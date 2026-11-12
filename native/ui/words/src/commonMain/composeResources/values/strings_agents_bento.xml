@@ -32,4 +32,7 @@
     <string name="agentsConversationsStored">Copy a conversation for another agent</string>
     <string name="agentsConversationsStoredOn">Copy a conversation from %1$s</string>
     <string name="agentsHostAccount">Host account: %1$s</string>
+    <string name="agentsStateSignInUnchecked">Installed, but this app can't check its sign-in yet</string>
+    <string name="agentsStateSignInCheckFailed">Sign-in could not be checked. Try signing in again.</string>
+    <string name="agentsSignInUncheckedBody">It can't be used for conversations yet. You can remove it.</string>
 </resources>

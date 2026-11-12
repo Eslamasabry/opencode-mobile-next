@@ -32,4 +32,7 @@
     <string name="agentsInstallFailedVersionOther">Không thể cài đặt %1$s: bản tải về cho biết là phiên bản %2$s, còn ứng dụng này hoạt động với %3$s. Thử lại sẽ không thay đổi điều này; cập nhật ứng dụng này thì có.</string>
     <string name="agentsInstallFailedNotStarted">%1$s đã được tải về nhưng không khởi động trên điện thoại này, nên không thể kiểm tra phiên bản. Hãy thử lại; nếu vẫn xảy ra, phần Chi tiết có thông tin điện thoại báo về.</string>
     <string name="agentsInstallFailedWithdrawn">Không thể cài đặt %1$s: phiên bản %2$s, phiên bản ứng dụng này cài đặt, không còn được cung cấp để tải về. Thử lại sẽ không thay đổi điều này; cập nhật ứng dụng này thì có.</string>
+    <string name="agentsStateSignInUnchecked">Đã cài đặt, nhưng ứng dụng này chưa kiểm tra được việc đăng nhập</string>
+    <string name="agentsStateSignInCheckFailed">Không kiểm tra được việc đăng nhập. Hãy thử đăng nhập lại.</string>
+    <string name="agentsSignInUncheckedBody">Chưa dùng được cho cuộc trò chuyện. Bạn có thể gỡ bỏ nó.</string>
 </resources>

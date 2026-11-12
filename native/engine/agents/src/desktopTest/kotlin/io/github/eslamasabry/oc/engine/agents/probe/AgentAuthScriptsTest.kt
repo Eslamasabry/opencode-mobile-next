@@ -187,6 +187,22 @@ class AgentAuthScriptsTest {
         }
     }
 
+    // Device 2026-11-12 (emulator, build 409af056a): Gemini CLI 0.66.0 installed and answered its version, then this
+    // probe said `probeUnsupported` and the card read "Not available on this phone yet" with no reason. The page tells
+    // "cannot be checked" apart from "check failed" by this rule, so it must say exactly what the real script does.
+    @Test
+    fun `the agents whose sign-in the probe can read are exactly those the script does not refuse`() {
+        val signIn = AgentCatalog.builtIn.agents.filter { AgentAuthScripts.script(it, AuthScriptAction.Probe) != null }
+        assertTrue(signIn.any { it.id.raw == "gemini" })
+        for (agent in signIn) {
+            // No program is installed here: a probed agent stops at "not installed", an unprobed one before it.
+            val probed = run(agent.id.raw).error != AuthProbeError.ProbeUnsupported
+            assertEquals(probed, AgentAuthScripts.checksSignIn(agent.id), agent.id.raw)
+        }
+        assertFalse(AgentAuthScripts.checksSignIn(AgentId("gemini")))
+        assertTrue(AgentAuthScripts.checksSignIn(AgentId("codex")))
+    }
+
     /** A fake `agy` that speaks just enough ACP: initialize, then one reply to session/list, then waits to be stopped. */
     private fun agy(reply: String, advertiseList: Boolean = true) {
         File("$home/agy-fixture.py").writeText(

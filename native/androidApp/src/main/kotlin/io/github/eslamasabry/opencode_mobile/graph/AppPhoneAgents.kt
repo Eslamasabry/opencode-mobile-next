@@ -506,6 +506,10 @@ class AppPhoneAgents(
                                     signIn == AgentSignInPhase.SignedIn &&
                                     AgentAuthScripts.supportsSignOut(agent.id) &&
                                     !installing,
+                            signInUnchecked = present == true && PhoneAgentRules.signInUnchecked(agent),
+                            signInCheckFailed =
+                                status == PhoneAgentStatus.SignInNeeded &&
+                                    PhoneAgentRules.signInCheckFailed(agent, signIn),
                             previousVersionAvailable =
                                 agent.id == AgentId.CLAUDE &&
                                     present == true &&
@@ -554,7 +558,13 @@ class AppPhoneAgents(
         kept: PhoneAgentFacts.Fact?,
     ): AgentSignInPhase? {
         if (agent.signInMethod == AgentSignInMethod.None) return AgentSignInPhase.SignedIn
-        if (owner == null || AgentAuthScripts.script(agent, AuthScriptAction.Probe) == null)
+        // No script, or one that refuses this agent before it starts (Gemini CLI, Qwen Code, Goose, omp): the same
+        // answer every time, so the row says it at once and never shows "Checking sign-in" first.
+        if (
+            owner == null ||
+                AgentAuthScripts.script(agent, AuthScriptAction.Probe) == null ||
+                !AgentAuthScripts.checksSignIn(agent.id)
+        )
             return AgentSignInPhase.Failed
         return synchronized(admission) {
             if (owner in denied) return AgentSignInPhase.Failed
@@ -942,6 +952,8 @@ class AppPhoneAgents(
         val authored =
             AgentAuthScripts.script(agent, AuthScriptAction.Probe)
                 ?: return AgentSignInPhase.Failed
+        // The script refuses this agent before it starts anything: no process for an answer known in advance.
+        if (!AgentAuthScripts.checksSignIn(agent.id)) return AgentSignInPhase.Failed
         val key = owner to agent.id
         if (synchronized(admission) { owner in denied }) return AgentSignInPhase.Failed
         // A probe starts a process, and Android stops an app's child processes past a limit: none while an install
@@ -1017,12 +1029,7 @@ class AppPhoneAgents(
         return phaseOf(answer)
     }
 
-    private fun phaseOf(answer: AuthProjection): AgentSignInPhase =
-        when (answer.state) {
-            AuthState.SignedOut -> AgentSignInPhase.SignedOut
-            AuthState.SignedIn -> AgentSignInPhase.SignedIn
-            AuthState.Error -> AgentSignInPhase.Failed
-        }
+    private fun phaseOf(answer: AuthProjection): AgentSignInPhase = PhoneAgentRules.phaseOf(answer)
 
     private val versions = HashMap<Pair<ProfileId, AgentId>, Pair<Long, Map<String, Any?>>>()
 

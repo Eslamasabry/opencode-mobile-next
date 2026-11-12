@@ -22,6 +22,7 @@ import io.github.eslamasabry.oc.engine.agents.AgentId
 import io.github.eslamasabry.oc.engine.agents.catalog.AgentCatalog
 import io.github.eslamasabry.oc.engine.agents.certification.AgentCertification
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentStatus
+import io.github.eslamasabry.oc.feature.agents.hub.phoneAgentSignedOut
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgents
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentsState
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeAgentNotice
@@ -474,7 +475,11 @@ internal object HomeAgentNoticeRules {
                     .mapNotNull { row ->
                         val kind =
                             when (row.status) {
-                                PhoneAgentStatus.SignInNeeded -> HomeAgentNoticeKind.SignedOut
+                                // A sign-in check that could not run is not news that it is signed out (Flutter: failed
+                                // is "unavailable", which the home does not list).
+                                PhoneAgentStatus.SignInNeeded ->
+                                    if (phoneAgentSignedOut(row)) HomeAgentNoticeKind.SignedOut
+                                    else return@mapNotNull null
                                 PhoneAgentStatus.Stopped ->
                                     if (helperStopped) HomeAgentNoticeKind.Stopped else return@mapNotNull null
                                 PhoneAgentStatus.Limit -> HomeAgentNoticeKind.LimitReached

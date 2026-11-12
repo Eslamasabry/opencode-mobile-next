@@ -61,6 +61,23 @@ class HomeAgentNoticeRulesTest {
         assertTrue(HomeAgentNoticeRules.notices(state.copy(available = false)) { true }.lines.isEmpty())
     }
 
+    // Gate (w4-agent-install2): a sign-in check that could not run (timed out, no answer) is not news that the agent
+    // is signed out, and an installed agent whose sign-in the app cannot read never ran, so it is not "stopped" either.
+    @Test
+    fun `no signed-out or stopped line for a check that could not run or an agent the app cannot check`() {
+        val rows =
+            persistentListOf(
+                PhoneAgentRow("codex", "Codex", PhoneAgentStatus.SignInNeeded, signInCheckFailed = true),
+                PhoneAgentRow("gemini", "Gemini CLI", PhoneAgentStatus.Unavailable, signInUnchecked = true),
+                PhoneAgentRow("claude", "Claude Code", PhoneAgentStatus.SignInNeeded),
+            )
+        val state = PhoneAgentsState(available = true, agents = rows, helperStoppedUnexpectedly = true)
+        assertEquals(
+            listOf(HomeAgentNotice("claude", "Claude Code", HomeAgentNoticeKind.SignedOut)),
+            HomeAgentNoticeRules.notices(state) { true }.lines,
+        )
+    }
+
     // Gate: the same lines read from the helper's own exit record, the way AppPhoneAgents builds the state.
     private val exitAt = 1_791_633_600_000L
     private val since = exitAt - 3_600_000 // boot or the app's update, an hour before the exit

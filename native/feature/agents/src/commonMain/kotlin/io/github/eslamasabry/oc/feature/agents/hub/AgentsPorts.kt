@@ -173,7 +173,22 @@ public data class PhoneAgentRow(
     val signInAvailable: Boolean = false,
     /** Signed in now, and the agent's bridge can run its own logout. */
     val signOutAvailable: Boolean = false,
+    /**
+     * Installed, but the app has no way to read this agent's sign-in, so it can never be confirmed and the agent
+     * cannot start conversations (Gemini CLI today). Its card says so instead of a bare "not available".
+     */
+    val signInUnchecked: Boolean = false,
+    /**
+     * [PhoneAgentStatus.SignInNeeded] only because this agent's sign-in check could not run to an answer (timed out, no
+     * answer from the phone's Linux): the card says the check could not be done, not that it is signed out, and no
+     * other place names it signed out (Flutter: failed is "Sign-in could not be checked. Try signing in again.").
+     */
+    val signInCheckFailed: Boolean = false,
 )
+
+/** Whether [row] is known to be signed out: a sign-in check ran and found no sign-in (not one that could not run). */
+public fun phoneAgentSignedOut(row: PhoneAgentRow): Boolean =
+    row.status == PhoneAgentStatus.SignInNeeded && !row.signInCheckFailed
 
 public sealed interface PhoneAgentRemoval {
     public data class Removed(val freedBytes: Long) : PhoneAgentRemoval

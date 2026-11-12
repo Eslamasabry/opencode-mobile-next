@@ -25,6 +25,7 @@ import io.github.eslamasabry.oc.engine.integrations.usage.ProviderUsageReading
 import io.github.eslamasabry.oc.engine.integrations.usage.parseProviderUsageList
 import io.github.eslamasabry.oc.engine.integrations.usage.withAntigravityUsage
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentStatus
+import io.github.eslamasabry.oc.feature.agents.hub.phoneAgentSignedOut
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgents
 import io.github.eslamasabry.oc.protocol.paseo.jsonOf
 import io.github.eslamasabry.oc.protocol.paseo.transport.PaseoTransport
@@ -67,11 +68,14 @@ class PhoneUsageReader(
         )
 
     private fun antigravityAgent(): AntigravityAgentState =
-        when (phoneAgents.state.value.agents.firstOrNull { it.id == "antigravity" }?.status) {
-            null -> AntigravityAgentState.Absent
-            PhoneAgentStatus.Ready -> AntigravityAgentState.Ready
-            PhoneAgentStatus.SignInNeeded -> AntigravityAgentState.SignedOut
-            else -> AntigravityAgentState.Other
+        phoneAgents.state.value.agents.firstOrNull { it.id == "antigravity" }.let { row ->
+            when {
+                row == null -> AntigravityAgentState.Absent
+                row.status == PhoneAgentStatus.Ready -> AntigravityAgentState.Ready
+                // Only a check that ran and found no sign-in; one that could not run says nothing about it.
+                phoneAgentSignedOut(row) -> AntigravityAgentState.SignedOut
+                else -> AntigravityAgentState.Other
+            }
         }
 
     private val retired = java.util.concurrent.ConcurrentHashMap.newKeySet<ProfileId>()

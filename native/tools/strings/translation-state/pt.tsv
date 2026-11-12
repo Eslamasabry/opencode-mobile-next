@@ -681,6 +681,7 @@ agentsSignInTerminalIntroOther	30d5454dd8
 agentsSignInTerminalNotYet	cca9167250
 agentsSignInTitle	b20645e38a
 agentsSignInUnavailable	ff6bb24013
+agentsSignInUncheckedBody	e51bcf1c40
 agentsSignOutAction	19c76c20c9
 agentsSignOutBody	810e271cb0
 agentsSignOutFailed	348c28a4f4
@@ -702,7 +703,9 @@ agentsStateNotInstalled	a1b82c84b4
 agentsStateNotInstalledNoSize	1ceb5b57d8
 agentsStatePhoneCheck	f245aa91aa
 agentsStateReady	22a88a22d2
+agentsStateSignInCheckFailed	00cad5539c
 agentsStateSignInNeeded	b7fb712e5a
+agentsStateSignInUnchecked	f8d969b43a
 agentsStateStopped	7dbdddb6a1
 agentsStateUnavailable	af58c3a2f5
 agentsStateUpdateWaiting	d7ccc5c1fa

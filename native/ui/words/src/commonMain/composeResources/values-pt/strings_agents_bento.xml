@@ -32,4 +32,7 @@
     <string name="agentsInstallFailedVersionOther">Não foi possível instalar %1$s: o download diz ser a versão %2$s, e este app funciona com a %3$s. Tentar novamente não muda isso; uma atualização deste app muda.</string>
     <string name="agentsInstallFailedNotStarted">%1$s foi baixado, mas não iniciou neste celular, então não foi possível verificar a versão. Tente novamente; se acontecer de novo, os Detalhes mostram o que o celular informou.</string>
     <string name="agentsInstallFailedWithdrawn">Não foi possível instalar %1$s: a versão %2$s, a que este app instala, não está mais disponível para download. Tentar novamente não muda isso; uma atualização deste app muda.</string>
+    <string name="agentsStateSignInUnchecked">Instalado, mas este app ainda não consegue verificar o login dele</string>
+    <string name="agentsStateSignInCheckFailed">Não foi possível verificar o login. Tente fazer login de novo.</string>
+    <string name="agentsSignInUncheckedBody">Ainda não dá para usá-lo em conversas. Você pode removê-lo.</string>
 </resources>
