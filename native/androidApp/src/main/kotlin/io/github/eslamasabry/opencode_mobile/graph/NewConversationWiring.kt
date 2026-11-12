@@ -626,11 +626,19 @@ class AndroidNewConversationHost(
                                     ?: read.value.model?.takeIf { it.providerId == provider }
                                     ?: models.firstOrNull()?.model,
                             )
+                        // Kept for this app run only: the next pick of this agent shows it at once.
+                        if (models.isNotEmpty()) lastPhoneModels["${profile.raw}|$agentId"] = found
                         Outcome.Ok(found)
                     }
                 }
             } ?: Outcome.Failed(Failure.Unavailable(FeatureId("phoneAgentModels")))
     }
+
+    /** The last list read per `profile|agent` (bounded: a few agents per server). */
+    private val lastPhoneModels = java.util.concurrent.ConcurrentHashMap<String, NewConversationPhoneModels>()
+
+    override fun cachedPhoneAgentModels(profile: ProfileId, agentId: String): NewConversationPhoneModels? =
+        lastPhoneModels["${profile.raw}|$agentId"]
 
     /** Asks the helper to check its agents and their models again (its list is otherwise kept until a restart). */
     private suspend fun recheckHelperProviders(helper: ProfileId) {

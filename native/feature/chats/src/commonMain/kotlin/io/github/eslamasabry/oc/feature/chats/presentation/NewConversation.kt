@@ -191,6 +191,12 @@ public interface NewConversationHost {
     public suspend fun phoneAgentModels(profile: ProfileId, agentId: String): Outcome<NewConversationPhoneModels> =
         Outcome.Failed(Failure.Unavailable(FeatureId("phoneAgentModels")))
 
+    /**
+     * The list [phoneAgentModels] last read for [agentId] in this app run, shown at once while it is read again (the
+     * helper's first read takes about ten seconds); null when none was read yet.
+     */
+    public fun cachedPhoneAgentModels(profile: ProfileId, agentId: String): NewConversationPhoneModels? = null
+
     /** Remembers [model] for [agentId] (`oc.agentModel.<profile>`). */
     public suspend fun savePhoneAgentModel(profile: ProfileId, agentId: String, model: ModelRef?): Outcome<Unit> =
         Outcome.Ok(Unit)
@@ -438,6 +444,10 @@ public data class NewConversationUi(
     /** The efforts the shown model offers (none when it offers none, or no model is named). */
     val shownVariants: List<String>
         get() = shownModel?.let { ref -> shownModels.firstOrNull { it.model == ref }?.variants }.orEmpty()
+
+    /** The phone agent's model list is still being read and nothing is known yet: the sheet says so. */
+    val modelsLoading: Boolean
+        get() = phoneAgent != null && phoneModelsBusy && phoneModels.isEmpty()
 
     /** The model the Model row shows. */
     val shownModel: ModelRef?
@@ -696,8 +706,12 @@ public class NewConversationViewModel(
                                 favorites = setup.favorites,
                                 agent = setup.agent,
                                 phoneAgent = setup.phone?.selected,
-                                phoneModels = emptyList(),
-                                phoneModel = null,
+                                // The default agent's last known list shows at once; the read below replaces it.
+                                phoneModels =
+                                    setup.phone?.selected?.let { a -> host.cachedPhoneAgentModels(profile, a) }
+                                        ?.models.orEmpty(),
+                                phoneModel =
+                                    setup.phone?.selected?.let { a -> host.cachedPhoneAgentModels(profile, a) }?.model,
                                 variant = null,
                                 busy = false,
                                 repairAvailable =
@@ -1045,8 +1059,9 @@ public class NewConversationViewModel(
                 // Build/Plan and a separate copy belong to the server's own agent.
                 agent = if (agent != null) null else it.agent,
                 separateCopy = if (agent != null) false else it.separateCopy,
-                phoneModels = emptyList(),
-                phoneModel = null,
+                // The list last read for this agent shows at once; the read below replaces it.
+                phoneModels = agent?.let { a -> host.cachedPhoneAgentModels(profile, a) }?.models.orEmpty(),
+                phoneModel = agent?.let { a -> host.cachedPhoneAgentModels(profile, a) }?.model,
                 variant = null,
             )
         }

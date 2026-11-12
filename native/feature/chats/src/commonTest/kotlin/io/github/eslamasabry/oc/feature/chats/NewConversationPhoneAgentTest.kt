@@ -152,6 +152,11 @@ class NewConversationPhoneAgentTest {
         /** The thinking effort each start carried. */
         val efforts = mutableListOf<String?>()
 
+        /** What [cachedPhoneAgentModels] answers: the list last read for an agent in this app run. */
+        var cached: NewConversationPhoneModels? = null
+
+        override fun cachedPhoneAgentModels(profile: ProfileId, agentId: String): NewConversationPhoneModels? = cached
+
         override suspend fun startWithEffort(
             profile: ProfileId,
             directory: String,
@@ -455,5 +460,33 @@ class NewConversationPhoneAgentTest {
         vm.draftChanged("hello")
         vm.start()
         assertEquals(listOf<String?>(null), host.efforts)
+    }
+
+    @Test
+    fun `MODELS-LOADING while the agent's list is being read the sheet says so, never "no models"`() {
+        val host = Host()
+        host.modelsGate = CompletableDeferred()
+        val vm = vm(host)
+        vm.choosePhoneAgent("claude")
+        assertTrue(vm.state.value.modelsLoading)
+        assertTrue(vm.state.value.shownModels.isEmpty())
+        host.modelsGate!!.complete(Unit)
+        assertFalse(vm.state.value.modelsLoading)
+        assertEquals(listOf(claudeModel), vm.state.value.shownModels.map { it.model })
+    }
+
+    @Test
+    fun `MODELS-CACHED the agent's last known list shows at once and the fresh read replaces it`() {
+        val host = Host()
+        val stale = ModelRef("claude", "old-model")
+        host.cached = NewConversationPhoneModels(listOf(NewConversationModel(stale, "Old model")), stale)
+        host.modelsGate = CompletableDeferred()
+        val vm = vm(host)
+        vm.choosePhoneAgent("claude")
+        assertEquals(listOf(stale), vm.state.value.shownModels.map { it.model }, "shown before the read ends")
+        assertFalse(vm.state.value.modelsLoading, "a known list is not an empty, loading one")
+        host.modelsGate!!.complete(Unit)
+        assertEquals(listOf(claudeModel), vm.state.value.shownModels.map { it.model })
+        assertEquals(claudeModel, vm.state.value.phoneModel)
     }
 }
