@@ -13,7 +13,6 @@ import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
-import androidx.compose.ui.test.onNode
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.unit.Density
@@ -53,6 +52,9 @@ class KitViewerPageDesktopTest {
 
     private val text = (1..12).joinToString("\n") { "Line number $it of the file" }
 
+    private fun near(expected: Float, actual: Float, tolerance: Float) =
+        assertTrue(kotlin.math.abs(expected - actual) <= tolerance, "expected $expected within $tolerance of $actual")
+
     private fun SemanticsNodeInteraction.left(): Float = fetchSemanticsNode().boundsInRoot.left
     private fun SemanticsNodeInteraction.top(): Float = fetchSemanticsNode().boundsInRoot.top
     private fun SemanticsNodeInteraction.bottom(): Float = fetchSemanticsNode().boundsInRoot.bottom
@@ -78,7 +80,7 @@ class KitViewerPageDesktopTest {
             }
         }
         val gutter = 16 * density
-        assertEquals(gutter, onNodeWithText("Line number 1 of the file", substring = true).left(), 1f)
+        near(gutter, onNodeWithText("Line number 1 of the file", substring = true).left(), 1f)
     }
 
     @Test
@@ -91,7 +93,7 @@ class KitViewerPageDesktopTest {
         // Not a loose row above the text: it sits beside the bar's other controls, above the body.
         val find = onNode(hasContentDescription("Find in file") or hasText("Find in file"))
         val back = onNodeWithContentDescription("Back")
-        assertEquals(back.top(), find.top(), 40f)
+        near(back.top(), find.top(), 40f)
         assertTrue(find.top() < onNodeWithText("Line number 1 of the file", substring = true).top())
         find.performClick()
         onNodeWithText("Next match").assertExists()
@@ -108,15 +110,10 @@ class KitViewerPageDesktopTest {
                 ) { KitViewerDocument(text) }
             }
         }
-        // Closed menu: none of them is a row on the page.
-        onNodeWithText("Copy contents").assertDoesNotExist()
-        onNodeWithText("Wrap lines").assertDoesNotExist()
-        onNodeWithText("Share on Wi-Fi").assertDoesNotExist()
+        listOf("Copy contents", "Wrap lines", "Share on Wi-Fi").forEach { onNodeWithText(it).assertDoesNotExist() }
         onNodeWithContentDescription("More actions").performClick()
-        val copy = onNodeWithText("Copy contents").top()
-        val wrap = onNodeWithText("Wrap lines").top()
-        val share = onNodeWithText("Share on Wi-Fi").top()
-        assertTrue(copy < wrap && wrap < share, "order: $copy $wrap $share")
+        val order = listOf("Copy contents", "Wrap lines", "Share on Wi-Fi").map { onNodeWithText(it).top() }
+        assertEquals(order.sorted(), order, "menu order")
         onNodeWithText("Share on Wi-Fi").performClick()
         assertEquals(1, shared)
     }
@@ -133,7 +130,7 @@ class KitViewerPageDesktopTest {
             }
         }
         val ask = onNodeWithText("Ask about this file")
-        assertEquals(16 * density, ask.left(), 40f)
+        near(16 * density, ask.left(), 40f)
         // Under every line of the text, at the bottom of the window.
         assertTrue(ask.top() > onNodeWithText("Line number 12 of the file", substring = true).bottom() - 1f)
         assertTrue(ask.bottom() > 800 * density - 120 * density)

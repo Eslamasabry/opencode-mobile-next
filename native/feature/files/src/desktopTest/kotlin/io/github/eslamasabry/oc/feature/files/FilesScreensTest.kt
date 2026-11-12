@@ -239,13 +239,15 @@ class FilesScreensTest {
         )
 
     @Test
-    fun `B-CHAT-087 the viewer offers Ask about this file, Share on Wi-Fi and Open with as visible actions`() =
+    fun `B-CHAT-087 the viewer offers Ask about this file at the bottom and Open with and Share on Wi-Fi in the bar's menu`() =
         runComposeUiTest {
             val calls = FileCalls()
             setContent { Themed { FileScreen(readme, calls) } }
             onNodeWithText("Hello files", substring = true).assertExists()
             onNodeWithText("Ask about this file").performClick()
+            onNodeWithContentDescription("More actions").performClick()
             onNodeWithText("Share on Wi-Fi").performClick()
+            onNodeWithContentDescription("More actions").performClick()
             onNodeWithText("Open with").performClick()
             assertEquals(listOf("ask", "share", "openWith"), calls.calls)
         }
@@ -280,10 +282,11 @@ class FilesScreensTest {
     }
 
     @Test
-    fun `B-MEDIA-001 Save is a visible action and a saved file says so`() = runComposeUiTest {
+    fun `B-MEDIA-001 Save is in the bar's menu and a saved file says so`() = runComposeUiTest {
         val calls = FileCalls()
         setContent { Themed { FileScreen(readme.copy(canSave = true, notice = FileNotice.Saved), calls) } }
         onNodeWithText("README.md saved to your device.").assertExists()
+        onNodeWithContentDescription("More actions").performClick()
         onNodeWithText("Save").performClick()
         assertEquals(listOf("save"), calls.calls)
     }
