@@ -1537,6 +1537,7 @@ public class PaseoGateway(
     override suspend fun stop(session: SessionId, resume: Boolean): Outcome<StopResult> = call {
         if (isReadOnlySession(session)) paseoFail(PaseoFailureKind.Unavailable)
         if (session.raw in drafts) return@call StopResult.NothingRunning
+        live[session.raw]?.stopAsked = true
         transport.request(
             "cancel_agent_request",
             jsonOf("agentId" to real(paseoString(session.raw, max = 256))),
@@ -2497,6 +2498,12 @@ internal class PaseoLive {
      * notice.
      */
     var turnErrorShown = false
+
+    /** The newest item of the turn in progress is a call the person declined at its card (fault 5). */
+    var endsOnDecline = false
+
+    /** This app asked the daemon to stop the turn in progress (a person's Stop). */
+    var stopAsked = false
 
     /** The saved record said its last turn failed before the helper loaded it. */
     var failedBeforeLoad = false

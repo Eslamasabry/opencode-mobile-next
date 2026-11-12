@@ -184,7 +184,8 @@ private val DECLINED_REPORT = Regex(
     "^(permission (request )?(denied|canceled)|" +
         "the user doesn't want to proceed|" +
         "the user answered with a message instead of approving|" +
-        "user (denied|rejected|declined)|" +
+        // OpenCode 2 through Paseo 0.15.3: "The user declined this tool call" (captured).
+        "(the )?user (denied|rejected|declined)|" +
         "permission to use .* has been denied)",
     RegexOption.IGNORE_CASE,
 )
