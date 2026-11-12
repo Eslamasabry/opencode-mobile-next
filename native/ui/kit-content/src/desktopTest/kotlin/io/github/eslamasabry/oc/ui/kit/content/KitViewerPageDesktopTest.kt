@@ -132,23 +132,42 @@ class KitViewerPageDesktopTest {
             assertEquals(listOf("open", "save", "share"), calls)
         }
 
-    @Test
-    fun `Ask about this file is pinned at the bottom on the side margin`() = runComposeUiTest {
-        var asked = 0
+    private fun androidx.compose.ui.test.ComposeUiTest.askFrame(onAsk: () -> Unit) =
         setContent {
             Themed {
                 KitViewerFrame(
                     "b4.txt", path = "b4.txt", onClose = {},
-                    primary = KitViewerAction("Ask about this file", { asked++ }),
+                    primary = KitViewerAction("Ask about this file", onAsk),
                 ) { KitViewerDocument(text) }
             }
         }
-        val ask = onNode(hasText("Ask about this file") and hasClickAction())
-        assertTrue(ask.left() <= 16 * scale + 1f, "the button reaches the margin: ${ask.left()}")
-        // At the bottom of the window, below the top bar and the text's first line, not in the scrolling body's flow.
-        assertTrue(ask.top() > onNodeWithText("Line number 1 of the file", substring = true).bottom(), "below the text")
-        assertTrue(ask.bottom() > 800 * scale - 120 * scale, "button bottom ${ask.bottom()}")
-        ask.performClick()
+
+    private fun androidx.compose.ui.test.ComposeUiTest.ask() =
+        onNode(hasText("Ask about this file") and hasClickAction())
+
+    @Test
+    fun `Ask about this file starts on the side margin`() = runComposeUiTest {
+        askFrame {}
+        near(16 * scale, ask().left(), 2f)
+    }
+
+    @Test
+    fun `Ask about this file sits below the text`() = runComposeUiTest {
+        askFrame {}
+        assertTrue(ask().top() > onNodeWithText("Line number 1 of the file", substring = true).bottom())
+    }
+
+    @Test
+    fun `Ask about this file is pinned at the bottom of the window`() = runComposeUiTest {
+        askFrame {}
+        assertTrue(ask().bottom() > 800 * scale - 120 * scale)
+    }
+
+    @Test
+    fun `Ask about this file calls its callback`() = runComposeUiTest {
+        var asked = 0
+        askFrame { asked++ }
+        ask().performClick()
         assertEquals(1, asked)
     }
 
