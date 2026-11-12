@@ -66,7 +66,7 @@ class KitViewerPageDesktopTest {
         var closed = 0
         setContent {
             Themed {
-                KitViewerFrame("b4.txt", path = "b4.txt", onClose = { closed++ }) { KitViewerDocument(text) }
+                KitViewerFrame("b4.txt", Modifier.fillMaxSize(), path = "b4.txt", onClose = { closed++ }) { KitViewerDocument(text) }
             }
         }
         onNodeWithText("Close").assertDoesNotExist()
@@ -78,7 +78,7 @@ class KitViewerPageDesktopTest {
     fun `the text starts on the page's side margin`() = runComposeUiTest {
         setContent {
             Themed {
-                KitViewerFrame("b4.txt", path = "b4.txt", onClose = {}) { KitViewerDocument(text) }
+                KitViewerFrame("b4.txt", Modifier.fillMaxSize(), path = "b4.txt", onClose = {}) { KitViewerDocument(text) }
             }
         }
         val gutter = 16 * scale
@@ -89,7 +89,7 @@ class KitViewerPageDesktopTest {
     fun `Find is an action of the bar and opens the find field`() = runComposeUiTest {
         setContent {
             Themed {
-                KitViewerFrame("b4.txt", path = "b4.txt", onClose = {}) { KitViewerDocument(text) }
+                KitViewerFrame("b4.txt", Modifier.fillMaxSize(), path = "b4.txt", onClose = {}) { KitViewerDocument(text) }
             }
         }
         // Not a loose row above the text: it sits beside the bar's other controls, above the body.
@@ -108,7 +108,7 @@ class KitViewerPageDesktopTest {
             setContent {
                 Themed {
                     KitViewerFrame(
-                        "b4.txt", path = "b4.txt", onClose = {},
+                        "b4.txt", Modifier.fillMaxSize(), path = "b4.txt", onClose = {},
                         menu = listOf(
                             KitViewerMenuItem("Open with", { calls += "open" }),
                             KitViewerMenuItem("Save", { calls += "save" }),
@@ -136,7 +136,7 @@ class KitViewerPageDesktopTest {
         setContent {
             Themed {
                 KitViewerFrame(
-                    "b4.txt", path = "b4.txt", onClose = {},
+                    "b4.txt", Modifier.fillMaxSize(), path = "b4.txt", onClose = {},
                     primary = KitViewerAction("Ask about this file", onAsk),
                 ) { KitViewerDocument(text) }
             }
@@ -173,7 +173,7 @@ class KitViewerPageDesktopTest {
 
     @Test
     fun `a viewer with no actions shows no menu and no button`() = runComposeUiTest {
-        setContent { Themed { KitViewerFrame("LICENSE", onClose = {}) { Box(Modifier.fillMaxSize()) } } }
+        setContent { Themed { KitViewerFrame("LICENSE", Modifier.fillMaxSize(), onClose = {}) { Box(Modifier.fillMaxSize()) } } }
         onNodeWithContentDescription("More actions").assertDoesNotExist()
         onNodeWithText("Ask about this file").assertDoesNotExist()
     }
