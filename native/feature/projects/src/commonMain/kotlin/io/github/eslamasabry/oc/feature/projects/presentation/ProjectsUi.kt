@@ -21,6 +21,8 @@ public data class FolderRowUi(
     val directory: String,
     val name: String,
     val conversations: Int = 0,
+    /** False when [conversations] was never read for this folder (opened before, found by a search): no count is shown. */
+    val counted: Boolean = true,
     val running: Int = 0,
     val isGit: Boolean? = null,
     /** The server's project id, when it keeps a project list (needed to rename). */

@@ -6,6 +6,7 @@ import io.github.eslamasabry.oc.core.model.SessionTime
 import io.github.eslamasabry.oc.core.model.WorkspaceProject
 import io.github.eslamasabry.oc.feature.projects.presentation.ChatTitle
 import io.github.eslamasabry.oc.feature.projects.presentation.ChatTitles
+import io.github.eslamasabry.oc.feature.projects.presentation.FolderRowUi
 import io.github.eslamasabry.oc.feature.projects.presentation.PathProblem
 import io.github.eslamasabry.oc.feature.projects.presentation.ProjectRules
 import kotlin.test.Test
@@ -195,5 +196,31 @@ class ProjectRulesTest {
         assertEquals("/a", hints["/a/demo"])
         assertEquals("/x/a", hints["/x/a/demo"])
         assertEquals("/", hints["/demo"])
+    }
+
+    @Test
+    fun `sweep C f a project shown under Opened before is not listed again`() {
+        val opened = listOf(FolderRowUi("/root/projects/second", "second"), FolderRowUi("/root/projects", "projects"))
+        val projects =
+            listOf(
+                FolderRowUi("/root/projects/second", "second", conversations = 4),
+                FolderRowUi("/root/projects", "projects", conversations = 1),
+                FolderRowUi("/root/other", "other", conversations = 2),
+            )
+        val (first, second) = ProjectRules.sections(opened, projects)
+        assertEquals(listOf("second", "projects"), first.map { it.name })
+        assertEquals(listOf("other"), second.map { it.name })
+        // An opened folder takes the listed project's count; one the server never listed has none.
+        assertEquals(4, first.first().conversations)
+        assertEquals(true, first.first().counted)
+        val (alone, none) = ProjectRules.sections(opened.take(1), emptyList())
+        assertEquals(false, alone.single().counted)
+        assertEquals(emptyList(), none)
+    }
+
+    @Test
+    fun `sweep C f a long path is cut at its start`() {
+        assertEquals("/root/projects/second", ProjectRules.cutStart("/root/projects/second"))
+        assertEquals("…/projects/second/very/deep/folder/app", ProjectRules.cutStart("/root/some/long/path/projects/second/very/deep/folder/app", 40))
     }
 }

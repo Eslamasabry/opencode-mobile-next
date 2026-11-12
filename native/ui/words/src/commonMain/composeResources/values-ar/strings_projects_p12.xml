@@ -58,4 +58,5 @@
     <string name="p12ArchivedFilter">المؤرشفة</string>
     <string name="p12MoreFor">المزيد لـ %1$s</string>
     <string name="p12OpenChat">فتح المحادثة</string>
+    <string name="p12PhoneFolderBody">اختر مجلدًا في التخزين المشترك لهذا الهاتف.</string>
 </resources>
