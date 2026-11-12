@@ -111,7 +111,8 @@ public class ThisPhoneModel(
                 baseAnswer.copy(
                     line =
                         reading.history?.let { AnswerLine.History(it) }
-                            ?: reading.memoryBytes?.let { AnswerLine.Memory(it) }
+                            ?: (l.processReading?.runningMemoryBytes?.takeIf { it > 0 } ?: reading.memoryBytes)
+                                ?.let { AnswerLine.Memory(it) }
                             ?: baseAnswer.line
                 )
             } else baseAnswer

@@ -206,7 +206,15 @@ internal class NativePhoneProcesses(
             )
         val lifted = limit.status().state == ChildLimitState.Lifted
         Outcome.Ok(
-            ProcessReading(rows, reading.childCount, lifted, runningRowStatus(reading), leftover)
+            ProcessReading(
+                rows,
+                reading.childCount,
+                lifted,
+                runningRowStatus(reading),
+                leftover,
+                runningCount = snapshot.processes.size,
+                runningMemoryBytes = reading.rssBytes,
+            )
         )
     }
 
