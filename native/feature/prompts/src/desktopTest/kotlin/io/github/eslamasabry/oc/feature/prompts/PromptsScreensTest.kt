@@ -10,7 +10,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.onAllNodesWithTag
+import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.unit.dp
@@ -39,6 +41,7 @@ import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 import kotlinx.collections.immutable.persistentListOf
 
 /** The real prompts screens, found by their visible words. */
@@ -102,10 +105,6 @@ class PromptsScreensTest {
             log += "commands"
         }
 
-        override fun openTasks() {
-            log += "tasks"
-        }
-
         override fun choose(name: String) {
             log += "choose:$name"
         }
@@ -138,6 +137,16 @@ class PromptsScreensTest {
         )
 
     @Test
+    fun `P52 the empty saved prompts state is centred like other empty states`() = runComposeUiTest {
+        setContent { Frame { SavedPromptsScreen(SavedPromptsUi(loading = false, prompts = emptyList()), Taps()) } }
+        val root = onRoot().getUnclippedBoundsInRoot()
+        val title = onNodeWithText("No saved prompts yet").getUnclippedBoundsInRoot()
+        val middle = (title.left + title.right).value / 2
+        val rootMiddle = (root.left + root.right).value / 2
+        assertTrue(kotlin.math.abs(middle - rootMiddle) < 12f, "title at $middle, page middle $rootMiddle")
+    }
+
+    @Test
     fun `B-STATE-140 saved prompts list by their words, restore and delete act on that prompt`() = runComposeUiTest {
         val taps = Taps()
         setContent { Frame { SavedPromptsScreen(SavedPromptsUi(loading = false, prompts = prompts), taps) } }
@@ -150,8 +159,9 @@ class PromptsScreensTest {
         onNodeWithText("Delete saved prompt").performClick()
         onNodeWithText("Save prompt for later").performClick()
         onNodeWithText("Slash commands and agents").performClick()
-        onNodeWithText("Tasks").performClick()
-        assertEquals(listOf("insert:a", "delete:b", "new", "commands", "tasks"), taps.log)
+        // P52: the agent's tasks are not a row here (Flutter's Plan row lives in the conversation menu).
+        onNodeWithText("Tasks").assertDoesNotExist()
+        assertEquals(listOf("insert:a", "delete:b", "new", "commands"), taps.log)
     }
 
     @Test

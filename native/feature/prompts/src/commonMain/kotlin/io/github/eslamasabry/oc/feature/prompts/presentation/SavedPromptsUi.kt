@@ -115,6 +115,4 @@ public interface SavedPromptsActions {
     public fun undoTimedOut()
 
     public fun openCommands()
-
-    public fun openTasks()
 }
