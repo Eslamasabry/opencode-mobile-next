@@ -100,6 +100,16 @@ public fun paseoPermission(agentId: String, request: JsonObject): PermissionRequ
             if (text("subAgentType").isNotEmpty()) metadata["subagent_type"] = JsonPrimitive(text("subAgentType", 256))
             covers = listOf(permission)
         }
+        // OpenCode 2 through Paseo 0.15.3 asks with only a `name` and a `description` holding its resources
+        // (captured: name "edit", description "shade-probe.txt"; no detail, no input). A single token there is the
+        // file, so the card and the notification can name what is allowed (B-SEC-105). Prose (a message with spaces)
+        // or several lines are never read as a path: the ask then stays unnamed and the shade offers only Open.
+        type == null && input.isEmpty() && toolId(name) in RESOURCE_FILE_TOOLS && resourcePath(request) != null -> {
+            val path = resourcePath(request)!!
+            permission = if (toolId(name) == "read") "read" else "edit"
+            patterns = mutableListOf(path)
+            metadata["filePath"] = JsonPrimitive(path)
+        }
         type == "plain_text" && name.lowercase() == "skill" -> {
             permission = "skill"
             val label = text("label", 512)
@@ -168,6 +178,16 @@ private fun display(value: JsonElement): String = (value as? JsonPrimitive)?.con
 private val INPUT_SHOWN_ELSEWHERE = setOf("old_string", "new_string", "content", "command", "new_source", "plan")
 
 private val CAMEL = Regex("([a-z0-9])([A-Z])")
+
+/** File tools whose OpenCode-2 ask names its file only in `description`. */
+private val RESOURCE_FILE_TOOLS = setOf("edit", "write", "patch", "multiedit", "read")
+
+/** The request's `description` when it is one file path: one token, no whitespace, at most 1024 characters. */
+private fun resourcePath(request: JsonObject): String? {
+    val text = (request["description"] as? JsonPrimitive)?.takeIf { it.isString }?.content?.trim() ?: return null
+    if (text.isEmpty() || text.length > 1024 || text.any { it.isWhitespace() || it.code < 32 || it.code == 127 }) return null
+    return text
+}
 
 /** "NotebookEdit" as "notebook_edit"; names the app already words as one id keep it. */
 internal fun toolId(name: String): String {
