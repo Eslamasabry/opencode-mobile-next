@@ -31,7 +31,7 @@ class ShellChoicesTest {
         assertEquals(listOf(null, "sh", "bash", "rbash", "dash"), rows.map { it.label })
         assertEquals(listOf("", "/bin/sh", "/bin/bash", "/bin/rbash", "/usr/bin/dash"), rows.map { it.value })
         assertEquals(listOf(false, false, false, true, false), rows.map { it.terminalOnly })
-        assertEquals(5, merged.realShells().size)
+        assertEquals(4, merged.realShells().size)
     }
 
     @Test
