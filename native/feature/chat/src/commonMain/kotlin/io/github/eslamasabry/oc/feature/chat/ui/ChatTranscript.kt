@@ -62,6 +62,9 @@ import io.github.eslamasabry.oc.feature.chat.world.PendingSend
 import io.github.eslamasabry.oc.feature.chat.world.PendingState
 import io.github.eslamasabry.oc.ui.design.effects.KitSurfaceStyle
 import io.github.eslamasabry.oc.ui.design.tokens.Space
+import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
+import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
+import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
 import io.github.eslamasabry.oc.ui.kit.motion.KitReveal
 import io.github.eslamasabry.oc.ui.kitchat.turn.KitLiveAsk
 import io.github.eslamasabry.oc.ui.kitchat.turn.KitTurnLiveLine
@@ -133,7 +136,10 @@ import io.github.eslamasabry.oc.ui.words.res.liveFailedStillWorking
 import io.github.eslamasabry.oc.ui.words.res.liveFailedStopped
 import io.github.eslamasabry.oc.ui.words.res.kitQueuedUncertain
 import io.github.eslamasabry.oc.ui.words.res.nativePendingReview
+import io.github.eslamasabry.oc.ui.words.res.queuedKeepForReview
 import io.github.eslamasabry.oc.ui.words.res.queuedResendConfirm
+import io.github.eslamasabry.oc.ui.words.res.queuedResendMessage
+import io.github.eslamasabry.oc.ui.words.res.queuedResendTitle
 import io.github.eslamasabry.oc.ui.words.res.kitTurnMore
 import io.github.eslamasabry.oc.ui.words.res.queuedReceiptStillUncertain
 import io.github.eslamasabry.oc.ui.words.res.queuedReceiptStorageProblem
@@ -747,7 +753,10 @@ private fun PendingBubble(
     }
 }
 
-/** The unconfirmed bubble looks only: its action can never resend it. */
+/**
+ * The unconfirmed bubble looks first: Check again and Review never resend. Its own Send again (a send with no record on
+ * the waiting-sends page) asks first, the way that page does, because the words may already have arrived.
+ */
 @Composable
 private fun ReceiptCheckLine(
     localId: Long,
@@ -772,6 +781,7 @@ private fun ReceiptCheckLine(
     val checkAgain = stringResource(Res.string.chatReceiptCheckAgain)
     val review = stringResource(Res.string.nativePendingReview)
     val sendAgain = stringResource(Res.string.queuedResendConfirm)
+    var askingSendAgain by remember(localId) { mutableStateOf(false) }
     // On the reply's own 16 dp edge, never against the screen's.
     Column(Modifier.padding(horizontal = Space.S4.dp).testTag("chat-receipt-$localId")) {
         KitNotice(
@@ -789,8 +799,33 @@ private fun ReceiptCheckLine(
                         )
                     },
                     onReview?.let { KitLineAction(review, it, testTag = "chat-receipt-review-$localId") },
-                    onSendAgain?.let { KitLineAction(sendAgain, it, testTag = "chat-receipt-send-again-$localId") },
+                    onSendAgain?.let {
+                        KitLineAction(
+                            sendAgain,
+                            { askingSendAgain = true },
+                            testTag = "chat-receipt-send-again-$localId",
+                        )
+                    },
                 ),
+        )
+        // The same warning as the waiting-sends page (N-48): "It may already have reached OpenCode. Sending again can
+        // duplicate it." Nothing is sent without this second tap.
+        KitConfirm(
+            spec =
+                if (askingSendAgain && onSendAgain != null)
+                    KitConfirmSpec(
+                        title = stringResource(Res.string.queuedResendTitle),
+                        confirmLabel = sendAgain,
+                        kind = KitConfirmKind.Neutral,
+                        body = stringResource(Res.string.queuedResendMessage),
+                        cancelLabel = stringResource(Res.string.queuedKeepForReview),
+                    )
+                else null,
+            onConfirm = {
+                askingSendAgain = false
+                onSendAgain?.invoke()
+            },
+            onCancel = { askingSendAgain = false },
         )
         check?.checkedAtMs?.let { at ->
             val time =
