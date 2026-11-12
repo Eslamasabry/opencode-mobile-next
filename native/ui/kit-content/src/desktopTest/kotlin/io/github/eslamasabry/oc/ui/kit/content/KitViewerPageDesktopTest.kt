@@ -47,7 +47,7 @@ class KitViewerPageDesktopTest {
                 localeTag = "en",
                 stillFrame = true,
             ) {
-                Box(Modifier.size(411.dp, 800.dp)) { content() }
+                Box(Modifier.size(411.dp, 380.dp)) { content() }
             }
         }
     }
@@ -146,9 +146,12 @@ class KitViewerPageDesktopTest {
         onNode(hasText("Ask about this file") and hasClickAction())
 
     @Test
-    fun `Ask about this file starts on the side margin`() = runComposeUiTest {
+    fun `Ask about this file sits inside the side margins at full width`() = runComposeUiTest {
         askFrame {}
-        near(16 * scale, ask().left(), 2f)
+        // Inside the margins on both sides; the kit's button cap may centre it, never push it past them.
+        val node = ask().fetchSemanticsNode().boundsInRoot
+        assertTrue(node.left >= 16 * scale - 1f && node.right <= (411 - 16) * scale + 1f, "button $node")
+        assertTrue(node.width >= 250 * scale, "the button is full width up to its cap: ${node.width}")
     }
 
     @Test
@@ -160,7 +163,7 @@ class KitViewerPageDesktopTest {
     @Test
     fun `Ask about this file is pinned at the bottom of the window`() = runComposeUiTest {
         askFrame {}
-        assertTrue(ask().bottom() > 800 * scale - 120 * scale)
+        assertTrue(ask().bottom() > 380 * scale - 100 * scale)
     }
 
     @Test
