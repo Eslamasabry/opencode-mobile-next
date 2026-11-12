@@ -946,6 +946,26 @@ class WorldComposerFilesModelsTest {
         }
 
     @Test
+    fun `Paseo fault 3 on a pictures-only server a picked project file is named in the words, never staged as a file`() =
+        runTest {
+            val f = Fixture(this)
+            f.base.setLocation(io.github.eslamasabry.oc.core.model.ServerLocation(directory = "/work/project"))
+            // Paseo's flags (PaseoCapabilities): pictures go with a message, other files do not.
+            f.base.capabilities.value =
+                f.base.capabilities.value.copy(promptAttachments = true, promptImagesOnly = true)
+            f.open()
+            f.world.draftChanged("summarize @readme.txt")
+            assertIs<Outcome.Ok<Unit>>(f.world.mentionFile("readme.txt"))
+            // Before: a file:// part was staged and every send failed "Unavailable.promptAttachments".
+            assertTrue(f.world.draft.value.attachments.isEmpty())
+            assertIs<Outcome.Ok<Unit>>(f.world.send("summarize @readme.txt"))
+            runCurrent()
+            val sent = f.base.sentPrompts.single().second
+            assertEquals("summarize @readme.txt", sent.text)
+            assertTrue(sent.attachments.isEmpty())
+        }
+
+    @Test
     fun `B-CHAT-087 a mention whose words were deleted sends no file`() = runTest {
         val f = Fixture(this)
         f.base.setLocation(io.github.eslamasabry.oc.core.model.ServerLocation(directory = "/work"))

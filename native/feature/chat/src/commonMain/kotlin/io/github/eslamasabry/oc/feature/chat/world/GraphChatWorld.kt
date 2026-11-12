@@ -1886,7 +1886,11 @@ internal class GraphChatWorld(
     }
 
     override suspend fun mentionFile(path: String): Outcome<Unit> {
-        currentAttached() ?: return Outcome.Failed(Failure.Network(NetworkWhy.Offline))
+        val a = currentAttached() ?: return Outcome.Failed(Failure.Network(NetworkWhy.Offline))
+        // Flutter `_stagesMentionedFiles` (chat_mentions.dart): a server that takes pictures only
+        // (Paseo) gets the `@path` words alone, and the agent reads the file in its own folder.
+        // Staging it as a file part made every such send fail "Unavailable.promptAttachments".
+        if (a.gateway.capabilities.value.promptImagesOnly) return Outcome.Ok(Unit)
         val directory =
             this.directory ?: return Outcome.Failed(Failure.Unavailable(FeatureId("fileBrowsing")))
         val file = Mentions.projectFile(directory, path)
