@@ -654,6 +654,17 @@ class WorldComposerFilesModelsTest {
         }
 
     @Test
+    fun `Paseo fault 6 the header takes the title the server gives the conversation by an update`() =
+        runTest {
+            val f = Fixture(this)
+            f.open()
+            // Paseo names a new conversation by an agent update (SessionUpserted), never SessionChanged.
+            f.base.events.emit(GatewayEvent.SessionUpserted(Session(ref.sessionId, title = "say hi")))
+            runCurrent()
+            assertEquals("say hi", f.world.title.value)
+        }
+
+    @Test
     fun `Paseo fault 2 an unconfirmed send with nothing on the waiting page offers Send again, not an empty Review`() =
         runTest {
             // A server with no offline queue (Paseo): no dispatch marker, so the waiting-sends page has nothing.

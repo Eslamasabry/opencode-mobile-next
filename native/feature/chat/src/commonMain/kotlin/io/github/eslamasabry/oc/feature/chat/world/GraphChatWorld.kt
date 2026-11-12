@@ -957,6 +957,10 @@ internal class GraphChatWorld(
                         if (event is CoreEvent.SessionUpserted && event.session.id == sid) {
                             refreshReadOnly(gateway, event.session)
                             adoptUndone(gateway, event.session)
+                            // Paseo names a new conversation by an agent update (an upsert, never
+                            // SessionChanged): the header kept "New conversation" while the home row
+                            // already read the daemon's title.
+                            event.session.title?.takeIf { it.isNotBlank() }?.let { mutableTitle.value = it }
                         }
                         if (event is CoreEvent.RevertChanged && event.sessionId == sid)
                             (gateway.session(sid) as? Outcome.Ok)?.value?.let { adoptUndone(gateway, it) }
