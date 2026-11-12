@@ -1,7 +1,6 @@
 package io.github.eslamasabry.oc.ui.kit.frame
 
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -22,7 +21,6 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
-import io.github.eslamasabry.oc.ui.kit.foundation.KitFrostRules
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
 
 /**
@@ -31,7 +29,7 @@ import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
  * across a line of text; scrolled to the end, or with nothing to scroll, the body is left whole. Without a [foot]
  * nothing fades (the body ends at the page's own edge).
  *
- * The fade eases in and out over frost's [KitFrostRules.FADE_MS] as the list leaves and reaches its end (at once under
+ * The fade eases in and out with the kit's enter motion as the list leaves and reaches its end (at once under
  * reduced motion), is read while drawing, and sits on whole pixels (see [wholePx]). [contentPadding] and
  * [verticalArrangement] are the scrolling column's own, inside the fade.
  */
@@ -49,11 +47,12 @@ public fun KitPinnedFootBody(
     var settled by remember { mutableStateOf(false) }
     val reduced = KitMotion.state.reduced
     val hasFoot = foot != null
+    val spec = KitMotion.specs.enter<Float>()
     LaunchedEffect(scroll, reduced, hasFoot) {
         if (!hasFoot) return@LaunchedEffect
         snapshotFlow { scroll.canScrollForward }.collect { hidden ->
             val target = if (hidden) 1f else 0f
-            if (!settled || reduced) more.snapTo(target) else more.animateTo(target, tween(KitFrostRules.FADE_MS))
+            if (!settled || reduced) more.snapTo(target) else more.animateTo(target, spec)
             settled = true
         }
     }
