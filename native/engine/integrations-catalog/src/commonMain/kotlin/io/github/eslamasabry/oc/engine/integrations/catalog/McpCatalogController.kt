@@ -65,7 +65,7 @@ public class McpCatalogController(
     private fun current(): Boolean {
         val result =
             !closed &&
-                host.sourceIdentity(profile) === sourceIdentity &&
+                host.sourceIdentity(profile) == sourceIdentity &&
                 host.current(profile, directory, workspace)
         if (!result && !closed)
             mutable.update {

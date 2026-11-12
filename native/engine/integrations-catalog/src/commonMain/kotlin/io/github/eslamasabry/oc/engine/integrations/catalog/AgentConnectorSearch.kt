@@ -55,7 +55,7 @@ public class AgentConnectorSearch(
         check(current())
         val source = host.sourceIdentity(profile)
         val read = host.loadCache(profile)
-        check(current() && host.sourceIdentity(profile) === source)
+        check(current() && host.sourceIdentity(profile) == source)
         val cache = (read as? Outcome.Ok)?.value ?: return off()
         if ((cache.get("optedIn") as? JsonPrimitive)?.booleanOrNull != true) return off()
         val saved = cache.let { parseMcpCatalog(it, redactor) }
@@ -77,11 +77,11 @@ public class AgentConnectorSearch(
             val searched = async { host.fetchRegistry(query) }
             withTimeoutOrNull(4_000) {
                 val full = refreshed?.await()
-                check(current() && host.sourceIdentity(profile) === source)
+                check(current() && host.sourceIdentity(profile) == source)
                 if (full is Outcome.Ok && full.value["servers"] is JsonArray) {
                     val latest = parseMcpCatalog(full.value, redactor)
                     val reread = host.loadCache(profile)
-                    check(current() && host.sourceIdentity(profile) === source)
+                    check(current() && host.sourceIdentity(profile) == source)
                     val latestCache = (reread as? Outcome.Ok)?.value
                     if ((latestCache?.get("optedIn") as? JsonPrimitive)?.booleanOrNull == true) {
                         val payload = buildJsonObject {
@@ -91,12 +91,12 @@ public class AgentConnectorSearch(
                             put("entries", encodeMcpCatalog(latest))
                         }
                         host.saveRefreshedCache(profile, payload)
-                        check(current() && host.sourceIdentity(profile) === source)
+                        check(current() && host.sourceIdentity(profile) == source)
                         entries = latest
                     }
                 }
                 val found = searched.await()
-                check(current() && host.sourceIdentity(profile) === source)
+                check(current() && host.sourceIdentity(profile) == source)
                 if (found is Outcome.Ok && found.value["servers"] is JsonArray) {
                     entries =
                         (parseMcpCatalog(found.value, redactor) + entries.orEmpty()).distinctBy {
@@ -107,9 +107,9 @@ public class AgentConnectorSearch(
             refreshed?.cancel()
             searched.cancel()
         }
-        check(current() && host.sourceIdentity(profile) === source)
+        check(current() && host.sourceIdentity(profile) == source)
         val reread = host.loadCache(profile)
-        check(current() && host.sourceIdentity(profile) === source)
+        check(current() && host.sourceIdentity(profile) == source)
         if (
             ((reread as? Outcome.Ok)?.value?.get("optedIn") as? JsonPrimitive)?.booleanOrNull !=
                 true

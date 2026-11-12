@@ -3,7 +3,13 @@ package io.github.eslamasabry.oc.feature.integrations.catalog
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
+import io.github.eslamasabry.oc.ui.kit.state.KitStateView
+import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
+import io.github.eslamasabry.oc.ui.kit.KitAction
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.TextFieldState
@@ -89,28 +95,39 @@ public fun McpCatalogScreen(ui: McpCatalogUi, actions: McpCatalogActions) {
         width = KitScreenWidth.Reading,
         edges = KitScreenEdges.Bleed,
     ) {
-        Column(
-            Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(Space.S3.dp),
-            verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
-        ) {
-            if (ui.forgetFailed) KitText(stringResource(Res.string.mcpCatalogForgetFailed))
-            else state.notice?.let { KitText(notice(it)) }
-            if (state.uncertain)
-                KitButton(
-                    stringResource(Res.string.mcpNativeCheck),
-                    actions::check,
-                    working = state.adding,
-                )
-            val selected = state.selected
-            when {
-                !state.optedIn -> {
-                    KitText(stringResource(Res.string.mcpNativeConsent))
-                    KitButton(
-                        stringResource(Res.string.mcpNativeTurnOn),
-                        { actions.consent(true) },
-                        working = state.loading,
+        val gutter = LocalKitTokens.current.gutter.dp
+        if (!state.optedIn) {
+            // Flutter's consent page (lib/ui/screens/mcp_catalog_screen.dart:427-445): one centred state
+            // with the question, what is sent, and the one button.
+            Column(
+                Modifier.fillMaxSize().padding(horizontal = gutter, vertical = Space.S3.dp),
+                verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
+            ) {
+                Notices(ui, state, actions)
+                Box(Modifier.weight(1f).fillMaxWidth()) {
+                    KitStateView(
+                        kind = KitStateKind.Empty,
+                        title = stringResource(Res.string.mcpCatalogConsentTitle),
+                        body = stringResource(Res.string.mcpCatalogConsentBody),
+                        icon = KitIcons.extensions,
+                        primary =
+                            KitAction(
+                                stringResource(Res.string.mcpCatalogConsentLoad),
+                                { actions.consent(true) },
+                                working = state.loading,
+                            ),
                     )
                 }
+            }
+        } else Column(
+            Modifier.fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = gutter, vertical = Space.S3.dp),
+            verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
+        ) {
+            Notices(ui, state, actions)
+            val selected = state.selected
+            when {
                 selected != null -> Review(selected, state, actions)
                 else -> {
                     KitSearchField(
@@ -149,6 +166,14 @@ public fun McpCatalogScreen(ui: McpCatalogUi, actions: McpCatalogActions) {
             }
         }
     }
+}
+
+@Composable
+private fun Notices(ui: McpCatalogUi, state: McpCatalogState, actions: McpCatalogActions) {
+    if (ui.forgetFailed) KitText(stringResource(Res.string.mcpCatalogForgetFailed))
+    else state.notice?.let { KitText(notice(it)) }
+    if (state.uncertain)
+        KitButton(stringResource(Res.string.mcpNativeCheck), actions::check, working = state.adding)
 }
 
 @Composable

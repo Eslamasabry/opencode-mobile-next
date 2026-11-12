@@ -44,6 +44,14 @@ internal fun ConnectionRegistry.savedGraph(stores: PreviewStores, id: ProfileId)
     }
 }
 
+/** Which saved server a catalogue page belongs to; equal values are the same server. */
+private data class CatalogSource(
+    val profile: String,
+    val baseUrl: String,
+    val username: String,
+    val backend: Any,
+)
+
 @SingleIn(AppScope::class)
 @ContributesBinding(AppScope::class)
 @Inject
@@ -54,13 +62,19 @@ class AppMcpCatalogHost(
 ) : McpCatalogHost {
     private fun key(profile: String) = "oc.setupRegistry.$profile"
 
+    /**
+     * The saved server this page was opened for, by value: the live graph and the profile row are
+     * rebuilt when the connection refreshes or the list is republished, and a new object for the
+     * same server is not a change.
+     */
     override fun sourceIdentity(profile: String): Any? =
-        registry.savedGraph(stores, ProfileId(profile))
-            ?: stores.profiles.profile(ProfileId(profile))?.profile
+        stores.profiles.profile(ProfileId(profile))?.profile?.let {
+            CatalogSource(profile, it.baseUrl, it.username, it.backend)
+        }
 
     override fun current(profile: String, directory: String?, workspace: String?): Boolean {
         val graph =
-            sourceIdentity(profile) as? ConnectionGraph
+            registry.savedGraph(stores, ProfileId(profile))
                 ?: return stores.profiles.profile(ProfileId(profile)) != null &&
                     directory == null &&
                     workspace == null
@@ -68,7 +82,7 @@ class AppMcpCatalogHost(
     }
 
     override fun capabilities(profile: String): ServerCapabilities =
-        (sourceIdentity(profile) as? ConnectionGraph)?.session?.capabilities?.value
+        registry.savedGraph(stores, ProfileId(profile))?.session?.capabilities?.value
             ?: ServerCapabilities()
 
     override suspend fun loadCache(profile: String): Outcome<JsonObject?> {
@@ -183,13 +197,17 @@ class AppMcpCatalogHost(
         directory: String?,
         workspace: String?,
     ): Outcome<List<McpServerInfo>> {
-        val graph = sourceIdentity(profile) as? ConnectionGraph ?: return staleCatalog()
+        val graph =
+            registry.savedGraph(stores, ProfileId(profile)) ?: return staleCatalog()
         if (!current(profile, directory, workspace)) return staleCatalog()
         val gateway =
             graph.session.server.facet<McpGateway>()
                 ?: return Failure.Unavailable(FeatureId("serverCatalog")).failed()
         val result = gateway.mcpServers()
-        if (sourceIdentity(profile) !== graph || !current(profile, directory, workspace))
+        if (
+            registry.savedGraph(stores, ProfileId(profile)) !== graph ||
+            !current(profile, directory, workspace)
+        )
             return staleCatalog()
         return result.map { it.toList() }
     }
@@ -200,7 +218,8 @@ class AppMcpCatalogHost(
         workspace: String?,
         draft: McpServerDraft,
     ): Outcome<Unit> {
-        val graph = sourceIdentity(profile) as? ConnectionGraph ?: return staleCatalog()
+        val graph =
+            registry.savedGraph(stores, ProfileId(profile)) ?: return staleCatalog()
         if (!current(profile, directory, workspace)) return staleCatalog()
         if (!graph.session.capabilities.value.mcpRuntimeAdds)
             return Failure.Unavailable(FeatureId("mcpRuntimeAdds")).failed()
@@ -208,7 +227,10 @@ class AppMcpCatalogHost(
             graph.session.server.facet<McpGateway>()
                 ?: return Failure.Unavailable(FeatureId("mcpRuntimeAdds")).failed()
         val result = gateway.addMcpServer(draft, McpConfigScope.RuntimeLocation)
-        if (sourceIdentity(profile) !== graph || !current(profile, directory, workspace))
+        if (
+            registry.savedGraph(stores, ProfileId(profile)) !== graph ||
+            !current(profile, directory, workspace)
+        )
             return staleCatalog()
         return result
     }
