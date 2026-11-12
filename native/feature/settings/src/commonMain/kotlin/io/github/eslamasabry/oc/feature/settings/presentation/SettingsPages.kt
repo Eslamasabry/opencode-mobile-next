@@ -89,6 +89,8 @@ public sealed interface SettingsPage {
 public enum class SettingsOutside {
     Servers,
     ThisPhone,
+    /** This phone's App storage page (what the app keeps, with sizes and the clear actions): the real Storage. */
+    AppStorage,
     ModelAndMode,
     Providers,
     Usage,
