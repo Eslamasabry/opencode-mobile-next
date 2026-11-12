@@ -3,4 +3,6 @@
     <string name="chat_model_favorite_remove">Remove favorite</string>
     <string name="chat_model_favorites">Favorites</string>
     <string name="chat_model_favorites_empty">Star a model to keep it here.</string>
+    <string name="chat_model_loading">Loading models…</string>
+    <string name="chat_model_updating">Updating…</string>
 </resources>

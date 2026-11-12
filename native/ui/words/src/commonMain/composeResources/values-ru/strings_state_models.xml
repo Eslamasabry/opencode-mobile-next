@@ -4,4 +4,7 @@
     <string name="chat_model_favorite_add">Добавить в избранное</string>
     <string name="chat_model_favorite_remove">Убрать из избранного</string>
     <string name="chat_model_favorites">Избранное</string>
+    <string name="chat_model_favorites_empty">Отметьте модель звездой, чтобы она была здесь.</string>
+    <string name="chat_model_loading">Загрузка моделей…</string>
+    <string name="chat_model_updating">Обновление…</string>
 </resources>

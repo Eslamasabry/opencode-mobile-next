@@ -4,4 +4,7 @@
     <string name="chat_model_favorite_add">添加收藏</string>
     <string name="chat_model_favorite_remove">取消收藏</string>
     <string name="chat_model_favorites">收藏</string>
+    <string name="chat_model_favorites_empty">为模型加星标，即可保留在这里。</string>
+    <string name="chat_model_loading">正在加载模型…</string>
+    <string name="chat_model_updating">正在更新…</string>
 </resources>
