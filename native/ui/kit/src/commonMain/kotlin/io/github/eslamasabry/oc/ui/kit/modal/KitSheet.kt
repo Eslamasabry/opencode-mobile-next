@@ -67,6 +67,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalDensity
+import io.github.eslamasabry.oc.ui.kit.frame.kitScrollEdges
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.dismiss
@@ -234,6 +235,7 @@ internal class SheetEntry {
     var grows: Boolean by mutableStateOf(false)
     var morph: Any? by mutableStateOf(null)
     var fills: Boolean by mutableStateOf(false)
+    var answerPair: Boolean by mutableStateOf(false)
     var asking: Boolean by mutableStateOf(false)
     var onDismissRequest: () -> Unit by mutableStateOf({})
     var body: @Composable ColumnScope.() -> Unit by mutableStateOf({})
@@ -422,6 +424,8 @@ public fun KitSheet(
      * rail itself where its parts need it. Use with a `Half` or `Full` [height].
      */
     bodyFills: Boolean = false,
+    /** The pinned [primary] and [secondary] as a permission card lays its answers: secondary then primary, side by side. */
+    answerPair: Boolean = false,
     body: @Composable ColumnScope.() -> Unit,
 ) {
     val host = LocalKitSheetHost.current
@@ -450,6 +454,7 @@ public fun KitSheet(
         entry.grows = growsInPlace
         entry.morph = morphFrom
         entry.fills = bodyFills
+        entry.answerPair = answerPair
         entry.onDismissRequest = onDismissRequest
         entry.body = body
     }
@@ -762,10 +767,22 @@ private fun SheetPanel(
                     Column(Modifier.weight(1f).fillMaxWidth().padding(top = Space.S2.dp).testTag("kit-sheet-fill")) {
                         androidx.compose.runtime.CompositionLocalProvider(io.github.eslamasabry.oc.ui.kit.row.LocalKitOnRail provides true) { entry.body(this) }
                     }
-                else Column(
+                else {
+                val scroll = rememberScrollState()
+                val fadeReach = 24.dp
+                val fadePx = with(LocalDensity.current) { fadeReach.toPx() }
+                val pinned = entry.primary != null || entry.secondary != null || entry.tertiary.isNotEmpty()
+                Column(
                     Modifier.weight(1f, fill = false)
                         .fillMaxWidth()
-                        .verticalScroll(rememberScrollState()),
+                        // A body that runs on below the pinned buttons fades out above them (nothing is hidden: no fade).
+                        .kitScrollEdges(
+                            clearAbove = null,
+                            topReach = 0.dp,
+                            fadeFromBottom = if (pinned) ({ if (scroll.canScrollForward) fadePx else 0f }) else null,
+                            bottomReach = fadeReach,
+                        )
+                        .verticalScroll(scroll),
                     verticalArrangement = Arrangement.spacedBy(tokens.labelGap.dp),
                 ) {
                     if (scrollHeader) {
@@ -796,6 +813,7 @@ private fun SheetPanel(
                         } else androidx.compose.runtime.CompositionLocalProvider(io.github.eslamasabry.oc.ui.kit.row.LocalKitOnRail provides true) { io.github.eslamasabry.oc.ui.kit.row.KitStackScope { entry.body(this) } }
                     }
                 }
+                }
                 if (
                     entry.primary != null || entry.secondary != null || entry.tertiary.isNotEmpty()
                 ) {
@@ -811,6 +829,7 @@ private fun SheetPanel(
                         primary = entry.primary,
                         secondary = entry.secondary,
                         tertiary = entry.tertiary,
+                        answerPair = entry.answerPair,
                     )
                 }
             }
