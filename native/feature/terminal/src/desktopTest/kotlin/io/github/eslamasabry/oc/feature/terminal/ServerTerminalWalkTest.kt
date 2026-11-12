@@ -129,6 +129,21 @@ class ServerTerminalWalkTest {
     }
 
     @Test
+    fun `sweep C P42 the page is titled Terminal, never the server's random id`() = runComposeUiTest {
+        val named = shell.copy(title = "Terminal 0Ome")
+        val state = live().copy(terminals = persistentListOf(named), selected = named)
+        setContent {
+            KitTheme(
+                platform = DesktopKitPlatform(),
+                localeTag = "en",
+                stillFrame = true,
+            ) { TerminalScreen(state, Sent()) }
+        }
+        onAllNodesWithText("Terminal 0Ome").assertCountEquals0()
+        kotlin.test.assertTrue(onAllNodesWithText("Terminal").fetchSemanticsNodes().isNotEmpty())
+    }
+
+    @Test
     fun `B-LINUX-224 the key bar sends arrows, Esc, Tab and a latched Ctrl to the shell`() = runComposeUiTest {
         val actions = Sent()
         setContent {

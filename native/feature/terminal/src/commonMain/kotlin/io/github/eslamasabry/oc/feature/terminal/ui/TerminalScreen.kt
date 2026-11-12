@@ -178,7 +178,9 @@ public fun TerminalScreen(state: RemoteTerminalState, actions: TerminalActions, 
         topBar = {
             // Copy is the bar's one action; everything else waits in the menu, so nothing is cut off at phone width.
             KitTopBar(
-                title = title,
+                // The page is named "Terminal", as Flutter's terminal page is (terminal_surface.dart `_page`): the
+                // server's own title is "Terminal <random id>" until renamed, and stays in the menu and labels.
+                title = stringResource(Res.string.libraryTerminalTitle),
                 exit = KitTopBarExit.Back,
                 exitLabel = stringResource(Res.string.kitTopBarBack),
                 onExit = actions::back,
