@@ -2,6 +2,18 @@ package io.github.eslamasabry.oc.ui.kit.choice
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.Animatable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import io.github.eslamasabry.oc.ui.kit.motion.KitPace
+import io.github.eslamasabry.oc.ui.kit.motion.pace
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.graphicsLayer
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
@@ -252,7 +264,11 @@ public fun KitChoiceRow(
             // draws the chosen row's own glass face, concentric with its group; every other style a rounded plate.
             .then(
                 glassChosen?.takeIf { selected && on }
-                    ?: Modifier.kitChosenPlate(fill, bleed),
+                    // On a rail the row's box reaches the sheet's edges and the plate ends space2 short of them, so
+                    // the words (on the rail) and the trailing star both lie inside it. It used to step in by the
+                    // whole bleed as well, which started the plate after the words and left the star outside it
+                    // (owner 2026-11-10).
+                    ?: Modifier.kitChosenPlate(fill),
             )
             // Flutter floors a choice row at the two-line row height (64, 56 compact): F: lib/ui/kit/kit_choice_list.dart:635-637.
             .heightIn(min = tokens.rowHeightTwo.dp)
@@ -295,7 +311,22 @@ public fun KitChoiceRow(
             )
         }
         // The tick takes no room on unchosen rows; on the chosen one it opens in (KitPresence) rather than popping.
-        if (mark == KitChoiceMark.Tick) KitPresence(selected) { ChoiceMarkGlyph(mark, true, on) }
+        if (mark == KitChoiceMark.Tick) {
+            // A row that becomes the chosen one has its check drawn in, start to tip, as a pen would (Full only). A row
+            // that was chosen when it first showed has it whole from the first frame.
+            val motion = KitMotion.state
+            val specs = KitMotion.specs
+            val drawn = remember { Animatable(1f) }
+            var was by remember { mutableStateOf(selected) }
+            LaunchedEffect(selected) {
+                if (selected && !was && motion.travels && !motion.stillFrame) {
+                    drawn.snapTo(0f)
+                    drawn.animateTo(1f, specs.pace(KitPace.Standard))
+                }
+                was = selected
+            }
+            KitPresence(selected) { ChoiceMarkGlyph(mark, true, on, tickDrawn = if (motion.travels) ({ drawn.value }) else null) }
+        }
         // A trailing control (the model sheet's star) is a 48 dp target: it takes the row's 8 dp steps above and below
         // instead of stretching a one-line row past 56 dp, and on a rail its glyph lines up with the sheet's Close.
         trailing?.let {
@@ -352,7 +383,7 @@ private fun Modifier.trailingOverhang(end: Dp, vertical: Dp): Modifier =
     }
 
 @Composable
-private fun ChoiceMarkGlyph(mark: KitChoiceMark, selected: Boolean, on: Boolean) {
+private fun ChoiceMarkGlyph(mark: KitChoiceMark, selected: Boolean, on: Boolean, tickDrawn: (() -> Float)? = null) {
     val colors = LocalKitColors.current
     val size = 22.dp
     val edge = if (!on) colors.text3 else if (selected) colors.accent else colors.text2
@@ -368,7 +399,9 @@ private fun ChoiceMarkGlyph(mark: KitChoiceMark, selected: Boolean, on: Boolean)
             if (pop > 0f) {
                 // C04: the bare check in the accent, not a disc behind it.
                 Box(popped.size(size), contentAlignment = Alignment.Center) {
-                    KitGlyph(KitPartGlyphs.Check, colors.accent, 20.dp, Modifier.testTag("kit-choice-tick"))
+                    val accent = colors.accent
+                    if (tickDrawn == null) KitGlyph(KitPartGlyphs.Check, accent, 20.dp, Modifier.testTag("kit-choice-tick"))
+                    else Box(Modifier.size(20.dp).testTag("kit-choice-tick").drawBehind { drawTick(accent, tickDrawn()) })
                 }
             }
         }
@@ -389,6 +422,33 @@ private fun ChoiceMarkGlyph(mark: KitChoiceMark, selected: Boolean, on: Boolean)
         }
     }
 }
+
+/**
+ * The check as one stroke, drawn up to [shown] of its length: the centre line of the kit's check glyph (Phosphor
+ * `check`, a 16-unit round stroke through (40,144), (96,200), (224,72) of 256), so at 1 it is the glyph.
+ */
+private fun DrawScope.drawTick(color: Color, shown: Float) {
+    val u = size.minDimension / 256f
+    val w = 16f * u
+    val ax = 40f * u
+    val ay = 144f * u
+    val bx = 96f * u
+    val by = 200f * u
+    val cx = 224f * u
+    val cy = 72f * u
+    val d = shown.coerceIn(0f, 1f) * (TICK_DOWN + TICK_UP)
+    if (d <= 0f) return
+    val t1 = minOf(1f, d / TICK_DOWN)
+    drawLine(color, Offset(ax, ay), Offset(ax + (bx - ax) * t1, ay + (by - ay) * t1), w, StrokeCap.Round)
+    if (d > TICK_DOWN) {
+        val t2 = (d - TICK_DOWN) / TICK_UP
+        drawLine(color, Offset(bx, by), Offset(bx + (cx - bx) * t2, by + (cy - by) * t2), w, StrokeCap.Round)
+    }
+}
+
+/** The lengths of the check's two strokes in its 256 box. */
+private const val TICK_DOWN: Float = 79.196f
+private const val TICK_UP: Float = 181.019f
 
 /** How strongly a chosen row's fill shows the accent: a breath, never a slab (audit 2026-11-09, C04). */
 internal const val SELECTED_FILL_ALPHA: Float = 0.06f

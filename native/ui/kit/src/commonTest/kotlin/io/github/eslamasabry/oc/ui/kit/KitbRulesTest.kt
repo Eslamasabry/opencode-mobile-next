@@ -108,11 +108,17 @@ class KitbRulesTest {
                 "KitModalMotion.sheet", "KitSwapMorph", "kitItemMotion.placement", "kitItemMotion.fade", "KitSheet.drag",
                 "KitSheet.release", "KitGrow.title", "KitRollingNumber", "KitDissolve", "KitChoiceRow.fill",
                 "KitChoiceRow.mark", "KitStepProgress", "KitToast", "KitStaggerRow",
+                // The finger-linked tabs and the model sheet built on them (2026-11-10).
+                "KitTabStrip.pill", "KitTabPages.drag", "KitTabPages.settle", "KitTabPages.tap", "KitModelSheet.rows",
+                "KitModelSheet.star",
             )
         assertEquals(expected, KitMotionManifest.parts.keys)
         assertEquals(KitMotionClass.Travel, KitMotionManifest.parts.getValue("KitSwap.count"))
         assertEquals(KitMotionClass.AmbientLoop, KitMotionManifest.parts.getValue("KitRefresh.breath"))
         assertEquals(KitMotionClass.Follow, KitMotionManifest.parts.getValue("KitRefresh.pull"))
+        // The pill and the pages follow the finger at every level; only what happens after it lets go may stop at Off.
+        assertEquals(KitMotionClass.Follow, KitMotionManifest.parts.getValue("KitTabStrip.pill"))
+        assertEquals(KitMotionClass.Follow, KitMotionManifest.parts.getValue("KitTabPages.drag"))
     }
 
     @Test
