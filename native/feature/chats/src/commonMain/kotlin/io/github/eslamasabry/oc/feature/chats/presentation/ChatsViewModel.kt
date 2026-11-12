@@ -158,7 +158,7 @@ public class ChatsViewModel(
      * same feed rows, so the layout is the connected one and live rows replace them in place (same identity).
      */
     private val shownFeed =
-        combine(feed.snapshot, home.snapshot) { snapshot, extra -> HomeCachedRows.merge(snapshot, extra.opening) }
+        combine(feed.snapshot, home.snapshot, pinTick) { snapshot, extra, _ -> HomeCachedRows.merge(snapshot, extra.opening) }
 
     /** A row tapped while its server was still answering: it opens the moment the server does. */
     private var pendingOpen: ConversationRef? = null
@@ -380,6 +380,7 @@ public class ChatsViewModel(
             startOfTodayMs = day.startOfToday(clock.now()).toEpochMilliseconds(),
             settingsAvailable = settings.available,
             nowMs = clock.now().toEpochMilliseconds(),
+            pinned = pinnedKeys(snapshot),
         )
 
     override fun answerPermission(row: ConversationRowUi, allow: Boolean) {
