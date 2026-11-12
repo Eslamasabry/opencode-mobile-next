@@ -182,12 +182,22 @@ private val CAMEL = Regex("([a-z0-9])([A-Z])")
 /** File tools whose OpenCode-2 ask names its file only in `description`. */
 private val RESOURCE_FILE_TOOLS = setOf("edit", "write", "patch", "multiedit", "read")
 
-/** The request's `description` when it is one file path: one token, no whitespace, at most 1024 characters. */
+/**
+ * The request's `description` when it is plainly one file path: one token, no whitespace, at most 1024 characters.
+ * A one-tap Allow from the shade names exactly this file, so anything that is not plainly one file stays unnamed (the
+ * shade then offers only Open): a link (`://`), a pattern that could cover many files (`*`, `?`, `[`, `{`), a list
+ * (`,`), or a step out of the folder (`..`), whose last segment alone would read as a harmless name.
+ */
 private fun resourcePath(request: JsonObject): String? {
     val text = (request["description"] as? JsonPrimitive)?.takeIf { it.isString }?.content?.trim() ?: return null
     if (text.isEmpty() || text.length > 1024 || text.any { it.isWhitespace() || it.code < 32 || it.code == 127 }) return null
+    if ("://" in text || text.any { it in NOT_ONE_FILE }) return null
+    if (text.split('/', '\\').any { it == ".." }) return null
+    if (text.endsWith('/') || text.endsWith('\\')) return null
     return text
 }
+
+private val NOT_ONE_FILE = setOf('*', '?', '[', ']', '{', '}', ',', ';', '|', '&', '$', '`', '<', '>')
 
 /** "NotebookEdit" as "notebook_edit"; names the app already words as one id keep it. */
 internal fun toolId(name: String): String {
