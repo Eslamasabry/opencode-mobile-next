@@ -27,6 +27,8 @@ internal fun SwitchModelSheet(
     models: List<ComposerModel>,
     actions: ChatActions,
     readings: Map<String, Double> = emptyMap(),
+    /** The conversation's model list ([ComposerModels.loading]) is being read now. */
+    loading: Boolean = false,
 ) {
     val free = stringResource(Res.string.b169Free)
     val tooLong = stringResource(Res.string.b169TooLong)
@@ -56,5 +58,6 @@ internal fun SwitchModelSheet(
         suggested = sheet?.suggestion?.let { "${it.providerId}/${it.modelId}" },
         suggestedLabel = stringResource(Res.string.b169Suggested),
         title = stringResource(Res.string.b169SwitchModel),
+        loading = loading,
     )
 }

@@ -116,9 +116,13 @@ class NewConversationPhoneAgentTest {
             return Outcome.Ok(Unit)
         }
 
+        /** The next reads fail with this (null: they answer [agentModels]). */
+        var modelsFailure: io.github.eslamasabry.oc.core.common.Failure? = null
+
         override suspend fun phoneAgentModels(profile: ProfileId, agentId: String): Outcome<NewConversationPhoneModels> {
             modelReads++
             modelsGate?.await()
+            modelsFailure?.let { return Outcome.Failed(it) }
             return Outcome.Ok(NewConversationPhoneModels(agentModels, agentModels.firstOrNull()?.model))
         }
 
@@ -473,6 +477,48 @@ class NewConversationPhoneAgentTest {
         host.modelsGate!!.complete(Unit)
         assertFalse(vm.state.value.modelsLoading)
         assertEquals(listOf(claudeModel), vm.state.value.shownModels.map { it.model })
+    }
+
+    /** The sheet's `loading` is `modelsLoading`; its "no models" line shows when the list is empty and it is false. */
+    @Test
+    fun `MODELS-LOADING the flag ends after a failed read and "no models" waits for a read that ended with none`() {
+        val host = Host()
+        host.modelsGate = CompletableDeferred()
+        host.modelsFailure = io.github.eslamasabry.oc.core.common.Failure.Network(
+            io.github.eslamasabry.oc.core.common.NetworkWhy.Offline
+        )
+        val vm = vm(host)
+        vm.choosePhoneAgent("claude")
+        assertTrue(vm.state.value.modelsLoading, "a read is on its way: the loading row, never \"no models\"")
+        host.modelsGate!!.complete(Unit)
+        assertFalse(vm.state.value.modelsLoading, "a failed read ended")
+        // A read that ends with no model: the flag is off, so the empty list is told as "no models".
+        host.modelsFailure = null
+        host.agentModels = emptyList()
+        host.modelsGate = CompletableDeferred()
+        vm.choosePhoneAgent(null) // the server's own models, then the agent again: a fresh read
+        vm.choosePhoneAgent("claude")
+        assertTrue(vm.state.value.modelsLoading)
+        host.modelsGate!!.complete(Unit)
+        assertFalse(vm.state.value.modelsLoading)
+        assertTrue(vm.state.value.shownModels.isEmpty())
+    }
+
+    @Test
+    fun `MODELS-LOADING an older read never ends the flag while a newer one runs`() {
+        val host = Host()
+        val first = CompletableDeferred<Unit>()
+        host.modelsGate = first
+        val vm = vm(host)
+        vm.choosePhoneAgent("claude")
+        val second = CompletableDeferred<Unit>()
+        host.modelsGate = second
+        vm.choosePhoneAgent(null)
+        vm.choosePhoneAgent("claude")
+        first.complete(Unit)
+        assertTrue(vm.state.value.modelsLoading, "the newer read is still on its way")
+        second.complete(Unit)
+        assertFalse(vm.state.value.modelsLoading)
     }
 
     @Test

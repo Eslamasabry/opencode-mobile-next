@@ -329,6 +329,8 @@ public fun ChatScreen(
     onToggleTimestamps: (() -> Unit)? = null,
     /** The models the error card may suggest ("Use {model} and resend"). */
     modelChoices: List<io.github.eslamasabry.oc.feature.chat.world.ComposerModel> = emptyList(),
+    /** [modelChoices] are being read now (the same models state's `loading`). */
+    modelChoicesLoading: Boolean = false,
     /** Background commands, Stop command and Run shell command (null = not offered here). */
     work: io.github.eslamasabry.oc.feature.chat.work.ChatWorkUi =
         io.github.eslamasabry.oc.feature.chat.work.ChatWorkUi(),
@@ -1140,7 +1142,12 @@ public fun ChatScreen(
                 )
                 ChatTimelineSheet(state.timeline, actions, facts.nowMs)
                 // B-169 §3: Switch model on a failed reply.
-                io.github.eslamasabry.oc.feature.chat.composer.SwitchModelSheet(state.switching, modelChoices, actions)
+                io.github.eslamasabry.oc.feature.chat.composer.SwitchModelSheet(
+                    state.switching,
+                    modelChoices,
+                    actions,
+                    loading = modelChoicesLoading,
+                )
                 KitConfirm(
                     spec = confirmSpec(state.confirm),
                     onConfirm = {

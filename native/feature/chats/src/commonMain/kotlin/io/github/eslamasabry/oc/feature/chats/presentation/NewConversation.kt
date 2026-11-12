@@ -1091,18 +1091,24 @@ public class NewConversationViewModel(
     }
 
     /** The phone agent's own models; read while the person types, so Start does not wait for them. */
+    /** The newest model read: only it may end [NewConversationUi.phoneModelsBusy] (the sheet's `loading`). */
+    private var phoneModelsRead = 0
+
     private fun loadPhoneModels(profile: ProfileId, agent: String) {
+        val read = ++phoneModelsRead
         mutable.update { it.copy(phoneModelsBusy = true) }
         viewModelScope.launch {
-            val read = host.phoneAgentModels(profile, agent)
+            val answer = host.phoneAgentModels(profile, agent)
             mutable.update {
-                if (it.phoneAgent != agent || it.profile != profile) it
+                // An older read never clears the flag while a newer one is still on its way.
+                if (read != phoneModelsRead) it
+                else if (it.phoneAgent != agent || it.profile != profile) it.copy(phoneModelsBusy = false)
                 else
-                    when (read) {
+                    when (answer) {
                         is Outcome.Ok ->
                             it.copy(
-                                phoneModels = read.value.models,
-                                phoneModel = read.value.model,
+                                phoneModels = answer.value.models,
+                                phoneModel = answer.value.model,
                                 phoneModelsBusy = false,
                             )
                         is Outcome.Failed -> it.copy(phoneModelsBusy = false)

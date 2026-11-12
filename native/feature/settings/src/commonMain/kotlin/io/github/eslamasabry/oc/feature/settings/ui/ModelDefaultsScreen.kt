@@ -165,6 +165,8 @@ public fun ModelDefaultsScreen(state: ModelDefaultsUi, actions: ModelDefaultsAct
             state.models.firstOrNull { it.model.providerId == option.providerId && it.model.modelId == option.modelId }?.let { actions.toggleFavorite(it.model) }
         },
         offersServerDefault = true,
+        // The server's list is being read (also behind the kept list): the kit's loading row or working mark.
+        loading = state.loading,
         below = {
             val row = state.current?.let { c -> state.models.firstOrNull { it.model.sameModel(c) } }
             if (row != null && row.variants.isNotEmpty()) {

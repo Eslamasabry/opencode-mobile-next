@@ -159,7 +159,13 @@ class WorldComposerFilesModelsTest {
 
         override suspend fun commands() = commands
 
-        override suspend fun catalog(): Outcome<CatalogSnapshot> = catalog
+        /** Holds the catalog read back until completed (null answers at once). */
+        var catalogGate: kotlinx.coroutines.CompletableDeferred<Unit>? = null
+
+        override suspend fun catalog(): Outcome<CatalogSnapshot> {
+            catalogGate?.await()
+            return catalog
+        }
 
         override suspend fun chatDefaults(): Outcome<ChatDefaults> = defaults
     }
@@ -426,6 +432,38 @@ class WorldComposerFilesModelsTest {
             assertEquals(listOf("m1"), f.world.models.value.choices.map { it.modelId })
             assertNotNull(f.world.models.value.failure)
             assertFalse(f.world.models.value.loading)
+        }
+
+    /** The model sheets' `loading` (ModelSheet, SwitchModelSheet) is this flag: true only while the read runs. */
+    @Test
+    fun `the models' loading flag is true only while the catalog read runs, false after success and failure`() =
+        runTest {
+            val f = Fixture(this, selection = ModelRef("prov", "m1"))
+            f.operations.catalog = Outcome.Ok(snapshot(catalogModel("m1")))
+            f.operations.defaults = Outcome.Ok(ChatDefaults(ModelRef("prov", "m1"), null))
+            f.switchesModels()
+            f.open()
+            runCurrent()
+            assertFalse(f.world.models.value.loading)
+            var gate = kotlinx.coroutines.CompletableDeferred<Unit>()
+            f.operations.catalogGate = gate
+            var load = async { f.world.loadModels() }
+            runCurrent()
+            assertTrue(f.world.models.value.loading, "the read is on its way")
+            gate.complete(Unit)
+            assertIs<Outcome.Ok<Unit>>(load.await())
+            assertFalse(f.world.models.value.loading, "a read that succeeded ended")
+            // A refresh behind the kept list: the list stays and the flag marks the read.
+            gate = kotlinx.coroutines.CompletableDeferred()
+            f.operations.catalogGate = gate
+            f.operations.catalog = Outcome.Failed(Failure.Network(NetworkWhy.Refused))
+            load = async { f.world.loadModels() }
+            runCurrent()
+            assertTrue(f.world.models.value.loading)
+            assertEquals(listOf("m1"), f.world.models.value.choices.map { it.modelId })
+            gate.complete(Unit)
+            assertIs<Outcome.Failed>(load.await())
+            assertFalse(f.world.models.value.loading, "a failed read ended")
         }
 
     @Test

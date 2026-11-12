@@ -1401,12 +1401,18 @@ internal class GraphChatWorld(
         val runtime = boundRuntime(a.gateway)
         // A non-switching server without a catalog of its own still has nothing to offer; any other
         // failed read shows as the sheet's failure below (with its way to try again).
+        // The model sheets' `loading`: true from here until this read ends, the early read included (a phone
+        // agent's helper takes about ten seconds to list its models).
+        val wasLoading = mutableModels.value.loading
+        if (!wasLoading) mutableModels.value = mutableModels.value.copy(loading = true)
         val early =
             if (a.gateway.capabilities.value.sessionModelProviderSwitching) null
             else (a.graph as ChatGraphAccessors).chatOperations.catalog()
         if (currentAttached() !== a) return staleModels()
-        if (early is Outcome.Failed && early.failure is Failure.Unavailable)
+        if (early is Outcome.Failed && early.failure is Failure.Unavailable) {
+            mutableModels.value = mutableModels.value.copy(loading = false)
             return Outcome.Failed(Failure.Unavailable(FeatureId("sessionModelProviderSwitching")))
+        }
         val epoch = selectionEpoch
         if (mutableModels.value.selected == null) {
             recentModels.session(ref.profileId.raw, sid.raw)?.let { cached ->
