@@ -233,6 +233,7 @@ internal class SheetEntry {
     var secondaryDismisses: Boolean by mutableStateOf(false)
     var grows: Boolean by mutableStateOf(false)
     var morph: Any? by mutableStateOf(null)
+    var fills: Boolean by mutableStateOf(false)
     var asking: Boolean by mutableStateOf(false)
     var onDismissRequest: () -> Unit by mutableStateOf({})
     var body: @Composable ColumnScope.() -> Unit by mutableStateOf({})
@@ -415,6 +416,12 @@ public fun KitSheet(
     leading: KitAction? = null,
     growsInPlace: Boolean = false,
     morphFrom: Any? = null,
+    /**
+     * The body lays itself out in the sheet's own height, edge to edge, instead of being one scrolling column on the
+     * rail: parts of it stay put (a search field, tabs) while others scroll on their own (pages of rows). It keeps the
+     * rail itself where its parts need it. Use with a `Half` or `Full` [height].
+     */
+    bodyFills: Boolean = false,
     body: @Composable ColumnScope.() -> Unit,
 ) {
     val host = LocalKitSheetHost.current
@@ -442,6 +449,7 @@ public fun KitSheet(
         entry.secondaryDismisses = secondaryDismisses
         entry.grows = growsInPlace
         entry.morph = morphFrom
+        entry.fills = bodyFills
         entry.onDismissRequest = onDismissRequest
         entry.body = body
     }
@@ -745,11 +753,16 @@ private fun SheetPanel(
             val frameHeight = maxHeight
             val scrollHeader = frameHeight < 400.dp || LocalDensity.current.fontScale >= 2f
             Column {
-                if (!scrollHeader) {
+                // A body that fills keeps the header in place at any size: there is no one scroll for it to join.
+                if (!scrollHeader || entry.fills) {
                     SheetHeader(entry, handle)
                     KitLoadingBar(entry.loading, stringResource(Res.string.kitSheetLoading))
                 }
-                Column(
+                if (entry.fills)
+                    Column(Modifier.weight(1f).fillMaxWidth().padding(top = Space.S2.dp).testTag("kit-sheet-fill")) {
+                        androidx.compose.runtime.CompositionLocalProvider(io.github.eslamasabry.oc.ui.kit.row.LocalKitOnRail provides true) { entry.body(this) }
+                    }
+                else Column(
                     Modifier.weight(1f, fill = false)
                         .fillMaxWidth()
                         .verticalScroll(rememberScrollState()),

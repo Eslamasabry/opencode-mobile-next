@@ -19,9 +19,10 @@ import io.github.eslamasabry.oc.ui.kit.motion.kitLeaving
 import io.github.eslamasabry.oc.ui.kit.motion.pace
 
 /**
- * Views that each keep their own state, switched by [index] (Dart `KitTabSwitcher`; plan 08 §5.9.2). Every body keeps
- * its saved state while another is shown; the chosen one takes touches, focus and semantics from the first frame; the
- * one being left is picture only. No slide, no swipe paging, no scale (MOT-2).
+ * Views that each keep their own state, switched by [index] with no strip of their own (Dart `KitTabSwitcher`; plan 08
+ * §5.9.2). Every body keeps its saved state while another is shown; the chosen one takes touches, focus and semantics
+ * from the first frame; the one being left is picture only. This form only fades: it has no strip to show where a
+ * swipe would lead. The form with tabs pages under the finger.
  *
  * States: default, switching
  * Text: none (bodies decide)
@@ -56,13 +57,17 @@ public fun KitTabSwitcher(index: Int, bodies: List<@Composable () -> Unit>, modi
 }
 
 /**
- * The strip over the kept-alive bodies (Dart `KitTabSwitcher.tabs`). [tabs] and [bodies] have the same length: a
- * mismatch is refused in debug (B-KIT-050).
+ * The strip over its pages, moved by a finger (owner 2026-11-10; this reverses MOT-2's "no swipe paging" for tabs).
+ * The pages lie side by side and are dragged; the strip's pill follows them frame for frame and a tap on a tab slides
+ * the pages there ([KitTabStrip] with a [KitTabsState], [KitTabPages]). Every body keeps its saved state while another
+ * is shown. [tabs] and [bodies] have the same length: a mismatch is refused in debug (B-KIT-050). [onSelected] is
+ * called once per change the person made, by tap or by swipe.
  *
- * States: default, counts loading, needs you, overflowing, switching
+ * States: default, counts loading, needs you, overflowing, dragging
  * Text: frame (the strip)
  * Cap: Fill
- * Motion: as KitTabStrip and KitTabSwitcher
+ * Motion: as KitTabStrip and KitTabPages
+ * Hidden: the swipe between pages; the tabs are its visible twin
  */
 @Composable
 public fun KitTabSwitcher(
@@ -74,8 +79,11 @@ public fun KitTabSwitcher(
     semanticsLabel: String? = null,
 ) {
     kitAssert(TabRules.bodiesMatch(tabs.size, bodies.size)) { "KitTabSwitcher: ${tabs.size} tabs but ${bodies.size} bodies" }
+    val state = rememberKitTabsState(index, tabs.size, onSelected)
     Column(modifier) {
-        KitTabStrip(tabs, index, onSelected, semanticsLabel = semanticsLabel)
-        KitTabSwitcher(index, bodies, Modifier.weight(1f, fill = false))
+        KitTabStrip(tabs, state, semanticsLabel = semanticsLabel)
+        KitTabPages(state, Modifier.weight(1f, fill = false), pageTitle = { tabs.getOrNull(it)?.label.orEmpty() }) { i ->
+            bodies.getOrNull(i)?.invoke()
+        }
     }
 }

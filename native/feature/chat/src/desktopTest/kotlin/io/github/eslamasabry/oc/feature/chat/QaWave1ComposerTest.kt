@@ -197,8 +197,12 @@ class QaWave1ComposerTest {
         onNodeWithText("The server’s own default model").assertExists()
         // A short list has no search field: it appears from KIT_MODEL_SEARCH_FROM (8) models.
         onNodeWithTag("chat-model-search").assertDoesNotExist()
-        // The second GLM row (OpenRouter's) is a different choice, not the current one.
-        onAllNodesWithText("GLM-5.3-Flash").onLast().performClick()
+        // The second GLM row (OpenRouter's) is a different choice, not the current one. Providers are pages now
+        // (2026-11-10): it is on OpenRouter's own page, a tab away.
+        onNodeWithContentDescription("OpenRouter").performScrollTo()
+        onNodeWithContentDescription("OpenRouter").performClick()
+        waitForIdle()
+        onNodeWithText("GLM-5.3-Flash").performClick()
         waitForIdle()
         assertEquals(listOf("select <openrouter/glm-5.3-flash>"), actions.calls.filter { it.startsWith("select") })
     }
