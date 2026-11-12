@@ -405,6 +405,11 @@ public data class PendingSend(
     val failure: Failure? = null,
     /** The exact dispatched queue record has a receipt on this connection. */
     val canCheckReceipt: Boolean = false,
+    /**
+     * An unconfirmed send with a record on the waiting-sends page (a dispatch marker): Review opens it there. Without
+     * one (a server with no offline queue, Paseo) that page is empty, so the bubble offers Send again itself.
+     */
+    val reviewable: Boolean = false,
     /** Pictures and files the bubble carries, shown at once from the bytes the phone already holds. */
     val files: List<PendingFile> = emptyList(),
 )

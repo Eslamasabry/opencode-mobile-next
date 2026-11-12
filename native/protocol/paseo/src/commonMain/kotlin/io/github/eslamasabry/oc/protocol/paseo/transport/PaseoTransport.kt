@@ -291,10 +291,11 @@ public class PaseoTransport(
         val myEpoch = connectReady()
         if (expectedEpoch != null && myEpoch != expectedEpoch)
             paseoFail(PaseoFailureKind.StaleRequest)
+        // Nothing of this request was written yet (no fence, no frame): a lost link here is
+        // Disconnected for a mutation too. DeliveryUnknown would mark a send "may have arrived" and
+        // block the conversation's next sends although nothing left the phone (Paseo fault 2).
         if (isClosed || myEpoch != epoch || socket == null || !initialized) {
-            paseoFail(
-                if (mutation) PaseoFailureKind.DeliveryUnknown else PaseoFailureKind.Disconnected
-            )
+            paseoFail(PaseoFailureKind.Disconnected)
         }
         if (boundedFrameBytes != null && !PaseoTestedVersions.paseoSupports(serverVersion)) {
             paseoFail(PaseoFailureKind.Unavailable)

@@ -19,4 +19,5 @@
     <string name="agentsHubNotAnswering">Esa computadora no respondió. Comprueba que Paseo esté en ejecución y que este teléfono pueda llegar a ella.</string>
     <string name="agentsHubNotConnected">Sin conexión</string>
     <string name="agentsHubDefaultName">Paseo</string>
+    <string name="agentsHubPasswordNeeded">Esta computadora necesita una contraseña. Escribe la contraseña del daemon y vuelve a comprobar.</string>
 </resources>

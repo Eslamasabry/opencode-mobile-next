@@ -578,6 +578,7 @@ public class ChatEntries(
                                     requestActions = requests,
                                     formWaiting = formState.form != null,
                                     modelChoices = errorModels.choices,
+                                    modelChoicesLoading = errorModels.loading,
                                     work = workUi,
                                     workModel = vm.work,
                                     serverCommands = serverCommandList,
