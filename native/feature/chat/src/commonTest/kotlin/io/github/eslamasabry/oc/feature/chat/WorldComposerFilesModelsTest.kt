@@ -165,7 +165,7 @@ class WorldComposerFilesModelsTest {
     }
 
     /** The session selection facet: setSessionModel records every call; the readback answers [applied]. */
-    private class SelectionGateway(
+    private open class SelectionGateway(
         val base: FakeServerGateway,
         var applied: ModelRef?,
     ) : ServerGateway by base, SessionSelectionGateway {
@@ -238,16 +238,37 @@ class WorldComposerFilesModelsTest {
         }
     }
 
+    /**
+     * A server that cannot switch a conversation's runtime (Paseo) names the one this conversation
+     * runs on, as `PaseoGateway.providerIdForSession` does.
+     */
+    private class BoundRuntimeGateway(base: FakeServerGateway, applied: ModelRef?, val runtime: String) :
+        SelectionGateway(base, applied), io.github.eslamasabry.oc.core.domain.AgentFeaturesGateway {
+        override fun providerIdForSession(session: SessionId): String? = runtime
+
+        override suspend fun agentFeatures(session: SessionId) =
+            Outcome.Failed(Failure.Unavailable(FeatureId("agentFeatures")))
+
+        override suspend fun setAgentFeature(
+            session: SessionId,
+            featureId: String,
+            value: kotlinx.serialization.json.JsonPrimitive,
+        ) = Outcome.Failed(Failure.Unavailable(FeatureId("agentFeatures")))
+    }
+
     private inner class Fixture(
         val test: TestScope,
         selection: ModelRef? = null,
+        runtime: String? = null,
         val prefsBackend: InMemoryPrefsBackend = InMemoryPrefsBackend(),
         val composerPrefs: MemoryComposerPrefs = MemoryComposerPrefs(),
         val payloads: MemoryPayloadStore = MemoryPayloadStore(),
     ) {
         val base =
             FakeServerGateway(listOf(Session(ref.sessionId, time = SessionTime(idleMs = 20))))
-        val gateway = SelectionGateway(base, selection)
+        val gateway =
+            if (runtime == null) SelectionGateway(base, selection)
+            else BoundRuntimeGateway(base, selection, runtime)
         val operations = ScriptedOperations()
         val dispatcher = StandardTestDispatcher(test.testScheduler)
         val dispatchers = TestDispatchers(dispatcher)
@@ -507,9 +528,11 @@ class WorldComposerFilesModelsTest {
         }
 
     @Test
-    fun `B-CHAT-105 without session model switching the catalog never loads`() = runTest {
+    fun `B-CHAT-105 without session model switching and without a catalog of its own nothing loads`() = runTest {
+        // PZ4 changed this on purpose: a non-switching server that HAS a catalog (Paseo) now offers
+        // its conversation's runtime (next test); one without a catalog still offers nothing.
         val f = Fixture(this, selection = ModelRef("prov", "m1"))
-        f.operations.catalog = Outcome.Ok(snapshot(catalogModel("m1")))
+        f.operations.catalog = Outcome.Failed(Failure.Unavailable(FeatureId("serverCatalog")))
         f.operations.defaults = Outcome.Ok(ChatDefaults(ModelRef("prov", "m1"), null))
         f.open()
         f.base.capabilities.value =
@@ -521,6 +544,48 @@ class WorldComposerFilesModelsTest {
         assertIs<Outcome.Failed>(f.world.selectModel(null))
         assertTrue(f.gateway.modelCalls.isEmpty())
     }
+
+    @Test
+    fun `PZ4 without runtime switching the model sheet offers the conversation's own runtime and refuses another`() =
+        runTest {
+            val f = Fixture(this, selection = ModelRef("opencode", "opencode/big-pickle"), runtime = "opencode")
+            f.operations.catalog =
+                Outcome.Ok(
+                    CatalogSnapshot(
+                        persistentListOf(
+                            CatalogProvider("opencode", "OpenCode", true, null),
+                            CatalogProvider("prov", "Prov", true, null),
+                        ),
+                        persistentListOf(
+                            catalogModel("opencode/big-pickle", provider = "opencode", name = "Big Pickle"),
+                            catalogModel("opencode/beam-free", provider = "opencode", name = "Beam Free"),
+                            catalogModel("m1"),
+                        ),
+                        persistentListOf(),
+                    )
+                )
+            f.operations.defaults = Outcome.Ok(ChatDefaults(ModelRef("opencode", "opencode/big-pickle"), null))
+            f.open()
+            f.base.capabilities.value =
+                io.github.eslamasabry.oc.core.domain.capabilities.ServerCapabilities(
+                    serverCatalog = true,
+                    sessionModelProviderSwitching = false,
+                )
+            // Before: refused outright, the sheet said "No models are available right now." for ever.
+            assertIs<Outcome.Ok<Unit>>(f.world.loadModels())
+            val models = f.world.models.value
+            assertEquals(listOf("opencode/big-pickle", "opencode/beam-free"), models.choices.map { it.modelId })
+            assertEquals(listOf("Big Pickle", "Beam Free"), models.choices.map { it.label })
+            assertNull(models.failure)
+            // Another runtime's model is refused without a server call.
+            val other = assertIs<Outcome.Failed>(f.world.selectModel(ComposerModel("prov", "m1", "m1", true)))
+            assertIs<Failure.Unavailable>(other.failure)
+            assertTrue(f.gateway.modelCalls.isEmpty())
+            // The runtime's own other model is chosen as usual.
+            val beam = models.choices.single { it.modelId == "opencode/beam-free" }
+            assertIs<Outcome.Ok<Unit>>(f.world.selectModel(beam))
+            assertEquals(listOf(ModelRef("opencode", "opencode/beam-free")), f.gateway.modelCalls)
+        }
 
     // ---- Files on the send path ----
 

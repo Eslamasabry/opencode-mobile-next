@@ -4,7 +4,13 @@ import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.core.domain.ServerOperationsGateway
 import io.github.eslamasabry.oc.core.domain.SubAgents
+import io.github.eslamasabry.oc.core.model.CatalogModel
+import io.github.eslamasabry.oc.core.model.CatalogProvider
+import io.github.eslamasabry.oc.core.model.CatalogSnapshot
+import io.github.eslamasabry.oc.core.model.CatalogVariant
+import io.github.eslamasabry.oc.core.model.ChatDefaults
 import io.github.eslamasabry.oc.core.model.FileDiff
+import io.github.eslamasabry.oc.core.model.ProvidersResponse
 import io.github.eslamasabry.oc.core.model.Session
 import io.github.eslamasabry.oc.core.model.SubAgent
 import io.github.eslamasabry.oc.core.model.TerminalChannel
@@ -13,12 +19,6 @@ import io.github.eslamasabry.oc.core.model.VcsDiffMode
 import io.github.eslamasabry.oc.core.model.VersionControlFile
 import io.github.eslamasabry.oc.core.model.VersionControlHealth
 import io.github.eslamasabry.oc.core.model.WorktreeInfo
-import io.github.eslamasabry.oc.core.model.CatalogModel
-import io.github.eslamasabry.oc.core.model.CatalogProvider
-import io.github.eslamasabry.oc.core.model.CatalogSnapshot
-import io.github.eslamasabry.oc.core.model.CatalogVariant
-import io.github.eslamasabry.oc.core.model.ChatDefaults
-import io.github.eslamasabry.oc.core.model.ProvidersResponse
 import io.github.eslamasabry.oc.protocol.paseo.boolOrNull
 import io.github.eslamasabry.oc.protocol.paseo.numberOrNull
 import io.github.eslamasabry.oc.protocol.paseo.obj
