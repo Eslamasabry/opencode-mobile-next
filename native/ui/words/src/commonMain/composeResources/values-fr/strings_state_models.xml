@@ -4,4 +4,5 @@
     <string name="chat_model_favorite_add">Ajouter aux favoris</string>
     <string name="chat_model_favorite_remove">Retirer des favoris</string>
     <string name="chat_model_favorites">Favoris</string>
+    <string name="chat_model_favorites_empty">Ajoutez une étoile à un modèle pour le garder ici.</string>
 </resources>
