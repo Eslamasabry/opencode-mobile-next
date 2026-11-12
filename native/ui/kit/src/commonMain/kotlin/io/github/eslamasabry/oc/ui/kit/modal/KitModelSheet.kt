@@ -304,13 +304,6 @@ public fun KitModelSheet(
     visible: Boolean,
     onDismissRequest: () -> Unit,
     options: List<KitModelOption>,
-    /**
-     * The list is being fetched. With no [options] yet the sheet shows one quiet "Loading models…" row (the working
-     * mark and the words) in place of [above], so a caller's "no models" notice cannot show while they are on the way;
-     * [below] is drawn as ever. With a last known list the rows stay usable and a small working mark (read out as
-     * "Updating…") sits over the sheet's top-right corner, taking no height, so the list does not move when it ends.
-     */
-    loading: Boolean = false,
     current: String?,
     onChoose: (KitModelOption?) -> Unit,
     favorites: List<KitModelOption> = emptyList(),
@@ -326,6 +319,13 @@ public fun KitModelSheet(
     suggestedLabel: String = "",
     /** The sheet's title; null = "Choose a model". */
     title: String? = null,
+    /**
+     * The list is being fetched. With no [options] yet the sheet shows one quiet "Loading models…" row (the working
+     * mark and the words) in place of [above], so a caller's "no models" notice cannot show while they are on the way;
+     * [below] is drawn as ever. With a last known list the rows stay usable and a small working mark (read out as
+     * "Updating…") sits over the sheet's top-right corner, taking no height, so the list does not move when it ends.
+     */
+    loading: Boolean = false,
     above: @Composable ColumnScope.() -> Unit = {},
     below: @Composable ColumnScope.() -> Unit = {},
     morphFrom: Any? = null,
