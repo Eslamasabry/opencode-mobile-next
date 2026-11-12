@@ -18,6 +18,7 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.Failure
+import io.github.eslamasabry.oc.core.common.SignInWhy
 import io.github.eslamasabry.oc.feature.agents.hub.AgentComputerKind
 import io.github.eslamasabry.oc.feature.agents.hub.AgentsActions
 import io.github.eslamasabry.oc.feature.agents.hub.AgentsHubActions
@@ -92,6 +93,7 @@ import io.github.eslamasabry.oc.ui.words.res.agentsHubNotAnswering
 import io.github.eslamasabry.oc.ui.words.res.agentsHubNotConnected
 import io.github.eslamasabry.oc.ui.words.res.agentsHubOnComputers
 import io.github.eslamasabry.oc.ui.words.res.agentsHubOnPhone
+import io.github.eslamasabry.oc.ui.words.res.agentsHubPasswordNeeded
 import io.github.eslamasabry.oc.ui.words.res.agentsHubSignInFailed
 import io.github.eslamasabry.oc.ui.words.res.agentsHubStartFailed
 import io.github.eslamasabry.oc.ui.words.res.agentsHubSwitchFailed
@@ -342,7 +344,11 @@ private fun IssueNotice(issue: AgentsProblem, modifier: Modifier) {
 private fun issueWords(issue: AgentsProblem): String =
     stringResource(
         when (issue.failure) {
-            is Failure.SignIn -> Res.string.agentsHubSignInFailed
+            // The daemon asked for a password and none was given (`hello.rejected` "password_required"): say the
+            // computer needs one, not that it refused one.
+            is Failure.SignIn ->
+                if ((issue.failure as Failure.SignIn).why == SignInWhy.PasswordMissing) Res.string.agentsHubPasswordNeeded
+                else Res.string.agentsHubSignInFailed
             is Failure.ComputerDidNotAnswer,
             is Failure.Network,
             is Failure.TimedOut -> Res.string.agentsHubNotAnswering

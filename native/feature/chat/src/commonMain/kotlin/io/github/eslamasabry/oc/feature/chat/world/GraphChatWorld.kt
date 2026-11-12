@@ -227,6 +227,9 @@ internal class GraphChatWorld(
     private val mutableLoad = MutableStateFlow<ChatLoad>(ChatLoad.Loading)
     private val mutableReadOnly = MutableStateFlow<ReadOnlyChat?>(null)
     private val mutableTitle = MutableStateFlow<String?>(null)
+
+    /** This server named the conversation by a SessionChanged title: upserts no longer set the header. */
+    private var titleChangedSeen = false
     private val mutableCaps = MutableStateFlow(ServerCapabilities())
     private val mutableLink = MutableStateFlow(ChatLink.Connecting)
     private val mutableRetryAt = MutableStateFlow<Long?>(null)
@@ -846,6 +849,7 @@ internal class GraphChatWorld(
                                 PendingState.Unconfirmed,
                                 canCheckReceipt =
                                     entry.dispatched && gateway.capabilities.value.commandReceipts,
+                                reviewable = true,
                                 files = entry.attachments.map(::pendingFile),
                             ))
                         .toImmutableList()
@@ -956,6 +960,13 @@ internal class GraphChatWorld(
                         if (event is CoreEvent.SessionUpserted && event.session.id == sid) {
                             refreshReadOnly(gateway, event.session)
                             adoptUndone(gateway, event.session)
+                            // Paseo names a new conversation by an agent update (an upsert, never
+                            // SessionChanged): the header kept "New conversation" while the home row
+                            // already read the daemon's title. A server that names conversations by
+                            // SessionChanged keeps that as the truth (an OpenCode 2 SessionCreated
+                            // upsert carries the first title and must not undo a later rename).
+                            if (!titleChangedSeen)
+                                event.session.title?.takeIf { it.isNotBlank() }?.let { mutableTitle.value = it }
                         }
                         if (event is CoreEvent.RevertChanged && event.sessionId == sid)
                             (gateway.session(sid) as? Outcome.Ok)?.value?.let { adoptUndone(gateway, it) }
@@ -965,8 +976,10 @@ internal class GraphChatWorld(
                             event is CoreEvent.SessionChanged &&
                                 event.sessionId == sid &&
                                 event.title != null
-                        )
+                        ) {
+                            titleChangedSeen = true
                             mutableTitle.value = event.title
+                        }
                         if (
                             event is CoreEvent.MessageUpserted &&
                                 event.message.sessionId == sid.raw &&
@@ -1388,12 +1401,18 @@ internal class GraphChatWorld(
         val runtime = boundRuntime(a.gateway)
         // A non-switching server without a catalog of its own still has nothing to offer; any other
         // failed read shows as the sheet's failure below (with its way to try again).
+        // The model sheets' `loading`: true from here until this read ends, the early read included (a phone
+        // agent's helper takes about ten seconds to list its models).
+        val wasLoading = mutableModels.value.loading
+        if (!wasLoading) mutableModels.value = mutableModels.value.copy(loading = true)
         val early =
             if (a.gateway.capabilities.value.sessionModelProviderSwitching) null
             else (a.graph as ChatGraphAccessors).chatOperations.catalog()
         if (currentAttached() !== a) return staleModels()
-        if (early is Outcome.Failed && early.failure is Failure.Unavailable)
+        if (early is Outcome.Failed && early.failure is Failure.Unavailable) {
+            mutableModels.value = mutableModels.value.copy(loading = false)
             return Outcome.Failed(Failure.Unavailable(FeatureId("sessionModelProviderSwitching")))
+        }
         val epoch = selectionEpoch
         if (mutableModels.value.selected == null) {
             recentModels.session(ref.profileId.raw, sid.raw)?.let { cached ->
@@ -1885,7 +1904,11 @@ internal class GraphChatWorld(
     }
 
     override suspend fun mentionFile(path: String): Outcome<Unit> {
-        currentAttached() ?: return Outcome.Failed(Failure.Network(NetworkWhy.Offline))
+        val a = currentAttached() ?: return Outcome.Failed(Failure.Network(NetworkWhy.Offline))
+        // Flutter `_stagesMentionedFiles` (chat_mentions.dart): a server that takes pictures only
+        // (Paseo) gets the `@path` words alone, and the agent reads the file in its own folder.
+        // Staging it as a file part made every such send fail "Unavailable.promptAttachments".
+        if (a.gateway.capabilities.value.promptImagesOnly) return Outcome.Ok(Unit)
         val directory =
             this.directory ?: return Outcome.Failed(Failure.Unavailable(FeatureId("fileBrowsing")))
         val file = Mentions.projectFile(directory, path)
@@ -2079,9 +2102,14 @@ internal class GraphChatWorld(
 
     override suspend fun retrySend(localId: Long): Outcome<Unit> {
         if (readOnlyNow()) return readOnlyFailure()
+        // Paseo fault 2: an unconfirmed send with nothing on the waiting-sends page (no dispatch
+        // marker) has its Send again here, at the person's tap only; one with a record is resent
+        // from that page, never twice from here.
         val bubble =
             mutablePending.value.firstOrNull {
-                it.localId == localId && it.state == PendingState.Failed
+                it.localId == localId &&
+                    (it.state == PendingState.Failed ||
+                        it.state == PendingState.Unconfirmed && !it.reviewable)
             } ?: return Outcome.Ok(Unit)
         val expected = currentAttached()
         baselines[localId] =
@@ -2360,12 +2388,13 @@ internal class GraphChatWorld(
         mutablePending.update { list ->
             list
                 .map { pending ->
-                    val canCheck =
-                        supportsReceipts &&
-                            pending.state == PendingState.Unconfirmed &&
+                    // A record on the waiting-sends page exists only for a send with a dispatch marker.
+                    val recorded =
+                        pending.state == PendingState.Unconfirmed &&
                             recoveryIds.any { (_, id) -> id == pending.localId }
-                    if (pending.canCheckReceipt == canCheck) pending
-                    else pending.copy(canCheckReceipt = canCheck)
+                    val canCheck = supportsReceipts && recorded
+                    if (pending.canCheckReceipt == canCheck && pending.reviewable == recorded) pending
+                    else pending.copy(canCheckReceipt = canCheck, reviewable = recorded)
                 }
                 .toImmutableList()
         }

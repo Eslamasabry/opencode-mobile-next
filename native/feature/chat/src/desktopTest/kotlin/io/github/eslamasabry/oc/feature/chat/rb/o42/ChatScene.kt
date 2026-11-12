@@ -67,8 +67,11 @@ import kotlin.time.Instant
  * [TurnFactsPresenter], as in the app. The capture server offers approvals (answered by asking first), uses the
  * server's default model and has voice, so the composer shows "Ask first", "Server default" and the mic.
  */
-internal class ChatScene(val nav: RecordingNavigator = RecordingNavigator()) {
-    val actions = ChatPresenter(FakeChatWorld(), nav, Immediate)
+internal class ChatScene(
+    val nav: RecordingNavigator = RecordingNavigator(),
+    val world: FakeChatWorld = FakeChatWorld(),
+) {
+    val actions = ChatPresenter(world, nav, Immediate)
     private val promptsDoor = ChatPromptsDoor(Ref, ComposerInbox(), nav)
     val headerActions = object : ChatHeaderActions {
         override fun openMenu() {}

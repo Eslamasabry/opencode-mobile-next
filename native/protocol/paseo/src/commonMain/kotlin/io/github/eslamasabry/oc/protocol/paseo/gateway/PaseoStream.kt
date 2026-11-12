@@ -17,6 +17,7 @@ import io.github.eslamasabry.oc.core.model.transcript.Role
 import io.github.eslamasabry.oc.protocol.paseo.longOrNull
 import io.github.eslamasabry.oc.protocol.paseo.mappers.paseoItemId
 import io.github.eslamasabry.oc.protocol.paseo.mappers.paseoItemMessage
+import io.github.eslamasabry.oc.protocol.paseo.mappers.paseoDeclinedToolCall
 import io.github.eslamasabry.oc.protocol.paseo.mappers.paseoMergeToolCall
 import io.github.eslamasabry.oc.protocol.paseo.obj
 import io.github.eslamasabry.oc.protocol.paseo.paseoMillis
@@ -28,7 +29,8 @@ import kotlinx.serialization.json.JsonPrimitive
 /*
  * Port of Dart lib/paseo/gateway/events.dart (`_onStream`, `_onTimelineItem`, `_finishOpen`) onto the neutral
  * GatewayEvent vocabulary (B-CHAT-070, 071):
- *   turn_started → RunStarted; turn_completed → RunEnded(Succeeded); turn_canceled → RunEnded(Interrupted(User));
+ *   turn_started → RunStarted; turn_completed → RunEnded(Succeeded); turn_canceled → RunEnded(Interrupted(User)),
+ *   or Interrupted(Unknown) when the turn ended on a call the person declined and nobody pressed Stop;
  *   turn_failed → RunEnded(Failed(tag PaseoTurnFailed)), or RunEnded(Succeeded) when the reply already showed the
  *   agent's own error row (no second error; Dart emitted only `session.idle` then);
  *   a new item → MessageUpserted + PartUpserted; a streamed delta of a known item → PartDelta; a turn end finishes
@@ -54,6 +56,8 @@ internal fun PaseoGateway.onStream(id: String, event: JsonObject, payload: JsonO
     val session = SessionId(id)
     when (event.str("type")) {
         "turn_started" -> {
+            state.endsOnDecline = false
+            state.stopAsked = false
             state.runId = null
             state.turnErrorShown = false
             state.failedBeforeLoad = false
@@ -68,12 +72,20 @@ internal fun PaseoGateway.onStream(id: String, event: JsonObject, payload: JsonO
             turnActive.remove(id)
             finishOpen(state)
             emitStatus(id, SessionStatus.Idle)
+            // OpenCode 2 ends a turn the person declined at its card as `turn_canceled`, right after the
+            // declined call (captured from 0.15.3). Nobody pressed Stop: that is not a person's interrupt,
+            // so the chat reads the turn as declined, not "Stopped" (fault 5). A Stop from this app keeps User.
+            val declined = state.endsOnDecline && !state.stopAsked
+            state.endsOnDecline = false
+            state.stopAsked = false
             emit(
                 GatewayEvent.RunEnded(
                     session,
-                    if (event.str("type") == "turn_canceled")
-                        RunOutcome.Interrupted(InterruptReason.User)
-                    else RunOutcome.Succeeded,
+                    when {
+                        event.str("type") != "turn_canceled" -> RunOutcome.Succeeded
+                        declined -> RunOutcome.Interrupted(InterruptReason.Unknown)
+                        else -> RunOutcome.Interrupted(InterruptReason.User)
+                    },
                 )
             )
         }
@@ -143,6 +155,10 @@ internal fun PaseoGateway.onTimelineItem(
             item = item.with("declinedByPerson", JsonPrimitive(true))
         state.tools[messageId] = item
         while (state.tools.size > 2048) state.tools.remove(state.tools.keys.first())
+        state.endsOnDecline = paseoDeclinedToolCall(item)
+    } else if (type != "user_message") {
+        // Anything the agent did after a declined call means the turn did not end on it.
+        state.endsOnDecline = false
     }
     val text = state.announced[messageId]
     if (streamed && text != null) {

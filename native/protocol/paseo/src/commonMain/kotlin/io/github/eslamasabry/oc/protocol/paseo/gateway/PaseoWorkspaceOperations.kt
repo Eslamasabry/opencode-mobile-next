@@ -73,6 +73,17 @@ internal class PaseoWorkspaceOperations(
     ): Outcome<ImmutableList<io.github.eslamasabry.oc.core.model.Session>> =
         gateway.laneCall { gateway.subagentChildrenRead(id.raw) }
 
+    /**
+     * The Conversations list reaches Paseo's operations through [PaseoGateway.operationsAt] (the
+     * app's `ConnectionGraph.operations()`), not through [PaseoOperations]. Without this override
+     * Archive fell to the interface default `unavailable("sessionArchive")`: the row came back with
+     * "Couldn't archive the conversation." and no `archive_agent_request` ever left the phone. An
+     * agent id names the same conversation from every folder, so this is the gateway's archive.
+     */
+    override suspend fun archiveSession(
+        id: io.github.eslamasabry.oc.core.common.ids.SessionId
+    ): Outcome<Unit> = gateway.deleteSession(id)
+
     private suspend inline fun <T> call(crossinline block: suspend () -> T): Outcome<T> =
         withContext(gateway.lane) { paseoAttempt { block() } }
 

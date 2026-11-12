@@ -21,6 +21,27 @@ internal object Paseo0153Frames {
     /** The `status` payload (`agent_created`) that answered it. */
     val agentCreated: JsonObject by lazy { parse(AGENT_CREATED) }
 
+    /** `fetch_agent_response` payload (2026-11-12) for an idle OpenCode agent made by "say hi" in the project folder. */
+    val fetchedAgent: JsonObject by lazy { parse(FETCHED_AGENT) }
+
+    /** The `agent_archived` push that answered `archive_agent_request` for that agent (by its requestId). */
+    val agentArchived: JsonObject by lazy { parse(AGENT_ARCHIVED) }
+
+    /** `agent_created` (2026-11-12) for "Create a file named shade-probe.txt ...": the agent the deny frames below belong to. */
+    val denyAgentCreated: JsonObject by lazy { parse(DENY_AGENT_CREATED) }
+
+    /** `agent_stream` payload: the write call running, before its permission. */
+    val denyToolRunning: JsonObject by lazy { parse(DENY_TOOL_RUNNING) }
+
+    /** `agent_permission_request` payload: OpenCode 2's ask has only name "edit" and description "shade-probe.txt". */
+    val denyPermissionRequest: JsonObject by lazy { parse(DENY_PERMISSION_REQUEST) }
+
+    /** `agent_stream` payload after `{behavior: "deny"}`: the call failed, "The user declined this tool call". */
+    val denyToolDeclined: JsonObject by lazy { parse(DENY_TOOL_DECLINED) }
+
+    /** `agent_stream` payload right after: the turn ends `turn_canceled` ("OpenCode interrupted execution"). */
+    val denyTurnCanceled: JsonObject by lazy { parse(DENY_TURN_CANCELED) }
+
     private fun parse(text: String): JsonObject = PaseoWireJson.parseToJsonElement(text).jsonObject
 
     private const val PROVIDERS: String =
@@ -31,4 +52,25 @@ internal object Paseo0153Frames {
 
     private const val AGENT_CREATED: String =
         """{"status":"agent_created","agentId":"67cf2ff7-2443-49a8-862d-ede574ea9a8f","requestId":"cap_1","agent":{"id":"67cf2ff7-2443-49a8-862d-ede574ea9a8f","provider":"opencode","cwd":"/work/project","workspaceId":"wks_db93e8c721df2ff8","model":"opencode/big-pickle","thinkingOptionId":null,"effectiveThinkingOptionId":"default","runtimeInfo":{"provider":"opencode","sessionId":"ses_e337e9afeffeoBXWDD6ZbpWfNU","model":"opencode/big-pickle","thinkingOptionId":"default","modeId":"build"},"createdAt":"2026-11-11T21:26:34.536Z","updatedAt":"2026-11-11T21:26:34.548Z","lastUserMessageAt":"2026-11-11T21:26:34.548Z","status":"running","activeTurn":{"turnId":"4bd9801c-ba41-4378-9267-bb72b61d41d5","startedAt":"2026-11-11T21:26:34.547Z"},"capabilities":{"supportsStreaming":true,"supportsSessionPersistence":true,"supportsSessionListing":true,"supportsDynamicModes":true,"supportsMcpServers":true,"supportsReasoningStream":true,"supportsToolInvocations":true,"supportsRewindBoth":true,"supportsRewindConversation":false,"supportsRewindFiles":false},"currentModeId":"build","availableModes":[{"id":"build","label":"Build","description":"The default agent. Executes tools based on configured permissions."},{"id":"plan","label":"Plan","description":"Read-only agent for exploring the codebase and planning work before implementation."}],"features":[{"type":"toggle","id":"auto_accept","label":"Auto-accept","value":false}],"pendingPermissions":[],"persistence":{"provider":"opencode","sessionId":"ses_e337e9afeffeoBXWDD6ZbpWfNU","nativeHandle":"ses_e337e9afeffeoBXWDD6ZbpWfNU","metadata":{"provider":"opencode","cwd":"/work/project","model":"opencode/big-pickle","openCodeRuntimeNotices":[{"major":2,"timestamp":"2026-11-11T21:26:34.536Z"}]}},"title":"say hi","labels":{},"archivedAt":null,"requiresAttention":false,"attentionReason":null,"attentionTimestamp":null}}"""
+
+    private const val FETCHED_AGENT: String =
+        """{"requestId":"m1_2","agent":{"id":"e88a5aea-63aa-4dc6-b81f-f42f0ceded13","provider":"opencode","cwd":"/work/project","workspaceId":"wks_d7bdf28632fc4528","model":"opencode/big-pickle","thinkingOptionId":null,"effectiveThinkingOptionId":"default","runtimeInfo":{"provider":"opencode","sessionId":"ses_e327bb303ffeoGJvDHyhTOgpwW","model":"opencode/big-pickle","thinkingOptionId":"default","modeId":"build"},"createdAt":"2026-11-12T02:09:22.210Z","updatedAt":"2026-11-12T02:09:24.258Z","lastUserMessageAt":"2026-11-12T02:09:22.218Z","status":"idle","activeTurn":null,"capabilities":{"supportsStreaming":true,"supportsSessionPersistence":true,"supportsSessionListing":true,"supportsDynamicModes":true,"supportsMcpServers":true,"supportsReasoningStream":true,"supportsToolInvocations":true,"supportsRewindBoth":true,"supportsRewindConversation":false,"supportsRewindFiles":false},"currentModeId":"build","availableModes":[{"id":"build","label":"Build","description":"The default agent. Executes tools based on configured permissions."},{"id":"plan","label":"Plan","description":"Read-only agent for exploring the codebase and planning work before implementation."}],"features":[{"type":"toggle","id":"auto_accept","label":"Auto-accept","value":false}],"pendingPermissions":[],"persistence":{"provider":"opencode","sessionId":"ses_e327bb303ffeoGJvDHyhTOgpwW","nativeHandle":"ses_e327bb303ffeoGJvDHyhTOgpwW","metadata":{"provider":"opencode","cwd":"/work/project","model":"opencode/big-pickle","openCodeRuntimeNotices":[{"major":2,"timestamp":"2026-11-12T02:09:22.210Z"}]}},"title":"say hi","labels":{},"archivedAt":null,"lastUsage":{"inputTokens":17,"cachedInputTokens":16128,"outputTokens":15,"totalCostUsd":0,"contextWindowMaxTokens":200000,"contextWindowUsedTokens":16160},"requiresAttention":true,"attentionReason":"finished","attentionTimestamp":"2026-11-12T02:09:24.257Z"},"project":{"projectKey":"prj_dcdbdc245f7c9c34","projectName":"project","workspaceName":"Say hi greeting response","checkout":{"cwd":"/work/project","currentBranch":"master","remoteUrl":null,"worktreeRoot":"/work/project","isGit":true,"isPaseoOwnedWorktree":false,"mainRepoRoot":null}},"error":null}"""
+
+    private const val AGENT_ARCHIVED: String =
+        """{"agentId":"e88a5aea-63aa-4dc6-b81f-f42f0ceded13","archivedAt":"2026-11-12T02:09:24.265Z","requestId":"m1_3"}"""
+
+    private const val DENY_AGENT_CREATED: String =
+        """{"status":"agent_created","agentId":"6f174af8-17b8-4b47-8dd2-cfe380514843","requestId":"m1_1","agent":{"id":"6f174af8-17b8-4b47-8dd2-cfe380514843","provider":"opencode","cwd":"/work/project","workspaceId":"wks_dbf51e55996ac427","model":"opencode/big-pickle","thinkingOptionId":null,"effectiveThinkingOptionId":"default","runtimeInfo":{"provider":"opencode","sessionId":"ses_e326f7cc4ffejhbp2ilOzHPI1r","model":"opencode/big-pickle","thinkingOptionId":"default","modeId":"build"},"createdAt":"2026-11-12T02:22:42.515Z","updatedAt":"2026-11-12T02:22:42.523Z","lastUserMessageAt":"2026-11-12T02:22:42.522Z","status":"running","activeTurn":{"turnId":"98b988f0-6177-480a-b54d-66e7d0331d19","startedAt":"2026-11-12T02:22:42.522Z"},"capabilities":{"supportsStreaming":true,"supportsSessionPersistence":true,"supportsSessionListing":true,"supportsDynamicModes":true,"supportsMcpServers":true,"supportsReasoningStream":true,"supportsToolInvocations":true,"supportsRewindBoth":true,"supportsRewindConversation":false,"supportsRewindFiles":false},"currentModeId":"build","availableModes":[{"id":"build","label":"Build","description":"The default agent. Executes tools based on configured permissions."},{"id":"plan","label":"Plan","description":"Read-only agent for exploring the codebase and planning work before implementation."}],"features":[{"type":"toggle","id":"auto_accept","label":"Auto-accept","value":false}],"pendingPermissions":[],"persistence":{"provider":"opencode","sessionId":"ses_e326f7cc4ffejhbp2ilOzHPI1r","nativeHandle":"ses_e326f7cc4ffejhbp2ilOzHPI1r","metadata":{"provider":"opencode","cwd":"/work/project","model":"opencode/big-pickle","openCodeRuntimeNotices":[{"major":2,"timestamp":"2026-11-12T02:22:42.514Z"}]}},"title":"Create a file named shade-probe.txt containing the word hi.","labels":{},"archivedAt":null,"requiresAttention":false,"attentionReason":null,"attentionTimestamp":null}}"""
+
+    private const val DENY_TOOL_RUNNING: String =
+        """{"agentId":"6f174af8-17b8-4b47-8dd2-cfe380514843","event":{"type":"timeline","provider":"opencode","item":{"type":"tool_call","callId":"chatcmpl-tool-b5a3b81b10815740","name":"write","detail":{"type":"write","filePath":"/work/project/shade-probe.txt","content":"hi\n"},"metadata":{},"status":"running","error":null},"turnId":"98b988f0-6177-480a-b54d-66e7d0331d19"},"timestamp":"2026-11-12T02:22:44.112Z","seq":4,"epoch":"20c86420-a837-44b6-b796-49694b2b2b18"}"""
+
+    private const val DENY_PERMISSION_REQUEST: String =
+        """{"agentId":"6f174af8-17b8-4b47-8dd2-cfe380514843","request":{"id":"per_1cd908972001rad5NvEv7kvMfh","provider":"opencode","kind":"tool","name":"edit","description":"shade-probe.txt","actions":[{"id":"once","label":"Allow once","behavior":"allow"},{"id":"always","label":"Always allow","behavior":"allow"},{"id":"reject","label":"Deny","behavior":"deny"}]}}"""
+
+    private const val DENY_TOOL_DECLINED: String =
+        """{"agentId":"6f174af8-17b8-4b47-8dd2-cfe380514843","event":{"type":"timeline","provider":"opencode","item":{"type":"tool_call","callId":"chatcmpl-tool-b5a3b81b10815740","name":"write","detail":{"type":"write","filePath":"/work/project/shade-probe.txt","content":"hi\n"},"status":"failed","error":{"type":"aborted","message":"The user declined this tool call"}},"turnId":"98b988f0-6177-480a-b54d-66e7d0331d19"},"timestamp":"2026-11-12T02:22:44.141Z","seq":5,"epoch":"20c86420-a837-44b6-b796-49694b2b2b18"}"""
+
+    private const val DENY_TURN_CANCELED: String =
+        """{"agentId":"6f174af8-17b8-4b47-8dd2-cfe380514843","event":{"type":"turn_canceled","provider":"opencode","turnId":"98b988f0-6177-480a-b54d-66e7d0331d19","reason":"OpenCode interrupted execution"},"timestamp":"2026-11-12T02:22:44.145Z"}"""
 }

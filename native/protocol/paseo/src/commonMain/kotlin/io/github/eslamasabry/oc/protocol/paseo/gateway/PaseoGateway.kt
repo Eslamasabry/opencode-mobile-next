@@ -1112,7 +1112,9 @@ public class PaseoGateway(
                             (beforeSend?.invoke() ?: true).also { if (it) wired = true }
                         }
                     } catch (e: PaseoException) {
-                        if (!wired && e.kind == PaseoFailureKind.Unavailable) refusedBeforeWire = true
+                        // Fault 2 (daemon unreachable): a link that could not be (re)opened fails
+                        // Disconnected before the prompt's fence, so its frame was never written either.
+                        if (!wired && e.kind in NOTHING_WIRED) refusedBeforeWire = true
                         throw e
                     }
                 }
@@ -1535,6 +1537,7 @@ public class PaseoGateway(
     override suspend fun stop(session: SessionId, resume: Boolean): Outcome<StopResult> = call {
         if (isReadOnlySession(session)) paseoFail(PaseoFailureKind.Unavailable)
         if (session.raw in drafts) return@call StopResult.NothingRunning
+        live[session.raw]?.stopAsked = true
         transport.request(
             "cancel_agent_request",
             jsonOf("agentId" to real(paseoString(session.raw, max = 256))),
@@ -2458,6 +2461,13 @@ public class PaseoGateway(
         private val STEERING_PROVIDERS = setOf("claude", "codex", "opencode", "pi")
         private val DETAILS = Redactor()
 
+        /**
+         * Failures that, thrown before a prompt's fence passed, prove its frame never left: a refusal on the phone,
+         * or a link that could not be opened. DeliveryUnknown is not one: before the fence it means an earlier
+         * send of this conversation is still unknown, and a duplicate is the worse error.
+         */
+        private val NOTHING_WIRED = setOf(PaseoFailureKind.Unavailable, PaseoFailureKind.Disconnected)
+
         /** Questions changed; sent alongside the typed QuestionAsked/QuestionSettled events. */
         public val QUESTION_HINT: HintKind = HintKind("question")
     }
@@ -2488,6 +2498,12 @@ internal class PaseoLive {
      * notice.
      */
     var turnErrorShown = false
+
+    /** The newest item of the turn in progress is a call the person declined at its card (fault 5). */
+    var endsOnDecline = false
+
+    /** This app asked the daemon to stop the turn in progress (a person's Stop). */
+    var stopAsked = false
 
     /** The saved record said its last turn failed before the helper loaded it. */
     var failedBeforeLoad = false

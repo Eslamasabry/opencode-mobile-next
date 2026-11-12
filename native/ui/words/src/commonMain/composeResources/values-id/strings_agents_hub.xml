@@ -19,4 +19,5 @@
     <string name="agentsHubNotAnswering">Komputer itu tidak menjawab. Pastikan Paseo berjalan dan ponsel ini dapat menjangkaunya.</string>
     <string name="agentsHubNotConnected">Tidak terhubung</string>
     <string name="agentsHubDefaultName">Paseo</string>
+    <string name="agentsHubPasswordNeeded">Komputer ini memerlukan kata sandi. Masukkan kata sandi daemon, lalu periksa lagi.</string>
 </resources>

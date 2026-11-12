@@ -73,6 +73,11 @@ public data class NewConversationModel(
     val runtime: String? = null,
     /** N-51: the provider's name, the heading its models sit under (as in the chat's model sheet). */
     val providerName: String? = null,
+    /**
+     * The thinking efforts this model offers (Paseo `thinkingOptions`, OpenCode `variants`), as the server names
+     * them ("low", "high", "xhigh"); empty when it offers none.
+     */
+    val variants: List<String> = emptyList(),
 )
 
 /** One agent this phone can run, as New conversation offers it (Flutter `ChatAgentChoice` / a set-up row). */
@@ -186,6 +191,18 @@ public interface NewConversationHost {
     public suspend fun phoneAgentModels(profile: ProfileId, agentId: String): Outcome<NewConversationPhoneModels> =
         Outcome.Failed(Failure.Unavailable(FeatureId("phoneAgentModels")))
 
+    /**
+     * The list [phoneAgentModels] last read for [agentId] in this app run, shown at once while it is read again (the
+     * helper's first read takes about ten seconds); null when none was read yet.
+     */
+    public fun cachedPhoneAgentModels(profile: ProfileId, agentId: String): NewConversationPhoneModels? = null
+
+    /**
+     * Reads the models of the ready phone agents [agentIds] ahead of any pick and keeps them for
+     * [cachedPhoneAgentModels]; nothing is shown from here.
+     */
+    public suspend fun prefetchPhoneAgentModels(profile: ProfileId, agentIds: List<String>) {}
+
     /** Remembers [model] for [agentId] (`oc.agentModel.<profile>`). */
     public suspend fun savePhoneAgentModel(profile: ProfileId, agentId: String, model: ModelRef?): Outcome<Unit> =
         Outcome.Ok(Unit)
@@ -233,6 +250,19 @@ public interface NewConversationHost {
         /** The session and local send exist; its composer can open while admission settles. */
         onStarted: (ConversationRef) -> Unit = {},
     ): NewConversationAttempt
+
+    /** [start] with the thinking effort chosen for [model] ([variant], null = the model's own default). */
+    public suspend fun startWithEffort(
+        profile: ProfileId,
+        directory: String,
+        text: String,
+        model: ModelRef?,
+        variant: String?,
+        agent: String?,
+        separateCopy: Boolean,
+        previous: NewConversationAttempt?,
+        onStarted: (ConversationRef) -> Unit = {},
+    ): NewConversationAttempt = start(profile, directory, text, model, agent, separateCopy, previous, onStarted)
 
     public suspend fun imports(
         profile: ProfileId,
@@ -395,6 +425,8 @@ public data class NewConversationUi(
     val phoneModels: List<NewConversationModel> = emptyList(),
     val phoneModel: ModelRef? = null,
     val phoneModelsBusy: Boolean = false,
+    /** The thinking effort chosen for the shown model; null is the model's own default. */
+    val variant: String? = null,
 ) {
     /** A separate copy is OpenCode only: a phone agent hides it (Flutter `_start`). */
     val canCopy: Boolean
@@ -414,6 +446,18 @@ public data class NewConversationUi(
      */
     val modelChoosable: Boolean
         get() = (phoneAgent != null && phoneModelsBusy) || filterNewConversationModels(shownModels, "").size >= 2
+
+    /** The efforts the shown model offers (none when it offers none, or no model is named). */
+    val shownVariants: List<String>
+        get() = shownModel?.let { ref -> shownModels.firstOrNull { it.model == ref }?.variants }.orEmpty()
+
+    /**
+     * The phone agent's model list is being read now (the list shown meanwhile is the last known one, or none). This is
+     * the model sheet's `loading` once the kit's KitModelSheet takes it (branch native/kit-model-loading); until then
+     * the sheet only holds back the "no models" sentence while it is true.
+     */
+    val modelsLoading: Boolean
+        get() = phoneAgent != null && phoneModelsBusy
 
     /** The model the Model row shows. */
     val shownModel: ModelRef?
@@ -467,6 +511,9 @@ public interface NewConversationActions {
     public fun chooseDirectory(directory: String)
 
     public fun chooseModel(model: ModelRef?)
+
+    /** The thinking effort for the chosen model; null is its own default. */
+    public fun chooseVariant(variant: String?) {}
 
     /** N-51: a model sheet star: adds or removes [model] from this server's favourites. */
     public fun toggleFavorite(model: ModelRef) {}
@@ -669,8 +716,13 @@ public class NewConversationViewModel(
                                 favorites = setup.favorites,
                                 agent = setup.agent,
                                 phoneAgent = setup.phone?.selected,
-                                phoneModels = emptyList(),
-                                phoneModel = null,
+                                // The default agent's last known list shows at once; the read below replaces it.
+                                phoneModels =
+                                    setup.phone?.selected?.let { a -> host.cachedPhoneAgentModels(profile, a) }
+                                        ?.models.orEmpty(),
+                                phoneModel =
+                                    setup.phone?.selected?.let { a -> host.cachedPhoneAgentModels(profile, a) }?.model,
+                                variant = null,
                                 busy = false,
                                 repairAvailable =
                                     setup.directory?.let { dir -> host.canRepair(profile, dir) } ==
@@ -701,7 +753,14 @@ public class NewConversationViewModel(
                             wantedApplied = true
                             if (setup.phone?.selected != wanted) choosePhoneAgent(wanted)
                             else loadPhoneModels(profile, wanted)
-                        } else setup.phone?.selected?.let { loadPhoneModels(profile, it) }
+                        } else {
+                            val chosen = setup.phone?.selected
+                            if (chosen != null) loadPhoneModels(profile, chosen)
+                            else setup.phone?.choices?.map { c -> c.id }?.takeIf { it.isNotEmpty() }?.let { ready ->
+                            // No agent chosen yet: the ready agents' lists are read now, so a pick shows one at once.
+                                viewModelScope.launch { host.prefetchPhoneAgentModels(profile, ready) }
+                            }
+                        }
                         restore(profile, setup.directory)
                         setup.directory?.let { checkFolder(profile, it) }
                         startInWantedFolder(profile, setup.directory)
@@ -923,12 +982,19 @@ public class NewConversationViewModel(
         val phone = shown.phoneAgent
         val profile = shown.profile
         if (phone != null && profile != null) {
-            mutable.update { it.copy(phoneModel = model, sheet = null) }
+            mutable.update { it.copy(phoneModel = model, variant = null, sheet = null) }
             viewModelScope.launch { host.savePhoneAgentModel(profile, phone, model) }
             return
         }
-        mutable.update { it.copy(model = model, sheet = null) }
+        mutable.update { it.copy(model = model, variant = null, sheet = null) }
         saveChoices()
+    }
+
+    override fun chooseVariant(variant: String?) {
+        val shown = mutable.value
+        if (shown.busy || shown.deliveryUnconfirmed) return
+        if (variant != null && variant !in shown.shownVariants) return
+        mutable.update { it.copy(variant = variant) }
     }
 
     override fun toggleFavorite(model: ModelRef) {
@@ -1010,8 +1076,10 @@ public class NewConversationViewModel(
                 // Build/Plan and a separate copy belong to the server's own agent.
                 agent = if (agent != null) null else it.agent,
                 separateCopy = if (agent != null) false else it.separateCopy,
-                phoneModels = emptyList(),
-                phoneModel = null,
+                // The list last read for this agent shows at once; the read below replaces it.
+                phoneModels = agent?.let { a -> host.cachedPhoneAgentModels(profile, a) }?.models.orEmpty(),
+                phoneModel = agent?.let { a -> host.cachedPhoneAgentModels(profile, a) }?.model,
+                variant = null,
             )
         }
         viewModelScope.launch {
@@ -1023,18 +1091,24 @@ public class NewConversationViewModel(
     }
 
     /** The phone agent's own models; read while the person types, so Start does not wait for them. */
+    /** The newest model read: only it may end [NewConversationUi.phoneModelsBusy] (the sheet's `loading`). */
+    private var phoneModelsRead = 0
+
     private fun loadPhoneModels(profile: ProfileId, agent: String) {
+        val read = ++phoneModelsRead
         mutable.update { it.copy(phoneModelsBusy = true) }
         viewModelScope.launch {
-            val read = host.phoneAgentModels(profile, agent)
+            val answer = host.phoneAgentModels(profile, agent)
             mutable.update {
-                if (it.phoneAgent != agent || it.profile != profile) it
+                // An older read never clears the flag while a newer one is still on its way.
+                if (read != phoneModelsRead) it
+                else if (it.phoneAgent != agent || it.profile != profile) it.copy(phoneModelsBusy = false)
                 else
-                    when (read) {
+                    when (answer) {
                         is Outcome.Ok ->
                             it.copy(
-                                phoneModels = read.value.models,
-                                phoneModel = read.value.model,
+                                phoneModels = answer.value.models,
+                                phoneModel = answer.value.model,
                                 phoneModelsBusy = false,
                             )
                         is Outcome.Failed -> it.copy(phoneModelsBusy = false)
@@ -1277,6 +1351,7 @@ public class NewConversationViewModel(
             val phone = shown.setup?.phone?.takeIf { shown.phoneAgent != null }
             val target = phone?.helper ?: profile
             val model = if (phone != null) shown.phoneModel else shown.model
+            val variant = shown.variant?.takeIf { it in shown.shownVariants }
             val agent = if (phone != null) null else shown.agent
             val result = edits.withLock {
                 val saved = host.saveDraft(target, directory, shown.text)
@@ -1292,11 +1367,12 @@ public class NewConversationViewModel(
                                 io.github.eslamasabry.oc.core.common.attempt({
                                     Failure.StorageRefused()
                                 }) {
-                                    host.start(
+                                    host.startWithEffort(
                                         target,
                                         directory,
                                         shown.text.trim(),
                                         model,
+                                        variant,
                                         agent,
                                         shown.separateCopy,
                                         attempt,

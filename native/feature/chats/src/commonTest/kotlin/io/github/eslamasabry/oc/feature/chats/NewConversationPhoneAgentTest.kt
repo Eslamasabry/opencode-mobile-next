@@ -116,9 +116,13 @@ class NewConversationPhoneAgentTest {
             return Outcome.Ok(Unit)
         }
 
+        /** The next reads fail with this (null: they answer [agentModels]). */
+        var modelsFailure: io.github.eslamasabry.oc.core.common.Failure? = null
+
         override suspend fun phoneAgentModels(profile: ProfileId, agentId: String): Outcome<NewConversationPhoneModels> {
             modelReads++
             modelsGate?.await()
+            modelsFailure?.let { return Outcome.Failed(it) }
             return Outcome.Ok(NewConversationPhoneModels(agentModels, agentModels.firstOrNull()?.model))
         }
 
@@ -147,6 +151,29 @@ class NewConversationPhoneAgentTest {
                 ref = ConversationRef(profile, SessionId("s1")),
                 dispatched = true,
             )
+        }
+
+        /** The thinking effort each start carried. */
+        val efforts = mutableListOf<String?>()
+
+        /** What [cachedPhoneAgentModels] answers: the list last read for an agent in this app run. */
+        var cached: NewConversationPhoneModels? = null
+
+        override fun cachedPhoneAgentModels(profile: ProfileId, agentId: String): NewConversationPhoneModels? = cached
+
+        override suspend fun startWithEffort(
+            profile: ProfileId,
+            directory: String,
+            text: String,
+            model: ModelRef?,
+            variant: String?,
+            agent: String?,
+            separateCopy: Boolean,
+            previous: NewConversationAttempt?,
+            onStarted: (ConversationRef) -> Unit,
+        ): NewConversationAttempt {
+            efforts += variant
+            return start(profile, directory, text, model, agent, separateCopy, previous, onStarted)
         }
 
         override suspend fun imports(profile: ProfileId, directory: String): Outcome<ImportableConversations> =
@@ -395,5 +422,118 @@ class NewConversationPhoneAgentTest {
         assertTrue(host.starts.isEmpty(), "Start waits for a folder under /root/projects/")
         vm.chooseAgent(null)
         assertFalse(vm.state.value.phoneNeedsProjectsFolder, "OpenCode has no such rule")
+    }
+
+    // ---- Owner 11-12 on the phone (Paseo helper): thinking effort, a list being read, the last known list
+
+    private val codexSol = ModelRef("codex", "gpt-6.1-sol")
+
+    @Test
+    fun `EFFORT a Codex model's thinking efforts are offered and the chosen one goes out with the first message`() {
+        val host = Host()
+        // As the helper lists Codex (thinkingOptions kept as variants by the Paseo gateway).
+        host.agentModels = listOf(NewConversationModel(codexSol, "GPT-6.1-Sol", variants = listOf("low", "medium", "high", "xhigh")))
+        val vm = vm(host)
+        vm.choosePhoneAgent("claude")
+        assertEquals(listOf("low", "medium", "high", "xhigh"), vm.state.value.shownVariants)
+        assertNull(vm.state.value.variant, "the model's own default until a level is chosen")
+        vm.chooseVariant("xhigh")
+        assertEquals("xhigh", vm.state.value.variant)
+        vm.chooseVariant("turbo")
+        assertEquals("xhigh", vm.state.value.variant, "a level the model does not offer is ignored")
+        vm.draftChanged("hello")
+        vm.start()
+        assertEquals(listOf<String?>("xhigh"), host.efforts)
+        assertEquals(codexSol, host.starts.single().model)
+    }
+
+    @Test
+    fun `EFFORT another model starts again from its own default effort`() {
+        val host = Host()
+        val other = ModelRef("codex", "gpt-6-luna")
+        host.agentModels =
+            listOf(
+                NewConversationModel(codexSol, "GPT-6.1-Sol", variants = listOf("low", "high")),
+                NewConversationModel(other, "GPT-6-Luna", variants = listOf("low", "high")),
+            )
+        val vm = vm(host)
+        vm.choosePhoneAgent("claude")
+        vm.chooseVariant("high")
+        vm.chooseModel(other)
+        assertNull(vm.state.value.variant)
+        vm.draftChanged("hello")
+        vm.start()
+        assertEquals(listOf<String?>(null), host.efforts)
+    }
+
+    @Test
+    fun `MODELS-LOADING while the agent's list is being read the sheet says so, never "no models"`() {
+        val host = Host()
+        host.modelsGate = CompletableDeferred()
+        val vm = vm(host)
+        vm.choosePhoneAgent("claude")
+        assertTrue(vm.state.value.modelsLoading)
+        assertTrue(vm.state.value.shownModels.isEmpty())
+        host.modelsGate!!.complete(Unit)
+        assertFalse(vm.state.value.modelsLoading)
+        assertEquals(listOf(claudeModel), vm.state.value.shownModels.map { it.model })
+    }
+
+    /** The sheet's `loading` is `modelsLoading`; its "no models" line shows when the list is empty and it is false. */
+    @Test
+    fun `MODELS-LOADING the flag ends after a failed read and "no models" waits for a read that ended with none`() {
+        val host = Host()
+        host.modelsGate = CompletableDeferred()
+        host.modelsFailure = io.github.eslamasabry.oc.core.common.Failure.Network(
+            io.github.eslamasabry.oc.core.common.NetworkWhy.Offline
+        )
+        val vm = vm(host)
+        vm.choosePhoneAgent("claude")
+        assertTrue(vm.state.value.modelsLoading, "a read is on its way: the loading row, never \"no models\"")
+        host.modelsGate!!.complete(Unit)
+        assertFalse(vm.state.value.modelsLoading, "a failed read ended")
+        // A read that ends with no model: the flag is off, so the empty list is told as "no models".
+        host.modelsFailure = null
+        host.agentModels = emptyList()
+        host.modelsGate = CompletableDeferred()
+        vm.choosePhoneAgent(null) // the server's own models, then the agent again: a fresh read
+        vm.choosePhoneAgent("claude")
+        assertTrue(vm.state.value.modelsLoading)
+        host.modelsGate!!.complete(Unit)
+        assertFalse(vm.state.value.modelsLoading)
+        assertTrue(vm.state.value.shownModels.isEmpty())
+    }
+
+    @Test
+    fun `MODELS-LOADING an older read never ends the flag while a newer one runs`() {
+        val host = Host()
+        val first = CompletableDeferred<Unit>()
+        host.modelsGate = first
+        val vm = vm(host)
+        vm.choosePhoneAgent("claude")
+        val second = CompletableDeferred<Unit>()
+        host.modelsGate = second
+        vm.choosePhoneAgent(null)
+        vm.choosePhoneAgent("claude")
+        first.complete(Unit)
+        assertTrue(vm.state.value.modelsLoading, "the newer read is still on its way")
+        second.complete(Unit)
+        assertFalse(vm.state.value.modelsLoading)
+    }
+
+    @Test
+    fun `MODELS-CACHED the agent's last known list shows at once and the fresh read replaces it`() {
+        val host = Host()
+        val stale = ModelRef("claude", "old-model")
+        host.cached = NewConversationPhoneModels(listOf(NewConversationModel(stale, "Old model")), stale)
+        host.modelsGate = CompletableDeferred()
+        val vm = vm(host)
+        vm.choosePhoneAgent("claude")
+        assertEquals(listOf(stale), vm.state.value.shownModels.map { it.model }, "shown before the read ends")
+        assertTrue(vm.state.value.modelsLoading, "the list shown is the last known one while the fresh read runs")
+        host.modelsGate!!.complete(Unit)
+        assertEquals(listOf(claudeModel), vm.state.value.shownModels.map { it.model }, "the fresh read replaces the stale list")
+        assertEquals(claudeModel, vm.state.value.phoneModel)
+        assertFalse(vm.state.value.modelsLoading)
     }
 }

@@ -643,12 +643,49 @@ private fun NewConversationModelSheet(state: NewConversationUi, actions: NewConv
         favorites = favorites,
         onToggleFavorite = { actions.toggleFavorite(ModelRef(it.providerId, it.modelId)) },
         resetKey = state.profile,
+        // A read of the agent's models is running: the kit says "Loading models…" (no list yet) or marks the last
+        // known list while it is read again.
+        loading = state.modelsLoading,
         above = {
-            if (options.isEmpty())
+            // "No models" only after a read ended with none (the kit draws no `above` while loading, this keeps it so).
+            if (options.isEmpty() && !state.modelsLoading)
                 KitText(stringResource(Res.string.upgNewChatModelsNone), role = TypeRole.Secondary)
+        },
+        below = {
+            // The chosen model's thinking efforts, as the chat's model sheet offers them (Default first).
+            val levels = state.shownVariants
+            if (options.isNotEmpty() && levels.isNotEmpty()) {
+                KitSectionLabel(stringResource(Res.string.composerFullThinking))
+                KitFilterChips(Modifier.fillMaxWidth().testTag("new-thinking-choices")) {
+                    (listOf<String?>(null) + levels).forEach { level ->
+                        KitChip(
+                            label =
+                                if (level == null) stringResource(Res.string.composerFullThinkingDefault)
+                                else effortWords(level),
+                            kind = io.github.eslamasabry.oc.ui.kit.chip.KitChipKind.Action,
+                            selected = level == state.variant,
+                            onClick = { actions.chooseVariant(level) },
+                        )
+                    }
+                }
+            }
         },
     )
 }
+
+/** A thinking effort as people read it (the chat's model sheet, Flutter `presentedEffort`); unknown ids as they are. */
+@Composable
+private fun effortWords(id: String): String =
+    when (id.trim().lowercase()) {
+        "none" -> stringResource(Res.string.modelEffortNone)
+        "minimal" -> stringResource(Res.string.modelEffortMinimal)
+        "low" -> stringResource(Res.string.modelEffortLow)
+        "medium" -> stringResource(Res.string.modelEffortMedium)
+        "high" -> stringResource(Res.string.modelEffortHigh)
+        "xhigh" -> stringResource(Res.string.modelEffortExtraHigh)
+        "max" -> stringResource(Res.string.modelEffortMax)
+        else -> id
+    }
 
 private fun KitModelOption.matches(ref: ModelRef): Boolean =
     providerId == ref.providerId && modelId == ref.modelId
