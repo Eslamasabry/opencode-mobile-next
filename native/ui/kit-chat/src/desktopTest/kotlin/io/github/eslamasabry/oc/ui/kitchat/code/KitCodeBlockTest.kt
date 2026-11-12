@@ -106,16 +106,32 @@ class KitCodeBlockTest {
             }
             mainClock.advanceTimeBy(100)
             // Flutter (`kit_code_block.dart:596-633`, `:1003-1013`): with Copy on line one the block is S1 + 48 + S1;
-            // without controls it is S4 + a 48 dp minimum + S4.
+            // without controls there is nothing to touch, so it is S4 + the line (19 dp) + S4, not a 48 dp minimum.
             val withCopy = onNode(androidx.compose.ui.test.hasTestTag("one")).box()
             val without = onNode(androidx.compose.ui.test.hasTestTag("plain")).box()
             near(56f, withCopy.height, what = "one line with Copy")
-            near(80f, without.height, what = "one line without controls")
+            near(51f, without.height, what = "one line without controls")
             onNodeWithContentDescription("Copy").performClick()
             mainClock.advanceTimeBy(100)
             onNodeWithContentDescription("Copied").assertExists()
             mainClock.advanceTimeBy(COPIED_MS + 500)
             onNodeWithContentDescription("Copy").assertExists()
+        }
+
+    @Test
+    fun `a one-line wrapped output block with no controls is one line plus its padding`() =
+        runComposeUiTest {
+            setContent {
+                ChatTestTheme {
+                    KitCodeBlock(
+                        source = "c2.txt", kind = KitCodeKind.Output,
+                        modifier = androidx.compose.ui.Modifier.testTag("one"),
+                        wrap = true, showWrapToggle = false,
+                    )
+                }
+            }
+            val one = onNode(androidx.compose.ui.test.hasTestTag("one")).box()
+            assertTrue(one.height < 60f, "one line plus 16 dp above and below, not a 48 dp minimum: ${one.height}")
         }
 
     @Test
