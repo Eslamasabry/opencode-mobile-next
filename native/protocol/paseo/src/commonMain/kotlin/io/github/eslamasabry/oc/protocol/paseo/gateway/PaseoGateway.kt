@@ -1300,6 +1300,16 @@ public class PaseoGateway(
      */
     private suspend fun draftDefaultModel(id: String): ModelRef? {
         if (draftProviders[id] != null) return null
+        // A computer that runs Claude (switched on, not `unavailable`) keeps starting there exactly
+        // as before, also while Claude is still loading or needs a sign-in: that reason is shown
+        // ("not sent"), never a silent start on another runtime picked from a half-ready snapshot.
+        val claude = providerSnapshot().firstOrNull { it.str("provider") == DEFAULT_PROVIDER }
+        if (
+            claude != null &&
+                claude["enabled"].boolOrNull() != false &&
+                claude.str("status") != "unavailable"
+        )
+            return null
         val defaults = readProviders()
         val provider = defaults.defaultProviderId ?: return null
         if (provider == DEFAULT_PROVIDER) return null
