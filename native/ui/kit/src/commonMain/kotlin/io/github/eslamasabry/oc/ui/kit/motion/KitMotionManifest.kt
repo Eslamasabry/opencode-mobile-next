@@ -65,6 +65,10 @@ public object KitMotionManifest {
             "KitJumpPill" to KitMotionClass.Travel,
             "KitTabSwitcher" to KitMotionClass.Fade,
             "KitTabStrip.indicator" to KitMotionClass.Travel,
+            "KitTabStrip.pill" to KitMotionClass.Follow,
+            "KitTabPages.drag" to KitMotionClass.Follow,
+            "KitTabPages.settle" to KitMotionClass.Settle,
+            "KitTabPages.tap" to KitMotionClass.Settle,
             "KitSearchField.clear" to KitMotionClass.Fade,
             "KitScrollFade" to KitMotionClass.Follow,
             "KitSheetStep" to KitMotionClass.Fold,
@@ -86,5 +90,7 @@ public object KitMotionManifest {
             "KitStepProgress" to KitMotionClass.Fold,
             "KitToast" to KitMotionClass.Travel,
             "KitStaggerRow" to KitMotionClass.Travel,
+            "KitModelSheet.rows" to KitMotionClass.Travel,
+            "KitModelSheet.star" to KitMotionClass.Settle,
         )
 }
