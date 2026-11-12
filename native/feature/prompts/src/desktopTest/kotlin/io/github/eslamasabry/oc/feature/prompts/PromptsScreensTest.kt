@@ -138,7 +138,7 @@ class PromptsScreensTest {
 
     @Test
     fun `P52 the empty saved prompts state is centred like other empty states`() = runComposeUiTest {
-        setContent { Frame { SavedPromptsScreen(SavedPromptsUi(loading = false, prompts = emptyList()), Taps()) } }
+        setContent { Frame { SavedPromptsScreen(SavedPromptsUi(loading = false, prompts = persistentListOf()), Taps()) } }
         val root = onRoot().getUnclippedBoundsInRoot()
         val title = onNodeWithText("No saved prompts yet").getUnclippedBoundsInRoot()
         val middle = (title.left + title.right).value / 2
