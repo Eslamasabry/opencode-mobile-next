@@ -58,6 +58,8 @@ public data class AllModel(
     val archiveCapable: Set<ProfileId> = emptySet(),
     /** Servers that can move a conversation into the open project (`sessionSteal`). */
     val stealCapable: Set<ProfileId> = emptySet(),
+    /** Servers that make a share link (`sessionShare`): only their rows are offered Share. */
+    val shareCapable: Set<ProfileId> = emptySet(),
     /** The folder each server is open on now, trimmed; "Continue here" moves into it. */
     val openFolders: Map<ProfileId, String> = emptyMap(),
     val moving: MovingHere? = null,
@@ -184,6 +186,7 @@ public object AllConversationsRules {
                         !archivedOf(e) &&
                         model.sources[e.profile]?.preview != true,
                 readOnly = model.sources[e.profile]?.preview == true,
+                canShare = e.profile in model.shareCapable && model.sources[e.profile]?.preview != true,
                 pinned = e.session.id in model.sources[e.profile]?.pinned.orEmpty(),
                 canContinueHere =
                     e.profile in model.stealCapable &&

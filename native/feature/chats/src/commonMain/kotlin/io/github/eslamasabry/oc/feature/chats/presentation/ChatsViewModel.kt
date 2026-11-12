@@ -217,6 +217,7 @@ public class ChatsViewModel(
                 val snapshot = feed.snapshot.value
                 base.copy(
                     deletable = deletable(snapshot),
+                    shareable = shareable(snapshot),
                     pinnable = if (pins.supported) editable(snapshot) else kotlinx.collections.immutable.persistentSetOf(),
                     pinned = pinnedKeys(snapshot),
                     alwaysAllowable = alwaysAllowable(snapshot),
@@ -268,6 +269,18 @@ public class ChatsViewModel(
         val live = connections.servers.value.mapTo(hashSetOf()) { it.profile }
         return snapshot.items
             .filter { !it.isSubagent && it.agentId == OPENCODE_AGENT_ID && it.profileId in live }
+            .mapTo(hashSetOf()) { it.identity }
+            .toImmutableSet()
+    }
+
+    /** F: session_menu.dart `sharing: capabilities.sessionShare`: Share is offered only where the server can. */
+    private fun shareable(snapshot: ChatFeedSnapshot): kotlinx.collections.immutable.ImmutableSet<String> {
+        val capable =
+            connections.servers.value
+                .filter { it.gateway.capabilities.value.sessionShare }
+                .mapTo(hashSetOf()) { it.profile }
+        return snapshot.items
+            .filter { !it.isSubagent && it.agentId == OPENCODE_AGENT_ID && it.profileId in capable }
             .mapTo(hashSetOf()) { it.identity }
             .toImmutableSet()
     }

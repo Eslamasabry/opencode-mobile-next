@@ -863,6 +863,7 @@ private fun rememberHomeRowWords(): HomeRowWords =
 private data class HomeRowFlags(
     val canArchive: Boolean,
     val pinnable: Boolean,
+    val shareable: Boolean,
     val pinned: Boolean,
     val renamable: Boolean,
     val deletable: Boolean,
@@ -882,6 +883,7 @@ private fun rowFlags(row: ConversationRowUi, state: ChatsUi): HomeRowFlags =
     HomeRowFlags(
         canArchive = row.key in state.archivable,
         pinnable = row.key in state.pinnable,
+        shareable = row.key in state.shareable,
         pinned = row.key in state.pinned,
         renamable = row.key in state.renamable,
         deletable = row.key in state.deletable,
@@ -985,7 +987,7 @@ private fun ConversationRow(
             if (row.canOpen) {
                 // Share, Details, Copy handoff and Open related open the conversation's own page and run the same
                 // act its menu runs (one path to the server for each).
-                add(KitMenuItem(words.share, { menuOpen = false; actions.rowAct(row, RowAct.Share) }, icon = KitIcons.link))
+                if (flags.shareable) add(KitMenuItem(words.share, { menuOpen = false; actions.rowAct(row, RowAct.Share) }, icon = KitIcons.link))
                 add(KitMenuItem(words.details, { menuOpen = false; actions.rowAct(row, RowAct.Details) }, icon = KitIcons.info))
                 add(KitMenuItem(words.related, { menuOpen = false; actions.rowAct(row, RowAct.OpenRelated) }, icon = KitIcons.branch))
                 add(KitMenuItem(words.handoff, { menuOpen = false; actions.rowAct(row, RowAct.CopyHandoff) }, icon = KitIcons.terminal))
