@@ -1094,19 +1094,36 @@ public class PaseoGateway(
                 )
             )
         }
+        // PZ5: whether this prompt's create or send frame was handed to the socket. A refusal
+        // before that (the runtime cannot start, a mode it lacks, the phone said no) sent nothing.
+        var wired = false
+        var refusedBeforeWire = false
         val outcome = withPayloadLease {
             call {
                 withPayloadUse {
-                    sendPrompt(
-                        sessionId,
-                        messageId,
-                        prompt,
-                        (images as PaseoImages.Ok).images,
-                        existingOnly,
-                        beforeSend,
-                    )
+                    try {
+                        sendPrompt(
+                            sessionId,
+                            messageId,
+                            prompt,
+                            (images as PaseoImages.Ok).images,
+                            existingOnly,
+                        ) {
+                            (beforeSend?.invoke() ?: true).also { if (it) wired = true }
+                        }
+                    } catch (e: PaseoException) {
+                        if (!wired && e.kind == PaseoFailureKind.Unavailable) refusedBeforeWire = true
+                        throw e
+                    }
                 }
             }
+        }
+        // The delivery engine reads only a nothing-sent failure as "not sent, try again"; any other
+        // reads as "may have arrived" and leaves the person a bubble no one can confirm.
+        if (refusedBeforeWire && outcome is Outcome.Failed) {
+            return Outcome.Failed(
+                Failure.Unavailable(FeatureId("agentStart"), outcome.failure.details)
+            )
         }
         // A lost answer is Uncertain: look it up, never resend (plan 04 §11.1).
         val failure = (outcome as? Outcome.Failed)?.failure
@@ -1203,7 +1220,7 @@ public class PaseoGateway(
                     sessionId,
                     text,
                     messageId,
-                    model ?: draftModels[sessionId],
+                    model ?: draftModels[sessionId] ?: draftDefaultModel(sessionId),
                     prompt.agent,
                     variant ?: draftVariants[sessionId],
                     images,
@@ -1271,6 +1288,32 @@ public class PaseoGateway(
             if (e.kind == PaseoFailureKind.DeliveryUnknown) uncertain += sessionId
             throw e
         }
+    }
+
+    /**
+     * PZ5: a new conversation nobody picked a model or runtime for starts where [chatDefaults] says
+     * it will, the snapshot's default runtime and model (Flutter's controller sends that model), not
+     * the hard-coded [DEFAULT_PROVIDER] a daemon may not run (Paseo 0.15.3 with only OpenCode
+     * enabled lists Claude as `unavailable`, so every such first message was refused before it left
+     * the phone). Where [DEFAULT_PROVIDER] itself is the default nothing changes: the daemon picks
+     * its model.
+     */
+    private suspend fun draftDefaultModel(id: String): ModelRef? {
+        if (draftProviders[id] != null) return null
+        // A computer that runs Claude (switched on, not `unavailable`) keeps starting there exactly
+        // as before, also while Claude is still loading or needs a sign-in: that reason is shown
+        // ("not sent"), never a silent start on another runtime picked from a half-ready snapshot.
+        val claude = providerSnapshot().firstOrNull { it.str("provider") == DEFAULT_PROVIDER }
+        if (
+            claude != null &&
+                claude["enabled"].boolOrNull() != false &&
+                claude.str("status") != "unavailable"
+        )
+            return null
+        val defaults = readProviders()
+        val provider = defaults.defaultProviderId ?: return null
+        if (provider == DEFAULT_PROVIDER) return null
+        return ModelRef(provider, defaults.defaultModelId ?: DEFAULT_MODEL)
     }
 
     /**
