@@ -703,6 +703,7 @@ agentsStateNotInstalledNoSize	1ceb5b57d8
 agentsStatePhoneCheck	f245aa91aa
 agentsStateReady	22a88a22d2
 agentsStateSignInNeeded	b7fb712e5a
+agentsStateSignInUnchecked	f8d969b43a
 agentsStateStopped	7dbdddb6a1
 agentsStateUnavailable	af58c3a2f5
 agentsStateUpdateWaiting	d7ccc5c1fa

@@ -506,6 +506,7 @@ class AppPhoneAgents(
                                     signIn == AgentSignInPhase.SignedIn &&
                                     AgentAuthScripts.supportsSignOut(agent.id) &&
                                     !installing,
+                            signInUnchecked = present == true && PhoneAgentRules.signInUnchecked(agent),
                             previousVersionAvailable =
                                 agent.id == AgentId.CLAUDE &&
                                     present == true &&

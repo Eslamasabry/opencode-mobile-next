@@ -54,7 +54,27 @@ class PhoneAgentRulesTest {
         assertEquals(PhoneAgentStatus.Checking, PhoneAgentRules.status(codex, arm, true, true, true, null))
         assertEquals(PhoneAgentStatus.PhoneCheck, PhoneAgentRules.status(claude, arm, true, true, false, AgentSignInPhase.SignedIn))
         assertEquals(PhoneAgentStatus.NotInstalled, PhoneAgentRules.status(codex, arm, false, false, false, null))
-        assertEquals(PhoneAgentStatus.Unavailable, PhoneAgentRules.status(codex, arm, true, true, true, AgentSignInPhase.Failed))
+    }
+
+    // Device 2026-11-12 (emulator, build 409af056a): Gemini CLI installed, answered "0.66.0", then its card read
+    // "Not available on this phone yet" with no reason and no act. Its sign-in check answers "probeUnsupported", which
+    // is the sign-in phase Failed. Flutter `buildAgentRow` gives Failed "Sign-in could not be checked. Try signing in
+    // again." with Sign in; an agent whose sign-in the app cannot read at all says that instead.
+    @Test
+    fun `a sign-in check that did not answer asks to sign in again, and an agent the app cannot check says so`() {
+        assertEquals(PhoneAgentStatus.SignInNeeded, PhoneAgentRules.status(codex, arm, true, true, true, AgentSignInPhase.Failed))
+        assertFalse(PhoneAgentRules.signInUnchecked(codex))
+        assertFalse(PhoneAgentRules.signInUnchecked(claude))
+        val gemini = AgentCatalog.builtIn.byId(AgentId("gemini"))!!
+        val q = PhoneAgentRules.qualified(gemini, AgentArchitecture.X64, null, gemini.recipe!!.version)
+        assertTrue(q)
+        assertEquals(
+            PhoneAgentStatus.Unavailable,
+            PhoneAgentRules.status(gemini, AgentArchitecture.X64, true, true, q, AgentSignInPhase.Failed),
+        )
+        assertTrue(PhoneAgentRules.signInUnchecked(gemini))
+        for (id in listOf("qwen", "goose", "omp-acp"))
+            assertTrue(PhoneAgentRules.signInUnchecked(AgentCatalog.builtIn.byId(AgentId(id))!!), id)
     }
 
     @Test

@@ -32,4 +32,5 @@
     <string name="agentsInstallFailedVersionOther">تعذّر تثبيت %1$s: يقول التنزيل إنه الإصدار %2$s، وهذا التطبيق يعمل مع %3$s. لن تغيّر إعادة المحاولة ذلك؛ سيغيّره تحديث هذا التطبيق.</string>
     <string name="agentsInstallFailedNotStarted">نُزّل %1$s لكنه لم يبدأ على هذا الهاتف، فتعذّر التحقق من إصداره. حاول مجددًا؛ وإن تكرر ذلك فستجد في التفاصيل ما أبلغ به الهاتف.</string>
     <string name="agentsInstallFailedWithdrawn">تعذّر تثبيت %1$s: الإصدار %2$s، وهو الذي يثبّته هذا التطبيق، لم يعد متاحًا للتنزيل. لن تغيّر إعادة المحاولة ذلك؛ سيغيّره تحديث هذا التطبيق.</string>
+    <string name="agentsStateSignInUnchecked">مثبّت، لكن هذا التطبيق لا يستطيع التحقق من تسجيل دخوله بعد</string>
 </resources>

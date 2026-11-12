@@ -67,6 +67,7 @@ import io.github.eslamasabry.oc.ui.words.res.agentsStatePhoneCheck
 import io.github.eslamasabry.oc.ui.words.res.agentsStateReady
 import io.github.eslamasabry.oc.ui.words.res.agentsStateSignInNeeded
 import io.github.eslamasabry.oc.ui.words.res.agentsStateStopped
+import io.github.eslamasabry.oc.ui.words.res.agentsStateSignInUnchecked
 import io.github.eslamasabry.oc.ui.words.res.agentsStateUnavailable
 import io.github.eslamasabry.oc.ui.words.res.agentsCheckDownload
 import io.github.eslamasabry.oc.ui.words.res.agentsCheckDownloadUnknown
@@ -265,7 +266,11 @@ internal fun tileWords(tile: AgentTileModel): String {
         AgentTileState.PhoneCheck -> stringResource(Res.string.agentsStatePhoneCheck)
         AgentTileState.Stopped -> stringResource(Res.string.agentsStateStopped)
         AgentTileState.Limit -> stringResource(Res.string.agentsStateLimit)
-        AgentTileState.Unavailable -> stringResource(Res.string.agentsStateUnavailable)
+        // Installed, but the app cannot read its sign-in, so it can never start a conversation: say that, not a bare
+        // "not available" (device 2026-11-12, Gemini CLI). Signing in or installing again would not change it.
+        AgentTileState.Unavailable ->
+            if (agent.signInUnchecked) stringResource(Res.string.agentsStateSignInUnchecked)
+            else stringResource(Res.string.agentsStateUnavailable)
     }
 }
 

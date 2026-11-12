@@ -38,6 +38,15 @@ public object AgentAuthScripts {
             "OC_AUTH_PROBE\n"
     }
 
+    /**
+     * Whether the probe can read [agent]'s sign-in at all. For any other agent (Gemini CLI, Qwen Code, Goose, omp) it
+     * answers `probeUnsupported` every time, before it starts the program, so its sign-in can never be confirmed and a
+     * person signing in again changes nothing. Mirrors the `agent not in (...)` line of [AUTH_PROBE_BODY].
+     */
+    public fun checksSignIn(agent: AgentId): Boolean = agent.raw in SIGN_IN_CHECKED
+
+    private val SIGN_IN_CHECKED = setOf("claude", "fx", "codex", "kilo", "cline", "antigravity")
+
     /** Only Claude and fx have a sign-out the bridge can run. */
     public fun supportsSignOut(agent: AgentId): Boolean = agent == AgentId.CLAUDE || agent.raw == "fx"
 

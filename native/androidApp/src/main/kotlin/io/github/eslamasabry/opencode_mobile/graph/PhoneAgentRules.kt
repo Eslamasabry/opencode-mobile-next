@@ -5,9 +5,11 @@ import io.github.eslamasabry.oc.engine.agents.AgentId
 import io.github.eslamasabry.oc.engine.agents.catalog.AgentArchitecture
 import io.github.eslamasabry.oc.engine.agents.catalog.AgentDescriptor
 import io.github.eslamasabry.oc.engine.agents.catalog.AgentPins
+import io.github.eslamasabry.oc.engine.agents.catalog.AgentSignInMethod
 import io.github.eslamasabry.oc.engine.agents.gate.PhoneGate
 import io.github.eslamasabry.oc.engine.agents.host.AuthProjection
 import io.github.eslamasabry.oc.engine.agents.host.AuthState
+import io.github.eslamasabry.oc.engine.agents.probe.AgentAuthScripts
 import io.github.eslamasabry.oc.engine.agents.readiness.AgentHiddenReason
 import io.github.eslamasabry.oc.engine.agents.readiness.AgentReadiness
 import io.github.eslamasabry.oc.engine.agents.readiness.AgentSignInPhase
@@ -201,10 +203,23 @@ internal object PhoneAgentRules {
                     AgentHiddenReason.RuntimeUnknown -> PhoneAgentStatus.Checking
                     AgentHiddenReason.UnsupportedArchitecture,
                     AgentHiddenReason.UnverifiedDownload -> PhoneAgentStatus.NotInstalled
+                    // The sign-in check did not answer (Flutter `buildAgentRow`: "Sign-in could not be checked. Try
+                    // signing in again." with Sign in). Before, this read "Not available on this phone yet" with no
+                    // reason and no act. An agent whose sign-in the app cannot read at all stays unavailable: signing
+                    // in again could never change it, and its card says why ([signInUnchecked]).
+                    AgentHiddenReason.SignedOut ->
+                        if (signInUnchecked(agent)) PhoneAgentStatus.Unavailable else PhoneAgentStatus.SignInNeeded
                     else -> PhoneAgentStatus.Unavailable
                 }
         }
     }
+
+    /**
+     * An agent that needs a sign-in the app's probe cannot read (Gemini CLI, Qwen Code, Goose, omp): its check answers
+     * "unsupported" every time, so it can never read as signed in or start a conversation.
+     */
+    fun signInUnchecked(agent: AgentDescriptor): Boolean =
+        agent.signInMethod != AgentSignInMethod.None && !AgentAuthScripts.checksSignIn(agent.id)
 
     /**
      * The install steps whose own check already passes. Flutter ran each component's check before its install; the

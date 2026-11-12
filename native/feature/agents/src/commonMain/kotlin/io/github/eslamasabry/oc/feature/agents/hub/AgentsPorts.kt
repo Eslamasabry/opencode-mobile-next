@@ -173,6 +173,11 @@ public data class PhoneAgentRow(
     val signInAvailable: Boolean = false,
     /** Signed in now, and the agent's bridge can run its own logout. */
     val signOutAvailable: Boolean = false,
+    /**
+     * Installed, but the app has no way to read this agent's sign-in, so it can never be confirmed and the agent
+     * cannot start conversations (Gemini CLI today). Its card says so instead of a bare "not available".
+     */
+    val signInUnchecked: Boolean = false,
 )
 
 public sealed interface PhoneAgentRemoval {
