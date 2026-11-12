@@ -33,4 +33,6 @@
     <string name="agentsInstallFailedNotStarted">%1$s a été téléchargé mais n’a pas démarré sur ce téléphone, donc sa version n’a pas pu être vérifiée. Réessayez\u00A0; si cela se reproduit, les détails contiennent ce que le téléphone a signalé.</string>
     <string name="agentsInstallFailedWithdrawn">%1$s n’a pas pu être installé\u00A0: la version %2$s, celle qu’installe cette application, n’est plus proposée au téléchargement. Réessayer n’y changera rien\u00A0; une mise à jour de cette application, si.</string>
     <string name="agentsStateSignInUnchecked">Installé, mais cette app ne peut pas encore vérifier sa connexion</string>
+    <string name="agentsStateSignInCheckFailed">Impossible de vérifier la connexion. Essayez de vous reconnecter.</string>
+    <string name="agentsSignInUncheckedBody">Il ne peut pas encore servir aux conversations. Vous pouvez le supprimer.</string>
 </resources>

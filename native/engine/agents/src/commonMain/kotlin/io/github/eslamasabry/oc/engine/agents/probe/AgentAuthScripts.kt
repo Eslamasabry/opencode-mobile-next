@@ -41,11 +41,21 @@ public object AgentAuthScripts {
     /**
      * Whether the probe can read [agent]'s sign-in at all. For any other agent (Gemini CLI, Qwen Code, Goose, omp) it
      * answers `probeUnsupported` every time, before it starts the program, so its sign-in can never be confirmed and a
-     * person signing in again changes nothing. Mirrors the `agent not in (...)` line of [AUTH_PROBE_BODY].
+     * person signing in again changes nothing. Read from the `agent not in (...)` line of [AUTH_PROBE_BODY] itself, so
+     * the script stays the one list: an agent the probe learns to read stops being "can't check" with no other edit.
      */
     public fun checksSignIn(agent: AgentId): Boolean = agent.raw in SIGN_IN_CHECKED
 
-    private val SIGN_IN_CHECKED = setOf("claude", "fx", "codex", "kilo", "cline", "antigravity")
+    private val SIGN_IN_CHECKED: Set<String> =
+        Regex("""^if agent not in \(([^)]*)\):""", RegexOption.MULTILINE)
+            .find(AUTH_PROBE_BODY)
+            ?.groupValues
+            ?.get(1)
+            ?.split(',')
+            ?.map { it.trim().removeSurrounding("'") }
+            ?.filter { it.isNotEmpty() }
+            ?.toSet()
+            .orEmpty()
 
     /** Only Claude and fx have a sign-out the bridge can run. */
     public fun supportsSignOut(agent: AgentId): Boolean = agent == AgentId.CLAUDE || agent.raw == "fx"

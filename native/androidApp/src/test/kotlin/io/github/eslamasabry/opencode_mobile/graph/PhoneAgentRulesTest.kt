@@ -3,11 +3,15 @@ package io.github.eslamasabry.opencode_mobile.graph
 import io.github.eslamasabry.oc.engine.agents.AgentId
 import io.github.eslamasabry.oc.engine.agents.catalog.AgentArchitecture
 import io.github.eslamasabry.oc.engine.agents.catalog.AgentCatalog
+import io.github.eslamasabry.oc.engine.agents.host.AuthProbeError
+import io.github.eslamasabry.oc.engine.agents.host.AuthProjection
+import io.github.eslamasabry.oc.engine.agents.host.AuthState
 import io.github.eslamasabry.oc.engine.agents.readiness.AgentSignInPhase
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentInstallPhase
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentInstallation
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentRow
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentStatus
+import io.github.eslamasabry.oc.feature.agents.hub.phoneAgentSignedOut
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -75,6 +79,49 @@ class PhoneAgentRulesTest {
         assertTrue(PhoneAgentRules.signInUnchecked(gemini))
         for (id in listOf("qwen", "goose", "omp-acp"))
             assertTrue(PhoneAgentRules.signInUnchecked(AgentCatalog.builtIn.byId(AgentId(id))!!), id)
+    }
+
+    // Gate (w4-agent-install2): only a check that RAN and found no usable sign-in says "Sign in needed"; one that could
+    // not run (time limit, the phone's Linux or helper not answering, an unreadable reply, the program not found) keeps
+    // Flutter's Sign in act but reads "Sign-in could not be checked" and is not called signed out anywhere.
+    @Test
+    fun `a sign-in check that could not run is told apart from one that found no sign-in, per failure kind`() {
+        fun phase(state: AuthState, error: AuthProbeError? = null) =
+            PhoneAgentRules.phaseOf(AuthProjection(state, error = error))
+        assertEquals(AgentSignInPhase.SignedOut, phase(AuthState.SignedOut))
+        assertEquals(AgentSignInPhase.SignedIn, phase(AuthState.SignedIn))
+        // The check ran and the sign-in it found has expired: signed out, not "could not check".
+        assertEquals(AgentSignInPhase.SignedOut, phase(AuthState.Error, AuthProbeError.SignInExpired))
+        for (couldNotRun in
+            listOf(
+                AuthProbeError.TimedOut,
+                AuthProbeError.HostUnavailable,
+                AuthProbeError.InvalidResponse,
+                AuthProbeError.InvalidContext,
+                AuthProbeError.NotInstalled,
+                AuthProbeError.ProbeUnsupported,
+                null,
+            )) {
+            val failed = phase(AuthState.Error, couldNotRun)
+            assertEquals(AgentSignInPhase.Failed, failed, "$couldNotRun")
+            // A supported agent: Sign in stays offered (SignInNeeded), flagged as a check that could not run.
+            assertEquals(PhoneAgentStatus.SignInNeeded, PhoneAgentRules.status(codex, arm, true, true, true, failed))
+            assertTrue(PhoneAgentRules.signInCheckFailed(codex, failed), "$couldNotRun")
+        }
+        // Ran and found no sign-in: the plain "Sign in needed", not flagged.
+        assertEquals(
+            PhoneAgentStatus.SignInNeeded,
+            PhoneAgentRules.status(codex, arm, true, true, true, AgentSignInPhase.SignedOut),
+        )
+        assertFalse(PhoneAgentRules.signInCheckFailed(codex, AgentSignInPhase.SignedOut))
+        assertFalse(PhoneAgentRules.signInCheckFailed(codex, AgentSignInPhase.SignedIn))
+        assertFalse(PhoneAgentRules.signInCheckFailed(codex, null))
+        // An agent the app cannot check at all is the separate "can't check its sign-in yet" line, not this one.
+        val gemini = AgentCatalog.builtIn.byId(AgentId("gemini"))!!
+        assertFalse(PhoneAgentRules.signInCheckFailed(gemini, AgentSignInPhase.Failed))
+        val flagged = PhoneAgentRow("codex", "Codex", PhoneAgentStatus.SignInNeeded, signInCheckFailed = true)
+        assertFalse(phoneAgentSignedOut(flagged))
+        assertTrue(phoneAgentSignedOut(flagged.copy(signInCheckFailed = false)))
     }
 
     @Test

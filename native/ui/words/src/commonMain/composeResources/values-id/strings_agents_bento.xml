@@ -33,4 +33,6 @@
     <string name="agentsInstallFailedNotStarted">%1$s sudah diunduh tetapi tidak berjalan di ponsel ini, jadi versinya tidak dapat diperiksa. Coba lagi; jika terjadi lagi, Detail berisi apa yang dilaporkan ponsel.</string>
     <string name="agentsInstallFailedWithdrawn">%1$s tidak dapat dipasang: versi %2$s, yang dipasang aplikasi ini, tidak lagi tersedia untuk diunduh. Mencoba lagi tidak akan mengubahnya; pembaruan aplikasi ini akan mengubahnya.</string>
     <string name="agentsStateSignInUnchecked">Terpasang, tetapi aplikasi ini belum bisa memeriksa status masuknya</string>
+    <string name="agentsStateSignInCheckFailed">Status masuk tidak dapat diperiksa. Coba masuk lagi.</string>
+    <string name="agentsSignInUncheckedBody">Belum bisa dipakai untuk percakapan. Anda bisa menghapusnya.</string>
 </resources>

@@ -67,7 +67,9 @@ import io.github.eslamasabry.oc.ui.words.res.agentsStatePhoneCheck
 import io.github.eslamasabry.oc.ui.words.res.agentsStateReady
 import io.github.eslamasabry.oc.ui.words.res.agentsStateSignInNeeded
 import io.github.eslamasabry.oc.ui.words.res.agentsStateStopped
+import io.github.eslamasabry.oc.ui.words.res.agentsStateSignInCheckFailed
 import io.github.eslamasabry.oc.ui.words.res.agentsStateSignInUnchecked
+import io.github.eslamasabry.oc.ui.words.res.agentsSignInUncheckedBody
 import io.github.eslamasabry.oc.ui.words.res.agentsStateUnavailable
 import io.github.eslamasabry.oc.ui.words.res.agentsCheckDownload
 import io.github.eslamasabry.oc.ui.words.res.agentsCheckDownloadUnknown
@@ -261,7 +263,10 @@ internal fun tileWords(tile: AgentTileModel): String {
                 ?: stringResource(Res.string.agentsStateNotInstalledNoSize)
         AgentTileState.CannotRun -> stringResource(Res.string.agentsFailArchitecture)
         AgentTileState.Ready -> stringResource(Res.string.agentsStateReady)
-        AgentTileState.SignInNeeded -> stringResource(Res.string.agentsStateSignInNeeded)
+        // The check could not run (timed out, no answer): nothing is known about the account, so not "Sign in needed".
+        AgentTileState.SignInNeeded ->
+            if (agent.signInCheckFailed) stringResource(Res.string.agentsStateSignInCheckFailed)
+            else stringResource(Res.string.agentsStateSignInNeeded)
         AgentTileState.Checking -> stringResource(Res.string.agentsStateChecking)
         AgentTileState.PhoneCheck -> stringResource(Res.string.agentsStatePhoneCheck)
         AgentTileState.Stopped -> stringResource(Res.string.agentsStateStopped)
@@ -484,6 +489,9 @@ internal fun PhoneAgentSheet(state: AgentsUi, actions: AgentsActions, enabled: K
                 KitText(stringResource(Res.string.agentsCheckTitle))
             tile.state == AgentTileState.NotInstalled ->
                 tile.agent.downloadBytes?.let { KitText(stringResource(Res.string.agentsSetupSizeNote, agentPayloadSize(it))) }
+            // Installed, but its sign-in cannot be read: what that means and the one thing that can be done here.
+            tile.state == AgentTileState.Unavailable && tile.agent.signInUnchecked ->
+                KitText(stringResource(Res.string.agentsSignInUncheckedBody))
             else -> Unit
         }
     }

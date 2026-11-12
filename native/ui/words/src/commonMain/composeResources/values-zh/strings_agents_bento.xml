@@ -33,4 +33,6 @@
     <string name="agentsInstallFailedNotStarted">%1$s 已下载，但未能在此手机上启动，因此无法检查其版本。请重试；如果再次发生，详情中有手机上报的信息。</string>
     <string name="agentsInstallFailedWithdrawn">无法安装 %1$s：此应用安装的版本 %2$s 已不再提供下载。重试不会改变这一点；更新此应用才行。</string>
     <string name="agentsStateSignInUnchecked">已安装，但本应用暂时无法检查它的登录状态</string>
+    <string name="agentsStateSignInCheckFailed">无法检查登录状态。请尝试重新登录。</string>
+    <string name="agentsSignInUncheckedBody">暂时还不能用于对话。你可以移除它。</string>
 </resources>

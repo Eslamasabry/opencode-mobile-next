@@ -7,6 +7,7 @@ import io.github.eslamasabry.oc.engine.agents.catalog.AgentDescriptor
 import io.github.eslamasabry.oc.engine.agents.catalog.AgentPins
 import io.github.eslamasabry.oc.engine.agents.catalog.AgentSignInMethod
 import io.github.eslamasabry.oc.engine.agents.gate.PhoneGate
+import io.github.eslamasabry.oc.engine.agents.host.AuthProbeError
 import io.github.eslamasabry.oc.engine.agents.host.AuthProjection
 import io.github.eslamasabry.oc.engine.agents.host.AuthState
 import io.github.eslamasabry.oc.engine.agents.probe.AgentAuthScripts
@@ -220,6 +221,27 @@ internal object PhoneAgentRules {
      */
     fun signInUnchecked(agent: AgentDescriptor): Boolean =
         agent.signInMethod != AgentSignInMethod.None && !AgentAuthScripts.checksSignIn(agent.id)
+
+    /**
+     * The sign-in check of an agent the probe can read did not run to an answer this time (timed out, the phone's
+     * Linux or helper did not answer, an unreadable reply) and no earlier answer stands in. Its row is
+     * [PhoneAgentStatus.SignInNeeded] for Flutter's Sign in act, but nothing is known about the account: the card says
+     * the check could not be done (Flutter "Sign-in could not be checked. Try signing in again."), never "Sign in
+     * needed", and the home names no signed-out agent for it. A check that ran and found no (or an expired) sign-in
+     * is [AgentSignInPhase.SignedOut], not this.
+     */
+    fun signInCheckFailed(agent: AgentDescriptor, signIn: AgentSignInPhase?): Boolean =
+        signIn == AgentSignInPhase.Failed && agent.signInMethod != AgentSignInMethod.None && !signInUnchecked(agent)
+
+    /** The sign-in phase of the probe's [answer]: an expired sign-in is a check that ran and found none to use. */
+    fun phaseOf(answer: AuthProjection): AgentSignInPhase =
+        when (answer.state) {
+            AuthState.SignedOut -> AgentSignInPhase.SignedOut
+            AuthState.SignedIn -> AgentSignInPhase.SignedIn
+            AuthState.Error ->
+                if (answer.error == AuthProbeError.SignInExpired) AgentSignInPhase.SignedOut
+                else AgentSignInPhase.Failed
+        }
 
     /**
      * The install steps whose own check already passes. Flutter ran each component's check before its install; the
