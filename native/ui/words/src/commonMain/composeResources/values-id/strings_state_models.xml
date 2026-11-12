@@ -4,4 +4,7 @@
     <string name="chat_model_favorite_add">Tambah favorit</string>
     <string name="chat_model_favorite_remove">Hapus favorit</string>
     <string name="chat_model_favorites">Favorit</string>
+    <string name="chat_model_favorites_empty">Beri bintang pada model untuk menyimpannya di sini.</string>
+    <string name="chat_model_loading">Memuat model…</string>
+    <string name="chat_model_updating">Memperbarui…</string>
 </resources>
