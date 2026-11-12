@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.SignInWhy
+import io.github.eslamasabry.oc.core.model.realShells
 import io.github.eslamasabry.oc.feature.settings.presentation.*
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
@@ -585,7 +586,7 @@ private fun ShellBody(state: ServerSettingsUi, actions: ServerSettingsActions) {
         return
     }
     val only =
-        settings.options.singleOrNull()?.takeIf {
+        settings.realShells().singleOrNull()?.takeIf {
             settings.selected.isEmpty() ||
                 settings.selected == it.name ||
                 settings.selected == it.path
@@ -612,7 +613,7 @@ private fun ShellBody(state: ServerSettingsUi, actions: ServerSettingsActions) {
                         else KitEnabled.Enabled,
                 )
             },
-        selected = settings.selected,
+        selected = settings.selectedValue(),
         semanticsLabel = stringResource(Res.string.serverSettingsShell),
         onSelect = actions::selectShell,
     )
