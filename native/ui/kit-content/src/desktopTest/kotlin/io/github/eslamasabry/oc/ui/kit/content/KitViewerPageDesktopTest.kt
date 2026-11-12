@@ -34,11 +34,11 @@ import kotlin.test.assertTrue
  */
 @OptIn(ExperimentalTestApi::class)
 class KitViewerPageDesktopTest {
-    private val density = 2f
+    private val scale = 2f
 
     @Composable
     private fun Themed(content: @Composable () -> Unit) {
-        CompositionLocalProvider(LocalDensity provides Density(density, 1f)) {
+        CompositionLocalProvider(LocalDensity provides Density(scale, 1f)) {
             KitTheme(
                 appearance = KitAppearance(motion = MotionLevel.Off),
                 platform = ContentFakePlatform(),
@@ -79,7 +79,7 @@ class KitViewerPageDesktopTest {
                 KitViewerFrame("b4.txt", path = "b4.txt", onClose = {}) { KitViewerDocument(text) }
             }
         }
-        val gutter = 16 * density
+        val gutter = 16 * scale
         near(gutter, onNodeWithText("Line number 1 of the file", substring = true).left(), 1f)
     }
 
@@ -130,10 +130,10 @@ class KitViewerPageDesktopTest {
             }
         }
         val ask = onNodeWithText("Ask about this file")
-        near(16 * density, ask.left(), 40f)
+        near(16 * scale, ask.left(), 40f)
         // Under every line of the text, at the bottom of the window.
         assertTrue(ask.top() > onNodeWithText("Line number 12 of the file", substring = true).bottom() - 1f)
-        assertTrue(ask.bottom() > 800 * density - 120 * density)
+        assertTrue(ask.bottom() > 800 * scale - 120 * scale)
         ask.performClick()
         assertEquals(1, asked)
     }
