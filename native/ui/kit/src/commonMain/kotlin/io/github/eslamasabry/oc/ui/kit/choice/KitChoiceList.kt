@@ -7,7 +7,11 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
@@ -240,6 +244,8 @@ public fun KitChoiceRow(
 ) {
     val tokens = LocalKitTokens.current
     val on = enabled.isEnabled
+    // A finger that travelled past touch slop (sideways to turn a page, or to leave) is a drag, never a choice.
+    val dragged = remember { DragWatch() }
     // C04 (audit 2026-11-09): a single choice is marked by the check at the trailing edge, never by a ring at the start.
     val mark = if (mark == KitChoiceMark.Radio) KitChoiceMark.Tick else mark
     // The chosen row fills with the accent (owner reference 2026-11-07), on the effects spring: it washes in and out
@@ -273,12 +279,13 @@ public fun KitChoiceRow(
             // Flutter floors a choice row at the two-line row height (64, 56 compact): F: lib/ui/kit/kit_choice_list.dart:635-637.
             .heightIn(min = tokens.rowHeightTwo.dp)
             .kitEdge(KitEdge.Bleed) // a row's highlight runs edge to edge (native/docs/kit/LAYOUT-RULES.md §2)
+            .then(dragged.watch)
             .kitSelectTap(
                 selected = selected,
                 role = if (mark == KitChoiceMark.Check) Role.Checkbox else Role.RadioButton,
                 enabled = enabled,
                 haptic = haptic,
-                onClick = onClick,
+                onClick = { if (!dragged.moved) onClick() },
             )
             .padding(horizontal = bleed + io.github.eslamasabry.oc.ui.kit.row.kitRowGutter(), vertical = Space.S2.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -452,3 +459,26 @@ private const val TICK_UP: Float = 181.019f
 
 /** How strongly a chosen row's fill shows the accent: a breath, never a slab (audit 2026-11-09, C04). */
 internal const val SELECTED_FILL_ALPHA: Float = 0.06f
+
+/**
+ * Whether the finger now on a row has travelled past touch slop since it landed, in any direction. A click ends inside
+ * a wide row however far the finger went sideways, so the row asks this before it chooses. It watches the pointer on
+ * the way down and consumes nothing, so a pager or a list above still gets the drag.
+ */
+internal class DragWatch {
+    var moved: Boolean = false
+        private set
+
+    val watch: Modifier =
+        Modifier.pointerInput(Unit) {
+            awaitEachGesture {
+                val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
+                moved = false
+                do {
+                    val event = awaitPointerEvent(PointerEventPass.Initial)
+                    val change = event.changes.firstOrNull { it.id == down.id } ?: break
+                    if ((change.position - down.position).getDistance() > viewConfiguration.touchSlop) moved = true
+                } while (event.changes.any { it.pressed })
+            }
+        }
+}

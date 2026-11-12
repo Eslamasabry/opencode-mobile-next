@@ -4,5 +4,7 @@
     <string name="chat_model_favorite_add">Agregar a favoritos</string>
     <string name="chat_model_favorite_remove">Quitar de favoritos</string>
     <string name="chat_model_favorites">Favoritos</string>
-    <string name="chat_model_favorites_empty">Marca un modelo con una estrella para tenerlo aquí.</string>
+    <string name="chat_model_favorites_empty">Marca un modelo con una estrella para guardarlo aquí.</string>
+    <string name="chat_model_loading">Cargando modelos…</string>
+    <string name="chat_model_updating">Actualizando…</string>
 </resources>

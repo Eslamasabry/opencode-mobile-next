@@ -4,5 +4,7 @@
     <string name="chat_model_favorite_add">Ajouter aux favoris</string>
     <string name="chat_model_favorite_remove">Retirer des favoris</string>
     <string name="chat_model_favorites">Favoris</string>
-    <string name="chat_model_favorites_empty">Ajoutez une étoile à un modèle pour le garder ici.</string>
+    <string name="chat_model_favorites_empty">Marquez un modèle d’une étoile pour le garder ici.</string>
+    <string name="chat_model_loading">Chargement des modèles…</string>
+    <string name="chat_model_updating">Mise à jour…</string>
 </resources>

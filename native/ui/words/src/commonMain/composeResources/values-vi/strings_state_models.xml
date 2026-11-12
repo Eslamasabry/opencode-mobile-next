@@ -5,4 +5,6 @@
     <string name="chat_model_favorite_remove">Xóa khỏi yêu thích</string>
     <string name="chat_model_favorites">Yêu thích</string>
     <string name="chat_model_favorites_empty">Gắn sao cho một mô hình để giữ nó ở đây.</string>
+    <string name="chat_model_loading">Đang tải mô hình…</string>
+    <string name="chat_model_updating">Đang cập nhật…</string>
 </resources>

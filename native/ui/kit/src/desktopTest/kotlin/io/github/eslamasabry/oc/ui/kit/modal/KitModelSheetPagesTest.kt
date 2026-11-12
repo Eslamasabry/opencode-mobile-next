@@ -166,7 +166,7 @@ class KitModelSheetPagesTest {
         onNode(hasTestTag("chat-model-choice") and hasText("Claude 1") and hasText("OpenCode")).assertExists()
         onNodeWithText("Recent").assertExists()
         onNode(hasTestTag("chat-model-choice") and hasText("GLM-5.3-Flash") and hasText("Zen")).assertExists()
-        onNodeWithText("Server default").assertExists()
+        onNodeWithText("Server default").assertDoesNotExist() // the picks page holds only picks
         onNodeWithText("Claude 5").assertDoesNotExist()
     }
 
@@ -181,7 +181,7 @@ class KitModelSheetPagesTest {
         onNode(hasContentDescription("Favorites")).performClick()
         settle()
         onNodeWithText("Star a model to keep it here.").assertExists()
-        onNodeWithText("Server default").assertExists()
+        onNodeWithText("Server default").assertDoesNotExist()
     }
 
     @Test
@@ -234,6 +234,8 @@ class KitModelSheetPagesTest {
         setContent { Sheet(scene) }
         settle()
         onNodeWithText("GLM-5.3-Flash").performClick()
+        onNode(hasContentDescription("Zen")).performClick()
+        settle()
         onNodeWithText("Server default").performClick()
         assertEquals(listOf(zai[1], null), scene.chosen)
         onAllNodesWithContentDescription("Remove favorite")[0].performClick()
