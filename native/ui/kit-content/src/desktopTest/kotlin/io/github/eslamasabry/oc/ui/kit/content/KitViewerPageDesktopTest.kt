@@ -12,6 +12,7 @@ import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.v2.runComposeUiTest
@@ -23,6 +24,7 @@ import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.content.viewer.KitViewerAction
 import io.github.eslamasabry.oc.ui.kit.content.viewer.KitViewerDocument
 import io.github.eslamasabry.oc.ui.kit.content.viewer.KitViewerFrame
+import io.github.eslamasabry.oc.ui.kit.content.viewer.KitViewerTags
 import io.github.eslamasabry.oc.ui.kit.content.viewer.KitViewerMenuItem
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -144,9 +146,10 @@ class KitViewerPageDesktopTest {
         }
         val ask = onNodeWithText("Ask about this file")
         near(16 * scale, ask.left(), 40f)
-        // Under every line of the text, at the bottom of the window.
-        assertTrue(ask.top() > onNodeWithText("Line number 12 of the file", substring = true).bottom() - 1f)
-        assertTrue(ask.bottom() > 800 * scale - 120 * scale)
+        // Under the whole body, at the bottom of the window.
+        val body = onNodeWithTag(KitViewerTags.BODY)
+        assertTrue(ask.top() >= body.bottom() - 1f, "button ${ask.top()} under body ${body.bottom()}")
+        assertTrue(ask.bottom() > 800 * scale - 120 * scale, "button bottom ${ask.bottom()}")
         ask.performClick()
         assertEquals(1, asked)
     }
