@@ -644,14 +644,10 @@ private fun NewConversationModelSheet(state: NewConversationUi, actions: NewConv
         onToggleFavorite = { actions.toggleFavorite(ModelRef(it.providerId, it.modelId)) },
         resetKey = state.profile,
         above = {
-            // The agent's list is still being read (the helper's first read takes about ten seconds): say so,
-            // never "no models" before the read has ended.
-            if (options.isEmpty() && state.modelsLoading)
-                KitNotice(
-                    message = stringResource(Res.string.composerPreviewModelsLoading),
-                    tone = StatusTone.Progress,
-                )
-            else if (options.isEmpty())
+            // "No models" only after a read ended with none: while the agent's list is being read (the helper's
+            // first read takes about ten seconds) nothing is said here; the kit's sheet draws its own loading row
+            // once KitModelSheet takes `loading = state.modelsLoading` (native/kit-model-loading).
+            if (options.isEmpty() && !state.modelsLoading)
                 KitText(stringResource(Res.string.upgNewChatModelsNone), role = TypeRole.Secondary)
         },
         below = {

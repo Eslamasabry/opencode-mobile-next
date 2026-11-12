@@ -626,19 +626,56 @@ class AndroidNewConversationHost(
                                     ?: read.value.model?.takeIf { it.providerId == provider }
                                     ?: models.firstOrNull()?.model,
                             )
-                        // Kept for this app run only: the next pick of this agent shows it at once.
-                        if (models.isNotEmpty()) lastPhoneModels["${profile.raw}|$agentId"] = found
+                        // One read lists every agent's models: each is kept (across app starts), so the next pick of
+                        // any of them shows its list at once while it is read again.
+                        rememberPhoneModels(profile, read.value.models)
                         Outcome.Ok(found)
                     }
                 }
             } ?: Outcome.Failed(Failure.Unavailable(FeatureId("phoneAgentModels")))
     }
 
-    /** The last list read per `profile|agent` (bounded: a few agents per server). */
+    /** The last list read per `profile|agent` in this run; [PhoneModelsCache] keeps them across starts. */
     private val lastPhoneModels = java.util.concurrent.ConcurrentHashMap<String, NewConversationPhoneModels>()
 
     override fun cachedPhoneAgentModels(profile: ProfileId, agentId: String): NewConversationPhoneModels? =
         lastPhoneModels["${profile.raw}|$agentId"]
+            ?: try {
+                PhoneModelsCache.get(stores.prefs.string(PhoneModelsCache.key(profile)), agentId)
+            } catch (_: Exception) {
+                null // the store is not open yet (migration gate): no list to show early
+            }
+
+    /** One helper read lists every agent's models; [phoneAgentModels] keeps them all. */
+    override suspend fun prefetchPhoneAgentModels(profile: ProfileId, agentIds: List<String>) {
+        agentIds.firstOrNull()?.let { phoneAgentModels(profile, it) }
+    }
+
+    /** Keeps every agent's list from one helper read (an agent with no real model is not kept). */
+    private suspend fun rememberPhoneModels(profile: ProfileId, all: List<NewConversationModel>) {
+        val selection = selection(profile)
+        var stored =
+            try {
+                stores.prefs.string(PhoneModelsCache.key(profile))
+            } catch (_: Exception) {
+                return
+            }
+        for (agent in AgentCatalog.builtIn.agents) {
+            val provider = agent.providerId
+            val models = all.filter { it.model.providerId == provider }
+            if (models.none { it.model.modelId != "default" }) continue
+            val saved = selection.selectedModel(profile, agent.id)
+            val entry =
+                NewConversationPhoneModels(
+                    models,
+                    models.firstOrNull { it.model.modelId == saved }?.model ?: models.first().model,
+                )
+            lastPhoneModels["${profile.raw}|${agent.id.raw}"] = entry
+            stored = PhoneModelsCache.put(stored, agent.id.raw, entry)
+        }
+        val text = stored ?: return
+        stores.prefs.commit(stores.lanes.forProfile(profile)) { putString(PhoneModelsCache.key(profile), text) }
+    }
 
     /** Asks the helper to check its agents and their models again (its list is otherwise kept until a restart). */
     private suspend fun recheckHelperProviders(helper: ProfileId) {

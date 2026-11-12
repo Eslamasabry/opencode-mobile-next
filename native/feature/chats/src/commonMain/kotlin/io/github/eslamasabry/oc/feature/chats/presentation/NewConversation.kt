@@ -197,6 +197,12 @@ public interface NewConversationHost {
      */
     public fun cachedPhoneAgentModels(profile: ProfileId, agentId: String): NewConversationPhoneModels? = null
 
+    /**
+     * Reads the models of the ready phone agents [agentIds] ahead of any pick and keeps them for
+     * [cachedPhoneAgentModels]; nothing is shown from here.
+     */
+    public suspend fun prefetchPhoneAgentModels(profile: ProfileId, agentIds: List<String>) {}
+
     /** Remembers [model] for [agentId] (`oc.agentModel.<profile>`). */
     public suspend fun savePhoneAgentModel(profile: ProfileId, agentId: String, model: ModelRef?): Outcome<Unit> =
         Outcome.Ok(Unit)
@@ -445,9 +451,13 @@ public data class NewConversationUi(
     val shownVariants: List<String>
         get() = shownModel?.let { ref -> shownModels.firstOrNull { it.model == ref }?.variants }.orEmpty()
 
-    /** The phone agent's model list is still being read and nothing is known yet: the sheet says so. */
+    /**
+     * The phone agent's model list is being read now (the list shown meanwhile is the last known one, or none). This is
+     * the model sheet's `loading` once the kit's KitModelSheet takes it (branch native/kit-model-loading); until then
+     * the sheet only holds back the "no models" sentence while it is true.
+     */
     val modelsLoading: Boolean
-        get() = phoneAgent != null && phoneModelsBusy && phoneModels.isEmpty()
+        get() = phoneAgent != null && phoneModelsBusy
 
     /** The model the Model row shows. */
     val shownModel: ModelRef?
@@ -743,7 +753,14 @@ public class NewConversationViewModel(
                             wantedApplied = true
                             if (setup.phone?.selected != wanted) choosePhoneAgent(wanted)
                             else loadPhoneModels(profile, wanted)
-                        } else setup.phone?.selected?.let { loadPhoneModels(profile, it) }
+                        } else {
+                            val chosen = setup.phone?.selected
+                            if (chosen != null) loadPhoneModels(profile, chosen)
+                            else setup.phone?.choices?.map { c -> c.id }?.takeIf { it.isNotEmpty() }?.let { ready ->
+                            // No agent chosen yet: the ready agents' lists are read now, so a pick shows one at once.
+                                viewModelScope.launch { host.prefetchPhoneAgentModels(profile, ready) }
+                            }
+                        }
                         restore(profile, setup.directory)
                         setup.directory?.let { checkFolder(profile, it) }
                         startInWantedFolder(profile, setup.directory)

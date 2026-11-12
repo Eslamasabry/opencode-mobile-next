@@ -484,9 +484,10 @@ class NewConversationPhoneAgentTest {
         val vm = vm(host)
         vm.choosePhoneAgent("claude")
         assertEquals(listOf(stale), vm.state.value.shownModels.map { it.model }, "shown before the read ends")
-        assertFalse(vm.state.value.modelsLoading, "a known list is not an empty, loading one")
+        assertTrue(vm.state.value.modelsLoading, "the list shown is the last known one while the fresh read runs")
         host.modelsGate!!.complete(Unit)
-        assertEquals(listOf(claudeModel), vm.state.value.shownModels.map { it.model })
+        assertEquals(listOf(claudeModel), vm.state.value.shownModels.map { it.model }, "the fresh read replaces the stale list")
         assertEquals(claudeModel, vm.state.value.phoneModel)
+        assertFalse(vm.state.value.modelsLoading)
     }
 }
