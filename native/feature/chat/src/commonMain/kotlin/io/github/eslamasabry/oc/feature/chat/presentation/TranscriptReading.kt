@@ -124,6 +124,26 @@ internal fun transcriptReading(
     for ((turnIndex, turn) in snapshot.turns.withIndex()) {
         val live = busy && turnIndex == snapshot.turns.lastIndex
         val assistants = turn.messages.filter { it.info.role == Role.Assistant }
+        if (!live && turnIndex != snapshot.turns.lastIndex) {
+            // A refusal is that turn's result, so an older turn keeps "You declined this" after later prompts. The
+            // other closing lines (Stopped, cut off, server stop, No reply) describe how the newest run ended and stay
+            // newest-only. Same rule as the newest turn (endsOnRefusal, no words after the refused step), read from
+            // this turn's own messages only; the cheap checks run first.
+            if (
+                assistants.isNotEmpty() &&
+                    io.github.eslamasabry.oc.engine.transcript.ledger.endsOnRefusal(turn) &&
+                    noWordsAfterLastStep(assistants)
+            ) {
+                val prompt =
+                    turn.messages.firstOrNull { m ->
+                        m.info.role == Role.User && m.parts.any { it.type == PartType.Text }
+                    }
+                val olderCommand =
+                    prompt?.parts?.any { it.type == PartType.Text && it.text.trimStart().startsWith('/') } == true
+                val compact = turn.messages.any { m -> m.parts.any { it.type == PartType.Compaction } }
+                if (prompt != null && !olderCommand && !compact) endNotes[turn.turnId] = TurnEndNote.Declined
+            }
+        }
         if (!live && turnIndex == snapshot.turns.lastIndex) {
             val prompt =
                 turn.messages.firstOrNull { m ->

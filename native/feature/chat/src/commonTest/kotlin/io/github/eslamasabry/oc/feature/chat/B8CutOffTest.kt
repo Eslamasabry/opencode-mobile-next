@@ -405,4 +405,68 @@ class B8CutOffTest {
         val streaming = ended.copy(info = ended.info.copy(time = MsgTime(520_000, null)))
         assertNull(facts(listOf(prompt(), streaming), busy = true).reading.endNotes["m1"])
     }
+
+    // ---- Older turns: a refusal is that turn's result and stays; the other closing lines stay newest-only.
+
+    private fun nextPrompt(id: String, at: Long, text: String) =
+        MessageWithParts(
+            MessageInfo(id, sid, Role.User, time = MsgTime(at, null)),
+            listOf(Part("text-$id", id, sid, PartType.Text, "text", text = text, ended = true)).toImmutableList(),
+        )
+
+    private fun answer(id: String, at: Long, text: String) =
+        MessageWithParts(
+            MessageInfo(id, sid, Role.Assistant, providerId = "opencode", modelId = "big-pickle", time = MsgTime(at + 10, at + 1_000), finish = "stop"),
+            listOf(Part("text-$id", id, sid, PartType.Text, "text", text = text)).toImmutableList(),
+        )
+
+    private fun deniedTurn(): List<MessageWithParts> =
+        listOf(prompt("write a file"), unfinished(tool(ToolStatus.Error, "The user declined this tool call", "m2")))
+
+    @Test
+    fun `W4 older - a declined turn keeps its line after a new prompt and after two more turns`() {
+        val one = deniedTurn() + listOf(nextPrompt("m3", 600_000, "say hi"), answer("m4", 600_000, "Hi!"))
+        val f1 = facts(one)
+        assertEquals(TurnEndNote.Declined, f1.reading.endNotes["m1"])
+        assertNull(f1.reading.endNotes["m3"])
+        val two = one + listOf(nextPrompt("m5", 700_000, "and again"), answer("m6", 700_000, "Again!"))
+        val f2 = facts(two)
+        assertEquals(TurnEndNote.Declined, f2.reading.endNotes["m1"])
+        assertEquals(setOf("m1"), f2.reading.endNotes.keys)
+        // The newest turn declined too: both turns say so, once each.
+        val both = deniedTurn() + listOf(nextPrompt("m3", 600_000, "again"), unfinished(tool(ToolStatus.Error, "The user declined this tool call", "m4").copy(id = "t2", messageId = "m4"), id = "m4", created = 600_010))
+        val f3 = facts(both)
+        assertEquals(TurnEndNote.Declined, f3.reading.endNotes["m1"])
+        assertEquals(TurnEndNote.Declined, f3.reading.endNotes["m3"])
+        // While the new turn runs, the older line stays and the live turn has none yet.
+        val live = facts(one.dropLast(1), busy = true)
+        assertEquals(TurnEndNote.Declined, live.reading.endNotes["m1"])
+        assertNull(live.reading.endNotes["m3"])
+    }
+
+    @Test
+    fun `W4 older - a turn that declined one step and then finished with words has no line`() {
+        val declined = tool(ToolStatus.Error, "The user declined this tool call", "m2")
+        val first = finished(declined, id = "m2")
+        val after = answer("m3a", 520_000, "Understood, I left the file out.")
+        val page = listOf(prompt("write a file"), first, after, nextPrompt("m3", 600_000, "ok"), answer("m4", 600_000, "Done"))
+        assertNull(facts(page).reading.endNotes["m1"])
+    }
+
+    @Test
+    fun `W4 older - a Stop or a lost run on an older turn gets no line, as before`() {
+        val stopped = tool(ToolStatus.Error, "Tool execution interrupted", "m2")
+        val page = listOf(prompt("write a file"), unfinished(stopped), nextPrompt("m3", 600_000, "ok"), answer("m4", 600_000, "Done"))
+        val reading = facts(page, outcome = RunOutcome.Interrupted(InterruptReason.User)).reading
+        assertNull(reading.endNotes["m1"])
+        assertNull(facts(page).reading.endNotes["m1"])
+        val lost = listOf(prompt(), unfinished(emptyThought("m2")), nextPrompt("m3", 600_000, "ok"), answer("m4", 600_000, "Done"))
+        assertNull(facts(lost).reading.endNotes["m1"])
+    }
+
+    @Test
+    fun `W4 older - a command turn or a turn without a reply gets no declined line`() {
+        val cmd = listOf(prompt("/compact"), unfinished(tool(ToolStatus.Error, "The user declined this tool call", "m2")), nextPrompt("m3", 600_000, "ok"), answer("m4", 600_000, "Done"))
+        assertNull(facts(cmd).reading.endNotes["m1"])
+    }
 }
