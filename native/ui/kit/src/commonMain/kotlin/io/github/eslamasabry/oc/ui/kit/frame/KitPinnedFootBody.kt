@@ -66,9 +66,9 @@ public fun KitPinnedFootBody(
                     else
                         Modifier.kitScrollEdges(
                             clearAbove = null,
-                            topReach = androidx.compose.ui.unit.Dp.Zero,
+                            topReach = 0.dp,
                             fadeFromBottom = { with(density) { COMPOSER_FADE_DP.dp.toPx() } },
-                            bottomReach = androidx.compose.ui.unit.Dp.Zero,
+                            bottomReach = 0.dp,
                             bottomReachPx = { with(density) { COMPOSER_FADE_DP.dp.toPx() } },
                             bottomStrength = { more.value },
                         )
