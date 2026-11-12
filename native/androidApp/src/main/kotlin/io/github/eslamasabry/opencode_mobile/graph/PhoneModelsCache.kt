@@ -24,6 +24,8 @@ internal object PhoneModelsCache {
 
     private const val MAX_AGENTS = 32
     private const val MAX_MODELS = 300
+    private const val MAX_VARIANTS = 16
+    private const val MAX_TEXT = 256
     private val JSON = Json { ignoreUnknownKeys = true }
 
     /** [stored] with [agentId]'s entry replaced by [fresh]; null [stored] or an unreadable one starts empty. */
@@ -32,6 +34,14 @@ internal object PhoneModelsCache {
         all.remove(agentId)
         all[agentId] = fresh
         while (all.size > MAX_AGENTS) all.remove(all.keys.first())
+        return JsonObject(all.mapValues { (_, v) -> encode(v) }).toString()
+    }
+
+    /** [stored] without [agentId]'s entry; null when nothing is left (or nothing could be read). */
+    fun remove(stored: String?, agentId: String): String? {
+        val all = LinkedHashMap(decodeAll(stored))
+        if (all.remove(agentId) == null) return stored?.takeIf { all.isNotEmpty() }
+        if (all.isEmpty()) return null
         return JsonObject(all.mapValues { (_, v) -> encode(v) }).toString()
     }
 
@@ -49,10 +59,14 @@ internal object PhoneModelsCache {
                             JsonObject(
                                 buildMap {
                                     put("ref", ref(m.model))
-                                    put("name", JsonPrimitive(m.name))
-                                    m.runtime?.let { put("runtime", JsonPrimitive(it)) }
-                                    m.providerName?.let { put("providerName", JsonPrimitive(it)) }
-                                    if (m.variants.isNotEmpty()) put("variants", JsonArray(m.variants.map(::JsonPrimitive)))
+                                    put("name", JsonPrimitive(m.name.take(MAX_TEXT)))
+                                    m.runtime?.let { put("runtime", JsonPrimitive(it.take(MAX_TEXT))) }
+                                    m.providerName?.let { put("providerName", JsonPrimitive(it.take(MAX_TEXT))) }
+                                    if (m.variants.isNotEmpty())
+                                        put(
+                                            "variants",
+                                            JsonArray(m.variants.take(MAX_VARIANTS).map { JsonPrimitive(it.take(MAX_TEXT)) }),
+                                        )
                                 }
                             )
                         }

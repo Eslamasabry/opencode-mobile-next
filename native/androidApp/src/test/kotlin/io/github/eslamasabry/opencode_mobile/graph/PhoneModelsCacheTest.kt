@@ -49,6 +49,32 @@ class PhoneModelsCacheTest {
     }
 
     @Test
+    fun aReadThatNamesNoModelForTheAskedAgentDropsItsOldList() {
+        var stored: String? = PhoneModelsCache.put(null, "codex", list(NewConversationModel(sol, "GPT-6.1-Sol")))
+        stored = PhoneModelsCache.put(stored, "claude", list(NewConversationModel(opus, "Opus")))
+        stored = PhoneModelsCache.remove(stored, "codex")
+        assertNull(PhoneModelsCache.get(stored, "codex"))
+        assertEquals(listOf(opus), PhoneModelsCache.get(stored, "claude")!!.models.map { it.model })
+        // The last one gone: nothing is left to keep (the key is removed).
+        assertNull(PhoneModelsCache.remove(stored, "claude"))
+        assertNull(PhoneModelsCache.remove("not json", "claude"))
+    }
+
+    @Test
+    fun aStoredListIsBounded() {
+        val many = (1..400).map { NewConversationModel(ModelRef("codex", "m$it"), "x".repeat(5000), variants = (1..40).map { v -> "v$v" }) }
+        val stored = PhoneModelsCache.put(null, "codex", NewConversationPhoneModels(many, many.first().model))
+        val back = PhoneModelsCache.get(stored, "codex")!!
+        assertEquals(300, back.models.size)
+        assertEquals(256, back.models.first().name.length)
+        assertEquals(16, back.models.first().variants.size)
+        var all: String? = null
+        for (i in 1..40) all = PhoneModelsCache.put(all, "agent$i", list(NewConversationModel(sol, "GPT-6.1-Sol")))
+        assertNull(PhoneModelsCache.get(all, "agent1"), "the oldest agents fall off past 32")
+        assertTrue(PhoneModelsCache.get(all, "agent40") != null)
+    }
+
+    @Test
     fun unreadableTextIsNoCache() {
         assertNull(PhoneModelsCache.get("not json", "codex"))
         assertNull(PhoneModelsCache.get(null, "codex"))

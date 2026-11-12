@@ -585,8 +585,20 @@ class AndroidNewConversationHost(
     override suspend fun phoneAgentModels(
         profile: ProfileId,
         agentId: String,
+    ): Outcome<NewConversationPhoneModels> = readPhoneAgentModels(profile, agentId, ahead = false)
+
+    /**
+     * [ahead]: a read nobody asked for yet (the page opened with no agent chosen). It never starts or reconnects the
+     * helper and never asks it to look at its agents again (each look can start one process per agent CLI on the
+     * phone): it only reads the list the running helper already holds.
+     */
+    private suspend fun readPhoneAgentModels(
+        profile: ProfileId,
+        agentId: String,
+        ahead: Boolean,
     ): Outcome<NewConversationPhoneModels> {
         val helper = phoneHelperId() ?: return refused()
+        if (ahead && registry.live.value[helper] == null) return refused()
         val provider =
             AgentCatalog.builtIn.byId(AgentId(agentId))?.providerId ?: return refused()
         val agentReady =
@@ -600,10 +612,11 @@ class AndroidNewConversationHost(
                             is Outcome.Failed -> first
                             is Outcome.Ok ->
                                 if (
-                                    phoneModelsNeedRecheck(
-                                        agentReady,
-                                        first.value.models.filter { it.model.providerId == provider },
-                                    )
+                                    !ahead &&
+                                        phoneModelsNeedRecheck(
+                                            agentReady,
+                                            first.value.models.filter { it.model.providerId == provider },
+                                        )
                                 ) {
                                     // The helper keeps the list it read first (before the agent was installed or
                                     // signed in) until asked to look again: ask once, then read it again.
@@ -628,7 +641,7 @@ class AndroidNewConversationHost(
                             )
                         // One read lists every agent's models: each is kept (across app starts), so the next pick of
                         // any of them shows its list at once while it is read again.
-                        rememberPhoneModels(profile, read.value.models)
+                        rememberPhoneModels(profile, read.value.models, asked = AgentId(agentId))
                         Outcome.Ok(found)
                     }
                 }
@@ -646,24 +659,55 @@ class AndroidNewConversationHost(
                 null // the store is not open yet (migration gate): no list to show early
             }
 
-    /** One helper read lists every agent's models; [phoneAgentModels] keeps them all. */
+    /** One read ahead at a time, app-wide. */
+    private val readAhead = Mutex()
+
+    /** The helper connection (its live graph) a read ahead already succeeded on: the next page open reads nothing. */
+    @Volatile private var readAheadDoneOn: Any? = null
+
+    /**
+     * One helper read lists every agent's models; [readPhoneAgentModels] keeps them all. Bounded for the phone (its
+     * process limit): only while the helper already runs (never started for this), no recheck, one read at a time
+     * (a second page open while one runs reads nothing), once per helper connection, and the page's scope cancels it
+     * when the page closes. So it adds at most one plain read of the list the helper holds.
+     */
     override suspend fun prefetchPhoneAgentModels(profile: ProfileId, agentIds: List<String>) {
-        agentIds.firstOrNull()?.let { phoneAgentModels(profile, it) }
+        val first = agentIds.firstOrNull() ?: return
+        val helper = phoneHelperId() ?: return
+        val live = registry.live.value[helper] ?: return
+        if (readAheadDoneOn === live) return
+        if (!readAhead.tryLock()) return
+        try {
+            if (readPhoneAgentModels(profile, first, ahead = true) is Outcome.Ok) readAheadDoneOn = live
+        } finally {
+            readAhead.unlock()
+        }
     }
 
-    /** Keeps every agent's list from one helper read (an agent with no real model is not kept). */
-    private suspend fun rememberPhoneModels(profile: ProfileId, all: List<NewConversationModel>) {
+    /**
+     * Keeps every agent's list from one helper read (an agent with no real model is not kept). The [asked] agent's
+     * entry is always replaced: when this read named none of its models, its old list is dropped, so a list from before
+     * a sign-out never shows again.
+     */
+    private suspend fun rememberPhoneModels(profile: ProfileId, all: List<NewConversationModel>, asked: AgentId) {
         val selection = selection(profile)
-        var stored =
+        val before =
             try {
                 stores.prefs.string(PhoneModelsCache.key(profile))
             } catch (_: Exception) {
                 return
             }
+        var stored = before
         for (agent in AgentCatalog.builtIn.agents) {
             val provider = agent.providerId
             val models = all.filter { it.model.providerId == provider }
-            if (models.none { it.model.modelId != "default" }) continue
+            if (models.none { it.model.modelId != "default" }) {
+                if (agent.id == asked) {
+                    lastPhoneModels.remove("${profile.raw}|${agent.id.raw}")
+                    stored = PhoneModelsCache.remove(stored, agent.id.raw)
+                }
+                continue
+            }
             val saved = selection.selectedModel(profile, agent.id)
             val entry =
                 NewConversationPhoneModels(
@@ -673,8 +717,13 @@ class AndroidNewConversationHost(
             lastPhoneModels["${profile.raw}|${agent.id.raw}"] = entry
             stored = PhoneModelsCache.put(stored, agent.id.raw, entry)
         }
-        val text = stored ?: return
-        stores.prefs.commit(stores.lanes.forProfile(profile)) { putString(PhoneModelsCache.key(profile), text) }
+        val key = PhoneModelsCache.key(profile)
+        val text = stored
+        if (text == null) {
+            if (before != null) stores.prefs.commit(stores.lanes.forProfile(profile)) { remove(key) }
+            return
+        }
+        if (text != before) stores.prefs.commit(stores.lanes.forProfile(profile)) { putString(key, text) }
     }
 
     /** Asks the helper to check its agents and their models again (its list is otherwise kept until a restart). */
