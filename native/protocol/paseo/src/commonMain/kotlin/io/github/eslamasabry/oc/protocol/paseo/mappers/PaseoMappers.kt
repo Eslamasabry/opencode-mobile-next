@@ -184,8 +184,7 @@ private val DECLINED_REPORT = Regex(
     "^(permission (request )?(denied|canceled)|" +
         "the user doesn't want to proceed|" +
         "the user answered with a message instead of approving|" +
-        // OpenCode 2 through Paseo 0.15.3: "The user declined this tool call" (captured).
-        "(the )?user (denied|rejected|declined)|" +
+        "user (denied|rejected|declined)|" +
         "permission to use .* has been denied)",
     RegexOption.IGNORE_CASE,
 )
@@ -195,8 +194,22 @@ public fun paseoDeclinedToolCall(item: JsonObject): Boolean {
     if (item["status"].stringOrNull() != "failed") return false
     // The app knows the person rejected this call's card: whatever reason they typed comes back as the error text.
     if (item["declinedByPerson"].let { it is JsonPrimitive && !it.isString && it.content == "true" }) return true
+    if (openCodeDeclined(item)) return true
     return DECLINED_REPORT.containsMatchIn(toolErrorText(item).trim())
 }
+
+/**
+ * OpenCode 2 through Paseo 0.15.3 (captured): a call the person denied at its card fails with exactly
+ * `{type: "aborted", message: "The user declined this tool call"}`. Only that whole sentence in an aborted error counts:
+ * a tool's own output or a model's words that merely contain it, or a real failure of another type, stay failures.
+ */
+private fun openCodeDeclined(item: JsonObject): Boolean {
+    val error = item["error"] as? JsonObject ?: return false
+    if (error["type"].stringOrNull() != "aborted") return false
+    return error["message"].stringOrNull()?.trim()?.removeSuffix(".") == OPENCODE_DECLINED
+}
+
+private const val OPENCODE_DECLINED = "The user declined this tool call"
 
 /** Dart `paseoMergeToolCall`: a later report of the same call merged into the earlier one. */
 public fun paseoMergeToolCall(earlier: JsonObject?, later: JsonObject): JsonObject {
