@@ -128,7 +128,9 @@ internal fun transcriptReading(
             // A refusal is that turn's result, so an older turn keeps "You declined this" after later prompts. The
             // other closing lines (Stopped, cut off, server stop, No reply) describe how the newest run ended and stay
             // newest-only. Same rule as the newest turn (endsOnRefusal, no words after the refused step), read from
-            // this turn's own messages only; the cheap checks run first.
+            // this turn's own messages only; the cheap checks run first. Where the newest turn waits for its run to end,
+            // an older one needs the next prompt sent after everything it recorded: a prompt queued while the run went
+            // on takes the rest of that run under it, so this turn's last step is not where the agent stopped.
             if (
                 assistants.isNotEmpty() &&
                     io.github.eslamasabry.oc.engine.transcript.ledger.endsOnRefusal(turn) &&
@@ -141,7 +143,11 @@ internal fun transcriptReading(
                 val olderCommand =
                     prompt?.parts?.any { it.type == PartType.Text && it.text.trimStart().startsWith('/') } == true
                 val compact = turn.messages.any { m -> m.parts.any { it.type == PartType.Compaction } }
-                if (prompt != null && !olderCommand && !compact) endNotes[turn.turnId] = TurnEndNote.Declined
+                if (
+                    prompt != null && !olderCommand && !compact &&
+                        endedBeforeNextPrompt(turn, snapshot.turns[turnIndex + 1])
+                )
+                    endNotes[turn.turnId] = TurnEndNote.Declined
             }
         }
         if (!live && turnIndex == snapshot.turns.lastIndex) {
@@ -312,6 +318,36 @@ private fun cutOff(
     // A reply that went on in words past the refused step (a refusal with a message lets the agent carry on) and was
     // then lost is cut off like any other; only a turn that stopped at the refusal is the person's answer.
     return !(io.github.eslamasabry.oc.engine.transcript.ledger.endsOnRefusal(turn) && noWordsAfterLastStep(assistants))
+}
+
+/**
+ * Whether [turn]'s run had settled before the person sent [next]'s prompt. The ledger splits turns by creation time, so
+ * a prompt queued while a run still went (or while its permission card was open) starts a new turn, and the rest of
+ * that run (the agent going on after the refusal, a new card) lands under the queued prompt: the older turn's last
+ * step is then the refusal although the agent did not stop there. Only a prompt sent after everything the turn
+ * recorded (its messages' creation and end, its steps' start and end) proves the refusal ended the run. A time that
+ * is not known proves nothing, so the line stays off.
+ */
+private fun endedBeforeNextPrompt(
+    turn: io.github.eslamasabry.oc.engine.transcript.ledger.LedgerTurn,
+    next: io.github.eslamasabry.oc.engine.transcript.ledger.LedgerTurn,
+): Boolean {
+    val sent =
+        next.messages
+            .firstOrNull { m -> m.info.role == Role.User && m.parts.any { it.type == PartType.Text } }
+            ?.info
+            ?.time
+            ?.createdMs ?: return false
+    var last = Long.MIN_VALUE
+    for (m in turn.messages) {
+        if (m.info.role != Role.Assistant) continue
+        last = maxOf(last, m.info.time?.createdMs ?: Long.MIN_VALUE, m.info.time?.completedMs ?: Long.MIN_VALUE)
+        for (p in m.parts) {
+            val tool = p.tool ?: continue
+            last = maxOf(last, tool.startedAtMs ?: Long.MIN_VALUE, tool.completedAtMs ?: Long.MIN_VALUE)
+        }
+    }
+    return last != Long.MIN_VALUE && last <= sent
 }
 
 /** No words came after the turn's last tool step (so the reply did not go on past it and finish). */

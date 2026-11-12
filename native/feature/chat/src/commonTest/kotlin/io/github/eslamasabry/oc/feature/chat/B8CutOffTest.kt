@@ -469,4 +469,82 @@ class B8CutOffTest {
         val cmd = listOf(prompt("/compact"), unfinished(tool(ToolStatus.Error, "The user declined this tool call", "m2")), nextPrompt("m3", 600_000, "ok"), answer("m4", 600_000, "Done"))
         assertNull(facts(cmd).reading.endNotes["m1"])
     }
+
+    // ---- Gate (older turns): the line needs the next prompt sent after the run settled; Paseo keeps it; Codex never.
+
+    @Test
+    fun `W4 older gate - a prompt queued while the run went on takes the rest of the run, so no declined line`() {
+        // The person queued "say done" while the write card was open (517_500), then pressed Deny (518_000). The agent
+        // went on; the ledger orders by creation time, so its next step landed under the queued prompt and the older
+        // turn's last step is the refusal although the agent did not stop there.
+        val refused = finished(tool(ToolStatus.Error, "The user declined this tool call", "m2"), id = "m2")
+        val queued = nextPrompt("m3", 517_500, "say done")
+        val next =
+            Part(
+                "t-read", "m4", sid, PartType.Tool, "tool", callId = "c-read", toolName = "read",
+                tool = ToolState(ToolStatus.Running, input = JsonObject(mapOf("filePath" to JsonPrimitive("/p/a.txt"))), startedAtMs = 520_200),
+            )
+        val running = facts(listOf(prompt("write a file"), refused, queued, unfinished(next, id = "m4", created = 520_100)), busy = true)
+        assertNull(running.reading.endNotes["m1"], "the run still goes under the queued prompt")
+        val done = answer("m5", 521_000, "Done.")
+        val settled = facts(listOf(prompt("write a file"), refused, queued, unfinished(next, id = "m4", created = 520_100), done))
+        assertNull(settled.reading.endNotes["m1"], "the agent went on after the refusal")
+        // The same refusal with the next prompt sent after the run had settled keeps its line.
+        val after = facts(listOf(prompt("write a file"), refused, nextPrompt("m3", 530_000, "say done"), answer("m4", 530_000, "Done.")))
+        assertEquals(TurnEndNote.Declined, after.reading.endNotes["m1"])
+        // A next prompt with no known time proves nothing: no line.
+        val undated = nextPrompt("m3", 0, "say done").let { it.copy(info = it.info.copy(time = null)) }
+        assertNull(facts(listOf(prompt("write a file"), refused, undated)).reading.endNotes["m1"])
+    }
+
+    @Test
+    fun `W4 older gate - a Paseo turn rejected at its card keeps the line after the next prompt`() {
+        // PaseoMappers: one message per timeline item, a provider and no model, the item's time as creation and end;
+        // a call the person rejected at its card is failed with outputValue "The user declined this tool call".
+        val rejected =
+            MessageWithParts(
+                MessageInfo("p2", sid, Role.Assistant, providerId = "claude", time = MsgTime(520_000, 520_000)),
+                listOf(
+                    Part(
+                        "p2-tool", "p2", sid, PartType.Tool, "tool", callId = "toolu_1", toolName = "Bash",
+                        tool = ToolState(ToolStatus.Error, input = JsonObject(mapOf("command" to JsonPrimitive("rm -rf build"))), outputValue = JsonPrimitive("The user declined this tool call")),
+                    ),
+                ).toImmutableList(),
+            )
+        val reply =
+            MessageWithParts(
+                MessageInfo("p4", sid, Role.Assistant, providerId = "claude", time = MsgTime(600_100, 600_100)),
+                listOf(words("Hi!", "p4")).toImmutableList(),
+            )
+        val facts = facts(listOf(prompt("clean the build"), rejected, nextPrompt("m3", 600_000, "say hi"), reply))
+        assertEquals(TurnEndNote.Declined, facts.reading.endNotes["m1"])
+        assertNull(facts.reading.endNotes["m3"])
+    }
+
+    @Test
+    fun `W4 older gate - a Codex turn the person declined or stopped is never read as declined`() {
+        // CodexMappers: a declined command is failed with its own (empty) output, the handoff reads it cancelled; an
+        // interrupted turn keeps no completion and finishes "cancelled". Neither carries the refusal sentence.
+        fun codex(status: ToolStatus) =
+            MessageWithParts(
+                MessageInfo("c2", sid, Role.Assistant, providerId = "codex", time = MsgTime(520_000, null), finish = "cancelled"),
+                listOf(
+                    Part(
+                        "c2-tool", "c2", sid, PartType.Tool, "tool", callId = "c2", toolName = "shell",
+                        tool = ToolState(status, input = JsonObject(mapOf("command" to JsonPrimitive("rm -rf build"))), output = ""),
+                    ),
+                ).toImmutableList(),
+            )
+        val reply =
+            MessageWithParts(
+                MessageInfo("c4", sid, Role.Assistant, providerId = "codex", time = MsgTime(600_100, 601_000), finish = "stop"),
+                listOf(words("Hi!", "c4")).toImmutableList(),
+            )
+        for (status in listOf(ToolStatus.Error, ToolStatus.Cancelled)) {
+            val older = facts(listOf(prompt("clean the build"), codex(status), nextPrompt("m3", 600_000, "say hi"), reply))
+            assertTrue(older.reading.endNotes.isEmpty(), "older, $status: ${older.reading.endNotes}")
+            val newest = facts(listOf(prompt("clean the build"), codex(status)), outcome = RunOutcome.Interrupted(InterruptReason.User))
+            assertTrue(newest.reading.endNotes["m1"] != TurnEndNote.Declined, "newest, $status")
+        }
+    }
 }
