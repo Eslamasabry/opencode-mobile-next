@@ -14,6 +14,7 @@
     <string name="agentsHubAgentsFailed">Couldn't read the agents on that computer. Check that Paseo is running there.</string>
     <string name="agentsHubStartFailed">Couldn't start a conversation there. The computer is still saved.</string>
     <string name="agentsHubSignInFailed">That computer didn't accept the password.</string>
+    <string name="agentsHubPasswordNeeded">This computer needs a password. Enter its daemon password, then check again.</string>
     <string name="agentsHubNotAnswering">That computer didn't answer. Check that Paseo is running and this phone can reach it.</string>
     <string name="agentsHubNotConnected">Not connected</string>
     <string name="agentsHubDefaultName">Paseo</string>

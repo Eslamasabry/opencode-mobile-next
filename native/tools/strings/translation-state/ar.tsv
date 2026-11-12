@@ -594,6 +594,7 @@ agentsHubNotAnswering	8331c5b7cf
 agentsHubNotConnected	54ecc73164
 agentsHubOnComputers	bbd4aa7577
 agentsHubOnPhone	30451c91d1
+agentsHubPasswordNeeded	e0288a7fa6
 agentsHubSignInFailed	f6fefd83cb
 agentsHubStartFailed	0ba87a6ee8
 agentsHubSwitchFailed	ce1fc30ff6

@@ -17,4 +17,5 @@
     <string name="agentsHubNotAnswering">لم يُجب ذلك الحاسوب. تأكّد من أن Paseo يعمل وأن هذا الهاتف يصل إليه.</string>
     <string name="agentsHubNotConnected">غير متصل</string>
     <string name="agentsHubDefaultName">Paseo</string>
+    <string name="agentsHubPasswordNeeded">يحتاج هذا الحاسوب إلى كلمة مرور. أدخل كلمة مرور الخدمة، ثم تحقق مرة أخرى.</string>
 </resources>
