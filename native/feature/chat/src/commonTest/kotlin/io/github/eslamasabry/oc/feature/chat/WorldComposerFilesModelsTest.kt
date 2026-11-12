@@ -660,6 +660,7 @@ class WorldComposerFilesModelsTest {
             val f = Fixture(this)
             f.base.admission = PromptAdmission.Uncertain
             f.open()
+            f.world.draftChanged("say hi")
             assertIs<Outcome.Ok<Unit>>(f.world.send("say hi"))
             runCurrent()
             val bubble = f.world.pending.value.single()
@@ -679,6 +680,7 @@ class WorldComposerFilesModelsTest {
             f.base.admission = PromptAdmission.Uncertain
             f.queuesPrompts()
             f.open()
+            f.world.draftChanged("say hi")
             assertIs<Outcome.Ok<Unit>>(f.world.send("say hi"))
             runCurrent()
             val bubble = f.world.pending.value.single()

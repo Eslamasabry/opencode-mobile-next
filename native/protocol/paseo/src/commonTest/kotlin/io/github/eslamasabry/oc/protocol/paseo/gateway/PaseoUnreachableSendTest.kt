@@ -27,7 +27,7 @@ import kotlin.test.assertTrue
 class PaseoUnreachableSendTest {
     private fun <T> Outcome<T>.ok(): T = assertIs<Outcome.Ok<T>>(this, "expected Ok, got $this").value
 
-    private fun TestScope.daemon0153(sockets: FakeSockets, daemon: FakeDaemon): GatewayHarness {
+    private fun as0153(daemon: FakeDaemon) {
         daemon.version = "0.15.3"
         daemon.handlers["get_providers_snapshot_request"] = {
             "get_providers_snapshot_response" to Paseo0153Frames.providersSnapshot
@@ -40,6 +40,10 @@ class PaseoUnreachableSendTest {
                 )
         }
         daemon.handlers["fetch_agent_request"] = { "fetch_agent_response" to Paseo0153Frames.fetchedAgent }
+    }
+
+    private fun TestScope.daemon0153(sockets: FakeSockets, daemon: FakeDaemon): GatewayHarness {
+        as0153(daemon)
         return GatewayHarness(this, daemon, sockets, directory = Paseo0153Frames.PASEO_0153_DIR)
     }
 
@@ -48,19 +52,26 @@ class PaseoUnreachableSendTest {
     @Test
     fun `fault 2 a first message while the computer is unreachable is not sent, and nothing is written`() = runTest {
         val daemon = FakeDaemon()
-        val sockets = FakeSockets(daemon).apply { refuse = PaseoException(PaseoFailureKind.Disconnected) }
+        val back = FakeDaemon()
+        val sockets = FakeSockets(daemon, back)
         val h = daemon0153(sockets, daemon)
+        as0153(back)
+        h.gateway.providers().ok()
         val draft = h.gateway.createSession(NewSession()).ok().id
+        // The daemon stops: the socket drops and every reconnect is refused.
+        sockets.refuse = PaseoException(PaseoFailureKind.Disconnected)
+        daemon.drop()
+        h.pump()
         val failed = assertIs<Outcome.Failed>(h.gateway.prompt(draft, OutgoingPrompt("say hi")))
         // Before: ComputerDidNotAnswer, which the delivery engine reads as "may have arrived".
         assertIs<Failure.Unavailable>(failed.failure)
-        assertTrue(daemon.sent.isEmpty())
+        assertTrue(daemon.of("create_agent_request").isEmpty())
 
         // The computer is back: the same draft starts, with nothing left over that blocks it.
         sockets.refuse = null
-        daemon.handlers["create_agent_request"] = { "status" to Paseo0153Frames.agentCreated }
+        back.handlers["create_agent_request"] = { "status" to Paseo0153Frames.agentCreated }
         assertEquals(PromptAdmission.Confirmed(null), h.gateway.prompt(draft, OutgoingPrompt("say hi")).ok())
-        assertEquals(1, daemon.of("create_agent_request").size)
+        assertEquals(1, back.of("create_agent_request").size)
     }
 
     @Test
