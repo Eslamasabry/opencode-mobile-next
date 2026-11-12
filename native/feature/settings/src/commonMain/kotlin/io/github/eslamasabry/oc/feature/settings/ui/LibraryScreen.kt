@@ -78,7 +78,9 @@ public fun LibraryScreen(state: LibraryUi, actions: LibraryActions) {
         topBar = {
             KitTopBar(
                 stringResource(
-                    if (providerPage) Res.string.usageProviders else Res.string.e7SettingsDetailUi25
+                    // The page's own name, not the "Built-in" tab label of Flutter's Tools page
+                    // (lib/ui/screens/capabilities_screen.dart:144 labels a tab; its page title is :188).
+                    if (providerPage) Res.string.usageProviders else Res.string.nlibTitle
                 ),
                 exit = KitTopBarExit.Back,
                 exitLabel = stringResource(Res.string.nlibBack),
@@ -216,11 +218,12 @@ public fun LibraryScreen(state: LibraryUi, actions: LibraryActions) {
                         } else KitRowGroup(label = stringResource(Res.string.e7LibraryServerCommands)) {
                             rows.forEach { command ->
                                 KitRow(
-                                    libraryCommandTitle(command),
+                                    libraryCommandWords(command).title,
                                     modifier = Modifier.testTag("library-command-${command.name}"),
                                     supporting = libraryCommandSupporting(command),
-                                    supportingMaxLines =
-                                        2, // F: lib/ui/widgets/command_sheet.dart:663
+                                    // F: lib/ui/widgets/command_sheet.dart:658 (3 title lines) and :663
+                                    titleMaxLines = 3,
+                                    supportingMaxLines = 2,
                                     trailing = KitRowTrailing.None,
                                     onClick = { actions.show(LibrarySheet.Command(command)) },
                                 )
@@ -520,21 +523,19 @@ private fun LibraryEmpty(
     }
 }
 
-internal fun libraryCommandTitle(command: CommandInfo): String =
-    command.description?.trim()?.takeIf { it.isNotEmpty() } ?: "/${command.name.removePrefix("/")}"
-
 @Composable
 private fun libraryCommandSupporting(command: CommandInfo): String {
-    val name = "/${command.name.removePrefix("/")}"
+    val words = libraryCommandWords(command)
     val detail =
         if (command.description.isNullOrBlank())
             stringResource(Res.string.chatUiOpenCodeServerCommand)
-        else name
+        else words.slash
+    val withHint = words.hint?.let { "$detail $it" } ?: detail
     return command.agent
         ?.takeIf { it.isNotBlank() }
         ?.let {
-            detail + " · " + stringResource(Res.string.commandsScreenRunsWith, it)
-        } ?: detail
+            withHint + " · " + stringResource(Res.string.commandsScreenRunsWith, it)
+        } ?: withHint
 }
 
 @Composable

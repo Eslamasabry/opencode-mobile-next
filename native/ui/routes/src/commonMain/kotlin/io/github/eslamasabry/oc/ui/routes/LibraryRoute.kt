@@ -10,7 +10,7 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 public data class LibraryRoute(
-    val tab: String = "commands",
+    val tab: String = "mcp",
     val ref: ConversationRef? = null,
     val profileId: io.github.eslamasabry.oc.core.common.ids.ProfileId? = null,
 ) : AppRoute
