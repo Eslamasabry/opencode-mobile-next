@@ -105,7 +105,7 @@ class SettingsReachTest {
         val row = SettingsStructure.rows(SettingsGroupId.ThisApp, withLinux, reasoning = false, timestamps = false)
             .first { it.id == SettingsRowId.Storage }
         assertEquals(io.github.eslamasabry.oc.feature.settings.presentation.SettingsDoor.Outside(SettingsOutside.AppStorage), row.door)
-        val without = phoneFacts().copy(localModelStorage = true, opens = null)
+        val without = phoneFacts().let { it.copy(localModelStorage = true, platform = it.platform.copy(builtinLinux = false), opens = null) }
         val plain = SettingsStructure.rows(SettingsGroupId.ThisApp, without, reasoning = false, timestamps = false)
             .first { it.id == SettingsRowId.Storage }
         assertEquals(io.github.eslamasabry.oc.feature.settings.presentation.SettingsDoor.Page(SettingsPage.Storage), plain.door)

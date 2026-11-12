@@ -184,9 +184,10 @@ public object SettingsStructure {
                         // Storage opens where the app's storage is measured (Flutter: Clear this app's
                         // storage). The models-only page stays for a phone without that page.
                         SettingsRowId.Storage ->
-                            if (p.builtinLinux && facts.canOpen(SettingsOutside.AppStorage))
+                            if (!facts.localModelStorage) null
+                            else if (p.builtinLinux && facts.canOpen(SettingsOutside.AppStorage))
                                 SettingsDoor.Outside(SettingsOutside.AppStorage)
-                            else SettingsDoor.Page(SettingsPage.Storage).takeIf { facts.localModelStorage }
+                            else SettingsDoor.Page(SettingsPage.Storage)
                         SettingsRowId.Guide -> SettingsDoor.Page(SettingsPage.Guide)
                         SettingsRowId.Capabilities ->
                             SettingsDoor.Outside(SettingsOutside.Capabilities)
