@@ -77,6 +77,7 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 
 /** The first message uses the same durable delivery owner as the conversation composer. */
@@ -618,14 +619,14 @@ class AndroidNewConversationHost(
                     is Outcome.Ok -> {
                         val models = read.value.models.filter { it.model.providerId == provider }
                         val saved = selection(profile).selectedModel(profile, AgentId(agentId))
-                        Outcome.Ok(
+                        val found =
                             NewConversationPhoneModels(
                                 models,
                                 models.firstOrNull { it.model.modelId == saved }?.model
                                     ?: read.value.model?.takeIf { it.providerId == provider }
                                     ?: models.firstOrNull()?.model,
                             )
-                        )
+                        Outcome.Ok(found)
                     }
                 }
             } ?: Outcome.Failed(Failure.Unavailable(FeatureId("phoneAgentModels")))
@@ -785,6 +786,12 @@ class AndroidNewConversationHost(
                                         ),
                                         if (caps.hostAgentProviders) p.name else null,
                                         providerName = p.name.ifBlank { null },
+                                        // Its thinking efforts (Paseo `thinkingOptions`, kept as `variants`).
+                                        variants =
+                                            (p.modelData[model]?.get("variants") as? JsonObject)
+                                                ?.keys
+                                                ?.toList()
+                                                .orEmpty(),
                                     )
                                 }
                             },
@@ -849,6 +856,20 @@ class AndroidNewConversationHost(
         directory: String,
         text: String,
         model: ModelRef?,
+        agent: String?,
+        separateCopy: Boolean,
+        previous: NewConversationAttempt?,
+        onStarted: (ConversationRef) -> Unit,
+    ): NewConversationAttempt =
+        startWithEffort(profile, directory, text, model, null, agent, separateCopy, previous, onStarted)
+
+    /** The thinking effort [variant] rides the first message's selection (Paseo: the create's `thinkingOptionId`). */
+    override suspend fun startWithEffort(
+        profile: ProfileId,
+        directory: String,
+        text: String,
+        model: ModelRef?,
+        variant: String?,
         agent: String?,
         separateCopy: Boolean,
         previous: NewConversationAttempt?,
@@ -1095,7 +1116,7 @@ class AndroidNewConversationHost(
                     SendRequest(
                         ref = ref,
                         text = text,
-                        model = model?.let(::ModelSelection),
+                        model = model?.let { ModelSelection(it, variant?.takeIf { v -> v.isNotEmpty() }) },
                         agent = agent,
                     )
                 val receipt =

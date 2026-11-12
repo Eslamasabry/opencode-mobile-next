@@ -149,6 +149,24 @@ class NewConversationPhoneAgentTest {
             )
         }
 
+        /** The thinking effort each start carried. */
+        val efforts = mutableListOf<String?>()
+
+        override suspend fun startWithEffort(
+            profile: ProfileId,
+            directory: String,
+            text: String,
+            model: ModelRef?,
+            variant: String?,
+            agent: String?,
+            separateCopy: Boolean,
+            previous: NewConversationAttempt?,
+            onStarted: (ConversationRef) -> Unit,
+        ): NewConversationAttempt {
+            efforts += variant
+            return start(profile, directory, text, model, agent, separateCopy, previous, onStarted)
+        }
+
         override suspend fun imports(profile: ProfileId, directory: String): Outcome<ImportableConversations> =
             Outcome.Failed(Failure.Unavailable(FeatureId("test")))
 
@@ -395,5 +413,47 @@ class NewConversationPhoneAgentTest {
         assertTrue(host.starts.isEmpty(), "Start waits for a folder under /root/projects/")
         vm.chooseAgent(null)
         assertFalse(vm.state.value.phoneNeedsProjectsFolder, "OpenCode has no such rule")
+    }
+
+    // ---- Owner 11-12 on the phone (Paseo helper): thinking effort, a list being read, the last known list
+
+    private val codexSol = ModelRef("codex", "gpt-6.1-sol")
+
+    @Test
+    fun `EFFORT a Codex model's thinking efforts are offered and the chosen one goes out with the first message`() {
+        val host = Host()
+        // As the helper lists Codex (thinkingOptions kept as variants by the Paseo gateway).
+        host.agentModels = listOf(NewConversationModel(codexSol, "GPT-6.1-Sol", variants = listOf("low", "medium", "high", "xhigh")))
+        val vm = vm(host)
+        vm.choosePhoneAgent("claude")
+        assertEquals(listOf("low", "medium", "high", "xhigh"), vm.state.value.shownVariants)
+        assertNull(vm.state.value.variant, "the model's own default until a level is chosen")
+        vm.chooseVariant("xhigh")
+        assertEquals("xhigh", vm.state.value.variant)
+        vm.chooseVariant("turbo")
+        assertEquals("xhigh", vm.state.value.variant, "a level the model does not offer is ignored")
+        vm.draftChanged("hello")
+        vm.start()
+        assertEquals(listOf<String?>("xhigh"), host.efforts)
+        assertEquals(codexSol, host.starts.single().model)
+    }
+
+    @Test
+    fun `EFFORT another model starts again from its own default effort`() {
+        val host = Host()
+        val other = ModelRef("codex", "gpt-6-luna")
+        host.agentModels =
+            listOf(
+                NewConversationModel(codexSol, "GPT-6.1-Sol", variants = listOf("low", "high")),
+                NewConversationModel(other, "GPT-6-Luna", variants = listOf("low", "high")),
+            )
+        val vm = vm(host)
+        vm.choosePhoneAgent("claude")
+        vm.chooseVariant("high")
+        vm.chooseModel(other)
+        assertNull(vm.state.value.variant)
+        vm.draftChanged("hello")
+        vm.start()
+        assertEquals(listOf<String?>(null), host.efforts)
     }
 }

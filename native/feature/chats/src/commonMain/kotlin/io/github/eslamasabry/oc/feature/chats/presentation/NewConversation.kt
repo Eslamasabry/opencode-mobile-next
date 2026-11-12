@@ -73,6 +73,11 @@ public data class NewConversationModel(
     val runtime: String? = null,
     /** N-51: the provider's name, the heading its models sit under (as in the chat's model sheet). */
     val providerName: String? = null,
+    /**
+     * The thinking efforts this model offers (Paseo `thinkingOptions`, OpenCode `variants`), as the server names
+     * them ("low", "high", "xhigh"); empty when it offers none.
+     */
+    val variants: List<String> = emptyList(),
 )
 
 /** One agent this phone can run, as New conversation offers it (Flutter `ChatAgentChoice` / a set-up row). */
@@ -233,6 +238,19 @@ public interface NewConversationHost {
         /** The session and local send exist; its composer can open while admission settles. */
         onStarted: (ConversationRef) -> Unit = {},
     ): NewConversationAttempt
+
+    /** [start] with the thinking effort chosen for [model] ([variant], null = the model's own default). */
+    public suspend fun startWithEffort(
+        profile: ProfileId,
+        directory: String,
+        text: String,
+        model: ModelRef?,
+        variant: String?,
+        agent: String?,
+        separateCopy: Boolean,
+        previous: NewConversationAttempt?,
+        onStarted: (ConversationRef) -> Unit = {},
+    ): NewConversationAttempt = start(profile, directory, text, model, agent, separateCopy, previous, onStarted)
 
     public suspend fun imports(
         profile: ProfileId,
@@ -395,6 +413,8 @@ public data class NewConversationUi(
     val phoneModels: List<NewConversationModel> = emptyList(),
     val phoneModel: ModelRef? = null,
     val phoneModelsBusy: Boolean = false,
+    /** The thinking effort chosen for the shown model; null is the model's own default. */
+    val variant: String? = null,
 ) {
     /** A separate copy is OpenCode only: a phone agent hides it (Flutter `_start`). */
     val canCopy: Boolean
@@ -414,6 +434,10 @@ public data class NewConversationUi(
      */
     val modelChoosable: Boolean
         get() = (phoneAgent != null && phoneModelsBusy) || filterNewConversationModels(shownModels, "").size >= 2
+
+    /** The efforts the shown model offers (none when it offers none, or no model is named). */
+    val shownVariants: List<String>
+        get() = shownModel?.let { ref -> shownModels.firstOrNull { it.model == ref }?.variants }.orEmpty()
 
     /** The model the Model row shows. */
     val shownModel: ModelRef?
@@ -467,6 +491,9 @@ public interface NewConversationActions {
     public fun chooseDirectory(directory: String)
 
     public fun chooseModel(model: ModelRef?)
+
+    /** The thinking effort for the chosen model; null is its own default. */
+    public fun chooseVariant(variant: String?) {}
 
     /** N-51: a model sheet star: adds or removes [model] from this server's favourites. */
     public fun toggleFavorite(model: ModelRef) {}
@@ -671,6 +698,7 @@ public class NewConversationViewModel(
                                 phoneAgent = setup.phone?.selected,
                                 phoneModels = emptyList(),
                                 phoneModel = null,
+                                variant = null,
                                 busy = false,
                                 repairAvailable =
                                     setup.directory?.let { dir -> host.canRepair(profile, dir) } ==
@@ -923,12 +951,19 @@ public class NewConversationViewModel(
         val phone = shown.phoneAgent
         val profile = shown.profile
         if (phone != null && profile != null) {
-            mutable.update { it.copy(phoneModel = model, sheet = null) }
+            mutable.update { it.copy(phoneModel = model, variant = null, sheet = null) }
             viewModelScope.launch { host.savePhoneAgentModel(profile, phone, model) }
             return
         }
-        mutable.update { it.copy(model = model, sheet = null) }
+        mutable.update { it.copy(model = model, variant = null, sheet = null) }
         saveChoices()
+    }
+
+    override fun chooseVariant(variant: String?) {
+        val shown = mutable.value
+        if (shown.busy || shown.deliveryUnconfirmed) return
+        if (variant != null && variant !in shown.shownVariants) return
+        mutable.update { it.copy(variant = variant) }
     }
 
     override fun toggleFavorite(model: ModelRef) {
@@ -1012,6 +1047,7 @@ public class NewConversationViewModel(
                 separateCopy = if (agent != null) false else it.separateCopy,
                 phoneModels = emptyList(),
                 phoneModel = null,
+                variant = null,
             )
         }
         viewModelScope.launch {
@@ -1277,6 +1313,7 @@ public class NewConversationViewModel(
             val phone = shown.setup?.phone?.takeIf { shown.phoneAgent != null }
             val target = phone?.helper ?: profile
             val model = if (phone != null) shown.phoneModel else shown.model
+            val variant = shown.variant?.takeIf { it in shown.shownVariants }
             val agent = if (phone != null) null else shown.agent
             val result = edits.withLock {
                 val saved = host.saveDraft(target, directory, shown.text)
@@ -1292,11 +1329,12 @@ public class NewConversationViewModel(
                                 io.github.eslamasabry.oc.core.common.attempt({
                                     Failure.StorageRefused()
                                 }) {
-                                    host.start(
+                                    host.startWithEffort(
                                         target,
                                         directory,
                                         shown.text.trim(),
                                         model,
+                                        variant,
                                         agent,
                                         shown.separateCopy,
                                         attempt,
