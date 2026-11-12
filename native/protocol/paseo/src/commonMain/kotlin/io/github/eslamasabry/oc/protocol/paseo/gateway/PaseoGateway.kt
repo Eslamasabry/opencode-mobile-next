@@ -1112,7 +1112,9 @@ public class PaseoGateway(
                             (beforeSend?.invoke() ?: true).also { if (it) wired = true }
                         }
                     } catch (e: PaseoException) {
-                        if (!wired && e.kind == PaseoFailureKind.Unavailable) refusedBeforeWire = true
+                        // Fault 2 (daemon unreachable): a link that could not be (re)opened fails
+                        // Disconnected before the prompt's fence, so its frame was never written either.
+                        if (!wired && e.kind in NOTHING_WIRED) refusedBeforeWire = true
                         throw e
                     }
                 }
@@ -2457,6 +2459,13 @@ public class PaseoGateway(
         private const val MAX_SESSIONS = 1024
         private val STEERING_PROVIDERS = setOf("claude", "codex", "opencode", "pi")
         private val DETAILS = Redactor()
+
+        /**
+         * Failures that, thrown before a prompt's fence passed, prove its frame never left: a refusal on the phone,
+         * or a link that could not be opened. DeliveryUnknown is not one: before the fence it means an earlier
+         * send of this conversation is still unknown, and a duplicate is the worse error.
+         */
+        private val NOTHING_WIRED = setOf(PaseoFailureKind.Unavailable, PaseoFailureKind.Disconnected)
 
         /** Questions changed; sent alongside the typed QuestionAsked/QuestionSettled events. */
         public val QUESTION_HINT: HintKind = HintKind("question")

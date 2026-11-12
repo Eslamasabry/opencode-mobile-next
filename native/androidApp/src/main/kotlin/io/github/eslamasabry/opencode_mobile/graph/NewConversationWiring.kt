@@ -48,7 +48,6 @@ import io.github.eslamasabry.oc.engine.delivery.SendOutcomeId
 import io.github.eslamasabry.oc.engine.delivery.SendPhase
 import io.github.eslamasabry.oc.engine.delivery.SendRequest
 import io.github.eslamasabry.oc.engine.delivery.port.GatewaySendLink
-import io.github.eslamasabry.oc.engine.delivery.port.nothingSent
 import io.github.eslamasabry.oc.engine.delivery.receipts.CommandReceipt
 import io.github.eslamasabry.oc.engine.delivery.receipts.CommandReceiptController
 import io.github.eslamasabry.oc.engine.delivery.receipts.CommandReceiptState
@@ -1266,10 +1265,8 @@ class AndroidNewConversationHost(
         try {
             when (val sent = delivery.send(request)) {
                 is Outcome.Failed -> {
-                    val uncertain =
-                        (sent.failure as? Failure.Refused)?.reason ==
-                            RefusalReason.DispatchUncertain
-                    if (sent.failure.nothingSent && !uncertain) FirstMessage.PutBack(sent.failure)
+                    if (FirstMessageRules.notSent(sent.failure, request))
+                        FirstMessage.PutBack(sent.failure)
                     else FirstMessage.Unknown(sent.failure)
                 }
                 is Outcome.Ok -> {

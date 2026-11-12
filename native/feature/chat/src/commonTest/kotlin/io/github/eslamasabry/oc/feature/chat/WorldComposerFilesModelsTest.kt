@@ -654,6 +654,42 @@ class WorldComposerFilesModelsTest {
         }
 
     @Test
+    fun `Paseo fault 2 an unconfirmed send with nothing on the waiting page offers Send again, not an empty Review`() =
+        runTest {
+            // A server with no offline queue (Paseo): no dispatch marker, so the waiting-sends page has nothing.
+            val f = Fixture(this)
+            f.base.admission = PromptAdmission.Uncertain
+            f.open()
+            assertIs<Outcome.Ok<Unit>>(f.world.send("say hi"))
+            runCurrent()
+            val bubble = f.world.pending.value.single()
+            assertEquals(PendingState.Unconfirmed, bubble.state)
+            assertFalse(bubble.reviewable, "Review would open an empty Waiting to send page")
+            // Send again is the person's own tap: the same words go once more.
+            f.base.admission = PromptAdmission.Confirmed(null)
+            assertIs<Outcome.Ok<Unit>>(f.world.retrySend(bubble.localId))
+            runCurrent()
+            assertEquals(listOf("say hi", "say hi"), f.base.sentPrompts.map { it.second.text })
+        }
+
+    @Test
+    fun `Paseo fault 2 an unconfirmed send with a waiting record is reviewed there, never resent from the bubble`() =
+        runTest {
+            val f = Fixture(this)
+            f.base.admission = PromptAdmission.Uncertain
+            f.queuesPrompts()
+            f.open()
+            assertIs<Outcome.Ok<Unit>>(f.world.send("say hi"))
+            runCurrent()
+            val bubble = f.world.pending.value.single()
+            assertEquals(PendingState.Unconfirmed, bubble.state)
+            assertTrue(bubble.reviewable)
+            assertIs<Outcome.Ok<Unit>>(f.world.retrySend(bubble.localId))
+            runCurrent()
+            assertEquals(1, f.base.sentPrompts.size)
+        }
+
+    @Test
     fun `09-4_6 a file-only unconfirmed send never settles on a blank row or duplicates`() =
         runTest {
             val f = Fixture(this)

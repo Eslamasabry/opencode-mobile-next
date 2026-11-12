@@ -846,6 +846,7 @@ internal class GraphChatWorld(
                                 PendingState.Unconfirmed,
                                 canCheckReceipt =
                                     entry.dispatched && gateway.capabilities.value.commandReceipts,
+                                reviewable = true,
                                 files = entry.attachments.map(::pendingFile),
                             ))
                         .toImmutableList()
@@ -2079,9 +2080,14 @@ internal class GraphChatWorld(
 
     override suspend fun retrySend(localId: Long): Outcome<Unit> {
         if (readOnlyNow()) return readOnlyFailure()
+        // Paseo fault 2: an unconfirmed send with nothing on the waiting-sends page (no dispatch
+        // marker) has its Send again here, at the person's tap only; one with a record is resent
+        // from that page, never twice from here.
         val bubble =
             mutablePending.value.firstOrNull {
-                it.localId == localId && it.state == PendingState.Failed
+                it.localId == localId &&
+                    (it.state == PendingState.Failed ||
+                        it.state == PendingState.Unconfirmed && !it.reviewable)
             } ?: return Outcome.Ok(Unit)
         val expected = currentAttached()
         baselines[localId] =
@@ -2360,12 +2366,13 @@ internal class GraphChatWorld(
         mutablePending.update { list ->
             list
                 .map { pending ->
-                    val canCheck =
-                        supportsReceipts &&
-                            pending.state == PendingState.Unconfirmed &&
+                    // A record on the waiting-sends page exists only for a send with a dispatch marker.
+                    val recorded =
+                        pending.state == PendingState.Unconfirmed &&
                             recoveryIds.any { (_, id) -> id == pending.localId }
-                    if (pending.canCheckReceipt == canCheck) pending
-                    else pending.copy(canCheckReceipt = canCheck)
+                    val canCheck = supportsReceipts && recorded
+                    if (pending.canCheckReceipt == canCheck && pending.reviewable == recorded) pending
+                    else pending.copy(canCheckReceipt = canCheck, reviewable = recorded)
                 }
                 .toImmutableList()
         }

@@ -133,6 +133,7 @@ import io.github.eslamasabry.oc.ui.words.res.liveFailedStillWorking
 import io.github.eslamasabry.oc.ui.words.res.liveFailedStopped
 import io.github.eslamasabry.oc.ui.words.res.kitQueuedUncertain
 import io.github.eslamasabry.oc.ui.words.res.nativePendingReview
+import io.github.eslamasabry.oc.ui.words.res.queuedResendConfirm
 import io.github.eslamasabry.oc.ui.words.res.kitTurnMore
 import io.github.eslamasabry.oc.ui.words.res.queuedReceiptStillUncertain
 import io.github.eslamasabry.oc.ui.words.res.queuedReceiptStorageProblem
@@ -712,7 +713,16 @@ private fun PendingBubble(
         )
         when (p.state) {
             PendingState.Sending -> KitQuietLine(words.sending)
-            PendingState.Unconfirmed -> ReceiptCheckLine(p.localId, check, onCheck, onReview)
+            // Review opens the waiting-sends page, which lists only sends with a record: without one it would
+            // open empty (Paseo fault 2), so the bubble offers Send again itself.
+            PendingState.Unconfirmed ->
+                ReceiptCheckLine(
+                    p.localId,
+                    check,
+                    onCheck,
+                    onReview = onReview?.takeIf { p.reviewable },
+                    onSendAgain = onRetry.takeIf { !p.reviewable },
+                )
             PendingState.Failed -> {
                 KitQuietLine(words.notSent)
                 p.failure?.let { failure ->
@@ -744,6 +754,7 @@ private fun ReceiptCheckLine(
     check: ReceiptCheckUi?,
     onCheck: (() -> Unit)?,
     onReview: (() -> Unit)? = null,
+    onSendAgain: (() -> Unit)? = null,
 ) {
     val checking = check?.checking == true
     val words =
@@ -760,6 +771,7 @@ private fun ReceiptCheckLine(
     // bubble also offers Review: the waiting sends, where Send again and Discard live (N-48).
     val checkAgain = stringResource(Res.string.chatReceiptCheckAgain)
     val review = stringResource(Res.string.nativePendingReview)
+    val sendAgain = stringResource(Res.string.queuedResendConfirm)
     // On the reply's own 16 dp edge, never against the screen's.
     Column(Modifier.padding(horizontal = Space.S4.dp).testTag("chat-receipt-$localId")) {
         KitNotice(
@@ -777,6 +789,7 @@ private fun ReceiptCheckLine(
                         )
                     },
                     onReview?.let { KitLineAction(review, it, testTag = "chat-receipt-review-$localId") },
+                    onSendAgain?.let { KitLineAction(sendAgain, it, testTag = "chat-receipt-send-again-$localId") },
                 ),
         )
         check?.checkedAtMs?.let { at ->
