@@ -19,4 +19,5 @@
     <string name="agentsHubNotAnswering">Máy tính đó không phản hồi. Hãy kiểm tra Paseo có đang chạy và điện thoại này có truy cập được nó không.</string>
     <string name="agentsHubNotConnected">Chưa kết nối</string>
     <string name="agentsHubDefaultName">Paseo</string>
+    <string name="agentsHubPasswordNeeded">Máy tính này cần mật khẩu. Hãy nhập mật khẩu daemon rồi kiểm tra lại.</string>
 </resources>

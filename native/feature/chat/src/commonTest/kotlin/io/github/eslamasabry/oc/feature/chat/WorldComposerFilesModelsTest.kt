@@ -159,7 +159,13 @@ class WorldComposerFilesModelsTest {
 
         override suspend fun commands() = commands
 
-        override suspend fun catalog(): Outcome<CatalogSnapshot> = catalog
+        /** Holds the catalog read back until completed (null answers at once). */
+        var catalogGate: kotlinx.coroutines.CompletableDeferred<Unit>? = null
+
+        override suspend fun catalog(): Outcome<CatalogSnapshot> {
+            catalogGate?.await()
+            return catalog
+        }
 
         override suspend fun chatDefaults(): Outcome<ChatDefaults> = defaults
     }
@@ -428,6 +434,38 @@ class WorldComposerFilesModelsTest {
             assertFalse(f.world.models.value.loading)
         }
 
+    /** The model sheets' `loading` (ModelSheet, SwitchModelSheet) is this flag: true only while the read runs. */
+    @Test
+    fun `the models' loading flag is true only while the catalog read runs, false after success and failure`() =
+        runTest {
+            val f = Fixture(this, selection = ModelRef("prov", "m1"))
+            f.operations.catalog = Outcome.Ok(snapshot(catalogModel("m1")))
+            f.operations.defaults = Outcome.Ok(ChatDefaults(ModelRef("prov", "m1"), null))
+            f.switchesModels()
+            f.open()
+            runCurrent()
+            assertFalse(f.world.models.value.loading)
+            var gate = kotlinx.coroutines.CompletableDeferred<Unit>()
+            f.operations.catalogGate = gate
+            var load = async { f.world.loadModels() }
+            runCurrent()
+            assertTrue(f.world.models.value.loading, "the read is on its way")
+            gate.complete(Unit)
+            assertIs<Outcome.Ok<Unit>>(load.await())
+            assertFalse(f.world.models.value.loading, "a read that succeeded ended")
+            // A refresh behind the kept list: the list stays and the flag marks the read.
+            gate = kotlinx.coroutines.CompletableDeferred()
+            f.operations.catalogGate = gate
+            f.operations.catalog = Outcome.Failed(Failure.Network(NetworkWhy.Refused))
+            load = async { f.world.loadModels() }
+            runCurrent()
+            assertTrue(f.world.models.value.loading)
+            assertEquals(listOf("m1"), f.world.models.value.choices.map { it.modelId })
+            gate.complete(Unit)
+            assertIs<Outcome.Failed>(load.await())
+            assertFalse(f.world.models.value.loading, "a failed read ended")
+        }
+
     @Test
     fun `B-CHAT-105 a choice is published only after the session readback acknowledges it`() =
         runTest {
@@ -651,6 +689,75 @@ class WorldComposerFilesModelsTest {
             assertEquals("original words", retry.text)
             assertEquals(listOf("first.txt"), retry.attachments.map { it.filename })
             assertEquals(ModelRef("prov", "m1"), retry.model?.model)
+        }
+
+    @Test
+    fun `Paseo fault 6 the header takes the title the server gives the conversation by an update`() =
+        runTest {
+            val f = Fixture(this)
+            f.open()
+            // Paseo names a new conversation by an agent update (SessionUpserted), never SessionChanged.
+            f.base.events.emit(GatewayEvent.SessionUpserted(Session(ref.sessionId, title = "say hi")))
+            runCurrent()
+            assertEquals("say hi", f.world.title.value)
+            // A later name by update follows too, while no SessionChanged named it.
+            f.base.events.emit(GatewayEvent.SessionUpserted(Session(ref.sessionId, title = "Say hi greeting")))
+            runCurrent()
+            assertEquals("Say hi greeting", f.world.title.value)
+        }
+
+    @Test
+    fun `a server that renames by SessionChanged keeps that title when an older upsert arrives`() =
+        runTest {
+            val f = Fixture(this)
+            f.open()
+            f.base.events.emit(
+                GatewayEvent.SessionChanged(ref.sessionId, "Renamed", null, null, replacesLocation = false)
+            )
+            runCurrent()
+            assertEquals("Renamed", f.world.title.value)
+            // OpenCode 2's SessionCreated arrives as an upsert with the first title: it never undoes the rename.
+            f.base.events.emit(GatewayEvent.SessionUpserted(Session(ref.sessionId, title = "New session")))
+            runCurrent()
+            assertEquals("Renamed", f.world.title.value)
+        }
+
+    @Test
+    fun `Paseo fault 2 an unconfirmed send with nothing on the waiting page offers Send again, not an empty Review`() =
+        runTest {
+            // A server with no offline queue (Paseo): no dispatch marker, so the waiting-sends page has nothing.
+            val f = Fixture(this)
+            f.base.admission = PromptAdmission.Uncertain
+            f.open()
+            f.world.draftChanged("say hi")
+            assertIs<Outcome.Ok<Unit>>(f.world.send("say hi"))
+            runCurrent()
+            val bubble = f.world.pending.value.single()
+            assertEquals(PendingState.Unconfirmed, bubble.state)
+            assertFalse(bubble.reviewable, "Review would open an empty Waiting to send page")
+            // Send again is the person's own tap: the same words go once more.
+            f.base.admission = PromptAdmission.Confirmed(null)
+            assertIs<Outcome.Ok<Unit>>(f.world.retrySend(bubble.localId))
+            runCurrent()
+            assertEquals(listOf("say hi", "say hi"), f.base.sentPrompts.map { it.second.text })
+        }
+
+    @Test
+    fun `Paseo fault 2 an unconfirmed send with a waiting record is reviewed there, never resent from the bubble`() =
+        runTest {
+            val f = Fixture(this)
+            f.base.admission = PromptAdmission.Uncertain
+            f.queuesPrompts()
+            f.open()
+            f.world.draftChanged("say hi")
+            assertIs<Outcome.Ok<Unit>>(f.world.send("say hi"))
+            runCurrent()
+            val bubble = f.world.pending.value.single()
+            assertEquals(PendingState.Unconfirmed, bubble.state)
+            assertTrue(bubble.reviewable)
+            assertIs<Outcome.Ok<Unit>>(f.world.retrySend(bubble.localId))
+            runCurrent()
+            assertEquals(1, f.base.sentPrompts.size)
         }
 
     @Test
@@ -907,6 +1014,26 @@ class WorldComposerFilesModelsTest {
             assertEquals(4, sent.mentionStart)
             assertEquals(13, sent.mentionEnd)
             assertEquals("file:///work/src/a.kt", sent.url)
+        }
+
+    @Test
+    fun `Paseo fault 3 on a pictures-only server a picked project file is named in the words, never staged as a file`() =
+        runTest {
+            val f = Fixture(this)
+            f.base.setLocation(io.github.eslamasabry.oc.core.model.ServerLocation(directory = "/work/project"))
+            // Paseo's flags (PaseoCapabilities): pictures go with a message, other files do not.
+            f.base.capabilities.value =
+                f.base.capabilities.value.copy(promptAttachments = true, promptImagesOnly = true)
+            f.open()
+            f.world.draftChanged("summarize @readme.txt")
+            assertIs<Outcome.Ok<Unit>>(f.world.mentionFile("readme.txt"))
+            // Before: a file:// part was staged and every send failed "Unavailable.promptAttachments".
+            assertTrue(f.world.draft.value.attachments.isEmpty())
+            assertIs<Outcome.Ok<Unit>>(f.world.send("summarize @readme.txt"))
+            runCurrent()
+            val sent = f.base.sentPrompts.single().second
+            assertEquals("summarize @readme.txt", sent.text)
+            assertTrue(sent.attachments.isEmpty())
         }
 
     @Test

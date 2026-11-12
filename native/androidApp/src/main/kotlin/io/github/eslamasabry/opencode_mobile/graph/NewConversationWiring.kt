@@ -48,7 +48,6 @@ import io.github.eslamasabry.oc.engine.delivery.SendOutcomeId
 import io.github.eslamasabry.oc.engine.delivery.SendPhase
 import io.github.eslamasabry.oc.engine.delivery.SendRequest
 import io.github.eslamasabry.oc.engine.delivery.port.GatewaySendLink
-import io.github.eslamasabry.oc.engine.delivery.port.nothingSent
 import io.github.eslamasabry.oc.engine.delivery.receipts.CommandReceipt
 import io.github.eslamasabry.oc.engine.delivery.receipts.CommandReceiptController
 import io.github.eslamasabry.oc.engine.delivery.receipts.CommandReceiptState
@@ -78,6 +77,7 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 
 /** The first message uses the same durable delivery owner as the conversation composer. */
@@ -585,8 +585,20 @@ class AndroidNewConversationHost(
     override suspend fun phoneAgentModels(
         profile: ProfileId,
         agentId: String,
+    ): Outcome<NewConversationPhoneModels> = readPhoneAgentModels(profile, agentId, ahead = false)
+
+    /**
+     * [ahead]: a read nobody asked for yet (the page opened with no agent chosen). It never starts or reconnects the
+     * helper and never asks it to look at its agents again (each look can start one process per agent CLI on the
+     * phone): it only reads the list the running helper already holds.
+     */
+    private suspend fun readPhoneAgentModels(
+        profile: ProfileId,
+        agentId: String,
+        ahead: Boolean,
     ): Outcome<NewConversationPhoneModels> {
         val helper = phoneHelperId() ?: return refused()
+        if (ahead && registry.live.value[helper] == null) return refused()
         val provider =
             AgentCatalog.builtIn.byId(AgentId(agentId))?.providerId ?: return refused()
         val agentReady =
@@ -600,10 +612,11 @@ class AndroidNewConversationHost(
                             is Outcome.Failed -> first
                             is Outcome.Ok ->
                                 if (
-                                    phoneModelsNeedRecheck(
-                                        agentReady,
-                                        first.value.models.filter { it.model.providerId == provider },
-                                    )
+                                    !ahead &&
+                                        phoneModelsNeedRecheck(
+                                            agentReady,
+                                            first.value.models.filter { it.model.providerId == provider },
+                                        )
                                 ) {
                                     // The helper keeps the list it read first (before the agent was installed or
                                     // signed in) until asked to look again: ask once, then read it again.
@@ -619,17 +632,98 @@ class AndroidNewConversationHost(
                     is Outcome.Ok -> {
                         val models = read.value.models.filter { it.model.providerId == provider }
                         val saved = selection(profile).selectedModel(profile, AgentId(agentId))
-                        Outcome.Ok(
+                        val found =
                             NewConversationPhoneModels(
                                 models,
                                 models.firstOrNull { it.model.modelId == saved }?.model
                                     ?: read.value.model?.takeIf { it.providerId == provider }
                                     ?: models.firstOrNull()?.model,
                             )
-                        )
+                        // One read lists every agent's models: each is kept (across app starts), so the next pick of
+                        // any of them shows its list at once while it is read again.
+                        rememberPhoneModels(profile, read.value.models, asked = AgentId(agentId))
+                        Outcome.Ok(found)
                     }
                 }
             } ?: Outcome.Failed(Failure.Unavailable(FeatureId("phoneAgentModels")))
+    }
+
+    /** The last list read per `profile|agent` in this run; [PhoneModelsCache] keeps them across starts. */
+    private val lastPhoneModels = java.util.concurrent.ConcurrentHashMap<String, NewConversationPhoneModels>()
+
+    override fun cachedPhoneAgentModels(profile: ProfileId, agentId: String): NewConversationPhoneModels? =
+        lastPhoneModels["${profile.raw}|$agentId"]
+            ?: try {
+                PhoneModelsCache.get(stores.prefs.string(PhoneModelsCache.key(profile)), agentId)
+            } catch (_: Exception) {
+                null // the store is not open yet (migration gate): no list to show early
+            }
+
+    /** One read ahead at a time, app-wide. */
+    private val readAhead = Mutex()
+
+    /** The helper connection (its live graph) a read ahead already succeeded on: the next page open reads nothing. */
+    @Volatile private var readAheadDoneOn: Any? = null
+
+    /**
+     * One helper read lists every agent's models; [readPhoneAgentModels] keeps them all. Bounded for the phone (its
+     * process limit): only while the helper already runs (never started for this), no recheck, one read at a time
+     * (a second page open while one runs reads nothing), once per helper connection, and the page's scope cancels it
+     * when the page closes. So it adds at most one plain read of the list the helper holds.
+     */
+    override suspend fun prefetchPhoneAgentModels(profile: ProfileId, agentIds: List<String>) {
+        val first = agentIds.firstOrNull() ?: return
+        val helper = phoneHelperId() ?: return
+        val live = registry.live.value[helper] ?: return
+        if (readAheadDoneOn === live) return
+        if (!readAhead.tryLock()) return
+        try {
+            if (readPhoneAgentModels(profile, first, ahead = true) is Outcome.Ok) readAheadDoneOn = live
+        } finally {
+            readAhead.unlock()
+        }
+    }
+
+    /**
+     * Keeps every agent's list from one helper read (an agent with no real model is not kept). The [asked] agent's
+     * entry is always replaced: when this read named none of its models, its old list is dropped, so a list from before
+     * a sign-out never shows again.
+     */
+    private suspend fun rememberPhoneModels(profile: ProfileId, all: List<NewConversationModel>, asked: AgentId) {
+        val selection = selection(profile)
+        val before =
+            try {
+                stores.prefs.string(PhoneModelsCache.key(profile))
+            } catch (_: Exception) {
+                return
+            }
+        var stored = before
+        for (agent in AgentCatalog.builtIn.agents) {
+            val provider = agent.providerId
+            val models = all.filter { it.model.providerId == provider }
+            if (models.none { it.model.modelId != "default" }) {
+                if (agent.id == asked) {
+                    lastPhoneModels.remove("${profile.raw}|${agent.id.raw}")
+                    stored = PhoneModelsCache.remove(stored, agent.id.raw)
+                }
+                continue
+            }
+            val saved = selection.selectedModel(profile, agent.id)
+            val entry =
+                NewConversationPhoneModels(
+                    models,
+                    models.firstOrNull { it.model.modelId == saved }?.model ?: models.first().model,
+                )
+            lastPhoneModels["${profile.raw}|${agent.id.raw}"] = entry
+            stored = PhoneModelsCache.put(stored, agent.id.raw, entry)
+        }
+        val key = PhoneModelsCache.key(profile)
+        val text = stored
+        if (text == null) {
+            if (before != null) stores.prefs.commit(stores.lanes.forProfile(profile)) { remove(key) }
+            return
+        }
+        if (text != before) stores.prefs.commit(stores.lanes.forProfile(profile)) { putString(key, text) }
     }
 
     /** Asks the helper to check its agents and their models again (its list is otherwise kept until a restart). */
@@ -786,6 +880,12 @@ class AndroidNewConversationHost(
                                         ),
                                         if (caps.hostAgentProviders) p.name else null,
                                         providerName = p.name.ifBlank { null },
+                                        // Its thinking efforts (Paseo `thinkingOptions`, kept as `variants`).
+                                        variants =
+                                            (p.modelData[model]?.get("variants") as? JsonObject)
+                                                ?.keys
+                                                ?.toList()
+                                                .orEmpty(),
                                     )
                                 }
                             },
@@ -850,6 +950,20 @@ class AndroidNewConversationHost(
         directory: String,
         text: String,
         model: ModelRef?,
+        agent: String?,
+        separateCopy: Boolean,
+        previous: NewConversationAttempt?,
+        onStarted: (ConversationRef) -> Unit,
+    ): NewConversationAttempt =
+        startWithEffort(profile, directory, text, model, null, agent, separateCopy, previous, onStarted)
+
+    /** The thinking effort [variant] rides the first message's selection (Paseo: the create's `thinkingOptionId`). */
+    override suspend fun startWithEffort(
+        profile: ProfileId,
+        directory: String,
+        text: String,
+        model: ModelRef?,
+        variant: String?,
         agent: String?,
         separateCopy: Boolean,
         previous: NewConversationAttempt?,
@@ -1096,7 +1210,7 @@ class AndroidNewConversationHost(
                     SendRequest(
                         ref = ref,
                         text = text,
-                        model = model?.let(::ModelSelection),
+                        model = model?.let { ModelSelection(it, variant?.takeIf { v -> v.isNotEmpty() }) },
                         agent = agent,
                     )
                 val receipt =
@@ -1266,10 +1380,8 @@ class AndroidNewConversationHost(
         try {
             when (val sent = delivery.send(request)) {
                 is Outcome.Failed -> {
-                    val uncertain =
-                        (sent.failure as? Failure.Refused)?.reason ==
-                            RefusalReason.DispatchUncertain
-                    if (sent.failure.nothingSent && !uncertain) FirstMessage.PutBack(sent.failure)
+                    if (FirstMessageRules.notSent(sent.failure, request))
+                        FirstMessage.PutBack(sent.failure)
                     else FirstMessage.Unknown(sent.failure)
                 }
                 is Outcome.Ok -> {

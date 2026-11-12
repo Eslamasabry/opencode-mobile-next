@@ -99,6 +99,28 @@ class CacheFirstModelDefaultsTest {
         assertEquals(live.models.map { it.selected }, first.models.map { it.selected })
     }
 
+    /** The model sheet's `loading` (KitModelSheet) is `state.loading`: true only while a read is on its way. */
+    @Test
+    fun `the sheet's loading flag is true only while the read runs, then false after success or failure`() = runTest {
+        val failing = Host(kept = null)
+        val vm = ModelDefaultsViewModel(SettingsRoute.ModelDefaults(), failing, Nav)
+        assertTrue(vm.state.value.loading, "the first read is on its way")
+        assertTrue(vm.state.value.models.isEmpty())
+        failing.live.complete(Outcome.Failed(Failure.Network(NetworkWhy.Offline)))
+        assertFalse(vm.state.value.loading, "a failed read ended")
+
+        val host = Host(kept = data)
+        val kept = ModelDefaultsViewModel(SettingsRoute.ModelDefaults(), host, Nav)
+        // The kept list with the read behind it: the list shows and the flag marks the refresh.
+        assertTrue(kept.state.value.loading)
+        assertEquals(2, kept.state.value.models.size)
+        host.live.complete(Outcome.Ok(data))
+        assertFalse(kept.state.value.loading, "a read that succeeded ended")
+        // A refresh is a read again; it ends false whatever it answers.
+        kept.refresh()
+        assertFalse(kept.state.value.loading, "the completed read answers at once")
+    }
+
     @Test
     fun `CF-16 a failed read keeps the kept rows and says so, never an empty page`() = runTest {
         val host = Host(data)

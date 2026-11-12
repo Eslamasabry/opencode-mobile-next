@@ -19,4 +19,5 @@
     <string name="agentsHubNotAnswering">Этот компьютер не ответил. Убедитесь, что Paseo запущен и телефон может до него добраться.</string>
     <string name="agentsHubNotConnected">Нет подключения</string>
     <string name="agentsHubDefaultName">Paseo</string>
+    <string name="agentsHubPasswordNeeded">Этому компьютеру нужен пароль. Введите пароль демона и проверьте ещё раз.</string>
 </resources>

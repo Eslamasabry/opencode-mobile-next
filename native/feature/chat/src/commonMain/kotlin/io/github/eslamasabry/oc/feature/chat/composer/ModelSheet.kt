@@ -95,8 +95,11 @@ internal fun ModelSheet(
         },
         offersServerDefault = ModelPicker.offersServerDefault(models),
         resetKey = targetKey,
+        // The catalog read is running: "Loading models…" with no list yet, the working mark over a kept list.
+        loading = models.loading,
         above = {
             when {
+                // The kit draws its own loading row (and no `above`) while loading with no list; kept as a guard.
                 models.loading && models.choices.isEmpty() ->
                     KitNotice(
                         message = stringResource(Res.string.composerPreviewModelsLoading),

@@ -19,4 +19,5 @@
     <string name="agentsHubNotAnswering">那台电脑没有响应。请检查 Paseo 是否在运行，以及这部手机能否访问它。</string>
     <string name="agentsHubNotConnected">未连接</string>
     <string name="agentsHubDefaultName">Paseo</string>
+    <string name="agentsHubPasswordNeeded">这台电脑需要密码。请输入守护进程密码，然后再检查一次。</string>
 </resources>
