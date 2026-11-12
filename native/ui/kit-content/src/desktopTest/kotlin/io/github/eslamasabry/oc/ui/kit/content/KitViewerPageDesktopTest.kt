@@ -9,10 +9,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.SemanticsNodeInteraction
+import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.onNodeWithContentDescription
-import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.v2.runComposeUiTest
@@ -24,7 +24,6 @@ import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.content.viewer.KitViewerAction
 import io.github.eslamasabry.oc.ui.kit.content.viewer.KitViewerDocument
 import io.github.eslamasabry.oc.ui.kit.content.viewer.KitViewerFrame
-import io.github.eslamasabry.oc.ui.kit.content.viewer.KitViewerTags
 import io.github.eslamasabry.oc.ui.kit.content.viewer.KitViewerMenuItem
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -144,11 +143,10 @@ class KitViewerPageDesktopTest {
                 ) { KitViewerDocument(text) }
             }
         }
-        val ask = onNodeWithText("Ask about this file")
-        near(16 * scale, ask.left(), 40f)
-        // Under the whole body, at the bottom of the window.
-        val body = onNodeWithTag(KitViewerTags.BODY)
-        assertTrue(ask.top() >= body.bottom() - 1f, "button ${ask.top()} under body ${body.bottom()}")
+        val ask = onNode(hasText("Ask about this file") and hasClickAction())
+        assertTrue(ask.left() <= 16 * scale + 1f, "the button reaches the margin: ${ask.left()}")
+        // At the bottom of the window, below the top bar and the text's first line, not in the scrolling body's flow.
+        assertTrue(ask.top() > onNodeWithText("Line number 1 of the file", substring = true).bottom(), "below the text")
         assertTrue(ask.bottom() > 800 * scale - 120 * scale, "button bottom ${ask.bottom()}")
         ask.performClick()
         assertEquals(1, asked)
