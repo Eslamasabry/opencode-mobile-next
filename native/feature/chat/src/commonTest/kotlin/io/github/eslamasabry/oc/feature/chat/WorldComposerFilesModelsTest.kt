@@ -662,6 +662,26 @@ class WorldComposerFilesModelsTest {
             f.base.events.emit(GatewayEvent.SessionUpserted(Session(ref.sessionId, title = "say hi")))
             runCurrent()
             assertEquals("say hi", f.world.title.value)
+            // A later name by update follows too, while no SessionChanged named it.
+            f.base.events.emit(GatewayEvent.SessionUpserted(Session(ref.sessionId, title = "Say hi greeting")))
+            runCurrent()
+            assertEquals("Say hi greeting", f.world.title.value)
+        }
+
+    @Test
+    fun `a server that renames by SessionChanged keeps that title when an older upsert arrives`() =
+        runTest {
+            val f = Fixture(this)
+            f.open()
+            f.base.events.emit(
+                GatewayEvent.SessionChanged(ref.sessionId, "Renamed", null, null, replacesLocation = false)
+            )
+            runCurrent()
+            assertEquals("Renamed", f.world.title.value)
+            // OpenCode 2's SessionCreated arrives as an upsert with the first title: it never undoes the rename.
+            f.base.events.emit(GatewayEvent.SessionUpserted(Session(ref.sessionId, title = "New session")))
+            runCurrent()
+            assertEquals("Renamed", f.world.title.value)
         }
 
     @Test

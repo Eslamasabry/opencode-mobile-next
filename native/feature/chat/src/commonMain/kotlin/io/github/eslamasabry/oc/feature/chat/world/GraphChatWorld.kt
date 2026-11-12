@@ -227,6 +227,9 @@ internal class GraphChatWorld(
     private val mutableLoad = MutableStateFlow<ChatLoad>(ChatLoad.Loading)
     private val mutableReadOnly = MutableStateFlow<ReadOnlyChat?>(null)
     private val mutableTitle = MutableStateFlow<String?>(null)
+
+    /** This server named the conversation by a SessionChanged title: upserts no longer set the header. */
+    private var titleChangedSeen = false
     private val mutableCaps = MutableStateFlow(ServerCapabilities())
     private val mutableLink = MutableStateFlow(ChatLink.Connecting)
     private val mutableRetryAt = MutableStateFlow<Long?>(null)
@@ -959,8 +962,11 @@ internal class GraphChatWorld(
                             adoptUndone(gateway, event.session)
                             // Paseo names a new conversation by an agent update (an upsert, never
                             // SessionChanged): the header kept "New conversation" while the home row
-                            // already read the daemon's title.
-                            event.session.title?.takeIf { it.isNotBlank() }?.let { mutableTitle.value = it }
+                            // already read the daemon's title. A server that names conversations by
+                            // SessionChanged keeps that as the truth (an OpenCode 2 SessionCreated
+                            // upsert carries the first title and must not undo a later rename).
+                            if (!titleChangedSeen)
+                                event.session.title?.takeIf { it.isNotBlank() }?.let { mutableTitle.value = it }
                         }
                         if (event is CoreEvent.RevertChanged && event.sessionId == sid)
                             (gateway.session(sid) as? Outcome.Ok)?.value?.let { adoptUndone(gateway, it) }
@@ -970,8 +976,10 @@ internal class GraphChatWorld(
                             event is CoreEvent.SessionChanged &&
                                 event.sessionId == sid &&
                                 event.title != null
-                        )
+                        ) {
+                            titleChangedSeen = true
                             mutableTitle.value = event.title
+                        }
                         if (
                             event is CoreEvent.MessageUpserted &&
                                 event.message.sessionId == sid.raw &&
