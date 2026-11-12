@@ -664,7 +664,7 @@
     <string name="tourMakeItYoursTitle">Personnalisez l’application</string>
     <string name="tourMakeItYoursOffer">Personnalisez l’application\u00A0: clair ou sombre, couleurs et style, en quatre étapes</string>
     <string name="tourMakeItYoursColours">Commencez ici\u00A0: clair ou sombre, un thème et une couleur d’accent. L’aperçu ci-dessus montre chaque changement aussitôt.</string>
-    <string name="tourMakeItYoursStyle">Choisissez l’aspect des cartes et des barres\u00A0: Solide, Doux, Brut ou Papier.</string>
+    <string name="tourMakeItYoursStyle">Choisissez l’aspect des cartes et des barres\u00A0: Plein, Verre, Doux, Brut, Papier ou Signal.</string>
     <string name="appearanceGroupBackground">Arrière-plan</string>
     <string name="tourMakeItYoursBackground">Choisissez ce qui bouge derrière vos pages, ou désactivez-le.</string>
     <string name="tourMakeItYoursComfort">Agrandissez le texte, calmez les animations et choisissez la lueur pendant la rédaction d’une réponse.</string>

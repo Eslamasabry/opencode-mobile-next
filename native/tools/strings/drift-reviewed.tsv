@@ -62,3 +62,10 @@ zh	settingsHubSearchPhoneAliases
 zh	setupOutputWaiting
 # 2026-11-11: problem reports no longer hold a log, so the row says what happens (other languages fall back to English until translated).
 en	sendReportRowDetail
+# 2026-11-12: Help > Tips mini tutorial "Make it yours" step 2 names all six styles (Glass and Signal were missing), spelled as the Style page spells them.
+ar	tourMakeItYoursStyle
+en	tourMakeItYoursStyle
+es	tourMakeItYoursStyle
+pt	tourMakeItYoursStyle
+ru	tourMakeItYoursStyle
+zh	tourMakeItYoursStyle

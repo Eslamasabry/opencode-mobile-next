@@ -79,36 +79,6 @@ public fun TeachingScreen(state: TeachingUi, actions: TeachingActions) {
                     role = TypeRole.Secondary,
                 )
             }
-            state.replay
-                ?.takeIf { it.kind == TeachingKind.Tour }
-                ?.let { entry ->
-                    item(key = "replay") {
-                        val last = entry.steps.isEmpty() || state.step >= entry.steps.lastIndex
-                        KitNotice(
-                            message =
-                                teachingWords(
-                                    entry.steps.getOrNull(state.step)?.messageKey
-                                        ?: entry.messageKey
-                                ),
-                            title = teachingWords(entry.titleKey),
-                            actions =
-                                listOf(
-                                    KitLineAction(
-                                        stringResource(
-                                            if (last) Res.string.voiceConversationNativeTourDone
-                                            else Res.string.voiceConversationNativeTourNext
-                                        ),
-                                        actions::next,
-                                    )
-                                ),
-                            dismiss =
-                                KitLineAction(
-                                    stringResource(Res.string.e7VoiceUiNotNow),
-                                    actions::dismiss,
-                                ),
-                        )
-                    }
-                }
             TeachingKind.entries.forEach { kind ->
                 item(key = "group-${kind.name}") {
                     KitRowGroup(
@@ -159,6 +129,7 @@ private fun TeachingRow(entry: TipDefinition, kind: TeachingKind, state: Teachin
     val open = kind == TeachingKind.Tip && state.replay?.id == entry.id
     val action =
         when {
+            kind == TeachingKind.Tour && entry.page == null -> KitRowTrailing.None
             open ->
                 KitRowTrailing.Action(
                     KitLineAction(

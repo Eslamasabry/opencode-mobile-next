@@ -642,7 +642,7 @@
     <string name="tourMakeItYoursTitle">Tùy chỉnh theo ý bạn</string>
     <string name="tourMakeItYoursOffer">Tùy chỉnh theo ý bạn: sáng hoặc tối, màu sắc và kiểu dáng, trong bốn bước</string>
     <string name="tourMakeItYoursColours">Bắt đầu từ đây: sáng hoặc tối, một chủ đề và một màu nhấn. Phần xem trước phía trên hiện mọi thay đổi cùng lúc.</string>
-    <string name="tourMakeItYoursStyle">Chọn cảm giác của thẻ và thanh: Đặc, Mềm, Thô hoặc Giấy.</string>
+    <string name="tourMakeItYoursStyle">Chọn cảm giác của thẻ và thanh: Đặc, Kính, Mềm, Thô, Giấy hoặc Signal.</string>
     <string name="appearanceGroupBackground">Nền</string>
     <string name="tourMakeItYoursBackground">Chọn thứ chuyển động phía sau các trang của bạn, hoặc tắt đi.</string>
     <string name="tourMakeItYoursComfort">Làm chữ lớn hơn, giảm chuyển động và chọn hiệu ứng sáng trong lúc câu trả lời đang được viết.</string>

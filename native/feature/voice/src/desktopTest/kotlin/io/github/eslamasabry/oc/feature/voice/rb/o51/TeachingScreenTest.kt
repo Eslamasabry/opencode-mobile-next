@@ -141,4 +141,22 @@ class TeachingScreenTest {
         onNodeWithTag("tips-show-me-${a.id.raw}", useUnmergedTree = true).assertExists()
         assertEquals(1, onAllNodesWithText("Hide tip", useUnmergedTree = true).fetchSemanticsNodes().size)
     }
+
+    @Test
+    fun `a mini tutorial never plays on the Tips page and one with no page has no Show me`() = runComposeUiTest {
+        val fake = Fake()
+        show(fake)
+        // Make it yours and What's new know their pages; the voice conversation only runs inside a conversation.
+        onNodeWithTag("tips-show-me-${TeachingIds.MakeItYours.raw}", useUnmergedTree = true).assertExists()
+        onNodeWithTag("tips-show-me-${TeachingIds.WhatsNew.raw}", useUnmergedTree = true).assertExists()
+        onNodeWithTag("tips-show-me-${TeachingIds.VoiceConversation.raw}", useUnmergedTree = true).assertDoesNotExist()
+        showMe(TeachingIds.MakeItYours)
+        assertEquals(listOf(TeachingIds.MakeItYours), fake.opened)
+        // Nothing of the tutorial is drawn here, even when the controller reports it as active.
+        fake.ui = fake.ui.copy(replay = TeachingRegistry.defaults.entry(TeachingIds.MakeItYours))
+        waitForIdle()
+        onAllNodesWithText("The preview above", substring = true).assertCountEquals(0)
+        onAllNodesWithText("Not now").assertCountEquals(0)
+        onNodeWithTag("tips-hide-${TeachingIds.MakeItYours.raw}", useUnmergedTree = true).assertDoesNotExist()
+    }
 }

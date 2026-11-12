@@ -643,7 +643,7 @@
     <string name="tourMakeItYoursTitle">打造你的风格</string>
     <string name="tourMakeItYoursOffer">打造你的风格：浅色或深色、颜色和样式，四步完成</string>
     <string name="tourMakeItYoursColours">从这里开始：浅色或深色、主题和强调色。上方预览会同时显示每项更改。</string>
-    <string name="tourMakeItYoursStyle">选择卡片和栏的质感：实心、柔和、粗犷或纸质。</string>
+    <string name="tourMakeItYoursStyle">选择卡片和栏的质感：实心、玻璃、柔和、粗犷、纸感或 Signal。</string>
     <string name="appearanceGroupBackground">背景</string>
     <string name="tourMakeItYoursBackground">选择页面后面的动态效果，或将其关闭。</string>
     <string name="tourMakeItYoursComfort">放大文字、减弱动效，并选择回复生成时的光晕。</string>
