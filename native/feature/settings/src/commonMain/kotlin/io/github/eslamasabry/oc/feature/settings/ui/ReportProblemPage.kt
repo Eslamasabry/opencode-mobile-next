@@ -40,6 +40,7 @@ import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
 import io.github.eslamasabry.oc.ui.kit.motion.KitSwap
+import io.github.eslamasabry.oc.ui.kit.row.KitGroupNote
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
 import io.github.eslamasabry.oc.ui.kit.text.kitLocalTime
@@ -59,6 +60,7 @@ import io.github.eslamasabry.oc.ui.words.res.perfTraceTitle
 import io.github.eslamasabry.oc.ui.words.res.reportProblemClearFailed
 import io.github.eslamasabry.oc.ui.words.res.reportKeptClearErrors
 import io.github.eslamasabry.oc.ui.words.res.reportKeptCopyErrors
+import io.github.eslamasabry.oc.ui.words.res.reportKeptErrorsNote
 import io.github.eslamasabry.oc.ui.words.res.reportProblemErrorsLabel
 import io.github.eslamasabry.oc.ui.words.res.reportCodeCopy
 import io.github.eslamasabry.oc.ui.words.res.reportCodeLabel
@@ -266,6 +268,8 @@ private fun KeptOnPhone(report: ReportUi, actions: SettingsActions) {
         KitSectionLabel(
             pluralStringResource(Res.plurals.reportProblemErrorsLabel, report.errorsKept, report.errorsKept)
         )
+        // H4: what these errors are and what copying them is for; they are not part of the report.
+        KitGroupNote(stringResource(Res.string.reportKeptErrorsNote))
         KitRow(
             title = copyErrors.label,
             leading = KitRowLeading.Glyph(KitIcons.copy),

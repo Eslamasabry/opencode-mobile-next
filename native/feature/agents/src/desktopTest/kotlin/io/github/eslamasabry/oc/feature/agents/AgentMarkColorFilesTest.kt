@@ -11,7 +11,7 @@ class AgentMarkColorFilesTest {
     private val marks = File(System.getProperty("user.dir"), "../../androidApp/src/main/assets/marks")
 
     /** Brands drawn in the text colour on purpose: single-colour by design, or no colour version exists. */
-    private val deliberateMono = setOf("opencode", "codex", "kilocode", "cline", "goose", "pi")
+    private val deliberateMono = setOf("opencode", "codex", "kilocode", "cline", "goose", "pi", "antigravity")
 
     @Test
     fun `B-AGENTS-290 every persona mark slug has a colour file or is a deliberate mono mark`() {
@@ -35,7 +35,7 @@ class AgentMarkColorFilesTest {
     @Test
     fun `B-AGENTS-291 the agent ids map to the colour file of their brand`() {
         assertTrue(ProviderMarks.agentColorFile("claude") == "claude-color")
-        assertTrue(ProviderMarks.agentColorFile("antigravity") == null) // B-116: no Google G
+        assertTrue(ProviderMarks.agentColorFile("antigravity") == null) // its own mono mark, never Google's G
         assertTrue(ProviderMarks.agentColorFile("opencode") == null)
         assertTrue(ProviderMarks.agentColorFile("codex") == null)
     }

@@ -81,6 +81,7 @@ import io.github.eslamasabry.oc.ui.kit.row.KitSwitchRow
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitSkeletonRows
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
+import io.github.eslamasabry.oc.ui.kit.state.KitStateSize
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
 import io.github.eslamasabry.oc.ui.kit.text.kitRelativeAge
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
@@ -368,7 +369,6 @@ public fun ThingScreen(state: ThingUi, actions: ThingActions) {
             visible = true,
             onDismissRequest = { explaining = null },
             title = bidiName(about.text),
-            closeLabel = stringResource(Res.string.fbDismiss),
             icon = KitIcons.info,
             primary =
                 if (state.canWrite) {
@@ -443,6 +443,7 @@ public fun SearchScreen(state: SearchUi, actions: SearchActions) {
                                 stringResource(Res.string.fbSearchNoneTitle),
                                 body = stringResource(Res.string.fbSearchNoneBody),
                                 icon = KitIcons.search,
+                                size = KitStateSize.Inline,
                             )
                         }
                     }
@@ -703,7 +704,6 @@ public fun NotSavedScreen(state: NotSavedUi, actions: NotSavedActions) {
             visible = true,
             onDismissRequest = actions::closeExport,
             title = stringResource(Res.string.fbExportTitle),
-            closeLabel = stringResource(Res.string.fbDismiss),
             icon = KitIcons.upload,
         ) {
             Column(verticalArrangement = Arrangement.spacedBy(Space.S3.dp)) {

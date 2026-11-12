@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="serverFailureOpenCode1">此服务器运行的是 OpenCode 1。请将它更新到 OpenCode 2 后再在这里使用。</string>
+</resources>

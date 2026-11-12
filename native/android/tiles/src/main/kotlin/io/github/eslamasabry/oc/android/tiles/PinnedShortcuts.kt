@@ -44,8 +44,9 @@ object PinnedShortcuts {
     fun shortcutId(profileId: String, sessionId: String): String = "$ID_PREFIX$profileId:$sessionId"
 
     /**
-     * Replaces the published set with [pins] for [profileId] (other profiles' dynamic entries are
-     * withdrawn, as in the Flutter app: one connected profile at a time). An empty list withdraws
+     * Makes the published session set exactly [pins] for [profileId] (other profiles' session entries are
+     * withdrawn, as in the Flutter app: one connected profile at a time). Only entries whose id starts with
+     * [ID_PREFIX] are added, updated or removed; any other dynamic shortcut is left alone. An empty list withdraws
      * everything and forgets the record. Returns false when [profileId] is blank or the launcher
      * refused.
      */
@@ -84,7 +85,8 @@ object PinnedShortcuts {
             try {
                 disable(context, staleIds(launcherIds(context), keep, profileId = null))
                 if (next.isNotEmpty()) {
-                    if (!ShortcutManagerCompat.setDynamicShortcuts(context, next)) return false
+                    // Add or update by id: replacing the whole dynamic set would also wipe shortcuts that are not ours.
+                    if (!ShortcutManagerCompat.addDynamicShortcuts(context, next)) return false
                     // A session unpinned and pinned again may still have a disabled copy on the
                     // home screen.
                     try {

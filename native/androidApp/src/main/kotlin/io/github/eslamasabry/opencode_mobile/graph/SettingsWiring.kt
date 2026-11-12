@@ -239,8 +239,18 @@ class AndroidSettingsHost(
     private val telemetryHealth: AppTelemetryHealth,
     // Report a problem › On this phone: the kept errors and timings (nothing here sends anything).
     private val kept: io.github.eslamasabry.oc.feature.diagnostics.presentation.KeptDiagnosticsHost,
+    // Settings › Conversations › Edge dock: the in-app dock's on/off switch (device-wide).
+    private val dock: AppEdgeDock,
 ) : SettingsHost {
     private val scope = CoroutineScope(appScope.coroutineContext)
+
+    override val edgeDock: io.github.eslamasabry.oc.feature.settings.presentation.EdgeDockSetting =
+        object : io.github.eslamasabry.oc.feature.settings.presentation.EdgeDockSetting {
+            override val shown: StateFlow<Boolean>
+                get() = dock.shown
+
+            override fun setShown(on: Boolean) = dock.setShown(on)
+        }
 
     /** Rows whose page or engine is not in this build are absent (02 §3.7), never dead. */
     private val shipped = settingsShippedPlatform(platform, voiceSettings.offered)
@@ -431,6 +441,15 @@ class AndroidSettingsHost(
                 if (target != null) serverPage.open(target, place) else nav.open(ServersRoute.Home)
             }
             SettingsOutside.UsageAlerts -> nav.open(PlansAlertsRoute)
+            // S6: the Linux manager's pages (Settings search); before the phone is set up, its setup opens.
+            SettingsOutside.LinuxProcesses ->
+                nav.open(if (phoneSetUp()) PhoneRoute.Running else PhoneSetupRoute.Setup)
+            SettingsOutside.LinuxPorts ->
+                nav.open(if (phoneSetUp()) io.github.eslamasabry.oc.ui.routes.LinuxRoute.Ports else PhoneSetupRoute.Setup)
+            SettingsOutside.LinuxStorage ->
+                nav.open(if (phoneSetUp()) io.github.eslamasabry.oc.ui.routes.LinuxRoute.Storage else PhoneSetupRoute.Setup)
+            SettingsOutside.LinuxPackages ->
+                nav.open(if (phoneSetUp()) io.github.eslamasabry.oc.ui.routes.LinuxRoute.Packages else PhoneSetupRoute.Setup)
             // s28: Help › Guide's doors (F: guide_screen.dart): Add server itself, phone setup, the demo.
             SettingsOutside.AddServer -> nav.open(ServersRoute.Edit())
             SettingsOutside.PhoneSetup -> nav.open(PhoneSetupRoute.Setup)
@@ -725,6 +744,10 @@ internal val SETTINGS_OPENS: Set<SettingsOutside> =
         SettingsOutside.AddServer,
         SettingsOutside.PhoneSetup,
         SettingsOutside.Demo,
+        SettingsOutside.LinuxProcesses,
+        SettingsOutside.LinuxPorts,
+        SettingsOutside.LinuxStorage,
+        SettingsOutside.LinuxPackages,
     )
 
 /**

@@ -25,6 +25,7 @@ import io.github.eslamasabry.oc.feature.phone.presentation.PhoneServerSource
 class AndroidChatPhoneServer(
     private val stores: PreviewStores,
     private val server: PhoneServerSource,
+    private val agentHost: Lazy<AppLocalAgentHostStarter>,
 ) : ChatPhoneServer {
     override fun runsHere(profile: ProfileId): Boolean =
         (stores.prefs.get("oc.builtinServerOwner") as? PrefValue.Str)?.value == profile.raw
@@ -33,6 +34,18 @@ class AndroidChatPhoneServer(
     suspend fun start(profile: ProfileId): Outcome<Unit> =
         if (runsHere(profile)) server.start()
         else Outcome.Failed(Failure.Unavailable(FeatureId("startPhoneServer")))
+
+    /** The saved "Phone agents" server (`<owner>-agents`), whose helper the app starts. */
+    override fun isAgentHelper(profile: ProfileId): Boolean =
+        PhoneAgentRules.isHelperProfile(
+            profile.raw,
+            (stores.prefs.get("oc.phoneAgentOwner.${profile.raw}") as? PrefValue.Str)?.value,
+        )
+
+    /** The same path a fresh connection of this server takes ([AppLocalAgentHostStarter.ensureHelper]). */
+    override suspend fun startAgentHelper(profile: ProfileId): Outcome<Unit> =
+        if (isAgentHelper(profile)) agentHost.value.ensureHelper(profile)
+        else Outcome.Ok(Unit)
 
     override suspend fun restart(profile: ProfileId): Outcome<Unit> =
         if (runsHere(profile)) server.restart()

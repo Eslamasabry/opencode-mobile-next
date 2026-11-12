@@ -1,6 +1,6 @@
 package io.github.eslamasabry.oc.engine.integrations.catalog
 
-/** Exact Flutter mark catalogue. These slugs name only the 79 app-bundled monochrome SVGs. */
+/** Exact Flutter mark catalogue. These slugs name only the app-bundled monochrome SVGs. */
 public object ProviderMarks {
     public val slugs: Set<String> =
         setOf(
@@ -10,6 +10,7 @@ public object ProviderMarks {
             "alibaba",
             "amdradeoncloud",
             "antgroup",
+            "antigravity",
             "anthropic",
             "arcee",
             "azure",
@@ -200,7 +201,10 @@ public object ProviderMarks {
             "claude" to "claude",
             "codex" to "codex",
             "gemini" to "gemini",
-            // Antigravity has no official mark of its own; Google's "G" is the wrong brand, so it takes the neutral agent mark.
+            // Antigravity's own mark (lobe-icons), never Google's "G".
+            "antigravity" to "antigravity",
+            "antigravity-cli" to "antigravity",
+            "agy" to "antigravity",
             "qwen" to "qwen",
             "kilo" to "kilocode",
             "cline" to "cline",

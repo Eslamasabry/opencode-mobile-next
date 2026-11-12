@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="monitorNativeTitle">检查其他服务器</string>
+    <string name="monitorNativeBack">返回</string>
+    <string name="monitorNativeForegroundOnly">此页面打开期间检查已保存的服务器。关闭页面会停止读取。这不会启动手机服务器，也不会开启后台提醒。</string>
+    <string name="monitorNativeCheck">立即检查</string>
+    <string name="monitorNativeChecking">正在检查…</string>
+    <string name="monitorNativeAllow">允许检查</string>
+    <string name="monitorNativeConsent">允许此应用从这个已保存的服务器读取请求和最近的对话状态。</string>
+    <string name="monitorNativeUnsupported">无法在这里检查这个已保存的服务器。</string>
+    <string name="monitorNativeOff">检查已关闭</string>
+    <string name="monitorNativeWaiting">尚未检查</string>
+    <string name="monitorNativeCurrent">已检查</string>
+    <string name="monitorNativePartial">部分已检查。再次检查可读取更多对话。</string>
+    <string name="monitorNativeUnknown">无法确认最新状态。可能仍显示较早的观察结果。</string>
+    <string name="monitorNativePaused">检查已暂停</string>
+    <string name="monitorNativePending">等待你处理：%1$d</string>
+    <string name="monitorNativeRunning">运行中：%1$d</string>
+    <string name="monitorNativeConversation">对话</string>
+    <string name="monitorNativeFailed">最近检查的一轮失败了</string>
+    <string name="monitorNativeEarlierFailure">较早的失败；最新状态未知</string>
+    <string name="monitorNativeSaveFailed">无法保存或加载这些设置。请重试。</string>
+    <string name="monitorNativeEmpty">没有可检查的已保存服务器。</string>
+    <string name="monitorNativeRequest">等待你处理</string>
+    <string name="monitorNativeEarlierRequest">较早的请求；最新状态未知</string>
+    <string name="monitorNativeReconnect">检查前，请先连接此服务器，或在服务器页面更新它的登录信息。</string>
+</resources>

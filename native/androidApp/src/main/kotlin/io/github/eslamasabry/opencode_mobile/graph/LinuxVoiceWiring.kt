@@ -40,6 +40,9 @@ import io.github.eslamasabry.oc.engine.runtime.host.RuntimePhase
 import io.github.eslamasabry.oc.engine.runtime.host.RuntimeStatus
 import io.github.eslamasabry.oc.engine.runtime.server.AppOpenStart
 import io.github.eslamasabry.oc.engine.runtime.server.LocalServerGate
+import io.github.eslamasabry.oc.engine.runtime.server.LaunchStartRules
+import io.github.eslamasabry.oc.engine.runtime.server.OpenCodeVersions
+import io.github.eslamasabry.oc.engine.runtime.server.PhoneWorkIdle
 import io.github.eslamasabry.oc.engine.runtime.server.LocalServerWait
 import io.github.eslamasabry.oc.engine.runtime.server.LaunchMode
 import io.github.eslamasabry.oc.engine.runtime.server.PhoneServerPort
@@ -54,6 +57,7 @@ import io.github.eslamasabry.oc.feature.linux.host.LinuxPresence
 import io.github.eslamasabry.oc.feature.linux.host.ShellRun
 import io.github.eslamasabry.oc.feature.linux.presentation.LinuxLifecycle
 import io.github.eslamasabry.oc.feature.linux.presentation.LinuxSetupSource
+import io.github.eslamasabry.oc.feature.phone.presentation.PhoneHeatFacts
 import io.github.eslamasabry.oc.feature.phone.presentation.PhoneServerFacts
 import io.github.eslamasabry.oc.feature.phone.presentation.PhoneServerSource
 import io.github.eslamasabry.oc.feature.phone.presentation.RecoveryFacts
@@ -61,6 +65,7 @@ import io.github.eslamasabry.oc.protocol.paseo.transport.PaseoTransport
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.phoneSetupProfileName
 import io.github.eslamasabry.opencode_mobile.BuiltinLinux
+import io.github.eslamasabry.opencode_mobile.PhoneServerStopRecord
 import io.github.eslamasabry.opencode_mobile.ServerPortBusy
 import io.github.eslamasabry.opencode_mobile.SetupPersistenceException
 import io.github.eslamasabry.opencode_mobile.SetupRunner
@@ -133,8 +138,19 @@ object LinuxRuntimeWiring {
     @Provides fun linuxSetupSource(setup: NativePhoneSetup): LinuxSetupSource = setup
 
     @Provides
-    fun phoneServerSource(runtime: BuiltinRuntime, setup: NativePhoneSetup): PhoneServerSource =
-        runtime.serverSource(setup::update)
+    fun phoneServerSource(
+        runtime: BuiltinRuntime,
+        setup: NativePhoneSetup,
+        thermal: ThermalRuntime,
+    ): PhoneServerSource {
+        val base = runtime.serverSource(setup::update)
+        // The heat guard's hold (Flutter `_heat`, "Paused, your phone is warm") is its own flow: [facts] stays the
+        // runtime's own StateFlow, so start/stop and "who stopped it" never read a value one dispatch old, and no
+        // collector is started per injection.
+        return object : PhoneServerSource by base {
+            override val heat: StateFlow<PhoneHeatFacts?> = thermal.heat
+        }
+    }
 }
 
 /**
@@ -716,12 +732,12 @@ internal constructor(
 
     /**
      * The person's Stop, as BuiltinLinux keeps it (device-wide `builtin_server_recovery`
-     * userStopped).
+     * userStopped). Nothing recorded, or a stop the app or Android made, is not their Stop.
      */
     private fun stoppedByPerson(): Boolean =
-        app.getSharedPreferences("builtin_server_recovery", Context.MODE_PRIVATE).let { prefs ->
-            prefs.getBoolean("userStopped", !prefs.getBoolean("wanted", false))
-        }
+        PhoneServerStopRecord.read(
+            app.getSharedPreferences(PhoneServerStopRecord.PREFERENCES, Context.MODE_PRIVATE)
+        )
 
     private fun probeLoopback(password: String): ProbeAnswer {
         val auth =
@@ -821,9 +837,13 @@ internal constructor(
     private suspend fun publish() {
         val status = (runtimeStatus() as? Outcome.Ok)?.value
         val stopped = withContext(io) { runCatchingBlocking { stoppedByPerson() } ?: true }
+        val owner = ownerId()?.let { profiles.profile(it) }?.profile
+        val versions = OpenCodeVersions.of(status, owner?.serverVersion, owner?.requiresOpenCode2Migration != true)
         facts.update {
             it.copy(
                 status = status,
+                installedVersion = versions.installed,
+                pinnedVersion = versions.pinned,
                 stoppedByPerson = stopped,
                 replyRunning = ownerId()?.raw?.let { owner -> leases.busy.value[owner] } == true,
                 // This phone offers the OpenCode 2 move while its saved server still needs it.
@@ -1009,8 +1029,22 @@ internal constructor(
     suspend fun mayUpdate(): Boolean {
         val status = (runtimeStatus() as? Outcome.Ok)?.value ?: return false
         if (!status.serverRunning) return true
-        val owner = ownerId()?.raw ?: return false
-        return leases.busy.value[owner] == false
+        return readWorkIdle().idle
+    }
+
+    /** What the idle decision saw, for the one-line log (no personal data). */
+    data class WorkIdle(val idle: Boolean, val lease: Boolean?, val direct: Boolean?, val agent: Boolean)
+
+    /**
+     * Known idle for the owner's server: the chat-lease reading when there is one, else a status read made now (the
+     * lease map has no entry until a connected server has been read), and the phone agent's own chat not working.
+     */
+    suspend fun readWorkIdle(): WorkIdle {
+        val owner = ownerId()?.raw
+        val lease = owner?.let { leases.busy.value[it] }
+        val direct = if (owner != null && lease == null) leases.readNow(owner) else null
+        val agent = agentWorkBusy()
+        return WorkIdle(PhoneWorkIdle.knownIdle(lease, direct, agent), lease, direct, agent)
     }
 
     /** An explicit idle-policy edit is bounded and never manufactures a supported receipt. */
@@ -1527,12 +1561,16 @@ internal constructor(
 
     /** A folder-access restart may never be redirected to a newly selected phone owner. */
     suspend fun restartOwned(profile: ProfileId): Outcome<Unit> =
-        when (val stopped = stopNow(profile)) {
+        when (val stopped = stopNow(PhoneServerStopRecord.Cause.Replace, profile)) {
             is Outcome.Failed -> stopped
             is Outcome.Ok -> startNow(profile)
         }
 
-    private suspend fun stopNow(expectedOwner: ProfileId? = null): Outcome<Unit> {
+    /** [cause] says whose stop it is: only [PhoneServerStopRecord.Cause.Person] keeps the server off. */
+    private suspend fun stopNow(
+        cause: PhoneServerStopRecord.Cause,
+        expectedOwner: ProfileId? = null,
+    ): Outcome<Unit> {
         if (expectedOwner != null && ownerId() != expectedOwner)
             return Outcome.Failed(Failure.Runtime(RuntimeProblem.InvalidProfile))
         // Withdraw a suspended probe before waiting for the lane; persistence and process drain
@@ -1540,7 +1578,7 @@ internal constructor(
         actionEpoch++
         val revoked = mutation {
             check(expectedOwner == null || ownerId() == expectedOwner)
-            linux.requestServerStop()
+            linux.requestServerStop(cause = cause)
         }
         if (revoked is Outcome.Failed) return revoked
         return lane.withLock {
@@ -1565,10 +1603,26 @@ internal constructor(
      */
     fun replyRunning(): Boolean = ownerId()?.raw?.let { owner -> leases.busy.value[owner] } == true
 
-    /** The phone team's turn-on stops OpenCode here (Flutter `PhoneTeamSetupPorts.stopServer`). */
-    suspend fun stopServer(): Outcome<Unit> = stopNow()
+    /**
+     * The phone team's turn-on stops OpenCode here (Flutter `PhoneTeamSetupPorts.stopServer`) and starts it again
+     * after: the app's stop, not the person's.
+     */
+    suspend fun stopServer(): Outcome<Unit> = stopNow(PhoneServerStopRecord.Cause.Replace)
+
+    /** Setup's finish step stops the old OpenCode before it starts the new one: the app's stop, not the person's. */
+    suspend fun stopToReplace(): Outcome<Unit> = stopNow(PhoneServerStopRecord.Cause.Replace)
 
     suspend fun refreshServer() = refreshNow()
+
+    /** The setup engine's OpenCode job, as This phone's Update row shows it (running or failed last time). */
+    fun noteUpdateJob(running: Boolean, failed: Boolean) =
+        facts.update { it.copy(updateRunning = running, updateFailed = failed) }
+
+    /** The saved server still needs the OpenCode 2 move (a half-finished switch). */
+    fun switchPending(): Boolean = facts.value.needsOpenCode2Move
+
+    /** Flutter `localPhoneAgentWorkBusy`: the phone agent's own chat on this server is working (its `<owner>.agents` reading). */
+    fun agentWorkBusy(): Boolean = ownerId()?.raw?.let { owner -> leases.busy.value["$owner.agents"] } == true
 
     fun serverSource(update: suspend () -> Outcome<Unit>): PhoneServerSource =
         object : PhoneServerSource {
@@ -1579,10 +1633,11 @@ internal constructor(
 
             override suspend fun start(): Outcome<Unit> = startNow()
 
-            override suspend fun stop(): Outcome<Unit> = stopNow()
+            override suspend fun stop(): Outcome<Unit> = stopNow(PhoneServerStopRecord.Cause.Person)
 
+            // A restart is not a Stop: if its start fails, the next app open starts it again.
             override suspend fun restart(): Outcome<Unit> =
-                when (val stopped = stopNow()) {
+                when (val stopped = stopNow(PhoneServerStopRecord.Cause.Replace)) {
                     is Outcome.Failed -> stopped
                     is Outcome.Ok -> startNow()
                 }
@@ -1600,7 +1655,9 @@ internal constructor(
                 val password = (profiles.secret(id) as? Outcome.Ok)?.value.orEmpty()
                 if (password.isEmpty()) ProbeAnswer.NoAnswer else port.probe(password)
             },
-            restart = { id -> startNow(id) is Outcome.Ok },
+            // The wait runs outside the connection lock and a newer command may cancel it (PreviewRuntime's
+            // LocalServerWaits); a restart once begun still finishes, so the server is never left half-started.
+            restart = { id -> withContext(kotlinx.coroutines.NonCancellable) { startNow(id) is Outcome.Ok } },
             clock = clock,
             mayWait = { id ->
                 id.raw !in closedProfiles &&
@@ -1610,6 +1667,11 @@ internal constructor(
                 facts.update {
                     it.copy(starting = waiting, startProblem = if (waiting) null else it.startProblem)
                 }
+            },
+            booting = {
+                val status = (runtimeStatus() as? Outcome.Ok)?.value
+                if (status?.serverRunning == true) LaunchStartRules.stillBooting(status.serverUptime)
+                else kotlin.time.Duration.ZERO
             },
         )
 

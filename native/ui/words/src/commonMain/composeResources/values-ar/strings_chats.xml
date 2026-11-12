@@ -89,7 +89,7 @@
     <string name="globalSessionsFilterActive">النشطة</string>
     <string name="globalSessionsArchivedNoMatchMessage">لا توجد محادثة مؤرشفة بهذا العنوان. جرّب بحثًا أقصر.</string>
     <string name="globalSessionsArchivedEmptyTitle">لا توجد محادثات مؤرشفة</string>
-    <string name="globalSessionsArchivedEmptyMessage">تظهر هنا المحادثات التي تؤرشفها في المهام.</string>
+    <string name="globalSessionsArchivedEmptyMessage">تظهر هنا المحادثات التي تؤرشفها.</string>
     <string name="globalSessionsShowActive">عرض المحادثات النشطة</string>
     <string name="globalSessionsProjectInUse">%1$s · قيد الاستخدام</string>
     <string name="globalSessionsCopyFolder">نسخ مسار المجلد</string>
@@ -197,9 +197,10 @@
     <string name="chatsHomeStopped">أُوقف</string>
     <string name="chatsHomeDone">تم</string>
     <string name="chatsHomeFailed">فشلت</string>
+    <string name="chatsHomeInterrupted">انقطعت</string>
     <string name="chatsHomeToday">اليوم</string>
     <string name="chatsHomeEarlier">سابقًا</string>
-    <string name="chatsHomeOnlyProject">تُعرض المحادثات في %1$s فقط. لا يستطيع هذا الخادم سرد كل المشاريع.</string>
+    <string name="chatsHomeOnlyProject">تُعرض المحادثات في «%1$s» فقط. لا يستطيع هذا الخادم سرد كل المشاريع.</string>
     <string name="chatsHomeIncomplete">تعذر تحميل بعض المحادثات</string>
     <string name="chatsHomeIncompleteNamed">تعذر تحميل محادثات %1$s</string>
     <string name="shellServerPlusOthers">%1$s +%2$d</string>
@@ -338,7 +339,6 @@
     <string name="chats_all_filter">التصفية: %1$s</string>
     <string name="chats_all_none">بلا تصفية</string>
     <string name="chats_back">رجوع</string>
-    <string name="chatsReturnBriefUnknown">لا يمكن معرفة الجديد على هذا الخادم</string>
     <string name="chatsReturnBriefMore">و%1$d أخرى</string>
     <string name="workRunawayStopFailedRetry">تعذّر إيقاف %1$s. حاول مجددًا.</string>
 </resources>

@@ -19,6 +19,8 @@ public data class ProjectSummary(
     val isGit: Boolean? = null,
     /** The server's project id, when it keeps a project list. */
     val id: String? = null,
+    /** Extra working copies (Git worktrees) the server keeps for this project. */
+    val worktrees: Int = 0,
 )
 
 /** Pure rules of the projects picker and the project page (Dart projects_screen, project_folder_actions). */
@@ -162,6 +164,7 @@ public object ProjectRules {
                     updatedMs = p.updatedAtMs,
                     isGit = p.isGit,
                     id = p.id,
+                    worktrees = p.worktrees.map(::normalize).toSet().count { it != normalize(p.directory) },
                 )
             }
 
@@ -184,6 +187,15 @@ public object ProjectRules {
                 updatedMs = list.maxOf(::updatedAt),
             )
         }
+    }
+
+    /**
+     * One server's projects with the folders of the connections that are part of it (This phone's agents): the
+     * server's own rows first, as they are, then each other folder once. A folder both work in is the server's row.
+     */
+    public fun joined(own: List<FolderRowUi>, others: List<FolderRowUi>): List<FolderRowUi> {
+        val seen = own.mapTo(HashSet()) { normalize(it.directory) }
+        return own + others.filter { seen.add(normalize(it.directory)) }
     }
 
     /** This project's conversations, newest first; subagents stay with their parent. */

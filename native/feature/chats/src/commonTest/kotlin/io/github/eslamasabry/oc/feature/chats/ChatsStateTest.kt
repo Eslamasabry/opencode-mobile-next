@@ -193,7 +193,8 @@ class ChatsStateTest {
                 { false },
                 { null },
             )
-        assertTrue(build(item("a"), brief = unknown).brief!!.unknown)
+        // Nothing to show and nothing to do: no block at all, so no "can't tell" line either.
+        assertNull(build(item("a"), brief = unknown).brief)
     }
 
     @Test
@@ -232,7 +233,8 @@ class ChatsStateTest {
             )
         assertEquals(listOf(right.ref), ui.brief!!.rows.map { it.ref })
         assertEquals(listOf(right.identity), ui.brief!!.rows.map { it.key })
-        assertTrue(
+        // Failing closed now means no block at all: a brief with no row to show says nothing (owner 2026-11-11).
+        assertNull(
             build(
                     otherProfile,
                     otherFolder,
@@ -241,14 +243,9 @@ class ChatsStateTest {
                     unknownLocation,
                     brief = brief,
                 )
-                .brief!!
-                .rows
-                .isEmpty()
+                .brief
         )
-        assertTrue(
-            build(right, brief = brief.copy(scope = null)).brief!!.rows.isEmpty(),
-            "unscoped briefs fail closed",
-        )
+        assertNull(build(right, brief = brief.copy(scope = null)).brief, "unscoped briefs fail closed")
     }
 
     @Test
@@ -326,5 +323,53 @@ class ChatsStateTest {
         val ui = build(item("seen", at = 2_000), item("old", at = 1_000), brief = brief)
         assertEquals(listOf("seen"), ui.brief?.rows?.map { it.ref.sessionId.raw })
         assertEquals(listOf("old"), ui.recent.map { it.ref.sessionId.raw })
+    }
+
+    @Test
+    fun `H3 a server that cannot list across projects names the one project it shows`() {
+        val items = listOf(item("a", at = 2_000)).toImmutableList()
+        fun ui(across: Boolean) =
+            ChatsState.build(ChatFeedSnapshot(items, acrossProjects = across), ReturnBrief.None, ChatsFilters(), today, settingsAvailable = true)
+        assertNull(ui(true).onlyProject)
+        assertEquals("api", ui(false).onlyProject)
+    }
+
+    @Test
+    fun `a server that lists across projects shows every project, ranks the far rows by status and narrows by chip`() {
+        val items =
+            listOf(
+                item("far-ask", "/work/web", at = 1_000, status = ChatStatus.NeedsYou),
+                item("far-run", "/work/web", at = 2_000, status = ChatStatus.Running),
+                item("near", "/work/api", at = 3_000),
+            ).toImmutableList()
+        fun ui(filters: ChatsFilters = ChatsFilters()) =
+            ChatsState.build(ChatFeedSnapshot(items, acrossProjects = true), ReturnBrief.None, filters, today, settingsAvailable = true)
+        val all = ui()
+        assertNull(all.onlyProject)
+        assertEquals(listOf("far-ask", "far-run"), all.rightNow.map { it.ref.sessionId.raw })
+        assertEquals(setOf("/work/api", "/work/web"), all.projects.map { it.directory }.toSet())
+        assertTrue(all.showProjects)
+        val web = ui(ChatsFilters(projectDirectory = "/work/web"))
+        assertEquals(listOf("far-ask", "far-run"), (web.rightNow + web.recent).map { it.ref.sessionId.raw })
+        val api = ui(ChatsFilters(projectDirectory = "/work/api"))
+        assertEquals(listOf("near"), (api.rightNow + api.recent).map { it.ref.sessionId.raw })
+    }
+
+    @Test
+    fun `a run the server interrupted says Interrupted, a run the person stopped keeps Stopped`() {
+        val cut = item("cut", at = 2_000).copy(interrupted = true, finishedUnseen = true)
+        val stopped = item("stopped", at = 1_000).copy(stoppedByPerson = true, finishedUnseen = true, interrupted = false)
+        val ui = build(cut, stopped)
+        val rows = (ui.rightNow + ui.recent).associateBy { it.ref.sessionId.raw }
+        assertEquals(RowStatus.Interrupted, rows.getValue("cut").status)
+        assertEquals(RowStatus.Stopped, rows.getValue("stopped").status)
+        assertEquals(
+            RowStatus.Stopped,
+            io.github.eslamasabry.oc.feature.chats.presentation.HomeRowStatusRules.idle(
+                finishedUnseen = true,
+                stoppedByPerson = true,
+                interrupted = true,
+            ),
+        )
     }
 }

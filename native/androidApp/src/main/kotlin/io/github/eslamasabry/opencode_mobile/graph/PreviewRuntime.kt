@@ -10,7 +10,10 @@ import io.github.eslamasabry.oc.core.domain.SessionReadStateGateway
 import io.github.eslamasabry.oc.core.domain.events.GatewayEvent
 import io.github.eslamasabry.oc.core.domain.facet
 import io.github.eslamasabry.oc.core.domain.events.RunOutcome
+import io.github.eslamasabry.oc.core.model.BackendKind
 import io.github.eslamasabry.oc.core.model.NewSession
+import io.github.eslamasabry.oc.core.model.Session
+import io.github.eslamasabry.oc.core.model.SessionRunOutcome
 import io.github.eslamasabry.oc.core.model.transcript.ToolStatus
 import io.github.eslamasabry.oc.core.model.SessionStatus
 import io.github.eslamasabry.oc.core.model.StreamStatus
@@ -66,6 +69,8 @@ class PreviewRuntime(
     private val profileClosers: Set<ProfileCloser>,
     private val clock: Clock,
     private val localGates: LocalServerGates,
+    // Lazy: the helper's starter connects through this class, so it cannot be built before it.
+    private val phoneHelper: Lazy<AppLocalAgentHostStarter>,
 ) : ServerConnections, ServerDisconnects {
     val profiles: ProfileStore = stores.profiles
     private val lane = dispatchers.serial("preview-runtime")
@@ -77,6 +82,17 @@ class PreviewRuntime(
     override val servers: StateFlow<ImmutableList<SavedServer>> = mutableServers.asStateFlow()
     private val mutableBusy = MutableStateFlow(false)
     override val busy: StateFlow<Boolean> = mutableBusy.asStateFlow()
+    // Busy is a command holding the lock, or an attempt waiting for this phone's own server outside it.
+    private val busyLock = Any()
+    private var holding = false
+    private val localWaits =
+        io.github.eslamasabry.oc.engine.runtime.server.LocalServerWaits(
+            scope,
+            gate = { id ->
+                localGates.gate?.invoke(id) ?: io.github.eslamasabry.oc.engine.runtime.server.LocalServerWait.Ready
+            },
+            onWaitingChanged = ::publishBusy,
+        )
     internal val snapshot = MutableStateFlow(ChatFeedSnapshot())
     private val unverifiedListings = mutableSetOf<ProfileId>()
     private val listings = mutableMapOf<ProfileId, MutableStateFlow<OpenCodeListing>>()
@@ -157,16 +173,36 @@ class PreviewRuntime(
         if (!restoreRequested.compareAndSet(false, true)) return
         scope.launch {
             if (ready.await() is Outcome.Failed) return@launch
-            val active = profiles.activeId.value ?: profiles.profiles.value.firstOrNull()?.id
+            // The phone agents' helper is part of This phone, never the server the home is on: a saved choice of it
+            // (earlier builds listed it as a server) moves to the phone, and nothing is lost: its conversations stay
+            // in the list beside the phone's own.
+            val chosen = profiles.activeId.value
+            val active =
+                PhoneAgentRules.homeServer(
+                        chosen?.raw,
+                        profiles.profiles.value.map { it.id.raw },
+                        isHelper = { isPhoneHelper(ProfileId(it)) },
+                        phoneOf = { stores.phoneOfHelper(ProfileId(it))?.raw },
+                    )
+                    ?.let(::ProfileId)
+            if (chosen != null && active != null && active != chosen) profiles.setActive(active)
+            // Before any connection opens: the helper carries its phone's name, so every place that names a
+            // connection (a chat's header, an alert, All conversations) reads This phone, never "Phone agents".
+            stores.nameHelpersAfterPhones()
             // 47-port-rest-2: the saved session labels show at once, marked unverified, until the
             // server answers.
             if (active != null) seedOpening(active)
             // PORT-SCREENS-2: the home list records each source's failure, then the other shown
             // sources join. Launcher shortcuts wait for this first connection (awaitInitialConnection).
             initialConnection.complete(
-                if (active != null) command { connectForHome(active) } else Unit.ok()
+                if (active != null)
+                    connectCommand(active, makeActive = true) { turn ->
+                        connectForHome(active, makeActive = turn.activate, local = turn.local)
+                    }
+                else Unit.ok()
             )
             synchronizeListSources()
+            adoptPhoneAgents()
         }
     }
 
@@ -176,6 +212,8 @@ class PreviewRuntime(
     private fun publishServers() {
         mutableServers.value =
             profiles.profiles.value
+                // The phone agents' helper is part of This phone, not a server a person picks, edits or removes.
+                .filterNot { isPhoneHelper(it) }
                 .map {
                     SavedServer(
                         it.id,
@@ -206,16 +244,62 @@ class PreviewRuntime(
         }
         return withContext(lane) {
             order.withLock {
-                mutableBusy.value = true
+                setHolding(true)
                 try {
                     block()
                 } finally {
-                    mutableBusy.value = false
+                    setHolding(false)
                     publishServers()
                 }
             }
         }
     }
+
+    private fun setHolding(held: Boolean) {
+        synchronized(busyLock) { holding = held }
+        publishBusy()
+    }
+
+    private fun publishBusy() {
+        synchronized(busyLock) { mutableBusy.value = holding || localWaits.waiting > 0 }
+    }
+
+    /**
+     * A connection attempt. One to this phone's own server waits for it to answer BEFORE it takes the command lock
+     * (LocalServerWaits): the lock guards the connection state, and the wait (up to about 150 s while the phone boots)
+     * changes none of it, so a switch, a Try again or a Stop is never queued behind it. A newer command supersedes the
+     * waiting attempt, which then ends with StaleScope and changes nothing (no failure is recorded for it).
+     */
+    private suspend fun connectCommand(
+        id: ProfileId,
+        makeActive: Boolean,
+        connect: suspend (io.github.eslamasabry.oc.engine.runtime.server.LocalServerWaits.Turn) -> Outcome<Unit>,
+    ): Outcome<Unit> {
+        when (val start = ready.await()) {
+            is Outcome.Failed -> return start.atStage(ConnectionStage.StorageReady)
+            is Outcome.Ok -> Unit
+        }
+        return localWaits.run(
+            id,
+            makeActive,
+            waits = profiles.profile(id)?.let(::waitsForPhoneServer) == true,
+            locked = { block -> command(block) },
+            stale = ::superseded,
+        ) { turn ->
+            // The person chose another server while this one booted: it still joins the list if it is shown there.
+            if (turn.overtaken && !listSourceShown(id)) superseded() else connect(turn)
+        }
+    }
+
+    private fun superseded(): Outcome<Unit> = Failure.Refused(RefusalReason.StaleScope).failed()
+
+    /** This phone's own server, which may still be booting: the first connection waits for it (phase 0). */
+    private fun waitsForPhoneServer(loaded: LoadedProfile): Boolean =
+        localGates.gate != null &&
+            !loaded.profile.usesAgentSocket &&
+            !loaded.profile.requiresOpenCode2Migration &&
+            !loaded.cleartextUnconfirmed &&
+            io.github.eslamasabry.oc.engine.runtime.switching.ManagedLocalServer.isBuiltin(loaded.profile.baseUrl)
 
     override suspend fun save(
         name: String,
@@ -247,16 +331,32 @@ class PreviewRuntime(
             .map { id }
     }
 
-    override suspend fun connect(id: ProfileId): Outcome<Unit> = command {
-        connectForHome(id, recoverDrafts = true)
-    }
+    override suspend fun connect(id: ProfileId): Outcome<Unit> =
+        // The phone agents' helper never becomes the home's server (a notification, a link or a page that connects
+        // it): it joins the list as part of This phone.
+        if (ready.await() is Outcome.Ok && isPhoneHelper(id)) connectInBackground(id)
+        else
+            connectCommand(id, makeActive = true) { turn ->
+                connectForHome(id, recoverDrafts = true, makeActive = turn.activate, local = turn.local)
+            }
 
+    /** The server on the home stays the one the person chose: opening the Agents page used to switch it to "Phone agents". */
+    override suspend fun connectInBackground(id: ProfileId): Outcome<Unit> =
+        connectCommand(id, makeActive = id == profiles.activeId.value) { turn ->
+            connectForHome(id, makeActive = turn.activate && id == profiles.activeId.value, local = turn.local)
+        }
+
+    /**
+     * [local]: how the wait for this phone's own server ended, when the attempt waited for it outside the lock
+     * (connectCommand); null when it did not.
+     */
     private suspend fun connectForHome(
         id: ProfileId,
         recoverDrafts: Boolean = false,
         makeActive: Boolean = true,
+        local: io.github.eslamasabry.oc.engine.runtime.server.LocalServerWait? = null,
     ): Outcome<Unit> {
-        val result = connectNow(id, recoverDrafts, makeActive)
+        val result = connectNow(id, recoverDrafts, makeActive, local)
         when (result) {
             is Outcome.Failed -> mutableSourceFailures.update { it + (id to result.failure) }
             is Outcome.Ok -> mutableSourceFailures.update { it - id }
@@ -285,12 +385,81 @@ class PreviewRuntime(
                     listSourceShown(profile.id) &&
                     profile.id !in listings
             ) {
+                // The phone's agent helper may need a start of up to 30 s: it joins later and never holds the
+                // OpenCode list (or any other command) while it starts.
+                if (isPhoneHelper(profile)) {
+                    joinPhoneHelper(profile.id)
+                    continue
+                }
+                // This phone's own server may be booting: it joins once it answers, outside the lock.
+                if (waitsForPhoneServer(profile)) {
+                    joinPhoneServer(profile.id)
+                    continue
+                }
                 val result = connectForHome(profile.id, makeActive = false)
                 if (result is Outcome.Failed) failed = result
             }
         }
         rebuildFeed()
         failed ?: Unit.ok()
+    }
+
+    private fun isPhoneHelper(profile: LoadedProfile): Boolean = stores.isPhoneHelper(profile)
+
+    /** The phone agents' helper profile: part of This phone, never listed or chosen as a server. */
+    internal fun isPhoneHelper(id: ProfileId): Boolean = stores.isPhoneHelper(id)
+
+    private val joiningHelpers = mutableSetOf<ProfileId>()
+
+    /** Starts the helper outside the command lock, then adds its conversations to the list. */
+    private fun joinPhoneHelper(id: ProfileId) {
+        if (!synchronized(joiningHelpers) { joiningHelpers.add(id) }) return
+        scope.launch {
+            try {
+                if (phoneHelper.value.ensureHelper(id) is Outcome.Ok) {
+                    command {
+                        if (id !in listings && listSourceShown(id)) {
+                            connectForHome(id, makeActive = false)
+                            rebuildFeed()
+                        }
+                        Unit.ok()
+                    }
+                }
+            } finally {
+                synchronized(joiningHelpers) { joiningHelpers.remove(id) }
+            }
+        }
+    }
+
+    private val joiningServers = mutableSetOf<ProfileId>()
+
+    /** Connects this phone's own server as a list source once it answers; the wait holds no lock. */
+    private fun joinPhoneServer(id: ProfileId) {
+        if (!synchronized(joiningServers) { joiningServers.add(id) }) return
+        scope.launch {
+            try {
+                connectCommand(id, makeActive = false) { turn ->
+                    if (id !in listings && listSourceShown(id)) {
+                        connectForHome(id, makeActive = false, local = turn.local)
+                        rebuildFeed()
+                    }
+                    Unit.ok()
+                }
+            } finally {
+                synchronized(joiningServers) { joiningServers.remove(id) }
+            }
+        }
+    }
+
+    /**
+     * Cold start: with a phone agent installed, the "Phone agents" source is saved and joins the list on its own,
+     * with no visit to the Agents page. Never raises a failure: the OpenCode list shows either way.
+     */
+    private fun adoptPhoneAgents() {
+        scope.launch {
+            val adopted = phoneHelper.value.adoptSource()
+            if (adopted is Outcome.Ok && adopted.value != null) synchronizeListSources()
+        }
     }
 
     internal suspend fun showListSource(id: ProfileId, shown: Boolean): Outcome<Unit> = command {
@@ -308,27 +477,33 @@ class PreviewRuntime(
         }
         // The choice is saved. A server that does not answer is recorded on its own row (sourceFailures); it is not a
         // failure to change the list, so turning it on or off here never raises the sheet's error.
-        if (shown) connectForHome(id, makeActive = false)
+        if (shown) {
+            val loaded = profiles.profile(id)
+            if (loaded != null && waitsForPhoneServer(loaded)) joinPhoneServer(id)
+            else connectForHome(id, makeActive = false)
+        }
         rebuildFeed()
         Unit.ok()
     }
 
-    internal suspend fun retryListSource(id: ProfileId): Outcome<Unit> = command {
-        if (!listSourceShown(id)) return@command Failure.Refused(RefusalReason.StaleScope).failed()
-        connectForHome(id, makeActive = id == profiles.activeId.value)
-    }
+    /** The home's Try again (and its quiet retries): supersedes an attempt for [id] still waiting for the phone. */
+    internal suspend fun retryListSource(id: ProfileId): Outcome<Unit> =
+        connectCommand(id, makeActive = id == profiles.activeId.value) { turn ->
+            if (!listSourceShown(id)) Failure.Refused(RefusalReason.StaleScope).failed()
+            else connectForHome(id, makeActive = turn.activate && id == profiles.activeId.value, local = turn.local)
+        }
 
     internal suspend fun connectWatched(id: ProfileId, expected: StoredProfile): Outcome<Unit> =
-        command {
-            if (profiles.profile(id)?.profile != expected)
-                return@command Failure.Refused(RefusalReason.StaleScope).failed()
-            connectForHome(id)
+        connectCommand(id, makeActive = true) { turn ->
+            if (profiles.profile(id)?.profile != expected) Failure.Refused(RefusalReason.StaleScope).failed()
+            else connectForHome(id, makeActive = turn.activate, local = turn.local)
         }
 
     /**
      * Runtime migration retires only local transports; saved rows, secrets and queues stay intact.
      */
     internal suspend fun disconnectForRuntimeSwitch(ids: Set<ProfileId>): Outcome<Unit> = command {
+        localWaits.cancel(ids)
         for (id in ids) {
             registry.close(id)
             eventJobs.remove(id)?.cancel()
@@ -342,6 +517,7 @@ class PreviewRuntime(
         id: ProfileId,
         recoverDrafts: Boolean = false,
         makeActive: Boolean = true,
+        local: io.github.eslamasabry.oc.engine.runtime.server.LocalServerWait? = null,
     ): Outcome<Unit> {
         val loaded =
             profiles.profile(id)
@@ -395,7 +571,9 @@ class PreviewRuntime(
             rebuildFeed()
         }
         // Phase 0: This phone's own server may still be booting (right after setup or an app start). Wait for it
-        // to answer before the first connection instead of being refused.
+        // to answer before the first connection instead of being refused. The wait ran before the lock
+        // (connectCommand, [local]); waiting here, in the lock, is left only for a profile edited into this phone's
+        // server between that wait and the lock.
         if (
             !loaded.profile.usesAgentSocket &&
                 io.github.eslamasabry.oc.engine.runtime.switching.ManagedLocalServer.isBuiltin(
@@ -403,13 +581,18 @@ class PreviewRuntime(
                 )
         ) {
             val gate = localGates.gate
-            if (
-                gate != null &&
-                    gate(id) == io.github.eslamasabry.oc.engine.runtime.server.LocalServerWait.NotAnswering
-            ) {
+            val waited = local ?: gate?.invoke(id)
+            if (waited == io.github.eslamasabry.oc.engine.runtime.server.LocalServerWait.NotAnswering) {
                 return Failure.Runtime(RuntimeProblem.ServerStartUnavailable)
                     .failed()
                     .atStage(ConnectionStage.OpenGateway)
+            }
+        }
+        // The saved "Phone agents" server needs its helper running; the app starts it, not only the Agents page.
+        if (loaded.profile.backend == BackendKind.Paseo) {
+            when (val helper = phoneHelper.value.ensureHelper(id)) {
+                is Outcome.Failed -> return helper.atStage(ConnectionStage.OpenGateway)
+                is Outcome.Ok -> Unit
             }
         }
         when (val opened = registry.open(profile)) {
@@ -457,6 +640,12 @@ class PreviewRuntime(
                         )
                     rebuildFeed()
                     eventJobs[id] = scope.launch {
+                        // H6: the Stops the person pressed from this app (the row says "Stopped", not "Done").
+                        launch {
+                            ListRowFacts.stopped(id, graph).collect { stopped ->
+                                listings[id]?.let { it.value = it.value.copy(stoppedByPerson = stopped) }
+                            }
+                        }
                         launch {
                             graph.session.readState.state.collect { reads ->
                                 if (registry.live.value[id] === graph) {
@@ -586,7 +775,12 @@ class PreviewRuntime(
     private fun observeFeedEvent(id: ProfileId, event: GatewayEvent): Boolean {
         val listing = listings[id] ?: return false
         val current = listing.value
-        fun status(session: SessionId, status: SessionStatus, failed: Boolean? = null) {
+        fun status(
+            session: SessionId,
+            status: SessionStatus,
+            failed: Boolean? = null,
+            outcome: SessionRunOutcome? = null,
+        ) {
             val next = (runRevision[id] ?: 0) + 1
             runRevision[id] = next
             runSignals.getOrPut(id) { mutableMapOf() }[session] = next
@@ -599,7 +793,13 @@ class PreviewRuntime(
                         if (failed == null) listing.value.sessions
                         else
                             listing.value.sessions.map {
-                                if (it.id == session) it.copy(lastRunFailed = failed) else it
+                                if (it.id == session)
+                                    it.copy(
+                                        lastRunFailed = failed,
+                                        // A new run clears the server's word for the last one; an end sets it.
+                                        lastRunOutcome = outcome ?: if (failed == false) null else it.lastRunOutcome,
+                                    )
+                                else it
                             },
                 )
         }
@@ -632,6 +832,12 @@ class PreviewRuntime(
                         RunOutcome.Idle -> null
                         else -> false
                     },
+                    when (event.outcome) {
+                        is RunOutcome.Failed -> SessionRunOutcome.Failed
+                        is RunOutcome.Interrupted -> SessionRunOutcome.Interrupted
+                        RunOutcome.Succeeded -> SessionRunOutcome.Succeeded
+                        else -> null
+                    },
                 )
             is GatewayEvent.PermissionAsked ->
                 request("permission", event.request.id.raw, event.request.sessionId)
@@ -655,6 +861,11 @@ class PreviewRuntime(
                         sessions =
                             current.sessions.filterNot { it.id == event.session.id } +
                                 event.session.copy(
+                                    lastRunOutcome =
+                                        event.session.lastRunOutcome
+                                            ?: current.sessions
+                                                .firstOrNull { it.id == event.session.id }
+                                                ?.lastRunOutcome,
                                     lastRunFailed =
                                         event.session.lastRunFailed ||
                                             event.session.id in failedRuns[id].orEmpty()
@@ -696,6 +907,13 @@ class PreviewRuntime(
                         registry.live.value[id]?.let {
                             sessionReads.locationKey(it.profile, it.session.server.location.value)
                         },
+                    // An agents server's rows say which agent runs them (Claude Code, Codex, ...).
+                    agentOf =
+                        if (profiles.profile(id)?.profile?.backend == BackendKind.Paseo)
+                            PhoneConversationRules::agentOf
+                        else ({ _: Session -> null }),
+                    // H4: an agent conversation the helper can no longer reopen offers a new one on tap.
+                    needsNewChat = { ListRowFacts.needsNewChat(registry.live.value[id], it.id) },
                     refresh = { refreshOne(id) },
                 )
             }
@@ -806,7 +1024,7 @@ class PreviewRuntime(
         val readEventRevision = refreshRevision[id] ?: 0
         val readRunRevision = runRevision[id] ?: 0
         val readRequestRevision = requestRevision[id] ?: 0
-        when (val page = readSessionPages(graph.session.server)) {
+        when (val page = readFeedSessionPages(graph.session.server, graph.operations())) {
             is Outcome.Failed -> {
                 listing.value = listing.value.copy(loading = false, failed = true)
                 return page.atStage(ConnectionStage.LoadConversations)
@@ -819,7 +1037,13 @@ class PreviewRuntime(
                 unverifiedListings.remove(id)
                 val stored = profiles.profile(id)?.profile
                 if (stored != null)
-                    inventory.save(stored, page.value.sessions) {
+                    // Own project first, then the others: the saved list holds 100 rows, so keep the newest of all.
+                    inventory.save(
+                        stored,
+                        page.value.sessions.sortedByDescending {
+                            it.time?.updatedMs ?: it.time?.createdMs ?: 0L
+                        },
+                    ) {
                         registry.live.value[id] === graph
                     }
                 val statuses = graph.session.server.sessionStatuses()
@@ -830,6 +1054,18 @@ class PreviewRuntime(
                     if (caps.legacyQuestionRequests) graph.session.server.pendingQuestions()
                     else null
                 val forms = if (caps.forms) graph.session.server.pendingForms() else null
+                // Across projects the ask lists above cover the connection's own folder only.
+                val others =
+                    if (caps.globalSessionSearch)
+                        readOtherProjectAsks(
+                            graph.session.server,
+                            page.value.sessions,
+                            (statuses as? Outcome.Ok)?.value,
+                            graph.session.server.location.value.directory,
+                        )
+                    else OtherProjectAsks.None
+                val allPermissions = (permissions as? Outcome.Ok)?.value?.plus(others.permissions)
+                val allForms = (forms as? Outcome.Ok)?.value?.plus(others.forms)
                 if (registry.live.value[id] !== graph)
                     return Failure.Refused(RefusalReason.StaleScope).failed()
                 val pending = requests.getOrPut(id) { mutableMapOf() }
@@ -841,7 +1077,7 @@ class PreviewRuntime(
                     }
                     replace(
                         "permission",
-                        (permissions as? Outcome.Ok)?.value?.map { it.id.raw to it.sessionId },
+                        allPermissions?.map { it.id.raw to it.sessionId },
                     )
                     replace(
                         "question",
@@ -849,7 +1085,7 @@ class PreviewRuntime(
                     )
                     replace(
                         "form",
-                        (forms as? Outcome.Ok)?.value?.map { it.id.raw to it.sessionId },
+                        allForms?.map { it.id.raw to it.sessionId },
                     )
                 }
                 val resolvedStatuses =
@@ -883,9 +1119,10 @@ class PreviewRuntime(
                                 .toImmutableList(),
                         statuses = resolvedStatuses,
                         running = listing.value.running,
+                        stoppedByPerson = listing.value.stoppedByPerson,
                         permissions =
-                            if (permissions is Outcome.Ok)
-                                permissions.value
+                            if (allPermissions != null)
+                                allPermissions
                                     .groupBy { it.sessionId }
                                     .mapNotNull { (sid, asks) ->
                                         asks.firstOrNull()?.let { ask ->
@@ -903,11 +1140,56 @@ class PreviewRuntime(
                                                             .firstOrNull()
                                                             .orEmpty()
                                                     ),
+                                                    ask.permission,
                                                 )
                                         }
                                     }
                                     .toMap()
                             else listing.value.permissions,
+                        // H1: the first waiting question / form of each conversation, so its row can be answered.
+                        questions =
+                            if (questions is Outcome.Ok)
+                                questions.value
+                                    .groupBy { it.sessionId }
+                                    .mapNotNull { (sid, asks) ->
+                                        asks.firstOrNull()?.let { ask ->
+                                            val first = ask.prompts.firstOrNull()
+                                            sid to
+                                                FeedQuestion(
+                                                    requestId = ask.id.raw,
+                                                    title = redactor.redact(first?.title.orEmpty()),
+                                                    question = redactor.redact(first?.question.orEmpty()),
+                                                    choices =
+                                                        first?.choices.orEmpty().map { redactor.redact(it.label) },
+                                                    prompts = ask.prompts.size,
+                                                    custom = first?.custom == true,
+                                                    inPlace =
+                                                        ask.prompts.size == 1 &&
+                                                            first != null &&
+                                                            !first.multiple &&
+                                                            !first.optional &&
+                                                            first.choices.none { it.description.length > 140 },
+                                                )
+                                        }
+                                    }
+                                    .toMap()
+                            else if (questions == null) emptyMap() else listing.value.questions,
+                        forms =
+                            if (forms is Outcome.Ok)
+                                forms.value
+                                    .groupBy { it.sessionId }
+                                    .mapNotNull { (sid, asks) ->
+                                        asks.firstOrNull()?.let { ask ->
+                                            sid to
+                                                FeedForm(
+                                                    ask.id.raw,
+                                                    ask.title?.let(redactor::redact),
+                                                    ask.fields.size,
+                                                )
+                                        }
+                                    }
+                                    .toMap()
+                            else if (forms == null) emptyMap() else listing.value.forms,
                         needsYou = pending.values.toSet(),
                         finishedUnseen =
                             graph.session.readState.state.value
@@ -920,8 +1202,12 @@ class PreviewRuntime(
                                 permissions is Outcome.Failed ||
                                 questions is Outcome.Failed ||
                                 forms is Outcome.Failed,
+                        // The phone agents' folder-by-folder list never makes the whole list look single-project.
                         acrossProjects =
-                            graph.session.server.capabilities.value.globalSessionSearch,
+                            PhoneAgentRules.listsAcrossProjects(
+                                graph.session.server.capabilities.value.globalSessionSearch,
+                                isPhoneHelper(id),
+                            ),
                     )
 anySourceLoaded = true
                 loadedSources.update { it + id }
@@ -947,7 +1233,13 @@ anySourceLoaded = true
         registry.live.value[ref.profileId]?.session?.reads?.prefetch(ref.sessionId)
     }
 
-    override suspend fun disconnect(id: ProfileId): Outcome<Unit> = command {
+    override suspend fun disconnect(id: ProfileId): Outcome<Unit> {
+        // A waiting attempt for this server ends at once, and so does its wait (Disconnect, the person's Stop).
+        localWaits.cancel(listOf(id))
+        return disconnectNow(id)
+    }
+
+    private suspend fun disconnectNow(id: ProfileId): Outcome<Unit> = command {
         registry.close(id)
         eventJobs.remove(id)?.cancel()
         refreshJobs.remove(id)?.cancel()
@@ -1123,6 +1415,23 @@ anySourceLoaded = true
      * a send that may already have arrived included, instead of keeping the server forever.
      */
     suspend fun remove(id: ProfileId, discardHeld: Boolean): Outcome<Unit> {
+        // The phone agents' helper is part of This phone and has no row of its own to remove it from: it goes with
+        // the phone (its prompts too: the person removed the phone). Read before the phone's keys are swept.
+        val helpers =
+            PhoneAgentRules.removedWith(id.raw, profiles.profiles.value.map { it.id.raw }) {
+                    stores.phoneOfHelper(ProfileId(it))?.raw
+                }
+                .map(::ProfileId)
+        val removed = removeOne(id, discardHeld)
+        if (removed is Outcome.Failed) return removed
+        for (helper in helpers) {
+            val gone = removeOne(helper, discardHeld = true)
+            if (gone is Outcome.Failed) return gone
+        }
+        return removed
+    }
+
+    private suspend fun removeOne(id: ProfileId, discardHeld: Boolean): Outcome<Unit> {
         val result = command {
             when (val queued = OfflineQueueStore(stores.prefs, stores.lanes.app).load()) {
                 QueueRead.Unreadable -> return@command Failure.StorageRefused().failed()
@@ -1143,6 +1452,7 @@ anySourceLoaded = true
                     if (swept is Outcome.Failed) return@command swept
                 }
             }
+            localWaits.cancel(listOf(id))
             registry.close(id)
             eventJobs.remove(id)?.cancel()
             listings.remove(id)

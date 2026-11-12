@@ -27,6 +27,10 @@ public enum class RowStatus {
     Running,
     Failed,
     Done,
+    /** Finished because the person pressed Stop (Flutter: finishedUnseen and stoppedByPerson). */
+    Stopped,
+    /** The server ended the run (a restart or a newer prompt); open it and send again. */
+    Interrupted,
     None,
 }
 
@@ -44,8 +48,13 @@ public data class ConversationRowUi(
     val ago: RelativeAge? = null,
     val running: io.github.eslamasabry.oc.engine.agents.feed.FeedRunning? = null,
     val permission: io.github.eslamasabry.oc.engine.agents.feed.FeedPermission? = null,
+    /** H1: a waiting question (answered from the row where one tap answers it) or form (opens the conversation). */
+    val question: io.github.eslamasabry.oc.engine.agents.feed.FeedQuestion? = null,
+    val form: io.github.eslamasabry.oc.engine.agents.feed.FeedForm? = null,
     val updatedAtMs: Long? = null,
     val canOpen: Boolean = true,
+    /** H4: an agent conversation that cannot be reopened; a tap asks "Start a new conversation?" first. */
+    val needsNewChat: Boolean = false,
     /** The agent's bundled mark slug (empty: a neutral mark) and its plain name, from the persona table. */
     val agentMark: String = "",
     val agentName: String? = null,
@@ -124,7 +133,8 @@ public data class HomeConnectionUi(val server: String, val state: HomeConnection
                     else HomeConnectionState.Connecting,
                 )
             }
-            val main = extra.sources.firstOrNull { it.main } ?: extra.sources.firstOrNull() ?: return null
+            val servers = extra.sources.filterNot { it.agents }
+            val main = servers.firstOrNull { it.main } ?: servers.firstOrNull() ?: return null
             return HomeConnectionUi(
                 main.name,
                 if (main.unreachable) HomeConnectionState.NotAnswering else HomeConnectionState.Connected,
@@ -188,6 +198,12 @@ public data class ChatsUi(
     val projectFacts: kotlinx.collections.immutable.ImmutableMap<String, HomeProjectFacts> =
         kotlinx.collections.immutable.persistentMapOf(),
     val allCount: Int = 0,
+    /**
+     * P5: what the list's "All conversations" row counts when it opens that page narrowed ([ChatsState.allFilter]: the
+     * chosen project, else Running), so the number is what the page shows; null when it opens the whole list, and the
+     * row counts [allCount].
+     */
+    val shownCount: Int? = null,
     val otherFoldersCount: Int = 0,
     val otherFoldersSelected: Boolean = false,
     val sheet: ChatsHomeSheet? = null,
@@ -195,6 +211,8 @@ public data class ChatsUi(
     val inbox: ImmutableList<ConversationRowUi> = persistentListOf(),
     val finished: ImmutableList<ConversationRowUi> = persistentListOf(),
     val confirmWatched: ChatsWatchedRequestUi? = null,
+    /** H4: the "Start a new conversation?" question for a tapped agent conversation that cannot be reopened. */
+    val startNew: StartNewUi? = null,
     val answering: ImmutableSet<String> = persistentSetOf(),
     val answerFailure: io.github.eslamasabry.oc.core.common.Failure? = null,
     /** Row keys whose server can archive them (OpenCode conversations on a server with `sessionArchive`). */
@@ -229,7 +247,45 @@ public data class ChatsUi(
     val alwaysAllowable: ImmutableSet<String> = persistentSetOf(),
     /** The row whose Always allow waits on its confirm, or null. */
     val confirmAlways: ConversationRowUi? = null,
+    /**
+     * H1: permission answers waiting out their 3 s undo window, by request id. The row shows the held word and Undo
+     * instead of the answers (F: chats_host.dart:236-246).
+     */
+    val held: kotlinx.collections.immutable.ImmutableMap<String, HomeHeldReply> =
+        kotlinx.collections.immutable.persistentMapOf(),
+    /** H1: question answers inside their undo window, by request id, with the words the person chose. */
+    val heldQuestions: kotlinx.collections.immutable.ImmutableMap<String, String> =
+        kotlinx.collections.immutable.persistentMapOf(),
+    /** H1: question requests whose answer the server did not take; the row says so and offers Try again. */
+    val refusedQuestions: ImmutableSet<String> = persistentSetOf(),
+    /** H1: question answers on their way to the server (after the undo window). */
+    val sendingQuestions: ImmutableSet<String> = persistentSetOf(),
+    /**
+     * H3: set when no connection can list across projects: the one project the list shows. The projects chip names
+     * it ([projectChipName]); there is no separate notice (Flutter's "This server can't list all projects" line was
+     * dropped on purpose, owner 2026-11-11: the person cannot act on it).
+     */
+    val onlyProject: String? = null,
+    /** G6: the phone agents' notices (signed out, stopped, plan limit, restart). */
+    val agentNotices: HomeAgentNotices = HomeAgentNotices(),
+    /** P14: a row's Details, shown over the home (the person asked about the row, not to open it); null = closed. */
+    val rowDetails: RowDetailsUi? = null,
 ) {
+    /**
+     * The project the projects chip names, or null for "All projects" / "Other folders". A chosen project names itself;
+     * with no choice, a source that can only list one project names that one, so the chip never says "All projects"
+     * over a list limited to one (owner 2026-11-11).
+     */
+    val projectChipName: String?
+        get() =
+            when {
+                otherFoldersSelected -> null
+                filters.projectDirectory != null ->
+                    projectChoices.firstOrNull { it.directory == filters.projectDirectory }?.name
+                        ?: filters.projectDirectory.trimEnd('/').substringAfterLast('/')
+                else -> onlyProject
+            }
+
     /** The server pill's words; null before anything is saved. */
     val connection: HomeConnectionUi?
         get() = HomeConnectionUi.of(home)
@@ -237,6 +293,35 @@ public data class ChatsUi(
     /** A computer is saved (not only this phone): the first-run page then skips "Connect a computer". */
     val hasComputer: Boolean
         get() = home.sources.any { !it.onThisPhone }
+}
+
+/**
+ * P14 (F: lib/ui/widgets/session_menu.dart:42-48, Details does not need the open conversation): what the list knows of
+ * one conversation, shown in a sheet over the home. Each fact is null when the list does not know it, and its line is
+ * then left out (no "Not reported yet" on a conversation that was never opened).
+ */
+public data class RowDetailsUi(
+    val key: String,
+    val title: RowTitle,
+    val server: String?,
+    val project: String?,
+    val directory: String?,
+    val agent: String?,
+    val branch: String?,
+) {
+    public companion object {
+        /** [row]'s facts; its server named as the home's sources name it, else as the row does. */
+        public fun of(row: ConversationRowUi, sources: List<ChatsListSourceUi>): RowDetailsUi =
+            RowDetailsUi(
+                key = row.key,
+                title = row.title,
+                server = sources.firstOrNull { it.profile == row.ref.profileId }?.name?.takeIf { it.isNotBlank() } ?: row.server,
+                project = row.project.takeIf { it.isNotBlank() },
+                directory = row.directory,
+                agent = row.agentName,
+                branch = row.branch,
+            )
+    }
 }
 
 /** The conversation just archived (or, with [deleted], deleted), waiting out its undo window. */
@@ -274,7 +359,34 @@ public interface ChatsActions {
     /** A row's menu act other than Open and Archive; no-op where the list cannot offer it. */
     public fun rowAct(row: ConversationRowUi, act: RowAct) {}
 
+    /** Closes a row's Details ([ChatsUi.rowDetails]). */
+    public fun closeRowDetails() {}
+
     public fun answerPermission(row: ConversationRowUi, allow: Boolean) {}
+
+    /** H1: takes back a permission answer still inside its undo window; nothing was sent. */
+    public fun undoAnswer(row: ConversationRowUi) {}
+
+    /**
+     * H1: answers the row's waiting question with [answers] (one list per prompt). Held [ANSWER_HOLD_MS] with Undo,
+     * then sent through the conversation's own requests engine. [shown] is the words the held row repeats.
+     */
+    public fun answerQuestion(row: ConversationRowUi, answers: List<List<String>>, shown: String) {}
+
+    /** H1: resend the question answer the server did not take. */
+    public fun retryQuestion(row: ConversationRowUi) {}
+
+    /** H1: a question or form that is answered in the conversation: opens it. */
+    public fun openRequest(row: ConversationRowUi) {}
+
+    /** H3: "Try again" on the list's quiet line: asks every connection that did not answer, then reads the list. */
+    public fun retryList() {}
+
+    /** G6: a home agent notice's action (Sign in to {agent}, Resume {agent}): the Agents page, where it is done. */
+    public fun openAgents() {}
+
+    /** A plan-limit line's action: that agent's own page, where its plan and usage are. */
+    public fun openAgent(agentId: String) {}
 
     /** Always allow on a row's waiting permission: asks first ([ChatsUi.confirmAlways]), as Flutter's list does. */
     public fun askAlwaysAllow(row: ConversationRowUi) {}
@@ -289,6 +401,11 @@ public interface ChatsActions {
     public fun openInbox() {}
 
     public fun openConversation(ref: ConversationRef)
+
+    /** The question said yes: open the new-conversation form with the same agent. */
+    public fun confirmStartNew() {}
+
+    public fun dismissStartNew() {}
 
     /** Hides the row at once and archives it when the undo window ends; one offer at a time. */
     public fun archive(row: ConversationRowUi) {}
@@ -402,6 +519,24 @@ public interface ChatsActions {
 
     /** Edit the sign-in (password or token) of the server that is failing to open, inline in its form. */
     public fun editOpeningServer() {}
+
+    /** The opening-failure card's "Set up Tailscale" (the address is a Tailscale one and nothing answered). */
+    public fun openTailscale() {}
+
+    /**
+     * The switcher's Allow once on another server's single waiting command: held a few seconds so a slip can be
+     * undone, then sent (F: DelayedAnswers, 3 s).
+     */
+    public fun allowSwitcherRequest(
+        ref: io.github.eslamasabry.oc.core.common.ids.ConversationRef,
+        requestId: String,
+    ) {}
+
+    /** Undo for an Allow once that is still held. */
+    public fun undoSwitcherRequest(requestId: String) {}
+
+    /** The switcher's Open on a waiting request: that conversation, where the full card lives. */
+    public fun openSwitcherRequest(ref: io.github.eslamasabry.oc.core.common.ids.ConversationRef) {}
     /** First run: add a computer (the server form). */
     public fun connectComputer() {}
 

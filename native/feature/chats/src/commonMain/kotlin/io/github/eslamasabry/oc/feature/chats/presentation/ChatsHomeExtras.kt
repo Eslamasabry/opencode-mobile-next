@@ -46,6 +46,12 @@ public data class ChatsOpeningUi(
     val onThisPhone: Boolean = false,
     /** This phone's own OpenCode is off because the person stopped it: the way forward is Start, not Restart. */
     val phoneOff: Boolean = false,
+    /** Where the server was meant to be, to tell a Tailscale or loopback address from any other one. */
+    val address: String = "",
+    /** The server signs in with a connection token (Codex), not a password. */
+    val usesToken: Boolean = false,
+    /** How many times opening this server has been tried since it first failed (1 = the first try). */
+    val attempts: Int = 1,
 )
 
 /** What the "Connections in this list" sheet says as a whole, apart from each row's own state. */
@@ -71,6 +77,13 @@ public data class ChatsListSourceUi(
     val main: Boolean,
     val onThisPhone: Boolean,
     val unreachable: Boolean,
+    /** Its saved password or token must be typed again. */
+    val secret: SwitcherSecret = SwitcherSecret.None,
+    /**
+     * The agents on this phone (Flutter `ChatListSourceKind.agents`): their conversations join the list beside This
+     * phone's, with their own switch in "Connections in this list", but they are never a server to switch to.
+     */
+    val agents: Boolean = false,
 )
 
 public data class ChatsHomeExtraState(

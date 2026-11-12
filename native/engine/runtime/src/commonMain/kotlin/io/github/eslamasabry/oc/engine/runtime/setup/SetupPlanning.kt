@@ -91,6 +91,12 @@ public object SetupPlanning {
     public const val RUNTIME_OPENCODE2: String = "opencode2"
 
     /**
+     * The group the Flutter app's phone-agent install job wrote into setup.json (`{profileId, agentId}`, Flutter
+     * `phone_agents_host.dart`). A saved record may carry it; no setup job is ever started with it.
+     */
+    public const val FLUTTER_AGENT_OWNER_GROUP: String = "phoneAgentOwner"
+
+    /**
      * [ids] plus every required component, expanded by `dependsOn`, in dependency order (registry
      * order among equals).
      */
@@ -246,6 +252,13 @@ public object SetupPlanning {
                 "ECONNRESET|ETIMEDOUT|EAI_AGAIN|ENOTFOUND|Failed to fetch",
             RegexOption.IGNORE_CASE,
         )
+    private const val RESOLVE_WINDOW = 6000
+    private val resolveFailure =
+        Regex(
+            "Temporary failure resolving|Could not resolve|Unable to resolve host|Network is unreachable|" +
+                "Check your connection and retry setup",
+            RegexOption.IGNORE_CASE,
+        )
     private val noSpace =
         Regex("No space left on device|ENOSPC|not enough free space", RegexOption.IGNORE_CASE)
     private val interrupted =
@@ -266,7 +279,14 @@ public object SetupPlanning {
             "app_offline" -> return SetupError.Offline(title) to SetupError.NoInternet
             "app_no_space" -> return both(SetupError.NoSpace(title))
             "app_checksum" -> return both(SetupError.Checksum(title))
-            "app_install_failed" -> return both(SetupError.Install(title))
+            // The installer's own wording for a step that could not fetch packages: a name lookup that failed
+            // anywhere in the recent output means the phone had no usable network, not that the step is broken.
+            "app_install_failed" ->
+                return if (resolveFailure.containsMatchIn(logTail.takeLast(RESOLVE_WINDOW))) {
+                    SetupError.Offline(title) to SetupError.NoInternet
+                } else {
+                    both(SetupError.Install(title))
+                }
         }
         if (
             reason.startsWith("[oc] Some packages are still unfinished.") ||
@@ -373,6 +393,7 @@ public object SetupPlanning {
                 .joinToString("\n")
         return SetupProgress(
             jobId = record.jobId,
+            startedAtMs = record.startedAt,
             state = state,
             components = list,
             overall = if (state == SetupState.Done) 1.0 else overall,

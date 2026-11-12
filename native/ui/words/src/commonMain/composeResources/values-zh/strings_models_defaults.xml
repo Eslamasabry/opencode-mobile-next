@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="modelDefaultsPhoneTitle">这部手机上的新对话</string>
+    <string name="modelDefaultsNamedTitle">%1$s 上的新对话</string>
+    <string name="modelDefaultsScope">用于新对话。每个对话保留它自己的选择。</string>
+    <string name="modelDefaultsServerChoice">使用服务器默认</string>
+    <string name="modelDefaultsRecommended">推荐的选择</string>
+    <string name="modelDefaultsAll">所有可用的模型</string>
+    <string name="modelDefaultsFailed">无法读取或保存模型选择。</string>
+    <string name="modelDefaultsInUse">使用中</string>
+    <string name="modelDefaultsDefault">服务器默认</string>
+    <string name="modelDefaultsRecent">最近的选择</string>
+    <string name="modelDefaultsCheapest">最低价格</string>
+    <string name="modelDefaultsFree">免费</string>
+    <string name="modelDefaultsPrice">输入 $%1$s · 输出 $%2$s（每百万词元）</string>
+    <string name="modelDefaultsSelected">已选择</string>
+    <string name="modelDefaultsChecking">正在检查服务器的模型</string>
+    <string name="modelDefaultsSaving">正在保存模型选择</string>
+</resources>

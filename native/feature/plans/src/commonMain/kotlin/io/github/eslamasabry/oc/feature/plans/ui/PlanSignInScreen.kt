@@ -18,6 +18,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.model.IntegrationAuthMode
+import io.github.eslamasabry.oc.engine.integrations.catalog.ConnectHint
+import io.github.eslamasabry.oc.engine.integrations.catalog.connectMethodHasOwnLabel
+import io.github.eslamasabry.oc.engine.integrations.catalog.connectMethodHint
+import io.github.eslamasabry.oc.engine.integrations.catalog.providerKeyPageUrl
 import io.github.eslamasabry.oc.feature.plans.presentation.PlanAuthenticationUi
 import io.github.eslamasabry.oc.feature.plans.presentation.PlanSignInActions
 import io.github.eslamasabry.oc.feature.plans.presentation.PlanSignInStep
@@ -43,6 +47,7 @@ import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
 import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
+import io.github.eslamasabry.oc.ui.kit.state.KitStateSize
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.*
@@ -136,17 +141,17 @@ public fun PlanSignInScreen(state: PlanAuthenticationUi, actions: PlanSignInActi
                     KitRowGroup(label = stringResource(Res.string.m40AuthMethods)) {
                         for (integration in state.integrations) for (method in
                             integration.methods) KitRow(
-                            title = method.label,
+                            title =
+                                if (connectMethodHasOwnLabel(method)) method.label
+                                else stringResource(Res.string.m40AuthKey),
                             supporting =
                                 stringResource(
-                                    when {
-                                        method.type == "key" -> Res.string.m40AuthKeyHelp
-                                        method.type == "command" -> Res.string.m40AuthCommandHint
-                                        method.label.lowercase().contains("browser") ->
-                                            Res.string.m40AuthBrowserHint
-                                        method.label.lowercase().contains("headless") ->
-                                            Res.string.m40AuthDeviceHint
-                                        else -> Res.string.m40AuthAccountHint
+                                    when (connectMethodHint(method)) {
+                                        ConnectHint.Key -> Res.string.m40AuthKeyHelp
+                                        ConnectHint.Command -> Res.string.m40AuthCommandHint
+                                        ConnectHint.Browser -> Res.string.m40AuthBrowserHint
+                                        ConnectHint.Device -> Res.string.m40AuthDeviceHint
+                                        ConnectHint.Account -> Res.string.m40AuthAccountHint
                                     }
                                 ),
                             supportingMaxLines = 3,
@@ -179,6 +184,15 @@ public fun PlanSignInScreen(state: PlanAuthenticationUi, actions: PlanSignInActi
                         working = state.busy,
                         enabled = enabled,
                     )
+                    // Flutter's key dialog: providers whose terms allow only a key link their
+                    // own page for creating one.
+                    if (state.integration?.let { providerKeyPageUrl(it.id) } != null)
+                        KitButton(
+                            stringResource(Res.string.nlibGetKey),
+                            actions::openKeyPage,
+                            role = KitButtonRole.Tertiary,
+                            enabled = enabled,
+                        )
                 }
                 PlanSignInStep.Form -> OAuthForm(state, actions, enabled)
                 PlanSignInStep.OAuth -> {
@@ -247,6 +261,7 @@ public fun PlanSignInScreen(state: PlanAuthenticationUi, actions: PlanSignInActi
                         KitStateKind.Finished,
                         stringResource(Res.string.m40AuthComplete),
                         body = stringResource(Res.string.m40AuthCompleteBody),
+                        size = KitStateSize.Inline,
                     )
                     KitButton(stringResource(Res.string.m40AuthDone), actions::dismiss)
                 }
@@ -283,7 +298,13 @@ private fun OAuthForm(
     }
     val answers = fields.mapValues { it.value.text.toString() }
     val conditions = method.presetAnswers + answers
-    for (prompt in method.prompts.filter { planPromptVisible(it, conditions) }) {
+    val shown = method.prompts.filter { planPromptVisible(it, conditions) }
+    val answered =
+        shown.all { prompt ->
+            prompt["required"] == JsonPrimitive(false) ||
+                prompt.text("key")?.let { fields[it]?.text?.isNotBlank() } != false
+        }
+    for (prompt in shown) {
         val id = prompt.text("key") ?: continue
         val field = fields[id] ?: continue
         val label = prompt.text("message")?.takeIf { it.isNotBlank() } ?: id
@@ -315,7 +336,10 @@ private fun OAuthForm(
             KitField(
                 field,
                 label,
+                kind =
+                    if (prompt.text("format") == "uri") KitFieldKind.Url else KitFieldKind.Text,
                 placeholder = prompt.text("placeholder"),
+                helper = prompt.text("description")?.takeIf { it.isNotBlank() },
                 error = if (missing) stringResource(Res.string.m40AuthEnterValue) else null,
                 enabled = enabled,
             )
@@ -323,7 +347,7 @@ private fun OAuthForm(
     KitButton(
         stringResource(Res.string.m40AuthContinue),
         { actions.submitForm(fields.mapValues { it.value.text.toString() }.toImmutableMap()) },
-        enabled = enabled,
+        enabled = if (answered) enabled else KitEnabled.Disabled(stringResource(Res.string.m40AuthEnterValue)),
         working = state.busy,
     )
 }

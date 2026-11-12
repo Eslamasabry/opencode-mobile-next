@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="dockLabel">Активные чаты</string>
+    <string name="dockWorking">Работает</string>
+    <string name="dockWorkingTasks">Работает · %1$s из %2$s</string>
+    <string name="dockThinking">Думает</string>
+    <string name="dockNeedsYou">Ждёт вас</string>
+    <string name="dockFinished">Завершено</string>
+    <string name="dockFailed">Не удалось</string>
+    <string name="dockChildNeedsYou">%1$s ждёт вас</string>
+    <string name="dockChildFailed">%1$s: не удалось</string>
+    <plurals name="dockSubagents">
+        <item quantity="one">%1$s субагент</item>
+        <item quantity="few">%1$s субагента</item>
+        <item quantity="many">%1$s субагентов</item>
+        <item quantity="other">%1$s субагента</item>
+    </plurals>
+    <string name="dockOnServer">на сервере %1$s</string>
+    <string name="dockStop">Остановить</string>
+    <string name="dockRemove">Убрать</string>
+    <string name="dockOpen">Открыть</string>
+    <string name="dockPin">Закрепить</string>
+    <string name="dockUnpin">Открепить</string>
+    <string name="dockRestore">Вернуть</string>
+    <string name="dockNickname">Название в доке</string>
+    <plurals name="dockHidden">
+        <item quantity="one">%1$s скрыт</item>
+        <item quantity="few">%1$s скрыто</item>
+        <item quantity="many">%1$s скрыто</item>
+        <item quantity="other">%1$s скрыто</item>
+    </plurals>
+    <string name="dockMoveDock">Переместить док</string>
+    <string name="dockShowDock">Показать док</string>
+    <string name="dockActionOn">%1$s %2$s</string>
+    <string name="dockRemoved">%1$s убран из дока</string>
+    <string name="dockStaysWhileOpen">%1$s открыт, поэтому остаётся</string>
+    <string name="dockStopFailed">Не удалось остановить %1$s</string>
+    <string name="dockAnswerFailed">Не удалось ответить: %1$s</string>
+    <string name="dockSettingTitle">Док у края экрана</string>
+    <string name="dockSettingBody">Активные чаты у края экрана. Потяните его за верхнюю часть, чтобы переместить на другую сторону.</string>
+</resources>

@@ -43,6 +43,11 @@ public data class SetupOptions(
  * dependencies.
  */
 public object SetupSelection {
+    /** The extracted size of [job] when every part reports one; null otherwise (the free-space rule then uses 2x). */
+    public fun installedBytes(job: List<SetupComponent>): Long? =
+        job.map { it.installedBytes }.takeIf { sizes -> sizes.isNotEmpty() && sizes.all { it != null } }
+            ?.sumOf { it ?: 0L }
+
     public fun toggle(
         registry: List<SetupComponent>,
         chosen: Set<String>,

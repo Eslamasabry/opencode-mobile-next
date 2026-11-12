@@ -47,6 +47,10 @@ public class ConnectionAutoApprovals(
     public fun start() {
         if (started) return
         started = true
+        // The automatic-approval record lives as long as its connection (it is cleared with it).
+        registry.appScope.launch(registry.mainContext) {
+            registry.live.collect { graphs -> AutoApprovalRecords.retain(graphs.keys) }
+        }
         registry.appScope.launch(registry.mainContext) {
             registry.live
                 .flatMapLatest { graphs -> merge(*graphs.values.map(::sweep).toTypedArray()) }
@@ -80,6 +84,7 @@ public class ConnectionAutoApprovals(
                     )
                 },
                 clock = clock,
+                onRecorded = { AutoApprovalRecords.add(profile, it) },
             )
         return combine(
                 engine.pending,

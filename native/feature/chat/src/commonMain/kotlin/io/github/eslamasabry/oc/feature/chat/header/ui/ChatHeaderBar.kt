@@ -65,10 +65,6 @@ import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.agentToolsTitle
 import io.github.eslamasabry.oc.ui.words.res.gitSheetTitle
 import io.github.eslamasabry.oc.ui.words.res.handoffUiPhoneTitle
-import io.github.eslamasabry.oc.ui.words.res.handoffUiPhoneIntro
-import io.github.eslamasabry.oc.ui.words.res.handoffUiPhoneLinkLabel
-import io.github.eslamasabry.oc.ui.words.res.handoffUiPhoneCopyLink
-import io.github.eslamasabry.oc.ui.words.res.handoffUiPhoneUnavailable
 import io.github.eslamasabry.oc.ui.words.res.cardsFromAgentsTitle
 import io.github.eslamasabry.oc.ui.words.res.chatHeaderArchiveFailed
 import io.github.eslamasabry.oc.ui.words.res.chatHeaderContext
@@ -81,6 +77,8 @@ import io.github.eslamasabry.oc.ui.words.res.chatHeaderRenameFailed
 import io.github.eslamasabry.oc.ui.words.res.chatHeaderServer
 import io.github.eslamasabry.oc.ui.words.res.chatHeaderShareFailed
 import io.github.eslamasabry.oc.ui.words.res.chatHeaderTokens
+import io.github.eslamasabry.oc.ui.words.res.e7SharedAccumulatedCostReportedByServer
+import io.github.eslamasabry.oc.ui.words.res.historyLoadedCost
 import io.github.eslamasabry.oc.ui.words.res.chatHeaderUnshareFailed
 import io.github.eslamasabry.oc.ui.words.res.chatProjectChipFilesSemantics
 import io.github.eslamasabry.oc.ui.words.res.chatProjectServerChipFilesSemantics
@@ -291,32 +289,50 @@ public fun ChatHeaderTopBar(
                         )
                     }
             )
+    // A subagent's conversation names where it came from on the title's own line ("Parent › subagent"), in place of
+    // the project line; the parent is one tap back (pops, never stacks it twice).
+    val parentLine: (@Composable () -> Unit)? =
+        state.parent?.let { _ ->
+            {
+                io.github.eslamasabry.oc.ui.kit.nav.KitBreadcrumb(
+                    rootLabel = state.parentTitle ?: stringResource(Res.string.commandUntitledChat),
+                    segments = listOf(state.title ?: stringResource(Res.string.commandDestination)),
+                    onSelected = { if (it < 0) actions.openParent() },
+                )
+            }
+        }
+    val showGitChip = state.showsGit
+    val projectLine: (@Composable () -> Unit)? =
+        state.projectName?.let { project ->
+            {
+                KitTopBarScope(
+                    project = project,
+                    server = state.serverName,
+                    projectLabel =
+                        state.serverName?.let {
+                            stringResource(
+                                Res.string.chatProjectServerChipFilesSemantics,
+                                project,
+                                it,
+                            )
+                        } ?: stringResource(Res.string.chatProjectChipFilesSemantics, project),
+                    onProject = onProject,
+                    // F: chat_top_bar.dart:180-190 shows "Git" until a branch is known; here the chip appears only for
+                    // a folder that is a Git project (one rule with the Git page and Changes): never "Git" for a
+                    // plain folder or before the server has answered.
+                    branch =
+                        onBranch?.takeIf { showGitChip }?.let {
+                            state.branch ?: stringResource(Res.string.gitSheetTitle)
+                        },
+                    onBranch = onBranch?.takeIf { showGitChip },
+                )
+            }
+        }
     KitTopBar(
         // F: chat_top_bar.dart:162-166: an untitled conversation's bar reads "Conversation" (commandDestination).
         title = state.title ?: stringResource(Res.string.commandDestination),
         subtitle = subtitle,
-        scope =
-            state.projectName?.let { project ->
-                {
-                    KitTopBarScope(
-                        project = project,
-                        server = state.serverName,
-                        projectLabel =
-                            state.serverName?.let {
-                                stringResource(
-                                    Res.string.chatProjectServerChipFilesSemantics,
-                                    project,
-                                    it,
-                                )
-                            } ?: stringResource(Res.string.chatProjectChipFilesSemantics, project),
-                        onProject = onProject,
-                        // F: chat_top_bar.dart:180-190: the Git chip always shows, the branch once known and
-                        // "Git" (gitSheetTitle) until then; it opens the Git sheet.
-                        branch = onBranch?.let { state.branch ?: stringResource(Res.string.gitSheetTitle) },
-                        onBranch = onBranch,
-                    )
-                }
-            },
+        scope = parentLine ?: projectLine,
         exit = if (canGoBack) KitTopBarExit.Back else KitTopBarExit.None,
         exitLabel = stringResource(Res.string.kitTopBarBack),
         onExit = onBack,
@@ -650,36 +666,18 @@ private fun DetailsBody(facts: DetailsUi) {
                     trailing = KitRowTrailing.Value(Numbers.format(it), chevron = false),
                 )
             }
-        }
-    }
-}
-
-/** Flutter `_ContinueOnPhoneBody`: the link with its own Copy, or why there is none. */
-@Composable
-private fun PhoneBody(sheet: HeaderSheet.ContinueOnPhone, actions: ChatHeaderActions) {
-    Column(
-        Modifier.fillMaxWidth().testTag("continue-on-phone-sheet"),
-        verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
-    ) {
-        val link = sheet.link
-        if (link != null) {
-            KitText(stringResource(Res.string.handoffUiPhoneIntro))
-            KitSectionLabel(stringResource(Res.string.handoffUiPhoneLinkLabel))
-            KitCodeBlock(
-                source = link,
-                kind = KitCodeKind.Command,
-                maxLines = Int.MAX_VALUE,
-                modifier = Modifier.testTag("continue-on-phone-link"),
-                wrap = true,
-                copyLabel = stringResource(Res.string.handoffUiPhoneCopyLink),
-                copiedLabel = stringResource(Res.string.kitCopied),
-                onCopy = { actions.copyPhoneLink() },
-            )
-        } else {
-            KitNotice(
-                modifier = Modifier.testTag("continue-on-phone-unavailable"),
-                message = stringResource(Res.string.handoffUiPhoneUnavailable),
-            )
+            // C4 (Flutter session_context_screen.dart:778-788): what the conversation cost, said by whose figure.
+            facts.cost?.let {
+                KitRow(
+                    stringResource(
+                        if (it.reportedByServer) Res.string.e7SharedAccumulatedCostReportedByServer
+                        else Res.string.historyLoadedCost
+                    ),
+                    trailing =
+                        KitRowTrailing.Value("$" + Numbers.decimal(it.amount, 2), chevron = false),
+                    modifier = Modifier.testTag("chat-details-cost"),
+                )
+            }
         }
     }
 }

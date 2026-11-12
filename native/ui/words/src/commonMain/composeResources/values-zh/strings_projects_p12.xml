@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="p12ProjectsTitle">项目</string>
+    <string name="p12OpenFolder">打开服务器上的文件夹</string>
+    <string name="p12NewProjectUnavailable">此服务器无法从手机创建文件夹。请在那台电脑上创建文件夹，再到这里打开。</string>
+    <string name="p12PhoneFolder">这部手机上的文件夹</string>
+    <string name="p12PhoneFolderUnavailable">此版本尚未设置这部手机上的 OpenCode。</string>
+    <string name="p12ProjectsOnServer">%1$s 上的项目</string>
+    <string name="p12ProjectsLoadFailed">无法加载此服务器的项目。</string>
+    <string name="p12NoServerTitle">未连接服务器</string>
+    <string name="p12NoServerBody">连接一个服务器即可查看其项目和对话。</string>
+    <string name="p12PathNotAbsolute">请输入以 / 开头的完整路径。</string>
+    <string name="p12PathBadParts">路径中不能包含“..”或换行。</string>
+    <string name="p12NewHere">在此新建对话</string>
+    <string name="p12NewHereBody">开始一个在 %1$s 中工作的对话。</string>
+    <string name="p12ProjectConversations">此项目中的对话</string>
+    <string name="p12ProjectNoConversations">此项目中还没有对话。</string>
+    <string name="p12ElsewhereTitle">在其他项目中</string>
+    <string name="p12CreateFailed">无法开始对话。</string>
+    <string name="p12Select">选择</string>
+    <string name="p12SelectCancel">取消选择</string>
+    <string name="p12Rename">重命名</string>
+    <string name="p12RenameTitle">重命名对话</string>
+    <string name="p12RenameField">标题</string>
+    <string name="p12RenameEmpty">标题至少需要一个字符。</string>
+    <string name="p12RenameFailed">无法重命名对话。</string>
+    <plurals name="p12DeleteSelected">
+        <item quantity="other">删除 %1$d 个对话</item>
+    </plurals>
+    <plurals name="p12ArchiveSelected">
+        <item quantity="other">归档 %1$d 个对话</item>
+    </plurals>
+    <string name="p12Deleted">已删除“%1$s”</string>
+    <string name="chatsRowArchived">已归档“%1$s”</string>
+    <string name="chatsRowActions">对话操作</string>
+    <plurals name="p12DeletedMany">
+        <item quantity="other">已删除 %1$d 个对话</item>
+    </plurals>
+    <string name="p12DeleteFailed">无法删除某个对话，它已回到列表中。</string>
+    <string name="p12ArchiveUnavailable">此服务器无法归档对话。</string>
+    <string name="p12ArchiveFailed">无法归档对话。</string>
+    <string name="p12ArchivedFilter">已归档</string>
+    <string name="p12MoreFor">%1$s 的更多操作</string>
+    <string name="p12OpenChat">打开对话</string>
+    <string name="p12ProjectsOnThisPhone">这部手机上的项目</string>
+</resources>

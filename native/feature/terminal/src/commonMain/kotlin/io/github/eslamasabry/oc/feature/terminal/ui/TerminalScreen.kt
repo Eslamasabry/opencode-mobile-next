@@ -59,6 +59,7 @@ import io.github.eslamasabry.oc.ui.kit.state.KitSkeletonRows
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
 import io.github.eslamasabry.oc.ui.words.res.*
+import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 
 /**
@@ -66,7 +67,7 @@ import org.jetbrains.compose.resources.stringResource
  * while the shell is not connected, the readable transcript with its field, and the key bar under it.
  */
 @Composable
-public fun TerminalScreen(state: RemoteTerminalState, actions: TerminalActions) {
+public fun TerminalScreen(state: RemoteTerminalState, actions: TerminalActions, devServerPort: Int? = null) {
     val terminal = state.selected
     val canCreate = !state.loading && !state.working && state.failure == null
     var barMenuOpen by remember { mutableStateOf(false) }
@@ -74,10 +75,15 @@ public fun TerminalScreen(state: RemoteTerminalState, actions: TerminalActions) 
     var remove by remember(terminal?.id) { mutableStateOf(false) }
     var resize by remember(terminal?.id) { mutableStateOf(false) }
     var details by remember(terminal?.id) { mutableStateOf<TerminalDetailsUi?>(null) }
+    var removeEnded by remember { mutableStateOf(false) }
+    val endedCount = state.terminals.count { !it.running && it.id != terminal?.id }
     val title =
         terminal?.title?.takeIf { it.isNotBlank() }
             ?: stringResource(Res.string.libraryTerminalTitle)
     val newLabel = stringResource(Res.string.remoteTerminalCreate)
+    // Flutter's numbering (`terminal_list.dart`): "Terminal 2" is the next one, never the server's random id.
+    val newTitle = stringResource(Res.string.e7SetupTerminalNumber, state.terminals.size + 1)
+    val createNamed: () -> Unit = { actions.create(newTitle) }
     val stopLabel =
         stringResource(
             if (terminal?.running == true) Res.string.terminalScreenStopConfirm
@@ -100,7 +106,20 @@ public fun TerminalScreen(state: RemoteTerminalState, actions: TerminalActions) 
         }
     }
     val menu = buildList {
-        if (canCreate) add(KitMenuItem(newLabel, close(actions::create), icon = KitIcons.add))
+        if (canCreate) add(KitMenuItem(newLabel, close(createNamed), icon = KitIcons.add))
+        // G7: Flutter's "Open preview" for the project's running dev server, on every server terminal.
+        if (devServerPort != null)
+            add(KitMenuItem(stringResource(Res.string.terminalOpenPreview), close(actions::openDevPreview), icon = KitIcons.browser))
+        if (terminal == null && endedCount > 0 && !state.working)
+            add(
+                KitMenuItem(
+                    pluralStringResource(Res.plurals.terminalScreenRemoveEnded, endedCount, endedCount),
+                    close { removeEnded = true },
+                    icon = KitIcons.delete,
+                    destructive = true,
+                )
+            )
+        add(KitMenuItem(stringResource(Res.string.terminalScreenUsePhone), close(actions::usePhone), icon = KitIcons.terminal))
         if (terminal != null) {
             add(KitMenuItem(
                 stringResource(Res.string.remoteTerminalList),
@@ -163,6 +182,7 @@ public fun TerminalScreen(state: RemoteTerminalState, actions: TerminalActions) 
                 exit = KitTopBarExit.Back,
                 exitLabel = stringResource(Res.string.kitTopBarBack),
                 onExit = actions::back,
+                subtitle = devServerPort?.let { stringResource(Res.string.terminalDevServerRunning) },
                 actions =
                     if (terminal == null) emptyList()
                     else listOf(KitLineAction(
@@ -195,6 +215,21 @@ public fun TerminalScreen(state: RemoteTerminalState, actions: TerminalActions) 
         },
         width = KitScreenWidth.Full,
     ) {
+        KitConfirm(
+            if (!removeEnded) null
+            else
+                KitConfirmSpec(
+                    title = pluralStringResource(Res.plurals.terminalScreenRemoveEndedTitle, endedCount, endedCount),
+                    confirmLabel = pluralStringResource(Res.plurals.terminalScreenRemoveEnded, endedCount, endedCount),
+                    kind = KitConfirmKind.Destructive,
+                    body = stringResource(Res.string.terminalScreenRemoveEndedBody),
+                ),
+            onConfirm = {
+                removeEnded = false
+                actions.removeEnded()
+            },
+            onCancel = { removeEnded = false },
+        )
         Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
             // The frame keeps the page gutter (KitScreenEdges.Gutter): the notices, output and keys sit inside it.
             val inset = Modifier
@@ -225,13 +260,15 @@ public fun TerminalScreen(state: RemoteTerminalState, actions: TerminalActions) 
                         state.failure != null && state.terminals.isEmpty() -> Unit
                         state.terminals.isEmpty() ->
                             item {
+                                // Alone on the page: it takes the list's whole room, so it sits in the page's middle.
                                 KitStateView(
                                     kind = KitStateKind.Empty,
-                                    title = stringResource(Res.string.remoteTerminalEmpty),
+                                    title = stringResource(Res.string.terminalScreenEmptyTitle),
+                                    modifier = Modifier.fillParentMaxSize(),
                                     primary =
                                         KitAction(
                                             newLabel,
-                                            actions::create,
+                                            createNamed,
                                             working = state.working,
                                         ),
                                 )

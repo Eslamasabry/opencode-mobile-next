@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxAgentInstall">安装或更新 %1$s</string>
+    <string name="linuxAgentInstalling">正在安装 %1$s</string>
+    <string name="linuxAgentInstallBackground">安装会在后台继续。点按“刷新”可读取最新进度。</string>
+    <string name="linuxAgentInstallCancel">取消安装</string>
+    <string name="linuxAgentInstallBusy">另一项设置正在运行。请等它完成，或先取消它。</string>
+    <string name="linuxAgentInstallSpace">可用空间不足，无法容纳此次下载及已安装的文件。请腾出一些存储空间后重试。</string>
+    <string name="linuxAgentInstallUnavailable">这部手机目前无法安装此智能体。</string>
+    <string name="linuxAgentInstallDone">%1$s 已安装。使用前仍需登录并完成手机兼容性检查。</string>
+    <string name="linuxAgentInstallFailed">无法安装 %1$s。请点按“安装或更新”重试。</string>
+    <string name="linuxAgentInstallInterrupted">%1$s 的安装被中断。请点按“安装或更新”安全地重试。</string>
+</resources>

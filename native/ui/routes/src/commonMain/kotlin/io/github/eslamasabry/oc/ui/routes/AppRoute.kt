@@ -52,4 +52,13 @@ public interface AppNavigator {
 
     /** Pop one entry. With one entry left it does nothing: the root never intercepts Back (ADR §9.4, D5). */
     public fun back()
+
+    /**
+     * Go back to the conversation [ref] (a sub-agent's chat going to the conversation that started it): pops the top
+     * when [ref]'s chat is the entry right below it (the child was opened from the parent's card), otherwise opens it
+     * (the child was opened from the dock, a notification or the Subagents page). Never stacks the parent twice.
+     */
+    public fun backToChat(ref: ConversationRef) {
+        openChat(ref)
+    }
 }

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="chatStarAskTitle">Bạn thích OpenCode Next chứ?</string>
+    <string name="chatStarAskBody">Một sao trên GitHub giúp người khác tìm thấy ứng dụng.</string>
+    <string name="chatStarAskAction">Gắn sao trên GitHub</string>
+    <string name="chatStarAskDismiss">Để sau</string>
+</resources>

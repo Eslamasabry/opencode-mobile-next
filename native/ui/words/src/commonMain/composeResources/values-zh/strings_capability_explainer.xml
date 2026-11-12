@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="kitCapEnableFailed">无法打开此操作。请从它所在的页面重试。</string>
+</resources>

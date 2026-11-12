@@ -16,17 +16,21 @@ import dev.zacsweers.metrox.viewmodel.metroViewModel
 import io.github.eslamasabry.oc.feature.settings.presentation.ServerConfigurationActions
 import io.github.eslamasabry.oc.feature.settings.presentation.ServerConfigurationUi
 import io.github.eslamasabry.oc.feature.settings.presentation.ServerConfigurationViewModel
-import io.github.eslamasabry.oc.ui.design.type.TypeRole
+import androidx.compose.foundation.layout.Arrangement
 import io.github.eslamasabry.oc.ui.kit.KitAction
-import io.github.eslamasabry.oc.ui.kit.KitText
-import io.github.eslamasabry.oc.ui.kit.KitTextKind
-import io.github.eslamasabry.oc.ui.kit.action.KitActionBlock
+import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
+import io.github.eslamasabry.oc.ui.kit.row.KitRow
+import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
+import io.github.eslamasabry.oc.ui.kit.state.KitDetailsFold
+import io.github.eslamasabry.oc.ui.kit.text.KitBidi
+import io.github.eslamasabry.oc.ui.kit.text.KitRedact
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenWidth
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
 import io.github.eslamasabry.oc.ui.kit.row.KitGroupNote
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
+import io.github.eslamasabry.oc.ui.kit.state.KitStateSize
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.Res
@@ -35,6 +39,12 @@ import io.github.eslamasabry.oc.ui.words.res.configInspectionExplanation
 import io.github.eslamasabry.oc.ui.words.res.configInspectionRefresh
 import io.github.eslamasabry.oc.ui.words.res.configInspectionTitle
 import io.github.eslamasabry.oc.ui.words.res.configInspectionUnavailable
+import io.github.eslamasabry.oc.ui.words.res.configFilesLabel
+import io.github.eslamasabry.oc.ui.words.res.configFoldersLabel
+import io.github.eslamasabry.oc.ui.words.res.configNoFileBody
+import io.github.eslamasabry.oc.ui.words.res.configNoFileTitle
+import io.github.eslamasabry.oc.ui.words.res.kitCopyDetails
+import io.github.eslamasabry.oc.ui.words.res.kitDetails
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarBack
 import org.jetbrains.compose.resources.stringResource
 
@@ -46,8 +56,9 @@ internal fun ServerConfigurationPage(onBack: () -> Unit) {
 }
 
 /**
- * A read-only source list. The adapter has already removed sensitive values before this state
- * exists.
+ * What the server reads its configuration from, in plain words: the files it found (or that there is none yet) and
+ * the folders it looks in. The masked source sits under Details only. The adapter has already removed sensitive
+ * values before this state exists, and the lists carry nothing but paths.
  */
 @Composable
 public fun ServerConfigurationScreen(
@@ -63,40 +74,66 @@ public fun ServerConfigurationScreen(
                 exit = KitTopBarExit.Back,
                 exitLabel = stringResource(Res.string.kitTopBarBack),
                 onExit = onBack,
+                actions =
+                    if (state is ServerConfigurationUi.Ready)
+                        listOf(
+                            KitLineAction(
+                                stringResource(Res.string.configInspectionRefresh),
+                                actions::refresh,
+                            )
+                        )
+                    else emptyList(),
             )
         },
         width = KitScreenWidth.Reading,
         page = true,
         edges = KitScreenEdges.Bleed,
     ) {
-        Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+        Column(
+            Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(LocalKitTokens.current.sectionGap.dp),
+        ) {
             KitGroupNote(stringResource(Res.string.configInspectionExplanation))
             when (state) {
                 ServerConfigurationUi.Loading ->
-                    KitStateView(kind = KitStateKind.Loading, title = title)
+                    KitStateView(kind = KitStateKind.Loading, title = title, size = KitStateSize.Inline)
                 ServerConfigurationUi.Unavailable ->
                     KitStateView(
                         kind = KitStateKind.Error,
                         title = stringResource(Res.string.configInspectionUnavailable),
                         primary =
                             KitAction(stringResource(Res.string.commonRetry), actions::refresh),
+                        size = KitStateSize.Inline,
                     )
                 is ServerConfigurationUi.Ready -> {
-                    KitActionBlock(
-                        primary =
-                            KitAction(
-                                stringResource(Res.string.configInspectionRefresh),
-                                actions::refresh,
-                            ),
-                        modifier = Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp),
-                    )
-                    KitText(
-                        state.text,
+                    KitRowGroup(label = stringResource(Res.string.configFilesLabel)) {
+                        if (state.files.isEmpty())
+                            KitRow(
+                                title = stringResource(Res.string.configNoFileTitle),
+                                modifier = Modifier.testTag("server-configuration-no-file"),
+                                supporting = stringResource(Res.string.configNoFileBody),
+                                supportingMaxLines = 4,
+                            )
+                        for (path in state.files)
+                            KitRow(
+                                title = KitBidi.ltr(path.substringAfterLast('/').ifBlank { path }),
+                                modifier = Modifier.testTag("server-configuration-file"),
+                                supporting = KitBidi.ltr(path),
+                                supportingMaxLines = 3,
+                            )
+                    }
+                    if (state.folders.isNotEmpty())
+                        KitRowGroup(label = stringResource(Res.string.configFoldersLabel)) {
+                            for (path in state.folders)
+                                KitRow(title = KitBidi.ltr(path), titleMaxLines = 3)
+                        }
+                    KitDetailsFold(
+                        label = stringResource(Res.string.kitDetails),
+                        copyLabel = stringResource(Res.string.kitCopyDetails),
                         modifier =
-                            Modifier.padding(LocalKitTokens.current.gutter.dp)
+                            Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp)
                                 .testTag("server-configuration-masked"),
-                        role = TypeRole.Mono,
-                        kind = KitTextKind.Reading,
+                        notes = listOf(KitRedact.text(state.text)),
                     )
                 }
             }

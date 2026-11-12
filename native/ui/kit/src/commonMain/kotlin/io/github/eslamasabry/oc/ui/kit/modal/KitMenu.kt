@@ -24,6 +24,9 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.unit.round
+import androidx.compose.ui.unit.toSize
+import androidx.compose.foundation.layout.offset
+import kotlinx.coroutines.launch
 import io.github.eslamasabry.oc.ui.kit.foundation.kitPaneInset
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.animation.AnimatedVisibility
@@ -95,6 +98,8 @@ import io.github.eslamasabry.oc.ui.kit.foundation.kitFloating
 import io.github.eslamasabry.oc.ui.kit.foundation.kitGlassSheet
 import io.github.eslamasabry.oc.ui.kit.effects.LiquidMotion
 import io.github.eslamasabry.oc.ui.kit.effects.kitLiquidMenuFace
+import io.github.eslamasabry.oc.ui.kit.effects.kitLiquidJoinClip
+import io.github.eslamasabry.oc.ui.kit.effects.kitLiquidJoinRest
 import io.github.eslamasabry.oc.ui.kit.foundation.kitTappable
 import io.github.eslamasabry.oc.ui.kit.foundation.shape
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
@@ -341,7 +346,7 @@ private fun LayerMenu(layer: KitMenuLayerState, shown: MutableTransitionState<Bo
         content = {
             // The panel takes every press on it (its padding too): only a press beside it closes the menu.
             Box(Modifier.pointerInput(Unit) { awaitPointerEventScope { while (true) awaitPointerEvent() } }) {
-                MenuContent(shown, last, onDismissRequest, anchor, gutter, top, bottom)
+                MenuContent(shown, last, onDismissRequest, anchor, gutter, top, bottom, joins = true)
             }
         },
     ) { measurables, constraints ->
@@ -401,6 +406,8 @@ private fun MenuContent(
     gutter: Int,
     top: Int,
     bottom: Int,
+    /** In the window's menu layer, where its glass may join the glass it opened from; a popup's window never does. */
+    joins: Boolean = false,
 ) {
     val items = last.items
     val title = last.title
@@ -410,67 +417,74 @@ private fun MenuContent(
         val motion = KitMotion.state
         val specs = KitMotion.specs
         val density = LocalDensity.current
+        // Joined glass (KitLiquidJoin.kt): opened from a control on a piece of liquid glass (the bar's capsule), the panel
+        // is one body of glass with it while both are liquid. It drops out of the glass as a column, rebounds, then
+        // fills sideways; its rows are uncovered by the glass. Elsewhere it moves as it always did.
+        val joinRegistry = io.github.eslamasabry.oc.ui.kit.effects.LocalKitLiquidJoin.current
+        val home = joinRegistry?.takeIf { joins }?.bodyAt(Offset(last.at.center.x.toFloat(), last.at.center.y.toFloat()))
+        val drop = io.github.eslamasabry.oc.ui.kit.effects.rememberKitLiquidJoinDrop(home?.name ?: "bar", on = motion.travels && home != null)
+        // The bar's menu only (a menu from a chip on the message box is the design's phase 3).
+        val joinable = drop != null && home != null && home.granted && home.name == "bar"
         // The panel drops 8 dp from the anchor when it opens below and rises when it opens above (Full only; Calm
         // fades); it fades out on the way out (M-004). Off: both are instant, so the first frame is final.
         val opensAbove = remember { mutableStateOf(false) }
-        val drop =
+        val drop8 =
             slideInVertically(specs.quick<IntOffset>()) {
                 with(density) { KitModalMotionRules.menuDropDp(motion, opensAbove.value).dp.roundToPx() }
             }
         AnimatedVisibility(
             shown,
-            enter = if (motion.travels) fadeIn(specs.quick()) + drop else fadeIn(specs.quick()),
-            exit = fadeOut(specs.exit()),
+            enter =
+                when {
+                    joinable -> androidx.compose.animation.EnterTransition.None
+                    motion.travels -> fadeIn(specs.quick()) + drop8
+                    else -> fadeIn(specs.quick())
+                },
+            // A joined panel keeps itself on screen while its glass empties and is drawn up (its own springs).
+            exit = if (joinable) fadeOut(specs.hold(io.github.eslamasabry.oc.ui.design.effects.LiquidJoin.CLOSE_MS)) else fadeOut(specs.exit()),
             label = "kit.menu",
         ) {
             // The panel grows out of the control that opened it (owner 2026-11-10, "the menu grows out of the ⋯ button
             // instead of fading in"): from MENU_FROM_SCALE to 1 around the anchor's centre on the side it opens from,
             // on the release spring (a finger let go of the control: it may settle with a slight overshoot), and back
-            // into the control on the way out. Read in the draw phase. Full only.
+            // into the control on the way out. Read in the draw phase. Full only. A joined panel does not scale.
             val panelBox = remember { mutableStateOf(IntRect.Zero) }
-            // Fluid glass: opened from a control on a piece of glass (the bar's ⋯, a chip on the message box), the
-            // panel is drawn out of that glass and lets go of it as it settles; closing, it joins it again.
-            val merge = io.github.eslamasabry.oc.ui.kit.effects.LocalKitLiquidMerge.current
-            val drop = io.github.eslamasabry.oc.ui.kit.effects.rememberKitLiquidDrop("bar", on = motion.travels)
-            val pull by transition.animateFloat(
-                transitionSpec = { if (targetState == EnterExitState.Visible) specs.effectsSlow() else specs.effectsFast() },
-                label = "kit.menu.pull",
-            ) { if (it == EnterExitState.Visible) 0f else 1f }
-            val menuRadius = with(density) { MENU_MERGE_RADIUS_DP.dp.toPx() }
             val scale by transition.animateFloat(
                 transitionSpec = {
                     if (targetState == EnterExitState.Visible) specs.release() else specs.exit()
                 },
                 label = "kit.menu.scale",
-            ) { if (it == EnterExitState.Visible || !motion.travels) 1f else MENU_FROM_SCALE }
+            ) { if (it == EnterExitState.Visible || !motion.travels || joinable) 1f else MENU_FROM_SCALE }
+            val leaving = transition.targetState == EnterExitState.PostExit
+            val placed = remember { mutableStateOf(Rect.Zero) }
+            val waited = remember { mutableStateOf(false) }
+            // Whether this composition knows the join. The join is made between a composition and its draw (the face
+            // is granted in an effect, the box is placed in layout), so the frame it is made in still holds the lone
+            // pane at full size with every row; the panel shows only once it has been composed joined (owner
+            // 2026-11-11: "it shows in full then animations start drawing again").
+            val composedJoined = joinable && drop != null && joinRegistry?.partnerOf(drop) != null
+            if (joinable) androidx.compose.runtime.LaunchedEffect(Unit) {
+                kotlinx.coroutines.delay(JOIN_WAIT_MS)
+                waited.value = true
+            }
+            if (joinable && drop != null && home != null) KitMenuJoinMotion(drop, home, last.at, placed, leaving)
             KitMenuPanel(
                 modifier =
-                    Modifier.kitLeaving(transition.targetState == EnterExitState.PostExit)
+                    Modifier.kitLeaving(leaving)
                         .onGloballyPositioned { panelBox.value = it.boundsInWindow().toIntRect() }
+                        .then(
+                            if (!joinable || home == null) Modifier
+                            else
+                                Modifier.onGloballyPositioned { placed.value = Rect(it.positionInWindow(), it.size.toSize()) }
+                                    .offset { menuJoinOffset(home, last.at, placed.value, this) }
+                        )
                         .graphicsLayer {
                             scaleX = scale
                             scaleY = scale
-                            val from = MenuPlacement.origin(anchor, panelBox.value, opensAbove.value)
-                            transformOrigin = from
-                            if (drop != null && merge != null) {
-                                // Where the panel is drawn now (its box, scaled about the point it grows from), in the
-                                // window; the body is whichever glass holds the control that opened it.
-                                val box = panelBox.value
-                                val ox = box.left + box.width * from.pivotFractionX
-                                val oy = box.top + box.height * from.pivotFractionY
-                                drop.rect =
-                                    Rect(
-                                        ox + (box.left - ox) * scale,
-                                        oy + (box.top - oy) * scale,
-                                        ox + (box.right - ox) * scale,
-                                        oy + (box.bottom - oy) * scale,
-                                    )
-                                drop.radius = menuRadius
-                                val centre = Offset(anchor.center.x.toFloat(), anchor.center.y.toFloat())
-                                val home = merge.bodies.entries.firstOrNull { it.value.rect.contains(centre) }?.key
-                                if (home != null) drop.body = home
-                                drop.pull = if (home != null) pull else 0f
-                            }
+                            transformOrigin = MenuPlacement.origin(anchor, panelBox.value, opensAbove.value)
+                            // A joined panel shows once it is composed joined, so the lone pane never flashes at
+                            // full size; if the join does not come it shows anyway.
+                            if (joinable && drop != null) alpha = if (composedJoined || waited.value) 1f else 0f
                         }
                         .layout { measurable, constraints ->
                         if (!constraints.hasBoundedHeight) {
@@ -490,11 +504,88 @@ private fun MenuContent(
                     item.onSelect()
                     if (item.dismissal == KitMenuDismissal.AfterSelect) onDismissRequest()
                 },
-                grow = { LiquidMotion.growFraction(scale, MENU_FROM_SCALE) },
+                grow = { if (joinable) 0f else LiquidMotion.growFraction(scale, MENU_FROM_SCALE) },
+                join = drop.takeIf { joinable },
             )
         }
     }
 }
+
+/**
+ * A joined menu's motion ("Drop, rebound, fill", `LiquidJoin`): its glass falls from [home] as a column as wide as a
+ * control, passes its resting line once and rebounds, then fills sideways to its box; closing, it empties back into the
+ * column, which is drawn up. Written to [drop] for the draw phase; [at] is the control it opened from (window px).
+ */
+@Composable
+private fun KitMenuJoinMotion(
+    drop: io.github.eslamasabry.oc.ui.kit.effects.KitLiquidJoinDrop,
+    home: io.github.eslamasabry.oc.ui.kit.effects.KitLiquidJoinBody,
+    at: IntRect,
+    placed: androidx.compose.runtime.State<Rect>,
+    leaving: Boolean,
+) {
+    val specs = KitMotion.specs
+    val density = LocalDensity.current
+    val length = remember { androidx.compose.animation.core.Animatable(0f) }
+    val fill = remember { androidx.compose.animation.core.Animatable(0f) }
+    val calm = remember { androidx.compose.animation.core.Animatable(0f) }
+    val j = io.github.eslamasabry.oc.ui.design.effects.LiquidJoin
+    val columnPx = with(density) { j.COLUMN_DP.dp.toPx() }
+    val reachPx = with(density) { j.REACH_MENU_DP.dp.toPx() }
+    drop.reachesCentre = true
+    drop.content = { fill.value / if (leaving) j.ROWS_UNTIL_FILL else j.ROWS_FROM_FILL }
+    drop.reach = { reachPx * (1f + j.MENU_REACH_SWELL * (1f - calm.value.coerceIn(0f, 1f))) }
+    drop.shape = { rest ->
+        val (l, r) = menuColumnOf(home, at, columnPx)
+        val box = j.dropBox(rest.joinBox(), l.coerceIn(rest.left, rest.right - 1f), r.coerceIn(rest.left + 1f, rest.right), length.value, fill.value)
+        Rect(box.left, box.top, box.right, box.bottom)
+    }
+    androidx.compose.runtime.LaunchedEffect(leaving) {
+        if (!leaving) {
+            launch { length.animateTo(1f, specs.liquid(j.DROP_ZETA, j.DROP_K)) }
+            launch { calm.animateTo(1f, specs.liquid(1f, j.DROP_K)) }
+            launch {
+                kotlinx.coroutines.delay(specs.delayMs(j.turnMs(j.DROP_ZETA, j.DROP_K) + j.FILL_AFTER_TURN_MS))
+                fill.animateTo(1f, specs.liquid(j.FILL_ZETA, j.FILL_K))
+            }
+        } else {
+            launch { fill.animateTo(0f, specs.liquid(1f, j.EMPTY_K)) }
+            launch {
+                kotlinx.coroutines.delay(specs.delayMs(j.DRAW_UP_AFTER_MS.toFloat()))
+                launch { calm.animateTo(0f, specs.liquid(1f, j.DRAW_UP_K)) }
+                length.animateTo(0f, specs.liquid(1f, j.DRAW_UP_K))
+            }
+        }
+    }
+}
+
+/** How long a joined menu waits for its glass to join before it shows as a lone pane, ms. */
+private const val JOIN_WAIT_MS: Long = 120
+
+/** The column a joined menu falls as, under the control at [at] or flush with the end of [home] it sits at. */
+private fun menuColumnOf(home: io.github.eslamasabry.oc.ui.kit.effects.KitLiquidJoinBody, at: IntRect, columnPx: Float): Pair<Float, Float> =
+    io.github.eslamasabry.oc.ui.design.effects.LiquidJoin.menuColumn(home.rest.joinBox(), at.left.toFloat(), at.right.toFloat(), columnPx)
+
+/**
+ * Where a joined menu rests (shape rule 3): its top [LiquidJoin.MENU_OVERLAP_DP] into its body's bottom edge, its outer
+ * edge on the body's when the control sits at that end. [placed] is where the menu's placement put it (window px).
+ */
+private fun menuJoinOffset(
+    home: io.github.eslamasabry.oc.ui.kit.effects.KitLiquidJoinBody,
+    at: IntRect,
+    placed: Rect,
+    density: androidx.compose.ui.unit.Density,
+): IntOffset {
+    val body = home.rest
+    if (placed.width <= 0f || body.width <= 0f) return IntOffset.Zero
+    val j = io.github.eslamasabry.oc.ui.design.effects.LiquidJoin
+    val (l, r) = menuColumnOf(home, at, with(density) { j.COLUMN_DP.dp.toPx() })
+    val (left, top) = j.menuRest(body.joinBox(), placed.joinBox(), l, r, with(density) { j.MENU_OVERLAP_DP.dp.toPx() })
+    return IntOffset(kotlin.math.round(left - placed.left).toInt(), kotlin.math.round(top - placed.top).toInt())
+}
+
+private fun Rect.joinBox(radius: Float = 0f): io.github.eslamasabry.oc.ui.design.effects.JoinBox =
+    io.github.eslamasabry.oc.ui.design.effects.JoinBox.of(left, top, right, bottom, radius)
 
 /**
  * The menu's panel on its own (Dart `KitMenuPanel`): `surface2`, a hairline, at most 320 dp, rows
@@ -508,13 +599,18 @@ public fun KitMenuPanel(
     onChoose: (KitMenuItem) -> Unit,
     /** How far the panel's grow-in has still to run (0 at rest, 1 at its start): liquid glass is frost meanwhile. */
     grow: () -> Float = { 0f },
+    /** The panel as a drop of the glass its control sits on (KitLiquidJoin.kt); null: a panel of its own. */
+    join: io.github.eslamasabry.oc.ui.kit.effects.KitLiquidJoinDrop? = null,
 ) {
     val colors = LocalKitColors.current
     val tokens = LocalKitTokens.current
     val shape = KitShapeId.Panel.shape()
     // Glass: liquid glass over the page (Android 13+, not held), else a frosted pane with its soft rims; every other
     // style keeps surface2 and its hairline.
-    val liquidFace = kitLiquidMenuFace(shape, grow)
+    val liquidFace = kitLiquidMenuFace(shape, grow, join)
+    // Joined to the glass it opened from: its glass is drawn beyond its box (it falls, then fills), so it is not
+    // clipped to its own shape; its rows are clipped to the glass instead.
+    val joined = join != null && join.owner.partnerOf(join) != null
     val menuFace =
         liquidFace
             ?: kitGlassSheet(KitShapeId.Panel, colors.surface2)
@@ -524,10 +620,15 @@ public fun KitMenuPanel(
     Column(
         modifier
             .widthIn(min = MENU_MIN_WIDTH_DP.dp, max = MENU_MAX_WIDTH_DP.dp)
-            .clip(shape)
+            // As wide as its widest row needs (owner 2026-11-11: "size should be determined based on the content"),
+            // within the limits; the rows fill that width. A joined menu's rest box, column and fill follow it.
+            .width(androidx.compose.foundation.layout.IntrinsicSize.Max)
+            .then(if (joined) Modifier else Modifier.clip(shape))
             .kitLiquidTouchWatch(touch)
+            .kitLiquidJoinRest(join, shape)
             .then(menuFace)
-            .kitLiquidTouchLight(touch, shape)
+            .kitLiquidTouchLight(touch, shape, join = join)
+            .then(if (joined && join != null) Modifier.kitLiquidJoinClip(join) else Modifier)
             .verticalScroll(rememberScrollState())
             // Glass keeps its pane inset inside the menu (owner 2026-11-09): rows clear of the rim, sheen and lens.
             .padding(horizontal = kitPaneInset(), vertical = Space.S1.dp + kitPaneInset())
@@ -535,6 +636,7 @@ public fun KitMenuPanel(
             .kitFloating("menu")
             .testTag("kit-menu")
     ) {
+        CompositionLocalProvider(io.github.eslamasabry.oc.ui.kit.effects.LocalKitOnLiquidGlass provides (liquidFace != null)) {
         // C17 (audit 2026-11-09): glyphs are all or nothing. Every item has one, aligned in one column, or none shows
         // one; a half-iconed menu makes the text column jump.
         val glyphSlot = items.isNotEmpty() && items.all { it.icon != null }
@@ -558,6 +660,7 @@ public fun KitMenuPanel(
                     )
                 is KitMenuEntry.Item -> MenuRow(entry.item, glyphSlot, onChoose)
             }
+        }
         }
     }
 }
@@ -705,4 +808,3 @@ private class MenuPosition(
 internal const val MENU_FROM_SCALE: Float = 0.55f
 
 /** The panel's corner as the fluid bridge takes it, in dp (the kit's Panel corner on Glass). */
-private const val MENU_MERGE_RADIUS_DP: Int = 24

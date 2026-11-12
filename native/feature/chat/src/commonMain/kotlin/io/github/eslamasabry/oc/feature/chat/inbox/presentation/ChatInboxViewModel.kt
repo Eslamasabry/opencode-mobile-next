@@ -7,6 +7,9 @@ import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactory
 import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactoryKey
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.ids.InboxItemId
+import io.github.eslamasabry.oc.core.common.ids.ProfileId
+import io.github.eslamasabry.oc.engine.delivery.queue.QueueEviction
+import io.github.eslamasabry.oc.engine.delivery.queue.QueuedPrompt
 import io.github.eslamasabry.oc.core.domain.CorrelatedPromptGateway
 import io.github.eslamasabry.oc.core.domain.facet
 import io.github.eslamasabry.oc.core.model.InboxDelivery
@@ -39,13 +42,49 @@ public data class InboxRestore(val id: Long, val text: String) {
     override fun toString(): String = "InboxRestore(id=$id, length=${text.length})"
 }
 
+/** C3: how many queued drafts the queue dropped on its own (too old / over the limits). Counts only, never text. */
+public data class QueueEvictedNotice(val tooOld: Int, val overLimit: Int) {
+    public val total: Int
+        get() = tooOld + overLimit
+}
+
+/** S7: drafts queued under another server, with the name to show and the server they wait on. */
+public data class OtherServerDrafts(val source: ProfileId, val count: Int)
+
 public data class ChatInboxUi(
     val rows: List<ChatInboxRow> = emptyList(),
     val canSteer: Boolean = false,
     val busy: Boolean = false,
     val failed: Boolean = false,
     val restore: InboxRestore? = null,
-)
+    /** C3: shown once, until the person dismisses it. */
+    val evicted: QueueEvictedNotice? = null,
+    /** S7: drafts waiting for other servers (this chat's server is the destination of a move). */
+    val others: List<OtherServerDrafts> = emptyList(),
+    /** S7: this chat's server name, the destination in "Move N waiting prompts to ...". */
+    val serverName: String = "",
+) {
+    public val othersTotal: Int
+        get() = others.sumOf { it.count }
+}
+
+/** Pure reads of the queue for the chat's banners (testable without a connection). */
+public object QueueBanners {
+    /** Oversized drafts count with the over-the-limit ones: one reason in plain words. */
+    public fun evicted(eviction: QueueEviction?): QueueEvictedNotice? =
+        eviction
+            ?.let { QueueEvictedNotice(it.expired, it.overflowed + it.oversized) }
+            ?.takeIf { it.total > 0 }
+
+    /** Drafts that wait under servers other than [profile], grouped by server, largest first. */
+    public fun others(entries: List<QueuedPrompt>, profile: ProfileId): List<OtherServerDrafts> =
+        entries
+            .filter { it.profileId != profile }
+            .groupingBy { it.profileId }
+            .eachCount()
+            .map { (id, count) -> OtherServerDrafts(id, count) }
+            .sortedByDescending { it.count }
+}
 
 public interface ChatInboxActions {
     public fun cancel(row: ChatInboxRow)
@@ -68,6 +107,9 @@ public interface ChatInboxActions {
     public fun editLocal(row: ChatInboxRow)
 
     public fun restoreDone(id: Long)
+
+    /** C3: the person has read (or dismissed) the "discarded N queued drafts" notice. */
+    public fun evictionSeen() {}
 }
 
 /** Reads the connection's existing projection; this screen never duplicates event subscriptions. */
@@ -88,7 +130,8 @@ public class ChatInboxViewModel(
                 .distinctUntilChanged()
                 .collectLatest { graph ->
                 val services = graph as? ChatGraphAccessors
-                mutable.value = ChatInboxUi(restore = mutable.value.restore)
+                mutable.value =
+                    ChatInboxUi(restore = mutable.value.restore, evicted = mutable.value.evicted)
                 if (services == null) return@collectLatest
                 val gateway = services.chatGateway
                 val delivery = services.chatDelivery
@@ -133,15 +176,37 @@ public class ChatInboxViewModel(
                                                 item.id in local.acceptedUnrecorded,
                                         )
                                     }
-                            (remote + device) to caps.promptSteering
+                            Derived(
+                                remote + device,
+                                caps.promptSteering,
+                                QueueBanners.evicted(local.eviction),
+                                QueueBanners.others(local.entries, route.ref.profileId),
+                            )
                         }
-                        .collect { (rows, steer) ->
-                            mutable.value = mutable.value.copy(rows = rows, canSteer = steer)
+                        .collect { derived ->
+                            mutable.value =
+                                mutable.value.copy(
+                                    rows = derived.rows,
+                                    canSteer = derived.steer,
+                                    evicted = derived.evicted ?: mutable.value.evicted,
+                                    others = derived.others,
+                                    serverName = graph?.profile?.name.orEmpty(),
+                                )
+                            // C3: the queue shows an eviction once; taking it clears the engine's copy.
+                            if (derived.evicted != null || queue?.state?.value?.eviction != null)
+                                queue?.takeEviction()
                         }
                 }
             }
         }
     }
+
+    private class Derived(
+        val rows: List<ChatInboxRow>,
+        val steer: Boolean,
+        val evicted: QueueEvictedNotice?,
+        val others: List<OtherServerDrafts>,
+    )
 
     private fun action(row: ChatInboxRow, command: suspend (ChatGraphAccessors) -> Boolean) {
         if (mutable.value.busy || row !in mutable.value.rows || row.sending) return
@@ -262,6 +327,10 @@ public class ChatInboxViewModel(
             }
             true
         }
+    }
+
+    override fun evictionSeen() {
+        mutable.value = mutable.value.copy(evicted = null)
     }
 
     override fun restoreDone(id: Long) {

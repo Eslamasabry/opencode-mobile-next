@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="chatFeelShare">分享</string>
+    <string name="chatFeelSelectText">选择文字</string>
+    <string name="chatFeelEditAndResend">编辑并重新发送</string>
+    <string name="chatFeelOpenLinkTitle">打开链接？</string>
+    <string name="chatFeelOpenLinkBody">这将在应用外打开 %1$s。</string>
+    <string name="chatFeelOpenLinkAction">打开</string>
+    <string name="chatFeelLinkRefused">无法从这里打开此链接。</string>
+    <string name="chatFeelUndoTitle">从这里开始撤销？</string>
+    <string name="chatFeelUndoBody">这条提示词及其之后的所有内容都会在服务器上撤销。</string>
+    <string name="chatFeelUndoAction">撤销</string>
+    <string name="chatFeelPicture">图片</string>
+    <string name="chatFeelPictureOnServer">服务器上的图片：%1$s</string>
+    <string name="chatFeelPictureOnWeb">来自 %1$s 的图片。点按可在应用外打开。</string>
+    <string name="chatFeelDone">完成</string>
+    <string name="chatFeelPictureLoading">正在打开图片…</string>
+    <string name="chatFeelPictureFailed">无法在这里显示此图片。</string>
+</resources>

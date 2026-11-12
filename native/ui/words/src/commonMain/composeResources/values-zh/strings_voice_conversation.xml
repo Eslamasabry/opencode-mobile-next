@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="voiceConversationNativeSends">录音结束后，其中的文字会发送到此对话。点按“聆听”开始下一轮。只有在你开启后，回复才会被朗读。</string>
+    <string name="voiceConversationNativeTourSpeak">说完后点按“发送”来发送你说的话。“聆听”会开始你的下一轮。</string>
+    <string name="voiceConversationNativeTourReplies">“朗读回复”会征求你的同意，并需要一个手机语音。你可以随时停止朗读。</string>
+    <string name="voiceConversationNativeTourLeave">“退出语音模式”会停止聆听和自动朗读。不确定是否已发送的内容绝不会自动重发。</string>
+    <string name="voiceConversationNativeTourDone">知道了</string>
+    <string name="voiceConversationNativeTourNext">下一步</string>
+    <string name="voiceConversationNativeTourReset">再次显示提示</string>
+    <string name="voiceConversationNativeTourResetFailed">无法重置提示。请重试。</string>
+    <string name="voiceConversationNativeTourReplay">演示给我看</string>
+    <string name="voiceConversationNativeTourLoadFailed">无法打开提示。请重试。</string>
+</resources>

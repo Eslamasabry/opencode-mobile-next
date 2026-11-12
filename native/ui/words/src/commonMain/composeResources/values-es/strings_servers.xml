@@ -136,7 +136,7 @@
     </plurals>
     <string name="serversRemoveDrafts__eq1">Se eliminará 1 borrador sin enviar</string>
     <string name="serversRemoveActiveNext">Estás conectado a él: la app se desconecta y muestra tus servidores</string>
-    <string name="serversRemoveServerKeeps">No se elimina nada en el servidor ni en tus proveedores de IA</string>
+    <string name="serversRemoveServerKeeps">No se elimina nada en el servidor ni en tus proveedores de IA.</string>
     <string name="pairingScannerAllowCamera">Permitir cámara</string>
     <string name="pairingScannerStarting">Abriendo la cámara…</string>
     <string name="tailscaleSetupAppTitle">Tailscale en este teléfono</string>
@@ -513,4 +513,6 @@
     <string name="serverDetailsAccessDenied">El servidor rechazó el acceso. Revisa qué cuenta puede usar este servidor.</string>
     <string name="serverDetailsFixSignIn">Corregir inicio de sesión</string>
     <string name="serverDetailsLastAttempt">Último intento de conexión: %1$s</string>
+    <string name="connectionAgentStarting">Iniciando Claude Code…</string>
+    <string name="connectionAgentStartFailed">Claude Code no se inició. Toca Reiniciar Claude Code para intentarlo una vez más.</string>
 </resources>

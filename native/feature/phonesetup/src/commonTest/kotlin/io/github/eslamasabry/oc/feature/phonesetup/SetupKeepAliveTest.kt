@@ -76,6 +76,13 @@ class SetupKeepAliveTest {
     }
 
     @Test
+    fun `OEM-KILL-011 an exit from before the setup began is not blamed`() {
+        val now = 10 * SystemKill.WINDOW_MS
+        assertNull(SystemKill.pick(listOf(ExitFact(3, now - 5000)), now, sinceMs = now - 1000))
+        assertEquals(SystemKill.LowMemory, SystemKill.pick(listOf(ExitFact(3, now - 500)), now, sinceMs = now - 1000))
+    }
+
+    @Test
     fun `OEM-KILL-010 a force stop or a Recents swipe is not blamed on the phone`() {
         val now = 10_000_000L
         // REASON_OTHER with the Recents-swipe sub-reason: the classifier says the person closed it.
@@ -190,7 +197,7 @@ class SetupKeepAliveTest {
     ) : SetupKeepAlive {
         val tried = mutableListOf<SettingsTarget>()
 
-        override suspend fun interruption(): SystemKill? = kill
+        override suspend fun interruption(sinceMs: Long): SystemKill? = kill
 
         override suspend fun facts(): BatteryFacts? = facts
 
@@ -207,10 +214,16 @@ class SetupKeepAliveTest {
 
     @Test
     fun `OEM-KILL-006 a stopped setup that the phone killed says so and shows the card`() {
-        val model = vm(SetupState.Failed, Phone(kill = SystemKill.Other, facts = xiaomi))
+        val model = vm(SetupState.Interrupted, Phone(kill = SystemKill.Other, facts = xiaomi))
         assertEquals(SystemKill.Other, model.state.value.systemKill)
         assertEquals(SetupMaker.Xiaomi, model.state.value.batteryCard?.maker)
         assertTrue(model.state.value.progress.canContinue)
+    }
+
+    @Test
+    fun `OEM-KILL-012 a step that failed while the app lived is never blamed on memory`() {
+        val model = vm(SetupState.Failed, Phone(kill = SystemKill.LowMemory, facts = xiaomi))
+        assertNull(model.state.value.systemKill)
     }
 
     @Test

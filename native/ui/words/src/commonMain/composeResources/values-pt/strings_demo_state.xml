@@ -5,9 +5,9 @@
     <string name="stateDemoTitle">Demonstração offline</string>
     <string name="stateDemoDisclosure">Demonstração simulada. Nenhum servidor, arquivo ou configuração salva é alterado. Ao sair, a demonstração é esquecida.</string>
     <string name="stateDemoPrompt">Deixe a mensagem de boas-vindas mais amigável.</string>
-    <string name="stateDemoReply">Vou mudar a saudação em welcome.txt de “%1$s” para “%2$s”.</string>
-    <string name="stateDemoAllowed">Pronto. welcome.txt agora diz “%1$s”.</string>
-    <string name="stateDemoDenied">Certo, deixei welcome.txt como estava.</string>
+    <string name="stateDemoReply">Vou trocar a saudação em welcome.txt de “%1$s” para “%2$s”.</string>
+    <string name="stateDemoAllowed">Pronto. O welcome.txt agora diz “%1$s”.</string>
+    <string name="stateDemoDenied">Certo, deixei o welcome.txt como estava.</string>
     <string name="stateDemoBefore">Olá</string>
     <string name="stateDemoAfter">Seja bem-vindo!</string>
     <string name="stateDemoMore">A demonstração termina aqui. Conecte um servidor para trabalhar nos seus próprios projetos.</string>

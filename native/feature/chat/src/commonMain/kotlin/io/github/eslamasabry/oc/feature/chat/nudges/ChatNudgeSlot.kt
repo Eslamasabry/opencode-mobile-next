@@ -98,7 +98,7 @@ public fun ChatNudgeSlot(
 
 /** Flutter `permissionRequestTitle`: the kind of ask in words, never its raw id. */
 @Composable
-private fun permissionWords(permission: String): String =
+internal fun permissionWords(permission: String): String =
     when (permission) {
         "bash", "shell" -> stringResource(Res.string.e7PermissionAction1)
         "edit" -> stringResource(Res.string.e7PermissionAction2)

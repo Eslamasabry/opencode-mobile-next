@@ -30,6 +30,9 @@ public interface FilesConnections {
 
     public fun canTerminal(ref: ConversationRef): Boolean = false
 
+    /** How many of this project's terminals are running now (Flutter `projectHubTerminalsRunning`); null when unknown. */
+    public suspend fun runningTerminals(ref: ConversationRef, directory: String?): Int? = null
+
     /** The project tools that server offers, for the ⋯ menu (Flutter `ProjectHub.toolsFor`). */
     public fun tools(ref: ConversationRef): FilesProjectTools = FilesProjectTools.None
 
@@ -68,6 +71,7 @@ public class ProjectFilesSource(
     public val gateway: FileGateway,
     public val canBrowse: Boolean,
     public val canTerminal: Boolean = false,
+    public val runningTerminals: suspend () -> Int? = { null },
     public val tools: FilesProjectTools = FilesProjectTools.None,
     public val canSearchText: Boolean = false,
     public val canSearchSymbols: Boolean = false,

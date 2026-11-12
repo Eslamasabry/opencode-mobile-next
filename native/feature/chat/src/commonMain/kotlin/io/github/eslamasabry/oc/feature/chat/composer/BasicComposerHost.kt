@@ -27,6 +27,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.input.ImeAction
@@ -287,7 +288,10 @@ public fun BasicComposer(
     // N-55: a stray hardware key steers focus here (the chat asks; the field answers).
     DisposableEffect(focus, chrome.typing) {
         chrome.typing.focus = { focus.requestFocus() }
-        onDispose { chrome.typing.focus = null }
+        onDispose {
+            chrome.typing.focus = null
+            chrome.typing.focused = false
+        }
     }
     // "Ready to type" (07 §2.5, B-NAV-005): focus once per arrival, then acknowledge it.
     val focusId = chrome.focusRequest()
@@ -438,6 +442,14 @@ public fun BasicComposer(
             focusManager.clearFocus()
             modelsOpen = true
             chrome.modelPickerDone(pickerId)
+        }
+    }
+    // F2 / Shift+F2: the next or previous recent model, only when there is another one to switch to.
+    val cycle = chrome.modelCycleRequest()
+    LaunchedEffect(cycle?.id) {
+        if (cycle != null) {
+            if (state.models.recent.size > 1) actions.cycleModel(cycle.reverse)
+            chrome.modelCycleDone(cycle.id)
         }
     }
     // S24-CHAT story 4: the full-screen editor works on this same field; what it changed becomes the
@@ -880,7 +892,7 @@ public fun BasicComposer(
         val inlineMic = if (voiceActive) inlineAtStart else typed
         // S28 story 14 (Flutter `_stopBeforeSend`): a hung reply on a server that does not steer is stopped first;
         // the words go once it has stopped, and nothing goes if it does not stop.
-        val stopsFirst = SendFieldRules.stopsBeforeSend(busy, state.steers, chrome.stuck())
+        val stopsFirst = (busy && state.restarts) || SendFieldRules.stopsBeforeSend(busy, state.steers, chrome.stuck())
         val stopAndSend: () -> Unit = {
             scope.launch {
                 chrome.onStop()
@@ -895,6 +907,7 @@ public fun BasicComposer(
             stringResource(
                 when {
                     state.sending -> Res.string.kitComposerSending
+                    busy && state.restarts -> Res.string.kitComposerStopAndSend
                     busy && state.steers -> Res.string.kitComposerAddToTurn
                     busy -> Res.string.kitComposerSendAfter
                     else -> Res.string.kitComposerSend
@@ -1131,7 +1144,11 @@ public fun BasicComposer(
                                 repeatRevision = null
                                 actions.draftChanged(accepted)
                             },
-                            modifier = Modifier.kitPromptOrigin().testTag("chat-composer-field"),
+                            // w4-focus: the chat asks whether the box had focus when another field opened.
+                            modifier =
+                                Modifier.kitPromptOrigin()
+                                    .onFocusChanged { chrome.typing.focused = it.hasFocus }
+                                    .testTag("chat-composer-field"),
                         )
                     }
                 },

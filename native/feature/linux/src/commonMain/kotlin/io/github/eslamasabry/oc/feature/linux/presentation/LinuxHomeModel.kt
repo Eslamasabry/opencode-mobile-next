@@ -40,10 +40,13 @@ public sealed interface LinuxConfirm {
 
     public data object StopSetup : LinuxConfirm
 
-    public data class RemoveComponent(val id: String) : LinuxConfirm
+    public data class RemoveComponent(val id: String, val freedBytes: Long? = null) : LinuxConfirm
 
     public data class StopJob(val kind: LinuxJobKind, val names: List<String>) : LinuxConfirm
 }
+
+/** How long a component's size is measured before the confirm leaves the figure out (Flutter: 3 s). */
+private const val REMOVE_SIZE_MS: Long = 3_000
 
 /** One line said in place on the manager home, never a snackbar. */
 public sealed interface LinuxHomeNotice {
@@ -310,8 +313,16 @@ public class LinuxHomeModel(
         )
             return
         val entry = ui.value.components.firstOrNull { it.component.id == id } ?: return
-        if (entry.canRemove)
-            ui.update { it.copy(confirm = LinuxConfirm.RemoveComponent(id), componentBlock = null) }
+        if (!entry.canRemove) return
+        ui.update { it.copy(confirm = LinuxConfirm.RemoveComponent(id), componentBlock = null) }
+        // Flutter measured for up to 3 s and left the figure out when it could not: ask now, fill the size in after.
+        scope.launch {
+            val bytes = kotlinx.coroutines.withTimeoutOrNull(REMOVE_SIZE_MS) { setupSource?.freedBytes(id) } ?: return@launch
+            ui.update {
+                val asked = it.confirm
+                if (asked is LinuxConfirm.RemoveComponent && asked.id == id) it.copy(confirm = asked.copy(freedBytes = bytes)) else it
+            }
+        }
     }
 
     override fun openOwnershipSettings() {

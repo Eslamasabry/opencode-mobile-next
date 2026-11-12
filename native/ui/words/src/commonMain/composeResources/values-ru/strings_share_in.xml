@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <plurals name="shareInPartial">
+        <item quantity="one">Добавлен %1$d из %2$d файлов. %3$s</item>
+        <item quantity="few">Добавлено %1$d из %2$d файлов. %3$s</item>
+        <item quantity="many">Добавлено %1$d из %2$d файлов. %3$s</item>
+        <item quantity="other">Добавлено %1$d из %2$d файлов. %3$s</item>
+    </plurals>
+    <string name="shareInReasonLimit">В черновик можно добавить до 5 файлов и 20 МБ.</string>
+    <string name="shareInReasonTooLarge">Остальные слишком большие для вложения (по 10 МБ каждый).</string>
+    <string name="shareInReasonUnsupported">Остальные — файлы такого типа, который нельзя прикрепить.</string>
+    <string name="shareInReasonUnreadable">Остальные не удалось прочитать. Попробуйте поделиться ими ещё раз.</string>
+    <string name="shareInNoneTooLarge">Ничего не добавлено. Файл слишком большой для вложения (по 10 МБ каждый, 20 МБ всего).</string>
+    <string name="shareInNoneUnsupported">Ничего не добавлено. Файл такого типа нельзя прикрепить.</string>
+    <string name="shareInNoneUnreadable">Ничего не добавлено. Не удалось прочитать файл. Попробуйте поделиться им ещё раз.</string>
+    <string name="shareInGotIt">Понятно</string>
+</resources>

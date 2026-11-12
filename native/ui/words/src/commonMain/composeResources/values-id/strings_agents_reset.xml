@@ -12,4 +12,5 @@
     <string name="agentsPreviousVersionBody">Beralih ke versi sebelumnya yang terverifikasi dan tersimpan di ponsel ini? Pembantu akan berhenti dulu, lalu agen ponsel terhubung lagi. Akun masuk dan percakapan tetap ada.</string>
     <string name="agentsPreviousVersionFailed">Versi sebelumnya tidak dapat dipulihkan. Selesaikan pekerjaan yang sedang berjalan, lalu coba lagi.</string>
     <string name="agentsPreviousVersionRestored">Versi sebelumnya dipulihkan.</string>
+    <string name="agentsHelperStartAgain">Mulai pembantu agen</string>
 </resources>

@@ -523,7 +523,7 @@
     <string name="agentComputerCodex">Codex</string>
     <string name="agentComputerCodexNote">اتصل بخادم تطبيق Codex الرسمي عبر WebSocket. أدخل عنوانه ومسار مجلد المشروع الكامل على ذلك الجهاز.</string>
     <string name="agentErrorOpenSettings">فتح الإعدادات</string>
-    <string name="agentDraftTitle">سجلات المحادثات</string>
+    <string name="agentDraftTitle">نسخ محادثة</string>
     <string name="agentDraftReadOnly">راجع السجل قبل نسخه إلى وكيل آخر. لا يؤدي هذا إلى بدء محادثة أو استئنافها أو تغييرها.</string>
     <string name="agentDraftGuide">1. اختر محادثة أدناه.
 2. راجع السجل وأي تنبيه بشأن الأدوار القديمة المحذوفة منه.
@@ -546,4 +546,5 @@
     <string name="agentDraftTooLarge">أحدث دور في هذه المحادثة أكبر من أن يتّسع له السجل دون فقدان نص.</string>
     <string name="agentPhoneCheck">فحص وكلاء الهاتف</string>
     <string name="agentsCatalogNeedsPhoneSetup">أعدّ الخادم المدمج على هذا الهاتف أولًا، ثم عُد إلى هنا لتثبيت هذا الوكيل.</string>
+    <string name="agentDraftAsCopied">السجل كما سيُنسخ</string>
 </resources>

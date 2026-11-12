@@ -30,7 +30,7 @@
     <string name="backgroundPauseOpenKeepRunning">Abrir as configurações de Manter em execução</string>
     <string name="backgroundPauseResumed">Conexão em segundo plano retomada.</string>
     <plurals name="notifStatusNeedsYou">
-        <item quantity="one">1 precisa de você</item>
+        <item quantity="one">%1$d precisa de você</item>
         <item quantity="many">%1$d precisam de você</item>
         <item quantity="other">%1$d precisam de você</item>
     </plurals>

@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.chats.presentation
 
+import io.github.eslamasabry.oc.core.common.text.PlainMarkdown
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.model.transcript.MessageWithParts
 import io.github.eslamasabry.oc.core.model.transcript.PartType
@@ -19,6 +20,18 @@ import kotlinx.coroutines.launch
  * newest message that says something, whitespace folded, cut at 120).
  */
 public object HomePreviewRules {
+    /** How a waiting request's home line is worded: by what the request is, not always "run". */
+    public enum class AskKind { Run, Edit, Read, Other }
+
+    /** The server's permission type (`bash`, `edit`, ...) as a sentence kind; the same sets the request card reads. */
+    public fun askKind(permission: String): AskKind =
+        when (permission.trim().lowercase()) {
+            "bash", "shell" -> AskKind.Run
+            "edit", "write", "multiedit", "patch" -> AskKind.Edit
+            "read" -> AskKind.Read
+            else -> AskKind.Other
+        }
+
     /** The longest preview kept; the row cuts it again to its width. */
     public const val MAX_CHARS: Int = 120
 
@@ -28,9 +41,16 @@ public object HomePreviewRules {
     /** A running conversation moves all the time: its line is read again at most this often. */
     public const val LIVE_REREAD_MS: Long = 15_000
 
-    /** [text] on one line: whitespace folded, trimmed, cut at [MAX_CHARS] with an ellipsis; null when empty. */
+    /**
+     * [text] without the marks a reply is written with: the list shows words, not "**bold**", "`paths`", "# headings"
+     * or "[labels](links)" (seen raw on the owner's phone). Headings, quotes, bullets and code fences lose their lead,
+     * a link keeps its label, emphasis and code keep their words; emoji and everything else stay.
+     */
+    public fun plain(text: String): String = PlainMarkdown.plain(text)
+
+    /** [text] on one line: marks removed, whitespace folded, trimmed, cut at [MAX_CHARS] with an ellipsis; null when empty. */
     public fun oneLine(text: String): String? {
-        val folded = text.replace(Regex("\\s+"), " ").trim()
+        val folded = PlainMarkdown.oneLine(text)
         if (folded.isEmpty()) return null
         return if (folded.length <= MAX_CHARS) folded else folded.substring(0, MAX_CHARS - 1).trimEnd() + "…"
     }
@@ -49,12 +69,22 @@ public object HomePreviewRules {
 
     /**
      * Whether a row's line must be read (again): never read; or it moved since, unless it is running and was read
-     * less than [LIVE_REREAD_MS] ago. Only OpenCode conversations are read: the other protocols' history reads are not
-     * cheap, so their rows keep project and server.
+     * less than [LIVE_REREAD_MS] ago; or it was read while it ran ([readWhileRunning]) and has stopped since. Only
+     * OpenCode conversations are read: the other protocols' history reads are not cheap, so their rows keep project
+     * and server.
      */
-    public fun needsRead(item: ChatFeedItem, readAtActivityMs: Long?, readAtMs: Long?, nowMs: Long): Boolean {
+    public fun needsRead(
+        item: ChatFeedItem,
+        readAtActivityMs: Long?,
+        readAtMs: Long?,
+        nowMs: Long,
+        readWhileRunning: Boolean = false,
+    ): Boolean {
         if (item.agentId != OPENCODE_AGENT_ID) return false
         if (readAtActivityMs == null || readAtMs == null) return true
+        // B8: read while the reply was still being written, the newest words were the person's own prompt. The run's
+        // end need not move the conversation's time, so a line read mid-run is read again once it stops.
+        if (readWhileRunning && item.status != ChatStatus.Running) return true
         if (readAtActivityMs == item.lastActivityMs) return false
         return item.status != ChatStatus.Running || nowMs - readAtMs >= LIVE_REREAD_MS
     }
@@ -91,7 +121,7 @@ internal class HomePreviews(
     private val servers: () -> List<ConversationServer>,
     private val nowMs: () -> Long,
 ) {
-    private class Read(val activityMs: Long, val atMs: Long)
+    private class Read(val activityMs: Long, val atMs: Long, val running: Boolean)
 
     private val reads = HashMap<String, Read>()
     private val inFlight = HashSet<String>()
@@ -106,14 +136,24 @@ internal class HomePreviews(
         if (saved.isNotEmpty()) mutable.update { saved + it }
     }
 
+    /** The rows last asked for, so a refresh can read them again. */
+    private var wanted: List<ChatFeedItem> = emptyList()
+
+    /** A pull to refresh: every shown row's line is read again; the line shown stays until the new read answers. */
+    fun refresh() {
+        reads.clear()
+        want(wanted)
+    }
+
     /** The rows the home shows now; reads what is missing or stale. */
     fun want(items: List<ChatFeedItem>) {
+        wanted = items
         val now = nowMs()
         val byProfile = servers().associateBy { it.profile }
         for (item in items) {
             if (item.preview.isNotBlank() || item.identity in inFlight) continue
             val known = reads[item.identity]
-            if (!HomePreviewRules.needsRead(item, known?.activityMs, known?.atMs, now)) continue
+            if (!HomePreviewRules.needsRead(item, known?.activityMs, known?.atMs, now, known?.running == true)) continue
             val server = byProfile[item.profileId] ?: continue
             inFlight += item.identity
             scope.launch {
@@ -124,7 +164,7 @@ internal class HomePreviews(
                             is Outcome.Ok -> HomePreviewRules.lastText(page.value.items)
                             is Outcome.Failed -> null
                         }
-                    reads[item.identity] = Read(item.lastActivityMs, nowMs())
+                    reads[item.identity] = Read(item.lastActivityMs, nowMs(), item.status == ChatStatus.Running)
                     // A failed or empty read keeps the line read before, if any.
                     if (text != null) mutable.update { it + (item.identity to text) }
                 } finally {

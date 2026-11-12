@@ -23,6 +23,10 @@ import io.github.eslamasabry.oc.feature.chats.presentation.ChatsHomeSheet
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsMonitorStatus
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsOpeningPhase
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsOpeningUi
+import io.github.eslamasabry.oc.feature.chats.presentation.SwitcherSecret
+import io.github.eslamasabry.oc.feature.chats.presentation.HomeHeldReply
+import io.github.eslamasabry.oc.feature.chats.presentation.ConnectionDiagnosis
+import io.github.eslamasabry.oc.feature.chats.presentation.DiagnosisAction
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsUi
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsWatchedKind
 import io.github.eslamasabry.oc.feature.chats.presentation.ConversationRowUi
@@ -53,6 +57,8 @@ import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
 import io.github.eslamasabry.oc.ui.words.res.*
+import io.github.eslamasabry.oc.feature.chats.presentation.StartNewUi
+import io.github.eslamasabry.oc.ui.kit.text.KitBidi
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 
@@ -61,9 +67,7 @@ internal fun HomeFilterChips(state: ChatsUi, actions: ChatsActions) {
     KitChip(
         label = when {
             state.otherFoldersSelected -> stringResource(Res.string.chatsHomeOtherFolders)
-            state.filters.projectDirectory == null -> stringResource(Res.string.chatsHomeAllProjects)
-            else -> state.projectChoices.firstOrNull { it.directory == state.filters.projectDirectory }?.name
-                ?: state.filters.projectDirectory!!.trimEnd('/').substringAfterLast('/')
+            else -> state.projectChipName ?: stringResource(Res.string.chatsHomeAllProjects)
         },
         kind = KitChipKind.Action,
         // F: lib/ui/screens/chats/chats_home_screen.dart:421-423: a chosen project tints the chip (active tone); it
@@ -85,8 +89,62 @@ internal fun HomeFilterChips(state: ChatsUi, actions: ChatsActions) {
 
 }
 
+/**
+ * H4 (F: chats_home_screen.dart:186-206): an old agent conversation that cannot be reopened asks first, and changes
+ * nothing until the person agrees. Shared by the home and All conversations.
+ */
+@Composable
+internal fun StartNewConversationConfirm(ask: StartNewUi?, onConfirm: () -> Unit, onCancel: () -> Unit) {
+    KitConfirm(
+        spec =
+            ask?.let {
+                KitConfirmSpec(
+                    title = stringResource(Res.string.agentsResumeNoticeTitle),
+                    body = stringResource(Res.string.agentsResumeNoticeBody, KitBidi.auto(it.agentName ?: it.agentId)),
+                    confirmLabel = stringResource(Res.string.agentsStartNew),
+                    cancelLabel = stringResource(Res.string.agentsCancel),
+                    kind = KitConfirmKind.Neutral,
+                )
+            },
+        onConfirm = onConfirm,
+        onCancel = onCancel,
+    )
+}
+
+/**
+ * P14: a row's Details over the home, the facts the list knows (F: lib/ui/widgets/session_menu.dart:42-48, Details
+ * does not need the open conversation). The conversation's own Details (model, context, cost) stays in the
+ * conversation; a tap on the row opens it.
+ */
+@Composable
+private fun RowDetailsSheet(details: io.github.eslamasabry.oc.feature.chats.presentation.RowDetailsUi?, actions: ChatsActions) {
+    // The facts stay drawn while the sheet slides away.
+    val last = remember { arrayOfNulls<io.github.eslamasabry.oc.feature.chats.presentation.RowDetailsUi>(1) }
+    if (details != null) last[0] = details
+    val shown = last[0]
+    KitSheet(
+        visible = details != null,
+        onDismissRequest = actions::closeRowDetails,
+        title = stringResource(Res.string.sessionMenuDetails),
+        subtitle = shown?.let { rowTitleWords(it.title) },
+        closeLabel = stringResource(Res.string.kitSheetClose),
+    ) {
+        val facts = shown ?: return@KitSheet
+        Column(Modifier.testTag("chats-row-details")) {
+            KitRowGroup {
+                facts.server?.let { KitRow(stringResource(Res.string.chatHeaderServer), trailing = KitRowTrailing.Value(KitBidi.auto(it), chevron = false)) }
+                facts.project?.let { KitRow(stringResource(Res.string.continueWithFactProject), trailing = KitRowTrailing.Value(KitBidi.auto(it), chevron = false)) }
+                facts.directory?.let { KitRow(stringResource(Res.string.mentionProjectFolder), supporting = KitBidi.ltr(it)) }
+                facts.branch?.let { KitRow(stringResource(Res.string.isolatedTaskBranchLabel), trailing = KitRowTrailing.Value(KitBidi.ltr(it), chevron = false)) }
+                facts.agent?.let { KitRow(stringResource(Res.string.chatUiAgent), trailing = KitRowTrailing.Value(KitBidi.auto(it), chevron = false)) }
+            }
+        }
+    }
+}
+
 @Composable
 internal fun ChatsHomeSheets(state: ChatsUi, actions: ChatsActions) {
+    RowDetailsSheet(state.rowDetails, actions)
     val sheet = state.sheet
     // The in-use server the person asked to disconnect from, waiting for their yes.
     var askDisconnect by remember { mutableStateOf<Pair<io.github.eslamasabry.oc.core.common.ids.ProfileId, String>?>(null) }
@@ -121,6 +179,7 @@ internal fun ChatsHomeSheets(state: ChatsUi, actions: ChatsActions) {
     KitPageOverlay(sheet == ChatsHomeSheet.Inbox, stringResource(Res.string.inboxTitle), actions::closeHomeSheet) {
         ChatsInboxScreen(state, actions)
     }
+    StartNewConversationConfirm(state.startNew, actions::confirmStartNew, actions::dismissStartNew)
     KitConfirm(
         spec =
             state.confirmWatched?.let { watched ->
@@ -141,7 +200,7 @@ internal fun ChatsHomeSheets(state: ChatsUi, actions: ChatsActions) {
                     title = stringResource(Res.string.server40DisconnectConfirm, name),
                     body = stringResource(Res.string.server40DisconnectBody),
                     confirmLabel = stringResource(Res.string.server40Disconnect),
-                    kind = KitConfirmKind.Neutral,
+                    kind = KitConfirmKind.Stop,
                 )
             },
         onConfirm = {
@@ -154,9 +213,12 @@ internal fun ChatsHomeSheets(state: ChatsUi, actions: ChatsActions) {
 
 @Composable
 private fun ProjectChoices(state: ChatsUi, actions: ChatsActions) {
-    val all = state.filters.projectDirectory == null && !state.otherFoldersSelected
+    // A source that can only list one project has no "all": offering it would promise rows it cannot bring. The one
+    // project stands as the choice and reads as the current one (the chip names it too).
+    val onlyOne = state.onlyProject != null && state.projectChoices.isNotEmpty()
+    val all = state.filters.projectDirectory == null && !state.otherFoldersSelected && !onlyOne
     KitRowGroup(leadingTiles = true) {
-        KitRow(
+        if (!onlyOne) KitRow(
             title = stringResource(Res.string.chatsHomeAllProjects),
             leading = KitRowLeading.Glyph(KitIcons.folderOpen, current = all),
             supporting = pluralStringResource(Res.plurals.chatsFilterChatCount, state.allCount, state.allCount),
@@ -165,7 +227,9 @@ private fun ProjectChoices(state: ChatsUi, actions: ChatsActions) {
             onClick = actions::allProjects,
         )
         state.projectChoices.forEach { project ->
-            val selected = state.filters.projectDirectory == project.directory
+            val selected =
+                state.filters.projectDirectory == project.directory ||
+                    (onlyOne && state.filters.projectDirectory == null && !state.otherFoldersSelected)
             val parts = buildList {
                 add(pluralStringResource(Res.plurals.chatsFilterChatCount, project.chatCount, project.chatCount))
                 if (project.runningCount > 0) add(stringResource(Res.string.chatsFilterRunningCount, project.runningCount))
@@ -230,10 +294,37 @@ private fun ServerSwitcher(
         Spacer(Modifier.height(Space.S3.dp))
     }
     val busy = switcher.switching != null
+    // A command is shown as the home rows show it: secrets masked, read left to right.
+    val mask = io.github.eslamasabry.oc.ui.kitchat.header.rememberKitMask()
     KitRowGroup(leadingTiles = true) {
         switcher.servers.forEach { server ->
+            val ask = server.ask
+            val command = ask?.command?.let { io.github.eslamasabry.oc.ui.kit.text.KitBidi.ltr(mask(it)) }
+            val heldReply = ask?.requestId?.let { switcher.held[it] }
+            val held = heldReply != null
+            val secretWords =
+                when (server.secret) {
+                    SwitcherSecret.Password -> stringResource(Res.string.e7SetupPasswordRequired)
+                    SwitcherSecret.Token -> stringResource(Res.string.e7SetupTokenRequired)
+                    SwitcherSecret.None -> null
+                }
             val words = buildList {
-                add(
+                if (held)
+                    add(
+                        stringResource(
+                            when (heldReply) {
+                                HomeHeldReply.Rejected -> Res.string.chatRequestAnswerRejected
+                                HomeHeldReply.AlwaysAllowed -> Res.string.chatRequestAlwaysOn
+                                else -> Res.string.chatRequestAnswerAllowed
+                            }
+                        ) + (command?.let { " · $it" } ?: "")
+                    )
+                else if (ask?.allowable == true && ask.command != null && secretWords == null)
+                    add(
+                        pluralStringResource(Res.plurals.kitNeedsYouSpan, 1, Numbers.format(1)).trimEnd().removeSuffix("·").trimEnd() +
+                            " · " + command
+                    )
+                else add(
                     when (server.state) {
                         SwitcherServerState.Connected -> stringResource(Res.string.serverRowConnected)
                         SwitcherServerState.Connecting -> stringResource(Res.string.e7WorkspaceConnecting)
@@ -242,14 +333,16 @@ private fun ServerSwitcher(
                             stringResource(if (server.onThisPhone) Res.string.chatsSourcesOnPhone else Res.string.chatsSourcesElsewhere)
                     }
                 )
-                if (server.needsYou > 0)
+                if (server.needsYou > 0 && !held && !(ask?.allowable == true && ask.command != null && secretWords == null))
                     add(
                         pluralStringResource(Res.plurals.kitNeedsYouSpan, server.needsYou, Numbers.format(server.needsYou))
                             .trimEnd().removeSuffix("·").trimEnd()
                     )
-                if (server.working > 0)
+                if (server.working > 0 && !held)
                     add(pluralStringResource(Res.plurals.otherServerWorking, server.working, Numbers.format(server.working)))
+                if (secretWords != null) add(secretWords)
             }
+            val needsYouNow = server.needsYou > 0 && !held
             val opening = switcher.switching == server.profile
             KitRow(
                 title = server.name,
@@ -257,7 +350,7 @@ private fun ServerSwitcher(
                 supporting = if (opening) stringResource(Res.string.e7WorkspaceConnecting) else words.joinToString(" · "),
                 selected = server.current,
                 state =
-                    if (server.needsYou > 0 && !opening)
+                    if (needsYouNow && !opening)
                         io.github.eslamasabry.oc.ui.kit.row.KitRowState(null, io.github.eslamasabry.oc.ui.kit.row.KitRowStateTone.NeedsYou)
                     else null,
                 trailing =
@@ -289,6 +382,31 @@ private fun ServerSwitcher(
                                                 )
                                             )
                                         else emptyList(),
+                            )
+                        // What waits there: Allow once with the command beside it, Undo while held, else Open.
+                        !busy && ask != null && held ->
+                            KitRowTrailing.Action(
+                                io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction(
+                                    stringResource(Res.string.kitUndoAction),
+                                    { actions.undoSwitcherRequest(ask.requestId!!) },
+                                )
+                            )
+                        !busy && ask != null && ask.allowable && secretWords == null ->
+                            KitRowTrailing.Action(
+                                io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction(
+                                    stringResource(Res.string.kitRequestAllowOnce),
+                                    { actions.allowSwitcherRequest(ask.ref, ask.requestId!!) },
+                                )
+                            )
+                        !busy && ask != null && secretWords == null ->
+                            KitRowTrailing.Action(
+                                io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction(
+                                    stringResource(Res.string.serverSwitcherOpenRequest),
+                                    {
+                                        if (ask.count == 1) actions.openSwitcherRequest(ask.ref)
+                                        else actions.switchServer(server.profile)
+                                    },
+                                )
                             )
                         server.state == SwitcherServerState.NotAnswering && !busy ->
                             KitRowTrailing.Action(
@@ -335,7 +453,10 @@ private fun SourceChoices(state: ChatsUi, actions: ChatsActions) {
         state.home.sources.forEach { source ->
             KitSwitchRow(
                 title = source.name,
-                leading = KitRowLeading.Glyph(if (source.onThisPhone) KitIcons.phone else KitIcons.server),
+                // F: chats_sources_sheet.dart:26-48: the agents on this phone are one switch, marked as Claude Code's.
+                leading =
+                    if (source.agents) KitRowLeading.Logo("claude", source.name, agent = true)
+                    else KitRowLeading.Glyph(if (source.onThisPhone) KitIcons.phone else KitIcons.server),
                 checked = source.shown,
                 locked = source.main,
                 lockedLabel = if (source.main) stringResource(Res.string.chatsSourcesAlways) else null,
@@ -345,6 +466,7 @@ private fun SourceChoices(state: ChatsUi, actions: ChatsActions) {
                 supporting =
                     when {
                         source.main -> stringResource(Res.string.chatsSourcesMain)
+                        source.agents -> stringResource(Res.string.chatsSourcesAgents)
                         source.unreachable -> stringResource(Res.string.chatsSourcesUnreachable)
                         source.onThisPhone -> stringResource(Res.string.chatsSourcesOnPhone)
                         else -> stringResource(Res.string.chatsSourcesElsewhere)
@@ -411,52 +533,77 @@ private fun MonitoringSettings(state: ChatsUi, actions: ChatsActions) {
 internal fun OpeningStatus(opening: ChatsOpeningUi, actions: ChatsActions, blocked: Boolean = false) {
     // Connecting and starting live in the server pill; only a failure needs its own card.
     var askRestart by remember { mutableStateOf(false) }
+    // The cause decides the words and the lead action (Flutter ConnectionFailure.diagnose). This phone's own server
+    // keeps its own words; only a sign-in or certificate problem there is told the same way.
+    val failure = opening.failure
+    val diagnosis =
+        if (opening.phoneOff || opening.phase != ChatsOpeningPhase.Failed) null
+        else if (
+            opening.onThisPhone &&
+                failure !is io.github.eslamasabry.oc.core.common.Failure.SignIn &&
+                failure !is io.github.eslamasabry.oc.core.common.Failure.Certificate
+        ) null
+        else ConnectionDiagnosis.of(failure, opening.address, opening.usesToken, opening.attempts)
+    val words = diagnosis?.let { diagnosisWords(it) }
+    val retry = KitAction(stringResource(Res.string.kitTryAgain), actions::retryOpening)
+    val change = KitAction(stringResource(Res.string.openingChangeServer), actions::openServers)
+    val lead = diagnosis?.lead
+    val leadAction =
+        when (lead) {
+            DiagnosisAction.UpdatePassword ->
+                KitAction(stringResource(Res.string.e7BannerUpdatePassword), actions::editOpeningServer)
+            DiagnosisAction.UpdateToken ->
+                KitAction(stringResource(Res.string.updateConnectionToken), actions::editOpeningServer)
+            DiagnosisAction.ReviewCertificate ->
+                KitAction(stringResource(Res.string.serverTrustCertificateRecheck), actions::editOpeningServer)
+            DiagnosisAction.ChangeServer -> change
+            DiagnosisAction.Retry, null -> retry
+        }
     KitStateView(
         kind = KitStateKind.Error,
         title =
-            if (opening.phoneOff) stringResource(Res.string.homePhoneOffTitle)
-            else stringResource(Res.string.homeOpeningFailed, opening.serverName),
+            when {
+                opening.phoneOff -> stringResource(Res.string.homePhoneOffTitle)
+                words != null -> words.title
+                else -> stringResource(Res.string.homeOpeningFailed, opening.serverName)
+            },
         // After a tap on New conversation the card also says that nothing was started, so there is one card, not two.
         body =
             when {
                 opening.phoneOff -> stringResource(Res.string.thisPhoneAnswerOffLine)
                 blocked -> stringResource(Res.string.homeNewBlockedBody, opening.serverName)
+                words != null -> words.body
                 else -> stringResource(Res.string.homeOpeningFailedBody)
             },
         failure = if (opening.phoneOff) null else opening.failure,
         primary =
             if (opening.phase == ChatsOpeningPhase.Failed)
                 if (opening.phoneOff) KitAction(stringResource(Res.string.homePhoneOffStart), actions::startOpeningPhoneServer)
-                else KitAction(stringResource(Res.string.kitTryAgain), actions::retryOpening)
+                else leadAction
             else null,
-        // A rejected or missing sign-in is fixed where it is typed; any failure can switch server.
+        // The way to try again stays one tap away when something else leads (a sign-in is fixed where it is typed).
         secondary =
-            if (opening.phase == ChatsOpeningPhase.Failed) {
-                val why = (opening.failure as? io.github.eslamasabry.oc.core.common.Failure.SignIn)?.why
-                when {
-                    opening.profile != null && why != null ->
-                        KitAction(
-                            stringResource(
-                                when (why) {
-                                    io.github.eslamasabry.oc.core.common.SignInWhy.TokenMissing,
-                                    io.github.eslamasabry.oc.core.common.SignInWhy.TokenRejected ->
-                                        Res.string.updateConnectionToken
-                                    else -> Res.string.e7BannerUpdatePassword
-                                }
-                            ),
-                            actions::editOpeningServer,
-                        )
-                    else -> null
+            if (opening.phase == ChatsOpeningPhase.Failed && !opening.phoneOff && diagnosis != null && lead != DiagnosisAction.Retry)
+                when (diagnosis.primary) {
+                    DiagnosisAction.Retry,
+                    DiagnosisAction.UpdatePassword,
+                    DiagnosisAction.UpdateToken,
+                    DiagnosisAction.ReviewCertificate -> retry
+                    DiagnosisAction.ChangeServer -> null
                 }
-            } else null,
+            else null,
         tertiary =
             if (opening.phase == ChatsOpeningPhase.Failed)
                 listOfNotNull(
+                    // A Tailscale address that did not answer: Tailscale being off is the likely cause.
+                    if (diagnosis?.tailnet == true)
+                        KitAction(stringResource(Res.string.kitCapNetworkTailscaleEnable), actions::openTailscale)
+                    else null,
                     // This phone's own OpenCode can be restarted from here (Flutter root-connecting Restart).
                     if (opening.onThisPhone && !opening.phoneOff)
                         KitAction(stringResource(Res.string.connectionRestartPhoneServer), { askRestart = true })
                     else null,
-                    KitAction(stringResource(Res.string.openingChangeServer), actions::openServers),
+                    if (lead != DiagnosisAction.ChangeServer) change else null,
                 )
             else emptyList(),
     )

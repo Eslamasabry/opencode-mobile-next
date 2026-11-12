@@ -75,8 +75,13 @@ public enum class AgentSetupFailure {
     Checksum,
     Storage,
     Interrupted,
+    /** The pinned download ran but named another version ([AgentVersionCheck.reported] has both). */
     Version,
     Unknown,
+    /** The pinned download did not answer its version check: too slow, crashed, or printed no version. */
+    NotStarted,
+    /** The pinned file's address answered 404/410: upstream withdrew that release. */
+    Withdrawn,
 }
 
 public enum class AgentSetupPhase {
@@ -158,7 +163,14 @@ public class AgentInstaller(
         if (needed != null && free != null && free < needed) {
             return@withLock InstallStart.Refused(InstallRefusal.NotEnoughSpace).ok()
         }
-        when (val marked = prefs.commit { putString(AgentKeys.agentInstall(owner), agentId.raw) }) {
+        // A new attempt replaces the last result.
+        when (
+            val marked =
+                prefs.commit {
+                    putString(AgentKeys.agentInstall(owner), agentId.raw)
+                    remove(AgentKeys.agentInstallResult(owner))
+                }
+        ) {
             is Outcome.Failed -> return@withLock marked
             is Outcome.Ok -> Unit
         }
@@ -192,19 +204,44 @@ public class AgentInstaller(
     public suspend fun restore(owner: OwnerId): Outcome<AgentSetupProgress> = lane.withLock {
         val marker =
             prefs.string(AgentKeys.agentInstall(owner))?.let(::AgentId)
-                ?: return@withLock AgentSetupProgress.Idle.also { state.value = it }.ok()
+                ?: return@withLock keptResult(owner).also { state.value = it }.ok()
         val job =
             when (val read = jobs.job(owner)) {
                 is Outcome.Failed -> return@withLock read
                 is Outcome.Ok -> read.value
             }
-        if (job == null || job.agent != marker || job.state != AgentSetupJobState.Running) {
-            when (val cleared = prefs.commit { remove(AgentKeys.agentInstall(owner)) }) {
-                is Outcome.Failed -> return@withLock cleared
-                is Outcome.Ok -> Unit
-            }
+        if (!ownJob(marker, job)) return@withLock vanished(owner, marker) ?: dropStale(owner)
+        endIfOver(owner, marker, job)?.let {
+            return@withLock it
         }
         project(marker, job).also { state.value = it }.ok()
+    }
+
+    /**
+     * The job this installer started and was following is gone (no job record, or another job's record in its
+     * place): the install ended without a result. That is an interruption the person must see, never a silent return
+     * to "not installed". A marker this installer never followed (left by the Flutter app, or from before a restart
+     * whose job record says nothing) is still dropped silently by [dropStale]. Null when it was not ours to follow.
+     */
+    private suspend fun vanished(owner: OwnerId, marker: AgentId): Outcome<AgentSetupProgress>? {
+        val followed = state.value.phase == AgentSetupPhase.Installing && state.value.agentId == marker
+        if (!followed) return null
+        endIfOver(owner, marker, null)?.let {
+            return it
+        }
+        return project(marker, null).also { state.value = it }.ok()
+    }
+
+    /**
+     * A marker with no job of this app behind it (the Flutter app wrote the same key and left it after a finished
+     * install, or the job record is another agent's) says nothing about an interruption: it is dropped silently.
+     */
+    private fun ownJob(marker: AgentId, job: AgentSetupJob?): Boolean = job != null && job.agent == marker
+
+    private suspend fun dropStale(owner: OwnerId): Outcome<AgentSetupProgress> {
+        val cleared = prefs.commit { remove(AgentKeys.agentInstall(owner)) }
+        if (cleared is Outcome.Failed) return cleared
+        return keptResult(owner).also { state.value = it }.ok()
     }
 
     /**
@@ -216,14 +253,61 @@ public class AgentInstaller(
             val marker =
                 prefs.string(AgentKeys.agentInstall(owner))?.let(::AgentId)
                     ?: return@withLock state.value.ok()
-            if (job == null || job.state != AgentSetupJobState.Running) {
-                when (val cleared = prefs.commit { remove(AgentKeys.agentInstall(owner)) }) {
-                    is Outcome.Failed -> return@withLock cleared
-                    is Outcome.Ok -> Unit
-                }
+            if (!ownJob(marker, job)) return@withLock vanished(owner, marker) ?: dropStale(owner)
+            endIfOver(owner, marker, job)?.let {
+                return@withLock it
             }
             project(marker, job).also { state.value = it }.ok()
         }
+
+    /**
+     * The marker never points at nothing for more than one read, but the way an install ended is not lost with it: a
+     * failed or interrupted one is kept as a result until the next attempt or until [dismissResult]. Returns an error
+     * when the storage refused the change, else null.
+     */
+    private suspend fun endIfOver(
+        owner: OwnerId,
+        marker: AgentId,
+        job: AgentSetupJob?,
+    ): Outcome<AgentSetupProgress>? {
+        if (job != null && job.agent == marker && job.state == AgentSetupJobState.Running) return null
+        val ended = project(marker, job)
+        val keep = ended.phase == AgentSetupPhase.Failed || ended.phase == AgentSetupPhase.Interrupted
+        val cleared =
+            prefs.commit {
+                remove(AgentKeys.agentInstall(owner))
+                if (keep) putString(AgentKeys.agentInstallResult(owner), encode(ended))
+            }
+        return (cleared as? Outcome.Failed)
+    }
+
+    /** The result of the last install that failed or was interrupted, or idle when there is none. */
+    private fun keptResult(owner: OwnerId): AgentSetupProgress {
+        val parts = prefs.string(AgentKeys.agentInstallResult(owner))?.split(':') ?: return AgentSetupProgress.Idle
+        if (parts.size != 3) return AgentSetupProgress.Idle
+        val phase =
+            when (parts[0]) {
+                "failed" -> AgentSetupPhase.Failed
+                "interrupted" -> AgentSetupPhase.Interrupted
+                else -> return AgentSetupProgress.Idle
+            }
+        val failure = AgentSetupFailure.entries.firstOrNull { it.name == parts[2] }
+        return AgentSetupProgress(AgentId(parts[1]), phase, null, null, null, null, failure)
+    }
+
+    private fun encode(progress: AgentSetupProgress): String =
+        "${if (progress.phase == AgentSetupPhase.Failed) "failed" else "interrupted"}:" +
+            "${progress.agentId?.raw.orEmpty()}:" +
+            "${progress.failure ?: if (progress.phase == AgentSetupPhase.Interrupted) AgentSetupFailure.Interrupted else AgentSetupFailure.Unknown}"
+
+    /** The person put the notice away: nothing of the last result stays. */
+    public suspend fun dismissResult(owner: OwnerId): Outcome<Unit> = lane.withLock {
+        val cleared = prefs.commit { remove(AgentKeys.agentInstallResult(owner)) }
+        if (cleared is Outcome.Ok && state.value.phase != AgentSetupPhase.Installing) {
+            state.value = AgentSetupProgress.Idle
+        }
+        cleared
+    }
 
     /**
      * Cancel stops only the exact durable owner; with no marker there is nothing of ours to stop.
@@ -302,6 +386,22 @@ public class AgentInstaller(
         return requiredSetupFreeBytes(download, artifact.installedBytes)
     }
 
+    /**
+     * What installing [agentId] needs free before the job starts, honestly: the setup job checks [requiredBytes] is
+     * free when each of its steps starts, so by the agent's own (last) step that much must still be left after the
+     * shared parts have taken theirs. When [sharedPartsInPlace] is false the shared parts (the Linux packages with
+     * Python, Node.js, and the agent helper) are counted at [SHARED_PART_BYTES] each: their sizes are not pinned, so
+     * each takes the job's own per-step floor and the figure can only err toward warning. Null when unknown.
+     */
+    public fun requiredBytesBeforeStart(
+        agentId: AgentId,
+        architecture: AgentArchitecture,
+        sharedPartsInPlace: Boolean,
+    ): Long? {
+        val own = requiredBytes(agentId, architecture) ?: return null
+        return withSharedParts(own, sharedPartsInPlace)
+    }
+
     private fun project(agent: AgentId, job: AgentSetupJob?): AgentSetupProgress {
         val phase =
             when (job?.state) {
@@ -334,5 +434,21 @@ public class AgentInstaller(
         public const val AGENT_USER: String = "agent-user"
         public const val AGENT_NODE: String = "agent-node"
         public const val AGENT_PASEO: String = "agent-paseo"
+
+        /** The shared parts an install may still have to add: Linux packages (with Python), Node.js, the helper. */
+        public const val SHARED_PARTS: Long = 3L
+
+        /**
+         * One shared part's room before it starts: the setup job's per-step floor (`SetupDiskSpace.MIN_INSTALL_BYTES`),
+         * used because the parts' installed sizes are not pinned.
+         */
+        public const val SHARED_PART_BYTES: Long = 300_000_000L
+
+        /** [own] (an agent's [requiredBytes]) plus the shared parts' room when they are not in place yet. */
+        public fun withSharedParts(own: Long, sharedPartsInPlace: Boolean): Long {
+            if (sharedPartsInPlace) return own
+            val shared = SHARED_PARTS * SHARED_PART_BYTES
+            return if (own >= Long.MAX_VALUE - shared) Long.MAX_VALUE else own + shared
+        }
     }
 }

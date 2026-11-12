@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="homeStartOpenProject">打开项目</string>
+    <string name="homeStartOpenProjectDetail">新建一个，或选择一个文件夹</string>
+    <string name="homeStartConnectDetail">让智能体在你自己的电脑上运行</string>
+    <string name="homeStartDemo">看看智能体能做什么</string>
+    <string name="homeStartDemoDetail">一个简短的示例，无需任何设置</string>
+    <string name="homeProjectSheetNew">新建项目</string>
+    <string name="homeProjectSheetNewDetail">在你的项目中创建一个带 Git 的文件夹</string>
+    <string name="homeProjectSheetByPath">按路径选择文件夹</string>
+</resources>

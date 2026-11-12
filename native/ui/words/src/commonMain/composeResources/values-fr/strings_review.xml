@@ -10,6 +10,9 @@
     <string name="reviewWaiting">Une annulation attend votre relecture. Les messages après son invite sont masqués jusqu’à votre choix.</string>
     <string name="reviewUndoUnknown">Tout annuler nécessite l’invite d’où partent ces modifications, et elle n’a pas pu être lue.</string>
     <string name="reviewUndoUnavailable">Ce serveur ne peut pas annuler à partir d’une invite.</string>
-    <string name="reviewToolEvidence">D’après ce que les outils de l’agent ont signalé. Les modifications faites par des commandes ne sont pas listées.</string>
+    <string name="reviewToolEvidence">Seulement ce que l’agent de cette conversation a modifié avec ses outils. Les fichiers créés par des commandes, les nouveaux fichiers pas encore suivis par Git et les modifications d’autres conversations n’y figurent pas. Non validées liste ce que Git voit dans le dossier.</string>
     <string name="reviewSendBackFailed">Impossible d’ajouter votre note au message. Réessayez.</string>
+    <string name="reviewProjectNotGitTitle">Ce projet n’utilise pas Git</string>
+    <string name="reviewProjectNotGitBody">Les modifications ne peuvent être listées que pour un projet suivi par Git. Commencez à le suivre depuis la page Git du projet pour les voir ici.</string>
+    <string name="reviewProjectOpenGit">Ouvrir la page Git</string>
 </resources>

@@ -145,6 +145,8 @@ public fun KitLiveBackground(modifier: Modifier = Modifier, shared: Boolean = fa
                     drawRect(ground)
                     val at = if (animates) drift.value.toDouble() else 0.0
                     drawAuroraPlate(image, filter, alpha, AuroraImage.driftAt(at))
+                    // The page's soft lights (dark only), still while the plate drifts under them.
+                    drawAuroraLights(accent, roles.dark, alpha)
                 }
             }
             shaderPicture != null -> Modifier.kitGlassBackdropSource(backdrop, pictures, shaderPicture)
@@ -173,9 +175,21 @@ public fun KitLiveBackground(modifier: Modifier = Modifier, shared: Boolean = fa
         } else if (render == LiveRender.Still) {
             LiveStill(rememberLivePalette(), strength, Modifier.matchParentSize())
         }
-        CompositionLocalProvider(LocalKitGlassBackdrop provides backdrop, LocalLiveClock provides clock) { content() }
+        // Words on a Glass page painted with light read a step brighter (glass-in-the-kit 1b'): the same condition that
+        // makes the panes clear over the painted aurora.
+        val paintedClear =
+            plate != null && style.style == io.github.eslamasabry.oc.ui.design.style.Style.Glass && glassBlurs &&
+                io.github.eslamasabry.oc.ui.kit.effects.kitClearPanesOn()
+        val inkLift = io.github.eslamasabry.oc.ui.design.style.GlassSpec.pageInkLift(roles.dark, paintedClear)
+        CompositionLocalProvider(LocalKitGlassBackdrop provides backdrop, LocalLiveClock provides clock, LocalKitPageInkLift provides inkLift) { content() }
     }
 }
+
+/**
+ * How far words on this page move their secondary and tertiary inks toward the primary one (glass-in-the-kit 1b'):
+ * [io.github.eslamasabry.oc.ui.design.style.GlassSpec.pageInkLift], provided by [KitLiveBackground]; 0 elsewhere.
+ */
+public val LocalKitPageInkLift: androidx.compose.runtime.ProvidableCompositionLocal<Float> = androidx.compose.runtime.staticCompositionLocalOf { 0f }
 
 /** The most steps a second the glass picture takes (the shader looks); a 60, 90 or 120 Hz screen draws it at most 60. */
 internal const val GLASS_PICTURE_FPS: Int = 60

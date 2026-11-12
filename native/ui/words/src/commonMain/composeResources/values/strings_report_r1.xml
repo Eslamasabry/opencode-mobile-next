@@ -11,7 +11,7 @@
     <string name="reportR1Send">Send report</string>
     <string name="reportR1CopyText">Copy text</string>
     <string name="reportR1PostGitHub">Post publicly on GitHub</string>
-    <string name="reportR1NoSend">This version can't send reports. Copy the text, or post it on GitHub.</string>
+    <string name="reportR1NoSend">This version can't send reports from the app. Copy the text to share it in a message, or post it publicly on GitHub.</string>
     <string name="reportR1SheetSubtitle">This is exactly what gets sent.</string>
     <string name="reportR1Words">Your words</string>
     <string name="reportR1NoWords">Nothing written</string>
@@ -49,4 +49,5 @@
     <string name="reportR1KindOther">Other problem</string>
     <string name="reportKeptCopyErrors">Copy error log</string>
     <string name="reportKeptClearErrors">Clear errors</string>
+    <string name="reportKeptErrorsNote">Errors the app noticed on its own. They stay on this phone and aren't added to the report. Copy them in if they help explain what happened.</string>
 </resources>

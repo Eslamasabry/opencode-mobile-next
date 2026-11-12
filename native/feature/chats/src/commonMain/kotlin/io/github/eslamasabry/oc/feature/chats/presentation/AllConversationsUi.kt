@@ -47,6 +47,12 @@ public interface ConversationServers {
     public fun prefetch(ref: ConversationRef) {}
 
     public fun forget(ref: ConversationRef) {}
+
+    /**
+     * The person archived or deleted [ref] and the server took it (after any Undo window). The app tells what follows
+     * conversations by identity (the edge dock drops its ring); the server sends nothing for an archive.
+     */
+    public fun left(ref: ConversationRef) {}
 }
 
 private val NO_WAITING: StateFlow<ImmutableList<ServerName>> = MutableStateFlow(persistentListOf())
@@ -99,6 +105,43 @@ public data class AllRowUi(
     val readOnly: Boolean = false,
     /** Its server can move it into the project that is open (Flutter "Continue here"). */
     val canContinueHere: Boolean = false,
+    /** Last change the server reported, epoch ms; 0 = not told. The row says how long ago. */
+    val updatedMs: Long = 0L,
+    /** A run finished after the person last opened it ("Unread result"). */
+    val unread: Boolean = false,
+    /** The person stopped the run that ended it ("Stopped"). */
+    val stopped: Boolean = false,
+    /** The server ended the run and the person has not opened it since ("Interrupted"). */
+    val interrupted: Boolean = false,
+    /** The last run failed ("Failed"). */
+    val failed: Boolean = false,
+    /** Blocked on a permission, question or form ("Needs you"). */
+    val needsYou: Boolean = false,
+    /** The folder it works in, for the row menu's Copy folder path; null = the server did not say. */
+    val folder: String? = null,
+)
+
+/**
+ * What the home feed knows about a row that the server's session list does not (Flutter
+ * `controller.isSessionUnread`, the needs-you set).
+ */
+public data class RowAttention(
+    val needsYou: Boolean = false,
+    val unread: Boolean = false,
+    /** The person pressed Stop on the run that ended it. */
+    val stopped: Boolean = false,
+    val interrupted: Boolean = false,
+    val failed: Boolean = false,
+)
+
+/**
+ * "Import a conversation" from All conversations (Flutter `SessionImportScreen`): [choices] while more than one
+ * connected server can import and none is picked yet, then the reviewed import on [server].
+ */
+public data class ImportUi(
+    val choices: ImmutableList<ServerName> = persistentListOf(),
+    val server: String? = null,
+    val session: io.github.eslamasabry.oc.engine.agents.sessionimport.SessionImportUi? = null,
 )
 
 /**
@@ -162,7 +205,15 @@ public data class AllConversationsUi(
     val problem: AllProblem? = null,
     val renaming: RenameUi? = null,
     val moveHere: MoveHereUi? = null,
+    /** H4: see [StartNewUi]. */
+    val startNew: StartNewUi? = null,
     val undo: DeleteUndoUi? = null,
+    /** Some connected server can import a conversation file: the bar offers it. */
+    val canImport: Boolean = false,
+    /** The import sheet while it is open. */
+    val import: ImportUi? = null,
+    /** Now, epoch ms, for the rows' "how long ago"; 0 = unknown. */
+    val nowMs: Long = 0L,
 )
 
 /** Intents, never widget names (ADR §9.1). */
@@ -192,6 +243,11 @@ public interface ChatsAllActions {
 
     /** Asks "Move to this project?" for the row; nothing moves until [confirmContinueHere]. */
     public fun continueHere(key: String) {}
+
+    /** H4: the "Start a new conversation?" question said yes / no. */
+    public fun confirmStartNew() {}
+
+    public fun dismissStartNew() {}
 
     public fun confirmContinueHere() {}
 
@@ -229,4 +285,22 @@ public interface ChatsAllActions {
     public fun dismissProblem()
 
     public fun openServers()
+
+    /** Opens Import a conversation (the one server that can, else a choice of servers first). */
+    public fun openImport() {}
+
+    public fun importPick(profile: ProfileId) {}
+
+    public fun importChoose() {}
+
+    public fun importReview(text: String) {}
+
+    public fun importDestination(directory: String, workspace: String) {}
+
+    public fun importSend() {}
+
+    /** Opens the imported conversation and closes the sheet. */
+    public fun importOpen() {}
+
+    public fun closeImport() {}
 }

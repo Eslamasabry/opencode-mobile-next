@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxIdleTitle">空闲时停止服务器</string>
+    <string name="linuxIdleDetail">工作完成后节省手机资源。需要时可恢复同一个服务器。</string>
+    <string name="linuxIdleMinutes">空闲时间（分钟）</string>
+    <plurals name="linuxIdleMinutesValue">
+        <item quantity="other">%1$d 分钟</item>
+    </plurals>
+    <string name="linuxIdleInvalid">请输入 1 到 60 之间的整数。</string>
+    <string name="linuxIdleFailed">这部手机无法读取或更改其空闲状态。请重新打开此页面重试。</string>
+    <string name="linuxIdleResume">恢复空闲的手机服务器</string>
+    <string name="linuxIdleSave">保存空闲时间</string>
+    <string name="linuxIdleWorking">正在更新空闲状态…</string>
+</resources>

@@ -183,7 +183,7 @@
         <item quantity="other">Eliminar %1$d borradores</item>
     </plurals>
     <string name="privacyDeleteDraftsCount__eq0">Eliminar borradores</string>
-    <string name="languagePickerPartlyTranslated">Traducido en parte (%1$d %)</string>
+    <string name="languagePickerPartlyTranslated">Traducido en parte (%1$d%)</string>
     <string name="appearancePickerPreviewLabel">Vista previa de %1$s</string>
     <string name="appearancePickerPreviewIn">Vista previa en</string>
     <string name="appearancePickerInUse">En uso ahora</string>
@@ -827,4 +827,11 @@
     <string name="browserModeCors">El servidor debe permitir el origen de esta página. Si una prueba de conexión falla de inmediato aquí mientras la misma dirección funciona desde la app del teléfono, el servidor está rechazando las solicitudes del navegador desde este origen.</string>
     <string name="backgroundBatterySettingsInstead">Android no mostró su pregunta, así que se abrieron sus ajustes de batería. Configura esta app como Sin restricciones allí.</string>
     <string name="manageSpaceKeptAllComputers">Tus computadoras y todo lo que subiste a git se conservan</string>
+    <string name="appearancePreviewAsk">Ordena la página de ajustes</string>
+    <string name="appearancePreviewReply">Listo. Cambiaron tres archivos y todas las comprobaciones pasan.</string>
+    <string name="appearancePreviewAction">Revisar cambios</string>
+    <string name="appearancePreviewSpoken">Una muestra de la app con estas opciones</string>
+    <string name="consentWhyNeedsYouBlocked">Android bloquea las notificaciones de esta app. Toca para arreglarlo en Notificaciones.</string>
+    <string name="consentWhyNeedsYouWhileOpen">Solo recibes avisos mientras la app está abierta. Toca para mantener activa la conexión en segundo plano.</string>
+    <string name="consentWhyNeedsYouChannelOff">Android tiene desactivadas las notificaciones de preguntas de esta app. Toca para activarlas en los ajustes de Android.</string>
 </resources>

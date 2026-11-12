@@ -3,7 +3,7 @@ package io.github.eslamasabry.oc.engine.agents.guard
 import io.github.eslamasabry.oc.engine.agents.catalog.AgentArtifact
 import io.github.eslamasabry.oc.engine.agents.catalog.AgentCatalog
 import io.github.eslamasabry.oc.engine.agents.catalog.AgentDescriptor
-import io.github.eslamasabry.oc.engine.agents.scripts.repoRoot
+import io.github.eslamasabry.oc.engine.agents.scripts.freezeTipSource
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
@@ -11,7 +11,7 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
-import java.io.File
+import kotlinx.serialization.json.jsonPrimitive
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -73,12 +73,33 @@ class CatalogInventoryTest {
         },
     )
 
+    /**
+     * Pins that moved on native after the Flutter freeze, old text to new, applied to that agent's saved entry only:
+     * OpenCode 2 2.2.5 -> 2.2.6 (93fcf4049; the values AgentPinsParityTest checks literally). Every other field still
+     * has to equal the inventory byte for byte.
+     */
+    private val postFreezeMoves = mapOf(
+        "opencode2" to listOf(
+            "2.2.5" to "2.2.6",
+            "f8c5a82075fede9b5b044ed6c8a6d13ad807a7e62caea1cd0a878adef49eb053" to
+                "22352e200630ec61a48a65b9f5c2b627328ae5002658d81c067f67c5fb689898",
+            "873856acbaa71c5ed8df6433e312dfa0c82a86e2cddfb9d80f0a31123a917a08" to
+                "00d8b036689fc35927d8f20f57000d5c091fe7a5a3345fef5326f330bfe6d0ce",
+        ),
+    )
+
     @Test
     fun `B-BUILD-006 the phone agent catalog inventory file is the live catalog`() {
+        // The freeze tip's inventory: since the master merge test/ holds the released 2.1.5 app's older one.
         val saved = Json.parseToJsonElement(
-            File(repoRoot, "test/fixtures/coverage/phone_agent_catalog_source.json").readText(),
+            freezeTipSource("test/fixtures/coverage/phone_agent_catalog_source.json"),
         ).jsonObject.getValue("agents").jsonArray.map { e ->
-            JsonObject(e.jsonObject.filterKeys { it != "limitation" && it != "resumeReason" })
+            val id = e.jsonObject.getValue("id").jsonPrimitive.content
+            val moved = postFreezeMoves[id].orEmpty().fold(e.toString()) { text, (old, new) ->
+                check(old in text) { "$id no longer holds $old" }
+                text.replace(old, new)
+            }
+            JsonObject(Json.parseToJsonElement(moved).jsonObject.filterKeys { it != "limitation" && it != "resumeReason" })
         }
         val live: List<JsonElement> = AgentCatalog.builtIn.agents.map { entry(it) }
         assertEquals(saved.size, live.size)

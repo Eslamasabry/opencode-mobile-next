@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="dockLabel">Cuộc trò chuyện đang chạy</string>
+    <string name="dockWorking">Đang làm việc</string>
+    <string name="dockWorkingTasks">Đang làm việc · %1$s trên %2$s</string>
+    <string name="dockThinking">Đang suy nghĩ</string>
+    <string name="dockNeedsYou">Cần bạn</string>
+    <string name="dockFinished">Đã xong</string>
+    <string name="dockFailed">Thất bại</string>
+    <string name="dockChildNeedsYou">%1$s cần bạn</string>
+    <string name="dockChildFailed">%1$s thất bại</string>
+    <plurals name="dockSubagents">
+        <item quantity="other">%1$s tác nhân phụ</item>
+    </plurals>
+    <string name="dockOnServer">trên %1$s</string>
+    <string name="dockStop">Dừng</string>
+    <string name="dockRemove">Gỡ</string>
+    <string name="dockOpen">Mở</string>
+    <string name="dockPin">Ghim</string>
+    <string name="dockUnpin">Bỏ ghim</string>
+    <string name="dockRestore">Đưa lại</string>
+    <string name="dockNickname">Tên trong thanh dock</string>
+    <plurals name="dockHidden">
+        <item quantity="other">%1$s đã ẩn</item>
+    </plurals>
+    <string name="dockMoveDock">Di chuyển thanh dock</string>
+    <string name="dockShowDock">Hiện thanh dock</string>
+    <string name="dockActionOn">%1$s %2$s</string>
+    <string name="dockRemoved">%1$s đã rời thanh dock</string>
+    <string name="dockStaysWhileOpen">%1$s đang mở nên được giữ lại</string>
+    <string name="dockStopFailed">Không dừng được %1$s</string>
+    <string name="dockAnswerFailed">Không trả lời được %1$s</string>
+    <string name="dockSettingTitle">Thanh dock cạnh màn hình</string>
+    <string name="dockSettingBody">Các cuộc trò chuyện đang chạy ở cạnh màn hình. Kéo phần trên của thanh để chuyển sang cạnh bên kia.</string>
+</resources>

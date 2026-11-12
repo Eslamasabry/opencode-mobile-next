@@ -90,12 +90,18 @@ public class ChatHeaderViewModel(
 
     override fun dismissApprovalFailure(): Unit = approvals.dismissApprovalFailure()
 
+    override fun setInheritToChildren(on: Boolean): Unit = approvals.setInheritToChildren(on)
+
+    override fun followParent(): Unit = approvals.followParent()
+
     override fun onCleared() {
         presenter.close()
         worlds.release(world)
     }
 
     override fun openMenu(): Unit = presenter.openMenu()
+
+    override fun openParent(): Unit = presenter.openParent()
 
     override fun closeMenu(): Unit = presenter.closeMenu()
 
@@ -128,6 +134,8 @@ public class ChatHeaderViewModel(
     override fun copyResumeCommand(): Unit = presenter.copyResumeCommand()
 
     override fun copyPhoneLink(): Unit = presenter.copyPhoneLink()
+
+    override fun copyPhoneAddressLink(): Unit = presenter.copyPhoneAddressLink()
 
     override fun handoffSelect(choice: ContinueChoice): Unit = presenter.handoffSelect(choice)
 

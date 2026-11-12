@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="setupKilled">Điện thoại đã đóng OpenCode khi đang thiết lập. Các bước đã xong vẫn được giữ. Chọn Tiếp tục để làm tiếp từ chỗ đã dừng.</string>
+    <string name="setupKilledMemory">Điện thoại hết bộ nhớ và đã đóng OpenCode khi đang thiết lập. Các bước đã xong vẫn được giữ. Chọn Tiếp tục để làm tiếp từ chỗ đã dừng.</string>
+    <string name="setupBatteryTitle">Để OpenCode tiếp tục chạy</string>
+    <string name="setupBatteryBody">Một số điện thoại đóng ứng dụng để tiết kiệm pin. Hãy đổi các cài đặt này để quá trình thiết lập không bị ngắt giữa chừng.</string>
+    <string name="setupBatteryStepUnrestricted">Mở cài đặt Pin của ứng dụng và chọn “Không hạn chế” (một số điện thoại gọi là “Không có giới hạn”).</string>
+    <string name="setupBatteryStepAutostart">Bật Tự khởi động cho OpenCode.</string>
+    <string name="setupBatteryStepNeverSleeping">Thêm OpenCode vào danh sách ứng dụng không bao giờ ngủ.</string>
+    <string name="setupBatteryOpenApp">Mở cài đặt ứng dụng</string>
+    <string name="setupBatteryOpenAutostart">Mở Tự khởi động</string>
+    <string name="setupBatteryOpenSamsung">Mở Pin</string>
+    <string name="setupBatteryOpenFailed">Điện thoại này không mở được màn hình đó. Hãy làm theo các bước trong Cài đặt theo cách thủ công.</string>
+</resources>

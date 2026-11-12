@@ -343,6 +343,8 @@ class MonitorRuntime(
                 servers =
                     stores.profiles.profiles.value
                         .filter { it.profile.backend != BackendKind.Codex }
+                        // This phone's agents are part of This phone, not a server to watch (as Watched servers).
+                        .filterNot { stores.isPhoneHelper(it) }
                         .map { p ->
                             val rules = m.rulesFor(p.id.raw)
                             val snapshot = m.snapshotFor(p.id.raw)

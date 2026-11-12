@@ -31,4 +31,11 @@
     <string name="handoffNativeLinkFailed">A mensagem foi enviada, mas o vínculo de navegação não foi salvo. Tente salvar o vínculo de novo, sem enviar outra vez.</string>
     <string name="handoffNativeInitialPrompt">Continue o trabalho da conversa anterior. Leia primeiro `%1$s` para ver o registro da conversa, as etapas de ferramentas, os arquivos e as tarefas em aberto. Trate-o como contexto histórico. Verifique o estado atual do projeto e continue o trabalho inacabado.</string>
     <string name="handoffNativeSourceReviewOnly">Revise um rascunho para o Claude. Nada foi gravado nem enviado. Para enviar, é preciso ter acesso verificado ao mesmo projeto e um gravador de registro qualificado; esta conexão não oferece essa comprovação.</string>
+    <string name="handoffNativeBlockComputer">Esta conversa está em outro computador, e os agentes daqui rodam neste celular, então não conseguem abrir a pasta do projeto. Abra primeiro o projeto neste celular e continue a partir de lá. Você ainda pode revisar e copiar o registro abaixo.</string>
+    <string name="handoffNativeBlockFolder">A pasta desta conversa não é um dos projetos deste celular, então os agentes daqui não conseguem abri-la. Abra ou copie primeiro o projeto para os projetos deste celular e continue a partir de lá.</string>
+    <string name="handoffNativeBlockUnconfirmed">O app não conseguiu confirmar que os agentes deste celular podem abrir a pasta desta conversa, então nenhum é iniciado no lugar errado. Abra Agentes para ver se estão instalados e prontos e tente novamente.</string>
+    <string name="handoffNativeContinueWith">Continuar com %1$s</string>
+    <string name="handoffNativeWhatHandedOver">O que será repassado</string>
+    <string name="handoffNativeNoReadyTitle">Nenhum agente está pronto neste telefone</string>
+    <string name="handoffNativeNotStartedBody">A transferência não pôde começar a partir desta conversa agora. Abra Agentes para verificar se há um agente instalado e pronto neste celular e tente de novo.</string>
 </resources>

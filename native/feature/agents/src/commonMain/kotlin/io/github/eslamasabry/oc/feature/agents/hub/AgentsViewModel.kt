@@ -38,6 +38,7 @@ public class AgentsViewModel(
     private val nav: AppNavigator,
     private val hub: AgentsHubConnection,
     phoneHosts: Set<PhoneAgentHostStarter>,
+    phoneCheckers: Set<PhoneAgentChecker>,
     accounts: AgentAccounts,
     drafts: AgentHandoffDrafts,
     clock: Clock,
@@ -51,9 +52,14 @@ public class AgentsViewModel(
             openChat = { nav.openChat(it, focusComposer = true) },
             openComputerPage = { nav.open(ComputerRoute(it)) },
             phoneHost = phoneHosts.singleOrNull(),
+            checker = phoneCheckers.singleOrNull(),
             accounts = accounts,
             clock = clock,
             drafts = drafts,
+            openNewChat = { profile, agent ->
+                nav.open(io.github.eslamasabry.oc.ui.routes.ChatsRoute.New(profile = profile, phoneAgent = agent))
+            },
+            openSignIn = { owner, agent -> nav.open(AgentsRoute.SignInTerminal(owner, agent)) },
         )
 
     public val state: StateFlow<AgentsUi> = presenter.state
@@ -85,6 +91,12 @@ public class AgentsViewModel(
     }
 
     override fun back(): Unit = presenter.back()
+
+    /** Leaves this page whatever is open on it (an agent's own page whose set-up just finished). */
+    public fun leave() {
+        presenter.closeAgent()
+        nav.back()
+    }
 
     override fun openAccount(id: ProfileId): Unit = presenter.openAccount(id)
 
@@ -140,14 +152,7 @@ public class AgentsViewModel(
 
     override fun dismissInstall(): Unit = presenter.dismissInstall()
 
-    override fun signInPhone(id: String) {
-        if (state.value.busy) return
-        val phone = state.value.phone
-        val owner = phone.owner ?: return
-        if (phone.agents.none { it.id == id && it.signInAvailable }) return
-        presenter.closeAgent()
-        nav.open(AgentsRoute.SignInTerminal(owner, id))
-    }
+    override fun signInPhone(id: String): Unit = presenter.signInPhone(id)
 
     override fun installPhone(id: String): Unit = presenter.installPhone(id)
 
@@ -163,13 +168,17 @@ public class AgentsViewModel(
 
     override fun connectPhoneHelper(): Unit = presenter.connectPhoneHelper()
 
+    override fun checkPhoneAgent(id: String): Unit = presenter.checkPhoneAgent(id)
+
+    override fun resumePhoneAgent(id: String): Unit = presenter.resumePhoneAgent(id)
+
     override fun openAgent(id: String): Unit = presenter.openAgent(id)
 
     override fun selectTab(tab: AgentsTab): Unit = presenter.selectTab(tab)
 
     override fun pullRefresh(): Unit = presenter.pullRefresh()
 
-    override fun newPhoneConversation(): Unit = presenter.newPhoneConversation()
+    override fun newPhoneConversation(agent: String): Unit = presenter.newPhoneConversation(agent)
 
     override fun closeAgent(): Unit = presenter.closeAgent()
 

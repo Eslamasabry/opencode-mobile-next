@@ -40,6 +40,8 @@ tasks.test {
     // must only shrink); anything else checks against them.
     systemProperty("oc.ruleBaseline", providers.gradleProperty("oc.ruleBaseline").getOrElse("check"))
     inputs.dir(layout.projectDirectory.dir("config/rule-baseline")).withPropertyName("ruleBaseline").withPathSensitivity(PathSensitivity.RELATIVE)
+    // K20's allowlist (kit surfaces) is read by the test as well.
+    inputs.file(layout.projectDirectory.file("config/kit-surfaces-allow.txt")).withPropertyName("kitSurfacesAllow").withPathSensitivity(PathSensitivity.RELATIVE)
     // E00-S13: T2's component-freeze step checks the merged same-package release manifest ("required", or a path).
     inputs.files(fileTree(rootDir) {
         include("**/src/**/AndroidManifest.xml", "**/src/**/res/xml/*.xml", "quality/config/component-freeze/**")

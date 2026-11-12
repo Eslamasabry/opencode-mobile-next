@@ -13,9 +13,12 @@ import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.Redacted
 import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.engine.team.TeamEngine
+import io.github.eslamasabry.oc.engine.team.TeamHostMode
 import io.github.eslamasabry.oc.engine.team.TeamPhase
 import io.github.eslamasabry.oc.engine.team.TeamProvider
 import io.github.eslamasabry.oc.engine.team.TeamState
+import io.github.eslamasabry.oc.engine.team.fleet.FleetState
+import kotlinx.coroutines.flow.flowOf
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.TeamRoute
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -51,6 +54,18 @@ public data class TeamSettingsUi(
     val working: Boolean = false,
     /** The last Turn off could not stop the team on this phone, so it is still on. */
     val offFailed: Boolean = false,
+    /**
+     * The team runs on a computer (Gas City): no roles editor or phone check here, the computer's words in Technical
+     * details, and Turn off only forgets it on this phone.
+     */
+    val computer: Boolean = false,
+    /**
+     * The team's host runs on this phone (a Gas City in the phone's Linux, or the bundled engine): Technical details say
+     * "This phone", never "Computer", even though the team page is a Gas City team's.
+     */
+    val onPhone: Boolean = false,
+    /** Change address is offered: a Gas City team, whose address the person may move (Dart `team-home-change-address`). */
+    val canChangeAddress: Boolean = false,
 )
 
 public interface TeamSettingsActions {
@@ -66,6 +81,9 @@ public interface TeamSettingsActions {
 
     public fun closeDetails() {}
 
+    /** Change address: the address form, starting from the saved address. */
+    public fun changeAddress() {}
+
     public fun askTurnOff() {}
 
     public fun cancelTurnOff() {}
@@ -77,18 +95,28 @@ public interface TeamSettingsActions {
 
 /** Pure mapping from the engine's state to the settings page (tested without Compose). */
 public object TeamSettingsPresent {
-    public fun present(state: TeamState, redact: (String) -> Redacted): TeamSettingsUi {
+    public fun present(state: TeamState, redact: (String) -> Redacted, fleetVersion: String? = null): TeamSettingsUi {
         val config = state.config
         val phone = config?.provider == TeamProvider.PhoneEngine
         return TeamSettingsUi(
             phase = state.phase,
             roles = state.workspace?.roles?.size ?: 0,
             canCheck = phone,
+            computer = config != null && !phone,
+            onPhone = config != null && (phone || config.hostMode == TeamHostMode.Phone),
+            canChangeAddress = config?.provider == TeamProvider.GasCity,
             host =
                 config?.let {
                     TeamHostFacts(
-                        provider = redact(if (phone) "phoneEngine" else it.provider.name),
-                        version = state.health?.engineVersion?.let(redact),
+                        provider =
+                            redact(
+                                when (it.provider) {
+                                    TeamProvider.PhoneEngine -> "phoneEngine"
+                                    TeamProvider.GasCity -> "gascity"
+                                    TeamProvider.Fixture -> "fixture"
+                                },
+                            ),
+                        version = (state.health?.engineVersion ?: fleetVersion?.takeIf { _ -> !phone })?.let(redact),
                         address = redact(it.url),
                         protection = state.health?.boundaryTier?.takeIf { tier -> tier == "proot" || tier == "landlock" },
                     )
@@ -113,8 +141,8 @@ public class TeamSettingsViewModel(
     private val local = MutableStateFlow(TeamSettingsUi())
 
     public val state: StateFlow<TeamSettingsUi> =
-        combine(engine.state(profile), local) { team, mine ->
-                TeamSettingsPresent.present(team, redactor::details)
+        combine(engine.state(profile), local, engine.fleet?.state(profile) ?: flowOf(FleetState())) { team, mine, fleet ->
+                TeamSettingsPresent.present(team, redactor::details, fleet.host?.version)
                     .copy(
                         detailsOpen = mine.detailsOpen,
                         confirmingOff = mine.confirmingOff,
@@ -136,6 +164,10 @@ public class TeamSettingsViewModel(
 
     override fun openSetup() {
         nav.open(TeamRoute.TurnOn(route.profileId))
+    }
+
+    override fun changeAddress() {
+        if (!local.value.working) nav.open(TeamRoute.Address(route.profileId))
     }
 
     override fun openDetails() = local.update { it.copy(detailsOpen = true) }

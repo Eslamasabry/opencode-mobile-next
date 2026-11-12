@@ -2,7 +2,11 @@
 <!-- Translated with native/tools/strings/translate; English is the source. -->
 <resources>
     <string name="configInspectionTitle">Configuración del servidor</string>
-    <string name="configInspectionExplanation">Lee las fuentes de configuración del servidor en orden de prioridad. Las claves, los tokens, los valores de entorno, los encabezados, los comandos y los mensajes están ocultos. Esta página no cambia nada.</string>
+    <string name="configInspectionExplanation">Qué archivos de configuración lee este servidor, primero el más importante. Las claves, las contraseñas y otros secretos están ocultos. Esta página no cambia nada.</string>
     <string name="configInspectionUnavailable">No se pudo cargar la configuración del servidor. Vuelve a conectar e inténtalo de nuevo.</string>
     <string name="configInspectionRefresh">Actualizar configuración</string>
+    <string name="configFilesLabel">Archivos de configuración</string>
+    <string name="configFoldersLabel">Carpetas donde busca el servidor</string>
+    <string name="configNoFileTitle">Aún no hay archivo de configuración</string>
+    <string name="configNoFileBody">Este servidor usa su configuración integrada. Un archivo de configuración en una de las carpetas de abajo la cambiaría. Esta página solo lo lee.</string>
 </resources>

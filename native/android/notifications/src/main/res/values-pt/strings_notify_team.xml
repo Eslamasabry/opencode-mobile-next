@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="notify_team_decision_title">O AI Team precisa de uma decisão</string>
+    <string name="notify_team_decision_body">Uma tarefa aguarda sua resposta. Abra o AI Team para responder.</string>
+    <string name="notify_team_review_title">O trabalho do AI Team está pronto para revisão</string>
+    <string name="notify_team_review_body">Uma tarefa terminou e aguarda sua revisão.</string>
+    <string name="notify_team_failed_title">Uma tarefa do AI Team falhou</string>
+    <string name="notify_team_failed_body">Abra o AI Team para ver o que aconteceu e iniciá-la de novo.</string>
+    <string name="notify_team_completed_title">O AI Team concluiu o projeto</string>
+    <string name="notify_team_completed_body">Todas as tarefas do projeto foram concluídas.</string>
+</resources>

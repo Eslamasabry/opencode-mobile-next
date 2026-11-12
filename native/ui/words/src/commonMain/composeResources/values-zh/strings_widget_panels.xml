@@ -35,4 +35,6 @@
     <string name="widgetV2StyleUnavailable">无法保存样式。请重试。</string>
     <string name="widgetV2DictationUnavailable">听写暂时不可用。你可以改为输入。</string>
     <string name="widgetV2RestartUnavailable">此对话只能在应用内更改。</string>
+    <string name="widgetProjectTitle">显示来自以下位置的对话</string>
+    <string name="widgetProjectUnavailable">无法保存此选择。请重试。</string>
 </resources>

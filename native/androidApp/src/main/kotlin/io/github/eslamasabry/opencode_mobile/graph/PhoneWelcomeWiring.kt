@@ -217,8 +217,17 @@ class NativePhoneWelcome(
                                 SetupPreflight.check(
                                     options.value.device,
                                     SetupSelection.bytes(job),
+                                    SetupSelection.installedBytes(job),
                                 )
+                            // A nearly full phone is told what the set-up needs and what it has before it downloads.
+                            val tight =
+                                SetupPreflight.spaceTight(
+                                    options.value.device,
+                                    SetupSelection.bytes(job),
+                                    SetupSelection.installedBytes(job),
+                                ) != null
                             if (
+                                tight ||
                                 !preflight.supported ||
                                     preflight is
                                         io.github.eslamasabry.oc.engine.runtime.setup.SetupPreflightResult.MayBeSlow

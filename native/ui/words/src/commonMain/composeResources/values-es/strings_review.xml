@@ -10,6 +10,9 @@
     <string name="reviewWaiting">Hay un deshacer esperando tu revisión. Los mensajes posteriores a su mensaje quedan ocultos hasta que elijas.</string>
     <string name="reviewUndoUnknown">Deshacer todo necesita el mensaje del que partieron estos cambios, y no se pudo leer.</string>
     <string name="reviewUndoUnavailable">Este servidor no puede deshacer desde un mensaje.</string>
-    <string name="reviewToolEvidence">Según lo que informaron las herramientas del agente. No se listan los cambios hechos con comandos.</string>
+    <string name="reviewToolEvidence">Solo lo que el agente de esta conversación cambió con sus herramientas. No se listan los archivos creados por comandos, los archivos nuevos que Git aún no sigue ni los cambios de otras conversaciones. Sin confirmar lista lo que Git ve en la carpeta.</string>
     <string name="reviewSendBackFailed">No se pudo poner tu nota en el mensaje. Inténtalo de nuevo.</string>
+    <string name="reviewProjectNotGitTitle">No es un proyecto Git</string>
+    <string name="reviewProjectNotGitBody">Solo se pueden listar los cambios de un proyecto que está en Git. Empieza a seguirlo desde la página Git del proyecto para verlos aquí.</string>
+    <string name="reviewProjectOpenGit">Abrir la página de Git</string>
 </resources>

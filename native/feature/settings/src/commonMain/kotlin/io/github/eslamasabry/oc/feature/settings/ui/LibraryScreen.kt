@@ -6,6 +6,7 @@ import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.ids.SessionId
@@ -48,10 +49,22 @@ public fun LibraryScreen(state: LibraryUi, actions: LibraryActions) {
     val tabs = listOf(LibraryTab.Mcp, LibraryTab.Commands, LibraryTab.Skills, LibraryTab.References)
     val searches = remember { mutableMapOf<LibraryTab, TextFieldState>() }
     val search = searches.getOrPut(state.tab) { TextFieldState() }
+    // A provider tap opens a sheet over the list: the search box's keyboard goes away with it, so one Back
+    // closes that sheet instead of first only lowering a keyboard the sheet does not use (device basics B19).
+    val focus = LocalFocusManager.current
     val query = search.text.toString().trim()
     fun match(vararg values: String?) =
         query.isEmpty() || values.any { it?.contains(query, ignoreCase = true) == true }
     val inventory = state.inventory
+    // A2: each provider's model names, joined once per catalog, not once per provider on every frame.
+    val modelTerms =
+        remember(inventory.catalog) {
+            inventory.catalog
+                ?.models
+                ?.groupBy { it.providerId }
+                ?.mapValues { (_, models) -> models.joinToString(" ") { it.name + " " + it.id } }
+                .orEmpty()
+        }
     val selectedSection =
         when (state.tab) {
             LibraryTab.Commands -> "commands"
@@ -107,7 +120,7 @@ public fun LibraryScreen(state: LibraryUi, actions: LibraryActions) {
         ) {
             item {
                 if (!state.available)
-                    KitStateView(KitStateKind.Calm, stringResource(Res.string.nlibUnavailable))
+                    KitStateView(KitStateKind.Calm, stringResource(Res.string.nlibUnavailable), size = KitStateSize.Inline)
                 if (
                     selectedSection in inventory.failedSections ||
                         (state.tab == LibraryTab.Mcp && "resources" in inventory.failedSections)
@@ -276,76 +289,8 @@ public fun LibraryScreen(state: LibraryUi, actions: LibraryActions) {
                             }
                         }
                     }
-                    LibraryTab.Providers -> {
-                        KitRowGroup {
-                            inventory.attempts.forEach { attempt ->
-                                val provider =
-                                    inventory.providers.firstOrNull { it.id == attempt.integration }
-                                KitRow(
-                                    provider?.name ?: attempt.integration,
-                                    supporting = authLabel(attempt.state),
-                                    trailing = KitRowTrailing.Chevron,
-                                    onClick = { actions.show(LibrarySheet.SignIn(attempt)) },
-                                )
-                            }
-                            inventory.uncertain.forEach { id ->
-                                KitRow(
-                                    inventory.providers.firstOrNull { it.id == id }?.name ?: id,
-                                    supporting = stringResource(Res.string.nlibUncertain),
-                                    onClick = { actions.show(LibrarySheet.Uncertain(id)) },
-                                )
-                            }
-                            val rows =
-                                inventory.providers
-                                    .filter {
-                                        match(
-                                            it.name,
-                                            it.id,
-                                            providerSearchTerms(it.id),
-                                            inventory.catalog
-                                                ?.models
-                                                ?.filter { m -> m.providerId == it.id }
-                                                ?.joinToString(" ") { m -> m.name + " " + m.id },
-                                        ) &&
-                                            inventory.attempts.none { pending ->
-                                                pending.integration == it.id
-                                            } &&
-                                            it.id !in inventory.uncertain
-                                    }
-                                    .sortedWith(
-                                        compareByDescending<IntegrationInfo> {
-                                                it.connections.isNotEmpty()
-                                            }
-                                            .thenBy { providerRank(it.id) }
-                                            .thenBy { it.name.lowercase() }
-                                    )
-                            LibraryEmpty(
-                                rows.isEmpty() && inventory.attempts.isEmpty(),
-                                query,
-                                inventory.coldLoading,
-                                selectedSection in inventory.failedSections,
-                                state.tab,
-                            )
-                            rows.forEach { provider ->
-                                KitRow(
-                                    provider.name,
-                                    leading = KitRowLeading.Logo(provider.id, provider.name),
-                                    supporting =
-                                        if (provider.connections.isEmpty())
-                                            stringResource(Res.string.nlibDisconnected)
-                                        else if (
-                                            inventory.catalog?.providers?.none {
-                                                it.id == provider.id && it.enabled
-                                            } == true
-                                        )
-                                            stringResource(Res.string.nlibUnusable)
-                                        else stringResource(Res.string.nlibConnected),
-                                    trailing = KitRowTrailing.Chevron,
-                                    onClick = { actions.show(LibrarySheet.Provider(provider)) },
-                                )
-                            }
-                        }
-                    }
+                    // A2: the providers are lazy rows of their own below (one composed per visible row).
+                    LibraryTab.Providers -> Unit
                     LibraryTab.Mcp -> {
                         if (
                             inventory.capabilities?.let {
@@ -418,6 +363,79 @@ public fun LibraryScreen(state: LibraryUi, actions: LibraryActions) {
                     }
                 }
             }
+            if (state.tab == LibraryTab.Providers) {
+                val pending =
+                    inventory.attempts.map { attempt ->
+                        attempt to inventory.providers.firstOrNull { it.id == attempt.integration }
+                    }
+                val rows = providerRows(inventory, { values -> match(*values) }, modelTerms)
+                val empty = rows.isEmpty() && inventory.attempts.isEmpty()
+                if (empty)
+                    item {
+                        LibraryEmpty(
+                            true,
+                            query,
+                            inventory.coldLoading,
+                            selectedSection in inventory.failedSections,
+                            state.tab,
+                        )
+                    }
+                kitSliverRowGroup(
+                    children =
+                        pending.map { (attempt, provider) ->
+                            @Composable {
+                                KitRow(
+                                    provider?.name ?: attempt.integration,
+                                    supporting = authLabel(attempt.state),
+                                    trailing = KitRowTrailing.Chevron,
+                                    onClick = { actions.show(LibrarySheet.SignIn(attempt)) },
+                                )
+                            }
+                        } +
+                            inventory.uncertain.map { id ->
+                                @Composable {
+                                    KitRow(
+                                        inventory.providers.firstOrNull { it.id == id }?.name ?: id,
+                                        supporting = stringResource(Res.string.nlibUncertain),
+                                        onClick = { actions.show(LibrarySheet.Uncertain(id)) },
+                                    )
+                                }
+                            },
+                    itemCount = rows.size,
+                    itemKey = { "provider-" + rows[it].id },
+                    itemContent = { index ->
+                        val provider = rows[index]
+                        KitRow(
+                            provider.name,
+                            leading = KitRowLeading.Logo(provider.id, provider.name),
+                            supporting =
+                                if (provider.connections.isEmpty())
+                                    stringResource(Res.string.nlibDisconnected)
+                                else if (
+                                    inventory.catalog?.providers?.none {
+                                        it.id == provider.id && it.enabled
+                                    } == true
+                                )
+                                    stringResource(Res.string.nlibUnusable)
+                                else stringResource(Res.string.nlibConnected),
+                            trailing = KitRowTrailing.Chevron,
+                            onClick = {
+                                focus.clearFocus()
+                                val only =
+                                    soleMethodToConnect(
+                                        provider,
+                                        state.inventory.capabilities?.integrationCommandAuth ==
+                                            true,
+                                    )
+                                actions.show(
+                                    if (only != null) LibrarySheet.Method(provider, only)
+                                    else LibrarySheet.Provider(provider)
+                                )
+                            },
+                        )
+                    },
+                )
+            }
             item { Spacer(Modifier.height(Space.S5.dp)) }
         }
         state.sheet?.let { LibrarySheetBody(it, state, actions) }
@@ -438,6 +456,27 @@ public fun LibraryScreen(state: LibraryUi, actions: LibraryActions) {
     }
 }
 
+/**
+ * The providers a search keeps, connected first, then the usual order (A2: a plain function, so the lazy list
+ * filters once per change and composes only the rows on screen).
+ */
+internal fun providerRows(
+    inventory: LibraryInventory,
+    match: (Array<out String?>) -> Boolean,
+    modelTerms: Map<String, String>,
+): List<IntegrationInfo> =
+    inventory.providers
+        .filter {
+            match(arrayOf(it.name, it.id, providerSearchTerms(it.id), modelTerms[it.id])) &&
+                inventory.attempts.none { pending -> pending.integration == it.id } &&
+                it.id !in inventory.uncertain
+        }
+        .sortedWith(
+            compareByDescending<IntegrationInfo> { it.connections.isNotEmpty() }
+                .thenBy { providerRank(it.id) }
+                .thenBy { it.name.lowercase() }
+        )
+
 @Composable
 private fun LibraryEmpty(
     empty: Boolean,
@@ -453,7 +492,7 @@ private fun LibraryEmpty(
     }
     if (failed) return
     if (query.isNotEmpty()) {
-        KitStateView(KitStateKind.Calm, stringResource(Res.string.nlibNoMatch))
+        KitStateView(KitStateKind.Calm, stringResource(Res.string.nlibNoMatch), size = KitStateSize.Inline)
         return
     }
     val title =
@@ -477,7 +516,7 @@ private fun LibraryEmpty(
                     .padding(bottom = Space.S3.dp),
         )
     } else {
-        KitStateView(KitStateKind.Calm, stringResource(title))
+        KitStateView(KitStateKind.Calm, stringResource(title), size = KitStateSize.Inline)
     }
 }
 
@@ -822,6 +861,20 @@ private fun ConversationChoice(
     )
 }
 
+/**
+ * The one method to open directly: a provider with no connection yet, nothing to read about its
+ * environment and exactly one usable method has nothing to manage, so the sheet that would list
+ * that single row is skipped.
+ */
+internal fun soleMethodToConnect(
+    provider: IntegrationInfo,
+    commandSupported: Boolean,
+): IntegrationMethodInfo? {
+    if (provider.connections.isNotEmpty()) return null
+    if (provider.methods.any { it.type == "env" && it.environmentNames.isNotEmpty() }) return null
+    return connectMethods(provider.id, provider.methods, commandSupported).singleOrNull()
+}
+
 @Composable
 private fun ProviderSheet(provider: IntegrationInfo, state: LibraryUi, actions: LibraryActions) {
     var disconnect by remember { mutableStateOf(false) }
@@ -852,17 +905,28 @@ private fun ProviderSheet(provider: IntegrationInfo, state: LibraryUi, actions: 
             },
     ) {
         val methods =
-            current.methods.filter {
-                it.type == "key" ||
-                    it.type == "oauth" ||
-                    (it.type == "command" &&
-                        state.inventory.capabilities?.integrationCommandAuth == true)
-            }
+            connectMethods(
+                current.id,
+                current.methods,
+                commandSupported = state.inventory.capabilities?.integrationCommandAuth == true,
+            )
         if (methods.isEmpty()) KitText(stringResource(Res.string.nlibServerManaged))
         KitRowGroup {
             methods.forEach { method ->
                 KitRow(
-                    method.label,
+                    if (connectMethodHasOwnLabel(method)) method.label
+                    else stringResource(Res.string.m40AuthKey),
+                    supporting =
+                        stringResource(
+                            when (connectMethodHint(method)) {
+                                ConnectHint.Key -> Res.string.m40AuthKeyHelp
+                                ConnectHint.Command -> Res.string.m40AuthCommandHint
+                                ConnectHint.Browser -> Res.string.m40AuthBrowserHint
+                                ConnectHint.Device -> Res.string.m40AuthDeviceHint
+                                ConnectHint.Account -> Res.string.m40AuthAccountHint
+                            }
+                        ),
+                    supportingMaxLines = 3,
                     trailing = KitRowTrailing.Chevron,
                     onClick = { actions.show(LibrarySheet.Method(current, method)) },
                 )
@@ -937,16 +1001,7 @@ private fun MethodSheet(
         }
     var missing by remember { mutableStateOf(false) }
     val prompts =
-        method.prompts.filter { prompt ->
-            val whenValue = prompt["when"] as? JsonObject
-            val name = (whenValue?.get("key") as? JsonPrimitive)?.content
-            val expected = (whenValue?.get("value") as? JsonPrimitive)?.content
-            when ((whenValue?.get("op") as? JsonPrimitive)?.content) {
-                "eq" -> answers[name] == expected
-                "neq" -> answers[name] != expected
-                else -> true
-            }
-        }
+        method.prompts.filter { prompt -> connectPromptVisible(prompt, answers) }
     val label =
         if (method.type == "key") stringResource(Res.string.nlibSaveKey)
         else stringResource(Res.string.nlibStartSignIn)
@@ -985,7 +1040,10 @@ private fun MethodSheet(
                 working = state.working,
             ),
     ) {
-        KitText(method.label)
+        KitText(
+            if (connectMethodHasOwnLabel(method)) method.label
+            else stringResource(Res.string.m40AuthKey)
+        )
         if (method.type == "key") {
             KitField(key, stringResource(Res.string.nlibKey), kind = KitFieldKind.Secret)
             providerKeyPageUrl(provider.id)?.let { url ->
@@ -1017,7 +1075,17 @@ private fun MethodSheet(
                     )
                 } else
                     fields[id]?.let { field ->
-                        KitField(field, title, onTextChanged = { answers[id] = it })
+                        KitField(
+                            field,
+                            title,
+                            kind =
+                                if ((prompt["format"] as? JsonPrimitive)?.content == "uri")
+                                    KitFieldKind.Url
+                                else KitFieldKind.Text,
+                            placeholder = (prompt["placeholder"] as? JsonPrimitive)?.content,
+                            helper = (prompt["description"] as? JsonPrimitive)?.content,
+                            onTextChanged = { answers[id] = it },
+                        )
                     }
             }
         }

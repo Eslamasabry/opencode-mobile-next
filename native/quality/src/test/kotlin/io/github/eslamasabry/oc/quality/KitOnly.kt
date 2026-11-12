@@ -28,8 +28,14 @@ object KitOnly {
         )
     private val onlyInEntries = listOf("androidx.navigation3.runtime.")
     private val onlyInPreviews = listOf("androidx.compose.ui.tooling.preview.")
+    // K20 (SURFACES-SPEC.md §5 item 7): a feature never builds a glass face; the recording markers kitFrostSource and
+    // kitGlassSource stay allowed.
     private val bannedInside =
-        listOf("io.github.eslamasabry.oc.ui.kit.platform.", "io.github.eslamasabry.oc.core.common.AppDispatchers")
+        listOf(
+            "io.github.eslamasabry.oc.ui.kit.platform.", "io.github.eslamasabry.oc.core.common.AppDispatchers",
+            "io.github.eslamasabry.oc.ui.kit.effects.kitLiquidFace", "io.github.eslamasabry.oc.ui.kit.foundation.kitGlassSheet",
+            "io.github.eslamasabry.oc.ui.kit.foundation.LocalKitGlassBackdrop",
+        )
 
     /** Imports of one feature file that break K1; empty = the file is fine. */
     fun violations(packageName: String?, fileName: String, imports: List<String>): List<String> {

@@ -16,6 +16,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
@@ -205,12 +206,12 @@ private fun costed(source: Any?): Any? = source as? KitLiquidSource
 
 /** Asks the window's budget for [role]'s liquid face over [source]; true when granted (always, without a budget). */
 @Composable
-private fun kitLiquidClaim(role: LiquidRole, source: Any?, asking: Boolean): Boolean {
+internal fun kitLiquidClaim(role: LiquidRole, source: Any?, asking: Boolean, rank: Int = role.rank): Boolean {
     val budget = LocalKitLiquidBudget.current ?: return asking
     val key = remember { Any() }
     val order = remember(budget) { budget.order() }
-    DisposableEffect(budget, role, source, asking) {
-        val claim = LiquidClaim(key, role, costed(source), order)
+    DisposableEffect(budget, role, source, asking, rank) {
+        val claim = LiquidClaim(key, role, costed(source), order, rank)
         if (asking) budget.claims += claim
         onDispose { budget.claims.remove(claim) }
     }
@@ -233,28 +234,39 @@ public fun kitLiquidFace(
     transform: () -> Float = NoTransform,
     /** A chosen or "on" part (an active chip): its glass leans to the accent, as Glass's chosen panes do. */
     chosen: Boolean = false,
+    /**
+     * This pane's part of a joined body (KitLiquidJoin.kt: the message box, the jump pill): while its partner is
+     * liquid too, the face is the joined pane, drawn with it as one body of glass; alone it is the library's pane.
+     */
+    join: KitLiquidJoinPart? = null,
 ): Modifier? {
     val ground = LocalKitColors.current.ground.copy(alpha = 1f)
     val picture = LocalKitGlassBackdrop.current
     val backdrop = remember(source, ground, picture) { source?.let { frostStateBackdrop(it, ground, picture) } }
-    return liquidFace(role, source, backdrop, shape, transform, chosen)
+    return liquidFace(role, source, backdrop, shape, transform, chosen, join)
 }
 
 /** [role]'s liquid face over a kit-owned [source] (the page, a body under its bar); null keeps the part's own face. */
 @Composable
-internal fun kitLiquidFace(role: LiquidRole, source: KitLiquidSource?, shape: Shape, transform: () -> Float = NoTransform): Modifier? {
+internal fun kitLiquidFace(
+    role: LiquidRole,
+    source: KitLiquidSource?,
+    shape: Shape,
+    transform: () -> Float = NoTransform,
+    join: KitLiquidJoinPart? = null,
+): Modifier? {
     val ground = LocalKitColors.current.ground.copy(alpha = 1f)
     val picture = LocalKitGlassBackdrop.current
     val live = io.github.eslamasabry.oc.ui.kit.foundation.LocalKitLivePicture.current?.backdrop
     val backdrop = remember(source, ground, picture, live) { source?.let { liquidSourceBackdrop(it, ground, picture, live) } }
-    return liquidFace(role, source, backdrop, shape, transform)
+    return liquidFace(role, source, backdrop, shape, transform, join = join)
 }
 
 /** A menu's liquid face over the page (frost of it under the Frosted look), unless it opens over a sheet or a dialog. */
 @Composable
-internal fun kitLiquidMenuFace(shape: Shape, transform: () -> Float): Modifier? {
+internal fun kitLiquidMenuFace(shape: Shape, transform: () -> Float, join: KitLiquidJoinPart? = null): Modifier? {
     val page = LocalKitLiquidPage.current.takeIf { !LocalKitLiquidOverModal.current }
-    return kitFrostedPanelFace(LiquidRole.Menu, page, shape) ?: kitLiquidFace(LiquidRole.Menu, page, shape, transform)
+    return kitFrostedPanelFace(LiquidRole.Menu, page, shape) ?: kitLiquidFace(LiquidRole.Menu, page, shape, transform, join)
 }
 
 /** A sheet's liquid face over the page (frost of it under the Frosted look). */
@@ -312,7 +324,15 @@ internal object LiquidMotion {
 }
 
 @Composable
-private fun liquidFace(role: LiquidRole, source: Any?, backdrop: KitLiquidBackdrop?, shape: Shape, transform: () -> Float, chosen: Boolean = false): Modifier? {
+private fun liquidFace(
+    role: LiquidRole,
+    source: Any?,
+    backdrop: KitLiquidBackdrop?,
+    shape: Shape,
+    transform: () -> Float,
+    chosen: Boolean = false,
+    join: KitLiquidJoinPart? = null,
+): Modifier? {
     val on = kitLiquidOn() && backdrop != null
     val shaped = liquidShapeOk(shape)
     // Only rounded kit shapes reach the lens; a square one falls back quietly, anything else is a kit bug.
@@ -326,11 +346,23 @@ private fun liquidFace(role: LiquidRole, source: Any?, backdrop: KitLiquidBackdr
             onDispose { if (asking) users.users-- }
         }
     }
+    // Joined glass (KitLiquidJoin.kt): a pane that is part of a body or a drop says whether it holds a granted liquid
+    // face; it is drawn joined while its partner holds one too and the platform runs the join shader.
+    val platform = LocalKitPlatform.current
+    val joinable = join != null && asking && granted && join.owner.programs(platform) != null
+    if (join != null) {
+        DisposableEffect(join, joinable) {
+            join.granted = joinable
+            onDispose { join.granted = false }
+        }
+    }
     if (!asking || backdrop == null) return null
     // Beyond the window's budget a part is frost of the same shape through the same glass (the lens let go, the rim
     // kept), never its solid face: nothing changes shape or flickers as a menu or sheet opens (owner 2026-11-08).
     val face = if (granted) transform else HeldFrost
-    return Modifier.liquidPane(role, backdrop, shape as CornerBasedShape, face, liquidFlipFor(source, role), chosen, keepRim = !granted)
+    val joined = joinable && join!!.owner.partnerOf(join) != null
+    join?.composedJoined = joined
+    return Modifier.liquidPane(role, backdrop, shape as CornerBasedShape, face, liquidFlipFor(source, role), chosen, keepRim = !granted, join = join, joined = joined)
 }
 
 /** A claim beyond the budget: all frost, no lens. */
@@ -356,12 +388,19 @@ private fun Modifier.liquidPane(
     shared: LiquidFlip?,
     chosen: Boolean,
     keepRim: Boolean = false,
+    join: KitLiquidJoinPart? = null,
+    joined: Boolean = false,
 ): Modifier {
     val own = remember { LiquidFlip() }
     val flip = shared ?: own
     val spec = kitLiquidPaneSpec(role, flip, chosen, keepRim)
     val platform = LocalKitPlatform.current
     val words = kitLiquidWords(backdrop, flip)
+    if (join != null) SideEffect { join.spec = spec }
+    if (joined && join != null) {
+        // One body with its partner: the joined pane draws this side (no clip to its own shape, no rim of its own).
+        return this.kitLiquidJoinedPane(join.owner, join, spec, backdrop).kitGlassStackRoot().kitLiquidPlateHost(words)
+    }
     val latest by rememberUpdatedState(transform)
     // The rim catches the live picture's light over the whole pane (glass-live): drawn after it, so it lies on top.
     return this.kitBackdropRimLight(shape).then(platform.liquidPane(spec, backdrop, shape) { latest() }).kitGlassStackRoot().kitLiquidPlateHost(words)
@@ -369,7 +408,7 @@ private fun Modifier.liquidPane(
 
 /** [role]'s liquid pane as the look here draws it: its face measured for its words, its recipe, rim and gloss. */
 @Composable
-internal fun kitLiquidPaneSpec(role: LiquidRole, flip: LiquidFlip, chosen: Boolean, keepRim: Boolean): KitLiquidPaneSpec {
+internal fun kitLiquidPaneSpec(role: LiquidRole, flip: LiquidFlip, chosen: Boolean, keepRim: Boolean, swell: Boolean = false): KitLiquidPaneSpec {
     val roles = LocalKitRoles.current
     val platform = LocalKitPlatform.current
     val appearance = LocalKitAppearance.current
@@ -379,7 +418,7 @@ internal fun kitLiquidPaneSpec(role: LiquidRole, flip: LiquidFlip, chosen: Boole
     val picture = kitLivePictureSpots()
     val look = kitGlassLook()
     val spec =
-        remember(roles, role, rtl, appearance.pack, appearance.accent, flip, chosen, keepRim, picture, look, platform.liquidResolution) {
+        remember(roles, role, rtl, appearance.pack, appearance.accent, flip, chosen, keepRim, swell, picture, look, platform.liquidResolution) {
             // The face carries its words itself (no plate): its tint is thickened for the theme's ink over the content
             // that ink lies over; over content of the other brightness the words flip to the other theme's ink and the
             // face to the other theme's face, which carries that ink there.
@@ -401,7 +440,8 @@ internal fun kitLiquidPaneSpec(role: LiquidRole, flip: LiquidFlip, chosen: Boole
             }
             val faceDark = smoke?.dark ?: roles.dark
             val fill = lean(face.fill?.let { Color(it.v) } ?: Color.Transparent, faceDark)
-            val recipe = LiquidEdge.recipe(role, faceDark, look)
+            // The edge dock's grown end is the menu's old glass (6 dp dark, 3 light): menus themselves frost at 12 dp.
+            val recipe = if (swell && role == LiquidRole.Menu) LiquidEdge.swellRecipe(faceDark, look) else LiquidEdge.recipe(role, faceDark, look)
             val rim = LiquidRim.Light
             KitLiquidPaneSpec(
                 recipe = recipe,
@@ -517,7 +557,6 @@ private class PlateHostNode(var words: KitLiquidWords) :
                 val v = backdrop.version()
                 if (v == seen) continue
                 val c = coordinates?.takeIf { it.isAttached } ?: continue
-                seen = v
                 val w = (c.size.width / SAMPLE_SCALE).coerceAtLeast(1)
                 val h = (c.size.height / SAMPLE_SCALE).coerceAtLeast(1)
                 val small: DrawScope.() -> Unit = { scale(1f / SAMPLE_SCALE, 1f / SAMPLE_SCALE, Offset.Zero) { backdrop.draw(this, c) } }
@@ -532,6 +571,9 @@ private class PlateHostNode(var words: KitLiquidWords) :
                         if (!platform.readPixels(layer.toImageBitmap(), read, w, h)) continue
                         read
                     }
+                // Counted as seen only once a sample came back: a sample the sampler skipped (another pane's was in
+                // flight, or the GPU is slow) is asked for again on the next tick, not only when the content next moves.
+                seen = v
                 if (pixels.size < w * h || pixels.count { (it ushr 24) > 0x80 } < pixels.size / 2) continue
                 val (mean, _) = LiquidInkRule.measure(pixels)
                 val next = LiquidInkRule.next(ink, mean)
@@ -650,11 +692,11 @@ internal object LiquidRim {
  * most [LIQUID_BAR_RADIUS]. The bar's content keeps its own place: only its ground becomes glass.
  */
 @Composable
-internal fun BoxScope.KitLiquidBarPane(face: Modifier) {
+internal fun BoxScope.KitLiquidBarPane(face: Modifier, join: KitLiquidJoinBody? = null) {
     Box(
         Modifier.matchParentSize()
             .padding(horizontal = LIQUID_BAR_INSET_X.dp, vertical = LIQUID_BAR_INSET_Y.dp)
-            .kitLiquidMergeBody("bar", LIQUID_BAR_RADIUS.dp, LiquidRole.Bar)
+            .kitLiquidJoinRest(join, LiquidBarShape)
             .then(face)
             .testTag("kit-liquid-bar")
     )
@@ -720,7 +762,7 @@ private fun DrawScope.drawGroundUnder(ground: Color, picture: KitGlassBackdrop?,
 }
 
 /** A feature's [KitFrostState] (its content recorded by [kitFrostSource]) seen from a pane in the same window. */
-private fun frostStateBackdrop(state: KitFrostState, ground: Color, picture: KitGlassBackdrop?): KitLiquidBackdrop =
+internal fun frostStateBackdrop(state: KitFrostState, ground: Color, picture: KitGlassBackdrop?): KitLiquidBackdrop =
     KitLiquidBackdrop({ state.version }) { c ->
         // Read here so the pane draws again when the content behind it records again (a scroll under the bar).
         state.version

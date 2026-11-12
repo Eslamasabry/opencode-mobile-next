@@ -16,6 +16,7 @@ import io.github.eslamasabry.oc.ui.design.effects.FrostConditions
 import io.github.eslamasabry.oc.ui.design.effects.FrostPolicy
 import io.github.eslamasabry.oc.ui.design.generated.FlutterKitTokens
 import io.github.eslamasabry.oc.ui.design.style.GlassFinish
+import io.github.eslamasabry.oc.ui.design.style.GlassLook
 import io.github.eslamasabry.oc.ui.design.style.GlassSpec
 import io.github.eslamasabry.oc.ui.design.style.Radii
 import io.github.eslamasabry.oc.ui.design.style.Style
@@ -62,10 +63,11 @@ internal fun kitClearPanesOn(): Boolean {
 /**
  * [d]'s rims as Glass draws them now: a chosen pane's accent ring becomes a soft accent rim, bright at its top start and
  * clearly there all round (the accent marks chosen states only); on a [clear] pane the rim is the same neutral white
- * light as the liquid panes' ([LiquidRim], owner 2026-11-08), brightest along the top-start edge (the specular) and
- * faint at the bottom end, never Flutter's .95 white hairline in a light theme.
+ * light as the liquid panes' ([LiquidRim], owner 2026-11-08), at [look]'s alphas ([GlassLook.paneRim]): brightest along
+ * the top-start edge (the specular), quieter between, and, in the dark theme, lit again at the bottom end (one light,
+ * two lit arcs; docs/designs/glass-in-the-kit.md 1a). Never Flutter's .95 white hairline in a light theme.
  */
-internal fun glassRims(d: SurfaceDecoration, roles: Roles, clear: Boolean): SurfaceDecoration {
+internal fun glassRims(d: SurfaceDecoration, roles: Roles, clear: Boolean, look: GlassLook = GlassLook.Default): SurfaceDecoration {
     if (d.edgeWidthDp <= 0f) return d
     val accent = roles.accent
     val chosen = d.edgeStart == accent && d.edgeEnd == accent
@@ -74,21 +76,12 @@ internal fun glassRims(d: SurfaceDecoration, roles: Roles, clear: Boolean): Surf
     val rim = if (chosen) accent.withAlpha(1f) else LiquidRim.Light.toArgbValue()
     val dark = roles.dark
     return if (chosen) {
-        d.copy(edgeStart = rim.withAlpha(if (dark) CHOSEN_RIM_START_DARK else CHOSEN_RIM_START_LIGHT), edgeEnd = rim.withAlpha(if (dark) CHOSEN_RIM_END_DARK else CHOSEN_RIM_END_LIGHT))
+        d.copy(edgeStart = rim.withAlpha(if (dark) CHOSEN_RIM_START_DARK else CHOSEN_RIM_START_LIGHT), edgeEnd = rim.withAlpha(if (dark) CHOSEN_RIM_END_DARK else CHOSEN_RIM_END_LIGHT), edgeRest = null)
     } else {
-        d.copy(edgeStart = rim.withAlpha(if (dark) PANE_RIM_START_DARK else PANE_RIM_START_LIGHT), edgeEnd = rim.withAlpha(if (dark) PANE_RIM_END_DARK else PANE_RIM_END_LIGHT))
+        val (s, r, e) = look.paneRim(dark)
+        d.copy(edgeStart = rim.withAlpha(s), edgeRest = r?.let { rim.withAlpha(it) }, edgeEnd = rim.withAlpha(e))
     }
 }
-
-/**
- * A clear pane's white rim (owner 2026-11-09, "crisper": a sharp, thin 1 dp white rim): clearly there all round,
- * brighter at its top start and faint at its bottom end. The bright top-start segment on it is the face's specular
- * ([SurfaceDecoration.specular], drawn by [drawGlassFace]).
- */
-internal const val PANE_RIM_START_DARK: Float = .24f
-internal const val PANE_RIM_START_LIGHT: Float = .60f
-internal const val PANE_RIM_END_DARK: Float = .07f
-internal const val PANE_RIM_END_LIGHT: Float = .16f
 
 /** A chosen pane's accent rim: clearly there all round, brightest at its top start. */
 internal const val CHOSEN_RIM_START_DARK: Float = .90f
@@ -153,5 +146,5 @@ internal fun chosenRowFace(
     // The row lies inside its group's pane, which frosts already: no frost, no shadow of its own.
     // Its specular stays on the group's edge: a row inside a pane is not an edge of glass.
     val face = resolve(request).copy(frost = 0f, shadows = emptyList(), specular = Argb(0))
-    return glassRims(GlassFinish.thickened(face, roles, solid, under), roles, clear)
+    return glassRims(GlassFinish.thickened(face, roles, solid, under), roles, clear, look)
 }

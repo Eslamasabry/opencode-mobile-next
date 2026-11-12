@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="reportR1Optional">可选</string>
+    <string name="reportR1Included">包含的内容</string>
+    <string name="reportR1IncludedLine">应用和手机的详细信息。密码、密钥和服务器地址会被去除。</string>
+    <string name="reportR1IncludedCrash">应用和手机的详细信息，以及 %1$s 的崩溃。密码、密钥和服务器地址会被去除。</string>
+    <string name="reportR1IncludedFreeze">应用和手机的详细信息，以及 %1$s 的卡死。密码、密钥和服务器地址会被去除。</string>
+    <string name="reportR1IncludedClose">应用和手机的详细信息，以及 %1$s 的关闭。密码、密钥和服务器地址会被去除。</string>
+    <string name="reportR1IncludedOpen">查看包含的内容</string>
+    <string name="reportR1Send">发送报告</string>
+    <string name="reportR1CopyText">复制文本</string>
+    <string name="reportR1PostGitHub">在 GitHub 上公开发布</string>
+    <string name="reportR1NoSend">此版本无法从应用内发送报告。请复制文本并在消息中分享，或公开发布到 GitHub。</string>
+    <string name="reportR1SheetSubtitle">以下就是将要发送的全部内容。</string>
+    <string name="reportR1Words">你的描述</string>
+    <string name="reportR1NoWords">未填写</string>
+    <string name="reportR1LastClose">应用上次关闭的情况</string>
+    <string name="reportR1Crashed">意外关闭 · %1$s</string>
+    <string name="reportR1Froze">停止响应 · %1$s</string>
+    <string name="reportR1ClosedForMemory">被 Android 关闭以释放内存 · %1$s</string>
+    <string name="reportR1App">应用</string>
+    <string name="reportR1AppValue">OpenCode Mobile %1$s（%2$s）</string>
+    <string name="reportR1Phone">手机</string>
+    <string name="reportR1Android">Android %1$s</string>
+    <string name="reportR1Memory">%1$s GB 内存</string>
+    <string name="reportR1Connection">连接</string>
+    <string name="reportR1AddressOut">%1$s · 已去除地址</string>
+    <string name="reportR1NotConnected">未连接</string>
+    <string name="reportR1Problems">最近的问题</string>
+    <string name="reportR1NoProblems">无</string>
+    <string name="reportR1ProblemCount">%1$s（%2$s）</string>
+    <string name="reportR1NeverSent">绝不会发送：你的对话、文件、密码、密钥和服务器地址。</string>
+    <string name="reportR1SentBody">谢谢。如果你就这个问题联系我们，请提供此代码，以便我们找到你的报告。</string>
+    <string name="reportR1PublicTitle">公开发布此报告？</string>
+    <string name="reportR1PublicBody">任何人都能读到 GitHub 上的问题。表单会带着你的描述和应用详情打开，在你于那里提交之前不会发布任何内容。</string>
+    <string name="reportR1PublicConfirm">打开 GitHub</string>
+    <string name="reportR1GitHubFailed">无法打开 GitHub。请重试。</string>
+    <string name="reportR1KindTimeout">超时</string>
+    <string name="reportR1KindAuth">登录被拒绝</string>
+    <string name="reportR1KindTls">证书不受信任</string>
+    <string name="reportR1KindServer">服务器错误</string>
+    <string name="reportR1KindProtocol">服务器返回了意外的回复</string>
+    <string name="reportR1KindDns">找不到地址</string>
+    <string name="reportR1KindRefused">连接被拒绝</string>
+    <string name="reportR1KindOffline">没有网络</string>
+    <string name="reportR1KindTooLarge">消息过大</string>
+    <string name="reportR1KindRejected">消息被拒绝</string>
+    <string name="reportR1KindOther">其他问题</string>
+    <string name="reportKeptCopyErrors">复制错误日志</string>
+    <string name="reportKeptClearErrors">清除错误</string>
+    <string name="reportKeptErrorsNote">应用自己发现的错误。它们只保存在这部手机上，不会加入报告。如果有助于说明发生了什么，请把它们复制进去。</string>
+</resources>

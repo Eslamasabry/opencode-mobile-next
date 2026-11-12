@@ -39,6 +39,12 @@ public data class TurnFeed(
     val link: ChatLink = ChatLink.Connecting,
     /** B-CHAT-092: each timed reply, by the turn it answered (prompt → first output → end, app clock). */
     val timings: Map<String, ReplyTiming> = emptyMap(),
+    /**
+     * B8: the server said this conversation runs nothing, after the newest history was read (its status read, or a
+     * run end it sent). False while that is not known: before the status read answers, when it failed, and once the
+     * conversation shows activity again. Only a said idle lets an unfinished reply read as cut off.
+     */
+    val idleSaid: Boolean = false,
 ) {
     public companion object {
         public val Empty: TurnFeed = TurnFeed()
@@ -46,6 +52,10 @@ public data class TurnFeed(
         public fun windowKey(providerId: String, modelId: String): String = "$providerId/$modelId"
     }
 }
+
+/** The newest turn, its reply count and newest reply (B8: what an idle the server said was said for). */
+private fun LedgerSnapshot.newestMark(): Triple<String, Int, String?>? =
+    turns.lastOrNull()?.let { t -> Triple(t.turnId, t.messages.size, t.messages.lastOrNull()?.info?.id) }
 
 /** A world that can feed the turn facts (the real [GraphChatWorld]; fakes need not). */
 public interface TurnFeedSource {
@@ -75,15 +85,37 @@ internal class TurnFeedKeeper(private val sessionId: String) {
     /** The fence for a history read that starts now (B-CHAT-112/117): pass it back to [history] with the page. */
     fun historyVersion(): Long = ledger.historyVersion()
 
-    fun history(page: List<MessageWithParts>, beforeVersion: Long = Long.MAX_VALUE) {
+    /**
+     * [newest]: the conversation's newest page. When it brings a newer turn or reply than the server's idle was said
+     * for, that idle no longer holds (B8) until [idle] says it again; the same page read again keeps it (no flicker).
+     */
+    fun history(page: List<MessageWithParts>, beforeVersion: Long = Long.MAX_VALUE, newest: Boolean = false) {
+        val before = state.value.ledger.newestMark()
         ledger.load(page, beforeVersion)
-        state.value = state.value.copy(ledger = ledger.snapshot())
+        val s = state.value
+        val snapshot = ledger.snapshot()
+        state.value = s.copy(ledger = snapshot, idleSaid = s.idleSaid && !(newest && snapshot.newestMark() != before))
+    }
+
+    /** B8: the server's answer to "does it still run?" after the newest page: idle, or running (null: no answer). */
+    fun idle(said: Boolean = true) {
+        val s = state.value
+        val idle = said && !s.busy
+        if (s.idleSaid != idle) state.value = s.copy(idleSaid = idle)
     }
 
     /** A run is going now (the session status said busy when the chat opened; [atMs] null = start unknown). */
     fun running(atMs: Long?) {
         val s = state.value
-        if (!s.busy) state.value = s.copy(busy = true, runStartedAtMs = atMs, lastProgressAtMs = atMs, lastOutcome = null)
+        if (!s.busy)
+            state.value =
+                s.copy(
+                    busy = true,
+                    runStartedAtMs = atMs,
+                    lastProgressAtMs = atMs,
+                    lastOutcome = null,
+                    idleSaid = false,
+                )
     }
 
     fun event(event: GatewayEvent, atMs: Long) {
@@ -99,6 +131,7 @@ internal class TurnFeedKeeper(private val sessionId: String) {
                             lastProgressAtMs = atMs,
                             retry = null,
                             lastOutcome = null,
+                            idleSaid = false,
                         )
             is GatewayEvent.RunRetrying ->
                 if (event.sessionId.raw == sessionId)
@@ -109,6 +142,7 @@ internal class TurnFeedKeeper(private val sessionId: String) {
                             // a rate limit from an overload or a dropped connection.
                             retry = RunRetry(event.attempt, event.nextAtMs, event.tag?.raw ?: event.details?.text, atMs),
                             lastProgressAtMs = atMs,
+                            idleSaid = false,
                         )
             is GatewayEvent.RunEnded ->
                 if (event.sessionId.raw == sessionId)
@@ -122,21 +156,47 @@ internal class TurnFeedKeeper(private val sessionId: String) {
                             lastOutcome =
                                 if (event.outcome == RunOutcome.Idle && s.lastOutcome != null && !s.busy) s.lastOutcome
                                 else event.outcome,
+                            idleSaid = true,
                         )
             else ->
                 if (ledger.apply(event)) {
+                    val snapshot = ledger.snapshot()
                     state.value =
                         s.copy(
-                            ledger = ledger.snapshot(),
+                            ledger = snapshot,
                             lastProgressAtMs = atMs,
                             // Fresh output means the retry worked.
                             retry = null,
+                            // B8: streamed words, a new turn or reply, a reply that opens or a step that runs mean the
+                            // conversation is active again: not idle as said. A durable event replayed unchanged after a
+                            // reconnect is not applied at all and keeps it.
+                            idleSaid =
+                                s.idleSaid &&
+                                    !active(event) &&
+                                    snapshot.newestMark() == s.ledger.newestMark(),
                         )
                 } else if (event is GatewayEvent.PartDelta && event.sessionId.raw == sessionId) {
-                    state.value = s.copy(lastProgressAtMs = atMs, retry = null)
+                    state.value = s.copy(lastProgressAtMs = atMs, retry = null, idleSaid = false)
                 }
         }
     }
+
+    /** B8: an applied event that shows the conversation working (whatever the status said before it). */
+    private fun active(event: GatewayEvent): Boolean =
+        when (event) {
+            is GatewayEvent.PartDelta -> true
+            is GatewayEvent.MessageUpserted ->
+                event.message.role == Role.Assistant &&
+                    event.message.time?.completedMs == null &&
+                    event.message.finish == null &&
+                    event.message.errorText == null
+            is GatewayEvent.PartUpserted ->
+                event.part.tool?.status.let {
+                    it == io.github.eslamasabry.oc.core.model.transcript.ToolStatus.Pending ||
+                        it == io.github.eslamasabry.oc.core.model.transcript.ToolStatus.Running
+                }
+            else -> false
+        }
 
     /** B-CHAT-092: times the reply from this conversation's own events; a finished timing joins its turn. */
     private fun time(event: GatewayEvent, atMs: Long) {

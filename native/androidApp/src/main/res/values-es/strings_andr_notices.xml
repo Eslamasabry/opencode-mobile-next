@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Translated with native/tools/strings/translate; English is the source. -->
 <resources>
-    <string name="andr_appExitForceStopped">OpenCode Mobile se cerró %1$s</string>
-    <string name="andr_appExitStoppedBackground">OpenCode se detuvo. Si no lo hiciste tú, puede que el gestor de batería de tu teléfono lo haya cerrado</string>
-    <string name="andr_appExitLowMemory">Android cerró OpenCode Mobile %1$s para liberar memoria</string>
-    <string name="andr_appExitCrashed">OpenCode Mobile se detuvo de forma inesperada %1$s</string>
-    <string name="andr_appExitKilled">Android detuvo OpenCode Mobile %1$s</string>
-    <string name="andr_appExitServerStopped">%1$s. El OpenCode de tu teléfono se detuvo con ella y se está iniciando de nuevo.</string>
-    <string name="andr_appExitServerAndTeamStopped">%1$s. El OpenCode de tu teléfono y el AI Team se detuvieron con ella y se están iniciando de nuevo.</string>
-    <string name="andr_appExitServerStoppedManual">%1$s. El OpenCode de tu teléfono se detuvo con ella. Inícialo de nuevo cuando quieras.</string>
-    <string name="andr_appExitServerAndTeamStoppedManual">%1$s. El OpenCode de tu teléfono y el AI Team se detuvieron con ella. Inícialos de nuevo cuando quieras.</string>
-    <string name="andr_appExitServerBack">%1$s. El OpenCode de tu teléfono se detuvo con ella y ya está funcionando de nuevo.</string>
-    <string name="andr_appExitServerBackTeam">%1$s. El OpenCode de tu teléfono y el AI Team se detuvieron con ella; OpenCode ya está funcionando de nuevo.</string>
+    <string name="andr_appExitForceStopped">La aplicación se cerró %1$s</string>
+    <string name="andr_appExitStoppedBackground">La aplicación se cerró en segundo plano</string>
+    <string name="andr_appExitLowMemory">Android cerró la aplicación %1$s para liberar memoria</string>
+    <string name="andr_appExitCrashed">La aplicación se cerró de forma inesperada %1$s</string>
+    <string name="andr_appExitKilled">Android detuvo la aplicación %1$s</string>
+    <string name="andr_appExitServerStopped">%1$s, así que OpenCode se detuvo. Se está iniciando de nuevo.</string>
+    <string name="andr_appExitServerAndTeamStopped">%1$s, así que OpenCode y el AI Team se detuvieron. Se están iniciando de nuevo.</string>
+    <string name="andr_appExitServerStoppedManual">%1$s, así que OpenCode se detuvo. Inícialo de nuevo desde Este teléfono.</string>
+    <string name="andr_appExitServerAndTeamStoppedManual">%1$s, así que OpenCode y el AI Team se detuvieron. Inícialos de nuevo desde Este teléfono.</string>
+    <string name="andr_appExitServerBack">%1$s, así que OpenCode se detuvo. Ya está funcionando de nuevo.</string>
+    <string name="andr_appExitServerBackTeam">%1$s, así que OpenCode y el AI Team se detuvieron. OpenCode ya está funcionando de nuevo.</string>
     <string name="andr_appExitAtTime">a las %1$s</string>
     <string name="andr_appExitOnDay">el %1$s a las %2$s</string>
     <string name="andr_appExitKeepRunning">Mantener en ejecución</string>
@@ -40,4 +40,5 @@
     <string name="andr_crashOfferMessage">OpenCode Mobile se cerró de forma inesperada la última vez. ¿Enviar un informe del fallo?</string>
     <string name="andr_crashOfferReview">Revisar y enviar</string>
     <string name="andr_crashOfferNotNow">Ahora no</string>
+    <string name="andr_appExitOpenThisPhone">Abrir Este teléfono</string>
 </resources>

@@ -70,8 +70,19 @@ public data class SetupJourneyUi(
     val seconds: Long
         get() = SetupSelection.seconds(install)
 
+    /** The extracted size of the install, when every part of it reports one (the start check counts it too). */
+    val installedBytes: Long?
+        get() = SetupSelection.installedBytes(install)
+
     val preflight: SetupPreflightResult?
-        get() = options?.let { SetupPreflight.check(it.device, bytes) }
+        get() = options?.let { SetupPreflight.check(it.device, bytes, installedBytes) }
+
+    /**
+     * What the install needs free and what this phone has, while the phone is within 1 GB of the need (so a nearly
+     * full phone is told before the download, not only when it is already too full). Null when free space is unknown.
+     */
+    val spaceTight: Pair<Long, Long>?
+        get() = options?.let { SetupPreflight.spaceTight(it.device, bytes, installedBytes) }
 
     val canConfirm: Boolean
         get() =
@@ -184,7 +195,10 @@ public class SetupJourneyViewModel(
         judged = key
         val stopped = progress.state == SetupState.Failed || progress.state == SetupState.Interrupted
         val waiting = stopped || progress.state == SetupState.Idle
-        val kill = if (stopped) keepAlive.interruption() else null
+        // Only a setup the system stopped ("interrupted") can be a kill. A step that failed while the app lived says
+        // its own reason (no network, storage, the step), never "ran short of memory".
+        val kill =
+            if (progress.state == SetupState.Interrupted) keepAlive.interruption(progress.startedAtMs) else null
         val card = if (waiting) keepAlive.facts()?.let { BatteryCard.decide(it, afterKill = kill != null) } else null
         mutable.update { it.copy(systemKill = kill, batteryCard = card, batteryOpenFailed = false) }
     }

@@ -40,6 +40,10 @@ import io.github.eslamasabry.oc.ui.kit.chip.KitChip
 import io.github.eslamasabry.oc.ui.kit.effects.LocalKitLiquidChrome
 import io.github.eslamasabry.oc.ui.kit.effects.kitGlassSource
 import io.github.eslamasabry.oc.ui.kit.effects.kitLiquidFace
+import io.github.eslamasabry.oc.ui.kit.effects.kitLiquidJoinRest
+import io.github.eslamasabry.oc.ui.kit.effects.rememberKitLiquidJoinBody
+import io.github.eslamasabry.oc.ui.kit.frame.KitJumpPill
+import io.github.eslamasabry.oc.ui.kit.frame.KitReportBottomSlab
 import io.github.eslamasabry.oc.ui.kit.foundation.KitSurface
 import io.github.eslamasabry.oc.ui.kit.foundation.kitFrostSource
 import io.github.eslamasabry.oc.ui.kit.foundation.rememberKitFrostState
@@ -67,9 +71,11 @@ import kotlinx.coroutines.flow.StateFlow
  * scrolled by itself so a Macrobenchmark measures the same frames on every build. `look`: `solid`, `glass` (Glass, no
  * background), `glass-aurora` (Glass over the animated aurora shader) or `glass-drift` (Glass over the painted aurora).
  * `scene`: `list` (a long list of Glass rows under a liquid bar, chips and a liquid +), `chat` (a long transcript of
- * text under a liquid bar and a liquid composer), `menu` (the chat with a reply's menu opened and closed eight times) or
- * `push` (a second page pushed over the chat and popped again, eight times, with the shell's fade-forwards). The
- * benchmark taps Start and waits for Done.
+ * text under a liquid bar and a liquid composer), `menu` (the chat with a reply's menu opened and closed eight times),
+ * `push` (a second page pushed over the chat and popped again, eight times, with the shell's fade-forwards),
+ * `join-pill` (the chat scrolling with the jump pill joined to the message box: joined glass,
+ * docs/designs/liquid-merge-one-body.md) or `join-menu` (the bar's menu, joined to the bar, opened and closed eight
+ * times). The benchmark taps Start and waits for Done.
  */
 /** Scrolls by [total] px over [ms], one step per display frame (frame-driven: no animation scale applies). */
 private suspend fun LazyListState.glide(total: Float, ms: Long) {
@@ -155,14 +161,15 @@ class GlassProofActivity : ComponentActivity() {
         var menu by remember { mutableStateOf(false) }
         LaunchedEffect(started) {
             if (!started || !runs) return@LaunchedEffect
-            if (scene == "menu" && hold) {
+            if ((scene == "menu" || scene == "join-menu") && hold) {
                 menu = true
                 delay(1_500)
                 done = true
                 return@LaunchedEffect
             }
-            if (scene == "menu") {
-                // The owner's path (2026-11-09): a reply's ⋯ menu opening and closing over the chat, eight times.
+            if (scene == "menu" || scene == "join-menu") {
+                // The owner's path (2026-11-09): a reply's ⋯ menu opening and closing over the chat, eight times
+                // (join-menu: the bar's menu, one body of glass with the bar).
                 repeat(8) {
                     menu = true
                     delay(900)
@@ -187,14 +194,30 @@ class GlassProofActivity : ComponentActivity() {
             page = true,
             overlayChrome = true,
             frost = if (scene != "list") source else null,
-            topBar = { KitTopBar(if (done) "Done" else if (started) "Scrolling" else "Ready") },
+            topBar = {
+                Box(Modifier.fillMaxWidth()) {
+                    KitTopBar(if (done) "Done" else if (started) "Scrolling" else "Ready")
+                    if (scene == "join-menu") {
+                        KitMenu(
+                            expanded = menu,
+                            items = listOf(KitMenuItem("Find", {}), KitMenuItem("Rename conversation", {}), KitMenuItem("Fork conversation", {}), KitMenuItem("Copy transcript", {})),
+                            onDismissRequest = { menu = false },
+                            modifier = Modifier.align(Alignment.CenterEnd).padding(end = 16.dp),
+                        ) { KitText("More", KitTextRole.Supporting, Modifier.padding(12.dp)) }
+                    }
+                }
+            },
             bottom =
                 if (scene != "list") {
                     {
+                        // join-pill: the message box is one slab of glass the jump pill joins.
+                        if (scene == "join-pill") KitReportBottomSlab(true)
                         Column(Modifier.fillMaxWidth().padding(16.dp)) {
                             Row { KitChip("Ask first", icon = KitIcons.add); KitChip("build · Model") }
-                            val face = kitLiquidFace(LiquidRole.Composer, LocalKitLiquidChrome.current, RoundedCornerShape(28.dp))
-                            Box(Modifier.fillMaxWidth().height(64.dp).then(face ?: Modifier)) {
+                            val shape = RoundedCornerShape(28.dp)
+                            val body = if (scene == "join-pill") rememberKitLiquidJoinBody("bottom") else null
+                            val face = kitLiquidFace(LiquidRole.Composer, LocalKitLiquidChrome.current, shape, join = body)
+                            Box(Modifier.fillMaxWidth().height(64.dp).kitLiquidJoinRest(body, shape).then(face ?: Modifier)) {
                                 KitText("Ask OpenCode…", KitTextRole.Supporting, Modifier.align(Alignment.CenterStart).padding(start = 24.dp))
                             }
                         }
@@ -237,7 +260,10 @@ class GlassProofActivity : ComponentActivity() {
                         }
                     }
                 }
-                if (scene != "chat") KitFab("New", KitIcons.add, {}, Modifier.align(Alignment.BottomEnd).padding(16.dp), backdrop = source)
+                if (scene == "join-pill") {
+                    KitJumpPill("Jump to latest", {}, visible = true, modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 12.dp), backdrop = source)
+                }
+                if (scene != "chat" && !scene.startsWith("join-")) KitFab("New", KitIcons.add, {}, Modifier.align(Alignment.BottomEnd).padding(16.dp), backdrop = source)
             }
         }
     }

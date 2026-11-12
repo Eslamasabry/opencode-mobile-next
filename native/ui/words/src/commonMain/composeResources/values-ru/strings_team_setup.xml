@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="phoneTeamProofSignal">Android закрыл проверку безопасности (сигнал %1$d), и она не успела завершиться.</string>
+    <string name="phoneTeamProofCheckSignal">Android закрыл проверку безопасности «%1$s» (сигнал %2$d).</string>
+    <string name="phoneTeamProofNotBlocked">Проверка безопасности «%1$s» не пройдена: этот телефон не заблокировал это так, как нужно песочнице команды.</string>
+    <string name="phoneTeamProofSandbox">Песочница команды не смогла запуститься на этом телефоне.</string>
+    <string name="phoneTeamProofUbuntu">Шаг Ubuntu «%1$s» не выполнен внутри песочницы команды.</string>
+    <string name="phoneTeamProofFixture">Закрытые тестовые файлы проверки безопасности изменились или их не удалось подготовить.</string>
+    <string name="phoneTeamProofNoAnswer">Проверка безопасности не ответила вовремя.</string>
+    <string name="phoneTeamProofProot">Проверка безопасности proot «%1$s» не пройдена.</string>
+    <string name="phoneTeamProofOther">Проверка безопасности остановилась на «%1$s».</string>
+</resources>

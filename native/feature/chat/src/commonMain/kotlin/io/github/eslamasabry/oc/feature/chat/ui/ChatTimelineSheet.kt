@@ -25,6 +25,7 @@ import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
 import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
+import io.github.eslamasabry.oc.ui.kit.state.KitStateSize
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
 import io.github.eslamasabry.oc.ui.words.res.chatUiJumpAnywhereForkRestoresAPromptFor
@@ -40,11 +41,11 @@ import io.github.eslamasabry.oc.ui.words.res.chatUiMessage
 import io.github.eslamasabry.oc.ui.words.res.chatUiMessageTimeline
 import io.github.eslamasabry.oc.ui.words.res.chatUiNoMatchingMessages
 import io.github.eslamasabry.oc.ui.words.res.chatUiSearchMessages
+import io.github.eslamasabry.oc.ui.words.res.chatUiToolsSummary
 import io.github.eslamasabry.oc.ui.words.res.chatUiYou
 import io.github.eslamasabry.oc.ui.words.res.commonRetry
 import io.github.eslamasabry.oc.ui.words.res.historyLoadOlder
 import io.github.eslamasabry.oc.ui.words.res.historyLoadedOnly
-import io.github.eslamasabry.oc.ui.words.res.kitSheetDismiss
 import io.github.eslamasabry.oc.ui.kit.platform.LocalKitPlatform
 import kotlinx.coroutines.flow.drop
 import org.jetbrains.compose.resources.stringResource
@@ -56,13 +57,13 @@ internal fun ChatTimelineSheet(timeline: TimelineUi?, actions: ChatActions, nowM
         visible = timeline != null,
         onDismissRequest = actions::closeTimeline,
         title = stringResource(Res.string.chatUiMessageTimeline),
-        closeLabel = stringResource(Res.string.kitSheetDismiss),
         subtitle = if (timeline?.entries?.any { it.forkable } == true) stringResource(Res.string.chatUiJumpAnywhereForkRestoresAPromptFor) else null,
     ) {
         if (timeline == null) return@KitSheet
         val field = rememberTextFieldState(timeline.query)
         val mask = rememberKitMask()
         val platform = LocalKitPlatform.current
+        val stepTitle = rememberStepTitles()
         // Flutter filters every keystroke; the search field settles only its announcement.
         LaunchedEffect(field, actions) {
             snapshotFlow { field.text.toString() }.drop(1).collect(actions::timelineQuery)
@@ -96,14 +97,28 @@ internal fun ChatTimelineSheet(timeline: TimelineUi?, actions: ChatActions, nowM
                 if (timeline.query.isNotBlank() && !timeline.partial) {
                     KitSearchNoMatch(timeline.query, { field.edit { replace(0, length, "") }; actions.timelineQuery("") }, Modifier.testTag("timeline-no-match"))
                 } else {
-                    KitStateView(kind = KitStateKind.Empty, title = stringResource(Res.string.chatUiNoMatchingMessages), icon = KitIcons.history, modifier = Modifier.testTag("timeline-empty"))
+                    KitStateView(kind = KitStateKind.Empty, title = stringResource(Res.string.chatUiNoMatchingMessages), icon = KitIcons.history, modifier = Modifier.testTag("timeline-empty"), size = KitStateSize.Inline)
                 }
             }
         }
         if (timeline.entries.isNotEmpty()) KitRowGroup {
         for (entry in timeline.entries) {
             KitRow(
-                title = mask(entry.preview.ifBlank { stringResource(Res.string.chatUiMessage) }),
+                title =
+                    mask(
+                        entry.preview.ifBlank {
+                            // Flutter: "Tools: Shell · uptime" (each tool once, as its step row names it).
+                            if (entry.tools.isEmpty()) stringResource(Res.string.chatUiMessage)
+                            else
+                                stringResource(
+                                    Res.string.chatUiToolsSummary,
+                                    entry.tools.joinToString(", ") { facts ->
+                                        listOfNotNull(stepTitle(facts), facts.subject?.takeIf { it.isNotBlank() })
+                                            .joinToString(" · ")
+                                    },
+                                )
+                        }
+                    ),
                 titleMaxLines = 2, // F: lib/ui/screens/chat/timeline_sheet.dart:242
                 leading = KitRowLeading.Glyph(if (entry.prompt) KitIcons.person else KitIcons.sparkle),
                 supporting =

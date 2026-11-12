@@ -31,4 +31,11 @@
     <string name="handoffNativeLinkFailed">Tin nhắn đã được gửi nhưng liên kết điều hướng chưa được lưu. Hãy thử lưu lại liên kết mà không gửi lại tin nhắn.</string>
     <string name="handoffNativeInitialPrompt">Hãy tiếp tục công việc từ cuộc trò chuyện trước. Đọc `%1$s` trước để biết bản ghi cuộc trò chuyện, các bước dùng công cụ, tệp và tác vụ đang mở. Xem đó là ngữ cảnh đã qua. Kiểm tra trạng thái hiện tại của dự án rồi tiếp tục phần việc còn dở.</string>
     <string name="handoffNativeSourceReviewOnly">Xem lại bản nháp cho Claude. Chưa có gì được ghi hoặc gửi đi. Để gửi cần có quyền truy cập đã xác minh vào cùng dự án và một trình ghi bản ghi đủ điều kiện; kết nối này không cung cấp bằng chứng đó.</string>
+    <string name="handoffNativeBlockComputer">Cuộc trò chuyện này nằm trên một máy tính khác, còn các tác nhân ở đây chạy trên điện thoại này nên không thể mở thư mục dự án của nó. Hãy mở dự án trên điện thoại này trước, rồi tiếp tục từ đó. Bạn vẫn có thể xem lại và sao chép bản ghi bên dưới.</string>
+    <string name="handoffNativeBlockFolder">Thư mục của cuộc trò chuyện này không thuộc các dự án trên điện thoại này nên các tác nhân ở đây không thể mở nó. Hãy mở hoặc sao chép dự án vào các dự án của điện thoại này trước, rồi tiếp tục từ đó.</string>
+    <string name="handoffNativeBlockUnconfirmed">Ứng dụng không thể xác nhận rằng các tác nhân trên điện thoại này mở được thư mục của cuộc trò chuyện này, nên sẽ không khởi động tác nhân nào ở sai chỗ. Hãy mở Tác nhân để kiểm tra chúng đã được cài đặt và sẵn sàng, rồi thử lại.</string>
+    <string name="handoffNativeContinueWith">Tiếp tục với %1$s</string>
+    <string name="handoffNativeWhatHandedOver">Những gì sẽ được chuyển giao</string>
+    <string name="handoffNativeNoReadyTitle">Không có tác nhân nào sẵn sàng trên điện thoại này</string>
+    <string name="handoffNativeNotStartedBody">Hiện chưa thể bắt đầu chuyển giao từ cuộc trò chuyện này. Mở Tác nhân để kiểm tra một tác nhân đã được cài và sẵn sàng trên điện thoại này, rồi thử lại.</string>
 </resources>

@@ -273,7 +273,7 @@
     </plurals>
     <string name="serversRemoveDrafts__eq1">1 неотправленный черновик будет удалён</string>
     <string name="serversRemoveActiveNext">Вы подключены к нему: приложение отключится и покажет ваши серверы</string>
-    <string name="serversRemoveServerKeeps">На сервере и у ваших поставщиков ИИ ничего не удаляется</string>
+    <string name="serversRemoveServerKeeps">На сервере и у ваших поставщиков ИИ ничего не удаляется.</string>
     <string name="pairingScannerAllowCamera">Разрешить доступ к камере</string>
     <string name="pairingScannerStarting">Открываем камеру…</string>
     <string name="profileMonitorSwitchBody">На %1$s идёт выполнение. После переключения в приложении откроется %2$s, а выполнение на %1$s продолжится.</string>
@@ -519,4 +519,6 @@
     <string name="serverDetailsAccessDenied">Сервер отказал в доступе. Проверьте, какая учётная запись может использовать этот сервер.</string>
     <string name="serverDetailsFixSignIn">Исправить вход</string>
     <string name="serverDetailsLastAttempt">Последняя попытка подключения: %1$s</string>
+    <string name="connectionAgentStarting">Запускаем Claude Code…</string>
+    <string name="connectionAgentStartFailed">Claude Code не запустился. Нажмите «Перезапустить Claude Code», чтобы попробовать ещё раз.</string>
 </resources>

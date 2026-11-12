@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="gitRemotePickGitHub">从 GitHub 选择</string>
+    <string name="gitRemotePickGitHubTitle">选择仓库</string>
+    <string name="gitRemotePickGitHubNone">这个 GitHub 账号下还没有仓库。</string>
+    <string name="gitRemoteRepoPrivate">私有</string>
+    <string name="gitProblemInvalidGitHubRepositoryName">仓库名最多 100 个字符，可包含字母、数字、点、短横线或下划线。</string>
+    <string name="gitProblemGitHubRepositoryNameUnavailable">该名称在你的 GitHub 账号中已被占用或不可用。请换一个。</string>
+    <string name="gitActionInitialize">开始跟踪</string>
+    <string name="gitActionPublish">在 GitHub 上创建</string>
+    <string name="gitBusyInitialize">正在此项目中启用 Git…</string>
+    <string name="gitBusyPublish">正在 GitHub 上创建仓库…</string>
+    <string name="gitDoneInitialized">Git 已在此项目中就绪。</string>
+    <string name="gitDoneGitHubRepositoryCreated">GitHub 仓库已创建并连接。你的项目还没有上传。</string>
+    <string name="gitInitializeProject">开始跟踪此项目</string>
+    <string name="gitInitializeProjectHint">文件保持原位，并开始使用 Git。</string>
+    <string name="gitPublishToGitHub">创建 GitHub 仓库</string>
+    <string name="gitPublishToGitHubHint">选择名称和谁可以看到它。</string>
+    <string name="gitPublishTitle">创建仓库</string>
+    <string name="gitPublishName">仓库名称</string>
+    <string name="gitPublishNameHint">可使用字母、数字、点、短横线或下划线。</string>
+    <string name="gitPublishVisibility">谁可以看到</string>
+    <string name="gitPublishPrivate">私有</string>
+    <string name="gitPublishPublic">公开</string>
+    <string name="gitPublishPrivateHint">只有你和你选择的人可以看到此仓库。</string>
+    <string name="gitPublishPublicHint">任何人都可以看到此仓库。</string>
+    <string name="gitPublishButton">创建仓库</string>
+</resources>

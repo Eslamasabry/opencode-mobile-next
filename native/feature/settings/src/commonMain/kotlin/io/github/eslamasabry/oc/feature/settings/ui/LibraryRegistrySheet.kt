@@ -100,7 +100,7 @@ internal fun LibraryRegistrySheet(state: LibraryUi, actions: LibraryActions) {
                     )
                     .map { it.value }
             if (rows.isEmpty() && registry.status != SetupRegistryStatus.Loading)
-                KitStateView(KitStateKind.Calm, stringResource(Res.string.nlibNoMatch))
+                KitStateView(KitStateKind.Calm, stringResource(Res.string.nlibNoMatch), size = KitStateSize.Inline)
             KitRowGroup {
                 rows.forEach { item ->
                     val existing = installed[item.name]

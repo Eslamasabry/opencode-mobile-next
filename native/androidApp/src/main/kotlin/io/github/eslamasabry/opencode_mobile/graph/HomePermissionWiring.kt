@@ -13,6 +13,7 @@ import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
 import io.github.eslamasabry.oc.engine.requests.AnswerPhase
 import io.github.eslamasabry.oc.engine.requests.PendingRequest
 import io.github.eslamasabry.oc.engine.requests.RequestAnswer
+import kotlinx.collections.immutable.toImmutableList
 import io.github.eslamasabry.oc.feature.chat.world.ChatGraphAccessors
 import io.github.eslamasabry.oc.feature.chats.presentation.HomePermissionAnswers
 import io.github.eslamasabry.oc.feature.chats.presentation.HomePermissionReply
@@ -59,6 +60,33 @@ class HomePermissionAnswerWiring(private val registry: ConnectionRegistry) : Hom
                     HomePermissionReply.Reject -> PermissionReply.Reject
                 }
             ),
+        )
+    }
+
+    /**
+     * H1: the same engine path the chat's question card sends through (`answerNow`: one claim, one write, the
+     * request's own checks), for the captured conversation only.
+     */
+    override suspend fun answerQuestion(
+        ref: ConversationRef,
+        requestId: String,
+        answers: List<List<String>>,
+    ): Outcome<Unit> {
+        val graph =
+            registry.graphFor(ref)
+                ?: return Outcome.Failed(Failure.Refused(RefusalReason.StaleScope))
+        val engine = (graph as ChatGraphAccessors).chatRequests.engine
+        val request =
+            engine.pending.value.filterIsInstance<PendingRequest.Question>().singleOrNull {
+                it.question.id.raw == requestId &&
+                    it.sessionId == ref.sessionId &&
+                    (it.phase == AnswerPhase.Waiting || it.phase is AnswerPhase.NotAccepted)
+            } ?: return Outcome.Failed(Failure.Refused(RefusalReason.StaleScope))
+        if (registry.graphFor(ref) !== graph)
+            return Outcome.Failed(Failure.Refused(RefusalReason.StaleScope))
+        return engine.answerNow(
+            request.question.id,
+            RequestAnswer.Question(answers.map { it.toImmutableList() }.toImmutableList()),
         )
     }
 }

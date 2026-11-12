@@ -252,7 +252,12 @@ public class SetupEngine(
         val optional = registry.filter { !it.required && !it.jobStep }
         if (optional.isEmpty()) return emptySet<String>().ok()
         return when (val checks = check(optional, requireComplete = true)) {
-            is Checks.Failed -> Failure.Runtime(RuntimeProblem.Generic).failed()
+            // Another phone task held the one check slot: say "busy", so the reader waits and asks
+            // again instead of reporting that nothing could be checked.
+            is Checks.Failed ->
+                if ((checks.cause as? Failure.Runtime)?.problem == RuntimeProblem.SlotBusy)
+                    Failure.Runtime(RuntimeProblem.SlotBusy).failed()
+                else Failure.Runtime(RuntimeProblem.Generic).failed()
             is Checks.Ok ->
                 optional.filter { checks.results[it.id]?.ok == true }.map { it.id }.toSet().ok()
         }
@@ -417,7 +422,8 @@ public class SetupEngine(
     private sealed interface Checks {
         data class Ok(val results: Map<String, SetupCheckResult>) : Checks
 
-        data class Failed(val error: SetupError) : Checks
+        /** [cause] is the host's own failure when it said why (a busy check slot is not a broken one). */
+        data class Failed(val error: SetupError, val cause: Failure? = null) : Checks
     }
 
     /**
@@ -484,7 +490,7 @@ public class SetupEngine(
                             !agentUser ||
                             SetupPlanning.isOwnershipFailure(run.failure)
                     ) {
-                        return Checks.Failed(hostError(run.failure))
+                        return Checks.Failed(hostError(run.failure), run.failure)
                     }
                     // The first agent install has not created oc yet: its checks stay pending.
                 }
@@ -708,7 +714,11 @@ public class SetupEngine(
                 is Outcome.Failed -> return answer
                 is Outcome.Ok -> answer.value
             }
-        val parsed = SetupJobRecord.parse(text)
+        // B-251: the Flutter app's phone-agent install saved its owner as a group of its own in this file. It is that
+        // job's, never a setup parameter: it is dropped here so it neither refuses every later job (the OpenCode
+        // update, Repair, Add tools) nor travels into one.
+        val parsed =
+            SetupJobRecord.parse(text)?.let { it.copy(params = it.params - SetupPlanning.FLUTTER_AGENT_OWNER_GROUP) }
         if (text != null && text.isNotBlank() && parsed == null)
             return Failure.Runtime(RuntimeProblem.Generic).failed()
         if (parsed != null) {

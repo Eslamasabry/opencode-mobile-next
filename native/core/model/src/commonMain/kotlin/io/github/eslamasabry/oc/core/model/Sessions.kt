@@ -72,8 +72,22 @@ public data class Session(
     val selection: SessionSelection? = null,
     val compactingSinceMs: Long? = null,
     val lastRunFailed: Boolean = false,
+    /** How the server says the last run ended (OpenCode 2 `outcome`); null = unknown or not reported. */
+    val lastRunOutcome: SessionRunOutcome? = null,
     val contextUse: SessionContextUse? = null,
+    /**
+     * The conversation this one was forked from, when the server marks it a fork. A fork also carries [parentId]
+     * (OpenCode 2 `fork` beside `parentID`), so this is what keeps a fork out of the sub-agent lists.
+     */
+    val forkOf: SessionId? = null,
 )
+
+/** How a conversation's last run ended, as a server reports it on the conversation itself. */
+public enum class SessionRunOutcome {
+    Succeeded,
+    Failed,
+    Interrupted,
+}
 
 /** Open enum (wire value kept): `idle`, `busy`, `retry`, or anything newer. */
 @JvmInline

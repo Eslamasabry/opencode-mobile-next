@@ -35,7 +35,12 @@ class AppVoiceTeaching(
     private val stores: PreviewStores,
     private val clock: kotlin.time.Clock,
     private val scope: io.github.eslamasabry.oc.core.common.AppCoroutineScope,
+    private val nudges: io.github.eslamasabry.oc.feature.chat.nudges.ChatNudgeSource,
 ) : io.github.eslamasabry.oc.feature.voice.presentation.VoiceTeachingHub {
+    override suspend fun resetNudges() {
+        nudges.registry()?.reset()
+    }
+
     private val lane = kotlinx.coroutines.sync.Mutex()
     private var tips: io.github.eslamasabry.oc.engine.settings.teaching.TipController? = null
 

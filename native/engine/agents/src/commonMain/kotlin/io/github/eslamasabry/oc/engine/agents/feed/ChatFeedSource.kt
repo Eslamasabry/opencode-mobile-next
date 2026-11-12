@@ -5,6 +5,7 @@ import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.core.common.ok
 import io.github.eslamasabry.oc.core.model.Session
+import io.github.eslamasabry.oc.core.model.SessionRunOutcome
 import io.github.eslamasabry.oc.core.model.SessionStatus
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -60,6 +61,8 @@ public data class OpenCodeListing(
      * Sessions whose last run finished after the person last opened them (device read watermarks).
      */
     val finishedUnseen: Set<SessionId> = emptySet(),
+    /** Sessions whose latest turn the person stopped from this app (`ConnectionDelivery.stoppedByPerson`). */
+    val stoppedByPerson: Set<SessionId> = emptySet(),
     val loading: Boolean = false,
     val complete: Boolean = true,
     val failed: Boolean = false,
@@ -67,6 +70,8 @@ public data class OpenCodeListing(
     val acrossProjects: Boolean = true,
     val running: Map<SessionId, FeedRunning> = emptyMap(),
     val permissions: Map<SessionId, FeedPermission> = emptyMap(),
+    val questions: Map<SessionId, FeedQuestion> = emptyMap(),
+    val forms: Map<SessionId, FeedForm> = emptyMap(),
 )
 
 /**
@@ -77,6 +82,13 @@ public class OpenCodeChatFeedSource(
     override val label: String?,
     private val listing: StateFlow<OpenCodeListing>,
     private val locationKey: String? = null,
+    /**
+     * Who runs a row, as (agent id, agent label), for a server whose conversations are an agent's (the phone's
+     * agents). Null keeps the row an OpenCode one.
+     */
+    private val agentOf: (Session) -> Pair<String, String?>? = { null },
+    /** Whether reopening the session needs a new conversation (the agents helper's answer); null = unknown. */
+    private val needsNewChat: (Session) -> Boolean? = { null },
     private val refresh: suspend () -> Outcome<Unit> = { Unit.ok() },
 ) : ChatFeedSource {
     override val id: String = "opencode:${profileId.raw}"
@@ -107,15 +119,20 @@ public class OpenCodeChatFeedSource(
             when {
                 session.id in listing.needsYou -> ChatStatus.NeedsYou
                 status == SessionStatus.Busy || status == SessionStatus.Retry -> ChatStatus.Running
-                session.lastRunFailed -> ChatStatus.Failed
+                session.lastRunFailed || session.lastRunOutcome == SessionRunOutcome.Failed -> ChatStatus.Failed
                 else -> ChatStatus.Idle
             }
         val directory = session.directory
+        val agent = agentOf(session)
         return ChatFeedItem(
             sourceId = id,
+            agentId = agent?.first ?: OPENCODE_AGENT_ID,
+            agentLabel = agent?.second,
             locationKey = locationKey,
             running = listing.running[session.id].takeIf { chatStatus == ChatStatus.Running },
             permission = listing.permissions[session.id],
+            question = listing.questions[session.id],
+            form = listing.forms[session.id],
             profileId = profileId,
             sessionId = session.id,
             title = session.title,
@@ -126,6 +143,13 @@ public class OpenCodeChatFeedSource(
             parentId = session.parentId,
             sourceLabel = label,
             finishedUnseen = chatStatus == ChatStatus.Idle && session.id in listing.finishedUnseen,
+            stoppedByPerson = chatStatus == ChatStatus.Idle && session.id in listing.stoppedByPerson,
+            interrupted =
+                chatStatus == ChatStatus.Idle &&
+                    session.lastRunOutcome == SessionRunOutcome.Interrupted &&
+                    session.id !in listing.stoppedByPerson &&
+                    session.id in listing.finishedUnseen,
+            needsNewChat = chatStatus != ChatStatus.Running && needsNewChat(session) == true,
         )
     }
 }

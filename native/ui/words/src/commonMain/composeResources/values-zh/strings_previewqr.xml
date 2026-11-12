@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="previewQrLeaveTitle">在浏览器中打开此链接？</string>
+    <string name="previewQrPortLabel">端口号</string>
+    <string name="previewQrPortHelp">或输入正在运行的应用的端口号。</string>
+    <string name="previewQrPortInvalid">请输入 1 到 65535 之间的端口。</string>
+    <string name="previewQrPortOpen">打开端口</string>
+    <string name="previewQrPairFilled">已根据配对码填写。请检查后保存。</string>
+    <string name="previewQrLinkFilled">已根据链接填写地址。请添加密码后保存。</string>
+    <string name="previewQrScanRejected">该二维码不是配对码。请把相机对准 opencode2 pair 打印出的码。</string>
+    <string name="previewQrPairingCodeLabel">配对码</string>
+</resources>

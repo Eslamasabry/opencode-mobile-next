@@ -5,6 +5,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -73,7 +75,9 @@ class KitTaskSheetParityTest {
         onNodeWithTag("task-sheet").assertExists()
         onNodeWithText("Fix the parser").assertExists()
         // Not running: the in-progress task keeps its words but shows the still (waiting) ring.
-        onNodeWithTag("kit-task-mark-Todo", useUnmergedTree = true).assertExists()
+        // f8ca806604: the mark's box clears its semantics, so its "kit-task-mark-*" tag is not in the tree; the drawn
+        // ring keeps its own tag. Two waiting rings: the real Todo and the paused in-progress task.
+        onAllNodesWithTag("kit-task-waiting", useUnmergedTree = true).assertCountEquals(2)
         onNodeWithContentDescription("Close").performClick()
         waitForIdle()
         assertEquals(false, open)

@@ -78,6 +78,7 @@ class FakeLinuxHost : BudgetReadings, PhoneServerPort {
                 installed = installed,
                 serverRunning = running,
                 serverRestartWanted = wanted && !userStopped,
+                serverStoppedByPerson = userStopped,
                 serverRecoveryGeneration = generation,
                 serverRecoveryAuthority = recoveryAuthority,
                 serverRecoveryScheduled = recoveryScheduled,
@@ -89,6 +90,16 @@ class FakeLinuxHost : BudgetReadings, PhoneServerPort {
         generation++
         wanted = false
         userStopped = true
+        running = false
+    }
+
+    /**
+     * A stop that is not the person's (the app replacing the server and not getting it back, Android refusing or ending
+     * the service): the background restore is withdrawn, the person's record is left as it was.
+     */
+    fun stopsWithoutPerson() {
+        generation++
+        wanted = false
         running = false
     }
 
@@ -117,7 +128,9 @@ class FakeLinuxHost : BudgetReadings, PhoneServerPort {
             }
         // The native side refuses a guarded launch once a Stop moved the generation (freeze tip).
         if (expected != null && expected != generation) return RuntimeProblem.Generic.refused()
-        if (mode == LaunchMode.Manual) {
+        // The native opening start refuses only the person's Stop, then starts like a manual start (wanted again).
+        if (mode is LaunchMode.ForAppOpen && userStopped) return RuntimeProblem.Generic.refused()
+        if (mode == LaunchMode.Manual || mode is LaunchMode.ForAppOpen) {
             wanted = true
             userStopped = false
         }

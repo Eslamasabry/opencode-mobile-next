@@ -52,4 +52,5 @@
     <string name="p12ArchivedFilter">В архиве</string>
     <string name="p12MoreFor">Ещё для %1$s</string>
     <string name="p12OpenChat">Открыть чат</string>
+    <string name="p12ProjectsOnThisPhone">Проекты на этом телефоне</string>
 </resources>

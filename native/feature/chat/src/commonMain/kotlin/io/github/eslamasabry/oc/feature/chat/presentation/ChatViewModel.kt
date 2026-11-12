@@ -190,7 +190,9 @@ public class ChatViewModel(
     }
 
     override fun openProviders(): Unit =
-        nav.open(io.github.eslamasabry.oc.ui.routes.ProvidersRoute(route.ref.profileId))
+        nav.open(
+            io.github.eslamasabry.oc.ui.routes.LibraryRoute(tab = "providers", profileId = route.ref.profileId)
+        )
 
     override fun useModelAndResend(turnId: String, providerId: String, modelId: String): Unit =
         presenter.useModelAndResend(turnId, providerId, modelId)
@@ -235,6 +237,8 @@ public class ChatViewModel(
 
     override fun stop(): Unit = presenter.stop()
 
+    override fun stopForSteer(promptKey: String, words: String): Unit = presenter.stopForSteer(promptKey, words)
+
     override fun find(query: String?): Unit = presenter.find(query)
 
     override fun findNext(): Unit = presenter.findNext()
@@ -257,12 +261,17 @@ public class ChatViewModel(
 
     override fun stopAfterStep(note: String): Unit = presenter.stopAfterStep(note)
 
+    override fun undoStopAfterStep(): Unit = presenter.undoStopAfterStep()
+
     override fun openPlace(place: ChatPlace): Unit = presenter.openPlace(place)
 
     override fun restartPhoneServer(): Unit = presenter.restartPhoneServer()
 
+    override fun restartAgent(): Unit = presenter.restartAgent()
+
     override fun openParent() {
-        world.parent.value?.let { nav.open(ChatRoute(it)) }
+        // Back to the parent: pops when it is right below (opened from its card), never stacks it twice.
+        world.parent.value?.let { nav.backToChat(it) }
     }
 
     override fun showSubagents(): Unit = nav.open(io.github.eslamasabry.oc.ui.routes.SessionRelationsRoute(world.ref))

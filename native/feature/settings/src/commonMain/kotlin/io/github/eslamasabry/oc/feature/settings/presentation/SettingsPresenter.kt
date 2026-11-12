@@ -71,11 +71,14 @@ public class SettingsPresenter(
     private val healthConsent: HealthConsentSetting? = null,
     /** R1: Report a problem's report, its Send report and About's report code. */
     private val problemReport: ProblemReportSender? = null,
+    /** The edge dock's on/off switch; null where the app draws no dock. */
+    private val edgeDock: EdgeDockSetting? = null,
 ) : SettingsActions {
     private data class Local(
         val stack: ImmutableList<SettingsPage> = persistentListOf(SettingsPage.Hub),
         val query: String = "",
         val entries: List<SettingsSearchEntry> = emptyList(),
+        val insideEntries: List<SettingsInsideEntry> = emptyList(),
         val allPacks: Boolean = false,
         val note: SettingsNote? = null,
         val consentSaving: Boolean = false,
@@ -111,7 +114,12 @@ public class SettingsPresenter(
     )
 
     private val local = MutableStateFlow(Local())
-    private val currentFacts = facts
+    /** The host's facts, with the edge dock's switch where the app has one. */
+    private val currentFacts: StateFlow<SettingsFacts> =
+        edgeDock?.let { dock ->
+            combine(facts, dock.shown) { f, on -> f.copy(edgeDock = on) }
+                .stateIn(scope, SharingStarted.Eagerly, facts.value.copy(edgeDock = dock.shown.value))
+        } ?: facts
     private val prefs = choices.value
 
     private data class Extra(
@@ -151,7 +159,7 @@ public class SettingsPresenter(
         )
 
     public val state: StateFlow<SettingsUi> =
-        combine(local, facts, prefs, engines, appearanceGuide?.record ?: flowOf(null)) {
+        combine(local, currentFacts, prefs, engines, appearanceGuide?.record ?: flowOf(null)) {
                 l,
                 f,
                 p,
@@ -164,7 +172,7 @@ public class SettingsPresenter(
                 SharingStarted.Eagerly,
                 build(
                     local.value,
-                    facts.value,
+                    currentFacts.value,
                     prefs.value,
                     engineNow(),
                     appearanceGuide?.record?.value,
@@ -225,6 +233,19 @@ public class SettingsPresenter(
         local.update { it.copy(entries = entries) }
     }
 
+    override fun onInsideEntries(entries: List<SettingsInsideEntry>) {
+        local.update { it.copy(insideEntries = entries) }
+    }
+
+    override fun onInside(inside: SettingsInside) {
+        if (inside !in SettingsInside.searchable(currentFacts.value)) return
+        when (val door = inside.door()) {
+            is SettingsDoor.Page -> onOpen(door.page)
+            is SettingsDoor.Outside -> onOutside(door.place)
+            is SettingsDoor.Switch -> Unit
+        }
+    }
+
     private fun build(
         l: Local,
         f: SettingsFacts,
@@ -236,6 +257,10 @@ public class SettingsPresenter(
         val results =
             if (l.query.isBlank()) persistentListOf()
             else SettingsSearch.find(l.query, l.entries.filter { it.row in searchable })
+        val insideSearchable = SettingsInside.searchable(f)
+        val insideResults =
+            if (l.query.isBlank()) persistentListOf()
+            else SettingsSearch.findInside(l.query, l.insideEntries.filter { it.inside in insideSearchable })
         val group =
             (l.stack.last() as? SettingsPage.Group)?.let { g ->
                 GroupUi(
@@ -258,6 +283,8 @@ public class SettingsPresenter(
                     results,
                     searchable,
                     f.savedServers,
+                    insideResults,
+                    insideSearchable.toImmutableList(),
                 ),
             group = group,
             appearance =
@@ -321,7 +348,12 @@ public class SettingsPresenter(
             phraseChips = l.phraseChips,
             focusedRow = l.focusedRow,
             focusedAnchor = l.focusedAnchor,
-            localModels = e.localModels?.copy(confirmDelete = l.confirmLocalModels),
+            localModels =
+                e.localModels?.copy(
+                    confirmDelete = l.confirmLocalModels,
+                    phoneStorage =
+                        f.platform.builtinLinux && f.canOpen(SettingsOutside.ThisPhone),
+                ),
             note = l.note,
             voiceLicenses = licenses != null,
             license = l.license,
@@ -643,6 +675,7 @@ public class SettingsPresenter(
                         write(PersonalChange.Reasoning(!door.on), SettingsNote.ChoiceNotSaved)
                     SettingsRowId.ShowTimestamps ->
                         write(PersonalChange.Timestamps(!door.on), SettingsNote.ChoiceNotSaved)
+                    SettingsRowId.EdgeDock -> edgeDock?.setShown(!door.on)
                     else -> Unit
                 }
         }

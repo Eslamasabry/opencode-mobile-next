@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="vpttAutoSendDetailShort">短暂停顿后发送，你有 3 秒时间取消。按住麦克风时不会发送。</string>
+    <string name="readAloudVoiceNaturalDetailShort">更自然，且可离线使用。仅限英语；其他语言使用手机自带的语音。</string>
+</resources>

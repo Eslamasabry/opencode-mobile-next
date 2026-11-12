@@ -279,6 +279,7 @@ public class PaseoGateway(
             )
         recoverySnapshots.value =
             recoverySnapshots.value + mapOf(id to snapshot, real(id) to snapshot)
+        publishContinuations()
     }
 
     internal val agentTools = PaseoAgentTools(this)
@@ -302,6 +303,22 @@ public class PaseoGateway(
 
     // ---- state (lane-confined; Dart field names)
     internal var directoryValue: String? = directory
+
+    /**
+     * The phone helper's gateway is pinned to the folder that holds all the agents' projects, and its list shows the
+     * conversations of every project folder under it (Flutter opened one source per project folder). Other servers
+     * keep the exact folder.
+     */
+    public var includeSubfolders: Boolean = false
+
+    /** Whether a conversation that runs in [directory] belongs to the folder [scope] this gateway is pinned to. */
+    internal fun holds(scope: String?, directory: String?): Boolean =
+        directory == scope ||
+            (includeSubfolders &&
+                scope != null &&
+                directory != null &&
+                directory.startsWith(scope.trimEnd('/') + "/") &&
+                directory.split('/').none { it == ".." || it == "." })
     internal var closed = false
     internal var locationEpoch = 0
     internal val agents = LinkedHashMap<String, JsonObject>()
@@ -319,6 +336,7 @@ public class PaseoGateway(
      */
     internal val draftFeatureValues = HashMap<String, Map<String, JsonElement>>()
     internal val liveAgentSessions = HashSet<String>()
+    internal val resumeFailed = PaseoResumeMemory()
     internal val uncertain = HashSet<String>()
 
     /**
@@ -338,6 +356,9 @@ public class PaseoGateway(
     internal val appIds = HashMap<String, String>()
     internal val titleHints = HashMap<String, String>()
     internal val archivedCopies = HashSet<String>()
+
+    /** The listings being read: what each kept so far, by the cursor that continues it (PaseoListCopies.kt). */
+    internal val listedCopies = PaseoListedCopies()
 
     /** Background work and failed turns as this gateway read them (B-AGENT-151, PaseoBackgroundTasks.kt). */
     internal val backgroundTasks = PaseoBackgroundTaskBook(sharedBackgroundTasks)
@@ -535,7 +556,7 @@ public class PaseoGateway(
         SessionId(publishedAliases.value[appId.raw] ?: real(appId.raw))
 
     private suspend inline fun <T> call(crossinline block: suspend () -> T): Outcome<T> =
-        withContext(lane) { paseoAttempt { block() } }
+        withContext(lane) { paseoAttempt { block() }.also { publishContinuations() } }
 
     override val scopeRevision: Long
         get() = (locationEpoch.toLong() shl 32) + transport.epoch
@@ -565,6 +586,7 @@ public class PaseoGateway(
         providerRevision++
         agents.clear()
         sessions.clear()
+        listedCopies.clear()
         providerImport.clear()
         statuses.clear()
         cancelRecordBusyExpiry()
@@ -574,6 +596,7 @@ public class PaseoGateway(
         draftVariants.clear()
         draftFeatureValues.clear()
         liveAgentSessions.clear()
+        resumeFailed.clear()
         uncertain.clear()
         uncertainStarts.clear()
         awaitingTurn.clear()
@@ -633,9 +656,10 @@ public class PaseoGateway(
         return result.toImmutableList()
     }
 
+    /** One row per conversation: older records of a resumed or imported one are left out (PaseoListCopies.kt). */
     override suspend fun sessionPage(cursor: String?, limit: Int): Outcome<ServerPage<Session>> =
         call {
-            readSessionPage(cursor, limit)
+            withoutOlderCopies(readSessionPage(cursor, limit), cursor)
         }
 
     internal suspend fun readSessionPage(cursor: String?, limit: Int): ServerPage<Session> {
@@ -784,11 +808,16 @@ public class PaseoGateway(
         if (isReadOnlySession(id)) paseoFail(PaseoFailureKind.Unavailable)
         if (id.raw !in drafts) {
             if (id.raw !in sessions) fetchAgent(id.raw)
+            // The list shows a conversation by its newest record: its older records go with it (PaseoListCopies.kt).
+            val older = olderCopiesOf(id.raw)
             transport.request(
                 "archive_agent_request",
                 jsonOf("agentId" to real(id.raw)),
                 mutation = true,
             )
+            forget(id.raw)
+            archiveOlderCopies(older)
+            return@call
         }
         forget(id.raw)
     }
@@ -823,7 +852,7 @@ public class PaseoGateway(
             val agent = read.obj("agent") ?: paseoFail(PaseoFailureKind.NotFound)
             if (agent.str("id") != real(id)) paseoFail(PaseoFailureKind.InvalidResponse)
             if (
-                paseoSession(agent).directory != directory ||
+                !holds(directory, paseoSession(agent).directory) ||
                     agent["archivedAt"].stringOrNull() != null
             )
                 paseoFail(PaseoFailureKind.ScopeMismatch)
@@ -1065,19 +1094,36 @@ public class PaseoGateway(
                 )
             )
         }
+        // PZ5: whether this prompt's create or send frame was handed to the socket. A refusal
+        // before that (the runtime cannot start, a mode it lacks, the phone said no) sent nothing.
+        var wired = false
+        var refusedBeforeWire = false
         val outcome = withPayloadLease {
             call {
                 withPayloadUse {
-                    sendPrompt(
-                        sessionId,
-                        messageId,
-                        prompt,
-                        (images as PaseoImages.Ok).images,
-                        existingOnly,
-                        beforeSend,
-                    )
+                    try {
+                        sendPrompt(
+                            sessionId,
+                            messageId,
+                            prompt,
+                            (images as PaseoImages.Ok).images,
+                            existingOnly,
+                        ) {
+                            (beforeSend?.invoke() ?: true).also { if (it) wired = true }
+                        }
+                    } catch (e: PaseoException) {
+                        if (!wired && e.kind == PaseoFailureKind.Unavailable) refusedBeforeWire = true
+                        throw e
+                    }
                 }
             }
+        }
+        // The delivery engine reads only a nothing-sent failure as "not sent, try again"; any other
+        // reads as "may have arrived" and leaves the person a bubble no one can confirm.
+        if (refusedBeforeWire && outcome is Outcome.Failed) {
+            return Outcome.Failed(
+                Failure.Unavailable(FeatureId("agentStart"), outcome.failure.details)
+            )
         }
         // A lost answer is Uncertain: look it up, never resend (plan 04 §11.1).
         val failure = (outcome as? Outcome.Failed)?.failure
@@ -1174,7 +1220,7 @@ public class PaseoGateway(
                     sessionId,
                     text,
                     messageId,
-                    model ?: draftModels[sessionId],
+                    model ?: draftModels[sessionId] ?: draftDefaultModel(sessionId),
                     prompt.agent,
                     variant ?: draftVariants[sessionId],
                     images,
@@ -1232,9 +1278,42 @@ public class PaseoGateway(
         } catch (e: PaseoException) {
             awaitingTurn.remove(sessionId)
             publishRecovery(sessionId)
+            if (sessionId !in drafts)
+                resumeFailed.note(
+                    sessionId,
+                    e.kind,
+                    live = sessionId in liveAgentSessions || agents[sessionId]?.let(::daemonHolds) == true,
+                )
+            publishContinuations()
             if (e.kind == PaseoFailureKind.DeliveryUnknown) uncertain += sessionId
             throw e
         }
+    }
+
+    /**
+     * PZ5: a new conversation nobody picked a model or runtime for starts where [chatDefaults] says
+     * it will, the snapshot's default runtime and model (Flutter's controller sends that model), not
+     * the hard-coded [DEFAULT_PROVIDER] a daemon may not run (Paseo 0.15.3 with only OpenCode
+     * enabled lists Claude as `unavailable`, so every such first message was refused before it left
+     * the phone). Where [DEFAULT_PROVIDER] itself is the default nothing changes: the daemon picks
+     * its model.
+     */
+    private suspend fun draftDefaultModel(id: String): ModelRef? {
+        if (draftProviders[id] != null) return null
+        // A computer that runs Claude (switched on, not `unavailable`) keeps starting there exactly
+        // as before, also while Claude is still loading or needs a sign-in: that reason is shown
+        // ("not sent"), never a silent start on another runtime picked from a half-ready snapshot.
+        val claude = providerSnapshot().firstOrNull { it.str("provider") == DEFAULT_PROVIDER }
+        if (
+            claude != null &&
+                claude["enabled"].boolOrNull() != false &&
+                claude.str("status") != "unavailable"
+        )
+            return null
+        val defaults = readProviders()
+        val provider = defaults.defaultProviderId ?: return null
+        if (provider == DEFAULT_PROVIDER) return null
+        return ModelRef(provider, defaults.defaultModelId ?: DEFAULT_MODEL)
     }
 
     /**
@@ -1861,6 +1940,38 @@ public class PaseoGateway(
             )
         }
 
+    /**
+     * The list's read of [hostAgentContinuation]: from the agent records already held, never a request. True when
+     * reopening [session] needs an explicit new conversation (the daemon no longer holds it and its runtime handle is
+     * missing or unproven), false when it reopens, null when this gateway holds no record for it (unknown: the row
+     * stays as it is). Read from the list's thread while the gateway's own lane writes the records, so a torn read
+     * answers null rather than a guess.
+     */
+    public fun reopenNeedsNewChat(session: SessionId): Boolean? = continuations.value.needsNewChat[session.raw]
+
+    /**
+     * What [reopenNeedsNewChat] answers: one immutable copy, replaced whole by the gateway's lane whenever the records
+     * it is built from change, so the list's thread reads a consistent picture and never the lane's maps.
+     */
+    internal data class ContinuationSnapshot(val needsNewChat: Map<String, Boolean> = emptyMap())
+
+    private val continuations = MutableStateFlow(ContinuationSnapshot())
+
+    /** Lane only. Rebuilt from the agent records, the live set and the failed-reopen memory; unchanged = not replaced. */
+    internal fun publishContinuations() {
+        val next =
+            try {
+                agents.mapValuesTo(LinkedHashMap()) { (id, agent) ->
+                    val live = id in liveAgentSessions || daemonHolds(agent)
+                    // A reopen that already failed here asks for a new conversation at once (Flutter `_paResumeFailed`).
+                    resumeFailed.failedBefore(id, live) || paseoHostAgentContinuation(id, agent, live).requiresNewChat
+                }
+            } catch (_: Exception) {
+                return
+            }
+        if (continuations.value.needsNewChat != next) continuations.value = ContinuationSnapshot(next)
+    }
+
     public suspend fun pendingHostPermissions():
         Outcome<ImmutableList<HostAgentPermissionRequest>> = call {
         requests.pendingHostPermissions()
@@ -1941,7 +2052,7 @@ public class PaseoGateway(
         val time = mapped.time
         val session =
             if (time == null) mapped else mapped.copy(time = time.copy(updatedMs = settled))
-        if (session.directory != directoryValue || agent["archivedAt"].stringOrNull() != null)
+        if (!holds(directoryValue, session.directory) || agent["archivedAt"].stringOrNull() != null)
             return null
         val id = session.id.raw
         agents[id] = agent
@@ -2009,6 +2120,8 @@ public class PaseoGateway(
         draftVariants.remove(id)
         draftFeatureValues.remove(id)
         liveAgentSessions.remove(id)
+        resumeFailed.forget(id)
+        publishContinuations()
         uncertain.remove(id)
         uncertainStarts.remove(id)
         awaitingTurn.remove(id)
@@ -2121,7 +2234,9 @@ public class PaseoGateway(
             return
         }
         val session = remember(agent) ?: return
-        emit(GatewayEvent.SessionUpserted(session))
+        // An older record of a conversation whose newer record is known adds no second row (PaseoListCopies.kt).
+        val row = pushedRecord(session) ?: return
+        emit(GatewayEvent.SessionUpserted(row))
     }
 
     private fun removed(id: String?) {
@@ -2155,6 +2270,7 @@ public class PaseoGateway(
 
     private fun onTransportLost() {
         liveAgentSessions.clear()
+        publishContinuations()
         providerEntries = null
         providerRevision++
         requests.disconnect()
@@ -2284,7 +2400,9 @@ public class PaseoGateway(
             retry?.cancel()
             retry = null
             agents.clear()
+            continuations.value = ContinuationSnapshot()
             sessions.clear()
+            listedCopies.clear()
             statuses.clear()
             cancelRecordBusyExpiry()
             drafts.clear()

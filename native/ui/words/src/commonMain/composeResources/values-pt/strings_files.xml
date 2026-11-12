@@ -24,4 +24,5 @@
     <string name="filesReasonNotShowable">Este tipo de arquivo não pode ser exibido aqui.</string>
     <string name="filesReasonNotShowableBody">Não é texto nem imagem. Abra-o no computador onde ele está.</string>
     <string name="filesReasonNotShowablePhoneBody">Não é texto nem imagem. Ele está neste celular, então outro app pode abri-lo: escolha Abrir com.</string>
+    <string name="filesShowingSaved">Mostrando o que foi salvo. Não é possível acessar o servidor agora.</string>
 </resources>

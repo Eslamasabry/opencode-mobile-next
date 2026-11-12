@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Agents page: what a phone agent install is doing, and why one did not finish (native/w4-install-fail, 2026-11-11). -->
+<resources>
+    <string name="agentsTileStepLinux">Preparing Linux…</string>
+    <string name="agentsTileStepRuntime">Installing Node.js…</string>
+    <string name="agentsTileStepHelper">Installing the agent helper…</string>
+    <string name="agentsTileStillWorking">Still working · %1$s</string>
+    <string name="agentsTileFailedSpace">Not installed: not enough space</string>
+    <string name="agentsTileFailedDownload">Not installed: the download failed</string>
+    <string name="agentsTileFailedStopped">Not installed: setup stopped</string>
+    <string name="agentsTileFailedOther">Not installed: setup failed</string>
+    <string name="agentsInstallNeedsSpace">%1$s needs about %2$s of free space to install, and this phone has %3$s free. Free up space, then install it.</string>
+    <string name="agentsInstallSpaceFits">Needs about %1$s of free space; this phone has %2$s free.</string>
+</resources>

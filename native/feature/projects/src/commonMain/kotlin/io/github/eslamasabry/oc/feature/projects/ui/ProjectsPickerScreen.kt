@@ -1,6 +1,7 @@
 package io.github.eslamasabry.oc.feature.projects.ui
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.LazyColumn
@@ -54,6 +55,7 @@ import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitInlineStateView
 import io.github.eslamasabry.oc.ui.kit.state.KitSkeletonRows
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
+import io.github.eslamasabry.oc.ui.kit.state.KitStateSize
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
 import io.github.eslamasabry.oc.ui.kit.state.KitTechnicalValue
 import io.github.eslamasabry.oc.ui.kitchat.LocalKitRedactor
@@ -79,6 +81,7 @@ import io.github.eslamasabry.oc.ui.words.res.p12PhoneFolder
 import io.github.eslamasabry.oc.ui.words.res.p12PhoneFolderUnavailable
 import io.github.eslamasabry.oc.ui.words.res.p12ProjectsLoadFailed
 import io.github.eslamasabry.oc.ui.words.res.p12ProjectsOnServer
+import io.github.eslamasabry.oc.ui.words.res.p12ProjectsOnThisPhone
 import io.github.eslamasabry.oc.ui.words.res.p12ProjectsTitle
 import io.github.eslamasabry.oc.ui.words.res.projectFolderCreateFailedTitle
 import io.github.eslamasabry.oc.ui.words.res.projectFolderCreateHelper
@@ -156,6 +159,10 @@ public fun ProjectsPickerScreen(state: ProjectsPickerUi, actions: ProjectsPicker
                                 }
                             }
                         }
+                    }
+                    if (state.oneFolder) {
+                        item(key = "one-folder") { OneFolder(state) }
+                        return@LazyColumn
                     }
                     item(key = "start") { StartRows(state, actions) }
                     if (state.canFindPhoneProjects)
@@ -295,6 +302,29 @@ private fun PathDialog(state: ProjectsPickerUi, actions: ProjectsPickerActions) 
     }
 }
 
+/** A server that works in one folder (Codex, Paseo): says so and shows the folder it uses; no project choice. */
+@Composable
+private fun OneFolder(state: ProjectsPickerUi) {
+    val folder = state.configuredFolder
+    Column(verticalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
+        KitStateView(
+            kind = KitStateKind.Calm,
+            title = stringResource(Res.string.projectsOneFolderTitle),
+            body = stringResource(Res.string.e7ProjectProjectSwitchUnavailableDetail),
+            icon = KitIcons.folderOpen,
+            size = KitStateSize.Inline,
+        )
+        KitRowGroup {
+            KitRow(
+                title = stringResource(Res.string.projectConfiguredFolder),
+                leading = KitRowLeading.Glyph(KitIcons.files),
+                supporting = folder ?: stringResource(Res.string.e7ProjectProjectDefaultDirectory),
+                supportingMaxLines = 3,
+            )
+        }
+    }
+}
+
 @Composable
 private fun StartRows(state: ProjectsPickerUi, actions: ProjectsPickerActions) {
     KitRowGroup {
@@ -333,7 +363,11 @@ private fun StartRows(state: ProjectsPickerUi, actions: ProjectsPickerActions) {
 
 @Composable
 private fun ServerProjects(state: ProjectsPickerUi, actions: ProjectsPickerActions) {
-    KitRowGroup(label = stringResource(Res.string.p12ProjectsOnServer, state.serverName)) {
+    KitRowGroup(
+        label =
+            if (state.canBrowsePhone) stringResource(Res.string.p12ProjectsOnThisPhone)
+            else stringResource(Res.string.p12ProjectsOnServer, state.serverName)
+    ) {
         val failure = state.projectsFailure
         // Cache-first: a failure never swaps the rows out; it is a notice above the kept ones.
         if (failure != null)
@@ -353,6 +387,7 @@ private fun ServerProjects(state: ProjectsPickerUi, actions: ProjectsPickerActio
                     kind = KitStateKind.Empty,
                     title = stringResource(Res.string.e7ProjectProjectsEmpty),
                     body = stringResource(Res.string.e7ProjectProjectsEmptyDetail),
+                    size = KitStateSize.Inline,
                 )
         }
     }
@@ -386,6 +421,8 @@ private fun ProjectRow(
         )
         if (project.running > 0)
             add(stringResource(Res.string.chatsFilterRunningCount, project.running))
+        if (project.worktrees > 0)
+            add(pluralStringResource(Res.plurals.e7ProjectProjectWorktrees, project.worktrees, project.worktrees))
         project.kind?.let { kind ->
             add(
                 stringResource(

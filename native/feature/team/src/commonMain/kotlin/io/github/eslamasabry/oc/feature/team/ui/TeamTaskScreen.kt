@@ -645,6 +645,11 @@ private fun Controls(t: TaskView, actions: TeamTaskActions, enabled: KitEnabled)
                 icon = KitIcons.checks,
             ).takeIf { c.verify },
             KitAction(
+                stringResource(Res.string.failedJobReport),
+                actions::reportFailure,
+                icon = KitIcons.bug,
+            ).takeIf { c.report },
+            KitAction(
                 stringResource(Res.string.teamProjectTaskStop),
                 { actions.ask(TaskConfirm.Stop) },
                 enabled,

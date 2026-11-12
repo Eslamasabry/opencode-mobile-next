@@ -94,6 +94,12 @@ public data class SurfaceDecoration(
     val specular: Argb = Argb(0),
     /** The specular's glint line, as a share of [specular] (the glass look's [GlassLook.glintShare]). */
     val glint: Float = GLINT_SHARE,
+    /**
+     * The rim's colour between its two lit ends, halfway along its fade from [edgeStart] at the top start to [edgeEnd]
+     * at the bottom end (Glass's clear panes, docs/designs/glass-in-the-kit.md 1a: one light, two lit arcs). Null: the
+     * rim fades straight from [edgeStart] to [edgeEnd].
+     */
+    val edgeRest: Argb? = null,
 ) {
     public companion object {
         /** The most the [sheen] reaches down a face, in dp: a tall pane keeps its gloss at its top, not over its rows. */

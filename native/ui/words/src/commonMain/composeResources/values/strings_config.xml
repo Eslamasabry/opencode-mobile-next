@@ -1,6 +1,10 @@
 <resources>
     <string name="configInspectionTitle">Server configuration</string>
-    <string name="configInspectionExplanation">Read the server’s configuration sources in priority order. Keys, tokens, environment values, headers, commands and prompts are hidden. This page changes nothing.</string>
+    <string name="configInspectionExplanation">Which configuration files this server reads, the most important first. Keys, passwords and other secrets are hidden. This page changes nothing.</string>
     <string name="configInspectionUnavailable">The server’s configuration could not be loaded. Reconnect and try again.</string>
     <string name="configInspectionRefresh">Refresh configuration</string>
+    <string name="configFilesLabel">Configuration files</string>
+    <string name="configFoldersLabel">Folders the server looks in</string>
+    <string name="configNoFileTitle">No configuration file yet</string>
+    <string name="configNoFileBody">This server runs on its built-in settings. A configuration file in one of the folders below would change them. This page only reads it.</string>
 </resources>

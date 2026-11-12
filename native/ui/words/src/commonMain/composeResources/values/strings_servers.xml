@@ -241,6 +241,8 @@
     <string name="workServerNotAnswering">%1$s isn't answering</string>
     <string name="workServerKeepsTrying">The app keeps trying in the background.</string>
     <string name="connectionRestartAgent">Restart Claude Code</string>
+    <string name="connectionAgentStarting">Starting Claude Code…</string>
+    <string name="connectionAgentStartFailed">Claude Code didn't start. Tap Restart Claude Code to try once more.</string>
     <string name="connectionRestartPhoneServer">Restart OpenCode</string>
     <string name="connectStartingBody">Your conversations are kept. This can take a minute.</string>
     <string name="managedRecoveryRowDetail">Up to 3 tries, only while this app is open. It never installs or updates.</string>
@@ -265,7 +267,7 @@
     </plurals>
     <string name="serversRemoveDrafts__eq1">1 unsent draft will be deleted</string>
     <string name="serversRemoveActiveNext">You are connected to it: the app disconnects and shows your servers</string>
-    <string name="serversRemoveServerKeeps">Nothing is deleted on the server or at your AI providers</string>
+    <string name="serversRemoveServerKeeps">Nothing is deleted on the server or at your AI providers.</string>
     <string name="pairingScannerAllowCamera">Allow camera</string>
     <string name="pairingScannerStarting">Opening the camera…</string>
     <string name="profileMonitorSwitchBody">A run is going on %1$s. Switching shows %2$s in this app; the run on %1$s keeps going.</string>

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="notify_dock_channel">Активные чаты</string>
+    <string name="notify_dock_channel_description">Одна тихая строка со списком ваших активных чатов, пока что-то выполняется или ждёт вас. На экране блокировки названия скрыты.</string>
+    <string name="notify_dock_untitled">Чат без названия</string>
+    <string name="notify_dock_helper_generic">субагент</string>
+    <string name="notify_dock_name_needs_you">%1$s ждёт вас</string>
+    <string name="notify_dock_waiting_answer">Ждёт вашего ответа</string>
+    <plurals name="notify_dock_others_working">
+        <item quantity="one">Ещё %1$s работает</item>
+        <item quantity="few">Ещё %1$s работают</item>
+        <item quantity="many">Ещё %1$s работают</item>
+        <item quantity="other">Ещё %1$s работают</item>
+    </plurals>
+    <string name="notify_dock_helper_asking">Его субагент %1$s задаёт вопрос</string>
+    <string name="notify_dock_working_on">Работает: %1$s</string>
+    <string name="notify_dock_state_working">Работает</string>
+    <string name="notify_dock_state_thinking">Думает</string>
+    <string name="notify_dock_state_needs_you">Ждёт вас</string>
+    <string name="notify_dock_state_done">Готово, ещё не открыто</string>
+    <string name="notify_dock_state_failed">Остановлено, не закончив</string>
+    <plurals name="notify_dock_helpers">
+        <item quantity="one">%1$s субагент</item>
+        <item quantity="few">%1$s субагента</item>
+        <item quantity="many">%1$s субагентов</item>
+        <item quantity="other">%1$s субагента</item>
+    </plurals>
+    <string name="notify_status_action_open_named">Открыть: %1$s</string>
+    <string name="notify_status_action_stop_named">Остановить: %1$s</string>
+</resources>

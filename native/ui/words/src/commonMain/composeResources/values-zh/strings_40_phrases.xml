@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="phraseSuggestionsInsert">插入：%1$s</string>
+    <string name="phraseSuggestionsOptions">%1$s 的选项</string>
+    <string name="phraseSuggestionsChangeFailed">无法隐藏这条短语。请再试一次它的菜单。</string>
+</resources>

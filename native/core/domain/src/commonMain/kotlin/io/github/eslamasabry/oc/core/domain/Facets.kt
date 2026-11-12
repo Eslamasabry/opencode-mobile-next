@@ -15,6 +15,7 @@ import io.github.eslamasabry.oc.core.model.Session
 import io.github.eslamasabry.oc.core.model.SessionRetryState
 import io.github.eslamasabry.oc.core.model.SessionRevert
 import io.github.eslamasabry.oc.core.model.SessionSelection
+import io.github.eslamasabry.oc.core.model.VersionControlHealth
 import io.github.eslamasabry.oc.core.model.WebSearchProvider
 import io.github.eslamasabry.oc.core.model.WebSearchResponse
 import kotlinx.collections.immutable.ImmutableList
@@ -179,6 +180,13 @@ public interface LocatedFileGateway {
  */
 public interface LocatedVcsGateway {
     public suspend fun workingTreeAt(location: ServerLocation): Outcome<ImmutableList<FileDiff>>
+
+    /**
+     * The version-control answer for one folder (OC2 `GET /vcs` with its location), so a screen about a conversation
+     * reads the conversation's folder and not whichever folder the connection is on now.
+     */
+    public suspend fun versionControlHealthAt(location: ServerLocation): Outcome<VersionControlHealth> =
+        unavailable("projectManagement")
 }
 
 /** One answer from an optional `/api` route: the HTTP [status] and the body text (null when the body was empty). */

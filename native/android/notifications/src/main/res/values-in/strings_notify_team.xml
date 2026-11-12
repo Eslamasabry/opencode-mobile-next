@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="notify_team_decision_title">AI Team membutuhkan keputusan</string>
+    <string name="notify_team_decision_body">Sebuah tugas menunggu jawaban Anda. Buka AI Team untuk membalas.</string>
+    <string name="notify_team_review_title">Hasil kerja AI Team siap ditinjau</string>
+    <string name="notify_team_review_body">Sebuah tugas selesai dan menunggu tinjauan Anda.</string>
+    <string name="notify_team_failed_title">Sebuah tugas AI Team gagal</string>
+    <string name="notify_team_failed_body">Buka AI Team untuk melihat apa yang terjadi dan memulainya lagi.</string>
+    <string name="notify_team_completed_title">AI Team menyelesaikan proyek</string>
+    <string name="notify_team_completed_body">Semua tugas proyek sudah selesai.</string>
+</resources>

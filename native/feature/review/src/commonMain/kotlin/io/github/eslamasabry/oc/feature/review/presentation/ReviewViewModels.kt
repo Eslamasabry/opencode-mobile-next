@@ -14,6 +14,7 @@ import io.github.eslamasabry.oc.feature.review.ReviewAgent
 import io.github.eslamasabry.oc.feature.review.ReviewDrafts
 import io.github.eslamasabry.oc.feature.review.ReviewHub
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
+import io.github.eslamasabry.oc.ui.routes.GitRoute
 import io.github.eslamasabry.oc.ui.routes.ReviewRoute
 import kotlinx.coroutines.flow.StateFlow
 
@@ -29,6 +30,8 @@ private class RouteNavigation(private val nav: AppNavigator, private val ref: Co
     override fun openBranchFile(path: String): Unit = nav.open(ReviewRoute.File(ref, path, BRANCH_FILE))
 
     override fun openStaged(): Unit = nav.open(ReviewRoute.Staged(ref))
+
+    override fun openGit(): Unit = nav.open(GitRoute(ref))
 }
 
 /** The [ReviewRoute.File.messageId] that names the whole branch's diff (never a server message id: they have no NUL). */
@@ -55,6 +58,7 @@ public class ChangesViewModel(
                 ReviewAgentPorts(notes.comments, agent.sender(route.ref), agent.guideAsk(route.ref), notes.guides),
                 hub.branch(route.ref),
                 kept.firstOrNull()?.let { ReviewShelf(it, route.ref) },
+                hub.conversationSetup(route.ref),
             )
         }
     public val state: StateFlow<ChangesUi> = presenter.state
@@ -74,6 +78,8 @@ public class ChangesViewModel(
     override fun dismissConfirm(): Unit = presenter.dismissConfirm()
 
     override fun openStaged(): Unit = presenter.openStaged()
+
+    override fun openGit(): Unit = presenter.openGit()
 
     override fun chooseWorkingTree(on: Boolean): Unit = presenter.chooseWorkingTree(on)
 
@@ -102,6 +108,7 @@ public class FileDiffViewModel(
     hub: ReviewHub,
     private val nav: AppNavigator,
     agent: ReviewAgent,
+    drafts: ReviewDrafts,
     kept: Set<ReviewLastKnown> = emptySet(),
 ) : ViewModel(), FileDiffActions {
     private val presenter =
@@ -119,6 +126,7 @@ public class FileDiffViewModel(
             ReviewAgentPorts(hub.notes(route.ref).comments, agent.sender(route.ref)),
             hub.branch(route.ref),
             kept.firstOrNull()?.let { ReviewShelf(it, route.ref) },
+            drafts.addFile(route.ref).takeUnless { route.staged },
         )
     public val state: StateFlow<FileDiffUi> = presenter.state
 
@@ -133,6 +141,8 @@ public class FileDiffViewModel(
     override fun removeComment(id: String): Unit = presenter.removeComment(id)
 
     override fun sendComments(): Unit = presenter.sendComments()
+
+    override fun addToPrompt(): Unit = presenter.addToPrompt()
 
     @AssistedFactory
     @ManualViewModelAssistedFactoryKey
@@ -200,5 +210,76 @@ public class StagedViewModel(
     @ContributesIntoMap(AppScope::class)
     public fun interface Factory : ManualViewModelAssistedFactory {
         public fun create(@Assisted route: ReviewRoute.Staged): StagedViewModel
+    }
+}
+
+/** Maps a project review's destinations to routes: only its working-tree files open. */
+private class ProjectNavigation(private val nav: AppNavigator, private val route: ReviewRoute.Project) : ReviewNavigation {
+    override fun back(): Unit = nav.back()
+
+    override fun openFile(path: String, staged: Boolean): Unit = openWorkingTreeFile(path)
+
+    override fun openWorkingTreeFile(path: String): Unit = nav.open(ReviewRoute.ProjectFile(route.profile, route.directory, path))
+
+    override fun openStaged(): Unit = Unit
+}
+
+/** "Changes" of a whole project opened from Files, with no conversation. */
+@AssistedInject
+public class ProjectChangesViewModel(
+    @Assisted route: ReviewRoute.Project,
+    hub: ReviewHub,
+    nav: AppNavigator,
+) : ViewModel(), ChangesActions {
+    private val presenter = ProjectChangesPresenter(hub.projectTree(route.profile, route.directory), ProjectNavigation(nav, route), viewModelScope, hub.projectSetup(route.profile, route.directory))
+    public val state: StateFlow<ChangesUi> = presenter.state
+
+    override fun back(): Unit = presenter.back()
+
+    override fun retry(): Unit = presenter.retry()
+
+    override fun openFile(path: String): Unit = presenter.openFile(path)
+
+    override fun keepAll(): Unit = presenter.keepAll()
+
+    override fun undoAll(): Unit = presenter.undoAll()
+
+    override fun confirmUndoAll(): Unit = presenter.confirmUndoAll()
+
+    override fun dismissConfirm(): Unit = presenter.dismissConfirm()
+
+    override fun openStaged(): Unit = presenter.openStaged()
+
+    override fun sendBack(): Unit = presenter.sendBack()
+
+    override fun sendBackNote(note: String?): Unit = presenter.sendBackNote(note)
+
+    @AssistedFactory
+    @ManualViewModelAssistedFactoryKey
+    @ContributesIntoMap(AppScope::class)
+    public fun interface Factory : ManualViewModelAssistedFactory {
+        public fun create(@Assisted route: ReviewRoute.Project): ProjectChangesViewModel
+    }
+}
+
+/** One file of a project's uncommitted changes. */
+@AssistedInject
+public class ProjectFileDiffViewModel(
+    @Assisted route: ReviewRoute.ProjectFile,
+    hub: ReviewHub,
+    private val nav: AppNavigator,
+) : ViewModel(), FileDiffActions {
+    private val presenter = ProjectFileDiffPresenter(hub.projectTree(route.profile, route.directory), route.path, viewModelScope)
+    public val state: StateFlow<FileDiffUi> = presenter.state
+
+    override fun back(): Unit = nav.back()
+
+    override fun retry(): Unit = presenter.retry()
+
+    @AssistedFactory
+    @ManualViewModelAssistedFactoryKey
+    @ContributesIntoMap(AppScope::class)
+    public fun interface Factory : ManualViewModelAssistedFactory {
+        public fun create(@Assisted route: ReviewRoute.ProjectFile): ProjectFileDiffViewModel
     }
 }

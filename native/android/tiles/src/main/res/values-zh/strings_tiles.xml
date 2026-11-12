@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="shortcut_connect_short">连接</string>
+    <string name="shortcut_connect_long">选择要连接的服务器</string>
+    <string name="shortcut_new_task_short">新对话</string>
+    <string name="shortcut_new_task_long">在当前服务器上开始新对话</string>
+    <string name="shortcut_session_untitled">未命名对话</string>
+    <string name="shortcut_session_unavailable">此对话已不可用</string>
+    <string name="tile_label">OpenCode</string>
+    <string name="tile_label_with_count">OpenCode · %1$s</string>
+    <string name="tile_all_clear">没有需要你处理的事</string>
+    <plurals name="tile_need_you">
+        <item quantity="other">%1$d 项需要你处理</item>
+    </plurals>
+    <string name="pause_tile_label">后台模式</string>
+    <string name="pause_tile_label_with_state">后台模式 · %1$s</string>
+    <string name="pause_tile_on">开</string>
+    <string name="pause_tile_paused">已暂停</string>
+    <string name="pause_tile_off">已在设置中关闭</string>
+</resources>

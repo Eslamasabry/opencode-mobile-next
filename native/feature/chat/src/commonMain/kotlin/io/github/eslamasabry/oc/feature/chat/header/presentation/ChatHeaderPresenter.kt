@@ -92,8 +92,13 @@ public class ChatHeaderPresenter(
         io.github.eslamasabry.oc.feature.chat.header.world.ChatAgentHandoff? =
         null,
     private val export: io.github.eslamasabry.oc.feature.chat.header.world.TranscriptExport? = null,
+    /** K1: the address switch on Open on another phone; null (the default) shows the local link alone. */
+    private val phoneAddress: PhoneAddressOffer? = null,
 ) : ChatHeaderActions, ChatAgentHandoffActions {
     private val local = MutableStateFlow(HeaderLocal())
+
+    /** The parent conversations' titles as read, once per parent (a sub-agent's chat names where it came from). */
+    private val parentTitles = MutableStateFlow<Map<ConversationRef, String?>>(emptyMap())
     private var nextId = 1L
     private var handoff: io.github.eslamasabry.oc.engine.agents.handoff.HandoffEngine? = null
     private val handoffGeneration = MutableStateFlow(0L)
@@ -106,13 +111,17 @@ public class ChatHeaderPresenter(
 
     public fun current(): ChatHeaderUi =
         present(
-            world.title.value,
-            world.capabilities.value,
-            port.facts.value,
-            world.transcript.value,
-            world.models.value,
-            local.value,
-        )
+                world.title.value,
+                world.capabilities.value,
+                port.facts.value,
+                world.transcript.value,
+                world.models.value,
+                local.value,
+            )
+            .withParent(world.parent.value, parentTitles.value)
+
+    private fun ChatHeaderUi.withParent(parent: ConversationRef?, titles: Map<ConversationRef, String?>): ChatHeaderUi =
+        if (parent == null) this else copy(parent = parent, parentTitle = titles[parent])
 
     public fun states(scope: CoroutineScope, started: SharingStarted): StateFlow<ChatHeaderUi> {
         val serverSide =
@@ -124,11 +133,27 @@ public class ChatHeaderPresenter(
                 m ->
                 ServerSide(t, c, f, tr, m)
             }
-        return combine(serverSide, local, world.readOnly) { s, l, _ ->
-                present(s.title, s.caps, s.facts, s.transcript, s.models, l)
+        return combine(serverSide, local, world.readOnly, world.parent, parentTitles) { s, l, _, parent, titles ->
+                present(s.title, s.caps, s.facts, s.transcript, s.models, l).withParent(parent, titles)
             }
             .stateIn(scope, started, current())
-            .also { launcher.launch { loadFreeFacts() } }
+            .also {
+                launcher.launch { loadFreeFacts() }
+                launcher.launch { readParentTitles() }
+            }
+    }
+
+    /** Reads each parent's title once, when this conversation turns out to be a sub-agent's. */
+    private suspend fun readParentTitles() {
+        world.parent.collect { parent ->
+            if (parent == null || parent in parentTitles.value) return@collect
+            val title = world.conversationTitle(parent)
+            parentTitles.update { it + (parent to title) }
+        }
+    }
+
+    override fun openParent() {
+        world.parent.value?.let { nav.backToChat(it) }
     }
 
     private suspend fun loadFreeFacts() {
@@ -189,6 +214,12 @@ public class ChatHeaderPresenter(
                             facts.contextTokens ?: reading?.tokens,
                             facts.contextLimit ?: reading?.limit,
                         )
+                    val loadedCost =
+                        feed
+                            ?.ledger
+                            ?.messages
+                            ?.filter { it.info.role == Role.Assistant }
+                            ?.sumOf { it.info.cost }
                     val replyTokens =
                         feed
                             ?.ledger
@@ -205,6 +236,7 @@ public class ChatHeaderPresenter(
                             contextPercent = percent,
                             contextLevel = HeaderRules.contextLevel(percent),
                             totalTokens = (facts.totalTokens ?: replyTokens)?.takeIf { it > 0 },
+                            cost = SessionCost.of(facts.totalCost, loadedCost),
                         )
                     )
                 }
@@ -231,12 +263,13 @@ public class ChatHeaderPresenter(
                         l.handoffState,
                     )
                 SheetKind.ContinueOnComputer -> HeaderSheet.ContinueOnComputer(resumeCommand(facts))
-                SheetKind.ContinueOnPhone -> HeaderSheet.ContinueOnPhone(phoneLink())
+                SheetKind.ContinueOnPhone -> HeaderSheet.ContinueOnPhone(phoneLink(), phoneAddress)
                 SheetKind.ImportConversation ->
                     l.importState?.let { HeaderSheet.ImportConversation(it) }
             }
         return ChatHeaderUi(
             branch = facts.branch,
+            git = facts.git,
             title = title,
             serverName = facts.serverName,
             projectName = project,
@@ -265,6 +298,8 @@ public class ChatHeaderPresenter(
             failure = l.failure,
             clip = l.clip,
             saved = l.saved,
+            serverCost = facts.totalCost,
+            serverTokens = facts.totalTokens,
             renaming = l.renaming,
             agentName =
                 if (caps.hostAgentProviders)
@@ -422,6 +457,11 @@ public class ChatHeaderPresenter(
 
     override fun copyPhoneLink() {
         val text = phoneLink() ?: return
+        local.update { it.copy(clip = HeaderClip(nextId++, text, ClipKind.PhoneLink)) }
+    }
+
+    override fun copyPhoneAddressLink() {
+        val text = (phoneAddress?.build?.invoke() as? PhoneAddressResult.Link)?.link ?: return
         local.update { it.copy(clip = HeaderClip(nextId++, text, ClipKind.PhoneLink)) }
     }
 

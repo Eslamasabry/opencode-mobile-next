@@ -130,6 +130,7 @@ public class TurnFactsPresenter(private val clock: Clock) {
         null
     private var readingBusy = false
     private var readingOutcome: RunOutcome? = null
+    private var readingIdleSaid = false
     private var reading = TranscriptReadingUi()
     private var sessionKey = "turn"
     private var lastLink: ChatLink? = null
@@ -177,17 +178,23 @@ public class TurnFactsPresenter(private val clock: Clock) {
      */
     public fun present(feed: TurnFeed, nowMs: Long, waitingForYou: Boolean = false): TurnFactsUi {
         val snapshot = feed.ledger
+        // W4: a run the person's refusal ended is not a stop, nor a server restart (OC2 reports it as "shutdown").
+        val outcome = StoppedSteps.outcomeBesidesRefusal(feed.lastOutcome, snapshot.turns.lastOrNull(), feed.busy)
+        // B8: a reply waiting on the person (a request card) is never cut off, whatever the status said.
+        val idleSaid = feed.idleSaid && !waitingForYou
         if (
             readingSnapshot !== snapshot ||
                 readingBusy != feed.busy ||
-                readingOutcome != feed.lastOutcome
+                readingOutcome != outcome ||
+                readingIdleSaid != idleSaid
         ) {
-            reading = transcriptReading(snapshot, feed.busy, feed.lastOutcome)
+            reading = transcriptReading(snapshot, feed.busy, outcome, idleSaid)
             readingSnapshot = snapshot
             readingBusy = feed.busy
-            readingOutcome = feed.lastOutcome
+            readingOutcome = outcome
+            readingIdleSaid = idleSaid
         }
-        val stopped = feed.lastOutcome is RunOutcome.Interrupted
+        val stopped = outcome is RunOutcome.Interrupted
         // P-102: a step the stop ended reads Stopped, not Failed, live and after a relaunch.
         val work =
             turnWork(snapshot, feed.busy, stopped = stopped, waitingForYou = waitingForYou)
@@ -306,7 +313,8 @@ internal fun sameApartFromProgress(a: TurnFeed, b: TurnFeed): Boolean =
         a.lastOutcome == b.lastOutcome &&
         a.link == b.link &&
         a.windows == b.windows &&
-        a.timings == b.timings
+        a.timings == b.timings &&
+        a.idleSaid == b.idleSaid
 
 /** Whether the work line of [work] opens by itself (Dart `KitWorkLine.opensByDefault`). */
 internal fun TurnWork.opensByDefault(): Boolean = state == WorkLineState.EndedFailed

@@ -76,7 +76,9 @@ object CapabilityFlowsWiring {
                                         when {
                                             graph?.session?.capabilities?.value?.serverCatalog ==
                                                 true && profile != null ->
-                                                nav.open(ProvidersRoute(profile))
+                                                nav.open(
+                                                    LibraryRoute(tab = "providers", profileId = profile)
+                                                )
                                             graph?.session?.capabilities?.value?.agentAccount ==
                                                 true && profile != null ->
                                                 nav.open(CapabilityAgentAccountRoute(profile))
@@ -136,7 +138,9 @@ object CapabilityFlowsWiring {
                                         )
                                     CapabilityEnableFlow.QuotaCollectorGuide -> nav.open(PlansRoute)
                                     // Flutter's teamTurnOn opens the team page (it says what to do when off).
-                                    CapabilityEnableFlow.TeamTurnOn ->
+                                    // The team page says what to do when off and offers the host guide (the team now exists).
+                                    CapabilityEnableFlow.TeamTurnOn,
+                                    CapabilityEnableFlow.TeamHostGuide ->
                                         if (profile != null) nav.open(TeamRoute.Home(profile))
                                         else
                                             nav.open(
@@ -144,7 +148,6 @@ object CapabilityFlowsWiring {
                                                     CapabilityServerDoor.AddServer
                                                 )
                                             )
-                                    CapabilityEnableFlow.TeamHostGuide,
                                     CapabilityEnableFlow.AddExternalAgent ->
                                         return@withContext Outcome.Failed(
                                             Failure.Unavailable(
@@ -163,7 +166,6 @@ object CapabilityFlowsWiring {
 
     private val unavailable =
         mapOf(
-            CapabilityEnableFlow.TeamHostGuide to CapabilityFlowLimit.TeamAfterSwitch,
             CapabilityEnableFlow.AddExternalAgent to CapabilityFlowLimit.ExternalAgentsDropped,
         )
 }

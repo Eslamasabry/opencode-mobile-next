@@ -55,6 +55,7 @@ import io.github.eslamasabry.oc.ui.kit.row.KitSectionLabel
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitSkeletonRows
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
+import io.github.eslamasabry.oc.ui.kit.state.KitStateSize
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.*
@@ -131,7 +132,6 @@ public fun NeedsYouScreen(state: NeedsYouUi, actions: NeedsYouActions) {
                 onDismissRequest = { more = null },
                 title = claim,
                 subtitle = classWords(open.reviewClass),
-                closeLabel = stringResource(Res.string.fbDismiss),
             ) {
                 KitRowGroup {
                     if (open.text != null) {
@@ -176,7 +176,6 @@ public fun NeedsYouScreen(state: NeedsYouUi, actions: NeedsYouActions) {
                 onDismissRequest = { moreProposal = null },
                 title = claim,
                 subtitle = classWords("reminder"),
-                closeLabel = stringResource(Res.string.fbDismiss),
             ) {
                 KitRowGroup {
                     if (state.canChangeProposals && proposal.preview.schedule != null) {
@@ -289,6 +288,7 @@ private fun Body(
                     stringResource(Res.string.fbNeedsYouNone),
                     body = stringResource(Res.string.fbNeedsYouNoneBody),
                     icon = KitIcons.checkCircle,
+                    size = KitStateSize.Inline,
                 )
             }
         }

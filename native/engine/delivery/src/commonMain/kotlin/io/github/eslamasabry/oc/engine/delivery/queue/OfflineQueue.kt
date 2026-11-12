@@ -316,6 +316,88 @@ public class OfflineQueue(
             }
         }
 
+    /** Why [prompt] cannot move to another server right now, or null (the move page shows this before the try). */
+    public fun moveBlock(prompt: QueuedPrompt, redactor: io.github.eslamasabry.oc.core.security.Redactor): QueueMoveBlock? =
+        QueueServerMove.blockFor(prompt, redactor, sending = sending(prompt.id) || acceptedUnrecorded(prompt.id))
+
+    /**
+     * Moves the picked waiting prompts of [source] into [destination] (a conversation of another server) in ONE
+     * queue write (Flutter `moveQueuedPrompts`): only prompts that [moveBlock] allows move, the rest of the pick is
+     * counted in [QueueMoveResult.skipped]; moved prompts keep their place in the queue, text, attachments and
+     * mentions; the text is stored redacted; the model, agent and variant are dropped together when the destination
+     * does not offer them. Nothing is sent here. `Ok(null)` = nothing could move; a refused write changes nothing.
+     * [models] / [agents] null = the destination's list is unknown, nothing dropped.
+     */
+    public suspend fun moveMany(
+        source: ProfileId,
+        ids: Set<String>,
+        destination: ConversationRef,
+        newConversation: Boolean,
+        models: Set<io.github.eslamasabry.oc.core.model.ModelRef>?,
+        agents: Set<String>?,
+        redactor: io.github.eslamasabry.oc.core.security.Redactor,
+    ): Outcome<QueueMoveResult?> =
+        withContext(lane) {
+            changes.withLock {
+                if (source in closedProfiles || destination.profileId in closedProfiles)
+                    return@withLock Failure.Refused(RefusalReason.ProfileClosing).failed()
+                if (source == destination.profileId) return@withLock null.ok()
+                val current = queue()
+                val moved = LinkedHashMap<String, QueuedPrompt>()
+                var reset = 0
+                for (entry in current) {
+                    if (entry.profileId != source || entry.id !in ids) continue
+                    if (moveBlock(entry, redactor) != null) continue
+                    val relocated = QueueServerMove.relocate(entry, destination, models, agents, redactor.redact(entry.text))
+                    when (val used = commandIdUsed(entry)) {
+                        is Outcome.Failed -> return@withLock used
+                        is Outcome.Ok -> if (used.value) continue
+                    }
+                    when (val used = commandIdUsed(relocated.first)) {
+                        is Outcome.Failed -> return@withLock used
+                        is Outcome.Ok -> if (used.value) continue
+                    }
+                    moved[entry.id] = relocated.first
+                    if (relocated.second) reset++
+                }
+                if (moved.isEmpty()) return@withLock null.ok()
+                val originals = current.filter { it.profileId == source && it.id in moved }
+                val next = current.map { if (it.profileId == source) moved[it.id] ?: it else it }
+                if (!store.save(next)) return@withLock Failure.StorageRefused().failed()
+                cache = next
+                cacheStamp = store.loadedStamp
+                explicitResends -= moved.keys
+                publish()
+                QueueMoveResult(
+                    source = source,
+                    destination = destination.profileId,
+                    session = destination.sessionId,
+                    originals = originals,
+                    skipped = ids.size - moved.size,
+                    selectionsReset = reset,
+                    newConversation = newConversation,
+                ).ok()
+            }
+        }
+
+    /**
+     * Undo for [moveMany]: puts back every moved prompt that is still waiting, unsent, in the destination
+     * conversation, exactly as it was queued for the source. Returns how many returned; a refused write changes
+     * nothing.
+     */
+    public suspend fun undoMove(result: QueueMoveResult): Outcome<Int> =
+        withContext(lane) {
+            changes.withLock {
+                val (next, restored) = QueueServerMove.undo(queue(), result) { sending(it) || it in acceptedUnrecorded }
+                if (restored == 0) return@withLock 0.ok()
+                if (!store.save(next)) return@withLock Failure.StorageRefused().failed()
+                cache = next
+                cacheStamp = store.loadedStamp
+                publish()
+                restored.ok()
+            }
+        }
+
     /** A second live connection can observe a move without rebuilding its owner. */
     public suspend fun reloadFromStorage(): Unit =
         withContext(lane) {

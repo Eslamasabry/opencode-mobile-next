@@ -76,7 +76,8 @@ class KitLiquidResolutionTest {
     fun `B-KIT-018 a frosted liquid pane draws its backdrop at the platform's reduced resolution, chips and the + at full`() {
         val seen = resolutions(FakeKitPlatform(liquidGlass = true, liquidResolution = .5f))
         assertTrue(LiquidRole.Composer in seen && LiquidRole.Action in seen && LiquidRole.Pill in seen, "panes drawn: ${seen.keys}")
-        assertEquals(setOf(.5f), seen.getValue(LiquidRole.Composer), "the message box")
+        // The blur cut (owner 2026-11-11): the message box's 2 dp frost no longer hides a half-resolution backdrop.
+        assertEquals(setOf(1f), seen.getValue(LiquidRole.Composer), "the message box")
         assertEquals(setOf(1f), seen.getValue(LiquidRole.Action), "the +")
         assertEquals(setOf(1f), seen.getValue(LiquidRole.Pill), "the jump pill")
     }
@@ -89,13 +90,16 @@ class KitLiquidResolutionTest {
     }
 
     @Test
-    fun `B-KIT-018 the bars, the message box, sheets and menus are the panes frosted enough for the reduced resolution`() {
+    fun `B-KIT-018 sheets and menus are the panes frosted enough for the reduced resolution`() {
+        // After the blur cut (owner 2026-11-11: bars 3 dp, the message box 2, menus now 12 in both themes) only panes
+        // frosted at least LIQUID_REDUCED_MIN_BLUR_DP keep the reduced resolution.
         for (dark in listOf(false, true)) {
             for (role in LiquidRole.entries) {
                 val expected =
                     when (role) {
-                        LiquidRole.Bar, LiquidRole.Composer, LiquidRole.Sheet, LiquidRole.Menu -> .5f
-                        LiquidRole.Pill, LiquidRole.Status, LiquidRole.Action -> 1f
+                        LiquidRole.Sheet -> .5f
+                        LiquidRole.Menu -> .5f
+                        LiquidRole.Bar, LiquidRole.Dock, LiquidRole.Composer, LiquidRole.Pill, LiquidRole.Status, LiquidRole.Action -> 1f
                     }
                 assertEquals(expected, liquidResolutionOf(LiquidEdge.recipe(role, dark), .5f), "$role dark=$dark")
                 assertEquals(1f, liquidResolutionOf(LiquidEdge.recipe(role, dark), 1f), "$role dark=$dark, full platform")

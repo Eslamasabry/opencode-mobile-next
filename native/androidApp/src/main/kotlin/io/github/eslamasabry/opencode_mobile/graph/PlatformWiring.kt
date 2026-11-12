@@ -334,6 +334,9 @@ class PlatformHub(
     // s28-app: what a link that cannot complete says (F: link_routes.dart).
     private val linkNotices: AppLinkNotices,
     private val composerFiles: AndroidComposerFiles,
+    private val teamAlerts: TeamAlertsWatcher,
+    // Plan 11 §9.3 (D11-2): a reply watch is a watch, as live mode is (AlertFacts.replyWatchActive).
+    private val replyWatch: ReplyWatchFlag,
 ) {
     private val mainDispatcher = dispatchers.main
     private val appScope = CoroutineScope(appScope.coroutineContext + mainDispatcher)
@@ -453,7 +456,9 @@ class PlatformHub(
                                     it.status == ChatStatus.NeedsYou)
                         }
                     if (graph == null || !stillRunning) Outcome.Failed(Failure.NotFound())
-                    else graph.session.server.stop(ref.sessionId).map { Unit }
+                    // The chat's own Stop path (the person's Stop recorded, waiting sends called off), not a bare
+                    // server stop.
+                    else stopLikeTheChat(graph, ref)
                 },
             lock =
                 object : DeviceLock {
@@ -472,6 +477,7 @@ class PlatformHub(
         WidgetFeed.backgroundRunner = widgetRunner
         sharedProjectFolders.start()
         monitoring.start()
+        teamAlerts.start()
         channels.ensure()
         // B-L10N-002: channel names follow an acknowledged language save (the stored value, never
         // an attempt).
@@ -570,6 +576,16 @@ class PlatformHub(
             openPinnedSession(tap)
             return
         }
+        // AI Team alerts carry a team id, not a conversation: their tap opens the team's Gate, task or team page.
+        teamAlertRoute(
+            AlertKind.fromWire(intent.getStringExtra(FrozenExtras.EXTRA_CODING_ALERT_KIND)),
+            intent.getStringExtra(FrozenExtras.EXTRA_CODING_ALERT_SESSION_ID),
+            intent.getStringExtra(FrozenExtras.EXTRA_CODING_ALERT_PROFILE_ID),
+        )?.let { team ->
+            alertTap(intent) // consumes the extras
+            if (trusted) navigator.open(team)
+            return
+        }
         alertTap(intent)?.takeIf { trusted }?.let { ref ->
             shade.dismiss(AlertKeys.status(ref.profileId.raw, ref.sessionId.raw))
             navigator.openChat(ref)
@@ -618,7 +634,9 @@ class PlatformHub(
             if (generation != pinnedLaunchGeneration) return@launch
             val saved = stores.profiles.profile(id)
             val graph = registry.live.value[id]
-            if (stores.profiles.activeId.value != id || saved == null ||
+            // This phone's agents are never the active server: their pinned conversation opens while This phone is.
+            val home = stores.profiles.activeId.value
+            if ((home != id && (home == null || stores.phoneOfHelper(id) != home)) || saved == null ||
                 saved.reentry.password || saved.reentry.agentToken ||
                 graph?.session?.status?.value != io.github.eslamasabry.oc.core.model.StreamStatus.Connected
             ) {
@@ -730,7 +748,8 @@ class PlatformHub(
         (graph as? ChatGraphAccessors)?.chatRequests?.engine?.pending
 
     private suspend fun watchFeed() {
-        combine(runtime.snapshot, pendingEverywhere(), visible) { feed, waiting, shown ->
+        // The reply watch starting re-reads what waits: a request shown in the app before the person left gets its alert.
+        combine(runtime.snapshot, pendingEverywhere(), visible, replyWatch.active) { feed, waiting, shown, _ ->
                 Triple(feed, waiting, shown > 0)
             }
             .conflate()
@@ -1423,9 +1442,8 @@ class PlatformHub(
         val facts =
             AlertFacts(
                 liveModeActive = background.live.value.enabled && background.live.value.active,
-                // The process is alive with a live connection: this is the reply watch of the
-                // preview (no service).
-                replyWatchActive = false,
+                // Plan 11 §9.3: the short service that keeps a running reply watched after the person left.
+                replyWatchActive = replyWatch.active.value,
                 appVisible = appVisible,
                 permissionGranted = notificationsAllowed(),
                 serverAlertsOn = true, // narrowed per kind below by the person's Settings choices
@@ -1526,8 +1544,8 @@ class PlatformHub(
                     if (
                         endedKinds[item.ref] == kind &&
                             visible.value == 0 &&
-                            background.live.value.enabled &&
-                            background.live.value.active &&
+                            (background.live.value.enabled && background.live.value.active ||
+                                replyWatch.active.value) &&
                             registry.live.value.containsKey(item.profileId)
                     )
                         shade.show(alert.copy(detail = line), route)
@@ -1538,6 +1556,21 @@ class PlatformHub(
             statusPosted += alert.key
         }
     }
+
+    /** Reply watch: the needs-you alerts in the shade now (`AlertKeys.input`), so a shown request stops counting. */
+    internal fun shownRequestKeys(): Set<String> = alerted.keys.filter { it.startsWith("input:") }.toSet()
+
+    /** Reply watch: the person's request-alert switch. */
+    internal fun requestAlertsOn(): Boolean = choice(REQUESTS_ON)
+
+    /**
+     * Reply watch's `wouldAlert` (plan 11 §9.3): Android lets this app notify, and the person's switches allow a request
+     * or a finished reply now. During quiet hours finished replies are never posted, so only requests count then.
+     */
+    internal fun backgroundAlertsPossible(): Boolean =
+        notificationsAllowed() &&
+            application.getSystemService(NotificationManager::class.java)?.areNotificationsEnabled() != false &&
+            (choice(REQUESTS_ON) || (choice(FINISHED_ON) && !quietNow()))
 
     private fun shadeText(value: String): String = NotificationText.redact(redactor.redact(value))
 

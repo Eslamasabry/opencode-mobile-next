@@ -195,7 +195,8 @@ class S28AboutGuideTest {
     @Test
     fun `B-NAV-097 the shortcut list names every key with the platform modifier`() {
         val mac = ShortcutHelp.entries("⌘")
-        assertTrue(mac.filter { it.does != ShortcutDoes.CloseOverlay }.all { it.keys.startsWith("⌘ + ") })
+        val plain = setOf(ShortcutDoes.CloseOverlay, ShortcutDoes.RecentModel, ShortcutDoes.FindMatch, ShortcutDoes.PromptHistory)
+        assertTrue(mac.filter { it.does !in plain }.all { it.keys.startsWith("⌘ + ") })
         assertEquals(ShortcutDoes.entries.toSet(), mac.map { it.does }.toSet())
     }
 }

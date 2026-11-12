@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The edge dock (2026-11-11): one ring per running conversation on the screen edge. Its swell, peek and list. -->
+    <string name="dockLabel">المحادثات الجارية</string>
+    <string name="dockWorking">يعمل</string>
+    <string name="dockWorkingTasks">يعمل · %1$s من %2$s</string>
+    <string name="dockThinking">يفكّر</string>
+    <string name="dockNeedsYou">بحاجة إليك</string>
+    <string name="dockFinished">انتهى</string>
+    <string name="dockFailed">فشل</string>
+    <string name="dockChildNeedsYou">%1$s بحاجة إليك</string>
+    <string name="dockChildFailed">فشل %1$s</string>
+    <plurals name="dockSubagents">
+        <item quantity="zero">%1$s وكيل فرعي</item>
+        <item quantity="one">%1$s وكيل فرعي</item>
+        <item quantity="two">%1$s وكيلان فرعيان</item>
+        <item quantity="few">%1$s وكلاء فرعيين</item>
+        <item quantity="many">%1$s وكيلًا فرعيًا</item>
+        <item quantity="other">%1$s وكيل فرعي</item>
+    </plurals>
+    <string name="dockOnServer">على %1$s</string>
+    <string name="dockStop">إيقاف</string>
+    <string name="dockRemove">إزالة</string>
+    <string name="dockOpen">فتح</string>
+    <string name="dockPin">تثبيت</string>
+    <string name="dockUnpin">إلغاء التثبيت</string>
+    <string name="dockRestore">إعادة</string>
+    <string name="dockNickname">الاسم في الشريط</string>
+    <plurals name="dockHidden">
+        <item quantity="zero">%1$s مخفية</item>
+        <item quantity="one">%1$s مخفية</item>
+        <item quantity="two">%1$s مخفيتان</item>
+        <item quantity="few">%1$s مخفية</item>
+        <item quantity="many">%1$s مخفية</item>
+        <item quantity="other">%1$s مخفية</item>
+    </plurals>
+    <string name="dockMoveDock">تحريك الشريط</string>
+    <string name="dockShowDock">إظهار الشريط</string>
+    <string name="dockActionOn">%1$s %2$s</string>
+    <string name="dockRemoved">خرجت %1$s من الشريط</string>
+    <string name="dockStaysWhileOpen">%1$s مفتوحة، لذا تبقى</string>
+    <string name="dockStopFailed">تعذّر إيقاف %1$s</string>
+    <string name="dockAnswerFailed">تعذّر الرد على %1$s</string>
+    <!-- Settings › Conversations: the dock's on/off row. -->
+    <string name="dockSettingTitle">الشريط الجانبي</string>
+    <string name="dockSettingBody">المحادثات الجارية على حافة الشاشة. اسحب أعلاه لنقله إلى الجهة الأخرى.</string>
+</resources>

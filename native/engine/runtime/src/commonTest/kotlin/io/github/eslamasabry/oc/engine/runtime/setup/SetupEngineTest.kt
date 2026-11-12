@@ -420,6 +420,52 @@ class SetupEngineTest {
         engine.dispose()
     }
 
+    // ---- B-251 --------------------------------------------------------------------------------------------------
+
+    /** setup.json as the Flutter app left it after installing a phone agent (Claude Code): its own owner group. */
+    private fun flutterAgentJob(state: String) = mutableMapOf<String, Any?>(
+        "jobId" to "setup-1794348856312478",
+        "state" to state,
+        "order" to listOf("linux", "agent-claude"),
+        "components" to mapOf("linux" to mapOf("state" to "skipped"), "agent-claude" to mapOf("state" to "done")),
+        "params" to mapOf(
+            "phoneAgentOwner" to mapOf("agentId" to "claude", "profileId" to "1794348260833562"),
+            "opencode" to mapOf("runtime" to "opencode2"),
+        ),
+    )
+
+    @Test
+    fun `B-251 a job starts after the Flutter app's agent install was the last saved job`() = runTest {
+        linux.job = flutterAgentJob("done")
+        val engine = engine()
+        engine.run(setOf("opencode"), mapOf("opencode" to mapOf("runtime" to "opencode2")))
+        assertNull(engine.progress.value.error, "the saved agent job is no reason to refuse")
+        // The agent job's owner group is its own: it never becomes a parameter of a setup job.
+        assertEquals(mapOf("opencode" to mapOf("runtime" to "opencode2")), linux.started.single().params)
+        engine.dispose()
+    }
+
+    @Test
+    fun `B-251 a stopped Flutter agent install never hands its owner group to the next job`() = runTest {
+        linux.job = flutterAgentJob("interrupted")
+        val engine = engine()
+        engine.run(emptySet())
+        assertEquals(mapOf("opencode" to mapOf("runtime" to "opencode2")), linux.started.single().params)
+        engine.dispose()
+    }
+
+    @Test
+    fun `B-251 a saved job with any other unknown group is still refused`() = runTest {
+        linux.job = flutterAgentJob("done").also {
+            it["params"] = mapOf("somethingElse" to mapOf("x" to "y"), "opencode" to mapOf("runtime" to "opencode2"))
+        }
+        val engine = engine()
+        engine.run(setOf("opencode"), mapOf("opencode" to mapOf("runtime" to "opencode2")))
+        assertTrue(linux.started.isEmpty())
+        assertNotNull(engine.progress.value.error)
+        engine.dispose()
+    }
+
     // ---- B-LINUX-197 -------------------------------------------------------------------------------------------
 
     @Test
@@ -687,6 +733,23 @@ class SetupEngineTest {
         assertFalse(linux.runs.single().contains("'node'"))
         linux.installed = false
         assertEquals(emptySet(), (engine.installedOptional() as Outcome.Ok).value)
+        engine.dispose()
+    }
+
+    @Test
+    fun `S15 installedOptional says busy when another phone task held the check slot`() = runTest {
+        linux.checks["python"] = true to "3.12.3"
+        val engine = engine()
+        // The one check slot was taken: busy, so This phone waits and reads again.
+        linux.checkError = Failure.Runtime(RuntimeProblem.SlotBusy)
+        val busy = engine.installedOptional() as Outcome.Failed
+        assertEquals(RuntimeProblem.SlotBusy, (busy.failure as Failure.Runtime).problem)
+        // Any other refusal stays a plain failure.
+        linux.checkError = Failure.Runtime(RuntimeProblem.Generic)
+        val broken = engine.installedOptional() as Outcome.Failed
+        assertEquals(RuntimeProblem.Generic, (broken.failure as Failure.Runtime).problem)
+        linux.checkError = null
+        assertEquals(setOf("python"), (engine.installedOptional() as Outcome.Ok).value)
         engine.dispose()
     }
 }

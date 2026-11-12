@@ -37,6 +37,33 @@ class HelperDiagnosticsTest {
         assertNull(AgentHelperStatus.fromRecord(JsonObject(emptyMap())).notice)
     }
 
+    // Device QA basics-3 B1 (gate): the exit record outlives app starts. A later launch whose run ended with the app
+    // (force-stop, update, the app killed) writes no exit, so the old exit must not come back as news.
+    @Test
+    fun `an exit older than the helper's latest launch is not a stop, an exit after it is`() {
+        fun launched(launchAt: Long): JsonObject =
+            JsonObject(record() + ("lastLaunchAtMs" to Json.parseToJsonElement(launchAt.toString())))
+        val superseded = AgentHelperStatus.fromRecord(launched(at + 60_000))
+        assertEquals(at + 60_000, superseded.lastLaunchAtEpochMillis)
+        assertFalse(superseded.unexpectedStop)
+        assertNull(superseded.notice)
+        // The run that ended on its own is the latest one: still said (records from before launch times also are).
+        assertEquals(HelperNotice.PossiblyStoppedByAndroid, AgentHelperStatus.fromRecord(launched(at - 60_000)).notice)
+        assertTrue(AgentHelperStatus.fromRecord(record()).unexpectedStop)
+        // An Android-style SIGKILL code on a stop the person asked for is not a stop on its own.
+        val asked = JsonObject(launched(at - 60_000) + ("lastStopRequested" to Json.parseToJsonElement("true")))
+        assertNull(AgentHelperStatus.fromRecord(asked).notice)
+    }
+
+    @Test
+    fun `a stop from before the phone's boot or the app's install is not said again`() {
+        val stopped = AgentHelperStatus.fromRecord(record())
+        assertEquals(HelperNotice.PossiblyStoppedByAndroid, stopped.noticeSince(at))
+        assertEquals(HelperNotice.PossiblyStoppedByAndroid, stopped.noticeSince(at - 1))
+        assertNull(stopped.noticeSince(at + 1))
+        assertNull(AgentHelperStatus.fromRecord(record(requested = "true")).noticeSince(0))
+    }
+
     @Test
     fun `B-AGENT-022 malformed and old metadata cannot invent a dated kill`() {
         for (stamp in listOf("null", "-1", "0", "1.5", "1e3", "8640000000000001", "\"secret\"")) {

@@ -14,6 +14,8 @@ import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.model.StreamStatus
 import io.github.eslamasabry.oc.engine.connection.ConnectionGraph
 import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
+import io.github.eslamasabry.oc.engine.runtime.lifecycle.ReadyReconnect
+import io.github.eslamasabry.oc.engine.runtime.lifecycle.ReturnToForeground
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Instant
@@ -49,18 +51,26 @@ class NativePhoneHealing(
     private var attemptOwner: ProfileId? = null
     private var watched: ConnectionGraph? = null
     private var watch: Job? = null
+    private val away = ReturnToForeground()
 
     fun start() {
         if (started) return
         started = true
-        runtime.onManualReady = { connect(automatic = false) }
+        // Never awaited inside the start: the start may be the connection gate's restart, which holds the locks this
+        // connect needs (M1, "Connecting" for good after a phone restart).
+        val afterStart = ReadyReconnect(scope) { connect(automatic = false) }
+        runtime.onManualReady = { afterStart.announce() }
         app.registerActivityLifecycleCallbacks(
             object : Application.ActivityLifecycleCallbacks {
                 override fun onActivityResumed(activity: Activity) {
-                    scope.launch { check() }
+                    val wake = away.returned(clock.now())
+                    scope.launch {
+                        check()
+                        if (wake) wakeConnected()
+                    }
                 }
 
-                override fun onActivityPaused(activity: Activity) = Unit
+                override fun onActivityPaused(activity: Activity) = away.left(clock.now())
 
                 override fun onActivityCreated(activity: Activity, state: Bundle?) = Unit
 
@@ -89,6 +99,19 @@ class NativePhoneHealing(
                 if (runtime.isForeground) check()
             }
         }
+    }
+
+    /**
+     * Back after a while out of sight: a stream that still reads Connected may be dead (sleep, a network
+     * switch). One wake re-dials it and the readers refetch. Only the open server, only if the person's
+     * reconnect setting allows it; a server that is disconnected has no live graph, so it is left alone.
+     */
+    private suspend fun wakeConnected() = connectLane.withLock {
+        val id = stores.profiles.activeId.value ?: return@withLock
+        if (!runtime.isForeground || !reconnectAllowed(id)) return@withLock
+        val graph = registry.live.value[id] ?: return@withLock
+        if (graph.session.server.events.status.value == StreamStatus.Connected)
+            graph.session.server.events.retryNow()
     }
 
     private fun followConnection() {

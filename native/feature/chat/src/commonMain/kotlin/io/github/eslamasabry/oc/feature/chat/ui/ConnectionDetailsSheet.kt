@@ -9,12 +9,12 @@ import io.github.eslamasabry.oc.ui.kit.KitAction
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
 import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.connectionRestartAgent
 import io.github.eslamasabry.oc.ui.words.res.connectionRestartPhoneServer
 import io.github.eslamasabry.oc.ui.words.res.e7BannerCheckingExplanation
 import io.github.eslamasabry.oc.ui.words.res.e7BannerLost
 import io.github.eslamasabry.oc.ui.words.res.e7BannerStaleExplanation
 import io.github.eslamasabry.oc.ui.words.res.isolatedTaskRetryOpen
-import io.github.eslamasabry.oc.ui.words.res.kitSheetDismiss
 import io.github.eslamasabry.oc.ui.words.res.mcpReconnecting
 import io.github.eslamasabry.oc.ui.words.res.productStatesSwitchServer
 import org.jetbrains.compose.resources.stringResource
@@ -35,7 +35,6 @@ internal fun ConnectionDetailsSheet(
         visible = visible,
         onDismissRequest = onDismiss,
         title = stringResource(if (reconnecting) Res.string.mcpReconnecting else Res.string.e7BannerLost),
-        closeLabel = stringResource(Res.string.kitSheetDismiss),
         primary =
             if (reconnecting) null
             else
@@ -45,7 +44,12 @@ internal fun ConnectionDetailsSheet(
                 }),
         tertiary =
             listOfNotNull(
-                if (line?.canRestart == true && !reconnecting)
+                if (line?.canRestartAgent == true && !reconnecting)
+                    KitAction(stringResource(Res.string.connectionRestartAgent), {
+                        onDismiss()
+                        actions.restartAgent()
+                    })
+                else if (line?.canRestart == true && !reconnecting)
                     KitAction(stringResource(Res.string.connectionRestartPhoneServer), {
                         onDismiss()
                         actions.restartPhoneServer()

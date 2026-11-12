@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="plansCollectors">读取套餐上限</string>
+    <string name="plansCollectorTarget">%1$s · %2$s</string>
+    <string name="plansCollectorEnabled">读取已开启。点按可关闭并清除这些数据。</string>
+    <string name="plansCollectorDisabled">通过安装在此服务器上的收集程序读取</string>
+    <string name="plansCollectorQuestion">从此服务器读取 %1$s 的上限？</string>
+    <string name="plansCollectorAllow">信任收集程序并读取</string>
+    <string name="plansCollectorTrust">仅当你信任安装在 %1$s 上的配额收集程序时才继续。它会在固定的配额地址收到此服务器保存的登录凭据。请求不会跟随重定向。你可以在这里关闭读取。更改地址或登录信息后需要再次获得许可。</string>
+    <string name="plansCollectorFailed">无法保存此选择。请重新连接服务器后重试。</string>
+    <string name="plansPaseoDisabled">从这个 Paseo 服务器读取用量</string>
+    <string name="plansPaseoQuestion">从 Paseo 读取套餐用量？</string>
+    <string name="plansPaseoTrust">在此应用可见时，读取 %1$s 报告的套餐上限。关闭后会清除其已保存的小组件数据。不会启动任何后台读取程序。</string>
+    <string name="plansBuiltinReader">手机内置用量读取程序</string>
+    <string name="plansBuiltinDisabled">在这部手机的 Ubuntu 中设置用量读取程序</string>
+    <string name="plansBuiltinQuestion">在这部手机上读取套餐上限？</string>
+    <string name="plansBuiltinTrust">在 %1$s 中安装内置的用量读取程序，并读取保存在那里的提供商登录信息。它的读取令牌保存在安全存储和私有文件中。仍无法收集 Claude 的数据。关闭后会停止其服务并清除其小组件数据。</string>
+</resources>

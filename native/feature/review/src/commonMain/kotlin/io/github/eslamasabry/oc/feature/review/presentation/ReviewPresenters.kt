@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.review.presentation
 
+import io.github.eslamasabry.oc.core.model.VersionControlSetupState
 import io.github.eslamasabry.oc.core.common.BusyKind
 import io.github.eslamasabry.oc.core.common.FeatureId
 import io.github.eslamasabry.oc.core.common.Failure
@@ -57,6 +58,9 @@ public interface ChangesActions {
     /** The change-scope picker: this conversation, uncommitted, or the whole branch (Flutter `_selectScope`). */
     public fun chooseScope(scope: ReviewScope) {}
 
+    /** "Open Git for this project": the Git page, from the not-a-Git-project state. */
+    public fun openGit() {}
+
     /** "Send back with a note": opens the note field. */
     public fun sendBack()
 
@@ -84,6 +88,7 @@ public class ChangesPresenter(
     agent: ReviewAgentPorts = ReviewAgentPorts(),
     private val branch: ReviewBranchRead? = null,
     private val shelf: ReviewShelf? = null,
+    private val setup: ReviewProjectSetup = ReviewProjectSetup { VersionControlSetupState.Unknown },
 ) : ChangesActions {
     private val runner = agent.runner(review)
     private val guideAsk = agent.guideAsk
@@ -195,9 +200,14 @@ public class ChangesPresenter(
                     val rows = markViewed(chosen, scopedFiles)
                     val working = chosen != ReviewScope.Conversation
                     val scopes = scopes()
+                    // An empty folder or branch view says why: not under Git, or a clean tree (the agent's reported
+                    // edits are the Conversation view's own words).
+                    val notRepository =
+                        rows.isEmpty() && working && setup.setup() == VersionControlSetupState.Absent
                     mutable.update {
                         it.copy(
                             load = ReviewLoad.Ready,
+                            notRepository = notRepository,
                             workingTree = chosen == ReviewScope.WorkingTree,
                             scope = chosen,
                             scopes = scopes,
@@ -433,6 +443,8 @@ public class ChangesPresenter(
 
     override fun openStaged(): Unit = nav.openStaged()
 
+    override fun openGit(): Unit = nav.openGit()
+
     override fun sendBack() {
         val s = state.value
         if (sendBack != null && s.load == ReviewLoad.Ready && s.files.isNotEmpty() && !s.working) {
@@ -501,6 +513,9 @@ public interface FileDiffActions {
     /** Removes a draft comment. */
     public fun removeComment(id: String) {}
 
+    /** "Add <file> to the prompt": an `@path` mention in the conversation's message; the person stays here. */
+    public fun addToPrompt() {}
+
     /** "Send N comments": every draft in this conversation, one prompt to its agent. */
     public fun sendComments() {}
 }
@@ -519,6 +534,7 @@ public class FileDiffPresenter(
     agent: ReviewAgentPorts = ReviewAgentPorts(),
     private val branch: ReviewBranchRead? = null,
     private val shelf: ReviewShelf? = null,
+    private val addFile: ReviewAddFile? = null,
 ) : FileDiffActions {
     private val staged = source == FileDiffSource.Staged
     private val workingTree = source == FileDiffSource.WorkingTree
@@ -527,7 +543,7 @@ public class FileDiffPresenter(
     private val itemKey = ReviewShelf.file(source, messageId, path)
     private val mutable =
         MutableStateFlow(
-            shelf?.peek(itemKey)?.file?.let { frame(it) } ?: FileDiffUi(path, canComment = runner != null)
+            shelf?.peek(itemKey)?.file?.let { frame(it) } ?: FileDiffUi(path, canComment = runner != null, canAddFile = addFile != null)
         )
     public val state: StateFlow<FileDiffUi> = mutable.asStateFlow()
 
@@ -539,6 +555,7 @@ public class FileDiffPresenter(
             missing = kept.missing,
             noDiff = kept.noDiff,
             canComment = runner != null,
+            canAddFile = addFile != null,
             updating = true,
         )
 
@@ -599,6 +616,18 @@ public class FileDiffPresenter(
 
     override fun removeComment(id: String) {
         runner?.book?.remove(id)
+    }
+
+    override fun addToPrompt() {
+        val add = addFile ?: return
+        scope.launch {
+            val notice =
+                when (val result = add.add(path)) {
+                    is Outcome.Ok -> if (result.value == AddedFile.Added) FileNotice.Added else FileNotice.AlreadyThere
+                    is Outcome.Failed -> FileNotice.Failed(result.failure)
+                }
+            mutable.update { it.copy(fileNotice = notice) }
+        }
     }
 
     override fun sendComments() {

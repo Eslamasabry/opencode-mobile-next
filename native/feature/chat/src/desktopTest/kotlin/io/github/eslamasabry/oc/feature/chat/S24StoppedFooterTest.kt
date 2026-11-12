@@ -8,6 +8,8 @@ import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.v2.runComposeUiTest
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.engine.transcript.state.FooterRow
@@ -40,8 +42,7 @@ class S24StoppedFooterTest {
             }
         }
 
-    @Test
-    fun `B-CHAT-S24-70 the Stopped note lines up with the reply text, not 40 dp in`() = runComposeUiTest {
+    private fun androidx.compose.ui.test.ComposeUiTest.host(dir: LayoutDirection) {
         val rows =
             persistentListOf(
                 FooterRow("footer:m1", "m1", failed = false, stopped = true),
@@ -53,17 +54,38 @@ class S24StoppedFooterTest {
             KitTheme(
                 platform = DesktopKitPlatform(),
                 appearance = KitAppearance(motion = MotionLevel.Off),
-                localeTag = "en",
+                localeTag = if (dir == LayoutDirection.Rtl) "ar" else "en",
                 stillFrame = true,
             ) {
-                CompositionLocalProvider(LocalKitRedactor provides Redactor()) {
+                CompositionLocalProvider(
+                    LocalKitRedactor provides Redactor(),
+                    LocalLayoutDirection provides dir,
+                ) {
                     ChatScreen(state, actions, composer)
                 }
             }
         }
-        val reply = onNodeWithText("Here is the start of the answer", substring = true).getBoundsInRoot().left
+    }
+
+    // The real list item wraps a reply block in a clickable box (message actions) that starts at the list edge; the
+    // text sits one page gutter inside it. Measure the TEXT (unmerged node), not the merged clickable box.
+    @Test
+    fun `B-CHAT-S24-70 the Stopped note lines up with the reply text, not 40 dp in`() = runComposeUiTest {
+        host(LayoutDirection.Ltr)
+        val reply = onNodeWithText("Here is the start of the answer", substring = true, useUnmergedTree = true).getBoundsInRoot().left
         val note = onNodeWithTag("chat-turn-footer-note", useUnmergedTree = true).getBoundsInRoot().left
         assertTrue(abs((note - reply).value) <= 2f, "note at $note, reply text at $reply")
-        assertTrue(note < reply + 8.dp)
+        assertTrue(reply > 8.dp, "the reply text keeps the page gutter, at $reply")
+        assertTrue(note > 8.dp, "the note keeps the page gutter, at $note")
+    }
+
+    @Test
+    fun `B-CHAT-S24-71 in a right-to-left chat the note and the reply text share the start edge`() = runComposeUiTest {
+        host(LayoutDirection.Rtl)
+        val width = onNodeWithTag("chat-turn-footer", useUnmergedTree = true).getBoundsInRoot()
+        val reply = onNodeWithText("Here is the start of the answer", substring = true, useUnmergedTree = true).getBoundsInRoot().right
+        val note = onNodeWithTag("chat-turn-footer-note", useUnmergedTree = true).getBoundsInRoot().right
+        assertTrue(abs((note - reply).value) <= 2f, "note right edge $note, reply text right edge $reply")
+        assertTrue(note < width.right - 8.dp, "the note keeps the page gutter from the right edge, at $note")
     }
 }

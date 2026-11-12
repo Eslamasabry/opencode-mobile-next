@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="nativeAboutProvenanceTitle">关于此构建</string>
+    <string name="nativeAboutProvenance">这是一款独立应用，大量借助 AI 构建。Android 是主要支持的平台。桌面版本仍处于实验阶段，尚未在硬件上测试。请报告出现的问题，帮助改进应用。</string>
+    <string name="nativePhraseChipsTitle">短语标签</string>
+    <string name="nativePhraseChipsAliases">短语标签 快捷短语 建议 输入框</string>
+    <string name="nativePhraseChipsDescription">在输入框上方推荐你常用的简短短语。学到的短语只保存在此设备上。</string>
+    <string name="nativeToolsRequired">必填</string>
+    <string name="nativeToolsOptional">可选</string>
+    <string name="nativeToolsParameters">参数</string>
+    <string name="nativeToolsNoParameters">此工具未声明任何参数。</string>
+    <string name="nativeToolsCoding">供模型使用的工具</string>
+    <string name="nativeToolsChooseModel">选择一个模型以查看它的工具。</string>
+    <string name="nativeCapabilitiesTitle">这里可用的功能</string>
+</resources>

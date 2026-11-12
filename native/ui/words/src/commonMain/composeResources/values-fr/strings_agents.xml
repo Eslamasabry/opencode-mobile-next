@@ -501,7 +501,7 @@
     <string name="agentComputerCodex">Codex</string>
     <string name="agentComputerCodexNote">Connectez-vous au serveur d’application Codex officiel par WebSocket. Saisissez son adresse et le chemin complet du dossier de projet sur cet ordinateur.</string>
     <string name="agentErrorOpenSettings">Ouvrir les paramètres</string>
-    <string name="agentDraftTitle">Historiques de conversation</string>
+    <string name="agentDraftTitle">Copier une conversation</string>
     <string name="agentDraftReadOnly">Relisez un historique avant de le copier vers un autre agent. Cela ne démarre, ne reprend ni ne modifie aucune conversation.</string>
     <string name="agentDraftGuide">1. Choisissez une conversation ci-dessous.\n2. Relisez l’historique et tout avis sur les anciens échanges omis.\n3. Copiez-le seulement quand vous êtes prêt à le partager.</string>
     <string name="agentDraftLoading">Lecture de la conversation</string>
@@ -519,4 +519,5 @@
     <string name="agentDraftTooLarge">Le dernier échange de cette conversation est trop volumineux pour être inclus sans perdre de texte.</string>
     <string name="agentPhoneCheck">Vérifier les agents du téléphone</string>
     <string name="agentsCatalogNeedsPhoneSetup">Configurez d’abord le serveur intégré sur ce téléphone. Revenez ensuite ici pour installer cet agent.</string>
+    <string name="agentDraftAsCopied">L’historique tel qu’il sera copié</string>
 </resources>

@@ -81,10 +81,14 @@ public class OpenProjectViewModel(
                         ui.copy(
                             serversLoading = false,
                             recent = recentAcross(live),
+                            // A connection that is part of a live server (This phone's agents) is not a server here.
                             servers =
                                 live
                                     .mapIndexed { i, s ->
                                         OpenServerUi(s.profile, s.name, s.phoneFolders, statusOf(statuses[i]))
+                                    }
+                                    .filterIndexed { i, _ ->
+                                        live[i].partOf.let { p -> p == null || live.none { it.profile == p } }
                                     }
                                     .toImmutableList(),
                         )

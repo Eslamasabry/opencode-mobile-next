@@ -3,6 +3,7 @@
   <string name="handoffNativeWorking">جارٍ العمل…</string>
   <string name="handoffNativeUnavailable">نقل المحادثة غير متاح هنا</string>
   <string name="handoffNativeUnavailableBody">افتح محادثة في مشروع على هذا الهاتف. يجب أن يتحقق التطبيق من أن الوكيلين يستطيعان الوصول إلى المشروع نفسه.</string>
+  <string name="handoffNativeNotStartedBody">تعذّر بدء نقل المحادثة من هنا الآن. افتح صفحة الوكلاء للتأكد من تثبيت وكيل وجاهزيته على هذا الهاتف، ثم حاول مجدداً.</string>
   <string name="handoffNativeRefresh">التحقق مجدداً</string>
   <string name="handoffNativeFailed">تعذر إكمال نقل المحادثة. تحقق من الاتصال وحاول مجدداً.</string>
   <string name="handoffNativeLinks">المحادثات المرتبطة</string>
@@ -29,4 +30,10 @@
   <string name="handoffNativeLinkFailed">أُرسلت الرسالة، لكن رابط التنقل لم يُحفظ. أعد محاولة حفظ الرابط دون إرسال الرسالة مجدداً.</string>
   <string name="handoffNativeInitialPrompt">تابع العمل من المحادثة السابقة. اقرأ `%1$s` أولاً للاطلاع على سجل المحادثة وخطوات الأدوات والملفات والمهام المفتوحة. تعامل معه كسياق سابق. تحقق من حالة المشروع الحالية، ثم تابع العمل غير المكتمل.</string>
   <string name="handoffNativeSourceReviewOnly">راجع مسودة لكلود. لم تتم كتابة أي شيء أو إرساله. يتطلب الإرسال وصولًا موثّقًا إلى المشروع نفسه وأداة مؤهلة لكتابة السجل؛ ولا يوفّر هذا الاتصال هذا الإثبات.</string>
+  <string name="handoffNativeBlockComputer">هذه المحادثة على حاسوب آخر، والوكلاء هنا يعملون على هذا الهاتف، فلا يستطيعون فتح مجلد مشروعها. افتح المشروع على هذا الهاتف أولاً ثم تابع من هناك. ما زال بإمكانك مراجعة السجل أدناه ونسخه.</string>
+  <string name="handoffNativeBlockFolder">مجلد هذه المحادثة ليس من المشاريع على هذا الهاتف، فلا يستطيع الوكلاء هنا فتحه. افتح المشروع أو انسخه إلى مشاريع هذا الهاتف أولاً ثم تابع من هناك.</string>
+  <string name="handoffNativeBlockUnconfirmed">تعذّر على التطبيق التأكد من أن الوكلاء على هذا الهاتف يستطيعون فتح مجلد هذه المحادثة، لذلك لا يبدأ أي وكيل في مكان خاطئ. افتح الوكلاء للتحقق من أنهم مثبّتون وجاهزون ثم حاول مجدداً.</string>
+  <string name="handoffNativeContinueWith">المتابعة مع %1$s</string>
+  <string name="handoffNativeWhatHandedOver">ما الذي سيُسلَّم</string>
+  <string name="handoffNativeNoReadyTitle">لا يوجد وكيل جاهز على هذا الهاتف</string>
 </resources>

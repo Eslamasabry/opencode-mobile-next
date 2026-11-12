@@ -31,6 +31,8 @@ import io.github.eslamasabry.oc.feature.settings.presentation.SettingsGroupId
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsOutside
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsPage
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsRowId
+import io.github.eslamasabry.oc.feature.settings.presentation.SettingsInside
+import io.github.eslamasabry.oc.feature.settings.presentation.SettingsInsideEntry
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsSearch
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsSearchEntry
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsUi
@@ -192,6 +194,17 @@ private fun rememberSearchEntries(rows: List<SettingsRowId>): List<SettingsSearc
     return cache.entries
 }
 
+/** S6: the inside pages' words, resolved when the set or the language changes. */
+@Composable
+private fun rememberInsideEntries(inside: List<SettingsInside>): List<SettingsInsideEntry> {
+    val locale = LocalKitLocaleTag.current
+    val titles = inside.map { insideTitle(it) }
+    val aliases = inside.map { insideAliases(it) }
+    return remember(inside, locale, titles, aliases) {
+        inside.mapIndexed { i, it -> SettingsInsideEntry(it, titles[i], aliases[i]) }
+    }
+}
+
 @Composable
 private fun ColumnScope.HubBody(
     state: SettingsUi,
@@ -203,6 +216,8 @@ private fun ColumnScope.HubBody(
     val hub = state.hub
     val entries = rememberSearchEntries(hub.searchable)
     LaunchedEffect(entries) { actions.onSearchEntries(entries) }
+    val insideEntries = rememberInsideEntries(hub.insideSearchable)
+    LaunchedEffect(insideEntries) { actions.onInsideEntries(insideEntries) }
     val field = rememberTextFieldState(hub.query)
     // Back clears the search in the presenter; the field follows.
     LaunchedEffect(hub.query) {
@@ -213,9 +228,12 @@ private fun ColumnScope.HubBody(
             label = stringResource(Res.string.settingsHubSearch),
             onSearch = actions::onQuery,
             onSubmit = { text ->
-                SettingsSearch.find(text, entries).firstOrNull()?.let(actions::onTarget)
+                val row = SettingsSearch.find(text, entries).firstOrNull()
+                if (row != null) actions.onTarget(row)
+                else SettingsSearch.findInside(text, insideEntries).firstOrNull()?.let(actions::onInside)
             },
-            resultCount = hub.results.size.takeIf { hub.query.isNotBlank() && it > 0 },
+            resultCount =
+                (hub.results.size + hub.insideResults.size).takeIf { hub.query.isNotBlank() && it > 0 },
             prominent = true,
             state = field,
             modifier = Modifier.testTag("settings-search"),
@@ -250,7 +268,7 @@ private fun ColumnScope.HubBody(
                 )
             }
         }
-    } else if (hub.results.isEmpty()) {
+    } else if (hub.results.isEmpty() && hub.insideResults.isEmpty()) {
         KitSearchNoMatch(
             query = hub.query,
             onClear = { actions.onQuery("") },
@@ -265,6 +283,16 @@ private fun ColumnScope.HubBody(
                     leading = KitRowLeading.Glyph(rowGlyph(row)),
                     trailing = KitRowTrailing.Chevron,
                     onClick = { actions.onTarget(row) },
+                )
+            }
+            hub.insideResults.forEach { inside ->
+                KitRow(
+                    title = insideTitle(inside),
+                    modifier = Modifier.testTag(inside.tag),
+                    supporting = groupWords(inside.group),
+                    leading = KitRowLeading.Glyph(insideGlyph(inside)),
+                    trailing = KitRowTrailing.Chevron,
+                    onClick = { actions.onInside(inside) },
                 )
             }
         }
@@ -314,6 +342,7 @@ private fun rowGlyph(row: SettingsRowId) =
         SettingsRowId.AiTeam -> KitIcons.kanban
         SettingsRowId.ShowReasoning -> KitIcons.idea
         SettingsRowId.ShowTimestamps -> KitIcons.clock
+        SettingsRowId.EdgeDock -> KitIcons.layers
         SettingsRowId.PhraseChips -> KitIcons.chat
         SettingsRowId.DefaultShell -> KitIcons.terminal
         SettingsRowId.Voice -> KitIcons.mic

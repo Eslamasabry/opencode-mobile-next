@@ -36,6 +36,21 @@ public object SetupPreflight {
     private fun saturated(first: Long, second: Long): Long =
         if (first >= Long.MAX_VALUE - second) Long.MAX_VALUE else first + second
 
+    /** Within this much of the need, a nearly full phone is told the numbers before it downloads. */
+    public const val TIGHT_MARGIN_BYTES: Long = 1_000_000_000
+
+    /**
+     * What the install needs free and what this phone has, while free space is within [TIGHT_MARGIN_BYTES] of the
+     * need (the start page says both numbers, and the welcome flow stops on that page instead of downloading). Null
+     * when free space is unknown, nothing is downloaded, or there is room. The one place this rule lives.
+     */
+    public fun spaceTight(device: SetupDeviceInfo, downloadBytes: Long, installedBytes: Long? = null): Pair<Long, Long>? {
+        val free = device.availableStorageBytes ?: return null
+        if (downloadBytes <= 0) return null
+        val need = requiredFreeBytes(downloadBytes, installedBytes)
+        return if (free < saturated(need, TIGHT_MARGIN_BYTES)) need to free else null
+    }
+
     /** Storage alone, so setup can repeat the same policy between installs. An unavailable reading allows a try. */
     public fun checkStorage(availableBytes: Long?, downloadBytes: Long, installedBytes: Long? = null): SetupPreflightResult {
         if (availableBytes == null) return SetupPreflightResult.Ok

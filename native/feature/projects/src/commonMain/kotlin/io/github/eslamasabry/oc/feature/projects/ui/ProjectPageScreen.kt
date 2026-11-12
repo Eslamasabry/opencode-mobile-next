@@ -36,6 +36,7 @@ import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
 import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitSkeletonRows
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
+import io.github.eslamasabry.oc.ui.kit.state.KitStateSize
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.agentElsewhereCounts
@@ -256,6 +257,7 @@ public fun ProjectPageScreen(
                             failure = state.failure,
                             onRetry = actions::retry,
                             retryLabel = stringResource(Res.string.kitTryAgain),
+                            size = KitStateSize.Inline,
                         )
                     }
                 ProjectPagePhase.NoServer -> Unit

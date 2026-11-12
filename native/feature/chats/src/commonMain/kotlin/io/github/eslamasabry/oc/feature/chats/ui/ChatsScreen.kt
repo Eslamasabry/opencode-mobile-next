@@ -82,11 +82,16 @@ import io.github.eslamasabry.oc.ui.kit.chip.KitChipWrap
 import io.github.eslamasabry.oc.ui.kit.chip.KitFilterChips
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
+import io.github.eslamasabry.oc.ui.kit.frame.KitFloatingBar
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenRefresh
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenWidth
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.motion.KitGrowPage
 import io.github.eslamasabry.oc.ui.words.res.kitRequestAllowOnce
+import io.github.eslamasabry.oc.ui.words.res.kitRequestAnswer
+import io.github.eslamasabry.oc.ui.words.res.kitRequestMoreAnswers
+import io.github.eslamasabry.oc.ui.words.res.chatRequestOtherAnswer
+import io.github.eslamasabry.oc.ui.words.res.chatUiInputRequested
 import io.github.eslamasabry.oc.ui.words.res.chatRequestAlwaysConfirm
 import io.github.eslamasabry.oc.ui.words.res.chatRequestAlwaysInProject
 import io.github.eslamasabry.oc.ui.words.res.chatRequestAlwaysScope
@@ -107,6 +112,9 @@ import io.github.eslamasabry.oc.feature.chats.presentation.HomePreviewRules
 import androidx.compose.runtime.key
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeRightNow
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeRecent
+import io.github.eslamasabry.oc.ui.words.res.chatsHomeAsksOther
+import io.github.eslamasabry.oc.ui.words.res.chatsHomeAsksToEdit
+import io.github.eslamasabry.oc.ui.words.res.chatsHomeAsksToRead
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeAsksToRun
 import io.github.eslamasabry.oc.ui.words.res.chats_all_title
 import io.github.eslamasabry.oc.ui.kit.row.KitSwipeRow
@@ -137,10 +145,33 @@ import io.github.eslamasabry.oc.ui.words.res.appUpdateUpdate
 import io.github.eslamasabry.oc.ui.words.res.chatHomeAnswerFailed
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeClearFilters
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeDone
+import io.github.eslamasabry.oc.ui.words.res.chatsHomeStopped
+import io.github.eslamasabry.oc.ui.words.res.chatsHomeInterrupted
+import io.github.eslamasabry.oc.ui.words.res.agentsStateCantReopen
+import io.github.eslamasabry.oc.feature.chats.presentation.HomeRowStatusRules
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeEmptyCalmBody
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeEmptyTitle
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeFailed
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeIncompleteNamed
+import io.github.eslamasabry.oc.ui.words.res.chatsHomeUnreachableShort
+import io.github.eslamasabry.oc.ui.words.res.kitTryAgain
+import io.github.eslamasabry.oc.ui.words.res.agentsRestartLine
+import io.github.eslamasabry.oc.ui.words.res.agentsResumeAction
+import io.github.eslamasabry.oc.ui.words.res.agentsSignInAction
+import io.github.eslamasabry.oc.ui.words.res.agentsSignedOutLine
+import io.github.eslamasabry.oc.ui.words.res.agentsStoppedLine
+import io.github.eslamasabry.oc.ui.words.res.agentsLimitUnknown
+import io.github.eslamasabry.oc.ui.words.res.gateSheetOpenAgent
+import io.github.eslamasabry.oc.ui.words.res.chatRequestAlwaysOn
+import io.github.eslamasabry.oc.ui.words.res.chatRequestAnswerAllowed
+import io.github.eslamasabry.oc.ui.words.res.chatRequestAnswerRejected
+import io.github.eslamasabry.oc.ui.words.res.signalRowRunningCommand
+import io.github.eslamasabry.oc.ui.kit.state.KitReceipt
+import io.github.eslamasabry.oc.ui.kit.state.KitReceiptState
+import io.github.eslamasabry.oc.feature.chats.presentation.HomeAgentNoticeKind
+import io.github.eslamasabry.oc.feature.chats.presentation.HomeNoticeKind
+import io.github.eslamasabry.oc.feature.chats.presentation.HomeNotices
+import io.github.eslamasabry.oc.feature.chats.presentation.HomeHeldReply
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeNeedsYou
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeNewChat
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeNoMatchBody
@@ -150,7 +181,6 @@ import io.github.eslamasabry.oc.ui.words.res.chatsHomeRunningCount
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeShowAll
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeTitle
 import io.github.eslamasabry.oc.ui.words.res.chatsReturnBriefMore
-import io.github.eslamasabry.oc.ui.words.res.chatsReturnBriefUnknown
 import io.github.eslamasabry.oc.ui.words.res.chats_back
 import io.github.eslamasabry.oc.ui.words.res.e7WorkspaceConnecting
 import io.github.eslamasabry.oc.ui.words.res.e7WorkspaceDaysAgo
@@ -194,6 +224,8 @@ public fun ChatsScreen(
      * as its goldens show it, is this screen with [shellBar] false. The page's ground is the same either way.
      */
     shellBar: Boolean = true,
+    /** The edge dock over the list, under the home's sheets and dialogs; null = none. */
+    edgeDock: io.github.eslamasabry.oc.feature.chats.dock.HomeEdgeDock? = null,
 ) {
     // E05-S21: on the bare list (the whole back stack) the first Back says "Press back again to exit" in the one
     // status line; called first so sheets, dialogs and a filled search registered below close before it.
@@ -207,7 +239,8 @@ public fun ChatsScreen(
     val listed = state.phase == ChatsPhase.List
     // Shown once the home knows its server and that server is open: it fades in once, never out and in again.
     val showFab = listed && state.home.known && state.home.opening == null
-    // Under Glass the floating + is liquid glass over the list (the kit records it only then).
+    // Under Glass the floating + is liquid glass over the list (the kit records it only then), and the floating bar's
+    // pane bends the same recording (glass step 4).
     val listGlass = rememberKitFrostState()
     val barActions = buildList {
         add(KitLineAction(stringResource(Res.string.kitTopBarSearch), actions::openSearch, icon = KitIcons.search))
@@ -215,6 +248,8 @@ public fun ChatsScreen(
         if (state.updateReady) add(KitLineAction(updateLabel, actions::openUpdate, icon = KitIcons.systemDownload))
     }
     val briefKeys = state.brief?.rows.orEmpty().mapTo(hashSetOf()) { it.key }
+    // At most one notice at a time, in the notice place; the order is HomeNotices' (a pure, tested rule).
+    val shownNotice = HomeNotices.shown(HomeNotices.active(state, appCondition = appStatus != null, replyOffer = replyOffer != null))
     // The words every row shares are read once here, not again by each row; a row's menu words are only used when it opens.
     val rowWords = rememberHomeRowWords()
     // A command or a message can carry a token: masked as the chat masks it.
@@ -225,36 +260,42 @@ public fun ChatsScreen(
         else pluralStringResource(Res.plurals.kitNeedsYouSpan, state.needsYou, Numbers.format(state.needsYou)).trimEnd().removeSuffix("·").trimEnd()
     KitScreen(
         // The phone's top is the page's own (Flutter conv-header): title row with plain Search and Settings icons, then
-        // the connection pill beside the filters. No separate bar.
-        topBar = null,
+        // the connection pill beside the filters. Glass step 4: where the lens is drawn the two rows lie on one floating
+        // liquid pane over the list, which scrolls on under it; everywhere else they are the page's scrolling header, as
+        // before (KitFloatingBar's scrollsElsewhere).
+        topBar = {
+            // The page names itself under the bar (Flutter KitPageHeading); "2 need you" opens the Inbox.
+            // F: lib/ui/screens/chats/chats_home_screen.dart:380-386: room under the bar before the title, and
+            // as much under it when no "need you" line (whose own target gives that air) follows.
+            KitPageHeading(
+                stringResource(Res.string.chatsHomeTitle),
+                Modifier.padding(top = Space.S2.dp, bottom = if (needsLine == null) Space.S2.dp else 0.dp),
+                line = needsLine,
+                onLine = actions::showInbox,
+                actions = if (!shellBar) null else ({
+                    barActions.forEach { KitIconButton(it.icon!!, it.label, it.onClick) }
+                }),
+            )
+        },
         // E20-S27: framed without the bar too, so the page lies on one continuous ground behind heading and list.
         page = true,
-        header = {
-            // The page names itself under the bar (Flutter KitPageHeading); "2 need you" opens the Inbox. Nothing to
-            // filter on a list that holds nothing yet, so the chips wait for the first conversation.
-            Column {
-                // F: lib/ui/screens/chats/chats_home_screen.dart:380-386: room under the bar before the title, and
-                // as much under it when no "need you" line (whose own target gives that air) follows.
-                KitPageHeading(
-                    stringResource(Res.string.chatsHomeTitle),
-                    Modifier.padding(top = Space.S2.dp, bottom = if (needsLine == null) Space.S2.dp else 0.dp),
-                    line = needsLine,
-                    onLine = actions::showInbox,
-                    actions = if (!shellBar) null else ({
-                        barActions.forEach { KitIconButton(it.icon!!, it.label, it.onClick) }
-                    }),
-                )
-                val showFilters = state.phase == ChatsPhase.List || state.phase == ChatsPhase.NoMatch
-                val pill: (@Composable () -> Unit)? = if (!shellBar) null else state.connection?.let { connection -> { ConnectionStatusPill(connection, actions) } }
-                // Until the saved servers are read the row keeps its room and stays empty, so the pill and the
-                // filters arrive together in their places instead of the pill pushing the filters aside.
-                if (shellBar && !state.home.known) Spacer(Modifier.height(LocalKitTokens.current.minTarget.dp))
-                // One composition whether or not the pill has arrived, so the chips keep their scroll and press state when
-                // the connection shows up beside them (they run to the edge only beside the pill).
-                else HeaderRow(pill, showFilters) { Filters(state, actions, bleed = pill != null) }
-            }
-        },
-        status = backExit ?: appStatus,
+        floatingBar =
+            KitFloatingBar(
+                scrollsElsewhere = true,
+                source = listGlass,
+                below = {
+                    // Nothing to filter on a list that holds nothing yet, so the chips wait for the first conversation.
+                    val showFilters = state.phase == ChatsPhase.List || state.phase == ChatsPhase.NoMatch
+                    val pill: (@Composable () -> Unit)? = if (!shellBar) null else state.connection?.let { connection -> { ConnectionStatusPill(connection, actions) } }
+                    // Until the saved servers are read the row keeps its room and stays empty, so the pill and the
+                    // filters arrive together in their places instead of the pill pushing the filters aside.
+                    if (shellBar && !state.home.known) Spacer(Modifier.height(LocalKitTokens.current.minTarget.dp))
+                    // One composition whether or not the pill has arrived, so the chips keep their scroll and press state
+                    // when the connection shows up beside them (they run to the edge only beside the pill).
+                    else HeaderRow(pill, showFilters) { Filters(state, actions, bleed = pill != null) }
+                },
+            ),
+        status = backExit ?: appStatus.takeIf { shownNotice == HomeNoticeKind.AppCondition },
         // F: lib/ui/screens/chats/chats_home_screen.dart:536: pull the list down to read it again; not while the server
         // is still opening. Refresh wraps the scrolling header too (the title returns before a pull starts). The kit
         // part also answers F5 / Ctrl+R and a TalkBack "Refresh" action.
@@ -296,11 +337,11 @@ public fun ChatsScreen(
             state.home.opening?.takeIf { state.newBlocked && it.phase != ChatsOpeningPhase.Failed }?.let { opening ->
                 item(key = "new-blocked", contentType = "new-blocked") { Box(kitItemMotion()) { NewConversationBlocked(opening, actions) } }
             }
-            replyOffer?.let { offer -> item(key = "reply-notification-offer", contentType = "reply-notification-offer") { Box(kitItemMotion()) { offer() } } }
+            replyOffer?.takeIf { shownNotice == HomeNoticeKind.ReplyOffer }?.let { offer -> item(key = "reply-notification-offer", contentType = "reply-notification-offer") { Box(kitItemMotion()) { offer() } } }
             state.brief?.let { brief -> item(key = "brief", contentType = "brief") { Box(kitItemMotion()) { BriefBlock(brief, rowWords, mask, actions, state) } } }
-            if (state.archiveFailure != null)
+            if (state.archiveFailure != null && shownNotice == HomeNoticeKind.ArchiveFailure)
                 item(key = "archive-failure", contentType = "archive-failure") {
-                  Box(kitItemMotion()) {
+                  Box(kitItemMotion().padding(horizontal = LocalKitTokens.current.gutter.dp)) {
                     // E04-S05: the row is already back in the list, so closing the notice changes nothing real.
                     KitNotice(
                         message =
@@ -320,7 +361,7 @@ public fun ChatsScreen(
                     )
                   }
                 }
-            if (state.renameFailure != null)
+            if (state.renameFailure != null && shownNotice == HomeNoticeKind.RenameFailure)
                 item(key = "rename-failure", contentType = "rename-failure") {
                     Box(kitItemMotion()) {
                         io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice(
@@ -329,7 +370,7 @@ public fun ChatsScreen(
                         )
                     }
                 }
-            if (state.answerFailure != null)
+            if (state.answerFailure != null && shownNotice == HomeNoticeKind.AnswerFailure)
                 item(key = "answer-failure", contentType = "answer-failure") {
                     Box(kitItemMotion()) {
                         io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice(
@@ -338,15 +379,70 @@ public fun ChatsScreen(
                         )
                     }
                 }
-            if (state.incomplete.isNotEmpty()) {
-                item(key = "incomplete", contentType = "incomplete") {
-                    Box(kitItemMotion()) {
+            // S4 / H3 (F: chats_home_screen.dart:511-632): a connection that did not answer says so by name and offers
+            // Try again on the page; the one still opening has its own card. A list that is only partly read says what
+            // could not be read and offers Try again (a refresh in flight says nothing: the indicator shows it); a server
+            // that lists one project names it on the projects chip instead of a line.
+            // Flutter shows only "{servers} isn't answering" (chatsHomeUnreachableShort); the longer "conversations
+            // aren't shown" is its screen-reader label, because the visible list may still hold remembered rows.
+            // One notice at a time: the first connection that did not answer; the next shows once this one is back.
+            val unreachable = HomeNotices.unreachable(state)
+            if (shownNotice == HomeNoticeKind.ServerUnreachable) unreachable.take(1).forEach { source ->
+                item(key = "unreachable-${source.profile.raw}", contentType = "unreachable") {
+                    Box(kitItemMotion().padding(horizontal = LocalKitTokens.current.gutter.dp)) {
                         KitNotice(
-                            stringResource(
-                                Res.string.chatsHomeIncompleteNamed,
-                                state.incomplete.joinToString(", "),
-                            )
+                            message = stringResource(Res.string.chatsHomeUnreachableShort, KitBidi.auto(source.name)),
+                            actions = listOf(KitLineAction(stringResource(Res.string.kitTryAgain), { actions.retrySource(source.profile) })),
                         )
+                    }
+                }
+            }
+            // One place per server: a server with its own line, or the one opening (pill or failure card), is not
+            // named again here.
+            val partial = HomeNotices.partial(state)
+            if (shownNotice == HomeNoticeKind.ListIncomplete) {
+                item(key = "incomplete", contentType = "incomplete") {
+                    Box(kitItemMotion().padding(horizontal = LocalKitTokens.current.gutter.dp)) {
+                        val names = KitBidi.auto(partial.joinToString(", "))
+                        KitNotice(
+                            stringResource(Res.string.chatsHomeIncompleteNamed, names),
+                            actions = listOf(KitLineAction(stringResource(Res.string.kitTryAgain), actions::retryList)),
+                        )
+                    }
+                }
+            }
+            // G6 (F: agent_notices.dart:84-157): the phone agents' restart offer, sign-in, stopped and plan-limit lines.
+            if (state.phase != ChatsPhase.Opening) {
+                if (state.agentNotices.restart && shownNotice == HomeNoticeKind.AgentRestart)
+                    item(key = "agents-restart", contentType = "agent-notice") {
+                        Box(kitItemMotion().padding(horizontal = LocalKitTokens.current.gutter.dp)) { KitNotice(stringResource(Res.string.agentsRestartLine)) }
+                    }
+                // The phone's agents, one line: a sign-in first, then a stop, then a plan limit.
+                state.agentNotices.lines.filter { HomeNotices.agentKind(it.kind) == shownNotice }.take(1).forEach { notice ->
+                    item(key = "agent-${notice.agentId}-${notice.kind.name}", contentType = "agent-notice") {
+                        Box(kitItemMotion().padding(horizontal = LocalKitTokens.current.gutter.dp)) {
+                            val name = KitBidi.auto(notice.agentName)
+                            when (notice.kind) {
+                                HomeAgentNoticeKind.SignedOut ->
+                                    KitNotice(
+                                        stringResource(Res.string.agentsSignedOutLine, name),
+                                        actions = listOf(KitLineAction(stringResource(Res.string.agentsSignInAction, name), actions::openAgents)),
+                                    )
+                                HomeAgentNoticeKind.Stopped ->
+                                    KitNotice(
+                                        stringResource(Res.string.agentsStoppedLine, name),
+                                        actions = listOf(KitLineAction(stringResource(Res.string.agentsResumeAction, name), actions::openAgents)),
+                                    )
+                                HomeAgentNoticeKind.LimitReached ->
+                                    KitNotice(
+                                        stringResource(Res.string.agentsLimitUnknown, name),
+                                        actions =
+                                            listOf(
+                                                KitLineAction(stringResource(Res.string.gateSheetOpenAgent, name), { actions.openAgent(notice.agentId) })
+                                            ),
+                                    )
+                            }
+                        }
                     }
                 }
             }
@@ -381,13 +477,17 @@ public fun ChatsScreen(
                     if (rightNow.isNotEmpty())
                         item(key = "right-now", contentType = "right-now") {
                             Box(kitItemMotion()) {
-                                KitRowPanel(
-                                    label = stringResource(Res.string.chatsHomeRightNow),
-                                    // A step of air under the chips, as above Recent, so the first label is not pressed up.
-                                    gapBefore = if (above) sectionGap else Space.S4.dp,
-                                    prominentDividers = true,
-                                ) {
-                                    rightNow.forEach { row -> key(row.key) { ConversationRow(row, rowWords, rowFlags(row, state), mask, actions) } }
+                                // P69: the panel is built afresh when the last answers in it go, so it never keeps
+                                // their height (seen: a 55 dp empty band after Allow once).
+                                key(rememberAnswersGoneKey(rightNow)) {
+                                    KitRowPanel(
+                                        label = stringResource(Res.string.chatsHomeRightNow),
+                                        // A step of air under the chips, as above Recent, so the first label is not pressed up.
+                                        gapBefore = if (above) sectionGap else Space.S4.dp,
+                                        prominentDividers = true,
+                                    ) {
+                                        rightNow.forEach { row -> key(row.key) { ConversationRow(row, rowWords, rowFlags(row, state), mask, actions) } }
+                                    }
                                 }
                             }
                         }
@@ -412,7 +512,7 @@ public fun ChatsScreen(
                             ) {
                                 KitPanelLinkRow(
                                     label = stringResource(Res.string.chats_all_title),
-                                    count = Numbers.format(state.allCount),
+                                    count = Numbers.format(state.shownCount ?: state.allCount),
                                     onClick = actions::showAll,
                                 )
                             }
@@ -421,20 +521,10 @@ public fun ChatsScreen(
                 }
             }
         }
-        // The Undo bar sits at the bottom edge; the New button rides above it while it shows.
+        // P20 (F: lib/ui/kit/kit_undo.dart:63, the bar floats above a pinned primary): the Undo bar rides above the New
+        // button, which never moves. Before, the button rode above the bar and dropped into Undo's place as the bar left,
+        // so a late tap meant for Undo opened New conversation.
         Column(Modifier.align(Alignment.BottomCenter).fillMaxWidth(), horizontalAlignment = Alignment.End) {
-            // P-107: Flutter's round 56 dp + on the gutter, 12 dp above the bottom; the words are heard, not drawn, so
-            // it no longer covers a row's time. It fades out while the server cannot start one yet.
-            if (listed) {
-                KitFab(
-                    label = stringResource(Res.string.chatsHomeNewChat),
-                    icon = KitIcons.add,
-                    onClick = actions::newConversation,
-                    modifier = Modifier.padding(end = LocalKitTokens.current.gutter.dp, bottom = Space.S3.dp),
-                    visible = showFab,
-                    backdrop = listGlass,
-                )
-            }
             val undo = state.archiveUndo
             val message =
                 undo?.let {
@@ -449,6 +539,22 @@ public fun ChatsScreen(
                 onTimeout = actions::commitArchive,
                 modifier = Modifier.align(Alignment.CenterHorizontally),
             )
+            // P-107: Flutter's round 56 dp + on the gutter, 12 dp above the bottom; the words are heard, not drawn, so
+            // it no longer covers a row's time. It fades out while the server cannot start one yet.
+            if (listed) {
+                KitFab(
+                    label = stringResource(Res.string.chatsHomeNewChat),
+                    icon = KitIcons.add,
+                    onClick = actions::newConversation,
+                    modifier = Modifier.padding(end = LocalKitTokens.current.gutter.dp, bottom = Space.S3.dp),
+                    visible = showFab,
+                    backdrop = listGlass,
+                )
+            }
+        }
+        // The edge dock over the list, clear of the floating + at the foot; under Glass it bends the list's recording.
+        androidx.compose.runtime.CompositionLocalProvider(io.github.eslamasabry.oc.ui.kit.dock.LocalKitDockGlass provides listGlass) {
+            edgeDock?.Content(clearBottom = if (listed) KIT_FAB_CLEARANCE.dp else 0.dp)
         }
       }
         ChatsHomeSheets(state, actions)
@@ -613,15 +719,13 @@ private fun Filters(state: ChatsUi, actions: ChatsActions, bleed: Boolean = fals
 private fun BriefBlock(brief: BriefUi, words: HomeRowWords, mask: (String) -> String, actions: ChatsActions, state: ChatsUi) {
     Column(verticalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
         // On the gutter like the rows under it (its glyph sat on the screen's edge).
-        if (brief.unknown)
-            KitNotice(
-                stringResource(Res.string.chatsReturnBriefUnknown),
-                Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp),
-            )
         // Headed and grouped like Right now and Recent, so the top group reads as part of the same list.
         if (brief.rows.isNotEmpty())
-            KitRowPanel(label = stringResource(Res.string.teamProjectDigest)) {
-                brief.rows.forEach { row -> key(row.key) { ConversationRow(row, words, rowFlags(row, state), mask, actions) } }
+            // P69: rebuilt when the last answers in it go, as Right now.
+            key(rememberAnswersGoneKey(brief.rows)) {
+                KitRowPanel(label = stringResource(Res.string.teamProjectDigest)) {
+                    brief.rows.forEach { row -> key(row.key) { ConversationRow(row, words, rowFlags(row, state), mask, actions) } }
+                }
             }
         // One line on the gutter: the rest of what finished at the start, marking it all seen at the end.
         if (brief.more > 0 || brief.rows.isNotEmpty())
@@ -675,6 +779,33 @@ private fun AlwaysAllowConfirm(row: ConversationRowUi?, mask: (String) -> String
 private fun rowTitleText(t: RowTitle): String = rowTitleWords(t)
 
 /**
+ * P69 (a workaround; the cause, most likely KitRowPanel's eased height under the shell's lookahead, is unproven): a
+ * panel's key, which moves on only when the last answers in it go (a waiting permission, question or form). Rebuilding
+ * a panel drops what its rows hold for the moment (an answer half tapped, an open row menu, a swipe), so the key never
+ * moves while any row in the panel still carries answers, nor when answers arrive: nobody is answering in it then.
+ */
+internal fun answersGoneKey(key: Int, hadAnswers: Boolean, hasAnswers: Boolean): Int =
+    if (hadAnswers && !hasAnswers) key + 1 else key
+
+/** Whether any of [rows] carries answers under its words. */
+internal fun carriesAnswers(rows: List<ConversationRowUi>): Boolean =
+    rows.any { it.permission != null || it.question != null || it.form != null }
+
+private class AnswersGone {
+    var had = false
+    var key = 0
+}
+
+@Composable
+private fun rememberAnswersGoneKey(rows: List<ConversationRowUi>): Int {
+    val seen = remember { AnswersGone() }
+    val has = carriesAnswers(rows)
+    seen.key = answersGoneKey(seen.key, seen.had, has)
+    seen.had = has
+    return seen.key
+}
+
+/**
  * One conversation as A1's roomy row (KitRecentRow): the agent's bare mark, the title, one line of the last message
  * (a waiting request's own words first: "Asks to run: npm test"), the time and the state word. Long-press opens the
  * row's acts; a waiting permission keeps its answers (Allow once, Reject, Always allow) under the words, as Flutter's
@@ -686,6 +817,9 @@ private data class HomeRowWords(
     val working: String,
     val failed: String,
     val done: String,
+    val stopped: String,
+    val interrupted: String,
+    val cantReopen: String,
     val archive: String,
     val otherAgent: String,
     val rowActions: String,
@@ -697,6 +831,8 @@ private data class HomeRowWords(
     val related: String,
     val handoff: String,
     val delete: String,
+    /** "Working", or "Working 34m" once the run's start is known (B-161). */
+    val runningFor: (Long?) -> String,
 )
 
 @Composable
@@ -706,6 +842,9 @@ private fun rememberHomeRowWords(): HomeRowWords =
         working = stringResource(Res.string.chatsHomeRowWorking),
         failed = stringResource(Res.string.chatsHomeFailed),
         done = stringResource(Res.string.chatsHomeDone),
+        stopped = stringResource(Res.string.chatsHomeStopped),
+        interrupted = stringResource(Res.string.chatsHomeInterrupted),
+        cantReopen = stringResource(Res.string.agentsStateCantReopen),
         archive = stringResource(Res.string.sessionMenuArchive),
         otherAgent = stringResource(Res.string.agentPersonaOtherName),
         rowActions = stringResource(Res.string.chatsRowActions),
@@ -717,6 +856,7 @@ private fun rememberHomeRowWords(): HomeRowWords =
         related = stringResource(Res.string.sessionOpenRelated),
         handoff = stringResource(Res.string.sessionCopyHandoff),
         delete = stringResource(Res.string.sessionMenuDelete),
+        runningFor = liveRunWords(),
     )
 
 /** What a row needs to know of the whole screen, and nothing else: equal for a row nothing happened to. */
@@ -728,6 +868,11 @@ private data class HomeRowFlags(
     val deletable: Boolean,
     val always: Boolean,
     val answering: Boolean,
+    val held: HomeHeldReply?,
+    /** H1: a waiting question's answer inside its undo window (the words chosen), on its way, or refused. */
+    val heldQuestion: String?,
+    val questionSending: Boolean,
+    val questionRefused: Boolean,
     val showProject: Boolean,
     val showAgents: Boolean,
     val nowMs: Long,
@@ -742,6 +887,10 @@ private fun rowFlags(row: ConversationRowUi, state: ChatsUi): HomeRowFlags =
         deletable = row.key in state.deletable,
         always = row.key in state.alwaysAllowable,
         answering = row.permission?.requestId?.let { it in state.answering } == true,
+        held = row.permission?.requestId?.let { state.held[it] },
+        heldQuestion = row.question?.requestId?.let { state.heldQuestions[it] },
+        questionSending = row.question?.requestId?.let { it in state.sendingQuestions } == true,
+        questionRefused = row.question?.requestId?.let { it in state.refusedQuestions } == true,
         showProject = state.showProjects,
         showAgents = state.showAgents,
         nowMs = state.nowMs,
@@ -764,15 +913,25 @@ private fun ConversationRow(
     val title = rowTitleText(row.title)
     val canArchive = flags.canArchive
     val status =
-        when (row.status) {
+        // While the person's answer is held ("Allowed · Undo" under the row) or a chosen answer to a question is held or
+        // on its way, the state word must not say "Needs you".
+        if (flags.held != null || flags.heldQuestion != null || flags.questionSending) null
+        // H4 (F: chats_home_screen.dart:901): a finished conversation that cannot reopen says so before Done/Stopped.
+        else if (HomeRowStatusRules.saysCantReopen(row)) words.cantReopen
+        else when (row.status) {
             RowStatus.NeedsYou -> words.needsYou
-            RowStatus.Running -> words.working
+            RowStatus.Running ->
+                // H5 (F: chats_host.dart:188-199): how long the run has gone, when its start is known.
+                words.runningFor(row.running?.sinceMs?.takeIf { flags.nowMs > 0 }?.let { flags.nowMs - it })
             RowStatus.Failed -> words.failed
             RowStatus.Done -> words.done
+            RowStatus.Stopped -> words.stopped
+            RowStatus.Interrupted -> words.interrupted
             RowStatus.None -> null
         }
     val tone =
-        when (row.status) {
+        if (flags.held != null || flags.heldQuestion != null || flags.questionSending) KitRowStateTone.Quiet
+        else when (row.status) {
             RowStatus.NeedsYou -> KitRowStateTone.NeedsYou
             RowStatus.Running -> KitRowStateTone.Running
             RowStatus.Failed -> KitRowStateTone.Failed
@@ -784,15 +943,36 @@ private fun ConversationRow(
         row.updatedAtMs?.takeIf { flags.nowMs > 0 }?.let { kitRelativeAge(it, flags.nowMs) }
             ?: row.ago?.let { agoText(it) }
     val preview =
-        row.permission?.let { stringResource(Res.string.chatsHomeAsksToRun, KitBidi.ltr(mask(it.command))) }
+        row.permission?.let {
+            val target = KitBidi.ltr(mask(it.command))
+            when (HomePreviewRules.askKind(it.kind)) {
+                HomePreviewRules.AskKind.Run -> stringResource(Res.string.chatsHomeAsksToRun, target)
+                HomePreviewRules.AskKind.Edit -> stringResource(Res.string.chatsHomeAsksToEdit, target)
+                HomePreviewRules.AskKind.Read -> stringResource(Res.string.chatsHomeAsksToRead, target)
+                HomePreviewRules.AskKind.Other -> stringResource(Res.string.chatsHomeAsksOther, target)
+            }
+        }
+            // H1: a waiting question's own words, or the form's title, where no permission speaks first.
+            ?: row.question?.question?.takeIf { it.isNotBlank() }?.let { mask(it) }
+            ?: row.question?.title?.takeIf { it.isNotBlank() }?.let { mask(it) }
+            ?: row.form?.let { mask(it.title?.takeIf { t -> t.isNotBlank() } ?: stringResource(Res.string.chatUiInputRequested)) }
+            // H5: the shell command a running row is on ("Running npm test"), read left to right.
+            ?: row.running?.command?.takeIf { row.status == RowStatus.Running && it.isNotBlank() }
+                ?.let { stringResource(Res.string.signalRowRunningCommand, KitBidi.ltr(mask(it))) }
             ?: row.preview?.let { mask(it) }
     val project = row.project.takeIf { flags.showProject && it.isNotBlank() }
     // No line to show: the row says where it lives instead (its project when no dot names it, and its server).
     val meta = HomePreviewRules.fallback(row.project, row.server, projectShown = project != null)
     val permission = row.permission
+    val question = row.question
+    val form = row.form
     val below: (@Composable () -> Unit)? =
-        if (permission == null) null
-        else ({ PermissionAnswers(row, permission, flags.always, flags.answering, actions) })
+        when {
+            permission != null -> ({ PermissionAnswers(row, permission, flags.always, flags.answering, flags.held, actions) })
+            question != null -> ({ QuestionAnswers(row, question, flags, mask, actions) })
+            form != null -> ({ FormAnswers(row, actions) })
+            else -> null
+        }
     KitMenu(
         expanded = menuOpen,
         // N-30: the same acts, in the same order, as a row on All conversations (a tap already opens it). Built only
@@ -848,8 +1028,25 @@ private fun PermissionAnswers(
     permission: io.github.eslamasabry.oc.engine.agents.feed.FeedPermission,
     always: Boolean,
     answering: Boolean,
+    held: HomeHeldReply?,
     actions: ChatsActions,
 ) {
+    // H1 (F: chats_host.dart:236-246): the answer waits 3 s; the row says what was chosen and offers Undo.
+    if (held != null) {
+        KitReceipt(
+            state = KitReceiptState.Confirmed,
+            label =
+                stringResource(
+                    when (held) {
+                        HomeHeldReply.Allowed -> Res.string.chatRequestAnswerAllowed
+                        HomeHeldReply.Rejected -> Res.string.chatRequestAnswerRejected
+                        HomeHeldReply.AlwaysAllowed -> Res.string.chatRequestAlwaysOn
+                    }
+                ),
+            onUndo = { actions.undoAnswer(row) },
+        )
+        return
+    }
     val enabled =
         when {
             answering -> KitEnabled.Disabled(stringResource(Res.string.serversWorking))
@@ -882,6 +1079,97 @@ private fun PermissionAnswers(
             )
     }
 }
+
+/**
+ * H1 (F: chats_host.dart:300-310, attention_card.dart): a waiting question under its row. One prompt with one answer
+ * shows its choices (at most [QUESTION_ROW_CHOICES]; the rest are behind "More answers", which opens the
+ * conversation); a tap holds the answer for the undo window, then sends it. Anything else (several prompts, many
+ * answers, "something else") is answered in the conversation: the same Answer button the chat's card has.
+ */
+@Composable
+private fun QuestionAnswers(
+    row: ConversationRowUi,
+    question: io.github.eslamasabry.oc.engine.agents.feed.FeedQuestion,
+    flags: HomeRowFlags,
+    mask: (String) -> String,
+    actions: ChatsActions,
+) {
+    val held = flags.heldQuestion
+    if (held != null) {
+        KitReceipt(
+            state = KitReceiptState.Confirmed,
+            label = mask(held),
+            onUndo = { actions.undoAnswer(row) },
+        )
+        return
+    }
+    if (flags.questionSending) {
+        KitReceipt(state = KitReceiptState.Sending)
+        return
+    }
+    if (flags.questionRefused) {
+        KitReceipt(state = KitReceiptState.Refused(), onRetry = { actions.retryQuestion(row) })
+        return
+    }
+    val enabled = if (row.canOpen) KitEnabled.Enabled else KitEnabled.Disabled(stringResource(Res.string.e7WorkspaceConnecting))
+    val inPlace = question.inPlace && question.choices.isNotEmpty()
+    val shown = if (question.choices.size > QUESTION_ROW_CHOICES) question.choices.take(QUESTION_ROW_CHOICES - 1) else question.choices
+    KitChipWrap {
+        if (inPlace) {
+            shown.forEach { choice ->
+                KitButton(
+                    mask(choice),
+                    { actions.answerQuestion(row, listOf(listOf(choice)), choice) },
+                    role = KitButtonRole.Secondary,
+                    enabled = enabled,
+                    expand = false,
+                )
+            }
+            val remaining = question.choices.size - shown.size
+            if (remaining > 0)
+                KitButton(
+                    pluralStringResource(Res.plurals.kitRequestMoreAnswers, remaining, Numbers.format(remaining)),
+                    { actions.openRequest(row) },
+                    role = KitButtonRole.Tertiary,
+                    enabled = enabled,
+                    expand = false,
+                )
+            if (question.custom)
+                KitButton(
+                    stringResource(Res.string.chatRequestOtherAnswer),
+                    { actions.openRequest(row) },
+                    role = KitButtonRole.Tertiary,
+                    enabled = enabled,
+                    expand = false,
+                )
+        } else {
+            KitButton(
+                stringResource(Res.string.kitRequestAnswer),
+                { actions.openRequest(row) },
+                role = KitButtonRole.Secondary,
+                enabled = enabled,
+                expand = false,
+            )
+        }
+    }
+}
+
+/** H1: a waiting form under its row: the form itself is filled in the conversation, so Answer opens it there. */
+@Composable
+private fun FormAnswers(row: ConversationRowUi, actions: ChatsActions) {
+    KitChipWrap {
+        KitButton(
+            stringResource(Res.string.kitRequestAnswer),
+            { actions.openRequest(row) },
+            role = KitButtonRole.Secondary,
+            enabled = if (row.canOpen) KitEnabled.Enabled else KitEnabled.Disabled(stringResource(Res.string.e7WorkspaceConnecting)),
+            expand = false,
+        )
+    }
+}
+
+/** Choices shown on a row before "More answers" (the chat's question card shows the same five, F: Kit question card). */
+private const val QUESTION_ROW_CHOICES: Int = 5
 
 @Composable
 internal fun agoText(age: RelativeAge): String =

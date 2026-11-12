@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="oc_schedule_channel">定时提示</string>
+    <string name="oc_schedule_title">定时提示</string>
+    <string name="oc_schedule_running">正在运行你的定时提示…</string>
+    <string name="oc_schedule_ran">已发送。回复在对话中。</string>
+    <string name="oc_schedule_finished">已完成。点按查看回复。</string>
+    <string name="oc_schedule_skipped">这次已跳过。点按查看原因。</string>
+    <string name="oc_schedule_failed">未完成。点按查看原因。</string>
+    <string name="oc_schedule_why_needs_you">正在等你回答。打开对话以继续。</string>
+    <string name="oc_schedule_why_sign_in">服务器要求重新登录。</string>
+    <string name="oc_schedule_why_agent">智能体因出错而停止。</string>
+    <string name="oc_schedule_why_timeout">未能在时限内完成，也不会再次发送。</string>
+    <string name="oc_schedule_why_unavailable">无法连接到服务器。</string>
+    <string name="oc_schedule_digest_title">今早的定时提示</string>
+    <string name="oc_schedule_digest_body">%1$d 个已回复，%2$d 个未完成，%3$d 个已跳过</string>
+    <string name="oc_schedule_open">打开</string>
+</resources>

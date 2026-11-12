@@ -8,7 +8,7 @@
     <string name="e7LocaleUiDescription">Escolha o idioma usado em todo o app. As mensagens do servidor e o seu texto permanecem como estão.</string>
     <string name="e7LocaleUiSaving">Salvando o idioma…</string>
     <string name="e7LocaleUiSaveFailed">Não foi possível salvar o idioma. Sua escolha anterior continua ativa. Selecione um idioma para tentar novamente.</string>
-    <string name="languagePickerPartlyTranslated">Parcialmente traduzido (%1$d%)</string>
+    <string name="languagePickerPartlyTranslated">Traduzido em parte (%1$d%)</string>
     <string name="e7LocaleUiJapanese">日本語</string>
     <string name="e7LocaleUiChinese">简体中文</string>
     <string name="e7LocaleUiSpanish">Español</string>
@@ -827,4 +827,11 @@
     <string name="backgroundBatterySettingsInstead">O Android não mostrou a pergunta dele, então as configurações de bateria foram abertas. Defina este app como Sem restrições lá.</string>
     <string name="privacyPagesSummary">Servidores, provedores, voz, arquivos e atualizações</string>
     <string name="manageSpaceKeptAllComputers">Seus computadores e tudo o que foi enviado ao git permanecem</string>
+    <string name="appearancePreviewAsk">Arrume a página de configurações</string>
+    <string name="appearancePreviewReply">Pronto. Três arquivos mudaram e todas as verificações passam.</string>
+    <string name="appearancePreviewAction">Revisar alterações</string>
+    <string name="appearancePreviewSpoken">Uma amostra do app com estas escolhas</string>
+    <string name="consentWhyNeedsYouBlocked">O Android bloqueia as notificações deste app. Toque para corrigir em Notificações.</string>
+    <string name="consentWhyNeedsYouWhileOpen">Você só recebe avisos enquanto o app está aberto. Toque para manter a conexão em segundo plano ativa.</string>
+    <string name="consentWhyNeedsYouChannelOff">O Android está com as notificações de perguntas deste app desativadas. Toque para ativá-las nas configurações do Android.</string>
 </resources>

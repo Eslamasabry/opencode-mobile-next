@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.engine.team.TeamPhase
 import io.github.eslamasabry.oc.feature.team.presentation.AskAnswer
 import io.github.eslamasabry.oc.feature.team.presentation.EditorKind
+import io.github.eslamasabry.oc.feature.team.presentation.FleetHomeKind
 import io.github.eslamasabry.oc.feature.team.presentation.HomeRow
 import io.github.eslamasabry.oc.feature.team.presentation.PhoneOffKind
 import io.github.eslamasabry.oc.feature.team.presentation.PhoneOffUi
@@ -44,6 +45,7 @@ import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
+import io.github.eslamasabry.oc.ui.kit.state.KitStateSize
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
 import io.github.eslamasabry.oc.ui.kit.team.KitProjectRow
 import io.github.eslamasabry.oc.ui.kit.team.KitTeamState
@@ -72,13 +74,30 @@ public fun TeamHomeScreen(state: TeamHomeUi, actions: TeamHomeActions) {
                         when {
                             state.demo -> stringResource(Res.string.teamProjectDemoChip)
                             state.phase == TeamPhase.Off -> stringResource(Res.string.teamUiRowOff)
+                            state.phase == TeamPhase.Computer -> computerSubtitle(state.computer)
                             else -> null
                         },
                     exit = KitTopBarExit.Back,
                     exitLabel = stringResource(Res.string.kitTopBarBack),
                     onExit = actions::back,
                     actions =
-                        if (!ready) emptyList()
+                        if (state.phase == TeamPhase.Computer)
+                        // A computer's team: Team settings (where it runs, Turn off) and Refresh.
+                            listOf(
+                                KitLineAction(
+                                    stringResource(Res.string.teamSettingsOpenTooltip),
+                                    actions::openSettings,
+                                    icon = KitIcons.settingsGear,
+                                    testTag = "team-settings",
+                                ),
+                                KitLineAction(
+                                    stringResource(Res.string.teamUiRefresh),
+                                    actions::refreshComputer,
+                                    icon = KitIcons.retry,
+                                    testTag = "team-refresh",
+                                ),
+                            )
+                        else if (!ready) emptyList()
                         else
                             listOf(
                                 KitLineAction(
@@ -102,7 +121,9 @@ public fun TeamHomeScreen(state: TeamHomeUi, actions: TeamHomeActions) {
                             ),
                     // A phone's bar holds two; Team settings waits in the menu there.
                     more = { hidden ->
-                        KitMenu(
+                        // The bar calls this even with nothing past its limit (the Off page has no action): a menu with
+                        // no item would be a dead tap, so it is not drawn.
+                        if (hidden.isNotEmpty()) KitMenu(
                             expanded = barMenuOpen,
                             items = hidden.map { KitMenuItem(it.label, it.onClick, icon = it.icon) },
                             onDismissRequest = { barMenuOpen = false },
@@ -118,11 +139,23 @@ public fun TeamHomeScreen(state: TeamHomeUi, actions: TeamHomeActions) {
                     },
                 )
             },
-            loading = state.phase == TeamPhase.Loading || state.loading,
-            loadingLabel = stringResource(Res.string.teamProjectLoad),
+            loading =
+                state.phase == TeamPhase.Loading || state.loading ||
+                    (state.phase == TeamPhase.Computer && state.computer.kind == FleetHomeKind.Starting),
+            loadingLabel = stringResource(if (state.phase == TeamPhase.Computer) Res.string.teamUiCardLoading else Res.string.teamProjectLoad),
             width = KitScreenWidth.Reading,
             bottom =
                 if (state.phase == TeamPhase.Off) ({ TeamIntroBottom(state.intro, actions) })
+                // A computer's team: the one primary, pinned below the list, only where the phone can give a task.
+                else if (state.phase == TeamPhase.Computer)
+                    (if (state.computer.kind == FleetHomeKind.Ready && state.computer.canGiveTask)
+                        ({
+                            KitActionBlock(
+                                Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp, vertical = Space.S2.dp),
+                                primary = KitAction(stringResource(Res.string.teamUiStartRunFab), actions::startRun, icon = KitIcons.add),
+                            )
+                        })
+                    else null)
                 else if (!ready || !state.canStart) null
                 else
                     ({
@@ -138,12 +171,7 @@ public fun TeamHomeScreen(state: TeamHomeUi, actions: TeamHomeActions) {
             when (state.phase) {
                 TeamPhase.Loading -> Unit
                 TeamPhase.Off -> TeamIntro(state.intro, actions)
-                TeamPhase.Computer ->
-                    KitStateView(
-                        KitStateKind.Missing,
-                        stringResource(Res.string.teamUiHomeTitle),
-                        body = stringResource(Res.string.nativeCapabilityTeamDeferred),
-                    )
+                TeamPhase.Computer -> TeamComputerHome(state.computer, state.nowMs, actions)
                 TeamPhase.PhoneOff -> PhoneOffPage(state.phoneOff, actions)
                 TeamPhase.Ready -> Projects(state, actions) { answering = it }
             }
@@ -226,7 +254,7 @@ private fun Projects(state: TeamHomeUi, actions: TeamHomeActions, text: (HomeRow
             }
         }
         if (state.rows.isEmpty() && !state.stale) {
-            item(key = "empty") { KitStateView(KitStateKind.Empty, stringResource(Res.string.teamProjectEmpty)) }
+            item(key = "empty") { KitStateView(KitStateKind.Empty, stringResource(Res.string.teamProjectEmpty), size = KitStateSize.Inline) }
         }
         items(state.rows, key = { it.key }) { row ->
             when (row) {

@@ -321,7 +321,7 @@ class BuiltinInstallerProducerQaService : Service() {
             launchStage = "environment"
             val environment = value.getJSONObject("environment")
             val expected = mapOf("PROOT_LOADER" to "$native/libproot-loader.so",
-                "PROOT_TMP_DIR" to "${cacheDir.absolutePath}/proot-tmp", "LD_LIBRARY_PATH" to native,
+                "PROOT_TMP_DIR" to "${noBackupFilesDir.absolutePath}/proot-tmp", "LD_LIBRARY_PATH" to native,
                 "OC_RUNTIME_OWNER" to id)
             checkSafe(keys(environment) == expected.keys && expected.all { (key,
                     item) -> environment.opt(key) == item },

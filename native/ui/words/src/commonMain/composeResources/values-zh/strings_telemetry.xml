@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="telemetryCrashReportsTitle">向开发者发送崩溃报告（Google Firebase）</string>
+    <string name="telemetryCrashReportsBody">当应用崩溃或某个步骤失败时，它会发送问题的类型、应用和 Android 版本，以及一份简短的代码位置列表。绝不会发送你的消息、文件、地址或密钥。</string>
+    <string name="telemetryConsentChoose">选择</string>
+    <string name="telemetryConsentSave">保存我的选择</string>
+    <string name="sendReportTitle">发送问题报告</string>
+    <string name="sendReportSubtitle">这就是报告包含的全部内容。在你点按“发送”之前不会发送任何内容。</string>
+    <string name="sendReportSend">发送</string>
+    <string name="sendReportCollecting">正在收集报告…</string>
+    <string name="sendReportSentTitle">报告已发送</string>
+    <string name="sendReportSentBody">如果你在 GitHub 上提交问题，请附上此报告代码，以便开发者找到你的报告。</string>
+    <string name="sendReportFailed">无法发送报告。请检查网络连接后重试。</string>
+    <string name="sendReportDone">完成</string>
+    <string name="reportCodeLabel">报告代码</string>
+    <string name="reportCodeCopy">复制报告代码</string>
+    <string name="sendReportRowDetail">先查看将要发送的内容，再发送</string>
+</resources>

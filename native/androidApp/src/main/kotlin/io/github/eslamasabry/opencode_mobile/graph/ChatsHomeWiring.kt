@@ -17,6 +17,19 @@ import io.github.eslamasabry.oc.core.model.BackendKind
 import io.github.eslamasabry.oc.core.model.ServerLocation
 import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.core.common.ids.SessionId
+import dev.zacsweers.metro.ContributesIntoSet
+import io.github.eslamasabry.oc.engine.agents.AgentId
+import io.github.eslamasabry.oc.engine.agents.catalog.AgentCatalog
+import io.github.eslamasabry.oc.engine.agents.certification.AgentCertification
+import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentStatus
+import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgents
+import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentsState
+import io.github.eslamasabry.oc.feature.chats.presentation.HomeAgentNotice
+import io.github.eslamasabry.oc.feature.chats.presentation.HomeAgentNoticeKind
+import io.github.eslamasabry.oc.feature.chats.presentation.HomeAgentNoticeSource
+import io.github.eslamasabry.oc.feature.chats.presentation.HomeAgentNotices
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.stateIn
 import io.github.eslamasabry.oc.engine.agents.feed.ChatFeedItem
 import io.github.eslamasabry.oc.engine.agents.feed.ChatStatus
 import io.github.eslamasabry.oc.engine.agents.feed.HomeFeedCache
@@ -120,15 +133,31 @@ class AppChatsHome(
         val sources =
             runtime.profiles.profiles.value
                 .map { loaded ->
+                    // F: side_connections.dart:93-99: the phone agents are one switch named after Claude Code, part of
+                    // This phone: never the server, never "not answering" (their own notices say what is wrong).
+                    val agents = runtime.isPhoneHelper(loaded.id)
                     ChatsListSourceUi(
                         profile = loaded.id,
-                        name = loaded.profile.name,
+                        name =
+                            if (agents) AgentCatalog.builtIn.byId(AgentId("claude"))?.name ?: loaded.profile.name
+                            else loaded.profile.name,
                         shown = runtime.listSourceShown(loaded.id),
-                        main = loaded.id == active,
+                        main = !agents && loaded.id == active,
                         onThisPhone = runtime.sourceOnThisPhone(loaded.profile),
-                        unreachable = loaded.id in runtime.sourceFailures,
+                        unreachable = !agents && loaded.id in runtime.sourceFailures,
+                        agents = agents,
+                        secret =
+                            when {
+                                loaded.reentry.password ->
+                                    io.github.eslamasabry.oc.feature.chats.presentation.SwitcherSecret.Password
+                                loaded.reentry.agentToken ->
+                                    io.github.eslamasabry.oc.feature.chats.presentation.SwitcherSecret.Token
+                                else -> io.github.eslamasabry.oc.feature.chats.presentation.SwitcherSecret.None
+                            },
                     )
                 }
+                // F: the agents' switch comes after every server's.
+                .sortedBy { it.agents }
                 .toImmutableList()
         val owner = active?.let(runtime.profiles::profile)
         val opening =
@@ -148,9 +177,15 @@ class AppChatsHome(
                     profile = active,
                     onThisPhone = phoneServer.runsHere(active),
                     phoneOff = phoneServer.runsHere(active) && phone.serverFacts.value.stoppedByPerson,
+                    address = owner.profile.baseUrl,
+                    usesToken = owner.profile.usesAgentSocket,
+                    attempts = openingTries(owner.id),
                 )
             } else null
-        if (opening == null) phoneWatch = null
+        if (opening == null) {
+            phoneWatch = null
+            openingTries = null
+        }
         mutable.value = ChatsHomeExtraState(sources, opening, null, monitor.snapshot.value)
         if (opening?.phase == ChatsOpeningPhase.Starting) keepTryingQuietly()
     }
@@ -214,10 +249,17 @@ class AppChatsHome(
     override suspend fun retrySource(profile: ProfileId): Outcome<Unit> =
         record(runtime.retryListSource(profile))
 
+    // How many times opening the active server has been tried since it first failed (1 = the first try).
+    private var openingTries: Pair<ProfileId, Int>? = null
+
+    private fun openingTries(profile: ProfileId): Int =
+        openingTries?.takeIf { it.first == profile }?.second ?: 1
+
     override suspend fun retryOpening(): Outcome<Unit> {
         val active =
             runtime.profiles.activeId.value
                 ?: return Outcome.Failed(Failure.Refused(RefusalReason.ProfileDeleted))
+        openingTries = active to (openingTries(active) + 1)
         return record(runtime.retryListSource(active))
     }
 
@@ -389,5 +431,59 @@ class AppChatsHome(
                 }
             }
         if (result is Outcome.Ok) cachedRevisions[id] = signature to withLines
+    }
+}
+
+/**
+ * G6 (F: lib/ui/screens/agents/agent_notices.dart:84-157): the home's lines about the phone's agents, read from the
+ * same state the Agents page shows. A sign-in or plan line only for an agent New conversation offers (certified for
+ * chat); a stopped agent is said only when its helper really stopped ([HomeAgentNoticeRules]).
+ */
+@SingleIn(AppScope::class)
+@ContributesIntoSet(AppScope::class)
+@Inject
+class AppHomeAgentNotices(phoneAgents: PhoneAgents, appScope: AppCoroutineScope) : HomeAgentNoticeSource {
+    override val notices: StateFlow<HomeAgentNotices> =
+        phoneAgents.state
+            .map { state ->
+                HomeAgentNoticeRules.notices(state) { AgentCertification.bundled.certifiedForChat(AgentId(it)) }
+            }
+            .distinctUntilChanged()
+            .stateIn(appScope, SharingStarted.Eagerly, HomeAgentNotices())
+}
+
+internal object HomeAgentNoticeRules {
+    /**
+     * The home's agent lines from the Agents page's [state]. A row reads Stopped whenever the agent helper is not
+     * running in this app process (PhoneAgentRules.status: `qualified && helperRunning == false`), and the helper only
+     * starts when the Agents page opens (AgentsPresenter.connectWhenInstalled). So after every app start an installed
+     * agent read "stopped in the background" although nothing had stopped. The stop line is said only when the helper
+     * was seen to stop on its own ([PhoneAgentsState.helperStoppedUnexpectedly]: its exit record, not asked for, from
+     * its latest run and since boot and the app's update; the "maybe Android" flag only refines that and never says a
+     * stop by itself). Its Resume opens the Agents page, which starts the helper again; that launch supersedes the
+     * record, so the line does not come back. Flutter starts the helper itself and hides the line meanwhile
+     * (phone_agents.dart:610-616, 684-692).
+     */
+    fun notices(state: PhoneAgentsState, certifiedForChat: (String) -> Boolean): HomeAgentNotices {
+        if (!state.available) return HomeAgentNotices()
+        val helperStopped = state.helperStoppedUnexpectedly
+        return HomeAgentNotices(
+            restart = state.needsRestart,
+            lines =
+                state.agents
+                    .mapNotNull { row ->
+                        val kind =
+                            when (row.status) {
+                                PhoneAgentStatus.SignInNeeded -> HomeAgentNoticeKind.SignedOut
+                                PhoneAgentStatus.Stopped ->
+                                    if (helperStopped) HomeAgentNoticeKind.Stopped else return@mapNotNull null
+                                PhoneAgentStatus.Limit -> HomeAgentNoticeKind.LimitReached
+                                else -> return@mapNotNull null
+                            }
+                        if (kind != HomeAgentNoticeKind.Stopped && !certifiedForChat(row.id)) return@mapNotNull null
+                        HomeAgentNotice(row.id, row.name, kind)
+                    }
+                    .toImmutableList(),
+        )
     }
 }

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="notify_team_decision_title">AI Team needs a decision</string>
+    <string name="notify_team_decision_body">A task is waiting for your answer. Open AI Team to reply.</string>
+    <string name="notify_team_review_title">AI Team work is ready to review</string>
+    <string name="notify_team_review_body">A task finished and is waiting for your review.</string>
+    <string name="notify_team_failed_title">An AI Team task failed</string>
+    <string name="notify_team_failed_body">Open AI Team to see what happened and start it again.</string>
+    <string name="notify_team_completed_title">AI Team finished the project</string>
+    <string name="notify_team_completed_body">All of the project\'s tasks are done.</string>
+</resources>

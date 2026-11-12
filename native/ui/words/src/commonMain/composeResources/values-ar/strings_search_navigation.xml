@@ -52,7 +52,12 @@
     <string name="nativeSearchPlaceLanguage">اللغة</string>
     <string name="nativeSearchAliasesLanguage">العربية؛ الإنجليزية</string>
     <string name="nativeSearchPlaceTips">نصائح</string>
-    <string name="nativeSearchAliasesTips">مساعدة؛ إرشادات؛ إيماءات</string>
+    <string name="nativeSearchAliasesTips">مساعدة؛ إرشادات؛ إيماءات؛ إظهار النصائح مرة أخرى</string>
+    <string name="nativeSearchAliasesUpdates">تحديث؛ ترقية؛ إصدار جديد؛ تثبيت</string>
+    <string name="nativeSearchAliasesKeepRunning">الخلفية؛ البطارية؛ البقاء متصلًا؛ خدمة مقدّمة</string>
+    <string name="nativeSearchAliasesLinuxPorts">لينكس؛ المنافذ المفتوحة؛ منفذ الخادم</string>
+    <string name="nativeSearchAliasesLinuxPackages">لينكس؛ برامج؛ apt؛ تثبيت</string>
+    <string name="nativeSearchAliasesDemo">عرض تجريبي؛ جرّب؛ مثال؛ دون اتصال</string>
     <string name="nativeSearchPlaceShortcuts">اختصارات لوحة المفاتيح</string>
     <string name="nativeSearchAliasesShortcuts">لوحة المفاتيح؛ سطح المكتب؛ المفاتيح</string>
     <string name="nativeSearchShortcutsBody">تعمل هذه المفاتيح في محرر الرسالة وعناصر التحكم عند التركيز عليها.</string>

@@ -119,10 +119,30 @@ public fun ServersScreen(
                         stringResource(Res.string.openCode1UnsupportedTitle), { actions.openUpdateGuide(id) },
                     )
                 }
-                KitErrorNotice(issueWords(issue, state.failure),
+                // A saved password or token that cannot be read or was refused is fixed where it is typed.
+                val signIn = state.signIn?.let { id -> state.servers.firstOrNull { it.id == id } }
+                val token = signIn?.let { state.rows.facts[it.id]?.backend }.let {
+                    it == io.github.eslamasabry.oc.core.model.BackendKind.Codex || it == io.github.eslamasabry.oc.core.model.BackendKind.Paseo
+                }
+                val unreadable = signIn != null && state.failure is Failure.SecretUnavailable
+                val enter = signIn?.let { server ->
+                    io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction(
+                        stringResource(
+                            if (!unreadable) (if (token) Res.string.updateConnectionToken else Res.string.e7BannerUpdatePassword)
+                            else if (token) Res.string.connectionEnterToken else Res.string.connectionEnterPassword
+                        ),
+                        { actions.edit(server.id) },
+                    )
+                }
+                KitErrorNotice(
+                    if (unreadable) stringResource(if (token) Res.string.connectionTokenUnreadableDetails else Res.string.connectionPasswordUnreadableDetails)
+                    else issueWords(issue, state.failure),
                     modifier = Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp, vertical = Space.S1.dp),
+                    title = if (unreadable) stringResource(
+                        if (token) Res.string.connectionTokenUnreadable else Res.string.connectionPasswordUnreadable, signIn!!.name,
+                    ) else null,
                     failure = state.failure, detailsLabel = stringResource(Res.string.kitDetails), copyLabel = stringResource(Res.string.kitCopyDetails),
-                    retry = guide)
+                    retry = guide ?: enter)
             }
             if (empty) {
                 Column(Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp).padding(top = (Space.S6 + Space.S6).dp)) {

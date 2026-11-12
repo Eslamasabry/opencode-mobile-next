@@ -111,6 +111,27 @@ class NativeAgentSetupJobs(
                             }
                     },
                 )
+            // Flutter ran each component's own check first: a step already in place is not run again (the Node
+            // download and Paseo's `npm ci` are the long ones). A check that cannot run leaves the step to run.
+            val inPlace =
+                if (!linux.installed) emptySet()
+                else
+                    PhoneAgentRules.satisfiedSteps(
+                        mapOf(
+                                "agent-node" to PaseoPhoneScripts.nodeCheck,
+                                "agent-paseo" to PaseoPhoneScripts.check,
+                                "agent-${agent.raw}" to AgentPhoneScripts.check(descriptor),
+                            )
+                            .filterKeys { id -> components.any { it.id == id } }
+                    ) { script ->
+                        try {
+                            linux.run(script, 120, agentUser = true, logOutput = false).exitCode
+                        } catch (e: CancellationException) {
+                            throw e
+                        } catch (_: Exception) {
+                            null
+                        }
+                    }
             val specs = components.map { component ->
                 val script =
                     when (component.id) {
@@ -129,7 +150,7 @@ class NativeAgentSetupJobs(
                     native = component.id == "linux",
                     step = false,
                     weight = 1.0,
-                    skipped = component.id == "linux" && linux.installed,
+                    skipped = (component.id == "linux" && linux.installed) || component.id in inPlace,
                     version = null,
                     stage = null,
                     labels = emptyMap(),
@@ -210,22 +231,26 @@ class NativeAgentSetupJobs(
 
     private fun status(): JSONObject? = runner.status()?.let(::JSONObject)
 
+    /** The last failed job's fixed message, for Details; null when the last job did not fail. */
+    fun lastFailureText(): String? =
+        try {
+            status()?.takeIf { it.optString("state") == "failed" }?.optString("error")?.takeIf { it.isNotBlank() }
+        } catch (_: Exception) {
+            null
+        }
+
     private fun admitted(profile: ProfileId): Boolean =
         profile !in denied &&
             stores.profiles.profile(profile) != null &&
             (stores.prefs.get("oc.builtinServerOwner") as? PrefValue.Str)?.value == profile.raw
 
-    private fun failure(snapshot: JSONObject): AgentSetupFailure {
-        val text = snapshot.optString("error") + " " + snapshot.optString("logTail")
-        return when {
-            "checksum" in text.lowercase() -> AgentSetupFailure.Checksum
-            "space" in text.lowercase() || "storage" in text.lowercase() ->
-                AgentSetupFailure.Storage
-            "version" in text.lowercase() -> AgentSetupFailure.Version
-            "download" in text.lowercase() -> AgentSetupFailure.Download
-            else -> AgentSetupFailure.Unknown
-        }
-    }
+    // AgentInstallFailureRules reads the agent's own version check first (AgentVersionCheck), then the job's words.
+    private fun failure(snapshot: JSONObject): AgentSetupFailure =
+        AgentInstallFailureRules.of(
+            snapshot.optString("error"),
+            snapshot.optString("logTail"),
+            snapshot.optString("errorCode").takeIf { !snapshot.isNull("errorCode") },
+        )
 
     override fun stopAdmission(profile: ProfileId) {
         synchronized(admission) { denied.add(profile) }

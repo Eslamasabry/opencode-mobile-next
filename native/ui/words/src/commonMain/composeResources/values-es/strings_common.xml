@@ -715,4 +715,5 @@
     <string name="browserEditorInsecureOrigin">Esta página se abrió por HTTP simple desde una dirección de red, así que el navegador no guardará la contraseña de un servidor. Deja la contraseña vacía si el servidor no tiene una, o abre la app por HTTPS o desde localhost para guardarla.</string>
     <string name="browserAgentSocketUnavailable">Las conexiones de Codex y Paseo no están disponibles en el navegador. Inician sesión con un encabezado de WebSocket que los navegadores no pueden enviar, y todavía no se admite el inicio de sesión desde el navegador. Usa la app del teléfono o de escritorio para ellas; los servidores de OpenCode funcionan aquí.</string>
     <string name="phoneServerPortBusy">Otro servidor de OpenCode ya está usando el puerto %1$s en este teléfono.</string>
+    <string name="chatRequestAskReadFolder">¿Leer esta carpeta?</string>
 </resources>

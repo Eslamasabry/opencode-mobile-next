@@ -6,7 +6,7 @@
     <string name="telemetryCrashesTitle">Rapports de plantage</string>
     <string name="telemetryCrashesDetail">Envoie des rapports de plantage à Google Firebase Crashlytics\u00A0: le type d’erreur et l’endroit du code de l’application où elle s’est produite, jamais son message, vos dernières actions sous forme de mots courts, et la raison pour laquelle Android a arrêté l’application la dernière fois. Aucun code, conversation, fichier, adresse, clé ni identifiant publicitaire.</string>
     <string name="collectTitle">Ce que nous collectons</string>
-    <string name="collectRowSummary">Les deux interrupteurs sont désactivés au départ. Voyez exactement ce que chacun envoie.</string>
+    <string name="collectRowSummary">Utilisation et Rapports de plantage restent désactivés, sauf si vous avez dit oui quand la question vous a été posée. Voyez exactement ce que chacun envoie.</string>
     <string name="collectUsageNotSentYet">Cette version n’envoie pas encore l’utilisation et l’état de l’application. Votre réponse est conservée et sera utilisée dès que ce sera le cas.</string>
     <string name="collectRules">Seuls des mots fixes et des tranches de nombres sont envoyés, jamais de texte libre. Désactiver un interrupteur supprime ce qui n’a pas encore été envoyé.</string>
     <string name="collectUsageLabel">Avec Utilisation et état de l’application</string>
@@ -22,17 +22,17 @@
     <string name="collectAgents">Si un agent a démarré, et le type d’échec</string>
     <string name="collectBackground">Pourquoi le service en arrière-plan s’est arrêté</string>
     <string name="collectUpdates">Si une mise à jour s’est installée, et le type d’échec</string>
-    <string name="collectPages">Les types de pages et de fonctions que vous utilisez, les étapes de configuration, la première réponse, la durée d’une visite et le nombre de messages envoyés pendant celle-ci</string>
+    <string name="collectPages">Les types de pages et de fonctions que vous utilisez, les étapes de configuration, la première réponse, la durée d’une visite et le nombre de messages que vous y avez envoyés</string>
     <string name="collectJourney">Jusqu’où vous êtes allé dans vos premiers pas (ouvert l’appli, configuré, connecté, envoyé un message, reçu une première réponse) et environ combien de temps après votre accord. Chaque étape n’est comptée qu’une fois</string>
     <string name="collectStarters">Le type de suggestion touché dans une nouvelle conversation, jamais ses mots ni ce qu’elle demande</string>
     <string name="collectStart">La rapidité de démarrage de l’application</string>
-    <string name="collectSmooth">La fluidité des pages (la part d’images lentes et figées), et la fréquence de rafraîchissement de l’écran</string>
+    <string name="collectSmooth">La fluidité des pages (part d’images lentes et figées) et la fréquence de rafraîchissement de l’écran</string>
     <string name="collectMemory">Les avertissements de mémoire d’Android</string>
     <string name="collectDevice">Des tranches pour la mémoire et l’espace libre de votre téléphone, son type de processeur et la version de WebView, si les notifications sont autorisées, et le type et la version du serveur que vous utilisez</string>
     <string name="collectCrashKind">Le type d’erreur et l’endroit du code de l’application où elle s’est produite, jamais son message</string>
     <string name="collectExit">Pourquoi Android a arrêté l’application la dernière fois (par exemple un plantage, un blocage ou un manque de mémoire)</string>
     <string name="collectSteps">Vos 30 dernières actions, sous forme de mots courts comme chat.send</string>
     <string name="collectCrashKeys">La version de l’application, son mode d’installation, le type de serveur, si le serveur de ce téléphone est en marche, combien de connexions sont ouvertes et la version du serveur</string>
-    <string name="collectReport">Les 500 dernières lignes du journal de l’application, avec les clés, adresses et chemins masqués. Vous voyez tout et choisissez Envoyer ou Annuler.</string>
     <string name="collectNever">Vos invites et réponses, noms ou chemins de fichiers, adresses web, noms d’hôte, adresses IP, textes de messages d’erreur, clés ou jetons, l’identifiant publicitaire ou l’identifiant Android</string>
+    <string name="collectReport">Ce que vous écrivez sur le problème, la dernière fois que l’application s’est fermée de façon inattendue, les versions de l’application et d’Android, une plage de mémoire et le type de serveur, avec les clés, adresses et chemins masqués. Aucun journal ni aucune conversation. Vous voyez tout et choisissez Envoyer ou Annuler.</string>
 </resources>

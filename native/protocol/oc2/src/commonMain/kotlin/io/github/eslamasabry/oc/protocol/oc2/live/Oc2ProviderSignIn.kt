@@ -3,10 +3,12 @@ package io.github.eslamasabry.oc.protocol.oc2.live
 import io.github.eslamasabry.oc.core.common.*
 import io.github.eslamasabry.oc.core.domain.*
 import io.github.eslamasabry.oc.core.model.*
+import io.github.eslamasabry.oc.core.security.ConfigValues
 import io.github.eslamasabry.oc.core.security.Redactor
 import io.ktor.http.*
 import kotlinx.collections.immutable.*
 import kotlinx.coroutines.sync.Mutex
+import kotlin.concurrent.atomics.AtomicReference
 import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.json.*
 
@@ -25,6 +27,16 @@ internal class Oc2ProviderSignIn(
     private val attempts = LinkedHashMap<String, Attempt>()
     private val terminal = LinkedHashMap<String, IntegrationAuthStatus>()
 
+    /**
+     * From the last sign-in list: per method (integration id to method id), each visible field's published choices
+     * (`options[].value`) and its string `default`, which the form prefills in the clear. An answer that is exactly one
+     * of them is a public value the server offered ("github.com", "enterprise", "global", "https://gitlab.com"), so it
+     * is not registered as a secret (a HIDDEN field's default is a preset and is registered): registered, it masked that word in
+     * every preview and tool row. Every other answer is registered whole, as before (the form schema has no
+     * secret/password flag, so a free-text answer may be a credential).
+     */
+    private val choices = AtomicReference<Map<Pair<String, String>, Map<String, Set<String>>>>(emptyMap())
+
     private fun query(at: ServerLocation = location()): Map<String, String?> =
         mapOf("location[directory]" to at.directory, "location[workspace]" to at.workspace)
 
@@ -42,6 +54,48 @@ internal class Oc2ProviderSignIn(
     private fun text(obj: JsonObject, key: String): String? =
         (obj[key] as? JsonPrimitive)?.takeIf { it.isString }?.contentOrNull
 
+    /**
+     * One sign-in question in the app's prompt shape (Flutter `_formPrompt`): a field with options
+     * is a choice unless the server allows its own value; defaults, placeholders, descriptions,
+     * URL formats and `when` conditions are kept so the form can show them.
+     */
+    private fun prompt(field: JsonObject, key: String): JsonObject {
+        val options =
+            (field["options"] as? JsonArray).orEmpty().take(MAX_CHOICES).mapNotNull { raw ->
+                val option = raw as? JsonObject ?: return@mapNotNull null
+                val value = text(option, "value") ?: return@mapNotNull null
+                value to safe(text(option, "label") ?: value)
+            }
+        val custom = (field["custom"] as? JsonPrimitive)?.booleanOrNull == true
+        val declared = text(field, "type")
+        val choice =
+            if (declared == "select" || declared == "text") declared == "select"
+            else options.isNotEmpty() && !custom
+        return buildJsonObject {
+            put("key", key)
+            put("message", safe(text(field, "title") ?: text(field, "message") ?: key))
+            put("type", if (choice) "select" else "text")
+            if (options.isNotEmpty())
+                put(
+                    "options",
+                    JsonArray(
+                        options.map { (value, label) ->
+                            buildJsonObject {
+                                put("value", value)
+                                put("label", label)
+                            }
+                        }
+                    ),
+                )
+            put("required", (field["required"] as? JsonPrimitive)?.booleanOrNull == true)
+            text(field, "placeholder")?.let { put("placeholder", safe(it)) }
+            text(field, "description")?.let { put("description", safe(it)) }
+            if (text(field, "format") == "uri") put("format", "uri")
+            (field["default"] as? JsonPrimitive)?.contentOrNull?.let { put("default", it) }
+            field["when"]?.takeIf { it is JsonObject || it is JsonArray }?.let { put("when", it) }
+        }
+    }
+
     private fun <T> remember(map: LinkedHashMap<String, T>, key: String, value: T) {
         map.remove(key)
         map[key] = value
@@ -53,11 +107,12 @@ internal class Oc2ProviderSignIn(
         val result = gateway.json("/integration", query = scope)
         if (result is Outcome.Failed) return result
         val root = (result as Outcome.Ok).value
-        redactor.registerCredentialValues(root)
+        redactor.registerAnswerCredentials(root)
         val rows = data(root) as? JsonArray ?: return failed()
         if (rows.size > 1000) return failed()
         val list = mutableListOf<IntegrationInfo>()
         val ids = mutableSetOf<String>()
+        val offered = mutableMapOf<Pair<String, String>, Map<String, Set<String>>>()
         for (raw in rows) {
             val row = raw as? JsonObject ?: return failed()
             val id = text(row, "id")?.takeIf(::valid) ?: return failed()
@@ -73,6 +128,7 @@ internal class Oc2ProviderSignIn(
                 val methodId = text(method, "id")?.takeIf(::valid)
                 val prompts = mutableListOf<JsonObject>()
                 val presets = mutableMapOf<String, String>()
+                val fieldChoices = mutableMapOf<String, Set<String>>()
                 val form = method["form"] as? JsonArray
                 if (form != null && form.size > 32) return failed()
                 for (fieldRaw in form.orEmpty()) {
@@ -84,19 +140,27 @@ internal class Oc2ProviderSignIn(
                             redactor.registerSecret(it)
                         }
                     } else {
-                        prompts += buildJsonObject {
-                            put("key", key)
-                            put(
-                                "message",
-                                safe(text(field, "title") ?: text(field, "message") ?: key),
-                            )
-                            put(
-                                "required",
-                                (field["required"] as? JsonPrimitive)?.booleanOrNull == true,
-                            )
-                        }
+                        // A visible field's default is prefilled in the clear on the form, like its
+                        // choices: an answer left at it ("https://gitlab.com") is not a secret.
+                        val published =
+                            (field["options"] as? JsonArray)
+                                .orEmpty()
+                                .take(MAX_CHOICES)
+                                .mapNotNull { option ->
+                                    ((option as? JsonObject)?.get("value") as? JsonPrimitive)
+                                        ?.takeIf { it.isString }
+                                        ?.content
+                                } +
+                                listOfNotNull(
+                                    (field["default"] as? JsonPrimitive)
+                                        ?.takeIf { it.isString }
+                                        ?.content
+                                )
+                        if (published.isNotEmpty()) fieldChoices[key] = published.toSet()
+                        prompts += prompt(field, key)
                     }
                 }
+                if (methodId != null && fieldChoices.isNotEmpty()) offered[id to methodId] = fieldChoices
                 methods +=
                     IntegrationMethodInfo(
                         type,
@@ -135,6 +199,7 @@ internal class Oc2ProviderSignIn(
                     connections.size,
                 )
         }
+        choices.store(offered)
         return list.toImmutableList().ok()
     }
 
@@ -187,7 +252,12 @@ internal class Oc2ProviderSignIn(
         )
             return@withLock failed()
         val scope = query()
-        inputs.values.forEach(redactor::registerSecret)
+        val offered = choices.load()[id to methodId].orEmpty()
+        for ((field, value) in inputs) {
+            if (value in offered[field].orEmpty()) continue
+            if (field in NON_SECRET_FIELDS && ConfigValues.isPlainlyNotSecret(value)) continue
+            redactor.registerSecret(value)
+        }
         val reply =
             gateway.json(
                 path(id) + "/connect/oauth",
@@ -290,5 +360,23 @@ internal class Oc2ProviderSignIn(
             )
         if (reply is Outcome.Ok) attempts.remove(attemptId)
         reply.map { Unit }
+    }
+
+    private companion object {
+        const val MAX_CHOICES = 256
+
+        /**
+         * Visible sign-in fields that name a place or an account, never a credential, as a 2.2.5/2.2.6 server publishes
+         * them (Google Vertex, Amazon Bedrock, Snowflake, Cloudflare AI Gateway, Azure, GitHub Copilot, GitLab). A typed
+         * answer to one of them is left unregistered ONLY when it is also plainly ordinary by
+         * [ConfigValues.isPlainlyNotSecret] (an AWS profile "default", a custom location "global"): registered, such a
+         * word was masked in every preview and tool row. A free-text answer (a project id, an enterprise URL) is still
+         * registered whole, and so is every answer to any other field, `server` (OpenCode's hidden preset) included.
+         */
+        val NON_SECRET_FIELDS =
+            setOf(
+                "project", "location", "profile", "account", "accountId", "gatewayId", "resourceName",
+                "deploymentType", "enterpriseUrl", "instanceUrl",
+            )
     }
 }

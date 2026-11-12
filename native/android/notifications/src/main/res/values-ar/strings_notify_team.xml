@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="notify_team_decision_title">فريق الذكاء الاصطناعي يحتاج إلى قرارك</string>
+    <string name="notify_team_decision_body">مهمة تنتظر إجابتك. افتح فريق الذكاء الاصطناعي للرد.</string>
+    <string name="notify_team_review_title">عمل الفريق جاهز للمراجعة</string>
+    <string name="notify_team_review_body">انتهت مهمة وهي تنتظر مراجعتك.</string>
+    <string name="notify_team_failed_title">فشلت مهمة في فريق الذكاء الاصطناعي</string>
+    <string name="notify_team_failed_body">افتح فريق الذكاء الاصطناعي لمعرفة ما حدث وإعادة المحاولة.</string>
+    <string name="notify_team_completed_title">أنهى الفريق المشروع</string>
+    <string name="notify_team_completed_body">اكتملت جميع مهام المشروع.</string>
+</resources>

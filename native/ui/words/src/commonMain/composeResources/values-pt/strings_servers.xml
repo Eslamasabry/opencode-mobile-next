@@ -271,7 +271,7 @@
     </plurals>
     <string name="serversRemoveDrafts__eq1">1 rascunho não enviado será excluído</string>
     <string name="serversRemoveActiveNext">Você está conectado a ele: o app desconecta e mostra seus servidores</string>
-    <string name="serversRemoveServerKeeps">Nada é excluído no servidor nem nos seus provedores de IA</string>
+    <string name="serversRemoveServerKeeps">Nada é excluído no servidor nem nos seus provedores de IA.</string>
     <string name="pairingScannerAllowCamera">Permitir câmera</string>
     <string name="pairingScannerStarting">Abrindo a câmera…</string>
     <string name="profileMonitorSwitchBody">Uma execução está em andamento em %1$s. Ao trocar, o app mostra %2$s; a execução em %1$s continua.</string>
@@ -513,4 +513,6 @@
     <string name="serverDetailsAccessDenied">O servidor recusou o acesso. Confira qual conta pode usar este servidor.</string>
     <string name="serverDetailsFixSignIn">Corrigir o login</string>
     <string name="serverDetailsLastAttempt">Última tentativa de conexão: %1$s</string>
+    <string name="connectionAgentStarting">Iniciando o Claude Code…</string>
+    <string name="connectionAgentStartFailed">O Claude Code não iniciou. Toque em Reiniciar o Claude Code para tentar mais uma vez.</string>
 </resources>

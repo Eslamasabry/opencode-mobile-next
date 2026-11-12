@@ -137,6 +137,7 @@ lib/ui/screens/usage_hub_screen.dart	usage
 lib/ui/screens/usage_screen.dart	usage
 lib/ui/screens/usage_widget_screen.dart	widget_panels
 lib/ui/screens/web_sources_screen.dart	settings
+lib/ui/screens/send_problem_report.dart	about
 lib/ui/screens/whats_new_places.dart	about
 lib/ui/screens/whats_new_sheet.dart	about
 lib/ui/screens/worktrees_screen.dart	project

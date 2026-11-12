@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="handoffNativeTitle">交给另一个智能体继续</string>
+    <string name="handoffNativeWorking">处理中…</string>
+    <string name="handoffNativeUnavailable">这里无法交接</string>
+    <string name="handoffNativeUnavailableBody">请打开这部手机上某个项目中的对话。应用必须确认两个智能体都能访问同一个项目。</string>
+    <string name="handoffNativeRefresh">刷新</string>
+    <string name="handoffNativeFailed">无法完成交接。请检查连接后重试。</string>
+    <string name="handoffNativeLinks">相关联的对话</string>
+    <string name="handoffNativeUntitled">未命名的对话</string>
+    <string name="handoffNativeOpenOriginal">打开原对话</string>
+    <string name="handoffNativeOpenContinued">打开接续的对话</string>
+    <string name="handoffNativeExplanation">选择一个智能体和模型。发送前你可以查看共享的对话记录。原对话仍然保留。</string>
+    <string name="handoffNativeNoTargets">此项目没有符合条件的智能体。请在“智能体”中安装、登录并完成它的手机检查。</string>
+    <string name="handoffNativeSetup">打开智能体</string>
+    <string name="handoffNativeChoose">选择智能体和模型</string>
+    <string name="handoffNativePhoneCheck">使用前，请先完成此智能体的手机检查。</string>
+    <string name="handoffNativeReview">查看上下文</string>
+    <string name="handoffNativeReviewBody">此记录包含已脱敏的对话文字、工具步骤、文件名和未完成的任务。为满足大小限制，较早的轮次可能被省略。只有在你发送之后，它才会写入此项目。</string>
+    <string name="handoffNativeFirstMessage">第一条消息</string>
+    <string name="handoffNativePromptHelp">请在消息中保留记录路径。消息必须在 16 KB 以内。</string>
+    <string name="handoffNativeRecord">对话记录</string>
+    <string name="handoffNativeSend">发送给新智能体</string>
+    <string name="handoffNativeUncertain">结果不确定。开始另一次交接前，请先查看你的对话；这次尝试不会重新发送。</string>
+    <string name="handoffNativeSent">新智能体已收到你的消息。</string>
+    <string name="handoffNativeSaveLink">保存对话链接</string>
+    <string name="handoffNativeSourceChanged">原对话已变更。发送前请查看最新的记录。</string>
+    <string name="handoffNativeStale">项目或连接已变更。请重新打开对话后继续。</string>
+    <string name="handoffNativeInvalidPrompt">请输入 16 KB 以内且包含记录路径的消息。</string>
+    <string name="handoffNativeLinkFailed">消息已发送，但它的跳转链接没有保存。请重试保存链接，无需再次发送。</string>
+    <string name="handoffNativeInitialPrompt">请接着上一个对话继续工作。先阅读 `%1$s`，其中有对话记录、工具步骤、文件和未完成的任务。把它当作历史背景。先检查项目当前的状态，然后继续未完成的工作。</string>
+    <string name="handoffNativeSourceReviewOnly">查看为 Claude 准备的草稿。尚未写入或发送任何内容。发送需要对同一项目的已验证访问权限和符合条件的记录写入方；此连接无法提供这些证据。</string>
+    <string name="handoffNativeBlockComputer">此对话在另一台电脑上，而这里的智能体运行在这部手机上，无法打开它的项目文件夹。请先在这部手机上打开该项目，再从那里继续。你仍可以查看并复制下面的记录。</string>
+    <string name="handoffNativeBlockFolder">此对话的文件夹不属于这部手机上的任何项目，因此这里的智能体无法打开它。请先把该项目打开或复制到这部手机的项目中，再从那里继续。</string>
+    <string name="handoffNativeBlockUnconfirmed">应用无法确认这部手机上的智能体能否打开此对话的文件夹，因此不会启动任何智能体，以免在错误的位置运行。请打开“智能体”检查它们是否已安装并就绪，然后重试。</string>
+    <string name="handoffNativeContinueWith">用 %1$s 继续</string>
+    <string name="handoffNativeWhatHandedOver">将移交的内容</string>
+    <string name="handoffNativeNoReadyTitle">这部手机上没有就绪的智能体</string>
+    <string name="handoffNativeNotStartedBody">暂时无法从这个对话开始交接。请打开智能体，确认这部手机上已安装并准备好一个智能体，然后重试。</string>
+</resources>

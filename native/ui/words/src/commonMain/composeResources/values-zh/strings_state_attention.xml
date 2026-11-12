@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="stateAttentionTitle">动态</string>
+    <string name="stateAttentionRefresh">刷新</string>
+    <string name="stateAttentionNeedsYou">需要你处理</string>
+    <string name="stateAttentionHistory">你不在时</string>
+    <string name="stateAttentionIncomplete">有些服务器尚未检查。已保存的观察结果可能已过时。</string>
+    <string name="stateAttentionCorrupt">有些已保存的动态无法读取。它们仍保存在这部手机上。</string>
+    <string name="stateAttentionSaveFailed">无法保存此更改。请刷新后重试。</string>
+    <string name="stateAttentionNoneKnown">在已响应的服务器中，未发现任何请求。</string>
+    <string name="stateAttentionNone">没有等待处理的请求。</string>
+    <string name="stateAttentionNoHistory">没有可显示的自动动态。</string>
+    <string name="stateAttentionPermission">有权限请求</string>
+    <string name="stateAttentionQuestion">有问题等待回答</string>
+    <string name="stateAttentionForm">有表单等待填写</string>
+    <string name="stateAttentionFailure">对话需要查看</string>
+    <string name="stateAttentionTeam">团队需要你处理</string>
+    <string name="stateAttentionStale">最后已知</string>
+    <string name="stateAttentionAcknowledge">关闭已显示的动态</string>
+    <string name="stateActReconnect">已自动重新连接</string>
+    <string name="stateActRestart">已自动重启</string>
+    <string name="stateActHeatPause">因发热而暂停</string>
+    <string name="stateActHeatStop">因发热而停止</string>
+    <string name="stateActHeatResume">降温后已继续</string>
+    <string name="stateActUpdate">已自动更新</string>
+    <string name="stateActPermission">已自动允许权限</string>
+    <string name="stateActQueued">已发送保存的消息</string>
+    <string name="stateActOther">自动动态</string>
+    <string name="stateAttentionMonitorTitle">其他服务器</string>
+    <string name="stateAttentionMonitorCopy">选择这部手机可以检查哪些其他已保存的服务器是否有等待处理的请求。这不会回答请求，也不会更改这些服务器。</string>
+    <string name="stateAttentionMonitorChoice">检查等待处理的请求</string>
+</resources>

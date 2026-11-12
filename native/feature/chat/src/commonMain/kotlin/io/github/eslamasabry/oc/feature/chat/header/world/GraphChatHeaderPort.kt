@@ -45,9 +45,15 @@ public class GraphChatHeaderPorts(
     private val importFiles:
         Set<io.github.eslamasabry.oc.engine.agents.sessionimport.SessionImportFiles>,
     private val context: io.github.eslamasabry.oc.engine.settings.context.ContextUsageHistory,
+    storages: Set<io.github.eslamasabry.oc.engine.delivery.DeliveryStorage> = emptySet(),
 ) : ChatHeaderPorts {
+    private val withdrawn =
+        storages.singleOrNull()?.let {
+            io.github.eslamasabry.oc.engine.connection.adopted.WithdrawnPromptStore(it.store, it.lanes)
+        }
+
     override fun open(ref: ConversationRef): ChatHeaderPort =
-        GraphChatHeaderPort(ref, registry, dispatchers, importFiles.singleOrNull(), context).also {
+        GraphChatHeaderPort(ref, registry, dispatchers, importFiles.singleOrNull(), context, withdrawn).also {
             it.attach()
         }
 }
@@ -64,6 +70,7 @@ internal class GraphChatHeaderPort(
     private val importFiles:
         io.github.eslamasabry.oc.engine.agents.sessionimport.SessionImportFiles?,
     private val context: io.github.eslamasabry.oc.engine.settings.context.ContextUsageHistory,
+    private val withdrawn: io.github.eslamasabry.oc.engine.connection.adopted.WithdrawnPromptStore? = null,
 ) : ChatHeaderPort {
     private val sid = SessionId(ref.sessionId.raw)
     private val mutableFacts = MutableStateFlow(HeaderFacts())
@@ -162,15 +169,28 @@ internal class GraphChatHeaderPort(
                 directory = gateway.location.value.directory,
                 connected = true,
                 branch = branches[ref.profileId.raw to gateway.location.value.directory],
+                git = gitKnown[ref.profileId.raw to gateway.location.value.directory],
             )
         val jobs =
             listOf(
                 graph.scope.launch(registry.mainContext) {
                     gateway.location.collectLatest { location ->
                         val key = ref.profileId.raw to location.directory
-                        mutableFacts.update { it.copy(branch = branches[key]) }
-                        val health =
-                            (graph as ChatGraphAccessors).chatOperations.versionControlHealth()
+                        mutableFacts.update { it.copy(branch = branches[key], git = gitKnown[key]) }
+                        val operations = (graph as ChatGraphAccessors).chatOperations
+                        var health = operations.versionControlHealth()
+                        // An OpenCode 2.2.x server answers "no provider" for a folder it has not looked at yet and
+                        // finds Git a moment later: one more read then, so a repository opened cold still gets its
+                        // chip (a plain folder stays without one: unknown shows nothing).
+                        if (
+                            health is Outcome.Ok &&
+                                health.value.setupState ==
+                                    io.github.eslamasabry.oc.core.model.VersionControlSetupState.Unknown &&
+                                health.value.branch.isNullOrBlank()
+                        ) {
+                            kotlinx.coroutines.delay(GIT_SETTLE_MS)
+                            health = operations.versionControlHealth()
+                        }
                         if (
                             bound === graph &&
                                 gateway.location.value == location &&
@@ -181,7 +201,10 @@ internal class GraphChatHeaderPort(
                                     it.isNotEmpty() && it != "HEAD"
                                 }
                             if (branch == null) branches.remove(key) else branches[key] = branch
-                            mutableFacts.update { it.copy(branch = branch) }
+                            val git =
+                                io.github.eslamasabry.oc.core.model.gitProjectState(health.value)
+                            if (git == null) gitKnown.remove(key) else gitKnown[key] = git
+                            mutableFacts.update { it.copy(branch = branch, git = git) }
                         }
                     }
                 },
@@ -241,6 +264,7 @@ internal class GraphChatHeaderPort(
             contextTokens = s.contextUse?.tokens,
             contextLimit = s.contextUse?.limit,
             totalTokens = s.tokens?.total,
+            totalCost = s.cost,
         )
 
     override suspend fun refresh(): Outcome<Unit> {
@@ -296,7 +320,7 @@ internal class GraphChatHeaderPort(
 
     override suspend fun delete(): Outcome<Unit> = withGateway { gateway, _ ->
         if (!gateway.capabilities.value.sessionDelete) unavailable("sessionDelete")
-        else gateway.deleteSession(sid)
+        else gateway.deleteSession(sid).also { if (it is Outcome.Ok) withdrawn?.forget(ref.profileId, ref.sessionId.raw) }
     }
 
     override fun openImport():
@@ -358,3 +382,7 @@ private const val MAX_PARENT_DEPTH = 8
  * Process-local branch read cache: a reopened header can render its last known branch immediately.
  */
 private val branches = mutableMapOf<Pair<String, String?>, String>()
+private val gitKnown = mutableMapOf<Pair<String, String?>, Boolean>()
+
+/** How long a 2.2.x server takes to find Git in a folder it was just asked about (measured: under a second). */
+private const val GIT_SETTLE_MS = 1_500L

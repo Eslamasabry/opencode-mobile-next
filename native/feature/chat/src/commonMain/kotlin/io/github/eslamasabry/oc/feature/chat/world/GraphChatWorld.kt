@@ -131,7 +131,13 @@ public class GraphChatWorlds(
     private val readSharing: Set<ChatReadSharing> = emptySet(),
     private val phoneServers: Set<ChatPhoneServer> = emptySet(),
     private val lastKnown: Set<ChatLastKnown> = emptySet(),
+    storages: Set<io.github.eslamasabry.oc.engine.delivery.DeliveryStorage> = emptySet(),
 ) : ChatWorlds {
+    private val withdrawn =
+        storages.singleOrNull()?.let {
+            io.github.eslamasabry.oc.engine.connection.adopted.WithdrawnPromptStore(it.store, it.lanes)
+        }
+
     /**
      * B3: shared by every conversation of the app run; B-STATE-032: saved per server (8 newest)
      * when the app binds a store.
@@ -164,6 +170,7 @@ public class GraphChatWorlds(
                     readSharing.singleOrNull(),
                     phoneServers.singleOrNull(),
                     lastKnown.singleOrNull(),
+                    withdrawn,
                 ) to 0)
         open[ref] = world to holders + 1
         if (holders == 0) world.attach()
@@ -206,6 +213,7 @@ internal class GraphChatWorld(
     private val readSharing: ChatReadSharing? = null,
     private val phoneServer: ChatPhoneServer? = null,
     private val lastKnown: ChatLastKnown? = null,
+    private val withdrawnStore: io.github.eslamasabry.oc.engine.connection.adopted.WithdrawnPromptStore? = null,
 ) : ChatWorld, TurnFeedSource, VoiceConversationSession {
     // CHAT-TRANSCRIPT: full messages, run and retry facts for the turn facts (steps, results,
     // context).
@@ -285,17 +293,38 @@ internal class GraphChatWorld(
     override val link: StateFlow<ChatLink> = mutableLink.asStateFlow()
     override val linkRetryAtMs: StateFlow<Long?> = mutableRetryAt.asStateFlow()
     override val parent: StateFlow<ConversationRef?> = mutableParent.asStateFlow()
+
+    override suspend fun conversationTitle(other: ConversationRef): String? {
+        if (other.profileId != ref.profileId) return null
+        val a = currentAttached() ?: return null
+        return (a.graph.session.reads.session(other.sessionId) as? Outcome.Ok)?.value?.title
+    }
     override val linkStopped: StateFlow<Failure?> = mutableStopped.asStateFlow()
 
     override fun tryLinkNow() {
         currentAttached()?.gateway?.events?.retryNow()
     }
 
+    /**
+     * The conversation's own folder (a conversation of another project is opened without moving the connection), else
+     * the connection's.
+     */
+    private var ownDirectory: String? = null
+
     override val directory: String?
-        get() = currentAttached()?.gateway?.location?.value?.directory?.takeIf { it.isNotBlank() }
+        get() =
+            ownDirectory?.takeIf { it.isNotBlank() }
+                ?: currentAttached()?.gateway?.location?.value?.directory?.takeIf { it.isNotBlank() }
 
     override val serverOnThisPhone: Boolean
         get() = phoneServer?.runsHere(ref.profileId) == true
+
+    override val serverIsAgentHelper: Boolean
+        get() = phoneServer?.isAgentHelper(ref.profileId) == true
+
+    override suspend fun startAgentHelper(): Outcome<Unit> =
+        phoneServer?.takeIf { it.isAgentHelper(ref.profileId) }?.startAgentHelper(ref.profileId)
+            ?: Outcome.Failed(Failure.Unavailable(FeatureId("startAgentHelper")))
 
     override suspend fun restartPhoneServer(): Outcome<Unit> =
         phoneServer?.takeIf { it.runsHere(ref.profileId) }?.restart(ref.profileId)
@@ -744,6 +773,7 @@ internal class GraphChatWorld(
         voiceGeneration++
         voiceLiveUsers.clear()
         unbind()
+        ownDirectory = null
         mutableCaps.value = ServerCapabilities()
         // Another server owns another catalog and selection; a stale graph publishes nothing.
         mutableModels.value = ComposerModels()
@@ -1032,6 +1062,7 @@ internal class GraphChatWorld(
                 scope.launch(registry.mainContext) {
                     val session = (graph.session.reads.session(sid) as? Outcome.Ok)?.value
                     session?.title?.let { mutableTitle.value = it }
+                    ownDirectory = session?.directory
                     refreshReadOnly(gateway, session)
                     val statuses = gateway.sessionStatuses()
                     if (statuses is Outcome.Ok && statuses.value[sid] == SessionStatus.Busy) {
@@ -1219,7 +1250,7 @@ internal class GraphChatWorld(
                 if (currentAttached()?.handle !== handle)
                     return Outcome.Failed(Failure.Network(NetworkWhy.Offline))
                 handle.loadHistory(page.value.items.map(bridge::message), version)
-                feedKeeper.history(page.value.items, feedVersion)
+                feedKeeper.history(page.value.items, feedVersion, newest = cursor == null)
                 publishVoiceConversation()
                 nextCursor = page.value.nextCursor
                 mutableOlder.value = nextCursor != null
@@ -1248,6 +1279,7 @@ internal class GraphChatWorld(
                 keepLastKnown(handle)
                 refreshDraftProtection()
                 mutableLoad.value = ChatLoad.Live
+                if (cursor == null) confirmIdle(gateway, handle)
                 Outcome.Ok(Unit)
             }
             is Outcome.Failed -> {
@@ -1256,6 +1288,21 @@ internal class GraphChatWorld(
                 page
             }
         }
+    }
+
+    /**
+     * B8: asks the server, after the newest history was read, whether this conversation still runs. Only its answer
+     * "not running" lets an unfinished reply read as cut off; a read that fails or a busy answer makes it unknown (no
+     * line), and a stale attachment changes nothing. Asked after the history because Codex and Paseo learn a thread's
+     * state while reading it, and because a run may have started or ended since the opening read.
+     */
+    private suspend fun confirmIdle(gateway: ServerGateway, handle: TranscriptHandle) {
+        if (feedKeeper.feed.value.busy) return
+        val statuses = gateway.sessionStatuses()
+        if (currentAttached()?.handle !== handle) return
+        // No answer: unknown, so no line.
+        val status = (statuses as? Outcome.Ok)?.value?.let { it[sid] ?: SessionStatus.Idle }
+        feedKeeper.idle(said = status != null && status != SessionStatus.Busy && status != SessionStatus.Retry)
     }
 
     override suspend fun loadOlder(): Outcome<Unit> {
@@ -1335,7 +1382,17 @@ internal class GraphChatWorld(
 
     override suspend fun loadModels(): Outcome<Unit> {
         val a = currentAttached() ?: return Outcome.Failed(Failure.Network(NetworkWhy.Offline))
-        if (!a.gateway.capabilities.value.sessionModelProviderSwitching)
+        // PZ4: a server that cannot switch a conversation's runtime (Paseo) still offers that
+        // runtime's models; the list is only narrowed to it (Flutter `catalogForSession`). A new
+        // conversation not yet bound to a runtime offers all of them.
+        val runtime = boundRuntime(a.gateway)
+        // A non-switching server without a catalog of its own still has nothing to offer; any other
+        // failed read shows as the sheet's failure below (with its way to try again).
+        val early =
+            if (a.gateway.capabilities.value.sessionModelProviderSwitching) null
+            else (a.graph as ChatGraphAccessors).chatOperations.catalog()
+        if (currentAttached() !== a) return staleModels()
+        if (early is Outcome.Failed && early.failure is Failure.Unavailable)
             return Outcome.Failed(Failure.Unavailable(FeatureId("sessionModelProviderSwitching")))
         val epoch = selectionEpoch
         if (mutableModels.value.selected == null) {
@@ -1356,7 +1413,7 @@ internal class GraphChatWorld(
         }
         mutableModels.value = mutableModels.value.copy(loading = true, failure = null)
         val operations = (a.graph as ChatGraphAccessors).chatOperations
-        val catalog = operations.catalog()
+        val catalog = early ?: operations.catalog()
         if (currentAttached() !== a) return staleModels()
         if (catalog is Outcome.Failed) {
             mutableModels.value =
@@ -1374,13 +1431,15 @@ internal class GraphChatWorld(
         val seen = HashSet<Pair<String, String>>()
         for (m in snapshot.models) {
             if (m.providerId !in enabledProviders) continue
+            if (runtime != null && m.providerId != runtime) continue
             if (!seen.add(m.providerId to m.id)) continue
             // Safe display metadata only; raw provider config never leaves the catalog.
             choices +=
                 ComposerModel(
                     m.providerId,
                     m.id,
-                    m.name.ifBlank { m.id },
+                    // An unnamed model (or one named only by its id) reads as words, as in Flutter `_choiceName`.
+                    io.github.eslamasabry.oc.core.model.ModelDisplayName.of(m.id, m.name),
                     m.attachments,
                     variants = m.variants.filterNot { it.disabled }.map { it.id },
                     providerName = providerNames[m.providerId] ?: m.providerId,
@@ -1535,6 +1594,14 @@ internal class GraphChatWorld(
         return result
     }
 
+    /**
+     * The runtime this conversation is bound to on a server that cannot switch it (Flutter
+     * `catalogForSession`); null where models of every runtime may be chosen.
+     */
+    private fun boundRuntime(gateway: ServerGateway): String? =
+        if (gateway.capabilities.value.sessionModelProviderSwitching) null
+        else gateway.facet<io.github.eslamasabry.oc.core.domain.AgentFeaturesGateway>()?.providerIdForSession(sid)
+
     /** A graph swapped mid-load owns the next load; this one publishes nothing new. */
     private fun staleModels(): Outcome<Unit> {
         mutableModels.value = mutableModels.value.copy(loading = false)
@@ -1636,7 +1703,9 @@ internal class GraphChatWorld(
         recordRecent: Boolean = true,
     ): Outcome<Unit> {
         val a = currentAttached() ?: return Outcome.Failed(Failure.Network(NetworkWhy.Offline))
-        if (!a.gateway.capabilities.value.sessionModelProviderSwitching)
+        // PZ4: without runtime switching only the conversation's own runtime's models are offered.
+        val runtime = boundRuntime(a.gateway)
+        if (runtime != null && choice != null && choice.providerId != runtime)
             return Outcome.Failed(Failure.Unavailable(FeatureId("sessionModelProviderSwitching")))
         if (a.gateway.events.status.value != StreamStatus.Connected)
             return Outcome.Failed(Failure.Network(NetworkWhy.Offline))
@@ -1816,10 +1885,9 @@ internal class GraphChatWorld(
     }
 
     override suspend fun mentionFile(path: String): Outcome<Unit> {
-        val a = currentAttached() ?: return Outcome.Failed(Failure.Network(NetworkWhy.Offline))
+        currentAttached() ?: return Outcome.Failed(Failure.Network(NetworkWhy.Offline))
         val directory =
-            a.gateway.location.value.directory
-                ?: return Outcome.Failed(Failure.Unavailable(FeatureId("fileBrowsing")))
+            this.directory ?: return Outcome.Failed(Failure.Unavailable(FeatureId("fileBrowsing")))
         val file = Mentions.projectFile(directory, path)
         val current = mutableDraft.value.attachments
         if (current.any { it.mentionPath == path }) return Outcome.Ok(Unit)
@@ -1831,6 +1899,35 @@ internal class GraphChatWorld(
     override suspend fun send(text: String): Outcome<Unit> = send(text, draftFiles = true)
 
     override suspend fun sendAgain(text: String): Outcome<Unit> = send(text, draftFiles = false)
+
+    override fun withdrawnPrompts(): Set<String> =
+        try {
+            withdrawnStore?.read(ref.profileId, ref.sessionId.raw).orEmpty().mapTo(HashSet()) { "prompt:$it" }
+        } catch (_: io.github.eslamasabry.oc.core.data.kv.GateNotOpen) {
+            emptySet() // before the migration gate opens: nothing is remembered yet
+        }
+
+    override suspend fun rememberWithdrawn(promptKey: String) {
+        val id = promptKey.removePrefix("prompt:").takeIf { it.isNotEmpty() } ?: return
+        withdrawnStore?.remember(ref.profileId, ref.sessionId.raw, id)
+    }
+
+    override fun midTurn(): io.github.eslamasabry.oc.core.model.MidTurnPrompt? =
+        (currentAttached()?.graph as? ChatGraphAccessors)
+            ?.chatGateway
+            ?.facet<io.github.eslamasabry.oc.core.domain.MidTurnPromptGateway>()
+            ?.midTurnPrompt(ref.sessionId)
+
+    override suspend fun withdrawNote(text: String): Boolean {
+        val services = currentAttached()?.graph as? ChatGraphAccessors ?: return false
+        if (!services.chatGateway.capabilities.value.inbox) return false
+        val inbox = services.chatDelivery.inbox
+        val item =
+            inbox.items.value[ref.sessionId].orEmpty().firstOrNull {
+                io.github.eslamasabry.oc.engine.delivery.live.InboxProjection.promptText(it)?.trim() == text.trim()
+            } ?: return false
+        return inbox.cancel(ref.sessionId, item.id) is Outcome.Ok
+    }
 
     override fun stoppedPrompt(turnId: String): StoppedPrompt? {
         val row =

@@ -7,6 +7,7 @@ import io.github.eslamasabry.oc.feature.chat.world.PendingSend
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.ImmutableMap
 import kotlinx.collections.immutable.ImmutableSet
+import io.github.eslamasabry.oc.engine.transcript.turnfacts.ToolFacts
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentMapOf
 import kotlinx.collections.immutable.persistentSetOf
@@ -135,6 +136,12 @@ public data class ChatStatusUi(
     val retryInSeconds: Int? = null,
     /** This conversation's server runs on this phone: the line offers Restart (after a confirm). */
     val canRestart: Boolean = false,
+    /** The server is the phone agents' helper: the line offers Restart agent (no confirm, as Flutter). */
+    val canRestartAgent: Boolean = false,
+    /** The helper is being started right now. */
+    val startingAgent: Boolean = false,
+    /** Starting the helper failed; the line says so in plain words and offers the action again. */
+    val agentFailed: Boolean = false,
 )
 
 /** A receipt check is only a read. Its timestamp is intentionally not persisted. */
@@ -199,6 +206,12 @@ public data class LiveTurnUi(
     val stoppingAfterStep: Boolean = false,
     /** Hold Stop offers "Stop after this step": the server steers a running turn and no note went yet. */
     val canStopAfterStep: Boolean = false,
+    /** C5: the stop note may still be taken back (Undo beside "Stopping after this step"). */
+    val canUndoStopAfterStep: Boolean = false,
+    /** C6: a message sent now joins the running turn (the agent reads it at its next step). */
+    val joinsTurn: Boolean = false,
+    /** C6: the agent's name for "{agent} reads this when this step finishes"; null says "The agent". */
+    val agentName: String? = null,
 )
 
 /**
@@ -227,6 +240,8 @@ public data class TimelineEntryUi(
     val preview: String,
     val createdMs: Long?,
     val forkable: Boolean,
+    /** The tools a message with no words of its own did; the screen names them in plain words. */
+    val tools: ImmutableList<ToolFacts> = persistentListOf(),
 )
 
 public data class TimelineUi(
@@ -457,6 +472,15 @@ public interface ChatActions {
      */
     public fun stopAfterStep(note: String) {}
 
+    /**
+     * C6 (Flutter `_stopForSteer`): Stop on the steer note under the message [promptKey] ([words] is what it said): stops the step it waits on,
+     * then the same words go out again so the agent reads them at once. Nothing when the step already ended.
+     */
+    public fun stopForSteer(promptKey: String, words: String) {}
+
+    /** C5: Undo on "Stopping after this step": withdraws the waiting [note] so the turn carries on. */
+    public fun undoStopAfterStep() {}
+
     /** S24-CHAT: a commands-launcher place for this conversation (Flutter `_ChatCommandAction`). */
     public fun openPlace(place: ChatPlace) {}
 
@@ -507,6 +531,9 @@ public interface ChatActions {
 
     /** Flutter "Restart OpenCode" on the connection line: asks first ([ChatConfirm.RestartPhoneServer]). */
     public fun restartPhoneServer() {}
+
+    /** Flutter "Restart agent" on the connection line: starts the phone agents' helper, then reconnects. */
+    public fun restartAgent() {}
 
     public fun confirmRestartPhoneServer() {}
 

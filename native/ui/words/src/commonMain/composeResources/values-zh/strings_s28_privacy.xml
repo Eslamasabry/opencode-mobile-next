@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="telemetryUsageTitle">使用情况和应用健康</string>
+    <string name="telemetryUsageDetail">向 Google Analytics for Firebase 发送匿名计数：你使用哪几类页面和功能，连接、发送、设置、智能体、后台服务和更新是否正常，应用启动有多快、页面有多流畅，内存警告，以及你手机的内存、可用存储、CPU 和 WebView 版本的范围。同时向 Firebase Performance Monitoring 发送耗时：应用启动、连接、首次回复、设置步骤和启动智能体各花了多久。只包含固定的词、范围和数字，外加一个随机的安装 ID、你的手机型号和 Android 版本。不含代码、对话、文件、地址、密钥或广告 ID。</string>
+    <string name="telemetryCrashesTitle">崩溃报告</string>
+    <string name="telemetryCrashesDetail">向 Google Firebase Crashlytics 发送崩溃报告：错误的类型及其在应用代码中的位置（绝不包含错误消息）、你最后几步操作（以简短的词表示），以及上次 Android 结束应用的原因。不含代码、对话、文件、地址、密钥或广告 ID。</string>
+    <string name="collectTitle">我们收集什么</string>
+    <string name="collectRowSummary">除非你在被询问时选择了同意，否则使用情况和崩溃报告会保持关闭。可查看每一项具体会发送什么。</string>
+    <string name="collectUsageNotSentYet">此版本尚不发送使用情况和应用健康数据。你的选择会被保留，待支持后生效。</string>
+    <string name="collectRules">只发送固定的词和数字范围，绝不发送自由文本。关闭开关会删除尚未发送的内容。</string>
+    <string name="collectUsageLabel">开启“使用情况和应用健康”时</string>
+    <string name="collectCrashesLabel">开启“崩溃报告”时</string>
+    <string name="collectReportLabel">仅当你发送问题报告时</string>
+    <string name="collectNeverLabel">绝不发送</string>
+    <string name="collectConnect">连接服务器是否成功、失败的类型以及耗时</string>
+    <string name="collectDrop">连接为何中断，以及是否已恢复</string>
+    <string name="collectSend">发送消息是成功了还是在队列中等待，以及多久收到首次回复</string>
+    <string name="collectStall">长时间等待发生在哪里（某个工具、某次授权）以及持续多久</string>
+    <string name="collectQueue">排队的消息有多少已发送或失败</string>
+    <string name="collectPhoneSetup">这部手机上的设置进行到哪一步、每一步耗时多久以及失败的类型</string>
+    <string name="collectAgents">智能体是否已启动，以及失败的类型</string>
+    <string name="collectBackground">后台服务为何停止</string>
+    <string name="collectUpdates">更新是否已安装，以及失败的类型</string>
+    <string name="collectPages">你使用哪几类页面和功能、设置步骤、首次回复、一次访问持续多久，以及其间发送了多少条消息</string>
+    <string name="collectJourney">你的最初几步进行到了哪里（打开应用、设置、连接、发送消息、收到首次回复），以及大约在你同意后多久。每一步只计一次</string>
+    <string name="collectStarters">在新对话中你点按了哪一类建议，绝不包含其文字或所问的内容</string>
+    <string name="collectStart">应用启动有多快</string>
+    <string name="collectSmooth">页面有多流畅（卡顿帧和冻结帧所占比例），以及屏幕刷新率</string>
+    <string name="collectMemory">来自 Android 的内存警告</string>
+    <string name="collectDevice">你手机的内存和可用存储范围、处理器类型和 WebView 版本、是否允许通知，以及你所用服务器的类型和版本</string>
+    <string name="collectCrashKind">错误的类型及其在应用代码中的位置，绝不包含错误消息</string>
+    <string name="collectExit">上次 Android 结束应用的原因（例如崩溃、卡死或内存不足）</string>
+    <string name="collectSteps">你最后 30 步操作，以 chat.send 这样的简短词语表示</string>
+    <string name="collectCrashKeys">应用版本、安装方式、服务器类型、这部手机上的服务器是否在运行、打开了多少个连接以及服务器版本</string>
+    <string name="collectNever">你的提示词和回复、文件名或路径、网址、主机名、IP 地址、错误消息文本、密钥或令牌、广告 ID 或 Android ID</string>
+    <string name="collectReport">你所写的关于问题的描述、应用上次意外关闭的时间、应用和 Android 版本、内存范围以及服务器类型，其中的密钥、地址和路径已被抹去。不含日志和对话。你会看到全部内容，并选择“发送”或“取消”。</string>
+</resources>

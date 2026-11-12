@@ -124,6 +124,12 @@ public class AndroidKitPlatform(
 
     override val liquidGlass: Boolean = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
 
+    override fun liquidJoinEffect(program: io.github.eslamasabry.oc.ui.kit.live.LiveShaderProgram, blurPx: Float): RenderEffect? {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return null
+        val shader = (program as? AndroidLiveShader)?.shader ?: return null
+        return AndroidFrost.join(shader, blurPx)
+    }
+
     // Half the pixels per side for a frosted liquid pane's backdrop, blur and lens (smoothness round 2: Glass inside a
     // 120 Hz frame on a Galaxy S24); the vendored library (third_party/backdrop) scales the layer back up.
     override val liquidResolution: Float = .5f
@@ -189,6 +195,16 @@ public class AndroidKitPlatform(
         return try {
             SVG.setInternalEntitiesEnabled(false)
             val document = SVG.getFromString(text)
+            // Every bundled mark says width="24" height="24". Rendered as written, the mark is drawn 24 pixels wide in
+            // the corner of the box whatever the box's size (a 52dp agent tile showed a 9dp logo). The drawing's own
+            // box becomes its view box, and the drawing fills the square it was asked for.
+            if (document.documentViewBox == null) {
+                val width = document.documentWidth
+                val height = document.documentHeight
+                if (width > 0f && height > 0f) document.setDocumentViewBox(0f, 0f, width, height)
+            }
+            document.setDocumentWidth("100%")
+            document.setDocumentHeight("100%")
             val bitmap = Bitmap.createBitmap(pixels, pixels, Bitmap.Config.ARGB_8888)
             document.renderToCanvas(
                 Canvas(bitmap),

@@ -16,6 +16,7 @@ import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.core.domain.events.GatewayEvent
+import io.github.eslamasabry.oc.engine.agents.feed.ChatStatus
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.ChatsRoute
 import io.github.eslamasabry.oc.ui.routes.ServersRoute
@@ -32,6 +33,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.takeWhile
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -51,6 +53,10 @@ public class ChatsAllViewModel(
     private val context: io.github.eslamasabry.oc.engine.settings.context.ContextUsageHistory? =
         null,
     private val previews: ConversationPreviews = NoConversationPreviews(),
+    /** Needs-you and unread come from the home feed: the server's session list does not carry them. */
+    private val feed: ConversationsFeed = QuietConversationsFeed(),
+    private val dispatchers: io.github.eslamasabry.oc.core.common.AppDispatchers? = null,
+    private val importFiles: Set<io.github.eslamasabry.oc.engine.agents.sessionimport.SessionImportFiles> = emptySet(),
 ) : ViewModel(), ChatsAllActions, ChatsPinActions {
     private val model =
         MutableStateFlow(
@@ -61,6 +67,8 @@ public class ChatsAllViewModel(
         )
     private var servers: List<ConversationServer> = emptyList()
     private var generation = 0
+    /** Servers whose cross-project list answered "cannot": they keep the current project's list. */
+    private val projectOnly = mutableSetOf<ProfileId>()
     private val attemptedPins = mutableSetOf<Pair<ProfileId, SessionId>>()
     private val failedPins = mutableSetOf<Pair<ProfileId, SessionId>>()
     private val tombstones = mutableMapOf<ProfileId, MutableSet<SessionId>>()
@@ -80,7 +88,9 @@ public class ChatsAllViewModel(
         model
             .map { current ->
                 // ANDR-1: a host with pin storage shows the row's visible pin action too.
-                val built = AllConversationsRules.build(current)
+                val built =
+                    AllConversationsRules.build(current)
+                        .let { it.copy(nowMs = io.github.eslamasabry.oc.core.common.CommonBindings.clock().now().toEpochMilliseconds()) }
                 if (!pins.supported) built
                 else
                     built.copy(
@@ -111,6 +121,31 @@ public class ChatsAllViewModel(
                             }
                     )
                 }
+            }
+        }
+        // Needs you / unread per row, from the home feed (the same facts the home list marks).
+        viewModelScope.launch {
+            feed.snapshot.collect { snap ->
+                val next =
+                    snap.items
+                        .filter {
+                            it.status == ChatStatus.NeedsYou ||
+                                it.status == ChatStatus.Failed ||
+                                it.finishedUnseen ||
+                                it.stoppedByPerson ||
+                                it.interrupted
+                        }
+                        .associate {
+                            AllConversationsRules.key(it.profileId, it.sessionId) to
+                                RowAttention(
+                                    needsYou = it.status == ChatStatus.NeedsYou,
+                                    unread = it.finishedUnseen && it.status == ChatStatus.Idle,
+                                    stopped = it.stoppedByPerson && it.status == ChatStatus.Idle,
+                                    interrupted = it.interrupted,
+                                    failed = it.status == ChatStatus.Failed,
+                                )
+                        }
+                model.update { it.copy(attention = next) }
             }
         }
         viewModelScope.launch {
@@ -153,6 +188,16 @@ public class ChatsAllViewModel(
                         }
                         .map { it.profile }
                         .toSet(),
+                importCapable =
+                    if (dispatchers == null) emptySet()
+                    else
+                        live
+                            .filter {
+                                it.gateway.capabilities.value.sessionImportExport &&
+                                    it.gateway is io.github.eslamasabry.oc.core.domain.SessionTransferImportGateway
+                            }
+                            .map { it.profile }
+                            .toSet(),
                 stealCapable =
                     live
                         .filter {
@@ -338,9 +383,42 @@ public class ChatsAllViewModel(
         }
     }
 
+    /**
+     * One page of the list. A server that lists across projects (`globalSessionSearch`) gives the conversations of
+     * every project, as Flutter's All conversations page does (`listGlobalSessions`, archived ones included so the
+     * archived switch still works); one that cannot, or whose first answer says so, gives the current project's.
+     */
+    private suspend fun readPage(
+        server: ConversationServer,
+        cursor: String?,
+    ): Outcome<io.github.eslamasabry.oc.core.model.ServerPage<io.github.eslamasabry.oc.core.model.Session>> {
+        val operations = server.operations
+        if (
+            operations == null ||
+                !server.gateway.capabilities.value.globalSessionSearch ||
+                server.profile in projectOnly
+        )
+            return server.gateway.sessionPage(cursor = cursor, limit = AllConversationsRules.PAGE)
+        return when (
+            val page = operations.listGlobalSessions(null, true, cursor, AllConversationsRules.PAGE)
+        ) {
+            is Outcome.Ok -> Outcome.Ok(
+                    io.github.eslamasabry.oc.core.model.ServerPage(
+                        page.value.items.map { it.session }.toImmutableList(),
+                        page.value.nextCursor,
+                    )
+                )
+            is Outcome.Failed ->
+                if (cursor == null && (page.failure is Failure.Unavailable || page.failure is Failure.NotFound)) {
+                    projectOnly += server.profile
+                    server.gateway.sessionPage(cursor = null, limit = AllConversationsRules.PAGE)
+                } else page
+        }
+    }
+
     private suspend fun firstPage(server: ConversationServer, run: Int) {
         val savedScope = previews.scope(server)
-        val page = server.gateway.sessionPage(limit = AllConversationsRules.PAGE)
+        val page = readPage(server, null)
         val statuses = server.gateway.sessionStatuses()
         if (run != generation) return
         model.update { cur ->
@@ -466,8 +544,7 @@ public class ChatsAllViewModel(
         viewModelScope.launch {
             waiting.forEach { server ->
                 val cursor = model.value.sources[server.profile]?.cursor ?: return@forEach
-                val page =
-                    server.gateway.sessionPage(cursor = cursor, limit = AllConversationsRules.PAGE)
+                val page = readPage(server, cursor)
                 if (run != generation) return@launch
                 if (
                     page is Outcome.Failed &&
@@ -544,8 +621,24 @@ public class ChatsAllViewModel(
         val (profile, session) = AllConversationsRules.find(m, key) ?: return
         commitDelete()
         val target = ConversationRef(profile, session.id)
+        // H4: an agent conversation the helper cannot resume asks before anything opens.
+        val item = feed.snapshot.value.items.firstOrNull { it.ref == target }
+        AgentResumeRules.ask(item, item?.let { ChatsState.row(it).agentName })?.let { ask ->
+            model.update { it.copy(startNew = ask) }
+            return
+        }
         connections.prefetch(target)
         nav.openChat(target)
+    }
+
+    override fun confirmStartNew() {
+        val ask = model.value.startNew ?: return
+        model.update { it.copy(startNew = null) }
+        nav.open(AgentResumeRules.route(ask))
+    }
+
+    override fun dismissStartNew() {
+        model.update { it.copy(startNew = null) }
     }
 
     override fun continueHere(key: String) {
@@ -730,6 +823,7 @@ public class ChatsAllViewModel(
                 when (val done = server.gateway.deleteSession(id)) {
                     is Outcome.Ok -> {
                         removeSession(server.profile, id)
+                        connections.left(ConversationRef(server.profile, id))
                         model.update { cur ->
                             val profile = server.profile
                             val src = cur.sources[profile]
@@ -778,7 +872,10 @@ public class ChatsAllViewModel(
                 val ops = server.operations ?: return@forEach
                 val session = AllConversationsRules.find(model.value, k)?.second ?: return@forEach
                 when (val done = ops.archiveSession(session.id)) {
-                    is Outcome.Ok -> model.update { it.copy(archivedNow = it.archivedNow + k) }
+                    is Outcome.Ok -> {
+                        connections.left(ConversationRef(server.profile, session.id))
+                        model.update { it.copy(archivedNow = it.archivedNow + k) }
+                    }
                     is Outcome.Failed ->
                         model.update {
                             it.copy(problem = AllProblem(AllProblemKind.Archive, done.failure))
@@ -794,12 +891,85 @@ public class ChatsAllViewModel(
         nav.open(ServersRoute.Home)
     }
 
+    private var importer: io.github.eslamasabry.oc.engine.agents.sessionimport.SessionImportEngine? = null
+
+    override fun openImport() {
+        if (model.value.importing != null) return
+        val capable = model.value.servers.filter { it.profile in model.value.importCapable }
+        when (capable.size) {
+            0 -> Unit
+            1 -> startImport(capable.single().profile)
+            else -> model.update { it.copy(importing = ImportModel(choices = capable)) }
+        }
+    }
+
+    override fun importPick(profile: ProfileId) {
+        if (profile in model.value.importCapable) startImport(profile)
+    }
+
+    private fun startImport(profile: ProfileId) {
+        val server = servers.firstOrNull { it.profile == profile } ?: return
+        val work = dispatchers ?: return
+        val engine =
+            io.github.eslamasabry.oc.engine.agents.sessionimport.SessionImportEngine(
+                server.gateway,
+                { servers.firstOrNull { it.profile == profile }?.gateway === server.gateway },
+                importFiles.firstOrNull(),
+                work,
+                io.github.eslamasabry.oc.core.model.ServerLocation(
+                    server.gateway.location.value.directory,
+                    server.gateway.location.value.workspace,
+                ),
+            )
+        importer?.close()
+        importer = engine
+        model.update { it.copy(importing = ImportModel(profile = profile, session = engine.state.value)) }
+        viewModelScope.launch {
+            engine.state.takeWhile { !it.closed }.collect { value ->
+                if (importer === engine)
+                    model.update { m -> m.copy(importing = m.importing?.copy(session = value)) }
+            }
+        }
+    }
+
+    override fun importChoose() {
+        importer?.let { engine -> viewModelScope.launch { engine.choose() } }
+    }
+
+    override fun importReview(text: String) {
+        importer?.let { engine -> viewModelScope.launch { engine.review(text) } }
+    }
+
+    override fun importDestination(directory: String, workspace: String) {
+        importer?.destination(directory, workspace)
+    }
+
+    override fun importSend() {
+        importer?.let { engine -> viewModelScope.launch { engine.send() } }
+    }
+
+    override fun importOpen() {
+        val engine = importer ?: return
+        val profile = model.value.importing?.profile ?: return
+        val session = engine.state.value.imported ?: return
+        if (!engine.mayOpen()) return
+        closeImport()
+        nav.openChat(ConversationRef(profile, session))
+    }
+
+    override fun closeImport() {
+        importer?.close()
+        importer = null
+        model.update { it.copy(importing = null) }
+    }
+
     private fun serverOf(key: String): ConversationServer? {
         val profile: ProfileId = AllConversationsRules.profileOf(key)
         return servers.firstOrNull { it.profile == profile }
     }
 
     override fun onCleared() {
+        importer?.close()
         commitDelete()
         super.onCleared()
     }
@@ -811,7 +981,8 @@ public class ChatsAllViewModel(
         public fun create(@Assisted route: ChatsRoute.All): ChatsAllViewModel
     }
 
-    private companion object {
+    internal companion object {
+        /** The route filter that opens the list with Running on (a filter starting with "/" is a project). */
         const val RUNNING = "running"
     }
 }

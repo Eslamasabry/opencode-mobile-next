@@ -57,6 +57,9 @@ public interface TeamIntroActions {
     public fun openGuide() {}
 
     public fun closeGuide() {}
+
+    /** The guide's next step: the computer's address (Flutter `enterAddress`). */
+    public fun enterAddress() {}
 }
 
 /**

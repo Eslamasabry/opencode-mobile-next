@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="notify_dock_channel">Cuộc trò chuyện đang chạy</string>
+    <string name="notify_dock_channel_description">Một dòng yên lặng liệt kê các cuộc trò chuyện đang chạy của bạn khi có việc đang làm hoặc đang chờ bạn. Tên được ẩn trên màn hình khóa.</string>
+    <string name="notify_dock_untitled">Cuộc trò chuyện chưa đặt tên</string>
+    <string name="notify_dock_helper_generic">một tác nhân phụ</string>
+    <string name="notify_dock_name_needs_you">%1$s cần bạn</string>
+    <string name="notify_dock_waiting_answer">Đang chờ câu trả lời của bạn</string>
+    <plurals name="notify_dock_others_working">
+        <item quantity="other">%1$s cuộc khác đang làm việc</item>
+    </plurals>
+    <string name="notify_dock_helper_asking">Tác nhân phụ %1$s của nó đang hỏi</string>
+    <string name="notify_dock_working_on">Đang làm: %1$s</string>
+    <string name="notify_dock_state_working">Đang làm việc</string>
+    <string name="notify_dock_state_thinking">Đang suy nghĩ</string>
+    <string name="notify_dock_state_needs_you">Cần bạn</string>
+    <string name="notify_dock_state_done">Xong, chưa mở</string>
+    <string name="notify_dock_state_failed">Dừng trước khi xong</string>
+    <plurals name="notify_dock_helpers">
+        <item quantity="other">%1$s tác nhân phụ</item>
+    </plurals>
+    <string name="notify_status_action_open_named">Mở %1$s</string>
+    <string name="notify_status_action_stop_named">Dừng %1$s</string>
+</resources>

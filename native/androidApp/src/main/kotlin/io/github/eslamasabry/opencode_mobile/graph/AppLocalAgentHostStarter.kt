@@ -21,10 +21,12 @@ import io.github.eslamasabry.oc.engine.profiles.SecretEdit
 import io.github.eslamasabry.oc.engine.profiles.StoredProfile
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentHostStarter
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgents
+import io.github.eslamasabry.oc.feature.agents.hub.phoneInstalledAgents
 import io.github.eslamasabry.oc.protocol.paseo.gateway.PaseoProbeResult
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.agentsPhoneHelperProfile
 import io.github.eslamasabry.opencode_mobile.BuiltinLinux
+import io.github.eslamasabry.opencode_mobile.PhoneAgentHost
 import java.security.SecureRandom
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.sync.Mutex
@@ -51,7 +53,86 @@ class AppLocalAgentHostStarter(
 ) : PhoneAgentHostStarter {
     private val lane = Mutex()
 
-    override suspend fun connect(): Outcome<Unit> = lane.withLock {
+    /** The Paseo version the helper last answered with (a verified wire check). */
+    @Volatile private var answeredVersion: String? = null
+
+    /**
+     * The phone check's connection steps: starts the helper like any connect (without saving the "Phone agents"
+     * server) and answers the Paseo version it reported. A helper that already runs the expected version is kept.
+     */
+    suspend fun checkHelper(): Outcome<String?> {
+        answeredVersion = null
+        return when (val prepared = prepare(save = false, budgetMs = GATE_BUDGET_MS)) {
+            is Outcome.Failed -> prepared
+            is Outcome.Ok -> Outcome.Ok(answeredVersion)
+        }
+    }
+
+    override suspend fun connect(): Outcome<Unit> {
+        // The lock covers the helper and the saved profile only: connecting the profile asks [ensureHelper] again
+        // (it is the same path any later connection of this server takes), so it must not run under the lock.
+        val id =
+            when (val prepared = prepare(save = true, budgetMs = HelperAnswerWait.BUDGET_MS)) {
+                is Outcome.Failed -> return prepared
+                is Outcome.Ok -> prepared.value
+            }
+        // In the background: the Agents page must not change which server the home shows.
+        return connections.connectInBackground(id)
+    }
+
+    /**
+     * Cold start (Flutter built its agent sources from the phone profile with no visit to the Agents page): when an
+     * agent is installed and no "Phone agents" source is saved, starts the helper and saves that source, without
+     * connecting it or making it the active server. Ok(null) when nothing needed doing. Reads the install state only.
+     */
+    suspend fun adoptSource(): Outcome<ProfileId?> {
+        when (val warm = stores.warm()) {
+            is Outcome.Failed -> return warm
+            is Outcome.Ok -> Unit
+        }
+        val saved =
+            stores.profiles.profiles.value.any {
+                it.profile.backend == BackendKind.Paseo &&
+                    PhoneAgentRules.isHelperProfile(
+                        it.id.raw,
+                        (stores.prefs.get("oc.phoneAgentOwner.${it.id.raw}") as? PrefValue.Str)?.value,
+                    )
+            }
+        // The rows are read at every start, saved source or not: New conversation lists the phone's agents from them,
+        // and without this read they stayed empty until the Agents page was opened.
+        phone.refresh()
+        if (saved) return Outcome.Ok(null)
+        val state = phone.state.value
+        if (
+            !PhoneConversationRules.shouldAdopt(
+                state.available,
+                state.needsRestart,
+                phoneInstalledAgents(state).size,
+                alreadySaved = false,
+            )
+        )
+            return Outcome.Ok(null)
+        return when (val prepared = prepare(save = true, budgetMs = GATE_BUDGET_MS)) {
+            is Outcome.Failed -> prepared
+            is Outcome.Ok -> Outcome.Ok(prepared.value)
+        }
+    }
+
+    /**
+     * Makes sure the helper behind the saved "Phone agents" server [id] runs and answers, starting it when it does
+     * not (Flutter started it whenever that server was needed, not only from the Agents page). Nothing is saved.
+     * Ok for any other server: only this one is the helper's own.
+     */
+    suspend fun ensureHelper(id: ProfileId): Outcome<Unit> {
+        val owned = (stores.prefs.get("oc.phoneAgentOwner.${id.raw}") as? PrefValue.Str)?.value
+        if (!PhoneAgentRules.isHelperProfile(id.raw, owned)) return Outcome.Ok(Unit)
+        return when (val prepared = prepare(save = false, budgetMs = GATE_BUDGET_MS)) {
+            is Outcome.Failed -> prepared
+            is Outcome.Ok -> if (prepared.value == id) Outcome.Ok(Unit) else unavailable()
+        }
+    }
+
+    private suspend fun prepare(save: Boolean, budgetMs: Long): Outcome<ProfileId> = lane.withLock {
         if (phone.state.value.needsRestart) return@withLock unavailable()
         when (val warm = stores.warm()) {
             is Outcome.Failed -> return@withLock warm
@@ -98,25 +179,45 @@ class AppLocalAgentHostStarter(
                             password,
                             PaseoConfig.render().json,
                             expectedHelperVersion = AgentPins.builtIn.paseo.version,
+                            // As the Flutter app's ordinary start: an older tested helper runs as it is.
+                            testedHelperVersions = AgentPins.builtIn.paseoTestedVersions.toSet(),
                         )
                         Outcome.Ok(Unit)
                     }
                 } catch (e: CancellationException) {
                     throw e
-                } catch (_: Exception) {
-                    Outcome.Failed(Failure.Runtime(RuntimeProblem.ServerStartUnavailable))
+                } catch (e: Exception) {
+                    // A helper that is missing or too old to run is its own reason, with its own way forward.
+                    Outcome.Failed(
+                        Failure.Runtime(
+                            if (PhoneAgentHost.failureCode(e) == "helper_update_required")
+                                RuntimeProblem.HelperUpdateRequired
+                            else RuntimeProblem.ServerStartUnavailable
+                        )
+                    )
                 }
             }
         if (started is Outcome.Failed) return@withLock started
         // A live authenticated wire check, rather than a process handle, admits the connection.
-        when (val checked = factory.paseo.checkConnection(ADDRESS, password, FOLDER)) {
+        // The helper may still be starting (20 s or more on a slow phone): ask again as the Flutter app did.
+        val answer =
+            HelperAnswerWait.until(
+                now = { android.os.SystemClock.elapsedRealtime() },
+                pause = { kotlinx.coroutines.delay(it) },
+                done = { it !is PaseoProbeResult.Refused || !HelperAnswerWait.stillStarting(it.failure) },
+                budgetMs = budgetMs,
+            ) {
+                factory.paseo.checkConnection(ADDRESS, password, FOLDER)
+            }
+        when (val checked = answer) {
             is PaseoProbeResult.Refused -> return@withLock Outcome.Failed(checked.failure)
             is PaseoProbeResult.InvalidInput -> return@withLock unavailable()
-            is PaseoProbeResult.Verified -> Unit
+            is PaseoProbeResult.Verified -> answeredVersion = checked.version
         }
         if (phone.state.value.needsRestart || stores.profiles.profile(profile) == null)
             return@withLock unavailable()
-        val id = ProfileId("${owner.raw}-agents")
+        val id = ProfileId("${owner.raw}$SUFFIX")
+        if (!save) return@withLock Outcome.Ok(id)
         val existing = stores.profiles.profile(id)?.profile
         if (
             existing != null &&
@@ -134,13 +235,16 @@ class AppLocalAgentHostStarter(
             is Outcome.Failed -> return@withLock mapped
             is Outcome.Ok -> Unit
         }
+        // Saved under the phone's own name: the helper is part of This phone, and every place that names a connection
+        // (a chat's header, an alert, All conversations) must read This phone, never a second server.
+        val name = stores.helperName(profile, getString(Res.string.agentsPhoneHelperProfile))
         when (
             val saved =
                 stores.profiles.upsert(
-                    existing
+                    existing?.copy(name = name)
                         ?: StoredProfile(
                             id,
-                            getString(Res.string.agentsPhoneHelperProfile),
+                            name,
                             ADDRESS,
                             backend = BackendKind.Paseo,
                             codexDirectory = FOLDER,
@@ -151,16 +255,19 @@ class AppLocalAgentHostStarter(
             is Outcome.Failed -> return@withLock saved
             is Outcome.Ok -> Unit
         }
-        connections.connect(id)
+        Outcome.Ok(id)
     }
 
     private fun unavailable(): Outcome.Failed =
         Outcome.Failed(Failure.Runtime(RuntimeProblem.Generic))
 
-    private companion object {
-        const val ADDRESS = "ws://127.0.0.1:4099"
-        const val FOLDER = "/root/projects"
-        val ID = Regex("[A-Za-z0-9_-]{1,80}")
-        val PASSWORD = Regex("[a-f0-9]{64}")
+    companion object {
+        /** The saved helper profile is `<owner>-agents`. */
+        const val SUFFIX = "-agents"
+        private const val GATE_BUDGET_MS = 30_000L
+        private const val ADDRESS = "ws://127.0.0.1:4099"
+        private const val FOLDER = "/root/projects"
+        private val ID = Regex("[A-Za-z0-9_-]{1,80}")
+        private val PASSWORD = Regex("[a-f0-9]{64}")
     }
 }

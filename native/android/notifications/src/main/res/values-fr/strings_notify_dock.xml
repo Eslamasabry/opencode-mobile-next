@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="notify_dock_channel">Conversations en cours</string>
+    <string name="notify_dock_channel_description">Une ligne discrète qui liste vos conversations en cours tant que quelque chose tourne ou vous attend. Les noms restent masqués sur l’écran de verrouillage.</string>
+    <string name="notify_dock_untitled">Conversation sans titre</string>
+    <string name="notify_dock_helper_generic">un sous-agent</string>
+    <string name="notify_dock_name_needs_you">%1$s a besoin de vous</string>
+    <string name="notify_dock_waiting_answer">En attente de votre réponse</string>
+    <plurals name="notify_dock_others_working">
+        <item quantity="one">%1$s autre travaille</item>
+        <item quantity="many">%1$s autres travaillent</item>
+        <item quantity="other">%1$s autres travaillent</item>
+    </plurals>
+    <string name="notify_dock_helper_asking">Son sous-agent %1$s pose une question</string>
+    <string name="notify_dock_working_on">Travaille sur %1$s</string>
+    <string name="notify_dock_state_working">En cours</string>
+    <string name="notify_dock_state_thinking">Réflexion</string>
+    <string name="notify_dock_state_needs_you">A besoin de vous</string>
+    <string name="notify_dock_state_done">Terminé, pas encore ouvert</string>
+    <string name="notify_dock_state_failed">Arrêté avant la fin</string>
+    <plurals name="notify_dock_helpers">
+        <item quantity="one">%1$s sous-agent</item>
+        <item quantity="many">%1$s sous-agents</item>
+        <item quantity="other">%1$s sous-agents</item>
+    </plurals>
+    <string name="notify_status_action_open_named">Ouvrir %1$s</string>
+    <string name="notify_status_action_stop_named">Arrêter %1$s</string>
+</resources>

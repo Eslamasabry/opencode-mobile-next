@@ -1,7 +1,7 @@
 package io.github.eslamasabry.oc.engine.agents.claudeagent
 
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
-import java.io.File
+import io.github.eslamasabry.oc.engine.agents.scripts.freezeTipSource
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -10,12 +10,10 @@ import kotlin.test.assertEquals
  * (Dart's own string rules, independently of the generated Kotlin template) and compares.
  */
 class ClaudeAgentLinkScriptParityTest {
-    private val repo: File = generateSequence(File("").absoluteFile) { it.parentFile }
-        .first { File(it, "lib/builtin/claude_agent_link.dart").isFile }
-
     @Test
     fun `B-AGENT-409 the root script equals the Dart freeze tip byte for byte`() {
-        val dart = File(repo, "lib/builtin/claude_agent_link.dart").readText()
+        // The freeze tip's copy: the released Flutter app that lib/ holds since the master merge has no Claude agent link.
+        val dart = freezeTipSource("lib/builtin/claude_agent_link.dart")
         val marker = Regex("static const shimMarker = '([^']*)';").find(dart)!!.groupValues[1]
         var body = dart.substring(dart.indexOf("return '''") + "return '''".length, dart.indexOf("''';"))
         // Dart drops the first line of a triple-quoted string when it holds only whitespace.

@@ -335,7 +335,7 @@ public class PhoneServerHealing(
     private suspend fun launchAdmission(profile: HealingProfile): Long? {
         if (!mayLaunch(profile)) return null
         val admission: RuntimeStatus = host.statusOrNull() ?: return null
-        if (!mayLaunch(profile) || !admission.serverRestartWanted || admission.idleBlocksLaunch) return null
+        if (!mayLaunch(profile) || admission.serverStoppedByPerson || admission.idleBlocksLaunch) return null
         return admission.serverRecoveryGeneration
     }
 

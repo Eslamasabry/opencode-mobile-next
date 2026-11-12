@@ -82,15 +82,17 @@ class SearchUsageServers(
 ) {
     private val scope = CoroutineScope(appScope.coroutineContext)
 
-    /** Connected servers by id and saved name, in saved order. */
+    /**
+     * Connected servers by id and saved name, in saved order. The phone agents' helper connection is part of This
+     * phone, not a server to pick here.
+     */
     val live: StateFlow<List<Pair<ProfileId, String>>> =
         registry.live
-            .map { graphs -> graphs.map { (id, graph) -> id to graph.profile.name } }
-            .stateIn(
-                scope,
-                SharingStarted.Eagerly,
-                registry.live.value.map { (id, graph) -> id to graph.profile.name },
-            )
+            .map { servers(it) }
+            .stateIn(scope, SharingStarted.Eagerly, servers(registry.live.value))
+
+    private fun servers(graphs: Map<ProfileId, io.github.eslamasabry.oc.engine.connection.ConnectionGraph>) =
+        graphs.filterKeys { !stores.isPhoneHelper(it) }.map { (id, graph) -> id to graph.profile.name }
 
     val active: StateFlow<ProfileId?> = stores.profiles.activeId
 

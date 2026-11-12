@@ -19,6 +19,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.engine.git.GitAction
@@ -47,6 +48,9 @@ import io.github.eslamasabry.oc.feature.git.presentation.GitActions
 import io.github.eslamasabry.oc.feature.git.presentation.GitConfirm
 import io.github.eslamasabry.oc.feature.git.presentation.GitSheet
 import io.github.eslamasabry.oc.feature.git.presentation.GitUi
+import io.github.eslamasabry.oc.feature.git.presentation.GitWay
+import io.github.eslamasabry.oc.feature.git.presentation.gitSavedNeedsSignIn
+import io.github.eslamasabry.oc.feature.git.presentation.gitWayForward
 import io.github.eslamasabry.oc.ui.design.color.StatusTone
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kit.KitAction
@@ -85,6 +89,7 @@ import io.github.eslamasabry.oc.ui.kit.state.KitDetailsFold
 import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
+import io.github.eslamasabry.oc.ui.kit.state.KitStateSize
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
 import io.github.eslamasabry.oc.ui.kit.status.KitStatus
 import io.github.eslamasabry.oc.ui.kit.text.KitBidi
@@ -172,12 +177,14 @@ public fun GitScreen(state: GitUi, actions: GitActions, serverTools: @Composable
                         title = stringResource(Res.string.gitSheetTitle),
                         body = gitUnavailableText(view.reason),
                         modifier = Modifier.testTag("git-unavailable"),
+                        size = KitStateSize.Inline,
                     )
                 GitPageView.NotRepository -> {
                     KitStateView(
                         kind = KitStateKind.Empty,
                         title = stringResource(Res.string.gitNotRepositoryTitle),
                         body = stringResource(Res.string.gitNotRepositoryBody),
+                        size = KitStateSize.Inline,
                     )
                     KitRowGroup {
                         // Acts in place (no page opens), so no chevron.
@@ -309,17 +316,44 @@ private fun Ready(
     // A failed action, or a failed refresh over the last snapshot (B-NAV-020): plain words, Git's
     // text under Details.
     val failed = state.result?.failure
+    // Set identity puts the person in the identity block's first empty field; a focused field scrolls into view.
+    val identityField = remember { FocusRequester() }
     if (failed != null) {
         Gutter {
-            val words = gitProblemText(failed.problem)
+            val place = placeOf(state, snapshot)
+            val words = gitProblemText(failed.problem, state.offersGitHubSignIn)
+            // Flutter `_wayForward`: the one step that fixes it, next to the words.
+            val way =
+                gitWayForward(
+                    failed.problem,
+                    state.offersGitHubSignIn,
+                    canSignIn = state.signIn is GitHubSignIn.SignedOut,
+                )
+            val close = KitLineAction(stringResource(Res.string.kitSheetClose), actions::dismissResult)
+            val step =
+                when (way) {
+                    GitWay.SignIn -> KitLineAction(stringResource(Res.string.gitHubSignIn), actions::signIn)
+                    GitWay.GetLatest -> KitLineAction(stringResource(Res.string.gitGetLatest), actions::pull)
+                    GitWay.SetIdentity ->
+                        KitLineAction(
+                            stringResource(Res.string.gitIdentityTitle),
+                            { identityField.requestFocus() },
+                        )
+                    null -> null
+                }
             KitErrorNotice(
-                if (state.savedNotSent) stringResource(Res.string.gitSavedNotSent, words)
-                else words,
+                when {
+                    state.savedNotSent &&
+                        gitSavedNeedsSignIn(failed.problem, state.offersGitHubSignIn, place.isNotEmpty()) ->
+                        stringResource(Res.string.gitSavedSignInFirst, place)
+                    state.savedNotSent -> stringResource(Res.string.gitSavedNotSent, words)
+                    else -> words
+                },
                 details = state.resultDetails,
                 detailsLabel = stringResource(Res.string.kitDetails),
                 copyLabel = stringResource(Res.string.kitCopyDetails),
-                retry =
-                    KitLineAction(stringResource(Res.string.kitSheetClose), actions::dismissResult),
+                retry = step ?: close,
+                dismiss = close.takeIf { step != null },
             )
         }
     }
@@ -491,6 +525,27 @@ private fun Ready(
                     tone = StatusTone.Attention,
                 )
             }
+            // Flutter `_askConflictsRow`: one tap sends the agent the files to resolve, from this conversation.
+            if (state.canAskAgent) {
+                val paths = snapshot.status.files.filter { it.isConflicted }.map { it.path }
+                val prompt = stringResource(Res.string.gitAskAgentFixConflictsPrompt, paths.joinToString(", "))
+                KitRow(
+                    title = stringResource(Res.string.gitAskAgentFixConflicts),
+                    supporting = pluralStringResource(Res.plurals.gitConflictCount, count, count),
+                    leading = KitRowLeading.Glyph(KitIcons.sparkle),
+                    trailing = KitRowTrailing.Chevron,
+                    onClick = { actions.askAgent(prompt) },
+                    modifier = Modifier.testTag("git-row-ask-conflicts"),
+                )
+            }
+            if (state.askFailed) {
+                Gutter {
+                    KitErrorNotice(
+                        stringResource(Res.string.chatSendFailedRefused),
+                        retry = KitLineAction(stringResource(Res.string.kitSheetClose), actions::dismissAskFailure),
+                    )
+                }
+            }
         }
         // The save block. Steer, never queue: every button holds while an action runs.
         Gutter {
@@ -556,7 +611,7 @@ private fun Ready(
     if (
         snapshot.identity?.needsSetup == true || state.result?.problem == GitProblem.IdentityMissing
     )
-        IdentityBlock(snapshot, actions, enabled)
+        IdentityBlock(snapshot, actions, enabled, identityField)
 
     // Recent saves.
     if (snapshot.commits.isNotEmpty()) {
@@ -590,12 +645,13 @@ private fun placeOf(state: GitUi, snapshot: GitSnapshot): String {
 }
 
 @Composable
-private fun IdentityBlock(snapshot: GitSnapshot, actions: GitActions, enabled: KitEnabled) {
+private fun IdentityBlock(snapshot: GitSnapshot, actions: GitActions, enabled: KitEnabled, focus: FocusRequester) {
     val name = remember { TextFieldState(snapshot.identity?.name.orEmpty()) }
     val email = remember { TextFieldState(snapshot.identity?.email.orEmpty()) }
     val typedName = name.text.toString().trim()
     val typedEmail = email.text.toString().trim()
     val ready = typedName.isNotEmpty() && '@' in typedEmail
+    val toEmail = remember { snapshot.identity?.name.isNullOrBlank().not() && snapshot.identity?.email.isNullOrBlank() }
     Gutter {
         Column(verticalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
             KitText(stringResource(Res.string.gitIdentityTitle), role = KitTextRole.Title)
@@ -605,6 +661,7 @@ private fun IdentityBlock(snapshot: GitSnapshot, actions: GitActions, enabled: K
                 stringResource(Res.string.gitIdentityName),
                 enabled = enabled,
                 modifier = Modifier.testTag("git-identity-name"),
+                focusRequester = focus.takeUnless { toEmail },
             )
             KitField(
                 email,
@@ -612,6 +669,7 @@ private fun IdentityBlock(snapshot: GitSnapshot, actions: GitActions, enabled: K
                 modifier = Modifier.testTag("git-identity-email"),
                 kind = KitFieldKind.Text,
                 enabled = enabled,
+                focusRequester = focus.takeIf { toEmail },
             )
             KitButton(
                 stringResource(Res.string.gitActionSaveIdentity),

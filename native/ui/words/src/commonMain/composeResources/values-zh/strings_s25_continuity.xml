@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="crashOfferSection">崩溃报告</string>
+    <string name="crashOfferSettingTitle">提供崩溃报告</string>
+    <string name="crashOfferSettingDetail">应用意外关闭后，提供一份你可以先查看的报告。绝不会自动发送任何内容。</string>
+    <string name="telemetryConsentTitle">帮助改进 OpenCode Mobile？</string>
+    <string name="telemetryConsentBody">如果你同意，应用会通过 Google Firebase 发送匿名的使用情况和应用健康数据，以及崩溃报告。你可以在“设置”›“隐私和数据”中分别更改。</string>
+    <string name="telemetryConsentSends">会发送：使用过的页面和功能、连接、发送和设置是否正常、应用速度、内存和存储范围、崩溃报告，以及一个随机的安装 ID。</string>
+    <string name="telemetryConsentNever">绝不发送：你的代码、对话、文件、服务器地址或密钥。不含广告 ID。</string>
+    <string name="telemetryConsentShare">两者都分享</string>
+    <string name="telemetryConsentNotNow">暂不</string>
+</resources>

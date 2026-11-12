@@ -18,7 +18,18 @@
     <string name="agentsComputerReadFailed">Không đọc được các tác nhân của máy tính này. Hãy kéo xuống để thử lại.</string>
     <string name="agentsNewChat">Cuộc trò chuyện mới</string>
     <string name="agentsNewChatWith">Cuộc trò chuyện mới với %1$s</string>
-    <string name="agentsConversationsStored">Nơi lưu các cuộc trò chuyện</string>
-    <string name="agentsConversationsStoredOn">Nơi lưu các cuộc trò chuyện: %1$s</string>
+    <string name="agentsConversationsStored">Sao chép cuộc trò chuyện cho tác nhân khác</string>
+    <string name="agentsConversationsStoredOn">Sao chép cuộc trò chuyện từ %1$s</string>
     <string name="agentsHostAccount">Tài khoản trên máy chủ: %1$s</string>
+    <string name="agentsHelperUpdateRequired">Các tác nhân trên điện thoại chưa được kết nối: trình hỗ trợ tác nhân bị thiếu hoặc quá cũ để chạy.</string>
+    <string name="agentsHelperUpdateAction">Cập nhật trình hỗ trợ tác nhân</string>
+    <string name="agentsInstallFailedDownload">Không thể cài đặt %1$s: quá trình tải xuống chưa hoàn tất. Hãy kiểm tra kết nối và thử lại.</string>
+    <string name="agentsInstallFailedChecksum">Không thể cài đặt %1$s: tệp tải về không phải tệp mà ứng dụng mong đợi nên đã bị loại bỏ. Hãy thử lại.</string>
+    <string name="agentsInstallFailedStorage">Không thể cài đặt %1$s: điện thoại này không đủ dung lượng. Hãy giải phóng bớt dung lượng rồi thử lại.</string>
+    <string name="agentsInstallFailedVersion">Không thể cài đặt %1$s: phiên bản tải về không phải phiên bản ứng dụng mong đợi. Hãy thử lại.</string>
+    <string name="agentsInstallFailedUnknown">Không thể cài đặt %1$s. Hãy thử lại; phần Chi tiết có thông tin điện thoại báo về.</string>
+    <string name="agentsInstallInterruptedNow">Việc cài đặt %1$s bị gián đoạn trước khi xong. Hãy thử lại để tiếp tục.</string>
+    <string name="agentsInstallFailedVersionOther">Không thể cài đặt %1$s: bản tải về cho biết là phiên bản %2$s, còn ứng dụng này hoạt động với %3$s. Thử lại sẽ không thay đổi điều này; cập nhật ứng dụng này thì có.</string>
+    <string name="agentsInstallFailedNotStarted">%1$s đã được tải về nhưng không khởi động trên điện thoại này, nên không thể kiểm tra phiên bản. Hãy thử lại; nếu vẫn xảy ra, phần Chi tiết có thông tin điện thoại báo về.</string>
+    <string name="agentsInstallFailedWithdrawn">Không thể cài đặt %1$s: phiên bản %2$s, phiên bản ứng dụng này cài đặt, không còn được cung cấp để tải về. Thử lại sẽ không thay đổi điều này; cập nhật ứng dụng này thì có.</string>
 </resources>

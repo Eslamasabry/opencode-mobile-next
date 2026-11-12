@@ -24,7 +24,12 @@ import io.github.eslamasabry.oc.ui.kit.row.KitSectionLabel
 import io.github.eslamasabry.oc.ui.kitchat.turn.KitContextLevel
 import io.github.eslamasabry.oc.ui.kitchat.turn.KitContextRing
 import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.e7SharedAccumulatedCostReportedByServer
 import io.github.eslamasabry.oc.ui.words.res.e7SharedAssistantText
+import io.github.eslamasabry.oc.ui.words.res.e7SharedSessionTokensReportedByServer
+import io.github.eslamasabry.oc.ui.words.res.e7SharedSessionTotals
+import io.github.eslamasabry.oc.ui.words.res.historyLoadedCost
+import io.github.eslamasabry.oc.ui.words.res.historyServerTotalsNote
 import io.github.eslamasabry.oc.ui.words.res.e7SharedContextLimit
 import io.github.eslamasabry.oc.ui.words.res.e7SharedContextLimitUnavailable
 import io.github.eslamasabry.oc.ui.words.res.e7SharedEstimatedInputMakeup
@@ -37,7 +42,6 @@ import io.github.eslamasabry.oc.ui.words.res.e7SharedUserPrompts
 import io.github.eslamasabry.oc.ui.words.res.kitContextRingSemantics
 import io.github.eslamasabry.oc.ui.words.res.kitContextSheetModel
 import io.github.eslamasabry.oc.ui.words.res.kitContextSheetTitle
-import io.github.eslamasabry.oc.ui.words.res.kitSheetDismiss
 import io.github.eslamasabry.oc.ui.words.res.sessionContextMessagesSplit
 import io.github.eslamasabry.oc.ui.words.res.sessionContextPercent
 import io.github.eslamasabry.oc.ui.words.res.sessionContextTokens
@@ -80,7 +84,6 @@ internal fun SessionContextDetailsSheet(context: ContextUi?, visible: Boolean, o
         visible = visible && context != null,
         onDismissRequest = onDismiss,
         title = stringResource(Res.string.e7SharedSessionContext),
-        closeLabel = stringResource(Res.string.kitSheetDismiss),
     ) {
         if (context == null) return@KitSheet
         val sheet = context.sheet
@@ -166,14 +169,31 @@ private fun TokenRow(title: String, tokens: Long) {
     )
 }
 
-/** The bar opens the small context-window summary; the session metrics are a separate page. */
+/**
+ * C4: what the sheet says about the conversation's totals. The server's figures cover the whole conversation; the
+ * loaded cost covers the messages on the phone (Flutter `historyLoadedCost`, `historyServerTotalsNote`).
+ */
+internal class ContextTotals(val serverCost: Double?, val serverTokens: Long?, val loadedCost: Double) {
+    val reportedByServer: Boolean
+        get() = serverCost != null || serverTokens != null
+
+    /** The one cost to show: the server's, else the loaded sum; null when there is nothing worth saying. */
+    val cost: Double?
+        get() = (serverCost ?: loadedCost).takeIf { it > 0.0 }
+}
+
+/** The bar opens the context-window summary and, below it, what the conversation has cost so far. */
 @Composable
-internal fun ChatContextSheet(context: ContextUi?, visible: Boolean, onDismiss: () -> Unit) {
+internal fun ChatContextSheet(
+    context: ContextUi?,
+    visible: Boolean,
+    totals: ContextTotals? = null,
+    onDismiss: () -> Unit,
+) {
     KitSheet(
         visible = visible && context?.sheet?.contextLimit != null,
         onDismissRequest = onDismiss,
         title = stringResource(Res.string.kitContextSheetTitle),
-        closeLabel = stringResource(Res.string.kitSheetDismiss),
     ) {
         if (context != null) {
             val limit = context.sheet.contextLimit
@@ -184,6 +204,39 @@ internal fun ChatContextSheet(context: ContextUi?, visible: Boolean, onDismiss: 
                 percent = context.percent,
                 level = context.level.toKit(),
             )
+            ContextTotalsRows(totals)
         }
     }
+}
+
+@Composable
+private fun ContextTotalsRows(totals: ContextTotals?) {
+    if (totals == null) return
+    val cost = totals.cost
+    if (cost == null && totals.serverTokens == null) return
+    KitSectionLabel(stringResource(Res.string.e7SharedSessionTotals), Modifier.testTag("chat-context-totals"))
+    if (cost != null)
+        KitRow(
+            title =
+                stringResource(
+                    if (totals.serverCost != null) Res.string.e7SharedAccumulatedCostReportedByServer
+                    else Res.string.historyLoadedCost
+                ),
+            trailing = KitRowTrailing.Value("$" + Numbers.decimal(cost, 4), chevron = false),
+            modifier = Modifier.testTag("chat-context-cost"),
+        )
+    totals.serverTokens?.let {
+        KitRow(
+            title = stringResource(Res.string.e7SharedSessionTokensReportedByServer),
+            trailing = KitRowTrailing.Value(stringResource(Res.string.sessionContextTokens, Numbers.format(it)), chevron = false),
+            modifier = Modifier.testTag("chat-context-server-tokens"),
+        )
+    }
+    if (totals.reportedByServer)
+        KitText(
+            stringResource(Res.string.historyServerTotalsNote),
+            role = TypeRole.Caption,
+            tone = TextTone.Secondary,
+            modifier = Modifier.padding(horizontal = Space.S4.dp),
+        )
 }

@@ -82,8 +82,9 @@ public sealed interface PhoneServerState {
                     null -> Checking
                 }
             }
-            if (facts.stoppedByPerson || status.restoreReason == RestoreReason.Stopped)
-                return Stopped(StoppedBy.Person)
+            // Only the person's own Stop record says "you stopped it": the native restore reason `stopped` is also
+            // written when the app replaced the server or Android refused its service (owner rule 2026-11-11).
+            if (facts.stoppedByPerson) return Stopped(StoppedBy.Person)
             gaveUp(status.restoreReason)?.let {
                 return GaveUp(it)
             }
@@ -147,6 +148,12 @@ public enum class AnswerHeadline {
     StartFailed,
     Recovery,
 
+    /** The phone is warm: the heat guard paused the AI Team. */
+    HeatPaused,
+
+    /** The phone is hot: the heat guard stopped the AI Team and the server. */
+    HeatStopped,
+
     /** This phone's server still has to move to OpenCode 2 ("Update this server"). */
     NeedsOpenCode2,
 }
@@ -175,6 +182,12 @@ public sealed interface AnswerLine {
 
     /** Why it is restarting by itself (the Android or self stop that preceded it). */
     public data class Because(val headline: AnswerHeadline) : AnswerLine
+
+    public data object HeatResumeCool : AnswerLine
+
+    public data class HeatResumeIn(val wait: AboutWait) : AnswerLine
+
+    public data object HeatStays : AnswerLine
 
     /** "This needs OpenCode 2. Switch this phone's server to it?" */
     public data object OpenCode2Offer : AnswerLine
@@ -255,6 +268,9 @@ public object ThisPhoneAnswers {
                 AnswerLine.PortBusy(busyPort),
                 PhoneAct.StartAgain,
             )
+        heatAnswer(state, facts, now)?.let {
+            return it
+        }
         return when (state) {
             PhoneServerState.Checking ->
                 ThisPhoneAnswer(AnswerTone.Working, AnswerHeadline.Checking)
@@ -339,6 +355,39 @@ public object ThisPhoneAnswers {
                     )
                 }
         }
+    }
+
+    /**
+     * Flutter `_heat`: while the heat guard holds the team, the page says so and when it comes back, in place of
+     * "running" or "stopped by itself". The person's own Stop still reads as their Stop.
+     */
+    private fun heatAnswer(state: PhoneServerState, facts: PhoneServerFacts, now: Instant?): ThisPhoneAnswer? {
+        val heat = facts.heat ?: return null
+        val shown =
+            when (state) {
+                PhoneServerState.Running,
+                PhoneServerState.RestartingNow,
+                is PhoneServerState.Restarting -> true
+                is PhoneServerState.Stopped -> state.by != StoppedBy.Person
+                else -> false
+            }
+        if (!shown) return null
+        val at = heat.resumeAt
+        val left = if (at != null && now != null) at - now else null
+        val line =
+            when {
+                !heat.resumesByItself -> AnswerLine.HeatStays
+                left == null || left <= Duration.ZERO -> AnswerLine.HeatResumeCool
+                else -> AnswerLine.HeatResumeIn(AboutWait.of(left))
+            }
+        return ThisPhoneAnswer(
+            AnswerTone.Paused,
+            if (heat.stopped) AnswerHeadline.HeatStopped else AnswerHeadline.HeatPaused,
+            line,
+            // The way back is a visible act when nothing will bring it back by itself.
+            primary = if (!heat.resumesByItself && state is PhoneServerState.Stopped) PhoneAct.Start else null,
+            until = at.takeIf { heat.resumesByItself },
+        )
     }
 
     private fun StartProblem.isFailure(): Boolean =

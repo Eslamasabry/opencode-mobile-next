@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxToolsTitle">已安装的工具</string>
+    <string name="linuxToolsAiTeam">AI Team</string>
+    <string name="linuxToolsPart">手机工具</string>
+    <string name="linuxToolsFreedBytes">约可释放 %1$s。</string>
+    <string name="linuxToolsWait">请等待当前的手机操作完成。</string>
+    <string name="linuxToolsInstalled">已安装</string>
+    <string name="linuxToolsAbsent">未安装</string>
+    <string name="linuxToolsUnknown">无法检查。请刷新后重试。</string>
+    <string name="linuxToolsRefresh">刷新已安装的工具</string>
+    <string name="linuxToolsRemovePython">移除 Python 工具</string>
+    <string name="linuxToolsRemoveQuestion">移除 Python 工具？</string>
+    <string name="linuxToolsRemoveBody">移除 pip 和虚拟环境的软件包。Python 本身、项目和对话会保留。</string>
+    <string name="linuxToolsRemoved">Python 工具已移除。</string>
+    <string name="linuxToolsDependent">另一个已安装的工具需要此组件。</string>
+    <string name="linuxToolsDependencyUnknown">无法检查可能需要此组件的另一个工具。请刷新后重试。</string>
+    <string name="linuxToolsRequired">手机工具需要此组件。</string>
+    <string name="linuxToolsUnsupported">无法在这里移除此组件。</string>
+    <string name="linuxToolsInventoryFailed">无法检查已安装的工具。请刷新后重试。没有移除任何内容。</string>
+    <string name="linuxToolsSetupRunning">移除工具前，请先停止设置或等它完成。</string>
+    <string name="linuxToolsRemoveFailed">无法完全移除 Python 工具。请刷新已安装的工具，然后重试。</string>
+    <string name="linuxSetupStatusUnreadable">无法读取已保存的设置。请继续设置后重试。</string>
+    <string name="linuxSetupHostMismatch">这份已保存的设置属于另一个 Linux 环境。请改为为这部手机开始设置。</string>
+    <string name="linuxSetupHostRefused">手机设置无法安全地开始。请继续设置后重试。</string>
+    <string name="linuxSetupSavedFailed">无法保存设置。请腾出一些存储空间，然后继续设置。</string>
+    <string name="linuxSetupBytes">%1$s / %2$s</string>
+    <string name="linuxSetupCheckingPart">正在检查已安装的工具</string>
+    <string name="linuxSetupPartPending">等待中</string>
+    <string name="linuxSetupPartRunning">正在安装</string>
+    <string name="linuxSetupPartDone">已就绪</string>
+    <string name="linuxSetupPartFailed">未能完成</string>
+</resources>

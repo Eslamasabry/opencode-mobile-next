@@ -783,6 +783,8 @@ public fun ServerEditorScreen(
                         state.pairingProblem?.let { KitErrorNotice(pairingProblemText(it)) }
                     val manualFields: @Composable () -> Unit = {
                         Column(verticalArrangement = Arrangement.spacedBy(Space.S4.dp)) {
+                            // W4: the phone's own server shows no address, HTTPS advice, password or user name.
+                            if (ServerEditorRules.showsAddress(state.record))
                             KitField(
                                 address,
                                 stringResource(
@@ -807,6 +809,7 @@ public fun ServerEditorScreen(
                                     else null,
                                 enabled = enabled,
                             )
+                            if (ServerEditorRules.showsPassword(state.record))
                             KitField(
                                 password,
                                 stringResource(
@@ -846,6 +849,7 @@ public fun ServerEditorScreen(
                             val origin = editorOrigin(address.text.toString())
                             if (
                                 backend == BackendKind.OpenCode2 &&
+                                    ServerEditorRules.showsAddress(state.record) &&
                                     origin != null &&
                                     AddressRules.needsCleartextConsent(origin)
                             ) {
@@ -916,14 +920,35 @@ public fun ServerEditorScreen(
                                     )
                             }
                             state.failure?.let { failure ->
-                                KitErrorNotice(
+                                val redactor = io.github.eslamasabry.oc.ui.kitchat.LocalKitRedactor.current
+                                val words =
                                     editorFailureWords(
                                         failure,
                                         httpsRequired =
                                             editorOrigin(address.text.toString())
                                                 ?.let(AddressRules::cleartextNeedsHttps) == true,
-                                    ),
+                                    )
+                                // One message for one fact: a server that is saved but did not connect says so
+                                // once, with the way forward, unless the cause has its own more exact words.
+                                val saidOnce =
+                                    state.saved &&
+                                        serverFailureKind(failure).let {
+                                            it == ServerFailureKind.Network ||
+                                                it == ServerFailureKind.Timeout ||
+                                                it == ServerFailureKind.Other
+                                        }
+                                KitErrorNotice(
+                                    if (saidOnce) stringResource(Res.string.editor40SavedFailed) else words,
                                     failure = failure,
+                                    details =
+                                        if (failure is Failure.Refused) failure.details
+                                        else
+                                            redactor.details(
+                                                checkDetailsText(
+                                                    editorOrigin(address.text.toString()),
+                                                    failure,
+                                                )
+                                            ),
                                     detailsLabel = stringResource(Res.string.kitDetails),
                                     copyLabel = stringResource(Res.string.kitCopyDetails),
                                 )
@@ -939,8 +964,6 @@ public fun ServerEditorScreen(
                                         copy,
                                     )
                             }
-                            if (state.saved && state.failure != null)
-                                KitNotice(stringResource(Res.string.editor40SavedFailed))
                             state.checked?.let {
                                 KitNotice(
                                     stringResource(
@@ -952,7 +975,7 @@ public fun ServerEditorScreen(
                             }
                             if (state.record?.needsSecret == true)
                                 KitNotice(stringResource(Res.string.rows40Secret))
-                            if (backend == BackendKind.OpenCode2) {
+                            if (backend == BackendKind.OpenCode2 && ServerEditorRules.showsAddress(state.record)) {
                                 if (address.text.toString().trim().startsWith("https://")) {
                                     if (pin != null)
                                         KitNotice(stringResource(Res.string.editor40Pinned))
@@ -984,7 +1007,7 @@ public fun ServerEditorScreen(
                                 enabled = connectionEnabled,
                                 working = state.checking,
                             )
-                            if (state.failedCheck)
+                            if (state.failedCheck && state.failedFromSave)
                                 KitButton(
                                     stringResource(Res.string.editor40SaveAnyway),
                                     { actions.save(input(), true) },
@@ -1018,6 +1041,7 @@ public fun ServerEditorScreen(
                                 role = TypeRole.Secondary,
                                 tone = io.github.eslamasabry.oc.ui.design.type.TextTone.Secondary,
                             )
+                        if (ServerEditorRules.showsUsername(state.record))
                         KitExpandRow(
                             stringResource(Res.string.editor40More),
                             moreOpen,

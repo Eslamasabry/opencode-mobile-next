@@ -54,6 +54,7 @@ import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
 import io.github.eslamasabry.oc.ui.design.color.StatusTone
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
+import io.github.eslamasabry.oc.ui.kit.state.KitStateSize
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
 import io.github.eslamasabry.oc.ui.kitchat.header.KitClipboardEffect
 import io.github.eslamasabry.oc.ui.words.res.Res
@@ -113,6 +114,10 @@ import io.github.eslamasabry.oc.ui.words.res.kitTryAgain
 import io.github.eslamasabry.oc.ui.words.res.libraryTerminalTitle
 import io.github.eslamasabry.oc.ui.words.res.readerUiAttachPrompt
 import io.github.eslamasabry.oc.ui.words.res.readerUiChangedCount
+import io.github.eslamasabry.oc.ui.words.res.filesMenuChanges
+import io.github.eslamasabry.oc.ui.words.res.filesMenuChanges__eq0
+import io.github.eslamasabry.oc.ui.words.res.filesMenuChanges__eq1
+import io.github.eslamasabry.oc.ui.words.res.projectHubTerminalsRunning
 import io.github.eslamasabry.oc.ui.words.res.readerUiCopyPath
 import io.github.eslamasabry.oc.ui.words.res.readerUiIndicatorsFailed
 import io.github.eslamasabry.oc.ui.words.res.readerUiNoFiles
@@ -272,6 +277,7 @@ public fun FolderScreen(state: FolderUi, actions: FolderActions) {
                                     stringResource(Res.string.filesReviewStorage),
                                     actions::reviewStorage,
                                 ),
+                            size = KitStateSize.Inline,
                         )
                     }
                 if (state.storageResult == FilesStorageResult.RestartRequired)
@@ -288,6 +294,7 @@ public fun FolderScreen(state: FolderUi, actions: FolderActions) {
                                 listOf(
                                     KitAction(stringResource(Res.string.fileReload), actions::retry)
                                 ),
+                            size = KitStateSize.Inline,
                         )
                     }
                 if (state.offline)
@@ -403,6 +410,7 @@ public fun FolderScreen(state: FolderUi, actions: FolderActions) {
                                             actions::retry,
                                         )
                                     ),
+                                size = KitStateSize.Inline,
                             )
                         }
                     state.onlyHidden ->
@@ -608,6 +616,7 @@ private fun LazyListScope.searchItems(
                     KitStateKind.Empty,
                     stringResource(Res.string.readerUiNoFiles),
                     body = stringResource(Res.string.readerUiTryFileName),
+                    size = KitStateSize.Inline,
                 )
             }
         else ->
@@ -762,6 +771,18 @@ internal fun folderToolItems(state: FolderUi, actions: FolderActions, close: () 
                 )
             )
         val tools = state.tools
+        // Flutter's first tool: the whole conversation's (or project's) Changes review, with the count of changed files.
+        if (state.phase == FolderPhase.Ready)
+            item(
+                // Flutter's =0 / =1 forms: "Changes" with nothing changed, never "Changes · 0 files".
+                when (val n = state.changes.size) {
+                    0 -> stringResource(Res.string.filesMenuChanges__eq0)
+                    1 -> stringResource(Res.string.filesMenuChanges__eq1)
+                    else -> pluralStringResource(Res.plurals.filesMenuChanges, n, n)
+                },
+                KitIcons.review,
+                actions::reviewChanges,
+            )
         if (tools.health) item(
             stringResource(Res.string.e7LibraryProjectHealth),
             KitIcons.diagnostics,
@@ -790,7 +811,10 @@ internal fun folderBarActions(
     if (state.canTerminal)
         add(
             KitLineAction(
-                stringResource(Res.string.libraryTerminalTitle),
+                state.runningTerminals?.takeIf { it > 0 }?.let {
+                    stringResource(Res.string.libraryTerminalTitle) + " · " +
+                        pluralStringResource(Res.plurals.projectHubTerminalsRunning, it, it)
+                } ?: stringResource(Res.string.libraryTerminalTitle),
                 actions::terminal,
                 icon = KitIcons.terminal,
             )

@@ -75,6 +75,34 @@ class HomePreviewsTest {
     }
 
     @Test
+    fun `B-266 the line shows a reply's words, not the marks it was written with`() {
+        // The two lines seen raw on the owner's phone.
+        assertEquals(
+            "Made you something. http://127.0.0.1:8150/ A process is serving it.",
+            HomePreviewRules.oneLine("Made you something. **http://127.0.0.1:8150/** A process is serving it."),
+        )
+        assertEquals(
+            "PC Health Check ✅ System is fine",
+            HomePreviewRules.oneLine("**PC Health Check** ✅ **System** is fine"),
+        )
+        // Headings, bullets, code marks and links keep their words.
+        assertEquals(
+            "Summary Edited src/app/Main.kt See the docs and shot",
+            HomePreviewRules.oneLine(
+                "## Summary\n- Edited `src/app/Main.kt`\n- See [the docs](https://example.com/a) and ![shot](x.png)"
+            ),
+        )
+        // Code keeps its stars, names keep their underscores, a quote loses only its lead.
+        assertEquals(
+            "val a = 2 * 3 * 4 quoted _as is_ and snake_case_name stay",
+            HomePreviewRules.oneLine("```kotlin\nval a = 2 * 3 * 4\n```\n> quoted _as is_ and snake_case_name stay"),
+        )
+        // A reply cut mid-emphasis leaves no stray stars.
+        assertEquals("an unfinished bold that never clo", HomePreviewRules.oneLine("an unfinished **bold that never clo"))
+        assertEquals("old new, 2 * 3 = 6, a_b_c", HomePreviewRules.oneLine("~~old~~ new, 2 * 3 = 6, a_b_c"))
+    }
+
+    @Test
     fun `A1-HOME-12 a row is read once, again only when it moved, a running one at most every 15 seconds`() {
         val idle = item("a", at = 1_000)
         assertTrue(HomePreviewRules.needsRead(idle, null, null, nowMs = 0), "never read")
@@ -95,6 +123,18 @@ class HomePreviewsTest {
         assertEquals("⁨Laptop⁩", HomePreviewRules.fallback("api", "Laptop", projectShown = true))
         assertEquals("⁨api⁩", HomePreviewRules.fallback("api", null, projectShown = false))
         assertNull(HomePreviewRules.fallback("api", null, projectShown = true))
+    }
+
+    @Test
+    fun `a waiting request's line is worded by its kind, not always run`() {
+        for (kind in listOf("bash", "shell", "BASH"))
+            assertEquals(HomePreviewRules.AskKind.Run, HomePreviewRules.askKind(kind))
+        for (kind in listOf("edit", "write", "multiedit", "patch"))
+            assertEquals(HomePreviewRules.AskKind.Edit, HomePreviewRules.askKind(kind))
+        assertEquals(HomePreviewRules.AskKind.Read, HomePreviewRules.askKind("read"))
+        for (kind in listOf("webfetch", "task", "external_directory", ""))
+            assertEquals(HomePreviewRules.AskKind.Other, HomePreviewRules.askKind(kind))
+        assertEquals("bash", io.github.eslamasabry.oc.engine.agents.feed.FeedPermission("r", "ls").kind)
     }
 
     private class Feed : ConversationsFeed {
@@ -172,6 +212,60 @@ class HomePreviewsTest {
         feed.snapshot.value =
             ChatFeedSnapshot(rows.map { if (it.sessionId.raw == "i8") it.copy(lastActivityMs = 9_500) else it }.toImmutableList())
         assertEquals(listOf("i8"), gateway.reads.drop(6))
+    }
+
+    /** A server whose conversations say [words] now (the person's prompt mid-run, the reply once it is written). */
+    private class Scripted(private val inner: FakeServerGateway = FakeServerGateway()) : ServerGateway by inner {
+        var words = ""
+        val reads = mutableListOf<String>()
+
+        override suspend fun messagePage(id: SessionId, cursor: String?, limit: Int): Outcome<ServerPage<MessageWithParts>> {
+            reads += id.raw
+            val said = MessageWithParts(
+                MessageInfo("m", id.raw, Role.Assistant),
+                persistentListOf(Part("p", "m", id.raw, PartType.Text, "text", text = words)),
+            )
+            return ServerPage(persistentListOf(said), null).ok()
+        }
+    }
+
+    @Test
+    fun `B8 a line read while the reply was being written is read again once the run stops`() {
+        val stopped = item("a", at = 1_000)
+        assertTrue(
+            HomePreviewRules.needsRead(stopped, 1_000, 10, nowMs = 20, readWhileRunning = true),
+            "read mid-run, stopped since without its time moving: read again",
+        )
+        assertFalse(HomePreviewRules.needsRead(stopped, 1_000, 10, nowMs = 20, readWhileRunning = false), "read at rest: kept")
+        val still = item("r", at = 1_000, status = ChatStatus.Running)
+        assertFalse(HomePreviewRules.needsRead(still, 1_000, 10, nowMs = 20, readWhileRunning = true), "still running: the 15 s rule")
+    }
+
+    @Test
+    fun `B8 after a restart mid-run the row ends on the reply's words, not the person's prompt`() = runTest {
+        val feed = Feed()
+        val gateway = Scripted()
+        val servers =
+            object : ConversationServers {
+                override val servers =
+                    MutableStateFlow<ImmutableList<ConversationServer>>(persistentListOf(ConversationServer(P1, "p1", gateway, null)))
+            }
+        val clock = object : Clock { override fun now(): Instant = Instant.fromEpochMilliseconds(100_000) }
+        val vm = ChatsViewModel(feed, Briefs(), Door, { Instant.fromEpochMilliseconds(0) }, clock, Nav, connections = servers)
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
+        // Reopened while the run goes on: the newest words are still the person's prompt.
+        gateway.words = "write 300 numbered lines about rivers"
+        feed.snapshot.value = ChatFeedSnapshot(persistentListOf(item("run", at = 5_000, status = ChatStatus.Running)))
+        assertEquals("write 300 numbered lines about rivers", vm.state.value.rightNow.single().preview)
+        // The run ends; the conversation's time does not move with it.
+        gateway.words = "Done: rivers.txt has 300 lines"
+        feed.snapshot.value = ChatFeedSnapshot(persistentListOf(item("run", at = 5_000)))
+        assertEquals("Done: rivers.txt has 300 lines", vm.state.value.recent.single().preview)
+        assertEquals(2, gateway.reads.size)
+        // A pull to refresh reads the shown rows' lines again.
+        gateway.words = "Renamed it to streams.txt"
+        vm.refreshList()
+        assertEquals("Renamed it to streams.txt", vm.state.value.recent.single().preview)
     }
 
     @Test

@@ -71,7 +71,7 @@ public fun KitText(
     val text = if (maxLines != Int.MAX_VALUE && role in TITLE_ROLES) kitTitleLine(text) else text
     val style =
         base.copy(
-            color = LocalKitColors.current.tone(tone),
+            color = kitToneOnGlass(tone),
             textDirection = if (kind == KitTextKind.Reading) TextDirection.Content else TextDirection.Unspecified,
             textAlign = textAlign ?: TextAlign.Start,
             fontFeatureSettings = if (tabular) "tnum" else base.fontFeatureSettings, // F: lib/ui/kit/kit_text.dart:635-636
@@ -136,7 +136,7 @@ public fun KitMonoText(
     val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
     val style =
         LocalKitTypography.current.style(TypeRole.Mono).copy(
-            color = LocalKitColors.current.tone(tone),
+            color = kitToneOnGlass(tone),
             textDirection = TextDirection.Ltr,
             textAlign = if (rtl) TextAlign.Right else TextAlign.Left,
         )
@@ -237,3 +237,25 @@ public fun KitText(text: String, role: KitTextRole, modifier: Modifier = Modifie
         KitTextRole.Supporting -> KitText(text, modifier, TypeRole.Secondary, TextTone.Secondary)
     }
 }
+
+/**
+ * [tone]'s ink here: on a liquid pane ([io.github.eslamasabry.oc.ui.kit.effects.LocalKitOnLiquidGlass]) the second line
+ * is brighter than on the page (owner 2026-11-11: the bar's second line did not read over an orange photo); on a Glass
+ * page painted with light ([io.github.eslamasabry.oc.ui.kit.live.LocalKitPageInkLift], glass-in-the-kit 1b') the second
+ * and third lines are lifted toward the first. The two lifts never stack: the larger one applies.
+ */
+@Composable
+internal fun kitToneOnGlass(tone: TextTone): androidx.compose.ui.graphics.Color {
+    val colors = LocalKitColors.current
+    val ink = colors.tone(tone)
+    val lift = kitToneLift(tone, io.github.eslamasabry.oc.ui.kit.live.LocalKitPageInkLift.current, io.github.eslamasabry.oc.ui.kit.effects.LocalKitOnLiquidGlass.current)
+    return if (lift <= 0f) ink else androidx.compose.ui.graphics.lerp(ink, colors.text1, lift)
+}
+
+/** How far [tone] moves toward the primary ink: the page's [pageLift] or a liquid pane's second-line lift, the larger. */
+internal fun kitToneLift(tone: TextTone, pageLift: Float, onLiquid: Boolean): Float =
+    when (tone) {
+        TextTone.Secondary -> maxOf(pageLift, if (onLiquid) io.github.eslamasabry.oc.ui.design.effects.LiquidJoin.SECOND_INK_ON_GLASS else 0f)
+        TextTone.Tertiary -> pageLift
+        else -> 0f
+    }

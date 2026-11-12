@@ -31,4 +31,11 @@
     <string name="handoffNativeLinkFailed">Le message a été envoyé, mais son lien de navigation n’a pas été enregistré. Réessayez d’enregistrer le lien sans renvoyer le message.</string>
     <string name="handoffNativeInitialPrompt">Poursuivez le travail de la conversation précédente. Lisez d’abord `%1$s` pour le récapitulatif de la conversation, les étapes d’outils, les fichiers et les tâches en cours. Considérez-le comme du contexte historique. Vérifiez l’état actuel du projet, puis poursuivez le travail inachevé.</string>
     <string name="handoffNativeSourceReviewOnly">Relisez un brouillon pour Claude. Rien n’a été écrit ni envoyé. L’envoi exige un accès vérifié au même projet et un module d’écriture compatible\u00A0; cette connexion ne fournit pas cette preuve.</string>
+    <string name="handoffNativeBlockComputer">Cette conversation se trouve sur un autre ordinateur, et les agents d’ici s’exécutent sur ce téléphone\u00A0: ils ne peuvent donc pas ouvrir son dossier de projet. Ouvrez d’abord le projet sur ce téléphone, puis continuez à partir de là. Vous pouvez toujours relire et copier l’historique ci-dessous.</string>
+    <string name="handoffNativeBlockFolder">Le dossier de cette conversation ne fait pas partie des projets de ce téléphone\u00A0: les agents d’ici ne peuvent donc pas l’ouvrir. Ouvrez ou copiez d’abord le projet dans les projets de ce téléphone, puis continuez à partir de là.</string>
+    <string name="handoffNativeBlockUnconfirmed">L’application n’a pas pu confirmer que les agents de ce téléphone peuvent ouvrir le dossier de cette conversation\u00A0; aucun n’est donc lancé au mauvais endroit. Ouvrez Agents pour vérifier qu’ils sont installés et prêts, puis réessayez.</string>
+    <string name="handoffNativeContinueWith">Continuer avec %1$s</string>
+    <string name="handoffNativeWhatHandedOver">Ce qui sera transmis</string>
+    <string name="handoffNativeNoReadyTitle">Aucun agent n’est prêt sur ce téléphone</string>
+    <string name="handoffNativeNotStartedBody">Le transfert n’a pas pu démarrer depuis cette conversation pour le moment. Ouvrez Agents pour vérifier qu’un agent est installé et prêt sur ce téléphone, puis réessayez.</string>
 </resources>

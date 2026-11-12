@@ -20,7 +20,9 @@ import io.github.eslamasabry.oc.feature.chats.presentation.HomeConnectionState
 import io.github.eslamasabry.oc.feature.chats.presentation.PhoneStopWatch
 import io.github.eslamasabry.oc.feature.chats.presentation.HomePermissionReply
 import io.github.eslamasabry.oc.ui.routes.ServersRoute
+import io.github.eslamasabry.oc.feature.chats.presentation.ANSWER_HOLD_MS
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsViewModel
+import io.github.eslamasabry.oc.feature.chats.presentation.HomeHeldReply
 import io.github.eslamasabry.oc.feature.chats.presentation.ConversationsFeed
 import io.github.eslamasabry.oc.feature.chats.presentation.ReturnBriefFeed
 import io.github.eslamasabry.oc.feature.chats.presentation.SettingsDoor
@@ -43,7 +45,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 
@@ -80,7 +84,12 @@ class ChatsViewModelTest {
     private class Feed : ConversationsFeed {
         override val snapshot = MutableStateFlow(ChatFeedSnapshot())
 
-        override suspend fun refresh(): Outcome<Unit> = Unit.ok()
+        var reads = 0
+
+        override suspend fun refresh(): Outcome<Unit> {
+            reads++
+            return Unit.ok()
+        }
     }
 
     private class Briefs : ReturnBriefFeed {
@@ -372,7 +381,12 @@ class ChatsViewModelTest {
             return sourceAnswer
         }
 
-        override suspend fun retrySource(profile: ProfileId): Outcome<Unit> = retryAnswer
+        val retried = mutableListOf<ProfileId>()
+
+        override suspend fun retrySource(profile: ProfileId): Outcome<Unit> {
+            retried += profile
+            return retryAnswer
+        }
 
         override suspend fun retryOpening(): Outcome<Unit> = Unit.ok()
 
@@ -553,6 +567,13 @@ class ChatsViewModelTest {
 
     private class Answers : io.github.eslamasabry.oc.feature.chats.presentation.HomePermissionAnswers {
         val sent = mutableListOf<String>()
+        val questions = mutableListOf<String>()
+        var questionResult: Outcome<Unit> = Unit.ok()
+
+        override suspend fun answerQuestion(ref: ConversationRef, requestId: String, answers: List<List<String>>): Outcome<Unit> {
+            questions += "$requestId $answers"
+            return questionResult
+        }
 
         override suspend fun answer(ref: ConversationRef, requestId: String, allow: Boolean): Outcome<Unit> =
             answer(ref, requestId, if (allow) HomePermissionReply.Once else HomePermissionReply.Reject)
@@ -563,13 +584,23 @@ class ChatsViewModelTest {
         }
     }
 
-    private fun asking(grants: Boolean): Pair<ChatsViewModel, Answers> {
+    private fun asking(
+        grants: Boolean,
+        question: io.github.eslamasabry.oc.engine.agents.feed.FeedQuestion? = null,
+        form: io.github.eslamasabry.oc.engine.agents.feed.FeedForm? = null,
+    ): Pair<ChatsViewModel, Answers> {
         val feed = Feed()
+        val plain = question == null && form == null
         feed.snapshot.value =
             ChatFeedSnapshot(
                 persistentListOf(
                     item("ask", status = ChatStatus.NeedsYou)
-                        .copy(permission = io.github.eslamasabry.oc.engine.agents.feed.FeedPermission("req1", "npm test"))
+                        .copy(
+                            permission =
+                                if (plain) io.github.eslamasabry.oc.engine.agents.feed.FeedPermission("req1", "npm test") else null,
+                            question = question,
+                            form = form,
+                        )
                 )
             )
         val gateway = io.github.eslamasabry.oc.core.testing.FakeServerGateway()
@@ -611,11 +642,79 @@ class ChatsViewModelTest {
         assertEquals(emptyList(), answers.sent)
         vm.askAlwaysAllow(row)
         vm.confirmAlwaysAllow()
+        // H1: the answer waits out its undo window first, then leaves once.
+        assertEquals(emptyList(), answers.sent)
+        advanceTimeBy(ANSWER_HOLD_MS + 1)
+        runCurrent()
         assertEquals(listOf("req1 Always"), answers.sent)
         assertEquals(null, vm.state.value.confirmAlways)
         // Allow once and Reject still answer as they did.
         vm.answerPermission(row, false)
+        advanceTimeBy(ANSWER_HOLD_MS + 1)
+        runCurrent()
         assertEquals(listOf("req1 Always", "req1 Reject"), answers.sent)
+    }
+
+    @Test
+    fun `H1 a permission answer is held with Undo for three seconds and Undo sends nothing`() = runTest {
+        val (vm, answers) = asking(grants = true)
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
+        val row = vm.state.value.rightNow.single()
+        vm.answerPermission(row, true)
+        assertEquals(mapOf("req1" to HomeHeldReply.Allowed), vm.state.value.held)
+        // A second tap while held changes nothing.
+        vm.answerPermission(row, false)
+        assertEquals(mapOf("req1" to HomeHeldReply.Allowed), vm.state.value.held)
+        advanceTimeBy(ANSWER_HOLD_MS - 500)
+        runCurrent()
+        assertEquals(emptyList(), answers.sent)
+        vm.undoAnswer(row)
+        assertEquals(emptyMap(), vm.state.value.held)
+        advanceTimeBy(ANSWER_HOLD_MS * 2)
+        runCurrent()
+        assertEquals(emptyList(), answers.sent, "an undone answer is never sent")
+        // Answering again after the undo works as before.
+        vm.answerPermission(row, true)
+        advanceTimeBy(ANSWER_HOLD_MS + 1)
+        runCurrent()
+        assertEquals(listOf("req1 Once"), answers.sent)
+        assertEquals(emptyMap(), vm.state.value.held)
+    }
+
+    @Test
+    fun `the switcher's Allow once is the rows' own held answer, sent once after one window`() = runTest {
+        val (vm, answers) = asking(grants = true)
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
+        val row = vm.state.value.rightNow.single()
+        vm.allowSwitcherRequest(row.ref, "req1")
+        // One hold, seen in both places; the row cannot answer it a second time.
+        assertEquals(mapOf("req1" to HomeHeldReply.Allowed), vm.state.value.held)
+        assertEquals(mapOf("req1" to HomeHeldReply.Allowed), vm.state.value.switcher.held)
+        vm.answerPermission(row, false)
+        assertEquals(mapOf("req1" to HomeHeldReply.Allowed), vm.state.value.held)
+        // Undo on the row takes back the switcher's answer.
+        vm.undoAnswer(row)
+        assertEquals(emptyMap(), vm.state.value.switcher.held)
+        advanceTimeBy(ANSWER_HOLD_MS * 2)
+        runCurrent()
+        assertEquals(emptyList(), answers.sent)
+        // Not held twice: it leaves right after the one 3 s window.
+        vm.allowSwitcherRequest(row.ref, "req1")
+        advanceTimeBy(ANSWER_HOLD_MS + 1)
+        runCurrent()
+        assertEquals(listOf("req1 Once"), answers.sent)
+        assertEquals(emptyMap(), vm.state.value.switcher.held)
+    }
+
+    @Test
+    fun `H3 Try again asks every connection that did not answer, then reads the list`() = runTest {
+        val home = Home(listOf(source("main", main = true), source("termux").copy(unreachable = true)))
+        val feed = Feed()
+        val vm = ChatsViewModel(feed, Briefs(), Door(false), { Instant.fromEpochMilliseconds(0) }, clock, RecordingNavigator(), home = home)
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
+        vm.retryList()
+        assertEquals(listOf(ProfileId("termux")), home.retried)
+        assertEquals(1, feed.reads)
     }
 
     @Test
@@ -628,6 +727,45 @@ class ChatsViewModelTest {
         vm.confirmAlwaysAllow()
         assertEquals(null, vm.state.value.confirmAlways)
         assertEquals(emptyList(), answers.sent)
+    }
+
+    @Test
+    fun `P14 Details from a row shows its facts over the home and opens nothing`() = runTest {
+        val nav = RecordingNavigator()
+        val home = Home(listOf(ChatsListSourceUi(P1, "Laptop", shown = true, main = true, onThisPhone = false, unreachable = false)))
+        val feed = Feed().apply { snapshot.value = ChatFeedSnapshot(persistentListOf(item("s1", "/work/api"))) }
+        val vm = ChatsViewModel(feed, Briefs(), Door(false), { Instant.fromEpochMilliseconds(0) }, clock, nav, home = home)
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
+        val row = vm.state.value.recent.single()
+        vm.rowAct(row, io.github.eslamasabry.oc.feature.chats.presentation.RowAct.Details)
+        assertEquals(emptyList(), nav.calls, "the person asked about the row; nothing opens under the sheet")
+        val details = vm.state.value.rowDetails!!
+        assertEquals(row.key, details.key)
+        assertEquals("Laptop", details.server, "the server named as the home's sources name it")
+        assertEquals("api", details.project)
+        assertEquals("/work/api", details.directory)
+        vm.closeRowDetails()
+        assertEquals(null, vm.state.value.rowDetails, "closing it leaves the person on the list")
+        assertEquals(emptyList(), nav.calls)
+        // The acts that do need the conversation still open it.
+        vm.rowAct(row, io.github.eslamasabry.oc.feature.chats.presentation.RowAct.Share)
+        assertEquals(1, nav.routes.size)
+    }
+
+    @Test
+    fun `P5 All conversations opens with the home's project, else Running, as its count says`() {
+        val nav = RecordingNavigator()
+        val vm = ChatsViewModel(Feed(), Briefs(), Door(false), { Instant.fromEpochMilliseconds(0) }, clock, nav)
+        vm.showAll()
+        vm.chooseProject("/work/web")
+        vm.showAll()
+        vm.chooseProject("/work/web")
+        vm.toggleRunning()
+        vm.showAll()
+        assertEquals(
+            listOf<AppRoute>(ChatsRoute.All(null), ChatsRoute.All("/work/web"), ChatsRoute.All("running")),
+            nav.routes,
+        )
     }
 
     @Test
@@ -707,5 +845,100 @@ class ChatsViewModelTest {
             Failure.Unexpected(),
             Failure.Refused(io.github.eslamasabry.oc.core.common.RefusalReason.ProfileDeleted),
         ).forEach { assertEquals(it, io.github.eslamasabry.oc.feature.chats.presentation.SourceChoiceRules.sheetFailure(it)) }
+    }
+
+    private val pick =
+        io.github.eslamasabry.oc.engine.agents.feed.FeedQuestion(
+            requestId = "q1",
+            title = "Which one",
+            question = "Use npm or pnpm?",
+            choices = listOf("npm", "pnpm"),
+            inPlace = true,
+        )
+
+    @Test
+    fun `H1 a choice on a question row is held with Undo for three seconds, then sent once`() = runTest {
+        val (vm, answers) = asking(grants = false, question = pick)
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
+        val row = vm.state.value.rightNow.single()
+        assertEquals(pick, row.question)
+        vm.answerQuestion(row, listOf(listOf("pnpm")), "pnpm")
+        assertEquals(mapOf("q1" to "pnpm"), vm.state.value.heldQuestions)
+        // A second tap while held changes nothing.
+        vm.answerQuestion(row, listOf(listOf("npm")), "npm")
+        assertEquals(mapOf("q1" to "pnpm"), vm.state.value.heldQuestions)
+        advanceTimeBy(ANSWER_HOLD_MS - 500)
+        runCurrent()
+        assertEquals(emptyList(), answers.questions)
+        advanceTimeBy(1000)
+        runCurrent()
+        assertEquals(listOf("q1 [[pnpm]]"), answers.questions)
+        assertEquals(emptyMap(), vm.state.value.heldQuestions)
+        assertEquals(emptySet(), vm.state.value.sendingQuestions)
+    }
+
+    @Test
+    fun `H1 Undo on a question row sends nothing and the row can be answered again`() = runTest {
+        val (vm, answers) = asking(grants = false, question = pick)
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
+        val row = vm.state.value.rightNow.single()
+        vm.answerQuestion(row, listOf(listOf("npm")), "npm")
+        vm.undoAnswer(row)
+        assertEquals(emptyMap(), vm.state.value.heldQuestions)
+        advanceTimeBy(ANSWER_HOLD_MS * 2)
+        runCurrent()
+        assertEquals(emptyList(), answers.questions, "an undone answer is never sent")
+        vm.answerQuestion(row, listOf(listOf("pnpm")), "pnpm")
+        advanceTimeBy(ANSWER_HOLD_MS + 1)
+        runCurrent()
+        assertEquals(listOf("q1 [[pnpm]]"), answers.questions)
+    }
+
+    @Test
+    fun `H1 a refused question answer says so on the row and Try again resends the same answer at once`() = runTest {
+        val (vm, answers) = asking(grants = false, question = pick)
+        answers.questionResult = Outcome.Failed(Failure.Unexpected())
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
+        val row = vm.state.value.rightNow.single()
+        vm.answerQuestion(row, listOf(listOf("pnpm")), "pnpm")
+        advanceTimeBy(ANSWER_HOLD_MS + 1)
+        runCurrent()
+        assertEquals(setOf("q1"), vm.state.value.refusedQuestions)
+        assertEquals(emptySet(), vm.state.value.sendingQuestions)
+        assertEquals(null, vm.state.value.answerFailure, "the failure is on the row, not a page notice")
+        answers.questionResult = Unit.ok()
+        vm.retryQuestion(row)
+        runCurrent()
+        assertEquals(listOf("q1 [[pnpm]]", "q1 [[pnpm]]"), answers.questions)
+        assertEquals(emptySet(), vm.state.value.refusedQuestions)
+    }
+
+    @Test
+    fun `H1 a free-text, multi-prompt or form row is answered in the conversation, never from the row`() = runTest {
+        val text = pick.copy(inPlace = false, choices = emptyList(), custom = true)
+        val (vm, answers) = asking(grants = false, question = text)
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
+        val row = vm.state.value.rightNow.single()
+        assertFalse(row.question!!.inPlace)
+        vm.openRequest(row)
+        assertEquals(emptyList(), answers.questions)
+        val (formVm, formAnswers) =
+            asking(grants = false, form = io.github.eslamasabry.oc.engine.agents.feed.FeedForm("f1", "Deploy settings", 3))
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { formVm.state.collect {} }
+        val formRow = formVm.state.value.rightNow.single()
+        assertEquals("f1", formRow.form?.requestId)
+        formVm.openRequest(formRow)
+        assertEquals(emptyList(), formAnswers.questions)
+    }
+
+    @Test
+    fun `H1 the held and refused words are masked by the screen's mask, so the state keeps only the chosen words`() = runTest {
+        // The row masks `shown` with the screen's mask when it draws; the state never holds more than the choice.
+        val (vm, _) = asking(grants = false, question = pick)
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
+        val row = vm.state.value.rightNow.single()
+        vm.answerQuestion(row, listOf(listOf("pnpm")), "pnpm")
+        assertEquals(listOf("pnpm"), vm.state.value.heldQuestions.values.toList())
+        assertEquals(emptyMap(), vm.state.value.held, "a question hold is not a permission hold")
     }
 }

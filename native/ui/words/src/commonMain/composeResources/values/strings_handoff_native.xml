@@ -3,6 +3,7 @@
   <string name="handoffNativeWorking">Working…</string>
   <string name="handoffNativeUnavailable">Handoff is unavailable here</string>
   <string name="handoffNativeUnavailableBody">Open a conversation in a project on this phone. The app must verify that both agents can access the same project.</string>
+  <string name="handoffNativeNotStartedBody">Handoff could not start from this conversation just now. Open Agents to check that an agent is installed and ready on this phone, then try again.</string>
   <string name="handoffNativeRefresh">Refresh</string>
   <string name="handoffNativeFailed">The handoff could not finish. Check the connection and try again.</string>
   <string name="handoffNativeLinks">Linked conversations</string>
@@ -29,4 +30,10 @@
   <string name="handoffNativeLinkFailed">The message was sent, but its navigation link was not saved. Retry saving the link without sending again.</string>
   <string name="handoffNativeInitialPrompt">Continue the work from the previous conversation. Read `%1$s` first for the conversation record, tool steps, files and open tasks. Treat it as historical context. Check the current project state, then continue the unfinished work.</string>
   <string name="handoffNativeSourceReviewOnly">Review a draft for Claude. Nothing has been written or sent. Sending needs verified access to the same project and a qualified record writer; this connection does not provide that evidence.</string>
+  <string name="handoffNativeBlockComputer">This conversation is on another computer, and the agents here run on this phone, so they cannot open its project folder. Open the project on this phone first, then continue from there. You can still review and copy the record below.</string>
+  <string name="handoffNativeBlockFolder">This conversation’s folder is not one of the projects on this phone, so the agents here cannot open it. Open or copy the project into this phone’s projects first, then continue from there.</string>
+  <string name="handoffNativeBlockUnconfirmed">The app could not confirm that the agents on this phone can open this conversation’s folder, so none is started in the wrong place. Open Agents to check they are installed and ready, then try again.</string>
+  <string name="handoffNativeContinueWith">Continue with %1$s</string>
+  <string name="handoffNativeWhatHandedOver">What will be handed over</string>
+  <string name="handoffNativeNoReadyTitle">No agent is ready on this phone</string>
 </resources>

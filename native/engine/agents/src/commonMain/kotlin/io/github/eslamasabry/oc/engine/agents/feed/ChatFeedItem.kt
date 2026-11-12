@@ -19,7 +19,30 @@ public const val OPENCODE_AGENT_ID: String = "opencode"
 
 public data class FeedRunning(val sinceMs: Long?, val command: String? = null)
 
-public data class FeedPermission(val requestId: String, val command: String)
+/**
+ * A request waiting on the person. [command] is what it targets (the shell command, or the file); [kind] is the
+ * server's permission type (`bash`, `edit`, `write`, `read`, ...), which the home row words its sentence by.
+ */
+public data class FeedPermission(val requestId: String, val command: String, val kind: String = "bash")
+
+/**
+ * A question waiting on the person (H1, Flutter `questionForFeedItem`): the first prompt's words and choices, which
+ * the home row shows so a one-answer question is answered from the list. [prompts] is how many prompts it holds;
+ * [inPlace] says one tap on a choice answers it (one prompt, one answer, short choices); anything else is answered
+ * in the conversation.
+ */
+public data class FeedQuestion(
+    val requestId: String,
+    val title: String,
+    val question: String,
+    val choices: List<String>,
+    val prompts: Int = 1,
+    val custom: Boolean = false,
+    val inPlace: Boolean = false,
+)
+
+/** A form waiting on the person: the row says what it is and opens the conversation at it (H1). */
+public data class FeedForm(val requestId: String, val title: String?, val fields: Int)
 
 /**
  * One conversation row on Conversations (Dart `ChatFeedItem`, 17 §1.6). Immutable, and it holds
@@ -50,12 +73,31 @@ public data class ChatFeedItem(
     /** False for an agent chat that cannot resume (always true for OpenCode). */
     val canReopen: Boolean = true,
     /**
+     * The newest turn ended because the person pressed Stop from this app (Flutter
+     * `ChatFeedItem.stoppedByPerson`, `chat_feed.dart:52`). OpenCode 2 reports a stop as a normal
+     * finish, so only this memory can tell "Stopped" from "Done". Meaningful with [finishedUnseen].
+     */
+    val stoppedByPerson: Boolean = false,
+    /**
+     * The server ended the newest run (a restart, a newer prompt) and the person has not opened the conversation
+     * since: the row says "Interrupted". Never set with [stoppedByPerson]; only OpenCode 2 reports it.
+     */
+    val interrupted: Boolean = false,
+    /**
+     * An agent conversation the helper no longer holds and cannot resume (Flutter `AgentResumeNotice
+     * .requiresAcknowledgement`): a tap offers "Start a new conversation" instead of opening a dead chat. Distinct
+     * from `canReopen = false`, which only says the listing is not verified yet.
+     */
+    val needsNewChat: Boolean = false,
+    /**
      * Opaque `[baseUrl, directory, workspace]` key shared with the return brief; null means
      * unknown.
      */
     val locationKey: String? = null,
     val running: FeedRunning? = null,
     val permission: FeedPermission? = null,
+    val question: FeedQuestion? = null,
+    val form: FeedForm? = null,
 ) {
     /** The list key: profile, source, session, folder and captured location. */
     val identity: String

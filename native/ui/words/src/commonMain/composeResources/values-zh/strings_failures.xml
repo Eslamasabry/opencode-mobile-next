@@ -81,4 +81,20 @@
     <string name="agentErrorUnknown">请求未能完成。</string>
     <string name="agentErrorUnknownHint">重新发送前请先查看对话。详情可能有助于说明发生了什么。</string>
     <string name="openCode1UnsupportedTitle">更新此服务器</string>
+    <string name="agentErrorUsageLimit">此模型的用量上限暂时已达到。</string>
+    <string name="agentErrorUsageLimitHint">请选择另一个模型继续，或等额度重置后再继续。</string>
+    <string name="chatSendFailureLostConnectionTo">%1$s 与 %2$s 的连接中断</string>
+    <string name="chatSendFailureLostConnection">%1$s 与其模型提供方的连接中断</string>
+    <string name="chatSendFailureSignIn">%1$s 需要你登录</string>
+    <string name="chatSendFailureSignInAgain">%1$s 需要你重新登录</string>
+    <string name="chatSendFailureNoCredit">%1$s 在此模型上没有额度</string>
+    <string name="chatSendFailureModelUnavailable">此模型不可用</string>
+    <string name="chatSendFailureBusy">%1$s 正忙</string>
+    <string name="chatSendFailureAgentFallback">智能体</string>
+    <string name="chatSendFailureDetailsAgent">智能体</string>
+    <string name="chatSendFailureDetailsModel">模型</string>
+    <string name="chatSendFailureDetailsCode">错误代码</string>
+    <string name="chatSendFailureNeedsAccount">此模型需要 %1$s 账号</string>
+    <string name="agentErrorFreeTier">OpenCode 的免费模型中止了这条回复。</string>
+    <string name="agentErrorFreeTierHint">免费版经常拒绝较长的对话，即使你今天用得很少。缩短这个对话或开始新对话通常有帮助。</string>
 </resources>

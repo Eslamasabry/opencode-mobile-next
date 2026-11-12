@@ -1,6 +1,7 @@
 package io.github.eslamasabry.oc.feature.settings.presentation
 
 import io.github.eslamasabry.oc.engine.agents.models.CatalogModel
+import io.github.eslamasabry.oc.engine.agents.models.CatalogVariant
 import io.github.eslamasabry.oc.engine.agents.models.ModelCost
 import io.github.eslamasabry.oc.engine.agents.models.ModelLibrary
 import io.github.eslamasabry.oc.engine.agents.models.ModelRef
@@ -18,6 +19,9 @@ public data class KeptModelDefaults(
     public val models: List<Model>,
     public val current: Ref? = null,
     public val defaults: List<Ref> = emptyList(),
+    public val variant: String = "",
+    public val providerNames: Map<String, String> = emptyMap(),
+    public val modes: List<ModelDefaultsMode> = emptyList(),
 ) {
     @Serializable
     public data class Model(
@@ -27,12 +31,18 @@ public data class KeptModelDefaults(
         public val enabled: Boolean = true,
         public val input: Double? = null,
         public val output: Double? = null,
+        public val variants: List<String> = emptyList(),
     )
 
     @Serializable public data class Ref(public val providerId: String, public val modelId: String)
 
     /** [stored] is this phone's saved choice now; it wins over the kept one, as in a live read. */
-    public fun data(library: ModelLibrary, stored: ModelRef?): ModelDefaultsData =
+    public fun data(
+        library: ModelLibrary,
+        stored: ModelRef?,
+        storedVariant: String? = null,
+        storedMode: String = "",
+    ): ModelDefaultsData =
         ModelDefaultsData(
             serverName,
             thisPhone,
@@ -43,11 +53,17 @@ public data class KeptModelDefaults(
                     it.name,
                     it.enabled,
                     cost = if (it.input != null && it.output != null) ModelCost(it.input, it.output) else null,
+                    variants = it.variants.map(::CatalogVariant),
                 )
             },
             stored ?: current?.let { ModelRef(it.providerId, it.modelId) },
             defaults.map { ModelRef(it.providerId, it.modelId) },
             library,
+            storedVariant ?: variant,
+            providerNames,
+            usesDefault = stored == null,
+            modes = modes,
+            mode = storedMode,
         )
 
     public companion object {
@@ -56,10 +72,21 @@ public data class KeptModelDefaults(
                 data.serverName,
                 data.thisPhone,
                 data.models.map {
-                    Model(it.id, it.providerId, it.name, it.enabled, it.cost?.inputPerMillion, it.cost?.outputPerMillion)
+                    Model(
+                        it.id,
+                        it.providerId,
+                        it.name,
+                        it.enabled,
+                        it.cost?.inputPerMillion,
+                        it.cost?.outputPerMillion,
+                        it.variants.filterNot { v -> v.disabled }.map { v -> v.id },
+                    )
                 },
                 data.current?.let { Ref(it.providerId, it.modelId) },
                 data.defaults.map { Ref(it.providerId, it.modelId) },
+                data.variant,
+                data.providerNames,
+                data.modes,
             )
     }
 }

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxLocalProjects">浏览手机项目</string>
+    <string name="linuxLocalProjectsDetail">服务器停止时也可浏览文件夹，包括移除 Linux 后保留的项目。</string>
+    <string name="linuxLocalParent">返回上一级文件夹</string>
+    <string name="linuxLocalClose">关闭文件夹</string>
+    <string name="linuxLocalGit">Git 项目</string>
+    <string name="linuxLocalFolder">文件夹</string>
+    <string name="linuxLocalReading">正在读取文件夹…</string>
+    <string name="linuxLocalFolderFailed">无法读取此文件夹。它可能已被移动、移除，或是一个链接。</string>
+    <string name="linuxLocalEmpty">这里没有文件夹。</string>
+    <string name="linuxLocalMeasure">测量移除 Linux 的各种选择</string>
+    <string name="linuxLocalRemoveKeep">移除 Linux，保留项目</string>
+    <string name="linuxLocalRemoveAll">移除 Linux 和项目</string>
+    <string name="linuxLocalFreed">可释放 %1$s</string>
+    <string name="linuxLocalRemoveKeepQuestion">移除 Linux 并保留项目？</string>
+    <string name="linuxLocalRemoveAllQuestion">移除 Linux 和所有手机项目？</string>
+    <string name="linuxLocalRemoveKeepBody">停止手机上的程序，并移除 Linux、已安装的工具、登录信息和本地服务器历史。你的项目文件仍可浏览。可释放 %1$s。</string>
+    <string name="linuxLocalRemoveAllBody">停止手机上的程序，并移除 Linux、已安装的工具、登录信息、本地服务器历史以及所有保留的手机项目文件。此操作无法撤销。可释放 %1$s。</string>
+    <string name="linuxLocalStorageFailed">这部手机未能完成 Linux 存储的读取或移除。请关闭手机上的任务后重试。</string>
+    <string name="linuxLocalRemoved">Linux 存储已移除。</string>
+    <string name="linuxLocalCreate">创建手机项目</string>
+    <string name="linuxLocalCreatePath">项目文件夹的绝对路径</string>
+    <string name="linuxLocalInvalidPath">请输入不含上级目录跳转和换行的绝对文件夹路径。</string>
+</resources>

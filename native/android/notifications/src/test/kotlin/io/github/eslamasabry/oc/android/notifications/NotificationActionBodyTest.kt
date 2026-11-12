@@ -259,6 +259,27 @@ class NotificationActionBodyTest {
         }
 
     @Test
+    fun `dock outside a locked phone on API 26-30 stops nothing from the row, as Allow once does`() =
+        runTest {
+            val stop =
+                Intent(FrozenExtras.ACTION_STATUS).apply {
+                    data = Uri.parse(FrozenExtras.STOP_REPLY_URI)
+                    putExtra(FrozenExtras.EXTRA_STATUS_ACTION, "stop_reply")
+                    putExtra(FrozenExtras.EXTRA_STATUS_SESSION, "ses_7")
+                    putExtra(FrozenExtras.EXTRA_STATUS_PROFILE, "p1")
+                }
+            lock = Lock(sdkInt = 30, locked = true)
+            assertEquals(ShadeOutcome.Ignored, body().onStatusAction(stop))
+            assertTrue(stops.isEmpty())
+            lock.locked = false
+            assertEquals(ShadeOutcome.StopSent, body().onStatusAction(stop))
+            // API 31+: Android itself asks to unlock before the broadcast (setAuthenticationRequired on the button).
+            lock = Lock(sdkInt = 31, locked = true)
+            assertEquals(ShadeOutcome.StopSent, body().onStatusAction(stop))
+            assertEquals(2, stops.size)
+        }
+
+    @Test
     fun `S11-9 swiping the status row away ends reply watch for that run only`() =
         runTest {
             val swipe =

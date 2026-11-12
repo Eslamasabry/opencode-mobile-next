@@ -58,7 +58,10 @@ public object ChatsState {
                 visible.isEmpty() -> ChatsPhase.NoMatch
                 else -> ChatsPhase.List
             }
-        val briefUi = if (filters.identities == null) briefUi(brief, roots, nowMs) else null
+        // P5: one filtered set feeds every section. The brief names only conversations the filters let through, so a
+        // chosen project, source or Running never shows another project's rows above its own empty state.
+        val shownKeys = if (filters.any) visible.mapTo(hashSetOf()) { it.identity } else null
+        val briefUi = if (filters.identities == null) briefUi(brief, roots, shownKeys, nowMs) else null
         // A row the return brief already shows is not repeated under it.
         val briefKeys = briefUi?.rows.orEmpty().mapTo(hashSetOf()) { it.key }
         val listed = visible.filterNot { it.identity in briefKeys }
@@ -83,6 +86,10 @@ public object ChatsState {
             filters = filters,
             brief = briefUi,
             incomplete = feed.incompleteSources,
+            // A source that cannot list every project shows one; the projects chip then names it. When the list
+            // holds several projects anyway (another source reaches further) there is no single project to name.
+            // Only a project the projects menu lists: the chip and the menu name the same one.
+            onlyProject = if (feed.acrossProjects || projects.size != 1) null else projects.single().name.takeIf { it.isNotBlank() },
             settingsAvailable = settingsAvailable,
             projectChoices = projects.toImmutableList(),
             projectNeedsYou =
@@ -91,6 +98,13 @@ public object ChatsState {
                     .mapNotNull { it.directory }
                     .toImmutableSet(),
             allCount = roots.size,
+            shownCount =
+                allFilter(filters)?.let { carried ->
+                    val opens =
+                        if (carried == ChatsAllViewModel.RUNNING) ChatFeedFilter(running = true)
+                        else ChatFeedFilter(projectDirectory = carried)
+                    opens.apply(roots).size
+                },
             otherFoldersCount = roots.count { it.inOtherFolder },
             otherFoldersSelected = filters.otherFolders,
             inbox =
@@ -130,6 +144,7 @@ public object ChatsState {
             project = item.projectName,
             updatedAtMs = item.lastActivityMs.takeIf { it > 0 },
             canOpen = item.canReopen,
+            needsNewChat = item.needsNewChat,
             agentMark = AgentPersona.of(item.agentId).markSlug,
             agentName = agentName(item),
             server = item.sourceLabel,
@@ -139,11 +154,13 @@ public object ChatsState {
                     ChatStatus.NeedsYou -> RowStatus.NeedsYou
                     ChatStatus.Running -> RowStatus.Running
                     ChatStatus.Failed -> RowStatus.Failed
-                    ChatStatus.Idle -> if (item.finishedUnseen) RowStatus.Done else RowStatus.None
+                    ChatStatus.Idle -> HomeRowStatusRules.idle(item.finishedUnseen, item.stoppedByPerson, item.interrupted)
                 },
             ago = RelativeAge.of(item.lastActivityMs, nowMs),
             running = item.running,
             permission = item.permission,
+            question = item.question,
+            form = item.form,
             preview = item.preview.takeIf { it.isNotBlank() }?.let(HomePreviewRules::oneLine),
         )
 
@@ -180,10 +197,19 @@ public object ChatsState {
         }
 
     /**
+     * P5: the narrowing the home's "All conversations" row opens that page with, and counts: the chosen project, else
+     * Running; null (the whole list, counted as [ChatsUi.allCount]) when the home's filters carry neither, as for Needs
+     * you, a search, Other folders or the away block's overflow, which that page cannot open with.
+     */
+    public fun allFilter(filters: ChatsFilters): String? =
+        filters.projectDirectory?.takeIf { it.startsWith("/") && !filters.otherFolders }
+            ?: ChatsAllViewModel.RUNNING.takeIf { filters.running }
+
+    /**
      * Brief rows are the feed rows of the sessions it names (same profile); nothing when it has
      * nothing to say.
      */
-    private fun briefUi(brief: ReturnBrief, roots: List<ChatFeedItem>, nowMs: Long): BriefUi? {
+    private fun briefUi(brief: ReturnBrief, roots: List<ChatFeedItem>, shown: Set<String>?, nowMs: Long): BriefUi? {
         if (brief.isEmpty && !brief.unknown && brief.hiddenUnreviewed + brief.hiddenRequests == 0)
             return null
         // A session id is local to a source and folder. Unknown scope or an ambiguous match fails
@@ -198,8 +224,29 @@ public object ChatsState {
                     it.directory == session.directory
             }
         }
-        val requests = brief.requests.filter { match(it.session) != null }
-        val runs = brief.unreviewed.filter { match(it.session) != null }
+        // Whether the brief can name its sessions at all is read against the whole list; what it shows (and marks seen)
+        // is only what the filters let through ([shown] null: no filter). Under a filter the block is filled again from
+        // the brief's own overflow, so a project's finished runs are named even when other projects' newer ones took
+        // the block's places.
+        fun visible(session: Session): Boolean = shown == null || match(session)?.identity?.let { it in shown } == true
+        val matchedRequests = brief.requests.filter { match(it.session) != null }
+        val matchedRuns = brief.unreviewed.filter { match(it.session) != null }
+        val requests: List<io.github.eslamasabry.oc.engine.agents.feed.BriefRequest>
+        val runs: List<io.github.eslamasabry.oc.engine.agents.feed.BriefRun>
+        val overflow: List<Session>
+        if (shown == null) {
+            requests = matchedRequests
+            runs = matchedRuns
+            overflow = brief.overflowRequests.map { it.session } + brief.overflowRuns.map { it.session }
+        } else {
+            val letRequests = (brief.requests + brief.overflowRequests).filter { visible(it.session) }
+            val letRuns = (brief.unreviewed + brief.overflowRuns).filter { visible(it.session) }
+            requests = letRequests.take(ReturnBrief.MAX_SHOWN_REQUESTS)
+            runs = letRuns.take(ReturnBrief.MAX_SHOWN_RUNS)
+            overflow =
+                letRequests.drop(ReturnBrief.MAX_SHOWN_REQUESTS).map { it.session } +
+                    letRuns.drop(ReturnBrief.MAX_SHOWN_RUNS).map { it.session }
+        }
         val rows =
             (requests.map { it.session } + runs.map { it.session })
                 .mapNotNull(::match)
@@ -210,18 +257,18 @@ public object ChatsState {
                         if (r.status == RowStatus.None) r.copy(status = RowStatus.Done) else r
                     }
                 }
-        val overflowKeys =
-            (brief.overflowRequests.map { it.session } + brief.overflowRuns.map { it.session })
-                .mapNotNull(::match)
-                .map { it.identity }
-                .toImmutableSet()
+        val overflowKeys = overflow.mapNotNull(::match).map { it.identity }.toImmutableSet()
+        // Under a filter, "N more" counts only the hidden ones the filter lets through.
+        val more = if (shown == null) brief.hiddenUnreviewed + brief.hiddenRequests else overflowKeys.size
+        // "Can't tell what's new" has nothing to show and nothing to do: with no row and no overflow there is no block.
+        if (rows.isEmpty() && more == 0) return null
         return BriefUi(
             rows = rows.toImmutableList(),
-            more = brief.hiddenUnreviewed + brief.hiddenRequests,
+            more = more,
             unknown =
                 brief.unknown ||
-                    requests.size != brief.requests.size ||
-                    runs.size != brief.unreviewed.size,
+                    matchedRequests.size != brief.requests.size ||
+                    matchedRuns.size != brief.unreviewed.size,
             acknowledgement =
                 brief.copy(
                     requests = requests.toImmutableList(),

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="upgradeFindTitle">在我的网络中查找</string>
+    <string name="upgradeFindBody">在这个 Wi-Fi 下的电脑上查找 OpenCode。</string>
+    <string name="upgradeFindReason">为了找到你的电脑，应用会查看你 Wi-Fi 网络中的设备。它不会发送任何密码，只会询问附近的地址。</string>
+    <string name="upgradeFindScanning">正在这个 Wi-Fi 下查找…</string>
+    <string name="upgradeFindStop">停止</string>
+    <string name="upgradeFindSearchAgain">重新搜索</string>
+    <string name="upgradeFindResultsLabel">在你的网络中找到的电脑</string>
+    <string name="upgradeFindNeedsPassword">需要密码</string>
+    <string name="upgradeFindVersion">版本 %1$s</string>
+    <string name="upgradeFindPickLabel">使用 %1$s</string>
+    <string name="upgradeFindEmptyTitle">什么都没找到</string>
+    <string name="upgradeFindEmptyBody">请在你的电脑上用 `opencode serve --mdns` 启动 OpenCode，确保两者在同一个 Wi-Fi 下，或自己输入地址。</string>
+    <string name="upgradeFindEnterAddress">输入地址</string>
+    <string name="upgradeFindDeniedBody">没有本地网络的访问权限，应用就无法查找你的电脑。你可以允许后重试，或自己输入地址。</string>
+    <string name="upgradeFindAllow">允许并搜索</string>
+    <string name="upgradeFindBlockedBody">此应用的本地网络访问已关闭。请在应用设置中开启，或自己输入地址。</string>
+    <string name="upgradeFindOpenSettings">打开应用设置</string>
+</resources>

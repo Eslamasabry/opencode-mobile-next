@@ -6,8 +6,8 @@
     <string name="stateDemoDisclosure">Cuộc trò chuyện giả lập. Không có máy chủ, tệp hay cài đặt đã lưu nào bị thay đổi. Thoát ra sẽ quên bản demo này.</string>
     <string name="stateDemoPrompt">Làm lời chào thân thiện hơn.</string>
     <string name="stateDemoReply">Tôi sẽ đổi lời chào trong welcome.txt từ “%1$s” thành “%2$s”.</string>
-    <string name="stateDemoAllowed">Xong. welcome.txt giờ ghi “%1$s”.</string>
-    <string name="stateDemoDenied">Được, tôi giữ nguyên welcome.txt.</string>
+    <string name="stateDemoAllowed">Xong. Giờ welcome.txt ghi “%1$s”.</string>
+    <string name="stateDemoDenied">Được, tôi đã giữ nguyên welcome.txt.</string>
     <string name="stateDemoBefore">Hello</string>
     <string name="stateDemoAfter">Welcome aboard!</string>
     <string name="stateDemoMore">Bản demo kết thúc ở đây. Hãy kết nối máy chủ để làm việc với dự án của bạn.</string>

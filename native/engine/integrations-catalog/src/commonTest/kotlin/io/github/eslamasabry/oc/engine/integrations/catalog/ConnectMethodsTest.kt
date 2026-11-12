@@ -1,0 +1,166 @@
+package io.github.eslamasabry.oc.engine.integrations.catalog
+
+import io.github.eslamasabry.oc.core.model.IntegrationMethodInfo
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.persistentMapOf
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
+
+/** The shapes are the ones a real OpenCode 2.2.6 server offers (types and labels only). */
+class ConnectMethodsTest {
+    private fun m(type: String, id: String? = null, label: String = type, required: Boolean = false) =
+        IntegrationMethodInfo(
+            type,
+            id,
+            label,
+            if (required) persistentListOf(buildJsonObject { put("key", "q"); put("required", true) })
+            else persistentListOf(),
+            persistentListOf(),
+            persistentMapOf(),
+        )
+
+    private fun ids(list: List<IntegrationMethodInfo>) = list.map { it.id ?: it.type }
+
+    @Test
+    fun `W4-1 OpenCode Go offers only the key, the server has no sign-in for it`() {
+        val shown = connectMethods("opencode-go", listOf(m("key"), m("env")), commandSupported = true)
+        assertEquals(listOf("key"), ids(shown))
+    }
+
+    @Test
+    fun `W4-2 OpenCode Console puts the account sign-in before the service-account key`() {
+        val shown =
+            connectMethods(
+                "opencode",
+                listOf(m("key", label = "API key (service account)"), m("env"), m("oauth", "device", "OpenCode Console account")),
+                commandSupported = false,
+            )
+        assertEquals(listOf("device", "key"), ids(shown))
+    }
+
+    @Test
+    fun `W4-3 OpenAI puts ChatGPT and device code before the key and the browser sign-in last`() {
+        val shown =
+            connectMethods(
+                "openai",
+                listOf(
+                    m("key"),
+                    m("env"),
+                    m("oauth", "chatgpt", "Sign in with ChatGPT"),
+                    m("oauth", "codex", "Codex browser (legacy)"),
+                    m("oauth", "headless", "Codex device code (legacy)"),
+                ),
+                commandSupported = false,
+            )
+        assertEquals(listOf("chatgpt", "headless", "key", "codex"), ids(shown))
+        assertTrue(connectMethodNeedsServerBrowser(shown.last()))
+    }
+
+    @Test
+    fun `W4-4 GitHub Copilot keeps its sign-in even though it asks required questions`() {
+        val shown =
+            connectMethods(
+                "github-copilot",
+                listOf(m("env"), m("oauth", "device", "Login with GitHub Copilot", required = true)),
+                commandSupported = false,
+            )
+        assertEquals(listOf("device"), ids(shown))
+    }
+
+    @Test
+    fun `W4-5 Anthropic keeps only the key and its key page`() {
+        val shown =
+            connectMethods("anthropic", listOf(m("key"), m("env"), m("oauth", "claude", "Claude account")), commandSupported = true)
+        assertEquals(listOf("key"), ids(shown))
+        // Nothing is invented: a key-led provider without a key keeps what the server offers.
+        assertEquals(
+            listOf("claude"),
+            ids(connectMethods("anthropic", listOf(m("oauth", "claude", "Claude account")), commandSupported = true)),
+        )
+    }
+
+    @Test
+    fun `W4-6 command sign-ins show only when the server runs them and they have an id`() {
+        val methods = listOf(m("command", "login"), m("command"), m("key"))
+        assertEquals(listOf("key"), ids(connectMethods("x", methods, commandSupported = false)))
+        assertEquals(listOf("key", "login"), ids(connectMethods("x", methods, commandSupported = true)))
+    }
+
+    @Test
+    fun `W4-7 hints say how each choice finishes`() {
+        assertEquals(ConnectHint.Key, connectMethodHint(m("key")))
+        assertEquals(ConnectHint.Command, connectMethodHint(m("command", "c")))
+        assertEquals(ConnectHint.Browser, connectMethodHint(m("oauth", "a", "Codex browser")))
+        assertEquals(ConnectHint.Device, connectMethodHint(m("oauth", "a", "Codex headless")))
+        assertEquals(ConnectHint.Account, connectMethodHint(m("oauth", "a", "Console account")))
+    }
+
+    @Test
+    fun `W4-8 a method with no name of its own is recognised so the page never shows the word key`() {
+        assertFalse(connectMethodHasOwnLabel(m("key")))
+        assertFalse(connectMethodHasOwnLabel(m("key", label = "  ")))
+        assertTrue(connectMethodHasOwnLabel(m("key", label = "API key (service account)")))
+        // An unnamed sign-in is never titled "API key".
+        assertTrue(connectMethodHasOwnLabel(m("oauth", "a")))
+        assertTrue(connectMethodHasOwnLabel(m("command", "c")))
+    }
+
+    @Test
+    fun `W4-27 a device-code label gets the device-code hint, the other OpenAI rows do not`() {
+        assertEquals(ConnectHint.Device, connectMethodHint(m("oauth", "a", "Codex device code (legacy)")))
+        assertEquals(ConnectHint.Account, connectMethodHint(m("oauth", "b", "Sign in with ChatGPT")))
+    }
+
+    private fun q(vararg parts: Pair<String, String>) =
+        buildJsonObject {
+            put("key", "enterpriseUrl")
+            put(
+                "when",
+                kotlinx.serialization.json.JsonArray(
+                    listOf(buildJsonObject { parts.forEach { (k, v) -> put(k, v) } })
+                ),
+            )
+        }
+
+    @Test
+    fun `W4-28 a question with a condition shows only while the condition holds`() {
+        val enterprise = q("key" to "deploymentType", "op" to "eq", "value" to "enterprise")
+        assertFalse(connectPromptVisible(enterprise, mapOf("deploymentType" to "github.com")))
+        assertTrue(connectPromptVisible(enterprise, mapOf("deploymentType" to "enterprise")))
+        assertTrue(connectPromptVisible(q("key" to "a", "op" to "neq", "value" to "x"), mapOf("a" to "y")))
+        assertTrue(connectPromptVisible(buildJsonObject { put("key", "plain") }, emptyMap()))
+    }
+
+    @Test
+    fun `W4-PROVFORMS-GATE every condition in the list must hold, and a boolean or number value compares as text`() {
+        val prompt =
+            kotlinx.serialization.json.JsonObject(
+                mapOf(
+                    "key" to kotlinx.serialization.json.JsonPrimitive("region"),
+                    "when" to
+                        kotlinx.serialization.json.JsonArray(
+                            listOf(
+                                buildJsonObject { put("key", "mode"); put("op", "eq"); put("value", "advanced") },
+                                buildJsonObject { put("key", "managed"); put("op", "neq"); put("value", true) },
+                            )
+                        ),
+                )
+            )
+        assertTrue(connectPromptVisible(prompt, mapOf("mode" to "advanced", "managed" to "false")))
+        assertFalse(connectPromptVisible(prompt, mapOf("mode" to "advanced", "managed" to "true")))
+        assertFalse(connectPromptVisible(prompt, mapOf("mode" to "basic", "managed" to "false")))
+        // An operator the recording does not have leaves the field shown rather than hiding it for good.
+        val unknown =
+            kotlinx.serialization.json.JsonObject(
+                mapOf(
+                    "key" to kotlinx.serialization.json.JsonPrimitive("x"),
+                    "when" to buildJsonObject { put("key", "mode"); put("op", "in"); put("value", "a") },
+                )
+            )
+        assertTrue(connectPromptVisible(unknown, mapOf("mode" to "b")))
+    }
+}

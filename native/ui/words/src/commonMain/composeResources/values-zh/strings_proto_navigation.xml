@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="serversInspectSetup">查看设置</string>
+    <string name="serversPairingAnswered">服务器已响应。连接前，请先检查它的登录或状态。</string>
+    <string name="serversRemoteTerminal">终端</string>
+</resources>

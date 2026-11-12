@@ -27,6 +27,8 @@ import io.github.eslamasabry.oc.core.domain.platform.ForegroundWork
 import io.github.eslamasabry.opencode_mobile.graph.attentionRuntime
 import io.github.eslamasabry.opencode_mobile.graph.backgroundHub
 import io.github.eslamasabry.opencode_mobile.graph.platformHub
+import io.github.eslamasabry.opencode_mobile.graph.ReplyWatchHub
+import io.github.eslamasabry.opencode_mobile.graph.replyWatch
 import kotlinx.coroutines.launch
 import kotlinx.collections.immutable.ImmutableSet
 import kotlinx.collections.immutable.persistentSetOf
@@ -62,7 +64,7 @@ class BackgroundConnectionService : Service() {
             if (request == null) {
                 // Started through getForegroundService: keep the start-foreground promise even for
                 // a malformed request, then drop the row at once.
-                if (!livePromised) {
+                if (!holdsDataSync()) {
                     widgetForeground.promote()
                     ServiceCompat.stopForeground(this, ServiceCompat.STOP_FOREGROUND_REMOVE)
                 }
@@ -91,6 +93,8 @@ class BackgroundConnectionService : Service() {
             }
             return START_NOT_STICKY
         }
+        // Reply watch (plan 11 §9.3): the body keeps the dataSync promise first and owns its own end.
+        if (intent?.action == ReplyWatchHub.ACTION_REPLY_WATCH) return replyWatch.onServiceStart(this)
         val hub = backgroundHub
         val promised =
             try {
@@ -100,6 +104,7 @@ class BackgroundConnectionService : Service() {
                     else 0
                 ServiceCompat.startForeground(this, NotificationIds.STATUS, row(), type)
                 livePromised = true
+                replyWatch.liveOwnerBegan()
                 true
             } catch (_: IllegalStateException) {
                 false // ForegroundServiceStartNotAllowedException and the API 34+ type checks
@@ -109,13 +114,17 @@ class BackgroundConnectionService : Service() {
         hub.launchOnMain {
             if (!hub.serviceBody.onForegroundResult(promised)) {
                 livePromised = false
-                if (widgetRuns == 0) {
-                    ServiceCompat.stopForeground(
-                        this@BackgroundConnectionService,
-                        ServiceCompat.STOP_FOREGROUND_REMOVE,
-                    )
-                    stopSelf()
-                } else widgetForeground.promote()
+                replyWatch.liveOwnerEnded()
+                // A reply watch on this service keeps its own promise and its own end.
+                if (!replyWatch.holds(this@BackgroundConnectionService)) {
+                    if (widgetRuns == 0) {
+                        ServiceCompat.stopForeground(
+                            this@BackgroundConnectionService,
+                            ServiceCompat.STOP_FOREGROUND_REMOVE,
+                        )
+                        stopSelf()
+                    } else widgetForeground.promote()
+                }
             } else {
                 appGraph.previewRuntime.restoreSavedConnection()
             }
@@ -132,9 +141,16 @@ class BackgroundConnectionService : Service() {
             return
         }
         val hub = backgroundHub
+        val liveHere = livePromised
+        val replyHeld = replyWatch.holds(this)
+        // Android's dataSync budget is spent: a reply watch ends now (it stops the service unless live mode holds it).
+        if (replyHeld) replyWatch.body.onTimeout()
+        // A reply watch alone saves no live-mode pause: live mode was off.
+        if (replyHeld && !liveHere) return
         hub.launchOnMain {
             hub.serviceBody.onTimeout()
             livePromised = false
+            replyWatch.liveOwnerEnded()
             ServiceCompat.stopForeground(
                 this@BackgroundConnectionService,
                 ServiceCompat.STOP_FOREGROUND_REMOVE,
@@ -162,6 +178,8 @@ class BackgroundConnectionService : Service() {
 
     override fun onDestroy() {
         widgetJobs.toList().forEach { it.cancel() }
+        replyWatch.onServiceDestroy(this)
+        if (livePromised) replyWatch.liveOwnerEnded()
         livePromised = false
         backgroundHub.serviceBody.onDestroy()
         super.onDestroy()
@@ -202,7 +220,11 @@ class BackgroundConnectionService : Service() {
             .build()
     }
 
-    private fun hasLiveOwner(): Boolean = livePromised || backgroundHub.signals.active
+    private fun hasLiveOwner(): Boolean =
+        livePromised || backgroundHub.signals.active || replyWatch.holds(this)
+
+    /** This instance already holds a dataSync promise (live mode or a reply watch) that a widget action borrows. */
+    private fun holdsDataSync(): Boolean = livePromised || replyWatch.holds(this)
 
     /**
      * The widget borrows an existing live promise; otherwise its exact ticket owns only a
@@ -220,6 +242,8 @@ class BackgroundConnectionService : Service() {
                     // Only this instance's own live promise counts: the live signal alone has not
                     // called startForeground here.
                     livePromised -> persistentSetOf(ForegroundKind.LiveMode)
+                    replyWatch.holds(this@BackgroundConnectionService) ->
+                        persistentSetOf(ForegroundKind.ReplyWatch)
                     tickets.isNotEmpty() -> persistentSetOf(ForegroundKind.WidgetAction)
                     else -> persistentSetOf()
                 }
@@ -227,7 +251,7 @@ class BackgroundConnectionService : Service() {
 
         fun promote(): Boolean =
             try {
-                if (!livePromised) {
+                if (!holdsDataSync()) {
                     val type =
                         when {
                             Build.VERSION.SDK_INT >= 34 ->
@@ -262,7 +286,7 @@ class BackgroundConnectionService : Service() {
         override suspend fun end(ticket: ForegroundTicket) {
             if (ticket.kind != ForegroundKind.WidgetAction || !tickets.remove(ticket.id)) return
             syncOwners()
-            if (tickets.isEmpty() && !livePromised) {
+            if (tickets.isEmpty() && !holdsDataSync()) {
                 ServiceCompat.stopForeground(
                     this@BackgroundConnectionService,
                     ServiceCompat.STOP_FOREGROUND_REMOVE,

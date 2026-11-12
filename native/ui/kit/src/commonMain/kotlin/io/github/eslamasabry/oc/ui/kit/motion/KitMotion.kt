@@ -96,6 +96,20 @@ public class KitMotionSpecs internal constructor(private val s: KitMotionState) 
     /** A part a finger let go of settles with the finger's velocity and may overshoot slightly. */
     public fun <T> release(): FiniteAnimationSpec<T> = springOf(MotionTokens.RELEASE_ZETA, MotionTokens.RELEASE_K)
 
+    /**
+     * Joined glass's springs (docs/designs/liquid-merge-one-body.md, "Drop, rebound, fill"; numbers in `LiquidJoin`): a
+     * drop that passes its resting line once and rebounds ([zeta] 0.62), a calm fill (0.92), or a critically damped
+     * spring ([zeta] 1) for closing and for the reach's swell, at [stiffness].
+     */
+    public fun <T> liquid(zeta: Float, stiffness: Float): FiniteAnimationSpec<T> = springOf(zeta, stiffness)
+
+    /** A part kept on screen, unchanged, for [millis] while its own motion runs (an exit that only waits). */
+    public fun <T> hold(millis: Int): FiniteAnimationSpec<T> =
+        if (s.reduced) snap() else tween(ms(millis), easing = { if (it < 1f) 0f else 1f })
+
+    /** [millis] at the debug time scale: the wait between two springs of one motion. */
+    public fun delayMs(millis: Float): Long = (millis * s.debugTimeScale).toLong()
+
     public val state: KitMotionState get() = s
 }
 

@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import io.github.eslamasabry.oc.ui.kitchat.request.KitRequestStack
+import androidx.compose.foundation.text.input.clearText
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -49,6 +50,7 @@ import io.github.eslamasabry.oc.ui.kit.KitTextKind
 import io.github.eslamasabry.oc.ui.kit.choice.KitChoiceRow
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.input.KitField
+import io.github.eslamasabry.oc.ui.kit.input.KitFieldKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
@@ -76,12 +78,6 @@ import io.github.eslamasabry.oc.ui.words.res.approvalAllow
 import io.github.eslamasabry.oc.ui.words.res.approvalCopied
 import io.github.eslamasabry.oc.ui.words.res.approvalCopyAsk
 import io.github.eslamasabry.oc.ui.words.res.approvalDeny
-import io.github.eslamasabry.oc.ui.words.res.approvalReplyBack
-import io.github.eslamasabry.oc.ui.words.res.approvalReplyEmpty
-import io.github.eslamasabry.oc.ui.words.res.approvalReplyJustDeny
-import io.github.eslamasabry.oc.ui.words.res.approvalReplyLabel
-import io.github.eslamasabry.oc.ui.words.res.approvalReplySend
-import io.github.eslamasabry.oc.ui.kitchat.request.KitDenyReply
 import io.github.eslamasabry.oc.ui.words.res.chatRequestIfIgnored
 import io.github.eslamasabry.oc.ui.words.res.chatRequestCardLabel
 import io.github.eslamasabry.oc.ui.words.res.chatRequestNoLongerNeeded
@@ -92,6 +88,9 @@ import io.github.eslamasabry.oc.ui.words.res.chatStopAfterStepUndo
 import io.github.eslamasabry.oc.ui.words.res.chatUiAlwaysAllow
 import io.github.eslamasabry.oc.ui.words.res.invitation40Question
 import io.github.eslamasabry.oc.ui.words.res.kitConfirmCancel
+import io.github.eslamasabry.oc.ui.words.res.e7WorkspaceDismissDetail
+import io.github.eslamasabry.oc.ui.words.res.e7WorkspaceDismissRequest
+import io.github.eslamasabry.oc.ui.words.res.kitSheetDismiss
 import io.github.eslamasabry.oc.ui.words.res.kitRequestAnswer
 import io.github.eslamasabry.oc.ui.words.res.kitRequestChangeSize
 import io.github.eslamasabry.oc.ui.words.res.kitRequestReplyEmptyReason
@@ -115,6 +114,7 @@ import io.github.eslamasabry.oc.ui.words.res.chatRequestDetailTool
 import io.github.eslamasabry.oc.ui.words.res.chatRequestReadFrom
 import io.github.eslamasabry.oc.ui.words.res.chatRequestReadLines
 import io.github.eslamasabry.oc.ui.words.res.chatUiAlwaysAllowWouldAlsoCover
+import io.github.eslamasabry.oc.ui.words.res.chatUiTellTheAgentWhyOrWhatTo
 import io.github.eslamasabry.oc.ui.words.res.kitDetails
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
@@ -341,15 +341,6 @@ private fun PermissionWaiting(
         toolLabel = if (RequestCardRules.showsToolLine(card.ask)) askToolLine(card.ask) else null,
         copyLabel = if (copies) stringResource(Res.string.approvalCopyAsk) else null,
         copiedLabel = if (copies) stringResource(Res.string.approvalCopied) else null,
-        denyReply =
-            KitDenyReply(
-                fieldLabel = stringResource(Res.string.approvalReplyLabel),
-                sendLabel = stringResource(Res.string.approvalReplySend),
-                justDenyLabel = stringResource(Res.string.approvalReplyJustDeny),
-                backLabel = stringResource(Res.string.approvalReplyBack),
-                emptyReason = stringResource(Res.string.approvalReplyEmpty),
-                onSend = { actions.performReviewed(card, ReviewedRequestAction.RejectWith(it)) },
-            ),
         summary = stringResource(Res.string.chatRequestIfIgnored),
         subject = null,
         targets =
@@ -393,6 +384,9 @@ private fun PermissionDetailsSheet(
     val mask = rememberKitMask()
     val redactor = LocalKitRedactor.current
     val shown = remember(request) { request?.let(PermissionDetails::of) }
+    // Flutter `showPermissionDetails`: the optional note sent with Reject lives here, not on the card.
+    val note = rememberTextFieldState()
+    LaunchedEffect(card?.id) { note.clearText() }
     KitSheet(
         visible = card != null && shown != null,
         onDismissRequest = onClose,
@@ -407,8 +401,12 @@ private fun PermissionDetailsSheet(
         },
         secondary = card?.let {
             KitAction(stringResource(Res.string.approvalDeny), {
+                val said = note.text.toString().trim()
                 onClose()
-                actions.performReviewed(it, ReviewedRequestAction.Reject)
+                actions.performReviewed(
+                    it,
+                    if (said.isEmpty()) ReviewedRequestAction.Reject else ReviewedRequestAction.RejectWith(said),
+                )
             })
         },
     ) {
@@ -417,13 +415,20 @@ private fun PermissionDetailsSheet(
             Modifier.fillMaxWidth().testTag("chat-permission-details"),
             verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
         ) {
-            val full = details.fullText ?: stringResource(Res.string.chatUiAllMatchingRequests)
-            KitCodeBlock(
-                mask(full),
-                if (details.command) KitCodeKind.Command else KitCodeKind.Output,
-                wrap = true,
-                showWrapToggle = false,
-            )
+            // W4: a folder read shows the folder (never the server's "."), a search its pattern.
+            val ask = card?.ask
+            val full =
+                (if (ask != null) RequestCardRules.detailsText(ask, details.fullText) else details.fullText)
+                    ?: if (ask == null || RequestCardRules.detailsSaysAllMatching(ask))
+                        stringResource(Res.string.chatUiAllMatchingRequests)
+                    else null
+            if (full != null)
+                KitCodeBlock(
+                    mask(full),
+                    if (details.command) KitCodeKind.Command else KitCodeKind.Output,
+                    wrap = true,
+                    showWrapToggle = false,
+                )
             details.diff?.let { diff -> KitCodeBlock(mask(diff), KitCodeKind.Code, wrap = true, showWrapToggle = false) }
             val values = details.facts.map { fact -> permissionFactValue(fact, redactor) }
             KitDetailsFold(
@@ -431,6 +436,12 @@ private fun PermissionDetailsSheet(
                 copyLabel = stringResource(Res.string.approvalCopyAsk),
                 values = values,
                 initiallyExpanded = true,
+            )
+            KitField(
+                note,
+                label = stringResource(Res.string.chatUiTellTheAgentWhyOrWhatTo),
+                modifier = Modifier.testTag("permission-reject-message"),
+                kind = KitFieldKind.Multiline,
             )
         }
     }
@@ -474,7 +485,19 @@ private fun QuestionWaiting(
     card: RequestCardUi.Question,
     actions: ChatRequestActions,
 ) {
+    var confirming by remember { mutableStateOf(false) }
+    KitConfirm(
+        spec = if (!confirming) null else KitConfirmSpec(
+            title = stringResource(Res.string.e7WorkspaceDismissRequest),
+            confirmLabel = stringResource(Res.string.kitSheetDismiss),
+            body = stringResource(Res.string.e7WorkspaceDismissDetail),
+            kind = KitConfirmKind.Neutral,
+        ),
+        onConfirm = { confirming = false; actions.dismissQuestion(card.id) },
+        onCancel = { confirming = false },
+    )
     KitQuestionCard(
+        dismiss = KitAction(stringResource(Res.string.kitSheetDismiss), { confirming = true }),
         title = card.title,
         question = card.question,
         summary = stringResource(Res.string.chatRequestIfIgnored),

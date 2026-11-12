@@ -212,6 +212,7 @@ class NativeServerDefaults(
         private const val MODEL = "oc.model."
         private const val EXPLICIT = "oc.modelExplicit."
         private const val VARIANT = "oc.variant."
+        private const val AGENT = "oc.agent."
 
         fun register(scope: ProfileScope) {
             scope.register(
@@ -239,6 +240,16 @@ class NativeServerDefaults(
                     PrefType.Str,
                     ":feature:settings",
                     "New conversation default",
+                )
+            )
+            // The mode (agent) new conversations start in; Flutter's own key, so a migrated profile keeps it.
+            scope.register(
+                KeyShape(
+                    AGENT,
+                    KeyScope.Profile,
+                    PrefType.Str,
+                    ":feature:settings",
+                    "New conversation mode",
                 )
             )
         }

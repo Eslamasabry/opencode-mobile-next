@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="stateHandoffTitle">关联的对话</string>
+    <string name="stateHandoffWorking">处理中…</string>
+    <string name="stateHandoffFailed">无法打开关联的对话。请重试。</string>
+    <string name="stateHandoffTransferFailed">此次转移未得到确认。请关闭此面板并查看你的对话，再开始下一次转移。</string>
+    <string name="stateHandoffReviewNote">继续之前，请先查看这份已遮蔽的对话记录和第一条提示词。附件内容和私密推理不包含在内。</string>
+    <string name="stateHandoffRecord">对话记录</string>
+    <string name="stateHandoffPrompt">第一条提示词</string>
+    <string name="stateHandoffRetryLink">再次保存链接</string>
+    <string name="stateHandoffContinue">开始关联的对话</string>
+    <string name="stateHandoffLinked">关联的对话</string>
+    <string name="stateHandoffNoLinks">此对话没有已保存的链接。</string>
+    <string name="stateHandoffNew">在新对话中继续</string>
+    <string name="stateHandoffNewNote">请在此连接上选择一个模型。你的项目保持不变，且在发送任何内容之前你都可以先查看交接内容。</string>
+</resources>

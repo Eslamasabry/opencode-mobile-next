@@ -24,6 +24,8 @@ public data class ServersUi(
     val failure: Failure? = null,
     /** s23-oc1move: the saved server whose connect said it runs OpenCode 1; the notice offers its update guide. */
     val openCode1: ProfileId? = null,
+    /** The server whose saved password or token was refused or could not be read: its form is the way forward. */
+    val signIn: ProfileId? = null,
     /** App-authored validation fact only; no input or credentials are retained. */
     val addressProblem: io.github.eslamasabry.oc.engine.runtime.messages.SetupMessage.Known? = null,
     val savedGeneration: Int = 0,

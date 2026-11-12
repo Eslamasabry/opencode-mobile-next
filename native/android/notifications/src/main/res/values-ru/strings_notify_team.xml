@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="notify_team_decision_title">AI Team нужно ваше решение</string>
+    <string name="notify_team_decision_body">Задача ждёт вашего ответа. Откройте AI Team, чтобы ответить.</string>
+    <string name="notify_team_review_title">Работа AI Team готова к проверке</string>
+    <string name="notify_team_review_body">Задача завершена и ждёт вашей проверки.</string>
+    <string name="notify_team_failed_title">Задача AI Team не выполнена</string>
+    <string name="notify_team_failed_body">Откройте AI Team, чтобы узнать, что произошло, и запустить её снова.</string>
+    <string name="notify_team_completed_title">AI Team завершила проект</string>
+    <string name="notify_team_completed_body">Все задачи проекта выполнены.</string>
+</resources>

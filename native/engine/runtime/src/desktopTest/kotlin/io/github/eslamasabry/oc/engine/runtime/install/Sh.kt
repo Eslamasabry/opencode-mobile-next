@@ -44,30 +44,36 @@ object Sh {
     /** The repository root (Gradle runs desktopTest in native/engine/runtime). */
     val repo: File by lazy {
         var dir: File? = File("").absoluteFile
-        while (dir != null && !File(dir, "scripts/host/ubuntu-opencode.sh").isFile) dir = dir.parentFile
+        // native/scripts/host holds the native copy of the host script, so look for the repository's native/ build.
+        while (dir != null && !File(dir, "native/settings.gradle.kts").isFile) dir = dir.parentFile
         checkNotNull(dir) { "repository root not found" }
     }
     /** A Dart raw string constant's text, as Dart reads it (a first whitespace-only line is dropped). */
     fun dartRaw(path: String, name: String): String = dartRawIn(File(repo, path).readText(), path, name)
 
     /**
-     * The released Flutter app (tag v2.1.4+62), the source of truth for behaviour. This branch's own lib/ is an older
-     * snapshot of the Flutter tree, so a "byte for byte" check reads the release from git, not the working tree.
+     * The released Flutter app (tag v2.1.4+62), the source of truth for behaviour. The working tree's lib/ is not that
+     * release, so a "byte for byte" check reads the release's files.
      */
     const val RELEASED_FLUTTER: String = "2dec68a250fec08909593fd3b1a8125de908f0c2"
 
-    /** [path] as the released Flutter app has it. Fails, naming the fix, in a clone without that commit. */
+    /**
+     * [path] as the released Flutter app has it: the verbatim twin in `resources/flutter-2.1.4` (CI checks out one
+     * commit, without the release in its history). When git does have the release, the twin must equal it.
+     */
     fun releasedText(path: String): String {
+        val twin =
+            checkNotNull(Sh::class.java.getResource("/flutter-2.1.4/$path.txt")) { "missing released twin $path" }
+                .readText()
         val shown =
             run(
                 listOf("git", "-C", repo.path, "show", "$RELEASED_FLUTTER:$path"),
                 mapOf("PATH" to "/usr/local/bin:/usr/bin:/bin", "HOME" to System.getProperty("java.io.tmpdir")),
             )
-        check(shown.exitCode == 0) {
-            "$path at the released Flutter app ($RELEASED_FLUTTER, v2.1.4+62) is not in this clone: " +
-                "git fetch origin master"
+        if (shown.exitCode == 0) {
+            check(shown.stdout == twin) { "the released twin of $path differs from $RELEASED_FLUTTER" }
         }
-        return shown.stdout
+        return twin
     }
 
     /** A Dart raw string constant's text in the released Flutter app (see [releasedText]). */

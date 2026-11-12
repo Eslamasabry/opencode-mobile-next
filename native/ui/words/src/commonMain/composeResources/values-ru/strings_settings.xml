@@ -8,7 +8,7 @@
     <string name="e7LocaleUiDescription">Выберите язык всего приложения. Сообщения сервера и ваш текст остаются без изменений.</string>
     <string name="e7LocaleUiSaving">Сохранение языка…</string>
     <string name="e7LocaleUiSaveFailed">Не удалось сохранить язык. Прежний выбор остаётся в силе. Выберите язык, чтобы повторить попытку.</string>
-    <string name="languagePickerPartlyTranslated">Переведено частично (%1$d %)</string>
+    <string name="languagePickerPartlyTranslated">Переведено частично (%1$d%)</string>
     <string name="e7LocaleUiJapanese">日本語</string>
     <string name="e7LocaleUiChinese">简体中文</string>
     <string name="e7LocaleUiSpanish">Español</string>
@@ -833,4 +833,27 @@
     <string name="backgroundBatterySettingsInstead">Android не показал свой вопрос, поэтому вместо него открылись настройки батареи. Выберите там для этого приложения «Без ограничений».</string>
     <string name="privacyPagesSummary">Серверы, поставщики, голос, файлы и обновления</string>
     <string name="manageSpaceKeptAllComputers">Ваши компьютеры и всё, что отправлено в git, останется</string>
+    <string name="appearanceGlassLook">Вид стекла</string>
+    <string name="appearanceGlassLookPick">Выберите вид стекла</string>
+    <string name="appearanceGlassLookGlossy">Глянцевое</string>
+    <string name="appearanceGlassLookGlossyLine">Яркий блеск, искажает по краям</string>
+    <string name="appearanceGlassLookClear">Прозрачное</string>
+    <string name="appearanceGlassLookClearLine">Сквозь него всё видно, лёгкий блеск</string>
+    <string name="appearanceGlassLookFrosted">Матовое</string>
+    <string name="appearanceGlassLookFrostedLine">Мягкое размытие, удобнее всего читать</string>
+    <string name="appearanceGlassLookSmoked">Тонированное</string>
+    <string name="appearanceGlassLookSmokedLine">Тёмное тонированное стекло на панелях и кнопках</string>
+    <string name="appearanceGlassLookDisclosure">В превью использованы яркие цвета, чтобы были видны различия. Страница позади показывает ваш настоящий фон.</string>
+    <string name="appearanceGlassLookFrostedLighter">Матовое стекло теперь использует более светлые карточки, поэтому сквозь них больше виден ваш фон.</string>
+    <string name="appearanceGlassLookHeldMotion">Виды стекла приостановлены, пока анимация выключена. Включите анимацию снова, чтобы выбрать вид.</string>
+    <string name="appearanceGlassLookNeedsAndroid13">Искажение краёв требует Android 13. На этом телефоне края показаны размытыми во всех видах.</string>
+    <string name="appearanceGlassCardHint">Нажмите «Стекло» ещё раз, чтобы выбрать его вид.</string>
+    <string name="appearanceGlassCardLook">Стекло · %1$s</string>
+    <string name="appearancePreviewAsk">Наведи порядок на странице настроек</string>
+    <string name="appearancePreviewReply">Готово. Изменено три файла, все проверки пройдены.</string>
+    <string name="appearancePreviewAction">Проверить изменения</string>
+    <string name="appearancePreviewSpoken">Пример приложения с этими настройками</string>
+    <string name="consentWhyNeedsYouBlocked">Android блокирует уведомления этого приложения. Нажмите, чтобы исправить это в разделе «Уведомления».</string>
+    <string name="consentWhyNeedsYouWhileOpen">Уведомления приходят, только пока приложение открыто. Нажмите, чтобы оставить фоновое подключение включённым.</string>
+    <string name="consentWhyNeedsYouChannelOff">В Android отключены уведомления с вопросами от этого приложения. Нажмите, чтобы включить их в настройках Android.</string>
 </resources>

@@ -12,6 +12,8 @@ import io.github.eslamasabry.oc.android.platform.NativeCrashStore
 import io.github.eslamasabry.oc.core.common.AppBuildInfo
 import io.github.eslamasabry.oc.core.common.AppLog
 import io.github.eslamasabry.oc.core.common.Channel
+import io.github.eslamasabry.oc.core.common.KnownSecretMask
+import io.github.eslamasabry.oc.core.common.KnownSecrets
 import io.github.eslamasabry.oc.core.common.LaunchMode
 import io.github.eslamasabry.oc.core.common.Severity
 import io.github.eslamasabry.oc.core.security.RedactingWriter
@@ -78,10 +80,17 @@ class OcApplication : Application(), GraphOwner {
             RedactingWriter(
                 redactor,
                 // B-190: the app's own log ring for "Send a problem report".
-                listOf(DiagnosticsLogSink, io.github.eslamasabry.opencode_mobile.telemetry.TelemetryRingSink),
+                appLogSinks(
+                    debuggable = applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0,
+                    base = listOf(DiagnosticsLogSink, io.github.eslamasabry.opencode_mobile.telemetry.TelemetryRingSink),
+                    logcat = LogcatLogSink(),
+                    asked = ::logTagAsked,
+                ),
             ), // P12: warnings/errors feed Report a problem
             Severity.Info,
         ) // ring + logcat sinks: slice 1
+        // The notification shade masks every value registered here, not only secret-shaped text (w4-mcp-secrets gate).
+        KnownSecrets.install(KnownSecretMask(redactor::maskKnown))
         buildInfo =
             AppBuildInfo(
                 versionName = BuildConfig.VERSION_NAME,
@@ -118,6 +127,11 @@ class OcApplication : Application(), GraphOwner {
                     }
                     step("builtinRuntime") {
                         appGraph.builtinRuntime // P12-FIX-LINUX-VOICE: the built-in Linux follows the activity; phone server comes back
+                    }
+                    step("phoneOpenCodeAutoUpdate") {
+                        (appGraph as io.github.eslamasabry.opencode_mobile.graph.PhoneOpenCodeAutoUpdateAccessors)
+                            .phoneOpenCodeAutoUpdate
+                            .start() // keep the phone server on the pinned OpenCode (B-LINUX-079)
                     }
                     step("nativePhoneHealing") { (appGraph as NativeHealingAccessors).nativePhoneHealing.start() }
                     step("agentWidgets") {
@@ -196,6 +210,10 @@ class OcApplication : Application(), GraphOwner {
         }
         step("platform") {
             (appGraph as PlatformAccessors).platform.start() // P12-PLATFORM: channels, widgets feed, alerts, update check
+        }
+        step("replyWatch") {
+            // Plan 11 §9.3: follows the activities from the first start, so leaving with a reply running is seen.
+            (appGraph as io.github.eslamasabry.opencode_mobile.graph.ReplyWatchAccessors).replyWatch.start()
         }
         step("resumedActivities") {
             appGraph.resumedActivities // P12-VOICE: follow the resumed activity from the start (mic permission)

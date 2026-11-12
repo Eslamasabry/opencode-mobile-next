@@ -68,7 +68,19 @@ class RemoteTerminalsTest {
             assertEquals(Failure.Refused(RefusalReason.StaleScope), owner.state.value.failure)
         }
 
+    @Test
+    fun `W4 a new terminal is created with the name the screen numbered it with`() =
+        runTest {
+            val source = Source()
+            val owner =
+                RemoteTerminals(ref, source, backgroundScope, TestDispatchers(StandardTestDispatcher(testScheduler)))
+            owner.refresh()
+            owner.create("Terminal 2")
+            assertEquals("Terminal 2", source.lastTitle)
+        }
+
     private class Source : RemoteTerminalSource {
+        var lastTitle: String? = null
         var current = true
         var activations = 0
         var lists = 0
@@ -82,6 +94,7 @@ class RemoteTerminalsTest {
 
                 override suspend fun createTerminal(title: String?): Outcome<TerminalProcess> {
                     creates++
+                    lastTitle = title
                     return Outcome.Failed(Failure.Unexpected())
                 }
             }

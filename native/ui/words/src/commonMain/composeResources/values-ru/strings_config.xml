@@ -2,7 +2,11 @@
 <!-- Translated with native/tools/strings/translate; English is the source. -->
 <resources>
     <string name="configInspectionTitle">Конфигурация сервера</string>
-    <string name="configInspectionExplanation">Просмотр источников конфигурации сервера в порядке приоритета. Ключи, токены, значения окружения, заголовки, команды и запросы скрыты. Эта страница ничего не меняет.</string>
+    <string name="configInspectionExplanation">Какие файлы конфигурации читает этот сервер, самые важные сначала. Ключи, пароли и другие секреты скрыты. Эта страница ничего не меняет.</string>
     <string name="configInspectionUnavailable">Не удалось загрузить конфигурацию сервера. Подключитесь заново и повторите.</string>
     <string name="configInspectionRefresh">Обновить конфигурацию</string>
+    <string name="configFilesLabel">Файлы конфигурации</string>
+    <string name="configFoldersLabel">Папки, где ищет сервер</string>
+    <string name="configNoFileTitle">Файла конфигурации пока нет</string>
+    <string name="configNoFileBody">Этот сервер работает со встроенными настройками. Файл конфигурации в одной из папок ниже изменил бы их. Эта страница только читает его.</string>
 </resources>

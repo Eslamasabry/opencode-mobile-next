@@ -305,4 +305,6 @@
     <string name="phoneSetupRingDetailsTitle">Détails de la configuration</string>
     <string name="browserTransportFailure">Le navigateur n'a pas pu joindre le serveur. Vérifiez l'adresse et que le serveur est démarré. Un serveur d'une autre origine doit autoriser l'origine de cette page (CORS), et une page chargée en https ne peut pas utiliser un serveur http:// ou ws://.</string>
     <string name="browserProbeTimeout">La connexion a expiré. Vérifiez l'adresse, et que le serveur est joignable depuis ce navigateur.</string>
+    <string name="phoneSetupStartStepsNoTime">Installer, nommer un projet, démarrer une conversation</string>
+    <string name="phoneSetupPreflightSpaceNumbers">La configuration demande environ %1$s d’espace libre. Ce téléphone en a %2$s.</string>
 </resources>

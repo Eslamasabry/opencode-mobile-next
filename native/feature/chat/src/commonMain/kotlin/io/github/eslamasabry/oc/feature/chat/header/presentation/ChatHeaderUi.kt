@@ -18,6 +18,8 @@ public data class ChatHeaderUi(
     val serverName: String? = null,
     val projectName: String? = null,
     val branch: String? = null,
+    /** The one "is this a Git project" answer; null = not known yet. The Git chip shows only for true. */
+    val git: Boolean? = null,
     /**
      * The ⋯ menu's entries in order (Go to, then Do; destructive last), built from capabilities.
      */
@@ -42,7 +44,17 @@ public data class ChatHeaderUi(
     val renaming: String? = null,
     /** S24-CHAT: a new id each time a transcript file was saved ("Transcript saved", said once). */
     val saved: Long? = null,
-)
+    /** C4: the conversation's totals as the server reported them (cost, tokens); null parts = not reported. */
+    val serverCost: Double? = null,
+    val serverTokens: Long? = null,
+    /** The conversation that delegated this one (a sub-agent's chat); null for a top-level one. */
+    val parent: io.github.eslamasabry.oc.core.common.ids.ConversationRef? = null,
+    /** [parent]'s title as the server names it; null until read or untitled. */
+    val parentTitle: String? = null,
+) {
+    /** The Git chip shows for a Git project (or an old branch read while Git is not yet confirmed), never otherwise. */
+    val showsGit: Boolean get() = git == true || (git == null && branch != null)
+}
 
 /** What the ⋯ menu offers (Flutter `SessionMenuAction`, the native subset with a real path). */
 public enum class HeaderAction {
@@ -128,7 +140,23 @@ public sealed interface HeaderSheet {
     public data class ContinueOnComputer(val command: SessionResumeCommand) : HeaderSheet
 
     /** The link the app on another phone opens; null when an id is unsafe to put in a link. */
-    public data class ContinueOnPhone(val link: String?) : HeaderSheet
+    public data class ContinueOnPhone(val link: String?, val address: PhoneAddressOffer? = null) : HeaderSheet
+}
+
+/** C4: an accumulated cost and whether the server reported it (else it covers the loaded messages only). */
+public data class SessionCost(val amount: Double, val reportedByServer: Boolean) {
+    public companion object {
+        /** Flutter shows a server figure from half a cent; below that the row says nothing. */
+        public const val MIN_SHOWN: Double = 0.005
+
+        public fun of(serverCost: Double?, loadedCost: Double?): SessionCost? =
+            when {
+                serverCost != null && serverCost >= MIN_SHOWN -> SessionCost(serverCost, true)
+                serverCost == null && loadedCost != null && loadedCost >= MIN_SHOWN ->
+                    SessionCost(loadedCost, false)
+                else -> null
+            }
+    }
 }
 
 public data class DetailsUi(
@@ -142,6 +170,8 @@ public data class DetailsUi(
     val contextPercent: Int?,
     val contextLevel: ContextLevel?,
     val totalTokens: Long?,
+    /** C4: what the conversation cost: the server's figure, else the sum over the loaded replies. */
+    val cost: SessionCost? = null,
     /** Full server-reported folder, alongside the short project name. */
     val directory: String? = null,
 )
@@ -201,6 +231,9 @@ public interface ChatHeaderActions {
 
     public fun closeMenu()
 
+    /** Back to the conversation that delegated this one (pops when it is right below, never stacks it twice). */
+    public fun openParent() {}
+
     public fun choose(action: HeaderAction)
 
     /** Copy transcript, headed in the person's own language. */
@@ -235,6 +268,9 @@ public interface ChatHeaderActions {
     public fun copyResumeCommand() {}
 
     public fun copyPhoneLink() {}
+
+    /** Copy the portable link (the one with the server's address): it is built again, not reused. */
+    public fun copyPhoneAddressLink() {}
 }
 
 /** Optional handoff intents; implemented only by the production header with a concrete host. */

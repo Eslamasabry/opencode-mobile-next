@@ -4,6 +4,7 @@ import io.github.eslamasabry.oc.engine.runtime.storage.HostStorageAvailability
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.FeatureId
 import io.github.eslamasabry.oc.core.common.Outcome
+import io.github.eslamasabry.oc.core.common.RuntimeProblem
 import io.github.eslamasabry.oc.core.common.pace.Pacer
 import io.github.eslamasabry.oc.engine.runtime.budget.ProcessBudget
 import kotlin.time.Clock
@@ -55,6 +56,7 @@ public class ThisPhoneModel(
         val lifecycle: io.github.eslamasabry.oc.engine.runtime.lifecycle.LifecycleReport? = null,
         val storage: io.github.eslamasabry.oc.engine.runtime.lifecycle.AppStorageFacts? = null,
         val storageFailed: Boolean = false,
+        val measuringApp: Boolean = false,
         val phoneStorage: io.github.eslamasabry.oc.engine.runtime.storage.PhoneStorageSnapshot? =
             null,
         val measuringStorage: Boolean = false,
@@ -70,16 +72,16 @@ public class ThisPhoneModel(
     public val state: StateFlow<ThisPhoneUi> =
         combine(
                 source.facts,
+                source.heat,
                 local,
                 exits.notice,
                 phoneDetails?.state ?: flowOf(PhoneDetailsUi()),
-                ::build,
-            )
+            ) { facts, heat, l, notice, reading -> build(facts.copy(heat = heat), l, notice, reading) }
             .stateIn(
                 scope,
                 SharingStarted.Eagerly,
                 build(
-                    source.facts.value,
+                    source.facts.value.copy(heat = source.heat.value),
                     local.value,
                     exits.notice.value,
                     phoneDetails?.state?.value ?: PhoneDetailsUi(),
@@ -127,6 +129,7 @@ public class ThisPhoneModel(
             lifecycle = l.lifecycle,
             storage = l.storage,
             storageFailed = l.storageFailed,
+            measuringApp = l.measuringApp,
             answer = answer,
             serverRows = serverRows.toImmutableList(),
             version = version(facts),
@@ -192,13 +195,23 @@ public class ThisPhoneModel(
         details.singleOrNull()?.dismissRecovery()
     }
 
+    /**
+     * Measures the app's own storage. Every call really measures again (one at a time): the failure
+     * line gives way to "Measuring…" while it runs, and comes back only if this attempt fails too.
+     */
     override fun refreshStorage() {
         val owner = details.singleOrNull() ?: return
+        if (local.value.measuringApp) return
+        local.update { it.copy(measuringApp = true, storageFailed = false) }
         scope.launch {
-            when (val result = owner.measureStorage()) {
-                is Outcome.Ok ->
-                    local.update { it.copy(storage = result.value, storageFailed = false) }
-                is Outcome.Failed -> local.update { it.copy(storageFailed = true) }
+            try {
+                when (val result = owner.measureStorage()) {
+                    is Outcome.Ok ->
+                        local.update { it.copy(storage = result.value, storageFailed = false) }
+                    is Outcome.Failed -> local.update { it.copy(storageFailed = true) }
+                }
+            } finally {
+                local.update { it.copy(measuringApp = false) }
             }
         }
     }
@@ -246,8 +259,10 @@ public class ThisPhoneModel(
         exits.dismiss()
     }
 
+    /** The page's one measure action: the app's storage and the phone's free space, both again. */
     override fun measureStorage() {
-        readStorage(includeBuiltinHost = true)
+        refreshStorage()
+        readStorage(includeBuiltinHost = details.isEmpty())
     }
 
     private fun readStorage(includeBuiltinHost: Boolean) {
@@ -405,7 +420,14 @@ public class ThisPhoneModel(
             local.update {
                 it.copy(
                     working = null,
-                    notice = if (outcome is Outcome.Failed) ThisPhoneNotice.Failed(op) else null,
+                    notice =
+                        when {
+                            outcome !is Outcome.Failed -> null
+                            // Refused because work is running or not known idle: say so and the way forward.
+                            op == PhoneOp.Update && (outcome.failure as? Failure.Runtime)?.problem == RuntimeProblem.SlotBusy ->
+                                ThisPhoneNotice.UpdateBusy
+                            else -> ThisPhoneNotice.Failed(op)
+                        },
                 )
             }
             if (visible.value) phoneDetails?.refresh()

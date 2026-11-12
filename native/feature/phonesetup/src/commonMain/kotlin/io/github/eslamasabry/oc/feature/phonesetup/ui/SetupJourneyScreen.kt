@@ -73,6 +73,22 @@ import kotlin.math.roundToInt
 import kotlin.time.Duration.Companion.seconds
 import org.jetbrains.compose.resources.stringResource
 
+/** What the setup page draws under its sheets. */
+internal enum class JourneyBody { Nothing, Hero, Job }
+
+/**
+ * Add tools (from This phone, OpenCode already installed) opens its sheet over This phone's own name,
+ * like Flutter's sheet over this_phone_screen.dart: never over the first-run "Set up OpenCode" page,
+ * which is for a phone without it. A running add job still shows its progress.
+ */
+internal fun journeyBody(state: SetupJourneyUi): JourneyBody =
+    when {
+        state.adding ->
+            if (state.progress.state == SetupState.Running) JourneyBody.Job else JourneyBody.Nothing
+        state.customizing || state.progress.state == SetupState.Idle -> JourneyBody.Hero
+        else -> JourneyBody.Job
+    }
+
 /** One durable setup, with dependency-aware first-install and add-tools choices. */
 @Composable
 public fun SetupJourneyScreen(state: SetupJourneyUi, actions: SetupJourneyActions) {
@@ -107,8 +123,11 @@ public fun SetupJourneyScreen(state: SetupJourneyUi, actions: SetupJourneyAction
             // C12: the checking page says what it is doing instead of drawing nothing under the progress line.
             KitStateView(kind = KitStateKind.Loading, title = stringResource(Res.string.phoneSetupStartChecking))
         } else {
-            if (state.customizing || idle) StartHero(state, actions)
-            else Job(state, actions)
+            when (journeyBody(state)) {
+                JourneyBody.Nothing -> Unit
+                JourneyBody.Hero -> StartHero(state, actions)
+                JourneyBody.Job -> Job(state, actions)
+            }
         }
         KitSheet(
             visible = state.customizing,
@@ -174,6 +193,8 @@ public fun SetupJourneyScreen(state: SetupJourneyUi, actions: SetupJourneyAction
 /** The persisted job names its additions, in job order, even after the app is reopened. */
 @Composable
 private fun journeyTitle(state: SetupJourneyUi): String {
+    if (state.adding && state.progress.adding.isEmpty())
+        return stringResource(Res.string.settingsV3ThisPhone)
     if (state.progress.adding.isEmpty())
         return stringResource(Res.string.phoneSetupStartScreenTitle)
     // F: lib/builtin/setup/setup_engine/progress_helpers.dart:335-356
@@ -243,12 +264,18 @@ private fun StartHero(state: SetupJourneyUi, actions: SetupJourneyActions) {
         },
         content = {
             Column(verticalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
-                val minutes = setupPromiseMinutes(state.seconds) // NV: estimated seconds converted to whole minutes
-                val time = if (minutes == 1) stringResource(Res.string.phoneSetupStartStepsTime__eq1)
-                    else org.jetbrains.compose.resources.pluralStringResource(Res.plurals.phoneSetupStartStepsTime, minutes, minutes)
-                if (!blocked) KitText(stringResource(Res.string.phoneSetupStartSteps, time), role = TypeRole.Label)
+                // No minutes promise: the registry's sum ("about 4 min") ran past 9 minutes on a real phone, and
+                // the running page has its own honest "time left". The steps stay.
+                if (!blocked) KitText(stringResource(Res.string.phoneSetupStartStepsNoTime), role = TypeRole.Label)
                 includes?.let { KitText(it, role = TypeRole.Secondary, tone = TextTone.Secondary) }
                 if (check is SetupPreflightResult.MayBeSlow) KitText(stringResource(Res.string.phoneSetupPreflightMayBeSlow, Numbers.format(check.totalMemoryMb)), role = TypeRole.Secondary)
+                state.spaceTight?.let { (need, free) ->
+                    KitText(
+                        stringResource(Res.string.phoneSetupPreflightSpaceNumbers, journeySize(need), journeySize(free)),
+                        role = TypeRole.Secondary,
+                        tone = TextTone.Secondary,
+                    )
+                }
                 if (state.storageUnopened) KitErrorNotice(stringResource(Res.string.r40SetupStorageUnopened))
                 if (state.failure != null) KitErrorNotice(stringResource(Res.string.r40SetupCouldNotCheck),
                     retry = KitLineAction(stringResource(Res.string.r40SetupRetry), actions::retry))
@@ -413,17 +440,9 @@ private fun Choices(state: SetupJourneyUi, actions: SetupJourneyActions) {
             )
         blocked -> Preflight(state, actions)
         else -> {
-            val minutes = setupPromiseMinutes(state.seconds)
-            val duration =
-                if (minutes == 1) stringResource(Res.string.phoneSetupStartAboutMinutes__eq1)
-                else
-                    org.jetbrains.compose.resources.pluralStringResource(
-                        Res.plurals.phoneSetupStartAboutMinutes,
-                        minutes,
-                        minutes,
-                    )
+            // The size only: the minutes estimate was not honest (see StartHero).
             KitText(
-                stringResource(Res.string.phoneSetupStartTotals, duration, journeySize(state.bytes)),
+                stringResource(Res.string.teamDiscoverDownloadTitle, journeySize(state.bytes)),
                 totalsModifier.padding(vertical = Space.S1.dp),
                 role = TypeRole.Secondary,
                 tone = TextTone.Secondary,
@@ -521,7 +540,10 @@ private fun Job(state: SetupJourneyUi, actions: SetupJourneyActions) {
         progress.components.ifEmpty {
             state.install.map { ComponentProgress(it.id, ComponentState.Pending) }
         }
-    val memory = remember(progress.jobId ?: rows.joinToString { it.id }) { JourneyProgressMemory() }
+    val memory =
+        remember(progress.jobId ?: rows.joinToString { it.id }) {
+            progress.jobId?.let { journeyMemory(it) } ?: JourneyProgressMemory()
+        }
     fun finished(row: ComponentProgress) =
         row.state == ComponentState.Done || row.state == ComponentState.Skipped
     val done = rows.count(::finished)
@@ -961,6 +983,20 @@ internal fun nodeCannotRun(progress: SetupProgress): Boolean =
         (progress.error == SetupError.NodeCannotRun ||
             progress.components.any { it.error == SetupError.NodeCannotRun })
 
+private const val OVERDUE_FLOOR_SECONDS = 180
+
+/**
+ * The memories outlive the screen: leaving the set-up page and coming back must not restart the "time left" at a
+ * larger number. Few jobs ever run, so the map is capped.
+ */
+private val journeyMemories = LinkedHashMap<String, JourneyProgressMemory>()
+
+internal fun journeyMemory(jobId: String): JourneyProgressMemory =
+    journeyMemories.getOrPut(jobId) {
+        if (journeyMemories.size >= 4) journeyMemories.remove(journeyMemories.keys.first())
+        JourneyProgressMemory()
+    }
+
 /** UI memory from Flutter's _track / _measuredOf: a new job resets it; a new stage resets only its arc. */
 internal class JourneyProgressMemory {
     private var measuredKey: Pair<String, String?>? = null
@@ -978,13 +1014,36 @@ internal class JourneyProgressMemory {
 
     fun eta(progress: SetupProgress, registry: List<SetupComponent>): Int? {
         if (progress.state != SetupState.Running) return null
-        progress.etaSeconds?.let { raw ->
-            val pending = progress.components.filter { it.state == ComponentState.Pending }.sumOf { row ->
-                registry.firstOrNull { it.id == row.id }?.estimatedSeconds ?: 0
-            }
-            val estimate = maxOf(raw, pending)
-            remaining = remaining?.let { minOf(it, estimate) } ?: estimate
+        // A step far past its own estimate has no honest "minutes left": show none (the step clock and the
+        // still-working line remain) instead of a number that was wrong and then grows.
+        val running = progress.components.firstOrNull { it.state == ComponentState.Running }
+        val promised = running?.let { row -> registry.firstOrNull { it.id == row.id }?.estimatedSeconds }
+        val onStep = progress.stepElapsedSeconds
+        if (promised != null && onStep != null && onStep > maxOf(promised * 2, OVERDUE_FLOOR_SECONDS)) return null
+        // The pace-scaled guess only says "enough has happened to guess" (it is null for the first seconds). The
+        // number itself is the steps' own sizes: the running step's part not yet done plus every pending step, so it
+        // drops as seconds pass and as steps complete, and a step with no size makes it unknown rather than a guess.
+        if (progress.etaSeconds == null && remaining == null) return null
+        if (progress.components.isEmpty()) {
+            // No step is listed: the engine's own figure is all there is, and it still never rises.
+            progress.etaSeconds?.let { remaining = remaining?.let { r -> minOf(r, it) } ?: it }
+            return remaining
         }
+        val sizes = progress.components.filter { it.state == ComponentState.Pending }.map { row ->
+            registry.firstOrNull { it.id == row.id }?.estimatedSeconds?.takeIf { it > 0 }
+        }
+        if (sizes.any { it == null }) return remaining
+        val ahead = sizes.sumOf { it ?: 0 }
+        val left =
+            when {
+                running == null -> 0
+                promised == null || promised <= 0 -> return remaining
+                running.fraction != null -> (promised * (1.0 - running.fraction!!.coerceIn(0.0, 1.0))).toInt()
+                onStep != null -> maxOf(0, promised - onStep)
+                else -> promised
+            }
+        val estimate = ahead + left
+        remaining = remaining?.let { minOf(it, estimate) } ?: estimate
         return remaining
     }
 }

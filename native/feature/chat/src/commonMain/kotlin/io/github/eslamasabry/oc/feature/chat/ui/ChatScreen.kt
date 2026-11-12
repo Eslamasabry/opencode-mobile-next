@@ -2,9 +2,14 @@ package io.github.eslamasabry.oc.feature.chat.ui
 
 import androidx.compose.runtime.saveable.rememberSaveable
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
-import androidx.compose.foundation.focusGroup
-import androidx.compose.ui.focus.FocusDirection
-import androidx.compose.ui.focus.focusProperties
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.isAltPressed
+import androidx.compose.ui.input.key.isCtrlPressed
+import androidx.compose.ui.input.key.isMetaPressed
+import androidx.compose.ui.input.key.isShiftPressed
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -16,6 +21,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
@@ -49,6 +55,7 @@ import io.github.eslamasabry.oc.feature.chat.header.ui.ChatHeaderSlot
 import io.github.eslamasabry.oc.feature.chat.header.ui.ChatHeaderTopBar
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatActions
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatConfirm
+import io.github.eslamasabry.oc.feature.chat.presentation.ChatPlace
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatPhase
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatStatusKind
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatStatusUi
@@ -91,6 +98,7 @@ import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
 import io.github.eslamasabry.oc.ui.kit.modal.KitMenuItem
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
+import io.github.eslamasabry.oc.ui.kit.modal.LocalKitSheetHost
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
 import io.github.eslamasabry.oc.ui.kit.status.KitStatus
 import io.github.eslamasabry.oc.ui.kit.status.KitStatusKind
@@ -127,7 +135,7 @@ import io.github.eslamasabry.oc.ui.words.res.chatErrorModelNotFound
 import io.github.eslamasabry.oc.ui.words.res.chatErrorOutputLength
 import io.github.eslamasabry.oc.ui.words.res.chatErrorProviderAuth
 import io.github.eslamasabry.oc.ui.words.res.chatErrorUnknown
-import io.github.eslamasabry.oc.ui.words.res.chatFeelDone
+import io.github.eslamasabry.oc.ui.words.res.kitSheetClose
 import io.github.eslamasabry.oc.ui.words.res.chatFeelLinkRefused
 import io.github.eslamasabry.oc.ui.words.res.chatFeelOpenLinkAction
 import io.github.eslamasabry.oc.ui.words.res.chatFeelOpenLinkBody
@@ -195,7 +203,11 @@ import io.github.eslamasabry.oc.ui.words.res.commonRetry
 import io.github.eslamasabry.oc.ui.words.res.chatStopAfterStepPending
 import io.github.eslamasabry.oc.ui.words.res.chatStopAfterStepPrompt
 import io.github.eslamasabry.oc.ui.words.res.connectionReconnectingQuiet
+import io.github.eslamasabry.oc.ui.words.res.connectionAgentStartFailed
+import io.github.eslamasabry.oc.ui.words.res.connectionAgentStarting
+import io.github.eslamasabry.oc.ui.words.res.connectionRestartAgent
 import io.github.eslamasabry.oc.ui.words.res.connectionRestartPhoneServer
+import io.github.eslamasabry.oc.ui.words.res.workServerNotAnswering
 import io.github.eslamasabry.oc.ui.words.res.connectionTryNow
 import io.github.eslamasabry.oc.ui.words.res.chatUiDelegatedSession
 import io.github.eslamasabry.oc.ui.words.res.chatUiOpenParentSession
@@ -309,6 +321,12 @@ public fun ChatScreen(
     monitoredForm: (@Composable () -> Unit)? = null,
     transcriptDisplay: io.github.eslamasabry.oc.feature.chat.presentation.TranscriptDisplayChoices =
         io.github.eslamasabry.oc.feature.chat.presentation.TranscriptDisplayChoices(),
+    /** C7: saves an inline file the agent produced (null where the device cannot). */
+    toolFileSaver: io.github.eslamasabry.oc.feature.chat.world.ToolFileOutputs? = null,
+    /** C7: puts an inline file the agent produced on the next prompt. */
+    onAttachToolFile: ((io.github.eslamasabry.oc.engine.transcript.turnfacts.ToolArtifact) -> Unit)? = null,
+    /** C10: flips message timestamps (the Settings choice); null where it cannot be saved. */
+    onToggleTimestamps: (() -> Unit)? = null,
     /** The models the error card may suggest ("Use {model} and resend"). */
     modelChoices: List<io.github.eslamasabry.oc.feature.chat.world.ComposerModel> = emptyList(),
     /** Background commands, Stop command and Run shell command (null = not offered here). */
@@ -327,6 +345,8 @@ public fun ChatScreen(
     canGoBack: Boolean = true,
     /** S28 story 8: the conversation's handoff line, drawn at the top of the transcript; null = none. */
     handoffLine: (@Composable () -> Unit)? = null,
+    /** The edge dock over the transcript, under the chat's sheets and viewers; null = none (see [ChatEdgeDock]). */
+    edgeDock: ChatEdgeDock? = null,
 ) {
     var commandsOpen by remember(state.ref) { mutableStateOf(false) }
     val slashCommands =
@@ -344,6 +364,7 @@ public fun ChatScreen(
         }
     var commandInsertId by remember(state.ref) { mutableStateOf(0L) }
     var modelPicker by remember(state.ref) { mutableStateOf<Long?>(null) }
+    var modelCycle by remember(state.ref) { mutableStateOf<io.github.eslamasabry.oc.feature.chat.composer.ModelCycleRequest?>(null) }
     var editorRequest by remember(state.ref) { mutableStateOf<Long?>(null) }
     var sentPicture by remember(state.ref) { mutableStateOf<PictureRequest?>(null) }
     var pictureSeq by remember(state.ref) { mutableStateOf(0L) }
@@ -358,6 +379,9 @@ public fun ChatScreen(
     val requestState by rememberUpdatedState(requests)
     val formPending by rememberUpdatedState(formWaiting)
     val headerState by rememberUpdatedState(header)
+    var toolFile by remember {
+        mutableStateOf<io.github.eslamasabry.oc.engine.transcript.turnfacts.ToolArtifact?>(null)
+    }
     val factsState by rememberUpdatedState(facts)
     val words = rememberChatWords()
     val stopNote = stringResource(Res.string.chatStopAfterStepPrompt)
@@ -408,10 +432,11 @@ public fun ChatScreen(
             )
         }
     val list = rememberTranscriptListState()
+    var dockRoomPx by remember { mutableIntStateOf(0) }
     val reveal = rememberRevealRegistry()
     val motion = kitChatMotion()
     val latest by rememberUpdatedState(state)
-    val itemsBelowRows = (if (state.live != null) 1 else 0) + state.pending.size
+    val itemsBelowRows = (if (state.live != null) 1 else 0) + state.pending.size + (if (dockRoomPx > 0) 1 else 0)
 
     // Read acknowledgement follows the visible list (plan 09 §6.7).
     LaunchedEffect(list) {
@@ -521,6 +546,8 @@ public fun ChatScreen(
                 pictureDone = { id -> if (sentPicture?.id == id) sentPicture = null },
                 editorDone = { id -> if (editorRequest == id) editorRequest = null },
                 modelPickerDone = { id -> if (modelPicker == id) modelPicker = null },
+                modelCycleRequest = { modelCycle },
+                modelCycleDone = { id -> if (modelCycle?.id == id) modelCycle = null },
             )
         }
 
@@ -552,6 +579,8 @@ public fun ChatScreen(
             },
             header = header,
             onContext = facts.context?.let { { contextOpen = true } },
+            timestamps =
+                onToggleTimestamps?.let { toggle -> transcriptDisplay.timestampsVisible to toggle },
             onEditor =
                 if (composerHost.hasPromptEditor) {
                     { editorRequest = (editorRequest ?: 0L) + 1L }
@@ -578,17 +607,54 @@ public fun ChatScreen(
     // reuses this ancestor rather than creating a host scoped only to its own content.
     KitPromptLiftHost {
         KitSheetHost(modifier.fillMaxSize()) {
-            // N-55: the shell steers a stray hardware key into the page (FocusDirection.Enter);
-            // here it lands in the message field, never on the first button.
+            // w4-focus (sweep P79/P80): a sheet or dialog over the conversation owns typing; the kit's sheet host takes
+            // the page's focus and hands it back (KitSheetHost); when that finds nothing (the box moved while covered),
+            // the box takes it back only if nothing on the page has it. Find's field takes focus itself; closing Find
+            // gives the message box its focus back if it had it.
+            val sheets = LocalKitSheetHost.current
+            val covered = sheets != null && (sheets.isShowing || sheets.isDialogShowing)
+            val coveredNow by rememberUpdatedState(covered)
+            ComposerYields(state.find != null && state.phase == ChatPhase.Live, chrome.typing) { !coveredNow }
+            val pageFocus = remember { ChatPageFocus() }
+            ComposerAfterCover(covered, chrome.typing, pageFocus) { latest.find == null }
+            // N-55: the shell steers a stray hardware key into the page (FocusDirection.Enter); it lands on the
+            // conversation itself, which hands it to the message field, never to the first button
+            // ([chatTypingLanding]: a request for a field inside, as Find's, is never redirected).
             Box(
                 Modifier.fillMaxSize()
-                    .focusProperties {
-                        onEnter = {
-                            if (requestedFocusDirection == FocusDirection.Enter && chrome.typing.focus())
-                                cancelFocusChange()
+                    .onPreviewKeyEvent { event ->
+                        if (event.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
+                        val key =
+                            ChatKeys.of(event.key, event.isCtrlPressed, event.isMetaPressed, event.isAltPressed, event.isShiftPressed)
+                                ?: return@onPreviewKeyEvent false
+                        val scene =
+                            ChatKeyScene(
+                                demo = demoMode,
+                                overlayOpen =
+                                    commandsOpen || workOpen || contextOpen || tasksOpen || connectionDetails || barMenuOpen,
+                                findOpen = latest.find != null,
+                                terminal = latest.capabilities.terminal,
+                                canBackground = latest.canBackground,
+                            )
+                        if (!ChatKeys.available(key, scene)) return@onPreviewKeyEvent false
+                        when (key) {
+                            ChatKey.Launcher -> {
+                                onLoadServerCommands()
+                                commandsOpen = true
+                            }
+                            ChatKey.Find -> actions.find(latest.find?.query ?: "")
+                            ChatKey.FindNext -> actions.findNext()
+                            ChatKey.FindPrevious -> actions.findPrevious()
+                            ChatKey.Terminal -> actions.openPlace(ChatPlace.Terminal)
+                            ChatKey.Background -> actions.backgroundWork()
+                            ChatKey.ModelNext ->
+                                modelCycle = io.github.eslamasabry.oc.feature.chat.composer.ModelCycleRequest((modelCycle?.id ?: 0L) + 1L, false)
+                            ChatKey.ModelPrevious ->
+                                modelCycle = io.github.eslamasabry.oc.feature.chat.composer.ModelCycleRequest((modelCycle?.id ?: 0L) + 1L, true)
                         }
+                        true
                     }
-                    .focusGroup()
+                    .chatTypingLanding(chrome.typing, pageFocus) { coveredNow }
             ) {
                 KitScreen(
                     modifier = Modifier.fillMaxSize(),
@@ -928,10 +994,13 @@ public fun ChatScreen(
                                             onCheckReceipt = actions::checkReceipt,
                                             onReviewPending = onReviewPending,
                                             modifier = Modifier.fillMaxSize().chatPane(),
+                                            extraBottomPx = dockRoomPx,
                                             facts = facts,
                                             display = transcriptDisplay,
                                             onOpenSession = onOpenSession,
                                             onStopLive = actions::stop,
+                                            onUndoStopAfterStep = actions::undoStopAfterStep,
+                                            onStopForSteer = actions::stopForSteer,
                                             starAsk = state.starAsk,
                                             onStarTap = actions::starTapped,
                                             onStarDismiss = actions::starDismissed,
@@ -961,7 +1030,11 @@ public fun ChatScreen(
                                                             workModel::openShellDialog
                                                         else null,
                                                 ),
-                                            onOpenFile = { file -> openArtifact(actions, file) },
+                                            onOpenFile = { file ->
+                                                if (io.github.eslamasabry.oc.feature.chat.world.isInlineFile(file.url) && file.path == null)
+                                                    toolFile = file
+                                                else openArtifact(actions, file)
+                                            },
                                             onAllFiles = actions::openFiles,
                                             onSendAgain = actions::retryLastPrompt,
                                             reasoningExpanded = state.reasoningExpanded,
@@ -985,6 +1058,14 @@ public fun ChatScreen(
                                 )
                             }
                     }
+                    // The edge dock: over the transcript, clear of the header and the composer. Beside the
+                    // transcript's recording, not in it: under Glass it bends that recording (never itself).
+                    if (state.phase == ChatPhase.Live)
+                        androidx.compose.runtime.CompositionLocalProvider(
+                            io.github.eslamasabry.oc.ui.kit.dock.LocalKitDockGlass provides frost
+                        ) {
+                            edgeDock?.Content(kitScreenChromePadding(), onBottomRoom = { dockRoomPx = it })
+                        }
                 }
 
                 // The menu opens over the composer's end, where the action that opened it is under
@@ -997,7 +1078,16 @@ public fun ChatScreen(
                     reads = replyReader != null,
                     facts = facts,
                 )
-                ChatContextSheet(facts.context, contextOpen) { contextOpen = false }
+                ToolFileSheet(toolFile, toolFileSaver, onAttachToolFile) { toolFile = null }
+                ChatContextSheet(
+                    facts.context,
+                    contextOpen,
+                    facts.context?.let {
+                        ContextTotals(header?.state?.serverCost, header?.state?.serverTokens, it.sheet.sessionCost)
+                    },
+                ) {
+                    contextOpen = false
+                }
                 ChatTasksSheet(
                     facts.tasks,
                     tasksOpen,
@@ -1135,7 +1225,7 @@ private fun SelectTextSheet(select: SelectTextUi?, actions: ChatActions) {
         visible = select != null,
         onDismissRequest = actions::closeSelection,
         title = stringResource(Res.string.chatFeelSelectText),
-        closeLabel = stringResource(Res.string.chatFeelDone),
+        closeLabel = stringResource(Res.string.kitSheetClose),
     ) {
         if (select != null) {
             KitMarkdownSelection(Modifier.fillMaxWidth().testTag("chat-select-text")) {
@@ -1155,7 +1245,7 @@ private fun CodeReaderSheet(code: KitMdBlock.Code?, actions: ChatActions, onClos
         visible = code != null,
         onDismissRequest = onClose,
         title = stringResource(Res.string.markdownReaderTitle),
-        closeLabel = stringResource(Res.string.chatFeelDone),
+        closeLabel = stringResource(Res.string.kitSheetClose),
         height = io.github.eslamasabry.oc.ui.kit.modal.KitSheetHeight.Full,
     ) {
         if (code != null) {
@@ -1181,7 +1271,7 @@ private fun PictureSheet(picture: PictureUi?, actions: ChatActions) {
         visible = picture != null,
         onDismissRequest = actions::closePicture,
         title = picture?.name ?: stringResource(Res.string.chatFeelPicture),
-        closeLabel = stringResource(Res.string.chatFeelDone),
+        closeLabel = stringResource(Res.string.kitSheetClose),
         height = io.github.eslamasabry.oc.ui.kit.modal.KitSheetHeight.Full,
     ) {
         if (picture != null) {
@@ -1345,7 +1435,27 @@ private fun connectionLine(
             more = listOf(details, changeServer),
         )
     }
+    // The phone agents' helper: starting says so; a failed start says why in plain words with the action again.
+    if (line.startingAgent)
+        return KitStatus(
+            KitStatusKind.Connection,
+            stringResource(Res.string.connectionAgentStarting),
+            id = "chat-status-${line.id}",
+            more = listOf(details, changeServer),
+        )
+    val restartAgent =
+        if (line.canRestartAgent)
+            KitLineAction(
+                stringResource(Res.string.connectionRestartAgent),
+                actions::restartAgent,
+                testTag = "chat-connection-restart-agent",
+            )
+        else null
     val message =
+        if (line.agentFailed) stringResource(Res.string.connectionAgentStartFailed)
+        else if (line.canRestartAgent && offline)
+            stringResource(Res.string.workServerNotAnswering, "Claude Code")
+        else
         stringResource(
             when {
                 !offline && seconds != null -> Res.string.connectionReconnectingQuiet
@@ -1355,13 +1465,14 @@ private fun connectionLine(
             }
         )
     val restart =
-        if (line.canRestart)
-            KitLineAction(
-                stringResource(Res.string.connectionRestartPhoneServer),
-                actions::restartPhoneServer,
-                testTag = "chat-connection-restart",
-            )
-        else null
+        restartAgent
+            ?: if (line.canRestart)
+                KitLineAction(
+                    stringResource(Res.string.connectionRestartPhoneServer),
+                    actions::restartPhoneServer,
+                    testTag = "chat-connection-restart",
+                )
+            else null
     val id = "chat-status-${line.id}"
     if (seconds != null)
         return KitStatus(
@@ -1381,7 +1492,7 @@ private fun connectionLine(
         )
     // Already reconnecting with no schedule: waiting is the way out, so nothing is offered.
     if (!offline)
-        return KitStatus(KitStatusKind.Connection, message, id = id, more = listOf(details, changeServer))
+        return KitStatus(KitStatusKind.Connection, message, id = id, more = listOfNotNull(restartAgent, details, changeServer))
     val retry =
         KitLineAction(
             stringResource(Res.string.commonRetry),
@@ -1725,6 +1836,7 @@ internal fun canOpenArtifact(
     file: io.github.eslamasabry.oc.engine.transcript.turnfacts.ToolArtifact
 ): Boolean =
     file.path != null ||
+        io.github.eslamasabry.oc.feature.chat.world.isInlineFile(file.url) ||
         file.url?.let { it.startsWith("https://") || it.startsWith("http://") } == true
 
 /** The words the transcript shows that are not server text, from `:ui:words`. */

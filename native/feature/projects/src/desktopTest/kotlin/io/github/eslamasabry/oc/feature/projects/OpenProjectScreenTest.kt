@@ -195,7 +195,7 @@ class OpenProjectScreenTest {
     @Test
     fun `B-182 the projects page marks Git repositories and OpenCode projects and keeps the other ways in view`() =
         shoot("open_project_projects", projectsPage) {
-            onNodeWithText("Projects on This phone").assertExists()
+            onNodeWithText("Projects on this phone").assertExists() // c1bf862823: the phone's own wording
             onNodeWithText("Git repository · /root/projects/landing-page").assertExists()
             onNodeWithText("OpenCode project · /root/projects/demo").assertExists()
             onNodeWithText("New folder").assertExists()

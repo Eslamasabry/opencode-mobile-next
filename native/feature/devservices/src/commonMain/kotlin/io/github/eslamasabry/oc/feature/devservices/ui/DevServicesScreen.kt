@@ -67,6 +67,7 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitWindow
 import io.github.eslamasabry.oc.ui.kitchat.LocalKitRedactor
 import io.github.eslamasabry.oc.ui.kitchat.header.KitClipboardEffect
 import io.github.eslamasabry.oc.ui.kitchat.header.rememberKitMask
+import io.github.eslamasabry.oc.ui.routes.PreviewRoute
 import io.github.eslamasabry.oc.ui.words.res.*
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
@@ -258,6 +259,19 @@ public fun DevServicesScreen(state: DevServicesUi, actions: DevServicesActions) 
                             icon = KitIcons.restart,
                         )
                     },
+            tertiary =
+                if (state.log?.canReport == true)
+                    listOf(
+                        KitAction(
+                            stringResource(Res.string.failedJobReport),
+                            {
+                                actions.reportFailure()
+                                actions.closeLogs()
+                            },
+                            icon = KitIcons.bug,
+                        )
+                    )
+                else emptyList(),
             closeLabel = stringResource(Res.string.kitSheetClose),
         ) {
             state.log?.let { log ->
@@ -395,6 +409,11 @@ private fun ServiceBlock(
         else KitEnabled.Enabled
     val mask = rememberKitMask()
     val logsAvailable = state.supported && row.status != DevelopmentServiceStatus.NotStarted
+    // G4: a running service is previewed on a port its output printed, else the port of its saved address.
+    val previewPorts =
+        if (row.status != DevelopmentServiceStatus.Running) emptyList()
+        else
+            row.ports.toList().ifEmpty { listOfNotNull(PreviewRoute.Page.claim(row.url, null)?.port) }
     val menu =
         listOfNotNull(
             if (row.canStart)
@@ -429,6 +448,7 @@ private fun ServiceBlock(
                     enabled = hold,
                 )
             else null,
+            *previewMenu(previewPorts, actions),
             if (row.url.isNotBlank())
                 KitMenuItem(
                     stringResource(Res.string.servicesVisit),
@@ -494,6 +514,14 @@ private fun ServiceBlock(
             } else null,
         trailing = {
             Row {
+                previewPorts.firstOrNull()?.let { port ->
+                    KitIconButton(
+                        KitIcons.browser,
+                        stringResource(Res.string.servicesOpenPreviewNamed, row.name),
+                        { actions.preview(port) },
+                        Modifier.testTag("development-service-preview-$port"),
+                    )
+                }
                 if (row.canStop)
                     KitIconButton(
                         KitIcons.stop,
@@ -519,6 +547,23 @@ private fun ServiceBlock(
         },
     )
 }
+
+/** One menu item per port (F `_foundMenu`): "Open preview" for one port, "Preview port N" for several. */
+@Composable
+private fun previewMenu(
+    ports: List<Int>,
+    actions: DevServicesActions,
+): Array<KitMenuItem> =
+    ports
+        .map { port ->
+            KitMenuItem(
+                if (ports.size == 1) stringResource(Res.string.servicesOpenPreview)
+                else stringResource(Res.string.servicesPreviewPort, port.toString()),
+                { actions.preview(port) },
+                KitIcons.browser,
+            )
+        }
+        .toTypedArray()
 
 @Composable
 private fun Found(state: DevServicesUi, actions: DevServicesActions, copy: (String) -> Unit) {
@@ -568,6 +613,7 @@ private fun FoundRow(
             )
     val menu =
         listOfNotNull(
+            *previewMenu(row.ports, actions),
             if (row.hasLogs)
                 KitMenuItem(
                     stringResource(Res.string.servicesLogs),
@@ -618,6 +664,14 @@ private fun FoundRow(
             } else null,
         trailing = {
             Row {
+                row.ports.firstOrNull()?.let { port ->
+                    KitIconButton(
+                        KitIcons.browser,
+                        stringResource(Res.string.servicesOpenPreviewNamed, mask(row.name)),
+                        { actions.preview(port) },
+                        Modifier.testTag("development-found-preview-button-$port"),
+                    )
+                }
                 if (row.canStop)
                     KitIconButton(
                         KitIcons.stop,

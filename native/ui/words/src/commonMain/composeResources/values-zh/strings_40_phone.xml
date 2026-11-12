@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="r40PhoneConnect">使用这部手机的服务器</string>
+    <string name="r40PhoneConnectFailed">无法连接到这部手机的服务器。请重试。</string>
+    <string name="r40PhoneMemory">已用内存 %1$s</string>
+    <string name="r40PhoneHistoryMoving">正在迁入你之前的对话…</string>
+    <string name="r40PhoneHistoryCount">正在迁入你之前的对话（%1$s / %2$s）…</string>
+    <string name="r40PhoneHistoryFailed">无法迁入之前的对话。你的原始数据仍完好保存在这部手机上。</string>
+    <string name="r40PhoneReplySpeed">上次回复速度</string>
+    <string name="r40PhoneReplyNoWords">%1$s 内完成，没有文字</string>
+    <string name="r40PhoneReplyLast">首字用时 %1$s · 完成用时 %2$s</string>
+    <string name="r40PhoneInstalled">已安装在这部手机上</string>
+    <string name="r40PhoneChecking">正在检查…</string>
+    <string name="r40PhoneInstalledMark">已安装</string>
+    <string name="r40PhoneInventoryFailed">无法检查已安装的内容。已保留之前的列表。请重试。</string>
+    <string name="r40PhoneLinuxMode">Linux 模式</string>
+    <string name="r40PhoneLinuxFast">快速（seccomp）</string>
+    <string name="r40PhoneLinuxSlow">较慢（ptrace）</string>
+    <string name="r40PhoneUnknown">未上报</string>
+    <string name="r40PhoneAwake">保持手机唤醒</string>
+    <string name="r40PhoneAwakeNow">现正为工作保持唤醒</string>
+    <string name="r40PhoneAwakeWhenWorking">仅在工作需要时</string>
+    <string name="r40PhoneFirstWords">等待首字</string>
+    <string name="r40PhoneFirstSplit">应用内 %1$s · 服务器上 %2$s</string>
+    <string name="r40PhoneRefresh">刷新手机详情</string>
+    <string name="r40PhoneModel">上次回复所用的模型</string>
+    <string name="r40PhoneRuntimeDetails">运行环境详情</string>
+    <string name="r40PhoneHistoryDetails">对话导入详情</string>
+    <string name="r40PhoneLogFailed">无法读取服务器日志。请重试。</string>
+    <string name="r40PhoneLogEmpty">服务器还没有写入日志。</string>
+    <string name="r40PhoneLog">OpenCode 服务器日志</string>
+    <string name="r40PhoneSeconds">%1$s 秒</string>
+</resources>

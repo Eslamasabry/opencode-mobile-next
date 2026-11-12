@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="dockLabel">Percakapan yang berjalan</string>
+    <string name="dockWorking">Bekerja</string>
+    <string name="dockWorkingTasks">Bekerja · %1$s dari %2$s</string>
+    <string name="dockThinking">Berpikir</string>
+    <string name="dockNeedsYou">Butuh Anda</string>
+    <string name="dockFinished">Selesai</string>
+    <string name="dockFailed">Gagal</string>
+    <string name="dockChildNeedsYou">%1$s membutuhkan Anda</string>
+    <string name="dockChildFailed">%1$s gagal</string>
+    <plurals name="dockSubagents">
+        <item quantity="other">%1$s subagen</item>
+    </plurals>
+    <string name="dockOnServer">di %1$s</string>
+    <string name="dockStop">Hentikan</string>
+    <string name="dockRemove">Hapus</string>
+    <string name="dockOpen">Buka</string>
+    <string name="dockPin">Sematkan</string>
+    <string name="dockUnpin">Lepas sematan</string>
+    <string name="dockRestore">Tampilkan lagi</string>
+    <string name="dockNickname">Nama di dok</string>
+    <plurals name="dockHidden">
+        <item quantity="other">%1$s disembunyikan</item>
+    </plurals>
+    <string name="dockMoveDock">Pindahkan dok</string>
+    <string name="dockShowDock">Tampilkan dok</string>
+    <string name="dockActionOn">%1$s %2$s</string>
+    <string name="dockRemoved">%1$s keluar dari dok</string>
+    <string name="dockStaysWhileOpen">%1$s sedang terbuka, jadi tetap ada</string>
+    <string name="dockStopFailed">Tidak dapat menghentikan %1$s</string>
+    <string name="dockAnswerFailed">Tidak dapat menjawab %1$s</string>
+    <string name="dockSettingTitle">Dok tepi</string>
+    <string name="dockSettingBody">Percakapan yang berjalan di tepi layar. Seret bagian atasnya untuk memindahkannya ke sisi lain.</string>
+</resources>

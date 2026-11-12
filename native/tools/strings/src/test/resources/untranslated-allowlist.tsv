@@ -78,6 +78,7 @@ localTerminalShellName
 m40PlansDurationHoursMinutes
 m40PlansDurationMinutes
 m40PlansPlan
+m40UsageReadCommand
 managedWorkspacesBranchLabel
 nativeSearchAliasesProjectChanges
 nativeSearchHealthBranch
@@ -201,3 +202,9 @@ widget_label_status
 widget_status_title
 widget_v2_offline_plain
 widget_v2_span_min
+linuxVitalsLinuxCpu
+reachSsh2
+reachTailscale2
+setupNativeToolHelp
+stateDemoAfter
+stateDemoBefore

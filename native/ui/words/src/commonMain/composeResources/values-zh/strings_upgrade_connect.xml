@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="upgradeConnectScanTitle">扫描你电脑上的二维码</string>
+    <string name="upgradeConnectScanBody">在你的电脑上运行下面的命令。它会显示一个二维码。扫描后就连接好了。</string>
+    <string name="upgradeConnectPasteBody">在你的电脑上运行下面的命令，然后粘贴它打印出的代码。</string>
+    <string name="upgradeConnectCommandTitle">在你的电脑上运行这个</string>
+    <string name="upgradeConnectOtherWays">其他连接方式</string>
+    <string name="upgradeConnectTailscaleBody">通过你的私人网络连接你的电脑。</string>
+    <string name="upgradeConnectManualBody">先输入地址，再输入密码。</string>
+    <string name="upgradeConnectNameLine">将保存为 %1$s。你可以在下方重命名。</string>
+    <string name="upgradeConnectNameFallback">我的电脑</string>
+    <string name="upgradeReadyTitle">已连接到 %1$s</string>
+    <string name="upgradeReadyVersion">版本 %1$s</string>
+    <string name="upgradeReadyStart">开始对话</string>
+</resources>

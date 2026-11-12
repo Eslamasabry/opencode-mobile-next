@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="staleFailureTitle">报告此故障？</string>
+    <string name="staleFailureBody">这发生在 %1$s。版本 %2$s 可能已经修复了它。</string>
+    <string name="staleFailureUpdateFirst">先更新</string>
+    <string name="staleFailureReportAnyway">仍然报告</string>
+</resources>

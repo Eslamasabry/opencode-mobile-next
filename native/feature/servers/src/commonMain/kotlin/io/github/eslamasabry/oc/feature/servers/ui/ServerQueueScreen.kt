@@ -151,6 +151,7 @@ public fun ServerQueueScreen(state: ServerQueueUi, actions: ServerQueueActions) 
                             KitStateView(
                                 KitStateKind.Empty,
                                 stringResource(Res.string.queuedMoveNoneLeft, plan.sourceName),
+                                size = KitStateSize.Inline,
                             )
                         },
                         onChange = { next ->

@@ -41,6 +41,8 @@ public fun KitQuestionCard(
     inPlace: Boolean,
     modifier: Modifier = Modifier,
     other: (@Composable () -> Unit)? = null,
+    /** C1: the quiet way out: the agent carries on without an answer (the caller confirms first). */
+    dismiss: io.github.eslamasabry.oc.ui.kit.KitAction? = null,
 ) {
     val shown = if (choices.size > MAX_CHOICES) choices.take(MAX_CHOICES - 1) else choices
     KitRequestFrame(
@@ -61,6 +63,7 @@ public fun KitQuestionCard(
                     )
                 }
             }
+            dismiss?.let { KitButton(it.label, it.onClick ?: {}, role = KitButtonRole.Tertiary) }
         },
     ) {
         if (title.isNotBlank()) {

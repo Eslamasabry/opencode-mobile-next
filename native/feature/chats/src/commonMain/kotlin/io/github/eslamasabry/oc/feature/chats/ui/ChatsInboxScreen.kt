@@ -118,7 +118,16 @@ internal fun ChatsInboxScreen(state: ChatsUi, actions: ChatsActions) {
                                 project = row.project,
                                 time = row.updatedAtMs?.takeIf { state.nowMs > 0 }?.let { kitRelativeAge(it, state.nowMs) }
                                     ?: row.ago?.let { agoText(it) },
-                                state = KitRowState(stringResource(Res.string.chatsHomeDone), KitRowStateTone.Quiet),
+                                state = KitRowState(
+                                    stringResource(
+                                        when (row.status) {
+                                            RowStatus.Stopped -> Res.string.chatsHomeStopped
+                                            RowStatus.Interrupted -> Res.string.chatsHomeInterrupted
+                                            else -> Res.string.chatsHomeDone
+                                        },
+                                    ),
+                                    KitRowStateTone.Quiet,
+                                ),
                                 done = true,
                                 onClick = if (row.canOpen) ({ actions.openConversation(row.ref) }) else null,
                             )
@@ -143,7 +152,9 @@ private fun InboxRequest(row: ConversationRowUi, state: ChatsUi, actions: ChatsA
     val answering = permission != null && permission.requestId in state.answering
     val enabled = if (answering) KitEnabled.Disabled(stringResource(Res.string.serversWorking))
         else if (!row.canOpen) KitEnabled.Disabled(stringResource(Res.string.e7WorkspaceConnecting)) else KitEnabled.Enabled
-    val source = state.home.sources.firstOrNull { it.profile == row.ref.profileId }?.name
+    // F: inbox_screen.dart:276: an agent's conversation names its agent, not the connection it runs through.
+    val source = state.home.sources.firstOrNull { it.profile == row.ref.profileId }
+        ?.let { if (it.agents) row.agentName ?: it.name else it.name }
     KitInboxRequestRow(
         title = if (permission != null) stringResource(Res.string.chatRequestAskRunNamed, mask(permission.command))
             else stringResource(Res.string.inboxWaitingForAnswer),

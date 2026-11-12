@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="dockLabel">Conversations en cours</string>
+    <string name="dockWorking">En cours</string>
+    <string name="dockWorkingTasks">En cours · %1$s sur %2$s</string>
+    <string name="dockThinking">Réflexion</string>
+    <string name="dockNeedsYou">A besoin de vous</string>
+    <string name="dockFinished">Terminé</string>
+    <string name="dockFailed">Échec</string>
+    <string name="dockChildNeedsYou">%1$s a besoin de vous</string>
+    <string name="dockChildFailed">%1$s a échoué</string>
+    <plurals name="dockSubagents">
+        <item quantity="one">%1$s sous-agent</item>
+        <item quantity="many">%1$s sous-agents</item>
+        <item quantity="other">%1$s sous-agents</item>
+    </plurals>
+    <string name="dockOnServer">sur %1$s</string>
+    <string name="dockStop">Arrêter</string>
+    <string name="dockRemove">Retirer</string>
+    <string name="dockOpen">Ouvrir</string>
+    <string name="dockPin">Épingler</string>
+    <string name="dockUnpin">Désépingler</string>
+    <string name="dockRestore">Remettre</string>
+    <string name="dockNickname">Nom dans le dock</string>
+    <plurals name="dockHidden">
+        <item quantity="one">%1$s masquée</item>
+        <item quantity="many">%1$s masquées</item>
+        <item quantity="other">%1$s masquées</item>
+    </plurals>
+    <string name="dockMoveDock">Déplacer le dock</string>
+    <string name="dockShowDock">Afficher le dock</string>
+    <string name="dockActionOn">%1$s %2$s</string>
+    <string name="dockRemoved">%1$s a quitté le dock</string>
+    <string name="dockStaysWhileOpen">%1$s est ouverte, elle reste donc</string>
+    <string name="dockStopFailed">Impossible d’arrêter %1$s</string>
+    <string name="dockAnswerFailed">Impossible de répondre à %1$s</string>
+    <string name="dockSettingTitle">Dock de bord</string>
+    <string name="dockSettingBody">Les conversations en cours sur le bord de l’écran. Faites glisser son haut pour le passer de l’autre côté.</string>
+</resources>

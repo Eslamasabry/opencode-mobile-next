@@ -12,4 +12,5 @@
     <string name="agentsPreviousVersionBody">¿Cambiar a la versión anterior verificada que se guarda en este teléfono? Primero se detendrá el ayudante y luego los agentes del teléfono se conectarán de nuevo. Se conservan los inicios de sesión y las conversaciones.</string>
     <string name="agentsPreviousVersionFailed">No se pudo restaurar la versión anterior. Termina cualquier trabajo en curso e inténtalo de nuevo.</string>
     <string name="agentsPreviousVersionRestored">Se restauró la versión anterior.</string>
+    <string name="agentsHelperStartAgain">Iniciar el ayudante de agentes</string>
 </resources>

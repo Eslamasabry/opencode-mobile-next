@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="migrationSkillUseNew">在新对话中使用</string>
+    <string name="migrationSkillReady">技能已在新对话中准备好。智能体尚未运行。</string>
+    <string name="migrationSkillChanged">连接已变更。已创建的对话都已保留。</string>
+    <string name="migrationSkillInvalid">此技能没有受支持的标识符。请刷新技能列表。</string>
+    <string name="migrationSkillUncertain">请求可能已到达服务器。已创建的对话都已保留。再次尝试前，请先查看它。</string>
+    <string name="migrationSkillOpen">打开对话</string>
+</resources>

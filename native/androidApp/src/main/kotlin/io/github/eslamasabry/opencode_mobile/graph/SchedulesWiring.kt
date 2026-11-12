@@ -57,6 +57,7 @@ import io.github.eslamasabry.oc.engine.schedules.ScheduledOpen
 import io.github.eslamasabry.oc.feature.schedules.presentation.ConversationSeed
 import io.github.eslamasabry.oc.feature.schedules.presentation.ModelChoice
 import io.github.eslamasabry.oc.feature.schedules.presentation.ScheduleServers
+import io.github.eslamasabry.oc.feature.schedules.presentation.ScheduleTiming
 import io.github.eslamasabry.oc.feature.schedules.presentation.ScheduleTarget
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.EntryInstaller
@@ -158,7 +159,10 @@ class AppScheduleProfiles(
 
     override suspend fun fingerprint(profileId: String): String? {
         stores.warm()
-        val server = stores.profiles.profile(ProfileId(profileId))?.toServerProfile() ?: return null
+        // The phone-server flag is derived from the address already in this fingerprint; it stays false here so the
+        // fingerprints saved before the profile store derived it still match.
+        val server =
+            stores.profiles.profile(ProfileId(profileId))?.toServerProfile(managedOnPhone = false) ?: return null
         // Everything that names the server and the account, never the display name or a secret.
         return ScheduleEngine.fingerprint(
             listOf(
@@ -400,9 +404,33 @@ class AppScheduleProfiles(
 @ContributesBinding(AppScope::class)
 @Inject
 class AppScheduleServers(
+    private val application: Application,
     private val stores: PreviewStores,
     private val profiles: AppScheduleProfiles,
 ) : ScheduleServers {
+    override suspend fun timing(): ScheduleTiming =
+        ScheduleTiming(
+            exactAllowed = ScheduleExactAlarms(application, FlutterScheduleReceiver::class.java).allowed(),
+            notificationsAllowed =
+                androidx.core.app.NotificationManagerCompat.from(application).areNotificationsEnabled(),
+        )
+
+    /** F ScheduledPromptChannel.kt requestExactAlarm: the phone's own "Alarms & reminders" page for this app. */
+    override fun allowExactTiming() {
+        if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.S) return
+        val intent =
+            Intent(
+                    android.provider.Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM,
+                    android.net.Uri.parse("package:${application.packageName}"),
+                )
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        try {
+            application.startActivity(intent)
+        } catch (_: android.content.ActivityNotFoundException) {
+            // No such page on this phone: the note stays and nothing else happens.
+        }
+    }
+
     override suspend fun target(profileId: ProfileId): ScheduleTarget {
         stores.warm()
         val name = stores.profiles.profile(profileId)?.profile?.name

@@ -56,6 +56,7 @@ import io.github.eslamasabry.oc.ui.kit.state.KitInlineStateView
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitSkeletonRows
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
+import io.github.eslamasabry.oc.ui.kit.state.KitStateSize
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
 import io.github.eslamasabry.oc.ui.kit.state.KitTechnicalValue
 import io.github.eslamasabry.oc.ui.kitchat.LocalKitRedactor
@@ -77,7 +78,9 @@ public fun OpenProjectScreen(state: OpenProjectUi, actions: OpenProjectActions) 
                 title =
                     when (state.step) {
                         OpenProjectStep.Servers -> stringResource(Res.string.openProjectWhereTitle)
-                        OpenProjectStep.Projects -> stringResource(Res.string.p12ProjectsOnServer, state.serverName)
+                        OpenProjectStep.Projects ->
+                            if (state.onThisPhone) stringResource(Res.string.p12ProjectsOnThisPhone)
+                            else stringResource(Res.string.p12ProjectsOnServer, state.serverName)
                         OpenProjectStep.Folder -> folderName
                     },
                 subtitle = if (state.step == OpenProjectStep.Folder) state.path else null,
@@ -185,6 +188,7 @@ private fun Servers(state: OpenProjectUi, actions: OpenProjectActions) {
                 title = stringResource(Res.string.p12NoServerTitle),
                 body = stringResource(Res.string.p12NoServerBody),
                 primary = KitAction(stringResource(Res.string.serversTitle), actions::openServers),
+                size = KitStateSize.Inline,
             )
         else ->
             KitRowGroup(label = stringResource(Res.string.openProjectWhereBody), leadingTiles = true) {

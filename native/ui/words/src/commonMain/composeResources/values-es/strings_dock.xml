@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="dockLabel">Conversaciones en curso</string>
+    <string name="dockWorking">Trabajando</string>
+    <string name="dockWorkingTasks">Trabajando · %1$s de %2$s</string>
+    <string name="dockThinking">Pensando</string>
+    <string name="dockNeedsYou">Te necesita</string>
+    <string name="dockFinished">Terminada</string>
+    <string name="dockFailed">Fallida</string>
+    <string name="dockChildNeedsYou">%1$s te necesita</string>
+    <string name="dockChildFailed">%1$s falló</string>
+    <plurals name="dockSubagents">
+        <item quantity="one">%1$s subagente</item>
+        <item quantity="many">%1$s subagentes</item>
+        <item quantity="other">%1$s subagentes</item>
+    </plurals>
+    <string name="dockOnServer">en %1$s</string>
+    <string name="dockStop">Detener</string>
+    <string name="dockRemove">Quitar</string>
+    <string name="dockOpen">Abrir</string>
+    <string name="dockPin">Fijar</string>
+    <string name="dockUnpin">Dejar de fijar</string>
+    <string name="dockRestore">Volver a mostrar</string>
+    <string name="dockNickname">Nombre en el dock</string>
+    <plurals name="dockHidden">
+        <item quantity="one">%1$s oculta</item>
+        <item quantity="many">%1$s ocultas</item>
+        <item quantity="other">%1$s ocultas</item>
+    </plurals>
+    <string name="dockMoveDock">Mover el dock</string>
+    <string name="dockShowDock">Mostrar el dock</string>
+    <string name="dockActionOn">%1$s %2$s</string>
+    <string name="dockRemoved">%1$s salió del dock</string>
+    <string name="dockStaysWhileOpen">%1$s está abierta, así que se queda</string>
+    <string name="dockStopFailed">No se pudo detener %1$s</string>
+    <string name="dockAnswerFailed">No se pudo responder a %1$s</string>
+    <string name="dockSettingTitle">Dock lateral</string>
+    <string name="dockSettingBody">Las conversaciones en curso en el borde de la pantalla. Arrastra su parte superior para moverlo al otro lado.</string>
+</resources>

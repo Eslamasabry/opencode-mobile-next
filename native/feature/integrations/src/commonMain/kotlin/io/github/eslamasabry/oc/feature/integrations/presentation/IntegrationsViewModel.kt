@@ -86,11 +86,6 @@ public class IntegrationsViewModel(
         }
     }
 
-    override fun chooseProvider(id: String) {
-        if (local.value.busy || local.value.data.providers.none { it.id == id }) return
-        local.update { it.copy(selected = id, authorization = null, notice = null) }
-    }
-
     private fun command(work: suspend (IntegrationSession) -> Outcome<Unit>) {
         val pinned = session ?: return
         if (local.value.busy) return
@@ -111,38 +106,6 @@ public class IntegrationsViewModel(
         }
     }
 
-    override fun saveKey(key: String) {
-        val id = local.value.selected ?: return
-        command { it.saveKey(id, key) }
-    }
-
-    override fun startOAuth(method: String) {
-        val pinned = session ?: return
-        val provider = local.value.selected ?: return
-        if (local.value.busy) return
-        val mine = generation
-        local.update { it.copy(busy = true, notice = null, authorization = null) }
-        viewModelScope.launch {
-            val result = pinned.startOAuth(provider, method)
-            if (mine != generation) return@launch
-            local.update {
-                when (result) {
-                    is Outcome.Ok -> it.copy(busy = false, authorization = result.value)
-                    is Outcome.Failed -> it.copy(busy = false, notice = notice(result.failure))
-                }
-            }
-        }
-    }
-
-    override fun completeOAuth(code: String) {
-        val authorization = local.value.authorization ?: return
-        command { pinned ->
-            pinned.completeOAuth(authorization.attempt, code).also {
-                if (it is Outcome.Ok) local.update { s -> s.copy(authorization = null) }
-            }
-        }
-    }
-
     private fun requestLink(url: String) {
         when (val result = source.openLink(url)) {
             is Outcome.Failed -> local.update { it.copy(notice = notice(result.failure)) }
@@ -151,14 +114,6 @@ public class IntegrationsViewModel(
                 local.update { it.copy(linkPrompt = result.value) }
             }
         }
-    }
-
-    override fun openAuthorization() {
-        local.value.authorization?.url?.let(::requestLink)
-    }
-
-    override fun openKeyPage() {
-        local.value.selected?.let(source::keyPage)?.let(::requestLink)
     }
 
     override fun confirmLink() {

@@ -82,7 +82,6 @@
     <ID>CyclomaticComplexMethod:PaseoRequestBook.kt$PaseoRequestBook$public suspend fun replyPermission( requestId: String, answer: PaseoPermissionAnswer, legacySessionId: String? = null, message: String? = null, )</ID>
     <ID>CyclomaticComplexMethod:PaseoStream.kt$internal fun PaseoGateway.onStream(id: String, event: JsonObject, payload: JsonObject)</ID>
     <ID>CyclomaticComplexMethod:PaseoStream.kt$internal fun PaseoGateway.onTimelineItem( id: String, state: PaseoLive, raw: JsonObject, provider: String, seq: Long?, at: Long?, )</ID>
-    <ID>CyclomaticComplexMethod:PaseoSubagents.kt$PaseoSubagents$private fun upsert(descriptor: JsonObject)</ID>
     <ID>CyclomaticComplexMethod:PaseoTerminals.kt$TerminalUtf8$fun add(bytes: ByteArray): String</ID>
     <ID>CyclomaticComplexMethod:PaseoToolMappers.kt$internal fun toolInput(detail: JsonObject): JsonElement</ID>
     <ID>CyclomaticComplexMethod:PaseoToolMappers.kt$internal fun toolOutput(item: JsonObject, detail: JsonObject): JsonElement</ID>
@@ -253,11 +252,6 @@
     <ID>MagicNumber:PaseoStream.kt$4096</ID>
     <ID>MagicNumber:PaseoSubAgents.kt$200</ID>
     <ID>MagicNumber:PaseoSubAgents.kt$2048</ID>
-    <ID>MagicNumber:PaseoSubagents.kt$PaseoSubagents$200</ID>
-    <ID>MagicNumber:PaseoSubagents.kt$PaseoSubagents$2048</ID>
-    <ID>MagicNumber:PaseoSubagents.kt$PaseoSubagents$256</ID>
-    <ID>MagicNumber:PaseoSubagents.kt$PaseoSubagents$4096</ID>
-    <ID>MagicNumber:PaseoSubagents.kt$PaseoSubagents$500</ID>
     <ID>MagicNumber:PaseoTerminals.kt$255</ID>
     <ID>MagicNumber:PaseoTerminals.kt$500</ID>
     <ID>MagicNumber:PaseoTerminals.kt$PaseoTerminalChannel$64</ID>
@@ -587,7 +581,6 @@
     <ID>MaxLineLength:PaseoSubAgents.kt$row.objectOrNull()?.let { if (provider != null) JsonObject(LinkedHashMap(it).apply { put("provider", provider) }) else it }</ID>
     <ID>MaxLineLength:PaseoSubAgents.kt$time = SessionTime(createdMs = paseoMillis(descriptor["createdAt"]), updatedMs = paseoMillis(descriptor["updatedAt"]))</ID>
     <ID>MaxLineLength:PaseoSubAgents.kt$val metadata = JsonObject(LinkedHashMap(tool.metadata ?: JsonObject(emptyMap())).apply { put("sessionId", JsonPrimitive(child)) })</ID>
-    <ID>MaxLineLength:PaseoSubAgents.kt$val result = transport.request("agent.provider_subagents.list.request", jsonOf("parentAgentId" to real(parentId)), timeoutMs = 8_000)</ID>
     <ID>MaxLineLength:PaseoSubAgents.kt$val title = listOfNotNull(descriptor.str("title"), descriptor.str("description")).map { it.trim() }.firstOrNull { it.isNotEmpty() } ?: "Sub-agent"</ID>
     <ID>MaxLineLength:PaseoSubAgentsTest.kt$PaseoSubAgentsTest$"agent.provider_subagents.list.response" to jsonOf("parentAgentId" to "a1", "subagents" to listOf(descriptor(status = "completed")), "error" to null)</ID>
     <ID>MaxLineLength:PaseoSubAgentsTest.kt$PaseoSubAgentsTest$"detail" to mapOf("type" to "unknown", "input" to mapOf("description" to "List the files", "subagent_type" to "Explore"))</ID>
@@ -769,9 +762,6 @@
     <ID>ReturnCount:PaseoSubAgents.kt$internal fun PaseoGateway.linkedToolPart(part: Part): Part</ID>
     <ID>ReturnCount:PaseoSubAgents.kt$internal fun PaseoGateway.onSubagentUpdate(payload: JsonObject)</ID>
     <ID>ReturnCount:PaseoSubAgents.kt$internal fun PaseoGateway.upsertSubagent(descriptor: JsonObject)</ID>
-    <ID>ReturnCount:PaseoSubagents.kt$PaseoSubagents$fun linked(part: Part): Part</ID>
-    <ID>ReturnCount:PaseoSubagents.kt$PaseoSubagents$fun push(payload: JsonObject)</ID>
-    <ID>ReturnCount:PaseoSubagents.kt$PaseoSubagents$private fun upsert(descriptor: JsonObject)</ID>
     <ID>ReturnCount:PaseoTerminals.kt$PaseoTerminalChannel$private fun onFrame(frame: PaseoBinaryFrame)</ID>
     <ID>ReturnCount:PaseoTerminals.kt$PaseoTerminalStream$private fun frame(frame: PaseoBinaryFrame)</ID>
     <ID>ReturnCount:PaseoTitles.kt$PaseoTitles$public fun remembered(agent: JsonObject, savedTitle: ((String) -&gt; String?)?): String?</ID>
@@ -809,7 +799,6 @@
     <ID>TooManyFunctions:PaseoMappers.kt$io.github.eslamasabry.oc.protocol.paseo.mappers.PaseoMappers.kt</ID>
     <ID>TooManyFunctions:PaseoOperations.kt$PaseoOperations : ServerOperationsGateway</ID>
     <ID>TooManyFunctions:PaseoRequestBook.kt$PaseoRequestBook</ID>
-    <ID>TooManyFunctions:PaseoSubagents.kt$PaseoSubagents</ID>
     <ID>TooManyFunctions:PaseoToolMappers.kt$io.github.eslamasabry.oc.protocol.paseo.mappers.PaseoToolMappers.kt</ID>
     <ID>TooManyFunctions:PaseoTransport.kt$PaseoTransport</ID>
     <ID>TooManyFunctions:PaseoUsageMonitor.kt$PaseoUsageMonitor</ID>
@@ -822,7 +811,6 @@
     <ID>WildcardImport:PaseoAgentTools.kt$import io.github.eslamasabry.oc.core.model.*</ID>
     <ID>WildcardImport:PaseoAgentTools.kt$import io.github.eslamasabry.oc.protocol.paseo.*</ID>
     <ID>WildcardImport:PaseoHandoff.kt$import io.github.eslamasabry.oc.protocol.paseo.*</ID>
-    <ID>WildcardImport:PaseoSubagents.kt$import io.github.eslamasabry.oc.protocol.paseo.*</ID>
     <ID>WildcardImport:PaseoTerminals.kt$import io.github.eslamasabry.oc.protocol.paseo.*</ID>
   </CurrentIssues>
 </SmellBaseline>

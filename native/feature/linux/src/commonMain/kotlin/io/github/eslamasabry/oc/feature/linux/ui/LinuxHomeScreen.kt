@@ -33,6 +33,17 @@ import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenWidth
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
+import io.github.eslamasabry.oc.ui.words.res.thisPhoneRemoveToolBody
+import io.github.eslamasabry.oc.ui.words.res.thisPhoneRemovePythonLost
+import io.github.eslamasabry.oc.ui.words.res.thisPhoneRemovePythonKept
+import io.github.eslamasabry.oc.ui.words.res.thisPhoneRemoveTeamLost
+import io.github.eslamasabry.oc.ui.words.res.thisPhoneRemoveTeamLostWork
+import io.github.eslamasabry.oc.ui.words.res.thisPhoneRemoveTeamKept
+import io.github.eslamasabry.oc.ui.words.res.thisPhoneRemoveVoiceLost
+import io.github.eslamasabry.oc.ui.words.res.thisPhoneRemoveToolKept
+import io.github.eslamasabry.oc.ui.kit.modal.KitConsequence
+import io.github.eslamasabry.oc.ui.kit.modal.KitConsequenceMark
+import io.github.eslamasabry.oc.engine.runtime.components.ComponentIds
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
@@ -352,10 +363,14 @@ public fun LinuxHomeScreen(
                             ),
                         kind = KitConfirmKind.Destructive,
                         body =
-                            stringResource(
-                                io.github.eslamasabry.oc.ui.words.res.Res.string
-                                    .linuxComponentsRemoveBody
-                            ),
+                            if (asked.freedBytes != null)
+                                stringResource(Res.string.thisPhoneRemoveToolBody, size(asked.freedBytes))
+                            else
+                                stringResource(
+                                    io.github.eslamasabry.oc.ui.words.res.Res.string
+                                        .linuxComponentsRemoveBody
+                                ),
+                        consequenceItems = removeConsequences(asked.id),
                     )
                 is LinuxConfirm.Remove ->
                     KitConfirmSpec(
@@ -423,3 +438,23 @@ private fun PageRow(
         onClick = onClick,
     )
 }
+
+/** What removing one component loses and keeps (Flutter `_removeConsequences`); a plain "projects stay" for the rest. */
+@Composable
+private fun removeConsequences(id: String): List<KitConsequence> =
+    when (id) {
+        ComponentIds.PYTHON ->
+            listOf(
+                KitConsequence(stringResource(Res.string.thisPhoneRemovePythonLost), KitConsequenceMark.Lost),
+                KitConsequence(stringResource(Res.string.thisPhoneRemovePythonKept), KitConsequenceMark.Kept),
+            )
+        ComponentIds.AITEAM ->
+            listOf(
+                KitConsequence(stringResource(Res.string.thisPhoneRemoveTeamLost), KitConsequenceMark.Lost),
+                KitConsequence(stringResource(Res.string.thisPhoneRemoveTeamLostWork), KitConsequenceMark.Lost),
+                KitConsequence(stringResource(Res.string.thisPhoneRemoveTeamKept), KitConsequenceMark.Kept),
+            )
+        ComponentIds.VOICE ->
+            listOf(KitConsequence(stringResource(Res.string.thisPhoneRemoveVoiceLost), KitConsequenceMark.Lost))
+        else -> listOf(KitConsequence(stringResource(Res.string.thisPhoneRemoveToolKept), KitConsequenceMark.Kept))
+    }

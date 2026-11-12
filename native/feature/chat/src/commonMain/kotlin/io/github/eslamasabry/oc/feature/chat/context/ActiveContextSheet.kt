@@ -9,6 +9,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.*
+import io.github.eslamasabry.oc.engine.agents.context.ActiveContextMessage
+import io.github.eslamasabry.oc.feature.chat.presentation.ReplyModelNames
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
@@ -50,7 +52,22 @@ private fun contextTypeLabel(type: String): String = when (type) {
     "shell" -> stringResource(Res.string.activeContextShell)
     "compaction" -> stringResource(Res.string.activeContextCompaction)
     "agent-switched", "model-switched", "location-switched" -> stringResource(Res.string.activeContextChange)
-    else -> type
+    // A kind the app has no words for ("idle"): never the server's own word.
+    else -> stringResource(HandWords.activeContextMessageTitle("other"))
+}
+
+/**
+ * A row's one line. The model's private reasoning is not what a row says when the entry has words of its own; a change of
+ * model reads as the model's name ("Big Pickle"), never its id. NV (W4, sweep-a P49): Flutter shows the first part's
+ * text as it is (often the reasoning) and an unknown kind by the server's own word; native says "Message" for an
+ * unknown kind and leads with the entry's own words. An entry that holds only reasoning still shows it: this page is
+ * where a person goes to read what the model was given, and opening a row shows every part.
+ */
+private fun rowPreview(message: ActiveContextMessage, query: String): String {
+    val spoken = message.content.filter { it.kind != ContextContentKind.Reasoning }
+    val shown = if (query.isNotEmpty() || spoken.isEmpty() || spoken.size == message.content.size) message else ActiveContextMessage(message.id, message.type, spoken)
+    val line = shown.previewFor(query)
+    return if (message.type == "model-switched" && line.isNotBlank()) ReplyModelNames.fromId(line) else line
 }
 
 private fun titleRole(type: String): String = when (type) {
@@ -152,7 +169,7 @@ internal fun ActiveContextScreen(visible: Boolean, state: ActiveContextUi, onClo
                                 )
                                 KitText(stringResource(Res.string.activeContextIntro), Modifier.padding(horizontal = tokens.gutter.dp, vertical = Space.S2.dp), role = TypeRole.Secondary, tone = TextTone.Secondary)
                                 when {
-                                    state.messages.isEmpty() -> KitStateView(KitStateKind.Empty, stringResource(Res.string.activeContextEmpty), body = stringResource(Res.string.activeContextEmptyDetail), icon = KitIcons.layers)
+                                    state.messages.isEmpty() -> KitStateView(KitStateKind.Empty, stringResource(Res.string.activeContextEmpty), body = stringResource(Res.string.activeContextEmptyDetail), icon = KitIcons.layers, size = KitStateSize.Inline)
                                     shown.isEmpty() -> KitSearchNoMatch(field.text.toString().trim().ifEmpty { typeLabel.orEmpty() }, {
                                         field.edit { replace(0, length, "") }; type = null
                                     }, what = stringResource(Res.string.activeContextWhat))
@@ -161,7 +178,7 @@ internal fun ActiveContextScreen(visible: Boolean, state: ActiveContextUi, onClo
                                             val label = contextTypeLabel(message.type)
                                             KitRow(
                                                 title = label,
-                                                supporting = message.previewFor(query).ifEmpty { stringResource(Res.string.activeContextNoText) },
+                                                supporting = rowPreview(message, query).ifEmpty { stringResource(Res.string.activeContextNoText) },
                                                 supportingMaxLines = 3, // F: lib/ui/screens/active_context_screen.dart:350
                                                 trailing = KitRowTrailing.Chevron,
                                                 onClickLabel = stringResource(Res.string.activeContextOpenMessage, label),

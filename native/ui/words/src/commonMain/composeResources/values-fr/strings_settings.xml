@@ -277,7 +277,7 @@
     <string name="serverSettingsUpgradeKeepsData">Les données du serveur restent en place</string>
     <string name="serverSettingsCopyUpdateCommands">Copier les commandes de mise à jour pour %1$s</string>
     <string name="serverSettingsAddressLabel">Adresse</string>
-    <string name="languagePickerPartlyTranslated">Partiellement traduit (%1$d %)</string>
+    <string name="languagePickerPartlyTranslated">Traduit en partie (%1$d\u00A0%)</string>
     <string name="appearancePickerPreviewLabel">Aperçu de %1$s</string>
     <string name="appearancePickerPreviewIn">Aperçu en</string>
     <string name="appearancePickerInUse">Utilisé actuellement</string>
@@ -809,4 +809,27 @@
     <string name="backgroundBatterySettingsInstead">Android n’a pas affiché sa question, ses paramètres de batterie se sont donc ouverts à la place. Réglez-y cette application sur Sans restriction.</string>
     <string name="privacyPagesSummary">Serveurs, fournisseurs, voix, fichiers et mises à jour</string>
     <string name="manageSpaceKeptAllComputers">Vos ordinateurs et tout ce qui a été poussé vers git restent</string>
+    <string name="appearanceGlassLook">Aspect du verre</string>
+    <string name="appearanceGlassLookPick">Choisir un aspect du verre</string>
+    <string name="appearanceGlassLookGlossy">Brillant</string>
+    <string name="appearanceGlassLookGlossyLine">Reflet vif, courbe les bords</string>
+    <string name="appearanceGlassLookClear">Transparent</string>
+    <string name="appearanceGlassLookClearLine">On voit au travers, reflet léger</string>
+    <string name="appearanceGlassLookFrosted">Dépoli</string>
+    <string name="appearanceGlassLookFrostedLine">Flou doux, le plus lisible</string>
+    <string name="appearanceGlassLookSmoked">Fumé</string>
+    <string name="appearanceGlassLookSmokedLine">Verre teinté sombre sur les barres et les boutons</string>
+    <string name="appearanceGlassLookDisclosure">Les aperçus utilisent des couleurs vives pour faire ressortir les différences. La page derrière montre votre vrai arrière-plan.</string>
+    <string name="appearanceGlassLookFrostedLighter">Le verre dépoli utilise désormais des cartes plus claires, et laisse donc mieux voir votre arrière-plan.</string>
+    <string name="appearanceGlassLookHeldMotion">Les aspects du verre sont en pause tant que les animations sont désactivées. Réactivez les animations pour en choisir un.</string>
+    <string name="appearanceGlassLookNeedsAndroid13">Les bords courbés demandent Android 13. Ce téléphone les affiche floutés, quel que soit l’aspect.</string>
+    <string name="appearanceGlassCardHint">Touchez Verre à nouveau pour choisir son aspect.</string>
+    <string name="appearanceGlassCardLook">Verre · %1$s</string>
+    <string name="appearancePreviewAsk">Mets de l’ordre dans la page des paramètres</string>
+    <string name="appearancePreviewReply">C’est fait. Trois fichiers ont changé et toutes les vérifications passent.</string>
+    <string name="appearancePreviewAction">Relire les modifications</string>
+    <string name="appearancePreviewSpoken">Un aperçu de l’application avec ces choix</string>
+    <string name="consentWhyNeedsYouBlocked">Android bloque les notifications de cette app. Touchez pour corriger cela dans Notifications.</string>
+    <string name="consentWhyNeedsYouWhileOpen">Vous n’êtes prévenu que lorsque l’app est ouverte. Touchez pour garder la connexion en arrière-plan.</string>
+    <string name="consentWhyNeedsYouChannelOff">Android a désactivé les notifications de questions de cette app. Touchez pour les activer dans les réglages d'Android.</string>
 </resources>

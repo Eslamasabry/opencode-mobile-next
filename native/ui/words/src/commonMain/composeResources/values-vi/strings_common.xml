@@ -692,4 +692,5 @@
     <string name="browserEditorInsecureOrigin">Trang này được mở qua HTTP thường từ một địa chỉ mạng, nên trình duyệt sẽ không lưu mật khẩu máy chủ. Hãy để trống mật khẩu với máy chủ không có mật khẩu, hoặc mở ứng dụng qua HTTPS hay từ localhost để lưu mật khẩu.</string>
     <string name="browserAgentSocketUnavailable">Kết nối Codex và Paseo không có trong trình duyệt. Chúng đăng nhập bằng tiêu đề WebSocket mà trình duyệt không thể gửi, và hiện chưa hỗ trợ đăng nhập trên trình duyệt. Hãy dùng ứng dụng điện thoại hoặc máy tính cho chúng; máy chủ OpenCode dùng được ở đây.</string>
     <string name="phoneServerPortBusy">Một máy chủ OpenCode khác đang dùng cổng %1$s trên điện thoại này.</string>
+    <string name="chatRequestAskReadFolder">Đọc thư mục này?</string>
 </resources>

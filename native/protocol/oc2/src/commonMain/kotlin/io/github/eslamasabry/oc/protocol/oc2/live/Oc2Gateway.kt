@@ -899,6 +899,20 @@ internal class Oc2Gateway(
             )
         }
 
+    /**
+     * Flutter `listGlobalSessions` (ops_projects.dart): `GET /session` with no directory or workspace, roots only
+     * (`parentID=null`), newest first, the server's own title search; a page by cursor sends the cursor alone.
+     * Archived rows are dropped here unless asked for; the continuation is kept either way.
+     */
+    override suspend fun listGlobalSessions(
+        search: String?,
+        includeArchived: Boolean,
+        cursor: String?,
+        limit: Int,
+    ): Outcome<ServerPage<GlobalSessionResult>> =
+        Oc2SearchUsage.searchSessions(this, search, cursor, limit, includeArchived)
+            ?: unavailable("globalSessionSearch")
+
     override suspend fun createSession(spec: NewSession): Outcome<Session> =
         read(
             "/session",
@@ -1004,6 +1018,59 @@ internal class Oc2Gateway(
             HttpMethod.Post,
             buildJsonObject { put("agent", agent) },
         )
+
+    /**
+     * The sub-agent sessions [id] started: `GET /session?parentID=<id>` (Flutter `listSessionChildren`, protocol
+     * notes §4.2), one page of at most [SubAgents.MAX_CHILDREN]. No location filter: `parentID` already names the
+     * family, and a child keeps working in its parent's folder whichever folder the app shows. Forks also carry
+     * `parentID`; their `fork` field keeps them out. A row that does not decode is skipped, not the whole list.
+     */
+    override suspend fun sessionChildren(id: SessionId): Outcome<ImmutableList<Session>> =
+        childRows(id).map { rows -> rows.map { it.first }.toImmutableList() }
+
+    /** [sessionChildren] with each child's state: running from `/session/active`, else its last run's `outcome`. */
+    override suspend fun subAgents(parent: SessionId): Outcome<ImmutableList<SubAgent>> =
+        when (val rows = childRows(parent)) {
+            is Outcome.Failed -> rows
+            is Outcome.Ok -> {
+                val ended =
+                    rows.value
+                        .mapNotNull { (session, outcome) -> endedState(outcome)?.let { session.id to it } }
+                        .toMap()
+                SubAgents.withStates(this, parent, rows.value.map { it.first }, ended).ok()
+            }
+        }
+
+    private suspend fun childRows(parent: SessionId): Outcome<List<Pair<Session, Oc2SessionOutcome?>>> {
+        if (parent.raw.isBlank()) return Failure.Rejected(null).failed()
+        return read(
+            "/session",
+            query =
+                mapOf(
+                    "parentID" to parent.raw,
+                    "limit" to SubAgents.MAX_CHILDREN.toString(),
+                    "order" to "desc",
+                ),
+        ) { root ->
+            val rows = pageEntries(root) ?: return@read null
+            rows.mapNotNull { row ->
+                val wire = Oc2Session.fromJson(data(row) as? JsonObject ?: return@mapNotNull null)
+                    ?: return@mapNotNull null
+                val session = sessionValue(data(row)) ?: return@mapNotNull null
+                if (session.parentId != parent || session.forkOf != null) return@mapNotNull null
+                session to wire.outcome
+            }
+        }
+    }
+
+    private fun endedState(outcome: Oc2SessionOutcome?): SubAgentState? =
+        when (outcome) {
+            Oc2SessionOutcome.Succeeded -> SubAgentState.Done
+            Oc2SessionOutcome.Failed -> SubAgentState.Failed
+            Oc2SessionOutcome.Interrupted -> SubAgentState.Stopped
+            Oc2SessionOutcome.Unknown,
+            null -> null
+        }
 
     /** The visible Fork action uses the server's own boundary contract; an anchored copy excludes its anchor. */
     override suspend fun forkSession(id: SessionId, from: MessageId?): Outcome<SessionId> {
@@ -1912,7 +1979,7 @@ internal class Oc2Gateway(
         val providerReply = json("/provider", query = scope)
         if (providerReply is Outcome.Failed) return providerReply
         val providerJson = (providerReply as Outcome.Ok).value
-        redactor.registerCredentialValues(providerJson)
+        redactor.registerAnswerCredentials(providerJson)
         val providerPayload = data(providerJson)
         // Older provider inventories include their models and an explicit connected list. An empty
         // connected list is authoritative, never a reason to offer the catalog's models.
@@ -1927,7 +1994,7 @@ internal class Oc2Gateway(
         if (defaultReply is Outcome.Failed) return defaultReply
         val modelJson = (modelReply as Outcome.Ok).value
         val defaultJson = (defaultReply as Outcome.Ok).value
-        redactor.registerCredentialValues(providerJson)
+        redactor.registerAnswerCredentials(providerJson)
         val providerRows =
             data(providerJson) as? JsonArray ?: return Failure.UnreadableReply().failed()
         val modelRows = data(modelJson) as? JsonArray ?: return Failure.UnreadableReply().failed()
@@ -1952,10 +2019,10 @@ internal class Oc2Gateway(
                         name,
                         listed
                             .filter { it.enabled }
-                            .map { it.modelID ?: it.id.removePrefix("$id/") }
+                            .map { Oc2SessionSelection.catalogModelId(it) }
                             .toImmutableList(),
                         listed
-                            .associate { (it.modelID ?: it.id.removePrefix("$id/")) to it.raw }
+                            .associate { Oc2SessionSelection.catalogModelId(it) to it.raw }
                             .toImmutableMap(),
                     )
                 }
@@ -1965,7 +2032,7 @@ internal class Oc2Gateway(
                 providers,
                 providers,
                 default?.providerID,
-                default?.let { it.modelID ?: it.id.removePrefix("${it.providerID}/") },
+                default?.let { Oc2SessionSelection.catalogModelId(it) },
             )
             .ok()
     }
@@ -2008,7 +2075,7 @@ internal class Oc2Gateway(
         val providerJson = (providerReply as Outcome.Ok).value
         val modelJson = (modelReply as Outcome.Ok).value
         val agentJson = (agentReply as Outcome.Ok).value
-        redactor.registerCredentialValues(providerJson)
+        redactor.registerAnswerCredentials(providerJson)
         val providerRows =
             data(providerJson) as? JsonArray ?: return Failure.UnreadableReply().failed()
         val modelRows = data(modelJson) as? JsonArray ?: return Failure.UnreadableReply().failed()
@@ -2156,6 +2223,49 @@ internal class Oc2Gateway(
                 }
                 .toImmutableList()
         }
+
+    override suspend fun versionControlHealth(): Outcome<VersionControlHealth> =
+        versionControlHealthAt(location.value)
+
+    /**
+     * `GET /vcs` (Vcs.Info). A real 2.2.6 server answers `{provider:"git", branch:{current?, default?}}` for a
+     * repository (`current` is absent on a detached HEAD) and `{branch:{}}` otherwise. It also answers `{branch:{}}`
+     * for a repository on the first reads of a folder it has not looked at yet (it finds Git a moment later), so
+     * only `provider: "git"` is an answer: anything else is Unknown, never "not a repository". The changed files
+     * come from `GET /vcs/status` (Vcs.FileStatus `{file, additions, deletions, status}`), optional as in Flutter's
+     * `loadVersionControlHealth` (ops_dev.dart).
+     */
+    override suspend fun versionControlHealthAt(location: ServerLocation): Outcome<VersionControlHealth> {
+        val health =
+            read("/vcs", query = locationQuery(location)) { root ->
+                val info =
+                    ((root as? JsonObject)?.let { it["data"] ?: it } as? JsonObject) ?: return@read null
+                val branch = info["branch"] as? JsonObject
+                VersionControlHealth(
+                    branch = branch?.str("current")?.trim()?.takeIf { it.isNotEmpty() },
+                    defaultBranch = branch?.str("default")?.trim()?.takeIf { it.isNotEmpty() },
+                    changes = persistentListOf(),
+                    setupState =
+                        if (info.str("provider") == "git") VersionControlSetupState.Git
+                        else VersionControlSetupState.Unknown,
+                )
+            }
+        if (health !is Outcome.Ok || health.value.setupState != VersionControlSetupState.Git) return health
+        val changes =
+            (json("/vcs/status", query = locationQuery(location)) as? Outcome.Ok)?.value?.let { root ->
+                (((root as? JsonObject)?.get("data") ?: root) as? JsonArray)?.mapNotNull { row ->
+                    val obj = row as? JsonObject ?: return@mapNotNull null
+                    fun count(key: String) = (obj[key] as? JsonPrimitive)?.takeIf { !it.isString }?.intOrNull ?: 0
+                    VersionControlFile(
+                        obj.str("file")?.takeIf { it.isNotEmpty() } ?: return@mapNotNull null,
+                        obj.str("status").orEmpty(),
+                        count("additions"),
+                        count("deletions"),
+                    )
+                }
+            }
+        return Outcome.Ok(health.value.copy(changes = changes.orEmpty().toImmutableList()))
+    }
 
     /**
      * `GET /vcs/diff?mode=working` (protocol notes "VCS"): the folder's uncommitted changes vs
@@ -2332,6 +2442,10 @@ internal class Oc2Gateway(
         return imported.ok()
     }
 
+    /** A fork names its source (`fork.sessionID`); a fork without one still is a fork of its `parentID`. */
+    private fun forkOf(wire: Oc2Session): SessionId? =
+        wire.fork?.let { fork -> (fork.sessionID?.takeIf { it.isNotEmpty() } ?: wire.parentID)?.let(::SessionId) }
+
     internal fun sessionValue(value: JsonElement): Session? {
         val wire = Oc2Session.fromJson(value as? JsonObject ?: return null) ?: return null
         return Session(
@@ -2344,6 +2458,8 @@ internal class Oc2Gateway(
             path = wire.subpath,
             reverted = wire.reverted,
             stagedRevert = wire.revert?.let(::revertOf),
+            forkOf = forkOf(wire),
+            lastRunOutcome = runOutcomeOf(wire.outcome),
             time =
                 SessionTime(
                     wire.time.created,
@@ -2383,7 +2499,9 @@ internal class Oc2Gateway(
                 promptImagesOnly = false,
                 promptEchoTextOnly = false,
                 subagentReplies = true,
-                subagentSessions = false,
+                // Children are sessions listed by `GET /session?parentID=` (Flutter ops_sessions.dart
+                // listSessionChildren); forks are kept out by their `fork` field.
+                subagentSessions = true,
                 promptAgentMentions = true,
                 promptSteering = true,
                 offlinePromptQueue = true,
@@ -2391,7 +2509,9 @@ internal class Oc2Gateway(
                 terminal = true,
                 conversationShell = true,
                 projectManagement = true,
-                globalSessionSearch = false,
+                // listGlobalSessions: the unscoped root list (Flutter ops_projects.dart), so the home and All
+                // conversations read every project.
+                globalSessionSearch = true,
                 sessionDiff = false,
                 sessionFork = true,
                 sessionCompact = false,

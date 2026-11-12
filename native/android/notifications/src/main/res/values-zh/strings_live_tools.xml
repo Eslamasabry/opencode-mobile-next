@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="notify_tool_command">正在运行命令…</string>
+    <string name="notify_tool_edit">正在编辑文件…</string>
+    <string name="notify_tool_read">正在读取文件…</string>
+    <string name="notify_tool_search">正在搜索文件…</string>
+    <string name="notify_tool_web">正在浏览网页…</string>
+    <string name="notify_tool_subagent">正在运行子智能体…</string>
+    <string name="notify_tool_plan">正在规划…</string>
+    <string name="notify_tool_working">正在工作…</string>
+    <string name="notify_tool_card">正在显示卡片…</string>
+    <string name="notify_tool_backgroundtask">正在检查后台任务…</string>
+    <string name="notify_tool_other">正在运行 %1$s…</string>
+</resources>

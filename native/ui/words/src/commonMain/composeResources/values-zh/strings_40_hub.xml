@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="hub40Changed">该用量条目已变更。请刷新套餐以查看当前账号。</string>
+    <string name="hub40ContinueOn">在 %1$s 上继续？</string>
+    <string name="hub40ContinueBody">此快捷方式会请求打开已保存的连接以登录提供方。在你继续之前不会发送任何内容。</string>
+    <string name="hub40Continue">继续</string>
+</resources>

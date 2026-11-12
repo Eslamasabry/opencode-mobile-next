@@ -8,6 +8,7 @@ kotlin {
         api(project(":core:common"))
         api(project(":core:model"))
         api(project(":core:domain"))
+        api(project(":core:data")) // the edge dock registers its nickname key shape for the profile sweep
         implementation(project(":core:security"))
     }
 }

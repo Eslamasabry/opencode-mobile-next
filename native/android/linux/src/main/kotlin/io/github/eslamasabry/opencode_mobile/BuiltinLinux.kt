@@ -263,6 +263,9 @@ class BuiltinLinux(private val context: Context) {
     /**
      * Runs [script] with /bin/sh inside Ubuntu as root (faked by proot). The script is a process
      * argument, so secrets travel as [stdin] only.
+     *
+     * [stop] (a read of the phone's agents giving way to a person's step) ends the script the way its time limit does
+     * ([stopInstaller]: SIGTERM, so its traps run, then SIGKILL) and makes it answer -1; a stopped read starts none.
      */
     fun run(
         script: String,
@@ -270,15 +273,18 @@ class BuiltinLinux(private val context: Context) {
         agentUser: Boolean = false,
         logOutput: Boolean = true,
         stdin: String? = null,
+        stop: ProbeStop? = null,
     ): Result {
         val began = SystemClock.elapsedRealtime()
         val timeoutMillis = TimeUnit.SECONDS.toMillis(timeoutSeconds).coerceAtLeast(0L)
-        val process = admitCheckProcess(script, timeoutMillis, began, agentUser, stdin)
+        val process = admitCheckProcess(script, timeoutMillis, began, agentUser, stdin, stop)
         val output = StringBuilder()
         val readerFailed = java.util.concurrent.atomic.AtomicBoolean()
         var reader: Thread? = null
         try {
             process.outputStream.close()
+            // Stopped between the start and here: it is ended below at once, like a time-out.
+            val running = stop == null || stop.attach { stopInstaller(process) }
             reader =
                 Thread(
                         {
@@ -311,15 +317,18 @@ class BuiltinLinux(private val context: Context) {
                     }
             val remainingMillis =
                 (timeoutMillis - (SystemClock.elapsedRealtime() - began)).coerceAtLeast(0L)
-            val finished = process.waitFor(remainingMillis, TimeUnit.MILLISECONDS)
+            val finished = running && process.waitFor(remainingMillis, TimeUnit.MILLISECONDS)
             if (!finished) stopInstaller(process)
             reader.join(2000)
-            val complete = finished && !reader.isAlive && !readerFailed.get()
+            // A stopped script's answer is not news: it may have been ended halfway.
+            val complete = finished && !reader.isAlive && !readerFailed.get() && stop?.isStopped != true
             val text =
                 if (complete) synchronized(output) { output.takeLast(OUTPUT_CAP).toString() }
                 else ""
             return Result(if (complete) process.exitValue() else -1, text)
         } finally {
+            // First: a stop ending this script right now finishes before the slot below is freed.
+            stop?.detach()
             // IO/security failure or Thread.start refusal must not leak a child
             // or replace the original safe channel failure during cleanup.
             try {
@@ -347,10 +356,13 @@ class BuiltinLinux(private val context: Context) {
         began: Long,
         agentUser: Boolean,
         stdin: String?,
+        stop: ProbeStop?,
     ): Process {
         val queueDeadline = began + timeoutMillis.coerceAtMost(RUN_ADMISSION_WINDOW_MS)
         var admitted: Process? = null
         while (admitted == null) {
+            // A stopped read neither starts its script nor waits in this queue for the slot.
+            check(stop?.isStopped != true) { "Another phone task is running. Wait a moment and try again." }
             admitted =
                 synchronized(this) {
                     reclaimDeadInstaller()
@@ -1516,8 +1528,12 @@ class BuiltinLinux(private val context: Context) {
         )
     }
 
-    /** Private auth output bypasses neither the generic receipt filter nor owner checks. */
-    fun agentAuthProbe(arguments: Map<*, *>): Map<String, Any?> = privateAgentAuth.run(arguments)
+    /**
+     * Private auth output bypasses neither the generic receipt filter nor owner checks. [stop] lets a person's step
+     * end a read's probe instead of waiting for it.
+     */
+    fun agentAuthProbe(arguments: Map<*, *>, stop: ProbeStop? = null): Map<String, Any?> =
+        privateAgentAuth.run(arguments, stop)
 
     val agentSignIn by lazy { PhoneAgentSignIn(this) }
     val agentHost by lazy { PhoneAgentHost(this) }
@@ -1586,7 +1602,7 @@ class BuiltinLinux(private val context: Context) {
         val retained = diagnosticsPreferences.getStringSet("names", emptySet()).orEmpty() - names
         val edit = diagnosticsPreferences.edit().putStringSet("names", retained)
         names.forEach { name ->
-            listOf("exit", "uptime", "restarts", "launched", "exitAt", "stopRequested").forEach {
+            listOf("exit", "uptime", "restarts", "launched", "exitAt", "stopRequested", "launchedAt").forEach {
                 edit.remove("$name.$it")
             }
         }
@@ -1721,7 +1737,7 @@ class BuiltinLinux(private val context: Context) {
 
     private fun protectedCommand(command: List<String>): List<String> {
         PhoneEngineNative.verifyBundle(context, "libaiteam_sandbox.so")
-        val tmp = File(context.cacheDir, "proot-tmp").apply { mkdirs() }
+        val tmp = prootTmpDir()
         val policy =
             listOf(
                 "$nativeDir/libaiteam_sandbox.so",
@@ -2578,9 +2594,55 @@ class BuiltinLinux(private val context: Context) {
             }
         }
 
+    /**
+     * proot's scratch folder. It lives beside the app's other private files, not in the cache folder: Android clears
+     * a cache folder whenever storage runs low, and a step of minutes (apt) then ended with
+     * "proot error: can't chmod .../proot-tmp/...: No such file or directory". It is created on every launch.
+     */
+    fun prootTmpDir(): File =
+        File(context.noBackupFilesDir, "proot-tmp").apply { mkdirs() }
+
+    @Volatile private var prootTmpCleaning = false
+
+    /**
+     * Empties proot's scratch folder at the one moment it is safe: a server start with none of our proot processes
+     * running yet. Off the calling thread, bounded, and a failure is only logged (class name, no paths).
+     */
+    private fun cleanProotTmpWhenIdle() {
+        if (prootTmpCleaning) return
+        val safe =
+            try {
+                ProotTmpCleanup.safeToClean(
+                    serviceRunning = services.values.any { it.process.isAlive },
+                    processRunning = processes.any { it.isAlive },
+                    agentRunning = agentProcessProfiles.keys.any { it.isAlive },
+                    installerRunning = installerProcess?.isAlive == true,
+                    terminalLive = LocalTerminal.get(context).hasLiveSessions(),
+                )
+            } catch (_: Exception) {
+                false
+            }
+        if (!safe) return
+        val dir = File(context.noBackupFilesDir, "proot-tmp")
+        prootTmpCleaning = true
+        Thread(
+            {
+                try {
+                    val gone = ProotTmpCleanup.clean(dir)
+                    if (gone > 0) Log.i(TAG, "proot scratch folder: $gone old entries removed")
+                } catch (error: Exception) {
+                    Log.w(TAG, "proot scratch folder not cleaned: ${error.javaClass.simpleName}")
+                } finally {
+                    prootTmpCleaning = false
+                }
+            },
+            "proot-tmp-clean",
+        ).apply { isDaemon = true }.start()
+    }
+
     /** What proot itself needs in its environment, on top of the app's own. */
     fun prootEnvironment(compat: Boolean = false): Map<String, String> {
-        val tmp = File(context.cacheDir, "proot-tmp").apply { mkdirs() }
+        val tmp = prootTmpDir()
         val base =
             mapOf(
                 "PROOT_LOADER" to "$nativeDir/libproot-loader.so",
@@ -2643,6 +2705,10 @@ class BuiltinLinux(private val context: Context) {
                 else null,
             restartCount = diagnosticsPreferences.getInt("$name.restarts", 0),
             hasLaunched = diagnosticsPreferences.getBoolean("$name.launched", false),
+            lastLaunchAtMs =
+                if (diagnosticsPreferences.contains("$name.launchedAt"))
+                    diagnosticsPreferences.getLong("$name.launchedAt", 0)
+                else null,
         )
 
     private fun saveDiagnosticRecord(name: String, record: ServiceDiagnostics) {
@@ -2660,6 +2726,8 @@ class BuiltinLinux(private val context: Context) {
         record.lastExitAtMs?.let { edit.putLong("$name.exitAt", it) } ?: edit.remove("$name.exitAt")
         record.lastStopRequested?.let { edit.putBoolean("$name.stopRequested", it) }
             ?: edit.remove("$name.stopRequested")
+        record.lastLaunchAtMs?.let { edit.putLong("$name.launchedAt", it) }
+            ?: edit.remove("$name.launchedAt")
         if (!edit.commit()) Log.w(TAG, "Service diagnostics could not be saved")
     }
 
@@ -2670,7 +2738,7 @@ class BuiltinLinux(private val context: Context) {
         notice: String?,
         script: String? = null,
     ): Service {
-        saveDiagnosticRecord(name, diagnosticRecord(name).launched())
+        saveDiagnosticRecord(name, diagnosticRecord(name).launched(System.currentTimeMillis()))
         return Service(process, port, notice, script)
     }
 
@@ -2744,11 +2812,13 @@ class BuiltinLinux(private val context: Context) {
     private var activityEpoch = 0L
     @Volatile private var idleServerLive = false
     private var wantedRevision = 0L
+    // Only the person's own Stop is recorded here; nothing saved is not their Stop (PhoneServerStopRecord).
     private var userStopped =
-        recoveryPreferences.getBoolean(
-            "userStopped",
-            !recoveryPreferences.getBoolean("wanted", false),
-        )
+        try {
+            PhoneServerStopRecord.read(recoveryPreferences)
+        } catch (_: Throwable) {
+            true
+        }
     private var restartWanted = recoveryPreferences.getBoolean("wanted", false) && !userStopped
     private val restartBackoff = RestartBackoff()
     private var supervisionProfile: String? = recoveryPreferences.getString("owner", null)
@@ -2834,6 +2904,7 @@ class BuiltinLinux(private val context: Context) {
             "phase" to phase,
             "serverRunning" to serverRunning,
             "serverRestartWanted" to serverRestartWanted,
+            "serverStoppedByPerson" to serverStoppedByPerson,
             "serverRecoveryAuthority" to true,
             "serverRecoveryGeneration" to serverRecoveryGeneration,
             "serverRecoveryScheduled" to serverRecoveryScheduled,
@@ -3115,6 +3186,7 @@ class BuiltinLinux(private val context: Context) {
         config: String,
         port: Int = 4099,
         expectedHelperVersion: String? = null,
+        testedHelperVersions: Set<String> = emptySet(),
     ): Map<String, Any?> {
         val ticket = captureAgentHostStart(profile, false, null) ?: error("agent_host_unavailable")
         return withAgentHostStart(ticket) {
@@ -3124,7 +3196,10 @@ class BuiltinLinux(private val context: Context) {
                     password,
                     port,
                     config,
-                    PhoneAgentHost.HelperPolicy(expectedVersion = expectedHelperVersion),
+                    PhoneAgentHost.HelperPolicy(
+                        expectedVersion = expectedHelperVersion,
+                        testedVersions = testedHelperVersions,
+                    ),
                 )
             )
         }
@@ -3229,6 +3304,10 @@ class BuiltinLinux(private val context: Context) {
 
     val serverRestartWanted: Boolean
         get() = synchronized(recoveryLock) { restartWanted }
+
+    /** The person's own Stop holds the server off (PhoneServerStopRecord); no other stop does. */
+    val serverStoppedByPerson: Boolean
+        get() = synchronized(recoveryLock) { userStopped }
 
     val serverRecoveryGeneration: Long
         get() =
@@ -4980,18 +5059,23 @@ class BuiltinLinux(private val context: Context) {
         if (!resumed) cancelServerRecovery()
     }
 
-    /** Revokes admission immediately, before an asynchronous explicit stop. */
+    /**
+     * Revokes admission immediately, before an asynchronous explicit stop. Only [PhoneServerStopRecord.Cause.Person]
+     * records the person's Stop; any other cause withdraws the background restore and leaves the next app open free
+     * to start it again.
+     */
     fun requestServerStop(
         reason: String = "stopped",
         includeOther: Boolean = false,
         onRevoked: ((Long) -> Unit)? = null,
+        cause: PhoneServerStopRecord.Cause = PhoneServerStopRecord.Cause.Person,
     ): Long =
         synchronized(recoveryLock) {
             idleReturnNotification.clear()
             restartWanted = false
             serverEventTicket = null
             serverEventWorkerStarted = false
-            userStopped = true
+            userStopped = PhoneServerStopRecord.afterStop(userStopped, cause)
             supervisionGeneration++
             scheduledRecovery = false
             recoveryGeneration++
@@ -5009,7 +5093,8 @@ class BuiltinLinux(private val context: Context) {
                 recoveryPreferences
                     .edit()
                     .putBoolean("wanted", false)
-                    .putBoolean("userStopped", true)
+                    .putBoolean(PhoneServerStopRecord.LEGACY_KEY, true)
+                    .putBoolean(PhoneServerStopRecord.KEY, userStopped)
                     .remove("restoreOwner")
                     .putString("restoreReason", reason)
             capturePendingDrain(edit, profile, includeOther)
@@ -5135,7 +5220,7 @@ class BuiltinLinux(private val context: Context) {
                     confirmedRecoveryUndoProcess(profileId, expectedGeneration) ?: return false
                 // Save revocation and the exact owned drain before any signal. Holding this
                 // monitor prevents every service-start path from replacing the checked process.
-                requestServerStop()
+                requestServerStop(cause = PhoneServerStopRecord.Cause.Person)
                 serverRecipe = null
                 stoppedPhoneServer = null
                 owned
@@ -5172,7 +5257,9 @@ class BuiltinLinux(private val context: Context) {
                 recoveryPreferences
                     .edit()
                     .putBoolean("wanted", wanted)
-                    .putBoolean("userStopped", !wanted)
+                    .putBoolean(PhoneServerStopRecord.LEGACY_KEY, !wanted)
+                    // A start clears the person's Stop; a stop here is the app's own and keeps the record as it is.
+                    .putBoolean(PhoneServerStopRecord.KEY, !wanted && userStopped)
             val reason =
                 if (wanted) null
                 else
@@ -5196,7 +5283,7 @@ class BuiltinLinux(private val context: Context) {
             }
             revokeIdleTransition()
             restartWanted = wanted
-            userStopped = !wanted
+            userStopped = !wanted && userStopped
         }
     }
 
@@ -5375,17 +5462,7 @@ class BuiltinLinux(private val context: Context) {
         }
         beginServerStart()
         val chosen =
-            (listOf(selectedServerPort) + (4100..4199)).distinct().firstOrNull { candidate ->
-                try {
-                    java.net.ServerSocket().use { socket ->
-                        socket.reuseAddress = false
-                        socket.bind(java.net.InetSocketAddress("127.0.0.1", candidate))
-                    }
-                    true
-                } catch (_: java.io.IOException) {
-                    false
-                }
-            }
+            (listOf(selectedServerPort) + (4100..4199)).distinct().firstOrNull { LoopbackPort.free(it) }
                 ?: run {
                     selectedPortBusy = true
                     throw ServerPortBusy(selectedServerPort)
@@ -5420,6 +5497,20 @@ class BuiltinLinux(private val context: Context) {
 
     val serverRunning: Boolean
         get() = serviceRunning(SERVER)
+
+    /** The phone server's own service holds the shared status row now (so the app may lend it its words). */
+    fun holdsStatusRow(): Boolean = StatusNotification.isOwned(StatusNotification.OWNER_SERVER)
+
+    /**
+     * Posts the shared status row with the phone server's own words again, after the app's reply watch showed its
+     * working words there. False when no service of ours holds the row any more (the server is stopping, or its
+     * process outlived its service): the caller then takes its own row away, so no orphaned row stays behind.
+     */
+    fun repostStatusRow(): Boolean {
+        if (!StatusNotification.anyOwner()) return false
+        StatusNotification.refresh(context)
+        return true
+    }
 
     val port: Int?
         get() = servicePort(SERVER)
@@ -5537,11 +5628,14 @@ exec gc supervisor run
         restoreRecipe: Map<*, *>? = null,
     ) {
         synchronized(recoveryLock) {
+            // Opening the app in front is the person's own act: an app or Android stop does not hold it back, only
+            // the person's Stop does (PhoneServerStopRecord). A Stop that came first still moved the generation.
             check(
-                activityResumed &&
-                    restartWanted &&
-                    !userStopped &&
-                    recoveryGeneration == expectedGeneration
+                PhoneServerStopRecord.openStartAdmitted(
+                    activityResumed,
+                    userStopped,
+                    recoveryGeneration == expectedGeneration,
+                )
             ) {
                 "The phone server could not start."
             }
@@ -5721,6 +5815,7 @@ exec gc supervisor run
                 }
             synchronized(recoveryLock) { manualStartGeneration = recoveryGeneration }
         }
+        if (name == SERVER) cleanProotTmpWhenIdle()
         launchService(name, script, port, notice)
         if (name == SERVER) {
             workLeases.authorizeForegroundWork(workGeneration)

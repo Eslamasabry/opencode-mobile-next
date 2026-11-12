@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="chatReceiptCheckAgain">刷新</string>
+    <string name="chatReceiptChecking">正在确认你的消息是否送达…</string>
+    <string name="chatReceiptLastChecked">上次确认于 %1$s。</string>
+</resources>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="monitorServerUnavailable">无法检查此服务器。请打开对话查看请求。</string>
+    <string name="monitorServerWaiting">等待下一次检查。</string>
+    <string name="monitorServerCurrent">请求已检查。</string>
+    <string name="monitorServerPaused">检查已暂停。请打开应用，或恢复后台连接。</string>
+    <string name="monitorServerWifiRequired">正在等待 Wi-Fi。</string>
+</resources>

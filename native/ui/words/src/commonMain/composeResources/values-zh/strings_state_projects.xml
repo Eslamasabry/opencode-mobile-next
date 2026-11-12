@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="stateFolderNameEmpty">请输入文件夹名称。</string>
+    <string name="stateFolderNameSegment">请使用单个文件夹名称，不要含斜杠。</string>
+    <string name="stateFolderNameCharacters">请使用字母、数字、点、短横线或下划线，并以字母或数字开头（最多 64 个字符）。</string>
+    <string name="stateFolderCreating">正在创建项目文件夹…</string>
+</resources>

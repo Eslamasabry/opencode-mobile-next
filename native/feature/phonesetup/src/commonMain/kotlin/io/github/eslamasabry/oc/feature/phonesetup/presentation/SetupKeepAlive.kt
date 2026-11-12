@@ -49,9 +49,11 @@ public enum class SystemKill(
          * The kill the setup is blamed on: only the newest exit counts (a normal exit after it means the app ran on),
          * and only within [WINDOW_MS]. [exits] is newest first.
          */
-        public fun pick(exits: List<ExitFact>, nowMs: Long): SystemKill? {
+        public fun pick(exits: List<ExitFact>, nowMs: Long, sinceMs: Long = 0): SystemKill? {
             val newest = exits.firstOrNull() ?: return null
             if (nowMs - newest.atMs > WINDOW_MS) return null
+            // An exit from before this setup began cannot have stopped it (the tester's earlier runs, a data clear).
+            if (newest.atMs < sinceMs) return null
             // A swipe from Recents is REASON_OTHER too; the classifier's sub-reason read says it was the person.
             if (!newest.closedBySystem) return null
             return of(newest.reason, newest.memoryPressure)
@@ -199,7 +201,7 @@ public object SettingsOpener {
  */
 public interface SetupKeepAlive {
     /** The system kill behind the last exit that the setup is blamed on, or null. */
-    public suspend fun interruption(): SystemKill?
+    public suspend fun interruption(sinceMs: Long = 0): SystemKill?
 
     public suspend fun facts(): BatteryFacts?
 
@@ -208,7 +210,7 @@ public interface SetupKeepAlive {
 }
 
 public class NoSetupKeepAlive : SetupKeepAlive {
-    override suspend fun interruption(): SystemKill? = null
+    override suspend fun interruption(sinceMs: Long): SystemKill? = null
 
     override suspend fun facts(): BatteryFacts? = null
 

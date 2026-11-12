@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <plurals name="shareInPartial">
+        <item quantity="other">%1$d dari %2$d file ditambahkan. %3$s</item>
+    </plurals>
+    <string name="shareInReasonLimit">Satu draf memuat hingga 5 file dan 20 MB.</string>
+    <string name="shareInReasonTooLarge">Sisanya terlalu besar untuk dilampirkan (10 MB per file).</string>
+    <string name="shareInReasonUnsupported">Sisanya adalah jenis file yang tidak dapat dilampirkan.</string>
+    <string name="shareInReasonUnreadable">Sisanya tidak dapat dibaca. Coba bagikan lagi.</string>
+    <string name="shareInNoneTooLarge">Tidak ada yang ditambahkan. File terlalu besar untuk dilampirkan (10 MB per file, 20 MB total).</string>
+    <string name="shareInNoneUnsupported">Tidak ada yang ditambahkan. Jenis file ini tidak dapat dilampirkan.</string>
+    <string name="shareInNoneUnreadable">Tidak ada yang ditambahkan. File tidak dapat dibaca. Coba bagikan lagi.</string>
+    <string name="shareInGotIt">Mengerti</string>
+</resources>

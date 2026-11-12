@@ -20,6 +20,14 @@ internal fun dartRawStrings(path: String): Map<String, String> = rawStrings(File
 internal fun releasedDartSource(path: String): String =
     checkNotNull(object {}.javaClass.getResource("/flutter-2.1.4/$path.txt")) { "missing released twin $path" }.readText()
 
+/**
+ * The Flutter freeze tip's copy of [path] (`resources/flutter-freeze-tip`, the native candidate's Flutter tree before
+ * master was merged in): the source the agent pins were ported from, which `lib/` and `test/` no longer hold. See
+ * that folder's README.
+ */
+internal fun freezeTipSource(path: String): String =
+    checkNotNull(object {}.javaClass.getResource("/flutter-freeze-tip/$path.txt")) { "missing freeze-tip twin $path" }.readText()
+
 /** [dartRawStrings] over the released Flutter copy of [path]. */
 internal fun releasedDartRawStrings(path: String): Map<String, String> = rawStrings(releasedDartSource(path))
 

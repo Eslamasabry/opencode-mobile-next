@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="reviewTurnTitle">本轮的更改</string>
+    <string name="reviewOneFileUnavailable">暂时无法逐个文件撤销：此服务器只能从某条提示词开始撤销。请使用“全部撤销”，或在某条提示词上选择“从这里撤销”。</string>
+    <string name="reviewNoDiff">服务器没有报告此文件中更改的行。</string>
+    <string name="reviewFileGone">此文件已不在这些更改中。</string>
+    <string name="reviewIncomplete">无法读取更早的消息，所以此列表可能缺少一些文件。</string>
+    <string name="reviewNoChangesBody">智能体没有在这里报告任何文件编辑。</string>
+    <string name="reviewWaiting">有一项撤销正等你审阅。在你选择之前，其提示词之后的消息会被隐藏。</string>
+    <string name="reviewUndoUnknown">“全部撤销”需要这些更改所源自的提示词，但无法读取它。</string>
+    <string name="reviewUndoUnavailable">此服务器无法从某条提示词开始撤销。</string>
+    <string name="reviewToolEvidence">仅列出这个对话的智能体用其工具所做的更改。由命令创建的文件、Git 尚未跟踪的新文件以及其他对话中的更改不会列出。“未提交”列出 Git 在该文件夹中看到的内容。</string>
+    <string name="reviewSendBackFailed">无法把你的备注放进消息。请重试。</string>
+    <string name="reviewProjectNotGitTitle">不是 Git 项目</string>
+    <string name="reviewProjectNotGitBody">只有用 Git 管理的项目才能列出更改。请在项目的 Git 页面开始跟踪它，之后即可在这里看到更改。</string>
+    <string name="reviewProjectOpenGit">打开 Git 页面</string>
+</resources>

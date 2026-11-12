@@ -1660,4 +1660,8 @@
     <string name="teamVoiceApprovePlan">Bắt đầu xây dựng %1$s</string>
     <string name="teamVoiceAcceptPhase">Chấp nhận %1$s</string>
     <string name="teamVoicePutOnMain">Đưa %1$s lên main</string>
+    <string name="teamRefusalServerRestarted">OpenCode đã khởi động lại khi bước này đang chạy nên bước bị ngắt.</string>
+    <string name="teamRefusalServerRestartedNext">Chọn Tiếp tục để gửi lại bước đó. Nó sẽ làm tiếp từ phần việc đã xong.</string>
+    <string name="teamRefusalRestartResend">OpenCode đã khởi động lại khi bước này đang chạy. Nhóm đang gửi lại bước đó.</string>
+    <string name="teamRefusalRestartResendNext">Bạn không cần làm gì. Phần việc đã xong vẫn được giữ.</string>
 </resources>

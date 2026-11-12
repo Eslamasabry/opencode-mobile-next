@@ -71,6 +71,7 @@ import io.github.eslamasabry.oc.ui.routes.ChatRoute
 import io.github.eslamasabry.oc.ui.routes.ConnectionFormRoute
 import io.github.eslamasabry.oc.ui.routes.EntryInstaller
 import io.github.eslamasabry.oc.ui.routes.PreviewRoute
+import io.github.eslamasabry.oc.ui.routes.ServersRoute
 import io.github.eslamasabry.oc.ui.routes.SessionRelationsRoute
 import io.github.eslamasabry.oc.ui.routes.TerminalRoute
 import io.github.eslamasabry.oc.ui.routes.ToolsRoute
@@ -80,9 +81,17 @@ import io.github.eslamasabry.oc.ui.words.res.continuedIn
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.activeContextTitle
 import io.github.eslamasabry.oc.ui.words.res.chatQueueMoveTitle
+import io.github.eslamasabry.oc.ui.words.res.chatStopAfterStepPrompt
 import io.github.eslamasabry.oc.ui.words.res.devPreviewMenu
 import io.github.eslamasabry.oc.ui.words.res.firstRunNotifyTitle
+import io.github.eslamasabry.oc.ui.words.res.chatUiOtherDraftsWaiting
+import io.github.eslamasabry.oc.ui.words.res.kitSheetDismiss
 import io.github.eslamasabry.oc.ui.words.res.nativePendingCount
+import io.github.eslamasabry.oc.ui.words.res.queueEvictedJoin
+import io.github.eslamasabry.oc.ui.words.res.queueEvictedOverLimit
+import io.github.eslamasabry.oc.ui.words.res.queueEvictedSummary
+import io.github.eslamasabry.oc.ui.words.res.queueEvictedTooOld
+import io.github.eslamasabry.oc.ui.words.res.serverRowMoveQueued
 import io.github.eslamasabry.oc.ui.words.res.nativePendingFailed
 import io.github.eslamasabry.oc.ui.words.res.nativePendingReview
 import io.github.eslamasabry.oc.ui.words.res.protoToolsTitle
@@ -123,10 +132,14 @@ public class ChatEntries(
     private val transcriptPreferences:
         Set<io.github.eslamasabry.oc.feature.chat.presentation.TranscriptDisplayPreferences> =
         emptySet(),
+    private val toolFileOutputs: Set<io.github.eslamasabry.oc.feature.chat.world.ToolFileOutputs> =
+        emptySet(),
     private val pictureEncoders: Set<io.github.eslamasabry.oc.feature.chat.ui.ChatPictureEncoder> =
         emptySet(),
     private val activeContextKept: Set<io.github.eslamasabry.oc.feature.chat.context.ActiveContextLastKnown> =
         emptySet(),
+    /** The edge dock over the conversation, where the app binds one. */
+    private val edgeDocks: Set<io.github.eslamasabry.oc.feature.chat.ui.ChatEdgeDock> = emptySet(),
 ) : EntryInstaller {
     override fun EntryProviderScope<NavKey>.install() {
         entry<ConnectionFormRoute> { route ->
@@ -161,7 +174,13 @@ public class ChatEntries(
                 assistedMetroViewModel<ChatInboxViewModel, ChatInboxViewModel.Factory> {
                     create(route)
                 }
-            val pendingSends by pendingVm.state.collectAsStateWithLifecycle()
+            val inboxSends by pendingVm.state.collectAsStateWithLifecycle()
+            // C5 (Flutter `_isStopAfterStepNote`): while "Stopping after this step" is on, its own note waiting in the
+            // server's inbox is said by the live line (with Undo), not again in the waiting-messages strip.
+            val stopNoteWords = stringResource(Res.string.chatStopAfterStepPrompt).trim()
+            val pendingSends =
+                if (state.live?.stoppingAfterStep != true) inboxSends
+                else inboxSends.copy(rows = inboxSends.rows.filterNot { !it.local && it.text.trim() == stopNoteWords })
             var pendingOpen by remember(route.ref) { mutableStateOf(false) }
             val startVm =
                 assistedMetroViewModel<ChatStartViewModel, ChatStartViewModel.Factory> {
@@ -251,7 +270,79 @@ public class ChatEntries(
                                 { pendingOpen = true },
                             ),
                     )
-            val appStatus = KitStatus.highest(listOf(appNoticeStatus, pendingStatus, offerStatus))
+            // C3: the queue dropped drafts on its own (too old / over the limits); said once, with a way to dismiss.
+            val evictedStatus =
+                pendingSends.evicted?.let { evicted ->
+                    val reasons =
+                        listOfNotNull(
+                            evicted.tooOld
+                                .takeIf { it > 0 }
+                                ?.let {
+                                    pluralStringResource(
+                                        Res.plurals.queueEvictedTooOld,
+                                        it,
+                                        it.toString(),
+                                    )
+                                },
+                            evicted.overLimit
+                                .takeIf { it > 0 }
+                                ?.let {
+                                    pluralStringResource(
+                                        Res.plurals.queueEvictedOverLimit,
+                                        it,
+                                        it.toString(),
+                                    )
+                                },
+                        )
+                    KitStatus(
+                        KitStatusKind.Info,
+                        pluralStringResource(
+                            Res.plurals.queueEvictedSummary,
+                            evicted.total,
+                            evicted.total.toString(),
+                            reasons.joinToString(stringResource(Res.string.queueEvictedJoin)),
+                        ),
+                        id = "chat-queue-evicted",
+                        tone = io.github.eslamasabry.oc.ui.design.color.StatusTone.Attention,
+                        onDismiss = { pendingVm.evictionSeen() },
+                        dismissLabel = stringResource(Res.string.kitSheetDismiss),
+                    )
+                }
+            // S7 (Flutter chat_states.dart _queuedDraftsStatus): drafts waiting for other servers, with one Move action
+            // per source server (this server is the destination). The page moves them in one write with an Undo
+            // (OfflineQueue.moveMany); it says plainly when this server cannot take them.
+            val othersStatus =
+                pendingSends.others
+                    .takeIf { it.isNotEmpty() }
+                    ?.let { others ->
+                        val moves =
+                            others.map { other ->
+                                KitLineAction(
+                                    pluralStringResource(
+                                        Res.plurals.serverRowMoveQueued,
+                                        other.count,
+                                        other.count.toString(),
+                                        pendingSends.serverName,
+                                    ),
+                                    { navigator.open(ServersRoute.MoveQueued(other.source)) },
+                                )
+                            }
+                        KitStatus(
+                            KitStatusKind.Info,
+                            pluralStringResource(
+                                Res.plurals.chatUiOtherDraftsWaiting,
+                                pendingSends.othersTotal,
+                                pendingSends.othersTotal.toString(),
+                            ),
+                            id = "chat-queue-others",
+                            action = moves.first(),
+                            more = moves.drop(1),
+                        )
+                    }
+            val appStatus =
+                KitStatus.highest(
+                    listOf(appNoticeStatus, pendingStatus, evictedStatus, othersStatus, offerStatus)
+                )
             // The explanation and opt-in belong in a sheet, never a tall transcript banner.
             // The compact strip only opens the review; enabling still requires its explicit action.
             val offerContent: (@androidx.compose.runtime.Composable () -> Unit)? =
@@ -261,7 +352,6 @@ public class ChatEntries(
                             visible = offerDetails,
                             onDismissRequest = { offerDetails = false },
                             title = stringResource(Res.string.firstRunNotifyTitle),
-                            closeLabel = offer.declineLabel,
                         ) {
                             KitNotice(
                                 message = offer.message,
@@ -556,6 +646,33 @@ public class ChatEntries(
                                     prompts = prompts,
                                     facts = facts,
                                     transcriptDisplay = display,
+                                    toolFileSaver = toolFileOutputs.firstOrNull(),
+                                    onAttachToolFile = { file ->
+                                        val url = file.url
+                                        if (url != null)
+                                            inbox.offer(
+                                                ComposerInbox.target(
+                                                    route.ref.profileId.raw,
+                                                    route.ref.sessionId.raw,
+                                                ),
+                                                "",
+                                                attachments =
+                                                    listOf(
+                                                        io.github.eslamasabry.oc.core.model.PromptAttachment(
+                                                            mime = file.mime ?: "application/octet-stream",
+                                                            filename = file.displayName ?: "file",
+                                                            url = url,
+                                                        )
+                                                    ),
+                                            )
+                                    },
+                                    onToggleTimestamps =
+                                        transcriptPreferences
+                                            .singleOrNull()
+                                            ?.takeIf { it.canSetTimestamps }
+                                            ?.let { prefs ->
+                                                { prefs.setTimestamps(!display.timestampsVisible) }
+                                            },
                                     onOpenSession = vm::openSession,
                                     header =
                                         ChatHeaderSlot(
@@ -575,6 +692,7 @@ public class ChatEntries(
                                         offerContent?.invoke()
                                     },
                                     encodePng = pictureEncoders.firstOrNull()?.encodePng,
+                                    edgeDock = edgeDocks.firstOrNull(),
                                 )
                             }
                             ChatInboxSlot(

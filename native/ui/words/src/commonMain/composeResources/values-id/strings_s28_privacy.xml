@@ -6,7 +6,7 @@
     <string name="telemetryCrashesTitle">Laporan crash</string>
     <string name="telemetryCrashesDetail">Mengirim laporan crash ke Google Firebase Crashlytics: jenis kesalahan dan lokasinya di kode aplikasi, tanpa pesannya, langkah terakhir Anda dalam kata singkat, dan alasan Android menutup aplikasi terakhir kali. Tanpa kode, percakapan, file, alamat, kunci, atau ID iklan.</string>
     <string name="collectTitle">Yang kami kumpulkan</string>
-    <string name="collectRowSummary">Kedua tombol mulai dalam keadaan mati. Lihat persis apa yang dikirim masing-masing.</string>
+    <string name="collectRowSummary">Penggunaan dan Laporan error aplikasi tetap nonaktif kecuali Anda menjawab ya saat ditanya. Lihat persis apa yang dikirim masing-masing.</string>
     <string name="collectUsageNotSentYet">Versi ini belum mengirim penggunaan dan kesehatan aplikasi. Jawaban Anda disimpan dan dipakai setelah fitur itu tersedia.</string>
     <string name="collectRules">Hanya kata baku dan rentang angka yang dikirim, tidak pernah teks bebas. Mematikan tombol menghapus data yang belum terkirim.</string>
     <string name="collectUsageLabel">Dengan Penggunaan dan kesehatan aplikasi</string>
@@ -33,6 +33,6 @@
     <string name="collectExit">Alasan Android menutup aplikasi terakhir kali (misalnya crash, macet, atau memori rendah)</string>
     <string name="collectSteps">30 langkah terakhir Anda, dalam kata singkat seperti chat.send</string>
     <string name="collectCrashKeys">Versi aplikasi, cara pemasangannya, jenis server, apakah server ponsel ini berjalan, jumlah koneksi yang terbuka, dan versi server</string>
-    <string name="collectReport">500 baris terakhir log aplikasi sendiri, dengan kunci, alamat, dan path dikosongkan. Anda melihat semuanya dan memilih Kirim atau Batal.</string>
     <string name="collectNever">Perintah dan balasan Anda, nama file atau path, alamat web, nama host, alamat IP, teks pesan kesalahan, kunci atau token, ID iklan, atau ID Android</string>
+    <string name="collectReport">Apa yang Anda tulis tentang masalahnya, terakhir kali aplikasi tertutup tak terduga, versi aplikasi dan Android, rentang memori, dan jenis server, dengan kunci, alamat, dan path disamarkan. Tanpa log dan tanpa percakapan. Anda melihat semuanya dan memilih Kirim atau Batal.</string>
 </resources>

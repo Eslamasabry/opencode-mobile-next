@@ -32,12 +32,14 @@ import io.github.eslamasabry.oc.ui.kit.capability.KitCapabilityExplainer
 import io.github.eslamasabry.oc.ui.kit.capability.KitCapabilityVariant
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
+import io.github.eslamasabry.oc.ui.kit.frame.KitFloatingBar
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenWidth
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.aboutAllLicences
 import io.github.eslamasabry.oc.ui.words.res.aboutBundledComponents
 import io.github.eslamasabry.oc.ui.words.res.aboutTitle
 import io.github.eslamasabry.oc.ui.words.res.appUpdatesTitle
@@ -196,6 +198,16 @@ public fun SettingsScreen(
                 modifier,
             ) {
                 NoticesBody()
+            }
+        SettingsPage.Licences ->
+            SettingsFrame(
+                stringResource(Res.string.aboutAllLicences),
+                back,
+                state,
+                actions,
+                modifier,
+            ) {
+                NoticesBody(file = "files/LICENCES.md")
             }
         SettingsPage.PhraseChips ->
             SettingsFrame(
@@ -371,6 +383,9 @@ internal fun SettingsFrame(
             else KitScreenWidth.Reading,
         page = true,
         edges = KitScreenEdges.Bleed,
+        // Glass step 4: where the lens is drawn the page scrolls on under its bar, a floating liquid capsule; the kit
+        // records the page for it. Everywhere else the bar is pinned as before.
+        floatingBar = KitFloatingBar(),
     ) {
         Column(Modifier.fillMaxSize()) {
             Column(

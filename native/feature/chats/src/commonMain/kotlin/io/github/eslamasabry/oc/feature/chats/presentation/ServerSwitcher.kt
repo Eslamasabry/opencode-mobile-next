@@ -23,6 +23,29 @@ public enum class SwitcherServerState {
     Saved,
 }
 
+/** A saved server whose password or token has to be typed again (F: `requiresPasswordReentry`/`requiresCodexTokenReentry`). */
+public enum class SwitcherSecret {
+    None,
+    Password,
+    Token,
+}
+
+/**
+ * What waits on the person at another server, for the row's one act (F: server_switcher_sheet.dart `_ask`): Allow once
+ * only when a single shell request waits and its exact command is known; otherwise Open.
+ */
+public data class SwitcherAsk(
+    /** The first waiting conversation, which Open goes to. */
+    val ref: io.github.eslamasabry.oc.core.common.ids.ConversationRef,
+    /** How many conversations there wait on the person. */
+    val count: Int,
+    /** The one request Allow once answers, with the command the person sees beside the button. */
+    val requestId: String? = null,
+    val command: String? = null,
+) {
+    public val allowable: Boolean get() = count == 1 && requestId != null && !command.isNullOrBlank()
+}
+
 /** One row of the server switcher: a saved server and what the app knows of it now. */
 public data class SwitcherServerUi(
     val profile: ProfileId,
@@ -35,6 +58,10 @@ public data class SwitcherServerUi(
     val working: Int = 0,
     /** Conversations there that wait on the person. */
     val needsYou: Int = 0,
+    /** Its saved password or token cannot be used: the row says so and a tap goes to its form. */
+    val secret: SwitcherSecret = SwitcherSecret.None,
+    /** What waits there, when something does and the server answers. */
+    val ask: SwitcherAsk? = null,
 )
 
 /** The one-tap switcher the home's server pill opens. */
@@ -44,6 +71,9 @@ public data class ServerSwitcherUi(
     val switching: ProfileId? = null,
     /** Why the last switch did not happen; the sheet stays open to say it. */
     val failure: Failure? = null,
+    /** Answers held for the home's undo window, by request id (the same hold the home rows use). */
+    val held: kotlinx.collections.immutable.ImmutableMap<String, HomeHeldReply> =
+        kotlinx.collections.immutable.persistentMapOf(),
 )
 
 /** Plain rules for the switcher's rows; `ServerSwitcherRulesTest` drives them. */
@@ -58,9 +88,12 @@ public object ServerSwitcherRules {
         val working = top.filter { it.status == ChatStatus.Running }.groupingBy { it.profileId }.eachCount()
         val waiting =
             top.filter { it.status == ChatStatus.NeedsYou || it.permission != null }.groupingBy { it.profileId }.eachCount()
+        val waitingRows =
+            top.filter { it.status == ChatStatus.NeedsYou || it.permission != null }.groupBy { it.profileId }
         val opening = extra.opening
         val rows =
-            extra.sources.map { source ->
+            // The agents on this phone are part of This phone, not a server (F: the switcher lists saved profiles only).
+            extra.sources.filterNot { it.agents }.map { source ->
                 val state =
                     when {
                         source.main && opening != null && (opening.profile == null || opening.profile == source.profile) ->
@@ -70,7 +103,19 @@ public object ServerSwitcherRules {
                         source.main -> SwitcherServerState.Connected
                         else -> SwitcherServerState.Saved
                     }
+                val asking = if (state == SwitcherServerState.NotAnswering) emptyList() else waitingRows[source.profile].orEmpty()
+                val first = asking.firstOrNull()
                 SwitcherServerUi(
+                    secret = source.secret,
+                    ask =
+                        first?.let {
+                            SwitcherAsk(
+                                ref = it.ref,
+                                count = asking.size,
+                                requestId = it.permission?.requestId,
+                                command = it.permission?.command,
+                            )
+                        },
                     profile = source.profile,
                     name = source.name,
                     current = source.main,

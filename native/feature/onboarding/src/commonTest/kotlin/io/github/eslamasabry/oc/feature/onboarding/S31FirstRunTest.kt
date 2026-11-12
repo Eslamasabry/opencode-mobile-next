@@ -171,7 +171,7 @@ class S31FirstRunTest {
             }
             onAllNodes(hasText("Where should your agent run?"), useUnmergedTree = true).assertCountEquals(1)
             onNode(hasText("On this phone"), useUnmergedTree = true).assertExists()
-            onNode(hasText("About 6 minutes · 165 MB download"), useUnmergedTree = true).assertExists()
+            onNode(hasText("About 165 MB to download"), useUnmergedTree = true).assertExists()
             onNode(hasText("On my computer"), useUnmergedTree = true).assertExists()
             onNode(hasText("Pair with a code, or type its address"), useUnmergedTree = true).assertExists()
             onNodeWithText("Just show me").assertExists()

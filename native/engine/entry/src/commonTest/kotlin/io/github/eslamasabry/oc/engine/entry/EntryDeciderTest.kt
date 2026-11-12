@@ -314,6 +314,19 @@ class EntryDeciderTest {
         assertEquals(Drop(), decide(alert(AlertKind.Test)))
     }
 
+    @Test
+    fun `a computer team's alert opens its Gate page or its task page, and a phone team's keeps the lists`() {
+        fun team(kind: AlertKind, id: String, profile: ProfileId? = null) =
+            EntryRequest.AlertOpen(kind, profile ?: P1, SessionId(id), null, false, T0)
+        val active = P1
+        assertEquals(Go(EntryTarget.TeamPage(active, true, "g1")), decide(team(AlertKind.TeamDecision, "gate:g1")))
+        assertEquals(Go(EntryTarget.TeamPage(active, true, "g2")), decide(team(AlertKind.TeamReview, "gate:g2")))
+        assertEquals(Go(EntryTarget.TeamPage(active, false, "r1")), decide(team(AlertKind.TeamRunFailed, "run:r1")))
+        assertEquals(Go(EntryTarget.TeamPage(active, false, "r2")), decide(team(AlertKind.TeamCompleted, "run:r2")))
+        assertEquals(Go(EntryTarget.NeedsYou), decide(team(AlertKind.TeamDecision, "request-9")))
+        assertEquals(Go(EntryTarget.Conversations(ConversationsFilter.None)), decide(team(AlertKind.TeamCompleted, "project-9")))
+    }
+
     // ---- 07 §7.9 ----
 
     private val schedules =

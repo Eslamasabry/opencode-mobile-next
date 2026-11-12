@@ -43,6 +43,15 @@ public data class AgentsUi(
     val removal: PhoneAgentRemoval? = null,
     val installIssue: PhoneAgentInstallIssue? = null,
     val installingAgent: PhoneAgentRow? = null,
+    /** The free space the open install review needs and what the phone has, once read; null until then or unknown. */
+    val installSpace: PhoneAgentSpace? = null,
+    /** A running install has shown no new step or byte for a while: the tile says it is still working. */
+    val installQuiet: Boolean = false,
+    /**
+     * The agent whose install this page followed and which then ended with no result at all while the agent is still
+     * not installed: it reads as an interrupted install (Try again, Dismiss), never as a silent "Not installed".
+     */
+    val lostInstall: String? = null,
     val revertingAgent: PhoneAgentRow? = null,
     val previousVersionFailed: Boolean = false,
     val previousVersionRestored: Boolean = false,
@@ -61,6 +70,10 @@ public data class AgentsUi(
     val unreadComputers: kotlinx.collections.immutable.ImmutableSet<ProfileId> = kotlinx.collections.immutable.persistentSetOf(),
     /** The agent whose sheet is open (its actions: install, sign in, sign out, earlier version, remove). */
     val sheetAgent: String? = null,
+    /** The agent whose phone check is running now, and the agent whose last check failed with why. */
+    val checkingAgent: String? = null,
+    val checkFailedAgent: String? = null,
+    val checkFailure: io.github.eslamasabry.oc.engine.agents.check.PhoneCheckFailure? = null,
     val resettingSignIns: Boolean = false,
     val resetFailed: Boolean = false,
     val signingOutAgent: PhoneAgentRow? = null,
@@ -78,8 +91,8 @@ public interface AgentsActions {
     /** Pull to refresh: this phone's agents, and on the computers tab every computer's agents. */
     public fun pullRefresh() {}
 
-    /** A new conversation with the phone's agents (a ready tile's New chat). */
-    public fun newPhoneConversation() {}
+    /** New conversation opened with [agent] chosen (a ready tile's New chat, the sheet's "Use {agent}"; F: `selectChatAgent`). */
+    public fun newPhoneConversation(agent: String) {}
 
     public fun back()
 
@@ -136,9 +149,21 @@ public interface AgentsActions {
 
     public fun signInPhone(id: String) {}
 
+    /** Runs the phone check for [id] (the tile's "Check" and the sheet's primary). */
+    public fun checkPhoneAgent(id: String) {}
+
+    /** Starts the stopped agent helper again by hand ("Resume {agent}"). */
+    public fun resumePhoneAgent(id: String) {}
+
     public fun installPhone(id: String) {}
 
     public fun cancelPhoneInstall() {}
+
+    /** "Update the agent helper" when the helper is missing or older than the app can run. */
+    public fun updatePhoneHelper() {}
+
+    /** Puts the last failed or interrupted install's notice away. */
+    public fun dismissInstallResult() {}
 
     public fun refreshPhone()
 

@@ -77,6 +77,9 @@ public interface ChatWorld {
     public val parent: StateFlow<ConversationRef?>
         get() = NoParent
 
+    /** Another conversation's title on this conversation's server (the parent's, for the header); null = unknown. */
+    public suspend fun conversationTitle(other: ConversationRef): String? = null
+
     /** Flutter "Try now": cancel the wait and try the link at once. Never resends anything. */
     public fun tryLinkNow() {}
 
@@ -91,6 +94,14 @@ public interface ChatWorld {
     /** Flutter "Restart OpenCode" for this phone's server, after the person confirmed. */
     public suspend fun restartPhoneServer(): Outcome<Unit> =
         Outcome.Failed(Failure.Unavailable(FeatureId("restartPhoneServer")))
+
+    /** True when this conversation's server is the phone agents' helper (Restart agent is offered). */
+    public val serverIsAgentHelper: Boolean
+        get() = false
+
+    /** Starts the phone agents' helper when it is not answering; Ok when it already is. */
+    public suspend fun startAgentHelper(): Outcome<Unit> =
+        Outcome.Failed(Failure.Unavailable(FeatureId("startAgentHelper")))
 
     /** Optimistic prompt bubbles not yet in the transcript, oldest first (plan 09 §4.6). */
     public val pending: StateFlow<ImmutableList<PendingSend>>
@@ -207,6 +218,28 @@ public interface ChatWorld {
      * attachments aside).
      */
     public suspend fun sendAgain(text: String): Outcome<Unit> = send(text)
+
+    /**
+     * C5 (Flutter `_undoStopAfterStep`): takes back a note that still waits in the server's inbox, unread by the agent.
+     * False when it is not waiting any more (the agent has it) or this server keeps no inbox.
+     */
+    public suspend fun withdrawNote(text: String): Boolean = false
+
+    /**
+     * C6: the row keys ("prompt:<id>") of this conversation's copies that were stopped and sent again, remembered
+     * across restarts. Empty when this build keeps no memory.
+     */
+    public fun withdrawnPrompts(): Set<String> = emptySet()
+
+    /** Remembers that the copy under [promptKey] was stopped and sent again (bounded, per server, swept with it). */
+    public suspend fun rememberWithdrawn(promptKey: String) {}
+
+    /**
+     * C6 (Flutter `MidTurnPromptGateway.midTurnPrompt`): what a message sent while the agent works does to the running
+     * turn, for gateways whose agents never hold one. Null: this server steers by capability, or the agent is not
+     * known yet.
+     */
+    public fun midTurn(): io.github.eslamasabry.oc.core.model.MidTurnPrompt? = null
 
     /**
      * B-169: the prompt that started [turnId] as the transcript holds it (words, files, agent, the model its reply ran

@@ -12,4 +12,5 @@
     <string name="agentsPreviousVersionBody">Переключиться на проверенную предыдущую версию, сохранённую на этом телефоне? Сначала помощник остановится, затем агенты на телефоне подключатся снова. Входы и чаты сохранятся.</string>
     <string name="agentsPreviousVersionFailed">Не удалось вернуть предыдущую версию. Завершите все выполняемые задачи и повторите попытку.</string>
     <string name="agentsPreviousVersionRestored">Предыдущая версия восстановлена.</string>
+    <string name="agentsHelperStartAgain">Запустить помощник агентов</string>
 </resources>

@@ -13,6 +13,7 @@ import io.github.eslamasabry.oc.core.data.kv.string
 import io.github.eslamasabry.oc.core.domain.ServerOperationsGateway
 import io.github.eslamasabry.oc.core.domain.facet
 import io.github.eslamasabry.oc.engine.agents.models.CatalogModel
+import io.github.eslamasabry.oc.engine.agents.models.CatalogVariant
 import io.github.eslamasabry.oc.engine.agents.models.ModelCost
 import io.github.eslamasabry.oc.engine.agents.models.ModelKeys
 import io.github.eslamasabry.oc.engine.agents.models.ModelRef
@@ -21,6 +22,7 @@ import io.github.eslamasabry.oc.engine.connection.ConnectionGraph
 import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
 import io.github.eslamasabry.oc.feature.settings.presentation.ModelDefaultsData
 import io.github.eslamasabry.oc.feature.settings.presentation.ModelDefaultsHost
+import io.github.eslamasabry.oc.feature.settings.presentation.ModelDefaultsMode
 import io.github.eslamasabry.oc.feature.settings.presentation.NoModelDefaultsHost
 import io.github.eslamasabry.oc.feature.settings.presentation.KeptModelDefaults
 
@@ -78,6 +80,7 @@ class LiveModelDefaultsHost(
                         provider.id,
                         info?.name ?: id,
                         info?.enabled ?: true,
+                        variants = info?.variants?.map { CatalogVariant(it.id, it.disabled) }.orEmpty(),
                         cost =
                             info?.cost?.let { ModelCost(it.inputPerMillion, it.outputPerMillion) },
                     )
@@ -101,6 +104,20 @@ class LiveModelDefaultsHost(
                     providers.defaultModelId?.let { ModelRef(provider, it) }
                 },
             )
+        // Modes (agents) a conversation can start in: gated on the capability, never on the flavour. Primary and
+        // not hidden, as Flutter's picker lists them.
+        val modes =
+            if (!gateway.capabilities.value.agentSelection) emptyList()
+            else
+                catalog
+                    ?.agents
+                    ?.filter { !it.hidden && it.mode != "subagent" }
+                    ?.map { ModelDefaultsMode(it.id, it.description.orEmpty().trim()) }
+                    ?: (gateway.agents() as? Outcome.Ok)
+                        ?.value
+                        ?.filter { it.mode != "subagent" }
+                        ?.map { ModelDefaultsMode(it.name) }
+                        .orEmpty()
         val data =
             ModelDefaultsData(
                 graph.profile.name,
@@ -109,6 +126,12 @@ class LiveModelDefaultsHost(
                 stored ?: serverDefaults.firstOrNull(),
                 serverDefaults,
                 modelStore.modelLibrary(profile),
+                stores.prefs.string("oc.variant.${profile.raw}").orEmpty(),
+                // The chat's sheet groups by the server's provider names; the ids are the fallback.
+                providers.providers.filter { it.name.isNotBlank() }.associate { it.id to it.name },
+                usesDefault = stored == null,
+                modes = modes.distinctBy { it.id },
+                mode = stores.prefs.string("oc.agent.${profile.raw}").orEmpty(),
             )
         shelf.keep(profile, value = KeptModelDefaults.of(data))
         return Outcome.Ok(data)
@@ -124,7 +147,12 @@ class LiveModelDefaultsHost(
                 ?.split('|')
                 ?.takeIf { it.size >= 2 }
                 ?.let { ModelRef(it[0], it[1]) }
-        return kept.data(library, stored)
+        return kept.data(
+            library,
+            stored,
+            stores.prefs.string("oc.variant.${id.raw}").orEmpty(),
+            stores.prefs.string("oc.agent.${id.raw}").orEmpty(),
+        )
     }
 
     companion object {
@@ -144,11 +172,54 @@ class LiveModelDefaultsHost(
         val store = ModelStore(KvAgentPrefs(stores.prefs, stores.lanes.forProfile(profile)))
         val library = model?.let { store.modelLibrary(profile).remember(it) }
         return stores.prefs.commit(stores.lanes.forProfile(profile)) {
+            // A thinking level belongs to its model: a new choice starts on the model's own default.
+            remove("oc.variant.${profile.raw}")
             if (model == null) remove("oc.model.${profile.raw}")
             else putString("oc.model.${profile.raw}", "${model.providerId}|${model.modelId}")
             if (library != null)
                 putString(ModelKeys.modelLibrary(profile), library.toJson().toString())
         }
     }
-}
 
+    override suspend fun chooseWithVariant(model: ModelRef, variant: String): Outcome<Unit> {
+        val (profile, graph) = captured ?: return stale()
+        if (
+            registry.live.value[profile] !== graph ||
+                graph.session.server.location.value != capturedLocation ||
+                graph.session.server.scopeRevision != capturedRevision ||
+                stores.profiles.profile(profile) == null ||
+                available.none { it.sameModel(model) }
+        )
+            return stale()
+        val store = ModelStore(KvAgentPrefs(stores.prefs, stores.lanes.forProfile(profile)))
+        val library = store.modelLibrary(profile).remember(model)
+        return stores.prefs.commit(stores.lanes.forProfile(profile)) {
+            putString("oc.model.${profile.raw}", "${model.providerId}|${model.modelId}")
+            if (variant.isEmpty()) remove("oc.variant.${profile.raw}")
+            else putString("oc.variant.${profile.raw}", variant)
+            putString(ModelKeys.modelLibrary(profile), library.toJson().toString())
+        }
+    }
+
+    override suspend fun chooseMode(mode: String): Outcome<Unit> {
+        val (profile, graph) = captured ?: return stale()
+        if (
+            registry.live.value[profile] !== graph ||
+                graph.session.server.location.value != capturedLocation ||
+                graph.session.server.scopeRevision != capturedRevision ||
+                stores.profiles.profile(profile) == null
+        )
+            return stale()
+        // The same key Flutter used, so a migrated profile keeps its choice; swept with the profile.
+        return stores.prefs.commit(stores.lanes.forProfile(profile)) {
+            if (mode.isEmpty()) remove("oc.agent.${profile.raw}") else putString("oc.agent.${profile.raw}", mode)
+        }
+    }
+
+    override suspend fun toggleFavorite(model: ModelRef): Outcome<Unit> {
+        val (profile, graph) = captured ?: return stale()
+        if (registry.live.value[profile] !== graph || stores.profiles.profile(profile) == null) return stale()
+        val store = ModelStore(KvAgentPrefs(stores.prefs, stores.lanes.forProfile(profile)))
+        return store.setModelLibrary(profile, store.modelLibrary(profile).toggleFavorite(model))
+    }
+}

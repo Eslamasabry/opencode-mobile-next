@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="statePin">置顶对话</string>
+    <string name="stateUnpin">取消置顶对话</string>
+    <string name="statePinFailed">无法保存置顶。请重试。</string>
+    <string name="stateContextUsage">上次上下文：%1$d%</string>
+    <string name="stateSavedPreview">已保存的列表。连接后才能打开此对话。</string>
+</resources>

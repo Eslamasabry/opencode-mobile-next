@@ -61,6 +61,20 @@ public data class AllModel(
     /** The folder each server is open on now, trimmed; "Continue here" moves into it. */
     val openFolders: Map<ProfileId, String> = emptyMap(),
     val moving: MovingHere? = null,
+    /** H4: the tapped agent conversation that cannot be reopened, waiting for "Start new conversation". */
+    val startNew: StartNewUi? = null,
+    /** Per row key: needs-you and unread, from the home feed. */
+    val attention: Map<String, RowAttention> = emptyMap(),
+    /** Servers that can import a conversation file (`sessionImportExport` and the import door). */
+    val importCapable: Set<ProfileId> = emptySet(),
+    val importing: ImportModel? = null,
+)
+
+/** The open import: the servers to choose from, the chosen one, and its reviewed state. */
+public data class ImportModel(
+    val choices: List<ServerName> = emptyList(),
+    val profile: ProfileId? = null,
+    val session: io.github.eslamasabry.oc.engine.agents.sessionimport.SessionImportUi? = null,
 )
 
 /** The "Continue here" question for one row; [working] while the server moves it, [failed] keeps it open. */
@@ -116,7 +130,9 @@ public object AllConversationsRules {
             )
         }
         val names = model.servers.associate { it.profile to it.name }
-        val many = model.servers.size > 1
+        // A row names its server only when the list holds more than one: This phone's agents carry the phone's name
+        // (they are part of it), so the phone and its agents alone name none.
+        val many = model.servers.map { it.name }.distinct().size > 1
         val hidden = model.pending.map { it.key }.toSet() + model.hiddenSent
         // Subagent sessions belong to their parent's page, never this list (Dart rootsOnly: true);
         // the AI Team's own
@@ -152,6 +168,8 @@ public object AllConversationsRules {
         }
         val rows = shown.map { e ->
             val k = key(e.profile, e.session.id)
+            val attention = model.attention[k]
+            val needsYou = attention?.needsYou == true
             AllRowUi(
                 key = k,
                 ref = ConversationRef(e.profile, e.session.id),
@@ -178,6 +196,14 @@ public object AllConversationsRules {
                     model.sources[e.profile]?.contextUsage?.get(e.session.id)?.let {
                         (it * 100).toInt()
                     },
+                updatedMs = updatedAt(e.session),
+                needsYou = needsYou,
+                unread = !needsYou && !e.running && attention?.unread == true && attention.stopped != true &&
+                        attention.interrupted != true,
+                stopped = !needsYou && !e.running && attention?.stopped == true,
+                interrupted = !needsYou && !e.running && attention?.interrupted == true,
+                failed = !needsYou && !e.running && attention?.failed == true,
+                folder = e.session.directory?.trim()?.takeIf { it.isNotEmpty() },
             )
         }
         val chipDirs =
@@ -237,6 +263,7 @@ public object AllConversationsRules {
                     .map { it.name }
                     .toImmutableList(),
             problem = model.problem,
+            startNew = model.startNew,
             moveHere =
                 model.moving?.let { moving ->
                     val row = rows.firstOrNull { it.key == moving.key }
@@ -254,6 +281,15 @@ public object AllConversationsRules {
                         )
                 },
             renaming = model.renaming,
+            canImport = model.importCapable.isNotEmpty(),
+            import =
+                model.importing?.let { open ->
+                    ImportUi(
+                        choices = open.choices.toImmutableList(),
+                        server = model.servers.firstOrNull { it.profile == open.profile }?.name,
+                        session = open.session,
+                    )
+                },
             undo =
                 if (model.pending.isEmpty()) null
                 else

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="background_pause_time_limit">为节省电量，后台连接已于 %1$s 暂停。</string>
+    <string name="background_pause_restricted">后台连接已暂停：电池使用受限。</string>
+    <string name="background_pause_user_stopped">后台连接已随应用在 %1$s 关闭而停止。</string>
+    <string name="background_pause_app_updated">后台连接已随应用在 %1$s 更新而停止。</string>
+    <string name="background_pause_interrupted">后台连接因未知原因停止。</string>
+    <string name="background_pause_device_restarted">后台连接已随手机重启而停止。</string>
+    <string name="background_pause_resume">恢复后台连接</string>
+    <string name="background_pause_resume_short">恢复</string>
+    <string name="background_pause_resuming">正在恢复后台连接…</string>
+    <string name="background_pause_resume_failed">无法恢复。请打开“保持运行”设置。</string>
+    <string name="background_pause_open_keep_running">打开“保持运行”设置</string>
+    <string name="background_pause_resumed">后台连接已恢复。</string>
+    <string name="background_error_notifications_required">需要通知权限。</string>
+    <string name="background_error_could_not_change">Android 无法更改后台模式。</string>
+    <string name="background_error_android_app_only">后台实时模式仅在 Android 应用中可用。</string>
+</resources>

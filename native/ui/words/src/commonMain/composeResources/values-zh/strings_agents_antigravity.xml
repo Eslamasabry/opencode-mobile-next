@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="agentPersonaAntigravityStrength">终端里的 Antigravity</string>
+    <string name="agentPersonaAntigravityAbout">Google 以终端为先的 Antigravity 智能体使用方式。</string>
+    <string name="agentPersonaAntigravityNeeds">Google 账号；在浏览器中登录</string>
+    <string name="agentsAntigravitySignInIntro">Antigravity 会在终端里给你一个登录链接。请在浏览器中打开并使用 Google 登录，然后把浏览器给出的代码粘贴到终端。</string>
+    <string name="agentsGeminiMigrationNote">如果 Gemini CLI 提示你改用 Antigravity，请回到智能体页面，安装 Antigravity（agy）。你的 Gemini 对话会保留在这里。</string>
+</resources>

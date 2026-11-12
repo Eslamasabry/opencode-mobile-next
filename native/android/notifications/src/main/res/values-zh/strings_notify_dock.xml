@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="notify_dock_channel">实时对话</string>
+    <string name="notify_dock_channel_description">一条安静的通知，在有任务运行或等你处理时列出正在进行的对话。锁屏上不显示对话名称。</string>
+    <string name="notify_dock_untitled">未命名对话</string>
+    <string name="notify_dock_helper_generic">一个子智能体</string>
+    <string name="notify_dock_name_needs_you">%1$s 需要你处理</string>
+    <string name="notify_dock_waiting_answer">等你回答</string>
+    <plurals name="notify_dock_others_working">
+        <item quantity="other">另有 %1$s 个在工作</item>
+    </plurals>
+    <string name="notify_dock_helper_asking">其子智能体 %1$s 正在提问</string>
+    <string name="notify_dock_working_on">正在处理 %1$s</string>
+    <string name="notify_dock_state_working">工作中</string>
+    <string name="notify_dock_state_thinking">思考中</string>
+    <string name="notify_dock_state_needs_you">需要你处理</string>
+    <string name="notify_dock_state_done">已完成，尚未打开</string>
+    <string name="notify_dock_state_failed">未完成即已停止</string>
+    <plurals name="notify_dock_helpers">
+        <item quantity="other">%1$s 个子智能体</item>
+    </plurals>
+    <string name="notify_status_action_open_named">打开 %1$s</string>
+    <string name="notify_status_action_stop_named">停止 %1$s</string>
+</resources>

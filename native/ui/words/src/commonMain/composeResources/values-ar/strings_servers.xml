@@ -245,6 +245,8 @@
     <string name="workServerNotAnswering">%1$s لا يستجيب</string>
     <string name="workServerKeepsTrying">يواصل التطبيق المحاولة في الخلفية.</string>
     <string name="connectionRestartAgent">إعادة تشغيل Claude Code</string>
+    <string name="connectionAgentStarting">جارٍ تشغيل Claude Code…</string>
+    <string name="connectionAgentStartFailed">لم يبدأ Claude Code. اضغط إعادة تشغيل Claude Code للمحاولة مرة أخرى.</string>
     <string name="connectionRestartPhoneServer">إعادة تشغيل OpenCode</string>
     <string name="connectStartingBody">تبقى محادثاتك محفوظة. قد يستغرق هذا دقيقة.</string>
     <string name="managedRecoveryRowDetail">حتى 3 محاولات، وفقط أثناء فتح التطبيق. لا يثبّت شيئًا ولا يحدّثه.</string>
@@ -273,7 +275,7 @@
     </plurals>
     <string name="serversRemoveDrafts__eq1">ستُحذف مسودة واحدة لم تُرسل</string>
     <string name="serversRemoveActiveNext">أنت متصل به: يقطع التطبيق الاتصال ويعرض خوادمك</string>
-    <string name="serversRemoveServerKeeps">لا يُحذف شيء على الخادم أو لدى مزوّدي الذكاء الاصطناعي</string>
+    <string name="serversRemoveServerKeeps">لا يُحذف شيء على الخادم أو لدى مزوّدي الذكاء الاصطناعي.</string>
     <string name="pairingScannerAllowCamera">السماح بالكاميرا</string>
     <string name="pairingScannerStarting">جارٍ فتح الكاميرا…</string>
     <string name="profileMonitorSwitchBody">هناك عمل جارٍ على %1$s. يعرض التبديل %2$s في هذا التطبيق؛ يستمر العمل على %1$s.</string>

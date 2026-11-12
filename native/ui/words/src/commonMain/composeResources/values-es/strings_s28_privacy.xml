@@ -6,7 +6,7 @@
     <string name="telemetryCrashesTitle">Informes de fallos</string>
     <string name="telemetryCrashesDetail">Envía informes de fallos a Google Firebase Crashlytics: el tipo de error y en qué parte del código de la app ocurrió, nunca su mensaje, los últimos pasos que diste como palabras cortas, y por qué Android cerró la app la última vez. Sin código, conversaciones, archivos, direcciones, claves ni ID de publicidad.</string>
     <string name="collectTitle">Qué recopilamos</string>
-    <string name="collectRowSummary">Ambos interruptores empiezan desactivados. Mira exactamente qué envía cada uno.</string>
+    <string name="collectRowSummary">Uso e Informes de fallos siguen desactivados a menos que dijeras que sí cuando se te preguntó. Mira exactamente qué envía cada uno.</string>
     <string name="collectUsageNotSentYet">Esta versión aún no envía el uso y el estado de la app. Tu respuesta se guarda y se usará cuando lo haga.</string>
     <string name="collectRules">Solo se envían palabras fijas y rangos de números, nunca texto libre. Al desactivar un interruptor se borra lo que aún no se envió.</string>
     <string name="collectUsageLabel">Con Uso y estado de la app</string>
@@ -33,6 +33,6 @@
     <string name="collectExit">Por qué Android cerró la app la última vez (por ejemplo, un fallo, un bloqueo o poca memoria)</string>
     <string name="collectSteps">Tus últimos 30 pasos, como palabras cortas, por ejemplo chat.send</string>
     <string name="collectCrashKeys">La versión de la app, cómo se instaló, el tipo de servidor, si el servidor de este teléfono está en marcha, cuántas conexiones hay abiertas y la versión del servidor</string>
-    <string name="collectReport">Las últimas 500 líneas del registro propio de la app, con claves, direcciones y rutas borradas. Lo ves todo y eliges Enviar o Cancelar.</string>
     <string name="collectNever">Tus mensajes y respuestas, nombres o rutas de archivos, direcciones web, nombres de host, direcciones IP, texto de mensajes de error, claves o tokens, el ID de publicidad o el ID de Android</string>
+    <string name="collectReport">Lo que escribes sobre el problema, la última vez que la app se cerró inesperadamente, las versiones de la app y de Android, un rango de memoria y el tipo de servidor, con claves, direcciones y rutas borradas. Sin registros ni conversaciones. Lo ves todo y eliges Enviar o Cancelar.</string>
 </resources>

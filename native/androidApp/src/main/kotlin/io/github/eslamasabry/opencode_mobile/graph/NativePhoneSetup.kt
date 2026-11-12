@@ -246,6 +246,9 @@ class NativePhoneSetup(
             }
         }
 
+    override suspend fun freedBytes(id: String): Long? =
+        withContext(serial) { lane.withLock { removal.freedBytes(id) } }
+
     override suspend fun openOwnershipSettings(): Outcome<Unit> =
         if (settings.open(KeepAliveSetting.AppDetails)) Outcome.Ok(Unit)
         else Outcome.Failed(Failure.Runtime(RuntimeProblem.Generic))
@@ -633,9 +636,17 @@ class NativePhoneSetup(
             }
         }
 
+    /** Which job is the OpenCode update (the Update row follows only that one). */
+    val updateJob = io.github.eslamasabry.oc.engine.runtime.server.OpenCodeUpdateJob()
+
     suspend fun update(): Outcome<Unit> {
         if (!runtime.mayUpdate()) return Outcome.Failed(Failure.Runtime(RuntimeProblem.SlotBusy))
-        return command { it.run(setOf(SetupComponentIds.OPENCODE), RUNTIME_PARAMS) }
+        updateJob.starting(shown.value.jobId)
+        try {
+            return command { it.run(setOf(SetupComponentIds.OPENCODE), RUNTIME_PARAMS) }
+        } finally {
+            updateJob.started(shown.value.jobId)
+        }
     }
 
     val lifecycle: LinuxLifecycle =

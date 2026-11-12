@@ -64,6 +64,14 @@ object Drift {
          * list only shrinks.
          */
         val reviewed: Set<Pair<String, String>> = emptySet(),
+        /**
+         * Translations the translation pipeline owns (`translation-state/<tag>.tsv`, plain keys only): locale to
+         * key to the hash of the English the text was produced from. A key whose hash equals the hash of the
+         * current English is pipeline output, not drift from the frozen ARB. A key whose English changed since
+         * (hash differs) is not owned: `translate.py status` reports it as "changed" and the drift check still
+         * reports it when it differs from the ARB.
+         */
+        val owned: Map<String, Map<String, String>> = emptyMap(),
     ) {
         companion object {
             fun forRepo(repo: Path) = Inputs(
@@ -78,7 +86,19 @@ object Drift {
                     .filter { it.isNotBlank() && !it.startsWith("#") }
                     .map { it.substringBefore('\t') to it.substringAfter('\t').trim() }
                     .toSet(),
+                owned = readOwned(repo.resolve("native/tools/strings/translation-state")),
             )
+
+            fun readOwned(dir: Path): Map<String, Map<String, String>> {
+                if (!dir.isDirectory()) return emptyMap()
+                return dir.listDirectoryEntries("*.tsv").associate { file ->
+                    file.name.removeSuffix(".tsv") to file.readLines()
+                        .filter { '\t' in it }
+                        .map { it.substringBefore('\t') to it.substringAfter('\t').trim() }
+                        .filter { ':' !in it.first }
+                        .toMap()
+                }
+            }
         }
     }
 
@@ -215,11 +235,18 @@ object Drift {
                 for (name in android.keys - cmp.keys) f(Kind.ANDROID_RES, locale, name, "only in Android res")
             }
         }
-        if (inputs.reviewed.isEmpty()) return findings
-        fun base(name: String) = name.substringBefore("__")
         val divergent = setOf(Kind.CHANGED, Kind.SHAPE, Kind.STALE)
+        // Translations the pipeline wrote from the current English are not drift from the frozen ARB.
+        fun ownedByPipeline(fd: Finding): Boolean {
+            if (fd.kind !in divergent || fd.locale == inputs.template) return false
+            val hash = inputs.owned[fd.locale]?.get(fd.name) ?: return false
+            return en[fd.name]?.let { stateHash(it) } == hash
+        }
+        val afterOwned = findings.filterNot { ownedByPipeline(it) }
+        if (inputs.reviewed.isEmpty()) return afterOwned
+        fun base(name: String) = name.substringBefore("__")
         val used = mutableSetOf<Pair<String, String>>()
-        val kept = findings.filter { fd ->
+        val kept = afterOwned.filter { fd ->
             val key = fd.locale to base(fd.name)
             val hide = fd.kind in divergent && key in inputs.reviewed
             if (hide) used += key
@@ -229,6 +256,39 @@ object Drift {
             kept += Finding(Kind.CHANGED, e.first, e.second, "drift-reviewed.tsv entry no longer diverges: drop it")
         }
         return kept
+    }
+
+    private fun stateHash(v: Value): String = when (v) {
+        is Value.S -> stateHash(v.text)
+        is Value.P -> stateHash(v.items)
+    }
+
+    /** The hash `translate.py` records in the state file for an English string (`digest`: sha1 of its JSON, 10 hex). */
+    fun stateHash(text: String): String = sha1Ten(jsonString(text))
+
+    /** The same for a plurals resource: the quantities sorted, as a JSON object. */
+    fun stateHash(items: Map<String, String>): String =
+        sha1Ten(items.toSortedMap().entries.joinToString(", ", "{", "}") { jsonString(it.key) + ": " + jsonString(it.value) })
+
+    private fun sha1Ten(json: String): String =
+        java.security.MessageDigest.getInstance("SHA-1").digest(json.toByteArray(Charsets.UTF_8))
+            .joinToString("") { "%02x".format(it) }.take(10)
+
+    /** Python's `json.dumps(s, ensure_ascii=False)` for one string. */
+    private fun jsonString(s: String): String = buildString {
+        append('"')
+        for (c in s) when {
+            c == '"' -> append("\\\"")
+            c == '\\' -> append("\\\\")
+            c == '\n' -> append("\\n")
+            c == '\r' -> append("\\r")
+            c == '\t' -> append("\\t")
+            c == '\b' -> append("\\b")
+            c == '\u000C' -> append("\\f")
+            c.code < 0x20 -> append("\\u%04x".format(c.code))
+            else -> append(c)
+        }
+        append('"')
     }
 
     private fun tokens(v: Value?): Set<Pair<String, String>> = when (v) {

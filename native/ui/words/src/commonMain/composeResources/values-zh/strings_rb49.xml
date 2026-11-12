@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="rb49_accountChatGpt">ChatGPT</string>
+    <string name="rb49_accountAmazonBedrock">Amazon Bedrock</string>
+</resources>

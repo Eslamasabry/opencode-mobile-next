@@ -29,6 +29,7 @@ class FilesToolsMenuUiTest {
         override fun worktrees() { calls += "worktrees" }
         override fun devServices() { calls += "services" }
         override fun switchProject() { calls += "switch" }
+        override fun reviewChanges() { calls += "changes" }
     }
 
     @Test
@@ -46,20 +47,37 @@ class FilesToolsMenuUiTest {
                             path = "",
                             phase = FolderPhase.Ready,
                             tools = FilesProjectTools(true, true, true, true),
+                            inConversation = false,
                         ),
                         actions,
                     ) { closed++ }
-                none = folderToolItems(FolderUi(path = "", phase = FolderPhase.Ready), actions) {}
+                none = folderToolItems(FolderUi(path = "", phase = FolderPhase.Ready, inConversation = false), actions) {}
             }
         }
         waitForIdle()
         assertEquals(
-            listOf("Project health", "Worktrees", "Development services", "Switch project"),
+            listOf("Changes", "Project health", "Worktrees", "Development services", "Switch project"),
             items.map { it.label },
         )
-        assertEquals(emptyList(), none)
+        assertEquals(listOf("Changes"), none.map { it.label })
         items.forEach { it.onSelect() }
-        assertEquals(listOf("health", "worktrees", "services", "switch"), actions.calls)
-        assertEquals(4, closed)
+        assertEquals(listOf("changes", "health", "worktrees", "services", "switch"), actions.calls)
+        assertEquals(5, closed)
+    }
+
+    @Test
+    fun `a conversation's menu leads with Changes and its count, and opens the whole review`() = runComposeUiTest {
+        val actions = Recorder()
+        var items: List<KitMenuItem> = emptyList()
+        setContent {
+            KitTheme(platform = DesktopKitPlatform(), localeTag = "en", stillFrame = true) {
+                items = folderToolItems(FolderUi(path = "", phase = FolderPhase.Ready), actions) {}
+            }
+        }
+        waitForIdle()
+        // Nothing changed: Flutter's =0 form, "Changes", never "Changes · 0 files".
+        assertEquals(listOf("Changes"), items.map { it.label })
+        items.first().onSelect()
+        assertEquals(listOf("changes"), actions.calls)
     }
 }

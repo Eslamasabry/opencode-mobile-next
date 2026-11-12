@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="dockLabel">运行中的对话</string>
+    <string name="dockWorking">工作中</string>
+    <string name="dockWorkingTasks">工作中 · %1$s / %2$s</string>
+    <string name="dockThinking">思考中</string>
+    <string name="dockNeedsYou">需要你处理</string>
+    <string name="dockFinished">已完成</string>
+    <string name="dockFailed">失败</string>
+    <string name="dockChildNeedsYou">%1$s 需要你处理</string>
+    <string name="dockChildFailed">%1$s 失败</string>
+    <plurals name="dockSubagents">
+        <item quantity="other">%1$s 个子智能体</item>
+    </plurals>
+    <string name="dockOnServer">在 %1$s 上</string>
+    <string name="dockStop">停止</string>
+    <string name="dockRemove">移除</string>
+    <string name="dockOpen">打开</string>
+    <string name="dockPin">固定</string>
+    <string name="dockUnpin">取消固定</string>
+    <string name="dockRestore">找回</string>
+    <string name="dockNickname">在停靠栏中的名称</string>
+    <plurals name="dockHidden">
+        <item quantity="other">%1$s 个已隐藏</item>
+    </plurals>
+    <string name="dockMoveDock">移动停靠栏</string>
+    <string name="dockShowDock">显示停靠栏</string>
+    <string name="dockActionOn">%1$s %2$s</string>
+    <string name="dockRemoved">%1$s 已移出停靠栏</string>
+    <string name="dockStaysWhileOpen">%1$s 已打开，所以保留</string>
+    <string name="dockStopFailed">无法停止 %1$s</string>
+    <string name="dockAnswerFailed">无法回答 %1$s</string>
+    <string name="dockSettingTitle">边缘停靠栏</string>
+    <string name="dockSettingBody">在屏幕边缘显示运行中的对话。拖动其顶部可移到另一侧。</string>
+</resources>

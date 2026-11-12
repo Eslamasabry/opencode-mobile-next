@@ -27,6 +27,8 @@ import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
 import io.github.eslamasabry.oc.ui.kit.foundation.kitShadowReach
 import io.github.eslamasabry.oc.ui.kit.foundation.kitShadowRoom
 import io.github.eslamasabry.oc.ui.design.tokens.Space
+import io.github.eslamasabry.oc.ui.kit.frame.FloatingPaneRow
+import io.github.eslamasabry.oc.ui.kit.frame.LocalKitOnFloatingPane
 import io.github.eslamasabry.oc.ui.kit.frame.kitScrollFade
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 
@@ -63,12 +65,23 @@ public fun KitFilterChips(
     // inside that gutter, its chips starting on it and fading out at the block's end, never cut at the screen's edge
     // (it used to reach out over the gutter, so the last chip ran off the screen).
     val inset = if (bleed) 0.dp else kitPageGutter()
+    // On the floating glass pane (Glass with a lens, KitFloatingBar's second row) the line clips at the pane's sides, its
+    // chips rest on the gutter inside them and an edge with more past it fades over a short step, so no chip is ever cut
+    // by the pane's outline (FloatingPaneRow).
+    val onPane = LocalKitOnFloatingPane.current
+    val paneEdge = FloatingPaneRow.EDGE_DP.dp
+    val paneInset = FloatingPaneRow.contentInsetDp(tokens.gutter).dp
     Box(
         modifier.kitMaxWidth(CapRole.Reading)
+            .then(if (onPane) Modifier.padding(start = if (bleed) 0.dp else paneEdge, end = paneEdge) else Modifier)
             .kitShadowRoom(room)
             .clipToBounds()
-            .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
+            .then(if (onPane) Modifier.kitScrollFade(scroll, FloatingPaneRow.FADE_DP.dp) else Modifier.graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen })
             .drawWithContent {
+                if (onPane) {
+                    drawContent()
+                    return@drawWithContent
+                }
                 drawContent()
                 val rtl = layoutDirection == LayoutDirection.Rtl
                 val left = if (rtl) scroll.value < scroll.maxValue else scroll.value > 0
@@ -83,7 +96,12 @@ public fun KitFilterChips(
             .testTag("kit-filter-chips"),
     ) {
         Row(
-            Modifier.horizontalScroll(scroll).padding(horizontal = inset, vertical = room),
+            Modifier.horizontalScroll(scroll).padding(
+                start = if (!onPane) inset else if (bleed) 0.dp else paneInset,
+                end = if (onPane) paneInset else inset,
+                top = room,
+                bottom = room,
+            ),
             horizontalArrangement = Arrangement.spacedBy(Space.S2.dp),
             verticalAlignment = Alignment.CenterVertically,
             content = chips,

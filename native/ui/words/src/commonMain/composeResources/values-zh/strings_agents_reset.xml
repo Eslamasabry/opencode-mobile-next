@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="agentsResetSavedSignIns">重置已保存的登录信息</string>
+    <string name="agentsResetSavedSignInsBody">断开所有服务器，并从此应用中移除已保存的服务器密码和助手程序访问密钥吗？你的配置、对话、项目以及智能体自己的登录信息会保留。之后请重启应用。</string>
+    <string name="agentsResetSavedSignInsFailed">未能全部重置已保存的登录信息。请重试，然后重启应用。</string>
+    <string name="agentsRestartAfterReset">请先重启应用，再连接或使用手机智能体。</string>
+    <string name="agentsHelperStopped">助手程序意外停止。开始新对话前，请先检查手机设置。</string>
+    <string name="agentsHelperMayHaveStopped">助手程序已停止。Android 可能为了释放内存或限制后台进程而停止了它。</string>
+    <string name="agentsHelperStartAgain">启动助手程序</string>
+    <string name="agentsPhoneHelperProfile">手机智能体</string>
+    <string name="agentsPreviousVersion">使用较早的 %1$s 版本</string>
+    <string name="agentsPreviousVersionBody">切换到这部手机上保留的、已验证的较早版本吗？助手程序会先停止，随后手机智能体重新连接。登录信息和对话会保留。</string>
+    <string name="agentsPreviousVersionFailed">无法恢复较早的版本。请先完成正在运行的工作，然后重试。</string>
+    <string name="agentsPreviousVersionRestored">已恢复较早的版本。</string>
+</resources>

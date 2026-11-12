@@ -25,6 +25,9 @@ public interface ReviewNavigation {
 
     /** "Review the undo". */
     public fun openStaged()
+
+    /** The project's Git page (where "Start tracking" lives). */
+    public fun openGit() {}
 }
 
 /**
@@ -33,6 +36,20 @@ public interface ReviewNavigation {
  */
 public fun interface ReviewSendBack {
     public suspend fun send(text: String): Outcome<Unit>
+}
+
+/** What "Add <file> to the prompt" did (Flutter `readerUiReferenceAdded` / `readerUiReferenceDuplicate`). */
+public enum class AddedFile {
+    Added,
+    AlreadyThere,
+}
+
+/**
+ * "Add <file> to the prompt" (Flutter `review_workspace.dart` `_stageFile`): the file goes into this conversation's
+ * message as an `@path` mention and the person stays on the page. Nothing is sent.
+ */
+public fun interface ReviewAddFile {
+    public suspend fun add(path: String): Outcome<AddedFile>
 }
 
 /**
@@ -123,8 +140,15 @@ public data class ChangesUi(
     val scope: ReviewScope = ReviewScope.Conversation,
     /** The scopes this server can show, in Flutter's order; the picker shows when there are two or more. */
     val scopes: ImmutableList<ReviewScope> = persistentListOf(ReviewScope.Conversation),
+    /** A project's page (no conversation) found nothing because the folder is not under Git, not because it is clean. */
+    val notRepository: Boolean = false,
     /** "Send back with a note" is offered (a conversation's message can take it). */
     val canSendBack: Boolean = false,
+    /**
+     * False for a project's own uncommitted changes opened from Files (no conversation behind them): the page says
+     * nothing about undoing from a prompt or which view it picked.
+     */
+    val conversation: Boolean = true,
     /** The note field is open. */
     val noting: Boolean = false,
     /** The note could not be put into the message. */
@@ -173,6 +197,10 @@ public data class FileDiffUi(
     val noDiff: Boolean = false,
     /** Lines can be commented for the agent here (B-156; not on the undo's preview). */
     val canComment: Boolean = false,
+    /** "Add <file> to the prompt" is offered (the conversation's message can take it). */
+    val canAddFile: Boolean = false,
+    /** What the last "Add to the prompt" did; null before it was used or after it was read. */
+    val fileNotice: FileNotice? = null,
     /** This file's comments, in the order written. */
     val comments: ImmutableList<LineComment> = persistentListOf(),
     /** The comment field is open for these lines. */
@@ -185,6 +213,16 @@ public data class FileDiffUi(
     val updating: Boolean = false,
 ) {
     val name: String get() = path.split('/', '\\').lastOrNull { it.isNotEmpty() } ?: path
+}
+
+/** The one line under the diff's bar after "Add <file> to the prompt". */
+public sealed interface FileNotice {
+    public data object Added : FileNotice
+
+    public data object AlreadyThere : FileNotice
+
+    /** The message could not take it; [failure] is for Details only. */
+    public data class Failed(val failure: Failure) : FileNotice
 }
 
 /** Why the undo's primary action is off right now; null when it is on. */

@@ -66,6 +66,8 @@ internal fun Modifier.kitScrollEdges(
     strength: () -> Float = { 1f },
     /** The top fade's length in px, read while drawing; overrides [topReach] (the status edge's dissolve). */
     topReachPx: (() -> Float)? = null,
+    /** The bottom fade's length in px, read while drawing; overrides [bottomReach]. */
+    bottomReachPx: (() -> Float)? = null,
 ): Modifier {
     if (clearAbove == null && fadeFromBottom == null) return this
     return graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
@@ -93,7 +95,7 @@ internal fun Modifier.kitScrollEdges(
                 if (fadeFromBottom != null) {
                     val from = (size.height - fadeFromBottom()).coerceIn(0f, size.height)
                     val y0 = wholePx(from)
-                    val r = wholePx(from + bottomReach.toPx()) - y0
+                    val r = wholePx(from + (bottomReachPx?.invoke() ?: bottomReach.toPx())) - y0
                     if (r > 0f) drawRect(bottom.of(0f, 1f, 1f, y0, y0 + r), Offset(0f, y0), Size(w, r), blendMode = BlendMode.DstOut)
                     val below = y0 + r
                     if (below < size.height)
@@ -104,7 +106,7 @@ internal fun Modifier.kitScrollEdges(
 }
 
 /** One edge's clearing gradient, kept until its strength or its span changes. */
-private class EdgeBrush {
+internal class EdgeBrush {
     private var k = Float.NaN
     private var start = Float.NaN
     private var end = Float.NaN

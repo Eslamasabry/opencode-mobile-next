@@ -9,6 +9,8 @@ import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.core.domain.events.GatewayEvent
 import io.github.eslamasabry.oc.core.model.OutgoingPrompt
 import io.github.eslamasabry.oc.core.model.SessionStatus
+import io.github.eslamasabry.oc.core.model.SubAgentOpen
+import io.github.eslamasabry.oc.core.model.SubAgentState
 import io.github.eslamasabry.oc.protocol.paseo.DIR
 import io.github.eslamasabry.oc.protocol.paseo.jsonOf
 import io.github.eslamasabry.oc.protocol.paseo.str
@@ -142,5 +144,38 @@ class PaseoSubAgentsTest {
         h.pump()
         assertEquals(sub, h.lastToolPart().tool!!.metadata!!.str("sessionId"))
         assertEquals("a1", h.daemon.of("agent.provider_subagents.list.request").single().str("parentAgentId"))
+    }
+
+    @Test
+    fun `B-AGENT-165 a conversation never opened lists its sub-agents from the helper, read once`() = runTest {
+        val h = ready()
+        h.daemon.handlers["agent.provider_subagents.list.request"] = {
+            "agent.provider_subagents.list.response" to
+                jsonOf("parentAgentId" to "a1", "subagents" to listOf(descriptor()), "error" to null)
+        }
+        val ops = PaseoOperations(h.gateway)
+        // Nothing pushed and the history never read: the neutral read asks the helper itself.
+        val agents = ops.subAgents(SessionId("a1")).ok()
+        val one = agents.single()
+        assertEquals(sub, one.id.raw)
+        assertEquals("a1", one.parent.raw)
+        assertEquals("List the files", one.name)
+        assertEquals(SubAgentState.Working, one.state)
+        assertEquals(SubAgentOpen.Conversation(SessionId(sub), readOnly = true), one.open)
+        assertEquals("a1", h.daemon.of("agent.provider_subagents.list.request").single().str("parentAgentId"))
+        // The list was read for this session: the Subagents page and the next read do not ask again.
+        assertEquals(listOf(sub), ops.sessionChildren(SessionId("a1")).ok().map { it.id.raw })
+        ops.subAgents(SessionId("a1")).ok()
+        assertEquals(1, h.daemon.of("agent.provider_subagents.list.request").size)
+    }
+
+    @Test
+    fun `B-AGENT-165 a finished sub-agent reads as done, and an older helper leaves the list as it is`() = runTest {
+        val h = ready()
+        val done = jsonOf("kind" to "upsert", "subagent" to descriptor(status = "completed"))
+        h.daemon.push("agent.provider_subagents.update", done)
+        h.pump()
+        val agents = PaseoOperations(h.gateway).subAgents(SessionId("a1")).ok()
+        assertEquals(SubAgentState.Done, agents.single().state)
     }
 }

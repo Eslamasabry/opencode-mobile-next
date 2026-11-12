@@ -262,7 +262,7 @@
     </plurals>
     <string name="serversRemoveDrafts__eq1">1 draf belum terkirim akan dihapus</string>
     <string name="serversRemoveActiveNext">Anda sedang tersambung ke server ini: aplikasi akan memutuskan sambungan dan menampilkan daftar server Anda</string>
-    <string name="serversRemoveServerKeeps">Tidak ada yang dihapus di server atau di penyedia AI Anda</string>
+    <string name="serversRemoveServerKeeps">Tidak ada yang dihapus di server atau di penyedia AI Anda.</string>
     <string name="pairingScannerAllowCamera">Izinkan kamera</string>
     <string name="pairingScannerStarting">Membuka kamera…</string>
     <string name="profileMonitorSwitchBody">Sebuah proses sedang berjalan di %1$s. Berpindah akan menampilkan %2$s di aplikasi ini; proses di %1$s tetap berjalan.</string>
@@ -500,4 +500,6 @@
     <string name="serverDetailsAccessDenied">Server menolak akses. Periksa akun mana yang dapat memakai server ini.</string>
     <string name="serverDetailsFixSignIn">Perbaiki data masuk</string>
     <string name="serverDetailsLastAttempt">Percobaan koneksi terakhir: %1$s</string>
+    <string name="connectionAgentStarting">Memulai Claude Code…</string>
+    <string name="connectionAgentStartFailed">Claude Code tidak mau mulai. Ketuk Mulai ulang Claude Code untuk mencoba sekali lagi.</string>
 </resources>

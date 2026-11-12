@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The edge dock (2026-11-11): one ring per running conversation on the screen edge. Its swell, peek and list. -->
+    <string name="dockLabel">Running conversations</string>
+    <string name="dockWorking">Working</string>
+    <string name="dockWorkingTasks">Working · %1$s of %2$s</string>
+    <string name="dockThinking">Thinking</string>
+    <string name="dockNeedsYou">Needs you</string>
+    <string name="dockFinished">Finished</string>
+    <string name="dockFailed">Failed</string>
+    <string name="dockChildNeedsYou">%1$s needs you</string>
+    <string name="dockChildFailed">%1$s failed</string>
+    <plurals name="dockSubagents">
+        <item quantity="one">%1$s subagent</item>
+        <item quantity="other">%1$s subagents</item>
+    </plurals>
+    <string name="dockOnServer">on %1$s</string>
+    <string name="dockStop">Stop</string>
+    <string name="dockRemove">Remove</string>
+    <string name="dockOpen">Open</string>
+    <string name="dockPin">Pin</string>
+    <string name="dockUnpin">Unpin</string>
+    <string name="dockRestore">Bring back</string>
+    <string name="dockNickname">Name in the dock</string>
+    <plurals name="dockHidden">
+        <item quantity="one">%1$s hidden</item>
+        <item quantity="other">%1$s hidden</item>
+    </plurals>
+    <string name="dockMoveDock">Move the dock</string>
+    <string name="dockShowDock">Show the dock</string>
+    <string name="dockActionOn">%1$s %2$s</string>
+    <string name="dockRemoved">%1$s left the dock</string>
+    <string name="dockStaysWhileOpen">%1$s is open, so it stays</string>
+    <string name="dockStopFailed">Couldn\'t stop %1$s</string>
+    <string name="dockAnswerFailed">Couldn\'t answer %1$s</string>
+    <!-- Settings › Conversations: the dock's on/off row. -->
+    <string name="dockSettingTitle">Edge dock</string>
+    <string name="dockSettingBody">Running conversations on the screen edge. Drag its top to move it to the other side.</string>
+</resources>

@@ -5,7 +5,9 @@ import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.ui.design.layout.WindowClass
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.AppRoute
+import io.github.eslamasabry.oc.ui.routes.ChatRoute
 import io.github.eslamasabry.oc.ui.routes.ChatsRoute
+import io.github.eslamasabry.oc.ui.routes.SearchRoute
 import io.github.eslamasabry.oc.ui.routes.SettingsRoute
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -63,7 +65,7 @@ class ShellShortcutsTest {
         assertNull(ShellShortcuts.of(Key.N, ctrl = false, meta = false, alt = false, shift = false))
         assertNull(ShellShortcuts.of(Key.N, ctrl = true, meta = false, alt = true, shift = false))
         assertNull(ShellShortcuts.of(Key.N, ctrl = true, meta = false, alt = false, shift = true))
-        assertNull(ctrl(Key.K))
+        assertNull(ctrl(Key.J))
     }
 
     @Test
@@ -83,6 +85,21 @@ class ShellShortcutsTest {
         assertEquals(emptyList(), nav.calls)
         ShellShortcuts.perform(ShellShortcut.CloseScreen, nav, SettingsRoute.Home)
         assertEquals(listOf("back"), nav.calls)
+    }
+
+    @Test
+    fun `S8 Ctrl K opens Search away from a conversation and is the conversation's own inside one`() {
+        assertEquals(ShellShortcut.Launcher, ctrl(Key.K))
+        val ref = ConversationRef(io.github.eslamasabry.oc.core.common.ids.ProfileId("p"), io.github.eslamasabry.oc.core.common.ids.SessionId("s"))
+        assertFalse(ShellShortcuts.claims(ShellShortcut.Launcher, ChatRoute(ref)))
+        assertTrue(ShellShortcuts.claims(ShellShortcut.Launcher, ChatsRoute.Home))
+        assertTrue(ShellShortcuts.claims(ShellShortcut.NewConversation, ChatRoute(ref)))
+        val nav = Recorder()
+        ShellShortcuts.perform(ShellShortcut.Launcher, nav, ChatsRoute.Home)
+        assertIs<SearchRoute.Conversations>(nav.opened.last())
+        nav.calls.clear()
+        ShellShortcuts.perform(ShellShortcut.Launcher, nav, SearchRoute.Conversations())
+        assertEquals(emptyList(), nav.calls)
     }
 
     @Test

@@ -38,6 +38,7 @@ import kotlinx.collections.immutable.persistentMapOf
 import kotlinx.collections.immutable.persistentSetOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toPersistentMap
+import kotlinx.collections.immutable.toPersistentSet
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -79,9 +80,22 @@ internal data class ChatLocal(
     val readAloud: ReadAloudUi? = null,
     val arrival: PendingArrival? = null,
     val actionFailure: Failure? = null,
+    val startingAgent: Boolean = false,
+    val agentFailed: Boolean = false,
     val atLiveEdge: Boolean = true,
     val stopping: Boolean = false,
     val stopAfterStep: Boolean = false,
+    /** C5: the words of the note that went, so Undo can find it in the inbox. */
+    val stopNote: String? = null,
+    val undoingStopNote: Boolean = false,
+    /**
+     * The words of a "Stop after this step" note sent in this conversation, kept after the note is gone: the note is
+     * a control message (Flutter keeps it in the inbox, never as a prompt bubble), so a prompt row with exactly these
+     * words is not drawn, while it waits, after Undo, and once it was read.
+     */
+    val hiddenStopNote: String? = null,
+    /** C6: steered messages Stop-then-resend took back; the server keeps them in its record, the chat shows them once. */
+    val withdrawn: PersistentSet<String> = persistentSetOf(),
     val leaving: Boolean = false,
     val select: SelectTextUi? = null,
     val insert: ClipUi? = null,
@@ -147,6 +161,7 @@ public class ChatPresenter(
     private val local =
         MutableStateFlow(
             ChatLocal(
+                withdrawn = world.withdrawnPrompts().toPersistentSet(),
                 arrival =
                     if (focusComposer || landOnFailure)
                         PendingArrival(nextId++, focusComposer, landOnFailure)
@@ -160,6 +175,8 @@ public class ChatPresenter(
     private var readAllowed = false
     private var readBusy = false
     private var stopInFlight = false
+    /** B8: the turn whose prompt Send again is sending, or sent; one tap sends it once. */
+    private var resentTurn: String? = null
     private var historySearchGeneration = 0L
     private val feed = (world as? TurnFeedSource)?.turnFeed ?: MutableStateFlow(TurnFeed.Empty)
 
@@ -331,6 +348,13 @@ public class ChatPresenter(
         }
     }
 
+    /** A connection line on the phone agents' server carries the helper's facts (Restart agent, starting, failed). */
+    private fun agentLine(line: ChatStatusUi?, l: ChatLocal): ChatStatusUi? =
+        if (line == null || !world.serverIsAgentHelper ||
+            (line.kind != ChatStatusKind.Offline && line.kind != ChatStatusKind.Connecting)
+        ) line
+        else line.copy(canRestartAgent = true, startingAgent = l.startingAgent, agentFailed = l.agentFailed)
+
     internal fun present(i: ChatInputs, l: ChatLocal, hits: ImmutableList<FindHit>): ChatUi {
         lastHits = hits
         // N-47: when the server goes away after the conversation was read, keep the last transcript and title on
@@ -372,6 +396,7 @@ public class ChatPresenter(
             ref = world.ref,
             title = i.title ?: lastTitle,
             status =
+              agentLine(
                 (if (kept != null) i.retry.line(KEPT_OFFLINE_STATUS, ChatStatusKind.Offline) else null) ?: StatusPick.pick(i.link, i.pending, t.run, t.rows, l.actionFailure, l.linkRefused, i.retry)
                     ?: l.receiptResult?.let {
                         ChatStatusUi(
@@ -382,6 +407,8 @@ public class ChatPresenter(
                     }
                     ?: undoneLine(world.undone.value)
                     ?: world.parent.value?.let { ChatStatusUi(SUBAGENT_STATUS, ChatStatusKind.Subagent) },
+                l,
+              ),
             phase =
                 when (val load = i.load) {
                     // Cache-first: known rows draw the real transcript while the live read is on its way.
@@ -390,7 +417,15 @@ public class ChatPresenter(
                     is ChatLoad.Failed ->
                         if (kept != null) ChatPhase.Live else ChatPhase.Failed(load.failure)
                 },
-            rows = t.rows,
+            rows =
+                if (l.withdrawn.isEmpty() && l.hiddenStopNote == null) t.rows
+                else
+                    t.rows
+                        .filterNot {
+                            it.key in l.withdrawn ||
+                                (l.hiddenStopNote != null && it is PromptRow && it.text.trim() == l.hiddenStopNote)
+                        }
+                        .toImmutableList(),
             newestRowKey = t.newestKey,
             canPutBack = world.undone.value != ChatUndone.None,
             canBackground = canBackground(t.run.busy, l),
@@ -399,6 +434,13 @@ public class ChatPresenter(
                     LiveTurnUi(
                         l.stopping,
                         stoppingAfterStep = l.stopAfterStep,
+                        joinsTurn =
+                            i.capabilities.promptSteering ||
+                                world.midTurn() == io.github.eslamasabry.oc.core.model.MidTurnPrompt.JoinsTurn,
+                        agentName = world.models.value.agent,
+                        canUndoStopAfterStep =
+                            l.stopAfterStep && l.stopNote != null && !l.undoingStopNote &&
+                                i.capabilities.inbox,
                         canStopAfterStep =
                             !l.stopping && !l.stopAfterStep && i.capabilities.promptSteering,
                     )
@@ -557,12 +599,40 @@ public class ChatPresenter(
     // ---- Load, stop, sends ----
 
     override fun retryLoad() {
+        startHelperThen { reloadNow() }
+    }
+
+    private fun reloadNow() {
         launcher.launch { world.reload() }
     }
 
     override fun tryLinkNow() {
+        startHelperThen(::reconnectNow)
+    }
+
+    private fun reconnectNow() {
         world.tryLinkNow()
-        if (world.load.value is ChatLoad.Failed) retryLoad()
+        if (world.load.value is ChatLoad.Failed) reloadNow()
+    }
+
+    override fun restartAgent() {
+        if (!world.serverIsAgentHelper) return
+        startHelperThen(::reconnectNow)
+    }
+
+    /**
+     * Reconnecting to the phone agents' server while its link is down first makes sure the helper runs (a dead
+     * helper otherwise fails against a closed port). One start per tap, none automatic; [next] runs only after it.
+     */
+    private fun startHelperThen(next: () -> Unit) {
+        if (!world.serverIsAgentHelper || world.link.value == ChatLink.Live) return next()
+        if (local.value.startingAgent) return
+        local.update { it.copy(startingAgent = true, agentFailed = false) }
+        launcher.launch {
+            val started = world.startAgentHelper()
+            local.update { it.copy(startingAgent = false, agentFailed = started is Outcome.Failed) }
+            if (started is Outcome.Ok) next()
+        }
     }
 
     override fun restartPhoneServer() {
@@ -584,8 +654,25 @@ public class ChatPresenter(
     }
 
     override fun retryLastPrompt() {
-        val text = newestPrompt()?.text?.takeIf { it.isNotBlank() } ?: return
-        launcher.launch { world.sendAgain(text) }
+        val row = newestPrompt() ?: return
+        val text = row.text.takeIf { it.isNotBlank() } ?: return
+        // B8 (Flutter `_retryLast` returns while `_sending`): a second tap before the copy lands sends nothing.
+        if (resentTurn == row.turnId) return
+        resentTurn = row.turnId
+        // The prompt as the transcript holds it, with its files (Flutter `_retryLast` carries them), on the
+        // conversation's current agent and model as Flutter sends it; a file that can no longer be read leaves the
+        // words alone, as before.
+        val prompt =
+            world.stoppedPrompt(row.turnId)
+                ?.takeIf { it.text.isNotBlank() && it.unreadable.isEmpty() }
+                ?.copy(agent = null)
+        launcher.launch {
+            val sent = if (prompt != null) world.sendAgainWith(prompt) else world.sendAgain(text)
+            if (sent is Outcome.Failed) {
+                resentTurn = null
+                local.update { it.copy(actionFailure = sent.failure) }
+            }
+        }
     }
 
     override fun undoLastPrompt() {
@@ -633,18 +720,59 @@ public class ChatPresenter(
             local.update { it.copy(stopping = false) }
         // The turn ended: the stop note did its work (or the turn finished first).
         if (local.value.stopAfterStep && !world.transcript.value.run.busy)
-            local.update { it.copy(stopAfterStep = false) }
+            local.update { it.copy(stopAfterStep = false, stopNote = null) }
     }
 
     override fun stopAfterStep(note: String) {
         val l = local.value
         if (note.isBlank() || l.stopping || l.stopAfterStep) return
         if (!world.transcript.value.run.busy || !world.capabilities.value.promptSteering) return
-        local.update { it.copy(stopAfterStep = true) }
+        local.update { it.copy(stopAfterStep = true, stopNote = note, hiddenStopNote = note.trim()) }
         launcher.launch {
             val sent = world.sendAgain(note)
             if (sent is Outcome.Failed)
-                local.update { it.copy(stopAfterStep = false, actionFailure = sent.failure) }
+                local.update { it.copy(stopAfterStep = false, stopNote = null, actionFailure = sent.failure) }
+        }
+    }
+
+    /**
+     * C6 (Flutter `_stopForSteer`): Stop on the "{agent} reads this when this step finishes" note. Stops the step the
+     * message waits on, then sends the same words again so the agent reads them at once; the stopped copy is left out
+     * of the chat so the words show once. Nothing happens when the step already ended (the agent has the message).
+     */
+    override fun stopForSteer(promptKey: String, words: String) {
+        if (local.value.stopping || words.isBlank() || !world.transcript.value.run.busy) return
+        stopInFlight = true
+        local.update { it.copy(stopping = true, actionFailure = null) }
+        launcher.launch {
+            val result = world.stopTurn()
+            stopInFlight = false
+            val failure = (result as? Outcome.Failed)?.failure
+            val asked = (result as? Outcome.Ok)?.value == true
+            local.update { it.copy(stopping = asked && world.transcript.value.run.busy, actionFailure = failure) }
+            // Too late: the stop was not asked, or the agent started on the message in the last moment.
+            if (!asked || !SteerWaitRules.unreadAfterStop(world.transcript.value.rows, promptKey)) return@launch
+            val sent = world.sendAgain(words.trim())
+            if (sent is Outcome.Failed) local.update { it.copy(actionFailure = sent.failure) }
+            else {
+                local.update { it.copy(withdrawn = it.withdrawn.add(promptKey)) }
+                world.rememberWithdrawn(promptKey)
+            }
+        }
+    }
+
+    override fun undoStopAfterStep() {
+        val l = local.value
+        val note = l.stopNote ?: return
+        if (!l.stopAfterStep || l.undoingStopNote) return
+        local.update { it.copy(undoingStopNote = true) }
+        launcher.launch {
+            // True: the agent never read it, the turn carries on. False: too late (or no inbox), the stop stays.
+            val withdrawn = world.withdrawNote(note)
+            local.update {
+                if (withdrawn) it.copy(stopAfterStep = false, stopNote = null, undoingStopNote = false)
+                else it.copy(stopNote = null, undoingStopNote = false)
+            }
         }
     }
 
@@ -1375,7 +1503,7 @@ public class ChatPresenter(
         if (!world.capabilities.value.fileBrowsing) return
         val name = clean.substringAfterLast('/')
         if (PICTURE_NAME.containsMatchIn(name)) openPicture(clean, name)
-        else nav.open(FilesRoute.File(world.ref, clean, line))
+        else nav.open(FilesRoute.File(world.ref, projectRelativePath(clean, world.directory), line))
     }
 
     override fun closePicture() {
@@ -1429,6 +1557,21 @@ public class ChatPresenter(
             }
         }
         return null
+    }
+}
+
+/**
+ * The path Files opens: relative to the conversation's own project folder. A tool reports a file by its absolute path
+ * ("/work/app/notes.txt"); Files takes paths below the project, so a path under [directory] loses that prefix. A path
+ * that is already relative, or that lies outside the project, is left as it is.
+ */
+internal fun projectRelativePath(path: String, directory: String?): String {
+    val root = directory?.trimEnd('/')?.takeIf { it.isNotEmpty() } ?: return path
+    if (!path.startsWith("/")) return path
+    return when {
+        path == root -> ""
+        path.startsWith("$root/") -> path.removePrefix("$root/")
+        else -> path
     }
 }
 

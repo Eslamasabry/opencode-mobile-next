@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxFindProjects">查找这部手机上的项目</string>
+    <string name="linuxFindProjectsBody">在项目空间和手机共享存储中查找。文件夹保持原位。</string>
+    <string name="linuxStopFinding">停止查找</string>
+    <string name="linuxFindProjectsDone">查找完毕</string>
+    <string name="linuxFindProjectsLimited">已达到扫描上限而停止。这些是最前面的结果。</string>
+    <string name="linuxProjectDart">Dart / Flutter</string>
+    <string name="linuxProjectNode">Node</string>
+    <string name="linuxProjectPython">Python</string>
+    <string name="linuxProjectRust">Rust</string>
+    <string name="linuxProjectGo">Go</string>
+    <string name="linuxProjectJava">Java / Gradle</string>
+    <string name="linuxProjectRuby">Ruby</string>
+    <string name="linuxProjectPhp">PHP</string>
+    <string name="linuxProjectDotnet">.NET</string>
+    <string name="linuxProjectCpp">C / C++</string>
+    <string name="linuxProjectFolder">项目文件夹</string>
+</resources>

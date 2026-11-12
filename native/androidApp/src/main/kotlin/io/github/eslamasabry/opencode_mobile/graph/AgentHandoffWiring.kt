@@ -123,15 +123,31 @@ class NativeHandoffSource(
             (stores.prefs.get("oc.builtinServerOwner") as? PrefValue.Str)?.value == owner.raw &&
             !SetupRunner.get(app).running
 
-    fun project(directory: String): Boolean =
-        directory.length <= 4096 &&
-            (directory == "/root/projects" || directory.startsWith("/root/projects/")) &&
-            directory.split('/').none { it == "." || it == ".." } &&
-            directory.none { it.code < 32 || it.code == 127 }
+    /** The phone's Linux project folders only: where the agent helper's shared workspace lives. */
+    fun project(directory: String): Boolean = HandoffFolderRule.isPhoneProject(directory)
 
     suspend fun helper(owner: ProfileId, directory: String): Outcome<TransientConnection> =
         lane.withLock {
             if (!project(directory) || !ownerCurrent(owner)) return@withLock stale()
+            // A phone with no agent set up has no agent helper either: that is the normal state of a phone
+            // without agents (the page says "No agent is ready" with Open Agents), not a failed start. A helper
+            // that is there but older, or a probe that itself fails, stays a real failure further down.
+            val probe =
+                withContext(dispatchers.io) {
+                    attempt({ Failure.Runtime(RuntimeProblem.Generic) }) {
+                        linux.agentHost.checks.version(
+                            owner.raw,
+                            "paseo",
+                            AgentPins.builtIn.paseo.version,
+                        )
+                    }
+                }
+            if (
+                (probe as? Outcome.Ok)?.value?.let {
+                    it["installed"] != true && it["foundVersion"] == null
+                } == true
+            )
+                return@withLock HandoffBlock.NoAgentReady.failure().failed()
             val claim =
                 when (val claimed = payloads.reserveNativeSignIn(owner)) {
                     is Outcome.Failed -> return@withLock claimed
@@ -205,7 +221,7 @@ class NativeHandoffSource(
                 if (!ownerCurrent(owner) || !filesystem.isCurrent() || !identity.isCurrent())
                     return@withLock stale()
                 if ((shared as? Outcome.Ok)?.value != true)
-                    return@withLock Failure.Unavailable(FeatureId("sharedProject")).failed()
+                    return@withLock HandoffBlock.NotConfirmed.failure().failed()
                 val parent =
                     stores.profiles.profile(owner)?.toServerProfile() ?: return@withLock stale()
                 val profile =
@@ -277,9 +293,11 @@ class GraphAgentHandoffHost(
 
     override suspend fun review(source: ConversationRef): Outcome<AgentHandoffReview?> {
         val graph = registry.graphFor(source) ?: return stale()
-        // Codex's normal messagePage resumes/subscribes. The source-review service deliberately
-        // uses its full thread/read snapshot, including turns, and never calls messagePage.
-        val gateway = graph.session.server as? CodexGateway ?: return null.ok()
+        // Any conversation the app shows can be reviewed: the draft service reads it through the
+        // protocol-neutral gateway (Codex through its read-only snapshot, never messagePage, which
+        // would resume the thread). Every gateway has a history reader, so no capability flag
+        // hides the entry; a conversation that cannot be read fails here, with a reason.
+        val gateway = graph.session.server
         val revision = gateway.scopeRevision
         val location = gateway.location.value
         val profile = stores.profiles.profile(source.profileId) ?: return stale()
@@ -327,15 +345,28 @@ class GraphAgentHandoffHost(
             is Outcome.Ok -> Unit
         }
         val original = registry.graphFor(source) ?: return stale()
-        // A direct Codex endpoint provides read-only history, but no native process attestation
-        // tying its filesystem to our phone project. Its source-only draft is handled by review().
-        if (original.session.server is CodexGateway)
-            return Failure.Unavailable(FeatureId("sharedProject")).failed()
         val trustedOwner = registry.ownerOfTransient(source.profileId)
         val parent = trustedOwner ?: source.profileId
-        val owner = trustedOwner ?: rawOwner(parent) ?: return stale()
         val location = original.session.server.location.value
-        val directory = location.directory ?: return stale()
+        val origin = original.profile.origin
+        // The folder check, in plain reasons: the receiving agent runs in this phone's Linux, so it
+        // must be able to open the conversation's folder there. A conversation on a computer, or a
+        // folder outside the phone's projects, is refused with its reason before anything is read.
+        val onPhone =
+            trustedOwner != null || HandoffFolderRule.isPhoneEndpoint(origin.scheme, origin.host)
+        // The folder is read where the record reads it: the session's own directory first, the connection's
+        // project only as a fallback (an OpenCode 2 connection reports none while its sessions carry theirs).
+        val sessionDirectory =
+            (original.session.server.session(source.sessionId) as? Outcome.Ok)?.value?.directory
+        val folder = HandoffFolderRule.folderOf(sessionDirectory, location.directory)
+        HandoffFolderRule.judge(onPhone, folder)?.let {
+            return it.failure().failed()
+        }
+        // A direct Codex endpoint provides read-only history, but no native process attestation
+        // tying its filesystem to our phone project. Its source-only draft is handled by review().
+        if (original.session.server is CodexGateway) return HandoffBlock.NotConfirmed.failure().failed()
+        val owner = trustedOwner ?: rawOwner(parent) ?: return stale()
+        val directory = folder ?: return stale()
         if (
             !this.source.project(directory) ||
                 !saved.admitting(parent) ||
@@ -358,12 +389,6 @@ class GraphAgentHandoffHost(
             if (trustedOwner != null) {
                 withContext(dispatchers.io) { linux.agentHost.captureHandoffIdentity(owner.raw) }
             } else {
-                val origin = original.profile.origin
-                if (
-                    origin.host !in setOf("127.0.0.1", "localhost", "::1") ||
-                        origin.scheme !in setOf("http", "https")
-                )
-                    return stale()
                 val password =
                     when (val secret = stores.profiles.secret(parent)) {
                         is Outcome.Failed -> return secret
@@ -381,11 +406,16 @@ class GraphAgentHandoffHost(
                 is Outcome.Failed -> return read
                 is Outcome.Ok -> read.value
             }
-        if (!sourceCurrent() || !sourceProof.isCurrent() || originalSession.directory != directory)
+        if (!sourceCurrent() || !sourceProof.isCurrent() || (originalSession.directory ?: directory) != directory)
             return stale()
         val spec =
             when (val target = this.source.helper(owner, directory)) {
-                is Outcome.Failed -> return target
+                // The folder passed the rule above, so a helper that cannot be reached or confirmed is an agent
+                // problem: say so (with "Open Agents"), not "open a project".
+                is Outcome.Failed ->
+                    return if (HandoffBlock.of(target.failure) == null &&
+                        (target.failure as? Failure.Refused)?.reason != RefusalReason.StaleScope
+                    ) HandoffBlock.NotConfirmed.failure().failed() else target
                 is Outcome.Ok -> target.value
             }
         if (!sourceCurrent() || !sourceProof.isCurrent() || !spec.currentOwner()) return stale()
@@ -453,11 +483,7 @@ class GraphAgentHandoffHost(
                     OwnerId(owner.raw),
                 )
             val arch =
-                when {
-                    "arm64-v8a" in Build.SUPPORTED_ABIS -> AgentArchitecture.Arm64
-                    "x86_64" in Build.SUPPORTED_ABIS -> AgentArchitecture.X64
-                    else -> null
-                }
+PhoneAgentRules.architectureOf(Build.SUPPORTED_ABIS.toList())
             val targets = LinkedHashMap<String, Pair<AgentHandoffChoice, HandoffTarget>>()
             val sourceAdapter = HandoffGatewayAdapter(original.session.server, ::current)
             val targetAdapter =

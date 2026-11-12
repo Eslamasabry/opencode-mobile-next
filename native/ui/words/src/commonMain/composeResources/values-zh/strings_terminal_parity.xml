@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="terminalLinkReviewBody">在浏览器中打开此链接？%1$s</string>
+    <string name="terminalLinkReviewInsecure">此链接使用未加密的连接。在浏览器中打开 %1$s？</string>
+    <string name="terminalLinkReviewTitle">打开此链接？</string>
+    <string name="terminalParityInterrupt">Ctrl-C</string>
+    <string name="terminalParityEndInput">Ctrl-D</string>
+    <string name="terminalParityEscape">Esc</string>
+    <string name="terminalParityTab">Tab</string>
+    <string name="terminalParityOpenAddress">打开链接 · %1$s</string>
+</resources>

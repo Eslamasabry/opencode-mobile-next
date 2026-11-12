@@ -25,7 +25,6 @@ import androidx.compose.ui.graphics.drawscope.ContentDrawScope
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
-import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.drawscope.inset
 import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.drawscope.translate
@@ -467,22 +466,25 @@ internal fun DrawScope.drawGlassFace(d: SurfaceDecoration) {
             drawOutline(outline, Brush.linearGradient(listOf(Color(p.dark.v), Color.Transparent, Color(p.light.v))), style = Stroke(w))
         }
     }
-    // The rim, fading from the top start to the bottom end, inside the face (kit_surface_paint.dart:132-144).
+    // The rim, fading from the top start to the bottom end, inside the face (kit_surface_paint.dart:132-144); with a rest,
+    // lit at both ends.
     if (d.edgeWidthDp > 0f) {
         val s = d.edgeStart ?: d.edgeEnd
         val e = d.edgeEnd ?: d.edgeStart
-        if (s != null && e != null && (s.alpha > 0 || e.alpha > 0)) {
+        // The rest between the two lit ends (glass-in-the-kit 1a): a third stop halfway along the fade; null, a straight fade.
+        val r = d.edgeRest
+        if (s != null && e != null && (s.alpha > 0 || e.alpha > 0 || (r?.alpha ?: 0) > 0)) {
             val w = d.edgeWidthDp.dp.toPx()
             // The rim is inset by half its width: a pane narrower than the rim has no inside to draw it in.
             if (size.width > w && size.height > w) inset(w / 2f) {
                 val rim = shape.createOutline(size, layoutDirection, this)
-                if (s == e) {
+                if (s == e && r == null) {
                     drawOutline(rim, Color(s.v), style = Stroke(w))
                 } else {
                     drawOutline(
                         rim,
                         Brush.linearGradient(
-                            listOf(Color(s.v), Color(e.v)),
+                            listOfNotNull(Color(s.v), r?.let { Color(it.v) }, Color(e.v)),
                             start = Offset(if (rtl) size.width else 0f, 0f),
                             end = Offset(if (rtl) 0f else size.width, size.height),
                         ),
@@ -754,14 +756,19 @@ private class GlassFrostNode(
 
 /**
  * The rim catching the backdrop's light (glass-live 2026-11-09; owner: "glass not interacting with the background", "so
- * frosty and not glossy"): a [RIM_LIGHT_BAND_DP] band just inside a pane's lit edges (the straight part of its top edge
- * and of its start side, where the specular light falls) shows the live picture behind it as neutral white light,
- * brighter where the picture is brighter than the ground and nothing over the plain ground. White, never the look's
- * colour (owner 2026-11-08: neutral rims). Dark themes only; a light theme's rim is already white on milk.
+ * frosty and not glossy"): the pane's thin rim shows the live picture behind it as neutral white light, brighter where
+ * the picture is brighter than the ground and nothing over the plain ground. White, never the look's colour (owner
+ * 2026-11-08: neutral rims). Dark themes only; a light theme's rim is already white on milk.
  *
- * Cheap by design: the band's layer holds one reference to the page's one picture recording (never a copy), so the
- * picture stepping re-records nothing here; it is drawn through two rectangle clips (a scissor, never a path mask), and
- * recorded again only when the pane moves or changes size.
+ * One light (owner's first phone look, 2026-11-11: a thick bright bar on the straight part of a panel's start side, hard
+ * ended where the thin, dim corner began, once the page's glow was bright): the light is the rim itself, a ring as wide
+ * as the rim ([rimLightWidthDp], never wider) round the pane's whole outline, corners included, so it rises and falls
+ * with the picture along the edge with no start or stop of its own. It used to be a [RIM_LIGHT_BAND_DP] band clipped
+ * to two rectangles on the straight top edge and start side only.
+ *
+ * Cheap by design: the light's layer holds one reference to the page's one picture recording (never a copy), so the
+ * picture stepping re-records nothing here; it is drawn through one ring clip (two rounded rectangles, even-odd), kept
+ * until the pane's size or shape changes, and recorded again only when the pane moves or changes size.
  */
 internal class BackdropRimLight {
     private var layer: GraphicsLayer? = null
@@ -769,7 +776,7 @@ internal class BackdropRimLight {
 
     fun draw(scope: DrawScope, context: androidx.compose.ui.graphics.GraphicsContext, picture: GraphicsLayer, shift: Offset, shape: Shape, light: KitRimLight) {
         with(scope) {
-            val band = light.bandDp.dp.toPx()
+            val band = rimLightWidthDp(light).dp.toPx()
             if (light.gain <= 0f || size.width <= band * 4f || size.height <= band * 4f) return
             val l = layer ?: context.createGraphicsLayer().also { layer = it }
             if (filtered != light) {
@@ -778,29 +785,71 @@ internal class BackdropRimLight {
             }
             l.alpha = light.max
             recordDetached(l) { translate(shift.x, shift.y) { drawLayer(picture) } }
-            // The corners' radius: the bands stay on the straight edges, inside the face.
-            val r = cornerOf(shape, size, this).coerceAtMost(minOf(size.width, size.height) / 2f)
-            val rtl = layoutDirection == LayoutDirection.Rtl
-            if (size.width - 2f * r > band) clipRect(r, 0f, size.width - r, band) { drawLayer(l) }
-            if (size.height - 2f * r > band) {
-                val x = if (rtl) size.width - band else 0f
-                clipRect(x, r, x + band, size.height - r) { drawLayer(l) }
-            }
+            // The rim's own ring, round the whole outline: the light is the rim, never a stroke of its own.
+            clipPath(ringOf(shape, size, layoutDirection, this, band)) { drawLayer(l) }
         }
     }
 
-    private fun cornerOf(shape: Shape, size: androidx.compose.ui.geometry.Size, density: Density): Float =
-        when (val o = shape.createOutline(size, LayoutDirection.Ltr, density)) {
-            is androidx.compose.ui.graphics.Outline.Rounded -> maxOf(o.roundRect.topLeftCornerRadius.x, o.roundRect.topRightCornerRadius.x)
-            is androidx.compose.ui.graphics.Outline.Rectangle -> 0f
-            else -> minOf(size.width, size.height) / 4f
+    private var ring: Path? = null
+    private var ringKey: Any? = null
+
+    /** The band [w] px wide just inside [shape]'s outline, as one even-odd path; kept while its inputs stay. */
+    private fun ringOf(shape: Shape, size: Size, direction: LayoutDirection, density: Density, w: Float): Path {
+        val key = listOf(shape, size, direction, density.density, w)
+        ring?.takeIf { ringKey == key }?.let { return it }
+        val path = rimRing(shape.createOutline(size, direction, density), w) {
+            shape.createOutline(Size(size.width - 2f * w, size.height - 2f * w), direction, density)
         }
+        ring = path
+        ringKey = key
+        return path
+    }
 
     fun release(context: androidx.compose.ui.graphics.GraphicsContext) {
         layer?.let { context.releaseGraphicsLayer(it) }
         layer = null
         filtered = null
+        ring = null
+        ringKey = null
     }
+}
+
+/** The pane's rim width, in dp: the glass rim and the liquid rim are both 1 dp. */
+internal const val RIM_WIDTH_DP: Float = 1f
+
+/** How wide the picture's light on a rim is: the look's band, never wider than the rim itself ("one light"). */
+internal fun rimLightWidthDp(light: KitRimLight): Float = minOf(light.bandDp, RIM_WIDTH_DP)
+
+/**
+ * The ring [w] px wide just inside [outline]: the outline less the same shape [w] in from every side (its corners
+ * [w] tighter, so the ring is as wide round a corner as along an edge), filled even-odd. [inner] makes the inner outline
+ * of a shape that is neither a rectangle nor a rounded one.
+ */
+internal fun rimRing(outline: androidx.compose.ui.graphics.Outline, w: Float, inner: () -> androidx.compose.ui.graphics.Outline): Path {
+    val path = Path().apply { fillType = androidx.compose.ui.graphics.PathFillType.EvenOdd }
+    when (outline) {
+        is androidx.compose.ui.graphics.Outline.Rectangle -> {
+            path.addRect(outline.rect)
+            path.addRect(outline.rect.deflate(w))
+        }
+        is androidx.compose.ui.graphics.Outline.Rounded -> {
+            val o = outline.roundRect
+            path.addRoundRect(o)
+            fun tight(r: androidx.compose.ui.geometry.CornerRadius) =
+                androidx.compose.ui.geometry.CornerRadius((r.x - w).coerceAtLeast(0f), (r.y - w).coerceAtLeast(0f))
+            path.addRoundRect(
+                androidx.compose.ui.geometry.RoundRect(
+                    o.left + w, o.top + w, o.right - w, o.bottom - w,
+                    tight(o.topLeftCornerRadius), tight(o.topRightCornerRadius), tight(o.bottomRightCornerRadius), tight(o.bottomLeftCornerRadius),
+                )
+            )
+        }
+        is androidx.compose.ui.graphics.Outline.Generic -> {
+            path.addPath(outline.path)
+            path.addPath(Path().apply { addOutline(inner()) }, Offset(w, w))
+        }
+    }
+    return path
 }
 
 /**
@@ -834,7 +883,7 @@ internal fun kitRimLightGround(): KitRimLight? {
     return KitRimLight(luma, look.backdropLightGain, look.backdropLightMax, look.backdropLightBandDp)
 }
 
-/** How wide the lit band inside a pane's edge is, in dp: a touch wider than the 1 dp rim, so the light reads. */
+/** The look's lit band inside a pane's edge, in dp; drawn no wider than the rim ([rimLightWidthDp]). */
 internal val RIM_LIGHT_BAND_DP: Float get() = io.github.eslamasabry.oc.ui.design.style.GlassLook.Default.backdropLightBandDp
 
 /** Light per unit of luma above the ground: a look at its cap (about .2 above a dark ground) lights the rim about half. */

@@ -19,7 +19,10 @@ import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.domain.ImportableConversation
 import io.github.eslamasabry.oc.core.domain.ImportableConversations
+import io.github.eslamasabry.oc.core.model.ModelDisplayName
 import io.github.eslamasabry.oc.core.model.ModelRef
+import io.github.eslamasabry.oc.engine.agents.AgentId
+import io.github.eslamasabry.oc.engine.agents.selection.AgentSelection
 import io.github.eslamasabry.oc.engine.git.GitLinkRepairReport
 import io.github.eslamasabry.oc.engine.git.GitLinkRepairResult
 import io.github.eslamasabry.oc.ui.routes.AgentsRoute
@@ -51,6 +54,11 @@ public data class NewConversationServer(
     val connected: Boolean,
     /** This phone's own OpenCode is off because the person stopped it. */
     val phoneOff: Boolean = false,
+    /**
+     * Connections that are part of this server and never listed on their own (This phone's agents): a page opened
+     * for one of them (Start new from an agent's conversation) starts here, with that agent chosen.
+     */
+    val standsFor: Set<ProfileId> = emptySet(),
 )
 
 public data class NewConversationProject(
@@ -67,6 +75,47 @@ public data class NewConversationModel(
     val providerName: String? = null,
 )
 
+/** One agent this phone can run, as New conversation offers it (Flutter `ChatAgentChoice` / a set-up row). */
+public data class NewConversationPhoneAgent(
+    val id: String,
+    val name: String,
+    val iconKey: String,
+)
+
+/**
+ * The agents on this phone beside the connected server's own: [choices] can start a conversation now,
+ * [needsSetup] open their setup. [helper] is the profile their conversations live on, and [selected] the agent
+ * remembered for the shown server (null = the server's own agent).
+ */
+public data class NewConversationPhone(
+    val helper: ProfileId,
+    val choices: List<NewConversationPhoneAgent>,
+    val needsSetup: List<NewConversationPhoneAgent>,
+    val selected: String? = null,
+)
+
+/** A phone agent's models, and the one remembered for it (else its first). */
+public data class NewConversationPhoneModels(
+    val models: List<NewConversationModel>,
+    val model: ModelRef?,
+)
+
+/**
+ * A model row's name: the catalog's, else the one the server or agent reports, and when that is blank or only the id
+ * again, the id read as words (Flutter `_choiceName`): never a raw id such as `claude-opus-4-6`.
+ */
+public fun newConversationModelName(modelId: String, catalogName: String?, reportedName: String?): String =
+    ModelDisplayName.of(modelId, catalogName?.takeIf { it.isNotBlank() } ?: reportedName)
+
+/**
+ * Whether the helper's model list for a phone agent must be read again from the agent itself: the Agents page says
+ * the agent is ready, yet the helper's last list names no real model for it (it was read before the agent was
+ * installed or signed in, and the helper keeps that list until it is asked to look again). Asked once per read, never
+ * in a loop.
+ */
+public fun phoneModelsNeedRecheck(agentReady: Boolean, models: List<NewConversationModel>): Boolean =
+    agentReady && models.none { it.model.modelId != "default" }
+
 public data class NewConversationSetup(
     val directory: String?,
     val projects: List<NewConversationProject>,
@@ -80,6 +129,8 @@ public data class NewConversationSetup(
     val modes: List<String> = emptyList(),
     /** N-51: this server's favourite models, as the chat's model sheet shows them. */
     val favorites: List<ModelRef> = emptyList(),
+    /** The agents on this phone; null where the phone has no agent host. */
+    val phone: NewConversationPhone? = null,
 )
 
 /** Keeps successful stages on an explicit retry: a copy or conversation is never created twice. */
@@ -124,6 +175,20 @@ public interface NewConversationHost {
         Outcome.Failed(Failure.Unavailable(FeatureId("startPhoneServer")))
 
     public suspend fun setup(profile: ProfileId): Outcome<NewConversationSetup>
+
+    /**
+     * Remembers the agent for [profile] (`oc.chatAgent.<profile>`); null is the server's own agent. A phone agent that
+     * cannot start a conversation now is refused and nothing is written.
+     */
+    public suspend fun choosePhoneAgent(profile: ProfileId, agentId: String?): Outcome<Unit> = Outcome.Ok(Unit)
+
+    /** [agentId]'s models and the remembered one; the phone's helper starts when it has to (the first read is slow). */
+    public suspend fun phoneAgentModels(profile: ProfileId, agentId: String): Outcome<NewConversationPhoneModels> =
+        Outcome.Failed(Failure.Unavailable(FeatureId("phoneAgentModels")))
+
+    /** Remembers [model] for [agentId] (`oc.agentModel.<profile>`). */
+    public suspend fun savePhoneAgentModel(profile: ProfileId, agentId: String, model: ModelRef?): Outcome<Unit> =
+        Outcome.Ok(Unit)
 
     public suspend fun review(profile: ProfileId, directory: String?): Outcome<ConversationRef?> =
         Outcome.Ok(null)
@@ -324,9 +389,41 @@ public data class NewConversationUi(
     /** The chosen server is this phone's own OpenCode and the person stopped it: no list can be read until it starts. */
     val phoneOff: Boolean = false,
     val startingPhone: Boolean = false,
+    /** The agent on this phone chosen for this conversation; null = the server's own agent. */
+    val phoneAgent: String? = null,
+    /** [phoneAgent]'s models and the chosen one; empty while they are read. */
+    val phoneModels: List<NewConversationModel> = emptyList(),
+    val phoneModel: ModelRef? = null,
+    val phoneModelsBusy: Boolean = false,
 ) {
+    /** A separate copy is OpenCode only: a phone agent hides it (Flutter `_start`). */
     val canCopy: Boolean
-        get() = setup?.projects?.any { it.directory == directory && it.separateCopy } == true
+        get() = phoneAgent == null && setup?.projects?.any { it.directory == directory && it.separateCopy } == true
+
+    /** The chosen phone agent's row, while it is still offered. */
+    val phoneAgentChoice: NewConversationPhoneAgent?
+        get() = setup?.phone?.choices?.firstOrNull { it.id == phoneAgent }
+
+    /** The models the Model row and sheet list: the phone agent's own, else the server's. */
+    val shownModels: List<NewConversationModel>
+        get() = if (phoneAgent != null) phoneModels else setup?.models.orEmpty()
+
+    /**
+     * Whether the Model row is a control: a person can name at least two models, or the phone agent's list is
+     * still being read. With one model or none there is nothing to choose, so the row only states the model.
+     */
+    val modelChoosable: Boolean
+        get() = (phoneAgent != null && phoneModelsBusy) || filterNewConversationModels(shownModels, "").size >= 2
+
+    /** The model the Model row shows. */
+    val shownModel: ModelRef?
+        get() = if (phoneAgent != null) phoneModel else model
+
+    /** Why Start cannot run for a phone agent: it works only in the projects on this phone (`/root/projects/`). */
+    val phoneNeedsProjectsFolder: Boolean
+        get() =
+            phoneAgent != null && directory != null &&
+                !AgentSelection.folderAllowed(AgentId(phoneAgent), directory)
 
     /**
      * E20-S08: the project sheet's rows, one per folder. A server can list the same folder twice (a worktree, a
@@ -375,6 +472,14 @@ public interface NewConversationActions {
     public fun toggleFavorite(model: ModelRef) {}
 
     public fun chooseAgent(agent: String?)
+
+    /** An agent on this phone, or null for the server's own agent; remembered per server. */
+    public fun choosePhoneAgent(agent: String?) {}
+
+    /** A dimmed agent: opens its setup (the Agents page); coming back rereads the offer. */
+    public fun setUpPhoneAgent(agent: String) {
+        agents()
+    }
 
     public fun chooseMode(mode: String) {
         chooseAgent(mode)
@@ -443,7 +548,9 @@ public class NewConversationViewModel(
                     shown.profile?.let(::chooseServer)
                 if (mutable.value.profile == null) {
                     val target =
-                        route.profile?.takeIf { wanted -> servers.any { it.profile == wanted } }
+                        route.profile?.let { wanted ->
+                            servers.firstOrNull { it.profile == wanted || wanted in it.standsFor }?.profile
+                        }
                             ?: servers.firstOrNull { it.connected }?.profile
                             ?: servers.singleOrNull()?.profile
                     target?.let(::chooseServer)
@@ -452,10 +559,13 @@ public class NewConversationViewModel(
         }
     }
 
-    // This entry owns its draft in memory while pickers or other pages cover it. A new entry
-    // starts empty; resuming must never import another conversation's old project draft.
+    // This entry owns its draft in memory while pickers or other pages cover it. A new entry with an empty field
+    // shows the words left unsent in this project (P25, F: new_chat_screen.dart:119-175); resuming reads nothing.
     /** Agent setup was opened from here: the agents may have changed when this screen is shown again. */
     private var refreshOnShown = false
+
+    /** [ChatsRoute.New.phoneAgent] is applied once, on the first setup that offers it. */
+    private var wantedApplied = false
 
     override fun shown() {
         if (!refreshOnShown) return
@@ -464,9 +574,24 @@ public class NewConversationViewModel(
         viewModelScope.launch {
             // Only the offered agents are reread: the draft, project, model and agent stay as they are.
             val loaded = host.setup(profile) as? Outcome.Ok ?: return@launch
+            var reread: String? = null
             mutable.update {
-                if (it.profile == profile && it.setup != null) it.copy(setup = loaded.value) else it
+                if (it.profile == profile && it.setup != null) {
+                    // A phone agent that is no longer offered (removed, signed out) goes back to OpenCode.
+                    val kept =
+                        it.phoneAgent?.takeIf { id -> loaded.value.phone?.choices?.any { c -> c.id == id } == true }
+                    reread = kept
+                    it.copy(
+                        setup = loaded.value,
+                        phoneAgent = kept,
+                        phoneModels = if (kept == null) emptyList() else it.phoneModels,
+                        phoneModel = if (kept == null) null else it.phoneModel,
+                    )
+                } else it
             }
+            // Setup may have installed or signed in the agent, or changed its models: its list is read again
+            // (before, the list read when the page opened stayed until the app restarted).
+            reread?.let { agent -> loadPhoneModels(profile, agent) }
         }
     }
 
@@ -500,6 +625,12 @@ public class NewConversationViewModel(
     override fun agents() {
         refreshOnShown = true
         nav.open(AgentsRoute.Home)
+    }
+
+    /** A dimmed agent's "Set up" opens that agent's own sheet (not the whole page) and comes back here when it is ready. */
+    override fun setUpPhoneAgent(agent: String) {
+        refreshOnShown = true
+        nav.open(AgentsRoute.Agent(agent, forNewChat = true))
     }
 
     override fun addServer(): Unit = nav.open(ServersRoute.Home)
@@ -537,17 +668,61 @@ public class NewConversationViewModel(
                                 model = setup.model,
                                 favorites = setup.favorites,
                                 agent = setup.agent,
+                                phoneAgent = setup.phone?.selected,
+                                phoneModels = emptyList(),
+                                phoneModel = null,
                                 busy = false,
                                 repairAvailable =
                                     setup.directory?.let { dir -> host.canRepair(profile, dir) } ==
                                         true,
                             )
                         }
+                        val wanted = route.phoneAgent
+                        val offer = setup.phone
+                        if (
+                            wanted != null && !wantedApplied && offer != null &&
+                                offer.choices.none { c -> c.id == wanted } &&
+                                offer.needsSetup.none { c -> c.id == wanted }
+                        ) {
+                            // A ready agent the offer lists only once chosen (not yet certified for chat, as Flutter's
+                            // agentChoosable): the Agents card's choice is saved like a tap and the offer read again,
+                            // now listing it. Before, the page dropped it and showed the remembered agent instead.
+                            wantedApplied = true
+                            if (host.choosePhoneAgent(profile, wanted) is Outcome.Ok && ticket == generation) {
+                                chooseServer(profile)
+                                return@launch
+                            }
+                        }
+                        if (
+                            wanted != null && !wantedApplied &&
+                                setup.phone?.choices?.any { c -> c.id == wanted } == true
+                        ) {
+                            // The Agents page chose this agent: it is the one chosen here, remembered like a tap.
+                            wantedApplied = true
+                            if (setup.phone?.selected != wanted) choosePhoneAgent(wanted)
+                            else loadPhoneModels(profile, wanted)
+                        } else setup.phone?.selected?.let { loadPhoneModels(profile, it) }
                         restore(profile, setup.directory)
                         setup.directory?.let { checkFolder(profile, it) }
+                        startInWantedFolder(profile, setup.directory)
                     }
             }
         }
+    }
+
+    /**
+     * [ChatsRoute.New.directory] is applied once; a folder the server no longer has leaves the usual one. Where the app
+     * cannot check (a helper on another computer, or the phone's Linux not running) the old folder is used, as Flutter's
+     * start-new-chat uses the old conversation's folder unchecked.
+     */
+    private var wantedFolderApplied = false
+
+    private suspend fun startInWantedFolder(profile: ProfileId, current: String?) {
+        val wanted = route.directory?.trim()?.takeIf { it.isNotEmpty() } ?: return
+        if (wantedFolderApplied) return
+        wantedFolderApplied = true
+        if (wanted == current) return
+        if (host.folderExists(profile, wanted) != false) chooseDirectory(wanted)
     }
 
     private suspend fun restore(profile: ProfileId, directory: String?) {
@@ -592,18 +767,25 @@ public class NewConversationViewModel(
                         }
                 }
             }
-            // Only an unresolved first-send receipt may restore persisted words on a fresh
-            // entry: these belong to the conversation offered for review, not a new prompt.
-            if (before.text.isNotEmpty() || !mutable.value.deliveryUnconfirmed) return
+            // P25 (F: new_chat_screen.dart:119-175, `KitDraft` per project): words typed and left unsent here (Close,
+            // Back) come back when New conversation opens again on this project with an empty field. A sent first
+            // message clears them once its delivery is confirmed; offered words (a starter text) are never replaced.
+            // An unresolved first-send receipt restores the words of the conversation offered for review, as before.
+            if (before.text.isNotEmpty()) return
+            if (route.initialText.isNotEmpty() && !mutable.value.deliveryUnconfirmed) return
             when (val saved = host.draft(profile, directory)) {
                 is Outcome.Failed -> mutable.update { it.copy(draftFailed = true) }
                 is Outcome.Ok ->
                     mutable.update {
-                        it.copy(
-                            text = saved.value,
-                            textRevision = it.textRevision + 1,
-                            draftFailed = false,
-                        )
+                        // The reads above wait on storage and the server: words typed meanwhile (or a server or
+                        // project changed meanwhile) win, and are never replaced by the stored draft.
+                        if (it.text.isNotEmpty() || it.profile != profile || it.directory != directory) it
+                        else
+                            it.copy(
+                                text = saved.value,
+                                textRevision = it.textRevision + 1,
+                                draftFailed = false,
+                            )
                     }
             }
         }
@@ -737,6 +919,14 @@ public class NewConversationViewModel(
     override fun chooseModel(model: ModelRef?) {
         if (mutable.value.busy || mutable.value.deliveryUnconfirmed) return
         // The model is the last choice of the sheet: picking one closes it.
+        val shown = mutable.value
+        val phone = shown.phoneAgent
+        val profile = shown.profile
+        if (phone != null && profile != null) {
+            mutable.update { it.copy(phoneModel = model, sheet = null) }
+            viewModelScope.launch { host.savePhoneAgentModel(profile, phone, model) }
+            return
+        }
         mutable.update { it.copy(model = model, sheet = null) }
         saveChoices()
     }
@@ -800,9 +990,57 @@ public class NewConversationViewModel(
         )
             return
         // The sheet stays open: Build/Plan and the model are the next choices in the same sheet.
-        if (!mutable.value.busy && !mutable.value.deliveryUnconfirmed)
+        if (!mutable.value.busy && !mutable.value.deliveryUnconfirmed) {
+            // The server's own agent is the choice now: a phone agent is no longer the one remembered.
+            if (mutable.value.phoneAgent != null) choosePhoneAgent(null)
             mutable.update { it.copy(agent = agent) }
+        }
         saveChoices()
+    }
+
+    override fun choosePhoneAgent(agent: String?) {
+        val shown = mutable.value
+        val profile = shown.profile ?: return
+        val phone = shown.setup?.phone ?: return
+        if (shown.busy || shown.deliveryUnconfirmed || shown.attempted || shown.phoneAgent == agent) return
+        if (agent != null && phone.choices.none { it.id == agent }) return
+        mutable.update {
+            it.copy(
+                phoneAgent = agent,
+                // Build/Plan and a separate copy belong to the server's own agent.
+                agent = if (agent != null) null else it.agent,
+                separateCopy = if (agent != null) false else it.separateCopy,
+                phoneModels = emptyList(),
+                phoneModel = null,
+            )
+        }
+        viewModelScope.launch {
+            if (host.choosePhoneAgent(profile, agent) is Outcome.Failed)
+                mutable.update { it.copy(draftFailed = true) }
+        }
+        if (agent != null) loadPhoneModels(profile, agent)
+        else saveChoices()
+    }
+
+    /** The phone agent's own models; read while the person types, so Start does not wait for them. */
+    private fun loadPhoneModels(profile: ProfileId, agent: String) {
+        mutable.update { it.copy(phoneModelsBusy = true) }
+        viewModelScope.launch {
+            val read = host.phoneAgentModels(profile, agent)
+            mutable.update {
+                if (it.phoneAgent != agent || it.profile != profile) it
+                else
+                    when (read) {
+                        is Outcome.Ok ->
+                            it.copy(
+                                phoneModels = read.value.models,
+                                phoneModel = read.value.model,
+                                phoneModelsBusy = false,
+                            )
+                        is Outcome.Failed -> it.copy(phoneModelsBusy = false)
+                    }
+            }
+        }
     }
 
     private fun saveChoices() {
@@ -822,6 +1060,8 @@ public class NewConversationViewModel(
     }
 
     override fun sheet(sheet: NewConversationSheet?) {
+        // The model sheet never opens with nothing to choose.
+        if (sheet == NewConversationSheet.Models && !mutable.value.modelChoosable) return
         val profile = mutable.value.profile
         mutable.update {
             it.copy(
@@ -995,7 +1235,9 @@ public class NewConversationViewModel(
                 shown.setup == null ||
                 shown.creationUnconfirmed ||
                 shown.deliveryUnconfirmed ||
-                shown.folderMissing
+                shown.folderMissing ||
+                shown.phoneNeedsProjectsFolder ||
+                shown.phoneModelsBusy
         )
             return
         if (shown.separateCopy) {
@@ -1031,9 +1273,14 @@ public class NewConversationViewModel(
         }
         viewModelScope.launch {
             var openedConversation: ConversationRef? = null
+            // A phone agent's conversation lives on the phone helper's profile, with the agent's own model.
+            val phone = shown.setup?.phone?.takeIf { shown.phoneAgent != null }
+            val target = phone?.helper ?: profile
+            val model = if (phone != null) shown.phoneModel else shown.model
+            val agent = if (phone != null) null else shown.agent
             val result = edits.withLock {
-                val saved = host.saveDraft(profile, directory, shown.text)
-                val choices = host.saveChoices(profile, directory, shown.model, shown.agent)
+                val saved = host.saveDraft(target, directory, shown.text)
+                val choices = host.saveChoices(target, directory, model, agent)
                 when {
                     saved is Outcome.Failed ->
                         NewConversationAttempt(directory, failure = saved.failure)
@@ -1046,11 +1293,11 @@ public class NewConversationViewModel(
                                     Failure.StorageRefused()
                                 }) {
                                     host.start(
-                                        profile,
+                                        target,
                                         directory,
                                         shown.text.trim(),
-                                        shown.model,
-                                        shown.agent,
+                                        model,
+                                        agent,
                                         shown.separateCopy,
                                         attempt,
                                         onStarted = { ref ->
@@ -1077,6 +1324,9 @@ public class NewConversationViewModel(
                 }
             }
             attempt = result
+            // The words are the phone agent's conversation now: the server's own draft for this folder is spent.
+            if (target != profile && result.ref != null)
+                edits.withLock { host.saveDraft(profile, directory, "") }
             if (result.dispatched) report(NewChatOutcome.FirstMessageSent)
             else if (result.deliveryUnconfirmed) report(NewChatOutcome.Unknown)
             if ((result.dispatched || result.deliveryUnconfirmed) && result.ref != null) {
@@ -1148,3 +1398,18 @@ public fun isStartableAgent(name: String): Boolean =
                 "explore",
                 "general",
             )
+
+/**
+ * The line under a project's name in the project sheet: the folders it sits in, so same-named projects tell apart
+ * ("work/app"). The phone's Linux home (`/root`) is where every project of the phone lives, so it is never part of the
+ * line: a project straight in it has none. Longer than two folders keeps the last two behind an ellipsis.
+ */
+public fun projectPlace(directory: String): String? {
+    val parts = directory.trim().replace('\\', '/').split('/').filter { it.isNotEmpty() }
+    val parents = parts.dropLast(1).let { if (it.firstOrNull() == "root" && directory.trim().startsWith("/root")) it.drop(1) else it }
+    return when {
+        parents.isEmpty() -> null
+        parents.size <= 2 -> parents.joinToString("/")
+        else -> "…/" + parents.takeLast(2).joinToString("/")
+    }
+}
