@@ -3,6 +3,7 @@ package io.github.eslamasabry.oc.feature.chat
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.v2.runComposeUiTest
@@ -49,7 +50,7 @@ class W4DeclinedLineTest {
         }
         onNodeWithTag("turn-m1").assertExists()
         onNodeWithTag("turn-m3").assertExists()
-        androidx.compose.ui.test.onAllNodesWithText("You declined this").assertCountEquals(2)
+        onAllNodesWithText("You declined this").assertCountEquals(2)
         onNodeWithText("Stopped").assertDoesNotExist()
     }
 }
