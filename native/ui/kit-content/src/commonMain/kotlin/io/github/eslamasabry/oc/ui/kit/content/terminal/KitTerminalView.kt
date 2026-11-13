@@ -54,7 +54,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
@@ -752,8 +751,7 @@ public fun KitTerminalLiveView(
         return
     }
     // One sideways row when the window left above the keyboard is short (a phone in landscape with the keyboard up).
-    val density = LocalDensity.current
-    val ime = with(density) { WindowInsets.ime.getBottom(density).toDp() }
+    val ime = io.github.eslamasabry.oc.ui.kit.frame.kitKeyboardHeight()
     val keyboard = maxOf(ime, keyboardInset ?: 0.dp)
     val compact = window.heightDp - keyboard.value < Layout.SHORT_HEIGHT
     val send: (KitTerminalBarKey, Boolean, Boolean) -> Unit = { key, ctrl, alt ->

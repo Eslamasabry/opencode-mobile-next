@@ -1,5 +1,7 @@
 package io.github.eslamasabry.oc.ui.kit.modal
 
+import io.github.eslamasabry.oc.ui.kit.frame.kitKeyboardInsets
+import io.github.eslamasabry.oc.ui.kit.frame.kitSystemInsets
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -68,7 +70,7 @@ public fun KitFloatingPanel(
         )
         Box(
             Modifier.fillMaxSize()
-                .windowInsetsPadding(WindowInsets.safeDrawing.union(WindowInsets.ime))
+                .windowInsetsPadding(kitSystemInsets().union(kitKeyboardInsets()))
                 .padding(Space.S4.dp),
             contentAlignment = Alignment.BottomCenter,
         ) {

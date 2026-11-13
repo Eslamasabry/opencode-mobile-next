@@ -24,4 +24,5 @@
     <string name="terminalKeyTilde">~</string>
     <string name="terminalKeyMinus">−</string>
     <string name="terminalKeyUnderscore">_</string>
+    <string name="terminalUseServerTerminal">Dùng terminal trên %1$s</string>
 </resources>

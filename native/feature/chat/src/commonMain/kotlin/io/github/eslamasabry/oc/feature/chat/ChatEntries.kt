@@ -1,8 +1,6 @@
 package io.github.eslamasabry.oc.feature.chat
 
 import kotlinx.collections.immutable.toImmutableMap
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.ime
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -53,7 +51,7 @@ import io.github.eslamasabry.oc.feature.chat.sessiontransfer.ui.SessionTransferS
 import io.github.eslamasabry.oc.feature.chat.start.presentation.ChatStartViewModel
 import io.github.eslamasabry.oc.feature.chat.ui.ChatScreen
 import io.github.eslamasabry.oc.feature.chat.ui.MessageTeachingScope
-import io.github.eslamasabry.oc.feature.chat.ui.rememberBottomInsetOpen
+import io.github.eslamasabry.oc.ui.kit.frame.kitKeyboardVisible
 import io.github.eslamasabry.oc.feature.chat.world.ChatGraphAccessors
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
@@ -221,7 +219,7 @@ public class ChatEntries(
                 )
             }
             var offerDetails by remember(route) { mutableStateOf(false) }
-            val keyboardOpen by rememberBottomInsetOpen(WindowInsets.ime)
+            val keyboardOpen = kitKeyboardVisible()
             val offerStatus =
                 replyOffer
                     ?.takeUnless { keyboardOpen }

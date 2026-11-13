@@ -5,7 +5,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.imePadding
+import io.github.eslamasabry.oc.ui.kit.frame.kitImePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.input.TextFieldState
@@ -92,7 +92,7 @@ import org.jetbrains.compose.resources.stringResource
 /**
  * The composer (plan 09 §10), arranged from kit parts: the one-line chip row (model, approval, then
  * Stop at the trailing end while a reply runs), the note line, the field, and the one field button
- * (mic, Send or a steer form). It follows the keyboard (`imePadding`) and the navigation bar. The
+ * (mic, Send or a steer form). It follows the keyboard (kit keyboard padding) and the navigation bar. The
  * field owns its text ([field]); words flow out through [ComposerActions.onTextChanged] and edits
  * flow in through [ComposerUi.edit].
  *
@@ -134,7 +134,7 @@ fun ComposerScreen(
         modifier
             .fillMaxWidth()
             .navigationBarsPadding()
-            .imePadding()
+            .kitImePadding()
             .padding(horizontal = Space.S4.dp, vertical = Space.S2.dp),
         verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
     ) {
@@ -245,6 +245,8 @@ private fun ChipRow(state: ComposerUi, actions: ComposerActions, freeModel: Bool
     val stop = state.chips.filterIsInstance<ComposerChip.Stop>().firstOrNull()
     val approvals = state.chips.filterIsInstance<ComposerChip.Approval>()
     val model = state.chips.filterIsInstance<ComposerChip.Model>().firstOrNull()
+    // A chip opens a sheet: the keyboard goes first so the sheet opens whole, not half under the keyboard.
+    val focus = LocalFocusManager.current
     KitComposerStatusStrip(
         hasChips = approvals.isNotEmpty(),
         model =
@@ -254,7 +256,10 @@ private fun ChipRow(state: ComposerUi, actions: ComposerActions, freeModel: Bool
                     KitComposerModelChip(
                         modelChipWords(model) +
                             if (freeModel) stringResource(Res.string.upgradeComposerFree) else "",
-                        onClick = actions::onModelChip,
+                        onClick = {
+                            focus.clearFocus()
+                            actions.onModelChip()
+                        },
                     )
                 }),
         stop =
@@ -276,7 +281,10 @@ private fun ChipRow(state: ComposerUi, actions: ComposerActions, freeModel: Bool
                 kind = KitChipKind.Action,
                 icon = if (chip.mode == ApprovalMode.Paused) KitIcons.pause else KitIcons.shield,
                 selected = if (chip.mode == ApprovalMode.AutoApprove) true else null,
-                onClick = actions::onApprovalChip,
+                onClick = {
+                    focus.clearFocus()
+                    actions.onApprovalChip()
+                },
             )
         }
     }

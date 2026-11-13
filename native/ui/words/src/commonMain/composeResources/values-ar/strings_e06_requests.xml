@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="chatRequestNoLongerNeeded">لم يعد مطلوبًا</string>
-    <string name="chatRequestNoLongerNeededWhy">توقف التشغيل، لذا لم يُرسَل شيء.</string>
     <string name="chatRequestCardLabel">الطلب %1$s من %2$s: %3$s</string>
+    <string name="chatRequestNoLongerNeededEnding">ينتهي التشغيل، لذلك لم يُرسل شيء.</string>
 </resources>

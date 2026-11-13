@@ -6,7 +6,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.imePadding
+import io.github.eslamasabry.oc.ui.kit.frame.kitImePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.TextFieldState
@@ -163,7 +163,7 @@ private fun EditorForm(state: ScheduleEditUi, draft: EditorDraft, words: Schedul
     LaunchedEffect(state.seed) { if (!state.editing) promptFocus.requestFocus() }
     Column(
         Modifier.fillMaxSize()
-            .imePadding()
+            .kitImePadding()
             .verticalScroll(rememberScrollState())
             .padding(horizontal = LocalKitTokens.current.gutter.dp, vertical = Space.S3.dp)
     ) {

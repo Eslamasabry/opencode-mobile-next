@@ -57,7 +57,7 @@
     <string name="s40iFixTool">Periksa %1$s di server</string>
     <string name="s40iAddTools">Tambah server alat di server</string>
     <string name="s40iUnnamed">Item tanpa nama</string>
-    <string name="s40iToolsNotListed">Server ini tidak mencantumkan alat yang tersedia untuk model. Halaman katalog lainnya tersedia di atas.</string>
+    <string name="s40iToolsNotListed">Server ini tidak menyebutkan alat apa yang bisa dipakai model. Halaman di atas menunjukkan apa yang dimilikinya.</string>
     <string name="s40iCommands">Perintah</string>
     <string name="s40iSkills">Keterampilan</string>
     <string name="s40iReferences">Referensi</string>
@@ -72,4 +72,5 @@
     <string name="s40iRunCommand">Jalankan /%1$s</string>
     <string name="s40iOpenPageQuestion">Buka halaman ini?</string>
     <string name="s40iOpenPage">Buka halaman</string>
+    <string name="s40iMcpAddHintRuntime">Pilih URL jarak jauh atau program lokal. Server menambahkannya untuk proyek ini sampai server dimulai ulang; server tidak memasang perangkat lunak yang belum ada.</string>
 </resources>

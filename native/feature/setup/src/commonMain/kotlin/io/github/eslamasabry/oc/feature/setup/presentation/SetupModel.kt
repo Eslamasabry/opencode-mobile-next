@@ -214,7 +214,25 @@ public class SetupModel(
         if (progress.state != SetupState.Running || raw == null) return
         val later = progress.components.filter { it.state == ComponentState.Pending }
             .sumOf { row -> registry().firstOrNull { it.id == row.id }?.estimatedSeconds ?: 0 }
-        val estimate = max(raw, later)
+        // The number counts down with the step's own progress: its part not yet done plus the steps still waiting.
+        // (Taking the larger of the engine's figure and the waiting steps kept it frozen at the waiting steps' sum.)
+        val running = progress.components.firstOrNull { it.state == ComponentState.Running }
+        val promised = running?.let { row -> registry().firstOrNull { it.id == row.id }?.estimatedSeconds }?.takeIf { it > 0 }
+        val onStep = progress.stepElapsedSeconds
+        // A step far past its own estimate has no honest number: say none rather than one that was wrong.
+        if (promised != null && onStep != null && onStep > max(promised * 2, 180)) {
+            eta = null
+            return
+        }
+        val left =
+            when {
+                running == null -> 0
+                promised == null -> raw
+                running.fraction != null -> (promised * (1.0 - running.fraction!!)).toInt()
+                onStep != null -> max(0, promised - onStep)
+                else -> promised
+            }
+        val estimate = later + left
         eta = eta?.let { min(it, estimate) } ?: estimate
     }
 

@@ -204,6 +204,9 @@ public fun KitViewerFrame(
             }
             if (secondary != null) add(KitMenuItem(secondary.label, secondary.onClick))
         }
+    // While Find is open the one filled button steps aside (review: it took a short window's room from the text while
+    // the keyboard was up); closing Find brings it back.
+    val shownPrimary = primary?.takeIf { !chrome.finding }
     CompositionLocalProvider(LocalViewerChrome provides chrome) {
         KitScreen(
             modifier = modifier.widthIn(max = VIEWER_MAX_WIDTH_DP.dp),
@@ -237,14 +240,14 @@ public fun KitViewerFrame(
                 )
             },
             bottom =
-                if (primary != null || footer != null) {
+                if (shownPrimary != null || footer != null) {
                     {
                         Column {
                             footer?.invoke()
-                            if (primary != null) {
+                            if (shownPrimary != null) {
                                 // The screen's bottom block already sits on the page margin: no second gutter here.
                                 Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                                    KitButton(primary.label, primary.onClick, Modifier.tagged(primary.tag), fullWidth = true)
+                                    KitButton(shownPrimary.label, shownPrimary.onClick, Modifier.tagged(shownPrimary.tag), fullWidth = true)
                                 }
                             }
                         }

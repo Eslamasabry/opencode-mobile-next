@@ -1247,4 +1247,6 @@
     <string name="composerPasteImageFromClipboardSupporting">Adjunta la imagen copiada</string>
     <string name="composerPasteImageEmpty">No hay ninguna imagen en el portapapeles.</string>
     <string name="chatRequestAnswerRequired">Responde primero las preguntas obligatorias.</string>
+    <string name="chatStepDeclinedNote">Tu nota: “%1$s”</string>
+    <string name="chatStepMalformedCall">El agente lo pidió de forma incorrecta, así que no se ejecutó nada. Pídele que lo intente de nuevo.</string>
 </resources>

@@ -2,13 +2,11 @@ package io.github.eslamasabry.oc.ui.kitchat.tool
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.selection.DisableSelection
 import androidx.compose.foundation.text.selection.SelectionContainer
@@ -43,6 +41,7 @@ import io.github.eslamasabry.oc.ui.kit.theme.KitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTypography
 import io.github.eslamasabry.oc.ui.kitchat.LocalKitRedactor
+import io.github.eslamasabry.oc.ui.kitchat.code.CodeOverflow
 
 /**
  * Lines of output shown in place before "Show all" (plan 09 §9.5: output is cut at 12 lines before
@@ -119,11 +118,17 @@ public fun KitCommandBox(
         if (lines.isNotEmpty()) {
             Column(Modifier.fillMaxWidth()) {
                 SelectionContainer {
-                    Column(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState())) {
-                        for (line in shown) TerminalStyledText(
-                            TerminalText.line(line, redactor::redact),
-                            colors,
-                        )
+                    // Review 2026-11-13 #5: output wider than the box fades at its edge and scrolls sideways (the
+                    // code block's scroller) instead of stopping inside a glyph.
+                    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                        CodeOverflow(colors.surface1, colors.text3) {
+                            Column {
+                                for (line in shown) TerminalStyledText(
+                                    TerminalText.line(line, redactor::redact),
+                                    colors,
+                                )
+                            }
+                        }
                     }
                 }
             }

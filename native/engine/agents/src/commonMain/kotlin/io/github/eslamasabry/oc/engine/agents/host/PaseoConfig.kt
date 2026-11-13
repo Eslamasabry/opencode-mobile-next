@@ -9,7 +9,7 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 
 /**
- * The helper's `config.json`, rendered here and written by `:android:agenthost` at every start (plan 17 §1.10). Byte for
+ * The helper's `config.json`, rendered here and written by `:android:linux` at every start (plan 17 §1.10). Byte for
  * byte the Dart `PhoneAgentsHost.configuration()` output for the same catalog and port: catalog-authored commands only
  * (ACP installation is discovery, not admission); relay, service proxy, MCP injection, web UI, dictation and voice off
  * (they would download speech models at start); a small rotating `daemon.log`, never `/dev/null`.

@@ -379,8 +379,6 @@
     <string name="kitComposerCantTakeMidReply">%1$s не принимает сообщения во время ответа.</string>
     <string name="vpttLetGoToFinish">Отпустите, когда закончите</string>
     <string name="vpttLetGoToCancel">Отпустите, чтобы отменить</string>
-    <string name="vpttSendingIn">Отправка через %1$s…</string>
-    <string name="vpttDontSend">Не отправлять</string>
     <string name="vpttLanguageFollowApp">Как в приложении</string>
     <string name="vpttLanguageFollowAppDetail">Слушает на языке приложения, если может, а если нет, определяет язык по вашему голосу.</string>
     <string name="vpttLanguageDetectDetail">Каждый раз определяет язык по вашему голосу.</string>

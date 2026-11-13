@@ -401,8 +401,6 @@
     <string name="kitComposerCantTakeMidReply">لا يستطيع %1$s استقبال رسالة أثناء الرد.</string>
     <string name="vpttLetGoToFinish">ارفع إصبعك عند الانتهاء</string>
     <string name="vpttLetGoToCancel">ارفع إصبعك للإلغاء</string>
-    <string name="vpttSendingIn">الإرسال خلال %1$s…</string>
-    <string name="vpttDontSend">لا ترسل</string>
     <string name="vpttLanguageFollowApp">مثل التطبيق</string>
     <string name="vpttLanguageFollowAppDetail">يصغي بلغة التطبيق متى أمكن، ويتعرّف على اللغة من صوتك عندما لا يمكن.</string>
     <string name="vpttLanguageDetectDetail">يتعرّف على اللغة من صوتك في كل مرة.</string>

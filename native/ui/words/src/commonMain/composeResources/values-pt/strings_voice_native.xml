@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Translated with native/tools/strings/translate; English is the source. -->
 <resources>
-    <string name="voiceNativeSendNow">Enviar agora</string>
     <string name="voiceNativeDetect">Detectar pela fala</string>
     <string name="voiceNativeSizeMb">%1$d MB</string>
     <string name="voiceNativePhoneEngine">A digitação por voz usa o reconhecimento de fala do próprio celular, então o áudio fica neste celular. Celulares sem ele não mostram o microfone. Esta versão ainda não usa os modelos de fala abaixo.</string>

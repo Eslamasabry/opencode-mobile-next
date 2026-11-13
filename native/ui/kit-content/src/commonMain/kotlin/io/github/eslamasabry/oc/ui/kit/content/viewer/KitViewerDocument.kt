@@ -124,6 +124,7 @@ public fun KitViewerDocument(
     if (chrome != null) {
         // The page's bar and menu carry the tools; this body paints no row of its own.
         SideEffect {
+            chrome.finding = finding
             chrome.offer(
                 tools,
                 mapOf(

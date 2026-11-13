@@ -65,9 +65,8 @@ class GlassWordsMenuSheetTest {
     /** Which recipe the pane wears: the old one, the knee alone, the knee with saturation 1.0 (a), or the shipped one (b). */
     private enum class Variant(val spec: (KitLiquidPaneSpec, Kind, Boolean) -> KitLiquidPaneSpec) {
         Before({ s, k, dark -> s.copy(recipe = s.recipe.copy(blurDp = if (k == Kind.Menu) (if (dark) 6f else 3f) else 12f, hold = LiquidHold.Off)) }),
-        // The alternatives weighed on 2026-11-11, at that day's 12 dp frost and the joined bar's knee.
-        KneeOnly({ s, _, _ -> s.copy(recipe = s.recipe.copy(blurDp = 12f, hold = LiquidHold(true, 0f))) }),
-        SaturationOne({ s, _, _ -> s.copy(recipe = s.recipe.copy(blurDp = 12f, saturation = 1f, hold = LiquidHold(true, 0f))) }),
+        KneeOnly({ s, _, _ -> s.copy(recipe = s.recipe.copy(hold = LiquidHold(true, 0f))) }),
+        SaturationOne({ s, _, _ -> s.copy(recipe = s.recipe.copy(saturation = 1f, hold = LiquidHold(true, 0f))) }),
         Shipped({ s, _, _ -> s }),
     }
 
@@ -329,12 +328,12 @@ class GlassWordsMenuSheetTest {
             val bar = LiquidEdge.recipe(LiquidRole.Bar, dark)
             val menu = LiquidEdge.recipe(LiquidRole.Menu, dark)
             assertEquals(bar, joinedFrost(bar, menu, 0f), "no rows yet: the bar's frost (dark=$dark)")
-            assertEquals(bar.copy(blurDp = LiquidEdge.DECISION_BLUR_DP), joinedFrost(bar, menu, 1f), "rows in: the menu's blur, nothing else of the bar's moves (dark=$dark)")
+            assertEquals(bar.copy(blurDp = 12f), joinedFrost(bar, menu, 1f), "rows in: the menu's blur 12 dp, nothing else of the bar's moves (dark=$dark)")
             assertEquals(joinedFrost(bar, menu, 1f), joinedFrost(bar, menu, 1.7f), "clamped")
             var last = joinedFrost(bar, menu, 0f).blurDp
             for (i in 1..100) {
                 val now = joinedFrost(bar, menu, i / 100f).blurDp
-                assertTrue(now >= last && now - last <= .4f, "a step at ${i / 100f}: $last to $now")
+                assertTrue(now >= last && now - last <= .1f, "a step at ${i / 100f}: $last to $now")
                 last = now
             }
         }
@@ -374,7 +373,7 @@ class GlassWordsMenuSheetTest {
             assertTrue(seen.isNotEmpty(), "$kind dark=$dark: the face asked the platform")
             val role = if (kind == Kind.Menu) LiquidRole.Menu else LiquidRole.Sheet
             val want = LiquidEdge.recipe(role, dark)
-            assertEquals(LiquidEdge.DECISION_BLUR_DP, seen.last().recipe.blurDp, "$kind dark=$dark blur")
+            assertEquals(12f, seen.last().recipe.blurDp, "$kind dark=$dark blur")
             assertEquals(want.hold, seen.last().recipe.hold, "$kind dark=$dark hold")
             assertTrue(seen.last().recipe.hold.knee && seen.last().recipe.hold.chroma > 0f)
         }

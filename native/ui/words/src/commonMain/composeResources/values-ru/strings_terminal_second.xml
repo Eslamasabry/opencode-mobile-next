@@ -24,4 +24,5 @@
     <string name="terminalKeyTilde">~</string>
     <string name="terminalKeyMinus">−</string>
     <string name="terminalKeyUnderscore">_</string>
+    <string name="terminalUseServerTerminal">Использовать терминал на %1$s</string>
 </resources>

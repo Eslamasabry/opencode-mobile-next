@@ -524,7 +524,9 @@ class Oc2LiveGatewayTest {
                 seen += page.items.map { it.id.raw }
             }
             assertEquals(total, seen.distinct().size)
-            assertEquals(listOf<String?>("100", "100", "100"), asked)
+            // B-235: the server's cursor is followed until an empty page, so the short third page is not taken as
+            // the end; the fourth request is the empty page that ends the list.
+            assertEquals(listOf<String?>("100", "100", "100", "100"), asked)
             gateway.close()
         }
 

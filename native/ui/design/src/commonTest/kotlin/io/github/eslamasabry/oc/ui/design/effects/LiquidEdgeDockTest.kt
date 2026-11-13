@@ -50,7 +50,7 @@ class LiquidEdgeDockTest {
         for (dark in listOf(true, false)) {
             val menu = LiquidEdge.swellRecipe(dark)
             val sheet = LiquidEdge.recipe(LiquidRole.Sheet, dark)
-            assertEquals(LiquidEdge.DECISION_BLUR_DP, sheet.blurDp, "the sheet's blur (dark=$dark)")
+            assertEquals(12f, sheet.blurDp, "the sheet's blur (dark=$dark)")
             assertEquals(48f, sheet.refractionDp, "the sheet's bend (dark=$dark)")
             assertEquals(menu, LiquidEdge.dockRecipe(dark, 1f, list = 0f), "no list: the menu's (dark=$dark)")
             val list = LiquidEdge.dockRecipe(dark, 1f, list = 1f)

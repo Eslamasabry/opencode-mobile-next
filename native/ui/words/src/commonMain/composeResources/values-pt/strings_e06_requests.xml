@@ -2,6 +2,6 @@
 <!-- Translated with native/tools/strings/translate; English is the source. -->
 <resources>
     <string name="chatRequestNoLongerNeeded">Não é mais necessário</string>
-    <string name="chatRequestNoLongerNeededWhy">A execução parou, então nada foi enviado.</string>
     <string name="chatRequestCardLabel">Solicitação %1$s de %2$s: %3$s</string>
+    <string name="chatRequestNoLongerNeededEnding">A execução está terminando, então nada foi enviado.</string>
 </resources>

@@ -32,7 +32,7 @@ public data class NodePins(val version: String, val sha256: ImmutableMap<AgentAr
 /**
  * The verified pins (plan 17 §1.3): one file, `native/engine/agents/pins/agent-pins.json`, read by this engine and by
  * the install scripts. A pin moves only with an app release (S3-PINS). [claudeCodeTestedVersions] must equal the
- * Kotlin `TESTED_CLAUDE_VERSIONS` of `:android:agenthost` (B-AGENT-050, checked there).
+ * Kotlin `TESTED_CLAUDE_VERSIONS` of `:android:linux` (B-AGENT-050, checked there).
  */
 public class AgentPins internal constructor(
     public val paseo: PaseoPins,

@@ -35,6 +35,9 @@ import dev.zacsweers.metrox.viewmodel.MetroViewModelFactory
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
+import io.github.eslamasabry.oc.ui.kit.modal.KitToastHost
+import io.github.eslamasabry.oc.ui.kit.modal.KitToastState
+import io.github.eslamasabry.oc.ui.kit.modal.LocalKitToasts
 import io.github.eslamasabry.oc.ui.kit.platform.KitPlatform
 import io.github.eslamasabry.oc.ui.kit.platform.LocalKitPlatform
 import io.github.eslamasabry.oc.ui.kit.status.KitStatusScope
@@ -106,6 +109,10 @@ public fun NavShell(
         }
     val scale by deps.motion.animatorScale.collectAsState()
     val conditions = deps.statusSources.mapNotNull { it.status() }
+    // One toast slot for the window: every page's `LocalKitToasts.current?.show(...)` lands here (it was provided
+    // nowhere, so every toast was silent).
+    val toasts = remember { KitToastState() }
+    CompositionLocalProvider(LocalKitToasts provides toasts) {
     KitStatusScope(conditions) {
         // N-55: a hardware key nothing on the page used never presses a button or turns into Back.
         // s28: the shell's Ctrl/⌘ shortcuts (F: shortcuts.dart), with or without a field focused; outside the
@@ -139,7 +146,9 @@ public fun NavShell(
                     }
                 }
             }
+            KitToastHost(toasts)
         }
+    }
     }
 }
 

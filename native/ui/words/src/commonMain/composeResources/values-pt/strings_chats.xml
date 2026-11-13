@@ -330,4 +330,6 @@
     <string name="chatsHomeInterrupted">Interrompida</string>
     <string name="chatsNewGettingReady">Preparando…</string>
     <string name="chatsNewGettingReadySlow">Ainda lendo os projetos e modelos deste servidor…</string>
+    <string name="chatsHomeNotReadTitle">Nem todas as suas conversas foram lidas</string>
+    <string name="chatsHomeNotReadBody">O servidor respondeu, mas esta página não conseguiu ler a lista, então não pode dizer que não há nenhuma. Tente de novo para lê-la.</string>
 </resources>

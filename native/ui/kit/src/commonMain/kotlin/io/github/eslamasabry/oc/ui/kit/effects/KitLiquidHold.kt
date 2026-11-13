@@ -41,7 +41,6 @@ half4 main(float2 q) {
     float3 rgb = c.rgb / a;
     float l = dot(rgb, float3(0.213, 0.715, 0.072));
     rgb = clamp(cc.y * (l + cc.x * (rgb - l)) + (0.5 - 0.5 * cc.y + cc.z), 0.0, 1.0);
-    float3 seen = rgb;
     if (knee.y < 1.0) {
         float lum = dot(rgb, float3(0.213, 0.715, 0.072));
         float deep = 1.0;
@@ -66,9 +65,7 @@ half4 main(float2 q) {
         float easy = 0.4 * hold;
         float limited = (hold > 0.0 && chroma > easy) ? (easy + (hold - easy) * (1.0 - exp(-(chroma - easy) / (hold - easy)))) / chroma : 1.0;
         rgb = mix(float3(grey), scaled, mix(1.0, limited, deep));
-        // The rim shows the page as it is, its light and its colour (a foreground decision's knee is low: held there
-        // too, its edge would read as a dark band, not glass); the hold is in full from half the rim's width inward.
-        rgb = clamp(mix(seen, rgb, deep), 0.0, 1.0);
+        rgb = clamp(rgb, 0.0, 1.0);
     }
     return half4(float4(rgb * c.a, c.a));
 }

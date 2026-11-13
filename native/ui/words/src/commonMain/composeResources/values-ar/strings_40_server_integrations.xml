@@ -55,7 +55,7 @@
     <string name="s40iFixTool">تحقّق من %1$s على الخادم</string>
     <string name="s40iAddTools">أضف خوادم أدوات على الخادم</string>
     <string name="s40iUnnamed">عنصر بلا اسم</string>
-    <string name="s40iToolsNotListed">لا يسرد هذا الخادم الأدوات المتاحة للنموذج. صفحات قائمته الأخرى متاحة أعلاه.</string>
+    <string name="s40iToolsNotListed">لا يذكر هذا الخادم الأدوات التي يستطيع النموذج استخدامها. الصفحات أعلاه تعرض ما لديه.</string>
     <string name="s40iCommands">الأوامر</string>
     <string name="s40iSkills">المهارات</string>
     <string name="s40iReferences">المراجع</string>
@@ -70,4 +70,5 @@
     <string name="s40iRunCommand">تشغيل /%1$s</string>
     <string name="s40iOpenPageQuestion">هل تريد فتح هذه الصفحة؟</string>
     <string name="s40iOpenPage">فتح الصفحة</string>
+    <string name="s40iMcpAddHintRuntime">اختر عنوانًا بعيدًا أو برنامجًا محليًا. يضيفه الخادم لهذا المشروع حتى يُعاد تشغيله، ولا يثبّت أي برنامج ناقص.</string>
 </resources>

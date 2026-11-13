@@ -345,8 +345,6 @@
     <string name="kitComposerCantTakeMidReply">%1$s tidak bisa menerima pesan saat sedang membalas.</string>
     <string name="vpttLetGoToFinish">Lepaskan saat selesai</string>
     <string name="vpttLetGoToCancel">Lepaskan untuk membatalkan</string>
-    <string name="vpttSendingIn">Mengirim dalam %1$s…</string>
-    <string name="vpttDontSend">Jangan kirim</string>
     <string name="vpttLanguageFollowApp">Sama dengan aplikasi</string>
     <string name="vpttLanguageFollowAppDetail">Mendengarkan dalam bahasa aplikasi jika bisa, dan mengenali bahasa dari suara Anda jika tidak bisa.</string>
     <string name="vpttLanguageDetectDetail">Mengenali bahasa dari suara Anda setiap kali.</string>

@@ -343,4 +343,6 @@
     <string name="workRunawayStopFailedRetry">تعذّر إيقاف %1$s. حاول مجددًا.</string>
     <string name="chatsNewGettingReady">جارٍ التحضير…</string>
     <string name="chatsNewGettingReadySlow">ما زلنا نقرأ مشاريع هذا الخادم ونماذجه…</string>
+    <string name="chatsHomeNotReadTitle">لم تتم قراءة كل محادثاتك</string>
+    <string name="chatsHomeNotReadBody">ردّ الخادم، لكن هذه الصفحة لم تتمكن من قراءة قائمته، فلا يمكنها القول إنه لا توجد محادثات. حاول مرة أخرى لقراءتها.</string>
 </resources>

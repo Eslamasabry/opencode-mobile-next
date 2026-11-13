@@ -51,7 +51,9 @@ public data class KitToast(val message: String, val icon: ImageVector? = null, i
 
 /**
  * The window's toast slot (owner reference 2026-11-07). [show] replaces whatever shows; it holds for [HOLD_MS]
- * (TalkBack reads it politely). `KitTheme` provides one per window as [LocalKitToasts].
+ * (TalkBack reads it politely). The app's shell provides one for its window as [LocalKitToasts]; a page frame
+ * (`KitScreen`, `KitPaneScreen`) with no slot above it provides its own, so every window that shows a kit page (the
+ * widget panels, Android's Manage space page) has one.
  */
 @Stable
 public class KitToastState {

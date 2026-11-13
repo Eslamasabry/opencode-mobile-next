@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Translated with native/tools/strings/translate; English is the source. -->
 <resources>
-    <string name="voiceNativeSendNow">Kirim sekarang</string>
     <string name="voiceNativeDetect">Deteksi dari ucapan</string>
     <string name="voiceNativeSizeMb">%1$d MB</string>
     <string name="voiceNativePhoneEngine">Pengetikan suara memakai pengenalan ucapan bawaan ponsel Anda, jadi audio tetap di ponsel ini. Ponsel tanpa fitur itu tidak menampilkan mikrofon. Versi ini belum memakai model ucapan di bawah.</string>

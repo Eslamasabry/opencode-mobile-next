@@ -4,11 +4,7 @@ import io.github.eslamasabry.oc.engine.voice.state.VoiceMode
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
-import kotlin.test.assertNull
 import kotlin.test.assertTrue
-import kotlin.time.Duration.Companion.milliseconds
-import kotlin.time.Duration.Companion.seconds
-import kotlin.time.Instant
 
 class AutoSendPolicyTest {
     @Test
@@ -44,43 +40,5 @@ class AutoSendPolicyTest {
         assertTrue(stopsOnSilence(VoiceMode.Tap, autoSend = true))
         assertFalse(stopsOnSilence(VoiceMode.Hold, autoSend = true))
         assertFalse(stopsOnSilence(VoiceMode.Conversation, autoSend = true))
-    }
-
-    @Test
-    fun `B-MEDIA-017 the countdown shows 3, 2, 1 in the pill and sends at zero`() {
-        val t0 = Instant.fromEpochMilliseconds(1_000_000)
-        val countdown = AutoSendCountdown.startIfAllowed("Run the tests", stoppedBySilence = true, now = t0)!!
-        assertEquals(3, countdown.secondsLeft(t0))
-        assertEquals(3, countdown.secondsLeft(t0 + 1.milliseconds))
-        assertEquals(2, countdown.secondsLeft(t0 + 1.seconds))
-        assertEquals(1, countdown.secondsLeft(t0 + 2.5.seconds))
-        assertEquals(0, countdown.secondsLeft(t0 + 3.seconds))
-        assertEquals(AutoSendCountdown.Decision.Wait, countdown.decide(t0 + 2.seconds, "Run the tests", true, false))
-        assertEquals(
-            AutoSendCountdown.Decision.Send("Run the tests"),
-            countdown.decide(t0 + 3.seconds, "Run the tests", foreground = true, sendInFlight = false),
-        )
-        assertEquals(
-            AutoSendCountdown.Decision.Send("Run the tests"),
-            countdown.decide(t0, "Run the tests", foreground = true, sendInFlight = false, sendNow = true),
-        )
-    }
-
-    @Test
-    fun `B-MEDIA-017 an edited field, the background or a send in flight cancels and keeps the words`() {
-        val t0 = Instant.fromEpochMilliseconds(0)
-        val countdown = AutoSendCountdown.startIfAllowed("Run the tests", true, t0)!!
-        val end = t0 + 3.seconds
-        assertEquals(AutoSendCountdown.Decision.Cancel, countdown.decide(end, "Run the tests!", true, false))
-        assertEquals(AutoSendCountdown.Decision.Cancel, countdown.decide(end, "Run the tests", false, false))
-        assertEquals(AutoSendCountdown.Decision.Cancel, countdown.decide(end, "Run the tests", true, true))
-    }
-
-    @Test
-    fun `B-MEDIA-017 no countdown without a silence stop or for words that may not go out by themselves`() {
-        val t0 = Instant.fromEpochMilliseconds(0)
-        assertNull(AutoSendCountdown.startIfAllowed("Run the tests", stoppedBySilence = false, now = t0))
-        assertNull(AutoSendCountdown.startIfAllowed("[BLANK_AUDIO]", stoppedBySilence = true, now = t0))
-        assertNull(AutoSendCountdown.startIfAllowed("/undo", stoppedBySilence = true, now = t0))
     }
 }

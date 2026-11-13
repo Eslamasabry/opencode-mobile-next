@@ -716,4 +716,5 @@
     <string name="browserAgentSocketUnavailable">Las conexiones de Codex y Paseo no están disponibles en el navegador. Inician sesión con un encabezado de WebSocket que los navegadores no pueden enviar, y todavía no se admite el inicio de sesión desde el navegador. Usa la app del teléfono o de escritorio para ellas; los servidores de OpenCode funcionan aquí.</string>
     <string name="phoneServerPortBusy">Otro servidor de OpenCode ya está usando el puerto %1$s en este teléfono.</string>
     <string name="chatRequestAskReadFolder">¿Leer esta carpeta?</string>
+    <string name="appUpdateUpdatedTo">Actualizado a la versión %1$s</string>
 </resources>

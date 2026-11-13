@@ -1247,4 +1247,6 @@
     <string name="composerPasteImageFromClipboardSupporting">Anexar a imagem copiada</string>
     <string name="composerPasteImageEmpty">Não há imagem na área de transferência.</string>
     <string name="chatRequestAnswerRequired">Responda primeiro às perguntas obrigatórias.</string>
+    <string name="chatStepDeclinedNote">Sua observação: “%1$s”</string>
+    <string name="chatStepMalformedCall">O agente fez o pedido de forma incorreta, então nada foi executado. Peça para tentar de novo.</string>
 </resources>

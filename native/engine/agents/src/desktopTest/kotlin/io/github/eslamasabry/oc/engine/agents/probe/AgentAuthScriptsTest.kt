@@ -83,7 +83,7 @@ class AgentAuthScriptsTest {
 
     @Test
     fun `B-AGENT-005 authored scripts are byte-identical to the Dart scripts the native side admits`() {
-        val fixtures = File(repoRoot, "native/android/agenthost/src/test/resources/auth-scripts")
+        val fixtures = File(repoRoot, "native/android/linux/src/test/resources/auth-scripts")
         val profile = ProfileId("synthetic-profile")
         for (agent in AgentCatalog.builtIn.agents) {
             val id = agent.id.raw

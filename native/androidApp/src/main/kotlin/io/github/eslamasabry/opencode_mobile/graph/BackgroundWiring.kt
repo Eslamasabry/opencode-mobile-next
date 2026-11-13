@@ -143,7 +143,8 @@ class BackgroundHub(
                 combine(controller.state, notice.notices) { s, n -> project(s, n) }
                     .collect { facts.value = it }
             }
-            controller.restore()
+            // This step may run in a background process, where Android refuses a service start.
+            controller.restore(appInFront = false)
         }
     }
 

@@ -19,4 +19,5 @@
     <string name="composerFullFiles">项目中的文件</string>
     <string name="composerFullAttachmentsLocal">附件会随此草稿保存在这台设备上。</string>
     <string name="composerFullSteerHint">运行时引导它…</string>
+    <string name="composerFullWaitingHint">正在等待你在上方做决定…</string>
 </resources>

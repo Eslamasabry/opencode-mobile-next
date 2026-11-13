@@ -280,6 +280,30 @@ class KitViewerPageDesktopTest {
     }
 
     @Test
+    fun `while Find is open Ask about this file steps aside, and Close find brings it back`() = runComposeUiTest {
+        askFrame {}
+        ask().assertExists()
+        onNode(hasContentDescription("Find in file") and hasClickAction()).performClick()
+        waitForIdle()
+        onNode(hasSetTextAction()).performTextInput("Line")
+        waitForIdle()
+        ask().assertDoesNotExist()
+        onNodeWithContentDescription("Close find").performClick()
+        waitForIdle()
+        ask().assertExists()
+    }
+
+    @Test
+    fun `the find bar has one close control, also with words typed`() = runComposeUiTest {
+        openFind()
+        waitForIdle()
+        onNode(hasSetTextAction()).performTextInput("Line")
+        waitForIdle()
+        onAllNodes(hasContentDescription("Close find")).assertCountEquals(1)
+        onAllNodes(hasContentDescription("Clear search")).assertCountEquals(0)
+    }
+
+    @Test
     fun `a viewer with no actions shows no menu and no button`() = runComposeUiTest {
         setContent { Themed { KitViewerFrame("LICENSE", Modifier.fillMaxSize(), onClose = {}) { Box(Modifier.fillMaxSize()) } } }
         onNodeWithContentDescription("More actions").assertDoesNotExist()

@@ -727,4 +727,5 @@
     <string name="browserAgentSocketUnavailable">Подключения Codex и Paseo недоступны в браузере. Они входят с заголовком WebSocket, который браузеры не могут отправить, а вход через браузер пока не поддерживается. Используйте для них приложение на телефоне или компьютере; серверы OpenCode здесь работают.</string>
     <string name="phoneServerPortBusy">Другой сервер OpenCode уже использует порт %1$s на этом телефоне.</string>
     <string name="chatRequestAskReadFolder">Прочитать эту папку?</string>
+    <string name="appUpdateUpdatedTo">Обновлено до версии %1$s</string>
 </resources>

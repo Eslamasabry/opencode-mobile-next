@@ -77,6 +77,7 @@ import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.input.KitField
 import io.github.eslamasabry.oc.ui.kit.input.KitFieldKind
+import io.github.eslamasabry.oc.ui.kit.modal.KitBackGuard
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
@@ -131,6 +132,7 @@ import io.github.eslamasabry.oc.ui.words.res.composerFullPasteEmpty
 import io.github.eslamasabry.oc.ui.words.res.composerFullPhotoDenied
 import io.github.eslamasabry.oc.ui.words.res.composerFullStale
 import io.github.eslamasabry.oc.ui.words.res.composerFullSteerHint
+import io.github.eslamasabry.oc.ui.words.res.composerFullWaitingHint
 import io.github.eslamasabry.oc.ui.words.res.composerKeptMissingFiles
 import io.github.eslamasabry.oc.ui.words.res.composerKeptRestoreRefused
 import io.github.eslamasabry.oc.ui.words.res.composerKeptRestoreTitle
@@ -483,6 +485,8 @@ public fun BasicComposer(
         chrome.pictureDone(picture.id)
     }
     var addOpen by remember(state.targetKey) { mutableStateOf(false) }
+    // Back with the attach row open closes the row (it used to only lower the keyboard).
+    KitBackGuard(enabled = addOpen) { addOpen = false }
     var toolsOpen by remember(state.targetKey) { mutableStateOf(false) }
     // S28 story 12: the "File from the project" sheet.
     var projectFilesOpen by remember(state.targetKey) { mutableStateOf(false) }
@@ -1101,7 +1105,9 @@ public fun BasicComposer(
                             // While a reply runs on a steering server the words join it
                             // (B-PROTO-025).
                             label =
-                                if (busy && state.steers)
+                                if (chrome.requestWaiting())
+                                    stringResource(Res.string.composerFullWaitingHint)
+                                else if (busy && state.steers)
                                     stringResource(Res.string.composerFullSteerHint)
                                 else
                                     stringResource(

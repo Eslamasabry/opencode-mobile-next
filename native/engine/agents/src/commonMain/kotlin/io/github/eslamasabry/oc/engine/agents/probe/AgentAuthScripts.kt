@@ -21,7 +21,7 @@ public enum class AuthScriptAction(internal val wire: String) { Probe("probe"), 
  * - fx: `status --json` credential source; expired is `signInExpired`, an unknown future source is invalid.
  * - Sign-out runs the agent's logout and then its status: an exit code is never proof.
  *
- * The output is byte-identical to Dart's, so `:android:agenthost` `PhoneAgentAuthRequest` admits it by digest.
+ * The output is byte-identical to Dart's, so `:android:linux` `PhoneAgentAuthRequest` admits it by digest.
  */
 public object AgentAuthScripts {
     /** Null when the agent has no usable pinned installation (Dart `_recipe` throws). */

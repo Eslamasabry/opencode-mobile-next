@@ -3,7 +3,6 @@ package io.github.eslamasabry.oc.feature.updates.presentation
 import io.github.eslamasabry.oc.engine.updates.AppUpdateState
 import io.github.eslamasabry.oc.engine.updates.UpdatePhase
 import kotlin.math.floor
-import kotlinx.coroutines.delay
 
 /**
  * The app's own update in the one status line (Flutter `AppUpdateNotice._status`). Null when the line shows nothing:
@@ -41,15 +40,6 @@ public interface UpdateNoticeActions {
     public fun onCancel()
 
     public fun onInstall()
-}
-
-/** How long "Updated to version X" holds before it leaves by itself (B-217). */
-public const val UPDATED_NOTICE_HOLD_MS: Long = 6_000L
-
-/** Holds the "Updated to version X" line for [UPDATED_NOTICE_HOLD_MS], then dismisses it as Not now would. */
-public suspend fun UpdateNoticeActions.dismissAfterHold() {
-    delay(UPDATED_NOTICE_HOLD_MS)
-    onNotNow()
 }
 
 /** The status line for [state], or null (Flutter `AppUpdateNotice._status`). Pure. */

@@ -50,13 +50,10 @@ import io.github.eslamasabry.oc.ui.words.res.voiceModeMicAllow
 import io.github.eslamasabry.oc.ui.words.res.voiceModeMicAsk
 import io.github.eslamasabry.oc.ui.words.res.voiceModeMicBlocked
 import io.github.eslamasabry.oc.ui.words.res.voiceModeNothingHeard
-import io.github.eslamasabry.oc.ui.words.res.voiceNativeSendNow
 import io.github.eslamasabry.oc.ui.words.res.voiceNativeSettingsAction
 import io.github.eslamasabry.oc.ui.words.res.voiceNativeStoppedAfterPause
-import io.github.eslamasabry.oc.ui.words.res.vpttDontSend
 import io.github.eslamasabry.oc.ui.words.res.vpttLetGoToCancel
 import io.github.eslamasabry.oc.ui.words.res.vpttLetGoToFinish
-import io.github.eslamasabry.oc.ui.words.res.vpttSendingIn
 import org.jetbrains.compose.resources.stringResource
 
 /**
@@ -263,26 +260,6 @@ internal fun VoicePanel(
                 title = stringResource(Res.string.kitVoiceTranscribing),
                 modifier = modifier,
                 words = if (state.mode == VoiceMode.Conversation) state.words else "",
-            )
-        MicPhase.Countdown ->
-            KitVoicePill(
-                title =
-                    stringResource(Res.string.vpttSendingIn, (state.secondsLeft ?: 0).toString()),
-                modifier = modifier.testTag("voice-countdown"),
-                words = fieldText(),
-                attention = true,
-                primary =
-                    KitLineAction(
-                        stringResource(Res.string.voiceNativeSendNow),
-                        presenter::sendNow,
-                        testTag = "voice-send-now",
-                    ),
-                secondary =
-                    KitLineAction(
-                        stringResource(Res.string.vpttDontSend),
-                        presenter::dontSend,
-                        testTag = "voice-dont-send",
-                    ),
             )
         MicPhase.Idle -> VoiceNoteView(state.note, presenter, modifier)
     }

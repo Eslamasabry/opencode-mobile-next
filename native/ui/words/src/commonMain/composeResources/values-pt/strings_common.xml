@@ -716,4 +716,5 @@
     <string name="browserAgentSocketUnavailable">As conexões do Codex e do Paseo não estão disponíveis no navegador. Elas fazem login com um cabeçalho WebSocket que os navegadores não conseguem enviar, e ainda não há login no navegador. Use o app do celular ou do computador para elas; os servidores OpenCode funcionam aqui.</string>
     <string name="phoneServerPortBusy">Outro servidor OpenCode já está usando a porta %1$s neste celular.</string>
     <string name="chatRequestAskReadFolder">Ler esta pasta?</string>
+    <string name="appUpdateUpdatedTo">Atualizado para a versão %1$s</string>
 </resources>

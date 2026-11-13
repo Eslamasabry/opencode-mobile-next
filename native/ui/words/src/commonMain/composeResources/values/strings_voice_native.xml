@@ -1,5 +1,4 @@
 <resources>
-    <string name="voiceNativeSendNow">Send now</string>
     <string name="voiceNativeDetect">Detect from speech</string>
     <string name="voiceNativeSizeMb">%1$d MB</string>
     <string name="voiceNativePhoneEngine">Voice typing uses your phone's own speech recognition, so the audio stays on this phone. Phones without it don't show the mic. This version doesn't use the speech models below yet.</string>

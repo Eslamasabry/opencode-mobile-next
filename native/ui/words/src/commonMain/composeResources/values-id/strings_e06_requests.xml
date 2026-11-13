@@ -2,6 +2,6 @@
 <!-- Translated with native/tools/strings/translate; English is the source. -->
 <resources>
     <string name="chatRequestNoLongerNeeded">Tidak diperlukan lagi</string>
-    <string name="chatRequestNoLongerNeededWhy">Proses dihentikan, jadi tidak ada yang dikirim.</string>
     <string name="chatRequestCardLabel">Permintaan %1$s dari %2$s: %3$s</string>
+    <string name="chatRequestNoLongerNeededEnding">Proses sedang berakhir, jadi tidak ada yang dikirim.</string>
 </resources>

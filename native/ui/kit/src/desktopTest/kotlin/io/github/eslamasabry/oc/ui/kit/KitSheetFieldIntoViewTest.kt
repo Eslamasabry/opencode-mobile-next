@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.design.style.Style
 import io.github.eslamasabry.oc.ui.kit.input.KitFieldKind
 import io.github.eslamasabry.oc.ui.kit.input.KitField
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
@@ -38,14 +39,19 @@ import kotlin.test.assertTrue
 class KitSheetFieldIntoViewTest {
     private val fade = 24.dp
 
-    private fun run(pinned: Boolean, keyboardUp: Boolean, middle: Boolean = false, typed: String? = null, lines: IntRange = 1..8, check: (field: androidx.compose.ui.unit.DpRect, button: androidx.compose.ui.unit.DpRect?, sheet: androidx.compose.ui.unit.DpRect) -> Unit) =
+    private fun run(pinned: Boolean, keyboardUp: Boolean, middle: Boolean = false, typed: String? = null, lines: IntRange = 1..8, style: Style = Style.Solid, windowHeight: Int = 700, answerPair: Boolean = false, check: (field: androidx.compose.ui.unit.DpRect, button: androidx.compose.ui.unit.DpRect?, sheet: androidx.compose.ui.unit.DpRect) -> Unit) =
         runComposeUiTest {
             var keyboard by mutableStateOf(if (keyboardUp) 200.dp else 0.dp)
             val focus = FocusRequester()
             setContent {
                 CompositionLocalProvider(LocalDensity provides Density(1f), LocalSheetKeyboard provides keyboard) {
-                    KitTheme(KitAppearance(motion = MotionLevel.Off), FakeKitPlatform(), "en", stillFrame = true) {
-                        InWindow(400, 700) {
+                    KitTheme(
+                        KitAppearance(style = style, motion = MotionLevel.Off),
+                        if (style == Style.Glass) FakeKitPlatform(frost = true, liquidGlass = true) else FakeKitPlatform(),
+                        "en",
+                        stillFrame = true,
+                    ) {
+                        InWindow(400, windowHeight) {
                             KitSheetHost {
                                 KitSheet(
                                     visible = true,
@@ -53,6 +59,7 @@ class KitSheetFieldIntoViewTest {
                                     title = "Details",
                                     primary = if (pinned) KitAction("Allow", onClick = {}) else null,
                                     secondary = if (pinned) KitAction("Deny", onClick = {}) else null,
+                                    answerPair = answerPair,
                                 ) {
                                     Column {
                                         Spacer(Modifier.height(if (middle) 400.dp else 1500.dp))
@@ -130,4 +137,29 @@ class KitSheetFieldIntoViewTest {
         run(pinned = true, keyboardUp = true, middle = true, typed = "a", lines = 24..24) { field, button, _ ->
             assertTrue(field.top + 40.dp <= button!!.top - fade, "the first line (caret) ends above the fade: top ${field.top}, buttons ${button.top}")
         }
+
+    // Review item 7 (the permission note cut open by the pinned Deny / Allow): a small window with the keyboard up, the
+    // answers side by side as the permission sheet lays them, under Soft and Glass (Glass keeps its pane inset).
+    private fun noteWhole(style: Style, middle: Boolean) =
+        run(pinned = true, keyboardUp = true, middle = middle, typed = "a", lines = 3..8, style = style, windowHeight = 520, answerPair = true) { field, button, sheet ->
+            val room = if (middle) fade else 0.dp
+            assertTrue(field.bottom <= button!!.top - room, "$style: field bottom ${field.bottom}, buttons ${button.top}, fade $room")
+            assertTrue(field.top >= sheet.top, "$style: the whole field is in the sheet: field ${field.top}, sheet ${sheet.top}")
+        }
+
+    @Test
+    fun `R7 under Soft the permission note at the end of the body is whole above Deny and Allow, small window, keyboard up`() =
+        noteWhole(Style.Soft, middle = false)
+
+    @Test
+    fun `R7 under Soft a note in the middle of the body rests a fade above Deny and Allow, small window, keyboard up`() =
+        noteWhole(Style.Soft, middle = true)
+
+    @Test
+    fun `R7 under Glass the permission note at the end of the body is whole above Deny and Allow, small window, keyboard up`() =
+        noteWhole(Style.Glass, middle = false)
+
+    @Test
+    fun `R7 under Glass a note in the middle of the body rests a fade above Deny and Allow, small window, keyboard up`() =
+        noteWhole(Style.Glass, middle = true)
 }
