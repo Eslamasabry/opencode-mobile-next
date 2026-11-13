@@ -18,6 +18,15 @@ class PhoneProfileAddressTest {
     }
 
     @Test
+    fun `B-239 B-119 the profile follows this app's server to the port it runs on`() {
+        assertEquals("http://127.0.0.1:4100", PhoneProfileAddress.adopted("http://127.0.0.1:4098", 4100))
+        assertEquals("http://127.0.0.1:4098", PhoneProfileAddress.adopted("http://127.0.0.1:4100/", 4098))
+        assertEquals("http://127.0.0.1:4100", PhoneProfileAddress.adopted("http://localhost:4101", 4100))
+        assertNull(PhoneProfileAddress.adopted("http://127.0.0.1:4100/api", 4101), "an address with a path is not ours")
+        assertNull(PhoneProfileAddress.adopted("http://127.0.0.1:8080", 4101), "not one of the phone server's ports")
+    }
+
+    @Test
     fun `an address that is already right or is not the old in-app one is left alone`() {
         assertNull(PhoneProfileAddress.adopted("http://127.0.0.1:4098", 4098))
         assertNull(PhoneProfileAddress.adopted("http://192.168.1.20:4097", 4098), "a computer on the same port number")
