@@ -51,6 +51,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -222,6 +223,7 @@ public class ChatPresenter(
                     ChatInputs(f.t, f.l, f.ti, f.c, f.k, p, d)
                 }
                 .combine(retryFacts()) { i, r -> i.copy(retry = r) }
+                .combine(setUpChanges()) { i, _ -> i }
         // Read acknowledgement follows the world, not the screen's composition (plan 09 §6.7).
         combine(world.load, world.transcript, local) { _, _, _ ->
                 syncRead()
@@ -391,13 +393,14 @@ public class ChatPresenter(
                             ?.takeIf { it >= 0 }
                     ChatArrivalUi(a.id, a.focusComposer, land)
                 }
+        val pending = withSetUp(i.pending, firstMessage = t.rows.isEmpty())
         return ChatUi(
             revision = ++revision,
             ref = world.ref,
             title = i.title ?: lastTitle,
             status =
               agentLine(
-                (if (kept != null) i.retry.line(KEPT_OFFLINE_STATUS, ChatStatusKind.Offline) else null) ?: StatusPick.pick(i.link, i.pending, t.run, t.rows, l.actionFailure, l.linkRefused, i.retry)
+                (if (kept != null) i.retry.line(KEPT_OFFLINE_STATUS, ChatStatusKind.Offline) else null) ?: StatusPick.pick(i.link, pending, t.run, t.rows, l.actionFailure, l.linkRefused, i.retry)
                     ?: l.receiptResult?.let {
                         ChatStatusUi(
                             RECEIPT_STATUS,
@@ -445,7 +448,7 @@ public class ChatPresenter(
                             !l.stopping && !l.stopAfterStep && i.capabilities.promptSteering,
                     )
                 else null,
-            pending = pendingShown(i.pending),
+            pending = pendingShown(pending),
             find = find,
             menu = l.menu,
             confirm = l.confirm,
@@ -486,6 +489,35 @@ public class ChatPresenter(
     }
 
     private var lastPending: ImmutableList<PendingSend> = persistentListOf()
+
+    /** Set up at first use: whether the agent was set up when each counted failure came (by bubble). */
+    private val setUpAtFailure = HashMap<Long, Boolean>()
+
+    /** The set-up list of this conversation's phone owner changed: the bubbles are read again. */
+    private fun setUpChanges(): Flow<Unit> {
+        val port = outside ?: return flowOf(Unit)
+        val owner = port.phoneAgentOwner(world.ref) ?: return flowOf(Unit)
+        return port.agentsSetUpChanges(owner).onStart { emit(Unit) }
+    }
+
+    /** Set up at first use ([AgentSetUpRules]): a failed send whose agent was never set up says so on its bubble. */
+    private fun withSetUp(pending: ImmutableList<PendingSend>, firstMessage: Boolean): ImmutableList<PendingSend> {
+        setUpAtFailure.keys.retainAll { id -> pending.any { it.localId == id && AgentSetUpRules.counts(it) } }
+        if (pending.none(AgentSetUpRules::counts)) return pending
+        val port = outside ?: return pending
+        val owner = port.phoneAgentOwner(world.ref) ?: return pending
+        val runtime = world.runtimeId() ?: return pending
+        val done = AgentSetUpRules.agentId(runtime)?.let { it in port.agentsSetUp(owner) } ?: return pending
+        return pending
+            .map { p ->
+                if (!AgentSetUpRules.counts(p)) return@map p
+                val before = setUpAtFailure.getOrPut(p.localId) { done }
+                val need =
+                    AgentSetUpRules.need(p, runtime, firstMessage, before, setUpSinceFailure = done && !before)
+                if (need == p.setUp) p else p.copy(setUp = need)
+            }
+            .toImmutableList()
+    }
     private var lastReceiptChecks: PersistentMap<Long, ReceiptCheckUi> = persistentMapOf()
 
     /** Newest first; the same instance while the bubbles are equal, so readers of it skip. */
@@ -991,6 +1023,12 @@ public class ChatPresenter(
 
     override fun retrySend(localId: Long) {
         launcher.launch { world.retrySend(localId) }
+    }
+
+    /** Set up at first use: the same set-up terminal the Agents page opens, for this conversation's phone owner. */
+    override fun setUpAgent(agentId: String) {
+        val owner = outside?.phoneAgentOwner(world.ref) ?: return
+        nav.open(io.github.eslamasabry.oc.ui.routes.AgentsRoute.SignInTerminal(owner, agentId))
     }
 
     override fun dismissStatus(id: String) {

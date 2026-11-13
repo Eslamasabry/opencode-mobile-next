@@ -23,6 +23,12 @@ import io.github.eslamasabry.oc.core.common.AppDispatchers
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.MediaProblem
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
+import io.github.eslamasabry.oc.core.common.ids.ProfileId
+import io.github.eslamasabry.oc.core.data.kv.string
+import io.github.eslamasabry.oc.engine.agents.AgentKeys
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.map
 import io.github.eslamasabry.oc.core.security.AddressRules
 import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
 import io.github.eslamasabry.oc.core.security.ApprovedLink
@@ -65,10 +71,26 @@ class AndroidChatOutside(
     private val dispatchers: AppDispatchers,
     // E15-S05: the app's one redactor masks server text before the presenter copies or shares it.
     private val redactor: Redactor,
+    // Set up at first use: the set-up list the Agents page's set-up terminal writes (`oc.agentSetUp.<owner>`).
+    private val stores: PreviewStores,
 ) : ChatOutside {
 
     override fun isPhoneServer(ref: ConversationRef): Boolean =
         connections.graphFor(ref)?.profile?.origin?.host?.let(AddressRules::isLoopback) == true
+
+    override fun phoneAgentOwner(ref: ConversationRef): ProfileId? =
+        PhoneAgentOwnerRule.owner(ref.profileId, stores.prefs.string("oc.builtinServerOwner"))
+
+    override fun agentsSetUp(owner: ProfileId): Set<String> =
+        KvAgentPrefs(stores.prefs, stores.lanes.forProfile(owner))
+            .stringList(AgentKeys.agentSetUp(owner))
+            .orEmpty()
+            .toSet()
+
+    override fun agentsSetUpChanges(owner: ProfileId): Flow<Unit> {
+        val key = AgentKeys.agentSetUp(owner)
+        return stores.prefs.changes.filter { key in it }.map {}
+    }
 
     override fun fileLinkPath(url: String): String? =
         try {
@@ -228,5 +250,19 @@ class AndroidChatOutside(
             "jar", "so", "db", "sqlite", "mp3", "wav", "flac", "ogg", "m4a", "mp4", "mkv", "mov", "avi", "webm",
             "doc", "docx", "xls", "xlsx", "ppt", "pptx", "odt", "ods", "epub",
         )
+    }
+}
+
+/**
+ * Set up at first use: the phone owner behind a conversation of the phone's agents. Their conversations live on the
+ * helper profile `<owner>-agents` ([AppLocalAgentHostStarter.SUFFIX]); the Agents page, its set-up terminal and the
+ * set-up list use the owner of the phone's built-in server. Anything else has no phone agents to set up.
+ */
+internal object PhoneAgentOwnerRule {
+    fun owner(conversationProfile: ProfileId, builtinOwner: String?): ProfileId? {
+        val raw = conversationProfile.raw
+        if (!raw.endsWith(AppLocalAgentHostStarter.SUFFIX)) return null
+        val owner = raw.removeSuffix(AppLocalAgentHostStarter.SUFFIX)
+        return if (owner.isNotEmpty() && owner == builtinOwner) ProfileId(owner) else null
     }
 }
