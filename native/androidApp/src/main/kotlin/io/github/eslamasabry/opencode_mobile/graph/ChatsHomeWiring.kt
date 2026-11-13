@@ -359,7 +359,10 @@ class AppChatsHome(
                     sessionId = SessionId(id),
                     title = redactor.redact(title),
                     directory = dir,
-                    projectName = row["project"] as? String ?: "",
+                    // A saved row always shows its project: from the saved name, else from its folder as a live row does.
+                    projectName =
+                        (row["project"] as? String)?.takeIf { it.isNotBlank() }
+                            ?: io.github.eslamasabry.oc.engine.agents.feed.FeedFolders.rowLabel(dir),
                     status = ChatStatus.Idle,
                     lastActivityMs = (row["updated"] as? Number)?.toLong() ?: 0L,
                     preview = redactor.redact((row["preview"] as? String).orEmpty()).take(256),
@@ -380,7 +383,9 @@ class AppChatsHome(
         val signature = inventoryScope(owner)
         val items =
             runtime.snapshot.value.items
-                .filter { it.profileId == id }
+                // Sub-conversations belong to their parent and are never counted on home: saving them made the saved
+                // count (and its project names) disagree with the first live read.
+                .filter { it.profileId == id && !it.isSubagent }
                 .sortedByDescending { it.lastActivityMs }
                 .take(100)
         val withLines = items.map { it.copy(preview = previewLines[it.identity] ?: it.preview) }

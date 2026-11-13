@@ -32,6 +32,29 @@ class ListRowFactsTest {
     }
 
     @Test
+    fun `a stop the person made reads Stopped after a restart, a run that was truly lost reads Interrupted`() {
+        val lost = session("lost", "/w", 5).copy(lastRunOutcome = io.github.eslamasabry.oc.core.model.SessionRunOutcome.Interrupted)
+        val stopped = session("stopped", "/w", 4).copy(lastRunOutcome = io.github.eslamasabry.oc.core.model.SessionRunOutcome.Interrupted)
+        val items =
+            source(
+                    OpenCodeListing(
+                        sessions = listOf(lost, stopped),
+                        finishedUnseen = setOf(SessionId("lost"), SessionId("stopped")),
+                        // What the delivery now reloads from disk after a restart.
+                        stoppedByPerson = setOf(SessionId("stopped")),
+                    )
+                )
+                .current()
+                .items
+        val a = items.first { it.sessionId.raw == "stopped" }
+        assertTrue(a.stoppedByPerson)
+        assertFalse(a.interrupted)
+        val b = items.first { it.sessionId.raw == "lost" }
+        assertTrue(b.interrupted)
+        assertFalse(b.stoppedByPerson)
+    }
+
+    @Test
     fun `H6 a stopped conversation that runs again is not stopped any more`() {
         val item =
             source(
