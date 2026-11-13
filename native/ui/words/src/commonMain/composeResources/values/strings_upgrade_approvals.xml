@@ -20,7 +20,7 @@
     <string name="approvalAllowedWhat">Allowed: %1$s</string>
     <string name="approvalAlwaysAllowedWhat">Always allowed: %1$s</string>
     <string name="approvalDenied">Denied</string>
-    <string name="approvalDeniedInstead">Denied, asked to do this instead: %1$s</string>
+    <string name="approvalDeniedInstead">Denied, asked to do this instead: “%1$s”</string>
     <string name="approvalChangeOf">The change to %1$s</string>
     <string name="approvalChangeMissing">The agent did not say what it will write.</string>
     <string name="approvalCopyChange">Copy the change</string>

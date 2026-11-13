@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.padding
 import io.github.eslamasabry.oc.ui.kit.frame.kitPageGutter
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import io.github.eslamasabry.oc.ui.kitchat.request.KitRequestStack
 import androidx.compose.foundation.text.input.clearText
@@ -46,7 +45,6 @@ import io.github.eslamasabry.oc.ui.kit.KitAction
 import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.KitText
-import io.github.eslamasabry.oc.ui.kit.KitTextKind
 import io.github.eslamasabry.oc.ui.kit.choice.KitChoiceRow
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.input.KitField
@@ -71,6 +69,7 @@ import io.github.eslamasabry.oc.ui.kit.state.KitReceipt
 import io.github.eslamasabry.oc.ui.kit.state.KitReceiptState
 import io.github.eslamasabry.oc.ui.kitchat.request.KitPermissionCard
 import io.github.eslamasabry.oc.ui.kitchat.request.KitQuestionCard
+import io.github.eslamasabry.oc.ui.kitchat.request.KitRequestAnsweredRow
 import io.github.eslamasabry.oc.ui.kitchat.request.KitRequestTarget
 import io.github.eslamasabry.oc.ui.kitchat.request.KitRequestWaitingCaption
 import io.github.eslamasabry.oc.ui.words.res.Res
@@ -81,7 +80,7 @@ import io.github.eslamasabry.oc.ui.words.res.approvalDeny
 import io.github.eslamasabry.oc.ui.words.res.chatRequestIfIgnored
 import io.github.eslamasabry.oc.ui.words.res.chatRequestCardLabel
 import io.github.eslamasabry.oc.ui.words.res.chatRequestNoLongerNeeded
-import io.github.eslamasabry.oc.ui.words.res.chatRequestNoLongerNeededWhy
+import io.github.eslamasabry.oc.ui.words.res.chatRequestNoLongerNeededEnding
 import io.github.eslamasabry.oc.ui.words.res.chatRequestOtherAnswer
 import io.github.eslamasabry.oc.ui.words.res.chatRequestOtherField
 import io.github.eslamasabry.oc.ui.words.res.chatStopAfterStepUndo
@@ -283,11 +282,11 @@ private fun RequestCard(
             }
             is CardState.Held -> HeldLine(card, receiptWords(card, phase.words), actions)
             is CardState.Sending ->
-                AnsweredLine(receiptWords(card, phase.words), KitReceiptState.Sending, null)
+                AnsweredLine(card, receiptWords(card, phase.words), KitReceiptState.Sending, null)
             is CardState.Sent ->
-                AnsweredLine(receiptWords(card, phase.words), KitReceiptState.Sent, null)
+                AnsweredLine(card, receiptWords(card, phase.words), KitReceiptState.Sent, null)
             is CardState.NotAccepted ->
-                AnsweredLine(receiptWords(card, phase.words), KitReceiptState.Refused(null)) {
+                AnsweredLine(card, receiptWords(card, phase.words), KitReceiptState.Refused(null)) {
                     actions.performReviewed(card, ReviewedRequestAction.Retry)
                 }
             CardState.NoLongerNeeded -> NoLongerNeededLine(card)
@@ -327,7 +326,7 @@ private fun cardTarget(card: RequestCardUi): String {
 
 /**
  * E06-S03: the run that asked was stopped. No answers, no "Needs your decision": the ask in small
- * words and "No longer needed · The run stopped, so nothing was sent." until the card leaves.
+ * words and "No longer needed · The run is ending, so nothing was sent." until the card leaves.
  */
 @Composable
 private fun NoLongerNeededLine(card: RequestCardUi) {
@@ -340,7 +339,8 @@ private fun NoLongerNeededLine(card: RequestCardUi) {
     KitRow(
         title = title,
         supporting =
-            "${stringResource(Res.string.chatRequestNoLongerNeeded)} · ${stringResource(Res.string.chatRequestNoLongerNeededWhy)}",
+            // The card retires as soon as Stop is accepted, while the run may still be "Stopping": never "The run stopped".
+            "${stringResource(Res.string.chatRequestNoLongerNeeded)} · ${stringResource(Res.string.chatRequestNoLongerNeededEnding)}",
         leading = KitRowLeading.Glyph(if (card is RequestCardUi.Question) KitIcons.question else KitIcons.permissions),
         supportingMaxLines = 2,
         modifier = Modifier.testTag("chat-request-no-longer-needed").semantics { liveRegion = LiveRegionMode.Polite },
@@ -691,15 +691,17 @@ private fun OtherField(
     )
 }
 
-/** Inside the hold: "Allowed · Undo" (plan 08 `HELD_ANSWER`). */
+/**
+ * Inside the hold: "Allowed · Undo" (plan 08 `HELD_ANSWER`), as the kit's answered row, so it sits on the page's edge
+ * like the card it replaces (it was drawn from the window's edge).
+ */
 @Composable
 private fun HeldLine(card: RequestCardUi, words: String, actions: ChatRequestActions) {
-    Row(
-        Modifier.fillMaxWidth().semantics { liveRegion = LiveRegionMode.Polite },
-        horizontalArrangement = Arrangement.spacedBy(Space.S2.dp),
-        verticalAlignment = Alignment.CenterVertically,
+    KitRequestAnsweredRow(
+        icon = if (card is RequestCardUi.Question) KitIcons.question else KitIcons.permissions,
+        title = words,
+        modifier = Modifier.testTag("chat-request-answered").semantics { liveRegion = LiveRegionMode.Polite },
     ) {
-        KitText(words, Modifier.weight(1f), role = TypeRole.Body, kind = KitTextKind.Frame)
         KitButton(
             stringResource(Res.string.chatStopAfterStepUndo),
             onClick = { actions.performReviewed(card, ReviewedRequestAction.Undo) },
@@ -708,15 +710,14 @@ private fun HeldLine(card: RequestCardUi, words: String, actions: ChatRequestAct
     }
 }
 
-/** After the hold: the answer and its receipt ("Sent" is never "Done"). */
+/** After the hold: the answer and its receipt ("Sent" is never "Done"), on the page's edge (the kit's answered row). */
 @Composable
-private fun AnsweredLine(words: String, receipt: KitReceiptState, onRetry: (() -> Unit)?) {
-    Row(
-        Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(Space.S2.dp),
-        verticalAlignment = Alignment.CenterVertically,
+private fun AnsweredLine(card: RequestCardUi, words: String, receipt: KitReceiptState, onRetry: (() -> Unit)?) {
+    KitRequestAnsweredRow(
+        icon = if (card is RequestCardUi.Question) KitIcons.question else KitIcons.permissions,
+        title = words,
+        modifier = Modifier.testTag("chat-request-answered"),
     ) {
-        KitText(words, Modifier.weight(1f), role = TypeRole.Body, kind = KitTextKind.Frame)
         KitReceipt(receipt, onRetry = onRetry)
     }
 }

@@ -12,8 +12,12 @@ import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onFirst
+import androidx.compose.ui.test.onLast
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.test.v2.runComposeUiTest
 import io.github.eslamasabry.oc.core.common.ids.RequestId
 import io.github.eslamasabry.oc.core.common.ids.SessionId
@@ -22,10 +26,12 @@ import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.engine.requests.PendingRequest
 import io.github.eslamasabry.oc.engine.requests.ask.PermissionAsk
 import io.github.eslamasabry.oc.feature.chat.requests.presentation.AlwaysConfirmUi
+import io.github.eslamasabry.oc.feature.chat.requests.presentation.AnswerWords
 import io.github.eslamasabry.oc.feature.chat.requests.presentation.CardState
 import io.github.eslamasabry.oc.feature.chat.requests.presentation.ChatRequestActions
 import io.github.eslamasabry.oc.feature.chat.requests.presentation.RequestCardUi
 import io.github.eslamasabry.oc.feature.chat.requests.presentation.RequestSlotUi
+import io.github.eslamasabry.oc.feature.chat.requests.presentation.ReviewedRequestAction
 import io.github.eslamasabry.oc.feature.chat.requests.ui.ChatRequestSlot
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
@@ -95,27 +101,55 @@ class PermissionAnswersScreenTest {
     }
 
     @Composable
-    private fun Slot(state: RequestSlotUi) {
+    private fun Slot(state: RequestSlotUi, actions: ChatRequestActions = NoActions) {
         KitTheme(
             platform = DesktopKitPlatform(),
             appearance = KitAppearance(motion = MotionLevel.Off),
             localeTag = "en",
             stillFrame = true,
         ) {
-            KitChatEnvironment(Redactor()).Provide { KitSheetHost { ChatRequestSlot(state, NoActions, nowMs = null) } }
+            KitChatEnvironment(Redactor()).Provide { KitSheetHost { ChatRequestSlot(state, actions, nowMs = null) } }
+        }
+    }
+
+    /** Counts the answers that reach the model, whichever surface sent them. */
+    private class Counting : ChatRequestActions by NoActions {
+        val allowed = mutableListOf<RequestId>()
+
+        override fun performReviewed(card: RequestCardUi, action: ReviewedRequestAction) {
+            if (action == ReviewedRequestAction.AllowOnce) allowed += card.id
         }
     }
 
     @Test
-    fun `B-CHAT-REV3-001 the card and its Details answer with Allow once and Deny`() = runComposeUiTest {
+    fun `B-CHAT-REV3-001 the card answers with Allow once and Deny`() = runComposeUiTest {
         setContent { Slot(RequestSlotUi(card("edit", listOf("e9.txt"), always = false))) }
         onNodeWithText("Allow once").assertIsDisplayed()
         onNodeWithText("Deny").assertIsDisplayed()
-        assertEquals(0, onAllNodesWithText("Allow").fetchSemanticsNodes().size, "no bare Allow")
+    }
+
+    @Test
+    fun `B-CHAT-REV3-008 the Details sheet answers with its own Allow once, which allows and closes it`() =
+        runComposeUiTest {
+            val actions = Counting()
+            setContent { Slot(RequestSlotUi(card("edit", listOf("e9.txt"), always = false)), actions) }
+            onAllNodesWithText("Details").onFirst().performClick()
+            waitForIdle()
+            onNodeWithTag("chat-permission-details", useUnmergedTree = true).assertExists()
+            // A modal sheet may hide the card under it from the semantics; the sheet's pinned answer is the last one.
+            onAllNodesWithText("Allow once", useUnmergedTree = true).onLast().performClick()
+            waitForIdle()
+            assertEquals(listOf(RequestId("p1")), actions.allowed, "the sheet's Allow once answers")
+            onNodeWithTag("chat-permission-details", useUnmergedTree = true).assertDoesNotExist()
+        }
+
+    @Test
+    fun `B-CHAT-REV3-009 no answer anywhere says a bare Allow, on the card or in Details`() = runComposeUiTest {
+        setContent { Slot(RequestSlotUi(card("edit", listOf("e9.txt"), always = false))) }
+        assertEquals(0, onAllNodesWithText("Allow", useUnmergedTree = true).fetchSemanticsNodes().size, "card")
         onAllNodesWithText("Details").onFirst().performClick()
         waitForIdle()
-        assertTrue(onAllNodesWithText("Allow once").fetchSemanticsNodes().size >= 2, "the card's and the sheet's")
-        assertEquals(0, onAllNodesWithText("Allow").fetchSemanticsNodes().size, "no bare Allow in the sheet")
+        assertEquals(0, onAllNodesWithText("Allow", useUnmergedTree = true).fetchSemanticsNodes().size, "Details")
     }
 
     @Test
@@ -186,4 +220,29 @@ class PermissionAnswersScreenTest {
                 .fetchSemanticsNodes()
         assertEquals(1, cues.size, "one waiting cue for one card: $cues")
     }
+
+    @Test
+    fun `B-CHAT-REV3-010 the Sending row sits on the page's edge, not the window's`() = runComposeUiTest {
+        val sending = card("edit", listOf("e9.txt"), always = false).copy(state = CardState.Sending(AnswerWords.Allowed))
+        setContent { Slot(RequestSlotUi(sending)) }
+        val words = onNode(reads("Allowed"), useUnmergedTree = true).getUnclippedBoundsInRoot()
+        assertTrue(words.left >= 16.dp, "the answer's words start on the page's 16 dp edge: ${words.left}")
+    }
+
+    @Test
+    fun `B-CHAT-REV3-011 a Deny with a note quotes the person's words`() = runComposeUiTest {
+        val denied =
+            card("edit", listOf("e9.txt"), always = false).copy(state = CardState.Sending(AnswerWords.RejectedWith("use b.txt")))
+        setContent { Slot(RequestSlotUi(denied)) }
+        onNode(reads("Denied, asked to do this instead: \u201cuse b.txt\u201d"), useUnmergedTree = true).assertExists()
+    }
+
+    @Test
+    fun `B-CHAT-REV3-012 a card retired by Stop never says the run stopped while it may still be stopping`() =
+        runComposeUiTest {
+            val retired = card("edit", listOf("e9.txt"), always = false).copy(state = CardState.NoLongerNeeded)
+            setContent { Slot(RequestSlotUi(retired)) }
+            onNode(reads("The run is ending, so nothing was sent."), useUnmergedTree = true).assertExists()
+            assertTrue(onAllNodes(reads("The run stopped"), useUnmergedTree = true).fetchSemanticsNodes().isEmpty())
+        }
 }

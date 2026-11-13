@@ -670,6 +670,7 @@
     <string name="kitToolDone">Done</string>
     <string name="kitToolFailed">Failed</string>
     <string name="kitToolDeclined">You declined this</string>
+    <string name="chatStepDeclinedNote">Your note: “%1$s”</string>
     <string name="kitToolStopped">Stopped</string>
     <string name="kitToolBackground">Started in the background</string>
     <plurals name="kitToolTookSeconds">
