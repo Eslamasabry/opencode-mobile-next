@@ -36,17 +36,19 @@ import kotlin.concurrent.atomics.AtomicReference
  * immutable snapshot until an acknowledged write replaces it; a pending or refused write keeps the old visible pins.
  *
  * This is the one pin store of the app: the home lists and the edge dock both read and write it. `"order"` is the
- * profile-wide list in the person's order (a scope key is a JSON array text, so it can never be called `order`); a
- * session in it is pinned in every location, which is how a pin made on the dock shows on the home list. A pin saved
- * before `"order"` existed sits only in its scope and is ordered after the ordered ones ([orderedIds]).
+ * profile-wide list in the person's order (a scope key is a JSON array text, so it can never be called `order`). A
+ * session in it that no location lists is pinned in every location, which is how a pin made on the dock (it knows no
+ * location) shows on the home list; a pin made on the home list stays in its own location, as before. A pin saved before
+ * `"order"` existed sits only in its scope and is ordered after the ordered ones ([orderedIds]).
  */
 public class SessionPinStore(private val store: KeyValueStore, private val lanes: WriterLanes) {
     private class Pins(val scopes: Map<String, ImmutableSet<String>>, val order: ImmutableList<String>) {
-        private val orderSet: ImmutableSet<String> = order.toImmutableSet()
+        /** Pins no location owns (made on the dock, which knows none): they count in every location. */
+        private val anywhere: ImmutableSet<String> = order.filter { id -> scopes.values.none { id in it } }.toImmutableSet()
         private val effective: Map<String, ImmutableSet<String>> =
-            scopes.mapValues { (_, ids) -> if (orderSet.all { it in ids }) ids else (ids + orderSet).toImmutableSet() }
+            scopes.mapValues { (_, ids) -> if (anywhere.isEmpty()) ids else (ids + anywhere).toImmutableSet() }
 
-        fun ids(scope: String): ImmutableSet<String> = effective[scope] ?: orderSet
+        fun ids(scope: String): ImmutableSet<String> = effective[scope] ?: anywhere
 
         fun ordered(): List<String> = (order + scopes.values.flatten()).distinct()
     }
@@ -68,7 +70,7 @@ public class SessionPinStore(private val store: KeyValueStore, private val lanes
         }
     }
 
-    /** The pinned ids in [scope] (its own and the profile-wide ones): an immutable snapshot, the same instance until an acknowledged write. */
+    /** The pinned ids in [scope] (its own and the ones pinned from the dock): an immutable snapshot, the same instance until an acknowledged write. */
     public fun ids(profile: ProfileId, scope: String): ImmutableSet<String> = load(profile).ids(scope)
 
     /** Every pinned id of [profile] in the person's order, whatever the location. */

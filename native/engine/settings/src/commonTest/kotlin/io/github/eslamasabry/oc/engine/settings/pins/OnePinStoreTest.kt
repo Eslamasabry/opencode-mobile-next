@@ -45,7 +45,7 @@ class OnePinStoreTest {
         assertEquals(listOf("d1", "d2"), pins.orderedIds(a))
         pins.setPinned(a, here, "h1", true)
         assertEquals(listOf("d1", "d2", "h1"), pins.orderedIds(a), "a home pin lands after the dock's")
-        assertEquals(setOf("d1", "d2", "h1"), pins.ids(a, there), "and shows everywhere")
+        assertEquals(setOf("d1", "d2"), pins.ids(a, there), "a home pin stays in its own location, the dock's show everywhere")
         // The home unpins a pin the dock made.
         pins.setPinned(a, here, "d1", false)
         assertEquals(listOf("d2", "h1"), pins.orderedIds(a))
@@ -64,9 +64,9 @@ class OnePinStoreTest {
         assertEquals(listOf("h3", "h1", "h2"), pins.orderedIds(a))
         pins.replaceOrder(a, listOf("h3", "h2")) // unpin h1 on the dock
         assertEquals(listOf("h3", "h2"), pins.orderedIds(a))
-        assertEquals(setOf("h2", "h3"), pins.ids(a, here), "the home no longer shows h1 as pinned")
+        assertEquals(setOf("h2"), pins.ids(a, here), "the home no longer shows h1 as pinned")
         assertTrue("h1" !in pins.ids(a, here))
-        assertEquals(setOf("h2", "h3"), pins.ids(a, there))
+        assertEquals(setOf("h3"), pins.ids(a, there), "each pin stays in the location the home made it in")
     }
 
     @Test
