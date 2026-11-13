@@ -99,6 +99,11 @@ public data class GlassKnobs(
     val localDp: Float,
     val localFree: Float,
     val localSlope: Float,
+    /**
+     * The ink-side hold ([LiquidHold.inkKeep]): the share kept of what behind the pane looks like its own words' ink
+     * (dark strokes under dark words, light ones under light words) past the page's local ground; 1 = off.
+     */
+    val inkKeep: Float,
     /** How wide the joined glass's curve is where a menu (or the jump pill) meets its bar (or the message box), dp. */
     val joinReachDp: Float,
     /**
@@ -135,6 +140,7 @@ public enum class GlassKnob(
     LocalReach("localdp", "Local detail softening", "dp around each point, 0 off", 0f, 48f, 1f, GLASS_REFRACTION_GROUP, { it.localDp }, { k, v -> k.copy(localDp = v) }),
     LocalFree("localfree", "Detail that passes whole", "0-1", 0f, 1f, .01f, GLASS_REFRACTION_GROUP, { it.localFree }, { k, v -> k.copy(localFree = v) }),
     LocalSlope("localslope", "Detail kept beyond it", "share, 1 = all", 0f, 1f, .01f, GLASS_REFRACTION_GROUP, { it.localSlope }, { k, v -> k.copy(localSlope = v) }),
+    InkKeep("inkkeep", "Ink-like strokes kept", "share of strokes like the words' ink, 1 = all", 0f, 1f, .01f, GLASS_REFRACTION_GROUP, { it.inkKeep }, { k, v -> k.copy(inkKeep = v) }),
     JoinReach("join", "Join curve width", "dp (menu at the bar, pill at the box)", 24f, 160f, 2f, "Join", { it.joinReachDp }, { k, v -> k.copy(joinReachDp = v) }),
     // Clarity: frost and tint.
     Blur("blur", "Blur", "dp", 0f, 30f, .5f, "Clarity", { it.blurDp }, { k, v -> k.copy(blurDp = v) }),
@@ -275,6 +281,7 @@ public data class GlassTuning(val panes: Map<GlassPaneKey, GlassKnobs> = emptyMa
                 localDp = r.hold.localDp,
                 localFree = r.hold.localFree,
                 localSlope = r.hold.localSlope,
+                inkKeep = r.hold.inkKeep,
                 joinReachDp = if (kind == GlassPaneKind.Chip) LiquidJoin.REACH_PILL_DP else LiquidJoin.REACH_MENU_DP,
                 wordsClear = 1f,
             )

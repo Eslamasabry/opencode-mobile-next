@@ -43,6 +43,7 @@ class GlassTuningTest {
             assertEquals(if (held) LiquidEdge.MODAL_HOLD.localDp else 0f, k.localDp, "$kind local softening")
             assertEquals(if (held) LiquidEdge.MODAL_HOLD.localFree else 0f, k.localFree, "$kind local free")
             assertEquals(if (held) LiquidEdge.MODAL_HOLD.localSlope else 1f, k.localSlope, "$kind local slope")
+            assertEquals(if (held) LiquidEdge.MODAL_HOLD.inkKeep else 1f, k.inkKeep, "$kind ink-like strokes kept")
             assertEquals(1f, k.wordsClear, "$kind: the page under the words is cleared as today")
             assertEquals(if (kind == GlassPaneKind.Chip) LiquidJoin.REACH_PILL_DP else LiquidJoin.REACH_MENU_DP, k.joinReachDp)
         }

@@ -95,6 +95,15 @@ public data class LiquidHold(
     /** The detail (RGB distance from the local mean, 0-1) that passes whole, and the share kept beyond it. */
     val localFree: Float = 0f,
     val localSlope: Float = 1f,
+    /**
+     * The ink-side hold (round two, 2026-11-14: the grey bars of text behind a light menu and the ghost words between a
+     * sheet's rows): the share kept of what behind the pane looks like the pane's own ink, past the page's local ground
+     * within [localDp]. Under dark words a stroke darker than the ground round it is lifted to it, under light words a
+     * stroke lighter than it is pressed down to it; only the grey part moves (the same amount from every channel), so a
+     * colour keeps its chroma: no white film, no black slab. Where most of what is round a point is ink-like (a dark
+     * picture under dark words) it lets go, so a dark thing is never lifted to fog. 1 = off. Outside the rim, as the rest.
+     */
+    val inkKeep: Float = 1f,
 ) {
     /** Whether this hold is the local-contrast one. */
     public val local: Boolean get() = localDp > 0f
@@ -143,11 +152,17 @@ public object LiquidEdge {
     public const val MODAL_BLUR_DP: Float = 4f
 
     /**
-     * What a menu and a sheet hold back behind their words: the knee and the colour ([HOLD_CHROMA]) as before, and the
-     * fine detail (a line of text, a table's rules) pressed toward its local mean within [LiquidHold.localDp], so the
-     * words do not sit on legible words while the colour and the light of the page come through. Not in the rim.
+     * What a menu and a sheet hold back behind their words: the knee and the colour ([HOLD_CHROMA]) as before, the fine
+     * detail (a line of text, a table's rules) pressed toward its local mean within [LiquidHold.localDp], and what looks
+     * like the pane's own ink lifted (or pressed) to the page's local ground ([LiquidHold.inkKeep]), so the words do not
+     * sit on words or on grey bars of them while the colour and the light of the page come through. Not in the rim.
+     * Round two (2026-11-14): the mean is an even disc and reaches past a line's pitch (about 24 dp), so a line of text
+     * no longer survives in it as a bar.
      */
-    public val MODAL_HOLD: LiquidHold = LiquidHold(knee = true, chroma = HOLD_CHROMA, localDp = 16f, localFree = .03f, localSlope = .15f)
+    public val MODAL_HOLD: LiquidHold = LiquidHold(knee = true, chroma = HOLD_CHROMA, localDp = 28f, localFree = .02f, localSlope = .10f, inkKeep = .10f)
+
+    /** A sheet's hold: a sheet is modal and holds a list, so the page's words between its rows may be held harder. */
+    public val SHEET_HOLD: LiquidHold = MODAL_HOLD
 
     /** The edge dock's pulled-out list keeps the sheet's old frost (the dock's glass is not part of this retune). */
     public const val DOCK_LIST_BLUR_DP: Float = 12f
@@ -205,7 +220,7 @@ public object LiquidEdge {
             // a little more frost ([MODAL_BLUR_DP]). Their words read by holding back what is behind them, not by frost:
             // the light past the knee and the colour (LiquidHold), and the fine detail round its local mean
             // ([MODAL_HOLD]), all in the calm middle; the rim keeps what it bends.
-            LiquidRole.Sheet -> r(MODAL_BLUR_DP, 48f, 0f, .22f, .14f, rimMax = 30f, hold = MODAL_HOLD)
+            LiquidRole.Sheet -> r(MODAL_BLUR_DP, 48f, 0f, .22f, .14f, rimMax = 30f, hold = SHEET_HOLD)
             LiquidRole.Menu -> r(MODAL_BLUR_DP, 48f, .18f, .20f, .10f, rimMax = 26f, hold = MODAL_HOLD)
             // Small pills (the jump pill, the chips over the message box) are calm glass: a narrow rim and a light bend,
             // no lens to the middle (owner 2026-11-08: the jump pill's lens read swirly over text).
