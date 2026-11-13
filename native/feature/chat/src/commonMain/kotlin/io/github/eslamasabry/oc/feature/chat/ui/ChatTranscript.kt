@@ -518,6 +518,10 @@ internal fun ChatTranscriptList(
                         )
                     // The ask folds away as soon as the reply streams, or when a note about the turn replaces the words.
                     val streaming = unique.firstOrNull().let { it is BlockRow && it.live }
+                    // A retry that keeps failing offers another model besides waiting or Stop.
+                    val retryWayOut =
+                        notice is LiveNoticeUi.Retry && notice.facts.offerWayOut && !live.canUndoStopAfterStep &&
+                            reply?.chooseModelLabel != null
                     val askTitle = stringResource(Res.string.chatStarAskTitle)
                     val askBody = stringResource(Res.string.chatStarAskBody)
                     val askAction = stringResource(Res.string.chatStarAskAction)
@@ -566,8 +570,12 @@ internal fun ChatTranscriptList(
                                 stringResource(Res.string.chatStopAfterStepUndo)
                             else if (notice is LiveNoticeUi.ToolWait && onStopLive != null)
                                 stringResource(Res.string.chatStalledStop)
+                            else if (retryWayOut) reply?.chooseModelLabel
                             else null,
-                        onAction = if (live.canUndoStopAfterStep) onUndoStopAfterStep else onStopLive,
+                        onAction =
+                            if (live.canUndoStopAfterStep) onUndoStopAfterStep
+                            else if (retryWayOut) reply?.onChooseModel
+                            else onStopLive,
                         ask = ask,
                     )
                 } else if (

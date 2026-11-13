@@ -154,7 +154,9 @@ public object AllConversationsRules {
             model.titles[key(e.profile, e.session.id)] ?: e.session.title
         val sorted =
             entries.sortedWith(
-                compareByDescending<Entry> {
+                // Rows read from a saved list (their server is not connected) come after every live row, as one group.
+                compareBy<Entry> { model.sources[it.profile]?.preview == true }
+                    .thenByDescending {
                         it.session.id in model.sources[it.profile]?.pinned.orEmpty()
                     }
                     .thenByDescending { updatedAt(it.session) }

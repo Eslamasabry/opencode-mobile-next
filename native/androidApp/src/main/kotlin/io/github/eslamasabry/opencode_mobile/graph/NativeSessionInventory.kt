@@ -89,7 +89,9 @@ class NativeSessionInventory(
         val scope = scope(profile)
         val rich = richRows((stores.prefs.get(PREFIX + profile.id.raw) as? PrefValue.Str)?.value, scope)
         var used = 0
-        for (session in sessions.take(MAX_SESSIONS)) {
+        // The saved list counts what home counts: top-level, not archived (sub-conversations and archived ones made the
+        // first paint say 45 where the live read said 42).
+        for (session in sessions.filter { it.parentId == null && it.time?.archivedMs == null }.take(MAX_SESSIONS)) {
             if (session.id.raw.isEmpty() || session.id.raw.length > 512) continue
             val row =
                 withRich(

@@ -68,7 +68,27 @@ internal fun causeOf(raw: String): Cause? {
  * is null when the server sent no positive attempt (there is no ceiling to invent). [secondsLeft] is null when there
  * is no next time or it is already past: a clock stuck at 0:00 reads as a frozen app.
  */
-public data class RetryBannerFacts(val rateLimited: Boolean, val attempt: Int?, val secondsLeft: Int?)
+public data class RetryBannerFacts(
+    val rateLimited: Boolean,
+    val attempt: Int?,
+    val secondsLeft: Int?,
+    /** What the server's retry event says went wrong, when it says; null when it gave no usable reason. */
+    val why: RetryWhy? = null,
+    /** Enough tries have failed that the person is offered a way out besides waiting. */
+    val offerWayOut: Boolean = false,
+)
+
+/** Why the server is retrying, in the few kinds a person can act on. Never the server's own text. */
+public enum class RetryWhy {
+    /** The model's provider could not be reached, or the link to it dropped or timed out: often the connection. */
+    ProviderUnreachable,
+
+    /** The model's provider answered that it is overloaded or down. */
+    ProviderBusy,
+}
+
+/** After this many failed tries the retry line offers another model instead of only waiting. */
+public const val RETRY_OFFER_WAY_OUT_AFTER: Int = 3
 
 public fun retryBannerFacts(attempt: Int, nextAtMs: Long?, message: String?, nowMs: Long): RetryBannerFacts {
     val cause = causeOf(message ?: "")
@@ -77,6 +97,13 @@ public fun retryBannerFacts(attempt: Int, nextAtMs: Long?, message: String?, now
         rateLimited = cause == null || cause == Cause.RateLimited,
         attempt = attempt.takeIf { it > 0 },
         secondsLeft = if (delta == null || delta <= 0) null else (delta / 1000).toInt(),
+        why =
+            when (cause) {
+                Cause.ProviderUnreachable, Cause.ConnectionDropped, Cause.TimedOut -> RetryWhy.ProviderUnreachable
+                Cause.ProviderBusy -> RetryWhy.ProviderBusy
+                else -> null
+            },
+        offerWayOut = attempt >= RETRY_OFFER_WAY_OUT_AFTER,
     )
 }
 

@@ -367,7 +367,8 @@ internal fun TurnEndNote(
             KitButton(
                 stringResource(Res.string.messageViewContinueReply),
                 onContinue,
-                role = KitButtonRole.Tertiary,
+                role = KitButtonRole.Secondary,
+                expand = false,
                 modifier = Modifier.testTag("stopped-continue"),
             )
         // F: message_view.dart:658-665 `interrupted-send-again`: a reply cut off before any words is sent again.
@@ -375,7 +376,8 @@ internal fun TurnEndNote(
             KitButton(
                 stringResource(Res.string.chatUiSendPromptAgain),
                 onSendAgain,
-                role = KitButtonRole.Tertiary,
+                role = KitButtonRole.Secondary,
+                expand = false,
                 modifier = Modifier.testTag("interrupted-send-again"),
             )
     }

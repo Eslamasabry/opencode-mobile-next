@@ -50,6 +50,8 @@ import io.github.eslamasabry.oc.ui.words.res.chatUiQuestions
 import io.github.eslamasabry.oc.ui.words.res.chatUiRateLimitCountdown
 import io.github.eslamasabry.oc.ui.words.res.chatUiRateLimitRetry
 import io.github.eslamasabry.oc.ui.words.res.chatUiRead
+import io.github.eslamasabry.oc.ui.words.res.chatUiRetryWhyBusy
+import io.github.eslamasabry.oc.ui.words.res.chatUiRetryWhyUnreachable
 import io.github.eslamasabry.oc.ui.words.res.chatUiRetryingCountdown
 import io.github.eslamasabry.oc.ui.words.res.chatUiRetryingSoon
 import io.github.eslamasabry.oc.ui.words.res.chatUiSearchText
@@ -300,6 +302,18 @@ internal fun fileLine(path: String, added: Int?, removed: Int?): String =
             append("  ")
             append("+").append(Numbers.format(added ?: 0))
             append(" −").append(Numbers.format(removed ?: 0))
+        }
+    }
+
+/** The plain reason under a retry line when the server's retry says why; null when it does not. */
+@Composable
+internal fun retryWhyWords(n: LiveNoticeUi): String? =
+    (n as? LiveNoticeUi.Retry)?.facts?.why?.let {
+        when (it) {
+            io.github.eslamasabry.oc.engine.transcript.turnfacts.RetryWhy.ProviderUnreachable ->
+                stringResource(Res.string.chatUiRetryWhyUnreachable)
+            io.github.eslamasabry.oc.engine.transcript.turnfacts.RetryWhy.ProviderBusy ->
+                stringResource(Res.string.chatUiRetryWhyBusy)
         }
     }
 
