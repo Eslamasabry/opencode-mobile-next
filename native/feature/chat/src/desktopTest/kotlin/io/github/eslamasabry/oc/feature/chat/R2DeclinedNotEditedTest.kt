@@ -17,6 +17,8 @@ import io.github.eslamasabry.oc.core.model.transcript.ToolState
 import io.github.eslamasabry.oc.core.model.transcript.ToolStatus
 import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.engine.transcript.ledger.StepState
+import io.github.eslamasabry.oc.engine.transcript.state.WorkLineRow
+import io.github.eslamasabry.oc.engine.transcript.state.WorkState
 import io.github.eslamasabry.oc.feature.chat.composer.ComposerChrome
 import io.github.eslamasabry.oc.feature.chat.composer.ComposerHost
 import io.github.eslamasabry.oc.feature.chat.composer.ComposerTarget
@@ -177,7 +179,13 @@ class R2DeclinedNotEditedTest {
                 tool("t1", "write", ToolStatus.Error, mapOf("filePath" to "/root/projects/e2.txt", "content" to "x"), note),
                 Part("x2", "m2", sid, PartType.Text, "text", text = reply),
             )
-        val rows = persistentListOf(footer("m1"), block("m1", "m2", "x2", 0, reply), prompt("m1", "create a file e2.txt with one line"))
+        val rows =
+            persistentListOf(
+                footer("m1"),
+                block("m1", "m2", "x2", 0, reply),
+                WorkLineRow("work:m1", "m1", calls = 1, failed = 1, state = WorkState.Done),
+                prompt("m1", "create a file e2.txt with one line"),
+            )
         val state = ChatUi.loading(Ref).copy(title = "Native chat", phase = ChatPhase.Live, rows = rows)
         val actions = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
         setContent {
