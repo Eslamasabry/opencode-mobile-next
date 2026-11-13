@@ -75,7 +75,8 @@ public enum class ToolFailure {
     /**
      * The agent called the tool with arguments the server would not take (a question form with a question missing, a
      * required field left out). Nothing ran and nothing was shown; the server told the agent, which usually calls the
-     * tool again. OpenCode 2: `Invalid arguments for tool "question": … Update the arguments and call the tool again.`;
+     * tool again. OpenCode 2: `Invalid arguments for tool "question": … Update the arguments and call the tool
+     * again.`;
      * OpenCode 1: `The arguments provided to the tool are invalid: …`; the AI SDK: `Invalid input for tool …`.
      */
     MalformedCall,
@@ -86,7 +87,8 @@ public enum class ToolFailure {
 
 private val MALFORMED_CALL =
     Regex(
-        "^\\s*(?:error:\\s*)?(?:invalid (?:arguments|input) for tool\\b|the arguments provided to the tool are invalid\\b)",
+        "^\\s*(?:error:\\s*)?" +
+            "(?:invalid (?:arguments|input) for tool\\b|the arguments provided to the tool are invalid\\b)",
         RegexOption.IGNORE_CASE,
     )
 

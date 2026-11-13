@@ -119,7 +119,8 @@ class Oc2EventAdapterTest {
         assertEquals("The user declined this tool call\nsearch src only", tool.error)
         val other = adapter().apply { twoSearches() }.v2(
             "session.tool.failed",
-            """{"assistantMessageID":"msg_a1","id":"call_1","content":[],"error":{"type":"tool.execution","message":"boom"}}""",
+            """{"assistantMessageID":"msg_a1","id":"call_1","content":[],""" +
+                """"error":{"type":"tool.execution","message":"boom"}}""",
         )
         assertEquals("boom", assertIs<Oc2Adapted.PartUpserted>(other.single()).part.tool!!.error)
     }

@@ -64,8 +64,9 @@ class Oc2LostRunTest {
         message(
             """{"id":"msg_r","time":{"created":1,"completed":3},"type":"assistant","agent":"build",""" +
                 """"model":{"id":"big-pickle","providerID":"opencode"},"finish":"error",""" +
-                """"content":[{"type":"tool","id":"call_1","name":"write","executed":false,"state":{"status":"error",""" +
-                """"input":{"path":"/work/project/a.txt"},"error":$error},"time":{"created":2,"completed":3}}]}"""
+                """"content":[{"type":"tool","id":"call_1","name":"write","executed":false,""" +
+                """"state":{"status":"error","input":{"path":"/work/project/a.txt"},"error":$error},""" +
+                """"time":{"created":2,"completed":3}}]}"""
         ).parts.single { it.type == PartType.Tool }.tool!!
 
     @Test
