@@ -12,7 +12,7 @@ import io.github.eslamasabry.oc.core.model.ReferenceInfo
 import io.github.eslamasabry.oc.core.model.Session
 import io.github.eslamasabry.oc.core.model.SkillInfo
 import kotlinx.collections.immutable.toImmutableList
-import kotlinx.collections.immutable.toImmutableMap
+import kotlinx.collections.immutable.persistentMapOf
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
@@ -30,7 +30,9 @@ public interface LibraryLastKnown {
 
 /**
  * The lists the library draws: commands, skills, references, providers (names, sign-in methods and connection labels,
- * never keys), MCP servers and resources. Attempts, credentials and authorization links are never kept.
+ * never keys), MCP servers and resources. Attempts, credentials and authorization links are never kept, and neither are
+ * the two server texts that can carry a secret: an MCP server's error prose and a sign-in method's hidden preset
+ * answers.
  */
 @Serializable
 public data class KeptLibrary(
@@ -68,6 +70,10 @@ public data class KeptLibrary(
         /** Each prompt as its JSON text. */
         val prompts: List<String> = emptyList(),
         val environmentNames: List<String> = emptyList(),
+        /**
+         * Read only from older files. Hidden preset answers are registered as secrets when the server sends them, so
+         * they are never written here; the live read that replaces the kept lists brings them back.
+         */
         val presetAnswers: Map<String, String> = emptyMap(),
     )
 
@@ -80,7 +86,12 @@ public data class KeptLibrary(
         val connectionCount: Int,
     )
 
-    @Serializable public data class KeptServer(val name: String, val status: String, val error: String?)
+    /**
+     * [error] stays in the format so an older file still reads, but nothing writes it: a server's MCP error prose
+     * can echo a header, an environment value or a link with a token in it, and no screen shows it (fixed status
+     * words only).
+     */
+    @Serializable public data class KeptServer(val name: String, val status: String, val error: String? = null)
 
     @Serializable
     public data class KeptResource(
@@ -127,7 +138,7 @@ public data class KeptLibrary(
                                             .mapNotNull { runCatching { Json.parseToJsonElement(it) as? JsonObject }.getOrNull() }
                                             .toImmutableList(),
                                         m.environmentNames.toImmutableList(),
-                                        m.presetAnswers.toImmutableMap(),
+                                        persistentMapOf(),
                                     )
                                 }
                                 .toImmutableList(),
@@ -136,7 +147,7 @@ public data class KeptLibrary(
                         )
                     }
                     .toImmutableList(),
-            servers = servers.map { McpServerInfo(it.name, it.status, it.error) }.toImmutableList(),
+            servers = servers.map { McpServerInfo(it.name, it.status, null) }.toImmutableList(),
             resources = resources.map { McpResourceInfo(it.name, it.server, it.uri, it.description, it.mimeType) }.toImmutableList(),
             conversations = conversations.map { Session(SessionId(it.id), it.title) }.toImmutableList(),
             fromKept = true,
@@ -145,7 +156,6 @@ public data class KeptLibrary(
     public companion object {
         public const val MAX_ROWS: Int = 200
         public const val MAX_SKILL_BYTES: Int = 200_000
-        private const val MAX_ERROR: Int = 300
 
         public fun of(inventory: LibraryInventory): KeptLibrary {
             var budget = MAX_SKILL_BYTES
@@ -166,13 +176,13 @@ public data class KeptLibrary(
                             p.id,
                             p.name,
                             p.methods.map { m ->
-                                KeptMethod(m.type, m.id, m.label, m.prompts.map { it.toString() }, m.environmentNames, m.presetAnswers)
+                                KeptMethod(m.type, m.id, m.label, m.prompts.map { it.toString() }, m.environmentNames)
                             },
                             p.connections.map { KeptConnection(it.type, it.id, it.label, it.status) },
                             p.connectionCount,
                         )
                     },
-                servers = inventory.servers.take(MAX_ROWS).map { KeptServer(it.name, it.status, it.error?.take(MAX_ERROR)) },
+                servers = inventory.servers.take(MAX_ROWS).map { KeptServer(it.name, it.status) },
                 resources = inventory.resources.take(MAX_ROWS).map { KeptResource(it.name, it.server, it.uri, it.description, it.mimeType) },
                 conversations = inventory.conversations.take(MAX_ROWS).map { KeptConversation(it.id.raw, it.title) },
             )
