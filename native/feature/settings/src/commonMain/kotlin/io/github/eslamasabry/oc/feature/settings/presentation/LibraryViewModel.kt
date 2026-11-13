@@ -199,9 +199,7 @@ public class LibraryViewModel(
         if (route.ref == null && route.profileId != null)
             host?.openProfile(route.profileId!!, viewModelScope)
         else host?.open(route.ref, viewModelScope)
-    private val initialTab =
-        LibraryTab.entries.firstOrNull { it.name.equals(route.tab, ignoreCase = true) }
-            ?: LibraryTab.Commands
+    private val initialTab = libraryInitialTab(route.tab)
     private val mutable =
         MutableStateFlow(
             LibraryUi(
@@ -626,3 +624,10 @@ public fun librarySkillProse(content: String, name: String): String {
         text = text.substring(heading.range.last + 1)
     return text.trimStart()
 }
+
+/**
+ * The tab a route names. With none named the page opens on its first tab, MCP servers, as Flutter's
+ * Tools page does (lib/ui/screens/capabilities_screen.dart:117-124, the first section).
+ */
+internal fun libraryInitialTab(name: String?): LibraryTab =
+    LibraryTab.entries.firstOrNull { it.name.equals(name, ignoreCase = true) } ?: LibraryTab.Mcp

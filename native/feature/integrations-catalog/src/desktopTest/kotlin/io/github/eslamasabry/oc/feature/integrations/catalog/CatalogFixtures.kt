@@ -68,6 +68,11 @@ internal class FakeCatalogHost(optedIn: Boolean = true) : McpCatalogHost {
     var installed = setOf<String>()
     private val source = Any()
 
+    /** The live connection object is rebuilt for the same server: an equal value, never the same object. */
+    var rebuildsSource = false
+
+    private data class SameServer(val profile: String)
+
     override suspend fun loadCache(profile: String): Outcome<JsonObject?> = Outcome.Ok(cache)
 
     override suspend fun saveCache(profile: String, value: JsonObject): Outcome<Unit> {
@@ -82,7 +87,7 @@ internal class FakeCatalogHost(optedIn: Boolean = true) : McpCatalogHost {
 
     override suspend fun fetchRegistry(query: String?): Outcome<JsonObject> = Outcome.Ok(REGISTRY)
 
-    override fun sourceIdentity(profile: String): Any = source
+    override fun sourceIdentity(profile: String): Any = if (rebuildsSource) SameServer(profile) else source
 
     override fun current(profile: String, directory: String?, workspace: String?): Boolean = true
 

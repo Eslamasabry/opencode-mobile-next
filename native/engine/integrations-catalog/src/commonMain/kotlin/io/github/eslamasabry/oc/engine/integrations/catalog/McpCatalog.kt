@@ -20,6 +20,11 @@ public interface McpCatalogHost {
 
     public suspend fun fetchRegistry(query: String?): Outcome<JsonObject>
 
+    /**
+     * Names the server this screen was opened for. The controller compares two answers with `==`,
+     * so a value that describes the server stays equal across a refreshed profile list or a
+     * reconnect; an object created again for the same server must not read as a change.
+     */
     public fun sourceIdentity(profile: String): Any?
 
     public fun current(profile: String, directory: String?, workspace: String?): Boolean

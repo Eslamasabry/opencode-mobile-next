@@ -94,14 +94,12 @@ object CapabilityFlowsWiring {
                                     CapabilityEnableFlow.McpAdd ->
                                         nav.open(
                                             profile?.let {
+                                                val location =
+                                                    graph?.session?.server?.location?.value
                                                 McpCatalogRoute(
                                                     it,
-                                                    graph
-                                                        ?.session
-                                                        ?.server
-                                                        ?.location
-                                                        ?.value
-                                                        ?.directory,
+                                                    location?.directory,
+                                                    location?.workspace,
                                                 )
                                             } ?: ServersRoute.Home
                                         )

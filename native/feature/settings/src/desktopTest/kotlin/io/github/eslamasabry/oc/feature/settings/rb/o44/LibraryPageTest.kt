@@ -54,6 +54,26 @@ class LibraryPageTest {
         }
 
     @Test
+    fun `P53 the page is named Commands and tools and a command row shows no cut template`() =
+        runComposeUiTest {
+            val command =
+                CommandInfo("goal", "keep working until an objective is met [pause|resume|clear]", null, false)
+            val state =
+                LibraryUi(
+                    tab = LibraryTab.Commands,
+                    available = true,
+                    inventory =
+                        LibraryInventory(loading = false, commands = persistentListOf(command)),
+                )
+            val actions = actions()
+            setContent { SettingsThemed { LibraryScreen(state, actions) } }
+            onNodeWithText("Commands and tools").assertExists()
+            onNodeWithText("Built-in").assertDoesNotExist()
+            onNodeWithText("keep working until an objective is met").assertExists()
+            onNodeWithText("/goal [pause|resume|clear]").assertExists()
+        }
+
+    @Test
     fun `B-NAV-068 reference picker adds the named reference in one tap`() = runComposeUiTest {
         val reference = ReferenceInfo("docs", "/project/docs", "Project documentation")
         val state =

@@ -64,4 +64,13 @@ class McpCatalogViewModelTest {
         assertFalse(vm.state.value.catalog.optedIn)
         assertFalse(vm.state.value.canForget)
     }
+
+    @Test
+    fun `P37 first open does not claim the connection changed when the server is the same`() = runTest {
+        val host = FakeCatalogHost(optedIn = false)
+        host.rebuildsSource = true
+        val vm = model(host)
+        assertEquals(null, vm.state.value.catalog.notice)
+        assertTrue(vm.state.value.catalog.canAdd)
+    }
 }

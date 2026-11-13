@@ -47,12 +47,10 @@ import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitSkeletonRows
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
-import io.github.eslamasabry.oc.ui.kit.state.KitStateSize
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.chatUiEdit
 import io.github.eslamasabry.oc.ui.words.res.chatUiSlashCommandsAndAgents
-import io.github.eslamasabry.oc.ui.words.res.chatUiTodos
 import io.github.eslamasabry.oc.ui.words.res.commonRetry
 import io.github.eslamasabry.oc.ui.words.res.composerToolSaveForLater
 import io.github.eslamasabry.oc.ui.words.res.fileSave
@@ -91,7 +89,8 @@ import org.jetbrains.compose.resources.stringResource
  * Saved prompts (Flutter `_PromptStashSheet`), as a page opened from the chat. Obvious actions are
  * visible rows and buttons: "Save prompt for later" writes a new one; tapping a prompt puts it into
  * the conversation's composer (the saved copy stays); Edit and Delete sit under each prompt; Delete
- * acts at once with Undo. The server's commands and the agent's tasks are two rows at the top.
+ * acts at once with Undo. The server's commands are a row at the top; the agent's tasks live in the conversation's own menu
+ * (Flutter's Plan row), only when the agent wrote a list.
  */
 @Composable
 public fun SavedPromptsScreen(state: SavedPromptsUi, actions: SavedPromptsActions) {
@@ -139,12 +138,6 @@ public fun SavedPromptsScreen(state: SavedPromptsUi, actions: SavedPromptsAction
                 onClick = actions::openCommands,
                 modifier = Modifier.testTag("prompts-open-commands"),
             )
-            KitRow(
-                title = stringResource(Res.string.chatUiTodos),
-                trailing = KitRowTrailing.Chevron,
-                onClick = actions::openTasks,
-                modifier = Modifier.testTag("prompts-open-tasks"),
-            )
             Issue(state, actions)
             if (state.migrationPending)
                 KitNotice(
@@ -177,7 +170,6 @@ public fun SavedPromptsScreen(state: SavedPromptsUi, actions: SavedPromptsAction
                         kind = KitStateKind.Empty,
                         title = stringResource(Res.string.promptStashEmptyTitle),
                         body = stringResource(Res.string.promptStashIntro),
-                        size = KitStateSize.Inline,
                     )
                 else -> {
                     KitField(

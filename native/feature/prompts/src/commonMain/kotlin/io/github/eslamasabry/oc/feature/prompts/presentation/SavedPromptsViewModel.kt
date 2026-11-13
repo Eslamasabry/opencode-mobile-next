@@ -274,8 +274,6 @@ public class SavedPromptsViewModel(
 
     override fun openCommands(): Unit = nav.open(PromptsRoute.Commands(route.ref))
 
-    override fun openTasks(): Unit = nav.open(PromptsRoute.Tasks(route.ref))
-
     @AssistedFactory
     @ManualViewModelAssistedFactoryKey
     @ContributesIntoMap(AppScope::class)

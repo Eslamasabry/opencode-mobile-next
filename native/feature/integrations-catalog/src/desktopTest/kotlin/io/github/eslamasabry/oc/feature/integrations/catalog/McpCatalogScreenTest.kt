@@ -10,6 +10,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.captureToImage
+import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
@@ -18,6 +19,7 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.engine.integrations.catalog.McpCatalogNotice
 import io.github.eslamasabry.oc.engine.integrations.catalog.McpCatalogState
 import io.github.eslamasabry.oc.engine.integrations.catalog.orderMcpCatalog
@@ -32,6 +34,7 @@ import java.util.Locale
 import javax.imageio.ImageIO
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 /** The catalogue page shows each listing's needs, the price note, and Stop using the registry. */
 @OptIn(ExperimentalTestApi::class)
@@ -81,6 +84,25 @@ class McpCatalogScreenTest {
         setContent { KitTheme(platform = DesktopKitPlatform()) { McpCatalogScreen(failed, RecordingActions()) } }
         onAllNodesWithContentDescription("More actions").assertCountEquals(0)
         onNodeWithText("Couldn't forget the saved registry list. Try again.").assertExists()
+    }
+
+    @Test
+    fun `P37 the consent page uses Flutter's words and the page margin`() = runComposeUiTest {
+        val actions = RecordingActions()
+        val ui =
+            mcpCatalogUi(
+                McpCatalogState(loading = false, notice = McpCatalogNotice.SaveFailed),
+                forgetting = false,
+            )
+        setContent { KitTheme(platform = DesktopKitPlatform()) { McpCatalogScreen(ui, actions) } }
+        onNodeWithText("Load the MCP registry?").assertExists()
+        onNodeWithText("public MCP registry", substring = true).assertDoesNotExist()
+        // The notice starts at the page margin (16 dp), not inside it (it sat at 12 dp).
+        val left = onNodeWithText("Could not save the catalogue preference. Try again.")
+            .getUnclippedBoundsInRoot().left
+        assertTrue(left >= 16.dp, "notice starts at $left")
+        onNodeWithText("Load the list").performClick()
+        assertEquals(listOf("consent true"), actions.calls)
     }
 
     /** Capture only, when `-Poc.mcpCatalogShots=<dir>` is set: the list in light and dark at 412 x 915 dp. */
