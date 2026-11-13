@@ -91,6 +91,8 @@ class BackgroundScreenUiTest {
             val actions = page(BackgroundLiveFacts(supported = true))
             onNodeWithText("Stay connected in the background").assertExists()
             assertTrue(shows("Off"))
+            // The status row names its subject; "Off" is its value, never a title alone.
+            onNodeWithText("Background connection").assertExists()
             assertTrue(!shows("Allow unrestricted battery access"), "no battery row while off")
             onNodeWithText("Stay connected in the background").performClick()
             waitForIdle()

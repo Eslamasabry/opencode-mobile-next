@@ -18,12 +18,12 @@ import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.commonRetry
-import io.github.eslamasabry.oc.ui.words.res.filesOpenPhone
+import io.github.eslamasabry.oc.ui.words.res.manageSpaceTitle
+import io.github.eslamasabry.oc.ui.words.res.migrationStorageAppDetail
 import io.github.eslamasabry.oc.ui.words.res.migrationStorageAssistant
 import io.github.eslamasabry.oc.ui.words.res.migrationStorageDelete
 import io.github.eslamasabry.oc.ui.words.res.migrationStorageDeleteBody
 import io.github.eslamasabry.oc.ui.words.res.migrationStorageDeleteTitle
-import io.github.eslamasabry.oc.ui.words.res.migrationStorageEmpty
 import io.github.eslamasabry.oc.ui.words.res.localModelSaveFailed
 import io.github.eslamasabry.oc.ui.words.res.migrationStorageTitle
 import org.jetbrains.compose.resources.stringResource
@@ -38,35 +38,27 @@ internal fun LocalModelsBody(state: LocalModelStorageFacts, actions: SettingsAct
             message = stringResource(Res.string.localModelSaveFailed),
             retry = KitLineAction(stringResource(Res.string.commonRetry), actions::onRefreshLocalModels),
         )
-        // No assistant model: say so, and lead to where the app's storage is measured (This phone ›
-        // App storage) instead of a page with nothing else on it.
-        !state.present ->
-            KitStateView(
-                kind = KitStateKind.Empty,
-                title = stringResource(Res.string.migrationStorageEmpty),
-                primary =
-                    if (state.phoneStorage)
-                        KitAction(
-                            label = stringResource(Res.string.filesOpenPhone),
-                            onClick = { actions.onOutside(SettingsOutside.ThisPhone) },
-                        )
-                    else null,
-            )
+        // The page is the app's storage: its own measured page is the first row, and the assistant
+        // model is one more row (with its Delete) only while one is stored.
         else -> {
             KitRowGroup {
                 KitRow(
-                    title = stringResource(Res.string.migrationStorageAssistant),
-                    trailing = KitRowTrailing.Value(state.size, chevron = false),
+                    title = stringResource(Res.string.manageSpaceTitle),
+                    supporting = stringResource(Res.string.migrationStorageAppDetail),
+                    supportingMaxLines = 2,
+                    trailing = KitRowTrailing.Chevron,
+                    onClick = { actions.onOutside(SettingsOutside.AppStorage) },
                 )
+                if (state.present)
+                    KitRow(
+                        title = stringResource(Res.string.migrationStorageAssistant),
+                        trailing = KitRowTrailing.Value(state.size, chevron = false),
+                    )
             }
-            KitActionBlock(
-                primary = KitAction(stringResource(Res.string.migrationStorageDelete), actions::onAskDeleteLocalModel),
-                // The rest of the app's storage is measured on This phone (App storage): the same door the empty page has.
-                secondary =
-                    if (state.phoneStorage)
-                        KitAction(stringResource(Res.string.filesOpenPhone), { actions.onOutside(SettingsOutside.ThisPhone) })
-                    else null,
-            )
+            if (state.present)
+                KitActionBlock(
+                    primary = KitAction(stringResource(Res.string.migrationStorageDelete), actions::onAskDeleteLocalModel),
+                )
         }
     }
     KitConfirm(

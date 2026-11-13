@@ -160,4 +160,26 @@ class LibraryPageTest {
             onNodeWithText("Copy @platform-docs").performClick()
             assertEquals<List<Pair<String, List<Any?>>>>(listOf("copy" to listOf("@platform-docs")), calls)
         }
+
+    @Test
+    fun `the command sheet names the list as where the command runs and explains its field`() =
+        runComposeUiTest {
+            val command = CommandInfo("review", "review changes [commit|branch|pr]", null, false)
+            val state =
+                LibraryUi(
+                    tab = LibraryTab.Commands,
+                    available = true,
+                    sheet = LibrarySheet.Command(command),
+                    inventory =
+                        LibraryInventory(
+                            loading = false,
+                            commands = persistentListOf(command),
+                            conversations = persistentListOf(Session(SessionId("s1"), "say hi")),
+                        ),
+                )
+            setContent { SettingsThemed { LibraryScreen(state, actions()) } }
+            onNodeWithText("Run in").assertExists()
+            onNodeWithText("Arguments (optional)").assertExists()
+            onNodeWithText("Passed to the command when it runs. Leave empty to use its defaults.").assertExists()
+        }
 }

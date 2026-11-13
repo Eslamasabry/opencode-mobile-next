@@ -42,7 +42,7 @@ import io.github.eslamasabry.oc.ui.words.res.aboutAllLicences
 import io.github.eslamasabry.oc.ui.words.res.aboutBundledComponents
 import io.github.eslamasabry.oc.ui.words.res.aboutTitle
 import io.github.eslamasabry.oc.ui.words.res.appUpdatesTitle
-import io.github.eslamasabry.oc.ui.words.res.capabilityScreenTitle
+import io.github.eslamasabry.oc.ui.words.res.capabilityScreenHeading
 import io.github.eslamasabry.oc.ui.words.res.e7AppearanceTitle
 import io.github.eslamasabry.oc.ui.words.res.kitReportProblem
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarBack
@@ -51,7 +51,7 @@ import io.github.eslamasabry.oc.ui.words.res.migrationStorageTitle
 import io.github.eslamasabry.oc.ui.words.res.monitorQuietEnd
 import io.github.eslamasabry.oc.ui.words.res.monitorQuietStart
 import io.github.eslamasabry.oc.ui.words.res.nativeBundledPrivacy
-import io.github.eslamasabry.oc.ui.words.res.nativePhraseChipsTitle
+import io.github.eslamasabry.oc.ui.words.res.settingsPhraseChipsTitle
 import io.github.eslamasabry.oc.ui.words.res.notifyDismiss
 import io.github.eslamasabry.oc.ui.words.res.privacyPolicyTitle
 import io.github.eslamasabry.oc.ui.words.res.settingsHubGroupNotifications
@@ -215,7 +215,7 @@ public fun SettingsScreen(
             }
         SettingsPage.PhraseChips ->
             SettingsFrame(
-                stringResource(Res.string.nativePhraseChipsTitle),
+                stringResource(Res.string.settingsPhraseChipsTitle),
                 back,
                 state,
                 actions,
@@ -305,7 +305,7 @@ public fun SettingsScreen(
             }
         SettingsPage.ServerCapabilities ->
             SettingsFrame(
-                stringResource(Res.string.capabilityScreenTitle),
+                stringResource(Res.string.capabilityScreenHeading),
                 back,
                 state,
                 actions,

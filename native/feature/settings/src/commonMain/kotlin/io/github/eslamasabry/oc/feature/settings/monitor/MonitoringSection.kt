@@ -8,6 +8,7 @@ import io.github.eslamasabry.oc.ui.kit.choice.KitChoiceList
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.row.KitGroupNote
 import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
+import io.github.eslamasabry.oc.ui.kit.row.KitSectionLabel
 import io.github.eslamasabry.oc.ui.kit.row.KitSwitchRow
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.words.res.*
@@ -15,11 +16,18 @@ import org.jetbrains.compose.resources.stringResource
 
 @Composable
 public fun ColumnScope.MonitoringSection(state: MonitoringUi, actions: MonitoringActions) {
-    if (state.servers.isEmpty()) return
+    if (state.servers.isEmpty()) {
+        // The empty words follow the real list this section draws, not a second copy of it.
+        KitSectionLabel(stringResource(Res.string.notifyNoServersTitle))
+        KitGroupNote(stringResource(Res.string.notifyNoServersDetail))
+        return
+    }
     KitGroupNote(stringResource(Res.string.andrMonitorExplanation))
     if (state.saveFailed) KitNotice(stringResource(Res.string.andrMonitorSaveFailed))
     state.servers.forEach { server ->
-        KitRowGroup(label = server.name) {
+        // A label of its own: the kit gives a section label its gap from what sits above it.
+        KitSectionLabel(server.name)
+        KitRowGroup {
             KitSwitchRow(
                 title = stringResource(Res.string.andrMonitorEnabled),
                 checked = server.enabled,

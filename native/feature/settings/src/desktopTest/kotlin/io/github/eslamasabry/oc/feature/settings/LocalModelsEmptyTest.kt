@@ -10,46 +10,39 @@ import io.github.eslamasabry.oc.feature.settings.ui.LocalModelsBody
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
-/** ST1: This app › Storage with no assistant model leads to where the app's storage is measured. */
+/** ST1: This app > Storage is the app's storage; the assistant model is one row in it, only when stored. */
 class LocalModelsEmptyTest {
     @Test
-    fun `ST1 no assistant model offers Open This phone, where App storage measures the app`() {
+    fun `ST1 no assistant model still shows the app's storage and never an empty headline`() {
         val actions = RecordingActions()
         runComposeUiTest {
             setContent {
                 SettingsThemed {
-                    LocalModelsBody(LocalModelStorageFacts(loading = false, phoneStorage = true), actions)
+                    LocalModelsBody(LocalModelStorageFacts(loading = false), actions)
                 }
             }
-            onNodeWithText("No assistant model is stored on this phone").assertExists()
-            onNodeWithText("Open This phone").performClick()
+            onNodeWithText("No assistant model is stored on this phone").assertDoesNotExist()
+            onNodeWithText("Assistant model on this phone").assertDoesNotExist()
+            onNodeWithText("Clear this app's storage").performClick()
         }
-        assertTrue("outside:ThisPhone" in actions.calls)
+        assertTrue("outside:AppStorage" in actions.calls)
     }
 
     @Test
-    fun `ST1 without This phone the empty page offers no dead door`() = runComposeUiTest {
-        setContent {
-            SettingsThemed { LocalModelsBody(LocalModelStorageFacts(loading = false), RecordingActions()) }
-        }
-        onNodeWithText("Open This phone").assertDoesNotExist()
-    }
-
-    @Test
-    fun `ST1 with an assistant model stored the page keeps its Delete and still leads to This phone`() {
+    fun `ST1 with an assistant model stored the page adds its row and Delete beside the app's storage`() {
         val actions = RecordingActions()
         runComposeUiTest {
             setContent {
                 SettingsThemed {
                     LocalModelsBody(
-                        LocalModelStorageFacts(loading = false, present = true, size = "1.2 GB", phoneStorage = true),
+                        LocalModelStorageFacts(loading = false, present = true, size = "1.2 GB"),
                         actions,
                     )
                 }
             }
             onNodeWithText("1.2 GB").assertExists()
-            onNodeWithText("Open This phone").performClick()
+            onNodeWithText("Delete model").assertExists()
+            onNodeWithText("Clear this app's storage").assertExists()
         }
-        assertTrue("outside:ThisPhone" in actions.calls)
     }
 }

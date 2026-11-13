@@ -100,7 +100,7 @@ class SettingsReachTest {
     }
 
     @Test
-    fun `ST1 the Storage row opens the page that holds the assistant model's Delete, with or without the phone's Linux`() {
+    fun `ST1 the Storage row opens the Storage page, with or without the phone's Linux`() {
         for (linux in listOf(true, false)) {
             val facts = phoneFacts().let { it.copy(localModelStorage = true, platform = it.platform.copy(builtinLinux = linux), opens = null) }
             val row = SettingsStructure.rows(SettingsGroupId.ThisApp, facts, reasoning = false, timestamps = false)

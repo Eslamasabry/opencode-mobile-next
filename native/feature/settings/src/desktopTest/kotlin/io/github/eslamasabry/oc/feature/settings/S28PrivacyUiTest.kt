@@ -30,7 +30,10 @@ class S28PrivacyUiTest {
                     SettingsScreen(SettingsUi(stack = persistentListOf(SettingsPage.Privacy), privacy = privacy), actions)
                 }
             }
-            onNodeWithText("Offer crash reports").performScrollTo().assertExists()
+            // Two different choices, each named for what it does; neither title repeats the other.
+            onNodeWithText("Ask me after a crash").performScrollTo().assertExists()
+            onNodeWithText("Send crash data automatically").performScrollTo().assertExists()
+            onNodeWithText("Offer crash reports").assertDoesNotExist()
             onNodeWithTag("privacy-send-usage").performScrollTo().onChild().assertIsOff()
             onNodeWithTag("privacy-crash-reports").performScrollTo().onChild().assertIsOff()
             onNodeWithText("Usage and app health").performClick()

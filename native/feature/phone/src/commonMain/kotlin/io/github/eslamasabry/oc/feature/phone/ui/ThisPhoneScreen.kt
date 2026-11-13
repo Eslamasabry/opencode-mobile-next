@@ -29,6 +29,7 @@ import io.github.eslamasabry.oc.engine.runtime.storage.HostStorageAvailability
 import io.github.eslamasabry.oc.engine.runtime.storage.StoragePressure
 import io.github.eslamasabry.oc.feature.phone.presentation.PhoneAct
 import io.github.eslamasabry.oc.feature.phone.presentation.PhoneExitKind
+import io.github.eslamasabry.oc.feature.phone.presentation.PhoneOp
 import io.github.eslamasabry.oc.feature.phone.presentation.ServerRow
 import io.github.eslamasabry.oc.feature.phone.presentation.ThisPhoneActions
 import io.github.eslamasabry.oc.feature.phone.presentation.ThisPhoneConfirm
@@ -105,7 +106,9 @@ import io.github.eslamasabry.oc.ui.words.res.termuxStorageBytesMb
 import io.github.eslamasabry.oc.ui.words.res.thisPhoneBusy
 import io.github.eslamasabry.oc.ui.words.res.thisPhoneExportProjects
 import io.github.eslamasabry.oc.ui.words.res.thisPhoneRestartBusy
+import io.github.eslamasabry.oc.ui.words.res.thisPhoneRestartBody
 import io.github.eslamasabry.oc.ui.words.res.thisPhoneRestartRow
+import io.github.eslamasabry.oc.ui.words.res.thisPhoneRestartingRow
 import io.github.eslamasabry.oc.ui.words.res.thisPhoneRestartTitle
 import io.github.eslamasabry.oc.ui.words.res.thisPhoneStop
 import io.github.eslamasabry.oc.ui.words.res.thisPhoneUpToDate
@@ -278,6 +281,11 @@ public fun ThisPhoneScreen(
                                 KitRow(
                                     title = stringResource(Res.string.thisPhoneRestartRow),
                                     leading = KitRowLeading.Glyph(KitIcons.restart),
+                                    // Visible progress from the confirm until the server answers again.
+                                    supporting =
+                                        if (state.working == PhoneOp.Restart)
+                                            stringResource(Res.string.thisPhoneRestartingRow)
+                                        else null,
                                     enabled = !busy,
                                     disabledReason = busyWords,
                                     onClick = actions::askRestart,
@@ -575,7 +583,7 @@ private fun PhoneConfirmation(
                             body =
                                 if (asked.replyRunning)
                                     stringResource(Res.string.thisPhoneRestartBusy)
-                                else null,
+                                else stringResource(Res.string.thisPhoneRestartBody),
                         )
                     is ThisPhoneConfirm.Update ->
                         KitConfirmSpec(

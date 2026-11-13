@@ -89,6 +89,7 @@
     <string name="e7SettingsUi28">Allow unrestricted battery access</string>
     <string name="e7SettingsUi29">Android may still apply its foreground-service time limit.</string>
     <string name="e7SettingsUi30">Optional. Helps preserve the live connection during Doze. Android 15+ limits data-sync background work to six hours per 24 hours.</string>
+    <string name="backgroundStatusTitle">Background connection</string>
     <string name="e7SettingsUi31">Stopped by Android — tap to restart</string>
     <string name="e7SettingsUi32">Running now</string>
     <string name="e7SettingsUi34">Android stops this after 6 hours a day. The app will tell you when it does.</string>

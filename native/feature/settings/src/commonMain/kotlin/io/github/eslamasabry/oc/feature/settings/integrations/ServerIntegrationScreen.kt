@@ -10,6 +10,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.tokens.Space
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.*
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
@@ -45,7 +46,13 @@ public fun ServerIntegrationScreen(state: ServerIntegrationUi, actions: ServerIn
                 exitLabel = stringResource(Res.string.s40iBack),
                 onExit = actions::close,
                 actions =
-                    listOf(KitLineAction(stringResource(Res.string.s40iRefresh), actions::refresh)),
+                    listOf(
+                        KitLineAction(
+                            stringResource(Res.string.s40iRefresh),
+                            actions::refresh,
+                            icon = KitIcons.sync,
+                        )
+                    ),
             )
         },
         loading = state.loading,
@@ -322,9 +329,14 @@ private fun IntegrationRow(item: ServerIntegrationItem, actions: ServerIntegrati
             if (
                 item.kind == ServerIntegrationKind.CallableTool ||
                     item.kind == ServerIntegrationKind.Suggestion ||
-                    item.kind == ServerIntegrationKind.Source
+                    item.kind == ServerIntegrationKind.Source ||
+                    item.kind == ServerIntegrationKind.Command ||
+                    item.kind == ServerIntegrationKind.Skill ||
+                    item.kind == ServerIntegrationKind.Reference
             )
-                item.description
+                item.description?.takeIf { it.isNotBlank() }
+            // A state the server did not report is not words to show.
+            else if (item.status == ServerIntegrationState.Unknown) null
             else integrationState(item.status),
         supportingMaxLines = 2,
         trailing = KitRowTrailing.Chevron,
@@ -386,7 +398,7 @@ private fun AddMcpSheet(state: ServerIntegrationUi, actions: ServerIntegrationAc
 private fun integrationTitle(page: ServerIntegrationPage): String =
     stringResource(
         when (page) {
-            ServerIntegrationPage.Providers -> Res.string.s40iProviders
+            ServerIntegrationPage.Providers -> Res.string.settingsHubProvidersRow
             ServerIntegrationPage.Tools -> Res.string.s40iTools
             ServerIntegrationPage.Commands -> Res.string.s40iCommands
             ServerIntegrationPage.Skills -> Res.string.s40iSkills

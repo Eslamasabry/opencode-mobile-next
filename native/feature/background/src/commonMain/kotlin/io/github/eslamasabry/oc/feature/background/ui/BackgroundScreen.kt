@@ -40,6 +40,7 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.appExitAtTime
 import io.github.eslamasabry.oc.ui.words.res.appExitOnDay
+import io.github.eslamasabry.oc.ui.words.res.backgroundStatusTitle
 import io.github.eslamasabry.oc.ui.words.res.backgroundPauseAppUpdated
 import io.github.eslamasabry.oc.ui.words.res.backgroundPauseDeviceRestarted
 import io.github.eslamasabry.oc.ui.words.res.backgroundPauseInterrupted
@@ -193,7 +194,13 @@ public fun BackgroundScreen(
                     }
                     val restart = stringResource(Res.string.notifyRestartBackground)
                     KitRow(
-                        title = stringResource(statusTitle(state.status)),
+                        // The row names its subject; the state is its value ("Off" alone named nothing).
+                        title =
+                            stringResource(
+                                if (state.status == LiveStatusLine.StoppedByAndroid)
+                                    statusTitle(state.status)
+                                else Res.string.backgroundStatusTitle
+                            ),
                         leading =
                             KitRowLeading.Glyph(
                                 when (state.status) {
@@ -209,6 +216,11 @@ public fun BackgroundScreen(
                         trailing =
                             if (state.restart)
                                 KitRowTrailing.Action(KitLineAction(restart, actions::onRestart))
+                            else if (state.status != LiveStatusLine.StoppedByAndroid)
+                                KitRowTrailing.Value(
+                                    stringResource(statusTitle(state.status)),
+                                    chevron = false,
+                                )
                             else KitRowTrailing.None,
                         onClick = if (state.restart) actions::onRestart else null,
                     )

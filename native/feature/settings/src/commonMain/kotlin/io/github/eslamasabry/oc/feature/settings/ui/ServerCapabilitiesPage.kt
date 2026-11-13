@@ -79,15 +79,9 @@ private fun CapabilityRow(feature: ServerFeatureUi) {
     val words = featureWords(feature.id)
     KitRow(
         title = words.first,
-        supportingMaxLines = 8,
-        supporting =
-            words.second +
-                "\n" +
-                stringResource(
-                    if (feature.available) Res.string.capabilityStateHere
-                    else if (feature.device) Res.string.capabilityStateNotDevice
-                    else Res.string.capabilityStateNotServer
-                ),
+        // The heading above says whether it works here; the row says only what it is.
+        supporting = words.second,
+        supportingMaxLines = 3,
     )
 }
 
