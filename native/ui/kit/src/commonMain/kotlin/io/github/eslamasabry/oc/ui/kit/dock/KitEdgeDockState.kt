@@ -205,7 +205,14 @@ public class KitEdgeDockState internal constructor() {
     internal val tucked: Boolean get() = out.value < DockDims.REST_W * 0.5f
 
     /** True while anything is open over the content (a tap outside closes it). */
-    internal val anythingOpen: Boolean get() = swell != null || panelOpen || renaming != null
+    internal val anythingOpen: Boolean get() = swell != null || panelOpen || renaming != null || stripOpen
+
+    /**
+     * The person brought the strip out from the nub (a tap or a pull on it): it is an open thing like a sheet, so Back,
+     * a tap outside and a tap on its handle put it away again ([tuckByPerson]). A dock that is merely out by default
+     * (nobody opened it) is not, so it never takes Back or a page's touches.
+     */
+    internal var stripOpen by mutableStateOf(false)
 
     /** The swell is on its way in ([closeSwell] ran): it takes no touches and no longer widens the touch area. */
     internal var swellClosing by mutableStateOf(false)
@@ -218,7 +225,7 @@ public class KitEdgeDockState internal constructor() {
      * a rename, a card or swell the person opened. Not a closing swell (after Remove, Open or any target the area is the
      * dock's own again at once) and not an alert's look-only swell (device QA 2026-11-11 sweep B; dock study, finding 2).
      */
-    internal val takesWholeArea: Boolean get() = (swell != null && !swellClosing && !swellLookOnly) || panelOpen || renaming != null
+    internal val takesWholeArea: Boolean get() = (swell != null && !swellClosing && !swellLookOnly) || panelOpen || renaming != null || stripOpen
 
     /** The strip's column top now (follows the placement, or the finger while the dock is moved). */
     internal val columnTop: Float get() = top.value
@@ -650,6 +657,7 @@ public class KitEdgeDockState internal constructor() {
         swellJob?.cancel()
         panelJob?.cancel()
         gesture.cancel()
+        stripOpen = false
         swell = null
         swellRing = -1
         swellClosing = false
@@ -707,8 +715,10 @@ public class KitEdgeDockState internal constructor() {
                 }
                 settlePull(o.velocity)
             }
+            DockOutcome.Tuck -> tuckByPerson()
             DockOutcome.Untuck -> {
                 moving = false
+                stripOpen = true
                 launch { out.animateTo(DockDims.REST_W, DockSprings.drop(reduced)) }
                 intents.onTuckChange(false)
             }
@@ -784,6 +794,22 @@ public class KitEdgeDockState internal constructor() {
         closeSwell()
     }
 
+    /** Puts the strip away to its nub, closing what it had open (Back, a tap outside once nothing else is open, its handle). */
+    internal fun tuckByPerson() {
+        stripOpen = false
+        closeSwell()
+        if (panelOpen) closePanel()
+        launch { out.animateTo(DockDims.NUB_W, DockSprings.close(reduced)) }
+        intents.onTuckChange(true)
+    }
+
+    /** A touch outside everything open: it closes one open thing (the swell, the list), else puts the strip away. */
+    internal fun dismissOutside() {
+        if ((swell != null && !swellClosing) || panelOpen) onOutcome(DockOutcome.Close)
+        else if (stripOpen) tuckByPerson()
+        else onOutcome(DockOutcome.Close)
+    }
+
     internal fun openPanel() {
         panelShown = true
         panelOpen = true
@@ -835,6 +861,7 @@ public class KitEdgeDockState internal constructor() {
                 launch { out.animateTo(DockDims.REST_W, DockSprings.drop(reduced)) }
             }
             PullSettle.Tuck -> {
+                stripOpen = false
                 closePanel()
                 launch { out.animateTo(DockDims.NUB_W, DockSprings.close(reduced)) }
                 intents.onTuckChange(true)

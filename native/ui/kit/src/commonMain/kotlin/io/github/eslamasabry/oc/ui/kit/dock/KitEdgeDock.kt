@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.State
@@ -228,6 +229,7 @@ public fun KitEdgeDock(
             val to = if (model.tucked) DockDims.NUB_W else DockDims.REST_W
             if (state.out.value == to) return@LaunchedEffect
             if (model.tucked) {
+                state.stripOpen = false
                 state.closeSwell()
                 if (state.panelOpen) state.closePanel()
             }
@@ -275,9 +277,12 @@ public fun KitEdgeDock(
             when {
                 state.renaming != null -> state.endRename(save = false, text = "")
                 state.panelOpen -> state.closePanel()
-                else -> state.closeSwell()
+                state.swell != null && !state.swellClosing -> state.closeSwell()
+                else -> state.tuckByPerson()
             }
         }
+        // An open strip never outlives its page: leaving the page puts it away, so the next page does not show it open.
+        DisposableEffect(state) { onDispose { if (state.stripOpen) state.tuckByPerson() } }
     }
 }
 
@@ -764,7 +769,7 @@ private fun DockHitNode(state: KitEdgeDockState) {
                         if (state.anythingOpen) {
                             down.consume()
                             if (state.renaming != null) state.endRename(save = true, text = state.renameText)
-                            state.onOutcome(DockOutcome.Close)
+                            state.dismissOutside()
                         }
                         return@awaitEachGesture
                     }
