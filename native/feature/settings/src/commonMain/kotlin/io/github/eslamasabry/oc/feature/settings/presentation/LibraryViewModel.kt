@@ -625,9 +625,6 @@ public fun librarySkillProse(content: String, name: String): String {
     return text.trimStart()
 }
 
-/**
- * The tab a route names. With none named the page opens on its first tab, MCP servers, as Flutter's
- * Tools page does (lib/ui/screens/capabilities_screen.dart:117-124, the first section).
- */
+/** The tab a route names. With none named the page opens on its first tab, Commands, the page's name. */
 internal fun libraryInitialTab(name: String?): LibraryTab =
-    LibraryTab.entries.firstOrNull { it.name.equals(name, ignoreCase = true) } ?: LibraryTab.Mcp
+    LibraryTab.entries.firstOrNull { it.name.equals(name, ignoreCase = true) } ?: LibraryTab.Commands
