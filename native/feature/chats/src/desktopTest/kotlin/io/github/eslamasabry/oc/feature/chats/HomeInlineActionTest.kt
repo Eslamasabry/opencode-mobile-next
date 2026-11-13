@@ -46,7 +46,7 @@ class HomeInlineActionTest {
                     listOf(Session(SessionId("old"), directory = "/work/api", time = SessionTime(idleMs = 10))),
                     true, false, { true }, { false }, { null }, scope = BRIEF_SCOPE,
                 )
-            val ui = ChatsState.build(ChatFeedSnapshot(listOf(item("a", at = 12_000)).toImmutableList()), brief, ChatsFilters(), 10_000, true)
+            val ui = ChatsState.build(ChatFeedSnapshot(listOf(item("old", at = 12_000)).toImmutableList()), brief, ChatsFilters(), 10_000, true)
             setContent {
                 CompositionLocalProvider(LocalDensity provides Density(1f)) {
                     ChatEnvironment {

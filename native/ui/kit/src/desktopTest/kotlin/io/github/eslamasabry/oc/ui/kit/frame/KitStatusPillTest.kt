@@ -139,7 +139,7 @@ class KitStatusPillTest {
     fun a_word_that_does_not_fit_beside_the_name_is_left_out_never_the_name_cut() = runComposeUiTest {
         setContent {
             Themed(rtl = false, fontScale = 1f) {
-                Box(Modifier.widthIn(max = 150.dp)) {
+                Box(Modifier.widthIn(max = 110.dp)) {
                     KitStatusPill("This phone", KitConnectionTone.Problem, "x", {}, word = "Not answering")
                 }
             }
