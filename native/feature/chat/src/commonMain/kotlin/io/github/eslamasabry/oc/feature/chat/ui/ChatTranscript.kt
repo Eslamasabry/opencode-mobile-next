@@ -277,6 +277,19 @@ internal val LocalLimitSwitchReply =
     androidx.compose.runtime.compositionLocalOf<LimitSwitchReply?> { null }
 
 /**
+ * Set up at first use, the reply seam: the failed replies (by turn id) whose agent needs setting up, and what Set up
+ * opens. The chat screen provides it; without it every failed reply keeps today's words.
+ */
+@Immutable
+internal class AgentSetUpReply(
+    val needs: Map<String, io.github.eslamasabry.oc.feature.chat.world.AgentSetUpNeed>,
+    val onSetUp: (agentId: String) -> Unit,
+)
+
+internal val LocalAgentSetUpReply =
+    androidx.compose.runtime.compositionLocalOf<AgentSetUpReply?> { null }
+
+/**
  * B2: a short, safe code for a send failure (no server text, no address): what QA asked to see
  * under Details.
  */
@@ -1054,12 +1067,17 @@ private fun ChatRow(
                         // B-169 §2: a lasting limit reads plainly ("{Model} is used up for now").
                         val limits = LocalLimitSwitchReply.current
                         val limit = reply?.let { limits?.limitSwitch?.get(row.turnId) }
+                        // Set up at first use: the agent was never set up (omp's first answer); one line, one action.
+                        val setUpReply = LocalAgentSetUpReply.current
+                        val setUp = setUpReply?.needs?.get(row.turnId)
                         // B-AGENT-189: a lapsed sign-in names the agent and says "sign in again".
                         val signInAgain =
-                            if (limit == null && AgentErrorText.signInExpired(reason))
+                            if (setUp == null && limit == null && AgentErrorText.signInExpired(reason))
                                 row.providerId?.let { reply?.signInAgainWords?.invoke(it) }
                             else null
-                        if (limit != null && limits != null) KitQuietLine(limits.words.usedUp(limit.modelName))
+                        if (setUp != null)
+                            KitQuietLine(listWords.setUpNeeded(setUp.name), modifier = Modifier.testTag("chat-reply-set-up"))
+                        else if (limit != null && limits != null) KitQuietLine(limits.words.usedUp(limit.modelName))
                         else if (signInAgain != null)
                             KitQuietLine(signInAgain, modifier = Modifier.testTag("chat-sign-in-again"))
                         else if (typed != null) KitQuietLine(typed)
@@ -1073,6 +1091,13 @@ private fun ChatRow(
                             ?.takeIf { it.turnId == row.turnId }
                             ?.let { KitQuietLine(limits.words.attachAgain(it.file)) }
                         KitTranscriptActions {
+                            if (setUp != null && setUpReply != null)
+                                KitButton(
+                                    listWords.setUpAction(setUp.name),
+                                    { setUpReply.onSetUp(setUp.agentId) },
+                                    role = KitButtonRole.Primary,
+                                    modifier = Modifier.testTag("error-action-set-up"),
+                                )
                             val signInAgainLabel = reply?.signInAgainLabel
                             val signInAgainAgent = row.providerId
                             if (signInAgain != null && signInAgainLabel != null && signInAgainAgent != null) {
@@ -1085,7 +1110,8 @@ private fun ChatRow(
                                 )
                             }
                             if (
-                                AgentErrorText.classify(reason)?.offersSignIn == true &&
+                                setUp == null &&
+                                    AgentErrorText.classify(reason)?.offersSignIn == true &&
                                     reply?.signInSettingsLabel != null
                             ) {
                                 KitButton(
@@ -1096,7 +1122,7 @@ private fun ChatRow(
                             }
                             // Flutter error card: a sign-in, no-credit, wrong-model or full-context
                             // failure always offers the way on (never a dead end).
-                            if (reply != null) {
+                            if (reply != null && setUp == null) {
                                 val suggestion =
                                     if (
                                         row.errorKind == MessageErrorKind.ModelNotFound ||
@@ -1205,7 +1231,8 @@ private fun ChatRow(
                             // turn picks up there).
                             val continueLabel = reply?.continueLabel
                             if (
-                                kind == ReplyFailureKind.ConnectionLost &&
+                                setUp == null &&
+                                    kind == ReplyFailureKind.ConnectionLost &&
                                     !continueLabel.isNullOrBlank()
                             )
                                 KitButton(
@@ -1213,7 +1240,7 @@ private fun ChatRow(
                                     onClick = { reply.onContinue(continueLabel) },
                                     role = KitButtonRole.Secondary,
                                 )
-                            if (reason.isNotBlank())
+                            if (reason.isNotBlank() && setUp == null)
                                 KitDetailsFold(
                                     label = listWords.details,
                                     copyLabel = listWords.copyDetails,
