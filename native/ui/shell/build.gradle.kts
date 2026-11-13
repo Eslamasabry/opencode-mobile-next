@@ -23,6 +23,8 @@ kotlin.sourceSets.getByName("desktopTest").dependencies {
 tasks.withType<Test>().matching { it.name == "desktopTest" }.configureEach {
     outputs.upToDateWhen { false }
     outputs.cacheIf { false }
+    // A failing navigation test names its broken assertion in the CI log (the report is not uploaded).
+    testLogging { exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL }
 }
 
 // P2: Robolectric host test of the Android animator-scale source (ADR §7.2: Android-only behaviour).

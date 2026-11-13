@@ -61,4 +61,22 @@ public interface AppNavigator {
     public fun backToChat(ref: ConversationRef) {
         openChat(ref)
     }
+
+    /**
+     * The edge light's switch (plan v3.1 §3): go to [target] so that one Back returns to the conversation the person
+     * left, exactly as they left it (its open Files, Changes or Git page included), and one more Back goes where that
+     * one went before. Only one step is kept: A → B → C, then Back goes C → B → the page under B. Switching back to
+     * the kept conversation swaps the two. [request], when given, also asks [target]'s page to show that request card
+     * ([requestFocus]). Only the edge light calls this; every other way in keeps [openChat].
+     */
+    public fun switchTo(target: ConversationRef, request: String? = null) {
+        openChat(target)
+    }
+
+    /** The waiting "show this request" (§4), or null. A page that subscribes after the emit still receives it. */
+    public val requestFocus: StateFlow<RequestFocus?>
+        get() = NoRequestFocus
+
+    /** The page showed the request [seq] of [requestFocus]; it is not offered again. */
+    public fun consumeRequestFocus(seq: Long): Unit = Unit
 }
