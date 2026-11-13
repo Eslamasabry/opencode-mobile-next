@@ -1,8 +1,0 @@
-{
-  "error": {
-    "code": "conflict",
-    "message": "An item with this title already exists.",
-    "hint": "Refresh state or check the requested capability.",
-    "request_id": "op_00000000000000000000000004"
-  }
-}

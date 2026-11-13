@@ -1,8 +1,0 @@
-{
-  "error": {
-    "code": "not_enabled",
-    "message": "This capability is not enabled.",
-    "hint": "Use an enabled capability.",
-    "request_id": "op_00000000000000000000000001"
-  }
-}

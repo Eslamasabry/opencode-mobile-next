@@ -1,5 +1,0 @@
-{
-  "gate": "G10",
-  "note": "Sheets whose multiline field keeps no draft, per file, when the G10 manifest was made (2026-09-27). Counts only go down (KIT-5); fix the site and lower or remove its entry.",
-  "sheets": {}
-}

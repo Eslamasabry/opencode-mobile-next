@@ -1,8 +1,0 @@
-{
-  "progress.componentId": "ignored: which internal piece is downloading; the bar covers the whole agent",
-  "progress.downloadedBytes": "shown",
-  "progress.failure": "shown",
-  "progress.fraction": "ignored: the bar follows the bytes downloaded; a step fraction alone would jump between pieces",
-  "progress.phase": "shown",
-  "progress.totalBytes": "shown"
-}

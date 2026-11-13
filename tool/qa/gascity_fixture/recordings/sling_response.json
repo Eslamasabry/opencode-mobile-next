@@ -1,7 +1,0 @@
-{
- "status": "slung",
- "target": "ocproof/gastown.polecat",
- "bead": "oc-loy",
- "mode": "direct",
- "dashboard_url": "http://127.0.0.1:8372/city/bright-lights/runs"
-}

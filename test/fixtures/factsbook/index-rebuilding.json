@@ -1,8 +1,0 @@
-{
-  "error": {
-    "code": "index_rebuilding",
-    "message": "The request was rejected.",
-    "hint": "Refresh state or check the requested capability.",
-    "request_id": "op_00000000000000000000000003"
-  }
-}

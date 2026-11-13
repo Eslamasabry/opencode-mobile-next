@@ -1,7 +1,0 @@
-{
- "type": "urn:gascity:error:convoy-not-found",
- "title": "Convoy Not Found",
- "status": 404,
- "detail": "bead gc-3 is not a convoy",
- "code": "convoy-not-found"
-}

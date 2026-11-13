@@ -1,7 +1,0 @@
-{
- "type": "urn:gascity:error:invalid-request",
- "title": "Invalid Request",
- "status": 400,
- "detail": "scope_kind and scope_ref are required",
- "code": "invalid-request"
-}

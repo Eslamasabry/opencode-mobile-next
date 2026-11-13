@@ -1,8 +1,0 @@
-{
-  "error": {
-    "code": "busy",
-    "message": "The node is busy. Try again shortly.",
-    "hint": "Refresh state or check the requested capability.",
-    "request_id": "op_00000000000000000000000008"
-  }
-}

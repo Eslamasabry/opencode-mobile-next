@@ -1,8 +1,0 @@
-{
-  "error": {
-    "code": "sensitive_unavailable",
-    "message": "Sensitive storage is not available on this node.",
-    "hint": "Refresh state or check the requested capability.",
-    "request_id": "op_00000000000000000000000004"
-  }
-}

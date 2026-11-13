@@ -1,4 +1,0 @@
-{
-  "_about": "Gate G5 (STANDARDS.md §18) baseline: shot (golden name, theme included) -> check -> labels of the semantics nodes that may still fail it, recorded 2026-09-26. It only shrinks: an entry that now passes fails the shot until it is deleted, and nothing outside kitGalleryG5Ceiling in kit_gallery.dart is accepted. Why each entry is here: docs/qa/gate-G5-2026-09-26/README.md.",
-  "shots": {}
-}

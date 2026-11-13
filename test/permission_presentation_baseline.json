@@ -1,6 +1,0 @@
-{
-  "reason": "COPY-15 unknown-id title: lib/ui/permission_presentation.dart still titles an unknown id 'Use {permission}' (e7PermissionAction7) instead of 'Permission needed' (e7PermissionAction6) with the id behind Details; the owner of permission_presentation.dart lowers these to 0.",
-  "unknownIdNotGeneric": {
-    "en": 4
-  }
-}
