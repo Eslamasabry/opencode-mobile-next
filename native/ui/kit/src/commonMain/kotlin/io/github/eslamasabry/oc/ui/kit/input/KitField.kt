@@ -28,6 +28,7 @@ import androidx.compose.foundation.text.input.maxLength
 import androidx.compose.foundation.text.input.then
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.ProvidableCompositionLocal
 import androidx.compose.runtime.getValue
@@ -107,6 +108,7 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitRoles
 import io.github.eslamasabry.oc.ui.design.style.styleBoundary
 import io.github.eslamasabry.oc.ui.kit.theme.toColor
 import io.github.eslamasabry.oc.ui.kit.foundation.kitFocusRingWidth
+import io.github.eslamasabry.oc.ui.kit.modal.LocalKitSheetTyping
 import io.github.eslamasabry.oc.ui.kit.foundation.kitHairline
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.KitButton
@@ -398,6 +400,12 @@ private fun FieldBox(
     // text-input session start first, including when a hardware keyboard is connected.
     LaunchedEffect(focused, composer) {
         if (composer && focused) keyboardController?.show()
+    }
+    // A sheet body keeps a typing field clear of its fade; only this kit text field tells it (never a clickable row).
+    val typing = LocalKitSheetTyping.current
+    DisposableEffect(typing, focused) {
+        if (focused) typing?.fieldFocused = true
+        onDispose { if (focused) typing?.fieldFocused = false }
     }
     val on = enabled.isEnabled
     val technical =

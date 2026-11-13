@@ -13,7 +13,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.runtime.withFrameNanos
@@ -22,39 +21,39 @@ import androidx.compose.runtime.withFrameNanos
  * A sheet's scrolling body that fades out above pinned actions: a part it is asked to bring into view (a field's
  * caret line) must come to rest above the fade, not inside it. Asks for [fadePx] more room below the part, and
  * remembers the last part asked for, so [rememberSheetBodyIntoView] can ask again when the keyboard resizes the body.
- * At the very end of the body there is no content below the part to scroll past, so the body also grows [fadePx] of
- * room at its end while a field in it has focus (see SheetPanel).
+ * Only while a text field of the kit in the body has focus ([SheetBodyIntoView.fieldFocused]); a clickable row that
+ * takes focus (mouse, keyboard) never changes the layout or scrolls the body.
  */
 @OptIn(ExperimentalFoundationApi::class)
-internal class SheetFieldIntoView(private val fadePx: () -> Float) : BringIntoViewResponder {
+internal class SheetFieldIntoView(private val fadePx: () -> Float, private val typing: () -> Boolean) : BringIntoViewResponder {
     var last: Rect? = null
 
     override fun calculateRectForParent(localRect: Rect): Rect {
-        val extra = fadePx()
+        val extra = if (typing()) fadePx() else 0f
         return if (extra <= 0f) localRect else Rect(localRect.left, localRect.top, localRect.right, localRect.bottom + extra)
     }
 
     override suspend fun bringChildIntoView(localRect: () -> Rect?) {
-        last = localRect() ?: return
+        if (typing()) last = localRect() ?: return
     }
 }
 
 /** Keeps a sheet body's field above the fade: [viewport] goes before the scroll, [content] after it. */
 @OptIn(ExperimentalFoundationApi::class)
 internal class SheetBodyIntoView(fadePx: () -> Float) {
-    internal val responder = SheetFieldIntoView(fadePx)
+    /** True while a text field of the kit inside the body has focus (the field reports it; see [LocalKitSheetTyping]). */
+    internal var fieldFocused by mutableStateOf(false)
+    internal val responder = SheetFieldIntoView(fadePx) { fieldFocused }
     internal val requester = BringIntoViewRequester()
-    internal var focused by mutableStateOf(false)
     internal var height by mutableStateOf(0)
 
     /** Before the scroll: reports the body's height (the keyboard changes it). */
     fun viewport(): Modifier = Modifier.onSizeChanged { height = it.height }
 
-    /** After the scroll: asks for the fade's room below a part brought into view, and tracks focus inside. */
+    /** After the scroll: asks for the fade's room below a part brought into view,  */
     fun content(): Modifier =
         Modifier.bringIntoViewResponder(responder)
             .bringIntoViewRequester(requester)
-            .onFocusChanged { focused = it.hasFocus }
 }
 
 /**
@@ -66,9 +65,9 @@ internal class SheetBodyIntoView(fadePx: () -> Float) {
 internal fun rememberSheetBodyIntoView(fadePx: () -> Float): SheetBodyIntoView {
     val latest by rememberUpdatedState(fadePx)
     val state = remember { SheetBodyIntoView { latest() } }
-    LaunchedEffect(state.height, state.focused) {
+    LaunchedEffect(state.height, state.fieldFocused) {
         val rect = state.responder.last
-        if (state.focused && rect != null) {
+        if (state.fieldFocused && rect != null) {
             // One frame: the scroll has taken the new size first, then this asks again with the fade's room.
             withFrameNanos {}
             state.requester.bringIntoView(rect)
@@ -76,3 +75,6 @@ internal fun rememberSheetBodyIntoView(fadePx: () -> Float): SheetBodyIntoView {
     }
     return state
 }
+
+/** The sheet body's typing hook: the kit's text fields report their focus into it. Null outside a sheet body. */
+internal val LocalKitSheetTyping = androidx.compose.runtime.staticCompositionLocalOf<SheetBodyIntoView?> { null }

@@ -476,8 +476,6 @@ public fun KitViewer(
         active = 0
     }
     val step = { delta: Int -> if (marks.isNotEmpty()) active = ViewerFind.step(active, delta, marks.size) }
-    // The system Back closes Find first; only then does it leave the page.
-    io.github.eslamasabry.oc.ui.kit.modal.KitBackGuard(enabled = findOpen, onBack = closeFind)
     val items = buildList {
         if (findable) add(KitMenuItem(stringResource(Res.string.kitViewerFind), { findOpen = true }, KitIcons.search, KitViewerMenuGroup))
         val copyText = content?.copyText

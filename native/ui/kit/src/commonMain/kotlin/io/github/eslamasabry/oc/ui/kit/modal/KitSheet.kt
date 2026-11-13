@@ -774,6 +774,7 @@ private fun SheetPanel(
                 val pinned = entry.primary != null || entry.secondary != null || entry.tertiary.isNotEmpty()
                 // A field in the body comes to rest above the fade, and again when the keyboard resizes the body.
                 val intoView = rememberSheetBodyIntoView { if (pinned) fadePx else 0f }
+                androidx.compose.runtime.CompositionLocalProvider(LocalKitSheetTyping provides intoView) {
                 Column(
                     Modifier.weight(1f, fill = false)
                         .fillMaxWidth()
@@ -802,9 +803,7 @@ private fun SheetPanel(
                             start = FlutterKitTokens.RAIL.dp,
                             top = Space.S2.dp,
                             end = FlutterKitTokens.RAIL.dp,
-                            bottom = (if (hasActions) Space.S2 else FlutterKitTokens.RAIL).dp +
-                                // The fade's reach of room past the last part while a field has focus: its caret line can scroll clear of the fade.
-                                (if (pinned && intoView.focused) fadeReach else 0.dp),
+                            bottom = (if (hasActions) Space.S2 else FlutterKitTokens.RAIL).dp,
                         )
                     ) {
                         if (entry.framed) {
@@ -818,6 +817,7 @@ private fun SheetPanel(
                             )
                         } else androidx.compose.runtime.CompositionLocalProvider(io.github.eslamasabry.oc.ui.kit.row.LocalKitOnRail provides true) { io.github.eslamasabry.oc.ui.kit.row.KitStackScope { entry.body(this) } }
                     }
+                }
                 }
                 }
                 if (

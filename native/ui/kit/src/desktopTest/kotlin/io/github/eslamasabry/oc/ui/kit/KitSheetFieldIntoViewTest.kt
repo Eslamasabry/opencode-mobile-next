@@ -18,6 +18,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.unit.Density
@@ -37,7 +38,7 @@ import kotlin.test.assertTrue
 class KitSheetFieldIntoViewTest {
     private val fade = 24.dp
 
-    private fun run(pinned: Boolean, keyboardUp: Boolean, check: (field: androidx.compose.ui.unit.DpRect, button: androidx.compose.ui.unit.DpRect?, sheet: androidx.compose.ui.unit.DpRect) -> Unit) =
+    private fun run(pinned: Boolean, keyboardUp: Boolean, middle: Boolean = false, typed: String? = null, check: (field: androidx.compose.ui.unit.DpRect, button: androidx.compose.ui.unit.DpRect?, sheet: androidx.compose.ui.unit.DpRect) -> Unit) =
         runComposeUiTest {
             var keyboard by mutableStateOf(if (keyboardUp) 200.dp else 0.dp)
             val focus = FocusRequester()
@@ -54,7 +55,7 @@ class KitSheetFieldIntoViewTest {
                                     secondary = if (pinned) KitAction("Deny", onClick = {}) else null,
                                 ) {
                                     Column {
-                                        Spacer(Modifier.height(1500.dp))
+                                        Spacer(Modifier.height(if (middle) 400.dp else 1500.dp))
                                         KitField(
                                             remember { TextFieldState() },
                                             "Tell the agent why",
@@ -64,6 +65,7 @@ class KitSheetFieldIntoViewTest {
                                             multilineLines = 1..8,
                                             focusRequester = focus,
                                         )
+                                        if (middle) Spacer(Modifier.height(1500.dp))
                                     }
                                 }
                             }
@@ -73,6 +75,10 @@ class KitSheetFieldIntoViewTest {
             }
             runOnIdle { focus.requestFocus() }
             waitForIdle()
+            if (typed != null) {
+                onNode(androidx.compose.ui.test.hasSetTextAction()).performTextInput(typed)
+                waitForIdle()
+            }
             check(
                 onNodeWithTag("why").getBoundsInRoot(),
                 if (pinned) onNodeWithText("Allow").getBoundsInRoot() else null,
@@ -81,15 +87,22 @@ class KitSheetFieldIntoViewTest {
         }
 
     @Test
-    fun `a focused field at the end of a body with pinned buttons rests a fade's reach above them`() =
+    fun `at the end of the body the focused field is whole, above the pinned buttons`() =
         run(pinned = true, keyboardUp = false) { field, button, _ ->
-            assertTrue(field.bottom <= button!!.top - fade, "field bottom ${field.bottom} must be at least $fade above the buttons ${button.top}")
+            assertTrue(field.bottom <= button!!.top, "field bottom ${field.bottom} is at or above the buttons ${button.top}")
         }
 
     @Test
-    fun `the same with the keyboard up under the sheet`() =
-        run(pinned = true, keyboardUp = true) { field, button, _ ->
-            assertTrue(field.bottom <= button!!.top - fade, "field bottom ${field.bottom} must be at least $fade above the buttons ${button.top}")
+    fun `a focused field in the middle of a tall body rests a fade's reach above the buttons with the keyboard up`() =
+        run(pinned = true, keyboardUp = true, middle = true) { field, button, _ ->
+            assertTrue(field.bottom <= button!!.top - fade, "field bottom ${field.bottom} at least $fade above ${button.top}")
+        }
+
+    @Test
+    fun `typing new lines in a field in the middle keeps it a fade's reach above the buttons`() =
+        run(pinned = true, keyboardUp = true, middle = true, typed = "one\ntwo\nthree\nfour") { field, button, _ ->
+            // The caret's line ends one inner padding (under 16 dp) above the field's own bottom edge.
+            assertTrue(field.bottom - 16.dp <= button!!.top - fade, "field bottom ${field.bottom} less its padding at least $fade above ${button.top}")
         }
 
     @Test
