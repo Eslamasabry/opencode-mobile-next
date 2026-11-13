@@ -92,6 +92,9 @@ import androidx.compose.ui.zIndex
 import io.github.eslamasabry.oc.ui.kit.live.KitLiveBackground
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
 import io.github.eslamasabry.oc.ui.kit.modal.LocalKitSheetHost
+import io.github.eslamasabry.oc.ui.kit.modal.KitToastHost
+import io.github.eslamasabry.oc.ui.kit.modal.KitToastState
+import io.github.eslamasabry.oc.ui.kit.modal.LocalKitToasts
 import io.github.eslamasabry.oc.ui.kit.state.KitLoadingBar
 import io.github.eslamasabry.oc.ui.kit.status.KitStatus
 import io.github.eslamasabry.oc.ui.kit.status.KitStatusContribution
@@ -880,12 +883,34 @@ public fun KitScreen(
         // The page's ground: flat, or the person's live background (Glass panes blur only that picture).
         // One live background for the whole app (smoothness round 2): every page shows the theme root's one picture.
         KitLiveBackground(modifier.fillMaxSize(), shared = true) {
-            ScreenSheetHost(Modifier.fillMaxSize()) {
-                content()
+            ScreenToastHost {
+                ScreenSheetHost(Modifier.fillMaxSize()) {
+                    content()
+                }
             }
         }
     } else {
         Box(modifier) { content() }
+    }
+}
+
+/**
+ * The window's toast slot, part of the page frame: a page with no slot above it (a window other than the app's shell:
+ * the widget panels, Android's Manage space page) provides one and draws its toast over everything it hosts, so no
+ * window can forget it and leave every `show` silent. Under the shell's slot (or an outer page's) it adds nothing.
+ */
+@Composable
+private fun ScreenToastHost(content: @Composable () -> Unit) {
+    if (LocalKitToasts.current != null) {
+        content()
+        return
+    }
+    val toasts = remember { KitToastState() }
+    CompositionLocalProvider(LocalKitToasts provides toasts) {
+        Box(Modifier.fillMaxSize()) {
+            content()
+            KitToastHost(toasts, Modifier.zIndex(4f))
+        }
     }
 }
 
@@ -1016,6 +1041,7 @@ private fun Panes(
         drawPaneRule(hairline, x, rule)
     }
     KitLiveBackground(modifier.fillMaxSize(), shared = true) {
+        ScreenToastHost {
         ScreenSheetHost(Modifier.fillMaxSize()) {
             Row(Modifier.fillMaxSize()) {
                 Box(
@@ -1058,6 +1084,7 @@ private fun Panes(
                     }
                 }
             }
+        }
         }
     }
 }
