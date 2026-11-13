@@ -57,7 +57,7 @@
     <string name="s40iFixTool">在服务器上检查 %1$s</string>
     <string name="s40iAddTools">在服务器上添加工具服务器</string>
     <string name="s40iUnnamed">未命名项目</string>
-    <string name="s40iToolsNotListed">此服务器没有列出可供模型使用的工具。上方可查看它的其他目录页面。</string>
+    <string name="s40iToolsNotListed">此服务器没有说明模型可以使用哪些工具。上方的页面显示了它有什么。</string>
     <string name="s40iCommands">命令</string>
     <string name="s40iSkills">技能</string>
     <string name="s40iReferences">参考资料</string>
@@ -72,4 +72,5 @@
     <string name="s40iRunCommand">运行 /%1$s</string>
     <string name="s40iOpenPageQuestion">打开此页面？</string>
     <string name="s40iOpenPage">打开页面</string>
+    <string name="s40iMcpAddHintRuntime">选择远程 URL 或本地可执行文件。服务器会为此项目添加它，直到服务器重启；它不会安装缺少的软件。</string>
 </resources>

@@ -2,6 +2,6 @@
 <!-- Translated with native/tools/strings/translate; English is the source. -->
 <resources>
     <string name="chatRequestNoLongerNeeded">不再需要</string>
-    <string name="chatRequestNoLongerNeededWhy">运行已停止，因此没有发送任何内容。</string>
     <string name="chatRequestCardLabel">第 %1$s 个请求，共 %2$s 个：%3$s</string>
+    <string name="chatRequestNoLongerNeededEnding">运行即将结束，所以没有发送任何内容。</string>
 </resources>

@@ -715,4 +715,5 @@
     <string name="browserAgentSocketUnavailable">Les connexions Codex et Paseo ne sont pas disponibles dans le navigateur. Elles se connectent avec un en-tête WebSocket que les navigateurs ne peuvent pas envoyer, et aucune connexion par navigateur n’est encore prise en charge. Utilisez l’application pour téléphone ou ordinateur\u00A0; les serveurs OpenCode fonctionnent ici.</string>
     <string name="phoneServerPortBusy">Un autre serveur OpenCode utilise déjà le port %1$s sur ce téléphone.</string>
     <string name="chatRequestAskReadFolder">Lire ce dossier\u00A0?</string>
+    <string name="appUpdateUpdatedTo">Mis à jour vers la version %1$s</string>
 </resources>

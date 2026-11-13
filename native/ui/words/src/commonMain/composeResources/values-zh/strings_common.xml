@@ -694,4 +694,5 @@
     <string name="browserAgentSocketUnavailable">浏览器中无法使用 Codex 和 Paseo 连接。它们通过浏览器无法发送的 WebSocket 请求头登录，而且目前不支持浏览器登录。请使用手机或桌面应用；OpenCode 服务器可在这里使用。</string>
     <string name="phoneServerPortBusy">这部手机上的端口 %1$s 已被另一个 OpenCode 服务器占用。</string>
     <string name="chatRequestAskReadFolder">读取此文件夹？</string>
+    <string name="appUpdateUpdatedTo">已更新到版本 %1$s</string>
 </resources>

@@ -57,7 +57,7 @@
     <string name="s40iFixTool">Kiểm tra %1$s trên máy chủ</string>
     <string name="s40iAddTools">Thêm máy chủ công cụ trên máy chủ</string>
     <string name="s40iUnnamed">Mục chưa đặt tên</string>
-    <string name="s40iToolsNotListed">Máy chủ này không liệt kê các công cụ mà mô hình có thể dùng. Các trang danh mục khác có ở trên.</string>
+    <string name="s40iToolsNotListed">Máy chủ này không cho biết mô hình dùng được công cụ nào. Các trang ở trên cho thấy những gì nó có.</string>
     <string name="s40iCommands">Lệnh</string>
     <string name="s40iSkills">Kỹ năng</string>
     <string name="s40iReferences">Tài liệu tham khảo</string>
@@ -72,4 +72,5 @@
     <string name="s40iRunCommand">Chạy /%1$s</string>
     <string name="s40iOpenPageQuestion">Mở trang này?</string>
     <string name="s40iOpenPage">Mở trang</string>
+    <string name="s40iMcpAddHintRuntime">Chọn URL từ xa hoặc chương trình cục bộ. Máy chủ thêm nó cho dự án này đến khi khởi động lại; nó không cài phần mềm còn thiếu.</string>
 </resources>

@@ -1406,4 +1406,6 @@
     <string name="composerPasteImageFromClipboardSupporting">إرفاق الصورة المنسوخة</string>
     <string name="composerPasteImageEmpty">لا توجد صورة في الحافظة.</string>
     <string name="chatRequestAnswerRequired">أجب عن الأسئلة المطلوبة أولاً.</string>
+    <string name="chatStepDeclinedNote">ملاحظتك: «%1$s»</string>
+    <string name="chatStepMalformedCall">طلب الوكيل هذا بطريقة غير صحيحة، فلم يتم تنفيذ شيء. اطلب منه المحاولة مرة أخرى.</string>
 </resources>

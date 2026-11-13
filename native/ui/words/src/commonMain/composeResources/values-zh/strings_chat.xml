@@ -1141,4 +1141,6 @@
     <string name="composerPasteImageFromClipboardSupporting">附加已复制的图片</string>
     <string name="composerPasteImageEmpty">剪贴板中没有图片。</string>
     <string name="chatRequestAnswerRequired">请先回答必填问题。</string>
+    <string name="chatStepDeclinedNote">你的备注：“%1$s”</string>
+    <string name="chatStepMalformedCall">智能体的请求方式有误，所以什么也没有运行。请让它再试一次。</string>
 </resources>

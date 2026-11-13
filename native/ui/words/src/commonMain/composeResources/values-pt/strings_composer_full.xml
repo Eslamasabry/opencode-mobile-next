@@ -19,4 +19,5 @@
     <string name="composerFullFiles">Arquivos do projeto</string>
     <string name="composerFullAttachmentsLocal">Os anexos são salvos com este rascunho neste aparelho.</string>
     <string name="composerFullSteerHint">Oriente enquanto trabalha…</string>
+    <string name="composerFullWaitingHint">Aguardando sua decisão acima…</string>
 </resources>

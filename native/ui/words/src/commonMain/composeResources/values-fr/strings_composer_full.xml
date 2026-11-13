@@ -19,4 +19,5 @@
     <string name="composerFullFiles">Fichiers du projet</string>
     <string name="composerFullAttachmentsLocal">Les pièces jointes sont enregistrées avec ce brouillon sur cet appareil.</string>
     <string name="composerFullSteerHint">Guidez pendant qu’il travaille…</string>
+    <string name="composerFullWaitingHint">En attente de votre décision ci-dessus…</string>
 </resources>

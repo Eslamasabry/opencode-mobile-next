@@ -321,4 +321,6 @@
     <string name="chatsHomeInterrupted">Terputus</string>
     <string name="chatsNewGettingReady">Menyiapkan…</string>
     <string name="chatsNewGettingReadySlow">Masih membaca proyek dan model server ini…</string>
+    <string name="chatsHomeNotReadTitle">Tidak semua percakapan Anda terbaca</string>
+    <string name="chatsHomeNotReadBody">Server menjawab, tetapi halaman ini tidak bisa membaca daftarnya, jadi tidak bisa bilang tidak ada percakapan. Coba lagi untuk membacanya.</string>
 </resources>

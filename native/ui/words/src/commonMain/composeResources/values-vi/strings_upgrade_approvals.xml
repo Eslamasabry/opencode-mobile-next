@@ -21,7 +21,7 @@
     <string name="approvalAllowedWhat">Đã cho phép: %1$s</string>
     <string name="approvalAlwaysAllowedWhat">Luôn cho phép: %1$s</string>
     <string name="approvalDenied">Đã từ chối</string>
-    <string name="approvalDeniedInstead">Đã từ chối, yêu cầu làm việc này thay thế: %1$s</string>
+    <string name="approvalDeniedInstead">Đã từ chối, yêu cầu làm việc này thay thế: “%1$s”</string>
     <string name="approvalChangeOf">Thay đổi trong %1$s</string>
     <string name="approvalChangeMissing">Tác nhân không cho biết sẽ ghi gì.</string>
     <string name="approvalCopyChange">Sao chép thay đổi</string>

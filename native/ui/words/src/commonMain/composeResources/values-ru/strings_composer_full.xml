@@ -19,4 +19,5 @@
     <string name="composerFullFiles">Файлы проекта</string>
     <string name="composerFullAttachmentsLocal">Вложения сохраняются вместе с этим черновиком на этом устройстве.</string>
     <string name="composerFullSteerHint">Направляйте, пока он работает…</string>
+    <string name="composerFullWaitingHint">Ждём вашего решения выше…</string>
 </resources>

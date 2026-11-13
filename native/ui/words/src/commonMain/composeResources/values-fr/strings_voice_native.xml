@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Translated with native/tools/strings/translate; English is the source. -->
 <resources>
-    <string name="voiceNativeSendNow">Envoyer maintenant</string>
     <string name="voiceNativeDetect">Détecter à partir de la voix</string>
     <string name="voiceNativeSizeMb">%1$d Mo</string>
     <string name="voiceNativePhoneEngine">La saisie vocale utilise la reconnaissance vocale propre à votre téléphone, donc l'audio reste sur ce téléphone. Les téléphones qui n'en ont pas n'affichent pas le micro. Cette version n'utilise pas encore les modèles vocaux ci-dessous.</string>

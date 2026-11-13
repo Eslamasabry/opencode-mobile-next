@@ -19,4 +19,5 @@
     <string name="composerFullFiles">Tệp trong dự án</string>
     <string name="composerFullAttachmentsLocal">Tệp đính kèm được lưu cùng bản nháp này trên thiết bị này.</string>
     <string name="composerFullSteerHint">Chỉnh hướng khi tác nhân đang làm…</string>
+    <string name="composerFullWaitingHint">Đang chờ quyết định của bạn ở trên…</string>
 </resources>

@@ -17,4 +17,5 @@
     <string name="composerFullFiles">ملفات من المشروع</string>
     <string name="composerFullAttachmentsLocal">تُحفظ المرفقات مع هذه المسودة على هذا الجهاز.</string>
     <string name="composerFullSteerHint">وجّهه أثناء عمله…</string>
+    <string name="composerFullWaitingHint">في انتظار قرارك أعلاه…</string>
 </resources>

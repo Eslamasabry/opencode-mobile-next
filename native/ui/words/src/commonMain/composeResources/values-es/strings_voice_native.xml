@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Translated with native/tools/strings/translate; English is the source. -->
 <resources>
-    <string name="voiceNativeSendNow">Enviar ahora</string>
     <string name="voiceNativeDetect">Detectar por la voz</string>
     <string name="voiceNativeSizeMb">%1$d MB</string>
     <string name="voiceNativePhoneEngine">El dictado por voz usa el reconocimiento de voz de tu propio teléfono, así que el audio se queda en este teléfono. Los teléfonos que no lo tienen no muestran el micrófono. Esta versión aún no usa los modelos de voz de abajo.</string>

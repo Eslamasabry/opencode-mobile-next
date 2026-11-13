@@ -749,4 +749,5 @@
     <string name="browserAgentSocketUnavailable">اتصالات Codex وPaseo غير متاحة في المتصفح. تسجّل الدخول برأس WebSocket لا تستطيع المتصفحات إرساله، ولا يوجد حتى الآن تسجيل دخول مدعوم في المتصفح. استخدم تطبيق الهاتف أو سطح المكتب لها؛ أما خوادم OpenCode فتعمل هنا.</string>
     <string name="phoneServerPortBusy">خادم OpenCode آخر يستخدم المنفذ %1$s على هذا الهاتف بالفعل.</string>
     <string name="chatRequestAskReadFolder">قراءة هذا المجلد؟</string>
+    <string name="appUpdateUpdatedTo">تم التحديث إلى الإصدار %1$s</string>
 </resources>

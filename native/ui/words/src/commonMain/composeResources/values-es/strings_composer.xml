@@ -368,8 +368,6 @@
     <string name="kitComposerCantTakeMidReply">%1$s no puede recibir un mensaje mientras responde.</string>
     <string name="vpttLetGoToFinish">Suelta cuando termines</string>
     <string name="vpttLetGoToCancel">Suelta para cancelar</string>
-    <string name="vpttSendingIn">Enviando en %1$s…</string>
-    <string name="vpttDontSend">No enviar</string>
     <string name="vpttLanguageFollowApp">El mismo de la app</string>
     <string name="vpttLanguageFollowAppDetail">Escucha en el idioma de la app cuando puede y, si no, detecta el idioma por tu voz.</string>
     <string name="vpttLanguageDetectDetail">Detecta el idioma por tu voz cada vez.</string>

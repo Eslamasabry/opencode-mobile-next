@@ -57,7 +57,7 @@
     <string name="s40iFixTool">Revisa %1$s en el servidor</string>
     <string name="s40iAddTools">Agrega servidores de herramientas en el servidor</string>
     <string name="s40iUnnamed">Elemento sin nombre</string>
-    <string name="s40iToolsNotListed">Este servidor no enumera las herramientas disponibles para un modelo. Sus otras páginas del catálogo están disponibles arriba.</string>
+    <string name="s40iToolsNotListed">Este servidor no indica qué herramientas puede usar un modelo. Las páginas de arriba muestran lo que tiene.</string>
     <string name="s40iCommands">Comandos</string>
     <string name="s40iSkills">Habilidades</string>
     <string name="s40iReferences">Referencias</string>
@@ -72,4 +72,5 @@
     <string name="s40iRunCommand">Ejecutar /%1$s</string>
     <string name="s40iOpenPageQuestion">¿Abrir esta página?</string>
     <string name="s40iOpenPage">Abrir página</string>
+    <string name="s40iMcpAddHintRuntime">Elige una URL remota o un ejecutable local. El servidor lo agrega a este proyecto hasta que se reinicie; no instala el software que falte.</string>
 </resources>

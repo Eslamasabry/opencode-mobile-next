@@ -1140,4 +1140,6 @@
     <string name="composerPasteImageFromClipboardSupporting">Đính kèm ảnh đã sao chép</string>
     <string name="composerPasteImageEmpty">Bộ nhớ tạm không có ảnh nào.</string>
     <string name="chatRequestAnswerRequired">Hãy trả lời các câu hỏi bắt buộc trước.</string>
+    <string name="chatStepDeclinedNote">Ghi chú của bạn: “%1$s”</string>
+    <string name="chatStepMalformedCall">Tác nhân đã yêu cầu sai cách nên chưa có gì chạy. Hãy bảo nó thử lại.</string>
 </resources>

@@ -1300,4 +1300,6 @@
     <string name="composerPasteImageFromClipboardSupporting">Прикрепить скопированную картинку</string>
     <string name="composerPasteImageEmpty">В буфере обмена нет картинки.</string>
     <string name="chatRequestAnswerRequired">Сначала ответьте на обязательные вопросы.</string>
+    <string name="chatStepDeclinedNote">Ваша заметка: «%1$s»</string>
+    <string name="chatStepMalformedCall">Агент задал это неверно, поэтому ничего не выполнилось. Попросите его повторить.</string>
 </resources>

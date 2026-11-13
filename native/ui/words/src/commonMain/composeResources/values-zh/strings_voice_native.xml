@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Translated with native/tools/strings/translate; English is the source. -->
 <resources>
-    <string name="voiceNativeSendNow">立即发送</string>
     <string name="voiceNativeDetect">根据语音检测</string>
     <string name="voiceNativeSizeMb">%1$d MB</string>
     <string name="voiceNativePhoneEngine">语音输入使用你手机自带的语音识别，所以音频保留在这部手机上。没有语音识别的手机不会显示麦克风。此版本尚未使用下面的语音模型。</string>
