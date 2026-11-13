@@ -48,6 +48,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import kotlin.time.Clock
+import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Instant
 
 private object EnglishWords : ChatTranscriptWords {
@@ -84,7 +85,9 @@ class TranscriptStreamUiTest {
 
     @Test
     fun `P3 a 6,000-word reply streams at the live edge, and jump to latest brings a reader back`() =
-        runComposeUiTest {
+        // The body renders ~5,500 real frames with the wall clock (about 80 s on a loaded build server), so it needs more
+        // than the default one minute; a hang is still caught.
+        runComposeUiTest(testTimeout = 5.minutes) {
             mainClock.autoAdvance = false
             val handle: TranscriptHandle = engine.open(Stream6000.SESSION)
             var state by mutableStateOf(TranscriptState.Empty)

@@ -5,11 +5,10 @@ import io.github.eslamasabry.oc.ui.design.effects.GlassPaneKind
 import io.github.eslamasabry.oc.ui.design.effects.GlassPreset
 import io.github.eslamasabry.oc.ui.design.effects.GlassTuning
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
 
@@ -73,10 +72,8 @@ public class GlassLabPresenter(private val scope: CoroutineScope, private val po
 
     init {
         scope.launch {
-            pending.filterNotNull().collectLatest {
-                delay(SAVE_MS)
-                port.save(textOf(it))
-            }
+            @OptIn(kotlinx.coroutines.FlowPreview::class)
+            pending.filterNotNull().debounce(SAVE_MS).collect { port.save(textOf(it)) }
         }
     }
 
