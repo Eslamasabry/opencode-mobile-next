@@ -8,16 +8,27 @@ import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.binding
 import dev.zacsweers.metrox.viewmodel.ViewModelKey
 import io.github.eslamasabry.oc.core.common.Outcome
+import io.github.eslamasabry.oc.engine.settings.teaching.TeachingKind
+import io.github.eslamasabry.oc.engine.settings.teaching.TeachingPage
 import io.github.eslamasabry.oc.engine.settings.teaching.TeachingRegistry
 import io.github.eslamasabry.oc.engine.settings.teaching.TipController
 import io.github.eslamasabry.oc.engine.settings.teaching.TipDefinition
 import io.github.eslamasabry.oc.engine.settings.teaching.TipId
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
+import io.github.eslamasabry.oc.ui.routes.AppRoute
+import io.github.eslamasabry.oc.ui.routes.SettingsRoute
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+
+/** Where a mini tutorial's "Show me" goes: the page it teaches, where it then runs. */
+internal fun teachingRoute(page: TeachingPage): AppRoute =
+    when (page) {
+        TeachingPage.Appearance -> SettingsRoute.Target("settings-appearance", guide = true)
+        TeachingPage.WhatsNew -> SettingsRoute.WhatsNew
+    }
 
 public data class TeachingUi(
     val ready: Boolean = false,
@@ -68,7 +79,8 @@ public class TeachingViewModel(private val hub: VoiceTeachingHub, private val na
             controller = tips
             mutable.update { it.copy(ready = true) }
             tips.active.collect { active ->
-                val entry = active?.id?.let(TeachingRegistry.defaults::entry)
+                // Only a replay opened from this page is "open" in a row; a tip offered elsewhere is not.
+                val entry = active?.takeIf { it.replay }?.id?.let(TeachingRegistry.defaults::entry)
                 mutable.update {
                     it.copy(replay = entry, step = if (it.replay?.id == entry?.id) it.step else 0)
                 }
@@ -79,7 +91,13 @@ public class TeachingViewModel(private val hub: VoiceTeachingHub, private val na
     override fun back(): Unit = nav.back()
 
     override fun replay(id: TipId) {
-        controller?.replay(id)
+        val entry = TeachingRegistry.defaults.entry(id) ?: return
+        when (entry.kind) {
+            // A tip opens in its own row, in place.
+            TeachingKind.Tip -> controller?.replay(id)
+            // A mini tutorial opens the page it teaches and runs there, never on this page.
+            TeachingKind.Tour -> entry.page?.let { nav.open(teachingRoute(it)) }
+        }
     }
 
     override fun next() {

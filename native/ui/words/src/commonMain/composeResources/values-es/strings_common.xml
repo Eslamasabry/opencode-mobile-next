@@ -665,7 +665,7 @@
     <string name="tourMakeItYoursTitle">Hazla tuya</string>
     <string name="tourMakeItYoursOffer">Hazla tuya: claro u oscuro, colores y estilo, en cuatro pasos</string>
     <string name="tourMakeItYoursColours">Empieza aquí: claro u oscuro, un tema y un color de acento. La vista previa de arriba muestra cada cambio al instante.</string>
-    <string name="tourMakeItYoursStyle">Elige cómo se ven las tarjetas y las barras: Sólido, Suave, Brutal o Papel.</string>
+    <string name="tourMakeItYoursStyle">Elige cómo se ven las tarjetas y las barras: Sólido, Cristal, Suave, Brutal, Papel o Señal.</string>
     <string name="appearanceGroupBackground">Fondo</string>
     <string name="tourMakeItYoursBackground">Elige qué se mueve detrás de tus páginas, o desactívalo.</string>
     <string name="tourMakeItYoursComfort">Agranda el texto, calma el movimiento y elige el brillo mientras se escribe una respuesta.</string>

@@ -676,7 +676,7 @@
     <string name="tourMakeItYoursTitle">Настройте под себя</string>
     <string name="tourMakeItYoursOffer">Настройте под себя: светлая или тёмная тема, цвета и стиль, за четыре шага</string>
     <string name="tourMakeItYoursColours">Начните здесь: светлая или тёмная тема, оформление и акцентный цвет. Предпросмотр выше сразу показывает каждое изменение.</string>
-    <string name="tourMakeItYoursStyle">Выберите, как выглядят карточки и панели: «Плотный», «Мягкий», «Грубый» или «Бумага».</string>
+    <string name="tourMakeItYoursStyle">Выберите, как выглядят карточки и панели: «Сплошной», «Стекло», «Мягкий», «Грубый», «Бумажный» или «Signal».</string>
     <string name="appearanceGroupBackground">Фон</string>
     <string name="tourMakeItYoursBackground">Выберите, что движется за вашими страницами, или отключите это.</string>
     <string name="tourMakeItYoursComfort">Увеличьте текст, приглушите движение и выберите свечение, пока пишется ответ.</string>

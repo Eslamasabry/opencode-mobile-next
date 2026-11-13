@@ -665,7 +665,7 @@
     <string name="tourMakeItYoursTitle">Deixe com a sua cara</string>
     <string name="tourMakeItYoursOffer">Deixe com a sua cara: claro ou escuro, cores e estilo, em quatro etapas</string>
     <string name="tourMakeItYoursColours">Comece aqui: claro ou escuro, um tema e uma cor de destaque. A prévia acima mostra cada mudança na hora.</string>
-    <string name="tourMakeItYoursStyle">Escolha como os cartões e as barras ficam: Sólido, Suave, Brutal ou Papel.</string>
+    <string name="tourMakeItYoursStyle">Escolha como os cartões e as barras ficam: Sólido, Vidro, Suave, Brutal, Papel ou Signal.</string>
     <string name="appearanceGroupBackground">Plano de fundo</string>
     <string name="tourMakeItYoursBackground">Escolha o que se move atrás das suas telas ou desative.</string>
     <string name="tourMakeItYoursComfort">Aumente o texto, acalme o movimento e escolha o brilho enquanto uma resposta é escrita.</string>

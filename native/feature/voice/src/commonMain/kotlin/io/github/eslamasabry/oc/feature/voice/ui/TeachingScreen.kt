@@ -9,6 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.engine.settings.teaching.TeachingKind
+import io.github.eslamasabry.oc.engine.settings.teaching.TipDefinition
 import io.github.eslamasabry.oc.feature.voice.presentation.TeachingActions
 import io.github.eslamasabry.oc.feature.voice.presentation.TeachingUi
 import io.github.eslamasabry.oc.ui.design.tokens.Space
@@ -24,7 +25,7 @@ import io.github.eslamasabry.oc.ui.kit.modal.LocalKitToasts
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
 import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
-import io.github.eslamasabry.oc.ui.kit.row.KitTeachingRow
+import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitSkeletonRows
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
@@ -78,36 +79,6 @@ public fun TeachingScreen(state: TeachingUi, actions: TeachingActions) {
                     role = TypeRole.Secondary,
                 )
             }
-            state.replay
-                ?.takeIf { it.kind == TeachingKind.Tour }
-                ?.let { entry ->
-                    item(key = "replay") {
-                        val last = entry.steps.isEmpty() || state.step >= entry.steps.lastIndex
-                        KitNotice(
-                            message =
-                                teachingWords(
-                                    entry.steps.getOrNull(state.step)?.messageKey
-                                        ?: entry.messageKey
-                                ),
-                            title = teachingWords(entry.titleKey),
-                            actions =
-                                listOf(
-                                    KitLineAction(
-                                        stringResource(
-                                            if (last) Res.string.voiceConversationNativeTourDone
-                                            else Res.string.voiceConversationNativeTourNext
-                                        ),
-                                        actions::next,
-                                    )
-                                ),
-                            dismiss =
-                                KitLineAction(
-                                    stringResource(Res.string.e7VoiceUiNotNow),
-                                    actions::dismiss,
-                                ),
-                        )
-                    }
-                }
             TeachingKind.entries.forEach { kind ->
                 item(key = "group-${kind.name}") {
                     KitRowGroup(
@@ -121,19 +92,7 @@ public fun TeachingScreen(state: TeachingUi, actions: TeachingActions) {
                         state.entries
                             .filter { it.kind == kind }
                             .forEach { entry ->
-                                KitTeachingRow(
-                                    title = teachingWords(entry.titleKey),
-                                    icon =
-                                        if (kind == TeachingKind.Tour) KitIcons.playCircle
-                                        else KitIcons.idea,
-                                    showLabel = stringResource(Res.string.tipsShowMe),
-                                    onShow = { actions.replay(entry.id) },
-                                    message = teachingWords(entry.messageKey),
-                                    replaying =
-                                        kind == TeachingKind.Tip && state.replay?.id == entry.id,
-                                    onDismissed = actions::dismiss,
-                                    modifier = Modifier.testTag("tips-row-${entry.id.raw}"),
-                                )
+                                TeachingRow(entry, kind, state, actions)
                             }
                     }
                 }
@@ -158,6 +117,45 @@ public fun TeachingScreen(state: TeachingUi, actions: TeachingActions) {
             }
         }
     }
+}
+
+/**
+ * One Help row. A tip opens in place: its words appear as the row's supporting lines and the button reads Hide tip
+ * (one row open at a time, the controller holds a single replay). A mini tutorial's Show me opens the page it
+ * teaches; one with no page has no button.
+ */
+@Composable
+private fun TeachingRow(entry: TipDefinition, kind: TeachingKind, state: TeachingUi, actions: TeachingActions) {
+    val open = kind == TeachingKind.Tip && state.replay?.id == entry.id
+    val action =
+        when {
+            kind == TeachingKind.Tour && entry.page == null -> KitRowTrailing.None
+            open ->
+                KitRowTrailing.Action(
+                    KitLineAction(
+                        stringResource(Res.string.nudgeDismiss),
+                        actions::dismiss,
+                        testTag = "tips-hide-${entry.id.raw}",
+                    )
+                )
+            else ->
+                KitRowTrailing.Action(
+                    KitLineAction(
+                        stringResource(Res.string.tipsShowMe),
+                        { actions.replay(entry.id) },
+                        testTag = "tips-show-me-${entry.id.raw}",
+                    )
+                )
+        }
+    KitRow(
+        title = teachingWords(entry.titleKey),
+        supporting = if (open) teachingWords(entry.messageKey) else null,
+        supportingMaxLines = 6,
+        titleMaxLines = 3, // F: lib/ui/screens/settings/tips_screen.dart:74
+        leading = KitRowLeading.Glyph(if (kind == TeachingKind.Tour) KitIcons.playCircle else KitIcons.idea),
+        trailing = action,
+        modifier = Modifier.testTag("tips-row-${entry.id.raw}"),
+    )
 }
 
 @Composable

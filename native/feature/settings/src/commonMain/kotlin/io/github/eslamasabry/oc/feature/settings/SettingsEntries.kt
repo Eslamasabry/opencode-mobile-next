@@ -97,6 +97,7 @@ public class SettingsEntries(private val host: SettingsHost) : EntryInstaller {
             val vm = metroViewModel<SettingsViewModel>()
             LaunchedEffect(vm, target.rowTag) {
                 vm.actions.onAnchor(target.rowTag)
+                if (target.guide) vm.actions.onAppearanceAgain()
             }
             val state by vm.state.collectAsStateWithLifecycle()
             val monitoring = metroViewModel<MonitoringViewModel>()

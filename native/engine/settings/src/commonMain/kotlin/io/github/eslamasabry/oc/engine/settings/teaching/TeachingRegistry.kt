@@ -14,6 +14,15 @@ public enum class TeachingKind {
     Tour,
 }
 
+/**
+ * The page a mini tutorial teaches and runs on. Help › Tips' "Show me" opens it there; a tutorial with no page has
+ * nowhere to run from Help and is listed without "Show me".
+ */
+public enum class TeachingPage {
+    Appearance,
+    WhatsNew,
+}
+
 /** One step of a mini tutorial: what it points at and the copy KEY of its sentence. */
 public data class TourStepDefinition(val anchors: ImmutableList<String>, val messageKey: String)
 
@@ -43,6 +52,8 @@ public data class TipDefinition(
      * steps.
      */
     val runsInOwnSheet: Boolean = false,
+    /** The page a mini tutorial runs on, or null when it only runs inside a live conversation. */
+    val page: TeachingPage? = null,
 )
 
 public object TeachingIds {
@@ -111,7 +122,10 @@ public class TeachingRegistry(tips: Iterable<TipDefinition>) {
                 if (step.anchors.isEmpty()) add("$id: a step has no anchor")
             }
             when (tip.kind) {
-                TeachingKind.Tip -> if (tip.steps.isNotEmpty()) add("$id: a tip has no steps")
+                TeachingKind.Tip -> {
+                    if (tip.steps.isNotEmpty()) add("$id: a tip has no steps")
+                    if (tip.page != null) add("$id: a tip replays in its Help row, it has no page")
+                }
                 TeachingKind.Tour ->
                     if (!tip.runsInOwnSheet && tip.steps.size !in 2..4)
                         add("$id: a tutorial has 2 to 4 steps, not ${tip.steps.size}")
@@ -255,6 +269,7 @@ public class TeachingRegistry(tips: Iterable<TipDefinition>) {
                             "after the first reply: the first visit to Settings › This app › Appearance, " +
                                 "or a screen that offers it (offered once)",
                         maxCount = 1,
+                        page = TeachingPage.Appearance,
                         steps =
                             persistentListOf(
                                 TourStepDefinition(
@@ -287,6 +302,7 @@ public class TeachingRegistry(tips: Iterable<TipDefinition>) {
                                 "replayed from About › What's new",
                         maxCount = 1,
                         runsInOwnSheet = true,
+                        page = TeachingPage.WhatsNew,
                     ),
                 )
             )

@@ -15,7 +15,12 @@ public sealed interface SettingsRoute : AppRoute {
     /**
      * A stable settings row identifier; the settings feature resolves its page and scroll target.
      */
-    @Serializable public data class Target(val rowTag: String) : SettingsRoute
+    @Serializable
+    public data class Target(
+        val rowTag: String,
+        /** Help › Tips "Show me": run the page's guide (Appearance's "Make it yours") as the page opens. */
+        val guide: Boolean = false,
+    ) : SettingsRoute
 
     @Serializable
     public data class ModelDefaults(

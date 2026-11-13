@@ -655,7 +655,7 @@
     <string name="tourMakeItYoursTitle">Make it yours</string>
     <string name="tourMakeItYoursOffer">Make it yours: light or dark, colours and style, in four steps</string>
     <string name="tourMakeItYoursColours">Start here: light or dark, a theme and an accent. The preview above shows every change at once.</string>
-    <string name="tourMakeItYoursStyle">Pick how cards and bars feel: Solid, Soft, Brutal or Paper.</string>
+    <string name="tourMakeItYoursStyle">Pick how cards and bars feel: Solid, Glass, Soft, Brutal, Paper or Signal.</string>
     <string name="appearanceGroupBackground">Background</string>
     <string name="tourMakeItYoursBackground">Pick what moves behind your pages, or turn it off.</string>
     <string name="tourMakeItYoursComfort">Make text bigger, calm the motion and choose the glow while a reply is written.</string>
