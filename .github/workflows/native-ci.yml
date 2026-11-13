@@ -271,7 +271,9 @@ jobs:
           if ! grep -Eq '^(> Task :|BUILD (SUCCESSFUL|FAILED))' "$log" 2>/dev/null; then
             echo "::error::Gradle did not run for this shard (no task and no BUILD line in the log)"; tail -n 20 "$log" 2>/dev/null; exit 1
           fi
-          if [ "${{ steps.gradle.outcome }}" = success ] && ! find . -path '*/build/test-results/*' -name 'TEST-*.xml' -size +0 2>/dev/null | grep -q .; then
+          # -print -quit, not a pipe into grep -q: with pipefail, grep leaving at the first match kills find (SIGPIPE)
+          # and the pipeline reads as "nothing found" on shards with many result files.
+          if [ "${{ steps.gradle.outcome }}" = success ] && [ -z "$(find . -path '*/build/test-results/*' -name 'TEST-*.xml' -size +0 -print -quit 2>/dev/null)" ]; then
             echo "::error::Gradle succeeded but left no test result XML"; exit 1
           fi
       - name: Summarise results
