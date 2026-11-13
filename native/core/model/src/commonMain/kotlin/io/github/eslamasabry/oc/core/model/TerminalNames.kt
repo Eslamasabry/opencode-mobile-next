@@ -13,17 +13,17 @@ public sealed interface TerminalName {
 
 private val appDefaultTitle = Regex("^Terminal( [0-9]+)?$")
 
-private val serverDefaultTitle = Regex("^Terminal [A-Za-z0-9]{3,}$")
-
-/** The person's own name for [this] terminal, or null when it was never renamed. */
+/**
+ * The person's own name for [this] terminal, or null when it was never renamed. Not a name: an empty title, digits
+ * only, the app's old default ("Terminal", "Terminal <digits>"), and the server's default, which is exactly
+ * "Terminal " plus the last four characters of this terminal's own id (OpenCode's pty create stores
+ * `title || "Terminal " + id.slice(-4)`, read from the shipped CLI binaries, 1 and 2). Anything else is kept.
+ */
 public fun TerminalProcess.givenName(): String? {
     val text = title.trim()
     if (text.isEmpty() || text.all { it.isDigit() || it == ' ' }) return null
-    // "Terminal" or "Terminal <digits>" is the app's own old default, never a person's name.
     if (appDefaultTitle.matches(text)) return null
-    // A server default carries a short random id with at least one letter; "Terminal 2" is a person's own.
-    if (serverDefaultTitle.matches(text) && text.drop("Terminal ".length).any { !it.isDigit() })
-        return null
+    if (text == "Terminal " + id.takeLast(4)) return null
     return text
 }
 

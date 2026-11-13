@@ -55,7 +55,7 @@ class TerminalNamesPageTest {
 
     @Test
     fun `B-TERM-NAME-1 one unnamed terminal is called Terminal`() = runComposeUiTest {
-        show(open(listOf(process("a", "Terminal 0Ome")), 0))
+        show(open(listOf(process("pty_a0Ome", "Terminal 0Ome")), 0))
         onNodeWithContentDescription("Actions for Terminal").performClick()
         onNodeWithText("Rename Terminal").assertExists()
         assertEquals(0, onAllNodesWithText("0Ome", substring = true).count())
@@ -63,7 +63,7 @@ class TerminalNamesPageTest {
 
     @Test
     fun `B-TERM-NAME-2 the second terminal is called Terminal 2 in the bar and the menu`() = runComposeUiTest {
-        show(open(listOf(process("a", "Terminal 0Ome"), process("b", "Terminal BYbZ")), 1))
+        show(open(listOf(process("pty_a0Ome", "Terminal 0Ome"), process("pty_bBYbZ", "Terminal BYbZ")), 1))
         assertTrue(onAllNodesWithText("Terminal 2").count() >= 1)
         onNodeWithContentDescription("Actions for Terminal 2").performClick()
         onNodeWithText("Rename Terminal 2").assertExists()
@@ -74,7 +74,7 @@ class TerminalNamesPageTest {
 
     @Test
     fun `B-TERM-NAME-3 a renamed terminal shows its own name in the bar and the Rename label`() = runComposeUiTest {
-        show(open(listOf(process("a", "Terminal 0Ome"), process("b", "Build")), 1))
+        show(open(listOf(process("pty_a0Ome", "Terminal 0Ome"), process("b", "Build")), 1))
         assertTrue(onAllNodesWithText("Build").count() >= 1)
         onNodeWithContentDescription("Actions for Build").performClick()
         onNodeWithText("Rename Build").assertExists()
@@ -82,7 +82,7 @@ class TerminalNamesPageTest {
 
     @Test
     fun `B-TERM-NAME-4 the list names every terminal by the same rule`() = runComposeUiTest {
-        val all = listOf(process("a", "Terminal 0Ome"), process("b", "Build"), process("c", "Terminal BYbZ"))
+        val all = listOf(process("pty_a0Ome", "Terminal 0Ome"), process("b", "Build"), process("pty_cBYbZ", "Terminal BYbZ"))
         show(open(all, 0).copy(selected = null))
         assertTrue(onAllNodesWithText("Terminal").count() >= 1)
         onNodeWithText("Build").assertExists()
