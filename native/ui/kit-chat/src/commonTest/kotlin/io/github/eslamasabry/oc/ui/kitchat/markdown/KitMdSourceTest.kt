@@ -8,6 +8,34 @@ import kotlin.test.assertTrue
 
 /** P12-CHAT-FEEL: a transcript row's source becomes the kit's Markdown model (B-CHAT-059, B-CHAT-064). */
 class KitMdSourceTest {
+    private fun streamedText(text: String): String =
+        KitMdSource.blocks("s", text, streaming = true).joinToString("\n") { (it as KitMdBlock.Prose).inlines.text }
+
+    @Test
+    fun `RC1-MD-001 a reply or thought still streaming keeps marks that are not Markdown pairs`() {
+        // Every growing prefix, as the stream delivers it: the finished line reads exactly as written.
+        for (line in listOf("17*23 = 391", "a_b_c", "2*3*4 is 24")) {
+            assertEquals(line, streamedText(line), "the streamed line keeps every mark")
+            for (end in 1..line.length) {
+                val shown = streamedText(line.substring(0, end))
+                assertTrue(shown.length >= end - 1, "no mark is eaten mid-stream: \"$shown\" for \"${line.substring(0, end)}\"")
+            }
+        }
+        val emphasis = KitMdSource.blocks("s", "a real *emphasis* here", streaming = true).single() as KitMdBlock.Prose
+        assertEquals("a real emphasis here", emphasis.inlines.text, "a real pair is still emphasis")
+        assertTrue(emphasis.inlines.spans.any { it.kind == KitSpanKind.Italic })
+    }
+
+    @Test
+    fun `RC1-MD-002 a line read as words keeps characters and drops only real marks`() {
+        assertEquals("17*23 = 391", KitMdSource.lineWords("17*23 = 391"))
+        assertEquals("a_b_c", KitMdSource.lineWords("a_b_c"))
+        assertEquals("2*3*4", KitMdSource.lineWords("2*3*4"))
+        assertEquals("emphasis", KitMdSource.lineWords("*emphasis*"))
+        assertEquals("Plan", KitMdSource.lineWords("## **Plan**"))
+        assertEquals("The River Called Rive", KitMdSource.lineWords("1. The River Called Rive"))
+    }
+
     @Test
     fun `B-CHAT-064 prose loses its marks and keeps links and path candidates as spans`() {
         val b = KitMdSource.blocks("b:m/p:0", "Read **this** at [docs](https://example.com) or `lib/main.dart:12`", false)
