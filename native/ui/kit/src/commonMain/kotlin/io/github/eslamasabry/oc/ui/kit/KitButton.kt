@@ -174,7 +174,7 @@ public fun KitButton(
     val tertiaryInk = kitTertiaryInk(danger)
     val fill: Color =
         when {
-            role == KitButtonRole.Tertiary -> if (on) tertiaryInk.copy(alpha = TERTIARY_TINT) else Color.Transparent
+            role == KitButtonRole.Tertiary -> if (on) kitTertiaryCapsule(danger) else Color.Transparent
             !on -> if (heroWaits) heroFill else colors.surface3
             role == KitButtonRole.Secondary -> colors.surface3
             destructive -> colors.text1
@@ -359,11 +359,18 @@ internal fun kitTertiaryInk(danger: Boolean = false): Color {
     }
 }
 
-/** The text action's capsule: its ink at this alpha over the ground, a touch shape that stays quieter than any fill. */
+/** A text action's capsule: the accent (danger: the attention colour) at [TERTIARY_TINT], what its ink is read on. */
+@Composable
+internal fun kitTertiaryCapsule(danger: Boolean = false): Color {
+    val colors = LocalKitColors.current
+    return (if (danger) colors.attention else colors.accent).copy(alpha = TERTIARY_TINT)
+}
+
+/** The text action's capsule: the accent at this alpha over the ground, a touch shape that stays quieter than any fill. */
 internal const val TERTIARY_TINT = .12f
 
 /** The text action's words against the ground, the page's surface and its own capsule. */
-private const val TERTIARY_CONTRAST = 4.5
+private const val TERTIARY_CONTRAST = 4.6
 
 /** The app theme's filled button side padding (Dart `filledButtonTheme`). */
 private const val FILLED_SIDE_PAD_DP = 16 // F: lib/ui/app_theme.dart:370

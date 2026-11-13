@@ -23,7 +23,9 @@ internal object ShadowEdges {
         val reach = reachDp * density
         val run = (RUN_DP * density).roundToInt()
         val out = mutableListOf<String>()
-        fun outside(x: Int, y: Int) = x in 0 until image.width && y in 0 until image.height && faces.none { it.inflate(1.5f).contains(androidx.compose.ui.geometry.Offset(x + .5f, y + .5f)) }
+        // A face's own rim (a 1 dp edge stroke centred on its outline, anti-aliased) lies just outside its box.
+        val rim = density + 1.5f
+        fun outside(x: Int, y: Int) = x in 0 until image.width && y in 0 until image.height && faces.none { it.inflate(rim).contains(androidx.compose.ui.geometry.Offset(x + .5f, y + .5f)) }
         fun step(x0: Int, y0: Int, x1: Int, y1: Int): Boolean {
             if (!outside(x0, y0) || !outside(x1, y1)) return false
             val a = image[x0, y0]

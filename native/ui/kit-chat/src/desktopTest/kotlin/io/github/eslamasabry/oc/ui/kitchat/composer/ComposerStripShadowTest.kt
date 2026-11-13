@@ -30,7 +30,9 @@ import io.github.eslamasabry.oc.ui.kit.chip.KitChipKind
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
+import io.github.eslamasabry.oc.ui.design.tokens.Space
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
@@ -56,7 +58,7 @@ class ComposerStripShadowTest {
                         "en",
                         stillFrame = true,
                     ) {
-                        face = LocalKitTokens.current.chipHeight * D
+                        face = (LocalKitTokens.current.chipHeight + if (LocalKitStyle.current.spec.tokens.track) Space.S1 else 0) * D
                         ground = LocalKitColors.current.ground.copy(alpha = 1f)
                         Box(Modifier.fillMaxSize().background(ground).padding(start = 16.dp, top = 80.dp)) {
                             KitComposerStatusStrip(

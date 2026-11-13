@@ -48,7 +48,7 @@ internal fun KitInlineAction(action: KitLineAction, modifier: Modifier = Modifie
     val tagged = action.testTag?.let { modifier.testTag(it) } ?: modifier
     val ink = io.github.eslamasabry.oc.ui.kit.kitTertiaryInk()
     // The capsule is drawn before the target's clip, on the same shape.
-    val capsule = if (action.enabled) Modifier.background(ink.copy(alpha = io.github.eslamasabry.oc.ui.kit.TERTIARY_TINT), KitShapeId.Button.shape()) else Modifier
+    val capsule = if (action.enabled) Modifier.background(io.github.eslamasabry.oc.ui.kit.kitTertiaryCapsule(), KitShapeId.Button.shape()) else Modifier
     KitTappable(
         onClick = action.onClick,
         modifier =
