@@ -115,7 +115,8 @@ class AgentCatalogTest {
         )
         for (entry in catalog.agents) {
             for (arch in AgentArchitecture.entries) {
-                assertTrue(entry.installableOn(arch), entry.id.raw)
+                // A retired agent (Gemini CLI) keeps its pins for an installed copy but is never installable.
+                assertEquals(!entry.retired, entry.installableOn(arch), entry.id.raw)
                 assertTrue(Regex("^[a-f0-9]{64}$").matches(entry.artifactFor(arch)!!.sha256))
             }
             assertEquals(AgentCapabilities.None, entry.capabilities)
