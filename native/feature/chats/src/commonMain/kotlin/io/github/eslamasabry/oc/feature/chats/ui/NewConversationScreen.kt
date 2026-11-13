@@ -20,6 +20,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import kotlinx.coroutines.delay
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
@@ -34,6 +35,7 @@ import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationAction
 import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationModel
 import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationSheet
 import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationStarter
+import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationWait
 import io.github.eslamasabry.oc.feature.chats.presentation.projectPlace
 import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationUi
 import io.github.eslamasabry.oc.feature.chats.presentation.filterNewConversationModels
@@ -113,20 +115,36 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
         if (field.text.toString() != state.text) field.edit { replace(0, length, state.text) }
     }
     val working = stringResource(Res.string.serversWorking)
+    // Getting the page ready is not "the current action": the button says what it waits for, and after a few
+    // seconds the strip and the line under the field name the thing being read.
+    var slow by remember { mutableStateOf(false) }
+    val preparing = state.wait == NewConversationWait.Preparing
+    LaunchedEffect(preparing) {
+        slow = false
+        if (preparing) {
+            delay(PREPARING_SLOW_MS)
+            slow = true
+        }
+    }
+    val gettingReady =
+        stringResource(if (slow) Res.string.chatsNewGettingReadySlow else Res.string.chatsNewGettingReady)
+    val loadingModels = stringResource(Res.string.chat_model_loading)
     val phoneOffWords = stringResource(Res.string.homePhoneOffTitle)
     val enabled =
         if (state.phoneOff) KitEnabled.Disabled(phoneOffWords)
         else if (state.deliveryUnconfirmed)
             KitEnabled.Disabled(stringResource(Res.string.p12NewDeliveryUnconfirmed))
+        else if (preparing) KitEnabled.Disabled(gettingReady)
         else if (state.busy) KitEnabled.Disabled(working) else KitEnabled.Enabled
     val startBlocked =
         when {
             state.phoneOff -> phoneOffWords
+            preparing -> gettingReady
             state.busy -> working
             state.deliveryUnconfirmed -> stringResource(Res.string.p12NewDeliveryUnconfirmed)
             state.creationUnconfirmed -> stringResource(Res.string.p12NewCreationUnconfirmed)
             state.setup == null ->
-                if (state.failure != null) stringResource(Res.string.chatsNewFailed) else working
+                if (state.failure != null) stringResource(Res.string.chatsNewFailed) else gettingReady
             state.directory.isNullOrBlank() -> stringResource(Res.string.chatsNewNeedProject)
             state.folderMissing -> stringResource(Res.string.chatsNewFolderMissing)
             state.phoneNeedsProjectsFolder ->
@@ -134,7 +152,7 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                     Res.string.chatsNewAgentNeedsProjectsFolder,
                     state.phoneAgentChoice?.name.orEmpty(),
                 )
-            state.phoneModelsBusy -> working
+            state.phoneModelsBusy -> loadingModels
             state.text.isBlank() -> stringResource(Res.string.chatsNewBuildPrompt)
             else -> null
         }
@@ -152,7 +170,7 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
             },
             width = KitScreenWidth.Reading,
             loading = state.busy,
-            loadingLabel = working,
+            loadingLabel = if (preparing) gettingReady else working,
             bottom = {
                 Column(
                     Modifier.fillMaxWidth(),
@@ -163,7 +181,7 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                     val promptHint = stringResource(Res.string.chatsNewBuildPrompt)
                     // N-48: an unconfirmed send already has its notice above; the reason is said once.
                     if (
-                        startBlocked != null && startBlocked != promptHint && !state.busy && !state.phoneOff &&
+                        startBlocked != null && startBlocked != promptHint && (!state.busy || preparing) && !state.phoneOff &&
                             !state.deliveryUnconfirmed && !state.creationUnconfirmed &&
                             !state.folderMissing
                     )
@@ -176,7 +194,8 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                                 enabled =
                                     if (startBlocked == null) KitEnabled.Enabled
                                     else KitEnabled.Disabled(startBlocked),
-                                working = state.busy,
+                                // A spinner only once Start was pressed.
+                                working = state.wait == NewConversationWait.Sending,
                             ),
                         modifier = Modifier.fillMaxWidth(),
                         hero = true,
@@ -356,6 +375,9 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
         NewConversationSheet(state, actions)
     }
 }
+
+/** How long getting the page ready may take before it says what it is reading. */
+private const val PREPARING_SLOW_MS = 4_000L
 
 /** Compact upgrade choices stay beside Start while the keyboard is open. */
 @Composable

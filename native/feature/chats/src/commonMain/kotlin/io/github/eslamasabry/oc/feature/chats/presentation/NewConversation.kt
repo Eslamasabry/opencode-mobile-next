@@ -375,6 +375,20 @@ public fun filterNewConversationModels(
     }
 }
 
+/**
+ * What the New conversation page is waiting on, for the Start button's words and spinner. A spinner belongs only to
+ * [Sending] (the person pressed Start); getting the page ready and reading models say what they are, with Start off.
+ */
+public enum class NewConversationWait {
+    None,
+    /** The chosen server's projects, models and agents are being read. */
+    Preparing,
+    /** The agent's models are being read. */
+    Models,
+    /** Start was pressed. */
+    Sending,
+}
+
 public data class NewConversationUi(
     val servers: List<NewConversationServer> = emptyList(),
     val profile: ProfileId? = null,
@@ -458,6 +472,17 @@ public data class NewConversationUi(
      */
     val modelsLoading: Boolean
         get() = phoneAgent != null && phoneModelsBusy
+
+    /** What the page waits on now (see [NewConversationWait]). */
+    val wait: NewConversationWait
+        get() =
+            when {
+                openingChat -> NewConversationWait.Sending
+                busy && setup == null && !repairing -> NewConversationWait.Preparing
+                busy && setup != null && !repairing && text.isNotBlank() -> NewConversationWait.Sending
+                phoneModelsBusy && !busy -> NewConversationWait.Models
+                else -> NewConversationWait.None
+            }
 
     /** The model the Model row shows. */
     val shownModel: ModelRef?
