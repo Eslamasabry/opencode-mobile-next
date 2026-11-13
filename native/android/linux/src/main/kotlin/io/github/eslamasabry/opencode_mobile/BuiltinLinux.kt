@@ -1191,7 +1191,8 @@ class BuiltinLinux(private val context: Context) {
                 "DISABLE_AUTOUPDATER=1",
                 "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1",
             ) + program
-        return prootCommand(command, agentUser = true) to request
+        // Compatibility mode like every agent process (issue #117): the sign-in is the agent's own Node.js program.
+        return prootCommand(command, agentUser = true, compat = serverCompat()) to request
     }
 
     /**
@@ -1329,10 +1330,13 @@ class BuiltinLinux(private val context: Context) {
                 "DISABLE_AUTOUPDATER=1",
                 "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1",
             ) + argv
+        // The agent helper and the agents are Node.js programs too: on a phone where Node only runs with the proot in
+        // compatibility mode (issue #117), they need it as the server does, or the helper "did not start".
+        val compat = serverCompat()
         val builder =
-            ProcessBuilder(prootCommand(command, agentUser = true)).apply {
+            ProcessBuilder(prootCommand(command, agentUser = true, compat = compat)).apply {
                 environment().clear()
-                environment().putAll(prootEnvironment())
+                environment().putAll(prootEnvironment(compat))
                 if (privateOutput) redirectError(File("/dev/null")) else redirectErrorStream(true)
             }
         val process =
@@ -2657,7 +2661,7 @@ class BuiltinLinux(private val context: Context) {
      * Whether the server's proot runs in compatibility mode: the Node install found that Node.js only runs that way
      * on this phone and wrote `proot-compat` under its saved safe mode (NodeCompatState, issue #117).
      */
-    private fun serverCompat(): Boolean = NodeCompatState.prootCompat(rootfs)
+    fun serverCompat(): Boolean = NodeCompatState.prootCompat(rootfs)
 
     // ---- long-running services ---------------------------------------------
 
