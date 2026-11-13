@@ -137,8 +137,11 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
         if (state.phoneOff) KitEnabled.Disabled(phoneOffWords)
         else if (state.deliveryUnconfirmed)
             KitEnabled.Disabled(stringResource(Res.string.p12NewDeliveryUnconfirmed))
-        else if (preparing) KitEnabled.Disabled(gettingReady)
-        else if (state.busy) KitEnabled.Disabled(working) else KitEnabled.Enabled
+        // Getting ready never locks the field: the person can type ahead; only Start waits (RC1 device pass).
+        else if (state.busy && !preparing) KitEnabled.Disabled(working) else KitEnabled.Enabled
+    // A page that could not read its server says that, never "the conversation didn't start" (nothing was sent).
+    val setupFailed = state.setup == null && state.failure != null
+    val failureShown = state.failure != null && !state.deliveryUnconfirmed
     val startBlocked =
         when {
             state.phoneOff -> phoneOffWords
@@ -147,7 +150,7 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
             state.deliveryUnconfirmed -> stringResource(Res.string.p12NewDeliveryUnconfirmed)
             state.creationUnconfirmed -> stringResource(Res.string.p12NewCreationUnconfirmed)
             state.setup == null ->
-                if (state.failure != null) stringResource(Res.string.chatsNewFailed) else gettingReady
+                if (setupFailed) stringResource(Res.string.chatsNewSetupFailed) else gettingReady
             state.directory.isNullOrBlank() -> stringResource(Res.string.chatsNewNeedProject)
             state.folderMissing -> stringResource(Res.string.chatsNewFolderMissing)
             state.phoneNeedsProjectsFolder ->
@@ -182,9 +185,11 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                     if (state.servers.isNotEmpty()) NewConversationChoices(state, actions)
                     // The empty prompt already says it in the field; repeating it is the stray line (N-32).
                     val promptHint = stringResource(Res.string.chatsNewBuildPrompt)
-                    // N-48: an unconfirmed send already has its notice above; the reason is said once.
+                    // N-48: an unconfirmed send already has its notice above; the reason is said once. A failure
+                    // notice on the page is that reason too: never the same sentence twice.
                     if (
                         startBlocked != null && startBlocked != promptHint && (!state.busy || preparing) && !state.phoneOff &&
+                            !failureShown &&
                             !state.deliveryUnconfirmed && !state.creationUnconfirmed &&
                             !state.folderMissing
                     )
@@ -242,7 +247,7 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                         enabled = enabled,
                         minLines = 2,
                         // B-098: not while a sheet is open; coming back from agent setup re-ran this and the keyboard covered the sheet.
-                        autofocus = !state.busy && state.sheet == null,
+                        autofocus = (!state.busy || preparing) && state.sheet == null,
                         onTextChanged = {
                             reported = it
                             actions.draftChanged(it)
@@ -340,13 +345,14 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                         )
                     }
                     // N-48: an unconfirmed send is said once (above); a failed read behind it adds no second notice.
-                    if (state.failure != null && !state.deliveryUnconfirmed) {
+                    if (failureShown) {
                         KitErrorNotice(
                             modifier = inset,
                             message =
                                 stringResource(
                                     if (state.creationUnconfirmed)
                                         Res.string.p12NewCreationUnconfirmed
+                                    else if (setupFailed) Res.string.chatsNewSetupFailed
                                     else if (
                                         state.repairAvailable && state.failure is Failure.ProjectGit
                                     )
@@ -357,23 +363,22 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                             detailsLabel = stringResource(Res.string.kitDetails),
                             copyLabel = stringResource(Res.string.kitCopyDetails),
                         )
-                        if (
-                            !state.creationUnconfirmed &&
-                                !state.deliveryUnconfirmed &&
-                                state.repairAvailable &&
-                                state.failure is Failure.ProjectGit
-                        )
-                            KitButton(
-                                stringResource(Res.string.gitRepairAction),
-                                actions::repair,
-                                role = KitButtonRole.Tertiary,
+                        // The ways forward sit on the page gutter like the notice above them (a bare text button
+                        // touched the screen's left edge).
+                        if (!state.creationUnconfirmed) {
+                            val repair =
+                                KitAction(stringResource(Res.string.gitRepairAction), actions::repair)
+                                    .takeIf { state.repairAvailable && state.failure is Failure.ProjectGit }
+                            KitActionBlock(
+                                inset,
+                                secondary =
+                                    KitAction(
+                                        stringResource(Res.string.commonRetry),
+                                        if (state.setup == null) actions::retryLoad else actions::start,
+                                    ),
+                                tertiary = listOfNotNull(repair),
                             )
-                        if (!state.creationUnconfirmed && !state.deliveryUnconfirmed)
-                            KitButton(
-                                stringResource(Res.string.commonRetry),
-                                if (state.setup == null) actions::retryLoad else actions::start,
-                                role = KitButtonRole.Tertiary,
-                            )
+                        }
                     }
                 }
             }

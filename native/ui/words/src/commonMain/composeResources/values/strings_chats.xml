@@ -298,6 +298,7 @@
     <string name="chatsNewBuildPrompt">What would you like to build?</string>
     <string name="chatsNewGettingReady">Getting ready…</string>
     <string name="chatsNewGettingReadySlow">Still reading this server's projects and models…</string>
+    <string name="chatsNewSetupFailed">This server's projects and models couldn't be read.</string>
     <string name="chatsNewProjectRow">Project</string>
     <string name="chatsNewModelRow">Model</string>
     <string name="chatsNewSeparateCopyDetail">Works on its own copy, so your files stay as they are.</string>
