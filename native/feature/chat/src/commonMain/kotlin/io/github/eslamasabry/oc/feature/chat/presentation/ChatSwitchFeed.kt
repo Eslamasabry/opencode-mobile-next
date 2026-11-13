@@ -20,7 +20,7 @@ import kotlinx.coroutines.launch
  * kept and is composed again both receive it.
  */
 internal class ChatSwitchFeed(
-    private val ref: ConversationRef,
+    private val own: ConversationRef,
     private val nav: AppNavigator,
     private val arrivals: ChatArrivals,
     scope: CoroutineScope,
@@ -45,16 +45,16 @@ internal class ChatSwitchFeed(
     fun backNoteShown(seq: Long) = arrivals.noteShown(seq)
 
     /** This page is gone for good. */
-    fun closed() = arrivals.closed(ref)
+    fun closed() = arrivals.closed(own)
 
     /** The page leaves the screen (a switch, Files, Back): the words typed so far reach their store now. */
     fun flushDraft() {
         flushScope.launch { saveDraft() }
     }
 
-    private fun RequestFocus?.mine(): RequestFocus? = this?.takeIf { it.ref == ref }
+    private fun RequestFocus?.mine(): RequestFocus? = this?.takeIf { it.ref == own }
 
-    private fun ChatArrival?.mine(): ChatArrival? = this?.takeIf { it.target == ref }
+    private fun ChatArrival?.mine(): ChatArrival? = this?.takeIf { it.target == own }
 
     private companion object {
         const val STOP_MS = 5_000L

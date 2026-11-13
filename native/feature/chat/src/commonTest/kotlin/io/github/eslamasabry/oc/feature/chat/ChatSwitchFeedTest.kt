@@ -181,7 +181,7 @@ class ChatSwitchFeedTest {
         val saved = mutableListOf<String>()
         val page = feed(a, SignalNav(), saved = saved)
         page.flushDraft() // the page being left, when the new conversation opens
-        testScheduler.advanceUntilIdle()
+        testScheduler.runCurrent() // background work: advanceUntilIdle would skip it
         assertEquals(listOf("saved"), saved)
     }
 }
