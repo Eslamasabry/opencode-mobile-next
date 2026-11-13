@@ -1,11 +1,8 @@
 package io.github.eslamasabry.oc.ui.kit.frame
 
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
@@ -83,33 +80,29 @@ public fun KitStatusPill(
             },
         contentAlignment = Alignment.CenterStart,
     ) {
-        Row(
-            Modifier
-                .height(tokens.chipHeight.dp)
-                .then(look.modifier)
-                .padding(start = Space.S3.dp, end = Space.S2.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(Space.S2.dp),
-        ) {
-            Box(Modifier.size(tokens.smallIcon.dp), contentAlignment = Alignment.Center) {
-                if (tone == KitConnectionTone.Working && !KitMotion.state.reduced) {
-                    KitWorkingMark(dot, size = tokens.smallIcon.dp)
-                } else {
-                    Box(Modifier.size(Space.S2.dp).background(dot, CircleShape))
+        val gap = with(androidx.compose.ui.platform.LocalDensity.current) { Space.S2.dp.roundToPx() }
+        // The name comes first and is never cut to make room for a transient word: the word is drawn only when it fits
+        // whole beside the name; while connecting the spinner says it (the word is in the spoken label).
+        val shownWord = word.takeIf { tone != KitConnectionTone.Working }
+        androidx.compose.ui.layout.Layout(
+            content = {
+                Box(Modifier.size(tokens.smallIcon.dp), contentAlignment = Alignment.Center) {
+                    if (tone == KitConnectionTone.Working && !KitMotion.state.reduced) {
+                        KitWorkingMark(dot, size = tokens.smallIcon.dp)
+                    } else {
+                        Box(Modifier.size(Space.S2.dp).background(dot, CircleShape))
+                    }
                 }
-            }
-            KitText(
-                label,
-                Modifier.weight(1f, fill = false),
-                role = TypeRole.Secondary,
-                tone = TextTone.Primary,
-                kind = KitTextKind.Frame,
-                maxLines = 1,
-            )
-            Box(Modifier.animateContentSize(specs.quick())) {
-                if (word != null) {
+                KitText(
+                    label,
+                    role = TypeRole.Secondary,
+                    tone = TextTone.Primary,
+                    kind = KitTextKind.Frame,
+                    maxLines = 1,
+                )
+                if (shownWord != null) {
                     KitText(
-                        "· $word",
+                        "\u00b7 $shownWord",
                         Modifier.testTag("kit-status-pill-word"),
                         role = TypeRole.Secondary,
                         tone = TextTone.Secondary,
@@ -117,8 +110,30 @@ public fun KitStatusPill(
                         maxLines = 1,
                     )
                 }
+                KitGlyph(KitIcons.chevronDown, colors.text2, tokens.smallIcon.dp)
+            },
+            modifier =
+                Modifier.height(tokens.chipHeight.dp)
+                    .then(look.modifier)
+                    .padding(start = Space.S3.dp, end = Space.S2.dp),
+        ) { measurables, constraints ->
+            val loose = constraints.copy(minWidth = 0, minHeight = 0)
+            val mark = measurables[0].measure(loose)
+            val chevron = measurables.last().measure(loose)
+            val room = (constraints.maxWidth - mark.width - chevron.width - gap * 2).coerceAtLeast(0)
+            val name = measurables[1].measure(loose.copy(maxWidth = room))
+            val wordPlaceable =
+                if (measurables.size > 3) measurables[2].measure(loose.copy(maxWidth = Int.MAX_VALUE / 4)) else null
+            val wordFits = wordPlaceable != null && name.width + gap + wordPlaceable.width <= room
+            val width = mark.width + gap + name.width + (if (wordFits) gap + wordPlaceable!!.width else 0) + gap + chevron.width
+            val height = constraints.maxHeight.takeIf { it != androidx.compose.ui.unit.Constraints.Infinity } ?: maxOf(mark.height, name.height)
+            layout(width, height) {
+                var x = 0
+                mark.placeRelative(x, (height - mark.height) / 2); x += mark.width + gap
+                name.placeRelative(x, (height - name.height) / 2); x += name.width + gap
+                if (wordFits) { wordPlaceable!!.placeRelative(x, (height - wordPlaceable.height) / 2); x += wordPlaceable.width + gap }
+                chevron.placeRelative(x, (height - chevron.height) / 2)
             }
-            KitGlyph(KitIcons.chevronDown, colors.text2, tokens.smallIcon.dp)
         }
     }
 }
