@@ -370,7 +370,8 @@ public class OpenProjectViewModel(
 
     override fun openShown() {
         val path = state.value.path ?: return
-        if (state.value.step != OpenProjectStep.Folder || state.value.loading) return
+        // Opening does not need the listing: a folder still being read opens at once (B-106), never a silent no-op.
+        if (state.value.step != OpenProjectStep.Folder) return
         // B-106: home and root cannot be projects; say so on the page instead of doing nothing.
         if (ProjectRules.pathProblem(ProjectRules.normalize(path)) != null) {
             mutable.update { it.copy(refusedPath = path) }

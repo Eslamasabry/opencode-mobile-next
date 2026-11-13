@@ -60,6 +60,7 @@ import io.github.eslamasabry.oc.feature.chat.composer.presentation.BasicComposer
 import io.github.eslamasabry.oc.feature.chat.composer.presentation.BasicComposerViewModel
 import io.github.eslamasabry.oc.feature.chat.composer.presentation.ComposerQuery
 import io.github.eslamasabry.oc.feature.chat.composer.presentation.SendFieldRules
+import io.github.eslamasabry.oc.feature.chat.presentation.RunTailRules
 import io.github.eslamasabry.oc.ui.design.color.StatusTone
 import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
@@ -1022,7 +1023,7 @@ public fun BasicComposer(
         KitPictureReceiver(takePicture, Modifier.fillMaxWidth()) {
         KitComposerRowFit({ field.text.toString() }, leadingTargets = 1, stack = slab) { stacked ->
             KitComposerBox(
-                running = busy && !waitingRequest,
+                running = RunTailRules.boxRunning(RunTailRules.tail(busy, chrome.stopping(), waitingRequest)),
                 stacked = stacked,
                 hasLeading = true,
                 chips = {

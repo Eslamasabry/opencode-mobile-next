@@ -2,6 +2,9 @@ package io.github.eslamasabry.oc.feature.settings
 
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
@@ -96,7 +99,14 @@ public class SettingsEntries(private val host: SettingsHost) : EntryInstaller {
         entry<SettingsRoute.Target> { target ->
             val vm = metroViewModel<SettingsViewModel>()
             // Once per visit: the view model outlives the screen coming back from another page or a rotation.
-            LaunchedEffect(vm, target.rowTag) { vm.openTarget(target.rowTag, target.guide) }
+            // rememberSaveable: a rotation re-runs the effect but must not reset the guide the person already opened.
+            var opened by rememberSaveable(target.rowTag) { mutableStateOf(false) }
+            LaunchedEffect(vm, target.rowTag) {
+                if (!opened) {
+                    opened = true
+                    vm.openTarget(target.rowTag, target.guide)
+                }
+            }
             val state by vm.state.collectAsStateWithLifecycle()
             val monitoring = metroViewModel<MonitoringViewModel>()
             val monitoringState by monitoring.state.collectAsStateWithLifecycle()

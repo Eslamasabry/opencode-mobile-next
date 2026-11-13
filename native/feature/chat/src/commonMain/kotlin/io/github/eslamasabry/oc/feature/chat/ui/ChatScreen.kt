@@ -53,6 +53,7 @@ import io.github.eslamasabry.oc.feature.chat.header.ui.ApprovalSettingsRows
 import io.github.eslamasabry.oc.feature.chat.header.ui.ChatHeaderOverlays
 import io.github.eslamasabry.oc.feature.chat.header.ui.ChatHeaderSlot
 import io.github.eslamasabry.oc.feature.chat.header.ui.ChatHeaderTopBar
+import io.github.eslamasabry.oc.feature.chat.presentation.RunTailRules
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatActions
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatConfirm
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatPlace
@@ -480,7 +481,8 @@ public fun ChatScreen(
         remember(actions, prompts) {
             ComposerChrome(
                 busy = { latest.live != null },
-                requestWaiting = { requestState.card != null || formPending },
+                // Review #12: the box agrees with the run's state; a decision on its way waits on no one.
+                requestWaiting = { RunTailRules.waitsForYou(requestState.cards.map { it.state }) || formPending },
                 onSent = { list.following = true },
                 // "Edit and resend" (P12-CHAT-FEEL) first, then saved prompts and slash commands
                 // (P12-PROMPTS); each

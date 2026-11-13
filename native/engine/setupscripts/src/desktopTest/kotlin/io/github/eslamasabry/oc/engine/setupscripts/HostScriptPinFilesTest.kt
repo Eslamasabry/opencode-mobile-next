@@ -36,6 +36,13 @@ class HostScriptPinFilesTest {
     }
 
     @Test
+    fun `B-279 the computer guide link points at a pinned commit, never at master where the file is missing`() {
+        val url = HostScripts.UBUNTU_GUIDE_URL
+        assertFalse(url.contains("/blob/master/"), url)
+        assertTrue(Regex("/blob/[0-9a-f]{40}/native/docs/ubuntu-host\\.md$").containsMatchIn(url), url)
+    }
+
+    @Test
     fun `B-SEC-092 the guides show the same pinned, checked commands`() {
         // The native guide: docs/ubuntu-host.md is the frozen Flutter app's, at its own (older) pin.
         val ubuntu = File(root, "native/docs/ubuntu-host.md").readText()

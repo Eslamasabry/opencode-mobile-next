@@ -60,7 +60,46 @@ public data class ToolOutputView(
     val metadata: JsonObject?,
     val artifacts: List<ToolArtifact>,
     val pruned: Boolean = false,
+    /** Why a failed call failed, read from its error text; null when the call did not fail (B-253). */
+    val failure: ToolFailure? = null,
 )
+
+/**
+ * Why a tool call failed, as far as its error text says (B-253), so a step can say it in plain words and keep the
+ * server's text under Details.
+ */
+public enum class ToolFailure {
+    /** The person refused it at its permission card ([isDeclinedToolError]): a choice, not a failure. */
+    Declined,
+
+    /**
+     * The agent called the tool with arguments the server would not take (a question form with a question missing, a
+     * required field left out). Nothing ran and nothing was shown; the server told the agent, which usually calls the
+     * tool again. OpenCode 2: `Invalid arguments for tool "question": … Update the arguments and call the tool
+     * again.`;
+     * OpenCode 1: `The arguments provided to the tool are invalid: …`; the AI SDK: `Invalid input for tool …`.
+     */
+    MalformedCall,
+
+    /** Any other failure: the error text is the only explanation. */
+    Failed,
+}
+
+private val MALFORMED_CALL =
+    Regex(
+        "^\\s*(?:error:\\s*)?" +
+            "(?:invalid (?:arguments|input) for tool\\b|the arguments provided to the tool are invalid\\b)",
+        RegexOption.IGNORE_CASE,
+    )
+
+/** [ToolFailure] of a failed call's error [text]; null when there is no error text. */
+public fun toolFailureOf(text: String?): ToolFailure? =
+    when {
+        text == null -> null
+        isDeclinedToolError(text) -> ToolFailure.Declined
+        MALFORMED_CALL.containsMatchIn(text) -> ToolFailure.MalformedCall
+        else -> ToolFailure.Failed
+    }
 
 /**
  * Whether a tool's error is the person's own refusal at its permission card (Dart `ToolState.declined`: OpenCode 2
@@ -79,9 +118,10 @@ public fun toolOutputView(state: ToolState, toolName: String?): ToolOutputView {
             ToolStatus.Error -> outputText(state)
             else -> ""
         }
+    val errorText = if (state.status == ToolStatus.Error) text else null
     return ToolOutputView(
         text = text,
-        errorText = if (state.status == ToolStatus.Error) text else null,
+        errorText = errorText,
         rawInput =
             if (state.status == ToolStatus.Pending) state.inputRaw ?: ""
             else prettyJson(state.input),
@@ -89,6 +129,7 @@ public fun toolOutputView(state: ToolState, toolName: String?): ToolOutputView {
         metadata = state.metadata,
         artifacts = toolArtifacts(state, toolName),
         pruned = state.pruned,
+        failure = toolFailureOf(errorText),
     )
 }
 

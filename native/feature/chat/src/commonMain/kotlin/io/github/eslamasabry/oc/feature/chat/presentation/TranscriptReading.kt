@@ -105,6 +105,12 @@ public data class TranscriptReadingUi(
     val endNotes: Map<String, TurnEndNote> = emptyMap(),
     /** Model and agent switches belong to the message details, never the transcript. */
     val switches: Map<String, List<TranscriptDetailUi>> = emptyMap(),
+    /**
+     * Review #13: the thoughts of a turn whose only work is thinking (no tool step), oldest first. Reasoning is work, so
+     * such a turn still gets its one work line ("Thought"), drawn by its first thought's row; the later thoughts' rows
+     * are hidden and sit inside that line.
+     */
+    val thoughtWork: Map<String, List<TranscriptDetailUi>> = emptyMap(),
 )
 
 /**
@@ -125,6 +131,7 @@ internal fun transcriptReading(
     val metadata = LinkedHashMap<String, TurnMetadataUi>()
     val endNotes = LinkedHashMap<String, TurnEndNote>()
     val switches = LinkedHashMap<String, List<TranscriptDetailUi>>()
+    val thoughtWork = LinkedHashMap<String, List<TranscriptDetailUi>>()
     val newestFailedCompaction =
         snapshot.messages.asReversed().firstNotNullOfOrNull { m ->
             m.parts.asReversed().firstOrNull { it.type == PartType.Compaction }
@@ -300,8 +307,18 @@ internal fun transcriptReading(
             } else if (part.type == PartType.Tool) entries += WorkEntryUi.Step(part.id)
         }
         if (hasTools) work[turn.turnId] = entries
+        else {
+            // Review #13 (C-022): a thought never stands loose in the reply area. With no tool step to fold under, the
+            // turn's thoughts make its work line themselves: the first thought's row draws it, the others hide.
+            val thoughts = parts.filter { it.type == PartType.Reasoning }
+            if (thoughts.isNotEmpty()) {
+                thoughtWork[turn.turnId] =
+                    thoughts.map { p -> details.getValue("thought:${p.messageId}/${p.id}") }
+                thoughts.drop(1).forEach { p -> hidden += "${p.messageId}/${p.id}" }
+            }
+        }
     }
-    return TranscriptReadingUi(details, hidden, work, metadata, endNotes, switches)
+    return TranscriptReadingUi(details, hidden, work, metadata, endNotes, switches, thoughtWork)
 }
 
 /**

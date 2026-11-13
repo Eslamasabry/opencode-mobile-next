@@ -78,6 +78,37 @@ public data class AgentsUi(
     val resetFailed: Boolean = false,
     val signingOutAgent: PhoneAgentRow? = null,
     val signOutFailed: String? = null,
+) {
+    /**
+     * What keeps the open install review from starting: the setup job that holds the phone (named, with its step and
+     * progress, and whether it can be stopped), or, when a refusal said the phone's setup is busy and no job is named,
+     * that alone. Null when nothing blocks or no review is open. It clears by itself when the job ends.
+     */
+    val installBlocker: InstallBlocker?
+        get() {
+            if (installingAgent == null) return null
+            val job = phone.installation?.takeIf { it.phase == PhoneAgentInstallPhase.Installing }
+            if (job != null)
+                return InstallBlocker(
+                    agentId = job.id,
+                    name = phone.agents.firstOrNull { it.id == job.id }?.name ?: job.id,
+                    step = job.step,
+                    fraction = job.fraction,
+                    canCancel = true,
+                )
+            val review = installingAgent
+            val stillBlocked = phone.agents.none { it.id == review.id && it.installable }
+            return if (installIssue == PhoneAgentInstallIssue.Busy && stillBlocked) InstallBlocker(null, null, null, null, canCancel = false) else null
+        }
+}
+
+/** A running setup that holds the phone's setup lane; [agentId] and [name] are null when the phone only said "busy". */
+public data class InstallBlocker(
+    val agentId: String?,
+    val name: String?,
+    val step: PhoneAgentInstallStep?,
+    val fraction: Double?,
+    val canCancel: Boolean,
 )
 
 public enum class AgentsTab {

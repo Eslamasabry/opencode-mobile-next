@@ -136,7 +136,11 @@ class P102StoppedStepsTest {
     fun `P-102 a real failure before the stop stays Failed and keeps its time`() {
         val k = TurnFeedKeeper(sid)
         val turn = stoppedTurn()
-        val failed = tool("t0", "bash", ToolStatus.Error, mapOf("command" to "make"), "make: *** No rule")
+        // It ran: the shell reported its exit code (R2: a failed step without one never ran and is not counted).
+        val failed =
+            tool("t0", "bash", ToolStatus.Error, mapOf("command" to "make"), "make: *** No rule").let {
+                it.copy(tool = it.tool?.copy(metadata = JsonObject(mapOf("exit" to JsonPrimitive(2)))))
+            }
         val reply = turn[1].copy(parts = (listOf(failed) + turn[1].parts).toImmutableList())
         k.history(listOf(turn[0], reply))
         val work = assertNotNull(TurnFactsPresenter(FixedClock).present(k.feed.value, 140_000).work["m1"])

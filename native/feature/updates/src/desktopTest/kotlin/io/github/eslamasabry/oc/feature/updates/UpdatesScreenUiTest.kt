@@ -26,6 +26,7 @@ import io.github.eslamasabry.oc.feature.updates.presentation.UpdatePromptActions
 import io.github.eslamasabry.oc.feature.updates.presentation.UpdateNoticeActions
 import io.github.eslamasabry.oc.feature.updates.presentation.UpdatesActions
 import io.github.eslamasabry.oc.feature.updates.presentation.updatesUi
+import io.github.eslamasabry.oc.feature.updates.ui.UPDATED_HOLD_MS
 import io.github.eslamasabry.oc.feature.updates.ui.UpdateNotice
 import io.github.eslamasabry.oc.feature.updates.ui.UpdateOfferSheet
 import io.github.eslamasabry.oc.feature.updates.ui.UpdatePromptSheet
@@ -220,6 +221,27 @@ class UpdatesScreenUiTest {
         onNodeWithContentDescription("Not now").performClick()
         onNodeWithText("Update").performClick()
         assertEquals(listOf("notNow", "update"), actions.calls)
+    }
+
+    @Test
+    fun `B-217 after the update the line says the version once and leaves by itself`() = runComposeUiTest {
+        val actions = Recording()
+        mainClock.autoAdvance = false
+        setContent { Themed { UpdateNotice(NoticeUi.Updated("2.2.0"), actions) } }
+        mainClock.advanceTimeBy(1_000)
+        onNodeWithText("Updated to version 2.2.0").assertExists()
+        assertTrue(actions.calls.isEmpty(), "it holds while the person reads it")
+        mainClock.advanceTimeBy(UPDATED_HOLD_MS)
+        assertEquals(listOf("notNow"), actions.calls, "it does not stay on every screen")
+    }
+
+    @Test
+    fun `B-217 the updated line can be dismissed at once`() = runComposeUiTest {
+        val actions = Recording()
+        setContent { Themed { UpdateNotice(NoticeUi.Updated("2.2.0"), actions) } }
+        waitForIdle()
+        onNodeWithContentDescription("Dismiss").performClick()
+        assertEquals("notNow", actions.calls.first())
     }
 
     @Test

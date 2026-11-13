@@ -50,7 +50,7 @@ public fun AgentHandoffScreen(state: AgentHandoffUi, actions: AgentHandoffAction
         if (wasAway && currentPage == HandoffPage.NoAgent) {
             wasAway = false
             actions.refresh()
-        }
+        } else actions.resumed()
         onPauseOrDispose { wasAway = true }
     }
     KitScreen(
@@ -159,17 +159,37 @@ public fun AgentHandoffScreen(state: AgentHandoffUi, actions: AgentHandoffAction
                     item { KitNotice(stringResource(Res.string.handoffNativeExplanation)) }
                     item {
                         KitRowGroup(label = stringResource(Res.string.handoffNativeChoose)) {
-                            for (choice in state.choices) KitRow(
-                                title = choice.agent,
-                                supporting = choice.model,
-                                selected = choice.id == state.selected,
-                                enabled = !locked && choice.issue == null,
-                                disabledReason =
-                                    if (choice.issue == HandoffChoiceIssue.PhoneCheck)
-                                        stringResource(Res.string.handoffNativePhoneCheck)
-                                    else working,
-                                onClick = { actions.select(choice.id) },
-                            )
+                            for (choice in state.choices)
+                                if (choice.checkable)
+                                    // Waits only on its phone check: the reason and the way forward, never a dead row.
+                                    KitRow(
+                                        title = choice.agent,
+                                        supporting = choice.model,
+                                        unavailableReason =
+                                            stringResource(Res.string.handoffNativePhoneCheck),
+                                        enable =
+                                            KitLineAction(
+                                                stringResource(
+                                                    Res.string.agentsCheckAction,
+                                                    choice.agent,
+                                                ),
+                                                { actions.checkAgent(choice.id) },
+                                                enabled = !locked,
+                                                disabledReason = working,
+                                            ),
+                                    )
+                                else
+                                    KitRow(
+                                        title = choice.agent,
+                                        supporting = choice.model,
+                                        selected = choice.id == state.selected,
+                                        enabled = !locked && choice.issue == null,
+                                        disabledReason =
+                                            if (choice.issue == HandoffChoiceIssue.PhoneCheck)
+                                                stringResource(Res.string.handoffNativePhoneCheck)
+                                            else working,
+                                        onClick = { actions.select(choice.id) },
+                                    )
                         }
                     }
                     item {

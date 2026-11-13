@@ -547,12 +547,31 @@ public class ProjectsPickerViewModel(
                 mutable.update {
                     it.copy(missingPath = normal, missingFailure = null, creatingMissing = false)
                 }
-            else openProject(normal)
+            else openListed(normal)
         }
     }
 
     override fun openProject(directory: String) {
         val normal = ProjectRules.normalize(directory)
+        // B-125: a listed project whose folder is gone (this phone's Linux can be asked) says so and offers to make
+        // it again, instead of opening a page that cannot read anything.
+        val server = current()
+        val ownFolder = all.firstOrNull { ProjectRules.normalize(it.directory) == normal }?.opensOn == null
+        if (server != null && ownFolder && creator.available(server)) {
+            val run = generation
+            viewModelScope.launch {
+                val there = creator.exists(server, normal)
+                if (run != generation || current()?.gateway !== server.gateway) return@launch
+                if (there == false)
+                    mutable.update { it.copy(missingPath = normal, missingFailure = null, creatingMissing = false) }
+                else openListed(normal)
+            }
+            return
+        }
+        openListed(normal)
+    }
+
+    private fun openListed(normal: String) {
         // A folder only This phone's agents work in opens on their connection, where its conversations are.
         val profile = all.firstOrNull { ProjectRules.normalize(it.directory) == normal }?.opensOn ?: chosen ?: return
         // The project page owns the shared-storage gate (SharedStorageAccess) and asks there.

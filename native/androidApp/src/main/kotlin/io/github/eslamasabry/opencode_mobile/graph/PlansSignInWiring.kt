@@ -137,10 +137,9 @@ class AndroidPlanSignInPort(
             return Failure.SecretUnavailable().failed()
         if (profile.cleartextUnconfirmed)
             return Failure.Refused(RefusalReason.CleartextNotConfirmed).failed()
-        val live = registry.live.value[id]
         val target =
-            profile.toServerProfile(managedOnPhone = live?.profile?.managedOnPhone == true)
-                ?: return stale()
+            // The store derives the phone flag from the saved address; a graph that is not live yet must not read false.
+            profile.toServerProfile() ?: return stale()
         val graph =
             when (val opened = registry.open(target)) {
                 is Outcome.Failed -> return opened

@@ -1,6 +1,14 @@
 package io.github.eslamasabry.oc.feature.agents.ui
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
+import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
+import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
+import io.github.eslamasabry.oc.feature.agents.hub.agentTile
 import androidx.compose.ui.Modifier
 import io.github.eslamasabry.oc.feature.agents.hub.AgentsActions
 import io.github.eslamasabry.oc.feature.agents.hub.AgentsUi
@@ -29,7 +37,9 @@ internal fun AgentInstallPanel(
     modifier: Modifier,
     enabled: KitEnabled,
 ) {
+    var stopAsked by remember { mutableStateOf(false) }
     state.installingAgent?.let { agent ->
+        val blocker = state.installBlocker
         val size = agent.downloadBytes?.let(::agentPayloadSize)
         val needsPhoneSetup = !state.phone.available || state.phone.owner == null
         // Known before the press: this phone cannot fit the install, so Install waits and the review says why.
@@ -45,12 +55,14 @@ internal fun AgentInstallPanel(
                         state.phone.installation?.let {
                             it.id == agent.id && it.phase != PhoneAgentInstallPhase.Installing
                         } == true) && enabled.isEnabled,
-                    stringResource(Res.string.linuxAgentInstallBusy),
+                    // Wait for it, or stop it where the sheet offers to; without that, only wait.
+                    stringResource(if (blocker?.canCancel == false) Res.string.agentsFailBusy else Res.string.linuxAgentInstallBusy),
                 )
         KitSheet(
             visible = true,
             onDismissRequest = actions::dismissInstall,
-            dismissible = !state.busy,
+            // Closing the review changes nothing that runs: always possible, a busy page included.
+            dismissible = true,
             title =
                 if (size == null) stringResource(Res.string.agentsSetupTitleNoSize, agent.name)
                 else stringResource(Res.string.agentsSetupTitle, agent.name, size),
@@ -69,7 +81,8 @@ internal fun AgentInstallPanel(
                         stringResource(Res.string.agentsInstallAction, agent.name),
                         { actions.installPhone(agent.id) },
                         enabled = installEnabled,
-                        working = state.busy,
+                        // A blocked install waits, plainly: a disabled button with its reason, not a spinner.
+                        working = state.busy && blocker == null,
                     ),
             secondary =
                 if (state.phone.installation?.let {
@@ -83,6 +96,21 @@ internal fun AgentInstallPanel(
                     )
                 else null,
         ) {
+            if (blocker != null) {
+                val job = blocker.agentId?.let { id -> state.phone.agents.firstOrNull { it.id == id } }
+                val progress =
+                    if (job != null) installingWords(agentTile(job, state.phone.installation, quiet = state.installQuiet))
+                    else stringResource(Res.string.agentsTileStepLinux)
+                KitNotice(
+                    if (blocker.name != null) stringResource(Res.string.agentsInstalling, blocker.name) + "\n" + progress
+                    else progress,
+                    tone = StatusTone.Attention,
+                    actions =
+                        if (blocker.canCancel)
+                            listOf(KitLineAction(stringResource(Res.string.linuxAgentInstallCancel), { stopAsked = true }, enabled = enabled.isEnabled))
+                        else emptyList(),
+                )
+            }
             KitText(stringResource(Res.string.agentsSetupBody, agent.name))
             if (agent.id == "gemini") KitNotice(stringResource(Res.string.agentsGeminiMigrationNote))
             if (size != null) KitText(stringResource(Res.string.agentsSetupSizeNote, size))
@@ -110,7 +138,27 @@ internal fun AgentInstallPanel(
                 )
         }
     }
-    state.installIssue?.let { issue ->
+    // Stopping another agent's setup asks first: it ends work that may be half done.
+    state.installingAgent?.let { _ ->
+        KitConfirm(
+            spec =
+                if (stopAsked)
+                    KitConfirmSpec(
+                        title = stringResource(Res.string.linuxAgentInstallCancel),
+                        body = stringResource(Res.string.agentsSetupInterrupted),
+                        confirmLabel = stringResource(Res.string.linuxAgentInstallCancel),
+                        kind = KitConfirmKind.Neutral,
+                        cancelLabel = stringResource(Res.string.kitSheetDismiss),
+                    )
+                else null,
+            onConfirm = {
+                stopAsked = false
+                actions.cancelPhoneInstall()
+            },
+            onCancel = { stopAsked = false },
+        )
+    }
+    state.installIssue?.takeIf { state.installingAgent == null || it != PhoneAgentInstallIssue.Busy }?.let { issue ->
         KitErrorNotice(
             stringResource(
                 when (issue) {

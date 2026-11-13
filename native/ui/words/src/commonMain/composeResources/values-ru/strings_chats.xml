@@ -332,4 +332,6 @@
     <string name="chats_back">Назад</string>
     <string name="workRunawayStopFailedRetry">Не удалось остановить %1$s. Повторите.</string>
     <string name="chatsHomeInterrupted">Прервано</string>
+    <string name="chatsNewGettingReady">Подготовка…</string>
+    <string name="chatsNewGettingReadySlow">Всё ещё читаем проекты и модели этого сервера…</string>
 </resources>

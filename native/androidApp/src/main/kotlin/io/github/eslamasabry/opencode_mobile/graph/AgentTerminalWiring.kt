@@ -69,11 +69,13 @@ class LinuxTerminalBridge(
                     )
                 }
                 val argv = signIn?.first ?: linux.prootCommand(listOf("/bin/bash", "-l"))
+                // An agent's sign-in runs its proot as agentSignInCommand built it (compatibility mode, issue #117).
+                val compat = signIn != null && linux.serverCompat()
                 NativeTerminalProgram(
                     linux.prootLaunchPath,
                     app.filesDir.absolutePath,
                     argv,
-                    (System.getenv() + linux.prootEnvironment()).map { (key, value) ->
+                    (System.getenv() + linux.prootEnvironment(compat)).map { (key, value) ->
                         "$key=$value"
                     },
                     owner,

@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -20,7 +19,6 @@ import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
-import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenWidth
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
@@ -37,7 +35,6 @@ import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
 import io.github.eslamasabry.oc.ui.kit.state.KitDetailsFold
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitTechnicalValue
-import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.*
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
@@ -50,7 +47,6 @@ import org.jetbrains.compose.resources.stringResource
  */
 @Composable
 public fun TeamSettingsScreen(state: TeamSettingsUi, actions: TeamSettingsActions) {
-    val inset = Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp)
     KitSheetHost(Modifier.fillMaxSize()) {
         KitScreen(
             topBar = {
@@ -64,7 +60,6 @@ public fun TeamSettingsScreen(state: TeamSettingsUi, actions: TeamSettingsAction
             loading = state.phase == TeamPhase.Loading,
             loadingLabel = stringResource(Res.string.teamProjectLoad),
             width = KitScreenWidth.Reading,
-            edges = KitScreenEdges.Bleed,
         ) {
             LazyColumn(
                 Modifier.fillMaxSize().testTag("team-settings"),
@@ -75,7 +70,7 @@ public fun TeamSettingsScreen(state: TeamSettingsUi, actions: TeamSettingsAction
                     item(key = "off-failed") {
                         KitNotice(
                             stringResource(if (state.computer) Res.string.aiteamComponentTurnOffFailed else Res.string.teamHomeTurnOffFailed),
-                            inset.testTag("team-settings-turn-off-failed"),
+                            Modifier.testTag("team-settings-turn-off-failed"),
                             dismiss = KitLineAction(stringResource(Res.string.kitConfirmCancel), actions::dismissOffFailed),
                         )
                     }
