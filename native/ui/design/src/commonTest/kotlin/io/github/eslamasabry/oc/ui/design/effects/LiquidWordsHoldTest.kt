@@ -36,7 +36,7 @@ class LiquidWordsHoldTest {
             assertEquals(if (wants) LiquidEdge.HOLD_CHROMA else 0f, hold.chroma, "$role colour hold dark=$dark")
             // Glass liquid (2026-11-14): their fine detail is held round its local mean too; nobody else's.
             assertEquals(wants, hold.local, "$role detail hold dark=$dark")
-            if (wants) assertEquals(LiquidEdge.MODAL_HOLD, hold, "$role hold dark=$dark")
+            if (wants) assertEquals(if (role == LiquidRole.Sheet) LiquidEdge.SHEET_HOLD else LiquidEdge.MODAL_HOLD, hold, "$role hold dark=$dark")
         }
     }
 
