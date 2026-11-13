@@ -254,7 +254,7 @@ internal fun nowWords(step: TurnStep, counts: WorkCounts): String {
     // every mono surface.
     val mask = rememberKitMask()
     // "Reading 6 files", "Editing 2 files": the count is the steps of that kind so far this turn
-    // (the engine counts steps, not distinct files; the words follow the step count).
+    // (edited counts distinct files, a file written then edited is one; the other kinds count steps).
     return when (f.kind) {
         ToolKind.Read,
         ToolKind.Lsp -> liveStepCount(Res.plurals.liveStepReading, counts.read)
