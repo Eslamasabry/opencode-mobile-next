@@ -16,6 +16,8 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.test.performTextReplacement
+import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.unit.dp
@@ -149,6 +151,32 @@ class GitScreenTest {
         onNodeWithTag("git-save").performScrollTo().performClick()
         assertEquals("commit Added a combo counter and screen shake.", calls.last())
     }
+
+    @Test
+    fun `PLACE-5 an unsent save message is still there when the person leaves the page and comes back`() =
+        runComposeUiTest {
+            val shown = androidx.compose.runtime.mutableStateOf(true)
+            val ui =
+                GitUi(
+                    view = GitPageView.Ready(snapshot),
+                    selected = persistentSetOf("src/app.kt"),
+                    signIn = GitHubSignIn.SignedOut(),
+                )
+            setContent {
+                val holder = androidx.compose.runtime.saveable.rememberSaveableStateHolder()
+                if (shown.value) holder.SaveableStateProvider("git") { Screen(ui) }
+            }
+            onNodeWithTag("git-message").performScrollTo()
+            onNode(hasSetTextAction() and hasAnyAncestor(hasTestTag("git-message"))).performTextReplacement("my own words")
+            shown.value = false
+            waitForIdle()
+            shown.value = true
+            waitForIdle()
+            onNodeWithTag("git-message").performScrollTo()
+            onNode(hasSetTextAction() and hasAnyAncestor(hasTestTag("git-message"))).assertTextContains("my own words")
+            onNodeWithTag("git-save").performScrollTo().performClick()
+            assertEquals("commit my own words", calls.last())
+        }
 
     @Test
     fun `WALK-1108-G1 without a summary there is no Write it for me`() = runComposeUiTest {
