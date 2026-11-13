@@ -109,6 +109,7 @@ import io.github.eslamasabry.oc.ui.design.style.styleBoundary
 import io.github.eslamasabry.oc.ui.kit.theme.toColor
 import io.github.eslamasabry.oc.ui.kit.foundation.kitFocusRingWidth
 import io.github.eslamasabry.oc.ui.kit.modal.LocalKitSheetTyping
+import io.github.eslamasabry.oc.ui.kit.modal.sheetTypingBox
 import io.github.eslamasabry.oc.ui.kit.foundation.kitHairline
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.KitButton
@@ -261,7 +262,7 @@ public fun KitField(
     val fieldFocus = focusRequester ?: remember { FocusRequester() }
     val keyboard = LocalSoftwareKeyboardController.current
     val labelFocuses = enabled.isEnabled && !(kind == KitFieldKind.Secret && secretPresence == SecretFieldPresence.Saved)
-    Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
+    Column(modifier.fillMaxWidth().sheetTypingBox(), verticalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
         if (labelShown)
             KitText(
                 label,
