@@ -52,6 +52,7 @@ import io.github.eslamasabry.oc.ui.kit.foundation.kitAssert
 import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
 import io.github.eslamasabry.oc.ui.kit.foundation.kitSurfaceLook
 import io.github.eslamasabry.oc.ui.kit.foundation.kitTappable
+import io.github.eslamasabry.oc.ui.kit.foundation.shape
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
 import io.github.eslamasabry.oc.ui.kit.style.LocalKitSignalInSlip
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
@@ -74,7 +75,7 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.LayoutDirection
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitWindow
 
-/** Dart `KitButtonRole`: primary = accent fill, secondary = surface3, tertiary = words only. */
+/** Dart `KitButtonRole`: primary = accent fill, secondary = surface3, tertiary = accent-ink words on a faint capsule. */
 public enum class KitButtonRole {
     Primary,
     Secondary,
@@ -112,7 +113,7 @@ public data class KitAction(
 /**
  * A button (Dart `KitButton`; plan 06 §7.5). Primary = accent fill with `onAccent` words; a
  * destructive primary is the strong neutral (text1 fill, ground words), never red; secondary =
- * `surface3`; tertiary = `text1` words. Disabled = `surface3` with `text3` words (tertiary: `text3`
+ * `surface3`; tertiary = the accent's readable ink on a faint capsule of it ([kitTertiaryInk]). Disabled = `surface3` with `text3` words (tertiary: `text3`
  * words) and its reason as the state a screen reader hears. [working] shows the working mark before
  * the words and makes taps no-ops while the button keeps its colour. Labels wrap to two lines.
  * Plain presses are silent; pass [haptic] only when the action's meaning calls for one (plan 06
@@ -167,9 +168,13 @@ public fun KitButton(
     }
     val buttonShape = if (hero) KitShapeId.Pill else KitShapeId.Button
     val signalKey = LocalKitSignalInSlip.current
+    // Device pass 2026-11-13 ("Send again" read as a heading): a text action in plain text1 words looked like any
+    // other bold line. It now reads as an action in every style: words in the accent's readable ink (danger: the
+    // attention colour) on a faint capsule of the same hue, its touch shape, never the primary's solid fill.
+    val tertiaryInk = kitTertiaryInk(danger)
     val fill: Color =
         when {
-            role == KitButtonRole.Tertiary -> Color.Transparent
+            role == KitButtonRole.Tertiary -> if (on) tertiaryInk.copy(alpha = TERTIARY_TINT) else Color.Transparent
             !on -> if (heroWaits) heroFill else colors.surface3
             role == KitButtonRole.Secondary -> colors.surface3
             destructive -> colors.text1
@@ -181,9 +186,8 @@ public fun KitButton(
             !on -> if (heroWaits) heroWords else if (hero) colors.text2 else colors.text3
             role == KitButtonRole.Primary && destructive -> colors.ground
             role == KitButtonRole.Primary -> colors.onAccent
-            role == KitButtonRole.Tertiary && danger -> colors.attention
-            // Green is the one accent for the primary action only: a tertiary action is neutral text1, which still
-            // reads apart from disabled text3 (R5).
+            role == KitButtonRole.Tertiary -> tertiaryInk
+            // The solid accent fill stays the primary action's alone; a text action shows the accent only as its ink.
             else -> colors.text1 // F: lib/ui/kit/kit_buttons.dart:732
         }
     // Muted → solid when the step becomes valid (owner reference 2026-11-07): the fill washes in on the effects spring.
@@ -217,7 +221,8 @@ public fun KitButton(
         else if (role == KitButtonRole.Tertiary || !expand) tokens.minTarget
         else tokens.buttonHeight
     // A tertiary button keeps space2 on both sides; a filled one the app theme's 16, with or without its glyph.
-    val pad = if (role == KitButtonRole.Tertiary) Space.S2 else FILLED_SIDE_PAD_DP // F: lib/ui/kit/kit_buttons.dart:728
+    // (its capsule now shows, so its words keep space3 from the capsule's ends; the capsule reaches into the gutter)
+    val pad = if (role == KitButtonRole.Tertiary) Space.S3 else FILLED_SIDE_PAD_DP // F: lib/ui/kit/kit_buttons.dart:728
     val padStart = pad
     // The app theme's filled buttons keep 12 above and below their words, so large text grows the button; a tertiary
     // button's own padding is horizontal only.
@@ -254,7 +259,7 @@ public fun KitButton(
                     }
                 }
                 // The face (fill, edge and the style's shadow) sits outside the press clip, so its shadow is whole.
-                .then(if (look != null) look.modifier else Modifier.background(easedFill))
+                .then(if (look != null) look.modifier else Modifier.background(easedFill, buttonShape.shape()))
                 .kitTappable(
                     onClick = { if (!working) onClick() },
                     enabled = on,
@@ -324,6 +329,41 @@ private fun Modifier.kitBleed(x: Dp): Modifier =
         val width = (placeable.width - 2 * px).coerceIn(constraints.minWidth, constraints.maxWidth)
         layout(width, placeable.height) { placeable.placeRelative(-px, 0) }
     }
+
+/**
+ * The words of a text action (a tertiary button, a line's inline action). Device pass 2026-11-13 ("Send again" read as a
+ * heading): plain text1 words looked like any other bold line. They are the accent's readable ink (danger: the attention
+ * colour), at 4.5:1 or better on the ground, the page's surface and the action's own faint capsule ([TERTIARY_TINT]),
+ * so the action reads as one in every style without the primary's solid fill.
+ */
+@Composable
+internal fun kitTertiaryInk(danger: Boolean = false): Color {
+    val colors = LocalKitColors.current
+    return remember(colors, danger) {
+        if (danger) colors.attention
+        else {
+            val under = colors.ground.copy(alpha = 1f)
+            Color(
+                RoleDerivation.readableOn(
+                    Argb(colors.accent.copy(alpha = 1f).toArgb()),
+                    listOf(
+                        Argb(under.toArgb()),
+                        Argb(colors.surface1.compositeOver(under).toArgb()),
+                        Argb(colors.accent.copy(alpha = TERTIARY_TINT).compositeOver(under).toArgb()),
+                    ),
+                    TERTIARY_CONTRAST,
+                    toward = Argb(colors.text1.copy(alpha = 1f).toArgb()),
+                ).v
+            )
+        }
+    }
+}
+
+/** The text action's capsule: its ink at this alpha over the ground, a touch shape that stays quieter than any fill. */
+internal const val TERTIARY_TINT = .12f
+
+/** The text action's words against the ground, the page's surface and its own capsule. */
+private const val TERTIARY_CONTRAST = 4.5
 
 /** The app theme's filled button side padding (Dart `filledButtonTheme`). */
 private const val FILLED_SIDE_PAD_DP = 16 // F: lib/ui/app_theme.dart:370
