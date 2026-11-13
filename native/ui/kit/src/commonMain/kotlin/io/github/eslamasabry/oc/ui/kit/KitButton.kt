@@ -169,12 +169,13 @@ public fun KitButton(
     val buttonShape = if (hero) KitShapeId.Pill else KitShapeId.Button
     val signalKey = LocalKitSignalInSlip.current
     // Device pass 2026-11-13 ("Send again" read as a heading): a text action in plain text1 words looked like any
-    // other bold line. It now reads as an action in every style: words in the accent's readable ink (danger: the
-    // attention colour) on a faint capsule of the same hue, its touch shape, never the primary's solid fill.
+    // other bold line. It reads as an action in every style as a native text button does: its words in the accent's
+    // readable ink (danger: the attention colour), with no face at rest; the press, focus and hover state layer is its
+    // touch shape. A style whose links are underlined (Brutal) underlines it too.
     val tertiaryInk = kitTertiaryInk(danger)
     val fill: Color =
         when {
-            role == KitButtonRole.Tertiary -> if (on) kitTertiaryCapsule(danger) else Color.Transparent
+            role == KitButtonRole.Tertiary -> Color.Transparent
             !on -> if (heroWaits) heroFill else colors.surface3
             role == KitButtonRole.Secondary -> colors.surface3
             destructive -> colors.text1
@@ -221,8 +222,8 @@ public fun KitButton(
         else if (role == KitButtonRole.Tertiary || !expand) tokens.minTarget
         else tokens.buttonHeight
     // A tertiary button keeps space2 on both sides; a filled one the app theme's 16, with or without its glyph.
-    // (its capsule now shows, so its words keep space3 from the capsule's ends; the capsule reaches into the gutter)
-    val pad = if (role == KitButtonRole.Tertiary) Space.S3 else FILLED_SIDE_PAD_DP // F: lib/ui/kit/kit_buttons.dart:728
+    // Its press and focus layer fills that padded box, which reaches out past the words by the padding (kitBleed below).
+    val pad = if (role == KitButtonRole.Tertiary) Space.S2 else FILLED_SIDE_PAD_DP // F: lib/ui/kit/kit_buttons.dart:728
     val padStart = pad
     // The app theme's filled buttons keep 12 above and below their words, so large text grows the button; a tertiary
     // button's own padding is horizontal only.
@@ -333,8 +334,8 @@ private fun Modifier.kitBleed(x: Dp): Modifier =
 /**
  * The words of a text action (a tertiary button, a line's inline action). Device pass 2026-11-13 ("Send again" read as a
  * heading): plain text1 words looked like any other bold line. They are the accent's readable ink (danger: the attention
- * colour), at 4.5:1 or better on the ground, the page's surface and the action's own faint capsule ([TERTIARY_TINT]),
- * so the action reads as one in every style without the primary's solid fill.
+ * colour), at 4.5:1 or better on the ground and the page's surface, so the action reads as one in every style without
+ * a face of its own at rest (the press, focus and hover layer is its touch shape) and never as the primary's fill.
  */
 @Composable
 internal fun kitTertiaryInk(danger: Boolean = false): Color {
@@ -349,7 +350,6 @@ internal fun kitTertiaryInk(danger: Boolean = false): Color {
                     listOf(
                         Argb(under.toArgb()),
                         Argb(colors.surface1.compositeOver(under).toArgb()),
-                        Argb(colors.accent.copy(alpha = TERTIARY_TINT).compositeOver(under).toArgb()),
                     ),
                     TERTIARY_CONTRAST,
                     toward = Argb(colors.text1.copy(alpha = 1f).toArgb()),
@@ -359,17 +359,11 @@ internal fun kitTertiaryInk(danger: Boolean = false): Color {
     }
 }
 
-/** A text action's capsule: the accent (danger: the attention colour) at [TERTIARY_TINT], what its ink is read on. */
+/** True where the style in force underlines its links (Brutal): a text action is underlined there too. */
 @Composable
-internal fun kitTertiaryCapsule(danger: Boolean = false): Color {
-    val colors = LocalKitColors.current
-    return (if (danger) colors.attention else colors.accent).copy(alpha = TERTIARY_TINT)
-}
+internal fun kitTertiaryUnderlined(): Boolean = LocalKitStyle.current.spec.tokens.linkUnderline != null
 
-/** The text action's capsule: the accent at this alpha over the ground, a touch shape that stays quieter than any fill. */
-internal const val TERTIARY_TINT = .12f
-
-/** The text action's words against the ground, the page's surface and its own capsule. */
+/** The text action's words against the ground and the page's surface. */
 private const val TERTIARY_CONTRAST = 4.6
 
 /** The app theme's filled button side padding (Dart `filledButtonTheme`). */
@@ -447,11 +441,11 @@ private fun KitButtonWords(label: String, color: Color, maxLines: Int, shortcut:
     val window = LocalKitWindow.current
     // Visual language §5: the shortcut shows on a fine pointer, from the expanded window up.
     if (shortcut == null || !window.finePointer || !window.cls.isWide) {
-        KitTextColored(label, color, maxLines)
+        KitTextColored(label, color, maxLines, underline = role == KitButtonRole.Tertiary && kitTertiaryUnderlined())
         return
     }
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Box(Modifier.weight(1f, fill = false)) { KitTextColored(label, color, maxLines) }
+        Box(Modifier.weight(1f, fill = false)) { KitTextColored(label, color, maxLines, underline = role == KitButtonRole.Tertiary && kitTertiaryUnderlined()) }
         Spacer(Modifier.width(Space.S1.dp))
         // Mono, text3 on a tertiary button and the button's own words otherwise; always left to right.
         val mono = LocalKitTypography.current.style(TypeRole.Mono)
@@ -463,7 +457,7 @@ private fun KitButtonWords(label: String, color: Color, maxLines: Int, shortcut:
 }
 
 @Composable
-private fun KitTextColored(text: String, color: Color, maxLines: Int) {
+private fun KitTextColored(text: String, color: Color, maxLines: Int, underline: Boolean = false) {
     // Dart `_KitButtonLabel`: a plain Text in the theme's button style, so the label follows the person's text size in
     // full (2.0x text draws 2.0x words and a taller button), not the 1.3x chrome cap. A style with type of its own
     // keeps firm 600 words, and so does Arabic (the system Arabic face at 500 reads too thin on a filled button).
@@ -477,6 +471,7 @@ private fun KitTextColored(text: String, color: Color, maxLines: Int) {
             fontWeight = if (firm) FontWeight.W600 else base.fontWeight, // F: lib/ui/kit/kit_buttons.dart:805
             textAlign = TextAlign.Center,
             textDirection = TextDirection.Content,
+            textDecoration = if (underline) androidx.compose.ui.text.style.TextDecoration.Underline else null,
         ),
         maxLines,
     )

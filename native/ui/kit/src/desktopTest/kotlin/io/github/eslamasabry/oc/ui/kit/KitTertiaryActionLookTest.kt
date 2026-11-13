@@ -18,6 +18,8 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.isRoot
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
@@ -34,9 +36,10 @@ import kotlin.test.assertTrue
 
 /**
  * Device pass 2026-11-13: "Send again" after a dropped reply looked like a heading (big text1 words under a grey line).
- * A text action (a tertiary [KitButton]) reads as an action in every style, dark and light: it has a visible touch
- * shape (a faint capsule), its words are not the body text's colour, they read at 4.5:1 or better on that capsule, and
- * the capsule stays quiet (never a second primary's solid fill). Measured on the render at 2.625 px/dp.
+ * A text action (a tertiary [KitButton]) reads as an action the native way, in every style, dark and light: words in
+ * the accent's readable ink, 4.5:1 or better on the ground and apart from the body text's colour, with no face drawn at
+ * rest outside the words' own box, and a face (the press layer) while it is pressed. Measured on the render at
+ * 2.625 px/dp.
  */
 class KitTertiaryActionLookTest {
     private fun problems(style: Style, dark: Boolean): List<String> {
@@ -62,23 +65,36 @@ class KitTertiaryActionLookTest {
                 }
             }
             waitForIdle()
-            val b = onNodeWithTag("action", useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
-            val image = onAllNodes(isRoot())[0].captureToImage().toPixelMap()
             val what = "$style ${if (dark) "dark" else "light"}"
-            val y = ((b.top + b.bottom) / 2f).toInt()
-            // Inside the capsule, before the words (the action keeps 12 dp from its ends).
-            val capsule = image[(b.left + 5f * D).toInt(), y]
-            if (levels(capsule, ground) < 3f) out += "$what: no touch shape (the capsule is the ground's colour: $capsule)"
-            if (contrast(capsule, ground) > 1.6) out += "$what: the capsule is as strong as a filled button (${"%.2f".format(contrast(capsule, ground))}:1 on the ground)"
-            // The words: the pixel that stands out most from the capsule, between its ends.
-            var ink = capsule
-            for (x in (b.left + 12f * D).toInt() until (b.right - 12f * D).toInt()) for (yy in (b.top + 4f * D).toInt() until (b.bottom - 4f * D).toInt()) {
-                val p = image[x, yy]
-                if (contrast(p, capsule) > contrast(ink, capsule)) ink = p
+            val node = onNodeWithTag("action", useUnmergedTree = true)
+            val b = node.fetchSemanticsNode().boundsInRoot
+            val words = onNodeWithText("Send again", useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
+            val rest = onAllNodes(isRoot())[0].captureToImage().toPixelMap()
+            // At rest: nothing drawn in the action's box outside its words' own box (no capsule, no plate).
+            val slack = D + 1f
+            var face = 0
+            for (x in b.left.toInt() until b.right.toInt()) for (y in b.top.toInt() until b.bottom.toInt()) {
+                val inWords = x >= words.left - slack && x <= words.right + slack && y >= words.top - slack && y <= words.bottom + slack
+                if (!inWords && levels(rest[x, y], ground) >= 3f) face++
             }
-            val ratio = contrast(ink, capsule)
-            if (ratio < 4.5) out += "$what: the words read at ${"%.2f".format(ratio)}:1 on their capsule"
+            if (face > 0) out += "$what: $face px of a face drawn at rest outside the words"
+            // The words: the pixel that stands out most from the ground inside their box.
+            var ink = ground
+            for (x in words.left.toInt() until words.right.toInt()) for (y in words.top.toInt() until words.bottom.toInt()) {
+                val p = rest[x, y]
+                if (contrast(p, ground) > contrast(ink, ground)) ink = p
+            }
+            val ratio = contrast(ink, ground)
+            if (ratio < 4.5) out += "$what: the words read at ${"%.2f".format(ratio)}:1 on the ground"
             if (levels(ink, text1) < 12f) out += "$what: the words are the body text's colour ($ink vs $text1), so the action reads as a line"
+            // Pressed: the press layer is its touch shape, at the box's start, clear of the words.
+            node.performTouchInput { down(center) }
+            mainClock.advanceTimeBy(100)
+            waitForIdle()
+            val pressed = onAllNodes(isRoot())[0].captureToImage().toPixelMap()
+            val probe = pressed[(b.left + 3f * D).toInt(), ((b.top + b.bottom) / 2f).toInt()]
+            if (levels(probe, ground) < 3f) out += "$what: no face while pressed ($probe on $ground)"
+            node.performTouchInput { up() }
         }
         return out
     }
@@ -88,9 +104,9 @@ class KitTertiaryActionLookTest {
         assertTrue(all.isEmpty(), "A text action does not read as an action:\n" + all.joinToString("\n"))
     }
 
-    @Test fun `dark - a text action has a quiet touch shape and readable words apart from the body text, in every style`() = check(dark = true)
+    @Test fun `dark - a text action is readable accent words with no face at rest and a face while pressed, in every style`() = check(dark = true)
 
-    @Test fun `light - a text action has a quiet touch shape and readable words apart from the body text, in every style`() = check(dark = false)
+    @Test fun `light - a text action is readable accent words with no face at rest and a face while pressed, in every style`() = check(dark = false)
 
     private fun levels(a: Color, b: Color): Float = max(abs(a.red - b.red), max(abs(a.green - b.green), abs(a.blue - b.blue))) * 255f
 

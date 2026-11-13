@@ -1,6 +1,5 @@
 package io.github.eslamasabry.oc.ui.kit.foundation
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
@@ -38,22 +37,20 @@ public data class KitLineAction(
 )
 
 /**
- * A tertiary action in a 48 dp target, drawn as a tertiary [io.github.eslamasabry.oc.ui.kit.KitButton]: the accent's
- * readable ink on a faint capsule of it ([io.github.eslamasabry.oc.ui.kit.kitTertiaryInk]), text3 words and no capsule
- * when disabled. Never the primary's solid fill.
+ * A tertiary action in a 48 dp target, drawn as a tertiary [io.github.eslamasabry.oc.ui.kit.KitButton]: words in the
+ * accent's readable ink ([io.github.eslamasabry.oc.ui.kit.kitTertiaryInk]), no face at rest (the press and focus layer
+ * is its touch shape), text3 words when disabled. Never the primary's solid fill.
  * Kit-internal.
  */
 @Composable
 internal fun KitInlineAction(action: KitLineAction, modifier: Modifier = Modifier, maxLines: Int = 2) {
     val tagged = action.testTag?.let { modifier.testTag(it) } ?: modifier
     val ink = io.github.eslamasabry.oc.ui.kit.kitTertiaryInk()
-    // The capsule is drawn before the target's clip, on the same shape.
-    val capsule = if (action.enabled) Modifier.background(io.github.eslamasabry.oc.ui.kit.kitTertiaryCapsule(), KitShapeId.Button.shape()) else Modifier
     KitTappable(
         onClick = action.onClick,
         modifier =
             (if (action.semanticsLabel == null) tagged
-            else tagged.semantics { contentDescription = action.semanticsLabel }).then(capsule),
+            else tagged.semantics { contentDescription = action.semanticsLabel }),
         enabled = action.enabled,
         disabledReason = action.disabledReason,
         shape = KitShapeId.Button,
