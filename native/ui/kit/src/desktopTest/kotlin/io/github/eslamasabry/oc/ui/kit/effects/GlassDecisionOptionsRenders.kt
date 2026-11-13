@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -50,6 +51,7 @@ import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.KitTheme
+import io.github.eslamasabry.oc.ui.kit.foundation.kitFrostSource
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import io.github.eslamasabry.oc.ui.kit.platform.KitPlatform
 import io.github.eslamasabry.oc.ui.kit.row.KitConversation
@@ -68,44 +70,50 @@ import kotlin.math.sqrt
 import kotlin.test.Test
 
 /**
- * Owner 2026-11-13 on the decision panes (sheets, dialogs, menus), "What is this shitty glass?": the page's rows read
- * through the old pane; the 11-13 pane looked like a plastic tray (a band at the rim, then a soft inner rectangle). The
- * first options (one material to the edge) left the rows behind a light menu as grey smudges: the hold only pulled
- * light DOWN past a knee, so dark text behind a light pane passed at its own tone. Round 2, two options, both one
- * material to the edge with the crafted 1 dp rim:
- * - A2: blur 24 dp, the shipped tint, a TWO-WAY hold;
- * - C2: blur 16 dp, the tint +.15, the same two-way hold.
- * The two-way hold: the content's luminance is pulled toward the page ground's own (the pane's base over an empty page)
- * from above AND below: within [FREE] of the base it passes, beyond it only [SLOPE] of the rest is kept; the colour that
- * is left is limited to [CHROMA] as before. Drawn through a desktop stand-in of Android's pane (colour controls, blur on
- * a padded layer as the library pads it, the hold, the tint, the rim) on real kit content: a chat reply with a code block
- * and a permission card behind a sheet with the permission's details, and a conversation list behind a row's context
- * menu; Glass dark and light, 1080 px wide. Measured with the pane's own words left out: blurred by 8 px, how far any
- * patch of the pane's inside differs from its mean luminance (target about 2-3 %); and the stripe scenes'
- * hidden-edge steps of [ForegroundGhostTest]. Not a test: it runs only when `GLASS_OPTIONS_OUT` names a folder.
+ * Owner 2026-11-13 on the decision panes (sheets, dialogs, menus). Morning: the page's rows read through. Midday: a
+ * band at the rim and a soft inner rectangle. Afternoon, on the phone (Glass dark, Aurora drift): the "..." menu joined
+ * to the bar was a flat near-black slab, the bar with it ("What did you do to the glass?"): holding the page's light
+ * DOWN to 8 % drags the mean to black. Round 3 rule: the pane stays glass. The Aurora and the page's light and colour
+ * come through as soft light; only fine DETAIL (rows of words, button edges) is compressed, around the LOCAL mean of
+ * what is behind, never toward black or white ([LOCAL_HOLD]).
+ *
+ * Options (real kit content over Aurora drift, at its still moment, dark and light, 1080 px wide; one material to the
+ * edge, the crafted 1 dp rim, saturation 1.6):
+ * - now: this morning's material (12 dp, knee .36, the rim band), as the build line has it again;
+ * - L1: blur 24 dp, the shipped tint, the local-contrast hold;
+ * - L2: blur 16 dp, the tint +.10, the local-contrast hold.
+ * The guard, per option, on the stripe scenes over the Aurora: the decision pane's mean luminance against the plain
+ * bar's over the same patch (it must let light through), and the hidden-edge step of [ForegroundGhostTest] against the
+ * aurora alone (detail must not read). Not a test: it runs only when `GLASS_OPTIONS_OUT` names a folder.
  */
 class GlassDecisionOptionsRenders {
     private val options =
         listOf(
-            Option("A2", 24f, 0f, FREE, SLOPE),
-            Option("C2", 16f, .15f, FREE, SLOPE),
+            Option("now", 0f, 0f, 0f, 0f, morning = true),
+            Option("L1", 24f, 0f, FREE, SLOPE),
+            Option("L2", 16f, .10f, FREE, SLOPE),
         )
 
-    private class OptionPlatform(val option: Option, val seen: MutableList<String>) : KitPlatform by DesktopKitPlatform() {
+    private class OptionPlatform(val option: Option, val seen: MutableList<String>) :
+        KitPlatform by io.github.eslamasabry.oc.ui.kit.FakeKitPlatform(
+            frost = true,
+            liquidGlass = true,
+            liveShaders = io.github.eslamasabry.oc.ui.kit.live.LiveShaderCompiler(io.github.eslamasabry.oc.ui.kit.platform.DesktopLiveShader::compile),
+            joinEffect = { p, b -> DesktopKitPlatform().liquidJoinEffect(p, b) },
+        ) {
         override val liquidGlass: Boolean = true
 
-        /** The page ground's colour, set by the scene: the two-way hold's base. */
-        var ground: Color = Color.Black
-
         override fun liquidPane(spec: KitLiquidPaneSpec, backdrop: KitLiquidBackdrop, shape: CornerBasedShape, transform: () -> Float): Modifier {
+            // Only the decision panes (the roles with a hold: sheets, menus) take the option; a bar keeps its own.
+            if (option.morning || !spec.recipe.hold.knee) return kitLiquidPlainStandIn(spec, backdrop, shape, this)
             val s =
                 spec.copy(
                     recipe = spec.recipe.copy(blurDp = option.blurDp),
                     fill = spec.fill.copy(alpha = min(1f, spec.fill.alpha + option.tintPlus)),
                     fillStart = spec.fillStart.copy(alpha = min(1f, spec.fillStart.alpha + option.tintPlus)),
                 )
-            seen += "fill %.2f, blur %.0f dp, two-way hold: free %.3f, slope %.2f, colour %.2f".format(s.fill.alpha, s.recipe.blurDp, option.free, option.slope, CHROMA)
-            return twoWayStandIn(s, backdrop, shape, this, option) { ground }
+            seen += "fill %.2f, blur %.0f dp, local hold: mean over %.0f dp, free %.3f, slope %.2f".format(s.fill.alpha, s.recipe.blurDp, MEAN_DP, option.free, option.slope)
+            return localHoldStandIn(s, backdrop, shape, this, option)
         }
     }
 
@@ -173,18 +181,21 @@ class GlassDecisionOptionsRenders {
     private enum class Real { Sheet, Menu }
 
     @Composable
-    private fun RealScene(kind: Real, platform: OptionPlatform, words: Boolean = true) {
+    private fun RealScene(kind: Real, words: Boolean = true) {
         val page = rememberKitLiquidSource()
-        val colors = LocalKitColors.current
-        platform.ground = colors.ground
         CompositionLocalProvider(LocalKitLiquidPage provides page) {
-            Box(Modifier.size(W.dp, REAL_H.dp).background(colors.ground).testTag("scene")) {
-                Box(Modifier.fillMaxSize().kitLiquidSource(page)) { if (kind == Real.Sheet) ChatPage() else ListPage() }
-                val box = paneBox(kind)
-                val shape = if (kind == Real.Sheet) RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp) else RoundedCornerShape(20.dp)
-                val face = if (kind == Real.Sheet) kitLiquidSheetFace(shape, { 0f }) else kitLiquidMenuFace(shape, { 0f })
-                Box(Modifier.offset(box[0].dp, box[1].dp).size((box[2] - box[0]).dp, (box[3] - box[1]).dp).then(face ?: Modifier.background(Color.Magenta))) {
-                    if (words) CompositionLocalProvider(LocalKitOnLiquidGlass provides true) { if (kind == Real.Sheet) SheetDetails() else MenuItems() }
+            Box(Modifier.size(W.dp, REAL_H.dp).testTag("scene")) {
+                // The pane inside the live background (as a page's sheet host is), so it sees the Aurora behind the page.
+                io.github.eslamasabry.oc.ui.kit.live.KitLiveBackground(Modifier.fillMaxSize()) {
+                    Box(Modifier.fillMaxSize()) {
+                        Box(Modifier.fillMaxSize().kitLiquidSource(page)) { if (kind == Real.Sheet) ChatPage() else ListPage() }
+                        val box = paneBox(kind)
+                        val shape = if (kind == Real.Sheet) RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp) else RoundedCornerShape(20.dp)
+                        val face = if (kind == Real.Sheet) kitLiquidSheetFace(shape, { 0f }) else kitLiquidMenuFace(shape, { 0f })
+                        Box(Modifier.offset(box[0].dp, box[1].dp).size((box[2] - box[0]).dp, (box[3] - box[1]).dp).then(face ?: Modifier.background(Color.Magenta))) {
+                            if (words) CompositionLocalProvider(LocalKitOnLiquidGlass provides true) { if (kind == Real.Sheet) SheetDetails() else MenuItems() }
+                        }
+                    }
                 }
             }
         }
@@ -200,7 +211,7 @@ class GlassDecisionOptionsRenders {
             setContent {
                 CompositionLocalProvider(LocalDensity provides Density(D)) {
                     KitTheme(
-                        appearance = KitAppearance(style = Style.Glass, mode = if (dark) AppearanceMode.Dark else AppearanceMode.Light),
+                        appearance = KitAppearance(style = Style.Glass, mode = if (dark) AppearanceMode.Dark else AppearanceMode.Light, liveBackground = true, liveStyle = "aurora"),
                         platform = platform,
                         localeTag = "en",
                         stillFrame = true,
@@ -261,7 +272,7 @@ class GlassDecisionOptionsRenders {
         for (option in options) for (kind in Real.entries) for (dark in listOf(true, false)) {
             val seen = mutableListOf<String>()
             val platform = OptionPlatform(option, seen)
-            val img = render(REAL_H, dark, platform) { RealScene(kind, platform) }
+            val img = render(REAL_H, dark, platform) { RealScene(kind) }
             val mode = if (dark) "dark" else "light"
             val name = "opt-${option.name}-${if (kind == Real.Sheet) "chat-sheet" else "list-menu"}-$mode"
             val awt = img.toAwtImage()
@@ -273,10 +284,9 @@ class GlassDecisionOptionsRenders {
                 ImageIO.write(zoom(awt, px(box[2] - 60f), px(box[1] + 40f), px(70f), px(110f)), "png", File(out, "$name-end-edge-4x.png"))
                 ImageIO.write(zoom(awt, px(box[2] - 60f), px(box[3] - 60f), px(70f), px(70f)), "png", File(out, "$name-bottom-end-4x.png"))
             }
-            val bareOn = OptionPlatform(option, mutableListOf())
-            val bare = render(REAL_H, dark, bareOn) { RealScene(kind, bareOn, words = false) }.toPixelMap()
+            val bare = render(REAL_H, dark, OptionPlatform(option, mutableListOf())) { RealScene(kind, words = false) }.toPixelMap()
             val (spread, x, y) = patchSpread(bare, box)
-            notes.append("$name: ${seen.distinct().joinToString("; ")}; without its words, blurred 8 px: the worst patch is %.1f %% from the pane's mean, at (%d, %d) px\n".format(spread, x, y))
+            notes.append("$name: ${seen.distinct().joinToString("; ").ifEmpty { "this morning's material" }}; without its words, blurred 8 px: the worst patch is %.1f %% from the pane's mean, at (%d, %d) px\n".format(spread, x, y))
         }
         File(out, "options-notes.txt").writeText(notes.toString())
     }
@@ -292,6 +302,71 @@ class GlassDecisionOptionsRenders {
         return outImg
     }
 
+    /**
+     * The owner's phone, 2026-11-13: Glass dark over Aurora drift, a chat scrolled so a table and its text sit behind the
+     * top bar, the "..." menu open and joined to the bar. Drawn with the kit's real screen, bar and menu (the joined body
+     * is the build line's join shader: options for the plain panes do not reach it).
+     */
+    @Test
+    fun `the owner's scene - the chat's menu joined to the bar over Aurora drift`() {
+        val out = System.getenv("GLASS_OPTIONS_OUT")?.let(::File) ?: return
+        out.mkdirs()
+        val items =
+            listOf("Find", "Rename conversation", "Fork conversation", "Copy transcript", "Go to", "More").map {
+                io.github.eslamasabry.oc.ui.kit.modal.KitMenuItem(it, onSelect = {})
+            }
+        androidx.compose.ui.test.v2.runSkikoComposeUiTest(Size(1080f, 2400f), testTimeout = kotlin.time.Duration.parse("6m")) {
+            io.github.eslamasabry.oc.ui.kit.PaneRimScenes.settle(this) {
+                CompositionLocalProvider(LocalDensity provides Density(D)) {
+                    KitTheme(
+                        KitAppearance(mode = AppearanceMode.Dark, style = Style.Glass, liveBackground = true, liveStyle = "aurora"),
+                        OptionPlatform(options.first(), mutableListOf()),
+                        "en",
+                        stillFrame = true,
+                    ) {
+                        io.github.eslamasabry.oc.ui.kit.live.KitLiveBackground(Modifier.fillMaxSize()) {
+                            val source = io.github.eslamasabry.oc.ui.kit.foundation.rememberKitFrostState()
+                            io.github.eslamasabry.oc.ui.kit.frame.KitScreen(
+                                page = true,
+                                overlayChrome = true,
+                                frost = source,
+                                topBar = {
+                                    Box(Modifier.fillMaxWidth().height(72.dp)) {
+                                        KitText("Can you run this on your Ubuntu?", Modifier.align(Alignment.CenterStart).padding(start = 56.dp), role = TypeRole.RowTitle, maxLines = 1)
+                                        io.github.eslamasabry.oc.ui.kit.modal.KitMenu(
+                                            expanded = true,
+                                            items = items,
+                                            onDismissRequest = {},
+                                            modifier = Modifier.align(Alignment.CenterEnd).padding(end = 12.dp),
+                                        ) { KitText("...") }
+                                    }
+                                },
+                                edges = io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges.Bleed,
+                            ) {
+                                Column(
+                                    Modifier.fillMaxSize().kitFrostSource(source).padding(horizontal = 16.dp),
+                                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                                ) {
+                                    for ((name, stars) in TABLE) {
+                                        Row(Modifier.fillMaxWidth().background(LocalKitColors.current.surface1).padding(14.dp)) {
+                                            KitText(name, Modifier.weight(1f), role = TypeRole.Mono, maxLines = 1)
+                                            KitText(stars, role = TypeRole.Body)
+                                        }
+                                    }
+                                    KitText("A couple of important caveats before you run any of these forks.")
+                                    KitText("1. The original author withdrew the project. Running one is your call.")
+                                    KitText("2. It is a third-party client for a short-drama service whose terms it does not control.")
+                                    KitText("3. It is a desktop app, not a web server: building it here needs a full toolchain.")
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            ImageIO.write(onAllNodes(androidx.compose.ui.test.isRoot())[0].captureToImage().toAwtImage(), "png", File(out, "owner-scene-joined-menu-aurora-dark-now.png"))
+        }
+    }
+
     // ---- the hard test: stripes and a button, as ForegroundGhostTest draws them ----
 
     private enum class Kind { Menu, Sheet }
@@ -305,37 +380,58 @@ class GlassDecisionOptionsRenders {
 
     private fun place(kind: Kind): Place = if (kind == Kind.Menu) Place(60f, 140f, 260f, 190f) else Place(0f, 300f, W, 260f)
 
+    /** [bar]: the plain bar's face (LiquidRole.Bar) over the same patch instead of the decision pane. */
     @Composable
-    private fun StripeScene(kind: Kind, content: Content, platform: OptionPlatform) {
+    private fun StripeScene(kind: Kind, content: Content, bar: Boolean = false) {
         val page = rememberKitLiquidSource()
         val colors = LocalKitColors.current
-        platform.ground = colors.ground
         CompositionLocalProvider(LocalKitLiquidPage provides page) {
-            Box(Modifier.size(W.dp, STRIPE_H.dp).background(colors.ground).testTag("scene")) {
+            Box(Modifier.size(W.dp, STRIPE_H.dp).testTag("scene")) {
                 val p = place(kind)
-                Box(
-                    Modifier.fillMaxSize().kitLiquidSource(page).drawBehind {
-                        val d = density
-                        when (content) {
-                            Content.Empty -> Unit
-                            Content.Button -> drawRoundRect(colors.accent, Offset((p.cx - 80f) * d, (p.cy - 24f) * d), Size(160f * d, 48f * d), CornerRadius(24f * d))
-                            Content.Rows ->
-                                for (line in -3..3) {
-                                    var x = 8f
-                                    val y = p.cy + line * 24f
-                                    while (x < W - 8f) {
-                                        drawRect(colors.text1, Offset(x * d, (y - 7f) * d), Size(2.2f * d, 14f * d))
-                                        x += 5f
+                io.github.eslamasabry.oc.ui.kit.live.KitLiveBackground(Modifier.fillMaxSize()) {
+                  Box(Modifier.fillMaxSize()) {
+                    Box(
+                        Modifier.fillMaxSize().kitLiquidSource(page).drawBehind {
+                            val d = density
+                            when (content) {
+                                Content.Empty -> Unit
+                                Content.Button -> drawRoundRect(colors.accent, Offset((p.cx - 80f) * d, (p.cy - 24f) * d), Size(160f * d, 48f * d), CornerRadius(24f * d))
+                                Content.Rows ->
+                                    for (line in -3..3) {
+                                        var x = 8f
+                                        val y = p.cy + line * 24f
+                                        while (x < W - 8f) {
+                                            drawRect(colors.text1, Offset(x * d, (y - 7f) * d), Size(2.2f * d, 14f * d))
+                                            x += 5f
+                                        }
                                     }
-                                }
+                            }
+                        },
+                    )
+                    val shape = RoundedCornerShape(28.dp)
+                    val face =
+                        when {
+                            bar -> kitLiquidFace(io.github.eslamasabry.oc.ui.design.effects.LiquidRole.Bar, page, shape)
+                            kind == Kind.Menu -> kitLiquidMenuFace(shape, { 0f })
+                            else -> kitLiquidSheetFace(shape, { 0f })
                         }
-                    },
-                )
-                val shape = RoundedCornerShape(28.dp)
-                val face = if (kind == Kind.Menu) kitLiquidMenuFace(shape, { 0f }) else kitLiquidSheetFace(shape, { 0f })
-                Box(Modifier.offset(p.x.dp, p.y.dp).size(p.w.dp, p.h.dp).then(face ?: Modifier.background(Color.Magenta)))
+                    Box(Modifier.offset(p.x.dp, p.y.dp).size(p.w.dp, p.h.dp).then(face ?: Modifier.background(Color.Magenta)))
+                  }
+                }
             }
         }
+    }
+
+    private fun meanLum(img: PixelMap, kind: Kind): Float {
+        val p = place(kind)
+        var sum = 0.0
+        var n = 0
+        for (y in ((p.y + INSET_DP + 20f) * D).roundToInt() until ((p.y + p.h - INSET_DP - 20f) * D).roundToInt() step 3) {
+            for (x in ((p.x + INSET_DP + 20f) * D).roundToInt() until ((p.x + p.w - INSET_DP - 20f) * D).roundToInt() step 3) {
+                sum += lum(img[x, y]); n++
+            }
+        }
+        return (sum / n).toFloat()
     }
 
     private fun ghost(img: PixelMap, empty: PixelMap, kind: Kind): Pair<Float, Float> {
@@ -365,31 +461,35 @@ class GlassDecisionOptionsRenders {
     }
 
     @Test
-    fun `decision options on stripes - how far a hidden edge steps, and the worst patch`() {
+    fun `decision options on stripes over the Aurora - the guard`() {
         val out = System.getenv("GLASS_OPTIONS_OUT")?.let(::File) ?: return
         out.mkdirs()
-        val sweep = options + Option("C2 slope .10", 16f, .15f, FREE, .10f) + Option("A2 at 16 dp, shipped tint", 16f, 0f, FREE, SLOPE)
-        val table = StringBuilder("option | pane | mode | rows step light/colour | button step light/colour | worst patch rows / button (%, blurred 8 px) (limits 12 / 18; ~2-3 %)\n")
-        for (option in sweep) for (kind in Kind.entries) for (dark in listOf(true, false)) {
-            fun shot(content: Content): PixelMap {
-                val platform = OptionPlatform(option, mutableListOf())
-                return render(STRIPE_H, dark, platform) { StripeScene(kind, content, platform) }.toPixelMap()
-            }
+        val table =
+            StringBuilder(
+                "option | pane | mode | pane mean vs plain bar mean (luminance, band .08) | rows step light/colour | button step light/colour (limits 12 / 18) | guard\n",
+            )
+        for (option in options) for (kind in Kind.entries) for (dark in listOf(true, false)) {
+            fun shot(content: Content, bar: Boolean = false): PixelMap = render(STRIPE_H, dark, OptionPlatform(option, mutableListOf())) { StripeScene(kind, content, bar) }.toPixelMap()
             val empty = shot(Content.Empty)
-            val rowsImg = shot(Content.Rows)
-            val buttonImg = shot(Content.Button)
-            val rows = ghost(rowsImg, empty, kind)
-            val button = ghost(buttonImg, empty, kind)
-            val p = place(kind)
-            val box = floatArrayOf(p.x, p.y, p.x + p.w, p.y + p.h)
+            val barMean = meanLum(shot(Content.Empty, bar = true), kind)
+            val paneMean = meanLum(empty, kind)
+            val rows = ghost(shot(Content.Rows), empty, kind)
+            val button = ghost(shot(Content.Button), empty, kind)
+            val lets = abs(paneMean - barMean) <= MEAN_BAND
+            val hides = rows.first <= 12f && rows.second <= 18f && button.first <= 12f && button.second <= 18f
             table.append(
-                "%s | %s | %s | %.1f / %.1f | %.1f / %.1f | %.1f / %.1f\n".format(
-                    option.name, kind, if (dark) "dark" else "light", rows.first, rows.second, button.first, button.second,
-                    patchSpread(rowsImg, box).first, patchSpread(buttonImg, box).first,
+                "%s | %s | %s | %.3f vs %.3f | %.1f / %.1f | %.1f / %.1f | %s\n".format(
+                    option.name, kind, if (dark) "dark" else "light", paneMean, barMean, rows.first, rows.second, button.first, button.second,
+                    when {
+                        lets && hides -> "PASS"
+                        !lets && !hides -> "FAIL: too dark/light AND detail reads"
+                        !lets -> "FAIL: the pane does not let the light through"
+                        else -> "FAIL: detail reads through"
+                    },
                 ),
             )
         }
-        File(out, "options-stripes.txt").writeText(table.toString())
+        File(out, "options-guard.txt").writeText(table.toString())
     }
 
     private companion object {
@@ -406,12 +506,18 @@ class GlassDecisionOptionsRenders {
         /** The blur the patch measure takes (px), as the review asked. */
         const val BLUR_PX = 8
 
-        /** The two-way hold: the luminance band round the base that passes as it is, and the share kept beyond it. */
-        const val FREE = .012f
-        const val SLOPE = .05f
+        /** The local hold: the detail (RGB distance from the local mean, 0-1) that passes as it is, and the share kept beyond. */
+        const val FREE = .015f
+        const val SLOPE = .12f
 
-        /** The most colour that is left (as LiquidEdge.HOLD_CHROMA). */
-        const val CHROMA = .10f
+        /** How far the local mean reaches (dp): about two lines of words, less than a card. */
+        const val MEAN_DP = 36f
+
+        /** The guard's band: a decision pane's mean luminance within this of the plain bar's over the same patch. */
+        const val MEAN_BAND = .08f
+
+        val TABLE =
+            listOf("zxsos/HGhubX" to "932", "hichuv/HGhub" to "96", "bashirian777/HGhub" to "66", "stlin256/HGhub-Harmony" to "20", "vs2pk0/HGhub" to "16")
 
         val CODE =
             listOf(
@@ -438,34 +544,31 @@ class GlassDecisionOptionsRenders {
     }
 }
 
-/** One option: the decision pane's blur, its tint's extra alpha, and its two-way hold (free band, slope). */
-private data class Option(val name: String, val blurDp: Float, val tintPlus: Float, val free: Float, val slope: Float)
+/** One option: the decision pane's blur, its tint's extra alpha, its local hold (free, slope); [morning]: the build line's. */
+private data class Option(val name: String, val blurDp: Float, val tintPlus: Float, val free: Float, val slope: Float, val morning: Boolean = false)
 
 /**
- * The decision pane as Android would draw it under [o]: the backdrop recorded on a layer padded by the blur, as the
- * library pads it, so the blur never clamps at the pane's own edge; colour controls, blur and the two-way hold in one
- * pass ([TWO_WAY_HOLD]), the same everywhere inside the outline; then the tint and the 1 dp rim light.
+ * The decision pane as Android would draw it under [o]: the backdrop recorded on a layer padded by the blur and the
+ * local mean's reach (the library pads its layer by the blur), so neither clamps at the pane's own edge; colour
+ * controls, blur and [LOCAL_HOLD] in one pass, the same everywhere inside the outline; then the tint and the 1 dp rim.
  */
-private fun twoWayStandIn(spec: KitLiquidPaneSpec, backdrop: KitLiquidBackdrop, shape: CornerBasedShape, platform: KitPlatform, o: Option, ground: () -> Color): Modifier {
+private fun localHoldStandIn(spec: KitLiquidPaneSpec, backdrop: KitLiquidBackdrop, shape: CornerBasedShape, platform: KitPlatform, o: Option): Modifier {
     val at = arrayOfNulls<LayoutCoordinates>(1)
-    val program = platform.liveShaders?.compile(TWO_WAY_HOLD)
+    val program = platform.liveShaders?.compile(LOCAL_HOLD)
     val rim = KitRimShader.programFor(platform.liveShaders)
     return Modifier.onGloballyPositioned { at[0] = it }
         .clip(shape)
         .drawWithCache {
             val layer = obtainGraphicsLayer()
             val r = spec.recipe.blurDp.dp.toPx()
-            val pad = ceil(r + 2f)
+            val reach = MEAN_REACH_DP.dp.toPx()
+            val pad = ceil(r + reach + 2f)
             onDrawBehind {
                 val c = at[0] ?: return@onDrawBehind
                 val p = program ?: return@onDrawBehind
                 val recipe = spec.recipe
-                val g = ground()
-                // The base: the ground after the colour controls (a grey ground: saturation leaves it, contrast and lift move it).
-                val gl = .2126f * g.red + .7152f * g.green + .0722f * g.blue
-                val base = (recipe.contrast * gl + (.5f - .5f * recipe.contrast + recipe.brightness)).coerceIn(0f, 1f)
                 p.float4("cc", recipe.saturation, recipe.contrast, recipe.brightness, 0f)
-                p.float4("hold", base, o.free, o.slope, .10f)
+                p.float4("hold", reach, o.free, o.slope, 0f)
                 layer.renderEffect = platform.liquidJoinEffect(p, r)
                 val w = size.width.roundToInt() + 2 * pad.toInt()
                 val h = size.height.roundToInt() + 2 * pad.toInt()
@@ -477,36 +580,43 @@ private fun twoWayStandIn(spec: KitLiquidPaneSpec, backdrop: KitLiquidBackdrop, 
         }
 }
 
+/** The local mean's reach (dp), as the options' companion says. */
+private const val MEAN_REACH_DP: Float = 36f
+
 /**
- * The two-way hold, after the blur: the colour controls, then the luminance pulled toward `hold.x` (the base) from above
- * and from below (within `hold.y` it passes; beyond it `hold.z` of the rest is kept), moved as a shift of all three
- * channels so the hue stays; then the chroma left eased to `hold.w`, as LiquidEdge.heldRgb limits it.
+ * The local-contrast hold, after the blur: the colour controls; then the local mean of what is behind (the point and two
+ * rings of twelve samples, at half and all of `hold.x` px); then the pixel's distance from that mean (RGB, 0-1) kept
+ * whole up to `hold.y` and only `hold.z` of the rest beyond, so rows of words and a button's edge sink into the light
+ * round them while the light itself (the Aurora, the page's tone, a glow's colour) passes as it is.
  */
-private const val TWO_WAY_HOLD: String =
+private const val LOCAL_HOLD: String =
     """
 uniform shader content;
 uniform float4 cc;
 uniform float4 hold;
 
+float3 controls(float2 p) {
+    float4 c = float4(content.eval(p));
+    float3 rgb = c.rgb / max(c.a, 0.0001);
+    float l = dot(rgb, float3(0.2126, 0.7152, 0.0722));
+    return clamp(cc.y * (l + cc.x * (rgb - l)) + (0.5 - 0.5 * cc.y + cc.z), 0.0, 1.0);
+}
+
 half4 main(float2 q) {
-    float4 c = float4(content.eval(q));
-    float a = max(c.a, 0.0001);
-    float3 rgb = c.rgb / a;
-    float3 w = float3(0.2126, 0.7152, 0.0722);
-    float l = dot(rgb, w);
-    rgb = clamp(cc.y * (l + cc.x * (rgb - l)) + (0.5 - 0.5 * cc.y + cc.z), 0.0, 1.0);
-    float lum = dot(rgb, w);
-    float d = lum - hold.x;
-    float ad = abs(d);
-    float held = ad > hold.y ? hold.y + (ad - hold.y) * hold.z : ad;
-    rgb = rgb + (hold.x + sign(d) * held - lum);
-    float mx = max(rgb.r, max(rgb.g, rgb.b));
-    float mn = min(rgb.r, min(rgb.g, rgb.b));
-    float chroma = mx - mn;
-    float easy = 0.4 * hold.w;
-    float f = (hold.w > 0.0 && chroma > easy) ? (easy + (hold.w - easy) * (1.0 - exp(-(chroma - easy) / (hold.w - easy)))) / chroma : 1.0;
-    float g = dot(rgb, w);
-    rgb = clamp(g + (rgb - g) * f, 0.0, 1.0);
-    return half4(float4(rgb * c.a, c.a));
+    float a = float(content.eval(q).a);
+    float3 rgb = controls(q);
+    float3 m = rgb;
+    for (int i = 0; i < 12; i++) {
+        float t = 6.2831853 * (float(i) + 0.5) / 12.0;
+        float2 d = float2(cos(t), sin(t));
+        m += controls(q + d * hold.x);
+        m += controls(q + d * (hold.x * 0.5));
+    }
+    m /= 25.0;
+    float3 dv = rgb - m;
+    float len = length(dv);
+    float held = len > hold.y ? hold.y + (len - hold.y) * hold.z : len;
+    float3 outRgb = len > 0.0001 ? m + dv * (held / len) : rgb;
+    return half4(float4(clamp(outRgb, 0.0, 1.0) * a, a));
 }
 """
