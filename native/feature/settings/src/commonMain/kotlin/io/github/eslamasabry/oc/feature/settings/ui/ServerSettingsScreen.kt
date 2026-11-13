@@ -1,6 +1,5 @@
 package io.github.eslamasabry.oc.feature.settings.ui
 
-import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
@@ -42,7 +41,6 @@ import io.github.eslamasabry.oc.ui.kit.row.KitSectionLabel
 import io.github.eslamasabry.oc.ui.kit.row.KitSwitchRow
 import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
-import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.kitchat.code.KitCodeBlock
 import io.github.eslamasabry.oc.ui.kitchat.code.KitCodeKind
 import io.github.eslamasabry.oc.ui.kitchat.header.KitClipboardEffect
@@ -105,17 +103,13 @@ public fun ServerSettingsScreen(state: ServerSettingsUi, actions: ServerSettings
                 state.checking ||
                 state.working ||
                 state.modelWorking,
-        edges = KitScreenEdges.Bleed,
     ) {
         Column(
-            // P-007: rows, groups and labels carry the page gutter themselves; only the free parts get it
-            // below, so every line starts on the one 16 dp page edge.
             Modifier.verticalScroll(rememberScrollState()).padding(vertical = Space.S3.dp),
             verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
         ) {
             state.failure?.let { failure ->
                 KitErrorNotice(
-                    modifier = gutter(),
                     message = stringResource(Res.string.serverSettingsFailed),
                     failure = failure,
                     detailsLabel = stringResource(Res.string.kitDetails),
@@ -125,8 +119,8 @@ public fun ServerSettingsScreen(state: ServerSettingsUi, actions: ServerSettings
             }
             when {
                 state.page == ServerSettingsPage.Reach -> ReachComputerBody()
-                state.loading -> KitText(stringResource(Res.string.connCheckRunning), gutter())
-                state.facts == null -> KitNotice(stringResource(Res.string.settingsV3ServerGone), gutter())
+                state.loading -> KitText(stringResource(Res.string.connCheckRunning))
+                state.facts == null -> KitNotice(stringResource(Res.string.settingsV3ServerGone))
                 else ->
                     when (state.page) {
                         ServerSettingsPage.Model -> ServerModelBody(state, actions)
@@ -222,7 +216,7 @@ private fun ServerHome(state: ServerSettingsUi, actions: ServerSettingsActions) 
                 disabledReason = stringResource(Res.string.serverSettingsSaving),
             )
         }
-        KitNotice(stringResource(Res.string.serverSettingsOnServer, facts.name), gutter())
+        KitNotice(stringResource(Res.string.serverSettingsOnServer, facts.name))
         KitRowGroup {
             val flags = facts.capabilities
             if (flags?.serverCatalog == true || flags?.agentAccount == true)
@@ -254,7 +248,7 @@ private fun ServerHome(state: ServerSettingsUi, actions: ServerSettingsActions) 
             ) {
                 // The app cannot update a computer's OpenCode; the row copies the pinned command to run there.
                 val commands = facts.updateCommands
-                if (commands == null) KitNotice(stringResource(Res.string.e7SettingsUi68), gutter())
+                if (commands == null) KitNotice(stringResource(Res.string.e7SettingsUi68))
                 else CopyUpdateCommandsRow(facts.name, commands)
             }
             if (facts.capabilities?.shellSettings == true)
@@ -279,7 +273,6 @@ private fun ServerHome(state: ServerSettingsUi, actions: ServerSettingsActions) 
     } else
         KitNotice(
             stringResource(Res.string.settingsV3ConnectToChange),
-            gutter(),
             actions =
                 listOf(
                     KitLineAction(
@@ -301,7 +294,6 @@ private fun ServerHome(state: ServerSettingsUi, actions: ServerSettingsActions) 
             stringResource(Res.string.server40Reconnect),
             actions::connect,
             role = KitButtonRole.Tertiary,
-            modifier = gutter(),
             enabled =
                 if (state.working)
                     KitEnabled.Disabled(stringResource(Res.string.serverSettingsSaving))
@@ -311,7 +303,6 @@ private fun ServerHome(state: ServerSettingsUi, actions: ServerSettingsActions) 
             stringResource(Res.string.server40Disconnect),
             actions::askDisconnect,
             role = KitButtonRole.Tertiary,
-            modifier = gutter(),
             destructive = true,
             enabled =
                 if (state.working)
@@ -323,7 +314,6 @@ private fun ServerHome(state: ServerSettingsUi, actions: ServerSettingsActions) 
         label = stringResource(Res.string.serverSettingsRemoveTitle, facts.name),
         destructive = true,
         role = KitButtonRole.Tertiary,
-        modifier = gutter(),
         onClick = actions::askRemove,
         enabled =
             if (state.working) KitEnabled.Disabled(stringResource(Res.string.serverSettingsSaving))
@@ -421,7 +411,7 @@ private fun ServerLocalBody(state: ServerSettingsUi, actions: ServerSettingsActi
                 else enabled,
         )
     }
-    if (state.resetDone) KitNotice(stringResource(Res.string.server40ResetDone), gutter())
+    if (state.resetDone) KitNotice(stringResource(Res.string.server40ResetDone))
     if (local.hasOverrides)
         KitRow(
             title = stringResource(Res.string.settingsV3UseMyDefault),
@@ -439,7 +429,7 @@ private fun ServerLocalBody(state: ServerSettingsUi, actions: ServerSettingsActi
 
 @Composable
 private fun ServerModelBody(state: ServerSettingsUi, actions: ServerSettingsActions) {
-    KitNotice(stringResource(Res.string.server40ModelHelp), gutter())
+    KitNotice(stringResource(Res.string.server40ModelHelp))
     val enabled =
         if (state.working || state.modelWorking)
             KitEnabled.Disabled(stringResource(Res.string.serverSettingsSaving))
@@ -483,7 +473,7 @@ private fun ServerModelBody(state: ServerSettingsUi, actions: ServerSettingsActi
 
 @Composable
 private fun ConnectionCheckBody(state: ServerSettingsUi, actions: ServerSettingsActions) {
-    KitText(stringResource(Res.string.connCheckIntro), gutter())
+    KitText(stringResource(Res.string.connCheckIntro))
     KitRowGroup(Modifier.testTag("connection-check-steps")) {
         state.results.forEach { result ->
             val mark =
@@ -518,7 +508,6 @@ private fun ConnectionCheckBody(state: ServerSettingsUi, actions: ServerSettings
             if (state.checking) Res.string.connCheckRunning else Res.string.connCheckAgain
         ),
         actions::refresh,
-        modifier = gutter(),
         enabled = !state.checking,
         disabledReason = stringResource(Res.string.connCheckRunning),
     )
@@ -572,17 +561,17 @@ private fun resultWords(result: ConnectionResult): String? {
 
 @Composable
 private fun ShellBody(state: ServerSettingsUi, actions: ServerSettingsActions) {
-    KitText(stringResource(Res.string.e7SettingsUi36), gutter())
-    KitNotice(stringResource(Res.string.settingsV3ShellByServerNote), gutter())
+    KitText(stringResource(Res.string.e7SettingsUi36))
+    KitNotice(stringResource(Res.string.settingsV3ShellByServerNote))
     if (state.facts?.capabilities?.shellSettings != true) {
-        KitNotice(stringResource(Res.string.serverSettingsShellUnavailable), gutter())
+        KitNotice(stringResource(Res.string.serverSettingsShellUnavailable))
         return
     }
     val settings = state.shells
     if (settings == null) {
         // A failed read already shows the page's error notice with its own Try again: one retry, not two.
         if (!state.working && state.failure == null)
-            KitButton(stringResource(Res.string.kitTryAgain), actions::refresh, modifier = gutter())
+            KitButton(stringResource(Res.string.kitTryAgain), actions::refresh)
         return
     }
     val only =
@@ -675,7 +664,7 @@ private fun ReachComputerBody() {
     var copied by remember { mutableStateOf<String?>(null) }
     var copyId by remember { mutableLongStateOf(0) }
     KitClipboardEffect(if (copied == null) null else copyId, copied, onDone = { copied = null })
-    KitText(stringResource(Res.string.reachIntro), gutter())
+    KitText(stringResource(Res.string.reachIntro))
     KitSectionLabel(stringResource(Res.string.reachTailscaleHeading))
     listOf(
             Res.string.reachTailscale1,
@@ -684,17 +673,17 @@ private fun ReachComputerBody() {
             Res.string.reachTailscale4,
         )
         .forEachIndexed { index, key ->
-            KitText("${index + 1}. ${stringResource(key)}", gutter(), role = TypeRole.Body)
+            KitText("${index + 1}. ${stringResource(key)}", role = TypeRole.Body)
         }
     KitSectionLabel(stringResource(Res.string.reachSshHeading))
     listOf(Res.string.reachSsh1, Res.string.reachSsh2, Res.string.reachSsh3, Res.string.reachSsh4)
         .forEachIndexed { index, key ->
-            KitText("${index + 1}. ${stringResource(key)}", gutter(), role = TypeRole.Body)
+            KitText("${index + 1}. ${stringResource(key)}", role = TypeRole.Body)
         }
     KitCodeBlock(
         source = stringResource(Res.string.reachSshCommand),
         kind = KitCodeKind.Command,
-        modifier = gutter().testTag("reach-ssh-command"),
+        modifier = Modifier.testTag("reach-ssh-command"),
         copyLabel = stringResource(Res.string.kitCopyDetails),
         copiedLabel = stringResource(Res.string.kitCopied),
         onCopy = {
@@ -703,8 +692,6 @@ private fun ReachComputerBody() {
         },
     )
     KitSectionLabel(stringResource(Res.string.reachSafetyHeading))
-    KitText(stringResource(Res.string.reachSafety), gutter())
+    KitText(stringResource(Res.string.reachSafety))
 }
 
-/** The page gutter for the parts that don't carry it themselves (text, notices, buttons, code). */
-@Composable private fun gutter(): Modifier = Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp)
