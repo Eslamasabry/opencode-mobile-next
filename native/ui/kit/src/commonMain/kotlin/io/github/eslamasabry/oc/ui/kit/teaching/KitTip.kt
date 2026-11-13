@@ -76,6 +76,12 @@ public object TipRules {
     /** Above the anchor when it sits below the top quarter of the window, else below. */
     public fun above(anchorTopPx: Float, windowHeightPx: Float): Boolean = anchorTopPx > windowHeightPx / 4f
 
+    /**
+     * An anchor taller than half the window is one the page is made of (a terminal, a canvas): its far side is where
+     * its own controls are, so the tip sits inside it, at its top edge, never past its bottom.
+     */
+    public fun inside(anchorHeightPx: Float, windowHeightPx: Float): Boolean = anchorHeightPx > windowHeightPx / 2f
+
     /** How far the tip rises toward its anchor as it appears: Full only. */
     public fun riseDp(state: KitMotionState): Int = if (state.travels) MotionTokens.TIP_RISE_DP else 0
 }
@@ -83,7 +89,7 @@ public object TipRules {
 /**
  * One sentence anchored to a control (Dart `KitTip`; plan 06 §7.2, owner rule "teach what is hidden"), shown while
  * [visible]. It never blocks: it takes no focus, any touch fades it, and it fades by itself after [holdMs]; each end
- * calls [onDismissed] once. Above the anchor when the anchor is below the top quarter, else below; aligned with the
+ * calls [onDismissed] once. Above the anchor when the anchor is below the top quarter, else below (inside its top edge when the anchor is taller than half the window); aligned with the
  * anchor's nearer edge so it never leaves the window; at most 280 dp wide. Announced politely when it appears. Never
  * amber, never red. Which tip shows, and how often, is the teaching controller's (S2-TEACH); this is the drawing.
  *
@@ -216,7 +222,10 @@ public fun KitTipBubble(message: String, modifier: Modifier = Modifier) {
     }
 }
 
-/** Above or below the anchor, aligned with the anchor's nearer edge, kept inside the window. */
+/**
+ * Above or below the anchor, aligned with the anchor's nearer edge, kept inside the window; inside a tall anchor
+ * ([TipRules.inside]) at its top edge plus the gap, never on its far side.
+ */
 private class TipPosition(private val above: Boolean, private val gap: Int) : PopupPositionProvider {
     override fun calculatePosition(anchorBounds: IntRect, windowSize: IntSize, layoutDirection: LayoutDirection, popupContentSize: IntSize): IntOffset {
         val nearStart = anchorBounds.center.x < windowSize.width / 2
@@ -224,7 +233,8 @@ private class TipPosition(private val above: Boolean, private val gap: Int) : Po
             (if (nearStart) anchorBounds.left else anchorBounds.right - popupContentSize.width)
                 .coerceIn(0, (windowSize.width - popupContentSize.width).coerceAtLeast(0))
         val y =
-            (if (above) anchorBounds.top - gap - popupContentSize.height else anchorBounds.bottom + gap)
+            (if (TipRules.inside(anchorBounds.height.toFloat(), windowSize.height.toFloat())) anchorBounds.top + gap
+            else if (above) anchorBounds.top - gap - popupContentSize.height else anchorBounds.bottom + gap)
                 .coerceIn(0, (windowSize.height - popupContentSize.height).coerceAtLeast(0))
         return IntOffset(x, y)
     }

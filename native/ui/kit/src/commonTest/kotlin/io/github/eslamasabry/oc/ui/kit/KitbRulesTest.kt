@@ -231,6 +231,11 @@ class KitbRulesTest {
         assertTrue(TipRules.above(anchorTopPx = 900f, windowHeightPx = 2400f))
         assertFalse(TipRules.above(anchorTopPx = 400f, windowHeightPx = 2400f))
         assertEquals(280, TipRules.MAX_WIDTH_DP)
+        // A tall anchor (more than half the window) holds the tip inside it; half exactly is still a small anchor.
+        assertTrue(TipRules.inside(anchorHeightPx = 1900f, windowHeightPx = 2400f))
+        assertTrue(TipRules.inside(anchorHeightPx = 1201f, windowHeightPx = 2400f))
+        assertFalse(TipRules.inside(anchorHeightPx = 1200f, windowHeightPx = 2400f))
+        assertFalse(TipRules.inside(anchorHeightPx = 144f, windowHeightPx = 2400f))
         assertEquals(MotionTokens.TIP_RISE_DP, TipRules.riseDp(KitMotionState(MotionLevel.Full)))
         assertEquals(0, TipRules.riseDp(KitMotionState(MotionLevel.Calm)))
         assertEquals(MotionTokens.TIP_HOLD.toLong(), TipRules.HOLD_MS)
