@@ -64,7 +64,7 @@ class GlassLabPageTest {
         onNodeWithText("Paste values").assertExists()
         onNodeWithText("Reset all").assertExists()
         onNodeWithText("Light refraction").assertExists()
-        onNodeWithText("Clear liquid").assertExists()
+        onNodeWithText("Clear liquid", useUnmergedTree = true).assertExists()
         onNodeWithText("Refraction strength").assertExists()
         onNodeWithTag("kit-tuning-drawer-handle").assertExists()
         // The preview is real content: the bar's title and the reply under it.
@@ -76,7 +76,7 @@ class GlassLabPageTest {
         assertEquals(8f, t.knobs(GlassPaneKind.Bar, true).blurDp)
         assertEquals(17f, t.knobs(GlassPaneKind.Menu, true).blurDp)
         // One kind: only the menu moves.
-        onNodeWithText("Menu").performClick()
+        onNodeWithText("Menu", useUnmergedTree = true).performClick()
         onNode(hasContentDescription("Refraction strength") and canSetProgress).performSemanticsAction(SemanticsActions.SetProgress) { it(90f) }
         waitForIdle()
         assertEquals(90f, lab!!.state.value.tuning.knobs(GlassPaneKind.Menu, true).lensStrengthDp)
