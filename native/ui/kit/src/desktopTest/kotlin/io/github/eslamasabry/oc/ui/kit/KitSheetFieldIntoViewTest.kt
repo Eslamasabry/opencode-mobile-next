@@ -37,9 +37,9 @@ import kotlin.test.assertTrue
 class KitSheetFieldIntoViewTest {
     private val fade = 24.dp
 
-    private fun run(pinned: Boolean, check: (field: androidx.compose.ui.unit.DpRect, button: androidx.compose.ui.unit.DpRect?, sheet: androidx.compose.ui.unit.DpRect) -> Unit) =
+    private fun run(pinned: Boolean, keyboardUp: Boolean, check: (field: androidx.compose.ui.unit.DpRect, button: androidx.compose.ui.unit.DpRect?, sheet: androidx.compose.ui.unit.DpRect) -> Unit) =
         runComposeUiTest {
-            var keyboard by mutableStateOf(0.dp)
+            var keyboard by mutableStateOf(if (keyboardUp) 200.dp else 0.dp)
             val focus = FocusRequester()
             setContent {
                 CompositionLocalProvider(LocalDensity provides Density(1f), LocalSheetKeyboard provides keyboard) {
@@ -60,6 +60,8 @@ class KitSheetFieldIntoViewTest {
                                             "Tell the agent why",
                                             Modifier.testTag("why"),
                                             kind = KitFieldKind.Multiline,
+                                            // One line to start: the caret line is the whole field, as typing goes on.
+                                            multilineLines = 1..8,
                                             focusRequester = focus,
                                         )
                                     }
@@ -71,28 +73,28 @@ class KitSheetFieldIntoViewTest {
             }
             runOnIdle { focus.requestFocus() }
             waitForIdle()
-            fun measure() =
-                check(
-                    onNodeWithTag("why").getBoundsInRoot(),
-                    if (pinned) onNodeWithText("Allow").getBoundsInRoot() else null,
-                    onNodeWithTag("kit-sheet").getBoundsInRoot(),
-                )
-            measure()
-            // The keyboard comes up under the sheet: the body is shorter, the field still rests above the fade.
-            runOnIdle { keyboard = 300.dp }
-            waitForIdle()
-            measure()
+            check(
+                onNodeWithTag("why").getBoundsInRoot(),
+                if (pinned) onNodeWithText("Allow").getBoundsInRoot() else null,
+                onNodeWithTag("kit-sheet").getBoundsInRoot(),
+            )
         }
 
     @Test
-    fun `a focused field at the end of a body with pinned buttons rests a fade's reach above them, keyboard up or not`() =
-        run(pinned = true) { field, button, _ ->
+    fun `a focused field at the end of a body with pinned buttons rests a fade's reach above them`() =
+        run(pinned = true, keyboardUp = false) { field, button, _ ->
+            assertTrue(field.bottom <= button!!.top - fade, "field bottom ${field.bottom} must be at least $fade above the buttons ${button.top}")
+        }
+
+    @Test
+    fun `the same with the keyboard up under the sheet`() =
+        run(pinned = true, keyboardUp = true) { field, button, _ ->
             assertTrue(field.bottom <= button!!.top - fade, "field bottom ${field.bottom} must be at least $fade above the buttons ${button.top}")
         }
 
     @Test
     fun `without pinned buttons the focused field only reaches the sheet's edge`() =
-        run(pinned = false) { field, _, sheet ->
+        run(pinned = false, keyboardUp = false) { field, _, sheet ->
             assertTrue(field.bottom <= sheet.bottom, "field bottom ${field.bottom} inside the sheet ${sheet.bottom}")
         }
 }
