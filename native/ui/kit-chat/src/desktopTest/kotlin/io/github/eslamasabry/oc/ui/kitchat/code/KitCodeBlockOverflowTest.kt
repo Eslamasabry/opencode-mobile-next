@@ -13,7 +13,14 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import androidx.compose.ui.unit.dp
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.geometry.Rect
 import io.github.eslamasabry.oc.ui.kitchat.ChatTestTheme
+import io.github.eslamasabry.oc.ui.kitchat.stream.KitMotionLevel
+import io.github.eslamasabry.oc.ui.kitchat.stream.RevealRegistry
+import io.github.eslamasabry.oc.ui.kitchat.tool.KitCommandBox
+import io.github.eslamasabry.oc.ui.kitchat.transcript.KitBlockKind
+import io.github.eslamasabry.oc.ui.kitchat.transcript.KitReplyBlock
 import kotlin.test.Test
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
@@ -74,4 +81,79 @@ class KitCodeBlockOverflowTest {
         }
         assertFalse(ranges.any { it > 0f }, "nothing to scroll ($ranges)")
     }
+
+    /** The sideways scrollers on screen that have more to show: their viewports in root pixels. */
+    private fun overflowingViewports(root: androidx.compose.ui.semantics.SemanticsNode): List<Rect> {
+        val out = mutableListOf<Rect>()
+        fun visit(n: androidx.compose.ui.semantics.SemanticsNode) {
+            val range = n.config.getOrNull(SemanticsProperties.HorizontalScrollAxisRange)
+            if (range != null && range.maxValue() > 0f) out += n.boundsInRoot
+            n.children.forEach(::visit)
+        }
+        visit(root)
+        return out
+    }
+
+    /** Strongest ink in columns [x0, x1) of rows [y0, y1), against the strip under the last line ([bgY]). */
+    private fun ink(img: androidx.compose.ui.graphics.ImageBitmap, x0: Int, x1: Int, y0: Int, y1: Int, bgY: Int): Float {
+        val px = img.toPixelMap()
+        var best = 0f
+        for (x in x0 until x1) {
+            val bg = px[x, bgY]
+            for (y in y0 until y1)
+                best = maxOf(best, kotlin.math.abs(px[x, y].red - bg.red), kotlin.math.abs(px[x, y].green - bg.green))
+        }
+        return best
+    }
+
+    /**
+     * Review 2026-11-13 #5, measured on screen: [content] shows one listing wider than its box. Its viewport can
+     * scroll sideways, and the glyphs in the viewport's last 3 px are at most half as strong as mid-line ones: the
+     * listing thins out at the edge instead of stopping inside a letter.
+     */
+    private fun assertFadesAtEnd(what: String, content: @Composable () -> Unit) {
+        var viewports = emptyList<Rect>()
+        var edge = 1f
+        var mid = 0f
+        runDesktopComposeUiTest(400, 300) {
+            setContent { ChatTestTheme { Box(Modifier.width(300.dp)) { content() } } }
+            waitForIdle()
+            viewports = overflowingViewports(onRoot().fetchSemanticsNode())
+            if (viewports.isNotEmpty()) {
+                val v = viewports.first()
+                val img = onRoot().captureToImage()
+                val top = v.top.toInt()
+                val bottom = v.bottom.toInt()
+                val right = v.right.toInt()
+                val centre = v.center.x.toInt()
+                edge = ink(img, right - 3, right, top, bottom - 4, bottom - 2)
+                mid = ink(img, centre, centre + 3, top, bottom - 4, bottom - 2)
+            }
+        }
+        assertTrue(viewports.isNotEmpty(), "$what: the listing scrolls sideways")
+        assertTrue(mid > 0.2f, "$what: mid-line glyphs are drawn ($mid)")
+        assertTrue(edge < mid * 0.5f, "$what: the last glyph column thins out at the edge ($edge vs $mid)")
+    }
+
+    // Dense glyphs so the edge columns always hold ink: before the fix they were as strong as mid-line ones.
+    private val listing = "W".repeat(120)
+
+    @Test
+    fun `a fence still arriving fades at its right edge and scrolls sideways`() =
+        assertFadesAtEnd("reply row") {
+            KitReplyBlock(
+                listing, KitBlockKind.Code, live = false, streamed = false, revealKey = "r", revealGroup = "g",
+                registry = RevealRegistry(), motion = KitMotionLevel.Off,
+            )
+        }
+
+    @Test
+    fun `a chunk of a long fence fades at its right edge and scrolls sideways`() =
+        assertFadesAtEnd("code chunk") { KitCodeChunk(listing, continued = false, continues = false) }
+
+    @Test
+    fun `command output wider than its box fades at the right edge and scrolls sideways`() =
+        assertFadesAtEnd("command box") {
+            KitCommandBox(command = "ls", output = listing, moreLabel = "Show all", onMore = {}, exitLabel = null)
+        }
 }
