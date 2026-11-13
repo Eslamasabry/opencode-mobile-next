@@ -6,6 +6,7 @@ import io.github.eslamasabry.oc.core.common.ok
 import io.github.eslamasabry.oc.engine.agents.feed.ChatFeedSnapshot
 import io.github.eslamasabry.oc.engine.agents.feed.ChatStatus
 import io.github.eslamasabry.oc.engine.agents.feed.FeedPermission
+import io.github.eslamasabry.oc.engine.agents.feed.FeedRunning
 import io.github.eslamasabry.oc.engine.agents.feed.ReturnBrief
 import io.github.eslamasabry.oc.core.domain.capabilities.ServerCapabilities
 import io.github.eslamasabry.oc.engine.attention.dock.DockListState.NeedsYou
@@ -147,6 +148,25 @@ class LampSharedHoldTest {
         advanceTimeBy(10_000)
         runCurrent()
         assertTrue(answers.sent.isEmpty())
+    }
+
+    @Test
+    fun `B-LAMP-M2 a running home row can be stopped from its menu by the chat's own path, an idle one cannot`() = runTest {
+        val running = item("run", status = ChatStatus.Running).copy(running = FeedRunning(null))
+        val feed = Feed().apply { snapshot.value = ChatFeedSnapshot(persistentListOf(running, item("idle"))) }
+        val stopped = mutableListOf<ConversationRef>()
+        val vm = ChatsViewModel(feed, Briefs(), Door, { Instant.fromEpochMilliseconds(0) }, clock, Nav(), stopper = HomeStop { ref -> stopped += ref; Unit.ok() })
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
+        assertTrue(vm.state.value.stoppable)
+        val rows = vm.state.value.rightNow + vm.state.value.recent
+        vm.stopRow(rows.first { it.ref.sessionId.raw == "idle" })
+        assertTrue(stopped.isEmpty(), "an idle row has nothing to stop")
+        vm.stopRow(rows.first { it.ref.sessionId.raw == "run" })
+        runCurrent()
+        assertEquals(listOf(lref("run")), stopped)
+        val without = ChatsViewModel(feed, Briefs(), Door, { Instant.fromEpochMilliseconds(0) }, clock, Nav())
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { without.state.collect {} }
+        assertEquals(false, without.state.value.stoppable, "no stop path bound: the menu offers no Stop")
     }
 
     private object NoPort : LampPort {
