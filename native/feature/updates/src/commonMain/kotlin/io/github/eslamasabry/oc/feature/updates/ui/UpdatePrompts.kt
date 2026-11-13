@@ -6,7 +6,9 @@ import androidx.compose.ui.Modifier
 import io.github.eslamasabry.oc.feature.updates.presentation.NoticeUi
 import io.github.eslamasabry.oc.feature.updates.presentation.OfferUi
 import io.github.eslamasabry.oc.feature.updates.presentation.UpdateNoticeActions
+import io.github.eslamasabry.oc.feature.updates.presentation.UPDATED_NOTICE_HOLD_MS
 import io.github.eslamasabry.oc.feature.updates.presentation.UpdatePromptActions
+import io.github.eslamasabry.oc.feature.updates.presentation.dismissAfterHold
 import io.github.eslamasabry.oc.ui.design.color.StatusTone
 import io.github.eslamasabry.oc.ui.kit.KitAction
 import io.github.eslamasabry.oc.ui.kit.KitText
@@ -33,14 +35,13 @@ import io.github.eslamasabry.oc.ui.words.res.appUpdateVerifying
 import io.github.eslamasabry.oc.ui.words.res.appUpdateWhatsNew
 import io.github.eslamasabry.oc.ui.words.res.kitSheetClose
 import io.github.eslamasabry.oc.ui.words.res.notifyDismiss
-import kotlinx.coroutines.delay
 import org.jetbrains.compose.resources.stringResource
 
 private const val NOTICE_ID = "update:release"
 private const val UPDATED_ID = "update:installed"
 
 /** How long "Updated to version X" holds on screen before it leaves by itself (B-217). */
-public const val UPDATED_HOLD_MS: Long = 6_000L
+public const val UPDATED_HOLD_MS: Long = UPDATED_NOTICE_HOLD_MS
 
 /**
  * The update's words for the one status line (Flutter `AppUpdateNotice._status`), for a screen or shell that passes
@@ -52,8 +53,7 @@ public fun updateStatus(notice: NoticeUi, actions: UpdateNoticeActions): KitStat
     // Said once on the visit after the update, never left standing on every screen (B-217, B-241's lesson).
     if (notice is NoticeUi.Updated) {
         LaunchedEffect(notice.version) {
-            delay(UPDATED_HOLD_MS)
-            actions.onNotNow()
+            actions.dismissAfterHold()
         }
     }
     return when (notice) {
