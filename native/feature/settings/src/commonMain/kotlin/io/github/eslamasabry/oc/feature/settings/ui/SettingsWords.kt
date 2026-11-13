@@ -147,7 +147,8 @@ import io.github.eslamasabry.oc.ui.words.res.settingsHubServer
 import io.github.eslamasabry.oc.ui.words.res.settingsHubShowReasoning
 import io.github.eslamasabry.oc.ui.words.res.settingsHubShowTimestamps
 import io.github.eslamasabry.oc.ui.words.res.dockLabel
-import io.github.eslamasabry.oc.ui.words.res.dockSettingBody
+import io.github.eslamasabry.oc.ui.words.res.dockModeAliases
+import io.github.eslamasabry.oc.ui.words.res.dockModeTitle
 import io.github.eslamasabry.oc.ui.words.res.dockSettingTitle
 import io.github.eslamasabry.oc.ui.words.res.settingsHubToolsRow
 import io.github.eslamasabry.oc.ui.words.res.settingsHubVoice
