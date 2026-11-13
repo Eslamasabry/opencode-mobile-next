@@ -5444,15 +5444,16 @@ class BuiltinLinux(private val context: Context) {
         serverStartLogOffset = null
     }
 
-    /** Native packages keep their own loopback address; Flutter continues to own 4097. */
+    /** The port the last start chose ([PhoneServerPorts]); each build has its own default. */
     val selectedServerPort: Int
         get() =
-            recoveryPreferences.getInt("nativeServerPort", defaultServerPort).takeIf {
-                it == 4098 || it in 4100..4199
-            } ?: defaultServerPort
+            PhoneServerPorts.saved(
+                recoveryPreferences.getInt("nativeServerPort", defaultServerPort),
+                defaultServerPort,
+            )
 
     private val defaultServerPort: Int
-        get() = if (context.packageName.endsWith(".native")) 4100 else SERVER_DEFAULT_PORT
+        get() = PhoneServerPorts.default(context.packageName, configuredDefaultPort)
 
     /** Only select a port while our tracked server is stopped; never take over another listener. */
     @Synchronized
@@ -5462,7 +5463,7 @@ class BuiltinLinux(private val context: Context) {
         }
         beginServerStart()
         val chosen =
-            (listOf(selectedServerPort) + (4100..4199)).distinct().firstOrNull { LoopbackPort.free(it) }
+            PhoneServerPorts.candidates(defaultServerPort).firstOrNull { LoopbackPort.free(it) }
                 ?: run {
                     selectedPortBusy = true
                     throw ServerPortBusy(selectedServerPort)
@@ -6738,7 +6739,6 @@ exec gc supervisor run
         private const val MAX_RESTART_DELAY_MS = 60_000L
         private const val MAX_RECEIPT_CHARS = 131_072
         private const val MAX_ENV_BYTES = 131_072
-        private const val SERVER_DEFAULT_PORT = 4098
         private const val CPU_SAMPLE_MS = 1_000L
         private const val STOP_GRACE_MS = 2_000L
         private const val MAX_STOP_PIDS = 256
@@ -6989,6 +6989,13 @@ exec gc supervisor run
         private val NAME = Regex("[a-z][a-z0-9-]{0,31}")
 
         @Volatile private var instance: BuiltinLinux? = null
+
+        /** The app build's own phone server port (B-232); set once in Application.onCreate before any start. */
+        @Volatile private var configuredDefaultPort: Int? = null
+
+        fun configureDefaultPort(port: Int) {
+            configuredDefaultPort = port.takeIf(PhoneServerPorts::valid)
+        }
 
         /**
          * For the Status widget: whether this process runs the phone server. Never creates the
