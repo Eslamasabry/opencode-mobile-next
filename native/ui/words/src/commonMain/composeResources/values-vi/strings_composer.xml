@@ -345,8 +345,6 @@
     <string name="kitComposerCantTakeMidReply">%1$s không nhận được tin nhắn giữa chừng khi đang trả lời.</string>
     <string name="vpttLetGoToFinish">Thả tay khi nói xong</string>
     <string name="vpttLetGoToCancel">Thả tay để hủy</string>
-    <string name="vpttSendingIn">Gửi sau %1$s…</string>
-    <string name="vpttDontSend">Không gửi</string>
     <string name="vpttLanguageFollowApp">Giống ứng dụng</string>
     <string name="vpttLanguageFollowAppDetail">Nghe theo ngôn ngữ của ứng dụng khi có thể, và tự nhận ra ngôn ngữ từ giọng của bạn khi không thể.</string>
     <string name="vpttLanguageDetectDetail">Tự nhận ra ngôn ngữ từ giọng của bạn mỗi lần.</string>

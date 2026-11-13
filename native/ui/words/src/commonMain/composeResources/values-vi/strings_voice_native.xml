@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Translated with native/tools/strings/translate; English is the source. -->
 <resources>
-    <string name="voiceNativeSendNow">Gửi ngay</string>
     <string name="voiceNativeDetect">Nhận diện từ giọng nói</string>
     <string name="voiceNativeSizeMb">%1$d MB</string>
     <string name="voiceNativePhoneEngine">Nhập bằng giọng nói dùng tính năng nhận dạng giọng nói riêng của điện thoại, nên âm thanh vẫn ở trên điện thoại này. Điện thoại không có tính năng đó sẽ không hiện micro. Phiên bản này chưa dùng các mô hình giọng nói bên dưới.</string>

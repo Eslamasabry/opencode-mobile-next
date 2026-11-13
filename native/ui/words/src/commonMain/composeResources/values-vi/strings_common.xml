@@ -693,4 +693,5 @@
     <string name="browserAgentSocketUnavailable">Kết nối Codex và Paseo không có trong trình duyệt. Chúng đăng nhập bằng tiêu đề WebSocket mà trình duyệt không thể gửi, và hiện chưa hỗ trợ đăng nhập trên trình duyệt. Hãy dùng ứng dụng điện thoại hoặc máy tính cho chúng; máy chủ OpenCode dùng được ở đây.</string>
     <string name="phoneServerPortBusy">Một máy chủ OpenCode khác đang dùng cổng %1$s trên điện thoại này.</string>
     <string name="chatRequestAskReadFolder">Đọc thư mục này?</string>
+    <string name="appUpdateUpdatedTo">Đã cập nhật lên phiên bản %1$s</string>
 </resources>

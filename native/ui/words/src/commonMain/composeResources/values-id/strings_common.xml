@@ -693,4 +693,5 @@
     <string name="browserAgentSocketUnavailable">Koneksi Codex dan Paseo tidak tersedia di browser. Keduanya masuk dengan header WebSocket yang tidak bisa dikirim browser, dan belum ada proses masuk lewat browser. Gunakan aplikasi ponsel atau desktop untuk keduanya; server OpenCode berfungsi di sini.</string>
     <string name="phoneServerPortBusy">Server OpenCode lain sudah memakai port %1$s di ponsel ini.</string>
     <string name="chatRequestAskReadFolder">Baca folder ini?</string>
+    <string name="appUpdateUpdatedTo">Diperbarui ke versi %1$s</string>
 </resources>

@@ -1,5 +1,4 @@
 <resources>
-    <string name="voiceNativeSendNow">أرسل الآن</string>
     <string name="voiceNativeDetect">تعرّف على اللغة من الكلام</string>
     <string name="voiceNativeSizeMb">%1$d ميغابايت</string>
     <string name="voiceNativePhoneEngine">تستخدم الكتابة بالصوت ميزة التعرّف على الكلام في هاتفك، فيبقى الصوت على هذا الهاتف. الهواتف التي لا تدعمها لا تعرض زر الميكروفون. لا يستخدم هذا الإصدار نماذج الكلام أدناه بعد.</string>

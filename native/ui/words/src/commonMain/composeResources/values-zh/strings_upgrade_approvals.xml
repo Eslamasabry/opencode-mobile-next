@@ -21,7 +21,7 @@
     <string name="approvalAllowedWhat">已允许：%1$s</string>
     <string name="approvalAlwaysAllowedWhat">已始终允许：%1$s</string>
     <string name="approvalDenied">已拒绝</string>
-    <string name="approvalDeniedInstead">已拒绝，并要求改做：%1$s</string>
+    <string name="approvalDeniedInstead">已拒绝，并要求改为：“%1$s”</string>
     <string name="approvalChangeOf">对 %1$s 的更改</string>
     <string name="approvalChangeMissing">智能体没有说明要写入什么。</string>
     <string name="approvalCopyChange">复制更改</string>

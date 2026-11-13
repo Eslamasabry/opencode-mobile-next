@@ -19,4 +19,5 @@
     <string name="composerFullFiles">File dari proyek</string>
     <string name="composerFullAttachmentsLocal">Lampiran disimpan bersama draf ini di perangkat ini.</string>
     <string name="composerFullSteerHint">Arahkan saat sedang bekerja…</string>
+    <string name="composerFullWaitingHint">Menunggu keputusan Anda di atas…</string>
 </resources>

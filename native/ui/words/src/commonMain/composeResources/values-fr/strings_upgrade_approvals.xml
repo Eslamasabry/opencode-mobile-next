@@ -21,7 +21,7 @@
     <string name="approvalAllowedWhat">Autorisé\u00A0: %1$s</string>
     <string name="approvalAlwaysAllowedWhat">Toujours autorisé\u00A0: %1$s</string>
     <string name="approvalDenied">Refusé</string>
-    <string name="approvalDeniedInstead">Refusé, il doit faire ceci à la place\u00A0: %1$s</string>
+    <string name="approvalDeniedInstead">Refusé, avec la demande de faire ceci à la place : « %1$s »</string>
     <string name="approvalChangeOf">La modification de %1$s</string>
     <string name="approvalChangeMissing">L'agent n'a pas dit ce qu'il va écrire.</string>
     <string name="approvalCopyChange">Copier la modification</string>

@@ -322,4 +322,6 @@
     <string name="chatsHomeInterrupted">已中断</string>
     <string name="chatsNewGettingReady">正在准备…</string>
     <string name="chatsNewGettingReadySlow">仍在读取此服务器的项目和模型…</string>
+    <string name="chatsHomeNotReadTitle">并非所有对话都已读取</string>
+    <string name="chatsHomeNotReadBody">服务器已响应，但此页面无法读取它的列表，所以不能确定没有对话。请重试以读取。</string>
 </resources>

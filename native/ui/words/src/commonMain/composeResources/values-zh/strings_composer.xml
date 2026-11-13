@@ -346,8 +346,6 @@
     <string name="kitComposerCantTakeMidReply">%1$s 无法在回复途中接收消息。</string>
     <string name="vpttLetGoToFinish">说完后松开</string>
     <string name="vpttLetGoToCancel">松开即取消</string>
-    <string name="vpttSendingIn">%1$s 后发送…</string>
-    <string name="vpttDontSend">不发送</string>
     <string name="vpttLanguageFollowApp">与应用相同</string>
     <string name="vpttLanguageFollowAppDetail">尽可能按应用的语言识别；无法识别时，根据你的声音判断语言。</string>
     <string name="vpttLanguageDetectDetail">每次都根据你的声音判断语言。</string>

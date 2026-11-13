@@ -57,7 +57,7 @@
     <string name="s40iFixTool">Проверьте %1$s на сервере</string>
     <string name="s40iAddTools">Добавьте серверы инструментов на сервере</string>
     <string name="s40iUnnamed">Элемент без названия</string>
-    <string name="s40iToolsNotListed">Этот сервер не перечисляет инструменты, доступные модели. Остальные страницы каталога доступны выше.</string>
+    <string name="s40iToolsNotListed">Этот сервер не сообщает, какие инструменты доступны модели. Страницы выше показывают, что у него есть.</string>
     <string name="s40iCommands">Команды</string>
     <string name="s40iSkills">Навыки</string>
     <string name="s40iReferences">Справочные материалы</string>
@@ -72,4 +72,5 @@
     <string name="s40iRunCommand">Выполнить /%1$s</string>
     <string name="s40iOpenPageQuestion">Открыть эту страницу?</string>
     <string name="s40iOpenPage">Открыть страницу</string>
+    <string name="s40iMcpAddHintRuntime">Выберите удалённый URL или локальную программу. Сервер добавит её в этот проект до перезапуска; недостающее ПО он не устанавливает.</string>
 </resources>

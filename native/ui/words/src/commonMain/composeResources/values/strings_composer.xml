@@ -357,8 +357,6 @@
     <string name="kitComposerCantTakeMidReply">%1$s can't take a message mid-reply.</string>
     <string name="vpttLetGoToFinish">Let go when you're done</string>
     <string name="vpttLetGoToCancel">Let go to cancel</string>
-    <string name="vpttSendingIn">Sending in %1$s…</string>
-    <string name="vpttDontSend">Don't send</string>
     <string name="vpttLanguageFollowApp">Same as the app</string>
     <string name="vpttLanguageFollowAppDetail">Listens for the app's language when it can, and works out the language from your voice when it can't.</string>
     <string name="vpttLanguageDetectDetail">Works out the language from your voice each time.</string>

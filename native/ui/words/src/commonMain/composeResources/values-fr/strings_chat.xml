@@ -1246,4 +1246,6 @@
     <string name="composerPasteImageFromClipboardSupporting">Joindre l'image copiée</string>
     <string name="composerPasteImageEmpty">Il n'y a aucune image dans le presse-papiers.</string>
     <string name="chatRequestAnswerRequired">Répondez d'abord aux questions obligatoires.</string>
+    <string name="chatStepDeclinedNote">Votre note : « %1$s »</string>
+    <string name="chatStepMalformedCall">L’agent a fait cette demande de travers, donc rien ne s’est exécuté. Demandez-lui de réessayer.</string>
 </resources>

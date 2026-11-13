@@ -321,4 +321,6 @@
     <string name="chatsHomeInterrupted">Bị gián đoạn</string>
     <string name="chatsNewGettingReady">Đang chuẩn bị…</string>
     <string name="chatsNewGettingReadySlow">Vẫn đang đọc các dự án và mô hình của máy chủ này…</string>
+    <string name="chatsHomeNotReadTitle">Chưa đọc được hết cuộc trò chuyện của bạn</string>
+    <string name="chatsHomeNotReadBody">Máy chủ đã trả lời nhưng trang này không đọc được danh sách, nên không thể nói là chưa có cuộc trò chuyện nào. Hãy thử lại để đọc.</string>
 </resources>

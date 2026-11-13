@@ -971,6 +971,7 @@ appUpdateSizeMb	3486d83ccc
 appUpdateTryAgain	454b12ef6b
 appUpdateUpToDate	8a9a5c4bab
 appUpdateUpdate	2d970d6965
+appUpdateUpdatedTo	0bf6dd9a6a
 appUpdateVerifying	67023ca51a
 appUpdateWhatsNew	3faf0302ba
 appUpdatesSearchAliases	3ab093e6bd
@@ -1119,7 +1120,7 @@ approvalCopied	f057bce5d6
 approvalCopyAsk	96fd37b964
 approvalCopyChange	b6cbd14aef
 approvalDenied	54d7586401
-approvalDeniedInstead	5e1c5dc37c
+approvalDeniedInstead	548531ddf8
 approvalDeny	56030cb830
 approvalModeAskDetail	4e4ff42553
 approvalModeAskTitle	20cf505627
@@ -1575,7 +1576,7 @@ chatRequestIfIgnored	33ebaad3d8
 chatRequestMoreWaiting	2626e0ec34
 chatRequestNoConnection	d7d1eba808
 chatRequestNoLongerNeeded	881aea226a
-chatRequestNoLongerNeededWhy	89c590eda8
+chatRequestNoLongerNeededEnding	e68edc630d
 chatRequestOtherAnswer	3a7c1dced9
 chatRequestOtherField	d964165af4
 chatRequestReadFrom	8bf11b982b
@@ -1654,6 +1655,8 @@ chatSteerReadsAfterCommand	6a13bb8902
 chatSteerReadsAfterStep	9aadbb3d70
 chatSteerStopCommand	7bd9b91f80
 chatSteerStopStep	9ea771f9af
+chatStepDeclinedNote	44b5774893
+chatStepMalformedCall	549463ac9e
 chatStopAfterStep	505bfb0c44
 chatStopAfterStepPending	bcc7138ca0
 chatStopAfterStepPrompt	ee845ea221
@@ -2079,6 +2082,8 @@ chatsHomeNewChat	7a01dcc0e8
 chatsHomeNewShort	172f8fd530
 chatsHomeNoMatchBody	be3823d8b7
 chatsHomeNoMatchTitle	16fa5e0a76
+chatsHomeNotReadBody	fe509c3974
+chatsHomeNotReadTitle	a73a4fa9ac
 chatsHomeNothingRunning	25185a7b35
 chatsHomeNothingRunningBody	ef0cf63e18
 chatsHomeOnlyProject	b3e2966456
@@ -2298,6 +2303,7 @@ composerFullSteerHint	f2ed60bce8
 composerFullTakePhoto	f48aac1980
 composerFullThinking	adc54cc9be
 composerFullThinkingDefault	cf003bbfa9
+composerFullWaitingHint	5c9022a717
 composerKeptMissingFiles	d349228e73
 composerKeptRestoreRefused	d8cad221eb
 composerKeptRestoreTitle	5b50d5433d
@@ -9703,6 +9709,7 @@ s40iLabel	ba68f42cdc
 s40iLocalHint	bf834c5a16
 s40iMcp	333bb913f4
 s40iMcpAddHint	d0fb5bd476
+s40iMcpAddHintRuntime	58ff3e1abc
 s40iModel	673b95d963
 s40iName	55e13485e7
 s40iNewConversation	7a01dcc0e8
@@ -9734,7 +9741,7 @@ s40iSkills	9714c1cf73
 s40iSource	c247e5f71f
 s40iStatusFailed	2591b5ea2b
 s40iTools	7590722ba2
-s40iToolsNotListed	ae1f0c8486
+s40iToolsNotListed	63b784bb2f
 s40iUnavailable	3a9f83515e
 s40iUncertain	0343881f54
 s40iUnknown	93f42c6ab1
@@ -12918,6 +12925,7 @@ terminalSourceServer	f832619c88
 terminalSourceServerRuntime	7984054b3b
 terminalStateEnded	3a48299913
 terminalStateRunning	100f4da50a
+terminalUseServerTerminal	ac57882932
 termuxInAppInstead	8adcfc0560
 termuxLeadRunningBody	f02fc1c295
 termuxLeadStoppedBody	d6020fe8a6
@@ -13632,7 +13640,6 @@ voiceNativePartial	6d375d41de
 voiceNativePhoneEngine	4823e12618
 voiceNativePhoneRecognizer	8cdc354e54
 voiceNativeReadAloud	411411daa6
-voiceNativeSendNow	15e47c1763
 voiceNativeSettingsAction	cdad8c7768
 voiceNativeSizeMb	ae263b315a
 voiceNativeStoppedAfterPause	97aa84b87f
@@ -13658,7 +13665,6 @@ voiceSetupUsePack	3b63d00855
 vpttAutoSendDetail	1c0123b414
 vpttAutoSendDetailShort	ef50f716cb
 vpttAutoSendTitle	18d490b152
-vpttDontSend	7b3096c797
 vpttLanguageCompactRough	2659a97421
 vpttLanguageDetectDetail	736e6592a1
 vpttLanguageFollowApp	f81f924832
@@ -13666,7 +13672,6 @@ vpttLanguageFollowAppDetail	50583946a4
 vpttLanguageUnavailableOffline	af42653fa1
 vpttLetGoToCancel	836c6164bd
 vpttLetGoToFinish	a546362668
-vpttSendingIn	88c68357c1
 webSearchAuthentication	79a94b7f73
 webSearchBusy	c3051e166e
 webSearchDisclosure	ab73518342

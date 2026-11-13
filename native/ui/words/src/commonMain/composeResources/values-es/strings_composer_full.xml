@@ -19,4 +19,5 @@
     <string name="composerFullFiles">Archivos del proyecto</string>
     <string name="composerFullAttachmentsLocal">Los adjuntos se guardan con este borrador en este dispositivo.</string>
     <string name="composerFullSteerHint">Guía mientras trabaja…</string>
+    <string name="composerFullWaitingHint">Esperando tu decisión arriba…</string>
 </resources>

@@ -1140,4 +1140,6 @@
     <string name="composerPasteImageFromClipboardSupporting">Lampirkan gambar yang disalin</string>
     <string name="composerPasteImageEmpty">Tidak ada gambar di papan klip.</string>
     <string name="chatRequestAnswerRequired">Jawab dulu pertanyaan yang wajib diisi.</string>
+    <string name="chatStepDeclinedNote">Catatan Anda: “%1$s”</string>
+    <string name="chatStepMalformedCall">Agen memintanya dengan cara yang salah, jadi tidak ada yang dijalankan. Minta agen mencoba lagi.</string>
 </resources>
