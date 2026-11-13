@@ -225,7 +225,12 @@ private fun kitJumpJoinMotion(drop: io.github.eslamasabry.oc.ui.kit.effects.KitL
     val calm = remember { androidx.compose.animation.core.Animatable(0f) }
     val risePx = with(density) { j.PILL_RISE_DP.dp.toPx() }
     val halfPx = with(density) { j.PILL_HALF_DP.dp.toPx() }
-    val reachPx = with(density) { j.REACH_PILL_DP.dp.toPx() }
+    // The Glass lab's join curve for the pill (its shipped number is REACH_PILL_DP).
+    val tunedReach =
+        io.github.eslamasabry.oc.ui.kit.effects.LocalKitGlassTuning.current
+            ?.knobs(io.github.eslamasabry.oc.ui.design.effects.GlassPaneKind.Chip, io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors.current.dark)
+            ?.joinReachDp
+    val reachPx = with(density) { (tunedReach ?: j.REACH_PILL_DP).dp.toPx() }
     drop.reachesCentre = false
     drop.reach = { reachPx * (1f + j.PILL_REACH_SWELL * (1f - calm.value.coerceIn(0f, 1f))) }
     drop.shape = { rest ->

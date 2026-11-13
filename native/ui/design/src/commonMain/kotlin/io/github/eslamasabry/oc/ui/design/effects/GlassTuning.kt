@@ -91,6 +91,21 @@ public data class GlassKnobs(
      * hold its light and colour back more and more, down to soft light at 0 ([GlassTuning.passThrough]).
      */
     val passThrough: Float,
+    /**
+     * The local-detail softening ([LiquidHold.localDp]): fine detail behind the pane is pressed toward its local mean
+     * within this reach (dp; 0 = off, as shipped) while the mean light and colour pass; [localFree] of detail passes
+     * whole and [localSlope] of the rest is kept.
+     */
+    val localDp: Float,
+    val localFree: Float,
+    val localSlope: Float,
+    /** How wide the joined glass's curve is where a menu (or the jump pill) meets its bar (or the message box), dp. */
+    val joinReachDp: Float,
+    /**
+     * How much of the page that scrolls under a bar's or the message box's words the glass no longer sees (1, as
+     * shipped: all of it past the lens rim, so nothing bright runs through the words; 0: the page shows fully).
+     */
+    val wordsClear: Float,
 )
 
 /** One slider of the lab: its words, its unit, its range and step, and the knob it moves. */
@@ -117,6 +132,10 @@ public enum class GlassKnob(
     SpecularLine("glintline", "Glint line", "top line, share of the glint", 0f, 1f, .05f, GLASS_REFRACTION_GROUP, { it.specularLine }, { k, v -> k.copy(specularLine = v) }),
     LightDirection("light", "Light direction", "degrees (rim light)", 0f, 180f, 5f, GLASS_REFRACTION_GROUP, { it.lightDeg }, { k, v -> k.copy(lightDeg = v) }),
     PassThrough("through", "Light passing through", "1 page shows fully, 0 soft light", 0f, 1f, .01f, GLASS_REFRACTION_GROUP, { it.passThrough }, { k, v -> k.copy(passThrough = v) }),
+    LocalReach("localdp", "Local detail softening", "dp around each point, 0 off", 0f, 48f, 1f, GLASS_REFRACTION_GROUP, { it.localDp }, { k, v -> k.copy(localDp = v) }),
+    LocalFree("localfree", "Detail that passes whole", "0-1", 0f, 1f, .01f, GLASS_REFRACTION_GROUP, { it.localFree }, { k, v -> k.copy(localFree = v) }),
+    LocalSlope("localslope", "Detail kept beyond it", "share, 1 = all", 0f, 1f, .01f, GLASS_REFRACTION_GROUP, { it.localSlope }, { k, v -> k.copy(localSlope = v) }),
+    JoinReach("join", "Join curve width", "dp (menu at the bar, pill at the box)", 24f, 160f, 2f, "Join", { it.joinReachDp }, { k, v -> k.copy(joinReachDp = v) }),
     // Clarity: frost and tint.
     Blur("blur", "Blur", "dp", 0f, 30f, .5f, "Clarity", { it.blurDp }, { k, v -> k.copy(blurDp = v) }),
     Tint("tint", "Tint strength", "alpha", 0f, 1f, .01f, "Clarity", { it.tint }, { k, v -> k.copy(tint = v) }),
@@ -139,6 +158,7 @@ public enum class GlassKnob(
     SoftenKnee("knee", "Softening knee", "light level", 0f, 1f, .01f, "Words", { it.softenKnee }, { k, v -> k.copy(softenKnee = v) }),
     SoftenKeep("slope", "Softening slope", "share of light kept", 0f, 1f, .01f, "Words", { it.softenKeep }, { k, v -> k.copy(softenKeep = v) }),
     ColourLimit("colour", "Colour limit", "most chroma, 0 = none", 0f, 1f, .01f, "Words", { it.colourLimit }, { k, v -> k.copy(colourLimit = v) }),
+    WordsClear("clear", "Page hidden under the words", "bar and message box: 1 hidden, 0 shows fully", 0f, 1f, .01f, "Words", { it.wordsClear }, { k, v -> k.copy(wordsClear = v) }),
     ;
 
     public fun of(k: GlassKnobs): Float = get(k)
@@ -252,6 +272,11 @@ public data class GlassTuning(val panes: Map<GlassPaneKey, GlassKnobs> = emptyMa
                 specularLine = io.github.eslamasabry.oc.ui.design.style.GlassLook.Default.glintShare,
                 specularReachDp = SPECULAR_REACH_DP,
                 passThrough = if (r.hold.knee) PASS_SHIPPED_HOLD else 1f,
+                localDp = r.hold.localDp,
+                localFree = r.hold.localFree,
+                localSlope = r.hold.localSlope,
+                joinReachDp = if (kind == GlassPaneKind.Chip) LiquidJoin.REACH_PILL_DP else LiquidJoin.REACH_MENU_DP,
+                wordsClear = 1f,
             )
         }
 
@@ -311,6 +336,7 @@ public data class GlassTuning(val panes: Map<GlassPaneKey, GlassKnobs> = emptyMa
                 specularReachDp = if (small) 40f else 140f,
                 specularLine = .6f,
                 passThrough = if (modal) .6f else if (small) 1f else .8f,
+                wordsClear = .4f,
             )
         }
 

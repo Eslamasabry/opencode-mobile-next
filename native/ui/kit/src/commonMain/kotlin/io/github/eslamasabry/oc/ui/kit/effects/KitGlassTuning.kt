@@ -38,7 +38,8 @@ internal fun KitLiquidPaneSpec.tuned(t: GlassKnobs, shipped: GlassKnobs, platfor
     val pass = if (t.passThrough != shipped.passThrough) GlassTuning.passThrough(t.passThrough) else null
     val softenOn = if (t.soften != shipped.soften) t.soften >= .5f else pass?.let { it[0] >= .5f }
     val limit = if (t.colourLimit != shipped.colourLimit) t.colourLimit else pass?.get(3)
-    val holdMoved = softenOn != null || limit != null
+    val localMoved = t.localDp != shipped.localDp || t.localFree != shipped.localFree || t.localSlope != shipped.localSlope
+    val holdMoved = softenOn != null || limit != null || localMoved
     val recipe =
         r.copy(
             saturation = pick(t.saturation, shipped.saturation, r.saturation),
@@ -51,7 +52,16 @@ internal fun KitLiquidPaneSpec.tuned(t: GlassKnobs, shipped: GlassKnobs, platfor
             rimShare = pick(t.lensShare, shipped.lensShare, r.rimShare),
             depth = if (t.lensMiddle != shipped.lensMiddle) t.lensMiddle >= .5f else r.depth,
             tint = pick(t.tint, shipped.tint, r.tint),
-            hold = if (holdMoved) LiquidHold(knee = softenOn ?: r.hold.knee, chroma = limit ?: r.hold.chroma) else r.hold,
+            hold =
+                if (holdMoved)
+                    LiquidHold(
+                        knee = softenOn ?: r.hold.knee,
+                        chroma = limit ?: r.hold.chroma,
+                        localDp = pick(t.localDp, shipped.localDp, r.hold.localDp),
+                        localFree = pick(t.localFree, shipped.localFree, r.hold.localFree),
+                        localSlope = pick(t.localSlope, shipped.localSlope, r.hold.localSlope),
+                    )
+                else r.hold,
         )
     val tintMoved = t.tint != shipped.tint || t.tintLightness != shipped.tintLightness
     fun face(c: Color): Color {

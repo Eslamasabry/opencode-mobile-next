@@ -364,6 +364,8 @@ private fun androidx.compose.foundation.layout.ColumnScope.GlassLabControls(ui: 
             role = KitButtonRole.Secondary,
         )
         KitPasteButton(stringResource(Res.string.glassLabPaste), { text -> toasts?.show(if (actions.onPaste(text)) pasted else refused) })
+    }
+    Row(gutter.fillMaxWidth()) {
         KitButton(stringResource(Res.string.glassLabResetAll), actions::onResetAll, role = KitButtonRole.Tertiary)
     }
     val words =
