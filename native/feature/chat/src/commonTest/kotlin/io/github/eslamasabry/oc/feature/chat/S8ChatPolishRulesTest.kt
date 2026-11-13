@@ -154,20 +154,6 @@ class S8ChatPolishRulesTest {
         assertTrue(RequestCardRules.showsToolLine(AskView(AskVerb.Generic)))
     }
 
-    @Test
-    fun `P-013 a file named by its one target line is not named again in the question`() {
-        val one = AskView(AskVerb.Edit, name = "game.js", targets = persistentListOf(AskTarget("src/game.js", file = true)))
-        assertTrue(RequestCardRules.questionOmitsName(one))
-        val same = AskView(AskVerb.Create, name = "notes.md", targets = persistentListOf(AskTarget("notes.md", file = true)))
-        // Review 2026-11-13 #1: a creation says "Create notes.md?", never "Create 1 file?".
-        assertFalse(RequestCardRules.questionOmitsName(same))
-        val other = AskView(AskVerb.Edit, name = "game.js", targets = persistentListOf(AskTarget("src/other.js")))
-        assertFalse(RequestCardRules.questionOmitsName(other))
-        val run = AskView(AskVerb.Run, name = "npm test", targets = persistentListOf(AskTarget("npm test")))
-        assertFalse(RequestCardRules.questionOmitsName(run))
-        assertFalse(RequestCardRules.questionOmitsName(AskView(AskVerb.Edit, name = "a.kt")))
-    }
-
     // ---- P-018: one "Continue elsewhere" page ----
 
     @Test

@@ -33,6 +33,7 @@ import io.github.eslamasabry.oc.ui.kit.input.KitField
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.LiveRegionMode
@@ -176,9 +177,22 @@ public fun KitPermissionCard(
                 // The standard ask card's quiet line (kit_request_card.dart:1143-1235): "Details" at the far end, small and
                 // plain, space2 under the answers, space3 of air above and below as its own target.
                 if (!question && onDetails != null) {
+                    // Signal draws no face, so there is no padding of the card's own to reach into.
+                    val padded = LocalKitAppearance.current.style != KitSurfaceStyle.Signal
                     // The touch target is the kit's minimum height by itself (KitTappable); no extra air above or below it,
-                    // so the card does not end in an empty band under the answers.
-                    Box(Modifier.fillMaxWidth().testTag("permission-card-details-row"), contentAlignment = Alignment.CenterEnd) {
+                    // so the card does not end in an empty band under the answers. Its lower part reaches into the card's
+                    // own bottom padding instead of adding to it (RC1 device pass: about 100 px of empty card under
+                    // "Details", the target's lower half plus the whole padding).
+                    Box(
+                        Modifier.layout { measurable, constraints ->
+                            val placeable = measurable.measure(constraints)
+                            val trim = if (padded) minOf(Space.S4.dp.roundToPx(), placeable.height / 2) else 0
+                            layout(placeable.width, placeable.height - trim) { placeable.place(0, 0) }
+                        }
+                            .fillMaxWidth()
+                            .testTag("permission-card-details-row"),
+                        contentAlignment = Alignment.CenterEnd,
+                    ) {
                         KitTappable(onDetails, Modifier.testTag("permission-card-details"), onClickLabel = stringResource(Res.string.kitDetails)) {
                             KitText(
                                 stringResource(Res.string.kitDetails),
