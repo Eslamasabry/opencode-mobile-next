@@ -37,7 +37,7 @@
     <string name="glassLabSampleAskTwo">Yes, run them and tell me what fails.</string>
     <string name="glassLabSamplePermission">Run a command?</string>
     <string name="glassLabSampleCommand">./gradlew :core:markdown:test</string>
-    <string name="glassLabSamplePermissionWhy">Runs the markdown module\'s tests in the project folder.</string>
+    <string name="glassLabSamplePermissionWhy">Runs the markdown module's tests in the project folder.</string>
     <string name="glassLabSampleAskBox">Ask OpenCode…</string>
     <string name="glassLabSampleModel">Big Pickle</string>
     <string name="glassLabSampleMode">Ask first</string>
