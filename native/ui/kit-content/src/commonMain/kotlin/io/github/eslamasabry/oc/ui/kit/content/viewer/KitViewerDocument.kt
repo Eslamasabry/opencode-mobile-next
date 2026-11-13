@@ -25,7 +25,6 @@ import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.KitText
-import io.github.eslamasabry.oc.ui.kit.input.KitSearchField
 import io.github.eslamasabry.oc.ui.kit.text.KitRedact
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTypography
@@ -46,14 +45,31 @@ public fun KitViewerDocument(
     initialLine: Int? = null,
     formatted: (@Composable () -> Unit)? = null,
     lineContent: (@Composable (AnnotatedString, Modifier, Boolean) -> Unit)? = null,
+    /**
+     * The host's own wrap choice (a saved preference): the document's one Wrap lines tool shows and changes it, and
+     * [onWrapChanged] hears each change. Null: the document keeps its own (wrapped for text, one line for code).
+     */
+    wrap: Boolean? = null,
+    onWrapChanged: ((Boolean) -> Unit)? = null,
 ) {
     val cut = remember(source) { ViewerText.cut(source) }
     val lines = remember(cut) { ViewerText.lines(cut.text) }
-    var wrap by remember(source) { mutableStateOf(!code) }
+    var wrapOwn by remember(source, wrap) { mutableStateOf(wrap ?: !code) }
+    val wrapOn = wrapOwn
+    val toggleWrap = {
+        wrapOwn = !wrapOwn
+        onWrapChanged?.invoke(wrapOwn)
+    }
     var showSource by remember(source) { mutableStateOf(false) }
     var finding by remember(source) { mutableStateOf(false) }
     var query by remember(source) { mutableStateOf("") }
     var active by remember(source, query) { mutableIntStateOf(0) }
+    val closeFind = {
+        finding = false
+        query = ""
+    }
+    // The system Back closes Find first; only then does it leave the page.
+    io.github.eslamasabry.oc.ui.kit.modal.KitBackGuard(enabled = finding, onBack = closeFind)
     val matches =
         remember(lines, query) {
             if (query.isEmpty()) emptyList()
@@ -98,7 +114,7 @@ public fun KitViewerDocument(
             add(ViewerTool("copy", copyLabel, KitIcons.copy, null))
             add(ViewerTool("find", findLabel, KitIcons.search, null))
             if (formatted != null) add(ViewerTool("source", sourceLabel, KitIcons.code, null))
-            if (!rendering) add(ViewerTool("wrap", wrapLabel, KitIcons.wrapText, wrap))
+            if (!rendering) add(ViewerTool("wrap", wrapLabel, KitIcons.wrapText, wrapOn))
         }
     if (chrome != null) {
         // The page's bar and menu carry the tools; this body paints no row of its own.
@@ -107,9 +123,9 @@ public fun KitViewerDocument(
                 tools,
                 mapOf(
                     "copy" to copy,
-                    "find" to { finding = !finding },
+                    "find" to { if (finding) closeFind() else finding = true },
                     "source" to { showSource = !showSource },
-                    "wrap" to { wrap = !wrap },
+                    "wrap" to toggleWrap,
                 ),
             )
         }
@@ -130,12 +146,12 @@ public fun KitViewerDocument(
                         {
                             when (tool.id) {
                                 "copy" -> copy()
-                                "find" -> finding = !finding
+                                "find" -> if (finding) closeFind() else finding = true
                                 "source" -> showSource = !showSource
-                                else -> wrap = !wrap
+                                else -> toggleWrap()
                             }
                         },
-                        modifier = if (tool.id == "wrap") Modifier.semantics { selected = wrap } else Modifier,
+                        modifier = if (tool.id == "wrap") Modifier.semantics { selected = wrapOn } else Modifier,
                         role = KitButtonRole.Tertiary,
                         icon = tool.icon,
                         expand = false,
@@ -144,53 +160,18 @@ public fun KitViewerDocument(
             }
         }
         if (finding) {
-            KitSearchField(
-                stringResource(Res.string.kitViewerFind),
-                { query = it },
-                Modifier.padding(horizontal = rail),
-                onSubmit = {
-                    if (matches.isNotEmpty()) active = (active + 1) % matches.size
-                },
-            )
-            FlowRow(
-                Modifier.padding(horizontal = rail),
-                horizontalArrangement = Arrangement.spacedBy(Space.S1.dp),
-            ) {
-                KitButton(
-                    stringResource(Res.string.kitViewerFindPrevious),
-                    {
-                        if (matches.isNotEmpty())
-                            active = (active + matches.size - 1) % matches.size
-                    },
-                    role = KitButtonRole.Tertiary,
-                )
-                KitButton(
-                    stringResource(Res.string.kitViewerFindNext),
-                    { if (matches.isNotEmpty()) active = (active + 1) % matches.size },
-                    role = KitButtonRole.Tertiary,
-                )
-                KitButton(
-                    stringResource(Res.string.kitViewerFindClose),
-                    {
-                        finding = false
-                        query = ""
-                    },
-                    role = KitButtonRole.Tertiary,
-                )
-            }
-            if (query.isNotEmpty())
-                KitText(
+            ViewerFindBar(
+                query = query,
+                count =
                     if (matches.isEmpty()) stringResource(Res.string.kitViewerFindNone)
-                    else
-                        stringResource(
-                            Res.string.kitViewerFindCount,
-                            (active + 1).toString(),
-                            matches.size.toString(),
-                        ),
-                    Modifier.padding(horizontal = rail).semantics {
-                        liveRegion = LiveRegionMode.Polite
-                    },
-                )
+                    else stringResource(Res.string.kitViewerFindCount, (active + 1).toString(), matches.size.toString()),
+                hasMarks = matches.isNotEmpty(),
+                onQuery = { query = it },
+                onStep = { delta ->
+                    if (matches.isNotEmpty()) active = (active + matches.size + delta) % matches.size
+                },
+                onClose = closeFind,
+            )
         }
         if (cut.truncated)
             KitText(
@@ -206,7 +187,7 @@ public fun KitViewerDocument(
                 LazyColumn(
                     Modifier.fillMaxSize()
                         .then(
-                            if (wrap) Modifier else Modifier.horizontalScroll(rememberScrollState())
+                            if (wrapOn) Modifier else Modifier.horizontalScroll(rememberScrollState())
                         ),
                     state = list,
                     contentPadding = PaddingValues(horizontal = rail, vertical = Space.S3.dp),
@@ -244,9 +225,9 @@ public fun KitViewerDocument(
                                         role = TypeRole.Mono,
                                     )
                                 }
-                            val textModifier = if (wrap) Modifier.weight(1f) else Modifier
-                            if (lineContent != null) lineContent(annotated, textModifier, wrap)
-                            else BasicText(annotated, textModifier, style = style, softWrap = wrap)
+                            val textModifier = if (wrapOn) Modifier.weight(1f) else Modifier
+                            if (lineContent != null) lineContent(annotated, textModifier, wrapOn)
+                            else BasicText(annotated, textModifier, style = style, softWrap = wrapOn)
                         }
                     }
                 }

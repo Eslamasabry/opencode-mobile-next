@@ -11,7 +11,18 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasContentDescription
+import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.assertHasClickAction
+import androidx.compose.ui.test.assertIsFocused
+import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.performTextInput
+import androidx.navigationevent.NavigationEvent
+import androidx.navigationevent.NavigationEventDispatcher
+import androidx.navigationevent.NavigationEventDispatcherOwner
+import androidx.navigationevent.NavigationEventInput
+import androidx.navigationevent.compose.LocalNavigationEventDispatcherOwner
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -38,9 +49,24 @@ import kotlin.test.assertTrue
 class KitViewerPageDesktopTest {
     private val scale = 2f
 
+    private class Press : NavigationEventInput() {
+        fun press() {
+            dispatchOnBackStarted(NavigationEvent(NavigationEvent.EDGE_LEFT, 0f))
+            dispatchOnBackCompleted()
+        }
+    }
+
+    private val press = Press()
+    private var leftPage = 0
+    private val owner =
+        object : NavigationEventDispatcherOwner {
+            override val navigationEventDispatcher =
+                NavigationEventDispatcher(onBackCompletedFallback = { leftPage++ }).also { it.addInput(press) }
+        }
+
     @Composable
     private fun Themed(content: @Composable () -> Unit) {
-        CompositionLocalProvider(LocalDensity provides Density(scale, 1f)) {
+        CompositionLocalProvider(LocalDensity provides Density(scale, 1f), LocalNavigationEventDispatcherOwner provides owner) {
             KitTheme(
                 appearance = KitAppearance(motion = MotionLevel.Off),
                 platform = ContentFakePlatform(),
@@ -86,6 +112,14 @@ class KitViewerPageDesktopTest {
     }
 
     @Test
+    fun `Ask about this file starts and ends on the page margin, like the text above it`() = runComposeUiTest {
+        askFrame {}
+        val node = ask().fetchSemanticsNode().boundsInRoot
+        near(16 * scale, node.left, 1f)
+        near((411 - 16) * scale, node.right, 1f)
+    }
+
+    @Test
     fun `Find is an action of the bar and opens the find field`() = runComposeUiTest {
         setContent {
             Themed {
@@ -98,8 +132,67 @@ class KitViewerPageDesktopTest {
         near(back.top(), find.top(), 40f)
         assertTrue(find.top() < onNodeWithText("Line number 1 of the file", substring = true).top())
         find.performClick()
-        onNodeWithText("Next match").assertExists()
+        onNodeWithContentDescription("Next match").assertExists()
     }
+
+    private fun androidx.compose.ui.test.ComposeUiTest.openFind() {
+        setContent {
+            Themed {
+                KitViewerFrame("b4.txt", Modifier.fillMaxSize(), path = "b4.txt", onClose = {}) { KitViewerDocument(text) }
+            }
+        }
+        onNode(hasContentDescription("Find in file") and hasClickAction()).performClick()
+    }
+
+    @Test
+    fun `Find takes focus as it opens, so the keyboard comes up with it`() = runComposeUiTest {
+        openFind()
+        waitForIdle()
+        onNode(hasSetTextAction()).assertIsFocused()
+    }
+
+    @Test
+    fun `Previous match, Next match and Close find are buttons by those names, not loose words`() = runComposeUiTest {
+        openFind()
+        onNode(hasSetTextAction()).performTextInput("Line")
+        waitForIdle()
+        listOf("Previous match", "Next match", "Close find").forEach {
+            onNodeWithContentDescription(it).assertHasClickAction()
+            onAllNodesWithText(it).assertCountEquals(0)
+        }
+    }
+
+    @Test
+    fun `the system Back closes Find first, then leaves the page`() = runComposeUiTest {
+        openFind()
+        waitForIdle()
+        onNode(hasSetTextAction()).assertExists()
+        runOnIdle { press.press() }
+        waitForIdle()
+        onNode(hasSetTextAction()).assertDoesNotExist()
+        assertEquals(0, leftPage, "the first Back only closed Find")
+        runOnIdle { press.press() }
+        assertEquals(1, leftPage, "the second Back is the page's")
+    }
+
+    @Test
+    fun `a code file shows one Wrap lines row, with the host's saved choice as its state, and tapping it reports the change`() =
+        runComposeUiTest {
+            var saved = false
+            val changes = mutableListOf<Boolean>()
+            setContent {
+                Themed {
+                    KitViewerFrame("a.kt", Modifier.fillMaxSize(), path = "src/a.kt", onClose = {}) {
+                        KitViewerDocument(text, code = true, wrap = saved, onWrapChanged = { changes += it; saved = it })
+                    }
+                }
+            }
+            onNodeWithContentDescription("More actions").performClick()
+            onAllNodesWithText("Wrap lines").assertCountEquals(1)
+            onAllNodesWithText("Wrap code lines").assertCountEquals(0)
+            onNodeWithText("Wrap lines").performClick()
+            assertEquals(listOf(true), changes)
+        }
 
     @Test
     fun `the bar's menu lists Copy contents, Wrap lines, Open with, Save, Share in that order and each acts`() =

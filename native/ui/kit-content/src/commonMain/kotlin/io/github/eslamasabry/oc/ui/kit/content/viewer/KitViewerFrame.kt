@@ -45,10 +45,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -56,7 +54,6 @@ import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
-import io.github.eslamasabry.oc.ui.kit.frame.kitPageGutter
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarBack
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarMore
 import androidx.compose.runtime.getValue
@@ -89,7 +86,6 @@ import io.github.eslamasabry.oc.ui.kit.foundation.kitSurfaceLook
 import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
 import io.github.eslamasabry.oc.ui.kit.foundation.shape
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
-import io.github.eslamasabry.oc.ui.kit.input.KitSearchField
 import io.github.eslamasabry.oc.ui.kit.modal.KitMenu
 import io.github.eslamasabry.oc.ui.kit.modal.KitMenuGroup
 import io.github.eslamasabry.oc.ui.kit.modal.KitMenuItem
@@ -110,11 +106,8 @@ import io.github.eslamasabry.oc.ui.words.res.kitViewerCantShowBody
 import io.github.eslamasabry.oc.ui.words.res.kitViewerCopyContents
 import io.github.eslamasabry.oc.ui.words.res.kitViewerEmpty
 import io.github.eslamasabry.oc.ui.words.res.kitViewerFind
-import io.github.eslamasabry.oc.ui.words.res.kitViewerFindClose
 import io.github.eslamasabry.oc.ui.words.res.kitViewerFindCount
-import io.github.eslamasabry.oc.ui.words.res.kitViewerFindNext
 import io.github.eslamasabry.oc.ui.words.res.kitViewerFindNone
-import io.github.eslamasabry.oc.ui.words.res.kitViewerFindPrevious
 import io.github.eslamasabry.oc.ui.words.res.kitViewerLoadFailed
 import io.github.eslamasabry.oc.ui.words.res.kitViewerOpenAll
 import io.github.eslamasabry.oc.ui.words.res.kitViewerPartial
@@ -249,10 +242,8 @@ public fun KitViewerFrame(
                         Column {
                             footer?.invoke()
                             if (primary != null) {
-                                Box(
-                                    Modifier.fillMaxWidth().padding(horizontal = kitPageGutter(), vertical = Space.S2.dp),
-                                    contentAlignment = Alignment.Center,
-                                ) {
+                                // The screen's bottom block already sits on the page margin: no second gutter here.
+                                Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                                     KitButton(primary.label, primary.onClick, Modifier.tagged(primary.tag), fullWidth = true)
                                 }
                             }
@@ -485,6 +476,8 @@ public fun KitViewer(
         active = 0
     }
     val step = { delta: Int -> if (marks.isNotEmpty()) active = ViewerFind.step(active, delta, marks.size) }
+    // The system Back closes Find first; only then does it leave the page.
+    io.github.eslamasabry.oc.ui.kit.modal.KitBackGuard(enabled = findOpen, onBack = closeFind)
     val items = buildList {
         if (findable) add(KitMenuItem(stringResource(Res.string.kitViewerFind), { findOpen = true }, KitIcons.search, KitViewerMenuGroup))
         val copyText = content?.copyText
@@ -656,57 +649,6 @@ private fun ViewerHeader(
                 )
                 if (reason != null) KitText(reason, role = TypeRole.Secondary)
             }
-        }
-    }
-}
-
-/** The find bar (Dart `_findBar`): the field, Previous, Next and Close; the count under them once there is a query. */
-@Composable
-private fun ViewerFindBar(
-    query: String,
-    count: String,
-    hasMarks: Boolean,
-    onQuery: (String) -> Unit,
-    onStep: (Int) -> Unit,
-    onClose: () -> Unit,
-) {
-    val tokens = LocalKitTokens.current
-    val field = rememberTextFieldState()
-    Column(Modifier.fillMaxWidth().padding(start = tokens.gutter.dp, top = Space.S2.dp, end = Space.S2.dp, bottom = Space.S2.dp)) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            KitSearchField(
-                stringResource(Res.string.kitViewerFind),
-                onQuery,
-                Modifier.weight(1f).testTag(KitViewerKeys.FIND),
-                state = field,
-                onSubmit = { onStep(1) },
-            )
-            Spacer(Modifier.width(Space.S1.dp))
-            // Up and down: never mirrored.
-            val off = KitEnabled.Disabled(stringResource(Res.string.kitViewerFindNone))
-            KitIconButton(
-                KitIcons.chevronUp, stringResource(Res.string.kitViewerFindPrevious), { onStep(-1) },
-                Modifier.testTag(KitViewerKeys.FIND_PREVIOUS), enabled = if (hasMarks) KitEnabled.Enabled else off, shortcut = "Shift+Enter",
-            )
-            KitIconButton(
-                KitIcons.chevronDown, stringResource(Res.string.kitViewerFindNext), { onStep(1) },
-                Modifier.testTag(KitViewerKeys.FIND_NEXT), enabled = if (hasMarks) KitEnabled.Enabled else off, shortcut = "Enter",
-            )
-            KitIconButton(
-                KitIcons.close, stringResource(Res.string.kitViewerFindClose), {
-                    field.edit { replace(0, length, "") }
-                    onClose()
-                },
-                Modifier.testTag(KitViewerKeys.FIND_CLOSE), shortcut = "Esc",
-            )
-        }
-        if (query.isNotEmpty()) {
-            KitText(
-                count,
-                Modifier.padding(top = Space.S2.dp).testTag(KitViewerKeys.FIND_COUNT),
-                role = TypeRole.Secondary,
-                tabular = true,
-            )
         }
     }
 }

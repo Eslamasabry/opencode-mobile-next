@@ -32,6 +32,7 @@ kotlin {
         implementation("com.github.termux.termux-app:terminal-view:v0.118.3")
     }
     sourceSets.getByName("desktopTest").dependencies {
+        implementation(libs.navigationevent.compose) // the viewer's Back closes Find first: tests press Back
         implementation(
             project(":core:security")
         ) // B-XPLAT-011: terminal lines masked by the app's one redactor
