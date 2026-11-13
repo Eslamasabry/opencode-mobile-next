@@ -33,7 +33,6 @@ import io.github.eslamasabry.oc.ui.kit.input.KitFieldKind
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import kotlin.test.Test
 import kotlin.test.assertTrue
-import kotlin.test.fail
 
 /**
  * Owner 2026-11-13 ("You are fixing these broken corners everywhere also right?"): a focused multiline field in a sheet
@@ -98,8 +97,11 @@ class OutlineCornersTest {
     fun `every style is covered`() = kotlin.test.assertEquals(6, Style.entries.size, "a new style needs its corner tests here")
 
     private fun fields(style: Style, dark: Boolean) {
-        val gaps = fieldCases.flatMap { check(style, dark, it) }
-        if (gaps.isNotEmpty()) fail("Outlines cut at the corners (${gaps.size}):\n" + gaps.joinToString("\n"))
+        val (oneLine, multiline, error) = fieldCases.map { check(style, dark, it) }
+        // One assertion per case, so the failing line names the case.
+        assertTrue(oneLine.isEmpty(), "Outlines cut at the corners:\n" + oneLine.joinToString("\n"))
+        assertTrue(multiline.isEmpty(), "Outlines cut at the corners:\n" + multiline.joinToString("\n"))
+        assertTrue(error.isEmpty(), "Outlines cut at the corners:\n" + error.joinToString("\n"))
     }
 
     private fun check(style: Style, dark: Boolean, case: Case): List<String> {
@@ -113,7 +115,9 @@ class OutlineCornersTest {
             assertTrue(box.height >= 48f * DENSITY - 1f, "${case.name}: the matched node is the field's box (${box.height} px tall)")
             val image = onAllNodes(isRoot())[0].captureToImage().toPixelMap()
             val what = "${style.name} ${if (dark) "dark" else "light"} ${case.name}"
-            result = OutlineCorners.gaps(image, box, DENSITY).map { "$what: $it" }
+            // The scene's own ground, far from the part: the outside a ray compares with (a line of words below the
+            // field, its error line, must not stand in for the outside).
+            result = OutlineCorners.gaps(image, box, DENSITY, outsideAt = 2 to 2).map { "$what: $it" }
         }
         return result
     }

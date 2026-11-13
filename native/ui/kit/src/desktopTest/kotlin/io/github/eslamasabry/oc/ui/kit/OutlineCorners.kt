@@ -15,7 +15,9 @@ import kotlin.math.sqrt
  * is one that is neither the part's inside, nor the outside, nor a blend of the two (the clip's own soft edge): its
  * colour lies at least [MIN_DISTANCE] away from the line between the inside and the outside samples of that ray. A clip
  * of another radius than the outline cuts the outline off at the corners: the rays across that run find only the
- * fill, the soft clip edge and the outside, and the check names the corner and the angles.
+ * fill, the soft clip edge and the outside, and the check names the corner and the angles. The outside is sampled on
+ * each ray past the part, or, with `outsideAt`, at one point of the picture's own ground (when words or marks lie just
+ * outside the part, as a field's error line does).
  */
 internal object OutlineCorners {
     /** How far in from the corner the rays start, in dp (at most half the part's width or height). */
@@ -33,7 +35,8 @@ internal object OutlineCorners {
     private val corners = listOf("top-start" to (-1 to -1), "top-end" to (1 to -1), "bottom-start" to (-1 to 1), "bottom-end" to (1 to 1))
 
     /** The corners, with the angles of their rays that found no outline; empty when the outline is whole. */
-    fun gaps(image: PixelMap, box: Rect, density: Float): List<String> {
+    fun gaps(image: PixelMap, box: Rect, density: Float, outsideAt: Pair<Int, Int>? = null): List<String> {
+        val ground = outsideAt?.let { (x, y) -> rgb(image, x, y) }
         val inner = minOf(INNER_DP * density, box.width / 2f, box.height / 2f)
         val band = BAND_DP * density
         val outside = OUTSIDE_DP * density
@@ -47,7 +50,7 @@ internal object OutlineCorners {
                 val a = deg * PI / 180.0
                 val dx = (sx * cos(a)).toFloat()
                 val dy = (sy * sin(a)).toFloat()
-                if (!rayCrossesOutline(image, box, ox, oy, dx, dy, band, outside, density)) missing += deg
+                if (!rayCrossesOutline(image, box, ox, oy, dx, dy, band, outside, density, ground)) missing += deg
             }
             if (missing.isNotEmpty()) out += "$name corner has no outline at ${missing.joinToString("°, ")}°"
         }
@@ -64,6 +67,7 @@ internal object OutlineCorners {
         band: Float,
         outside: Float,
         density: Float,
+        ground: FloatArray?,
     ): Boolean {
         val candidates = mutableListOf<FloatArray>()
         var inside: FloatArray? = null
@@ -87,7 +91,7 @@ internal object OutlineCorners {
             t += step
         }
         val i = inside ?: return false
-        val e = beyond ?: candidates.lastOrNull() ?: return false
+        val e = ground ?: beyond ?: candidates.lastOrNull() ?: return false
         return candidates.any { distanceToSegment(it, i, e) >= MIN_DISTANCE }
     }
 
