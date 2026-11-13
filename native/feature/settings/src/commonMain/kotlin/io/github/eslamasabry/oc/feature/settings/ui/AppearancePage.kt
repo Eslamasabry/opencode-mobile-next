@@ -125,7 +125,6 @@ internal fun ColumnScope.AppearanceBody(ui: AppearanceUi, actions: SettingsActio
             }
     }
     val guide = ui.guide ?: return
-    Spacer(Modifier.height(Space.S4.dp))
     // A row, not a tertiary button: that drew as a bare heading with nothing to tell it is tappable.
     KitRowGroup {
         KitRow(
