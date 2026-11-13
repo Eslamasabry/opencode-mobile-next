@@ -3,6 +3,10 @@ package io.github.eslamasabry.oc.ui.kit.rb.o01
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.unit.dp
+import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
+import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.kit.FakeKitPlatform
+import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.foundation.KitBottomInset
 import io.github.eslamasabry.oc.ui.kit.foundation.KitBottomInsetAdd
 import io.github.eslamasabry.oc.ui.kit.foundation.KitClearance
@@ -15,7 +19,9 @@ import kotlin.test.assertEquals
 class KitBottomInsetParityTest {
     @Test fun noPublisherIsZeroOnDesktop() = runComposeUiTest {
         var seen = KitClearance(1.dp, 1.dp)
-        setContent { seen = kitBottomInset() }
+        // With no publisher the inset is the window's own (navigation bar, keyboard), read through the kit's one
+        // keyboard value, which lives in the theme as every real page does.
+        setContent { KitTheme(KitAppearance(motion = MotionLevel.Full), FakeKitPlatform(), "en") { seen = kitBottomInset() } }
         assertEquals(KitClearance(), seen)
     }
 
