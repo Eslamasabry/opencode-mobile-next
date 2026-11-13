@@ -205,7 +205,8 @@ public fun ProjectsPickerScreen(state: ProjectsPickerUi, actions: ProjectsPicker
                             KitRowGroup(
                                 label = stringResource(Res.string.folderBrowserOpenedBefore)
                             ) {
-                                opened.forEach { ProjectRow(it, actions) }
+                                // A project the server lists is drawn only here, so it keeps its Rename here.
+                                opened.forEach { ProjectRow(it, actions, state.canRename) }
                             }
                         }
                     }

@@ -1,6 +1,9 @@
 package io.github.eslamasabry.oc.feature.projects
 
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -149,6 +152,18 @@ class ProjectsScreenTest {
             onAllNodesWithText("Find projects on this phone").assertCountEquals(1)
             onNodeWithText("Pick a folder in this phone’s shared storage.").assertExists()
         }
+
+    @Test
+    fun `a project under Opened before keeps its long-press Rename where the server keeps names`() = runComposeUiTest {
+        val both =
+            ready.copy(
+                canRename = true,
+                projects = persistentListOf(FolderRowUi("/work/site", "site", conversations = 2, id = "p1")),
+            )
+        setContent { Themed { ProjectsPickerScreen(both, Picker()) } }
+        onAllNodesWithText("site").assertCountEquals(1)
+        onNodeWithText("site").assert(SemanticsMatcher.keyIsDefined(SemanticsActions.OnLongClick))
+    }
 
     @Test
     fun `B-NAV-011 the server's projects carry their counts and are named for their server`() = runComposeUiTest {
