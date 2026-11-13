@@ -139,8 +139,11 @@ private fun RoundFace(label: String, icon: ImageVector, onClick: () -> Unit, bac
     Box(
         Modifier.kitLiquidSwell(liquidPress)
             .size(KIT_FAB_SIZE.dp)
+            // The style's face (and its shadow) is drawn before the target's circular clip, so a raised or offset
+            // shadow is not cut away to nothing (device pass 2026-11-13: the round + had no shadow in Soft).
+            .then(if (liquid == null) look.modifier else Modifier)
             .kitTappable(onClick = onClick, shape = KitShapeId.Circle, ink = TextTone.OnAccent, interactionSource = interactions)
-            .then(liquid ?: look.modifier)
+            .then(liquid ?: Modifier)
             .kitLiquidPressLight(liquidPress, CircleShape)
             .semantics { contentDescription = label }
             .testTag("kit-fab"),

@@ -70,14 +70,12 @@ public fun KitStatusPill(
         }
     val dot by animateColorAsState(ink, specs.quick(), label = "kit-status-pill-dot")
     val look = kitSurfaceLook(KitSurfaceInput(role = SurfaceRole.Control, shape = KitShapeId.Pill, level = SurfaceLevel.Surface3, ownFill = colors.surface3))
+    // Device pass 2026-11-13 (Soft, home): the tap target (48 dp) clips to its own pill, and the visible 32 dp pill
+    // drew its style shadow inside it, so the shadow was cut into a hard-edged capsule. The face is drawn beside the
+    // target, as KitChip does: its shadow is free, and the target's press ink is kept to the face's own outline.
+    val face = with(androidx.compose.ui.platform.LocalDensity.current) { tokens.chipHeight.dp.toPx() }
     Box(
-        modifier
-            .heightIn(min = tokens.minTarget.dp)
-            .kitTappable(onClick = onClick, shape = KitShapeId.Pill, onClickLabel = onClickLabel)
-            .clearAndSetSemantics {
-                contentDescription = spoken
-                testTag = "kit-status-pill"
-            },
+        modifier.heightIn(min = tokens.minTarget.dp),
         contentAlignment = Alignment.CenterStart,
     ) {
         val gap = with(androidx.compose.ui.platform.LocalDensity.current) { Space.S2.dp.roundToPx() }
@@ -114,6 +112,7 @@ public fun KitStatusPill(
             },
             modifier =
                 Modifier.height(tokens.chipHeight.dp)
+                    .clearAndSetSemantics {}
                     .then(look.modifier)
                     .padding(start = Space.S3.dp, end = Space.S2.dp),
         ) { measurables, constraints ->
@@ -142,5 +141,28 @@ public fun KitStatusPill(
                 chevron.placeRelative(x, (height - chevron.height) / 2)
             }
         }
+        Box(
+            Modifier.matchParentSize()
+                .kitTappable(onClick = onClick, shape = KitShapeId.Pill, onClickLabel = onClickLabel, pressClip = CentredPill(face))
+                .clearAndSetSemantics {
+                    contentDescription = spoken
+                    testTag = "kit-status-pill"
+                }
+        )
+    }
+}
+
+/** The visible pill, [heightPx] tall, centred in a taller tap target: where the target's press ink is drawn. */
+private class CentredPill(private val heightPx: Float) : androidx.compose.ui.graphics.Shape {
+    override fun createOutline(
+        size: androidx.compose.ui.geometry.Size,
+        layoutDirection: androidx.compose.ui.unit.LayoutDirection,
+        density: androidx.compose.ui.unit.Density,
+    ): androidx.compose.ui.graphics.Outline {
+        val h = heightPx.coerceAtMost(size.height)
+        val top = (size.height - h) / 2f
+        return androidx.compose.ui.graphics.Outline.Rounded(
+            androidx.compose.ui.geometry.RoundRect(0f, top, size.width, top + h, androidx.compose.ui.geometry.CornerRadius(h / 2f)),
+        )
     }
 }

@@ -56,6 +56,13 @@ import androidx.compose.ui.graphics.shadow.Shadow as ComposeShadow
 /** The box never shrinks below this, so the question has room to breathe (Dart `KitStartBox.minHeight`). */
 internal const val START_BOX_MIN_HEIGHT: Int = 80 // F: lib/ui/kit/kit_start_box.dart:54
 
+/**
+ * Room the start box keeps above itself for its halo (32 dp blur, sigma about 18.5 dp) beyond the 12 dp a page puts
+ * before its first part: at 32 dp from the box the glow is about 1% (under one colour step), so a scroller's top clip
+ * never shows as a line.
+ */
+internal const val START_BOX_HALO_ROOM_DP: Int = 20
+
 /** The field grows by four lines past [minLines] before it scrolls (Dart `maxLines: minLines + 4`). */
 internal fun startBoxLines(minLines: Int): IntRange = minLines..(minLines + 4) // F: lib/ui/kit/kit_start_box.dart:165
 
@@ -115,8 +122,13 @@ public fun KitStartBox(
         snapshotFlow { state.text.toString() }.distinctUntilChanged().drop(1).collect { changed.value?.invoke(it) }
     }
     LaunchedEffect(autofocus, focusKey) { if (autofocus || focusKey != null) focus.requestFocus() }
+    // The halo needs room above the box: a page scroller clips at its top, and the box is often the first thing on the
+    // page (New conversation in Soft, device pass 2026-11-13: the glow ended in a hard band under the header). The
+    // box keeps that room itself, so no screen has to know how far its halo reaches.
+    val haloRoom = if (halo === Modifier) 0.dp else START_BOX_HALO_ROOM_DP.dp
     Box(
         modifier
+            .padding(top = haloRoom)
             .kitMaxWidth(CapRole.Conversation)
             .fillMaxWidth()
             .heightIn(min = START_BOX_MIN_HEIGHT.dp)
