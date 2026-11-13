@@ -95,10 +95,8 @@ public class SettingsEntries(private val host: SettingsHost) : EntryInstaller {
         }
         entry<SettingsRoute.Target> { target ->
             val vm = metroViewModel<SettingsViewModel>()
-            LaunchedEffect(vm, target.rowTag) {
-                vm.actions.onAnchor(target.rowTag)
-                if (target.guide) vm.actions.onAppearanceAgain()
-            }
+            // Once per visit: the view model outlives the screen coming back from another page or a rotation.
+            LaunchedEffect(vm, target.rowTag) { vm.openTarget(target.rowTag, target.guide) }
             val state by vm.state.collectAsStateWithLifecycle()
             val monitoring = metroViewModel<MonitoringViewModel>()
             val monitoringState by monitoring.state.collectAsStateWithLifecycle()

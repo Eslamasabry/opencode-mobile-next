@@ -135,6 +135,9 @@ public class SettingsViewModel(host: SettingsHost, private val nav: AppNavigator
         presenter.close()
     }
 
+    /** A route that opens Settings onto a row (Tips' Show me, search, a chat's link): runs once per visit. */
+    public fun openTarget(rowTag: String, guide: Boolean): Unit = presenter.openEntryTarget(rowTag, guide)
+
     private var announced = false
 
     public fun showWhatsNew() {
