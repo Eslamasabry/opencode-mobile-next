@@ -63,6 +63,8 @@ class AndroidKitPlatformTest {
         assertEquals(HapticFeedbackConstants.CLOCK_TICK, hapticConstant(KitHaptic.Select, 33))
         assertEquals(HapticFeedbackConstants.TOGGLE_ON, hapticConstant(KitHaptic.ToggleOn, 34))
         assertEquals(HapticFeedbackConstants.CLOCK_TICK, hapticConstant(KitHaptic.ToggleOff, 33))
+        assertEquals(HapticFeedbackConstants.CLOCK_TICK, hapticConstant(KitHaptic.Attention, 37))
+        assertEquals(HapticFeedbackConstants.CLOCK_TICK, hapticConstant(KitHaptic.Attention, 26))
     }
 
     @Test

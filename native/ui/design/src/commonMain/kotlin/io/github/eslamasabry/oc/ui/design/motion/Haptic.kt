@@ -17,6 +17,11 @@ public enum class KitHaptic {
     Select,
     ToggleOn,
     ToggleOff,
+    /**
+     * Another conversation needs the person while they read this one: the edge light's one light tick, once per burst
+     * (LAMP-CRAFT §2). The only haptic for something that did not come from the person's own touch.
+     */
+    Attention,
 }
 
 /** Flutter KitHaptics: the global and contextual settings both win; only done obeys reduced motion. */

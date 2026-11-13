@@ -310,6 +310,8 @@ internal fun hapticConstant(kind: KitHaptic, sdk: Int): Int? =
         KitHaptic.Select ->
             if (sdk >= 34) HapticFeedbackConstants.SEGMENT_TICK
             else HapticFeedbackConstants.CLOCK_TICK
+        // The edge light's "someone needs you": the lightest tick the platform has, on every API level.
+        KitHaptic.Attention -> HapticFeedbackConstants.CLOCK_TICK
     }
 
 private fun ColorScheme.tones(): DynamicTones =

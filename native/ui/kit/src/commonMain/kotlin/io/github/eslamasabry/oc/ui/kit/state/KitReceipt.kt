@@ -1,6 +1,23 @@
 package io.github.eslamasabry.oc.ui.kit.state
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.Animatable
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.platform.LocalAccessibilityManager
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.runtime.rememberUpdatedState
+import io.github.eslamasabry.oc.core.common.text.Numbers
+import io.github.eslamasabry.oc.ui.design.style.SurfaceRole
+import io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel
+import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceInput
+import io.github.eslamasabry.oc.ui.kit.foundation.kitSurface
+import io.github.eslamasabry.oc.ui.kit.foundation.kitSurfaceLook
+import io.github.eslamasabry.oc.ui.words.res.kitReceiptCountdownSpoken
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
@@ -128,6 +145,11 @@ public object ReceiptRules {
      */
     public fun retryShown(words: ReceiptWords, canRetry: Boolean): Boolean = asksToAct(words) && canRetry
 
+    /** The whole seconds a hold of [ms] lasts, rounded up: what TalkBack says Undo lasts. */
+    public fun holdSeconds(ms: Long): Int = ((ms + MS_PER_SECOND - 1) / MS_PER_SECOND).toInt()
+
+    private const val MS_PER_SECOND: Long = 1_000L // NV: milliseconds in a second
+
     /** Undo only on a confirmed receipt inside its window. */
     public fun undoShown(words: ReceiptWords, canUndo: Boolean, windowOpen: Boolean): Boolean =
         words == ReceiptWords.Confirmed && canUndo && windowOpen
@@ -159,6 +181,17 @@ public fun KitReceipt(
     undoUntil: TimeMark? = null,
     onTap: (() -> Unit)? = null,
     automatic: Boolean = false,
+    /**
+     * A held answer or stop ("Allowed · Undo", "Stopping ‹title›… · Undo"): the receipt is a pill whose tonal fill
+     * drains from the end toward the start over this hold (HELD_ANSWER, 3 s), stretched by the person's accessibility
+     * timeout; TalkBack hears the words and how long Undo lasts. Only a confirmed receipt holds. Off = the fill stays.
+     */
+    countdownMs: Int? = null,
+    /**
+     * Called once when the hold ends without Undo. Undo, or the receipt leaving the screen, cancels it: a caller whose
+     * hold must outlive the receipt (the list closing) keeps its own timer and treats this as the visual end.
+     */
+    onHoldEnd: (() -> Unit)? = null,
 ) {
     val colors = LocalKitColors.current
     val tokens = LocalKitTokens.current
@@ -168,10 +201,13 @@ public fun KitReceipt(
     val undoClosed = rememberPassed(undoUntil, Duration.ZERO, fallback = false)
     val word = receiptWord(words, state, label, sendingLabel, automatic)
     val atWords = at?.let { stringResource(Res.string.kitReceiptAt, it) }
+    val hold = rememberHold(countdownMs, words, onHoldEnd)
+    val undo = onUndo?.let { act -> { hold?.undone = true; act() } }
     val retryShown = ReceiptRules.retryShown(words, onRetry != null)
-    val undoShown = ReceiptRules.undoShown(words, onUndo != null, !undoClosed)
+    val undoShown = ReceiptRules.undoShown(words, undo != null, !undoClosed)
     val hasActions = retryShown || undoShown
-    val spoken = listOfNotNull(receiptPlainWord(words, state, label, sendingLabel, automatic), (state as? KitReceiptState.Refused)?.reason?.trim()?.takeIf { words == ReceiptWords.RefusedReason }, atWords).joinToString(", ")
+    val plain = listOfNotNull(receiptPlainWord(words, state, label, sendingLabel, automatic), (state as? KitReceiptState.Refused)?.reason?.trim()?.takeIf { words == ReceiptWords.RefusedReason }, atWords).joinToString(", ")
+    val spoken = if (hold != null) stringResource(Res.string.kitReceiptCountdownSpoken, plain, Numbers.format(ReceiptRules.holdSeconds(hold.ms))) else plain
     val text =
         buildAnnotatedString {
             withStyle(SpanStyle(color = wordColor(colors, words))) { append(word) }
@@ -189,8 +225,8 @@ public fun KitReceipt(
             BasicText(text, Modifier.weight(1f, fill = false), style = LocalKitTypography.current.style(TypeRole.Secondary))
         }
     }
-    FlowRow(
-        modifier.kitMaxWidth(CapRole.Reading).testTag("kit-receipt"),
+    val row: @Composable (Modifier) -> Unit = { rowModifier -> FlowRow(
+        rowModifier,
         horizontalArrangement = Arrangement.spacedBy(Space.S2.dp),
         itemVerticalAlignment = Alignment.CenterVertically,
     ) {
@@ -207,13 +243,18 @@ public fun KitReceipt(
                 },
             contentAlignment = Alignment.CenterStart,
         ) { line() }
-        KitFade(retryShown to undoShown) { (retry, undo) ->
+        val undoAction = undo
+        KitFade(retryShown to undoShown) { (retry, shownUndo) ->
+            val undo = if (shownUndo) undoAction else null
             Row(horizontalArrangement = Arrangement.spacedBy(Space.S2.dp), verticalAlignment = Alignment.CenterVertically) {
                 if (retry && onRetry != null) ReceiptAction(stringResource(Res.string.kitTryAgain), onRetry, "kit-receipt-retry")
-                if (undo && onUndo != null) ReceiptAction(stringResource(Res.string.kitUndoAction), onUndo, "kit-receipt-undo")
+                if (undo != null) ReceiptAction(stringResource(Res.string.kitUndoAction), undo, "kit-receipt-undo")
             }
         }
-    }
+    } }
+    val outer = modifier.kitMaxWidth(CapRole.Reading).testTag("kit-receipt")
+    // A held receipt is a pill around the same row; without a hold the row is the receipt, as before.
+    if (hold == null) row(outer) else Box(outer) { row(Modifier.receiptHold(hold).testTag(RECEIPT_HOLD_TAG)) }
 }
 
 /** A tertiary action in its own padding, as Flutter's padded text button sits in the receipt's wrap. */
@@ -327,3 +368,58 @@ public fun kitReceiptSpan(
     val color = wordColor(LocalKitColors.current, words)
     return buildAnnotatedString { withStyle(SpanStyle(color = color)) { append("$word · ") } }
 }
+
+/** One hold's countdown: its stretched length, the draining fill (1 = full, 0 = ended), and whether Undo ran. */
+private class ReceiptHold(val ms: Long) {
+    val fill = Animatable(1f)
+    var undone = false
+    var fired = false
+}
+
+/**
+ * The hold of a confirmed receipt with [countdownMs], null otherwise: the accessibility timeout stretches it, the fill
+ * drains linearly over it (not under Off), and [onHoldEnd] runs once at its end unless Undo ran first.
+ */
+@Composable
+private fun rememberHold(countdownMs: Int?, words: ReceiptWords, onHoldEnd: (() -> Unit)?): ReceiptHold? {
+    if (countdownMs == null || words != ReceiptWords.Confirmed) return null
+    val a11y = LocalAccessibilityManager.current
+    val ms = remember(countdownMs, a11y) {
+        a11y?.calculateRecommendedTimeoutMillis(countdownMs.toLong(), containsIcons = true, containsText = true, containsControls = true)
+            ?: countdownMs.toLong()
+    }
+    val hold = remember(ms) { ReceiptHold(ms) }
+    val ended by rememberUpdatedState(onHoldEnd)
+    val specs = KitMotion.specs
+    val reduced = KitMotion.state.reduced
+    LaunchedEffect(hold) {
+        coroutineScope {
+            if (!reduced) launch { hold.fill.animateTo(0f, specs.countdown(ms.toInt())) }
+            delay(ms)
+            if (!hold.undone && !hold.fired) {
+                hold.fired = true
+                ended?.invoke()
+            }
+        }
+    }
+    return hold
+}
+
+/** The held receipt's pill: the style's control face by role, the tonal fill drained from the end toward the start. */
+@Composable
+private fun Modifier.receiptHold(hold: ReceiptHold): Modifier {
+    val colors = LocalKitColors.current
+    val look = kitSurfaceLook(KitSurfaceInput(role = SurfaceRole.Control, shape = KitShapeId.Pill, level = SurfaceLevel.Surface1, ownFill = colors.surface1))
+    val tonal = colors.accent.copy(alpha = FlutterKitTokens.MARK_TINT_ALPHA)
+    val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
+    return this
+        .kitSurface(look)
+        .drawBehind {
+            val w = size.width * hold.fill.value.coerceIn(0f, 1f)
+            if (w > 0f) drawRect(tonal, Offset(if (rtl) size.width - w else 0f, 0f), Size(w, size.height))
+        }
+        .padding(horizontal = Space.S3.dp, vertical = Space.S1.dp)
+}
+
+/** The held receipt's pill, for tests. */
+public const val RECEIPT_HOLD_TAG: String = "kit-receipt-hold"

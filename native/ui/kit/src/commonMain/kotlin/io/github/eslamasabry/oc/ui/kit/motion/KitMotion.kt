@@ -103,6 +103,21 @@ public class KitMotionSpecs internal constructor(private val s: KitMotionState) 
      */
     public fun <T> liquid(zeta: Float, stiffness: Float): FiniteAnimationSpec<T> = springOf(zeta, stiffness)
 
+    /** The edge light's one halo (LIGHT_PULSE on `Pulse`): it grows and fades once when someone needs the person. */
+    public fun <T> lightPulse(): FiniteAnimationSpec<T> =
+        if (s.reduced) snap() else tween(ms(MotionTokens.LIGHT_PULSE), easing = KitEasing.Pulse)
+
+    /** A finished mark's check drawing itself (CHECK_DRAW on `Enter`). */
+    public fun <T> checkDraw(): FiniteAnimationSpec<T> =
+        if (s.reduced) snap() else tween(ms(MotionTokens.CHECK_DRAW), easing = KitEasing.Enter)
+
+    /**
+     * A held answer's countdown: a linear drain over [millis] (`Steady`), the time left read without a number. Under
+     * Off it does not drain at all (the caller keeps the bar still); its length still holds.
+     */
+    public fun <T> countdown(millis: Int): FiniteAnimationSpec<T> =
+        if (s.reduced) snap() else tween(ms(millis), easing = KitEasing.Steady)
+
     /** A part kept on screen, unchanged, for [millis] while its own motion runs (an exit that only waits). */
     public fun <T> hold(millis: Int): FiniteAnimationSpec<T> =
         if (s.reduced) snap() else tween(ms(millis), easing = { if (it < 1f) 0f else 1f })
