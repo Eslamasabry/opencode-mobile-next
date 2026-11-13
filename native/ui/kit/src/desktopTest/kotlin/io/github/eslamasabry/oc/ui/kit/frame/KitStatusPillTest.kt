@@ -2,6 +2,7 @@ package io.github.eslamasabry.oc.ui.kit.frame
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
@@ -120,6 +121,41 @@ class KitStatusPillTest {
         }
         val pill = onNodeWithTag("kit-status-pill", useUnmergedTree = true).getUnclippedBoundsInRoot()
         assertEquals(48f, (pill.bottom - pill.top).value, 1f)
+        onNodeWithTag("kit-status-pill-word", useUnmergedTree = true).fetchSemanticsNode()
+    }
+
+    @Test
+    fun while_connecting_the_pill_shows_the_name_and_a_spinner_and_no_word() = runComposeUiTest {
+        setContent {
+            Themed(rtl = false, fontScale = 1f) {
+                KitStatusPill("This phone", KitConnectionTone.Working, "This phone, Connecting", {}, word = "Connecting")
+            }
+        }
+        // The word goes in what is spoken; the pill keeps its short name whole and does not grow.
+        assertTrue(onAllNodesWithTag("kit-status-pill-word", useUnmergedTree = true).fetchSemanticsNodes().isEmpty())
+    }
+
+    @Test
+    fun a_word_that_does_not_fit_beside_the_name_is_left_out_never_the_name_cut() = runComposeUiTest {
+        setContent {
+            Themed(rtl = false, fontScale = 1f) {
+                Box(Modifier.widthIn(max = 150.dp)) {
+                    KitStatusPill("This phone", KitConnectionTone.Problem, "x", {}, word = "Not answering")
+                }
+            }
+        }
+        assertTrue(onAllNodesWithTag("kit-status-pill-word", useUnmergedTree = true).fetchSemanticsNodes().isEmpty())
+    }
+
+    @Test
+    fun a_word_that_fits_still_shows() = runComposeUiTest {
+        setContent {
+            Themed(rtl = false, fontScale = 1f) {
+                Box(Modifier.widthIn(max = 300.dp)) {
+                    KitStatusPill("This phone", KitConnectionTone.Problem, "x", {}, word = "Offline")
+                }
+            }
+        }
         onNodeWithTag("kit-status-pill-word", useUnmergedTree = true).fetchSemanticsNode()
     }
 }
