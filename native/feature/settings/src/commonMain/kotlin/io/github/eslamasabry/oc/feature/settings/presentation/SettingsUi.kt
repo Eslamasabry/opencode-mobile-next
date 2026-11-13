@@ -56,6 +56,8 @@ public data class SettingsUi(
      * (F: settings_screen.dart:390 `groups.firstOrNull`). Not a page: a phone never draws it.
      */
     val firstGroup: GroupUi? = null,
+    /** Settings › Appearance › Glass lab; null where the build has no lab. */
+    val glassLab: GlassLabUi? = null,
 ) {
     val page: SettingsPage
         get() = stack.last()
@@ -124,6 +126,8 @@ public data class AppearanceUi(
      * the row says the edges do not bend); null when nothing does.
      */
     val glassLookHold: EdgeHold? = null,
+    /** The Glass lab row (preview builds): it opens [SettingsPage.GlassLab]. */
+    val glassLab: Boolean = false,
     val guide: AppearanceGuideRecord? = null,
     val question: AppearanceQuestion? = null,
     val questions: List<AppearanceQuestion> = emptyList(),

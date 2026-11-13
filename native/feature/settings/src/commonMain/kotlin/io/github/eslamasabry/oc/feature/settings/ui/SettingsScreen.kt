@@ -244,6 +244,12 @@ public fun SettingsScreen(
                     reportCode = state.reportCode,
                 )
             }
+        SettingsPage.GlassLab -> {
+            // Preview builds only: a build without the lab never opens it (its row is absent).
+            val lab = state.glassLab
+            val labActions = actions.glassLab
+            if (lab != null && labActions != null) GlassLabPage(lab, labActions, back, modifier)
+        }
         SettingsPage.KeyboardShortcuts ->
             SettingsFrame(
                 stringResource(Res.string.e7LibraryKeyboardShortcuts),

@@ -83,6 +83,10 @@ public interface SettingsHost {
     /** The edge dock's on/off switch; null where the app draws no dock (no row). */
     public val edgeDock: EdgeDockSetting?
         get() = null
+
+    /** Appearance › Glass lab's numbers; null where the build offers no lab (only preview builds do). */
+    public val glassLab: GlassLabSetting?
+        get() = null
 }
 
 /**
@@ -118,6 +122,7 @@ public class SettingsViewModel(host: SettingsHost, private val nav: AppNavigator
             healthConsent = host.healthConsent,
             problemReport = host.problemReport,
             edgeDock = host.edgeDock,
+            glassLabPort = host.glassLab,
         )
 
     public val state: StateFlow<SettingsUi> = presenter.state

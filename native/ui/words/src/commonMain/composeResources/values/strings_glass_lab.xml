@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Settings › Appearance › Glass lab (preview builds, 2026-11-13). English only until the gate translates. -->
+    <string name="glassLabTitle">Glass lab</string>
+    <string name="glassLabRowLine">Tune every glass number over a live preview (test builds)</string>
+    <string name="glassLabHandle">Glass controls</string>
+    <string name="glassLabHandleOpen">Open</string>
+    <string name="glassLabHandleClosed">Closed</string>
+    <string name="glassLabThemeDark">Dark theme numbers</string>
+    <string name="glassLabThemeLight">Light theme numbers</string>
+    <string name="glassLabAllLinked">All linked</string>
+    <string name="glassLabStartFrom">Start from</string>
+    <string name="glassLabInApp">Use in the whole app</string>
+    <string name="glassLabInAppLine">Every glass pane in the app wears these numbers until you turn this off</string>
+    <string name="glassLabCopy">Copy values</string>
+    <string name="glassLabCopied">Copied</string>
+    <string name="glassLabCopiedToast">Glass values copied</string>
+    <string name="glassLabPaste">Paste values</string>
+    <string name="glassLabPasted">Glass values loaded</string>
+    <string name="glassLabPasteRefused">No glass values on the clipboard</string>
+    <string name="glassLabResetAll">Reset all</string>
+    <string name="glassLabSceneChat">Chat</string>
+    <string name="glassLabSceneHome">Home list</string>
+    <string name="glassLabOpenMenu">Bar menu</string>
+    <string name="glassLabOpenSheet">Sheet</string>
+    <string name="glassLabOpenContext">Context menu</string>
+    <string name="glassLabOpenDialog">Dialog</string>
+    <string name="glassLabSliderReset">Back to shipped</string>
+    <string name="glassLabTypeTitle">Type a number</string>
+    <string name="glassLabTypeField">Value</string>
+    <string name="glassLabTypeConfirm">Set</string>
+    <!-- The preview's sample content. -->
+    <string name="glassLabSampleTitle">Run the parser on Ubuntu</string>
+    <string name="glassLabSampleSubtitle">new · This phone</string>
+    <string name="glassLabSampleAsk">Can you check why the parser drops empty lines inside fenced blocks, and show me the numbers?</string>
+    <string name="glassLabSampleReply">I traced it to the line splitter: it trims every line before it checks for a fence, so an empty line inside a block reads as the end of a paragraph. Here is what each version does with the same file:\n\n| Version | Lines kept | Time |\n|---|---|---|\n| 1.4 | 212 | 38 ms |\n| 1.5 | 196 | 35 ms |\n| fix | 212 | 36 ms |\n\nThe fix keeps the raw line until the fence check has run:\n\n```kotlin\nval raw = lines[i]\nif (inFence) block += raw\nelse if (raw.isBlank()) closeParagraph()\n```\n\nWant me to run the tests on your Ubuntu machine?</string>
+    <string name="glassLabSampleAskTwo">Yes, run them and tell me what fails.</string>
+    <string name="glassLabSamplePermission">Run a command?</string>
+    <string name="glassLabSampleCommand">./gradlew :core:markdown:test</string>
+    <string name="glassLabSamplePermissionWhy">Runs the markdown module\'s tests in the project folder.</string>
+    <string name="glassLabSampleAskBox">Ask OpenCode…</string>
+    <string name="glassLabSampleModel">Big Pickle</string>
+    <string name="glassLabSampleMode">Ask first</string>
+    <string name="glassLabSampleDialogTitle">Delete this conversation?</string>
+    <string name="glassLabSampleDialogBody">It goes from this phone and from the server. This cannot be undone.</string>
+    <string name="glassLabSampleDelete">Delete</string>
+    <string name="glassLabSampleKeep">Keep it</string>
+    <string name="glassLabSampleHome">Conversations</string>
+    <string name="glassLabSampleConnected">Connected</string>
+    <string name="glassLabSampleAll">All</string>
+    <string name="glassLabSampleNeedsYou">Needs you</string>
+    <string name="glassLabSampleRunning">Running</string>
+    <string name="glassLabSampleNew">New</string>
+</resources>

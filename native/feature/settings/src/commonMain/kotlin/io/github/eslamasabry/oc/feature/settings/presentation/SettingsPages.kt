@@ -80,6 +80,9 @@ public sealed interface SettingsPage {
 
     /** About › Tips and shortcuts › Keyboard shortcuts (Flutter shortcuts.dart `showShortcutsHelp`). */
     public data object KeyboardShortcuts : SettingsPage
+
+    /** Appearance › Glass lab (preview builds): every number of the Glass material over a live preview. */
+    public data object GlassLab : SettingsPage
 }
 
 /**

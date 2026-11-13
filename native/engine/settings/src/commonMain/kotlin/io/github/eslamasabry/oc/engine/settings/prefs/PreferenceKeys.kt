@@ -27,6 +27,12 @@ public object DevicePreferenceKeys {
 
     /** The Glass look (2026-11-09): `glossy` (default, never stored), `clear`, `frosted` or `smoked`. */
     public const val GLASS_LOOK: String = "oc.glassLook"
+
+    /**
+     * The Glass lab's numbers (preview builds, 2026-11-13): one text block (`GlassTuning.encode`), worn by the app while
+     * its "Use in the whole app" line says on. Missing = the shipped glass. One per install, never per profile.
+     */
+    public const val GLASS_TUNING: String = "oc.glassTuning"
     public const val REASONING: String = "oc.transcript.reasoningExpanded"
     public const val TIMESTAMPS: String = "oc.transcript.timestampsVisible"
     public const val MOTION: String = "oc.effectsMotion"
@@ -55,7 +61,7 @@ public object DevicePreferenceKeys {
     public val READ: Set<String> = linkedSetOf(
         APPEARANCE, THEME_PACK, LOCALE, TEXT_SIZE, ACCENT, FROST, REASONING, TIMESTAMPS, MOTION, CELEBRATIONS, GLOW,
         GLOW_STYLE, LIVE_BACKGROUND, LIVE_HELD_BY_STYLE, LIVE_STYLE, LIVE_INTENSITY, SURFACE_STYLE, CORNERS, DENSITY,
-        GLASS_EDGES, GLASS_LOOK,
+        GLASS_EDGES, GLASS_LOOK, GLASS_TUNING,
     )
 
     /** The keys that make up the facade's `effects` value (provenance: any of them stored = explicit). */
@@ -68,7 +74,7 @@ public object DevicePreferenceKeys {
         fun app(key: String, type: PrefType) = add(KeyShape(key, KeyScope.App, type, OWNER, "device preference"))
         listOf(
             APPEARANCE, THEME_PACK, LOCALE, TEXT_SIZE, ACCENT, FROST, MOTION, GLOW_STYLE, LIVE_STYLE, LIVE_INTENSITY,
-            SURFACE_STYLE, CORNERS, DENSITY, DEPTH, EDGES, GLOW_COLOURS, GLOW_SPEED, GLASS_EDGES, GLASS_LOOK,
+            SURFACE_STYLE, CORNERS, DENSITY, DEPTH, EDGES, GLOW_COLOURS, GLOW_SPEED, GLASS_EDGES, GLASS_LOOK, GLASS_TUNING,
         ).forEach { app(it, PrefType.Str) }
         listOf(REASONING, TIMESTAMPS, CELEBRATIONS, GLOW, LIVE_BACKGROUND, LIVE_HELD_BY_STYLE)
             .forEach { app(it, PrefType.Bool) }

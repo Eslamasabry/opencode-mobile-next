@@ -167,6 +167,7 @@ public class Preferences(
         is PreferenceChange.Look ->
             mapOf(K.GLASS_LOOK to change.value.wire.takeIf { change.value != GlassLookChoice.Glossy }) +
                 (if (store.get(K.GLASS_EDGES) != null) mapOf(K.GLASS_EDGES to null) else emptyMap())
+        is PreferenceChange.GlassTuning -> mapOf(K.GLASS_TUNING to change.text?.takeIf { it.isNotBlank() })
         is PreferenceChange.ReasoningExpanded -> mapOf(K.REASONING to change.value)
         is PreferenceChange.TimestampsVisible -> mapOf(K.TIMESTAMPS to change.value)
         is PreferenceChange.SetEffects -> effectEdits(current.effects, change.value)
@@ -249,6 +250,7 @@ public class Preferences(
                 // The retired edges key is read only until the migration deletes it (see glassLookMigration).
                 glassLook = wireOf<GlassLookChoice>(raw(K.GLASS_LOOK))
                     ?: if (raw(K.GLASS_EDGES) == GLASS_EDGES_FROSTED) GlassLookChoice.Frosted else GlassLookChoice.Glossy,
+                glassTuning = (raw(K.GLASS_TUNING) as? String)?.takeIf { it.isNotBlank() },
                 reasoningExpanded = bool(K.REASONING, false),
                 timestampsVisible = bool(K.TIMESTAMPS, false),
             )

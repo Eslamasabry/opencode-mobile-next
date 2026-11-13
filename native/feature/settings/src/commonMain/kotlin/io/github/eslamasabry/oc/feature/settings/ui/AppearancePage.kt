@@ -379,6 +379,18 @@ private fun ColumnScope.AppearanceControls(
                 ui.glassLook == GlassLookId.Frosted -> KitGroupNote(stringResource(Res.string.appearanceGlassLookFrostedLighter))
                 else -> Unit
             }
+            // Preview builds: every number of the Glass material over a live preview.
+            if (ui.glassLab) {
+                KitRowGroup {
+                    KitRow(
+                        title = stringResource(Res.string.glassLabTitle),
+                        modifier = Modifier.testTag("appearance-glass-lab"),
+                        supporting = stringResource(Res.string.glassLabRowLine),
+                        trailing = KitRowTrailing.Chevron,
+                        onClick = { actions.onOpen(io.github.eslamasabry.oc.feature.settings.presentation.SettingsPage.GlassLab) },
+                    )
+                }
+            }
         }
         val defaults = StyleResolver.spec(Style.valueOf(ui.style.name)).tokens.defaults
         KitGroupNote(
