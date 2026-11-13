@@ -200,6 +200,14 @@ jobs:
             fi
             cp "$apk" "$out/opencode-mobile-$NAME-$CODE-$abi.apk"
           done
+          # The R8 mapping stays with the build: a crash from this tag cannot be read without it. It goes into the
+          # workflow artifact only (the draft release attaches the APKs and SHA256SUMS).
+          mapping="$(find native/androidApp/build/outputs/mapping -name mapping.txt | head -n 1)"
+          if [ -z "$mapping" ]; then
+            echo "::error::No R8 mapping.txt under native/androidApp/build/outputs/mapping"
+            exit 1
+          fi
+          cp "$mapping" "$out/mapping-$NAME-$CODE.txt"
           (cd "$out" && sha256sum ./*.apk | sed 's# \./# #' > SHA256SUMS)
           cat "$out/SHA256SUMS"
 

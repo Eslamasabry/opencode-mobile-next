@@ -31,6 +31,10 @@ on:
         description: Build only the preview APK (signed with the preview key), skip compile and test shards
         type: boolean
         default: false
+      android_unit:
+        description: "Also run the Android library unit tests (native/android/*) and the :androidApp unit tests; no other lane runs them"
+        type: boolean
+        default: false
       runner:
         description: "self: the always-warm oc-native runner (falls back to GitHub-hosted when it is offline). github: force GitHub-hosted runners"
         type: choice
@@ -479,6 +483,48 @@ jobs:
         with:
           name: report-custom
           path: native/reports/custom.json
+          retention-days: 7
+          if-no-files-found: ignore
+
+  android-unit:
+    name: android unit tests
+    needs: where
+    if: ${{ inputs.android_unit == true }}
+    # Opt-in (workflow_dispatch input android_unit). Work branches never fail the run, as for custom tasks.
+    continue-on-error: ${{ github.ref_name != 'native/next' && !startsWith(github.ref_name, 'native/screens-merge') && github.ref_name != 'master' }}
+    runs-on: ${{ fromJSON(needs.where.outputs.runs_on) }}
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          clean: ${{ runner.environment != 'self-hosted' }}
+      - uses: ./.github/actions/native-setup
+      - name: Run the Android unit tests
+        shell: bash
+        run: |
+          set -o pipefail
+          # Every android/* library that has unit tests, plus the app module. The list comes from the folders, so a new
+          # module is picked up without editing this file.
+          tasks=""
+          for d in android/*/; do
+            m="$(basename "$d")"
+            if [ -d "$d/src/test" ]; then tasks="$tasks :android:$m:testDebugUnitTest"; fi
+          done
+          tool/ci/gradle_retry.sh "$RUNNER_TEMP/android-unit.log" $tasks :androidApp:testPreviewBenchmarkUnitTest $GRADLE_FLAGS
+      - name: Android unit report
+        if: always()
+        env:
+          JOB_STATUS: ${{ job.status }}
+        run: |
+          mkdir -p reports
+          failed=false; [ "$JOB_STATUS" = failure ] && failed=true
+          ran=false; grep -Eq '^(> Task :|BUILD )' "$RUNNER_TEMP/android-unit.log" 2>/dev/null && ran=true
+          echo "{\"failed\":$failed,\"gradle_ran\":$ran}" > reports/android-unit.json
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: report-android-unit
+          path: native/reports/android-unit.json
           retention-days: 7
           if-no-files-found: ignore
 
