@@ -52,6 +52,12 @@ public data class AppUpdateState(
      * release for the session; closing the sheet any other way only closes it.
      */
     val promptOpen: Boolean = false,
+    /**
+     * B-217: the release this app found, offered and that is now the installed build. Android closes the app to
+     * install an update and says nothing; the first visit after it says what happened. [AppUpdates.notNow] (the
+     * line's Dismiss, or its own short hold) clears it; it never comes back after that.
+     */
+    val updated: AppRelease? = null,
 ) {
     /** A newer release is known and not installed: drives the gear badge and stays on after Not now. */
     public val hasPendingRelease: Boolean get() = supported && release != null
@@ -123,6 +129,8 @@ public class AppUpdates(
             if (parsed != null && parsed.build > app.build) {
                 release = parsed
             } else {
+                // The release this app offered is the one running now: say so once (B-217).
+                if (parsed != null && parsed.build == app.build) set { it.copy(updated = parsed) }
                 // Installed (or older, or unreadable): the finding and its download are done.
                 record = record.copy(releaseJson = null)
                 store.write(record)
@@ -251,9 +259,12 @@ public class AppUpdates(
         store.write(record)
     }
 
-    /** Not now: hides the offer for this version until the next app start. The gear badge stays. */
+    /**
+     * Not now: hides the offer for this version until the next app start. The gear badge stays. Also the dismiss of
+     * "Updated to version X" (B-217), which is then said no more.
+     */
     public fun notNow() {
-        set { it.copy(notNow = true, promptOpen = false) }
+        set { it.copy(notNow = true, promptOpen = false, updated = null) }
     }
 
     /** Later on the prompt sheet: this release is not offered again this session (Flutter `dismissForSession`). */

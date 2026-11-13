@@ -569,8 +569,9 @@ public class AgentsPresenter(
         openSignIn(owner, id)
     }
 
+    /** Closing the review changes nothing that runs: it always closes, a press in flight included. */
     override fun dismissInstall() {
-        if (!local.value.busy) local.update { it.copy(installingAgent = null) }
+        local.update { it.copy(installingAgent = null) }
     }
 
     override fun installPhone(id: String): Unit = operation {

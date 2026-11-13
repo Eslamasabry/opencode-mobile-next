@@ -1191,7 +1191,8 @@ class BuiltinLinux(private val context: Context) {
                 "DISABLE_AUTOUPDATER=1",
                 "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1",
             ) + program
-        return prootCommand(command, agentUser = true) to request
+        // Compatibility mode like every agent process (issue #117): the sign-in is the agent's own Node.js program.
+        return prootCommand(command, agentUser = true, compat = serverCompat()) to request
     }
 
     /**
@@ -1329,10 +1330,13 @@ class BuiltinLinux(private val context: Context) {
                 "DISABLE_AUTOUPDATER=1",
                 "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1",
             ) + argv
+        // The agent helper and the agents are Node.js programs too: on a phone where Node only runs with the proot in
+        // compatibility mode (issue #117), they need it as the server does, or the helper "did not start".
+        val compat = serverCompat()
         val builder =
-            ProcessBuilder(prootCommand(command, agentUser = true)).apply {
+            ProcessBuilder(prootCommand(command, agentUser = true, compat = compat)).apply {
                 environment().clear()
-                environment().putAll(prootEnvironment())
+                environment().putAll(prootEnvironment(compat))
                 if (privateOutput) redirectError(File("/dev/null")) else redirectErrorStream(true)
             }
         val process =
@@ -2657,7 +2661,7 @@ class BuiltinLinux(private val context: Context) {
      * Whether the server's proot runs in compatibility mode: the Node install found that Node.js only runs that way
      * on this phone and wrote `proot-compat` under its saved safe mode (NodeCompatState, issue #117).
      */
-    private fun serverCompat(): Boolean = NodeCompatState.prootCompat(rootfs)
+    fun serverCompat(): Boolean = NodeCompatState.prootCompat(rootfs)
 
     // ---- long-running services ---------------------------------------------
 
@@ -5444,15 +5448,16 @@ class BuiltinLinux(private val context: Context) {
         serverStartLogOffset = null
     }
 
-    /** Native packages keep their own loopback address; Flutter continues to own 4097. */
+    /** The port the last start chose ([PhoneServerPorts]); each build has its own default. */
     val selectedServerPort: Int
         get() =
-            recoveryPreferences.getInt("nativeServerPort", defaultServerPort).takeIf {
-                it == 4098 || it in 4100..4199
-            } ?: defaultServerPort
+            PhoneServerPorts.saved(
+                recoveryPreferences.getInt("nativeServerPort", defaultServerPort),
+                defaultServerPort,
+            )
 
     private val defaultServerPort: Int
-        get() = if (context.packageName.endsWith(".native")) 4100 else SERVER_DEFAULT_PORT
+        get() = PhoneServerPorts.default(context.packageName, configuredDefaultPort)
 
     /** Only select a port while our tracked server is stopped; never take over another listener. */
     @Synchronized
@@ -5462,7 +5467,7 @@ class BuiltinLinux(private val context: Context) {
         }
         beginServerStart()
         val chosen =
-            (listOf(selectedServerPort) + (4100..4199)).distinct().firstOrNull { LoopbackPort.free(it) }
+            PhoneServerPorts.candidates(defaultServerPort).firstOrNull { LoopbackPort.free(it) }
                 ?: run {
                     selectedPortBusy = true
                     throw ServerPortBusy(selectedServerPort)
@@ -6738,7 +6743,6 @@ exec gc supervisor run
         private const val MAX_RESTART_DELAY_MS = 60_000L
         private const val MAX_RECEIPT_CHARS = 131_072
         private const val MAX_ENV_BYTES = 131_072
-        private const val SERVER_DEFAULT_PORT = 4098
         private const val CPU_SAMPLE_MS = 1_000L
         private const val STOP_GRACE_MS = 2_000L
         private const val MAX_STOP_PIDS = 256
@@ -6989,6 +6993,13 @@ exec gc supervisor run
         private val NAME = Regex("[a-z][a-z0-9-]{0,31}")
 
         @Volatile private var instance: BuiltinLinux? = null
+
+        /** The app build's own phone server port (B-232); set once in Application.onCreate before any start. */
+        @Volatile private var configuredDefaultPort: Int? = null
+
+        fun configureDefaultPort(port: Int) {
+            configuredDefaultPort = port.takeIf(PhoneServerPorts::valid)
+        }
 
         /**
          * For the Status widget: whether this process runs the phone server. Never creates the

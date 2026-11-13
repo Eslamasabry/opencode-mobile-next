@@ -130,7 +130,8 @@ class S8ChatPolishRulesTest {
         val work =
             TurnWork(
                 "t",
-                listOf(step("e", "edit", StepState.Done, "a.kt"), step("b", "bash", StepState.Failed)),
+                // R2: a failed step is counted again (a failure did no work), so "every step finished" is all Done here.
+                listOf(step("e", "edit", StepState.Done, "a.kt"), step("b", "bash", StepState.Done)),
                 counts,
                 WorkLineState.Done,
                 null,

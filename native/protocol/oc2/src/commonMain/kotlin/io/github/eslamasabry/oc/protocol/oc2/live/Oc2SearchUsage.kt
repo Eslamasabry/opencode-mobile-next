@@ -57,10 +57,12 @@ public object Oc2SearchUsage {
             is Outcome.Ok -> {
                 val root = result.value
                 val rows = rows(root) ?: return Failure.UnreadableReply().failed()
+                val wires = rows.mapNotNull { row -> (data(row) as? JsonObject)?.let(Oc2Session::fromJson) }
+                // B-243: rows that came back but could not be read are not "no conversations"; an empty page here
+                // would let the home show its first-run empty state over a server full of conversations.
+                if (rows.isNotEmpty() && wires.isEmpty()) return Failure.UnreadableReply().failed()
                 val items =
-                    rows.mapNotNull { row ->
-                        val wire = Oc2Session.fromJson(data(row) as? JsonObject ?: return@mapNotNull null)
-                            ?: return@mapNotNull null
+                    wires.mapNotNull { wire ->
                         if (!includeArchived && wire.archived) null
                         else GlobalSessionResult(session(wire), projectName = null, projectDirectory = wire.directory)
                     }

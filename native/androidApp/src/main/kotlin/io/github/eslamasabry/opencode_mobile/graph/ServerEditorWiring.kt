@@ -115,6 +115,7 @@ class NativeServerEditor(
                 profile,
                 reconnectOnSave = stores.profiles.activeId.value == id || p.usesAgentSocket,
                 ownPhone = profile.managedOnPhone,
+                serverVersion = p.serverVersion?.takeIf { it.isNotBlank() },
             )
             .ok()
     }

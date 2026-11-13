@@ -469,11 +469,19 @@ private fun ProjectRow(
             add(stringResource(Res.string.folderBrowserGit))
         if (tail == null) add(ProjectRules.cutStart(project.directory))
     }
+    val renameable = canRename && project.id != null
+    val renameLabel = stringResource(Res.string.e7ProjectProjectRenameAction, project.name)
     KitRow(
         title = project.name,
         supporting = parts.joinToString(" · "),
         supportingMaxLines = 2,
-        trailing = KitRowTrailing.Chevron,
+        // Rename is a visible pencil on the row (owner rule: main actions are visible); the long press stays too.
+        trailing =
+            if (renameable)
+                KitRowTrailing.IconAction(
+                    KitLineAction(renameLabel, { actions.askRename(project) }, icon = KitIcons.edit)
+                )
+            else KitRowTrailing.Chevron,
         onClick = { actions.openProject(project.directory) },
         // Rename is a long-press (Flutter), told to TalkBack as a custom action; only where the
         // server keeps names.

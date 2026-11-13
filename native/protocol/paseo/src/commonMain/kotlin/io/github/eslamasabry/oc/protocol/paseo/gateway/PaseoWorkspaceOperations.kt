@@ -84,6 +84,26 @@ internal class PaseoWorkspaceOperations(
         id: io.github.eslamasabry.oc.core.common.ids.SessionId
     ): Outcome<Unit> = gateway.deleteSession(id)
 
+    /**
+     * The rest of what a conversation needs is the daemon's, not the folder's: the same reads as the gateway's own
+     * operations ([PaseoOperations]). Without these the located path fell to the interface defaults
+     * (`Unavailable`), so a caller reaching Paseo through [PaseoGateway.operationsAt] got no sub-agents, no commands
+     * and no model list (the archive gap above had the same cause).
+     */
+    private val daemon: PaseoOperations by lazy { PaseoOperations(gateway) }
+
+    override suspend fun subAgents(
+        parent: io.github.eslamasabry.oc.core.common.ids.SessionId
+    ): Outcome<ImmutableList<io.github.eslamasabry.oc.core.model.SubAgent>> = daemon.subAgents(parent)
+
+    override suspend fun commands(): Outcome<ImmutableList<io.github.eslamasabry.oc.core.model.CommandInfo>> =
+        daemon.commands()
+
+    override suspend fun catalog(): Outcome<io.github.eslamasabry.oc.core.model.CatalogSnapshot> = daemon.catalog()
+
+    override suspend fun chatDefaults(): Outcome<io.github.eslamasabry.oc.core.model.ChatDefaults> =
+        daemon.chatDefaults()
+
     private suspend inline fun <T> call(crossinline block: suspend () -> T): Outcome<T> =
         withContext(gateway.lane) { paseoAttempt { block() } }
 

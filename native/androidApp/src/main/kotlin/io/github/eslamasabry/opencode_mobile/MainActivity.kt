@@ -84,6 +84,7 @@ class MainActivity : ComponentActivity() {
                         if (AppLocale.changed(tag)) recreate()
                     }
                 }
+                if (!appearanceKnown) LaunchGround()
                 if (appearanceKnown) CompositionLocalProvider(
                     LocalKitSecureWindow provides secureWindow,
                     LocalKitTerminalSlot provides AndroidKitTerminalSlot,
@@ -157,6 +158,10 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
+        // Edge-to-edge is asserted again on every resume: a language switch relaunches the window more than once
+        // (the app's own recreate and the platform's locale relaunch), and the last window to appear must not keep
+        // the framework's fitted layout with black bars.
+        enableEdgeToEdge()
         appGraph.projectExport.activate(this)
         platformHub.onResumed(this)
     }

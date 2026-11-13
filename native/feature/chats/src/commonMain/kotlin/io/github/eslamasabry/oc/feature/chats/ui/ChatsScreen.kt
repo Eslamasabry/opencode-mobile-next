@@ -73,9 +73,7 @@ import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.KitScreen
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.KitTextRole
-import io.github.eslamasabry.oc.ui.kit.action.KIT_FAB_CLEARANCE
-import io.github.eslamasabry.oc.ui.kit.action.KIT_FAB_SIZE
-import io.github.eslamasabry.oc.ui.kit.action.KitFab
+import io.github.eslamasabry.oc.ui.kit.row.KitFootBar
 import io.github.eslamasabry.oc.ui.kit.chip.KitChip
 import io.github.eslamasabry.oc.ui.kit.chip.KitChipKind
 import io.github.eslamasabry.oc.ui.kit.chip.KitChipWrap
@@ -106,7 +104,6 @@ import io.github.eslamasabry.oc.ui.words.res.serversWorking
 import io.github.eslamasabry.oc.ui.kit.row.KitFeedAgent
 import io.github.eslamasabry.oc.ui.kit.row.KitRecentRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowPanel
-import io.github.eslamasabry.oc.ui.kit.row.KitPanelLinkRow
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.feature.chats.presentation.HomePreviewRules
 import androidx.compose.runtime.key
@@ -224,8 +221,6 @@ public fun ChatsScreen(
      * as its goldens show it, is this screen with [shellBar] false. The page's ground is the same either way.
      */
     shellBar: Boolean = true,
-    /** The edge dock over the list, under the home's sheets and dialogs; null = none. */
-    edgeDock: io.github.eslamasabry.oc.feature.chats.dock.HomeEdgeDock? = null,
 ) {
     // E05-S21: on the bare list (the whole back stack) the first Back says "Press back again to exit" in the one
     // status line; called first so sheets, dialogs and a filled search registered below close before it.
@@ -295,6 +290,21 @@ public fun ChatsScreen(
                     else HeaderRow(pill, showFilters) { Filters(state, actions, bleed = pill != null) }
                 },
             ),
+        // The foot bar: All conversations and the round + on one line, margin to margin, under the list (the frame
+        // gives the list the room above it), so no row ever passes under the button.
+        bottom =
+            if (!listed) null
+            else ({
+                KitFootBar(
+                    label = stringResource(Res.string.chats_all_title),
+                    count = Numbers.format(state.shownCount ?: state.allCount),
+                    onLink = actions::showAll,
+                    fabLabel = stringResource(Res.string.chatsHomeNewChat),
+                    fabIcon = KitIcons.add,
+                    onFab = actions::newConversation,
+                    fabVisible = showFab,
+                )
+            }),
         status = backExit ?: appStatus.takeIf { shownNotice == HomeNoticeKind.AppCondition },
         // F: lib/ui/screens/chats/chats_home_screen.dart:536: pull the list down to read it again; not while the server
         // is still opening. Refresh wraps the scrolling header too (the title returns before a pull starts). The kit
@@ -318,17 +328,8 @@ public fun ChatsScreen(
             state = list,
             modifier = Modifier.kitGlassSource(listGlass),
             // The calm empty page fills the room and keeps its own end space, so it never scrolls by that much.
-            contentPadding =
-                PaddingValues(
-                    bottom =
-                        when {
-                            (state.phase == ChatsPhase.Empty || state.phase == ChatsPhase.NoMatch) && state.home.opening == null -> 0.dp
-                            // A1: the list ends with All conversations beside the floating +, on its line (the + keeps
-                            // S3 from the bottom; the row stops short of it), so nothing scrolls under the button.
-                            showFab && state.phase == ChatsPhase.List -> Space.S3.dp
-                            else -> Space.S4.dp + if (showFab) KIT_FAB_CLEARANCE.dp else 0.dp
-                        }
-                ),
+            // The foot bar is the frame's own block under the list: the list ends above it.
+            contentPadding = PaddingValues(bottom = if ((state.phase == ChatsPhase.Empty || state.phase == ChatsPhase.NoMatch) && state.home.opening == null) 0.dp else Space.S4.dp),
         ) {
             // The saved rows draw as the normal list (the view model puts them in the feed); only a failure adds its card.
             state.home.opening?.takeIf { it.phase == ChatsOpeningPhase.Failed }?.let { opening ->
@@ -503,21 +504,6 @@ public fun ChatsScreen(
                                 }
                             }
                         }
-                    item(key = "all-conversations", contentType = "all-conversations") {
-                        Box(kitItemMotion()) {
-                            // Short of the floating + (its 56 dp and a S3 gap), so the two share the list's last line.
-                            KitRowPanel(
-                                Modifier.padding(top = Space.S5.dp, end = (KIT_FAB_SIZE + Space.S3).dp),
-                                leadingMarks = false,
-                            ) {
-                                KitPanelLinkRow(
-                                    label = stringResource(Res.string.chats_all_title),
-                                    count = Numbers.format(state.shownCount ?: state.allCount),
-                                    onClick = actions::showAll,
-                                )
-                            }
-                        }
-                    }
                 }
             }
         }
@@ -539,22 +525,6 @@ public fun ChatsScreen(
                 onTimeout = actions::commitArchive,
                 modifier = Modifier.align(Alignment.CenterHorizontally),
             )
-            // P-107: Flutter's round 56 dp + on the gutter, 12 dp above the bottom; the words are heard, not drawn, so
-            // it no longer covers a row's time. It fades out while the server cannot start one yet.
-            if (listed) {
-                KitFab(
-                    label = stringResource(Res.string.chatsHomeNewChat),
-                    icon = KitIcons.add,
-                    onClick = actions::newConversation,
-                    modifier = Modifier.padding(end = LocalKitTokens.current.gutter.dp, bottom = Space.S3.dp),
-                    visible = showFab,
-                    backdrop = listGlass,
-                )
-            }
-        }
-        // The edge dock over the list, clear of the floating + at the foot; under Glass it bends the list's recording.
-        androidx.compose.runtime.CompositionLocalProvider(io.github.eslamasabry.oc.ui.kit.dock.LocalKitDockGlass provides listGlass) {
-            edgeDock?.Content(clearBottom = if (listed) KIT_FAB_CLEARANCE.dp else 0.dp)
         }
       }
         ChatsHomeSheets(state, actions)
@@ -738,14 +708,14 @@ private fun BriefBlock(brief: BriefUi, words: HomeRowWords, mask: (String) -> St
                     KitButton(
                         label = stringResource(Res.string.chatsReturnBriefMore, brief.more),
                         onClick = { actions.showBriefOverflow(brief) },
-                        role = KitButtonRole.Tertiary,
+                        role = KitButtonRole.Secondary,
                     )
                 else Spacer(Modifier)
                 if (brief.rows.isNotEmpty())
                     KitButton(
                         label = stringResource(Res.string.returnBriefSeen),
                         onClick = { actions.dismissBrief(brief.acknowledgement) },
-                        role = KitButtonRole.Tertiary,
+                        role = KitButtonRole.Secondary,
                     )
             }
     }
@@ -961,7 +931,14 @@ private fun ConversationRow(
             // H5: the shell command a running row is on ("Running npm test"), read left to right.
             ?: row.running?.command?.takeIf { row.status == RowStatus.Running && it.isNotBlank() }
                 ?.let { stringResource(Res.string.signalRowRunningCommand, KitBidi.ltr(mask(it))) }
-            ?: row.preview?.let { mask(it) }
+            ?: row.preview?.let {
+                HomePreviewRules.forRow(
+                    mask(it),
+                    row.directory,
+                    // The status column says it; the line does not say it again.
+                    if (row.status == RowStatus.Done) listOfNotNull(words.done, "Done") else emptyList(),
+                )
+            }
     val project = row.project.takeIf { flags.showProject && it.isNotBlank() }
     // No line to show: the row says where it lives instead (its project when no dot names it, and its server).
     val meta = HomePreviewRules.fallback(row.project, row.server, projectShown = project != null)

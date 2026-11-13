@@ -39,9 +39,11 @@ public object WorkLineRules {
      * written then edited is one file, a step the server never ran is "not run".
      */
     public fun split(work: TurnWork): WorkLineCounts {
-        // P-102: a stopped step did not do its work; it is not counted as "edited" or "ran".
+        // P-102 / review #2: a stopped, declined or failed step did not do its work; it is not counted as "edited",
+        // "read" or "ran" (the engine's counts include failed steps, so any of them means counting again).
         val asking = work.state == WorkLineState.WaitingForYou
-        if (work.steps.none { unfinished(it, asking) || it.state == StepState.Stopped || it.state == StepState.Declined }) return WorkLineCounts(work.counts)
+        if (work.steps.none { unfinished(it, asking) || it.state == StepState.Stopped || it.state == StepState.Declined || it.state == StepState.Failed })
+            return WorkLineCounts(work.counts)
         var out = WorkLineCounts(WorkCounts(steps = work.counts.steps))
         val editedFiles = HashSet<String>()
         val waitingFiles = HashSet<String>()
@@ -67,9 +69,23 @@ public object WorkLineRules {
             else -> c.copy(waitingOther = c.waitingOther + 1)
         }
 
+    /**
+     * Review #2 (C-058): only work that happened is said in the past tense. A stopped or declined step did nothing; a
+     * failed one did nothing either (a failed edit leaves the file as it was, a failed read read nothing, and
+     * OpenCode 2 ends a call the person refused with a note as an error carrying only the note), except a command
+     * that ran and exited with an error: its exit code is the proof that it ran.
+     */
+    private fun didItsWork(step: TurnStep): Boolean =
+        when (step.state) {
+            StepState.Stopped,
+            StepState.Declined -> false
+            StepState.Failed -> name(step) in runTools && step.facts.exitCode != null
+            else -> true
+        }
+
     private fun finished(c: WorkCounts, step: TurnStep, files: MutableSet<String>): WorkCounts {
         if (step.state == StepState.NotRun) return c.copy(notRun = c.notRun + 1)
-        if (step.state == StepState.Stopped || step.state == StepState.Declined) return c
+        if (!didItsWork(step)) return c
         return when (name(step)) {
             "read" -> c.copy(read = c.read + 1)
             "glob",

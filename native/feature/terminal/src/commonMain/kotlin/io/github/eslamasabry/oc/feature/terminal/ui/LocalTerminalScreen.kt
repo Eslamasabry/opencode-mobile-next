@@ -144,7 +144,7 @@ public fun LocalTerminalScreen(state: LocalTerminalUi, actions: LocalTerminalAct
                                                 }
                                             add(
                                                 KitMenuItem(
-                                                    name,
+                                                    stringResource(Res.string.terminalUseServerTerminal, name),
                                                     { nativeActions.server(server.id) },
                                                     KitIcons.server,
                                                 )

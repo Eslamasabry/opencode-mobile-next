@@ -827,12 +827,15 @@ internal class GraphChatWorld(
         // N-40: the chat's own asks are read by session, so a folder other than the pinned one
         // keeps its card, and an ask emitted before this subscription is still shown.
         services.chatRequests.watchingSession(sid, true)
+        val place = MutableStateFlow(requestPlace(gateway.location.value))
         mutableRequests.value =
             ChatRequestsModel(
                 services.chatRequests.engine,
                 sid,
                 gateway.capabilities,
-                MutableStateFlow(RequestPlace()),
+                // The conversation's own folder, so a card names its target from the project (C-010: a folder
+                // read showed no target), and follows the connection when it names its place later.
+                place,
                 scope,
             )
         // A restarted process shows durable possibly-sent markers, never replays them.
@@ -884,6 +887,7 @@ internal class GraphChatWorld(
             listOf(
                 scope.launch(registry.mainContext) {
                     gateway.location.collect {
+                        place.value = requestPlace(it)
                         val draft = draftSession
                         if (
                             currentAttached()?.graph === graph &&
@@ -2821,3 +2825,15 @@ internal class GraphChatWorld(
  * 20 MB of picture as base64 (Flutter's attachment cap); a bigger file is not opened in the chat.
  */
 private const val MAX_PICTURE_BASE64: Int = 28_000_000
+
+/**
+ * Where a conversation's request cards say their targets are: its folder as the connection names it, and the project's
+ * name (the folder's last part, as the header's sub-line says it). A connection that names no folder gives none.
+ */
+internal fun requestPlace(location: io.github.eslamasabry.oc.core.model.ServerLocation): RequestPlace {
+    val directory = location.directory?.takeIf { it.isNotBlank() }
+    return RequestPlace(
+        project = io.github.eslamasabry.oc.feature.chat.header.presentation.HeaderRules.projectName(directory),
+        directory = directory,
+    )
+}

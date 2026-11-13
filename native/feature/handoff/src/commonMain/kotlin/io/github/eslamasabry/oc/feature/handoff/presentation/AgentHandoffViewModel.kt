@@ -34,6 +34,23 @@ public class AgentHandoffViewModel(
 
     override fun setup() = nav.open(AgentsRoute.Home)
 
+    /** A phone check opened from this page; the choices are read again when the page shows again. */
+    private var checkOpened = false
+
+    override fun checkAgent(id: String) {
+        if (state.value.busy || state.value.attempt.phase != HandoffPhase.Idle) return
+        val agent = state.value.choices.firstOrNull { it.id == id && it.checkable }?.agentId ?: return
+        checkOpened = true
+        // The agent's own sheet runs the check and steps back here once the agent is ready.
+        nav.open(AgentsRoute.Agent(agent, forNewChat = true))
+    }
+
+    override fun resumed() {
+        if (!checkOpened || state.value.busy) return
+        checkOpened = false
+        refresh()
+    }
+
     override fun refresh() {
         if (state.value.busy) return
         session?.close()

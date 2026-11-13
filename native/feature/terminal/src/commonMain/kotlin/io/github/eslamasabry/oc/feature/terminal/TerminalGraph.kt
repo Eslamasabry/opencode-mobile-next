@@ -19,6 +19,8 @@ import io.github.eslamasabry.oc.engine.runtime.terminal.RemoteTerminalTarget
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withTimeoutOrNull
 
+private const val CAPABILITIES_GRACE_MS = 4_000L
+
 @ContributesTo(ConnectionScope::class)
 public interface TerminalGraphAccessors {
     public val terminalGateway: ServerGateway
@@ -47,6 +49,10 @@ public class GraphRemoteTerminalSource(private val registry: ConnectionRegistry)
             graph as? TerminalGraphAccessors
                 ?: return Outcome.Failed(Failure.Unavailable(FeatureId("terminal")))
         val gateway = services.terminalGateway
+        // Right after a connect the server's abilities may still be loading: wait a moment before saying no.
+        if (!gateway.capabilities.value.terminal) {
+            withTimeoutOrNull(CAPABILITIES_GRACE_MS) { gateway.capabilities.first { it.terminal } }
+        }
         if (!gateway.capabilities.value.terminal)
             return Outcome.Failed(Failure.Unavailable(FeatureId("terminal")))
         val before = gateway.location.value

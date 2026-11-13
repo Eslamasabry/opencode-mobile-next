@@ -55,6 +55,65 @@ public object HomePreviewRules {
         return if (folded.length <= MAX_CHARS) folded else folded.substring(0, MAX_CHARS - 1).trimEnd() + "…"
     }
 
+    /** A path longer than this many characters is cut from its start in a row's line. */
+    private const val PATH_MAX: Int = 24
+
+    /** The tail of a cut path keeps up to this many characters, never less than its file name. */
+    private const val PATH_TAIL: Int = 20
+
+    private val pathPattern = Regex("""/[\w.\-@+~]+(?:/[\w.\-@+~]+)*""")
+
+    /**
+     * What a row shows of its stored [line]: marks removed, a path inside [directory] project-relative and any long
+     * path cut from its start (so the file name survives), and the state echo dropped: when the status column already
+     * says one of [stateWords] ("Done"), a line that opens with it and then goes on starts at what follows. A line
+     * that is only the echo stays as it is.
+     */
+    public fun forRow(line: String, directory: String?, stateWords: List<String>): String {
+        var text = PlainMarkdown.oneLine(line)
+        text = shortenPaths(text, directory)
+        for (word in stateWords.filter { it.isNotBlank() }) {
+            val echo = Regex("^" + Regex.escape(word.trim()) + """\s*[.!:;,\u2014\u2013-]+\s+(?=\S)""", RegexOption.IGNORE_CASE)
+            val rest = text.replace(echo, "")
+            if (rest != text) {
+                text = rest.replaceFirstChar { it.uppercaseChar() }
+                break
+            }
+        }
+        return text
+    }
+
+    private fun shortenPaths(text: String, directory: String?): String {
+        val base = directory?.trimEnd('/')?.takeIf { it.isNotEmpty() }
+        return pathPattern.replace(text) { match ->
+            val before = if (match.range.first == 0) ' ' else text[match.range.first - 1]
+            // Part of a word, a web address or another path: not a path of its own.
+            if (before.isLetterOrDigit() || before == '/' || before == '.' || before == '~' || before == ':' || before == '_') return@replace match.value
+            val whole = match.value
+            val path = whole.trimEnd('.', ',', ';', ':', ')')
+            val tail = whole.removePrefix(path)
+            val shown =
+                when {
+                    base != null && path == base -> base.substringAfterLast('/')
+                    base != null && path.startsWith("$base/") -> path.removePrefix("$base/")
+                    else -> path
+                }
+            cut(shown) + tail
+        }
+    }
+
+    private fun cut(path: String): String {
+        if (path.length <= PATH_MAX) return path
+        val segments = path.trim('/').split('/')
+        var kept = segments.last()
+        for (i in segments.size - 2 downTo 0) {
+            val next = segments[i] + "/" + kept
+            if (next.length > PATH_TAIL) break
+            kept = next
+        }
+        return if (kept == path.trim('/')) path else "\u2026/$kept"
+    }
+
     /** The newest message's words in [page] (chronological), user or agent; tools, files and thinking say nothing. */
     public fun lastText(page: List<MessageWithParts>): String? {
         for (message in page.asReversed()) {

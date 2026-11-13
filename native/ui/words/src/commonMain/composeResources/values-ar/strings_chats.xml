@@ -341,4 +341,6 @@
     <string name="chats_back">رجوع</string>
     <string name="chatsReturnBriefMore">و%1$d أخرى</string>
     <string name="workRunawayStopFailedRetry">تعذّر إيقاف %1$s. حاول مجددًا.</string>
+    <string name="chatsNewGettingReady">جارٍ التحضير…</string>
+    <string name="chatsNewGettingReadySlow">ما زلنا نقرأ مشاريع هذا الخادم ونماذجه…</string>
 </resources>

@@ -309,7 +309,7 @@ internal fun tileWords(tile: AgentTileModel): String {
  * that it is still working. Before the job names a step it reads "Installing…".
  */
 @Composable
-private fun installingWords(tile: AgentTileModel): String {
+internal fun installingWords(tile: AgentTileModel): String {
     val install = tile.install
     val done = install?.doneBytes
     val total = install?.totalBytes

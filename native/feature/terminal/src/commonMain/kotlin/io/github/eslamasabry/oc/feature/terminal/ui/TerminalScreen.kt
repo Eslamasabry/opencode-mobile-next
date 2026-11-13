@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.RefusalReason
 import io.github.eslamasabry.oc.core.model.TerminalName
+import io.github.eslamasabry.oc.core.model.TerminalProcess
 import io.github.eslamasabry.oc.core.model.givenName
 import io.github.eslamasabry.oc.core.model.terminalNameOf
 import io.github.eslamasabry.oc.engine.runtime.terminal.RemoteTerminalState
@@ -56,6 +57,7 @@ import io.github.eslamasabry.oc.ui.kit.modal.KitMenu
 import io.github.eslamasabry.oc.ui.kit.modal.KitMenuItem
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
+import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
 import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitSkeletonRows
@@ -286,14 +288,25 @@ public fun TerminalScreen(state: RemoteTerminalState, actions: TerminalActions, 
                                         ),
                                 )
                             }
-                        else ->
+                        else -> {
+                            // The way to a fresh shell sits first in the list, not only in the bar's menu.
+                            if (canCreate)
+                                item(key = "new-terminal") {
+                                    KitRow(
+                                        title = newLabel,
+                                        leading = KitRowLeading.Glyph(KitIcons.add),
+                                        onClick = createNamed,
+                                    )
+                                }
                             items(state.terminals, key = { it.id }) { entry ->
                                 KitRow(
                                     title = names[entry.id] ?: plainTitle,
-                                    supporting = entry.directory,
+                                    supporting = terminalRowState(entry),
+                                    leading = KitRowLeading.Glyph(KitIcons.terminal),
                                     onClick = { actions.select(entry.id) },
                                 )
                             }
+                        }
                     }
                 }
             } else {
@@ -392,6 +405,16 @@ public object TerminalTags {
 }
 
 /** Flutter `_status`: the one line, only while the terminal is not connected. */
+/** Each listed terminal says whether it still runs (or how it ended), then its folder. */
+@Composable
+private fun terminalRowState(entry: TerminalProcess): String =
+    when {
+        entry.running -> stringResource(Res.string.terminalScreenRowRunning, entry.directory)
+        entry.exitCode != null ->
+            stringResource(Res.string.terminalScreenRowEnded, entry.exitCode.toString(), entry.directory)
+        else -> stringResource(Res.string.terminalScreenRowEndedNoCode, entry.directory)
+    }
+
 @Composable
 private fun terminalStatus(line: TerminalLine, reconnect: () -> Unit): KitStatus? {
     val again = KitLineAction(stringResource(Res.string.e7SetupReconnect), reconnect)

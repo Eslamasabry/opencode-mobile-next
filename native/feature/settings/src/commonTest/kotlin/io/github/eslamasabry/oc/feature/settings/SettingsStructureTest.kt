@@ -67,13 +67,14 @@ class SettingsStructureTest {
     }
 
     @Test
-    fun the_edge_dock_switch_shows_only_where_the_app_draws_a_dock() {
-        assertFalse(SettingsRowId.EdgeDock in ids(SettingsGroupId.Conversations, phoneFacts()))
-        assertFalse(SettingsRowId.EdgeDock in SettingsStructure.searchable(phoneFacts()))
-        val on = SettingsStructure.rows(SettingsGroupId.Conversations, phoneFacts().copy(edgeDock = true), reasoning = false, timestamps = false)
-        assertEquals(SettingsDoor.Switch(true), on.first { it.id == SettingsRowId.EdgeDock }.door)
-        val off = SettingsStructure.rows(SettingsGroupId.Conversations, phoneFacts().copy(edgeDock = false), reasoning = false, timestamps = false)
-        assertEquals(SettingsDoor.Switch(false), off.first { it.id == SettingsRowId.EdgeDock }.door)
+    fun `the edge dock has no row and no search entry while the lamp is not built`() {
+        // The rings dock is removed (owner, 2026-11-11); nothing of it may show in Settings, for every host.
+        val facts = phoneFacts()
+        for (group in SettingsGroupId.entries) {
+            val hits = ids(group, facts).filter { it.toString().contains("dock", ignoreCase = true) }
+            assertEquals(emptyList(), hits, "a dock row shows in $group")
+        }
+        assertEquals(emptyList(), SettingsStructure.searchable(facts).filter { it.toString().contains("dock", ignoreCase = true) })
     }
 
     @Test

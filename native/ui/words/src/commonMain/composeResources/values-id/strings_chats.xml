@@ -319,4 +319,6 @@
     <string name="chatsReturnBriefMore">dan %1$d lainnya</string>
     <string name="workRunawayStopFailedRetry">Tidak bisa menghentikan %1$s. Coba lagi.</string>
     <string name="chatsHomeInterrupted">Terputus</string>
+    <string name="chatsNewGettingReady">Menyiapkan…</string>
+    <string name="chatsNewGettingReadySlow">Masih membaca proyek dan model server ini…</string>
 </resources>

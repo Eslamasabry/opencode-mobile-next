@@ -35,6 +35,16 @@ class LibraryCommandsPageTest {
     }
 
     @Test
+    fun `a bracket inside a sentence is prose and does not cut the title`() {
+        val words = libraryCommandWords(CommandInfo("docs", "open the [project docs] page", null, false))
+        assertEquals("open the [project docs] page", words.title)
+        assertNull(words.hint)
+        val later = libraryCommandWords(CommandInfo("x", "see [the manual] then run [file|dir]", null, false))
+        assertEquals("see [the manual] then run", later.title)
+        assertEquals("[file|dir]", later.hint)
+    }
+
+    @Test
     fun `no tab named opens the first tab, MCP servers`() {
         assertEquals(LibraryTab.Mcp, libraryInitialTab(null))
         assertEquals(LibraryTab.Mcp, libraryInitialTab("unknown"))

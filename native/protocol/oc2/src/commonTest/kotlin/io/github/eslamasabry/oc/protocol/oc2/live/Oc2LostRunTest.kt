@@ -10,6 +10,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 /**
  * B8: what OpenCode 2.2.6 gives back after its process was killed mid-run and `serve` started again (recorded
@@ -57,5 +58,34 @@ class Oc2LostRunTest {
         assertEquals(MessageErrorKind.Aborted, declined.info.errorKind)
         val tool = assertNotNull(declined.parts.single { it.type == PartType.Tool }.tool)
         assertEquals(ToolStatus.Error, tool.status)
+    }
+
+    private fun refusedWrite(error: String) =
+        message(
+            """{"id":"msg_r","time":{"created":1,"completed":3},"type":"assistant","agent":"build",""" +
+                """"model":{"id":"big-pickle","providerID":"opencode"},"finish":"error",""" +
+                """"content":[{"type":"tool","id":"call_1","name":"write","executed":false,""" +
+                """"state":{"status":"error","input":{"path":"/work/project/a.txt"},"error":$error},""" +
+                """"time":{"created":2,"completed":3}}]}"""
+        ).parts.single { it.type == PartType.Tool }.tool!!
+
+    @Test
+    fun `a write refused with a note reads as the person's refusal and keeps the note`() {
+        val tool = refusedWrite("""{"type":"permission.rejected","message":"use the other folder"}""")
+        assertEquals(ToolStatus.Error, tool.status)
+        // Before: the output was only "use the other folder", which the transcript read as a failure.
+        assertEquals("The user declined this tool call\nuse the other folder", tool.output)
+        assertTrue(tool.output!!.startsWith("The user declined")) // what the transcript reads as declined
+    }
+
+    @Test
+    fun `a refusal without a note is the decline sentence once, another error type keeps its own text`() {
+        assertEquals(
+            "The user declined this tool call",
+            refusedWrite("""{"type":"permission.rejected","message":"The user declined this tool call"}""").output,
+        )
+        assertEquals("The user declined this tool call", refusedWrite("""{"type":"permission.rejected"}""").output)
+        val failed = refusedWrite("""{"type":"tool.execution","message":"EACCES: permission denied"}""")
+        assertEquals("EACCES: permission denied", failed.output)
     }
 }

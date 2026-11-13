@@ -8,6 +8,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.padding
+import io.github.eslamasabry.oc.core.common.text.PhoneSizes
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.feature.settings.presentation.*
 import io.github.eslamasabry.oc.ui.design.tokens.Space
@@ -24,7 +25,6 @@ import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.words.HandWords
 import io.github.eslamasabry.oc.ui.words.res.*
-import kotlin.math.roundToLong
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 
@@ -209,17 +209,5 @@ internal fun ColumnScope.LocalDataBody(ui: LocalDataUi, actions: SettingsActions
     )
 }
 
-internal fun localBytes(bytes: Long): String {
-    val kilo = 1024L // F: lib/ui/screens/settings/personal_settings_screens.dart:30
-    val mega = kilo * kilo
-    val unit =
-        when {
-            bytes >= mega -> mega
-            bytes >= kilo -> kilo
-            else -> 1L
-        }
-    if (unit == 1L) return "${bytes.coerceAtLeast(0)} B"
-    val decimals = 10 // NV: one fractional decimal digit, as Dart toStringAsFixed(1)
-    val tenths = (bytes.toDouble() / unit * decimals).roundToLong()
-    return "${tenths / decimals}.${tenths % decimals} ${if (unit == kilo) "KB" else "MB"}"
-}
+/** Unsent-work sizes read in the one format every size on the phone pages uses. */
+internal fun localBytes(bytes: Long): String = PhoneSizes.text(bytes)

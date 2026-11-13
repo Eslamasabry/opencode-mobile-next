@@ -46,7 +46,9 @@ public fun AgentHandoffUi.page(): HandoffPage =
         !connected && block == HandoffBlock.NoAgentReady -> HandoffPage.NoAgent
         !connected -> HandoffPage.Refused
         attempt.phase != HandoffPhase.Idle -> HandoffPage.Active
-        choices.none { it.issue == null } -> HandoffPage.NoAgent
+        // An agent that only waits on its phone check is listed with Check {agent}: before, it read "no agent is
+        // ready" and walled the handoff although the agent was installed and signed in.
+        choices.none { it.issue == null || it.checkable } -> HandoffPage.NoAgent
         else -> HandoffPage.Choose
     }
 
@@ -139,4 +141,10 @@ public interface AgentHandoffActions {
     public fun openLink(id: String, continued: Boolean)
 
     public fun setup()
+
+    /** Runs the phone check of the agent behind choice [id] (its own sheet); the page reads again on return. */
+    public fun checkAgent(id: String) {}
+
+    /** The page is on screen again: after a phone check opened from here, the choices are read again. */
+    public fun resumed() {}
 }

@@ -146,9 +146,6 @@ import io.github.eslamasabry.oc.ui.words.res.settingsHubSearchVoiceAliases
 import io.github.eslamasabry.oc.ui.words.res.settingsHubServer
 import io.github.eslamasabry.oc.ui.words.res.settingsHubShowReasoning
 import io.github.eslamasabry.oc.ui.words.res.settingsHubShowTimestamps
-import io.github.eslamasabry.oc.ui.words.res.dockLabel
-import io.github.eslamasabry.oc.ui.words.res.dockSettingBody
-import io.github.eslamasabry.oc.ui.words.res.dockSettingTitle
 import io.github.eslamasabry.oc.ui.words.res.settingsHubToolsRow
 import io.github.eslamasabry.oc.ui.words.res.settingsHubVoice
 import io.github.eslamasabry.oc.ui.words.res.settingsPhraseChipsSupporting
@@ -214,7 +211,6 @@ internal fun rowKey(row: SettingsRowId): StringResource =
         SettingsRowId.AiTeam -> Res.string.teamUiHomeTitle
         SettingsRowId.ShowReasoning -> Res.string.settingsHubShowReasoning
         SettingsRowId.ShowTimestamps -> Res.string.settingsHubShowTimestamps
-        SettingsRowId.EdgeDock -> Res.string.dockSettingTitle
         SettingsRowId.PhraseChips -> Res.string.settingsPhraseChipsTitle
         // Flutter's row titles (`default_shell_row.dart`, `settings-voice`): "Shell for commands", "Voice typing".
         SettingsRowId.DefaultShell -> Res.string.settingsV3Shell
@@ -287,7 +283,6 @@ internal fun aliasKeys(row: SettingsRowId): List<StringResource> =
                 Res.string.chatUiTranscriptDisplay,
                 Res.string.chatUiTimestampsUsage,
             )
-        SettingsRowId.EdgeDock -> listOf(Res.string.dockLabel, Res.string.dockSettingBody)
         SettingsRowId.PhraseChips ->
             listOf(Res.string.nativePhraseChipsAliases, Res.string.settingsPhraseChipsSupporting)
         SettingsRowId.DefaultShell ->
