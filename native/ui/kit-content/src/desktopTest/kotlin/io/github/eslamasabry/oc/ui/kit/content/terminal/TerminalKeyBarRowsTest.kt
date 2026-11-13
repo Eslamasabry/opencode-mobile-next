@@ -43,7 +43,7 @@ class TerminalKeyBarRowsTest {
         val pageUp = onNodeWithContentDescription("Page up").getUnclippedBoundsInRoot()
         assertTrue(abs((interrupt.left - esc.left).value) <= 1f, "Ctrl-C starts the row where Esc does: $interrupt / $esc")
         assertTrue(abs((endOfInput.right - pageUp.right).value) <= 1f, "Ctrl-D ends the row where PgUp does: $endOfInput / $pageUp")
-        assertTrue(abs((interrupt.width - endOfInput.width).value) <= .5f, "the two keys share the row evenly")
+        assertTrue(abs(((interrupt.right - interrupt.left) - (endOfInput.right - endOfInput.left)).value) <= .5f, "the two keys share the row evenly")
     }
 
     @Test

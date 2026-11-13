@@ -216,7 +216,7 @@ class KitFloatingBarRowTest {
         // (A node's bounds are clipped to the line, so a chip running past its end ends on it.)
         val cut = CHIPS.indices.map { rest.bounds["chip-$it"]!! }.firstOrNull { it.left.value < line.right.value - 1f && it.right.value >= line.right.value - .5f }
         if (cut != null)
-            assertTrue(cut.width.value >= FilterChipsRules.MIN_PEEK_DP - 1f, "a chip cut at rest shows enough to name it: $cut in $line")
+            assertTrue((cut.right - cut.left).value >= FilterChipsRules.MIN_PEEK_DP - 1f, "a chip cut at rest shows enough to name it: $cut in $line")
         val endCleared = diff(rest, restBare, line.right.value - fade / 3f + .5f, line.right.value - .5f, faceTop, faceBottom)
         assertTrue(endCleared < 1f, "at rest the end that has more to show is faded out at its edge: $endCleared")
         val endFading = diff(rest, restBare, line.right.value - fade + 1f, line.right.value - fade / 3f, faceTop, faceBottom)
