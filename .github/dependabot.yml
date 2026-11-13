@@ -1,49 +1,8 @@
-# Dependency updates.
-#
-# Two ecosystems matter here: the Dart/Flutter packages in pubspec.yaml, and
-# the actions used by the quality workflow.
-#
-# Note for reviewers of a pub PR: bumping a dependency changes pubspec.lock,
-# and THIRD_PARTY_NOTICES.md is derived from pubspec.lock. The hygiene test
-# fails until the notices are regenerated — that is the intended behavior,
-# not a flaky test. See the "Regenerating this file" section in
-# THIRD_PARTY_NOTICES.md.
-#
-# Two dependencies must not be bumped blind:
-#   flutter_secure_storage — v10 migrates legacy Android ciphers; existing
-#     profile credentials have to pass through it, so v9 → v11 directly would
-#     strand them.
-#   sherpa_onnx — carries the native runtime and the declared ONNX Runtime
-#     version that THIRD_PARTY_NOTICES.md records.
+# Dependency updates: the actions used by the workflows. The native Gradle
+# dependencies are pinned in native/gradle/libs.versions.toml and moved by hand.
 
 version: 2
 updates:
-  - package-ecosystem: "pub"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-      day: "monday"
-    open-pull-requests-limit: 5
-    # Pushing master must not re-run CI on every open bot PR (each refresh
-    # costs CI minutes and emails); refresh one on demand: "@dependabot rebase".
-    rebase-strategy: "disabled"
-    labels:
-      - "dependencies"
-    commit-message:
-      prefix: "deps"
-    groups:
-      dart-minor-and-patch:
-        applies-to: version-updates
-        update-types:
-          - "minor"
-          - "patch"
-    ignore:
-      # Major bumps of these two need a deliberate migration, not a bot PR.
-      - dependency-name: "flutter_secure_storage"
-        update-types: ["version-update:semver-major"]
-      - dependency-name: "sherpa_onnx"
-        update-types: ["version-update:semver-major"]
-
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:

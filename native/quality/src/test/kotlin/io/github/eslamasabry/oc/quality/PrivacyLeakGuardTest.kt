@@ -16,7 +16,7 @@ class PrivacyLeakGuardTest {
     private val allowFile = File(root, "quality/config/privacy/token-fixtures.txt")
 
     /** The explicit ceiling of the token-fixture allowlist. Lower it when entries go; never raise it. */
-    private val allowlistCeiling = 39
+    private val allowlistCeiling = 14
 
     private fun allowlist(): Set<String> =
         allowFile.readLines().map { it.trim() }.filter { it.isNotEmpty() && !it.startsWith("#") }.toSet()

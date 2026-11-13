@@ -10,7 +10,7 @@ No computer, no Termux. Or connect to the agent on your computer.
 
 [![Latest release](https://img.shields.io/github/v/release/Eslamasabry/opencode-mobile-next?label=release&color=55D187)](https://github.com/Eslamasabry/opencode-mobile-next/releases/latest)
 [![Downloads](https://img.shields.io/github/downloads/Eslamasabry/opencode-mobile-next/total?color=55D187)](https://github.com/Eslamasabry/opencode-mobile-next/releases)
-[![Android quality gate](https://github.com/Eslamasabry/opencode-mobile-next/actions/workflows/android-quality.yml/badge.svg?branch=master)](https://github.com/Eslamasabry/opencode-mobile-next/actions/workflows/android-quality.yml)
+[![Native CI](https://github.com/Eslamasabry/opencode-mobile-next/actions/workflows/native-ci.yml/badge.svg)](https://github.com/Eslamasabry/opencode-mobile-next/actions/workflows/native-ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-55D187.svg)](LICENSE)
 
 **[Download for Android](https://github.com/Eslamasabry/opencode-mobile-next/releases/latest)**
@@ -98,7 +98,7 @@ Coming from Termux? The app no longer runs anything in Termux: built-in Linux is
 | OpenCode | OpenCode 2 only; OpenCode 1 is no longer supported |
 | Claude Code, Codex, Antigravity, Qwen Code, Kilo, Cline, Goose, Oh My Pi, fx | On the phone, in the built-in Linux (newer ones are less tested on real phones) |
 | Agents on your computer | OpenCode 2, Codex directly, or Claude Code through [Paseo](https://github.com/getpaseo/paseo) |
-| Languages | English, Arabic and Simplified Chinese, with partial Spanish, Japanese, Portuguese and Russian |
+| Languages | English, Arabic, Spanish, French, Indonesian, Portuguese, Russian, Vietnamese and Simplified Chinese, with partial Japanese |
 | iOS, macOS, Linux and Windows | Not available; desktop builds were dropped in 2.1.4 |
 
 ## Updating
@@ -109,11 +109,7 @@ Android updates an app in place only when the new APK has the same signature. Pu
 842284B27AA297FB74CF831779FD16498517E1BC2104451459FEC2EA7AC11D1C
 ```
 
-so each release installs over the previous one and keeps your servers, sign-ins and settings. You can check the installed signer in **Settings → About**. Do not uninstall to fix a failed update: projects on the phone live inside the app and would be deleted.
-
-## Coming next: a native Kotlin app
-
-The app is being rebuilt in native Kotlin, with Kotlin Multiplatform and Jetpack Compose, on the `native/*` branches of this repository. The goal is a faster, more Android-native app: smoother scrolling and motion, lower memory use, and closer use of the phone's own features. It is still in progress and not yet released. Until it has everything the current app has, the Flutter app stays the one you download and update, and it keeps getting fixes.
+so each release installs over the previous one and keeps your servers, sign-ins and settings. Version 3 is the native Kotlin app; it keeps the package name and this signer, so it installs over the 2.1 releases. You can check the installed signer in **Settings → About**. Do not uninstall to fix a failed update: projects on the phone live inside the app and would be deleted.
 
 ## Privacy
 
@@ -134,20 +130,22 @@ Never sent: messages, prompts, files, paths, server addresses, usernames, passwo
 
 ## Development
 
-The released app is Flutter with native Android parts in Kotlin; the native Kotlin rewrite is on the `native/*` branches. Start with:
+The app is native Kotlin: Kotlin Multiplatform and Jetpack Compose, all under [`native/`](native/). Start with:
 
-- [docs/technical-overview.md](docs/technical-overview.md): architecture, server protocols, building and releasing
-- [CONTRIBUTING.md](CONTRIBUTING.md): the pinned toolchain, checks and code boundaries
+- [native/AGENTS.md](native/AGENTS.md): toolchain, module rules and the Gradle tasks
+- [CONTRIBUTING.md](CONTRIBUTING.md): checks, boundaries and pull requests
 - [AGENTS.md](AGENTS.md): working notes for coding agents in this repo
 - [SECURITY.md](SECURITY.md): report vulnerabilities privately
 
 ```bash
-flutter pub get
-flutter analyze
-tool/qa/run_tests_fast.sh    # the full suite in parallel shards
+cd native
+./gradlew :quality:test                 # architecture rules
+./gradlew :<module>:desktopTest         # one module's tests
+./gradlew :androidApp:assembleDebug     # the preview APK
 ```
 
-CI runs analysis, Android lint, the test suite in six shards and a signed release build.
+CI (`native-ci.yml`) compiles the app, runs the desktop tests in shards and builds a preview-signed APK. The Flutter
+app this project started as is in the history up to the tag `flutter-final`.
 
 ## License
 

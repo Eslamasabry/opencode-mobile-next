@@ -1,18 +1,21 @@
 # Removing the Flutter app
 
-Status: prepared on branch `native/remove-flutter`, not merged. The owner decides the day. The native app under
-`native/` is the product; the Flutter app at the repository root was kept only as a reference.
+Status: prepared on branch `native/remove-flutter` (deletion commit `54d3ada905e3`), not merged. The owner decides
+the day. The native app under `native/` is the product; the Flutter app at the repository root was kept only as a
+reference.
 
 The branch is built so that everything before the last two commits works with the Flutter folders still present,
 and the last two commits do only this:
 
 1. **Deletion commit**: `git rm -r` of every path marked DELETE below. Nothing else. Revert it alone to undo.
-2. **Front matter commit**: the native-only `README.md`, `AGENTS.md` and `CONTRIBUTING.md` (drafts in
-   `docs/native/removal-drafts/`), `.gitignore`, `.gitattributes`, `CODEOWNERS`, `dependabot.yml`, the pull request
-   template and the privacy allowlist without the deleted `test/` paths.
+2. **Front matter commit**: the native-only `README.md`, `AGENTS.md` and `CONTRIBUTING.md` (drafted in
+   `docs/native/removal-drafts/` and moved into place), `.gitignore` (Flutter leftovers stay ignored),
+   `.gitattributes`, `CODEOWNERS`, `dependabot.yml`, the pull request template, and the privacy allowlist without the
+   deleted `test/` paths (`PrivacyLeakGuardTest` fails on a stale entry), with its ceiling lowered to 14.
 
-Headline: 9 551 tracked files and about 2.32 million lines go (30 376 tracked files before). Nothing the released
-native app contains changes: no native Gradle module compiles or packages a file from the Flutter folders.
+Headline: 9 551 tracked files and 1 388 235 text lines go (30 376 tracked files before, about 20 850 after). Nothing
+the released native app contains changes: no native Gradle module compiles or packages a file from the Flutter
+folders.
 
 ## (a) Root paths
 
@@ -94,7 +97,9 @@ Still reading Flutter **git history** (not the working tree), so unaffected: the
 4. **GitHub settings**: the Flutter workflows' secrets (`SHOREBIRD_TOKEN`, `CI_KEYSTORE_*`) can be deleted; Shorebird
    apps can be archived. Branch protection rules that require Flutter checks must drop them.
 
-Last commit with Flutter: recorded below before the deletion commit.
+**Last commit with Flutter: `4c1ffbda35fc0c08d8667d0aff580b4b4d6189d8`** (the parent of the deletion commit). Suggested tag:
+`git tag -a flutter-final 4c1ffbda35fc0c08d8667d0aff580b4b4d6189d8 -m "Last commit with the Flutter app"`. The last released Flutter app is
+`v2.1.5+63`.
 
 ## (e) Lost on purpose
 

@@ -12,30 +12,23 @@
 
 # Credentials, profile-scoped storage, and the deletion sweep. A missed key
 # here means data survives a profile the user deleted.
-/lib/state/profiles.dart                @Eslamasabry
-/lib/state/connection.dart              @Eslamasabry
-/lib/state/offline_queue.dart           @Eslamasabry
-/lib/state/session_drafts.dart          @Eslamasabry
+/native/core/security/                  @Eslamasabry
+/native/core/data/                      @Eslamasabry
 
-# The one hardened opener every server-supplied URL must go through.
-/lib/ui/widgets/external_link.dart      @Eslamasabry
-/lib/ui/widgets/markdown.dart           @Eslamasabry
-
-# Native surface: exported components, permissions, cleartext policy,
-# notification actions bound to request IDs, and the Termux bridge.
-/android/                               @Eslamasabry
-/lib/termux/                            @Eslamasabry
-/lib/background/                        @Eslamasabry
+# Android surface: exported components, permissions, cleartext policy,
+# notification actions bound to request IDs.
+/native/androidApp/src/main/AndroidManifest.xml @Eslamasabry
+/native/android/                        @Eslamasabry
 
 # A server this app talks to runs shell commands as its user. This script
 # decides what that server is exposed to.
-/scripts/host/                          @Eslamasabry
-/docs/ubuntu-host.md                    @Eslamasabry
+/native/scripts/host/                   @Eslamasabry
+/native/docs/ubuntu-host.md             @Eslamasabry
 
-# Release and update ownership: signing lineage, fail-closed gates, code push.
-/scripts/release.sh                     @Eslamasabry
-/shorebird.yaml                         @Eslamasabry
-/lib/update/                            @Eslamasabry
+# Release and update ownership: signing lineage, fail-closed gates.
+/scripts/native-release.sh              @Eslamasabry
+/native/tool/release/                   @Eslamasabry
+/native/build-logic/convention/src/main/kotlin/oc/buildlogic/ReleaseKey.kt @Eslamasabry
 /.github/workflows/                     @Eslamasabry
 
 # Generated from the checked-in contracts; never hand-edited.

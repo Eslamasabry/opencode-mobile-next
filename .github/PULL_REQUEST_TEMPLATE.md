@@ -16,17 +16,12 @@ Say what the user could not do before, or what was wrong. "Refactor" and
 
 ## How it was verified
 
-Run the gates with the pinned Flutter
-(`~/.shorebird/bin/cache/flutter/<rev>/bin/flutter`), not whatever is on
-`PATH`. See [CONTRIBUTING.md](../CONTRIBUTING.md).
+Run the tasks for what you touched (from `native/`), or dispatch
+`native-ci.yml` on your branch. See [CONTRIBUTING.md](../CONTRIBUTING.md).
 
-- [ ] `flutter analyze` — clean, no new `// ignore`
-- [ ] `flutter test --concurrency=1` — full suite green (paste the count)
+- [ ] The touched modules' tests and `:quality:test` pass (link the CI run)
+- [ ] `:tools:strings:test` passes if user-visible copy changed
 - [ ] New behavior is covered by a test that fails without this change
-
-```
-<!-- paste the flutter test summary line -->
-```
 
 ## Checklist
 
@@ -41,13 +36,11 @@ saying why is a fine answer.
 - [ ] **Profile-scoped storage**: any new per-profile key is named
       `oc.<what>.<profileId>` so the deletion sweep finds it
 - [ ] **External links**: every URL the app did not author goes through
-      `openExternalLink`
+      `ExternalLinkPolicy` → `ExternalLinkOpener`
 - [ ] **Migration notes** for a changed stored format
-- [ ] **Gateway boundary**: UI talks to `lib/domain/`, not `api/` or `api2/`
+- [ ] **Kit only**: features arrange kit parts; a missing part is added to the kit
 - [ ] **Docs**: README, CONTRIBUTING, PRIVACY, or THIRD_PARTY_NOTICES updated
       if this makes any of them untrue
-- [ ] **Dependencies**: `pubspec.lock` changed — `THIRD_PARTY_NOTICES.md`
-      regenerated (the hygiene test will tell you)
 
 ## Smoke matrix results
 
@@ -72,8 +65,7 @@ Link the record you filled in (`docs/qa/smoke-<version>-<date>/README.md`).
 
 <!--
 Required if any of those boxes are ticked. What data moves, what is stored,
-what a hostile server could do with this, whether this needs a full APK or
-can ride a Shorebird patch.
+and what a hostile server could do with this.
 -->
 
 ## Anything a reviewer should push back on

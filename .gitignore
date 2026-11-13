@@ -17,32 +17,6 @@ migrate_working_dir/
 *.ipr
 *.iws
 .idea/
-
-# The .vscode folder contains launch configuration and tasks you configure in
-# VS Code which you may wish to be included in version control, so this line
-# is commented out by default.
-#.vscode/
-
-# Flutter/Dart/Pub related
-**/doc/api/
-**/ios/Flutter/.last_build_id
-.dart_tool/
-.flutter-plugins-dependencies
-.pub-cache/
-.pub/
-/build/
-/coverage/
-
-# Symbolication related
-app.*.symbols
-
-# Obfuscation related
-app.*.map.json
-
-# Android Studio will place build artifacts here
-/android/app/debug
-/android/app/profile
-/android/app/release
 .claude/worktrees/
 
 # Developer agent prompt packs are third-party content installed locally.
@@ -55,7 +29,6 @@ app.*.map.json
 
 # APKs are distributed as release assets, not source files.
 /*.apk
-test/**/failures/
 COMMIT_MSG.txt
 
 # Native phone-engine build outputs stay off the root disk.
@@ -64,9 +37,6 @@ COMMIT_MSG.txt
 
 # Screen recordings stay out of the public tree (G25)
 docs/qa/**/*.mp4
-
-# Private build server target for tool/qa/vps_*.sh and run_tests_split.sh.
-tool/qa/build-server.env
 
 # native UI rebuild gate output
 /looks-gate/
@@ -83,3 +53,14 @@ google-services*.json
 /android/key.properties
 *.jks
 *.keystore
+
+# Leftovers of the removed Flutter app in older checkouts (build output, local SDK paths, keys): ignored so they are
+# never committed by accident. Delete them by hand when convenient.
+/android/
+/ios/
+/widgetbook/
+/build/
+/coverage/
+.dart_tool/
+.flutter-plugins-dependencies
+/test/**/failures/
