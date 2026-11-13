@@ -48,6 +48,7 @@ class AgentsInstallBlockedTest {
         override val state =
             MutableStateFlow(PhoneAgentsState(available = true, agents = persistentListOf(*rows), owner = ProfileId("owner")))
         var cancels = 0
+        var refuse: PhoneAgentInstallIssue? = null
 
         /** While set, [install] waits for it (a press that is still being handled). */
         var hold: CompletableDeferred<Unit>? = null
@@ -56,6 +57,7 @@ class AgentsInstallBlockedTest {
 
         override suspend fun install(id: String): Outcome<PhoneAgentInstallResult> {
             hold?.await()
+            refuse?.let { return PhoneAgentInstallResult.Refused(it).ok() }
             return PhoneAgentInstallResult.Started.ok()
         }
 
@@ -120,9 +122,11 @@ class AgentsInstallBlockedTest {
         val phone = Phone(gemini)
         val presenter = presenter(phone)
         presenter.requestInstall("gemini")
-        phone.state.value = phone.state.value.copy(agents = persistentListOf(gemini.copy(installable = false)))
+        phone.refuse = PhoneAgentInstallIssue.Busy
         presenter.installPhone("gemini")
         assertEquals(PhoneAgentInstallIssue.Busy, presenter.state.value.installIssue)
+        // The phone's read now says the agent cannot start (its setup is busy).
+        phone.state.value = phone.state.value.copy(agents = persistentListOf(gemini.copy(installable = false)))
         val blocker = assertNotNull(presenter.state.value.installBlocker)
         assertNull(blocker.agentId)
         assertEquals(false, blocker.canCancel)
