@@ -28,6 +28,7 @@ import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.design.style.Style
+import io.github.eslamasabry.oc.ui.kit.foundation.kitFrostSource
 import io.github.eslamasabry.oc.ui.kit.input.KitField
 import io.github.eslamasabry.oc.ui.kit.input.KitFieldKind
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
@@ -102,6 +103,76 @@ class OutlineCornersTest {
 
     @Test
     fun `every style is covered`() = kotlin.test.assertEquals(6, Style.entries.size, "a new style needs its corner tests here")
+
+    /**
+     * Owner 2026-11-14 ("Wtfff": two black dots and a hairline at the right edge read as stray marks): tucked, the edge
+     * dock rests as a whole small tab, its edge all the way round both inner corners, in Glass with the lens over a
+     * recording (the owner's case) and in every other style, light and dark.
+     */
+    @Test
+    fun `the edge dock's tucked tab has a whole outline round its inner corners in every style, light and dark`() {
+        val lens =
+            FakeKitPlatform(
+                liquidGlass = true,
+                liveShaders = io.github.eslamasabry.oc.ui.kit.live.LiveShaderCompiler(io.github.eslamasabry.oc.ui.kit.platform.DesktopLiveShader::compile),
+                joinEffect = { p, b -> io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform().liquidJoinEffect(p, b) },
+            )
+        val gaps = mutableListOf<String>()
+        for (style in Style.entries) for (dark in listOf(true, false)) {
+            val what = "${style.name} ${if (dark) "dark" else "light"} dock tab"
+            gaps += dockTabGaps(style, dark, if (style == Style.Glass) lens else FakeKitPlatform()).map { "$what: $it" }
+        }
+        assertTrue(gaps.isEmpty(), "The tucked dock's edge is cut:\n" + gaps.joinToString("\n"))
+    }
+
+    private fun dockTabGaps(style: Style, dark: Boolean, platform: FakeKitPlatform): List<String> {
+        var result = emptyList<String>()
+        val state = io.github.eslamasabry.oc.ui.kit.dock.KitEdgeDockState()
+        runDesktopComposeUiTest(WIDTH / 2, HEIGHT) {
+            setContent {
+                CompositionLocalProvider(LocalDensity provides Density(DENSITY)) {
+                    KitTheme(
+                        KitAppearance(mode = if (dark) AppearanceMode.Dark else AppearanceMode.Light, motion = MotionLevel.Off, style = style),
+                        platform,
+                        "en",
+                    ) {
+                        val source = io.github.eslamasabry.oc.ui.kit.foundation.rememberKitFrostState()
+                        Box(Modifier.fillMaxSize()) {
+                            // The page behind, recorded for the dock's glass as the chat's transcript is.
+                            Box(Modifier.fillMaxSize().kitFrostSource(source).background(LocalKitColors.current.ground.copy(alpha = 1f)))
+                            CompositionLocalProvider(io.github.eslamasabry.oc.ui.kit.dock.LocalKitDockGlass provides source) {
+                                io.github.eslamasabry.oc.ui.kit.dock.KitEdgeDock(
+                                    io.github.eslamasabry.oc.ui.kit.dock.KitDockModel(
+                                        rings =
+                                            listOf(
+                                                io.github.eslamasabry.oc.ui.kit.dock.KitDockRing("explain", "Explain this project", null, io.github.eslamasabry.oc.ui.kit.dock.KitDockRingState.Idle),
+                                                io.github.eslamasabry.oc.ui.kit.dock.KitDockRing("notes", "Notes", null, io.github.eslamasabry.oc.ui.kit.dock.KitDockRingState.Idle),
+                                            ),
+                                        tucked = true,
+                                    ),
+                                    object : io.github.eslamasabry.oc.ui.kit.dock.KitDockIntents {},
+                                    io.github.eslamasabry.oc.ui.kit.dock.TestDockWords,
+                                    insets = io.github.eslamasabry.oc.ui.kit.dock.KitDockInsets(top = 24.dp, bottom = 48.dp),
+                                    state = state,
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+            waitForIdle()
+            val b = runOnIdle { state.body() }
+            val image = onAllNodes(isRoot())[0].captureToImage().toPixelMap()
+            assertTrue(b.stripRight > b.stripLeft && b.stripBottom > b.stripTop, "a tucked strip: ${b.stripLeft}..${b.stripRight} x ${b.stripTop}..${b.stripBottom}")
+            // What shows of it: from its inner side to the screen edge.
+            val box = Rect(b.stripLeft, b.stripTop, minOf(b.stripRight, image.width.toFloat()), b.stripBottom)
+            // Its inner corners (the dock stands on the end edge); the outer ones lie past the screen edge.
+            result =
+                OutlineCorners.gaps(image, box, DENSITY, outsideAt = 2 to 2, bandDp = 2.5f)
+                    .filter { it.startsWith("top-start") || it.startsWith("bottom-start") }
+        }
+        return result
+    }
 
     private fun fields(style: Style, dark: Boolean) {
         val (oneLine, multiline, terminal, error) = fieldCases.map { check(style, dark, it) }

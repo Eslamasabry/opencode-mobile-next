@@ -978,6 +978,11 @@ public fun BasicComposer(
         // words and Stop to the end of the words' row; the frame then leaves the transcript sharp under the one pane.
         val slab = kitComposerSlab()
         KitReportBottomSlab(slab)
+        // Owner 2026-11-14 ("no new bar or row level": in Solid the approval and model chips stood as a third level
+        // above the box, under the jump pill and the phrase chips): in every style the box holds its own controls, as
+        // the Glass slab does: the words on top, one row under them with the plus, the approval mode, the model and
+        // the mic or Send, and Stop at the end of the words' row while a reply runs. Nothing rides above the box.
+        val inBox = true
         val modelPart: @Composable (inBox: Boolean) -> Unit = { inBox ->
             val chipWords = modelWords(state, chrome)
             val modelName = stringResource(Res.string.composerPreviewModelButton)
@@ -1000,7 +1005,7 @@ public fun BasicComposer(
                 else KitComposerModelChip(label = chipWords, onClick = openModels)
             }
         }
-        if (!slab)
+        if (!inBox)
             KitComposerStatusStrip(
                 hasChips = true,
                 modifier = Modifier.padding(bottom = COMPOSER_STRIP_GAP.dp).testTag("composer-status-strip"),
@@ -1025,18 +1030,18 @@ public fun BasicComposer(
                     }
                 }
         KitPictureReceiver(takePicture, Modifier.fillMaxWidth()) {
-        KitComposerRowFit({ field.text.toString() }, leadingTargets = 1, stack = slab) { stacked ->
+        KitComposerRowFit({ field.text.toString() }, leadingTargets = 1, stack = inBox) { stacked ->
             KitComposerBox(
                 running = RunTailRules.boxRunning(RunTailRules.tail(busy, chrome.stopping(), waitingRequest)),
                 stacked = stacked,
                 hasLeading = true,
                 chips = {
-                    if (slab) {
+                    if (inBox) {
                         chrome.rowChips()
                         modelPart(true)
                     }
                 },
-                fieldEnd = { if (slab && stopShown) stopPart() },
+                fieldEnd = { if (inBox && stopShown) stopPart() },
                 above = {
                     ComposerLimitArea(limits, state, conversationRef)
                     KitComposerTray(

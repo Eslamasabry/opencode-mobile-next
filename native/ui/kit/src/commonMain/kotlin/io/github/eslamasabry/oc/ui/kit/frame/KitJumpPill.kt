@@ -293,6 +293,8 @@ private fun PillFace(
     ) {
         Row(
             Modifier.heightIn(min = 36.dp)
+                // Its page ends its words before the pill (owner 2026-11-14): the pill never sits on a line.
+                .kitScreenFloat(edge)
                 .background(colors.surface3, shape)
                 .border(1.dp, colors.hairline, shape)
                 .padding(horizontal = Space.S3.dp, vertical = Space.S1.dp),
@@ -341,6 +343,9 @@ private fun VeiledPillFace(
     ) {
         Row(
             Modifier.heightIn(min = JUMP_PILL_FACE_DP.dp)
+                // Its page ends its words before the pill, and the pill's glass sees none (owner 2026-11-14: "# 3t
+                // tests 0 depen…encies" bent under its lens).
+                .kitScreenFloat(edge)
                 .kitLiquidJoinRest(drop, shape)
                 .then(
                     when {

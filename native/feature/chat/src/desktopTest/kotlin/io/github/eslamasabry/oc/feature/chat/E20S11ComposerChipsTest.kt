@@ -18,6 +18,7 @@ import io.github.eslamasabry.oc.feature.chat.world.ComposerModel
 import io.github.eslamasabry.oc.feature.chat.world.ComposerModels
 import io.github.eslamasabry.oc.feature.chat.world.DraftFacts
 import kotlin.test.Test
+import kotlin.math.abs
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
@@ -95,30 +96,20 @@ class E20S11ComposerChipsTest {
             check()
         }
 
+    // Owner 2026-11-14 ("no new bar or row level"): the chips ride the box's own controls row in every style. Was:
+    // "...the approval chip leads the strip above the box".
     @Test
-    fun `E20-S11 F1 the model's name shows whole, the approval chip leads the strip above the box`() {
+    fun `E20-S11 F1 the model's name shows whole, the chips ride inside the box`() {
         for (width in listOf(360, 600)) for (locale in listOf("en", "ar")) scene(width, locale) {
             val where = "$width dp, $locale"
-            // F1: the strip gives the chips at least half its width and the model the rest (Flutter
-            // kit_composer_status_strip.dart:212-217); at 360 dp right to left the model's words may shorten there.
-            if (width >= 600 || locale == "en")
-                assertFalse(isCut("Crouton Fast 2"), "$where: the model's name is whole")
+            if (width >= 600) assertFalse(isCut("Crouton Fast 2"), "$where: the model's name is whole")
             val modelChip = boundsOfTag("chat-model-button")
             val chip = boundsOfTag("approval-chip")
             // The tag sits inside the face's S1 padding.
             val box = boundsOfTag("kit-composer-box").inflate(4f)
-            // F1 (Flutter chat_composer_region.dart:44-77): the chips ride a strip above the message box, the
-            // approval chip at its start and the model at its end.
-            assertTrue(chip.bottom <= box.top + 0.5f, "$where: the approval chip sits above the box $box")
-            assertTrue(modelChip.bottom <= box.top + 0.5f, "$where: the model chip sits above the box $box")
-            if (locale == "en") {
-                assertTrue(chip.right <= modelChip.left + 0.5f, "$where: the approval chip leads, $chip, $modelChip")
-                assertTrue(modelChip.right <= box.right + 0.5f, "$where: the model chip ends on the box's edge")
-            } else {
-                assertTrue(chip.left >= modelChip.right - 0.5f, "$where: right to left the approval chip leads, $chip")
-                assertTrue(modelChip.left >= box.left - 0.5f, "$where: the model chip ends on the box's edge")
-            }
-            if (width >= 600) assertFalse(isCut(approve), "$where: with room, the approval words are whole too")
+            for ((what, r) in listOf("approval" to chip, "model" to modelChip))
+                assertTrue(r.top >= box.top - 0.5f && r.bottom <= box.bottom + 0.5f, "$where: the $what chip $r lies inside the box $box")
+            assertTrue(abs(chip.center.y - modelChip.center.y) < 1f, "$where: both chips share one row, $chip, $modelChip")
         }
     }
 

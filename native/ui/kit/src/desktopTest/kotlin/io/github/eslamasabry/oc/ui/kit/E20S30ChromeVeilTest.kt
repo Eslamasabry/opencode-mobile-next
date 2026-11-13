@@ -112,7 +112,7 @@ class E20S30ChromeVeilTest {
     // ground ended in a hard line over a live background. A chat's bottom block now lays nothing behind its parts; the
     // transcript fades out over its top 16 dp instead (ChromeEdgeBlendTest guards the look in every style).
     @Test
-    fun `E20-S30 a chat screen's bottom block lays no veil and the body scrolls under it with no fade room`() {
+    fun `E20-S30 a chat screen's bottom block lays no veil and the body keeps the rest of its fade as room`() {
         for (platform in listOf(FakeKitPlatform(frost = true), FakeKitPlatform(frost = false), FakeKitPlatform(KitSystemSignals(highContrast = true), frost = true)))
             runComposeUiTest {
                 val seen = Seen()
@@ -120,8 +120,10 @@ class E20S30ChromeVeilTest {
                 waitForIdle()
                 val block = onNodeWithTag("kit-screen-bottom").getBoundsInRoot()
                 assertNull(seen.veil, "no veil band behind the bottom block")
-                // The body's room is the block itself (the tag sits inside its 8 dp padding, top and bottom).
-                assertEquals(block.bottom - block.top + BLOCK_PADDING, assertNotNull(seen.padding).calculateBottomPadding())
+                // The body's room is the block itself (the tag sits inside its 8 dp padding, top and bottom) and the part
+                // of the transcript's 16 dp fade above it that the list's own 8 dp padding does not cover (2026-11-14:
+                // the transcript is gone at the block's top, so its newest line rests whole above the fade).
+                assertEquals(block.bottom - block.top + BLOCK_PADDING + 8.dp, assertNotNull(seen.padding).calculateBottomPadding())
             }
     }
 

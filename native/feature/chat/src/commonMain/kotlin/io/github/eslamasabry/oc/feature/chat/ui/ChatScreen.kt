@@ -91,6 +91,8 @@ import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
 import io.github.eslamasabry.oc.ui.kit.frame.kitScreenChromePadding
+import io.github.eslamasabry.oc.ui.kit.frame.kitScreenFloat
+import io.github.eslamasabry.oc.ui.kit.frame.KitJumpEdge
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.modal.KitBackGuard
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
@@ -1067,7 +1069,10 @@ public fun ChatScreen(
                                             top =
                                                 Space.S2.dp +
                                                     kitScreenChromePadding().calculateTopPadding()
-                                        ),
+                                        )
+                                        // It floats under the bar: the transcript ends before it, never under it
+                                        // (owner 2026-11-14).
+                                        .kitScreenFloat(KitJumpEdge.Top),
                                 )
                             }
                     }

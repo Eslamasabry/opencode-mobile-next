@@ -18,6 +18,13 @@ import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.layout.CapRole
 import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
+import io.github.eslamasabry.oc.ui.kit.frame.kitScreenAwayFromLatest
+import io.github.eslamasabry.oc.ui.kit.frame.kitScreenFoldsWhileAway
+import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import io.github.eslamasabry.oc.ui.kit.modal.KitMenu
 import io.github.eslamasabry.oc.ui.kit.modal.KitMenuItem
 
@@ -43,6 +50,34 @@ public fun KitPhraseChips(
     bleed: Boolean = true,
 ) {
     if (phrases.isEmpty()) return
+    // Owner 2026-11-14: while the person reads history (the page is away from its newest message) the row folds away,
+    // so "Jump to latest" rises out of the message box; the same chips come back at the newest message.
+    val specs = KitMotion.specs
+    androidx.compose.animation.AnimatedVisibility(
+        visible = !kitScreenAwayFromLatest(),
+        modifier = Modifier.kitScreenFoldsWhileAway(),
+        enter = expandVertically(specs.quick()) + fadeIn(specs.quick()),
+        exit = shrinkVertically(specs.quick()) + fadeOut(specs.quick()),
+        label = "kit.phrase-fold",
+    ) {
+        PhraseRow(phrases, label, insertLabel, menuLabel, hideLabel, onChoose, onHide, modifier, editLabel, onEdit, bleed)
+    }
+}
+
+@Composable
+private fun PhraseRow(
+    phrases: List<String>,
+    label: String,
+    insertLabel: (String) -> String,
+    menuLabel: (String) -> String,
+    hideLabel: String,
+    onChoose: (String) -> Unit,
+    onHide: (String) -> Unit,
+    modifier: Modifier,
+    editLabel: String?,
+    onEdit: ((String) -> Unit)?,
+    bleed: Boolean,
+) {
     Box(
         modifier.kitMaxWidth(CapRole.Conversation)
             .padding(bottom = Space.S2.dp) // F: lib/ui/kit/chat/kit_phrase_chips.dart:56-58

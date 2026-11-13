@@ -90,10 +90,11 @@ class QaWave1ComposerTest {
 
     @Test
     fun `B8 QA wave1 while a reply runs the message box keeps the full width`() = runComposeUiTest {
-        setContent { Theme { Box(Modifier.width(360.dp)) { BasicComposer(ui(), Actions(), chrome(busy = true)) } } }
-        // Flutter's composer (owner, 30 Oct 2026; 2026-11-09): Stop is the chip at the end of the strip above the
-        // box for the whole running turn, so the box keeps its one row; with words typed during a run Send joins the
-        // turn ("Add to this turn"). Neither ever squeezes the words.
+        setContent { Theme { Box(Modifier.width(360.dp).testTag("composer-width")) { BasicComposer(ui(), Actions(), chrome(busy = true)) } } }
+        // Owner 2026-11-14 ("no new bar or row level"): the box holds its own controls in every style; Stop sits at the
+        // end of the words' row for the whole running turn and nothing rides above or beside the box. With words typed
+        // during a run Send joins the turn ("Add to this turn"). Neither ever squeezes the words. Was: Stop is the chip
+        // at the end of the strip above the box, never inside it (Flutter's composer, 30 Oct 2026; 2026-11-09).
         onNodeWithTag("chat-stop-button", useUnmergedTree = true).assertIsDisplayed()
         onNode(hasSetTextAction() and hasAnyAncestor(hasTestTag("chat-composer-field")), useUnmergedTree = true)
             .performTextInput("Also check the docs")
@@ -102,11 +103,14 @@ class QaWave1ComposerTest {
         onNodeWithContentDescription("Add to this turn", useUnmergedTree = true).assertIsDisplayed()
         val field = onNodeWithTag("chat-composer-field").fetchSemanticsNode().size.width
         val box = onNodeWithTag("kit-composer-box", useUnmergedTree = true).fetchSemanticsNode().size.width
-        // The box holds what it holds with words typed when nothing runs ("+", the words, the small mic, Send): Stop
-        // takes none of its room.
+        // The words keep most of the box: Stop at the end of their row and Send on the controls' row take little of it.
         assertTrue(field >= box * 6 / 10, "the field is $field px of $box px: Stop and steer never squeeze it")
+        // The box keeps the full width: nothing stands beside it, and Stop is inside it, not on a strip above it.
+        val width = onNodeWithTag("composer-width").fetchSemanticsNode().size.width
+        assertTrue(box >= width * 95 / 100, "the box is $box px of the $width px it has: nothing sits beside it")
         onNode(hasTestTag("chat-stop-button") and hasAnyAncestor(hasTestTag("kit-composer-box")), useUnmergedTree = true)
-            .assertDoesNotExist()
+            .assertExists()
+        onNodeWithTag("composer-status-strip", useUnmergedTree = true).assertDoesNotExist()
     }
 
     @Test
@@ -157,14 +161,21 @@ class QaWave1ComposerTest {
                 }
             }
         }
-        // F1: the chips ride the strip above the message box (Flutter chat_composer_region.dart:44-77): the approval
-        // chip stays whole, inside the box's width and clear of Send, because the model chip's words are capped.
+        // Owner 2026-11-14 ("no new bar or row level"): the chips ride the box's own controls row, under the words, in
+        // every style. The approval chip stays whole, inside the box and clear of Send, because the model chip's words
+        // are capped. Was: the chips ride the strip above the message box (Flutter chat_composer_region.dart:44-77).
         val box = onNodeWithTag("kit-composer-box", useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
+        val field = onNodeWithTag("chat-composer-field", useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
         val send = onNodeWithTag("chat-send-button", useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
         val chip = onNodeWithTag("approval-chip", useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
-        assertTrue(chip.right <= box.right + 0.5f && chip.width > 20f, "chip $chip inside the box's width $box")
-        assertTrue(chip.bottom <= box.top + 0.5f, "chip $chip on the strip above the box $box")
+        val model = onNodeWithTag("chat-model-button", useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
+        assertTrue(chip.left >= box.left - 0.5f && chip.right <= box.right + 0.5f && chip.width > 20f, "chip $chip whole, inside the box's width $box")
+        // The tag sits inside the face's 4 dp padding.
+        assertTrue(chip.top >= box.top - 4.5f && chip.bottom <= box.bottom + 4.5f, "chip $chip inside the box $box")
+        assertTrue(chip.top >= field.bottom - 0.5f, "chip $chip on the controls' row, under the words $field")
+        assertTrue(chip.center.y in send.top..send.bottom, "chip $chip stays on Send's row $send, never pushed to a row of its own")
         assertTrue(chip.right <= send.left + 0.5f, "chip $chip never under Send $send")
+        assertTrue(model.right <= send.left + 0.5f, "the long model name $model stops before Send $send")
     }
 
     @Test

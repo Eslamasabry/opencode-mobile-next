@@ -362,13 +362,19 @@ private fun DrawScope.drawMarks(state: KitEdgeDockState, f: DockFrame, inks: Doc
     val out = state.out.value
     val vis = smoothstep(15f, 58f, out)
     if (vis < 1f) {
+        // Owner 2026-11-14 ("Wtfff": two black dots and a hairline at the right edge read as stray marks): tucked, the
+        // nub is a whole tab of its own in every style and theme, a tint of the second ink with a firmer edge all round
+        // its inner side and both ends, whatever the glass behind it shows, so the dots sit on a deliberate control.
+        drawNubTab(state, f, inks, 1f - vis)
         val nx = state.phys(f.edgeX - max(out, DockDims.NUB_W) / 2f) * d
         val bandTop = state.ringBandTop()
         val bandBottom = state.ringBandBottom()
         state.rings.forEachIndexed { i, r ->
             val cy = state.slotY(i) - DockDims.RING_LIFT
             // Only the rings in view, as the strip shows them.
-            if (cy in bandTop..bandBottom) drawCircle(inks.of(r.state), 3f * d, Offset(nx, cy * d), alpha = 1f - vis)
+            // A conversation with nothing to say rests quieter than one that is working or waiting for the person.
+            val rest = if (r.state == KitDockRingState.Idle) NUB_DOT_IDLE else 1f
+            if (cy in bandTop..bandBottom) drawCircle(inks.of(r.state), NUB_DOT_R * d, Offset(nx, cy * d), alpha = rest * (1f - vis))
         }
     }
     // The grip at the dock's head: a short bar (a mark, not a surface).
@@ -383,6 +389,47 @@ private fun DrawScope.drawMarks(state: KitEdgeDockState, f: DockFrame, inks: Doc
         }
     }
 }
+
+/** The tucked nub's tab: box A's visible part, its fill and its edge eased in by [k] (1 fully tucked). */
+private fun DrawScope.drawNubTab(state: KitEdgeDockState, f: DockFrame, inks: DockInks, k: Float) {
+    val d = density
+    val a = state.phys(f.aLeft) * d
+    val b = state.phys(f.edgeX) * d
+    val left = min(a, b)
+    val right = max(a, b)
+    if (right - left < 1f || f.aBottom <= f.aTop) return
+    // Past the screen edge by its own radius, so only the inner corners show; on whole pixels.
+    val r = f.aRadius * d
+    val x0 = if (state.onRight) kotlin.math.round(left) else left - r - 1f
+    val x1 = if (state.onRight) right + r + 1f else kotlin.math.round(right)
+    val top = kotlin.math.round(f.aTop * d)
+    val size = androidx.compose.ui.geometry.Size(x1 - x0, kotlin.math.round(f.aBottom * d) - top)
+    val corner = androidx.compose.ui.geometry.CornerRadius(r)
+    drawRoundRect(inks.ink2, Offset(x0, top), size, corner, alpha = NUB_TAB_FILL * k)
+    val w = NUB_TAB_EDGE_DP * d
+    drawRoundRect(
+        inks.ink2,
+        Offset(x0 + w / 2f, top + w / 2f),
+        androidx.compose.ui.geometry.Size(size.width - w, size.height - w),
+        androidx.compose.ui.geometry.CornerRadius((r - w / 2f).coerceAtLeast(0f)),
+        alpha = NUB_TAB_EDGE * k,
+        style = Stroke(w),
+    )
+}
+
+/**
+ * The nub tab's fill and edge (alpha of the second ink) and its edge's width, dp. Quiet on purpose: beside a page of
+ * words the tab is a place to pull from, not a bar to read (on the device a 0.2 fill with a 0.6 edge read as a slab).
+ */
+private const val NUB_TAB_FILL = 0.08f
+private const val NUB_TAB_EDGE = 0.28f
+private const val NUB_TAB_EDGE_DP = 1f
+
+/** A ring's dot on the nub, radius dp: clear of the tab's edge on both sides of its 8 dp. */
+private const val NUB_DOT_R = 2.5f
+
+/** An idle conversation's dot on the nub, as a share of its ink. */
+private const val NUB_DOT_IDLE = 0.55f
 
 /**
  * The band the rings stand in: the column's viewport ([KitEdgeDockState.ringBandTop]..[KitEdgeDockState.ringBandBottom])
