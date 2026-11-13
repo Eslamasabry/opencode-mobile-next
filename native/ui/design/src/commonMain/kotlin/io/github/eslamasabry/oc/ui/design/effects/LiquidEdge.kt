@@ -129,28 +129,28 @@ public object LiquidEdge {
     public const val SATURATION: Float = 1.6f
 
     /**
-     * The most colour a menu or a sheet lets through under its words ([LiquidHold.chroma]): .12 of the full range (.26
+     * The most colour a menu or a sheet lets through under its words ([LiquidHold.chroma]): .10 of the full range (.26
      * until 2026-11-13). A foreground decision (a sheet, a dialog, a menu) shows the page behind it as soft light and
      * colour, never as shapes (independent review 2026-11-13: an Allow button's green glowed behind a permission
      * sheet's words as a recognisable button); `ForegroundGhostTest` measures it on the theme's accent button.
      */
-    public const val HOLD_CHROMA: Float = .12f
+    public const val HOLD_CHROMA: Float = .10f
 
     /**
      * A foreground decision's frost (sheets, dialogs, menus; 12 dp until 2026-11-13): wide enough that a 48 dp button
-     * or a line of words behind it spreads into light (the blur's sigma, about 19 dp, is most of the button's height),
-     * not a blurred copy of its shape. The bars and the message box keep theirs: they show content passing.
+     * or a line of words behind it spreads into light (the blur's sigma, about 24 dp, is half the button's height and
+     * more), not a blurred copy of its shape. The bars and the message box keep theirs: they show content passing.
      */
-    public const val DECISION_BLUR_DP: Float = 32f
+    public const val DECISION_BLUR_DP: Float = 40f
 
     /**
      * A foreground decision's knee (luminance) and the share of the light past it the glass keeps (.36 and .22 until
      * 2026-11-13, still the joined bar's): the dark theme's ground and the Aurora's soft spots pass under it as they
-     * are, while the theme's accent button behind a sheet keeps under a fifth of its light (white keeps .19), a dim
-     * tinted glow. Under dark ink (a light theme) the dark end is lifted the same way.
+     * are, while the theme's accent button behind a sheet keeps about a sixth of its light (white .15), a dim tinted
+     * glow. Under dark ink (a light theme) the dark end is lifted the same way. The rim keeps the page as it is.
      */
-    public const val DECISION_KNEE: Float = .10f
-    public const val DECISION_KNEE_SLOPE: Float = .10f
+    public const val DECISION_KNEE: Float = .08f
+    public const val DECISION_KNEE_SLOPE: Float = .08f
 
     /** A foreground decision's hold: [DECISION_KNEE], [DECISION_KNEE_SLOPE] and [HOLD_CHROMA]. */
     public val DECISION_HOLD: LiquidHold = LiquidHold(knee = true, chroma = HOLD_CHROMA, kneeAt = DECISION_KNEE, kneeSlope = DECISION_KNEE_SLOPE)
@@ -199,12 +199,12 @@ public object LiquidEdge {
         }
 
     /** The menu's thin tint (dark, light), and the dock swell's (the menu's before 2026-11-13). */
-    private const val MENU_TINT_DARK: Float = .40f
-    private const val MENU_TINT_LIGHT: Float = .28f
+    private const val MENU_TINT_DARK: Float = .20f
+    private const val MENU_TINT_LIGHT: Float = .10f
     private const val SWELL_TINT_DARK: Float = .20f
     private const val SWELL_TINT_LIGHT: Float = .10f
-    private const val SHEET_TINT_DARK: Float = .42f
-    private const val SHEET_TINT_LIGHT: Float = .30f
+    private const val SHEET_TINT_DARK: Float = .22f
+    private const val SHEET_TINT_LIGHT: Float = .14f
 
     private fun baseRecipe(role: LiquidRole, dark: Boolean): LiquidRecipe {
         val lift = if (dark) -PRESS_LIFT_DARK else PRESS_LIFT_LIGHT
@@ -224,9 +224,8 @@ public object LiquidEdge {
             LiquidRole.Composer -> r(2f, 34f, .16f, .20f, .18f)
             // Sheets (and the dialogs drawn as one) and menus are foreground decisions: the page behind reads as soft light
             // and colour, never as shapes (review 2026-11-13: a green Allow button behind a permission sheet, the list's
-            // rows behind a context menu). Three levers together: a wide frost (DECISION_BLUR_DP), a low knee with a
-            // tight colour limit (DECISION_HOLD) and a thicker body of their own tint (.42/.30, .40/.28; were .22/.14,
-            // .20/.10), still well under the face's cap so the Aurora's colour shows through.
+            // rows behind a context menu). Two levers: a wide frost (DECISION_BLUR_DP) and a low knee with a tight colour
+            // limit (DECISION_HOLD). Their tint stays thin (.22/.14, .20/.10): clear glass that takes the Aurora's colour.
             LiquidRole.Sheet -> r(DECISION_BLUR_DP, 48f, 0f, SHEET_TINT_DARK, SHEET_TINT_LIGHT, rimMax = 30f, hold = DECISION_HOLD)
             LiquidRole.Menu -> r(DECISION_BLUR_DP, 48f, .18f, MENU_TINT_DARK, MENU_TINT_LIGHT, rimMax = 26f, hold = DECISION_HOLD)
             // Small pills (the jump pill, the chips over the message box) are calm glass: a narrow rim and a light bend,

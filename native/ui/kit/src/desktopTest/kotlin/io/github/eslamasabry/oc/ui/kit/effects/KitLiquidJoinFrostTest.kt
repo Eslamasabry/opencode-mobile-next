@@ -19,7 +19,7 @@ class KitLiquidJoinFrostTest {
             var last = joinedFrost(bar, menu, 0f).blurDp
             for (i in 1..100) {
                 val now = joinedFrost(bar, menu, i / 100f).blurDp
-                assertTrue(now >= last && now - last <= .3f, "a step at ${i / 100f}: $last to $now")
+                assertTrue(now >= last && now - last <= .4f, "a step at ${i / 100f}: $last to $now")
                 last = now
             }
         }

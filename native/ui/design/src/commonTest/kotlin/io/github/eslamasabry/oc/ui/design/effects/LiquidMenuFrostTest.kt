@@ -18,7 +18,7 @@ class LiquidMenuFrostTest {
             assertEquals(sheet.blurDp, menu.blurDp)
             assertEquals(48f, menu.refractionDp, "menu bend dark=$dark")
             assertEquals(26f, menu.rimMaxDp, "menu rim dark=$dark")
-            assertEquals(if (dark) .40f else .28f, menu.tint, "menu tint dark=$dark")
+            assertEquals(if (dark) .20f else .10f, menu.tint, "menu tint dark=$dark")
             assertEquals(1.6f, menu.saturation, "menu saturation dark=$dark")
         }
     }
@@ -43,7 +43,7 @@ class LiquidMenuFrostTest {
             assertEquals(1f, LiquidEdge.recipe(LiquidRole.Pill, dark).blurDp)
             assertEquals(1f, LiquidEdge.recipe(LiquidRole.Status, dark).blurDp)
             assertEquals(1f, LiquidEdge.recipe(LiquidRole.Action, dark).blurDp)
-            assertEquals(12f, LiquidEdge.recipe(LiquidRole.Sheet, dark).blurDp)
+            assertEquals(LiquidEdge.DECISION_BLUR_DP, LiquidEdge.recipe(LiquidRole.Sheet, dark).blurDp)
         }
     }
 }
