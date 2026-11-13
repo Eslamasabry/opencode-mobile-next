@@ -68,6 +68,19 @@ class Oc2SearchUsageTest {
     }
 
     @Test
+    fun `B-235 a global row that cannot be decoded is counted, never silently dropped`() = runTest {
+        val g = gateway { """{"data":[${session("ses_1", "prj_a", "/work/app")},{"nope":1}],"cursor":{"next":"c2"}}""" }
+        try {
+            val page = assertIs<Outcome.Ok<*>>(Oc2SearchUsage.searchSessions(g, null, null, 50)).value
+                as io.github.eslamasabry.oc.core.model.ServerPage<*>
+            assertEquals(1, page.items.size)
+            assertEquals(1, page.unreadable)
+        } finally {
+            g.close()
+        }
+    }
+
+    @Test
     fun `B-PROTO-020 an archived-only page arrives empty and still keeps its cursor`() = runTest {
         val g = gateway { """{"data":[${session("ses_1", "prj_a", "/work/app", archived = 5)}],"cursor":{"next":"c2"}}""" }
         try {

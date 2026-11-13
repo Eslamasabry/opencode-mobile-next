@@ -40,8 +40,8 @@ class AcrossProjectsTest {
         }
     }
 
-    private fun result(vararg rows: Session, next: String? = null) =
-        ServerPage(rows.map { GlobalSessionResult(it, null, it.directory) }.toImmutableList(), next)
+    private fun result(vararg rows: Session, next: String? = null, unreadable: Int = 0) =
+        ServerPage(rows.map { GlobalSessionResult(it, null, it.directory) }.toImmutableList(), next, unreadable)
 
     private fun gateway(across: Boolean, vararg own: Session) =
         FakeServerGateway(own.toList()).also {
@@ -77,11 +77,32 @@ class AcrossProjectsTest {
     }
 
     @Test
-    fun `four pages is the cap and says the list is incomplete`() = runTest {
+    fun `B-235 a list of more than four pages is read to its end, not cut at 200`() = runTest {
         val server = gateway(true)
-        val ops = Ops((0 until 6).associate { (if (it == 0) null else "c$it") to result(s("r$it", "/w$it"), next = "c${it + 1}") })
+        val last = 9
+        val ops = Ops((0..last).associate { (if (it == 0) null else "c$it") to result(s("r$it", "/w$it"), next = if (it == last) null else "c${it + 1}") })
         val read = assertIs<Outcome.Ok<SessionPages>>(readFeedSessionPages(server, ops)).value
-        assertEquals(4, read.sessions.size)
+        assertEquals(last + 1, read.sessions.size)
+        assertTrue(read.complete)
+    }
+
+    @Test
+    fun `the safety bound is reached only by an endless list and says the list is incomplete`() = runTest {
+        val server = gateway(true)
+        val n = ACROSS_FEED_PAGES + 2
+        val ops = Ops((0 until n).associate { (if (it == 0) null else "c$it") to result(s("r$it", "/w$it"), next = "c${it + 1}") })
+        val read = assertIs<Outcome.Ok<SessionPages>>(readFeedSessionPages(server, ops)).value
+        assertEquals(ACROSS_FEED_PAGES, read.sessions.size)
+        assertFalse(read.complete)
+    }
+
+    @Test
+    fun `B-235 rows the server sent that could not be decoded are counted and the list is incomplete`() = runTest {
+        val server = gateway(true)
+        val ops = Ops(mapOf(null to result(s("a", "/w"), next = "c1", unreadable = 1), "c1" to result(s("b", "/w"), unreadable = 2)))
+        val read = assertIs<Outcome.Ok<SessionPages>>(readFeedSessionPages(server, ops)).value
+        assertEquals(2, read.sessions.size)
+        assertEquals(3, read.unreadable)
         assertFalse(read.complete)
     }
 

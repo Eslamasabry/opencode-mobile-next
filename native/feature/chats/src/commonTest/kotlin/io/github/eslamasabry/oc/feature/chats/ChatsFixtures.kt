@@ -55,7 +55,7 @@ internal fun item(
         finishedUnseen = unseen,
     )
 
-internal class RecordingChatsActions : ChatsActions {
+internal open class RecordingChatsActions : ChatsActions {
     val calls = mutableListOf<String>()
 
     override fun openConversation(ref: ConversationRef) {

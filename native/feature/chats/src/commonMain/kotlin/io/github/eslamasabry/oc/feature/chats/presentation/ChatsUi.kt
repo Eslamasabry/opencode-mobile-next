@@ -16,6 +16,13 @@ public enum class ChatsPhase {
     /** Nothing at all on this server: the calm empty state with New conversation. */
     Empty,
 
+    /**
+     * B-243: no top-level conversation came back, but the read was cut short or held only sub-conversations. "No
+     * conversations yet" would be a lie (the server may hold hundreds): the page says they were not read, with Try
+     * again.
+     */
+    NotRead,
+
     /** Rows exist but none fit the search or filters. */
     NoMatch,
     List,

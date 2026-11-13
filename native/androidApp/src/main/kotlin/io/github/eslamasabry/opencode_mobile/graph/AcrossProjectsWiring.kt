@@ -13,8 +13,12 @@ import io.github.eslamasabry.oc.core.model.SessionStatus
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.withTimeoutOrNull
 
-/** Flutter `_feedPages` / `_feedPageSize` (state/connection/chat_feed.dart): four pages of fifty. */
-internal const val ACROSS_FEED_PAGES: Int = 4
+/**
+ * Pages of fifty the home reads across projects. Flutter read four (200 conversations) and a server with more simply
+ * lost its older ones (B-235); this is a safety bound far past any real list (1000), and reaching it still says the
+ * list is incomplete. All conversations pages without a bound as the person scrolls.
+ */
+internal const val ACROSS_FEED_PAGES: Int = 20
 internal const val ACROSS_FEED_PAGE_SIZE: Int = 50
 
 /**
@@ -32,12 +36,13 @@ internal suspend fun readFeedSessionPages(
     if (operations == null || !server.capabilities.value.globalSessionSearch) return project
     val global = readGlobalPages(operations)
     val own = (project as? Outcome.Ok)?.value
-    if (global == null) return own?.let { Outcome.Ok(SessionPages(it.sessions, complete = false)) } ?: project
+    if (global == null) return own?.let { Outcome.Ok(SessionPages(it.sessions, complete = false, unreadable = it.unreadable)) } ?: project
     val seen = HashSet<SessionId>()
     val merged = ArrayList<Session>()
     for (s in own?.sessions.orEmpty()) if (seen.add(s.id)) merged += s
     for (s in global.sessions) if (seen.add(s.id)) merged += s
-    return Outcome.Ok(SessionPages(merged.toImmutableList(), global.complete && (own?.complete ?: false)))
+    val unreadable = global.unreadable + (own?.unreadable ?: 0)
+    return Outcome.Ok(SessionPages(merged.toImmutableList(), global.complete && (own?.complete ?: false), unreadable))
 }
 
 private suspend fun readGlobalPages(operations: ServerOperationsGateway): SessionPages? {
@@ -45,6 +50,7 @@ private suspend fun readGlobalPages(operations: ServerOperationsGateway): Sessio
     val seenCursors = HashSet<String>()
     var cursor: String? = null
     var complete = true
+    var unreadable = 0
     for (page in 0 until ACROSS_FEED_PAGES) {
         val read: ServerPage<GlobalSessionResult> =
             when (
@@ -59,6 +65,7 @@ private suspend fun readGlobalPages(operations: ServerOperationsGateway): Sessio
                 is Outcome.Ok -> answer.value
             }
         all += read.items.map { it.session }
+        unreadable += read.unreadable
         val next = read.nextCursor
         if (next == null || !seenCursors.add(next)) {
             cursor = null
@@ -67,7 +74,7 @@ private suspend fun readGlobalPages(operations: ServerOperationsGateway): Sessio
         cursor = next
         if (page == ACROSS_FEED_PAGES - 1) complete = false
     }
-    return SessionPages(all.toImmutableList(), complete)
+    return SessionPages(all.toImmutableList(), complete && unreadable == 0, unreadable)
 }
 
 /** What conversations of other projects are blocked on (permissions and forms), read one conversation at a time. */

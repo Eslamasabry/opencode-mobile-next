@@ -61,4 +61,22 @@ class SessionPagesTest {
         assertEquals(100, read.sessions.size)
         assertFalse(read.complete)
     }
+
+    @Test
+    fun `B-235 a page with rows that could not be decoded is counted and the list is not called complete`() = runTest {
+        val bad = ServerPage((0 until 3).map { Session(SessionId("s$it")) }.toImmutableList(), null, unreadable = 2)
+        val read = assertIs<Outcome.Ok<SessionPages>>(readSessionPages(Paged(mapOf(null to bad)))).value
+        assertEquals(3, read.sessions.size)
+        assertEquals(2, read.unreadable)
+        assertFalse(read.complete)
+    }
+
+    @Test
+    fun `B-235 a short page that still carries a cursor is followed to the next one`() = runTest {
+        val server = Paged(mapOf(null to page(0, 40, "c1"), "c1" to page(40, 70, null)))
+        val read = assertIs<Outcome.Ok<SessionPages>>(readSessionPages(server)).value
+        assertEquals(70, read.sessions.size)
+        assertEquals(listOf(null, "c1"), server.asked)
+        assertTrue(read.complete)
+    }
 }

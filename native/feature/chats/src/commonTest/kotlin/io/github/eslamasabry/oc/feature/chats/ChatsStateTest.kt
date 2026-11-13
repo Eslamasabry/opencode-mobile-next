@@ -71,6 +71,21 @@ class ChatsStateTest {
     }
 
     @Test
+    fun `B-243 a read that was cut short, or held only sub-conversations, is never the first-run empty state`() {
+        val cut =
+            ChatsState.build(
+                ChatFeedSnapshot(incompleteSources = listOf("Server").toImmutableList()),
+                ReturnBrief.None,
+                ChatsFilters(),
+                today,
+                settingsAvailable = true,
+            )
+        assertEquals(ChatsPhase.NotRead, cut.phase)
+        assertEquals(ChatsPhase.NotRead, build(item("kid", parent = "gone")).phase)
+        assertEquals(ChatsPhase.Empty, build().phase, "a complete, empty list is still the first-run state")
+    }
+
+    @Test
     fun `SCREENS-NAV-27 opening shows skeletons, an empty server the calm empty state, filters with no rows no-match`() {
         assertEquals(ChatsPhase.Opening, build(loading = true).phase)
         assertEquals(ChatsPhase.Empty, build().phase)

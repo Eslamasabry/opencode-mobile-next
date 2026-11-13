@@ -217,6 +217,8 @@
     <string name="chatsSourcesAlways">Always shown</string>
     <string name="chatsHomeStillLoading">Loading %1$s conversations…</string>
     <string name="chatsHomeEmptyTitle">No conversations yet</string>
+    <string name="chatsHomeNotReadTitle">Your conversations weren't all read</string>
+    <string name="chatsHomeNotReadBody">The server answered, but this page could not read its list, so it can't say there are none. Try again to read it.</string>
     <string name="chatsHomeNoMatchTitle">No matching conversations</string>
     <string name="chatsHomeNoMatchBody">Nothing fits the filters you chose.</string>
     <string name="chatsHomeClearFilters">Clear filters</string>

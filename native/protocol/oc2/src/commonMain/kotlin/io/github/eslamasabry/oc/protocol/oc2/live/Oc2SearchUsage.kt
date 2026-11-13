@@ -61,12 +61,14 @@ public object Oc2SearchUsage {
                 // B-243: rows that came back but could not be read are not "no conversations"; an empty page here
                 // would let the home show its first-run empty state over a server full of conversations.
                 if (rows.isNotEmpty() && wires.isEmpty()) return Failure.UnreadableReply().failed()
+                // B-235: one odd row among good ones is counted, never silently lost.
+                val unreadable = rows.size - wires.size
                 val items =
                     wires.mapNotNull { wire ->
                         if (!includeArchived && wire.archived) null
                         else GlobalSessionResult(session(wire), projectName = null, projectDirectory = wire.directory)
                     }
-                ServerPage(items.toImmutableList(), next(root)?.takeIf { it.isNotEmpty() }).ok()
+                ServerPage(items.toImmutableList(), next(root)?.takeIf { it.isNotEmpty() }, unreadable).ok()
             }
         }
     }
