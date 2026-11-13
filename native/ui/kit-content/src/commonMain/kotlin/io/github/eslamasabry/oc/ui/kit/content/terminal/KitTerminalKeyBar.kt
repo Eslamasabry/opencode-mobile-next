@@ -403,7 +403,7 @@ public fun TerminalKeyBar(
             color = null,
             selected = false,
             pressed = false,
-        )
+        ).look
     val safe =
         if (safeArea) {
             // Keeps the keys out of the system insets below and beside the bar inside the bar's own band.
@@ -526,15 +526,32 @@ private fun TerminalKeyBarGrid(
                     .then(if (!fits) Modifier.horizontalScroll(rememberScrollState()) else Modifier), // F: lib/ui/kit/terminal_key_bar.dart:483-490
                 verticalArrangement = Arrangement.spacedBy(gap), // F: lib/ui/kit/terminal_key_bar.dart:475
             ) {
+                val keyWidth = if (fits) width else side
                 rows.forEach { keys ->
+                    // Review 2026-11-13 (terminal): a row of fewer keys than columns (Ctrl-C and Ctrl-D above the
+                    // eight) shares the grid's whole width, so it is never a row of two keys and six empty places.
+                    val w = TerminalKeyGrid.shortRowWidth(keys.size, columns, keyWidth.value, gap.value, dpr).dp
                     Row(horizontalArrangement = Arrangement.spacedBy(gap)) { // F: lib/ui/kit/terminal_key_bar.dart:458-461
                         keys.forEach { k ->
-                            Box(Modifier.size(width, side)) { key(k) } // F: lib/ui/kit/terminal_key_bar.dart:462-467
+                            Box(Modifier.size(w, side)) { key(k) } // F: lib/ui/kit/terminal_key_bar.dart:462-467
                         }
                     }
                 }
             }
         }
+    }
+}
+
+/** The full bar's grid numbers. */
+public object TerminalKeyGrid {
+    /**
+     * How wide each key of a row of [count] keys is, in dp, on a grid of [columns] keys [keyDp] wide and [gapDp] apart:
+     * a full row keeps [keyDp]; a shorter row's keys share the grid's whole span, in whole physical pixels ([dpr]).
+     */
+    public fun shortRowWidth(count: Int, columns: Int, keyDp: Float, gapDp: Float, dpr: Float): Float {
+        if (count <= 0 || count >= columns) return keyDp
+        val span = keyDp * columns + gapDp * (columns - 1)
+        return floor((span - gapDp * (count - 1)) / count * dpr) / dpr
     }
 }
 
@@ -548,7 +565,7 @@ private fun terminalSurfaceLook(
     color: Color?,
     selected: Boolean,
     pressed: Boolean,
-): KitSurfaceLook {
+): TerminalLook {
     val state = LocalKitStyle.current
     val roles = LocalKitRoles.current
     val r = StyleResolver.corner(radiusDp, state.knobs.corners, state.spec.tokens.sharpRadius) // F: lib/ui/kit/kit_surface_look.dart:185-199 (the knob mapping the resolver applies)
@@ -571,10 +588,14 @@ private fun terminalSurfaceLook(
     if (decoration == null) {
         // Solid keeps the part's own look: its fill under its shape.
         val modifier = if (ownFill == null) Modifier else Modifier.background(ownFill, shape) // F: lib/ui/kit/kit_surface_look.dart:171-172
-        return KitSurfaceLook(modifier, words?.let { Color(it.v) }, shape)
+        return TerminalLook(KitSurfaceLook(modifier, words?.let { Color(it.v) }, shape), decorated = false)
     }
-    return KitSurfaceLook(Modifier.kitDecorated(decoration, androidx.compose.ui.platform.LocalLayoutDirection.current == androidx.compose.ui.unit.LayoutDirection.Rtl), words?.let { Color(it.v) }, shape)
+    val rtl = androidx.compose.ui.platform.LocalLayoutDirection.current == androidx.compose.ui.unit.LayoutDirection.Rtl
+    return TerminalLook(KitSurfaceLook(Modifier.kitDecorated(decoration, rtl), words?.let { Color(it.v) }, shape), decorated = true)
 }
+
+/** A terminal surface's look and whether the style drew it (its own fill and edge) rather than the part's own fill. */
+private class TerminalLook(val look: KitSurfaceLook, val decorated: Boolean)
 
 /**
  * One key (Dart `_Key`): a [KitTerminalBarKey.face] on a `surface3` cap, `accent` while latched, `text3` while
@@ -620,14 +641,16 @@ private fun TerminalKeyCap(
             else -> TextTone.Primary
         }
     val buttonRadius = (Shapes.of(KitShapeId.Button) as Corner.Radius).dp // F: lib/ui/kit/terminal_key_bar.dart:750-752 (tokens.buttonRadius)
-    val capRadiusDp = if (calm) buttonRadius * .72f else buttonRadius.toFloat() // F: lib/ui/kit/terminal_key_bar.dart:750-752
+    // Review 2026-11-13 (terminal): every key, the one-row bar's included, has the buttons' corner, so the keys under
+    // the terminal and the grid's read as one set.
+    val capRadiusDp = buttonRadius.toFloat()
     val density = LocalDensity.current.density
     val focusRingWidth = (if (density <= 1f) max(2f / density, 1f) else 2f / density).dp // F: lib/ui/kit/kit_tokens.dart:322-327 (tokens.focusRingWidth)
     val hairlineWidth = (1f / density).dp // F: lib/ui/kit/kit_tokens.dart:315-318 (tokens.hairlineWidth)
     // Hook H3: a latched cap's face takes the colour the style says reads on it, so a style that sets a latched key in
     // reverse keeps it legible; every other cap keeps its own tone. Resolved inside the cap, so the face keeps its
     // plate (hook H10).
-    val capLook =
+    val capSurface =
         terminalSurfaceLook(
             role = SurfaceRole.Control, // F: lib/ui/kit/terminal_key_bar.dart:778-779
             level = if (calm) SurfaceLevel.Surface2 else SurfaceLevel.Surface3, // F: lib/ui/kit/terminal_key_bar.dart:780
@@ -637,6 +660,7 @@ private fun TerminalKeyCap(
             selected = on, // F: lib/ui/kit/terminal_key_bar.dart:783
             pressed = enabled && pressed, // F: lib/ui/kit/terminal_key_bar.dart:784
         )
+    val capLook = capSurface.look
     val ring = focused && enabled // F: lib/ui/kit/terminal_key_bar.dart:749
     // The ring is drawn over the style's own face; the calm cap's hairline edge is drawn inside the cap, so no parent
     // clip cuts it (LOOK-21). Both take the face's own shape (its radius under the Corners knob), never the token one.
@@ -644,7 +668,10 @@ private fun TerminalKeyCap(
     val edge =
         when {
             ring -> Modifier.border(focusRingWidth, colors.accent, radius) // F: lib/ui/kit/terminal_key_bar.dart:753-756,786-794
-            calm -> Modifier.border(hairlineWidth, if (on) colors.accent else colors.hairline, radius) // F: lib/ui/kit/terminal_key_bar.dart:769-773
+            // A style that draws the cap draws its own edge: a second hairline over it made each key two silhouettes
+            // (review 2026-11-13, terminal). The hairline is the calm cap's edge only on its own fill.
+            calm && !capSurface.decorated ->
+                Modifier.border(hairlineWidth, if (on) colors.accent else colors.hairline, radius) // F: lib/ui/kit/terminal_key_bar.dart:769-773
             else -> Modifier
         }
     val label = keyLabel(key)

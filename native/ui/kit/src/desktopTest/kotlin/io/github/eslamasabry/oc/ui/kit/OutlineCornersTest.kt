@@ -63,6 +63,13 @@ class OutlineCornersTest {
                 )
                 LaunchedEffect(Unit) { focus.requestFocus() }
             },
+            // Review 2026-11-13 (terminal): the terminal's "Send to terminal" command field (KitTerminalView) is a
+            // mono field; its outline lost all four corner arcs.
+            Case("focused terminal command field", hasSetTextAction()) {
+                val focus = remember { FocusRequester() }
+                KitField(rememberTextFieldState("ls -la"), "Send to terminal", kind = KitFieldKind.Mono, focusRequester = focus, labelShown = false)
+                LaunchedEffect(Unit) { focus.requestFocus() }
+            },
             Case("field with an error", hasSetTextAction()) {
                 KitField(rememberTextFieldState("99999"), "Port", kind = KitFieldKind.Number, error = "Too big", labelShown = false)
             },
@@ -97,10 +104,11 @@ class OutlineCornersTest {
     fun `every style is covered`() = kotlin.test.assertEquals(6, Style.entries.size, "a new style needs its corner tests here")
 
     private fun fields(style: Style, dark: Boolean) {
-        val (oneLine, multiline, error) = fieldCases.map { check(style, dark, it) }
+        val (oneLine, multiline, terminal, error) = fieldCases.map { check(style, dark, it) }
         // One assertion per case, so the failing line names the case.
         assertTrue(oneLine.isEmpty(), "Outlines cut at the corners:\n" + oneLine.joinToString("\n"))
         assertTrue(multiline.isEmpty(), "Outlines cut at the corners:\n" + multiline.joinToString("\n"))
+        assertTrue(terminal.isEmpty(), "Outlines cut at the corners:\n" + terminal.joinToString("\n"))
         assertTrue(error.isEmpty(), "Outlines cut at the corners:\n" + error.joinToString("\n"))
     }
 
