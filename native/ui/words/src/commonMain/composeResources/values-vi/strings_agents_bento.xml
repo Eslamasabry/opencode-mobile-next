@@ -35,4 +35,8 @@
     <string name="agentsStateSignInUnchecked">Đã cài đặt, nhưng ứng dụng này chưa kiểm tra được việc đăng nhập</string>
     <string name="agentsStateSignInCheckFailed">Không kiểm tra được việc đăng nhập. Hãy thử đăng nhập lại.</string>
     <string name="agentsSignInUncheckedBody">Chưa dùng được cho cuộc trò chuyện. Bạn có thể gỡ bỏ nó.</string>
+    <string name="agentsStateSetUpAtFirstUse">Đã cài đặt. Hãy thiết lập trong lần dùng đầu tiên.</string>
+    <string name="agentsChipSetUp">Thiết lập</string>
+    <string name="agentsSetUpAction">Thiết lập %1$s</string>
+    <string name="agentsSetUpTypeAuth">Gõ /auth rồi làm theo các bước.</string>
 </resources>

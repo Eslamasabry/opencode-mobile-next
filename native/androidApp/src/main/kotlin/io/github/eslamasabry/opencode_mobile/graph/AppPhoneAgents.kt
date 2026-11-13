@@ -511,7 +511,8 @@ class AppPhoneAgents(
                                     signIn == AgentSignInPhase.SignedIn &&
                                     AgentAuthScripts.supportsSignOut(agent.id) &&
                                     !installing,
-                            signInUnchecked = present == true && PhoneAgentRules.signInUnchecked(agent),
+                            // An agent whose sign-in no check can read is set up at first use now
+                            // (PhoneAgentStatus.SetUpAtFirstUse): the "can't check its sign-in yet" line is never shown.
                             signInCheckFailed =
                                 status == PhoneAgentStatus.SignInNeeded &&
                                     PhoneAgentRules.signInCheckFailed(agent, signIn),

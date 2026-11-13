@@ -1,5 +1,8 @@
 package io.github.eslamasabry.opencode_mobile.graph
 
+import io.github.eslamasabry.oc.core.common.ids.ProfileId
+import io.github.eslamasabry.oc.core.data.scope.ProfileKeyRule
+import io.github.eslamasabry.oc.engine.agents.AgentKeys
 import io.github.eslamasabry.oc.engine.agents.AgentId
 import io.github.eslamasabry.oc.engine.agents.catalog.AgentArchitecture
 import io.github.eslamasabry.oc.engine.agents.catalog.AgentCatalog
@@ -12,6 +15,8 @@ import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentInstallation
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentRow
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentStatus
 import io.github.eslamasabry.oc.feature.agents.hub.phoneAgentSignedOut
+import io.github.eslamasabry.oc.feature.agents.hub.installed
+import io.github.eslamasabry.oc.feature.agents.hub.phoneAgentStartsConversation
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -72,13 +77,43 @@ class PhoneAgentRulesTest {
         val gemini = AgentCatalog.builtIn.byId(AgentId("gemini"))!!
         val q = PhoneAgentRules.qualified(gemini, AgentArchitecture.X64, null, gemini.recipe!!.version)
         assertTrue(q)
+        // Coordinator ruling 2026-11-13: set up at first use, not "can't check its sign-in yet".
         assertEquals(
-            PhoneAgentStatus.Unavailable,
+            PhoneAgentStatus.SetUpAtFirstUse,
             PhoneAgentRules.status(gemini, AgentArchitecture.X64, true, true, q, AgentSignInPhase.Failed),
         )
         assertTrue(PhoneAgentRules.signInUnchecked(gemini))
         for (id in listOf("qwen", "goose", "omp-acp"))
             assertTrue(PhoneAgentRules.signInUnchecked(AgentCatalog.builtIn.byId(AgentId(id))!!), id)
+    }
+
+    // Coordinator ruling 2026-11-13 ("don't hide a problem, just fix it"): Qwen Code, Goose and omp have no read-only
+    // sign-in status. Installed and past the phone check, they are usable (offered for conversations), set up at first
+    // use; never "Ready", never "Sign in needed", and the home names none of them signed out.
+    @Test
+    fun `B-AGENT-113 an installed agent without a sign-in check is set up at first use and starts conversations`() {
+        for (id in listOf("qwen", "goose", "omp-acp")) {
+            val agent = AgentCatalog.builtIn.byId(AgentId(id))!!
+            val x64 = AgentArchitecture.X64
+            val q = PhoneAgentRules.qualified(agent, x64, null, agent.recipe!!.version)
+            assertTrue(q, id)
+            val status = PhoneAgentRules.status(agent, x64, true, true, q, AgentSignInPhase.Failed)
+            assertEquals(PhoneAgentStatus.SetUpAtFirstUse, status, id)
+            assertFalse(PhoneAgentRules.signInCheckFailed(agent, AgentSignInPhase.Failed), id)
+            val row = PhoneAgentRow(id, agent.name, status, removable = true, signInAvailable = true)
+            assertTrue(phoneAgentStartsConversation(row), id)
+            assertFalse(phoneAgentSignedOut(row), id)
+            assertTrue(row.status.installed, id)
+            // Not installed is still Install, and an unproved one still asks for the phone check.
+            assertEquals(PhoneAgentStatus.NotInstalled, PhoneAgentRules.status(agent, arm, false, false, false, null), id)
+        }
+    }
+
+    @Test
+    fun `B-AGENT-113 the set-up mark is swept with its profile`() {
+        val key = AgentKeys.agentSetUp(ProfileId("p1"))
+        assertEquals("oc.agentSetUp.p1", key)
+        assertEquals(setOf(key), ProfileKeyRule.scopedKeys("p1", listOf(key, "oc.agentSetUp.p2"), setOf("p2")))
     }
 
     // Gate (w4-agent-install2): only a check that RAN and found no usable sign-in says "Sign in needed"; one that could

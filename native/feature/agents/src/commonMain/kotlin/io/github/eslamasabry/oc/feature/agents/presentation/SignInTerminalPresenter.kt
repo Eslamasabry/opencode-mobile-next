@@ -72,6 +72,8 @@ public class SignInTerminalPresenter(
                         usesClaudeAccount = plan.usesClaudeAccount,
                         pastesBrowserCode = agent.id == ANTIGRAVITY,
                         offersAntigravityNote = agent.id == "gemini",
+                        firstUse = plan.firstUse,
+                        typesAuth = plan.typesAuth,
                         // Antigravity's sign-in ends with a code to paste. The readable view has a
                         // real text field (long-press paste, the keyboard, Send); the live grid did
                         // not take keyboard input on the phone (owner report, merge41), so the
@@ -209,6 +211,15 @@ public class SignInTerminalPresenter(
             return
         }
         dismissSignInPage()
+        if (ui.value.firstUse) {
+            // No read-only sign-in status exists for this agent: remember the set-up and go back; its own answer in
+            // the next conversation tells the truth.
+            ui.update { it.copy(inputEnabled = false) }
+            agents.markSetUp(owner, agent)
+            val ended = stopFirst || owned.end() is Outcome.Ok
+            ui.update { it.copy(step = SignInStep.SetUpDone, stopFailed = !ended) }
+            return
+        }
         ui.update { it.copy(step = SignInStep.Checking, inputEnabled = false) }
         val signedIn = agents.confirmSignedIn(owner, agent)
         val stopped = stopFirst || owned.end() is Outcome.Ok

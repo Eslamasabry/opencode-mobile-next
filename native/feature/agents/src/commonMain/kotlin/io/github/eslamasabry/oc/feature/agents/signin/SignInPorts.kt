@@ -157,7 +157,17 @@ public sealed interface SignInPlan {
     /**
      * The agent's own login runs in a terminal. [usesClaudeAccount]: words name the Claude account.
      */
-    public data class Terminal(val agentName: String, val usesClaudeAccount: Boolean) : SignInPlan
+    public data class Terminal(
+        val agentName: String,
+        val usesClaudeAccount: Boolean,
+        /**
+         * An agent set up at first use (Qwen Code, Goose, omp): no read-only sign-in status exists, so when the terminal
+         * ends the agent is marked set up ([SignInAgents.markSetUp]) and the person goes back; nothing is read.
+         */
+        val firstUse: Boolean = false,
+        /** Qwen Code: its set-up starts in its own TUI, where the person types `/auth`; the screen says so. */
+        val typesAuth: Boolean = false,
+    ) : SignInPlan
 
     /**
      * API-key agents (Qwen, Goose): "Set up a provider key on the host"; the app has no key field.
@@ -202,6 +212,12 @@ public interface SignInAgents {
      * device code.
      */
     public fun read(transcript: String): SignInFound
+
+    /**
+     * The set-up terminal of an agent set up at first use ended: remember that the person set it up (whatever the
+     * terminal claimed; nothing here can verify it). The app never stores, reads or passes a provider key.
+     */
+    public suspend fun markSetUp(owner: ProfileId, agent: AgentRef) {}
 }
 
 /** The sign-in foreground claim (plan 11 §9.1 `SignIn` row). */

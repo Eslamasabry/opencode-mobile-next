@@ -3,6 +3,8 @@ package io.github.eslamasabry.oc.feature.agents.hub
 /** Where an agent's tile stands; the words live in the screen. */
 public enum class AgentTileState {
     Ready,
+    /** Installed; set it up the first time it is used ([PhoneAgentStatus.SetUpAtFirstUse]). */
+    SetUp,
     SignInNeeded,
     NotInstalled,
     Installing,
@@ -20,6 +22,8 @@ public enum class AgentTileState {
 public enum class AgentTileAct {
     Install,
     SignIn,
+    /** Open the agent's own set-up in the sign-in terminal ([AgentTileState.SetUp]). */
+    SetUp,
     /** Run the phone check for this agent (Flutter's "Check" chip). */
     Check,
     /** Start the stopped agent helper again (Flutter's "Resume" chip). */
@@ -75,6 +79,13 @@ public fun agentTile(
         PhoneAgentStatus.NotInstalled ->
             if (agent.supportedInstallation) AgentTileModel(agent, AgentTileState.NotInstalled, act = AgentTileAct.Install)
             else AgentTileModel(agent, AgentTileState.CannotRun)
+        PhoneAgentStatus.SetUpAtFirstUse ->
+            AgentTileModel(
+                agent,
+                AgentTileState.SetUp,
+                act = if (agent.signInAvailable) AgentTileAct.SetUp else null,
+                justInstalled = justInstalled,
+            )
         PhoneAgentStatus.SignInNeeded ->
             AgentTileModel(
                 agent,
@@ -117,7 +128,8 @@ public fun phoneChatOffered(state: AgentsUi): Boolean {
  * by it ([cardOffersConversation]) and New conversation's "Who works on it" lists by it (the app's phone offer), so
  * the two can never disagree.
  */
-public fun phoneAgentStartsConversation(row: PhoneAgentRow): Boolean = row.status == PhoneAgentStatus.Ready
+public fun phoneAgentStartsConversation(row: PhoneAgentRow): Boolean =
+    row.status == PhoneAgentStatus.Ready || row.status == PhoneAgentStatus.SetUpAtFirstUse
 
 /** Whether [tile]'s card offers New conversation, given [chat] ([phoneChatOffered] for the page). */
 public fun cardOffersConversation(tile: AgentTileModel, chat: Boolean): Boolean =

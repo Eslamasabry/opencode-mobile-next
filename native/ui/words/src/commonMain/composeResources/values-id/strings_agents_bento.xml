@@ -35,4 +35,8 @@
     <string name="agentsStateSignInUnchecked">Terpasang, tetapi aplikasi ini belum bisa memeriksa status masuknya</string>
     <string name="agentsStateSignInCheckFailed">Status masuk tidak dapat diperiksa. Coba masuk lagi.</string>
     <string name="agentsSignInUncheckedBody">Belum bisa dipakai untuk percakapan. Anda bisa menghapusnya.</string>
+    <string name="agentsStateSetUpAtFirstUse">Terpasang. Siapkan saat pertama kali digunakan.</string>
+    <string name="agentsChipSetUp">Siapkan</string>
+    <string name="agentsSetUpAction">Siapkan %1$s</string>
+    <string name="agentsSetUpTypeAuth">Ketik /auth lalu ikuti langkahnya.</string>
 </resources>

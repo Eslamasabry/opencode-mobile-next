@@ -5,6 +5,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toAwtImage
@@ -202,6 +207,31 @@ class AgentsBentoTest {
         onNode(hasContentDescription("Install Gemini CLI")).assertDoesNotExist()
         onNodeWithText("Remove Gemini CLI").performClick()
         assertTrue("remove:gemini" in actions.calls)
+    }
+
+    // Coordinator ruling 2026-11-13: Qwen Code, Goose and omp have no read-only sign-in status. Installed, each says
+    // what is true (set it up at first use) and offers Set up and Remove; never "Ready", never "can't check".
+    @Test
+    fun `B-AGENT-113 an agent set up at first use says so and offers Set up and Remove`() = runComposeUiTest {
+        val actions = Recorder()
+        val rows =
+            persistentListOf(
+                PhoneAgentRow("qwen", "Qwen Code", PhoneAgentStatus.SetUpAtFirstUse, removable = true, signInAvailable = true),
+                PhoneAgentRow("goose", "Goose", PhoneAgentStatus.SetUpAtFirstUse, removable = true, signInAvailable = true),
+                PhoneAgentRow("omp-acp", "Oh My Pi", PhoneAgentStatus.SetUpAtFirstUse, removable = true, signInAvailable = true),
+            )
+        val page = AgentsUi(phone = PhoneAgentsState(available = true, agents = rows, owner = ProfileId("o")))
+        var state by mutableStateOf(page)
+        setContent { Screen(state, actions) }
+        onAllNodesWithText("Installed. Set it up the first time you use it.").assertCountEquals(3)
+        onNodeWithText("Installed, but this app can't check its sign-in yet").assertDoesNotExist()
+        onNodeWithText("Ready").assertDoesNotExist()
+        onNode(hasContentDescription("Set up Goose") and hasClickAction()).performClick()
+        assertTrue("signin:goose" in actions.calls)
+        state = page.copy(sheetAgent = "omp-acp")
+        onNodeWithText("Set up Oh My Pi").assertExists()
+        onNodeWithText("Remove Oh My Pi").performClick()
+        assertTrue("remove:omp-acp" in actions.calls)
     }
 
     @Test

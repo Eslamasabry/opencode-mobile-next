@@ -176,6 +176,41 @@ class SignInTerminalPresenterTest {
             assertEquals(false, screen.state.value.accessibleMode)
         }
 
+    // Coordinator ruling 2026-11-13: an agent set up at first use (no read-only sign-in status) runs its own set-up in
+    // the terminal; when that ends it is marked set up and the person goes back. No account is read or claimed.
+    @Test
+    fun `B-AGENT-113 a set-up terminal ends by marking the agent set up and going back, reading no account`() =
+        loop.run {
+            val screen = presenter("goose")
+            loop.pump()
+            assertEquals(
+                SignInCommand("goose", listOf("configure"), home = "/home/oc/.oc-profiles/p1"),
+                (host.targets.single() as TerminalTarget.SignIn).command,
+            )
+            assertTrue(screen.state.value.firstUse)
+            assertFalse(screen.state.value.typesAuth)
+            host.terminals.single().eventsFlow.emit(TerminalEvent.Exited(1))
+            loop.pump()
+            assertEquals(listOf("p1/goose"), agents.setUp)
+            assertEquals(0, agents.confirms)
+            assertEquals(SignInStep.SetUpDone, screen.state.value.step)
+            assertEquals(1, lease.releases)
+        }
+
+    @Test
+    fun `B-AGENT-113 Qwen Code's set-up opens its own TUI and says to type auth`() =
+        loop.run {
+            val screen = presenter("qwen-tui")
+            loop.pump()
+            assertEquals("qwen", (host.targets.single() as TerminalTarget.SignIn).command.program)
+            assertTrue((host.targets.single() as TerminalTarget.SignIn).command.args.isEmpty())
+            assertTrue(screen.state.value.typesAuth)
+            screen.finish()
+            loop.pump()
+            assertEquals(listOf("p1/qwen-tui"), agents.setUp)
+            assertEquals(SignInStep.SetUpDone, screen.state.value.step)
+        }
+
     @Test
     fun `B-LINUX-096 after the sign-in exits the account is checked while protection holds, then released`() =
         loop.run {

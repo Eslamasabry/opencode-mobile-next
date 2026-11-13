@@ -18,6 +18,8 @@ import io.github.eslamasabry.oc.engine.agents.AgentId
 import io.github.eslamasabry.oc.engine.agents.catalog.AgentAvailability
 import io.github.eslamasabry.oc.engine.agents.catalog.AgentCatalog
 import io.github.eslamasabry.oc.engine.agents.catalog.AgentSignInMethod
+import io.github.eslamasabry.oc.engine.agents.firstuse.AgentFirstUse
+import io.github.eslamasabry.oc.engine.agents.firstuse.AgentSetUpStore
 import io.github.eslamasabry.oc.engine.agents.probe.AgentAuthScripts
 import io.github.eslamasabry.oc.engine.agents.probe.AuthScriptAction
 import io.github.eslamasabry.oc.engine.agents.signin.SignInCommandPolicy
@@ -193,6 +195,18 @@ class NativePhoneSignIn(
                 )
                     return SignInPlan.NotAvailable(descriptor.name)
                 val recipe = descriptor.recipe ?: return SignInPlan.NotAvailable(descriptor.name)
+                // Set up at first use (no read-only sign-in status exists): the agent's own set-up in the terminal,
+                // also for API-key agents (Qwen Code: its TUI, Goose: `goose configure`, omp: `omp login`).
+                if (
+                    AgentFirstUse.applies(descriptor) &&
+                        SignInCommandPolicy.allows(recipe.executable, recipe.signInArgs)
+                )
+                    return SignInPlan.Terminal(
+                        descriptor.name,
+                        usesClaudeAccount = false,
+                        firstUse = true,
+                        typesAuth = agent.id == "qwen",
+                    )
                 return when (descriptor.signInMethod) {
                     AgentSignInMethod.ApiKeyHost -> SignInPlan.ProviderKeyOnHost(descriptor.name)
                     AgentSignInMethod.None -> SignInPlan.NotAvailable(descriptor.name)
@@ -233,6 +247,14 @@ class NativePhoneSignIn(
                         }
                     }
                 return owns(owner) && (result as? Outcome.Ok)?.value?.get("state") == "signedIn"
+            }
+
+            override suspend fun markSetUp(owner: ProfileId, agent: AgentRef) {
+                if (!owns(owner)) return
+                val descriptor = catalog.byId(AgentId(agent.id)) ?: return
+                if (!AgentFirstUse.applies(descriptor)) return
+                AgentSetUpStore(KvAgentPrefs(stores.prefs, stores.lanes.forProfile(owner)))
+                    .markSetUp(owner, descriptor.id)
             }
 
             override fun read(transcript: String): SignInFound =
