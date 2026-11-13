@@ -123,6 +123,11 @@ public data class KitSurfaceInput(
      * must not be run through the Corners knob a second time.
      */
     val exactRadius: Dp? = null,
+    /**
+     * Each corner its own named shape ([KitCorners]), resolved per corner as [shape] is (Corners knob, sharp radius,
+     * pane boost). Overrides [shape]'s radius, [radius] and [exactRadius]; [shape] still names the part's kind.
+     */
+    val corners: KitCorners? = null,
 )
 
 private fun Argb.faded(a: Float): Argb = withAlpha(alpha / 255f * a)
@@ -160,9 +165,20 @@ public fun kitSurfaceLook(input: KitSurfaceInput): KitSurfaceLook {
         if (input.exactRadius != null) base
         else if (input.shape.isPane) StyleResolver.paneCorner(base, style.knobs.corners, style.spec.tokens.copy(sharpRadius = paneSharp))
         else StyleResolver.corner(base, style.knobs.corners, sharp)
-    val radii = if (sheet) Radii(r, r, 0f, 0f) else Radii.all(if (input.shape == KitShapeId.Square) 0f else r)
+    val radii =
+        input.corners?.let { c ->
+            fun one(id: KitShapeId): Float {
+                if (id == KitShapeId.Square) return 0f
+                val token = id.radiusDp()
+                val oneSharp = if (id == KitShapeId.Sheet) minOf(SHEET_SHARP_MAX_DP, sharp * 2f) else sharp
+                return if (id.isPane) StyleResolver.paneCorner(token, style.knobs.corners, style.spec.tokens.copy(sharpRadius = oneSharp))
+                else StyleResolver.corner(token, style.knobs.corners, sharp)
+            }
+            Radii(one(c.topStart), one(c.topEnd), one(c.bottomStart), one(c.bottomEnd))
+        }
+            ?: if (sheet) Radii(r, r, 0f, 0f) else Radii.all(if (input.shape == KitShapeId.Square) 0f else r)
     val shape =
-        if (named) {
+        if (named && input.corners == null) {
             input.shape.shape()
         } else {
             RoundedCornerShape(
@@ -177,7 +193,7 @@ public fun kitSurfaceLook(input: KitSurfaceInput): KitSurfaceLook {
             knobs = style.knobs,
             level = input.level,
             radii = radii,
-            circle = input.shape == KitShapeId.Circle,
+            circle = input.shape == KitShapeId.Circle && input.corners == null,
             color = input.color?.toArgb(),
             selected = input.selected,
             pressed = input.pressed,
@@ -216,7 +232,7 @@ public fun kitSurfaceLook(input: KitSurfaceInput): KitSurfaceLook {
     val frost = Modifier.kitSurfaceGlass(if (glass) decoration else null)
     // The plain look as a decoration, so Solid can fade to and from the other styles.
     val ownFill = input.ownFill?.let { if (input.faceAlpha >= 1f) it else it.copy(alpha = it.alpha * input.faceAlpha) }
-    val plain = SurfaceDecoration(radii = radii, circle = input.shape == KitShapeId.Circle, fill = ownFill?.toArgb())
+    val plain = SurfaceDecoration(radii = radii, circle = input.shape == KitShapeId.Circle && input.corners == null, fill = ownFill?.toArgb())
     val shown = rememberSurfaceFade(decoration, plain, style.style)
     val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
     if (shown == null) {
@@ -435,6 +451,9 @@ public fun kitShadowReach(role: SurfaceRole = SurfaceRole.Control): Dp {
 }
 
 private const val BLUR_TAIL = 1.5f
+
+/** A sheet's Sharp corner is at most this (KitShapes: twice the style's sharp radius, at most 4 dp). */
+private const val SHEET_SHARP_MAX_DP = 4f
 
 /**
  * Grows a clipping container by [room] above and below without changing the space it takes: the content is laid out

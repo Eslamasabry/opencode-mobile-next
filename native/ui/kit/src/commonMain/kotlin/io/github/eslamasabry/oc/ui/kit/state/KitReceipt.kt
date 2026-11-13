@@ -204,7 +204,8 @@ public fun KitReceipt(
     val hold = rememberHold(countdownMs, words, onHoldEnd)
     val undo = onUndo?.let { act -> { hold?.undone = true; act() } }
     val retryShown = ReceiptRules.retryShown(words, onRetry != null)
-    val undoShown = ReceiptRules.undoShown(words, undo != null, !undoClosed)
+    // A hold that has ended was sent: its Undo goes with it, so it can never promise what it cannot take back.
+    val undoShown = ReceiptRules.undoShown(words, undo != null, !undoClosed && hold?.fired != true)
     val hasActions = retryShown || undoShown
     val plain = listOfNotNull(receiptPlainWord(words, state, label, sendingLabel, automatic), (state as? KitReceiptState.Refused)?.reason?.trim()?.takeIf { words == ReceiptWords.RefusedReason }, atWords).joinToString(", ")
     val spoken = if (hold != null) stringResource(Res.string.kitReceiptCountdownSpoken, plain, Numbers.format(ReceiptRules.holdSeconds(hold.ms))) else plain
@@ -373,7 +374,7 @@ public fun kitReceiptSpan(
 private class ReceiptHold(val ms: Long) {
     val fill = Animatable(1f)
     var undone = false
-    var fired = false
+    var fired by mutableStateOf(false)
 }
 
 /**
