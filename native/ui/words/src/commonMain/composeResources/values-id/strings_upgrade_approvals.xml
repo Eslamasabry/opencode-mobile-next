@@ -25,4 +25,12 @@
     <string name="approvalChangeOf">Perubahan pada %1$s</string>
     <string name="approvalChangeMissing">Agen tidak menyebutkan apa yang akan ditulis.</string>
     <string name="approvalCopyChange">Salin perubahan</string>
+    <string name="approvalScopeAnyFileChange">perubahan file apa pun</string>
+    <string name="approvalScopeFileChangesMatching">perubahan apa pun pada file yang cocok dengan %1$s</string>
+    <string name="approvalScopeCommandFamily">%1$s dengan argumen apa pun</string>
+    <string name="approvalScopeEverything">setiap permintaan seperti ini</string>
+    <string name="approvalScopeMatching">permintaan apa pun yang cocok dengan %1$s</string>
+    <string name="approvalAlwaysCoversWords">Selalu izinkan juga akan mencakup %1$s.</string>
+    <string name="approvalAlwaysPattern">Pola Selalu izinkan</string>
+    <string name="approvalNoteDenyOnly">Hanya dikirim jika Anda memilih Tolak.</string>
 </resources>

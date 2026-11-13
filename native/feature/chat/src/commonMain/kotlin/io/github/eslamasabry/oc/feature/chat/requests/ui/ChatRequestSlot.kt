@@ -74,7 +74,7 @@ import io.github.eslamasabry.oc.ui.kitchat.request.KitQuestionCard
 import io.github.eslamasabry.oc.ui.kitchat.request.KitRequestTarget
 import io.github.eslamasabry.oc.ui.kitchat.request.KitRequestWaitingCaption
 import io.github.eslamasabry.oc.ui.words.res.Res
-import io.github.eslamasabry.oc.ui.words.res.approvalAllow
+import io.github.eslamasabry.oc.ui.words.res.kitRequestAllowOnce
 import io.github.eslamasabry.oc.ui.words.res.approvalCopied
 import io.github.eslamasabry.oc.ui.words.res.approvalCopyAsk
 import io.github.eslamasabry.oc.ui.words.res.approvalDeny
@@ -97,6 +97,18 @@ import io.github.eslamasabry.oc.ui.words.res.kitRequestReplyEmptyReason
 import io.github.eslamasabry.oc.ui.words.res.kitRequestSend
 import io.github.eslamasabry.oc.feature.chat.requests.presentation.PermissionDetails
 import io.github.eslamasabry.oc.feature.chat.requests.presentation.PermissionChangeUi
+import io.github.eslamasabry.oc.feature.chat.requests.presentation.AlwaysScope
+import io.github.eslamasabry.oc.feature.chat.requests.presentation.AlwaysScopes
+import io.github.eslamasabry.oc.ui.words.res.approvalAlwaysCoversWords
+import io.github.eslamasabry.oc.ui.words.res.approvalAlwaysPattern
+import io.github.eslamasabry.oc.ui.words.res.approvalNoteDenyOnly
+import io.github.eslamasabry.oc.ui.words.res.approvalScopeAnyFileChange
+import io.github.eslamasabry.oc.ui.words.res.approvalScopeCommandFamily
+import io.github.eslamasabry.oc.ui.words.res.approvalScopeEverything
+import io.github.eslamasabry.oc.ui.words.res.approvalScopeFileChangesMatching
+import io.github.eslamasabry.oc.ui.words.res.approvalScopeMatching
+import io.github.eslamasabry.oc.ui.words.res.chatRequestAlwaysAnyCommandWhat
+import io.github.eslamasabry.oc.ui.words.res.kitCodeCopyCommand
 import io.github.eslamasabry.oc.engine.requests.ask.AskView
 import io.github.eslamasabry.oc.ui.kitchat.code.CodeLanguage
 import io.github.eslamasabry.oc.ui.kitchat.diff.KitDiffPreview
@@ -123,7 +135,6 @@ import io.github.eslamasabry.oc.ui.words.res.chatRequestDetailRunsIn
 import io.github.eslamasabry.oc.ui.words.res.chatRequestDetailTool
 import io.github.eslamasabry.oc.ui.words.res.chatRequestReadFrom
 import io.github.eslamasabry.oc.ui.words.res.chatRequestReadLines
-import io.github.eslamasabry.oc.ui.words.res.chatUiAlwaysAllowWouldAlsoCover
 import io.github.eslamasabry.oc.ui.words.res.chatUiTellTheAgentWhyOrWhatTo
 import io.github.eslamasabry.oc.ui.words.res.kitDetails
 import org.jetbrains.compose.resources.pluralStringResource
@@ -193,6 +204,8 @@ public fun ChatRequestSlot(
                 val request = it.captured?.request
                 val patterns = request?.let { ask -> ask.always.ifEmpty { ask.patterns }.joinToString(", ") }
                 val mask = rememberKitMask()
+                // Review 2026-11-13 #3: the scope in words ("any file change"), never a bare pattern.
+                val scope = request?.let(AlwaysScopes::of)?.let { s -> scopeWords(s, mask) }
                 KitConfirmSpec(
                     title = if (it.invitation) stringResource(Res.string.consentAlwaysAllowTitle)
                         else alwaysConfirmTitle(it.grant, request?.patterns?.firstOrNull()?.let(mask)),
@@ -201,7 +214,8 @@ public fun ChatRequestSlot(
                     // S30 story 1 (Flutter `_confirmAlways`): the body always says what the grant covers and where.
                     body = stringResource(
                         Res.string.chatRequestAlwaysScope,
-                        patterns?.takeIf { scope -> scope.isNotEmpty() }?.let { scope -> KitBidi.ltr(mask(scope)) }
+                        scope
+                            ?: patterns?.takeIf { p -> p.isNotEmpty() }?.let { p -> KitBidi.ltr(mask(p)) }
                             ?: stringResource(Res.string.chatUiAllMatchingRequests),
                         stringResource(if (it.invitation) Res.string.chatUiInThisChat else Res.string.chatRequestAlwaysInProject),
                     ),
@@ -364,7 +378,9 @@ private fun PermissionWaiting(
                     else null,
                 )
             },
-        allowOnceLabel = stringResource(Res.string.approvalAllow),
+        // Review 2026-11-13 #3: one pair everywhere a request is answered: "Allow once" says how long, "Deny" matches
+        // the transcript's "You declined this".
+        allowOnceLabel = stringResource(Res.string.kitRequestAllowOnce),
         // S30 story 1: Flutter's words (permission_ask.dart): "Always allow npm install", "Always allow commands like
         // this", "Always allow edits", else "Always allow requests like this". The confirm names the exact patterns.
         alwaysLabel = if (always) alwaysLabel(card.ask.always) else null,
@@ -431,7 +447,7 @@ private fun PermissionDetailsSheet(
         // Deny | Allow, the card's own arrangement.
         answerPair = true,
         primary = card?.let {
-            KitAction(stringResource(Res.string.approvalAllow), {
+            KitAction(stringResource(Res.string.kitRequestAllowOnce), {
                 onClose()
                 actions.performReviewed(it, ReviewedRequestAction.AllowOnce)
             })
@@ -464,12 +480,7 @@ private fun PermissionDetailsSheet(
             val change = card?.change
             val shownChange = change?.takeIf { it.first != null }
             if (full != null && shownChange == null)
-                KitCodeBlock(
-                    mask(full),
-                    if (details.command) KitCodeKind.Command else KitCodeKind.Output,
-                    wrap = true,
-                    showWrapToggle = false,
-                )
+                CommandOrTarget(mask(full), details.command)
             if (shownChange != null) WholeChange(shownChange, mask)
             else if (change == null) details.diff?.let { diff -> KitCodeBlock(mask(diff), KitCodeKind.Code, wrap = true, showWrapToggle = false) }
             if (change?.missing == true)
@@ -478,11 +489,19 @@ private fun PermissionDetailsSheet(
                     Modifier.testTag("chat-permission-change-missing"),
                     role = TypeRole.Secondary,
                 )
-            val values = details.facts.map { fact -> permissionFactValue(fact, redactor) }
+            // Review 2026-11-13 #3: what Always covers is said only where Always is offered, in words, with the raw
+            // pattern under it; the facts are read, not copied (the one copy is the command's or the change's own).
+            val offersAlways = card?.canAlwaysAllow == true && !card.invitation
+            val values =
+                details.facts
+                    .filter { fact -> fact !is PermissionFact.AlsoCovers || offersAlways }
+                    .map { fact -> permissionFactValue(fact, redactor).copy(copyable = false) }
+            val scope = request?.takeIf { offersAlways }?.let(AlwaysScopes::of)?.let { scopeWords(it, mask) }
             KitDetailsFold(
                 label = stringResource(Res.string.kitDetails),
                 copyLabel = stringResource(Res.string.approvalCopyAsk),
                 values = values,
+                notes = listOfNotNull(scope?.let { stringResource(Res.string.approvalAlwaysCoversWords, it) }),
                 initiallyExpanded = true,
             )
             KitField(
@@ -490,10 +509,49 @@ private fun PermissionDetailsSheet(
                 label = stringResource(Res.string.chatUiTellTheAgentWhyOrWhatTo),
                 modifier = Modifier.testTag("permission-reject-message"),
                 kind = KitFieldKind.Multiline,
+                // The note travels with Deny only; Allow once never sends it.
+                helper = stringResource(Res.string.approvalNoteDenyOnly),
             )
         }
     }
 }
+
+/** The command (with its one "Copy command") or the target a non-change ask names. */
+@Composable
+private fun CommandOrTarget(text: String, command: Boolean) {
+    if (!command) {
+        KitCodeBlock(text, KitCodeKind.Output, wrap = true, showWrapToggle = false)
+        return
+    }
+    val copy =
+        rememberKitRedactedCopyAction(
+            stringResource(Res.string.kitCodeCopyCommand),
+            stringResource(Res.string.approvalCopied),
+            { text },
+        )
+    KitCodeBlock(
+        text,
+        KitCodeKind.Command,
+        wrap = true,
+        showWrapToggle = false,
+        copyLabel = copy.label,
+        onCopy = { copy.onClick?.invoke() },
+    )
+}
+
+/** What an Always answer covers, in words: "any file change", "npm install with any arguments", "every command". */
+@Composable
+private fun scopeWords(scope: AlwaysScope, mask: (String) -> String): String =
+    when (scope) {
+        AlwaysScope.AnyFileChange -> stringResource(Res.string.approvalScopeAnyFileChange)
+        is AlwaysScope.FileChangesMatching ->
+            stringResource(Res.string.approvalScopeFileChangesMatching, KitBidi.ltr(mask(scope.patterns)))
+        AlwaysScope.AnyCommand -> stringResource(Res.string.chatRequestAlwaysAnyCommandWhat)
+        is AlwaysScope.CommandFamily -> stringResource(Res.string.approvalScopeCommandFamily, KitBidi.ltr(mask(scope.command)))
+        is AlwaysScope.Exactly -> KitBidi.ltr(mask(scope.text))
+        AlwaysScope.Everything -> stringResource(Res.string.approvalScopeEverything)
+        is AlwaysScope.Matching -> stringResource(Res.string.approvalScopeMatching, KitBidi.ltr(mask(scope.patterns)))
+    }
 
 /** Every file's change in full (masked), coloured as a diff, named by its path; each with one copy of the change. */
 @Composable
@@ -554,7 +612,7 @@ private fun permissionFactValue(fact: PermissionFact, redactor: Redactor): KitTe
             )
         is PermissionFact.AlsoCovers ->
             KitTechnicalValue(
-                stringResource(Res.string.chatUiAlwaysAllowWouldAlsoCover),
+                stringResource(Res.string.approvalAlwaysPattern),
                 redactor.details(fact.lines.joinToString("\n")),
             )
     }

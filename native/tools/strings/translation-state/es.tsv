@@ -1095,6 +1095,8 @@ approvalAllow	56f76c0729
 approvalAllowedWhat	1de049a410
 approvalAlwaysAllowExact	eb68e821c1
 approvalAlwaysAllowedWhat	074188b571
+approvalAlwaysCoversWords	1581079ef3
+approvalAlwaysPattern	67ddcd2f02
 approvalChangeMissing	3a95b754d2
 approvalChangeOf	3ae1bae5cd
 approvalCopied	f057bce5d6
@@ -1119,11 +1121,17 @@ approvalModeNowAsk	7d8b2152b6
 approvalModeNowAuto	91140471eb
 approvalModeNowEverything	fb340266fc
 approvalModeSettings	fd4e14df25
+approvalNoteDenyOnly	f65701f371
 approvalReplyBack	357885fe4b
 approvalReplyEmpty	f456ac58fd
 approvalReplyJustDeny	01f8da0e99
 approvalReplyLabel	9fa9cb48d3
 approvalReplySend	7a77df8050
+approvalScopeAnyFileChange	ad7ba50dee
+approvalScopeCommandFamily	e525da686f
+approvalScopeEverything	9e2f658191
+approvalScopeFileChangesMatching	e9a1f280bf
+approvalScopeMatching	0f0334bc3b
 approvalToolEdit	e814450558
 approvalToolLabel	582902b9a6
 approvalToolOther	386fdb4738
@@ -7933,7 +7941,7 @@ notifications:notify_phone_server_channel	6eb774b087
 notifications:notify_phone_server_description	3902e0e8e4
 notifications:notify_public_finished	30ebdd72b9
 notifications:notify_public_needs_you	279427a43e
-notifications:notify_reject	f9b848c392
+notifications:notify_reject	56030cb830
 notifications:notify_reply_watch_title	65f7738527
 notifications:notify_schedule_channel	9674f9a737
 notifications:notify_setup_channel	3aa4bc5d19

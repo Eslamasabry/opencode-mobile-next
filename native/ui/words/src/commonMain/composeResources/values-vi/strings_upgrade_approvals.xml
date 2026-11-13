@@ -25,4 +25,12 @@
     <string name="approvalChangeOf">Thay đổi trong %1$s</string>
     <string name="approvalChangeMissing">Tác nhân không cho biết sẽ ghi gì.</string>
     <string name="approvalCopyChange">Sao chép thay đổi</string>
+    <string name="approvalScopeAnyFileChange">mọi thay đổi tệp</string>
+    <string name="approvalScopeFileChangesMatching">mọi thay đổi ở tệp khớp với %1$s</string>
+    <string name="approvalScopeCommandFamily">%1$s với bất kỳ đối số nào</string>
+    <string name="approvalScopeEverything">mọi yêu cầu như thế này</string>
+    <string name="approvalScopeMatching">mọi yêu cầu khớp với %1$s</string>
+    <string name="approvalAlwaysCoversWords">Luôn cho phép cũng sẽ áp dụng cho %1$s.</string>
+    <string name="approvalAlwaysPattern">Mẫu Luôn cho phép</string>
+    <string name="approvalNoteDenyOnly">Chỉ được gửi nếu bạn chọn Từ chối.</string>
 </resources>

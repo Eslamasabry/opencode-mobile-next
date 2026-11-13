@@ -24,4 +24,12 @@
     <string name="approvalChangeOf">The change to %1$s</string>
     <string name="approvalChangeMissing">The agent did not say what it will write.</string>
     <string name="approvalCopyChange">Copy the change</string>
+    <string name="approvalScopeAnyFileChange">any file change</string>
+    <string name="approvalScopeFileChangesMatching">any file change matching %1$s</string>
+    <string name="approvalScopeCommandFamily">%1$s with any arguments</string>
+    <string name="approvalScopeEverything">every request like this</string>
+    <string name="approvalScopeMatching">any request matching %1$s</string>
+    <string name="approvalAlwaysCoversWords">Always allow would also cover %1$s.</string>
+    <string name="approvalAlwaysPattern">Always allow pattern</string>
+    <string name="approvalNoteDenyOnly">Sent only if you choose Deny.</string>
 </resources>

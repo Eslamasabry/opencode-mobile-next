@@ -24,4 +24,12 @@
     <string name="approvalChangeOf">التغيير على %1$s</string>
     <string name="approvalChangeMissing">لم يذكر الوكيل ما سيكتبه.</string>
     <string name="approvalCopyChange">نسخ التغيير</string>
+    <string name="approvalScopeAnyFileChange">أي تغيير في الملفات</string>
+    <string name="approvalScopeFileChangesMatching">أي تغيير في ملف يطابق %1$s</string>
+    <string name="approvalScopeCommandFamily">%1$s مع أي وسائط</string>
+    <string name="approvalScopeEverything">كل طلب مثل هذا</string>
+    <string name="approvalScopeMatching">أي طلب يطابق %1$s</string>
+    <string name="approvalAlwaysCoversWords">سيشمل «السماح دائمًا» أيضًا %1$s.</string>
+    <string name="approvalAlwaysPattern">نمط «السماح دائمًا»</string>
+    <string name="approvalNoteDenyOnly">تُرسل فقط إذا اخترت «رفض».</string>
 </resources>

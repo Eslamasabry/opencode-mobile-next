@@ -557,7 +557,7 @@ notifications:notify_phone_server_channel	6eb774b087
 notifications:notify_phone_server_description	3902e0e8e4
 notifications:notify_public_finished	30ebdd72b9
 notifications:notify_public_needs_you	279427a43e
-notifications:notify_reject	f9b848c392
+notifications:notify_reject	56030cb830
 notifications:notify_reply_watch_title	65f7738527
 notifications:notify_schedule_channel	9674f9a737
 notifications:notify_setup_channel	3aa4bc5d19

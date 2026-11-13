@@ -25,4 +25,12 @@
     <string name="approvalChangeOf">Изменение в %1$s</string>
     <string name="approvalChangeMissing">Агент не сообщил, что именно запишет.</string>
     <string name="approvalCopyChange">Копировать изменение</string>
+    <string name="approvalScopeAnyFileChange">любое изменение файлов</string>
+    <string name="approvalScopeFileChangesMatching">любое изменение файлов, подходящих под %1$s</string>
+    <string name="approvalScopeCommandFamily">%1$s с любыми аргументами</string>
+    <string name="approvalScopeEverything">любой такой запрос</string>
+    <string name="approvalScopeMatching">любой запрос, подходящий под %1$s</string>
+    <string name="approvalAlwaysCoversWords">«Всегда разрешать» также охватит: %1$s.</string>
+    <string name="approvalAlwaysPattern">Шаблон «Всегда разрешать»</string>
+    <string name="approvalNoteDenyOnly">Отправляется, только если вы выберете «Запретить».</string>
 </resources>

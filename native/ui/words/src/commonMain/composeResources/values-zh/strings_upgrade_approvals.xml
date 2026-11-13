@@ -25,4 +25,12 @@
     <string name="approvalChangeOf">对 %1$s 的更改</string>
     <string name="approvalChangeMissing">智能体没有说明要写入什么。</string>
     <string name="approvalCopyChange">复制更改</string>
+    <string name="approvalScopeAnyFileChange">任何文件更改</string>
+    <string name="approvalScopeFileChangesMatching">任何匹配 %1$s 的文件更改</string>
+    <string name="approvalScopeCommandFamily">%1$s（任意参数）</string>
+    <string name="approvalScopeEverything">所有此类请求</string>
+    <string name="approvalScopeMatching">任何匹配 %1$s 的请求</string>
+    <string name="approvalAlwaysCoversWords">“始终允许”还会涵盖%1$s。</string>
+    <string name="approvalAlwaysPattern">“始终允许”的模式</string>
+    <string name="approvalNoteDenyOnly">仅在你选择“拒绝”时发送。</string>
 </resources>

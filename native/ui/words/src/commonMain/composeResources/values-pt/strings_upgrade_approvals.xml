@@ -25,4 +25,12 @@
     <string name="approvalChangeOf">A alteração em %1$s</string>
     <string name="approvalChangeMissing">O agente não disse o que vai escrever.</string>
     <string name="approvalCopyChange">Copiar a alteração</string>
+    <string name="approvalScopeAnyFileChange">qualquer alteração de arquivo</string>
+    <string name="approvalScopeFileChangesMatching">qualquer alteração em arquivos que correspondam a %1$s</string>
+    <string name="approvalScopeCommandFamily">%1$s com quaisquer argumentos</string>
+    <string name="approvalScopeEverything">toda solicitação como esta</string>
+    <string name="approvalScopeMatching">qualquer solicitação que corresponda a %1$s</string>
+    <string name="approvalAlwaysCoversWords">Sempre permitir também cobriria %1$s.</string>
+    <string name="approvalAlwaysPattern">Padrão de Sempre permitir</string>
+    <string name="approvalNoteDenyOnly">Só é enviado se você escolher Negar.</string>
 </resources>
