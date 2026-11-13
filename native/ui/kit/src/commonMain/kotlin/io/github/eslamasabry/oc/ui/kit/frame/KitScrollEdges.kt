@@ -55,7 +55,7 @@ internal fun wholePx(y: Float): Float = kotlin.math.round(y)
 /**
  * Fades this content out at its scroll edges. Top: cleared above [clearAbove] px, fading in over [topReach] below it.
  * Bottom: whole down to [fadeFromBottom] px above the bottom edge, fading out over [bottomReach] from there, cleared
- * below. A null edge is left alone; [strength] (0–1, read while drawing) eases the top edge in and out. The content
+ * below. A null edge is left alone; [strength] (0–1, read while drawing) eases the top edge in and out, [bottomStrength] the bottom one. The content
  * is drawn in its own layer so the fade clears it alone.
  */
 internal fun Modifier.kitScrollEdges(
@@ -68,6 +68,8 @@ internal fun Modifier.kitScrollEdges(
     topReachPx: (() -> Float)? = null,
     /** The bottom fade's length in px, read while drawing; overrides [bottomReach]. */
     bottomReachPx: (() -> Float)? = null,
+    /** How much of the bottom fade shows, 0-1, read while drawing (0 leaves the bottom whole). */
+    bottomStrength: () -> Float = { 1f },
 ): Modifier {
     if (clearAbove == null && fadeFromBottom == null) return this
     return graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
@@ -92,14 +94,15 @@ internal fun Modifier.kitScrollEdges(
                         if (r > 0f) drawRect(top.of(1f, 0f, k, t, t + r), Offset(0f, t), Size(w, r), blendMode = BlendMode.DstOut)
                     }
                 }
-                if (fadeFromBottom != null) {
+                val kb = if (fadeFromBottom != null) bottomStrength().coerceIn(0f, 1f) else 0f
+                if (fadeFromBottom != null && kb > 0f) {
                     val from = (size.height - fadeFromBottom()).coerceIn(0f, size.height)
                     val y0 = wholePx(from)
                     val r = wholePx(from + (bottomReachPx?.invoke() ?: bottomReach.toPx())) - y0
-                    if (r > 0f) drawRect(bottom.of(0f, 1f, 1f, y0, y0 + r), Offset(0f, y0), Size(w, r), blendMode = BlendMode.DstOut)
+                    if (r > 0f) drawRect(bottom.of(0f, 1f, kb, y0, y0 + r), Offset(0f, y0), Size(w, r), blendMode = BlendMode.DstOut)
                     val below = y0 + r
                     if (below < size.height)
-                        drawRect(Color.Black, Offset(0f, below), Size(w, size.height - below), blendMode = BlendMode.DstOut)
+                        drawRect(Color.Black.copy(alpha = kb), Offset(0f, below), Size(w, size.height - below), blendMode = BlendMode.DstOut)
                 }
             }
         }

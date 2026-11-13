@@ -66,6 +66,37 @@ class ScrollEdgeWholePixelTest {
         }
     }
 
+    @Test
+    fun `a bottom fade at a fractional height and strength leaves no brighter row towards the end`() {
+        runDesktopComposeUiTest(W, H) {
+            setContent {
+                CompositionLocalProvider(LocalDensity provides Density(2.625f)) {
+                    Box(Modifier.size(W.dp, H.dp).background(Color.Black).testTag("scene")) {
+                        Box(
+                            Modifier.fillMaxSize()
+                                .kitScrollEdges(
+                                    clearAbove = null,
+                                    topReach = 0.dp,
+                                    fadeFromBottom = { 42.4f },
+                                    bottomReach = 0.dp,
+                                    bottomReachPx = { 42.4f },
+                                    bottomStrength = { .6f },
+                                )
+                                .background(Color.White)
+                        )
+                    }
+                }
+            }
+            val px = onNodeWithTag("scene").captureToImage().toPixelMap()
+            val column = List(px.height) { px[px.width / 2, it].red }
+            assertTrue(column.first() > WHOLE, "the content is whole at the top")
+            assertTrue(column.last() > .3f && column.last() < .5f, "a partial strength leaves the rest (${column.last()})")
+            for (y in 1 until px.height) {
+                assertTrue(column[y] <= column[y - 1] + STEP, "row $y (${column[y]}) is brighter than row ${y - 1} (${column[y - 1]})")
+            }
+        }
+    }
+
     private companion object {
         const val W = 120
         const val H = 160

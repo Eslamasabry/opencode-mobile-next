@@ -6,14 +6,11 @@ import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
@@ -33,6 +30,8 @@ import io.github.eslamasabry.oc.ui.kit.capability.KitCapabilityVariant
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
 import io.github.eslamasabry.oc.ui.kit.frame.KitFloatingBar
+import io.github.eslamasabry.oc.ui.kit.frame.KitPinnedFootBody
+import androidx.compose.foundation.layout.PaddingValues
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenWidth
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
@@ -387,23 +386,19 @@ internal fun SettingsFrame(
         // records the page for it. Everywhere else the bar is pinned as before.
         floatingBar = KitFloatingBar(),
     ) {
-        Column(Modifier.fillMaxSize()) {
-            Column(
-                Modifier.fillMaxWidth()
-                    .weight(1f)
-                    .verticalScroll(pageScroll)
-                    .padding(top = Space.S2.dp, bottom = Space.S6.dp),
-                verticalArrangement =
-                    Arrangement.spacedBy(
-                        if (state.page == SettingsPage.Hub || state.page == SettingsPage.Appearance)
-                            0.dp
-                        else Space.S2.dp
-                    ),
-            ) {
-                state.note?.let { NoteLine(it, actions) }
-                content()
-            }
-            footer?.invoke()
+        KitPinnedFootBody(
+            scroll = pageScroll,
+            foot = footer,
+            contentPadding = PaddingValues(top = Space.S2.dp, bottom = Space.S6.dp),
+            verticalArrangement =
+                Arrangement.spacedBy(
+                    if (state.page == SettingsPage.Hub || state.page == SettingsPage.Appearance)
+                        0.dp
+                    else Space.S2.dp
+                ),
+        ) {
+            state.note?.let { NoteLine(it, actions) }
+            content()
         }
     }
 }
