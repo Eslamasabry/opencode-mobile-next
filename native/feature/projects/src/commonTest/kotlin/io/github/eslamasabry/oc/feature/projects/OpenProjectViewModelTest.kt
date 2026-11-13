@@ -252,6 +252,18 @@ class OpenProjectViewModelTest {
     }
 
     @Test
+    fun `B-106 Open on a plain folder still being read opens it at once instead of doing nothing`() {
+        val gateway = Located().apply { hold = CompletableDeferred() }
+        val nav = Nav()
+        val vm = OpenProjectViewModel(nav, Servers(listOf(computer(gateway, Ops(listOf(project("/srv/app", true, 1)))))), SessionOpenedFolders())
+        vm.chooseServer(pcId)
+        vm.enterFolder("/srv/app")
+        assertTrue(vm.state.value.loading)
+        vm.openShown()
+        assertEquals(listOf<AppRoute>(ProjectsRoute.Project(pcId, "/srv/app")), nav.routes)
+    }
+
+    @Test
     fun `B-182 on this phone the project space is listed from its files, projects and folders together`() {
         val phone = Phone(mapOf("/root/projects" to listOf("app", "scratch"), "/root/projects/app" to listOf("lib")))
         val ops = Ops(listOf(project("/root/projects/app", git = true, at = 1)))

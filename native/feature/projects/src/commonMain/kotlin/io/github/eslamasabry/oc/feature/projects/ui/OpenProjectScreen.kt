@@ -115,7 +115,6 @@ public fun OpenProjectScreen(state: OpenProjectUi, actions: OpenProjectActions) 
                                 stringResource(Res.string.folderBrowserOpen, folderName),
                                 actions::openShown,
                                 icon = KitIcons.folderOpen,
-                                working = state.loading,
                             )
                     )
                 }
