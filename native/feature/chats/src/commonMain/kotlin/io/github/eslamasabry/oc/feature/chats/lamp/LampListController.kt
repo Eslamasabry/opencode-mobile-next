@@ -7,8 +7,6 @@ import io.github.eslamasabry.oc.feature.chats.presentation.HomePermissionReply
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import kotlin.time.Clock
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -39,7 +37,7 @@ public class LampListController(
     private val editing = MutableStateFlow(false)
     private val notice = MutableStateFlow<LampNotice?>(null)
     private val foldTick = MutableStateFlow(0)
-    private var noticeJob: Job? = null
+    private var noticeJob: kotlinx.coroutines.Job? = null
     private var latest: DockListModel = list.value
 
     public val ui: StateFlow<LampUi> =
@@ -197,7 +195,7 @@ public class LampListController(
     private fun tell(told: LampNotice, forMs: Long? = null) {
         noticeJob?.cancel()
         notice.value = told
-        noticeJob = forMs?.let { ms -> scope.launch { delay(ms); notice.value = null } }
+        noticeJob = forMs?.let { ms -> scope.launch { kotlinx.coroutines.delay(ms); notice.value = null } }
     }
 
     private fun clearNotice() {

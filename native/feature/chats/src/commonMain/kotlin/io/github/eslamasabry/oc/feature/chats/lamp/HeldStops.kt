@@ -4,8 +4,6 @@ import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeStop
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -30,7 +28,7 @@ public class HeldStops(
     private val stoppedMs: Long = STOPPED_SHOWN_MS,
 ) {
     private val state = MutableStateFlow<Map<ConversationRef, StopPhase>>(emptyMap())
-    private val jobs = HashMap<ConversationRef, Job>()
+    private val jobs = HashMap<ConversationRef, kotlinx.coroutines.Job>()
     private val failures = MutableSharedFlow<ConversationRef>(extraBufferCapacity = 8)
 
     public val phases: StateFlow<Map<ConversationRef, StopPhase>> = state.asStateFlow()
@@ -44,7 +42,7 @@ public class HeldStops(
         state.update { it + (ref to StopPhase.Holding) }
         jobs[ref] =
             scope.launch {
-                delay(holdMs)
+                kotlinx.coroutines.delay(holdMs)
                 send(ref)
             }
         return true
@@ -67,7 +65,7 @@ public class HeldStops(
             return
         }
         state.update { it + (ref to StopPhase.Stopped) }
-        delay(stoppedMs)
+        kotlinx.coroutines.delay(stoppedMs)
         state.update { it - ref }
         jobs.remove(ref)
     }

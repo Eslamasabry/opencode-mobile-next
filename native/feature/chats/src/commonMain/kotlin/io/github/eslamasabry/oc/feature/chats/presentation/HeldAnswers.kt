@@ -2,8 +2,6 @@ package io.github.eslamasabry.oc.feature.chats.presentation
 
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -23,7 +21,7 @@ public class HeldAnswers(
 ) {
     private val heldState = MutableStateFlow<Map<String, HomeHeldReply>>(emptyMap())
     private val rows = HashMap<String, Pair<ConversationRef, HomePermissionReply>>()
-    private val jobs = HashMap<String, Job>()
+    private val jobs = HashMap<String, kotlinx.coroutines.Job>()
 
     /** The replies waiting out the window, by request id, as the rows word them. */
     public val held: StateFlow<Map<String, HomeHeldReply>> = heldState.asStateFlow()
@@ -44,7 +42,7 @@ public class HeldAnswers(
         }
         jobs[requestId] =
             scope.launch {
-                delay(holdMs)
+                kotlinx.coroutines.delay(holdMs)
                 release(requestId)
             }
         return true
