@@ -3,12 +3,12 @@ package io.github.eslamasabry.oc.feature.updates.ui
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
+import io.github.eslamasabry.oc.engine.updates.UPDATED_NOTICE_HOLD_MS
+import io.github.eslamasabry.oc.engine.updates.holdUpdatedNotice
 import io.github.eslamasabry.oc.feature.updates.presentation.NoticeUi
 import io.github.eslamasabry.oc.feature.updates.presentation.OfferUi
 import io.github.eslamasabry.oc.feature.updates.presentation.UpdateNoticeActions
-import io.github.eslamasabry.oc.feature.updates.presentation.UPDATED_NOTICE_HOLD_MS
 import io.github.eslamasabry.oc.feature.updates.presentation.UpdatePromptActions
-import io.github.eslamasabry.oc.feature.updates.presentation.dismissAfterHold
 import io.github.eslamasabry.oc.ui.design.color.StatusTone
 import io.github.eslamasabry.oc.ui.kit.KitAction
 import io.github.eslamasabry.oc.ui.kit.KitText
@@ -53,7 +53,8 @@ public fun updateStatus(notice: NoticeUi, actions: UpdateNoticeActions): KitStat
     // Said once on the visit after the update, never left standing on every screen (B-217, B-241's lesson).
     if (notice is NoticeUi.Updated) {
         LaunchedEffect(notice.version) {
-            actions.dismissAfterHold()
+            holdUpdatedNotice()
+            actions.onNotNow()
         }
     }
     return when (notice) {
