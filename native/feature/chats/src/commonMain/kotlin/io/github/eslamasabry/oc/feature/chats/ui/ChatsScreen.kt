@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.chats.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.kitScreenChromePadding
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import io.github.eslamasabry.oc.ui.design.layout.Layout
 import androidx.compose.foundation.layout.widthIn
@@ -330,8 +331,9 @@ public fun ChatsScreen(
             state = list,
             modifier = Modifier.kitGlassSource(listGlass),
             // The calm empty page fills the room and keeps its own end space, so it never scrolls by that much.
-            // The foot bar is the frame's own block under the list: the list ends above it.
-            contentPadding = PaddingValues(bottom = if ((state.phase == ChatsPhase.Empty || state.phase == ChatsPhase.NotRead || state.phase == ChatsPhase.NoMatch) && state.home.opening == null) 0.dp else Space.S4.dp),
+            // The foot bar is the frame's own block under the list; under Glass the list runs on under its pane and the
+            // frame's chrome room keeps the last row above it at rest.
+            contentPadding = PaddingValues(bottom = kitScreenChromePadding().calculateBottomPadding() + if ((state.phase == ChatsPhase.Empty || state.phase == ChatsPhase.NotRead || state.phase == ChatsPhase.NoMatch) && state.home.opening == null) 0.dp else Space.S4.dp),
         ) {
             // The saved rows draw as the normal list (the view model puts them in the feed); only a failure adds its card.
             state.home.opening?.takeIf { it.phase == ChatsOpeningPhase.Failed }?.let { opening ->

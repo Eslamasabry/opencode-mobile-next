@@ -94,6 +94,20 @@ class KitFloatingBarPinnedBelowTest {
     }
 
     @Test
+    fun `pinned second row - under Soft, Brutal and Paper a page's tab row stays under the bar while the body scrolls`() {
+        for (style in listOf(Style.Soft, Style.Brutal, Style.Paper)) {
+            val r = rowBefore(style, FakeKitPlatform(), pinned = true)
+            assertTrue(stays(r), "$style: the tab row moved or left: at rest ${r.first}, scrolled ${r.second}")
+        }
+    }
+
+    @Test
+    fun `pinned second row - under Glass without the lens a page's tab row stays under the bar while the body scrolls`() {
+        val r = rowBefore(Style.Glass, FakeKitPlatform(frost = true, liquidGlass = false), pinned = true)
+        assertTrue(stays(r), "the tab row moved or left: at rest ${r.first}, scrolled ${r.second}")
+    }
+
+    @Test
     fun `pinned second row - by default under Solid the row scrolls away with the page, as the home's chips do`() {
         val r = rowBefore(Style.Solid, FakeKitPlatform(), pinned = false)
         assertTrue(r.first != null, "the row is laid out at rest")

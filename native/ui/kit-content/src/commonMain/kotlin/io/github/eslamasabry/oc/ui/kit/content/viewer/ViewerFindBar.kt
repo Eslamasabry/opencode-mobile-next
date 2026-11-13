@@ -56,6 +56,8 @@ internal fun ViewerFindBar(
                 onSubmit = { onStep(1) },
                 // Find takes focus as it opens, so the keyboard comes up with it.
                 autoFocus = true,
+                // One close control on the bar: Close find (which also clears) is its only X.
+                clearable = false,
             )
             Spacer(Modifier.width(Space.S1.dp))
             // Up and down: never mirrored.

@@ -19,7 +19,6 @@ import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
@@ -93,6 +92,9 @@ import androidx.compose.ui.zIndex
 import io.github.eslamasabry.oc.ui.kit.live.KitLiveBackground
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
 import io.github.eslamasabry.oc.ui.kit.modal.LocalKitSheetHost
+import io.github.eslamasabry.oc.ui.kit.modal.KitToastHost
+import io.github.eslamasabry.oc.ui.kit.modal.KitToastState
+import io.github.eslamasabry.oc.ui.kit.modal.LocalKitToasts
 import io.github.eslamasabry.oc.ui.kit.state.KitLoadingBar
 import io.github.eslamasabry.oc.ui.kit.status.KitStatus
 import io.github.eslamasabry.oc.ui.kit.status.KitStatusContribution
@@ -313,8 +315,10 @@ public fun KitScreen(
     // focus from composer whenever there's a tool tip below the top bar"). The overlaid layout now draws the line
     // itself, under the bar; only Find's own slot, a scrolling header or the loading line use the stacked layout.
     val inner: @Composable (line: KitStatus?, ownsLine: Boolean) -> Unit = { line, ownsLine ->
-        val insets =
-            LocalKitScreenInsets.current ?: WindowInsets.safeDrawing.union(WindowInsets.ime)
+        // Review item 8: the keyboard's room is the kit's settled reading (kitKeyboardInsets), never the raw animated
+        // inset, so a keyboard whose closing animation never ends here cannot hold the page up.
+        val keyboard = kitKeyboardInsets()
+        val insets = (LocalKitScreenInsets.current ?: kitSystemInsets()).union(keyboard)
         if (overlayChrome && search == null && header == null && !loading) {
             var topPx by remember { mutableIntStateOf(0) }
             // The status line's own height while it shows (and while it folds in or out); 0 with no line.
@@ -793,39 +797,66 @@ public fun KitScreen(
                             }
                         }
                     }
-                    if (refresh != null) {
-                        KitRefresh(
-                            refreshing = refresh.refreshing,
-                            onRefresh = refresh.onRefresh,
-                            modifier = Modifier.fillMaxWidth().weight(1f),
-                            enabled = refresh.enabled,
-                            hostState = refresh.state,
-                            // Under a floating bar the disc comes out below the bar, not under it.
-                            indicatorTopPx = if (floats) ({ runPx }) else null,
-                        ) {
-                            scrolling(Modifier.fillMaxSize())
+                    // Glass with the lens (the bar floats): the bottom block is a pane like the bar. The body runs on
+                    // under it, so rows pass behind its glass instead of being cut at its top; the frame tells the body
+                    // the block's height (kitScreenChromePadding) so the last row rests above it.
+                    val footFloats = floats && bottomPart != null
+                    var footPx by remember { mutableIntStateOf(0) }
+                    val scrollArea: @Composable (Modifier) -> Unit = { area ->
+                        if (refresh != null) {
+                            KitRefresh(
+                                refreshing = refresh.refreshing,
+                                onRefresh = refresh.onRefresh,
+                                modifier = area,
+                                enabled = refresh.enabled,
+                                hostState = refresh.state,
+                                // Under a floating bar the disc comes out below the bar, not under it.
+                                indicatorTopPx = if (floats) ({ runPx }) else null,
+                            ) {
+                                scrolling(Modifier.fillMaxSize())
+                            }
+                        } else {
+                            scrolling(area)
                         }
-                    } else {
-                        scrolling(Modifier.fillMaxWidth().weight(1f))
                     }
-                    bottomPart?.let {
-                        Box(
-                            Modifier.fillMaxWidth()
-                                .windowInsetsPadding(
-                                    WindowInsets.ime
-                                        .union(WindowInsets.navigationBars)
-                                        .only(WindowInsetsSides.Bottom)
-                                )
-                                .padding(
-                                    horizontal = if (bottomState.slab) LIQUID_BAR_INSET_X.dp else LocalKitTokens.current.gutter.dp,
-                                    vertical = Space.S2.dp,
-                                )
-                                .testTag("kit-screen-bottom"),
-                            // Dart's Column(crossAxisAlignment: stretch): the bottom block's child takes the full
-                            // width between the gutters (the page's primary is full width).
-                            propagateMinConstraints = true,
-                        ) {
-                            CompositionLocalProvider(LocalKitLiquidChrome provides frost, LocalKitScreenBottom provides bottomState) { it() }
+                    val bottomBlock: @Composable (Modifier) -> Unit = { place ->
+                        bottomPart?.let {
+                            Box(
+                                place.fillMaxWidth()
+                                    .windowInsetsPadding(
+                                        keyboard
+                                            .union(WindowInsets.navigationBars)
+                                            .only(WindowInsetsSides.Bottom)
+                                    )
+                                    .padding(
+                                        horizontal = if (bottomState.slab) LIQUID_BAR_INSET_X.dp else LocalKitTokens.current.gutter.dp,
+                                        vertical = Space.S2.dp,
+                                    )
+                                    .testTag("kit-screen-bottom"),
+                                // Dart's Column(crossAxisAlignment: stretch): the bottom block's child takes the full
+                                // width between the gutters (the page's primary is full width).
+                                propagateMinConstraints = true,
+                            ) {
+                                CompositionLocalProvider(LocalKitLiquidChrome provides frost, LocalKitScreenBottom provides bottomState) { it() }
+                            }
+                        }
+                    }
+                    if (!footFloats) {
+                        scrollArea(Modifier.fillMaxWidth().weight(1f))
+                        bottomBlock(Modifier)
+                    } else {
+                        val footDp = with(density) { footPx.toDp() }
+                        Box(Modifier.fillMaxWidth().weight(1f)) {
+                            CompositionLocalProvider(LocalChromePadding provides PaddingValues(bottom = footDp)) {
+                                scrollArea(Modifier.fillMaxSize())
+                            }
+                            // A touch on the pane (the gaps between its parts) is the pane's, never a row's under it.
+                            bottomBlock(
+                                Modifier.align(Alignment.BottomCenter)
+                                    .zIndex(1f)
+                                    .onSizeChanged { footPx = it.height }
+                                    .kitTouchSink()
+                            )
                         }
                     }
                 }
@@ -852,12 +883,34 @@ public fun KitScreen(
         // The page's ground: flat, or the person's live background (Glass panes blur only that picture).
         // One live background for the whole app (smoothness round 2): every page shows the theme root's one picture.
         KitLiveBackground(modifier.fillMaxSize(), shared = true) {
-            ScreenSheetHost(Modifier.fillMaxSize()) {
-                content()
+            ScreenToastHost {
+                ScreenSheetHost(Modifier.fillMaxSize()) {
+                    content()
+                }
             }
         }
     } else {
         Box(modifier) { content() }
+    }
+}
+
+/**
+ * The window's toast slot, part of the page frame: a page with no slot above it (a window other than the app's shell:
+ * the widget panels, Android's Manage space page) provides one and draws its toast over everything it hosts, so no
+ * window can forget it and leave every `show` silent. Under the shell's slot (or an outer page's) it adds nothing.
+ */
+@Composable
+private fun ScreenToastHost(content: @Composable () -> Unit) {
+    if (LocalKitToasts.current != null) {
+        content()
+        return
+    }
+    val toasts = remember { KitToastState() }
+    CompositionLocalProvider(LocalKitToasts provides toasts) {
+        Box(Modifier.fillMaxSize()) {
+            content()
+            KitToastHost(toasts, Modifier.zIndex(4f))
+        }
     }
 }
 
@@ -988,6 +1041,7 @@ private fun Panes(
         drawPaneRule(hairline, x, rule)
     }
     KitLiveBackground(modifier.fillMaxSize(), shared = true) {
+        ScreenToastHost {
         ScreenSheetHost(Modifier.fillMaxSize()) {
             Row(Modifier.fillMaxSize()) {
                 Box(
@@ -1030,6 +1084,7 @@ private fun Panes(
                     }
                 }
             }
+        }
         }
     }
 }

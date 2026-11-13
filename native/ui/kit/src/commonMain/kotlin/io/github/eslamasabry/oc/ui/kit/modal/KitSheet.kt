@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.kit.modal
 
+import io.github.eslamasabry.oc.ui.kit.frame.kitKeyboardPadding
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.platform.LocalLayoutDirection
 import io.github.eslamasabry.oc.ui.kit.foundation.kitPaneInset
@@ -29,7 +30,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -690,7 +690,7 @@ private fun SheetPanel(
             .navigationBarsPadding()
             .then(
                 LocalSheetKeyboard.current?.let { Modifier.padding(bottom = it) }
-                    ?: Modifier.imePadding()
+                    ?: Modifier.kitKeyboardPadding()
             )
             // Glass keeps its pane inset inside the sheet (owner 2026-11-09): room for the rim, sheen and lens.
             .padding(kitPaneInset())
