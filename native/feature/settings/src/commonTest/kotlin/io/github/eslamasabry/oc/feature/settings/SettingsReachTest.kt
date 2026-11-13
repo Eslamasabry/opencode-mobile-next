@@ -100,14 +100,12 @@ class SettingsReachTest {
     }
 
     @Test
-    fun `ST1 the Storage row opens App storage with the real sizes when this phone has it, else the models page`() {
-        val withLinux = phoneFacts().let { it.copy(localModelStorage = true, platform = it.platform.copy(builtinLinux = true), opens = null) }
-        val row = SettingsStructure.rows(SettingsGroupId.ThisApp, withLinux, reasoning = false, timestamps = false)
-            .first { it.id == SettingsRowId.Storage }
-        assertEquals(io.github.eslamasabry.oc.feature.settings.presentation.SettingsDoor.Outside(SettingsOutside.AppStorage), row.door)
-        val without = phoneFacts().let { it.copy(localModelStorage = true, platform = it.platform.copy(builtinLinux = false), opens = null) }
-        val plain = SettingsStructure.rows(SettingsGroupId.ThisApp, without, reasoning = false, timestamps = false)
-            .first { it.id == SettingsRowId.Storage }
-        assertEquals(io.github.eslamasabry.oc.feature.settings.presentation.SettingsDoor.Page(SettingsPage.Storage), plain.door)
+    fun `ST1 the Storage row opens the page that holds the assistant model's Delete, with or without the phone's Linux`() {
+        for (linux in listOf(true, false)) {
+            val facts = phoneFacts().let { it.copy(localModelStorage = true, platform = it.platform.copy(builtinLinux = linux), opens = null) }
+            val row = SettingsStructure.rows(SettingsGroupId.ThisApp, facts, reasoning = false, timestamps = false)
+                .first { it.id == SettingsRowId.Storage }
+            assertEquals(io.github.eslamasabry.oc.feature.settings.presentation.SettingsDoor.Page(SettingsPage.Storage), row.door)
+        }
     }
 }

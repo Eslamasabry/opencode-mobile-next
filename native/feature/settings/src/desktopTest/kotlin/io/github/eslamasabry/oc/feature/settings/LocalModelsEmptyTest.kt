@@ -34,4 +34,22 @@ class LocalModelsEmptyTest {
         }
         onNodeWithText("Open This phone").assertDoesNotExist()
     }
+
+    @Test
+    fun `ST1 with an assistant model stored the page keeps its Delete and still leads to This phone`() {
+        val actions = RecordingActions()
+        runComposeUiTest {
+            setContent {
+                SettingsThemed {
+                    LocalModelsBody(
+                        LocalModelStorageFacts(loading = false, present = true, size = "1.2 GB", phoneStorage = true),
+                        actions,
+                    )
+                }
+            }
+            onNodeWithText("1.2 GB").assertExists()
+            onNodeWithText("Open This phone").performClick()
+        }
+        assertTrue("outside:ThisPhone" in actions.calls)
+    }
 }

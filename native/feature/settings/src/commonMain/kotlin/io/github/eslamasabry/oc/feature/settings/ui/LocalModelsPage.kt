@@ -61,6 +61,11 @@ internal fun LocalModelsBody(state: LocalModelStorageFacts, actions: SettingsAct
             }
             KitActionBlock(
                 primary = KitAction(stringResource(Res.string.migrationStorageDelete), actions::onAskDeleteLocalModel),
+                // The rest of the app's storage is measured on This phone (App storage): the same door the empty page has.
+                secondary =
+                    if (state.phoneStorage)
+                        KitAction(stringResource(Res.string.filesOpenPhone), { actions.onOutside(SettingsOutside.ThisPhone) })
+                    else null,
             )
         }
     }
