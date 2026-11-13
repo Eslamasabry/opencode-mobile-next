@@ -61,6 +61,31 @@ class AppUpdatesTest {
     }
 
     @Test
+    fun `B-217 after Android installs the offered release the first start says so once`() = runTest {
+        make().start()
+        // Android closed the app to install 58; the next start runs the new build.
+        platform.build = 58
+        val after = make()
+        after.start()
+        assertEquals("2.2.0", after.state.value.updated?.version)
+        assertFalse(after.state.value.noticeVisible, "no offer: only the one 'updated' sentence")
+        after.notNow()
+        assertNull(after.state.value.updated)
+        val again = make()
+        again.start()
+        assertNull(again.state.value.updated, "said on the first start after the update only")
+    }
+
+    @Test
+    fun `B-217 a build that is not the offered one never claims that update`() = runTest {
+        make().start()
+        platform.build = 59
+        val after = make()
+        after.start()
+        assertNull(after.state.value.updated)
+    }
+
+    @Test
     fun `B-MIGR-012 checks happen at most once every six hours and a failure retries after thirty minutes`() = runTest {
         val c = make()
         c.start()

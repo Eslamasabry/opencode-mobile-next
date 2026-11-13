@@ -28,6 +28,7 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.http.encodedPath
 import io.ktor.http.isSuccess
+import kotlin.concurrent.atomics.AtomicBoolean
 import kotlin.concurrent.atomics.AtomicReference
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.io.IOException
@@ -337,7 +338,11 @@ public class NetClient(
                             readFailure(response) ?: StatusMapping.failureFor(response.status.value)
                         )
                     } else {
-                        Outcome.Ok(read(response))
+                        val value = read(response)
+                        // B-PROTO-148: closing the client can end a body read as a clean end of input (the engine
+                        // may close the body channel without a cause), so a stream cut by [close] would read as
+                        // one the server finished. A read that ends after [close] is a cut connection.
+                        if (closed.load()) Outcome.Failed(Failure.Network(NetworkWhy.Reset)) else Outcome.Ok(value)
                     }
                 }
             }
@@ -363,6 +368,9 @@ public class NetClient(
 
     private val observers = AtomicReference<List<HttpCallObserver>>(emptyList())
 
+    /** Set by [close]; a body read that ends after it was cut, not finished (B-PROTO-148). */
+    private val closed = AtomicBoolean(false)
+
     /**
      * Adds [observer] once (B-BUILD-026: attaching twice adds one). False when it was already
      * attached.
@@ -384,6 +392,7 @@ public class NetClient(
      * order).
      */
     public fun close() {
+        closed.store(true)
         http.close()
         closeEngine()
     }

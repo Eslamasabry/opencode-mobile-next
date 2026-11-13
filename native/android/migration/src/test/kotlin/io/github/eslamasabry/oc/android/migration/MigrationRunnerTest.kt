@@ -210,6 +210,42 @@ class MigrationRunnerTest {
     }
 
     @Test
+    fun `B-MIGR-010 a later native update runs no step again and keeps what the person changed since`() = runTest {
+        val w = world().apply { Seed.phone(this) }
+        val first = w.runner(io())
+        assertIs<RunnerState.Open>(first.run())
+        // The native app in use: a server removed, settings changed, a password replaced through the app's store.
+        w.prefs.commit(
+            mapOf(
+                physical("oc.profiles") to s("[]"),
+                physical("oc.offlineQueue") to null,
+                physical("oc.notify.wifiOnly") to b(false),
+                physical("oc.appLocale") to s("en"),
+            ),
+        )
+        assertTrue(first.secretChanges().write("pw.${Seed.REMOTE}", "typed-in-the-native-app"))
+        assertTrue(first.secretChanges().delete("oc.codexToken.${Seed.CODEX}"))
+        val journal = w.journalText()
+        val prefsBefore = w.logical()
+        val secretsBefore = w.secrets.values.toMap()
+        val backupBefore = snapshotFiles(w.paths.backupRoot)
+
+        // A newer native build replaces this one in place (same package).
+        w.versionCode = 10_020
+        val again = assertIs<RunnerState.Open>(w.runner(io()).run())
+
+        assertFalse(again.firstNativeLaunch)
+        assertEquals(prefsBefore, w.logical(), "no adopted setting is put back")
+        assertEquals(secretsBefore, w.secrets.values.toMap(), "no old sign-in comes back")
+        assertEquals(backupBefore, snapshotFiles(w.paths.backupRoot), "the safety backup is never retaken")
+        for (step in listOf("S0", "M1", "M2", "M3", "M4", "M5", "M6")) {
+            assertEquals(stepOf(journal, step), stepOf(w.journalText(), step), "$step ran again")
+        }
+        assertEquals(1, w.signals.done.size)
+        assertEquals(listOf<Long?>(null, 10_000L), w.signals.updated)
+    }
+
+    @Test
     fun `B-MIGR-005 every key outside the declared write sets stays byte-identical, unknown keys included`() = runTest {
         val w = world().apply { Seed.phone(this) }
         val before = w.logical()
@@ -326,4 +362,13 @@ class MigrationRunnerTest {
         assertIs<RunnerState.Open>(runner.retry())
         assertNotNull(S0Backup(w.paths, StepInterrupter.None, { 1L shl 40 }, 1, { 0 }).verifyPublished())
     }
+}
+
+private fun physical(logical: String): String =
+    io.github.eslamasabry.oc.android.migration.readers.prefs.FlutterPrefsCodec.physicalKey(logical)
+
+/** One step's journal record (state, attempts, time, result) as text, for "it did not run again". */
+private fun stepOf(journal: String, step: String): String {
+    val root = io.github.eslamasabry.oc.android.migration.readers.json.MiniJson.parse(journal) as Map<*, *>
+    return ((root["steps"] as Map<*, *>)[step]).toString()
 }

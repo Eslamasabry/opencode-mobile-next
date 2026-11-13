@@ -101,6 +101,8 @@ class OcApplication : Application(), GraphOwner {
         // Every component of the main process (activities, alert buttons, services, workers,
         // tiles, widgets) may be the first thing in a cold process and relies on the started
         // product, as before.
+        // B-232: each build's own default (installed app 4098, preview 4100, dev 4102), never another build's.
+        BuiltinLinux.configureDefaultPort(BuildConfig.PHONE_SERVER_PORT)
         PhoneServerScripts.configurePort { BuiltinLinux.get(this).selectedServerPort }
         step("graph") { appGraph }
         startProduct()

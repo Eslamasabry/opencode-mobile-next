@@ -342,7 +342,6 @@ private fun rowGlyph(row: SettingsRowId) =
         SettingsRowId.AiTeam -> KitIcons.kanban
         SettingsRowId.ShowReasoning -> KitIcons.idea
         SettingsRowId.ShowTimestamps -> KitIcons.clock
-        SettingsRowId.EdgeDock -> KitIcons.layers
         SettingsRowId.PhraseChips -> KitIcons.chat
         SettingsRowId.DefaultShell -> KitIcons.terminal
         SettingsRowId.Voice -> KitIcons.mic

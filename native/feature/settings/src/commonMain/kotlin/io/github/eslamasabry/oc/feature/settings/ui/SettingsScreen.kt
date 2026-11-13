@@ -137,12 +137,17 @@ public fun SettingsScreen(
                 androidx.compose.runtime.saveable.rememberSaveable(asked) {
                     androidx.compose.runtime.mutableIntStateOf(appearanceTabs(state.appearance).indexOf(asked).coerceAtLeast(0))
                 }
+            // A new tab opens at its top: the guide's Next never lands mid-way down the next group.
+            val appearanceScroll = rememberScrollState()
+            LaunchedEffect(appearanceTab.intValue) { appearanceScroll.scrollTo(0) }
             SettingsFrame(
                 stringResource(Res.string.e7AppearanceTitle),
                 back,
                 state,
                 actions,
                 modifier,
+                scroll = appearanceScroll,
+                pinned = { AppearanceTabRow(state.appearance, appearanceTab) },
                 footer =
                     if (state.appearance.guide?.done == false) {
                         { AppearanceGuideNext(state.appearance, actions, appearanceTab) }
@@ -355,6 +360,8 @@ internal fun SettingsFrame(
     search: (@Composable () -> Unit)? = null,
     large: Boolean = false,
     footer: (@Composable () -> Unit)? = null,
+    /** A page's own navigation (the Appearance tabs): the floating bar's second row, in the bar's pane. */
+    pinned: (@Composable () -> Unit)? = null,
     scroll: ScrollState? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
@@ -384,7 +391,8 @@ internal fun SettingsFrame(
         edges = KitScreenEdges.Bleed,
         // Glass step 4: where the lens is drawn the page scrolls on under its bar, a floating liquid capsule; the kit
         // records the page for it. Everywhere else the bar is pinned as before.
-        floatingBar = KitFloatingBar(),
+        // The page's own navigation (the Appearance tabs) is the bar's second row, inside the same pane.
+        floatingBar = KitFloatingBar(below = pinned),
     ) {
         KitPinnedFootBody(
             scroll = pageScroll,

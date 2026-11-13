@@ -73,9 +73,15 @@ class BuiltinNewProjectTest {
 
         val ours = File(projects, "my-app/.git")
         val theirs = File(referenceRepo, ".git")
-        assertEquals(listing(theirs), listing(ours))
-        for (file in listOf("config", "HEAD", "description", "info/exclude", "refs/heads/master",
-            "logs/HEAD", "logs/refs/heads/master", "COMMIT_EDITMSG", "index")) {
+        // The layout of an empty repository differs between git versions (extra folders, config keys, index
+        // format), so the files a person's git needs must exist, and only the files whose bytes never change
+        // between versions are compared with the host git's own.
+        val ourFiles = listing(ours)
+        for (needed in listOf("HEAD", "config", "objects/", "refs/", "refs/heads/", "refs/heads/master",
+            "logs/HEAD", "COMMIT_EDITMSG", "index")) {
+            assertTrue("missing $needed in $ourFiles", needed in ourFiles)
+        }
+        for (file in listOf("HEAD", "refs/heads/master", "logs/HEAD", "logs/refs/heads/master", "COMMIT_EDITMSG")) {
             assertArrayEquals(file, File(theirs, file).readBytes(), File(ours, file).readBytes())
         }
         val dir = File(projects, "my-app")

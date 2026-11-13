@@ -94,13 +94,19 @@ public class LiveModeController(
 
     /**
      * Cold start: a saved opt-in cannot override a durable OS interruption, and unknown state fails
-     * closed.
+     * closed. One exception (B-241): Android ending the app to install its update is not the
+     * person's choice to stop, so a connection they had on is resumed once, the same way their
+     * Resume tap would. If Android refuses the start, the pause and its notice stay as they were.
      */
     public suspend fun restore() {
         if (disableIfUnsupported()) return
         val savedEnabled = enabled
         val read = refreshPause()
-        if (!read.supported || read.paused) return
+        if (!read.supported) return
+        if (read.paused) {
+            if (savedEnabled && read.reason == PauseReason.AppUpdated && read.canResume) resume()
+            return
+        }
         run(if (savedEnabled) Method.Enable else Method.Status, persist = false)
     }
 

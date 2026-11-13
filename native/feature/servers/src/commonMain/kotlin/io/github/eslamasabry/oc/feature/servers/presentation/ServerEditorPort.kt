@@ -23,6 +23,8 @@ public data class ServerEditorRecord(
     val reconnectOnSave: Boolean = false,
     /** This phone's own server (the OpenCode the app runs here): its address, sign-in and HTTPS advice are the app's. */
     val ownPhone: Boolean = false,
+    /** The version the saved server last reported; the Connected page shows it when no check ran this visit. */
+    val serverVersion: String? = null,
 )
 
 /**

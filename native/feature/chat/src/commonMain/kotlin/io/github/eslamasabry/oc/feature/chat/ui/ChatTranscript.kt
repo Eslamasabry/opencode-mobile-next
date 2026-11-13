@@ -30,6 +30,7 @@ import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.text.Numbers
 import io.github.eslamasabry.oc.core.model.transcript.MessageErrorKind
 import io.github.eslamasabry.oc.engine.agents.errors.AgentErrorText
+import io.github.eslamasabry.oc.feature.chat.presentation.RunTailRules
 import io.github.eslamasabry.oc.feature.chat.presentation.ErrorFix
 import io.github.eslamasabry.oc.feature.chat.presentation.ErrorRecovery
 import io.github.eslamasabry.oc.feature.chat.presentation.StoppedSteps
@@ -549,7 +550,7 @@ internal fun ChatTranscriptList(
                             modifier = Modifier.testTag("chat-steer-wait"),
                         )
                     }
-                    KitTurnLiveLine(
+                    if (line != null) KitTurnLiveLine(
                         words = line.words,
                         tone = line.tone,
                         spoken = line.spoken,
@@ -569,7 +570,15 @@ internal fun ChatTranscriptList(
                         onAction = if (live.canUndoStopAfterStep) onUndoStopAfterStep else onStopLive,
                         ask = ask,
                     )
-                } else {
+                } else if (
+                    RunTailRules.liveLineShown(
+                        RunTailRules.tail(
+                            busy = true,
+                            stopping = live.stopping || live.stoppingAfterStep,
+                            waiting = runWork?.state == WorkLineState.WaitingForYou,
+                        )
+                    )
+                ) {
                     val minutes = stringResource(Res.string.chatHomeMinutes)
                     val seconds = stringResource(Res.string.chatHomeSeconds)
                     val step = facts.work.values.lastOrNull { it.now != null }?.now
@@ -955,7 +964,21 @@ private fun ChatRow(
             }
         is ThoughtRow -> {
             val detail = facts.reading.details[row.key]
-            if (detail != null && folds != null)
+            // Review #13: a turn whose only work is thinking folds its thoughts under one work line (this row is its
+            // first thought; the others' rows are hidden). A turn with steps folds them under its own work line.
+            val thoughts = facts.reading.thoughtWork[row.turnId]
+            if (thoughts != null && folds != null && facts.work[row.turnId] == null)
+                ThoughtWorkLine(
+                    row.turnId,
+                    thoughts,
+                    folds,
+                    reasoningExpanded,
+                    reply,
+                    onCompactAgain,
+                    onOpenSession,
+                    thinking = row.live,
+                )
+            else if (detail != null && folds != null)
                 TranscriptDetail(
                     detail,
                     folds,

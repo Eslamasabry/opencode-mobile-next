@@ -545,6 +545,7 @@ PhoneAgentRules.architectureOf(Build.SUPPORTED_ABIS.toList())
                             redactor.redact(agent.name),
                             label,
                             if (qualified) null else HandoffChoiceIssue.PhoneCheck,
+                            agentId = agent.id.raw,
                         )
                     targets[id] =
                         choice to

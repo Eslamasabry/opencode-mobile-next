@@ -17,7 +17,13 @@ public data class AgentHandoffChoice(
     val agent: String,
     val model: String,
     val issue: HandoffChoiceIssue? = null,
-)
+    /** The phone agent's catalog id, so a choice that waits on its phone check can open that agent's own check. */
+    val agentId: String? = null,
+) {
+    /** Waits only on this agent's phone check, which the person can run from here. */
+    val checkable: Boolean
+        get() = issue == HandoffChoiceIssue.PhoneCheck && agentId != null
+}
 
 public data class AgentHandoffLink(val id: String, val source: String, val target: String)
 

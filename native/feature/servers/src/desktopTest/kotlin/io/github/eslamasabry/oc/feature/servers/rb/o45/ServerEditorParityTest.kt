@@ -115,6 +115,33 @@ class ServerEditorParityTest {
             onNodeWithText("Server password").assertExists()
         }
 
+    @Test
+    fun `B-010 the Connected page shows the saved version when no check ran this visit`() =
+        runComposeUiTest {
+            val record =
+                ServerEditorRecord(
+                    id = io.github.eslamasabry.oc.core.common.ids.ProfileId("p"),
+                    name = "Desk",
+                    address = "http://$LAN_8:4096",
+                    username = "opencode",
+                    backend = BackendKind.OpenCode2,
+                    directory = "",
+                    hasSecret = true,
+                    needsSecret = false,
+                    tailscale = false,
+                    cleartextOrigin = null,
+                    certificatePin = null,
+                    certificateOrigin = null,
+                    serverVersion = "2.2.6",
+                )
+            setContent {
+                ServersTestTheme {
+                    ServerEditorScreen(ServerEditorUi(step = ServerEditorStep.Ready, record = record), Actions())
+                }
+            }
+            onNodeWithText("Version 2.2.6", substring = true).assertExists()
+        }
+
     private fun draft(address: String) =
         ServerEditorInput(
             null,

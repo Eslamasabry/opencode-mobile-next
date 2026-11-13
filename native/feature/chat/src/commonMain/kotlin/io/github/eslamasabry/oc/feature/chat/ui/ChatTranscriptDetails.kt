@@ -48,6 +48,12 @@ private val NO_THOUGHT =
         "(?i)^\\W*(no|empty)\\s+(reasoning|thinking|thoughts?)(\\s+(available|provided|recorded|to show))?\\W*$"
     )
 
+/** Whether a thought has words worth showing (not blank, not only "No reasoning"). */
+internal fun hasThoughtWords(text: String): Boolean {
+    val plain = text.replace(MARKDOWN_MARKS, "").trim()
+    return plain.isNotBlank() && !NO_THOUGHT.matches(plain)
+}
+
 /** Full thoughts, typed server notices and background results. All text and actions use the kit. */
 @Composable
 internal fun TranscriptDetail(

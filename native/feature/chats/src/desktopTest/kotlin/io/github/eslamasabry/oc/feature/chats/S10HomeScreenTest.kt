@@ -131,23 +131,18 @@ class S10HomeScreenTest {
     }
 
     @Test
-    fun `A1-HOME-17 P-107 at the list's end All conversations shares the New conversation button's line, never under it`() =
+    fun `A1-HOME-17 P-107 All conversations shares the New conversation button's line in the foot bar, never under it`() =
         runDesktopComposeUiTest(360, 640) {
             home(mixed(extra = 12))
             val list = SemanticsMatcher.keyIsDefined(SemanticsProperties.CollectionInfo)
-            val lastTitle = "All conversations"
-            onNode(list).performScrollToNode(hasContentDescriptionContaining(lastTitle))
             onNode(list).performTouchInput { swipeUp() }
             waitForIdle()
-            val last = onNode(hasContentDescriptionContaining(lastTitle)).getBoundsInRoot()
-            val root = onRoot().getBoundsInRoot()
-            // The round button: 56 dp, on the 16 dp gutter, 12 dp above the bottom edge.
-            val buttonTop = root.bottom - 12.dp - 56.dp
-            val buttonStart = root.right - 16.dp - 56.dp
-            assertTrue(last.right <= buttonStart - 12.dp, "the row ends at ${last.right}, the button starts at $buttonStart")
-            val rowMiddle = (last.top + last.bottom) / 2
-            val buttonMiddle = buttonTop + 28.dp
-            assertTrue((rowMiddle - buttonMiddle).value in -2f..2f, "row middle $rowMiddle, button middle $buttonMiddle")
+            val link = onNode(hasContentDescriptionContaining("All conversations")).getBoundsInRoot()
+            val button = onNode(hasContentDescriptionContaining("New conversation")).getBoundsInRoot()
+            assertTrue(link.right <= button.left - 8.dp, "the link ends at ${link.right}, the button starts at ${button.left}")
+            val linkMiddle = (link.top + link.bottom) / 2
+            val buttonMiddle = (button.top + button.bottom) / 2
+            assertTrue((linkMiddle - buttonMiddle).value in -2f..2f, "link middle $linkMiddle, button middle $buttonMiddle")
         }
 
     @Test
