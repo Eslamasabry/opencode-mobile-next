@@ -35,7 +35,9 @@ internal object LiquidHoldShader {
      * ink-side hold: what looks like the pane's ink (under dark words its blackness, 1 - the largest channel; under light
      * words its whiteness, the smallest channel) past the page's ground round it (the least ink of the disc) keeps
      * local.w; the same amount moves on every channel, so chroma is kept. Where ink-like things cover most of the disc
-     * (a dark picture under dark words) it lets go. 37 taps per pixel, as before.
+     * (past 60 %: a dark picture under dark words) it lets go; in the rim's outer half it works at 60 %, so the bend
+     * still shows the page's strokes at about half their strength (the bent words there read as grey smudges at full).
+     * 37 taps per pixel, as before.
      */
     const val LOCAL_HOLD: String =
         """
@@ -66,16 +68,19 @@ float3 localHold(float2 at, float3 rgb, float deep, float scale, float lightInk)
     float len = length(dv);
     float held = len > local.y ? local.y + (len - local.y) * local.z : len;
     float3 o = len > 0.0001 ? clamp(mean + dv * (held / len), 0.0, 1.0) : rgb;
+    o = mix(rgb, o, deep);
     if (local.w < 1.0) {
+        // Lines of text cover up to about half the disc; past 60 % ink-like things are the ground itself.
         float share = (isum / wsum - imin) / max(imax - imin, 0.05);
-        float strength = 1.0 - ss(0.35, 0.65, share);
+        // In the rim's outer half the ink-side hold is at 60 %: the bend still shows the page's strokes, at half strength.
+        float strength = (1.0 - ss(0.6, 0.9, share)) * mix(0.6, 1.0, deep);
         float inkNow = inkOf(o, lightInk);
         if (inkNow > imin) {
             float shift = (inkNow - (imin + (inkNow - imin) * local.w)) * strength;
             o = clamp(lightInk > 0.5 ? o - shift : o + shift, 0.0, 1.0);
         }
     }
-    return mix(rgb, o, deep);
+    return o;
 }
 """
 

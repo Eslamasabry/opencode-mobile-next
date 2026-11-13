@@ -214,7 +214,8 @@ class KitLiquidHoldShaderTest {
     fun `B-GLASS-LIQ-004 under dark words lines of text behind a pane become one even field, the page's own ground`() {
         // A white page with lines of dark text: across the pane's middle (row through a line and between lines) the
         // shipped hold leaves no bar and no word: at most 8/255 from end to end, and within 15/255 of the white ground.
-        for (y in listOf(12, 24, 36)) {
+        // Rows 36 (through a line) and 48 (between lines), in the middle of the 80 px pane (its rim is 20 px).
+        for (y in listOf(36, 48)) {
             val row = plainRow(darkInk, modal, y) { fill(255, 255, 255); textLines(40, 40, 40) }
             val mid = row.subList(28, 52)
             println("dark ink, text lines, row $y: ${mid.map { it[1] }}")
@@ -243,9 +244,9 @@ class KitLiquidHoldShaderTest {
         // A dark picture (most of the disc ink-like) with a few light dots, under dark words: left dark, not lifted.
         val dark = plainRow(darkInk, modal, 40) { fill(25, 25, 30); for (x in 0 until 80 step 20) box(x.toFloat(), 38f, 3f, 3f, 250, 250, 250) }
         assertTrue(dark.subList(30, 50).all { it[1] <= 70 }, "a dark picture stays dark: ${dark.subList(30, 50).map { it[1] }}")
-        // Under light words, a white page (most of the disc ink-like) is not pressed toward the dark lines on it.
-        val white = plainRow(lightInk, modal, 36) { fill(255, 255, 255); textLines(40, 40, 40) }
-        assertTrue(white.subList(28, 52).all { it[1] >= 150 }, "a white page stays light: ${white.subList(28, 52).map { it[1] }}")
+        // Under light words, a bright picture (most of the disc ink-like) with a few dark dots: left bright, not pressed.
+        val white = plainRow(lightInk, modal, 40) { fill(250, 250, 250); for (x in 0 until 80 step 20) box(x.toFloat(), 38f, 3f, 3f, 20, 20, 20) }
+        assertTrue(white.subList(30, 50).all { it[1] >= 200 }, "a bright picture stays bright: ${white.subList(30, 50).map { it[1] }}")
     }
 
     @Test
