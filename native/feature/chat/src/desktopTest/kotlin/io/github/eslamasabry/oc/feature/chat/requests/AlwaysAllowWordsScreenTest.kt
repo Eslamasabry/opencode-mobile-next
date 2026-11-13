@@ -108,7 +108,7 @@ class AlwaysAllowWordsScreenTest {
             val actions = Actions()
             setContent { Slot(RequestSlotUi(shell), actions) }
             onNodeWithText("Deny").assertIsDisplayed()
-            onNodeWithText("Allow").assertIsDisplayed()
+            onNodeWithText("Allow once").assertIsDisplayed()
             onNodeWithText("Details").assertIsDisplayed()
             // Flutter: "Always allow npm test", never the raw pattern "npm test *".
             onNode(reads("Always allow npm test")).assertIsDisplayed()

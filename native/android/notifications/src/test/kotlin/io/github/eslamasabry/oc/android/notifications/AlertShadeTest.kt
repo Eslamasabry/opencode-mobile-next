@@ -94,7 +94,7 @@ class AlertShadeTest {
         val alert = permission()
         shade.show(alert, needsYou)
         val n = posted(alert.key)
-        assertEquals(listOf("Allow once", "Reject"), n.actions.map { it.title.toString() })
+        assertEquals(listOf("Allow once", "Deny"), n.actions.map { it.title.toString() })
         assertTrue(n.actions[0].isAuthenticationRequired)
         assertFalse(n.actions[1].isAuthenticationRequired)
         val id = NotificationIds.alert(alert.key)

@@ -43,7 +43,7 @@ class BriefPlacementTest {
         )
         setContent { ChatEnvironment { KitTheme(platform = DesktopKitPlatform(), localeTag = "en") { ChatsScreen(state, actions) } } }
         onNodeWithText("Allow once").assertIsNotEnabled().performClick()
-        onNodeWithText("Reject").assertIsNotEnabled().performClick()
+        onNodeWithText("Deny").assertIsNotEnabled().performClick()
         assertEquals(emptyList(), answers)
     }
 
