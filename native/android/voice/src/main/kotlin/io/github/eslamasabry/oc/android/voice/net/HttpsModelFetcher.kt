@@ -103,8 +103,13 @@ public class HttpsModelFetcher(
                         MediaProblem.DownloadNoResponse
                     }
                 is SSLException, is EOFException -> MediaProblem.DownloadClosed
-                else -> MediaProblem.DownloadNoResponse
+                // Other socket errors that still say the network is gone ("Network is unreachable").
+                else ->
+                    if (error.saysOffline()) MediaProblem.DownloadOffline else MediaProblem.DownloadNoResponse
             }
+
+        private fun IOException.saysOffline(): Boolean =
+            message.orEmpty().let { it.contains("unreachable", true) || it.contains("Unable to resolve host", true) }
 
         private fun media(problem: MediaProblem, error: Throwable? = null): Outcome<Nothing> =
             Failure.Media(problem, error?.let { Redacted.shape(it) }).failed()

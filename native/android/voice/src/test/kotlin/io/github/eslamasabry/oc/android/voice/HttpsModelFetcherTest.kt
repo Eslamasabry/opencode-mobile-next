@@ -123,5 +123,6 @@ class HttpsModelFetcherTest {
         assertEquals(MediaProblem.DownloadOffline, HttpsModelFetcher.classify(java.net.NoRouteToHostException("x")))
         assertEquals(MediaProblem.DownloadOffline, HttpsModelFetcher.classify(java.net.ConnectException("Network is unreachable")))
         assertEquals(MediaProblem.DownloadNoResponse, HttpsModelFetcher.classify(java.net.ConnectException("Connection refused")))
+        assertEquals(MediaProblem.DownloadOffline, HttpsModelFetcher.classify(java.net.SocketException("Network is unreachable")))
     }
 }
