@@ -8,10 +8,10 @@ import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
-import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.v2.runComposeUiTest
 import io.github.eslamasabry.oc.core.common.ids.MessageId
 import io.github.eslamasabry.oc.core.common.ids.RequestId
@@ -54,6 +54,14 @@ class PermissionChangeScreenTest {
         SemanticsMatcher("reads \"$words\"") { node ->
             node.config.getOrNull(SemanticsProperties.Text).orEmpty().any {
                 words in it.text.filterNot { c -> c in "⁦⁧⁨⁩‎‏‪‫‬" }
+            }
+        }
+
+    /** A screen-reader name, read the same way (the path inside it sits in a left-to-right isolate). */
+    private fun describes(words: String) =
+        SemanticsMatcher("described as \"$words\"") { node ->
+            node.config.getOrNull(SemanticsProperties.ContentDescription).orEmpty().any {
+                it.filterNot { c -> c in "\u2066\u2067\u2068\u2069\u200E\u200F\u202A\u202B\u202C" } == words
             }
         }
 
@@ -150,7 +158,7 @@ class PermissionChangeScreenTest {
     fun `B-CHAT-REV1-001 a new file's card says Create and shows its first lines before the answers`() = runComposeUiTest {
         setContent { Slot(RequestSlotUi(newFile(listOf("hello from the agent")))) }
         onNode(reads("Create e9.txt?")).assertIsDisplayed()
-        onNodeWithContentDescription("The change to e9.txt").assertIsDisplayed()
+        onNode(describes("The change to e9.txt"), useUnmergedTree = true).assertExists()
         assertTrue(
             onAllNodes(hasText("hello from the agent", substring = true), useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty(),
             "the line it will write is on the card",
@@ -160,7 +168,7 @@ class PermissionChangeScreenTest {
     @Test
     fun `B-CHAT-REV1-002 an edit's card shows the removed and the added line`() = runComposeUiTest {
         setContent { Slot(RequestSlotUi(edited)) }
-        onNodeWithContentDescription("The change to src/e2.txt").assertIsDisplayed()
+        onNode(describes("The change to src/e2.txt"), useUnmergedTree = true).assertExists()
         for (line in listOf("the old line", "the new line"))
             assertTrue(
                 onAllNodes(hasText(line, substring = true), useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty(),
@@ -177,7 +185,8 @@ class PermissionChangeScreenTest {
                 onAllNodes(hasText("line number 20 of the new file"), useUnmergedTree = true).fetchSemanticsNodes().isEmpty(),
                 "the card keeps to a few lines",
             )
-            onNodeWithText("Show all").assertIsDisplayed().performClick()
+            // The card's words scroll inside it while the answers stay in sight.
+            onNodeWithText("Show all").performScrollTo().performClick()
             waitForIdle()
             onNodeWithTag("chat-permission-change", useUnmergedTree = true).assertExists()
             assertTrue(
