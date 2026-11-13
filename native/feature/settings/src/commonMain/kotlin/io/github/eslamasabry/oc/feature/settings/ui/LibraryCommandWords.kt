@@ -7,37 +7,32 @@ internal data class LibraryCommandWords(val title: String, val slash: String, va
 
 /**
  * A server writes a command's argument template inside its description ("review changes
- * [commit|branch|pr], defaults to ..."). The title keeps the sentence before the template; the
- * template goes beside the slash word, so no row shows a title cut in the middle of raw syntax.
+ * [commit|branch|pr], defaults to ..."). The title keeps every word of the description and drops
+ * only the template groups; the groups go beside the slash word. So no row shows a title cut in
+ * the middle of raw syntax, and none loses the words after a bracket.
  */
 internal fun libraryCommandWords(command: CommandInfo): LibraryCommandWords {
     val slash = "/${command.name.removePrefix("/")}"
     val text = command.description?.trim().orEmpty()
     if (text.isEmpty()) return LibraryCommandWords(slash, slash, null)
-    val open = argumentTemplateStart(text)
-    if (open <= 0) return LibraryCommandWords(text, slash, null)
-    val before = text.substring(0, open).trim()
-    if (before.isEmpty()) return LibraryCommandWords(text, slash, null)
-    return LibraryCommandWords(before, slash, text.substring(open).trim())
+    val groups = TEMPLATE.findAll(text).toList()
+    if (groups.isEmpty()) return LibraryCommandWords(text, slash, null)
+    val title =
+        TEMPLATE.replace(text, " ")
+            .replace(SPACES, " ")
+            .replace(SPACE_BEFORE_MARK, "$1")
+            .trim()
+            .trim(',', ';', ':')
+            .trim()
+    if (title.isEmpty() || title.none { it.isLetterOrDigit() }) return LibraryCommandWords(text, slash, null)
+    return LibraryCommandWords(title, slash, groups.joinToString(" ") { it.value })
 }
 
 /**
- * Where an argument template starts: the first bracket group closed by ']' whose words hold no space
- * ("[commit|branch|pr]"). A bracket inside a sentence ("open the [docs] page", "[1] first") is prose and stays.
+ * A bracket group that ends a clause (before a comma, a stop, another group or the end): that is
+ * where a server writes its template. One in the middle of a sentence, or a Markdown link's text,
+ * stays in the words.
  */
-private fun argumentTemplateStart(text: String): Int {
-    var from = 0
-    while (true) {
-        val open = text.indexOf('[', from)
-        if (open < 0) return -1
-        val close = text.indexOf(']', open)
-        if (close < 0) return -1
-        val inside = text.substring(open + 1, close)
-        if (inside.isNotEmpty() && inside.none { it.isWhitespace() } && inside.any { it == '|' || it.isLetter() } &&
-            !inside.all { it.isDigit() }
-        ) {
-            return open
-        }
-        from = close + 1
-    }
-}
+private val TEMPLATE = Regex("""\[[^\[\]]*](?=\s*(?:[,;:.]|\[|$))""")
+private val SPACES = Regex("""\s+""")
+private val SPACE_BEFORE_MARK = Regex("""\s+([,.;:!?)])""")

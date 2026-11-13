@@ -78,6 +78,8 @@ public data class ServerIntegrationUi(
     val question: ServerIntegrationItem? = null,
     val failure: Failure? = null,
     val mayAdd: Boolean = false,
+    /** The server keeps an added tool server only until it restarts (run-time add), not in the project's settings. */
+    val addUntilRestart: Boolean = false,
     val add: Boolean = false,
     val copied: Boolean = false,
     val inputRevision: Int = 0,

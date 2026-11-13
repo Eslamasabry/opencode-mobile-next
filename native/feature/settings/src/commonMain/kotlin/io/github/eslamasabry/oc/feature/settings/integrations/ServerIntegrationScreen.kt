@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.settings.integrations
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.rememberScrollState
@@ -7,6 +8,8 @@ import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kit.*
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
@@ -46,9 +49,11 @@ public fun ServerIntegrationScreen(state: ServerIntegrationUi, actions: ServerIn
             )
         },
         loading = state.loading,
-        edges = KitScreenEdges.Bleed,
     ) {
-        Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+        Column(
+            Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
+        ) {
             state.failure?.let {
                 KitErrorNotice(
                     stringResource(Res.string.s40iFailed),
@@ -67,20 +72,22 @@ public fun ServerIntegrationScreen(state: ServerIntegrationUi, actions: ServerIn
                 KitButton(stringResource(Res.string.s40iDocs), actions::docs)
             }
             if (state.page == ServerIntegrationPage.Tools && state.catalog) {
-                listOf(
-                        ServerIntegrationPage.Mcp,
-                        ServerIntegrationPage.Commands,
-                        ServerIntegrationPage.Skills,
-                        ServerIntegrationPage.References,
-                        ServerIntegrationPage.Plugins,
-                    )
-                    .forEach { page ->
-                        KitRow(
-                            integrationTitle(page),
-                            trailing = KitRowTrailing.Chevron,
-                            onClick = { actions.go(page) },
+                KitRowGroup {
+                    listOf(
+                            ServerIntegrationPage.Mcp,
+                            ServerIntegrationPage.Commands,
+                            ServerIntegrationPage.Skills,
+                            ServerIntegrationPage.References,
+                            ServerIntegrationPage.Plugins,
                         )
-                    }
+                        .forEach { page ->
+                            KitRow(
+                                integrationTitle(page),
+                                trailing = KitRowTrailing.Chevron,
+                                onClick = { actions.go(page) },
+                            )
+                        }
+                }
                 if (!state.toolsListed) KitNotice(stringResource(Res.string.s40iToolsNotListed))
                 else
                     KitRow(
@@ -338,7 +345,12 @@ private fun AddMcpSheet(state: ServerIntegrationUi, actions: ServerIntegrationAc
         closeLabel = stringResource(Res.string.kitSheetClose),
         height = KitSheetHeight.Full,
     ) {
-        KitNotice(stringResource(Res.string.s40iMcpAddHint))
+        KitNotice(
+            stringResource(
+                if (state.addUntilRestart) Res.string.s40iMcpAddHintRuntime
+                else Res.string.s40iMcpAddHint
+            )
+        )
         KitField(name, label = stringResource(Res.string.s40iName))
         KitField(
             url,

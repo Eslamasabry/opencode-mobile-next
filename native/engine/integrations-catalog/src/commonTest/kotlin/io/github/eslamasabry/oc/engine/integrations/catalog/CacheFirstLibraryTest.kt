@@ -17,6 +17,7 @@ import io.github.eslamasabry.oc.core.testing.FakeServerGateway
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.time.Clock
 import kotlinx.collections.immutable.ImmutableList
@@ -107,7 +108,8 @@ class CacheFirstLibraryTest {
             )
         val kept = KeptLibrary.of(inventory)
         assertTrue(kept.skills.isEmpty())
-        assertEquals(300, kept.servers.single().error?.length)
+        // B-292: a server's MCP error prose can echo a secret and no screen shows it, so it is never kept.
+        assertNull(kept.servers.single().error)
         val text = Json.encodeToString(KeptLibrary.serializer(), kept)
         assertFalse(Regex("(?i)\"(token|password|secret|apikey)\"").containsMatchIn(text))
     }

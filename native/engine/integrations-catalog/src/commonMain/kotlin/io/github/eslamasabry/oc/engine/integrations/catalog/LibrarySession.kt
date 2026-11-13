@@ -447,13 +447,10 @@ public class LibrarySession(
         }
 
     public suspend fun addMcp(draft: McpServerDraft): Outcome<Unit> = mutate { src ->
-        if (!src.capabilities.mcpRuntimeAdds && !src.capabilities.mcpConfigWrites)
-            return@mutate Outcome.Failed(Failure.Unavailable(FeatureId("mcpRuntimeAdds")))
-        src.operations.addMcpServer(
-            draft,
-            if (src.capabilities.mcpConfigWrites) McpConfigScope.Project
-            else McpConfigScope.RuntimeLocation,
-        )
+        val scope =
+            mcpAddScope(src.capabilities)
+                ?: return@mutate Outcome.Failed(Failure.Unavailable(FeatureId("mcpRuntimeAdds")))
+        src.operations.addMcpServer(draft, scope)
     }
 
     private suspend fun mutate(block: suspend (LibrarySource) -> Outcome<Unit>): Outcome<Unit> =

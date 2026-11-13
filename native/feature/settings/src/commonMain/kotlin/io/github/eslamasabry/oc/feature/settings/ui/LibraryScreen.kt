@@ -46,7 +46,8 @@ import io.github.eslamasabry.oc.feature.settings.presentation.McpAddFields
 @Composable
 public fun LibraryScreen(state: LibraryUi, actions: LibraryActions) {
     val providerPage = state.tab == LibraryTab.Providers
-    val tabs = listOf(LibraryTab.Mcp, LibraryTab.Commands, LibraryTab.Skills, LibraryTab.References)
+    // The page is named for its commands, so they lead and the page opens on them (B-300).
+    val tabs = listOf(LibraryTab.Commands, LibraryTab.Skills, LibraryTab.References, LibraryTab.Mcp)
     val searches = remember { mutableMapOf<LibraryTab, TextFieldState>() }
     val search = searches.getOrPut(state.tab) { TextFieldState() }
     // A provider tap opens a sheet over the list: the search box's keyboard goes away with it, so one Back
