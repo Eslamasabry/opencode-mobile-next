@@ -128,8 +128,11 @@ class KitLiquidHoldShaderTest {
         }
     }
 
-    /** The plain pane's hold over 2 px black and white stripes, every pixel of row 20 (a 40 px pane, rim 20 px). */
-    private fun plainStripes(knee: FloatArray, local: FloatArray): IntArray {
+    /**
+     * The plain pane's hold over a white page with two 3 px black strokes (a letter's stem: one in the rim at x 2-4, one
+     * in the middle at x 19-21), every pixel of row 20 (a 40 px pane, rim 20 px).
+     */
+    private fun plainStrokes(knee: FloatArray, local: FloatArray): IntArray {
         val program = assertNotNull(DesktopLiveShader.compile(LiquidHoldShader.SOURCE))
         LiquidHoldUniforms(knee, 0f, 0f, 0f, 20f, 20f, 8f, 20f, 1f, 1f, 0f, local).set(program)
         val filter = assertNotNull((program as DesktopLiveShader).filter(0f))
@@ -137,22 +140,21 @@ class KitLiquidHoldShaderTest {
         bitmap.allocPixels(ImageInfo.makeN32(40, 40, ColorAlphaType.PREMUL))
         val canvas = Canvas(bitmap)
         canvas.saveLayer(null, Paint().apply { imageFilter = filter })
-        for (x in 0 until 40 step 2) {
-            val v = if ((x / 2) % 2 == 0) 255 else 0
-            canvas.drawRect(org.jetbrains.skia.Rect.makeXYWH(x.toFloat(), 0f, 2f, 40f), Paint().apply { color = org.jetbrains.skia.Color.makeRGB(v, v, v) })
-        }
+        canvas.drawPaint(Paint().apply { color = org.jetbrains.skia.Color.makeRGB(255, 255, 255) })
+        for (x in listOf(2f, 19f)) canvas.drawRect(org.jetbrains.skia.Rect.makeXYWH(x, 0f, 3f, 40f), Paint().apply { color = org.jetbrains.skia.Color.makeRGB(0, 0, 0) })
         canvas.restore()
         return IntArray(40) { x -> (bitmap.getColor(x, 20) shr 8) and 0xFF }
     }
 
     @Test
     fun `B-GLASS-LIQ-002 the detail hold softens fine detail in the middle and leaves the rim's bent content whole`() {
-        val row = plainStripes(KNEE_OFF, floatArrayOf(6f, 0f, .2f))
-        val middle = row.slice(16..23).let { it.max() - it.min() }
-        val rim = row.slice(1..6).let { it.max() - it.min() }
+        val row = plainStrokes(KNEE_OFF, floatArrayOf(13f, 0f, .15f))
+        val middle = row.slice(14..26).let { it.max() - it.min() }
+        val rim = row.slice(0..8).let { it.max() - it.min() }
         println("stripes under the detail hold: middle contrast $middle, rim contrast $rim")
         assertTrue(rim >= 240, "the rim's outer half keeps its detail: $rim")
-        assertTrue(middle <= 255 * .3f, "the middle holds a fifth of the detail and a little more: $middle")
+        // The stroke keeps .15 of its depth below the local mean; the page round it lifts a little less: at most a third.
+        assertTrue(middle <= 255 / 3, "the middle holds back most of the stroke: $middle")
     }
 
     @Test

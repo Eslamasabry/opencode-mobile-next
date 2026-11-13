@@ -147,7 +147,7 @@ public object LiquidEdge {
      * fine detail (a line of text, a table's rules) pressed toward its local mean within [LiquidHold.localDp], so the
      * words do not sit on legible words while the colour and the light of the page come through. Not in the rim.
      */
-    public val MODAL_HOLD: LiquidHold = LiquidHold(knee = true, chroma = HOLD_CHROMA, localDp = 14f, localFree = .03f, localSlope = .3f)
+    public val MODAL_HOLD: LiquidHold = LiquidHold(knee = true, chroma = HOLD_CHROMA, localDp = 16f, localFree = .03f, localSlope = .15f)
 
     /** The edge dock's pulled-out list keeps the sheet's old frost (the dock's glass is not part of this retune). */
     public const val DOCK_LIST_BLUR_DP: Float = 12f
