@@ -7,8 +7,6 @@ import androidx.compose.ui.platform.testTag
 import io.github.eslamasabry.oc.feature.chat.header.approval.ApprovalChipActions
 import io.github.eslamasabry.oc.feature.chat.header.approval.ApprovalChipUi
 import io.github.eslamasabry.oc.feature.chat.header.approval.ApprovalChoice
-import io.github.eslamasabry.oc.ui.kit.chip.KitChip
-import io.github.eslamasabry.oc.ui.kit.chip.KitChipKind
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
@@ -69,8 +67,8 @@ import org.jetbrains.compose.resources.stringResource
 public class ApprovalChipSlot(public val state: ApprovalChipUi, public val actions: ApprovalChipActions)
 
 /**
- * The approval chip at the start of the strip above the message box (Flutter composer status strip): "Ask first" or
- * "Auto-approve on"; a tap opens the three modes, the current one checked. Only "Approve
+ * The approval chip at the start of the message box's own row: "Ask first" or "Auto-approve on" (the shield alone on a
+ * phone); a tap opens the three modes, the current one checked. Only "Approve
  * everything" asks first. Hidden where the server never asks.
  */
 @Composable
@@ -79,38 +77,28 @@ public fun ApprovalChip(slot: ApprovalChipSlot, modifier: Modifier = Modifier) {
     val actions = slot.actions
     if (!state.offered) return
     androidx.compose.foundation.layout.Box(modifier) {
-        // Flutter `_AutoApprovalIndicator` (approvals_sheet.dart:257-330), at the start of the strip above the
-        // message box: an action chip with the shield, reading "Ask first" while asking and "Auto-approve on" (the
-        // kit's selected check) for either automatic mode; the menu says which one.
+        // "Ask first" while asking and "Auto-approve on" for either automatic mode; the menu says which one.
         val words =
             when (state.choice) {
                 ApprovalChoice.Ask -> stringResource(Res.string.approvalModeAskTitle)
                 ApprovalChoice.Auto,
                 ApprovalChoice.Everything -> stringResource(Res.string.chatChipAutoApproveOn)
             }
-        // On the glass slab (owner 2026-11-10) the chip is a quiet part of the message box's own row; on a phone it
-        // is the shield alone, tinted while approvals are automatic, so the model's name keeps the room. The menu and
-        // the screen reader still say the words.
-        if (io.github.eslamasabry.oc.ui.kitchat.composer.LocalKitComposerSlab.current)
-            io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerChip(
-                label = words,
-                onClick = actions::openApprovalMenu,
-                modifier = Modifier.testTag("chat-approval-chip"),
-                icon = if (state.choice != ApprovalChoice.Ask) KitIcons.shieldFilled else KitIcons.shield,
-                opensPicker = false,
-                active = state.choice != ApprovalChoice.Ask,
-                wordless =
-                    io.github.eslamasabry.oc.ui.kit.theme.LocalKitWindow.current.cls ==
-                        io.github.eslamasabry.oc.ui.design.layout.WindowClass.Compact,
-            )
-        else
-        KitChip(
+        // The chip is a quiet part of the message box's own row in every style (the box holds its own controls). On a
+        // phone it is the shield alone, tinted while approvals are automatic, so the model's name keeps the room:
+        // with its words it cut "DeepSeek V4.1 Flash Free" down to "Dee…" beside "Auto-approve on". The menu and the
+        // screen reader still say the words.
+        io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerChip(
             label = words,
-            kind = KitChipKind.Action,
-            icon = KitIcons.shield,
-            selected = if (state.choice != ApprovalChoice.Ask) true else null,
             onClick = actions::openApprovalMenu,
             modifier = Modifier.testTag("chat-approval-chip"),
+            icon = if (state.choice != ApprovalChoice.Ask) KitIcons.shieldFilled else KitIcons.shield,
+            opensPicker = false,
+            semanticsLabel = words,
+            active = state.choice != ApprovalChoice.Ask,
+            wordless =
+                io.github.eslamasabry.oc.ui.kit.theme.LocalKitWindow.current.cls ==
+                    io.github.eslamasabry.oc.ui.design.layout.WindowClass.Compact,
         )
     }
     ApprovalSheet(state, actions)
