@@ -60,7 +60,14 @@ class PaneRimFloorTest {
                     PaneRimScenes.paneBox(node)
                 }
             val samples = PaneRim.around(image, box, PaneRimScenes.DENSITY, case.only(box))
-            result = if (samples.isEmpty()) listOf("no outline sampled in $box") else PaneRim.weak(samples, share, least)
+            // "Over Aurora" means the picture is behind the panes: a scene showing the flat ground there tests nothing.
+            val page = if (aurora) PaneRimScenes.groundSpread(image) else Float.MAX_VALUE
+            result =
+                when {
+                    page < PaneRimScenes.AURORA_SPREAD -> listOf("the Aurora is not drawn behind the panes (the page's light spreads ${page.toInt()} of 255)")
+                    samples.isEmpty() -> listOf("no outline sampled in $box")
+                    else -> PaneRim.weak(samples, share, least)
+                }
         }
         return result
     }

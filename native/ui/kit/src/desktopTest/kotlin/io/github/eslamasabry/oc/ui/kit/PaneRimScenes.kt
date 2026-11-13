@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.effects.LiquidRole
+import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.design.style.Corners
 import io.github.eslamasabry.oc.ui.design.style.Style
 import io.github.eslamasabry.oc.ui.kit.choice.KitSegment
@@ -141,14 +142,25 @@ internal object PaneRimScenes {
     private fun MessageBox() {
         val shape = RoundedCornerShape(28.dp)
         val face = kitLiquidFace(LiquidRole.Composer, LocalKitLiquidChrome.current, shape)
-        Box(Modifier.padding(horizontal = 12.dp, vertical = 8.dp).fillMaxWidth().height(104.dp).testTag(BOX).then(face ?: Modifier))
+        // The tag on the pane's own box, inside the air round it: the measured box is the glass, not the glass and its air.
+        Box(Modifier.padding(horizontal = 12.dp, vertical = 8.dp)) {
+            Box(Modifier.fillMaxWidth().height(104.dp).testTag(BOX).then(face ?: Modifier))
+        }
     }
 
     @Composable
     fun Scene(aurora: Boolean, dark: Boolean = true, content: @Composable () -> Unit) {
         CompositionLocalProvider(LocalDensity provides Density(DENSITY)) {
             KitTheme(
-                KitAppearance(mode = if (dark) AppearanceMode.Dark else AppearanceMode.Light, style = Style.Glass, liveBackground = aurora, liveStyle = "auroraImage"),
+                KitAppearance(
+                    mode = if (dark) AppearanceMode.Dark else AppearanceMode.Light,
+                    // Motion off, not a still frame: a still-frame host never paints the aurora (KitLiveBackground), so
+                    // "over Aurora" would be the plain ground; motion off holds the picture still and every part at rest.
+                    motion = MotionLevel.Off,
+                    style = Style.Glass,
+                    liveBackground = aurora,
+                    liveStyle = "auroraImage",
+                ),
                 FakeKitPlatform(
                     frost = true,
                     liquidGlass = true,
@@ -156,7 +168,6 @@ internal object PaneRimScenes {
                     joinEffect = { p, b -> DesktopKitPlatform().liquidJoinEffect(p, b) },
                 ),
                 "en",
-                stillFrame = true,
             ) {
                 if (aurora) KitLiveBackground(Modifier.fillMaxSize()) { content() }
                 else Box(Modifier.fillMaxSize().background(LocalKitColors.current.ground.copy(alpha = 1f))) { content() }
@@ -184,6 +195,21 @@ internal object PaneRimScenes {
     /** The pane's whole box: a part's tag may sit inside its own padding, so the widest box its modifiers lay out. */
     fun paneBox(node: androidx.compose.ui.semantics.SemanticsNode): Rect =
         node.layoutInfo.getModifierInfo().map { it.coordinates.boundsInRoot() }.plus(node.boundsInRoot).maxBy { it.width * it.height }
+
+    /**
+     * How far the page's light spreads (0-255, brightest less darkest) on a coarse grid down its middle column, between
+     * the bar and the message box: the flat ground spreads by a step or two, the Aurora by tens.
+     */
+    fun groundSpread(image: androidx.compose.ui.graphics.PixelMap): Float {
+        val lum =
+            (6..14).flatMap { row -> listOf(.08f, .5f, .92f).map { col -> image[(image.width * col).toInt(), image.height * row / 20] } }.map {
+                (.2126f * it.red + .7152f * it.green + .0722f * it.blue) * 255f
+            }
+        return lum.max() - lum.min()
+    }
+
+    /** The least spread [groundSpread] takes for a page with the Aurora drawn on it. */
+    const val AURORA_SPREAD: Float = 12f
 
     const val WIDTH = 1080
     const val HEIGHT = 1800

@@ -21,29 +21,49 @@ import kotlin.test.Test
  * and Glass light, on the plain ground and over Aurora, at the phone's 2.625 px/dp, 1080 px wide; and beside each, its
  * four corners cut out and enlarged four times into one 2x2 picture (top-start, top-end / bottom-start, bottom-end).
  * Not a test: it runs only when `PANE_RIM_RENDER_OUT` names a folder, and writes
- * `pane-rim-<pane>-glass-{dark,light}-{ground,aurora}.png` and `...-corners.png` there.
+ * `pane-rim-<pane>-glass-{dark,light}-{ground,aurora}.png`, `...-corners.png` and `...-measured.png` (the measured
+ * box outlined) there, and `pane-rim-errors.txt` naming any scene that could not be drawn.
  */
 class PaneRimRenders {
     @Test
     fun `pane rim renders`() {
         val out = System.getenv("PANE_RIM_RENDER_OUT")?.let(::File) ?: return
         out.mkdirs()
+        val errors = StringBuilder()
         for (case in PaneRimScenes.cases) for (dark in listOf(true, false)) for (aurora in listOf(false, true)) {
             val name = "pane-rim-${case.name.replace(' ', '-')}-glass-${if (dark) "dark" else "light"}-${if (aurora) "aurora" else "ground"}"
-            runDesktopComposeUiTest(PaneRimScenes.WIDTH, PaneRimScenes.HEIGHT) {
-                PaneRimScenes.settle(this) { PaneRimScenes.Scene(aurora, dark) { case.content() } }
-                val image = onAllNodes(isRoot())[0].captureToImage().toAwtImage()
-                ImageIO.write(image, "png", File(out, "$name.png"))
-                val box =
-                    case.pane { matcher ->
-                        val node =
-                            onAllNodes(matcher, useUnmergedTree = true).fetchSemanticsNodes().firstOrNull()
-                                ?: onAllNodes(matcher).fetchSemanticsNodes().first()
-                        PaneRimScenes.paneBox(node)
-                    }
-                ImageIO.write(corners(image, box.left, box.top, box.right, box.bottom), "png", File(out, "$name-corners.png"))
+            // One scene that cannot be drawn is named in errors.txt; the others are still written.
+            try {
+                runDesktopComposeUiTest(PaneRimScenes.WIDTH, PaneRimScenes.HEIGHT) {
+                    PaneRimScenes.settle(this) { PaneRimScenes.Scene(aurora, dark) { case.content() } }
+                    val image = onAllNodes(isRoot())[0].captureToImage().toAwtImage()
+                    ImageIO.write(image, "png", File(out, "$name.png"))
+                    val box =
+                        case.pane { matcher ->
+                            val node =
+                                onAllNodes(matcher, useUnmergedTree = true).fetchSemanticsNodes().firstOrNull()
+                                    ?: onAllNodes(matcher).fetchSemanticsNodes().first()
+                            PaneRimScenes.paneBox(node)
+                        }
+                    ImageIO.write(corners(image, box.left, box.top, box.right, box.bottom), "png", File(out, "$name-corners.png"))
+                    ImageIO.write(measured(image, box.left, box.top, box.right, box.bottom), "png", File(out, "$name-measured.png"))
+                }
+            } catch (e: Throwable) {
+                errors.append("$name: ${e::class.simpleName}: ${e.message?.take(400)}\n")
             }
         }
+        File(out, "pane-rim-errors.txt").writeText(errors.toString())
+    }
+
+    /** The picture with the box the test measures outlined in magenta: which pane a scene samples. */
+    private fun measured(image: BufferedImage, left: Float, top: Float, right: Float, bottom: Float): BufferedImage {
+        val copy = BufferedImage(image.width, image.height, BufferedImage.TYPE_INT_ARGB)
+        val g = copy.createGraphics()
+        g.drawImage(image, 0, 0, null)
+        g.color = Color.MAGENTA
+        g.drawRect(left.roundToInt(), top.roundToInt(), (right - left).roundToInt(), (bottom - top).roundToInt())
+        g.dispose()
+        return copy
     }
 
     /** The four corners of the pane at [left]..[bottom] (px), each a [CUT_DP] dp square enlarged [ZOOM] times, 2x2. */
