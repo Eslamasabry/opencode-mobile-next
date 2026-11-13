@@ -85,6 +85,12 @@ public data class ChatUi(
     val attachAgain: AttachAgainUi? = null,
     /** The one-time GitHub star ask rides under the live line while this turn waits for its reply. */
     val starAsk: Boolean = false,
+    /**
+     * Set up at first use: the failed replies (by turn id) whose agent needs setting up; they say so and offer the
+     * agent's set-up instead of today's fixes. A turn missing here keeps today's words.
+     */
+    val setUpReplies: ImmutableMap<String, io.github.eslamasabry.oc.feature.chat.world.AgentSetUpNeed> =
+        persistentMapOf(),
 ) {
     public companion object {
         public fun loading(ref: ConversationRef): ChatUi =

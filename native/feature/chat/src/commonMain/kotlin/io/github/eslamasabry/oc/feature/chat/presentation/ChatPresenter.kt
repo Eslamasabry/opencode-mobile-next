@@ -11,10 +11,12 @@ import io.github.eslamasabry.oc.engine.transcript.ledger.factTicks
 import io.github.eslamasabry.oc.engine.transcript.ledger.latest
 import io.github.eslamasabry.oc.engine.transcript.state.FooterRow
 import io.github.eslamasabry.oc.engine.transcript.state.PromptRow
+import io.github.eslamasabry.oc.engine.transcript.state.TranscriptRow
 import io.github.eslamasabry.oc.engine.transcript.state.TranscriptState
 import io.github.eslamasabry.oc.feature.chat.starprompt.ChatStarPrompt
 import io.github.eslamasabry.oc.feature.chat.starprompt.StarPromptEvent
 import io.github.eslamasabry.oc.feature.chat.starprompt.StarPromptTurn
+import io.github.eslamasabry.oc.feature.chat.world.AgentSetUpNeed
 import io.github.eslamasabry.oc.feature.chat.world.ChatLink
 import io.github.eslamasabry.oc.feature.chat.world.StoppedPrompt
 import io.github.eslamasabry.oc.feature.chat.world.ChatLoad
@@ -485,6 +487,7 @@ public class ChatPresenter(
             switching = l.switching,
             attachAgain = l.attachAgain,
             starAsk = l.starAsk && t.run.busy && i.link == ChatLink.Live,
+            setUpReplies = setUpReplies(t.rows),
         )
     }
 
@@ -498,6 +501,45 @@ public class ChatPresenter(
         val port = outside ?: return flowOf(Unit)
         val owner = port.phoneAgentOwner(world.ref) ?: return flowOf(Unit)
         return port.agentsSetUpChanges(owner).onStart { emit(Unit) }
+    }
+
+    /** Set up at first use: whether the agent was set up when each failed reply came (by turn). */
+    private val replySetUpAtFailure = HashMap<String, Boolean>()
+    private var lastSetUpReplies: kotlinx.collections.immutable.ImmutableMap<String, AgentSetUpNeed> = persistentMapOf()
+
+    /**
+     * Set up at first use, the reply seam ([AgentSetUpRules.replyNeed]): a failed reply of a phone agent that was never
+     * set up (omp's first answer) says so. Only phone agents' conversations are read; the same map while equal.
+     */
+    private fun setUpReplies(rows: ImmutableList<TranscriptRow>): kotlinx.collections.immutable.ImmutableMap<String, AgentSetUpNeed> {
+        val port = outside
+        val owner = port?.phoneAgentOwner(world.ref)
+        if (port == null || owner == null) {
+            replySetUpAtFailure.clear()
+            return persistentMapOf<String, AgentSetUpNeed>().also { lastSetUpReplies = it }
+        }
+        val failed = rows.filter { it is FooterRow && it.failed && !it.reason.isNullOrBlank() }.map { it as FooterRow }
+        replySetUpAtFailure.keys.retainAll { turn -> failed.any { it.turnId == turn } }
+        // Newest first: the oldest footer is the conversation's first answer, unless older history is not loaded.
+        val firstTurn = if (world.hasOlder.value) null else rows.lastOrNull { it is FooterRow }?.turnId
+        val setUp = port.agentsSetUp(owner)
+        val runtime = world.runtimeId()
+        val needs = HashMap<String, AgentSetUpNeed>()
+        for (footer in failed) {
+            val agentRuntime = runtime ?: footer.providerId ?: continue
+            val done = AgentSetUpRules.agentId(agentRuntime)?.let { it in setUp } ?: continue
+            val before = replySetUpAtFailure.getOrPut(footer.turnId) { done }
+            AgentSetUpRules.replyNeed(
+                    agentRuntime,
+                    footer.reason,
+                    firstAnswer = footer.turnId == firstTurn,
+                    setUpDone = before,
+                    setUpSinceFailure = done && !before,
+                )
+                ?.let { needs[footer.turnId] = it }
+        }
+        if (needs == lastSetUpReplies) return lastSetUpReplies
+        return needs.toPersistentMap().also { lastSetUpReplies = it }
     }
 
     /** Set up at first use ([AgentSetUpRules]): a failed send whose agent was never set up says so on its bubble. */
@@ -1029,6 +1071,23 @@ public class ChatPresenter(
     override fun setUpAgent(agentId: String) {
         val owner = outside?.phoneAgentOwner(world.ref) ?: return
         nav.open(io.github.eslamasabry.oc.ui.routes.AgentsRoute.SignInTerminal(owner, agentId))
+    }
+
+    /**
+     * B-AGENT-189: whose sign-in terminal this conversation's agents use. A phone agents conversation lives on the
+     * `<owner>-agents` helper profile, which that terminal refuses: it is the phone owner's, the same owner Set up uses.
+     * A conversation on the phone's own server is its own owner's; anything else has none.
+     */
+    private fun signInOwner(): io.github.eslamasabry.oc.core.common.ids.ProfileId? {
+        val port = outside ?: return null
+        return port.phoneAgentOwner(world.ref) ?: world.ref.profileId.takeIf { port.isPhoneServer(world.ref) }
+    }
+
+    override fun phoneAgentSignIn(): Boolean = signInOwner() != null
+
+    override fun openAgentSignIn(providerId: String) {
+        val owner = signInOwner() ?: return
+        nav.open(io.github.eslamasabry.oc.ui.routes.AgentsRoute.SignInTerminal(owner, providerId))
     }
 
     override fun dismissStatus(id: String) {

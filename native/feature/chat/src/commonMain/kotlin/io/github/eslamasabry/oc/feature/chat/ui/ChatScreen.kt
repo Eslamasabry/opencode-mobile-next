@@ -971,7 +971,11 @@ public fun ChatScreen(
                                     )
                                 } else
                                     androidx.compose.runtime.CompositionLocalProvider(
-                                        LocalLimitSwitchReply provides rememberLimitSwitchReply(state, actions)
+                                        LocalLimitSwitchReply provides rememberLimitSwitchReply(state, actions),
+                                        LocalAgentSetUpReply provides
+                                            remember(state.setUpReplies, actions) {
+                                                AgentSetUpReply(state.setUpReplies, actions::setUpAgent)
+                                            },
                                     ) {
                                         ChatTranscriptList(
                                             folds = folds,

@@ -211,12 +211,9 @@ public class ChatViewModel(
     override fun openSignInSettings(): Unit =
         nav.open(io.github.eslamasabry.oc.ui.routes.SettingsRoute.Home)
 
-    override fun phoneAgentSignIn(): Boolean = outside.isPhoneServer(route.ref)
+    override fun phoneAgentSignIn(): Boolean = presenter.phoneAgentSignIn()
 
-    override fun openAgentSignIn(providerId: String) {
-        if (!outside.isPhoneServer(route.ref)) return
-        nav.open(io.github.eslamasabry.oc.ui.routes.AgentsRoute.SignInTerminal(route.ref.profileId, providerId))
-    }
+    override fun openAgentSignIn(providerId: String): Unit = presenter.openAgentSignIn(providerId)
 
     override fun setUpAgent(agentId: String): Unit = presenter.setUpAgent(agentId)
 

@@ -44,6 +44,26 @@ internal object AgentSetUpRules {
         return if (verdict == AgentFirstUse.Verdict.NeedsSetUp) AgentSetUpNeed(agent.id.raw, agent.name) else null
     }
 
+    /**
+     * The set-up a failed reply needs, or null for today's reply-failure words. omp opens its conversation without
+     * credentials and fails its first answer, so the failure arrives as a reply ([AgentFirstUse.Phase.FirstPrompt]).
+     * Read for the conversation's [firstAnswer], or any answer while the agent is not set up ([setUpDone], as known when
+     * the failure came); after the set-up is marked ([setUpSinceFailure]) the same failure is the plain one.
+     */
+    fun replyNeed(
+        runtimeId: String,
+        reason: String?,
+        firstAnswer: Boolean,
+        setUpDone: Boolean,
+        setUpSinceFailure: Boolean,
+        catalog: AgentCatalog = AgentCatalog.builtIn,
+    ): AgentSetUpNeed? {
+        if (setUpSinceFailure || (!firstAnswer && setUpDone)) return null
+        val agent = catalog.agents.firstOrNull { it.providerId == runtimeId } ?: return null
+        val verdict = AgentFirstUse.classify(agent, AgentFirstUse.Phase.FirstPrompt, reason, setUpDone)
+        return if (verdict == AgentFirstUse.Verdict.NeedsSetUp) AgentSetUpNeed(agent.id.raw, agent.name) else null
+    }
+
     /** The catalog agent behind a conversation's runtime (the id its set-up terminal and set-up list use). */
     fun agentId(runtimeId: String, catalog: AgentCatalog = AgentCatalog.builtIn): String? =
         catalog.agents.firstOrNull { it.providerId == runtimeId }?.id?.raw
