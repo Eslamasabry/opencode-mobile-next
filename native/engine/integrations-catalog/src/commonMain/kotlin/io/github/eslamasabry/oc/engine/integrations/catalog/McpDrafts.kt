@@ -1,5 +1,7 @@
 package io.github.eslamasabry.oc.engine.integrations.catalog
 
+import io.github.eslamasabry.oc.core.domain.capabilities.ServerCapabilities
+import io.github.eslamasabry.oc.core.model.McpConfigScope
 import io.github.eslamasabry.oc.core.model.McpServerDraft
 import io.github.eslamasabry.oc.core.model.McpServerKind
 import kotlinx.serialization.json.JsonArray
@@ -17,6 +19,19 @@ public sealed interface McpDraftCheck {
 
     public data class Invalid(val problem: McpDraftProblem) : McpDraftCheck
 }
+
+/**
+ * Where an MCP server the person adds from the app is saved, or null when this server cannot take one. A server that
+ * writes its configuration keeps it in the project; one that only adds at run time keeps it for this project location
+ * until it restarts. Every add page asks this one rule, so no page offers Add where the server refuses it, and no page
+ * hides Add where the server takes it (an OpenCode 2 server only adds at run time).
+ */
+public fun mcpAddScope(capabilities: ServerCapabilities): McpConfigScope? =
+    when {
+        capabilities.mcpConfigWrites -> McpConfigScope.Project
+        capabilities.mcpRuntimeAdds -> McpConfigScope.RuntimeLocation
+        else -> null
+    }
 
 private val LINE_BREAK = Regex("[\r\n]")
 private val PAIR_NAME_BAD = Regex("[\r\n=]")
