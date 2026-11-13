@@ -17,6 +17,14 @@ class PhoneServerStopRecordTest {
     }
 
     @Test
+    fun aStopOrRestartThePersonAskedForIsRecordedAsAskedButARefusalOrTimeoutIsNot() {
+        assertEquals(
+            mapOf(Cause.Person to true, Cause.Replace to true, Cause.Refused to false, Cause.SystemTimeout to false),
+            Cause.values().associateWith { PhoneServerStopRecord.asked(it) },
+        )
+    }
+
+    @Test
     fun anEarlierStopByThePersonStaysThroughTheAppsOwnStops() {
         Cause.values().forEach { assertTrue(it.name, PhoneServerStopRecord.afterStop(before = true, cause = it)) }
     }

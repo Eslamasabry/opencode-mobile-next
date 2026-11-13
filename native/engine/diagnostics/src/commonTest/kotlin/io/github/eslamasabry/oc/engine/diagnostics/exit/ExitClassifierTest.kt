@@ -47,6 +47,37 @@ class ExitClassifierTest {
     }
 
     @Test
+    fun `B-244 an install or update, a stop the person asked for and a real background kill are told apart`() {
+        // Install or update, recorded as the user's request while the app was in the background.
+        for (importance in listOf(125, 100, 400)) {
+            val update = ExitRecord(reason = 10, timestampMs = OWNER_AT, subReason = 25, importance = importance)
+            assertEquals(ExitKind.Update, update.kind, "importance $importance")
+            assertFalse(update.kind.announced)
+        }
+        assertEquals(ExitKind.Update, ExitRecord(reason = 16, timestampMs = OWNER_AT, importance = 400).kind)
+        // The person's own stop (stop app by name, or a swipe from Recents) says nothing even in the background.
+        val asked = ExitRecord(reason = 10, timestampMs = OWNER_AT, subReason = 23, importance = 400)
+        assertEquals(ExitKind.ForceStop, asked.kind)
+        assertFalse(asked.kind.announced)
+        assertEquals(ExitKind.ForceStop, ExitRecord(reason = 10, timestampMs = OWNER_AT, subReason = 22, importance = 400).kind)
+        // A real background kill is still told, softly.
+        val killed = ExitRecord(reason = 10, timestampMs = OWNER_AT, subReason = 21, importance = 400)
+        assertEquals(ExitKind.BackgroundStop, killed.kind)
+        assertTrue(killed.kind.announced)
+        assertEquals(ExitKind.LowMemory, ExitRecord(reason = 3, timestampMs = OWNER_AT, importance = 400).kind)
+    }
+
+    @Test
+    fun `B-244 an exit just after a stop or restart the app itself did is the person's, a later one is not`() {
+        val stopAt = 1_000_000L
+        assertTrue(ExitClassifier.followsAskedStop(stopAt + 5_000, stopAt))
+        assertTrue(ExitClassifier.followsAskedStop(stopAt, stopAt))
+        assertFalse(ExitClassifier.followsAskedStop(stopAt + ExitClassifier.ASKED_STOP_WINDOW_MS + 1, stopAt))
+        assertFalse(ExitClassifier.followsAskedStop(stopAt - 1, stopAt), "an exit before the stop is not it")
+        assertFalse(ExitClassifier.followsAskedStop(stopAt + 5_000, null))
+    }
+
+    @Test
     fun `B-ANDR-004 a normal exit and an update say nothing`() {
         assertEquals(ExitKind.Normal, kind(1))
         assertEquals(ExitKind.Normal, kind(0))
