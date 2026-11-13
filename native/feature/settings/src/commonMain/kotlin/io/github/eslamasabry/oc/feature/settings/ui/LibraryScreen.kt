@@ -86,7 +86,13 @@ public fun LibraryScreen(state: LibraryUi, actions: LibraryActions) {
                 exitLabel = stringResource(Res.string.nlibBack),
                 onExit = actions::back,
                 actions =
-                    listOf(KitLineAction(stringResource(Res.string.nlibRefresh), actions::refresh)),
+                    listOf(
+                            KitLineAction(
+                                stringResource(Res.string.nlibRefresh),
+                                actions::refresh,
+                                icon = KitIcons.sync,
+                            )
+                        ),
             )
         },
         header =
@@ -114,7 +120,6 @@ public fun LibraryScreen(state: LibraryUi, actions: LibraryActions) {
                 }
             } else null,
         loading = inventory.loading,
-        edges = KitScreenEdges.Bleed,
     ) {
         LazyColumn(
             Modifier.fillMaxSize(),
@@ -144,9 +149,7 @@ public fun LibraryScreen(state: LibraryUi, actions: LibraryActions) {
                             icon = KitIcons.error,
                             primary =
                                 KitAction(stringResource(Res.string.commonRetry), actions::refresh),
-                            modifier =
-                                Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp)
-                                    .padding(bottom = Space.S3.dp),
+                            modifier = Modifier.padding(bottom = Space.S3.dp),
                         )
                     } else
                         KitNotice(
@@ -187,14 +190,12 @@ public fun LibraryScreen(state: LibraryUi, actions: LibraryActions) {
                             state.tab,
                         )
                         KitGroupNote(stringResource(Res.string.commandSheetLibrarySubtitle))
-                        Box(Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp)) {
-                            KitSearchField(
-                                label = stringResource(Res.string.chatUiFindACommandOrAction),
-                                state = search,
-                                onSearch = {},
-                                modifier = Modifier.testTag("library-command-search"),
-                            )
-                        }
+                        KitSearchField(
+                            label = stringResource(Res.string.chatUiFindACommandOrAction),
+                            state = search,
+                            onSearch = {},
+                            modifier = Modifier.testTag("library-command-search"),
+                        )
                         if (
                             selectedSection in inventory.failedSections && inventory.commands.isEmpty()
                         ) {
@@ -204,8 +205,7 @@ public fun LibraryScreen(state: LibraryUi, actions: LibraryActions) {
                             // native failure carries none, so the title says it alone.
                             KitNotice(
                                 stringResource(Res.string.commandsScreenLoadFailed),
-                                Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp)
-                                    .padding(top = Space.S3.dp),
+                                Modifier.padding(top = Space.S3.dp),
                                 tone = StatusTone.Failure,
                                 actions =
                                     listOf(
@@ -295,16 +295,9 @@ public fun LibraryScreen(state: LibraryUi, actions: LibraryActions) {
                     // A2: the providers are lazy rows of their own below (one composed per visible row).
                     LibraryTab.Providers -> Unit
                     LibraryTab.Mcp -> {
-                        if (
-                            inventory.capabilities?.let {
-                                it.mcpRuntimeAdds || it.mcpConfigWrites
-                            } == true
-                        )
-                            KitButton(
-                                stringResource(Res.string.nlibAddMcp),
-                                { actions.show(LibrarySheet.McpAddChoice) },
-                                role = KitButtonRole.Secondary,
-                            )
+                        val canAdd =
+                            inventory.capabilities?.let { it.mcpRuntimeAdds || it.mcpConfigWrites } ==
+                                true
                         val rows =
                             inventory.servers
                                 .filter { match(it.name, it.status) }
@@ -320,12 +313,30 @@ public fun LibraryScreen(state: LibraryUi, actions: LibraryActions) {
                                         }
                                         .thenBy { it.name.lowercase() }
                                 )
+                        val emptyAdd =
+                            rows.isEmpty() && query.isEmpty() && !inventory.coldLoading &&
+                                selectedSection !in inventory.failedSections
+                        // An empty tab has one clear thing to do: the state's own action. With rows, or a search
+                        // that matched none, the add button stays as a quiet button above the list.
+                        if (canAdd && !emptyAdd)
+                            KitButton(
+                                stringResource(Res.string.nlibAddMcp),
+                                { actions.show(LibrarySheet.McpAddChoice) },
+                                role = KitButtonRole.Secondary,
+                            )
                         LibraryEmpty(
                             rows.isEmpty(),
                             query,
                             inventory.coldLoading,
                             selectedSection in inventory.failedSections,
                             state.tab,
+                            addAction =
+                                if (canAdd)
+                                    KitAction(
+                                        stringResource(Res.string.nlibAddMcp),
+                                        { actions.show(LibrarySheet.McpAddChoice) },
+                                    )
+                                else null,
                         )
                         KitRowGroup {
                             rows.forEach { server ->
@@ -487,6 +498,7 @@ private fun LibraryEmpty(
     loading: Boolean,
     failed: Boolean,
     tab: LibraryTab,
+    addAction: KitAction? = null,
 ) {
     if (!empty) return
     if (loading) {
@@ -505,7 +517,15 @@ private fun LibraryEmpty(
             LibraryTab.Mcp -> Res.string.e7LibraryNoMCPServersConfigured
             else -> Res.string.nlibEmpty
         }
-    if (tab == LibraryTab.Skills || tab == LibraryTab.References) {
+    if (tab == LibraryTab.Mcp) {
+        KitInlineStateView(
+            title = stringResource(title),
+            icon = KitIcons.extensions,
+            body = stringResource(Res.string.aiSetupToolsTerm),
+            primary = addAction,
+            modifier = Modifier.padding(bottom = Space.S3.dp),
+        )
+    } else if (tab == LibraryTab.Skills || tab == LibraryTab.References) {
         KitInlineStateView(
             title = stringResource(title),
             icon = if (tab == LibraryTab.Skills) KitIcons.extensions else KitIcons.bookmark,
@@ -514,9 +534,7 @@ private fun LibraryEmpty(
                     if (tab == LibraryTab.Skills) Res.string.emptyTeachSkillsMessage
                     else Res.string.referencesScreenEmptyBody
                 ),
-            modifier =
-                Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp)
-                    .padding(bottom = Space.S3.dp),
+            modifier = Modifier.padding(bottom = Space.S3.dp),
         )
     } else {
         KitStateView(KitStateKind.Calm, stringResource(title), size = KitStateSize.Inline)
