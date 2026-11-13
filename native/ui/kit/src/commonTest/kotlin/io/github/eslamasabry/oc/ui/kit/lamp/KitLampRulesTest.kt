@@ -4,6 +4,7 @@ import androidx.compose.ui.geometry.Rect
 import io.github.eslamasabry.oc.core.common.text.Numbers
 import io.github.eslamasabry.oc.ui.design.motion.KitHaptic
 import io.github.eslamasabry.oc.ui.design.motion.MotionTokens
+import io.github.eslamasabry.oc.ui.design.motion.allowed
 import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.kit.state.ReceiptRules
 import io.github.eslamasabry.oc.ui.kit.status.KitMarkSize

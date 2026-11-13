@@ -409,8 +409,8 @@ private fun LampFace(face: KitLampFace, left: Boolean, interactions: MutableInte
     }
     Box(
         Modifier
-            .clearAndSetSemantics {}
             .testTag(LAMP_FACE_TAG)
+            .clearAndSetSemantics {}
             // The face runs a corner's width past the edge, so its edge side is square once the edge cuts it.
             .layout { m, c ->
                 val extra = corner.roundToPx()
