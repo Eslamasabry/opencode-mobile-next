@@ -120,6 +120,31 @@ class Oc2GlobalSessionsRowsTest {
     }
 
     @Test
+    fun `B-243 a page whose rows cannot be read is an unreadable reply, never an empty list`() = runTest {
+        val server = RowServer(location = here) { json(page("""{"title":"no id"}""", "\"text\"", next = "c2")) }
+        try {
+            val failed = assertIs<Outcome.Failed>(server.gateway.listGlobalSessions(null, false, null, 50))
+            assertIs<Failure.UnreadableReply>(failed.failure)
+        } finally {
+            server.gateway.close()
+        }
+    }
+
+    @Test
+    fun `B-243 an empty page from the server is an empty page`() = runTest {
+        val server = RowServer(location = here) { json(page()) }
+        try {
+            val read =
+                assertIs<Outcome.Ok<ServerPage<GlobalSessionResult>>>(
+                    server.gateway.listGlobalSessions(null, false, null, 50)
+                )
+            assertTrue(read.value.items.isEmpty())
+        } finally {
+            server.gateway.close()
+        }
+    }
+
+    @Test
     fun `a server that answers not found is a failure the caller can fall back from`() = runTest {
         val server =
             RowServer(location = here) {

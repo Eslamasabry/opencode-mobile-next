@@ -51,6 +51,30 @@ class ToolOutputTest {
     }
 
     @Test
+    fun `B-253 a call the agent formed wrongly is a malformed call, not a plain failure`() {
+        val refused =
+            "Invalid arguments for tool \"question\": questions[1].question: Missing key\n" +
+                "  at [\"questions\"][1][\"question\"]\nUpdate the arguments and call the tool again."
+        val view = toolOutputView(ToolState(ToolStatus.Error, output = refused), "question")
+        assertEquals(ToolFailure.MalformedCall, view.failure)
+        assertEquals(refused, view.errorText) // the server's text stays for Details
+        assertEquals(
+            ToolFailure.MalformedCall,
+            toolFailureOf("Error: The arguments provided to the tool are invalid: expected string"),
+        )
+        assertEquals(ToolFailure.MalformedCall, toolFailureOf("Invalid input for tool bash: Type validation failed"))
+    }
+
+    @Test
+    fun `B-253 other failures stay failures, a refusal stays declined, a finished call has none`() {
+        assertEquals(ToolFailure.Failed, toolFailureOf("ENOENT: no such file"))
+        assertEquals(ToolFailure.Failed, toolFailureOf("grep found: Invalid arguments for tool in log.txt"))
+        assertEquals(ToolFailure.Declined, toolFailureOf("The user declined this tool call"))
+        assertNull(toolFailureOf(null))
+        assertNull(toolOutputView(ToolState(ToolStatus.Completed, output = "ok"), null).failure)
+    }
+
+    @Test
     fun `B-CHAT-112 a finished call shows its input pretty printed and a string value as it is`() {
         val view =
             toolOutputView(

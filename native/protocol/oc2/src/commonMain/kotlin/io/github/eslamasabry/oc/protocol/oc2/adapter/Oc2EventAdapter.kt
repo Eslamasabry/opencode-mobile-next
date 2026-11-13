@@ -10,6 +10,7 @@ import io.github.eslamasabry.oc.protocol.oc2.wire.Oc2FormInfo
 import io.github.eslamasabry.oc.protocol.oc2.wire.Oc2Location
 import io.github.eslamasabry.oc.protocol.oc2.wire.Oc2ModelRef
 import io.github.eslamasabry.oc.protocol.oc2.wire.Oc2PermissionRequest
+import io.github.eslamasabry.oc.protocol.oc2.wire.Oc2StructuredError
 import io.github.eslamasabry.oc.protocol.oc2.wire.Oc2Tokens
 import io.github.eslamasabry.oc.protocol.oc2.wire.Oc2ToolResultItem
 import io.github.eslamasabry.oc.protocol.oc2.wire.Oc2ToolState
@@ -818,7 +819,7 @@ internal class Oc2EventAdapter(private val nowMs: () -> Long) {
                 status = if (e.succeeded) Oc2ToolStatus.Completed else Oc2ToolStatus.Error,
                 input = call?.input ?: EmptyJson,
                 output = if (e.succeeded) text else null,
-                error = if (e.succeeded) null else e.error?.message ?: text.ifEmpty { null },
+                error = if (e.succeeded) null else toolErrorText(e.error) ?: text.ifEmpty { null },
                 attachments = attachments,
                 content = e.content,
                 metadata = e.metadata,
@@ -889,7 +890,7 @@ internal class Oc2EventAdapter(private val nowMs: () -> Long) {
                     )
                 is Oc2ToolState.Error ->
                     Oc2AdaptedTool(
-                        item.id, item.name, Oc2ToolStatus.Error, input = s.input, error = s.error?.message,
+                        item.id, item.name, Oc2ToolStatus.Error, input = s.input, error = toolErrorText(s.error),
                         attachments = s.content.attachments(), content = s.content, metadata = s.metadata,
                     )
                 is Oc2ToolState.Unknown -> Oc2AdaptedTool(item.id, item.name, Oc2ToolStatus.Pending)
@@ -907,6 +908,18 @@ internal class Oc2EventAdapter(private val nowMs: () -> Long) {
             completedAtMs = item.time.completed,
             pruned = item.time.pruned != null,
         )
+    }
+
+    /**
+     * A failed call's error text. OpenCode 2 ends a call the person refused as an error of type
+     * `permission.rejected` whose message is either its own decline sentence or ONLY the note the person wrote
+     * ("use the other folder"), so the note alone read as a failure. Such a call is the person's refusal: its text
+     * starts with the decline sentence every reader knows ([DECLINED_TOOL_CALL]) and keeps the note on the next line.
+     */
+    private fun toolErrorText(error: Oc2StructuredError?): String? {
+        if (error?.type != PERMISSION_REJECTED) return error?.message
+        val note = error.message?.trim()?.takeIf { it.isNotEmpty() && !it.contains("user declined", ignoreCase = true) }
+        return if (note == null) DECLINED_TOOL_CALL else "$DECLINED_TOOL_CALL\n$note"
     }
 
     private fun List<Oc2ToolResultItem>.attachments(): List<Oc2ToolAttachment> =
@@ -1109,6 +1122,12 @@ internal class Oc2EventAdapter(private val nowMs: () -> Long) {
     public companion object {
         public const val MAX_TRACKED: Int = 256
         private val EmptyJson = JsonObject(emptyMap())
+
+        /** The error type OpenCode 2 gives a tool call the person refused at its permission card. */
+        private const val PERMISSION_REJECTED: String = "permission.rejected"
+
+        /** OpenCode 2's own sentence for a refused call; the transcript reads it as "You declined this". */
+        internal const val DECLINED_TOOL_CALL: String = "The user declined this tool call"
     }
 }
 

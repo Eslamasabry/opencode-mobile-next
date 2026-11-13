@@ -77,4 +77,19 @@ class Paseo0153ArchiveTest {
             assertIs<Outcome.Failed>(ops.archiveSession(SessionId(agentId)))
             assertEquals(1, h.daemon.of("archive_agent_request").size)
         }
+
+    @Test
+    fun `B-293 the operations at a folder read the daemon's model list and defaults, as the gateway's own do`() =
+        runTest {
+            val h = daemon0153()
+            val ops = h.gateway.operationsAt(h.gateway.location.value)
+            // Before: Failed(Unavailable serverCatalog) from the interface default, nothing asked of the daemon.
+            val located = assertIs<Outcome.Ok<io.github.eslamasabry.oc.core.model.CatalogSnapshot>>(ops.catalog()).value
+            val own = assertIs<Outcome.Ok<io.github.eslamasabry.oc.core.model.CatalogSnapshot>>(
+                PaseoOperations(h.gateway).catalog()
+            ).value
+            assertEquals(own, located)
+            assertEquals(listOf("opencode"), located.providers.map { it.id })
+            assertIs<Outcome.Ok<*>>(ops.chatDefaults())
+        }
 }
