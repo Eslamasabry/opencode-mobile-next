@@ -9,7 +9,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.imePadding
+import io.github.eslamasabry.oc.ui.kit.frame.kitImePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.TextFieldState
@@ -127,7 +127,7 @@ public fun SavedPromptsScreen(state: SavedPromptsUi, actions: SavedPromptsAction
     ) {
         Column(
             Modifier.fillMaxSize()
-                .imePadding()
+                .kitImePadding()
                 .verticalScroll(rememberScrollState())
                 .padding(vertical = Space.S3.dp),
             verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
