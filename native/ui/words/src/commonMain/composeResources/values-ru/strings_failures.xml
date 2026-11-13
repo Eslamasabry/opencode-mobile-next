@@ -96,4 +96,5 @@
     <string name="chatSendFailureNeedsAccount">Для этой модели нужна учётная запись %1$s</string>
     <string name="agentErrorFreeTier">Бесплатные модели OpenCode остановили этот ответ.</string>
     <string name="agentErrorFreeTierHint">Длинные чаты часто отклоняются на бесплатном тарифе, даже если сегодня вы почти не пользовались. Обычно помогает сократить этот чат или начать новый.</string>
+    <string name="chatSendFailureNeedsSetUp">%1$s нужно настроить, чтобы получить ответ</string>
 </resources>
