@@ -21,7 +21,9 @@ import androidx.compose.runtime.withFrameNanos
 /**
  * A sheet's scrolling body that fades out above pinned actions: a part it is asked to bring into view (a field's
  * caret line) must come to rest above the fade, not inside it. Asks for [fadePx] more room below the part, and
- * remembers the last part asked for, so [rememberSheetFieldIntoView] can ask again when the keyboard resizes the body.
+ * remembers the last part asked for, so [rememberSheetBodyIntoView] can ask again when the keyboard resizes the body.
+ * At the very end of the body there is no content below the part to scroll past, so the body also grows [fadePx] of
+ * room at its end while a field in it has focus (see SheetPanel).
  */
 @OptIn(ExperimentalFoundationApi::class)
 internal class SheetFieldIntoView(private val fadePx: () -> Float) : BringIntoViewResponder {
@@ -64,7 +66,7 @@ internal class SheetBodyIntoView(fadePx: () -> Float) {
 internal fun rememberSheetBodyIntoView(fadePx: () -> Float): SheetBodyIntoView {
     val latest by rememberUpdatedState(fadePx)
     val state = remember { SheetBodyIntoView { latest() } }
-    LaunchedEffect(state.height) {
+    LaunchedEffect(state.height, state.focused) {
         val rect = state.responder.last
         if (state.focused && rect != null) {
             // One frame: the scroll has taken the new size first, then this asks again with the fade's room.

@@ -802,7 +802,9 @@ private fun SheetPanel(
                             start = FlutterKitTokens.RAIL.dp,
                             top = Space.S2.dp,
                             end = FlutterKitTokens.RAIL.dp,
-                            bottom = (if (hasActions) Space.S2 else FlutterKitTokens.RAIL).dp,
+                            bottom = (if (hasActions) Space.S2 else FlutterKitTokens.RAIL).dp +
+                                // The fade's reach of room past the last part while a field has focus: its caret line can scroll clear of the fade.
+                                (if (pinned && intoView.focused) fadeReach else 0.dp),
                         )
                     ) {
                         if (entry.framed) {

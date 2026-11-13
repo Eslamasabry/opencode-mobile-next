@@ -97,12 +97,4 @@ class KitSheetFieldIntoViewTest {
         run(pinned = false, keyboardUp = false) { field, _, sheet ->
             assertTrue(field.bottom <= sheet.bottom, "field bottom ${field.bottom} inside the sheet ${sheet.bottom}")
         }
-
-    // Probes while the first CI run gave no numbers: how far above the buttons the field rests.
-    @Test fun `probe gap 0`() = run(true, false) { f, b, _ -> assertTrue(f.bottom <= b!!.top) }
-    @Test fun `probe gap 8`() = run(true, false) { f, b, _ -> assertTrue(f.bottom <= b!!.top - 8.dp) }
-    @Test fun `probe gap 16`() = run(true, false) { f, b, _ -> assertTrue(f.bottom <= b!!.top - 16.dp) }
-    @Test fun `probe gap 32`() = run(true, false) { f, b, _ -> assertTrue(f.bottom <= b!!.top - 32.dp) }
-    @Test fun `probe field is in the sheet`() = run(true, false) { f, _, sh -> assertTrue(f.bottom <= sh.bottom && f.top >= sh.top) }
-    @Test fun `probe field is under the header`() = run(true, false) { f, _, sh -> assertTrue(f.top >= sh.top + 60.dp) }
 }
