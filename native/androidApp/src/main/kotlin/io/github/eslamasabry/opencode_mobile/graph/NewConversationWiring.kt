@@ -1218,6 +1218,8 @@ class AndroidNewConversationHost(
                         model = model?.let { ModelSelection(it, variant?.takeIf { v -> v.isNotEmpty() }) },
                         agent = agent,
                     )
+                // Once the chat opened, it owns the first message's bubble: a put-back result is left for it to adopt.
+                var chatOpened = false
                 val receipt =
                     awaitFirstMessage(
                         delivery,
@@ -1226,8 +1228,10 @@ class AndroidNewConversationHost(
                         directory,
                         expectedTarget,
                         request,
-                        onStarted,
-                    )
+                    ) {
+                        chatOpened = true
+                        onStarted(it)
+                    }
                 if (!currentTarget(graph, directory) || target(graph, directory) != expectedTarget)
                     return@withLock attempt.copy(
                         ref = null,
@@ -1286,7 +1290,7 @@ class AndroidNewConversationHost(
                             stores.prefs.commit(stores.lanes.forProfile(profile)) {
                                 remove(reviewKey(profile, directory))
                             }
-                        receipt.outcome?.let(delivery::acknowledge)
+                        if (!chatOpened) receipt.outcome?.let(delivery::acknowledge)
                         if (cleared is Outcome.Failed)
                             attempt.copy(deliveryUnconfirmed = true, failure = cleared.failure)
                         else attempt.copy(failure = receipt.failure)

@@ -61,6 +61,7 @@ class NewConversationHandedOverTest {
     }
 
     private inner class Host(private val opensChat: Boolean) : NewConversationHost {
+        val drafts = mutableListOf<String>()
         override val servers: StateFlow<List<NewConversationServer>> =
             MutableStateFlow(listOf(NewConversationServer(phone, "This phone", connected = true)))
 
@@ -71,8 +72,10 @@ class NewConversationHandedOverTest {
 
         override suspend fun draft(profile: ProfileId, directory: String?): Outcome<String> = Outcome.Ok("")
 
-        override suspend fun saveDraft(profile: ProfileId, directory: String?, text: String): Outcome<Unit> =
-            Outcome.Ok(Unit)
+        override suspend fun saveDraft(profile: ProfileId, directory: String?, text: String): Outcome<Unit> {
+            drafts += text
+            return Outcome.Ok(Unit)
+        }
 
         override suspend fun start(
             profile: ProfileId,
@@ -111,11 +114,13 @@ class NewConversationHandedOverTest {
     @Test
     fun `First message (d) a failure the opened chat owns is not shown again on this page`() {
         val nav = Nav()
-        val vm = NewConversationViewModel(route, Host(opensChat = true), nav, Clock.System, ListenedReports())
+        val host = Host(opensChat = true)
+        val vm = NewConversationViewModel(route, host, nav, Clock.System, ListenedReports())
         vm.draftChanged("fix the tests")
         vm.start()
         assertEquals(listOf(conversation), nav.chats.toList(), "the chat opened at admission")
         assertNull(vm.state.value.failure, "the chat's failed bubble is the one place it shows")
+        assertEquals("", host.drafts.last(), "the words are the chat's bubble now, not a second copy in this page")
     }
 
     @Test
