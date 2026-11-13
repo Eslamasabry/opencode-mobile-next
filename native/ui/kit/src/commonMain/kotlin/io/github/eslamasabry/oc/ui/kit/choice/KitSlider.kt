@@ -136,7 +136,8 @@ public fun KitSlider(
             val density = LocalDensity.current
             val widthPx = with(density) { maxWidth.toPx() }
             val thumbPx = with(density) { thumb.toPx() }
-            val usable = (maxWidth - thumb).coerceAtLeast(0.dp)
+            val full = maxWidth
+            val usable = (full - thumb).coerceAtLeast(0.dp)
             fun at(x: Float): Float {
                 val from = if (rtl) widthPx - x else x
                 val t = if (widthPx <= thumbPx) 0f else ((from - thumbPx / 2f) / (widthPx - thumbPx)).coerceIn(0f, 1f)
@@ -153,10 +154,11 @@ public fun KitSlider(
                     )
                 }.pointerInput(widthPx, rtl, min, max, step) { detectTapGestures { latest(at(it.x)) } }
             ) {
-                val startX = if (rtl) maxWidth - thumb / 2 - usable * share else thumb / 2
+                // Offsets follow the reading direction by themselves; only the finger's x is mirrored (at).
+                val startX = thumb / 2
                 Box(Modifier.offset(x = thumb / 2, y = (target - line) / 2).width(usable).height(line).then(railLook.modifier))
                 Box(Modifier.offset(x = startX, y = (target - line) / 2).width(usable * share).height(line).background(colors.accent, RoundedCornerShape(line)))
-                val thumbX = if (rtl) usable * (1f - share) else usable * share
+                val thumbX = usable * share
                 Box(Modifier.offset(x = thumbX, y = (target - thumb) / 2).size(thumb).then(thumbLook.modifier))
             }
         }

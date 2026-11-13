@@ -656,9 +656,9 @@ half4 main(float2 q) {
         float2 at = q;
         if (rimW > 0.0 && depth < rimW) {
             float x = 1.0 - depth / rimW;
-            float c = 1.0 - sqrt(max(1.0 - x * x, 0.0));
+            float dome = 1.0 - sqrt(max(1.0 - x * x, 0.0));
             float x2 = x * x;
-            float shaped = bendShape < 0.0 ? mix(c, x, -bendShape) : mix(c, x2 * x2 * x2 * x2, bendShape);
+            float shaped = bendShape < 0.0 ? mix(dome, x, -bendShape) : mix(dome, x2 * x2 * x2 * x2, bendShape);
             at = q - shaped * amount * bend * res;
         }
         float4 c = float4(sampleContent(at));
