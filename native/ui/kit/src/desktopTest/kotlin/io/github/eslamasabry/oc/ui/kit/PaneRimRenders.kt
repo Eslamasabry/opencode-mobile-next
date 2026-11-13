@@ -6,7 +6,7 @@ import androidx.compose.ui.graphics.toAwtImage
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.isRoot
-import androidx.compose.ui.test.v2.runDesktopComposeUiTest
+import androidx.compose.ui.test.v2.runSkikoComposeUiTest
 import java.awt.Color
 import java.awt.RenderingHints
 import java.awt.image.BufferedImage
@@ -36,7 +36,7 @@ class PaneRimRenders {
             // One scene that cannot be drawn is named in errors.txt; the others are still written.
             val started = System.nanoTime()
             try {
-                runDesktopComposeUiTest(PaneRimScenes.WIDTH, PaneRimScenes.HEIGHT, testTimeout = PaneRimScenes.SCENE_TIMEOUT) {
+                runSkikoComposeUiTest(androidx.compose.ui.geometry.Size(PaneRimScenes.WIDTH.toFloat(), PaneRimScenes.HEIGHT.toFloat()), testTimeout = PaneRimScenes.SCENE_TIMEOUT) {
                     PaneRimScenes.settle(this) { PaneRimScenes.Scene(aurora, dark) { case.content() } }
                     val image = onAllNodes(isRoot())[0].captureToImage().toAwtImage()
                     ImageIO.write(image, "png", File(out, "$name.png"))

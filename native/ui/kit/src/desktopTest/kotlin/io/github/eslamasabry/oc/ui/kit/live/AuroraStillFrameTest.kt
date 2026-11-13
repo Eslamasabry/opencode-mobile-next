@@ -42,10 +42,13 @@ class AuroraStillFrameTest {
         return out
     }
 
-    /** The page's light spread (0-255, brightest less darkest) on a coarse grid. */
+    /**
+     * How far apart any two points of the page are in colour (0-255, Euclidean), on a coarse grid: the flat ground is 0;
+     * the dark plate at its still moment moves the ground's hue (teal to grey) more than its light, about 10-12.
+     */
     private fun spread(p: PixelMap): Float {
-        val lum = (1..9).flatMap { r -> (1..5).map { c -> p[p.width * c / 6, p.height * r / 10] } }.map { (.2126f * it.red + .7152f * it.green + .0722f * it.blue) * 255f }
-        return lum.max() - lum.min()
+        val px = (1..9).flatMap { r -> (1..5).map { c -> p[p.width * c / 6, p.height * r / 10] } }
+        return px.maxOf { a -> px.maxOf { b -> kotlin.math.sqrt(((a.red - b.red) * (a.red - b.red) + (a.green - b.green) * (a.green - b.green) + (a.blue - b.blue) * (a.blue - b.blue)).toDouble()).toFloat() } } * 255f
     }
 
     private fun same(a: PixelMap, b: PixelMap): Boolean = (0 until a.height step 7).all { y -> (0 until a.width step 7).all { x -> a[x, y] == b[x, y] } }
@@ -53,7 +56,7 @@ class AuroraStillFrameTest {
     @Test
     fun `a still-frame host paints the chosen aurora, the same frame every time`() {
         val first = shot(dark = true)
-        assertTrue(spread(first) >= 12f, "the aurora is drawn under a still frame: the page's light spreads ${spread(first)} of 255")
+        assertTrue(spread(first) >= 6f, "the aurora is drawn under a still frame: the page's colour spreads ${spread(first)} of 255")
         assertEquals(true, same(first, shot(dark = true)), "the still aurora is one fixed frame")
     }
 }
