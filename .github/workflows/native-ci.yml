@@ -504,11 +504,12 @@ jobs:
         run: |
           set -o pipefail
           # Every android/* library that has unit tests, plus the app module. The list comes from the folders, so a new
-          # module is picked up without editing this file.
+          # module is picked up without editing this file. The `test` task runs each module's tested build type
+          # (debug for most; :android:migration tests on `qa`, which has no testDebugUnitTest).
           tasks=""
           for d in android/*/; do
             m="$(basename "$d")"
-            if [ -d "$d/src/test" ]; then tasks="$tasks :android:$m:testDebugUnitTest"; fi
+            if [ -d "$d/src/test" ]; then tasks="$tasks :android:$m:test"; fi
           done
           tool/ci/gradle_retry.sh "$RUNNER_TEMP/android-unit.log" $tasks :androidApp:testPreviewDebugUnitTest $GRADLE_FLAGS
       - name: Android unit report
