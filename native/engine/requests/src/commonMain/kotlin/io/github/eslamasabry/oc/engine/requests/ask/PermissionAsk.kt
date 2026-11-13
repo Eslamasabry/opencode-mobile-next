@@ -216,8 +216,9 @@ public object PermissionAsk {
 
     private fun edit(request: PermissionRequest, paths: List<String>, directory: String?): AskView {
         val facts = fileFacts(request)
-        val single = diffSize(diffText(request))
-        val kinds = paths.map { facts[it]?.string("type") }.toSet()
+        val diff = diffText(request) ?: facts.values.singleOrNull()?.let { it.string("patch") ?: it.string("diff") }
+        val single = diffSize(diff)
+        val kinds = paths.map { path -> facts[path]?.let(::changeKind) ?: if (paths.size == 1 && createsFile(diff)) "add" else null }.toSet()
         val kind = kinds.singleOrNull()
 
         fun change(path: String): Pair<Int, Int>? {
@@ -268,12 +269,34 @@ public object PermissionAsk {
 
     private fun firstPattern(request: PermissionRequest): String? = request.patterns.firstOrNull { it.isNotBlank() && it != "*" }
 
-    /** OpenCode 1's apply_patch says per file what it does (`metadata.files[]{relativePath,type,additions,deletions}`). */
+    /**
+     * What a change says per file: OpenCode 1's apply_patch (`metadata.files[]{relativePath,type,additions,deletions}`)
+     * and OpenCode 2's write, edit and patch (`metadata.files[]{file,status,additions,deletions,patch}`).
+     */
     private fun fileFacts(request: PermissionRequest): Map<String, JsonObject> {
         val raw = request.metadata["files"] as? JsonArray ?: return emptyMap()
         return raw.filterIsInstance<JsonObject>()
-            .mapNotNull { file -> file.string("relativePath")?.takeIf { it.isNotEmpty() }?.let { it to file } }
+            .mapNotNull { file ->
+                (file.string("relativePath") ?: file.string("file"))?.trim()?.takeIf { it.isNotEmpty() }?.let { it to file }
+            }
             .toMap()
+    }
+
+    /** "add" / "delete" / null (a change), from OpenCode 1's `type` or OpenCode 2's `status`. */
+    private fun changeKind(file: JsonObject): String? =
+        when (file.string("type") ?: file.string("status")) {
+            "add", "added" -> "add"
+            "delete", "deleted" -> "delete"
+            // The server said what it does (a change, a move): never guessed from the diff.
+            null -> if (createsFile(file.string("patch") ?: file.string("diff"))) "add" else null
+            else -> null
+        }
+
+    /** A unified diff whose one hunk starts from nothing (`@@ -0,0 +1,n @@`, `--- /dev/null`): a new file. */
+    private fun createsFile(diff: String?): Boolean {
+        if (diff.isNullOrBlank()) return false
+        val hunks = diff.lineSequence().filter { it.startsWith("@@") }.toList()
+        return "\n--- /dev/null" in "\n$diff" || (hunks.size == 1 && hunks.single().startsWith("@@ -0,0 "))
     }
 
     private fun diffText(request: PermissionRequest): String? = request.metadata.firstString(diffMetadataKeys)

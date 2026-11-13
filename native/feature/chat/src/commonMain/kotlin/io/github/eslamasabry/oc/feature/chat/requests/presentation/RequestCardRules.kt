@@ -11,7 +11,11 @@ public object RequestCardRules {
     private val selfNaming =
         setOf(AskVerb.Run, AskVerb.Edit, AskVerb.Create, AskVerb.Delete, AskVerb.Read, AskVerb.ReadFolder, AskVerb.Fetch, AskVerb.WebSearch)
 
-    private val fileVerbs = setOf(AskVerb.Edit, AskVerb.Create, AskVerb.Delete, AskVerb.Read)
+    /**
+     * Asks whose question can say "this file" ("Edit this file?", "Read this file?"). A creation or a deletion always
+     * names its file ("Create notes.txt?"): their unnamed words count files ("Create 1 file?").
+     */
+    private val fileVerbs = setOf(AskVerb.Edit, AskVerb.Read)
 
     /** The "Tool: …" line only where the question does not already say what kind of thing asks. */
     public fun showsToolLine(ask: AskView): Boolean = ask.verb !in selfNaming

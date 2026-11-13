@@ -96,6 +96,16 @@ import io.github.eslamasabry.oc.ui.words.res.kitRequestChangeSize
 import io.github.eslamasabry.oc.ui.words.res.kitRequestReplyEmptyReason
 import io.github.eslamasabry.oc.ui.words.res.kitRequestSend
 import io.github.eslamasabry.oc.feature.chat.requests.presentation.PermissionDetails
+import io.github.eslamasabry.oc.feature.chat.requests.presentation.PermissionChangeUi
+import io.github.eslamasabry.oc.engine.requests.ask.AskView
+import io.github.eslamasabry.oc.ui.kitchat.code.CodeLanguage
+import io.github.eslamasabry.oc.ui.kitchat.diff.KitDiffPreview
+import io.github.eslamasabry.oc.ui.kitchat.rememberKitRedactedCopyAction
+import io.github.eslamasabry.oc.ui.kitchat.request.KitRequestChange
+import io.github.eslamasabry.oc.ui.words.res.approvalChangeMissing
+import io.github.eslamasabry.oc.ui.words.res.approvalChangeOf
+import io.github.eslamasabry.oc.ui.words.res.approvalCopyChange
+import io.github.eslamasabry.oc.ui.words.res.kitSuggestionsShowAll
 import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.ui.kitchat.LocalKitRedactor
 import io.github.eslamasabry.oc.feature.chat.requests.presentation.PermissionFact
@@ -366,6 +376,30 @@ private fun PermissionWaiting(
             else null,
         onDeny = { actions.performReviewed(card, ReviewedRequestAction.Reject) },
         onDetails = onDetails,
+        change = card.change?.let { changeOnCard(it, card.ask, onDetails) },
+    )
+}
+
+/**
+ * Review 2026-11-13 #1: the card shows what a file ask will write before the answers: the first lines of the change
+ * (masked), "Show all" when more follows (it opens Details, which holds the whole change), or plain words when the
+ * request carries no content at all.
+ */
+@Composable
+private fun changeOnCard(change: PermissionChangeUi, ask: AskView, onDetails: (() -> Unit)?): KitRequestChange {
+    val mask = rememberKitMask()
+    val first = change.first
+    val preview = remember(first, mask) { first?.let { KitDiffPreview.fromPatch(mask(it)) } ?: KitDiffPreview.Empty }
+    val name = change.files.firstOrNull()?.path ?: askWhat(ask)
+    val open = onDetails ?: {}
+    return KitRequestChange(
+        preview = preview,
+        label = stringResource(Res.string.approvalChangeOf, KitBidi.ltr(mask(name.orEmpty()))),
+        showAllLabel =
+            if (onDetails != null && (preview.more || change.files.size > 1)) stringResource(Res.string.kitSuggestionsShowAll)
+            else null,
+        onOpen = open,
+        missing = if (change.missing) stringResource(Res.string.approvalChangeMissing) else null,
     )
 }
 
@@ -425,14 +459,25 @@ private fun PermissionDetailsSheet(
                     ?: if (ask == null || RequestCardRules.detailsSaysAllMatching(ask))
                         stringResource(Res.string.chatUiAllMatchingRequests)
                     else null
-            if (full != null)
+            // Review 2026-11-13 #1: the whole change first, one block per file with its name; the path box only when
+            // there is no change to name it.
+            val change = card?.change
+            val shownChange = change?.takeIf { it.first != null }
+            if (full != null && shownChange == null)
                 KitCodeBlock(
                     mask(full),
                     if (details.command) KitCodeKind.Command else KitCodeKind.Output,
                     wrap = true,
                     showWrapToggle = false,
                 )
-            details.diff?.let { diff -> KitCodeBlock(mask(diff), KitCodeKind.Code, wrap = true, showWrapToggle = false) }
+            if (shownChange != null) WholeChange(shownChange, mask)
+            else if (change == null) details.diff?.let { diff -> KitCodeBlock(mask(diff), KitCodeKind.Code, wrap = true, showWrapToggle = false) }
+            if (change?.missing == true)
+                KitText(
+                    stringResource(Res.string.approvalChangeMissing),
+                    Modifier.testTag("chat-permission-change-missing"),
+                    role = TypeRole.Secondary,
+                )
             val values = details.facts.map { fact -> permissionFactValue(fact, redactor) }
             KitDetailsFold(
                 label = stringResource(Res.string.kitDetails),
@@ -445,6 +490,37 @@ private fun PermissionDetailsSheet(
                 label = stringResource(Res.string.chatUiTellTheAgentWhyOrWhatTo),
                 modifier = Modifier.testTag("permission-reject-message"),
                 kind = KitFieldKind.Multiline,
+            )
+        }
+    }
+}
+
+/** Every file's change in full (masked), coloured as a diff, named by its path; each with one copy of the change. */
+@Composable
+private fun WholeChange(change: PermissionChangeUi, mask: (String) -> String) {
+    val blocks =
+        change.files.mapNotNull { file -> file.patch?.takeIf { it.isNotBlank() }?.let { file.path to it } }
+            .ifEmpty { listOfNotNull(change.combined?.let { null as String? to it }) }
+    for ((path, patch) in blocks) {
+        key(path, patch) {
+            val masked = remember(patch, mask) { mask(patch) }
+            val copy =
+                rememberKitRedactedCopyAction(
+                    stringResource(Res.string.approvalCopyChange),
+                    stringResource(Res.string.approvalCopied),
+                    { masked },
+                )
+            KitCodeBlock(
+                masked,
+                KitCodeKind.Code,
+                Modifier.testTag("chat-permission-change"),
+                language = CodeLanguage.Diff,
+                maxLines = Int.MAX_VALUE,
+                wrap = true,
+                showWrapToggle = false,
+                copyLabel = copy.label,
+                onCopy = { copy.onClick?.invoke() },
+                fileName = path?.let(mask),
             )
         }
     }

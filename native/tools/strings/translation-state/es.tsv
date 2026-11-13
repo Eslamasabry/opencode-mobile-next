@@ -1095,8 +1095,11 @@ approvalAllow	56f76c0729
 approvalAllowedWhat	1de049a410
 approvalAlwaysAllowExact	eb68e821c1
 approvalAlwaysAllowedWhat	074188b571
+approvalChangeMissing	3a95b754d2
+approvalChangeOf	3ae1bae5cd
 approvalCopied	f057bce5d6
 approvalCopyAsk	96fd37b964
+approvalCopyChange	b6cbd14aef
 approvalDenied	54d7586401
 approvalDeniedInstead	5e1c5dc37c
 approvalDeny	56030cb830

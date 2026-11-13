@@ -158,7 +158,8 @@ class S8ChatPolishRulesTest {
         val one = AskView(AskVerb.Edit, name = "game.js", targets = persistentListOf(AskTarget("src/game.js", file = true)))
         assertTrue(RequestCardRules.questionOmitsName(one))
         val same = AskView(AskVerb.Create, name = "notes.md", targets = persistentListOf(AskTarget("notes.md", file = true)))
-        assertTrue(RequestCardRules.questionOmitsName(same))
+        // Review 2026-11-13 #1: a creation says "Create notes.md?", never "Create 1 file?".
+        assertFalse(RequestCardRules.questionOmitsName(same))
         val other = AskView(AskVerb.Edit, name = "game.js", targets = persistentListOf(AskTarget("src/other.js")))
         assertFalse(RequestCardRules.questionOmitsName(other))
         val run = AskView(AskVerb.Run, name = "npm test", targets = persistentListOf(AskTarget("npm test")))

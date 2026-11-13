@@ -61,6 +61,8 @@ public sealed interface RequestCardUi {
         val invitation: Boolean = false,
         /** Why the Always allow invitation of this card could not be saved. */
         val invitationFailure: Failure? = null,
+        /** The change a file ask would make, as the request states it; null for any other ask. */
+        val change: PermissionChangeUi? = captured?.request?.let(PermissionChange::of),
     ) : RequestCardUi
 
     /**

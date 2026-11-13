@@ -59,6 +59,8 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitAppearance
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTypography
 import io.github.eslamasabry.oc.ui.kitchat.tool.KitMonoLtr
+import io.github.eslamasabry.oc.ui.kitchat.diff.KitDiffPreview
+import io.github.eslamasabry.oc.ui.kitchat.diff.KitDiffPreviewCard
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
@@ -75,6 +77,20 @@ public class KitDenyReply(
     public val backLabel: String,
     public val emptyReason: String,
     public val onSend: (String) -> Unit,
+)
+
+/**
+ * The change a file ask would make, shown on the card before the answers (review 2026-11-13 #1): a few lines of it
+ * ([preview], drawn by [KitDiffPreviewCard], masked there), named [label] for a screen reader; a tap on it, or on
+ * [showAllLabel] when more follows, opens the whole change ([onOpen]). With no content, [missing] says so in plain words
+ * instead (the card never looks complete without it).
+ */
+public class KitRequestChange(
+    public val preview: KitDiffPreview,
+    public val label: String,
+    public val showAllLabel: String?,
+    public val onOpen: () -> Unit,
+    public val missing: String? = null,
 )
 
 /** Plan 09 R13 / plan 06 §8: the card height share grows at very large text. */
@@ -129,6 +145,7 @@ public fun KitPermissionCard(
     waitingMore: String? = null,
     onDetails: (() -> Unit)? = null,
     needsYou: Boolean = false,
+    change: KitRequestChange? = null,
 ) {
     require(enabled || disabledReason != null) {
         "KitPermissionCard: a card that cannot answer must say why"
@@ -228,6 +245,24 @@ public fun KitPermissionCard(
             ) {
                 KitMonoLtr(subject, Modifier.fillMaxWidth(), TextTone.Primary)
             }
+        }
+        if (change != null) ChangePreview(change)
+    }
+}
+
+/** The change under its target: a few lines in the preview card, "Show all" when more follow, or the missing words. */
+@Composable
+private fun ChangePreview(change: KitRequestChange) {
+    if (change.preview.isEmpty) {
+        change.missing?.let {
+            KitText(it, Modifier.testTag("permission-card-change-missing"), role = TypeRole.Secondary, tone = TextTone.Secondary, kind = KitTextKind.Reading)
+        }
+        return
+    }
+    Column(Modifier.fillMaxWidth().testTag("permission-card-change")) {
+        KitDiffPreviewCard(change.preview, change.label, change.onOpen)
+        change.showAllLabel?.let {
+            KitButton(it, change.onOpen, Modifier.testTag("permission-card-change-all"), role = KitButtonRole.Tertiary)
         }
     }
 }

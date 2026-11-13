@@ -22,4 +22,7 @@
     <string name="approvalAlwaysAllowedWhat">Selalu diizinkan: %1$s</string>
     <string name="approvalDenied">Ditolak</string>
     <string name="approvalDeniedInstead">Ditolak, diminta melakukan ini: %1$s</string>
+    <string name="approvalChangeOf">Perubahan pada %1$s</string>
+    <string name="approvalChangeMissing">Agen tidak menyebutkan apa yang akan ditulis.</string>
+    <string name="approvalCopyChange">Salin perubahan</string>
 </resources>

@@ -21,4 +21,7 @@
     <string name="approvalAlwaysAllowedWhat">سماح دائم: %1$s</string>
     <string name="approvalDenied">تم الرفض</string>
     <string name="approvalDeniedInstead">تم الرفض، وطُلب منه فعل هذا بدلًا من ذلك: %1$s</string>
+    <string name="approvalChangeOf">التغيير على %1$s</string>
+    <string name="approvalChangeMissing">لم يذكر الوكيل ما سيكتبه.</string>
+    <string name="approvalCopyChange">نسخ التغيير</string>
 </resources>

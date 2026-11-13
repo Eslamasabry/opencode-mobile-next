@@ -22,4 +22,7 @@
     <string name="approvalAlwaysAllowedWhat">Всегда разрешено: %1$s</string>
     <string name="approvalDenied">Запрещено</string>
     <string name="approvalDeniedInstead">Запрещено, вместо этого нужно сделать: %1$s</string>
+    <string name="approvalChangeOf">Изменение в %1$s</string>
+    <string name="approvalChangeMissing">Агент не сообщил, что именно запишет.</string>
+    <string name="approvalCopyChange">Копировать изменение</string>
 </resources>
