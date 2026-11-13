@@ -16,6 +16,16 @@ class HomePreviewLineTest {
         HomePreviewRules.forRow(line, directory, echoes)
 
     @Test
+    fun `RC1-HOME-008 a numbered list loses its numbers like a bullet loses its mark`() {
+        assertEquals(
+            "The River Called Rive It began as a rill",
+            shown("# The River Called Rive\n\n1. It began as a rill", echoes = emptyList()),
+        )
+        assertEquals("first second", HomePreviewRules.oneLine("1) first\n2) second"))
+        assertEquals("Version 2.1 is out", shown("Version 2.1 is out", echoes = emptyList()), "a number inside a line stays")
+    }
+
+    @Test
     fun `a leading Done is dropped when the status column already says Done`() {
         assertEquals("Created notes.txt with one line", shown("Done. Created notes.txt with one line"))
         assertEquals("Created t.py", shown("Done — created t.py"))
