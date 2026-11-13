@@ -83,19 +83,27 @@ Still reading Flutter **git history** (not the working tree), so unaffected: the
 | `byo-host-bundle.yml` | KEEP unchanged (`scripts/byo-host` stays). |
 | `pages.yml` | KEEP unchanged: `tool/qa/test_site.py` and `docs/site` both stay. |
 
-## (d) What the owner does by hand
+## (d) What had to be done by hand, and its state (2026-11-13)
 
-1. **Move the release key file** in your main checkout (never committed; git does not touch it):
-   `android/key.properties` → `native/key.properties`, and make its `storeFile` absolute or relative to `native/`.
-   Until you do, the build and `scripts/native-release.sh` still find the old file and print a notice. After the
-   merge the old file stays on disk, still ignored (the root `.gitignore` now names it and every `*.jks`/`*.keystore`).
-   Order the build uses: `OC_KEY_PROPERTIES`, then `native/key.properties`, then `android/key.properties`.
-2. **Tag the last commit that has Flutter** before merging: see "Last commit with Flutter" below. Suggested tag:
-   `flutter-final`. If the branch is rebased instead of merged, tag the parent of the deletion commit instead.
-3. **F-Droid / store listings**: an F-Droid build recipe that builds the Flutter app from this repository (it used
-   `tool/fdroid/`) stops working; point it at the native build or withdraw it. `fastlane/metadata` stays.
-4. **GitHub settings**: the Flutter workflows' secrets (`SHOREBIRD_TOKEN`, `CI_KEYSTORE_*`) can be deleted; Shorebird
-   apps can be archived. Branch protection rules that require Flutter checks must drop them.
+The owner asked the coordinator to do these.
+
+1. **Release key file.** DONE. A copy of the key properties file now lives outside every checkout and release runs
+   name it with `OC_KEY_PROPERTIES`; the original is left where it was as a second copy. Its `storeFile` is an
+   absolute path to a keystore that was never inside the repository, so nothing else moves. Order the build uses:
+   `OC_KEY_PROPERTIES`, then `native/key.properties`, then the old `android/key.properties` (with a notice). Never
+   delete a checkout's `android/` folder by hand while it still holds an untracked key file.
+2. **Tag the last commit that has Flutter.** Created when the removal lands on the build line: `flutter-final` on the
+   commit named below. It matches no workflow trigger (`v*` only).
+3. **F-Droid.** Nothing to do: neither package id has a recipe in fdroiddata (checked 2026-11-13). `fastlane/metadata`
+   stays. A future recipe builds `native/`.
+4. **Promoting a release.** Unchanged for native: the Native release workflow attaches the APKs to a DRAFT with
+   `make_latest=false`; a person publishes the draft by hand and marks it latest only on the owner's go
+   (`docs/native/release.md`, step 6). The Flutter script's `promote` goes with the Flutter release path.
+5. **Default branch protection.** OPEN, to do the day `master` moves: `master` requires the status check `gate`,
+   which only the Flutter workflow `android-quality.yml` produced. After the removal no workflow reports it, so the
+   required check must change to a native one (Native CI's `summary`) at the same time `master` is advanced.
+6. **Secrets.** Left alone on purpose. `SHOREBIRD_TOKEN` is unused after the removal; `CI_KEYSTORE_*` hold a signing
+   identity and are not deleted without the owner's own decision.
 
 **Last commit with Flutter: `4c1ffbda35fc0c08d8667d0aff580b4b4d6189d8`** (the parent of the deletion commit). Suggested tag:
 `git tag -a flutter-final 4c1ffbda35fc0c08d8667d0aff580b4b4d6189d8 -m "Last commit with the Flutter app"`. The last released Flutter app is
