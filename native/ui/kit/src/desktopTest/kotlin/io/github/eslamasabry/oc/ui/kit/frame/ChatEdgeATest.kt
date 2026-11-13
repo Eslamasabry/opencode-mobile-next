@@ -15,6 +15,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CornerBasedShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
@@ -67,8 +68,9 @@ import kotlin.test.assertTrue
 /**
  * Chat edge (owner's pick 2026-11-09, option A, amended 2026-11-14 after the owner's "Wtfff" screenshot): an
  * edge-to-edge chat frame. At rest its first row lies wholly below the bar; scrolled, nothing of the content shows under
- * the status bar or the bar in Glass (liquid and frosted) and it fades in over 12 dp below the bar; the other styles lay
- * the page's ground there with a soft fade, and that ground only while something lies under it.
+ * the status bar or the bar and it fades in over 12 dp below the bar. Glass bends or frosts the body's recording in its
+ * capsule; the other styles (owner 2026-11-14: "solids ... on the header") lay nothing behind the chrome, so the page's
+ * background runs unbroken from the window's top, and the fade below the bar shows only while something lies under it.
  */
 class ChatEdgeATest {
     /** Desktop with the lens and a blur, whose liquid panes draw their backdrop blurred, as Android's lens does. */
@@ -92,9 +94,12 @@ class ChatEdgeATest {
         }
     }
 
-    /** A chat frame: [rows] bright rows ([gap] dp apart) in a list scrolled to [first], a 56 dp bar, a 96 dp block. */
+    /**
+     * A chat frame: [rows] rows of [rowColor] ([gap] dp apart) in a list scrolled to [first], a 56 dp bar, a 96 dp block;
+     * with [pill], a control floating 8 dp under the bar ("N earlier messages") and a list that ends itself before it.
+     */
     @Composable
-    private fun Scene(rows: Int, first: Int, gap: Dp, paint: Boolean = true) {
+    private fun Scene(rows: Int, first: Int, gap: Dp, paint: Boolean = true, rowColor: Color = Color.White, pill: Boolean = false) {
         CompositionLocalProvider(LocalKitScreenInsets provides WindowInsets(top = STATUS_DP.dp, bottom = NAV_DP.dp)) {
             Box(Modifier.size(W.dp, H.dp).testTag("scene")) {
                 val source = rememberKitFrostState()
@@ -108,18 +113,32 @@ class ChatEdgeATest {
                     edges = KitScreenEdges.Bleed,
                 ) {
                     KitReportScrolledUnder { list.canScrollBackward }
-                    LazyColumn(
-                        state = list,
-                        contentPadding = kitScreenChromePadding(),
-                        modifier = Modifier.fillMaxSize().kitFrostSource(source).testTag("list"),
-                    ) {
-                        items(rows) { i ->
-                            Box(
-                                Modifier.fillMaxWidth().height(ROW_DP.dp).padding(bottom = gap)
-                                    .then(if (paint) Modifier.background(Color.White) else Modifier)
-                                    .testTag("row-$i")
-                            )
+                    Box(Modifier.fillMaxSize()) {
+                        LazyColumn(
+                            state = list,
+                            contentPadding = kitScreenChromePadding(),
+                            modifier =
+                                Modifier.fillMaxSize().kitFrostSource(source)
+                                    .then(if (pill) Modifier.kitScreenListEdges() else Modifier)
+                                    .testTag("list"),
+                        ) {
+                            items(rows) { i ->
+                                Box(
+                                    Modifier.fillMaxWidth().height(ROW_DP.dp).padding(bottom = gap)
+                                        .then(if (paint) Modifier.background(rowColor) else Modifier)
+                                        .testTag("row-$i")
+                                )
+                            }
                         }
+                        if (pill)
+                            Box(
+                                Modifier.align(Alignment.TopCenter)
+                                    .padding(top = kitScreenChromePadding().calculateTopPadding() + PILL_GAP_DP.dp)
+                                    .kitScreenFloat(KitJumpEdge.Top)
+                                    .size(PILL_W_DP.dp, PILL_H_DP.dp)
+                                    .background(PILL)
+                                    .testTag("pill")
+                            )
                     }
                 }
             }
@@ -128,19 +147,29 @@ class ChatEdgeATest {
 
     private class Shot(val image: PixelMap, val bar: androidx.compose.ui.unit.DpRect, val row0: androidx.compose.ui.unit.DpRect?)
 
-    private fun shot(appearance: KitAppearance, platform: KitPlatform, rows: Int = 60, first: Int = 0, gap: Dp = 8.dp, ground: ((Color) -> Color)? = null, paint: Boolean = true): Shot {
+    private fun shot(
+        appearance: KitAppearance,
+        platform: KitPlatform,
+        rows: Int = 60,
+        first: Int = 0,
+        gap: Dp = 8.dp,
+        ground: ((Color) -> Color)? = null,
+        paint: Boolean = true,
+        rowColor: Color = Color.White,
+        pill: Boolean = false,
+    ): Shot {
         lateinit var shot: Shot
         runDesktopComposeUiTest((W * D).toInt(), (H * D).toInt()) {
             setContent {
                 CompositionLocalProvider(LocalDensity provides Density(D)) {
                     KitTheme(appearance = appearance, platform = platform, localeTag = "en", stillFrame = true) {
-                        if (ground == null) Scene(rows, first, gap, paint)
+                        if (ground == null) Scene(rows, first, gap, paint, rowColor, pill)
                         else {
                             // A busy picture behind a see-through ground, for "no band at rest".
                             Box(Modifier.size(W.dp, H.dp).drawBehind { stripes() }) {
                                 val colors = LocalKitColors.current
                                 CompositionLocalProvider(LocalKitColors provides colors.copy(ground = ground(colors.ground))) {
-                                    Scene(rows, first, gap)
+                                    Scene(rows, first, gap, paint, rowColor, pill)
                                 }
                             }
                         }
@@ -168,6 +197,49 @@ class ChatEdgeATest {
 
     private fun dark(style: Style, look: GlassLookId = GlassLookId.Glossy) =
         KitAppearance(style = style, mode = AppearanceMode.Dark, glassLook = look)
+
+    private fun light(style: Style) = KitAppearance(style = style, mode = AppearanceMode.Light)
+
+    /**
+     * Below the bar's bottom edge in column [x]: how far [s] is from [none] (the same scene whose rows draw nothing) at
+     * the bar's edge and every pixel down to 2 dp past the fade, and 20 dp below the bar.
+     */
+    private fun fadeBelow(s: Shot, none: Shot, x: Int): Pair<List<Float>, Float> {
+        val barBottom = s.bar.bottom.value
+        val full = abs(luma(s.image[x, ((barBottom + 20) * D).toInt()]) - luma(none.image[x, ((barBottom + 20) * D).toInt()]))
+        val ramp = (0..((HEADER_FADE_DP + 2) * D).toInt()).map { k ->
+            val y = (barBottom * D).toInt() + k
+            abs(luma(s.image[x, y]) - luma(none.image[x, y]))
+        }
+        return ramp to full
+    }
+
+    /** The rows come in below the bar over 12 dp as a soft fade: none at its edge, whole past it, no dip and no step. */
+    private fun assertSoftFadeIn(what: String, ramp: List<Float>, full: Float) {
+        println("$what: full $full ramp ${ramp.map { it.toInt() }}")
+        assertTrue(full >= 150f, "$what: the rows are whole 20 dp below the bar, $full")
+        assertTrue(ramp.first() <= CLEAR_MAX, "$what: nothing of the rows at the bar's bottom edge, ${ramp.first()}")
+        assertTrue(ramp.last() >= full * .9f, "$what: the rows are whole by ${HEADER_FADE_DP + 2} dp below the bar, ${ramp.last()} of $full")
+        assertTrue(ramp.zipWithNext().all { (a, b) -> b >= a - 2f }, "$what: the rows come in without a dip: ${ramp.map { it.toInt() }}")
+        val levels = ramp.filter { it > CLEAR_MAX && it < full * .9f }.map { (it / 8f).toInt() }.distinct()
+        assertTrue(levels.size >= 4, "$what: a soft fade, not a cut: ${levels.size} steps in ${ramp.map { it.toInt() }}")
+        val maxStep = ramp.zipWithNext().maxOf { (a, b) -> abs(b - a) }
+        assertTrue(maxStep <= full / 6f, "$what: no hard step in the fade, $maxStep of $full")
+    }
+
+    /** Behind the status bar and the bar of [s] (above its bottom edge): the same picture as [none]'s, every pixel. */
+    private fun assertNothingUnderChrome(what: String, s: Shot, none: Shot) {
+        var worst = 0f
+        var at = ""
+        for (y in 0 until ((s.bar.bottom.value - .5f) * D).toInt()) for (x in 0 until s.image.width) {
+            val d = abs(luma(s.image[x, y]) - luma(none.image[x, y]))
+            if (d > worst) {
+                worst = d
+                at = "(${x / D}, ${y / D}) dp"
+            }
+        }
+        assertTrue(worst <= CLEAR_MAX, "$what: the rows show under the chrome, $worst of 255 at $at (bar bottom ${s.bar.bottom})")
+    }
 
     @Test
     fun `E20-S13 at rest the first row starts right below the bar, in every look`() {
@@ -198,80 +270,109 @@ class ChatEdgeATest {
         for ((what, appearance) in listOf("liquid" to dark(Style.Glass), "frosted" to dark(Style.Glass, GlassLookId.Frosted))) {
             val s = shot(appearance, LensPlatform(), first = 8, gap = 0.dp)
             val none = shot(appearance, LensPlatform(), first = 8, gap = 0.dp, paint = false)
-            val barBottom = s.bar.bottom.value
             // Under the status bar, in the capsule and beside it: the same picture as with no rows at all.
+            assertNothingUnderChrome(what, s, none)
+            // Below the bar, beside the middle: the rows come in over 12 dp in steps, whole past it.
+            val (ramp, full) = fadeBelow(s, none, (W * D / 4).toInt())
+            assertSoftFadeIn(what, ramp, full)
+        }
+    }
+
+    /**
+     * Owner 2026-11-14 ("Bro why there are solids above the composer and on the header"): scrolled, the clear styles lay
+     * no plate of the page's ground behind the chrome. Over a live picture (a see-through ground over stripes) every
+     * pixel behind the status bar and the bar is the picture alone, the same as the bare picture at the window's
+     * bottom: no ground band, no row. Was: "the ground lies over a live picture behind the chrome".
+     */
+    @Test
+    fun `E20-S30 scrolled in Solid dark and light the live background alone lies behind the status bar and the bar`() {
+        for ((what, appearance) in listOf("Solid dark" to dark(Style.Solid), "Solid light" to light(Style.Solid), "Soft dark" to dark(Style.Soft))) {
+            val s = shot(appearance, FakeKitPlatform(), first = 8, gap = 0.dp, ground = { it.copy(alpha = .6f) })
+            val bare = ((H - NAV_DP / 2) * D).toInt()
             var worst = 0f
             var at = ""
-            for (y in 0 until ((barBottom - .5f) * D).toInt()) for (x in 0 until s.image.width) {
-                val d = abs(luma(s.image[x, y]) - luma(none.image[x, y]))
+            for (y in 0 until ((s.bar.bottom.value - .5f) * D).toInt()) for (x in 0 until s.image.width step 2) {
+                val d = abs(luma(s.image[x, y]) - luma(s.image[x, bare]))
                 if (d > worst) {
                     worst = d
                     at = "(${x / D}, ${y / D}) dp"
                 }
             }
-            assertTrue(worst <= CLEAR_MAX, "$what: the rows show under the chrome, $worst of 255 at $at (bar bottom $barBottom dp)")
-            // Below the bar, beside the middle: the rows come in over 12 dp in steps, whole past it.
-            val x = (W * D / 4).toInt()
-            val full = abs(luma(s.image[x, ((barBottom + 20) * D).toInt()]) - luma(none.image[x, ((barBottom + 20) * D).toInt()]))
-            val ramp = (0..((HEADER_FADE_DP + 2) * D).toInt()).map { k ->
-                val y = (barBottom * D).toInt() + k
-                abs(luma(s.image[x, y]) - luma(none.image[x, y]))
-            }
-            println("$what: full $full ramp ${ramp.map { it.toInt() }}")
-            assertTrue(full >= 150f, "$what: the rows are whole 20 dp below the bar, $full")
-            assertTrue(ramp.first() <= CLEAR_MAX, "$what: nothing of the rows at the bar's bottom edge, ${ramp.first()}")
-            assertTrue(ramp.last() >= full * .9f, "$what: the rows are whole by ${HEADER_FADE_DP + 2} dp below the bar, ${ramp.last()} of $full")
-            assertTrue(ramp.zipWithNext().all { (a, b) -> b >= a - 2f }, "$what: the rows come in without a dip: ${ramp.map { it.toInt() }}")
-            val levels = ramp.filter { it > CLEAR_MAX && it < full * .9f }.map { (it / 8f).toInt() }.distinct()
-            assertTrue(levels.size >= 4, "$what: a soft fade, not a cut: ${levels.size} steps in ${ramp.map { it.toInt() }}")
-            val maxStep = ramp.zipWithNext().maxOf { (a, b) -> abs(b - a) }
-            assertTrue(maxStep <= full / 6f, "$what: no hard step in the fade, $maxStep of $full")
+            assertTrue(worst <= CLEAR_MAX, "$what scrolled: behind the chrome is not the bare picture, $worst of 255 at $at")
         }
     }
 
+    /**
+     * The clear styles' content is gone above the bar's bottom edge and fades in over 12 dp below it, the same fade as
+     * Glass's; its fills dissolve with its words. Was: "the page's ground runs through the status bar and the bar".
+     */
     @Test
-    fun `E20-S30 scrolled in Solid the page's ground runs through the status bar and the bar and fades out below it`() {
-        val s = shot(dark(Style.Solid), FakeKitPlatform(), first = 8, gap = 0.dp)
-        val x = (W * D / 2).toInt()
-        val ground = luma(s.image[x, ((H - NAV_DP - 2) * D).toInt()])
-        // Behind the status bar and the bar: the ground, the rows hidden.
-        for (y in 0 until ((STATUS_DP + BAR_DP - 1) * D).toInt()) {
-            val l = luma(s.image[x, y])
-            assertTrue(abs(l - ground) <= 3f, "Solid: the ground behind the chrome at y=${y / D} dp, was $l over $ground")
+    fun `E20-S30 scrolled in Solid nothing of the content shows under the chrome and it fades in below the bar`() {
+        val cases =
+            listOf(
+                Triple("Solid dark", dark(Style.Solid), Color.White),
+                Triple("Solid light", light(Style.Solid), Color.Black),
+            )
+        for ((what, appearance, row) in cases) {
+            val s = shot(appearance, FakeKitPlatform(), first = 8, gap = 0.dp, rowColor = row)
+            val none = shot(appearance, FakeKitPlatform(), first = 8, gap = 0.dp, paint = false)
+            assertNothingUnderChrome(what, s, none)
+            val (ramp, full) = fadeBelow(s, none, (W * D / 2).toInt())
+            assertSoftFadeIn(what, ramp, full)
         }
-        // The 16 dp fade below it: the rows half there in its middle, whole past its end.
-        val mid = luma(s.image[x, ((STATUS_DP + BAR_DP + 8) * D).toInt()])
-        assertTrue(mid > ground + 20f && mid < 235f, "Solid: the band fades out over 16 dp, its middle was $mid")
-        val past = luma(s.image[x, ((STATUS_DP + BAR_DP + 20) * D).toInt()])
-        assertTrue(past >= 240f, "Solid: the rows are whole past the fade, was $past")
-    }
-
-    @Test
-    fun `E20-S30 scrolled in Solid the ground lies over a live picture behind the chrome, not the picture alone`() {
-        // A see-through ground over a busy picture stands in for the live background: scrolled, something (the band of
-        // ground) lies over the picture behind the status bar and the bar, where a cleared body would show it bare.
-        val s = shot(dark(Style.Solid), FakeKitPlatform(), first = 8, gap = 0.dp, ground = { it.copy(alpha = .6f) })
-        val bare = ((H - NAV_DP / 2) * D).toInt()
-        var same = 0
-        var seen = 0
-        for (y in 0 until ((STATUS_DP + BAR_DP - 1) * D).toInt() step 3)
-            for (x in 0 until s.image.width step 5) {
-                seen++
-                if (abs(luma(s.image[x, y]) - luma(s.image[x, bare])) <= 4f) same++
-            }
-        assertTrue(same * 10 < seen, "Solid scrolled: $same of $seen points behind the chrome show the bare picture")
     }
 
     @Test
     fun `E20-S30 at rest in Solid no band lies over a live picture`() {
         // Nothing under the chrome (no rows): the picture shows the same at the top as further down, in every column.
-        val s = shot(dark(Style.Solid), FakeKitPlatform(), rows = 0, ground = { it.copy(alpha = .6f) })
-        val far = ((H / 2) * D).toInt()
-        for (y in 0 until ((STATUS_DP + BAR_DP + GROUND_BAND_FADE_DP) * D).toInt() step 3)
-            for (x in 0 until s.image.width step 5) {
-                val d = abs(luma(s.image[x, y]) - luma(s.image[x, far]))
-                assertTrue(d <= 2f, "Solid at rest: a band at (${x / D}, ${y / D}) dp, $d of 255 off the picture")
-            }
+        for ((what, appearance) in listOf("dark" to dark(Style.Solid), "light" to light(Style.Solid))) {
+            val s = shot(appearance, FakeKitPlatform(), rows = 0, ground = { it.copy(alpha = .6f) })
+            val far = ((H / 2) * D).toInt()
+            for (y in 0 until ((STATUS_DP + BAR_DP + HEADER_FADE_DP + 4) * D).toInt() step 3)
+                for (x in 0 until s.image.width step 5) {
+                    val d = abs(luma(s.image[x, y]) - luma(s.image[x, far]))
+                    assertTrue(d <= 2f, "Solid $what at rest: a band at (${x / D}, ${y / D}) dp, $d of 255 off the picture")
+                }
+        }
+    }
+
+    @Test
+    fun `E20-S30 at rest in Solid the first row is whole right below the bar, with no fade`() {
+        // At rest nothing lies under the chrome, so the body's fade below the bar is not drawn: the first row reads whole
+        // from its first pixel, as before the fix.
+        val s = shot(dark(Style.Solid), FakeKitPlatform())
+        val row0 = s.row0!!
+        val x = (W * D / 2).toInt()
+        for (y in (row0.top.value * D).toInt() until ((row0.top.value + ROW_DP - 8 - 1) * D).toInt()) {
+            val l = luma(s.image[x, y])
+            assertTrue(l >= 250f, "Solid at rest: the first row is faded at y=${y / D} dp (${row0.top} is its top), $l")
+        }
+    }
+
+    /**
+     * A control floating under the bar ("N earlier messages") is chrome, not content: scrolled, in Solid, it stays whole
+     * (the body's fade below the bar gives way to the list's own end below the control), and the rows beside it are gone
+     * down to its bottom.
+     */
+    @Test
+    fun `E20-S30 scrolled in Solid a control floating under the bar stays whole and no row shows beside it`() {
+        val s = shot(dark(Style.Solid), FakeKitPlatform(), first = 8, gap = 0.dp, pill = true)
+        val none = shot(dark(Style.Solid), FakeKitPlatform(), first = 8, gap = 0.dp, paint = false, pill = true)
+        val barBottom = s.bar.bottom.value
+        val pillTop = barBottom + PILL_GAP_DP
+        val mid = (W * D / 2).toInt()
+        val want = luma(PILL)
+        for (y in ((pillTop + .5f) * D).toInt() until ((pillTop + PILL_H_DP - .5f) * D).toInt()) {
+            val l = luma(s.image[mid, y])
+            assertTrue(abs(l - want) <= CLEAR_MAX, "the floating control is faded at y=${y / D} dp (its top $pillTop), $l of $want")
+        }
+        // Beside it, from the bar down to its bottom: the rows are gone.
+        val side = (W * D / 8).toInt()
+        for (y in (barBottom * D).toInt() until ((pillTop + PILL_H_DP) * D).toInt()) {
+            val d = abs(luma(s.image[side, y]) - luma(none.image[side, y]))
+            assertTrue(d <= CLEAR_MAX, "a row shows beside the floating control at y=${y / D} dp, $d of 255")
+        }
+        assertNothingUnderChrome("Solid with a floating control", s, none)
     }
 
     @Test
@@ -365,5 +466,11 @@ class ChatEdgeATest {
 
         /** Where nothing of the content may show: at most this brightness of 255 against the scene with no rows. */
         const val CLEAR_MAX = 3f
+
+        /** The control floating under the bar: its gap below the bar, its size (dp) and its colour. */
+        const val PILL_GAP_DP = 8
+        const val PILL_W_DP = 80
+        const val PILL_H_DP = 24
+        val PILL = Color(0xFFE0402A)
     }
 }

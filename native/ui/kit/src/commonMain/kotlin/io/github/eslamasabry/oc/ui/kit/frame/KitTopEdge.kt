@@ -18,7 +18,6 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.layout.layout
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
@@ -75,9 +74,12 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
  *   into a soft blur of itself with a dim of the page's ground that ends just below the status bar, so the clock reads
  *   over text without a plate ([KitStatusEdge]).
  * - Glass, frosted: the same, the capsule frosted instead of bent ([kitFrostedBarFace]).
- * - Solid, Soft, Brutal, Paper (and Glass wherever the platform or a hold keeps it from blurring): the page's ground
- *   runs from the status bar through the bar and ends in a soft 16 dp fade, only while content lies under it (Material's
- *   scrolled container); at rest over a live background no band shows ([KitGroundBand]).
+ * - Solid, Soft, Brutal, Paper (and Glass wherever the platform or a hold keeps it from blurring): nothing is painted
+ *   behind the chrome (owner 2026-11-14: "why there are solids above the composer and on the header": a band of the
+ *   page's ground there read as a slab laid on the page and cut the live background off below it). The page's
+ *   background (its ground, its live picture) runs unbroken from the top of the window, the bar's words sit on it, and
+ *   the body's own content is gone above the bar's bottom edge and fades in below it ([kitScrollEdges] in the frame),
+ *   that fade growing with what lies under the chrome ([kitUnderTop]), so a page at rest looks as it did.
  *
  * Every blur here draws the body's own recording (the screen's frost source), never a new one.
  */
@@ -90,14 +92,14 @@ internal enum class KitTopEdgeLook {
     /** Glass with frosted edges: the bar's capsule frosts the content; the status bar blurs and dims it. */
     Frosted,
 
-    /** Every other style (and Glass without a blur): the page's ground behind the chrome while content is under it. */
-    Ground,
+    /** Every other style (and Glass without a blur): nothing behind the chrome; the content is gone before the bar. */
+    Clear,
 }
 
 /**
  * Whether a screen's body has content under its top chrome right now. The kit's scrollers report it
- * ([KitReportScrolledUnder]); with no report the frame assumes there is (the chrome keeps its ground: nothing is ever
- * read through bare chrome).
+ * ([KitReportScrolledUnder]); with no report the frame assumes there is (the content keeps its fade below the bar:
+ * nothing is ever read under bare chrome).
  */
 @Stable
 public class KitScreenScroll internal constructor() {
@@ -111,8 +113,8 @@ internal val LocalKitScreenScroll = staticCompositionLocalOf<KitScreenScroll?> {
 
 /**
  * Tells the screen frame whether this body's content lies under the top chrome ([under]: read as state, e.g. a lazy
- * list's `canScrollBackward`, or `canScrollForward` for a reversed one). The frame shows its scrolled-container ground
- * only while it does. Outside an edge-to-edge frame it does nothing.
+ * list's `canScrollBackward`, or `canScrollForward` for a reversed one). The frame shows its scrolled-under look (the
+ * content's fade below the bar, the status edge's dim) only while it does. Outside an edge-to-edge frame it does nothing.
  */
 @Composable
 public fun KitReportScrolledUnder(under: () -> Boolean) {
@@ -126,9 +128,9 @@ public fun KitReportScrolledUnder(under: () -> Boolean) {
 }
 
 /**
- * How strongly the top chrome's scrolled-container look shows (0–1, read while drawing): it eases in and out over
- * frost's [KitFrostRules.FADE_MS] as content comes under the chrome and leaves, at once under reduced motion. The first
- * report lands at once, so a page that opens with nothing under its chrome never flashes a band.
+ * How strongly the top chrome's scrolled-under look shows (0–1, read while drawing): it eases in and out over frost's
+ * [KitFrostRules.FADE_MS] as content comes under the chrome and leaves, at once under reduced motion. The first report
+ * lands at once, so a page that opens with nothing under its chrome never flashes a fade.
  */
 @Composable
 internal fun kitUnderTop(scroll: KitScreenScroll): () -> Float {
@@ -153,9 +155,6 @@ internal const val STATUS_EDGE_BLUR_DP: Float = 8f
 
 /** The share of the status bar, from the top, where the content is all blur (the dissolve starts below it). */
 internal const val STATUS_EDGE_SOLID_SHARE: Float = .5f
-
-/** The Solid styles' band: its fade below the bar, in dp. */
-internal const val GROUND_BAND_FADE_DP: Int = 16
 
 /** The dim under the status bar: the page's ground at these alphas, at these shares of the edge (the mockup's). */
 private val DIM_STOPS: List<Pair<Float, Float>> = listOf(0f to .62f, .34f to .40f, .62f to .12f, 1f to 0f)
@@ -281,46 +280,10 @@ internal fun DrawScope.drawStatusEdge(
 }
 
 /**
- * The Solid styles' scrolled container: the page's ground from the window's top through [bandPx] (the status bar and
- * the bar), ending in a soft [GROUND_BAND_FADE_DP] fade, at [under] strength (0 at rest: no band over a live background).
- */
-@Composable
-internal fun BoxScope.KitGroundBand(bandPx: () -> Int, under: () -> Float) {
-    val ground = LocalKitColors.current.ground
-    val fadePx = with(LocalDensity.current) { GROUND_BAND_FADE_DP.dp.roundToPx() }
-    Box(
-        Modifier.align(Alignment.TopCenter)
-            .fillMaxWidth()
-            // The band's height is read while it is laid out and drawn, never while the page is composed: the bar and
-            // the status line under it change height (a line folds in), and that must not recompose the page.
-            .layout { measurable, constraints ->
-                val band = bandPx()
-                val h = if (band <= 0) 0 else (band + fadePx).coerceAtMost(constraints.maxHeight)
-                val placeable = measurable.measure(constraints.copy(minHeight = h, maxHeight = h))
-                layout(placeable.width, h) { placeable.place(0, 0) }
-            }
-            .drawBehind {
-                val k = under().coerceIn(0f, 1f)
-                val band = bandPx().toFloat()
-                if (k <= 0f || band <= 0f) return@drawBehind
-                val fade = fadePx.toFloat()
-                drawRect(ground, Offset.Zero, Size(size.width, band), alpha = k)
-                drawRect(
-                    Brush.verticalGradient(easedStops(ground, 1f, 0f), startY = band, endY = band + fade),
-                    Offset(0f, band),
-                    Size(size.width, fade),
-                    alpha = k,
-                )
-            }
-            .testTag("kit-ground-band")
-    )
-}
-
-/**
  * Glass with frosted edges: the bar's capsule frosts what scrolls under it (the page's ground and live picture with the
  * body's recording, blurred at the person's frost strength) under the liquid bar's tint, which is thickened for its
  * words over blurred text ([LiquidEdge.face]), with the liquid panes' 1 dp rim light. Null where it cannot blur (the
- * platform, a hold, frost Off, a style other than Glass): the page then keeps its ground behind the bar.
+ * platform, a hold, frost Off, a style other than Glass): the bar then lies on the page's background with nothing behind it.
  */
 @Composable
 internal fun kitFrostedBarFace(frost: KitFrostState?): Modifier? {
@@ -373,10 +336,10 @@ internal fun kitFrostedBarFace(frost: KitFrostState?): Modifier? {
         .testTag("kit-frosted-bar")
 }
 
-/** The look the top chrome takes for an edge-to-edge page: liquid, frosted, or the page's ground. */
+/** The look the top chrome takes for an edge-to-edge page: liquid, frosted, or clear. */
 internal fun topEdgeLook(liquid: Boolean, frosted: Boolean): KitTopEdgeLook =
     when {
         liquid -> KitTopEdgeLook.Liquid
         frosted -> KitTopEdgeLook.Frosted
-        else -> KitTopEdgeLook.Ground
+        else -> KitTopEdgeLook.Clear
     }
