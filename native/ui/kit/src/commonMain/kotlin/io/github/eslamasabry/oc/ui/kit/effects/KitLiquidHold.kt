@@ -45,12 +45,21 @@ float3 controls(float2 p) {
 }
 
 half4 main(float2 q) {
+    float4 c = float4(content.eval(q));
+    float3 rgb = controls(q);
+    // How deep inside the lens's rim this point lies: 0 in the rim's outer half, 1 from its inner end on. The rim, where
+    // the bent content must show, keeps its detail and its colour.
+    float deep = 1.0;
+    if (corner.y > 0.0) {
+        float k = clamp(corner.x, 0.0, min(box.z, box.w));
+        float2 d = abs(q - (box.xy + box.zw)) - box.zw + k;
+        float depth = -(length(max(d, 0.0)) + min(max(d.x, d.y), 0.0) - k);
+        deep = ss(0.5 * corner.y, corner.y, depth);
+    }
     if (local.x > 0.0) {
         // The local-contrast hold: the mean of what is behind (the point and three rings of twelve) passes; the detail
-        // round it is kept whole up to local.y and only local.z of the rest beyond.
-        float a0 = float(content.eval(q).a);
-        float3 v = controls(q);
-        float3 m = v;
+        // round it is kept whole up to local.y and only local.z of the rest beyond. Then the knee below, as without it.
+        float3 m = rgb;
         for (int i = 0; i < 12; i++) {
             float t = 6.2831853 * (float(i) + 0.5) / 12.0;
             float2 dir = float2(cos(t), sin(t));
@@ -60,26 +69,14 @@ half4 main(float2 q) {
             m += controls(q + dir * (local.x * 0.3333));
         }
         m /= 37.0;
-        float3 dv = v - m;
+        float3 dv = rgb - m;
         float len = length(dv);
         float held = len > local.y ? local.y + (len - local.y) * local.z : len;
-        float3 o = len > 0.0001 ? m + dv * (held / len) : v;
-        return half4(float4(clamp(o, 0.0, 1.0) * a0, a0));
+        float3 o = len > 0.0001 ? m + dv * (held / len) : rgb;
+        rgb = mix(rgb, clamp(o, 0.0, 1.0), deep);
     }
-    float4 c = float4(content.eval(q));
-    float a = max(c.a, 0.0001);
-    float3 rgb = c.rgb / a;
-    float l = dot(rgb, float3(0.213, 0.715, 0.072));
-    rgb = clamp(cc.y * (l + cc.x * (rgb - l)) + (0.5 - 0.5 * cc.y + cc.z), 0.0, 1.0);
     if (knee.y < 1.0) {
         float lum = dot(rgb, float3(0.213, 0.715, 0.072));
-        float deep = 1.0;
-        if (corner.y > 0.0) {
-            float k = clamp(corner.x, 0.0, min(box.z, box.w));
-            float2 d = abs(q - (box.xy + box.zw)) - box.zw + k;
-            float depth = -(length(max(d, 0.0)) + min(max(d.x, d.y), 0.0) - k);
-            deep = ss(0.5 * corner.y, corner.y, depth);
-        }
         float3 scaled;
         float grey;
         if (knee.z > 0.5) {

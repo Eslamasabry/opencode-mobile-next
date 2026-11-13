@@ -19,7 +19,7 @@ class LiquidWordsHoldTest {
         for (dark in listOf(true, false)) {
             val menu = LiquidEdge.recipe(LiquidRole.Menu, dark)
             val sheet = LiquidEdge.recipe(LiquidRole.Sheet, dark)
-            assertEquals(12f, menu.blurDp, "menu blur dark=$dark")
+            assertEquals(LiquidEdge.MODAL_BLUR_DP, menu.blurDp, "menu blur dark=$dark")
             assertEquals(sheet.blurDp, menu.blurDp)
             assertEquals(48f, menu.refractionDp, "menu bend dark=$dark")
             assertEquals(26f, menu.rimMaxDp, "menu rim dark=$dark")
@@ -34,6 +34,9 @@ class LiquidWordsHoldTest {
             val wants = role == LiquidRole.Menu || role == LiquidRole.Sheet
             assertEquals(wants, hold.knee, "$role knee dark=$dark")
             assertEquals(if (wants) LiquidEdge.HOLD_CHROMA else 0f, hold.chroma, "$role colour hold dark=$dark")
+            // Glass liquid (2026-11-14): their fine detail is held round its local mean too; nobody else's.
+            assertEquals(wants, hold.local, "$role detail hold dark=$dark")
+            if (wants) assertEquals(LiquidEdge.MODAL_HOLD, hold, "$role hold dark=$dark")
         }
     }
 

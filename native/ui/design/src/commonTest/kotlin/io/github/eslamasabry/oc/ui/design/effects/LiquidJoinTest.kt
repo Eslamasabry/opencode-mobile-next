@@ -208,10 +208,10 @@ class LiquidJoinTest {
         for (dark in listOf(true, false)) {
             assertEquals(3f, LiquidEdge.recipe(LiquidRole.Bar, dark).blurDp)
             assertEquals(2f, LiquidEdge.recipe(LiquidRole.Composer, dark).blurDp)
-            assertEquals(12f, LiquidEdge.recipe(LiquidRole.Menu, dark).blurDp, "menus frost as sheets do (words on glass 3)")
+            assertEquals(LiquidEdge.MODAL_BLUR_DP, LiquidEdge.recipe(LiquidRole.Menu, dark).blurDp, "menus frost as sheets do, the bar's clear glass (glass liquid)")
             assertEquals(1f, LiquidEdge.recipe(LiquidRole.Pill, dark).blurDp)
             assertEquals(1f, LiquidEdge.recipe(LiquidRole.Status, dark).blurDp)
-            assertEquals(12f, LiquidEdge.recipe(LiquidRole.Sheet, dark).blurDp, "sheets keep theirs")
+            assertEquals(LiquidEdge.MODAL_BLUR_DP, LiquidEdge.recipe(LiquidRole.Sheet, dark).blurDp, "sheets as menus")
             assertEquals(if (dark) 6f else 3f, LiquidEdge.swellRecipe(dark).blurDp, "the dock's swell keeps the menu's old glass")
             for (role in LiquidRole.entries) assertEquals(1.6f, LiquidEdge.recipe(role, dark).saturation, "$role saturation")
         }

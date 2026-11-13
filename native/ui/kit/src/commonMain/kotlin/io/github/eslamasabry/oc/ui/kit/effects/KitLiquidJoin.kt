@@ -385,9 +385,13 @@ private class JoinedPaneNode(
                 saturation = recipe.saturation,
                 contrast = recipe.contrast,
                 brightness = recipe.brightness,
-                knee = if (recipe.hold.local) KNEE_OFF else kneeOf(spec),
+                knee = kneeOf(spec),
                 hold = if (frostsBody) dropSpec!!.recipe.hold.chroma else 0f,
-                local = recipe.hold.let { if (it.local) floatArrayOf(it.localDp.dp.toPx(), it.localFree, it.localSlope) else floatArrayOf(0f, 0f, 1f) },
+                // The menu's detail softening is the body's too, coming in with its rows as its frost does (one material).
+                local = (if (frostsBody) dropSpec!!.recipe.hold else recipe.hold).let {
+                    val reach = if (frostsBody) drop!!.content().coerceIn(0f, 1f) else 1f
+                    if (it.local && reach > 0f) floatArrayOf(it.localDp.dp.toPx() * reach, it.localFree, it.localSlope) else floatArrayOf(0f, 0f, 1f)
+                },
                 tintMine = tintNow(spec),
                 tintTheirs = tintNow(theirSpec),
                 rimPx = spec.rimDp.dp.toPx(),
@@ -670,8 +674,12 @@ half4 main(float2 q) {
         float3 rgb = c.rgb;
         float l = dot(rgb, float3(0.213, 0.715, 0.072));
         rgb = clamp(cc.y * (l + cc.x * (rgb - l)) + (0.5 - 0.5 * cc.y + cc.z), 0.0, 1.0);
+        // The rim keeps its detail and its colour (content must show there); from half its width inward the holds are
+        // in full.
+        float deep = rimW > 0.0 ? ss(0.5 * rimW, rimW, depth) : 1.0;
         if (local.x > 0.0) {
-            // The local-contrast hold (as LiquidHoldShader's): the local mean passes, the detail round it is compressed.
+            // The local-contrast hold (as LiquidHoldShader's): the local mean passes, the detail round it is compressed;
+            // then the knee below, as without it.
             float3 m = rgb;
             for (int i = 0; i < 12; i++) {
                 float tt = 6.2831853 * (float(i) + 0.5) / 12.0;
@@ -686,14 +694,11 @@ half4 main(float2 q) {
             float3 dv = rgb - m;
             float len = length(dv);
             float heldLen = len > local.y ? local.y + (len - local.y) * local.z : len;
-            rgb = len > 0.0001 ? clamp(m + dv * (heldLen / len), 0.0, 1.0) : rgb;
-            return half4(float4(rgb * c.a, c.a));
+            float3 o = len > 0.0001 ? clamp(m + dv * (heldLen / len), 0.0, 1.0) : rgb;
+            rgb = mix(rgb, o, deep);
         }
         if (knee.y < 1.0) {
             float lum = dot(rgb, float3(0.213, 0.715, 0.072));
-            // The rim keeps its colour (content must show there); from half its width inward the colour held back with
-            // the light is in full.
-            float deep = rimW > 0.0 ? ss(0.5 * rimW, rimW, depth) : 1.0;
             float3 scaled;
             float grey;
             if (knee.z > 0.5) {

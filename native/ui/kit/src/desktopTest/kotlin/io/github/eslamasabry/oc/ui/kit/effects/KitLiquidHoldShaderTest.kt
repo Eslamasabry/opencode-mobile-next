@@ -128,6 +128,52 @@ class KitLiquidHoldShaderTest {
         }
     }
 
+    /**
+     * The plain pane's hold over a white page with two 3 px black strokes (a letter's stem: one in the rim at x 2-4, one
+     * in the middle at x 19-21), every pixel of row 20 (a 40 px pane, rim 20 px).
+     */
+    private fun plainStrokes(knee: FloatArray, local: FloatArray): IntArray {
+        val program = assertNotNull(DesktopLiveShader.compile(LiquidHoldShader.SOURCE))
+        LiquidHoldUniforms(knee, 0f, 0f, 0f, 20f, 20f, 8f, 20f, 1f, 1f, 0f, local).set(program)
+        val filter = assertNotNull((program as DesktopLiveShader).filter(0f))
+        val bitmap = Bitmap()
+        bitmap.allocPixels(ImageInfo.makeN32(40, 40, ColorAlphaType.PREMUL))
+        val canvas = Canvas(bitmap)
+        canvas.saveLayer(null, Paint().apply { imageFilter = filter })
+        canvas.drawPaint(Paint().apply { color = org.jetbrains.skia.Color.makeRGB(255, 255, 255) })
+        for (x in listOf(2f, 19f)) canvas.drawRect(org.jetbrains.skia.Rect.makeXYWH(x, 0f, 3f, 40f), Paint().apply { color = org.jetbrains.skia.Color.makeRGB(0, 0, 0) })
+        canvas.restore()
+        return IntArray(40) { x -> (bitmap.getColor(x, 20) shr 8) and 0xFF }
+    }
+
+    @Test
+    fun `B-GLASS-LIQ-002 the detail hold softens fine detail in the middle and leaves the rim's bent content whole`() {
+        val row = plainStrokes(KNEE_OFF, floatArrayOf(13f, 0f, .15f))
+        val middle = row.slice(14..26).let { it.max() - it.min() }
+        val rim = row.slice(0..8).let { it.max() - it.min() }
+        println("stripes under the detail hold: middle contrast $middle, rim contrast $rim")
+        assertTrue(rim >= 240, "the rim's outer half keeps its detail: $rim")
+        // The stroke keeps .15 of its depth below the local mean; the page round it lifts a little less: at most a third.
+        assertTrue(middle <= 255 / 3, "the middle holds back most of the stroke: $middle")
+    }
+
+    @Test
+    fun `B-GLASS-LIQ-003 the detail hold runs with the knee and the colour limit, not instead of them, in both shaders`() {
+        // A flat colour has no detail: the detail hold passes it, and the knee and the colour limit hold it as without one.
+        val local = floatArrayOf(6f, .03f, .3f)
+        for (rgb in samples) {
+            val want = LiquidEdge.heldRgb(floatArrayOf(rgb[0] / 255f, rgb[1] / 255f, rgb[2] / 255f), true, LiquidHold(true, LiquidEdge.HOLD_CHROMA))
+            val plain = assertNotNull(DesktopLiveShader.compile(LiquidHoldShader.SOURCE))
+            LiquidHoldUniforms(knee, LiquidEdge.HOLD_CHROMA, 0f, 0f, 20f, 20f, 8f, 20f, 1f, 1f, 0f, local).set(plain)
+            close(renderEffect(plain, rgb, centre), want, "plain with the detail hold ${rgb.toList()}")
+            val join = assertNotNull(DesktopLiveShader.compile(LiquidJoinShader.source(effect = true)))
+            val box = JoinBox(20f, 20f, 20f, 20f, 8f)
+            val far = JoinBox(5000f, 5000f, 10f, 10f, 10f)
+            JoinUniforms(JoinGeometry(box, far, box, far), 0f, LiquidJoin.BAND_DP, 20f, 20f, 0f, 0f, 1f, 1f, 0f, knee, Color.Transparent, Color.Transparent, 1f, LiquidEdge.HOLD_CHROMA, local = local).set(join, 0f, 1f)
+            close(renderEffect(join, rgb, centre), want, "join with the detail hold ${rgb.toList()}")
+        }
+    }
+
     @Test
     fun `knee off holds nothing - a pure green passes whole`() {
         val got = plainPixel(intArrayOf(0, 255, 0), KNEE_OFF, LiquidEdge.HOLD_CHROMA, centre)

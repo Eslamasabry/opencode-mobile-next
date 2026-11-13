@@ -3,18 +3,22 @@ package io.github.eslamasabry.oc.ui.design.effects
 import io.github.eslamasabry.oc.ui.design.style.GlassLooks
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 /**
  * Words on glass 3 (owner 2026-11-11, device sweep), item 1: a menu frosts as a sheet does, in both themes, and the glass
- * that derives from the Menu recipe (the edge dock's swell) keeps what it was.
+ * that derives from the Menu recipe (the edge dock's swell) keeps what it was. Glass liquid (2026-11-14): both are the
+ * bar's clear material, 4 dp of frost instead of 12, their words held by what lies behind them.
  */
 class LiquidMenuFrostTest {
     @Test
-    fun `a menu frosts as a sheet does in both themes and the refraction, rim and tint are unchanged`() {
+    fun `B-GLASS-LIQ-001 a menu and a sheet are the bar's clear glass in both themes - 4 dp, the refraction, rim and tint unchanged`() {
         for (dark in listOf(true, false)) {
             val menu = LiquidEdge.recipe(LiquidRole.Menu, dark)
             val sheet = LiquidEdge.recipe(LiquidRole.Sheet, dark)
-            assertEquals(12f, menu.blurDp, "menu blur dark=$dark")
+            val bar = LiquidEdge.recipe(LiquidRole.Bar, dark)
+            assertEquals(4f, menu.blurDp, "menu blur dark=$dark")
+            assertTrue(menu.blurDp - bar.blurDp <= 1f, "one family: the menu frosts at most 1 dp more than the bar it grows from (dark=$dark)")
             assertEquals(sheet.blurDp, menu.blurDp)
             assertEquals(48f, menu.refractionDp, "menu bend dark=$dark")
             assertEquals(26f, menu.rimMaxDp, "menu rim dark=$dark")
@@ -28,7 +32,8 @@ class LiquidMenuFrostTest {
         for (dark in listOf(true, false)) {
             assertEquals(3f, LiquidEdge.dockRecipe(dark, 0f).blurDp, "strip (dark=$dark)")
             assertEquals(if (dark) 6f else 3f, LiquidEdge.dockRecipe(dark, 1f).blurDp, "swell (dark=$dark)")
-            assertEquals(12f, LiquidEdge.dockRecipe(dark, 1f, GlassLooks.Glossy, list = 1f).blurDp, "list (dark=$dark)")
+            assertEquals(LiquidEdge.DOCK_LIST_BLUR_DP, LiquidEdge.dockRecipe(dark, 1f, GlassLooks.Glossy, list = 1f).blurDp, "list (dark=$dark)")
+            assertEquals(12f, LiquidEdge.DOCK_LIST_BLUR_DP, "the dock's list keeps its old frost")
             assertEquals(3f + if (dark) 3f else 0f, LiquidEdge.swellRecipe(dark).blurDp)
             assertEquals(LiquidEdge.recipe(LiquidRole.Menu, dark).refractionDp, LiquidEdge.swellRecipe(dark).refractionDp)
         }
@@ -43,7 +48,7 @@ class LiquidMenuFrostTest {
             assertEquals(1f, LiquidEdge.recipe(LiquidRole.Pill, dark).blurDp)
             assertEquals(1f, LiquidEdge.recipe(LiquidRole.Status, dark).blurDp)
             assertEquals(1f, LiquidEdge.recipe(LiquidRole.Action, dark).blurDp)
-            assertEquals(12f, LiquidEdge.recipe(LiquidRole.Sheet, dark).blurDp)
+            assertEquals(LiquidEdge.MODAL_BLUR_DP, LiquidEdge.recipe(LiquidRole.Sheet, dark).blurDp)
         }
     }
 }

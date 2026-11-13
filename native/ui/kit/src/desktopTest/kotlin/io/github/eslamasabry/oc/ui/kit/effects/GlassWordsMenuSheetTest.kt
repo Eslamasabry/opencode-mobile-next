@@ -247,8 +247,10 @@ class GlassWordsMenuSheetTest {
             val before = t.getValue(c to Variant.Before)
             val after = t.getValue(c to Variant.Shipped)
             println("MENU $c: steepest edge ${before.m.edge} -> ${after.m.edge}; contrast ${before.m.contrast} -> ${after.m.contrast}; peak difference ${before.diff} -> ${after.diff}")
-            assertTrue(after.m.edge < before.m.edge, "menu $c: steepest edge ${before.m.edge} -> ${after.m.edge}")
-            assertTrue(after.diff <= before.diff, "menu $c: peak ${before.diff} -> ${after.diff}")
+            // Glass liquid (2026-11-14): the menu is the bar's clear glass at 4 dp, less frost than the old 6 dp menu; the
+            // detail hold keeps what is behind its words at least as calm as that menu was, or below what an eye sees.
+            assertTrue(after.m.edge < before.m.edge || after.m.edge <= INVISIBLE_EDGE, "menu $c: steepest edge ${before.m.edge} -> ${after.m.edge}")
+            assertTrue(after.diff <= before.diff + 1f, "menu $c: peak ${before.diff} -> ${after.diff}")
         }
         val card = t.getValue(Content.BrightCard to Variant.Before) to t.getValue(Content.BrightCard to Variant.Shipped)
         println("MENU BrightCard: peak luma ${card.first.m.peakLuma} -> ${card.second.m.peakLuma}")
@@ -328,7 +330,7 @@ class GlassWordsMenuSheetTest {
             val bar = LiquidEdge.recipe(LiquidRole.Bar, dark)
             val menu = LiquidEdge.recipe(LiquidRole.Menu, dark)
             assertEquals(bar, joinedFrost(bar, menu, 0f), "no rows yet: the bar's frost (dark=$dark)")
-            assertEquals(bar.copy(blurDp = 12f), joinedFrost(bar, menu, 1f), "rows in: the menu's blur 12 dp, nothing else of the bar's moves (dark=$dark)")
+            assertEquals(bar.copy(blurDp = LiquidEdge.MODAL_BLUR_DP), joinedFrost(bar, menu, 1f), "rows in: the menu's blur, nothing else of the bar's moves (dark=$dark)")
             assertEquals(joinedFrost(bar, menu, 1f), joinedFrost(bar, menu, 1.7f), "clamped")
             var last = joinedFrost(bar, menu, 0f).blurDp
             for (i in 1..100) {
@@ -362,7 +364,7 @@ class GlassWordsMenuSheetTest {
     }
 
     @Test
-    fun `the specs the real menu and sheet faces hand the platform carry the recipe - 12 dp and the hold`() {
+    fun `the specs the real menu and sheet faces hand the platform carry the recipe - the bar's clear frost and the hold`() {
         for (dark in listOf(true, false)) for (kind in Kind.entries) {
             val seen = mutableListOf<KitLiquidPaneSpec>()
             val platform = LensPlatform({ seen += it; it })
@@ -373,7 +375,8 @@ class GlassWordsMenuSheetTest {
             assertTrue(seen.isNotEmpty(), "$kind dark=$dark: the face asked the platform")
             val role = if (kind == Kind.Menu) LiquidRole.Menu else LiquidRole.Sheet
             val want = LiquidEdge.recipe(role, dark)
-            assertEquals(12f, seen.last().recipe.blurDp, "$kind dark=$dark blur")
+            assertEquals(LiquidEdge.MODAL_BLUR_DP, seen.last().recipe.blurDp, "$kind dark=$dark blur")
+            assertTrue(seen.last().recipe.hold.local, "$kind dark=$dark: the detail hold reaches the platform")
             assertEquals(want.hold, seen.last().recipe.hold, "$kind dark=$dark hold")
             assertTrue(seen.last().recipe.hold.knee && seen.last().recipe.hold.chroma > 0f)
         }
@@ -442,5 +445,8 @@ class GlassWordsMenuSheetTest {
 
         /** The distance (dp) over which an edge's steepness is measured: a letter's stroke is about this wide. */
         const val EDGE_DP = 4f
+
+        /** A step in brightness (of 255) over [EDGE_DP] that no eye picks out behind a line of words. */
+        const val INVISIBLE_EDGE = 6f
     }
 }

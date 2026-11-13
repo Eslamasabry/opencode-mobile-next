@@ -88,8 +88,8 @@ public data class LiquidHold(
     val chroma: Float,
     /**
      * The local-contrast hold (owner 2026-11-13, "half glass half frosting" and the black slab): detail is compressed
-     * round the LOCAL mean of what is behind (its reach [localDp]); the mean light and colour pass. 0 = off, as shipped:
-     * a parameter for the Glass tuning page, no role uses it yet.
+     * round the LOCAL mean of what is behind (its reach [localDp]); the mean light and colour pass, then the knee and
+     * the colour limit hold what is left. 0 = off. Menus and sheets wear it ([LiquidEdge.MODAL_HOLD]), outside the rim.
      */
     val localDp: Float = 0f,
     /** The detail (RGB distance from the local mean, 0-1) that passes whole, and the share kept beyond it. */
@@ -136,6 +136,22 @@ public object LiquidEdge {
      */
     public const val HOLD_CHROMA: Float = .26f
 
+    /**
+     * The frost of a menu and a sheet, dp (12 until 2026-11-14): the bar's material with a touch more, so a menu out of
+     * the bar is one body of one glass and the content behind still bends visibly at the rim, in light mode too.
+     */
+    public const val MODAL_BLUR_DP: Float = 4f
+
+    /**
+     * What a menu and a sheet hold back behind their words: the knee and the colour ([HOLD_CHROMA]) as before, and the
+     * fine detail (a line of text, a table's rules) pressed toward its local mean within [LiquidHold.localDp], so the
+     * words do not sit on legible words while the colour and the light of the page come through. Not in the rim.
+     */
+    public val MODAL_HOLD: LiquidHold = LiquidHold(knee = true, chroma = HOLD_CHROMA, localDp = 16f, localFree = .03f, localSlope = .15f)
+
+    /** The edge dock's pulled-out list keeps the sheet's old frost (the dock's glass is not part of this retune). */
+    public const val DOCK_LIST_BLUR_DP: Float = 12f
+
     /** How far the glass presses the backdrop's contrast together (1 keeps it): lightly, so the content shows. */
     public const val PRESS: Float = 1f
 
@@ -162,9 +178,8 @@ public object LiquidEdge {
 
     /**
      * The menu's glass as the edge dock's swell wears it: the dock grows out of its strip towards this (blur 6 dp dark,
-     * 3 light, no hold), then towards the sheet's frost when its list is out ([dockRecipe]). Menus themselves frost at
-     * 12 dp ([recipe]); the dock's strip and swell keep what they were (2026-11-11, "the dock's list frosts as a
-     * sheet does": only the list moved).
+     * 3 light, no hold), then towards its list's frost when its list is out ([dockRecipe], [DOCK_LIST_BLUR_DP]). Menus
+     * themselves frost at [MODAL_BLUR_DP] ([recipe]); the dock's strip and swell keep what they were.
      */
     public fun swellRecipe(dark: Boolean, look: GlassLookPreset = GlassLooks.Glossy): LiquidRecipe =
         recipe(LiquidRole.Menu, dark, look).copy(blurDp = if (dark) 6f else 3f, hold = LiquidHold.Off)
@@ -185,11 +200,13 @@ public object LiquidEdge {
             // the rim still bends it. The dock at rest is a bar (dockRecipe mixes it towards a menu as it grows).
             LiquidRole.Bar, LiquidRole.Dock -> r(3f, 34f, .14f, .18f, .12f)
             LiquidRole.Composer -> r(2f, 34f, .16f, .20f, .18f)
-            // Sheets and menus hold back the light and the colour behind their words (LiquidHold). Both frost at 12 dp
-            // (menus 6 dark / 3 light until 2026-11-11 "words on glass 3": the page's rows and a dark bubble behind a
-            // menu's rows read as lines and as a highlighted row at that blur).
-            LiquidRole.Sheet -> r(12f, 48f, 0f, .22f, .14f, rimMax = 30f, hold = LiquidHold(true, HOLD_CHROMA))
-            LiquidRole.Menu -> r(12f, 48f, .18f, .20f, .10f, rimMax = 26f, hold = LiquidHold(true, HOLD_CHROMA))
+            // Sheets and menus are the bar's material (owner 2026-11-13, "half glass half frosting", "still no liquid it's
+            // frosted"): a menu that grows out of a clear bar is no longer a cloudy 12 dp pane but the same clear glass,
+            // a little more frost ([MODAL_BLUR_DP]). Their words read by holding back what is behind them, not by frost:
+            // the light past the knee and the colour (LiquidHold), and the fine detail round its local mean
+            // ([MODAL_HOLD]), all in the calm middle; the rim keeps what it bends.
+            LiquidRole.Sheet -> r(MODAL_BLUR_DP, 48f, 0f, .22f, .14f, rimMax = 30f, hold = MODAL_HOLD)
+            LiquidRole.Menu -> r(MODAL_BLUR_DP, 48f, .18f, .20f, .10f, rimMax = 26f, hold = MODAL_HOLD)
             // Small pills (the jump pill, the chips over the message box) are calm glass: a narrow rim and a light bend,
             // no lens to the middle (owner 2026-11-08: the jump pill's lens read swirly over text).
             LiquidRole.Pill, LiquidRole.Status -> r(1f, 12f, .16f, .18f, .28f, rimMax = 12f, share = .28f)
@@ -227,7 +244,7 @@ public object LiquidEdge {
      * the whole body, its blur, bend, rim and tint moving together as it grows.
      */
     public fun dockRecipe(dark: Boolean, growth: Float, look: GlassLookPreset = GlassLooks.Glossy, list: Float = 0f): LiquidRecipe =
-        toward(mix(recipe(LiquidRole.Dock, dark, look), swellRecipe(dark, look), growth), recipe(LiquidRole.Sheet, dark, look), list)
+        toward(mix(recipe(LiquidRole.Dock, dark, look), swellRecipe(dark, look), growth), recipe(LiquidRole.Sheet, dark, look).copy(blurDp = DOCK_LIST_BLUR_DP), list)
 
     /**
      * [from] with its blur and its bend moved towards [sheet]'s by [t] (0 keeps [from], 1 has the sheet's): the pulled-out
