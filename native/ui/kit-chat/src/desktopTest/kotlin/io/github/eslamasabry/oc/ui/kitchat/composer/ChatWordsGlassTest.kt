@@ -21,6 +21,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.BlurEffect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PixelMap
@@ -39,7 +40,6 @@ import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.performScrollToIndex
 import androidx.compose.ui.test.performTouchInput
-import androidx.compose.ui.test.swipeDown
 import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.DpRect
@@ -177,6 +177,7 @@ class ChatWordsGlassTest {
         chips: Boolean = false,
         outlined: Boolean = false,
         earlier: Boolean = false,
+        tall: Boolean = false,
     ) {
         CompositionLocalProvider(LocalKitScreenInsets provides WindowInsets(top = statusDp.dp, bottom = NAV_DP.dp)) {
             Box(Modifier.size(W.dp, H.dp).testTag("scene")) {
@@ -237,7 +238,7 @@ class ChatWordsGlassTest {
                             items((0 until ROWS).map { "row-$it" }, key = { it }) { key ->
                                 Box(
                                     Modifier.fillMaxWidth()
-                                        .height(if (outlined) CODE_DP.dp else ROW_DP.dp)
+                                        .height(if (outlined || tall) CODE_DP.dp else ROW_DP.dp)
                                         .then(
                                             when {
                                                 !bright -> Modifier
@@ -279,6 +280,10 @@ class ChatWordsGlassTest {
         outlined: Boolean = false,
         earlier: Boolean = false,
         scrollTo: Int = SCROLLED_TO,
+        /** Rows as tall as a code block, filled (with [bright]). */
+        tall: Boolean = false,
+        /** How far past [scrollTo]'s resting place the list is drawn, dp (see [shot]'s body). */
+        nudgeDp: Int = 0,
     ): Shot {
         lateinit var shot: Shot
         runDesktopComposeUiTest((W * D).toInt(), (H * D).toInt()) {
@@ -287,7 +292,7 @@ class ChatWordsGlassTest {
             setContent {
                 CompositionLocalProvider(LocalDensity provides Density(D)) {
                     KitTheme(appearance = appearance, platform = platform, localeTag = "en", stillFrame = true) {
-                        Scene(bright, notice, seen, lazy, statusDp, card, chips, outlined, earlier)
+                        Scene(bright, notice, seen, lazy, statusDp, card, chips, outlined, earlier, tall)
                     }
                 }
             }
@@ -296,8 +301,21 @@ class ChatWordsGlassTest {
             waitForIdle()
             // A person reading history drags the list, which stops it following the newest message; a scroll from code
             // keeps following, so the phrase row folding (the block's height changing) would pin it back to the newest.
-            if (chips && scrollTo > 0) onNodeWithTag("transcript-list").performTouchInput { swipeDown(durationMillis = 300) }
+            // The finger moves 120 dp toward older messages and rests before it lifts, so no fling carries the list on.
+            if (chips && scrollTo > 0)
+                onNodeWithTag("transcript-list").performTouchInput {
+                    down(center)
+                    repeat(12) { moveBy(Offset(0f, 10f * D)) }
+                    advanceEventTime(200)
+                    up()
+                }
             waitForIdle()
+            // Near the newest message (not away from it): the newest row drawn [nudgeDp] past its resting place, so its
+            // lower part lies under the bottom block.
+            if (nudgeDp > 0) {
+                runOnIdle { lazy[0]!!.requestScrollToItem(scrollTo, (nudgeDp * D).roundToInt()) }
+                waitForIdle()
+            }
             // The phrase row folding, the pill rising out of the box, the page's edges easing to their new place.
             mainClock.advanceTimeBy(1_000)
             waitForIdle()
@@ -457,7 +475,11 @@ class ChatWordsGlassTest {
         assertTrue(face.bottom <= bright.block!!.top, "the pill sits above the block: $face block ${bright.block}")
         val (mean, max) = diff(bright.image, none.image, face.left.value - 4f, face.top.value - 4f, face.right.value + 4f, face.bottom.value + 4f)
         println("pill over card: mean $mean max $max at $face")
-        assertTrue(mean <= WORDS_MEAN && max <= WORDS_MAX, "the rows show behind the pill: mean $mean, max $max")
+        assertTrue(
+            mean <= WORDS_MEAN && max <= WORDS_MAX,
+            "the rows show behind the pill: mean $mean, max $max (none: ${none.pillFace})\n" +
+                map(bright.image, none.image, face.left.value - 16f, face.top.value - 24f, face.right.value + 16f, bright.block!!.top.value + 8f),
+        )
         assertFadesOut(bright.image, none.image, x = 8f, from = face.top.value - 40f, to = face.top.value, what = "over the card")
     }
 
@@ -495,13 +517,22 @@ class ChatWordsGlassTest {
         bright.pill?.let { assertTrue(it.bottom <= label.top + 1.dp, "the pill ${it} lies below the label's top ${label.top}") }
     }
 
+    /**
+     * The phrase row shows only near the newest message (reading history it folds away, B-CHAT-COL-03), so the scene is
+     * there: a tall newest message drawn 120 dp past its resting place (not away from the newest, the chips stay), its
+     * lower part under the chips. Was scrolled to the fourth row, which is already away from the newest: the row had
+     * folded and the scene had no chips to measure.
+     */
     @Test
     fun `a bright row never shows behind the phrase chips above the box`() {
-        // Near the newest message (the row shows; reading history it folds away).
-        val bright = shot(dark(Style.Glass), LensPlatform(), bright = true, chips = true, scrollTo = 3)
-        val none = shot(dark(Style.Glass), LensPlatform(), bright = false, chips = true, scrollTo = 3)
-        val chip = bright.chip!!
+        val bright = shot(dark(Style.Glass), LensPlatform(), bright = true, chips = true, scrollTo = 0, tall = true, nudgeDp = 120)
+        val none = shot(dark(Style.Glass), LensPlatform(), bright = false, chips = true, scrollTo = 0, tall = true, nudgeDp = 120)
+        val chip = assertNotNull(bright.chip, "near the newest message the phrase row shows: ${bright.list}")
         assertTrue(chip.top < bright.box.top, "the chips lie above the box: $chip box ${bright.box}")
+        assertTrue(
+            bright.rows.any { it.top < chip.top && it.bottom > chip.bottom },
+            "the newest row runs under the chips: ${bright.rows.map { it.top..it.bottom }} chips $chip (${bright.list})",
+        )
         // The chip's own face lies at the row's start; its label is at its middle.
         val (mean, max) = diff(bright.image, none.image, chip.left.value + 6f, chip.top.value + 4f, chip.left.value + 60f, chip.bottom.value - 8f)
         println("chips: mean $mean max $max over $chip")
