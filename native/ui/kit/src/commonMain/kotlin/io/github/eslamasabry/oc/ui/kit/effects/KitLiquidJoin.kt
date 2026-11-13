@@ -390,6 +390,10 @@ private class JoinedPaneNode(
                 tintMine = tintNow(spec),
                 tintTheirs = tintNow(theirSpec),
                 rimPx = spec.rimDp.dp.toPx(),
+                falloff = spec.rimFalloff,
+                rimFloor = spec.rimFloor,
+                lightDir = spec.lightDir,
+                bendShape = spec.bendShape,
             )
         // 1. The backdrop at the body's resolution, blurred by the body's frost, bent and pressed by the lens pass.
         u.set(programs.lens, mode = 0f, res = res)
@@ -456,7 +460,7 @@ internal fun joinedFrost(body: io.github.eslamasabry.oc.ui.design.effects.Liquid
 internal fun kneeOf(spec: KitLiquidPaneSpec): FloatArray {
     val flipped = (spec.flip?.progress?.value ?: 0f) > .5f
     val lightInk = spec.rimAdds != flipped
-    return floatArrayOf(LiquidJoin.KNEE, LiquidJoin.KNEE_SLOPE, if (lightInk) 1f else 0f)
+    return floatArrayOf(spec.knee, spec.kneeSlope, if (lightInk) 1f else 0f)
 }
 
 /**
@@ -517,6 +521,12 @@ internal class JoinUniforms(
     val rimPx: Float,
     /** The most chroma the body lets through in its inner part (LiquidEdge.heldRgb, LiquidHold.chroma); 0 = no limit. */
     val hold: Float = 0f,
+    /** The rim light's falloff and floor ([io.github.eslamasabry.oc.ui.design.effects.RimLight]) and its direction. */
+    val falloff: Float = RIM_FALLOFF,
+    val rimFloor: Float = io.github.eslamasabry.oc.ui.design.effects.RimLight.FLOOR,
+    val lightDir: FloatArray = SHIPPED_LIGHT,
+    /** The bend's profile (-1 soft dome, 0 the shipped circle, 1 sharp bevel). */
+    val bendShape: Float = 0f,
 ) {
     /** [light]: the finger's light for modes 4 and 5 (centre x, centre y, radius or line width in px, strength). */
     fun set(p: LiveShaderProgram, mode: Float, res: Float, light: FloatArray = NO_LIGHT) {
@@ -540,10 +550,15 @@ internal class JoinUniforms(
         p.float4("tintA", tintMine.red * tintMine.alpha, tintMine.green * tintMine.alpha, tintMine.blue * tintMine.alpha, tintMine.alpha)
         p.float4("tintB", tintTheirs.red * tintTheirs.alpha, tintTheirs.green * tintTheirs.alpha, tintTheirs.blue * tintTheirs.alpha, tintTheirs.alpha)
         p.float("rimPx", rimPx)
-        p.float("falloff", RIM_FALLOFF)
-        p.float("rimFloor", io.github.eslamasabry.oc.ui.design.effects.RimLight.FLOOR)
+        p.float("falloff", falloff)
+        p.float("rimFloor", rimFloor)
+        p.float2("lightDir", lightDir[0], lightDir[1])
+        p.float("bendShape", bendShape)
     }
 }
+
+/** The shipped rim light's direction: the top-start / bottom-end diagonal. */
+internal val SHIPPED_LIGHT: FloatArray = floatArrayOf(0.70710678f, 0.70710678f)
 
 private val NO_LIGHT: FloatArray = floatArrayOf(0f, 0f, 1f, 0f)
 
@@ -587,6 +602,8 @@ uniform float4 tintB;
 uniform float rimPx;
 uniform float falloff;
 uniform float rimFloor;
+uniform float2 lightDir;
+uniform float bendShape;
 uniform float4 light;
 
 float sat01(float x) { return clamp(x, 0.0, 1.0); }
@@ -639,7 +656,10 @@ half4 main(float2 q) {
         float2 at = q;
         if (rimW > 0.0 && depth < rimW) {
             float x = 1.0 - depth / rimW;
-            at = q - (1.0 - sqrt(max(1.0 - x * x, 0.0))) * amount * bend * res;
+            float c = 1.0 - sqrt(max(1.0 - x * x, 0.0));
+            float x2 = x * x;
+            float shaped = bendShape < 0.0 ? mix(c, x, -bendShape) : mix(c, x2 * x2 * x2 * x2, bendShape);
+            at = q - shaped * amount * bend * res;
         }
         float4 c = float4(sampleContent(at));
         float3 rgb = c.rgb;
@@ -676,7 +696,7 @@ half4 main(float2 q) {
     if (mode < 2.5) {
         float gl = max(length(bend), 0.05);
         // The plain pane's light (KitRimShader): its two lit arcs the brightest, never below the floor elsewhere.
-        float lit = rimLit(dot(bend / gl, float2(0.70710678, 0.70710678)), falloff, rimFloor);
+        float lit = rimLit(dot(bend / gl, lightDir), falloff, rimFloor);
         float edge = sat01(0.5 - dist) * sat01(dist + rimPx + 0.5);
         return half4(edge * lit * mine);
     }

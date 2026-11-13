@@ -513,11 +513,19 @@ internal fun DrawScope.sheenDepthPx(): Float =
  * the top corners, brightest a quarter of the way from the start and gone at both ends ([SurfaceDecoration.GLINT_SHARE]
  * of [color]). [topRadiusPx] is the top-start corner's radius. Both are crisp strokes clipped to the face.
  */
-internal fun DrawScope.drawGlassSpecular(shape: Shape, color: Color, rtl: Boolean, topRadiusPx: Float, rimDp: Float = 1f, glintShare: Float = SurfaceDecoration.GLINT_SHARE) {
+internal fun DrawScope.drawGlassSpecular(
+    shape: Shape,
+    color: Color,
+    rtl: Boolean,
+    topRadiusPx: Float,
+    rimDp: Float = 1f,
+    glintShare: Float = SurfaceDecoration.GLINT_SHARE,
+    reachDp: Float = SPECULAR_REACH_DP,
+) {
     val w = rimDp.coerceIn(1f, 1.5f).dp.toPx()
     if (size.width <= w * 4f || size.height <= w * 4f || color.alpha <= 0f) return
     val corner = Offset(if (rtl) size.width else 0f, 0f)
-    val reach = minOf(SPECULAR_REACH_DP.dp.toPx(), size.width * SPECULAR_REACH_SHARE)
+    val reach = minOf(reachDp.dp.toPx(), size.width * SPECULAR_REACH_SHARE).coerceAtLeast(1f)
     val segment = Brush.radialGradient(0f to color, .45f to color.copy(alpha = color.alpha * .55f), 1f to color.copy(alpha = 0f), center = corner, radius = reach)
     inset(w / 2f) { drawOutline(shape.createOutline(size, layoutDirection, this), segment, style = Stroke(w)) }
     // The glint: one thin line inside the top edge, clear of the corners' curve.

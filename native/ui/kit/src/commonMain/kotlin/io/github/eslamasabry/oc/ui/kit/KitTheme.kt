@@ -165,6 +165,8 @@ public fun KitTheme(
         LocalKitPlatform provides platform,
         LocalKitAppearance provides effectiveAppearance,
         LocalKitStyle provides styleState,
+        // The Glass lab's tuning, while its "Use in the whole app" switch is on (null: the shipped glass).
+        io.github.eslamasabry.oc.ui.kit.effects.LocalKitGlassTuning provides appearance.glassTuning?.takeIf { it.inApp },
         LocalKitRoles provides fade.roles,
         LocalKitLocaleTag provides localeTag,
         LocalKitColors provides colors,

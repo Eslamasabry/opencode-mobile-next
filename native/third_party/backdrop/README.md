@@ -16,7 +16,7 @@ it) and gets this fork. Its own dependencies (Compose foundation/ui/ui-graphics 
 
 ## What changed, and why
 
-Two changes, marked `OC fork` in the code.
+Three changes, marked `OC fork` in the code.
 
 **Compose 1.13:** `androidMain/.../internal/Paint.kt` reads the framework paint through `Paint.nativePaint` instead of
 `asFrameworkPaint()`, which Compose 1.13 (the app's version) deprecates at error level. Same object, same behaviour.
@@ -38,6 +38,13 @@ upstream's behaviour, line for line).
   sheets, menus; `liquidResolutionOf` in `:ui:kit`); the lightly frosted chips and the + stay at 1.
 - Proof: the before/after frame numbers and the side-by-side screenshots (full and half resolution, same device, same
   scale) are in docs/native/qa/smoothness-2026-11-09/round-2.md.
+
+**Dispersion amount and bend shape:** `effects/Lens.kt` gains an overload `lens(refractionHeight, refractionAmount,
+depthEffect, dispersion: Float, bendShape: Float = 0)`, and `internal/Shaders.kt` the shader it uses,
+`OcRefractionShaderString`: upstream's refraction with dispersion, line for line, with the split as an amount (0 skips
+the seven samples) and the bend's profile as a uniform (0 is upstream's `circleMap`, -1 mixes it to a linear soft dome,
+1 to a sharp `x^8` bevel at the rim). With both at 0 the overload calls upstream's lens without dispersion, unchanged.
+Why: the kit's Glass lab (2026-11-13) lets the owner tune both as numbers. Nothing in the app moves them by default.
 
 ## Updating
 

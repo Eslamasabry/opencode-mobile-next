@@ -23,7 +23,9 @@ import com.kyant.backdrop.effects.runtimeShaderEffect
 import com.kyant.backdrop.highlight.Highlight
 import com.kyant.backdrop.highlight.HighlightStyle
 import com.kyant.backdrop.isRuntimeShaderSupported
+import com.kyant.backdrop.shadow.InnerShadow
 import com.kyant.backdrop.shadow.Shadow
+import androidx.compose.ui.unit.DpOffset
 import io.github.eslamasabry.oc.ui.design.effects.LiquidEdge
 import io.github.eslamasabry.oc.ui.design.effects.RimLight
 import io.github.eslamasabry.oc.ui.kit.effects.KitLiquidBackdrop
@@ -54,10 +56,13 @@ internal object AndroidLiquidGlass {
                 colorControls(brightness = recipe.brightness, contrast = recipe.contrast, saturation = recipe.saturation)
                 blur((recipe.blurDp + (spec.frostBlurDp - recipe.blurDp) * t).dp.toPx())
                 if (size.isSpecified && t < 1f) {
+                    // The colour split and the bend shape are 0 in the shipped glass: that is upstream's lens without dispersion.
                     lens(
                         LiquidEdge.rimPx(size.minDimension, density, recipe),
                         recipe.refractionDp.dp.toPx() * (1f - t),
-                        depthEffect = recipe.depth,
+                        recipe.depth,
+                        spec.dispersion,
+                        spec.bendShape.coerceIn(-1f, 1f),
                     )
                 }
                 // The sheet's and the menu's glass hold back the light and the colour behind their words, after the blur
@@ -91,10 +96,23 @@ internal object AndroidLiquidGlass {
                     width = spec.rimDp.dp,
                     blurRadius = 0.dp,
                     alpha = if (spec.keepRim) 1f else 1f - transform().coerceIn(0f, 1f),
-                    style = RimStyle(color = spec.rim, blendMode = if (spec.rimAdds) BlendMode.Plus else BlendMode.SrcOver),
+                    style =
+                        RimStyle(
+                            color = spec.rim,
+                            blendMode = if (spec.rimAdds) BlendMode.Plus else BlendMode.SrcOver,
+                            falloff = spec.rimFalloff,
+                            floor = spec.rimFloor,
+                            lightX = spec.lightDir[0],
+                            lightY = spec.lightDir[1],
+                        ),
                 )
             },
             shadow = if (spec.shadow.alpha > 0f) ({ Shadow(radius = 24.dp, color = spec.shadow) }) else null,
+            // None in the shipped glass; the Glass lab's inner shadow, dropped by half its size. The library cuts it with
+            // a Clear blend, which some GPU emulators' renderers do not survive: it stays off unless someone moves it.
+            innerShadow =
+                if (spec.innerShadow > 0f) ({ InnerShadow(radius = spec.innerShadowDp.dp, offset = DpOffset(0.dp, (spec.innerShadowDp / 2f).dp), color = Color.Black.copy(alpha = spec.innerShadow.coerceIn(0f, 1f))) })
+                else null,
             onDrawSurface = { drawLiquidTint(spec, shape) },
             // The backdrop layer (colour controls, blur, lens) at the pane's resolution; rim light, specular and tint
             // above stay at full resolution (third_party/backdrop/README.md).
@@ -116,7 +134,14 @@ internal object AndroidLiquidGlass {
      * RimLight's floor). The library strokes the pane's own outline with it, clipped to that outline, and lays it on
      * with [blendMode]; the paint's [color] alpha is the rim's strength at its peak.
      */
-    private data class RimStyle(override val color: Color, override val blendMode: BlendMode) : HighlightStyle {
+    private data class RimStyle(
+        override val color: Color,
+        override val blendMode: BlendMode,
+        val falloff: Float = RimLight.FALLOFF,
+        val floor: Float = RimLight.FLOOR,
+        val lightX: Float = 0.70710678f,
+        val lightY: Float = 0.70710678f,
+    ) : HighlightStyle {
         override fun DrawScope.createShader(shape: Shape, runtimeShaderCache: RuntimeShaderCache): RuntimeShader? {
             if (!isRuntimeShaderSupported()) return null
             val corners = shape as? CornerBasedShape
@@ -127,8 +152,9 @@ internal object AndroidLiquidGlass {
                 setFloatUniform("size", size.width, size.height)
                 setFloatUniform("cornerRadii", radii[0], radii[1], radii[2], radii[3])
                 setFloatUniform("rimColor", color.red, color.green, color.blue, 1f)
-                setFloatUniform("falloff", RimLight.FALLOFF)
-                setFloatUniform("rimFloor", RimLight.FLOOR)
+                setFloatUniform("falloff", falloff)
+                setFloatUniform("rimFloor", floor)
+                setFloatUniform("lightDir", lightX, lightY)
             }
         }
     }

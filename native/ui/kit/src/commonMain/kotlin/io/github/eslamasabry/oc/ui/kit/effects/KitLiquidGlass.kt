@@ -254,12 +254,14 @@ internal fun kitLiquidFace(
     shape: Shape,
     transform: () -> Float = NoTransform,
     join: KitLiquidJoinPart? = null,
+    /** A dialog's panel: drawn with the sheet's role, tuned as a dialog (the Glass lab). */
+    dialog: Boolean = false,
 ): Modifier? {
     val ground = LocalKitColors.current.ground.copy(alpha = 1f)
     val picture = LocalKitGlassBackdrop.current
     val live = io.github.eslamasabry.oc.ui.kit.foundation.LocalKitLivePicture.current?.backdrop
     val backdrop = remember(source, ground, picture, live) { source?.let { liquidSourceBackdrop(it, ground, picture, live) } }
-    return liquidFace(role, source, backdrop, shape, transform, join = join)
+    return liquidFace(role, source, backdrop, shape, transform, join = join, dialog = dialog)
 }
 
 /** A menu's liquid face over the page (frost of it under the Frosted look), unless it opens over a sheet or a dialog. */
@@ -271,9 +273,9 @@ internal fun kitLiquidMenuFace(shape: Shape, transform: () -> Float, join: KitLi
 
 /** A sheet's liquid face over the page (frost of it under the Frosted look). */
 @Composable
-internal fun kitLiquidSheetFace(shape: Shape, transform: () -> Float): Modifier? {
+internal fun kitLiquidSheetFace(shape: Shape, transform: () -> Float, dialog: Boolean = false): Modifier? {
     val page = LocalKitLiquidPage.current
-    return kitFrostedPanelFace(LiquidRole.Sheet, page, shape) ?: kitLiquidFace(LiquidRole.Sheet, page, shape, transform)
+    return kitFrostedPanelFace(LiquidRole.Sheet, page, shape, dialog) ?: kitLiquidFace(LiquidRole.Sheet, page, shape, transform, dialog = dialog)
 }
 
 /**
@@ -283,7 +285,7 @@ internal fun kitLiquidSheetFace(shape: Shape, transform: () -> Float): Modifier?
  * it has no lens.
  */
 @Composable
-private fun kitFrostedPanelFace(role: LiquidRole, source: KitLiquidSource?, shape: Shape): Modifier? {
+private fun kitFrostedPanelFace(role: LiquidRole, source: KitLiquidSource?, shape: Shape, dialog: Boolean = false): Modifier? {
     val on = source != null && shape is CornerBasedShape && kitFrostedPanelsOn()
     // The page records only while a pane uses it.
     DisposableEffect(source, on) {
@@ -296,7 +298,7 @@ private fun kitFrostedPanelFace(role: LiquidRole, source: KitLiquidSource?, shap
     val live = io.github.eslamasabry.oc.ui.kit.foundation.LocalKitLivePicture.current?.backdrop
     val backdrop = remember(source, ground, picture, live) { liquidSourceBackdrop(source!!, ground, picture, live) }
     val flip = liquidFlipFor(source, role)
-    val spec = kitLiquidPaneSpec(role, flip ?: remember { LiquidFlip() }, chosen = false, keepRim = true)
+    val spec = kitLiquidPaneSpec(role, flip ?: remember { LiquidFlip() }, chosen = false, keepRim = true, dialog = dialog)
     return Modifier.kitBackdropRimLight(shape)
         .kitFrostPane(spec, backdrop, shape as CornerBasedShape, spec.frostBlurDp, kitGlassLook().spec.frostSaturation)
         .kitGlassStackRoot()
@@ -332,6 +334,7 @@ private fun liquidFace(
     transform: () -> Float,
     chosen: Boolean = false,
     join: KitLiquidJoinPart? = null,
+    dialog: Boolean = false,
 ): Modifier? {
     val on = kitLiquidOn() && backdrop != null
     val shaped = liquidShapeOk(shape)
@@ -362,7 +365,7 @@ private fun liquidFace(
     val face = if (granted) transform else HeldFrost
     val joined = joinable && join!!.owner.partnerOf(join) != null
     join?.composedJoined = joined
-    return Modifier.liquidPane(role, backdrop, shape as CornerBasedShape, face, liquidFlipFor(source, role), chosen, keepRim = !granted, join = join, joined = joined)
+    return Modifier.liquidPane(role, backdrop, shape as CornerBasedShape, face, liquidFlipFor(source, role), chosen, keepRim = !granted, join = join, joined = joined, dialog = dialog)
 }
 
 /** A claim beyond the budget: all frost, no lens. */
@@ -390,10 +393,11 @@ private fun Modifier.liquidPane(
     keepRim: Boolean = false,
     join: KitLiquidJoinPart? = null,
     joined: Boolean = false,
+    dialog: Boolean = false,
 ): Modifier {
     val own = remember { LiquidFlip() }
     val flip = shared ?: own
-    val spec = kitLiquidPaneSpec(role, flip, chosen, keepRim)
+    val spec = kitLiquidPaneSpec(role, flip, chosen, keepRim, dialog = dialog)
     val platform = LocalKitPlatform.current
     val words = kitLiquidWords(backdrop, flip)
     if (join != null) SideEffect { join.spec = spec }
@@ -408,7 +412,7 @@ private fun Modifier.liquidPane(
 
 /** [role]'s liquid pane as the look here draws it: its face measured for its words, its recipe, rim and gloss. */
 @Composable
-internal fun kitLiquidPaneSpec(role: LiquidRole, flip: LiquidFlip, chosen: Boolean, keepRim: Boolean, swell: Boolean = false): KitLiquidPaneSpec {
+internal fun kitLiquidPaneSpec(role: LiquidRole, flip: LiquidFlip, chosen: Boolean, keepRim: Boolean, swell: Boolean = false, dialog: Boolean = false): KitLiquidPaneSpec {
     val roles = LocalKitRoles.current
     val platform = LocalKitPlatform.current
     val appearance = LocalKitAppearance.current
@@ -467,7 +471,14 @@ internal fun kitLiquidPaneSpec(role: LiquidRole, flip: LiquidFlip, chosen: Boole
                 resolution = liquidResolutionOf(recipe, platform.liquidResolution),
             )
         }
-    return spec
+    // The Glass lab's tuning (null: the shipped glass). The dock's grown swell keeps the menu's old glass.
+    val tuning = LocalKitGlassTuning.current ?: return spec
+    if (swell) return spec
+    val kind = io.github.eslamasabry.oc.ui.design.effects.GlassPaneKind.of(role, dialog)
+    val dark = if (kitGlassLook().smoked) true else roles.dark
+    return remember(spec, tuning, kind, dark, platform.liquidResolution) {
+        spec.tuned(tuning.knobs(kind, dark), io.github.eslamasabry.oc.ui.design.effects.GlassTuning.shipped(kind, dark), platform.liquidResolution)
+    }
 }
 
 /**

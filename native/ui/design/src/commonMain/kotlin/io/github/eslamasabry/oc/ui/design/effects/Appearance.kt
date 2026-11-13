@@ -60,6 +60,11 @@ public data class KitAppearance(
      * lib/state/effects.dart:45-47 at GLASS_REF). A style may cap it (`LivePolicy.cap`).
      */
     val liveStrength: Float = 1f,
+    /**
+     * `oc.glassTuning`: the Glass lab's numbers, worn by every glass pane while its "Use in the whole app" switch is on
+     * (preview builds); null draws the shipped glass.
+     */
+    val glassTuning: GlassTuning? = null,
 ) {
     public val saver: Boolean
         get() = mode == AppearanceMode.Saver
