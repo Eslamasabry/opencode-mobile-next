@@ -239,7 +239,8 @@ public class RunningModel(
                         loading = false,
                         loadFailed = false,
                         refreshFailed = false,
-                        rows = reading.processes.map(::row).toImmutableList(),
+                        // A process is one row, whichever group a reading's classifiers would put it in.
+                        rows = reading.processes.distinctBy { p -> p.pid }.map(::row).toImmutableList(),
                         count = reading.count,
                         cap = ProcessBudget.ceiling(reading.limitLifted),
                         nearLimit = ProcessBudget.nearLimit(reading.count),

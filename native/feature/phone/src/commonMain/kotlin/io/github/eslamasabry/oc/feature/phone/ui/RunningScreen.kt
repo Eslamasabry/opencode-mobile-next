@@ -89,7 +89,6 @@ import io.github.eslamasabry.oc.ui.words.res.termuxProcsAutoRefresh
 import io.github.eslamasabry.oc.ui.words.res.termuxProcsMemoryMb
 import io.github.eslamasabry.oc.ui.words.res.termuxProcsStopping
 import io.github.eslamasabry.oc.ui.words.res.workspaceDismissNotice
-import kotlin.math.roundToLong
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 
@@ -216,7 +215,7 @@ public fun RunningScreen(state: RunningUi, actions: RunningActions) {
                                 Res.plurals.runningPhoneSummary,
                                 state.summaryCount,
                                 state.summaryCount,
-                                runningLargeMemory(bytes),
+                                PhoneSizes.memory(bytes),
                             )
                         ),
                         Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp).testTag("running-summary"),
@@ -509,27 +508,7 @@ private fun processFacts(row: ProcessRowUi): String =
         )
         .joinToString(" · ")
 
-@Composable
-private fun runningMemory(bytes: Long): String {
-    val mb = (bytes / 1048576.0).roundToLong() // F: lib/ui/widgets/running_on_phone_text.dart:93
-    // C09: "215.0 MB" keeps its order in an Arabic line ("MB 215.0" before).
-    if (mb < 1024) return kitUnits(stringResource(Res.string.termuxProcsMemoryMb, mb))
-    return kitUnits(runningLargeMemory(bytes))
-}
-
-/** Locale-neutral byte unit data, as Flutter formatPhoneStorage's fixed Latin units. */
-internal fun runningLargeMemory(bytes: Long): String {
-    // F: lib/ui/widgets/phone_server_card.dart:542-550
-    val units = listOf("KB", "MB", "GB", "TB")
-    var value = bytes / 1024.0
-    var unit = 0
-    while (value >= 1024 && unit < units.lastIndex) {
-        value /= 1024
-        unit++
-    }
-    val tenths = (value * 10).roundToLong()
-    return "${tenths / 10}.${tenths % 10} ${units[unit]}"
-}
+private fun runningMemory(bytes: Long): String = PhoneSizes.memory(bytes)
 
 internal fun offersInlineStop(row: ProcessRowUi): Boolean =
     row.stoppable && (row.leftBehind || row.heavy || row.orphanReason != null)
