@@ -95,7 +95,11 @@ private fun edgeLightLabel(counts: EdgeLightCounts): String {
         if (counts.working > 0) add(pluralStringResource(Res.plurals.lampSpokenWorking, counts.working, counts.working))
     }
     return if (parts.isEmpty()) stringResource(Res.string.lampLabel)
-    else stringResource(Res.string.lampLabelWith, parts.joinToString(stringResource(Res.string.lampSpokenJoin)))
+    else {
+        var joined = parts.first()
+        for (next in parts.drop(1)) joined = stringResource(Res.string.lampSpokenJoin, joined, next)
+        stringResource(Res.string.lampLabelWith, joined)
+    }
 }
 
 /**

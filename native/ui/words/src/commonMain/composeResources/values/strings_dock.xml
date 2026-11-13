@@ -36,7 +36,7 @@
     <!-- Settings › Conversations › Other conversations: Rings / Edge light / Hidden (replaces the dock's on/off switch). -->
     <string name="lampLabel">Other conversations</string>
     <string name="lampLabelWith">Other conversations, %1$s</string>
-    <string name="lampSpokenJoin">, </string>
+    <string name="lampSpokenJoin">%1$s, %2$s</string>
     <plurals name="lampSpokenNeeds">
         <item quantity="one">%1$s needs you</item>
         <item quantity="other">%1$s need you</item>

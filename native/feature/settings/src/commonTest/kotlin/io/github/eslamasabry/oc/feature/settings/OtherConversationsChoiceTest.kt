@@ -88,7 +88,7 @@ class OtherConversationsChoiceTest {
         }
 
     @Test
-    fun `tapping the row changes nothing by itself (the page opens the list)`() =
+    fun `tapping the row changes nothing by itself because the page opens the list`() =
         rig(OtherConversationsMode.Rings) { p, setting, scope ->
             p.onRow(SettingsRowId.EdgeDock); scope.runCurrent()
             assertEquals(OtherConversationsMode.Rings, setting.mode.value)
