@@ -209,15 +209,26 @@ private fun AgentTile(tile: AgentTileModel, actions: AgentsActions, chat: Boolea
                     ) {
                         actions.signInPhone(agent.id)
                     }
+                // Usable before it is set up (its own answer tells): with conversations on, the card starts one, as it
+                // does for a Ready agent (the card and New conversation agree); Set up stays in its sheet.
                 AgentTileAct.SetUp ->
-                    KitAgentTileAction(
-                        stringResource(Res.string.agentsChipSetUp),
-                        stringResource(Res.string.agentsSetUpAction, agent.name),
-                        icon = KitIcons.login,
-                        prominent = true,
-                    ) {
-                        actions.signInPhone(agent.id)
-                    }
+                    if (cardOffersConversation(tile, chat))
+                        KitAgentTileAction(
+                            stringResource(Res.string.agentsNewChat),
+                            stringResource(Res.string.agentsNewChatWith, agent.name),
+                            icon = KitIcons.chat,
+                        ) {
+                            actions.newPhoneConversation(agent.id)
+                        }
+                    else
+                        KitAgentTileAction(
+                            stringResource(Res.string.agentsChipSetUp),
+                            stringResource(Res.string.agentsSetUpAction, agent.name),
+                            icon = KitIcons.login,
+                            prominent = true,
+                        ) {
+                            actions.signInPhone(agent.id)
+                        }
                 AgentTileAct.Check ->
                     KitAgentTileAction(
                         stringResource(if (checkFailed) Res.string.kitTryAgain else Res.string.agentsChipCheck),

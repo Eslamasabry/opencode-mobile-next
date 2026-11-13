@@ -133,4 +133,6 @@ public fun phoneAgentStartsConversation(row: PhoneAgentRow): Boolean =
 
 /** Whether [tile]'s card offers New conversation, given [chat] ([phoneChatOffered] for the page). */
 public fun cardOffersConversation(tile: AgentTileModel, chat: Boolean): Boolean =
-    chat && tile.state == AgentTileState.Ready && phoneAgentStartsConversation(tile.agent)
+    chat &&
+        (tile.state == AgentTileState.Ready || tile.state == AgentTileState.SetUp) &&
+        phoneAgentStartsConversation(tile.agent)
