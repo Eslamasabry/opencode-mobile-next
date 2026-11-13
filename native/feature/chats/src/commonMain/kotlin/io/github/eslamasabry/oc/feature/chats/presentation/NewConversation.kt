@@ -33,6 +33,7 @@ import io.github.eslamasabry.oc.ui.routes.NewChatReports
 import io.github.eslamasabry.oc.ui.routes.ProjectsRoute
 import io.github.eslamasabry.oc.ui.routes.ServersRoute
 import kotlin.time.Clock
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -379,6 +380,9 @@ public fun filterNewConversationModels(
  * What the New conversation page is waiting on, for the Start button's words and spinner. A spinner belongs only to
  * [Sending] (the person pressed Start); getting the page ready and reading models say what they are, with Start off.
  */
+/** How long getting the page ready may take before it says what it is reading. */
+internal const val PREPARING_SLOW_MS: Long = 4_000
+
 public enum class NewConversationWait {
     None,
     /** The chosen server's projects, models and agents are being read. */
@@ -439,6 +443,8 @@ public data class NewConversationUi(
     val phoneModels: List<NewConversationModel> = emptyList(),
     val phoneModel: ModelRef? = null,
     val phoneModelsBusy: Boolean = false,
+    /** Getting the page ready has lasted more than a few seconds: the page names what it is reading. */
+    val preparingSlow: Boolean = false,
     /** The thinking effort chosen for the shown model; null is the model's own default. */
     val variant: String? = null,
 ) {
@@ -719,7 +725,11 @@ public class NewConversationViewModel(
             return
         }
         mutable.update {
-            it.copy(profile = profile, busy = true, failure = null, setup = null, phoneOff = false)
+            it.copy(profile = profile, busy = true, failure = null, setup = null, phoneOff = false, preparingSlow = false)
+        }
+        viewModelScope.launch {
+            delay(PREPARING_SLOW_MS)
+            if (ticket == generation) mutable.update { if (it.busy && it.setup == null) it.copy(preparingSlow = true) else it }
         }
         viewModelScope.launch {
             // Never wait for ever: a server that does not answer in time is a failure with a Try again.

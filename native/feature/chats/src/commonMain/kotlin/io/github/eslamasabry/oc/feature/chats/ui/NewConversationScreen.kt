@@ -20,7 +20,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import kotlinx.coroutines.delay
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
@@ -117,17 +116,9 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
     val working = stringResource(Res.string.serversWorking)
     // Getting the page ready is not "the current action": the button says what it waits for, and after a few
     // seconds the strip and the line under the field name the thing being read.
-    var slow by remember { mutableStateOf(false) }
     val preparing = state.wait == NewConversationWait.Preparing
-    LaunchedEffect(preparing) {
-        slow = false
-        if (preparing) {
-            delay(PREPARING_SLOW_MS)
-            slow = true
-        }
-    }
     val gettingReady =
-        stringResource(if (slow) Res.string.chatsNewGettingReadySlow else Res.string.chatsNewGettingReady)
+        stringResource(if (state.preparingSlow) Res.string.chatsNewGettingReadySlow else Res.string.chatsNewGettingReady)
     val loadingModels = stringResource(Res.string.chat_model_loading)
     val phoneOffWords = stringResource(Res.string.homePhoneOffTitle)
     val enabled =
@@ -375,9 +366,6 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
         NewConversationSheet(state, actions)
     }
 }
-
-/** How long getting the page ready may take before it says what it is reading. */
-private const val PREPARING_SLOW_MS = 4_000L
 
 /** Compact upgrade choices stay beside Start while the keyboard is open. */
 @Composable
