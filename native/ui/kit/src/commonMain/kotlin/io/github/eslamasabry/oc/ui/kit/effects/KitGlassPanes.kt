@@ -88,11 +88,15 @@ internal fun glassRims(d: SurfaceDecoration, roles: Roles, clear: Boolean, look:
     }
 }
 
-/** A chosen pane's accent rim: clearly there all round, brightest at its top start. */
+/**
+ * A chosen pane's accent rim: clearly there all round, brightest at its top start. Its bottom end keeps most of the
+ * light (.45/.55 until 2026-11-13 left the end corners of a wide chosen segment at a quarter of the ring's peak, under
+ * the rim floor every glass pane keeps: PaneRimFloorTest).
+ */
 internal const val CHOSEN_RIM_START_DARK: Float = .90f
 internal const val CHOSEN_RIM_START_LIGHT: Float = .95f
-internal const val CHOSEN_RIM_END_DARK: Float = .45f
-internal const val CHOSEN_RIM_END_LIGHT: Float = .55f
+internal const val CHOSEN_RIM_END_DARK: Float = .70f
+internal const val CHOSEN_RIM_END_LIGHT: Float = .76f
 
 private fun Color.toArgbValue(): Argb =
     Argb(((alpha * 255f + .5f).toInt() shl 24) or ((red * 255f + .5f).toInt() shl 16) or ((green * 255f + .5f).toInt() shl 8) or (blue * 255f + .5f).toInt())
