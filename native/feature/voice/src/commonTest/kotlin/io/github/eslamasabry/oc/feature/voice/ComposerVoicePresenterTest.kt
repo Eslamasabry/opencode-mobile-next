@@ -118,7 +118,7 @@ class ComposerVoicePresenterTest {
             runCurrent()
             val ui = rig.presenter.state.value
             assertEquals(MicPhase.Idle, ui.phase)
-                        assertEquals(VoiceNote.StoppedAfterPause, ui.note)
+            assertEquals(VoiceNote.StoppedAfterPause, ui.note)
             assertEquals("run the tests", rig.field.value)
             assertTrue(rig.field.sent.isEmpty())
         }
@@ -154,7 +154,7 @@ class ComposerVoicePresenterTest {
         advanceTimeBy(5_000)
         runCurrent()
         assertTrue(rig.field.sent.isEmpty())
-                assertEquals(VoiceNote.StoppedAfterPause, rig.presenter.state.value.note)
+        assertEquals(VoiceNote.StoppedAfterPause, rig.presenter.state.value.note)
     }
 
     @Test

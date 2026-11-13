@@ -126,7 +126,7 @@ internal class OkHttpModelFetcher(
                 .build()
 
         private fun IOException.saysOffline(): Boolean =
-            message.orEmpty().let { it.contains("unreachable", true) || it.contains("Unable to resolve host", true) }
+            message.orEmpty().let { it.contains("Network is unreachable", true) || it.contains("Unable to resolve host", true) }
 
         fun classify(error: IOException): MediaProblem =
             when (error) {
@@ -134,7 +134,7 @@ internal class OkHttpModelFetcher(
                 // No route / no DNS means the phone is offline: say so, not "no response".
                 is java.net.UnknownHostException, is java.net.NoRouteToHostException -> MediaProblem.DownloadOffline
                 is java.net.ConnectException ->
-                    if (error.message?.contains("unreachable", ignoreCase = true) == true) {
+                    if (error.saysOffline()) {
                         MediaProblem.DownloadOffline
                     } else {
                         MediaProblem.DownloadNoResponse

@@ -115,7 +115,15 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
     var reported by remember { mutableStateOf("") }
     LaunchedEffect(state.textRevision) {
         val now = field.text.toString()
-        if (now != state.text && fieldMayTakeState(now, reported)) field.edit { replace(0, length, state.text) }
+        if (now == state.text) {
+            // Already the same words (a fill by code is not always reported back): they are the baseline now.
+            reported = now
+            return@LaunchedEffect
+        }
+        if (fieldMayTakeState(now, reported)) {
+            field.edit { replace(0, length, state.text) }
+            reported = state.text
+        }
     }
     val working = stringResource(Res.string.serversWorking)
     // Getting the page ready is not "the current action": the button says what it waits for, and after a few
