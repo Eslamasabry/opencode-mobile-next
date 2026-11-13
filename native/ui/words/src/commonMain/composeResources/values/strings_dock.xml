@@ -33,7 +33,30 @@
     <string name="dockStaysWhileOpen">%1$s is open, so it stays</string>
     <string name="dockStopFailed">Couldn't stop %1$s</string>
     <string name="dockAnswerFailed">Couldn't answer %1$s</string>
-    <!-- Settings › Conversations: the dock's on/off row. -->
+    <!-- Settings › Conversations › Other conversations: Rings / Edge light / Hidden (replaces the dock's on/off switch). -->
+    <string name="lampLabel">Other conversations</string>
+    <string name="lampLabelWith">Other conversations, %1$s</string>
+    <string name="lampSpokenJoin">, </string>
+    <plurals name="lampSpokenNeeds">
+        <item quantity="one">%1$s needs you</item>
+        <item quantity="other">%1$s need you</item>
+    </plurals>
+    <plurals name="lampSpokenFailed">
+        <item quantity="one">%1$s failed</item>
+        <item quantity="other">%1$s failed</item>
+    </plurals>
+    <plurals name="lampSpokenWorking">
+        <item quantity="one">%1$s working</item>
+        <item quantity="other">%1$s working</item>
+    </plurals>
+    <string name="dockModeTitle">Other conversations</string>
+    <string name="dockModeRings">Rings</string>
+    <string name="dockModeEdgeLight">Edge light</string>
+    <string name="dockModeHidden">Hidden</string>
+    <string name="dockModeRingsHint">One ring per running conversation on the screen edge.</string>
+    <string name="dockModeEdgeLightHint">A small light on the edge that opens one list to switch.</string>
+    <string name="dockModeHiddenHint">Nothing on the edge of a conversation.</string>
+    <string name="dockModeAliases">dock rings edge light switch conversation other conversations</string>
     <string name="dockSettingTitle">Edge dock</string>
     <string name="dockSettingBody">Running conversations on the screen edge. Drag its top to move it to the other side.</string>
 </resources>

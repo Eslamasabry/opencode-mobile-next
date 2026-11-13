@@ -214,7 +214,7 @@ internal fun rowKey(row: SettingsRowId): StringResource =
         SettingsRowId.AiTeam -> Res.string.teamUiHomeTitle
         SettingsRowId.ShowReasoning -> Res.string.settingsHubShowReasoning
         SettingsRowId.ShowTimestamps -> Res.string.settingsHubShowTimestamps
-        SettingsRowId.EdgeDock -> Res.string.dockSettingTitle
+        SettingsRowId.EdgeDock -> Res.string.dockModeTitle
         SettingsRowId.PhraseChips -> Res.string.settingsPhraseChipsTitle
         // Flutter's row titles (`default_shell_row.dart`, `settings-voice`): "Shell for commands", "Voice typing".
         SettingsRowId.DefaultShell -> Res.string.settingsV3Shell
@@ -287,7 +287,13 @@ internal fun aliasKeys(row: SettingsRowId): List<StringResource> =
                 Res.string.chatUiTranscriptDisplay,
                 Res.string.chatUiTimestampsUsage,
             )
-        SettingsRowId.EdgeDock -> listOf(Res.string.dockLabel, Res.string.dockSettingBody)
+        SettingsRowId.EdgeDock ->
+            listOf(
+                Res.string.dockModeAliases,
+                Res.string.dockModeTitle,
+                Res.string.dockSettingTitle,
+                Res.string.dockLabel,
+            )
         SettingsRowId.PhraseChips ->
             listOf(Res.string.nativePhraseChipsAliases, Res.string.settingsPhraseChipsSupporting)
         SettingsRowId.DefaultShell ->
