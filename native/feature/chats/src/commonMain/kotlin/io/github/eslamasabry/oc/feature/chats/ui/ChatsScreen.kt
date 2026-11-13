@@ -148,6 +148,8 @@ import io.github.eslamasabry.oc.ui.words.res.agentsStateCantReopen
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeRowStatusRules
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeEmptyCalmBody
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeEmptyTitle
+import io.github.eslamasabry.oc.ui.words.res.chatsHomeNotReadBody
+import io.github.eslamasabry.oc.ui.words.res.chatsHomeNotReadTitle
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeFailed
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeIncompleteNamed
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeUnreachableShort
@@ -329,7 +331,7 @@ public fun ChatsScreen(
             modifier = Modifier.kitGlassSource(listGlass),
             // The calm empty page fills the room and keeps its own end space, so it never scrolls by that much.
             // The foot bar is the frame's own block under the list: the list ends above it.
-            contentPadding = PaddingValues(bottom = if ((state.phase == ChatsPhase.Empty || state.phase == ChatsPhase.NoMatch) && state.home.opening == null) 0.dp else Space.S4.dp),
+            contentPadding = PaddingValues(bottom = if ((state.phase == ChatsPhase.Empty || state.phase == ChatsPhase.NotRead || state.phase == ChatsPhase.NoMatch) && state.home.opening == null) 0.dp else Space.S4.dp),
         ) {
             // The saved rows draw as the normal list (the view model puts them in the feed); only a failure adds its card.
             state.home.opening?.takeIf { it.phase == ChatsOpeningPhase.Failed }?.let { opening ->
@@ -463,6 +465,16 @@ public fun ChatsScreen(
                                 if (state.hasComputer) null
                                 else KitAction(stringResource(Res.string.chatsHomeConnectComputer), actions::connectComputer, icon = KitIcons.computer),
                             modifier = calmRoom(list, "empty"),
+                        )
+                    }
+                ChatsPhase.NotRead ->
+                    item(key = "not-read", contentType = "not-read") {
+                        CalmPage(
+                            title = stringResource(Res.string.chatsHomeNotReadTitle),
+                            body = stringResource(Res.string.chatsHomeNotReadBody),
+                            primary = KitAction(stringResource(Res.string.kitTryAgain), actions::retryList, icon = KitIcons.retry),
+                            tertiary = KitAction(stringResource(Res.string.chatsHomeNewChat), actions::newConversation, icon = KitIcons.add),
+                            modifier = calmRoom(list, "not-read"),
                         )
                     }
                 ChatsPhase.NoMatch ->

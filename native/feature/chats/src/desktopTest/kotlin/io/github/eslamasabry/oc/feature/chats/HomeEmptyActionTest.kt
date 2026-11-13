@@ -32,7 +32,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.test.assertDoesNotExist
 import androidx.compose.ui.test.getBoundsInRoot
+import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.unit.dp
 import kotlin.test.assertTrue
@@ -66,5 +68,23 @@ class HomeEmptyActionTest {
         val button = onNodeWithText("New conversation").getBoundsInRoot()
         assertTrue(button.bottom <= 800.dp, "New conversation ends at ${button.bottom}, below the 800 dp window")
         assertTrue(button.top > 260.dp, "it sits under the notice (top ${button.top})")
+    }
+
+    @Test
+    fun `B-243 a list that was not read says so and offers Try again, never the first-run words`() = runComposeUiTest {
+        val actions = object : RecordingChatsActions() { override fun retryList() { calls += "retry list" } }
+        setContent {
+            ChatEnvironment {
+                KitTheme(appearance = KitAppearance(motion = MotionLevel.Off), platform = DesktopKitPlatform(), localeTag = "en") {
+                    Box(Modifier.size(412.dp, 800.dp)) {
+                        KitSheetHost { ChatsScreen(ChatsUi(phase = ChatsPhase.NotRead), actions) }
+                    }
+                }
+            }
+        }
+        waitForIdle()
+        onNodeWithText("No conversations yet").assertDoesNotExist()
+        onNodeWithText("Try again").performClick()
+        assertTrue("retry list" in actions.calls, "Try again reaches the list read: ${actions.calls}")
     }
 }

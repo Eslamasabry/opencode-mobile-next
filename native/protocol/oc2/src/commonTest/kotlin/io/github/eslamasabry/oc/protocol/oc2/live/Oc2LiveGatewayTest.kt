@@ -460,7 +460,7 @@ class Oc2LiveGatewayTest {
     }
 
     @Test
-    fun `B-PROTO-020 a short session page discards a decorative cursor but a full page keeps it`() =
+    fun `B-235 a short session page is not the end while the server offers a cursor`() =
         runTest {
             val engine = MockEngine {
                 respond(
@@ -471,10 +471,32 @@ class Oc2LiveGatewayTest {
             val gateway = gateway(engine)
             val short = (gateway.sessionPage(limit = 100) as Outcome.Ok).value
             assertEquals(2, short.items.size)
-            assertNull(short.nextCursor)
+            assertEquals("opaque", short.nextCursor)
             assertNull(short.items.first().title)
-            val full = (gateway.sessionPage(limit = 2) as Outcome.Ok).value
-            assertEquals("opaque", full.nextCursor)
+            gateway.close()
+        }
+
+    @Test
+    fun `B-235 an empty session page ends the list even when the server still offers a cursor`() =
+        runTest {
+            val engine = MockEngine { respond("""{"data":[],"cursor":{"next":"opaque"}}""", HttpStatusCode.OK) }
+            val gateway = gateway(engine)
+            val page = (gateway.sessionPage(limit = 100) as Outcome.Ok).value
+            assertEquals(0, page.items.size)
+            assertNull(page.nextCursor)
+            gateway.close()
+        }
+
+    @Test
+    fun `B-235 a session row that cannot be decoded is counted and the others are kept`() =
+        runTest {
+            val engine = MockEngine {
+                respond("""{"data":[{"id":"a"},{"nope":1},{"id":"c"}],"cursor":{"next":"o"}}""", HttpStatusCode.OK)
+            }
+            val gateway = gateway(engine)
+            val page = (gateway.sessionPage(limit = 100) as Outcome.Ok).value
+            assertEquals(listOf("a", "c"), page.items.map { it.id.raw })
+            assertEquals(1, page.unreadable)
             gateway.close()
         }
 

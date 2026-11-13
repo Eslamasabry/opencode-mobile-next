@@ -7,7 +7,12 @@ import io.github.eslamasabry.oc.core.model.Session
 import kotlinx.collections.immutable.toImmutableList
 
 /** One full read of a server's conversation list (QA wave 1 B1). */
-internal class SessionPages(val sessions: List<Session>, val complete: Boolean)
+internal class SessionPages(
+    val sessions: List<Session>,
+    val complete: Boolean,
+    /** Rows the server sent that could not be decoded; the list is then never called complete. */
+    val unreadable: Int = 0,
+)
 
 /**
  * QA wave 1 B1: a server with more than one page of conversations is not a failure. The list follows `nextCursor`
@@ -24,6 +29,7 @@ internal suspend fun readSessionPages(server: ServerGateway, maxPages: Int = MAX
     val seenCursors = HashSet<String>()
     var cursor = first.nextCursor
     var pages = 1
+    var unreadable = first.unreadable
     var complete = true
     while (cursor != null && pages < maxPages && seenCursors.add(cursor)) {
         val next: ServerPage<Session> =
@@ -35,13 +41,16 @@ internal suspend fun readSessionPages(server: ServerGateway, maxPages: Int = MAX
                 is Outcome.Ok -> page.value
             }
         pages++
+        unreadable += next.unreadable
         for (s in next.items) if (seenIds.add(s.id)) all += s
         cursor = next.nextCursor
     }
     // B-NAV-031: a cursor left over (the page cap, or a cursor the server repeated) means older conversations
     // were not read; the feed says so (Flutter marks a page-capped feed incomplete).
     if (cursor != null) complete = false
-    return Outcome.Ok(SessionPages(all.toImmutableList(), complete))
+    // A row that could not be decoded is counted and says so: never a silently shorter list.
+    if (unreadable > 0) complete = false
+    return Outcome.Ok(SessionPages(all.toImmutableList(), complete, unreadable))
 }
 
 /** 10 × 100: the newest thousand conversations; older ones are not a load failure. */

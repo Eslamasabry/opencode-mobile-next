@@ -55,6 +55,8 @@ public object ChatsState {
         val phase =
             when {
                 roots.isEmpty() && feed.loading -> ChatsPhase.Opening
+                roots.isEmpty() && (feed.incompleteSources.isNotEmpty() || feed.items.isNotEmpty()) ->
+                    ChatsPhase.NotRead
                 roots.isEmpty() -> ChatsPhase.Empty
                 visible.isEmpty() -> ChatsPhase.NoMatch
                 else -> ChatsPhase.List

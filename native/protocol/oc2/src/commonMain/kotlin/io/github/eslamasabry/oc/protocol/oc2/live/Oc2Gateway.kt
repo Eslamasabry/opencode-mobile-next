@@ -892,10 +892,16 @@ internal class Oc2Gateway(
                     ),
         ) { root ->
             val rows = pageEntries(root) ?: return@read null
-            val decoded = rows.map { sessionValue(data(it)) ?: return@read null }
+            val decoded = rows.mapNotNull { sessionValue(data(it)) }
+            // A page where nothing decodes is a changed wire shape, not a list; one odd row among good ones is
+            // counted (never silently lost) and the rest is kept.
+            if (rows.isNotEmpty() && decoded.isEmpty()) return@read null
             ServerPage(
                 decoded.toImmutableList(),
-                cursor(root)?.takeIf { it.isNotEmpty() && rows.size >= limit },
+                // The cursor is the server's own word that older rows exist: a page shorter than asked for is not
+                // the end (a server may cut a page short), only an empty page or no cursor is.
+                cursor(root)?.takeIf { it.isNotEmpty() && rows.isNotEmpty() },
+                unreadable = rows.size - decoded.size,
             )
         }
 

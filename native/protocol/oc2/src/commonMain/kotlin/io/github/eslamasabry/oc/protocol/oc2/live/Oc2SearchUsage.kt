@@ -57,14 +57,18 @@ public object Oc2SearchUsage {
             is Outcome.Ok -> {
                 val root = result.value
                 val rows = rows(root) ?: return Failure.UnreadableReply().failed()
+                var unreadable = 0
                 val items =
                     rows.mapNotNull { row ->
-                        val wire = Oc2Session.fromJson(data(row) as? JsonObject ?: return@mapNotNull null)
-                            ?: return@mapNotNull null
-                        if (!includeArchived && wire.archived) null
+                        val wire = (data(row) as? JsonObject)?.let { Oc2Session.fromJson(it) }
+                        if (wire == null) {
+                            // Counted, never silently lost: the reader of the list says some rows were not read.
+                            unreadable++
+                            null
+                        } else if (!includeArchived && wire.archived) null
                         else GlobalSessionResult(session(wire), projectName = null, projectDirectory = wire.directory)
                     }
-                ServerPage(items.toImmutableList(), next(root)?.takeIf { it.isNotEmpty() }).ok()
+                ServerPage(items.toImmutableList(), next(root)?.takeIf { it.isNotEmpty() }, unreadable).ok()
             }
         }
     }

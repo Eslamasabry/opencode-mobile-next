@@ -15,8 +15,11 @@ import kotlin.jvm.JvmInline
 /** Dart `Health`. */
 public data class Health(val healthy: Boolean, val version: String?)
 
-/** One page of a paged read; the opaque continuation always requests older rows. */
-public data class ServerPage<out T>(val items: ImmutableList<T>, val nextCursor: String?)
+/**
+ * One page of a paged read; the opaque continuation always requests older rows. [unreadable] counts rows the server
+ * sent that the app could not decode: they are not in [items], and a reader that shows the list says so.
+ */
+public data class ServerPage<out T>(val items: ImmutableList<T>, val nextCursor: String?, val unreadable: Int = 0)
 
 /** Times in epoch ms (Dart SessionTime). */
 public data class SessionTime(

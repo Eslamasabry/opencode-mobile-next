@@ -408,6 +408,7 @@ public class ChatsAllViewModel(
                     io.github.eslamasabry.oc.core.model.ServerPage(
                         page.value.items.map { it.session }.toImmutableList(),
                         page.value.nextCursor,
+                        page.value.unreadable,
                     )
                 )
             is Outcome.Failed ->
