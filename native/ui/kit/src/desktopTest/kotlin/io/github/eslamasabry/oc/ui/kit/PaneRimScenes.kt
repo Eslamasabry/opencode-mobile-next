@@ -164,6 +164,23 @@ internal object PaneRimScenes {
         }
     }
 
+    /**
+     * Shows [content] and lets it settle on the test clock, without waiting for the clock to run on its own: a scene with
+     * a running animation (a live picture, a frame-driven sampler) is never idle while the clock advances itself.
+     */
+    @OptIn(androidx.compose.ui.test.ExperimentalTestApi::class)
+    fun settle(test: androidx.compose.ui.test.ComposeUiTest, content: @Composable () -> Unit) {
+        test.mainClock.autoAdvance = false
+        test.setContent(content)
+        repeat(SETTLE_STEPS) {
+            test.mainClock.advanceTimeBy(SETTLE_STEP_MS)
+            test.waitForIdle()
+        }
+    }
+
+    private const val SETTLE_STEPS = 12
+    private const val SETTLE_STEP_MS = 125L
+
     /** The pane's whole box: a part's tag may sit inside its own padding, so the widest box its modifiers lay out. */
     fun paneBox(node: androidx.compose.ui.semantics.SemanticsNode): Rect =
         node.layoutInfo.getModifierInfo().map { it.coordinates.boundsInRoot() }.plus(node.boundsInRoot).maxBy { it.width * it.height }
