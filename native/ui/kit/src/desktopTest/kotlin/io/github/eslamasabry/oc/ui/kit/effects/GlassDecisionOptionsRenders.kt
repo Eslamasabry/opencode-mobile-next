@@ -58,6 +58,7 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import java.io.File
 import javax.imageio.ImageIO
 import kotlin.math.abs
+import kotlin.math.exp
 import kotlin.math.ceil
 import kotlin.math.max
 import kotlin.math.min
@@ -68,29 +69,33 @@ import kotlin.test.Test
 
 /**
  * Owner 2026-11-13 on the decision panes (sheets, dialogs, menus), "What is this shitty glass?": the page's rows read
- * through the old pane; the 11-13 pane looked like a plastic tray (a band at the rim where the page showed held less,
- * then a soft inner rectangle where the hold began). Options for the owner to pick from, each ONE material to the edge
- * (no band, no second shape), the crafted 1 dp rim light kept:
- * - A: uniform frost to the edge, the shipped tint, the light held (knee .08, slope .08, colour .10), no lens;
- * - B: A with a 3 dp lens at the edge (it shows up to 6 dp of what lies just beyond the edge);
- * - C: A with a denser tint (+.15) and less blur (calmer, more solid).
- * Drawn through a desktop stand-in of Android's pane (colour controls, blur on a padded layer as the library pads it,
- * the hold, the tint, the rim), on real kit content: a chat reply with a code block and a permission card behind a sheet
- * with the permission's details, and a conversation list behind a row's context menu; Glass dark and light, 1080 px wide.
- * Also, on the stripe scenes of [ForegroundGhostTest], how far a hidden edge steps through each blur and tint.
- * Not a test: it runs only when `GLASS_OPTIONS_OUT` names a folder.
+ * through the old pane; the 11-13 pane looked like a plastic tray (a band at the rim, then a soft inner rectangle). The
+ * first options (one material to the edge) left the rows behind a light menu as grey smudges: the hold only pulled
+ * light DOWN past a knee, so dark text behind a light pane passed at its own tone. Round 2, two options, both one
+ * material to the edge with the crafted 1 dp rim:
+ * - A2: blur 24 dp, the shipped tint, a TWO-WAY hold;
+ * - C2: blur 16 dp, the tint +.15, the same two-way hold.
+ * The two-way hold: the content's luminance is pulled toward the page ground's own (the pane's base over an empty page)
+ * from above AND below: within [FREE] of the base it passes, beyond it only [SLOPE] of the rest is kept; the colour that
+ * is left is limited to [CHROMA] as before. Drawn through a desktop stand-in of Android's pane (colour controls, blur on
+ * a padded layer as the library pads it, the hold, the tint, the rim) on real kit content: a chat reply with a code block
+ * and a permission card behind a sheet with the permission's details, and a conversation list behind a row's context
+ * menu; Glass dark and light, 1080 px wide. Measured with the pane's own words left out: blurred by 8 px, how far any
+ * patch of the pane's inside differs from its mean luminance (target about 2-3 %); and the stripe scenes'
+ * hidden-edge steps of [ForegroundGhostTest]. Not a test: it runs only when `GLASS_OPTIONS_OUT` names a folder.
  */
 class GlassDecisionOptionsRenders {
     private val options =
         listOf(
-            Option("now", 40f, 0f, rimBand = true),
-            Option("A", 24f, 0f),
-            Option("B", 24f, 0f, lensDp = 3f, shiftDp = 6f),
-            Option("C", 16f, .15f),
+            Option("A2", 24f, 0f, FREE, SLOPE),
+            Option("C2", 16f, .15f, FREE, SLOPE),
         )
 
     private class OptionPlatform(val option: Option, val seen: MutableList<String>) : KitPlatform by DesktopKitPlatform() {
         override val liquidGlass: Boolean = true
+
+        /** The page ground's colour, set by the scene: the two-way hold's base. */
+        var ground: Color = Color.Black
 
         override fun liquidPane(spec: KitLiquidPaneSpec, backdrop: KitLiquidBackdrop, shape: CornerBasedShape, transform: () -> Float): Modifier {
             val s =
@@ -99,10 +104,8 @@ class GlassDecisionOptionsRenders {
                     fill = spec.fill.copy(alpha = min(1f, spec.fill.alpha + option.tintPlus)),
                     fillStart = spec.fillStart.copy(alpha = min(1f, spec.fillStart.alpha + option.tintPlus)),
                 )
-            seen += "fill %.2f, start %.2f, blur %.0f dp, knee %.2f slope %.2f colour %.2f".format(
-                s.fill.alpha, s.fillStart.alpha, s.recipe.blurDp, s.recipe.hold.kneeAt, s.recipe.hold.kneeSlope, s.recipe.hold.chroma,
-            )
-            return optionStandIn(s, backdrop, shape, this, option)
+            seen += "fill %.2f, blur %.0f dp, two-way hold: free %.3f, slope %.2f, colour %.2f".format(s.fill.alpha, s.recipe.blurDp, option.free, option.slope, CHROMA)
+            return twoWayStandIn(s, backdrop, shape, this, option) { ground }
         }
     }
 
@@ -170,28 +173,26 @@ class GlassDecisionOptionsRenders {
     private enum class Real { Sheet, Menu }
 
     @Composable
-    private fun RealScene(kind: Real) {
+    private fun RealScene(kind: Real, platform: OptionPlatform, words: Boolean = true) {
         val page = rememberKitLiquidSource()
         val colors = LocalKitColors.current
+        platform.ground = colors.ground
         CompositionLocalProvider(LocalKitLiquidPage provides page) {
             Box(Modifier.size(W.dp, REAL_H.dp).background(colors.ground).testTag("scene")) {
                 Box(Modifier.fillMaxSize().kitLiquidSource(page)) { if (kind == Real.Sheet) ChatPage() else ListPage() }
-                if (kind == Real.Sheet) {
-                    val shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)
-                    val face = kitLiquidSheetFace(shape, { 0f })
-                    Box(Modifier.offset(0.dp, (REAL_H - SHEET_H).dp).size(W.dp, SHEET_H.dp).then(face ?: Modifier.background(Color.Magenta))) {
-                        CompositionLocalProvider(LocalKitOnLiquidGlass provides true) { SheetDetails() }
-                    }
-                } else {
-                    val shape = RoundedCornerShape(20.dp)
-                    val face = kitLiquidMenuFace(shape, { 0f })
-                    Box(Modifier.offset(120.dp, 250.dp).size(240.dp, 210.dp).then(face ?: Modifier.background(Color.Magenta))) {
-                        CompositionLocalProvider(LocalKitOnLiquidGlass provides true) { MenuItems() }
-                    }
+                val box = paneBox(kind)
+                val shape = if (kind == Real.Sheet) RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp) else RoundedCornerShape(20.dp)
+                val face = if (kind == Real.Sheet) kitLiquidSheetFace(shape, { 0f }) else kitLiquidMenuFace(shape, { 0f })
+                Box(Modifier.offset(box[0].dp, box[1].dp).size((box[2] - box[0]).dp, (box[3] - box[1]).dp).then(face ?: Modifier.background(Color.Magenta))) {
+                    if (words) CompositionLocalProvider(LocalKitOnLiquidGlass provides true) { if (kind == Real.Sheet) SheetDetails() else MenuItems() }
                 }
             }
         }
     }
+
+    /** The pane's box in dp: left, top, right, bottom. */
+    private fun paneBox(kind: Real): FloatArray =
+        if (kind == Real.Sheet) floatArrayOf(0f, REAL_H - SHEET_H, W, REAL_H) else floatArrayOf(120f, 250f, 360f, 460f)
 
     private fun render(height: Float, dark: Boolean, platform: KitPlatform, content: @Composable () -> Unit): ImageBitmap {
         lateinit var out: ImageBitmap
@@ -213,6 +214,45 @@ class GlassDecisionOptionsRenders {
         return out
     }
 
+    private fun lum(c: Color): Float = .2126f * c.red + .7152f * c.green + .0722f * c.blue
+
+    /**
+     * The pane's inside (all but its outer [INSET_DP]) blurred by [BLUR_PX] (a box blur run three times, about a Gaussian):
+     * the largest distance of any patch from the mean luminance, in % of full light, and where it is (px).
+     */
+    private fun patchSpread(img: PixelMap, box: FloatArray): Triple<Float, Int, Int> {
+        val l = ((box[0] + INSET_DP) * D).roundToInt()
+        val t = ((box[1] + INSET_DP) * D).roundToInt()
+        val r = (min(box[2] * D, img.width.toFloat()) - INSET_DP * D).roundToInt()
+        val b = (min(box[3] * D, img.height.toFloat()) - INSET_DP * D).roundToInt()
+        val w = r - l
+        val h = b - t
+        var a = FloatArray(w * h) { i -> lum(img[l + i % w, t + i / w]) }
+        val k = BLUR_PX / 2
+        repeat(3) {
+            val tmp = FloatArray(w * h)
+            for (y in 0 until h) for (x in 0 until w) {
+                var sum = 0f
+                var n = 0
+                for (dx in -k..k) { val xx = x + dx; if (xx in 0 until w) { sum += a[y * w + xx]; n++ } }
+                tmp[y * w + x] = sum / n
+            }
+            val out = FloatArray(w * h)
+            for (y in 0 until h) for (x in 0 until w) {
+                var sum = 0f
+                var n = 0
+                for (dy in -k..k) { val yy = y + dy; if (yy in 0 until h) { sum += tmp[yy * w + x]; n++ } }
+                out[y * w + x] = sum / n
+            }
+            a = out
+        }
+        val mean = a.average().toFloat()
+        var worst = 0f
+        var at = 0
+        for (i in a.indices) { val d = abs(a[i] - mean); if (d > worst) { worst = d; at = i } }
+        return Triple(worst * 100f, l + at % w, t + at / w)
+    }
+
     @Test
     fun `decision options on real content`() {
         val out = System.getenv("GLASS_OPTIONS_OUT")?.let(::File) ?: return
@@ -220,13 +260,36 @@ class GlassDecisionOptionsRenders {
         val notes = StringBuilder()
         for (option in options) for (kind in Real.entries) for (dark in listOf(true, false)) {
             val seen = mutableListOf<String>()
-            val img = render(REAL_H, dark, OptionPlatform(option, seen)) { RealScene(kind) }
+            val platform = OptionPlatform(option, seen)
+            val img = render(REAL_H, dark, platform) { RealScene(kind, platform) }
             val mode = if (dark) "dark" else "light"
             val name = "opt-${option.name}-${if (kind == Real.Sheet) "chat-sheet" else "list-menu"}-$mode"
-            ImageIO.write(img.toAwtImage(), "png", File(out, "$name.png"))
-            notes.append("$name: ${seen.distinct().joinToString("; ")}; lens ${option.lensDp} dp band, ${option.shiftDp} dp shift; rim band ${option.rimBand}\n")
+            val awt = img.toAwtImage()
+            ImageIO.write(awt, "png", File(out, "$name.png"))
+            val box = paneBox(kind)
+            if (kind == Real.Menu) {
+                // The menu's end edge and its bottom-end corner, four times.
+                val px = { v: Float -> (v * D).roundToInt() }
+                ImageIO.write(zoom(awt, px(box[2] - 60f), px(box[1] + 40f), px(70f), px(110f)), "png", File(out, "$name-end-edge-4x.png"))
+                ImageIO.write(zoom(awt, px(box[2] - 60f), px(box[3] - 60f), px(70f), px(70f)), "png", File(out, "$name-bottom-end-4x.png"))
+            }
+            val bareOn = OptionPlatform(option, mutableListOf())
+            val bare = render(REAL_H, dark, bareOn) { RealScene(kind, bareOn, words = false) }.toPixelMap()
+            val (spread, x, y) = patchSpread(bare, box)
+            notes.append("$name: ${seen.distinct().joinToString("; ")}; without its words, blurred 8 px: the worst patch is %.1f %% from the pane's mean, at (%d, %d) px\n".format(spread, x, y))
         }
         File(out, "options-notes.txt").writeText(notes.toString())
+    }
+
+    private fun zoom(img: java.awt.image.BufferedImage, x: Int, y: Int, w: Int, h: Int): java.awt.image.BufferedImage {
+        val sx = x.coerceIn(0, img.width - w)
+        val sy = y.coerceIn(0, img.height - h)
+        val outImg = java.awt.image.BufferedImage(w * 4, h * 4, java.awt.image.BufferedImage.TYPE_INT_ARGB)
+        val g = outImg.createGraphics()
+        g.setRenderingHint(java.awt.RenderingHints.KEY_INTERPOLATION, java.awt.RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR)
+        g.drawImage(img, 0, 0, w * 4, h * 4, sx, sy, sx + w, sy + h, null)
+        g.dispose()
+        return outImg
     }
 
     // ---- the hard test: stripes and a button, as ForegroundGhostTest draws them ----
@@ -243,9 +306,10 @@ class GlassDecisionOptionsRenders {
     private fun place(kind: Kind): Place = if (kind == Kind.Menu) Place(60f, 140f, 260f, 190f) else Place(0f, 300f, W, 260f)
 
     @Composable
-    private fun StripeScene(kind: Kind, content: Content) {
+    private fun StripeScene(kind: Kind, content: Content, platform: OptionPlatform) {
         val page = rememberKitLiquidSource()
         val colors = LocalKitColors.current
+        platform.ground = colors.ground
         CompositionLocalProvider(LocalKitLiquidPage provides page) {
             Box(Modifier.size(W.dp, STRIPE_H.dp).background(colors.ground).testTag("scene")) {
                 val p = place(kind)
@@ -300,48 +364,28 @@ class GlassDecisionOptionsRenders {
         return luma to colour
     }
 
-    private fun linear(v: Float): Double = if (v <= .04045f) v / 12.92 else ((v + .055) / 1.055).pow(2.4)
-
-    private fun relative(c: Color): Double = .2126 * linear(c.red) + .7152 * linear(c.green) + .0722 * linear(c.blue)
-
-    private fun worstContrast(img: PixelMap, kind: Kind, ink: Color): Double {
-        val p = place(kind)
-        var least = 21.0
-        for (y in ((p.y + INSET_DP) * D).roundToInt() until ((p.y + p.h - INSET_DP) * D).roundToInt() step 3) {
-            for (x in ((p.x + INSET_DP) * D).roundToInt() until ((p.x + p.w - INSET_DP) * D).roundToInt() step 3) {
-                val a = relative(ink)
-                val b = relative(img[x, y])
-                least = min(least, (max(a, b) + .05) / (min(a, b) + .05))
-            }
-        }
-        return least
-    }
-
     @Test
-    fun `decision options on stripes - how far a hidden edge steps per blur and tint`() {
+    fun `decision options on stripes - how far a hidden edge steps, and the worst patch`() {
         val out = System.getenv("GLASS_OPTIONS_OUT")?.let(::File) ?: return
         out.mkdirs()
-        val sweep =
-            listOf(12f, 16f, 20f, 24f, 32f).map { Option("blur ${it.toInt()} tint +0", it, 0f) } +
-                listOf(12f, 16f).map { Option("blur ${it.toInt()} tint +.15", it, .15f) } +
-                Option("now (40, rim band)", 40f, 0f, rimBand = true) + Option("B lens 3/6 at 24", 24f, 0f, 3f, 6f)
-        val table = StringBuilder("option | pane | mode | rows step light/colour | button step light/colour | first ink worst contrast over the button (limits 12 / 18, 4.5)\n")
+        val sweep = options + Option("C2 slope .10", 16f, .15f, FREE, .10f) + Option("A2 at 16 dp, shipped tint", 16f, 0f, FREE, SLOPE)
+        val table = StringBuilder("option | pane | mode | rows step light/colour | button step light/colour | worst patch rows / button (%, blurred 8 px) (limits 12 / 18; ~2-3 %)\n")
         for (option in sweep) for (kind in Kind.entries) for (dark in listOf(true, false)) {
-            var ink = Color.Unspecified
-            fun shot(content: Content): PixelMap =
-                render(STRIPE_H, dark, OptionPlatform(option, mutableListOf())) {
-                    ink = LocalKitColors.current.text1
-                    StripeScene(kind, content)
-                }.toPixelMap()
+            fun shot(content: Content): PixelMap {
+                val platform = OptionPlatform(option, mutableListOf())
+                return render(STRIPE_H, dark, platform) { StripeScene(kind, content, platform) }.toPixelMap()
+            }
             val empty = shot(Content.Empty)
-            val rows = ghost(shot(Content.Rows), empty, kind)
+            val rowsImg = shot(Content.Rows)
             val buttonImg = shot(Content.Button)
+            val rows = ghost(rowsImg, empty, kind)
             val button = ghost(buttonImg, empty, kind)
-            val words = worstContrast(buttonImg, kind, ink)
-            val ok = rows.first <= 12f && rows.second <= 18f && button.first <= 12f && button.second <= 18f && words >= 4.5
+            val p = place(kind)
+            val box = floatArrayOf(p.x, p.y, p.x + p.w, p.y + p.h)
             table.append(
-                "%s | %s | %s | %.1f / %.1f | %.1f / %.1f | %.2f | %s\n".format(
-                    option.name, kind, if (dark) "dark" else "light", rows.first, rows.second, button.first, button.second, words, if (ok) "ok" else "OVER",
+                "%s | %s | %s | %.1f / %.1f | %.1f / %.1f | %.1f / %.1f\n".format(
+                    option.name, kind, if (dark) "dark" else "light", rows.first, rows.second, button.first, button.second,
+                    patchSpread(rowsImg, box).first, patchSpread(buttonImg, box).first,
                 ),
             )
         }
@@ -358,6 +402,16 @@ class GlassDecisionOptionsRenders {
 
         /** The pane's inside measured: everything but the outer 8 dp (the rim light and its anti-aliasing). */
         const val INSET_DP = 8f
+
+        /** The blur the patch measure takes (px), as the review asked. */
+        const val BLUR_PX = 8
+
+        /** The two-way hold: the luminance band round the base that passes as it is, and the share kept beyond it. */
+        const val FREE = .012f
+        const val SLOPE = .05f
+
+        /** The most colour that is left (as LiquidEdge.HOLD_CHROMA). */
+        const val CHROMA = .10f
 
         val CODE =
             listOf(
@@ -384,36 +438,34 @@ class GlassDecisionOptionsRenders {
     }
 }
 
-/** One option: the decision pane's blur, its tint's extra alpha, its lens (band and shift, dp), and a rim band. */
-private data class Option(val name: String, val blurDp: Float, val tintPlus: Float, val lensDp: Float = 0f, val shiftDp: Float = 0f, val rimBand: Boolean = false)
+/** One option: the decision pane's blur, its tint's extra alpha, and its two-way hold (free band, slope). */
+private data class Option(val name: String, val blurDp: Float, val tintPlus: Float, val free: Float, val slope: Float)
 
 /**
- * The decision pane as Android would draw it under [option]: the backdrop recorded on a layer padded by the blur (and
- * the lens's reach) as the library pads it, so the blur never clamps at the pane's own edge; colour controls, blur, an
- * optional lens of [Option.lensDp] (showing up to [Option.shiftDp] of what lies beyond the edge), the hold (to the edge,
- * or eased in over the rim when [Option.rimBand]); then the tint and the 1 dp rim light.
+ * The decision pane as Android would draw it under [o]: the backdrop recorded on a layer padded by the blur, as the
+ * library pads it, so the blur never clamps at the pane's own edge; colour controls, blur and the two-way hold in one
+ * pass ([TWO_WAY_HOLD]), the same everywhere inside the outline; then the tint and the 1 dp rim light.
  */
-private fun optionStandIn(spec: KitLiquidPaneSpec, backdrop: KitLiquidBackdrop, shape: CornerBasedShape, platform: KitPlatform, o: Option): Modifier {
+private fun twoWayStandIn(spec: KitLiquidPaneSpec, backdrop: KitLiquidBackdrop, shape: CornerBasedShape, platform: KitPlatform, o: Option, ground: () -> Color): Modifier {
     val at = arrayOfNulls<LayoutCoordinates>(1)
-    val program = platform.liveShaders?.compile(LENSED_HOLD)
+    val program = platform.liveShaders?.compile(TWO_WAY_HOLD)
     val rim = KitRimShader.programFor(platform.liveShaders)
     return Modifier.onGloballyPositioned { at[0] = it }
         .clip(shape)
         .drawWithCache {
             val layer = obtainGraphicsLayer()
             val r = spec.recipe.blurDp.dp.toPx()
-            val band = o.lensDp.dp.toPx()
-            val shift = o.shiftDp.dp.toPx()
-            val pad = ceil(r + shift + 2f)
+            val pad = ceil(r + 2f)
             onDrawBehind {
                 val c = at[0] ?: return@onDrawBehind
                 val p = program ?: return@onDrawBehind
-                val radius = maxOf(shape.topStart.toPx(size, this), shape.topEnd.toPx(size, this), shape.bottomStart.toPx(size, this), shape.bottomEnd.toPx(size, this))
-                val colour = floatArrayOf(spec.recipe.saturation, spec.recipe.contrast, spec.recipe.brightness)
-                val u = LiquidHoldUniforms.of(spec, size.width, size.height, pad, pad, radius, density, colour)
-                val held = if (o.rimBand) u else LiquidHoldUniforms(u.knee, u.hold, u.left, u.top, u.halfWidth, u.halfHeight, u.radius, 0f, u.saturation, u.contrast, u.brightness)
-                held.set(p)
-                p.float2("lens", band, shift)
+                val recipe = spec.recipe
+                val g = ground()
+                // The base: the ground after the colour controls (a grey ground: saturation leaves it, contrast and lift move it).
+                val gl = .2126f * g.red + .7152f * g.green + .0722f * g.blue
+                val base = (recipe.contrast * gl + (.5f - .5f * recipe.contrast + recipe.brightness)).coerceIn(0f, 1f)
+                p.float4("cc", recipe.saturation, recipe.contrast, recipe.brightness, 0f)
+                p.float4("hold", base, o.free, o.slope, .10f)
                 layer.renderEffect = platform.liquidJoinEffect(p, r)
                 val w = size.width.roundToInt() + 2 * pad.toInt()
                 val h = size.height.roundToInt() + 2 * pad.toInt()
@@ -426,37 +478,35 @@ private fun optionStandIn(spec: KitLiquidPaneSpec, backdrop: KitLiquidBackdrop, 
 }
 
 /**
- * [LiquidHoldShader] with a lens in front of it: inside a band of `lens.x` px from the outline, the content is read from
- * further out along the outline's normal, up to `lens.y` px at the edge, on a circle's profile (the library's lens shape,
- * narrowed to the band).
+ * The two-way hold, after the blur: the colour controls, then the luminance pulled toward `hold.x` (the base) from above
+ * and from below (within `hold.y` it passes; beyond it `hold.z` of the rest is kept), moved as a shift of all three
+ * channels so the hue stays; then the chroma left eased to `hold.w`, as LiquidEdge.heldRgb limits it.
  */
-private val LENSED_HOLD: String =
-    LiquidHoldShader.SOURCE
-        .replace(
-            "half4 main(float2 q) {",
-            """
-uniform float2 lens;
+private const val TWO_WAY_HOLD: String =
+    """
+uniform shader content;
+uniform float4 cc;
+uniform float4 hold;
 
-float2 lensed(float2 q) {
-    if (lens.x <= 0.0) return q;
-    float k = clamp(corner.x, 0.0, min(box.z, box.w));
-    float2 p = q - (box.xy + box.zw);
-    float2 d = abs(p) - box.zw + k;
-    float depth = -(length(max(d, 0.0)) + min(max(d.x, d.y), 0.0) - k);
-    if (depth >= lens.x || depth < 0.0) return q;
-    float2 n;
-    if (d.x > 0.0 && d.y > 0.0) {
-        n = sign(p) * normalize(d);
-    } else if (d.x > d.y) {
-        n = float2(sign(p.x), 0.0);
-    } else {
-        n = float2(0.0, sign(p.y));
-    }
-    float t = 1.0 - depth / lens.x;
-    float bend = 1.0 - sqrt(max(1.0 - t * t, 0.0));
-    return q + n * lens.y * bend;
+half4 main(float2 q) {
+    float4 c = float4(content.eval(q));
+    float a = max(c.a, 0.0001);
+    float3 rgb = c.rgb / a;
+    float3 w = float3(0.2126, 0.7152, 0.0722);
+    float l = dot(rgb, w);
+    rgb = clamp(cc.y * (l + cc.x * (rgb - l)) + (0.5 - 0.5 * cc.y + cc.z), 0.0, 1.0);
+    float lum = dot(rgb, w);
+    float d = lum - hold.x;
+    float ad = abs(d);
+    float held = ad > hold.y ? hold.y + (ad - hold.y) * hold.z : ad;
+    rgb = rgb + (hold.x + sign(d) * held - lum);
+    float mx = max(rgb.r, max(rgb.g, rgb.b));
+    float mn = min(rgb.r, min(rgb.g, rgb.b));
+    float chroma = mx - mn;
+    float easy = 0.4 * hold.w;
+    float f = (hold.w > 0.0 && chroma > easy) ? (easy + (hold.w - easy) * (1.0 - exp(-(chroma - easy) / (hold.w - easy)))) / chroma : 1.0;
+    float g = dot(rgb, w);
+    rgb = clamp(g + (rgb - g) * f, 0.0, 1.0);
+    return half4(float4(rgb * c.a, c.a));
 }
-
-half4 main(float2 q) {""",
-        )
-        .replace("float4 c = float4(content.eval(q));", "float4 c = float4(content.eval(lensed(q)));")
+"""
