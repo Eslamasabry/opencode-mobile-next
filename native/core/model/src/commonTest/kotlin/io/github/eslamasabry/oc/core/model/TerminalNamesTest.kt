@@ -1,6 +1,5 @@
-package io.github.eslamasabry.oc.feature.projects.terminal
+package io.github.eslamasabry.oc.core.model
 
-import io.github.eslamasabry.oc.core.model.TerminalProcess
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlinx.collections.immutable.persistentListOf

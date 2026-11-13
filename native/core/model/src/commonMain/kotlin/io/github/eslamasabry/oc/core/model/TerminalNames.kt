@@ -1,6 +1,4 @@
-package io.github.eslamasabry.oc.feature.projects.terminal
-
-import io.github.eslamasabry.oc.core.model.TerminalProcess
+package io.github.eslamasabry.oc.core.model
 
 /**
  * What a terminal is called to the person: the name they gave it, or else a plain number in the order the
@@ -16,7 +14,7 @@ public sealed interface TerminalName {
 private val serverDefaultTitle = Regex("^Terminal [A-Za-z0-9]{3,}$")
 
 /** The person's own name for [this] terminal, or null when it was never renamed. */
-internal fun TerminalProcess.givenName(): String? {
+public fun TerminalProcess.givenName(): String? {
     val text = title.trim()
     if (text.isEmpty() || text.all { it.isDigit() || it == ' ' }) return null
     // A server default carries a short random id with at least one letter; "Terminal 2" is a person's own.
@@ -26,7 +24,7 @@ internal fun TerminalProcess.givenName(): String? {
 }
 
 /** The name of the terminal [id] among [processes], which are in the order they were opened. */
-internal fun terminalNameOf(processes: List<TerminalProcess>, id: String): TerminalName {
+public fun terminalNameOf(processes: List<TerminalProcess>, id: String): TerminalName {
     val process = processes.firstOrNull { it.id == id }
     process?.givenName()?.let {
         return TerminalName.Given(it)
@@ -34,5 +32,5 @@ internal fun terminalNameOf(processes: List<TerminalProcess>, id: String): Termi
     return TerminalName.Plain(processes.indexOfFirst { it.id == id }.coerceAtLeast(0) + 1)
 }
 
-internal fun terminalNameOf(processes: List<TerminalProcess>, process: TerminalProcess): TerminalName =
+public fun terminalNameOf(processes: List<TerminalProcess>, process: TerminalProcess): TerminalName =
     terminalNameOf(processes, process.id)
