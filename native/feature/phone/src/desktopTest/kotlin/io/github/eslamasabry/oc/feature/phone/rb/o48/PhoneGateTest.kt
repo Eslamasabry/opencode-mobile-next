@@ -121,6 +121,8 @@ class PhoneGateTest {
             }
         }
         onNodeWithText("Restart the server?").assertIsDisplayed()
+        // The sheet says what a restart does, not only offers it.
+        onNodeWithText("Conversations that are running stop", substring = true).assertIsDisplayed()
         onNodeWithText("Restart OpenCode on this phone").performClick()
         assertEquals(1, confirmed)
     }

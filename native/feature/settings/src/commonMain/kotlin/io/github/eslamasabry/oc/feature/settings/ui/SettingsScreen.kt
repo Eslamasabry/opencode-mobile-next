@@ -51,7 +51,7 @@ import io.github.eslamasabry.oc.ui.words.res.migrationStorageTitle
 import io.github.eslamasabry.oc.ui.words.res.monitorQuietEnd
 import io.github.eslamasabry.oc.ui.words.res.monitorQuietStart
 import io.github.eslamasabry.oc.ui.words.res.nativeBundledPrivacy
-import io.github.eslamasabry.oc.ui.words.res.nativePhraseChipsTitle
+import io.github.eslamasabry.oc.ui.words.res.settingsPhraseChipsTitle
 import io.github.eslamasabry.oc.ui.words.res.notifyDismiss
 import io.github.eslamasabry.oc.ui.words.res.privacyPolicyTitle
 import io.github.eslamasabry.oc.ui.words.res.settingsHubGroupNotifications
@@ -215,7 +215,7 @@ public fun SettingsScreen(
             }
         SettingsPage.PhraseChips ->
             SettingsFrame(
-                stringResource(Res.string.nativePhraseChipsTitle),
+                stringResource(Res.string.settingsPhraseChipsTitle),
                 back,
                 state,
                 actions,

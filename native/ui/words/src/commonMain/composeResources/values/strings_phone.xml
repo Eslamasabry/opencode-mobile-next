@@ -595,6 +595,8 @@
     <string name="thisPhoneAnswerConnecting">Connecting to the server</string>
     <string name="thisPhoneRestartRow">Restart OpenCode on this phone</string>
     <string name="thisPhoneRestartTitle">Restart the server?</string>
+    <string name="thisPhoneRestartBody">Conversations that are running stop, and your conversations are kept. This usually takes under a minute.</string>
+    <string name="thisPhoneRestartingRow">Restarting. This usually takes under a minute…</string>
     <string name="thisPhoneRestartBusy">A reply is being written. Restarting stops it; your conversations are kept.</string>
     <string name="thisPhoneAboutSeconds">about %1$d\u00A0s</string>
     <string name="thisPhoneAboutMinutes">about %1$d\u00A0min</string>

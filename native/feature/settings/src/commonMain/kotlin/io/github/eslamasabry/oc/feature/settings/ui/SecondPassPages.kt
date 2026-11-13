@@ -24,7 +24,7 @@ import org.jetbrains.compose.resources.stringResource
 internal fun ColumnScope.PhraseChipsBody(on: Boolean, actions: SettingsActions) {
     KitRowGroup {
         KitSwitchRow(
-            title = stringResource(Res.string.nativePhraseChipsTitle),
+            title = stringResource(Res.string.settingsPhraseChipsTitle),
             supporting = stringResource(Res.string.nativePhraseChipsDescription),
             checked = on,
             onCheckedChange = actions::onPhraseChips,

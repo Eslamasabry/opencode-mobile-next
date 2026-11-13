@@ -398,7 +398,7 @@ private fun AddMcpSheet(state: ServerIntegrationUi, actions: ServerIntegrationAc
 private fun integrationTitle(page: ServerIntegrationPage): String =
     stringResource(
         when (page) {
-            ServerIntegrationPage.Providers -> Res.string.s40iProviders
+            ServerIntegrationPage.Providers -> Res.string.settingsHubProvidersRow
             ServerIntegrationPage.Tools -> Res.string.s40iTools
             ServerIntegrationPage.Commands -> Res.string.s40iCommands
             ServerIntegrationPage.Skills -> Res.string.s40iSkills
