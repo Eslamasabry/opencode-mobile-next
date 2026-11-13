@@ -125,6 +125,20 @@ class PreferencesChoicesTest {
         }
 
     @Test
+    fun `B-298 choosing a style never replaces the background look the person has`() {
+        for (look in listOf("aurora", "mesh", "auroraImage")) {
+            var prefs = DevicePreferences(effects = Effects(surfaceStyle = StoredStyle.Glass, liveBackground = true, liveStyle = look))
+            for (style in listOf(SurfaceStyle.Solid, SurfaceStyle.Glass, SurfaceStyle.Soft, SurfaceStyle.Glass)) {
+                val change = PreferenceMapping.change(PersonalChange.Style(style), prefs)
+                assertIs<PreferenceChange.SetEffects>(change)
+                assertEquals(look, change.value.liveStyle, "after choosing ${'$'}style")
+                assertTrue(change.value.liveBackground, "the background stays on through ${'$'}style")
+                prefs = prefs.copy(effects = change.value)
+            }
+        }
+    }
+
+    @Test
     fun `B-KIT-040 a new style keeps the other effects and clears Fine-tune`() {
         val current =
             DevicePreferences(

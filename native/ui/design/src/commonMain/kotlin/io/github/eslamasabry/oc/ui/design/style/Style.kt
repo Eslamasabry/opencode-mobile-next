@@ -62,7 +62,8 @@ public data class NeedsYouLook(
 /**
  * How the live background shows under a style (contract §3.11). The Glass hooks (GLASS_REF `kit_style.dart`): [boost]
  * lifts the person's Intensity before the cap, [lightVivid] and [darkVivid] are the colour lift, [fillsMiddle] lays the
- * colour across the middle of the page, [lookWhenChosen] is the live look choosing the style picks.
+ * colour across the middle of the page. A style never picks the background's look: that is the person's choice
+ * (owner 2026-11-13; choosing Glass used to swap in the painted aurora, which reads as the background going dark).
  */
 public data class LivePolicy(
     val maxStrength: Float? = null,
@@ -71,7 +72,6 @@ public data class LivePolicy(
     val lightVivid: Float = 0f,
     val darkVivid: Float = 0f,
     val fillsMiddle: Boolean = false,
-    val lookWhenChosen: String? = null,
 ) {
     public fun vividFor(dark: Boolean): Float = if (dark) darkVivid else lightVivid
 

@@ -30,7 +30,7 @@ class GlassSpecParityTest {
         assertEquals(Knobs(), t.defaults)
         assertTrue(t.blursBehind)
         assertEquals(StyleType(weightBoost = 50f), t.type)
-        assertEquals(LivePolicy(fillsMiddle = true, lookWhenChosen = "auroraImage"), t.live)
+        assertEquals(LivePolicy(fillsMiddle = true), t.live)
         assertEquals(2f, t.sharpRadius)
     }
 

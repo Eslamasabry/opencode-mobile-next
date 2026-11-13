@@ -63,18 +63,6 @@ public object StyleResolver {
         return if (adjusted == roles) roles else adjusted.withAccent(adjusted.accent)
     }
 
-    /**
-     * The live look choosing [style] over [previous] picks (Dart `KitStyles.withLookOf`, GLASS_REF): the style's own
-     * [LivePolicy.lookWhenChosen]; leaving such a style puts [defaultLook] back unless the person had since picked
-     * another; otherwise [currentLook] stays.
-     */
-    public fun liveLookAfterChoosing(previous: Style, style: Style, currentLook: String, defaultLook: String): String {
-        if (style == previous) return currentLook
-        spec(style).tokens.live.lookWhenChosen?.let { return it }
-        val left = spec(previous).tokens.live.lookWhenChosen
-        return if (left != null && currentLook == left) defaultLook else currentLook
-    }
-
     /** Whether choosing [style] turns the live background off (Paper, Signal; Dart `KitStyles.choose`). */
     public fun offWhenChosen(style: Style): Boolean = spec(style).tokens.live.offWhenChosen
 }

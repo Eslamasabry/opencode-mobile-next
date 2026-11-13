@@ -183,19 +183,16 @@ public object PreferenceMapping {
         )
 
     /**
-     * [effects] with [style] chosen (Dart `KitSurfaceLook.choose`, `lib/ui/kit/kit_surface_look.dart:144-162` at
-     * GLASS_REF): Fine-tune resets; a style with a look of its own picks it (Glass: the painted aurora,
-     * `lookWhenChosen`) without turning the background on; leaving it puts the default look back. A style that starts
-     * without the background (Paper, Signal) turns it off and remembers it did; choosing another style gives it back.
-     * One the person turned off stays off.
+     * [effects] with [style] chosen: Fine-tune resets. The background's look is the person's and a style never
+     * replaces it (owner 2026-11-13: choosing Glass again swapped a lit Aurora drift for the dim painted aurora). A
+     * style that starts without the background (Paper, Signal) turns it off and remembers it did; choosing another
+     * style gives it back. One the person turned off stays off.
      */
     private fun chooseStyle(effects: Effects, style: StoredStyle): Effects {
-        val previous = KitStyle.entries.first { it.storageName == effects.surfaceStyle.wire }
         val next = KitStyle.entries.first { it.storageName == style.wire }
         if (style == effects.surfaceStyle) return effects.withSurfaceStyle(style)
         val held = effects.liveHeldByStyle && !effects.liveBackground
-        val look = StyleResolver.liveLookAfterChoosing(previous, next, effects.liveStyle, Effects.DEFAULT_LIVE_STYLE)
-        val moved = effects.withSurfaceStyle(style).copy(liveStyle = look)
+        val moved = effects.withSurfaceStyle(style)
         return when {
             StyleResolver.offWhenChosen(next) ->
                 moved.copy(liveBackground = false, liveHeldByStyle = held || effects.liveBackground)

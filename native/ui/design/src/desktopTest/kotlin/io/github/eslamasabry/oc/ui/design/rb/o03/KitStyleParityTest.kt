@@ -125,12 +125,8 @@ class KitStyleParityTest {
         assertEquals(0f, StyleResolver.corner(0f, Corners.Soft))
     }
 
-    @Test fun offWhenChosenAndLookWhenChosen() {
+    @Test fun offWhenChosenIsPaperAndSignalAndNoStylePicksALook() {
         assertEquals(setOf(Style.Paper, Style.Signal), Style.entries.filter { StyleResolver.offWhenChosen(it) }.toSet())
-        assertEquals("auroraImage", StyleResolver.liveLookAfterChoosing(Style.Solid, Style.Glass, "aurora", "aurora"))
-        assertEquals("aurora", StyleResolver.liveLookAfterChoosing(Style.Glass, Style.Soft, "auroraImage", "aurora"))
-        assertEquals("mesh", StyleResolver.liveLookAfterChoosing(Style.Glass, Style.Soft, "mesh", "aurora"))
-        assertEquals("auroraImage", StyleResolver.liveLookAfterChoosing(Style.Glass, Style.Glass, "auroraImage", "aurora"))
     }
 
     @Test fun adjustedRolesChangeOnlyTheAllowedFields() {

@@ -17,7 +17,7 @@ public object GlassSpec : StyleSpec {
             defaults = Knobs(),
             blursBehind = true,
             type = StyleType(weightBoost = WEIGHT_BOOST),
-            live = LivePolicy(fillsMiddle = true, lookWhenChosen = "auroraImage"),
+            live = LivePolicy(fillsMiddle = true),
             // Owner 2026-11-09, "good inside padding to let glass effects show": the content sits clear of the rim, the
             // sheen and the lens, with corners grown to stay concentric.
             paneInsetDp = PANE_INSET,
