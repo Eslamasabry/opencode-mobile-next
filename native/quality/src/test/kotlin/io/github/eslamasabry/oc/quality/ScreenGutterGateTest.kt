@@ -47,7 +47,8 @@ class ScreenGutterGateTest {
          * The screens marked Bleed when the frame took the gutter (2026-11-09: 123). Lower it as screens move over.
          * 125 since 2026-11-10: the AI Team settings and setup pages arrived from their own branch already marked
          * Bleed and were never counted, because this suite could not start. They are debt like the rest (B-225).
+         * 122 since 2026-11-13: a server's Commands and tools pages keep the frame's gutter.
          */
-        const val BLEED_CEILING = 123
+        const val BLEED_CEILING = 122
     }
 }

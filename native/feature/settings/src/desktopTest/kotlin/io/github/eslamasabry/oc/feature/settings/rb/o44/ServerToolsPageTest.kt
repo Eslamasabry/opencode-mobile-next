@@ -62,6 +62,31 @@ class ServerToolsPageTest {
         assertEquals(listOf("beginAdd"), calls)
     }
 
+    private fun addSheet(untilRestart: Boolean) =
+        ServerIntegrationUi(
+            ServerIntegrationPage.Mcp,
+            server = "This phone",
+            loading = false,
+            available = true,
+            mayAdd = true,
+            add = true,
+            addUntilRestart = untilRestart,
+        )
+
+    @Test
+    fun `M1 a server that adds at run time says the tool server lasts until it restarts`() = runComposeUiTest {
+        setContent { SettingsThemed { ServerIntegrationScreen(addSheet(untilRestart = true), actions()) } }
+        onNodeWithText("until the server restarts", substring = true).assertExists()
+        onNodeWithText("saves this configuration", substring = true).assertDoesNotExist()
+    }
+
+    @Test
+    fun `M1 a server that writes its configuration says it is saved for the project`() = runComposeUiTest {
+        setContent { SettingsThemed { ServerIntegrationScreen(addSheet(untilRestart = false), actions()) } }
+        onNodeWithText("saves this configuration for this project location", substring = true).assertExists()
+        onNodeWithText("until the server restarts", substring = true).assertDoesNotExist()
+    }
+
     @Test
     fun `C-043 the server's Commands and tools note keeps the page margin and reads as plain words`() =
         runComposeUiTest {

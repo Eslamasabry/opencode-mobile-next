@@ -345,7 +345,12 @@ private fun AddMcpSheet(state: ServerIntegrationUi, actions: ServerIntegrationAc
         closeLabel = stringResource(Res.string.kitSheetClose),
         height = KitSheetHeight.Full,
     ) {
-        KitNotice(stringResource(Res.string.s40iMcpAddHint))
+        KitNotice(
+            stringResource(
+                if (state.addUntilRestart) Res.string.s40iMcpAddHintRuntime
+                else Res.string.s40iMcpAddHint
+            )
+        )
         KitField(name, label = stringResource(Res.string.s40iName))
         KitField(
             url,

@@ -364,7 +364,14 @@ class NativeServerIntegrations(
                                     }
                                     // One rule with the Commands and tools page: an OpenCode 2 server
                                     // adds at run time only, so Add was never offered here before.
-                                    mutable.update { it.copy(mayAdd = mcpAddScope(caps) != null) }
+                                    val addScope = mcpAddScope(caps)
+                                    mutable.update {
+                                        it.copy(
+                                            mayAdd = addScope != null,
+                                            addUntilRestart =
+                                                addScope == McpConfigScope.RuntimeLocation,
+                                        )
+                                    }
                                     publish(rows, mine)
                                 }
                             }
@@ -1046,12 +1053,12 @@ class NativeServerIntegrations(
                     false,
                     null,
                 )
-            val scope = graph?.let { mcpAddScope(it.session.capabilities.value) }
-            if (scope == null) {
+            val addScope = graph?.let { mcpAddScope(it.session.capabilities.value) }
+            if (addScope == null) {
                 failed(Failure.Unavailable(FeatureId("mcpRuntimeAdds")))
                 return
             }
-            mutation { it.addMcpServer(draft, scope) }
+            mutation { it.addMcpServer(draft, addScope) }
         }
 
         override fun dismiss() {
