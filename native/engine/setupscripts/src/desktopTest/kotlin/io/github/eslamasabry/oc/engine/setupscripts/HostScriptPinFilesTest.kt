@@ -43,6 +43,12 @@ class HostScriptPinFilesTest {
     }
 
     @Test
+    fun `B-279 an edit to the computer guide forces the pinned link and its hash to be updated`() {
+        val guide = File(root, "native/docs/ubuntu-host.md").readBytes()
+        assertEquals(HostScripts.UBUNTU_GUIDE_SHA256, sha(guide))
+    }
+
+    @Test
     fun `B-SEC-092 the guides show the same pinned, checked commands`() {
         // The native guide: docs/ubuntu-host.md is the frozen Flutter app's, at its own (older) pin.
         val ubuntu = File(root, "native/docs/ubuntu-host.md").readText()
