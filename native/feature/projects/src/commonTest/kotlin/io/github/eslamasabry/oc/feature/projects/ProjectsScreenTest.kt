@@ -5,6 +5,7 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.assertCountEquals
@@ -163,6 +164,23 @@ class ProjectsScreenTest {
         setContent { Themed { ProjectsPickerScreen(both, Picker()) } }
         onAllNodesWithText("site").assertCountEquals(1)
         onNodeWithText("site").assert(SemanticsMatcher.keyIsDefined(SemanticsActions.OnLongClick))
+    }
+
+    @Test
+    fun `a renameable project row shows a visible Rename button that asks to rename it`() = runComposeUiTest {
+        val asked = mutableListOf<String>()
+        val actions =
+            object : ProjectsPickerActions by Picker() {
+                override fun askRename(project: FolderRowUi) { asked += project.directory }
+            }
+        val both =
+            ready.copy(
+                canRename = true,
+                projects = persistentListOf(FolderRowUi("/work/site", "site", conversations = 2, id = "p1")),
+            )
+        setContent { Themed { ProjectsPickerScreen(both, actions) } }
+        onNodeWithContentDescription("Rename site").performClick()
+        assertEquals(listOf("/work/site"), asked)
     }
 
     @Test
