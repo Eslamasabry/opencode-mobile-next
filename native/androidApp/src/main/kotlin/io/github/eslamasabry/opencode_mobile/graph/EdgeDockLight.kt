@@ -45,7 +45,7 @@ internal object EdgeLightKeys {
     fun isDeviceKey(key: String): Boolean = key in all
 }
 
-internal enum class EdgeLightHeight(val stored: String) {
+enum class EdgeLightHeight(val stored: String) {
     Low("low"),
     Middle("middle"),
     High("high"),
@@ -57,10 +57,10 @@ internal enum class EdgeLightHeight(val stored: String) {
 }
 
 /** Where the light sits: the default is the thumb's edge (end), low. */
-internal data class EdgeLightPlace(val side: KitLampSide = KitLampSide.End, val height: EdgeLightHeight = EdgeLightHeight.Low)
+data class EdgeLightPlace(val side: KitLampSide = KitLampSide.End, val height: EdgeLightHeight = EdgeLightHeight.Low)
 
 /** What the light taught so far: Back notes shown and tips shown. Only counts; the words are the screen's. */
-internal data class EdgeLightTaught(val backNotes: Int = 0, val tips: Int = 0)
+data class EdgeLightTaught(val backNotes: Int = 0, val tips: Int = 0)
 
 /**
  * The light's saved choices over the app's key store. One instance per app; every write is device-wide.
