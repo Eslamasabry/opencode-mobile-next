@@ -100,8 +100,13 @@ class StopRetiresCardScreenTest {
         }
 
     @Test
-    fun `RC1-STOP-003 a card whose run is ending shows no answers and says nothing was sent`() = runComposeUiTest {
+    fun `RC1-STOP-003 a card whose run is ending shows no answers and says nothing was sent`() {
+        // Built first, outside the UI test: the engine runs on its own test scheduler.
         val slot = endingSlot()
+        shows(slot)
+    }
+
+    private fun shows(slot: RequestSlotUi) = runComposeUiTest {
         setContent {
             KitTheme(
                 platform = DesktopKitPlatform(),
