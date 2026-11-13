@@ -6,4 +6,5 @@
     <string name="statePinFailed">Sematan tidak dapat disimpan. Coba lagi.</string>
     <string name="stateContextUsage">Konteks terakhir: %1$d%</string>
     <string name="stateSavedPreview">Daftar tersimpan. Hubungkan untuk membuka percakapan ini.</string>
+    <string name="chatsAllSavedGroup">Daftar tersimpan dari server yang tidak tersambung</string>
 </resources>

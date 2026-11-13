@@ -6,6 +6,6 @@
     <string name="migrationStorageDelete">Hapus model</string>
     <string name="migrationStorageDeleteTitle">Hapus model asisten?</string>
     <string name="migrationStorageDeleteBody">Ini menghapus model tersimpan dan unduhan yang belum selesai dari ponsel ini, sehingga membebaskan %1$s.</string>
-    <string name="migrationStorageEmpty">Tidak ada model asisten yang disimpan di ponsel ini</string>
     <string name="localModelSaveFailed">Tidak dapat mengubah model tersimpan. Coba lagi.</string>
+    <string name="migrationStorageAppDetail">Percakapan yang disimpan di sini, Linux ponsel, agen, dan unduhan: lihat ukuran dan ruang kosong</string>
 </resources>

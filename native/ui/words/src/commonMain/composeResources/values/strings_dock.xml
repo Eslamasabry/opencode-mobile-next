@@ -31,8 +31,8 @@
     <string name="dockActionOn">%1$s %2$s</string>
     <string name="dockRemoved">%1$s left the dock</string>
     <string name="dockStaysWhileOpen">%1$s is open, so it stays</string>
-    <string name="dockStopFailed">Couldn\'t stop %1$s</string>
-    <string name="dockAnswerFailed">Couldn\'t answer %1$s</string>
+    <string name="dockStopFailed">Couldn't stop %1$s</string>
+    <string name="dockAnswerFailed">Couldn't answer %1$s</string>
     <!-- Settings › Conversations: the dock's on/off row. -->
     <string name="dockSettingTitle">Edge dock</string>
     <string name="dockSettingBody">Running conversations on the screen edge. Drag its top to move it to the other side.</string>

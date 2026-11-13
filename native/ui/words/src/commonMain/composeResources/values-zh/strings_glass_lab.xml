@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="glassLabTitle">玻璃实验室</string>
+    <string name="glassLabRowLine">在实时预览上调节所有玻璃数值（测试版）</string>
+    <string name="glassLabHandle">玻璃控制</string>
+    <string name="glassLabHandleOpen">展开</string>
+    <string name="glassLabHandleClosed">收起</string>
+    <string name="glassLabThemeDark">深色主题数值</string>
+    <string name="glassLabThemeLight">浅色主题数值</string>
+    <string name="glassLabAllLinked">全部联动</string>
+    <string name="glassLabStartFrom">起点</string>
+    <string name="glassLabInApp">应用于整个应用</string>
+    <string name="glassLabInAppLine">应用内所有玻璃面板都会使用这些数值，直到你关闭</string>
+    <string name="glassLabCopy">复制数值</string>
+    <string name="glassLabCopied">已复制</string>
+    <string name="glassLabCopiedToast">已复制玻璃数值</string>
+    <string name="glassLabPaste">粘贴数值</string>
+    <string name="glassLabPasted">已载入玻璃数值</string>
+    <string name="glassLabPasteRefused">剪贴板中没有玻璃数值</string>
+    <string name="glassLabResetAll">全部重置</string>
+    <string name="glassLabSceneChat">对话</string>
+    <string name="glassLabSceneHome">主页列表</string>
+    <string name="glassLabOpenMenu">栏菜单</string>
+    <string name="glassLabOpenSheet">底部面板</string>
+    <string name="glassLabOpenContext">上下文菜单</string>
+    <string name="glassLabOpenDialog">对话框</string>
+    <string name="glassLabSliderReset">恢复默认值</string>
+    <string name="glassLabTypeTitle">输入数字</string>
+    <string name="glassLabTypeField">数值</string>
+    <string name="glassLabTypeConfirm">设定</string>
+    <string name="glassLabSampleTitle">在 Ubuntu 上运行解析器</string>
+    <string name="glassLabSampleSubtitle">新建 · 这部手机</string>
+    <string name="glassLabSampleAsk">能查一下为什么解析器会丢掉代码块里的空行，并把数字给我看看吗？</string>
+    <string name="glassLabSampleReply">我追查到了行拆分器：它在检查代码块之前就把每一行去掉了首尾空白，所以块内的空行被当成了段落结束。同一个文件，各版本的表现如下：\n\n| 版本 | 保留行数 | 耗时 |\n|---|---|---|\n| 1.4 | 212 | 38 ms |\n| 1.5 | 196 | 35 ms |\n| 修复 | 212 | 36 ms |\n\n修复后会保留原始行，直到代码块检查完成：\n\n```kotlin\nval raw = lines[i]\nif (inFence) block += raw\nelse if (raw.isBlank()) closeParagraph()\n```\n\n要我在你的 Ubuntu 电脑上运行测试吗？</string>
+    <string name="glassLabSampleAskTwo">好，运行一下，告诉我哪些没通过。</string>
+    <string name="glassLabSamplePermission">要运行命令吗？</string>
+    <string name="glassLabSampleCommand">./gradlew :core:markdown:test</string>
+    <string name="glassLabSamplePermissionWhy">在项目文件夹中运行 markdown 模块的测试。</string>
+    <string name="glassLabSampleAskBox">问问 OpenCode…</string>
+    <string name="glassLabSampleModel">Big Pickle</string>
+    <string name="glassLabSampleMode">先询问</string>
+    <string name="glassLabSampleDialogTitle">删除这个对话吗？</string>
+    <string name="glassLabSampleDialogBody">它会从这部手机和服务器上删除，无法撤销。</string>
+    <string name="glassLabSampleDelete">删除</string>
+    <string name="glassLabSampleKeep">保留</string>
+    <string name="glassLabSampleHome">对话</string>
+    <string name="glassLabSampleConnected">已连接</string>
+    <string name="glassLabSampleAll">全部</string>
+    <string name="glassLabSampleNeedsYou">需要你处理</string>
+    <string name="glassLabSampleRunning">运行中</string>
+    <string name="glassLabSampleNew">新建</string>
+</resources>

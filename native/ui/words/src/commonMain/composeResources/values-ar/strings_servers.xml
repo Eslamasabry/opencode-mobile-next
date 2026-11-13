@@ -290,7 +290,6 @@
     <string name="serverSwitcherTitle">الخوادم</string>
     <string name="serverSwitcherCurrentMenu">إجراءات الخادم</string>
     <string name="productStatesSwitchServer">تبديل الخادم</string>
-    <string name="capabilityStateHere">يعمل هنا</string>
     <string name="capabilityStateNotServer">غير متاح على هذا الخادم</string>
     <string name="capabilityStateNotDevice">غير متاح على هذا الجهاز</string>
     <string name="capabilityNeedsAndroid">يحتاج تطبيق Android</string>

@@ -6,6 +6,6 @@
     <string name="migrationStorageDelete">Excluir modelo</string>
     <string name="migrationStorageDeleteTitle">Excluir o modelo do assistente?</string>
     <string name="migrationStorageDeleteBody">Isso remove o modelo salvo e os downloads incompletos deste celular, liberando %1$s.</string>
-    <string name="migrationStorageEmpty">Nenhum modelo do assistente está armazenado neste celular</string>
     <string name="localModelSaveFailed">Não foi possível alterar o modelo salvo. Tente novamente.</string>
+    <string name="migrationStorageAppDetail">Conversas guardadas aqui, o Linux do celular, agentes e downloads: veja os tamanhos e o espaço livre</string>
 </resources>

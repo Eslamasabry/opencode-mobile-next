@@ -109,4 +109,6 @@
     <string name="nlibMcpLocal">Локальный</string>
     <string name="nlibMcpRuntime">Добавлен для этого проекта до перезапуска сервера. Существующие имена никогда не перезаписываются.</string>
     <string name="nlibMcpConnect">Подключить MCP-сервер</string>
+    <string name="nlibArgumentsHelper">Передаются команде при запуске. Оставьте пустым, чтобы использовать значения по умолчанию.</string>
+    <string name="nlibRunIn">Запустить в</string>
 </resources>

@@ -6,4 +6,5 @@
     <string name="statePinFailed">Không lưu được việc ghim. Thử lại.</string>
     <string name="stateContextUsage">Ngữ cảnh gần nhất: %1$d%</string>
     <string name="stateSavedPreview">Danh sách đã lưu. Hãy kết nối để mở cuộc trò chuyện này.</string>
+    <string name="chatsAllSavedGroup">Danh sách đã lưu từ các máy chủ chưa kết nối</string>
 </resources>

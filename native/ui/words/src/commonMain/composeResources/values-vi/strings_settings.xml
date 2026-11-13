@@ -786,4 +786,5 @@
     <string name="consentWhyNeedsYouBlocked">Android đang chặn thông báo của ứng dụng này. Nhấn để sửa trong Thông báo.</string>
     <string name="consentWhyNeedsYouWhileOpen">Bạn chỉ nhận thông báo khi ứng dụng đang mở. Nhấn để giữ kết nối nền luôn bật.</string>
     <string name="consentWhyNeedsYouChannelOff">Android đang tắt thông báo câu hỏi của ứng dụng này. Nhấn để bật lại trong cài đặt Android.</string>
+    <string name="backgroundStatusTitle">Kết nối nền</string>
 </resources>

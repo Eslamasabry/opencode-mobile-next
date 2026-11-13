@@ -333,7 +333,6 @@
     <string name="managedRecoveryRowDetail">Hasta 3 intentos, solo mientras esta app está abierta. Nunca instala ni actualiza.</string>
     <string name="profileMonitorSwitchBody">Hay una ejecución en curso en %1$s. Al cambiar se muestra %2$s en esta app; la ejecución en %1$s sigue adelante.</string>
     <string name="profileMonitorOpenFailedTitle">No se pudo abrir</string>
-    <string name="capabilityStateHere">Funciona aquí</string>
     <string name="capabilityStateNotServer">No está en este servidor</string>
     <string name="capabilityStateNotDevice">No está en este dispositivo</string>
     <string name="capabilityNeedsAndroid">Requiere la app para Android</string>

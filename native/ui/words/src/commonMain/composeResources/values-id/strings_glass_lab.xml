@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="glassLabTitle">Lab kaca</string>
+    <string name="glassLabRowLine">Atur semua angka kaca pada pratinjau langsung (versi uji)</string>
+    <string name="glassLabHandle">Kontrol kaca</string>
+    <string name="glassLabHandleOpen">Terbuka</string>
+    <string name="glassLabHandleClosed">Tertutup</string>
+    <string name="glassLabThemeDark">Angka tema gelap</string>
+    <string name="glassLabThemeLight">Angka tema terang</string>
+    <string name="glassLabAllLinked">Semua terhubung</string>
+    <string name="glassLabStartFrom">Mulai dari</string>
+    <string name="glassLabInApp">Pakai di seluruh aplikasi</string>
+    <string name="glassLabInAppLine">Semua panel kaca di aplikasi memakai angka ini sampai Anda mematikannya</string>
+    <string name="glassLabCopy">Salin nilai</string>
+    <string name="glassLabCopied">Tersalin</string>
+    <string name="glassLabCopiedToast">Nilai kaca disalin</string>
+    <string name="glassLabPaste">Tempel nilai</string>
+    <string name="glassLabPasted">Nilai kaca dimuat</string>
+    <string name="glassLabPasteRefused">Tidak ada nilai kaca di papan klip</string>
+    <string name="glassLabResetAll">Atur ulang semua</string>
+    <string name="glassLabSceneChat">Percakapan</string>
+    <string name="glassLabSceneHome">Daftar beranda</string>
+    <string name="glassLabOpenMenu">Menu bilah</string>
+    <string name="glassLabOpenSheet">Lembar</string>
+    <string name="glassLabOpenContext">Menu konteks</string>
+    <string name="glassLabOpenDialog">Dialog</string>
+    <string name="glassLabSliderReset">Kembali ke bawaan</string>
+    <string name="glassLabTypeTitle">Ketik angka</string>
+    <string name="glassLabTypeField">Nilai</string>
+    <string name="glassLabTypeConfirm">Atur</string>
+    <string name="glassLabSampleTitle">Jalankan parser di Ubuntu</string>
+    <string name="glassLabSampleSubtitle">baru · Ponsel ini</string>
+    <string name="glassLabSampleAsk">Bisa cek kenapa parser menghilangkan baris kosong di dalam blok kode, dan tunjukkan angkanya?</string>
+    <string name="glassLabSampleReply">Saya telusuri ke pemisah baris: ia memangkas setiap baris sebelum memeriksa blok kode, jadi baris kosong di dalam blok dianggap akhir paragraf. Ini hasil tiap versi untuk file yang sama:\n\n| Versi | Baris tersimpan | Waktu |\n|---|---|---|\n| 1.4 | 212 | 38 ms |\n| 1.5 | 196 | 35 ms |\n| perbaikan | 212 | 36 ms |\n\nPerbaikan mempertahankan baris asli sampai pemeriksaan blok selesai:\n\n```kotlin\nval raw = lines[i]\nif (inFence) block += raw\nelse if (raw.isBlank()) closeParagraph()\n```\n\nMau saya jalankan pengujiannya di mesin Ubuntu Anda?</string>
+    <string name="glassLabSampleAskTwo">Ya, jalankan dan beri tahu saya apa yang gagal.</string>
+    <string name="glassLabSamplePermission">Jalankan perintah?</string>
+    <string name="glassLabSampleCommand">./gradlew :core:markdown:test</string>
+    <string name="glassLabSamplePermissionWhy">Menjalankan pengujian modul markdown di folder proyek.</string>
+    <string name="glassLabSampleAskBox">Tanya OpenCode…</string>
+    <string name="glassLabSampleModel">Big Pickle</string>
+    <string name="glassLabSampleMode">Tanya dulu</string>
+    <string name="glassLabSampleDialogTitle">Hapus percakapan ini?</string>
+    <string name="glassLabSampleDialogBody">Percakapan dihapus dari ponsel ini dan dari server. Tindakan ini tidak bisa dibatalkan.</string>
+    <string name="glassLabSampleDelete">Hapus</string>
+    <string name="glassLabSampleKeep">Simpan</string>
+    <string name="glassLabSampleHome">Percakapan</string>
+    <string name="glassLabSampleConnected">Tersambung</string>
+    <string name="glassLabSampleAll">Semua</string>
+    <string name="glassLabSampleNeedsYou">Memerlukan Anda</string>
+    <string name="glassLabSampleRunning">Berjalan</string>
+    <string name="glassLabSampleNew">Baru</string>
+</resources>

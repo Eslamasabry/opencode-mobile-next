@@ -276,7 +276,6 @@
     <string name="serverSwitcherTitle">服务器</string>
     <string name="serverSwitcherCurrentMenu">服务器操作</string>
     <string name="productStatesSwitchServer">切换服务器</string>
-    <string name="capabilityStateHere">此处可用</string>
     <string name="capabilityStateNotServer">此服务器不支持</string>
     <string name="capabilityStateNotDevice">此设备不支持</string>
     <string name="capabilityNeedsAndroid">需要 Android 应用</string>

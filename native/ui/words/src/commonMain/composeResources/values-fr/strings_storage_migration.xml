@@ -6,6 +6,6 @@
     <string name="migrationStorageDelete">Supprimer le modèle</string>
     <string name="migrationStorageDeleteTitle">Supprimer le modèle de l’assistant\u00A0?</string>
     <string name="migrationStorageDeleteBody">Cela supprime le modèle enregistré et les téléchargements incomplets de ce téléphone, et libère %1$s.</string>
-    <string name="migrationStorageEmpty">Aucun modèle d’assistant n’est stocké sur ce téléphone</string>
     <string name="localModelSaveFailed">Impossible de modifier le modèle enregistré. Réessayez.</string>
+    <string name="migrationStorageAppDetail">Conversations conservées ici, Linux du téléphone, agents et téléchargements\u00A0: tailles et espace libre</string>
 </resources>

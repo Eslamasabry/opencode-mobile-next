@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="glassLabTitle">Лаборатория стекла</string>
+    <string name="glassLabRowLine">Настройте все значения стекла на живом предпросмотре (тестовые сборки)</string>
+    <string name="glassLabHandle">Управление стеклом</string>
+    <string name="glassLabHandleOpen">Открыто</string>
+    <string name="glassLabHandleClosed">Закрыто</string>
+    <string name="glassLabThemeDark">Значения тёмной темы</string>
+    <string name="glassLabThemeLight">Значения светлой темы</string>
+    <string name="glassLabAllLinked">Всё связано</string>
+    <string name="glassLabStartFrom">Начать с</string>
+    <string name="glassLabInApp">Применить во всём приложении</string>
+    <string name="glassLabInAppLine">Все стеклянные панели в приложении используют эти значения, пока вы не отключите это</string>
+    <string name="glassLabCopy">Копировать значения</string>
+    <string name="glassLabCopied">Скопировано</string>
+    <string name="glassLabCopiedToast">Значения стекла скопированы</string>
+    <string name="glassLabPaste">Вставить значения</string>
+    <string name="glassLabPasted">Значения стекла загружены</string>
+    <string name="glassLabPasteRefused">В буфере обмена нет значений стекла</string>
+    <string name="glassLabResetAll">Сбросить всё</string>
+    <string name="glassLabSceneChat">Чат</string>
+    <string name="glassLabSceneHome">Список на главной</string>
+    <string name="glassLabOpenMenu">Меню панели</string>
+    <string name="glassLabOpenSheet">Шторка</string>
+    <string name="glassLabOpenContext">Контекстное меню</string>
+    <string name="glassLabOpenDialog">Диалог</string>
+    <string name="glassLabSliderReset">Вернуть исходное</string>
+    <string name="glassLabTypeTitle">Введите число</string>
+    <string name="glassLabTypeField">Значение</string>
+    <string name="glassLabTypeConfirm">Задать</string>
+    <string name="glassLabSampleTitle">Запустить парсер в Ubuntu</string>
+    <string name="glassLabSampleSubtitle">новый · Этот телефон</string>
+    <string name="glassLabSampleAsk">Можешь выяснить, почему парсер теряет пустые строки внутри блоков кода, и показать цифры?</string>
+    <string name="glassLabSampleReply">Нашёл причину в разделителе строк: он обрезает каждую строку до проверки на блок кода, поэтому пустая строка внутри блока считается концом абзаца. Вот что делает каждая версия с одним и тем же файлом:\n\n| Версия | Сохранено строк | Время |\n|---|---|---|\n| 1.4 | 212 | 38 ms |\n| 1.5 | 196 | 35 ms |\n| исправление | 212 | 36 ms |\n\nИсправление оставляет строку как есть, пока проверка блока не закончится:\n\n```kotlin\nval raw = lines[i]\nif (inFence) block += raw\nelse if (raw.isBlank()) closeParagraph()\n```\n\nЗапустить тесты на вашем компьютере с Ubuntu?</string>
+    <string name="glassLabSampleAskTwo">Да, запусти их и скажи, что упадёт.</string>
+    <string name="glassLabSamplePermission">Выполнить команду?</string>
+    <string name="glassLabSampleCommand">./gradlew :core:markdown:test</string>
+    <string name="glassLabSamplePermissionWhy">Запускает тесты модуля markdown в папке проекта.</string>
+    <string name="glassLabSampleAskBox">Спросите OpenCode…</string>
+    <string name="glassLabSampleModel">Big Pickle</string>
+    <string name="glassLabSampleMode">Сначала спрашивать</string>
+    <string name="glassLabSampleDialogTitle">Удалить этот чат?</string>
+    <string name="glassLabSampleDialogBody">Он исчезнет с этого телефона и с сервера. Это нельзя отменить.</string>
+    <string name="glassLabSampleDelete">Удалить</string>
+    <string name="glassLabSampleKeep">Оставить</string>
+    <string name="glassLabSampleHome">Чаты</string>
+    <string name="glassLabSampleConnected">Подключено</string>
+    <string name="glassLabSampleAll">Все</string>
+    <string name="glassLabSampleNeedsYou">Ждёт вас</string>
+    <string name="glassLabSampleRunning">Выполняется</string>
+    <string name="glassLabSampleNew">Новый</string>
+</resources>

@@ -717,4 +717,5 @@
     <string name="phoneServerPortBusy">Otro servidor de OpenCode ya está usando el puerto %1$s en este teléfono.</string>
     <string name="chatRequestAskReadFolder">¿Leer esta carpeta?</string>
     <string name="appUpdateUpdatedTo">Actualizado a la versión %1$s</string>
+    <string name="capabilityScreenHeading">Lo que puede hacer este servidor</string>
 </resources>

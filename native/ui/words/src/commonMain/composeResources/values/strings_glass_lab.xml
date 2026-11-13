@@ -19,7 +19,7 @@
     <string name="glassLabPasted">Glass values loaded</string>
     <string name="glassLabPasteRefused">No glass values on the clipboard</string>
     <string name="glassLabResetAll">Reset all</string>
-    <string name="glassLabSceneChat">Chat</string>
+    <string name="glassLabSceneChat">Conversation</string>
     <string name="glassLabSceneHome">Home list</string>
     <string name="glassLabOpenMenu">Bar menu</string>
     <string name="glassLabOpenSheet">Sheet</string>

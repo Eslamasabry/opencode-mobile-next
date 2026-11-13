@@ -786,4 +786,5 @@
     <string name="consentWhyNeedsYouBlocked">Android memblokir notifikasi aplikasi ini. Ketuk untuk memperbaikinya di Notifikasi.</string>
     <string name="consentWhyNeedsYouWhileOpen">Notifikasi hanya muncul saat aplikasi terbuka. Ketuk untuk menjaga koneksi latar belakang tetap aktif.</string>
     <string name="consentWhyNeedsYouChannelOff">Android mematikan notifikasi pertanyaan dari aplikasi ini. Ketuk untuk menyalakannya di setelan Android.</string>
+    <string name="backgroundStatusTitle">Koneksi latar belakang</string>
 </resources>

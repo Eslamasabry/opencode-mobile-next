@@ -871,4 +871,6 @@
     <string name="linuxMgrJobDoneRestore">Linux 已恢复</string>
     <string name="linuxMgrResetBackUpFirst">先备份</string>
     <string name="thermalGuardSaveFailed">无法保存过热保护设置。请重试。</string>
+    <string name="thisPhoneRestartBody">正在运行的对话会停止，你的对话都会保留。通常不到一分钟。</string>
+    <string name="thisPhoneRestartingRow">正在重新启动。通常不到一分钟…</string>
 </resources>

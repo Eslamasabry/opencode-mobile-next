@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="glassLabTitle">مختبر الزجاج</string>
+    <string name="glassLabRowLine">اضبط كل أرقام الزجاج على معاينة حيّة (نسخ الاختبار)</string>
+    <string name="glassLabHandle">عناصر تحكم الزجاج</string>
+    <string name="glassLabHandleOpen">مفتوح</string>
+    <string name="glassLabHandleClosed">مغلق</string>
+    <string name="glassLabThemeDark">أرقام السمة الداكنة</string>
+    <string name="glassLabThemeLight">أرقام السمة الفاتحة</string>
+    <string name="glassLabAllLinked">الكل مرتبط</string>
+    <string name="glassLabStartFrom">ابدأ من</string>
+    <string name="glassLabInApp">استخدمها في التطبيق كله</string>
+    <string name="glassLabInAppLine">كل لوحة زجاجية في التطبيق تستخدم هذه الأرقام حتى توقف هذا الخيار</string>
+    <string name="glassLabCopy">نسخ القيم</string>
+    <string name="glassLabCopied">تم النسخ</string>
+    <string name="glassLabCopiedToast">تم نسخ قيم الزجاج</string>
+    <string name="glassLabPaste">لصق القيم</string>
+    <string name="glassLabPasted">تم تحميل قيم الزجاج</string>
+    <string name="glassLabPasteRefused">لا توجد قيم زجاج في الحافظة</string>
+    <string name="glassLabResetAll">إعادة ضبط الكل</string>
+    <string name="glassLabSceneChat">المحادثة</string>
+    <string name="glassLabSceneHome">قائمة الرئيسية</string>
+    <string name="glassLabOpenMenu">قائمة الشريط</string>
+    <string name="glassLabOpenSheet">ورقة سفلية</string>
+    <string name="glassLabOpenContext">قائمة سياقية</string>
+    <string name="glassLabOpenDialog">مربع حوار</string>
+    <string name="glassLabSliderReset">العودة إلى القيمة الأصلية</string>
+    <string name="glassLabTypeTitle">اكتب رقمًا</string>
+    <string name="glassLabTypeField">القيمة</string>
+    <string name="glassLabTypeConfirm">تعيين</string>
+    <string name="glassLabSampleTitle">شغّل المحلّل على Ubuntu</string>
+    <string name="glassLabSampleSubtitle">جديد · هذا الهاتف</string>
+    <string name="glassLabSampleAsk">هل يمكنك معرفة سبب حذف المحلّل للأسطر الفارغة داخل الكتل المسوّرة، وإطلاعي على الأرقام؟</string>
+    <string name="glassLabSampleReply">وجدت السبب في مُقسِّم الأسطر: يقصّ كل سطر قبل أن يتحقق من السياج، فيُفهم السطر الفارغ داخل الكتلة على أنه نهاية فقرة. هذا ما يفعله كل إصدار بالملف نفسه:\n\n| الإصدار | الأسطر المحفوظة | الزمن |\n|---|---|---|\n| 1.4 | 212 | 38 ms |\n| 1.5 | 196 | 35 ms |\n| الإصلاح | 212 | 36 ms |\n\nيحتفظ الإصلاح بالسطر كما هو حتى يكتمل التحقق من السياج:\n\n```kotlin\nval raw = lines[i]\nif (inFence) block += raw\nelse if (raw.isBlank()) closeParagraph()\n```\n\nهل أشغّل الاختبارات على جهاز Ubuntu لديك؟</string>
+    <string name="glassLabSampleAskTwo">نعم، شغّلها وأخبرني بما يفشل.</string>
+    <string name="glassLabSamplePermission">تشغيل أمر؟</string>
+    <string name="glassLabSampleCommand">./gradlew :core:markdown:test</string>
+    <string name="glassLabSamplePermissionWhy">يشغّل اختبارات وحدة markdown في مجلد المشروع.</string>
+    <string name="glassLabSampleAskBox">اسأل OpenCode…</string>
+    <string name="glassLabSampleModel">Big Pickle</string>
+    <string name="glassLabSampleMode">اسأل أولًا</string>
+    <string name="glassLabSampleDialogTitle">حذف هذه المحادثة؟</string>
+    <string name="glassLabSampleDialogBody">ستُحذف من هذا الهاتف ومن الخادم. لا يمكن التراجع عن ذلك.</string>
+    <string name="glassLabSampleDelete">حذف</string>
+    <string name="glassLabSampleKeep">إبقاؤها</string>
+    <string name="glassLabSampleHome">المحادثات</string>
+    <string name="glassLabSampleConnected">متصل</string>
+    <string name="glassLabSampleAll">الكل</string>
+    <string name="glassLabSampleNeedsYou">بانتظارك</string>
+    <string name="glassLabSampleRunning">قيد التشغيل</string>
+    <string name="glassLabSampleNew">جديد</string>
+</resources>

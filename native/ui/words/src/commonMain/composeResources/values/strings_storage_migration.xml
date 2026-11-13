@@ -6,6 +6,5 @@
     <string name="migrationStorageDeleteTitle">Delete the assistant model?</string>
     <string name="migrationStorageDeleteBody">This removes the saved model and incomplete downloads from this phone, freeing %1$s.</string>
     <string name="migrationStorageAppDetail">Conversations kept here, the phone's Linux, agents and downloads: see the sizes and free space</string>
-    <string name="migrationStorageEmpty">No assistant model is stored on this phone</string>
     <string name="localModelSaveFailed">Could not change the saved model. Try again.</string>
 </resources>

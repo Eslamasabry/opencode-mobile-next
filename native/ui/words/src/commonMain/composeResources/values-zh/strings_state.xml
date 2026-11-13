@@ -6,4 +6,5 @@
     <string name="statePinFailed">无法保存置顶。请重试。</string>
     <string name="stateContextUsage">上次上下文：%1$d%</string>
     <string name="stateSavedPreview">已保存的列表。连接后才能打开此对话。</string>
+    <string name="chatsAllSavedGroup">来自未连接服务器的已保存列表</string>
 </resources>

@@ -109,4 +109,6 @@
     <string name="nlibMcpAddVariable">Thêm giá trị này</string>
     <string name="nlibRegistryNeedsSettings">Hãy xem lại các cài đặt bắt buộc và đối số của lệnh trước khi lưu.</string>
     <string name="nlibRegistrySaveFailed">Không lưu được lựa chọn về danh mục. Hãy thử lại trước khi rời trang này.</string>
+    <string name="nlibArgumentsHelper">Được truyền cho lệnh khi chạy. Để trống để dùng mặc định.</string>
+    <string name="nlibRunIn">Chạy trong</string>
 </resources>

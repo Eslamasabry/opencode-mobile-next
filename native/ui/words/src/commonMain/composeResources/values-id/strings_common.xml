@@ -694,4 +694,5 @@
     <string name="phoneServerPortBusy">Server OpenCode lain sudah memakai port %1$s di ponsel ini.</string>
     <string name="chatRequestAskReadFolder">Baca folder ini?</string>
     <string name="appUpdateUpdatedTo">Diperbarui ke versi %1$s</string>
+    <string name="capabilityScreenHeading">Yang bisa dilakukan server ini</string>
 </resources>

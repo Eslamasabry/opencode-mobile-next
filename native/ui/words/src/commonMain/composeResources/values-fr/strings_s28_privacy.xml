@@ -35,4 +35,6 @@
     <string name="collectCrashKeys">La version de l’application, son mode d’installation, le type de serveur, si le serveur de ce téléphone est en marche, combien de connexions sont ouvertes et la version du serveur</string>
     <string name="collectNever">Vos invites et réponses, noms ou chemins de fichiers, adresses web, noms d’hôte, adresses IP, textes de messages d’erreur, clés ou jetons, l’identifiant publicitaire ou l’identifiant Android</string>
     <string name="collectReport">Ce que vous écrivez sur le problème, la dernière fois que l’application s’est fermée de façon inattendue, les versions de l’application et d’Android, une plage de mémoire et le type de serveur, avec les clés, adresses et chemins masqués. Aucun journal ni aucune conversation. Vous voyez tout et choisissez Envoyer ou Annuler.</string>
+    <string name="privacyCrashSendTitle">Envoyer automatiquement les données de plantage</string>
+    <string name="privacyCrashAskTitle">Me demander après un plantage</string>
 </resources>

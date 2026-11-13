@@ -934,4 +934,6 @@
     <string name="linuxMgrJobDoneRestore">Linux восстановлен</string>
     <string name="linuxMgrResetBackUpFirst">Сначала создать резервную копию</string>
     <string name="thermalGuardSaveFailed">Не удалось сохранить защиту от перегрева. Повторите попытку.</string>
+    <string name="thisPhoneRestartBody">Чаты, которые сейчас идут, остановятся, а ваши чаты сохранятся. Обычно это занимает меньше минуты.</string>
+    <string name="thisPhoneRestartingRow">Перезапуск. Обычно это занимает меньше минуты…</string>
 </resources>

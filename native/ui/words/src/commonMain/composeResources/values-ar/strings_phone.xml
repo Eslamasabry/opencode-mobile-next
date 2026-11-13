@@ -976,4 +976,6 @@
     <string name="linuxMgrJobDoneRestore">تمت استعادة Linux</string>
     <string name="linuxMgrResetBackUpFirst">انسخ احتياطيًا أولًا</string>
     <string name="thermalGuardSaveFailed">تعذّر حفظ الحماية من الحرارة. حاول مرة أخرى.</string>
+    <string name="thisPhoneRestartBody">المحادثات الجارية تتوقف وتبقى محادثاتك محفوظة. يستغرق ذلك عادةً أقل من دقيقة.</string>
+    <string name="thisPhoneRestartingRow">جارٍ إعادة التشغيل. يستغرق ذلك عادةً أقل من دقيقة…</string>
 </resources>

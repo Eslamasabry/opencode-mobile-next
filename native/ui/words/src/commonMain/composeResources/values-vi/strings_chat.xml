@@ -1142,4 +1142,6 @@
     <string name="chatRequestAnswerRequired">Hãy trả lời các câu hỏi bắt buộc trước.</string>
     <string name="chatStepDeclinedNote">Ghi chú của bạn: “%1$s”</string>
     <string name="chatStepMalformedCall">Tác nhân đã yêu cầu sai cách nên chưa có gì chạy. Hãy bảo nó thử lại.</string>
+    <string name="chatUiRetryWhyUnreachable">Không kết nối được với nhà cung cấp mô hình. Hãy kiểm tra kết nối của điện thoại này.</string>
+    <string name="chatUiRetryWhyBusy">Nhà cung cấp mô hình hiện chưa phản hồi.</string>
 </resources>

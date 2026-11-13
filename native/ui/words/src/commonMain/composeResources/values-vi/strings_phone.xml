@@ -870,4 +870,6 @@
     <string name="linuxMgrJobDoneRestore">Đã khôi phục Linux</string>
     <string name="linuxMgrResetBackUpFirst">Sao lưu trước</string>
     <string name="thermalGuardSaveFailed">Không lưu được chế độ bảo vệ nhiệt. Thử lại.</string>
+    <string name="thisPhoneRestartBody">Các cuộc trò chuyện đang chạy sẽ dừng lại, còn các cuộc trò chuyện của bạn vẫn được giữ. Thường mất chưa đến một phút.</string>
+    <string name="thisPhoneRestartingRow">Đang khởi động lại. Thường mất chưa đến một phút…</string>
 </resources>

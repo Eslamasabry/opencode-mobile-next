@@ -208,3 +208,8 @@ reachTailscale2
 setupNativeToolHelp
 stateDemoAfter
 stateDemoBefore
+glassLabSampleCommand
+glassLabSampleModel
+glassLabSampleHome
+glassLabOpenDialog
+glassLabSceneChat
