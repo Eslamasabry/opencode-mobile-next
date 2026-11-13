@@ -1403,6 +1403,9 @@ public class NewConversationViewModel(
             // The words are the phone agent's conversation now: the server's own draft for this folder is spent.
             if (target != profile && result.ref != null)
                 edits.withLock { host.saveDraft(profile, directory, "") }
+            // A put-back first message is the opened chat's failed bubble (with Try again): never a second copy here.
+            if (openedConversation != null && result.failure != null && !result.deliveryUnconfirmed)
+                edits.withLock { host.saveDraft(target, directory, "") }
             if (result.dispatched) report(NewChatOutcome.FirstMessageSent)
             else if (result.deliveryUnconfirmed) report(NewChatOutcome.Unknown)
             if ((result.dispatched || result.deliveryUnconfirmed) && result.ref != null) {
@@ -1431,7 +1434,8 @@ public class NewConversationViewModel(
                 mutable.update {
                     it.copy(
                         busy = false,
-                        failure = result.failure,
+                        // The chat this page opened shows a put-back first message as its own failed bubble.
+                        failure = result.failure.takeIf { openedConversation == null },
                         creationUnconfirmed = result.creationAttempted && result.ref == null,
                         deliveryUnconfirmed = result.deliveryUnconfirmed,
                         reviewConversation = result.ref.takeIf { result.deliveryUnconfirmed },

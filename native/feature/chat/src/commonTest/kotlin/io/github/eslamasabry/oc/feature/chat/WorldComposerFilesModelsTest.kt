@@ -50,6 +50,7 @@ import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
 import io.github.eslamasabry.oc.engine.connection.ConnectionSession
 import io.github.eslamasabry.oc.engine.delivery.ConnectionDelivery
 import io.github.eslamasabry.oc.engine.delivery.DeliveryStorage
+import io.github.eslamasabry.oc.engine.delivery.SendRequest
 import io.github.eslamasabry.oc.engine.delivery.receipts.ProfileDirectory
 import io.github.eslamasabry.oc.engine.requests.ConnectionRequests
 import io.github.eslamasabry.oc.engine.transcript.TranscriptAccessors
@@ -78,6 +79,8 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
@@ -178,6 +181,8 @@ class WorldComposerFilesModelsTest {
         val modelCalls = mutableListOf<ModelRef>()
         var acknowledge: Boolean = true
         var failNextPrompt: Boolean = false
+        /** What the refused prompt answers (a phone agent's own refusal carries its words in details). */
+        var refusal: Failure = Failure.Unavailable(FeatureId("prompt"))
 
         /** Holds the next prompt POST before it answers (a slow server). */
         var holdNextPrompt: kotlinx.coroutines.CompletableDeferred<Unit>? = null
@@ -238,7 +243,7 @@ class WorldComposerFilesModelsTest {
             if (failNextPrompt) {
                 failNextPrompt = false
                 // A refusal proves nothing left (a network failure may have: that stays unconfirmed).
-                return Outcome.Failed(Failure.Unavailable(FeatureId("prompt")))
+                return Outcome.Failed(refusal)
             }
             return base.prompt(session, prompt, commandId)
         }
@@ -368,7 +373,128 @@ class WorldComposerFilesModelsTest {
             world
             test.runCurrent()
         }
+
+        /** The connection is up, but no chat is reading yet (the New-conversation page sends first). */
+        suspend fun connect() {
+            base.events.connect()
+            registry.open(profile)
+            test.runCurrent()
+        }
+
+        fun engine(): io.github.eslamasabry.oc.engine.delivery.PromptDelivery =
+            assertNotNull((registry.graphFor(ref) as ChatGraphAccessors).chatDelivery.engine)
     }
+
+    // ---- The first message from the New-conversation page (it opens the chat after admission) ----
+
+    private val phoneOwner =
+        object : io.github.eslamasabry.oc.feature.chat.presentation.ChatOutside {
+            override fun phoneAgentOwner(ref: ConversationRef): ProfileId = ProfileId("phone")
+
+            override fun mask(text: String): String = text
+
+            override fun copy(text: String): Boolean = false
+
+            override fun share(text: String): Boolean = false
+
+            override fun checkLink(url: String) =
+                io.github.eslamasabry.oc.feature.chat.presentation.LinkCheck.Refused
+
+            override fun openLink(url: String): Boolean = false
+        }
+
+    @OptIn(io.github.eslamasabry.oc.core.common.RedactorApi::class)
+    @Test
+    fun `First message (a) a send that failed before the chat was reading opens as a failed bubble with its words`() =
+        runTest {
+            val f = Fixture(this, runtime = "qwen")
+            f.gateway.refusal =
+                Failure.Unavailable(
+                    FeatureId("agentStart"),
+                    io.github.eslamasabry.oc.core.common.Redacted("AuthRequired"),
+                )
+            f.gateway.failNextPrompt = true
+            f.connect()
+            val engine = f.engine()
+            assertIs<Outcome.Ok<*>>(engine.send(SendRequest(ref, "fix the tests")))
+            runCurrent()
+            advanceTimeBy(60)
+            runCurrent()
+            assertTrue(engine.pending.value.none { it.ref == ref }, "the send failed before any chat read it")
+            // Only now does the chat open.
+            f.world
+            runCurrent()
+            val bubble = f.world.pending.value.single()
+            assertEquals("fix the tests", bubble.text)
+            assertEquals(PendingState.Failed, bubble.state)
+            val shown =
+                io.github.eslamasabry.oc.feature.chat.presentation
+                    .ChatPresenter(f.world, RecordingNavigator(), Immediate, outside = phoneOwner)
+                    .current()
+                    .pending
+                    .single()
+            assertEquals(
+                io.github.eslamasabry.oc.feature.chat.world.AgentSetUpNeed("qwen", "Qwen Code"),
+                shown.setUp,
+            )
+            // Try again sends the same words once.
+            assertIs<Outcome.Ok<Unit>>(f.world.retrySend(bubble.localId))
+            runCurrent()
+            assertEquals(listOf("fix the tests"), f.base.sentPrompts.map { it.second.text })
+        }
+
+    @Test
+    fun `First message (b) a result taken away before the chat read it is not a spinner without end`() =
+        runTest {
+            val f = Fixture(this)
+            val hold = kotlinx.coroutines.CompletableDeferred<Unit>()
+            f.gateway.holdNextPrompt = hold
+            f.gateway.failNextPrompt = true
+            f.connect()
+            val engine = f.engine()
+            assertIs<Outcome.Ok<*>>(engine.send(SendRequest(ref, "hello")))
+            runCurrent()
+            f.world
+            runCurrent()
+            assertEquals(PendingState.Sending, f.world.pending.value.single().state, "the chat took the bubble over")
+            // The New-conversation page acknowledges the result the moment it appears, before the chat reads it.
+            backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+                engine.outcomes.collect { list -> list.filter { it.ref == ref }.forEach { engine.acknowledge(it.id) } }
+            }
+            hold.complete(Unit)
+            runCurrent()
+            advanceTimeBy(60)
+            runCurrent()
+            assertTrue(engine.outcomes.value.none { it.ref == ref })
+            val bubble = f.world.pending.value.single()
+            assertEquals(PendingState.Unconfirmed, bubble.state)
+            assertEquals("hello", bubble.text)
+            assertFalse(bubble.reviewable, "its own Send again, which asks first")
+        }
+
+    @Test
+    fun `First message (c) the normal order shows exactly one bubble`() =
+        runTest {
+            val f = Fixture(this)
+            val hold = kotlinx.coroutines.CompletableDeferred<Unit>()
+            f.gateway.holdNextPrompt = hold
+            f.gateway.failNextPrompt = true
+            f.connect()
+            val engine = f.engine()
+            assertIs<Outcome.Ok<*>>(engine.send(SendRequest(ref, "hello")))
+            runCurrent()
+            f.world
+            runCurrent()
+            hold.complete(Unit)
+            runCurrent()
+            advanceTimeBy(60)
+            runCurrent()
+            // A transcript change runs the delivery sync again: still one bubble.
+            f.base.events.emit(GatewayEvent.SessionUpserted(Session(ref.sessionId, title = "hello")))
+            runCurrent()
+            assertEquals(listOf(PendingState.Failed), f.world.pending.value.map { it.state })
+            assertEquals(listOf("hello"), f.world.pending.value.map { it.text })
+        }
 
     // ---- Model choices ----
 
