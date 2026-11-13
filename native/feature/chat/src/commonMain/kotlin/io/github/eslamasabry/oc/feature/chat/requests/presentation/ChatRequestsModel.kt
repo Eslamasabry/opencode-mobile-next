@@ -71,6 +71,12 @@ public class ChatRequestsModel(
         val confirmInvitation: Boolean = false,
         val invitationFailure: Failure? = null,
         val invitationFailureFor: RequestId? = null,
+        /**
+         * RC1: the person pressed Stop in this chat. Until the stop settles, a card that waited on them reads "No
+         * longer needed" and takes no answer, without waiting for the server to confirm the stop; a refused stop
+         * clears it and the card waits again.
+         */
+        val runEnding: Boolean = false,
     )
 
     private val local = MutableStateFlow(Local())
@@ -93,7 +99,7 @@ public class ChatRequestsModel(
         combine(local, engine.pending) { mine, requests ->
                 mine.sheet
                     ?.takeIf { reviewed ->
-                        requests.any {
+                        !mine.runEnding && requests.any {
                             it is PendingRequest.Question &&
                                 it.question === reviewed.question &&
                                 it.phase == AnswerPhase.Waiting
@@ -102,6 +108,14 @@ public class ChatRequestsModel(
                     ?.id
             }
             .stateIn(scope, SharingStarted.Eagerly, null)
+
+    /**
+     * The chat's own Stop state ([RunTail.Stopping][io.github.eslamasabry.oc.feature.chat.presentation.RunTail]):
+     * true from the tap until the run has stopped or the stop was refused.
+     */
+    public fun runEnding(on: Boolean) {
+        if (local.value.runEnding != on) local.update { it.copy(runEnding = on, confirm = if (on) null else it.confirm) }
+    }
 
     /** Leaving the chat sends its held answers now (plan 09 §5.1). */
     public suspend fun leave() {
@@ -428,7 +442,7 @@ public class ChatRequestsModel(
             requests
                 .filterIsInstance<PendingRequest.Question>()
                 .firstOrNull {
-                    mine.sheet?.question === it.question && it.phase == AnswerPhase.Waiting
+                    !mine.runEnding && mine.sheet?.question === it.question && it.phase == AnswerPhase.Waiting
                 }
                 ?.let {
                     val drafts =
@@ -455,7 +469,7 @@ public class ChatRequestsModel(
         where: RequestPlace,
         mine: Local,
     ): RequestCardUi {
-        val state = cardState(request.phase)
+        val state = cardState(request.phase).let { if (mine.runEnding && waitsOnPerson(it)) CardState.NoLongerNeeded else it }
         return when (request) {
                 is PendingRequest.Permission ->
                     RequestCardUi.Permission(
@@ -506,6 +520,10 @@ public class ChatRequestsModel(
                 }
             }
     }
+
+    /** Asked and not answered, held inside Undo, or refused and to be tried again: the person's Stop ends these. */
+    private fun waitsOnPerson(state: CardState): Boolean =
+        state == CardState.Waiting || state is CardState.Held || state is CardState.NotAccepted
 
     private fun cardState(phase: AnswerPhase): CardState =
         when (phase) {

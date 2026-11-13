@@ -79,6 +79,17 @@ class Oc2LostRunTest {
     }
 
     @Test
+    fun `RC1-DENY-002 the note sent as the user's words reads back as the person's note on the declined step`() {
+        val sent = io.github.eslamasabry.oc.protocol.oc2.adapter.Oc2DenyNote.message("  use rc2.txt ")
+        // What the model reads: who wrote it and that it is how to go on, then the person's own words.
+        assertTrue(sent.startsWith("The user declined this tool call, so it did not run."))
+        assertTrue(sent.endsWith("the user said:\nuse rc2.txt"))
+        val json = kotlinx.serialization.json.JsonPrimitive(sent).toString()
+        val tool = refusedWrite("""{"type":"permission.rejected","message":$json}""")
+        assertEquals("The user declined this tool call\nuse rc2.txt", tool.output)
+    }
+
+    @Test
     fun `a refusal without a note is the decline sentence once, another error type keeps its own text`() {
         assertEquals(
             "The user declined this tool call",

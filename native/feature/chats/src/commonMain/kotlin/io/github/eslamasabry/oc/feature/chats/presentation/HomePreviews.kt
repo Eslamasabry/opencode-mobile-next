@@ -46,11 +46,19 @@ public object HomePreviewRules {
      * or "[labels](links)" (seen raw on the owner's phone). Headings, quotes, bullets and code fences lose their lead,
      * a link keeps its label, emphasis and code keep their words; emoji and everything else stay.
      */
-    public fun plain(text: String): String = PlainMarkdown.plain(text)
+    public fun plain(text: String): String = PlainMarkdown.plain(withoutNumbers(text))
+
+    /**
+     * RC1 device pass: a numbered list's "1." stayed in a row's line ("The River Called Rive 1. It began as…") while a
+     * bullet's "-" went. A numbered item loses its number like a bullet loses its mark.
+     */
+    private val numberLead = Regex("""^\s{0,3}\d{1,9}[.)]\s+""", RegexOption.MULTILINE)
+
+    private fun withoutNumbers(text: String): String = text.replace(numberLead, "")
 
     /** [text] on one line: marks removed, whitespace folded, trimmed, cut at [MAX_CHARS] with an ellipsis; null when empty. */
     public fun oneLine(text: String): String? {
-        val folded = PlainMarkdown.oneLine(text)
+        val folded = PlainMarkdown.oneLine(withoutNumbers(text))
         if (folded.isEmpty()) return null
         return if (folded.length <= MAX_CHARS) folded else folded.substring(0, MAX_CHARS - 1).trimEnd() + "…"
     }
@@ -70,7 +78,7 @@ public object HomePreviewRules {
      * that is only the echo stays as it is.
      */
     public fun forRow(line: String, directory: String?, stateWords: List<String>): String {
-        var text = PlainMarkdown.oneLine(line)
+        var text = PlainMarkdown.oneLine(withoutNumbers(line))
         text = shortenPaths(text, directory)
         for (word in stateWords.filter { it.isNotBlank() }) {
             val echo = Regex("^" + Regex.escape(word.trim()) + """\s*[.!:;,\u2014\u2013-]+\s+(?=\S)""", RegexOption.IGNORE_CASE)

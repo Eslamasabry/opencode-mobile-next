@@ -360,8 +360,9 @@ private fun PermissionWaiting(
     val always = card.canAlwaysAllow && !card.invitation
     val copies = RequestCardRules.copiesTargets(card.ask)
     KitPermissionCard(
-        // P-013: a file named by its one target line is not named again in the question.
-        title = askQuestion(if (RequestCardRules.questionOmitsName(card.ask)) card.ask.copy(name = null) else card.ask),
+        // RC1 device pass: one rule for every file ask, the question names its file ("Edit rc1.txt?" as "Create
+        // rc1.txt?"); the target line under it adds the path and the change size.
+        title = askQuestion(card.ask),
         toolLabel = if (RequestCardRules.showsToolLine(card.ask)) askToolLine(card.ask) else null,
         copyLabel = if (copies) stringResource(Res.string.approvalCopyAsk) else null,
         copiedLabel = if (copies) stringResource(Res.string.approvalCopied) else null,

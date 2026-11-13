@@ -232,6 +232,8 @@ public class ChatPresenter(
                 settleStop()
             }
             .launchIn(scope)
+        // A requests model that arrives later (a reconnect) takes the chat's Stop state too.
+        world.requests.onEach { syncRunEnding() }.launchIn(scope)
         watchTurns(scope)
         // S30 story 3: what this server can background, read each time the chat goes live (Flutter reads it on
         // attach), so a reconnect to another server version is read again.
@@ -766,10 +768,20 @@ public class ChatPresenter(
     private fun newestPrompt(): PromptRow? =
         world.transcript.value.rows.firstOrNull { it is PromptRow } as? PromptRow
 
+    /**
+     * RC1: the chat's request cards follow its own Stop at once. From the tap a waiting card reads "No longer needed ·
+     * The run is ending, so nothing was sent." and takes no answer; the server's confirmation only removes it, and a
+     * refused Stop brings it back.
+     */
+    private fun syncRunEnding() {
+        world.requests.value?.runEnding(local.value.stopping)
+    }
+
     override fun stop() {
         if (local.value.stopping) return
         stopInFlight = true
         local.update { it.copy(stopping = true, actionFailure = null) }
+        syncRunEnding()
         launcher.launch {
             val result = world.stopTurn()
             stopInFlight = false
@@ -785,13 +797,16 @@ public class ChatPresenter(
                     actionFailure = failure,
                 )
             }
+            syncRunEnding()
         }
     }
 
     /** The turn ended after an accepted Stop: the stopping state settles (B10). */
     internal fun settleStop() {
-        if (!stopInFlight && local.value.stopping && !world.transcript.value.run.busy)
+        if (!stopInFlight && local.value.stopping && !world.transcript.value.run.busy) {
             local.update { it.copy(stopping = false) }
+            syncRunEnding()
+        }
         // The turn ended: the stop note did its work (or the turn finished first).
         if (local.value.stopAfterStep && !world.transcript.value.run.busy)
             local.update { it.copy(stopAfterStep = false, stopNote = null) }
@@ -818,12 +833,14 @@ public class ChatPresenter(
         if (local.value.stopping || words.isBlank() || !world.transcript.value.run.busy) return
         stopInFlight = true
         local.update { it.copy(stopping = true, actionFailure = null) }
+        syncRunEnding()
         launcher.launch {
             val result = world.stopTurn()
             stopInFlight = false
             val failure = (result as? Outcome.Failed)?.failure
             val asked = (result as? Outcome.Ok)?.value == true
             local.update { it.copy(stopping = asked && world.transcript.value.run.busy, actionFailure = failure) }
+            syncRunEnding()
             // Too late: the stop was not asked, or the agent started on the message in the last moment.
             if (!asked || !SteerWaitRules.unreadAfterStop(world.transcript.value.rows, promptKey)) return@launch
             val sent = world.sendAgain(words.trim())

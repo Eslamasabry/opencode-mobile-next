@@ -918,7 +918,10 @@ internal class Oc2EventAdapter(private val nowMs: () -> Long) {
      */
     private fun toolErrorText(error: Oc2StructuredError?): String? {
         if (error?.type != PERMISSION_REJECTED) return error?.message
-        val note = error.message?.trim()?.takeIf { it.isNotEmpty() && !it.contains("user declined", ignoreCase = true) }
+        // The app's own refusal message (Oc2DenyNote) says who wrote the note; the note is what follows it.
+        val note =
+            Oc2DenyNote.note(error.message)
+                ?: error.message?.trim()?.takeIf { it.isNotEmpty() && !it.contains("user declined", ignoreCase = true) }
         return if (note == null) DECLINED_TOOL_CALL else "$DECLINED_TOOL_CALL\n$note"
     }
 

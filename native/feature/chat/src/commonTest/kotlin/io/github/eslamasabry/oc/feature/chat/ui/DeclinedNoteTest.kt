@@ -1,6 +1,9 @@
 package io.github.eslamasabry.oc.feature.chat.ui
 
+import io.github.eslamasabry.oc.engine.transcript.ledger.StepState
 import kotlin.test.Test
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
@@ -13,5 +16,15 @@ class DeclinedNoteTest {
         assertNull(declinedNote("The user declined this tool call"))
         assertNull(declinedNote("The user declined this tool call\n   "))
         assertNull(declinedNote(null))
+    }
+
+    @Test
+    fun `RC1-DENY-001 a declined step's row carries the note itself and does not open, other steps keep theirs`() {
+        val error = "The user declined this tool call\nuse rc2.txt"
+        assertEquals("use rc2.txt", declinedStepNote(StepState.Declined, error))
+        assertFalse(stepOpens(StepState.Declined), "nothing more to open: the row says it all")
+        assertNull(declinedStepNote(StepState.Declined, "The user declined this tool call"), "a Deny without a note")
+        assertNull(declinedStepNote(StepState.Failed, error), "only a declined step reads it as the person's note")
+        assertTrue(stepOpens(StepState.Done))
     }
 }

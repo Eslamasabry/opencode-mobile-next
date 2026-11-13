@@ -163,7 +163,7 @@ internal fun TranscriptDetail(
         // it is still being written) and the body is the thought in the secondary size and tone. The opened body starts
         // after that first line, so an opened thought never says its first line twice (owner, 2026-11-09: grey line,
         // then the same words again in white).
-        val firstLine = remember(plain) { plain.lineSequence().first { it.isNotBlank() }.trim() }
+        val firstLine = remember(part.text) { thoughtTitle(part.text) }
         val thoughtTitle = if (thinking) stringResource(Res.string.kitMessageThinking) else firstLine
         val body = remember(part.text, thinking) { if (thinking) part.text else thoughtBody(part.text) }
         val open = (if (settled) folds.open[key] else null) ?: reasoningExpanded
@@ -316,6 +316,15 @@ private fun DetailMarkdown(key: String, text: String, reply: ReplyActions?, thou
         role = if (thought) TypeRole.Secondary else TypeRole.Body,
     )
 }
+
+/**
+ * A thought's title: its first line with words, read as Markdown reads it (a heading's `#`, `**bold**` marks go; a
+ * `*` between digits, as in `17*23`, is a character and stays). Every `*`, `_`, backtick and `#` used to be stripped,
+ * so "17*23 = 391" read "1723 = 391" (RC1 device pass).
+ */
+internal fun thoughtTitle(text: String): String =
+    text.lineSequence().map { KitMdSource.lineWords(it) }.firstOrNull { it.isNotBlank() }
+        ?: text.replace(MARKDOWN_MARKS, "").trim()
 
 /** A thought without its first line (that line is the fold's title), leading blank lines dropped. */
 internal fun thoughtBody(text: String): String {

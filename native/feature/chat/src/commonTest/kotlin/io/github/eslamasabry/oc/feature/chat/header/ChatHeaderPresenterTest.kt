@@ -502,6 +502,24 @@ class ChatHeaderPresenterTest {
     }
 
     @Test
+    fun `RC1-MODEL-001 a chat opened before its connection says Free on the chip once the server answers`() {
+        var online = false
+        val freePort =
+            object : ChatHeaderPort by port {
+                override suspend fun freeModelFacts(): Outcome<FreeModelFacts> =
+                    if (online) Outcome.Ok(FreeModelFacts(listOf("opencode"), freeCatalog()))
+                    else Outcome.Failed(Failure.Network(NetworkWhy.Offline))
+            }
+        port.facts.value = port.facts.value.copy(providerId = "opencode", model = "big-pickle", connected = false)
+        val presenter = ChatHeaderPresenter(world, freePort, nav, Immediate)
+        presenter.states(kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.Unconfined), kotlinx.coroutines.flow.SharingStarted.Eagerly)
+        assertFalse(presenter.current().freeModel, "nothing read yet: no Free")
+        online = true
+        port.facts.value = port.facts.value.copy(connected = true)
+        assertTrue(presenter.current().freeModel, "the reopened chat's chip says Free like the live one")
+    }
+
+    @Test
     fun `B-CHAT-015 the free model is a chip tag, never a banner, and a dismissal is still kept for this server`() {
         val store =
             object : FreeNoteStore {

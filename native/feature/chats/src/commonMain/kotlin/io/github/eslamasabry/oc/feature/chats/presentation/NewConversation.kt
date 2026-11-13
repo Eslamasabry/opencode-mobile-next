@@ -865,7 +865,12 @@ public class NewConversationViewModel(
             // Back) come back when New conversation opens again on this project with an empty field. A sent first
             // message clears them once its delivery is confirmed; offered words (a starter text) are never replaced.
             // An unresolved first-send receipt restores the words of the conversation offered for review, as before.
-            if (before.text.isNotEmpty()) return
+            if (before.text.isNotEmpty()) {
+                // Words typed while the page was getting ready are this project's draft from now on.
+                if (before.text != route.initialText && !mutable.value.deliveryUnconfirmed)
+                    host.saveDraft(profile, directory, before.text)
+                return
+            }
             if (route.initialText.isNotEmpty() && !mutable.value.deliveryUnconfirmed) return
             when (val saved = host.draft(profile, directory)) {
                 is Outcome.Failed -> mutable.update { it.copy(draftFailed = true) }
@@ -954,10 +959,15 @@ public class NewConversationViewModel(
     }
 
     override fun draftChanged(text: String) {
-        if (mutable.value.busy || mutable.value.deliveryUnconfirmed) return
+        val before = mutable.value
+        // Getting the page ready never locks the field (RC1 device pass: 90 s of "Still reading…" then an empty box):
+        // words typed meanwhile are kept here and saved as the project's draft once the project is known (restore).
+        val preparing = before.busy && before.setup == null
+        if ((before.busy && !preparing) || before.deliveryUnconfirmed) return
         mutable.update { it.copy(text = text) }
         val current = mutable.value
         val profile = current.profile ?: return
+        if (current.setup == null) return
         viewModelScope.launch {
             edits.withLock {
                 val saved = host.saveDraft(profile, current.directory, text)

@@ -238,6 +238,13 @@ class PermissionAnswersScreenTest {
     }
 
     @Test
+    fun `RC1-CARD-002 an edit names its file in the question as a creation does`() = runComposeUiTest {
+        setContent { Slot(RequestSlotUi(card("edit", listOf("rc1.txt"), always = false))) }
+        onNode(reads("Edit rc1.txt?"), useUnmergedTree = true).assertExists()
+        assertTrue(onAllNodes(reads("Edit this file?"), useUnmergedTree = true).fetchSemanticsNodes().isEmpty())
+    }
+
+    @Test
     fun `B-CHAT-REV3-012 a card retired by Stop never says the run stopped while it may still be stopping`() =
         runComposeUiTest {
             val retired = card("edit", listOf("e9.txt"), always = false).copy(state = CardState.NoLongerNeeded)

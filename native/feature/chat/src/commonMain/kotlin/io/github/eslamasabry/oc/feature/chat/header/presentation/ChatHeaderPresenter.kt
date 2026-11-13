@@ -29,6 +29,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.takeWhile
 import kotlinx.coroutines.flow.update
@@ -138,7 +140,13 @@ public class ChatHeaderPresenter(
             }
             .stateIn(scope, started, current())
             .also {
-                launcher.launch { loadFreeFacts() }
+                // RC1: one rule for the model chip's "· Free". The free list was read once, when the chat opened; a
+                // chat reopened before its connection was up never had it, so the same model read "Big Pickle" there
+                // and "Big Pickle · Free" in a live chat. It is read again whenever the server's facts or
+                // capabilities change, until it is known.
+                kotlinx.coroutines.flow.merge(world.capabilities, port.facts)
+                    .onEach { if (local.value.freeFacts == null) launcher.launch { loadFreeFacts() } }
+                    .launchIn(scope)
                 launcher.launch { readParentTitles() }
             }
     }
@@ -156,9 +164,14 @@ public class ChatHeaderPresenter(
         world.parent.value?.let { nav.backToChat(it) }
     }
 
+    private var freeReading = false
+
     private suspend fun loadFreeFacts() {
-        val facts = (port.freeModelFacts() as? Outcome.Ok)?.value ?: return
-        local.update { it.copy(freeFacts = facts) }
+        if (freeReading) return
+        freeReading = true
+        val facts = (port.freeModelFacts() as? Outcome.Ok)?.value
+        freeReading = false
+        if (facts != null) local.update { it.copy(freeFacts = facts) }
     }
 
     private fun freeNoteDue(facts: HeaderFacts, models: ComposerModels, l: HeaderLocal): Boolean {

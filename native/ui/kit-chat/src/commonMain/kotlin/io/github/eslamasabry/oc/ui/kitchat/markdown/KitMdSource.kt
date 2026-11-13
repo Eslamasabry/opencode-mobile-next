@@ -8,6 +8,7 @@ import io.github.eslamasabry.oc.core.markdown.MarkdownBlocks
 import io.github.eslamasabry.oc.core.markdown.MarkdownPicture
 import io.github.eslamasabry.oc.core.markdown.PictureKind
 import io.github.eslamasabry.oc.core.markdown.SpanKind
+import io.github.eslamasabry.oc.core.markdown.markdownDisplay
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -28,6 +29,16 @@ public object KitMdSource {
             .mapIndexed { i, b -> rekey(b, "$key#$i") }
             .toImmutableList()
     }
+
+    /**
+     * One line of Markdown as the words it reads as: a heading, quote or list mark at its start is dropped and its
+     * inline marks are read by the Markdown rules, so `**Plan**` reads "Plan" while `17*23`, `a_b_c` and `2*3*4` keep
+     * every character (RC1 device pass: a thought's line said "1723 = 391" because every `*` was stripped).
+     */
+    public fun lineWords(line: String): String =
+        markdownDisplay(line.trim().replace(LINE_LEAD, "")).text.trim()
+
+    private val LINE_LEAD = Regex("""^(?:#{1,6}\s+|>\s?|[-*+]\s+|\d{1,9}[.)]\s+)+""")
 
     private fun rekey(b: KitMdBlock, key: String): KitMdBlock =
         when (b) {
