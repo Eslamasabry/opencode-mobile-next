@@ -87,6 +87,7 @@ public fun KitActionBlock(
     secondary: KitAction? = null,
     tertiary: List<KitAction> = emptyList(),
     pair: Boolean = false,
+    answerPair: Boolean = false,
 ) {
     if (primary == null && secondary == null && tertiary.isEmpty()) return
     val (shown, overflow) = ActionBlockRules.split(tertiary)
@@ -99,7 +100,21 @@ public fun KitActionBlock(
         val paired =
             pair && stacked && primary != null && secondary != null && tertiary.isEmpty() &&
                 primary.enabled.reason == null && secondary.enabled.reason == null
+        val answers =
+            answerPair && stacked && primary != null && secondary != null && tertiary.isEmpty() &&
+                primary.enabled.reason == null && secondary.enabled.reason == null
         when {
+            answers && !large && maxWidth.value >= Layout.PAIR_ROW_MIN_WIDTH ->
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(gap), verticalAlignment = Alignment.CenterVertically) {
+                    KitButton(secondary!!, Modifier.weight(1f), KitButtonRole.Secondary)
+                    KitButton(primary!!, Modifier.weight(1f), KitButtonRole.Primary)
+                }
+            answers ->
+                Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+                    Stacked(secondary!!, KitButtonRole.Secondary)
+                    Spacer(Modifier.height(gap))
+                    Stacked(primary!!, KitButtonRole.Primary)
+                }
             paired && !large && maxWidth.value >= Layout.PAIR_ROW_MIN_WIDTH ->
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(gap), verticalAlignment = Alignment.CenterVertically) {
                     KitButton(primary!!, Modifier.weight(1f), KitButtonRole.Primary)

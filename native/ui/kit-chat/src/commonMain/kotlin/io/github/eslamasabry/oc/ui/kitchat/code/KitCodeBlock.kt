@@ -348,8 +348,9 @@ public fun KitCodeBlock(
             CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
                 Column(Modifier.weight(1f)) {
                     Box(
+                        // Without Copy or Wrap there is nothing to touch: the block is its lines plus the padding.
                         if (inline) Modifier.padding(top = insetTop.dp, bottom = insetBottom.dp)
-                        else Modifier.heightIn(min = FlutterKitTokens.MIN_TARGET.dp)
+                        else Modifier
                     ) {
                         if (effectiveWrap) Box(Modifier.fillMaxWidth()) { body() }
                         else CodeOverflow(colors.fill, colors.gutter) { body() }

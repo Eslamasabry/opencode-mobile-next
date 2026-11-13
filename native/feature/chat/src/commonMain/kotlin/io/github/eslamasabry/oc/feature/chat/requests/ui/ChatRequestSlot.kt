@@ -392,7 +392,10 @@ private fun PermissionDetailsSheet(
         onDismissRequest = onClose,
         title = card?.let { askQuestion(it.ask) } ?: stringResource(Res.string.kitDetails),
         closeLabel = stringResource(Res.string.kitConfirmCancel),
-        height = KitSheetHeight.Half,
+        // Grows to what it holds, up to the sheet's own cap; a long request scrolls with the answers pinned.
+        height = KitSheetHeight.Content,
+        // Deny | Allow, the card's own arrangement.
+        answerPair = true,
         primary = card?.let {
             KitAction(stringResource(Res.string.approvalAllow), {
                 onClose()
