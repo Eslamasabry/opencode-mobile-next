@@ -65,11 +65,10 @@ import kotlin.test.Test
 import kotlin.test.assertTrue
 
 /**
- * Owner's pick 2026-11-09, chat edge option A ("the text scrolls under the status bar and blurs through the glass
- * header, so the screen reads as one surface"; mockups in Storage2/mockups/2026-11-09-chat-edge): an edge-to-edge
- * chat frame. At rest its first row lies wholly below the bar; scrolled, the content runs on behind the status bar
- * and the bar: blurred there in Glass (liquid and frosted), under the page's ground with a soft fade in the other
- * styles, and that ground only while something lies under it.
+ * Chat edge (owner's pick 2026-11-09, option A, amended 2026-11-14 after the owner's "Wtfff" screenshot): an
+ * edge-to-edge chat frame. At rest its first row lies wholly below the bar; scrolled, nothing of the content shows under
+ * the status bar or the bar in Glass (liquid and frosted) and it fades in over 12 dp below the bar; the other styles lay
+ * the page's ground there with a soft fade, and that ground only while something lies under it.
  */
 class ChatEdgeATest {
     /** Desktop with the lens and a blur, whose liquid panes draw their backdrop blurred, as Android's lens does. */
@@ -95,7 +94,7 @@ class ChatEdgeATest {
 
     /** A chat frame: [rows] bright rows ([gap] dp apart) in a list scrolled to [first], a 56 dp bar, a 96 dp block. */
     @Composable
-    private fun Scene(rows: Int, first: Int, gap: Dp) {
+    private fun Scene(rows: Int, first: Int, gap: Dp, paint: Boolean = true) {
         CompositionLocalProvider(LocalKitScreenInsets provides WindowInsets(top = STATUS_DP.dp, bottom = NAV_DP.dp)) {
             Box(Modifier.size(W.dp, H.dp).testTag("scene")) {
                 val source = rememberKitFrostState()
@@ -115,7 +114,11 @@ class ChatEdgeATest {
                         modifier = Modifier.fillMaxSize().kitFrostSource(source).testTag("list"),
                     ) {
                         items(rows) { i ->
-                            Box(Modifier.fillMaxWidth().height(ROW_DP.dp).padding(bottom = gap).background(Color.White).testTag("row-$i"))
+                            Box(
+                                Modifier.fillMaxWidth().height(ROW_DP.dp).padding(bottom = gap)
+                                    .then(if (paint) Modifier.background(Color.White) else Modifier)
+                                    .testTag("row-$i")
+                            )
                         }
                     }
                 }
@@ -125,13 +128,13 @@ class ChatEdgeATest {
 
     private class Shot(val image: PixelMap, val bar: androidx.compose.ui.unit.DpRect, val row0: androidx.compose.ui.unit.DpRect?)
 
-    private fun shot(appearance: KitAppearance, platform: KitPlatform, rows: Int = 60, first: Int = 0, gap: Dp = 8.dp, ground: ((Color) -> Color)? = null): Shot {
+    private fun shot(appearance: KitAppearance, platform: KitPlatform, rows: Int = 60, first: Int = 0, gap: Dp = 8.dp, ground: ((Color) -> Color)? = null, paint: Boolean = true): Shot {
         lateinit var shot: Shot
         runDesktopComposeUiTest((W * D).toInt(), (H * D).toInt()) {
             setContent {
                 CompositionLocalProvider(LocalDensity provides Density(D)) {
                     KitTheme(appearance = appearance, platform = platform, localeTag = "en", stillFrame = true) {
-                        if (ground == null) Scene(rows, first, gap)
+                        if (ground == null) Scene(rows, first, gap, paint)
                         else {
                             // A busy picture behind a see-through ground, for "no band at rest".
                             Box(Modifier.size(W.dp, H.dp).drawBehind { stripes() }) {
@@ -163,15 +166,6 @@ class ChatEdgeATest {
 
     private fun luma(c: Color): Float = (0.2126f * c.red + 0.7152f * c.green + 0.0722f * c.blue) * 255f
 
-    /** Brightness down column [xDp] from [fromDp] to [toDp]: the mean, the spread and the steepest row-to-row step. */
-    private fun column(image: PixelMap, xDp: Float, fromDp: Float, toDp: Float): Triple<Float, Float, Float> {
-        val x = (xDp * D).roundToInt().coerceIn(0, image.width - 1)
-        val ys = ((fromDp * D).roundToInt() until (toDp * D).roundToInt()).filter { it in 0 until image.height }
-        val l = ys.map { luma(image[x, it]) }
-        val step = l.zipWithNext { a, b -> abs(a - b) }.maxOrNull() ?: 0f
-        return Triple(l.average().toFloat(), (l.maxOrNull() ?: 0f) - (l.minOrNull() ?: 0f), step)
-    }
-
     private fun dark(style: Style, look: GlassLookId = GlassLookId.Glossy) =
         KitAppearance(style = style, mode = AppearanceMode.Dark, glassLook = look)
 
@@ -193,26 +187,45 @@ class ChatEdgeATest {
         }
     }
 
+    /**
+     * Owner 2026-11-14 ("Wtfff": transcript text under the bar showed as a blurred band inside its lower edge), the
+     * coordinator's option A for chat edge: scrolled, nothing of the content is drawn under the status bar or the bar,
+     * through its glass or beside it, and it fades in over 12 dp below the bar. Was: "the content blurs behind the
+     * status bar and the bar" (chat edge A, 2026-11-09). Compared with the same scene whose rows draw nothing.
+     */
     @Test
-    fun `E20-S30 scrolled under liquid and frosted Glass the content blurs behind the status bar and the bar`() {
+    fun `E20-S30 scrolled under liquid and frosted Glass nothing of the content shows under the status bar or the bar, and it fades in below it`() {
         for ((what, appearance) in listOf("liquid" to dark(Style.Glass), "frosted" to dark(Style.Glass, GlassLookId.Frosted))) {
-            val s = shot(appearance, LensPlatform(), first = 8)
-            val ground = luma(s.image[(W * D / 2).toInt(), ((H - NAV_DP - 2) * D).toInt()])
-            // Under the status bar, where it is all blur: the rows show, as a blur (no sharp edge between a row and its gap).
-            val (statusMean, _, statusStep) = column(s.image, W / 2f, 1f, STATUS_DP * STATUS_EDGE_SOLID_SHARE - 1f)
-            assertTrue(statusMean >= ground + 25f, "$what: content under the status bar, mean $statusMean over ground $ground")
-            assertTrue(statusStep <= BLUR_STEP, "$what: blurred under the status bar, a step of $statusStep")
-            println("$what: status mean $statusMean step $statusStep, ground $ground")
-            // In the bar's capsule: the rows show through its glass, blurred.
-            val barFrom = STATUS_DP + 10f
-            val barTo = STATUS_DP + BAR_DP - 10f
-            val (capsuleMean, _, capsuleStep) = column(s.image, W / 2f, barFrom, barTo)
-            assertTrue(capsuleMean >= ground + 15f, "$what: content behind the bar's glass, mean $capsuleMean over ground $ground")
-            assertTrue(capsuleStep <= BLUR_STEP, "$what: blurred behind the bar's glass, a step of $capsuleStep")
-            println("$what: capsule mean $capsuleMean step $capsuleStep")
-            // Beside the capsule (its 6 dp margin) the rows run on as they are: one surface, nothing cleared.
-            val (_, sideSpread, _) = column(s.image, 2f, barFrom, barTo)
-            assertTrue(sideSpread >= 120f, "$what: the rows run on beside the bar, spread $sideSpread")
+            val s = shot(appearance, LensPlatform(), first = 8, gap = 0.dp)
+            val none = shot(appearance, LensPlatform(), first = 8, gap = 0.dp, paint = false)
+            val barBottom = s.bar.bottom.value
+            // Under the status bar, in the capsule and beside it: the same picture as with no rows at all.
+            var worst = 0f
+            var at = ""
+            for (y in 0 until ((barBottom - .5f) * D).toInt()) for (x in 0 until s.image.width) {
+                val d = abs(luma(s.image[x, y]) - luma(none.image[x, y]))
+                if (d > worst) {
+                    worst = d
+                    at = "(${x / D}, ${y / D}) dp"
+                }
+            }
+            assertTrue(worst <= CLEAR_MAX, "$what: the rows show under the chrome, $worst of 255 at $at (bar bottom $barBottom dp)")
+            // Below the bar, beside the middle: the rows come in over 12 dp in steps, whole past it.
+            val x = (W * D / 4).toInt()
+            val full = abs(luma(s.image[x, ((barBottom + 20) * D).toInt()]) - luma(none.image[x, ((barBottom + 20) * D).toInt()]))
+            val ramp = (0..((HEADER_FADE_DP + 2) * D).toInt()).map { k ->
+                val y = (barBottom * D).toInt() + k
+                abs(luma(s.image[x, y]) - luma(none.image[x, y]))
+            }
+            println("$what: full $full ramp ${ramp.map { it.toInt() }}")
+            assertTrue(full >= 150f, "$what: the rows are whole 20 dp below the bar, $full")
+            assertTrue(ramp.first() <= CLEAR_MAX, "$what: nothing of the rows at the bar's bottom edge, ${ramp.first()}")
+            assertTrue(ramp.last() >= full * .9f, "$what: the rows are whole by ${HEADER_FADE_DP + 2} dp below the bar, ${ramp.last()} of $full")
+            assertTrue(ramp.zipWithNext().all { (a, b) -> b >= a - 2f }, "$what: the rows come in without a dip: ${ramp.map { it.toInt() }}")
+            val levels = ramp.filter { it > CLEAR_MAX && it < full * .9f }.map { (it / 8f).toInt() }.distinct()
+            assertTrue(levels.size >= 4, "$what: a soft fade, not a cut: ${levels.size} steps in ${ramp.map { it.toInt() }}")
+            val maxStep = ramp.zipWithNext().maxOf { (a, b) -> abs(b - a) }
+            assertTrue(maxStep <= full / 6f, "$what: no hard step in the fade, $maxStep of $full")
         }
     }
 
@@ -350,7 +363,7 @@ class ChatEdgeATest {
         const val ROW_DP = 32
         const val LENS_BLUR_DP = 6f
 
-        /** The most brightness may step between two rows where the content is blurred (a sharp row edge is ~200). */
-        const val BLUR_STEP = 24f
+        /** Where nothing of the content may show: at most this brightness of 255 against the scene with no rows. */
+        const val CLEAR_MAX = 3f
     }
 }

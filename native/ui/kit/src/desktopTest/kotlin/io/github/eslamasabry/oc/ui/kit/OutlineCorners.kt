@@ -35,10 +35,11 @@ internal object OutlineCorners {
     private val corners = listOf("top-start" to (-1 to -1), "top-end" to (1 to -1), "bottom-start" to (-1 to 1), "bottom-end" to (1 to 1))
 
     /** The corners, with the angles of their rays that found no outline; empty when the outline is whole. */
-    fun gaps(image: PixelMap, box: Rect, density: Float, outsideAt: Pair<Int, Int>? = null): List<String> {
+    fun gaps(image: PixelMap, box: Rect, density: Float, outsideAt: Pair<Int, Int>? = null, bandDp: Float = BAND_DP): List<String> {
         val ground = outsideAt?.let { (x, y) -> rgb(image, x, y) }
         val inner = minOf(INNER_DP * density, box.width / 2f, box.height / 2f)
-        val band = BAND_DP * density
+        // A part narrower than the band (the dock's 8 dp tab) asks for a narrower one, so its middle reads as inside.
+        val band = bandDp * density
         val outside = OUTSIDE_DP * density
         val out = mutableListOf<String>()
         for ((name, signs) in corners) {

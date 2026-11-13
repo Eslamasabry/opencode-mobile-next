@@ -3,6 +3,7 @@
 package io.github.eslamasabry.oc.ui.kitchat.composer
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -34,6 +35,8 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onAllNodesWithTag
+import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.performScrollToIndex
 import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import androidx.compose.ui.unit.Density
@@ -58,6 +61,8 @@ import io.github.eslamasabry.oc.ui.kit.foundation.kitFrostSource
 import io.github.eslamasabry.oc.ui.kit.foundation.rememberKitFrostState
 import io.github.eslamasabry.oc.ui.kit.frame.KitReportBottomSlab
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
+import io.github.eslamasabry.oc.ui.kit.frame.KitJumpEdge
+import io.github.eslamasabry.oc.ui.kit.frame.kitScreenFloat
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
@@ -75,6 +80,8 @@ import kotlin.math.abs
 import kotlin.math.roundToInt
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.assertSame
 import kotlin.test.assertTrue
 
@@ -136,6 +143,18 @@ class ChatWordsGlassTest {
         val list: String,
         /** Whether the bottom block saw the screen's own recording (the frame handed it nothing else). */
         val bottomSawSource: Boolean,
+        /** Whether the bottom block saw any recording at all. */
+        val bottomSawSome: Boolean = false,
+        /** The whole bottom block, its padding inside. */
+        val block: DpRect? = null,
+        /** The jump pill's face (its glass), when it shows. */
+        val pillFace: DpRect? = null,
+        /** The "N earlier messages" chip under the bar (a scene with it), else null. */
+        val earlier: DpRect? = null,
+        /** How many phrase rows are laid out. */
+        val chipRows: Int = 0,
+        /** How many panes are drawn as one joined body of glass (the box and the pill). */
+        val joined: Int = 0,
     )
 
     private fun dark(style: Style, look: GlassLookId = GlassLookId.Glossy) =
@@ -146,7 +165,17 @@ class ChatWordsGlassTest {
      * that draw nothing) scrolled well away from the newest so it runs under the bar and the message box, and the box.
      */
     @Composable
-    private fun Scene(bright: Boolean, notice: Boolean, seen: Array<Any?>, lazy: Array<LazyListState?>, statusDp: Int, card: Boolean = false, chips: Boolean = false) {
+    private fun Scene(
+        bright: Boolean,
+        notice: Boolean,
+        seen: Array<Any?>,
+        lazy: Array<LazyListState?>,
+        statusDp: Int,
+        card: Boolean = false,
+        chips: Boolean = false,
+        outlined: Boolean = false,
+        earlier: Boolean = false,
+    ) {
         CompositionLocalProvider(LocalKitScreenInsets provides WindowInsets(top = statusDp.dp, bottom = NAV_DP.dp)) {
             Box(Modifier.size(W.dp, H.dp).testTag("scene")) {
                 val source = rememberKitFrostState()
@@ -206,19 +235,49 @@ class ChatWordsGlassTest {
                             items((0 until ROWS).map { "row-$it" }, key = { it }) { key ->
                                 Box(
                                     Modifier.fillMaxWidth()
-                                        .height(ROW_DP.dp)
-                                        .then(if (bright) Modifier.background(Color.White) else Modifier)
+                                        .height(if (outlined) CODE_DP.dp else ROW_DP.dp)
+                                        .then(
+                                            when {
+                                                !bright -> Modifier
+                                                // A code block: its outline only, the words inside it left out.
+                                                outlined ->
+                                                    Modifier.padding(horizontal = 12.dp)
+                                                        .border(1.dp, Color.White, androidx.compose.foundation.shape.RoundedCornerShape(12.dp))
+                                                else -> Modifier.background(Color.White)
+                                            }
+                                        )
                                         .testTag(key)
                                 )
                             }
                         }
+                        if (earlier)
+                            io.github.eslamasabry.oc.ui.kit.chip.KitChip(
+                                "40 earlier messages",
+                                onClick = {},
+                                modifier =
+                                    Modifier.align(Alignment.TopCenter)
+                                        .padding(top = 8.dp + io.github.eslamasabry.oc.ui.kit.frame.kitScreenChromePadding().calculateTopPadding())
+                                        .kitScreenFloat(KitJumpEdge.Top)
+                                        .testTag("earlier"),
+                            )
                     }
                 }
             }
         }
     }
 
-    private fun shot(appearance: KitAppearance, platform: KitPlatform, bright: Boolean, notice: Boolean = false, statusDp: Int = STATUS_DP, card: Boolean = false, chips: Boolean = false): Shot {
+    private fun shot(
+        appearance: KitAppearance,
+        platform: KitPlatform,
+        bright: Boolean,
+        notice: Boolean = false,
+        statusDp: Int = STATUS_DP,
+        card: Boolean = false,
+        chips: Boolean = false,
+        outlined: Boolean = false,
+        earlier: Boolean = false,
+        scrollTo: Int = SCROLLED_TO,
+    ): Shot {
         lateinit var shot: Shot
         runDesktopComposeUiTest((W * D).toInt(), (H * D).toInt()) {
             val seen = arrayOfNulls<Any?>(2)
@@ -226,12 +285,15 @@ class ChatWordsGlassTest {
             setContent {
                 CompositionLocalProvider(LocalDensity provides Density(D)) {
                     KitTheme(appearance = appearance, platform = platform, localeTag = "en", stillFrame = true) {
-                        Scene(bright, notice, seen, lazy, statusDp, card, chips)
+                        Scene(bright, notice, seen, lazy, statusDp, card, chips, outlined, earlier)
                     }
                 }
             }
             waitForIdle()
-            onNodeWithTag("transcript-list").performScrollToIndex(SCROLLED_TO)
+            onNodeWithTag("transcript-list").performScrollToIndex(scrollTo)
+            waitForIdle()
+            // The phrase row folding, the pill rising out of the box, the page's edges easing to their new place.
+            mainClock.advanceTimeBy(1_000)
             waitForIdle()
             val l = lazy[0]!!
             val visible = l.layoutInfo.visibleItemsInfo.map { it.key }
@@ -252,10 +314,18 @@ class ChatWordsGlassTest {
                     pill = boundsOrNull("jump-to-latest"),
                     bar = bounds("bar"),
                     label = if (card) bounds("decision-label") else null,
-                    chip = if (chips) bounds("chat-phrase-chips") else null,
+                    chip = if (chips) boundsOrNull("chat-phrase-chips") else null,
                     rows = visible.map { bounds(it.toString()) },
                     list = list,
                     bottomSawSource = seen[0] === seen[1],
+                    bottomSawSome = seen[0] != null,
+                    block = bounds("kit-screen-bottom"),
+                    pillFace = boundsOrNull("kit-jump-pill-veiled"),
+                    earlier = if (earlier) bounds("earlier") else null,
+                    chipRows = onAllNodesWithTag("chat-phrase-chips", useUnmergedTree = true).fetchSemanticsNodes().size,
+                    joined =
+                        onAllNodes(SemanticsMatcher.keyIsDefined(io.github.eslamasabry.oc.ui.kit.effects.KitLiquidJoined), useUnmergedTree = true)
+                            .fetchSemanticsNodes().size,
                 )
         }
         return shot
@@ -286,24 +356,120 @@ class ChatWordsGlassTest {
         return (if (n == 0) 0f else sum / n) to max
     }
 
+    /**
+     * Owner 2026-11-14 ("Wtfff": "Jump to latest" sat on a code block's words and bent them; a smear of bent transcript
+     * along the message box's top edge): reading history, nothing of the transcript shows in the bottom block (the box
+     * and its rim included) or behind the jump pill, at any scroll offset; it fades out above them over 16 dp in steps.
+     */
     @Test
-    fun `a bright row under the message box adds nothing where its words sit and still shows at its top edge`() {
-        val bright = shot(dark(Style.Glass), LensPlatform(), bright = true)
-        val none = shot(dark(Style.Glass), LensPlatform(), bright = false)
-        val box = bright.box
-        // The rows really run under the box (the transcript is scrolled away, so nothing rests above it).
-        assertTrue(bright.rows.any { it.bottom > box.top + 40.dp }, "rows under the box: ${bright.rows.map { it.top..it.bottom }} box $box")
-        // Where the placeholder and the typed words sit: the words' own line, across the whole field.
-        val (wordsMean, wordsMax) =
-            diff(bright.image, none.image, bright.field.left.value, bright.placeholder.top.value, bright.field.right.value, bright.placeholder.bottom.value)
-        println("words: mean $wordsMean max $wordsMax over ${bright.field.left}..${bright.field.right} x ${bright.placeholder.top}..${bright.placeholder.bottom}, box $box")
-        assertTrue(wordsMean <= WORDS_MEAN && wordsMax <= WORDS_MAX, "bright rows show behind the placeholder: mean $wordsMean, max $wordsMax of 255")
-        // At the box's top edge, beside the jump pill: the glass still bends real content.
-        val left = box.left.value + 12f
-        val right = box.left.value + (box.right - box.left).value / 4f
-        val (edgeMean, _) = diff(bright.image, none.image, left, box.top.value + 1f, right, box.top.value + 5f)
-        println("top edge: mean $edgeMean")
-        assertTrue(edgeMean >= EDGE_MEAN, "the box's top edge shows nothing of the rows behind it: mean $edgeMean of 255")
+    fun `B-CHAT-COL-01 nothing of the transcript shows in the bottom block or behind the jump pill, and it fades out above them`() {
+        for (at in listOf(SCROLLED_TO, SCROLLED_TO + 7)) {
+            val bright = shot(dark(Style.Glass), LensPlatform(), bright = true, scrollTo = at)
+            val none = shot(dark(Style.Glass), LensPlatform(), bright = false, scrollTo = at)
+            val block = bright.block!!
+            val face = assertNotNull(bright.pillFace, "scrolled to $at: the jump pill shows")
+            assertTrue(bright.rows.any { it.bottom > block.top + 40.dp }, "scrolled to $at: rows lie under the block: ${bright.rows.map { it.top..it.bottom }} block $block")
+            // The whole block, its rim and its margins.
+            val (blockMean, blockMax) = diff(bright.image, none.image, 0f, block.top.value, W.toFloat(), H.toFloat())
+            println("scrolled to $at: block mean $blockMean max $blockMax over $block, pill $face")
+            assertTrue(
+                blockMean <= WORDS_MEAN && blockMax <= WORDS_MAX,
+                "scrolled to $at: the rows show in the bottom block: mean $blockMean, max $blockMax\n" + map(bright.image, none.image, 0f, block.top.value - 40f, W.toFloat(), H.toFloat()),
+            )
+            // The pill's face: nothing of a row behind it, through its glass or around it.
+            val (pillMean, pillMax) = diff(bright.image, none.image, face.left.value - 4f, face.top.value - 4f, face.right.value + 4f, face.bottom.value)
+            assertTrue(pillMean <= WORDS_MEAN && pillMax <= WORDS_MAX, "scrolled to $at: the rows show behind the jump pill: mean $pillMean, max $pillMax")
+            // Above them, beside the pill: whole, then a soft fade in steps, then gone before the pill's top.
+            val gone = minOf(block.top.value, face.top.value)
+            assertFadesOut(bright.image, none.image, x = 8f, from = gone - 40f, to = gone, what = "scrolled to $at")
+        }
+    }
+
+    /**
+     * Down column [x] dp from [from] to [to] dp the bright scene goes from whole to nothing over a soft fade: whole at
+     * the start, nothing by [to], at least four levels between, no hard step.
+     */
+    private fun assertFadesOut(a: PixelMap, b: PixelMap, x: Float, from: Float, to: Float, what: String) {
+        val px = (x * D).roundToInt()
+        val ramp = ((from * D).roundToInt()..(to * D).roundToInt()).map { y -> abs(luma(a[px, y]) - luma(b[px, y])) }
+        val full = ramp.first()
+        println("$what: fade ${ramp.map { it.toInt() }}")
+        assertTrue(full >= 150f, "$what: the rows are whole $from dp: $full")
+        assertTrue(ramp.last() <= WORDS_MAX, "$what: nothing of the rows at $to dp: ${ramp.last()}")
+        assertTrue(ramp.zipWithNext().all { (p, q) -> q <= p + 2f }, "$what: the rows go without coming back: ${ramp.map { it.toInt() }}")
+        val levels = ramp.filter { it > WORDS_MAX && it < full * .9f }.map { (it / 8f).toInt() }.distinct()
+        assertTrue(levels.size >= 4, "$what: a soft fade, not a cut: ${ramp.map { it.toInt() }}")
+        assertTrue(ramp.zipWithNext().maxOf { (p, q) -> abs(q - p) } <= full / 6f, "$what: a hard step in the fade: ${ramp.map { it.toInt() }}")
+    }
+
+    /** Owner 2026-11-14: the code block was cut at its words but its outline ran on. A clearing hides everything. */
+    @Test
+    fun `B-CHAT-COL-02 a code block passing the bottom edge loses its outline with its words`() {
+        val bright = shot(dark(Style.Glass), LensPlatform(), bright = true, outlined = true)
+        val none = shot(dark(Style.Glass), LensPlatform(), bright = false, outlined = true)
+        val block = bright.block!!
+        assertTrue(bright.rows.any { it.top < block.top && it.bottom > block.top }, "a code block crosses the block's top: ${bright.rows.map { it.top..it.bottom }} block $block")
+        // Its two side lines, from the block's top down.
+        for (x in listOf(12f, 13f, W - 13f, W - 12f)) {
+            val (mean, max) = diff(bright.image, none.image, x - 1f, block.top.value, x + 1f, H.toFloat())
+            assertTrue(mean <= WORDS_MEAN && max <= WORDS_MAX, "the code block's outline runs on at $x dp under the block: mean $mean, max $max")
+        }
+        // Above the fade it is there.
+        val (above, _) = diff(bright.image, none.image, 11f, block.top.value - 120f, 14f, block.top.value - 60f)
+        assertTrue(above >= 20f, "the code block's outline shows above the bottom block: $above")
+    }
+
+    /**
+     * Owner 2026-11-14 ("Why did you unlink jump to latest from the composer it was good already!!"): reading history
+     * with a phrase row above the box, the row folds away and the pill is a drop of the message box, one body of glass;
+     * at the newest message the chips are back and the pill is gone.
+     */
+    @Test
+    fun `B-CHAT-COL-03 reading history the phrase row folds away and the pill joins the box, at the newest message the chips return`() {
+        val away = shot(dark(Style.Glass), LensPlatform(), bright = true, chips = true)
+        println("away: chips ${away.chipRows} joined ${away.joined} pill ${away.pill} face ${away.pillFace} box ${away.box}")
+        assertEquals(0, away.chipRows, "no phrase row is laid out while reading history")
+        assertEquals(2, away.joined, "the box and the pill are one body of glass")
+        val face = assertNotNull(away.pillFace)
+        assertTrue(face.bottom > away.box.top, "the pill rests sunk into the box: face $face box ${away.box}")
+        val latest = shot(dark(Style.Glass), LensPlatform(), bright = true, chips = true, scrollTo = 0)
+        println("latest: chips ${latest.chipRows} joined ${latest.joined} pill ${latest.pillFace}")
+        assertEquals(1, latest.chipRows, "the phrase row is back at the newest message")
+        assertNull(latest.pillFace, "no pill at the newest message")
+    }
+
+    /**
+     * A decision waiting above the box: the pill stays clear of the card, not joined, in the faded zone above the block,
+     * with nothing of the transcript behind it.
+     */
+    @Test
+    fun `B-CHAT-COL-04 with a request card above the box the pill stands apart over no words`() {
+        val bright = shot(dark(Style.Glass), LensPlatform(), bright = true, card = true)
+        val none = shot(dark(Style.Glass), LensPlatform(), bright = false, card = true)
+        val face = assertNotNull(bright.pillFace, "the pill shows")
+        assertEquals(0, bright.joined, "the pill is not joined to the box under the card")
+        assertTrue(face.bottom <= bright.block!!.top, "the pill sits above the block: $face block ${bright.block}")
+        val (mean, max) = diff(bright.image, none.image, face.left.value - 4f, face.top.value - 4f, face.right.value + 4f, face.bottom.value + 4f)
+        println("pill over card: mean $mean max $max at $face")
+        assertTrue(mean <= WORDS_MEAN && max <= WORDS_MAX, "the rows show behind the pill: mean $mean, max $max")
+        assertFadesOut(bright.image, none.image, x = 8f, from = face.top.value - 40f, to = face.top.value, what = "over the card")
+    }
+
+    /** Owner 2026-11-14: "40 earlier messages" sat on a line of the transcript. */
+    @Test
+    fun `B-CHAT-COL-05 nothing of the transcript shows behind N earlier messages, and it fades in below it`() {
+        val bright = shot(dark(Style.Glass), LensPlatform(), bright = true, earlier = true)
+        val none = shot(dark(Style.Glass), LensPlatform(), bright = false, earlier = true)
+        val chip = bright.earlier!!
+        val (mean, max) = diff(bright.image, none.image, 0f, 0f, W.toFloat(), chip.bottom.value)
+        println("earlier: mean $mean max $max at $chip, bar ${bright.bar}")
+        assertTrue(mean <= WORDS_MEAN && max <= WORDS_MAX, "the rows show above or behind the earlier-messages chip: mean $mean, max $max\n" + map(bright.image, none.image, 0f, 0f, W.toFloat(), chip.bottom.value + 24f))
+        // Below it the rows come back over 12 dp, as below the bar: read the fade upward.
+        val px = (8f * D).roundToInt()
+        val ramp = ((chip.bottom.value * D).roundToInt()..((chip.bottom.value + 16f) * D).roundToInt()).map { y -> abs(luma(bright.image[px, y]) - luma(none.image[px, y])) }
+        println("earlier fade ${ramp.map { it.toInt() }}")
+        assertTrue(ramp.first() <= WORDS_MAX && ramp.last() >= 150f, "the rows fade in below the chip: ${ramp.map { it.toInt() }}")
+        assertTrue(ramp.filter { it > WORDS_MAX && it < ramp.last() * .9f }.map { (it / 8f).toInt() }.distinct().size >= 4, "a soft fade: ${ramp.map { it.toInt() }}")
     }
 
     @Test
@@ -325,8 +491,9 @@ class ChatWordsGlassTest {
 
     @Test
     fun `a bright row never shows behind the phrase chips above the box`() {
-        val bright = shot(dark(Style.Glass), LensPlatform(), bright = true, chips = true)
-        val none = shot(dark(Style.Glass), LensPlatform(), bright = false, chips = true)
+        // Near the newest message (the row shows; reading history it folds away).
+        val bright = shot(dark(Style.Glass), LensPlatform(), bright = true, chips = true, scrollTo = 3)
+        val none = shot(dark(Style.Glass), LensPlatform(), bright = false, chips = true, scrollTo = 3)
         val chip = bright.chip!!
         assertTrue(chip.top < bright.box.top, "the chips lie above the box: $chip box ${bright.box}")
         // The chip's own face lies at the row's start; its label is at its middle.
@@ -335,24 +502,20 @@ class ChatWordsGlassTest {
         assertTrue(mean <= WORDS_MEAN && max <= WORDS_MAX, "bright rows show behind the phrase chip: mean $mean, max $max of 255")
     }
 
+    /**
+     * Owner 2026-11-14 ("Wtfff": transcript text ran up under the bar and showed inside its lower edge as a blurred band):
+     * nothing of the transcript shows under the status bar or the bar, its rim included; it fades in over 12 dp below.
+     * Was: "...and still shows in the bar's rim".
+     */
     @Test
-    fun `a bright row never shows behind the chat bar's title, and still shows in the bar's rim`() {
+    fun `a bright row never shows under the status bar or the chat bar, its rim included`() {
         val bright = shot(dark(Style.Glass), LensPlatform(), bright = true)
         val none = shot(dark(Style.Glass), LensPlatform(), bright = false)
         val bar = bright.bar
-        // The bar's pane lies 4 dp in from the bar's top and bottom; its rim is 22 dp (40 % of its 48 dp is 19 dp).
-        val paneBottom = bar.bottom.value - 4f
-        val rim = minOf(22f, 0.4f * (bar.bottom - bar.top).value)
-        val clearTo = paneBottom - rim - 1f
         assertTrue(bright.rows.any { it.top < bar.top }, "rows run under the bar: ${bright.rows.map { it.top..it.bottom }} bar $bar")
-        // The bar's title line, below the status edge (which keeps its blur of the page: chat edge A).
-        val (mean, max) = diff(bright.image, none.image, bar.left.value + 30f, bar.top.value + STATUS_EDGE_DP, bar.right.value - 30f, clearTo)
-        println("bar words: mean $mean max $max over 0..$clearTo, bar $bar")
-        assertTrue(mean <= WORDS_MEAN && max <= WORDS_MAX, "bright rows show behind the bar's title: mean $mean, max $max of 255\n" + map(bright.image, none.image, 0f, 0f, bar.right.value, bar.bottom.value))
-        // In the rim above the bar's bottom edge the glass still bends real rows.
-        val (edge, _) = diff(bright.image, none.image, bar.left.value + 40f, paneBottom - 8f, bar.right.value - 40f, paneBottom - 3f)
-        println("bar rim: mean $edge")
-        assertTrue(edge >= EDGE_MEAN, "the bar's rim shows nothing of the rows: mean $edge of 255")
+        val (mean, max) = diff(bright.image, none.image, 0f, 0f, W.toFloat(), bar.bottom.value)
+        println("bar: mean $mean max $max, bar $bar")
+        assertTrue(mean <= WORDS_MEAN && max <= WORDS_MAX, "bright rows show under the chrome: mean $mean, max $max of 255\n" + map(bright.image, none.image, 0f, 0f, bar.right.value, bar.bottom.value + 16f))
     }
 
     @Test
@@ -385,17 +548,22 @@ class ChatWordsGlassTest {
         assertEquals(frosted.pill, lens.pill, "the jump pill's place")
     }
 
+    /**
+     * Owner 2026-11-14: a clearing hides everything it covers. In every style the bottom block's glass (and the pill's)
+     * sees the screen's recording cleared as the page shows it, never the whole recording. Was: "outside liquid Glass
+     * the bottom block sees the screen's own recording".
+     */
     @Test
-    fun `outside liquid Glass the bottom block sees the screen's own recording`() {
+    fun `in every style the bottom block sees the recording cleared as the page shows it`() {
         val cases =
-            Style.entries.filter { it != Style.Glass }.map { "$it" to (dark(it) to (DesktopKitPlatform() as KitPlatform)) } +
+            Style.entries.map { "$it" to (dark(it) to (DesktopKitPlatform() as KitPlatform)) } +
                 listOf(
-                    "Glass, no lens on the platform" to (dark(Style.Glass) to (DesktopKitPlatform() as KitPlatform)),
                     "Glass, Frosted look" to (dark(Style.Glass, GlassLookId.Frosted) to (LensPlatform() as KitPlatform)),
+                    "Glass, lens" to (dark(Style.Glass) to (LensPlatform() as KitPlatform)),
                 )
         for ((what, case) in cases) {
             val s = shot(case.first, case.second, bright = true, notice = true)
-            assertTrue(s.bottomSawSource, "$what: the bottom block saw something other than the screen's recording")
+            assertTrue(s.bottomSawSome && !s.bottomSawSource, "$what: the bottom block saw the whole recording")
         }
     }
 
@@ -529,6 +697,9 @@ class ChatWordsGlassTest {
         const val ROW_DP = 40
         const val LABEL_DP = 64
 
+        /** A code block's height in the outlined scene. */
+        const val CODE_DP = 160
+
         /** The status edge's dissolve reaches this far under the bar's top (24 dp inset plus its blur's reach). */
         const val STATUS_EDGE_DP = 10f
         const val ROWS = 60
@@ -542,9 +713,6 @@ class ChatWordsGlassTest {
         /** Behind the words: at most this much brightness of 255 from the rows, on average and at any one pixel. */
         const val WORDS_MEAN = 2f
         const val WORDS_MAX = 8f
-
-        /** At the box's top edge the rows still show through the glass: at least this much on average. */
-        const val EDGE_MEAN = 20f
 
         /** Inside the notice line: nothing of the rows. */
         const val NOTICE_MEAN = 1f
