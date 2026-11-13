@@ -14,7 +14,7 @@ class LiquidMenuFrostTest {
         for (dark in listOf(true, false)) {
             val menu = LiquidEdge.recipe(LiquidRole.Menu, dark)
             val sheet = LiquidEdge.recipe(LiquidRole.Sheet, dark)
-            assertEquals(12f, menu.blurDp, "menu blur dark=$dark")
+            assertEquals(LiquidEdge.DECISION_BLUR_DP, menu.blurDp, "menu blur dark=$dark")
             assertEquals(sheet.blurDp, menu.blurDp)
             assertEquals(48f, menu.refractionDp, "menu bend dark=$dark")
             assertEquals(26f, menu.rimMaxDp, "menu rim dark=$dark")
@@ -43,7 +43,7 @@ class LiquidMenuFrostTest {
             assertEquals(1f, LiquidEdge.recipe(LiquidRole.Pill, dark).blurDp)
             assertEquals(1f, LiquidEdge.recipe(LiquidRole.Status, dark).blurDp)
             assertEquals(1f, LiquidEdge.recipe(LiquidRole.Action, dark).blurDp)
-            assertEquals(12f, LiquidEdge.recipe(LiquidRole.Sheet, dark).blurDp)
+            assertEquals(LiquidEdge.DECISION_BLUR_DP, LiquidEdge.recipe(LiquidRole.Sheet, dark).blurDp)
         }
     }
 }

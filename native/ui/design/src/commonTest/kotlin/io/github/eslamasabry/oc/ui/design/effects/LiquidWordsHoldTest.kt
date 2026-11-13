@@ -19,7 +19,7 @@ class LiquidWordsHoldTest {
         for (dark in listOf(true, false)) {
             val menu = LiquidEdge.recipe(LiquidRole.Menu, dark)
             val sheet = LiquidEdge.recipe(LiquidRole.Sheet, dark)
-            assertEquals(12f, menu.blurDp, "menu blur dark=$dark")
+            assertEquals(LiquidEdge.DECISION_BLUR_DP, menu.blurDp, "menu blur dark=$dark")
             assertEquals(sheet.blurDp, menu.blurDp)
             assertEquals(48f, menu.refractionDp, "menu bend dark=$dark")
             assertEquals(26f, menu.rimMaxDp, "menu rim dark=$dark")
@@ -63,7 +63,9 @@ class LiquidWordsHoldTest {
         // After the colour controls at 1.6 (what the knee sees): pure green stays (0,1,0); orange (1,.5,0) becomes (1,.458,0).
         val green = floatArrayOf(0f, 1f, 0f)
         val orange = floatArrayOf(1f, .458f, 0f)
+        // The joined bar's knee alone (what the menu wore until 2026-11-13), and the menu's own knee without its colour limit.
         val knee = LiquidHold(true, 0f)
+        val ownKnee = hold.copy(chroma = 0f)
         val greenKnee = chroma(LiquidEdge.heldRgb(green, true, knee))
         val greenHeld = chroma(LiquidEdge.heldRgb(green, true, hold))
         val orangeKnee = chroma(LiquidEdge.heldRgb(orange, true, knee))
@@ -72,9 +74,9 @@ class LiquidWordsHoldTest {
         assertTrue(greenHeld <= 1f / 3f && orangeHeld <= 1f / 3f, "at most a third of today's chroma: green $greenHeld orange $orangeHeld")
         assertTrue(greenKnee > 1f / 3f && orangeKnee > 1f / 3f, "the knee alone leaves more than a third (green $greenKnee orange $orangeKnee)")
         // The rim keeps the knee's colour.
-        close(chroma(LiquidEdge.heldRgb(green, true, hold, inside = 0f)), greenKnee, "rim keeps colour")
+        close(chroma(LiquidEdge.heldRgb(green, true, hold, inside = 0f)), chroma(LiquidEdge.heldRgb(green, true, ownKnee)), "rim keeps colour")
         // Below the knee and below the colour limit nothing changes.
-        val dim = floatArrayOf(.1f, .15f, .1f)
+        val dim = floatArrayOf(.04f, .07f, .05f)
         val out = LiquidEdge.heldRgb(dim, true, hold)
         for (i in 0..2) close(out[i], dim[i], "below the knee: unchanged ($i)", 1e-5f)
     }
@@ -87,7 +89,7 @@ class LiquidWordsHoldTest {
             val out = LiquidEdge.heldRgb(c, ink, hold)
             assertTrue(out.all { it in 0f..1f }, "range for ${c.toList()} ink $ink")
             // Less colour than the knee alone leaves, never more.
-            val knee = LiquidEdge.heldRgb(c, ink, LiquidHold(true, 0f))
+            val knee = LiquidEdge.heldRgb(c, ink, hold.copy(chroma = 0f))
             assertTrue(out.max() - out.min() <= knee.max() - knee.min() + 1e-4f, "more colour than the knee for ${c.toList()} ink $ink")
             // The light is the knee's.
             val l = { x: FloatArray -> 0.213f * x[0] + 0.715f * x[1] + 0.072f * x[2] }

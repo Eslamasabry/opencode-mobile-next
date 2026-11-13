@@ -110,11 +110,12 @@ class KitLiquidHoldShaderTest {
     }
 
     @Test
-    fun `the rim keeps its colour - at the edge of the pane both shaders leave the knee's colour`() {
+    fun `the rim keeps its colour - at the edge of the pane the joined body leaves the knee's colour, the plain pane the page's`() {
         for (rgb in listOf(intArrayOf(0, 255, 0), intArrayOf(255, 128, 0))) {
             val want = LiquidEdge.heldRgb(floatArrayOf(rgb[0] / 255f, rgb[1] / 255f, rgb[2] / 255f), true, LiquidHold(true, 0f))
             close(joinPixel(rgb, knee, LiquidEdge.HOLD_CHROMA, edge), want, "join rim ${rgb.toList()}")
-            close(plainPixel(rgb, knee, LiquidEdge.HOLD_CHROMA, edge), want, "plain rim ${rgb.toList()}")
+            // A sheet's or a menu's rim (2026-11-13): the page as it is, light and colour.
+            close(plainPixel(rgb, knee, LiquidEdge.HOLD_CHROMA, edge), floatArrayOf(rgb[0] / 255f, rgb[1] / 255f, rgb[2] / 255f), "plain rim ${rgb.toList()}")
         }
     }
 

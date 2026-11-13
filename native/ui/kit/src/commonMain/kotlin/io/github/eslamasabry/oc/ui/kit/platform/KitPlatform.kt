@@ -184,7 +184,7 @@ public interface KitPlatform {
         backdrop: io.github.eslamasabry.oc.ui.kit.effects.KitLiquidBackdrop,
         shape: androidx.compose.foundation.shape.CornerBasedShape,
         transform: () -> Float,
-    ): androidx.compose.ui.Modifier = io.github.eslamasabry.oc.ui.kit.effects.kitLiquidStandIn(spec, shape)
+    ): androidx.compose.ui.Modifier = io.github.eslamasabry.oc.ui.kit.effects.kitLiquidStandIn(spec, shape, liveShaders)
 }
 
 /**

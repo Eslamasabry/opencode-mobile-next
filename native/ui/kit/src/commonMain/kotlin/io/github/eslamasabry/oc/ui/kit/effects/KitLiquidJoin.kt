@@ -385,7 +385,7 @@ private class JoinedPaneNode(
                 saturation = recipe.saturation,
                 contrast = recipe.contrast,
                 brightness = recipe.brightness,
-                knee = kneeOf(spec),
+                knee = if (frostsBody) kneeOf(spec, dropSpec!!.recipe.hold, drop!!.content()) else kneeOf(spec, io.github.eslamasabry.oc.ui.design.effects.LiquidHold.Off),
                 hold = if (frostsBody) dropSpec!!.recipe.hold.chroma else 0f,
                 tintMine = tintNow(spec),
                 tintTheirs = tintNow(theirSpec),
@@ -451,12 +451,19 @@ internal fun joinedFrost(body: io.github.eslamasabry.oc.ui.design.effects.Liquid
 
 /**
  * The knee that holds back bright content in [spec]'s lens (LiquidJoin.held): it holds the bright end under light words
- * and lifts the dark end under dark words, following the words' ink flip.
+ * and lifts the dark end under dark words, following the words' ink flip. Where it sits is [hold]'s (a foreground
+ * decision's is lower, LiquidEdge.DECISION_HOLD), moved from the joined body's own ([LiquidJoin.KNEE]) by [t]: a body
+ * joined to a menu takes the menu's knee as the menu's rows come in, the same on both sides, so the seam never steps.
  */
-internal fun kneeOf(spec: KitLiquidPaneSpec): FloatArray {
+internal fun kneeOf(spec: KitLiquidPaneSpec, hold: io.github.eslamasabry.oc.ui.design.effects.LiquidHold = spec.recipe.hold, t: Float = 1f): FloatArray {
     val flipped = (spec.flip?.progress?.value ?: 0f) > .5f
     val lightInk = spec.rimAdds != flipped
-    return floatArrayOf(LiquidJoin.KNEE, LiquidJoin.KNEE_SLOPE, if (lightInk) 1f else 0f)
+    val f = t.coerceIn(0f, 1f)
+    return floatArrayOf(
+        LiquidJoin.KNEE + (hold.kneeAt - LiquidJoin.KNEE) * f,
+        LiquidJoin.KNEE_SLOPE + (hold.kneeSlope - LiquidJoin.KNEE_SLOPE) * f,
+        if (lightInk) 1f else 0f,
+    )
 }
 
 /**
@@ -541,13 +548,14 @@ internal class JoinUniforms(
         p.float4("tintB", tintTheirs.red * tintTheirs.alpha, tintTheirs.green * tintTheirs.alpha, tintTheirs.blue * tintTheirs.alpha, tintTheirs.alpha)
         p.float("rimPx", rimPx)
         p.float("falloff", RIM_FALLOFF)
+        p.float("rimFloor", io.github.eslamasabry.oc.ui.design.effects.RimLight.FLOOR)
     }
 }
 
 private val NO_LIGHT: FloatArray = floatArrayOf(0f, 0f, 1f, 0f)
 
-/** How tightly the rim light gathers at its lit arcs (the library pane's, AndroidLiquidGlass.RIM_FALLOFF). */
-internal const val RIM_FALLOFF: Float = 1.6f
+/** How tightly the rim light gathers at its lit arcs (the plain pane's: RimLight.FALLOFF). */
+internal const val RIM_FALLOFF: Float = io.github.eslamasabry.oc.ui.design.effects.RimLight.FALLOFF
 
 /** The knee switched off (the glass keeps all light). */
 internal val KNEE_OFF: FloatArray = floatArrayOf(1f, 1f, 1f)
@@ -562,7 +570,7 @@ internal val KNEE_OFF: FloatArray = floatArrayOf(1f, 1f, 1f)
 internal object LiquidJoinShader {
     fun source(effect: Boolean): String =
         (if (effect) "uniform shader content;\nhalf4 sampleContent(float2 p) { return content.eval(p); }\n"
-        else "half4 sampleContent(float2 p) { return half4(0.0); }\n") + BODY
+        else "half4 sampleContent(float2 p) { return half4(0.0); }\n") + io.github.eslamasabry.oc.ui.design.effects.RimLight.SHADER_LIT + BODY
 
     private const val BODY: String =
         """
@@ -585,6 +593,7 @@ uniform float4 tintA;
 uniform float4 tintB;
 uniform float rimPx;
 uniform float falloff;
+uniform float rimFloor;
 uniform float4 light;
 
 float sat01(float x) { return clamp(x, 0.0, 1.0); }
@@ -673,7 +682,8 @@ half4 main(float2 q) {
     }
     if (mode < 2.5) {
         float gl = max(length(bend), 0.05);
-        float lit = pow(abs(dot(bend / gl, float2(0.70710678, 0.70710678))), falloff);
+        // The plain pane's light (KitRimShader): its two lit arcs the brightest, never below the floor elsewhere.
+        float lit = rimLit(dot(bend / gl, float2(0.70710678, 0.70710678)), falloff, rimFloor);
         float edge = sat01(0.5 - dist) * sat01(dist + rimPx + 0.5);
         return half4(edge * lit * mine);
     }

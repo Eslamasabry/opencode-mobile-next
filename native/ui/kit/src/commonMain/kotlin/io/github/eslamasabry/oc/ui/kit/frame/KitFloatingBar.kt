@@ -47,6 +47,13 @@ public class KitFloatingBar(
      * glass, not panes of their own.
      */
     public val below: (@Composable () -> Unit)? = null,
+    /**
+     * Where the bar does not float (no lens: Solid, Soft, Brutal, Paper, Glass held or on a short window) and is not
+     * [scrollsElsewhere], [below] stays pinned directly under the bar on the page margin instead of scrolling away as the
+     * scrolling header's first part (a page's tab row). False keeps the home's behaviour: its chips row scrolls away.
+     * Where the bar floats the row is in its pane either way.
+     */
+    public val belowPinned: Boolean = false,
 )
 
 /**

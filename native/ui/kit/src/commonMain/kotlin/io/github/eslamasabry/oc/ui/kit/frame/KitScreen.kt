@@ -559,12 +559,14 @@ public fun KitScreen(
             val barInHeader = floatingBar != null && floatingBar.scrollsElsewhere && !floats && topPart != null
             val stackTop = if (barInHeader) null else topPart
             val belowPart: (@Composable () -> Unit)? = floatingBar?.below?.let { movableBelow }
+            // A page's tab row (KitFloatingBar.belowPinned) stays under a bar that does not float, instead of scrolling away.
+            val belowPinned = floatingBar?.belowPinned == true && belowPart != null && !floats && !barInHeader
             val pageHeader: (@Composable ColumnScope.() -> Unit)? =
                 when {
                     floatingBar == null -> header
                     barInHeader -> ({ topPart?.invoke(); belowPart?.invoke(); header?.invoke(this) })
                     // A pinned bar without the lens: its second row leads the scrolling header.
-                    !floats && belowPart != null -> ({ belowPart(); header?.invoke(this) })
+                    !floats && belowPart != null && !belowPinned -> ({ belowPart(); header?.invoke(this) })
                     // A floating page without a header gets one that holds only the spacer below the bar.
                     floats && header == null -> ({})
                     else -> header
@@ -665,7 +667,14 @@ public fun KitScreen(
                             }
                         } else {
                             if (barFace != null) KitLiquidBarPane(barFace)
-                            stackTop()
+                            if (belowPinned && belowPart != null) {
+                                // Pinned under the bar, one block with it (whatever lies behind the bar lies behind the row),
+                                // on the page margin.
+                                Column(Modifier.fillMaxWidth()) {
+                                    stackTop()
+                                    Box(Modifier.fillMaxWidth().padding(horizontal = kitPageGutter()).testTag("kit-pinned-below")) { belowPart() }
+                                }
+                            } else stackTop()
                         }
                     }
                 }
