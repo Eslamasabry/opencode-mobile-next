@@ -5,11 +5,11 @@ import io.github.eslamasabry.oc.ui.design.effects.GlassPaneKind
 import io.github.eslamasabry.oc.ui.design.effects.GlassPreset
 import io.github.eslamasabry.oc.ui.design.effects.GlassTuning
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
 
@@ -65,6 +65,7 @@ public interface GlassLabActions {
  * The lab's state and its saves. The draft is stored on every change (the newest after [SAVE_MS] of quiet, so a slider
  * at frame rate writes once when it rests), with its switch; the app wears it only while the switch is on.
  */
+@OptIn(kotlinx.coroutines.FlowPreview::class)
 public class GlassLabPresenter(private val scope: CoroutineScope, private val port: GlassLabSetting) : GlassLabActions {
     private val mutable =
         MutableStateFlow(GlassLabUi(tuning = port.stored.value?.let { GlassTuning.decode(it) } ?: GlassTuning.Shipped, build = port.build))
@@ -73,10 +74,7 @@ public class GlassLabPresenter(private val scope: CoroutineScope, private val po
 
     init {
         scope.launch {
-            pending.filterNotNull().collectLatest {
-                delay(SAVE_MS)
-                port.save(textOf(it))
-            }
+            pending.filterNotNull().debounce(SAVE_MS).collect { port.save(textOf(it)) }
         }
     }
 
