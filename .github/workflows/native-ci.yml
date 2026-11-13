@@ -510,7 +510,7 @@ jobs:
             m="$(basename "$d")"
             if [ -d "$d/src/test" ]; then tasks="$tasks :android:$m:testDebugUnitTest"; fi
           done
-          tool/ci/gradle_retry.sh "$RUNNER_TEMP/android-unit.log" $tasks :androidApp:testPreviewBenchmarkUnitTest $GRADLE_FLAGS
+          tool/ci/gradle_retry.sh "$RUNNER_TEMP/android-unit.log" $tasks :androidApp:testPreviewDebugUnitTest $GRADLE_FLAGS
       - name: Android unit report
         if: always()
         env:
