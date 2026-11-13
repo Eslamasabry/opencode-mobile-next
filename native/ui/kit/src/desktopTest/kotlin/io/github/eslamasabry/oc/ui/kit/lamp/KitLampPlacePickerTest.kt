@@ -30,7 +30,7 @@ import kotlin.test.assertTrue
 @OptIn(ExperimentalTestApi::class)
 class KitLampPlacePickerTest {
     @Test
-    fun `B-LAMP-K2-050 six spots; a tap picks the physical side at once with Select, in both directions`() {
+    fun `B-LAMP-K2-050 six spots - a tap picks the physical side at once with Select, in both directions`() {
         for (rtl in listOf(false, true)) {
             runDesktopComposeUiTest(412, 800) {
                 val platform = FakeKitPlatform()
