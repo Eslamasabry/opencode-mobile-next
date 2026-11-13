@@ -18,7 +18,11 @@ import io.github.eslamasabry.oc.engine.attention.dock.DockActions
 import io.github.eslamasabry.oc.engine.attention.dock.DockController
 import io.github.eslamasabry.oc.engine.attention.dock.DockEvent
 import io.github.eslamasabry.oc.core.model.BackendKind
+import io.github.eslamasabry.oc.engine.attention.dock.DockFacts
 import io.github.eslamasabry.oc.engine.attention.dock.DockFeed
+import io.github.eslamasabry.oc.engine.attention.dock.DockList
+import io.github.eslamasabry.oc.engine.attention.dock.DockListModel
+import io.github.eslamasabry.oc.engine.attention.dock.DockReader
 import io.github.eslamasabry.oc.engine.attention.dock.DockHomeWatch
 import io.github.eslamasabry.oc.engine.attention.dock.DockKeys
 import io.github.eslamasabry.oc.engine.attention.dock.DockNicknames
@@ -49,6 +53,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import kotlin.time.Clock
 
 /**
  * The conversations the person archived or deleted from the conversation lists, told by identity once the server took
@@ -95,6 +100,8 @@ class AppEdgeDock(
     private val navigator: AppNavigator,
     private val runtime: PreviewRuntime,
     private val conversationsLeft: ConversationsLeft,
+    private val storedPins: StoredConversationPins,
+    private val clock: Clock,
 ) {
     private val main: CoroutineScope = CoroutineScope(appScope.coroutineContext + dispatchers.main)
     private var navigate: (ConversationRef) -> Unit = { navigator.backToChat(it) }
@@ -158,7 +165,7 @@ class AppEdgeDock(
         DockController(
             main, nicknames, { navigate(it) },
             removals = DockRemovals(keyStore),
-            pins = DockPins(keyStore),
+            pins = DockPins(keyStore, storedPins.dockOrder),
             placementStore = DockPlacementStore(keyStore),
             actions = actions,
             peeks = peeks,
@@ -168,6 +175,16 @@ class AppEdgeDock(
     private var started = false
 
     val ui: StateFlow<DockUi> get() = controller.ui
+
+    /** What waiting requests say and when a conversation last did anything (needs a clock the reducer has none of). */
+    private val facts = DockFacts { clock.now().toEpochMilliseconds() }
+
+    /** The same conversations read by another reader (the edge light's list asks for more rows than the rings). */
+    fun ui(reader: DockReader): StateFlow<DockUi> = controller.ui(reader)
+
+    /** The edge light's list for [reader]: states, progress, words, newest line, sub-agents, server, pin, hidden. */
+    fun list(reader: DockReader = DockReader.list()): Flow<DockListModel> =
+        controller.ui(reader).map { DockList.build(it, facts, peeks::newest) }
 
     /** The person's Settings switch: false draws no dock in the app (the live notification row does not read it). */
     val shown: StateFlow<Boolean> = shownState.asStateFlow()
@@ -192,9 +209,16 @@ class AppEdgeDock(
             navigator.top.map { (it as? ChatRoute)?.ref }.distinctUntilChanged().collect { conversationShown(it) }
         }
         main.launch {
+            // A pin made on the home list (or anywhere else) shows on the dock: the dock reads the one store again.
+            storedPins.dockOrder.changes.collect { for (id in attached.keys.toList()) controller.refreshPins(id) }
+        }
+        main.launch {
             // An archive or delete the home or All conversations committed (after the Undo window, so an undone one
             // never leaves): its ring goes at once.
-            conversationsLeft.left.collect { controller.feed(DockEvent.Left(it)) }
+            conversationsLeft.left.collect {
+                facts.forget(it)
+                controller.feed(DockEvent.Left(it))
+            }
         }
         main.launch {
             // The fallback for an archive made elsewhere (the conversation's own menu, another device), which no event
@@ -232,6 +256,7 @@ class AppEdgeDock(
                     }
                     for (gone in (savedBefore - saved).toList()) {
                         detach(gone)
+                        facts.forgetProfile(gone)
                         controller.profileGone(gone)
                     }
                     savedBefore.clear()
@@ -299,6 +324,7 @@ class AppEdgeDock(
                 if (attached[id] !== graph) return@collect
                 if (envelope.event == GatewayEvent.Connected) graph.scope.launch(dispatchers.main) { reconcile(id, graph) }
                 peeks.feed(id, envelope.event)
+                facts.feed(id, envelope.event)
                 for (event in DockFeed.events(id, envelope.event)) controller.feed(event)
             }
         }
@@ -325,7 +351,9 @@ class AppEdgeDock(
                 }
             }
             // The dock is always available: it offers the recent conversations the home list knows as quiet rings.
-            controller.feed(DockEvent.Recent(id, rows.map { DockRecent(it.sessionId, it.title, it.lastActivityMs, it.parentId) }))
+            val recent = rows.map { DockRecent(it.sessionId, it.title, it.lastActivityMs, it.parentId) }
+            facts.listed(id, recent)
+            controller.feed(DockEvent.Recent(id, recent))
             reconcile(id, graph)
         }
     }
@@ -338,6 +366,9 @@ class AppEdgeDock(
         val permissions = (server.pendingPermissions() as? Outcome.Ok)?.value
         val questions = (server.pendingQuestions() as? Outcome.Ok)?.value
         val forms = if (server.capabilities.value.forms) (server.pendingForms() as? Outcome.Ok)?.value else emptyList()
-        if (current()) DockFeed.requestsRead(id, permissions, questions, forms)?.let(controller::feed)
+        if (current()) {
+            facts.requestsRead(id, permissions, questions, forms)
+            DockFeed.requestsRead(id, permissions, questions, forms)?.let(controller::feed)
+        }
     }
 }

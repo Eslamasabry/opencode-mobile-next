@@ -211,6 +211,38 @@ class StoredConversationPins(
         )
     }
 
+    /** A pin made on the dock shows on the home list, and the other way round. */
+    override val changes: kotlinx.coroutines.flow.Flow<Unit>
+        get() = pins.changes
+
+    /**
+     * The same pins seen by the edge dock: one store for both, so the dock reads and writes what the home list pins.
+     * A profile that is gone or being deleted has none and takes no write, like [ids] and [set].
+     */
+    val dockOrder: io.github.eslamasabry.oc.engine.attention.dock.SharedPinOrder =
+        object : io.github.eslamasabry.oc.engine.attention.dock.SharedPinOrder {
+            private fun isOpen(profile: io.github.eslamasabry.oc.core.common.ids.ProfileId) =
+                stores.profiles.profile(profile) != null && stores.lanes.forProfile(profile).isAdmitting
+
+            override fun ordered(
+                profile: io.github.eslamasabry.oc.core.common.ids.ProfileId
+            ): List<io.github.eslamasabry.oc.core.common.ids.SessionId> {
+                if (!isOpen(profile)) {
+                    pins.forget(profile)
+                    return emptyList()
+                }
+                return pins.orderedIds(profile).map { io.github.eslamasabry.oc.core.common.ids.SessionId(it) }
+            }
+
+            override suspend fun replace(
+                profile: io.github.eslamasabry.oc.core.common.ids.ProfileId,
+                ids: List<io.github.eslamasabry.oc.core.common.ids.SessionId>,
+            ): Boolean = isOpen(profile) && pins.replaceOrder(profile, ids.map { it.raw }) is Outcome.Ok
+
+            override val changes: kotlinx.coroutines.flow.Flow<Unit>
+                get() = pins.changes
+        }
+
     override fun ids(
         server: ConversationServer
     ): Set<io.github.eslamasabry.oc.core.common.ids.SessionId> {

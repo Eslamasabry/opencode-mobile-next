@@ -9,6 +9,7 @@ import io.github.eslamasabry.oc.core.data.scope.KeyShape
 import io.github.eslamasabry.oc.core.data.scope.ProfileScope
 import io.github.eslamasabry.oc.engine.attention.activity.AttentionKeyStore
 import kotlin.coroutines.cancellation.CancellationException
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.json.Json
@@ -79,13 +80,54 @@ public class DockRemovals(store: AttentionKeyStore) {
     public suspend fun save(profile: ProfileId, current: () -> List<SessionId>): Boolean = list.save(profile, current)
 }
 
-/** The pinned rings of the dock, in the person's order, under [DockKeys.pinsKey]. */
-public class DockPins(store: AttentionKeyStore) {
+/**
+ * The one pin store the dock and the home list share, seen from the dock: the pinned conversations of a profile in the
+ * person's order. Implemented where the home's pin store lives; the dock never owns pins of its own any more.
+ */
+public interface SharedPinOrder {
+    /** Every pinned session of [profile], in order. Empty for a profile that is not saved or is being deleted. */
+    public fun ordered(profile: ProfileId): List<SessionId>
+
+    /** Makes [ids] exactly the profile's pins, in that order. False when the store refused (nothing changed). */
+    public suspend fun replace(profile: ProfileId, ids: List<SessionId>): Boolean
+
+    /** Emits after the stored pins changed (from the dock or the home list). */
+    public val changes: Flow<Unit>
+}
+
+/**
+ * The pinned rings of the dock, in the person's order. With a [shared] store (the app) the pins live there, the same
+ * ones the home list pins; the dock's own key under [DockKeys.pinsKey] is only read once to carry old pins over (dock
+ * pins first in their order, then the home's not already there) and is then removed. Without one (previews, tests) the
+ * pins live under [DockKeys.pinsKey] as before.
+ */
+public class DockPins(store: AttentionKeyStore, private val shared: SharedPinOrder? = null) {
     private val list = DockIdList(store, DockKeys::pinsKey, DockModel.MAX_PINNED)
 
-    public suspend fun load(profile: ProfileId): List<SessionId> = list.load(profile)
+    /** The shared store's change signal, when there is one. */
+    public val changes: Flow<Unit>? get() = shared?.changes
 
-    public suspend fun save(profile: ProfileId, current: () -> List<SessionId>): Boolean = list.save(profile, current)
+    public suspend fun load(profile: ProfileId): List<SessionId> {
+        val store = shared ?: return list.load(profile)
+        val old = list.load(profile)
+        val current = store.ordered(profile)
+        if (old.isEmpty()) return current
+        val merged = merge(old, current)
+        // The old key goes only after the shared store holds the merge, so a refused write retries on the next load.
+        if (merged == current || store.replace(profile, merged)) list.save(profile) { emptyList() }
+        return merged
+    }
+
+    public suspend fun save(profile: ProfileId, current: () -> List<SessionId>): Boolean {
+        val store = shared ?: return list.save(profile, current)
+        return store.replace(profile, current().distinct().take(DockModel.MAX_STORED_PINS))
+    }
+
+    public companion object {
+        /** The dock's pins first in their order, then the home's that are not already there. */
+        public fun merge(dock: List<SessionId>, home: List<SessionId>): List<SessionId> =
+            (dock + home).distinct().take(DockModel.MAX_STORED_PINS)
+    }
 }
 
 /**
