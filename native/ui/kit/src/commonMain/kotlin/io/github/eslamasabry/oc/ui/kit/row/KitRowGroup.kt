@@ -12,6 +12,7 @@ import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
@@ -78,15 +79,23 @@ public fun KitRowGroup(
     val paneInset = io.github.eslamasabry.oc.ui.kit.foundation.kitPaneInset()
     val panelModifier =
         if (panel) Modifier.padding(horizontal = if (onRail) 0.dp else tokens.gutter.dp).then(look.modifier).clip(KitShapeId.Panel.shape()).padding(paneInset) else Modifier
-    Column(modifier.kitContainer().fillMaxWidth().kitMaxWidth(CapRole.List).testTag("kit-row-group").kitList("KitRowGroup")) {
+    // A group with no rows and nothing destructive draws nothing at all: no panel, hairline box, label or note
+    // (a list's empty state stands alone). The rows report their count while they are measured.
+    val rowSeams = remember { Seams() }
+    val endSeams = remember { Seams() }
+    Column(modifier.layout { measurable, constraints ->
+            val placeable = measurable.measure(constraints)
+            if (rowSeams.count <= 0 && endSeams.count <= 0) layout(0, 0) {}
+            else layout(placeable.width, placeable.height) { placeable.placeRelative(0, 0) }
+        }.kitContainer().fillMaxWidth().kitMaxWidth(CapRole.List).testTag("kit-row-group").kitList("KitRowGroup")) {
         label?.let { KitSectionLabel(it, gapBefore = if (section) tokens.sectionGap.dp else null) }
         val seam = kitRowGroupSeam(labelled = label != null, gapBefore = 0, frames = panel, afterGroup = afterGroup && LocalKitStack.current == null, gap = Space.S3)
         if (seam > 0) androidx.compose.foundation.layout.Spacer(Modifier.height(seam.dp).testTag("kit-row-group-seam"))
         Column(panelModifier) {
             // A panel is a surface of its own: its rows keep their gutter inside it, off the sheet's rail (P-008).
             androidx.compose.runtime.CompositionLocalProvider(LocalKitOnRail provides (onRail && !panel)) {
-                HairlineColumn(inset, rowGutter.dp, hairline, rows)
-                destructive?.let { HairlineColumn(rowGutter.dp, rowGutter.dp, hairline, it, ruleAbove = true) }
+                HairlineColumn(inset, rowGutter.dp, hairline, rows, seams = rowSeams)
+                destructive?.let { HairlineColumn(rowGutter.dp, rowGutter.dp, hairline, it, ruleAbove = true, seams = endSeams) }
             }
         }
         note?.let { KitGroupNote(it) }
@@ -117,6 +126,9 @@ public fun kitRowGutter(): Dp = kitRowGutterDp(LocalKitOnRail.current, LocalKitT
 /** Where the separators go, written by the measure pass and read by the draw pass of the same node. */
 private class Seams {
     var ys: IntArray = IntArray(0)
+
+    /** How many children the last measure placed; 0 means the column drew nothing. */
+    var count: Int = -1
 }
 
 /** Stacks [content] and draws one physical-pixel hairline between consecutive children, inset on both reading edges. */
@@ -137,8 +149,8 @@ private fun HairlineColumn(
     content: @Composable () -> Unit,
     ruleAbove: Boolean = false,
     prominent: KitProminentRule? = null,
+    seams: Seams = remember { Seams() },
 ) {
-    val seams = remember { Seams() }
     Layout(
         content = content,
         modifier =
@@ -169,6 +181,7 @@ private fun HairlineColumn(
             if (i < ys.size) ys[i] = y
         }
         seams.ys = ys
+        seams.count = placeables.size
         layout(constraints.maxWidth, height) {
             var top = 0
             placeables.forEach {
