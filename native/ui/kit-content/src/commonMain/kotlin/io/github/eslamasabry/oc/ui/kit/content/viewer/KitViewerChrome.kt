@@ -22,6 +22,9 @@ internal data class ViewerTool(
  */
 internal class ViewerChrome {
     var tools: List<ViewerTool> by mutableStateOf(emptyList())
+
+    /** The document's Find bar is open: the frame steps its bottom button aside, so the text keeps the room. */
+    var finding: Boolean by mutableStateOf(false)
     private var calls: Map<String, () -> Unit> = emptyMap()
 
     fun offer(tools: List<ViewerTool>, calls: Map<String, () -> Unit>) {
@@ -32,6 +35,7 @@ internal class ViewerChrome {
     fun clear() {
         calls = emptyMap()
         tools = emptyList()
+        finding = false
     }
 
     fun run(id: String) {

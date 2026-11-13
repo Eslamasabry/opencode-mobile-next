@@ -168,6 +168,8 @@ public fun KitSearchField(
     trailing: (@Composable () -> Unit)? = null,
     /** Focus the field when it first shows, so the keyboard comes up with the page. */
     autoFocus: Boolean = false,
+    /** False: no Clear button of its own (a bar whose own Close also clears, so it shows one X, not two). */
+    clearable: Boolean = true,
 ) {
     kitAssert(onBack == null || !backLabel.isNullOrBlank()) { "KitSearchField: a back arrow needs its label" }
     kitAssert(label.isNotBlank()) { "KitSearchField: a search field names what it searches" }
@@ -288,7 +290,7 @@ public fun KitSearchField(
                     else KitIconButton(icon = KitIcons.filter, label = stringResource(Res.string.kitSearchFilter), onClick = { filterOpen = true }, enabled = if (enabled) KitEnabled.Enabled else KitEnabled.Disabled(disabledReason.orEmpty()), tone = TextTone.Tertiary)
                 })
             }
-            KitPresence(visible = query.isNotEmpty()) {
+            KitPresence(visible = clearable && query.isNotEmpty()) {
                 KitIconButton(
                     icon = KitIcons.close,
                     label = stringResource(Res.string.kitSearchClear),
