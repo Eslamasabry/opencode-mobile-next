@@ -33,9 +33,9 @@ class TerminalNamesTest {
     }
 
     @Test
-    fun `B-PROJ-TERM-004 a person named Terminal 7 and a blank rename field never show an id`() {
+    fun `B-PROJ-TERM-004 a short numbered name is the persons own and a server id never starts the rename field`() {
         val list = listOf(process("a", "Terminal 7"), process("b", "Terminal BYbZ"))
-        assertEquals(null, list[0].givenName())
+        assertEquals("Terminal 7", list[0].givenName())
         assertEquals(null, list[1].givenName())
     }
 }

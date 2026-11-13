@@ -19,7 +19,7 @@ private val serverDefaultTitle = Regex("^Terminal [A-Za-z0-9]{3,}$")
 internal fun TerminalProcess.givenName(): String? {
     val text = title.trim()
     if (text.isEmpty() || text.all { it.isDigit() || it == ' ' }) return null
-    // "Terminal 2" and the like are the app's own plain names; a server default carries a letter-bearing id.
+    // A server default carries a short random id with at least one letter; "Terminal 2" is a person's own.
     if (serverDefaultTitle.matches(text) && text.drop("Terminal ".length).any { !it.isDigit() })
         return null
     return text
