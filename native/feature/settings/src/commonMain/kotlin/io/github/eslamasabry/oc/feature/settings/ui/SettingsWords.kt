@@ -61,7 +61,7 @@ import io.github.eslamasabry.oc.ui.words.res.appearanceSurfaceSolid
 import io.github.eslamasabry.oc.ui.words.res.automationSearchAliases
 import io.github.eslamasabry.oc.ui.words.res.automationTitle
 import io.github.eslamasabry.oc.ui.words.res.capabilityScreenAliases
-import io.github.eslamasabry.oc.ui.words.res.capabilityScreenTitle
+import io.github.eslamasabry.oc.ui.words.res.capabilityScreenHeading
 import io.github.eslamasabry.oc.ui.words.res.chatUiTimestampsUsage
 import io.github.eslamasabry.oc.ui.words.res.chatUiTranscriptDisplay
 import io.github.eslamasabry.oc.ui.words.res.configInspectionTitle
@@ -199,7 +199,7 @@ internal fun rowWords(row: SettingsRowId): String = stringResource(rowKey(row))
 
 internal fun rowKey(row: SettingsRowId): StringResource =
     when (row) {
-        SettingsRowId.ServerCapabilities -> Res.string.capabilityScreenTitle
+        SettingsRowId.ServerCapabilities -> Res.string.capabilityScreenHeading
         SettingsRowId.ServerConfiguration -> Res.string.configInspectionTitle
         SettingsRowId.Servers -> Res.string.settingsV3Servers
         SettingsRowId.ThisPhone -> Res.string.settingsV3ThisPhone

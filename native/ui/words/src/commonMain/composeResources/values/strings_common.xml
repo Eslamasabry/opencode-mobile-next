@@ -302,6 +302,7 @@
     <string name="gestureEquivShortcutFindMatch">Next / previous match while finding in a conversation</string>
     <string name="gestureEquivShortcutPromptHistory">Earlier / later prompt, with the cursor at the start or end of the message box</string>
     <string name="capabilityScreenTitle">Available on this server</string>
+    <string name="capabilityScreenHeading">What this server can do</string>
     <string name="discoverShowTipsAgain">Show tips again</string>
     <string name="discoverShowTipsSubtitle">One-time tips will appear again at their moment</string>
     <string name="discoverShowTipsDone">Tips will show again.</string>

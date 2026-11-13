@@ -19,6 +19,7 @@ import io.github.eslamasabry.oc.feature.settings.presentation.ServerConfiguratio
 import androidx.compose.foundation.layout.Arrangement
 import io.github.eslamasabry.oc.ui.kit.KitAction
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
 import io.github.eslamasabry.oc.ui.kit.state.KitDetailsFold
@@ -80,6 +81,7 @@ public fun ServerConfigurationScreen(
                             KitLineAction(
                                 stringResource(Res.string.configInspectionRefresh),
                                 actions::refresh,
+                                icon = KitIcons.sync,
                             )
                         )
                     else emptyList(),

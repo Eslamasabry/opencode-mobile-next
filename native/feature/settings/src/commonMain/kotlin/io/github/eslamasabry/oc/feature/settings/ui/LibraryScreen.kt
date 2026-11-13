@@ -703,7 +703,12 @@ private fun CommandSheet(
             },
     ) {
         command.description?.let { KitText(it) }
-        KitField(args, stringResource(Res.string.nlibArguments))
+        KitField(
+            args,
+            stringResource(Res.string.commandArguments),
+            helper = stringResource(Res.string.nlibArgumentsHelper),
+        )
+        KitSectionLabel(stringResource(Res.string.nlibRunIn))
         ConversationChoice(state.inventory.conversations, chosen) { chosen = it }
         if (state.locked) KitNotice(stringResource(Res.string.nlibUncertain))
     }

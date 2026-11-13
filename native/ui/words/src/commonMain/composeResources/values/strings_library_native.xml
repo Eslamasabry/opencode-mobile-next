@@ -31,6 +31,8 @@
     <string name="nlibConversation">Conversation</string>
     <string name="nlibUntitled">Untitled conversation</string>
     <string name="nlibArguments">Command arguments</string>
+    <string name="nlibArgumentsHelper">Passed to the command when it runs. Leave empty to use its defaults.</string>
+    <string name="nlibRunIn">Run in</string>
     <string name="nlibRunCommand">Run command</string>
     <string name="nlibRunNow">Run agent now</string>
     <string name="nlibAddSkill">Add skill to conversation</string>
