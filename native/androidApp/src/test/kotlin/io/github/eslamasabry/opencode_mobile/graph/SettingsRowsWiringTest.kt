@@ -27,8 +27,6 @@ class SettingsRowsWiringTest {
             opens = SETTINGS_OPENS,
             phraseChips = true,
             transcriptDisplay = true,
-            // cab4049fb3: Android draws the edge dock, so its switch row exists (the host passes EdgeDockSetting).
-            edgeDock = true,
         )
 
     private fun rows(facts: SettingsFacts) =
