@@ -101,6 +101,11 @@ public class SettingsPresenter(
         val discardConfirm: LocalDataKind? = null,
         val discardResult: LocalDeleteResult? = null,
         val discardFailed: Boolean = false,
+        /**
+         * The stack's size when this visit opened straight onto a page (Settings opened from Tips, search or a
+         * chat). Back from that page leaves Settings for where the person came from, never to this visit's hub.
+         */
+        val entryDepth: Int? = null,
     )
 
     private data class Engines(
@@ -627,6 +632,11 @@ public class SettingsPresenter(
                 onAppearanceQuestion(null)
                 true
             }
+            // Settings opened straight onto a page: its Back leaves Settings, one step, to the caller.
+            l.entryDepth != null && l.entryDepth > 1 && l.stack.size <= l.entryDepth -> {
+                exitWhatsNew()
+                true
+            }
             l.standaloneWhatsNew && l.stack.size <= 2 -> {
                 exitWhatsNew()
                 true
@@ -679,6 +689,21 @@ public class SettingsPresenter(
                     else -> Unit
                 }
         }
+    }
+
+    private var entryTargetUsed = false
+
+    /**
+     * The one-shot a Settings route opened onto a row runs: its page opens, [guide] restarts the Appearance guide, and
+     * Back from that page returns to the caller. Consumed on first use, so the screen's effect running again (leaving
+     * for another screen and coming back, a rotation) opens nothing and resets nothing.
+     */
+    public fun openEntryTarget(tag: String, guide: Boolean) {
+        if (entryTargetUsed) return
+        entryTargetUsed = true
+        onAnchor(tag)
+        local.update { it.copy(entryDepth = it.stack.size) }
+        if (guide) onAppearanceAgain()
     }
 
     override fun onAnchor(tag: String) {
