@@ -126,10 +126,11 @@ class KitLampPanelTest {
             onNodeWithText("Edge light").assertExists()
             onNodeWithText("Move…").performClick()
             onNodeWithText("Turn off").performClick()
-            onNodeWithContentDescription("Pin to top: create a file hello.txt with one line").performClick()
-            onNodeWithContentDescription("Rename conversation: create a file hello.txt with one line").performClick()
-            onNodeWithContentDescription("Hide from this list: create a file hello.txt with one line").performClick()
-            assertEquals(listOf("place", "off", "pin:hello:true", "rename:hello", "hide:hello"), scene.events)
+            onNodeWithContentDescription("Pin to top: create a file notes.txt with one line").performClick()
+            onNodeWithContentDescription("Rename conversation: create a file notes.txt with one line").performClick()
+            onNodeWithContentDescription("Hide from this list: create a file notes.txt with one line").performClick()
+            // The bottom row (in view: the list opens at the bottom and Edit makes rows taller).
+            assertEquals(listOf("place", "off", "pin:notes:true", "rename:notes", "hide:notes"), scene.events)
         }
 
     @Test

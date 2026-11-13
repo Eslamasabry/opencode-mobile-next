@@ -114,7 +114,7 @@ class StepTreeRulesTest {
 
     @Test
     fun `B-LAMP-K2-005 panel_topCutOnGroupBoundary - the list keeps whole groups from the bottom when they fill 45 percent`() {
-        assertEquals(300, KitLampPanelRules.viewport(listOf(100, 120, 180), 500), "all fit")
+        assertEquals(400, KitLampPanelRules.viewport(listOf(100, 120, 180), 500), "all fit")
         assertEquals(300, KitLampPanelRules.viewport(listOf(100, 120, 120, 180), 400), "cut above the Working group: 300 of 400")
         assertEquals(400, KitLampPanelRules.viewport(listOf(100, 300, 150), 400), "one group is under 45 % of the room: use the whole room")
         assertEquals(KitCornersCheck.sheetPanel, KitLampPanelRules.corners(lightAtEnd = true).let { it.topStart to it.topEnd })

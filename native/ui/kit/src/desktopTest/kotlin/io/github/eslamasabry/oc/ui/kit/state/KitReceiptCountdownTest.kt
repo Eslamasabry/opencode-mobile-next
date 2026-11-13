@@ -128,9 +128,11 @@ class KitReceiptCountdownTest {
     fun `B-LAMP-K1-044 the held pill is drawn in every style`() {
         for (style in listOf(Style.Solid, Style.Glass, Style.Soft, Style.Brutal, Style.Paper)) {
             runDesktopComposeUiTest(400, 240) {
+                // Looked at mid-hold: with auto-advance the 3 s drain runs out first, and an ended hold has no Undo.
+                mainClock.autoAdvance = false
                 val scene = Scene()
                 host(scene, style = style)
-                waitForIdle()
+                mainClock.advanceTimeBy(500)
                 onNodeWithTag(RECEIPT_HOLD_TAG, useUnmergedTree = true).assertExists()
                 onNodeWithText("Undo").assertExists()
             }
