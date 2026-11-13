@@ -54,6 +54,7 @@ import io.github.eslamasabry.oc.ui.kit.KitTextKind
 import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceInput
 import io.github.eslamasabry.oc.ui.kit.foundation.kitBottomInset
 import io.github.eslamasabry.oc.ui.kit.foundation.kitDecorated
+import io.github.eslamasabry.oc.ui.kit.foundation.shape
 import io.github.eslamasabry.oc.ui.kit.foundation.kitSurfaceLook
 import io.github.eslamasabry.oc.ui.kit.foundation.kitTappable
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcon
@@ -181,8 +182,10 @@ private fun SignalKey(label: String, icon: ImageVector, onClick: () -> Unit) {
             Modifier
                 .widthIn(max = cap)
                 .heightIn(min = KIT_FAB_SIZE.dp)
-                .kitTappable(onClick = onClick, shape = KitShapeId.Button, interactionSource = interactions)
+                // The key paints its face, edge and lip before the press clip, and the press ink is clipped to the key's
+                // own corners: a Button clip of another radius cut the key's edge at its corners and its lip below it.
                 .kitDecorated(key, rtl)
+                .kitTappable(onClick = onClick, shape = KitShapeId.Button, interactionSource = interactions, pressClip = key.shape())
                 .semantics { contentDescription = label }
                 .testTag("kit-fab")
                 .padding(start = Space.S4.dp, end = Space.S5.dp),

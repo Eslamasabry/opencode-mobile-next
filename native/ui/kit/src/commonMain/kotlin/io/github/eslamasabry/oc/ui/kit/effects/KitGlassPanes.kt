@@ -65,9 +65,10 @@ internal fun kitClearPanesOn(): Boolean {
  * clearly there all round (the accent marks chosen states only); on a [clear] pane the rim is the same neutral white
  * light as the liquid panes' ([LiquidRim], owner 2026-11-08), at [look]'s alphas ([GlassLook.paneRim]): brightest along
  * the top-start edge (the specular), quieter between, and, in the dark theme, lit again at the bottom end (one light,
- * two lit arcs; docs/designs/glass-in-the-kit.md 1a). Never Flutter's .95 white hairline in a light theme.
+ * two lit arcs; docs/designs/glass-in-the-kit.md 1a). Never Flutter's .95 white hairline in a light theme. [even]: the
+ * accent rim is a state outline (a field's focus or error ring), one even stroke at the bright end's alpha all round.
  */
-internal fun glassRims(d: SurfaceDecoration, roles: Roles, clear: Boolean, look: GlassLook = GlassLook.Default): SurfaceDecoration {
+internal fun glassRims(d: SurfaceDecoration, roles: Roles, clear: Boolean, look: GlassLook = GlassLook.Default, even: Boolean = false): SurfaceDecoration {
     if (d.edgeWidthDp <= 0f) return d
     val accent = roles.accent
     val chosen = d.edgeStart == accent && d.edgeEnd == accent
@@ -75,7 +76,11 @@ internal fun glassRims(d: SurfaceDecoration, roles: Roles, clear: Boolean, look:
     if (!chosen && (!clear || start.alpha == 0)) return d
     val rim = if (chosen) accent.withAlpha(1f) else LiquidRim.Light.toArgbValue()
     val dark = roles.dark
-    return if (chosen) {
+    return if (chosen && even) {
+        // A state outline (a field's focus or error ring) is one even stroke all the way round (owner 2026-11-13).
+        val a = rim.withAlpha(if (dark) CHOSEN_RIM_START_DARK else CHOSEN_RIM_START_LIGHT)
+        d.copy(edgeStart = a, edgeEnd = a, edgeRest = null)
+    } else if (chosen) {
         d.copy(edgeStart = rim.withAlpha(if (dark) CHOSEN_RIM_START_DARK else CHOSEN_RIM_START_LIGHT), edgeEnd = rim.withAlpha(if (dark) CHOSEN_RIM_END_DARK else CHOSEN_RIM_END_LIGHT), edgeRest = null)
     } else {
         val (s, r, e) = look.paneRim(dark)

@@ -96,7 +96,7 @@ public fun KitConnectionPill(
             .heightIn(min = tokens.minTarget.dp)
             .then(look.modifier)
             .then(
-                if (solid) Modifier.border(kitHairline(), colors.hairline, CircleShape)
+                if (solid) Modifier.border(kitHairline(), colors.hairline, look.shape) // the face's own shape (a box under Sharp corners)
                 else Modifier
             )
             .kitTappable(onClick = onClick, shape = KitShapeId.Pill, onClickLabel = switchLabel)
