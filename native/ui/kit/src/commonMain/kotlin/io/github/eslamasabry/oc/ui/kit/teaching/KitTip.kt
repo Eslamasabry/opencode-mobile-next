@@ -6,6 +6,7 @@ import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -82,8 +83,32 @@ public object TipRules {
      */
     public fun inside(anchorHeightPx: Float, windowHeightPx: Float): Boolean = anchorHeightPx > windowHeightPx / 2f
 
+    /**
+     * Beside an edge part ([KitTipPlacement.BesideEdge]): the tip stands on the page side of the anchor, [gapPx] away,
+     * centred on it vertically and kept in the window, so it points at a 16 dp light and never lies over it. Returns
+     * the tip's top-left (px).
+     */
+    public fun besideEdge(anchorLeft: Int, anchorTop: Int, anchorRight: Int, anchorBottom: Int, windowWidth: Int, windowHeight: Int, tipWidth: Int, tipHeight: Int, gapPx: Int): Pair<Int, Int> {
+        val onRight = (anchorLeft + anchorRight) / 2 > windowWidth / 2
+        val x = (if (onRight) anchorLeft - gapPx - tipWidth else anchorRight + gapPx).coerceIn(0, (windowWidth - tipWidth).coerceAtLeast(0))
+        val y = ((anchorTop + anchorBottom) / 2 - tipHeight / 2).coerceIn(0, (windowHeight - tipHeight).coerceAtLeast(0))
+        return x to y
+    }
+
     /** How far the tip rises toward its anchor as it appears: Full only. */
     public fun riseDp(state: KitMotionState): Int = if (state.travels) MotionTokens.TIP_RISE_DP else 0
+}
+
+/** Where a tip stands against its anchor. */
+public enum class KitTipPlacement {
+    /** Above the anchor (below near the top of the window), aligned with its nearer edge. */
+    Auto,
+
+    /**
+     * Beside a thin part on the screen edge (the edge light, 16 dp): on the page side of it, centred on it, moving
+     * sideways toward it as it appears. Above or below would cover the reply's buttons that line up with the light.
+     */
+    BesideEdge,
 }
 
 /**
@@ -106,6 +131,7 @@ public fun KitTip(
     onDismissed: () -> Unit,
     modifier: Modifier = Modifier,
     holdMs: Long = TipRules.HOLD_MS,
+    placement: KitTipPlacement = KitTipPlacement.Auto,
     anchor: @Composable () -> Unit,
 ) {
     kitAssert(message.isNotBlank()) { "KitTip: a tip is one sentence" }
@@ -117,6 +143,9 @@ public fun KitTip(
     var placed by remember { mutableStateOf(false) }
     val windowHeight = LocalWindowInfo.current.containerSize.height.toFloat()
     val above = remember(visible, placed, windowHeight) { TipRules.above(bounds[0].top, windowHeight) }
+    val windowWidth = LocalWindowInfo.current.containerSize.width.toFloat()
+    val anchorOnRight = remember(visible, placed, windowWidth) { bounds[0].center.x > windowWidth / 2f }
+    val beside = placement == KitTipPlacement.BesideEdge
     val motion = KitMotion.state
     val specs = KitMotion.specs
     val shown = remember { MutableTransitionState(false) }
@@ -142,12 +171,17 @@ public fun KitTip(
         if (showing) {
             val gap = with(LocalDensity.current) { Space.S2.dp.roundToPx() }
             val rise = with(LocalDensity.current) { TipRules.riseDp(motion).dp.roundToPx() }
-            val place = remember(above, gap) { TipPosition(above, gap) }
+            val place = remember(above, gap, beside) { TipPosition(above, gap, beside) }
             val bubble: @Composable () -> Unit = {
                 val enter: EnterTransition =
                     if (motion.reduced) EnterTransition.None
                     else fadeIn(specs.tipFade()) +
-                        (if (rise != 0) slideInVertically(specs.pace<IntOffset>(KitPace.Standard)) { if (above) -rise else rise } else EnterTransition.None)
+                        (when {
+                            rise == 0 -> EnterTransition.None
+                            // Toward the light: from the page side, whichever physical edge it sits on.
+                            beside -> slideInHorizontally(specs.pace<IntOffset>(KitPace.Standard)) { if (anchorOnRight) -rise else rise }
+                            else -> slideInVertically(specs.pace<IntOffset>(KitPace.Standard)) { if (above) -rise else rise }
+                        })
                 val exit: ExitTransition = if (motion.reduced) ExitTransition.None else fadeOut(specs.tipFade())
                 AnimatedVisibility(shown, enter = enter, exit = exit, label = "kit.tip") {
                     KitTipBubble(message, Modifier.pointerInput(Unit) { detectTapGestures { dismiss() } })
@@ -226,8 +260,16 @@ public fun KitTipBubble(message: String, modifier: Modifier = Modifier) {
  * Above or below the anchor, aligned with the anchor's nearer edge, kept inside the window; inside a tall anchor
  * ([TipRules.inside]) at its top edge plus the gap, never on its far side.
  */
-private class TipPosition(private val above: Boolean, private val gap: Int) : PopupPositionProvider {
+private class TipPosition(private val above: Boolean, private val gap: Int, private val beside: Boolean = false) : PopupPositionProvider {
     override fun calculatePosition(anchorBounds: IntRect, windowSize: IntSize, layoutDirection: LayoutDirection, popupContentSize: IntSize): IntOffset {
+        if (beside) {
+            val (bx, by) =
+                TipRules.besideEdge(
+                    anchorBounds.left, anchorBounds.top, anchorBounds.right, anchorBounds.bottom,
+                    windowSize.width, windowSize.height, popupContentSize.width, popupContentSize.height, gap,
+                )
+            return IntOffset(bx, by)
+        }
         val nearStart = anchorBounds.center.x < windowSize.width / 2
         val x =
             (if (nearStart) anchorBounds.left else anchorBounds.right - popupContentSize.width)
