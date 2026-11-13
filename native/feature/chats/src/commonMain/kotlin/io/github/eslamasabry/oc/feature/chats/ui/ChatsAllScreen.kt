@@ -5,7 +5,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.runtime.Composable
@@ -57,6 +57,7 @@ import io.github.eslamasabry.oc.ui.kit.modal.LocalKitToasts
 import io.github.eslamasabry.oc.ui.kit.modal.KitUndoBar
 import io.github.eslamasabry.oc.ui.kit.modal.KitUndoOffer
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
+import io.github.eslamasabry.oc.ui.kit.row.KitSectionLabel
 import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
 import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
 import io.github.eslamasabry.oc.ui.kit.row.KitRowState
@@ -112,6 +113,7 @@ import io.github.eslamasabry.oc.ui.words.res.sessionsReload
 import io.github.eslamasabry.oc.ui.words.res.stateContextUsage
 import io.github.eslamasabry.oc.ui.words.res.statePin
 import io.github.eslamasabry.oc.ui.words.res.statePinFailed
+import io.github.eslamasabry.oc.ui.words.res.chatsAllSavedGroup
 import io.github.eslamasabry.oc.ui.words.res.stateSavedPreview
 import io.github.eslamasabry.oc.ui.words.res.stateUnpin
 import io.github.eslamasabry.oc.ui.words.res.workspaceNewSession
@@ -326,8 +328,13 @@ public fun ChatsAllScreen(state: AllConversationsUi, actions: ChatsAllActions) {
                         )
                     }
                 AllPhase.List ->
-                    items(state.rows, key = { it.key }, contentType = { "conversation" }) { row ->
-                        AllRow(row, state.selecting, rowWords, state.nowMs, actions)
+                    itemsIndexed(state.rows, key = { _, row -> row.key }, contentType = { _, _ -> "conversation" }) { index, row ->
+                        // Saved-only rows (their server is not connected) are one group at the end, named as such.
+                        Column {
+                            if (row.readOnly && state.rows.getOrNull(index - 1)?.readOnly != true)
+                                KitSectionLabel(stringResource(Res.string.chatsAllSavedGroup))
+                            AllRow(row, state.selecting, rowWords, state.nowMs, actions)
+                        }
                     }
             }
             // Under a filter with no loaded match, older pages may still hold one: Load more and

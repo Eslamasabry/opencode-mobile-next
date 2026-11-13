@@ -5,4 +5,5 @@
     <string name="statePinFailed">Could not save the pin. Try again.</string>
     <string name="stateContextUsage">Last context: %1$d%</string>
     <string name="stateSavedPreview">Saved list. Connect to open this conversation.</string>
+    <string name="chatsAllSavedGroup">Saved lists from servers that are not connected</string>
 </resources>
