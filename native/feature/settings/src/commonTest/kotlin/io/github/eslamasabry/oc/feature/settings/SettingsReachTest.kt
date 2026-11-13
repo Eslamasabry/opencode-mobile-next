@@ -94,6 +94,7 @@ class SettingsReachTest {
                 phraseChips = true,
                 transcriptDisplay = true,
                 opens = null,
+                edgeDock = true,
             )
         assertEquals(SettingsRowId.entries.toSet(), SettingsStructure.searchable(all).toSet())
     }
