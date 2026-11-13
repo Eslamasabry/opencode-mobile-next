@@ -46,6 +46,7 @@ internal fun registerStateKeys(scope: ProfileScope) {
                 "oc.promptHistory." to ":engine:composer",
                 "oc.olderDraftsBackupV1." to ":engine:composer",
                 "oc.pendingCommands." to ":engine:delivery",
+                "oc.stoppedTurns." to ":engine:delivery",
                 "oc.developmentServices." to ":engine:runtime",
             )) register(
             KeyShape(prefix, KeyScope.Profile, PrefType.Str, owner, "saved native state")

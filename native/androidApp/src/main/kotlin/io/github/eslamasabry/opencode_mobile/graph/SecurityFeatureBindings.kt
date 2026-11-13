@@ -120,6 +120,15 @@ object SecurityFeatureBindings {
                     "read-only opening conversation titles",
                 )
             )
+            register(
+                KeyShape(
+                    "oc.stoppedTurns.",
+                    KeyScope.Profile,
+                    PrefType.Str,
+                    ":engine:delivery",
+                    "conversations whose newest turn the person stopped",
+                )
+            )
             // ANDR-1: consent records (moved here from PreviewRuntime's local scope; its monitor keys
             // and session pins are already registered above by AndroidProfileMonitoring.registerKeys
             // and registerStateKeys).

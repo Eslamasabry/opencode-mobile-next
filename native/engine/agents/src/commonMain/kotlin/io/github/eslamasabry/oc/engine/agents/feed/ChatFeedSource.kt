@@ -143,7 +143,10 @@ public class OpenCodeChatFeedSource(
             parentId = session.parentId,
             sourceLabel = label,
             finishedUnseen = chatStatus == ChatStatus.Idle && session.id in listing.finishedUnseen,
-            stoppedByPerson = chatStatus == ChatStatus.Idle && session.id in listing.stoppedByPerson,
+            stoppedByPerson =
+                chatStatus == ChatStatus.Idle &&
+                    session.id in listing.stoppedByPerson &&
+                    session.lastRunOutcome != SessionRunOutcome.Succeeded,
             interrupted =
                 chatStatus == ChatStatus.Idle &&
                     session.lastRunOutcome == SessionRunOutcome.Interrupted &&

@@ -110,7 +110,8 @@ public class ConnectionDelivery(
     private val tracing: PromptTracing? = tracers.firstOrNull()
     private val reconcileLane = dispatchers.serial("delivery-reconcile")
     private val running = MutableStateFlow<Set<ConversationRef>>(emptySet())
-    private val stopped = MutableStateFlow<Set<ConversationRef>>(emptySet())
+    private val stoppedMemory = stores.singleOrNull()?.let { StoppedTurnMemory(it.store, it.lanes.app, profile.id, scope) }
+    private val stopped = stoppedMemory?.refs ?: MutableStateFlow<Set<ConversationRef>>(emptySet())
     public val stoppedByPerson: kotlinx.coroutines.flow.StateFlow<Set<ConversationRef>> = stopped
     private val requestedStop = MutableStateFlow<Set<ConversationRef>>(emptySet())
 
@@ -165,11 +166,11 @@ public class ConnectionDelivery(
                 }
 
                 override fun markStoppedByPerson(ref: ConversationRef) {
-                    stopped.update { it + ref }
+                    stoppedMemory?.add(ref) ?: stopped.update { it + ref }
                 }
 
                 override fun clearStoppedByPerson(ref: ConversationRef) {
-                    stopped.update { it - ref }
+                    stoppedMemory?.remove(ref) ?: stopped.update { it - ref }
                     requestedStop.update { it - ref }
                 }
             },
