@@ -30,6 +30,7 @@ import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.text.Numbers
 import io.github.eslamasabry.oc.core.model.transcript.MessageErrorKind
 import io.github.eslamasabry.oc.engine.agents.errors.AgentErrorText
+import io.github.eslamasabry.oc.feature.chat.presentation.RunTailRules
 import io.github.eslamasabry.oc.feature.chat.presentation.ErrorFix
 import io.github.eslamasabry.oc.feature.chat.presentation.ErrorRecovery
 import io.github.eslamasabry.oc.feature.chat.presentation.StoppedSteps
@@ -549,7 +550,7 @@ internal fun ChatTranscriptList(
                             modifier = Modifier.testTag("chat-steer-wait"),
                         )
                     }
-                    KitTurnLiveLine(
+                    if (line != null) KitTurnLiveLine(
                         words = line.words,
                         tone = line.tone,
                         spoken = line.spoken,
@@ -569,7 +570,15 @@ internal fun ChatTranscriptList(
                         onAction = if (live.canUndoStopAfterStep) onUndoStopAfterStep else onStopLive,
                         ask = ask,
                     )
-                } else {
+                } else if (
+                    RunTailRules.liveLineShown(
+                        RunTailRules.tail(
+                            busy = true,
+                            stopping = live.stopping || live.stoppingAfterStep,
+                            waiting = runWork?.state == WorkLineState.WaitingForYou,
+                        )
+                    )
+                ) {
                     val minutes = stringResource(Res.string.chatHomeMinutes)
                     val seconds = stringResource(Res.string.chatHomeSeconds)
                     val step = facts.work.values.lastOrNull { it.now != null }?.now

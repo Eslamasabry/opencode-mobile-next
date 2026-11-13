@@ -87,7 +87,8 @@ public class ChatViewModel(
             .states(
                 (world as? TurnFeedSource)?.turnFeed ?: flowOf(TurnFeed.Empty),
                 world.requests.latest { model ->
-                    model?.state?.map { it.card != null } ?: flowOf(false)
+                    // Review #12: a decision being sent or a card the stop retired waits on no one.
+                    model?.state?.map { slot -> RunTailRules.waitsForYou(slot.cards.map { it.state }) } ?: flowOf(false)
                 },
                 viewModelScope,
                 SharingStarted.WhileSubscribed(STOP_AFTER_MS),
