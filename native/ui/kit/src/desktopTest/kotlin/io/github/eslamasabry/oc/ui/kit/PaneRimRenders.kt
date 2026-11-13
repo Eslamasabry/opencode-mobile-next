@@ -6,7 +6,7 @@ import androidx.compose.ui.graphics.toAwtImage
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.isRoot
-import androidx.compose.ui.test.v2.runDesktopComposeUiTest
+import androidx.compose.ui.test.v2.runSkikoComposeUiTest
 import java.awt.Color
 import java.awt.RenderingHints
 import java.awt.image.BufferedImage
@@ -30,11 +30,13 @@ class PaneRimRenders {
         val out = System.getenv("PANE_RIM_RENDER_OUT")?.let(::File) ?: return
         out.mkdirs()
         val errors = StringBuilder()
+        val times = StringBuilder()
         for (case in PaneRimScenes.cases) for (dark in listOf(true, false)) for (aurora in listOf(false, true)) {
             val name = "pane-rim-${case.name.replace(' ', '-')}-glass-${if (dark) "dark" else "light"}-${if (aurora) "aurora" else "ground"}"
             // One scene that cannot be drawn is named in errors.txt; the others are still written.
+            val started = System.nanoTime()
             try {
-                runDesktopComposeUiTest(PaneRimScenes.WIDTH, PaneRimScenes.HEIGHT) {
+                runSkikoComposeUiTest(androidx.compose.ui.geometry.Size(PaneRimScenes.WIDTH.toFloat(), PaneRimScenes.HEIGHT.toFloat()), testTimeout = PaneRimScenes.SCENE_TIMEOUT) {
                     PaneRimScenes.settle(this) { PaneRimScenes.Scene(aurora, dark) { case.content() } }
                     val image = onAllNodes(isRoot())[0].captureToImage().toAwtImage()
                     ImageIO.write(image, "png", File(out, "$name.png"))
@@ -51,8 +53,10 @@ class PaneRimRenders {
             } catch (e: Throwable) {
                 errors.append("$name: ${e::class.simpleName}: ${e.message?.take(400)}\n")
             }
+            times.append("$name: ${(System.nanoTime() - started) / 1_000_000_000} s\n")
         }
         File(out, "pane-rim-errors.txt").writeText(errors.toString())
+        File(out, "pane-rim-times.txt").writeText(times.toString())
     }
 
     /** The picture with the box the test measures outlined in magenta: which pane a scene samples. */
