@@ -274,9 +274,14 @@ class KitLiquidHoldShaderTest {
             bitmap.allocPixels(ImageInfo.makeN32(w, h, ColorAlphaType.PREMUL))
             val canvas = Canvas(bitmap)
             canvas.saveLayer(null, Paint().apply { imageFilter = filter })
-            val wash = org.jetbrains.skia.Shader.makeLinearGradient(0f, 0f, w.toFloat(), h.toFloat(),
-                if (darkPage) intArrayOf(0xFF0E2A22.toInt(), 0xFF1E1838.toInt()) else intArrayOf(0xFFD4F5E4.toInt(), 0xFFE6DDF7.toInt()))
-            canvas.drawPaint(Paint().apply { shader = wash })
+            // A wash from mint to lilac (dark: deep green to deep violet), column by column.
+            val from = if (darkPage) intArrayOf(14, 42, 34) else intArrayOf(212, 245, 228)
+            val to = if (darkPage) intArrayOf(30, 24, 56) else intArrayOf(230, 221, 247)
+            for (x in 0 until w step 4) {
+                val f = x / w.toFloat()
+                val c = IntArray(3) { (from[it] + (to[it] - from[it]) * f).toInt() }
+                canvas.drawRect(org.jetbrains.skia.Rect.makeXYWH(x.toFloat(), 0f, 4f, h.toFloat()), Paint().apply { color = org.jetbrains.skia.Color.makeRGB(c[0], c[1], c[2]) })
+            }
             val ink = if (darkPage) org.jetbrains.skia.Color.makeARGB(235, 236, 236, 240) else org.jetbrains.skia.Color.makeARGB(235, 24, 24, 28)
             var y = 30f
             var line = 0
