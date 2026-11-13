@@ -43,6 +43,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.layout
 import io.github.eslamasabry.oc.ui.kit.frame.KitJumpPill
+import io.github.eslamasabry.oc.ui.kit.frame.kitScreenListEdges
 import io.github.eslamasabry.oc.ui.kit.foundation.KitFrostState
 import io.github.eslamasabry.oc.ui.kit.foundation.kitFrostSource
 import io.github.eslamasabry.oc.ui.kit.foundation.rememberKitFrostState
@@ -170,6 +171,8 @@ public fun KitTranscriptList(
     // Chat edge A (owner 2026-11-09): the frame shows its scrolled-container ground only while older rows lie under the
     // header (the list is reversed: older rows are forward, above).
     KitReportScrolledUnder { state.lazy.canScrollForward }
+    // Reading history: the phrase row folds away, so the jump pill rises out of the message box (owner 2026-11-14).
+    io.github.eslamasabry.oc.ui.kit.frame.KitReportAwayFromLatest { state.awayFromLatest }
     val chrome = kitScreenChromePadding()
     val insetPadding =
         PaddingValues(
@@ -194,7 +197,14 @@ public fun KitTranscriptList(
             contentPadding = insetPadding,
             // A viewport that shrinks or grows (a slot above the composer unfolding beside the list) re-pins before the
             // list measures, so the newest row rides the slot's edge frame by frame.
-            modifier = Modifier.fillMaxSize().keepsBottom(pin).kitFrostSource(backdrop).testTag("transcript-list"),
+            // The list ends its own words before the page's floating controls (kitScreenListEdges): the jump pill and
+            // "N earlier messages" lie beside it, whole, on ground with no text under them (owner 2026-11-14).
+            modifier =
+                Modifier.fillMaxSize()
+                    .keepsBottom(pin)
+                    .kitScreenListEdges()
+                    .kitFrostSource(backdrop)
+                    .testTag("transcript-list"),
             content = content,
         )
         // E20-S30 (owner 2026-11-07, "Big gap not required"): no solid lane behind the pill. The words scroll on under
@@ -218,7 +228,9 @@ public fun KitTranscriptList(
         // The fade's value is read only when it draws; composition sees just whether it shows at all (twice per fade),
         // not every frame of it.
         val fadeShown by remember { derivedStateOf { fadeState.value > 0f } }
-        if (fadeShown && !io.github.eslamasabry.oc.ui.kit.frame.kitScreenBottomIsSlab())
+        // A page that records its body ends the list itself above the pill (kitScreenListEdges): no band of ground there.
+        val pageEnds = io.github.eslamasabry.oc.ui.kit.frame.kitScreenBottomGlass() != null
+        if (fadeShown && !pageEnds && !io.github.eslamasabry.oc.ui.kit.frame.kitScreenBottomIsSlab())
             Box(
                 Modifier.align(Alignment.BottomCenter)
                     .fillMaxWidth()
@@ -240,7 +252,9 @@ public fun KitTranscriptList(
             state,
             jumpLabel,
             motion,
-            backdrop,
+            // The page's recording cleared as the page shows it, so the pill's glass bends no words; the list's own
+            // recording where the page records nothing.
+            io.github.eslamasabry.oc.ui.kit.frame.kitScreenBottomGlass() ?: backdrop,
             // Bottom centre, its face 8 dp above the composer's veil (the 48 dp target's own margin counts toward it).
             Modifier.align(Alignment.BottomCenter).padding(bottom = chromeBottom + jumpPillLift(LocalKitTokens.current.minTarget).dp),
         )
