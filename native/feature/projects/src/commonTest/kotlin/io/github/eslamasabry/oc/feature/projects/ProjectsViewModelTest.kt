@@ -16,6 +16,7 @@ import io.github.eslamasabry.oc.core.model.WorkspaceProject
 import io.github.eslamasabry.oc.feature.projects.presentation.ProjectRules
 import io.github.eslamasabry.oc.core.testing.FakeOperationsGateway
 import io.github.eslamasabry.oc.core.testing.FakeServerGateway
+import io.github.eslamasabry.oc.feature.projects.presentation.ProjectCreation
 import io.github.eslamasabry.oc.feature.projects.presentation.NoPhoneProjectDiscovery
 import io.github.eslamasabry.oc.feature.projects.presentation.ProjectPagePhase
 import io.github.eslamasabry.oc.feature.projects.presentation.ProjectPageViewModel
@@ -281,6 +282,30 @@ class ProjectsViewModelTest {
         ProjectPageViewModel(ProjectsRoute.Project(p1, "/work/site"), nav, servers, folders)
         nav.top.value = route // Back
         assertEquals(listOf("site"), picker.state.value.openedBefore.map { it.name })
+    }
+
+    @Test
+    fun `B-125 a listed project whose folder is gone asks to make it again instead of opening`() = runTest {
+        val nav = Nav()
+        val gateway = FakeServerGateway(listOf(session("a", "/root/projects/new", 30)))
+        gateway.capabilities.value = ServerCapabilities(projectManagement = false)
+        var there = false
+        val creator =
+            object : ProjectCreation {
+                override fun available(server: ProjectServer) = true
+
+                override suspend fun create(server: ProjectServer, name: String): Outcome<String> = Outcome.Ok("/root/projects/$name")
+
+                override suspend fun exists(server: ProjectServer, path: String): Boolean = there
+            }
+        val vm = ProjectsPickerViewModel(ProjectsRoute.Picker(), nav, Servers(listOf(ProjectServer(p1, "phone", gateway, null))), SessionOpenedFolders(), NoPhoneProjectDiscovery(), creator)
+        vm.openProject("/root/projects/new")
+        assertEquals("/root/projects/new", vm.state.value.missingPath)
+        assertTrue(nav.calls.isEmpty())
+        there = true
+        vm.dismissMissing()
+        vm.openProject("/root/projects/new")
+        assertEquals(1, nav.calls.size)
     }
 
     @Test
