@@ -105,12 +105,17 @@ class HomeFooterTest {
         }
 
     @Test
-    fun `while the server opens the plus waits and the link takes the whole line`() =
+    fun `while the server opens the plus keeps its place beside the link`() =
         runDesktopComposeUiTest(360, 640) {
+            // Device pass RC1: the plus vanished while "This phone" was opening and came back a moment later, so the
+            // bar jumped. It stays where it is in every state of the home.
             val ui = mixed(extra = 12)
             home(ui.copy(home = ui.home.copy(opening = ChatsOpeningUi(ChatsOpeningPhase.Connecting, "This phone"))))
             toTheEnd()
             val link = onNodeWithTag("kit-panel-link-row", useUnmergedTree = true).getBoundsInRoot()
-            assertTrue(link.left.value in 15f..17f && link.right.value in 343f..345f, "the link spans margin to margin: $link")
+            val plus = onNode(has("New conversation")).getBoundsInRoot()
+            assertTrue(link.left.value in 15f..17f, "the bar starts on the page margin: ${link.left}")
+            assertTrue(plus.right.value in 343f..345f, "the plus ends on the page margin: ${plus.right}")
+            assertTrue(plus.left - link.right in 8.dp..16.dp, "the link ends ${link.right}, the plus starts ${plus.left}")
         }
 }

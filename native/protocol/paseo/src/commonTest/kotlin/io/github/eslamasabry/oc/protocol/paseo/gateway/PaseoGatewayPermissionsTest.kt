@@ -76,7 +76,9 @@ class PaseoGatewayPermissionsTest {
     fun `B-SEC-114 reject denies with the reason and cancel also interrupts`() = runTest {
         val h = asked()
         h.reply("perm-1", PermissionReply.Reject, "wrong file")
-        assertEquals(jsonOf("behavior" to "deny", "message" to "wrong file"), h.responses().single()["response"])
+        // The note goes as the person's own words (the daemon hands "message" to the model as the tool's result).
+        val note = "The user declined this tool call, so it did not run. To tell you how to proceed, the user said:\nwrong file"
+        assertEquals(jsonOf("behavior" to "deny", "message" to note), h.responses().single()["response"])
         h.daemon.push("agent_permission_request", jsonOf("agentId" to "a1", "request" to writePermission("perm-3")))
         h.pump()
         assertIs<Outcome.Ok<Unit>>(h.gateway.cancelPermission(SessionId("a1"), RequestId("perm-3")))
