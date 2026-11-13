@@ -69,12 +69,36 @@ class OutlineCornersTest {
             },
         )
 
+    // One test per style and theme, so a run's console names the look that broke (the failure message lists the cases).
+    @Test fun `Glass dark - a field's focus and error outline goes round all four corners`() = fields(Style.Glass, dark = true)
+
+    @Test fun `Glass light - a field's focus and error outline goes round all four corners`() = fields(Style.Glass, dark = false)
+
+    @Test fun `Soft dark - a field's focus and error outline goes round all four corners`() = fields(Style.Soft, dark = true)
+
+    @Test fun `Soft light - a field's focus and error outline goes round all four corners`() = fields(Style.Soft, dark = false)
+
+    @Test fun `Brutal dark - a field's focus and error outline goes round all four corners`() = fields(Style.Brutal, dark = true)
+
+    @Test fun `Brutal light - a field's focus and error outline goes round all four corners`() = fields(Style.Brutal, dark = false)
+
+    @Test fun `Paper dark - a field's focus and error outline goes round all four corners`() = fields(Style.Paper, dark = true)
+
+    @Test fun `Paper light - a field's focus and error outline goes round all four corners`() = fields(Style.Paper, dark = false)
+
+    @Test fun `Signal dark - a field's focus and error outline goes round all four corners`() = fields(Style.Signal, dark = true)
+
+    @Test fun `Signal light - a field's focus and error outline goes round all four corners`() = fields(Style.Signal, dark = false)
+
+    @Test fun `Solid dark - a field's focus and error outline goes round all four corners`() = fields(Style.Solid, dark = true)
+
+    @Test fun `Solid light - a field's focus and error outline goes round all four corners`() = fields(Style.Solid, dark = false)
+
     @Test
-    fun `a field's focus and error outline goes round all four corners in every style, dark and light`() {
-        val gaps = mutableListOf<String>()
-        for (style in Style.entries) for (dark in listOf(true, false)) for (case in fieldCases) {
-            gaps += check(style, dark, case)
-        }
+    fun `every style is covered`() = kotlin.test.assertEquals(6, Style.entries.size, "a new style needs its corner tests here")
+
+    private fun fields(style: Style, dark: Boolean) {
+        val gaps = fieldCases.flatMap { check(style, dark, it) }
         if (gaps.isNotEmpty()) fail("Outlines cut at the corners (${gaps.size}):\n" + gaps.joinToString("\n"))
     }
 
