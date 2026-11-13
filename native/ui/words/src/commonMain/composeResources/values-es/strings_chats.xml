@@ -332,4 +332,5 @@
     <string name="chatsNewGettingReadySlow">Aún se leen los proyectos y modelos de este servidor…</string>
     <string name="chatsHomeNotReadTitle">No se leyeron todas tus conversaciones</string>
     <string name="chatsHomeNotReadBody">El servidor respondió, pero esta página no pudo leer su lista, así que no puede decir que no hay ninguna. Inténtalo de nuevo para leerla.</string>
+    <string name="chatsNewSetupFailed">No se pudieron leer los proyectos y modelos de este servidor.</string>
 </resources>

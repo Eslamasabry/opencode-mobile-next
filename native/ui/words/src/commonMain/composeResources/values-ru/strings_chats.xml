@@ -336,4 +336,5 @@
     <string name="chatsNewGettingReadySlow">Всё ещё читаем проекты и модели этого сервера…</string>
     <string name="chatsHomeNotReadTitle">Не все ваши чаты удалось прочитать</string>
     <string name="chatsHomeNotReadBody">Сервер ответил, но эта страница не смогла прочитать его список, поэтому не может сказать, что чатов нет. Повторите, чтобы прочитать его.</string>
+    <string name="chatsNewSetupFailed">Не удалось прочитать проекты и модели этого сервера.</string>
 </resources>

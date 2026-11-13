@@ -323,4 +323,5 @@
     <string name="chatsNewGettingReadySlow">Masih membaca proyek dan model server ini…</string>
     <string name="chatsHomeNotReadTitle">Tidak semua percakapan Anda terbaca</string>
     <string name="chatsHomeNotReadBody">Server menjawab, tetapi halaman ini tidak bisa membaca daftarnya, jadi tidak bisa bilang tidak ada percakapan. Coba lagi untuk membacanya.</string>
+    <string name="chatsNewSetupFailed">Proyek dan model server ini tidak dapat dibaca.</string>
 </resources>
