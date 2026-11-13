@@ -23,15 +23,27 @@ class RetryStatusTest {
     fun `B-CHAT-016 a retry is only called a rate limit when it is one`() {
         // Dart: "Retrying 2 in 0:42" for a dropped socket.
         assertEquals(
-            RetryBannerFacts(rateLimited = false, attempt = 2, secondsLeft = 42),
+            RetryBannerFacts(rateLimited = false, attempt = 2, secondsLeft = 42, why = RetryWhy.ProviderUnreachable),
             retryBannerFacts(2, now + 42_000, "ECONNRESET: The socket connection was closed", now),
         )
         // "Retrying 1…"
-        assertEquals(RetryBannerFacts(false, 1, null), retryBannerFacts(1, null, "Overloaded", now))
+        assertEquals(RetryBannerFacts(false, 1, null, RetryWhy.ProviderBusy), retryBannerFacts(1, null, "Overloaded", now))
         // "Rate limited. Retrying 3 in 0:05"
-        assertEquals(RetryBannerFacts(true, 3, 5), retryBannerFacts(3, now + 5_000, "429 Too Many Requests", now))
+        assertEquals(RetryBannerFacts(true, 3, 5, offerWayOut = true), retryBannerFacts(3, now + 5_000, "429 Too Many Requests", now))
         assertEquals(true, retryReasonIsRateLimit("Rate limit exceeded, backing off"))
         assertEquals(false, retryReasonIsRateLimit("Overloaded"))
+    }
+
+    @Test
+    fun `a retry that keeps failing says why and offers a way out after three tries`() {
+        val early = retryBannerFacts(2, now + 9_000, "getaddrinfo ENOTFOUND api.example.com", now)
+        assertEquals(RetryWhy.ProviderUnreachable, early.why)
+        assertEquals(false, early.offerWayOut)
+        val late = retryBannerFacts(RETRY_OFFER_WAY_OUT_AFTER, now + 9_000, "fetch failed", now)
+        assertEquals(RetryWhy.ProviderUnreachable, late.why)
+        assertEquals(true, late.offerWayOut)
+        assertEquals(RetryWhy.ProviderBusy, retryBannerFacts(4, null, "503 Service Unavailable", now).why)
+        assertNull(retryBannerFacts(4, null, null, now).why)
     }
 
     @Test

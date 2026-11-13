@@ -63,7 +63,7 @@ internal fun liveLineWords(
                         is LiveNoticeUi.Stall -> KitTurnLiveTone.Quiet
                         else -> KitTurnLiveTone.Working
                     }
-                LiveLineWords(words, words, tone)
+                LiveLineWords(words, words, tone, step = retryWhyWords(notice))
             }
             else -> null
         }

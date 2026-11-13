@@ -522,6 +522,8 @@
     <string name="agentErrorRecovered">The agent carried on after this.</string>
     <string name="chatUiRetryingSoon">Retrying%1$s…</string>
     <string name="chatUiRetryingCountdown">Retrying%1$s in %2$s</string>
+    <string name="chatUiRetryWhyUnreachable">Can’t reach the model’s provider. Check this phone’s connection.</string>
+    <string name="chatUiRetryWhyBusy">The model’s provider is not answering right now.</string>
     <string name="chatUiCompactAgain">Shorten again</string>
     <string name="chatUiCompactionFailedHint">The conversation is still too long for the model, so the next turn will try again.</string>
     <string name="chatStripContextPending">Context pending</string>
