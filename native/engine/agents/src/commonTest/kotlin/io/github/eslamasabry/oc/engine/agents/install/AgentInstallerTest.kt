@@ -264,10 +264,6 @@ class AgentInstallerTest {
         }
         assertTrue(jobs.calls.isEmpty())
     }
-}
-
-private fun AgentSetupJob(agent: AgentId, state: AgentSetupJobState, component: String?, done: Long?, total: Long?) =
-    AgentSetupJob(agent, state, component, done, total, null
 
     @Test
     fun `B-AGENT-120 a retired agent is refused before anything starts`() = runTest {
@@ -277,3 +273,6 @@ private fun AgentSetupJob(agent: AgentId, state: AgentSetupJobState, component: 
         assertTrue(jobs.calls.isEmpty())
     }
 }
+
+private fun AgentSetupJob(agent: AgentId, state: AgentSetupJobState, component: String?, done: Long?, total: Long?) =
+    AgentSetupJob(agent, state, component, done, total, null)
