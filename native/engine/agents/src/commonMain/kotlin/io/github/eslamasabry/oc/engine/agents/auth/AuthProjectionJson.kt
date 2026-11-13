@@ -12,7 +12,7 @@ import kotlinx.serialization.json.JsonPrimitive
 /**
  * The probe's narrow allowlist projection (port of `AgentAuthProbeResult.fromJson`, lib/domain/agent_auth_probe.dart).
  * Only `state`, `accountDisplayName` and `error` cross the bridge; unknown, malformed or contradictory replies are
- * errors (`InvalidResponse`), never a guessed signed-out state. `:android:agenthost` decodes its reply with this.
+ * errors (`InvalidResponse`), never a guessed signed-out state. `:android:linux` decodes its reply with this.
  */
 public object AuthProjectionJson {
     private val CONTROL = Regex("[\\x00-\\x1f\\x7f]")
