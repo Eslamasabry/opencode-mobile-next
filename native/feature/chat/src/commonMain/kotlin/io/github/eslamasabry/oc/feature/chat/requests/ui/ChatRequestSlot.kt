@@ -405,7 +405,7 @@ private fun PermissionWaiting(
 private fun changeOnCard(change: PermissionChangeUi, ask: AskView, onDetails: (() -> Unit)?): KitRequestChange {
     val mask = rememberKitMask()
     val first = change.first
-    val preview = remember(first, mask) { first?.let { KitDiffPreview.fromPatch(mask(it)) } ?: KitDiffPreview.Empty }
+    val preview = remember(first, mask) { first?.let { KitDiffPreview.fromPatch(mask(it), RequestCardRules.CARD_PREVIEW_LINES) } ?: KitDiffPreview.Empty }
     val name = change.files.firstOrNull()?.path ?: askWhat(ask)
     val open = onDetails ?: {}
     return KitRequestChange(

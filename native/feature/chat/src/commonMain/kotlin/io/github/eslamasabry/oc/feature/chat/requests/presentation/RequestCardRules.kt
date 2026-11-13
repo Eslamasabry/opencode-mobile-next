@@ -7,6 +7,12 @@ import io.github.eslamasabry.oc.engine.requests.ask.AskView
  * P-013: what a permission card shows besides its question, so it says each thing once, in plain words.
  */
 public object RequestCardRules {
+    /**
+     * Lines of a change the card shows before "Show all" (review 2026-11-13 #1): enough to read what it writes, few
+     * enough that the card rarely scrolls; Details holds the whole change.
+     */
+    public const val CARD_PREVIEW_LINES: Int = 4
+
     /** Verbs whose question already names the kind of action ("Edit game.js?", "Run npm test?"). */
     private val selfNaming =
         setOf(AskVerb.Run, AskVerb.Edit, AskVerb.Create, AskVerb.Delete, AskVerb.Read, AskVerb.ReadFolder, AskVerb.Fetch, AskVerb.WebSearch)

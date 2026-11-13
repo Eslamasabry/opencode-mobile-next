@@ -181,4 +181,13 @@ class PermissionAnswersScreenTest {
             assertTrue(named("Copy tool").isEmpty() && named("Copy runs in").isEmpty(), "no copy mark per fact")
             assertTrue(onAllNodes(hasTestTag("kit-details-copy-all"), useUnmergedTree = true).fetchSemanticsNodes().isEmpty())
         }
+
+    @Test
+    fun `B-CHAT-REV3-007 the waiting card says it needs a decision once`() = runComposeUiTest {
+        setContent { Slot(RequestSlotUi(card("edit", listOf("e9.txt"), always = false))) }
+        val cues =
+            onAllNodes(reads("Needs your decision") or hasContentDescription("Needs your decision", substring = true))
+                .fetchSemanticsNodes()
+        assertEquals(1, cues.size, "one waiting cue for one card: $cues")
+    }
 }
