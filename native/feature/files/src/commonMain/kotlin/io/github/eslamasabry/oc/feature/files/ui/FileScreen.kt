@@ -126,9 +126,7 @@ import io.github.eslamasabry.oc.ui.words.res.readerUiOpenReview
 import io.github.eslamasabry.oc.ui.words.res.readerUiPathLine
 import io.github.eslamasabry.oc.ui.words.res.readerUiReferenceAdded
 import io.github.eslamasabry.oc.ui.words.res.readerUiSavedDevice
-import io.github.eslamasabry.oc.ui.words.res.stateReaderNoWrap
 import io.github.eslamasabry.oc.ui.words.res.stateReaderSaveFailed
-import io.github.eslamasabry.oc.ui.words.res.stateReaderWrap
 import io.github.eslamasabry.oc.ui.words.res.stateStorageAppAction
 import io.github.eslamasabry.oc.ui.words.res.stateStorageAppBody
 import io.github.eslamasabry.oc.ui.words.res.stateStorageAppTitle
@@ -153,26 +151,15 @@ public fun FileScreen(state: FileUi, actions: FileActions) {
         val ready = state.phase == FilePhase.Ready
         val openWithShown = state.body is FileBody.Binary && state.canOpenWith
         val offerOpenWith = (ready && state.canOpenWith || state.canOpenLocal) && !openWithShown
-        val wrapLabel =
-            stringResource(if (state.wrapCode) Res.string.stateReaderNoWrap else Res.string.stateReaderWrap)
         val installLabel = stringResource(Res.string.phoneFileInstallAction)
         val openWithLabel = stringResource(Res.string.filesOpenWith)
         val saveLabel = stringResource(Res.string.fileSave)
         val shareLabel = stringResource(Res.string.fileShareAction)
         val moreLabel = stringResource(Res.string.filesMoreActions)
-        // The file's other acts live in the page's bar menu (Back, Find and "More actions" are the frame's): wrap,
-        // install, open with, save, share, then the one "More file actions" row for the longer list.
+        // The file's other acts live in the page's bar menu (Back, Find, Copy contents and the one Wrap lines are the
+        // frame's and document's): install, open with, save, share, then the one "More file actions" row for the longer list.
         val menu =
             buildList {
-                if (ready && state.body is FileBody.Code)
-                    add(
-                        KitViewerMenuItem(
-                            wrapLabel,
-                            actions::toggleWrap,
-                            icon = KitIcons.wrapText,
-                            enabled = !state.preferencesSaving,
-                        ),
-                    )
                 if (state.canInstall)
                     add(
                         KitViewerMenuItem(
@@ -220,7 +207,7 @@ public fun FileScreen(state: FileUi, actions: FileActions) {
                     if (state.offline)
                         KitNotice(
                             stringResource(Res.string.filesShowingSaved),
-                            Modifier.padding(horizontal = Space.S4.dp),
+                            Modifier,
                             tone = StatusTone.Attention,
                             actions = listOf(KitLineAction(stringResource(Res.string.kitTryAgain), actions::retry)),
                             liveRegion = false,
@@ -228,7 +215,7 @@ public fun FileScreen(state: FileUi, actions: FileActions) {
                     state.notice?.let { notice ->
                         KitNotice(
                             noticeWords(notice, state.name),
-                            Modifier.padding(horizontal = Space.S4.dp),
+                            Modifier,
                             dismiss =
                                 KitLineAction(
                                     stringResource(Res.string.kitTopBarClose),
@@ -301,7 +288,7 @@ public fun FileScreen(state: FileUi, actions: FileActions) {
                         actions.retry()
                     },
                 )
-                if (state.canChooseWrap && (state.body is FileBody.Code || state.source))
+                if (state.canChooseWrap && state.source && state.body !is FileBody.Code)
                     KitRow(
                         stringResource(
                             if (state.wrapCode) Res.string.filesUnwrapCode
@@ -483,6 +470,9 @@ private fun Body(state: FileUi, actions: FileActions) {
                                     body.text,
                                     code = true,
                                     initialLine = body.line,
+                                    // The saved wrap choice is the one Wrap lines tool of the page's menu.
+                                    wrap = state.wrapCode,
+                                    onWrapChanged = { actions.toggleWrap() },
                                     lineContent = { text, modifier, wrap ->
                                         KitCodeLine(text, language, modifier, wrap, highlight = highlight)
                                     },
