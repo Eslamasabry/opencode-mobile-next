@@ -35,12 +35,14 @@ internal object LiquidHoldShader {
      * ink-side hold: what looks like the pane's ink (under dark words its blackness, 1 - the largest channel; under light
      * words its whiteness, the smallest channel) past the page's ground round it (the least ink of the disc) keeps
      * local.w; the same amount moves on every channel, so chroma is kept. Where ink-like things cover most of the disc
-     * (past 60 %: a dark picture under dark words) it lets go; in the rim's outer half it works at 60 %, so the bend
-     * still shows the page's strokes at about half their strength (the bent words there read as grey smudges at full).
+     * (past 60 %: a dark picture under dark words) it lets go; in the rim's outer half it works at `inkRim` (its own
+     * uniform), so the bend still shows the page's strokes, fainter (bent whole, they read as grey smudges and words).
      * 37 taps per pixel, as before.
      */
     const val LOCAL_HOLD: String =
         """
+uniform float inkRim;
+
 float inkOf(float3 c, float lightInk) { return lightInk > 0.5 ? min(c.r, min(c.g, c.b)) : 1.0 - max(c.r, max(c.g, c.b)); }
 
 float3 localHold(float2 at, float3 rgb, float deep, float scale, float lightInk) {
@@ -72,8 +74,8 @@ float3 localHold(float2 at, float3 rgb, float deep, float scale, float lightInk)
     if (local.w < 1.0) {
         // Lines of text cover up to about half the disc; past 60 % ink-like things are the ground itself.
         float share = (isum / wsum - imin) / max(imax - imin, 0.05);
-        // In the rim's outer half the ink-side hold is at 60 %: the bend still shows the page's strokes, at half strength.
-        float strength = (1.0 - ss(0.6, 0.9, share)) * mix(0.6, 1.0, deep);
+        // In the rim's outer half the ink-side hold works at inkRim: the bend still shows the page's strokes, fainter.
+        float strength = (1.0 - ss(0.6, 0.9, share)) * mix(inkRim, 1.0, deep);
         float inkNow = inkOf(o, lightInk);
         if (inkNow > imin) {
             float shift = (inkNow - (imin + (inkNow - imin) * local.w)) * strength;
@@ -170,11 +172,12 @@ internal class LiquidHoldUniforms(
     val saturation: Float,
     val contrast: Float,
     val brightness: Float,
-    /** The local hold: (reach px, free, slope, ink kept); reach 0 = off, ink kept 1 = off. A 3-long array has no ink hold. */
-    val local: FloatArray = floatArrayOf(0f, 0f, 1f, 1f),
+    /** The local hold: (reach px, free, slope, ink kept, ink in the rim); reach 0 = off, ink kept 1 = off. */
+    val local: FloatArray = floatArrayOf(0f, 0f, 1f, 1f, 1f),
 ) {
     fun set(p: LiveShaderProgram) {
         p.float4("local", local[0], local[1], local[2], local.getOrElse(3) { 1f })
+        p.float("inkRim", local.getOrElse(4) { 1f })
         p.float3("knee", knee[0], knee[1], knee[2])
         p.float("hold", hold)
         p.float4("box", left, top, halfWidth, halfHeight)
@@ -218,7 +221,7 @@ internal class LiquidHoldUniforms(
 
 /** [hold]'s local hold as the shaders' `local` uniform, its reach [reachPx]; off (reach 0) when it has none. */
 internal fun localOf(hold: io.github.eslamasabry.oc.ui.design.effects.LiquidHold, reachPx: Float): FloatArray =
-    if (hold.local && reachPx > 0f) floatArrayOf(reachPx, hold.localFree, hold.localSlope, hold.inkKeep) else floatArrayOf(0f, 0f, 1f, 1f)
+    if (hold.local && reachPx > 0f) floatArrayOf(reachPx, hold.localFree, hold.localSlope, hold.inkKeep, hold.inkRim) else floatArrayOf(0f, 0f, 1f, 1f, 1f)
 
 /**
  * The plain liquid pane where the platform has no lens but the kit's tests want to see what the pane keeps: its

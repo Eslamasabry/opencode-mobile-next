@@ -532,8 +532,8 @@ internal class JoinUniforms(
     val lightDir: FloatArray = SHIPPED_LIGHT,
     /** The bend's profile (-1 soft dome, 0 the shipped circle, 1 sharp bevel). */
     val bendShape: Float = 0f,
-    /** The local hold: (reach px, free, slope, ink kept); reach 0 = off, ink kept 1 = off. A 3-long array has no ink hold. */
-    val local: FloatArray = floatArrayOf(0f, 0f, 1f, 1f),
+    /** The local hold: (reach px, free, slope, ink kept, ink in the rim); reach 0 = off, ink kept 1 = off. */
+    val local: FloatArray = floatArrayOf(0f, 0f, 1f, 1f, 1f),
 ) {
     /** [light]: the finger's light for modes 4 and 5 (centre x, centre y, radius or line width in px, strength). */
     fun set(p: LiveShaderProgram, mode: Float, res: Float, light: FloatArray = NO_LIGHT) {
@@ -555,6 +555,7 @@ internal class JoinUniforms(
         p.float3("knee", knee[0], knee[1], knee[2])
         p.float("hold", hold)
         p.float4("local", local[0], local[1], local[2], local.getOrElse(3) { 1f })
+        p.float("inkRim", local.getOrElse(4) { 1f })
         p.float4("tintA", tintMine.red * tintMine.alpha, tintMine.green * tintMine.alpha, tintMine.blue * tintMine.alpha, tintMine.alpha)
         p.float4("tintB", tintTheirs.red * tintTheirs.alpha, tintTheirs.green * tintTheirs.alpha, tintTheirs.blue * tintTheirs.alpha, tintTheirs.alpha)
         p.float("rimPx", rimPx)

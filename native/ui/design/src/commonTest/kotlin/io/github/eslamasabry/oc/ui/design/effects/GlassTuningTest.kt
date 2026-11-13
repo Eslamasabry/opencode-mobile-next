@@ -46,6 +46,7 @@ class GlassTuningTest {
             assertEquals(if (held) h.localFree else 0f, k.localFree, "$kind local free")
             assertEquals(if (held) h.localSlope else 1f, k.localSlope, "$kind local slope")
             assertEquals(if (held) h.inkKeep else 1f, k.inkKeep, "$kind ink-like strokes kept")
+            assertEquals(if (held) h.inkRim else 1f, k.inkRim, "$kind ink-like strokes held in the rim")
             assertEquals(1f, k.wordsClear, "$kind: the page under the words is cleared as today")
             assertEquals(if (kind == GlassPaneKind.Chip) LiquidJoin.REACH_PILL_DP else LiquidJoin.REACH_MENU_DP, k.joinReachDp)
         }

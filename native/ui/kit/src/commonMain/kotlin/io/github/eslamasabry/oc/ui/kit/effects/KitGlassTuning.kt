@@ -38,7 +38,7 @@ internal fun KitLiquidPaneSpec.tuned(t: GlassKnobs, shipped: GlassKnobs, platfor
     val pass = if (t.passThrough != shipped.passThrough) GlassTuning.passThrough(t.passThrough) else null
     val softenOn = if (t.soften != shipped.soften) t.soften >= .5f else pass?.let { it[0] >= .5f }
     val limit = if (t.colourLimit != shipped.colourLimit) t.colourLimit else pass?.get(3)
-    val localMoved = t.localDp != shipped.localDp || t.localFree != shipped.localFree || t.localSlope != shipped.localSlope || t.inkKeep != shipped.inkKeep
+    val localMoved = t.localDp != shipped.localDp || t.localFree != shipped.localFree || t.localSlope != shipped.localSlope || t.inkKeep != shipped.inkKeep || t.inkRim != shipped.inkRim
     val holdMoved = softenOn != null || limit != null || localMoved
     val recipe =
         r.copy(
@@ -61,6 +61,7 @@ internal fun KitLiquidPaneSpec.tuned(t: GlassKnobs, shipped: GlassKnobs, platfor
                         localFree = pick(t.localFree, shipped.localFree, r.hold.localFree),
                         localSlope = pick(t.localSlope, shipped.localSlope, r.hold.localSlope),
                         inkKeep = pick(t.inkKeep, shipped.inkKeep, r.hold.inkKeep),
+                        inkRim = pick(t.inkRim, shipped.inkRim, r.hold.inkRim),
                     )
                 else r.hold,
         )

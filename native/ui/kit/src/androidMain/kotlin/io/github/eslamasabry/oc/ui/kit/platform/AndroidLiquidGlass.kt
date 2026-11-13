@@ -86,6 +86,7 @@ internal object AndroidLiquidGlass {
                         setFloatUniform("corner", u.radius, u.rimPx)
                         setFloatUniform("cc", u.saturation, u.contrast, u.brightness, 0f)
                         setFloatUniform("local", u.local[0], u.local[1], u.local[2], u.local.getOrElse(3) { 1f })
+                        setFloatUniform("inkRim", u.local.getOrElse(4) { 1f })
                     }
                 }
             },

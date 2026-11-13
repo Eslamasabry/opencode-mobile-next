@@ -104,6 +104,11 @@ public data class LiquidHold(
      * picture under dark words) it lets go, so a dark thing is never lifted to fog. 1 = off. Outside the rim, as the rest.
      */
     val inkKeep: Float = 1f,
+    /**
+     * How much of the ink-side hold works in the rim's outer half, where the lens bends the page (0: none, the bent
+     * strokes whole; 1: as in the middle, the bend shows only colour). Between, the bend still shows the page's strokes.
+     */
+    val inkRim: Float = 1f,
 ) {
     /** Whether this hold is the local-contrast one. */
     public val local: Boolean get() = localDp > 0f
@@ -159,7 +164,7 @@ public object LiquidEdge {
      * Round two (2026-11-14): the mean is an even disc and reaches past a line's pitch (about 24 dp), so a line of text
      * no longer survives in it as a bar.
      */
-    public val MODAL_HOLD: LiquidHold = LiquidHold(knee = true, chroma = HOLD_CHROMA, localDp = 28f, localFree = .02f, localSlope = .10f, inkKeep = .10f)
+    public val MODAL_HOLD: LiquidHold = LiquidHold(knee = true, chroma = HOLD_CHROMA, localDp = 28f, localFree = .02f, localSlope = .10f, inkKeep = .10f, inkRim = .8f)
 
     /** A sheet's hold: a sheet is modal and holds a list, so the page's words between its rows may be held harder. */
     public val SHEET_HOLD: LiquidHold = MODAL_HOLD

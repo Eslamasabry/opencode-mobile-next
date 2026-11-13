@@ -206,7 +206,7 @@ class KitLiquidHoldShaderTest {
 
     private val darkInk = floatArrayOf(1f, 1f, 0f)
     private val lightInk = floatArrayOf(1f, 1f, 1f)
-    private val modal = LiquidEdge.MODAL_HOLD.let { floatArrayOf(it.localDp, it.localFree, it.localSlope, it.inkKeep) }
+    private val modal = LiquidEdge.MODAL_HOLD.let { floatArrayOf(it.localDp, it.localFree, it.localSlope, it.inkKeep, it.inkRim) }
 
     private fun spread(row: List<IntArray>, from: Int, to: Int, channel: Int = 1): Int = row.subList(from, to).map { it[channel] }.let { it.max() - it.min() }
 
@@ -311,7 +311,7 @@ class KitLiquidHoldShaderTest {
         }
         for (dark in listOf(false, true)) {
             val before = render(floatArrayOf(16f * d, .03f, .15f, 1f), dark)
-            val after = render(LiquidEdge.MODAL_HOLD.let { floatArrayOf(it.localDp * d, it.localFree, it.localSlope, it.inkKeep) }, dark)
+            val after = render(LiquidEdge.MODAL_HOLD.let { floatArrayOf(it.localDp * d, it.localFree, it.localSlope, it.inkKeep, it.inkRim) }, dark)
             val out = java.awt.image.BufferedImage(w, h * 2, java.awt.image.BufferedImage.TYPE_INT_RGB)
             for (yy in 0 until h) for (xx in 0 until w) {
                 out.setRGB(xx, yy, before.getColor(xx, yy))
