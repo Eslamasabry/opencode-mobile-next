@@ -541,13 +541,14 @@ internal class JoinUniforms(
         p.float4("tintB", tintTheirs.red * tintTheirs.alpha, tintTheirs.green * tintTheirs.alpha, tintTheirs.blue * tintTheirs.alpha, tintTheirs.alpha)
         p.float("rimPx", rimPx)
         p.float("falloff", RIM_FALLOFF)
+        p.float("rimFloor", io.github.eslamasabry.oc.ui.design.effects.RimLight.FLOOR)
     }
 }
 
 private val NO_LIGHT: FloatArray = floatArrayOf(0f, 0f, 1f, 0f)
 
-/** How tightly the rim light gathers at its lit arcs (the library pane's, AndroidLiquidGlass.RIM_FALLOFF). */
-internal const val RIM_FALLOFF: Float = 1.6f
+/** How tightly the rim light gathers at its lit arcs (the plain pane's: RimLight.FALLOFF). */
+internal const val RIM_FALLOFF: Float = io.github.eslamasabry.oc.ui.design.effects.RimLight.FALLOFF
 
 /** The knee switched off (the glass keeps all light). */
 internal val KNEE_OFF: FloatArray = floatArrayOf(1f, 1f, 1f)
@@ -562,7 +563,7 @@ internal val KNEE_OFF: FloatArray = floatArrayOf(1f, 1f, 1f)
 internal object LiquidJoinShader {
     fun source(effect: Boolean): String =
         (if (effect) "uniform shader content;\nhalf4 sampleContent(float2 p) { return content.eval(p); }\n"
-        else "half4 sampleContent(float2 p) { return half4(0.0); }\n") + BODY
+        else "half4 sampleContent(float2 p) { return half4(0.0); }\n") + io.github.eslamasabry.oc.ui.design.effects.RimLight.SHADER_LIT + BODY
 
     private const val BODY: String =
         """
@@ -585,6 +586,7 @@ uniform float4 tintA;
 uniform float4 tintB;
 uniform float rimPx;
 uniform float falloff;
+uniform float rimFloor;
 uniform float4 light;
 
 float sat01(float x) { return clamp(x, 0.0, 1.0); }
@@ -673,7 +675,8 @@ half4 main(float2 q) {
     }
     if (mode < 2.5) {
         float gl = max(length(bend), 0.05);
-        float lit = pow(abs(dot(bend / gl, float2(0.70710678, 0.70710678))), falloff);
+        // The plain pane's light (KitRimShader): its two lit arcs the brightest, never below the floor elsewhere.
+        float lit = rimLit(dot(bend / gl, float2(0.70710678, 0.70710678)), falloff, rimFloor);
         float edge = sat01(0.5 - dist) * sat01(dist + rimPx + 0.5);
         return half4(edge * lit * mine);
     }

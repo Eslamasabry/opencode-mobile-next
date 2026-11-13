@@ -134,12 +134,13 @@ internal class LiquidHoldUniforms(
 /**
  * The plain liquid pane where the platform has no lens but the kit's tests want to see what the pane keeps: its
  * backdrop pressed together by the recipe's colour controls, blurred by the recipe's blur, then through the hold
- * ([LiquidHoldShader]) under the pane's tint. No bend and no rim light (a desktop cannot show those). Used by tests
- * through a fake platform that says it has a lens; Android draws its own (`AndroidLiquidGlass`).
+ * ([LiquidHoldShader]) under the pane's tint, and the rim light Android's library draws ([drawKitRim]). No bend. Used
+ * by tests through a fake platform that says it has a lens; Android draws its own (`AndroidLiquidGlass`).
  */
 public fun kitLiquidPlainStandIn(spec: KitLiquidPaneSpec, backdrop: KitLiquidBackdrop, shape: CornerBasedShape, platform: KitPlatform): Modifier {
     val at = arrayOfNulls<LayoutCoordinates>(1)
     val program = platform.liveShaders?.compile(LiquidHoldShader.SOURCE)
+    val rim = KitRimShader.programFor(platform.liveShaders)
     return Modifier.onGloballyPositioned { at[0] = it }
         .clip(shape)
         .drawWithCache {
@@ -157,6 +158,7 @@ public fun kitLiquidPlainStandIn(spec: KitLiquidPaneSpec, backdrop: KitLiquidBac
                 layer.record { backdrop.draw(this, c) }
                 drawLayer(layer)
                 drawLiquidTint(spec, shape)
+                drawKitRim(spec, shape, rim)
             }
         }
 }

@@ -42,7 +42,8 @@ class FakeKitPlatform(
         transform: () -> Float,
     ): androidx.compose.ui.Modifier {
         liquidSpecs += spec
-        return io.github.eslamasabry.oc.ui.kit.effects.kitLiquidStandIn(spec, shape)
+        // The rim light as Android's library draws it, where this platform compiles shaders (desktop's in desktop tests).
+        return io.github.eslamasabry.oc.ui.kit.effects.kitLiquidStandIn(spec, shape, liveShaders)
     }
 
     val haptics: MutableList<KitHaptic> = mutableListOf()

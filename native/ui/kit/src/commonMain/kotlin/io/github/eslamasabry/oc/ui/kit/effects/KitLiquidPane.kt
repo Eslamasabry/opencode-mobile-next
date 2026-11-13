@@ -120,7 +120,19 @@ internal fun DrawScope.drawLiquidTint(spec: KitLiquidPaneSpec, shape: Shape? = n
     }
 }
 
-/** Where the platform cannot bend light: the pane's tint alone, clipped to its shape. Never drawn by the desktop app. */
-public fun kitLiquidStandIn(spec: KitLiquidPaneSpec, shape: CornerBasedShape): Modifier =
-    Modifier.clip(shape).drawBehind { drawLiquidTint(spec, shape) }
+/**
+ * Where the platform cannot bend light: the pane's tint, clipped to its shape, and, given the platform's [shaders], the
+ * rim light Android's library draws ([drawKitRim]). Never drawn by the desktop app; the kit's tests draw it.
+ */
+public fun kitLiquidStandIn(
+    spec: KitLiquidPaneSpec,
+    shape: CornerBasedShape,
+    shaders: io.github.eslamasabry.oc.ui.kit.live.LiveShaderCompiler? = null,
+): Modifier {
+    val rim = KitRimShader.programFor(shaders)
+    return Modifier.clip(shape).drawBehind {
+        drawLiquidTint(spec, shape)
+        drawKitRim(spec, shape, rim)
+    }
+}
 
