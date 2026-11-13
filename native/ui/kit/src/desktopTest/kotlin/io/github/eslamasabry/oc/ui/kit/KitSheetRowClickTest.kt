@@ -16,6 +16,8 @@ import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.unit.Density
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
+import io.github.eslamasabry.oc.ui.kit.choice.KitChoice
+import io.github.eslamasabry.oc.ui.kit.choice.KitChoiceList
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHeight
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
@@ -57,6 +59,42 @@ class KitSheetRowClickTest {
         assertTrue(picked, "the click took effect")
         onNodeWithText("Enterprise URL").assertExistsCompat()
         assertEquals(before, onNodeWithText("GitHub Enterprise").getBoundsInRoot(), "the row stayed where it was")
+    }
+
+    @Test
+    fun `picking a choice in a sheet with pinned buttons shows the field that depends on it`() = runComposeUiTest {
+        var picked by mutableStateOf<String?>("com")
+        setContent {
+            CompositionLocalProvider(LocalDensity provides Density(1f)) {
+                KitTheme(KitAppearance(motion = MotionLevel.Off), FakeKitPlatform(), "en", stillFrame = true) {
+                    InWindow(400, 700) {
+                        KitSheetHost {
+                            KitSheet(
+                                visible = true,
+                                onDismissRequest = {},
+                                title = "Provider",
+                                primary = KitAction("Start", onClick = {}),
+                            ) {
+                                Column {
+                                    KitChoiceList(
+                                        listOf(KitChoice("com", "GitHub.com"), KitChoice("ent", "GitHub Enterprise")),
+                                        picked,
+                                        "Where",
+                                        empty = {},
+                                        onSelect = { picked = it },
+                                    )
+                                    if (picked == "ent") KitText("Enterprise URL")
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        onNodeWithText("Enterprise URL").assertDoesNotExist()
+        onNodeWithText("GitHub Enterprise").performClick()
+        waitForIdle()
+        onNodeWithText("Enterprise URL").assertExists()
     }
 
     private fun androidx.compose.ui.test.SemanticsNodeInteraction.assertExistsCompat() = assertExists()
