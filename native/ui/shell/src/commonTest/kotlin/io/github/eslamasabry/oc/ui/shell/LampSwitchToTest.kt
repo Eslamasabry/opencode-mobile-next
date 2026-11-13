@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.shell
 
+import androidx.compose.runtime.mutableStateListOf
 import androidx.navigation3.runtime.NavKey
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
@@ -29,7 +30,9 @@ class LampSwitchToTest {
     private val b = conv("B")
     private val c = conv("C")
 
-    private fun navigator(): ShellNavigator = ShellNavigator().also { it.attach(mutableListOf<NavKey>(ChatsRoute.Home)) }
+    /** The same list type NavShell attaches (rememberNavBackStack is a SnapshotStateList). */
+    private fun navigator(): ShellNavigator =
+        ShellNavigator().also { it.attach(mutableStateListOf<NavKey>(ChatsRoute.Home)) }
 
     private fun ShellNavigator.stack(): String = snapshot().joinToString(" > ") { it.label() }
 
@@ -236,7 +239,7 @@ class LampSwitchToTest {
         val saved = before.snapshot()
         // A new process: a new navigator, the shell comes up on Home, the activity puts the stack back.
         val after = ShellNavigator()
-        after.attach(mutableListOf<NavKey>(ChatsRoute.Home))
+        after.attach(mutableStateListOf<NavKey>(ChatsRoute.Home))
         after.restoreStack(saved)
         assertEquals("Home > A > B", after.stack())
         after.switchTo(c)
@@ -267,7 +270,7 @@ class LampSwitchToTest {
     fun `B-LAMP-N1 the request rides the switch, a plain switch drops it, and it ages out after ten seconds`() {
         val clock = MovingClock()
         val nav = ShellNavigator(clock)
-        nav.attach(mutableListOf<NavKey>(ChatsRoute.Home))
+        nav.attach(mutableStateListOf<NavKey>(ChatsRoute.Home))
         nav.openChat(a)
         nav.switchTo(b, request = "per_1")
         val sent = nav.requestFocus.value!!

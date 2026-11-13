@@ -193,7 +193,8 @@ public class ShellNavigator(clock: Clock = StoppedClock) : AppNavigator {
         val k = kept ?: return null
         val runStart = indexOfLast { it is ChatRoute }
         if (runStart < k.size) return null
-        return k.takeIf { subList(runStart - k.size, runStart) == it }
+        // toList(): the shell's stack is a SnapshotStateList, whose subList has no list equality.
+        return k.takeIf { subList(runStart - k.size, runStart).toList() == it }
     }
 
     /** Changes only the part of the stack that differs from [next], so entries below it are not touched. */
