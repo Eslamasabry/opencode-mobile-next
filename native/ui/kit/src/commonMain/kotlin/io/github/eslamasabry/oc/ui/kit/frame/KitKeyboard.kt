@@ -21,7 +21,9 @@ import androidx.compose.runtime.withFrameMillis
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
 import kotlin.math.roundToInt
 
@@ -91,6 +93,18 @@ internal fun kitSystemInsets(): WindowInsets = WindowInsets.systemBars.union(Win
 
 /** Pads by the keyboard's room as the kit reads it ([kitKeyboardInsets]): the kit's `imePadding`. */
 @Composable internal fun Modifier.kitKeyboardPadding(): Modifier = windowInsetsPadding(kitKeyboardInsets())
+
+/** The kit's `imePadding` for screens: pads by the keyboard's room as the kit reads it, never the raw measurement. */
+@Composable public fun Modifier.kitImePadding(): Modifier = kitKeyboardPadding()
+
+/** The keyboard's room as the kit reads it, in dp; a caller is composed again as it moves, so read it only to size. */
+@Composable
+public fun kitKeyboardHeight(): Dp {
+    LocalKitKeyboardShown.current?.let { shown -> if (!shown) return 0.dp }
+    val keyboard = kitKeyboardInsets()
+    val density = LocalDensity.current
+    return with(density) { keyboard.getBottom(density).toDp() }
+}
 
 private class KitKeyboardSettle {
     var capped by mutableStateOf(false)

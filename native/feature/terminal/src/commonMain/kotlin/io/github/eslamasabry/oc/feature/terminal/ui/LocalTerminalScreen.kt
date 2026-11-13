@@ -37,8 +37,8 @@ public fun LocalTerminalScreen(state: LocalTerminalUi, actions: LocalTerminalAct
         onPauseOrDispose {}
     }
     val selected = state.shells.firstOrNull { it.id == state.selected }
-    val keyboard = WindowInsets.ime.getBottom(LocalDensity.current)
-    val keyboardVisible = keyboard > 0
+    val keyboard = kitKeyboardHeight()
+    val keyboardVisible = keyboard > 0.dp
     var menu by remember { mutableStateOf(false) }
     val held =
         if (state.working) KitEnabled.Disabled(stringResource(Res.string.localTerminalStarting))
@@ -59,7 +59,7 @@ public fun LocalTerminalScreen(state: LocalTerminalUi, actions: LocalTerminalAct
     }
     BoxWithConstraints(Modifier.fillMaxSize()) {
         val compact =
-            maxHeight - with(LocalDensity.current) { keyboard.toDp() } < LOCAL_TERMINAL_COMPACT
+            maxHeight - keyboard < LOCAL_TERMINAL_COMPACT
         KitScreen(
             topBar = {
                 KitTopBar(

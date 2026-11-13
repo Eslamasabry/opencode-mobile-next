@@ -48,7 +48,7 @@ public fun ToolsScreen(state: ToolsUi, actions: ToolsActions) {
         edges = KitScreenEdges.Bleed,
     ) {
         Column(
-            Modifier.fillMaxSize().verticalScroll(rememberScrollState()).imePadding(),
+            Modifier.fillMaxSize().verticalScroll(rememberScrollState()).kitImePadding(),
             verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
         ) {
             KitButton(
