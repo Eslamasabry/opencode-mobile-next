@@ -15,6 +15,7 @@ import io.github.eslamasabry.oc.engine.transcript.turnfacts.ConnectorSearchOutco
 import io.github.eslamasabry.oc.engine.transcript.turnfacts.ToolCount
 import io.github.eslamasabry.oc.engine.transcript.turnfacts.ToolCountKind
 import io.github.eslamasabry.oc.engine.transcript.turnfacts.ToolDetail
+import io.github.eslamasabry.oc.engine.transcript.turnfacts.ToolFailure
 import io.github.eslamasabry.oc.engine.transcript.turnfacts.ToolFacts
 import io.github.eslamasabry.oc.engine.transcript.turnfacts.ToolKind
 import io.github.eslamasabry.oc.engine.transcript.turnfacts.toolIdWords
@@ -33,6 +34,7 @@ import io.github.eslamasabry.oc.ui.kitchat.markdown.KitMarkdown
 import io.github.eslamasabry.oc.ui.kitchat.markdown.KitMdSource
 import io.github.eslamasabry.oc.ui.kitchat.transcript.KitQuietLine
 import io.github.eslamasabry.oc.ui.words.res.chatStepDeclinedNote
+import io.github.eslamasabry.oc.ui.words.res.chatStepMalformedCall
 import io.github.eslamasabry.oc.ui.words.res.*
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
@@ -173,6 +175,11 @@ internal fun ToolStepBody(step: TurnStep, reply: ReplyActions?) {
     if (kind == ToolKind.Card || step.state == StepState.NotRun || step.state == StepState.Stopped)
         return
     if (output.errorText != null) {
+        if (output.failure == ToolFailure.MalformedCall) {
+            KitQuietLine(stringResource(Res.string.chatStepMalformedCall))
+            TechnicalText(text.removePrefix("Error:").trim(), reply)
+            return
+        }
         if (kind == ToolKind.Generic)
             Readable(input, reply, stringResource(Res.string.toolCardWhatWasSent))
         if (kind == ToolKind.AgentMessage) AgentMessageBody(step, reply)
