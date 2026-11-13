@@ -38,15 +38,18 @@ class GlassTuningTest {
             assertEquals(45f, k.lightDeg)
             assertEquals(1f, k.rimWidthDp)
             listOf(k.dispersion, k.bendShape, k.specular, k.sheen, k.innerShadow, k.tintLightness).forEach { assertEquals(0f, it, "$kind off by default") }
-            listOf(k.localDp, k.localFree).forEach { assertEquals(0f, it, "$kind local softening off") }
-            assertEquals(1f, k.localSlope)
+            // Menus, sheets and dialogs hold the fine detail behind their words (glass liquid 2026-11-14); nobody else.
+            val held = kind == GlassPaneKind.Menu || kind == GlassPaneKind.Sheet || kind == GlassPaneKind.Dialog
+            assertEquals(if (held) LiquidEdge.MODAL_HOLD.localDp else 0f, k.localDp, "$kind local softening")
+            assertEquals(if (held) LiquidEdge.MODAL_HOLD.localFree else 0f, k.localFree, "$kind local free")
+            assertEquals(if (held) LiquidEdge.MODAL_HOLD.localSlope else 1f, k.localSlope, "$kind local slope")
             assertEquals(1f, k.wordsClear, "$kind: the page under the words is cleared as today")
             assertEquals(if (kind == GlassPaneKind.Chip) LiquidJoin.REACH_PILL_DP else LiquidJoin.REACH_MENU_DP, k.joinReachDp)
         }
-        // The numbers the owner sees today: the bar 3 dp of blur and a 34 dp bend, the menu 12 dp and 48 dp.
+        // The numbers the owner sees today: the bar 3 dp of blur and a 34 dp bend, the menu 4 dp and 48 dp.
         assertEquals(3f, GlassTuning.shipped(GlassPaneKind.Bar, true).blurDp)
         assertEquals(34f, GlassTuning.shipped(GlassPaneKind.Bar, true).lensStrengthDp)
-        assertEquals(12f, GlassTuning.shipped(GlassPaneKind.Menu, true).blurDp)
+        assertEquals(4f, GlassTuning.shipped(GlassPaneKind.Menu, true).blurDp)
         assertEquals(48f, GlassTuning.shipped(GlassPaneKind.Dialog, false).lensStrengthDp)
         assertTrue(GlassTuning.Shipped.isShipped)
     }
@@ -92,7 +95,7 @@ class GlassTuningTest {
         val t = GlassTuning.Shipped.linked(GlassPaneKind.Bar, true, GlassKnob.Blur, 5f)
         assertEquals(5f, t.knobs(GlassPaneKind.Bar, true).blurDp)
         assertEquals(4f, t.knobs(GlassPaneKind.MessageBox, true).blurDp)
-        assertEquals(14f, t.knobs(GlassPaneKind.Menu, true).blurDp)
+        assertEquals(6f, t.knobs(GlassPaneKind.Menu, true).blurDp)
         assertEquals(3f, t.knobs(GlassPaneKind.Chip, true).blurDp)
         // The light theme is untouched.
         assertEquals(GlassTuning.shipped(GlassPaneKind.Bar, false), t.knobs(GlassPaneKind.Bar, false))

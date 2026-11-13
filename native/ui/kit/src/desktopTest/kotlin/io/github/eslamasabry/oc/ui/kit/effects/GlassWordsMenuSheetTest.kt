@@ -328,7 +328,7 @@ class GlassWordsMenuSheetTest {
             val bar = LiquidEdge.recipe(LiquidRole.Bar, dark)
             val menu = LiquidEdge.recipe(LiquidRole.Menu, dark)
             assertEquals(bar, joinedFrost(bar, menu, 0f), "no rows yet: the bar's frost (dark=$dark)")
-            assertEquals(bar.copy(blurDp = 12f), joinedFrost(bar, menu, 1f), "rows in: the menu's blur 12 dp, nothing else of the bar's moves (dark=$dark)")
+            assertEquals(bar.copy(blurDp = LiquidEdge.MODAL_BLUR_DP), joinedFrost(bar, menu, 1f), "rows in: the menu's blur, nothing else of the bar's moves (dark=$dark)")
             assertEquals(joinedFrost(bar, menu, 1f), joinedFrost(bar, menu, 1.7f), "clamped")
             var last = joinedFrost(bar, menu, 0f).blurDp
             for (i in 1..100) {
@@ -362,7 +362,7 @@ class GlassWordsMenuSheetTest {
     }
 
     @Test
-    fun `the specs the real menu and sheet faces hand the platform carry the recipe - 12 dp and the hold`() {
+    fun `the specs the real menu and sheet faces hand the platform carry the recipe - the bar's clear frost and the hold`() {
         for (dark in listOf(true, false)) for (kind in Kind.entries) {
             val seen = mutableListOf<KitLiquidPaneSpec>()
             val platform = LensPlatform({ seen += it; it })
@@ -373,7 +373,8 @@ class GlassWordsMenuSheetTest {
             assertTrue(seen.isNotEmpty(), "$kind dark=$dark: the face asked the platform")
             val role = if (kind == Kind.Menu) LiquidRole.Menu else LiquidRole.Sheet
             val want = LiquidEdge.recipe(role, dark)
-            assertEquals(12f, seen.last().recipe.blurDp, "$kind dark=$dark blur")
+            assertEquals(LiquidEdge.MODAL_BLUR_DP, seen.last().recipe.blurDp, "$kind dark=$dark blur")
+            assertTrue(seen.last().recipe.hold.local, "$kind dark=$dark: the detail hold reaches the platform")
             assertEquals(want.hold, seen.last().recipe.hold, "$kind dark=$dark hold")
             assertTrue(seen.last().recipe.hold.knee && seen.last().recipe.hold.chroma > 0f)
         }

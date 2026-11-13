@@ -25,6 +25,7 @@ import io.github.eslamasabry.oc.feature.settings.ui.SettingsScreen
 import io.github.eslamasabry.oc.ui.design.color.PackId
 import io.github.eslamasabry.oc.ui.design.effects.GlassPaneKind
 import io.github.eslamasabry.oc.ui.design.effects.GlassTuning
+import io.github.eslamasabry.oc.ui.design.effects.LiquidEdge
 import io.github.eslamasabry.oc.engine.settings.walkthrough.AppearanceGuideRecord
 import io.github.eslamasabry.oc.engine.settings.walkthrough.AppearanceQuestion
 import kotlin.test.Test
@@ -74,7 +75,7 @@ class GlassLabPageTest {
         waitForIdle()
         val t = lab!!.state.value.tuning
         assertEquals(8f, t.knobs(GlassPaneKind.Bar, true).blurDp)
-        assertEquals(17f, t.knobs(GlassPaneKind.Menu, true).blurDp)
+        assertEquals(LiquidEdge.MODAL_BLUR_DP + 5f, t.knobs(GlassPaneKind.Menu, true).blurDp)
         // One kind: only the menu moves.
         onNodeWithText("Menu", useUnmergedTree = true).performClick()
         onNode(hasContentDescription("Refraction strength") and canSetProgress).performSemanticsAction(SemanticsActions.SetProgress) { it(90f) }
