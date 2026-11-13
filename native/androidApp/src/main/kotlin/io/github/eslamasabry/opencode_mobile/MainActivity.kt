@@ -45,6 +45,9 @@ class MainActivity : ComponentActivity() {
     private var lastRoute: List<AppRoute> = emptyList()
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // B-270: first, before anything installs the decor. A language switch recreates this Activity on the old
+        // window, and Android 15 would keep the page fitted between the bars (black bands) for good.
+        DecorFit.release(window)
         // Before super.onCreate: the product's activity-lifecycle owners (ResumedActivities, the
         // mic/result registries, AppVisibility) must see this activity's own created/started
         // callbacks, as they did when the product started in Application.onCreate.
@@ -158,10 +161,8 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
-        // Edge-to-edge is asserted again on every resume: a language switch relaunches the window more than once
-        // (the app's own recreate and the platform's locale relaunch), and the last window to appear must not keep
-        // the framework's fitted layout with black bars.
-        enableEdgeToEdge()
+        // No enableEdgeToEdge() here (B-270): it could not undo the fitted decor, and its light/dark guess from the
+        // phone's mode turned the status-bar icons dark over the app's dark page after every return.
         appGraph.projectExport.activate(this)
         platformHub.onResumed(this)
     }
