@@ -424,30 +424,42 @@ public fun kitShadowReach(role: SurfaceRole = SurfaceRole.Control): Dp {
         if (decoration == null) {
             0f
         } else {
-            val shadows = decoration.shadows.map { maxOf(kotlin.math.abs(it.dxDp), kotlin.math.abs(it.dyDp)) + it.blurDp + it.spreadDp }
-            val paired = decoration.paired?.takeIf { it.inset <= 0f }?.let { it.distanceDp + it.blurDp } ?: 0f
+            // A blurred shadow still shows past its blur radius (the radius is about 1.7 sigma): half a radius more
+            // takes it to about 2.6 sigma, under one colour step, so a clip there draws no line.
+            val shadows = decoration.shadows.map { maxOf(kotlin.math.abs(it.dxDp), kotlin.math.abs(it.dyDp)) + it.blurDp * BLUR_TAIL + it.spreadDp }
+            val paired = decoration.paired?.takeIf { it.inset <= 0f }?.let { it.distanceDp + it.blurDp * BLUR_TAIL } ?: 0f
             maxOf(shadows.maxOrNull() ?: 0f, paired, decoration.hardOffsetDp)
         }
     }
     return Dp(kotlin.math.ceil(reach))
 }
 
+private const val BLUR_TAIL = 1.5f
+
 /**
  * Grows a clipping container by [room] above and below without changing the space it takes: the content is laid out
  * [room] taller and placed [room] higher, so a clip applied after this modifier reaches past the reported bounds. Pad
  * the content by the same [room] vertically. Used with [kitShadowReach] so style shadows inside scrollers never clip.
+ *
+ * Device pass 2026-11-13 (Soft): a sideways scroller cut its chips' shadows at its ends too (the "Ask first" chip's
+ * shadow ended in a straight vertical edge where the strip hugging it ended). [start] and [end] grow it sideways the
+ * same way (pad the scrolling content by the same amounts at its ends), so a chip resting at an end keeps its shadow.
  */
-public fun Modifier.kitShadowRoom(room: Dp): Modifier =
-    if (room <= Dp(0f)) this
+public fun Modifier.kitShadowRoom(room: Dp, start: Dp = Dp(0f), end: Dp = Dp(0f)): Modifier =
+    if (room <= Dp(0f) && start <= Dp(0f) && end <= Dp(0f)) this
     else layout { measurable, constraints ->
-        val r = room.roundToPx()
+        val r = room.roundToPx().coerceAtLeast(0)
+        val s = start.roundToPx().coerceAtLeast(0)
+        val e = end.roundToPx().coerceAtLeast(0)
         val grown =
             constraints.copy(
+                minWidth = constraints.minWidth + s + e,
+                maxWidth = if (constraints.hasBoundedWidth) constraints.maxWidth + s + e else constraints.maxWidth,
                 minHeight = constraints.minHeight + 2 * r,
                 maxHeight = if (constraints.hasBoundedHeight) constraints.maxHeight + 2 * r else constraints.maxHeight,
             )
         val placeable = measurable.measure(grown)
-        layout(placeable.width, (placeable.height - 2 * r).coerceAtLeast(0)) { placeable.place(0, -r) }
+        layout((placeable.width - s - e).coerceAtLeast(0), (placeable.height - 2 * r).coerceAtLeast(0)) { placeable.placeRelative(-s, -r) }
     }
 
 private fun DrawScope.drawGrown(shape: Shape, grow: Float, color: Color) {

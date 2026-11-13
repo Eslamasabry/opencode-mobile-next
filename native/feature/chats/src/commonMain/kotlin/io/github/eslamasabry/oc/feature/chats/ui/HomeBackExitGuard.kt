@@ -10,6 +10,7 @@ import androidx.compose.runtime.withFrameMillis
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeBackExit
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.modal.KitBackGuard
+import io.github.eslamasabry.oc.ui.kit.modal.LocalKitToasts
 import io.github.eslamasabry.oc.ui.kit.status.KitStatus
 import io.github.eslamasabry.oc.ui.kit.status.KitStatusKind
 import io.github.eslamasabry.oc.ui.words.res.Res
@@ -31,9 +32,17 @@ internal fun homeBackExitStatus(root: () -> Boolean): KitStatus? {
     HomeBackExitHold(root, exit) { exit = it }
     // Short-circuited: the common case (no hint showing) never reads [root] here.
     if (!exit.hintShowing || !root()) return null
+    // Device pass 2026-11-13: the hint was a status line that pushed the whole list down and carried a back arrow. It
+    // is the window's toast: nothing moves. Only a window without a toast slot keeps the line.
+    val toasts = LocalKitToasts.current
+    val message = stringResource(Res.string.e7WorkspaceBackExit)
+    if (toasts != null) {
+        LaunchedEffect(exit) { toasts.show(message) }
+        return null
+    }
     return KitStatus(
         kind = KitStatusKind.Info,
-        message = stringResource(Res.string.e7WorkspaceBackExit),
+        message = message,
         id = "home-shell-back-exit",
         icon = KitIcons.back,
     )

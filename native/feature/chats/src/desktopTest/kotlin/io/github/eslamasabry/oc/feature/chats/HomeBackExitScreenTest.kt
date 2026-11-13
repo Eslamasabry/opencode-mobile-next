@@ -7,7 +7,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.ComposeUiTest
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.navigationevent.NavigationEvent
 import androidx.navigationevent.NavigationEventDispatcher
@@ -30,6 +32,9 @@ import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
+import io.github.eslamasabry.oc.ui.kit.modal.KitToastHost
+import io.github.eslamasabry.oc.ui.kit.modal.KitToastState
+import io.github.eslamasabry.oc.ui.kit.modal.LocalKitToasts
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -73,7 +78,7 @@ class HomeBackExitScreenTest {
         )
 
     @Composable
-    private fun Home(root: Boolean, overlay: @Composable () -> Unit = {}) {
+    private fun Home(root: Boolean, toasts: KitToastState? = null, overlay: @Composable () -> Unit = {}) {
         CompositionLocalProvider(LocalNavigationEventDispatcherOwner provides owner) {
             ChatEnvironment {
                 KitTheme(
@@ -81,13 +86,38 @@ class HomeBackExitScreenTest {
                     platform = DesktopKitPlatform(),
                     localeTag = "en",
                 ) {
-                    KitSheetHost {
-                        ChatsScreen(state, RecordingChatsActions(), root = { root })
-                        overlay()
+                    // The app shell's toast slot for its window, as App provides it.
+                    CompositionLocalProvider(LocalKitToasts provides toasts) {
+                        KitSheetHost {
+                            ChatsScreen(state, RecordingChatsActions(), root = { root })
+                            overlay()
+                            if (toasts != null) KitToastHost(toasts)
+                        }
                     }
                 }
             }
         }
+    }
+
+    /**
+     * Device pass 2026-11-13: the hint was a full status row that pushed the whole home down and carried its own back
+     * arrow. Under the shell's toast slot it is the window's toast: the list does not move, and no arrow comes with it.
+     */
+    @Test
+    fun `E05-S21 under the shell's toast slot the hint is a toast and the list does not move`() = runComposeUiTest {
+        val toasts = KitToastState()
+        setContent { Home(root = true, toasts = toasts) }
+        waitForIdle()
+        val before = onNodeWithText("Fix login", useUnmergedTree = true).getBoundsInRoot()
+        mainClock.autoAdvance = false
+        runOnIdle { back.press() }
+        mainClock.advanceTimeBy(400)
+        assertEquals(0, fellThrough, "one Back on the conversation list must not close the app")
+        assert(hintShows()) { "the toast says \"$HINT\"" }
+        assertEquals(before, onNodeWithText("Fix login", useUnmergedTree = true).getBoundsInRoot(), "the list moved when the hint showed")
+        mainClock.advanceTimeBy(600)
+        runOnIdle { back.press() }
+        assertEquals(1, fellThrough, "a second Back inside the window leaves the app")
     }
 
     private fun ComposeUiTest.hintShows(): Boolean =

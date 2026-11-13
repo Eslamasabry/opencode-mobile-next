@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.kit.foundation
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
@@ -37,31 +38,38 @@ public data class KitLineAction(
 )
 
 /**
- * A tertiary words-only action in a 48 dp target (Dart `KitButton` tertiary inside lines): text1 words, text3 when
- * disabled, never the accent (the accent is the primary action's alone).
+ * A tertiary action in a 48 dp target, drawn as a tertiary [io.github.eslamasabry.oc.ui.kit.KitButton]: the accent's
+ * readable ink on a faint capsule of it ([io.github.eslamasabry.oc.ui.kit.kitTertiaryInk]), text3 words and no capsule
+ * when disabled. Never the primary's solid fill.
  * Kit-internal.
  */
 @Composable
 internal fun KitInlineAction(action: KitLineAction, modifier: Modifier = Modifier, maxLines: Int = 2) {
     val tagged = action.testTag?.let { modifier.testTag(it) } ?: modifier
+    val ink = io.github.eslamasabry.oc.ui.kit.kitTertiaryInk()
+    // The capsule is drawn before the target's clip, on the same shape.
+    val capsule = if (action.enabled) Modifier.background(io.github.eslamasabry.oc.ui.kit.kitTertiaryCapsule(), KitShapeId.Button.shape()) else Modifier
     KitTappable(
         onClick = action.onClick,
         modifier =
-            if (action.semanticsLabel == null) tagged
-            else tagged.semantics { contentDescription = action.semanticsLabel },
+            (if (action.semanticsLabel == null) tagged
+            else tagged.semantics { contentDescription = action.semanticsLabel }).then(capsule),
         enabled = action.enabled,
         disabledReason = action.disabledReason,
         shape = KitShapeId.Button,
         ink = TextTone.Primary,
     ) {
-        KitText(
-            action.label,
-            Modifier.padding(horizontal = Space.S3.dp),
-            role = TypeRole.Button,
-            // Dart KitButton tertiary: neutral text1 words, text3 when disabled (kit_buttons.dart:732-733).
-            tone = if (action.enabled) TextTone.Primary else TextTone.Tertiary,
-            kind = KitTextKind.Frame,
-            maxLines = maxLines,
-        )
+        // The words in the readable ink: the accent tone, with the accent swapped for that ink around them only.
+        val colors = io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors.current
+        androidx.compose.runtime.CompositionLocalProvider(io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors provides colors.copy(accent = ink)) {
+            KitText(
+                action.label,
+                Modifier.padding(horizontal = Space.S3.dp),
+                role = TypeRole.Button,
+                tone = if (action.enabled) TextTone.Accent else TextTone.Tertiary,
+                kind = KitTextKind.Frame,
+                maxLines = maxLines,
+            )
+        }
     }
 }

@@ -169,13 +169,21 @@ public fun KitFilterChips(
     val onPane = LocalKitOnFloatingPane.current
     val paneEdge = FloatingPaneRow.EDGE_DP.dp
     val paneInset = FloatingPaneRow.contentInsetDp(tokens.gutter).dp
-    val startPad = if (!onPane) inset else if (bleed) 0.dp else paneInset
-    val endPad = if (onPane) paneInset else inset
+    val restStart = if (!onPane) inset else if (bleed) 0.dp else paneInset
+    val restEnd = if (onPane) paneInset else inset
+    // Device pass 2026-11-13 (Soft, home): where the line starts or ends on its clip edge (beside the server pill, on
+    // the pane) a chip resting there had its shadow cut into a straight edge. The clip grows past that end by the
+    // shadow's reach and the chips keep their place, so their shadows stay whole; the fade's clear part covers it.
+    // On the floating glass pane the clip stays at the pane's sides (nothing draws beside the pane).
+    val growStart = if (onPane) 0.dp else (room - restStart).coerceAtLeast(0.dp)
+    val growEnd = if (onPane) 0.dp else (room - restEnd).coerceAtLeast(0.dp)
+    val startPad = restStart + growStart
+    val endPad = restEnd + growEnd
     val line = remember { ChipLine(Space.S2.dp, FilterChipsRules.MIN_PEEK_DP.dp) }
     Box(
         modifier.kitMaxWidth(CapRole.Reading)
             .then(if (onPane) Modifier.padding(start = if (bleed) 0.dp else paneEdge, end = paneEdge) else Modifier)
-            .kitShadowRoom(room)
+            .kitShadowRoom(room, start = growStart, end = growEnd)
             .layout { measurable, constraints ->
                 line.roomPx = if (constraints.hasBoundedWidth) constraints.maxWidth - startPad.roundToPx() else 0
                 val placeable = measurable.measure(constraints)
