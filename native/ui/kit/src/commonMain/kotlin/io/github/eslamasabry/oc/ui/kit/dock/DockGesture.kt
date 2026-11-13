@@ -68,6 +68,9 @@ internal sealed interface DockOutcome {
     /** The swell or peek closes; nothing changes. */
     data object Close : DockOutcome
 
+    /** A tap on the dock's handle: the dock goes to its nub. */
+    data object Tuck : DockOutcome
+
     /** A ring was dropped at [to]; [pinned] when it landed above the pin line. */
     data class Drop(val from: Int, val to: Int, val pinned: Boolean) : DockOutcome
 
@@ -311,7 +314,7 @@ internal class DockGesture(private val rules: DockRules = DockRules()) {
                 // 2026-11-11, run 5: the flick from the head carried the dock across and no list opened).
                 if (velocityX <= -rules.flickSpeed && abs(dx) > rules.axisBias * abs(y - y0)) DockOutcome.PullEnd(velocityX)
                 else DockOutcome.Place(x, y)
-            DockMode.GripPress -> DockOutcome.None
+            DockMode.GripPress -> DockOutcome.Tuck
             DockMode.FootPress -> DockOutcome.NewConversation
             DockMode.SwellTap -> if (t != null) DockOutcome.Target(ring, t.kind, t.child).also { pinnedOpen = false } else DockOutcome.None
             DockMode.Idle -> if (pinnedOpen) DockOutcome.Close.also { pinnedOpen = false } else DockOutcome.None
