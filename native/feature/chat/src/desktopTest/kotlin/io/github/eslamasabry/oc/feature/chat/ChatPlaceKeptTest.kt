@@ -144,7 +144,7 @@ class ChatPlaceKeptTest {
         FindUi(query, count = 5, current = current, currentKey = "k$index", currentIndex = index, partial = false)
 
     @Test
-    fun `PLACE-2 coming back with Find open leaves the view; moving to another hit or changing the query jumps`() =
+    fun `PLACE-2 coming back with Find open leaves the view, and moving to another hit or changing the query jumps`() =
         runComposeUiTest {
             var shown by mutableStateOf(true)
             var found by mutableStateOf(find(50, 0))
