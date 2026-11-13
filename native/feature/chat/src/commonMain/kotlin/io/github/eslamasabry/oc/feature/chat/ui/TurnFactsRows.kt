@@ -19,6 +19,7 @@ import io.github.eslamasabry.oc.engine.transcript.turnfacts.ConnectorSearchOutco
 import io.github.eslamasabry.oc.engine.transcript.turnfacts.ToolArtifact
 import io.github.eslamasabry.oc.engine.transcript.turnfacts.ToolDetail
 import io.github.eslamasabry.oc.engine.transcript.turnfacts.ToolKind
+import io.github.eslamasabry.oc.feature.chat.presentation.TranscriptDetailUi
 import io.github.eslamasabry.oc.feature.chat.presentation.TurnResultUi
 import io.github.eslamasabry.oc.feature.chat.presentation.WorkEntryUi
 import io.github.eslamasabry.oc.ui.design.tokens.Space
@@ -46,6 +47,7 @@ import io.github.eslamasabry.oc.ui.words.res.chatUiGeneratedFile
 import io.github.eslamasabry.oc.ui.words.res.kitCodeShowAll
 import io.github.eslamasabry.oc.ui.words.res.toolCardRunCommandAgain
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
+import io.github.eslamasabry.oc.ui.words.res.kitMessageThought
 import io.github.eslamasabry.oc.ui.words.res.kitToolOpenConversation
 import io.github.eslamasabry.oc.ui.words.res.kitWorkEarlierSteps
 import io.github.eslamasabry.oc.ui.words.res.kitWorkWaitingForYou
@@ -188,6 +190,52 @@ internal fun TurnWorkLine(
                             onOpenSession,
                         )
             }
+        }
+    }
+}
+
+/**
+ * Review #13 (C-022): the work line of a turn whose only work is thinking. Reasoning is work: it folds under one line,
+ * "Thought", shut by default like every finished work line, never a loose paragraph above the reply. Opened, each
+ * thought is a line on the rail and opens as the chat's reasoning setting says ([reasoningExpanded]). Nothing is drawn
+ * when no thought has words.
+ */
+@Composable
+internal fun ThoughtWorkLine(
+    turnId: String,
+    thoughts: List<TranscriptDetailUi>,
+    folds: TranscriptFolds,
+    reasoningExpanded: Boolean,
+    reply: ReplyActions?,
+    onCompactAgain: (() -> Unit)?,
+    onOpenSession: ((String) -> Unit)?,
+    /** The newest thought is still being written. */
+    thinking: Boolean = false,
+) {
+    val shown = thoughts.filter { hasThoughtWords(it.part.text) || thinking && it === thoughts.last() }
+    if (shown.isEmpty()) return
+    val key = "work:$turnId"
+    val expanded = folds.open[key] ?: false
+    KitWorkLine(
+        label = stringResource(Res.string.kitMessageThought),
+        stateWords = null,
+        state = KitWorkState.Done,
+        expanded = expanded,
+        onToggle = { folds.open[key] = it },
+        icon = KitIcons.idea,
+        // The reply's 16 dp edge, as the turn's other work lines.
+        modifier = Modifier.padding(horizontal = Space.S4.dp).testTag("chat-work-line"),
+    ) {
+        shown.forEach { thought ->
+            TranscriptDetail(
+                thought,
+                folds,
+                reasoningExpanded,
+                reply,
+                onCompactAgain,
+                onOpenSession,
+                thinking = thinking && thought === thoughts.last(),
+            )
         }
     }
 }

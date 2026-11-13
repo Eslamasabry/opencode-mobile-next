@@ -15,7 +15,6 @@ import io.github.eslamasabry.oc.ui.words.res.kitTurnLiveMinutes
 import io.github.eslamasabry.oc.ui.words.res.kitTurnLiveNow
 import io.github.eslamasabry.oc.ui.words.res.kitTurnLiveSeconds
 import io.github.eslamasabry.oc.ui.words.res.kitTurnLiveThinking
-import io.github.eslamasabry.oc.ui.words.res.kitTurnLiveWaitingForYou
 import io.github.eslamasabry.oc.ui.words.res.kitTurnLiveWriting
 import org.jetbrains.compose.resources.stringResource
 
@@ -34,8 +33,8 @@ internal const val LIVE_SHOW_ELAPSED_AFTER_MS: Long = 5_000
  * The running turn's live line in words (Flutter `_KitTurnLiveLine`, kit_turn.dart:886-1006, fed by
  * chat_transcript.dart:290-375): what the turn is doing — the step in hand in plain words ("Running npm test"),
  * "Writing" while reply words stream, else "Thinking" — and, after five seconds, for how long ("Running npm test · 12
- * s"). Waiting for the person says so in the attention tone with no clock (the request card has its own); a stop on
- * its way, a retry, a stall or a stuck command replace the words. The muted step line is the newest line a running
+ * s"). While a request card waits for the person there is no live line (null): the card says it; a stop on its way,
+ * a retry, a stall or a stuck command replace the words. The muted step line is the newest line a running
  * command printed.
  */
 @Composable
@@ -46,7 +45,7 @@ internal fun liveLineWords(
     work: TurnWork?,
     writing: Boolean,
     elapsedMs: Long?,
-): LiveLineWords {
+): LiveLineWords? {
     val mask = rememberKitMask()
     // A stop or a note about the turn replaces what it is doing, without the time (F: kit_turn.dart:920-937).
     val held =
@@ -69,10 +68,9 @@ internal fun liveLineWords(
             else -> null
         }
     if (held != null) return held
-    if (work?.state == WorkLineState.WaitingForYou) {
-        val words = stringResource(Res.string.kitTurnLiveWaitingForYou)
-        return LiveLineWords(stringResource(Res.string.kitTurnLiveNow, words), words, KitTurnLiveTone.WaitingForYou)
-    }
+    // Review #12: a request card waiting on the person says so itself; the live line adds no second "Waiting for
+    // you" (RunTailRules: the live line is drawn only while the run works or stops).
+    if (work?.state == WorkLineState.WaitingForYou) return null
     val now = work?.now
     val words =
         when {

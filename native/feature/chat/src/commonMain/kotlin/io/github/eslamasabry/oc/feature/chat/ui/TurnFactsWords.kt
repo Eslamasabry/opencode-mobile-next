@@ -95,7 +95,6 @@ import io.github.eslamasabry.oc.ui.words.res.kitWorkRead
 import io.github.eslamasabry.oc.ui.words.res.kitWorkSearched
 import io.github.eslamasabry.oc.ui.words.res.kitWorkSeparator
 import io.github.eslamasabry.oc.ui.words.res.kitWorkSteps
-import io.github.eslamasabry.oc.ui.words.res.kitWorkWaitingForYou
 import io.github.eslamasabry.oc.ui.words.res.kitWorkWorking
 import io.github.eslamasabry.oc.ui.words.res.replySpeedLast
 import io.github.eslamasabry.oc.ui.words.res.toolCardExitFailed
@@ -246,11 +245,14 @@ internal fun workSummary(work: TurnWork): String {
     if (c.delegated > 0) segments += pluralStringResource(Res.plurals.kitWorkDelegated, c.delegated, c.delegated)
     if (c.other > 0) segments += pluralStringResource(Res.plurals.kitWorkOther, c.other, c.other)
     if (c.notRun > 0) segments += pluralStringResource(Res.plurals.kitWorkNotRun, c.notRun, c.notRun)
-    if (split.waitingEdit > 0)
+    // Review #12: while a request card waits for the person, the card says what is asked; the line says only how much
+    // work there is ("1 step", "Read 2 files"), never a second waiting phrase.
+    val asking = work.state == WorkLineState.WaitingForYou
+    if (!asking && split.waitingEdit > 0)
         segments += pluralStringResource(Res.plurals.chatWorkWaitingEdit, split.waitingEdit, split.waitingEdit)
-    if (split.waitingRun > 0)
+    if (!asking && split.waitingRun > 0)
         segments += pluralStringResource(Res.plurals.chatWorkWaitingRun, split.waitingRun, split.waitingRun)
-    if (split.waitingOther > 0)
+    if (!asking && split.waitingOther > 0)
         segments += pluralStringResource(Res.plurals.chatWorkWaitingOther, split.waitingOther, split.waitingOther)
     if (segments.isEmpty()) return pluralStringResource(Res.plurals.kitWorkSteps, c.steps, c.steps)
     segments[0] = segments[0].replaceFirstChar { it.uppercase() }
@@ -262,7 +264,8 @@ internal fun workSummary(work: TurnWork): String {
 internal fun workStateWords(state: WorkLineState): String? =
     when (state) {
         WorkLineState.Running -> stringResource(Res.string.kitWorkWorking)
-        WorkLineState.WaitingForYou -> stringResource(Res.string.kitWorkWaitingForYou)
+        // Review #12: the request card says the run waits for the person; the work line does not say it again.
+        WorkLineState.WaitingForYou -> null
         WorkLineState.Done -> null
         WorkLineState.EndedFailed -> stringResource(Res.string.kitWorkDidntFinish)
         // A turn the person stopped says so once, in its footer; the work line says how much work happened.
