@@ -611,8 +611,8 @@ public fun ServerEditorScreen(
                     val facts =
                         listOfNotNull(
                                 editorOrigin(address.text.toString())?.host,
-                                state.checked
-                                    ?.version
+                                // No check this visit (Save anyway): the version the saved server last reported.
+                                (state.checked?.version ?: state.record?.serverVersion)
                                     ?.takeIf { it.isNotBlank() }
                                     ?.let { stringResource(Res.string.upgradeReadyVersion, it) },
                                 state.checked
