@@ -38,6 +38,8 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.performScrollToIndex
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.swipeDown
 import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.DpRect
@@ -291,6 +293,10 @@ class ChatWordsGlassTest {
             }
             waitForIdle()
             onNodeWithTag("transcript-list").performScrollToIndex(scrollTo)
+            waitForIdle()
+            // A person reading history drags the list, which stops it following the newest message; a scroll from code
+            // keeps following, so the phrase row folding (the block's height changing) would pin it back to the newest.
+            if (chips && scrollTo > 0) onNodeWithTag("transcript-list").performTouchInput { swipeDown(durationMillis = 300) }
             waitForIdle()
             // The phrase row folding, the pill rising out of the box, the page's edges easing to their new place.
             mainClock.advanceTimeBy(1_000)

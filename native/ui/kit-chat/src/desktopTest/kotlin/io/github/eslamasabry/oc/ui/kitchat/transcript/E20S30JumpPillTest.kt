@@ -75,14 +75,15 @@ class E20S30JumpPillTest {
         val newest = onNodeWithText("Message 0").getBoundsInRoot()
         val veil = veilTop()
         assertTrue(newest.bottom <= veil, "newest $newest under the composer's veil at $veil")
-        // Only the list's own 16 dp padding between them: no extra lane or fade room.
-        assertTrue(veil - newest.bottom <= 16.5.dp, "gap ${veil - newest.bottom}")
+        // The list's own 16 dp padding and 8 dp more of the transcript's fade (2026-11-14: the transcript is gone at the
+        // block's top, fading out over the 16 dp above it): no extra lane.
+        assertTrue(veil - newest.bottom <= 24.5.dp, "gap ${veil - newest.bottom}")
         onNodeWithTag("jump-to-latest").assertDoesNotExist()
         onNodeWithTag("transcript-jump-fade").assertDoesNotExist()
     }
 
     @Test
-    fun `E20-S30 away from the latest the calm pill sits bottom centre 8 dp above the composer over a soft fade`() =
+    fun `E20-S30 away from the latest the calm pill sits bottom centre 16 dp above the composer with no band of ground`() =
         runComposeUiTest {
             setContent(scene())
             waitForIdle()
@@ -93,16 +94,12 @@ class E20S30JumpPillTest {
             // Centred (it used to sit at the end of the line).
             val centre = (face.left + face.right) / 2
             assertTrue(abs((centre - 206.dp).value) <= 1f, "pill centre $centre")
-            // The calmer 32 dp face, 8 dp clear of the composer's veil.
+            // The calmer 32 dp face, 16 dp clear of the composer's veil (the frame's bottom room holds 8 dp of the fade).
             assertEquals(32.dp, face.bottom - face.top)
-            assertTrue(abs((veil - face.bottom - 8.dp).value) <= .5f, "gap ${veil - face.bottom}")
-            // A short fade, never the old lane: it settles over 28 dp above the composer and holds on under it (owner
-            // 2026-11-09: ending at the composer it cut a hard line), where the screen's scroll edge fades it out.
-            val fade = onNodeWithTag("transcript-jump-fade").getBoundsInRoot()
-            assertTrue(abs((veil - fade.top - JUMP_FADE_DP.dp).value) <= .5f, "fade $fade starts 28 dp above the composer $veil")
-            val list = onNodeWithTag("transcript-list").getBoundsInRoot()
-            assertTrue(abs((fade.bottom - list.bottom).value) <= .5f, "fade $fade runs on to the list's edge $list")
-            assertTrue(JUMP_FADE_ALPHA < 1f, "the fade never reaches a solid block")
+            assertTrue(abs((veil - face.bottom - 16.dp).value) <= .5f, "gap ${veil - face.bottom}")
+            // 2026-11-14: a page that records its body ends the list itself above the pill (kitScreenListEdges), so no
+            // band of ground is laid there any more.
+            onNodeWithTag("transcript-jump-fade").assertDoesNotExist()
         }
 
     @Test
