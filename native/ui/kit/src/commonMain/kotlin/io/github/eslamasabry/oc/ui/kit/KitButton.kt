@@ -221,8 +221,9 @@ public fun KitButton(
         else if (role == KitButtonRole.Tertiary || !expand) tokens.minTarget
         else tokens.buttonHeight
     // A tertiary button keeps space2 on both sides; a filled one the app theme's 16, with or without its glyph.
-    // (its capsule now shows, so its words keep space3 from the capsule's ends; the capsule reaches into the gutter)
-    val pad = if (role == KitButtonRole.Tertiary) Space.S3 else FILLED_SIDE_PAD_DP // F: lib/ui/kit/kit_buttons.dart:728
+    // Its capsule is that padded box, which reaches out past the words by the padding (kitBleed below): the words keep
+    // their place on the column's edge, and the layout box and the gaps around it stay what they were.
+    val pad = if (role == KitButtonRole.Tertiary) Space.S2 else FILLED_SIDE_PAD_DP // F: lib/ui/kit/kit_buttons.dart:728
     val padStart = pad
     // The app theme's filled buttons keep 12 above and below their words, so large text grows the button; a tertiary
     // button's own padding is horizontal only.
