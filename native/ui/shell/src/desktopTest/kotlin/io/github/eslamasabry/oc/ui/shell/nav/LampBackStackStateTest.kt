@@ -166,10 +166,11 @@ class LampBackStackStateTest {
         act(p) { switchTo(a) }
         onNodeWithText("Page A").assertExists()
         assertKept(a1, p.seen["A"], "A after switching back")
+        assertEquals(emptyList(), p.cleared, "a swap clears nothing")
         act(p) { back() }
         onNodeWithText("Page B").assertExists()
         assertKept(b1, p.seen["B"], "B after Back")
-        assertTrue(p.cleared.isEmpty(), "nothing cleared: ${p.cleared}")
+        assertEquals(listOf("A"), p.cleared, "Back pops A, so only A's view model is cleared")
     }
 
     @Test
@@ -204,11 +205,13 @@ class LampBackStackStateTest {
         val a1 = p.seen["A"]!!
         act(p) { switchTo(b) }
         act(p) { switchTo(c) }
+        val stack = listOf<AppRoute>(ChatsRoute.Home, ChatRoute(b), ChatRoute(c))
+        assertEquals(stack, p.navigator.snapshot(), "A's run left the stack")
         assertEquals(listOf("A"), p.cleared, "the dropped run's view model is cleared")
         act(p) { openChat(a) }
         val a2 = p.seen["A"]!!
+        assertTrue(a1.model !== a2.model, "A comes back with a new view model")
         assertNotEquals(a1.saved, a2.saved, "its saved state was cleared too: A comes back fresh")
-        assertTrue(a1.model !== a2.model)
     }
 
     @Test
