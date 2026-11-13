@@ -1,6 +1,7 @@
 package io.github.eslamasabry.oc.feature.updates.ui
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import io.github.eslamasabry.oc.feature.updates.presentation.NoticeUi
 import io.github.eslamasabry.oc.feature.updates.presentation.OfferUi
@@ -27,12 +28,19 @@ import io.github.eslamasabry.oc.ui.words.res.appUpdatePercent
 import io.github.eslamasabry.oc.ui.words.res.appUpdatePermissionNeeded
 import io.github.eslamasabry.oc.ui.words.res.appUpdateReadyTitle
 import io.github.eslamasabry.oc.ui.words.res.appUpdateUpdate
+import io.github.eslamasabry.oc.ui.words.res.appUpdateUpdatedTo
 import io.github.eslamasabry.oc.ui.words.res.appUpdateVerifying
 import io.github.eslamasabry.oc.ui.words.res.appUpdateWhatsNew
 import io.github.eslamasabry.oc.ui.words.res.kitSheetClose
+import io.github.eslamasabry.oc.ui.words.res.notifyDismiss
+import kotlinx.coroutines.delay
 import org.jetbrains.compose.resources.stringResource
 
 private const val NOTICE_ID = "update:release"
+private const val UPDATED_ID = "update:installed"
+
+/** How long "Updated to version X" holds on screen before it leaves by itself (B-217). */
+public const val UPDATED_HOLD_MS: Long = 6_000L
 
 /**
  * The update's words for the one status line (Flutter `AppUpdateNotice._status`), for a screen or shell that passes
@@ -41,6 +49,13 @@ private const val NOTICE_ID = "update:release"
 @Composable
 public fun updateStatus(notice: NoticeUi, actions: UpdateNoticeActions): KitStatus {
     val notNow = stringResource(Res.string.appUpdateNotNow)
+    // Said once on the visit after the update, never left standing on every screen (B-217, B-241's lesson).
+    if (notice is NoticeUi.Updated) {
+        LaunchedEffect(notice.version) {
+            delay(UPDATED_HOLD_MS)
+            actions.onNotNow()
+        }
+    }
     return when (notice) {
         is NoticeUi.Ready ->
             KitStatus(
@@ -83,6 +98,14 @@ public fun updateStatus(notice: NoticeUi, actions: UpdateNoticeActions): KitStat
                 action = KitLineAction(stringResource(Res.string.appUpdateInstall), actions::onInstall, testTag = "update-notice-install"),
                 onDismiss = actions::onNotNow,
                 dismissLabel = notNow,
+            )
+        is NoticeUi.Updated ->
+            KitStatus(
+                kind = KitStatusKind.Update,
+                message = stringResource(Res.string.appUpdateUpdatedTo, notice.version),
+                id = UPDATED_ID,
+                onDismiss = actions::onNotNow,
+                dismissLabel = stringResource(Res.string.notifyDismiss),
             )
     }
 }

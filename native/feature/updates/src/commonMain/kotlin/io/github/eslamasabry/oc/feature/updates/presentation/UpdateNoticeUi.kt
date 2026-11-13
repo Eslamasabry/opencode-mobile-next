@@ -23,6 +23,12 @@ public sealed interface NoticeUi {
 
     /** "Version 2.2.0 is downloaded and checked" · Install · Not now; the permission line when Android must allow it. */
     public data class ReadyToInstall(val version: String, val needsPermission: Boolean) : NoticeUi
+
+    /**
+     * B-217: "Updated to version 2.2.0" · Dismiss, on the first visit after Android installed the release this app
+     * offered (Android closes the app to install it and says nothing). It leaves by itself after a short hold.
+     */
+    public data class Updated(val version: String) : NoticeUi
 }
 
 /** What the notice's actions reach. Update and Install both run AppUpdates.updateNow (a checked file is reused). */
@@ -38,7 +44,7 @@ public interface UpdateNoticeActions {
 
 /** The status line for [state], or null (Flutter `AppUpdateNotice._status`). Pure. */
 public fun noticeUi(state: AppUpdateState): NoticeUi? {
-    if (!state.noticeVisible) return null
+    if (!state.noticeVisible) return updatedUi(state)
     val version = state.release?.version.orEmpty()
     return when (state.phase) {
         UpdatePhase.Available -> NoticeUi.Ready(version)
@@ -50,6 +56,12 @@ public fun noticeUi(state: AppUpdateState): NoticeUi? {
         UpdatePhase.None, UpdatePhase.Checking, UpdatePhase.Failed -> null
     }
 }
+
+/** "Updated to version X" once nothing else about the update needs the line (B-217). */
+private fun updatedUi(state: AppUpdateState): NoticeUi? =
+    state.updated
+        ?.takeIf { state.supported && !state.pageOpen && !state.notNow && !state.busy }
+        ?.let { NoticeUi.Updated(it.version) }
 
 /**
  * The sheet the Settings gear opens while a newer release waits: "Version 2.2.0 is ready", the first plain sentence of

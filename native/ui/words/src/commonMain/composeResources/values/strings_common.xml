@@ -694,6 +694,7 @@
     <string name="appUpdateCancel">Cancel</string>
     <string name="appUpdateVerifying">Checking the download…</string>
     <string name="appUpdateInstalling">Installing…</string>
+    <string name="appUpdateUpdatedTo">Updated to version %1$s</string>
     <string name="appUpdateInstallReadyTitle">Version %1$s is downloaded and checked</string>
     <string name="appUpdateInstall">Install</string>
     <string name="appUpdatePermissionNeeded">To install it, allow this app to install updates, then come back.</string>
