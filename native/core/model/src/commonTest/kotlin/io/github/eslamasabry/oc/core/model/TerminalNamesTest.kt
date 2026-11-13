@@ -46,6 +46,6 @@ class TerminalNamesTest {
         assertEquals(TerminalName.Plain(1), terminalNameOf(two, "a"))
         assertEquals(TerminalName.Plain(2), terminalNameOf(two, "b"))
         assertEquals(null, process("c", "Terminal").givenName())
-        assertEquals("Terminal build", process("d", "Terminal build").givenName())
+        assertEquals("Build watcher", process("d", "Build watcher").givenName())
     }
 }
