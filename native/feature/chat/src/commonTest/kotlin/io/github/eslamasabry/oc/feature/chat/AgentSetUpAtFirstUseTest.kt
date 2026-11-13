@@ -15,6 +15,7 @@ import io.github.eslamasabry.oc.feature.chat.world.AgentSetUpNeed
 import io.github.eslamasabry.oc.feature.chat.world.PendingSend
 import io.github.eslamasabry.oc.feature.chat.world.PendingState
 import io.github.eslamasabry.oc.ui.routes.AgentsRoute
+import io.github.eslamasabry.oc.ui.routes.AppRoute
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -85,7 +86,7 @@ class AgentSetUpAtFirstUseTest {
         assertNotEquals(ChatStatusKind.SendFailed, p.current().status?.kind, "no Not sent / Try again over the chat")
         p.setUpAgent(shown.setUp!!.agentId)
         assertEquals(listOf(AgentsRoute.SignInTerminal(owner, "qwen")), nav.opened)
-        assertEquals(emptyList(), world.calls, "nothing is resent on its own")
+        assertEquals(emptyList<String>(), world.calls.toList(), "nothing is resent on its own")
     }
 
     @Test
@@ -112,7 +113,7 @@ class AgentSetUpAtFirstUseTest {
         val after = p.current().pending.single()
         assertNull(after.setUp)
         assertEquals("hi goose", after.text)
-        assertEquals(emptyList(), nav.opened)
+        assertEquals(emptyList<AppRoute>(), nav.opened.toList())
     }
 
     @Test
@@ -167,6 +168,6 @@ class AgentSetUpAtFirstUseTest {
         // Without a phone owner, Set up opens nothing.
         val (p, _, _) = chat("qwen", bubble, Outside(null))
         p.setUpAgent("qwen")
-        assertEquals(emptyList(), nav.opened)
+        assertEquals(emptyList<AppRoute>(), nav.opened.toList())
     }
 }

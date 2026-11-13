@@ -71,7 +71,7 @@ class AgentSetUpBubbleTest {
             onNodeWithText(setUp).performClick()
             waitForIdle()
             assertEquals(listOf(AgentsRoute.SignInTerminal(owner, "qwen")), scene.nav.opened)
-            assertEquals(emptyList(), scene.world.calls.filter { it.startsWith("retrySend") }, "nothing resent")
+            assertEquals(emptyList<String>(), scene.world.calls.filter { it.startsWith("retrySend") }, "nothing resent")
         }
 
     @Test
