@@ -1,6 +1,14 @@
 package io.github.eslamasabry.oc.feature.settings.monitor
 
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
+import io.github.eslamasabry.oc.ui.kit.row.KitRow
+import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import androidx.compose.runtime.Composable
 import io.github.eslamasabry.oc.core.common.text.Numbers
 import io.github.eslamasabry.oc.ui.kit.choice.KitChoice
@@ -15,10 +23,23 @@ import org.jetbrains.compose.resources.stringResource
 
 @Composable
 public fun ColumnScope.MonitoringSection(state: MonitoringUi, actions: MonitoringActions) {
-    if (state.servers.isEmpty()) return
+    if (state.servers.isEmpty()) {
+        // The empty words follow the real list this section draws, not a second copy of it.
+        Spacer(Modifier.height(LocalKitTokens.current.sectionGap.dp))
+        KitRowGroup(leadingTiles = true) {
+            KitRow(
+                title = stringResource(Res.string.notifyNoServersTitle),
+                leading = KitRowLeading.Glyph(KitIcons.server),
+                supporting = stringResource(Res.string.notifyNoServersDetail),
+                supportingMaxLines = Int.MAX_VALUE,
+            )
+        }
+        return
+    }
     KitGroupNote(stringResource(Res.string.andrMonitorExplanation))
     if (state.saveFailed) KitNotice(stringResource(Res.string.andrMonitorSaveFailed))
     state.servers.forEach { server ->
+        Spacer(Modifier.height(LocalKitTokens.current.sectionGap.dp))
         KitRowGroup(label = server.name) {
             KitSwitchRow(
                 title = stringResource(Res.string.andrMonitorEnabled),

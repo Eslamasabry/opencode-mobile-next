@@ -291,12 +291,6 @@ internal fun ColumnScope.NotificationsBody(n: NotificationFacts, actions: Settin
                     },
                 )
         }
-        if (n.profiles.isEmpty())
-            KitRow(
-                title = stringResource(Res.string.notifyNoServersTitle),
-                leading = KitRowLeading.Glyph(KitIcons.server),
-                supporting = stringResource(Res.string.notifyNoServersDetail),
-            )
         KitIconSwitchRow(
             title = stringResource(Res.string.notifyWifiOnly),
             icon = KitIcons.network,
