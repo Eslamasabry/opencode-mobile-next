@@ -183,5 +183,9 @@ class AgentCatalogTest {
         assertTrue(gemini.runsOnPhoneHost)
         val offered = AgentCatalog.builtIn.agents.filter { a -> AgentArchitecture.entries.any { a.installableOn(it) } }
         assertEquals(AgentCatalog.builtIn.agents.map { it.id.raw } - "gemini", offered.map { it.id.raw })
+        assertTrue(gemini.retired)
+        assertFalse(gemini.listedOnPhone(installed = false))
+        assertTrue(gemini.listedOnPhone(installed = true))
+        for (agent in offered) assertTrue(agent.listedOnPhone(installed = false), agent.id.raw)
     }
 }

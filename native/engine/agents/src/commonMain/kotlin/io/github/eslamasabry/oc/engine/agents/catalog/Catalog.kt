@@ -163,6 +163,11 @@ public class AgentDescriptor(
     public val unavailableReason: AgentUnavailableReason? = null,
     public val limitation: AgentLimitation? = null,
     public val resumeReason: AgentResumeReason? = null,
+    /**
+     * No longer offered: never installable, listed only while a copy is on the phone ([listedOnPhone]), where it keeps
+     * its check, sign-in and Remove. The recipe stays because removal and the sign-in terminal need its executable.
+     */
+    public val retired: Boolean = false,
 ) {
     init {
         require(ID.matches(id.raw) && providerId.isNotBlank() && name.isNotBlank() && iconKey.isNotBlank()) {
@@ -187,7 +192,10 @@ public class AgentDescriptor(
 
     /** Installation availability does not make this agent selectable for chat. */
     public fun installableOn(architecture: AgentArchitecture): Boolean =
-        unavailableReason == null && artifactFor(architecture) != null
+        !retired && unavailableReason == null && artifactFor(architecture) != null
+
+    /** Whether the phone's agent list shows this agent: a retired one only while [installed]. */
+    public fun listedOnPhone(installed: Boolean): Boolean = !retired || installed
 
     /** Runs on the phone's agent host (Paseo); server types (OpenCode) are not phone agents. */
     public val runsOnPhoneHost: Boolean get() = route == AgentRoute.PaseoNative || route == AgentRoute.AcpPaseo

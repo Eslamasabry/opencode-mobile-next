@@ -184,6 +184,26 @@ class AgentsBentoTest {
         assertTrue("remove:agy" in actions.calls)
     }
 
+    // Owner 2026-11-13: Gemini CLI is no longer offered, but a copy already on the phone must not be stranded.
+    @Test
+    fun `B-AGENT-189 an installed Gemini CLI is still listed with Remove and no Install`() = runComposeUiTest {
+        val actions = Recorder()
+        val installed =
+            PhoneAgentRow("gemini", "Gemini CLI", PhoneAgentStatus.Unavailable, removable = true, signInUnchecked = true)
+        setContent {
+            Screen(
+                AgentsUi(
+                    phone = PhoneAgentsState(available = true, agents = persistentListOf(installed), owner = ProfileId("o")),
+                    sheetAgent = "gemini",
+                ),
+                actions,
+            )
+        }
+        onNode(hasContentDescription("Install Gemini CLI")).assertDoesNotExist()
+        onNodeWithText("Remove Gemini CLI").performClick()
+        assertTrue("remove:gemini" in actions.calls)
+    }
+
     @Test
     fun `B-AGENT-182 a failed connection is one line with its reason and Try again`() = runComposeUiTest {
         val actions = Recorder()

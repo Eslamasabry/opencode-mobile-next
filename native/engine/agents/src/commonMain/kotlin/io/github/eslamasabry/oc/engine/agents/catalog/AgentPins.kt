@@ -109,8 +109,15 @@ public class AgentPins internal constructor(
                 recipe = recipe,
                 limitation = builtInLimitation(id),
                 resumeReason = AgentResumeReason.ResumeUnverified,
+                retired = id.raw in RETIRED,
             )
         }
+
+        /**
+         * Agents the app no longer offers (owner 2026-11-13: Gemini CLI is deprecated upstream). Their pins stay so a
+         * copy already on a phone is still listed, checked and removable; see [AgentDescriptor.retired].
+         */
+        private val RETIRED = setOf("gemini")
 
         /** The Dart `entry(…, limitation:)` overrides; every other entry says "Needs a check on your phone before use." */
         internal fun builtInLimitation(id: AgentId): AgentLimitation =
