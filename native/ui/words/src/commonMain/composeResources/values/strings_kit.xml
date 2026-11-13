@@ -114,6 +114,7 @@
     <string name="kitReceiptAnsweredElsewhere">Answered on %1$s</string>
     <string name="kitReceiptAnsweredElsewhereUnknown">Answered on another device</string>
     <string name="kitReceiptAt">at %1$s</string>
+    <string name="kitReceiptCountdownSpoken">%1$s. Undo within %2$s seconds</string>
     <string name="kitDetailsHide">Hide details</string>
     <string name="kitCopyAll">Copy all</string>
     <plurals name="kitDetailsShowAll">
