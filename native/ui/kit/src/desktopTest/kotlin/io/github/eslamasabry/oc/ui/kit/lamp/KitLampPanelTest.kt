@@ -167,8 +167,10 @@ class KitLampPanelTest {
                 val scene = Scene(K2.model())
                 panel(scene, width = width)
                 waitForIdle()
-                val full = onNodeWithTag(LAMP_PANEL_ALL_TAG, useUnmergedTree = true).fetchSemanticsNode().layoutInfo.isPlaced
-                val short = onNodeWithTag(LAMP_PANEL_ALL_SHORT_TAG, useUnmergedTree = true).fetchSemanticsNode().layoutInfo.isPlaced
+                // The label not chosen is measured but never placed.
+                fun placed(tag: String) = onAllNodesWithTag(tag, useUnmergedTree = true).fetchSemanticsNodes().any { it.layoutInfo.isPlaced }
+                val full = placed(LAMP_PANEL_ALL_TAG)
+                val short = placed(LAMP_PANEL_ALL_SHORT_TAG)
                 assertEquals(long, full, "$width: the long label")
                 assertEquals(!long, short, "$width: the short label")
                 onNodeWithText("New conversation").performClick()
