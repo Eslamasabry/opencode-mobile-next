@@ -166,7 +166,13 @@ public fun KitAskField(
     val near = if (styleHalo && !solid) 0.36f else 0.22f // F: lib/ui/kit/kit_ask_field.dart:201,207
     val showsHalo = solid || styleState.spec.tokens.fieldHaloShown
     val radius = tokens.composerRadius
-    val shape = RoundedCornerShape(radius.dp)
+    // Every style but Solid draws the style's field as a pane of the composer's radius, whose corner grows or scales with
+    // the style (Glass's pane corner, the Corners knob); its halo and focus ring follow that one shape, never a fixed
+    // one of their own (owner 2026-11-13: an outline on another radius is cut at the corners or stands off the face).
+    val fieldLook =
+        if (solid) null
+        else kitSurfaceLook(KitSurfaceInput(SurfaceRole.Field, KitShapeId.Card, ownFill = colors.surface1, selected = lit, radius = radius.dp))
+    val shape = fieldLook?.shape ?: RoundedCornerShape(radius.dp)
     val halo =
         if (!showsHalo) Modifier
         else
@@ -193,10 +199,9 @@ public fun KitAskField(
         label = "ask-edge",
     )
     val face =
-        if (solid) Modifier.clip(shape).background(colors.surface1).border(kitFocusRingWidth(), edgeAlpha, shape)
+        if (fieldLook == null) Modifier.clip(shape).background(colors.surface1).border(kitFocusRingWidth(), edgeAlpha, shape)
         else
-            kitSurfaceLook(KitSurfaceInput(SurfaceRole.Field, KitShapeId.Card, ownFill = colors.surface1, selected = lit, radius = radius.dp))
-                .modifier
+            fieldLook.modifier
                 .then(if (focused) Modifier.border(kitFocusRingWidth(), accent, shape) else Modifier)
     val body = typography.style(TypeRole.Body)
     val fade = KitMotion.specs.quick<Float>()
