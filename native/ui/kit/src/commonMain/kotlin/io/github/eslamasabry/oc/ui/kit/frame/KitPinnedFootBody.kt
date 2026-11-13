@@ -29,6 +29,10 @@ import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
  * across a line of text; scrolled to the end, or with nothing to scroll, the body is left whole. Without a [foot]
  * nothing fades (the body ends at the page's own edge).
  *
+ * With a [head] (a page's tab row) the head is pinned above the body, whole at every scroll position, and the body
+ * fades out over its first [COMPOSER_FADE_DP] dp while it is scrolled, as it passes beneath the head. Hosts that run
+ * the body under a floating bar must not use a head: the bar would cover it.
+ *
  * The fade eases in and out with the kit's enter motion as the list leaves and reaches its end (at once under
  * reduced motion), is read while drawing, and sits on whole pixels (see [wholePx]). [contentPadding] and
  * [verticalArrangement] are the scrolling column's own, inside the fade.
@@ -38,6 +42,7 @@ public fun KitPinnedFootBody(
     modifier: Modifier = Modifier,
     scroll: ScrollState = rememberScrollState(),
     foot: (@Composable () -> Unit)? = null,
+    head: (@Composable () -> Unit)? = null,
     contentPadding: PaddingValues = PaddingValues(),
     verticalArrangement: Arrangement.Vertical = Arrangement.Top,
     content: @Composable ColumnScope.() -> Unit,
@@ -47,6 +52,9 @@ public fun KitPinnedFootBody(
     var settled by remember { mutableStateOf(false) }
     val reduced = KitMotion.state.reduced
     val hasFoot = foot != null
+    val hasHead = head != null
+    val before = remember { Animatable(0f) }
+    var settledBefore by remember { mutableStateOf(false) }
     val spec = KitMotion.specs.enter<Float>()
     LaunchedEffect(scroll, reduced, hasFoot) {
         if (!hasFoot) return@LaunchedEffect
@@ -56,17 +64,28 @@ public fun KitPinnedFootBody(
             settled = true
         }
     }
+    LaunchedEffect(scroll, reduced, hasHead) {
+        if (!hasHead) return@LaunchedEffect
+        snapshotFlow { scroll.canScrollBackward }.collect { hidden ->
+            val target = if (hidden) 1f else 0f
+            if (!settledBefore || reduced) before.snapTo(target) else before.animateTo(target, spec)
+            settledBefore = true
+        }
+    }
     Column(modifier.fillMaxSize()) {
+        head?.invoke()
         Column(
             Modifier.fillMaxWidth()
                 .weight(1f)
                 .then(
-                    if (!hasFoot) Modifier
+                    if (!hasFoot && !hasHead) Modifier
                     else
                         Modifier.kitScrollEdges(
-                            clearAbove = null,
-                            topReach = 0.dp,
-                            fadeFromBottom = { with(density) { COMPOSER_FADE_DP.dp.toPx() } },
+                            // Under a pinned head the body thins out as it passes beneath it.
+                            clearAbove = if (hasHead) ({ 0f }) else null,
+                            topReach = COMPOSER_FADE_DP.dp,
+                            strength = { before.value },
+                            fadeFromBottom = if (hasFoot) ({ with(density) { COMPOSER_FADE_DP.dp.toPx() } }) else null,
                             bottomReach = 0.dp,
                             bottomReachPx = { with(density) { COMPOSER_FADE_DP.dp.toPx() } },
                             bottomStrength = { more.value },

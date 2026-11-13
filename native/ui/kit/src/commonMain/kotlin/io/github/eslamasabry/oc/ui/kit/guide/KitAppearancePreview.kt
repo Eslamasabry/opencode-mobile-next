@@ -4,6 +4,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
@@ -33,14 +35,22 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 /**
  * A small sample of the app as the Appearance in force draws it (owner 2026-11-10, Appearance redesign: "no preview of
  * what you are changing"): one card with a line a person asked ([ask], on the accent's soft tint at the end), the
- * reply's words ([reply]) and one filled action ([action]). It is a picture, not controls: nothing in it can be
+ * reply's words ([reply]) and one filled action ([action]); [label] ("Preview") on the first row says it is a sample.
+ * It is a picture, not controls: nothing in it can be
  * tapped, and a screen reader hears [spoken] once. Every choice on the page changes it at once, because it is drawn
  * with the same theme, style, corners, spacing and text size as the rest of the app.
  *
  * Cap: reading
  */
 @Composable
-public fun KitAppearancePreview(ask: String, reply: String, action: String, spoken: String, modifier: Modifier = Modifier) {
+public fun KitAppearancePreview(
+    ask: String,
+    reply: String,
+    action: String,
+    spoken: String,
+    label: String,
+    modifier: Modifier = Modifier,
+) {
     val colors = LocalKitColors.current
     val card = kitSurfaceLook(KitSurfaceInput(role = SurfaceRole.Content, shape = KitShapeId.Card, level = SurfaceLevel.Surface1, ownFill = colors.surface1))
     val pill = KitShapeId.Button.shape()
@@ -48,23 +58,28 @@ public fun KitAppearancePreview(ask: String, reply: String, action: String, spok
         modifier
             .fillMaxWidth()
             .then(card.modifier)
-            .padding(Space.S4.dp + kitPaneInset())
+            .padding(Space.S3.dp + kitPaneInset())
             .clearAndSetSemantics { contentDescription = spoken }
             .testTag("kit-appearance-preview"),
-        verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
+        verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
     ) {
-        Box(
-            Modifier.align(Alignment.End)
-                .widthIn(max = PREVIEW_ASK_MAX_DP.dp)
-                .clip(KitShapeId.Panel.shape())
-                .background(colors.accent.copy(alpha = PREVIEW_ASK_TINT))
-                .padding(horizontal = Space.S3.dp, vertical = Space.S2.dp)
-        ) {
-            KitText(ask, role = TypeRole.Body, maxLines = 2)
+        // The first row says what this is ("Preview") on the start side and holds the asked line at the end.
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            KitText(label, role = TypeRole.Label, tone = TextTone.Tertiary, kind = KitTextKind.Frame, maxLines = 1)
+            Spacer(Modifier.weight(1f))
+            Box(
+                Modifier.widthIn(max = PREVIEW_ASK_MAX_DP.dp)
+                    .clip(KitShapeId.Panel.shape())
+                    .background(colors.accent.copy(alpha = PREVIEW_ASK_TINT))
+                    .padding(horizontal = Space.S3.dp, vertical = Space.S1.dp)
+            ) {
+                KitText(ask, role = TypeRole.Body, maxLines = 1)
+            }
         }
-        KitText(reply, role = TypeRole.Body, maxLines = 3)
+        KitText(reply, role = TypeRole.Body, maxLines = 2)
+        // A drawn sample of a button: no click, no focus, no semantics (the whole card is one described picture).
         Box(
-            Modifier.heightIn(min = PREVIEW_ACTION_DP.dp).clip(pill).background(colors.accent).padding(horizontal = Space.S4.dp),
+            Modifier.heightIn(min = PREVIEW_ACTION_DP.dp).clip(pill).background(colors.accent).padding(horizontal = Space.S3.dp),
             contentAlignment = Alignment.Center,
         ) {
             KitText(action, role = TypeRole.Label, tone = TextTone.OnAccent, kind = KitTextKind.Frame, maxLines = 1)
@@ -77,4 +92,4 @@ private const val PREVIEW_ASK_MAX_DP = 280
 private const val PREVIEW_ASK_TINT = .16f
 
 /** The sample action's height: a picture of a button, smaller than a real target. */
-private const val PREVIEW_ACTION_DP = 36
+private const val PREVIEW_ACTION_DP = 28
