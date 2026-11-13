@@ -18,7 +18,8 @@ class PauseTest {
 
     @Test
     fun `B-ANDR-015 a paused live mode stays paused on cold start despite an old enabled preference`() = runTest {
-        for (reason in PauseReason.entries - PauseReason.None) {
+        // An app update is the one stop the person did not choose: B-241 below.
+        for (reason in PauseReason.entries - PauseReason.None - PauseReason.AppUpdated) {
             val optIn = FakeOptIn(true)
             val port = FakeLivePort().apply { onPause = { ok(pausedFor(reason)) } }
             val c = liveMode(backgroundScope, port, optIn)
@@ -33,6 +34,50 @@ class PauseTest {
             }
             assertEquals(false, optIn.value)
         }
+    }
+
+    @Test
+    fun `B-241 a connection the person had on comes back by itself after an app update`() = runTest {
+        val optIn = FakeOptIn(true)
+        val port = FakeLivePort().apply { onPause = { ok(pausedFor(PauseReason.AppUpdated)) } }
+        val c = liveMode(backgroundScope, port, optIn)
+        c.restore()
+        assertEquals(listOf("getBackgroundPause", "enable"), port.calls)
+        with(c.state.value) {
+            assertTrue(active)
+            assertTrue(enabled)
+            assertFalse(pause.paused, "no 'stopped when the app was updated' line is left behind")
+        }
+        assertEquals(true, optIn.value)
+    }
+
+    @Test
+    fun `B-241 a refused start after an update keeps the pause and its Resume`() = runTest {
+        val optIn = FakeOptIn(true)
+        val port =
+            FakeLivePort().apply {
+                onPause = { ok(pausedFor(PauseReason.AppUpdated)) }
+                onEnable = { refused("foreground_service_failed") }
+            }
+        val c = liveMode(backgroundScope, port, optIn)
+        c.restore()
+        with(c.state.value) {
+            assertFalse(active)
+            assertTrue(pause.paused)
+            assertEquals(PauseReason.AppUpdated, pause.reason)
+            assertTrue(pause.canResume)
+            assertNull(lastError)
+        }
+        assertEquals(false, optIn.value)
+    }
+
+    @Test
+    fun `B-241 an update pause the person already left paused is not resumed on a later start`() = runTest {
+        val port = FakeLivePort().apply { onPause = { ok(pausedFor(PauseReason.AppUpdated)) } }
+        val c = liveMode(backgroundScope, port, FakeOptIn(false))
+        c.restore()
+        assertEquals(listOf("getBackgroundPause"), port.calls)
+        assertTrue(c.state.value.pause.paused)
     }
 
     @Test
