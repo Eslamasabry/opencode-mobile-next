@@ -267,4 +267,13 @@ class AgentInstallerTest {
 }
 
 private fun AgentSetupJob(agent: AgentId, state: AgentSetupJobState, component: String?, done: Long?, total: Long?) =
-    AgentSetupJob(agent, state, component, done, total, null)
+    AgentSetupJob(agent, state, component, done, total, null
+
+    @Test
+    fun `B-AGENT-120 a retired agent is refused before anything starts`() = runTest {
+        val jobs = FakeJobs()
+        val r = AgentInstaller(FakeAgentPrefs(), jobs).install(owner, AgentId("gemini"), AgentArchitecture.Arm64)
+        assertEquals(InstallStart.Refused(InstallRefusal.NotInstallable), (r as Outcome.Ok).value)
+        assertTrue(jobs.calls.isEmpty())
+    }
+}

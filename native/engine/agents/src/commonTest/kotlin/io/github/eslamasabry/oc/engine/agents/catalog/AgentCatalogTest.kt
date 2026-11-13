@@ -172,4 +172,16 @@ class AgentCatalogTest {
         assertEquals("361718c444e49af2ca5a110c83ba6a8901143f23ab285ebbef0341f391f482a9", pins.node.sha256[AgentArchitecture.X64])
         assertTrue("2.1.319" in pins.claudeCodeTestedVersions)
     }
+
+    // Owner 2026-11-13: Gemini CLI is deprecated upstream and is no longer offered. A copy already on a phone keeps its
+    // row, its recipe (the removal script and the sign-in terminal need the executable) and its Remove.
+    @Test
+    fun `B-AGENT-007 Gemini CLI is no longer offered for install, but a copy on the phone stays listed`() {
+        val gemini = AgentCatalog.builtIn.byId(AgentId("gemini"))!!
+        for (arch in AgentArchitecture.entries) assertFalse(gemini.installableOn(arch), arch.wire)
+        assertEquals("gemini", gemini.recipe!!.executable)
+        assertTrue(gemini.runsOnPhoneHost)
+        val offered = AgentCatalog.builtIn.agents.filter { a -> AgentArchitecture.entries.any { a.installableOn(it) } }
+        assertEquals(AgentCatalog.builtIn.agents.map { it.id.raw } - "gemini", offered.map { it.id.raw })
+    }
 }
