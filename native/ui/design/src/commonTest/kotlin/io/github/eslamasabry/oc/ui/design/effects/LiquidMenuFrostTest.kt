@@ -14,11 +14,11 @@ class LiquidMenuFrostTest {
         for (dark in listOf(true, false)) {
             val menu = LiquidEdge.recipe(LiquidRole.Menu, dark)
             val sheet = LiquidEdge.recipe(LiquidRole.Sheet, dark)
-            assertEquals(12f, menu.blurDp, "menu blur dark=$dark")
+            assertEquals(LiquidEdge.DECISION_BLUR_DP, menu.blurDp, "menu blur dark=$dark")
             assertEquals(sheet.blurDp, menu.blurDp)
             assertEquals(48f, menu.refractionDp, "menu bend dark=$dark")
             assertEquals(26f, menu.rimMaxDp, "menu rim dark=$dark")
-            assertEquals(if (dark) .20f else .10f, menu.tint, "menu tint dark=$dark")
+            assertEquals(if (dark) .40f else .28f, menu.tint, "menu tint dark=$dark")
             assertEquals(1.6f, menu.saturation, "menu saturation dark=$dark")
         }
     }

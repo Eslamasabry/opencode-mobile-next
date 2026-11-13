@@ -385,7 +385,7 @@ private class JoinedPaneNode(
                 saturation = recipe.saturation,
                 contrast = recipe.contrast,
                 brightness = recipe.brightness,
-                knee = kneeOf(spec),
+                knee = if (frostsBody) kneeOf(spec, dropSpec!!.recipe.hold, drop!!.content()) else kneeOf(spec, io.github.eslamasabry.oc.ui.design.effects.LiquidHold.Off),
                 hold = if (frostsBody) dropSpec!!.recipe.hold.chroma else 0f,
                 tintMine = tintNow(spec),
                 tintTheirs = tintNow(theirSpec),
@@ -451,12 +451,19 @@ internal fun joinedFrost(body: io.github.eslamasabry.oc.ui.design.effects.Liquid
 
 /**
  * The knee that holds back bright content in [spec]'s lens (LiquidJoin.held): it holds the bright end under light words
- * and lifts the dark end under dark words, following the words' ink flip.
+ * and lifts the dark end under dark words, following the words' ink flip. Where it sits is [hold]'s (a foreground
+ * decision's is lower, LiquidEdge.DECISION_HOLD), moved from the joined body's own ([LiquidJoin.KNEE]) by [t]: a body
+ * joined to a menu takes the menu's knee as the menu's rows come in, the same on both sides, so the seam never steps.
  */
-internal fun kneeOf(spec: KitLiquidPaneSpec): FloatArray {
+internal fun kneeOf(spec: KitLiquidPaneSpec, hold: io.github.eslamasabry.oc.ui.design.effects.LiquidHold = spec.recipe.hold, t: Float = 1f): FloatArray {
     val flipped = (spec.flip?.progress?.value ?: 0f) > .5f
     val lightInk = spec.rimAdds != flipped
-    return floatArrayOf(LiquidJoin.KNEE, LiquidJoin.KNEE_SLOPE, if (lightInk) 1f else 0f)
+    val f = t.coerceIn(0f, 1f)
+    return floatArrayOf(
+        LiquidJoin.KNEE + (hold.kneeAt - LiquidJoin.KNEE) * f,
+        LiquidJoin.KNEE_SLOPE + (hold.kneeSlope - LiquidJoin.KNEE_SLOPE) * f,
+        if (lightInk) 1f else 0f,
+    )
 }
 
 /**

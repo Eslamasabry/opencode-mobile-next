@@ -83,7 +83,22 @@ public data class LiquidRecipe(
  * so a pure green held to .61 of its light by the knee is also a muted green, and a disc of it has no ring. The rim,
  * where content must show, keeps its colour.
  */
-public data class LiquidHold(val knee: Boolean, val chroma: Float) {
+public data class LiquidHold(
+    val knee: Boolean,
+    val chroma: Float,
+    /** Where the knee sits (luminance 0-1) and the share of the light past it the glass keeps ([LiquidJoin.held]). */
+    val kneeAt: Float = LiquidJoin.KNEE,
+    val kneeSlope: Float = LiquidJoin.KNEE_SLOPE,
+) {
+    /** [lum] (0-1) through this hold's knee: [LiquidJoin.held] with this hold's knee and slope. */
+    public fun held(lum: Float, lightInk: Boolean): Float =
+        if (lightInk) {
+            if (lum > kneeAt) kneeAt + (lum - kneeAt) * kneeSlope else lum
+        } else {
+            val inv = 1f - lum
+            1f - if (inv > kneeAt) kneeAt + (inv - kneeAt) * kneeSlope else inv
+        }
+
     public companion object {
         public val Off: LiquidHold = LiquidHold(knee = false, chroma = 0f)
 
@@ -114,12 +129,34 @@ public object LiquidEdge {
     public const val SATURATION: Float = 1.6f
 
     /**
-     * The most colour a menu or a sheet lets through under its words ([LiquidHold.chroma]): .26 of the full range.
-     * Measured in `GlassWordsMenuSheetTest` on a pure green and a pure orange circle: the colour under the words is
-     * .05 (green) and .26 (orange) of today's at the circle's core (the knee alone leaves .60 and .77; saturation 1.0
-     * with it .59 and .70).
+     * The most colour a menu or a sheet lets through under its words ([LiquidHold.chroma]): .12 of the full range (.26
+     * until 2026-11-13). A foreground decision (a sheet, a dialog, a menu) shows the page behind it as soft light and
+     * colour, never as shapes (independent review 2026-11-13: an Allow button's green glowed behind a permission
+     * sheet's words as a recognisable button); `ForegroundGhostTest` measures it on the theme's accent button.
      */
-    public const val HOLD_CHROMA: Float = .26f
+    public const val HOLD_CHROMA: Float = .12f
+
+    /**
+     * A foreground decision's frost (sheets, dialogs, menus; 12 dp until 2026-11-13): wide enough that a 48 dp button
+     * or a line of words behind it spreads into light (the blur's sigma, about 19 dp, is most of the button's height),
+     * not a blurred copy of its shape. The bars and the message box keep theirs: they show content passing.
+     */
+    public const val DECISION_BLUR_DP: Float = 32f
+
+    /**
+     * A foreground decision's knee (luminance) and the share of the light past it the glass keeps (.36 and .22 until
+     * 2026-11-13, still the joined bar's): the dark theme's ground and the Aurora's soft spots pass under it as they
+     * are, while the theme's accent button behind a sheet keeps under a fifth of its light (white keeps .19), a dim
+     * tinted glow. Under dark ink (a light theme) the dark end is lifted the same way.
+     */
+    public const val DECISION_KNEE: Float = .10f
+    public const val DECISION_KNEE_SLOPE: Float = .10f
+
+    /** A foreground decision's hold: [DECISION_KNEE], [DECISION_KNEE_SLOPE] and [HOLD_CHROMA]. */
+    public val DECISION_HOLD: LiquidHold = LiquidHold(knee = true, chroma = HOLD_CHROMA, kneeAt = DECISION_KNEE, kneeSlope = DECISION_KNEE_SLOPE)
+
+    /** The dock's pulled-out list frosts at the sheets' old 12 dp ([dockRecipe]): the dock keeps its glass. */
+    public const val DOCK_LIST_BLUR_DP: Float = 12f
 
     /** How far the glass presses the backdrop's contrast together (1 keeps it): lightly, so the content shows. */
     public const val PRESS: Float = 1f
@@ -141,9 +178,13 @@ public object LiquidEdge {
     public fun recipe(role: LiquidRole, dark: Boolean, look: GlassLookPreset = GlassLooks.Glossy): LiquidRecipe {
         val base = baseRecipe(role, dark)
         if (role == LiquidRole.Action) return base
-        val tint = (base.tint * look.tintFactor).let { if (look.smoked) maxOf(it, look.smokeTint) else it }.coerceIn(0f, 1f)
+        val tint = lookTint(base.tint, look)
         return if (tint == base.tint) base else base.copy(tint = tint)
     }
+
+    /** A recipe's thin [tint] as [look] wears it: scaled by its tint factor, and Smoked at least its smoke. */
+    private fun lookTint(tint: Float, look: GlassLookPreset): Float =
+        (tint * look.tintFactor).let { if (look.smoked) maxOf(it, look.smokeTint) else it }.coerceIn(0f, 1f)
 
     /**
      * The menu's glass as the edge dock's swell wears it: the dock grows out of its strip towards this (blur 6 dp dark,
@@ -152,7 +193,18 @@ public object LiquidEdge {
      * sheet does": only the list moved).
      */
     public fun swellRecipe(dark: Boolean, look: GlassLookPreset = GlassLooks.Glossy): LiquidRecipe =
-        recipe(LiquidRole.Menu, dark, look).copy(blurDp = if (dark) 6f else 3f, hold = LiquidHold.Off)
+        recipe(LiquidRole.Menu, dark, look).let {
+            // The menu's tint before decisions thickened theirs (2026-11-13): the dock keeps its glass.
+            it.copy(blurDp = if (dark) 6f else 3f, hold = LiquidHold.Off, tint = lookTint(if (dark) SWELL_TINT_DARK else SWELL_TINT_LIGHT, look))
+        }
+
+    /** The menu's thin tint (dark, light), and the dock swell's (the menu's before 2026-11-13). */
+    private const val MENU_TINT_DARK: Float = .40f
+    private const val MENU_TINT_LIGHT: Float = .28f
+    private const val SWELL_TINT_DARK: Float = .20f
+    private const val SWELL_TINT_LIGHT: Float = .10f
+    private const val SHEET_TINT_DARK: Float = .42f
+    private const val SHEET_TINT_LIGHT: Float = .30f
 
     private fun baseRecipe(role: LiquidRole, dark: Boolean): LiquidRecipe {
         val lift = if (dark) -PRESS_LIFT_DARK else PRESS_LIFT_LIGHT
@@ -170,11 +222,13 @@ public object LiquidEdge {
             // the rim still bends it. The dock at rest is a bar (dockRecipe mixes it towards a menu as it grows).
             LiquidRole.Bar, LiquidRole.Dock -> r(3f, 34f, .14f, .18f, .12f)
             LiquidRole.Composer -> r(2f, 34f, .16f, .20f, .18f)
-            // Sheets and menus hold back the light and the colour behind their words (LiquidHold). Both frost at 12 dp
-            // (menus 6 dark / 3 light until 2026-11-11 "words on glass 3": the page's rows and a dark bubble behind a
-            // menu's rows read as lines and as a highlighted row at that blur).
-            LiquidRole.Sheet -> r(12f, 48f, 0f, .22f, .14f, rimMax = 30f, hold = LiquidHold(true, HOLD_CHROMA))
-            LiquidRole.Menu -> r(12f, 48f, .18f, .20f, .10f, rimMax = 26f, hold = LiquidHold(true, HOLD_CHROMA))
+            // Sheets (and the dialogs drawn as one) and menus are foreground decisions: the page behind reads as soft light
+            // and colour, never as shapes (review 2026-11-13: a green Allow button behind a permission sheet, the list's
+            // rows behind a context menu). Three levers together: a wide frost (DECISION_BLUR_DP), a low knee with a
+            // tight colour limit (DECISION_HOLD) and a thicker body of their own tint (.42/.30, .40/.28; were .22/.14,
+            // .20/.10), still well under the face's cap so the Aurora's colour shows through.
+            LiquidRole.Sheet -> r(DECISION_BLUR_DP, 48f, 0f, SHEET_TINT_DARK, SHEET_TINT_LIGHT, rimMax = 30f, hold = DECISION_HOLD)
+            LiquidRole.Menu -> r(DECISION_BLUR_DP, 48f, .18f, MENU_TINT_DARK, MENU_TINT_LIGHT, rimMax = 26f, hold = DECISION_HOLD)
             // Small pills (the jump pill, the chips over the message box) are calm glass: a narrow rim and a light bend,
             // no lens to the middle (owner 2026-11-08: the jump pill's lens read swirly over text).
             LiquidRole.Pill, LiquidRole.Status -> r(1f, 12f, .16f, .18f, .28f, rimMax = 12f, share = .28f)
@@ -194,7 +248,7 @@ public object LiquidEdge {
         if (!hold.knee) return rgb.copyOf()
         val lum = 0.213f * rgb[0] + 0.715f * rgb[1] + 0.072f * rgb[2]
         val light = if (lightInk) lum else 1f - lum
-        val held = LiquidJoin.held(lum, lightInk)
+        val held = hold.held(lum, lightInk)
         val heldLight = if (lightInk) held else 1f - held
         val scale = heldLight / maxOf(light, 0.0001f)
         val scaled = FloatArray(3) { i -> if (lightInk) rgb[i] * scale else 1f - (1f - rgb[i]) * scale }
@@ -212,7 +266,7 @@ public object LiquidEdge {
      * the whole body, its blur, bend, rim and tint moving together as it grows.
      */
     public fun dockRecipe(dark: Boolean, growth: Float, look: GlassLookPreset = GlassLooks.Glossy, list: Float = 0f): LiquidRecipe =
-        toward(mix(recipe(LiquidRole.Dock, dark, look), swellRecipe(dark, look), growth), recipe(LiquidRole.Sheet, dark, look), list)
+        toward(mix(recipe(LiquidRole.Dock, dark, look), swellRecipe(dark, look), growth), recipe(LiquidRole.Sheet, dark, look).copy(blurDp = DOCK_LIST_BLUR_DP), list)
 
     /**
      * [from] with its blur and its bend moved towards [sheet]'s by [t] (0 keeps [from], 1 has the sheet's): the pulled-out
