@@ -39,7 +39,7 @@ import io.github.eslamasabry.oc.ui.kit.state.KitProgressRow
 import io.github.eslamasabry.oc.ui.kit.state.KitSkeletonRows
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.*
-import kotlin.math.roundToLong
+import io.github.eslamasabry.oc.core.common.text.PhoneSizes
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 
@@ -395,16 +395,4 @@ public fun ManageSpaceScreen(state: ManageSpaceState, actions: ManageSpaceAction
     }
 }
 
-/** Flutter `formatPhoneStorage`: binary steps, one decimal; Latin digits in an LTR isolate. */
-private fun bytes(value: Long): String {
-    if (value < 1024) return "\u2066${value.coerceAtLeast(0)} B\u2069"
-    val units = listOf("KB", "MB", "GB", "TB")
-    var size = value / 1024.0
-    var unit = 0
-    while (size >= 1024 && unit < units.lastIndex) {
-        size /= 1024
-        unit++
-    }
-    val tenths = (size * 10).roundToLong()
-    return "\u2066${tenths / 10}.${tenths % 10} ${units[unit]}\u2069"
-}
+private fun bytes(value: Long): String = PhoneSizes.text(value)
