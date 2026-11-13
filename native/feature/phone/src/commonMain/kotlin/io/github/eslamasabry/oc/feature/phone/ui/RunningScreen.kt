@@ -214,8 +214,8 @@ public fun RunningScreen(state: RunningUi, actions: RunningActions) {
                         kitUnits(
                             pluralStringResource(
                                 Res.plurals.runningPhoneSummary,
-                                state.rows.size,
-                                state.rows.size,
+                                state.summaryCount,
+                                state.summaryCount,
                                 runningLargeMemory(bytes),
                             )
                         ),

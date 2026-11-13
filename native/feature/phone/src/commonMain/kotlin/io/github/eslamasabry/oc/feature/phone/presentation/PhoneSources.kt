@@ -264,6 +264,13 @@ public data class ProcessReading(
     val limitLifted: Boolean,
     val status: io.github.eslamasabry.oc.engine.runtime.procs.RunningRowStatus? = null,
     val leftover: io.github.eslamasabry.oc.engine.runtime.procs.RunawayNotice? = null,
+    /**
+     * The ONE figure pair every page shows for "what runs": how many processes the reading holds and
+     * the memory they use together (Flutter `reading.snapshot.processes.length` and `reading.rssBytes`).
+     * The page's rows are grouped for reading, so their count and sum are not these.
+     */
+    val runningCount: Int? = null,
+    val runningMemoryBytes: Long? = null,
 )
 
 /**

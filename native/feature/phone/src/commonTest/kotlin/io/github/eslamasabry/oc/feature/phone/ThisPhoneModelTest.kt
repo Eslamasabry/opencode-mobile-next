@@ -345,4 +345,24 @@ class ThisPhoneModelTest {
             runCurrent()
             assertEquals(io.github.eslamasabry.oc.feature.phone.presentation.AnswerLine.Memory(1L shl 20), model.state.value.answer.line)
         }
+
+    @Test
+    fun `S7 the headline memory is the figure the Running page and the row show, not a second reading`() =
+        runTest {
+            val details = Details(io.github.eslamasabry.oc.feature.phone.presentation.PhoneDetailsUi(memoryBytes = 740L shl 20))
+            val processes =
+                FakeProcesses(
+                    Outcome.Ok(
+                        io.github.eslamasabry.oc.feature.phone.presentation.ProcessReading(
+                            emptyList(), count = 7, limitLifted = false,
+                            runningCount = 8, runningMemoryBytes = 1046L shl 20,
+                        )
+                    )
+                )
+            val model =
+                ThisPhoneModel(FakeServer(runningFacts), FakeSettings(), RecordingNav(), backgroundScope, testClock(), foregroundPacer(), phoneDetails = details, processes = processes)
+            model.shown(true)
+            runCurrent()
+            assertEquals(io.github.eslamasabry.oc.feature.phone.presentation.AnswerLine.Memory(1046L shl 20), model.state.value.answer.line)
+        }
 }

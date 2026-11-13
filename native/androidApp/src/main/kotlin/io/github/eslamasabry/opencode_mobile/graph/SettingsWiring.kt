@@ -434,6 +434,7 @@ class AndroidSettingsHost(
             SettingsOutside.ReadState -> nav.open(ServersRoute.Home)
             // E14-S01: Flutter opens This phone once OpenCode is set up here, else its setup.
             SettingsOutside.ThisPhone -> nav.open(thisPhoneRoute(phoneSetUp()))
+            SettingsOutside.AppStorage -> nav.open(PhoneRoute.ManageSpace)
             // One saved server (several go through Settings' By server page): its own page.
             SettingsOutside.DefaultShell,
             SettingsOutside.Permissions -> {
@@ -721,6 +722,7 @@ internal val SETTINGS_OPENS: Set<SettingsOutside> =
         SettingsOutside.Providers,
         SettingsOutside.Servers,
         SettingsOutside.ThisPhone,
+        SettingsOutside.AppStorage,
         SettingsOutside.Usage,
         SettingsOutside.UsageAlerts,
         SettingsOutside.Agents,

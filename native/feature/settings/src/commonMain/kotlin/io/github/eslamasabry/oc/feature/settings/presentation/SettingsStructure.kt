@@ -181,8 +181,13 @@ public object SettingsStructure {
                             SettingsDoor.Page(SettingsPage.Updates).takeIf {
                                 p.inAppUpdater || p.desktopReleaseCheck
                             }
+                        // Storage opens where the app's storage is measured (Flutter: Clear this app's
+                        // storage). The models-only page stays for a phone without that page.
                         SettingsRowId.Storage ->
-                            SettingsDoor.Page(SettingsPage.Storage).takeIf { facts.localModelStorage }
+                            if (!facts.localModelStorage) null
+                            else if (p.builtinLinux && facts.canOpen(SettingsOutside.AppStorage))
+                                SettingsDoor.Outside(SettingsOutside.AppStorage)
+                            else SettingsDoor.Page(SettingsPage.Storage)
                         SettingsRowId.Guide -> SettingsDoor.Page(SettingsPage.Guide)
                         SettingsRowId.Capabilities ->
                             SettingsDoor.Outside(SettingsOutside.Capabilities)

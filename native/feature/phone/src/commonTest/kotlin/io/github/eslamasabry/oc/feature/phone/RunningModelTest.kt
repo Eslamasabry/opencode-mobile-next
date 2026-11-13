@@ -281,4 +281,16 @@ class RunningModelTest {
             // Both are still offered to "Stop all left behind".
             assertEquals(listOf(50, 51), rig.model.state.value.leftBehind.map { it.pid })
         }
+
+    @Test
+    fun `S7 the summary line says the reading's own count and memory, not the grouped rows'`() =
+        runTest {
+            val rig = Rig(this, reading.copy(runningCount = 8, runningMemoryBytes = 1046L shl 20).ok(), FakeChildLimit())
+            rig.model.shown(true)
+            runCurrent()
+            val state = rig.model.state.value
+            assertEquals(3, state.rows.size)
+            assertEquals(8, state.summaryCount)
+            assertEquals(1046L shl 20, state.memoryBytes)
+        }
 }

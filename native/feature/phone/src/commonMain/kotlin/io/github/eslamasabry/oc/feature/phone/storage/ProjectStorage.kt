@@ -54,6 +54,14 @@ public data class ProjectStorageFacts(
     /** Loose files in the projects folder: exported too, listed apart, never called projects. */
     public val looseFiles: List<StoredProject>
         get() = projects.filterNot { it.folder }
+
+    /** Size of the project folders alone: the figure beside the project count. */
+    public val folderBytes: Long
+        get() = folders.sumOf { it.bytes }
+
+    /** Size of the loose files alone: the figure beside the one "Files" row. */
+    public val looseBytes: Long
+        get() = looseFiles.sumOf { it.bytes }
 }
 
 public enum class ProjectExportProblem {

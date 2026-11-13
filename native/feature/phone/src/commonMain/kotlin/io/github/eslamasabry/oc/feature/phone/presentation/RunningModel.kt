@@ -140,6 +140,9 @@ public data class RunningUi(
     val confirmStopLeftBehind: ImmutableList<ProcessRowUi>? = null,
     /** What the last "Stop all left behind" did: how many stopped. */
     val stoppedCount: Int? = null,
+    /** The reading's own count and memory, the same pair This phone shows; null before a reading carries them. */
+    val runningCount: Int? = null,
+    val runningMemoryBytes: Long? = null,
 ) {
     /** Every stoppable process left behind: the targets of "Stop all left behind" (Flutter's group). */
     val leftBehind: ImmutableList<ProcessRowUi>
@@ -151,7 +154,12 @@ public data class RunningUi(
 
     /** All memory the app's processes use, for the summary line; null when none was measured. */
     val memoryBytes: Long?
-        get() = rows.mapNotNull { it.memoryBytes }.takeIf { it.isNotEmpty() }?.sum()
+        get() = runningMemoryBytes?.takeIf { it > 0 }
+            ?: rows.mapNotNull { it.memoryBytes }.takeIf { it.isNotEmpty() }?.sum()
+
+    /** How many processes run, for the summary line: the reading's count, never the grouped rows'. */
+    val summaryCount: Int
+        get() = runningCount ?: rows.size
 }
 
 public interface RunningActions {
@@ -237,6 +245,8 @@ public class RunningModel(
                         nearLimit = ProcessBudget.nearLimit(reading.count),
                         status = reading.status,
                         leftover = reading.leftover,
+                        runningCount = reading.runningCount,
+                        runningMemoryBytes = reading.runningMemoryBytes,
                     )
                 }
             }
