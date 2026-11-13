@@ -372,7 +372,9 @@ private fun DrawScope.drawMarks(state: KitEdgeDockState, f: DockFrame, inks: Doc
         state.rings.forEachIndexed { i, r ->
             val cy = state.slotY(i) - DockDims.RING_LIFT
             // Only the rings in view, as the strip shows them.
-            if (cy in bandTop..bandBottom) drawCircle(inks.of(r.state), NUB_DOT_R * d, Offset(nx, cy * d), alpha = 1f - vis)
+            // A conversation with nothing to say rests quieter than one that is working or waiting for the person.
+            val rest = if (r.state == KitDockRingState.Idle) NUB_DOT_IDLE else 1f
+            if (cy in bandTop..bandBottom) drawCircle(inks.of(r.state), NUB_DOT_R * d, Offset(nx, cy * d), alpha = rest * (1f - vis))
         }
     }
     // The grip at the dock's head: a short bar (a mark, not a surface).
@@ -415,13 +417,19 @@ private fun DrawScope.drawNubTab(state: KitEdgeDockState, f: DockFrame, inks: Do
     )
 }
 
-/** The nub tab's fill and edge (alpha of the second ink) and its edge's width, dp. */
-private const val NUB_TAB_FILL = 0.2f
-private const val NUB_TAB_EDGE = 0.6f
+/**
+ * The nub tab's fill and edge (alpha of the second ink) and its edge's width, dp. Quiet on purpose: beside a page of
+ * words the tab is a place to pull from, not a bar to read (on the device a 0.2 fill with a 0.6 edge read as a slab).
+ */
+private const val NUB_TAB_FILL = 0.08f
+private const val NUB_TAB_EDGE = 0.28f
 private const val NUB_TAB_EDGE_DP = 1f
 
 /** A ring's dot on the nub, radius dp: clear of the tab's edge on both sides of its 8 dp. */
 private const val NUB_DOT_R = 2.5f
+
+/** An idle conversation's dot on the nub, as a share of its ink. */
+private const val NUB_DOT_IDLE = 0.55f
 
 /**
  * The band the rings stand in: the column's viewport ([KitEdgeDockState.ringBandTop]..[KitEdgeDockState.ringBandBottom])
