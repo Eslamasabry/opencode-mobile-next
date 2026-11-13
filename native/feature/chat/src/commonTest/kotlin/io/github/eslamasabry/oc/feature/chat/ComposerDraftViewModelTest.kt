@@ -60,6 +60,18 @@ class ComposerDraftViewModelTest {
         }
 
     @Test
+    fun `PLACE-6 a draft typed before leaving is what a new box for the same conversation starts from`() = runTest {
+        base.draft.value = DraftFacts("", ready = true)
+        val first = vm()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { first.state.collect {} }
+        first.draftChanged("unsent words")
+        // The person left: the first box is gone; coming back builds a new one on the same conversation.
+        val second = vm()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { second.state.collect {} }
+        assertEquals("unsent words", second.state.value.draft.text)
+    }
+
+    @Test
     fun `B-NAV-051 Codex composer 5 slash new and slash sessions are the app's own commands`() = runTest {
         val ran = mutableListOf<String>()
         val commands =
