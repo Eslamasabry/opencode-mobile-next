@@ -179,16 +179,16 @@ class SetupModelTest {
         val model = model()
         val estimates = source.registry.components(emptyMap()).associate { it.id to it.estimatedSeconds }
         fun running(percent: Double, elapsed: Int) =
-            job(SetupState.Running, ComponentProgress("linux", ComponentState.Running, percent = percent), current = "linux")
+            job(SetupState.Running, ComponentProgress("opencode", ComponentState.Running, percent = percent), current = "opencode")
                 .copy(etaSeconds = 600, stepElapsedSeconds = elapsed)
         source.progress.value = running(10.0, 5)
         runCurrent()
         val early = model.progress().minutesLeft
         assertTrue(early != null)
-        source.progress.value = running(90.0, 90)
+        source.progress.value = running(95.0, 90)
         runCurrent()
         val late = model.progress().minutesLeft
-        assertTrue(late != null && late < early, "early=$early late=$late (linux takes ${estimates["linux"]}s)")
+        assertTrue(late != null && late < early, "early=$early late=$late (opencode takes ${estimates["opencode"]}s)")
         source.progress.value = running(95.0, 100_000)
         runCurrent()
         assertNull(model.progress().minutesLeft, "a step far past its estimate shows no number")
