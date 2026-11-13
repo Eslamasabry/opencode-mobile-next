@@ -4,6 +4,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.v2.runComposeUiTest
 import io.github.eslamasabry.oc.core.common.PlatformViewHandle
+import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.engine.project.terminal.LocalShell
 import io.github.eslamasabry.oc.engine.project.terminal.TerminalKey
 import io.github.eslamasabry.oc.feature.terminal.presentation.*
@@ -158,4 +159,24 @@ class LocalTerminalScreenTest {
         onNodeWithText("Try again").performClick()
         assertEquals(listOf("create"), calls.map { it.first }.filter { it != "resumed" })
     }
+
+    @Test
+    fun `B-TERM-SRC-1 another server's terminal is offered with a verb, not a bare name`() =
+        runComposeUiTest {
+            setContent {
+                KitTheme(platform = DesktopKitPlatform(), localeTag = "en", stillFrame = true) {
+                    LocalTerminalScreen(
+                        LocalTerminalUi(
+                            shells = listOf(shell(1)),
+                            selected = 1,
+                            accessible = true,
+                            servers = listOf(TerminalServerSource(ProfileId("p1"), "This phone")),
+                        ),
+                        actions,
+                    )
+                }
+            }
+            onNodeWithContentDescription("More").performClick()
+            onNodeWithText("Use the terminal on This phone").assertExists()
+        }
 }

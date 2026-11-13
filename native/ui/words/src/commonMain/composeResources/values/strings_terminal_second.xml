@@ -1,6 +1,7 @@
 <resources>
     <string name="terminalSourceBuiltIn">Built-in Linux</string>
     <string name="terminalSourceServer">OpenCode server</string>
+    <string name="terminalUseServerTerminal">Use the terminal on %1$s</string>
     <string name="terminalSourceServerRuntime">%1$s · OpenCode server</string>
     <string name="terminalRerun">Rerun command</string>
     <string name="terminalRerunUncertain">Could not confirm the rerun. Refresh terminals before trying again.</string>
