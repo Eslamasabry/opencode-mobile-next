@@ -52,23 +52,27 @@ class AgentSignInTest {
         assertEquals(listOf("auth"), assertIs<SignInPlan.Terminal>(signIn.plan(AgentId("cline"))).args)
         val omp = assertIs<SignInPlan.Terminal>(signIn.plan(AgentId("omp-acp")))
         assertEquals("omp", omp.program, "Oh My Pi signs in inside its own CLI")
-        assertTrue(omp.args.isEmpty())
+        assertEquals(listOf("login"), omp.args)
         assertTrue(assertIs<SignInPlan.Terminal>(signIn.plan(AgentId("gemini"))).args.isEmpty())
     }
 
     @Test
-    fun `B-LINUX-125 every phone agent can open its sign-in, API-key agents are sent to the host instead`() {
+    fun `B-LINUX-125 every phone agent can open its sign-in, agents set up at first use in their own terminal`() {
         val host = SignInHost()
         val signIn = AgentSignIn(host, AgentAuth(host, OWNER, FixedClock))
-        assertEquals(SignInPlan.ProviderKeyOnHost(AgentId("qwen")), signIn.plan(AgentId("qwen")))
-        assertEquals(SignInPlan.ProviderKeyOnHost(AgentId("goose")), signIn.plan(AgentId("goose")))
+        // Set up at first use (coordinator ruling 2026-11-13): Qwen Code's TUI (/auth), `goose configure`, `omp login`.
+        assertEquals(SignInPlan.Terminal(AgentId("qwen"), "qwen", emptyList<String>().toImmutableList(), firstUse = true), signIn.plan(AgentId("qwen")))
+        assertEquals(SignInPlan.Terminal(AgentId("goose"), "goose", listOf("configure").toImmutableList(), firstUse = true), signIn.plan(AgentId("goose")))
+        assertEquals(SignInPlan.Terminal(AgentId("omp-acp"), "omp", listOf("login").toImmutableList(), firstUse = true), signIn.plan(AgentId("omp-acp")))
+        assertFalse(assertIs<SignInPlan.Terminal>(signIn.plan(AgentId("codex"))).firstUse)
         assertEquals(SignInPlan.NotAvailable(AgentId("opencode2")), signIn.plan(AgentId("opencode2")), "a server is not a phone agent")
         assertEquals(SignInPlan.NotAvailable(AgentId("missing")), signIn.plan(AgentId("missing")))
-        for (agent in listOf("claude", "codex", "gemini", "kilo", "cline", "omp-acp", "fx")) {
+        for (agent in listOf("claude", "codex", "gemini", "kilo", "cline", "omp-acp", "fx", "qwen", "goose")) {
             assertIs<Outcome.Ok<GuestCommand>>(signIn.command(OWNER, AgentId(agent)), agent)
         }
-        assertIs<Outcome.Failed>(signIn.command(OWNER, AgentId("qwen")))
-        assertFalse(host.commands.any { it.first.raw == "qwen" })
+        assertTrue(SignInCommandPolicy.allows("omp", listOf("login")))
+        assertTrue(AgentId("qwen") to emptyList<String>() in host.commands)
+        assertTrue(AgentId("goose") to listOf("configure") in host.commands)
         assertEquals(listOf("auth", "login", "--claudeai"), host.commands.first().second)
     }
 

@@ -32,6 +32,12 @@ public object AgentKeys {
     public fun contextUsage(profile: ProfileId): String = "oc.contextUsage.${profile.raw}"
     public fun agentHandoffs(profile: ProfileId): String = "oc.agentHandoffs.${profile.raw}"
 
+    /**
+     * The agents whose set-up terminal the person finished (ids, a list), for agents set up at first use
+     * ([io.github.eslamasabry.oc.engine.agents.firstuse.AgentFirstUse]). Swept with the owner's profile.
+     */
+    public fun agentSetUp(owner: OwnerId): String = "oc.agentSetUp.${owner.raw}"
+
     /** Secure storage: the in-app Paseo helper's 64-hex password (05 Appendix B). */
     public fun agentHostSecret(owner: OwnerId): String = "oc.agentHostSecret.${owner.raw}"
     public const val AGENT_HOST_SECRET_PREFIX: String = "oc.agentHostSecret."
