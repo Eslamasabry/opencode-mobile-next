@@ -10,6 +10,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.onSizeChanged
 import io.github.eslamasabry.oc.ui.kit.foundation.KitFrostState
@@ -231,7 +232,19 @@ public fun Modifier.kitScreenListEdges(): Modifier {
     return onGloballyPositioned {
         at[0] = it.positionInRoot().y
         at[1] = it.size.height.toFloat()
-    }.kitScrollEdges(
+    }
+        // The edges are also read here, outside the clearing's own layer: a recording made around this list (its
+        // kitFrostSource, which the jump pill's glass and its ink sampler read) is made again, with a new version,
+        // whenever an edge moves (the pill appearing above a request card moves the bottom edge up). Read only inside
+        // the clearing's layer, the edge moved on screen while the recording and its version stayed as they were, so
+        // the free-standing pill's ink kept the flip it took over the words that were there before.
+        .drawWithContent {
+            zones.bottomGone()
+            zones.topClear()
+            zones.topOn()
+            drawContent()
+        }
+        .kitScrollEdges(
         clearAbove = { zones.topClear().let { if (it.isNaN() || at[0].isNaN()) 0f else it - at[0] } },
         topReach = HEADER_FADE_DP.dp,
         strength = zones.topOn,
