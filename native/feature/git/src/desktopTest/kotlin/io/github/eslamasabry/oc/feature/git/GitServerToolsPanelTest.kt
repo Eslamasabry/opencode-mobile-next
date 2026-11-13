@@ -4,7 +4,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.width
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.ExperimentalTestApi
-import androidx.compose.ui.test.assertIsNotSelected
+import androidx.compose.ui.test.assert
+import androidx.compose.ui.test.isSelected
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
@@ -91,6 +92,7 @@ class GitServerToolsPanelTest {
         show(GitServerToolsUi(directory = "/work/plain", gitInit = true, shellSettings = true, open = true, shells = shells))
         assertEquals(1, onAllNodesWithText("bash").fetchSemanticsNodes().size)
         onNodeWithText("bash").assertIsSelected()
-        onNodeWithText("sh").assertIsNotSelected()
+        // An unchosen row carries no selected mark at all (not a "false" one).
+        onNodeWithText("sh").assert(!isSelected())
     }
 }
