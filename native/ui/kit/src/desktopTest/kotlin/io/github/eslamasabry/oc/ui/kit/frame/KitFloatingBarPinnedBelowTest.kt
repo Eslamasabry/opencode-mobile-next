@@ -17,8 +17,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.onNodeWithTag
-import androidx.compose.ui.test.performTouchInput
-import androidx.compose.ui.test.swipeUp
+import androidx.compose.ui.test.performScrollToIndex
 import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.DpRect
@@ -41,7 +40,7 @@ import kotlin.test.assertTrue
  * [KitFloatingBar.belowPinned] keeps it pinned under the bar; the default keeps the home's behaviour.
  */
 class KitFloatingBarPinnedBelowTest {
-    /** The second row's bounds at rest and after three drags up the body (null: not laid out any more). */
+    /** The second row's bounds at rest and after the body scrolled 30 rows (null: not laid out any more). */
     private fun rowBefore(style: Style, platform: KitPlatform, pinned: Boolean): Pair<DpRect?, DpRect?> {
         var rest: DpRect? = null
         var scrolled: DpRect? = null
@@ -72,11 +71,8 @@ class KitFloatingBarPinnedBelowTest {
             }
             waitForIdle()
             rest = runCatching { onNodeWithTag("tabs", useUnmergedTree = true).getBoundsInRoot() }.getOrNull()
-            // A finger's drag, so the scroll reaches the page's scrolling header as it does on a phone.
-            repeat(3) {
-                onNodeWithTag("list").performTouchInput { swipeUp(startY = bottom * .8f, endY = top + height * .2f, durationMillis = 400) }
-                waitForIdle()
-            }
+            onNodeWithTag("list").performScrollToIndex(30)
+            waitForIdle()
             scrolled = runCatching { onNodeWithTag("tabs", useUnmergedTree = true).getBoundsInRoot() }.getOrNull()
         }
         return rest to scrolled
