@@ -444,7 +444,7 @@ internal fun kitLiquidPaneSpec(role: LiquidRole, flip: LiquidFlip, chosen: Boole
             }
             val faceDark = smoke?.dark ?: roles.dark
             val fill = lean(face.fill?.let { Color(it.v) } ?: Color.Transparent, faceDark)
-            // The edge dock's grown end is the menu's old glass (6 dp dark, 3 light): menus themselves frost at 12 dp.
+            // The edge dock's grown end is the menu's old glass (6 dp dark, 3 light), not today's menu.
             val recipe = if (swell && role == LiquidRole.Menu) LiquidEdge.swellRecipe(faceDark, look) else LiquidEdge.recipe(role, faceDark, look)
             val rim = LiquidRim.Light
             KitLiquidPaneSpec(
