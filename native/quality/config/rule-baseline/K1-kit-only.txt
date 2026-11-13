@@ -176,6 +176,7 @@ feature/terminal/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/terminal
 feature/terminal/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/terminal/ui/LocalTerminalScreen.kt
 feature/terminal/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/terminal/ui/TerminalScreen.kt
 feature/usage/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/usage/ui/UsageScreen.kt
+feature/voice/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/voice/presentation/ComposerVoicePresenter.kt
 feature/voice/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/voice/ui/TeachingScreen.kt
 feature/widget-panels/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/widgetpanels/presentation/WidgetPanels.kt
 feature/widget-panels/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/widgetpanels/ui/WidgetPanelScreen.kt
