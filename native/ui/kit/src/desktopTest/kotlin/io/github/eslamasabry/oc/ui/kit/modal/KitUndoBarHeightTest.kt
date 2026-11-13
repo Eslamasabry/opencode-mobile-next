@@ -23,7 +23,7 @@ import kotlin.test.assertTrue
 @OptIn(ExperimentalTestApi::class)
 class KitUndoBarHeightTest {
     @Test
-    fun `the bar reports its height while an offer stands and nothing once it is gone`() =
+    fun `B-285 the bar reports its height while it is on screen, leaving included, and nothing once it is gone`() =
         runDesktopComposeUiTest(412, 860) {
             var offer by mutableStateOf<KitUndoOffer?>(KitUndoOffer("u1", "Alpha left the dock"))
             var reported = -1
@@ -36,9 +36,17 @@ class KitUndoBarHeightTest {
             }
             waitForIdle()
             assertTrue(reported >= 48, "the bar's height while offered, px: $reported")
+            val offered = reported
+            // B-285: while the bar leaves (its fade and guard) the room stays, so nothing slides under it.
+            mainClock.autoAdvance = false
             offer = null
+            mainClock.advanceTimeByFrame()
+            mainClock.advanceTimeBy(100)
+            assertEquals(offered, reported, "the leaving bar keeps its room")
+            mainClock.advanceTimeBy(5_000)
+            mainClock.autoAdvance = true
             waitForIdle()
-            assertEquals(0, reported, "no room once the offer is gone")
+            assertEquals(0, reported, "no room once the bar is gone")
         }
 
     @Test

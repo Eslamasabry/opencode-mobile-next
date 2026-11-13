@@ -116,8 +116,9 @@ public fun KitUndoBar(
     onTimeout: () -> Unit,
     modifier: Modifier = Modifier,
     /**
-     * The room the bar takes, px (its own padding included), while an offer stands, and 0 once the offer is gone: a page
-     * that scrolls under the bar gives its content that much bottom room, so its last row is never covered.
+     * The room the bar takes, px (its own padding included), while the bar is on screen (an offer stands, or it is
+     * leaving), and 0 once it is gone: a page that scrolls under the bar gives its content that much bottom room, so its
+     * last row is never covered and never slides back under the leaving bar.
      */
     onHeight: ((Int) -> Unit)? = null,
 ) {
@@ -134,7 +135,6 @@ public fun KitUndoBar(
     val liveNow by rememberUpdatedState(live)
     var barPx by remember { mutableIntStateOf(0) }
     val heightNow by rememberUpdatedState(onHeight)
-    LaunchedEffect(live, barPx) { heightNow?.invoke(if (live) barPx else 0) }
     DisposableEffect(Unit) { onDispose { heightNow?.invoke(0) } }
     val timedOut by rememberUpdatedState(onTimeout)
     // A finger on the bar holds the window; each touch and each lift start it again ([touches] keys the timer).
@@ -168,6 +168,10 @@ public fun KitUndoBar(
             present = false
         }
     }
+    // B-285: the room stays while the bar is on screen, leaving and its guard included. It used to go the moment the
+    // offer ended, so the page's last row (a chat's newest reply, its More button) slid back under the fading bar,
+    // right where a finger aimed at Undo lands once the bar has gone.
+    LaunchedEffect(present, barPx) { heightNow?.invoke(if (present) barPx else 0) }
     if (!live && !present) return
     val o = shown ?: return
     val shape = KitShapeId.Panel.shape()
