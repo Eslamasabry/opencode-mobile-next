@@ -46,7 +46,10 @@ internal fun CodeOverflow(
             // Flutter's fade of the block's fill over them and leaves the fill itself untouched.
             Modifier.fillMaxWidth().graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }.drawWithContent {
                 drawContent()
-                if (hasOverflow) {
+                // Read while drawing, not from the composition: the scroller learns its range while it is laid out, and
+                // a fade that waited for a recomposition could stay off on a block that plainly runs past its edge
+                // (device pictures 2026-11-13: a listing cut inside a glyph with no fade).
+                if (scroll.maxValue in 1 until Int.MAX_VALUE) {
                     val fade = Space.S6.dp.toPx() // F: lib/ui/kit/kit_code_block.dart:1069
                     if (scroll.value > 0)
                         drawRect(
