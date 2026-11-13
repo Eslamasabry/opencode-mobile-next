@@ -6,7 +6,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.hasContentDescription
-import androidx.compose.ui.test.hasSetProgressAction
+import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -37,6 +37,8 @@ import kotlinx.coroutines.flow.StateFlow
 /** Settings › Appearance › Glass lab on screen (2026-11-13): its controls are there and a slider moves the numbers. */
 @OptIn(ExperimentalTestApi::class)
 class GlassLabPageTest {
+    private val canSetProgress = SemanticsMatcher.keyIsDefined(SemanticsActions.SetProgress)
+
     private object Port : GlassLabSetting {
         override val stored: StateFlow<String?> = MutableStateFlow(null)
         override val build: String = "test"
@@ -67,14 +69,14 @@ class GlassLabPageTest {
         // The preview is real content: the bar's title and the reply under it.
         onNodeWithText("Run the parser on Ubuntu").assertExists()
         // Linked: the bar's blur moves and every other kind by the same step.
-        onNode(hasContentDescription("Blur") and hasSetProgressAction()).performSemanticsAction(SemanticsActions.SetProgress) { it(8f) }
+        onNode(hasContentDescription("Blur") and canSetProgress).performSemanticsAction(SemanticsActions.SetProgress) { it(8f) }
         waitForIdle()
         val t = lab!!.state.value.tuning
         assertEquals(8f, t.knobs(GlassPaneKind.Bar, true).blurDp)
         assertEquals(17f, t.knobs(GlassPaneKind.Menu, true).blurDp)
         // One kind: only the menu moves.
         onNodeWithText("Menu").performClick()
-        onNode(hasContentDescription("Refraction strength") and hasSetProgressAction()).performSemanticsAction(SemanticsActions.SetProgress) { it(90f) }
+        onNode(hasContentDescription("Refraction strength") and canSetProgress).performSemanticsAction(SemanticsActions.SetProgress) { it(90f) }
         waitForIdle()
         assertEquals(90f, lab!!.state.value.tuning.knobs(GlassPaneKind.Menu, true).lensStrengthDp)
         assertEquals(GlassTuning.shipped(GlassPaneKind.Sheet, true).lensStrengthDp, lab!!.state.value.tuning.knobs(GlassPaneKind.Sheet, true).lensStrengthDp)

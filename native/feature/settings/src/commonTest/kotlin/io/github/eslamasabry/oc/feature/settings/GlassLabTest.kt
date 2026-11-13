@@ -76,7 +76,7 @@ class GlassLabTest {
     }
 
     @Test
-    fun `B-GLASS-LAB-022 a pasted block loads its numbers; text without numbers is refused and says so`() = runTest {
+    fun `B-GLASS-LAB-022 a pasted block loads its numbers, text without numbers is refused and says so`() = runTest {
         val lab = GlassLabPresenter(backgroundScope, Port())
         assertFalse(lab.onPaste("hello"))
         assertTrue(lab.state.value.pasteRefused)

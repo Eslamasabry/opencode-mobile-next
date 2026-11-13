@@ -161,7 +161,6 @@ private fun GlassLabBar(scene: GlassLabScene, menu: Boolean, onMenu: (Boolean) -
     KitTopBar(
         title = stringResource(if (home) Res.string.glassLabSampleHome else Res.string.glassLabSampleTitle),
         subtitle = if (home) null else stringResource(Res.string.glassLabSampleSubtitle),
-        scope = if (home) HomePill else null,
         exit = KitTopBarExit.Back,
         exitLabel = stringResource(Res.string.kitTopBarBack),
         onExit = onBack,
@@ -265,6 +264,9 @@ private fun GlassLabHome(frost: KitFrostState) {
     val needs = KitRowState(stringResource(Res.string.glassLabSampleNeedsYou), KitRowStateTone.NeedsYou)
     val running = KitRowState(stringResource(Res.string.glassLabSampleRunning), KitRowStateTone.Running)
     LazyColumn(Modifier.fillMaxSize().kitFrostSource(frost), contentPadding = kitScreenChromePadding()) {
+        // The home's status pill rides in the bar's second row on the real page; here it heads the list, so the bar
+        // keeps one row and its Back.
+        item(key = "pill", contentType = "pill") { Box(Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp)) { HomePill() } }
         item(key = "chips", contentType = "chips") {
             KitFilterChips {
                 KitFilterChip(stringResource(Res.string.glassLabSampleAll), selected = true, onPressed = {})
