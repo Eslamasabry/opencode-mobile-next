@@ -38,7 +38,7 @@ import kotlin.test.assertTrue
 class KitSheetFieldIntoViewTest {
     private val fade = 24.dp
 
-    private fun run(pinned: Boolean, keyboardUp: Boolean, middle: Boolean = false, typed: String? = null, check: (field: androidx.compose.ui.unit.DpRect, button: androidx.compose.ui.unit.DpRect?, sheet: androidx.compose.ui.unit.DpRect) -> Unit) =
+    private fun run(pinned: Boolean, keyboardUp: Boolean, middle: Boolean = false, typed: String? = null, lines: IntRange = 1..8, check: (field: androidx.compose.ui.unit.DpRect, button: androidx.compose.ui.unit.DpRect?, sheet: androidx.compose.ui.unit.DpRect) -> Unit) =
         runComposeUiTest {
             var keyboard by mutableStateOf(if (keyboardUp) 200.dp else 0.dp)
             val focus = FocusRequester()
@@ -62,7 +62,7 @@ class KitSheetFieldIntoViewTest {
                                             Modifier.testTag("why"),
                                             kind = KitFieldKind.Multiline,
                                             // One line to start: the caret line is the whole field, as typing goes on.
-                                            multilineLines = 1..8,
+                                            multilineLines = lines,
                                             focusRequester = focus,
                                         )
                                         if (middle) Spacer(Modifier.height(1500.dp))
@@ -109,5 +109,25 @@ class KitSheetFieldIntoViewTest {
     fun `without pinned buttons the focused field only reaches the sheet's edge`() =
         run(pinned = false, keyboardUp = false) { field, _, sheet ->
             assertTrue(field.bottom <= sheet.bottom, "field bottom ${field.bottom} inside the sheet ${sheet.bottom}")
+        }
+
+    @Test
+    fun `a three-line field at the end of a tall body is whole above the buttons after one character, keyboard up`() =
+        run(pinned = true, keyboardUp = true, typed = "a", lines = 3..8) { field, button, sheet ->
+            assertTrue(field.bottom <= button!!.top, "field bottom ${field.bottom} at or above the buttons ${button.top}")
+            assertTrue(field.top >= sheet.top, "the whole box is in the sheet")
+        }
+
+    @Test
+    fun `a three-line field in the middle of a tall body is whole and a fade's reach above the buttons`() =
+        run(pinned = true, keyboardUp = true, middle = true, typed = "a", lines = 3..8) { field, button, sheet ->
+            assertTrue(field.bottom <= button!!.top - fade, "field bottom ${field.bottom} a fade above ${button.top}")
+            assertTrue(field.top >= sheet.top, "the whole box is in the sheet")
+        }
+
+    @Test
+    fun `a field taller than the viewport keeps its caret line clear of the fade`() =
+        run(pinned = true, keyboardUp = true, middle = true, typed = "a", lines = 24..24) { field, button, _ ->
+            assertTrue(field.top + 40.dp <= button!!.top - fade, "the first line (caret) ends above the fade: top ${field.top}, buttons ${button.top}")
         }
 }
