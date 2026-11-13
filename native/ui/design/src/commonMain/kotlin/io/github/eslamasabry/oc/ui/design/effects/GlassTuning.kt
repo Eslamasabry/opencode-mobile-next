@@ -319,24 +319,27 @@ public data class GlassTuning(val panes: Map<GlassPaneKey, GlassKnobs> = emptyMa
             val small = kind == GlassPaneKind.Chip || kind == GlassPaneKind.Button
             val modal = kind == GlassPaneKind.Menu || kind == GlassPaneKind.Sheet || kind == GlassPaneKind.Dialog
             return s.copy(
-                blurDp = when { small -> 0f; modal -> 2f; else -> .5f },
+                blurDp = when { small -> 0f; modal -> 3f; else -> .5f },
                 tint = if (kind == GlassPaneKind.Button) s.tint else if (dark) .10f else .08f,
                 saturation = 1.5f,
                 brightness = if (dark) -.02f else 0f,
                 lensWidthDp = when { small -> 16f; modal -> 34f; else -> 30f },
                 lensShare = if (small) .45f else .42f,
-                lensStrengthDp = when { kind == GlassPaneKind.Chip -> 20f; kind == GlassPaneKind.Button -> 30f; modal -> 64f; else -> 56f },
+                // Judged on the emulator (Contour lines, Aurora): a stronger bend than the rim is deep mirrors the page at
+                // the edge like a funhouse glass; this much, with the bend's profile leaning to the soft dome, presses the
+                // page into the rim instead, the way thick glass does.
+                lensStrengthDp = when { kind == GlassPaneKind.Chip -> 10f; kind == GlassPaneKind.Button -> 20f; modal -> 32f; else -> 24f },
                 rimBrightness = if (dark) .85f else .16f,
                 rimWidthDp = 1.25f,
                 rimFloor = .45f,
                 rimFocus = 1.3f,
                 sheen = if (dark) .06f else .10f,
-                bendShape = .25f,
+                bendShape = -.6f,
                 specular = if (dark) .55f else .70f,
                 specularReachDp = if (small) 40f else 140f,
                 specularLine = .6f,
-                passThrough = if (modal) .6f else if (small) 1f else .8f,
-                wordsClear = .4f,
+                passThrough = if (modal) .45f else if (small) 1f else .7f,
+                wordsClear = .6f,
             )
         }
 

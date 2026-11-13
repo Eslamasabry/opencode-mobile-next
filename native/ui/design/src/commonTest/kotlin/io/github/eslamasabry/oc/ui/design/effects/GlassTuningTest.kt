@@ -38,6 +38,10 @@ class GlassTuningTest {
             assertEquals(45f, k.lightDeg)
             assertEquals(1f, k.rimWidthDp)
             listOf(k.dispersion, k.bendShape, k.specular, k.sheen, k.innerShadow, k.tintLightness).forEach { assertEquals(0f, it, "$kind off by default") }
+            listOf(k.localDp, k.localFree).forEach { assertEquals(0f, it, "$kind local softening off") }
+            assertEquals(1f, k.localSlope)
+            assertEquals(1f, k.wordsClear, "$kind: the page under the words is cleared as today")
+            assertEquals(if (kind == GlassPaneKind.Chip) LiquidJoin.REACH_PILL_DP else LiquidJoin.REACH_MENU_DP, k.joinReachDp)
         }
         // The numbers the owner sees today: the bar 3 dp of blur and a 34 dp bend, the menu 12 dp and 48 dp.
         assertEquals(3f, GlassTuning.shipped(GlassPaneKind.Bar, true).blurDp)
@@ -118,8 +122,10 @@ class GlassTuningTest {
             val clear = GlassTuning.Shipped.preset(GlassPreset.ClearLiquid, dark)
             assertFalse(clear.isShipped)
             val bar = clear.knobs(GlassPaneKind.Bar, dark)
-            assertTrue(bar.blurDp < 1f && bar.lensStrengthDp > 34f && bar.specular > 0f, "clear liquid: little blur, a strong bend, a glint")
-            assertTrue(clear.knobs(GlassPaneKind.Menu, dark).lensStrengthDp > 48f, "menus bend too")
+            assertTrue(bar.blurDp < 1f && bar.lensStrengthDp > 0f && bar.specular > 0f && bar.bendShape < 0f, "clear liquid: little blur, a bend, a glint")
+            assertTrue(bar.wordsClear < 1f, "the page shows under the bar's words")
+            val menu = clear.knobs(GlassPaneKind.Menu, dark)
+            assertTrue(menu.blurDp < GlassTuning.shipped(GlassPaneKind.Menu, dark).blurDp && menu.lensStrengthDp > 0f, "menus are clear and bend too")
             assertNotEquals(clear, GlassTuning.Shipped.preset(GlassPreset.Frost, dark))
             assertTrue(clear.preset(GlassPreset.Shipped, dark).trimmed().isShipped)
         }

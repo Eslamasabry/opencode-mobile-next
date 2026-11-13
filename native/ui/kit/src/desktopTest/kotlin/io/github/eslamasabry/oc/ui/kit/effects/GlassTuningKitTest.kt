@@ -122,7 +122,7 @@ class GlassTuningKitTest {
         val clear = base.tuned(GlassTuning.presetKnobs(GlassPreset.ClearLiquid, GlassPaneKind.Bar, true), shipped, .5f)
         assertEquals(.5f, clear.recipe.blurDp)
         assertEquals(1f, clear.resolution, "a clear pane draws its backdrop at full resolution")
-        assertTrue(clear.specular.alpha > 0f && clear.bendShape > 0f && clear.recipe.hold.knee)
+        assertTrue(clear.specular.alpha > 0f && clear.bendShape != 0f && clear.recipe.hold.knee)
         assertNull(GlassTuning.decode("not a block"))
     }
 }
