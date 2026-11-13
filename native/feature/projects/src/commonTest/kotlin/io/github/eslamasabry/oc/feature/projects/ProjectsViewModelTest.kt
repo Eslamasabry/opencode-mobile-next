@@ -285,6 +285,34 @@ class ProjectsViewModelTest {
     }
 
     @Test
+    fun `B-125 a slow folder check shows its row as working and a second tap opens the project once`() = runTest {
+        val nav = Nav()
+        val gateway = FakeServerGateway(listOf(session("a", "/root/projects/new", 30)))
+        gateway.capabilities.value = ServerCapabilities(projectManagement = false)
+        val answer = kotlinx.coroutines.CompletableDeferred<Boolean>()
+        var asked = 0
+        val creator =
+            object : ProjectCreation {
+                override fun available(server: ProjectServer) = true
+
+                override suspend fun create(server: ProjectServer, name: String): Outcome<String> = Outcome.Ok("/root/projects/$name")
+
+                override suspend fun exists(server: ProjectServer, path: String): Boolean {
+                    asked++
+                    return answer.await()
+                }
+            }
+        val vm = ProjectsPickerViewModel(ProjectsRoute.Picker(), nav, Servers(listOf(ProjectServer(p1, "phone", gateway, null))), SessionOpenedFolders(), NoPhoneProjectDiscovery(), creator)
+        vm.openProject("/root/projects/new")
+        assertEquals("/root/projects/new", vm.state.value.checkingPath)
+        vm.openProject("/root/projects/new")
+        assertEquals(1, asked, "the second tap is ignored while the check runs")
+        answer.complete(true)
+        assertEquals(null, vm.state.value.checkingPath)
+        assertEquals(1, nav.calls.size, "the project opens once")
+    }
+
+    @Test
     fun `B-125 a listed project whose folder is gone asks to make it again instead of opening`() = runTest {
         val nav = Nav()
         val gateway = FakeServerGateway(listOf(session("a", "/root/projects/new", 30)))

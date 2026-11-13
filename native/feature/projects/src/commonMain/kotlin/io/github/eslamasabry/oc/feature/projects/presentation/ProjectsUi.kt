@@ -66,6 +66,11 @@ public data class ProjectsPickerUi(
     /** A typed path that does not exist yet: "Create this folder?" is asked for it. */
     val missingPath: String? = null,
     val creatingMissing: Boolean = false,
+    /**
+     * The folder (normalized) whose existence is being asked of the server right now: its row says it is
+     * working and a second tap is ignored, so one tap opens the project once.
+     */
+    val checkingPath: String? = null,
     val missingFailure: Failure? = null,
     /** The project being renamed (its directory), and the rename's state. */
     val renaming: FolderRowUi? = null,
