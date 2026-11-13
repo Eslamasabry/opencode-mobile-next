@@ -108,6 +108,23 @@ class Oc2EventAdapterTest {
     }
 
     @Test
+    fun `a live tool failure of type permission rejected is the person's refusal with their note`() {
+        val out = adapter().apply { twoSearches() }.v2(
+            "session.tool.failed",
+            """{"assistantMessageID":"msg_a1","id":"call_1","content":[],""" +
+                """"error":{"type":"permission.rejected","message":"search src only"},"executed":false}""",
+        )
+        val tool = assertIs<Oc2Adapted.PartUpserted>(out.single()).part.tool!!
+        assertEquals(Oc2ToolStatus.Error, tool.status)
+        assertEquals("The user declined this tool call\nsearch src only", tool.error)
+        val other = adapter().apply { twoSearches() }.v2(
+            "session.tool.failed",
+            """{"assistantMessageID":"msg_a1","id":"call_1","content":[],"error":{"type":"tool.execution","message":"boom"}}""",
+        )
+        assertEquals("boom", assertIs<Oc2Adapted.PartUpserted>(other.single()).part.tool!!.error)
+    }
+
+    @Test
     fun `B-PROTO-015 execution failure ends the run with the type and never also emits idle`() {
         val out = adapter().v2("session.execution.failed", """{"error":{"type":"provider.auth","message":"   "}}""")
         val ended = assertIs<Oc2Adapted.RunEnded>(out.single())
