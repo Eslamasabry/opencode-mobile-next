@@ -1,7 +1,6 @@
 package io.github.eslamasabry.oc.feature.settings.rb.o44
 
 import androidx.compose.ui.test.ExperimentalTestApi
-import androidx.compose.ui.test.assertExists
 import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.onNodeWithTag
@@ -44,7 +43,7 @@ class AppearancePinnedTabsTest {
         }
 
     @Test
-    fun `B-KIT-017 the footer never sits on the last control: the end of the page is whole`() = run {
+    fun `B-KIT-017 the end of the page is whole above the footer`() = run {
         onNodeWithTag("appearance-guide-skip").performScrollTo()
         waitForIdle()
         val last = onNodeWithTag("appearance-guide-skip").getBoundsInRoot()
@@ -55,9 +54,9 @@ class AppearancePinnedTabsTest {
     @Test
     fun `B-KIT-017 the preview says it is a preview, is compact, and its sample button is not a button`() = run {
         val preview = onNodeWithTag("appearance-preview").getBoundsInRoot()
-        assertTrue(preview.height.value <= 150f, "the preview is compact (${preview.height})")
+        assertTrue(preview.bottom.value - preview.top.value <= 150f, "the preview is compact ($preview)")
         onNodeWithText("Preview", useUnmergedTree = true).assertExists()
-        val clickable = androidx.compose.ui.test.onAllNodes(hasClickAction() and androidx.compose.ui.test.hasText("Review changes", substring = true), useUnmergedTree = true)
+        val clickable = onAllNodes(hasClickAction() and androidx.compose.ui.test.hasText("Review changes", substring = true), useUnmergedTree = true)
         assertEquals(0, clickable.fetchSemanticsNodes().size)
     }
 
@@ -79,7 +78,7 @@ class AppearancePinnedTabsTest {
         onNodeWithTag("appearance-style-Solid").assertExists()
         val preview = onNodeWithTag("appearance-preview").getBoundsInRoot()
         val tabs = onNodeWithTag("appearance-tabs").getBoundsInRoot()
-        assertTrue(preview.top >= tabs.bottom - 1f, "the page is back at its top: the preview lies under the tabs")
+        assertTrue(preview.top.value >= tabs.bottom.value - 1f, "the page is back at its top: the preview lies under the tabs")
     }
 }
 

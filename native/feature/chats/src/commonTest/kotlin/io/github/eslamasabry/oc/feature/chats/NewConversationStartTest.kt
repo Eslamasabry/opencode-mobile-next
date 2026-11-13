@@ -40,7 +40,7 @@ class NewConversationStartTest {
     private val setup = NewConversationSetup(directory = "/root/projects/a", projects = emptyList(), models = emptyList(), agents = emptyList())
 
     @Test
-    fun `NEW-WAIT presenter: each state names what the page waits on`() {
+    fun `NEW-WAIT presenter each state names what the page waits on`() {
         assertEquals(NewConversationWait.Preparing, NewConversationUi(servers = server, profile = profile, busy = true).wait)
         assertEquals(NewConversationWait.None, NewConversationUi(servers = server, profile = profile, setup = setup).wait)
         assertEquals(
