@@ -3,7 +3,6 @@ package io.github.eslamasabry.oc.feature.team.ui
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -23,7 +22,6 @@ import io.github.eslamasabry.oc.feature.team.presentation.TeamSetupUi
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kit.KitAction
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
-import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenWidth
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
@@ -40,7 +38,6 @@ import io.github.eslamasabry.oc.ui.kit.state.KitStateSize
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
 import io.github.eslamasabry.oc.ui.kit.state.KitStep
 import io.github.eslamasabry.oc.ui.kit.state.KitStepState
-import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.*
 import org.jetbrains.compose.resources.stringResource
 
@@ -52,7 +49,6 @@ import org.jetbrains.compose.resources.stringResource
  */
 @Composable
 public fun TeamSetupScreen(state: TeamSetupUi, actions: TeamSetupActions) {
-    val inset = Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp)
     KitSheetHost(Modifier.fillMaxSize()) {
         KitScreen(
             topBar = {
@@ -64,7 +60,6 @@ public fun TeamSetupScreen(state: TeamSetupUi, actions: TeamSetupActions) {
                 )
             },
             width = KitScreenWidth.Reading,
-            edges = KitScreenEdges.Bleed,
         ) {
             LazyColumn(
                 Modifier.fillMaxSize().testTag("team-setup"),
@@ -79,7 +74,7 @@ public fun TeamSetupScreen(state: TeamSetupUi, actions: TeamSetupActions) {
                                 if (state.protection == "proot") Res.string.phoneTeamProtectedProot
                                 else Res.string.phoneTeamProtectedLandlock,
                             ),
-                            inset.testTag("team-setup-protection"),
+                            Modifier.testTag("team-setup-protection"),
                             icon = KitIcons.shield,
                         )
                     }
@@ -89,14 +84,14 @@ public fun TeamSetupScreen(state: TeamSetupUi, actions: TeamSetupActions) {
                         val proof = state.proof?.let { proofLine(it) }
                         KitNotice(
                             whyWords(state.problem, proof != null),
-                            inset.testTag("team-setup-why"),
+                            Modifier.testTag("team-setup-why"),
                             notes = listOfNotNull(proof),
                         )
                     }
                 }
                 if (state.problem != SetupProblem.NoServer && state.steps.isNotEmpty()) {
                     item(key = "steps") {
-                        KitChecklist(steps(state), inset.testTag("team-setup-steps"))
+                        KitChecklist(steps(state), Modifier.testTag("team-setup-steps"))
                     }
                 }
             }

@@ -48,6 +48,6 @@ class ScreenGutterGateTest {
          * 125 since 2026-11-10: the AI Team settings and setup pages arrived from their own branch already marked
          * Bleed and were never counted, because this suite could not start. They are debt like the rest (B-225).
          */
-        const val BLEED_CEILING = 125
+        const val BLEED_CEILING = 123
     }
 }
