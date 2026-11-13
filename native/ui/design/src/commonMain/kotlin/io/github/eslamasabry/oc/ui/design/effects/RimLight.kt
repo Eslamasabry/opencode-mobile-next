@@ -25,7 +25,7 @@ public object RimLight {
      * ground and over Aurora's green and lilac, while the lit arcs stay almost three times brighter, so the pane still
      * reads as lit from one side and never as a flat outlined box.
      */
-    public const val FLOOR: Float = 0f
+    public const val FLOOR: Float = .35f
 
     /**
      * The rim's strength (0 to 1 of its peak) where the edge's outward direction makes [cosine] with the light: the

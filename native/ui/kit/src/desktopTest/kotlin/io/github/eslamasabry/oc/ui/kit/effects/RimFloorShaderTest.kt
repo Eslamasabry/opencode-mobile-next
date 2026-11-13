@@ -115,4 +115,13 @@ class RimFloorShaderTest {
         u.set(p, mode = 2f, res = 1f)
         check("joined body", alphas(p, w + 40, h + 40), w + 40, outline(left, top, rimPx / 2f))
     }
+
+    @Test
+    fun `rim floor - a chosen pane's graded rim keeps the pane floor at its low end`() {
+        // The owner's pick (2026-11-08): graded from its top-start corner to its bottom-end one in one straight fade.
+        val dark = CHOSEN_RIM_END_DARK / CHOSEN_RIM_START_DARK
+        val light = CHOSEN_RIM_END_LIGHT / CHOSEN_RIM_START_LIGHT
+        assertTrue(dark >= io.github.eslamasabry.oc.ui.design.effects.RimLight.FLOOR, "dark: its low end is ${(dark * 100).toInt()} % of its peak")
+        assertTrue(light >= io.github.eslamasabry.oc.ui.design.effects.RimLight.FLOOR, "light: its low end is ${(light * 100).toInt()} % of its peak")
+    }
 }
