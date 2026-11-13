@@ -68,8 +68,8 @@ class SettingsStructureTest {
 
     @Test
     fun `the edge dock has no row and no search entry while the lamp is not built`() {
-        // The rings dock is removed (owner, 2026-11-11); nothing of it may show in Settings, whatever the host says.
-        val facts = phoneFacts().copy(edgeDock = true)
+        // The rings dock is removed (owner, 2026-11-11); nothing of it may show in Settings, for every host.
+        val facts = phoneFacts()
         for (group in SettingsGroupId.entries) {
             val hits = ids(group, facts).filter { it.toString().contains("dock", ignoreCase = true) }
             assertEquals(emptyList(), hits, "a dock row shows in $group")
