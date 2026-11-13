@@ -794,39 +794,66 @@ public fun KitScreen(
                             }
                         }
                     }
-                    if (refresh != null) {
-                        KitRefresh(
-                            refreshing = refresh.refreshing,
-                            onRefresh = refresh.onRefresh,
-                            modifier = Modifier.fillMaxWidth().weight(1f),
-                            enabled = refresh.enabled,
-                            hostState = refresh.state,
-                            // Under a floating bar the disc comes out below the bar, not under it.
-                            indicatorTopPx = if (floats) ({ runPx }) else null,
-                        ) {
-                            scrolling(Modifier.fillMaxSize())
+                    // Glass with the lens (the bar floats): the bottom block is a pane like the bar. The body runs on
+                    // under it, so rows pass behind its glass instead of being cut at its top; the frame tells the body
+                    // the block's height (kitScreenChromePadding) so the last row rests above it.
+                    val footFloats = floats && bottomPart != null
+                    var footPx by remember { mutableIntStateOf(0) }
+                    val scrollArea: @Composable (Modifier) -> Unit = { area ->
+                        if (refresh != null) {
+                            KitRefresh(
+                                refreshing = refresh.refreshing,
+                                onRefresh = refresh.onRefresh,
+                                modifier = area,
+                                enabled = refresh.enabled,
+                                hostState = refresh.state,
+                                // Under a floating bar the disc comes out below the bar, not under it.
+                                indicatorTopPx = if (floats) ({ runPx }) else null,
+                            ) {
+                                scrolling(Modifier.fillMaxSize())
+                            }
+                        } else {
+                            scrolling(area)
                         }
-                    } else {
-                        scrolling(Modifier.fillMaxWidth().weight(1f))
                     }
-                    bottomPart?.let {
-                        Box(
-                            Modifier.fillMaxWidth()
-                                .windowInsetsPadding(
-                                    keyboard
-                                        .union(WindowInsets.navigationBars)
-                                        .only(WindowInsetsSides.Bottom)
-                                )
-                                .padding(
-                                    horizontal = if (bottomState.slab) LIQUID_BAR_INSET_X.dp else LocalKitTokens.current.gutter.dp,
-                                    vertical = Space.S2.dp,
-                                )
-                                .testTag("kit-screen-bottom"),
-                            // Dart's Column(crossAxisAlignment: stretch): the bottom block's child takes the full
-                            // width between the gutters (the page's primary is full width).
-                            propagateMinConstraints = true,
-                        ) {
-                            CompositionLocalProvider(LocalKitLiquidChrome provides frost, LocalKitScreenBottom provides bottomState) { it() }
+                    val bottomBlock: @Composable (Modifier) -> Unit = { place ->
+                        bottomPart?.let {
+                            Box(
+                                place.fillMaxWidth()
+                                    .windowInsetsPadding(
+                                        keyboard
+                                            .union(WindowInsets.navigationBars)
+                                            .only(WindowInsetsSides.Bottom)
+                                    )
+                                    .padding(
+                                        horizontal = if (bottomState.slab) LIQUID_BAR_INSET_X.dp else LocalKitTokens.current.gutter.dp,
+                                        vertical = Space.S2.dp,
+                                    )
+                                    .testTag("kit-screen-bottom"),
+                                // Dart's Column(crossAxisAlignment: stretch): the bottom block's child takes the full
+                                // width between the gutters (the page's primary is full width).
+                                propagateMinConstraints = true,
+                            ) {
+                                CompositionLocalProvider(LocalKitLiquidChrome provides frost, LocalKitScreenBottom provides bottomState) { it() }
+                            }
+                        }
+                    }
+                    if (!footFloats) {
+                        scrollArea(Modifier.fillMaxWidth().weight(1f))
+                        bottomBlock(Modifier)
+                    } else {
+                        val footDp = with(density) { footPx.toDp() }
+                        Box(Modifier.fillMaxWidth().weight(1f)) {
+                            CompositionLocalProvider(LocalChromePadding provides PaddingValues(bottom = footDp)) {
+                                scrollArea(Modifier.fillMaxSize())
+                            }
+                            // A touch on the pane (the gaps between its parts) is the pane's, never a row's under it.
+                            bottomBlock(
+                                Modifier.align(Alignment.BottomCenter)
+                                    .zIndex(1f)
+                                    .onSizeChanged { footPx = it.height }
+                                    .kitTouchSink()
+                            )
                         }
                     }
                 }
