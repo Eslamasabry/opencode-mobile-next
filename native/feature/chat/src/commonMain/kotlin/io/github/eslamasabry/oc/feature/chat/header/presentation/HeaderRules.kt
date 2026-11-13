@@ -40,6 +40,18 @@ public object HeaderRules {
     }
 
     /**
+     * A list row's act waits until the page can run it: Share and Stop sharing need the server's capabilities, which
+     * a page just opened does not have yet (their menu entry appears once it does). Every other act runs at once.
+     */
+    public fun thenActReady(act: HeaderAction?, menu: List<HeaderAction>): Boolean =
+        when (act) {
+            null -> false
+            HeaderAction.Share,
+            HeaderAction.Unshare -> HeaderAction.Share in menu || HeaderAction.Unshare in menu
+            else -> true
+        }
+
+    /**
      * The ⋯ menu (Flutter `sessionMenuItems`): Go to (Find, Subagents, Details), then Do (Share or Stop
      * sharing, Compact context, Fork, Rename, Continue with…, Continue on computer, Copy transcript, Archive),
      * Delete last. Gated on the conversation's own capabilities, never on the backend kind.

@@ -397,13 +397,21 @@ public class ChatEntries(
 
             // A list row's act (Share, Details, Copy handoff, Continue here) runs once the page is up.
             var thenDone by rememberSaveable(route) { mutableStateOf(false) }
-            LaunchedEffect(route) {
-                val act =
-                    route.thenAction?.let { name ->
-                        io.github.eslamasabry.oc.feature.chat.header.presentation.HeaderAction
-                            .entries
-                            .firstOrNull { it.name == name }
-                    }
+            // Share waits for the server's capabilities: a page just opened has none yet, and the share
+            // confirm is dropped without them (the act then did nothing at all).
+            val thenAct =
+                route.thenAction?.let { name ->
+                    io.github.eslamasabry.oc.feature.chat.header.presentation.HeaderAction
+                        .entries
+                        .firstOrNull { it.name == name }
+                }
+            val thenReady =
+                io.github.eslamasabry.oc.feature.chat.header.presentation.HeaderRules.thenActReady(
+                    thenAct,
+                    header.menu,
+                )
+            LaunchedEffect(route, thenReady) {
+                val act = thenAct.takeIf { thenReady }
                 if (act != null && !thenDone) {
                     thenDone = true
                     headerVm.choose(act)

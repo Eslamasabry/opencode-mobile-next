@@ -226,6 +226,8 @@ public data class ChatsUi(
     val renamable: ImmutableSet<String> = persistentSetOf(),
     /** N-30: row keys whose server deletes them. */
     val deletable: ImmutableSet<String> = persistentSetOf(),
+    /** Row keys whose server makes a share link (`capabilities.sessionShare`): only they are offered Share. */
+    val shareable: ImmutableSet<String> = persistentSetOf(),
     /** N-30: row keys that can be pinned on this phone, and those pinned now. */
     val pinnable: ImmutableSet<String> = persistentSetOf(),
     val pinned: ImmutableSet<String> = persistentSetOf(),

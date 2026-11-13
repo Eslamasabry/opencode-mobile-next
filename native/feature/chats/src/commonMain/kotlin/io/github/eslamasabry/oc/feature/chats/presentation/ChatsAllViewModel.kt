@@ -198,6 +198,8 @@ public class ChatsAllViewModel(
                             }
                             .map { it.profile }
                             .toSet(),
+                shareCapable =
+                    live.filter { it.gateway.capabilities.value.sessionShare }.map { it.profile }.toSet(),
                 stealCapable =
                     live
                         .filter {

@@ -28,6 +28,7 @@ public object ChatsState {
         startOfTodayMs: Long,
         settingsAvailable: Boolean,
         nowMs: Long = 0L,
+        pinned: Set<String> = emptySet(),
     ): ChatsUi {
         val roots = feed.items.filter { !it.isSubagent }
         val projects = ChatFeedRules.projects(roots)
@@ -70,7 +71,12 @@ public object ChatsState {
         val (live, rest) = listed.partition { it.status == ChatStatus.NeedsYou || it.status == ChatStatus.Running }
         val rightNow = live.sortedWith(ChatFeedRules.order).map { row(it, nowMs) }
         val latest =
-            rest.sortedWith(compareByDescending<ChatFeedItem> { it.lastActivityMs }.thenBy { it.identity })
+            // F: connection/sessions.dart sortedSessions(): pinned conversations come first, then the newest.
+            rest.sortedWith(
+                    compareByDescending<ChatFeedItem> { it.identity in pinned }
+                        .thenByDescending { it.lastActivityMs }
+                        .thenBy { it.identity }
+                )
                 .take(RECENT_ROWS)
                 .map { row(it, nowMs) }
         return ChatsUi(
