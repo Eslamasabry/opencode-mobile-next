@@ -19,16 +19,13 @@ import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.SemanticsMatcher
-import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasTestTag
-import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isSelected
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.effects.LiquidRole
-import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.design.style.Corners
 import io.github.eslamasabry.oc.ui.design.style.Style
 import io.github.eslamasabry.oc.ui.kit.choice.KitSegment
@@ -101,7 +98,7 @@ internal object PaneRimScenes {
             Case("dialog panel", { it.bounds(hasTestTag("kit-dialog")) }) {
                 Page { KitAlert(visible = true, title = "Rename conversation", onDismissRequest = {}, body = "The new name shows in the list.") }
             },
-            Case("chosen style card", { it.bounds(hasText("Glass") and hasClickAction()) }) {
+            Case("chosen style card", { it.bounds(isSelected()) }) {
                 Page {
                     Row(Modifier.padding(16.dp).padding(top = 80.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         KitStyleOptionCard(Style.Solid, "Solid", false, {}, Modifier.weight(1f))
@@ -154,9 +151,6 @@ internal object PaneRimScenes {
             KitTheme(
                 KitAppearance(
                     mode = if (dark) AppearanceMode.Dark else AppearanceMode.Light,
-                    // Motion off, not a still frame: a still-frame host never paints the aurora (KitLiveBackground), so
-                    // "over Aurora" would be the plain ground; motion off holds the picture still and every part at rest.
-                    motion = MotionLevel.Off,
                     style = Style.Glass,
                     liveBackground = aurora,
                     liveStyle = "auroraImage",
@@ -168,6 +162,10 @@ internal object PaneRimScenes {
                     joinEffect = { p, b -> DesktopKitPlatform().liquidJoinEffect(p, b) },
                 ),
                 "en",
+                // A still frame. Known gap (2026-11-13): a still-frame host never paints the aurora (KitLiveBackground),
+                // and motion off instead does not paint it either (and holds every frost), so the "over Aurora" scenes
+                // show the plain ground; the test says so rather than pass them.
+                stillFrame = true,
             ) {
                 if (aurora) KitLiveBackground(Modifier.fillMaxSize()) { content() }
                 else Box(Modifier.fillMaxSize().background(LocalKitColors.current.ground.copy(alpha = 1f))) { content() }
@@ -194,7 +192,9 @@ internal object PaneRimScenes {
 
     /** The pane's whole box: a part's tag may sit inside its own padding, so the widest box its modifiers lay out. */
     fun paneBox(node: androidx.compose.ui.semantics.SemanticsNode): Rect =
-        node.layoutInfo.getModifierInfo().map { it.coordinates.boundsInRoot() }.plus(node.boundsInRoot).maxBy { it.width * it.height }
+        node.layoutInfo.getModifierInfo().filter { it.coordinates.isAttached }.map { it.coordinates.boundsInRoot() }.plus(node.boundsInRoot)
+            .filter { it.left.isFinite() && it.top.isFinite() && it.right.isFinite() && it.bottom.isFinite() }
+            .maxBy { it.width * it.height }
 
     /**
      * How far the page's light spreads (0-255, brightest less darkest) on a coarse grid down its middle column, between
