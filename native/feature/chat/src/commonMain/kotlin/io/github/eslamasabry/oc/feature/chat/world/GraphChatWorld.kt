@@ -1941,6 +1941,12 @@ internal class GraphChatWorld(
             ?.facet<io.github.eslamasabry.oc.core.domain.MidTurnPromptGateway>()
             ?.midTurnPrompt(ref.sessionId)
 
+    override fun runtimeId(): String? =
+        (currentAttached()?.graph as? ChatGraphAccessors)
+            ?.chatGateway
+            ?.facet<io.github.eslamasabry.oc.core.domain.AgentFeaturesGateway>()
+            ?.providerIdForSession(ref.sessionId)
+
     override suspend fun withdrawNote(text: String): Boolean {
         val services = currentAttached()?.graph as? ChatGraphAccessors ?: return false
         if (!services.chatGateway.capabilities.value.inbox) return false

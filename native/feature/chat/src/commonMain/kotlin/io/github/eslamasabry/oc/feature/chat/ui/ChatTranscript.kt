@@ -196,6 +196,9 @@ internal class ChatListWords(
     val copyDetails: String = "",
     /** B2: why a send did not leave, in plain words. */
     val sendFailure: (Failure) -> String = { "" },
+    /** Set up at first use: "{agent} needs setting up before it can answer" and "Set up {agent}", by agent name. */
+    val setUpNeeded: (String) -> String = { "" },
+    val setUpAction: (String) -> String = { "" },
 )
 
 /**
@@ -379,6 +382,8 @@ internal fun ChatTranscriptList(
     onSendAgain: (() -> Unit)? = null,
     receiptChecks: ImmutableMap<Long, ReceiptCheckUi> = persistentMapOf(),
     onCheckReceipt: ((Long) -> Unit)? = null,
+    /** Set up at first use: opens the set-up of the agent (by id) a failed send needs; null hides it. */
+    onSetUpAgent: ((String) -> Unit)? = null,
     onReviewPending: (() -> Unit)? = null,
     display: TranscriptDisplayChoices = TranscriptDisplayChoices(),
     onCopyReply: ((FooterRow) -> Unit)? = null,
@@ -594,6 +599,7 @@ internal fun ChatTranscriptList(
                         if (p.canCheckReceipt) onCheckReceipt?.let { check -> { check(p.localId) } }
                         else null,
                     onReview = onReviewPending,
+                    onSetUp = onSetUpAgent,
                 )
               }
             }
@@ -704,6 +710,7 @@ private fun PendingBubble(
     check: ReceiptCheckUi? = null,
     onCheck: (() -> Unit)? = null,
     onReview: (() -> Unit)? = null,
+    onSetUp: ((String) -> Unit)? = null,
 ) {
     Column {
         // The same thumbnails the echoed message will show (cached by address), so the swap does not flicker.
@@ -717,7 +724,17 @@ private fun PendingBubble(
             photos = sent.photos,
             attachments = sent.attachments,
         )
-        when (p.state) {
+        val setUp = p.setUp?.takeIf { onSetUp != null && p.state != PendingState.Sending }
+        // Set up at first use: the agent was never set up, so the one way on is its set-up (the words stay above).
+        if (setUp != null) {
+            KitQuietLine(words.setUpNeeded(setUp.name))
+            KitButton(
+                words.setUpAction(setUp.name),
+                { onSetUp?.invoke(setUp.agentId) },
+                role = KitButtonRole.Tertiary,
+                modifier = Modifier.testTag("chat-send-set-up"),
+            )
+        } else when (p.state) {
             PendingState.Sending -> KitQuietLine(words.sending)
             // Review opens the waiting-sends page, which lists only sends with a record: without one it would
             // open empty (Paseo fault 2), so the bubble offers Send again itself.

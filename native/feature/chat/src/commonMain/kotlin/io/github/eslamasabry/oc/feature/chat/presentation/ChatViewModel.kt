@@ -218,6 +218,8 @@ public class ChatViewModel(
         nav.open(io.github.eslamasabry.oc.ui.routes.AgentsRoute.SignInTerminal(route.ref.profileId, providerId))
     }
 
+    override fun setUpAgent(agentId: String): Unit = presenter.setUpAgent(agentId)
+
     override fun confirmLeave(): Unit = presenter.confirmLeave()
 
     override fun dismissConfirm(): Unit = presenter.dismissConfirm()

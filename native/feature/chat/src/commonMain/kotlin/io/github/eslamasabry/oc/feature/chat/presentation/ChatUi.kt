@@ -650,6 +650,9 @@ public interface ChatActions {
     /** B-AGENT-189: opens the agent's sign-in page (no code to paste when its page needs none). */
     public fun openAgentSignIn(providerId: String) {}
 
+    /** Set up at first use: opens [agentId]'s set-up terminal (the Agents page's), from a send that needs it. */
+    public fun setUpAgent(agentId: String) {}
+
     /** Hold Send / "Send later or repeat": opens the schedule editor for this conversation. */
     public fun sendLater(words: String) {}
 

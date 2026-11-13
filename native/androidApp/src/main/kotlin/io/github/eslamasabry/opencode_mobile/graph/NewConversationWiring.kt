@@ -1083,6 +1083,11 @@ class AndroidNewConversationHost(
                         }
                         is Outcome.Ok -> {
                             attempt = attempt.copy(ref = ConversationRef(profile, created.value.id))
+                            // A phone agent's conversation knows its agent from the start, not only once its first
+                            // message opened it: the chat names the agent a failed first send needs set up, and Try
+                            // again goes to the same agent. Best effort: the first message carries the choice anyway.
+                            if (model != null)
+                                (gateway as? PaseoGateway)?.seedDraftProvider(created.value.id, model.providerId)
                             val journal =
                                 stores.prefs.commit(stores.lanes.forProfile(profile)) {
                                     putString(

@@ -96,4 +96,5 @@
     <string name="chatSendFailureNeedsAccount">Mô hình này cần tài khoản %1$s</string>
     <string name="agentErrorFreeTier">Các mô hình miễn phí của OpenCode đã dừng câu trả lời này.</string>
     <string name="agentErrorFreeTierHint">Các cuộc trò chuyện dài thường bị từ chối ở gói miễn phí, dù hôm nay bạn dùng ít. Rút ngắn cuộc trò chuyện này hoặc bắt đầu cuộc mới thường sẽ giúp ích.</string>
+    <string name="chatSendFailureNeedsSetUp">%1$s cần được thiết lập trước khi có thể trả lời</string>
 </resources>

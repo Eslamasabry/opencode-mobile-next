@@ -1589,6 +1589,7 @@ chatSendFailureLostConnection	9eabca7b44
 chatSendFailureLostConnectionTo	bcd22bd54a
 chatSendFailureModelUnavailable	ce8c635e77
 chatSendFailureNeedsAccount	9236050ecf
+chatSendFailureNeedsSetUp	39fcb406bb
 chatSendFailureNewConversation	f62040d150
 chatSendFailureNoCredit	fe2981da7a
 chatSendFailureSignIn	7c94ef237e

@@ -97,4 +97,5 @@
     <string name="chatSendFailureNeedsAccount">此模型需要 %1$s 账号</string>
     <string name="agentErrorFreeTier">OpenCode 的免费模型中止了这条回复。</string>
     <string name="agentErrorFreeTierHint">免费版经常拒绝较长的对话，即使你今天用得很少。缩短这个对话或开始新对话通常有帮助。</string>
+    <string name="chatSendFailureNeedsSetUp">%1$s 需要先设置才能回答</string>
 </resources>

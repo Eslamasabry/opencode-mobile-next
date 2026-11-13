@@ -123,6 +123,8 @@ import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.backgroundWorkShortcut
 import io.github.eslamasabry.oc.ui.words.res.chatSendFailureSignInAction
 import io.github.eslamasabry.oc.ui.words.res.chatSendFailureSignInAgain
+import io.github.eslamasabry.oc.ui.words.res.chatSendFailureNeedsSetUp
+import io.github.eslamasabry.oc.ui.words.res.agentsSetUpAction
 import io.github.eslamasabry.oc.ui.words.res.chatStripBackground
 import io.github.eslamasabry.oc.ui.words.res.revertReview
 import io.github.eslamasabry.oc.ui.words.res.revertStaged
@@ -401,6 +403,8 @@ public fun ChatScreen(
     val details = stringResource(Res.string.chatReplyFailedDetails)
     val copyDetails = stringResource(Res.string.chatReplyFailedCopy)
     val sendFailure = rememberSendFailureWords()
+    val setUpNeeded = stringResource(Res.string.chatSendFailureNeedsSetUp, "\u0000")
+    val setUpAction = stringResource(Res.string.agentsSetUpAction, "\u0000")
     val listWords =
         remember(
             messageActions,
@@ -416,6 +420,8 @@ public fun ChatScreen(
             details,
             copyDetails,
             sendFailure,
+            setUpNeeded,
+            setUpAction,
         ) {
             ChatListWords(
                 messageActions = messageActions,
@@ -431,6 +437,8 @@ public fun ChatScreen(
                 details = details,
                 copyDetails = copyDetails,
                 sendFailure = sendFailure,
+                setUpNeeded = { name -> setUpNeeded.replace("\u0000", name) },
+                setUpAction = { name -> setUpAction.replace("\u0000", name) },
             )
         }
     val list = rememberTranscriptListState()
@@ -994,6 +1002,7 @@ public fun ChatScreen(
                                             onRetrySend = actions::retrySend,
                                             receiptChecks = state.receiptChecks,
                                             onCheckReceipt = actions::checkReceipt,
+                                            onSetUpAgent = actions::setUpAgent,
                                             onReviewPending = onReviewPending,
                                             modifier = Modifier.fillMaxSize().chatPane(),
                                             extraBottomPx = dockRoomPx,

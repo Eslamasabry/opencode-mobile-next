@@ -70,8 +70,9 @@ import kotlin.time.Instant
 internal class ChatScene(
     val nav: RecordingNavigator = RecordingNavigator(),
     val world: FakeChatWorld = FakeChatWorld(),
+    outside: io.github.eslamasabry.oc.feature.chat.presentation.ChatOutside? = null,
 ) {
-    val actions = ChatPresenter(world, nav, Immediate)
+    val actions = ChatPresenter(world, nav, Immediate, outside = outside)
     private val promptsDoor = ChatPromptsDoor(Ref, ComposerInbox(), nav)
     val headerActions = object : ChatHeaderActions {
         override fun openMenu() {}

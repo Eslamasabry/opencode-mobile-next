@@ -96,4 +96,5 @@
     <string name="chatSendFailureNeedsAccount">Model ini memerlukan akun %1$s</string>
     <string name="agentErrorFreeTier">Model gratis OpenCode menghentikan balasan ini.</string>
     <string name="agentErrorFreeTierHint">Percakapan panjang sering ditolak di paket gratis, meskipun Anda belum banyak memakainya hari ini. Mempersingkat percakapan ini atau memulai yang baru biasanya membantu.</string>
+    <string name="chatSendFailureNeedsSetUp">%1$s perlu disiapkan sebelum bisa menjawab</string>
 </resources>

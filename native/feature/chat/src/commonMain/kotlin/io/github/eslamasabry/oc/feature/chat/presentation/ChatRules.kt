@@ -63,9 +63,10 @@ public object StatusPick {
             ChatLink.Connecting -> return retry.line(CONNECTION, ChatStatusKind.Connecting)
             ChatLink.Live -> Unit
         }
-        // The newest bubble speaks for the sends; an older failure stays on its own bubble.
+        // The newest bubble speaks for the sends; an older failure stays on its own bubble. One whose agent needs
+        // setting up says so on its bubble only: Try again here would only fail again.
         pending
-            .lastOrNull { it.state == PendingState.Failed }
+            .lastOrNull { it.state == PendingState.Failed && it.setUp == null }
             ?.let {
                 return ChatStatusUi(
                     "send-${it.localId}",
