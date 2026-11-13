@@ -28,7 +28,7 @@ class KitRowGroupEmptyTest {
                 }
             }
             waitForIdle()
-            assertEquals(0.dp, onNodeWithTag("host").getBoundsInRoot().height)
+            assertEquals(0.dp, onNodeWithTag("host").getBoundsInRoot().let { it.bottom - it.top })
         }
 
     @Test
@@ -40,6 +40,6 @@ class KitRowGroupEmptyTest {
                 }
             }
             waitForIdle()
-            assertTrue(onNodeWithTag("host").getBoundsInRoot().height > 0.dp)
+            assertTrue(onNodeWithTag("host").getBoundsInRoot().let { it.bottom - it.top } > 0.dp)
         }
 }
