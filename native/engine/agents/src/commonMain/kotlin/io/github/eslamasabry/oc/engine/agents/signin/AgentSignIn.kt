@@ -9,6 +9,7 @@ import io.github.eslamasabry.oc.engine.agents.OwnerId
 import io.github.eslamasabry.oc.engine.agents.auth.AgentAuth
 import io.github.eslamasabry.oc.engine.agents.catalog.AgentCatalog
 import io.github.eslamasabry.oc.engine.agents.catalog.AgentSignInMethod
+import io.github.eslamasabry.oc.engine.agents.firstuse.AgentFirstUse
 import io.github.eslamasabry.oc.engine.agents.host.AgentHost
 import io.github.eslamasabry.oc.engine.agents.host.GuestCommand
 import kotlinx.collections.immutable.ImmutableList
@@ -18,8 +19,17 @@ import kotlin.time.Duration.Companion.seconds
 
 /** How a person signs an agent in (plan 17 §1.5 "Sign in", AGENTS-BACKENDS-13/14). */
 public sealed interface SignInPlan {
-    /** The agent's own login runs in a terminal: [program] with exactly [args] (from the catalog's signInArgs). */
-    public data class Terminal(val agent: AgentId, val program: String, val args: ImmutableList<String>) : SignInPlan
+    /**
+     * The agent's own login runs in a terminal: [program] with exactly [args] (from the catalog's signInArgs).
+     * [firstUse]: an agent set up at first use ([AgentFirstUse]): its sign-in cannot be read afterwards, so the end of
+     * the terminal marks it set up instead of reading an account.
+     */
+    public data class Terminal(
+        val agent: AgentId,
+        val program: String,
+        val args: ImmutableList<String>,
+        val firstUse: Boolean = false,
+    ) : SignInPlan
 
     /** API-key agents (Qwen, Goose): words key [SignInWords.ProviderKeyOnHost]; the app has no key field. */
     public data class ProviderKeyOnHost(val agent: AgentId) : SignInPlan
@@ -54,6 +64,11 @@ public class AgentSignIn(
         val descriptor = catalog.byId(agent) ?: return SignInPlan.NotAvailable(agent)
         val recipe = descriptor.recipe
         if (!descriptor.runsOnPhoneHost || recipe == null) return SignInPlan.NotAvailable(agent)
+        // Set up at first use (Qwen Code: its TUI, `/auth`; Goose: `goose configure`; omp: `omp login`): the agent's
+        // own set-up in the terminal, also for API-key agents. The app never stores, reads or passes a provider key.
+        if (AgentFirstUse.applies(descriptor) && SignInCommandPolicy.allows(recipe.executable, recipe.signInArgs)) {
+            return SignInPlan.Terminal(agent, recipe.executable, recipe.signInArgs, firstUse = true)
+        }
         return when (descriptor.signInMethod) {
             AgentSignInMethod.ApiKeyHost -> SignInPlan.ProviderKeyOnHost(agent)
             AgentSignInMethod.None -> SignInPlan.NotAvailable(agent)

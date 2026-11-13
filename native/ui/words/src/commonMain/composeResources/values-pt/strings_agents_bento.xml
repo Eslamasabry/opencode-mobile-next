@@ -35,4 +35,8 @@
     <string name="agentsStateSignInUnchecked">Instalado, mas este app ainda não consegue verificar o login dele</string>
     <string name="agentsStateSignInCheckFailed">Não foi possível verificar o login. Tente fazer login de novo.</string>
     <string name="agentsSignInUncheckedBody">Ainda não dá para usá-lo em conversas. Você pode removê-lo.</string>
+    <string name="agentsStateSetUpAtFirstUse">Instalado. Configure na primeira vez que usar.</string>
+    <string name="agentsChipSetUp">Configurar</string>
+    <string name="agentsSetUpAction">Configurar o %1$s</string>
+    <string name="agentsSetUpTypeAuth">Digite /auth e siga as etapas.</string>
 </resources>

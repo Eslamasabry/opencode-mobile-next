@@ -206,18 +206,20 @@ internal object PhoneAgentRules {
                     AgentHiddenReason.UnverifiedDownload -> PhoneAgentStatus.NotInstalled
                     // The sign-in check did not answer (Flutter `buildAgentRow`: "Sign-in could not be checked. Try
                     // signing in again." with Sign in). Before, this read "Not available on this phone yet" with no
-                    // reason and no act. An agent whose sign-in the app cannot read at all stays unavailable: signing
-                    // in again could never change it, and its card says why ([signInUnchecked]).
+                    // reason and no act.
+                    // An agent whose sign-in no check can read (Qwen Code, Goose, omp) is usable once installed: set
+                    // up at first use, its truth learnt from its own answer (never "Ready", never signed in or out).
                     AgentHiddenReason.SignedOut ->
-                        if (signInUnchecked(agent)) PhoneAgentStatus.Unavailable else PhoneAgentStatus.SignInNeeded
+                        if (signInUnchecked(agent)) PhoneAgentStatus.SetUpAtFirstUse
+                        else PhoneAgentStatus.SignInNeeded
                     else -> PhoneAgentStatus.Unavailable
                 }
         }
     }
 
     /**
-     * An agent that needs a sign-in the app's probe cannot read (Gemini CLI, Qwen Code, Goose, omp): its check answers
-     * "unsupported" every time, so it can never read as signed in or start a conversation.
+     * An agent that needs a sign-in the app's probe cannot read (Qwen Code, Goose, omp, an installed Gemini CLI): its
+     * check answers "unsupported" every time, so it is set up at first use (engine `AgentFirstUse`).
      */
     fun signInUnchecked(agent: AgentDescriptor): Boolean =
         agent.signInMethod != AgentSignInMethod.None && !AgentAuthScripts.checksSignIn(agent.id)

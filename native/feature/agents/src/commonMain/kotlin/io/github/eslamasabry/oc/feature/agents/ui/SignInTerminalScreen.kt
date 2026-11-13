@@ -55,6 +55,8 @@ import io.github.eslamasabry.oc.ui.words.res.agentsSignInTerminalIntro
 import io.github.eslamasabry.oc.ui.words.res.agentsSignInTerminalIntroOther
 import io.github.eslamasabry.oc.ui.words.res.agentsSignInTerminalNotYet
 import io.github.eslamasabry.oc.ui.words.res.agentsSignInTitle
+import io.github.eslamasabry.oc.ui.words.res.agentsSetUpAction
+import io.github.eslamasabry.oc.ui.words.res.agentsSetUpTypeAuth
 import io.github.eslamasabry.oc.ui.words.res.agentsSignInUnavailable
 import io.github.eslamasabry.oc.ui.words.res.agentsSignedIn
 import io.github.eslamasabry.oc.ui.words.res.agentsSignedInBody
@@ -96,13 +98,17 @@ public fun SignInTerminalScreen(
     LaunchedEffect(state.step) {
         // Only the agent's account check can publish SignedIn. A clean terminal exit alone never
         // does.
-        if (state.step == SignInStep.SignedIn) actions.leave()
+        if (state.step == SignInStep.SignedIn || state.step == SignInStep.SetUpDone) actions.leave()
     }
     KitScreen(
         modifier = modifier,
         topBar = {
             KitTopBar(
-                title = stringResource(Res.string.agentsSignInTitle, state.agentName),
+                title =
+                    stringResource(
+                        if (state.firstUse) Res.string.agentsSetUpAction else Res.string.agentsSignInTitle,
+                        state.agentName,
+                    ),
                 exit = KitTopBarExit.Back,
                 exitLabel = stringResource(Res.string.kitTopBarBack),
                 onExit = actions::leave,
@@ -137,6 +143,16 @@ public fun SignInTerminalScreen(
                     ),
                     tone = TextTone.Secondary,
                 )
+                // Qwen Code's set-up starts in its own TUI: the one thing to type there.
+                if (state.typesAuth)
+                    KitNotice(
+                        stringResource(Res.string.agentsSetUpTypeAuth),
+                        Modifier.padding(
+                            start = LocalKitTokens.current.gutter.dp,
+                            end = LocalKitTokens.current.gutter.dp,
+                            bottom = Space.S2.dp,
+                        ),
+                    )
                 // Gemini CLI's own sign-in may ask people to move to Antigravity: say what to do here.
                 if (state.offersAntigravityNote && state.step != SignInStep.SignedIn)
                     KitNotice(
@@ -167,7 +183,8 @@ public fun SignInTerminalScreen(
             } else
                 when (state.step) {
                     SignInStep.Preparing,
-                    SignInStep.Starting -> Unit
+                    SignInStep.Starting,
+                    SignInStep.SetUpDone -> Unit
                     SignInStep.Running -> Running(state, actions, Modifier.weight(1f))
                     SignInStep.Checking ->
                         if (state.terminal != null || state.transcript.isNotEmpty())

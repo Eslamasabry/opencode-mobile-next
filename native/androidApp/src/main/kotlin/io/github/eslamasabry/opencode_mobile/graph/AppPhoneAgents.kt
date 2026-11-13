@@ -231,7 +231,9 @@ class AppPhoneAgents(
             .filter {
                 it.runsOnPhoneHost &&
                     it.recipe != null &&
-                    it.availability != AgentAvailability.Hidden
+                    it.availability != AgentAvailability.Hidden &&
+                    // A retired agent (Gemini CLI) is offered nowhere; an installed copy appears after the read.
+                    it.listedOnPhone(installed = false)
             }
             .map { agent ->
                 PhoneAgentRow(
@@ -450,7 +452,7 @@ class AppPhoneAgents(
             helperMayHaveBeenStoppedByAndroid = HelperStopNews.byAndroid(helper, stopNewsSince),
             agents =
                 agents
-                    .map { agent ->
+                    .mapNotNull { agent ->
                         val payload =
                             if (installed) PhoneAgentPayloads.present(linux, agent.recipe!!.executable)
                             else false
@@ -467,7 +469,10 @@ class AppPhoneAgents(
                         val signIn =
                             if (present == true) knownSignIn(authOwner, agent, kept[agent.id.raw]) else null
                         if (!final && ((needsVersion && version == null) || (present == true && signIn == null)))
-                            return@map showing[agent.id.raw] ?: checkingRow(agent)
+                            return@mapNotNull showing[agent.id.raw]
+                                ?: checkingRow(agent).takeIf { agent.listedOnPhone(installed = false) }
+                        // A retired agent (Gemini CLI) keeps its row, check and Remove only while a copy is here.
+                        if (!agent.listedOnPhone(installed = present == true || payload == true)) return@mapNotNull null
                         val status =
                             when (present) {
                                 null -> PhoneAgentStatus.Unavailable
@@ -506,7 +511,8 @@ class AppPhoneAgents(
                                     signIn == AgentSignInPhase.SignedIn &&
                                     AgentAuthScripts.supportsSignOut(agent.id) &&
                                     !installing,
-                            signInUnchecked = present == true && PhoneAgentRules.signInUnchecked(agent),
+                            // An agent whose sign-in no check can read is set up at first use now
+                            // (PhoneAgentStatus.SetUpAtFirstUse): the "can't check its sign-in yet" line is never shown.
                             signInCheckFailed =
                                 status == PhoneAgentStatus.SignInNeeded &&
                                     PhoneAgentRules.signInCheckFailed(agent, signIn),

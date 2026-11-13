@@ -35,4 +35,8 @@
     <string name="agentsStateSignInUnchecked">مثبّت، لكن هذا التطبيق لا يستطيع التحقق من تسجيل دخوله بعد</string>
     <string name="agentsStateSignInCheckFailed">تعذّر التحقق من تسجيل الدخول. حاول تسجيل الدخول مرة أخرى.</string>
     <string name="agentsSignInUncheckedBody">لا يمكن استخدامه في المحادثات بعد. يمكنك إزالته.</string>
+    <string name="agentsStateSetUpAtFirstUse">مثبّت. اضبطه في أول مرة تستخدمه فيها.</string>
+    <string name="agentsChipSetUp">إعداد</string>
+    <string name="agentsSetUpAction">إعداد %1$s</string>
+    <string name="agentsSetUpTypeAuth">اكتب /auth واتبع الخطوات.</string>
 </resources>

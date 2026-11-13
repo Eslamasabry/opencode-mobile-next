@@ -35,4 +35,8 @@
     <string name="agentsStateSignInUnchecked">Instalado, pero esta app aún no puede comprobar su inicio de sesión</string>
     <string name="agentsStateSignInCheckFailed">No se pudo comprobar el inicio de sesión. Intenta iniciar sesión de nuevo.</string>
     <string name="agentsSignInUncheckedBody">Aún no se puede usar en conversaciones. Puedes quitarlo.</string>
+    <string name="agentsStateSetUpAtFirstUse">Instalado. Configúralo la primera vez que lo uses.</string>
+    <string name="agentsChipSetUp">Configurar</string>
+    <string name="agentsSetUpAction">Configurar %1$s</string>
+    <string name="agentsSetUpTypeAuth">Escribe /auth y sigue los pasos.</string>
 </resources>

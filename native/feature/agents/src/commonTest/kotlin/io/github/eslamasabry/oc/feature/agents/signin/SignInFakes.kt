@@ -165,11 +165,14 @@ class FakeAgents(
             "claude" to SignInPlan.Terminal("Claude Code", usesClaudeAccount = true),
             "codex" to SignInPlan.Terminal("Codex", usesClaudeAccount = false),
             "qwen" to SignInPlan.ProviderKeyOnHost("Qwen Code"),
+            "goose" to SignInPlan.Terminal("Goose", usesClaudeAccount = false, firstUse = true),
+            "qwen-tui" to SignInPlan.Terminal("Qwen Code", usesClaudeAccount = false, firstUse = true, typesAuth = true),
         ),
 ) : SignInAgents {
     var signedIn = false
     var confirms = 0
     val commands = mutableListOf<String>()
+    val setUp = mutableListOf<String>()
 
     override fun plan(agent: AgentRef): SignInPlan = plans[agent.id] ?: SignInPlan.NotAvailable(agent.id)
 
@@ -178,6 +181,8 @@ class FakeAgents(
         return when (agent.id) {
             "claude" -> CLAUDE.ok()
             "codex" -> SignInCommand("codex", listOf("login", "--device-auth"), home = "/home/oc/.oc-profiles/p1").ok()
+            "goose" -> SignInCommand("goose", listOf("configure"), home = "/home/oc/.oc-profiles/p1").ok()
+            "qwen-tui" -> SignInCommand("qwen", emptyList(), home = "/home/oc/.oc-profiles/p1").ok()
             else -> Failure.Unavailable(io.github.eslamasabry.oc.core.common.FeatureId("agentSignIn")).failed()
         }
     }
@@ -185,6 +190,10 @@ class FakeAgents(
     override suspend fun confirmSignedIn(owner: ProfileId, agent: AgentRef): Boolean {
         confirms++
         return signedIn
+    }
+
+    override suspend fun markSetUp(owner: ProfileId, agent: AgentRef) {
+        setUp += "${owner.raw}/${agent.id}"
     }
 
     override fun read(transcript: String): SignInFound {

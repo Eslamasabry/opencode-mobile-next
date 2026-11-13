@@ -204,7 +204,9 @@ public object AgentReadiness {
         val fact = runtime?.takeIf { it.agentId == descriptor.id }
         val installable = descriptor.installableOn(architecture)
         // Server types (OpenCode) are not phone agents: only agents the phone host runs are listed.
-        val catalogVisible = descriptor.runsOnPhoneHost && descriptor.availability != AgentAvailability.Hidden
+        // A retired agent is offered nowhere; an installed copy keeps its row (and its sign-in and Remove).
+        val catalogVisible = descriptor.runsOnPhoneHost && descriptor.availability != AgentAvailability.Hidden &&
+            descriptor.listedOnPhone(installed = fact?.installed == true)
         val cannotInstall: AgentHiddenReason? = when {
             installable -> null
             descriptor.recipe == null ||

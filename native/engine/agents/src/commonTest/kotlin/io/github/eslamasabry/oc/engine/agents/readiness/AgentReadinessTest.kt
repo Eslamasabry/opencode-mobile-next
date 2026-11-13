@@ -302,4 +302,19 @@ class AgentReadinessTest {
         assertTrue(row(runtime().copy(behindPin = true)).behindPin)
         assertFalse(row(runtime(id = "codex").copy(behindPin = true)).behindPin)
     }
+
+    @Test
+    fun `B-LINUX-140 a retired agent is offered nowhere, but an installed copy keeps its row`() {
+        val gemini = AgentCatalog.builtIn.byId(AgentId("gemini"))!!
+        for (fact in listOf(null, runtime(id = "gemini", installed = false))) {
+            val result = row(fact, descriptor = gemini)
+            assertFalse(result.setupVisible)
+            assertFalse(result.installable)
+            assertEquals(null, result.fixAction)
+        }
+        val installed = row(runtime(id = "gemini", phase = AgentSignInPhase.Failed), descriptor = gemini)
+        assertTrue(installed.setupVisible)
+        assertFalse(installed.installable)
+        assertEquals(AgentFixAction.SignIn, installed.fixAction)
+    }
 }

@@ -35,4 +35,8 @@
     <string name="agentsStateSignInUnchecked">已安装，但本应用暂时无法检查它的登录状态</string>
     <string name="agentsStateSignInCheckFailed">无法检查登录状态。请尝试重新登录。</string>
     <string name="agentsSignInUncheckedBody">暂时还不能用于对话。你可以移除它。</string>
+    <string name="agentsStateSetUpAtFirstUse">已安装。首次使用时进行设置。</string>
+    <string name="agentsChipSetUp">设置</string>
+    <string name="agentsSetUpAction">设置 %1$s</string>
+    <string name="agentsSetUpTypeAuth">输入 /auth 并按步骤操作。</string>
 </resources>

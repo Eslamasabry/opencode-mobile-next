@@ -35,4 +35,8 @@
     <string name="agentsStateSignInUnchecked">Installé, mais cette app ne peut pas encore vérifier sa connexion</string>
     <string name="agentsStateSignInCheckFailed">Impossible de vérifier la connexion. Essayez de vous reconnecter.</string>
     <string name="agentsSignInUncheckedBody">Il ne peut pas encore servir aux conversations. Vous pouvez le supprimer.</string>
+    <string name="agentsStateSetUpAtFirstUse">Installé. Configurez-le la première fois que vous l’utilisez.</string>
+    <string name="agentsChipSetUp">Configurer</string>
+    <string name="agentsSetUpAction">Configurer %1$s</string>
+    <string name="agentsSetUpTypeAuth">Tapez /auth et suivez les étapes.</string>
 </resources>

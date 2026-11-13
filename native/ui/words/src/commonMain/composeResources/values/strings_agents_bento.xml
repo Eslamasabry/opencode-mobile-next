@@ -35,4 +35,11 @@
     <string name="agentsStateSignInUnchecked">Installed, but this app can't check its sign-in yet</string>
     <string name="agentsStateSignInCheckFailed">Sign-in could not be checked. Try signing in again.</string>
     <string name="agentsSignInUncheckedBody">It can't be used for conversations yet. You can remove it.</string>
+    <!-- An installed agent whose sign-in cannot be read ahead (Qwen Code, Goose, omp): usable, set up in its own terminal. -->
+    <string name="agentsStateSetUpAtFirstUse">Installed. Set it up the first time you use it.</string>
+    <!-- Short chip on the agent's card; opens the agent's own set-up in a terminal. -->
+    <string name="agentsChipSetUp">Set up</string>
+    <string name="agentsSetUpAction">Set up %1$s</string>
+    <!-- Above Qwen Code's set-up terminal. "/auth" is a command typed in the terminal: never translate it. -->
+    <string name="agentsSetUpTypeAuth">Type /auth and follow the steps.</string>
 </resources>
