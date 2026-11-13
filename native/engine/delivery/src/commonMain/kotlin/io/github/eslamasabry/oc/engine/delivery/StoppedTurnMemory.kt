@@ -7,6 +7,7 @@ import io.github.eslamasabry.oc.core.data.kv.KeyValueStore
 import io.github.eslamasabry.oc.core.data.kv.PrefValue
 import io.github.eslamasabry.oc.core.data.lane.WriterLane
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -25,6 +26,12 @@ internal class StoppedTurnMemory(
 ) {
     private val key = PREFIX + profile.raw
     val refs = MutableStateFlow(read())
+    private var lastWrite: Job? = null
+
+    /** Returns once every change so far is on disk. */
+    suspend fun settled() {
+        lastWrite?.join()
+    }
 
     fun add(ref: ConversationRef) = change { it + ref }
 
@@ -36,7 +43,9 @@ internal class StoppedTurnMemory(
         val after = refs.value
         if (after == before) return
         val ids = after.filter { it.profileId == profile }.map { it.sessionId.raw }.takeLast(MAX)
-        scope.launch {
+        val previous = lastWrite
+        lastWrite = scope.launch {
+            previous?.join()
             store.commit(lane) { if (ids.isEmpty()) remove(key) else putString(key, ids.joinToString(",")) }
         }
     }

@@ -1,6 +1,5 @@
 package io.github.eslamasabry.oc.engine.delivery
 
-import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -13,14 +12,14 @@ class StoppedTurnMemoryTest {
         val first = World(disk, this)
         val memory = StoppedTurnMemory(first.kv, first.lanes.app, P1, backgroundScope)
         memory.add(REF)
-        advanceUntilIdle()
+        memory.settled()
 
         val after = World(disk, this)
         val reopened = StoppedTurnMemory(after.kv, after.lanes.app, P1, backgroundScope)
         assertEquals(setOf(REF), reopened.refs.value)
 
         reopened.remove(REF)
-        advanceUntilIdle()
+        reopened.settled()
         val again = World(disk, this)
         assertTrue(StoppedTurnMemory(again.kv, again.lanes.app, P1, backgroundScope).refs.value.isEmpty())
     }
