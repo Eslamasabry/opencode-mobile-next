@@ -31,10 +31,7 @@ class PaneRimRenders {
         for (case in PaneRimScenes.cases) for (dark in listOf(true, false)) for (aurora in listOf(false, true)) {
             val name = "pane-rim-${case.name.replace(' ', '-')}-glass-${if (dark) "dark" else "light"}-${if (aurora) "aurora" else "ground"}"
             runDesktopComposeUiTest(PaneRimScenes.WIDTH, PaneRimScenes.HEIGHT) {
-                setContent { PaneRimScenes.Scene(aurora, dark) { case.content() } }
-                waitForIdle()
-                mainClock.advanceTimeBy(1_500)
-                waitForIdle()
+                PaneRimScenes.settle(this) { PaneRimScenes.Scene(aurora, dark) { case.content() } }
                 val image = onAllNodes(isRoot())[0].captureToImage().toAwtImage()
                 ImageIO.write(image, "png", File(out, "$name.png"))
                 val box =

@@ -34,7 +34,11 @@ class PaneRimFloorTest {
     @Test fun `rim floor - every glass pane keeps its rim all the way round, Glass dark over Aurora`() = all(aurora = true)
 
     private fun all(aurora: Boolean) {
-        val failures = PaneRimScenes.cases.map { case -> case.name to check(case, aurora) }.filter { it.second.isNotEmpty() }
+        val failures =
+            PaneRimScenes.cases.map { case ->
+                // One scene that cannot be drawn names itself; the others are still measured.
+                case.name to (try { check(case, aurora) } catch (e: Throwable) { listOf("not drawn: ${e::class.simpleName}: ${e.message?.take(300)}") })
+            }.filter { it.second.isNotEmpty() }
         assertTrue(
             failures.isEmpty(),
             "Rims below ${(share * 100).toInt()} % of the pane's peak or missing (${if (aurora) "Aurora" else "ground"}):\n" +
@@ -45,10 +49,7 @@ class PaneRimFloorTest {
     private fun check(case: PaneRimScenes.Case, aurora: Boolean): List<String> {
         var result = emptyList<String>()
         runDesktopComposeUiTest(PaneRimScenes.WIDTH, PaneRimScenes.HEIGHT) {
-            setContent { PaneRimScenes.Scene(aurora) { case.content() } }
-            waitForIdle()
-            mainClock.advanceTimeBy(1_500)
-            waitForIdle()
+            PaneRimScenes.settle(this) { PaneRimScenes.Scene(aurora) { case.content() } }
             val image: PixelMap = onAllNodes(isRoot())[0].captureToImage().toPixelMap()
             val box =
                 case.pane { matcher ->
