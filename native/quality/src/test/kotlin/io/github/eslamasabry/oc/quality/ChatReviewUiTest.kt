@@ -79,7 +79,7 @@ class ChatReviewUiTest {
                     }
                 }
             }
-            onNodeWithText("Allow").performClick()
+            onNodeWithText("Allow once").performClick()
             assertEquals(1, allowed)
             // The composer shows once the conversation has loaded (no composer under the skeleton or the load
             // error). With it there, a waiting request puts Stop in it and tells it so (the Flutter-parity box keeps

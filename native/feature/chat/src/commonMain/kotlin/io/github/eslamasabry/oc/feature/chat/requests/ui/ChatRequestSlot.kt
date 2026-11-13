@@ -497,11 +497,17 @@ private fun PermissionDetailsSheet(
                     .filter { fact -> fact !is PermissionFact.AlsoCovers || offersAlways }
                     .map { fact -> permissionFactValue(fact, redactor).copy(copyable = false) }
             val scope = request?.takeIf { offersAlways }?.let(AlwaysScopes::of)?.let { scopeWords(it, mask) }
+            // The scope is for the person, so it reads in plain words above the technical fold.
+            if (scope != null)
+                KitText(
+                    stringResource(Res.string.approvalAlwaysCoversWords, scope),
+                    Modifier.testTag("chat-permission-always-scope"),
+                    role = TypeRole.Secondary,
+                )
             KitDetailsFold(
                 label = stringResource(Res.string.kitDetails),
                 copyLabel = stringResource(Res.string.approvalCopyAsk),
                 values = values,
-                notes = listOfNotNull(scope?.let { stringResource(Res.string.approvalAlwaysCoversWords, it) }),
                 initiallyExpanded = true,
             )
             KitField(
