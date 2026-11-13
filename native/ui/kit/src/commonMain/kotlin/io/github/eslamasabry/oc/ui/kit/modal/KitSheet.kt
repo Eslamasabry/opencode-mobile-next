@@ -772,6 +772,8 @@ private fun SheetPanel(
                 val fadeReach = 24.dp
                 val fadePx = with(LocalDensity.current) { fadeReach.toPx() }
                 val pinned = entry.primary != null || entry.secondary != null || entry.tertiary.isNotEmpty()
+                // A field in the body comes to rest above the fade, and again when the keyboard resizes the body.
+                val intoView = rememberSheetBodyIntoView { if (pinned) fadePx else 0f }
                 Column(
                     Modifier.weight(1f, fill = false)
                         .fillMaxWidth()
@@ -782,7 +784,9 @@ private fun SheetPanel(
                             fadeFromBottom = if (pinned) ({ if (scroll.canScrollForward) fadePx else 0f }) else null,
                             bottomReach = fadeReach,
                         )
-                        .verticalScroll(scroll),
+                        .then(intoView.viewport())
+                        .verticalScroll(scroll)
+                        .then(intoView.content()),
                     verticalArrangement = Arrangement.spacedBy(tokens.labelGap.dp),
                 ) {
                     if (scrollHeader) {
