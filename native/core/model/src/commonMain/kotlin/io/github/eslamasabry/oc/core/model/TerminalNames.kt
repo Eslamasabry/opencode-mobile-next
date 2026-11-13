@@ -11,12 +11,16 @@ public sealed interface TerminalName {
     public data class Plain(val number: Int) : TerminalName
 }
 
+private val appDefaultTitle = Regex("^Terminal( [0-9]+)?$")
+
 private val serverDefaultTitle = Regex("^Terminal [A-Za-z0-9]{3,}$")
 
 /** The person's own name for [this] terminal, or null when it was never renamed. */
 public fun TerminalProcess.givenName(): String? {
     val text = title.trim()
     if (text.isEmpty() || text.all { it.isDigit() || it == ' ' }) return null
+    // "Terminal" or "Terminal <digits>" is the app's own old default, never a person's name.
+    if (appDefaultTitle.matches(text)) return null
     // A server default carries a short random id with at least one letter; "Terminal 2" is a person's own.
     if (serverDefaultTitle.matches(text) && text.drop("Terminal ".length).any { !it.isDigit() })
         return null

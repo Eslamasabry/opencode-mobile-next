@@ -32,9 +32,20 @@ class TerminalNamesTest {
     }
 
     @Test
-    fun `B-PROJ-TERM-004 a short numbered name is the persons own and a server id never starts the rename field`() {
+    fun `B-PROJ-TERM-004 neither a numbered default nor a server id starts the rename field`() {
         val list = listOf(process("a", "Terminal 7"), process("b", "Terminal BYbZ"))
-        assertEquals("Terminal 7", list[0].givenName())
+        assertEquals(null, list[0].givenName())
         assertEquals(null, list[1].givenName())
+    }
+
+    @Test
+    fun `B-PROJ-TERM-005 the app's old Terminal N default is not a name`() {
+        val one = listOf(process("a", "Terminal 3"))
+        assertEquals(TerminalName.Plain(1), terminalNameOf(one, "a"))
+        val two = listOf(process("a", "Terminal 2"), process("b", "Terminal 2"))
+        assertEquals(TerminalName.Plain(1), terminalNameOf(two, "a"))
+        assertEquals(TerminalName.Plain(2), terminalNameOf(two, "b"))
+        assertEquals(null, process("c", "Terminal").givenName())
+        assertEquals("Terminal build", process("d", "Terminal build").givenName())
     }
 }

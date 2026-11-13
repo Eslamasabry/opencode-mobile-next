@@ -95,9 +95,8 @@ public fun TerminalScreen(state: RemoteTerminalState, actions: TerminalActions, 
         }
     val title = terminal?.let { names[it.id] } ?: plainTitle
     val newLabel = stringResource(Res.string.remoteTerminalCreate)
-    // "Terminal 2" is the next one, never the server's random id.
-    val newTitle = stringResource(Res.string.e7SetupTerminalNumber, state.terminals.size + 1)
-    val createNamed: () -> Unit = { actions.create(newTitle) }
+    // No title is sent: the server's own default is hidden by the naming rule, so numbers never collide.
+    val createNamed: () -> Unit = { actions.create() }
     val stopLabel =
         stringResource(
             if (terminal?.running == true) Res.string.terminalScreenStopConfirm
