@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.kit.modal
 
+import io.github.eslamasabry.oc.ui.kit.frame.kitKeyboardPadding
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -20,7 +21,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
@@ -197,13 +197,13 @@ internal fun DialogLayer(state: KitSheetHostState) {
                             .then(glass ?: look.modifier)
                             .clip(KitShapeId.Sheet.shape())
                             .navigationBarsPadding()
-                            .imePadding()
+                            .kitKeyboardPadding()
                             .padding(kitPaneInset()),
                     ) { body(true) }
                 }
             }
         } else {
-            Box(Modifier.fillMaxSize().padding(Space.S6.dp).imePadding(), contentAlignment = Alignment.Center) {
+            Box(Modifier.fillMaxSize().padding(Space.S6.dp).kitKeyboardPadding(), contentAlignment = Alignment.Center) {
                 // MOT-2: a modal never scales in; it fades and rises 8 dp at Full (KitModalMotion).
                 val rise = KitModalMotion.dialogEnter()
                 AnimatedVisibility(state.dialogShown, enter = still.enter { rise }, exit = still.exit { fadeOut(specs.exit()) }) {

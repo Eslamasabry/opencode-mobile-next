@@ -2,7 +2,6 @@ package io.github.eslamasabry.oc.ui.kit.foundation
 
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
-import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -32,7 +31,7 @@ private fun roundToPhysicalPixel(value: Dp): Dp {
 @Composable
 public fun kitBottomInset(): KitClearance {
     LocalKitClearance.current?.let { return it }
-    val system = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() + WindowInsets.ime.asPaddingValues().calculateBottomPadding()
+    val system = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() + io.github.eslamasabry.oc.ui.kit.frame.kitKeyboardInsets().asPaddingValues().calculateBottomPadding()
     return KitClearance(bottom = roundToPhysicalPixel(system))
 }
 

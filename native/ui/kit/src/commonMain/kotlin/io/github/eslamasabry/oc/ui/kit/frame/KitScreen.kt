@@ -19,7 +19,6 @@ import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
@@ -313,8 +312,10 @@ public fun KitScreen(
     // focus from composer whenever there's a tool tip below the top bar"). The overlaid layout now draws the line
     // itself, under the bar; only Find's own slot, a scrolling header or the loading line use the stacked layout.
     val inner: @Composable (line: KitStatus?, ownsLine: Boolean) -> Unit = { line, ownsLine ->
-        val insets =
-            LocalKitScreenInsets.current ?: WindowInsets.safeDrawing.union(WindowInsets.ime)
+        // Review item 8: the keyboard's room is the kit's settled reading (kitKeyboardInsets), never the raw animated
+        // inset, so a keyboard whose closing animation never ends here cannot hold the page up.
+        val keyboard = kitKeyboardInsets()
+        val insets = (LocalKitScreenInsets.current ?: kitSystemInsets()).union(keyboard)
         if (overlayChrome && search == null && header == null && !loading) {
             var topPx by remember { mutableIntStateOf(0) }
             // The status line's own height while it shows (and while it folds in or out); 0 with no line.
@@ -812,7 +813,7 @@ public fun KitScreen(
                         Box(
                             Modifier.fillMaxWidth()
                                 .windowInsetsPadding(
-                                    WindowInsets.ime
+                                    keyboard
                                         .union(WindowInsets.navigationBars)
                                         .only(WindowInsetsSides.Bottom)
                                 )
