@@ -1,8 +1,8 @@
 package io.github.eslamasabry.oc.engine.agents.claudeagent
 
-// GENERATED from lib/builtin/claude_agent_link.dart `ClaudeAgentLink.script` (the Dart template, byte for byte).
-// In the template `§` stands for a literal dollar sign, ⟨HOME⟩ and ⟨MARKER⟩ for the two Dart interpolations.
-// ClaudeAgentLinkScriptParityTest renders the Dart source independently and compares.
+// Hand-owned since 2026-11-13. Copied once, byte for byte, from the Flutter app's `ClaudeAgentLink.script`
+// (lib/builtin/claude_agent_link.dart). In the template `§` stands for a literal dollar sign, ⟨HOME⟩ and ⟨MARKER⟩ for
+// the two interpolations. ClaudeAgentLinkScriptParityTest still compares it with the frozen freeze-tip copy.
 internal const val CLAUDE_AGENT_LINK_TEMPLATE: String = """
 set -u
 home='⟨HOME⟩'

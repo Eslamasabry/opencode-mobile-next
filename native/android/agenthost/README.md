@@ -21,7 +21,7 @@ not share a FQCN on one classpath.
 | `AgentProcesses.kt` | Native-authored move of `BuiltinLinux`'s agent block (lines 731–1076, 1804–1811, 2096–2131) over those ports; the production `AgentLinux`, and the process budget hooks. |
 | `AndroidAgentHost.kt`, `PaseoHealth.kt`, `AgentHostWiring.kt` | The Outcome surface (what `MainActivity.handleBuiltinLinux` did for the agent methods) and its phone wiring. |
 | `src/test/…/*Scenarios.kt` | Ports of the Flutter Kotlin harnesses `test/native/phone_agent_{host,auth,auth_other_owners}_harness.kt` (scenarios unchanged). |
-| `src/test/resources/auth-scripts/` | The Dart-authored probe scripts the auth harness reads, written by `tool/extract_auth_scripts.py` from `lib/builtin/agents/agent_scripts.dart`; `PhoneAgentAuthRequest`'s SHA-256 check proves them byte-identical. |
+| `src/test/resources/auth-scripts/` | The probe scripts the auth harness reads (first written from the Flutter app's Dart; committed and hand-owned since 2026-11-13). `AgentAuthScriptsTest` (`:engine:agents`) compares them with what `AgentAuthScripts` authors, and `PhoneAgentAuthRequest`'s SHA-256 check proves the body is the one the phone admits. |
 
 Twin rows (copy base: this repository at `580803d4`, the freeze snapshot; "source commit" is the last commit that
 changed the source file) are listed in the report §5.1 for `native/TWINS.md`, which the coordinator owns.
@@ -31,7 +31,6 @@ changed the source file) are listed in the report §5.1 for `native/TWINS.md`, w
 ```bash
 ./gradlew :android:agenthost:testDebugUnitTest     # 9 classes, 137 tests, plain JVM (no Robolectric)
 ./gradlew :android:agenthost:compileReleaseKotlin
-python3 -I native/android/agenthost/tool/extract_auth_scripts.py . native/android/agenthost/src/test/resources/auth-scripts
 ```
 
 The tests start real `/bin/sh` children and read `/proc`, so they need a Linux host (the PC, the VPS or a container).

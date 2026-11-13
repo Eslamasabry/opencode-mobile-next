@@ -1,8 +1,8 @@
 package io.github.eslamasabry.oc.engine.setupscripts
 
-// GENERATED twin of lib/builtin/setup/setup_scripts.dart `setupPrelude` and lib/builtin/setup/component_updates.dart
-// `componentUpdatePrelude` (every `$` is written as `${'$'}`). SetupPreludeTwinTest compares them byte for byte with
-// the Flutter source while it is in the repo. Edit the Dart text and regenerate; never edit only one side.
+// Hand-owned since 2026-11-13. Copied once from the Flutter app's `setupPrelude` (lib/builtin/setup/setup_scripts.dart)
+// and `componentUpdatePrelude` (lib/builtin/setup/component_updates.dart); every `$` is written as `${'$'}`.
+// SetupScriptsShellTest still compares them with the frozen 2.1.4 copies (resources/flutter-2.1.4).
 
 /**
  * Helpers for install scripts, POSIX sh (the job runs each script with Ubuntu's `/bin/sh`, dash; the tests run dash and

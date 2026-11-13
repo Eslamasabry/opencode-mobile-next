@@ -1,7 +1,9 @@
 package io.github.eslamasabry.oc.engine.agents.probe
 
-// GENERATED from lib/builtin/agents/agent_scripts.dart `_authProbe` (copied verbatim; the native side admits only this
-// exact text by its SHA-256). Do not edit by hand.
+// Hand-owned since 2026-11-13; this file is the source of the sign-in probe. Copied once, verbatim, from the Flutter
+// app's `_authProbe` (lib/builtin/agents/agent_scripts.dart). The phone admits only this exact text by its SHA-256
+// (SCRIPT_DIGEST in both PhoneAgentAuthRequest.kt files) and the auth-scripts test fixtures are byte-compared with
+// it: a change here must update the digests and the fixtures in the same commit.
 
 internal const val AUTH_PROBE_BODY: String = """import json, os, re, selectors, signal, subprocess, sys, time
 agent, executable, action = sys.argv[1:]

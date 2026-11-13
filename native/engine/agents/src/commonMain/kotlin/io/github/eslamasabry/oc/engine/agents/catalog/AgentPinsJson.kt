@@ -1,7 +1,8 @@
 package io.github.eslamasabry.oc.engine.agents.catalog
 
-// GENERATED from native/engine/agents/pins/agent-pins.json, byte for byte. Do not edit by hand: edit the JSON file
-// (only with an app release, S3-PINS) and regenerate; AgentPinsParityTest fails when the two differ.
+// A byte-for-byte copy of native/engine/agents/pins/agent-pins.json, which is the source of truth (hand-owned since
+// 2026-11-13). Edit the JSON (only with an app release, S3-PINS) and paste it here; AgentPinsParityTest fails when
+// the two differ.
 internal const val AGENT_PINS_JSON: String = """{
   "schema": 1,
   "source": "lib/domain/agent_catalog.dart _builtInCatalog(), lib/builtin/agents/paseo_scripts.dart, lib/paseo/tested_versions.dart (copied verbatim; a pin moves only with an app release)",
