@@ -63,7 +63,7 @@ class RunningDetailTest {
                     )
                 }
             }
-            onNodeWithText("Busy · 91.8% · 43 MB · running 12 min").assertExists()
+            onNodeWithText("Busy · 91.8% · ${PhoneSizes.memory(43 * 1048576L)} · running 12 min").assertExists()
             onNodeWithText("92 %", substring = true).assertDoesNotExist()
         }
 
@@ -88,7 +88,7 @@ class RunningDetailTest {
                     RunningScreen(RunningUi(loading = false, selected = row), Actions())
                 }
             }
-            onNodeWithText("Idle · 3.0% · 43 MB · running 12 min").assertExists()
+            onNodeWithText("Idle · 3.0% · ${PhoneSizes.memory(43 * 1048576L)} · running 12 min").assertExists()
             onNodeWithText("Copy command").assertExists()
             onNodeWithText("Stop OpenCode").assertDoesNotExist()
         }
