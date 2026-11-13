@@ -17,6 +17,7 @@ import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -104,9 +105,9 @@ class ContentPartsDesktopTest {
                 ) { KitViewerTextBody("hello") }
             }
         }
-        onNodeWithTag(KitViewerTags.FOLDER).assertDoesNotExist()
+        onNodeWithText("⁦src/⁩", substring = true).assertDoesNotExist()
         onNodeWithText("Ask about this file").performClick()
-        onNodeWithText("Close").performClick()
+        onNodeWithContentDescription("Back").performClick()
         assertEquals(1, asked)
         assertEquals(1, closed)
     }
@@ -114,10 +115,8 @@ class ContentPartsDesktopTest {
     @Test
     fun `B-NAV-028 the folder line is the parent folder, kept left to right`() = runComposeUiTest {
         setContent { Themed { KitViewerFrame("a.kt", path = "src/main/a.kt") { KitViewerTextBody("x") } } }
-        onNodeWithTag(KitViewerTags.FOLDER).assert(
-            SemanticsMatcher.expectValue(SemanticsProperties.Text, listOf(androidx.compose.ui.text.AnnotatedString("⁦src/main/⁩"))),
-        )
-        onNodeWithText("Close").assertDoesNotExist() // no onClose: an embedded pane has no Close
+        onNodeWithText("⁦src/main/⁩").assertExists()
+        onNodeWithContentDescription("Back").assertDoesNotExist() // no onClose: an embedded pane has no Back
     }
 
     @Test

@@ -1,11 +1,6 @@
 package io.github.eslamasabry.oc.feature.files.ui
 
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.ui.platform.testTag
-import androidx.compose.foundation.layout.FlowRow
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
-import io.github.eslamasabry.oc.ui.kit.frame.kitPageGutter
-import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -39,21 +34,18 @@ import io.github.eslamasabry.oc.feature.files.presentation.FileUi
 import io.github.eslamasabry.oc.feature.files.presentation.PdfPageUi
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kit.KitAction
-import io.github.eslamasabry.oc.ui.kit.KitButton
-import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.content.viewer.KitPdfPngPage
 import io.github.eslamasabry.oc.ui.kit.content.viewer.KitViewerAction
 import io.github.eslamasabry.oc.ui.kit.content.viewer.KitViewerBinaryBody
 import io.github.eslamasabry.oc.ui.kit.content.viewer.KitViewerDocument
 import io.github.eslamasabry.oc.ui.kit.content.viewer.KitViewerFrame
+import io.github.eslamasabry.oc.ui.kit.content.viewer.KitViewerMenuItem
 import io.github.eslamasabry.oc.ui.kit.content.viewer.KitViewerImageBody
 import io.github.eslamasabry.oc.ui.kit.content.viewer.KitViewerSvgBody
 import io.github.eslamasabry.oc.ui.kit.content.viewer.KitViewerTableBody
 import io.github.eslamasabry.oc.ui.kit.content.viewer.KitViewerCodeBody
 import io.github.eslamasabry.oc.ui.kit.content.viewer.KitViewerTextBody
-import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
-import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
@@ -143,13 +135,11 @@ import io.github.eslamasabry.oc.ui.words.res.stateStorageAppTitle
 import org.jetbrains.compose.resources.stringResource
 
 /**
- * D03 (07 §5): the file viewer, a page. The kit's viewer frame (name, parent folder, Close) with
- * the body for the file's kind; at the thumb, Ask about this file (into this conversation's
- * message) and Share on Wi-Fi; Open with is a visible button under them. Nothing is long-press
- * only.
+ * D03 (07 §5): the file viewer, a page of the app. The kit's viewer frame carries Back, the file name and its
+ * folder, Find, and the bar's "More actions" menu (Copy contents, Wrap lines, Open with, Save, Share on Wi-Fi, More
+ * file actions); at the thumb, Ask about this file (into this conversation's message). Nothing is long-press only.
  */
 @Composable
-@OptIn(ExperimentalLayoutApi::class)
 public fun FileScreen(state: FileUi, actions: FileActions) {
     var more by rememberSaveable { mutableStateOf(false) }
     KitClipboardEffect(state.clipId, state.clipText, actions::clipDone)
@@ -160,119 +150,96 @@ public fun FileScreen(state: FileUi, actions: FileActions) {
     var localOpen by rememberSaveable { mutableStateOf<Boolean?>(null) }
     // One modal layer for the frame and the share sheet (the chat's KitSheetHost pattern).
     KitSheetHost(Modifier.fillMaxSize()) {
-        KitScreen(modifier = Modifier.fillMaxSize(), page = true, edges = KitScreenEdges.Bleed) {
-            Column(Modifier.fillMaxSize()) {
-                val ready = state.phase == FilePhase.Ready
-                KitViewerFrame(
-                    name =
-                        if (state.line == null) state.name
-                        else stringResource(Res.string.readerUiPathLine, state.name, state.line),
-                    modifier = Modifier.weight(1f),
-                    path = state.path,
-                    primary =
-                        if (ready && !state.asking && state.inConversation)
-                            KitViewerAction(
-                                stringResource(Res.string.filesAskAboutFile),
-                                actions::ask,
-                                "project-file-ask",
-                            )
-                        else null,
-                    secondary =
-                        if (ready && state.canShare)
-                            KitViewerAction(
-                                stringResource(Res.string.fileShareAction),
-                                actions::shareOnWifi,
-                                "project-file-share-wifi",
-                            )
-                        else null,
-                    onClose = actions::back,
-                ) {
-                    Body(state, actions)
-                }
-                if (state.offline)
-                    KitNotice(
-                        stringResource(Res.string.filesShowingSaved),
-                        Modifier.padding(horizontal = Space.S4.dp),
-                        tone = StatusTone.Attention,
-                        actions = listOf(KitLineAction(stringResource(Res.string.kitTryAgain), actions::retry)),
-                        liveRegion = false,
-                    )
-                state.notice?.let { notice ->
-                    KitNotice(
-                        noticeWords(notice, state.name),
-                        Modifier.padding(horizontal = Space.S4.dp),
-                        dismiss =
-                            KitLineAction(
-                                stringResource(Res.string.kitTopBarClose),
-                                actions::dismissNotice,
-                            ),
-                    )
-                }
-                // C05: the file's other acts are text actions with their glyphs, side by side on the gutter with a
-                // full step between them (Flutter's viewer keeps them as visible actions too), never centred lines of
-                // words. A file shown as "Can't show this file" already offers Open with as its main button.
-                val openWithShown = state.body is FileBody.Binary && state.canOpenWith
-                FlowRow(
-                    Modifier.fillMaxWidth().padding(horizontal = kitPageGutter(), vertical = Space.S1.dp)
-                        .testTag("project-file-actions"),
-                    horizontalArrangement = Arrangement.spacedBy(Space.S4.dp),
-                ) {
-                    if (ready && state.body is FileBody.Code) {
-                        KitButton(
-                            stringResource(
-                                if (state.wrapCode) Res.string.stateReaderNoWrap
-                                else Res.string.stateReaderWrap
-                            ),
+        val ready = state.phase == FilePhase.Ready
+        val openWithShown = state.body is FileBody.Binary && state.canOpenWith
+        val offerOpenWith = (ready && state.canOpenWith || state.canOpenLocal) && !openWithShown
+        val wrapLabel =
+            stringResource(if (state.wrapCode) Res.string.stateReaderNoWrap else Res.string.stateReaderWrap)
+        val installLabel = stringResource(Res.string.phoneFileInstallAction)
+        val openWithLabel = stringResource(Res.string.filesOpenWith)
+        val saveLabel = stringResource(Res.string.fileSave)
+        val shareLabel = stringResource(Res.string.fileShareAction)
+        val moreLabel = stringResource(Res.string.filesMoreActions)
+        // The file's other acts live in the page's bar menu (Back, Find and "More actions" are the frame's): wrap,
+        // install, open with, save, share, then the one "More file actions" row for the longer list.
+        val menu =
+            buildList {
+                if (ready && state.body is FileBody.Code)
+                    add(
+                        KitViewerMenuItem(
+                            wrapLabel,
                             actions::toggleWrap,
-                            role = KitButtonRole.Tertiary,
                             icon = KitIcons.wrapText,
-                            expand = false,
-                            working = state.preferencesSaving,
-                        )
-                    }
-                    if (state.canInstall) {
-                        KitButton(
-                            stringResource(Res.string.phoneFileInstallAction),
+                            enabled = !state.preferencesSaving,
+                        ),
+                    )
+                if (state.canInstall)
+                    add(
+                        KitViewerMenuItem(
+                            installLabel,
                             { localOpen = true },
-                            role = KitButtonRole.Tertiary,
                             icon = KitIcons.download,
-                            expand = false,
-                            working = state.opening,
-                        )
-                    }
-                    val offerOpenWith = (ready && state.canOpenWith || state.canOpenLocal) && !openWithShown
-                    if (offerOpenWith) {
-                        KitButton(
-                            stringResource(Res.string.filesOpenWith),
+                            enabled = !state.opening,
+                        ),
+                    )
+                if (offerOpenWith)
+                    add(
+                        KitViewerMenuItem(
+                            openWithLabel,
                             { if (state.canOpenLocal) localOpen = false else actions.openWith() },
-                            role = KitButtonRole.Tertiary,
                             icon = KitIcons.externalLink,
-                            expand = false,
-                            working = state.opening,
-                            enabled = KitEnabled.Enabled,
-                        )
-                    }
-                    if (ready && state.canSave) {
-                        KitButton(
-                            stringResource(Res.string.fileSave),
-                            actions::save,
-                            role = KitButtonRole.Tertiary,
-                            icon = KitIcons.save,
-                            expand = false,
-                            working = state.saving,
-                            enabled = KitEnabled.Enabled,
-                        )
-                    }
-                    if (ready)
-                        KitButton(
-                            stringResource(Res.string.filesMoreActions),
-                            { more = true },
-                            role = KitButtonRole.Tertiary,
-                            icon = KitIcons.more,
-                            expand = false,
-                        )
-                }
+                            enabled = !state.opening,
+                        ),
+                    )
+                if (ready && state.canSave)
+                    add(
+                        KitViewerMenuItem(saveLabel, actions::save, icon = KitIcons.save, enabled = !state.saving),
+                    )
+                if (ready && state.canShare)
+                    add(KitViewerMenuItem(shareLabel, actions::shareOnWifi))
+                if (ready) add(KitViewerMenuItem(moreLabel, { more = true }, icon = KitIcons.more))
             }
+        KitViewerFrame(
+            name =
+                if (state.line == null) state.name
+                else stringResource(Res.string.readerUiPathLine, state.name, state.line),
+            modifier = Modifier.fillMaxSize(),
+            path = state.path,
+            primary =
+                if (ready && !state.asking && state.inConversation)
+                    KitViewerAction(
+                        stringResource(Res.string.filesAskAboutFile),
+                        actions::ask,
+                        "project-file-ask",
+                    )
+                else null,
+            onClose = actions::back,
+            menu = menu,
+            footer = {
+                Column {
+                    if (state.offline)
+                        KitNotice(
+                            stringResource(Res.string.filesShowingSaved),
+                            Modifier.padding(horizontal = Space.S4.dp),
+                            tone = StatusTone.Attention,
+                            actions = listOf(KitLineAction(stringResource(Res.string.kitTryAgain), actions::retry)),
+                            liveRegion = false,
+                        )
+                    state.notice?.let { notice ->
+                        KitNotice(
+                            noticeWords(notice, state.name),
+                            Modifier.padding(horizontal = Space.S4.dp),
+                            dismiss =
+                                KitLineAction(
+                                    stringResource(Res.string.kitTopBarClose),
+                                    actions::dismissNotice,
+                                ),
+                        )
+                    }
+                }
+            },
+        ) {
+            Body(state, actions)
         }
         FileShareSheet(state.share, state.name, actions, state.sizeBytes)
         KitConfirm(

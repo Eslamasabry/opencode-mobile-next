@@ -86,59 +86,74 @@ public fun KitViewerDocument(
             .style(if (code || showSource) TypeRole.Mono else TypeRole.Body)
             .copy(color = colors.text1)
     val rendering = formatted != null && !showSource && !finding
+    val chrome = LocalViewerChrome.current
+    val copy = { clipboard.setText(AnnotatedString(source)) }
+    val copyLabel = stringResource(Res.string.kitViewerCopyContents)
+    val findLabel = stringResource(Res.string.kitViewerFind)
+    val sourceLabel =
+        stringResource(if (showSource) Res.string.kitDiffShowFormatted else Res.string.kitViewerShowSource)
+    val wrapLabel = stringResource(Res.string.kitWrapLines)
+    val tools =
+        buildList {
+            add(ViewerTool("copy", copyLabel, KitIcons.copy, null))
+            add(ViewerTool("find", findLabel, KitIcons.search, null))
+            if (formatted != null) add(ViewerTool("source", sourceLabel, KitIcons.code, null))
+            if (!rendering) add(ViewerTool("wrap", wrapLabel, KitIcons.wrapText, wrap))
+        }
+    if (chrome != null) {
+        // The page's bar and menu carry the tools; this body paints no row of its own.
+        SideEffect {
+            chrome.offer(
+                tools,
+                mapOf(
+                    "copy" to copy,
+                    "find" to { finding = !finding },
+                    "source" to { showSource = !showSource },
+                    "wrap" to { wrap = !wrap },
+                ),
+            )
+        }
+        DisposableEffect(chrome) { onDispose { chrome.clear() } }
+    }
+    val rail = kitPageGutter()
     Column(modifier.fillMaxSize()) {
-        // C05: the document's tools are text actions with their glyphs and a full step between them, on the page's
-        // gutter; they used to run together as one line of words ("Copy contents Find in file Show source").
-        FlowRow(
-            Modifier.fillMaxWidth().padding(horizontal = kitPageGutter()).testTag("kit-viewer-tools"),
-            horizontalArrangement = Arrangement.spacedBy(Space.S4.dp),
-        ) {
-            KitButton(
-                stringResource(Res.string.kitViewerCopyContents),
-                { clipboard.setText(AnnotatedString(source)) },
-                role = KitButtonRole.Tertiary,
-                icon = KitIcons.copy,
-                expand = false,
-            )
-            KitButton(
-                stringResource(Res.string.kitViewerFind),
-                { finding = !finding },
-                role = KitButtonRole.Tertiary,
-                icon = KitIcons.search,
-                expand = false,
-            )
-            if (formatted != null)
-                KitButton(
-                    stringResource(
-                        if (showSource) Res.string.kitDiffShowFormatted
-                        else Res.string.kitViewerShowSource
-                    ),
-                    { showSource = !showSource },
-                    role = KitButtonRole.Tertiary,
-                    icon = KitIcons.code,
-                    expand = false,
-                )
-            if (!rendering)
-                KitButton(
-                    stringResource(Res.string.kitWrapLines),
-                    { wrap = !wrap },
-                    modifier = Modifier.semantics { selected = wrap },
-                    role = KitButtonRole.Tertiary,
-                    icon = KitIcons.wrapText,
-                    expand = false,
-                )
+        if (chrome == null) {
+            // C05: the tools of a document with no page around it are text actions with their glyphs and a full step
+            // between them, on the gutter.
+            FlowRow(
+                Modifier.fillMaxWidth().padding(horizontal = rail).testTag("kit-viewer-tools"),
+                horizontalArrangement = Arrangement.spacedBy(Space.S4.dp),
+            ) {
+                tools.forEach { tool ->
+                    KitButton(
+                        tool.label,
+                        {
+                            when (tool.id) {
+                                "copy" -> copy()
+                                "find" -> finding = !finding
+                                "source" -> showSource = !showSource
+                                else -> wrap = !wrap
+                            }
+                        },
+                        modifier = if (tool.id == "wrap") Modifier.semantics { selected = wrap } else Modifier,
+                        role = KitButtonRole.Tertiary,
+                        icon = tool.icon,
+                        expand = false,
+                    )
+                }
+            }
         }
         if (finding) {
             KitSearchField(
                 stringResource(Res.string.kitViewerFind),
                 { query = it },
-                Modifier.padding(horizontal = Space.S3.dp),
+                Modifier.padding(horizontal = rail),
                 onSubmit = {
                     if (matches.isNotEmpty()) active = (active + 1) % matches.size
                 },
             )
             FlowRow(
-                Modifier.padding(horizontal = Space.S3.dp),
+                Modifier.padding(horizontal = rail),
                 horizontalArrangement = Arrangement.spacedBy(Space.S1.dp),
             ) {
                 KitButton(
@@ -172,7 +187,7 @@ public fun KitViewerDocument(
                             (active + 1).toString(),
                             matches.size.toString(),
                         ),
-                    Modifier.padding(horizontal = Space.S3.dp).semantics {
+                    Modifier.padding(horizontal = rail).semantics {
                         liveRegion = LiveRegionMode.Polite
                     },
                 )
@@ -180,12 +195,12 @@ public fun KitViewerDocument(
         if (cut.truncated)
             KitText(
                 stringResource(Res.string.kitViewerPartial),
-                Modifier.padding(horizontal = Space.S3.dp),
+                Modifier.padding(horizontal = rail),
             )
         if (rendering) {
             Box(Modifier.weight(1f)) { formatted?.invoke() }
         } else if (lines.isEmpty()) {
-            KitText(stringResource(Res.string.kitViewerEmpty), Modifier.padding(Space.S3.dp))
+            KitText(stringResource(Res.string.kitViewerEmpty), Modifier.padding(horizontal = rail, vertical = Space.S3.dp))
         } else
             SelectionContainer(Modifier.weight(1f)) {
                 LazyColumn(
@@ -194,7 +209,7 @@ public fun KitViewerDocument(
                             if (wrap) Modifier else Modifier.horizontalScroll(rememberScrollState())
                         ),
                     state = list,
-                    contentPadding = PaddingValues(Space.S3.dp),
+                    contentPadding = PaddingValues(horizontal = rail, vertical = Space.S3.dp),
                 ) {
                     itemsIndexed(lines, key = { i, _ -> i }) { i, line ->
                         val annotated = buildAnnotatedString {
