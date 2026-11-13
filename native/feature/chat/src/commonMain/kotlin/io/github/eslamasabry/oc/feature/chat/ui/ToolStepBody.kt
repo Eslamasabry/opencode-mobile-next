@@ -32,6 +32,7 @@ import io.github.eslamasabry.oc.ui.kitchat.header.rememberKitMask
 import io.github.eslamasabry.oc.ui.kitchat.markdown.KitMarkdown
 import io.github.eslamasabry.oc.ui.kitchat.markdown.KitMdSource
 import io.github.eslamasabry.oc.ui.kitchat.transcript.KitQuietLine
+import io.github.eslamasabry.oc.ui.words.res.chatStepDeclinedNote
 import io.github.eslamasabry.oc.ui.words.res.*
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
@@ -142,6 +143,13 @@ private fun countWords(count: ToolCount): String {
 }
 
 /**
+ * The note the person sent with Deny, as the declined call's error carries it: the decline sentence on the first line,
+ * the note after it (OpenCode 2 `permission.rejected`). Null when no note was sent.
+ */
+internal fun declinedNote(errorText: String?): String? =
+    errorText?.substringAfter('\n', "")?.trim()?.takeIf { it.isNotEmpty() }
+
+/**
  * The opened step reads the tool's structured facts; it never replays a call or invents an outcome.
  */
 @Composable
@@ -157,8 +165,12 @@ internal fun ToolStepBody(step: TurnStep, reply: ReplyActions?) {
         TaskBody(step, reply)
         return
     }
-    // A declined call has nothing to explain: the row already says so (Flutter `tool_card_body.dart`).
-    if (kind == ToolKind.Card || step.state == StepState.NotRun || step.state == StepState.Stopped || step.state == StepState.Declined)
+    // A declined call: the row already says "You declined this"; the person's own note (sent with Deny) shows under it.
+    if (step.state == StepState.Declined) {
+        declinedNote(output.errorText)?.let { KitQuietLine(stringResource(Res.string.chatStepDeclinedNote, mask(it))) }
+        return
+    }
+    if (kind == ToolKind.Card || step.state == StepState.NotRun || step.state == StepState.Stopped)
         return
     if (output.errorText != null) {
         if (kind == ToolKind.Generic)

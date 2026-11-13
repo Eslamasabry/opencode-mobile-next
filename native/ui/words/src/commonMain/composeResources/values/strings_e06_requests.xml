@@ -3,6 +3,7 @@
     <!-- E06-S03: a card whose run was stopped; it leaves a moment later. -->
     <string name="chatRequestNoLongerNeeded">No longer needed</string>
     <string name="chatRequestNoLongerNeededWhy">The run stopped, so nothing was sent.</string>
+    <string name="chatRequestNoLongerNeededEnding">The run is ending, so nothing was sent.</string>
     <!-- E06-S01: what TalkBack says on each request card: its place, then what it asks about. -->
     <string name="chatRequestCardLabel">Request %1$s of %2$s: %3$s</string>
 </resources>

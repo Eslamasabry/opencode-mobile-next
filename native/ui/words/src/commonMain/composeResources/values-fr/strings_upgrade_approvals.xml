@@ -22,4 +22,15 @@
     <string name="approvalAlwaysAllowedWhat">Toujours autorisé\u00A0: %1$s</string>
     <string name="approvalDenied">Refusé</string>
     <string name="approvalDeniedInstead">Refusé, il doit faire ceci à la place\u00A0: %1$s</string>
+    <string name="approvalChangeOf">La modification de %1$s</string>
+    <string name="approvalChangeMissing">L'agent n'a pas dit ce qu'il va écrire.</string>
+    <string name="approvalCopyChange">Copier la modification</string>
+    <string name="approvalScopeAnyFileChange">toute modification de fichier</string>
+    <string name="approvalScopeFileChangesMatching">toute modification de fichiers correspondant à %1$s</string>
+    <string name="approvalScopeCommandFamily">%1$s avec n’importe quels arguments</string>
+    <string name="approvalScopeEverything">toute demande de ce type</string>
+    <string name="approvalScopeMatching">toute demande correspondant à %1$s</string>
+    <string name="approvalAlwaysCoversWords">Toujours autoriser couvrirait aussi %1$s.</string>
+    <string name="approvalAlwaysPattern">Motif de Toujours autoriser</string>
+    <string name="approvalNoteDenyOnly">Envoyé uniquement si vous choisissez Refuser.</string>
 </resources>

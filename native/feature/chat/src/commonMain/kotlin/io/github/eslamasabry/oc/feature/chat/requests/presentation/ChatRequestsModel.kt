@@ -474,6 +474,7 @@ public class ChatRequestsModel(
                         invitation = engine.isInvited(request.id),
                         invitationFailure =
                             mine.invitationFailure.takeIf { mine.invitationFailureFor == request.id },
+                        change = PermissionChange.of(request.request, where.directory),
                     )
                 is PendingRequest.Question -> {
                     val prompt = request.question.prompts.firstOrNull()

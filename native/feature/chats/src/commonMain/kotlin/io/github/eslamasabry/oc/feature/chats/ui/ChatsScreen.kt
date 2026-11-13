@@ -99,7 +99,7 @@ import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
 import io.github.eslamasabry.oc.ui.kit.text.KitBidi
-import io.github.eslamasabry.oc.ui.words.res.kitRequestReject
+import io.github.eslamasabry.oc.ui.words.res.approvalDeny
 import io.github.eslamasabry.oc.ui.words.res.serversWorking
 import io.github.eslamasabry.oc.ui.kit.row.KitFeedAgent
 import io.github.eslamasabry.oc.ui.kit.row.KitRecentRow
@@ -1054,7 +1054,7 @@ private fun PermissionAnswers(
             expand = false,
         )
         KitButton(
-            stringResource(Res.string.kitRequestReject),
+            stringResource(Res.string.approvalDeny),
             { actions.answerPermission(row, false) },
             role = KitButtonRole.Tertiary,
             enabled = enabled,

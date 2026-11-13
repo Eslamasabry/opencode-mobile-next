@@ -45,7 +45,7 @@
     <string name="notify_alert_reason_model">Эта модель недоступна. Выберите другую, чтобы продолжить.</string>
     <string name="notify_alert_reason_other">Что-то пошло не так.</string>
     <string name="notify_allow_once">Разрешить один раз</string>
-    <string name="notify_reject">Отклонить</string>
+    <string name="notify_reject">Запретить</string>
     <string name="notify_open">Открыть</string>
     <string name="notify_status_action_open">Открыть</string>
     <string name="notify_status_action_stop_reply">Остановить ответ</string>

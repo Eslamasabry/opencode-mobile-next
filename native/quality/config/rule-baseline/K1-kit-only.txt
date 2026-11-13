@@ -31,7 +31,6 @@ feature/chat/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/chat/inbox/u
 feature/chat/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/chat/notes/SessionNoteScreen.kt
 feature/chat/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/chat/relations/presentation/SessionRelationsViewModel.kt
 feature/chat/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/chat/requests/ui/ChatQuestionSheet.kt
-feature/chat/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/chat/requests/ui/ChatRequestSlot.kt
 feature/chat/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/chat/sessiontransfer/presentation/SessionTransferViewModel.kt
 feature/chat/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/chat/sessiontransfer/ui/SessionTransferSheet.kt
 feature/chat/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/chat/start/presentation/ChatStartViewModel.kt

@@ -85,7 +85,7 @@ class S8RequestSlotMotionTest {
             }
             mainClock.autoAdvance = false
             mainClock.advanceTimeBy(1_000)
-            assertEquals(1, countCardsWith(this, "Allow"), "the waiting card is shown")
+            assertEquals(1, countCardsWith(this, "Allow once"), "the waiting card is shown")
             val full = height
             assertTrue(full > 0)
             cards = emptyList()

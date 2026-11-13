@@ -45,7 +45,7 @@
     <string name="notify_alert_reason_model">Esse modelo não está disponível. Escolha outro para continuar.</string>
     <string name="notify_alert_reason_other">Algo deu errado.</string>
     <string name="notify_allow_once">Permitir uma vez</string>
-    <string name="notify_reject">Recusar</string>
+    <string name="notify_reject">Negar</string>
     <string name="notify_open">Abrir</string>
     <string name="notify_status_action_open">Abrir</string>
     <string name="notify_status_action_stop_reply">Parar a resposta</string>

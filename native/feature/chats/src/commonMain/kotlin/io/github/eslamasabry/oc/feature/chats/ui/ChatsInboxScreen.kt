@@ -164,7 +164,7 @@ private fun InboxRequest(row: ConversationRowUi, state: ChatsUi, actions: ChatsA
         onOpen = { actions.openConversation(row.ref) },
         command = permission?.command?.let(mask),
         allowLabel = if (permission == null) null else stringResource(Res.string.kitRequestAllowOnce),
-        rejectLabel = if (permission == null) null else stringResource(Res.string.kitRequestReject),
+        rejectLabel = if (permission == null) null else stringResource(Res.string.approvalDeny),
         onAllow = if (permission == null) null else ({ actions.answerPermission(row, true) }),
         onReject = if (permission == null) null else ({ actions.answerPermission(row, false) }),
         primary = primary,

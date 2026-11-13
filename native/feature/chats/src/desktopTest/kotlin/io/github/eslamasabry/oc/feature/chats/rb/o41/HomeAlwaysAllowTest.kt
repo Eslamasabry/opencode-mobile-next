@@ -82,7 +82,7 @@ class HomeAlwaysAllowTest {
         val actions = Actions()
         show(asking(always = true), actions)
         onNodeWithText("Allow once").performClick()
-        onNodeWithText("Reject").performClick()
+        onNodeWithText("Deny").performClick()
         onNodeWithText("Always allow", substring = true).performClick()
         assertEquals(listOf("once", "reject", "askAlways"), actions.calls)
     }

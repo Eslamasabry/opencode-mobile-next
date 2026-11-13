@@ -168,7 +168,7 @@ class RequestSlotGoldensTest {
 
     @Test
     fun `E06-S01 P-103 two cards, the first in full and the second one line`() = scene("two-cards", listOf(shell, edit)) {
-        assertEquals(1, onAllNodesWithText("Allow").fetchSemanticsNodes().size, "only the first card is open")
+        assertEquals(1, onAllNodesWithText("Allow once").fetchSemanticsNodes().size, "only the first card is open")
         assertEquals(1, onAllNodesWithTag("chat-request-folded").fetchSemanticsNodes().size)
         onNodeWithContentDescription("Request 2 of 2", substring = true).assertExists()
     }
@@ -187,7 +187,7 @@ class RequestSlotGoldensTest {
             onAllNodesWithTag("chat-request-folded")[1].performClick()
             waitForIdle()
             assertEquals(2, onAllNodesWithTag("chat-request-folded").fetchSemanticsNodes().size)
-            assertEquals(2, onAllNodesWithText("Allow").fetchSemanticsNodes().size, "the opened card has its own answers")
+            assertEquals(2, onAllNodesWithText("Allow once").fetchSemanticsNodes().size, "the opened card has its own answers")
         }
     }
 
@@ -228,7 +228,7 @@ class RequestSlotGoldensTest {
             onAllNodesWithText("No longer needed", substring = true).fetchSemanticsNodes().let { assertEquals(1, it.size) }
             // P-109: a plain row on the page's 16 dp edge, not the card's inset (its words sat at 77 dp).
             onNodeWithTag("chat-request-no-longer-needed").assertExists()
-            assertEquals(1, onAllNodesWithText("Allow").fetchSemanticsNodes().size, "only the waiting card has answers")
+            assertEquals(1, onAllNodesWithText("Allow once").fetchSemanticsNodes().size, "only the waiting card has answers")
         }
 
     private object NoActions : ChatRequestActions {

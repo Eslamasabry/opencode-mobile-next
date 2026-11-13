@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.padding
 import io.github.eslamasabry.oc.ui.kit.frame.kitPageGutter
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import io.github.eslamasabry.oc.ui.kitchat.request.KitRequestStack
 import androidx.compose.foundation.text.input.clearText
@@ -46,7 +45,6 @@ import io.github.eslamasabry.oc.ui.kit.KitAction
 import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.KitText
-import io.github.eslamasabry.oc.ui.kit.KitTextKind
 import io.github.eslamasabry.oc.ui.kit.choice.KitChoiceRow
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.input.KitField
@@ -71,17 +69,18 @@ import io.github.eslamasabry.oc.ui.kit.state.KitReceipt
 import io.github.eslamasabry.oc.ui.kit.state.KitReceiptState
 import io.github.eslamasabry.oc.ui.kitchat.request.KitPermissionCard
 import io.github.eslamasabry.oc.ui.kitchat.request.KitQuestionCard
+import io.github.eslamasabry.oc.ui.kitchat.request.KitRequestAnsweredRow
 import io.github.eslamasabry.oc.ui.kitchat.request.KitRequestTarget
 import io.github.eslamasabry.oc.ui.kitchat.request.KitRequestWaitingCaption
 import io.github.eslamasabry.oc.ui.words.res.Res
-import io.github.eslamasabry.oc.ui.words.res.approvalAllow
+import io.github.eslamasabry.oc.ui.words.res.kitRequestAllowOnce
 import io.github.eslamasabry.oc.ui.words.res.approvalCopied
 import io.github.eslamasabry.oc.ui.words.res.approvalCopyAsk
 import io.github.eslamasabry.oc.ui.words.res.approvalDeny
 import io.github.eslamasabry.oc.ui.words.res.chatRequestIfIgnored
 import io.github.eslamasabry.oc.ui.words.res.chatRequestCardLabel
 import io.github.eslamasabry.oc.ui.words.res.chatRequestNoLongerNeeded
-import io.github.eslamasabry.oc.ui.words.res.chatRequestNoLongerNeededWhy
+import io.github.eslamasabry.oc.ui.words.res.chatRequestNoLongerNeededEnding
 import io.github.eslamasabry.oc.ui.words.res.chatRequestOtherAnswer
 import io.github.eslamasabry.oc.ui.words.res.chatRequestOtherField
 import io.github.eslamasabry.oc.ui.words.res.chatStopAfterStepUndo
@@ -96,6 +95,28 @@ import io.github.eslamasabry.oc.ui.words.res.kitRequestChangeSize
 import io.github.eslamasabry.oc.ui.words.res.kitRequestReplyEmptyReason
 import io.github.eslamasabry.oc.ui.words.res.kitRequestSend
 import io.github.eslamasabry.oc.feature.chat.requests.presentation.PermissionDetails
+import io.github.eslamasabry.oc.feature.chat.requests.presentation.PermissionChangeUi
+import io.github.eslamasabry.oc.feature.chat.requests.presentation.AlwaysScope
+import io.github.eslamasabry.oc.feature.chat.requests.presentation.AlwaysScopes
+import io.github.eslamasabry.oc.ui.words.res.approvalAlwaysCoversWords
+import io.github.eslamasabry.oc.ui.words.res.approvalAlwaysPattern
+import io.github.eslamasabry.oc.ui.words.res.approvalNoteDenyOnly
+import io.github.eslamasabry.oc.ui.words.res.approvalScopeAnyFileChange
+import io.github.eslamasabry.oc.ui.words.res.approvalScopeCommandFamily
+import io.github.eslamasabry.oc.ui.words.res.approvalScopeEverything
+import io.github.eslamasabry.oc.ui.words.res.approvalScopeFileChangesMatching
+import io.github.eslamasabry.oc.ui.words.res.approvalScopeMatching
+import io.github.eslamasabry.oc.ui.words.res.chatRequestAlwaysAnyCommandWhat
+import io.github.eslamasabry.oc.ui.words.res.kitCodeCopyCommand
+import io.github.eslamasabry.oc.engine.requests.ask.AskView
+import io.github.eslamasabry.oc.ui.kitchat.code.CodeLanguage
+import io.github.eslamasabry.oc.ui.kitchat.diff.KitDiffPreview
+import io.github.eslamasabry.oc.ui.kitchat.rememberKitRedactedCopyAction
+import io.github.eslamasabry.oc.ui.kitchat.request.KitRequestChange
+import io.github.eslamasabry.oc.ui.words.res.approvalChangeMissing
+import io.github.eslamasabry.oc.ui.words.res.approvalChangeOf
+import io.github.eslamasabry.oc.ui.words.res.approvalCopyChange
+import io.github.eslamasabry.oc.ui.words.res.kitSuggestionsShowAll
 import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.ui.kitchat.LocalKitRedactor
 import io.github.eslamasabry.oc.feature.chat.requests.presentation.PermissionFact
@@ -113,7 +134,6 @@ import io.github.eslamasabry.oc.ui.words.res.chatRequestDetailRunsIn
 import io.github.eslamasabry.oc.ui.words.res.chatRequestDetailTool
 import io.github.eslamasabry.oc.ui.words.res.chatRequestReadFrom
 import io.github.eslamasabry.oc.ui.words.res.chatRequestReadLines
-import io.github.eslamasabry.oc.ui.words.res.chatUiAlwaysAllowWouldAlsoCover
 import io.github.eslamasabry.oc.ui.words.res.chatUiTellTheAgentWhyOrWhatTo
 import io.github.eslamasabry.oc.ui.words.res.kitDetails
 import org.jetbrains.compose.resources.pluralStringResource
@@ -183,6 +203,8 @@ public fun ChatRequestSlot(
                 val request = it.captured?.request
                 val patterns = request?.let { ask -> ask.always.ifEmpty { ask.patterns }.joinToString(", ") }
                 val mask = rememberKitMask()
+                // Review 2026-11-13 #3: the scope in words ("any file change"), never a bare pattern.
+                val scope = request?.let(AlwaysScopes::of)?.let { s -> scopeWords(s, mask) }
                 KitConfirmSpec(
                     title = if (it.invitation) stringResource(Res.string.consentAlwaysAllowTitle)
                         else alwaysConfirmTitle(it.grant, request?.patterns?.firstOrNull()?.let(mask)),
@@ -191,7 +213,8 @@ public fun ChatRequestSlot(
                     // S30 story 1 (Flutter `_confirmAlways`): the body always says what the grant covers and where.
                     body = stringResource(
                         Res.string.chatRequestAlwaysScope,
-                        patterns?.takeIf { scope -> scope.isNotEmpty() }?.let { scope -> KitBidi.ltr(mask(scope)) }
+                        scope
+                            ?: patterns?.takeIf { p -> p.isNotEmpty() }?.let { p -> KitBidi.ltr(mask(p)) }
                             ?: stringResource(Res.string.chatUiAllMatchingRequests),
                         stringResource(if (it.invitation) Res.string.chatUiInThisChat else Res.string.chatRequestAlwaysInProject),
                     ),
@@ -259,11 +282,11 @@ private fun RequestCard(
             }
             is CardState.Held -> HeldLine(card, receiptWords(card, phase.words), actions)
             is CardState.Sending ->
-                AnsweredLine(receiptWords(card, phase.words), KitReceiptState.Sending, null)
+                AnsweredLine(card, receiptWords(card, phase.words), KitReceiptState.Sending, null)
             is CardState.Sent ->
-                AnsweredLine(receiptWords(card, phase.words), KitReceiptState.Sent, null)
+                AnsweredLine(card, receiptWords(card, phase.words), KitReceiptState.Sent, null)
             is CardState.NotAccepted ->
-                AnsweredLine(receiptWords(card, phase.words), KitReceiptState.Refused(null)) {
+                AnsweredLine(card, receiptWords(card, phase.words), KitReceiptState.Refused(null)) {
                     actions.performReviewed(card, ReviewedRequestAction.Retry)
                 }
             CardState.NoLongerNeeded -> NoLongerNeededLine(card)
@@ -303,7 +326,7 @@ private fun cardTarget(card: RequestCardUi): String {
 
 /**
  * E06-S03: the run that asked was stopped. No answers, no "Needs your decision": the ask in small
- * words and "No longer needed · The run stopped, so nothing was sent." until the card leaves.
+ * words and "No longer needed · The run is ending, so nothing was sent." until the card leaves.
  */
 @Composable
 private fun NoLongerNeededLine(card: RequestCardUi) {
@@ -316,7 +339,8 @@ private fun NoLongerNeededLine(card: RequestCardUi) {
     KitRow(
         title = title,
         supporting =
-            "${stringResource(Res.string.chatRequestNoLongerNeeded)} · ${stringResource(Res.string.chatRequestNoLongerNeededWhy)}",
+            // The card retires as soon as Stop is accepted, while the run may still be "Stopping": never "The run stopped".
+            "${stringResource(Res.string.chatRequestNoLongerNeeded)} · ${stringResource(Res.string.chatRequestNoLongerNeededEnding)}",
         leading = KitRowLeading.Glyph(if (card is RequestCardUi.Question) KitIcons.question else KitIcons.permissions),
         supportingMaxLines = 2,
         modifier = Modifier.testTag("chat-request-no-longer-needed").semantics { liveRegion = LiveRegionMode.Polite },
@@ -354,7 +378,9 @@ private fun PermissionWaiting(
                     else null,
                 )
             },
-        allowOnceLabel = stringResource(Res.string.approvalAllow),
+        // Review 2026-11-13 #3: one pair everywhere a request is answered: "Allow once" says how long, "Deny" matches
+        // the transcript's "You declined this".
+        allowOnceLabel = stringResource(Res.string.kitRequestAllowOnce),
         // S30 story 1: Flutter's words (permission_ask.dart): "Always allow npm install", "Always allow commands like
         // this", "Always allow edits", else "Always allow requests like this". The confirm names the exact patterns.
         alwaysLabel = if (always) alwaysLabel(card.ask.always) else null,
@@ -366,6 +392,30 @@ private fun PermissionWaiting(
             else null,
         onDeny = { actions.performReviewed(card, ReviewedRequestAction.Reject) },
         onDetails = onDetails,
+        change = card.change?.let { changeOnCard(it, card.ask, onDetails) },
+    )
+}
+
+/**
+ * Review 2026-11-13 #1: the card shows what a file ask will write before the answers: the first lines of the change
+ * (masked), "Show all" when more follows (it opens Details, which holds the whole change), or plain words when the
+ * request carries no content at all.
+ */
+@Composable
+private fun changeOnCard(change: PermissionChangeUi, ask: AskView, onDetails: (() -> Unit)?): KitRequestChange {
+    val mask = rememberKitMask()
+    val first = change.first
+    val preview = remember(first, mask) { first?.let { KitDiffPreview.fromPatch(mask(it), RequestCardRules.CARD_PREVIEW_LINES) } ?: KitDiffPreview.Empty }
+    val name = change.files.firstOrNull()?.path ?: askWhat(ask)
+    val open = onDetails ?: {}
+    return KitRequestChange(
+        preview = preview,
+        label = stringResource(Res.string.approvalChangeOf, KitBidi.ltr(mask(name.orEmpty()))),
+        showAllLabel =
+            if (onDetails != null && (preview.more || change.files.size > 1)) stringResource(Res.string.kitSuggestionsShowAll)
+            else null,
+        onOpen = open,
+        missing = if (change.missing) stringResource(Res.string.approvalChangeMissing) else null,
     )
 }
 
@@ -397,7 +447,7 @@ private fun PermissionDetailsSheet(
         // Deny | Allow, the card's own arrangement.
         answerPair = true,
         primary = card?.let {
-            KitAction(stringResource(Res.string.approvalAllow), {
+            KitAction(stringResource(Res.string.kitRequestAllowOnce), {
                 onClose()
                 actions.performReviewed(it, ReviewedRequestAction.AllowOnce)
             })
@@ -425,15 +475,35 @@ private fun PermissionDetailsSheet(
                     ?: if (ask == null || RequestCardRules.detailsSaysAllMatching(ask))
                         stringResource(Res.string.chatUiAllMatchingRequests)
                     else null
-            if (full != null)
-                KitCodeBlock(
-                    mask(full),
-                    if (details.command) KitCodeKind.Command else KitCodeKind.Output,
-                    wrap = true,
-                    showWrapToggle = false,
+            // Review 2026-11-13 #1: the whole change first, one block per file with its name; the path box only when
+            // there is no change to name it.
+            val change = card?.change
+            val shownChange = change?.takeIf { it.first != null }
+            if (full != null && shownChange == null)
+                CommandOrTarget(mask(full), details.command)
+            if (shownChange != null) WholeChange(shownChange, mask)
+            else if (change == null) details.diff?.let { diff -> KitCodeBlock(mask(diff), KitCodeKind.Code, wrap = true, showWrapToggle = false) }
+            if (change?.missing == true)
+                KitText(
+                    stringResource(Res.string.approvalChangeMissing),
+                    Modifier.testTag("chat-permission-change-missing"),
+                    role = TypeRole.Secondary,
                 )
-            details.diff?.let { diff -> KitCodeBlock(mask(diff), KitCodeKind.Code, wrap = true, showWrapToggle = false) }
-            val values = details.facts.map { fact -> permissionFactValue(fact, redactor) }
+            // Review 2026-11-13 #3: what Always covers is said only where Always is offered, in words, with the raw
+            // pattern under it; the facts are read, not copied (the one copy is the command's or the change's own).
+            val offersAlways = card?.canAlwaysAllow == true && !card.invitation
+            val values =
+                details.facts
+                    .filter { fact -> fact !is PermissionFact.AlsoCovers || offersAlways }
+                    .map { fact -> permissionFactValue(fact, redactor).copy(copyable = false) }
+            val scope = request?.takeIf { offersAlways }?.let(AlwaysScopes::of)?.let { scopeWords(it, mask) }
+            // The scope is for the person, so it reads in plain words above the technical fold.
+            if (scope != null)
+                KitText(
+                    stringResource(Res.string.approvalAlwaysCoversWords, scope),
+                    Modifier.testTag("chat-permission-always-scope"),
+                    role = TypeRole.Secondary,
+                )
             KitDetailsFold(
                 label = stringResource(Res.string.kitDetails),
                 copyLabel = stringResource(Res.string.approvalCopyAsk),
@@ -445,6 +515,76 @@ private fun PermissionDetailsSheet(
                 label = stringResource(Res.string.chatUiTellTheAgentWhyOrWhatTo),
                 modifier = Modifier.testTag("permission-reject-message"),
                 kind = KitFieldKind.Multiline,
+                // The note travels with Deny only; Allow once never sends it.
+                helper = stringResource(Res.string.approvalNoteDenyOnly),
+            )
+        }
+    }
+}
+
+/** The command (with its one "Copy command") or the target a non-change ask names. */
+@Composable
+private fun CommandOrTarget(text: String, command: Boolean) {
+    if (!command) {
+        KitCodeBlock(text, KitCodeKind.Output, wrap = true, showWrapToggle = false)
+        return
+    }
+    val copy =
+        rememberKitRedactedCopyAction(
+            stringResource(Res.string.kitCodeCopyCommand),
+            stringResource(Res.string.approvalCopied),
+            { text },
+        )
+    KitCodeBlock(
+        text,
+        KitCodeKind.Command,
+        wrap = true,
+        showWrapToggle = false,
+        copyLabel = copy.label,
+        onCopy = { copy.onClick?.invoke() },
+    )
+}
+
+/** What an Always answer covers, in words: "any file change", "npm install with any arguments", "every command". */
+@Composable
+private fun scopeWords(scope: AlwaysScope, mask: (String) -> String): String =
+    when (scope) {
+        AlwaysScope.AnyFileChange -> stringResource(Res.string.approvalScopeAnyFileChange)
+        is AlwaysScope.FileChangesMatching ->
+            stringResource(Res.string.approvalScopeFileChangesMatching, KitBidi.ltr(mask(scope.patterns)))
+        AlwaysScope.AnyCommand -> stringResource(Res.string.chatRequestAlwaysAnyCommandWhat)
+        is AlwaysScope.CommandFamily -> stringResource(Res.string.approvalScopeCommandFamily, KitBidi.ltr(mask(scope.command)))
+        is AlwaysScope.Exactly -> KitBidi.ltr(mask(scope.text))
+        AlwaysScope.Everything -> stringResource(Res.string.approvalScopeEverything)
+        is AlwaysScope.Matching -> stringResource(Res.string.approvalScopeMatching, KitBidi.ltr(mask(scope.patterns)))
+    }
+
+/** Every file's change in full (masked), coloured as a diff, named by its path; each with one copy of the change. */
+@Composable
+private fun WholeChange(change: PermissionChangeUi, mask: (String) -> String) {
+    val blocks =
+        change.files.mapNotNull { file -> file.patch?.takeIf { it.isNotBlank() }?.let { file.path to it } }
+            .ifEmpty { listOfNotNull(change.combined?.let { null as String? to it }) }
+    for ((path, patch) in blocks) {
+        key(path, patch) {
+            val masked = remember(patch, mask) { mask(patch) }
+            val copy =
+                rememberKitRedactedCopyAction(
+                    stringResource(Res.string.approvalCopyChange),
+                    stringResource(Res.string.approvalCopied),
+                    { masked },
+                )
+            KitCodeBlock(
+                masked,
+                KitCodeKind.Code,
+                Modifier.testTag("chat-permission-change"),
+                language = CodeLanguage.Diff,
+                maxLines = Int.MAX_VALUE,
+                wrap = true,
+                showWrapToggle = false,
+                copyLabel = copy.label,
+                onCopy = { copy.onClick?.invoke() },
+                fileName = path?.let(mask),
             )
         }
     }
@@ -478,7 +618,7 @@ private fun permissionFactValue(fact: PermissionFact, redactor: Redactor): KitTe
             )
         is PermissionFact.AlsoCovers ->
             KitTechnicalValue(
-                stringResource(Res.string.chatUiAlwaysAllowWouldAlsoCover),
+                stringResource(Res.string.approvalAlwaysPattern),
                 redactor.details(fact.lines.joinToString("\n")),
             )
     }
@@ -551,15 +691,17 @@ private fun OtherField(
     )
 }
 
-/** Inside the hold: "Allowed · Undo" (plan 08 `HELD_ANSWER`). */
+/**
+ * Inside the hold: "Allowed · Undo" (plan 08 `HELD_ANSWER`), as the kit's answered row, so it sits on the page's edge
+ * like the card it replaces (it was drawn from the window's edge).
+ */
 @Composable
 private fun HeldLine(card: RequestCardUi, words: String, actions: ChatRequestActions) {
-    Row(
-        Modifier.fillMaxWidth().semantics { liveRegion = LiveRegionMode.Polite },
-        horizontalArrangement = Arrangement.spacedBy(Space.S2.dp),
-        verticalAlignment = Alignment.CenterVertically,
+    KitRequestAnsweredRow(
+        icon = if (card is RequestCardUi.Question) KitIcons.question else KitIcons.permissions,
+        title = words,
+        modifier = Modifier.testTag("chat-request-answered").semantics { liveRegion = LiveRegionMode.Polite },
     ) {
-        KitText(words, Modifier.weight(1f), role = TypeRole.Body, kind = KitTextKind.Frame)
         KitButton(
             stringResource(Res.string.chatStopAfterStepUndo),
             onClick = { actions.performReviewed(card, ReviewedRequestAction.Undo) },
@@ -568,15 +710,14 @@ private fun HeldLine(card: RequestCardUi, words: String, actions: ChatRequestAct
     }
 }
 
-/** After the hold: the answer and its receipt ("Sent" is never "Done"). */
+/** After the hold: the answer and its receipt ("Sent" is never "Done"), on the page's edge (the kit's answered row). */
 @Composable
-private fun AnsweredLine(words: String, receipt: KitReceiptState, onRetry: (() -> Unit)?) {
-    Row(
-        Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(Space.S2.dp),
-        verticalAlignment = Alignment.CenterVertically,
+private fun AnsweredLine(card: RequestCardUi, words: String, receipt: KitReceiptState, onRetry: (() -> Unit)?) {
+    KitRequestAnsweredRow(
+        icon = if (card is RequestCardUi.Question) KitIcons.question else KitIcons.permissions,
+        title = words,
+        modifier = Modifier.testTag("chat-request-answered"),
     ) {
-        KitText(words, Modifier.weight(1f), role = TypeRole.Body, kind = KitTextKind.Frame)
         KitReceipt(receipt, onRetry = onRetry)
     }
 }
