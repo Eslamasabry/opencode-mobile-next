@@ -77,6 +77,16 @@ public fun TerminalShellSettings.realShells(): List<TerminalShellOption> {
     return options.filter { seen.add(mergedShellPath(it.path)) }
 }
 
+/** True when [a] and [b] are one shell file: `/bin/bash` and `/usr/bin/bash` are the same on a merged-/usr Linux. */
+public fun sameShellPath(a: String, b: String): Boolean = mergedShellPath(a) == mergedShellPath(b)
+
+/**
+ * True when the server's saved shell is [option]: saved by its bare name or by either spelling of its path, the same
+ * normalisation [realShells] uses to list each shell once.
+ */
+public fun TerminalShellSettings.selects(option: TerminalShellOption): Boolean =
+    selected.isNotEmpty() && (selected == option.name || sameShellPath(selected, option.path))
+
 private fun mergedShellPath(path: String): String =
     when {
         path.startsWith("/usr/bin/") -> "/bin/" + path.removePrefix("/usr/bin/")

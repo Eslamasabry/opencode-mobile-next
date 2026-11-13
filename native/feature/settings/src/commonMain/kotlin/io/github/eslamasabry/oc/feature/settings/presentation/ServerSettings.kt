@@ -17,6 +17,7 @@ import io.github.eslamasabry.oc.core.model.Health
 import io.github.eslamasabry.oc.core.model.ModelRef
 import io.github.eslamasabry.oc.core.model.TerminalShellSettings
 import io.github.eslamasabry.oc.core.model.realShells
+import io.github.eslamasabry.oc.core.model.sameShellPath
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.ComputerRoute
 import io.github.eslamasabry.oc.ui.routes.ServerIntegrationPage
@@ -146,7 +147,10 @@ public fun shellChoices(settings: TerminalShellSettings): ImmutableList<ShellCho
     return rows.toImmutableList()
 }
 
-private fun ShellChoice.matches(saved: String): Boolean = value == saved || (name != null && name == saved)
+private fun ShellChoice.matches(saved: String): Boolean =
+    value == saved ||
+        (name != null && name == saved) ||
+        (value.isNotEmpty() && saved.isNotEmpty() && sameShellPath(value, saved))
 
 /** The value of the row that stands for what the server saved (a saved name matches its shell's path). */
 public fun TerminalShellSettings.selectedValue(): String =

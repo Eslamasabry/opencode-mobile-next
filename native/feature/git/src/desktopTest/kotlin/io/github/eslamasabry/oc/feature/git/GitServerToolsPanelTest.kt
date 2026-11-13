@@ -4,6 +4,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.width
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.assertIsNotSelected
+import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.v2.runComposeUiTest
@@ -73,5 +75,22 @@ class GitServerToolsPanelTest {
     fun `an action that did not work shows the failure above the tools`() = runComposeUiTest {
         show(GitServerToolsUi(directory = "/work/plain", gitInit = true, open = true, failed = true))
         assertEquals(1, onAllNodesWithText(failure).fetchSemanticsNodes().size)
+    }
+
+    @Test
+    fun `a shell saved under the other bin folder shows its one listed row selected`() = runComposeUiTest {
+        val shells =
+            io.github.eslamasabry.oc.core.model.TerminalShellSettings(
+                "/usr/bin/bash",
+                kotlinx.collections.immutable.persistentListOf(
+                    io.github.eslamasabry.oc.core.model.TerminalShellOption("/bin/bash", "bash", true),
+                    io.github.eslamasabry.oc.core.model.TerminalShellOption("/usr/bin/bash", "bash", true),
+                    io.github.eslamasabry.oc.core.model.TerminalShellOption("/bin/sh", "sh", true),
+                ),
+            )
+        show(GitServerToolsUi(directory = "/work/plain", gitInit = true, shellSettings = true, open = true, shells = shells))
+        assertEquals(1, onAllNodesWithText("bash").fetchSemanticsNodes().size)
+        onNodeWithText("bash").assertIsSelected()
+        onNodeWithText("sh").assertIsNotSelected()
     }
 }

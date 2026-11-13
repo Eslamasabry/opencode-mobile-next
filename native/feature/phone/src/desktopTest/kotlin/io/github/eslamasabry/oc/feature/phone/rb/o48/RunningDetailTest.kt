@@ -9,7 +9,7 @@ import io.github.eslamasabry.oc.engine.runtime.procs.CpuLevel
 import io.github.eslamasabry.oc.engine.runtime.procs.CpuWords
 import io.github.eslamasabry.oc.feature.phone.presentation.*
 import io.github.eslamasabry.oc.feature.phone.ui.RunningScreen
-import io.github.eslamasabry.oc.feature.phone.ui.runningLargeMemory
+import io.github.eslamasabry.oc.feature.phone.ui.PhoneSizes
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import kotlin.test.*
@@ -140,9 +140,11 @@ class RunningDetailTest {
         }
 
     @Test
-    fun `binary memory keeps one decimal at the MB boundary and from gigabytes`() {
-        assertEquals("1023.6 MB", runningLargeMemory((1023.6 * 1048576L).toLong()))
-        assertEquals("1.5 GB", runningLargeMemory(1610612736L))
-        assertEquals("1.0 TB", runningLargeMemory(1099511627776L))
+    fun `memory is whole MB below a GB and one decimal in GB, never rounded to tens`() {
+        val mb = 1048576L
+        assertEquals("\u2066997\u00a0MB\u2069", PhoneSizes.memory(997 * mb + 400_000))
+        assertEquals("\u20664\u00a0MB\u2069", PhoneSizes.memory(4 * mb))
+        assertEquals("\u20661.0\u00a0GB\u2069", PhoneSizes.memory(1000 * mb))
+        assertEquals("\u20661.5\u00a0GB\u2069", PhoneSizes.memory(1610612736L))
     }
 }

@@ -19,6 +19,7 @@ import androidx.lifecycle.compose.LifecycleResumeEffect
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.SignInWhy
 import io.github.eslamasabry.oc.core.model.realShells
+import io.github.eslamasabry.oc.core.model.selects
 import io.github.eslamasabry.oc.feature.settings.presentation.*
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
@@ -587,9 +588,7 @@ private fun ShellBody(state: ServerSettingsUi, actions: ServerSettingsActions) {
     }
     val only =
         settings.realShells().singleOrNull()?.takeIf {
-            settings.selected.isEmpty() ||
-                settings.selected == it.name ||
-                settings.selected == it.path
+            settings.selected.isEmpty() || settings.selects(it)
         }
     if (only != null) {
         KitRow(

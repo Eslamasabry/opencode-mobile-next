@@ -94,6 +94,6 @@ private fun RunningRowStatus.rowStatusWords(): String =
                 Res.plurals.runningPhoneRowNormal,
                 count,
                 count,
-                stringResource(Res.string.termuxProcsMemoryMb, rssBytes / 1_048_576),
+                PhoneSizes.memory(rssBytes),
             )
     }
