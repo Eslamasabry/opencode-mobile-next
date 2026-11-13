@@ -42,11 +42,11 @@ internal fun ColumnScope.PrivacyBody(privacy: PrivacyUi?, actions: SettingsActio
         KitRowGroup(label = stringResource(Res.string.crashOfferSection), leadingTiles = true) {
             offer?.let { on ->
                 KitSwitchRow(
-                    title = stringResource(Res.string.crashOfferSettingTitle),
+                    title = stringResource(Res.string.privacyCrashAskTitle),
                     checked = on,
                     leading = KitRowLeading.Glyph(KitIcons.bug),
                     supporting = stringResource(Res.string.crashOfferSettingDetail),
-                    supportingMaxLines = 3,
+                    supportingMaxLines = Int.MAX_VALUE,
                     onCheckedChange = actions::onOfferCrashReports,
                 )
             }
@@ -57,18 +57,18 @@ internal fun ColumnScope.PrivacyBody(privacy: PrivacyUi?, actions: SettingsActio
                     modifier = Modifier.testTag("privacy-send-usage"),
                     leading = KitRowLeading.Glyph(KitIcons.shield),
                     supporting = stringResource(Res.string.telemetryUsageDetail),
-                    supportingMaxLines = 8,
+                    supportingMaxLines = Int.MAX_VALUE,
                     onCheckedChange = actions::onUsage,
                 )
             }
             send?.let { on ->
                 KitSwitchRow(
-                    title = stringResource(Res.string.telemetryCrashesTitle),
+                    title = stringResource(Res.string.privacyCrashSendTitle),
                     checked = on,
                     modifier = Modifier.testTag("privacy-crash-reports"),
                     leading = KitRowLeading.Glyph(KitIcons.bug),
                     supporting = stringResource(Res.string.telemetryCrashesDetail),
-                    supportingMaxLines = 6,
+                    supportingMaxLines = Int.MAX_VALUE,
                     onCheckedChange = actions::onCrashReports,
                 )
             }
@@ -131,7 +131,7 @@ internal fun ColumnScope.WhatWeCollectBody(privacy: PrivacyUi, actions: Settings
     ) {
         privacy.crashReports?.let { on ->
             KitSwitchRow(
-                title = stringResource(Res.string.telemetryCrashesTitle),
+                title = stringResource(Res.string.privacyCrashSendTitle),
                 checked = on,
                 onCheckedChange = actions::onCrashReports,
             )

@@ -73,6 +73,7 @@ import io.github.eslamasabry.oc.ui.kit.choice.KitGlassLookOption
 import io.github.eslamasabry.oc.ui.kit.choice.KitGlassLookPicker
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
+import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
 import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
 import io.github.eslamasabry.oc.ui.words.res.appearanceFineTuneReset
 import io.github.eslamasabry.oc.ui.words.res.appearanceModeAutoNote
@@ -125,18 +126,20 @@ internal fun ColumnScope.AppearanceBody(ui: AppearanceUi, actions: SettingsActio
     }
     val guide = ui.guide ?: return
     Spacer(Modifier.height(Space.S4.dp))
-    KitButton(
-        stringResource(if (guide.done) Res.string.appearanceGuideAgain else Res.string.appearanceGuideSkip),
-        {
-            if (guide.done) {
-                tab.intValue = 0
-                actions.onAppearanceAgain()
-            } else actions.onAppearanceSkip()
-        },
-        gutter.testTag(if (guide.done) "appearance-guide-again" else "appearance-guide-skip"),
-        role = KitButtonRole.Tertiary,
-        fullWidth = false,
-    )
+    // A row, not a tertiary button: that drew as a bare heading with nothing to tell it is tappable.
+    KitRowGroup {
+        KitRow(
+            title = stringResource(if (guide.done) Res.string.appearanceGuideAgain else Res.string.appearanceGuideSkip),
+            modifier = Modifier.testTag(if (guide.done) "appearance-guide-again" else "appearance-guide-skip"),
+            trailing = KitRowTrailing.Chevron,
+            onClick = {
+                if (guide.done) {
+                    tab.intValue = 0
+                    actions.onAppearanceAgain()
+                } else actions.onAppearanceSkip()
+            },
+        )
+    }
 }
 
 /**
