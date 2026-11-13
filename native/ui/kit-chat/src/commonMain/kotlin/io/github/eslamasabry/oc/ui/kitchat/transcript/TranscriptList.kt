@@ -198,12 +198,14 @@ public fun KitTranscriptList(
             // A viewport that shrinks or grows (a slot above the composer unfolding beside the list) re-pins before the
             // list measures, so the newest row rides the slot's edge frame by frame.
             // The list ends its own words before the page's floating controls (kitScreenListEdges): the jump pill and
-            // "N earlier messages" lie beside it, whole, on ground with no text under them (owner 2026-11-14).
+            // "N earlier messages" lie beside it, whole, on ground with no text under them (owner 2026-11-14). The pill's
+            // recording is made of the list as it shows, so its glass bends no words either; it is the list's own, never
+            // the page's (the pill lies in the page's recording: reading that would draw the pill into itself).
             modifier =
                 Modifier.fillMaxSize()
                     .keepsBottom(pin)
-                    .kitScreenListEdges()
                     .kitFrostSource(backdrop)
+                    .kitScreenListEdges()
                     .testTag("transcript-list"),
             content = content,
         )
@@ -252,9 +254,7 @@ public fun KitTranscriptList(
             state,
             jumpLabel,
             motion,
-            // The page's recording cleared as the page shows it, so the pill's glass bends no words; the list's own
-            // recording where the page records nothing.
-            io.github.eslamasabry.oc.ui.kit.frame.kitScreenBottomGlass() ?: backdrop,
+            backdrop,
             // Bottom centre, its face 8 dp above the composer's veil (the 48 dp target's own margin counts toward it).
             Modifier.align(Alignment.BottomCenter).padding(bottom = chromeBottom + jumpPillLift(LocalKitTokens.current.minTarget).dp),
         )

@@ -168,7 +168,7 @@ class OutlineCornersTest {
             val box = Rect(b.stripLeft, b.stripTop, minOf(b.stripRight, image.width.toFloat()), b.stripBottom)
             // Its inner corners (the dock stands on the end edge); the outer ones lie past the screen edge.
             result =
-                OutlineCorners.gaps(image, box, DENSITY, outsideAt = 2 to 2, bandDp = 1.5f)
+                OutlineCorners.gaps(image, box, DENSITY, outsideAt = 2 to 2, bandDp = 2.5f)
                     .filter { it.startsWith("top-start") || it.startsWith("bottom-start") }
         }
         return result

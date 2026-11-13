@@ -75,9 +75,9 @@ public class KitScreenBottom internal constructor() {
     internal var floatTop: Float by mutableFloatStateOf(Float.NaN)
 
     /**
-     * What the glass of the block and of a control floating over it sees of the body: the screen's recording, cleared
-     * where the body itself is cleared (KitScreen), so no glass bends words the page no longer shows. Null outside a
-     * page that records its body.
+     * What the block's glass sees of the body: the screen's recording, cleared where the body itself is cleared
+     * (KitScreen), so no glass bends words the page no longer shows. Null outside a page that records its body. Never
+     * hand it to a part drawn inside the body (the jump pill): that part lies in the recording, so it would draw itself.
      */
     internal var glass: KitFrostState? by mutableStateOf(null)
 }
@@ -136,8 +136,8 @@ public fun KitReportAwayFromLatest(away: () -> Boolean) {
 public fun kitScreenAwayFromLatest(): Boolean = LocalKitScreenBottom.current?.away?.invoke() == true
 
 /**
- * The recording a control floating over this screen's body near its bottom block reads (the jump pill): cleared where
- * the body is ([KitScreenBottom.glass]); null outside a page that records its body.
+ * The recording this screen's bottom block reads, cleared where the body is ([KitScreenBottom.glass]); null outside a
+ * page that records its body. Not for a part inside the body (it would draw itself).
  */
 @Composable
 public fun kitScreenBottomGlass(): KitFrostState? = LocalKitScreenBottom.current?.glass
