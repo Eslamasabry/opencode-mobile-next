@@ -77,8 +77,10 @@ class SettingsBackAfterJumpTest {
         home.p.onOutside(SettingsOutside.ThisPhone)
         assertEquals(listOf(SettingsOutside.ThisPhone), home.openers.opened)
         // The outside page is its own route: Back there returns to this entry, still on Storage.
+        runCurrent()
         assertEquals(SettingsPage.Storage, home.p.state.value.page)
         assertTrue(home.p.onBack())
+        runCurrent()
         assertEquals(SettingsPage.Hub, home.p.state.value.page)
         assertEquals(0, home.left, "Back from Storage never leaves for Tips or reopens Appearance")
     }
@@ -90,6 +92,7 @@ class SettingsBackAfterJumpTest {
         // The person walks on in Settings, then the screen effect runs again (a rotation, or coming back
         // from another page).
         v.p.onOpen(SettingsPage.Storage)
+        runCurrent()
         v.p.openEntryTarget("settings-appearance", guide = true)
         runCurrent()
         assertEquals(SettingsPage.Storage, v.p.state.value.page, "the second run opened nothing")
@@ -102,6 +105,7 @@ class SettingsBackAfterJumpTest {
         runCurrent()
         v.p.onOpen(SettingsPage.Storage)
         assertTrue(v.p.onBack())
+        runCurrent()
         assertEquals(SettingsPage.Appearance, v.p.state.value.page)
         assertEquals(0, v.left)
         assertTrue(v.p.onBack())

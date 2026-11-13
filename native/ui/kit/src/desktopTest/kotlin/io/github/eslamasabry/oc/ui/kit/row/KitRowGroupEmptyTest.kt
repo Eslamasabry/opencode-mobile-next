@@ -17,7 +17,9 @@ class KitRowGroupEmptyTest {
         runDesktopComposeUiTest(412, 600) {
             setContent {
                 KitTheme(platform = FakeKitPlatform(), localeTag = "en") {
-                    KitRowGroup(label = "Servers", note = "Note") { listOf<String>().forEach { KitRow(it) } }
+                    androidx.compose.foundation.layout.Column {
+                        KitRowGroup(label = "Servers", note = "Note") { listOf<String>().forEach { KitRow(it) } }
+                    }
                 }
             }
             waitForIdle()
@@ -31,7 +33,7 @@ class KitRowGroupEmptyTest {
         runDesktopComposeUiTest(412, 600) {
             setContent {
                 KitTheme(platform = FakeKitPlatform(), localeTag = "en") {
-                    KitRowGroup(label = "Servers") { KitRow("one") }
+                    androidx.compose.foundation.layout.Column { KitRowGroup(label = "Servers") { KitRow("one") } }
                 }
             }
             waitForIdle()
