@@ -762,7 +762,13 @@ internal fun Modifier.kitRunUnderBar(barPx: () -> Int): Modifier =
 
 /** Paints the page's ground (and the live picture, where one is drawn) under a source's recording. */
 private fun DrawScope.drawGroundUnder(ground: Color, picture: KitGlassBackdrop?, at: LayoutCoordinates) {
-    drawRect(ground, Offset(-size.width, -size.height), Size(size.width * 3f, size.height * 3f))
+    // Sized by the pane as well as by this scope: the words' ink sampler draws the backdrop scaled down into a target an
+    // eighth of the pane's size, where this scope's size is that small target's, so a ground sized by it alone covered a
+    // corner of the sample. Content the page cleared (the transcript ended above the jump pill) then read as see-through,
+    // the sample was dropped as saying nothing, and the ink kept a flip taken over the words that lay there before.
+    val w = maxOf(size.width, at.size.width.toFloat())
+    val h = maxOf(size.height, at.size.height.toFloat())
+    drawRect(ground, Offset(-w, -h), Size(w * 3f, h * 3f))
     val bd = picture ?: return
     // The pane draws again on every new frame of the picture or another look (glass-live: never a stale picture).
     bd.frame()
