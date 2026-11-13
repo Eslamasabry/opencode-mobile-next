@@ -360,7 +360,7 @@ internal fun SettingsFrame(
     search: (@Composable () -> Unit)? = null,
     large: Boolean = false,
     footer: (@Composable () -> Unit)? = null,
-    /** A page's own navigation (the Appearance tabs): pinned under the bar, whole at every scroll position. */
+    /** A page's own navigation (the Appearance tabs): the floating bar's second row, in the bar's pane. */
     pinned: (@Composable () -> Unit)? = null,
     scroll: ScrollState? = null,
     content: @Composable ColumnScope.() -> Unit,
@@ -391,14 +391,12 @@ internal fun SettingsFrame(
         edges = KitScreenEdges.Bleed,
         // Glass step 4: where the lens is drawn the page scrolls on under its bar, a floating liquid capsule; the kit
         // records the page for it. Everywhere else the bar is pinned as before.
-        // A pinned head cannot sit under a floating bar (the page would scroll its first rows beneath it), so a page
-        // with one keeps the pinned bar.
-        floatingBar = if (pinned == null) KitFloatingBar() else null,
+        // The page's own navigation (the Appearance tabs) is the bar's second row, inside the same pane.
+        floatingBar = KitFloatingBar(below = pinned),
     ) {
         KitPinnedFootBody(
             scroll = pageScroll,
             foot = footer,
-            head = pinned,
             contentPadding = PaddingValues(top = Space.S2.dp, bottom = Space.S6.dp),
             verticalArrangement =
                 Arrangement.spacedBy(

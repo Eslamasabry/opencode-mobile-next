@@ -23,7 +23,7 @@ import kotlin.test.assertTrue
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 
-/** Appearance on a 412 x 915 phone: its tab row is pinned, its sample is compact and labelled, a new tab opens at its top. */
+/** Appearance on a 412 x 915 phone: its tab row is the bar's second row, its sample is compact and labelled, a new tab opens at its top. */
 @OptIn(ExperimentalTestApi::class)
 class AppearancePinnedTabsTest {
     private val state =
@@ -42,14 +42,6 @@ class AppearancePinnedTabsTest {
             waitForIdle()
             block()
         }
-
-    @Test
-    fun `B-KIT-017 the tab row keeps its place when the page is scrolled`() = run {
-        val rest = onNodeWithTag("appearance-tabs").getBoundsInRoot()
-        onNodeWithTag("appearance-guide-skip").performScrollTo()
-        waitForIdle()
-        assertEquals(rest, onNodeWithTag("appearance-tabs").getBoundsInRoot())
-    }
 
     @Test
     fun `B-KIT-017 the footer never sits on the last control: the end of the page is whole`() = run {

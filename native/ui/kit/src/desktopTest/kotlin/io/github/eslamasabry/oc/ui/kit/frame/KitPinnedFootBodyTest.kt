@@ -107,42 +107,6 @@ class KitPinnedFootBodyTest {
         assertEquals(ref, part)
     }
 
-    @Test
-    fun `a pinned head stays where it is at every scroll position and the body fades beneath it`() {
-        var atRest = 0f
-        var atEnd = 0f
-        var fadedJustUnder = 1f
-        var midUnder = 0f
-        runDesktopComposeUiTest(W, H) {
-            lateinit var scroll: ScrollState
-            setContent {
-                CompositionLocalProvider(LocalDensity provides Density(1f)) {
-                    KitTheme(platform = FakeKitPlatform(), localeTag = "en") {
-                        Box(Modifier.size(W.dp, H.dp).background(Color.Black).testTag("scene")) {
-                            scroll = rememberScrollState()
-                            KitPinnedFootBody(
-                                scroll = scroll,
-                                head = { Box(Modifier.fillMaxWidth().height(30.dp).background(Color.Black).testTag("head")) },
-                            ) { Box(Modifier.fillMaxWidth().height(600.dp).background(Color.White)) }
-                        }
-                    }
-                }
-            }
-            waitForIdle()
-            atRest = onNodeWithTag("head").getBoundsInRoot().top.value
-            runBlocking { scroll.scrollTo(scroll.maxValue / 2) }
-            waitForIdle()
-            val img = onNodeWithTag("scene").captureToImage().toPixelMap()
-            fadedJustUnder = img[W / 2, 31].red
-            midUnder = img[W / 2, 31 + 60].red
-            runBlocking { scroll.scrollTo(scroll.maxValue) }
-            waitForIdle()
-            atEnd = onNodeWithTag("head").getBoundsInRoot().top.value
-        }
-        assertEquals(atRest, atEnd)
-        assertTrue(fadedJustUnder < midUnder - 0.5f, "the body thins out just under the head ($fadedJustUnder vs $midUnder)")
-    }
-
     private class Column3(val mid: Float, val just: Float)
 
     private fun scene(rowsDp: Int, withFoot: Boolean, toEnd: Boolean): Column3 {
