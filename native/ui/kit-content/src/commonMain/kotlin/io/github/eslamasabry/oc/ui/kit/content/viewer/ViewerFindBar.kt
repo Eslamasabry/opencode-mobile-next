@@ -74,8 +74,8 @@ internal fun ViewerFindBar(
             )
         }
         // One Back closes Find, whatever is typed (the field's own clear button clears). Registered after the field's own
-        // Back, and again with each new query, so it stays the one that answers.
-        androidx.compose.runtime.key(query) { io.github.eslamasabry.oc.ui.kit.modal.KitBackGuard(enabled = true, onBack = close) }
+        // Back, and again with each keystroke (the field re-registers its own then), so it stays the one that answers.
+        androidx.compose.runtime.key(field.text.toString()) { io.github.eslamasabry.oc.ui.kit.modal.KitBackGuard(enabled = true, onBack = close) }
         if (query.isNotEmpty()) {
             KitText(
                 count,

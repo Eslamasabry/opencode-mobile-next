@@ -101,7 +101,8 @@ class KitSheetFieldIntoViewTest {
     @Test
     fun `typing new lines in a field in the middle keeps it a fade's reach above the buttons`() =
         run(pinned = true, keyboardUp = true, middle = true, typed = "one\ntwo\nthree\nfour") { field, button, _ ->
-            assertTrue(field.bottom <= button!!.top - fade, "field bottom ${field.bottom} at least $fade above ${button.top}")
+            // The caret's line ends one inner padding (under 16 dp) above the field's own bottom edge.
+            assertTrue(field.bottom - 16.dp <= button!!.top - fade, "field bottom ${field.bottom} less its padding at least $fade above ${button.top}")
         }
 
     @Test
