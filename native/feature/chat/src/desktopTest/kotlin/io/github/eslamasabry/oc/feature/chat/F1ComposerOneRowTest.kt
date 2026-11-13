@@ -76,8 +76,10 @@ class F1ComposerOneRowTest {
     private fun ComposeUiTest.bounds(tag: String): Rect =
         onNodeWithTag(tag, useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
 
+    // Owner 2026-11-14 ("no new bar or row level"): the box holds its own controls in every style, as the Glass slab
+    // does. Was: "F1 the idle box is one row and the chips sit on a strip above it" (Flutter's layout).
     @Test
-    fun `F1 the idle box is one row and the chips sit on a strip above it`() = runComposeUiTest {
+    fun `F1 the idle box holds its controls - the words on top, the plus, the chips and Send in one row under them`() = runComposeUiTest {
         setContent { Scene() }
         waitForIdle()
         // The tag sits inside the face's S1 padding: the face is 4 dp larger on every side.
@@ -87,17 +89,15 @@ class F1ComposerOneRowTest {
         val send = bounds("chat-send-button")
         val model = bounds("chat-model-button")
         val approval = bounds("approval-chip")
-        // One row: the plus, the words and Send share a line (Flutter `Row(leading, field, trailing)`).
+        // The words on top; the plus, the chips and Send share the row under them.
+        assertTrue(plus.top >= field.bottom - 0.5f && send.top >= field.bottom - 0.5f, "the controls $plus $send sit under the words $field")
         assertTrue(abs(plus.center.y - send.center.y) < 1f, "plus $plus and Send $send share a row")
-        assertTrue(field.top < send.center.y && send.center.y < field.bottom, "the field $field is on Send's row $send")
-        assertTrue(plus.right <= field.left + 0.5f && field.right <= send.left + 0.5f, "+ · words · Send in order")
-        // One 48 dp row plus the box's 4 dp padding (F: kit_composer.dart:572 minTarget; KitComposerBox S1).
-        assertTrue(box.height <= 56f + 0.5f, "the idle box is one row tall, was ${box.height}")
-        // The chips: above the box, the approval chip first, the model at the end (F: chat_composer_region.dart:66-73).
-        assertTrue(model.bottom <= box.top + 0.5f, "the model chip $model sits above $box")
-        assertTrue(approval.bottom <= box.top + 0.5f, "the approval chip $approval sits above $box")
-        assertTrue(approval.right <= model.left, "the approval chip $approval leads the model $model")
-        assertTrue(abs(model.right - box.right) < 1f, "the model chip ends on the box's edge: $model vs $box")
+        for ((what, r) in listOf("model" to model, "approval" to approval)) {
+            assertTrue(r.top >= box.top - 0.5f && r.bottom <= box.bottom + 0.5f, "the $what chip $r lies inside the box $box")
+            assertTrue(r.top >= field.bottom - 0.5f, "the $what chip $r is on the controls' row, under the words $field")
+        }
+        assertTrue(plus.right <= minOf(model.left, approval.left) + 0.5f, "the plus leads the chips")
+        assertTrue(maxOf(model.right, approval.right) <= send.left + 0.5f, "Send ends the row")
         // Without voice an empty box shows Send, disabled: nothing to send yet (kit_composer.dart:434).
         onNode(
             hasAnyAncestor(hasTestTag("chat-send-button")) and

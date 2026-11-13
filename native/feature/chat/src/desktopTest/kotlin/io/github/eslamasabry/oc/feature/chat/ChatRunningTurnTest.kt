@@ -174,7 +174,9 @@ class ChatRunningTurnTest {
     }
 
     @Test
-    fun `B-CHAT-006 while a reply runs Stop is the chip at the end of the strip, never in the message box`() =
+    // Owner 2026-11-14 ("no new bar or row level"): in every style the box holds its controls; nothing rides above it.
+    // Was: "Stop is the chip at the end of the strip, never in the message box".
+    fun `B-CHAT-006 while a reply runs Stop is in the message box, and no strip rides above it`() =
         runComposeUiTest {
             val actions =
                 object : BasicComposerActions {
@@ -188,8 +190,9 @@ class ChatRunningTurnTest {
             val chrome = ComposerChrome({ true }, { false }, {}, { null }, {}, { null }, {}, {}, { false })
             setContent { Root { Box(Modifier.width(360.dp)) { BasicComposer(ui, actions, chrome) } } }
             onNodeWithTag("chat-stop-button", useUnmergedTree = true).assertIsDisplayed()
-            onNode(hasTestTag("chat-stop-button") and hasAnyAncestor(hasTestTag("composer-status-strip")), useUnmergedTree = true).assertExists()
-            onNode(hasTestTag("chat-stop-button") and hasAnyAncestor(hasTestTag("kit-composer-box")), useUnmergedTree = true).assertDoesNotExist()
+            onNode(hasTestTag("chat-stop-button") and hasAnyAncestor(hasTestTag("kit-composer-box")), useUnmergedTree = true).assertExists()
+            onNodeWithTag("composer-status-strip", useUnmergedTree = true).assertDoesNotExist()
+            onNode(hasTestTag("chat-model-button") and hasAnyAncestor(hasTestTag("kit-composer-box")), useUnmergedTree = true).assertExists()
         }
 
     private object FixedClock : Clock {
