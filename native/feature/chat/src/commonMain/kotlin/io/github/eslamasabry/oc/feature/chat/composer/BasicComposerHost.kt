@@ -89,6 +89,7 @@ import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerFieldRow
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerStatusStrip
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerLimitStrip
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerBox
+import io.github.eslamasabry.oc.ui.kitchat.composer.kitReportMessageBlock
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerChip
 import io.github.eslamasabry.oc.ui.kitchat.composer.kitComposerSlab
 import io.github.eslamasabry.oc.ui.kit.frame.KitReportBottomSlab
@@ -525,7 +526,8 @@ public fun BasicComposer(
         editor.lastReported = now
         actions.draftChanged(now)
     }
-    Column(modifier) {
+    // KC1: the block's top goes to the page for the edge light to stand above (a no-op without a holder).
+    Column(modifier.kitReportMessageBlock()) {
         // A one-off note, as in Flutter: dismissing hides this failure until a new one arrives.
         var dismissedSave by remember { mutableStateOf<Failure?>(null) }
         if (history.saveFailure != null && history.saveFailure !== dismissedSave)
