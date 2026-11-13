@@ -71,8 +71,6 @@ public class SettingsPresenter(
     private val healthConsent: HealthConsentSetting? = null,
     /** R1: Report a problem's report, its Send report and About's report code. */
     private val problemReport: ProblemReportSender? = null,
-    /** The edge dock's on/off switch; null where the app draws no dock. */
-    private val edgeDock: EdgeDockSetting? = null,
 ) : SettingsActions {
     private data class Local(
         val stack: ImmutableList<SettingsPage> = persistentListOf(SettingsPage.Hub),
@@ -119,12 +117,7 @@ public class SettingsPresenter(
     )
 
     private val local = MutableStateFlow(Local())
-    /** The host's facts, with the edge dock's switch where the app has one. */
-    private val currentFacts: StateFlow<SettingsFacts> =
-        edgeDock?.let { dock ->
-            combine(facts, dock.shown) { f, on -> f.copy(edgeDock = on) }
-                .stateIn(scope, SharingStarted.Eagerly, facts.value.copy(edgeDock = dock.shown.value))
-        } ?: facts
+    private val currentFacts: StateFlow<SettingsFacts> = facts
     private val prefs = choices.value
 
     private data class Extra(
@@ -685,7 +678,6 @@ public class SettingsPresenter(
                         write(PersonalChange.Reasoning(!door.on), SettingsNote.ChoiceNotSaved)
                     SettingsRowId.ShowTimestamps ->
                         write(PersonalChange.Timestamps(!door.on), SettingsNote.ChoiceNotSaved)
-                    SettingsRowId.EdgeDock -> edgeDock?.setShown(!door.on)
                     else -> Unit
                 }
         }

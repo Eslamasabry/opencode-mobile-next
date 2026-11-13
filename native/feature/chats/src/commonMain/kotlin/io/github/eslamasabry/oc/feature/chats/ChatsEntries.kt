@@ -35,8 +35,6 @@ public class ChatsEntries(
     private val appNotices: AppNotices,
     private val navigator: AppNavigator,
     private val sections: Set<ChatsHomeSection> = emptySet(),
-    /** The edge dock on the home, where the app binds one. */
-    private val edgeDocks: Set<io.github.eslamasabry.oc.feature.chats.dock.HomeEdgeDock> = emptySet(),
 ) : EntryInstaller {
     override fun EntryProviderScope<NavKey>.install() {
         entry<ChatsRoute.New> { route ->
@@ -91,7 +89,6 @@ public class ChatsEntries(
                 replyOffer = offerContent,
                 root = { top.value == ChatsRoute.Home },
                 sections = orderedSections,
-                edgeDock = edgeDocks.firstOrNull(),
             )
         }
         entry<ChatsRoute.Attention> {
