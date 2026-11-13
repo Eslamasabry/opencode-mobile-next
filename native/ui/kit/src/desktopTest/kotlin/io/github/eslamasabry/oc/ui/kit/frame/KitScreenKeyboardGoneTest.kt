@@ -48,7 +48,8 @@ class KitScreenKeyboardGoneTest {
         stuckKeyboard(overlay = false)
 
     private fun stuckKeyboard(overlay: Boolean) = runComposeUiTest {
-        var now by mutableStateOf(keyboard)
+        // The animated inset: it never comes down in this test (the closing animation's end never arrives).
+        val now = keyboard
         var target by mutableStateOf(keyboard)
         setContent {
             KitTheme(KitAppearance(motion = MotionLevel.Full), FakeKitPlatform(), "en") {
