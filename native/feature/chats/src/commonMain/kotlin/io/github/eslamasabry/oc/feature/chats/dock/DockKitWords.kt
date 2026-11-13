@@ -7,7 +7,7 @@ import io.github.eslamasabry.oc.core.common.text.Numbers
 import io.github.eslamasabry.oc.ui.kit.dock.KitDockModel
 import io.github.eslamasabry.oc.ui.kit.dock.KitDockWords
 import io.github.eslamasabry.oc.ui.words.res.Res
-import io.github.eslamasabry.oc.ui.words.res.approvalAllow
+import io.github.eslamasabry.oc.ui.words.res.kitRequestAllowOnce
 import io.github.eslamasabry.oc.ui.words.res.approvalDeny
 import io.github.eslamasabry.oc.ui.words.res.chatUiRename
 import io.github.eslamasabry.oc.ui.words.res.chatUiRenameSession
@@ -140,7 +140,7 @@ internal fun rememberDockKitWords(model: KitDockModel): KitDockWords {
     val childNeedsYou = stringResource(Res.string.dockChildNeedsYou, A)
     val childFailed = stringResource(Res.string.dockChildFailed, A)
     val onServer = stringResource(Res.string.dockOnServer, A)
-    val allow = stringResource(Res.string.approvalAllow)
+    val allow = stringResource(Res.string.kitRequestAllowOnce)
     val deny = stringResource(Res.string.approvalDeny)
     val stop = stringResource(Res.string.dockStop)
     val rename = stringResource(Res.string.chatUiRename)

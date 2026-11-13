@@ -52,6 +52,7 @@ import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.action.KitIconButton
 import io.github.eslamasabry.oc.ui.kit.chip.KitChip
 import io.github.eslamasabry.oc.ui.kit.chip.KitChipKind
+import io.github.eslamasabry.oc.ui.kit.chip.FilterChipsRules
 import io.github.eslamasabry.oc.ui.kit.chip.KitFilterChips
 import io.github.eslamasabry.oc.ui.kit.effects.KitLiquidBackdrop
 import io.github.eslamasabry.oc.ui.kit.effects.KitLiquidPaneSpec
@@ -210,14 +211,16 @@ class KitFloatingBarRowTest {
         val face0 = rest.bounds["chip-0"]!!
         val faceTop = face0.top.value + 8f
         val faceBottom = face0.bottom.value - 8f
-        // At rest more lies past the end: a chip runs under the end edge, and its outer third there is cleared.
+        // At rest more lies past the end. Review 2026-11-13 #18: the last chip shown is whole, or a chip runs under the
+        // end edge with at least MIN_PEEK_DP of it showing (never a 1-3 letter stump), its outer third there cleared.
         // (A node's bounds are clipped to the line, so a chip running past its end ends on it.)
-        val under = CHIPS.indices.map { rest.bounds["chip-$it"]!! }.any { it.left.value < line.right.value - 1f && it.right.value >= line.right.value - .5f }
-        assertTrue(under, "at rest a chip runs past the line's end (the line overflows at 360 dp)")
+        val cut = CHIPS.indices.map { rest.bounds["chip-$it"]!! }.firstOrNull { it.left.value < line.right.value - 1f && it.right.value >= line.right.value - .5f }
+        if (cut != null)
+            assertTrue((cut.right - cut.left).value >= FilterChipsRules.MIN_PEEK_DP - 1f, "a chip cut at rest shows enough to name it: $cut in $line")
         val endCleared = diff(rest, restBare, line.right.value - fade / 3f + .5f, line.right.value - .5f, faceTop, faceBottom)
         assertTrue(endCleared < 1f, "at rest the end that has more to show is faded out at its edge: $endCleared")
         val endFading = diff(rest, restBare, line.right.value - fade + 1f, line.right.value - fade / 3f, faceTop, faceBottom)
-        assertTrue(endFading > 0f, "at rest the chip at the end thins out inside the pane rather than vanishing early: $endFading")
+        if (cut != null) assertTrue(endFading > 0f, "at rest the chip at the end thins out inside the pane rather than vanishing early: $endFading")
         // Nothing more before the start: no fade there, the first chip shows whole from the line's start.
         val startShown = diff(rest, restBare, line.left.value, line.left.value + fade / 3f, faceTop, faceBottom)
         assertTrue(startShown > 0f, "at rest the start has nothing more to show and is not faded: $startShown")

@@ -1,7 +1,5 @@
 package io.github.eslamasabry.oc.ui.kitchat.transcript
 
-import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Box
@@ -29,6 +27,8 @@ import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.text.style.TextMotion
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import io.github.eslamasabry.oc.ui.kitchat.code.CodeOverflow
+import io.github.eslamasabry.oc.ui.kitchat.code.KitCodeColors
 import io.github.eslamasabry.oc.ui.kitchat.code.codeChunkFrame
 import io.github.eslamasabry.oc.ui.kitchat.code.codeChunkStyle
 import io.github.eslamasabry.oc.ui.kitchat.code.codeFrameLook
@@ -127,13 +127,19 @@ public fun KitReplyBlock(
         val look = codeFrameLook()
         CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
             Box(m.codeChunkFrame(look, continued, continues)) {
-                BasicText(
-                    text = visible,
-                    style = codeChunkStyle().copy(textMotion = TextMotion.Static),
-                    softWrap = false,
-                    onTextLayout = onLayout,
-                    modifier = Modifier.horizontalScroll(rememberScrollState()).then(textModifier),
-                )
+                // Review 2026-11-13 #5: this row (a fence still arriving, still open or still fading in) scrolled
+                // with a bare scroller, so a listing wider than the block stopped inside a glyph with no fade. It
+                // shares the settled block's scroller: the same edge fade and sideways scroll.
+                val colors = KitCodeColors.of(LocalKitColors.current)
+                CodeOverflow(colors.fill, colors.gutter) {
+                    BasicText(
+                        text = visible,
+                        style = codeChunkStyle().copy(textMotion = TextMotion.Static),
+                        softWrap = false,
+                        onTextLayout = onLayout,
+                        modifier = textModifier,
+                    )
+                }
             }
         }
         return
