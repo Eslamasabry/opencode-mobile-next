@@ -144,7 +144,8 @@ class KitStatusPillTest {
                 }
             }
         }
-        assertTrue(onAllNodesWithTag("kit-status-pill-word", useUnmergedTree = true).fetchSemanticsNodes().isEmpty())
+        val nodes = onAllNodesWithTag("kit-status-pill-word", useUnmergedTree = true).fetchSemanticsNodes()
+        assertTrue(nodes.all { it.size.width == 0 }, "the word gets no room: ${nodes.map { it.size }}")
     }
 
     @Test

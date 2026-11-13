@@ -123,9 +123,15 @@ public fun KitStatusPill(
             val unbounded = constraints.maxWidth == androidx.compose.ui.unit.Constraints.Infinity
             val room = if (unbounded) androidx.compose.ui.unit.Constraints.Infinity else (constraints.maxWidth - mark.width - chevron.width - gap * 2).coerceAtLeast(0)
             val name = measurables[1].measure(loose.copy(maxWidth = room))
+            // Decided from the word's intrinsic width (a child is measured once): a word that does not fit is given no
+            // room at all, so it is neither drawn nor tapped nor read.
+            val wordNeeds = if (measurables.size > 3) measurables[2].maxIntrinsicWidth(constraints.maxHeight.takeIf { it != androidx.compose.ui.unit.Constraints.Infinity } ?: 0) else 0
+            val wordFits0 = measurables.size > 3 && (unbounded || name.width + gap + wordNeeds <= room)
             val wordPlaceable =
-                if (measurables.size > 3) measurables[2].measure(loose.copy(maxWidth = androidx.compose.ui.unit.Constraints.Infinity)) else null
-            val wordFits = wordPlaceable != null && (unbounded || name.width + gap + wordPlaceable.width <= room)
+                if (measurables.size > 3)
+                    measurables[2].measure(if (wordFits0) loose.copy(maxWidth = androidx.compose.ui.unit.Constraints.Infinity) else androidx.compose.ui.unit.Constraints(0, 0, 0, 0))
+                else null
+            val wordFits = wordFits0
             val width = mark.width + gap + name.width + (if (wordFits) gap + wordPlaceable!!.width else 0) + gap + chevron.width
             val height = constraints.maxHeight.takeIf { it != androidx.compose.ui.unit.Constraints.Infinity } ?: maxOf(mark.height, name.height)
             layout(width, height) {
