@@ -162,9 +162,8 @@ internal object PaneRimScenes {
                     joinEffect = { p, b -> DesktopKitPlatform().liquidJoinEffect(p, b) },
                 ),
                 "en",
-                // A still frame. Known gap (2026-11-13): a still-frame host never paints the aurora (KitLiveBackground),
-                // and motion off instead does not paint it either (and holds every frost), so the "over Aurora" scenes
-                // show the plain ground; the test says so rather than pass them.
+                // A still frame: the painted aurora is drawn at its still moment (KitLiveBackground), the same pixels
+                // every run.
                 stillFrame = true,
             ) {
                 if (aurora) KitLiveBackground(Modifier.fillMaxSize()) { content() }
@@ -186,6 +185,12 @@ internal object PaneRimScenes {
             test.waitForIdle()
         }
     }
+
+    /**
+     * How long one scene may take to draw and settle: the joined bar and menu run the join shader over the whole
+     * 1080 x 1800 picture on the CPU each frame, which took longer than the default minute on a slow machine.
+     */
+    val SCENE_TIMEOUT: kotlin.time.Duration = kotlin.time.Duration.parse("5m")
 
     private const val SETTLE_STEPS = 12
     private const val SETTLE_STEP_MS = 125L

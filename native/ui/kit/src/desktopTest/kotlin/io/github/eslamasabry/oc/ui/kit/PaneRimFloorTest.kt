@@ -48,7 +48,7 @@ class PaneRimFloorTest {
 
     private fun check(case: PaneRimScenes.Case, aurora: Boolean): List<String> {
         var result = emptyList<String>()
-        runDesktopComposeUiTest(PaneRimScenes.WIDTH, PaneRimScenes.HEIGHT) {
+        runDesktopComposeUiTest(PaneRimScenes.WIDTH, PaneRimScenes.HEIGHT, testTimeout = PaneRimScenes.SCENE_TIMEOUT) {
             PaneRimScenes.settle(this) { PaneRimScenes.Scene(aurora) { case.content() } }
             val image: PixelMap = onAllNodes(isRoot())[0].captureToImage().toPixelMap()
             val box =
