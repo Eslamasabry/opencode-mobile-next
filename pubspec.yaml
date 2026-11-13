@@ -14,7 +14,7 @@ dependencies:
   intl: any
   cupertino_icons: ^1.0.8
   # KitSince reads the time through package:clock so tests can fake it.
-  clock: ^1.1.2
+  clock: ^1.1.3
   # Dropping files onto the composer. Flutter exposes no native file-drop
   # channel of its own on desktop, so this is the one dependency the desktop
   # interaction work needs. Pinned exactly, because it registers a platform
@@ -31,23 +31,23 @@ dependencies:
   desktop_drop: 0.8.4
   dio: ^5.7.0
   file_picker: 12.2.0
-  flutter_riverpod: ^3.4.3
+  flutter_riverpod: ^3.5.0
   # Native IANA timezone IDs keep aggregate usage aligned with device days,
   # including historical daylight-saving changes.
-  flutter_timezone: 5.1.0
+  flutter_timezone: 5.1.1
   highlight: ^0.7.0
   # Local static SVG preview; external/active content is rejected before render.
-  flutter_svg: 2.3.0
+  flutter_svg: 2.3.2
   xml: 7.0.1
   # v10 (shipped in 1.0.31) migrated legacy Android ciphers; v11 removes the
   # deprecated algorithms. Installs that skipped 1.0.31 entirely lose stored
   # server credentials on upgrade and must pair again: acceptable for the
   # alpha line, and called out in the release notes.
   flutter_secure_storage: 11.2.0
-  crypto: 3.0.7
+  crypto: 3.0.8
   cryptography: 2.9.0
   local_auth: 3.0.2
-  image_picker: 1.2.3
+  image_picker: 1.2.4
   # Scanning the QR that `opencode2 pair` prints: the camera frames come from
   # the Flutter team's `camera` (androidx CameraX on Android, BSD-3-Clause,
   # no Google Play services) and are decoded by `zxing2`, a pure-Dart port of
@@ -64,12 +64,12 @@ dependencies:
   # Chosen over qr_flutter, which wraps this same encoder in widgets we do not
   # need. mobile_scanner only decodes, so nothing in the tree could encode.
   qr: 3.0.2
-  record: 7.1.1
+  record: 7.1.2
   scrollable_positioned_list: 0.3.8
   sherpa_onnx: 1.13.7
-  shared_preferences: ^2.3.3
+  shared_preferences: ^2.5.6
   shorebird_code_push: 2.0.7
-  url_launcher: ^6.3.1
+  url_launcher: ^6.3.3
   webview_flutter: ^4.9.0
   webview_flutter_android: ^4.10.0
   uuid: ^4.5.1
@@ -79,12 +79,12 @@ dependencies:
   # are a different type from Flutter's and cannot feed ThemeData until the
   # whole app moves to material_ui. 1.9 carries the surface-role fix.
   dynamic_color: ^1.9.0
-  package_info_plus: ^10.2.1
-  window_manager: ^0.5.2
+  package_info_plus: ^10.2.2
+  window_manager: ^0.6.0
   # Already present transitively via window_manager. Declared explicitly
   # because lib/desktop/window_state.dart imports it directly to clamp the
   # restored window to a display that is actually attached.
-  screen_retriever: ^0.2.0
+  screen_retriever: ^0.3.1
 
   path: ^1.9.1
   firebase_core: ^5.1.0
