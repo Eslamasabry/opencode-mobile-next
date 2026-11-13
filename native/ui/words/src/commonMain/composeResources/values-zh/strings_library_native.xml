@@ -109,4 +109,6 @@
     <string name="nlibMcpAddVariable">添加此值</string>
     <string name="nlibRegistryNeedsSettings">保存前，请检查必需的设置和命令参数。</string>
     <string name="nlibRegistrySaveFailed">无法保存目录偏好。离开此页面前请重试。</string>
+    <string name="nlibArgumentsHelper">运行命令时会传给它。留空则使用默认值。</string>
+    <string name="nlibRunIn">运行位置</string>
 </resources>

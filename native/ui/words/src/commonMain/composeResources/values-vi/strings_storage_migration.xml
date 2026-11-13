@@ -6,6 +6,6 @@
     <string name="migrationStorageDelete">Xóa mô hình</string>
     <string name="migrationStorageDeleteTitle">Xóa mô hình trợ lý?</string>
     <string name="migrationStorageDeleteBody">Thao tác này xóa mô hình đã lưu và các bản tải dở khỏi điện thoại này, giải phóng %1$s.</string>
-    <string name="migrationStorageEmpty">Điện thoại này chưa lưu mô hình trợ lý nào</string>
     <string name="localModelSaveFailed">Không thể đổi mô hình đã lưu. Thử lại.</string>
+    <string name="migrationStorageAppDetail">Cuộc trò chuyện lưu tại đây, Linux của điện thoại, tác nhân và tệp tải xuống: xem dung lượng và chỗ trống</string>
 </resources>

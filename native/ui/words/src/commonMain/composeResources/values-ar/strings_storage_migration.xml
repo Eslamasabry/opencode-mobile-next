@@ -5,6 +5,6 @@
     <string name="migrationStorageDelete">حذف النموذج</string>
     <string name="migrationStorageDeleteTitle">حذف نموذج المساعد؟</string>
     <string name="migrationStorageDeleteBody">يحذف هذا النموذج المحفوظ والتنزيلات غير المكتملة من هذا الهاتف، ويحرر %1$s.</string>
-    <string name="migrationStorageEmpty">لا يوجد نموذج مساعد محفوظ على هذا الهاتف</string>
     <string name="localModelSaveFailed">تعذّر تغيير النموذج المحفوظ. حاول مجددًا.</string>
+    <string name="migrationStorageAppDetail">المحادثات المحفوظة هنا، وLinux الخاص بالهاتف، والوكلاء والتنزيلات: اطّلع على الأحجام والمساحة الفارغة</string>
 </resources>

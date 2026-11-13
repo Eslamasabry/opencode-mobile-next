@@ -277,7 +277,6 @@
     <string name="serverSwitcherTitle">Máy chủ</string>
     <string name="serverSwitcherCurrentMenu">Thao tác với máy chủ</string>
     <string name="productStatesSwitchServer">Chuyển máy chủ</string>
-    <string name="capabilityStateHere">Dùng được ở đây</string>
     <string name="capabilityStateNotServer">Máy chủ này không có</string>
     <string name="capabilityStateNotDevice">Thiết bị này không có</string>
     <string name="capabilityNeedsAndroid">Cần ứng dụng Android</string>

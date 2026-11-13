@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="glassLabTitle">Phòng thử kính</string>
+    <string name="glassLabRowLine">Chỉnh mọi thông số của kính trên bản xem trước trực tiếp (bản thử nghiệm)</string>
+    <string name="glassLabHandle">Điều khiển kính</string>
+    <string name="glassLabHandleOpen">Mở</string>
+    <string name="glassLabHandleClosed">Đóng</string>
+    <string name="glassLabThemeDark">Thông số giao diện tối</string>
+    <string name="glassLabThemeLight">Thông số giao diện sáng</string>
+    <string name="glassLabAllLinked">Liên kết tất cả</string>
+    <string name="glassLabStartFrom">Bắt đầu từ</string>
+    <string name="glassLabInApp">Dùng trong toàn bộ ứng dụng</string>
+    <string name="glassLabInAppLine">Mọi bảng kính trong ứng dụng dùng các thông số này cho đến khi bạn tắt</string>
+    <string name="glassLabCopy">Sao chép thông số</string>
+    <string name="glassLabCopied">Đã sao chép</string>
+    <string name="glassLabCopiedToast">Đã sao chép thông số kính</string>
+    <string name="glassLabPaste">Dán thông số</string>
+    <string name="glassLabPasted">Đã nạp thông số kính</string>
+    <string name="glassLabPasteRefused">Bộ nhớ tạm không có thông số kính</string>
+    <string name="glassLabResetAll">Đặt lại tất cả</string>
+    <string name="glassLabSceneChat">Cuộc trò chuyện</string>
+    <string name="glassLabSceneHome">Danh sách trang chủ</string>
+    <string name="glassLabOpenMenu">Menu thanh</string>
+    <string name="glassLabOpenSheet">Bảng trượt</string>
+    <string name="glassLabOpenContext">Menu ngữ cảnh</string>
+    <string name="glassLabOpenDialog">Hộp thoại</string>
+    <string name="glassLabSliderReset">Về giá trị gốc</string>
+    <string name="glassLabTypeTitle">Nhập một số</string>
+    <string name="glassLabTypeField">Giá trị</string>
+    <string name="glassLabTypeConfirm">Đặt</string>
+    <string name="glassLabSampleTitle">Chạy trình phân tích trên Ubuntu</string>
+    <string name="glassLabSampleSubtitle">mới · Điện thoại này</string>
+    <string name="glassLabSampleAsk">Bạn xem giúp vì sao trình phân tích bỏ các dòng trống trong khối mã, và cho tôi xem số liệu nhé?</string>
+    <string name="glassLabSampleReply">Tôi lần ra lỗi ở bộ tách dòng: nó cắt bớt mỗi dòng trước khi kiểm tra khối mã, nên dòng trống trong khối bị hiểu là hết đoạn. Đây là kết quả của từng phiên bản với cùng một tệp:\n\n| Phiên bản | Số dòng giữ lại | Thời gian |\n|---|---|---|\n| 1.4 | 212 | 38 ms |\n| 1.5 | 196 | 35 ms |\n| bản sửa | 212 | 36 ms |\n\nBản sửa giữ nguyên dòng gốc cho đến khi kiểm tra khối mã xong:\n\n```kotlin\nval raw = lines[i]\nif (inFence) block += raw\nelse if (raw.isBlank()) closeParagraph()\n```\n\nBạn muốn tôi chạy kiểm thử trên máy Ubuntu của bạn không?</string>
+    <string name="glassLabSampleAskTwo">Có, hãy chạy rồi cho tôi biết mục nào lỗi.</string>
+    <string name="glassLabSamplePermission">Chạy một lệnh?</string>
+    <string name="glassLabSampleCommand">./gradlew :core:markdown:test</string>
+    <string name="glassLabSamplePermissionWhy">Chạy các bài kiểm thử của mô-đun markdown trong thư mục dự án.</string>
+    <string name="glassLabSampleAskBox">Hỏi OpenCode…</string>
+    <string name="glassLabSampleModel">Big Pickle</string>
+    <string name="glassLabSampleMode">Hỏi trước</string>
+    <string name="glassLabSampleDialogTitle">Xóa cuộc trò chuyện này?</string>
+    <string name="glassLabSampleDialogBody">Cuộc trò chuyện sẽ bị xóa khỏi điện thoại này và khỏi máy chủ. Không thể hoàn tác.</string>
+    <string name="glassLabSampleDelete">Xóa</string>
+    <string name="glassLabSampleKeep">Giữ lại</string>
+    <string name="glassLabSampleHome">Cuộc trò chuyện</string>
+    <string name="glassLabSampleConnected">Đã kết nối</string>
+    <string name="glassLabSampleAll">Tất cả</string>
+    <string name="glassLabSampleNeedsYou">Cần bạn</string>
+    <string name="glassLabSampleRunning">Đang chạy</string>
+    <string name="glassLabSampleNew">Mới</string>
+</resources>

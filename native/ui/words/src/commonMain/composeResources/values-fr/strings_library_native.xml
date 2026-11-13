@@ -109,4 +109,6 @@
     <string name="nlibMcpAddVariable">Ajouter cette valeur</string>
     <string name="nlibRegistryNeedsSettings">Vérifiez les réglages requis et les arguments de la commande avant d’enregistrer.</string>
     <string name="nlibRegistrySaveFailed">La préférence du catalogue n’a pas pu être enregistrée. Réessayez avant de quitter cette page.</string>
+    <string name="nlibArgumentsHelper">Transmis à la commande quand elle s’exécute. Laissez vide pour garder les valeurs par défaut.</string>
+    <string name="nlibRunIn">Exécuter dans</string>
 </resources>

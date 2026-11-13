@@ -109,4 +109,6 @@
     <string name="nlibMcpAddVariable">Tambah nilai ini</string>
     <string name="nlibRegistryNeedsSettings">Tinjau pengaturan wajib dan argumen perintah sebelum menyimpan.</string>
     <string name="nlibRegistrySaveFailed">Preferensi katalog tidak dapat disimpan. Coba lagi sebelum meninggalkan halaman ini.</string>
+    <string name="nlibArgumentsHelper">Diteruskan ke perintah saat dijalankan. Kosongkan untuk memakai bawaan.</string>
+    <string name="nlibRunIn">Jalankan di</string>
 </resources>

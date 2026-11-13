@@ -1142,4 +1142,6 @@
     <string name="chatRequestAnswerRequired">Jawab dulu pertanyaan yang wajib diisi.</string>
     <string name="chatStepDeclinedNote">Catatan Anda: “%1$s”</string>
     <string name="chatStepMalformedCall">Agen memintanya dengan cara yang salah, jadi tidak ada yang dijalankan. Minta agen mencoba lagi.</string>
+    <string name="chatUiRetryWhyUnreachable">Tidak bisa menjangkau penyedia model. Periksa koneksi ponsel ini.</string>
+    <string name="chatUiRetryWhyBusy">Penyedia model sedang tidak merespons.</string>
 </resources>

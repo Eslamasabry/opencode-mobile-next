@@ -870,4 +870,6 @@
     <string name="linuxMgrJobDoneRestore">Linux telah dipulihkan</string>
     <string name="linuxMgrResetBackUpFirst">Cadangkan dulu</string>
     <string name="thermalGuardSaveFailed">Tidak dapat menyimpan perlindungan panas. Coba lagi.</string>
+    <string name="thisPhoneRestartBody">Percakapan yang sedang berjalan akan berhenti, dan percakapan Anda tetap tersimpan. Biasanya butuh kurang dari satu menit.</string>
+    <string name="thisPhoneRestartingRow">Memulai ulang. Biasanya butuh kurang dari satu menit…</string>
 </resources>

@@ -35,4 +35,6 @@
     <string name="collectCrashKeys">Phiên bản ứng dụng, cách cài đặt, loại máy chủ, máy chủ của điện thoại này có đang chạy không, số kết nối đang mở và phiên bản máy chủ</string>
     <string name="collectNever">Lời nhắc và phản hồi, tên hoặc đường dẫn tệp, địa chỉ web, tên máy chủ, địa chỉ IP, nội dung thông báo lỗi, khóa hoặc mã thông báo, ID quảng cáo hay ID Android</string>
     <string name="collectReport">Những gì bạn viết về sự cố, lần gần nhất ứng dụng đóng đột ngột, phiên bản ứng dụng và Android, khoảng bộ nhớ và loại máy chủ; khóa, địa chỉ và đường dẫn được che đi. Không có nhật ký và không có cuộc trò chuyện. Bạn xem được toàn bộ và chọn Gửi hoặc Hủy.</string>
+    <string name="privacyCrashSendTitle">Tự động gửi dữ liệu sự cố</string>
+    <string name="privacyCrashAskTitle">Hỏi tôi sau khi có sự cố</string>
 </resources>

@@ -6,6 +6,6 @@
     <string name="migrationStorageDelete">Удалить модель</string>
     <string name="migrationStorageDeleteTitle">Удалить модель ассистента?</string>
     <string name="migrationStorageDeleteBody">Сохранённая модель и незавершённые загрузки будут удалены с этого телефона, освободится %1$s.</string>
-    <string name="migrationStorageEmpty">На этом телефоне нет модели ассистента</string>
     <string name="localModelSaveFailed">Не удалось изменить сохранённую модель. Повторите.</string>
+    <string name="migrationStorageAppDetail">Чаты, хранящиеся здесь, Linux на телефоне, агенты и загрузки: размеры и свободное место</string>
 </resources>

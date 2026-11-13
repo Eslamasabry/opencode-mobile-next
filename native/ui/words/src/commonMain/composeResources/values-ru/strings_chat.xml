@@ -1302,4 +1302,6 @@
     <string name="chatRequestAnswerRequired">Сначала ответьте на обязательные вопросы.</string>
     <string name="chatStepDeclinedNote">Ваша заметка: «%1$s»</string>
     <string name="chatStepMalformedCall">Агент задал это неверно, поэтому ничего не выполнилось. Попросите его повторить.</string>
+    <string name="chatUiRetryWhyUnreachable">Не удаётся связаться с провайдером модели. Проверьте подключение этого телефона.</string>
+    <string name="chatUiRetryWhyBusy">Провайдер модели сейчас не отвечает.</string>
 </resources>

@@ -286,7 +286,6 @@
     <string name="serverSwitcherTitle">Servidores</string>
     <string name="serverSwitcherCurrentMenu">Ações do servidor</string>
     <string name="productStatesSwitchServer">Trocar de servidor</string>
-    <string name="capabilityStateHere">Funciona aqui</string>
     <string name="capabilityStateNotServer">Não neste servidor</string>
     <string name="capabilityStateNotDevice">Não neste dispositivo</string>
     <string name="capabilityNeedsAndroid">Precisa do app para Android</string>

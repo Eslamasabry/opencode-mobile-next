@@ -1249,4 +1249,6 @@
     <string name="chatRequestAnswerRequired">Responda primeiro às perguntas obrigatórias.</string>
     <string name="chatStepDeclinedNote">Sua observação: “%1$s”</string>
     <string name="chatStepMalformedCall">O agente fez o pedido de forma incorreta, então nada foi executado. Peça para tentar de novo.</string>
+    <string name="chatUiRetryWhyUnreachable">Não foi possível falar com o provedor do modelo. Confira a conexão deste celular.</string>
+    <string name="chatUiRetryWhyBusy">O provedor do modelo não está respondendo agora.</string>
 </resources>

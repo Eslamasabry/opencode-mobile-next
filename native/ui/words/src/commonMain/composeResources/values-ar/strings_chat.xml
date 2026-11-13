@@ -1408,4 +1408,6 @@
     <string name="chatRequestAnswerRequired">أجب عن الأسئلة المطلوبة أولاً.</string>
     <string name="chatStepDeclinedNote">ملاحظتك: «%1$s»</string>
     <string name="chatStepMalformedCall">طلب الوكيل هذا بطريقة غير صحيحة، فلم يتم تنفيذ شيء. اطلب منه المحاولة مرة أخرى.</string>
+    <string name="chatUiRetryWhyUnreachable">تعذّر الوصول إلى مزوّد النموذج. تحقّق من اتصال هذا الهاتف.</string>
+    <string name="chatUiRetryWhyBusy">مزوّد النموذج لا يردّ الآن.</string>
 </resources>

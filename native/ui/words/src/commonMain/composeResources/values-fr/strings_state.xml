@@ -6,4 +6,5 @@
     <string name="statePinFailed">Impossible d’enregistrer l’épingle. Réessayez.</string>
     <string name="stateContextUsage">Dernier contexte\u00A0: %1$d%</string>
     <string name="stateSavedPreview">Liste enregistrée. Connectez-vous pour ouvrir cette conversation.</string>
+    <string name="chatsAllSavedGroup">Listes enregistrées de serveurs qui ne sont pas connectés</string>
 </resources>

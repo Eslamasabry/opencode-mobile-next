@@ -834,4 +834,5 @@
     <string name="consentWhyNeedsYouBlocked">O Android bloqueia as notificações deste app. Toque para corrigir em Notificações.</string>
     <string name="consentWhyNeedsYouWhileOpen">Você só recebe avisos enquanto o app está aberto. Toque para manter a conexão em segundo plano ativa.</string>
     <string name="consentWhyNeedsYouChannelOff">O Android está com as notificações de perguntas deste app desativadas. Toque para ativá-las nas configurações do Android.</string>
+    <string name="backgroundStatusTitle">Conexão em segundo plano</string>
 </resources>

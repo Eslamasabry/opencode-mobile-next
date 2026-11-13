@@ -6,4 +6,5 @@
     <string name="statePinFailed">No se pudo guardar el fijado. Inténtalo de nuevo.</string>
     <string name="stateContextUsage">Último contexto: %1$d%</string>
     <string name="stateSavedPreview">Lista guardada. Conéctate para abrir esta conversación.</string>
+    <string name="chatsAllSavedGroup">Listas guardadas de servidores que no están conectados</string>
 </resources>

@@ -695,4 +695,5 @@
     <string name="phoneServerPortBusy">这部手机上的端口 %1$s 已被另一个 OpenCode 服务器占用。</string>
     <string name="chatRequestAskReadFolder">读取此文件夹？</string>
     <string name="appUpdateUpdatedTo">已更新到版本 %1$s</string>
+    <string name="capabilityScreenHeading">此服务器能做什么</string>
 </resources>

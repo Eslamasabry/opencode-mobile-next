@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="glassLabTitle">Laboratorio de cristal</string>
+    <string name="glassLabRowLine">Ajusta todos los valores del cristal sobre una vista previa en vivo (versiones de prueba)</string>
+    <string name="glassLabHandle">Controles del cristal</string>
+    <string name="glassLabHandleOpen">Abierto</string>
+    <string name="glassLabHandleClosed">Cerrado</string>
+    <string name="glassLabThemeDark">Valores del tema oscuro</string>
+    <string name="glassLabThemeLight">Valores del tema claro</string>
+    <string name="glassLabAllLinked">Todo enlazado</string>
+    <string name="glassLabStartFrom">Empezar desde</string>
+    <string name="glassLabInApp">Usar en toda la app</string>
+    <string name="glassLabInAppLine">Todos los paneles de cristal de la app usan estos valores hasta que lo desactives</string>
+    <string name="glassLabCopy">Copiar valores</string>
+    <string name="glassLabCopied">Copiado</string>
+    <string name="glassLabCopiedToast">Valores del cristal copiados</string>
+    <string name="glassLabPaste">Pegar valores</string>
+    <string name="glassLabPasted">Valores del cristal cargados</string>
+    <string name="glassLabPasteRefused">No hay valores del cristal en el portapapeles</string>
+    <string name="glassLabResetAll">Restablecer todo</string>
+    <string name="glassLabSceneChat">Conversación</string>
+    <string name="glassLabSceneHome">Lista de inicio</string>
+    <string name="glassLabOpenMenu">Menú de la barra</string>
+    <string name="glassLabOpenSheet">Hoja</string>
+    <string name="glassLabOpenContext">Menú contextual</string>
+    <string name="glassLabOpenDialog">Diálogo</string>
+    <string name="glassLabSliderReset">Volver al valor original</string>
+    <string name="glassLabTypeTitle">Escribe un número</string>
+    <string name="glassLabTypeField">Valor</string>
+    <string name="glassLabTypeConfirm">Aplicar</string>
+    <string name="glassLabSampleTitle">Ejecutar el analizador en Ubuntu</string>
+    <string name="glassLabSampleSubtitle">nuevo · Este teléfono</string>
+    <string name="glassLabSampleAsk">¿Puedes revisar por qué el analizador elimina las líneas vacías dentro de los bloques de código, y mostrarme los números?</string>
+    <string name="glassLabSampleReply">Lo rastreé hasta el divisor de líneas: recorta cada línea antes de buscar un bloque de código, así que una línea vacía dentro del bloque se lee como el final de un párrafo. Esto es lo que hace cada versión con el mismo archivo:\n\n| Versión | Líneas conservadas | Tiempo |\n|---|---|---|\n| 1.4 | 212 | 38 ms |\n| 1.5 | 196 | 35 ms |\n| corrección | 212 | 36 ms |\n\nLa corrección conserva la línea original hasta que termina la comprobación del bloque:\n\n```kotlin\nval raw = lines[i]\nif (inFence) block += raw\nelse if (raw.isBlank()) closeParagraph()\n```\n\n¿Quieres que ejecute las pruebas en tu equipo con Ubuntu?</string>
+    <string name="glassLabSampleAskTwo">Sí, ejecútalas y dime qué falla.</string>
+    <string name="glassLabSamplePermission">¿Ejecutar un comando?</string>
+    <string name="glassLabSampleCommand">./gradlew :core:markdown:test</string>
+    <string name="glassLabSamplePermissionWhy">Ejecuta las pruebas del módulo markdown en la carpeta del proyecto.</string>
+    <string name="glassLabSampleAskBox">Pregunta a OpenCode…</string>
+    <string name="glassLabSampleModel">Big Pickle</string>
+    <string name="glassLabSampleMode">Preguntar primero</string>
+    <string name="glassLabSampleDialogTitle">¿Eliminar esta conversación?</string>
+    <string name="glassLabSampleDialogBody">Se elimina de este teléfono y del servidor. No se puede deshacer.</string>
+    <string name="glassLabSampleDelete">Eliminar</string>
+    <string name="glassLabSampleKeep">Conservarla</string>
+    <string name="glassLabSampleHome">Conversaciones</string>
+    <string name="glassLabSampleConnected">Conectado</string>
+    <string name="glassLabSampleAll">Todas</string>
+    <string name="glassLabSampleNeedsYou">Te necesita</string>
+    <string name="glassLabSampleRunning">En ejecución</string>
+    <string name="glassLabSampleNew">Nuevo</string>
+</resources>

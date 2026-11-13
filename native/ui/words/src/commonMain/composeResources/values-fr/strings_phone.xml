@@ -912,4 +912,6 @@
     <string name="linuxMgrJobDoneRestore">Linux est restauré</string>
     <string name="linuxMgrResetBackUpFirst">Sauvegarder d’abord</string>
     <string name="thermalGuardSaveFailed">Impossible d’enregistrer la protection contre la chaleur. Réessayez.</string>
+    <string name="thisPhoneRestartBody">Les conversations en cours s’arrêtent, et vos conversations sont conservées. Cela prend en général moins d’une minute.</string>
+    <string name="thisPhoneRestartingRow">Redémarrage. Cela prend en général moins d’une minute…</string>
 </resources>

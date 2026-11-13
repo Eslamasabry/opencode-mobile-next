@@ -35,4 +35,6 @@
     <string name="collectCrashKeys">应用版本、安装方式、服务器类型、这部手机上的服务器是否在运行、打开了多少个连接以及服务器版本</string>
     <string name="collectNever">你的提示词和回复、文件名或路径、网址、主机名、IP 地址、错误消息文本、密钥或令牌、广告 ID 或 Android ID</string>
     <string name="collectReport">你所写的关于问题的描述、应用上次意外关闭的时间、应用和 Android 版本、内存范围以及服务器类型，其中的密钥、地址和路径已被抹去。不含日志和对话。你会看到全部内容，并选择“发送”或“取消”。</string>
+    <string name="privacyCrashSendTitle">自动发送崩溃数据</string>
+    <string name="privacyCrashAskTitle">崩溃后先询问我</string>
 </resources>

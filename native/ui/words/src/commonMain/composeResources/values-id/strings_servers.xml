@@ -277,7 +277,6 @@
     <string name="serverSwitcherTitle">Server</string>
     <string name="serverSwitcherCurrentMenu">Tindakan server</string>
     <string name="productStatesSwitchServer">Ganti server</string>
-    <string name="capabilityStateHere">Berfungsi di sini</string>
     <string name="capabilityStateNotServer">Tidak ada di server ini</string>
     <string name="capabilityStateNotDevice">Tidak ada di perangkat ini</string>
     <string name="capabilityNeedsAndroid">Memerlukan aplikasi Android</string>

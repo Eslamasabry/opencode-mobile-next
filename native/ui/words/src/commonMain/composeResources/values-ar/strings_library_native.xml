@@ -108,4 +108,6 @@
     <string name="nlibMcpAddVariable">إضافة هذه القيمة</string>
     <string name="nlibRegistryNeedsSettings">راجع الإعدادات المطلوبة ومعاملات الأمر قبل الحفظ.</string>
     <string name="nlibRegistrySaveFailed">تعذّر حفظ تفضيل الكتالوج. أعد المحاولة قبل مغادرة هذه الصفحة.</string>
+    <string name="nlibArgumentsHelper">تُمرَّر إلى الأمر عند تشغيله. اتركها فارغة لاستخدام الإعدادات الافتراضية.</string>
+    <string name="nlibRunIn">تشغيل في</string>
 </resources>

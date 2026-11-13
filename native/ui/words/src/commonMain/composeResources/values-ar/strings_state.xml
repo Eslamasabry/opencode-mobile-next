@@ -5,4 +5,5 @@
     <string name="statePinFailed">تعذّر حفظ التثبيت. حاول مرة أخرى.</string>
     <string name="stateContextUsage">آخر استخدام للسياق: %1$d٪</string>
     <string name="stateSavedPreview">قائمة محفوظة. اتصل لفتح هذه المحادثة.</string>
+    <string name="chatsAllSavedGroup">قوائم محفوظة من خوادم غير متصلة</string>
 </resources>

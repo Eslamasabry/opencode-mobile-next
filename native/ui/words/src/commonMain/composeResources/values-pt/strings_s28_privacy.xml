@@ -35,4 +35,6 @@
     <string name="collectCrashKeys">A versão do app, como foi instalado, o tipo de servidor, se o servidor deste celular está ativo, quantas conexões estão abertas e a versão do servidor</string>
     <string name="collectNever">Suas mensagens e respostas, nomes ou caminhos de arquivos, endereços da web, nomes de host, endereços IP, texto de mensagens de erro, chaves ou tokens, o ID de publicidade ou o ID do Android</string>
     <string name="collectReport">O que você escreve sobre o problema, a última vez que o app fechou inesperadamente, as versões do app e do Android, uma faixa de memória e o tipo de servidor, com chaves, endereços e caminhos apagados. Sem log e sem conversa. Você vê tudo e escolhe Enviar ou Cancelar.</string>
+    <string name="privacyCrashSendTitle">Enviar dados de falhas automaticamente</string>
+    <string name="privacyCrashAskTitle">Perguntar depois de uma falha</string>
 </resources>

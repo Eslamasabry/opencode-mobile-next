@@ -6,4 +6,5 @@
     <string name="statePinFailed">Não foi possível salvar a fixação. Tente novamente.</string>
     <string name="stateContextUsage">Último contexto: %1$d%</string>
     <string name="stateSavedPreview">Lista salva. Conecte-se para abrir esta conversa.</string>
+    <string name="chatsAllSavedGroup">Listas salvas de servidores que não estão conectados</string>
 </resources>
