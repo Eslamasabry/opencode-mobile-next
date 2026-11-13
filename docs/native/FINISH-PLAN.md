@@ -10,7 +10,7 @@ RC1 is the first build that meets all seven gates. Each gate is measured, not ju
 | # | Gate | Measure | Now |
 |---|---|---|---|
 | G1 | Builds clean | `assemblePreviewBenchmark` + `assembleSwitchRelease` build; every desktopTest source set compiles; unit tests green | app builds (merge 22); tests not yet run as a whole |
-| G2 | Looks like Flutter | Judged by eye, not pixels (owner 2026-11-08): each daily-path screen (home, chat, composer, sheets, settings) side by side with Flutter, verdict match or a list of visible differences; no visible difference left on the daily path | 7.5 % overall (scoreboard at 89ec49e55, before today's chat merge) |
+| G2 | Looks right | Judged by eye, not pixels (owner 2026-11-08): each daily-path screen (home, chat, composer, sheets, settings) against the approved design and the kit's rules; no visible fault left on the daily path. Since 2026-11-13 the Flutter app is not the comparison (owner: it was a reference; native must not inherit its issues or limitations) | Device sweeps A, B and C (2026-11-11/12): open majors in the backlog |
 | G3 | Aligned | Alignment gate: 0 new findings; baseline shrinks | 133 baselined, gate live |
 | G4 | Moves like native | 90/120 Hz on the owner phone; janky frames < 5 %, p99 < 20 ms scrolling chat and home; row→chat transform, animated lists, sheet physics, send morph in | 1.5 % janky at 60 Hz (owner phone 11-07); motion lead building |
 | G5 | Keeps data | Upgrade gate Flutter 2.1.4 → native: 29/29 (items 2.1.4 or the emulator can't seed are NOT RUN with a reason) | 21/29 + harness fix for grants |
@@ -47,7 +47,9 @@ phone (B-158), Play Store.
 2. Before every merge wave the coordinator runs `overlap.sh` (modules and files touched by unmerged branches). Two
    unmerged branches touching the same file: the module owner's version wins and the other is re-briefed.
 3. No new builder starts on a module that has an unmerged builder.
-4. Layout and look follow Flutter (the Dart file is the spec). Motion and rendering follow native practice.
+4. Layout, look, wording and behaviour are decided by what serves the person and by the kit's rules. The Flutter app is
+   not the spec (owner 2026-11-13): read it to learn what a feature does, never to justify a choice, and never copy its
+   faults or limits. Motion and rendering follow native practice.
 
 ## Status at merge 28 (2026-11-07 23:30)
 
