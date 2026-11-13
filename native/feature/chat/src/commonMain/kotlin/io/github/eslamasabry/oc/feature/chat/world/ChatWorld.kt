@@ -242,6 +242,12 @@ public interface ChatWorld {
     public fun midTurn(): io.github.eslamasabry.oc.core.model.MidTurnPrompt? = null
 
     /**
+     * Set up at first use: the runtime this conversation is bound to (a phone agent's provider id, as the gateway
+     * knows it from the conversation itself, also before its first message opened it). Null: not known or not bound.
+     */
+    public fun runtimeId(): String? = null
+
+    /**
      * B-169: the prompt that started [turnId] as the transcript holds it (words, files, agent, the model its reply ran
      * on and the tool steps it ran), or null when this conversation cannot read it back.
      */
@@ -412,7 +418,15 @@ public data class PendingSend(
     val reviewable: Boolean = false,
     /** Pictures and files the bubble carries, shown at once from the bytes the phone already holds. */
     val files: List<PendingFile> = emptyList(),
+    /**
+     * Set up at first use: this send failed because its agent was never set up, so the bubble says so and offers the
+     * agent's set-up instead of Try again. Filled by the presenter, never by the world.
+     */
+    val setUp: AgentSetUpNeed? = null,
 )
+
+/** The agent a failed send needs set up: its catalog id (the set-up terminal's) and display name. */
+public data class AgentSetUpNeed(val agentId: String, val name: String)
 
 /** A file riding a pending prompt; [url] is a `data:` address for a picture from this phone. */
 public data class PendingFile(val name: String, val mime: String?, val url: String?)

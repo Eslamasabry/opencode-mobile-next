@@ -75,8 +75,6 @@ public fun KitViewerDocument(
             finding = true
         }
     }
-    // The system Back closes Find first; only then does it leave the page.
-    io.github.eslamasabry.oc.ui.kit.modal.KitBackGuard(enabled = finding, onBack = closeFind)
     val matches =
         remember(lines, query) {
             if (query.isEmpty()) emptyList()

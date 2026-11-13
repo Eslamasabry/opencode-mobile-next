@@ -155,6 +155,9 @@ public class GraphChatWorlds(
 
     private val open = HashMap<ConversationRef, Pair<GraphChatWorld, Int>>()
 
+    /** The put-back and unconfirmed results some chat already showed: a later chat never adopts them again. */
+    private val shownOutcomes = HashSet<Pair<ConversationRef, io.github.eslamasabry.oc.engine.delivery.SendOutcomeId>>()
+
     override fun open(ref: ConversationRef): ChatWorld {
         val (world, holders) =
             open[ref]
@@ -171,6 +174,7 @@ public class GraphChatWorlds(
                     phoneServers.singleOrNull(),
                     lastKnown.singleOrNull(),
                     withdrawn,
+                    shownOutcomes,
                 ) to 0)
         open[ref] = world to holders + 1
         if (holders == 0) world.attach()
@@ -214,6 +218,8 @@ internal class GraphChatWorld(
     private val phoneServer: ChatPhoneServer? = null,
     private val lastKnown: ChatLastKnown? = null,
     private val withdrawnStore: io.github.eslamasabry.oc.engine.connection.adopted.WithdrawnPromptStore? = null,
+    private val shownOutcomes: MutableSet<Pair<ConversationRef, io.github.eslamasabry.oc.engine.delivery.SendOutcomeId>> =
+        HashSet(),
 ) : ChatWorld, TurnFeedSource, VoiceConversationSession {
     // CHAT-TRANSCRIPT: full messages, run and retry facts for the turn facts (steps, results,
     // context).
@@ -1941,6 +1947,12 @@ internal class GraphChatWorld(
             ?.facet<io.github.eslamasabry.oc.core.domain.MidTurnPromptGateway>()
             ?.midTurnPrompt(ref.sessionId)
 
+    override fun runtimeId(): String? =
+        (currentAttached()?.graph as? ChatGraphAccessors)
+            ?.chatGateway
+            ?.facet<io.github.eslamasabry.oc.core.domain.AgentFeaturesGateway>()
+            ?.providerIdForSession(ref.sessionId)
+
     override suspend fun withdrawNote(text: String): Boolean {
         val services = currentAttached()?.graph as? ChatGraphAccessors ?: return false
         if (!services.chatGateway.capabilities.value.inbox) return false
@@ -2287,6 +2299,14 @@ internal class GraphChatWorld(
         }
     }
 
+    private fun SendOutcome.concerns(id: LocalSendId): Boolean =
+        when (this) {
+            is SendOutcome.Accepted -> localId == id
+            is SendOutcome.PutBack -> localId == id
+            is SendOutcome.Unconfirmed -> localId == id
+            is SendOutcome.Queued -> entryId == id.raw
+        }
+
     private fun syncDelivery(delivery: ConnectionDelivery) {
         val engine = delivery.engine ?: return
         if (!adoptedInitialDelivery) {
@@ -2301,6 +2321,20 @@ internal class GraphChatWorld(
                 baselines[localId] = emptySet()
                 mutablePending.update {
                     (it + PendingSend(localId, send.text, PendingState.Sending, files = send.attachments.map(::pendingFile))).toImmutableList()
+                }
+            }
+            // A first message that failed before this chat was reading left only its put-back result (the
+            // New-conversation page leaves it to the chat it opened): its failed bubble is built from that.
+            for (outcome in engine.outcomes.value) {
+                val lost = (outcome as? SendOutcome.PutBack)?.takeIf { it.ref == ref } ?: continue
+                val id = lost.localId ?: continue
+                if (id in deliveryIds.values || (ref to lost.id) in shownOutcomes) continue
+                val localId = nextLocalId++
+                deliveryIds[localId] = id
+                sentSnapshots[localId] = SentSnapshot(lost.attachments, null)
+                baselines[localId] = emptySet()
+                mutablePending.update {
+                    (it + PendingSend(localId, lost.text, PendingState.Sending, files = lost.attachments.map(::pendingFile))).toImmutableList()
                 }
             }
         }
@@ -2348,6 +2382,7 @@ internal class GraphChatWorld(
                         if (voiceProof?.localId == localId)
                             voiceProof = voiceProof?.copy(uncertain = true)
                         outcome.reviewId?.let { recoveryIds[it] = localId }
+                        shownOutcomes += ref to outcome.id
                         setPending(localId) {
                             it.copy(state = PendingState.Unconfirmed, failure = outcome.reason)
                         }
@@ -2363,12 +2398,19 @@ internal class GraphChatWorld(
                     if (outcome.localId == id) {
                         if (voiceProof?.localId == localId)
                             voiceProof = voiceProof?.copy(uncertain = true)
+                        shownOutcomes += ref to outcome.id
                         setPending(localId) {
                             it.copy(state = PendingState.Failed, failure = outcome.reason)
                         }
                     }
                 else -> Unit
             }
+            // The send left the engine and its result is gone before this chat read it (another screen took it):
+            // the chat cannot tell whether it arrived, so it says so with Send again, never Sending without end.
+            if (bubble == null && engine.outcomes.value.none { it.ref == ref && it.concerns(id) })
+                setPending(localId) {
+                    if (it.state == PendingState.Sending) it.copy(state = PendingState.Unconfirmed) else it
+                }
         }
         if (queuedLocalIds.isNotEmpty()) {
             mutablePending.update { list ->

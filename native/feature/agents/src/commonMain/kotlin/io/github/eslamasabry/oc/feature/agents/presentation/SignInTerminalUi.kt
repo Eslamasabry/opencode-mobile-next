@@ -18,6 +18,9 @@ public enum class SignInStep {
     Checking,
     SignedIn,
 
+    /** An agent set up at first use finished its set-up terminal: it is marked set up and the screen goes back. */
+    SetUpDone,
+
     /** The read did not say signed in ("isn't signed in yet. Start the sign-in again…"). */
     NotYet,
 
@@ -42,6 +45,10 @@ public data class SignInTerminalUi(
     val pastesBrowserCode: Boolean = false,
     /** Gemini CLI: its own sign-in may tell people to move to Antigravity; the screen says what to do. */
     val offersAntigravityNote: Boolean = false,
+    /** Set up at first use: the screen says "Set up <agent>", and the end of the terminal goes back (no account read). */
+    val firstUse: Boolean = false,
+    /** Qwen Code: "Type /auth and follow the steps." above its terminal. */
+    val typesAuth: Boolean = false,
     val step: SignInStep = SignInStep.Preparing,
     /** The live grid while the terminal exists. */
     val terminal: PlatformViewHandle? = null,

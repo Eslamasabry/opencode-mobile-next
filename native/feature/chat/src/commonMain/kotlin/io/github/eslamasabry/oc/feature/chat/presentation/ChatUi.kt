@@ -85,6 +85,12 @@ public data class ChatUi(
     val attachAgain: AttachAgainUi? = null,
     /** The one-time GitHub star ask rides under the live line while this turn waits for its reply. */
     val starAsk: Boolean = false,
+    /**
+     * Set up at first use: the failed replies (by turn id) whose agent needs setting up; they say so and offer the
+     * agent's set-up instead of today's fixes. A turn missing here keeps today's words.
+     */
+    val setUpReplies: ImmutableMap<String, io.github.eslamasabry.oc.feature.chat.world.AgentSetUpNeed> =
+        persistentMapOf(),
 ) {
     public companion object {
         public fun loading(ref: ConversationRef): ChatUi =
@@ -649,6 +655,9 @@ public interface ChatActions {
 
     /** B-AGENT-189: opens the agent's sign-in page (no code to paste when its page needs none). */
     public fun openAgentSignIn(providerId: String) {}
+
+    /** Set up at first use: opens [agentId]'s set-up terminal (the Agents page's), from a send that needs it. */
+    public fun setUpAgent(agentId: String) {}
 
     /** Hold Send / "Send later or repeat": opens the schedule editor for this conversation. */
     public fun sendLater(words: String) {}

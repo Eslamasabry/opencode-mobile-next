@@ -621,7 +621,6 @@ private fun TerminalKeyCap(
         }
     val buttonRadius = (Shapes.of(KitShapeId.Button) as Corner.Radius).dp // F: lib/ui/kit/terminal_key_bar.dart:750-752 (tokens.buttonRadius)
     val capRadiusDp = if (calm) buttonRadius * .72f else buttonRadius.toFloat() // F: lib/ui/kit/terminal_key_bar.dart:750-752
-    val radius = RoundedCornerShape(capRadiusDp)
     val density = LocalDensity.current.density
     val focusRingWidth = (if (density <= 1f) max(2f / density, 1f) else 2f / density).dp // F: lib/ui/kit/kit_tokens.dart:322-327 (tokens.focusRingWidth)
     val hairlineWidth = (1f / density).dp // F: lib/ui/kit/kit_tokens.dart:315-318 (tokens.hairlineWidth)
@@ -640,7 +639,8 @@ private fun TerminalKeyCap(
         )
     val ring = focused && enabled // F: lib/ui/kit/terminal_key_bar.dart:749
     // The ring is drawn over the style's own face; the calm cap's hairline edge is drawn inside the cap, so no parent
-    // clip cuts it (LOOK-21).
+    // clip cuts it (LOOK-21). Both take the face's own shape (its radius under the Corners knob), never the token one.
+    val radius = capLook.shape
     val edge =
         when {
             ring -> Modifier.border(focusRingWidth, colors.accent, radius) // F: lib/ui/kit/terminal_key_bar.dart:753-756,786-794

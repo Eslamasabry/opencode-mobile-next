@@ -76,6 +76,8 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import io.github.eslamasabry.oc.ui.design.style.StyleResolver
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalDensity
@@ -270,12 +272,15 @@ public fun KitAgentCard(
 @Composable
 private fun AgentFrame(attention: Boolean, content: @Composable ColumnScope.() -> Unit) {
     val colors = LocalKitColors.current
-    val radius = FlutterKitTokens.CARD_RADIUS
     val ring = FlutterKitTokens.NEEDS_YOU_RING_WIDTH
-    val shape = RoundedCornerShape(radius.dp)
     val face = if (attention) colors.attentionSurface.compositeOver(colors.surface1) else colors.surface1
     val line = if (attention) colors.attentionLine else colors.hairline
     val look = kitSurfaceLook(KitSurfaceInput(SurfaceRole.Content, KitShapeId.Card, ownFill = face, color = if (attention) face else null))
+    // The hairline and the wash ring follow the card's own corner (grown under Glass, scaled by the Corners knob), so
+    // the line never cuts into the face's corners and the ring stays concentric with it (2026-11-13).
+    val shape = look.shape
+    val style = LocalKitStyle.current
+    val radius = StyleResolver.paneCorner(FlutterKitTokens.CARD_RADIUS.toFloat(), style.knobs.corners, style.spec.tokens)
     val card =
         Modifier.fillMaxWidth()
             .then(look.modifier)

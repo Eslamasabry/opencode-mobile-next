@@ -230,6 +230,11 @@ public val PhoneAgentStatus.installed: Boolean
 /** The row states of Flutter `agentsState*` (17 §1.4 order); the words live in the screen. */
 public enum class PhoneAgentStatus {
     Ready,
+    /**
+     * Installed, and its sign-in cannot be read ahead (Qwen Code, Goose, omp: no read-only status exists): usable, set up
+     * in its own terminal the first time, its truth learnt from its own answer. Never "Ready", never signed in or out.
+     */
+    SetUpAtFirstUse,
     NotInstalled,
     SignInNeeded,
     Checking,
@@ -312,6 +317,7 @@ public fun phoneSharedPartsInPlace(agents: List<PhoneAgentRow>): Boolean =
     agents.any {
         when (it.status) {
             PhoneAgentStatus.Ready,
+            PhoneAgentStatus.SetUpAtFirstUse,
             PhoneAgentStatus.SignInNeeded,
             PhoneAgentStatus.PhoneCheck,
             PhoneAgentStatus.Stopped,

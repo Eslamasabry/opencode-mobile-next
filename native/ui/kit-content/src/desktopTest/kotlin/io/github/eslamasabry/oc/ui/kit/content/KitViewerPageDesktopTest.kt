@@ -176,6 +176,18 @@ class KitViewerPageDesktopTest {
     }
 
     @Test
+    fun `with text typed, one Back closes Find`() = runComposeUiTest {
+        openFind()
+        waitForIdle()
+        onNode(hasSetTextAction()).performTextInput("Line")
+        waitForIdle()
+        runOnIdle { press.press() }
+        waitForIdle()
+        onNode(hasSetTextAction()).assertDoesNotExist()
+        assertEquals(0, leftPage, "Back only closed Find")
+    }
+
+    @Test
     fun `a code file shows one Wrap lines row, with the host's saved choice as its state, and tapping it reports the change`() =
         runComposeUiTest {
             var saved = false

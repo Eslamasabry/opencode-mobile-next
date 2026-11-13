@@ -115,7 +115,8 @@ class AgentCatalogTest {
         )
         for (entry in catalog.agents) {
             for (arch in AgentArchitecture.entries) {
-                assertTrue(entry.installableOn(arch), entry.id.raw)
+                // A retired agent (Gemini CLI) keeps its pins for an installed copy but is never installable.
+                assertEquals(!entry.retired, entry.installableOn(arch), entry.id.raw)
                 assertTrue(Regex("^[a-f0-9]{64}$").matches(entry.artifactFor(arch)!!.sha256))
             }
             assertEquals(AgentCapabilities.None, entry.capabilities)
@@ -171,5 +172,21 @@ class AgentCatalogTest {
         assertEquals("95c264150aceb7f3437a29fd6984924f5f8d1511ea3cbd6c508b83f6c555dae2", pins.node.sha256[AgentArchitecture.Arm64])
         assertEquals("361718c444e49af2ca5a110c83ba6a8901143f23ab285ebbef0341f391f482a9", pins.node.sha256[AgentArchitecture.X64])
         assertTrue("2.1.319" in pins.claudeCodeTestedVersions)
+    }
+
+    // Owner 2026-11-13: Gemini CLI is deprecated upstream and is no longer offered. A copy already on a phone keeps its
+    // row, its recipe (the removal script and the sign-in terminal need the executable) and its Remove.
+    @Test
+    fun `B-AGENT-007 Gemini CLI is no longer offered for install, but a copy on the phone stays listed`() {
+        val gemini = AgentCatalog.builtIn.byId(AgentId("gemini"))!!
+        for (arch in AgentArchitecture.entries) assertFalse(gemini.installableOn(arch), arch.wire)
+        assertEquals("gemini", gemini.recipe!!.executable)
+        assertTrue(gemini.runsOnPhoneHost)
+        val offered = AgentCatalog.builtIn.agents.filter { a -> AgentArchitecture.entries.any { a.installableOn(it) } }
+        assertEquals(AgentCatalog.builtIn.agents.map { it.id.raw } - "gemini", offered.map { it.id.raw })
+        assertTrue(gemini.retired)
+        assertFalse(gemini.listedOnPhone(installed = false))
+        assertTrue(gemini.listedOnPhone(installed = true))
+        for (agent in offered) assertTrue(agent.listedOnPhone(installed = false), agent.id.raw)
     }
 }

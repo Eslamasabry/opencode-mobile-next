@@ -362,7 +362,9 @@ internal const val AGENT_PINS_JSON: String = """{
         "launchArgs": [
           "acp"
         ],
-        "signInArgs": [],
+        "signInArgs": [
+          "login"
+        ],
         "artifacts": {
           "arm64": {
             "url": "https://github.com/can1357/oh-my-pi/releases/download/v18.5.1/omp-linux-arm64",

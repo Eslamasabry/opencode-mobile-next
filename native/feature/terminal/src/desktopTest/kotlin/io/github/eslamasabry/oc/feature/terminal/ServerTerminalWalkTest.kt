@@ -130,7 +130,7 @@ class ServerTerminalWalkTest {
 
     @Test
     fun `sweep C P42 the page is titled Terminal, never the server's random id`() = runComposeUiTest {
-        val named = shell.copy(title = "Terminal 0Ome")
+        val named = shell.copy(id = "pty_x0Ome", title = "Terminal 0Ome")
         val state = live().copy(terminals = persistentListOf(named), selected = named)
         setContent {
             KitTheme(

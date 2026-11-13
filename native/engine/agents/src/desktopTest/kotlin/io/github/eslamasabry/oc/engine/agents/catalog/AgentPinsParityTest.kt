@@ -64,7 +64,9 @@ class AgentPinsParityTest {
                 val literal = recipe.launchArgs.joinToString(", ", "launchArgs: [", "]") { "'$it'" }
                 assertTrue(literal in dartCatalog, "${agent.id} $literal")
             }
-            if (recipe.signInArgs.isNotEmpty()) {
+            // Native-owned since 2026-11-13 (the Flutter app is no longer the spec): omp's set-up terminal runs
+            // `omp login`, which the freeze tip never had.
+            if (recipe.signInArgs.isNotEmpty() && agent.id.raw != "omp-acp") {
                 val literal = recipe.signInArgs.joinToString(", ", "signInArgs: [", "]") { "'$it'" }
                 assertTrue(literal in dartCatalog, "${agent.id} $literal")
             }

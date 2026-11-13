@@ -96,4 +96,5 @@
     <string name="chatSendFailureNeedsAccount">Este modelo precisa de uma conta %1$s</string>
     <string name="agentErrorFreeTier">Os modelos gratuitos do OpenCode interromperam esta resposta.</string>
     <string name="agentErrorFreeTierHint">Conversas longas costumam ser recusadas no plano gratuito, mesmo que você tenha usado pouco hoje. Encurtar esta conversa ou iniciar uma nova geralmente ajuda.</string>
+    <string name="chatSendFailureNeedsSetUp">%1$s precisa ser configurado antes de poder responder</string>
 </resources>

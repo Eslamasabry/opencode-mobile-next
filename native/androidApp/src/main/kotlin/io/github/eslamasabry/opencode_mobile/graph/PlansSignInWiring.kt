@@ -58,6 +58,7 @@ class AndroidPlanSignInPort(
     private val installed =
         setOf(
             PhoneAgentStatus.Ready,
+            PhoneAgentStatus.SetUpAtFirstUse,
             PhoneAgentStatus.SignInNeeded,
             PhoneAgentStatus.PhoneCheck,
             PhoneAgentStatus.Stopped,

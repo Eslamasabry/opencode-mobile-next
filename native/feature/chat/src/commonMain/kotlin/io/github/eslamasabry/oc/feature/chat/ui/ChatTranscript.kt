@@ -196,6 +196,9 @@ internal class ChatListWords(
     val copyDetails: String = "",
     /** B2: why a send did not leave, in plain words. */
     val sendFailure: (Failure) -> String = { "" },
+    /** Set up at first use: "{agent} needs setting up before it can answer" and "Set up {agent}", by agent name. */
+    val setUpNeeded: (String) -> String = { "" },
+    val setUpAction: (String) -> String = { "" },
 )
 
 /**
@@ -272,6 +275,19 @@ internal class LimitSwitchWords(
 
 internal val LocalLimitSwitchReply =
     androidx.compose.runtime.compositionLocalOf<LimitSwitchReply?> { null }
+
+/**
+ * Set up at first use, the reply seam: the failed replies (by turn id) whose agent needs setting up, and what Set up
+ * opens. The chat screen provides it; without it every failed reply keeps today's words.
+ */
+@Immutable
+internal class AgentSetUpReply(
+    val needs: Map<String, io.github.eslamasabry.oc.feature.chat.world.AgentSetUpNeed>,
+    val onSetUp: (agentId: String) -> Unit,
+)
+
+internal val LocalAgentSetUpReply =
+    androidx.compose.runtime.compositionLocalOf<AgentSetUpReply?> { null }
 
 /**
  * B2: a short, safe code for a send failure (no server text, no address): what QA asked to see
@@ -379,6 +395,8 @@ internal fun ChatTranscriptList(
     onSendAgain: (() -> Unit)? = null,
     receiptChecks: ImmutableMap<Long, ReceiptCheckUi> = persistentMapOf(),
     onCheckReceipt: ((Long) -> Unit)? = null,
+    /** Set up at first use: opens the set-up of the agent (by id) a failed send needs; null hides it. */
+    onSetUpAgent: ((String) -> Unit)? = null,
     onReviewPending: (() -> Unit)? = null,
     display: TranscriptDisplayChoices = TranscriptDisplayChoices(),
     onCopyReply: ((FooterRow) -> Unit)? = null,
@@ -594,6 +612,7 @@ internal fun ChatTranscriptList(
                         if (p.canCheckReceipt) onCheckReceipt?.let { check -> { check(p.localId) } }
                         else null,
                     onReview = onReviewPending,
+                    onSetUp = onSetUpAgent,
                 )
               }
             }
@@ -704,6 +723,7 @@ private fun PendingBubble(
     check: ReceiptCheckUi? = null,
     onCheck: (() -> Unit)? = null,
     onReview: (() -> Unit)? = null,
+    onSetUp: ((String) -> Unit)? = null,
 ) {
     Column {
         // The same thumbnails the echoed message will show (cached by address), so the swap does not flicker.
@@ -717,7 +737,17 @@ private fun PendingBubble(
             photos = sent.photos,
             attachments = sent.attachments,
         )
-        when (p.state) {
+        val setUp = p.setUp?.takeIf { onSetUp != null && p.state != PendingState.Sending }
+        // Set up at first use: the agent was never set up, so the one way on is its set-up (the words stay above).
+        if (setUp != null) {
+            KitQuietLine(words.setUpNeeded(setUp.name))
+            KitButton(
+                words.setUpAction(setUp.name),
+                { onSetUp?.invoke(setUp.agentId) },
+                role = KitButtonRole.Tertiary,
+                modifier = Modifier.testTag("chat-send-set-up"),
+            )
+        } else when (p.state) {
             PendingState.Sending -> KitQuietLine(words.sending)
             // Review opens the waiting-sends page, which lists only sends with a record: without one it would
             // open empty (Paseo fault 2), so the bubble offers Send again itself.
@@ -1037,12 +1067,17 @@ private fun ChatRow(
                         // B-169 §2: a lasting limit reads plainly ("{Model} is used up for now").
                         val limits = LocalLimitSwitchReply.current
                         val limit = reply?.let { limits?.limitSwitch?.get(row.turnId) }
+                        // Set up at first use: the agent was never set up (omp's first answer); one line, one action.
+                        val setUpReply = LocalAgentSetUpReply.current
+                        val setUp = setUpReply?.needs?.get(row.turnId)
                         // B-AGENT-189: a lapsed sign-in names the agent and says "sign in again".
                         val signInAgain =
-                            if (limit == null && AgentErrorText.signInExpired(reason))
+                            if (setUp == null && limit == null && AgentErrorText.signInExpired(reason))
                                 row.providerId?.let { reply?.signInAgainWords?.invoke(it) }
                             else null
-                        if (limit != null && limits != null) KitQuietLine(limits.words.usedUp(limit.modelName))
+                        if (setUp != null)
+                            KitQuietLine(listWords.setUpNeeded(setUp.name), modifier = Modifier.testTag("chat-reply-set-up"))
+                        else if (limit != null && limits != null) KitQuietLine(limits.words.usedUp(limit.modelName))
                         else if (signInAgain != null)
                             KitQuietLine(signInAgain, modifier = Modifier.testTag("chat-sign-in-again"))
                         else if (typed != null) KitQuietLine(typed)
@@ -1056,6 +1091,13 @@ private fun ChatRow(
                             ?.takeIf { it.turnId == row.turnId }
                             ?.let { KitQuietLine(limits.words.attachAgain(it.file)) }
                         KitTranscriptActions {
+                            if (setUp != null && setUpReply != null)
+                                KitButton(
+                                    listWords.setUpAction(setUp.name),
+                                    { setUpReply.onSetUp(setUp.agentId) },
+                                    role = KitButtonRole.Primary,
+                                    modifier = Modifier.testTag("error-action-set-up"),
+                                )
                             val signInAgainLabel = reply?.signInAgainLabel
                             val signInAgainAgent = row.providerId
                             if (signInAgain != null && signInAgainLabel != null && signInAgainAgent != null) {
@@ -1068,7 +1110,8 @@ private fun ChatRow(
                                 )
                             }
                             if (
-                                AgentErrorText.classify(reason)?.offersSignIn == true &&
+                                setUp == null &&
+                                    AgentErrorText.classify(reason)?.offersSignIn == true &&
                                     reply?.signInSettingsLabel != null
                             ) {
                                 KitButton(
@@ -1079,7 +1122,7 @@ private fun ChatRow(
                             }
                             // Flutter error card: a sign-in, no-credit, wrong-model or full-context
                             // failure always offers the way on (never a dead end).
-                            if (reply != null) {
+                            if (reply != null && setUp == null) {
                                 val suggestion =
                                     if (
                                         row.errorKind == MessageErrorKind.ModelNotFound ||
@@ -1188,7 +1231,8 @@ private fun ChatRow(
                             // turn picks up there).
                             val continueLabel = reply?.continueLabel
                             if (
-                                kind == ReplyFailureKind.ConnectionLost &&
+                                setUp == null &&
+                                    kind == ReplyFailureKind.ConnectionLost &&
                                     !continueLabel.isNullOrBlank()
                             )
                                 KitButton(
@@ -1196,7 +1240,7 @@ private fun ChatRow(
                                     onClick = { reply.onContinue(continueLabel) },
                                     role = KitButtonRole.Secondary,
                                 )
-                            if (reason.isNotBlank())
+                            if (reason.isNotBlank() && setUp == null)
                                 KitDetailsFold(
                                     label = listWords.details,
                                     copyLabel = listWords.copyDetails,

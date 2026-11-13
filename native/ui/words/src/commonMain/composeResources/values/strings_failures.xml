@@ -87,6 +87,7 @@
     <string name="chatSendFailureLostConnection">%1$s lost its connection to its model provider</string>
     <string name="chatSendFailureSignIn">%1$s needs you to sign in</string>
     <string name="chatSendFailureSignInAgain">%1$s needs you to sign in again</string>
+    <string name="chatSendFailureNeedsSetUp">%1$s needs setting up before it can answer</string>
     <string name="chatSendFailureNoCredit">%1$s has no credits for this model</string>
     <string name="chatSendFailureModelUnavailable">This model isn't available</string>
     <string name="chatSendFailureBusy">%1$s is busy</string>

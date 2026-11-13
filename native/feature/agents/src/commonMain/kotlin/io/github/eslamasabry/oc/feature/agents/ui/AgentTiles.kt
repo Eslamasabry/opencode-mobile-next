@@ -69,6 +69,9 @@ import io.github.eslamasabry.oc.ui.words.res.agentsStateSignInNeeded
 import io.github.eslamasabry.oc.ui.words.res.agentsStateStopped
 import io.github.eslamasabry.oc.ui.words.res.agentsStateSignInCheckFailed
 import io.github.eslamasabry.oc.ui.words.res.agentsStateSignInUnchecked
+import io.github.eslamasabry.oc.ui.words.res.agentsStateSetUpAtFirstUse
+import io.github.eslamasabry.oc.ui.words.res.agentsChipSetUp
+import io.github.eslamasabry.oc.ui.words.res.agentsSetUpAction
 import io.github.eslamasabry.oc.ui.words.res.agentsSignInUncheckedBody
 import io.github.eslamasabry.oc.ui.words.res.agentsStateUnavailable
 import io.github.eslamasabry.oc.ui.words.res.agentsCheckDownload
@@ -206,6 +209,26 @@ private fun AgentTile(tile: AgentTileModel, actions: AgentsActions, chat: Boolea
                     ) {
                         actions.signInPhone(agent.id)
                     }
+                // Usable before it is set up (its own answer tells): with conversations on, the card starts one, as it
+                // does for a Ready agent (the card and New conversation agree); Set up stays in its sheet.
+                AgentTileAct.SetUp ->
+                    if (cardOffersConversation(tile, chat))
+                        KitAgentTileAction(
+                            stringResource(Res.string.agentsNewChat),
+                            stringResource(Res.string.agentsNewChatWith, agent.name),
+                            icon = KitIcons.chat,
+                        ) {
+                            actions.newPhoneConversation(agent.id)
+                        }
+                    else
+                        KitAgentTileAction(
+                            stringResource(Res.string.agentsChipSetUp),
+                            stringResource(Res.string.agentsSetUpAction, agent.name),
+                            icon = KitIcons.login,
+                            prominent = true,
+                        ) {
+                            actions.signInPhone(agent.id)
+                        }
                 AgentTileAct.Check ->
                     KitAgentTileAction(
                         stringResource(if (checkFailed) Res.string.kitTryAgain else Res.string.agentsChipCheck),
@@ -263,6 +286,8 @@ internal fun tileWords(tile: AgentTileModel): String {
                 ?: stringResource(Res.string.agentsStateNotInstalledNoSize)
         AgentTileState.CannotRun -> stringResource(Res.string.agentsFailArchitecture)
         AgentTileState.Ready -> stringResource(Res.string.agentsStateReady)
+        // No read-only sign-in status exists for it: never "Ready" or "Sign in needed", only what is true.
+        AgentTileState.SetUp -> stringResource(Res.string.agentsStateSetUpAtFirstUse)
         // The check could not run (timed out, no answer): nothing is known about the account, so not "Sign in needed".
         AgentTileState.SignInNeeded ->
             if (agent.signInCheckFailed) stringResource(Res.string.agentsStateSignInCheckFailed)
@@ -399,6 +424,13 @@ internal fun PhoneAgentSheet(state: AgentsUi, actions: AgentsActions, enabled: K
                 AgentTileAct.SignIn ->
                     KitAction(
                         stringResource(Res.string.agentsSignInAction, tile.agent.name),
+                        { actions.signInPhone(tile.agent.id) },
+                        enabled = can,
+                        working = state.busy,
+                    )
+                AgentTileAct.SetUp ->
+                    KitAction(
+                        stringResource(Res.string.agentsSetUpAction, tile.agent.name),
                         { actions.signInPhone(tile.agent.id) },
                         enabled = can,
                         working = state.busy,

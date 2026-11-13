@@ -9,6 +9,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.LifecycleStartEffect
+import io.github.eslamasabry.oc.core.model.TerminalName
+import io.github.eslamasabry.oc.core.model.givenName
+import io.github.eslamasabry.oc.core.model.terminalNameOf
 import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.action.KitIconButton

@@ -9,7 +9,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -28,6 +27,9 @@ import io.github.eslamasabry.oc.ui.kit.status.KitStatusKind
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.RefusalReason
+import io.github.eslamasabry.oc.core.model.TerminalName
+import io.github.eslamasabry.oc.core.model.givenName
+import io.github.eslamasabry.oc.core.model.terminalNameOf
 import io.github.eslamasabry.oc.engine.runtime.terminal.RemoteTerminalState
 import io.github.eslamasabry.oc.feature.terminal.presentation.TerminalActions
 import io.github.eslamasabry.oc.feature.terminal.presentation.TerminalDetailsUi
@@ -49,6 +51,7 @@ import io.github.eslamasabry.oc.ui.kit.input.KitField
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
+import io.github.eslamasabry.oc.ui.kit.modal.KitInputDialog
 import io.github.eslamasabry.oc.ui.kit.modal.KitMenu
 import io.github.eslamasabry.oc.ui.kit.modal.KitMenuItem
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
@@ -77,13 +80,23 @@ public fun TerminalScreen(state: RemoteTerminalState, actions: TerminalActions, 
     var details by remember(terminal?.id) { mutableStateOf<TerminalDetailsUi?>(null) }
     var removeEnded by remember { mutableStateOf(false) }
     val endedCount = state.terminals.count { !it.running && it.id != terminal?.id }
-    val title =
-        terminal?.title?.takeIf { it.isNotBlank() }
-            ?: stringResource(Res.string.libraryTerminalTitle)
+    val plainTitle = stringResource(Res.string.libraryTerminalTitle)
+    // One rule for every place a terminal is named (core:model TerminalName): the person's own name, else its number
+    // in the order the terminals were opened; the server's "Terminal <random id>" is never shown.
+    val names =
+        state.terminals.associate { process ->
+            process.id to
+                when (val name = terminalNameOf(state.terminals, process)) {
+                    is TerminalName.Given -> name.text
+                    is TerminalName.Plain ->
+                        if (name.number <= 1) plainTitle
+                        else stringResource(Res.string.e7SetupTerminalNumber, name.number)
+                }
+        }
+    val title = terminal?.let { names[it.id] } ?: plainTitle
     val newLabel = stringResource(Res.string.remoteTerminalCreate)
-    // Flutter's numbering (`terminal_list.dart`): "Terminal 2" is the next one, never the server's random id.
-    val newTitle = stringResource(Res.string.e7SetupTerminalNumber, state.terminals.size + 1)
-    val createNamed: () -> Unit = { actions.create(newTitle) }
+    // No title is sent: the server's own default is hidden by the naming rule, so numbers never collide.
+    val createNamed: () -> Unit = { actions.create() }
     val stopLabel =
         stringResource(
             if (terminal?.running == true) Res.string.terminalScreenStopConfirm
@@ -178,9 +191,7 @@ public fun TerminalScreen(state: RemoteTerminalState, actions: TerminalActions, 
         topBar = {
             // Copy is the bar's one action; everything else waits in the menu, so nothing is cut off at phone width.
             KitTopBar(
-                // The page is named "Terminal", as Flutter's terminal page is (terminal_surface.dart `_page`): the
-                // server's own title is "Terminal <random id>" until renamed, and stays in the menu and labels.
-                title = stringResource(Res.string.libraryTerminalTitle),
+                title = title,
                 exit = KitTopBarExit.Back,
                 exitLabel = stringResource(Res.string.kitTopBarBack),
                 onExit = actions::back,
@@ -278,7 +289,7 @@ public fun TerminalScreen(state: RemoteTerminalState, actions: TerminalActions, 
                         else ->
                             items(state.terminals, key = { it.id }) { entry ->
                                 KitRow(
-                                    title = entry.title.ifBlank { entry.command },
+                                    title = names[entry.id] ?: plainTitle,
                                     supporting = entry.directory,
                                     onClick = { actions.select(entry.id) },
                                 )
@@ -324,14 +335,20 @@ public fun TerminalScreen(state: RemoteTerminalState, actions: TerminalActions, 
                 )
             }
             if (terminal != null) {
-                // A new title (after a rename or a refresh) starts the field from that title.
-                key(terminal.title) {
-                    RenameTerminal(rename, terminal.title, onDismiss = { rename = false }) {
+                // The field starts empty or with the person's own name, never a server id.
+                KitInputDialog(
+                    visible = rename,
+                    title = stringResource(Res.string.terminalScreenRenameConfirm),
+                    fieldLabel = stringResource(Res.string.terminalScreenNameLabel),
+                    confirmLabel = stringResource(Res.string.terminalScreenRenameConfirm),
+                    initial = terminal.givenName().orEmpty(),
+                    operationKey = terminal.id,
+                    onResult = {
                         rename = false
-                        actions.rename(terminal.id, it)
-                    }
-                }
-                TerminalDetailsSheet(details) { details = null }
+                        if (!it.isNullOrBlank()) actions.rename(terminal.id, it)
+                    },
+                )
+                TerminalDetailsSheet(details, title) { details = null }
                 ResizeTerminal(resize, onDismiss = { resize = false }) { rows, columns ->
                     resize = false
                     actions.resize(terminal.id, rows, columns)
@@ -429,11 +446,11 @@ private fun terminalFailureText(failure: Failure): String =
  * the kit's redaction and copied together with "Copy details".
  */
 @Composable
-private fun TerminalDetailsSheet(details: TerminalDetailsUi?, onDismiss: () -> Unit) {
+private fun TerminalDetailsSheet(details: TerminalDetailsUi?, name: String, onDismiss: () -> Unit) {
     KitSheet(
         visible = details != null,
         onDismissRequest = onDismiss,
-        title = details?.let { stringResource(Res.string.terminalScreenDetailsTitle, it.title) } ?: stringResource(Res.string.terminalScreenDetails),
+        title = details?.let { stringResource(Res.string.terminalScreenDetailsTitle, name) } ?: stringResource(Res.string.terminalScreenDetails),
     ) {
         if (details != null)
             KitDetailsFold(
@@ -459,28 +476,6 @@ internal fun terminalDetailLines(details: TerminalDetailsUi): List<String> {
         line(stringResource(Res.string.terminalScreenDetailPid), details.pid.toString()),
         details.exitCode?.let { line(stringResource(Res.string.terminalScreenDetailExit), it.toString()) },
     )
-}
-
-@Composable
-private fun RenameTerminal(
-    visible: Boolean,
-    current: String,
-    onDismiss: () -> Unit,
-    onSave: (String) -> Unit,
-) {
-    val name = rememberTextFieldState(current)
-    KitSheet(
-        visible = visible,
-        onDismissRequest = onDismiss,
-        title = stringResource(Res.string.terminalScreenRenameConfirm),
-        primary =
-            KitAction(
-                stringResource(Res.string.terminalScreenRenameConfirm),
-                { if (name.text.isNotBlank()) onSave(name.text.toString()) },
-            ),
-    ) {
-        KitField(name, stringResource(Res.string.terminalScreenNameLabel), maxLength = 200)
-    }
 }
 
 @Composable

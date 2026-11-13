@@ -5,6 +5,9 @@ import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
+import io.github.eslamasabry.oc.core.common.ids.ProfileId
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emptyFlow
 
 /**
  * P12-CHAT-FEEL: what the chat hands to the platform — the clipboard, the share sheet and links.
@@ -33,6 +36,18 @@ public interface ChatOutside {
 
     /** B-AGENT-189: the conversation's server is this phone's own (its agents sign in here). */
     public fun isPhoneServer(ref: ConversationRef): Boolean = false
+
+    /**
+     * Set up at first use: the phone owner whose agents this conversation runs (the owner the Agents page and its set-up
+     * terminal use); null where its agents are not this phone's.
+     */
+    public fun phoneAgentOwner(ref: ConversationRef): ProfileId? = null
+
+    /** The agent ids [owner] set up through the app's set-up terminal (engine `AgentSetUpStore`), as they are now. */
+    public fun agentsSetUp(owner: ProfileId): Set<String> = emptySet()
+
+    /** Emits when [owner]'s set-up list may have changed (a set-up terminal ended), so the chat reads it again. */
+    public fun agentsSetUpChanges(owner: ProfileId): Flow<Unit> = emptyFlow()
 
     /**
      * Puts [text] on the clipboard as given: the presenter has already [mask]ed it. False = it did not work.

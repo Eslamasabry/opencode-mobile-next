@@ -35,4 +35,8 @@
     <string name="agentsStateSignInUnchecked">Установлен, но приложение пока не может проверить вход</string>
     <string name="agentsStateSignInCheckFailed">Не удалось проверить вход. Попробуйте войти снова.</string>
     <string name="agentsSignInUncheckedBody">Его пока нельзя использовать в разговорах. Его можно удалить.</string>
+    <string name="agentsStateSetUpAtFirstUse">Установлен. Настройте его при первом использовании.</string>
+    <string name="agentsChipSetUp">Настроить</string>
+    <string name="agentsSetUpAction">Настроить %1$s</string>
+    <string name="agentsSetUpTypeAuth">Введите /auth и следуйте шагам.</string>
 </resources>

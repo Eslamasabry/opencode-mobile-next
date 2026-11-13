@@ -13,7 +13,6 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTypography
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.semantics
-import io.github.eslamasabry.oc.ui.design.generated.FlutterKitTokens
 import io.github.eslamasabry.oc.ui.design.style.Style
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcon
 import io.github.eslamasabry.oc.ui.kit.icon.KitIconSize
@@ -25,11 +24,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
-import androidx.compose.ui.geometry.CornerRadius
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.drawOutline
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.inset
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.unit.LayoutDirection
@@ -121,26 +119,27 @@ public fun KitFactRow(
             KitSurfaceInput(SurfaceRole.Content, KitShapeId.Panel, ownFill = colors.surface1)
         )
     val border = kitFactBorder(provenance, colors.accent, colors.text2, if (plain) colors.hairline else Color.Transparent)
-    val radiusDp = FlutterKitTokens.PANEL_CORNER_RADIUS
+    // The provenance ring follows the face's own shape (the panel's corner as the style and the Corners knob draw it),
+    // inset by half its width as the glass rim is, so it never stands off or cuts into the face's corners (2026-11-13).
+    val faceShape = surface.shape
     val edge = Modifier.drawWithContent {
         drawContent()
         if (border.color.alpha == 0f) return@drawWithContent
         val stroke = border.width.dp.toPx()
-        val inset = stroke / 2
-        val corner = (radiusDp.dp.toPx() - inset).coerceAtLeast(0f) // F: lib/ui/kit/kit_fact_row.dart:320
-        drawRoundRect(
-            border.color,
-            Offset(inset, inset),
-            Size((size.width - stroke).coerceAtLeast(0f), (size.height - stroke).coerceAtLeast(0f)),
-            CornerRadius(corner),
-            style =
-                Stroke(
-                    stroke,
-                    pathEffect =
-                        if (border.dashed) PathEffect.dashPathEffect(floatArrayOf(FACT_DASH.dp.toPx(), FACT_GAP.dp.toPx()))
-                        else null,
-                ),
-        )
+        if (size.width <= stroke || size.height <= stroke) return@drawWithContent
+        inset(stroke / 2) {
+            drawOutline(
+                faceShape.createOutline(size, layoutDirection, this),
+                border.color,
+                style =
+                    Stroke(
+                        stroke,
+                        pathEffect =
+                            if (border.dashed) PathEffect.dashPathEffect(floatArrayOf(FACT_DASH.dp.toPx(), FACT_GAP.dp.toPx()))
+                            else null,
+                    ),
+            )
+        }
     }
     val tap =
         if (onOpen != null)

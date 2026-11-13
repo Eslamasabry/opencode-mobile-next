@@ -39,6 +39,13 @@ internal fun ViewerFindBar(
     val field = rememberTextFieldState()
     val keyboard = LocalSoftwareKeyboardController.current
     val focusManager = LocalFocusManager.current
+    val close = {
+        field.edit { replace(0, length, "") }
+        // Closing gives the keyboard back.
+        focusManager.clearFocus()
+        keyboard?.hide()
+        onClose()
+    }
     Column(Modifier.fillMaxWidth().padding(start = tokens.gutter.dp, top = Space.S2.dp, end = Space.S2.dp, bottom = Space.S2.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             KitSearchField(
@@ -62,16 +69,13 @@ internal fun ViewerFindBar(
                 Modifier.testTag(KitViewerKeys.FIND_NEXT), enabled = if (hasMarks) KitEnabled.Enabled else off, shortcut = "Enter",
             )
             KitIconButton(
-                KitIcons.close, stringResource(Res.string.kitViewerFindClose), {
-                    field.edit { replace(0, length, "") }
-                    // Closing gives the keyboard back.
-                    focusManager.clearFocus()
-                    keyboard?.hide()
-                    onClose()
-                },
+                KitIcons.close, stringResource(Res.string.kitViewerFindClose), { close() },
                 Modifier.testTag(KitViewerKeys.FIND_CLOSE), shortcut = "Esc",
             )
         }
+        // One Back closes Find, whatever is typed (the field's own clear button clears). Registered after the field's own
+        // Back, and again with each keystroke (the field re-registers its own then), so it stays the one that answers.
+        androidx.compose.runtime.key(field.text.toString()) { io.github.eslamasabry.oc.ui.kit.modal.KitBackGuard(enabled = true, onBack = close) }
         if (query.isNotEmpty()) {
             KitText(
                 count,
