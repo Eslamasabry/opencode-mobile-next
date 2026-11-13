@@ -671,6 +671,7 @@
     <string name="kitToolFailed">Failed</string>
     <string name="kitToolDeclined">You declined this</string>
     <string name="chatStepDeclinedNote">Your note: “%1$s”</string>
+    <string name="chatStepMalformedCall">The agent asked this the wrong way, so nothing ran. Ask it to try again.</string>
     <string name="kitToolStopped">Stopped</string>
     <string name="kitToolBackground">Started in the background</string>
     <plurals name="kitToolTookSeconds">

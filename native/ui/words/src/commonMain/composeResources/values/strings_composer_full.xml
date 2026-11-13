@@ -17,4 +17,5 @@
     <string name="composerFullFiles">Files from the project</string>
     <string name="composerFullAttachmentsLocal">Attachments save with this draft on this device.</string>
     <string name="composerFullSteerHint">Steer while it works…</string>
+    <string name="composerFullWaitingHint">Waiting for your decision above…</string>
 </resources>
