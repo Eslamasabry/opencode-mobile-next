@@ -62,7 +62,7 @@ internal object AndroidLiquidGlass {
                 }
                 // The sheet's and the menu's glass hold back the light and the colour behind their words, after the blur
                 // and the bend (the join shader's knee for the plain pane; LiquidHold). Every uniform, every draw.
-                if (recipe.hold.knee && size.isSpecified) {
+                if ((recipe.hold.knee || recipe.hold.local) && size.isSpecified) {
                     val u =
                         LiquidHoldUniforms.of(
                             spec = spec,
@@ -80,6 +80,7 @@ internal object AndroidLiquidGlass {
                         setFloatUniform("box", u.left, u.top, u.halfWidth, u.halfHeight)
                         setFloatUniform("corner", u.radius, u.rimPx)
                         setFloatUniform("cc", u.saturation, u.contrast, u.brightness, 0f)
+                        setFloatUniform("local", u.local[0], u.local[1], u.local[2])
                     }
                 }
             },
