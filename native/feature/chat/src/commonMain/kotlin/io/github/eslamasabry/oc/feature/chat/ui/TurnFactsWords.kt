@@ -95,7 +95,6 @@ import io.github.eslamasabry.oc.ui.words.res.kitWorkRead
 import io.github.eslamasabry.oc.ui.words.res.kitWorkSearched
 import io.github.eslamasabry.oc.ui.words.res.kitWorkSeparator
 import io.github.eslamasabry.oc.ui.words.res.kitWorkSteps
-import io.github.eslamasabry.oc.ui.words.res.kitWorkStopped
 import io.github.eslamasabry.oc.ui.words.res.kitWorkWaitingForYou
 import io.github.eslamasabry.oc.ui.words.res.kitWorkWorking
 import io.github.eslamasabry.oc.ui.words.res.replySpeedLast
@@ -266,7 +265,8 @@ internal fun workStateWords(state: WorkLineState): String? =
         WorkLineState.WaitingForYou -> stringResource(Res.string.kitWorkWaitingForYou)
         WorkLineState.Done -> null
         WorkLineState.EndedFailed -> stringResource(Res.string.kitWorkDidntFinish)
-        WorkLineState.Stopped -> stringResource(Res.string.kitWorkStopped)
+        // A turn the person stopped says so once, in its footer; the work line says how much work happened.
+        WorkLineState.Stopped -> null
     }
 
 /** B-CHAT-068/100/101: "Edited 2 files · ran 3 commands" for a finished turn; null when it changed and ran nothing. */

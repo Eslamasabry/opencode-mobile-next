@@ -1928,7 +1928,8 @@ internal fun workLineWords(calls: Int, state: WorkState): String {
     val word =
         when (state) {
             WorkState.Running -> stringResource(Res.string.kitWorkWorking)
-            WorkState.Stopped -> stringResource(Res.string.kitWorkStopped)
+            // The footer says "Stopped" once; the work line keeps to how much work happened.
+            WorkState.Stopped -> null
             WorkState.EndedFailed -> stringResource(Res.string.kitWorkDidntFinish)
             WorkState.Done -> null
         }

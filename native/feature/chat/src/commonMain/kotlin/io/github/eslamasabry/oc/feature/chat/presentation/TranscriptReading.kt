@@ -79,6 +79,15 @@ public enum class TurnEndNote {
         get() = this == CutOffBeforeReply
 }
 
+/**
+ * The reply's own stopped state, read as the transcript's footer reads it (an aborted message, or the error a stop
+ * leaves): that footer already says "Stopped".
+ */
+private fun replyStopped(info: io.github.eslamasabry.oc.core.model.transcript.MessageInfo?): Boolean =
+    info != null &&
+        (info.errorKind == io.github.eslamasabry.oc.core.model.transcript.MessageErrorKind.Aborted ||
+            StoppedSteps.isStopError(info.errorText))
+
 /** How an interrupted run reads on the newest turn: a server stop names its reason; anything else stays "Stopped". */
 internal fun stopNote(reason: io.github.eslamasabry.oc.core.domain.events.InterruptReason): TurnEndNote =
     when (reason) {
@@ -189,9 +198,11 @@ internal fun transcriptReading(
                 val last = assistants.lastOrNull()?.info
                 val end =
                     when {
+                        // One source for the turn's end: a reply that says it was stopped marks its own footer
+                        // "Stopped" (live and reopened alike), so the run's end adds no second line beside it.
                         outcome is
                             io.github.eslamasabry.oc.core.domain.events.RunOutcome.Interrupted ->
-                            stopNote(outcome.reason)
+                            stopNote(outcome.reason).takeUnless { it == TurnEndNote.Stopped && replyStopped(last) }
                         last?.errorText != null -> null // the failed footer already explains it
                         assistants.isEmpty() &&
                             outcome is
