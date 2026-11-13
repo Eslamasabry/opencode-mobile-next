@@ -144,7 +144,7 @@ class KitLampTest {
         }
 
     @Test
-    fun `B-LAMP-K1-023 hidden it fades out, takes no tap and says nothing; shown again it is back`() =
+    fun `B-LAMP-K1-023 hidden it fades out, takes no tap and says nothing, and shown again it is back`() =
         runDesktopComposeUiTest(W, H) {
             val scene = Scene(BUSY)
             host(scene)
@@ -180,7 +180,7 @@ class KitLampTest {
     }
 
     @Test
-    fun `B-LAMP-K1-025 needs you arriving pulses once with one Attention haptic; a burst shares it; open or hidden never pulses`() =
+    fun `B-LAMP-K1-025 needs you arriving pulses once with one Attention haptic, a burst shares it, open or hidden never pulses`() =
         runDesktopComposeUiTest(W, H) {
             mainClock.autoAdvance = false
             val platform = FakeKitPlatform()
