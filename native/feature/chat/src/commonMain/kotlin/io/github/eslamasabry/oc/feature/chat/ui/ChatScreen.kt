@@ -384,6 +384,8 @@ public fun ChatScreen(
     val requestState by rememberUpdatedState(requests)
     val formPending by rememberUpdatedState(formWaiting)
     val headerState by rememberUpdatedState(header)
+    // Closed on purpose when the person leaves the chat (plain `remember`, so neither Back nor rotation brings a
+    // sheet they did not just open): the transcript itself comes back exactly where it was (KeepScrollPlace).
     var toolFile by remember {
         mutableStateOf<io.github.eslamasabry.oc.engine.transcript.turnfacts.ToolArtifact?>(null)
     }
@@ -455,13 +457,7 @@ public fun ChatScreen(
     }
     // Find brings its current hit's row into view (plan 09 §6.6); a jump never animates across
     // thousands of rows (§7.5).
-    LaunchedEffect(state.find?.currentKey, state.find?.current) {
-        val index = latest.find?.currentIndex ?: -1
-        if (index >= 0) {
-            list.following = false
-            list.lazy.scrollToItem(itemsBelowRows + index)
-        }
-    }
+    FindJump(state.find, state.phase == ChatPhase.Live, itemsBelowRows, list)
     // Arrivals (07 §2.5): land once on the failure; "ready to type" is the composer's to
     // acknowledge.
     LaunchedEffect(state.arrival?.id) {

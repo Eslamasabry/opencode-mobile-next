@@ -11,12 +11,14 @@ import io.github.eslamasabry.oc.ui.kit.frame.kitImePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -109,8 +111,11 @@ import org.jetbrains.compose.resources.stringResource
  */
 @Composable
 public fun GitScreen(state: GitUi, actions: GitActions, serverTools: @Composable () -> Unit = {}) {
-    val message = remember { TextFieldState() }
-    var messageEdited by remember { mutableStateOf(false) }
+    // Saved with the page entry: an unsent message (and the fact that the person wrote it) comes back with the page,
+    // so the suggested message never replaces words they typed.
+    val message = rememberTextFieldState()
+    var messageEdited by rememberSaveable { mutableStateOf(false) }
+    var clearedAt by rememberSaveable { mutableStateOf(state.generation) }
     val defaultMessage =
         suggestedMessage(
             state.snapshot?.status?.files.orEmpty().filter { it.path in state.selected }
@@ -121,6 +126,9 @@ public fun GitScreen(state: GitUi, actions: GitActions, serverTools: @Composable
         }
     }
     LaunchedEffect(state.generation) {
+        // Coming back to a page whose save was already handled must not clear what was typed since.
+        if (state.generation == clearedAt) return@LaunchedEffect
+        clearedAt = state.generation
         val saved =
             state.savedNotSent ||
                 (state.result?.let { it.ok && it.note != null && it.commit != null } ?: false)

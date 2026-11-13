@@ -1,7 +1,9 @@
 package io.github.eslamasabry.oc.feature.chat
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.v2.runComposeUiTest
@@ -73,6 +75,35 @@ class ComposerDraftRestoreTest {
                 actions.changes.none { it.isEmpty() },
                 "initial empty editor must never overwrite restored data",
             )
+        }
+
+    @Test
+    fun `PLACE-6 an unsent message is still in the box when the person leaves the conversation and comes back`() =
+        runComposeUiTest {
+            // The draft lives with the conversation's world, not in the box: leaving drops the box, coming back
+            // builds a new one from that draft (the process-death restore is the test above, B-STATE-102).
+            val state = mutableStateOf(ui(""))
+            val actions =
+                object : BasicComposerActions {
+                    override fun draftChanged(text: String) {
+                        state.value = state.value.copy(draft = state.value.draft.copy(text = text, restoreRevision = 1))
+                    }
+
+                    override suspend fun send(text: String): Boolean = true
+
+                    override suspend fun sendAgain(text: String, expectedRevision: Long): Boolean = true
+                }
+            var shown by mutableStateOf(true)
+            setContent {
+                val holder = androidx.compose.runtime.saveable.rememberSaveableStateHolder()
+                Theme { if (shown) holder.SaveableStateProvider("chat") { BasicComposer(state.value, actions, chrome) } }
+            }
+            onNode(hasSetTextAction()).performTextReplacement("half a thought")
+            shown = false
+            waitForIdle()
+            shown = true
+            waitForIdle()
+            onNode(hasSetTextAction()).assertTextContains("half a thought")
         }
 
     @Test

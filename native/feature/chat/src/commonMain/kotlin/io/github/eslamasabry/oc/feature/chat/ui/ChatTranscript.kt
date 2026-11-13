@@ -16,6 +16,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
@@ -467,9 +468,21 @@ internal fun ChatTranscriptList(
     }
     // Flutter `_liveStepsShown` (chat_stop_after_step.dart): a tap on the live line shows the running turn's steps;
     // cleared once the turn ends. Null = no running turn; false = the live line names the step and the work hides.
-    var stepsShown by remember { mutableStateOf(false) }
+    var stepsShown by rememberSaveable { mutableStateOf(false) }
     if (live == null && stepsShown) stepsShown = false
     val runningSteps: Boolean? = if (live == null) null else stepsShown
+    // The same keys, in the same order, as the items below: the reader's place is kept by key (see KeepScrollPlace).
+    val itemKeys =
+        remember(unique, pending, live != null, listWords != null, extraBottomPx > 0, facts.background.isNotEmpty()) {
+            buildList {
+                if (extraBottomPx > 0) add(ListKeys.DOCK_ROOM)
+                if (live != null && listWords != null) add(ListKeys.LIVE)
+                if (facts.background.isNotEmpty() && listWords != null) add(ListKeys.BACKGROUND)
+                if (listWords != null) pending.forEach { add(ListKeys.pending(it.localId)) }
+                unique.forEach { add(it.key) }
+            }
+        }
+    KeepScrollPlace(list, itemKeys)
     KitTranscriptList(
         state = list,
         newestKey = newestKey,
