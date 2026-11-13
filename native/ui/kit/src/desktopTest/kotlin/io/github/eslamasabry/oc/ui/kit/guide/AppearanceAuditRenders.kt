@@ -85,7 +85,7 @@ class AppearanceAuditRenders {
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             KitText("Appearance", role = TypeRole.RowTitle)
-            KitAppearancePreview("Tidy up the settings page", "Done. Three files changed and every check passes.", "Review changes", "sample")
+            KitAppearancePreview("Tidy up the settings page", "Done. Three files changed and every check passes.", "Review changes", "sample", "Preview")
             KitRowGroup {
                 KitRow(title = "Server", supporting = "This phone · Connected", leading = KitRowLeading.Glyph(KitIcons.model), trailing = KitRowTrailing.Chevron, onClick = {})
                 KitRow(title = "Conversations", leading = KitRowLeading.Glyph(KitIcons.check), trailing = KitRowTrailing.Chevron, onClick = {})

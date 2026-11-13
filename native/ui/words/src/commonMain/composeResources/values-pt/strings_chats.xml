@@ -328,4 +328,6 @@
     <string name="chats_back">Voltar</string>
     <string name="workRunawayStopFailedRetry">Não foi possível parar %1$s. Tente novamente.</string>
     <string name="chatsHomeInterrupted">Interrompida</string>
+    <string name="chatsNewGettingReady">Preparando…</string>
+    <string name="chatsNewGettingReadySlow">Ainda lendo os projetos e modelos deste servidor…</string>
 </resources>

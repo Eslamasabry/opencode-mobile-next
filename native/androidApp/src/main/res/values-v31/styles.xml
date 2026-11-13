@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Android 12+ draws its own launch screen: the same ground and mark. -->
+    <style name="NativeAppTheme" parent="android:style/Theme.Material.NoActionBar">
+        <item name="android:defaultFocusHighlightEnabled">false</item>
+        <item name="android:windowBackground">@drawable/launch_ground</item>
+        <item name="android:windowSplashScreenBackground">@color/launcher_background</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
+    </style>
+</resources>

@@ -103,16 +103,10 @@ internal fun ColumnScope.AppearanceBody(ui: AppearanceUi, actions: SettingsActio
             reply = stringResource(Res.string.appearancePreviewReply),
             action = stringResource(Res.string.appearancePreviewAction),
             spoken = stringResource(Res.string.appearancePreviewSpoken),
+            label = stringResource(Res.string.filesShowPreview),
             modifier = Modifier.testTag("appearance-preview"),
         )
     }
-    Spacer(Modifier.height(Space.S3.dp))
-    KitTabStrip(
-        tabs = groups.map { KitTab(appearanceGroupWords(it)) },
-        selected = at,
-        onSelected = { tab.intValue = it },
-        modifier = Modifier.testTag("appearance-tabs"),
-    )
     val group = groups[at]
     if ((group == AppearanceGroup.Style || group == AppearanceGroup.Background) && ui.heldBySaver) {
         KitGroupNote(
@@ -142,6 +136,21 @@ internal fun ColumnScope.AppearanceBody(ui: AppearanceUi, actions: SettingsActio
         gutter.testTag(if (guide.done) "appearance-guide-again" else "appearance-guide-skip"),
         role = KitButtonRole.Tertiary,
         fullWidth = false,
+    )
+}
+
+/**
+ * The page's tab row. It is navigation for the page, so [SettingsFrame] pins it under the bar and the page's content
+ * scrolls beneath it: it is whole at every scroll position.
+ */
+@Composable
+internal fun AppearanceTabRow(ui: AppearanceUi, tab: MutableIntState) {
+    val groups = appearanceTabs(ui)
+    KitTabStrip(
+        tabs = groups.map { KitTab(appearanceGroupWords(it)) },
+        selected = tab.intValue.coerceIn(groups.indices),
+        onSelected = { tab.intValue = it },
+        modifier = Modifier.testTag("appearance-tabs"),
     )
 }
 

@@ -3,6 +3,8 @@
     <!-- Compose owns keyboard focus feedback in every native activity. -->
     <style name="NativeAppTheme" parent="android:style/Theme.Material.NoActionBar">
         <item name="android:defaultFocusHighlightEnabled">false</item>
+        <!-- No flat system grey before the first page: the app's ground and its mark. -->
+        <item name="android:windowBackground">@drawable/launch_ground</item>
     </style>
     <style name="NativeTrampolineTheme" parent="android:style/Theme.Translucent.NoTitleBar">
         <item name="android:defaultFocusHighlightEnabled">false</item>

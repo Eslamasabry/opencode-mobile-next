@@ -327,4 +327,6 @@
     <string name="chatsReturnBriefMore">et %1$d autres</string>
     <string name="workRunawayStopFailedRetry">Impossible d’arrêter %1$s. Réessayez.</string>
     <string name="chatsHomeInterrupted">Interrompue</string>
+    <string name="chatsNewGettingReady">Préparation…</string>
+    <string name="chatsNewGettingReadySlow">Lecture des projets et des modèles de ce serveur en cours…</string>
 </resources>

@@ -84,6 +84,7 @@ class MainActivity : ComponentActivity() {
                         if (AppLocale.changed(tag)) recreate()
                     }
                 }
+                if (!appearanceKnown) LaunchGround()
                 if (appearanceKnown) CompositionLocalProvider(
                     LocalKitSecureWindow provides secureWindow,
                     LocalKitTerminalSlot provides AndroidKitTerminalSlot,
