@@ -8,7 +8,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import io.github.eslamasabry.oc.ui.kitchat.request.KitRequestStack
 import androidx.compose.foundation.text.input.clearText
 import androidx.compose.foundation.text.input.rememberTextFieldState
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -139,6 +143,9 @@ import io.github.eslamasabry.oc.ui.words.res.kitDetails
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 
+/** The request the edge light asks the slot to show: [id] is the card, [seq] tells two asks for it apart. */
+public data class RequestShow(val id: RequestId, val seq: Long)
+
 /**
  * The request slot above the composer (plan 09 §5.1, §6.4; plan 08 §5.8; E06-S01): one card per
  * request of this conversation, in arrival order, each answered on its own in any order; never a
@@ -158,6 +165,9 @@ public fun ChatRequestSlot(
     actions: ChatRequestActions,
     nowMs: Long?,
     modifier: Modifier = Modifier,
+    /** The edge light asks the slot to show this request's card (scrolled into view once), then [onShown]. */
+    show: RequestShow? = null,
+    onShown: (seq: Long) -> Unit = {},
 ) {
     // P-009: the slot stays composed while its last card folds away (fade + collapse, instant under
     // reduced motion), and a card that arrives right after another left unfolds in the same stack
@@ -170,6 +180,20 @@ public fun ChatRequestSlot(
     var details by remember { mutableStateOf<RequestId?>(null) }
     val open = RequestStackRules.stillOpened(opened, cards)
     val folded = RequestStackRules.folded(cards, open, state.focused)
+    // "Show this request": once its card is in the slot and open in full, the slot scrolls to it and says it did.
+    val showId = show?.id
+    val requester = remember(showId) { BringIntoViewRequester() }
+    val showPresent = showId != null && cards.any { it.id == showId }
+    val shownBack by rememberUpdatedState(onShown)
+    LaunchedEffect(show?.seq, showPresent) {
+        if (show != null && showPresent) {
+            // The folded line swaps to the full card first; the scroll goes to the card.
+            withFrameNanos {}
+            withFrameNanos {}
+            requester.bringIntoView()
+            shownBack(show.seq)
+        }
+    }
     KitReveal(visible = state.cards.isNotEmpty(), modifier = modifier) {
         val total = cards.size
         KitRequestStack(
@@ -185,7 +209,11 @@ public fun ChatRequestSlot(
             },
         ) { card ->
             // The row and the card cross-fade (QUICK; instant under reduced motion); the size never animates.
-            KitSwap(card.id in folded, alignment = Alignment.TopStart) { isFolded ->
+            KitSwap(
+                card.id in folded,
+                if (card.id == showId) Modifier.bringIntoViewRequester(requester) else Modifier,
+                alignment = Alignment.TopStart,
+            ) { isFolded ->
                 if (isFolded) FoldedRequestRow(card) { opened = open + card.id }
                 else key(card.id, card.captured) { RequestCard(card, actions, nowMs) { details = card.id } }
             }

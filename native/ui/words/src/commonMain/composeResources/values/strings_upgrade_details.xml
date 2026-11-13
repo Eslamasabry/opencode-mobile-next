@@ -1,4 +1,5 @@
 <resources>
     <string name="tipMessageDetailsTitle">Message details</string>
     <string name="tipMessageDetails">Hold a message for Details, or use its More button, to see the model and timing.</string>
+    <string name="tipBackReturnsTo">Back returns to %1$s, where you left it.</string>
 </resources>

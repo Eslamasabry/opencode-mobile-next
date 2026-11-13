@@ -437,6 +437,8 @@ public fun BasicComposer(
             canSend = { canSend },
             conversationRef = conversationRef,
         )
+    // Leaving this conversation (a switch, Files, Back) ends any dictation into its box.
+    voice?.StopWhenLeft(voiceField)
     var modelsOpen by remember(state.targetKey) { mutableStateOf(false) }
     val focusManager = LocalFocusManager.current
     // Error card -> "Choose another model": open the list once, then acknowledge.
@@ -684,6 +686,9 @@ public fun BasicComposer(
         // body on every key.
         val wordsBlank by remember(field) { derivedStateOf { field.text.isBlank() } }
         val wordsEmpty by remember(field) { derivedStateOf { field.text.isEmpty() } }
+        // After an edge-light switch the box says "Reply in ‹title›" until the first words are typed.
+        val replyHint = io.github.eslamasabry.oc.feature.chat.ui.LocalReplyHint.current
+        LaunchedEffect(replyHint, wordsEmpty) { if (!wordsEmpty) replyHint?.typed?.invoke() }
         val clearWords: () -> Unit = {
             clearedText = field.text.toString()
             field.edit { replace(0, length, "") }
@@ -1111,6 +1116,8 @@ public fun BasicComposer(
                                     stringResource(Res.string.composerFullWaitingHint)
                                 else if (busy && state.steers)
                                     stringResource(Res.string.composerFullSteerHint)
+                                else if (replyHint != null)
+                                    replyHint.text
                                 else
                                     stringResource(
                                         Res.string.upgradeComposerAsk,

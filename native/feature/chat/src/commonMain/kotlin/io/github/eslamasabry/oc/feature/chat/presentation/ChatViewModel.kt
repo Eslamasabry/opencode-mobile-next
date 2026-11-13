@@ -27,6 +27,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.dropWhile
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -45,6 +46,7 @@ public class ChatViewModel(
     private val outside: ChatOutside,
     private val schedules: ScheduleEngine,
     starPrompts: Set<io.github.eslamasabry.oc.feature.chat.starprompt.ChatStarPrompt>,
+    arrivals: io.github.eslamasabry.oc.feature.chat.arrival.ChatArrivals,
 ) : ViewModel(), ChatActions {
     private val world = worlds.open(route.ref)
     private var openingSchedule = false
@@ -60,6 +62,9 @@ public class ChatViewModel(
             star = starPrompts.firstOrNull(),
         )
 
+    /** What the edge light hands this page: the request to show and the arrival after a switch (see [ChatSwitchFeed]). */
+    internal val switches = ChatSwitchFeed(route.ref, nav, arrivals, viewModelScope, saveDraft = { world.saveDraft() })
+
     public val serverCapabilities = world.capabilities
     public val requests = world.requests
 
@@ -69,6 +74,16 @@ public class ChatViewModel(
     init {
         // The error card suggests a model by name only once the catalog is read.
         viewModelScope.launch { if (world.models.value.choices.isEmpty()) world.loadModels() }
+        // "Show this request" from the edge light: the card opens in full (the slot scrolls to it and tells the
+        // navigator it was shown). A card that has not arrived yet is focused as soon as it does.
+        viewModelScope.launch {
+            switches.requests.collectLatest { focus ->
+                if (focus != null)
+                    world.requests.collect { model ->
+                        model?.focus(io.github.eslamasabry.oc.core.common.ids.RequestId(focus.requestId))
+                    }
+            }
+        }
         route.requestId?.let { id ->
             viewModelScope.launch {
                 world.requests.collect { model ->
@@ -111,6 +126,7 @@ public class ChatViewModel(
     }
 
     override fun onCleared() {
+        switches.closed()
         worlds.release(world)
     }
 
