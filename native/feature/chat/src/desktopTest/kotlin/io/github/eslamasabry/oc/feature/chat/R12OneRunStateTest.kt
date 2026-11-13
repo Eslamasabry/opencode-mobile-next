@@ -21,6 +21,8 @@ import io.github.eslamasabry.oc.core.model.transcript.ToolState
 import io.github.eslamasabry.oc.core.model.transcript.ToolStatus
 import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.engine.transcript.ledger.WorkLineState
+import io.github.eslamasabry.oc.engine.transcript.state.WorkLineRow
+import io.github.eslamasabry.oc.engine.transcript.state.WorkState
 import io.github.eslamasabry.oc.feature.chat.composer.ComposerChrome
 import io.github.eslamasabry.oc.feature.chat.composer.ComposerHost
 import io.github.eslamasabry.oc.feature.chat.composer.ComposerTarget
@@ -97,9 +99,9 @@ class R12OneRunStateTest {
     }
 
     private fun screen(facts: TurnFactsUi, live: LiveTurnUi?, footer: Boolean = false): ChatUi {
-        val rows =
-            if (footer) persistentListOf(footer("m1"), prompt("m1", "create a file e9.txt with one line"))
-            else persistentListOf(prompt("m1", "create a file e9.txt with one line"))
+        val work = WorkLineRow("work:m1", "m1", calls = 1, failed = 0, state = WorkState.Done)
+        val ask = prompt("m1", "create a file e9.txt with one line")
+        val rows = if (footer) persistentListOf(footer("m1"), work, ask) else persistentListOf(work, ask)
         return ChatUi.loading(Ref).copy(title = "Native chat", phase = ChatPhase.Live, rows = rows, live = live)
     }
 
