@@ -506,7 +506,7 @@ public fun KitScreen(
                 }
                 if (edgesFade && topPart != null && frost != null) {
                     if (look == KitTopEdgeLook.Ground) KitGroundBand(bandPx = { statusPx + topPx }, under = under)
-                    else KitStatusEdge(topFrost, statusPx, under = under, blur = statusBlur)
+                    else KitStatusEdge(topFrost ?: frost, statusPx, under = under, blur = statusBlur)
                 }
                 // The bar, and under it the one status line: one block whose height is the body's top room, so a line
                 // folding in or out eases the transcript down or up and nothing else moves.
