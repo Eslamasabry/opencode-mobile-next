@@ -81,6 +81,9 @@ public class DockPeeks(private val fallback: DockPeekFallback = DockPeekFallback
         rows.value = rows.value.filterKeys { it.profileId != profile }
     }
 
+    /** The newest line of [ref] right now (its last cached line, else the home list's saved one); null when none. */
+    public fun newest(ref: ConversationRef): String? = rows.value[ref]?.lastOrNull()?.text ?: fallback.lastLine(ref)
+
     /** The peek for [ref]; changes as lines arrive. Starts with what is cached right now. */
     public fun peek(ref: ConversationRef): Flow<DockPeek> =
         rows.map { all ->

@@ -28,25 +28,64 @@ public class DockController(
     private val actions: DockActions? = null,
     private val peeks: DockPeeks? = null,
 ) {
-    private var model = DockModel.empty(cap)
-    private val state = MutableStateFlow(model.ui)
-    public val ui: StateFlow<DockUi> = state.asStateFlow()
+    /** One reader's view of the shared facts: its own model (the ring cap shapes membership) and its own flow. */
+    private class Lane(val reader: DockReader, var model: DockModel) {
+        val state = MutableStateFlow(model.ui)
+        val flow: StateFlow<DockUi> = state.asStateFlow()
+    }
+
+    /** What the rings read: the constructor's [cap] and today's pin limit. Its output is what the dock always showed. */
+    private val ringsReader = DockReader(cap)
+    private val lanes = mutableListOf(Lane(ringsReader, DockModel.empty(cap)))
+    private val primary: Lane get() = lanes.first()
+    private val model: DockModel get() = primary.model
+
+    /** The rings' view. Same as `ui(DockReader())` for a controller built with the default cap. */
+    public val ui: StateFlow<DockUi> get() = primary.flow
+
+    /**
+     * A view of the same conversations with its own cap and pin limit (the edge light's list asks for more rows than
+     * the rings show). The rings' view never changes because another reader exists. Call from the controller's dispatcher.
+     */
+    public fun ui(reader: DockReader): StateFlow<DockUi> {
+        lanes.firstOrNull { it.reader == reader }?.let { return it.flow }
+        val lane = Lane(reader, primary.model.withReader(reader.cap, reader.pinLimit))
+        lanes += lane
+        return lane.flow
+    }
+
+    /** The model that decides what is saved: the reader that may see the most pins. */
+    private val authority: Lane get() = lanes.maxByOrNull { it.reader.pinLimit } ?: primary
 
     /** Feeds one fact. The wiring calls this; the UI does not. */
     public fun feed(event: DockEvent) {
-        val next = model.reduce(event)
-        if (next === model) return
-        val removedBefore = model.removedRefs
-        val pinsBefore = model.pinnedRefs
-        val placementBefore = model.ui.placement
-        model = next
-        state.value = next.ui
+        val before = primary.model
+        val removedBefore = before.removedRefs
+        val pinsBefore = authority.model.pinnedRefs
+        val placementBefore = before.ui.placement
+        for (lane in lanes) {
+            val reduced = lane.model.reduce(event)
+            if (reduced !== lane.model) {
+                lane.model = reduced
+                lane.state.value = reduced.ui
+            }
+        }
+        // A reader that sees fewer pins may have refused a pin another accepted: every reader holds the same list.
+        val truth = authority.model.pinnedRefs
+        for (lane in lanes) {
+            if (lane.model.pinnedRefs != truth) {
+                lane.model = lane.model.reduce(DockEvent.PinsSync(truth))
+                lane.state.value = lane.model.ui
+            }
+        }
+        val next = primary.model
+        if (next === before && authority.model.pinnedRefs == pinsBefore) return
         persist(removedBefore, next.removedRefs) { profile ->
             removals?.save(profile) { model.removedRefs.filter { it.profileId == profile }.map { it.sessionId } }
         }
         // Order matters for pins, so any change of the list (including a reorder) saves the profile's whole list.
-        persist(pinsBefore, next.pinnedRefs, orderMatters = true) { profile ->
-            pins?.save(profile) { model.pinnedRefs.filter { it.profileId == profile }.map { it.sessionId } }
+        persist(pinsBefore, authority.model.pinnedRefs, orderMatters = true) { profile ->
+            pins?.save(profile) { authority.model.pinnedRefs.filter { it.profileId == profile }.map { it.sessionId } }
         }
         if (placementStore != null && next.ui.placement != placementBefore && event is DockEvent.SetPlacement) {
             scope.launch { placementStore.save(model.ui.placement) }
@@ -160,6 +199,15 @@ public class DockController(
         val saved = pins?.load(profile).orEmpty()
         feed(DockEvent.PinsLoaded(profile, saved))
         return saved
+    }
+
+    /**
+     * Reads the shared pin store again after the home list (or anything else) changed it, so the rings and the list show
+     * the pins the person just made there. The profile's pins become exactly what the store holds.
+     */
+    public suspend fun refreshPins(profile: ProfileId) {
+        val saved = pins?.load(profile) ?: return
+        feed(DockEvent.PinsReplaced(profile, saved))
     }
 
     /** Device-wide, not per profile. [bias] is clamped to 0..1. */

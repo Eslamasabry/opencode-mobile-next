@@ -283,6 +283,15 @@ public sealed interface DockEvent {
      */
     public data class PinsLoaded(val profile: ProfileId, val sessions: List<SessionId>) : DockEvent
 
+    /**
+     * The shared pin store changed elsewhere (the home list pinned or unpinned): the profile's pins become exactly
+     * [sessions], in that order. Unlike [PinsLoaded] nothing the model held for the profile is kept.
+     */
+    public data class PinsReplaced(val profile: ProfileId, val sessions: List<SessionId>) : DockEvent
+
+    /** Another reader of the same controller changed the pins: every profile's pins become exactly [refs]. */
+    public data class PinsSync(val refs: List<ConversationRef>) : DockEvent
+
     /** The saved server's name, for entries to carry. Blank clears it. */
     public data class ServerName(val profile: ProfileId, val name: String?) : DockEvent
 
@@ -346,7 +355,13 @@ public class DockModel private constructor(private val s: Snapshot) {
     public val removedRefs: List<ConversationRef> get() = s.removed
 
     /** The pinned rings in the person's order. The controller saves it. */
-    public val pinnedRefs: List<ConversationRef> get() = s.pinned
+    public val pinnedRefs: List<ConversationRef> get() = s.pinnedAll
+
+    /** The same facts read with another ring cap and pin limit (a second reader of one controller). */
+    public fun withReader(cap: Int, pinLimit: Int): DockModel {
+        require(cap >= 1 && pinLimit >= 1) { "the dock needs at least one ring" }
+        return DockModel(s.copy(cap = cap, pinLimit = pinLimit).settled())
+    }
 
     public fun reduce(event: DockEvent): DockModel {
         val next = s.step(event)
@@ -396,7 +411,10 @@ public class DockModel private constructor(private val s: Snapshot) {
         val childCap: Int,
         /** Removed conversations, oldest first. A removed parent hides its sub-agents; a removed sub-agent hides itself. */
         val removed: List<ConversationRef> = emptyList(),
-        val pinned: List<ConversationRef> = emptyList(),
+        /** Every pin the shared store holds, in the person's order (at most [MAX_STORED_PINS]); a reader shows the first [pinLimit]. */
+        val pinnedAll: List<ConversationRef> = emptyList(),
+        /** How many pins this reader shows as pinned rings: the rings keep today's [MAX_PINNED], the list shows more. */
+        val pinLimit: Int = MAX_PINNED,
         /** Profiles whose connection is live (their pins were loaded). */
         val online: Set<ProfileId> = emptySet(),
         val servers: Map<ProfileId, String> = emptyMap(),
@@ -419,6 +437,9 @@ public class DockModel private constructor(private val s: Snapshot) {
         /** Where a removed ring stood in [order] when it left, so an Undo or a restore puts it back in that place. */
         val slots: Map<ConversationRef, Int> = emptyMap(),
     ) {
+        /** The pins this reader shows, in order. */
+        val pinned: List<ConversationRef> get() = if (pinnedAll.size <= pinLimit) pinnedAll else pinnedAll.take(pinLimit)
+
         /** The record for [ref], created when it is missing. */
         private fun withTracked(ref: ConversationRef, change: (Tracked) -> Tracked): Snapshot {
             val (base, next) = tracked[ref]?.let { it to nextSeq } ?: (Tracked(ref, nextSeq, known[ref]?.first, known[ref]?.second, parent = known[ref]?.third) to nextSeq + 1)
@@ -489,12 +510,12 @@ public class DockModel private constructor(private val s: Snapshot) {
                             ifTracked(e.ref) { alerted(it).copy(outcome = Outcome.Failed) }
                         } else this
                     } else this
-                is DockEvent.Deleted -> copy(pinned = pinned.filter { it != e.ref }, removed = removed.filter { it != e.ref }, known = known.remove(e.ref), tracked = tracked.filter { (r, t) -> r != e.ref && !(r.profileId == e.ref.profileId && t.parent == e.ref.sessionId) }, names = names - e.ref, open = open.takeIf { it != e.ref }, recent = recent - e.ref)
+                is DockEvent.Deleted -> copy(pinnedAll = pinnedAll.filter { it != e.ref }, removed = removed.filter { it != e.ref }, known = known.remove(e.ref), tracked = tracked.filter { (r, t) -> r != e.ref && !(r.profileId == e.ref.profileId && t.parent == e.ref.sessionId) }, names = names - e.ref, open = open.takeIf { it != e.ref }, recent = recent - e.ref)
                 is DockEvent.Left -> step(DockEvent.Deleted(e.ref)).copy(names = names)
                 is DockEvent.ProfileGone ->
                     copy(
                         removed = removed.filter { it.profileId != e.profile },
-                        pinned = pinned.filter { it.profileId != e.profile },
+                        pinnedAll = pinnedAll.filter { it.profileId != e.profile },
                         online = online - e.profile,
                         servers = servers - e.profile,
                         marks = marks - e.profile,
@@ -528,21 +549,27 @@ public class DockModel private constructor(private val s: Snapshot) {
                 }
                 is DockEvent.Seen -> seen(e.ref)
                 is DockEvent.Pin ->
-                    if (e.ref in pinned || pinned.size >= MAX_PINNED || e.ref !in tracked || rootOf(e.ref) != e.ref) this else copy(pinned = pinned + e.ref)
-                is DockEvent.Unpin -> if (e.ref in pinned) copy(pinned = pinned - e.ref) else this
+                    if (e.ref in pinnedAll || pinned.size >= pinLimit || e.ref !in tracked || rootOf(e.ref) != e.ref) this else copy(pinnedAll = pinnedAll + e.ref)
+                is DockEvent.Unpin -> if (e.ref in pinnedAll) copy(pinnedAll = pinnedAll - e.ref) else this
                 is DockEvent.Reorder ->
-                    if (e.from == e.to || e.from !in pinned || e.to !in pinned) {
+                    if (e.from == e.to || e.from !in pinnedAll || e.to !in pinnedAll) {
                         this
                     } else {
-                        val l = pinned.toMutableList()
+                        val l = pinnedAll.toMutableList()
                         l.remove(e.from)
-                        l.add(pinned.indexOf(e.to), e.from)
-                        copy(pinned = l)
+                        l.add(pinnedAll.indexOf(e.to), e.from)
+                        copy(pinnedAll = l)
                     }
                 is DockEvent.PinsLoaded -> {
                     val loaded = e.sessions.map { ConversationRef(e.profile, it) }
-                    copy(pinned = (loaded + pinned.filter { it.profileId != e.profile || it !in loaded }).distinct().take(MAX_PINNED), online = online + e.profile)
+                    copy(pinnedAll = (loaded + pinnedAll.filter { it.profileId != e.profile || it !in loaded }).distinct().take(MAX_STORED_PINS), online = online + e.profile)
                 }
+                is DockEvent.PinsReplaced -> {
+                    val loaded = e.sessions.map { ConversationRef(e.profile, it) }.distinct()
+                    val next = (loaded + pinnedAll.filter { it.profileId != e.profile }).take(MAX_STORED_PINS)
+                    if (next == pinnedAll) this else copy(pinnedAll = next)
+                }
+                is DockEvent.PinsSync -> if (e.refs == pinnedAll) this else copy(pinnedAll = e.refs.take(MAX_STORED_PINS))
                 is DockEvent.ServerName ->
                     if (e.name.isNullOrBlank()) copy(servers = servers - e.profile) else if (servers[e.profile] == e.name) this else copy(servers = servers + (e.profile to e.name))
                 is DockEvent.ServerMark ->
@@ -897,12 +924,15 @@ public class DockModel private constructor(private val s: Snapshot) {
         /** The most pinned rings (the dock has about [DEFAULT_CAP] places; pins may not fill it with idle ones). */
         public const val MAX_PINNED: Int = 5
 
+        /** The most pins the shared store keeps per device view; the rings show [MAX_PINNED] of them, the list more. */
+        public const val MAX_STORED_PINS: Int = 50
+
         /** The most recent conversations remembered to offer as idle rings; the least recent is forgotten first. */
         public const val MAX_RECENT: Int = 20
 
-        public fun empty(cap: Int = DEFAULT_CAP, childCap: Int = DEFAULT_CHILD_CAP): DockModel {
-            require(cap >= 1 && childCap >= 1) { "the dock needs at least one ring" }
-            return DockModel(Snapshot(cap, childCap).settled())
+        public fun empty(cap: Int = DEFAULT_CAP, childCap: Int = DEFAULT_CHILD_CAP, pinLimit: Int = MAX_PINNED): DockModel {
+            require(cap >= 1 && childCap >= 1 && pinLimit >= 1) { "the dock needs at least one ring" }
+            return DockModel(Snapshot(cap, childCap, pinLimit = pinLimit).settled())
         }
     }
 }
