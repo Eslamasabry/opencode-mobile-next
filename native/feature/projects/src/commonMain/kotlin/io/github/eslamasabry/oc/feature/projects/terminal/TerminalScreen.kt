@@ -54,6 +54,16 @@ public fun TerminalScreen(state: TerminalUi, actions: TerminalActions) {
     val title = stringResource(Res.string.terminal40Title)
     val unavailable = stringResource(Res.string.terminal40InputOff)
     val selected = state.processes.firstOrNull { it.id == state.selected }
+    val names =
+        state.processes.associate { process ->
+            process.id to
+                when (val name = terminalNameOf(state.processes, process)) {
+                    is TerminalName.Given -> name.text
+                    is TerminalName.Plain ->
+                        if (name.number <= 1) title
+                        else stringResource(Res.string.e7SetupTerminalNumber, name.number)
+                }
+        }
     val connected = state.phase == TerminalPhase.Connected
     val canAct =
         if (state.working) KitEnabled.Disabled(stringResource(Res.string.terminal40Working))
@@ -63,7 +73,7 @@ public fun TerminalScreen(state: TerminalUi, actions: TerminalActions) {
         loading = state.phase == TerminalPhase.Opening || state.phase == TerminalPhase.Connecting,
         topBar = {
             KitTopBar(
-                title = selected?.title ?: title,
+                title = selected?.let { names[it.id] } ?: title,
                 exit = KitTopBarExit.Back,
                 exitLabel = stringResource(Res.string.kitTopBarBack),
                 onExit = actions::back,
@@ -222,8 +232,12 @@ public fun TerminalScreen(state: TerminalUi, actions: TerminalActions) {
                     tabs =
                         state.processes.map {
                             KitTab(
-                                if (it.running) it.title
-                                else stringResource(Res.string.terminal40EndedTab, it.title)
+                                if (it.running) names.getValue(it.id)
+                                else
+                                    stringResource(
+                                        Res.string.terminal40EndedTab,
+                                        names.getValue(it.id),
+                                    )
                             )
                         },
                     selected =
@@ -237,7 +251,7 @@ public fun TerminalScreen(state: TerminalUi, actions: TerminalActions) {
                     items =
                         state.processes.map { process ->
                             KitMenuItem(
-                                process.title,
+                                names.getValue(process.id),
                                 {
                                     sessions = false
                                     actions.select(process.id)
@@ -303,7 +317,7 @@ public fun TerminalScreen(state: TerminalUi, actions: TerminalActions) {
                     anchor = {
                         KitTerminalView(
                             platformView = state.grid?.native,
-                            title = selected.title,
+                            title = names.getValue(selected.id),
                             accessibleMode = state.accessibleMode,
                             onAccessibleModeChange = actions::accessibleMode,
                             transcript = state.transcript,
@@ -343,7 +357,8 @@ public fun TerminalScreen(state: TerminalUi, actions: TerminalActions) {
             title = stringResource(Res.string.terminal40Rename),
             fieldLabel = stringResource(Res.string.terminal40Name),
             confirmLabel = stringResource(Res.string.terminal40Rename),
-            initial = state.processes.firstOrNull { it.id == state.rename }?.title.orEmpty(),
+            initial =
+                state.processes.firstOrNull { it.id == state.rename }?.givenName().orEmpty(),
             validate = { if (it.isBlank()) unavailable else null },
             onResult = actions::rename,
         )
@@ -358,7 +373,7 @@ public fun TerminalScreen(state: TerminalUi, actions: TerminalActions) {
                         body =
                             stringResource(
                                 Res.string.terminal40RemoveBody,
-                                state.removing.joinToString(", ") { it.title },
+                                state.removing.joinToString(", ") { names[it.id] ?: title },
                             ),
                     ),
             onConfirm = actions::remove,
