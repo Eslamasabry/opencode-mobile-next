@@ -73,7 +73,12 @@ public class SettingsPresenter(
     private val problemReport: ProblemReportSender? = null,
     /** The edge dock's on/off switch; null where the app draws no dock. */
     private val edgeDock: EdgeDockSetting? = null,
+    /** Appearance › Glass lab's numbers; null where the build offers no lab. */
+    glassLabPort: GlassLabSetting? = null,
 ) : SettingsActions {
+    private val lab: GlassLabPresenter? = glassLabPort?.let { GlassLabPresenter(scope, it) }
+    override val glassLab: GlassLabActions? get() = lab
+
     private data class Local(
         val stack: ImmutableList<SettingsPage> = persistentListOf(SettingsPage.Hub),
         val query: String = "",
@@ -172,6 +177,7 @@ public class SettingsPresenter(
                 guide ->
                 build(l, f, p, e, guide)
             }
+            .combine(lab?.state ?: flowOf(null)) { s, l -> s.copy(glassLab = l) }
             .stateIn(
                 scope,
                 SharingStarted.Eagerly,
@@ -181,7 +187,7 @@ public class SettingsPresenter(
                     prefs.value,
                     engineNow(),
                     appearanceGuide?.record?.value,
-                ),
+                ).copy(glassLab = lab?.state?.value),
             )
 
     init {
@@ -404,6 +410,7 @@ public class SettingsPresenter(
             systemMotionOff = f.systemMotionOff,
             glassLook = p.glassLook,
             glassLookHold = glassLookHold(p, f),
+            glassLab = lab != null,
             questions = appearanceQuestions(f),
         )
     }

@@ -252,6 +252,26 @@ class AndroidSettingsHost(
             override fun setShown(on: Boolean) = dock.setShown(on)
         }
 
+    /**
+     * Settings › Appearance › Glass lab: preview and dev builds only (the switch build that replaces the installed app
+     * has none). Its numbers are one device preference (`oc.glassTuning`), worn by the app while its switch is on.
+     */
+    override val glassLab: io.github.eslamasabry.oc.feature.settings.presentation.GlassLabSetting? =
+        if (io.github.eslamasabry.opencode_mobile.BuildConfig.FLAVOR == "switch") null
+        else
+            object : io.github.eslamasabry.oc.feature.settings.presentation.GlassLabSetting {
+                override val stored: StateFlow<String?> =
+                    prefs.value.map { it.glassTuning }.distinctUntilChanged().stateIn(scope, SharingStarted.Eagerly, prefs.value.value.glassTuning)
+
+                override fun save(text: String?) {
+                    scope.launch {
+                        prefs.preferences()?.set(io.github.eslamasabry.oc.engine.settings.prefs.PreferenceChange.GlassTuning(text))
+                    }
+                }
+
+                override val build: String = "${buildInfo.versionName} (${buildInfo.versionCode})"
+            }
+
     /** Rows whose page or engine is not in this build are absent (02 §3.7), never dead. */
     private val shipped = settingsShippedPlatform(platform, voiceSettings.offered)
 

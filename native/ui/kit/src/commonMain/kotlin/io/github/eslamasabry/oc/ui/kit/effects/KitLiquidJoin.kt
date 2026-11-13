@@ -385,11 +385,16 @@ private class JoinedPaneNode(
                 saturation = recipe.saturation,
                 contrast = recipe.contrast,
                 brightness = recipe.brightness,
-                knee = kneeOf(spec),
+                knee = if (recipe.hold.local) KNEE_OFF else kneeOf(spec),
                 hold = if (frostsBody) dropSpec!!.recipe.hold.chroma else 0f,
+                local = recipe.hold.let { if (it.local) floatArrayOf(it.localDp.dp.toPx(), it.localFree, it.localSlope) else floatArrayOf(0f, 0f, 1f) },
                 tintMine = tintNow(spec),
                 tintTheirs = tintNow(theirSpec),
                 rimPx = spec.rimDp.dp.toPx(),
+                falloff = spec.rimFalloff,
+                rimFloor = spec.rimFloor,
+                lightDir = spec.lightDir,
+                bendShape = spec.bendShape,
             )
         // 1. The backdrop at the body's resolution, blurred by the body's frost, bent and pressed by the lens pass.
         u.set(programs.lens, mode = 0f, res = res)
@@ -456,7 +461,7 @@ internal fun joinedFrost(body: io.github.eslamasabry.oc.ui.design.effects.Liquid
 internal fun kneeOf(spec: KitLiquidPaneSpec): FloatArray {
     val flipped = (spec.flip?.progress?.value ?: 0f) > .5f
     val lightInk = spec.rimAdds != flipped
-    return floatArrayOf(LiquidJoin.KNEE, LiquidJoin.KNEE_SLOPE, if (lightInk) 1f else 0f)
+    return floatArrayOf(spec.knee, spec.kneeSlope, if (lightInk) 1f else 0f)
 }
 
 /**
@@ -517,6 +522,14 @@ internal class JoinUniforms(
     val rimPx: Float,
     /** The most chroma the body lets through in its inner part (LiquidEdge.heldRgb, LiquidHold.chroma); 0 = no limit. */
     val hold: Float = 0f,
+    /** The rim light's falloff and floor ([io.github.eslamasabry.oc.ui.design.effects.RimLight]) and its direction. */
+    val falloff: Float = RIM_FALLOFF,
+    val rimFloor: Float = io.github.eslamasabry.oc.ui.design.effects.RimLight.FLOOR,
+    val lightDir: FloatArray = SHIPPED_LIGHT,
+    /** The bend's profile (-1 soft dome, 0 the shipped circle, 1 sharp bevel). */
+    val bendShape: Float = 0f,
+    /** The local-contrast hold: (reach px, free, slope); reach 0 = off. */
+    val local: FloatArray = floatArrayOf(0f, 0f, 1f),
 ) {
     /** [light]: the finger's light for modes 4 and 5 (centre x, centre y, radius or line width in px, strength). */
     fun set(p: LiveShaderProgram, mode: Float, res: Float, light: FloatArray = NO_LIGHT) {
@@ -537,13 +550,19 @@ internal class JoinUniforms(
         p.float4("cc", saturation, contrast, brightness, 0f)
         p.float3("knee", knee[0], knee[1], knee[2])
         p.float("hold", hold)
+        p.float3("local", local[0], local[1], local[2])
         p.float4("tintA", tintMine.red * tintMine.alpha, tintMine.green * tintMine.alpha, tintMine.blue * tintMine.alpha, tintMine.alpha)
         p.float4("tintB", tintTheirs.red * tintTheirs.alpha, tintTheirs.green * tintTheirs.alpha, tintTheirs.blue * tintTheirs.alpha, tintTheirs.alpha)
         p.float("rimPx", rimPx)
-        p.float("falloff", RIM_FALLOFF)
-        p.float("rimFloor", io.github.eslamasabry.oc.ui.design.effects.RimLight.FLOOR)
+        p.float("falloff", falloff)
+        p.float("rimFloor", rimFloor)
+        p.float2("lightDir", lightDir[0], lightDir[1])
+        p.float("bendShape", bendShape)
     }
 }
+
+/** The shipped rim light's direction: the top-start / bottom-end diagonal. */
+internal val SHIPPED_LIGHT: FloatArray = floatArrayOf(0.70710678f, 0.70710678f)
 
 private val NO_LIGHT: FloatArray = floatArrayOf(0f, 0f, 1f, 0f)
 
@@ -582,11 +601,14 @@ uniform float2 refr;
 uniform float4 cc;
 uniform float3 knee;
 uniform float hold;
+uniform float3 local;
 uniform float4 tintA;
 uniform float4 tintB;
 uniform float rimPx;
 uniform float falloff;
 uniform float rimFloor;
+uniform float2 lightDir;
+uniform float bendShape;
 uniform float4 light;
 
 float sat01(float x) { return clamp(x, 0.0, 1.0); }
@@ -639,12 +661,34 @@ half4 main(float2 q) {
         float2 at = q;
         if (rimW > 0.0 && depth < rimW) {
             float x = 1.0 - depth / rimW;
-            at = q - (1.0 - sqrt(max(1.0 - x * x, 0.0))) * amount * bend * res;
+            float dome = 1.0 - sqrt(max(1.0 - x * x, 0.0));
+            float x2 = x * x;
+            float shaped = bendShape < 0.0 ? mix(dome, x, -bendShape) : mix(dome, x2 * x2 * x2 * x2, bendShape);
+            at = q - shaped * amount * bend * res;
         }
         float4 c = float4(sampleContent(at));
         float3 rgb = c.rgb;
         float l = dot(rgb, float3(0.213, 0.715, 0.072));
         rgb = clamp(cc.y * (l + cc.x * (rgb - l)) + (0.5 - 0.5 * cc.y + cc.z), 0.0, 1.0);
+        if (local.x > 0.0) {
+            // The local-contrast hold (as LiquidHoldShader's): the local mean passes, the detail round it is compressed.
+            float3 m = rgb;
+            for (int i = 0; i < 12; i++) {
+                float tt = 6.2831853 * (float(i) + 0.5) / 12.0;
+                float2 dir = float2(cos(tt), sin(tt));
+                for (int j = 1; j <= 3; j++) {
+                    float4 s = float4(sampleContent(at + dir * local.x * res * 0.3333 * float(j)));
+                    float ls = dot(s.rgb, float3(0.213, 0.715, 0.072));
+                    m += clamp(cc.y * (ls + cc.x * (s.rgb - ls)) + (0.5 - 0.5 * cc.y + cc.z), 0.0, 1.0);
+                }
+            }
+            m /= 37.0;
+            float3 dv = rgb - m;
+            float len = length(dv);
+            float heldLen = len > local.y ? local.y + (len - local.y) * local.z : len;
+            rgb = len > 0.0001 ? clamp(m + dv * (heldLen / len), 0.0, 1.0) : rgb;
+            return half4(float4(rgb * c.a, c.a));
+        }
         if (knee.y < 1.0) {
             float lum = dot(rgb, float3(0.213, 0.715, 0.072));
             // The rim keeps its colour (content must show there); from half its width inward the colour held back with
@@ -676,7 +720,7 @@ half4 main(float2 q) {
     if (mode < 2.5) {
         float gl = max(length(bend), 0.05);
         // The plain pane's light (KitRimShader): its two lit arcs the brightest, never below the floor elsewhere.
-        float lit = rimLit(dot(bend / gl, float2(0.70710678, 0.70710678)), falloff, rimFloor);
+        float lit = rimLit(dot(bend / gl, lightDir), falloff, rimFloor);
         float edge = sat01(0.5 - dist) * sat01(dist + rimPx + 0.5);
         return half4(edge * lit * mine);
     }

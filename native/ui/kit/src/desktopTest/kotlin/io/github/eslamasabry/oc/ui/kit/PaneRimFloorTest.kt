@@ -7,7 +7,7 @@ import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.isRoot
-import androidx.compose.ui.test.v2.runDesktopComposeUiTest
+import androidx.compose.ui.test.v2.runSkikoComposeUiTest
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
@@ -48,7 +48,7 @@ class PaneRimFloorTest {
 
     private fun check(case: PaneRimScenes.Case, aurora: Boolean): List<String> {
         var result = emptyList<String>()
-        runDesktopComposeUiTest(PaneRimScenes.WIDTH, PaneRimScenes.HEIGHT) {
+        runSkikoComposeUiTest(androidx.compose.ui.geometry.Size(PaneRimScenes.WIDTH.toFloat(), PaneRimScenes.HEIGHT.toFloat()), testTimeout = PaneRimScenes.SCENE_TIMEOUT) {
             PaneRimScenes.settle(this) { PaneRimScenes.Scene(aurora) { case.content() } }
             val image: PixelMap = onAllNodes(isRoot())[0].captureToImage().toPixelMap()
             val box =

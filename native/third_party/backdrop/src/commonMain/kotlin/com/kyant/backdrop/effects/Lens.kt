@@ -8,10 +8,45 @@ import androidx.compose.ui.util.fastCoerceAtLeast
 import androidx.compose.ui.util.fastCoerceAtMost
 import com.kyant.backdrop.BackdropEffectScope
 import com.kyant.backdrop.internal.RoundedRectRefractionShaderString
+import com.kyant.backdrop.internal.OcRefractionShaderString
 import com.kyant.backdrop.internal.RoundedRectRefractionWithDispersionShaderString
 import com.kyant.backdrop.internal.RuntimeShaderEffect
 import com.kyant.backdrop.isRuntimeShaderSupported
 import com.kyant.shapes.RoundedRectangularShape
+
+// OC fork: the kit's Glass lab (2026-11-13) tunes the colour split as an amount (0-1) instead of on/off, and the bend's
+// profile ([bendShape]: -1 a soft dome, 0 upstream's circle, 1 a sharp bevel at the rim). Both at 0 draw exactly
+// upstream's lens without dispersion; otherwise the fork's own shader (OcRefractionShaderString) is used.
+fun BackdropEffectScope.lens(
+    @FloatRange(from = 0.0) refractionHeight: Float,
+    @FloatRange(from = 0.0) refractionAmount: Float,
+    depthEffect: Boolean,
+    @FloatRange(from = 0.0, to = 1.0) dispersion: Float,
+    @FloatRange(from = -1.0, to = 1.0) bendShape: Float = 0f
+) {
+    if (dispersion <= 0f && bendShape == 0f) {
+        lens(refractionHeight, refractionAmount, depthEffect, chromaticAberration = false)
+        return
+    }
+    if (!isRuntimeShaderSupported()) return
+    if (refractionHeight <= 0f || refractionAmount <= 0f) return
+    if (padding > 0f) {
+        padding = (padding - refractionHeight).fastCoerceAtLeast(0f)
+    }
+    val cornerRadii = cornerRadii ?: throwUnsupportedSDFException()
+    val shader = obtainRuntimeShader("OcRefraction", OcRefractionShaderString)
+    shader.apply {
+        setFloatUniform("size", size.width, size.height)
+        setFloatUniform("offset", -padding, -padding)
+        setFloatUniform("cornerRadii", cornerRadii)
+        setFloatUniform("refractionHeight", refractionHeight)
+        setFloatUniform("refractionAmount", -refractionAmount)
+        setFloatUniform("depthEffect", if (depthEffect) 1f else 0f)
+        setFloatUniform("chromaticAberration", dispersion.fastCoerceAtLeast(0f))
+        setFloatUniform("bendShape", bendShape)
+    }
+    effect(RuntimeShaderEffect(shader, "content"))
+}
 
 fun BackdropEffectScope.lens(
     @FloatRange(from = 0.0) refractionHeight: Float,

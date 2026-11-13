@@ -278,6 +278,10 @@ private class LiquidBodyNode(
                 tintMine = tint,
                 tintTheirs = tint,
                 rimPx = rest.rimDp.dp.toPx(),
+                falloff = rest.rimFalloff,
+                rimFloor = rest.rimFloor,
+                lightDir = rest.lightDir,
+                bendShape = rest.bendShape,
             )
         val local = area.topLeft
         // 1. The backdrop at one resolution, blurred by the mixed frost, bent and pressed by the lens pass.

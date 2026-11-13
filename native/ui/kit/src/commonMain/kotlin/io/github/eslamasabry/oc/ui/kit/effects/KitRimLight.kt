@@ -41,6 +41,7 @@ uniform float4 cornerRadii;
 uniform float4 rimColor;
 uniform float falloff;
 uniform float rimFloor;
+uniform float2 lightDir;
 """ + RimLight.SHADER_LIT + """
 float radiusAt(float2 coord, float4 radii) {
     if (coord.x >= 0.0) {
@@ -68,7 +69,7 @@ half4 main(float2 coord) {
     float radius = radiusAt(centeredCoord, cornerRadii);
     float gradRadius = min(radius * 1.5, min(halfSize.x, halfSize.y));
     float2 grad = gradSdRoundedRect(centeredCoord, halfSize, gradRadius);
-    float d = dot(grad, float2(0.70710678, 0.70710678));
+    float d = dot(grad, lightDir);
     float intensity = rimLit(d, falloff, rimFloor);
     return half4(float4(rimColor.rgb * intensity, intensity));
 }
@@ -91,12 +92,21 @@ half4 main(float2 coord) {
     }
 
     /** Every uniform, set before every draw. */
-    fun set(p: LiveShaderProgram, size: Size, radii: FloatArray, color: Color) {
+    fun set(
+        p: LiveShaderProgram,
+        size: Size,
+        radii: FloatArray,
+        color: Color,
+        falloff: Float = RimLight.FALLOFF,
+        floor: Float = RimLight.FLOOR,
+        light: FloatArray = SHIPPED_LIGHT,
+    ) {
         p.float2("size", size.width, size.height)
         p.float4("cornerRadii", radii[0], radii[1], radii[2], radii[3])
         p.float4("rimColor", color.red, color.green, color.blue, 1f)
-        p.float("falloff", RimLight.FALLOFF)
-        p.float("rimFloor", RimLight.FLOOR)
+        p.float("falloff", falloff)
+        p.float("rimFloor", floor)
+        p.float2("lightDir", light[0], light[1])
     }
 
     private val compiled = mutableMapOf<LiveShaderCompiler, LiveShaderProgram?>()
@@ -114,7 +124,7 @@ internal fun DrawScope.drawKitRim(spec: KitLiquidPaneSpec, shape: CornerBasedSha
     if (program == null || spec.rim.alpha <= 0f || spec.rimDp <= 0f || size.width <= 0f || size.height <= 0f) return
     val outline = shape.createOutline(size, layoutDirection, this)
     val w = ceil(spec.rimDp.dp.toPx().coerceAtMost(size.minDimension / 2f)) * 2f
-    KitRimShader.set(program, size, KitRimShader.cornerRadii(shape, size, this, layoutDirection), spec.rim.copy(alpha = 1f))
+    KitRimShader.set(program, size, KitRimShader.cornerRadii(shape, size, this, layoutDirection), spec.rim.copy(alpha = 1f), spec.rimFalloff, spec.rimFloor, spec.lightDir)
     clipPath(Path().apply { addOutline(outline) }) {
         drawOutline(
             outline,

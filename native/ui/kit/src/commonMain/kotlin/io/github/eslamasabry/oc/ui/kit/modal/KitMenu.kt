@@ -531,7 +531,12 @@ private fun KitMenuJoinMotion(
     val calm = remember { androidx.compose.animation.core.Animatable(0f) }
     val j = io.github.eslamasabry.oc.ui.design.effects.LiquidJoin
     val columnPx = with(density) { j.COLUMN_DP.dp.toPx() }
-    val reachPx = with(density) { j.REACH_MENU_DP.dp.toPx() }
+    // The Glass lab's join curve (its shipped number is REACH_MENU_DP).
+    val tunedReach =
+        io.github.eslamasabry.oc.ui.kit.effects.LocalKitGlassTuning.current
+            ?.knobs(io.github.eslamasabry.oc.ui.design.effects.GlassPaneKind.Menu, io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors.current.dark)
+            ?.joinReachDp
+    val reachPx = with(density) { (tunedReach ?: j.REACH_MENU_DP).dp.toPx() }
     drop.reachesCentre = true
     drop.content = { fill.value / if (leaving) j.ROWS_UNTIL_FILL else j.ROWS_FROM_FILL }
     drop.reach = { reachPx * (1f + j.MENU_REACH_SWELL * (1f - calm.value.coerceIn(0f, 1f))) }

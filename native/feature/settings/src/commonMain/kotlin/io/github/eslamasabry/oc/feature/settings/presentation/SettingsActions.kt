@@ -48,6 +48,10 @@ public interface SettingsActions {
 
     public fun onOpen(page: SettingsPage)
 
+    /** Settings › Appearance › Glass lab; null where the build has no lab (it is offered in preview builds only). */
+    public val glassLab: GlassLabActions?
+        get() = null
+
     /**
      * True when Back was used here (search cleared or a page closed); false at the hub with no
      * search.

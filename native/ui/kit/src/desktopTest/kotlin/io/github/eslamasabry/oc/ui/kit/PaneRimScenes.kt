@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -75,7 +76,9 @@ internal object PaneRimScenes {
             Case("context menu", { it.bounds(hasTestTag("kit-menu")) }) {
                 Page {
                     Box(Modifier.fillMaxWidth().padding(top = 120.dp, start = 16.dp)) {
-                        KitMenu(expanded = true, items = items, onDismissRequest = {}) { KitText("A conversation") }
+                        // An anchor with no words: a line of text just above the menu's top edge stood where the rays
+                        // read the ground beyond the rim, and measured the words instead of the rim.
+                        KitMenu(expanded = true, items = items, onDismissRequest = {}) { Box(Modifier.size(width = 160.dp, height = 24.dp)) }
                     }
                 }
             },
@@ -107,7 +110,9 @@ internal object PaneRimScenes {
                     }
                 }
             },
-            Case("chosen segment", { it.bounds(isSelected()) }) {
+            // The chosen segment's glass is its thumb, inset in the segment: the segment's own box (the track round it)
+            // has square end corners that the thumb's round ends never reach.
+            Case("chosen segment", { it.bounds(hasTestTag("kit-segmented-thumb")) }) {
                 Page {
                     Column(Modifier.padding(16.dp).padding(top = 80.dp)) {
                         KitSegmented(Corners.entries.map { KitSegment(it, it.name) }, Corners.entries.first(), "Corners", onChange = {})
@@ -162,9 +167,8 @@ internal object PaneRimScenes {
                     joinEffect = { p, b -> DesktopKitPlatform().liquidJoinEffect(p, b) },
                 ),
                 "en",
-                // A still frame. Known gap (2026-11-13): a still-frame host never paints the aurora (KitLiveBackground),
-                // and motion off instead does not paint it either (and holds every frost), so the "over Aurora" scenes
-                // show the plain ground; the test says so rather than pass them.
+                // A still frame: the painted aurora is drawn at its still moment (KitLiveBackground), the same pixels
+                // every run.
                 stillFrame = true,
             ) {
                 if (aurora) KitLiveBackground(Modifier.fillMaxSize()) { content() }
@@ -187,6 +191,13 @@ internal object PaneRimScenes {
         }
     }
 
+    /**
+     * How long one scene may take to draw and settle: the joined bar and menu run the join shader on the CPU every frame
+     * and took over two minutes on a slow machine. `runDesktopComposeUiTest` wraps its test in a `runTest` that keeps
+     * the default minute whatever `testTimeout` says, so the scenes run through `runSkikoComposeUiTest`, which honours it.
+     */
+    val SCENE_TIMEOUT: kotlin.time.Duration = kotlin.time.Duration.parse("5m")
+
     private const val SETTLE_STEPS = 12
     private const val SETTLE_STEP_MS = 125L
 
@@ -201,15 +212,16 @@ internal object PaneRimScenes {
      * the bar and the message box: the flat ground spreads by a step or two, the Aurora by tens.
      */
     fun groundSpread(image: androidx.compose.ui.graphics.PixelMap): Float {
-        val lum =
-            (6..14).flatMap { row -> listOf(.08f, .5f, .92f).map { col -> image[(image.width * col).toInt(), image.height * row / 20] } }.map {
-                (.2126f * it.red + .7152f * it.green + .0722f * it.blue) * 255f
-            }
-        return lum.max() - lum.min()
+        val px = (6..14).flatMap { row -> listOf(.08f, .5f, .92f).map { col -> image[(image.width * col).toInt(), image.height * row / 20] } }
+        // Colour, not light: the dark plate moves the ground's hue (teal to grey) far more than its light.
+        return px.maxOf { a -> px.maxOf { b -> kotlin.math.sqrt(((a.red - b.red) * (a.red - b.red) + (a.green - b.green) * (a.green - b.green) + (a.blue - b.blue) * (a.blue - b.blue)).toDouble()).toFloat() } } * 255f
     }
 
-    /** The least spread [groundSpread] takes for a page with the Aurora drawn on it. */
-    const val AURORA_SPREAD: Float = 12f
+    /**
+     * The least spread [groundSpread] takes for a page with the Aurora drawn on it: the flat ground spreads 0, the dark
+     * aurora at its still moment about 10-12 (colour), the light one more.
+     */
+    const val AURORA_SPREAD: Float = 6f
 
     const val WIDTH = 1080
     const val HEIGHT = 1800

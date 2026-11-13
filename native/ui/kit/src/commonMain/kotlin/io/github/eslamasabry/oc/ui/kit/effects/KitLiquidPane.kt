@@ -71,7 +71,36 @@ public data class KitLiquidPaneSpec(
      * rim light, the specular and the tint are always drawn at full resolution ([liquidResolutionOf]).
      */
     val resolution: Float = 1f,
-)
+    /** How tightly the rim light gathers at its lit arcs ([io.github.eslamasabry.oc.ui.design.effects.RimLight.FALLOFF]). */
+    val rimFalloff: Float = io.github.eslamasabry.oc.ui.design.effects.RimLight.FALLOFF,
+    /** The least the rim ever is, as a share of its peak ([io.github.eslamasabry.oc.ui.design.effects.RimLight.FLOOR]). */
+    val rimFloor: Float = io.github.eslamasabry.oc.ui.design.effects.RimLight.FLOOR,
+    /** The light's direction, degrees from the start edge (45: the top-start / bottom-end diagonal). */
+    val lightDeg: Float = io.github.eslamasabry.oc.ui.design.effects.GlassTuning.LIGHT_DEG,
+    /** The luminance knee that holds back bright content behind words, and the share of the light past it kept. */
+    val knee: Float = io.github.eslamasabry.oc.ui.design.effects.LiquidJoin.KNEE,
+    val kneeSlope: Float = io.github.eslamasabry.oc.ui.design.effects.LiquidJoin.KNEE_SLOPE,
+    /** The lens's colour split at the edge, 0-1 (0: none, the shipped glass). */
+    val dispersion: Float = 0f,
+    /** The bend's profile: -1 a soft dome, 0 the shipped circle, 1 a sharp bevel at the rim. */
+    val bendShape: Float = 0f,
+    /** How far the specular's bright rim segment reaches from its corner, dp (the shipped glass draws no specular). */
+    val specularReachDp: Float = io.github.eslamasabry.oc.ui.kit.foundation.SPECULAR_REACH_DP,
+    /** The inner shadow along the edge (alpha 0: none, the shipped glass) and its size in dp. */
+    val innerShadow: Float = 0f,
+    val innerShadowDp: Float = io.github.eslamasabry.oc.ui.design.effects.GlassTuning.INNER_SHADOW_DP,
+) {
+    /** The light's direction as a unit vector in the pane's pixels (y down). */
+    internal val lightDir: FloatArray
+        get() {
+            val a = lightDeg * (kotlin.math.PI.toFloat() / 180f)
+            return if (lightDeg == io.github.eslamasabry.oc.ui.design.effects.GlassTuning.LIGHT_DEG) floatArrayOf(DIAGONAL, DIAGONAL)
+            else floatArrayOf(kotlin.math.cos(a), kotlin.math.sin(a))
+        }
+}
+
+/** The shipped light's direction component (1/sqrt 2), as the shaders had it. */
+private const val DIAGONAL: Float = 0.70710678f
 
 /**
  * The resolution a pane of [recipe] draws its backdrop at on a platform offering [platform] (smoothness 2026-11-09):
@@ -116,7 +145,7 @@ internal fun DrawScope.drawLiquidTint(spec: KitLiquidPaneSpec, shape: Shape? = n
         // The same crisp specular as Glass's in-flow panes: a bright rim segment at the top start and a thin glint line
         // just inside the top edge (owner 2026-11-09, "crisper glossy glass").
         val top = (shape as? CornerBasedShape)?.let { it.topStart.toPx(size, this) } ?: (size.minDimension / 2f)
-        drawGlassSpecular(shape, spec.specular, spec.rtl, minOf(top, size.minDimension / 2f), glintShare = spec.glintShare)
+        drawGlassSpecular(shape, spec.specular, spec.rtl, minOf(top, size.minDimension / 2f), glintShare = spec.glintShare, reachDp = spec.specularReachDp)
     }
 }
 

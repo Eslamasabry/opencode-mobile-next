@@ -180,6 +180,8 @@ public object PreferenceMapping {
             liveHeldByStyle = p.effects.liveHeldByStyle,
             liveStyle = p.effects.liveStyle,
             liveStrength = strength(p.effects.liveIntensity).strength,
+            // The Glass lab's numbers, only while its "Use in the whole app" switch is on (preview builds).
+            glassTuning = p.glassTuning?.let { io.github.eslamasabry.oc.ui.design.effects.GlassTuning.decode(it) }?.takeIf { it.inApp },
         )
 
     /**

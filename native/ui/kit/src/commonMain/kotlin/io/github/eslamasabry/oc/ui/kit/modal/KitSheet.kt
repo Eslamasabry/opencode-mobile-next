@@ -655,7 +655,7 @@ internal fun Modifier.predictiveShrink(back: KitBackProgress, origin: TransformO
  */
 @Composable
 internal fun kitModalGlassFace(shape: KitShapeId, shrink: () -> Float = { 0f }): Modifier? =
-    kitLiquidSheetFace(shape.shape(), shrink) ?: kitGlassSheet(shape, LocalKitColors.current.surface2)
+    kitLiquidSheetFace(shape.shape(), shrink, dialog = shape == KitShapeId.Dialog) ?: kitGlassSheet(shape, LocalKitColors.current.surface2)
 
 @Composable
 private fun SheetPanel(

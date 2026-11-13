@@ -83,7 +83,22 @@ public data class LiquidRecipe(
  * so a pure green held to .61 of its light by the knee is also a muted green, and a disc of it has no ring. The rim,
  * where content must show, keeps its colour.
  */
-public data class LiquidHold(val knee: Boolean, val chroma: Float) {
+public data class LiquidHold(
+    val knee: Boolean,
+    val chroma: Float,
+    /**
+     * The local-contrast hold (owner 2026-11-13, "half glass half frosting" and the black slab): detail is compressed
+     * round the LOCAL mean of what is behind (its reach [localDp]); the mean light and colour pass. 0 = off, as shipped:
+     * a parameter for the Glass tuning page, no role uses it yet.
+     */
+    val localDp: Float = 0f,
+    /** The detail (RGB distance from the local mean, 0-1) that passes whole, and the share kept beyond it. */
+    val localFree: Float = 0f,
+    val localSlope: Float = 1f,
+) {
+    /** Whether this hold is the local-contrast one. */
+    public val local: Boolean get() = localDp > 0f
+
     public companion object {
         public val Off: LiquidHold = LiquidHold(knee = false, chroma = 0f)
 

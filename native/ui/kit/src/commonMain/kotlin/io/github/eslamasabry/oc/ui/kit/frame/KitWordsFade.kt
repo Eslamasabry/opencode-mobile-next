@@ -78,7 +78,7 @@ internal class KitWordsFade private constructor(
      * the body), cleared along the pane edge [edge] (root px: the pane's top edge for [KitWordsClear.Below], its bottom
      * edge for [KitWordsClear.Above]) over its lens rim [rim]. Records nothing onto this scope's canvas.
      */
-    fun DrawScope.record(edge: Float, rim: Float, clearAbove: Boolean = false) {
+    fun DrawScope.record(edge: Float, rim: Float, clearAbove: Boolean = false, clear: Float = 1f) {
         val from = layerOf()
         val origin = originOf()
         sync()
@@ -86,7 +86,9 @@ internal class KitWordsFade private constructor(
         if (from.size.width <= 0 || from.size.height <= 0) return
         target.record(this, layoutDirection, from.size) {
             drawLayer(from)
-            if (!edge.isNaN() && rim > 0f) {
+            // [clear]: how much of the page under the words goes (1, as shipped: all of it; the Glass lab may lower it).
+            val a = clear.coerceIn(0f, 1f)
+            if (!edge.isNaN() && rim > 0f && a > 0f) {
                 val h = size.height
                 // On whole pixels (wholePx): a clearing gradient across a fractional pixel edge crashed the emulator's
                 // renderer (KitScrollEdges.kt).
@@ -95,20 +97,20 @@ internal class KitWordsFade private constructor(
                         val y0 = wholePx(edge - origin.y).coerceIn(0f, h)
                         val y1 = wholePx(edge - origin.y + rim).coerceIn(0f, h)
                         if (y1 > y0) {
-                            drawRect(brush.of(0f, 1f, 1f, y0, y1), Offset(0f, y0), Size(size.width, y1 - y0), blendMode = BlendMode.DstOut)
+                            drawRect(brush.of(0f, 1f, 1f, y0, y1), Offset(0f, y0), Size(size.width, y1 - y0), alpha = a, blendMode = BlendMode.DstOut)
                         }
-                        if (y1 < h) drawRect(Color.Black, Offset(0f, y1), Size(size.width, h - y1), blendMode = BlendMode.DstOut)
+                        if (y1 < h) drawRect(Color.Black, Offset(0f, y1), Size(size.width, h - y1), alpha = a, blendMode = BlendMode.DstOut)
                         // Parts of glass stand above the box inside the block (phrase chips, a request card's controls):
                         // their words get nothing bright either. Only the box's own rim keeps the recording.
-                        if (clearAbove && y0 > 0f) drawRect(Color.Black, Offset(0f, 0f), Size(size.width, y0), blendMode = BlendMode.DstOut)
+                        if (clearAbove && y0 > 0f) drawRect(Color.Black, Offset(0f, 0f), Size(size.width, y0), alpha = a, blendMode = BlendMode.DstOut)
                     }
                     KitWordsClear.Above -> {
                         val y1 = wholePx(edge - origin.y).coerceIn(0f, h)
                         val y0 = wholePx(edge - origin.y - rim).coerceIn(0f, h)
                         if (y1 > y0) {
-                            drawRect(brush.of(1f, 0f, 1f, y0, y1), Offset(0f, y0), Size(size.width, y1 - y0), blendMode = BlendMode.DstOut)
+                            drawRect(brush.of(1f, 0f, 1f, y0, y1), Offset(0f, y0), Size(size.width, y1 - y0), alpha = a, blendMode = BlendMode.DstOut)
                         }
-                        if (y0 > 0f) drawRect(Color.Black, Offset(0f, 0f), Size(size.width, y0), blendMode = BlendMode.DstOut)
+                        if (y0 > 0f) drawRect(Color.Black, Offset(0f, 0f), Size(size.width, y0), alpha = a, blendMode = BlendMode.DstOut)
                     }
                 }
             }
@@ -176,11 +178,12 @@ internal fun Modifier.kitWordsFadeRecorder(
     rim: () -> Float,
     after: Boolean = false,
     clearAbove: () -> Boolean = { false },
+    clear: () -> Float = { 1f },
 ): Modifier =
     drawWithContent {
-        if (!after) with(fade) { record(edge(), rim(), clearAbove()) }
+        if (!after) with(fade) { record(edge(), rim(), clearAbove(), clear()) }
         drawContent()
-        if (after) with(fade) { record(edge(), rim(), clearAbove()) }
+        if (after) with(fade) { record(edge(), rim(), clearAbove(), clear()) }
     }
 
 /** Where a top pane's bottom edge lies and how deep its lens rim reaches, in root px (NaN / 0 while unknown). */

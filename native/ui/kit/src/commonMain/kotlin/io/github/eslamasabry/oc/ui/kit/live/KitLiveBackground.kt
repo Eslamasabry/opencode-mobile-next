@@ -75,8 +75,9 @@ public fun KitLiveBackground(modifier: Modifier = Modifier, shared: Boolean = fa
     val on = appearance.liveBackground && !appearance.saver && strength > 0f
     val shadersSupported = remember(platform) { platform.liveShaders?.compile(LiveShaderLib.PROBE) != null }
     val render = liveRenderFor(appearance.liveStyle, on, shadersSupported)
-    // The painted aurora keeps its earlier gate: it is not drawn under a still-frame (test or screenshot) host.
-    val paints = render == LiveRender.Painted && !motion.stillFrame
+    // The painted aurora is drawn under a still-frame (test or screenshot) host too, at its still moment (no drift: the
+    // clock does not run there), so a picture "over Aurora" shows the Aurora, the same pixels every time.
+    val paints = render == LiveRender.Painted
     val plate = rememberAuroraPlate(if (paints) appearance.liveStyle else null)
     val ground = colors.ground
     val accent = roles.accent

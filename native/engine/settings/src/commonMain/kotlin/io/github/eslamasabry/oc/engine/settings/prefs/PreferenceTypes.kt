@@ -135,6 +135,8 @@ public data class DevicePreferences(
     val accent: String? = null,
     val frost: FrostStrength = FrostStrength.Balanced,
     val glassLook: GlassLookChoice = GlassLookChoice.Glossy,
+    /** The Glass lab's stored block (`oc.glassTuning`); null = never tuned, the shipped glass. */
+    val glassTuning: String? = null,
     val reasoningExpanded: Boolean = false,
     val timestampsVisible: Boolean = false,
 ) {
@@ -165,6 +167,9 @@ public sealed interface PreferenceChange {
 
     /** The Glass look; Glossy removes the key. Every write also removes the retired `oc.glassEdges`. */
     public data class Look(val value: GlassLookChoice) : PreferenceChange
+
+    /** The Glass lab's block; null removes the key (the shipped glass). */
+    public data class GlassTuning(val text: String?) : PreferenceChange
 
     public data class ReasoningExpanded(val value: Boolean) : PreferenceChange
 

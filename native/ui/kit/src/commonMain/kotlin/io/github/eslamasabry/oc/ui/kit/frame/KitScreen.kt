@@ -309,6 +309,11 @@ public fun KitScreen(
     // rebuilt, so a chip row keeps its scroll and press state when the lens comes or goes (battery saver, reduced motion).
     val latestBelow = rememberUpdatedState(floatingBar?.below)
     val movableBelow = remember { movableContentOf { latestBelow.value?.invoke() } }
+    // The Glass lab's "Page behind the words" (shipped 1: what passes under a pane's words is cleared).
+    val tuning = io.github.eslamasabry.oc.ui.kit.effects.LocalKitGlassTuning.current
+    val tuneDark = LocalKitColors.current.dark
+    val barClear by rememberUpdatedState(tuning?.knobs(io.github.eslamasabry.oc.ui.design.effects.GlassPaneKind.Bar, tuneDark)?.wordsClear ?: 1f)
+    val boxClear by rememberUpdatedState(tuning?.knobs(io.github.eslamasabry.oc.ui.design.effects.GlassPaneKind.MessageBox, tuneDark)?.wordsClear ?: 1f)
     // A status line never decides the layout. It used to: a line arriving, leaving or folding away for typing moved the
     // bar, body and bottom block to the other layout, which made the transcript jump and dropped the message box's
     // focus, so the keyboard closed (emulator 2026-11-10, the demo chat; owner, a new install's first chat: "steals
@@ -422,7 +427,7 @@ public fun KitScreen(
                             // reads it).
                             .then(
                                 if (topFade == null) Modifier
-                                else Modifier.kitWordsFadeRecorder(topFade, { topPane.bottom }, { topPane.rim }, after = true)
+                                else Modifier.kitWordsFadeRecorder(topFade, { topPane.bottom }, { topPane.rim }, after = true, clear = { barClear })
                             )
                             .then(
                                 if (!edgesFade) Modifier
@@ -521,7 +526,7 @@ public fun KitScreen(
                             }
                             .then(
                                 if (wordsFade == null) Modifier
-                                else Modifier.kitWordsFadeRecorder(wordsFade, { bottomState.wordsTop }, { bottomState.wordsRim }, clearAbove = { bottomState.stacked })
+                                else Modifier.kitWordsFadeRecorder(wordsFade, { bottomState.wordsTop }, { bottomState.wordsRim }, clearAbove = { bottomState.stacked }, clear = { boxClear })
                             )
                             .then(
                                 if (edgesFade) Modifier
@@ -652,7 +657,7 @@ public fun KitScreen(
                                         if (floatFade == null || barFace == null) Modifier
                                         else
                                             Modifier.kitTopPaneReport(floatPane, LIQUID_BAR_INSET_X, LIQUID_BAR_INSET_Y)
-                                                .kitWordsFadeRecorder(floatFade, { floatPane.bottom }, { floatPane.rim })
+                                                .kitWordsFadeRecorder(floatFade, { floatPane.bottom }, { floatPane.rim }, clear = { barClear })
                                     )
                             ) {
                                 CompositionLocalProvider(io.github.eslamasabry.oc.ui.kit.effects.LocalKitOnLiquidGlass provides (barFace != null)) {

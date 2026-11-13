@@ -5,6 +5,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.graphics.BlurEffect
+import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.onGloballyPositioned
@@ -31,11 +32,40 @@ uniform float hold;
 uniform float4 box;
 uniform float2 corner;
 uniform float4 cc;
+uniform float3 local;
 
 float sat01(float x) { return clamp(x, 0.0, 1.0); }
 float ss(float e0, float e1, float x) { float t = sat01((x - e0) / (e1 - e0)); return t * t * (3.0 - 2.0 * t); }
 
+float3 controls(float2 p) {
+    float4 c = float4(content.eval(p));
+    float3 rgb = c.rgb / max(c.a, 0.0001);
+    float l = dot(rgb, float3(0.213, 0.715, 0.072));
+    return clamp(cc.y * (l + cc.x * (rgb - l)) + (0.5 - 0.5 * cc.y + cc.z), 0.0, 1.0);
+}
+
 half4 main(float2 q) {
+    if (local.x > 0.0) {
+        // The local-contrast hold: the mean of what is behind (the point and three rings of twelve) passes; the detail
+        // round it is kept whole up to local.y and only local.z of the rest beyond.
+        float a0 = float(content.eval(q).a);
+        float3 v = controls(q);
+        float3 m = v;
+        for (int i = 0; i < 12; i++) {
+            float t = 6.2831853 * (float(i) + 0.5) / 12.0;
+            float2 dir = float2(cos(t), sin(t));
+            float2 dir2 = float2(cos(t + 0.2618), sin(t + 0.2618));
+            m += controls(q + dir * local.x);
+            m += controls(q + dir2 * (local.x * 0.6667));
+            m += controls(q + dir * (local.x * 0.3333));
+        }
+        m /= 37.0;
+        float3 dv = v - m;
+        float len = length(dv);
+        float held = len > local.y ? local.y + (len - local.y) * local.z : len;
+        float3 o = len > 0.0001 ? m + dv * (held / len) : v;
+        return half4(float4(clamp(o, 0.0, 1.0) * a0, a0));
+    }
     float4 c = float4(content.eval(q));
     float a = max(c.a, 0.0001);
     float3 rgb = c.rgb / a;
@@ -90,8 +120,11 @@ internal class LiquidHoldUniforms(
     val saturation: Float,
     val contrast: Float,
     val brightness: Float,
+    /** The local-contrast hold: (reach px, free, slope); reach 0 = off. */
+    val local: FloatArray = floatArrayOf(0f, 0f, 1f),
 ) {
     fun set(p: LiveShaderProgram) {
+        p.float3("local", local[0], local[1], local[2])
         p.float3("knee", knee[0], knee[1], knee[2])
         p.float("hold", hold)
         p.float4("box", left, top, halfWidth, halfHeight)
@@ -126,6 +159,7 @@ internal class LiquidHoldUniforms(
                 saturation = colour[0],
                 contrast = colour[1],
                 brightness = colour[2],
+                local = if (hold.local) floatArrayOf(hold.localDp * density, hold.localFree, hold.localSlope) else floatArrayOf(0f, 0f, 1f),
             )
         }
     }
@@ -146,17 +180,29 @@ public fun kitLiquidPlainStandIn(spec: KitLiquidPaneSpec, backdrop: KitLiquidBac
         .drawWithCache {
             val layer = obtainGraphicsLayer()
             val r = spec.recipe.blurDp.dp.toPx()
+            // With a local hold, the backdrop on a layer padded by the blur and the mean's reach, as the library pads its
+            // own, so neither clamps at the pane's own edge; without one, as before (no padding).
+            val pad = if (spec.recipe.hold.local) kotlin.math.ceil(r + spec.recipe.hold.localDp.dp.toPx() + 2f) else 0f
             onDrawBehind {
                 val c = at[0] ?: return@onDrawBehind
                 val radius = maxOf(shape.topStart.toPx(size, this), shape.topEnd.toPx(size, this), shape.bottomStart.toPx(size, this), shape.bottomEnd.toPx(size, this))
                 val colour = floatArrayOf(spec.recipe.saturation, spec.recipe.contrast, spec.recipe.brightness)
                 layer.renderEffect =
                     program?.let {
-                        LiquidHoldUniforms.of(spec, size.width, size.height, 0f, 0f, radius, density, colour).set(it)
+                        LiquidHoldUniforms.of(spec, size.width, size.height, pad, pad, radius, density, colour).set(it)
                         platform.liquidJoinEffect(it, r)
                     } ?: BlurEffect(r, r)
-                layer.record { backdrop.draw(this, c) }
-                drawLayer(layer)
+                if (pad <= 0f) {
+                    layer.record { backdrop.draw(this, c) }
+                    drawLayer(layer)
+                } else {
+                    val w = size.width.toInt() + 2 * pad.toInt()
+                    val h = size.height.toInt() + 2 * pad.toInt()
+                    layer.record(androidx.compose.ui.unit.Density(density, fontScale), layoutDirection, androidx.compose.ui.unit.IntSize(w, h)) {
+                        translate(pad, pad) { backdrop.draw(this, c) }
+                    }
+                    translate(-pad, -pad) { drawLayer(layer) }
+                }
                 drawLiquidTint(spec, shape)
                 drawKitRim(spec, shape, rim)
             }
