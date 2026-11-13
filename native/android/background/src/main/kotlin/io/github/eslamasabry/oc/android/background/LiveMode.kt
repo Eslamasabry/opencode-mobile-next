@@ -84,6 +84,7 @@ public class LiveModeController(
     internal var pause: PauseState = PauseState.Unsupported
     internal var stoppedByAndroidTimeout: Boolean = false
     internal var pauseRevision: Int = 0
+    private var resumeAfterUpdateOwed: Boolean = false
     internal var disposed: Boolean = false
     internal val signIn: SignInForegroundState = SignInForegroundState(this)
 
@@ -97,14 +98,27 @@ public class LiveModeController(
      * closed. One exception (B-241): Android ending the app to install its update is not the
      * person's choice to stop, so a connection they had on is resumed once, the same way their
      * Resume tap would. If Android refuses the start, the pause and its notice stay as they were.
+     *
+     * Android refuses to start a foreground service from a background process, so that one automatic resume is
+     * spent only when [appInFront]. A restore from the application's background step passes false: the resume
+     * stays owed and the next restore with the app in front (the "H2.live" step) takes it.
      */
-    public suspend fun restore() {
+    public suspend fun restore(appInFront: Boolean = true) {
         if (disableIfUnsupported()) return
-        val savedEnabled = enabled
+        val savedEnabled = enabled || resumeAfterUpdateOwed
         val read = refreshPause()
         if (!read.supported) return
         if (read.paused) {
-            if (savedEnabled && read.reason == PauseReason.AppUpdated && read.canResume) resume()
+            if (savedEnabled && read.reason == PauseReason.AppUpdated && read.canResume) {
+                if (appInFront) {
+                    resumeAfterUpdateOwed = false
+                    resume()
+                } else {
+                    resumeAfterUpdateOwed = true
+                    // The saved choice stays on disk so the in-front step still sees it.
+                    optIn.write(true)
+                }
+            }
             return
         }
         run(if (savedEnabled) Method.Enable else Method.Status, persist = false)

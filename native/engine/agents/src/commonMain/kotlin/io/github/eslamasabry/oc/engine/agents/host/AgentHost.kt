@@ -21,7 +21,7 @@ import kotlin.time.Duration
  * shape). Every call is keyed by the OWNER profile ([io.github.eslamasabry.oc.engine.agents.ownership.AgentOwnership]),
  * never by an alias. No call takes or returns a raw string from a guest process except under Details.
  *
- * Android binds `AndroidAgentHost` (`:android:agenthost`, S3-AGENTHOST); desktop and iOS bind [UnavailableAgentHost].
+ * Android binds `AndroidAgentHost` (`:android:linux`); desktop and iOS bind [UnavailableAgentHost].
  * Errors: until CR17-1 lands `Failure.Runtime(RuntimeProblem)`, host problems travel as the existing leaves listed in
  * [AgentHostProblem.asFailure] and come back with [agentHostProblem] (lossless: the channel code is the tag).
  */

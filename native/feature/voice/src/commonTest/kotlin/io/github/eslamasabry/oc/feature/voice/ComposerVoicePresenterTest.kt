@@ -118,48 +118,10 @@ class ComposerVoicePresenterTest {
             runCurrent()
             val ui = rig.presenter.state.value
             assertEquals(MicPhase.Idle, ui.phase)
-            assertNull(ui.secondsLeft)
             assertEquals(VoiceNote.StoppedAfterPause, ui.note)
             assertEquals("run the tests", rig.field.value)
             assertTrue(rig.field.sent.isEmpty())
         }
-
-    @Test
-    fun `B-MEDIA-017 after a pause the old Send now and Don't send do nothing and the words stay unsent`() = runTest {
-        val rig = Rig(this, autoSend = true)
-        runCurrent()
-        rig.presenter.tapMic()
-        runCurrent()
-        rig.listening("ship it")
-        runCurrent()
-        rig.dictation.state.value = VoiceState.Done("ship it", VoiceEnd.Silence)
-        runCurrent()
-        rig.presenter.sendNow()
-        rig.presenter.dontSend()
-        advanceTimeBy(5_000)
-        runCurrent()
-        assertTrue(rig.field.sent.isEmpty())
-        assertEquals("ship it", rig.field.value)
-        assertEquals(MicPhase.Idle, rig.presenter.state.value.phase)
-    }
-
-    @Test
-    fun `B-MEDIA-017 changing the field during the countdown cancels the send`() = runTest {
-        val rig = Rig(this, autoSend = true)
-        runCurrent()
-        rig.presenter.tapMic()
-        runCurrent()
-        rig.listening("deploy")
-        runCurrent()
-        rig.dictation.state.value = VoiceState.Done("deploy now", VoiceEnd.Silence)
-        runCurrent()
-        rig.field.value = "deploy now please"
-        rig.presenter.fieldChanged(rig.field.value)
-        advanceTimeBy(5_000)
-        runCurrent()
-        assertTrue(rig.field.sent.isEmpty())
-        assertEquals(MicPhase.Idle, rig.presenter.state.value.phase)
-    }
 
     @Test
     fun `B-MEDIA-016 a spoken slash command is never auto-sent and the pause is explained`() = runTest {
@@ -192,7 +154,6 @@ class ComposerVoicePresenterTest {
         advanceTimeBy(5_000)
         runCurrent()
         assertTrue(rig.field.sent.isEmpty())
-        assertEquals(null, rig.presenter.state.value.secondsLeft)
         assertEquals(VoiceNote.StoppedAfterPause, rig.presenter.state.value.note)
     }
 
@@ -347,7 +308,7 @@ class ComposerVoicePresenterTest {
     }
 
     @Test
-    fun `leaving the app ends the countdown and tells the recognizer`() = runTest {
+    fun `leaving the app after a pause sends nothing and tells the recognizer`() = runTest {
         val rig = Rig(this, autoSend = true)
         runCurrent()
         rig.presenter.tapMic()

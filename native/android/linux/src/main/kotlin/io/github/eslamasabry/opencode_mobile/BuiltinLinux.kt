@@ -5103,6 +5103,8 @@ class BuiltinLinux(private val context: Context) {
                     .putString("restoreReason", reason)
             capturePendingDrain(edit, profile, includeOther)
             if (profile != null) edit.remove(recipeKey(profile))
+            if (PhoneServerStopRecord.asked(cause))
+                edit.putLong(PhoneServerStopRecord.ASKED_AT_KEY, System.currentTimeMillis())
             check(
                 NativeRuntimeOwnership.revocationMayCommit(stopRevision, wantedRevision) &&
                     edit.commit()

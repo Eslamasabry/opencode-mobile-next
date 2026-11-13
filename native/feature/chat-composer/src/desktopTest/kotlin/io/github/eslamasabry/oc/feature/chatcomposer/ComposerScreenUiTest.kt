@@ -117,6 +117,19 @@ class ComposerScreenUiTest {
     }
 
     @Test
+    fun `a chip that opens a sheet lets the keyboard go first`() = runComposeUiTest {
+        port.facts.value =
+            ComposerFacts(model = ModelFacts(modelId = "anthropic/claude-sonnet-5", catalogLoading = true), approval = ApprovalMode.AsksFirst)
+        show()
+        onNode(hasSetTextAction()).performClick()
+        onNode(hasSetTextAction()).assertIsFocused()
+        onNodeWithContentDescription("Sonnet 5").performClick()
+        waitForIdle()
+        onNode(hasSetTextAction()).assertIsNotFocused()
+        assertEquals(listOf("model"), openers.opened)
+    }
+
+    @Test
     fun `P09-10_1 with a fine pointer Enter sends and Shift+Enter is a newline`() = runComposeUiTest {
         show(finePointer = true, keepFocusOnSend = true)
         type("first line")

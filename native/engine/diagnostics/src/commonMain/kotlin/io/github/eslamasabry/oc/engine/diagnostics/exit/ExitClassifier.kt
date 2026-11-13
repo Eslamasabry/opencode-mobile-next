@@ -108,6 +108,16 @@ public object ExitClassifier {
             ExitReason.SUB_LARGE_CACHED, ExitReason.SUB_MEMORY_PRESSURE, ExitReason.SUB_REMOVE_LRU,
         )
 
+    /** How long after a stop or restart the app itself did an exit still counts as that stop. */
+    public const val ASKED_STOP_WINDOW_MS: Long = 2 * 60 * 1000L
+
+    /**
+     * Whether an exit at [exitAtMs] came right after a stop or restart the person asked for in the app
+     * ([askedStopAtMs], null when none was recorded): that exit is not news.
+     */
+    public fun followsAskedStop(exitAtMs: Long, askedStopAtMs: Long?): Boolean =
+        askedStopAtMs != null && exitAtMs >= askedStopAtMs && exitAtMs - askedStopAtMs <= ASKED_STOP_WINDOW_MS
+
     public fun classify(
         reason: Int,
         subReason: Int,
@@ -121,6 +131,8 @@ public object ExitClassifier {
                     // An update also ends the old process "because the user asked".
                     subReason == ExitReason.SUB_PACKAGE_UPDATE -> ExitKind.Update
                     subReason == ExitReason.SUB_REMOVE_TASK -> ExitKind.ForceStop
+                    // "Stop app" asked for by name (the person's Stop or an install tool), never a battery manager.
+                    subReason == ExitReason.SUB_STOP_APP -> ExitKind.ForceStop
                     // In the background (a foreground service counts): the person, or a maker's battery manager.
                     importance > ExitReason.IMPORTANCE_FOREGROUND -> ExitKind.BackgroundStop
                     // In front, or no importance recorded: the person's own stop.

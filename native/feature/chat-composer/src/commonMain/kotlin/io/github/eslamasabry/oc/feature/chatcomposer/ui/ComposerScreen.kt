@@ -245,6 +245,8 @@ private fun ChipRow(state: ComposerUi, actions: ComposerActions, freeModel: Bool
     val stop = state.chips.filterIsInstance<ComposerChip.Stop>().firstOrNull()
     val approvals = state.chips.filterIsInstance<ComposerChip.Approval>()
     val model = state.chips.filterIsInstance<ComposerChip.Model>().firstOrNull()
+    // A chip opens a sheet: the keyboard goes first so the sheet opens whole, not half under the keyboard.
+    val focus = LocalFocusManager.current
     KitComposerStatusStrip(
         hasChips = approvals.isNotEmpty(),
         model =
@@ -254,7 +256,10 @@ private fun ChipRow(state: ComposerUi, actions: ComposerActions, freeModel: Bool
                     KitComposerModelChip(
                         modelChipWords(model) +
                             if (freeModel) stringResource(Res.string.upgradeComposerFree) else "",
-                        onClick = actions::onModelChip,
+                        onClick = {
+                            focus.clearFocus()
+                            actions.onModelChip()
+                        },
                     )
                 }),
         stop =
@@ -276,7 +281,10 @@ private fun ChipRow(state: ComposerUi, actions: ComposerActions, freeModel: Bool
                 kind = KitChipKind.Action,
                 icon = if (chip.mode == ApprovalMode.Paused) KitIcons.pause else KitIcons.shield,
                 selected = if (chip.mode == ApprovalMode.AutoApprove) true else null,
-                onClick = actions::onApprovalChip,
+                onClick = {
+                    focus.clearFocus()
+                    actions.onApprovalChip()
+                },
             )
         }
     }
