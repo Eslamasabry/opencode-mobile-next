@@ -362,7 +362,7 @@ public fun KitScreen(
             // the status bar and the bar; at rest its content starts below them (KitTopEdge.kt).
             val frostedFace = if (topPart != null && edgesFade && barFace == null) kitFrostedBarFace(topFrost) else null
             val look = topEdgeLook(liquid = barFace != null, frosted = frostedFace != null)
-            val statusBlur = if (edgesFade && look != KitTopEdgeLook.Ground) kitStatusEdgeBlur() else null
+            val statusBlur = if (edgesFade && look != KitTopEdgeLook.Clear) kitStatusEdgeBlur() else null
             // A bottom block that is one pane of glass (KitReportBottomSlab): it sits in from the sides as the bar does.
             val slab = bottomState.slab && bottomPart != null
             // Owner 2026-11-14 ("Wtfff": a smear of bent transcript text along the message box's top edge, and words
@@ -489,10 +489,19 @@ public fun KitScreen(
                                     Modifier.kitScrollEdges(
                                         // Owner 2026-11-14 ("Wtfff"): floating things own their ground. Nothing of the
                                         // body is drawn under the status bar, the bar or its status line; it fades in
-                                        // over 12 dp below them (styles that lay a band of ground there keep the band).
-                                        // Below a control floating under the bar, a list ends itself (kitScreenListEdges).
-                                        clearAbove = if (topPart == null || look == KitTopEdgeLook.Ground) null else ({ (statusPx + topPx).toFloat() }),
+                                        // over 12 dp below them. Below a control floating under the bar, a list ends
+                                        // itself (kitScreenListEdges).
+                                        clearAbove = if (topPart == null) null else ({ (statusPx + topPx).toFloat() }),
                                         topReach = HEADER_FADE_DP.dp,
+                                        // Owner 2026-11-14 ("solids ... on the header"): the clear look lays nothing
+                                        // behind the chrome, so the body's fade alone ends the content before the bar.
+                                        // It grows with what lies under the chrome (none at rest: a page at rest looks
+                                        // as it did; at once under reduced motion, a clean edge at the bar's bottom
+                                        // meanwhile), and gives way to a list that ends itself below a control floating
+                                        // under the bar, so that control is never faded with the words.
+                                        topReachPx =
+                                            if (look != KitTopEdgeLook.Clear) null
+                                            else ({ if (zones.topOn() > 0f) 0f else fadeTopPx * under() }),
                                         // And nothing in or under the bottom block (its chips row, the message box): the
                                         // body fades out over the 16 dp above it. A list that ends itself (above the jump
                                         // pill too) takes this over, so the pill, drawn beside the list, stays whole.
@@ -504,10 +513,9 @@ public fun KitScreen(
                             .kitMaxWidth(cap)
                     ) { KitScreenBody(edges) { bodyPart() } }
                 }
-                if (edgesFade && topPart != null && frost != null) {
-                    if (look == KitTopEdgeLook.Ground) KitGroundBand(bandPx = { statusPx + topPx }, under = under)
-                    else KitStatusEdge(topFrost ?: frost, statusPx, under = under, blur = statusBlur)
-                }
+                // Glass's status edge; the clear look draws nothing behind the chrome (KitTopEdge.kt).
+                if (edgesFade && topPart != null && frost != null && look != KitTopEdgeLook.Clear)
+                    KitStatusEdge(topFrost ?: frost, statusPx, under = under, blur = statusBlur)
                 // The bar, and under it the one status line: one block whose height is the body's top room, so a line
                 // folding in or out eases the transcript down or up and nothing else moves.
                 if (topPart != null || ownsLine) {
