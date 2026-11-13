@@ -392,7 +392,8 @@ internal fun SettingsFrame(
         // Glass step 4: where the lens is drawn the page scrolls on under its bar, a floating liquid capsule; the kit
         // records the page for it. Everywhere else the bar is pinned as before.
         // The page's own navigation (the Appearance tabs) is the bar's second row, inside the same pane.
-        floatingBar = KitFloatingBar(below = pinned),
+        // The tabs stay under the bar in every style (belowPinned), as they do inside the floating pane.
+        floatingBar = KitFloatingBar(below = pinned, belowPinned = true),
     ) {
         KitPinnedFootBody(
             scroll = pageScroll,
