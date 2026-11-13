@@ -964,7 +964,21 @@ private fun ChatRow(
             }
         is ThoughtRow -> {
             val detail = facts.reading.details[row.key]
-            if (detail != null && folds != null)
+            // Review #13: a turn whose only work is thinking folds its thoughts under one work line (this row is its
+            // first thought; the others' rows are hidden). A turn with steps folds them under its own work line.
+            val thoughts = facts.reading.thoughtWork[row.turnId]
+            if (thoughts != null && folds != null && facts.work[row.turnId] == null)
+                ThoughtWorkLine(
+                    row.turnId,
+                    thoughts,
+                    folds,
+                    reasoningExpanded,
+                    reply,
+                    onCompactAgain,
+                    onOpenSession,
+                    thinking = row.live,
+                )
+            else if (detail != null && folds != null)
                 TranscriptDetail(
                     detail,
                     folds,
