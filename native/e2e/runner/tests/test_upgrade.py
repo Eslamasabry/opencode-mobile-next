@@ -217,7 +217,7 @@ class SetupFixesTest(Fixture):
         with mock.patch.object(upgrade, "REPO", self.tmp):
             with self.assertRaises(upgrade.Refused) as ctx:
                 upgrade.preflight(args)
-        self.assertIn("lib/l10n/app_en.arb", str(ctx.exception))
+        self.assertIn("native/tools/strings/frozen/arb/app_en.arb", str(ctx.exception))
 
     def test_the_fixture_env_carries_fx_ctl_from_fx_py_state(self):
         state = self.tmp / "state.json"

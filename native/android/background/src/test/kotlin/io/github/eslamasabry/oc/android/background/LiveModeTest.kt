@@ -1,6 +1,5 @@
 package io.github.eslamasabry.oc.android.background
 
-import java.io.File
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
@@ -258,14 +257,10 @@ class LiveModeTest {
 
     @Test
     fun `B-ANDR-014 the timeout method name and reasons match the native contract`() {
+        // The wire values the Flutter service used (BackgroundConnectionService), kept as the native contract.
         assertEquals("backgroundServiceTimeout", LiveModeController.TIMEOUT_METHOD)
-        val kotlin =
-            File("../../../android/app/src/main/kotlin/io/github/eslamasabry/opencode_mobile/BackgroundConnectionService.kt")
-                .readText()
-        assertTrue("const val METHOD_TIMEOUT = \"${LiveModeController.TIMEOUT_METHOD}\"" in kotlin)
-        assertTrue("const val REASON_SYSTEM_TIMEOUT = \"${LiveModeController.REASON_SYSTEM_TIMEOUT}\"" in kotlin)
-        assertTrue("const val REASON_USER_PAUSE = \"${LiveModeController.REASON_USER_PAUSE}\"" in kotlin)
-        assertTrue("notifyDartOfTimeout()" in kotlin)
+        assertEquals("systemTimeout", LiveModeController.REASON_SYSTEM_TIMEOUT)
+        assertEquals("userPause", LiveModeController.REASON_USER_PAUSE)
     }
 
     @Test

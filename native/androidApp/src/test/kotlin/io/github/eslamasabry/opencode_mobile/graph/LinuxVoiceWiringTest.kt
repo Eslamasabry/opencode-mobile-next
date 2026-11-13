@@ -87,15 +87,6 @@ class LinuxVoiceWiringTest {
     }
 
     @Test
-    fun `B-LINUX-023 the OpenCode 1 history copy is the Flutter script verbatim`() {
-        val dart = File("../../lib/domain/opencode_history_copy.dart").takeIf { it.isFile } ?: return
-        val text = dart.readText()
-        val provenance = text.substringAfter("const _historyCopyProvenance = r'''").substringBefore("''';")
-        val copy = text.substringAfter("const openCode1HistoryCopyScript =").substringAfter("r'''").substringBefore("''';")
-        assertEquals(provenance + copy, PhoneServerScripts.HISTORY_COPY)
-    }
-
-    @Test
     fun `B-LINUX-037 the probe reads 2xx as answered and 401 as our password refused and anything else as no answer`() {
         assertEquals(ProbeAnswer.Answered, PhoneServerScripts.answer(200))
         assertEquals(ProbeAnswer.NeedsPassword, PhoneServerScripts.answer(401))

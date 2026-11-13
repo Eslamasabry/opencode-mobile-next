@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Cut the golden-test fixture from the real ARB files.
 
-Copies the keys below, verbatim and in ARB order, from lib/l10n/app_<lang>.arb into
+Copies the keys below, verbatim and in ARB order, from native/tools/strings/frozen/arb/app_<lang>.arb (the frozen
+copies of the Flutter app's lib/l10n) into
 src/test/resources/fixture/lib/l10n/. The template keeps its @key metadata.
 FixtureDriftTest checks the fixture still matches the real files.
 
@@ -32,7 +33,7 @@ KEYS = [
 ]
 
 root = os.getcwd()
-src = os.path.join(root, "lib", "l10n")
+src = os.path.join(root, "native", "tools", "strings", "frozen", "arb")
 dst = os.path.join(root, "native", "tools", "strings", "src", "test", "resources", "fixture", "lib", "l10n")
 os.makedirs(dst, exist_ok=True)
 for name in sorted(os.listdir(src)):

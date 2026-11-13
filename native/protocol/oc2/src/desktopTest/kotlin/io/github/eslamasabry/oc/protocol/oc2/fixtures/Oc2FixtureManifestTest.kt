@@ -26,13 +26,4 @@ class Oc2FixtureManifestTest {
                 .map { it.relativeTo(Fixtures.root).invariantSeparatorsPath }.toSet()
         assertEquals(manifest.keys, onDisk)
     }
-
-    @Test
-    fun `B-PROTO-027 the copies are byte-identical to the Flutter originals under test fixtures`() {
-        for (path in manifest.keys) {
-            val original = File(Fixtures.repoRoot, "test/fixtures/" + path.removePrefix("flutter/"))
-            if (!original.isFile) continue // the Flutter tree may be gone after the switch; the manifest still holds
-            assertEquals(sha256(original), manifest.getValue(path), "drifted from ${original.path}")
-        }
-    }
 }

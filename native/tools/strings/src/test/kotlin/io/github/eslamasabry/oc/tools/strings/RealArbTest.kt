@@ -1,8 +1,6 @@
 package io.github.eslamasabry.oc.tools.strings
 
 import org.w3c.dom.Element
-import java.io.ByteArrayOutputStream
-import java.io.PrintStream
 import java.nio.file.Files
 import java.nio.file.Path
 import javax.xml.parsers.DocumentBuilderFactory
@@ -11,20 +9,18 @@ import kotlin.io.path.listDirectoryEntries
 import kotlin.io.path.name
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
-/** The whole real catalogue: lib/l10n/app_*.arb read by the real Dart lib/ and native/tools/strings/feature-routes.tsv. */
+/**
+ * The whole real catalogue: the frozen copies of the Flutter ARB files (frozen/README.md). Since the Flutter app left the
+ * repository there is no Dart lib/ to route keys by feature, so every key goes to one feature here; the split itself is
+ * in the committed :ui:words XML, which DriftTest checks.
+ */
 class RealArbTest {
-    private val repo: Path = assertNotNull(Fixture.repoRoot, "run through Gradle: the tests need the repository's lib/l10n")
-    private val arbs = Arb.readDir(repo.resolve("lib/l10n"))
-    private val routing = Router.route(
-        arbs.first().messages.keys,
-        repo.resolve("lib"),
-        Routes.read(repo.resolve("native/tools/strings/feature-routes.tsv")),
-    )
-    private val conv = Converter({ routing.featureByKey[it] }).convert(arbs)
+    private val repo: Path = assertNotNull(Fixture.repoRoot, "run through Gradle: the tests need the frozen ARB files")
+    private val arbs = Arb.readDir(repo.resolve(Paths.ARB))
+    private val conv = Converter({ "all" }).convert(arbs)
 
     private data class ReadBack(val keys: Set<String>, val strings: Map<String, String>, val plurals: Map<String, Map<String, String>>)
 
@@ -136,7 +132,7 @@ class RealArbTest {
         val handled = e.converted.flatMap { h -> h.locales.map { "$it:${h.key}" } }.toSet()
         assertEquals(conv.problems.map { "${it.locale}:${it.key}" }.toSet(), handled)
         assertEquals(48, handled.size)
-        val c = Converter({ routing.featureByKey[e.baseOf[it] ?: it] }).convert(e.arbs)
+        val c = Converter({ "all" }).convert(e.arbs)
         assertEquals(emptyList(), c.problems)
         // Accounting still holds in ARB keys: every key is converted (or unused), missing, or an orphan.
         for (l in c.locales) {
@@ -144,43 +140,6 @@ class RealArbTest {
             val arb = arbs.first { it.locale == l.locale }
             assertEquals(arb.messages.keys - l.orphans.toSet(), base, l.locale)
         }
-    }
-
-    @Test
-    fun `CLI fails loudly and writes nothing without --skip-unsupported`() {
-        val tmp = Files.createTempDirectory("arb2xml-cli")
-        val err = ByteArrayOutputStream()
-        val code = run(
-            listOf(
-                "convert", "--arb", "${repo.resolve("lib/l10n")}", "--dart-lib", "${repo.resolve("lib")}",
-                "--routes", "${repo.resolve("native/tools/strings/feature-routes.tsv")}",
-                "--out", "$tmp/out", "--report", "$tmp/report",
-            ),
-            PrintStream(ByteArrayOutputStream()), PrintStream(err, true, Charsets.UTF_8),
-        )
-        val text = err.toString(Charsets.UTF_8)
-        assertEquals(1, code, text)
-        assertTrue("48 messages cannot be converted" in text, text)
-        assertTrue("runningPhoneName [en,ar,es]" in text, text)
-        assertFalse(tmp.resolve("out").exists(), "no XML written")
-        assertTrue(tmp.resolve("report/unsupported.tsv").exists())
-    }
-
-    @Test
-    fun `CLI exits 2 on a Dart file no route covers`() {
-        val tmp = Files.createTempDirectory("arb2xml-routes")
-        val routes = tmp.resolve("routes.tsv").also { Files.writeString(it, "lib/ui/\tcommon\n") }
-        val err = ByteArrayOutputStream()
-        val code = run(
-            listOf(
-                "convert", "--arb", "${repo.resolve("lib/l10n")}", "--dart-lib", "${repo.resolve("lib")}",
-                "--routes", "$routes", "--out", "$tmp/out", "--report", "$tmp/report",
-            ),
-            PrintStream(ByteArrayOutputStream()), PrintStream(err, true, Charsets.UTF_8),
-        )
-        val text = err.toString(Charsets.UTF_8)
-        assertEquals(2, code, text)
-        assertTrue("lib/main.dart" in text, text)
     }
 
     @Test

@@ -16,7 +16,7 @@ class BundledScriptsShellTest {
 
     private val repo: File? =
         generateSequence(File(System.getProperty("user.dir")).absoluteFile) { it.parentFile }
-            .firstOrNull { File(it, "scripts/host").isDirectory && File(it, "native").isDirectory }
+            .firstOrNull { File(it, "native/settings.gradle.kts").isFile }
 
     private fun run(vararg command: String): Pair<Int, String> {
         val process = ProcessBuilder(*command).redirectErrorStream(true).start()

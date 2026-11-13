@@ -15,7 +15,7 @@ object Fixture {
 
     val goldenDir: Path = Path(System.getProperty("strings.toolDir") ?: ".").resolve("src/test/resources/golden")
 
-    val repoRoot: Path? = System.getProperty("strings.repoRoot")?.let(::Path)?.takeIf { it.resolve("lib/l10n/app_en.arb").exists() }
+    val repoRoot: Path? = System.getProperty("strings.repoRoot")?.let(::Path)?.takeIf { it.resolve("${Paths.ARB}/app_en.arb").exists() }
 
     val routes = Routes.parse(
         """

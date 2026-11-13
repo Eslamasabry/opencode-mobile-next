@@ -1,6 +1,5 @@
 package io.github.eslamasabry.opencode_mobile.release
 
-import java.io.File
 import javax.xml.parsers.DocumentBuilderFactory
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -51,15 +50,6 @@ class ManifestHardeningTest {
         excludesEverything(rules.children("device-transfer").single(), "device-transfer")
         assertEquals("true", rules.children("cloud-backup").single().getAttribute("disableIfNoEncryptionCapabilities"))
         excludesEverything(xml("androidApp/src/main/res/xml/backup_rules.xml"), "full-backup-content (Android 11 and older)")
-    }
-
-    @Test
-    fun `E15-S01 the rules are the Flutter app's own files`() {
-        for (name in listOf("data_extraction_rules.xml", "backup_rules.xml")) {
-            val flutter = File(RepoFiles.root, "android/app/src/main/res/xml/$name")
-            if (!flutter.isFile) continue // a native-only checkout: the structural test above still holds
-            assertEquals(flutter.readText().trim(), RepoFiles.text("androidApp/src/main/res/xml/$name").trim(), name)
-        }
     }
 
     @Test

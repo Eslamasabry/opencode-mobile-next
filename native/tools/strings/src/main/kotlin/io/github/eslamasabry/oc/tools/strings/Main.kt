@@ -10,7 +10,7 @@ import kotlin.system.exitProcess
 private const val USAGE = """usage: strings convert --repo <repository root> [--skip-unsupported]
        strings check   --repo <repository root>
 
-convert: every lib/l10n/app_<locale>.arb (with the hand recipes) and the Flutter app's native Android strings
+convert: every frozen app_<locale>.arb (with the hand recipes) and the Flutter app's native Android strings
   become CMP resource XML in :ui:words: values[-<lang>]/strings_<feature>.xml, strings_os.xml also generated
   into Android res, HandWords.kt, the unused keys and the report. Copy added in :ui:words after the conversion
   is kept. Exit 0 converted; 1 messages it cannot convert (listed; nothing written unless --skip-unsupported);
@@ -18,7 +18,8 @@ convert: every lib/l10n/app_<locale>.arb (with the hand recipes) and the Flutter
 check: the drift check (ARB and Android strings vs :ui:words XML, plus the XML's own rules). Exit 0 clean, 1 findings.
 
 Every location defaults from --repo and can be overridden:
-  --arb lib/l10n  --dart-lib lib  --android-res android/app/src/main/res (--android-res none to skip)
+  --arb native/tools/strings/frozen/arb  --android-res native/tools/strings/frozen/android-res (none to skip)
+  --dart-lib lib (convert only: the Flutter Dart sources, gone since 2026-11-13; pass a checkout of them)
   --routes, --hand: native/tools/strings/{feature-routes.tsv,hand-recipes.tsv}
   --out native/ui/words/src/commonMain/composeResources  --android-res-out native/ui/words/android-res
   --kotlin-out native/ui/words/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/words/HandWords.kt

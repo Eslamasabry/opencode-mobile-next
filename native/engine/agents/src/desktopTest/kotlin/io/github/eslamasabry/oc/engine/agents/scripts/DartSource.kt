@@ -2,15 +2,10 @@ package io.github.eslamasabry.oc.engine.agents.scripts
 
 import java.io.File
 
-/** The repository root (the Flutter reference app lives beside `native/`). */
-internal val repoRoot: File = generateSequence(File("").absoluteFile) { it.parentFile }
-    .first { File(it, "lib/domain/agent_catalog.dart").isFile }
-
-/**
- * Every `static const NAME = r'''…''';` (or top-level `const NAME = r'''…''';`) in a Dart file, with Dart's rule that a
- * multi-line string drops its first line when that line is empty.
- */
-internal fun dartRawStrings(path: String): Map<String, String> = rawStrings(File(repoRoot, path).readText())
+/** The repository root: the folder that holds `native/settings.gradle.kts`. */
+internal val repoRoot: File by lazy {
+    generateSequence(File("").absoluteFile) { it.parentFile }.first { File(it, "native/settings.gradle.kts").isFile }
+}
 
 /**
  * The released Flutter app's copy of [path] (2.1.4+62, `resources/flutter-2.1.4`). Use it where the engine follows a
@@ -28,7 +23,10 @@ internal fun releasedDartSource(path: String): String =
 internal fun freezeTipSource(path: String): String =
     checkNotNull(object {}.javaClass.getResource("/flutter-freeze-tip/$path.txt")) { "missing freeze-tip twin $path" }.readText()
 
-/** [dartRawStrings] over the released Flutter copy of [path]. */
+/**
+ * Every `static const NAME = r'''…''';` in the released Flutter copy of [path], with Dart's rule that a multi-line
+ * string drops its first line when that line is empty.
+ */
 internal fun releasedDartRawStrings(path: String): Map<String, String> = rawStrings(releasedDartSource(path))
 
 private fun rawStrings(text: String): Map<String, String> {

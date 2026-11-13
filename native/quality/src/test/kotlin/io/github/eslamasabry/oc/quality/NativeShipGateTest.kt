@@ -92,19 +92,6 @@ class NativeShipGateTest {
     }
 
     @Test
-    fun `the built-in Linux libraries are the Flutter app's own, byte for byte`() {
-        val flutter = File(root, "../android/app/src/main/jniLibs")
-        if (!flutter.isDirectory) return // a native-only checkout: the alignment test above still holds
-        for (abi in abis) for (name in linuxLibraries) {
-            assertEquals(sha256(File(flutter, "$abi/$name")), sha256(File(linuxJni, "$abi/$name")), "$abi/$name differs from the Flutter app's")
-        }
-        assertEquals(
-            sha256(File(root, "../android/app/src/main/assets/aiteam-engine-manifest.json")),
-            sha256(File(root, "android/linux/src/main/assets/aiteam-engine-manifest.json")),
-        )
-    }
-
-    @Test
     fun `the vendored sherpa-onnx AAR is the pinned one`() {
         val sums = File(root, "third_party/SHA256SUMS").readLines().filter { it.isNotBlank() }.associate { line ->
             val (hash, path) = line.trim().split(Regex("\\s+"), limit = 2)

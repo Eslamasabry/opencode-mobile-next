@@ -5,20 +5,22 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.long
-import java.io.File
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-/** The device captures of test/fixtures/agent_auth (B-AGENT-004): installed agents have final explicit states. */
+/**
+ * The device captures in resources/agent_auth (B-AGENT-004; copied from the Flutter app's test/fixtures/agent_auth):
+ * installed agents have final explicit states.
+ */
 class AuthProjectionFixtureTest {
-    private val repo: File = generateSequence(File("").absoluteFile) { it.parentFile }
-        .first { File(it, "test/fixtures/agent_auth").isDirectory }
+    private fun capture(name: String): String =
+        checkNotNull(javaClass.getResource("/agent_auth/$name-device.json")) { "missing capture $name" }.readText()
 
     @Test
     fun `B-AGENT-004 captured installed agents have final explicit account states`() {
         for ((name, state) in mapOf("claude-signedIn" to AuthState.SignedIn, "fx-signedOut" to AuthState.SignedOut)) {
-            val fixture = Json.parseToJsonElement(File(repo, "test/fixtures/agent_auth/$name-device.json").readText()).jsonObject
+            val fixture = Json.parseToJsonElement(capture(name)).jsonObject
             val result = AuthProjectionJson.decode(fixture.getValue("probe").jsonObject)
             assertEquals(state, result.state, name)
             assertTrue(fixture.getValue("capture").jsonObject.getValue("elapsedMs").jsonPrimitive.long < 10_000)

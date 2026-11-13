@@ -10,7 +10,6 @@ test-writer lead owns `behaviors.jsonl` and hands out ids.
 | `scope.jsonl` | One line per row: `scope`, `slice`, `module`, `decision`, `reason`, `amended`, `amended_at`, `split_from`. | Generated. Edit `seed/overrides.jsonl`, then run `seed_scope.py … --write`. |
 | `seed/seed_scope.py` | Plan 15 Appendix B (verbatim) for the first-pass slice, a module map, then `overrides.jsonl`. | Code. |
 | `seed/overrides.jsonl` | The hand decisions from reading every row's text, the top-up rows' scope, and the coordinator's amendments (the last line for an id wins per field). Lines starting with `//` are comments. | Coordinator. |
-| `seed/topup_inputs.py` | Lists the logic tests the top-up must read (uncited, new, changed). | Code. |
 | `topup-notes.jsonl` | For every top-up input test: the row it became, the row that already covers it, the row it amends, or why it is not a row. | Append at each top-up. |
 
 `ScopeFileTest` in `:quality` fails when an id is missing or repeated, a switch row lacks a slice or module, a moved-out

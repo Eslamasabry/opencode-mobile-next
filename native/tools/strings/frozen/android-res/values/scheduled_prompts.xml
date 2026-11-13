@@ -1,0 +1,9 @@
+<resources>
+    <string name="native_schedule_channel">Scheduled prompts</string>
+    <string name="native_schedule_title">Scheduled prompt</string>
+    <string name="native_schedule_ran">Your scheduled prompt started. Tap to open the conversation.</string>
+    <string name="native_schedule_failed">A scheduled prompt needs your attention. Tap to review its history.</string>
+    <string name="native_schedule_skipped">A scheduled prompt was skipped. Tap to review its history.</string>
+    <string name="native_schedule_digest_title">Morning digest</string>
+    <string name="native_schedule_digest_body">%1$d started · %2$d failed · %3$d skipped</string>
+</resources>

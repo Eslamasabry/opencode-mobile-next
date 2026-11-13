@@ -12,12 +12,13 @@
 # one dependency declared under another name (libtalloc.so.2) is rewritten
 # with patchelf. The Termux RUNPATH is dropped: the app sets LD_LIBRARY_PATH.
 #
-# Usage: tool/builtin_linux/fetch_proot.sh [patchelf]
+# Usage: native/android/linux/tool/fetch_proot.sh [patchelf]
+# (Moved from the Flutter app's tool/builtin_linux on 2026-11-13; it now writes the native :android:linux jniLibs.)
 set -euo pipefail
 
 PATCHELF=${1:-patchelf}
-ROOT=$(cd "$(dirname "$0")/../.." && pwd)
-OUT="$ROOT/android/app/src/main/jniLibs"
+MODULE=$(cd "$(dirname "$0")/.." && pwd)
+OUT="$MODULE/src/main/jniLibs"
 WORK=$(mktemp -d)
 trap 'rm -rf "$WORK"' EXIT
 

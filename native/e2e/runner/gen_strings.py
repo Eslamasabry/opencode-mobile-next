@@ -1,8 +1,9 @@
 r"""Builds the selector table the flows read as ${output.<form>.<key>} (plan 14 §4.3).
 
 Sources, all frozen copies the two apps share:
-  * lib/l10n/app_<lang>.arb               (keys as-is)
-  * android/app/src/main/res/values*/strings.xml  (keys prefixed "android_": tile, widget, shortcut labels)
+  * native/tools/strings/frozen/arb/app_<lang>.arb   (keys as-is; frozen copies of the Flutter app's lib/l10n)
+  * native/tools/strings/frozen/android-res/values*/strings.xml  (keys prefixed "android_": tile, widget, shortcut
+    labels; frozen copies of the Flutter app's android/app/src/main/res)
   * native/e2e/flows/_strings/extra*.<lang>.json  (keys prefixed "x_": labels the Flutter app hard-codes in Dart)
 A key missing in Arabic falls back to English, so both tables have the same keys.
 
@@ -26,8 +27,8 @@ import xml.etree.ElementTree as ET
 HERE = pathlib.Path(__file__).resolve().parent
 E2E = HERE.parent
 REPO = E2E.parent.parent
-ARB_DIR = REPO / "lib/l10n"
-RES_DIR = REPO / "android/app/src/main/res"
+ARB_DIR = REPO / "native/tools/strings/frozen/arb"
+RES_DIR = REPO / "native/tools/strings/frozen/android-res"
 EXTRA_DIR = E2E / "flows/_strings"
 FIXTURE_DEFAULTS = HERE / "fixture-defaults.json"
 FIXTURE_DATA = E2E / "fixtures/fixture-data.json"  # owned by S0-FX; read when present

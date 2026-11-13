@@ -135,10 +135,6 @@ class ClaudeInstallScriptTest {
             .replace("\$x64Sha256", ClaudeScripts.X64_SHA256)
             .replace("\u0001", "$")
         assertEquals(evaluated, ClaudeScripts.install)
-        // The pinned version and hashes follow this branch's lib/ (Claude Code 2.1.319); the 2.1.4 release still pins
-        // 2.1.294. Which pin ships is the agents owner's call, not this text check's.
-        val pins = File(repoRoot, "lib/builtin/setup/claude_scripts.dart").readText()
-        assertTrue("static const version = '${ClaudeScripts.VERSION}'" in pins)
-        assertTrue("'${ClaudeScripts.ARM64_SHA256}'" in pins && "'${ClaudeScripts.X64_SHA256}'" in pins)
+        // The pinned version and hashes are native-owned (ClaudeScripts); the 2.1.4 release pinned 2.1.294.
     }
 }

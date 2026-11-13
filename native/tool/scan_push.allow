@@ -3,3 +3,5 @@ private-ip 10.0.2.2  # the Android emulator's fixed alias for the host's loopbac
 @path native/config/detekt/baseline/*.xml private-ip  # detekt copies source lines into finding ids; the source was scanned on its own push (E02-S03)
 @path native/config/detekt/baseline/*.xml private-host  # as above: test fixtures such as example tailnet hosts, mirrored from scanned sources
 @path native/config/detekt/baseline/*.xml url-credential  # as above: the LinksTest credentials-in-URL fixture
+@path native/tools/strings/frozen/arb/*.arb private-ip  # frozen copy of the published Flutter ARB: example addresses in UI copy, no real host
+@path native/tools/strings/frozen/arb/*.arb private-host  # frozen copy of the published Flutter ARB: example tailnet names in UI copy

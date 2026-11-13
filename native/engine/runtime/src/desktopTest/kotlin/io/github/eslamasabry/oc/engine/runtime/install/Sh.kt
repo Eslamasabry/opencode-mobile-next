@@ -48,8 +48,6 @@ object Sh {
         while (dir != null && !File(dir, "native/settings.gradle.kts").isFile) dir = dir.parentFile
         checkNotNull(dir) { "repository root not found" }
     }
-    /** A Dart raw string constant's text, as Dart reads it (a first whitespace-only line is dropped). */
-    fun dartRaw(path: String, name: String): String = dartRawIn(File(repo, path).readText(), path, name)
 
     /**
      * The released Flutter app (tag v2.1.4+62), the source of truth for behaviour. The working tree's lib/ is not that

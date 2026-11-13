@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="native_phone_server_idle_body">Phone server paused while idle. Tap to open OpenCode.</string>
+</resources>

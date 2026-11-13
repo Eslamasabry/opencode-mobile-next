@@ -29,7 +29,7 @@ import kotlin.test.assertTrue
 
 private val repoRoot: File by lazy {
     generateSequence(File(System.getProperty("user.dir")).absoluteFile) { it.parentFile }
-        .first { File(it, "pubspec.yaml").isFile && File(it, "native").isDirectory }
+        .first { File(it, "native/settings.gradle.kts").isFile }
 }
 
 class AgentAuthScriptsTest {
@@ -112,7 +112,8 @@ class AgentAuthScriptsTest {
     @Test
     fun `B-AGENT-005 captured installed agents have final explicit account states`() {
         for ((name, state) in mapOf("claude-signedIn" to AuthState.SignedIn, "fx-signedOut" to AuthState.SignedOut)) {
-            val fixture = Json.parseToJsonElement(File(repoRoot, "test/fixtures/agent_auth/$name-device.json").readText()).jsonObject
+            val capture = checkNotNull(javaClass.getResource("/agent_auth/$name-device.json")) { "missing capture $name" }
+            val fixture = Json.parseToJsonElement(capture.readText()).jsonObject
             assertEquals(state, AuthProjectionJson.decode(fixture["probe"]!!.jsonObject).state)
             assertTrue(fixture["capture"]!!.jsonObject["elapsedMs"]!!.jsonPrimitive.int < 10000)
         }

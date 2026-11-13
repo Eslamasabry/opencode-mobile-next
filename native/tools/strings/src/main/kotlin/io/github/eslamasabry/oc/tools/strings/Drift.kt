@@ -75,7 +75,7 @@ object Drift {
     ) {
         companion object {
             fun forRepo(repo: Path) = Inputs(
-                arbDir = repo.resolve("lib/l10n"),
+                arbDir = repo.resolve(Paths.ARB),
                 recipes = HandRecipes.read(repo.resolve(Paths.HAND_RECIPES)),
                 androidRes = repo.resolve(Paths.ANDROID_RES).takeIf { it.isDirectory() },
                 words = repo.resolve(Paths.WORDS),
@@ -338,9 +338,10 @@ object Drift {
 
 /** Repository-relative locations (from the repository root). */
 object Paths {
-    const val ARB = "lib/l10n"
+    /** Frozen copies of the Flutter app's ARB files and Android string res (frozen/README.md). */
+    const val ARB = "native/tools/strings/frozen/arb"
     const val DART_LIB = "lib"
-    const val ANDROID_RES = "android/app/src/main/res"
+    const val ANDROID_RES = "native/tools/strings/frozen/android-res"
     const val TOOL = "native/tools/strings"
     const val ROUTES = "$TOOL/feature-routes.tsv"
     const val HAND_RECIPES = "$TOOL/hand-recipes.tsv"

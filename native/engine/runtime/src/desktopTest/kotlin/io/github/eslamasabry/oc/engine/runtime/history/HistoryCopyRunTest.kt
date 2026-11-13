@@ -213,14 +213,4 @@ class HistoryCopyRunTest {
         assertEquals("", result.stdout + result.stderr)
         assertFalse(f(oc2, "opencode.db").exists())
     }
-
-    @Test
-    fun `B-LINUX-107 the engine's history scripts are lib-domain-opencode_history_copy-dart byte for byte`() {
-        val path = "lib/domain/opencode_history_copy.dart"
-        val provenance = Sh.dartRaw(path, "_historyCopyProvenance")
-        assertEquals(provenance, HistoryCopyScripts.PROVENANCE)
-        assertEquals(provenance + Sh.dartRaw(path, "openCode1HistoryCopyScript"), HistoryCopyScripts.COPY)
-        assertEquals(provenance + Sh.dartRaw(path, "openCode1HistorySwitchCheckScript"), HistoryCopyScripts.SWITCH_CHECK)
-        assertTrue("'${HistoryCopyScripts.SWITCH_BLOCKED_TEXT.take(40)}" in File(Sh.repo, path).readText())
-    }
 }

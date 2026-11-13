@@ -1,0 +1,9 @@
+<resources>
+    <string name="native_schedule_channel">الطلبات المجدولة</string>
+    <string name="native_schedule_title">طلب مجدول</string>
+    <string name="native_schedule_ran">بدأ طلبك المجدول. اضغط لفتح المحادثة.</string>
+    <string name="native_schedule_failed">يحتاج طلب مجدول إلى انتباهك. اضغط لمراجعة السجل.</string>
+    <string name="native_schedule_skipped">تم تخطي طلب مجدول. اضغط لمراجعة السجل.</string>
+    <string name="native_schedule_digest_title">ملخص الصباح</string>
+    <string name="native_schedule_digest_body">بدأ %1$d · فشل %2$d · تم تخطي %3$d</string>
+</resources>

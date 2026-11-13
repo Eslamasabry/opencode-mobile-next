@@ -56,7 +56,8 @@ FLOW = "E2E-39"
 FIXTURES = ("FX-OC2", "FX-OC2-B", "FX-TLS", "FX-LINUXDL", "FX-GH", "fx-proxy")
 # What run.py and the flows read outside native/: gen_strings.py (strings.js) and the flow catalog. A sparse checkout
 # that holds only native/ (and docs/) cannot run the gate.
-NEEDED_FILES = ("lib/l10n/app_en.arb", "lib/l10n/app_ar.arb", "android/app/src/main/res/values/strings.xml",
+NEEDED_FILES = ("native/tools/strings/frozen/arb/app_en.arb", "native/tools/strings/frozen/arb/app_ar.arb",
+                "native/tools/strings/frozen/android-res/values/strings.xml",
                 "docs/design/native-rewrite-2026-11-01/catalog/e2e-flows.md")
 RAM_NEEDED_KB = 7 * 1024 * 1024       # plan 02 §7.8, checked before the gate boots its own AVD
 FLOW_TIMEOUT_S = 3 * 3600
@@ -365,8 +366,8 @@ def preflight(args, env=os.environ) -> None:
     """Refuse before taking the emulator: files outside native/ the flows need, and the host RAM."""
     missing = [f for f in NEEDED_FILES if not (REPO / f).exists()]
     if missing:
-        raise Refused(f"this checkout lacks {', '.join(missing)} (a sparse checkout? add lib/l10n, "
-                      "android/app/src/main/res and docs to it)")
+        raise Refused(f"this checkout lacks {', '.join(missing)} (a sparse checkout? add native/tools/strings/frozen "
+                      "and docs to it)")
     if args.skip_resource_checks or args.use_running:
         return
     with open("/proc/meminfo") as fh:

@@ -1,6 +1,5 @@
 package io.github.eslamasabry.oc.core.domain.capabilities
 
-import java.io.File
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.boolean
@@ -40,18 +39,6 @@ class CapabilitySnapshotTest {
         assertEquals(dart.map { it.first }, shared.map { it.first }, "flag names or order differ")
         assertEquals(dart, shared)
         assertEquals(nativeOnly.map { it to false }, kotlin.drop(dart.size), "native-only flags differ")
-    }
-
-    @Test
-    fun `capability snapshot - the vector file still matches the Dart source`() {
-        val dartFile = File("../../../lib/domain/server_gateway/capabilities.dart")
-        if (!dartFile.isFile) return // Flutter tree removed: the JSON is the parity record from then on.
-        val source = dartFile.readText()
-        val ctor = source.substring(source.indexOf("const ServerCapabilities({")).substringBefore("});")
-        val defaults = Regex("""this\.(\w+)\s*=\s*(true|false)""").findAll(ctor).map { it.groupValues[1] to (it.groupValues[2] == "true") }.toList()
-        val fields = Regex("""(?m)^  final bool (\w+);""").findAll(source).map { it.groupValues[1] }.toList()
-        assertEquals(fields, defaults.map { it.first }, "Dart constructor and field order differ")
-        assertEquals(defaults, snapshot(), "default.json is stale: regenerate it from capabilities.dart")
     }
 
     @Test

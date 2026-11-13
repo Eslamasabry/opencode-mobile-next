@@ -22,13 +22,12 @@ class AgentPinsParityTest {
     private val postFreeze = setOf("antigravity", "opencode2")
 
     private val repo: File = generateSequence(File("").absoluteFile) { it.parentFile }
-        .first { File(it, "lib/domain/agent_catalog.dart").isFile }
+        .first { File(it, "native/settings.gradle.kts").isFile }
     // The catalog and the tested sets come from the freeze tip's copies: since the master merge (4a0eac1cf4) lib/ holds
     // the released 2.1.5 app, which predates the Gemini, Qwen, Kilo and Cline pins and the extra tested versions.
     private val dartCatalog = freezeTipSource("lib/domain/agent_catalog.dart")
         .let { it.substring(it.indexOf("AgentCatalog _builtInCatalog()")) }
         .replace("'\$github", "'https://github.com")
-    private val paseoScripts = File(repo, "lib/builtin/agents/paseo_scripts.dart").readText()
     private val testedVersions = freezeTipSource("lib/paseo/tested_versions.dart")
     private val pinsFile = File(repo, "native/engine/agents/pins/agent-pins.json")
 
@@ -134,7 +133,13 @@ class AgentPinsParityTest {
     @Test
     fun `B-AGENT-008 Paseo, lock, Node and tested Claude versions equal the freeze tip`() {
         val pins = AgentPins.builtIn
-        fun dartConst(name: String) = Regex("static const $name =\\s*'([^']*)'").find(paseoScripts)!!.groupValues[1]
+        // The Node pins as the Flutter app's paseo_scripts.dart last had them (v24.22.2); native-owned since 2026-11-13.
+        val node = mapOf(
+            "nodeVersion" to "v24.22.2",
+            "nodeArm64Sha256" to "95c264150aceb7f3437a29fd6984924f5f8d1511ea3cbd6c508b83f6c555dae2",
+            "nodeX64Sha256" to "361718c444e49af2ca5a110c83ba6a8901143f23ab285ebbef0341f391f482a9",
+        )
+        fun dartConst(name: String) = node.getValue(name)
         // Paseo moved to 0.15.3 after the Flutter freeze (B-193): the pins equal the install script's own checks.
         assertEquals(PaseoPhoneScripts.VERSION, pins.paseo.version)
         assertEquals(PaseoPhoneScripts.PACKAGE_LOCK_SHA256, pins.paseo.packageLockSha256)

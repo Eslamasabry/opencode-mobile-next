@@ -426,64 +426,6 @@ with tarfile.open(sys.argv[1], 'w:gz') as t:
         assertFalse(exists(guest.ran))
     }
 
-    @Test
-    fun `B-LINUX-121 the ported raw script blocks equal the Flutter source byte for byte`() {
-        val dart = dartRawStrings("lib/builtin/agents/agent_scripts.dart")
-        assertEquals(dart.getValue("bootstrapUser"), AgentPhoneScripts.bootstrapUser)
-        assertEquals(nativeProbe(dart.getValue("_probe")), AgentPhoneScripts.PROBE)
-        assertEquals(dart.getValue("_claudeUpdateProbe"), AgentPhoneScripts.CLAUDE_UPDATE_PROBE)
-        assertEquals(dart.getValue("_terminalLauncher"), AgentPhoneScripts.TERMINAL_LAUNCHER)
-        assertEquals(dart.getValue("_extract"), AgentPhoneScripts.EXTRACT_PY)
-    }
-
-    /**
-     * Flutter's `_probe` with the native changes of 2026-11-12 (branch native/w4-agent-version; see
-     * [AgentPhoneScripts.PROBE] and [AgentVersionCheck]), each applied exactly where it was made: a 120 s limit, Gemini
-     * CLI's no-relaunch switch on the Node.js run, the run's exit status kept, and why it failed left for the install.
-     */
-    private fun nativeProbe(flutter: String): String {
-        var probe = flutter
-        fun change(old: String, new: String, times: Int = 1) {
-            assertEquals(times, probe.split(old).size - 1, old)
-            probe = probe.replace(old, new)
-        }
-        change("  oc_tree=\$1\n", "  oc_tree=\$1\n  oc_probe_why=missing\n  oc_probe_found=\n")
-        change(
-            "/.probe.XXXXXX)\n",
-            "/.probe.XXXXXX)\n  oc_version_rc=0\n  oc_probe_run='${AgentPhoneScripts.PROBE_RUN}'\n",
-        )
-        // The run kills the program's whole process group (gate, 2026-11-12): Ubuntu 26.04's timeout does not.
-        change(
-            "timeout 30s",
-            "python3 -I -c \"\$oc_probe_run\" ${AgentVersionCheck.PROBE_SECONDS} ${AgentVersionCheck.KILL_AFTER_SECONDS}",
-            times = 2,
-        )
-        change(
-            "PATH=\"\$PATH\" \\\n      /home/oc/.local/node/bin/node",
-            "PATH=\"\$PATH\" GEMINI_CLI_NO_RELAUNCH=true \\\n      /home/oc/.local/node/bin/node",
-        )
-        change("--version 2>/dev/null) || oc_output=\n", "--version 2>/dev/null) || { oc_version_rc=\$?; oc_output=; }\n", 2)
-        // Colour codes go before the version is read (gate, 2026-11-12).
-        change(
-            "  rm -rf \"\$oc_probe\"\n",
-            "  rm -rf \"\$oc_probe\"\n" +
-                "  oc_output=\$(printf '%s' \"\$oc_output\" | sed \"s/\$(printf '\\033')\\[[0-9;]*[A-Za-z]//g\")\n",
-        )
-        change(
-            "  printf '%s' \"\$oc_output\" | grep -Eq \"\$oc_version_pattern\"\n}",
-            "  printf '%s' \"\$oc_output\" | grep -Eq \"\$oc_version_pattern\" && return 0\n" +
-                "  oc_probe_found=\$(printf '%s\\n' \"\$oc_output\" | grep -Eo '${AgentVersionCheck.FOUND_PATTERN}' | " +
-                "head -n 1 | cut -c 1-${AgentVersionCheck.FOUND_MAX})\n" +
-                "  case \"\$oc_version_rc\" in\n" +
-                "    0) if [ -n \"\$oc_probe_found\" ]; then oc_probe_why=other; else oc_probe_why=silent; fi ;;\n" +
-                "    124|137) oc_probe_why=slow ;;\n" +
-                "    *) oc_probe_why=failed ;;\n" +
-                "  esac\n" +
-                "  return 1\n}",
-        )
-        return probe
-    }
-
     /** The last fixed `[oc] ` line of a run: what the setup job keeps as the step's error. */
     private fun lastMarker(result: ShResult): String? =
         (result.stdout + "\n" + result.stderr).lines().map { it.trim() }.lastOrNull { it.startsWith("[oc] ") }
@@ -639,33 +581,5 @@ with tarfile.open(sys.argv[1], 'w:gz') as t:
         val installed = guest.run(AgentPhoneScripts.install(agent))
         assertEquals(0, installed.exitCode, installed.stderr)
         assertEquals(0, guest.run(AgentPhoneScripts.check(agent)).exitCode)
-    }
-
-    @Test
-    fun `B-LINUX-121 every literal line of the Flutter templates appears in the generated scripts`() {
-        val source = File(repoRoot, "lib/builtin/agents/agent_scripts.dart").readText()
-        // Non-raw ''' sections, after the auth probe (not part of this port).
-        val sections = mutableListOf<String>()
-        var at = source.indexOf("static const bootstrapUser")
-        while (true) {
-            val open = source.indexOf("'''", at)
-            if (open < 0) break
-            val close = source.indexOf("'''", open + 3)
-            if (source[open - 1] != 'r') sections += source.substring(open + 3, close)
-            at = close + 3
-        }
-        val claude = AgentCatalog.builtIn.byId(AgentId("claude"))!!
-        val codex = AgentCatalog.builtIn.byId(AgentId("codex"))!!
-        val generated = listOf(
-            AgentPhoneScripts.install(claude), AgentPhoneScripts.install(codex),
-            AgentPhoneScripts.check(claude), AgentPhoneScripts.check(codex),
-            AgentPhoneScripts.usePreviousVersion(claude, "2.1.283"),
-        ).joinToString("\n")
-        val lines = sections.flatMap { it.split('\n') }
-            .map { it.replace("\\$", "\u0001").replace("\\\\", "\\").replace("\\'", "'") }
-            .filter { it.isNotBlank() && '$' !in it && "''}" !in it } // `''' : ''}` closes a Dart ternary
-            .map { it.replace('\u0001', '$') }
-        assertTrue(lines.size > 80, "${lines.size}")
-        for (line in lines) assertTrue(line in generated, line)
     }
 }

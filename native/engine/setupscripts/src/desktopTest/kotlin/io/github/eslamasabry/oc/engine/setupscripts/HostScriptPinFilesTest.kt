@@ -70,10 +70,6 @@ class HostScriptPinFilesTest {
     fun `B-SEC-092 nothing the app or its guides show pipes a download into a shell`() {
         val sources =
             buildList {
-                File(root, "lib").walkTopDown()
-                    .filter { it.isFile && it.name.endsWith(".dart") && "app_localizations" !in it.path }
-                    .forEach(::add)
-                add(File(root, "lib/l10n/app_en.arb"))
                 File(root, "docs").listFiles()!!.filter { it.isFile && it.name.endsWith(".md") }.forEach(::add)
                 add(File(root, "native/docs/ubuntu-host.md"))
                 for (dir in listOf("scripts", "tool/host", "native/scripts")) {
