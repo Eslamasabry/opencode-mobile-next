@@ -77,3 +77,9 @@ google-services.json
 native/androidApp/src/*/google-services.json
 # Private Firebase config
 google-services*.json
+
+# Release signing. The key file lives at native/key.properties (native/.gitignore) or is named by OC_KEY_PROPERTIES;
+# the old android/key.properties and any keystore stay ignored even after the Flutter folders are gone.
+/android/key.properties
+*.jks
+*.keystore

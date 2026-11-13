@@ -241,6 +241,24 @@ check "E01-S05 the refusal names the notes file" has "docs/releases/v3.0.0+10020
 check "E01-S05 a refused --go still writes nothing" REL_TRAILER_CHECK
 expect "E01-S05 an unknown lineage cannot run" 2 bash "$R/scripts/native-release.sh" --lineage legacy --no-build
 
+# The key file lookup (same order as native/build-logic ReleaseKey): OC_KEY_PROPERTIES, native/key.properties, then the
+# old android/key.properties with a notice. Fake files with fake values; git-ignored in the throwaway repo.
+printf 'native/key.properties\nandroid/key.properties\n' >>"$R/.git/info/exclude"
+mkdir -p "$R/android"
+printf 'storeFile=fake.jks\nstorePassword=fake\nkeyAlias=fake\nkeyPassword=fake\n' >"$R/android/key.properties"
+expect "E01-S05 the old android/key.properties is the last fallback" 0 bash "$R/scripts/native-release.sh" --no-build
+check "E01-S05 the old key file is used" has "key file present ($R/android/key.properties)"
+check "E01-S05 the old key file gets a notice" has "using the old key file android/key.properties"
+cp "$R/android/key.properties" "$R/native/key.properties"
+expect "E01-S05 native/key.properties comes before the old place" 0 bash "$R/scripts/native-release.sh" --no-build
+check "E01-S05 the native key file is used" has "key file present ($R/native/key.properties)"
+check "E01-S05 no notice for the native key file" bash -c '! grep -qF "using the old key file" <<<"$1"' _ "$OUT"
+expect "E01-S05 OC_KEY_PROPERTIES comes first" 0 env OC_KEY_PROPERTIES="$KEYP" bash "$R/scripts/native-release.sh" --no-build
+check "E01-S05 the named key file is used" has "key file present ($KEYP)"
+rm -f "$R/native/key.properties" "$R/android/key.properties"
+expect "E01-S05 without any key file the dry run still runs" 0 bash "$R/scripts/native-release.sh" --no-build
+check "E01-S05 the missing key is reported" has "no complete key file"
+
 R="$(new_release_repo 3.0.0-dev)"
 expect "E01-S05 refuses a suffixed versionName" 1 bash "$R/scripts/native-release.sh" --no-build
 

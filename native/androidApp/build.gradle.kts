@@ -58,27 +58,13 @@ class ReleaseSigning(val source: File, val storeFile: File?, val storePassword: 
 }
 
 val releaseSigning: ReleaseSigning = run {
-    val repo = rootDir.parentFile
     val named =
         providers.environmentVariable("OC_KEY_PROPERTIES").orNull?.takeIf { it.isNotBlank() }
             ?: providers.gradleProperty("OC_KEY_PROPERTIES").orNull?.takeIf { it.isNotBlank() }
-    val source: File = if (named != null) File(named) else File(repo, "android/key.properties")
-    val props = Properties()
-    if (source.isFile) source.inputStream().use(props::load)
-    val storePath: String = props.getProperty("storeFile").orEmpty().trim()
-    val store: File? =
-        when {
-            storePath.isEmpty() -> null
-            File(storePath).isAbsolute -> File(storePath)
-            else -> File(repo, "android/app/$storePath")
-        }
-    ReleaseSigning(
-        source,
-        store,
-        props.getProperty("storePassword"),
-        props.getProperty("keyAlias"),
-        props.getProperty("keyPassword"),
-    )
+    // OC_KEY_PROPERTIES, then native/key.properties, then the old android/key.properties (build-logic ReleaseKey).
+    val key = oc.buildlogic.ReleaseKey.locate(named, rootDir.parentFile)
+    key.notice?.let { logger.lifecycle(it) }
+    ReleaseSigning(key.source, key.storeFile, key.storePassword, key.keyAlias, key.keyPassword)
 }
 val releaseDebugSigned: Boolean = providers.gradleProperty("ocReleaseDebugSigned").orNull == "true"
 val releaseRequested: Boolean = gradle.startParameter.taskNames.any { it.substringAfterLast(':').contains("Release") }
@@ -99,8 +85,9 @@ when {
         )
     releaseRequested ->
         logger.lifecycle(
-            "Release signing skipped: no ${releaseSigning.source} (or OC_KEY_PROPERTIES). The release APK is left " +
-                "unsigned; sign it with apksigner and run tool/release/identity_gate.sh before delivery."
+            "Release signing skipped: no ${releaseSigning.source} (nor android/key.properties or OC_KEY_PROPERTIES). " +
+                "The release APK is left unsigned; sign it with apksigner and run tool/release/identity_gate.sh " +
+                "before delivery."
         )
 }
 
@@ -115,10 +102,10 @@ android {
         buildConfigField("long", "AGENT_INSTALL_MIN_FREE_BYTES", "${agentInstallFloor}L")
         buildConfigField("int", "PHONE_SERVER_PORT", "4098")
     }
-    // E01-S01: the release signer. The same file and the same four keys the Flutter app reads
-    // (android/app/build.gradle.kts: <repo>/android/key.properties with storeFile, storePassword, keyAlias, keyPassword;
-    // a relative storeFile resolves against <repo>/android/app as Flutter's file() does). OC_KEY_PROPERTIES (environment
-    // or Gradle property) names another file of that shape, so CI can keep it outside the repository. Without a
+    // E01-S01: the release signer. A key file with storeFile, storePassword, keyAlias and keyPassword, found by
+    // build-logic's ReleaseKey: OC_KEY_PROPERTIES (environment or Gradle property, so CI can keep it outside the
+    // repository), then <repo>/native/key.properties (a relative storeFile resolves against native/), then the old
+    // <repo>/android/key.properties (a relative storeFile resolves against android/app, as before). Without a
     // complete file the release stays unsigned (it is signed afterwards with apksigner and checked by the identity
     // gate). -PocReleaseDebugSigned=true signs it with this machine's debug key for a build-shape proof only: the
     // identity gate refuses that APK, so it can never be delivered.

@@ -58,13 +58,14 @@ class ReleaseShapeTest {
     }
 
     @Test
-    fun `E01-S01 release signing reads the Flutter app's key file and keys, and is skipped with a message without it`() {
-        val flutter = RepoFiles.rootText("android/app/build.gradle.kts")
-        for (key in listOf("storeFile", "storePassword", "keyAlias", "keyPassword")) {
-            assertTrue(flutter.contains("getProperty(\"$key\")"), "the Flutter build reads $key")
-            assertTrue(build.contains("props.getProperty(\"$key\")"), "the native build reads $key")
+    fun `E01-S01 release signing reads the lineage key file and keys, and is skipped with a message without it`() {
+        // The lookup lives in build-logic (ReleaseKey; its own tests cover the three places with fake files).
+        val key = RepoFiles.text("build-logic/convention/src/main/kotlin/oc/buildlogic/ReleaseKey.kt")
+        for (name in listOf("storeFile", "storePassword", "keyAlias", "keyPassword")) {
+            assertTrue(key.contains("props.getProperty(\"$name\")"), "the native build reads $name")
         }
-        assertTrue(build.contains("File(repo, \"android/key.properties\")"), "the same file the Flutter build reads")
+        assertTrue(key.contains("\"native/key.properties\"") && key.contains("\"android/key.properties\""))
+        assertTrue(build.contains("oc.buildlogic.ReleaseKey.locate(named, rootDir.parentFile)"))
         assertTrue(build.contains("OC_KEY_PROPERTIES"))
         assertTrue(build.contains("Release signing skipped:"), "a clear message when no key is configured")
         // The debug-key proof build is opt-in only and the lineage check stays for every real signer.

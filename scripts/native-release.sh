@@ -17,8 +17,8 @@
 # publishes it by hand after the GO checklist.
 #
 # Refuses unless: on master, the tree is clean (untracked files too), master equals <remote>/master, version.properties
-# holds a plain X.Y.Z versionName. --go also needs the lineage key (android/key.properties or OC_KEY_PROPERTIES, the
-# file the build reads) and release notes docs/releases/v<X.Y.Z+N>.md. Key values are never read or printed here.
+# holds a plain X.Y.Z versionName. --go also needs the lineage key (OC_KEY_PROPERTIES, native/key.properties or the old
+# android/key.properties: the file the build reads) and release notes docs/releases/v<X.Y.Z+N>.md. Key values are never read or printed here.
 # Environment: OC_RELEASE_REMOTE (default origin).
 # Exit: 0 done (dry run or release), 1 refused or a gate failed, 2 could not run.
 set -euo pipefail
@@ -78,7 +78,15 @@ say "  branch      $branch at $(git rev-parse --short HEAD), synchronized with $
 say "  version     $NAME+$CURRENT now; the release takes $NAME+$NEXT"
 say "  lineage     $LINEAGE (${EXPECT_SIGNER:0:8}…)"
 
-key_file="${OC_KEY_PROPERTIES:-$ROOT/android/key.properties}"
+# The same order as the build (native/build-logic ReleaseKey): OC_KEY_PROPERTIES, native/key.properties, then the old
+# android/key.properties with a notice.
+named_key="${OC_KEY_PROPERTIES:-}"
+if [[ -n "${named_key// /}" ]]; then key_file="$named_key"
+elif [[ -f "$NATIVE/key.properties" ]]; then key_file="$NATIVE/key.properties"
+elif [[ -f "$ROOT/android/key.properties" ]]; then
+  key_file="$ROOT/android/key.properties"
+  say "  notice      using the old key file android/key.properties; move it to native/key.properties"
+else key_file="$NATIVE/key.properties"; fi
 key_ready=false
 if [[ -f "$key_file" ]]; then
   key_ready=true
@@ -91,7 +99,7 @@ say "  signing     $($key_ready && echo "key file present ($key_file)" || echo "
 TAG="v$NAME+$NEXT"
 NOTES="$ROOT/docs/releases/$TAG.md"
 if $GO; then
-  $key_ready || fail "--go needs the lineage key file (android/key.properties or OC_KEY_PROPERTIES)."
+  $key_ready || fail "--go needs the lineage key file (OC_KEY_PROPERTIES, native/key.properties or the old android/key.properties)."
   [[ -s "$NOTES" && "$(head -n 1 "$NOTES")" == "# OpenCode Mobile $NAME+$NEXT" ]] ||
     fail "--go needs release notes $NOTES starting with '# OpenCode Mobile $NAME+$NEXT' (commit them first)."
   git rev-parse --verify --quiet "refs/tags/$TAG" >/dev/null && fail "tag $TAG already exists."
