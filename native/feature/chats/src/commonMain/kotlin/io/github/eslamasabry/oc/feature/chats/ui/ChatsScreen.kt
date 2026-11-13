@@ -170,6 +170,7 @@ import io.github.eslamasabry.oc.ui.kit.state.KitReceipt
 import io.github.eslamasabry.oc.ui.kit.state.KitReceiptState
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeAgentNoticeKind
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeNoticeKind
+import io.github.eslamasabry.oc.feature.chats.presentation.HomeFootBarRules
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeNotices
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeHeldReply
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeNeedsYou
@@ -234,11 +235,12 @@ public fun ChatsScreen(
     // round faces. No overflow: Servers is the pill, Inbox is the needs-you line, the rest are rows at the list's end.
     val settingsLabel = stringResource(Res.string.librarySettingsTitle)
     val updateLabel = stringResource(Res.string.appUpdateUpdate)
-    // G3: the empty page carries New conversation as its own full-width button at the bottom (Flutter
-    // KitStateView.calm), so the floating + only rides over a list.
-    val listed = state.phase == ChatsPhase.List
-    // Shown once the home knows its server and that server is open: it fades in once, never out and in again.
-    val showFab = listed && state.home.known && state.home.opening == null
+    // G3: the empty page (and the list that could not be read) carries New conversation as its own full-width button
+    // at the bottom (Flutter KitStateView.calm). Every other state of the home has the foot bar, and the bar always
+    // holds the round + (RC1 device pass: while the server was opening or not answering the + left the bar, and the
+    // skeleton or a filter that matched nothing had no way to start at all). A + tapped before the server is open is
+    // answered by the home's "still opening" notice, so it never has to hide.
+    val footBar = HomeFootBarRules.shown(state.phase)
     // Under Glass the floating + is liquid glass over the list (the kit records it only then), and the floating bar's
     // pane bends the same recording (glass step 4).
     val listGlass = rememberKitFrostState()
@@ -298,16 +300,16 @@ public fun ChatsScreen(
         // The foot bar: All conversations and the round + on one line, margin to margin, under the list (the frame
         // gives the list the room above it), so no row ever passes under the button.
         bottom =
-            if (!listed) null
+            if (!footBar) null
             else ({
                 KitFootBar(
                     label = stringResource(Res.string.chats_all_title),
-                    count = Numbers.format(state.shownCount ?: state.allCount),
+                    // Nothing is counted yet while the server first opens (the skeleton): no number, never a 0.
+                    count = if (state.phase == ChatsPhase.Opening) null else Numbers.format(state.shownCount ?: state.allCount),
                     onLink = actions::showAll,
                     fabLabel = stringResource(Res.string.chatsHomeNewChat),
                     fabIcon = KitIcons.add,
                     onFab = actions::newConversation,
-                    fabVisible = showFab,
                 )
             }),
         status = backExit ?: appStatus.takeIf { shownNotice == HomeNoticeKind.AppCondition },
@@ -544,7 +546,7 @@ public fun ChatsScreen(
         }
         // The edge dock over the list, clear of the foot bar; under Glass it bends the list's recording.
         androidx.compose.runtime.CompositionLocalProvider(io.github.eslamasabry.oc.ui.kit.dock.LocalKitDockGlass provides listGlass) {
-            edgeDock?.Content(clearBottom = if (listed) io.github.eslamasabry.oc.ui.kit.action.KIT_FAB_CLEARANCE.dp else 0.dp)
+            edgeDock?.Content(clearBottom = if (footBar) io.github.eslamasabry.oc.ui.kit.action.KIT_FAB_CLEARANCE.dp else 0.dp)
         }
       }
         ChatsHomeSheets(state, actions)
@@ -560,12 +562,13 @@ public fun ChatsScreen(
  */
 @Composable
 private fun CalmNoMatchPage(state: ChatsUi, actions: ChatsActions, modifier: Modifier) {
+    // New conversation is the foot bar's +, under this page as under the list: never a second button here.
     if (state.filters.running && !state.filters.needsYou)
         CalmPage(
             title = stringResource(Res.string.chatsHomeNothingRunning),
             body = stringResource(Res.string.chatsHomeNothingRunningBody),
-            primary = KitAction(stringResource(Res.string.chatsHomeNewChat), actions::newConversation, icon = KitIcons.add),
-            tertiary = KitAction(stringResource(Res.string.chatsHomeShowAll), actions::toggleRunning),
+            primary = KitAction(stringResource(Res.string.chatsHomeShowAll), actions::toggleRunning),
+            tertiary = null,
             modifier = modifier,
         )
     else

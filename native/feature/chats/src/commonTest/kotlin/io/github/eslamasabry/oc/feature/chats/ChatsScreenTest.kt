@@ -276,7 +276,7 @@ class ChatsScreenTest {
         }
 
     @Test
-    fun `SCREENS-NAV-27 G3 Running with nothing running says so and offers New conversation and Show all`() =
+    fun `SCREENS-NAV-27 G3 Running with nothing running says so and offers Show all, with the foot bar's + for New conversation`() =
         runComposeUiTest {
             val actions = RecordingChatsActions()
             val state =
@@ -292,7 +292,9 @@ class ChatsScreenTest {
             onNodeWithText("Nothing running").assertExists()
             onAllNodesWithText("No matching conversations").assertCountEquals(0)
             onNodeWithText("Show all conversations").performClick()
-            onNodeWithText("New conversation").performClick()
+            // RC1: New conversation is the foot bar's round + here too, once; the calm page draws no second one.
+            onAllNodesWithText("New conversation").assertCountEquals(0)
+            onNodeWithContentDescription("New conversation").performClick()
             assertEquals(listOf("running", "new"), actions.calls)
         }
 
