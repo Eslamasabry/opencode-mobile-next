@@ -451,4 +451,5 @@
     <string name="termuxRetiredSetUpLinux">جهّز لينكس المدمج</string>
     <string name="phoneSetupErrorNodeUnsupported">لا يستطيع نظام هذا الهاتف تشغيل Node.js داخل Linux المدمج. ما زال بإمكانك استخدام OpenCode Mobile بربطه بحاسوبك.</string>
     <string name="phoneSetupConnectComputer">ربط حاسوب</string>
+    <string name="capabilityStateHere">يعمل هنا</string>
 </resources>

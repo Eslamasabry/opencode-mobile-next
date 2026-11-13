@@ -272,4 +272,5 @@
     <string name="usageWidgetPlans__eq0">Sin planes</string>
     <string name="usageWidgetPlans__eq1">1 plan</string>
     <string name="usageWidgetPlans__eq2">%1$d planes</string>
+    <string name="capabilityStateHere">Funciona aquí</string>
 </resources>
