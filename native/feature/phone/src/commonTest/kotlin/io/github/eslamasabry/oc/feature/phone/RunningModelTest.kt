@@ -293,4 +293,28 @@ class RunningModelTest {
             assertEquals(8, state.summaryCount)
             assertEquals(1046L shl 20, state.memoryBytes)
         }
+
+    @Test
+    fun `B-LINUX-190 a process a reading lists twice is one row, so no name shows in two groups`() =
+        runTest {
+            val twice =
+                PhoneProcess(pid = 40, parentPid = 1, name = "Linux", kind = ProcessKind.OpenCode)
+            val rig =
+                Rig(this, reading.copy(processes = processes + twice + twice.copy(kind = ProcessKind.Helper)).ok(), FakeChildLimit())
+            rig.model.shown(true)
+            runCurrent()
+            assertEquals(1, rig.model.state.value.rows.count { it.pid == 40 })
+            assertEquals(1, rig.model.state.value.groups.count { g -> g.rows.any { it.pid == 40 } })
+        }
+
+    @Test
+    fun `B-LINUX-190 one reading gives the page its count and memory`() =
+        runTest {
+            val one = reading.copy(runningCount = 8, runningMemoryBytes = 997L shl 20)
+            val rig = Rig(this, one.ok(), FakeChildLimit())
+            rig.model.shown(true)
+            runCurrent()
+            assertEquals(8, rig.model.state.value.summaryCount)
+            assertEquals(997L shl 20, rig.model.state.value.memoryBytes)
+        }
 }
