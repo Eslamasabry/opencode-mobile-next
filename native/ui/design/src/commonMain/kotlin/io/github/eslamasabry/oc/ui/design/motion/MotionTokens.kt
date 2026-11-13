@@ -28,6 +28,12 @@ public object MotionTokens {
     public const val ARRIVAL_HOLD: Int = 2400
     public const val TIP_HOLD: Int = 4000
     public const val TIP_FADE: Int = 200
+    /** The edge light's one halo when someone needs the person (LAMP-CRAFT §2): 250 ms on `Pulse`, once. */
+    public const val LIGHT_PULSE: Int = 250
+    /** A mark arriving on the edge light fades in this long after its slot starts to open. */
+    public const val LIGHT_MARK_DELAY: Int = 60
+    /** A finished mark's check drawing itself (LAMP-CRAFT §2 "Done"). */
+    public const val CHECK_DRAW: Int = 200
     // Loops (§2.4), ms per lap or breath
     public const val GLOW_CLASSIC_LAP: Int = 3600
     public const val GLOW_MIN_LAP: Int = 1800
@@ -51,6 +57,8 @@ public object MotionTokens {
     public const val ENTRANCE_RISE_DP: Int = 6
     public const val MENU_DROP_DP: Int = 8
     public const val TIP_RISE_DP: Int = 4
+    /** How far the edge light's halo grows beyond its face (1 → 10 dp) while it fades. */
+    public const val LIGHT_HALO_DP: Int = 10
     public const val PREVIEW_CORNER_DP: Int = 28
     public const val ROW_CORNER_DP: Int = 20
     public const val DESCENDER_ALLOWANCE_DP: Int = 4
