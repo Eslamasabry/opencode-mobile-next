@@ -6,6 +6,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.Saver
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -85,10 +87,48 @@ internal class TranscriptFolds(
     }
 }
 
+/**
+ * Saveable, so what a person opened (a work line, a Thought, a step's Details, "show more") survives leaving the chat
+ * and coming back, and rotation. Bounded: at most [FOLDS_SAVED_PER_KIND] entries of each kind are saved, the ones the
+ * person left open first (an entry that is closed is the default again for most folds, so dropping it costs nothing).
+ */
+internal const val FOLDS_SAVED_PER_KIND = 200
+
+private val foldsSaver: Saver<TranscriptFolds, Any> =
+    Saver(
+        save = { folds ->
+            listOf(
+                foldsBoolOut(folds.open),
+                foldsBoolOut(folds.full),
+                folds.earlier.entries.take(FOLDS_SAVED_PER_KIND).flatMap { listOf(it.key, it.value) },
+            )
+        },
+        restore = { saved ->
+            val parts = saved as List<*>
+            TranscriptFolds(
+                foldsBoolIn(parts[0] as List<*>),
+                foldsBoolIn(parts[1] as List<*>),
+                mutableStateMapOf<String, Int>().also { map ->
+                    (parts[2] as List<*>).chunked(2).forEach { map[it[0] as String] = it[1] as Int }
+                },
+            )
+        },
+    )
+
+/** Open entries first, then closed ones (a closed entry that was set explicitly differs from a default-open fold). */
+private fun foldsBoolOut(map: Map<String, Boolean>): List<Any> =
+    map.entries.sortedByDescending { it.value }.take(FOLDS_SAVED_PER_KIND).flatMap { listOf(it.key, it.value) }
+
+private fun foldsBoolIn(flat: List<*>): SnapshotStateMap<String, Boolean> =
+    mutableStateMapOf<String, Boolean>().also { map ->
+        flat.chunked(2).forEach { map[it[0] as String] = it[1] as Boolean }
+    }
+
 @Composable
-internal fun rememberTranscriptFolds(): TranscriptFolds = remember {
-    TranscriptFolds(mutableStateMapOf(), mutableStateMapOf(), mutableStateMapOf())
-}
+internal fun rememberTranscriptFolds(): TranscriptFolds =
+    rememberSaveable(saver = foldsSaver) {
+        TranscriptFolds(mutableStateMapOf(), mutableStateMapOf(), mutableStateMapOf())
+    }
 
 private fun WorkLineState.toKit(): KitWorkState =
     when (this) {
