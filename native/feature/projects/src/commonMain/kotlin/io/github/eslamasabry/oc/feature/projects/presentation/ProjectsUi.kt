@@ -33,6 +33,8 @@ public data class FolderRowUi(
      * agents work in opens on their connection, where its conversations are. Null = the chosen server.
      */
     val opensOn: io.github.eslamasabry.oc.core.common.ids.ProfileId? = null,
+    /** False when [conversations] was never read for this folder (opened before, found by a search): no count is shown. */
+    val counted: Boolean = true,
 )
 
 /**

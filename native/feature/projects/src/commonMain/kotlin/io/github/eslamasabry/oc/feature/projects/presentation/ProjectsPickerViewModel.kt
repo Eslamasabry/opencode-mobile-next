@@ -304,6 +304,7 @@ public class ProjectsPickerViewModel(
                                         FolderRowUi(
                                             p.path,
                                             ProjectRules.name(p.path),
+                                            counted = false,
                                             isGit = p.hasGit,
                                             kind = p.kind,
                                         )

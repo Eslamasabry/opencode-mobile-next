@@ -50,4 +50,5 @@
     <string name="p12MoreFor">Mais opções para %1$s</string>
     <string name="p12OpenChat">Abrir conversa</string>
     <string name="p12ProjectsOnThisPhone">Projetos neste celular</string>
+    <string name="p12PhoneFolderBody">Escolha uma pasta no armazenamento compartilhado deste celular.</string>
 </resources>

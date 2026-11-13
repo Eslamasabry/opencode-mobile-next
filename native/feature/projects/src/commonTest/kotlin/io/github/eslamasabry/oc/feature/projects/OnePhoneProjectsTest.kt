@@ -19,6 +19,7 @@ import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNull
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.Dispatchers
@@ -121,8 +122,22 @@ class OnePhoneProjectsTest {
             )
         val joined = ProjectRules.joined(own, others)
         assertEquals(listOf("/w/app", "/w/web", "/w/notes"), joined.map { it.directory })
-        assertEquals(2, joined.first().conversations, "a folder both work in keeps the server's own row")
+        assertEquals("/w/app", joined.first().directory, "a folder both work in keeps the server's own row")
+        // Sweep C (f): the own list read 0 for a folder whose conversations live on the agents; both are counted.
+        assertEquals(7, joined.first().conversations)
+        assertNull(joined.first().opensOn)
         // The kept list remembers where a folder opens, so a cached row opens the same place.
         assertEquals(joined, KeptProjectList.of(joined).toRows())
+    }
+
+    @Test
+    fun `a folder only the agents have conversations in opens where they are, with its count`() {
+        val own = listOf(FolderRowUi("/root/projects/second", "second", conversations = 0, isGit = true))
+        val others = listOf(FolderRowUi("/root/projects/second", "second", conversations = 3, running = 1, opensOn = agents))
+        val row = ProjectRules.joined(own, others).single()
+        assertEquals(3, row.conversations)
+        assertEquals(1, row.running)
+        assertEquals(agents, row.opensOn)
+        assertEquals(true, row.isGit)
     }
 }

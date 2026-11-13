@@ -68,6 +68,22 @@ public data class TerminalShellSettings(
     val options: ImmutableList<TerminalShellOption>,
 )
 
+/**
+ * One row per real shell. On a merged-/usr Linux `/bin/sh` and `/usr/bin/sh` are the same file, and a server lists
+ * both; the first one listed stands for the pair. Different shells that share a name elsewhere stay apart.
+ */
+public fun TerminalShellSettings.realShells(): List<TerminalShellOption> {
+    val seen = HashSet<String>()
+    return options.filter { seen.add(mergedShellPath(it.path)) }
+}
+
+private fun mergedShellPath(path: String): String =
+    when {
+        path.startsWith("/usr/bin/") -> "/bin/" + path.removePrefix("/usr/bin/")
+        path.startsWith("/usr/sbin/") -> "/sbin/" + path.removePrefix("/usr/sbin/")
+        else -> path
+    }
+
 /** One interactive PTY connection. Cold until [output] is collected; [close] ends it. */
 public interface TerminalChannel {
     public val output: Flow<String>

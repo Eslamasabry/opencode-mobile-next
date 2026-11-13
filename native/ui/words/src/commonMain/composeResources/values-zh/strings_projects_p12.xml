@@ -44,4 +44,5 @@
     <string name="p12MoreFor">%1$s 的更多操作</string>
     <string name="p12OpenChat">打开对话</string>
     <string name="p12ProjectsOnThisPhone">这部手机上的项目</string>
+    <string name="p12PhoneFolderBody">在这部手机的共享存储中选择一个文件夹。</string>
 </resources>

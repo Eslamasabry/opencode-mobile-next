@@ -194,8 +194,49 @@ public object ProjectRules {
      * server's own rows first, as they are, then each other folder once. A folder both work in is the server's row.
      */
     public fun joined(own: List<FolderRowUi>, others: List<FolderRowUi>): List<FolderRowUi> {
+        val byFolder = others.groupBy { normalize(it.directory) }
         val seen = own.mapTo(HashSet()) { normalize(it.directory) }
-        return own + others.filter { seen.add(normalize(it.directory)) }
+        // A folder both work in is the server's row, with the conversations of both counted: the server's own list
+        // read 0 for a folder whose conversations live on This phone's agents. When only they have conversations the
+        // row opens where those are.
+        val merged =
+            own.map { row ->
+                val theirs = byFolder[normalize(row.directory)].orEmpty().filter { it.opensOn != null }
+                if (theirs.isEmpty()) row
+                else {
+                    val more = theirs.sumOf { it.conversations }
+                    row.copy(
+                        conversations = row.conversations + more,
+                        running = row.running + theirs.sumOf { it.running },
+                        opensOn = if (row.conversations == 0 && more > 0) theirs.first().opensOn else row.opensOn,
+                    )
+                }
+            }
+        return merged + others.filter { seen.add(normalize(it.directory)) }
+    }
+
+    /**
+     * "Opened before" and the server's projects as the page draws them: a project shown in the first group is not
+     * listed again in the second. An opened folder the server also lists takes that project's facts (conversations,
+     * Git); one it does not list has no count.
+     */
+    public fun sections(
+        openedBefore: List<FolderRowUi>,
+        projects: List<FolderRowUi>,
+    ): Pair<List<FolderRowUi>, List<FolderRowUi>> {
+        val known = projects.associateBy { normalize(it.directory) }
+        val opened =
+            openedBefore.distinctBy { normalize(it.directory) }.map { known[normalize(it.directory)] ?: it.copy(counted = false) }
+        val shown = opened.mapTo(HashSet()) { normalize(it.directory) }
+        return opened to projects.filter { shown.add(normalize(it.directory)) }
+    }
+
+    /** A path cut at its start when long, so the folders nearest the project stay readable (Flutter `_cutStart`). */
+    public fun cutStart(path: String, max: Int = 36): String {
+        if (path.length <= max) return path
+        val tail = path.substring(path.length - (max - 1))
+        val slash = tail.indexOf('/')
+        return "…" + if (slash > 0) tail.substring(slash) else tail
     }
 
     /** This project's conversations, newest first; subagents stay with their parent. */

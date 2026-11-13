@@ -167,7 +167,7 @@ public fun ProjectsPickerScreen(state: ProjectsPickerUi, actions: ProjectsPicker
                     item(key = "start") { StartRows(state, actions) }
                     if (state.canFindPhoneProjects)
                         item(key = "find-phone") {
-                            KitRowGroup(label = stringResource(Res.string.linuxFindProjects)) {
+                            KitRowGroup {
                                 KitRow(
                                     title =
                                         stringResource(
@@ -199,23 +199,19 @@ public fun ProjectsPickerScreen(state: ProjectsPickerUi, actions: ProjectsPicker
                                 state.phoneProjects.forEach { ProjectRow(it, actions) }
                             }
                         }
-                    if (state.openedBefore.isNotEmpty()) {
+                    val (opened, listed) = ProjectRules.sections(state.openedBefore, state.projects)
+                    if (opened.isNotEmpty()) {
                         item(key = "opened") {
                             KitRowGroup(
                                 label = stringResource(Res.string.folderBrowserOpenedBefore)
                             ) {
-                                state.openedBefore.forEach { folder ->
-                                    KitRow(
-                                        title = folder.name,
-                                        supporting = folder.directory,
-                                        trailing = KitRowTrailing.Chevron,
-                                        onClick = { actions.openProject(folder.directory) },
-                                    )
-                                }
+                                opened.forEach { ProjectRow(it, actions) }
                             }
                         }
                     }
-                    item(key = "projects") { ServerProjects(state, actions) }
+                    // Every listed project is already above: the second group would only repeat them.
+                    if (!(listed.isEmpty() && state.projects.isNotEmpty() && state.projectsFailure == null))
+                        item(key = "projects") { ServerProjects(state, listed, actions) }
                 }
             }
         }
@@ -351,6 +347,7 @@ private fun StartRows(state: ProjectsPickerUi, actions: ProjectsPickerActions) {
         }
         KitRow(
             title = stringResource(Res.string.p12PhoneFolder),
+            supporting = stringResource(Res.string.p12PhoneFolderBody),
             leading = KitRowLeading.Glyph(KitIcons.phone, tile = true),
             enabled = state.canBrowsePhone,
             trailing = KitRowTrailing.Chevron,
@@ -362,7 +359,11 @@ private fun StartRows(state: ProjectsPickerUi, actions: ProjectsPickerActions) {
 }
 
 @Composable
-private fun ServerProjects(state: ProjectsPickerUi, actions: ProjectsPickerActions) {
+private fun ServerProjects(
+    state: ProjectsPickerUi,
+    listed: List<FolderRowUi>,
+    actions: ProjectsPickerActions,
+) {
     KitRowGroup(
         label =
             if (state.canBrowsePhone) stringResource(Res.string.p12ProjectsOnThisPhone)
@@ -379,7 +380,7 @@ private fun ServerProjects(state: ProjectsPickerUi, actions: ProjectsPickerActio
                 retry = KitLineAction(stringResource(Res.string.kitTryAgain), actions::retry),
             )
         when {
-            state.projects.isNotEmpty() -> ProjectRows(state, actions)
+            listed.isNotEmpty() -> ProjectRows(state, listed, actions)
             state.projectsLoading -> KitSkeletonRows(count = 3)
             failure != null -> Unit
             else ->
@@ -394,10 +395,14 @@ private fun ServerProjects(state: ProjectsPickerUi, actions: ProjectsPickerActio
 }
 
 @Composable
-private fun ProjectRows(state: ProjectsPickerUi, actions: ProjectsPickerActions) {
+private fun ProjectRows(
+    state: ProjectsPickerUi,
+    listed: List<FolderRowUi>,
+    actions: ProjectsPickerActions,
+) {
     // N-42: same-named projects lead with the shortest parent path that tells them apart.
-    val hints = ProjectRules.sameNameHints(state.projects.map { it.directory to it.name })
-    state.projects.forEach {
+    val hints = ProjectRules.sameNameHints(listed.map { it.directory to it.name })
+    listed.forEach {
         ProjectRow(it, actions, state.canRename, tail = hints[ProjectRules.normalize(it.directory)])
     }
 }
@@ -412,13 +417,14 @@ private fun ProjectRow(
 ) {
     val parts = buildList {
         if (tail != null) add(tail)
-        add(
-            pluralStringResource(
-                Res.plurals.chatsFilterChatCount,
-                project.conversations,
-                project.conversations,
+        if (project.counted)
+            add(
+                pluralStringResource(
+                    Res.plurals.chatsFilterChatCount,
+                    project.conversations,
+                    project.conversations,
+                )
             )
-        )
         if (project.running > 0)
             add(stringResource(Res.string.chatsFilterRunningCount, project.running))
         if (project.worktrees > 0)
@@ -460,7 +466,7 @@ private fun ProjectRow(
                 project.kind != io.github.eslamasabry.oc.engine.files.PhoneProjectKind.Git
         )
             add(stringResource(Res.string.folderBrowserGit))
-        if (tail == null) add(project.directory)
+        if (tail == null) add(ProjectRules.cutStart(project.directory))
     }
     KitRow(
         title = project.name,

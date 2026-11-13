@@ -4,6 +4,8 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.v2.runComposeUiTest
 import io.github.eslamasabry.oc.core.common.Failure
@@ -126,6 +128,26 @@ class ProjectsScreenTest {
             onNodeWithText("site").performClick()
             onNodeWithText("api").performClick()
             assertEquals(listOf("ask", "project /work/site", "project /work/api"), actions.calls)
+        }
+
+    @Test
+    fun `sweep C f a project opened before is listed once, the search title is not said twice, the phone row says what it is`() =
+        runComposeUiTest {
+            val both =
+                ready.copy(
+                    canFindPhoneProjects = true,
+                    canBrowsePhone = true,
+                    projects =
+                        persistentListOf(
+                            FolderRowUi("/work/site", "site", conversations = 2),
+                            FolderRowUi("/work/api", "api", conversations = 3),
+                        ),
+                )
+            setContent { Themed { ProjectsPickerScreen(both, Picker()) } }
+            onAllNodesWithText("site").assertCountEquals(1)
+            onAllNodesWithText("api").assertCountEquals(1)
+            onAllNodesWithText("Find projects on this phone").assertCountEquals(1)
+            onNodeWithText("Pick a folder in this phone’s shared storage.").assertExists()
         }
 
     @Test

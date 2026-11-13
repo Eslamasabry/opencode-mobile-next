@@ -16,6 +16,7 @@ import io.github.eslamasabry.oc.core.domain.capabilities.ServerCapabilities
 import io.github.eslamasabry.oc.core.model.Health
 import io.github.eslamasabry.oc.core.model.ModelRef
 import io.github.eslamasabry.oc.core.model.TerminalShellSettings
+import io.github.eslamasabry.oc.core.model.realShells
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.ComputerRoute
 import io.github.eslamasabry.oc.ui.routes.ServerIntegrationPage
@@ -110,25 +111,46 @@ public interface ServerSettingsSource {
 }
 
 public data class ShellChoice(
+    /** What the server is asked to save: the shell's absolute path ("" = automatic). */
     val value: String,
     val label: String?,
     val terminalOnly: Boolean = false,
+    /** The bare name, which an older save may hold instead of the path. */
+    val name: String? = null,
 )
 
-/** Preserve custom selections and disambiguate equal names using the server's absolute paths. */
+/**
+ * One row per real shell (a merged-/usr Linux lists `/bin/sh` and `/usr/bin/sh` as two), named by its name; the path
+ * names it only when two different shells share a name (Flutter default_shell_row `_shellChoices`). Custom selections
+ * the server does not list are kept.
+ */
 public fun shellChoices(settings: TerminalShellSettings): ImmutableList<ShellChoice> {
-    val names = settings.options.groupingBy { it.name }.eachCount()
+    val real = settings.realShells()
+    val names = real.groupingBy { it.name }.eachCount()
     val rows = mutableListOf(ShellChoice("", null))
     val seen = mutableSetOf("")
-    for (option in settings.options) {
-        val value = if (names[option.name] == 1) option.name else option.path
-        if (seen.add(value)) rows.add(ShellChoice(value, value, !option.acceptable))
+    for (option in real) {
+        if (seen.add(option.path))
+            rows.add(
+                ShellChoice(
+                    option.path,
+                    if (names[option.name] == 1) option.name else option.path,
+                    !option.acceptable,
+                    option.name,
+                )
+            )
     }
-    if (settings.selected.isNotEmpty() && seen.add(settings.selected)) {
+    if (settings.selected.isNotEmpty() && rows.none { it.matches(settings.selected) }) {
         rows.add(ShellChoice(settings.selected, settings.selected))
     }
     return rows.toImmutableList()
 }
+
+private fun ShellChoice.matches(saved: String): Boolean = value == saved || (name != null && name == saved)
+
+/** The value of the row that stands for what the server saved (a saved name matches its shell's path). */
+public fun TerminalShellSettings.selectedValue(): String =
+    shellChoices(this).firstOrNull { it.matches(selected) }?.value ?: selected
 
 public data class ServerSettingsUi(
     val page: ServerSettingsPage,
@@ -371,7 +393,7 @@ public class ServerSettingsViewModel(
         val previous = mutable.value.shells ?: return
         if (
             mutable.value.working ||
-                previous.selected == value ||
+                previous.selectedValue() == value ||
                 shellChoices(previous).none { it.value == value }
         )
             return

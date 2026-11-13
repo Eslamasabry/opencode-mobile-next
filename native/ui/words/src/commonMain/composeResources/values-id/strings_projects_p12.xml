@@ -44,4 +44,5 @@
     <string name="p12MoreFor">Lainnya untuk %1$s</string>
     <string name="p12OpenChat">Buka percakapan</string>
     <string name="p12ProjectsOnThisPhone">Proyek di ponsel ini</string>
+    <string name="p12PhoneFolderBody">Pilih folder di penyimpanan bersama ponsel ini.</string>
 </resources>
