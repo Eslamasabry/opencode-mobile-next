@@ -3,6 +3,7 @@ package io.github.eslamasabry.oc.feature.settings
 import io.github.eslamasabry.oc.core.model.TerminalShellOption
 import io.github.eslamasabry.oc.core.model.TerminalShellSettings
 import io.github.eslamasabry.oc.core.model.realShells
+import io.github.eslamasabry.oc.core.model.selects
 import io.github.eslamasabry.oc.feature.settings.presentation.selectedValue
 import io.github.eslamasabry.oc.feature.settings.presentation.shellChoices
 import kotlin.test.Test
@@ -53,5 +54,20 @@ class ShellChoicesTest {
         val custom = merged.copy(selected = "/opt/fish")
         assertEquals("/opt/fish", custom.selectedValue())
         assertEquals("/opt/fish", shellChoices(custom).last().value)
+    }
+
+    @Test
+    fun `a save under the other bin folder selects the one listed row and adds no second row`() {
+        val saved = merged.copy(selected = "/usr/bin/bash")
+        val rows = shellChoices(saved)
+        assertEquals(listOf("", "/bin/sh", "/bin/bash", "/bin/rbash", "/usr/bin/dash"), rows.map { it.value })
+        assertEquals("/bin/bash", saved.selectedValue())
+        // The Git panel's check: exactly the one listed bash is selected, no other shell.
+        assertEquals(listOf("bash"), saved.realShells().filter { saved.selects(it) }.map { it.name })
+    }
+
+    @Test
+    fun `nothing saved selects no shell`() {
+        assertEquals(emptyList(), merged.realShells().filter { merged.selects(it) })
     }
 }

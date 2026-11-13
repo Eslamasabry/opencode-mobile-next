@@ -6,6 +6,7 @@ import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.model.realShells
+import io.github.eslamasabry.oc.core.model.selects
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitText
@@ -85,9 +86,7 @@ public fun GitServerToolsPanel(state: GitServerToolsUi, actions: GitServerToolsA
                         KitRow(
                             // One row per real shell, named by its name; the path only tells two shells of one name apart.
                             title = if (names[shell.name] == 1) shell.name else shell.path,
-                            selected =
-                                shell.path == state.shells?.selected ||
-                                    shell.name == state.shells?.selected,
+                            selected = state.shells?.selects(shell) == true,
                             enabled = !state.busy && shell.acceptable,
                             disabledReason =
                                 stringResource(
