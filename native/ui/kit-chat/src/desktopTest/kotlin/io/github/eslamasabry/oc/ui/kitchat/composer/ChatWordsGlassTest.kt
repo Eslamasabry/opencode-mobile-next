@@ -41,6 +41,7 @@ import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.performScrollToIndex
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.v2.runDesktopComposeUiTest
+import androidx.compose.ui.test.v2.runSkikoComposeUiTest
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.DpRect
 import androidx.compose.ui.unit.dp
@@ -286,7 +287,9 @@ class ChatWordsGlassTest {
         nudgeDp: Int = 0,
     ): Shot {
         lateinit var shot: Shot
-        runDesktopComposeUiTest((W * D).toInt(), (H * D).toInt()) {
+        // The joined box and pill run the join shader on the CPU every frame; a slow runner took over the default minute
+        // (runDesktopComposeUiTest keeps that minute whatever it is told, PaneRimScenes.SCENE_TIMEOUT).
+        runSkikoComposeUiTest(androidx.compose.ui.geometry.Size(W * D, H * D), testTimeout = SCENE_TIMEOUT) {
             val seen = arrayOfNulls<Any?>(2)
             val lazy = arrayOfNulls<LazyListState>(1)
             setContent {
@@ -725,6 +728,9 @@ class ChatWordsGlassTest {
     }
 
     private companion object {
+        /** How long one scene may take to draw and settle (see [shot]). */
+        val SCENE_TIMEOUT: kotlin.time.Duration = kotlin.time.Duration.parse("5m")
+
         const val W = 240
         const val H = 480
         const val D = 2f
