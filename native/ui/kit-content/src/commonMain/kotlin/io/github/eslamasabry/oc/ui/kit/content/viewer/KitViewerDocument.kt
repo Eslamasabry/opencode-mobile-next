@@ -56,7 +56,7 @@ public fun KitViewerDocument(
     val lines = remember(cut) { ViewerText.lines(cut.text) }
     var wrapOwn by remember(source, wrap) { mutableStateOf(wrap ?: !code) }
     val wrapOn = wrapOwn
-    val toggleWrap = {
+    val toggleWrap: () -> Unit = {
         wrapOwn = !wrapOwn
         onWrapChanged?.invoke(wrapOwn)
     }
@@ -64,9 +64,16 @@ public fun KitViewerDocument(
     var finding by remember(source) { mutableStateOf(false) }
     var query by remember(source) { mutableStateOf("") }
     var active by remember(source, query) { mutableIntStateOf(0) }
-    val closeFind = {
+    val closeFind: () -> Unit = {
         finding = false
         query = ""
+    }
+    val toggleFind: () -> Unit = {
+        if (finding) {
+            closeFind()
+        } else {
+            finding = true
+        }
     }
     // The system Back closes Find first; only then does it leave the page.
     io.github.eslamasabry.oc.ui.kit.modal.KitBackGuard(enabled = finding, onBack = closeFind)
@@ -123,7 +130,7 @@ public fun KitViewerDocument(
                 tools,
                 mapOf(
                     "copy" to copy,
-                    "find" to { if (finding) closeFind() else finding = true },
+                    "find" to toggleFind,
                     "source" to { showSource = !showSource },
                     "wrap" to toggleWrap,
                 ),
@@ -146,7 +153,7 @@ public fun KitViewerDocument(
                         {
                             when (tool.id) {
                                 "copy" -> copy()
-                                "find" -> if (finding) closeFind() else finding = true
+                                "find" -> toggleFind()
                                 "source" -> showSource = !showSource
                                 else -> toggleWrap()
                             }
