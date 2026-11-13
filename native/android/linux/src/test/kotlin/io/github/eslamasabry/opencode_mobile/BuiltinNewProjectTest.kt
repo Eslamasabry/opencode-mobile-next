@@ -81,6 +81,12 @@ class BuiltinNewProjectTest {
             "logs/HEAD", "COMMIT_EDITMSG", "index")) {
             assertTrue("missing $needed in $ourFiles", needed in ourFiles)
         }
+        // The config is read, not just found: a repository git cannot trust is not a repository.
+        val core = File(ours, "config").readLines().map { it.trim() }.filter { "=" in it }
+            .associate { it.substringBefore("=").trim() to it.substringAfter("=").trim() }
+        assertEquals("0", core["repositoryformatversion"])
+        assertEquals("false", core["bare"])
+        assertEquals("true", core["filemode"])
         for (file in listOf("HEAD", "refs/heads/master", "logs/HEAD", "logs/refs/heads/master", "COMMIT_EDITMSG")) {
             assertArrayEquals(file, File(theirs, file).readBytes(), File(ours, file).readBytes())
         }

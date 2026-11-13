@@ -8,7 +8,6 @@ import io.github.eslamasabry.oc.feature.settings.RecordingActions
 import io.github.eslamasabry.oc.feature.settings.SettingsThemed
 import io.github.eslamasabry.oc.feature.settings.presentation.*
 import io.github.eslamasabry.oc.feature.settings.ui.SettingsScreen
-import io.github.eslamasabry.oc.core.common.text.PhoneSizes
 import io.github.eslamasabry.oc.feature.settings.ui.localBytes
 import io.github.eslamasabry.oc.ui.gate.FlutterGoldenGate
 import kotlin.test.Test
@@ -122,8 +121,8 @@ class PrivacyGateTest {
         }
 
     @Test
-    fun `B-STATE-080 byte readout rounds the final decimal as Flutter does`() {
-        assertEquals(PhoneSizes.text(0), localBytes(0))
+    fun `B-STATE-080 byte readout rounds to one decimal and keeps its unit`() {
+        assertEquals("\u20661.5\u00a0KB\u2069", localBytes(1536))
         assertEquals("\u20660\u00a0B\u2069", localBytes(0))
         assertEquals("\u20661.1\u00a0KB\u2069", localBytes(1127))
         assertEquals("\u206621.0\u00a0KB\u2069", localBytes(21 * 1024L))

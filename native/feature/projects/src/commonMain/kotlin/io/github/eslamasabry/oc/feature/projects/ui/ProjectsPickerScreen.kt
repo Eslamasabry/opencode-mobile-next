@@ -62,6 +62,7 @@ import io.github.eslamasabry.oc.ui.kitchat.LocalKitRedactor
 import io.github.eslamasabry.oc.ui.words.res.*
 import io.github.eslamasabry.oc.ui.words.res.chatsFilterChatCount
 import io.github.eslamasabry.oc.ui.words.res.chatsFilterRunningCount
+import io.github.eslamasabry.oc.ui.words.res.r40PhoneChecking
 import io.github.eslamasabry.oc.ui.words.res.e7ProjectProjectsEmpty
 import io.github.eslamasabry.oc.ui.words.res.e7ProjectProjectsEmptyDetail
 import io.github.eslamasabry.oc.ui.words.res.e7ProjectProjectsSearch
@@ -196,7 +197,7 @@ public fun ProjectsPickerScreen(state: ProjectsPickerUi, actions: ProjectsPicker
                                             )
                                     )
                                 }
-                                state.phoneProjects.forEach { ProjectRow(it, actions) }
+                                state.phoneProjects.forEach { ProjectRow(it, actions, checkingPath = state.checkingPath) }
                             }
                         }
                     val (opened, listed) = ProjectRules.sections(state.openedBefore, state.projects)
@@ -206,7 +207,7 @@ public fun ProjectsPickerScreen(state: ProjectsPickerUi, actions: ProjectsPicker
                                 label = stringResource(Res.string.folderBrowserOpenedBefore)
                             ) {
                                 // A project the server lists is drawn only here, so it keeps its Rename here.
-                                opened.forEach { ProjectRow(it, actions, state.canRename) }
+                                opened.forEach { ProjectRow(it, actions, state.canRename, checkingPath = state.checkingPath) }
                             }
                         }
                     }
@@ -404,7 +405,13 @@ private fun ProjectRows(
     // N-42: same-named projects lead with the shortest parent path that tells them apart.
     val hints = ProjectRules.sameNameHints(listed.map { it.directory to it.name })
     listed.forEach {
-        ProjectRow(it, actions, state.canRename, tail = hints[ProjectRules.normalize(it.directory)])
+        ProjectRow(
+            it,
+            actions,
+            state.canRename,
+            tail = hints[ProjectRules.normalize(it.directory)],
+            checkingPath = state.checkingPath,
+        )
     }
 }
 
@@ -415,7 +422,10 @@ private fun ProjectRow(
     canRename: Boolean = false,
     /** Where this folder sits, shown first when another project has the same name (N-42). */
     tail: String? = null,
+    /** The folder being checked on the server now: its row says so and ignores taps. */
+    checkingPath: String? = null,
 ) {
+    val checking = checkingPath != null && checkingPath == ProjectRules.normalize(project.directory)
     val parts = buildList {
         if (tail != null) add(tail)
         if (project.counted)
@@ -473,7 +483,7 @@ private fun ProjectRow(
     val renameLabel = stringResource(Res.string.e7ProjectProjectRenameAction, project.name)
     KitRow(
         title = project.name,
-        supporting = parts.joinToString(" · "),
+        supporting = if (checking) stringResource(Res.string.r40PhoneChecking) else parts.joinToString(" · "),
         supportingMaxLines = 2,
         // Rename is a visible pencil on the row (owner rule: main actions are visible); the long press stays too.
         trailing =
@@ -482,7 +492,7 @@ private fun ProjectRow(
                     KitLineAction(renameLabel, { actions.askRename(project) }, icon = KitIcons.edit)
                 )
             else KitRowTrailing.Chevron,
-        onClick = { actions.openProject(project.directory) },
+        onClick = { if (!checking) actions.openProject(project.directory) },
         // Rename is a long-press (Flutter), told to TalkBack as a custom action; only where the
         // server keeps names.
         onLongClick = if (canRename && project.id != null) ({ actions.askRename(project) }) else null,

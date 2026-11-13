@@ -101,6 +101,23 @@ class AppExitHub(
                     )
                 }
             if (stopped) return@launch
+            // A stop or restart the person asked for in the app is not news when the app then ended (B-244).
+            val askedAt =
+                withContext(dispatchers.io) {
+                    io.github.eslamasabry.opencode_mobile.PhoneServerStopRecord.readAskedAt(
+                        application.getSharedPreferences(
+                            io.github.eslamasabry.opencode_mobile.PhoneServerStopRecord.PREFERENCES,
+                            Context.MODE_PRIVATE,
+                        )
+                    )
+                }
+            if (
+                io.github.eslamasabry.oc.engine.diagnostics.exit.ExitClassifier.followsAskedStop(
+                    exit.at.toEpochMilliseconds(),
+                    askedAt,
+                )
+            )
+                return@launch
             val profile =
                 (stores.prefs.get("oc.builtinServerOwner") as? PrefValue.Str)
                     ?.value

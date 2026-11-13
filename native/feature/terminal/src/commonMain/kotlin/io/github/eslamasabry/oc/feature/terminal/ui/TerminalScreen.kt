@@ -404,7 +404,6 @@ public object TerminalTags {
     public const val KEYS: String = "terminal-keys"
 }
 
-/** Flutter `_status`: the one line, only while the terminal is not connected. */
 /** Each listed terminal says whether it still runs (or how it ended), then its folder. */
 @Composable
 private fun terminalRowState(entry: TerminalProcess): String =
@@ -415,6 +414,7 @@ private fun terminalRowState(entry: TerminalProcess): String =
         else -> stringResource(Res.string.terminalScreenRowEndedNoCode, entry.directory)
     }
 
+/** Flutter `_status`: the one line, only while the terminal is not connected. */
 @Composable
 private fun terminalStatus(line: TerminalLine, reconnect: () -> Unit): KitStatus? {
     val again = KitLineAction(stringResource(Res.string.e7SetupReconnect), reconnect)

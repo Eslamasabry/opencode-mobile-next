@@ -19,6 +19,9 @@ object PhoneServerStopRecord {
     const val KEY: String = "personStopped"
     const val LEGACY_KEY: String = "userStopped"
 
+    /** When the app last stopped or restarted the server because the person asked (Stop or Restart). */
+    const val ASKED_AT_KEY: String = "askedStopAtMs"
+
     /** Why the server is being stopped. */
     enum class Cause {
         /** The person's Stop (This phone, the notification's Stop, Undo of an automatic restart). */
@@ -35,6 +38,16 @@ object PhoneServerStopRecord {
     }
 
     fun byPerson(cause: Cause): Boolean = cause == Cause.Person
+
+    /**
+     * A stop the person asked for: their Stop, or the app's own replacing stop for a Restart. An app exit just after
+     * one is never "your battery manager closed it".
+     */
+    fun asked(cause: Cause): Boolean = cause == Cause.Person || cause == Cause.Replace
+
+    /** The saved time of the last asked stop, or null. */
+    fun readAskedAt(preferences: SharedPreferences): Long? =
+        if (preferences.contains(ASKED_AT_KEY)) preferences.getLong(ASKED_AT_KEY, 0L).takeIf { it > 0 } else null
 
     /** [recorded] is the saved value, null when nothing is saved. */
     fun stoppedByPerson(recorded: Boolean?): Boolean = recorded == true

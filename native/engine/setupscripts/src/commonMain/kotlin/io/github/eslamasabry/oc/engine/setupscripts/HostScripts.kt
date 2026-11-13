@@ -53,6 +53,12 @@ public object HostScripts {
      */
     public const val UBUNTU_GUIDE_URL: String =
         "https://github.com/$REPOSITORY/blob/9ba25eab778e003199749543cc0c59502af4c519/native/docs/ubuntu-host.md"
+
+    /**
+     * SHA-256 of native/docs/ubuntu-host.md as the commit in [UBUNTU_GUIDE_URL] holds it. An edit to the guide
+     * changes this hash, so `HostScriptPinFilesTest` fails until the link's commit and this hash are both updated.
+     */
+    public const val UBUNTU_GUIDE_SHA256: String = "1cf222b14959da6b365edbd77111ebc2184434ae23b71cd06b503c85e6f6984f"
     public const val TEAM_GUIDE_URL: String = "$GUIDE_BASE/ai-team-host.md"
 
     /** First-time install on the host: the official pinned OpenCode 2 package, listening on [port]. */

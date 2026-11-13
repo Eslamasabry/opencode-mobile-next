@@ -36,7 +36,6 @@
 :engine:composer	S	chat-lead	slice-3
 :engine:runtime	S	runtime-owner	slice-3
 :engine:attention	S	attention-owner (widget ingress contract)	slice-4
-:android:agenthost	S	runtime-owner	slice-3
 :android:camera	F	QR-CAMERA	slice-3
 :android:media	S	media-lead	slice-3
 :android:notifications	F	NOTIFY (folds into S4-BG)	slice-4

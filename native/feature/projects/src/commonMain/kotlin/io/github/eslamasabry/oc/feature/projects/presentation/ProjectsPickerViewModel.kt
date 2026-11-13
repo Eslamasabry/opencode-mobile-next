@@ -539,9 +539,21 @@ public class ProjectsPickerViewModel(
             return
         }
         // A server that makes folders is asked first, so a typo is not remembered as a project.
+        checkThenOpen(server, normal)
+    }
+
+    /** One folder check at a time: a second tap while it runs is ignored, and the row shows it is working. */
+    private fun checkThenOpen(server: ProjectServer, normal: String) {
+        if (mutable.value.checkingPath != null) return
         val run = generation
+        mutable.update { it.copy(checkingPath = normal) }
         viewModelScope.launch {
-            val there = creator.exists(server, normal)
+            val there =
+                try {
+                    creator.exists(server, normal)
+                } finally {
+                    mutable.update { it.copy(checkingPath = null) }
+                }
             if (run != generation || current()?.gateway !== server.gateway) return@launch
             if (there == false)
                 mutable.update {
@@ -558,14 +570,7 @@ public class ProjectsPickerViewModel(
         val server = current()
         val ownFolder = all.firstOrNull { ProjectRules.normalize(it.directory) == normal }?.opensOn == null
         if (server != null && ownFolder && creator.available(server)) {
-            val run = generation
-            viewModelScope.launch {
-                val there = creator.exists(server, normal)
-                if (run != generation || current()?.gateway !== server.gateway) return@launch
-                if (there == false)
-                    mutable.update { it.copy(missingPath = normal, missingFailure = null, creatingMissing = false) }
-                else openListed(normal)
-            }
+            checkThenOpen(server, normal)
             return
         }
         openListed(normal)
