@@ -390,7 +390,7 @@ private class JoinedPaneNode(
                 // The menu's detail softening is the body's too, coming in with its rows as its frost does (one material).
                 local = (if (frostsBody) dropSpec!!.recipe.hold else recipe.hold).let {
                     val reach = if (frostsBody) drop!!.content().coerceIn(0f, 1f) else 1f
-                    if (it.local && reach > 0f) floatArrayOf(it.localDp.dp.toPx() * reach, it.localFree, it.localSlope) else floatArrayOf(0f, 0f, 1f)
+                    localOf(it, it.localDp.dp.toPx() * reach)
                 },
                 tintMine = tintNow(spec),
                 tintTheirs = tintNow(theirSpec),
@@ -532,8 +532,8 @@ internal class JoinUniforms(
     val lightDir: FloatArray = SHIPPED_LIGHT,
     /** The bend's profile (-1 soft dome, 0 the shipped circle, 1 sharp bevel). */
     val bendShape: Float = 0f,
-    /** The local-contrast hold: (reach px, free, slope); reach 0 = off. */
-    val local: FloatArray = floatArrayOf(0f, 0f, 1f),
+    /** The local hold: (reach px, free, slope, ink kept, ink in the rim); reach 0 = off, ink kept 1 = off. */
+    val local: FloatArray = floatArrayOf(0f, 0f, 1f, 1f, 1f),
 ) {
     /** [light]: the finger's light for modes 4 and 5 (centre x, centre y, radius or line width in px, strength). */
     fun set(p: LiveShaderProgram, mode: Float, res: Float, light: FloatArray = NO_LIGHT) {
@@ -554,7 +554,8 @@ internal class JoinUniforms(
         p.float4("cc", saturation, contrast, brightness, 0f)
         p.float3("knee", knee[0], knee[1], knee[2])
         p.float("hold", hold)
-        p.float3("local", local[0], local[1], local[2])
+        p.float4("local", local[0], local[1], local[2], local.getOrElse(3) { 1f })
+        p.float("inkRim", local.getOrElse(4) { 1f })
         p.float4("tintA", tintMine.red * tintMine.alpha, tintMine.green * tintMine.alpha, tintMine.blue * tintMine.alpha, tintMine.alpha)
         p.float4("tintB", tintTheirs.red * tintTheirs.alpha, tintTheirs.green * tintTheirs.alpha, tintTheirs.blue * tintTheirs.alpha, tintTheirs.alpha)
         p.float("rimPx", rimPx)
@@ -605,7 +606,7 @@ uniform float2 refr;
 uniform float4 cc;
 uniform float3 knee;
 uniform float hold;
-uniform float3 local;
+uniform float4 local;
 uniform float4 tintA;
 uniform float4 tintB;
 uniform float rimPx;
@@ -635,6 +636,13 @@ float2 dirBox(float2 p, float4 r, float c, float soften) {
     return s * float2(g, 1.0 - g);
 }
 float depthOf(float4 r, float c) { return max(min(c, min(r.z, r.w)), 0.001); }
+float4 holdSample(float2 p) {
+    float4 s = float4(sampleContent(p));
+    float3 rgb = s.rgb / max(s.a, 0.0001);
+    float l = dot(rgb, float3(0.213, 0.715, 0.072));
+    return float4(clamp(cc.y * (l + cc.x * (rgb - l)) + (0.5 - 0.5 * cc.y + cc.z), 0.0, 1.0), s.a);
+}
+""" + LiquidHoldShader.LOCAL_HOLD + """
 
 half4 main(float2 q) {
     float2 p = q / res;
@@ -677,26 +685,9 @@ half4 main(float2 q) {
         // The rim keeps its detail and its colour (content must show there); from half its width inward the holds are
         // in full.
         float deep = rimW > 0.0 ? ss(0.5 * rimW, rimW, depth) : 1.0;
-        if (local.x > 0.0) {
-            // The local-contrast hold (as LiquidHoldShader's): the local mean passes, the detail round it is compressed;
-            // then the knee below, as without it.
-            float3 m = rgb;
-            for (int i = 0; i < 12; i++) {
-                float tt = 6.2831853 * (float(i) + 0.5) / 12.0;
-                float2 dir = float2(cos(tt), sin(tt));
-                for (int j = 1; j <= 3; j++) {
-                    float4 s = float4(sampleContent(at + dir * local.x * res * 0.3333 * float(j)));
-                    float ls = dot(s.rgb, float3(0.213, 0.715, 0.072));
-                    m += clamp(cc.y * (ls + cc.x * (s.rgb - ls)) + (0.5 - 0.5 * cc.y + cc.z), 0.0, 1.0);
-                }
-            }
-            m /= 37.0;
-            float3 dv = rgb - m;
-            float len = length(dv);
-            float heldLen = len > local.y ? local.y + (len - local.y) * local.z : len;
-            float3 o = len > 0.0001 ? clamp(m + dv * (heldLen / len), 0.0, 1.0) : rgb;
-            rgb = mix(rgb, o, deep);
-        }
+        // The local hold (LiquidHoldShader.LOCAL_HOLD, as the plain pane's): detail to its local mean, ink-like strokes to
+        // the page's ground; then the knee below, as without it.
+        if (local.x > 0.0) rgb = localHold(at, rgb, deep, res, knee.z);
         if (knee.y < 1.0) {
             float lum = dot(rgb, float3(0.213, 0.715, 0.072));
             float3 scaled;

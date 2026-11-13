@@ -23,6 +23,69 @@ import io.github.eslamasabry.oc.ui.kit.platform.KitPlatform
  * shader is tested against). Only the roles whose recipe says so (LiquidHold: the menu and the sheet).
  */
 internal object LiquidHoldShader {
+    /**
+     * The local hold both shaders run (LiquidHold's localDp, localFree, localSlope, inkKeep), AGSL and SkSL alike. It
+     * needs `uniform float4 local` (reach px, free, slope, ink kept; 1 = off), `ss` and `float4 holdSample(float2)` (what
+     * is behind at a point, through the colour controls, with its alpha) defined before it.
+     *
+     * Round two (2026-11-14): the mean is taken over a disc of 36 points laid as many per area everywhere (a golden-angle
+     * spiral) instead of three rings of twelve, which put a third of the weight within a third of the reach, so a line of
+     * text survived in the mean as a grey bar; it is weighted by alpha, so what lies outside the recorded page (past the
+     * screen, past the layer's padding) is not read as black (a dark frame inside a sheet at a long reach). Then the
+     * ink-side hold: what looks like the pane's ink (under dark words its blackness, 1 - the largest channel; under light
+     * words its whiteness, the smallest channel) past the page's ground round it (the least ink of the disc) keeps
+     * local.w; the same amount moves on every channel, so chroma is kept. Where ink-like things cover most of the disc
+     * (past 60 %: a dark picture under dark words) it lets go; in the rim's outer half it works at `inkRim` (its own
+     * uniform), so the bend still shows the page's strokes, fainter (bent whole, they read as grey smudges and words).
+     * 37 taps per pixel, as before.
+     */
+    const val LOCAL_HOLD: String =
+        """
+uniform float inkRim;
+
+float inkOf(float3 c, float lightInk) { return lightInk > 0.5 ? min(c.r, min(c.g, c.b)) : 1.0 - max(c.r, max(c.g, c.b)); }
+
+float3 localHold(float2 at, float3 rgb, float deep, float scale, float lightInk) {
+    float3 sum = rgb;
+    float wsum = 1.0;
+    float ink0 = inkOf(rgb, lightInk);
+    float isum = ink0;
+    float imin = ink0;
+    float imax = ink0;
+    for (int i = 0; i < 36; i++) {
+        float r = local.x * scale * sqrt((float(i) + 0.5) / 36.0);
+        float t = 2.39996323 * float(i);
+        float4 s = holdSample(at + float2(cos(t), sin(t)) * r);
+        sum += s.rgb * s.a;
+        wsum += s.a;
+        float k = inkOf(s.rgb, lightInk);
+        isum += k * s.a;
+        if (s.a > 0.5) {
+            imin = min(imin, k);
+            imax = max(imax, k);
+        }
+    }
+    float3 mean = sum / wsum;
+    float3 dv = rgb - mean;
+    float len = length(dv);
+    float held = len > local.y ? local.y + (len - local.y) * local.z : len;
+    float3 o = len > 0.0001 ? clamp(mean + dv * (held / len), 0.0, 1.0) : rgb;
+    o = mix(rgb, o, deep);
+    if (local.w < 1.0) {
+        // Lines of text cover up to about half the disc; past 60 % ink-like things are the ground itself.
+        float share = (isum / wsum - imin) / max(imax - imin, 0.05);
+        // In the rim's outer half the ink-side hold works at inkRim: the bend still shows the page's strokes, fainter.
+        float strength = (1.0 - ss(0.6, 0.9, share)) * mix(inkRim, 1.0, deep);
+        float inkNow = inkOf(o, lightInk);
+        if (inkNow > imin) {
+            float shift = (inkNow - (imin + (inkNow - imin) * local.w)) * strength;
+            o = clamp(lightInk > 0.5 ? o - shift : o + shift, 0.0, 1.0);
+        }
+    }
+    return o;
+}
+"""
+
     /** AGSL on Android, SkSL on desktop: the same text. `content` is the pane's blurred, bent backdrop. */
     const val SOURCE: String =
         """
@@ -32,18 +95,26 @@ uniform float hold;
 uniform float4 box;
 uniform float2 corner;
 uniform float4 cc;
-uniform float3 local;
+uniform float4 local;
 
 float sat01(float x) { return clamp(x, 0.0, 1.0); }
 float ss(float e0, float e1, float x) { float t = sat01((x - e0) / (e1 - e0)); return t * t * (3.0 - 2.0 * t); }
 
-float3 controls(float2 p) {
-    float4 c = float4(content.eval(p));
-    float3 rgb = c.rgb / max(c.a, 0.0001);
+float3 controlled(float3 rgb) {
     float l = dot(rgb, float3(0.213, 0.715, 0.072));
     return clamp(cc.y * (l + cc.x * (rgb - l)) + (0.5 - 0.5 * cc.y + cc.z), 0.0, 1.0);
 }
 
+float3 controls(float2 p) {
+    float4 c = float4(content.eval(p));
+    return controlled(c.rgb / max(c.a, 0.0001));
+}
+
+float4 holdSample(float2 p) {
+    float4 c = float4(content.eval(p));
+    return float4(controlled(c.rgb / max(c.a, 0.0001)), c.a);
+}
+""" + LOCAL_HOLD + """
 half4 main(float2 q) {
     float4 c = float4(content.eval(q));
     float3 rgb = controls(q);
@@ -56,25 +127,9 @@ half4 main(float2 q) {
         float depth = -(length(max(d, 0.0)) + min(max(d.x, d.y), 0.0) - k);
         deep = ss(0.5 * corner.y, corner.y, depth);
     }
-    if (local.x > 0.0) {
-        // The local-contrast hold: the mean of what is behind (the point and three rings of twelve) passes; the detail
-        // round it is kept whole up to local.y and only local.z of the rest beyond. Then the knee below, as without it.
-        float3 m = rgb;
-        for (int i = 0; i < 12; i++) {
-            float t = 6.2831853 * (float(i) + 0.5) / 12.0;
-            float2 dir = float2(cos(t), sin(t));
-            float2 dir2 = float2(cos(t + 0.2618), sin(t + 0.2618));
-            m += controls(q + dir * local.x);
-            m += controls(q + dir2 * (local.x * 0.6667));
-            m += controls(q + dir * (local.x * 0.3333));
-        }
-        m /= 37.0;
-        float3 dv = rgb - m;
-        float len = length(dv);
-        float held = len > local.y ? local.y + (len - local.y) * local.z : len;
-        float3 o = len > 0.0001 ? m + dv * (held / len) : rgb;
-        rgb = mix(rgb, clamp(o, 0.0, 1.0), deep);
-    }
+    // The local hold (LOCAL_HOLD): the page's detail pressed to its local mean, what looks like the pane's ink lifted to
+    // the page's ground; then the knee below, as without it.
+    if (local.x > 0.0) rgb = localHold(q, rgb, deep, 1.0, knee.z);
     if (knee.y < 1.0) {
         float lum = dot(rgb, float3(0.213, 0.715, 0.072));
         float3 scaled;
@@ -117,11 +172,12 @@ internal class LiquidHoldUniforms(
     val saturation: Float,
     val contrast: Float,
     val brightness: Float,
-    /** The local-contrast hold: (reach px, free, slope); reach 0 = off. */
-    val local: FloatArray = floatArrayOf(0f, 0f, 1f),
+    /** The local hold: (reach px, free, slope, ink kept, ink in the rim); reach 0 = off, ink kept 1 = off. */
+    val local: FloatArray = floatArrayOf(0f, 0f, 1f, 1f, 1f),
 ) {
     fun set(p: LiveShaderProgram) {
-        p.float3("local", local[0], local[1], local[2])
+        p.float4("local", local[0], local[1], local[2], local.getOrElse(3) { 1f })
+        p.float("inkRim", local.getOrElse(4) { 1f })
         p.float3("knee", knee[0], knee[1], knee[2])
         p.float("hold", hold)
         p.float4("box", left, top, halfWidth, halfHeight)
@@ -145,7 +201,8 @@ internal class LiquidHoldUniforms(
         ): LiquidHoldUniforms {
             val hold = spec.recipe.hold
             return LiquidHoldUniforms(
-                knee = if (hold.knee) kneeOf(spec) else KNEE_OFF,
+                // Off, the knee still says the words' ink: the ink-side hold reads it.
+                knee = if (hold.knee) kneeOf(spec) else floatArrayOf(1f, 1f, kneeOf(spec)[2]),
                 hold = hold.chroma,
                 left = left,
                 top = top,
@@ -156,11 +213,15 @@ internal class LiquidHoldUniforms(
                 saturation = colour[0],
                 contrast = colour[1],
                 brightness = colour[2],
-                local = if (hold.local) floatArrayOf(hold.localDp * density, hold.localFree, hold.localSlope) else floatArrayOf(0f, 0f, 1f),
+                local = localOf(hold, hold.localDp * density),
             )
         }
     }
 }
+
+/** [hold]'s local hold as the shaders' `local` uniform, its reach [reachPx]; off (reach 0) when it has none. */
+internal fun localOf(hold: io.github.eslamasabry.oc.ui.design.effects.LiquidHold, reachPx: Float): FloatArray =
+    if (hold.local && reachPx > 0f) floatArrayOf(reachPx, hold.localFree, hold.localSlope, hold.inkKeep, hold.inkRim) else floatArrayOf(0f, 0f, 1f, 1f, 1f)
 
 /**
  * The plain liquid pane where the platform has no lens but the kit's tests want to see what the pane keeps: its

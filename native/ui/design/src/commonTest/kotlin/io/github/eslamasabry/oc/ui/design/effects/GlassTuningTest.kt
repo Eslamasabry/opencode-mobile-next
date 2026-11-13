@@ -40,9 +40,13 @@ class GlassTuningTest {
             listOf(k.dispersion, k.bendShape, k.specular, k.sheen, k.innerShadow, k.tintLightness).forEach { assertEquals(0f, it, "$kind off by default") }
             // Menus, sheets and dialogs hold the fine detail behind their words (glass liquid 2026-11-14); nobody else.
             val held = kind == GlassPaneKind.Menu || kind == GlassPaneKind.Sheet || kind == GlassPaneKind.Dialog
-            assertEquals(if (held) LiquidEdge.MODAL_HOLD.localDp else 0f, k.localDp, "$kind local softening")
-            assertEquals(if (held) LiquidEdge.MODAL_HOLD.localFree else 0f, k.localFree, "$kind local free")
-            assertEquals(if (held) LiquidEdge.MODAL_HOLD.localSlope else 1f, k.localSlope, "$kind local slope")
+            // Glass liquid round two: a sheet (and a dialog, drawn as one) may hold harder than a menu.
+            val h = if (kind == GlassPaneKind.Menu) LiquidEdge.MODAL_HOLD else LiquidEdge.SHEET_HOLD
+            assertEquals(if (held) h.localDp else 0f, k.localDp, "$kind local softening")
+            assertEquals(if (held) h.localFree else 0f, k.localFree, "$kind local free")
+            assertEquals(if (held) h.localSlope else 1f, k.localSlope, "$kind local slope")
+            assertEquals(if (held) h.inkKeep else 1f, k.inkKeep, "$kind ink-like strokes kept")
+            assertEquals(if (held) h.inkRim else 1f, k.inkRim, "$kind ink-like strokes held in the rim")
             assertEquals(1f, k.wordsClear, "$kind: the page under the words is cleared as today")
             assertEquals(if (kind == GlassPaneKind.Chip) LiquidJoin.REACH_PILL_DP else LiquidJoin.REACH_MENU_DP, k.joinReachDp)
         }
