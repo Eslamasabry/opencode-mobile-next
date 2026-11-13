@@ -84,8 +84,8 @@ import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceInput
 import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceLook
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappable
 import io.github.eslamasabry.oc.ui.kit.foundation.kitAssert
+import io.github.eslamasabry.oc.ui.kit.foundation.kitSurface
 import io.github.eslamasabry.oc.ui.kit.foundation.kitSurfaceLook
-import io.github.eslamasabry.oc.ui.kit.foundation.shape
 import io.github.eslamasabry.oc.ui.kit.platform.KitSecureEffect
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
@@ -417,9 +417,10 @@ private fun FieldBox(
                 0.dp
             ) // F: lib/ui/kit/kit_field.dart:737
         }
-    // Flutter's field radius is the control's (14), not the icon tile's.
-    val shape = KitShapeId.Button.shape()
+    // A field is a control's shape (a field and a button of one height look related); its clip, fill and outline all
+    // take the look's one shape in every style (owner 2026-11-13: a clip of another radius cut the focus outline).
     val fieldLook = rememberFieldLook(colors.surface1, focused || hasError)
+    val shape = fieldLook.look.shape
     // Flutter `KitField` frame (kit_field.dart:863-879): the accent while focused, text1 with an error, and at rest the
     // style's boundary, a grey that reads at 3:1 against the page and the fill (WCAG 1.4.11; `kitStyleBoundary`).
     val roles = LocalKitRoles.current
@@ -505,9 +506,7 @@ private fun FieldBox(
                         Modifier.clip(shape)
                             .background(colors.surface1)
                             .border(edgeWidth, edge, shape)
-                    else ->
-                        Modifier.clip(shape)
-                            .then(fieldLook.look.modifier)
+                    else -> Modifier.kitSurface(fieldLook.look)
                 }
             )
     // The words' inset inside the box. It sits inside the text field's decoration, so the field's own node (its
@@ -667,17 +666,16 @@ private fun SavedSecretLine(onReplace: () -> Unit) {
     val colors = LocalKitColors.current
     // The saved state wears the field's own frame, so "Saved" sits where the typed text would and lines up with the
     // fields above and below it; Replace is the field's trailing action, like Paste.
-    val shape = KitShapeId.Button.shape()
     val fieldLook = rememberFieldLook(colors.surface1, false)
+    val shape = fieldLook.look.shape
     val roles = LocalKitRoles.current
     val boundary = remember(roles) { styleBoundary(roles).toColor() }
     Row(
         Modifier.fillMaxWidth()
             .heightIn(min = tokens.buttonHeight.dp) // F: lib/ui/kit/kit_field.dart:732-735 (a 52 dp field)
-            .clip(shape)
             .then(
-                if (fieldLook.isSolid) Modifier.background(colors.surface1).border(kitHairline(), boundary, shape)
-                else fieldLook.look.modifier
+                if (fieldLook.isSolid) Modifier.clip(shape).background(colors.surface1).border(kitHairline(), boundary, shape)
+                else Modifier.kitSurface(fieldLook.look)
             )
             .padding(start = Space.S4.dp, end = (Space.S1 + Space.S2).dp), // F: lib/ui/kit/kit_field.dart:933,952 (space 1 after the button; the kit's tertiary bleeds its own space 2 out, Flutter's keeps it inside)
         verticalAlignment = Alignment.CenterVertically,
@@ -733,7 +731,7 @@ private fun rememberFieldLook(ownFill: Color, selected: Boolean): FieldLook {
         kitSurfaceLook(
             KitSurfaceInput(
                 SurfaceRole.Field,
-                KitShapeId.Tile,
+                KitShapeId.Button,
                 SurfaceLevel.Surface1,
                 ownFill = ownFill,
                 selected = selected,

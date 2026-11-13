@@ -85,6 +85,15 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitMotion
 @Immutable
 public data class KitSurfaceLook(val modifier: Modifier, val words: Color?, val shape: Shape, val paints: Boolean = false)
 
+/**
+ * Paints [look] (its fill, edge and shadows, all on [KitSurfaceLook.shape]) and clips what follows (the part's own
+ * content and press ink) to that same shape. A part's face and its clip are one shape, so a clip can never cut the
+ * part's state outline at the corners (owner 2026-11-13: a focused field's outline stopped short of its four corners
+ * because the field clipped to one named shape and drew its look on another). The look is painted outside the clip, so
+ * an outline or ring a style draws on or past the face's edge (Brutal's focus ring) stays whole too.
+ */
+public fun Modifier.kitSurface(look: KitSurfaceLook): Modifier = this.then(look.modifier).clip(look.shape)
+
 /** What a part asks for. [ownFill] is the part's own look under Solid; the other fields are the request. */
 @Immutable
 public data class KitSurfaceInput(
@@ -142,10 +151,18 @@ public fun kitSurfaceLook(input: KitSurfaceInput): KitSurfaceLook {
     val base = input.exactRadius?.value ?: input.radius?.value ?: input.shape.radiusDp()
     val sheet = input.shape == KitShapeId.Sheet && !input.roundSheetBottom
     // A pane's corners grow with the style's pane inset (Glass, owner 2026-11-09), as its named shape does.
-    val r = if (input.exactRadius != null) base else if (input.shape.isPane) StyleResolver.paneCorner(base, style.knobs.corners, style.spec.tokens) else StyleResolver.corner(base, style.knobs.corners, sharp)
+    // The look's shape is the named shape itself unless the part gives a radius or rounds a sheet's bottom.
+    val named = input.radius == null && input.exactRadius == null && !(input.shape == KitShapeId.Sheet && input.roundSheetBottom)
+    // A named sheet's Sharp corner is the named shape's (KitShapes: at most 4 dp, twice the style's sharp radius), so
+    // the decoration's corners and the shape a part clips to stay one (2026-11-13).
+    val paneSharp = if (named && input.shape == KitShapeId.Sheet) minOf(4f, sharp * 2f) else sharp
+    val r =
+        if (input.exactRadius != null) base
+        else if (input.shape.isPane) StyleResolver.paneCorner(base, style.knobs.corners, style.spec.tokens.copy(sharpRadius = paneSharp))
+        else StyleResolver.corner(base, style.knobs.corners, sharp)
     val radii = if (sheet) Radii(r, r, 0f, 0f) else Radii.all(if (input.shape == KitShapeId.Square) 0f else r)
     val shape =
-        if (input.radius == null && input.exactRadius == null && !(input.shape == KitShapeId.Sheet && input.roundSheetBottom)) {
+        if (named) {
             input.shape.shape()
         } else {
             RoundedCornerShape(
@@ -192,7 +209,7 @@ public fun kitSurfaceLook(input: KitSurfaceInput): KitSurfaceLook {
             // A clear content pane (a card, a row group) keeps its first line of words below Glass's pane inset, where its
             // top sheen has mostly faded (GlassFinish.sheenAt); a chip's or a field's words may lie anywhere on it.
             val wordsDp = if (clear && input.role == SurfaceRole.Content) GlassFinish.PANE_WORDS_DP else 0f
-            remember(resolved, spots, solid, roles, clear, request.look) { glassRims(GlassFinish.thickened(resolved!!, roles, solid, spots, inks = if (clear) GlassFinish.paneInks(roles, solid) else null, wordsDp = wordsDp), roles, clear, request.look) }
+            remember(resolved, spots, solid, roles, clear, request.look, input.role) { glassRims(GlassFinish.thickened(resolved!!, roles, solid, spots, inks = if (clear) GlassFinish.paneInks(roles, solid) else null, wordsDp = wordsDp), roles, clear, request.look, even = input.role == SurfaceRole.Field) }
         }
     // The frost under the face is decided by the decoration the surface settles on, never a fading one, so the tree
     // holds through a fade (kit_surface_look.dart:1257-1266).
