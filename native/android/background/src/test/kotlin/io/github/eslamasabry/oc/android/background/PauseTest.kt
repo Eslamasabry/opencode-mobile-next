@@ -52,6 +52,21 @@ class PauseTest {
     }
 
     @Test
+    fun `B-241 a restore from a background process does not spend the one automatic resume`() = runTest {
+        val optIn = FakeOptIn(true)
+        val port = FakeLivePort().apply { onPause = { ok(pausedFor(PauseReason.AppUpdated)) } }
+        val c = liveMode(backgroundScope, port, optIn)
+        c.restore(appInFront = false)
+        assertEquals(listOf("getBackgroundPause"), port.calls, "no start is tried in the background")
+        assertTrue(c.state.value.pause.paused)
+        assertEquals(true, optIn.value, "the choice is kept so the app-in-front step still resumes")
+        port.onPause = { ok(pausedFor(PauseReason.AppUpdated)) }
+        c.restore(appInFront = true)
+        assertEquals(listOf("getBackgroundPause", "getBackgroundPause", "enable"), port.calls)
+        assertTrue(c.state.value.active)
+    }
+
+    @Test
     fun `B-241 a refused start after an update keeps the pause and its Resume`() = runTest {
         val optIn = FakeOptIn(true)
         val port =

@@ -84,6 +84,7 @@ public class LiveModeController(
     internal var pause: PauseState = PauseState.Unsupported
     internal var stoppedByAndroidTimeout: Boolean = false
     internal var pauseRevision: Int = 0
+    private var resumeAfterUpdateOwed: Boolean = false
     internal var disposed: Boolean = false
     internal val signIn: SignInForegroundState = SignInForegroundState(this)
 
