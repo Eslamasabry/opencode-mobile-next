@@ -249,7 +249,8 @@ class Oc2LiveGatewayTest {
             } else {
                 assertEquals("/api/session/s/permission/r/reply", request.url.encodedPath)
                 assertEquals(
-                    "{\"reply\":\"reject\",\"message\":\"No thanks\"}",
+                    "{\"reply\":\"reject\",\"message\":\"The user declined this tool call, so it did not run. " +
+                        "To tell you how to proceed, the user said:\\nNo thanks\"}",
                     (request.body as TextContent).text,
                 )
                 respond("null", HttpStatusCode.OK)
@@ -424,7 +425,9 @@ class Oc2LiveGatewayTest {
             calls++
             assertEquals(HttpMethod.Post, request.method)
             assertEquals(
-                "{\"decision\":\"reject\",\"message\":\"No\"}",
+                // The person's note travels as the user's words (Oc2DenyNote); the dialect renames reply to decision.
+                "{\"decision\":\"reject\",\"message\":\"The user declined this tool call, so it did not run. " +
+                    "To tell you how to proceed, the user said:\\nNo\"}",
                 (request.body as TextContent).text,
             )
             respond("{}", HttpStatusCode.NotFound)

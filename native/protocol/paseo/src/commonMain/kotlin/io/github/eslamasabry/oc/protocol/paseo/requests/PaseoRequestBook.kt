@@ -500,7 +500,7 @@ public class PaseoRequestBook(
                     else
                         jsonOf(
                             "behavior" to "deny",
-                            "message" to paseoText(JsonPrimitive(text), max = 4096),
+                            "message" to paseoText(JsonPrimitive(denyNoteMessage(text)), max = 4096),
                         )
                 }
                 PaseoPermissionAnswer.Cancel -> jsonOf("behavior" to "deny", "interrupt" to true)
@@ -940,3 +940,12 @@ internal class NativeQuestionAdapter(
             }
     }
 }
+
+/**
+ * The note the person writes with Deny, as the agent's model reads it. A deny answer has only `message` for it, and the
+ * agent hands that to the model as the refused call's result; a bare "use rc2.txt" there read as text from the tool,
+ * not from the person (RC1 device pass, 2026-11-13). The message says who wrote it and that it is how to go on, and
+ * keeps the note on its own line (the declined step reads the line after the first as "Your note").
+ */
+internal fun denyNoteMessage(note: String): String =
+    "The user declined this tool call, so it did not run. To tell you how to proceed, the user said:\n" + note.trim()

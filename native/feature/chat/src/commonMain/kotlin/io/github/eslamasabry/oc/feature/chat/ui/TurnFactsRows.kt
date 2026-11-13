@@ -45,6 +45,7 @@ import io.github.eslamasabry.oc.ui.words.res.chatUiConnectorSearchEmpty
 import io.github.eslamasabry.oc.ui.words.res.chatUiConnectorSearchNotLoaded
 import io.github.eslamasabry.oc.ui.words.res.chatUiConnectorSearchOff
 import io.github.eslamasabry.oc.ui.words.res.chatUiConnectorSearchUnavailable
+import io.github.eslamasabry.oc.ui.words.res.chatStepDeclinedNote
 import io.github.eslamasabry.oc.ui.words.res.chatUiGeneratedFile
 import io.github.eslamasabry.oc.ui.words.res.kitCodeShowAll
 import io.github.eslamasabry.oc.ui.words.res.toolCardRunCommandAgain
@@ -339,6 +340,11 @@ private fun StepRow(
     val key = "step:${step.partId}"
     val f = step.facts
     val out = step.output
+    // RC1: a step the person declined with a note says the note on its own row ("Your note: “use rc2.txt”"), under
+    // "You declined this"; it showed only after a tap that was easy to land on the row above.
+    val noteMask = rememberKitMask()
+    val declinedWith =
+        declinedStepNote(step.state, out.errorText)?.let { stringResource(Res.string.chatStepDeclinedNote, noteMask(it)) }
     val view =
         KitToolView(
             id = step.partId,
@@ -348,7 +354,7 @@ private fun StepRow(
             subject =
                 stepRowSubject(f.kind, step.state, f.subject, out.input, out.rawInput)
                     ?: stepSubjectWords(f),
-            detail = stepDetailWords(f),
+            detail = declinedWith ?: stepDetailWords(f),
             // P-105: a step blocked on the person reads "Waiting for you" with the attention mark and no clock.
             status = if (waitingForYou) KitToolStatus.WaitingForYou else step.state.toKit(),
             // E20-S14: under a tenth of a second there is no time to show ("0.0s" said nothing).
@@ -371,14 +377,15 @@ private fun StepRow(
     // visible action.
     val files = if (onOpenFile == null) emptyList() else out.artifacts.filter(::canOpenArtifact)
     val connector = f.details.filterIsInstance<ToolDetail.ConnectorSearch>().firstOrNull()
+    // A declined call has nothing more to open: its row already says what the person decided and wrote.
     val hasBody =
-        connector != null ||
+        stepOpens(step.state) && (connector != null ||
             text != null ||
             out.pruned ||
             (out.input.isNotEmpty() && inputHasBody(f.kind, step.state)) ||
             (shell && !f.subject.isNullOrBlank()) ||
             child != null ||
-            files.isNotEmpty()
+            files.isNotEmpty())
     val full = folds.full[key] == true
     KitToolRow(
         view = view,

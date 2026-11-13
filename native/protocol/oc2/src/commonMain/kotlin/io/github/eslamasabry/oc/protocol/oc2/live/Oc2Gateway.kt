@@ -1855,7 +1855,10 @@ internal class Oc2Gateway(
                         PermissionReply.Reject -> "reject"
                     },
                 )
-                if (message != null && reply == PermissionReply.Reject) put("message", message)
+                // The reply has no field for the person's words: the message says they are the user's (Oc2DenyNote).
+                message?.trim()?.takeIf { it.isNotEmpty() && reply == PermissionReply.Reject }?.let {
+                    put("message", io.github.eslamasabry.oc.protocol.oc2.adapter.Oc2DenyNote.message(it))
+                }
             },
         )
 

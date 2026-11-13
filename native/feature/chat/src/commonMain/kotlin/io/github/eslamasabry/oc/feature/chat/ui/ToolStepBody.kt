@@ -152,6 +152,16 @@ internal fun declinedNote(errorText: String?): String? =
     errorText?.substringAfter('\n', "")?.trim()?.takeIf { it.isNotEmpty() }
 
 /**
+ * RC1: the note a declined step's own row shows under "You declined this", with no tap (it showed only in the opened
+ * step, and a tap easily landed on the thinking row above); null for any other step or a Deny without a note.
+ */
+internal fun declinedStepNote(state: StepState, errorText: String?): String? =
+    if (state == StepState.Declined) declinedNote(errorText) else null
+
+/** A declined step has nothing more to open: its row already says what the person decided and wrote. */
+internal fun stepOpens(state: StepState): Boolean = state != StepState.Declined
+
+/**
  * The opened step reads the tool's structured facts; it never replays a call or invents an outcome.
  */
 @Composable

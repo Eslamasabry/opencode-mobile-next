@@ -73,7 +73,14 @@ class PaseoPermissionsTest {
     fun `B-SEC-114 reject denies with the reason and cancel also interrupts`() = runTest {
         book.onPermissionRequest("a1", writePermission("perm-1"))
         book.replyPermission("perm-1", PaseoPermissionAnswer.Reject, message = "  wrong file ")
-        assertEquals(jsonOf("behavior" to "deny", "message" to "wrong file"), host.lastResponse())
+        // RC1: the note reaches the model as the user's own words, on its own line.
+        assertEquals(
+            jsonOf(
+                "behavior" to "deny",
+                "message" to "The user declined this tool call, so it did not run. To tell you how to proceed, the user said:\nwrong file",
+            ),
+            host.lastResponse(),
+        )
         book.onPermissionRequest("a1", writePermission("perm-3"))
         book.replyPermission("perm-3", PaseoPermissionAnswer.Cancel)
         assertEquals(jsonOf("behavior" to "deny", "interrupt" to true), host.lastResponse())
