@@ -190,7 +190,7 @@ public fun KitGrowFromAnchor(
                     .testTag(GROW_CONTENT_TAG)
                     .graphicsLayer {
                         val r = GrowFromAnchorRules.bounds(state.anchorInPane, Rect(Offset.Zero, size), state.body.value)
-                        shape = BodyClip(r, look.shape)
+                        this.shape = BodyClip(r, look.shape)
                         clip = true
                     },
             ) {
