@@ -474,35 +474,7 @@ class ChatWordsGlassTest {
         assertEquals(0, bright.joined, "the pill is not joined to the box under the card")
         assertTrue(face.bottom <= bright.block!!.top, "the pill sits above the block: $face block ${bright.block}")
         val (mean, max) = diff(bright.image, none.image, face.left.value - 4f, face.top.value - 4f, face.right.value + 4f, face.bottom.value + 4f)
-        println("pill over card: mean $mean max $max at $face, none ${none.pillFace}, block ${bright.block}, ${bright.list}")
-        if (mean > WORDS_MEAN || max > WORDS_MAX) {
-            // Where it differs: per 2 dp band, the largest difference, where, and each scene's brightness there.
-            var y = face.top.value - 8f
-            while (y < face.bottom.value + 8f) {
-                var best = 0f
-                var bx = 0f
-                var x = face.left.value - 16f
-                while (x < face.right.value + 16f) {
-                    val d = diff(bright.image, none.image, x, y, x + 1f, y + 2f).second
-                    if (d > best) {
-                        best = d
-                        bx = x
-                    }
-                    x += 1f
-                }
-                val px = (bx * D).roundToInt()
-                val py = (y * D).roundToInt()
-                println("diag y=$y max=${best.toInt()} at x=$bx bright=${luma(bright.image[px, py]).toInt()} none=${luma(none.image[px, py]).toInt()}")
-                y += 2f
-            }
-            val plainBright = shot(dark(Style.Glass), DesktopKitPlatform(), bright = true, card = true)
-            val plainNone = shot(dark(Style.Glass), DesktopKitPlatform(), bright = false, card = true)
-            val pf = plainBright.pillFace
-            if (pf != null) {
-                val (pm, px) = diff(plainBright.image, plainNone.image, pf.left.value - 4f, pf.top.value - 4f, pf.right.value + 4f, pf.bottom.value + 4f)
-                println("diag no lens: mean $pm max $px at $pf none ${plainNone.pillFace}")
-            }
-        }
+        println("pill over card: mean $mean max $max at $face")
         assertTrue(
             mean <= WORDS_MEAN && max <= WORDS_MAX,
             "the rows show behind the pill: mean $mean, max $max (none: ${none.pillFace})\n" +
