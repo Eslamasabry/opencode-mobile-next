@@ -16,6 +16,7 @@ import io.github.eslamasabry.oc.feature.chat.world.AgentSetUpNeed
 import io.github.eslamasabry.oc.feature.chat.world.PendingSend
 import io.github.eslamasabry.oc.feature.chat.world.PendingState
 import io.github.eslamasabry.oc.ui.routes.AgentsRoute
+import io.github.eslamasabry.oc.ui.routes.AppRoute
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.agentsSetUpAction
 import io.github.eslamasabry.oc.ui.words.res.chatSendFailed
@@ -70,7 +71,7 @@ class AgentSetUpBubbleTest {
             onNodeWithTag("chat-send-error-try-again").assertDoesNotExist()
             onNodeWithText(setUp).performClick()
             waitForIdle()
-            assertEquals(listOf(AgentsRoute.SignInTerminal(owner, "qwen")), scene.nav.opened)
+            assertEquals(listOf<AppRoute>(AgentsRoute.SignInTerminal(owner, "qwen")), scene.nav.opened.toList())
             assertEquals(emptyList<String>(), scene.world.calls.filter { it.startsWith("retrySend") }, "nothing resent")
         }
 

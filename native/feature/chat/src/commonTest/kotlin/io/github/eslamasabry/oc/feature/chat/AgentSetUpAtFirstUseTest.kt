@@ -85,7 +85,7 @@ class AgentSetUpAtFirstUseTest {
         assertEquals(PendingState.Failed, shown.state, "not shown as sent")
         assertNotEquals(ChatStatusKind.SendFailed, p.current().status?.kind, "no Not sent / Try again over the chat")
         p.setUpAgent(shown.setUp!!.agentId)
-        assertEquals(listOf(AgentsRoute.SignInTerminal(owner, "qwen")), nav.opened)
+        assertEquals(listOf<AppRoute>(AgentsRoute.SignInTerminal(owner, "qwen")), nav.opened.toList())
         assertEquals(emptyList<String>(), world.calls.toList(), "nothing is resent on its own")
     }
 
