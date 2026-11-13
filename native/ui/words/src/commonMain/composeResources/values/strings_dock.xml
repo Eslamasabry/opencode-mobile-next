@@ -144,6 +144,17 @@
     <string name="edgeLightChildLabel">%1$s, sub-agent of %2$s, %3$s</string>
     <string name="edgeLightChildLabelFact">%1$s, sub-agent of %2$s, %3$s, %4$s</string>
     <string name="edgeLightFactOf">%1$s of %2$s</string>
+    <string name="edgeLightActionOn">%1$s: %2$s</string>
+    <string name="edgeLightNotStarted">Not started</string>
+    <string name="edgeLightShowSubAgents">Show sub-agents</string>
+    <string name="edgeLightHideSubAgents">Hide sub-agents</string>
+    <string name="edgeLightPlaceBody">Tap a spot. The edge light moves there now.</string>
+    <string name="edgeLightAgeNow">a moment</string>
+    <string name="edgeLightAgeMinutes">%1$sm</string>
+    <string name="edgeLightAgeHours">%1$sh</string>
+    <string name="edgeLightAgeDays">%1$sd</string>
+    <string name="edgeLightBackNote">Back returns to “%1$s”</string>
+    <string name="edgeLightRenameFailed">Couldn't rename %1$s</string>
     <!-- Settings › Conversations: the dock's on/off row. -->
     <string name="dockSettingTitle">Edge dock</string>
     <string name="dockSettingBody">Running conversations on the screen edge. Drag its top to move it to the other side.</string>

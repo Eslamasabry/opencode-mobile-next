@@ -30,6 +30,10 @@ import io.github.eslamasabry.oc.engine.attention.dock.DockRequestRef
 import io.github.eslamasabry.oc.engine.attention.dock.DockSide
 import io.github.eslamasabry.oc.engine.attention.dock.DockUi
 import io.github.eslamasabry.oc.feature.chat.ui.ChatEdgeDock
+import io.github.eslamasabry.oc.feature.chats.lamp.HeldStops
+import io.github.eslamasabry.oc.feature.chats.lamp.LampListController
+import io.github.eslamasabry.oc.feature.chats.lamp.LampPlace
+import io.github.eslamasabry.oc.feature.chats.presentation.HeldAnswers
 import io.github.eslamasabry.oc.feature.settings.presentation.OtherConversationsMode
 import io.github.eslamasabry.oc.feature.chats.dock.EdgeDockHost
 import io.github.eslamasabry.oc.feature.chats.dock.EdgeDockPort
@@ -50,6 +54,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlin.time.Clock
 
 /**
  * The edge dock's screens' port: the one [AppEdgeDock] (started once at app scope by `AttentionRuntime`), the app's
@@ -64,6 +69,10 @@ class AppEdgeDockPort(
     private val navigator: AppNavigator,
     appScope: AppCoroutineScope,
     dispatchers: AppDispatchers,
+    private val held: HeldAnswers,
+    private val stops: HeldStops,
+    private val lampPort: AppLampPort,
+    private val clock: Clock,
 ) : EdgeDockPort {
     private val main = CoroutineScope(appScope.coroutineContext + dispatchers.main)
 
@@ -89,11 +98,24 @@ class AppEdgeDockPort(
         dock.list(DockReader.list()).stateIn(main, SharingStarted.WhileSubscribed(PEEK_KEEP_MS), DockListModel())
     }
 
+    /** The light's saved place as the list's own kind of place. */
+    val lampPlace: StateFlow<LampPlace> by lazy {
+        dock.lightPlace.map { it.toLampPlace() }.stateIn(main, SharingStarted.Eagerly, dock.lightPlace.value.toLampPlace())
+    }
+
+    /** How many Back notes and tips the light showed so far. */
+    val taught: StateFlow<EdgeLightTaught>
+        get() = dock.lightTaught
+
+    /** Counts one more Back note shown. */
+    fun backNoteShown() = dock.taughtMore(backNotes = 1)
+
     /**
-     * TODO(phase B): the real panel opens here. Phase A opens the existing All conversations page, so a tap on the
-     * light does something real while the panel is built.
+     * The panel's brain, made when a light is mounted and cancelled with [scope] (the screen's): the list, the shared
+     * holds, the dock's pins, names and hides, the routes. Holds live in the app scope, so closing cancels none.
      */
-    fun openAllConversations() = navigator.open(ChatsRoute.All())
+    fun lampController(scope: CoroutineScope): LampListController =
+        LampListController(scope, lightList, navigator, held, stops, lampPort, clock, lampPlace)
 
     override val onScreen: StateFlow<ConversationRef?> =
         navigator.top.map { (it as? ChatRoute)?.ref }.stateIn(main, SharingStarted.Eagerly, null)
