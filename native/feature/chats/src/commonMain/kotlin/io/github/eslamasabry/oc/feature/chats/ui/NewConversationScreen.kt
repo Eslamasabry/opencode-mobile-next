@@ -110,8 +110,20 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
         return
     }
     val field = rememberTextFieldState()
+    // The last words the field told the presenter. Words typed since, not yet reported, are newer than any state
+    // text (a stored draft arriving late, say) and are never written over.
+    var reported by remember { mutableStateOf("") }
     LaunchedEffect(state.textRevision) {
-        if (field.text.toString() != state.text) field.edit { replace(0, length, state.text) }
+        val now = field.text.toString()
+        if (now == state.text) {
+            // Already the same words (a fill by code is not always reported back): they are the baseline now.
+            reported = now
+            return@LaunchedEffect
+        }
+        if (fieldMayTakeState(now, reported)) {
+            field.edit { replace(0, length, state.text) }
+            reported = state.text
+        }
     }
     val working = stringResource(Res.string.serversWorking)
     // Getting the page ready is not "the current action": the button says what it waits for, and after a few
@@ -231,7 +243,10 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                         minLines = 2,
                         // B-098: not while a sheet is open; coming back from agent setup re-ran this and the keyboard covered the sheet.
                         autofocus = !state.busy && state.sheet == null,
-                        onTextChanged = actions::draftChanged,
+                        onTextChanged = {
+                            reported = it
+                            actions.draftChanged(it)
+                        },
                         focusKey = state.focusRevision.takeIf { it > 0 },
                     )
                     // Ways to start fill the empty prompt; nothing is sent until Start.
@@ -634,6 +649,12 @@ private fun NewConversationAgentStep(state: NewConversationUi, actions: NewConve
         )
     }
 }
+
+/**
+ * Whether the presenter's text may replace what the field holds: not when the field holds words the presenter has not
+ * heard yet (typed in a burst, before the field's report arrived).
+ */
+internal fun fieldMayTakeState(fieldText: String, reportedText: String): Boolean = fieldText == reportedText
 
 /** N-51: the chat's model sheet, with this server's favourites; choosing a model closes it. */
 @Composable

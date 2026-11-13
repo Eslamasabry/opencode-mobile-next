@@ -16,7 +16,6 @@ import io.github.eslamasabry.oc.engine.settings.teaching.offer
 import io.github.eslamasabry.oc.engine.voice.conversation.VoiceConversationSnapshot
 import io.github.eslamasabry.oc.engine.voice.conversation.VoiceReplyDecision
 import io.github.eslamasabry.oc.engine.voice.conversation.VoiceReplyWatch
-import io.github.eslamasabry.oc.engine.voice.dictation.AutoSendCountdown
 import io.github.eslamasabry.oc.engine.voice.dictation.DraftMerge
 import io.github.eslamasabry.oc.engine.voice.dictation.VoiceStart
 import io.github.eslamasabry.oc.engine.voice.dictation.stopsOnSilence
@@ -64,7 +63,6 @@ public enum class MicPhase {
     Starting,
     Listening,
     Writing,
-    Countdown,
 }
 
 /** One plain line under the composer after voice ends; never exception text. */
@@ -113,8 +111,6 @@ public data class ComposerVoiceUi(
     val words: String = "",
     /** Whole seconds since listening began, for "0:07". */
     val elapsedSeconds: Int = 0,
-    /** "Sending in 3…"; null when no countdown runs. */
-    val secondsLeft: Int? = null,
     val note: VoiceNote? = null,
     val conversationAvailable: Boolean = false,
     val conversation: Boolean = false,
@@ -144,9 +140,8 @@ public data class ComposerVoiceUi(
  * talk until Done (or until a pause when "Send when I stop talking" is on), hold to talk and let go
  * to finish, slide away and let go to cancel. The words heard so far are shown live; when the
  * recording ends they are merged into the field around its selection ([DraftMerge], B-MEDIA-024). A
- * recording that stopped on a pause, with the setting on and sendable words, waits
- * [AutoSendCountdown] (3 s) with Send now / Don't send, then goes through the composer's one send
- * path (B-MEDIA-016, B-MEDIA-017). A touch shorter than 400 ms is a slip, not a message.
+ * recording that stopped on a pause keeps its words in the box and says why (B-MEDIA-017); dictation never
+ * sends by itself. A touch shorter than 400 ms is a slip, not a message.
  *
  * The [Dictation] is app-wide; this presenter reacts only to the recordings it started.
  */
@@ -178,13 +173,11 @@ public class ComposerVoicePresenter(
 
     /** "Insert and send": the words are written, then go through the composer's one send. */
     private var sendAfterWrite = false
-    private var countdown: AutoSendCountdown? = null
 
     /**
-     * Bumped to end the running clock, level mirror and countdown (they stop at their next tick).
+     * Bumped to end the running clock and level mirror (they stop at their next tick).
      */
     private var ticking = 0
-    private var counting = 0
     private var foreground = true
     private var conversationRef: ConversationRef? = null
     private var conversationHandle: VoiceConversationHandle? = null
@@ -650,8 +643,7 @@ public class ComposerVoicePresenter(
                 if (mutable.value.conversation) listenConversation() else start(VoiceMode.Tap)
             MicPhase.Starting,
             MicPhase.Listening -> done()
-            MicPhase.Writing,
-            MicPhase.Countdown -> Unit
+            MicPhase.Writing -> Unit
         }
     }
 
@@ -705,25 +697,12 @@ public class ComposerVoicePresenter(
             MicPhase.Starting -> earlyEnd = EarlyEnd.Discard
             MicPhase.Listening,
             MicPhase.Writing -> discard()
-            MicPhase.Countdown -> dontSend()
             MicPhase.Idle -> Unit
         }
     }
 
-    // ---- the countdown ----
-
-    public fun sendNow() {
-        decide(sendNow = true)
-    }
-
-    /** The countdown stops; the words stay in the field, unsent. */
-    public fun dontSend() {
-        clearCountdown()
-    }
-
     /**
-     * The field changed while the countdown ran: anything else than the counted words cancels the
-     * send.
+     * The box reported its words: the note beside it stays until new words are typed.
      */
     public fun fieldChanged(text: String) {
         // Flutter `_composerNoteFollowsEdits`: the note stays beside the box until the next words; typing them
@@ -733,8 +712,6 @@ public class ComposerVoicePresenter(
             noteTyped = null
             mutable.update { it.copy(note = null) }
         }
-        val counted = countdown ?: return
-        if (text != counted.text) clearCountdown()
     }
 
     // ---- notes and places ----
@@ -768,7 +745,6 @@ public class ComposerVoicePresenter(
             ?.onHostChanged(if (inForeground) VoiceHost.Foreground else VoiceHost.Background)
         parts?.reader?.onHostChanged(inForeground)
         if (!inForeground) {
-            clearCountdown()
             exitConversation()
         }
     }
@@ -779,7 +755,6 @@ public class ComposerVoicePresenter(
      * when it is cleared).
      */
     public fun close(cleanup: CoroutineScope = scope) {
-        clearCountdown()
         conversationJob?.cancel()
         conversationHandle?.release?.invoke()
         conversationHandle = null
@@ -818,7 +793,6 @@ public class ComposerVoicePresenter(
     private fun beginStart(mode: VoiceMode): VoiceStart? {
         val p = parts ?: return null
         if (field == null || !mutable.value.available) return null
-        clearCountdown()
         previewBase =
             field?.takeIf { mode != VoiceMode.Conversation }?.let {
                 val selection = it.selection()
@@ -1106,73 +1080,10 @@ public class ComposerVoicePresenter(
         levelMirror.value = 0f
     }
 
-    private fun startCountdown(counted: AutoSendCountdown) {
-        stopTicking()
-        listeningSince = null
-        countdown = counted
-        mutable.update {
-            it.copy(
-                phase = MicPhase.Countdown,
-                holding = false,
-                cancelArmed = false,
-                words = "",
-                secondsLeft = counted.secondsLeft(clock.now()),
-                note = null,
-            )
-        }
-        val generation = ++counting
-        scope.launch {
-            hub.ticks(COUNTDOWN_STEP)
-                .takeWhile { generation == counting && countdown === counted }
-                .collect {
-                    val left = counted.secondsLeft(clock.now())
-                    mutable.update { it.copy(secondsLeft = left) }
-                    if (left == 0) decide(sendNow = false)
-                }
-        }
-    }
-
-    private fun decide(sendNow: Boolean) {
-        val counted = countdown ?: return
-        val f = field
-        if (f == null) {
-            clearCountdown()
-            return
-        }
-        when (
-            val decision =
-                counted.decide(
-                    now = clock.now(),
-                    fieldText = f.text(),
-                    foreground = foreground,
-                    sendInFlight = !f.canSend(),
-                    sendNow = sendNow,
-                )
-        ) {
-            AutoSendCountdown.Decision.Wait -> Unit
-            AutoSendCountdown.Decision.Cancel -> clearCountdown()
-            is AutoSendCountdown.Decision.Send -> {
-                clearCountdown()
-                if (f.text() == decision.text) f.send()
-            }
-        }
-    }
-
-    private fun clearCountdown() {
-        countdown = null
-        counting++
-        if (mutable.value.phase == MicPhase.Countdown) {
-            mutable.update { it.copy(phase = MicPhase.Idle, mode = null, secondsLeft = null) }
-        } else {
-            mutable.update { it.copy(secondsLeft = null) }
-        }
-    }
-
     public companion object {
         /** A held touch shorter than this is a slip, not a message (Flutter `_finishHold`). */
         public val SLIP: kotlin.time.Duration = 400.milliseconds
         private val TICK = 1.seconds
-        private val COUNTDOWN_STEP = 200.milliseconds
 
         public fun noteFor(failure: Failure): VoiceNote =
             when (failure) {
