@@ -39,6 +39,7 @@ import io.github.eslamasabry.oc.engine.attention.dock.SubAgentChildSource
 import io.github.eslamasabry.oc.engine.attention.dock.DockUi
 import io.github.eslamasabry.oc.engine.connection.ConnectionGraph
 import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
+import io.github.eslamasabry.oc.feature.settings.presentation.OtherConversationsMode
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.ChatRoute
 import kotlinx.coroutines.CoroutineScope
@@ -81,8 +82,10 @@ class ConversationsLeft {
  * learned by reading). No polling and no read of its own beyond that.
  *
  * Saved per profile (all swept with the profile by `DockKeys.register`): `oc.dockNames.<id>`, `oc.dockRemoved.<id>`,
- * `oc.dockPins.<id>`. Saved for the device (never swept): `oc.dockSide`, `oc.dockBias`, and `oc.dockShown` (the
- * person's Settings switch; absent = on).
+ * `oc.dockPins.<id>`. Saved for the device (never swept): `oc.dockSide`, `oc.dockBias`, and the edge light's keys
+ * (`EdgeLightKeys`): `oc.otherConversations` (the Settings choice Rings / Edge light / Hidden; absent = Rings, and the
+ * old `oc.dockShown` = "false" is moved to Hidden once), `oc.edgeLight.side`, `oc.edgeLight.height`, the Back notes
+ * and tips counts.
  *
  * The app starts it once at app scope (`AttentionRuntime.start`). Opening a ring goes through the app's navigator
  * ([AppNavigator.backToChat]: back to a conversation right below, else open it), and the conversation on screen is
@@ -105,14 +108,17 @@ class AppEdgeDock(
 ) {
     private val main: CoroutineScope = CoroutineScope(appScope.coroutineContext + dispatchers.main)
     private var navigate: (ConversationRef) -> Unit = { navigator.backToChat(it) }
+    private val modeState = MutableStateFlow(OtherConversationsMode.Rings)
     private val shownState = MutableStateFlow(true)
+    private val placeState = MutableStateFlow(EdgeLightPlace())
+    private val taughtState = MutableStateFlow(EdgeLightTaught())
     private val keyStore =
         object : AttentionKeyStore {
             override suspend fun read(key: String): String? = (stores.prefs.get(key) as? PrefValue.Str)?.value
 
             override suspend fun write(key: String, value: String): Boolean {
                 // Device-wide keys carry no profile id.
-                if (key == DockKeys.SIDE || key == DockKeys.BIAS || key == SHOWN_KEY) {
+                if (key == DockKeys.SIDE || key == DockKeys.BIAS || EdgeLightKeys.isDeviceKey(key)) {
                     return stores.prefs.commit(stores.lanes.app) { putString(key, value) } is Outcome.Ok
                 }
                 val id =
@@ -130,6 +136,7 @@ class AppEdgeDock(
                 stores.prefs.commit(stores.lanes.app) { remove(key) } is Outcome.Ok
         }
     private val nicknames = DockNicknames(keyStore)
+    private val lightPrefs = EdgeLightPrefs(keyStore)
 
     /** The home list's saved line per conversation, read once per profile and kept until the profile reattaches. */
     private val savedLines = mutableMapOf<ProfileId, Map<SessionId, String>>()
@@ -186,14 +193,39 @@ class AppEdgeDock(
     fun list(reader: DockReader = DockReader.list()): Flow<DockListModel> =
         controller.ui(reader).map { DockList.build(it, facts, peeks::newest) }
 
-    /** The person's Settings switch: false draws no dock in the app (the live notification row does not read it). */
+    /** What the person chose in Settings › Other conversations. Rings is the default. */
+    val mode: StateFlow<OtherConversationsMode> = modeState.asStateFlow()
+
+    /** The rings are drawn (the choice is Rings): Hidden and Edge light draw no ring (the live notification row does not read it). */
     val shown: StateFlow<Boolean> = shownState.asStateFlow()
 
-    /** Turns the in-app dock on or off for this device, saved at once. */
-    fun setShown(on: Boolean) {
-        if (shownState.value == on) return
-        shownState.value = on
-        main.launch { keyStore.write(SHOWN_KEY, on.toString()) }
+    /** Where the edge light sits (device-wide). */
+    val lightPlace: StateFlow<EdgeLightPlace> = placeState.asStateFlow()
+
+    /** How many Back notes and tips the light showed so far (device-wide). */
+    val lightTaught: StateFlow<EdgeLightTaught> = taughtState.asStateFlow()
+
+    /** Saves the choice for this device at once; the rings, the light or neither follow. */
+    fun setMode(mode: OtherConversationsMode) {
+        if (modeState.value == mode) return
+        modeState.value = mode
+        shownState.value = mode == OtherConversationsMode.Rings
+        main.launch { lightPrefs.saveMode(mode) }
+    }
+
+    /** Moves the edge light (side and height), saved at once. */
+    fun setLightPlace(place: EdgeLightPlace) {
+        if (placeState.value == place) return
+        placeState.value = place
+        main.launch { lightPrefs.savePlace(place) }
+    }
+
+    /** Counts one more Back note and/or tip shown, saved at once. */
+    fun taughtMore(backNotes: Int = 0, tips: Int = 0) {
+        if (backNotes == 0 && tips == 0) return
+        val next = taughtState.value.let { it.copy(backNotes = it.backNotes + backNotes, tips = it.tips + tips) }
+        taughtState.value = next
+        main.launch { lightPrefs.saveTaught(next) }
     }
 
     /**
@@ -232,7 +264,12 @@ class AppEdgeDock(
         }
         main.launch {
             if (stores.warm() !is Outcome.Ok) return@launch
-            keyStore.read(SHOWN_KEY)?.let { shownState.value = it != "false" }
+            lightPrefs.loadMode().let {
+                modeState.value = it
+                shownState.value = it == OtherConversationsMode.Rings
+            }
+            placeState.value = lightPrefs.loadPlace()
+            taughtState.value = lightPrefs.loadTaught()
             controller.loadPlacement()
             combine(connections.live, stores.profiles.profiles) { live, saved -> live to saved }
                 .collect { (live, loaded) ->
@@ -304,11 +341,6 @@ class AppEdgeDock(
     fun tuck() = controller.tuck()
 
     fun untuck() = controller.untuck()
-
-    private companion object {
-        /** Device-wide, never swept: the in-app dock is on unless the person turned it off. */
-        const val SHOWN_KEY = "oc.dockShown"
-    }
 
     private fun detach(id: ProfileId) {
         if (attached.remove(id) != null) controller.feed(DockEvent.ProfileOffline(id))
