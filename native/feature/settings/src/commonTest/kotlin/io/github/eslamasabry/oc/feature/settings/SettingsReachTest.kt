@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.settings
 
+import io.github.eslamasabry.oc.feature.settings.presentation.OtherConversationsMode
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsFacts
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsGroupId
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsOutside
@@ -94,7 +95,7 @@ class SettingsReachTest {
                 phraseChips = true,
                 transcriptDisplay = true,
                 opens = null,
-                edgeDock = true,
+                otherConversations = OtherConversationsMode.Rings,
             )
         assertEquals(SettingsRowId.entries.toSet(), SettingsStructure.searchable(all).toSet())
     }

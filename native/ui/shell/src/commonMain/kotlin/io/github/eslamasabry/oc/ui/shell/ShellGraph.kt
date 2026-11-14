@@ -23,6 +23,7 @@ public interface ShellMultibindings {
     @Multibinds(allowEmpty = true) public val entryInstallers: Set<EntryInstaller>
     @Multibinds(allowEmpty = true) public val statusSources: Set<ShellStatusSource>
     @Multibinds(allowEmpty = true) public val overlays: Set<ShellOverlay>
+    @Multibinds(allowEmpty = true) public val pageLights: Set<ShellPageLight>
 }
 
 /**
@@ -37,6 +38,7 @@ public class ShellDependencies(
     public val motion: SystemMotion,
     public val statusSources: Set<ShellStatusSource> = emptySet(),
     public val overlays: Set<ShellOverlay> = emptySet(),
+    public val pageLights: Set<ShellPageLight> = emptySet(),
 )
 
 /**

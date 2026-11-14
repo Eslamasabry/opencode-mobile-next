@@ -27,6 +27,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import io.github.eslamasabry.oc.feature.settings.presentation.OtherConversationsMode
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsActions
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsDoor
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsGroupId
@@ -40,6 +41,8 @@ import io.github.eslamasabry.oc.feature.settings.presentation.SettingsSearchEntr
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsUi
 import io.github.eslamasabry.oc.ui.design.layout.Layout
 import io.github.eslamasabry.oc.ui.design.tokens.Space
+import io.github.eslamasabry.oc.ui.kit.choice.KitChoice
+import io.github.eslamasabry.oc.ui.kit.choice.KitChoiceList
 import io.github.eslamasabry.oc.ui.kit.frame.KitPaneScreen
 import io.github.eslamasabry.oc.ui.words.res.settingsHubDetailEmpty
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
@@ -68,6 +71,7 @@ import io.github.eslamasabry.oc.ui.words.res.settingsPhraseChipsHiddenCount
 import io.github.eslamasabry.oc.ui.words.res.settingsPhraseChipsShowHidden
 import io.github.eslamasabry.oc.ui.words.res.settingsV3Connected
 import io.github.eslamasabry.oc.ui.words.res.settingsV3NotConnected
+import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 
@@ -399,6 +403,20 @@ private fun ColumnScope.GroupBody(
     page: SettingsPage.Group,
 ) {
     var languageOpen by rememberSaveable(page.id) { mutableStateOf(false) }
+    var otherOpen by rememberSaveable(page.id) { mutableStateOf(false) }
+    val otherNow = state.group?.rows.orEmpty().firstNotNullOfOrNull { (it.door as? SettingsDoor.Choice)?.mode }
+    if (otherOpen && otherNow != null) {
+        KitSheet(
+            visible = true,
+            onDismissRequest = { otherOpen = false },
+            title = stringResource(Res.string.dockModeTitle),
+        ) {
+            OtherConversationsBody(otherNow) {
+                actions.onOtherConversations(it)
+                otherOpen = false
+            }
+        }
+    }
     if (languageOpen) {
         KitSheet(
             visible = true,
@@ -430,6 +448,15 @@ private fun ColumnScope.GroupBody(
                     selected = focused
                 }
             when {
+                row.door is SettingsDoor.Choice ->
+                    KitRow(
+                        title = title,
+                        modifier = rowModifier,
+                        selected = focused,
+                        leading = KitRowLeading.Glyph(rowGlyph(row.id)),
+                        trailing = KitRowTrailing.Value(otherConversationsWords(row.door.mode)),
+                        onClick = { otherOpen = true },
+                    )
                 row.door is SettingsDoor.Switch ->
                     KitIconSwitchRow(
                         title = title,
@@ -559,3 +586,46 @@ private fun rowValue(row: SettingsRowId, state: SettingsUi): String? {
         else -> null
     }
 }
+
+/** Other conversations: three choices, one tap picks (the sheet closes, the choice is saved at once). */
+@Composable
+internal fun ColumnScope.OtherConversationsBody(
+    mode: OtherConversationsMode,
+    onPick: (OtherConversationsMode) -> Unit,
+) {
+    KitChoiceList(
+        choices =
+            OtherConversationsMode.entries.map { item ->
+                KitChoice(
+                    item,
+                    otherConversationsWords(item),
+                    supporting = stringResource(otherConversationsHint(item)),
+                )
+            },
+        selected = mode,
+        semanticsLabel = stringResource(Res.string.dockModeTitle),
+        modifier = Modifier.testTag("other-conversations-choices"),
+        onSelect = onPick,
+    )
+}
+
+@Composable
+internal fun otherConversationsWords(
+    mode: OtherConversationsMode
+): String =
+    stringResource(
+        when (mode) {
+            OtherConversationsMode.Rings -> Res.string.dockModeRings
+            OtherConversationsMode.EdgeLight -> Res.string.dockModeEdgeLight
+            OtherConversationsMode.Hidden -> Res.string.dockModeHidden
+        }
+    )
+
+private fun otherConversationsHint(
+    mode: OtherConversationsMode
+): StringResource =
+    when (mode) {
+        OtherConversationsMode.Rings -> Res.string.dockModeRingsHint
+        OtherConversationsMode.EdgeLight -> Res.string.dockModeEdgeLightHint
+        OtherConversationsMode.Hidden -> Res.string.dockModeHiddenHint
+    }

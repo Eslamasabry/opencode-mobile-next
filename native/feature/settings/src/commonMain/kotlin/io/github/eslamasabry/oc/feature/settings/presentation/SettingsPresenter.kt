@@ -71,7 +71,7 @@ public class SettingsPresenter(
     private val healthConsent: HealthConsentSetting? = null,
     /** R1: Report a problem's report, its Send report and About's report code. */
     private val problemReport: ProblemReportSender? = null,
-    /** The edge dock's on/off switch; null where the app draws no dock. */
+    /** The Other conversations choice (Rings, Edge light, Hidden); null where the app draws neither. */
     private val edgeDock: EdgeDockSetting? = null,
     /** Appearance › Glass lab's numbers; null where the build offers no lab. */
     glassLabPort: GlassLabSetting? = null,
@@ -124,11 +124,11 @@ public class SettingsPresenter(
     )
 
     private val local = MutableStateFlow(Local())
-    /** The host's facts, with the edge dock's switch where the app has one. */
+    /** The host's facts, with the Other conversations choice where the app has one. */
     private val currentFacts: StateFlow<SettingsFacts> =
         edgeDock?.let { dock ->
-            combine(facts, dock.shown) { f, on -> f.copy(edgeDock = on) }
-                .stateIn(scope, SharingStarted.Eagerly, facts.value.copy(edgeDock = dock.shown.value))
+            combine(facts, dock.mode) { f, mode -> f.copy(otherConversations = mode) }
+                .stateIn(scope, SharingStarted.Eagerly, facts.value.copy(otherConversations = dock.mode.value))
         } ?: facts
     private val prefs = choices.value
 
@@ -254,6 +254,7 @@ public class SettingsPresenter(
             is SettingsDoor.Page -> onOpen(door.page)
             is SettingsDoor.Outside -> onOutside(door.place)
             is SettingsDoor.Switch -> Unit
+            is SettingsDoor.Choice -> Unit
         }
     }
 
@@ -692,9 +693,10 @@ public class SettingsPresenter(
                         write(PersonalChange.Reasoning(!door.on), SettingsNote.ChoiceNotSaved)
                     SettingsRowId.ShowTimestamps ->
                         write(PersonalChange.Timestamps(!door.on), SettingsNote.ChoiceNotSaved)
-                    SettingsRowId.EdgeDock -> edgeDock?.setShown(!door.on)
                     else -> Unit
                 }
+            // The choice opens its own list on the page (HubPage); picking one comes back as onOtherConversations.
+            is SettingsDoor.Choice -> Unit
         }
     }
 
@@ -731,7 +733,7 @@ public class SettingsPresenter(
             SettingsStructure.rows(row.group, currentFacts.value, p.reasoning, p.timestamps)
                 .firstOrNull { it.id == row }
                 ?.door
-        if (door != null && door !is SettingsDoor.Switch) {
+        if (door != null && door !is SettingsDoor.Switch && door !is SettingsDoor.Choice) {
             onRow(row)
             return
         }
@@ -950,6 +952,10 @@ public class SettingsPresenter(
     override fun onTextSize(size: AppTextSize) {
         if (prefs.value.textSize != size)
             write(PersonalChange.TextSize(size), SettingsNote.AppearanceNotSaved)
+    }
+
+    override fun onOtherConversations(mode: OtherConversationsMode) {
+        edgeDock?.setMode(mode)
     }
 
     override fun onLanguage(language: AppLanguage) {

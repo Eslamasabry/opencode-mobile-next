@@ -33,6 +33,30 @@
     <string name="dockStaysWhileOpen">%1$s is open, so it stays</string>
     <string name="dockStopFailed">Couldn't stop %1$s</string>
     <string name="dockAnswerFailed">Couldn't answer %1$s</string>
+    <!-- Settings › Conversations › Other conversations: Rings / Edge light / Hidden (replaces the dock's on/off switch). -->
+    <string name="lampLabel">Other conversations</string>
+    <string name="lampLabelWith">Other conversations, %1$s</string>
+    <string name="lampSpokenJoin">%1$s, %2$s</string>
+    <plurals name="lampSpokenNeeds">
+        <item quantity="one">%1$s needs you</item>
+        <item quantity="other">%1$s need you</item>
+    </plurals>
+    <plurals name="lampSpokenFailed">
+        <item quantity="one">%1$s failed</item>
+        <item quantity="other">%1$s failed</item>
+    </plurals>
+    <plurals name="lampSpokenWorking">
+        <item quantity="one">%1$s working</item>
+        <item quantity="other">%1$s working</item>
+    </plurals>
+    <string name="dockModeTitle">Other conversations</string>
+    <string name="dockModeRings">Rings</string>
+    <string name="dockModeEdgeLight">Edge light</string>
+    <string name="dockModeHidden">Hidden</string>
+    <string name="dockModeRingsHint">One ring per running conversation on the screen edge.</string>
+    <string name="dockModeEdgeLightHint">A small light on the edge that opens one list to switch.</string>
+    <string name="dockModeHiddenHint">Nothing on the edge of a conversation.</string>
+    <string name="dockModeAliases">dock rings edge light switch conversation other conversations</string>
     <!-- The Edge light's list (2026-11-13): a small light on the edge of a conversation and one list to switch. Never "lamp" on screen. -->
     <string name="edgeLightTitle">Conversations</string>
     <string name="edgeLightYouAreIn">You are in “%1$s”</string>
@@ -120,6 +144,17 @@
     <string name="edgeLightChildLabel">%1$s, sub-agent of %2$s, %3$s</string>
     <string name="edgeLightChildLabelFact">%1$s, sub-agent of %2$s, %3$s, %4$s</string>
     <string name="edgeLightFactOf">%1$s of %2$s</string>
+    <string name="edgeLightActionOn">%1$s: %2$s</string>
+    <string name="edgeLightNotStarted">Not started</string>
+    <string name="edgeLightShowSubAgents">Show sub-agents</string>
+    <string name="edgeLightHideSubAgents">Hide sub-agents</string>
+    <string name="edgeLightPlaceBody">Tap a spot. The edge light moves there now.</string>
+    <string name="edgeLightAgeNow">a moment</string>
+    <string name="edgeLightAgeMinutes">%1$sm</string>
+    <string name="edgeLightAgeHours">%1$sh</string>
+    <string name="edgeLightAgeDays">%1$sd</string>
+    <string name="edgeLightBackNote">Back returns to “%1$s”</string>
+    <string name="edgeLightRenameFailed">Couldn't rename %1$s</string>
     <!-- Settings › Conversations: the dock's on/off row. -->
     <string name="dockSettingTitle">Edge dock</string>
     <string name="dockSettingBody">Running conversations on the screen edge. Drag its top to move it to the other side.</string>
