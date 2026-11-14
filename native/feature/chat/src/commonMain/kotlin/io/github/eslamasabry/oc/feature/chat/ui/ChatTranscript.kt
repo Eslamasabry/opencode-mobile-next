@@ -722,6 +722,7 @@ internal fun ChatTranscriptList(
                             teachDetails = row.key == newestCompleted,
                             runningSteps = runningSteps,
                             onHideSteps = { stepsShown = false },
+                            stopping = live?.stopping == true,
                         )
                 } else {
                     ChatRow(
@@ -745,6 +746,7 @@ internal fun ChatTranscriptList(
                         onSendAgain = onSendAgain.takeIf { row.key == newestPrompt || row.key == newestFooter },
                         runningSteps = runningSteps,
                         onHideSteps = { stepsShown = false },
+                        stopping = live?.stopping == true,
                     )
                 }
                 if (display.timestampsVisible) {
@@ -971,6 +973,8 @@ private fun ChatRow(
     /** A turn runs: whether the person asked to see its steps (null = no turn runs). */
     runningSteps: Boolean? = null,
     onHideSteps: () -> Unit = {},
+    /** The person pressed Stop: no step says it waits for them any more. */
+    stopping: Boolean = false,
 ) {
     when (row) {
         is BlockRow -> {
@@ -1072,6 +1076,7 @@ private fun ChatRow(
                         reasoningExpanded,
                         reply,
                         onCompactAgain,
+                        stopping = stopping,
                     )
                 }
                 else

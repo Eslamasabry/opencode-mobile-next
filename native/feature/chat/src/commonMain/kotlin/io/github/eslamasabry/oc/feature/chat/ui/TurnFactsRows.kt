@@ -189,6 +189,8 @@ internal fun TurnWorkLine(
     reasoningExpanded: Boolean = false,
     reply: ReplyActions? = null,
     onCompactAgain: (() -> Unit)? = null,
+    /** The person pressed Stop: the turn's steps no longer say they wait for the person (the tail says Stopping). */
+    stopping: Boolean = false,
 ) {
     val foldKey = "work:${work.turnId}"
     val rows = remember(work, entries) { StepListRules.entries(work, entries) }
@@ -201,7 +203,7 @@ internal fun TurnWorkLine(
         key(row.key) {
             when (row) {
                 is StepEntry.Step -> {
-                    StepRow(row.step, nowMs, folds, onOpenSession, onOpenFile, reply, waitingForYou = stepWaitsForYou(row.step.state, work.state))
+                    StepRow(row.step, nowMs, folds, onOpenSession, onOpenFile, reply, waitingForYou = !stopping && stepWaitsForYou(row.step.state, work.state))
                     val ask = row.step.callId?.let { inPlace?.byCall?.get(it) }
                     if (inPlace != null && ask != null) inPlace.draw(ask)
                 }

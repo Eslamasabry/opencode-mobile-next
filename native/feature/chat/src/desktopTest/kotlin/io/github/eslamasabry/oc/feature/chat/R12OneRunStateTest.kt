@@ -5,6 +5,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.v2.runComposeUiTest
 import io.github.eslamasabry.oc.core.common.ids.SessionId
@@ -115,13 +116,15 @@ class R12OneRunStateTest {
     }
 
     @Test
-    fun `R12 waiting for the decision - the card says it, the transcript adds no waiting line of its own`() = runComposeUiTest {
+    // D1 "steps only" (owner 2026-11-14): was "the card says it, the transcript adds no waiting line of its own". The
+    // step that waits now says so on its own row (d1-waiting: the ask is answered right under it); the promise kept is
+    // that it is said once: no live line, no second waiting line of the transcript's own.
+    fun `R12 waiting for the decision - the waiting step says it once, the transcript adds no waiting line of its own`() = runComposeUiTest {
         val facts = facts(waitingForYou = true)
         assertEquals(WorkLineState.WaitingForYou, facts.work["m1"]?.state)
         show(screen(facts, LiveTurnUi(stopping = false)), facts)
-        onAllNodesWithText("Waiting for you", substring = true, useUnmergedTree = true).assertCountEquals(0)
-        // The work line still stands for the turn's work, in neutral words.
-        onAllNodesWithText("1 step", useUnmergedTree = true).assertCountEquals(1)
+        onAllNodesWithText("Waiting for you", substring = true, useUnmergedTree = true).assertCountEquals(1)
+        onAllNodesWithTag("chat-live-line", useUnmergedTree = true).assertCountEquals(0)
     }
 
     @Test

@@ -194,6 +194,7 @@ class R2DeclinedNotEditedTest {
             }
         }
         onAllNodesWithText("Edited 1 file", substring = true, useUnmergedTree = true).assertCountEquals(0)
-        onAllNodesWithText("1 step", useUnmergedTree = true).assertCountEquals(1)
+        // D1: the turn's work is its step, which says what the person decided (was: a summary line "1 step").
+        onAllNodesWithText("You declined this", useUnmergedTree = true)[0].assertExists()
     }
 }
