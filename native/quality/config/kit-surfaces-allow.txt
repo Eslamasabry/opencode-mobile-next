@@ -43,7 +43,6 @@ ui/kit-content/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/content/usa
 ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/team/TeamParts.kt | drawRect\(colors\.surface3\) | A06 the team row's progress track
 ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/frame/KitCarousel.kt | colors\.surface3, RoundedCornerShape\(Space\.S2\.dp\) | A06 the carousel's page dots and its scroll track
 ui/kit-chat/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kitchat/card/KitAgentCard.kt | \.height\(Space\.S1\.dp\)\.clip\(KitShapeId\.Pill\.shape\(\)\)\.background\(colors\.surface2\) | A06 the agent card's progress track
-ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/state/KitSkeletonTranscript.kt | background\(roles\.surface3, barShape\) | A06 a skeleton bar (a loading placeholder)
 
 # A07 dots, rings, check marks and glyphs: marks, not surfaces
 ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/state/KitInboxEmptyAnswer.kt | \.border\(kitFocusRingWidth\(\), colors\.text3, CircleShape\) | A07 the empty answer's dot ring
