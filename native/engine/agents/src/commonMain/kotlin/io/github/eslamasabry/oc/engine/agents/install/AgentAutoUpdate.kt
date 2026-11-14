@@ -44,6 +44,19 @@ public interface AgentUpdateHost {
     /** Reads the agents again (installed versions); it may be older than the work that just ended. */
     public suspend fun refresh()
 
+    /**
+     * No kept answer can be trusted yet: the first look after an app update, or nothing was ever read. The updater
+     * then asks for ONE [read] (while the phone is idle) before it decides, so it never depends on the person having
+     * opened the Agents page.
+     */
+    public val readDue: Boolean
+
+    /**
+     * One read of the installed agents' versions (and whether the helper's install is in place at its pin), the cheap
+     * read the Agents page uses, without starting the helper. Records that it ran, so [readDue] turns false.
+     */
+    public suspend fun read()
+
     /** The installed agents in catalog order; empty when none is installed or nothing is known yet. */
     public val installed: List<AgentId>
 
@@ -92,10 +105,20 @@ public class AgentAutoUpdater(
     private var lastLine: String? = null
     private val attempted = mutableSetOf<String>()
     private val checking = Mutex()
+    private var readTried = false
 
     public suspend fun changed() {
         if (!checking.tryLock()) return
         try {
+            if (host.readDue && !readTried) {
+                // The read starts a process per installed agent: only while nothing is working, and once per run.
+                if (workBusy() || jobs.running || host.switchPending || host.installProblem) {
+                    note("a read of the installed agents is due; waiting for the phone to be idle")
+                    return
+                }
+                readTried = true
+                host.read()
+            }
             val key = host.pinKey
             if (decide(key, explain = true) == null) return
             host.refresh()

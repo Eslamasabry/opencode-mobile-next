@@ -56,6 +56,15 @@ class AgentAutoUpdateTest {
     private class Host : AgentUpdateHost {
         var refreshes = 0
         override suspend fun refresh() { refreshes++ }
+        var due = false
+        var reads = 0
+        var afterRead: (() -> Unit)? = null
+        override val readDue: Boolean get() = due
+        override suspend fun read() {
+            reads++
+            due = false
+            afterRead?.invoke()
+        }
         override var installed: List<AgentId> = listOf(AgentId("claude"))
         override var behind: Set<AgentId> = setOf(AgentId("claude"))
         override var helperBehind: Boolean = true
@@ -126,6 +135,40 @@ class AgentAutoUpdateTest {
         host.installProblem = true
         AgentAutoUpdater(host, second) { false }.changed()
         assertFalse(second.started.isNotEmpty())
+    }
+
+    @Test
+    fun `AGENT-AUTO-UPDATE no facts means one read while idle, and the read decides`() = runTest {
+        // Nothing is known (the person never opened the Agents page): no installed agent, nothing behind.
+        val host = Host().apply { installed = emptyList(); behind = emptySet(); helperBehind = false; due = true }
+        host.afterRead = {
+            host.installed = listOf(claude)
+            host.behind = setOf(claude)
+        }
+        val jobs = Jobs()
+        var busy = true
+        val updater = AgentAutoUpdater(host, jobs) { busy }
+        // Busy: no read starts a process, and nothing is decided.
+        updater.changed()
+        assertEquals(0, host.reads)
+        assertTrue(jobs.started.isEmpty())
+        busy = false
+        updater.changed()
+        assertEquals(1, host.reads)
+        assertEquals(listOf(claude), jobs.started)
+        // One read only, however often it looks again.
+        host.due = true
+        updater.changed()
+        assertEquals(1, host.reads)
+    }
+
+    @Test
+    fun `AGENT-AUTO-UPDATE a read that finds everything on its pins starts nothing`() = runTest {
+        val host = Host().apply { behind = emptySet(); helperBehind = false; due = true }
+        val jobs = Jobs()
+        AgentAutoUpdater(host, jobs) { false }.changed()
+        assertEquals(1, host.reads)
+        assertTrue(jobs.started.isEmpty())
     }
 
     @Test

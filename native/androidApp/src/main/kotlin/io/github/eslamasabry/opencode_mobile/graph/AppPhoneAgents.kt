@@ -26,6 +26,7 @@ import io.github.eslamasabry.oc.engine.agents.catalog.AgentPins
 import io.github.eslamasabry.oc.engine.agents.catalog.AgentDescriptor
 import io.github.eslamasabry.oc.engine.agents.catalog.AgentSignInMethod
 import io.github.eslamasabry.oc.engine.agents.diagnostics.AgentHelperStatus
+import io.github.eslamasabry.oc.engine.agents.scripts.PaseoPhoneScripts
 import io.github.eslamasabry.oc.engine.agents.diagnostics.HelperNotice
 import io.github.eslamasabry.oc.engine.agents.gate.PhoneGate
 import io.github.eslamasabry.oc.engine.agents.host.AuthProbeError
@@ -69,6 +70,7 @@ import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentsState
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneDevice
 import io.github.eslamasabry.oc.feature.agents.hub.phoneInstallStep
 import io.github.eslamasabry.oc.feature.agents.hub.phoneSharedPartsInPlace
+import io.github.eslamasabry.opencode_mobile.BuildConfig
 import io.github.eslamasabry.opencode_mobile.BuiltinLinux
 import io.github.eslamasabry.opencode_mobile.PhoneAgentPayloads
 import io.github.eslamasabry.opencode_mobile.ProbeStop
@@ -189,7 +191,60 @@ class AppPhoneAgents(
         val behind: Set<AgentId>,
         val helperRunning: Boolean,
         val helperVersion: String?,
+        /** The helper's install is not at its pin on disk ([readForUpdate]); false when unknown. */
+        val helperOnDiskBehind: Boolean = false,
     )
+
+    /** Whether the helper's install was in place at its pin when [readForUpdate] last looked; null before it ran. */
+    @Volatile private var helperInPlace: Boolean? = null
+
+    /** The app build the last [readForUpdate] ran under, kept per phone: `oc.agentUpdateRead.<owner>`. */
+    private fun updateReadKey(owner: ProfileId) = "oc.agentUpdateRead.${owner.raw}"
+
+    /**
+     * True at the first look after an app update (the build differs from the one the last read ran under) or before
+     * any read: the automatic update then asks for one [readForUpdate] before it decides.
+     */
+    internal fun updateReadDue(): Boolean {
+        if (needsRestart) return false
+        val owner = agentOwner(ownerId()) ?: return false
+        return gatePrefs(owner).string(updateReadKey(owner)) != BuildConfig.VERSION_CODE.toString()
+    }
+
+    /**
+     * One read of every catalog agent's installed version (the Agents page's own cheap read: the payload check and
+     * the version program, no sign-in probe, no helper start), kept as facts, and of whether the helper's install is
+     * in place at its pin. It gives way to a person's step and never runs under an install. True when it completed.
+     */
+    internal suspend fun readForUpdate(): Boolean = lane.read { stop -> readForUpdateLocked(stop) } == true
+
+    private suspend fun readForUpdateLocked(stop: ProbeStop): Boolean {
+        if (needsRestart) return false
+        val owner = agentOwner(ownerId()) ?: return false
+        if (mutable.value.installation?.phase == PhoneAgentInstallPhase.Installing) return false
+        val agents = phoneCatalog()
+        val read =
+            native {
+                if (!linux.installed) return@native false
+                for (agent in agents) {
+                    if (stop.isStopped) return@native false
+                    val payload = PhoneAgentPayloads.present(linux, agent.recipe!!.executable)
+                    versionOf(owner, agent, payload, installing = false, stop = stop)
+                }
+                !stop.isStopped
+            }
+        if ((read as? Outcome.Ok)?.value != true) return false
+        remember(owner, agents)
+        val anyInstalled = keptFacts(owner).values.any { it.installed == true }
+        if (anyInstalled) {
+            val place =
+                native { linux.run(PaseoPhoneScripts.check, 120, agentUser = true, logOutput = false).exitCode }
+            helperInPlace = (place as? Outcome.Ok)?.value?.let { it == 0 }
+        }
+        if (stop.isStopped) return false
+        gatePrefs(owner).commit { putString(updateReadKey(owner), BuildConfig.VERSION_CODE.toString()) }
+        return true
+    }
 
     internal fun updateFacts(): UpdateFacts? {
         if (needsRestart || !linux.installed) return null
@@ -210,6 +265,7 @@ class AppPhoneAgents(
             behind,
             helper["running"] == true,
             helper["helperVersion"] as? String,
+            helperOnDiskBehind = installed.isNotEmpty() && helperInPlace == false,
         )
     }
 
