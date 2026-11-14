@@ -5,6 +5,9 @@
 #
 #   native/tool/release/test/run_tests.sh [name filter]
 set -uo pipefail
+# A real release run exports the key file and may name a remote; the cases below set their own, so the caller's
+# values must not reach them (with the key file exported, the lookup-order cases all saw that one file).
+unset OC_KEY_PROPERTIES OC_RELEASE_REMOTE
 HERE="$(cd "$(dirname "$0")" && pwd)"
 NATIVE="$(cd "$HERE/../../.." && pwd)"
 ROOT="$(cd "$NATIVE/.." && pwd)"
