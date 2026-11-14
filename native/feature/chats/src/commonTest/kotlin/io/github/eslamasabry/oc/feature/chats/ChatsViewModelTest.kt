@@ -545,6 +545,13 @@ class ChatsViewModelTest {
         advanceTimeBy(10 * 60_000)
         assertEquals(ref, vm.state.value.waitingOpen)
         assertNull(vm.state.value.keptGaveUp)
+        // The update ends and the source still does not answer: the wait's limit counts from here, and the tap
+        // ends. (It also lets the test end: runTest drains the scheduler, and a wait that never ends never drains.)
+        home.snapshot.value =
+            home.snapshot.value.copy(sources = listOf(source("main", main = true), updating.copy(starting = null)).toImmutableList())
+        advanceTimeBy(io.github.eslamasabry.oc.feature.chats.presentation.KeptTapRules.LIMIT_MS + 1_000)
+        assertNull(vm.state.value.waitingOpen)
+        assertEquals(ref, vm.state.value.keptGaveUp)
     }
 
     @Test
