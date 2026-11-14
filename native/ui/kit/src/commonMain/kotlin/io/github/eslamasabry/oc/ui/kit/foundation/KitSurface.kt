@@ -250,6 +250,9 @@ public fun kitSurfaceLook(input: KitSurfaceInput): KitSurfaceLook {
     val ownFill = input.ownFill?.let { if (input.faceAlpha >= 1f) it else it.copy(alpha = it.alpha * input.faceAlpha) }
     val plain = SurfaceDecoration(radii = radii, circle = input.shape == KitShapeId.Circle, fill = ownFill?.toArgb())
     val shown = rememberSurfaceFade(decoration, plain, style.style)
+    // A style that squares a round control (Paper's Send, mic, icon discs) clips it square too: the face and the clip a
+    // part takes from the look stay one shape (a square disc under a round clip lost its corners).
+    val faceShape = if (decoration != null && input.shape == KitShapeId.Circle && !decoration.circle) decoration.shape() else shape
     val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
     if (shown == null) {
         if (decoration == null) {
@@ -259,13 +262,13 @@ public fun kitSurfaceLook(input: KitSurfaceInput): KitSurfaceLook {
         }
         val sink = if (decoration.faceShiftDp > 0f) Modifier.graphicsLayer { translationY = decoration.faceShiftDp * density } else Modifier
         val face = if (glass) frost.kitGlassFace(decoration) else Modifier.kitDecorated(decoration, rtl)
-        return KitSurfaceLook(face.then(sink), words, shape, decoration.paints(), dressed = true)
+        return KitSurfaceLook(face.then(sink), words, faceShape, decoration.paints(), dressed = true)
     }
     // Mid-fade: the in-between look, painted the Glass way when either end is Glass.
     val (mid, glassy) = shown
     val sink = if (mid.faceShiftDp > 0f) Modifier.graphicsLayer { translationY = mid.faceShiftDp * density } else Modifier
     val face = if (glassy) frost.kitGlassFace(mid) else Modifier.kitDecorated(mid, rtl)
-    return KitSurfaceLook(face.then(sink), words, shape, mid.paints() || (decoration ?: plain).paints(), dressed = decoration != null)
+    return KitSurfaceLook(face.then(sink), words, faceShape, mid.paints() || (decoration ?: plain).paints(), dressed = decoration != null)
 }
 
 /**
