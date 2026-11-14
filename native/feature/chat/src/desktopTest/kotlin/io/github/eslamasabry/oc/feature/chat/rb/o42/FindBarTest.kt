@@ -19,6 +19,8 @@ import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
+import androidx.compose.ui.unit.dp
 
 @OptIn(ExperimentalTestApi::class)
 class FindBarTest {
@@ -69,6 +71,31 @@ class FindBarTest {
         onNodeWithTag("transcript-find-next").assertDoesNotExist()
         onNodeWithContentDescription("Close search").performClick()
         assertEquals(listOf<String?>(null), calls)
+    }
+
+    @Test fun `B-CHAT-FIND-01 find is one row, its count inside the field, no excerpt row`() = runComposeUiTest {
+        val presenter = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
+        setContent {
+            KitTheme(platform = DesktopKitPlatform(), appearance = KitAppearance(motion = MotionLevel.Off)) {
+                TranscriptFindBar(FindUi("below", 4, 3, "hit", 0, false, excerpt = "values below one are clamped"), presenter)
+            }
+        }
+        val field = onNodeWithTag("kit-search-field", useUnmergedTree = true).getBoundsInRoot()
+        val input = onNodeWithTag("transcript-find-input", useUnmergedTree = true).getBoundsInRoot()
+        val count = onNodeWithTag("transcript-find-count", useUnmergedTree = true).getBoundsInRoot()
+        onNodeWithText("4 of 4", useUnmergedTree = true).assertIsDisplayed()
+        // The count lies inside the field's face, after the words.
+        assertTrue(count.left >= field.right && count.right <= input.right && count.top >= input.top && count.bottom <= input.bottom,
+            "count $count in the field $input after the words $field")
+        // Previous, next and Close share the field's row.
+        listOf("transcript-find-previous", "transcript-find-next", "transcript-find-close").forEach { tag ->
+            val b = onNodeWithTag(tag, useUnmergedTree = true).getBoundsInRoot()
+            assertTrue(b.top < input.bottom && b.bottom > input.top, "$tag $b off the field's row $input")
+        }
+        val bar = onNodeWithTag("transcript-find-bar", useUnmergedTree = true).getBoundsInRoot()
+        assertTrue((bar.bottom - bar.top) < (input.bottom - input.top) + 24.dp, "find bar ${bar.bottom - bar.top} tall: more than one row")
+        onNodeWithTag("transcript-find-excerpt", useUnmergedTree = true).assertDoesNotExist()
+        onNodeWithContentDescription("Clear search").assertDoesNotExist()
     }
 
     @Test fun noMatchesDisablesBothDirections() = runComposeUiTest {

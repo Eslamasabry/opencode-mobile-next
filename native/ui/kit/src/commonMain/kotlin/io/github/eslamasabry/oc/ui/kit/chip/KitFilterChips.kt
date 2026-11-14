@@ -176,7 +176,10 @@ public fun KitFilterChips(
     // shadow's reach and the chips keep their place, so their shadows stay whole; the fade's clear part covers it.
     // On the floating glass pane the clip stays at the pane's sides (nothing draws beside the pane).
     val growStart = if (onPane) 0.dp else (room - restStart).coerceAtLeast(0.dp)
-    val growEnd = if (onPane) 0.dp else (room - restEnd).coerceAtLeast(0.dp)
+    // A line on a block that keeps the gutter ([bleed], the chat's phrase row) ends on that gutter: its end fade, clear
+    // third included, lies inside it, so the last chip thins out before the block's edge and is never cut flat beside
+    // the screen's edge (audit 2026-11-14, finding 21).
+    val growEnd = if (onPane || bleed) 0.dp else (room - restEnd).coerceAtLeast(0.dp)
     val startPad = restStart + growStart
     val endPad = restEnd + growEnd
     val line = remember { ChipLine(Space.S2.dp, FilterChipsRules.MIN_PEEK_DP.dp) }

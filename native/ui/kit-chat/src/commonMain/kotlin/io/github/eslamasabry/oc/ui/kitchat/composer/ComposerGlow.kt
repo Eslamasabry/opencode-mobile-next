@@ -10,6 +10,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.dropShadow
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
@@ -30,6 +31,10 @@ import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import io.github.eslamasabry.oc.ui.kit.effects.KitLiquidJoinBody
+import io.github.eslamasabry.oc.ui.kit.effects.joinedBand
+import io.github.eslamasabry.oc.ui.kit.effects.joinedFill
+import io.github.eslamasabry.oc.ui.kit.effects.joined
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitAppearance
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
@@ -105,6 +110,46 @@ public fun KitComposerGlow(
     modifier: Modifier = Modifier,
     choice: KitGlowChoice = KitGlowChoice.Classic,
     corner: Dp = KitComposerGlowDefaults.Corner,
+    /**
+     * Glass: the body of glass the box is (the jump pill joins it). While a drop is joined to it the ring, the Soft wash
+     * and the halo run round the one joined body, never across the drop's foot along the box's own edge (owner
+     * 2026-11-14, c26: the green line cut "Jump to latest" from the box).
+     */
+    join: KitLiquidJoinBody? = null,
+    content: @Composable () -> Unit,
+) {
+    val outline = remember(join) { join?.let { body -> JoinedGlowOutline(body) } }
+    ComposerGlow(active, modifier, choice, corner, outline, content)
+}
+
+/**
+ * The outline the glow follows while its box is joined to a drop: a band along it ([band], in the ring node's px, its
+ * box's top-left at the origin given) and the whole outline filled ([fill]); null while the box stands alone.
+ */
+internal interface GlowOutline {
+    /** Whether a drop is joined now; read in composition (the halo is drawn another way while joined). */
+    val joined: Boolean
+
+    fun band(widthPx: Float, centred: Boolean, origin: Offset): Path?
+
+    fun fill(origin: Offset): Path?
+}
+
+private class JoinedGlowOutline(private val body: KitLiquidJoinBody) : GlowOutline {
+    override val joined: Boolean get() = body.joined
+
+    override fun band(widthPx: Float, centred: Boolean, origin: Offset): Path? = body.joinedBand(widthPx, centred, origin)
+
+    override fun fill(origin: Offset): Path? = body.joinedFill(origin)
+}
+
+@Composable
+internal fun ComposerGlow(
+    active: Boolean,
+    modifier: Modifier,
+    choice: KitGlowChoice,
+    corner: Dp,
+    outline: GlowOutline?,
     content: @Composable () -> Unit,
 ) {
     val motion = KitMotion.state
@@ -123,20 +168,25 @@ public fun KitComposerGlow(
     val drawn = plan.draw != GlowDraw.None && (active || lit)
     Box(modifier) {
         if (drawn && plan.halo && plan.draw != GlowDraw.Hairline) {
-            ComposerHalo(
-                strength = { strength.floatValue },
-                breath = if (plan.draw == GlowDraw.Travel && plan.loops) ({ haloAlpha(phase.floatValue) }) else null,
-                color = colours.primary,
-                shape = shape,
-                modifier = Modifier.matchParentSize(),
-            )
+            val breath = if (plan.draw == GlowDraw.Travel && plan.loops) ({ haloAlpha(phase.floatValue) }) else null
+            // Only a joined box (liquid glass, Android 13+) draws its halo as a blurred fill of the one body.
+            if (outline?.joined == true)
+                JoinedHalo({ strength.floatValue }, breath, colours.primary, corner, outline, Modifier.matchParentSize())
+            else
+                ComposerHalo(
+                    strength = { strength.floatValue },
+                    breath = breath,
+                    color = colours.primary,
+                    shape = shape,
+                    modifier = Modifier.matchParentSize(),
+                )
         }
         if (drawn && plan.soft && plan.draw != GlowDraw.Hairline) {
-            SoftWash({ strength.floatValue }, { phase.floatValue }, colours, corner, Modifier.matchParentSize())
+            SoftWash({ strength.floatValue }, { phase.floatValue }, colours, corner, Modifier.matchParentSize(), outline)
         }
         Box(
             if (drawn) {
-                Modifier.testTag(GLOW_TAG).composerRing({ strength.floatValue }, { phase.floatValue }, plan, colours, corner)
+                Modifier.testTag(GLOW_TAG).composerRing({ strength.floatValue }, { phase.floatValue }, plan, colours, corner, outline)
             } else {
                 Modifier
             },
@@ -175,6 +225,40 @@ internal fun ComposerHalo(
 /** Room around the pill for the halo's blur and spread (18 dp blur + 1 dp spread, rounded up). */
 private const val HALO_ROOM_DP = 24
 
+/**
+ * The halo of a box that is a body of joined glass: the same soft light, of the joined outline (the box alone: its own
+ * rounded box). A blurred fill of the outline on its own layer; the breath and the fade change only the layer's alpha.
+ * Its layer reaches [JOINED_HALO_ROOM_DP] past the box, room for a drop standing on it and the blur.
+ */
+@Composable
+private fun JoinedHalo(strength: () -> Float, breath: (() -> Float)?, color: Color, corner: Dp, outline: GlowOutline, modifier: Modifier) {
+    Box(
+        modifier
+            .outset(JOINED_HALO_ROOM_DP.dp)
+            .graphicsLayer {
+                val blur = GlowGeometry.HALO_BLUR_DP.dp.toPx()
+                renderEffect = BlurEffect(blur, blur, TileMode.Decal)
+                alpha = strength() * (breath?.invoke() ?: GlowGeometry.HALO_STILL)
+            }
+            .drawBehind {
+                val room = JOINED_HALO_ROOM_DP.dp.toPx()
+                val spread = GlowGeometry.HALO_SPREAD_DP.dp.toPx()
+                val joined = outline.fill(Offset(room, room))
+                if (joined != null) drawPath(joined, color)
+                else
+                    drawRoundRect(
+                        color,
+                        topLeft = Offset(room - spread, room - spread),
+                        size = Size(size.width - 2 * (room - spread), size.height - 2 * (room - spread)),
+                        cornerRadius = CornerRadius(corner.toPx() + spread),
+                    )
+            },
+    )
+}
+
+/** Room around a joined box for its halo: the blur, and a drop standing on the box (the pill's 32 dp and its rebound). */
+private const val JOINED_HALO_ROOM_DP = 64
+
 /** Lays the node out [by] larger on every side than the space it is given, centred on it (for glows that spill). */
 private fun Modifier.outset(by: Dp): Modifier =
     layout { measurable, constraints ->
@@ -190,7 +274,7 @@ private fun Modifier.outset(by: Dp): Modifier =
 
 /** The Soft ring's blurred wash on its own layer (a constant blur; the sweep turns by a canvas rotation). */
 @Composable
-private fun SoftWash(strength: () -> Float, phase: () -> Float, colours: GlowColours, corner: Dp, modifier: Modifier) {
+private fun SoftWash(strength: () -> Float, phase: () -> Float, colours: GlowColours, corner: Dp, modifier: Modifier, outline: GlowOutline?) {
     Box(
         modifier
             // The wash spills outside the pill: its layer gets room so the blur is not cut at the pill's edge.
@@ -209,7 +293,7 @@ private fun SoftWash(strength: () -> Float, phase: () -> Float, colours: GlowCol
                     center = Offset(size.width / 2f, size.height / 2f),
                 )
                 onDrawBehind {
-                    clipPath(band) {
+                    clipPath(outline?.band(GlowGeometry.SOFT_WASH_DP.dp.toPx(), true, Offset(pad, pad)) ?: band) {
                         rotate((phase() - QUARTER) * FULL_TURN) { drawCircle(sweep, radius = size.maxDimension) }
                     }
                 }
@@ -228,36 +312,50 @@ internal fun Modifier.composerRing(
     plan: GlowPlan,
     colours: GlowColours,
     corner: Dp,
+    outline: GlowOutline? = null,
 ): Modifier =
     drawWithCache {
         val r = corner.toPx()
         val hairline = GlowGeometry.HAIRLINE_DP.dp.toPx()
         val classic = GlowGeometry.CLASSIC_STROKE_DP.dp.toPx()
+        val soft = GlowGeometry.SOFT_LINE_DP.dp.toPx()
         val classicBand = ringBand(size, r, classic, Offset.Zero, inside = true)
-        val softBand = ringBand(size, r, GlowGeometry.SOFT_LINE_DP.dp.toPx(), Offset.Zero)
+        val softBand = ringBand(size, r, soft, Offset.Zero)
         val classicSweep = Brush.sweepGradient(*colours.classicStops, center = Offset(size.width / 2f, size.height / 2f))
         val softSweep = Brush.sweepGradient(*colours.softStops(1f), center = Offset(size.width / 2f, size.height / 2f))
-        val radius = size.maxDimension
+        // The sweep covers the joined body too (a drop stands above the box): its circle reaches past the box.
+        val radius = size.maxDimension * 1.5f
         onDrawWithContent {
             drawContent()
             val s = strength()
             if (s <= 0f) return@onDrawWithContent
+            // Joined to a drop (Glass): the ring runs round the one body; read here, so it follows the drop's motion.
             when {
-                plan.draw == GlowDraw.Hairline ->
-                    drawRoundRect(
-                        colours.primary,
-                        topLeft = Offset(hairline / 2, hairline / 2),
-                        size = Size(size.width - hairline, size.height - hairline),
-                        cornerRadius = CornerRadius(r - hairline / 2),
-                        style = Stroke(hairline),
-                        alpha = s,
-                    )
+                plan.draw == GlowDraw.Hairline -> {
+                    val joined = outline?.band(hairline, false, Offset.Zero)
+                    if (joined != null) drawPath(joined, colours.primary, alpha = s)
+                    else
+                        drawRoundRect(
+                            colours.primary,
+                            topLeft = Offset(hairline / 2, hairline / 2),
+                            size = Size(size.width - hairline, size.height - hairline),
+                            cornerRadius = CornerRadius(r - hairline / 2),
+                            style = Stroke(hairline),
+                            alpha = s,
+                        )
+                }
                 plan.soft ->
-                    clipPath(softBand) {
+                    clipPath(outline?.band(soft, true, Offset.Zero) ?: softBand) {
                         rotate((phase() - QUARTER) * FULL_TURN) { drawCircle(softSweep, radius, alpha = s) }
                     }
-                plan.draw == GlowDraw.Still -> clipPath(classicBand) { drawRect(colours.primary, alpha = s) }
-                else -> clipPath(classicBand) { rotate(phase() * FULL_TURN) { drawCircle(classicSweep, radius, alpha = s) } }
+                plan.draw == GlowDraw.Still ->
+                    (outline?.band(classic, false, Offset.Zero) ?: classicBand).let { band ->
+                        clipPath(band) { drawCircle(colours.primary, radius, alpha = s) }
+                    }
+                else ->
+                    clipPath(outline?.band(classic, false, Offset.Zero) ?: classicBand) {
+                        rotate(phase() * FULL_TURN) { drawCircle(classicSweep, radius, alpha = s) }
+                    }
             }
         }
     }

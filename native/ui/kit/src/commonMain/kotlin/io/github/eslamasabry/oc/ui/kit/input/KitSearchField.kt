@@ -54,7 +54,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
@@ -247,7 +246,7 @@ public fun KitSearchField(
                     decorator = TextFieldDecorator { inner -> Box(Modifier.heightIn(min = lineBox), contentAlignment = Alignment.CenterStart) { inner() } },
                     enabled = enabled,
                     textStyle = text,
-                    cursorBrush = SolidColor(colors.accent),
+                    cursorBrush = kitCaret(colors.accent),
                     lineLimits = TextFieldLineLimits.SingleLine,
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                     onKeyboardAction = {

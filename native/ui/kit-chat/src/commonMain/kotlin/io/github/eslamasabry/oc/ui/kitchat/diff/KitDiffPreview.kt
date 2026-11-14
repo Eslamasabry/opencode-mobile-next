@@ -229,15 +229,23 @@ public fun KitDiffPreviewCard(
         shape = KitShapeId.Code,
     ) {
         CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-            Box(Modifier.fillMaxWidth().clip(shape).background(colors.surface1).padding(vertical = Space.S2.dp)) {
+            // The card's room above its first line and below its last lies inside those lines' rows, so an added or
+            // removed line's tint runs to the card's edge and takes its shape (audit 2026-11-14, c21: a square-ended
+            // green strip inside the rounded card, with dark slivers above and below it).
+            Box(Modifier.fillMaxWidth().clip(shape).background(colors.surface1).testTag("kit-diff-preview-face")) {
                 // The lines are read as the card's one name, not one by one.
                 Column(
                     Modifier.fillMaxWidth()
                         .semantics { hideFromAccessibility() }
                         .then(if (preview.more) Modifier.fadeLastLines() else Modifier)
                 ) {
+                    val last = preview.lines.lastIndex
                     preview.lines.forEachIndexed { index, line ->
-                        PreviewRow(line, gutters[index], gutterWidth, redactor::redact, colors, mono)
+                        PreviewRow(
+                            line, gutters[index], gutterWidth, redactor::redact, colors, mono,
+                            top = if (index == 0) Space.S2.dp else 0.dp,
+                            bottom = if (index == last) Space.S2.dp else 0.dp,
+                        )
                     }
                 }
             }
@@ -253,6 +261,8 @@ private fun PreviewRow(
     redact: (String) -> String,
     colors: KitColors,
     mono: TextStyle,
+    top: Dp = 0.dp,
+    bottom: Dp = 0.dp,
 ) {
     val (tint, number) =
         when (line.kind) {
@@ -261,7 +271,8 @@ private fun PreviewRow(
             else -> Color.Transparent to colors.text3
         }
     Row(
-        Modifier.fillMaxWidth().background(tint).padding(horizontal = Space.S2.dp),
+        Modifier.fillMaxWidth().testTag("kit-diff-preview-row").background(tint)
+            .padding(start = Space.S2.dp, end = Space.S2.dp, top = top, bottom = bottom),
         horizontalArrangement = Arrangement.spacedBy(Space.S2.dp),
     ) {
         BasicText(
