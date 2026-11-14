@@ -45,7 +45,12 @@ class AgentPinsParityTest {
         val catalog = pins.catalog()
         // The Flutter catalog without its entries for post-freeze agents (an entry runs from "entry(" to the next one).
         val entries = dartCatalog.split("\n      entry(")
-        val frozenDart = entries.filterNot { e -> postFreeze.any { id -> e.trimStart().startsWith("'$id'") } }.joinToString("\n      entry(")
+        // An agent's artifact can also be a `final <id> = archive(...);` before the entries (qwen's is): that
+        // definition belongs to the agent too, so a post-freeze agent's old copy of it is left out as well.
+        val postFreezeDefinition = Regex("""final (\w+) = (?:archive|binary)\(.*?\n  \);\n""", RegexOption.DOT_MATCHES_ALL)
+        val frozenDart = entries.filterNot { e -> postFreeze.any { id -> e.trimStart().startsWith("'$id'") } }
+            .joinToString("\n      entry(")
+            .let { text -> postFreezeDefinition.replace(text) { m -> if (m.groupValues[1] in postFreeze) "" else m.value } }
         val dartHashes = Regex("'([a-f0-9]{64})'").findAll(frozenDart).map { it.groupValues[1] }.toSet()
         val dartUrls = Regex("'(https://[^']+)'").findAll(frozenDart).map { it.groupValues[1] }
             .filter { it != "https://github.com" }.toSet() // the `const github` prefix itself
