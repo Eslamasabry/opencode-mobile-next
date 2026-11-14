@@ -7,6 +7,7 @@ import androidx.compose.ui.layout.layout
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.offset
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -80,6 +81,7 @@ import io.github.eslamasabry.oc.ui.kit.effects.LocalKitLiquidJoin
 import io.github.eslamasabry.oc.ui.kit.effects.rememberKitLiquidJoinBody
 import io.github.eslamasabry.oc.ui.kit.effects.LIQUID_BAR_INSET_X
 import io.github.eslamasabry.oc.ui.kit.effects.LIQUID_BAR_INSET_Y
+import io.github.eslamasabry.oc.ui.kit.effects.LIQUID_BAR_RADIUS
 import io.github.eslamasabry.oc.ui.kit.effects.kitLiquidTouchLight
 import io.github.eslamasabry.oc.ui.kit.effects.kitLiquidTouchWatch
 import io.github.eslamasabry.oc.ui.kit.effects.rememberKitLiquidTouch
@@ -894,38 +896,67 @@ public fun KitScreen(
                                     FloatingBarIntoView(headerState, { runPx }, { if (reducedMotion) null else intoSpec })
                                 }
                             )
+                    // Owner 2026-11-14 (a conversation loading for ten seconds showed no sign of it): a body that runs up
+                    // under the bar would carry the loading line up under the pane (or the status bar) as soon as its
+                    // header moved, and before the bar was measured. There the line is pinned to the bar's lower edge
+                    // instead (pinnedLine below); the body keeps the line's 2 dp, so nothing moves when loading ends.
+                    val lineInFlow = loading && !runs
                     val scrolling: @Composable (Modifier) -> Unit = { m ->
                         if (pageHeader != null) {
                             val runDp = with(LocalDensity.current) { runPx.toDp() }
                             val shownHeader: @Composable ColumnScope.() -> Unit =
                                 if (!runs) pageHeader else ({ Spacer(Modifier.height(runDp)); pageHeader() })
                             KitScrollingHeaderFrame(shownHeader, m.then(intoView).then(pageEdges), headerState) {
-                                KitLoadingBar(loading, loadingLabel.orEmpty(), if (loading) Modifier.testTag("kit-screen-loading") else Modifier)
+                                KitLoadingBar(lineInFlow, loadingLabel.orEmpty(), if (lineInFlow) Modifier.testTag("kit-screen-loading") else Modifier)
                                 Box(Modifier.fillMaxWidth().weight(1f).nestedScroll(edgeWatch)) { pageBody() }
                             }
                         } else {
                             // Dart: KitLoadingBar(loading:, label:) always takes its 2 dp, so the page never jumps.
                             Column(m) {
-                                KitLoadingBar(loading, loadingLabel.orEmpty(), if (loading) Modifier.testTag("kit-screen-loading") else Modifier)
+                                KitLoadingBar(lineInFlow, loadingLabel.orEmpty(), if (lineInFlow) Modifier.testTag("kit-screen-loading") else Modifier)
                                 Box(Modifier.fillMaxWidth().weight(1f).nestedScroll(edgeWatch).then(pageEdges)) { pageBody() }
                             }
                         }
                     }
+                    // The loading line of a body that runs under the bar: on the floating pane's lower edge (along its flat
+                    // bottom, clear of its rounded ends) or right under a pinned glass bar, wherever the body has scrolled.
+                    // With a status line or Find between them the body rests below the bar and so does the line.
+                    val pinnedLine: @Composable BoxScope.() -> Unit = {
+                        if (loading && runs) {
+                            val side = if (floats) (LIQUID_BAR_INSET_X + LIQUID_BAR_RADIUS).dp else 0.dp
+                            KitLoadingBar(
+                                true,
+                                loadingLabel.orEmpty(),
+                                Modifier.align(Alignment.TopCenter)
+                                    .layout { measurable, constraints ->
+                                        val placeable = measurable.measure(constraints)
+                                        layout(placeable.width, placeable.height) {
+                                            placeable.place(0, topClear().toInt())
+                                        }
+                                    }
+                                    .padding(horizontal = side)
+                                    .testTag("kit-screen-loading"),
+                            )
+                        }
+                    }
                     val scrollArea: @Composable (Modifier) -> Unit = { area ->
-                        if (refresh != null) {
-                            KitRefresh(
-                                refreshing = refresh.refreshing,
-                                onRefresh = refresh.onRefresh,
-                                modifier = area,
-                                enabled = refresh.enabled,
-                                hostState = refresh.state,
-                                // Under a floating bar the disc comes out below the bar, not under it.
-                                indicatorTopPx = if (floats) ({ runPx }) else null,
-                            ) {
+                        Box(area) {
+                            if (refresh != null) {
+                                KitRefresh(
+                                    refreshing = refresh.refreshing,
+                                    onRefresh = refresh.onRefresh,
+                                    modifier = Modifier.fillMaxSize(),
+                                    enabled = refresh.enabled,
+                                    hostState = refresh.state,
+                                    // Under a floating bar the disc comes out below the bar, not under it.
+                                    indicatorTopPx = if (floats) ({ runPx }) else null,
+                                ) {
+                                    scrolling(Modifier.fillMaxSize())
+                                }
+                            } else {
                                 scrolling(Modifier.fillMaxSize())
                             }
-                        } else {
-                            scrolling(area)
+                            pinnedLine()
                         }
                     }
                     val bottomBlock: @Composable (Modifier) -> Unit = { place ->

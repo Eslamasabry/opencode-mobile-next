@@ -23,6 +23,14 @@
     <string name="agentsTabComputers">On computers</string>
     <string name="agentsPhoneReady">This phone is ready</string>
     <string name="agentsPhoneReadyDetails">This phone is ready · %1$s · Android %2$s</string>
+    <string name="agentsUpdateReading">checking your agents for updates</string>
+    <string name="agentsUpdateWaitingBusy">agent update waits until your agents are idle</string>
+    <string name="agentsUpdateWaitingSetup">agent update waits for phone setup to finish</string>
+    <string name="agentsUpdateWaitingSwitch">agent update waits for the phone server move to finish</string>
+    <string name="agentsUpdateWaitingMetered">agent update waits for Wi-Fi</string>
+    <string name="agentsUpdateUpdating">updating %1$s</string>
+    <string name="agentsUpdateReadFailed">agent update could not check your agents, it tries again when the app opens</string>
+    <string name="agentsUpdateRefused">agent update could not start, use Install on the agent</string>
     <string name="agentsCheckAgain">Refresh</string>
     <string name="agentsAddComputerLine">Use Claude Code or Pi on a computer that runs Paseo.</string>
     <string name="agentsComputerLooking">Looking for agents on this computer…</string>

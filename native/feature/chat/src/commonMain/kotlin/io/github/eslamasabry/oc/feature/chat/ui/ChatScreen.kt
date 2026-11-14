@@ -218,6 +218,7 @@ import io.github.eslamasabry.oc.ui.words.res.connectionReconnectingQuiet
 import io.github.eslamasabry.oc.ui.words.res.connectionAgentStartFailed
 import io.github.eslamasabry.oc.ui.words.res.connectionAgentStarting
 import io.github.eslamasabry.oc.ui.words.res.connectStartingPhone
+import io.github.eslamasabry.oc.ui.words.res.connectUpdatingAgents
 import io.github.eslamasabry.oc.ui.words.res.connectUpdatingPhone
 import io.github.eslamasabry.oc.ui.words.res.launchUiSessionWaiting
 import io.github.eslamasabry.oc.ui.words.res.connectionRestartAgent
@@ -536,6 +537,8 @@ public fun ChatScreen(
         remember(actions, prompts) {
             ComposerChrome(
                 busy = { latest.live != null },
+                // The box stands in its place while the conversation loads; Send waits for the load.
+                loading = { latest.phase == ChatPhase.Loading },
                 // Review #12: the box agrees with the run's state; a decision on its way waits on no one.
                 requestWaiting = { RunTailRules.waitsForYou(requestState.cards.map { it.state }) || formPending },
                 // A send brings the newest message into view at once (audit 1, k6: "Jump to latest" showed after a send
@@ -728,6 +731,23 @@ public fun ChatScreen(
                     }
                     .chatTypingLanding(chrome.typing, pageFocus) { coveredNow }
             ) {
+                val screenStatus =
+                    if (demoMode)
+                        KitStatus(
+                            KitStatusKind.Info,
+                            stringResource(Res.string.stateDemoDisclosure),
+                            id = "offline-demo",
+                        )
+                    else
+                        KitStatus.highest(
+                            listOf(
+                                // An unconfirmed send is said once, on its own bubble with Check again.
+                                state.status
+                                    ?.takeUnless { it.kind == ChatStatusKind.SendUnconfirmed }
+                                    ?.let { statusLine(it, actions, header?.state?.serverName, ::openConnectionDetails) },
+                                appStatus,
+                            )
+                        )
                 KitScreen(
                     modifier = Modifier.fillMaxSize(),
                     page = true,
@@ -934,23 +954,7 @@ public fun ChatScreen(
                             }
                         }
                     },
-                    status =
-                        if (demoMode)
-                            KitStatus(
-                                KitStatusKind.Info,
-                                stringResource(Res.string.stateDemoDisclosure),
-                                id = "offline-demo",
-                            )
-                        else
-                            KitStatus.highest(
-                                listOf(
-                                    // An unconfirmed send is said once, on its own bubble with Check again.
-                                    state.status
-                                        ?.takeUnless { it.kind == ChatStatusKind.SendUnconfirmed }
-                                        ?.let { statusLine(it, actions, header?.state?.serverName, ::openConnectionDetails) },
-                                    appStatus,
-                                )
-                            ),
+                    status = screenStatus,
                     loading = state.phase == ChatPhase.Loading,
                     loadingLabel = stringResource(Res.string.chatLoadingConversation),
                     bottom = {
@@ -989,10 +993,11 @@ public fun ChatScreen(
                                     details = requestDetails,
                                 )
                             if (requests.card == null) formSlot?.invoke(Modifier)
-                            // The composer is the conversation's: it shows once the conversation has loaded
-                            // (Flutter chat_states.dart: no composer under the skeleton or the could-not-load
-                            // page), as wide as the conversation's pane (E20-S27).
-                            if (state.phase == ChatPhase.Live)
+                            // The composer is the conversation's, as wide as the conversation's pane (E20-S27). It
+                            // stands in its place while the conversation loads (owner 2026-11-14: the page lost its
+                            // shape and showed nothing), so the person sees where they will type; Send waits for the
+                            // load (ComposerChrome.loading). The could-not-load page has none.
+                            if (state.phase == ChatPhase.Live || state.phase == ChatPhase.Loading)
                               CompositionLocalProvider(LocalReplyHint provides replyHint) {
                                 composerHost.Composer(
                                     ComposerTarget(
@@ -1014,7 +1019,9 @@ public fun ChatScreen(
                         // First load: the skeleton under the loading line, never an empty-state
                         // text
                         // (plan 09 §6.5).
-                        ChatPhase.Loading -> ChatLoadingBody()
+                        // A slow load says what it does in words, unless the screen's line already says something.
+                        ChatPhase.Loading ->
+                            ChatLoadingBody(stringResource(Res.string.chatLoadingConversation).takeIf { screenStatus == null })
                         is ChatPhase.Failed ->
                             ChatLoadError(
                                 title = stringResource(Res.string.chatLoadFailedTitle),
@@ -1483,6 +1490,7 @@ private fun connectionLine(
             stringResource(
                 when (wait) {
                     io.github.eslamasabry.oc.feature.chat.world.ChatServerWait.Updating -> Res.string.connectUpdatingPhone
+                    io.github.eslamasabry.oc.feature.chat.world.ChatServerWait.UpdatingAgents -> Res.string.connectUpdatingAgents
                     io.github.eslamasabry.oc.feature.chat.world.ChatServerWait.Starting -> Res.string.connectStartingPhone
                     io.github.eslamasabry.oc.feature.chat.world.ChatServerWait.Connecting -> Res.string.launchUiSessionWaiting
                 }

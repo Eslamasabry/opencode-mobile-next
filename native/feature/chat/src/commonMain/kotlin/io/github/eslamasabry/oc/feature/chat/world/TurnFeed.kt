@@ -72,10 +72,39 @@ internal class TurnFeedKeeper(private val sessionId: String) {
     private val state = MutableStateFlow(TurnFeed.Empty)
     val feed: StateFlow<TurnFeed> = state.asStateFlow()
 
-    fun reset() {
+    /** What the live ledger holds now (never the [known] one shown in its place). */
+    private var live: LedgerSnapshot = LedgerSnapshot.Empty
+
+    /**
+     * Cache-first: the messages last known (the page kept from a past visit, or the last live ledger before a reload),
+     * shown while the live ledger has nothing yet, exactly as the chat world shows the last known rows. The rows and
+     * the turn facts are read from the same messages, so a reopened conversation's first frame already knows who ended
+     * a step and which files an edit changed. The live ledger replaces it at its first message or history page.
+     */
+    private var known: LedgerSnapshot? = null
+
+    private fun shown(): LedgerSnapshot = if (live.messages.isNotEmpty()) live else known ?: live
+
+    /** The live ledger's messages, oldest first (what a kept page records). */
+    fun liveMessages(): List<MessageWithParts> = live.messages
+
+    /**
+     * [keepShown]: the messages shown now stay until the new live ledger has its own (a reload or another graph);
+     * false forgets them too (the conversation is gone).
+     */
+    fun reset(keepShown: Boolean = true) {
+        known = if (!keepShown) null else live.takeIf { it.messages.isNotEmpty() } ?: known
         ledger = TurnLedger(sessionId)
+        live = LedgerSnapshot.Empty
         timing = ReplyTimingState()
-        state.value = TurnFeed(windows = state.value.windows)
+        state.value = TurnFeed(ledger = shown(), windows = state.value.windows)
+    }
+
+    /** Cache-first: [messages] (a kept page, oldest first) stand in until the live ledger has messages. */
+    fun showKept(messages: List<MessageWithParts>) {
+        if (live.messages.isNotEmpty() || messages.isEmpty()) return
+        known = TurnLedger(sessionId).also { it.load(messages) }.snapshot()
+        state.value = state.value.copy(ledger = shown())
     }
 
     fun link(link: ChatLink) {
@@ -90,10 +119,13 @@ internal class TurnFeedKeeper(private val sessionId: String) {
      * for, that idle no longer holds (B8) until [idle] says it again; the same page read again keeps it (no flicker).
      */
     fun history(page: List<MessageWithParts>, beforeVersion: Long = Long.MAX_VALUE, newest: Boolean = false) {
-        val before = state.value.ledger.newestMark()
+        val before = live.newestMark()
         ledger.load(page, beforeVersion)
         val s = state.value
         val snapshot = ledger.snapshot()
+        live = snapshot
+        // The server answered: its page is the truth from here on, even when it is empty.
+        known = null
         state.value = s.copy(ledger = snapshot, idleSaid = s.idleSaid && !(newest && snapshot.newestMark() != before))
     }
 
@@ -161,9 +193,11 @@ internal class TurnFeedKeeper(private val sessionId: String) {
             else ->
                 if (ledger.apply(event)) {
                     val snapshot = ledger.snapshot()
+                    val before = live
+                    live = snapshot
                     state.value =
                         s.copy(
-                            ledger = snapshot,
+                            ledger = shown(),
                             lastProgressAtMs = atMs,
                             // Fresh output means the retry worked.
                             retry = null,
@@ -173,7 +207,7 @@ internal class TurnFeedKeeper(private val sessionId: String) {
                             idleSaid =
                                 s.idleSaid &&
                                     !active(event) &&
-                                    snapshot.newestMark() == s.ledger.newestMark(),
+                                    snapshot.newestMark() == before.newestMark(),
                         )
                 } else if (event is GatewayEvent.PartDelta && event.sessionId.raw == sessionId) {
                     state.value = s.copy(lastProgressAtMs = atMs, retry = null, idleSaid = false)

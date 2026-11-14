@@ -73,6 +73,7 @@ import io.github.eslamasabry.oc.ui.words.res.linuxMgrKindServer
 import io.github.eslamasabry.oc.ui.words.res.linuxMgrProblemBusy
 import io.github.eslamasabry.oc.ui.words.res.linuxMgrProblemFailed
 import io.github.eslamasabry.oc.ui.words.res.linuxMgrProblemJob
+import io.github.eslamasabry.oc.ui.words.res.linuxMgrProblemNotAnswering
 import io.github.eslamasabry.oc.ui.words.res.linuxMgrProblemSetup
 import io.github.eslamasabry.oc.ui.words.res.linuxMgrProblemUnavailable
 import org.jetbrains.compose.resources.stringResource
@@ -88,6 +89,7 @@ internal fun LinuxProblem.words(): String =
             LinuxProblem.JobRunning -> Res.string.linuxMgrProblemJob
             LinuxProblem.Unavailable -> Res.string.linuxMgrProblemUnavailable
             LinuxProblem.Failed -> Res.string.linuxMgrProblemFailed
+            LinuxProblem.NotAnswering -> Res.string.linuxMgrProblemNotAnswering
         }
     )
 

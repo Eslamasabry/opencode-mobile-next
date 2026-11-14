@@ -797,6 +797,7 @@ internal class GraphChatWorld(
                         val down = waiting || link != ChatLink.Live
                         when {
                             down && phone == PhoneServerWait.Updating -> ChatServerWait.Updating
+                            down && phone == PhoneServerWait.UpdatingAgents -> ChatServerWait.UpdatingAgents
                             down && phone == PhoneServerWait.Starting -> ChatServerWait.Starting
                             waiting -> ChatServerWait.Connecting
                             else -> null
@@ -817,6 +818,10 @@ internal class GraphChatWorld(
     private val appStartsServer: Boolean
         get() = serverOnThisPhone || serverIsAgentHelper
 
+    /** The phone's agents are being updated and this conversation's server is their helper: it waits and says so. */
+    private fun agentsUpdating(): Boolean =
+        phoneServer?.waiting(ref.profileId)?.value == PhoneServerWait.UpdatingAgents
+
     /** This phone's server is starting or updating: a wait for it does not count toward [NOT_READY_LIMIT_MS]. */
     private fun phoneBusy(): Boolean =
         (phoneServer?.waiting(ref.profileId)?.value ?: PhoneServerWait.None) != PhoneServerWait.None
@@ -830,12 +835,12 @@ internal class GraphChatWorld(
             is Failure.Refused ->
                 failure.reason == RefusalReason.StaleScope || failure.reason == RefusalReason.ProfileClosing
             is Failure.Network,
-            is Failure.TimedOut -> appStartsServer
+            is Failure.TimedOut -> appStartsServer || agentsUpdating()
             is Failure.Busy ->
-                appStartsServer &&
+                (appStartsServer &&
                     (failure.kind == BusyKind.Starting ||
                         failure.kind == BusyKind.Stopping ||
-                        failure.kind == BusyKind.Overloaded)
+                        failure.kind == BusyKind.Overloaded)) || agentsUpdating()
             else -> false
         }
 
@@ -910,7 +915,7 @@ internal class GraphChatWorld(
             mutableLink.value = ChatLink.Offline
             // This phone's server: the app opens its connection by itself (after a start or an update), so the page
             // waits for it instead of failing. A computer's lost connection says so at once, as before.
-            if (appStartsServer && mutableLoad.value !is ChatLoad.Live) loadFailed(OFFLINE)
+            if ((appStartsServer || agentsUpdating()) && mutableLoad.value !is ChatLoad.Live) loadFailed(OFFLINE)
             else mutableLoad.value = ChatLoad.Failed(OFFLINE)
             publishVoiceConversation()
             return
@@ -1035,7 +1040,7 @@ internal class GraphChatWorld(
                             mutableLoad.value = ChatLoad.Failed(Failure.NotFound())
                             nextCursor = null
                             mutableOlder.value = false
-                            feedKeeper.reset()
+                            feedKeeper.reset(keepShown = false)
                             recentModels.rememberSession(ref.profileId.raw, sid.raw, null)
                         }
                     }
@@ -1232,10 +1237,14 @@ internal class GraphChatWorld(
         keptJob =
             registry.appScope.launch(registry.mainContext) {
                 val kept = memory.peek(ref) ?: memory.read(ref) ?: return@launch
-                if (historyReconciled || kept.messages.isEmpty()) return@launch
+                if (historyReconciled || kept.history.isEmpty()) return@launch
+                val messages = kept.messages()
                 val handle = memory.detached(ref)
                 keptHandle = handle
                 if (mutableTitle.value == null) kept.title?.let { mutableTitle.value = it }
+                // The turn facts read the same kept messages as the rows, and are there before the rows draw: a
+                // declined step reads "You declined this" and an edit keeps its files from the first frame.
+                feedKeeper.showKept(messages)
                 launch {
                     handle.state.collect { s ->
                         if (historyReconciled || s.rows.isEmpty()) return@collect
@@ -1245,7 +1254,8 @@ internal class GraphChatWorld(
                         }
                     }
                 }
-                handle.loadHistory(kept.messages)
+                val bridge = P3Bridge(sid.raw)
+                handle.loadHistory(messages.map(bridge::message))
             }
     }
 
@@ -1271,8 +1281,11 @@ internal class GraphChatWorld(
         val memory = lastKnown ?: return
         if (!historyReconciled) return
         val title = mutableTitle.value
+        // The full messages the turn facts read (taken now: a reload resets the ledger), with the words the rows drew.
+        val ledger = feedKeeper.liveMessages()
         registry.appScope.launch(registry.mainContext) {
-            val messages = handle.keptMessages()
+            val messages =
+                io.github.eslamasabry.oc.engine.transcript.KeptTranscript.withWords(ledger, handle.keptMessages())
             if (messages.isNotEmpty()) memory.keep(ref, title, messages)
         }
     }

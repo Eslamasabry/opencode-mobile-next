@@ -11,6 +11,7 @@ import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.data.kv.PrefValue
 import io.github.eslamasabry.oc.core.common.AppCoroutineScope
+import io.github.eslamasabry.oc.engine.agents.install.AgentUpdateStep
 import io.github.eslamasabry.oc.feature.chat.world.ChatPhoneServer
 import io.github.eslamasabry.oc.feature.chat.world.PhoneServerWait
 import io.github.eslamasabry.oc.feature.phone.presentation.PhoneServerFacts
@@ -36,6 +37,7 @@ class AndroidChatPhoneServer(
     private val stores: PreviewStores,
     private val server: PhoneServerSource,
     private val agentHost: Lazy<AppLocalAgentHostStarter>,
+    private val agentUpdate: PhoneAgentUpdateStatus,
     private val appScope: AppCoroutineScope,
 ) : ChatPhoneServer {
     override fun runsHere(profile: ProfileId): Boolean =
@@ -66,7 +68,23 @@ class AndroidChatPhoneServer(
         server.facts.map(::waitOf).distinctUntilChanged().stateIn(appScope, SharingStarted.Eagerly, waitOf(server.facts.value))
     }
 
-    override fun waiting(profile: ProfileId): StateFlow<PhoneServerWait> = if (runsHere(profile)) wait else NOT_WAITING
+    /**
+     * The phone's agents are being updated (the automatic update's install runs): their helper is down or about to be
+     * replaced, so an agent conversation waits and says so instead of showing a saved list or a failure.
+     */
+    private val agentsWait: StateFlow<PhoneServerWait> by lazy {
+        agentUpdate.decision
+            .map { if (it.step == AgentUpdateStep.Updating) PhoneServerWait.UpdatingAgents else PhoneServerWait.None }
+            .distinctUntilChanged()
+            .stateIn(appScope, SharingStarted.Eagerly, PhoneServerWait.None)
+    }
+
+    override fun waiting(profile: ProfileId): StateFlow<PhoneServerWait> =
+        when {
+            runsHere(profile) -> wait
+            isAgentHelper(profile) -> agentsWait
+            else -> NOT_WAITING
+        }
 
     override suspend fun restart(profile: ProfileId): Outcome<Unit> =
         if (runsHere(profile)) server.restart()

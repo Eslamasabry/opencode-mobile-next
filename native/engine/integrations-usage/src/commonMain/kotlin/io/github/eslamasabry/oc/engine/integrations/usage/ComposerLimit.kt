@@ -77,7 +77,7 @@ public fun composerLimitProvider(id: String): String {
 }
 
 /** Model families a window can be limited to ("seven_day_opus"); a window naming none applies to every model. */
-private val modelFamilies = listOf("opus", "sonnet", "haiku", "fable", "flash")
+private val modelFamilies = listOf("opus", "sonnet", "haiku", "fable", "mythos", "flash")
 
 private fun UsageWindow.family(): String? {
     val words = (id + " " + label).lowercase()

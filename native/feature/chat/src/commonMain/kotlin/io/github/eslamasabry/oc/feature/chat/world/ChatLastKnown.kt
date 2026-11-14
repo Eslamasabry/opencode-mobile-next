@@ -1,9 +1,9 @@
 package io.github.eslamasabry.oc.feature.chat.world
 
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
+import io.github.eslamasabry.oc.core.model.transcript.MessageWithParts
 import io.github.eslamasabry.oc.engine.transcript.KeptTranscript
 import io.github.eslamasabry.oc.engine.transcript.TranscriptHandle
-import io.github.eslamasabry.oc.engine.transcript.state.MessageWithParts
 
 /**
  * Cache-first (owner rule, 2026-11-09): a conversation opened again draws its real transcript at once from the page
@@ -18,7 +18,10 @@ public interface ChatLastKnown {
     /** The kept page, read from storage when not in memory. Null when none, or when it came from another server. */
     public suspend fun read(ref: ConversationRef): KeptTranscript?
 
-    /** Keeps the newest of [messages] (oldest first) and the title, trimmed to the store's cap. */
+    /**
+     * Keeps the newest of [messages] (oldest first, in core's full types: the turn facts read them too) and the title,
+     * trimmed to the store's cap.
+     */
     public suspend fun keep(ref: ConversationRef, title: String?, messages: List<MessageWithParts>)
 
     /** A transcript with no server behind it, that draws a kept page with the live transcript's rows. */

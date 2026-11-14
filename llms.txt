@@ -1,0 +1,29 @@
+# OpenCode Mobile
+
+> OpenCode Mobile is a native Kotlin Android app (version 3.0.x) for running coding agents from your phone. It runs Claude Code, Codex, OpenCode and other agents in a Linux that the app installs on the phone through an agent helper, or connects to OpenCode 2 and other agents running on your computer.
+
+The app needs Android 8 or newer; agents on the phone need a 64-bit phone. You ask for a change in a conversation, approve commands from a notification, a widget or the conversation, review the diff and use Git without leaving the app. It talks only to servers you choose, and it is MIT licensed. Version 3 installs over the 2.1 releases and keeps their data. The links below are the documents that are current for the native app; the Optional section is for people building or releasing it.
+
+## Docs
+
+- [README](https://raw.githubusercontent.com/Eslamasabry/opencode-mobile-next/master/README.md): What the app is, the agents it runs, how to install it and choose between this phone and a computer, compatibility, updating and signing.
+- [Privacy policy](https://raw.githubusercontent.com/Eslamasabry/opencode-mobile-next/master/PRIVACY.md): Where your data goes, which connections the app accepts without HTTPS, and the optional reports and usage numbers that stay off unless you turn them on.
+- [Release notes 3.0.0+10030](https://raw.githubusercontent.com/Eslamasabry/opencode-mobile-next/master/docs/releases/v3.0.0+10030.md): The newest release: what changed for you in conversations, permissions, Home, agents on this phone, and computers and AI Team.
+- [Release notes 3.0.0+10020](https://raw.githubusercontent.com/Eslamasabry/opencode-mobile-next/master/docs/releases/v3.0.0+10020.md): The first native release, with the migration notes for people coming from 2.1.5, such as needing OpenCode 2 on the computer.
+- [Run OpenCode 2 on a computer](https://raw.githubusercontent.com/Eslamasabry/opencode-mobile-next/master/docs/ubuntu-host.md): Install and start a loopback-only OpenCode 2 server, bring it within reach of the phone with USB, SSH or HTTPS, and pair with opencode2 pair.
+- [Connect to Codex on a computer](https://raw.githubusercontent.com/Eslamasabry/opencode-mobile-next/master/docs/codex-connection.md): Start Codex app-server with a capability token, reach it with a tunnel or wss, add it in the app, and what the connection supports.
+- [Connect to Claude Code through Paseo](https://raw.githubusercontent.com/Eslamasabry/opencode-mobile-next/master/docs/paseo-connection.md): Run the Paseo daemon beside your agent command-line tools without its relay, listen on a private network, and add it in the app.
+- [Run an AI team on a computer](https://raw.githubusercontent.com/Eslamasabry/opencode-mobile-next/master/docs/ai-team-host.md): Set up a Gas City supervisor on a computer so the phone shows and steers several agents on your private network. The on-phone section is older.
+- [Use the app with a server you already have](https://raw.githubusercontent.com/Eslamasabry/opencode-mobile-next/master/docs/switching-clients.md): Open the conversations an OpenCode server already holds, what is shared with other clients, what stays on the phone, and how to connect over a network.
+- [Contributing](https://raw.githubusercontent.com/Eslamasabry/opencode-mobile-next/master/CONTRIBUTING.md): Toolchain, the checks a change must pass, test naming, module boundaries, the two security rules, pull request contents and how reports are triaged.
+
+## Optional
+
+- [Native build rules](https://raw.githubusercontent.com/Eslamasabry/opencode-mobile-next/master/native/AGENTS.md): Toolchain versions, the module and testing rules for the Kotlin code, and a table of the Gradle tasks to run for each need.
+- [Release procedure](https://raw.githubusercontent.com/Eslamasabry/opencode-mobile-next/master/docs/native/release.md): How a native release is built, gated, tagged and published as a draft, and how a broken release is fixed forward with a higher version code.
+- [Release identity and signing](https://raw.githubusercontent.com/Eslamasabry/opencode-mobile-next/master/docs/native/release-identity.md): Which package and signing key each build uses, why a build must install over the last one, and which processor types ship.
+- [Strings and translations](https://raw.githubusercontent.com/Eslamasabry/opencode-mobile-next/master/native/tools/strings/README.md): The pipeline for adding English copy and keeping the other languages in step, with the drift check, glossaries and priorities.
+- [Check ladder and push gates](https://raw.githubusercontent.com/Eslamasabry/opencode-mobile-next/master/native/tool/README.md): The scripts that run a module's tests while editing, before a push and at a checkpoint, and what their exit codes mean.
+- [Behaviour catalog](https://raw.githubusercontent.com/Eslamasabry/opencode-mobile-next/master/native/catalog/README.md): The list of behaviours the app must keep, which tests are named after, and the rules for adding to it.
+- [Health and diagnostics telemetry](https://raw.githubusercontent.com/Eslamasabry/opencode-mobile-next/master/docs/telemetry/health-and-diagnostics.md): The consent choices, the fixed values that may be sent, and what is never sent, for the optional usage, crash and problem reports.
+- [Moving from the Flutter app](https://raw.githubusercontent.com/Eslamasabry/opencode-mobile-next/master/docs/native/migration/README.md): Every store the 2.1.5 app kept on a phone and how version 3 reads it, so updating in place keeps servers, settings and projects.

@@ -151,6 +151,7 @@ import io.github.eslamasabry.oc.ui.words.res.draftAttachmentsFailed
 import io.github.eslamasabry.oc.ui.words.res.draftSaveFailed
 import io.github.eslamasabry.oc.ui.words.res.kitComposerAddToTurn
 import io.github.eslamasabry.oc.ui.words.res.kitComposerField
+import io.github.eslamasabry.oc.ui.words.res.chatLoadingConversation
 import io.github.eslamasabry.oc.ui.words.res.kitComposerSend
 import io.github.eslamasabry.oc.ui.words.res.kitComposerSendAfter
 import io.github.eslamasabry.oc.ui.words.res.kitComposerSending
@@ -415,6 +416,7 @@ public fun BasicComposer(
     // path.
     val canSend =
         state.available &&
+            !chrome.loading() &&
             editorReady &&
             state.draft.ready &&
             state.draft.failure == null &&
@@ -888,8 +890,11 @@ public fun BasicComposer(
         val waitingRequest = chrome.requestWaiting()
         val stopShown = busy || waitingRequest
         val typed = !wordsBlank || state.draft.attachments.isNotEmpty()
+        // The conversation is still loading: the box takes words, Send waits for the load.
+        val loadingConversation = chrome.loading()
         val sendReady =
             state.available &&
+                !loadingConversation &&
                 editorReady &&
                 state.draft.ready &&
                 state.draft.failure == null &&
@@ -1214,7 +1219,10 @@ public fun BasicComposer(
                                         if (sendReady && typed && !voiceActive) KitEnabled.Enabled
                                         else
                                             KitEnabled.Disabled(
-                                                stringResource(Res.string.kitComposerField)
+                                                stringResource(
+                                                    if (loadingConversation) Res.string.chatLoadingConversation
+                                                    else Res.string.kitComposerField
+                                                )
                                             ),
                                     working = state.sending,
                                     onLongClick =

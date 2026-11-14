@@ -122,6 +122,11 @@ public class ComposerChrome(
      * sheet. Null = none.
      */
     public val promptSettings: (@Composable (close: () -> Unit) -> Unit)? = null,
+    /**
+     * The conversation is still loading (owner 2026-11-14): the box is drawn in its place so the page keeps its shape and
+     * the person sees where they will type, and may start typing; Send waits until the conversation has loaded.
+     */
+    public val loading: () -> Boolean = { false },
 )
 
 /** N-55: how the message field takes focus, registered by the composer while it is shown. */

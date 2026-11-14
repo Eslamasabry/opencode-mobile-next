@@ -12,6 +12,8 @@ import kotlin.time.Instant
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -25,6 +27,7 @@ import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.takeWhile
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 
 /**
  * This phone's state holder (plan 07 F01). Plain Kotlin over a scope so its rules test on virtual
@@ -62,6 +65,8 @@ public class ThisPhoneModel(
         val measuringStorage: Boolean = false,
         val detailsOpen: Boolean = false,
         val installedOpen: Boolean = false,
+        /** The details read has run past [DETAILS_LIMIT_MS]: say so instead of "Checking…". */
+        val detailsLate: Boolean = false,
         /** The connection to this phone's server uses OpenCode's free model (read while shown and running). */
         val freeModel: Boolean = false,
     )
@@ -92,8 +97,18 @@ public class ThisPhoneModel(
         facts: PhoneServerFacts,
         l: Local,
         exitNotice: PhoneExitNotice?,
-        reading: PhoneDetailsUi,
+        read: PhoneDetailsUi,
     ): ThisPhoneUi {
+        // A read that ran past its limit stops saying "Checking…": the page says it could not
+        // check yet, with Try again, and the answer replaces that line whenever it arrives.
+        val reading =
+            if (l.detailsLate && read.installed && !read.addingTools)
+                read.copy(
+                    loading = false,
+                    inventoryFailure =
+                        read.inventoryFailure ?: Failure.Runtime(RuntimeProblem.Generic),
+                )
+            else read
         val shownFacts =
             if (l.working == PhoneOp.Start || l.working == PhoneOp.Restart)
                 facts.copy(starting = true)
@@ -321,7 +336,7 @@ public class ThisPhoneModel(
                 details.singleOrNull()?.refresh()
                 refreshStorage()
                 readStorage(includeBuiltinHost = false)
-                launch { phoneDetails?.refresh() }
+                launch { readDetails() }
                 local.update { it.copy(now = clock.now()) }
                 coroutineScope {
                     if (processes != null)
@@ -386,7 +401,27 @@ public class ThisPhoneModel(
         }
 
     override fun refreshDetails() {
-        scope.launch { phoneDetails?.refresh() }
+        scope.launch { readDetails() }
+    }
+
+    private var detailsRead: Deferred<Unit>? = null
+
+    /**
+     * Reads the details (the Installed list among them) for at most [DETAILS_LIMIT_MS]. The read runs
+     * on, one at a time (Try again while one runs joins it), and its answer is shown whenever it
+     * arrives; only the wait ends, so "Checking…" cannot last past the limit.
+     */
+    private suspend fun readDetails() {
+        val source = phoneDetails ?: return
+        val read = detailsRead?.takeIf { it.isActive } ?: scope.async { source.refresh() }.also { detailsRead = it }
+        local.update { it.copy(detailsLate = false) }
+        val finished = withTimeoutOrNull(DETAILS_LIMIT_MS) { read.await(); true } ?: false
+        if (finished) return
+        local.update { it.copy(detailsLate = true) }
+        scope.launch {
+            read.join()
+            if (detailsRead === read) local.update { it.copy(detailsLate = false) }
+        }
     }
 
     override fun showDetails(expanded: Boolean) {
@@ -431,11 +466,14 @@ public class ThisPhoneModel(
                         },
                 )
             }
-            if (visible.value) phoneDetails?.refresh()
+            if (visible.value) readDetails()
         }
     }
 
-    private companion object {
+    internal companion object {
+        /** The longest "Checking…" waits for the installed list; the read itself goes on. */
+        const val DETAILS_LIMIT_MS: Long = 60_000
+
         /**
          * Versions read the way the manager trims them: blank is unknown, a leading `v` is ignored
          * (B-LINUX-024/078).

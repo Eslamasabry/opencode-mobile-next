@@ -23,11 +23,18 @@ class CapabilitySnapshotTest {
     /**
      * Native-only flags, appended after Dart's 85 (`claudeAgent`, which the Flutter freeze tip had and the released
      * app that lib/ holds since the master merge does not; N-41 `projectFolderCreation`; Paseo agent features; the
-     * project worktree inspection pane; B-169 per-prompt model choice). Dart has no twin for them; each defaults to
+     * project worktree inspection pane; B-169 per-prompt model choice; pull request 142 custom providers). Dart has no twin for them; each defaults to
      * false.
      */
     private val nativeOnly =
-        listOf("claudeAgent", "projectFolderCreation", "agentFeatures", "worktreeInspection", "promptModelChoice")
+        listOf(
+            "claudeAgent",
+            "projectFolderCreation",
+            "agentFeatures",
+            "worktreeInspection",
+            "promptModelChoice",
+            "customProviders",
+        )
 
     @Test
     fun `capability snapshot - every Kotlin default equals the Dart vector file, in Dart order`() {

@@ -978,4 +978,5 @@
     <string name="thermalGuardSaveFailed">تعذّر حفظ الحماية من الحرارة. حاول مرة أخرى.</string>
     <string name="thisPhoneRestartBody">المحادثات الجارية تتوقف وتبقى محادثاتك محفوظة. يستغرق ذلك عادةً أقل من دقيقة.</string>
     <string name="thisPhoneRestartingRow">جارٍ إعادة التشغيل. يستغرق ذلك عادةً أقل من دقيقة…</string>
+    <string name="linuxMgrProblemNotAnswering">يستغرق Linux وقتًا طويلًا في الرد. حاول مرة أخرى بعد قليل.</string>
 </resources>

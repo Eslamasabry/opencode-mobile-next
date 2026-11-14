@@ -64,3 +64,7 @@ wiped (see Floor); they never come back and do not raise the floor.
 | 10021 | build | 2026-11-14 | owner takeover build ca1e857d4 |
 | 10022 | build | 2026-11-14 | owner test build 1f130e542 (edge light branch) |
 | 10030 | release | 2026-11-14 | native release 3.0.0+10030 (owner lineage) |
+| 10031 | build | 2026-11-14 | owner fix build of 0e4be570e (fix-only branch over release 10030) |
+| 10032 | build | 2026-11-14 | owner fix build of 11d62865c (release 10030 + open-while-starting incl. the Claude Code conversation fix) |
+| 10035 | build | 2026-11-14 | owner build of 679a414bc2 (10032 + Paseo 0.15.4, all agent pins, automatic agent update, visible loading) |
+| 10038 | build | 2026-11-14 | owner build of e5c7bf25c5 (agent update survives a stop and resumes; agent conversations wait; home says what is starting) |

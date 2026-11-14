@@ -695,4 +695,6 @@
     <string name="chatRequestAskReadFolder">Baca folder ini?</string>
     <string name="appUpdateUpdatedTo">Diperbarui ke versi %1$s</string>
     <string name="capabilityScreenHeading">Yang bisa dilakukan server ini</string>
+    <string name="connectUpdatingPhone">Memperbarui OpenCode di ponsel ini…</string>
+    <string name="connectUpdatingAgents">Memperbarui agen Anda di ponsel ini. Percakapan terbuka setelah selesai.</string>
 </resources>

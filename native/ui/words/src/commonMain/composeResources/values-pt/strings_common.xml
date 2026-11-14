@@ -718,4 +718,6 @@
     <string name="chatRequestAskReadFolder">Ler esta pasta?</string>
     <string name="appUpdateUpdatedTo">Atualizado para a versão %1$s</string>
     <string name="capabilityScreenHeading">O que este servidor pode fazer</string>
+    <string name="connectUpdatingPhone">Atualizando o OpenCode neste celular…</string>
+    <string name="connectUpdatingAgents">Atualizando seus agentes neste celular. A conversa abre quando terminar.</string>
 </resources>

@@ -33,6 +33,12 @@ public enum class LinuxProblem {
 
     /** The act ran and did not finish. */
     Failed,
+
+    /**
+     * Linux is set up but did not answer in time (the phone is slow or busy). Never says "not set
+     * up"; the way forward is Try again.
+     */
+    NotAnswering,
 }
 
 /** A manager answer: the value, or a problem with optional technical text for Details only. */
@@ -71,6 +77,9 @@ public class LinuxManager(
     private val storageLane = Mutex()
     private var storageScanned = false
     private val cleanupReceipts = mutableMapOf<LinuxCleanupId, String>()
+    /** Stages a scan measured before one ran out of time; Try again continues from them. */
+    private val storageStages = linkedMapOf<LinuxStorageCategory, String>()
+    private val stageSeconds = mutableMapOf<LinuxStorageCategory, Long>()
     private val scanProgress = MutableStateFlow(LinuxStorageScan())
     public val storageScan: StateFlow<LinuxStorageScan> = scanProgress.asStateFlow()
 
@@ -80,27 +89,57 @@ public class LinuxManager(
      * Runs [script]; a passing failure (another phone task, or a moment when ownership of every
      * program could not be proved) is tried twice more before the page says "busy" (B-LINUX-092). A
      * non-zero exit is [LinuxProblem.Failed].
+     *
+     * Every read ends: a read that ran out of time (exit [TIMED_OUT]) or failed for no named reason
+     * is tried once more automatically (the first with a longer limit, unless [retryOnTimeout] is
+     * false), and then answers [LinuxProblem.NotAnswering]. [LinuxProblem.Unavailable] is only for
+     * a Linux that is really not there: a set-up Linux that is merely slow or busy never gets it.
      */
-    internal suspend fun run(script: String, timeoutSeconds: Long = 60): LinuxAnswer<String> {
+    internal suspend fun run(
+        script: String,
+        timeoutSeconds: Long = 60,
+        retryOnTimeout: Boolean = true,
+    ): LinuxAnswer<String> {
         var attempt = 1
+        var second = false
+        var timeout = timeoutSeconds
         while (true) {
-            when (val result = host.run(script, timeoutSeconds)) {
-                is Outcome.Ok ->
-                    return if (result.value.exitCode == 0) {
-                        LinuxAnswer.Ok(result.value.output)
-                    } else {
-                        LinuxAnswer.Problem(LinuxProblem.Failed)
+            when (val result = host.run(script, timeout)) {
+                is Outcome.Ok -> {
+                    val exit = result.value.exitCode
+                    if (exit == 0) return LinuxAnswer.Ok(result.value.output)
+                    if (exit != TIMED_OUT) return LinuxAnswer.Problem(LinuxProblem.Failed)
+                    if (!second && retryOnTimeout) {
+                        second = true
+                        timeout = (timeout * 2).coerceAtMost(MAX_RETRY_SECONDS)
+                        retryWait.pause()
+                        continue
                     }
+                    return LinuxAnswer.Problem(LinuxProblem.NotAnswering)
+                }
                 is Outcome.Failed -> {
-                    val passing = passing(result.failure)
+                    val failure = result.failure
+                    val passing = passing(failure)
                     if (passing && attempt < ATTEMPTS) {
                         attempt++
                         retryWait.pause()
                         continue
                     }
+                    if (passing) return LinuxAnswer.Problem(LinuxProblem.Busy, failure.details)
+                    val problem = (failure as? Failure.Runtime)?.problem
+                    if (problem == RuntimeProblem.NotInstalled)
+                        return LinuxAnswer.Problem(LinuxProblem.Unavailable, failure.details)
+                    if (problem == RuntimeProblem.Installing)
+                        return LinuxAnswer.Problem(LinuxProblem.SetupRunning, failure.details)
+                    if (!second) {
+                        second = true
+                        retryWait.pause()
+                        continue
+                    }
+                    val there = host.presence() == LinuxPresence.Ready
                     return LinuxAnswer.Problem(
-                        if (passing) LinuxProblem.Busy else LinuxProblem.Unavailable,
-                        result.failure.details,
+                        if (there) LinuxProblem.NotAnswering else LinuxProblem.Unavailable,
+                        failure.details,
                     )
                 }
             }
@@ -162,24 +201,32 @@ public class LinuxManager(
         storageScanned = false
         cleanupReceipts.clear()
         scanProgress.value = LinuxStorageScan(LinuxStorageScanState.Running)
-        val output = StringBuilder()
         try {
             for (category in LinuxStorageCategory.entries) {
+                if (category in storageStages) continue
                 scanProgress.value =
                     scanProgress.value.copy(headings = scanProgress.value.headings + category)
                 val script =
                     (if (category == LinuxStorageCategory.entries.first())
                         LinuxStorage.DISCARD_RECEIPTS
                     else "") + LinuxStorage.stageScript(category)
-                when (val result = run(script, timeoutSeconds = 180)) {
+                val limit = stageSeconds[category] ?: STAGE_SECONDS
+                when (val result = run(script, timeoutSeconds = limit, retryOnTimeout = false)) {
                     is LinuxAnswer.Problem -> {
+                        // A slow stage gets a longer limit on Try again, and the stages already
+                        // measured are kept: a slow phone reaches the end, late rather than never.
+                        if (result.problem == LinuxProblem.NotAnswering)
+                            stageSeconds[category] = (limit * 2).coerceAtMost(MAX_STAGE_SECONDS)
                         scanProgress.value =
                             scanProgress.value.copy(state = LinuxStorageScanState.Failed)
                         return@withLock result
                     }
-                    is LinuxAnswer.Ok -> output.append(result.value).append('\n')
+                    is LinuxAnswer.Ok -> storageStages[category] = result.value
                 }
             }
+            val output = StringBuilder()
+            storageStages.values.forEach { output.append(it).append('\n') }
+            storageStages.clear()
             storageScanned = true
             scanProgress.value = LinuxStorageScan.parse("::storage-state Done\n$output")
             LinuxAnswer.Ok(LinuxStorage.report(output.toString()))
@@ -255,7 +302,7 @@ public class LinuxManager(
     // --- Packages
 
     public suspend fun installedPackages(): LinuxAnswer<List<LinuxPackage>> =
-        run(LinuxPackages.LIST_SCRIPT).then { LinuxAnswer.Ok(LinuxPackages.parseInstalled(it)) }
+        run(LinuxPackages.LIST_SCRIPT, timeoutSeconds = LIST_SECONDS).then { LinuxAnswer.Ok(LinuxPackages.parseInstalled(it)) }
 
     public suspend fun checkPackages(
         names: List<String>
@@ -316,6 +363,19 @@ public class LinuxManager(
         public const val JOB_SERVICE: String = "linux-job"
         private const val JOB_LOG_TAIL = 24_576
         private const val ATTEMPTS = 3
+
+        /** What `BuiltinLinux.run` answers when the script ran out of time or was stopped. */
+        internal const val TIMED_OUT: Int = -1
+
+        /** The longest a retried read may wait. */
+        private const val MAX_RETRY_SECONDS = 240L
+
+        /** One storage stage's first limit; a stage that runs out gets double, up to the cap. */
+        private const val STAGE_SECONDS = 90L
+        private const val MAX_STAGE_SECONDS = 360L
+
+        /** The installed-packages list reads dpkg's whole database: slow under proot. */
+        private const val LIST_SECONDS = 90L
 
         /** How long [LinuxRetryWait] pauses between tries (Flutter linux_manager retry: 700 ms). */
         public val RETRY_DELAY: Duration = 700.milliseconds
