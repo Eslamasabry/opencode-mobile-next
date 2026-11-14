@@ -68,6 +68,17 @@ class AppLocalAgentHostStarter(
         }
     }
 
+    /**
+     * After an automatic agent update: a running helper of another version than the pin is replaced by the pinned one
+     * (the start refuses while the phone's work is not idle). Nothing is saved, and a helper that does not run is not
+     * started: it runs the pinned version at its next start.
+     */
+    suspend fun restartForUpdate(): Outcome<Unit> =
+        when (val prepared = prepare(save = false, budgetMs = GATE_BUDGET_MS, upgrade = true)) {
+            is Outcome.Failed -> prepared
+            is Outcome.Ok -> Outcome.Ok(Unit)
+        }
+
     override suspend fun connect(): Outcome<Unit> {
         // The lock covers the helper and the saved profile only: connecting the profile asks [ensureHelper] again
         // (it is the same path any later connection of this server takes), so it must not run under the lock.
@@ -132,7 +143,7 @@ class AppLocalAgentHostStarter(
         }
     }
 
-    private suspend fun prepare(save: Boolean, budgetMs: Long): Outcome<ProfileId> = lane.withLock {
+    private suspend fun prepare(save: Boolean, budgetMs: Long, upgrade: Boolean = false): Outcome<ProfileId> = lane.withLock {
         if (phone.state.value.needsRestart) return@withLock unavailable()
         when (val warm = stores.warm()) {
             is Outcome.Failed -> return@withLock warm
@@ -179,8 +190,11 @@ class AppLocalAgentHostStarter(
                             password,
                             PaseoConfig.render().json,
                             expectedHelperVersion = AgentPins.builtIn.paseo.version,
-                            // As the Flutter app's ordinary start: an older tested helper runs as it is.
-                            testedHelperVersions = AgentPins.builtIn.paseoTestedVersions.toSet(),
+                            // As the Flutter app's ordinary start: an older tested helper runs as it is. The automatic
+                            // update asks for the pinned one instead (no tested older version stands in for it).
+                            testedHelperVersions =
+                                if (upgrade) emptySet() else AgentPins.builtIn.paseoTestedVersions.toSet(),
+                            restartIfVersionChanged = upgrade,
                         )
                         Outcome.Ok(Unit)
                     }

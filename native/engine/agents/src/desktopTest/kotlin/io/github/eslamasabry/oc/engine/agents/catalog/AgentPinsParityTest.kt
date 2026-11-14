@@ -1,5 +1,7 @@
 package io.github.eslamasabry.oc.engine.agents.catalog
 
+import io.github.eslamasabry.oc.engine.agents.AgentId
+import io.github.eslamasabry.oc.engine.agents.scripts.ClaudeScripts
 import io.github.eslamasabry.oc.engine.agents.scripts.PaseoPhoneScripts
 import io.github.eslamasabry.oc.engine.agents.scripts.freezeTipSource
 import java.io.File
@@ -19,7 +21,8 @@ class AgentPinsParityTest {
      */
     // Agents whose pins moved after the Flutter freeze (Flutter takes no new work since 2026-11-08): checked on their
     // own below, and their old Flutter entries are left out of the comparison.
-    private val postFreeze = setOf("antigravity", "opencode2")
+    private val postFreeze =
+        setOf("antigravity", "opencode2", "claude", "codex", "goose", "omp-acp", "fx", "qwen", "kilo")
 
     private val repo: File = generateSequence(File("").absoluteFile) { it.parentFile }
         .first { File(it, "native/settings.gradle.kts").isFile }
@@ -74,7 +77,7 @@ class AgentPinsParityTest {
     }
 
     @Test
-    fun `B-AGENT-008 Antigravity pins equal Flutter commit 4a75d8593`() {
+    fun `B-AGENT-008 Antigravity keeps its route, sign-in and limitation and its pins equal the 1.5.9 download`() {
         val agent = AgentPins.builtIn.catalog().byId(io.github.eslamasabry.oc.engine.agents.AgentId("antigravity"))!!
         val recipe = agent.recipe!!
         assertEquals("Antigravity", agent.name)
@@ -82,30 +85,288 @@ class AgentPinsParityTest {
         assertEquals("antigravity", agent.providerId)
         assertEquals(AgentSignInMethod.BrowserOAuthHost, agent.signInMethod)
         assertEquals(AgentLimitation.AntigravityGoogleSignIn, agent.limitation)
-        assertEquals("1.5.3", recipe.version)
+        assertEquals("1.5.9", recipe.version)
         assertEquals("agy", recipe.executable)
         assertEquals(listOf("acp", "--disable-telemetry"), recipe.launchArgs)
         assertEquals(listOf("acp", "--login"), recipe.signInArgs)
         val arm = recipe.artifacts.getValue(AgentArchitecture.Arm64)
         assertEquals(
-            "https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.3-6604829099950080/linux-arm/cli_linux_arm64.tar.gz",
+            "https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.9-4515810895593472/" +
+                "linux-arm/cli_linux_arm64.tar.gz",
             arm.url,
         )
-        assertEquals("2d50060c7b1327995e5c81ec58829c91c2564ebb9fec165d3f9f1325ec188675", arm.sha256)
-        assertEquals(69843447L, arm.downloadBytes)
-        assertEquals(235622776L, arm.installedBytes)
+        assertEquals("3a18c238c7ee6661e43df7e824a7d4c1bed78aeeda09430921a0f1dbfe825bca", arm.sha256)
+        assertEquals(90318517L, arm.downloadBytes)
+        assertEquals(249582256L, arm.installedBytes)
         assertEquals("antigravity", arm.archiveMember)
         assertEquals(AgentArtifactFormat.TarGz, arm.format)
         val x64 = recipe.artifacts.getValue(AgentArchitecture.X64)
         assertEquals(
-            "https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.3-6604829099950080/linux-x64/cli_linux_x64.tar.gz",
+            "https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.9-4515810895593472/" +
+                "linux-x64/cli_linux_x64.tar.gz",
             x64.url,
         )
-        assertEquals("1b4850599cce73a17f94ffb422df3bf9531531b77dbddc40c1a435e0c2c16807", x64.sha256)
-        assertEquals(73694700L, x64.downloadBytes)
-        assertEquals(246837648L, x64.installedBytes)
+        assertEquals("8b1f5e56779f2434a0af36f1b715a8392a084de550f8c68bc79821f95fabf3fa", x64.sha256)
+        assertEquals(99166075L, x64.downloadBytes)
+        assertEquals(265700040L, x64.installedBytes)
         // Gemini stays: the catalog only gains Antigravity.
         assertNotNull(AgentPins.builtIn.catalog().byId(io.github.eslamasabry.oc.engine.agents.AgentId("gemini")))
+    }
+
+    @Test
+    fun `B-AGENT-008 Claude Code pins equal the release manifest values and the install script`() {
+        // Moved after the freeze (2.1.319 -> 2.1.325 (Paseo 0.15.4 lists Fable 5.2 only for Claude Code 2.1.321 or
+        // newer).
+        // Each SHA-256 and size is the release manifest's, and equals the bytes of the downloaded binary.
+        val recipe = AgentPins.builtIn.catalog().byId(AgentId("claude"))!!.recipe!!
+        assertEquals("2.1.325", recipe.version)
+        assertEquals(ClaudeScripts.VERSION, recipe.version)
+        val arm = recipe.artifacts.getValue(AgentArchitecture.Arm64)
+        assertEquals("https://downloads.claude.ai/claude-code-releases/2.1.325/linux-arm64/claude", arm.url)
+        assertEquals("7b6e484b1989a5a14a4b354709ccc8672518a3ec5b9ccd7981fc6254327fde67", arm.sha256)
+        assertEquals(ClaudeScripts.ARM64_SHA256, arm.sha256)
+        assertEquals(364701112L, arm.downloadBytes)
+        assertEquals(364701112L, arm.installedBytes)
+        assertEquals(AgentArtifactFormat.Executable, arm.format)
+        val x64 = recipe.artifacts.getValue(AgentArchitecture.X64)
+        assertEquals("https://downloads.claude.ai/claude-code-releases/2.1.325/linux-x64/claude", x64.url)
+        assertEquals("0dc4f4a9a165fc60746d7ae8489712e5fc352f1e7ad4eb22e7141bd0812eb0cf", x64.sha256)
+        assertEquals(ClaudeScripts.X64_SHA256, x64.sha256)
+        assertEquals(365842960L, x64.downloadBytes)
+        assertEquals(365842960L, x64.installedBytes)
+        assertEquals(AgentArtifactFormat.Executable, x64.format)
+    }
+
+    @Test
+    fun `B-AGENT-008 Codex pins equal the release assets checked on 2026-11-14`() {
+        // Moved after the freeze (0.167.0 -> 0.169.0). Each SHA-256 equals GitHub's own asset digest and the bytes
+        // fetched;
+        // installedBytes is the archive member's size.
+        val recipe = AgentPins.builtIn.catalog().byId(AgentId("codex"))!!.recipe!!
+        assertEquals("0.169.0", recipe.version)
+        assertEquals("codex", recipe.executable)
+        assertEquals(listOf("app-server"), recipe.launchArgs)
+        assertEquals(listOf("login", "--device-auth"), recipe.signInArgs)
+        val arm = recipe.artifacts.getValue(AgentArchitecture.Arm64)
+        assertEquals(
+            "https://github.com/openai/codex/releases/download/rust-v0.169.0/" +
+                "codex-aarch64-unknown-linux-musl.tar.gz",
+            arm.url,
+        )
+        assertEquals("97b97d87eea075c5cb7709c7f6156a451622a7667953ecda40e0276637196f3f", arm.sha256)
+        assertEquals(119987185L, arm.downloadBytes)
+        assertEquals(290069784L, arm.installedBytes)
+        assertEquals("codex-aarch64-unknown-linux-musl", arm.archiveMember)
+        assertEquals(AgentArtifactFormat.TarGz, arm.format)
+        val x64 = recipe.artifacts.getValue(AgentArchitecture.X64)
+        assertEquals(
+            "https://github.com/openai/codex/releases/download/rust-v0.169.0/" +
+                "codex-x86_64-unknown-linux-musl.tar.gz",
+            x64.url,
+        )
+        assertEquals("9af4d751fce183faedea629437d5252dbf458eeb04130cf4f97be844621ea985", x64.sha256)
+        assertEquals(117805733L, x64.downloadBytes)
+        assertEquals(294277432L, x64.installedBytes)
+        assertEquals("codex-x86_64-unknown-linux-musl", x64.archiveMember)
+        assertEquals(AgentArtifactFormat.TarGz, x64.format)
+    }
+
+    @Test
+    fun `B-AGENT-008 Goose pins equal the downloads checked on 2026-11-14`() {
+        // Moved after the freeze. Each SHA-256 equals GitHub's digest for the release asset; installedBytes is the
+        // member's size.
+        val recipe = AgentPins.builtIn.catalog().byId(AgentId("goose"))!!.recipe!!
+        assertEquals("1.59.1", recipe.version)
+        assertEquals("goose", recipe.executable)
+        assertEquals(listOf("acp"), recipe.launchArgs)
+        assertEquals(listOf("configure"), recipe.signInArgs)
+        val arm = recipe.artifacts.getValue(AgentArchitecture.Arm64)
+        assertEquals(
+            "https://github.com/aaif-goose/goose/releases/download/v1.59.1/" +
+                "goose-aarch64-unknown-linux-gnu.tar.gz",
+            arm.url,
+        )
+        assertEquals("e3619b2ebf76dbbe8924561fd748220f289a34671e2757cda1cd833e44194f8e", arm.sha256)
+        assertEquals(63280232L, arm.downloadBytes)
+        assertEquals(195103264L, arm.installedBytes)
+        assertEquals("./goose", arm.archiveMember)
+        assertEquals(AgentArtifactFormat.TarGz, arm.format)
+        val x64 = recipe.artifacts.getValue(AgentArchitecture.X64)
+        assertEquals(
+            "https://github.com/aaif-goose/goose/releases/download/v1.59.1/" +
+                "goose-x86_64-unknown-linux-gnu.tar.gz",
+            x64.url,
+        )
+        assertEquals("04c08900ab2ae78b8e2f556f1ed535a91b61c080a3ff62e9fd8b280cceb544ef", x64.sha256)
+        assertEquals(62448338L, x64.downloadBytes)
+        assertEquals(208579376L, x64.installedBytes)
+        assertEquals("./goose", x64.archiveMember)
+        assertEquals(AgentArtifactFormat.TarGz, x64.format)
+    }
+
+    @Test
+    fun `B-AGENT-008 Oh My Pi pins equal the downloads checked on 2026-11-14`() {
+        // Moved after the freeze. Each SHA-256 equals GitHub's digest for the release asset; the executable's size is
+        // both sizes.
+        val recipe = AgentPins.builtIn.catalog().byId(AgentId("omp-acp"))!!.recipe!!
+        assertEquals("18.20.0", recipe.version)
+        assertEquals("omp", recipe.executable)
+        assertEquals(listOf("acp"), recipe.launchArgs)
+        assertEquals(listOf("login"), recipe.signInArgs)
+        val arm = recipe.artifacts.getValue(AgentArchitecture.Arm64)
+        assertEquals(
+            "https://github.com/can1357/oh-my-pi/releases/download/v18.20.0/" +
+                "omp-linux-arm64",
+            arm.url,
+        )
+        assertEquals("8b5e197db7c58b7ebabf83c6f03597f89bae3a766a84c6481b3a942a125f5e22", arm.sha256)
+        assertEquals(244435960L, arm.downloadBytes)
+        assertEquals(244435960L, arm.installedBytes)
+        assertEquals(null, arm.archiveMember)
+        assertEquals(AgentArtifactFormat.Executable, arm.format)
+        val x64 = recipe.artifacts.getValue(AgentArchitecture.X64)
+        assertEquals(
+            "https://github.com/can1357/oh-my-pi/releases/download/v18.20.0/" +
+                "omp-linux-x64",
+            x64.url,
+        )
+        assertEquals("c8694be8c6e6a1f45e3636dd8a8e9eaa78878ad629a89000b403ec5e456d3f89", x64.sha256)
+        assertEquals(287484080L, x64.downloadBytes)
+        assertEquals(287484080L, x64.installedBytes)
+        assertEquals(null, x64.archiveMember)
+        assertEquals(AgentArtifactFormat.Executable, x64.format)
+    }
+
+    @Test
+    fun `B-AGENT-008 fx pins equal the downloads checked on 2026-11-14`() {
+        // Moved after the freeze. Each SHA-256 equals GitHub's digest for the release asset; installedBytes is the
+        // member's size.
+        val recipe = AgentPins.builtIn.catalog().byId(io.github.eslamasabry.oc.engine.agents.AgentId("fx"))!!.recipe!!
+        assertEquals("0.0.16", recipe.version)
+        assertEquals("fx", recipe.executable)
+        assertEquals(listOf("acp"), recipe.launchArgs)
+        assertEquals(listOf("login"), recipe.signInArgs)
+        val arm = recipe.artifacts.getValue(AgentArchitecture.Arm64)
+        assertEquals(
+            "https://github.com/vercel-labs/fx/releases/download/v0.0.16/" +
+                "fx-linux-aarch64.tar.gz",
+            arm.url,
+        )
+        assertEquals("ca9441b104357e2105039dbfd4c2eaf0d6ee65a84085f23f51e880c95cbf46af", arm.sha256)
+        assertEquals(5562847L, arm.downloadBytes)
+        assertEquals(10832712L, arm.installedBytes)
+        assertEquals("fx", arm.archiveMember)
+        assertEquals(AgentArtifactFormat.TarGz, arm.format)
+        val x64 = recipe.artifacts.getValue(AgentArchitecture.X64)
+        assertEquals(
+            "https://github.com/vercel-labs/fx/releases/download/v0.0.16/" +
+                "fx-linux-x86_64.tar.gz",
+            x64.url,
+        )
+        assertEquals("f0fb822c7be546c80bcc89d50521bc1454435e0c6f586e8420c4e2b84fa80599", x64.sha256)
+        assertEquals(5680318L, x64.downloadBytes)
+        assertEquals(12814000L, x64.installedBytes)
+        assertEquals("fx", x64.archiveMember)
+        assertEquals(AgentArtifactFormat.TarGz, x64.format)
+    }
+
+    @Test
+    fun `B-AGENT-008 Qwen Code pins equal the downloads checked on 2026-11-14`() {
+        // Moved after the freeze. The SHA-256 is of the registry tarball, whose sha512 equals dist.integrity;
+        // installedBytes is dist.unpackedSize.
+        val recipe = AgentPins.builtIn.catalog().byId(io.github.eslamasabry.oc.engine.agents.AgentId("qwen"))!!.recipe!!
+        assertEquals("0.27.3", recipe.version)
+        assertEquals("qwen", recipe.executable)
+        assertEquals(listOf("--acp"), recipe.launchArgs)
+        assertEquals(listOf(), recipe.signInArgs)
+        val arm = recipe.artifacts.getValue(AgentArchitecture.Arm64)
+        assertEquals(
+            "https://registry.npmjs.org/@qwen-code/qwen-code/-/" +
+                "qwen-code-0.27.3.tgz",
+            arm.url,
+        )
+        assertEquals("313a567f05dd036b489b9142b0f20f21dfe348532e5d07b6f0818a47c5ac5333", arm.sha256)
+        assertEquals(43802478L, arm.downloadBytes)
+        assertEquals(159348420L, arm.installedBytes)
+        assertEquals("package/cli-entry.js", arm.archiveMember)
+        assertEquals(AgentArtifactFormat.NpmTarGz, arm.format)
+        val x64 = recipe.artifacts.getValue(AgentArchitecture.X64)
+        assertEquals(
+            "https://registry.npmjs.org/@qwen-code/qwen-code/-/" +
+                "qwen-code-0.27.3.tgz",
+            x64.url,
+        )
+        assertEquals("313a567f05dd036b489b9142b0f20f21dfe348532e5d07b6f0818a47c5ac5333", x64.sha256)
+        assertEquals(43802478L, x64.downloadBytes)
+        assertEquals(159348420L, x64.installedBytes)
+        assertEquals("package/cli-entry.js", x64.archiveMember)
+        assertEquals(AgentArtifactFormat.NpmTarGz, x64.format)
+    }
+
+    @Test
+    fun `B-AGENT-008 Kilo pins equal the downloads checked on 2026-11-14`() {
+        // Moved after the freeze. Each SHA-256 is of the registry tarball, whose sha512 equals dist.integrity;
+        // installedBytes is the member's size.
+        val recipe = AgentPins.builtIn.catalog().byId(io.github.eslamasabry.oc.engine.agents.AgentId("kilo"))!!.recipe!!
+        assertEquals("7.8.27", recipe.version)
+        assertEquals("kilo", recipe.executable)
+        assertEquals(listOf("acp"), recipe.launchArgs)
+        assertEquals(listOf("auth", "login"), recipe.signInArgs)
+        val arm = recipe.artifacts.getValue(AgentArchitecture.Arm64)
+        assertEquals(
+            "https://registry.npmjs.org/@kilocode/cli-linux-arm64/-/" +
+                "cli-linux-arm64-7.8.27.tgz",
+            arm.url,
+        )
+        assertEquals("992a0d0f4956926c6f624de742792eeab140516640f66a5cf5b7f9c357c06eb4", arm.sha256)
+        assertEquals(83530144L, arm.downloadBytes)
+        assertEquals(258198520L, arm.installedBytes)
+        assertEquals("package/bin/kilo", arm.archiveMember)
+        assertEquals(AgentArtifactFormat.TarGz, arm.format)
+        val x64 = recipe.artifacts.getValue(AgentArchitecture.X64)
+        assertEquals(
+            "https://registry.npmjs.org/@kilocode/cli-linux-x64/-/" +
+                "cli-linux-x64-7.8.27.tgz",
+            x64.url,
+        )
+        assertEquals("1da75cf0996f249abc9e1ae10bdcebcefd760dd375c440e704ae70bb9be3ce0b", x64.sha256)
+        assertEquals(84123912L, x64.downloadBytes)
+        assertEquals(259201200L, x64.installedBytes)
+        assertEquals("package/bin/kilo", x64.archiveMember)
+        assertEquals(AgentArtifactFormat.TarGz, x64.format)
+    }
+
+    @Test
+    fun `B-AGENT-008 Antigravity 1.5.9 pins equal the downloads checked on 2026-11-14`() {
+        // Moved after the freeze. Each SHA-256 is of the downloaded bytes, whose sha512 equals the release manifest's
+        // value for that platform.
+        val recipe = AgentPins.builtIn.catalog().byId(AgentId("antigravity"))!!.recipe!!
+        assertEquals("1.5.9", recipe.version)
+        assertEquals("agy", recipe.executable)
+        assertEquals(listOf("acp", "--disable-telemetry"), recipe.launchArgs)
+        assertEquals(listOf("acp", "--login"), recipe.signInArgs)
+        val arm = recipe.artifacts.getValue(AgentArchitecture.Arm64)
+        assertEquals(
+            "https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.9-4515810895593472/linux-arm/" +
+                "cli_linux_arm64.tar.gz",
+            arm.url,
+        )
+        assertEquals("3a18c238c7ee6661e43df7e824a7d4c1bed78aeeda09430921a0f1dbfe825bca", arm.sha256)
+        assertEquals(90318517L, arm.downloadBytes)
+        assertEquals(249582256L, arm.installedBytes)
+        assertEquals("antigravity", arm.archiveMember)
+        assertEquals(AgentArtifactFormat.TarGz, arm.format)
+        val x64 = recipe.artifacts.getValue(AgentArchitecture.X64)
+        assertEquals(
+            "https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.9-4515810895593472/linux-x64/" +
+                "cli_linux_x64.tar.gz",
+            x64.url,
+        )
+        assertEquals("8b1f5e56779f2434a0af36f1b715a8392a084de550f8c68bc79821f95fabf3fa", x64.sha256)
+        assertEquals(99166075L, x64.downloadBytes)
+        assertEquals(265700040L, x64.installedBytes)
+        assertEquals("antigravity", x64.archiveMember)
+        assertEquals(AgentArtifactFormat.TarGz, x64.format)
     }
 
     @Test
@@ -142,7 +403,7 @@ class AgentPinsParityTest {
             "nodeX64Sha256" to "361718c444e49af2ca5a110c83ba6a8901143f23ab285ebbef0341f391f482a9",
         )
         fun dartConst(name: String) = node.getValue(name)
-        // Paseo moved to 0.15.3 after the Flutter freeze (B-193): the pins equal the install script's own checks.
+        // Paseo moved to 0.15.4 after the Flutter freeze (B-193): the pins equal the install script's own checks.
         assertEquals(PaseoPhoneScripts.VERSION, pins.paseo.version)
         assertEquals(PaseoPhoneScripts.PACKAGE_LOCK_SHA256, pins.paseo.packageLockSha256)
         assertEquals(PaseoPhoneScripts.CLI_SHA256, pins.paseo.cliSha256)
@@ -151,10 +412,17 @@ class AgentPinsParityTest {
         assertEquals(dartConst("nodeVersion"), pins.node.version)
         assertEquals(dartConst("nodeArm64Sha256"), pins.node.sha256[AgentArchitecture.Arm64])
         assertEquals(dartConst("nodeX64Sha256"), pins.node.sha256[AgentArchitecture.X64])
-        assertEquals("/home/oc/.local/share/oc-paseo/0.15.3-9a676a737ac4", PaseoPhoneScripts.INSTALL_DIRECTORY)
+        assertEquals("/home/oc/.local/share/oc-paseo/0.15.4-b61e82dd777f", PaseoPhoneScripts.INSTALL_DIRECTORY)
         val tested = Regex("claudeCodeTestedVersions = \\{([^}]*)\\}").find(testedVersions)!!.groupValues[1]
-        assertEquals(Regex("'([^']+)'").findAll(tested).map { it.groupValues[1] }.toList(), pins.claudeCodeTestedVersions)
+        // 2.1.321 and 2.1.325 moved after the freeze (Fable 5.2 needs 2.1.321 or newer): the freeze set plus both.
+        assertEquals(
+            Regex("'([^']+)'").findAll(tested).map { it.groupValues[1] }.toList() + listOf("2.1.321", "2.1.325"),
+            pins.claudeCodeTestedVersions,
+        )
         val paseoTested = Regex("paseoTestedVersions = \\{([^}]*)\\}").find(testedVersions)!!.groupValues[1]
-        assertEquals(Regex("'([^']+)'").findAll(paseoTested).map { it.groupValues[1] }.toList() + "0.15.3", pins.paseoTestedVersions)
+        assertEquals(
+            Regex("'([^']+)'").findAll(paseoTested).map { it.groupValues[1] }.toList() + listOf("0.15.3", "0.15.4"),
+            pins.paseoTestedVersions,
+        )
     }
 }

@@ -7,8 +7,8 @@ internal const val AGENT_PINS_JSON: String = """{
   "schema": 1,
   "source": "lib/domain/agent_catalog.dart _builtInCatalog(), lib/builtin/agents/paseo_scripts.dart, lib/paseo/tested_versions.dart (copied verbatim; a pin moves only with an app release)",
   "paseo": {
-    "version": "0.15.3",
-    "packageLockSha256": "9a676a737ac42bc021d3a6fcf74b8e9d5b7c3bb9a300cb9288ca7254919c5f6a",
+    "version": "0.15.4",
+    "packageLockSha256": "b61e82dd777fab352dcc19ad1989ea3d2ad978c69c1ebe87b4481cad83ae9226",
     "cliSha256": "2b761f40e5a6416e4aaa733f38a47d5a4639b42cc1f88fc060256d2c4ed8cf94",
     "payloadSha256": "8620d03c3e7e6776c3bfc4d22a8875f92209a563612fe7cda63dea7512f83c09",
     "codeTreeSha256": "6395eb8b0119db3ece44ca70ada09a6b2f8d896ca5afd56f9879f969e85a14fa"
@@ -24,7 +24,9 @@ internal const val AGENT_PINS_JSON: String = """{
     "2.1.283",
     "2.1.294",
     "2.1.316",
-    "2.1.319"
+    "2.1.319",
+    "2.1.321",
+    "2.1.325"
   ],
   "paseoTestedVersions": [
     "0.9.2",
@@ -32,7 +34,8 @@ internal const val AGENT_PINS_JSON: String = """{
     "0.12.0",
     "0.13.2",
     "0.14.0",
-    "0.15.3"
+    "0.15.3",
+    "0.15.4"
   ],
   "agents": [
     {
@@ -77,7 +80,7 @@ internal const val AGENT_PINS_JSON: String = """{
       "providerId": "claude",
       "signInMethod": "browserOAuthHost",
       "recipe": {
-        "version": "2.1.319",
+        "version": "2.1.325",
         "executable": "claude",
         "launchArgs": [],
         "signInArgs": [
@@ -87,20 +90,20 @@ internal const val AGENT_PINS_JSON: String = """{
         ],
         "artifacts": {
           "arm64": {
-            "url": "https://downloads.claude.ai/claude-code-releases/2.1.319/linux-arm64/claude",
-            "sha256": "a7e687fd1cb054d651c7588223de3786c99d4c682365e3c3ae1e59ce7f3a591f",
+            "url": "https://downloads.claude.ai/claude-code-releases/2.1.325/linux-arm64/claude",
+            "sha256": "7b6e484b1989a5a14a4b354709ccc8672518a3ec5b9ccd7981fc6254327fde67",
             "format": "executable",
             "member": null,
-            "downloadBytes": 339797432,
-            "installedBytes": 339797432
+            "downloadBytes": 364701112,
+            "installedBytes": 364701112
           },
           "x64": {
-            "url": "https://downloads.claude.ai/claude-code-releases/2.1.319/linux-x64/claude",
-            "sha256": "dabafec82ca1319fa43d8be36a10fc61b1d11821cb98ad5df04ad95e199b8eed",
+            "url": "https://downloads.claude.ai/claude-code-releases/2.1.325/linux-x64/claude",
+            "sha256": "0dc4f4a9a165fc60746d7ae8489712e5fc352f1e7ad4eb22e7141bd0812eb0cf",
             "format": "executable",
             "member": null,
-            "downloadBytes": 340226576,
-            "installedBytes": 340226576
+            "downloadBytes": 365842960,
+            "installedBytes": 365842960
           }
         }
       }
@@ -112,7 +115,7 @@ internal const val AGENT_PINS_JSON: String = """{
       "providerId": "codex",
       "signInMethod": "browserOAuthHost",
       "recipe": {
-        "version": "0.167.0",
+        "version": "0.169.0",
         "executable": "codex",
         "launchArgs": [
           "app-server"
@@ -123,20 +126,20 @@ internal const val AGENT_PINS_JSON: String = """{
         ],
         "artifacts": {
           "arm64": {
-            "url": "https://github.com/openai/codex/releases/download/rust-v0.167.0/codex-aarch64-unknown-linux-musl.tar.gz",
-            "sha256": "843489acb4d4b1079745c36b03c5963b887b83155af208fd53584e33ee8eb281",
+            "url": "https://github.com/openai/codex/releases/download/rust-v0.169.0/codex-aarch64-unknown-linux-musl.tar.gz",
+            "sha256": "97b97d87eea075c5cb7709c7f6156a451622a7667953ecda40e0276637196f3f",
             "format": "tarGz",
             "member": "codex-aarch64-unknown-linux-musl",
-            "downloadBytes": 114300898,
-            "installedBytes": 278794648
+            "downloadBytes": 119987185,
+            "installedBytes": 290069784
           },
           "x64": {
-            "url": "https://github.com/openai/codex/releases/download/rust-v0.167.0/codex-x86_64-unknown-linux-musl.tar.gz",
-            "sha256": "9d64836106d5b374e90ee4454c7ebcde7ca7106558bd7e41a34b9f26ebda251a",
+            "url": "https://github.com/openai/codex/releases/download/rust-v0.169.0/codex-x86_64-unknown-linux-musl.tar.gz",
+            "sha256": "9af4d751fce183faedea629437d5252dbf458eeb04130cf4f97be844621ea985",
             "format": "tarGz",
             "member": "codex-x86_64-unknown-linux-musl",
-            "downloadBytes": 122587028,
-            "installedBytes": 320575976
+            "downloadBytes": 117805733,
+            "installedBytes": 294277432
           }
         }
       }
@@ -148,7 +151,7 @@ internal const val AGENT_PINS_JSON: String = """{
       "providerId": "antigravity",
       "signInMethod": "browserOAuthHost",
       "recipe": {
-        "version": "1.5.3",
+        "version": "1.5.9",
         "executable": "agy",
         "launchArgs": [
           "acp",
@@ -160,20 +163,20 @@ internal const val AGENT_PINS_JSON: String = """{
         ],
         "artifacts": {
           "arm64": {
-            "url": "https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.3-6604829099950080/linux-arm/cli_linux_arm64.tar.gz",
-            "sha256": "2d50060c7b1327995e5c81ec58829c91c2564ebb9fec165d3f9f1325ec188675",
+            "url": "https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.9-4515810895593472/linux-arm/cli_linux_arm64.tar.gz",
+            "sha256": "3a18c238c7ee6661e43df7e824a7d4c1bed78aeeda09430921a0f1dbfe825bca",
             "format": "tarGz",
             "member": "antigravity",
-            "downloadBytes": 69843447,
-            "installedBytes": 235622776
+            "downloadBytes": 90318517,
+            "installedBytes": 249582256
           },
           "x64": {
-            "url": "https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.3-6604829099950080/linux-x64/cli_linux_x64.tar.gz",
-            "sha256": "1b4850599cce73a17f94ffb422df3bf9531531b77dbddc40c1a435e0c2c16807",
+            "url": "https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.9-4515810895593472/linux-x64/cli_linux_x64.tar.gz",
+            "sha256": "8b1f5e56779f2434a0af36f1b715a8392a084de550f8c68bc79821f95fabf3fa",
             "format": "tarGz",
             "member": "antigravity",
-            "downloadBytes": 73694700,
-            "installedBytes": 246837648
+            "downloadBytes": 99166075,
+            "installedBytes": 265700040
           }
         }
       }
@@ -218,7 +221,7 @@ internal const val AGENT_PINS_JSON: String = """{
       "providerId": "qwen",
       "signInMethod": "apiKeyHost",
       "recipe": {
-        "version": "0.26.4",
+        "version": "0.27.3",
         "executable": "qwen",
         "launchArgs": [
           "--acp"
@@ -226,20 +229,20 @@ internal const val AGENT_PINS_JSON: String = """{
         "signInArgs": [],
         "artifacts": {
           "arm64": {
-            "url": "https://registry.npmjs.org/@qwen-code/qwen-code/-/qwen-code-0.26.4.tgz",
-            "sha256": "a7640f1c0656b7e54ea5995335ed6cc18ee219b8b4200fe8a6141cff148aaa89",
+            "url": "https://registry.npmjs.org/@qwen-code/qwen-code/-/qwen-code-0.27.3.tgz",
+            "sha256": "313a567f05dd036b489b9142b0f20f21dfe348532e5d07b6f0818a47c5ac5333",
             "format": "npmTarGz",
             "member": "package/cli-entry.js",
-            "downloadBytes": 42796897,
-            "installedBytes": 154807157
+            "downloadBytes": 43802478,
+            "installedBytes": 159348420
           },
           "x64": {
-            "url": "https://registry.npmjs.org/@qwen-code/qwen-code/-/qwen-code-0.26.4.tgz",
-            "sha256": "a7640f1c0656b7e54ea5995335ed6cc18ee219b8b4200fe8a6141cff148aaa89",
+            "url": "https://registry.npmjs.org/@qwen-code/qwen-code/-/qwen-code-0.27.3.tgz",
+            "sha256": "313a567f05dd036b489b9142b0f20f21dfe348532e5d07b6f0818a47c5ac5333",
             "format": "npmTarGz",
             "member": "package/cli-entry.js",
-            "downloadBytes": 42796897,
-            "installedBytes": 154807157
+            "downloadBytes": 43802478,
+            "installedBytes": 159348420
           }
         }
       }
@@ -251,7 +254,7 @@ internal const val AGENT_PINS_JSON: String = """{
       "providerId": "kilo",
       "signInMethod": "browserOAuthHost",
       "recipe": {
-        "version": "7.8.18",
+        "version": "7.8.27",
         "executable": "kilo",
         "launchArgs": [
           "acp"
@@ -262,20 +265,20 @@ internal const val AGENT_PINS_JSON: String = """{
         ],
         "artifacts": {
           "arm64": {
-            "url": "https://registry.npmjs.org/@kilocode/cli-linux-arm64/-/cli-linux-arm64-7.8.18.tgz",
-            "sha256": "0f1bd0fb983f67ec1edf53c185e9521268f8f133af2a4cec2f1967e5d60e45ef",
+            "url": "https://registry.npmjs.org/@kilocode/cli-linux-arm64/-/cli-linux-arm64-7.8.27.tgz",
+            "sha256": "992a0d0f4956926c6f624de742792eeab140516640f66a5cf5b7f9c357c06eb4",
             "format": "tarGz",
             "member": "package/bin/kilo",
-            "downloadBytes": 83529597,
-            "installedBytes": 258264056
+            "downloadBytes": 83530144,
+            "installedBytes": 258198520
           },
           "x64": {
-            "url": "https://registry.npmjs.org/@kilocode/cli-linux-x64/-/cli-linux-x64-7.8.18.tgz",
-            "sha256": "bde638d0a493155088e4454fbe4a9697571443665e2a22d5a78cad645b96b554",
+            "url": "https://registry.npmjs.org/@kilocode/cli-linux-x64/-/cli-linux-x64-7.8.27.tgz",
+            "sha256": "1da75cf0996f249abc9e1ae10bdcebcefd760dd375c440e704ae70bb9be3ce0b",
             "format": "tarGz",
             "member": "package/bin/kilo",
-            "downloadBytes": 84132773,
-            "installedBytes": 259213488
+            "downloadBytes": 84123912,
+            "installedBytes": 259201200
           }
         }
       }
@@ -322,7 +325,7 @@ internal const val AGENT_PINS_JSON: String = """{
       "providerId": "goose",
       "signInMethod": "apiKeyHost",
       "recipe": {
-        "version": "1.54.0",
+        "version": "1.59.1",
         "executable": "goose",
         "launchArgs": [
           "acp"
@@ -332,20 +335,20 @@ internal const val AGENT_PINS_JSON: String = """{
         ],
         "artifacts": {
           "arm64": {
-            "url": "https://github.com/aaif-goose/goose/releases/download/v1.54.0/goose-aarch64-unknown-linux-gnu.tar.gz",
-            "sha256": "0f174b5118a53888cd4e65b7ca9a4b72dd0b887e89142c8ce41e2409205e40d5",
+            "url": "https://github.com/aaif-goose/goose/releases/download/v1.59.1/goose-aarch64-unknown-linux-gnu.tar.gz",
+            "sha256": "e3619b2ebf76dbbe8924561fd748220f289a34671e2757cda1cd833e44194f8e",
             "format": "tarGz",
             "member": "./goose",
-            "downloadBytes": 93850226,
-            "installedBytes": 294298272
+            "downloadBytes": 63280232,
+            "installedBytes": 195103264
           },
           "x64": {
-            "url": "https://github.com/aaif-goose/goose/releases/download/v1.54.0/goose-x86_64-unknown-linux-gnu.tar.gz",
-            "sha256": "ab396c95aebbd28b4d38c175234be8d4a3ea0c96e7ccb24c307e4618c9be57e1",
+            "url": "https://github.com/aaif-goose/goose/releases/download/v1.59.1/goose-x86_64-unknown-linux-gnu.tar.gz",
+            "sha256": "04c08900ab2ae78b8e2f556f1ed535a91b61c080a3ff62e9fd8b280cceb544ef",
             "format": "tarGz",
             "member": "./goose",
-            "downloadBytes": 90912367,
-            "installedBytes": 307756800
+            "downloadBytes": 62448338,
+            "installedBytes": 208579376
           }
         }
       }
@@ -357,7 +360,7 @@ internal const val AGENT_PINS_JSON: String = """{
       "providerId": "omp-acp",
       "signInMethod": "browserOAuthHost",
       "recipe": {
-        "version": "18.5.1",
+        "version": "18.20.0",
         "executable": "omp",
         "launchArgs": [
           "acp"
@@ -367,20 +370,20 @@ internal const val AGENT_PINS_JSON: String = """{
         ],
         "artifacts": {
           "arm64": {
-            "url": "https://github.com/can1357/oh-my-pi/releases/download/v18.5.1/omp-linux-arm64",
-            "sha256": "e7b81b96b3f9f391ec8afc7ee64c052ce1783290f88bbb59ba36d15b3b4e927c",
+            "url": "https://github.com/can1357/oh-my-pi/releases/download/v18.20.0/omp-linux-arm64",
+            "sha256": "8b5e197db7c58b7ebabf83c6f03597f89bae3a766a84c6481b3a942a125f5e22",
             "format": "executable",
             "member": null,
-            "downloadBytes": 230476072,
-            "installedBytes": 230476072
+            "downloadBytes": 244435960,
+            "installedBytes": 244435960
           },
           "x64": {
-            "url": "https://github.com/can1357/oh-my-pi/releases/download/v18.5.1/omp-linux-x64",
-            "sha256": "fb7638e82f0c9d087e96e15d3eb83a662d92374cd907187d6d4d2605e39f1e3a",
+            "url": "https://github.com/can1357/oh-my-pi/releases/download/v18.20.0/omp-linux-x64",
+            "sha256": "c8694be8c6e6a1f45e3636dd8a8e9eaa78878ad629a89000b403ec5e456d3f89",
             "format": "executable",
             "member": null,
-            "downloadBytes": 280536544,
-            "installedBytes": 280536544
+            "downloadBytes": 287484080,
+            "installedBytes": 287484080
           }
         }
       }
@@ -392,7 +395,7 @@ internal const val AGENT_PINS_JSON: String = """{
       "providerId": "fx",
       "signInMethod": "browserOAuthHost",
       "recipe": {
-        "version": "0.0.13",
+        "version": "0.0.16",
         "executable": "fx",
         "launchArgs": [
           "acp"
@@ -402,20 +405,20 @@ internal const val AGENT_PINS_JSON: String = """{
         ],
         "artifacts": {
           "arm64": {
-            "url": "https://github.com/vercel-labs/fx/releases/download/v0.0.13/fx-linux-aarch64.tar.gz",
-            "sha256": "78f6a8171193a1d2033f93d1b5a2940ea4a62147daf60a37ae670a9bf85f12e9",
+            "url": "https://github.com/vercel-labs/fx/releases/download/v0.0.16/fx-linux-aarch64.tar.gz",
+            "sha256": "ca9441b104357e2105039dbfd4c2eaf0d6ee65a84085f23f51e880c95cbf46af",
             "format": "tarGz",
             "member": "fx",
-            "downloadBytes": 5692736,
-            "installedBytes": 11167446
+            "downloadBytes": 5562847,
+            "installedBytes": 10832712
           },
           "x64": {
-            "url": "https://github.com/vercel-labs/fx/releases/download/v0.0.13/fx-linux-x86_64.tar.gz",
-            "sha256": "53a3b30ce1541048f8fa4b42b7bc68161466bb2e3708db104449a58af3807430",
+            "url": "https://github.com/vercel-labs/fx/releases/download/v0.0.16/fx-linux-x86_64.tar.gz",
+            "sha256": "f0fb822c7be546c80bcc89d50521bc1454435e0c6f586e8420c4e2b84fa80599",
             "format": "tarGz",
             "member": "fx",
-            "downloadBytes": 5787883,
-            "installedBytes": 13194918
+            "downloadBytes": 5680318,
+            "installedBytes": 12814000
           }
         }
       }

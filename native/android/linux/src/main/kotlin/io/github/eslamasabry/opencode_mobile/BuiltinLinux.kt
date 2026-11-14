@@ -3191,6 +3191,8 @@ class BuiltinLinux(private val context: Context) {
         port: Int = 4099,
         expectedHelperVersion: String? = null,
         testedHelperVersions: Set<String> = emptySet(),
+        /** Replaces a running helper of another version, when the phone's work is idle (the automatic agent update). */
+        restartIfVersionChanged: Boolean = false,
     ): Map<String, Any?> {
         val ticket = captureAgentHostStart(profile, false, null) ?: error("agent_host_unavailable")
         return withAgentHostStart(ticket) {
@@ -3202,6 +3204,7 @@ class BuiltinLinux(private val context: Context) {
                     config,
                     PhoneAgentHost.HelperPolicy(
                         expectedVersion = expectedHelperVersion,
+                        restartIfVersionChanged = restartIfVersionChanged,
                         testedVersions = testedHelperVersions,
                     ),
                 )
