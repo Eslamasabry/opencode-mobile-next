@@ -240,11 +240,13 @@ public fun kitLiquidFace(
      * liquid too, the face is the joined pane, drawn with it as one body of glass; alone it is the library's pane.
      */
     join: KitLiquidJoinPart? = null,
+    /** No rim light and no edge highlight: glass known by its bend alone (the top pane of a page, owner 2026-11-14). */
+    rimless: Boolean = false,
 ): Modifier? {
     val ground = LocalKitColors.current.ground.copy(alpha = 1f)
     val picture = LocalKitGlassBackdrop.current
     val backdrop = remember(source, ground, picture) { source?.let { frostStateBackdrop(it, ground, picture) } }
-    return liquidFace(role, source, backdrop, shape, transform, chosen, join)
+    return liquidFace(role, source, backdrop, shape, transform, chosen, join, rimless = rimless)
 }
 
 /** [role]'s liquid face over a kit-owned [source] (the page, a body under its bar); null keeps the part's own face. */
@@ -257,12 +259,14 @@ internal fun kitLiquidFace(
     join: KitLiquidJoinPart? = null,
     /** A dialog's panel: drawn with the sheet's role, tuned as a dialog (the Glass lab). */
     dialog: Boolean = false,
+    /** No rim light and no edge highlight (the top pane of a page). */
+    rimless: Boolean = false,
 ): Modifier? {
     val ground = LocalKitColors.current.ground.copy(alpha = 1f)
     val picture = LocalKitGlassBackdrop.current
     val live = io.github.eslamasabry.oc.ui.kit.foundation.LocalKitLivePicture.current?.backdrop
     val backdrop = remember(source, ground, picture, live, role) { source?.let { pageBackdrop(role, it, ground, picture, live) } }
-    return liquidFace(role, source, backdrop, shape, transform, join = join, dialog = dialog)
+    return liquidFace(role, source, backdrop, shape, transform, join = join, dialog = dialog, rimless = rimless)
 }
 
 /** A menu's liquid face over the page (frost of it under the Frosted look), unless it opens over a sheet or a dialog. */
@@ -336,6 +340,7 @@ private fun liquidFace(
     chosen: Boolean = false,
     join: KitLiquidJoinPart? = null,
     dialog: Boolean = false,
+    rimless: Boolean = false,
 ): Modifier? {
     val on = kitLiquidOn() && backdrop != null
     val shaped = liquidShapeOk(shape)
@@ -366,7 +371,7 @@ private fun liquidFace(
     val face = if (granted) transform else HeldFrost
     val joined = joinable && join!!.owner.partnerOf(join) != null
     join?.composedJoined = joined
-    return Modifier.liquidPane(role, backdrop, shape as CornerBasedShape, face, liquidFlipFor(source, role), chosen, keepRim = !granted, join = join, joined = joined, dialog = dialog)
+    return Modifier.liquidPane(role, backdrop, shape as CornerBasedShape, face, liquidFlipFor(source, role), chosen, keepRim = !granted, join = join, joined = joined, dialog = dialog, rimless = rimless)
 }
 
 /** A claim beyond the budget: all frost, no lens. */
@@ -395,10 +400,14 @@ private fun Modifier.liquidPane(
     join: KitLiquidJoinPart? = null,
     joined: Boolean = false,
     dialog: Boolean = false,
+    rimless: Boolean = false,
 ): Modifier {
     val own = remember { LiquidFlip() }
     val flip = shared ?: own
-    val spec = kitLiquidPaneSpec(role, flip, chosen, keepRim, dialog = dialog)
+    val whole = kitLiquidPaneSpec(role, flip, chosen, keepRim, dialog = dialog)
+    // Owner 2026-11-14: "Get rid of the border around the top conversation area." A rimless pane keeps its glass and
+    // its bend; nothing is drawn along its outline.
+    val spec = if (rimless) remember(whole) { whole.copy(rim = Color.Transparent, specular = Color.Transparent) } else whole
     val platform = LocalKitPlatform.current
     val words = kitLiquidWords(backdrop, flip)
     if (join != null) SideEffect {
@@ -411,7 +420,7 @@ private fun Modifier.liquidPane(
     }
     val latest by rememberUpdatedState(transform)
     // The rim catches the live picture's light over the whole pane (glass-live): drawn after it, so it lies on top.
-    return this.kitBackdropRimLight(shape).then(platform.liquidPane(spec, backdrop, shape) { latest() }).kitGlassStackRoot().kitLiquidPlateHost(words)
+    return (if (rimless) this else this.kitBackdropRimLight(shape)).then(platform.liquidPane(spec, backdrop, shape) { latest() }).kitGlassStackRoot().kitLiquidPlateHost(words)
 }
 
 /** [role]'s liquid pane as the look here draws it: its face measured for its words, its recipe, rim and gloss. */
