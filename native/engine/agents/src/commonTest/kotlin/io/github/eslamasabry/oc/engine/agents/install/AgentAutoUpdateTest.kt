@@ -165,6 +165,9 @@ class AgentAutoUpdateTest {
             host.afterRead = {
                 host.installed = listOf(claude)
                 host.behind = setOf(claude)
+                // The read finds the helper behind too: an install that replaces the helper is the one that waits for
+                // idle (an agent-only update does not, since 3d7f396ce2; see the test further down).
+                host.helperBehind = true
             }
             val jobs = Jobs()
             var busy = true
