@@ -89,5 +89,65 @@ class KitScreenKeyboardGoneTest {
         assertTrue(boxBottom() <= rootBottom - keyboard, "keyboard up again: box bottom ${boxBottom()}")
     }
 
+    @Test
+    fun `B-FRAME-009 a late closing animation does not hold the page up past the hold`() = lateClose(overlay = true)
+
+    @Test
+    fun `B-FRAME-009 a late closing animation does not hold the stacked page up past the hold`() = lateClose(overlay = false)
+
+    @Test
+    fun `B-FRAME-009 a keyboard whose opening animation never reports still gets its room`() = runComposeUiTest {
+        // Audit 2026-11-14 (tl2): the real inset is the truth, whichever way the animated one is stuck.
+        var target by mutableStateOf(0.dp)
+        setContent { scene(overlay = true, now = { 0.dp }, target = { target }) }
+        val rootBottom = onRoot().getBoundsInRoot().bottom
+        val rest = boxBottom()
+        mainClock.autoAdvance = false
+        target = keyboard
+        mainClock.advanceTimeBy(KEYBOARD_CLOSE_HOLD_MS / 4)
+        assertTrue(abs((boxBottom() - rest).value) < 1f, "the box left before the keyboard's own animation could run")
+        mainClock.advanceTimeBy(KEYBOARD_CLOSE_HOLD_MS + 100L)
+        assertTrue(boxBottom() <= rootBottom - keyboard, "keyboard up, its animation silent: box bottom ${boxBottom()}")
+    }
+
+    /**
+     * Audit 2026-11-14 (tl2, a loaded phone): the keyboard went, and the page stood in its keyboard-up layout for about
+     * 4 s until the animated inset finally came down. The page takes the real inset once the hold is over, whenever the
+     * animation's own end arrives.
+     */
+    private fun lateClose(overlay: Boolean) = runComposeUiTest {
+        var now by mutableStateOf(keyboard)
+        var target by mutableStateOf(keyboard)
+        setContent { scene(overlay, now = { now }, target = { target }) }
+        val rootBottom = onRoot().getBoundsInRoot().bottom
+        mainClock.autoAdvance = false
+        target = 0.dp
+        mainClock.advanceTimeBy(KEYBOARD_CLOSE_HOLD_MS + 100L)
+        val under = rootBottom - nav - boxBottom()
+        assertTrue(under >= 0.dp && under < 48.dp, "keyboard gone 0.5 s ago, its animation not yet ended: room under the box $under")
+        // The animation's end arrives 4 s late: nothing moves any more.
+        mainClock.advanceTimeBy(3_500L)
+        now = 0.dp
+        mainClock.advanceTimeBy(100L)
+        val after = rootBottom - nav - boxBottom()
+        assertTrue(abs((after - under).value) < 1f, "the late end moved the box again: $under then $after")
+    }
+
+    @androidx.compose.runtime.Composable
+    private fun scene(overlay: Boolean, now: () -> Dp, target: () -> Dp) {
+        KitTheme(KitAppearance(motion = MotionLevel.Full), FakeKitPlatform(), "en") {
+            CompositionLocalProvider(
+                LocalKitScreenInsets provides WindowInsets(top = 24.dp, bottom = nav),
+                LocalKitKeyboardSource provides KitKeyboardSource(WindowInsets(bottom = now()), WindowInsets(bottom = target())),
+            ) {
+                Box(Modifier.size(412.dp, 900.dp)) {
+                    KitScreen(page = true, overlayChrome = overlay, topBar = { KitText("Page title") }, bottom = { KitText("Message box") }) {
+                        Box(Modifier.fillMaxSize())
+                    }
+                }
+            }
+        }
+    }
+
     private fun ComposeUiTest.boxBottom(): Dp = onNodeWithText("Message box", useUnmergedTree = true).getBoundsInRoot().bottom
 }
