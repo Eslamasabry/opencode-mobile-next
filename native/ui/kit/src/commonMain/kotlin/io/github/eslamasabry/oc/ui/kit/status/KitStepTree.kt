@@ -57,6 +57,7 @@ import io.github.eslamasabry.oc.ui.kit.icon.KitIcon
 import io.github.eslamasabry.oc.ui.kit.icon.KitIconSize
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
+import io.github.eslamasabry.oc.ui.kit.platform.LocalKitVisibility
 import io.github.eslamasabry.oc.ui.kit.request.KitHeld
 import io.github.eslamasabry.oc.ui.kit.request.KitRequest
 import io.github.eslamasabry.oc.ui.kit.request.KitRequestAnswers
@@ -65,7 +66,7 @@ import io.github.eslamasabry.oc.ui.kit.state.KitReceipt
 import io.github.eslamasabry.oc.ui.kit.state.KitReceiptState
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
-import kotlinx.coroutines.delay
+import kotlin.time.TimeSource
 
 /**
  * Which tree the data is (LAMP-CRAFT §4a): sub-agents that run at the same time are [Parallel] (a quiet trunk, a
@@ -423,11 +424,15 @@ public fun KitStepTree(
     // The live timer: one count a second while any shown step is working with a time (no frames in between).
     val ticking = steps.any { it.ticks() || it.children.any { c -> c.ticks() } }
     var counted by remember { mutableIntStateOf(0) }
+    val visibility = LocalKitVisibility.current
     LaunchedEffect(steps, ticking) {
         counted = 0
         if (ticking) while (true) {
-            delay(SECOND_MS)
-            counted++
+            // Parks while the app is hidden (no wake a second for pixels nobody sees); back on screen the seconds
+            // it missed are added at once, so the time never restarts from where it was left.
+            val lap = TimeSource.Monotonic.markNow()
+            visibility.tick(SECOND_MS)
+            counted += maxOf(1, lap.elapsedNow().inWholeSeconds.toInt())
         }
     }
     val scope =
