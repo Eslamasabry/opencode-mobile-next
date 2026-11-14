@@ -1,6 +1,7 @@
 package io.github.eslamasabry.oc.ui.kit.lamp
 
 import androidx.compose.ui.geometry.Rect
+import io.github.eslamasabry.oc.core.common.text.NumberSymbols
 import io.github.eslamasabry.oc.core.common.text.Numbers
 import io.github.eslamasabry.oc.ui.design.motion.KitHaptic
 import io.github.eslamasabry.oc.ui.design.motion.MotionTokens
@@ -10,6 +11,8 @@ import io.github.eslamasabry.oc.ui.kit.state.ReceiptRules
 import io.github.eslamasabry.oc.ui.kit.status.KitMarkSize
 import io.github.eslamasabry.oc.ui.kit.status.TaskMarkRules
 import io.github.eslamasabry.oc.ui.kit.teaching.TipRules
+import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -18,6 +21,11 @@ import kotlin.test.assertTrue
 
 /** The edge light's pure rules (LAMP-PLAN §2, LAMP-CRAFT §1, §2, §10). */
 class KitLampRulesTest {
+    // The digits come from the phone's locale (Resources.getSystem), which a plain host or JVM test has none of: pin them.
+    @BeforeTest fun latin() { Numbers.pinned = NumberSymbols.Latin }
+
+    @AfterTest fun unpin() { Numbers.pinned = null }
+
     private fun m(key: String, kind: KitLampMarkKind, progress: Float? = null) = KitLampMark(key, kind, progress)
 
     @Test

@@ -1,6 +1,7 @@
 package io.github.eslamasabry.opencode_mobile.graph
 
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
+import io.github.eslamasabry.oc.core.common.text.ConversationTitle
 import io.github.eslamasabry.oc.core.common.text.Numbers
 import io.github.eslamasabry.oc.engine.attention.dock.DockRequestKind
 import io.github.eslamasabry.oc.feature.chats.lamp.LampAnswerUi
@@ -39,7 +40,7 @@ import io.github.eslamasabry.oc.ui.kit.status.KitTreeStepState
 /** Every sentence of the edge light's list. The screen fills them from the string keys; tests fill them with tokens. */
 internal enum class LampWord {
     Title, Edit, Done, All, AllShort, NewConversation, Hidden, ShowAgain, More, Empty, Pin, Unpin, Rename, Hide, Stop,
-    Untitled, GroupPinned, GroupNeedsYou, GroupFailed, GroupWorking, GroupDone, GroupRecent,
+    Untitled, NewTitle, GroupPinned, GroupNeedsYou, GroupFailed, GroupWorking, GroupDone, GroupRecent,
     TasksDone, For, Thinking, Working, DoneWord, IdleWord, FailedWord, WaitingMixed, WaitingToFinish, PausedAtStep,
     PausedUntilAnswer, SubAgentOf, MoreSubAgents, MoreInside, AsksRun, AsksEdit, AsksRead, AsksFolder, AsksPermission,
     AsksQuestion, AsksQuestionBare, AsksForm, AsksFormBare, Answer, Allowed, Denied, Stopping, Stopped, Reorder, MoveUp,
@@ -60,6 +61,9 @@ internal class LampTexts(private val words: Map<LampWord, String>, val folded: M
     }
 
     fun count(n: Int): String = Numbers.format(n)
+
+    /** A conversation's title as the home words it (one rule, never empty). */
+    fun title(raw: String?): String = ConversationTitle.display(raw, get(LampWord.Untitled), get(LampWord.NewTitle))
 }
 
 /** The panel's rows, found again by the key a tap names. */
@@ -87,12 +91,12 @@ internal object LampPanelMap {
                     .sortedBy { it.group.ordinal },
             hidden =
                 ui.hidden?.items.orEmpty().map {
-                    KitLampRow(key = it.ref, title = it.title ?: t[LampWord.Untitled], mark = mark(it.state), canEdit = false)
+                    KitLampRow(key = it.ref, title = t.title(it.title), mark = mark(it.state), canEdit = false)
                 },
             more = ui.more,
             all = ui.allCount,
             editing = ui.editing,
-            youAreIn = ui.openTitle?.let { t.fmt(LampWord.YouAreIn, it) },
+            youAreIn = ui.openTitle?.let { t.fmt(LampWord.YouAreIn, t.title(it)) },
         )
 
     /**
@@ -135,7 +139,7 @@ internal object LampPanelMap {
         }
 
     fun row(r: LampRowUi, t: LampTexts): KitLampRow {
-        val title = r.title ?: t[LampWord.Untitled]
+        val title = t.title(r.title)
         val progress = (r.stateLine as? LampStateLine.TasksDone)?.takeIf { it.total > 0 }?.let { (it.done.toFloat() / it.total).coerceIn(0f, 1f) }
         val stopped = r.stop == LampStopUi.Stopped
         val stateText = if (stopped) t[LampWord.Stopped] else r.stateLine?.let { line(it, t) }
@@ -217,7 +221,7 @@ internal object LampPanelMap {
         }
 
     fun child(c: LampChildUi, t: LampTexts): KitTreeStep {
-        val name = c.name ?: t[LampWord.Untitled]
+        val name = t.title(c.name)
         val stopHold = if (c.stop == LampStopUi.Holding) KitHeld(c.key, t.fmt(LampWord.Stopping, name)) else null
         return KitTreeStep(
             key = c.key,

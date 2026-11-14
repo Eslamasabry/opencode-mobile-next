@@ -68,7 +68,8 @@ private fun lampWordKey(word: LampWord): StringResource =
         LampWord.Rename -> Res.string.edgeLightRename
         LampWord.Hide -> Res.string.edgeLightHide
         LampWord.Stop -> Res.string.edgeLightStop
-        LampWord.Untitled -> Res.string.edgeLightUntitled
+        LampWord.Untitled -> Res.string.commandUntitledChat
+        LampWord.NewTitle -> Res.string.workspaceNewSession
         LampWord.GroupPinned -> Res.string.edgeLightGroupPinned
         LampWord.GroupNeedsYou -> Res.string.edgeLightGroupNeedsYou
         LampWord.GroupFailed -> Res.string.edgeLightGroupFailed
@@ -142,7 +143,7 @@ private fun lampWordKey(word: LampWord): StringResource =
 
 /** The panel's kit words over [t]; [ui] says which sub-agent belongs to which conversation for TalkBack. */
 internal fun lampPanelWords(t: LampTexts, ui: LampUi): KitLampPanelWords {
-    val parentOf = ui.groups.flatMap { it.rows }.flatMap { row -> row.tree?.children.orEmpty().map { it.key to (row.title ?: t[LampWord.Untitled]) } }.toMap()
+    val parentOf = ui.groups.flatMap { it.rows }.flatMap { row -> row.tree?.children.orEmpty().map { it.key to t.title(row.title) } }.toMap()
     val request =
         KitRequestWords(
             allowOnce = t[LampWord.AllowOnce],
@@ -230,9 +231,9 @@ internal fun EdgeLightPanelLayer(
     LaunchedEffect(notice) {
         val said =
             when (notice) {
-                is LampNotice.StopFailed -> t.fmt(LampWord.StopFailed, notice.title ?: t[LampWord.Untitled])
-                is LampNotice.AnswerFailed -> t.fmt(LampWord.AnswerFailed, notice.title ?: t[LampWord.Untitled])
-                is LampNotice.RenameFailed -> t.fmt(LampWord.RenameFailed, notice.title ?: t[LampWord.Untitled])
+                is LampNotice.StopFailed -> t.fmt(LampWord.StopFailed, t.title(notice.title))
+                is LampNotice.AnswerFailed -> t.fmt(LampWord.AnswerFailed, t.title(notice.title))
+                is LampNotice.RenameFailed -> t.fmt(LampWord.RenameFailed, t.title(notice.title))
                 LampNotice.TurnedOff -> t[LampWord.OffNotice]
                 else -> null
             }
@@ -245,7 +246,7 @@ internal fun EdgeLightPanelLayer(
     fun openConversation(ref: ConversationRef) {
         // The page switched to says "Reply in ‹title›" and, the first three times, where Back goes (the conversation
         // being left); told right before the switch so a fresh page and a kept one both read it.
-        port.arriving(ref, ui.openTitle)
+        port.arriving(ref, ui.openTitle?.let(t::title))
         controller.open(ref)
         onClose()
     }
@@ -264,7 +265,7 @@ internal fun EdgeLightPanelLayer(
                 onDeny = { key, step -> requestOf(key, step?.key)?.let { controller.deny(it.owner, it.requestId) } },
                 onAnswer = { key, step ->
                     requestOf(key, step?.key)?.let {
-                        port.arriving(it.owner, ui.openTitle)
+                        port.arriving(it.owner, ui.openTitle?.let(t::title))
                         controller.answer(it.owner, it.requestId)
                         onClose()
                     }
@@ -319,7 +320,7 @@ internal fun EdgeLightPanelLayer(
         val hidden = ui.notice as? LampNotice.Hidden
         Box(Modifier.align(Alignment.BottomCenter).padding(bottom = bottom)) {
             KitUndoBar(
-                offer = hidden?.let { KitUndoOffer(it.ref.toString(), t.fmt(LampWord.HiddenNotice, it.title ?: t[LampWord.Untitled])) },
+                offer = hidden?.let { KitUndoOffer(it.ref.toString(), t.fmt(LampWord.HiddenNotice, t.title(it.title))) },
                 onUndo = { hidden?.let { controller.restore(it.ref) } },
                 onTimeout = { controller.dismissNotice() },
             )

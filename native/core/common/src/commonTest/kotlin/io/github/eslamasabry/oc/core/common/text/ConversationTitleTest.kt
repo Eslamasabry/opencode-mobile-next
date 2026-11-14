@@ -29,4 +29,15 @@ class ConversationTitleTest {
         assertEquals(ConversationTitle.MAX, title.length)
         assertTrue(title.endsWith("…"))
     }
+
+    @Test
+    fun `B-LAMP-FIX-001 shown - nothing readable is untitled, the dated placeholder is new, and display is never empty`() {
+        for (raw in listOf(null, "", "  ", "<tool_call>{", "<function=bash>")) {
+            assertEquals(ConversationTitle.Shown.Untitled, ConversationTitle.shown(raw), "raw $raw")
+            assertEquals("U", ConversationTitle.display(raw, "U", "N"))
+        }
+        assertEquals(ConversationTitle.Shown.New, ConversationTitle.shown("New session - 2026-11-14T10:00:00.000Z"))
+        assertEquals(ConversationTitle.Shown.Text("Fix login"), ConversationTitle.shown(" Fix login <tool_use>x"))
+        assertEquals("Fix login", ConversationTitle.display("Fix login", "U", "N"))
+    }
 }
