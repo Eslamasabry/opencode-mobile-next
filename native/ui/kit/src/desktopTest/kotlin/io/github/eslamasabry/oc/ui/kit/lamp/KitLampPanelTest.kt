@@ -83,9 +83,12 @@ class KitLampPanelTest {
 
     @Test
     fun `B-LAMP-K2-020 panel_opensScrolledToBottom - Needs you by the thumb, the oldest group above the cut`() =
-        runDesktopComposeUiTest(412, 480) {
+        // 420 dp: about 300 dp for the list, so Needs you (about 150 dp) fills at least 45 % of it and the Working group
+        // above does not fit: the cut must fall on their boundary. (At 480 dp Needs you is under 45 % of the room, and
+        // the rule rightly shows part of Working instead of a mostly empty list.)
+        runDesktopComposeUiTest(412, 420) {
             val scene = Scene(K2.model(pinned = true))
-            panel(scene, height = 480)
+            panel(scene, height = 420)
             waitForIdle()
             onNodeWithText("Needs you").assertIsDisplayed()
             onNodeWithText("Allow once").assertIsDisplayed()
@@ -95,9 +98,12 @@ class KitLampPanelTest {
 
     @Test
     fun `B-LAMP-K2-021 panel_topCutOnGroupBoundary - the list's top edge falls on a group's top`() =
-        runDesktopComposeUiTest(412, 480) {
+        // 420 dp: about 300 dp for the list, so Needs you (about 150 dp) fills at least 45 % of it and the Working group
+        // above does not fit: the cut must fall on their boundary. (At 480 dp Needs you is under 45 % of the room, and
+        // the rule rightly shows part of Working instead of a mostly empty list.)
+        runDesktopComposeUiTest(412, 420) {
             val scene = Scene(K2.model(pinned = true))
-            panel(scene, height = 480)
+            panel(scene, height = 420)
             waitForIdle()
             val list = onNodeWithTag(LAMP_PANEL_LIST_TAG).getUnclippedBoundsInRoot()
             // A heading scrolled out above the list reports its bounds clipped to the list's top edge with no height:
