@@ -715,7 +715,9 @@ internal fun ChatTranscriptList(
                         is NoticeRow -> row.key.removePrefix("notice:")
                         else -> null
                     }
-                if (source in facts.reading.hiddenPartKeys) return@CompositionLocalProvider
+                // No early return here: leaving a composable lambda half way makes the runtime unwind its
+                // groups by marker, and a list item that prefetch composes in pieces crashed doing that.
+                if (source !in facts.reading.hiddenPartKeys) {
                 // A table longer than one chunk is drawn whole by its first chunk; its later chunks
                 // draw nothing.
                 if (reply != null && row is BlockRow && row.key in tables) {
@@ -775,6 +777,7 @@ internal fun ChatTranscriptList(
                             else -> null
                         }
                     if (created != null) KitMessageTimestamp(created, facts.nowMs)
+                }
                 }
               }
             }
