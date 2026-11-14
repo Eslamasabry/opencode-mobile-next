@@ -207,6 +207,37 @@ class EdgeLightPanelMapTest {
     }
 
     @Test
+    fun `B-LAMP-FIX-001 a conversation with no readable title reads as the home words it, never empty, on every line that names it`() {
+        val words = LampWord.entries.associateWith { "${it.name}(%1\$s,%2\$s)" } +
+            mapOf(LampWord.Untitled to "Untitled conversation", LampWord.NewTitle to "New conversation", LampWord.YouAreIn to "In %1\$s", LampWord.Stopping to "Stopping %1\$s")
+        val w = LampTexts(words)
+        for ((raw, shown) in listOf(
+            null to "Untitled conversation", "" to "Untitled conversation", "   " to "Untitled conversation",
+            "<tool_call>{" to "Untitled conversation", "New session - 2026-11-14T10:00:00.000Z" to "New conversation",
+            " Fix login " to "Fix login",
+        )) {
+            assertEquals(shown, w.title(raw), "title $raw")
+        }
+        val stopping = row("e", LampState.Working, stop = LampStopUi.Holding, title = "")
+        val model =
+            LampPanelMap.model(
+                ui(
+                    group(LampGroupKind.Recent, row("blank", LampState.Idle, title = ""), row("none", LampState.Idle, title = null)),
+                    group(LampGroupKind.Working, stopping),
+                    hidden = LampHiddenUi(persistentListOf(LampHiddenItemUi(ref("h"), "  ", LampState.Idle))),
+                    open = "",
+                ),
+                w,
+            )
+        val rows = model.sections.flatMap { it.rows }
+        assertTrue(rows.all { it.title.isNotBlank() }, rows.map { it.title }.toString())
+        assertEquals(listOf("Untitled conversation"), rows.map { it.title }.distinct())
+        assertEquals("In Untitled conversation", model.youAreIn)
+        assertEquals("Untitled conversation", model.hidden.single().title)
+        assertEquals("Stopping Untitled conversation", rows.single { it.stopping != null }.stopping!!.label)
+    }
+
+    @Test
     fun `a tap's key finds its row, its sub-agent and its hidden conversation again`() {
         val child = LampChildUi("c1", ref("c1"), "c1", LampChildState.Working, null, null, false, 1, false, null)
         val tree = LampTreeUi(LampTreeKind.Parallel, persistentListOf(child), 0, 0, 1, false)

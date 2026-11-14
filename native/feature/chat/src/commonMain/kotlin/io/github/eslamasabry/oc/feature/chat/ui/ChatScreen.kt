@@ -33,6 +33,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.RefusalReason
+import io.github.eslamasabry.oc.core.common.text.ConversationTitle
 import io.github.eslamasabry.oc.core.common.text.Numbers
 import io.github.eslamasabry.oc.core.model.transcript.MessageErrorKind
 import io.github.eslamasabry.oc.engine.transcript.state.NoticeKind
@@ -74,6 +75,8 @@ import io.github.eslamasabry.oc.feature.chat.requests.ui.ChatRequestSlot
 import io.github.eslamasabry.oc.feature.chat.requests.ui.RequestShow
 import io.github.eslamasabry.oc.core.common.ids.RequestId
 import io.github.eslamasabry.oc.ui.words.res.chatReplyInHint
+import io.github.eslamasabry.oc.ui.words.res.commandUntitledChat
+import io.github.eslamasabry.oc.ui.words.res.workspaceNewSession
 import io.github.eslamasabry.oc.feature.chat.header.ui.LocalChatHeaderActs
 import io.github.eslamasabry.oc.feature.chat.start.presentation.ChatStartActions
 import io.github.eslamasabry.oc.feature.chat.start.presentation.ChatStartUi
@@ -490,7 +493,11 @@ public fun ChatScreen(
     LaunchedEffect(switchArrival?.seq) {
         if (switchArrival != null && backNoteTitle != null) onBackNoteShown(switchArrival.seq)
     }
-    val replyInWords = state.title?.takeIf { it.isNotBlank() }?.let { stringResource(Res.string.chatReplyInHint, it) }
+    // The title is worded by the one rule every list uses (blank is "Untitled conversation"), never empty.
+    val untitledWords = stringResource(Res.string.commandUntitledChat)
+    val newWords = stringResource(Res.string.workspaceNewSession)
+    val replyInWords =
+        state.title?.let { stringResource(Res.string.chatReplyInHint, ConversationTitle.display(it, untitledWords, newWords)) }
     val replyHint =
         remember(switchArrival?.seq, switchArrival?.hint, replyInWords) {
             if (switchArrival?.hint == true && replyInWords != null)
