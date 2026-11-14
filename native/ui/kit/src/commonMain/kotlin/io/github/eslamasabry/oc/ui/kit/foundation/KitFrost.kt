@@ -40,7 +40,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.layer.GraphicsLayer
-import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.compose.ui.graphics.rememberGraphicsLayer
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInRoot
@@ -86,9 +85,9 @@ public fun rememberKitFrostState(): KitFrostState {
 public fun Modifier.kitFrostSource(state: KitFrostState): Modifier =
     this.onGloballyPositioned { state.sourceOrigin = it.positionInRoot() }
         .drawWithContent {
-            state.layer.record { this@drawWithContent.drawContent() }
+            kitRecord(state.layer) { this@drawWithContent.drawContent() }
             androidx.compose.runtime.snapshots.Snapshot.withoutReadObservation { state.version++ }
-            drawLayer(state.layer)
+            kitDrawLayer(state.layer)
         }
 
 /**
@@ -141,8 +140,8 @@ public fun Modifier.kitFrost(
                 drawRect(colors.ground.copy(alpha = 1f))
                 blur.renderEffect = effect
                 val shift = state.sourceOrigin - origin[0]
-                blur.record { translate(shift.x, shift.y) { drawLayer(state.layer) } }
-                drawLayer(blur)
+                kitRecord(blur) { translate(shift.x, shift.y) { kitDrawLayer(state.layer) } }
+                kitDrawLayer(blur)
                 drawRect(tint.copy(alpha = spec.tintAlpha))
             }
             if (effect != null && spec != null) {
@@ -251,8 +250,8 @@ public fun KitFrost(
                         blur.renderEffect = effect
                         blur.colorFilter = saturate
                         val shift = state.sourceOrigin - origin[0]
-                        blur.record { translate(shift.x, shift.y) { drawLayer(state.layer) } }
-                        drawLayer(blur)
+                        kitRecord(blur) { translate(shift.x, shift.y) { kitDrawLayer(state.layer) } }
+                        kitDrawLayer(blur)
                     }
                     drawRect(tint.copy(alpha = KitFrostRules.tintAlpha(role, glass, colors.dark, t)))
                     val specks = colors.elevationShadow.copy(alpha = FrostPolicy.NOISE_OPACITY * t)

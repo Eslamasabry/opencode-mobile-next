@@ -13,7 +13,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.layer.CompositingStrategy
 import androidx.compose.ui.graphics.layer.GraphicsLayer
-import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.compose.ui.graphics.rememberGraphicsLayer
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInRoot
@@ -26,6 +25,8 @@ import io.github.eslamasabry.oc.ui.design.effects.LiquidEdge
 import io.github.eslamasabry.oc.ui.design.effects.LiquidRole
 import io.github.eslamasabry.oc.ui.kit.effects.KitLiquidSource
 import io.github.eslamasabry.oc.ui.kit.foundation.KitFrostState
+import io.github.eslamasabry.oc.ui.kit.foundation.kitRecord
+import io.github.eslamasabry.oc.ui.kit.foundation.kitDrawLayer
 
 /*
  * Words on the chat's glass (device, Android 15, Glass dark, 2026-11-11: "Steer while it works…" and "Ask OpenCode…"
@@ -84,8 +85,8 @@ internal class KitWordsFade private constructor(
         sync()
         // Nothing recorded yet (the body's first frame): nothing to see.
         if (from.size.width <= 0 || from.size.height <= 0) return
-        target.record(this, layoutDirection, from.size) {
-            drawLayer(from)
+        target.kitRecord(this, layoutDirection, from.size) {
+            kitDrawLayer(from)
             // [clear]: how much of the page under the words goes (1, as shipped: all of it; the Glass lab may lower it).
             val a = clear.coerceIn(0f, 1f)
             if (!edge.isNaN() && rim > 0f && a > 0f) {

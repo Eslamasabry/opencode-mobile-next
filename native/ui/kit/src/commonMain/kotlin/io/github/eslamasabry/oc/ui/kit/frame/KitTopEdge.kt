@@ -33,7 +33,6 @@ import androidx.compose.ui.graphics.RenderEffect
 import androidx.compose.ui.graphics.drawOutline
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.translate
-import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.compose.ui.graphics.rememberGraphicsLayer
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.findRootCoordinates
@@ -63,6 +62,8 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitMotion
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitRoles
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
+import io.github.eslamasabry.oc.ui.kit.foundation.kitRecord
+import io.github.eslamasabry.oc.ui.kit.foundation.kitDrawLayer
 
 /*
  * The top edge of a page whose body runs edge to edge under its chrome (owner's pick 2026-11-09, chat edge option A:
@@ -215,7 +216,7 @@ internal fun BoxScope.KitStatusEdge(source: KitFrostState, statusPx: Int, under:
             .drawBehind {
                 drawStatusEdge(edge, statusPx.toFloat(), blur, under()) {
                     val shift = source.sourceOrigin - origin[0]
-                    translate(shift.x, shift.y) { drawLayer(source.layer) }
+                    translate(shift.x, shift.y) { kitDrawLayer(source.layer) }
                 }
             }
             .testTag("kit-status-edge")
@@ -255,10 +256,10 @@ internal fun DrawScope.drawStatusEdge(
     if (effect != null) {
         val box = IntSize(w.toInt().coerceAtLeast(1), h.toInt().coerceAtLeast(1))
         layers.blur.renderEffect = effect
-        layers.blur.record(box) { content() }
+        kitRecord(layers.blur, box) { content() }
         layers.mask.compositingStrategy = androidx.compose.ui.graphics.layer.CompositingStrategy.Offscreen
-        layers.mask.record(box) {
-            drawLayer(layers.blur)
+        kitRecord(layers.mask, box) {
+            kitDrawLayer(layers.blur)
             // Keep the blur where the body is cleared: all of it above [solid], none at the edge's end.
             drawRect(Color.Black, Offset.Zero, Size(w, solid), blendMode = BlendMode.DstIn)
             drawRect(
@@ -269,7 +270,7 @@ internal fun DrawScope.drawStatusEdge(
             )
         }
         layers.mask.alpha = alpha.coerceIn(0f, 1f)
-        drawLayer(layers.mask)
+        kitDrawLayer(layers.mask)
     }
     val k = under.coerceIn(0f, 1f)
     if (k > 0f) {
@@ -316,20 +317,20 @@ internal fun kitFrostedBarFace(frost: KitFrostState?): Modifier? {
         .drawBehind {
             val c = at[0]?.takeIf { it.isAttached }
             blur.renderEffect = effect
-            blur.record {
+            kitRecord(blur) {
                 drawRect(ground)
                 if (c != null) {
                     val bd = picture
                     val pl = bd?.layer
                     if (bd != null && pl != null && bd.painted && bd.root === c.findRootCoordinates()) {
                         val shift = bd.origin - c.positionInRoot()
-                        translate(shift.x, shift.y) { drawLayer(pl) }
+                        translate(shift.x, shift.y) { kitDrawLayer(pl) }
                     }
                     val shift = frost.sourceOrigin - c.positionInRoot()
-                    translate(shift.x, shift.y) { drawLayer(frost.layer) }
+                    translate(shift.x, shift.y) { kitDrawLayer(frost.layer) }
                 }
             }
-            drawLayer(blur)
+            kitDrawLayer(blur)
             drawRect(tint)
             drawOutline(LiquidBarShape.createOutline(size, layoutDirection, this), rim, style = Stroke(RIM_LIGHT_DP.dp.toPx()))
         }

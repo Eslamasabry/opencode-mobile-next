@@ -29,7 +29,8 @@ import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.layer.CompositingStrategy
 import androidx.compose.ui.graphics.layer.GraphicsLayer
-import androidx.compose.ui.graphics.layer.drawLayer
+import io.github.eslamasabry.oc.ui.kit.foundation.kitDrawLayer
+import io.github.eslamasabry.oc.ui.kit.foundation.kitRecord
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.onGloballyPositioned
@@ -478,19 +479,19 @@ private class JoinedPaneNode(
         // 1. The backdrop at the body's resolution, blurred by the body's frost, bent and pressed by the lens pass.
         u.set(programs.lens, mode = 0f, res = res)
         back.renderEffect = platform.liquidJoinEffect(programs.lens, recipe.blurDp.dp.toPx() * res)
-        back.record(small) {
+        kitRecord(back, small) {
             scale(res, res, Offset.Zero) { translate(-local.x, -local.y) { source.draw(this, c) } }
         }
         // 2. The tint eased over the band, then this side's cover.
-        mask.record(full) {
-            scale(1f / res, 1f / res, Offset.Zero) { drawLayer(back) }
+        kitRecord(mask, full) {
+            scale(1f / res, 1f / res, Offset.Zero) { kitDrawLayer(back) }
             u.set(programs.brush, mode = 3f, res = 1f)
             drawRect(programs.brush.brush)
             u.set(programs.brush, mode = 1f, res = 1f)
             drawRect(programs.brush.brush, blendMode = BlendMode.DstIn)
         }
         translate(local.x, local.y) {
-            drawLayer(mask)
+            kitDrawLayer(mask)
             // 3. One rim light along the body's outline on this side (the library's highlight on the body's direction).
             u.set(programs.brush, mode = 2f, res = 1f)
             drawRect(
