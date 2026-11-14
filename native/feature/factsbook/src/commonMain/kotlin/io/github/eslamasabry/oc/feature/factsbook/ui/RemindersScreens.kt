@@ -282,9 +282,7 @@ public fun ReminderEditScreen(state: ReminderEditUi, actions: ReminderEditAction
         if (draft == null) {
             if (state.error == null) KitSkeletonRows()
             else KitStateView(KitStateKind.Missing, stringResource(Res.string.fbErrorTitle), body = failureWords(state.error))
-            return@KitScreen
-        }
-        LazyColumn(Modifier.fillMaxSize(), state = kitPageListState()) {
+        } else LazyColumn(Modifier.fillMaxSize(), state = kitPageListState()) {
             item("form") { DraftForm(draft, state, actions) }
         }
     }

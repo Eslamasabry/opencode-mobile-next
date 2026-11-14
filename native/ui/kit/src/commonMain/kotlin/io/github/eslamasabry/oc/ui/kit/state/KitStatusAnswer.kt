@@ -124,8 +124,8 @@ private fun AnswerMark(tone: KitAnswerTone) {
     Box(Modifier.size(32.dp).clearAndSetSemantics {}, contentAlignment = Alignment.Center) { // F: lib/ui/kit/kit_status_answer.dart:407
     if (tone == KitAnswerTone.Working) {
         KitWorkingMark(colors.text2, LocalKitTokens.current.smallIcon.dp)
-        return@Box
-    }
+    } else {
+    // No early return out of this block: the rest of the mark is the else branch.
     val lamp = when (tone) {
         KitAnswerTone.Ok -> colors.success
         KitAnswerTone.NeedsYou -> colors.attention
@@ -150,6 +150,7 @@ private fun AnswerMark(tone: KitAnswerTone) {
                     size = Size(bar, dot), cornerRadius = CornerRadius(bar / 2)) // F: lib/ui/kit/kit_status_answer.dart:448
             }
         }
+    }
     }
 }
 }

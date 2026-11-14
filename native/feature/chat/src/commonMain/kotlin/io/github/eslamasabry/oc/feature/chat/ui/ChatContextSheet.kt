@@ -85,7 +85,8 @@ internal fun SessionContextDetailsSheet(context: ContextUi?, visible: Boolean, o
         onDismissRequest = onDismiss,
         title = stringResource(Res.string.e7SharedSessionContext),
     ) {
-        if (context == null) return@KitSheet
+        // No early return out of a composable block: the rest of the body sits inside this if.
+        if (context != null) {
         val sheet = context.sheet
         val verdict = contextVerdict(context)
         Row(
@@ -157,6 +158,7 @@ internal fun SessionContextDetailsSheet(context: ContextUi?, visible: Boolean, o
                         ),
                 )
             }
+        }
         }
     }
 }

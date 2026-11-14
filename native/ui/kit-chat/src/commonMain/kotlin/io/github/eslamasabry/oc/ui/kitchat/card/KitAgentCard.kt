@@ -800,8 +800,8 @@ public fun KitCardPhoto(
                 role = TypeRole.Secondary,
                 tone = TextTone.Secondary,
             )
-            return@Column
-        }
+        } else {
+        // No early return out of this block: the rest of the body is the else branch.
         KitText(
             countLabel,
             role = TypeRole.Secondary,
@@ -837,6 +837,7 @@ public fun KitCardPhoto(
                 enabled = KitEnabled.of(reason == null, reason),
                 haptic = KitHaptic.Send,
             )
+        }
         }
     }
 }

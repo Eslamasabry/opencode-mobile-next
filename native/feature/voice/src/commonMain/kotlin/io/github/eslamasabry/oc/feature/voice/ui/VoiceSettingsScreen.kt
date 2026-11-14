@@ -177,8 +177,8 @@ public fun VoiceSettingsScreen(state: VoiceSettingsUi, actions: VoiceSettingsPre
                     modifier = gutter,
                     tone = StatusTone.Failure,
                 )
-                return@Column
-            }
+            } else {
+            // No early return out of this block: the rest of the page is the else branch.
             KitText(
                 stringResource(Res.string.voiceSetupSubtitle),
                 gutter,
@@ -224,6 +224,7 @@ public fun VoiceSettingsScreen(state: VoiceSettingsUi, actions: VoiceSettingsPre
                 )
             }
             ReadAloudVoice(state, actions)
+            }
         }
         // Inside the frame: KitScreen places the sheet host these overlays register with.
         LanguageSheet(state, actions)

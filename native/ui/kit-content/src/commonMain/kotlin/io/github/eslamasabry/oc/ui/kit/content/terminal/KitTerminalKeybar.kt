@@ -80,8 +80,8 @@ internal fun TerminalKeyBarSingleRow(
                     }
                 }
             }
-            return@BoxWithConstraints
-        }
+        } else {
+        // No early return out of this block: the rest of the body is the else branch.
         // The row slides; the end fades while more keys wait past it.
         val scroll = rememberScrollState()
         val more by remember { derivedStateOf { scroll.maxValue == 0 || scroll.value < scroll.maxValue - 1 } } // F: lib/ui/kit/terminal_key_bar.dart:548-552
@@ -121,6 +121,7 @@ internal fun TerminalKeyBarSingleRow(
                     Box(Modifier.size(width, height)) { key(k) } // F: lib/ui/kit/terminal_key_bar.dart:606-607
                 }
             }
+        }
         }
     }
 }

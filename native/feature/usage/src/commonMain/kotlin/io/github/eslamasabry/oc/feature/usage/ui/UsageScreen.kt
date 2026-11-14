@@ -822,8 +822,8 @@ private fun LazyListScope.breakdowns(
                 what = modelsLabel,
                 modifier = Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp),
             )
-            return@item
-        }
+        } else {
+        // No early return out of this block: the rest of the models list is the else branch.
         if (state.hasRecordFilters) {
             val subtotal = models.sumOf { it.cost }
             KitSectionLabel(
@@ -870,6 +870,7 @@ private fun LazyListScope.breakdowns(
                     trailing = KitRowTrailing.Value(cost(m.cost), chevron = false),
                 )
             }
+        }
         }
     }
     item(key = "tools") {
@@ -974,8 +975,8 @@ private fun Chart(report: UsageReport, state: UsageUi) {
                 role = TypeRole.Secondary,
                 tone = TextTone.Secondary,
             )
-            return@Column
-        }
+        } else {
+        // No early return out of this block: the chart is the else branch.
         val busiest = days.maxBy { it.steps }
         KitTrendLine(
             values = days.map { it.steps.toDouble() },
@@ -988,5 +989,6 @@ private fun Chart(report: UsageReport, state: UsageUi) {
                 ),
             modifier = Modifier.testTag("usage-chart"),
         )
+        }
     }
 }

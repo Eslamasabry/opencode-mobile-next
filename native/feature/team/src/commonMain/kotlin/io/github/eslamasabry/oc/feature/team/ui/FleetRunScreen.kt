@@ -362,7 +362,8 @@ private fun WorkSheet(work: FleetWorkUi?, nowMs: Long, actions: FleetRunActions)
         subtitle = work?.task,
         icon = KitIcons.checklist,
     ) {
-        if (work == null) return@KitSheet
+        // No early return out of a composable block: nothing is drawn without a step.
+        if (work != null) {
         if (!work.found) {
             KitStateView(
                 KitStateKind.Missing,
@@ -372,9 +373,7 @@ private fun WorkSheet(work: FleetWorkUi?, nowMs: Long, actions: FleetRunActions)
                 icon = KitIcons.cloudOff,
                 size = KitStateSize.Inline,
             )
-            return@KitSheet
-        }
-        Column(Modifier.testTag("fleet-work-sheet"), verticalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
+        } else Column(Modifier.testTag("fleet-work-sheet"), verticalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
             KitRowGroup {
                 val owner = work.owner
                 KitRow(
@@ -426,6 +425,7 @@ private fun WorkSheet(work: FleetWorkUi?, nowMs: Long, actions: FleetRunActions)
                         )
                     },
             )
+        }
         }
     }
 }

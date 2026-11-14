@@ -161,8 +161,8 @@ public fun DevServicesScreen(state: DevServicesUi, actions: DevServicesActions) 
                     KitIcons.info,
                     layout = KitInlineStateLayout.List,
                 )
-                return@Column
-            }
+            } else {
+            // No early return out of this block: the rest of the page is the else branch.
             if (!state.supported) {
                 KitNotice(
                     message = stringResource(Res.string.servicesUnavailable),
@@ -219,6 +219,7 @@ public fun DevServicesScreen(state: DevServicesUi, actions: DevServicesActions) 
                         },
                     ),
             )
+            }
         }
         KitSheet(
             visible = state.log != null,

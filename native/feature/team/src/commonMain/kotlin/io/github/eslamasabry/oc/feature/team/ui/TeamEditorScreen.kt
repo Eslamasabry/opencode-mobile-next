@@ -222,12 +222,14 @@ private fun Form(state: TeamEditorUi, actions: TeamEditorActions, blocked: Strin
         if (blocked != null) KitNotice(blocked, title = stringResource(Res.string.phoneTeamBlockedTitle))
         Notices(state, actions)
         if (state.changedElsewhere) Tertiary(stringResource(Res.string.teamProjectEditorReload), state, run = actions::askReload)
-        if (state.restoring) return@Column
-        if (kind.creating) Creation(state, actions)
-        if (kind.creating || kind == EditorKind.Settings || kind == EditorKind.Defaults) SettingsFields(state, actions)
-        if (kind == EditorKind.Spec) SpecFields(state, actions)
-        if (kind == EditorKind.Plan) PlanFields(state, actions)
-        if (kind == EditorKind.Roles) RoleFields(state, actions)
+        // No early return out of a composable block: the fields are drawn once the draft is restored.
+        if (!state.restoring) {
+            if (kind.creating) Creation(state, actions)
+            if (kind.creating || kind == EditorKind.Settings || kind == EditorKind.Defaults) SettingsFields(state, actions)
+            if (kind == EditorKind.Spec) SpecFields(state, actions)
+            if (kind == EditorKind.Plan) PlanFields(state, actions)
+            if (kind == EditorKind.Roles) RoleFields(state, actions)
+        }
     }
 }
 

@@ -97,8 +97,8 @@ public fun LinuxStorageScreen(state: LinuxStorageUi, actions: LinuxStorageAction
                         body = state.problem?.words(),
                         primary = KitAction(stringResource(Res.string.commonRetry), actions::retry),
                     )
-                return@Column
-            }
+            } else {
+            // No early return out of this block: the rest of the page is the else branch.
             KitText(
                 stringResource(Res.string.linuxMgrStorageTotal, storageSize(state.report.total)),
                 modifier = Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp),
@@ -226,6 +226,7 @@ public fun LinuxStorageScreen(state: LinuxStorageUi, actions: LinuxStorageAction
                     actions::retry,
                     role = KitButtonRole.Tertiary,
                 )
+            }
             }
         }
         val ask = state.confirm

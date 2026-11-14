@@ -45,7 +45,8 @@ internal fun ToolFileSheet(
         onDismissRequest = onDismiss,
         title = name,
     ) {
-        if (file == null) return@KitSheet
+        // No early return out of a composable block: the rest of the body sits inside this if.
+        if (file != null) {
         when (result) {
             true -> KitNotice(message = saved)
             false -> KitNotice(message = failed)
@@ -74,5 +75,6 @@ internal fun ToolFileSheet(
                 },
                 modifier = Modifier.testTag("chat-file-save"),
             )
+        }
     }
 }

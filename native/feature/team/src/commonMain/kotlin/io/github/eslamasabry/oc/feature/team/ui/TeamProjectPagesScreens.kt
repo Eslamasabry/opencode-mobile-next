@@ -75,11 +75,11 @@ public fun TeamServersScreen(state: TeamServersUi, actions: TeamServersActions) 
             width = KitScreenWidth.Reading,
             edges = KitScreenEdges.Bleed,
         ) {
-            if (state.phase == TeamPhase.Loading) return@KitScreen
-            if (state.projectName == null) {
-                KitStateView(KitStateKind.Empty, stringResource(Res.string.teamProjectSelect))
-                return@KitScreen
-            }
+            // No early return out of a composable block: one when picks what the screen draws.
+            when {
+            state.phase == TeamPhase.Loading -> Unit
+            state.projectName == null -> KitStateView(KitStateKind.Empty, stringResource(Res.string.teamProjectSelect))
+            else -> {
             LazyColumn(
                 Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(top = Space.S2.dp, bottom = Space.S6.dp),
@@ -152,6 +152,8 @@ public fun TeamServersScreen(state: TeamServersUi, actions: TeamServersActions) 
                         }
                     }
                 }
+            }
+            }
             }
         }
         val editing = state.servers.firstOrNull { it.id == state.editingLanes }
@@ -228,11 +230,11 @@ public fun TeamTimelineScreen(state: TeamTimelineUi, actions: TeamTimelineAction
         width = KitScreenWidth.Reading,
         edges = KitScreenEdges.Bleed,
     ) {
-        if (state.phase == TeamPhase.Loading) return@KitScreen
-        if (state.days.isEmpty()) {
-            KitStateView(KitStateKind.Empty, stringResource(Res.string.teamProjectNoTasks))
-            return@KitScreen
-        }
+        // No early return out of a composable block: one when picks what the screen draws.
+        when {
+        state.phase == TeamPhase.Loading -> Unit
+        state.days.isEmpty() -> KitStateView(KitStateKind.Empty, stringResource(Res.string.teamProjectNoTasks))
+        else -> {
         val unknown = stringResource(Res.string.teamProjectUnknown)
         val demo = if (state.demo) stringResource(Res.string.teamProjectDemo) else ""
         LazyColumn(
@@ -259,6 +261,8 @@ public fun TeamTimelineScreen(state: TeamTimelineUi, actions: TeamTimelineAction
                         },
                 )
             }
+        }
+        }
         }
     }
 }
