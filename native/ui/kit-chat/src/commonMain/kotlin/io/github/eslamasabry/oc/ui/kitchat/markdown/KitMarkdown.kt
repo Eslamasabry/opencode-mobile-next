@@ -543,6 +543,33 @@ public fun KitMarkdownTable(
     val columns = maxOf(block.header.size, block.rows.maxOfOrNull { it.size } ?: 0)
     if (columns == 0) return
     val rows = listOf(block.header) + block.rows
+    val measurer = rememberTextMeasurer()
+    val density = LocalDensity.current
+    // Every cell's words, built once; the layout reads them for the narrowest a column may be.
+    val cells =
+        remember(block, inline, actions.confirmedPaths) {
+            rows.map { row ->
+                (0 until columns).map { c ->
+                    inlineAnnotated(row.getOrNull(c) ?: KitInlines(""), inline, sink) { it in actions.confirmedPaths }
+                }
+            }
+        }
+    val bodyStyle = style
+    val headStyle = style.copy(fontWeight = FontWeight.SemiBold)
+    // The narrowest each column may be (audit 1, item 2): its widest unbroken word plus the cell's padding. Android's
+    // text layout breaks only at spaces here, not after a hyphen, so the engine's own minimum let "write-tool" split
+    // as "write-to / ol"; a word is cut only when the column is the whole window (never narrower than one word).
+    val wordMin =
+        remember(cells, bodyStyle, headStyle, density) {
+            val padding = with(density) { (Space.S3 * 2).dp.roundToPx() }
+            IntArray(columns) { c ->
+                cells.indices.maxOf { r ->
+                    kitMdWidestWord(cells[r][c]) { word ->
+                        measurer.measure(word, if (r == 0) headStyle else bodyStyle, softWrap = false, maxLines = 1).size.width
+                    } + padding
+                }
+            }
+        }
     val scroll = rememberScrollState()
     val scope = rememberCoroutineScope()
     BoxWithConstraints(modifier.fillMaxWidth()) {
@@ -579,21 +606,14 @@ public fun KitMarkdownTable(
                 content = {
                     rows.forEachIndexed { r, row ->
                         for (c in 0 until columns) {
-                            val cell = row.getOrNull(c) ?: KitInlines("")
                             val align =
                                 when (block.aligns.getOrNull(c)) {
                                     KitAlign.Center -> TextAlign.Center
                                     KitAlign.End -> TextAlign.End
                                     else -> TextAlign.Start
                                 }
-                            val text =
-                                remember(cell, inline, actions.confirmedPaths) {
-                                    inlineAnnotated(cell, inline, sink) {
-                                        it in actions.confirmedPaths
-                                    }
-                                }
                             BasicText(
-                                text,
+                                cells[r][c],
                                 Modifier.then(
                                         if (r == 0) Modifier.background(colors.surface1) // C-024: Flutter header band
                                         else Modifier
@@ -619,7 +639,7 @@ public fun KitMarkdownTable(
                 measurables.forEachIndexed { i, m ->
                     val c = i % columns
                     natural[c] = maxOf(natural[c], m.maxIntrinsicWidth(Constraints.Infinity))
-                    minimum[c] = maxOf(minimum[c], m.minIntrinsicWidth(Constraints.Infinity))
+                    minimum[c] = maxOf(minimum[c], m.minIntrinsicWidth(Constraints.Infinity), wordMin[c])
                 }
                 val widths = natural.copyOf()
                 if (natural.sum() > available) {
@@ -659,6 +679,21 @@ public fun KitMarkdownTable(
             }
         }
     }
+}
+
+/** The widest run of [text] between spaces, as [widthOf] measures it (0 for none); the unit a table cell never splits. */
+internal fun kitMdWidestWord(text: AnnotatedString, widthOf: (AnnotatedString) -> Int): Int {
+    var widest = 0
+    var start = -1
+    for (i in 0..text.length) {
+        val space = i == text.length || text[i].isWhitespace()
+        if (!space && start < 0) start = i
+        if (space && start >= 0) {
+            widest = maxOf(widest, widthOf(text.subSequence(start, i)))
+            start = -1
+        }
+    }
+    return widest
 }
 
 /** C-026 (Flutter `_KitMdRule`): the kit's one hairline divider with 4 dp above and below. */
