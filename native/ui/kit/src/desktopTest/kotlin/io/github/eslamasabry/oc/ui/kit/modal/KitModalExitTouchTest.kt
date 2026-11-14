@@ -12,13 +12,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.ComposeUiTest
 import androidx.compose.ui.test.click
-import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performTouchInput
-import androidx.compose.ui.test.v2.runComposeUiTest
+import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
@@ -59,7 +60,7 @@ class KitModalExitTouchTest {
     }
 
     private fun run(kind: Kind, block: ComposeUiTest.(Page) -> Unit) =
-        runComposeUiTest {
+        runDesktopComposeUiTest(412, 915) {
             val page = Page()
             setContent {
                 KitTheme(KitAppearance(motion = MotionLevel.Full), FakeKitPlatform(), "en", stillFrame = true) {
@@ -87,7 +88,8 @@ class KitModalExitTouchTest {
             mainClock.advanceTimeByFrame()
             mainClock.advanceTimeByFrame()
             onNodeWithText(label).assertExists()
-            onNodeWithTag("page-chip").performTouchInput { click() }
+            // By place, not by node: the page is out of the accessibility tree until the modal has gone.
+            onRoot().performTouchInput { click(Offset(20f, 20f)) }
             mainClock.advanceTimeByFrame()
             assertEquals(1, page.taps, "$kind: the first tap after the dismissal reached the page")
         }
