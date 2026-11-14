@@ -6613,6 +6613,7 @@ linuxMgrPortsTitle	97ee3baea2
 linuxMgrProblemBusy	ffe643d947
 linuxMgrProblemFailed	f9b82eab69
 linuxMgrProblemJob	5681477168
+linuxMgrProblemNotAnswering	e1bcd34eb8
 linuxMgrProblemSetup	62569f627d
 linuxMgrProblemUnavailable	741a0750ce
 linuxMgrProcEmpty	0cb2dc1561

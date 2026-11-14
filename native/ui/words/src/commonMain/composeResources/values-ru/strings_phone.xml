@@ -936,4 +936,5 @@
     <string name="thermalGuardSaveFailed">Не удалось сохранить защиту от перегрева. Повторите попытку.</string>
     <string name="thisPhoneRestartBody">Чаты, которые сейчас идут, остановятся, а ваши чаты сохранятся. Обычно это занимает меньше минуты.</string>
     <string name="thisPhoneRestartingRow">Перезапуск. Обычно это занимает меньше минуты…</string>
+    <string name="linuxMgrProblemNotAnswering">Linux долго не отвечает. Повторите попытку чуть позже.</string>
 </resources>
