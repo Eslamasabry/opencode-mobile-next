@@ -97,7 +97,7 @@ public fun KitFab(
     visible: Boolean = true,
     /**
      * What scrolls behind the button (the list it floats over, recorded by
-     * [io.github.eslamasabry.oc.ui.kit.effects.kitGlassSource]). Given, Glass draws the button as a drop of accent
+     * [io.github.eslamasabry.oc.ui.kit.effects.kitGlassSource]). Given, Glass draws the button as a drop of clear
      * liquid glass over it (Android 13+, where not held); every other style ignores it.
      */
     backdrop: KitFrostState? = null,
@@ -133,8 +133,10 @@ private fun RoundFace(label: String, icon: ImageVector, onClick: () -> Unit, bac
             )
         )
     val words = look.words ?: colors.onAccent // F: lib/ui/kit/kit_floating_action.dart:168-173
-    // Glass: accent liquid glass over what the button floats over; null keeps the style's own face.
+    // Glass: a clear drop of liquid glass over what the button floats over, its glyph in the page's ink (owner
+    // 2026-11-14: "When in glass the + button shouldn't have a color, just pure glass"); null keeps the style's own face.
     val liquid = kitLiquidFace(LiquidRole.Action, backdrop, CircleShape)
+    val glyph = if (liquid != null) TextTone.Primary else TextTone.OnAccent
     val liquidPress = rememberKitLiquidPress(interactions, on = liquid != null)
     Box(
         Modifier.kitLiquidSwell(liquidPress)
@@ -142,7 +144,7 @@ private fun RoundFace(label: String, icon: ImageVector, onClick: () -> Unit, bac
             // The style's face (and its shadow) is drawn before the target's circular clip, so a raised or offset
             // shadow is not cut away to nothing (device pass 2026-11-13: the round + had no shadow in Soft).
             .then(if (liquid == null) look.modifier else Modifier)
-            .kitTappable(onClick = onClick, shape = KitShapeId.Circle, ink = TextTone.OnAccent, interactionSource = interactions)
+            .kitTappable(onClick = onClick, shape = KitShapeId.Circle, ink = glyph, interactionSource = interactions)
             .then(liquid ?: Modifier)
             .kitLiquidPressLight(liquidPress, CircleShape)
             .semantics { contentDescription = label }
@@ -150,7 +152,7 @@ private fun RoundFace(label: String, icon: ImageVector, onClick: () -> Unit, bac
         contentAlignment = Alignment.Center,
     ) {
         CompositionLocalProvider(LocalKitColors provides colors.copy(onAccent = words)) {
-            KitIcon(icon, size = KitIconSize.Fab, tone = TextTone.OnAccent, growsWithText = true)
+            KitIcon(icon, size = KitIconSize.Fab, tone = glyph, growsWithText = true)
         }
     }
 }

@@ -262,7 +262,9 @@ public object LiquidEdge {
             // Small pills (the jump pill, the chips over the message box) are calm glass: a narrow rim and a light bend,
             // no lens to the middle (owner 2026-11-08: the jump pill's lens read swirly over text).
             LiquidRole.Pill, LiquidRole.Status -> r(1f, 12f, .16f, .18f, .28f, rimMax = 12f, share = .28f)
-            LiquidRole.Action -> r(1f, 26f, .22f, .55f, .62f, rimMax = 40f, share = .5f, depth = true)
+            // The + is a clear drop of glass: the pills' thin tint, never the accent (owner 2026-11-14: "When in
+            // glass the + button shouldn't have a color, just pure glass"); it keeps its lens to the middle.
+            LiquidRole.Action -> r(1f, 26f, .22f, .18f, .28f, rimMax = 40f, share = .5f, depth = true)
         }
     }
 
@@ -361,8 +363,7 @@ public object LiquidEdge {
         return when (role) {
             LiquidRole.Bar, LiquidRole.Dock -> ground
             LiquidRole.Composer, LiquidRole.Sheet, LiquidRole.Menu -> roles.surface2.over(ground)
-            LiquidRole.Pill, LiquidRole.Status -> roles.surface3.over(ground)
-            LiquidRole.Action -> roles.accent.over(ground)
+            LiquidRole.Pill, LiquidRole.Status, LiquidRole.Action -> roles.surface3.over(ground)
         }
     }
 
@@ -413,14 +414,10 @@ public object LiquidEdge {
     ): SurfaceDecoration {
         val recipe = recipe(role, roles.dark, look)
         if (role == LiquidRole.Action) {
-            // The + is accent glass, as thin as its glyph allows: 3:1 over either end of any backdrop.
-            val accent = roles.accent.opaqueArgb()
-            val (darkEnd, brightEnd) = backdropEnds(recipe)
-            val (glyph, target) = inks(roles, role).single()
-            fun reads(a: Float) = listOf(darkEnd, brightEnd).all { wcagContrast(glyph, accent.withAlpha(a).over(it)) >= target - 1e-6 }
-            var a = recipe.tint
-            while (a < 1f && !reads(a)) a = minOf(1f, a + .02f)
-            return SurfaceDecoration(radii = radii, circle = true, fill = accent.withAlpha(a), wordsPlate = Argb(0))
+            // The + is clear glass with the pills' face (their tint, lit corner and sheen), round; its glyph is the
+            // page's ink, flipped by what lies behind it as on every pane.
+            val t = faceTint(roles, LiquidRole.Pill, picture, look, page)
+            return SurfaceDecoration(radii = radii, circle = true, fill = t.fill, fillStart = t.fillStart, sheen = t.sheen, wordsPlate = Argb(0))
         }
         val t = faceTint(roles, role, picture, look, page)
         return SurfaceDecoration(radii = radii, fill = t.fill, fillStart = t.fillStart, sheen = t.sheen)
@@ -557,7 +554,7 @@ public object LiquidEdge {
     /** What must read on a [role] pane: text1, text2 and text3 (the +: its glyph), each with its target contrast. */
     public fun inks(roles: Roles, role: LiquidRole): List<Pair<Argb, Double>> {
         val solid = solidOf(roles, role)
-        return if (role == LiquidRole.Action) listOf(roles.onAccent to minOf(GLYPH_FLOOR, wcagContrast(roles.onAccent, solid)))
+        return if (role == LiquidRole.Action) listOf(roles.text1 to minOf(GLYPH_FLOOR, wcagContrast(roles.text1, solid)))
         else listOf(roles.text1, roles.text2, roles.text3).map { it to minOf(GlassFinish.FLOOR, wcagContrast(it, solid)) }
     }
 
