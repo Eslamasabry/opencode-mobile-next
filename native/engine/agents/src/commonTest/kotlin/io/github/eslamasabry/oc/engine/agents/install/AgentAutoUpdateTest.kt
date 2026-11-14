@@ -60,9 +60,10 @@ class AgentAutoUpdateTest {
         var reads = 0
         var afterRead: (() -> Unit)? = null
         override val readDue: Boolean get() = due
+        var keepDueAfterRead = false
         override suspend fun read() {
             reads++
-            due = false
+            if (!keepDueAfterRead) due = false
             afterRead?.invoke()
         }
         override var installed: List<AgentId> = listOf(AgentId("claude"))
@@ -156,26 +157,72 @@ class AgentAutoUpdateTest {
     }
 
     @Test
-    fun `AGENT-AUTO-UPDATE no facts means one read while idle, and the read decides`() = runTest {
-        // Nothing is known (the person never opened the Agents page): no installed agent, nothing behind.
-        val host = Host().apply { installed = emptyList(); behind = emptySet(); helperBehind = false; due = true }
-        host.afterRead = {
-            host.installed = listOf(claude)
-            host.behind = setOf(claude)
+    fun `AGENT-AUTO-UPDATE no facts means one read even while the agents are busy, and the update waits for idle`() =
+        runTest {
+            // Nothing is known (the person never opened the Agents page): no installed agent, nothing behind.
+            val host = Host().apply { installed = emptyList(); behind = emptySet(); helperBehind = false; due = true }
+            host.afterRead = {
+                host.installed = listOf(claude)
+                host.behind = setOf(claude)
+            }
+            val jobs = Jobs()
+            var busy = true
+            val updater = AgentAutoUpdater(host, jobs) { busy }
+            // A stale busy reading must not keep the version read from happening: it only asks each agent its version.
+            updater.changed()
+            assertEquals(1, host.reads)
+            assertTrue(jobs.started.isEmpty())
+            assertEquals(AgentUpdateStep.WaitingAgentsBusy, updater.decision.value.step)
+            busy = false
+            updater.changed()
+            assertEquals(listOf(claude), jobs.started)
+            assertEquals(AgentUpdateStep.Updating, updater.decision.value.step)
+            // One read only, however often it looks again.
+            host.due = true
+            updater.changed()
+            assertEquals(1, host.reads)
         }
+
+    @Test
+    fun `AGENT-AUTO-UPDATE the decision says what the updater waits for`() = runTest {
+        val host = Host().apply { due = false }
         val jobs = Jobs()
-        var busy = true
+        var busy = false
         val updater = AgentAutoUpdater(host, jobs) { busy }
-        // Busy: no read starts a process, and nothing is decided.
+        host.metered = true
         updater.changed()
-        assertEquals(0, host.reads)
-        assertTrue(jobs.started.isEmpty())
+        assertEquals(AgentUpdateStep.WaitingMetered, updater.decision.value.step)
+        assertEquals("agent update: waiting, network is metered", updater.decision.value.line())
+        host.metered = false
+        jobs.running = true
+        updater.changed()
+        assertEquals(AgentUpdateStep.WaitingSetup, updater.decision.value.step)
+        jobs.running = false
+        host.switchPending = true
+        updater.changed()
+        assertEquals(AgentUpdateStep.WaitingSwitch, updater.decision.value.step)
+        host.switchPending = false
+        busy = true
+        updater.changed()
+        assertEquals("agent update: waiting, agents busy", updater.decision.value.line())
         busy = false
         updater.changed()
-        assertEquals(1, host.reads)
-        assertEquals(listOf(claude), jobs.started)
-        // One read only, however often it looks again.
-        host.due = true
+        assertEquals("agent update: started claude", updater.decision.value.line())
+        host.behind = emptySet()
+        host.helperBehind = false
+        jobs.running = false
+        updater.changed()
+        assertEquals(AgentUpdateStep.NothingBehind, updater.decision.value.step)
+    }
+
+    @Test
+    fun `AGENT-AUTO-UPDATE a read that cannot finish is reported and not repeated this run`() = runTest {
+        val host = Host().apply { due = true }
+        host.keepDueAfterRead = true
+        val jobs = Jobs()
+        val updater = AgentAutoUpdater(host, jobs) { false }
+        updater.changed()
+        assertEquals(AgentUpdateStep.ReadFailed, updater.decision.value.step)
         updater.changed()
         assertEquals(1, host.reads)
     }
