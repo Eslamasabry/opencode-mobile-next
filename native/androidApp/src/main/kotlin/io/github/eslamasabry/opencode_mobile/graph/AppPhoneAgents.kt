@@ -178,6 +178,41 @@ class AppPhoneAgents(
         return (read as? Outcome.Ok)?.value == true
     }
 
+    /**
+     * What the automatic agent update ([PhoneAgentAutoUpdate]) reads: the agents the last reads found installed (kept
+     * across app starts, [PhoneAgentFacts]), those whose copy is not the pinned version, and the helper's own status.
+     * Nothing runs in Linux here except the helper's status read, and no agent is probed. Null when the phone's agents
+     * cannot be read (no Linux, no phone server, a restart pending).
+     */
+    internal class UpdateFacts(
+        val installed: List<AgentId>,
+        val behind: Set<AgentId>,
+        val helperRunning: Boolean,
+        val helperVersion: String?,
+    )
+
+    internal fun updateFacts(): UpdateFacts? {
+        if (needsRestart || !linux.installed) return null
+        val owner = agentOwner(ownerId()) ?: return null
+        val kept = keptFacts(owner)
+        val installed = phoneCatalog().filter { kept[it.id.raw]?.installed == true }
+        val behind =
+            installed
+                .filter { agent ->
+                    val found = kept[agent.id.raw]?.found
+                    found != null && found != agent.recipe?.version
+                }
+                .map { it.id }
+                .toSet()
+        val helper = linux.agentHost.status(owner.raw)
+        return UpdateFacts(
+            installed.map { it.id },
+            behind,
+            helper["running"] == true,
+            helper["helperVersion"] as? String,
+        )
+    }
+
     private fun ownerId(): ProfileId? =
         try {
             (stores.prefs.get("oc.builtinServerOwner") as? PrefValue.Str)

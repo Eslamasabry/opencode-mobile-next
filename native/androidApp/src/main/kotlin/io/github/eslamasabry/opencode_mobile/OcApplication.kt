@@ -135,6 +135,11 @@ class OcApplication : Application(), GraphOwner {
                             .phoneOpenCodeAutoUpdate
                             .start() // keep the phone server on the pinned OpenCode (B-LINUX-079)
                     }
+                    step("phoneAgentAutoUpdate") {
+                        (appGraph as io.github.eslamasabry.opencode_mobile.graph.PhoneAgentAutoUpdateAccessors)
+                            .phoneAgentAutoUpdate
+                            .start() // keep the installed agents and their helper on the pinned versions, when idle
+                    }
                     step("nativePhoneHealing") { (appGraph as NativeHealingAccessors).nativePhoneHealing.start() }
                     step("agentWidgets") {
                         (appGraph as io.github.eslamasabry.opencode_mobile.graph.AgentWidgetAccessors).agentWidgets.start()
