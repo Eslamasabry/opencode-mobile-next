@@ -154,7 +154,16 @@ public data class PhoneAgentsState(
     val conversations: ProfileId? = null,
     /** This phone as the status line names it ("arm64 · Android 15"); null where it is not known. */
     val device: PhoneDevice? = null,
+    /** What the automatic agent update is doing or waiting for, said on the status line; null when nothing to say. */
+    val updateNote: PhoneAgentUpdateNote? = null,
+    /** The agent's name for [PhoneAgentUpdateNote.Updating]. */
+    val updateAgentName: String? = null,
 )
+
+/** What the automatic agent update says on the phone's status line (the words live in the screen). */
+public enum class PhoneAgentUpdateNote {
+    Reading, WaitingBusy, WaitingSetup, WaitingSwitch, WaitingMetered, Updating, ReadFailed, Refused
+}
 
 /** The phone's processor ("arm64") and Android version ("15"), as read by the platform. */
 public data class PhoneDevice(val processor: String, val android: String)

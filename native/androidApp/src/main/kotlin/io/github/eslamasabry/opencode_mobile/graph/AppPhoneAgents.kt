@@ -26,6 +26,8 @@ import io.github.eslamasabry.oc.engine.agents.catalog.AgentPins
 import io.github.eslamasabry.oc.engine.agents.catalog.AgentDescriptor
 import io.github.eslamasabry.oc.engine.agents.catalog.AgentSignInMethod
 import io.github.eslamasabry.oc.engine.agents.diagnostics.AgentHelperStatus
+import io.github.eslamasabry.oc.engine.agents.install.AgentUpdateDecision
+import io.github.eslamasabry.oc.engine.agents.install.AgentUpdateStep
 import io.github.eslamasabry.oc.engine.agents.scripts.PaseoPhoneScripts
 import io.github.eslamasabry.oc.engine.agents.diagnostics.HelperNotice
 import io.github.eslamasabry.oc.engine.agents.gate.PhoneGate
@@ -66,6 +68,7 @@ import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentSpace
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentStatus
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentVersions
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgents
+import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentUpdateNote
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentsState
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneDevice
 import io.github.eslamasabry.oc.feature.agents.hub.phoneInstallStep
@@ -80,6 +83,7 @@ import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
@@ -199,6 +203,32 @@ class AppPhoneAgents(
     @Volatile private var helperInPlace: Boolean? = null
 
     /** The app build the last [readForUpdate] ran under, kept per phone: `oc.agentUpdateRead.<owner>`. */
+    /** The stores are loaded before the updater reads the owner and the kept facts (they load lazily). */
+    internal suspend fun warmForUpdate(): Boolean = stores.warm() is Outcome.Ok
+
+    /** What the automatic update says on the Agents page's status line; kept so every read's state carries it. */
+    @Volatile private var updateNote: Pair<PhoneAgentUpdateNote?, String?> = null to null
+
+    /** The updater's last decision, as the status line words it ([PhoneAgentsState.updateNote]). */
+    internal fun setUpdateNote(decision: AgentUpdateDecision) {
+        val name = decision.agent?.let { catalog.byId(it)?.name }
+        val note =
+            when (decision.step) {
+                AgentUpdateStep.NotLooked,
+                AgentUpdateStep.NothingBehind -> null
+                AgentUpdateStep.Reading -> PhoneAgentUpdateNote.Reading
+                AgentUpdateStep.ReadFailed -> PhoneAgentUpdateNote.ReadFailed
+                AgentUpdateStep.WaitingAgentsBusy -> PhoneAgentUpdateNote.WaitingBusy
+                AgentUpdateStep.WaitingSetup -> PhoneAgentUpdateNote.WaitingSetup
+                AgentUpdateStep.WaitingSwitch -> PhoneAgentUpdateNote.WaitingSwitch
+                AgentUpdateStep.WaitingMetered -> PhoneAgentUpdateNote.WaitingMetered
+                AgentUpdateStep.Updating -> PhoneAgentUpdateNote.Updating
+                AgentUpdateStep.Refused -> PhoneAgentUpdateNote.Refused
+            }
+        updateNote = note to name
+        mutable.update { it.copy(updateNote = note, updateAgentName = name) }
+    }
+
     private fun updateReadKey(owner: ProfileId) = "oc.agentUpdateRead.${owner.raw}"
 
     /**
@@ -493,7 +523,7 @@ class AppPhoneAgents(
         mutable.value =
             if (owner != null && synchronized(admission) { owner in denied })
                 PhoneAgentsState(needsRestart = needsRestart)
-            else shownState
+            else shownState.copy(updateNote = updateNote.first, updateAgentName = updateNote.second)
     }
 
     /**

@@ -22,7 +22,6 @@ import io.github.eslamasabry.oc.engine.runtime.setup.SetupState
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentInstallIssue
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentInstallPhase
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentInstallResult
-import java.util.concurrent.atomic.AtomicReference
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -50,6 +49,7 @@ class PhoneAgentAutoUpdate(
     private val setup: NativePhoneSetup,
     private val leases: NativeChatLeases,
     private val dispatchers: AppDispatchers,
+    private val status: PhoneAgentUpdateStatus,
     private val appScope: AppCoroutineScope,
 ) {
     private var started = false
@@ -91,11 +91,9 @@ class PhoneAgentAutoUpdate(
 
                 override val pinKey: String = pinned
                 override val switchPending: Boolean get() = runtime.switchPending()
-                override val installProblem: Boolean
-                    get() =
-                        phones.state.value.installation?.phase.let {
-                            it == PhoneAgentInstallPhase.Failed || it == PhoneAgentInstallPhase.Interrupted
-                        }
+                // An old failed or interrupted install must not hold the update for ever: a running job does (the
+                // updater's own setup check), and a failed try is retried once per app run.
+                override val installProblem: Boolean get() = false
 
                 // A download of hundreds of megabytes never goes over data that is paid for; unknown counts as paid.
                 override val metered: Boolean
@@ -109,7 +107,7 @@ class PhoneAgentAutoUpdate(
         val jobs =
             object : AgentUpdateJobs {
                 override val running: Boolean get() = setup.progress.value.state == SetupState.Running
-                override val failed: Boolean get() = setup.progress.value.state == SetupState.Failed
+                override val failed: Boolean get() = false
 
                 // Refused because the phone is busy: the try is not spent. Any other refusal (no room, not
                 // installable here) is left to the manual install, which says why.
@@ -127,30 +125,43 @@ class PhoneAgentAutoUpdate(
                 }
             }
         val settled = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
-        // As the OpenCode update: the work counts as busy until known idle has held for 30 s without a break.
+        // As the OpenCode update: work counts as busy until known idle has held for 30 s without a break. Only the
+        // agents' own work counts (the `<owner>.agents` reading), not the phone's OpenCode server: an old conversation
+        // that server still lists as started would otherwise hold the update for ever, and the update does not restart
+        // that server. The helper's own restart refuses by itself while its agents work.
         val settle = OpenCodeIdleSettle(appScope, { SystemClock.elapsedRealtime() }) { settled.tryEmit(Unit) }
-        val idle =
-            AtomicReference(BuiltinRuntime.WorkIdle(idle = false, lease = null, direct = null, agent = false))
-        val updater = AgentAutoUpdater(host, jobs, log = { log.i { it } }) { settle.busy(idle.get().idle) }
+        var busySince: Long? = null
+        val updater =
+            AgentAutoUpdater(host, jobs, log = { log.i { it } }) {
+                val now = SystemClock.elapsedRealtime()
+                val busy = settle.busy(!runtime.agentWorkBusy())
+                if (!busy) {
+                    busySince = null
+                    false
+                } else {
+                    val since = busySince ?: now.also { busySince = it }
+                    // A reading that says busy for this long without a break is taken as stale: the update goes on.
+                    now - since > BUSY_BOUND_MS
+                }
+            }
         // Everything runs off the main thread: the decision reads the helper's status in the phone's Linux.
+        appScope.launch(dispatchers.io) {
+            updater.decision.collect {
+                status.set(it)
+                phones.setUpdateNote(it)
+            }
+        }
         appScope.launch(dispatchers.io) {
             // Let the app finish starting before the first look.
             delay(FIRST_LOOK.seconds)
+            phones.warmForUpdate()
             updater.changed()
             merge(combine(setup.progress, leases.busy) { _, _ -> }, settled).collect { updater.changed() }
         }
         appScope.launch(dispatchers.io) {
             delay(FIRST_LOOK.seconds)
             while (true) {
-                // The idle reading is made only while something is behind: a phone on its pins reads nothing.
-                val facts = phones.updateFacts()
-                if (host.readDue || (facts != null && (facts.behind.isNotEmpty() || host.helperBehind))) {
-                    val now = runtime.readWorkIdle()
-                    if (now != idle.get()) {
-                        log.i { "work idle=${now.idle} lease=${now.lease} direct=${now.direct} agent=${now.agent}" }
-                    }
-                    idle.set(now)
-                }
+                phones.warmForUpdate()
                 updater.changed()
                 delay(LOOK_EVERY.seconds)
             }
@@ -187,6 +198,9 @@ class PhoneAgentAutoUpdate(
 
     private companion object {
         const val FIRST_LOOK = 45L
+
+        /** Agent work that reads busy for two hours without a break is taken as a stale reading. */
+        const val BUSY_BOUND_MS = 2L * 60 * 60 * 1000
         const val LOOK_EVERY = 30L
         const val WAIT_EVERY = 5L
         const val WAIT_STEPS = 180

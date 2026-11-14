@@ -149,6 +149,7 @@ private constructor(
          * timings only the newest few. [connection] is the connection in words with no address or
          * name; [fallbackTitle] titles a report with no attached error and no description (the
          * newest error kept). [update] is the counts-only update check (E00-S15); it leads the diagnostics.
+         * [agentUpdate] is the automatic agent update's last decision as one line.
          */
         public fun build(
             redactor: Redactor,
@@ -163,6 +164,7 @@ private constructor(
             maxTimings: Int = 10,
             maxStackLines: Int = 8,
             update: MigrationCheck? = null,
+            agentUpdate: String? = null,
         ): ProblemReport {
             fun scrub(text: String) = ProblemReports.scrub(redactor, text)
             val said = scrub(description.trim())
@@ -197,6 +199,8 @@ private constructor(
                 .append("Platform: ${scrub(platform)}")
             if (!connection.isNullOrBlank())
                 what.append("\nConnection: ${scrub(connection.trim())}")
+            // The automatic agent update's last decision, one plain line (no names, paths or addresses).
+            if (!agentUpdate.isNullOrBlank()) what.append("\n").append(scrub(agentUpdate.trim()))
 
             val lines = mutableListOf<String>()
             // Counts and fixed words only (MigrationCheck builds no line from file content); scrubbed like the rest.
