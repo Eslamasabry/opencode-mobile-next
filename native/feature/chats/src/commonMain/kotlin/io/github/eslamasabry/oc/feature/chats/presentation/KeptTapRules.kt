@@ -3,6 +3,10 @@ package io.github.eslamasabry.oc.feature.chats.presentation
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.engine.agents.feed.ChatFeedItem
+import kotlin.time.TimeSource
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.first
 
 /** What the home does with a row tapped while it could not open yet (B-333). */
 public sealed interface KeptTap {
@@ -49,8 +53,28 @@ public object KeptTapRules {
     /** How long a kept tap waits for its source with nothing in progress: the conversation page's own limit. */
     public const val LIMIT_MS: Long = 90_000L
 
-    /** How often the wait looks again. */
-    public const val STEP_MS: Long = 2_000L
+    /**
+     * Waits out a kept tap: true once it has waited [limitMs] while [waits] said [KeptWait.Quiet], false as soon as it
+     * says [KeptWait.Ended]. Time under [KeptWait.Updating] (an agent update) does not count. One timer per quiet
+     * stretch and none while updating or ended: nothing wakes on a step, in the foreground or behind the launcher
+     * (background CPU 2026-11-14). [time] measures a quiet stretch an update cut short.
+     */
+    public suspend fun limitSpent(
+        waits: Flow<KeptWait>,
+        limitMs: Long = LIMIT_MS,
+        time: TimeSource = TimeSource.Monotonic,
+    ): Boolean {
+        val now = waits.distinctUntilChanged()
+        var left = limitMs
+        while (left > 0) {
+            if (now.first { it != KeptWait.Updating } == KeptWait.Ended) return false
+            val quiet = time.markNow()
+            val next = kotlinx.coroutines.withTimeoutOrNull(left) { now.first { it != KeptWait.Quiet } } ?: return true
+            if (next == KeptWait.Ended) return false
+            left -= quiet.elapsedNow().inWholeMilliseconds
+        }
+        return true
+    }
 
     /**
      * All conversations' kept tap: a saved row of a server the app is starting opens once that server is connected
@@ -63,6 +87,18 @@ public object KeptTapRules {
             kept.profileId in live -> KeptServerTap.Open(kept)
             else -> KeptServerTap.Wait
         }
+}
+
+/** Where a kept tap's wait stands, for [KeptTapRules.limitSpent]. */
+public enum class KeptWait {
+    /** Kept, and nothing in progress: the time counts. */
+    Quiet,
+
+    /** Kept while the app updates the source's agents: the time does not count. */
+    Updating,
+
+    /** The tap opened, was dropped or was replaced: the wait ends with nothing to say. */
+    Ended,
 }
 
 /** What All conversations does with a row tapped while its server was starting. */
