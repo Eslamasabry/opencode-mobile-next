@@ -27,8 +27,10 @@ import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.LayoutCoordinates
@@ -43,6 +45,7 @@ import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.motion.MotionTokens
 import io.github.eslamasabry.oc.ui.design.style.Style
@@ -57,6 +60,7 @@ import io.github.eslamasabry.oc.ui.kit.icon.KitIcon
 import io.github.eslamasabry.oc.ui.kit.icon.KitIconSize
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
+import io.github.eslamasabry.oc.ui.kit.platform.kitPixelTick
 import io.github.eslamasabry.oc.ui.kit.request.KitHeld
 import io.github.eslamasabry.oc.ui.kit.request.KitRequest
 import io.github.eslamasabry.oc.ui.kit.request.KitRequestAnswers
@@ -65,7 +69,6 @@ import io.github.eslamasabry.oc.ui.kit.state.KitReceipt
 import io.github.eslamasabry.oc.ui.kit.state.KitReceiptState
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
-import kotlinx.coroutines.delay
 
 /**
  * Which tree the data is (LAMP-CRAFT §4a): sub-agents that run at the same time are [Parallel] (a quiet trunk, a
@@ -82,7 +85,8 @@ public enum class KitTreeStepState { NotStarted, Working, NeedsYou, Done, Failed
  * the working step's verb ("Testing"; null = the words' Working); [seconds] the time so far while working (the tree
  * counts on once a second while it is shown) or the time it took once done. [progress] is the working mark's share
  * done (null = the still dashed ring). [request] is what a child that needs the person asks; [held] an answer or a
- * stop held for 3 s; [denied] a refused request. [children] in their real order (as they started).
+ * stop held for 3 s; [denied] a refused request. [children] in their real order (as they started). [word] is said in
+ * place of the state's own word when the data knows better (a stopped step: "Stopped").
  */
 @Immutable
 public data class KitTreeStep(
@@ -98,6 +102,7 @@ public data class KitTreeStep(
     val denied: Boolean = false,
     val stoppable: Boolean = false,
     val children: List<KitTreeStep> = emptyList(),
+    val word: String? = null,
 )
 
 /** The tree's words (the caller's; L1 owns them). */
@@ -369,6 +374,60 @@ public interface KitStepTreeScope {
     /** The fold chevron at the end of the header's title line. */
     @Composable
     public fun FoldChevron()
+
+    /** Opens or folds the block, as the chevron does (a header that is itself the tap target calls it). */
+    public fun toggle()
+}
+
+/**
+ * How the tree's lines are drawn in the style in use (LAMP-CRAFT §4a "Styles"): [width] 1.5 dp in Solid, Glass and Soft,
+ * 2 dp of ink in Brutal, a 1 dp rule in Paper; the quiet [guide] is ink at 22 % (ink itself in Brutal and Paper); the
+ * [accent] (ink in Paper, where progress is ink) and the [attention] for a step that waits for the person. One ink for
+ * every part that draws a step tree's lines (the edge light's panel, a conversation's steps), so they never differ.
+ */
+@Immutable
+public class StepTreeInk(public val width: Dp, public val guide: Color, public val accent: Color, public val attention: Color) {
+    /** The colour of a stroke of [tone]. */
+    public fun of(tone: StepTone): Color =
+        when (tone) {
+            StepTone.Guide -> guide
+            StepTone.Accent -> accent
+            StepTone.Attention -> attention
+        }
+}
+
+/** The [StepTreeInk] of the style and colours in use. */
+@Composable
+public fun rememberStepTreeInk(): StepTreeInk {
+    val colors = LocalKitColors.current
+    val style = LocalKitStyle.current.style
+    return remember(style, colors) {
+        val width =
+            when (style) {
+                Style.Brutal -> StepTreeDims.LINE_BRUTAL
+                Style.Paper -> StepTreeDims.LINE_PAPER
+                else -> StepTreeDims.LINE
+            }
+        val inked = style == Style.Brutal || style == Style.Paper
+        StepTreeInk(
+            width = width.dp,
+            guide = if (inked) colors.text1 else colors.text1.copy(alpha = StepTreeDims.GUIDE_ALPHA),
+            accent = if (style == Style.Paper) colors.text1 else colors.accent,
+            attention = colors.attention,
+        )
+    }
+}
+
+/** Draws [strokes] in [ink] (round caps), each colour at [alpha] of its own; a stroke that starts below the box is skipped. */
+public fun DrawScope.drawStepStrokes(strokes: List<StepStroke>, ink: StepTreeInk, alpha: Float = 1f) {
+    if (strokes.isEmpty() || alpha <= 0f) return
+    val stroke = Stroke(ink.width.toPx(), cap = StrokeCap.Round)
+    val bottom = size.height
+    for (s in strokes) {
+        if (s.from.y > bottom) continue
+        val color = ink.of(s.tone)
+        drawPath(s.toPath(), color.copy(alpha = color.alpha * alpha), style = stroke)
+    }
 }
 
 /** The tree's own choices, kept while the panel lives: a fold the person chose, "+N more" shown, a request closed. */
@@ -406,14 +465,16 @@ public fun KitStepTree(
     modifier: Modifier = Modifier,
     actions: KitStepTreeActions = KitStepTreeActions(),
     state: KitStepTreeState = rememberKitStepTreeState(),
+    /** Where a child's mark starts, dp from the tree's start edge (a grandchild's one mark and gap further in). */
+    indent: Int = StepTreeDims.CHILD_INDENT,
+    /** Whether the block opens by itself; null = the panel's rule (open while a child works, needs you or failed). */
+    opensItself: Boolean? = null,
     header: @Composable KitStepTreeScope.() -> Unit,
 ) {
-    val colors = LocalKitColors.current
-    val style = LocalKitStyle.current.style
     val specs = KitMotion.specs
     val marks = remember { mutableStateMapOf<Any, Rect>() }
     val root = remember { CoordsHolder() }
-    val autoOpen = StepTreeRules.open(steps)
+    val autoOpen = opensItself ?: StepTreeRules.open(steps)
     val open = state.fold[StepTreeRules.ROOT] ?: autoOpen
     val shownFraction = remember { Animatable(if (open) 1f else 0f) }
     LaunchedEffect(open) {
@@ -426,7 +487,7 @@ public fun KitStepTree(
     LaunchedEffect(steps, ticking) {
         counted = 0
         if (ticking) while (true) {
-            delay(SECOND_MS)
+            kitPixelTick(SECOND_MS)
             counted++
         }
     }
@@ -436,15 +497,8 @@ public fun KitStepTree(
                 state.fold[StepTreeRules.ROOT] = !open
             }.also { it.words = words }
         }
-    val lineW = when (style) {
-        Style.Brutal -> StepTreeDims.LINE_BRUTAL
-        Style.Paper -> StepTreeDims.LINE_PAPER
-        else -> StepTreeDims.LINE
-    }
-    val guide = if (style == Style.Brutal || style == Style.Paper) colors.text1 else colors.text1.copy(alpha = StepTreeDims.GUIDE_ALPHA)
-    // Paper's progress is ink, not accent (LAMP-CRAFT §4a).
-    val accent = if (style == Style.Paper) colors.text1 else colors.accent
-    val attention = colors.attention
+    // Paper's progress is ink, not accent (LAMP-CRAFT §4a); the ink is shared with every other step tree.
+    val ink = rememberStepTreeInk()
     // Read in composition: the person's "+N more" choice recomposes the lines.
     val flat = flatten(steps, open || shownFraction.value > 0f, state)
     Column(
@@ -462,17 +516,7 @@ public fun KitStepTree(
                 val strokes =
                     if (kind == KitStepTreeKind.Parallel) StepTreeRules.parallel(known, StepTreeDims.BRANCH_R.dp.toPx())
                     else StepTreeRules.sequence(known, StepTreeDims.BEND.dp.toPx())
-                val stroke = Stroke(lineW.dp.toPx(), cap = StrokeCap.Round)
-                val bottom = size.height
-                for (s in strokes) {
-                    if (s.from.y > bottom) continue
-                    val color = when (s.tone) {
-                        StepTone.Guide -> guide
-                        StepTone.Accent -> accent
-                        StepTone.Attention -> attention
-                    }
-                    drawPath(s.toPath(), color.copy(alpha = color.alpha * fraction), style = stroke)
-                }
+                drawStepStrokes(strokes, ink, fraction)
             },
     ) {
         scope.header()
@@ -490,12 +534,12 @@ public fun KitStepTree(
                 Column(Modifier.fillMaxWidth()) {
                     for (f in flat) {
                         key(f.step.key) {
-                            StepLine(f, words, actions, counted, state, register = { c -> register(marks, root, f.step.key, c) })
+                            StepLine(f, words, actions, counted, state, indent, register = { c -> register(marks, root, f.step.key, c) })
                         }
-                        if (f.moreInside > 0) MoreLine(words.moreInside(f.moreInside), StepTreeDims.GRAND_INDENT + StepTreeDims.MARK + StepTreeDims.GAP) { actions.onOpen(f.step) }
+                        if (f.moreInside > 0) MoreLine(words.moreInside(f.moreInside), indentOf(2, indent) + StepTreeDims.MARK + StepTreeDims.GAP) { actions.onOpen(f.step) }
                         if (f.moreAfter > 0) {
                             val parentKey = f.parent ?: StepTreeRules.ROOT
-                            MoreLine(words.more(f.moreAfter), indentOf(f.depth) + StepTreeDims.MARK + StepTreeDims.GAP) { state.all[parentKey] = true }
+                            MoreLine(words.more(f.moreAfter), indentOf(f.depth, indent) + StepTreeDims.MARK + StepTreeDims.GAP) { state.all[parentKey] = true }
                         }
                     }
                 }
@@ -522,11 +566,15 @@ private class TreeScope(
     override val folded: Boolean,
     override val count: Int,
     private val onRoot: (LayoutCoordinates) -> Unit,
-    private val toggle: () -> Unit,
+    private val onToggle: () -> Unit,
 ) : KitStepTreeScope {
     var words: KitStepTreeWords? = null
 
     override fun Modifier.stepTreeRoot(): Modifier = this.onGloballyPositioned { onRoot(it) }
+
+    override fun toggle() {
+        onToggle()
+    }
 
     @Composable
     override fun FoldChevron() {
@@ -535,11 +583,11 @@ private class TreeScope(
             Modifier
                 .size(StepTreeDims.ROW.dp)
                 .testTag(STEP_TREE_FOLD_TAG)
-                .kitTappable(onClick = toggle, onClickLabel = label)
+                .kitTappable(onClick = onToggle, onClickLabel = label)
                 .clearAndSetSemantics {
                     contentDescription = label
                     role = Role.Button
-                    onClick { toggle(); true }
+                    onClick { onToggle(); true }
                 },
             contentAlignment = Alignment.Center,
         ) {
@@ -575,7 +623,9 @@ private fun flatten(steps: List<KitTreeStep>, open: Boolean, state: KitStepTreeS
     return out
 }
 
-private fun indentOf(depth: Int): Int = if (depth <= 1) StepTreeDims.CHILD_INDENT else StepTreeDims.GRAND_INDENT
+/** A depth's mark start: [first] for a child, one mark and gap further in for a grandchild. */
+private fun indentOf(depth: Int, first: Int = StepTreeDims.CHILD_INDENT): Int =
+    if (depth <= 1) first else first + StepTreeDims.MARK + StepTreeDims.GAP
 
 /** One 44 dp line: mark, name, fact, state, stop; under a waiting child its pause words and its answers. */
 @Composable
@@ -585,12 +635,14 @@ private fun StepLine(
     actions: KitStepTreeActions,
     counted: Int,
     state: KitStepTreeState,
+    first: Int,
     register: (LayoutCoordinates) -> Unit,
 ) {
     val step = f.step
     val waiting = step.state == KitTreeStepState.NeedsYou && step.request != null
     val requestOpen = waiting && state.closed[step.key] != true
     val said = when {
+        step.word != null -> step.word
         step.denied -> words.denied
         step.state == KitTreeStepState.Working -> step.verb ?: words.working
         step.state == KitTreeStepState.NeedsYou -> words.needsYou
@@ -598,7 +650,7 @@ private fun StepLine(
         step.state == KitTreeStepState.NotStarted -> words.notStarted
         else -> step.seconds?.let(words.duration) ?: ""
     }
-    val indent = indentOf(f.depth)
+    val indent = indentOf(f.depth, first)
     Column(Modifier.fillMaxWidth().testTag(STEP_ROW_TAG)) {
         Row(Modifier.fillMaxWidth().heightIn(min = StepTreeDims.ROW.dp), verticalAlignment = Alignment.CenterVertically) {
             Row(
