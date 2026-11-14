@@ -65,7 +65,7 @@ public fun KitPageState(
     }
     BoxWithConstraints(modifier.fillMaxSize()) {
         val height = if (constraints.hasBoundedHeight) maxHeight else 0.dp
-        val scroll = rememberScrollState()
+        val scroll = io.github.eslamasabry.oc.ui.kit.frame.kitPageScrollState()
         Box(
             Modifier.fillMaxWidth()
                 .then(if (constraints.hasBoundedHeight) Modifier.verticalScroll(scroll) else Modifier)

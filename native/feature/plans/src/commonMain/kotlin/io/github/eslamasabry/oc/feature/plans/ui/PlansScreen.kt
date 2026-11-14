@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.plans.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageScrollState
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -105,7 +106,7 @@ public fun PlansContent(
     val words = plansWords()
     var opened by rememberSaveable { mutableStateOf<String?>(null) }
     Column(
-        Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
+        Modifier.fillMaxSize().verticalScroll(kitPageScrollState()),
         verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
     ) {
         when (state.phase) {

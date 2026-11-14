@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.servers.setup.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageScrollState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.rememberTextFieldState
@@ -35,7 +36,7 @@ public fun SetupScreen(state: SetupUi, actions: SetupActions) {
         edges = KitScreenEdges.Bleed,
     ) {
         Column(
-            Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
+            Modifier.fillMaxSize().verticalScroll(kitPageScrollState()).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             KitNotice(stringResource(Res.string.setupInspectReadOnly))

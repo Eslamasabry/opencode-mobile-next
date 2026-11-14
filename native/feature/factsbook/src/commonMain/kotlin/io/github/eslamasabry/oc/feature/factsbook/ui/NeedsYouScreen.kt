@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.factsbook.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageListState
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenRefresh
 import androidx.compose.foundation.layout.Arrangement
@@ -248,7 +249,7 @@ private fun Body(
     onMore: (ReviewItem) -> Unit,
     onMoreProposal: (ReminderProposal) -> Unit,
 ) {
-    LazyColumn(Modifier.fillMaxSize()) {
+    LazyColumn(Modifier.fillMaxSize(), state = kitPageListState()) {
         if (!state.canApprove) {
             item("owner") {
                 KitNotice(

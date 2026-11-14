@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.voice.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageListState
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -54,6 +55,7 @@ public fun TeachingScreen(state: TeachingUi, actions: TeachingActions) {
         LazyColumn(
             Modifier.testTag("help-tips"),
             contentPadding = PaddingValues(top = Space.S2.dp, bottom = Space.S6.dp),
+            state = kitPageListState(),
         ) {
             if (!state.ready) {
                 item {

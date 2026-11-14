@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.team.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageListState
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -272,6 +273,7 @@ private fun Overview(p: ProjectView, state: TeamProjectUi, actions: TeamProjectA
         Modifier.fillMaxSize(),
         contentPadding = PaddingValues(top = Space.S2.dp, bottom = Space.S6.dp),
         verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
+        state = kitPageListState(),
     ) {
         item(key = "lines") { ExecutionLines(p.blocked, null, p.resumeUnavailable) }
         state.refusal?.let { r ->

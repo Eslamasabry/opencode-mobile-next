@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.chat.notes
 
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageScrollState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.rememberTextFieldState
@@ -143,7 +144,7 @@ public fun SessionNoteScreen(state: SessionNoteUi, actions: SessionNoteActions) 
             } else {
                 Column(
                     Modifier.fillMaxSize()
-                        .verticalScroll(rememberScrollState())
+                        .verticalScroll(kitPageScrollState())
                         .padding(horizontal = LocalKitTokens.current.gutter.dp)
                         .padding(top = Space.S3.dp),
                     verticalArrangement = Arrangement.spacedBy(Space.S4.dp),

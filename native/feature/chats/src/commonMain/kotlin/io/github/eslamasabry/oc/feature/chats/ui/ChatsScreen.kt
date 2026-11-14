@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.chats.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.KitReportPageScroll
 import io.github.eslamasabry.oc.ui.kit.frame.kitScreenChromePadding
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import io.github.eslamasabry.oc.ui.design.layout.Layout
@@ -332,7 +333,7 @@ public fun ChatsScreen(
         // between list items put every row 4 px lower than the one before it.
         val list = rememberLazyListState()
         LazyColumn(
-            state = list,
+            state = list.also { KitReportPageScroll(it) },
             modifier = Modifier.kitGlassSource(listGlass),
             // The calm empty page fills the room and keeps its own end space, so it never scrolls by that much.
             // The foot bar is the frame's own block under the list; under Glass the list runs on under its pane and the

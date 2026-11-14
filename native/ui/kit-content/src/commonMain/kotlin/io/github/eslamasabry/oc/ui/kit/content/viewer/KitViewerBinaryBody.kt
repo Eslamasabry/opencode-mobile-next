@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.kit.content.viewer
 
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageScrollState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
@@ -45,7 +46,7 @@ public fun KitViewerBinaryBody(
     val type = mimeType?.takeIf { it.isNotBlank() } ?: stringResource(Res.string.kitViewerUnknownType)
     val size = ViewerText.sizeInWords(sizeBytes) ?: stringResource(Res.string.kitViewerUnknownSize)
     Column(
-        modifier.verticalScroll(rememberScrollState()).padding(gutter),
+        modifier.verticalScroll(kitPageScrollState()).padding(gutter),
         verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
     ) {
         Column(Modifier.semantics(mergeDescendants = true) {}, verticalArrangement = Arrangement.spacedBy(Space.S1.dp)) {

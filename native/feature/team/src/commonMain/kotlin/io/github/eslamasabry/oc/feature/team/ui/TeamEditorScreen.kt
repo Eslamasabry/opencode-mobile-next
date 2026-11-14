@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.team.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageScrollState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
@@ -215,7 +216,7 @@ private fun Tertiary(label: String, state: TeamEditorUi, destructive: Boolean = 
 private fun Form(state: TeamEditorUi, actions: TeamEditorActions, blocked: String?) {
     val kind = state.kind
     Column(
-        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(top = Space.S2.dp, bottom = Space.S6.dp),
+        Modifier.fillMaxSize().verticalScroll(kitPageScrollState()).padding(top = Space.S2.dp, bottom = Space.S6.dp),
         verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
     ) {
         if (blocked != null) KitNotice(blocked, title = stringResource(Res.string.phoneTeamBlockedTitle))

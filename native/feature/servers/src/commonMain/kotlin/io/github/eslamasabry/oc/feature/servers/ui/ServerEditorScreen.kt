@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.servers.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.KitReportPageScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.TextFieldState
@@ -444,7 +445,7 @@ public fun ServerEditorScreen(
             }
         }
         RailColumn(
-            Modifier.fillMaxSize().verticalScroll(scroll).padding(LocalKitTokens.current.gutter.dp),
+            Modifier.fillMaxSize().verticalScroll(scroll.also { KitReportPageScroll(it) }).padding(LocalKitTokens.current.gutter.dp),
         ) {
             if (state.newServer) {
                 val total =

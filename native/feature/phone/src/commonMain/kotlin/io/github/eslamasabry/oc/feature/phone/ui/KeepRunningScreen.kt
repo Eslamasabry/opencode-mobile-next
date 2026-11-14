@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.phone.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageScrollState
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -73,7 +74,7 @@ public fun KeepRunningScreen(state: KeepRunningUi, actions: KeepRunningActions) 
         edges = KitScreenEdges.Bleed,
     ) {
         if (!state.loaded) return@KitScreen
-        Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
+        Column(Modifier.fillMaxWidth().verticalScroll(kitPageScrollState())) {
             if (state.allSet) {
                 KitNotice(
                     title = stringResource(Res.string.keepRunningAllSetTitle),

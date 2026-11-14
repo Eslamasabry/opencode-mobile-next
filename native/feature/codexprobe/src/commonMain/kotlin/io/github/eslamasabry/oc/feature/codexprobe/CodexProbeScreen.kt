@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.codexprobe
 
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageScrollState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.TextFieldState
@@ -47,7 +48,7 @@ public fun CodexProbeScreen(state: CodexProbeUi, actions: CodexProbeActions) {
     ) {
         Column(
             Modifier.fillMaxSize()
-                .verticalScroll(rememberScrollState())
+                .verticalScroll(kitPageScrollState())
                 .padding(LocalKitTokens.current.gutter.dp),
             verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
         ) {

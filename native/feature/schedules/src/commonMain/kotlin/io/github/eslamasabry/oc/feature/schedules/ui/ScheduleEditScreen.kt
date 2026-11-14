@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.schedules.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageScrollState
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -164,7 +165,7 @@ private fun EditorForm(state: ScheduleEditUi, draft: EditorDraft, words: Schedul
     Column(
         Modifier.fillMaxSize()
             .kitImePadding()
-            .verticalScroll(rememberScrollState())
+            .verticalScroll(kitPageScrollState())
             .padding(horizontal = LocalKitTokens.current.gutter.dp, vertical = Space.S3.dp)
     ) {
         KitField(

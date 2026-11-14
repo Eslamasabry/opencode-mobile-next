@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.search.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageListState
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -95,7 +96,7 @@ public fun SearchScreen(
         width = KitScreenWidth.Reading,
         edges = KitScreenEdges.Bleed,
     ) {
-        LazyColumn(verticalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
+        LazyColumn(verticalArrangement = Arrangement.spacedBy(Space.S1.dp), state = kitPageListState()) {
             if (web?.open == true) item(key = "web-search") { webSearch() }
             if (state.recentFailed) {
                 item(key = "recent-failed") { KitNotice(stringResource(Res.string.p12SearchRecentFailed)) }

@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.setupreview.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageScrollState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -31,7 +32,7 @@ import org.jetbrains.compose.resources.stringResource
 @Composable
 internal fun GuidedSetupContent(state: SetupGuidedUi, actions: SetupReviewActions) {
     Column(
-        Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
+        Modifier.fillMaxSize().verticalScroll(kitPageScrollState()),
         verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
     ) {
         KitGroupNote(stringResource(Res.string.setupNativeGuidedBody))

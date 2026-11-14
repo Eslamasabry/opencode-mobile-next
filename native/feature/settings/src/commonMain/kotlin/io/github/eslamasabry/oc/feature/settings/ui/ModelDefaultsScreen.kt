@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.settings.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageScrollState
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.rememberScrollState
@@ -56,7 +57,7 @@ public fun ModelDefaultsScreen(state: ModelDefaultsUi, actions: ModelDefaultsAct
         loading = state.loading && known,
         loadingLabel = stringResource(Res.string.modelDefaultsChecking),
     ) {
-        Column(Modifier.verticalScroll(rememberScrollState())) {
+        Column(Modifier.verticalScroll(kitPageScrollState())) {
             if (state.loading && !known) KitSkeletonRows()
             state.failure?.let {
                 KitErrorNotice(

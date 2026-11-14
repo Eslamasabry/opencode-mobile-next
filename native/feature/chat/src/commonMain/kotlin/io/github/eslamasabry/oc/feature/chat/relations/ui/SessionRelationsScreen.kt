@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.chat.relations.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageListState
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
@@ -90,6 +91,7 @@ public fun SessionRelationsScreen(state: SessionRelationsUi, actions: SessionRel
             LazyColumn(
                 Modifier.fillMaxSize().testTag("session-relations-list"),
                 contentPadding = PaddingValues(top = Space.S2.dp),
+                state = kitPageListState(),
             ) {
                 if (state.stale) {
                     item("stale") {

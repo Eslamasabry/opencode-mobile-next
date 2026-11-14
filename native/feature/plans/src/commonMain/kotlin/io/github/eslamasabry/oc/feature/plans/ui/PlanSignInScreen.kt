@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.plans.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageScrollState
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -94,7 +95,7 @@ public fun PlanSignInScreen(state: PlanAuthenticationUi, actions: PlanSignInActi
     ) {
         Column(
             Modifier.fillMaxSize()
-                .verticalScroll(rememberScrollState())
+                .verticalScroll(kitPageScrollState())
                 .padding(horizontal = LocalKitTokens.current.gutter.dp, vertical = Space.S3.dp),
             verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
         ) {

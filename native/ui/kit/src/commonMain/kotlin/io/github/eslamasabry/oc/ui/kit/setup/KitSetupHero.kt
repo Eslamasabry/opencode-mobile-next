@@ -43,7 +43,7 @@ public fun KitSetupHero(
     Box(
         modifier
             .fillMaxWidth()
-            .verticalScroll(rememberScrollState())
+            .verticalScroll(io.github.eslamasabry.oc.ui.kit.frame.kitPageScrollState())
             .padding(
                 start = tokens.gutter.dp,
                 end = tokens.gutter.dp,

@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.prompts.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageScrollState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.TextFieldState
@@ -65,7 +66,7 @@ public fun KeptPromptsScreen(state: KeptPromptsUi, actions: KeptPromptsActions) 
     ) {
         Column(
             Modifier.fillMaxSize()
-                .verticalScroll(rememberScrollState())
+                .verticalScroll(kitPageScrollState())
                 .padding(horizontal = LocalKitTokens.current.gutter.dp, vertical = Space.S3.dp),
             verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
         ) {

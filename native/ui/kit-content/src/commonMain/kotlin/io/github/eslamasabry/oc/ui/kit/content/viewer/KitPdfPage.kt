@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.kit.content.viewer
 
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageListState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -177,6 +178,7 @@ internal fun ViewerPdfBody(content: KitViewerContent.Pdf, name: String) {
                 Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(vertical = Space.S3.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
+                state = kitPageListState(),
             ) {
                 items(content.pageCount, key = { it }) { index ->
                     ViewerPdfPageView(index, content.pageCount, pageWidth, wide, content.renderPage, content.cancelPage)

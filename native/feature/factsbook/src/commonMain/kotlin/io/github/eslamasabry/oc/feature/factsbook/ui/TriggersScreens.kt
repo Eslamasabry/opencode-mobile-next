@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.factsbook.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageListState
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenRefresh
 import androidx.compose.foundation.layout.Arrangement
@@ -157,7 +158,7 @@ public fun TriggersScreen(state: TriggersUi, actions: TriggersActions) {
             TriggersLoad.Failed -> Failed(state.error, actions::refresh)
             TriggersLoad.Ready ->
                 KitRefresh(state.refreshing, actions::refresh, Modifier.fillMaxSize()) {
-                    LazyColumn(Modifier.fillMaxSize()) { triggerList(state, actions) }
+                    LazyColumn(Modifier.fillMaxSize(), state = kitPageListState()) { triggerList(state, actions) }
                 }
             else -> KitSkeletonRows()
         }
@@ -289,7 +290,7 @@ public fun RuleEditorScreen(state: RuleEditorUi, actions: RuleEditorActions) {
             },
             edges = KitScreenEdges.Bleed,
         ) {
-            LazyColumn(Modifier.fillMaxSize()) {
+            LazyColumn(Modifier.fillMaxSize(), state = kitPageListState()) {
                 if (!state.canApprove) item("owner") { OwnerNotice(stringResource(Res.string.fbRuleNeedsOwner), actions::setUpApproval) }
                 if (state.notice != null || state.failure != null) {
                     item("notice") {
@@ -579,7 +580,7 @@ public fun EventScreen(state: EventUi, actions: EventActions) {
         when {
             event == null && state.error == null -> KitSkeletonRows()
             event == null -> Failed(state.error, actions::reload)
-            else -> LazyColumn(Modifier.fillMaxSize()) { eventDetail(state, event) }
+            else -> LazyColumn(Modifier.fillMaxSize(), state = kitPageListState()) { eventDetail(state, event) }
         }
     }
 }
