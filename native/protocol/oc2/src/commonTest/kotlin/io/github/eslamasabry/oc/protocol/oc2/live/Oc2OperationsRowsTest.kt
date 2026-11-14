@@ -85,6 +85,28 @@ class Oc2OperationsRowsTest {
     }
 
     @Test
+    fun `B-AGENT-036 OpenCode 2 moves sub-agents and shells to the background and a 204 is a request not a promotion`() = runTest {
+        val server = RowServer(location = demo) { respond("", HttpStatusCode.NoContent) }
+        assertEquals(Outcome.Ok(BackgroundWorkSupport.SubagentsAndShells), server.gateway.backgroundWorkSupport())
+        assertTrue(server.seen.isEmpty(), "the support answer needs no request")
+        assertEquals(
+            Outcome.Ok(BackgroundWorkResult.Requested),
+            server.gateway.backgroundSession(io.github.eslamasabry.oc.core.common.ids.SessionId("ses_a1")),
+        )
+        val post = server.seen.single()
+        assertEquals("POST", post.method)
+        assertEquals("/api/session/ses_a1/background", post.path)
+        assertEquals("/root/projects/demo", post.query["location[directory]"])
+        server.gateway.close()
+
+        val refused = RowServer(location = demo) { json("""{"error":"nope"}""", HttpStatusCode.InternalServerError) }
+        assertIs<Outcome.Failed>(
+            refused.gateway.backgroundSession(io.github.eslamasabry.oc.core.common.ids.SessionId("ses_a1"))
+        )
+        refused.gateway.close()
+    }
+
+    @Test
     fun `B-PROTO-035 git init posts vcs init for git in the active location and 409 counts as done`() = runTest {
         val ok = RowServer(location = demo) { respond("", HttpStatusCode.NoContent) }
         assertEquals(Outcome.Ok(Unit), ok.gateway.initializeGitRepository())

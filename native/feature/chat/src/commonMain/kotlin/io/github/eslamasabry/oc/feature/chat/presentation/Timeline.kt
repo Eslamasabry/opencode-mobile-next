@@ -12,6 +12,22 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 
 /**
+ * The row that shows [messageId], as the timeline lands on a message picked without a query: its own last row, else
+ * the work line its folded step lives in, else its turn's first row; null when the transcript holds none of it.
+ */
+internal fun messageRowKey(feed: TurnFeed, transcript: TranscriptState, messageId: String): String? {
+    val own =
+        transcript.rows.filter { RowIds.messageIdOf(it) == messageId } +
+            transcript.rows.filter { it.key.startsWith("notice:$messageId/") }
+    own.lastOrNull()?.let { return it.key }
+    transcript.searchText
+        .firstOrNull { it.sourceId == messageId || it.sourceId.startsWith("$messageId/") }
+        ?.let { return it.rowKey }
+    val turn = feed.ledger.turns.firstOrNull { turn -> turn.messages.any { it.info.id == messageId } } ?: return null
+    return transcript.rows.firstOrNull { it.turnId == turn.turnId }?.key
+}
+
+/**
  * Flutter timeline: one row per real message, newest first, including files, tools and thoughts.
  */
 internal fun timelineEntries(

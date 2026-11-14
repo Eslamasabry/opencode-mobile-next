@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.chat.work
 
+import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.model.BackgroundWorkResult
 import io.github.eslamasabry.oc.core.model.BackgroundWorkSupport
@@ -68,6 +69,11 @@ public data class ChatWorkUi(
     val backgrounding: Boolean = false,
     /** What the server said to the last request; null = none made. */
     val backgroundResult: BackgroundWorkResult? = null,
+    /**
+     * Whether this server can move a running reply's work to the background at all; null until it was read. False
+     * makes the sheet say so in words instead of leaving the place out.
+     */
+    val backgroundSupported: Boolean? = null,
 ) {
     /** Flutter `blocked`: the notice stays while it can be asked, is asked, or was answered. */
     val backgroundNotice: Boolean
@@ -95,11 +101,14 @@ public class ChatWorkModel(
     private var backgroundRequested: Set<String> = emptySet()
     public val state: StateFlow<ChatWorkUi> = mutable
 
-    /** Keeps the running count honest while the chat is open; stops on its own where unsupported. */
+    /**
+     * Keeps the running count honest while the chat is open; stops on its own where the server neither lists
+     * commands nor moves work to the background (once both were read).
+     */
     public fun poll() {
         launch {
-            while (mutable.value.supported) {
-                if (world.capabilities.value.conversationShellOn) load(quiet = true)
+            while (mutable.value.supported || !supportRead || backgroundSupport != BackgroundWorkSupport.Unavailable) {
+                if (world.capabilities.value.conversationShellOn && mutable.value.supported) load(quiet = true)
                 loadBackground()
                 delay(POLL_MS)
             }
@@ -134,7 +143,12 @@ public class ChatWorkModel(
                 supportRead = true
             }
         }
-        mutable.update { it.copy(canBackground = offersBackground()) }
+        mutable.update {
+            it.copy(
+                canBackground = offersBackground(),
+                backgroundSupported = if (supportRead) backgroundSupport != BackgroundWorkSupport.Unavailable else null,
+            )
+        }
     }
 
     /** Flutter `_promote`: "Keep chatting while it runs" sends the running work to the background. */
@@ -176,7 +190,14 @@ public class ChatWorkModel(
                     )
                 }
             }
-            is Outcome.Failed -> mutable.update { it.copy(loading = false, failed = !quiet || it.failed) }
+            is Outcome.Failed ->
+                if (r.failure is Failure.Unavailable)
+                    // A server that lists no commands (an agent helper, Codex) is not a failed read: the sheet shows
+                    // what else it reports, or says it reports nothing, never "Couldn't load".
+                    mutable.update {
+                        it.copy(loading = false, failed = false, supported = false, shells = persistentListOf())
+                    }
+                else mutable.update { it.copy(loading = false, failed = !quiet || it.failed) }
         }
     }
 

@@ -93,6 +93,37 @@ class PaseoBackgroundTasksTest {
         assertNull(part.tool!!.metadata?.get("backgroundTask"))
     }
 
+    private fun agentItem(output: String, description: String? = "Audit the settings page"): JsonObject = jsonOf(
+        "type" to "tool_call",
+        "callId" to "toolu_01Agent",
+        "name" to "Agent",
+        "status" to "completed",
+        "error" to null,
+        "detail" to buildMap {
+            put("type", "sub_agent")
+            put("subAgentType", "general-purpose")
+            if (description != null) put("description", description)
+            put("output", output)
+        },
+    )
+
+    private val agentLaunched =
+        "Async agent launched successfully. (This tool result is internal metadata.)\n" +
+            "agentId: a7f3c2e1 (internal ID - do not mention to user.)\n" +
+            "The agent is working in the background. You will be notified automatically when it completes."
+
+    @Test
+    fun `B-AGENT-034 a sub-agent Claude Code launched in the background is marked with its id and named by its description`() {
+        val part = message(agentItem(agentLaunched), "toolu_01Agent").parts.single()
+        assertEquals("task", part.toolName)
+        assertEquals(jsonOf("id" to "a7f3c2e1", "label" to "Audit the settings page"), part.tool!!.metadata!!.obj("backgroundTask"))
+        // Without a description its kind names it; an agent that finished in the foreground carries no marker.
+        val unnamed = message(agentItem(agentLaunched, description = null), "toolu_01Agent").parts.single()
+        assertEquals(jsonOf("id" to "a7f3c2e1", "label" to "general-purpose"), unnamed.tool!!.metadata!!.obj("backgroundTask"))
+        val foreground = message(agentItem("The settings page has three groups."), "toolu_01Agent").parts.single()
+        assertNull(foreground.tool!!.metadata?.get("backgroundTask"))
+    }
+
     @Test
     fun `B-AGENT-034 the notice keeps which call and task it ended`() {
         val input = message(noticeItem, "task_notification_b1x2y3").parts.single().tool!!.input

@@ -280,6 +280,8 @@ public class ChatViewModel(
 
     override fun backgroundWork(): Unit = presenter.backgroundWork()
 
+    override fun showWorkStart(messageId: String): Unit = presenter.showWorkStart(messageId)
+
     override fun confirmCompact(): Unit = presenter.confirmCompact()
 
     override fun tryLinkNow(): Unit = presenter.tryLinkNow()

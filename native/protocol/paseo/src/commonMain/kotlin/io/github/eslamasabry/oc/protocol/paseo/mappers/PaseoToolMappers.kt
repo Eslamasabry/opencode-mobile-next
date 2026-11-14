@@ -145,12 +145,34 @@ internal fun taskNoticeInput(item: JsonObject, detail: JsonObject): JsonObject {
 
 private val BACKGROUND_COMMAND_REPLY = Regex("""Command running in background with ID:\s*([A-Za-z0-9_-]+)""")
 
-/** The step's metadata with the background marker when a finished `bash` step started work that goes on. */
+/**
+ * Claude Code's answer when its Agent tool started a sub-agent that goes on in the background (`run_in_background`):
+ * "Async agent launched successfully. … agentId: <id> …"; its end is a `task_notification` like a command's.
+ */
+private val BACKGROUND_AGENT_REPLY = Regex("""Async agent launched successfully[\s\S]*?agentId:\s*([A-Za-z0-9_-]+)""")
+
+/**
+ * The step's metadata with the background marker when a finished step started work that goes on: a `bash` command
+ * Claude Code sent to the background, or a sub-agent (`task`) it launched in the background. An agent is marked only
+ * with a name to show (its description or kind), never with the generic command words.
+ */
 internal fun withBackgroundTask(meta: JsonObject?, toolName: String, status: ToolStatus, detail: JsonObject): JsonObject? {
-    if (toolName != "bash" || status != ToolStatus.Completed) return meta
-    val output = detail["output"].stringOrNull() ?: return meta
-    val match = BACKGROUND_COMMAND_REPLY.find(output) ?: return meta
-    val description = detail["description"].stringOrNull()?.trim()?.takeIf { it.isNotEmpty() }
+    if (status != ToolStatus.Completed) return meta
+    val match =
+        when (toolName) {
+            "bash" -> detail["output"].stringOrNull()?.let(BACKGROUND_COMMAND_REPLY::find)
+            "task" ->
+                listOfNotNull(
+                    detail["output"].stringOrNull(),
+                    detail["output"].objectOrNull()?.get("text").stringOrNull(),
+                    detail["log"].stringOrNull(),
+                ).firstNotNullOfOrNull(BACKGROUND_AGENT_REPLY::find)
+            else -> null
+        } ?: return meta
+    val description =
+        (detail["description"].stringOrNull()?.trim()?.takeIf { it.isNotEmpty() }
+            ?: detail["subAgentType"].stringOrNull()?.trim()?.takeIf { it.isNotEmpty() && toolName == "task" })
+    if (toolName == "task" && description == null) return meta
     return JsonObject(
         LinkedHashMap<String, JsonElement>().apply {
             meta?.let(::putAll)

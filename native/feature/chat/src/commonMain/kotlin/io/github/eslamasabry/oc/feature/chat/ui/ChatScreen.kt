@@ -179,7 +179,6 @@ import io.github.eslamasabry.oc.ui.words.res.chatUiChanges
 import io.github.eslamasabry.oc.ui.words.res.chatUiCollapseReasoning
 import io.github.eslamasabry.oc.ui.words.res.chatCollapseAllSteps
 import io.github.eslamasabry.oc.ui.words.res.composerFullCommands
-import io.github.eslamasabry.oc.ui.words.res.workCount
 import io.github.eslamasabry.oc.ui.words.res.chatSendFailureAccountAction
 import io.github.eslamasabry.oc.ui.words.res.chatUiChooseAnotherModel
 import io.github.eslamasabry.oc.ui.words.res.chatUiChooseOption
@@ -471,11 +470,30 @@ public fun ChatScreen(
     val reveal = rememberRevealRegistry()
     val motion = kitChatMotion()
     val latest by rememberUpdatedState(state)
+    // The background line counts the stream's background work and, once the reply has ended, this conversation's
+    // commands still running on the server (owner 2026-11-14: "where is the background activity?").
+    val backgroundTasks =
+        remember(facts.background, work.shells, state.live != null) {
+            io.github.eslamasabry.oc.feature.chat.work.RunningWork.lineTasks(
+                facts.background,
+                work.shells,
+                replyBusy = state.live != null,
+            )
+        }
+    val transcriptFacts =
+        remember(facts, backgroundTasks) {
+            if (backgroundTasks == facts.background) facts else facts.copy(background = backgroundTasks)
+        }
+    fun openWork() {
+        val m = workModel ?: return
+        m.refresh()
+        workOpen = true
+    }
     // Every item the transcript draws below the engine's rows (ChatTranscriptList): a jump to a row (a timeline pick, a
     // Find hit, an arrival) counts them, or it lands one row off while background work shows.
     val itemsBelowRows =
         (if (state.live != null) 1 else 0) + state.pending.size + (if (dockRoomPx > 0) 1 else 0) +
-            (if (facts.background.isNotEmpty()) 1 else 0)
+            (if (transcriptFacts.background.isNotEmpty()) 1 else 0)
 
     // Read acknowledgement follows the visible list (plan 09 §6.7).
     LaunchedEffect(list) {
@@ -802,17 +820,17 @@ public fun ChatScreen(
                                             testTag = "chat-commands-open",
                                             icon = KitIcons.terminal,
                                         ),
-                                        if (workModel != null && work.running > 0)
-                                            KitLineAction(
-                                                stringResource(Res.string.workCount, work.running),
-                                                {
-                                                    workModel.refresh()
-                                                    workOpen = true
-                                                },
-                                                testTag = "chat-work-open",
-                                                icon = KitIcons.branch,
-                                            )
-                                        else null,
+                                        // Always here (owner 2026-11-14): with a count while work runs, and the sheet
+                                        // says when nothing runs or when this server does not report it.
+                                        runningWorkAction(
+                                            offered = workModel != null,
+                                            running =
+                                                io.github.eslamasabry.oc.feature.chat.work.RunningWork.count(
+                                                    facts.background,
+                                                    work.shells,
+                                                ),
+                                            onOpen = ::openWork,
+                                        ),
                                         facts.tasks?.let { tasks ->
                                             KitLineAction(
                                                 stringResource(
@@ -1089,7 +1107,8 @@ public fun ChatScreen(
                                             onReviewPending = onReviewPending,
                                             modifier = Modifier.fillMaxSize().chatPane(),
                                             extraBottomPx = dockRoomPx,
-                                            facts = facts,
+                                            facts = transcriptFacts,
+                                            onOpenBackground = if (workModel != null) ::openWork else null,
                                             display = transcriptDisplay,
                                             onOpenSession = onOpenSession,
                                             onStopLive = actions::stop,
@@ -1185,10 +1204,27 @@ public fun ChatScreen(
                     onDismiss = { commandsOpen = false },
                 )
                 if (workModel != null) {
-                    ChatWorkSheet(work, workOpen, workModel) {
+                    val closeWork = {
                         workOpen = false
                         workModel.closeOutput()
                     }
+                    ChatWorkSheet(
+                        work,
+                        workOpen,
+                        workModel,
+                        onDismiss = closeWork,
+                        tasks = facts.background,
+                        nowMs = facts.nowMs,
+                        subagents = state.capabilities.subagents && !demoMode,
+                        onShowSubagents = {
+                            closeWork()
+                            actions.showSubagents()
+                        },
+                        onShowTask = { task ->
+                            closeWork()
+                            if (task.messageId.isNotEmpty()) actions.showWorkStart(task.messageId)
+                        },
+                    )
                     ChatShellDialog(work, workModel)
                 }
                 if (activeContext != null) ActiveContextSheet(activeContext)
