@@ -6,4 +6,5 @@
     <string name="upgradeComposerVoiceHoldTitle">Habla con el agente</string>
     <string name="upgradeComposerVoiceHold">Mantén presionado el micrófono y habla; suelta para poner tus palabras en el cuadro. Para una conversación por voz, abre + y elige Conversación por voz.</string>
     <string name="upgradeComposerHoldDictate">Mantén presionado para dictar</string>
+    <string name="chatReplyInHint">Responder en %1$s</string>
 </resources>

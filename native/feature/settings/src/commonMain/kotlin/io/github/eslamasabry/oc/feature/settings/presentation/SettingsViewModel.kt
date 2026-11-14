@@ -80,7 +80,7 @@ public interface SettingsHost {
     public val problemReport: ProblemReportSender?
         get() = null
 
-    /** The edge dock's on/off switch; null where the app draws no dock (no row). */
+    /** The Other conversations choice (Rings, Edge light, Hidden); null where the app draws neither (no row). */
     public val edgeDock: EdgeDockSetting?
         get() = null
 

@@ -6,4 +6,5 @@
     <string name="upgradeComposerVoiceHoldTitle">Поговорить с агентом</string>
     <string name="upgradeComposerVoiceHold">Удерживайте микрофон и говорите; отпустите, чтобы текст попал в поле. Для голосового разговора откройте + и выберите «Голосовой чат».</string>
     <string name="upgradeComposerHoldDictate">Удерживайте, чтобы продиктовать</string>
+    <string name="chatReplyInHint">Ответить в чате «%1$s»</string>
 </resources>

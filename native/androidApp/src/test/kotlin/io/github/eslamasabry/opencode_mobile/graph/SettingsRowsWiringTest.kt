@@ -1,6 +1,7 @@
 package io.github.eslamasabry.opencode_mobile.graph
 
 import io.github.eslamasabry.oc.core.domain.capabilities.PlatformCapabilities
+import io.github.eslamasabry.oc.feature.settings.presentation.OtherConversationsMode
 import io.github.eslamasabry.oc.feature.settings.presentation.ServerLine
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsDoor
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsFacts
@@ -27,8 +28,8 @@ class SettingsRowsWiringTest {
             opens = SETTINGS_OPENS,
             phraseChips = true,
             transcriptDisplay = true,
-            // cab4049fb3: Android draws the edge dock, so its switch row exists (the host passes EdgeDockSetting).
-            edgeDock = true,
+            // Android draws the rings and the edge light, so the Other conversations row exists (the host passes EdgeDockSetting).
+            otherConversations = OtherConversationsMode.Rings,
         )
 
     private fun rows(facts: SettingsFacts) =

@@ -74,6 +74,12 @@ public interface KitComposerVoice {
      */
     @Composable public fun Panel(field: KitVoiceField, modifier: Modifier)
 
+    /**
+     * Stops any dictation into [field] when this composer leaves the screen (a switch to another conversation, Files,
+     * Back), so the mic never listens for a conversation the person is no longer in. Draws nothing.
+     */
+    @Composable public fun StopWhenLeft(field: KitVoiceField) {}
+
     /** Optional voice mode entry in the visible + tray, without an idle row above the field. */
     @Composable
     public fun Options(field: KitVoiceField, modifier: Modifier, onSelected: () -> Unit) {}

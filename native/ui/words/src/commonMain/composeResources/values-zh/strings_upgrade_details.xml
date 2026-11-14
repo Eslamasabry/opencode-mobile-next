@@ -3,4 +3,5 @@
 <resources>
     <string name="tipMessageDetailsTitle">消息详情</string>
     <string name="tipMessageDetails">长按消息查看“详情”，或使用它的“更多”按钮，即可查看模型和耗时。</string>
+    <string name="tipBackReturnsTo">返回会回到 %1$s，也就是你离开的地方。</string>
 </resources>

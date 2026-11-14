@@ -238,6 +238,8 @@ public data class ChatsUi(
     /** N-30: row keys that can be pinned on this phone, and those pinned now. */
     val pinnable: ImmutableSet<String> = persistentSetOf(),
     val pinned: ImmutableSet<String> = persistentSetOf(),
+    /** True where a running row's menu can Stop it (the app bound the chat's own stop path). */
+    val stoppable: Boolean = false,
     /** The rename dialog (N-30: Rename from the row menu), or null. */
     val renaming: RenameUi? = null,
     val renameFailure: io.github.eslamasabry.oc.core.common.Failure? = null,
@@ -440,6 +442,9 @@ public interface ChatsActions {
 
     /** N-30: pins or unpins the row's conversation on this phone (the same pins as All conversations). */
     public fun togglePin(row: ConversationRowUi) {}
+
+    /** Stops the running conversation of [row] by the chat's own stop path; no-op where none is bound. */
+    public fun stopRow(row: ConversationRowUi) {}
 
     public fun newConversation()
 

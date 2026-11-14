@@ -162,6 +162,11 @@ public class ChatEntries(
         entry<ChatRoute> { route ->
             val vm = assistedMetroViewModel<ChatViewModel, ChatViewModel.Factory> { create(route) }
             val state by vm.state.collectAsStateWithLifecycle()
+            // The edge light's hand-offs to this page: a request to show, and the arrival after a switch.
+            val requestFocus by vm.switches.requestFocus.collectAsStateWithLifecycle()
+            val switchArrival by vm.switches.arrival.collectAsStateWithLifecycle()
+            // The words typed so far reach their store when the page leaves (a switch, Files, Back).
+            DisposableEffect(vm) { onDispose { vm.switches.flushDraft() } }
             val liveGraphs by registry.live.collectAsStateWithLifecycle()
             val gateway = (liveGraphs[route.ref.profileId] as? ChatGraphAccessors)?.chatGateway
             val serverCapabilities = gateway?.capabilities?.collectAsStateWithLifecycle()?.value
@@ -580,6 +585,11 @@ public class ChatEntries(
                                     state,
                                     vm,
                                     composerHost,
+                                    requestFocus = requestFocus,
+                                    onRequestShown = vm.switches::requestShown,
+                                    switchArrival = switchArrival,
+                                    onHintTyped = vm.switches::hintTyped,
+                                    onBackNoteShown = vm.switches::backNoteShown,
                                     requests = slot,
                                     requestActions = requests,
                                     formWaiting = formState.form != null,

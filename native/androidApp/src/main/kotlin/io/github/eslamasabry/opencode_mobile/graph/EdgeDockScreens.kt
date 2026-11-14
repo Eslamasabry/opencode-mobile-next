@@ -8,9 +8,12 @@ import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.systemGestureExclusion
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesIntoSet
 import dev.zacsweers.metro.Inject
@@ -20,11 +23,19 @@ import io.github.eslamasabry.oc.core.common.AppCoroutineScope
 import io.github.eslamasabry.oc.core.common.AppDispatchers
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
+import io.github.eslamasabry.oc.engine.attention.dock.DockListModel
 import io.github.eslamasabry.oc.engine.attention.dock.DockPeek
+import io.github.eslamasabry.oc.engine.attention.dock.DockReader
 import io.github.eslamasabry.oc.engine.attention.dock.DockRequestRef
 import io.github.eslamasabry.oc.engine.attention.dock.DockSide
 import io.github.eslamasabry.oc.engine.attention.dock.DockUi
+import io.github.eslamasabry.oc.feature.chat.arrival.ChatArrivals
 import io.github.eslamasabry.oc.feature.chat.ui.ChatEdgeDock
+import io.github.eslamasabry.oc.feature.chats.lamp.HeldStops
+import io.github.eslamasabry.oc.feature.chats.lamp.LampListController
+import io.github.eslamasabry.oc.feature.chats.lamp.LampPlace
+import io.github.eslamasabry.oc.feature.chats.presentation.HeldAnswers
+import io.github.eslamasabry.oc.feature.settings.presentation.OtherConversationsMode
 import io.github.eslamasabry.oc.feature.chats.dock.EdgeDockHost
 import io.github.eslamasabry.oc.feature.chats.dock.EdgeDockPort
 import io.github.eslamasabry.oc.feature.chats.dock.HomeEdgeDock
@@ -44,6 +55,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlin.time.Clock
 
 /**
  * The edge dock's screens' port: the one [AppEdgeDock] (started once at app scope by `AttentionRuntime`), the app's
@@ -58,6 +70,11 @@ class AppEdgeDockPort(
     private val navigator: AppNavigator,
     appScope: AppCoroutineScope,
     dispatchers: AppDispatchers,
+    private val held: HeldAnswers,
+    private val stops: HeldStops,
+    private val lampPort: AppLampPort,
+    private val clock: Clock,
+    private val arrivals: ChatArrivals,
 ) : EdgeDockPort {
     private val main = CoroutineScope(appScope.coroutineContext + dispatchers.main)
 
@@ -66,6 +83,46 @@ class AppEdgeDockPort(
 
     override val shown: StateFlow<Boolean>
         get() = dock.shown
+
+    /** Rings, Edge light or Hidden: which of the two hosts is mounted (see [EdgeLightRules.mounts]). */
+    val mode: StateFlow<OtherConversationsMode>
+        get() = dock.mode
+
+    /** The edge light's side and height. */
+    val lightPlace: StateFlow<EdgeLightPlace>
+        get() = dock.lightPlace
+
+    /**
+     * The light's list: every other conversation's state and progress, up to the list reader's 20 rows. Read only
+     * while a light is on screen (it is made on first use, so the rings alone never ask for it).
+     */
+    val lightList: StateFlow<DockListModel> by lazy {
+        dock.list(DockReader.list()).stateIn(main, SharingStarted.WhileSubscribed(PEEK_KEEP_MS), DockListModel())
+    }
+
+    /** The home's "All conversations" number, for the panel's footer (0 until the home list is read). */
+    val allCount: StateFlow<Int> by lazy { dock.allConversations.stateIn(main, SharingStarted.WhileSubscribed(PEEK_KEEP_MS), 0) }
+
+    /** The light's saved place as the list's own kind of place. */
+    val lampPlace: StateFlow<LampPlace> by lazy {
+        dock.lightPlace.map { it.toLampPlace() }.stateIn(main, SharingStarted.Eagerly, dock.lightPlace.value.toLampPlace())
+    }
+
+    /**
+     * The light is about to switch to [target], leaving the conversation titled [leftTitle] (null on a page with no
+     * conversation of its own): the target's page says "Reply in ‹title›" and, the first three times on this device,
+     * where Back goes. Called right before the switch, never for a notification, a home row or a ring.
+     */
+    fun arriving(target: ConversationRef, leftTitle: String?) {
+        arrivals.switched(target, leftTitle)
+    }
+
+    /**
+     * The panel's brain, made when a light is mounted and cancelled with [scope] (the screen's): the list, the shared
+     * holds, the dock's pins, names and hides, the routes. Holds live in the app scope, so closing cancels none.
+     */
+    fun lampController(scope: CoroutineScope): LampListController =
+        LampListController(scope, lightList, navigator, held, stops, lampPort, clock, lampPlace)
 
     override val onScreen: StateFlow<ConversationRef?> =
         navigator.top.map { (it as? ChatRoute)?.ref }.stateIn(main, SharingStarted.Eagerly, null)
@@ -139,6 +196,9 @@ private fun dockBackGestureExclusion(state: KitEdgeDockState): Modifier =
 class AppHomeEdgeDock(private val port: AppEdgeDockPort) : HomeEdgeDock {
     @Composable
     override fun Content(clearBottom: Dp) {
+        val mode by port.mode.collectAsStateWithLifecycle()
+        // The edge light is never on the home (the home list shows all of this): with it chosen nothing is mounted.
+        if (!EdgeLightRules.mounts(mode).rings) return
         EdgeDockHost(
             port,
             Modifier.windowInsetsPadding(WindowInsets.safeDrawing),
@@ -157,6 +217,20 @@ class AppHomeEdgeDock(private val port: AppEdgeDockPort) : HomeEdgeDock {
 class AppChatEdgeDock(private val port: AppEdgeDockPort) : ChatEdgeDock {
     @Composable
     override fun Content(chrome: PaddingValues, onBottomRoom: (Int) -> Unit) {
+        val mode by port.mode.collectAsStateWithLifecycle()
+        val onScreen by port.onScreen.collectAsStateWithLifecycle()
+        if (EdgeLightRules.mounts(mode).light) {
+            // Rings are not mounted; the light sits between the page's top and bottom chrome, under the chat's sheets.
+            EdgeLightMount(
+                port = port,
+                page = onScreen,
+                top = chrome.calculateTopPadding(),
+                bottom = chrome.calculateBottomPadding(),
+                // TODO(KC1): the message box's published top replaces this fixed gap above the bottom chrome.
+                lowAbove = EdgeLightRules.LOW_ABOVE_CHROME_DP.dp,
+            )
+            return
+        }
         EdgeDockHost(
             port,
             Modifier.windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal)),

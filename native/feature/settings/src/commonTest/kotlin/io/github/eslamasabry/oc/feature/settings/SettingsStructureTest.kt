@@ -1,6 +1,7 @@
 package io.github.eslamasabry.oc.feature.settings
 
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsDoor
+import io.github.eslamasabry.oc.feature.settings.presentation.OtherConversationsMode
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsFacts
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsGroupId
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsOutside
@@ -67,13 +68,19 @@ class SettingsStructureTest {
     }
 
     @Test
-    fun the_edge_dock_switch_shows_only_where_the_app_draws_a_dock() {
+    fun the_other_conversations_choice_shows_only_where_the_app_draws_rings_or_a_light() {
         assertFalse(SettingsRowId.EdgeDock in ids(SettingsGroupId.Conversations, phoneFacts()))
         assertFalse(SettingsRowId.EdgeDock in SettingsStructure.searchable(phoneFacts()))
-        val on = SettingsStructure.rows(SettingsGroupId.Conversations, phoneFacts().copy(edgeDock = true), reasoning = false, timestamps = false)
-        assertEquals(SettingsDoor.Switch(true), on.first { it.id == SettingsRowId.EdgeDock }.door)
-        val off = SettingsStructure.rows(SettingsGroupId.Conversations, phoneFacts().copy(edgeDock = false), reasoning = false, timestamps = false)
-        assertEquals(SettingsDoor.Switch(false), off.first { it.id == SettingsRowId.EdgeDock }.door)
+        for (mode in OtherConversationsMode.entries) {
+            val rows =
+                SettingsStructure.rows(
+                    SettingsGroupId.Conversations,
+                    phoneFacts().copy(otherConversations = mode),
+                    reasoning = false,
+                    timestamps = false,
+                )
+            assertEquals(SettingsDoor.Choice(mode), rows.first { it.id == SettingsRowId.EdgeDock }.door)
+        }
     }
 
     @Test

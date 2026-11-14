@@ -239,17 +239,18 @@ class AndroidSettingsHost(
     private val telemetryHealth: AppTelemetryHealth,
     // Report a problem › On this phone: the kept errors and timings (nothing here sends anything).
     private val kept: io.github.eslamasabry.oc.feature.diagnostics.presentation.KeptDiagnosticsHost,
-    // Settings › Conversations › Edge dock: the in-app dock's on/off switch (device-wide).
+    // Settings › Conversations › Other conversations: Rings / Edge light / Hidden (device-wide).
     private val dock: AppEdgeDock,
 ) : SettingsHost {
     private val scope = CoroutineScope(appScope.coroutineContext)
 
     override val edgeDock: io.github.eslamasabry.oc.feature.settings.presentation.EdgeDockSetting =
         object : io.github.eslamasabry.oc.feature.settings.presentation.EdgeDockSetting {
-            override val shown: StateFlow<Boolean>
-                get() = dock.shown
+            override val mode: StateFlow<io.github.eslamasabry.oc.feature.settings.presentation.OtherConversationsMode>
+                get() = dock.mode
 
-            override fun setShown(on: Boolean) = dock.setShown(on)
+            override fun setMode(mode: io.github.eslamasabry.oc.feature.settings.presentation.OtherConversationsMode) =
+                dock.setMode(mode)
         }
 
     /**

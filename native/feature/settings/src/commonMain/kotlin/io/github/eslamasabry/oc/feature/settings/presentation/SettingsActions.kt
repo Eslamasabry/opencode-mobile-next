@@ -141,6 +141,9 @@ public interface SettingsActions {
     /** Appearance › Text size: applies at the app root at once (B-KIT-059). */
     public fun onTextSize(size: AppTextSize) {}
 
+    /** Settings › Conversations › Other conversations: Rings, Edge light or Hidden, saved for this device at once. */
+    public fun onOtherConversations(mode: OtherConversationsMode) {}
+
     /** Language: one tap chooses; the page stays, now in the chosen language (B-L10N-001). */
     public fun onLanguage(language: AppLanguage) {}
 

@@ -139,9 +139,11 @@ public fun NavShell(
                 // its own modals inside); with none contributed the tree is unchanged.
                 if (deps.overlays.isEmpty()) {
                     ShellWide(backStack, deps) { ShellNav(backStack, gate, scale, deps, provider) }
+                    ShellPageLights(backStack, deps)
                 } else {
                     KitSheetHost(Modifier.fillMaxSize()) {
                         ShellWide(backStack, deps) { ShellNav(backStack, gate, scale, deps, provider) }
+                        ShellPageLights(backStack, deps)
                         deps.overlays.forEach { it.Content() }
                     }
                 }
@@ -150,6 +152,18 @@ public fun NavShell(
         }
     }
     }
+}
+
+/**
+ * The edge light on a conversation's Files, Changes and Git pages, above the page and under every app-wide overlay.
+ * Outside the rail's frame: the rail shows only on Home and Settings, which carry no light, so a wide window changes
+ * nothing for it.
+ */
+@Composable
+private fun ShellPageLights(backStack: List<NavKey>, deps: ShellDependencies) {
+    if (deps.pageLights.isEmpty()) return
+    val top = backStack.lastOrNull() as? AppRoute
+    deps.pageLights.forEach { it.Content(top) }
 }
 
 /** s28: from medium, the rail beside the shell's destinations (Conversations, Settings); a phone is unchanged. */

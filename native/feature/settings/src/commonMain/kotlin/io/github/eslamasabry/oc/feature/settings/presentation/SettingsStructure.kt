@@ -22,7 +22,7 @@ public enum class SettingsRowId(public val tag: String, public val group: Settin
     AiTeam("settings-ai-team", SettingsGroupId.Agent),
     ShowReasoning("settings-show-reasoning", SettingsGroupId.Conversations),
     ShowTimestamps("settings-show-timestamps", SettingsGroupId.Conversations),
-    /** The edge dock (running conversations on the screen edge): on or off for this device. */
+    /** Other conversations: Rings, Edge light or Hidden for this device (the row keeps the old dock row's tag). */
     EdgeDock("settings-edge-dock", SettingsGroupId.Conversations),
     PhraseChips("settings-phrase-chips", SettingsGroupId.Conversations),
     DefaultShell("settings-default-shell", SettingsGroupId.Conversations),
@@ -51,6 +51,9 @@ public sealed interface SettingsDoor {
     public data class Outside(val place: SettingsOutside) : SettingsDoor
 
     public data class Switch(val on: Boolean) : SettingsDoor
+
+    /** A row that opens a short list of choices in place (Other conversations); [mode] is the one chosen now. */
+    public data class Choice(val mode: OtherConversationsMode) : SettingsDoor
 }
 
 public data class SettingsRowUi(val id: SettingsRowId, val door: SettingsDoor)
@@ -107,8 +110,8 @@ public data class SettingsFacts(
      */
     val transcriptDisplay: Boolean = true,
     val phraseChips: Boolean = false,
-    /** The edge dock's switch: null where the app draws no dock (no row), else whether it is on. */
-    val edgeDock: Boolean? = null,
+    /** Other conversations: null where the app draws neither rings nor light (no row), else the choice. */
+    val otherConversations: OtherConversationsMode? = null,
 ) {
     public fun canOpen(place: SettingsOutside): Boolean = opens?.contains(place) ?: true
 }
@@ -158,7 +161,7 @@ public object SettingsStructure {
                             SettingsDoor.Switch(reasoning).takeIf { facts.transcriptDisplay }
                         SettingsRowId.ShowTimestamps ->
                             SettingsDoor.Switch(timestamps).takeIf { facts.transcriptDisplay }
-                        SettingsRowId.EdgeDock -> facts.edgeDock?.let { SettingsDoor.Switch(it) }
+                        SettingsRowId.EdgeDock -> facts.otherConversations?.let { SettingsDoor.Choice(it) }
                         SettingsRowId.PhraseChips ->
                             SettingsDoor.Page(SettingsPage.PhraseChips).takeIf { facts.phraseChips }
                         SettingsRowId.DefaultShell ->

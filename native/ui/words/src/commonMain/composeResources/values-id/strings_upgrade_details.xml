@@ -3,4 +3,5 @@
 <resources>
     <string name="tipMessageDetailsTitle">Detail pesan</string>
     <string name="tipMessageDetails">Tahan pesan untuk melihat Detail, atau gunakan tombol Lainnya, untuk melihat model dan waktunya.</string>
+    <string name="tipBackReturnsTo">Kembali membawa Anda ke %1$s, tempat Anda tadi berhenti.</string>
 </resources>

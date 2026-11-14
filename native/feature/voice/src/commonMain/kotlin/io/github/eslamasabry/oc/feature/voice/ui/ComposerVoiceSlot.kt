@@ -92,6 +92,12 @@ public class ComposerVoiceSlot : KitComposerVoice {
     }
 
     @Composable
+    override fun StopWhenLeft(field: KitVoiceField) {
+        val presenter = presenterFor(field)
+        DisposableEffect(presenter) { onDispose { presenter.cancel() } }
+    }
+
+    @Composable
     override fun Actions(field: KitVoiceField, modifier: Modifier) {
         Options(field, modifier) {}
     }

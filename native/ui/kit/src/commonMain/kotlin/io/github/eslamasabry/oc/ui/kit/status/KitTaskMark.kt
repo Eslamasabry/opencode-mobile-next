@@ -1,6 +1,9 @@
 package io.github.eslamasabry.oc.ui.kit.status
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.Animatable
+import androidx.compose.foundation.Canvas
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
@@ -12,17 +15,33 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.PathMeasure
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.color.Argb
 import io.github.eslamasabry.oc.ui.design.color.RoleDerivation
 import io.github.eslamasabry.oc.ui.design.generated.FlutterKitTokens
+import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.text.TextScalePolicy
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitText
@@ -51,8 +70,36 @@ import kotlin.math.roundToInt
 /** Where a task stands (Dart `KitTaskState`): a step's four states, one waiting on the person, one stopped early. */
 public enum class KitTaskState { Waiting, Working, Done, Failed, NeedsYou, Stopped }
 
+/**
+ * How big a [KitTaskMark] is drawn: [Slot] is a row's 32 dp mark slot (the step glyphs); [Mini] is the edge light's
+ * 11 dp mark (LAMP-CRAFT §1): needs you an amber dot, failed a neutral rounded square with ×, working a ring whose arc
+ * is the share done (a still dashed ring when that share is unknown), done an accent ring with a drawn check.
+ */
+public enum class KitMarkSize(public val dp: Int) {
+    Slot(FlutterKitTokens.MARK_SLOT_SIZE),
+    Mini(TaskMarkRules.MINI_DP),
+
+    /** The edge light panel's 24 dp row mark (`Space.S6`): the mini mark's art at a conversation row's size. */
+    Row(Space.S6),
+}
+
 /** Pure rules of [KitTaskMark] (Dart `KitTaskMark.wordFor` and its paused assert). */
 public object TaskMarkRules {
+    /** The edge light's mark, one per 15 dp row of its face (LAMP-CRAFT §1, `MarkSize.Mini`). */
+    public const val MINI_DP: Int = 11
+
+    /**
+     * How far from the mark's centre its drawn ring reaches, as a share of the mark's size (ring radius plus half its
+     * stroke on the 12-unit grid): where a step tree's lines meet the mark exactly.
+     */
+    public const val MINI_OUTER_SHARE: Float = (MINI_RING_R + MINI_RING_W / 2f) / MINI_GRID
+
+    /** The least arc a working mini mark shows, so a run that has just begun still reads as a run. */
+    public const val MINI_LEAST_ARC: Float = 0.08f
+
+    /** The share of the circle a working mini mark's arc covers; null progress is the still dashed ring. */
+    public fun miniArc(progress: Float?): Float? = progress?.let { if (it.isNaN()) MINI_LEAST_ARC else it.coerceIn(MINI_LEAST_ARC, 1f) }
+
     /** Paused only applies to a waiting or working task (STATE-11). */
     public fun canPause(state: KitTaskState): Boolean = state == KitTaskState.Waiting || state == KitTaskState.Working
 
@@ -101,8 +148,21 @@ public fun KitTaskMark(
     paused: Boolean = false,
     label: String? = null,
     showLabel: Boolean = false,
+    /** [KitMarkSize.Mini] draws the edge light's 11 dp mark; [showLabel] and [paused] do not apply to it. */
+    size: KitMarkSize = KitMarkSize.Slot,
+    /** A working mini mark's share done, 0..1; null = unknown (the still dashed ring). Read at [KitMarkSize.Mini] and [KitMarkSize.Row]. */
+    progress: Float? = null,
+    /**
+     * The step tree's look (LAMP-CRAFT §4b), at [KitMarkSize.Mini] and [KitMarkSize.Row]: done is a check in an accent
+     * disc at 22 %, needs you is amber with a pause; the other states as the light draws them.
+     */
+    stepLook: Boolean = false,
 ) {
     val word = label ?: stringResource(TaskMarkRules.word(state, paused))
+    if (size == KitMarkSize.Mini || size == KitMarkSize.Row) {
+        KitMiniTaskMark(state, progress, modifier.clearAndSetSemantics { contentDescription = word }, size.dp, stepLook)
+        return
+    }
     val specs = KitMotion.specs
     val mark: @Composable (Modifier) -> Unit = { m ->
         AnimatedContent(
@@ -156,3 +216,123 @@ private fun taskGlyphSize(): Dp {
     val ratio = kitPixelRatio()
     return if (ratio > 0f) ((scaled * ratio).roundToInt() / ratio).dp else scaled.dp
 }
+
+/**
+ * The 11 dp mark (LAMP-CRAFT §1-2). It draws nothing between changes: a new state cross-fades (QUICK), a finished
+ * mark's check draws itself (CHECK_DRAW), a working arc moves to a new share on the spatial spring; the dashed ring of
+ * unknown progress never moves. Off = every change is final at once.
+ */
+@Composable
+private fun KitMiniTaskMark(state: KitTaskState, progress: Float?, modifier: Modifier, sizeDp: Int, stepLook: Boolean) {
+    val specs = KitMotion.specs
+    val share = TaskMarkRules.miniArc(progress) ?: 0f
+    val arc = remember { Animatable(share) }
+    LaunchedEffect(share) { if (arc.targetValue != share) arc.animateTo(share, specs.spatial()) }
+    val check = remember { Animatable(if (state == KitTaskState.Done) 1f else 0f) }
+    LaunchedEffect(state) {
+        if (state == KitTaskState.Done) { if (check.targetValue != 1f) check.animateTo(1f, specs.checkDraw()) }
+        else if (check.targetValue != 0f) check.snapTo(0f)
+    }
+    val colors = LocalKitColors.current
+    val inks = MiniInks(
+        track = TaskMarkRules.ringColor(colors).copy(alpha = MINI_TRACK_ALPHA),
+        accent = colors.accent,
+        attention = colors.attention,
+        fail = colors.text2,
+        onFail = colors.ground,
+        quiet = colors.text2,
+        onAttention = colors.ground,
+    )
+    val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
+    val known = progress != null
+    Crossfade(state, modifier.size(sizeDp.dp), animationSpec = specs.quick(), label = "kit-mini-mark") { shown ->
+        Canvas(Modifier.size(sizeDp.dp)) {
+            drawMiniMark(shown, known, { arc.value }, { check.value }, inks, rtl, stepLook)
+        }
+    }
+}
+
+private class MiniInks(val track: Color, val accent: Color, val attention: Color, val fail: Color, val onFail: Color, val quiet: Color, val onAttention: Color)
+
+/** The mini mark's art on a 12-unit grid (the prototype's `mini()` glyphs), scaled to the canvas. */
+private fun DrawScope.drawMiniMark(
+    state: KitTaskState,
+    known: Boolean,
+    arc: () -> Float,
+    check: () -> Float,
+    inks: MiniInks,
+    rtl: Boolean,
+    stepLook: Boolean,
+) {
+    val u = size.minDimension / MINI_GRID
+    val r = MINI_RING_R * u
+    val ring = Stroke(MINI_RING_W * u)
+    when (state) {
+        KitTaskState.NeedsYou -> {
+            if (!stepLook) {
+                drawCircle(inks.attention, MINI_DOT_R * u)
+            } else {
+                // Paused for the person: the amber disc to the ring's reach, two pause bars in the ground.
+                drawCircle(inks.attention, r + MINI_RING_W / 2f * u)
+                val w = MINI_RING_W * u
+                drawLine(inks.onAttention, Offset(PAUSE_LEFT * u, PAUSE_TOP * u), Offset(PAUSE_LEFT * u, (MINI_GRID - PAUSE_TOP) * u), w, StrokeCap.Round)
+                drawLine(inks.onAttention, Offset((MINI_GRID - PAUSE_LEFT) * u, PAUSE_TOP * u), Offset((MINI_GRID - PAUSE_LEFT) * u, (MINI_GRID - PAUSE_TOP) * u), w, StrokeCap.Round)
+            }
+        }
+        KitTaskState.Failed -> {
+            drawRoundRect(inks.fail, Offset(u, u), Size(size.width - 2 * u, size.height - 2 * u), CornerRadius(MINI_SQUARE_R * u))
+            val w = MINI_RING_W * u
+            drawLine(inks.onFail, Offset(4 * u, 4 * u), Offset(8 * u, 8 * u), w, StrokeCap.Round)
+            drawLine(inks.onFail, Offset(8 * u, 4 * u), Offset(4 * u, 8 * u), w, StrokeCap.Round)
+        }
+        KitTaskState.Working -> {
+            drawCircle(inks.track, r, style = ring)
+            val stroke = MINI_ARC_W * u
+            if (!known) {
+                drawCircle(
+                    inks.accent, r,
+                    style = Stroke(stroke, cap = StrokeCap.Round, pathEffect = PathEffect.dashPathEffect(floatArrayOf(MINI_DASH * u, MINI_GAP * u))),
+                )
+            } else {
+                val sweep = FULL_TURN * arc()
+                val box = Size(2 * r, 2 * r)
+                val at = Offset(center.x - r, center.y - r)
+                if (rtl) scale(-1f, 1f) { drawArc(inks.accent, TWELVE_O_CLOCK, sweep, false, at, box, style = Stroke(stroke, cap = StrokeCap.Round)) }
+                else drawArc(inks.accent, TWELVE_O_CLOCK, sweep, false, at, box, style = Stroke(stroke, cap = StrokeCap.Round))
+            }
+        }
+        KitTaskState.Done -> {
+            if (stepLook) drawCircle(inks.accent.copy(alpha = STEP_DONE_ALPHA), r + MINI_RING_W / 2f * u)
+            else drawCircle(inks.accent, r, style = ring)
+            val t = check()
+            if (t > 0f) {
+                val tick = Path().apply {
+                    moveTo(3.9f * u, 6.2f * u)
+                    lineTo(5.4f * u, 7.7f * u)
+                    lineTo(8.2f * u, 4.5f * u)
+                }
+                val measure = PathMeasure().apply { setPath(tick, false) }
+                val drawn = Path()
+                measure.getSegment(0f, measure.length * t, drawn, true)
+                drawPath(drawn, inks.accent, style = Stroke(MINI_RING_W * u, cap = StrokeCap.Round, join = StrokeJoin.Round))
+            }
+        }
+        KitTaskState.Waiting -> drawCircle(inks.track, r, style = ring)
+        KitTaskState.Stopped -> drawCircle(inks.quiet, r, style = ring)
+    }
+}
+
+private const val MINI_GRID: Float = 12f // NV: the prototype's 12-unit glyph box
+private const val MINI_RING_R: Float = 4.3f // NV: ring radius on the 12-unit grid
+private const val MINI_RING_W: Float = 1.6f // NV: ring and check stroke on the 12-unit grid
+private const val MINI_ARC_W: Float = 2f // NV: working arc stroke on the 12-unit grid
+private const val MINI_DOT_R: Float = 5f // NV: needs-you dot radius on the 12-unit grid
+private const val MINI_SQUARE_R: Float = 2.2f // NV: failed square corner on the 12-unit grid
+private const val MINI_DASH: Float = 2f // NV: unknown-progress dash on the 12-unit grid
+private const val MINI_GAP: Float = 2.5f // NV: unknown-progress gap on the 12-unit grid
+private const val MINI_TRACK_ALPHA: Float = 0.5f // NV: the track ring is the waiting ring at half strength
+private const val FULL_TURN: Float = 360f // NV: degrees in a turn
+private const val TWELVE_O_CLOCK: Float = -90f // NV: twelve o'clock in Compose degrees
+private const val PAUSE_LEFT: Float = 4.6f // NV: the pause bars' x on the 12-unit grid (prototype kmark)
+private const val PAUSE_TOP: Float = 3.8f // NV: the pause bars' top on the 12-unit grid (prototype kmark)
+private const val STEP_DONE_ALPHA: Float = 0.22f // NV: the step tree's done disc, accent at 22 % (LAMP-CRAFT §4b)

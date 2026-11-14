@@ -682,4 +682,5 @@
     <string name="kitConsequenceKept">Сохранится</string>
     <string name="kitConsequenceInfo">Примечание</string>
     <string name="kitPinned">Закреплено</string>
+    <string name="kitReceiptCountdownSpoken">%1$s. Отменить можно в течение %2$s сек.</string>
 </resources>
