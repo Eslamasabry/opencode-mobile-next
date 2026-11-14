@@ -311,14 +311,23 @@ public class PaseoGateway(
      */
     public var includeSubfolders: Boolean = false
 
+    /**
+     * The folder the helper's projects live under ([includeSubfolders] gateways): its conversations stay readable when
+     * a new conversation moves the gateway to one project. Without it, opening a saved conversation of another project
+     * was refused as stale for as long as the gateway stayed on the first one.
+     */
+    public var subfolderRoot: String? = null
+
     /** Whether a conversation that runs in [directory] belongs to the folder [scope] this gateway is pinned to. */
     internal fun holds(scope: String?, directory: String?): Boolean =
         directory == scope ||
-            (includeSubfolders &&
-                scope != null &&
-                directory != null &&
-                directory.startsWith(scope.trimEnd('/') + "/") &&
-                directory.split('/').none { it == ".." || it == "." })
+            (includeSubfolders && (under(scope, directory) || directory == subfolderRoot || under(subfolderRoot, directory)))
+
+    private fun under(scope: String?, directory: String?): Boolean =
+        scope != null &&
+            directory != null &&
+            directory.startsWith(scope.trimEnd('/') + "/") &&
+            directory.split('/').none { it == ".." || it == "." }
     internal var closed = false
     internal var locationEpoch = 0
     internal val agents = LinkedHashMap<String, JsonObject>()
