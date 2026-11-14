@@ -42,13 +42,21 @@ internal const val COPY_INK_END: Float = 0.125f
 internal fun replyActionReach(more: Boolean): Float =
     REPLY_ACTION_INSET + REPLY_ACTION_GLYPH * if (more) MORE_INK_END else COPY_INK_END
 
+/**
+ * How far in from the end edge a reply's Copy and More stand, beyond the turn's own edge, ALWAYS (the edge light is on
+ * or off): the light's touch box is [io.github.eslamasabry.oc.ui.kit.lamp.KitLampDims.TOUCH_W] wide at the physical
+ * edge and replies scroll under it, so the buttons' ink ends this much (24 dp = Space.S6) before the turn's edge.
+ * Mirrored in Arabic: it is the end side, not the right.
+ */
+public const val REPLY_ACTIONS_EDGE_INSET: Int = Space.S6
+
 /** At this text scale and above the meta words move above the actions (Flutter `_kWrapTextScale`). */
 internal const val FOOTER_WRAP_TEXT_SCALE: Float = 1.3f
 
 /**
  * The reply footer (Flutter `KitTurn._footerRow`, kit_turn.dart:667-737; C-003): one row in the reply column (700 dp
  * cap, S4 sides). Copy then More sit at the **end**, 24 dp glyphs in 48 dp targets 8 dp apart, moved toward the edge
- * so the last glyph's ink ends where the prompt bubble's edge does. [metadata] fills the start of the line: a stopped
+ * so the last glyph's ink ends [REPLY_ACTIONS_EDGE_INSET] before the prompt bubble's edge, clear of the edge light. [metadata] fills the start of the line: a stopped
  * reply's [KitReplyNote], then the newest turn's [KitReplyMeta] ("7:01 PM · model · 150 tok"), then any other line
  * (an end note). From 1.3× text that start column moves above the actions, which stay at the end.
  *
@@ -116,7 +124,12 @@ public const val REPLY_META_TAG: String = "kit-reply-meta"
 @Composable
 private fun ReplyActions(copyLabel: String, moreLabel: String, onCopy: (() -> Unit)?, onMore: (() -> Unit)?) {
     // Placed (painted and hit-tested) toward the end; the row's layout keeps its width, as Flutter's translate.
-    Row(Modifier.offset(x = replyActionReach(more = onMore != null).dp).testTag("kit-reply-actions")) {
+    // The inset is real layout (end padding, mirrored in Arabic) so the meta words never run under the buttons.
+    Row(
+        Modifier.padding(end = REPLY_ACTIONS_EDGE_INSET.dp)
+            .offset(x = replyActionReach(more = onMore != null).dp)
+            .testTag("kit-reply-actions")
+    ) {
         if (onCopy != null)
             KitIconButton(KitIcons.copy, copyLabel, onCopy, tone = TextTone.Secondary, size = REPLY_ACTION_GLYPH)
         if (onCopy != null && onMore != null) Spacer(Modifier.width(Space.S2.dp))

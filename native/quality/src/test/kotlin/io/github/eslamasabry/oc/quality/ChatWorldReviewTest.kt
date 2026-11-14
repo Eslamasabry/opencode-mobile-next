@@ -252,8 +252,9 @@ class ChatWorldReviewTest {
             java.lang.reflect.Proxy.newProxyInstance(
                 io.github.eslamasabry.oc.ui.routes.AppNavigator::class.java.classLoader,
                 arrayOf(io.github.eslamasabry.oc.ui.routes.AppNavigator::class.java),
-            ) { _, _, _ ->
-                null
+            ) { _, method, _ ->
+                // Everything answers null, except the edge light's request: a real flow that never emits.
+                if (method.name == "getRequestFocus") io.github.eslamasabry.oc.ui.routes.RequestFocusSignal().state else null
             } as io.github.eslamasabry.oc.ui.routes.AppNavigator
         val presenter =
             io.github.eslamasabry.oc.feature.chat.presentation.ChatPresenter(
@@ -280,8 +281,9 @@ class ChatWorldReviewTest {
             java.lang.reflect.Proxy.newProxyInstance(
                 io.github.eslamasabry.oc.ui.routes.AppNavigator::class.java.classLoader,
                 arrayOf(io.github.eslamasabry.oc.ui.routes.AppNavigator::class.java),
-            ) { _, _, _ ->
-                null
+            ) { _, method, _ ->
+                // Everything answers null, except the edge light's request: a real flow that never emits.
+                if (method.name == "getRequestFocus") io.github.eslamasabry.oc.ui.routes.RequestFocusSignal().state else null
             } as io.github.eslamasabry.oc.ui.routes.AppNavigator
         val presenter =
             io.github.eslamasabry.oc.feature.chat.presentation.ChatPresenter(

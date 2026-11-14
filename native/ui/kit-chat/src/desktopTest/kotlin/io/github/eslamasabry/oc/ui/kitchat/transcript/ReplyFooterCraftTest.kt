@@ -24,12 +24,12 @@ import kotlin.test.assertTrue
 
 /**
  * C-003 (parity audit 2026-11-07, Flutter kit_turn.dart:667-737): the reply footer puts Copy then More at the **end**,
- * 24 dp glyphs in 48 dp targets 8 dp apart, the last glyph's ink on the turn's edge, and the meta caption at the
+ * 24 dp glyphs in 48 dp targets 8 dp apart, the last glyph's ink 24 dp before the turn's edge (clear of the edge light), and the meta caption at the
  * start. Native had them at the start, 20 dp, no gap, no caption, raised into the reply.
  */
 @OptIn(ExperimentalTestApi::class)
 class ReplyFooterCraftTest {
-    private val width = 400.dp
+    private var width = 400.dp
 
     private fun near(expected: Dp, actual: Dp, what: String) =
         assertTrue(abs(expected.value - actual.value) <= 0.51f, "$what: expected $expected, was $actual")
@@ -62,7 +62,7 @@ class ReplyFooterCraftTest {
         assertTrue(copy.left > width / 2, "the actions sit at the end, not the start")
         // The glyph is 24 dp centred in the target; the dots' ink stands 18.75 % in from the glyph's end.
         val moreInkEnd = more.right - REPLY_ACTION_INSET.dp - (REPLY_ACTION_GLYPH * MORE_INK_END).dp
-        near(width - Space.S4.dp, moreInkEnd, "More's ink ends on the turn's edge")
+        near(width - Space.S4.dp - REPLY_ACTIONS_EDGE_INSET.dp, moreInkEnd, "More's ink ends 24 dp before the turn's edge")
         assertEquals(24, REPLY_ACTION_GLYPH, "the action glyphs are 24 dp (AppIconography.actionSize)")
     }
 
@@ -74,7 +74,7 @@ class ReplyFooterCraftTest {
         assertTrue(more.right < copy.left, "More follows Copy toward the end (left)")
         near(Space.S2.dp, copy.left - more.right, "8 dp between the two targets")
         val moreInkEnd = more.left + REPLY_ACTION_INSET.dp + (REPLY_ACTION_GLYPH * MORE_INK_END).dp
-        near(Space.S4.dp, moreInkEnd, "More's ink ends on the turn's edge")
+        near(Space.S4.dp + REPLY_ACTIONS_EDGE_INSET.dp, moreInkEnd, "More's ink ends 24 dp before the turn's edge")
     }
 
     @Test
@@ -118,6 +118,32 @@ class ReplyFooterCraftTest {
         footer(opened = null)
         val copy = onNodeWithContentDescription("Copy reply").getBoundsInRoot()
         val inkEnd = copy.right - REPLY_ACTION_INSET.dp - (REPLY_ACTION_GLYPH * COPY_INK_END).dp
-        near(width - Space.S4.dp, inkEnd, "Copy's ink ends on the turn's edge")
+        near(width - Space.S4.dp - REPLY_ACTIONS_EDGE_INSET.dp, inkEnd, "Copy's ink ends 24 dp before the turn's edge")
+    }
+
+    /** KC1: the buttons stand clear of the light's touch box (24 dp from the physical edge) at every width and text size. */
+    @Test
+    fun `KC1 the buttons always stand clear of the light's touch box, at 360 and 412 dp and 1_3x text, both directions`() {
+        assertEquals(24, REPLY_ACTIONS_EDGE_INSET, "the token is 24 dp (Space.S6)")
+        for (w in listOf(360, 412)) for (scale in listOf(1f, 1.3f)) for (rtl in listOf(false, true)) {
+            width = w.dp
+            runComposeUiTest {
+                footer(rtl = rtl, meta = "7:01 PM · Parity model · 150 tok", fontScale = scale)
+                val copy = onNodeWithContentDescription("Copy reply").getBoundsInRoot()
+                val more = onNodeWithContentDescription("More").getBoundsInRoot()
+                val ink = (REPLY_ACTION_INSET + REPLY_ACTION_GLYPH * MORE_INK_END).dp
+                val lightBox = 24.dp
+                val what = "w=$w scale=$scale rtl=$rtl"
+                if (!rtl) {
+                    near(width - Space.S4.dp - REPLY_ACTIONS_EDGE_INSET.dp, more.right - ink, "$what More's ink")
+                    assertTrue(width - (more.right - ink) >= lightBox + 16.dp - 0.51.dp, "$what clear of the touch box")
+                } else {
+                    near(Space.S4.dp + REPLY_ACTIONS_EDGE_INSET.dp, more.left + ink, "$what More's ink")
+                    assertTrue(more.left + ink >= lightBox + 16.dp - 0.51.dp, "$what clear of the touch box")
+                }
+                val meta = onNodeWithTag(REPLY_META_TAG, useUnmergedTree = true).getBoundsInRoot()
+                if (scale < 1.3f) assertTrue(if (!rtl) meta.right <= copy.left else meta.left >= copy.right, "$what meta clear of the buttons")
+            }
+        }
     }
 }

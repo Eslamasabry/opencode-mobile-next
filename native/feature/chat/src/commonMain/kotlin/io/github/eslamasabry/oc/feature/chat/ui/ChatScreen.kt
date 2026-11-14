@@ -71,6 +71,9 @@ import io.github.eslamasabry.oc.feature.chat.presentation.TurnFactsUi
 import io.github.eslamasabry.oc.feature.chat.requests.presentation.ChatRequestActions
 import io.github.eslamasabry.oc.feature.chat.requests.presentation.RequestSlotUi
 import io.github.eslamasabry.oc.feature.chat.requests.ui.ChatRequestSlot
+import io.github.eslamasabry.oc.feature.chat.requests.ui.RequestShow
+import io.github.eslamasabry.oc.core.common.ids.RequestId
+import io.github.eslamasabry.oc.ui.words.res.chatReplyInHint
 import io.github.eslamasabry.oc.feature.chat.header.ui.LocalChatHeaderActs
 import io.github.eslamasabry.oc.feature.chat.start.presentation.ChatStartActions
 import io.github.eslamasabry.oc.feature.chat.start.presentation.ChatStartUi
@@ -350,6 +353,14 @@ public fun ChatScreen(
     handoffLine: (@Composable () -> Unit)? = null,
     /** The edge dock over the transcript, under the chat's sheets and viewers; null = none (see [ChatEdgeDock]). */
     edgeDock: ChatEdgeDock? = null,
+    /** The request the edge light asks this page to show (already filtered to this conversation), or null. */
+    requestFocus: io.github.eslamasabry.oc.ui.routes.RequestFocus? = null,
+    /** The page showed request [seq] (scrolled to its card): the navigator drops it. */
+    onRequestShown: (seq: Long) -> Unit = {},
+    /** This page was just switched to with the edge light (filtered to this conversation), or null. */
+    switchArrival: io.github.eslamasabry.oc.feature.chat.arrival.ChatArrival? = null,
+    onHintTyped: (seq: Long) -> Unit = {},
+    onBackNoteShown: (seq: Long) -> Unit = {},
 ) {
     var commandsOpen by remember(state.ref) { mutableStateOf(false) }
     val slashCommands =
@@ -471,6 +482,21 @@ public fun ChatScreen(
         if (!arrival.focusComposer) actions.arrivalShown(arrival.id)
     }
 
+    // After an edge-light switch the keyboard stays down, the box says "Reply in ‹title›" until the person types,
+    // and (the first three times) a note under the top bar says where Back goes.
+    val arrivalFocus = androidx.compose.ui.platform.LocalFocusManager.current
+    LaunchedEffect(switchArrival?.seq) { if (switchArrival != null) arrivalFocus.clearFocus() }
+    var backNoteTitle by remember(switchArrival?.seq) { mutableStateOf(switchArrival?.takeIf { it.backNote }?.leftTitle) }
+    LaunchedEffect(switchArrival?.seq) {
+        if (switchArrival != null && backNoteTitle != null) onBackNoteShown(switchArrival.seq)
+    }
+    val replyInWords = state.title?.takeIf { it.isNotBlank() }?.let { stringResource(Res.string.chatReplyInHint, it) }
+    val replyHint =
+        remember(switchArrival?.seq, switchArrival?.hint, replyInWords) {
+            if (switchArrival?.hint == true && replyInWords != null)
+                ReplyHint(replyInWords) { onHintTyped(switchArrival.seq) }
+            else null
+        }
     val frost = rememberKitFrostState()
     // Find no longer moves the page to the stacked layout (audit 2026-11-14): its one row stands in the bottom block over
     // the message box, the transcript ends above the block (and above "Jump to latest", which stays apart over no words),
@@ -813,6 +839,7 @@ public fun ChatScreen(
                                             icon = KitIcons.idea,
                                         ),
                                     )
+                            BackNoteTip(backNoteTitle, { backNoteTitle = null }) {
                             if (header != null) {
                                 // CHAT-HEADER replaces the plain bar; Find lives in its ⋯ menu, the
                                 // other
@@ -876,6 +903,7 @@ public fun ChatScreen(
                                         )
                                     },
                                 )
+                            }
                         }
                     },
                     status =
@@ -927,12 +955,15 @@ public fun ChatScreen(
                                     requestActions,
                                     nowMs = null,
                                     modifier = Modifier,
+                                    show = requestFocus?.let { RequestShow(RequestId(it.requestId), it.seq) },
+                                    onShown = onRequestShown,
                                 )
                             if (requests.card == null) formSlot?.invoke(Modifier)
                             // The composer is the conversation's: it shows once the conversation has loaded
                             // (Flutter chat_states.dart: no composer under the skeleton or the could-not-load
                             // page), as wide as the conversation's pane (E20-S27).
                             if (state.phase == ChatPhase.Live)
+                              CompositionLocalProvider(LocalReplyHint provides replyHint) {
                                 composerHost.Composer(
                                     ComposerTarget(
                                         state.ref.profileId.raw,
@@ -944,6 +975,7 @@ public fun ChatScreen(
                                     // already keeps that room. E: on wide windows it shares the 700 dp pane.
                                     Modifier.fillMaxWidth().chatPane().testTag("chat-composer-pane").padding(top = Space.S2.dp),
                                 )
+                              }
                         }
                     },
                     edges = KitScreenEdges.Bleed,
