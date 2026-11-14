@@ -66,3 +66,4 @@ allow	Android
 allow	Linux
 allow	Git
 allow	git
+allow	Conversations

@@ -75,3 +75,4 @@ allow	Portugu
 allow	Espa
 allow	Brasil
 allow	min
+allow	tokens
