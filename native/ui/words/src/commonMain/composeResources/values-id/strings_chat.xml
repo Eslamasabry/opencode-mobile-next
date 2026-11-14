@@ -1163,4 +1163,63 @@
         <item quantity="other">%1$d dihentikan</item>
     </plurals>
     <string name="kitWorkSubAgentSpoken">%1$s, subagen, %2$s</string>
+    <string name="chatUiStopBackgroundTask">Tugas latar belakang dihentikan</string>
+    <string name="chatUiReadTaskOutput">Keluaran tugas latar belakang dibaca</string>
+    <plurals name="stepRunCommands">
+        <item quantity="other">%1$d perintah</item>
+    </plurals>
+    <plurals name="stepRunFiles">
+        <item quantity="other">%1$d file</item>
+    </plurals>
+    <plurals name="stepRunSearches">
+        <item quantity="other">%1$d pencarian</item>
+    </plurals>
+    <plurals name="stepRunFolders">
+        <item quantity="other">%1$d folder</item>
+    </plurals>
+    <string name="stepShellTests">Tes dijalankan</string>
+    <string name="stepShellTestsNow">Menjalankan tes</string>
+    <string name="stepShellSearch">File dicari</string>
+    <string name="stepShellSearchNow">Mencari file</string>
+    <string name="stepShellReadOne">%1$s dibaca</string>
+    <string name="stepShellReadMany">File dibaca</string>
+    <string name="stepShellReadManyNow">Membaca file</string>
+    <string name="stepShellList">File ditampilkan</string>
+    <string name="stepShellListNow">Menampilkan file</string>
+    <string name="stepShellProcesses">Proses yang berjalan diperiksa</string>
+    <string name="stepShellProcessesNow">Memeriksa proses yang berjalan</string>
+    <string name="stepShellStop">Proses dihentikan</string>
+    <string name="stepShellStopNow">Menghentikan proses</string>
+    <string name="stepShellChanges">Perubahan diperiksa</string>
+    <string name="stepShellChangesNow">Memeriksa perubahan</string>
+    <string name="stepShellAnalyze">Kode diperiksa</string>
+    <string name="stepShellAnalyzeNow">Memeriksa kode</string>
+    <string name="stepShellBuild">Proyek dibangun</string>
+    <string name="stepShellBuildNow">Membangun proyek</string>
+    <string name="stepShellInstall">Paket diinstal</string>
+    <string name="stepShellInstallNow">Menginstal paket</string>
+    <string name="stepShellFetch">Halaman web diambil</string>
+    <string name="stepShellFetchNow">Mengambil halaman web</string>
+    <string name="stepShellDelete">File dihapus</string>
+    <string name="stepShellDeleteNow">Menghapus file</string>
+    <string name="stepShellChangeFiles">File diubah</string>
+    <string name="stepShellChangeFilesNow">Mengubah file</string>
+    <string name="stepShellWait">Selesai menunggu</string>
+    <string name="stepShellWaitNow">Menunggu</string>
+    <string name="stepShellProgram">%1$s dijalankan</string>
+    <string name="stepShellTestsAsk">Jalankan tes</string>
+    <string name="stepShellSearchAsk">Cari file</string>
+    <string name="stepShellListAsk">Tampilkan file</string>
+    <string name="stepShellProcessesAsk">Periksa proses yang berjalan</string>
+    <string name="stepShellStopAsk">Hentikan proses</string>
+    <string name="stepShellChangesAsk">Periksa perubahan</string>
+    <string name="stepShellAnalyzeAsk">Periksa kode</string>
+    <string name="stepShellBuildAsk">Bangun proyek</string>
+    <string name="stepShellInstallAsk">Instal paket</string>
+    <string name="stepShellFetchAsk">Ambil halaman web</string>
+    <string name="stepShellDeleteAsk">Hapus file</string>
+    <string name="stepShellChangeFilesAsk">Ubah file</string>
+    <string name="stepShellWaitAsk">Tunggu</string>
+    <string name="stepShellProgramAsk">Jalankan %1$s</string>
+    <string name="stepShellUnknownAsk">Jalankan perintah</string>
 </resources>

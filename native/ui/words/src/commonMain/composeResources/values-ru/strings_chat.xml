@@ -1338,4 +1338,75 @@
         <item quantity="other">остановлено: %1$d</item>
     </plurals>
     <string name="kitWorkSubAgentSpoken">%1$s, субагент, %2$s</string>
+    <string name="chatUiStopBackgroundTask">Фоновая задача остановлена</string>
+    <string name="chatUiReadTaskOutput">Вывод фоновой задачи прочитан</string>
+    <plurals name="stepRunCommands">
+        <item quantity="one">%1$d команда</item>
+        <item quantity="few">%1$d команды</item>
+        <item quantity="many">%1$d команд</item>
+        <item quantity="other">%1$d команды</item>
+    </plurals>
+    <plurals name="stepRunFiles">
+        <item quantity="one">%1$d файл</item>
+        <item quantity="few">%1$d файла</item>
+        <item quantity="many">%1$d файлов</item>
+        <item quantity="other">%1$d файла</item>
+    </plurals>
+    <plurals name="stepRunSearches">
+        <item quantity="one">%1$d поиск</item>
+        <item quantity="few">%1$d поиска</item>
+        <item quantity="many">%1$d поисков</item>
+        <item quantity="other">%1$d поиска</item>
+    </plurals>
+    <plurals name="stepRunFolders">
+        <item quantity="one">%1$d папка</item>
+        <item quantity="few">%1$d папки</item>
+        <item quantity="many">%1$d папок</item>
+        <item quantity="other">%1$d папки</item>
+    </plurals>
+    <string name="stepShellTests">Тесты запущены</string>
+    <string name="stepShellTestsNow">Запуск тестов</string>
+    <string name="stepShellSearch">Поиск по файлам выполнен</string>
+    <string name="stepShellSearchNow">Поиск по файлам</string>
+    <string name="stepShellReadOne">Прочитано: %1$s</string>
+    <string name="stepShellReadMany">Файлы прочитаны</string>
+    <string name="stepShellReadManyNow">Чтение файлов</string>
+    <string name="stepShellList">Список файлов получен</string>
+    <string name="stepShellListNow">Получение списка файлов</string>
+    <string name="stepShellProcesses">Запущенные процессы проверены</string>
+    <string name="stepShellProcessesNow">Проверка запущенных процессов</string>
+    <string name="stepShellStop">Процесс остановлен</string>
+    <string name="stepShellStopNow">Остановка процесса</string>
+    <string name="stepShellChanges">Изменения проверены</string>
+    <string name="stepShellChangesNow">Проверка изменений</string>
+    <string name="stepShellAnalyze">Код проверен</string>
+    <string name="stepShellAnalyzeNow">Проверка кода</string>
+    <string name="stepShellBuild">Проект собран</string>
+    <string name="stepShellBuildNow">Сборка проекта</string>
+    <string name="stepShellInstall">Пакеты установлены</string>
+    <string name="stepShellInstallNow">Установка пакетов</string>
+    <string name="stepShellFetch">Веб-страница загружена</string>
+    <string name="stepShellFetchNow">Загрузка веб-страницы</string>
+    <string name="stepShellDelete">Файлы удалены</string>
+    <string name="stepShellDeleteNow">Удаление файлов</string>
+    <string name="stepShellChangeFiles">Файлы изменены</string>
+    <string name="stepShellChangeFilesNow">Изменение файлов</string>
+    <string name="stepShellWait">Ожидание завершено</string>
+    <string name="stepShellWaitNow">Ожидание</string>
+    <string name="stepShellProgram">Выполнено: %1$s</string>
+    <string name="stepShellTestsAsk">Запусти тесты</string>
+    <string name="stepShellSearchAsk">Выполни поиск по файлам</string>
+    <string name="stepShellListAsk">Покажи список файлов</string>
+    <string name="stepShellProcessesAsk">Проверь запущенные процессы</string>
+    <string name="stepShellStopAsk">Останови процесс</string>
+    <string name="stepShellChangesAsk">Проверь изменения</string>
+    <string name="stepShellAnalyzeAsk">Проверь код</string>
+    <string name="stepShellBuildAsk">Собери проект</string>
+    <string name="stepShellInstallAsk">Установи пакеты</string>
+    <string name="stepShellFetchAsk">Загрузи веб-страницу</string>
+    <string name="stepShellDeleteAsk">Удали файлы</string>
+    <string name="stepShellChangeFilesAsk">Измени файлы</string>
+    <string name="stepShellWaitAsk">Подожди</string>
+    <string name="stepShellProgramAsk">Запусти %1$s</string>
+    <string name="stepShellUnknownAsk">Выполни команду</string>
 </resources>

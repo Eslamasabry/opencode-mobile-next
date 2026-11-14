@@ -1280,4 +1280,71 @@
         <item quantity="other">%1$d interrompidos</item>
     </plurals>
     <string name="kitWorkSubAgentSpoken">%1$s, subagente, %2$s</string>
+    <string name="chatUiStopBackgroundTask">Encerrou uma tarefa em segundo plano</string>
+    <string name="chatUiReadTaskOutput">Leu a saída de uma tarefa em segundo plano</string>
+    <plurals name="stepRunCommands">
+        <item quantity="one">%1$d comando</item>
+        <item quantity="many">%1$d comandos</item>
+        <item quantity="other">%1$d comandos</item>
+    </plurals>
+    <plurals name="stepRunFiles">
+        <item quantity="one">%1$d arquivo</item>
+        <item quantity="many">%1$d arquivos</item>
+        <item quantity="other">%1$d arquivos</item>
+    </plurals>
+    <plurals name="stepRunSearches">
+        <item quantity="one">%1$d pesquisa</item>
+        <item quantity="many">%1$d pesquisas</item>
+        <item quantity="other">%1$d pesquisas</item>
+    </plurals>
+    <plurals name="stepRunFolders">
+        <item quantity="one">%1$d pasta</item>
+        <item quantity="many">%1$d pastas</item>
+        <item quantity="other">%1$d pastas</item>
+    </plurals>
+    <string name="stepShellTests">Executou os testes</string>
+    <string name="stepShellTestsNow">Executando os testes</string>
+    <string name="stepShellSearch">Pesquisou nos arquivos</string>
+    <string name="stepShellSearchNow">Pesquisando nos arquivos</string>
+    <string name="stepShellReadOne">Leu %1$s</string>
+    <string name="stepShellReadMany">Leu arquivos</string>
+    <string name="stepShellReadManyNow">Lendo arquivos</string>
+    <string name="stepShellList">Listou os arquivos</string>
+    <string name="stepShellListNow">Listando os arquivos</string>
+    <string name="stepShellProcesses">Verificou os processos em execução</string>
+    <string name="stepShellProcessesNow">Verificando os processos em execução</string>
+    <string name="stepShellStop">Encerrou um processo</string>
+    <string name="stepShellStopNow">Encerrando um processo</string>
+    <string name="stepShellChanges">Verificou as alterações</string>
+    <string name="stepShellChangesNow">Verificando as alterações</string>
+    <string name="stepShellAnalyze">Verificou o código</string>
+    <string name="stepShellAnalyzeNow">Verificando o código</string>
+    <string name="stepShellBuild">Compilou o projeto</string>
+    <string name="stepShellBuildNow">Compilando o projeto</string>
+    <string name="stepShellInstall">Instalou pacotes</string>
+    <string name="stepShellInstallNow">Instalando pacotes</string>
+    <string name="stepShellFetch">Buscou uma página da web</string>
+    <string name="stepShellFetchNow">Buscando uma página da web</string>
+    <string name="stepShellDelete">Excluiu arquivos</string>
+    <string name="stepShellDeleteNow">Excluindo arquivos</string>
+    <string name="stepShellChangeFiles">Alterou arquivos</string>
+    <string name="stepShellChangeFilesNow">Alterando arquivos</string>
+    <string name="stepShellWait">Esperou</string>
+    <string name="stepShellWaitNow">Esperando</string>
+    <string name="stepShellProgram">Executou %1$s</string>
+    <string name="stepShellTestsAsk">Execute os testes</string>
+    <string name="stepShellSearchAsk">Pesquise nos arquivos</string>
+    <string name="stepShellListAsk">Liste os arquivos</string>
+    <string name="stepShellProcessesAsk">Verifique os processos em execução</string>
+    <string name="stepShellStopAsk">Encerre um processo</string>
+    <string name="stepShellChangesAsk">Verifique as alterações</string>
+    <string name="stepShellAnalyzeAsk">Verifique o código</string>
+    <string name="stepShellBuildAsk">Compile o projeto</string>
+    <string name="stepShellInstallAsk">Instale pacotes</string>
+    <string name="stepShellFetchAsk">Busque uma página da web</string>
+    <string name="stepShellDeleteAsk">Exclua arquivos</string>
+    <string name="stepShellChangeFilesAsk">Altere arquivos</string>
+    <string name="stepShellWaitAsk">Espere</string>
+    <string name="stepShellProgramAsk">Execute %1$s</string>
+    <string name="stepShellUnknownAsk">Execute um comando</string>
 </resources>
