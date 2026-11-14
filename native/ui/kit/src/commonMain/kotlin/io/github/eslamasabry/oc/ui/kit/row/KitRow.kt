@@ -76,8 +76,11 @@ public fun kitRowSupportingLines(textScale: Float, asked: Int = 1): Int =
         else -> asked
     }
 
-/** A row title: one line below 1.3×, two from 1.3× (the full value stays in semantics). */
-public fun kitRowTitleLines(textScale: Float, asked: Int = 1): Int = if (TextScalePolicy.isLargeText(textScale)) maxOf(asked, 2) else asked
+/**
+ * A row title: two lines at every size, never "…" while a second line is free (audit 2: "Permissions and automati…"
+ * beside its value). A caller may ask for more; the full value stays in semantics.
+ */
+public fun kitRowTitleLines(@Suppress("UNUSED_PARAMETER") textScale: Float, asked: Int = 1): Int = maxOf(asked, 2)
 
 /**
  * A file name that wraps only after `_`, `-` or before the extension's dot, never mid-word (Dart `kitBreakableFileName`).
