@@ -54,14 +54,24 @@ public data class GroupCounts(val done: Int, val working: Int, val failed: Int, 
 /**
  * The rules of a turn's step list (D1): which rows it has, which sub-agents make one group, and what folds.
  *
- * Fold rule (settled 2026-11-14 from the drawn direction): the newest [SHOWN] rows stay in view while the turn runs and
- * after it ends; older rows fold behind ONE first row only when at least two would fold (one row behind a row saves
- * nothing). That row names the declined and failed steps inside it (a group counts its children), so a problem is
- * never folded away silently. A step that waits for the person is the newest row, so it is never folded.
+ * Fold rule (owner 2026-11-14, "when collapsed it takes a huge space"; the Flutter app's one quiet line): a turn that
+ * ended well ([sums]) is ONE row that opens in place to every step. While the turn runs, and when it ended on a failure,
+ * was stopped (it "shows its step", said Stopped once) or waits for the person, the newest [SHOWN] rows stay in view; older rows fold behind ONE first
+ * row only when at least two would fold (one row behind a row saves nothing). That row names the declined and failed
+ * steps inside it (a group counts its children), so a problem is never folded away silently. A step that waits for the
+ * person is the newest row, so it is never folded. (D1's first fold rule kept five rows in view after the turn ended
+ * too; it was the plan's own choice, not an owner decision, and the owner's picture showed it took a quarter of the
+ * screen.)
  */
 public object StepListRules {
-    /** Rows that stay in view (the drawn direction shows five). */
-    public const val SHOWN: Int = 5
+    /** Rows that stay in view while a turn runs: the newest three, live. */
+    public const val SHOWN: Int = 3
+
+    /**
+     * A turn in [state] shows its work as one summary row: it ended well. A turn that runs, waits for the person, was
+     * stopped or ended on a failure stays open at its newest steps, so the step where it stands is in view.
+     */
+    public fun sums(state: WorkLineState): Boolean = state == WorkLineState.Done
 
     /**
      * The rows of [work] in the order they happened. [entries] is the reading's order of steps and folded words (empty

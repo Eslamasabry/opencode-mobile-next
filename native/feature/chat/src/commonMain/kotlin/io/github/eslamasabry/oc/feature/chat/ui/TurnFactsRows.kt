@@ -31,6 +31,7 @@ import io.github.eslamasabry.oc.feature.chat.presentation.StepListRules
 import io.github.eslamasabry.oc.feature.chat.presentation.TranscriptDetailUi
 import io.github.eslamasabry.oc.feature.chat.presentation.TurnResultUi
 import io.github.eslamasabry.oc.feature.chat.presentation.WorkEntryUi
+import io.github.eslamasabry.oc.feature.chat.presentation.WorkLineRules
 import io.github.eslamasabry.oc.feature.chat.requests.ui.LocalInPlaceRequests
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kit.KitButton
@@ -52,6 +53,7 @@ import io.github.eslamasabry.oc.ui.kitchat.tool.KitToolKind
 import io.github.eslamasabry.oc.ui.kitchat.tool.KitToolRow
 import io.github.eslamasabry.oc.ui.kitchat.tool.KitToolStatus
 import io.github.eslamasabry.oc.ui.kitchat.tool.KitToolView
+import io.github.eslamasabry.oc.ui.kitchat.tool.kitWorkIcon
 import io.github.eslamasabry.oc.ui.kitchat.transcript.KitQuietLine
 import io.github.eslamasabry.oc.ui.kitchat.transcript.REPLY_ACTIONS_EDGE_INSET
 import io.github.eslamasabry.oc.ui.words.res.Res
@@ -198,6 +200,9 @@ internal fun TurnWorkLine(
     val rows = remember(work, entries) { StepListRules.entries(work, entries) }
     val cut = remember(rows) { StepListRules.cut(rows) }
     val open = folds.open[foldKey] == true
+    // Owner 2026-11-14: a finished turn's work is ONE quiet row that opens in place; a turn that runs, failed or waits
+    // for the person keeps its newest rows in view.
+    val summed = StepListRules.sums(work.state)
     val treeWords = rememberStepTreeWords()
     // D1: a permission ask for one of these steps is answered in place, right under the step it is for.
     val inPlace = LocalInPlaceRequests.current
@@ -218,20 +223,75 @@ internal fun TurnWorkLine(
             is StepEntry.Group -> SubAgentGroup(row, work.state, onOpenSession, treeWords)
         }
     }
-    val folded = cut.earlier.size
+    val folded = if (summed) rows.size else cut.earlier.size
     KitStepList(
         // The reply's 16 dp edge: the glyphs and the rail sit on it, the steps' words one column in.
         modifier = Modifier.padding(start = Space.S4.dp, end = REPLY_ACTIONS_EDGE_INSET.dp).testTag("chat-work-line"),
-        fold = cut.fold?.let { stepFoldLine(it, open) { folds.open[foldKey] = !open } },
+        fold = if (summed) null else cut.fold?.let { stepFoldLine(it, open) { folds.open[foldKey] = !open } },
     ) {
+        if (summed)
+            key("summary:${work.turnId}") {
+                KitStepItem { WorkSummaryRow(work, open) { folds.open[foldKey] = !open } }
+            }
         // Every row in one sequence, each with its own fold (owner 2026-11-14, "clipping flashing"): opening the
-        // earlier steps unfolds them one after another from the top (#052, #002); a row that moves behind the fold as
-        // new ones arrive folds away while the new one grows in, so the reply below moves smoothly and no row is
-        // composed again.
-        (cut.earlier + cut.shown).forEachIndexed { i, row ->
+        // turn's work or its earlier steps unfolds them one after another from the top (#052, #002); a row that moves
+        // behind the fold as new ones arrive folds away while the new one grows in, so the reply below moves smoothly
+        // and no row is composed again.
+        rows.forEachIndexed { i, row ->
             key(row.key) { KitStepItem(visible = i >= folded || open, order = i) { entry(row) } }
         }
     }
+}
+
+/**
+ * A finished turn's work as one row (owner 2026-11-14: "when collapsed it takes a huge space"; the Flutter app's "one
+ * quiet line that opens in place"): the glyph of what it mostly did, "Ran 11 commands · 2 other steps", what went wrong
+ * if anything did, the time the steps took and the fold chevron. A tap opens every step under it on the rail.
+ */
+@Composable
+private fun WorkSummaryRow(work: TurnWork, open: Boolean, onToggle: () -> Unit) {
+    val c = WorkLineRules.split(work).done
+    val sep = stringResource(Res.string.kitWorkSeparator)
+    val failed = work.steps.count { it.state == StepState.Failed }
+    val declined = work.steps.count { it.state == StepState.Declined }
+    val note =
+        listOfNotNull(
+                declined.takeIf { it > 0 }?.let { pluralStringResource(Res.plurals.kitWorkFoldDeclined, it, it) },
+                failed.takeIf { it > 0 }?.let { pluralStringResource(Res.plurals.kitWorkFoldFailed, it, it) },
+            )
+            .joinToString(sep)
+            .ifEmpty { null }
+    val total = work.steps.mapNotNull { it.durationMs }.takeIf { it.isNotEmpty() && it.size == work.steps.size }?.sum()
+    KitToolRow(
+        view =
+            KitToolView(
+                id = "summary:${work.turnId}",
+                kind = KitToolKind.Other,
+                title = turnWorkWords(work),
+                subject = null,
+                detail = note,
+                status = KitToolStatus.Done,
+                durationLabel = total?.takeIf { it >= 100 }?.let { durationWords(it) },
+                added = null,
+                removed = null,
+                statusLabel = stepStatus(StepState.Done, null),
+                icon =
+                    kitWorkIcon(
+                        read = c.read,
+                        searched = c.searched,
+                        listed = c.listed,
+                        edited = c.edited,
+                        ran = c.ran,
+                        fetched = c.fetched,
+                        delegated = c.delegated,
+                        other = c.other,
+                    ),
+            ),
+        opened = open,
+        onToggle = onToggle,
+        modifier = Modifier.testTag("chat-work-summary"),
+        group = true,
+    )
 }
 
 /** The fold row's words: "Show 5 earlier steps" and what lies inside ("1 declined · 1 failed"), or "Hide earlier steps". */
@@ -543,7 +603,8 @@ private fun runView(steps: List<TurnStep>, family: StepFamily, nowMs: Long): Kit
     val parts = ArrayList<String>()
     if (failed > 0) parts += pluralStringResource(Res.plurals.kitWorkFoldFailed, failed, failed)
     if (declined > 0) parts += pluralStringResource(Res.plurals.kitWorkFoldDeclined, declined, declined)
-    if (live != null) parts += stepRowTitle(live.facts, stepTense(live.state))
+    // A live run leads with what runs now ("Searching files · 6 commands"), never past and present in one row.
+    if (live != null) parts += runCount(family, steps.size)
     else
         for (s in steps) {
             val said =
@@ -565,7 +626,7 @@ private fun runView(steps: List<TurnStep>, family: StepFamily, nowMs: Long): Kit
                 StepFamily.Searches -> KitToolKind.Search
                 StepFamily.Lists -> KitToolKind.List
             },
-        title = runTitle(family, if (ended > 0) ended else steps.size),
+        title = if (live != null) stepRowTitle(live.facts, stepTense(live.state)) else runTitle(family, if (ended > 0) ended else steps.size),
         subject = null,
         detail = parts.joinToString(sep).ifEmpty { null },
         status = status,
@@ -573,6 +634,10 @@ private fun runView(steps: List<TurnStep>, family: StepFamily, nowMs: Long): Kit
         added = null,
         removed = null,
         statusLabel = stepStatus(if (live != null) StepState.Running else StepState.Done, null),
+        // What runs now, or what all of them did when they did one thing ("Ran 3 commands" of tests: the flask).
+        icon =
+            if (live != null) stepGlyph(live.facts)
+            else steps.map { stepGlyph(it.facts) }.distinct().singleOrNull(),
     )
 }
 
@@ -605,6 +670,8 @@ private fun OneStep(
             kind = f.kind.toKit(),
             // Owner 2026-11-14: a shell step says what it did ("Ran tests"); its command is in the opened step.
             title = stepRowTitle(f, stepTense(step.state, waiting = waitingForYou)),
+            // Owner 2026-11-14: the glyph follows what the step did (tests, a search, git), not only its tool.
+            icon = stepGlyph(f),
             // E20-S14: a waiting Write (Read, Edit) names its file as soon as the call's input has the path.
             subject =
                 if (f.kind == ToolKind.Shell && f.shell != null) null

@@ -338,6 +338,12 @@ class TurnFactsTest {
         }
     }
 
+    /** Opens a finished turn's one work row (owner 2026-11-14: a finished turn's work is one row until tapped). */
+    private fun androidx.compose.ui.test.ComposeUiTest.openWork() {
+        onNodeWithTag("chat-work-summary").performClick()
+        waitForIdle()
+    }
+
     private fun screenFacts(): TurnFactsUi {
         val k = keeper()
         k.history(finishedTurn())
@@ -359,13 +365,14 @@ class TurnFactsTest {
     }
 
     @Test
-    // D1 "steps only" (owner 2026-11-14): was "the work line folds the steps and opens to ..."; there is no summary line
-    // any more, the steps themselves are the turn's work, in view at once.
-    fun `B-CHAT-063 B-CHAT-111 B-CHAT-109 the turn's work is its plain-word steps with durations, in view without a tap`() =
+    // Owner 2026-11-14 (after D1): a finished turn's work is one row ("Ran 1 command · read 1 file · edited 1 file") that
+    // opens in place to its plain-word steps with their durations.
+    fun `B-CHAT-063 B-CHAT-111 B-CHAT-109 a finished turn's work is one row that opens to its plain-word steps with durations`() =
         runComposeUiTest {
             val actions = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
             setContent { Root { ChatScreen(screenState(), actions, composer, facts = screenFacts()) } }
-            onAllNodesWithText("Read 1 file · edited 1 file · ran 1 command").assertCountEquals(0)
+            onAllNodesWithText("Ran tests").assertCountEquals(0)
+            openWork()
             // Owner 2026-11-14 (was E20-S25, the command in mono): a shell step says what it did in plain words.
             onNodeWithText("Ran tests").assertIsDisplayed()
             onAllNodesWithText("npm test", substring = true).assertCountEquals(0)
@@ -378,11 +385,16 @@ class TurnFactsTest {
             val actions = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
             setContent { Root { ChatScreen(screenState(), actions, composer, facts = screenFacts()) } }
             waitForIdle()
-            // D1: no summary line and so no chevron of its own; the three steps each draw a node on the rail and no chevron.
+            // Folded, the turn's work is its one row: one node, the fold chevron.
+            onAllNodesWithTag("kit-step-node", useUnmergedTree = true).assertCountEquals(1)
+            onAllNodesWithTag(io.github.eslamasabry.oc.ui.kitchat.tool.STEP_RUN_CHEVRON_TAG, useUnmergedTree = true).assertCountEquals(1)
+            openWork()
+            // Opened, the three steps each draw a node on the rail and no chevron of their own.
             onAllNodesWithTag("kit-step-timeline-chevron", useUnmergedTree = true).assertCountEquals(0)
             onAllNodesWithTag("chat-work-line", useUnmergedTree = true).assertCountEquals(1)
             onAllNodesWithTag("kit-tool-chevron", useUnmergedTree = true).assertCountEquals(0)
-            onAllNodesWithTag("kit-step-node", useUnmergedTree = true).assertCountEquals(3)
+            onAllNodesWithTag("kit-step-node", useUnmergedTree = true).assertCountEquals(4)
+            onAllNodesWithTag(io.github.eslamasabry.oc.ui.kitchat.tool.STEP_RUN_CHEVRON_TAG, useUnmergedTree = true).assertCountEquals(1)
         }
 
     @Test
@@ -392,6 +404,7 @@ class TurnFactsTest {
             setContent { Root { ChatScreen(screenState(), actions, composer, facts = screenFacts()) } }
             // N-45: a turn with a work line says what it edited and ran there; no second "Edited … · ran …" row.
             onNodeWithTag("chat-turn-result").assertDoesNotExist()
+            openWork()
             // The read step and the edit step both name the file; the shell step says what it did (its command is inside).
             onAllNodesWithText("a.kt", substring = true).assertCountEquals(2)[1].assertIsDisplayed()
             onNodeWithText("Ran tests").assertIsDisplayed()
@@ -434,7 +447,9 @@ class TurnFactsTest {
             val opened = mutableListOf<String>()
             val actions = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
             setContent { Root { ChatScreen(screenState(), actions, composer, facts = facts, onOpenSession = { opened += it }) } }
-            // D1: a lone sub-agent is a step of its own on the rail (two that ran together make a group).
+            // D1: a lone sub-agent is a step of its own on the rail (two that ran together make a group), under the
+            // finished turn's one row.
+            openWork()
             onNodeWithTag("chat-step-t9").performClick()
             onNodeWithText("Open its conversation").assertIsDisplayed().performClick()
             assertEquals(listOf("child-1"), opened)
@@ -460,7 +475,8 @@ class TurnFactsTest {
             val facts = TurnFactsPresenter(FixedClock).present(k.feed.value, 5_000)
             val actions = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
             setContent { Root { ChatScreen(screenState(), actions, composer, facts = facts) } }
-            // N-45: the command is read on the turn's shell step (no separate turn result row); D1: in view at once.
+            // N-45: the command is read on the turn's shell step (no separate turn result row), under the turn's one row.
+            openWork()
             onNodeWithTag("chat-step-t1").performClick()
             waitForIdle()
             onAllNodesWithText("curl -H 'Authorization:", substring = true).onFirst().assertIsDisplayed()
@@ -498,10 +514,11 @@ class TurnFactsTest {
             val nav = RecordingNavigator()
             val actions = ChatPresenter(world, nav, Immediate)
             setContent { Root { ChatScreen(screenState(), actions, composer, facts = facts) } }
-            // D1: the step is in view on the turn's step list; it sits there, tappable, without a summary line to open.
+            // The step is on the turn's step list, one tap under the turn's one row.
             onAllNodes(hasClickAction() and androidx.compose.ui.test.hasAnyAncestor(androidx.compose.ui.test.hasTestTag("chat-work-line")))
                 .onFirst()
                 .assertExists()
+            openWork()
             onNodeWithTag("chat-step-t5").performClick()
             onNodeWithText("report.pdf").assertIsDisplayed().performClick()
             assertEquals(listOf<io.github.eslamasabry.oc.ui.routes.AppRoute>(io.github.eslamasabry.oc.ui.routes.FilesRoute.File(Ref, "/p/out/report.pdf")), nav.opened)

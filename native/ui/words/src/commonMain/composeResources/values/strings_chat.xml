@@ -681,6 +681,22 @@
         <item quantity="other">%1$d stopped</item>
     </plurals>
     <string name="kitWorkSubAgentSpoken">%1$s, sub-agent, %2$s</string>
+    <plurals name="stepRunCommands">
+        <item quantity="one">%1$d command</item>
+        <item quantity="other">%1$d commands</item>
+    </plurals>
+    <plurals name="stepRunFiles">
+        <item quantity="one">%1$d file</item>
+        <item quantity="other">%1$d files</item>
+    </plurals>
+    <plurals name="stepRunSearches">
+        <item quantity="one">%1$d search</item>
+        <item quantity="other">%1$d searches</item>
+    </plurals>
+    <plurals name="stepRunFolders">
+        <item quantity="one">%1$d folder</item>
+        <item quantity="other">%1$d folders</item>
+    </plurals>
     <string name="stepShellTests">Ran tests</string>
     <string name="stepShellTestsNow">Running tests</string>
     <string name="stepShellSearch">Searched files</string>

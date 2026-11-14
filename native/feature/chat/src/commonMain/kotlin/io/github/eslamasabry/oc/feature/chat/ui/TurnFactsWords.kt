@@ -2,6 +2,7 @@ package io.github.eslamasabry.oc.feature.chat.ui
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.ui.graphics.vector.ImageVector
 import io.github.eslamasabry.oc.core.common.text.Numbers
 import io.github.eslamasabry.oc.engine.transcript.ledger.StepState
 import io.github.eslamasabry.oc.engine.transcript.ledger.TurnWork
@@ -16,6 +17,7 @@ import io.github.eslamasabry.oc.engine.transcript.turnfacts.ToolKind
 import io.github.eslamasabry.oc.engine.transcript.turnfacts.ShellIntent
 import io.github.eslamasabry.oc.engine.transcript.turnfacts.ShellKind
 import io.github.eslamasabry.oc.feature.chat.presentation.StepFamily
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kitchat.header.rememberKitMask
 import io.github.eslamasabry.oc.engine.transcript.turnfacts.TurnStallNotice
 import io.github.eslamasabry.oc.engine.transcript.turnfacts.formatRetryCountdown
@@ -155,6 +157,10 @@ import io.github.eslamasabry.oc.ui.words.res.kitWorkRead
 import io.github.eslamasabry.oc.ui.words.res.kitWorkSearched
 import io.github.eslamasabry.oc.ui.words.res.kitWorkSeparator
 import io.github.eslamasabry.oc.ui.words.res.kitWorkSteps
+import io.github.eslamasabry.oc.ui.words.res.stepRunCommands
+import io.github.eslamasabry.oc.ui.words.res.stepRunFiles
+import io.github.eslamasabry.oc.ui.words.res.stepRunSearches
+import io.github.eslamasabry.oc.ui.words.res.stepRunFolders
 import io.github.eslamasabry.oc.ui.words.res.kitWorkWorking
 import io.github.eslamasabry.oc.ui.words.res.replySpeedLast
 import io.github.eslamasabry.oc.ui.words.res.toolCardExitFailed
@@ -265,6 +271,45 @@ private fun phraseWords(phrase: ToolPhrase, arg0: String, arg1: String): String 
     }
 }
 
+/**
+ * The glyph a step's row draws when its words know more than its tool (owner 2026-11-14: every command row wore the
+ * same terminal, so the list could not be scanned): a command that ran tests draws the test flask, a search the
+ * magnifier, a read the file, git the branch, a build the hammer; the terminal stays only for a command of no known
+ * kind. Null: the tool's own glyph (an edit's pencil, a read's file).
+ */
+internal fun stepGlyph(f: ToolFacts): ImageVector? {
+    if (f.kind == ToolKind.Shell) return shellGlyph(f.shell?.kind ?: ShellKind.Unknown)
+    return when (f.phrase) {
+        ToolPhrase.StopBackgroundTask -> KitIcons.stopCircle
+        ToolPhrase.ReadTaskOutput -> KitIcons.fileText
+        ToolPhrase.LoadTools -> KitIcons.extensions
+        else -> null
+    }
+}
+
+/** The glyph for what a command did (see [stepGlyph]). */
+internal fun shellGlyph(kind: ShellKind): ImageVector =
+    when (kind) {
+        ShellKind.Tests -> KitIcons.experiments
+        ShellKind.Search -> KitIcons.search
+        ShellKind.ReadOne,
+        ShellKind.ReadFile,
+        ShellKind.ReadMany -> KitIcons.fileText
+        ShellKind.List -> KitIcons.folderOpen
+        ShellKind.Processes -> KitIcons.processor
+        ShellKind.StopProcess -> KitIcons.stopCircle
+        ShellKind.CheckChanges -> KitIcons.branch
+        ShellKind.Analyze -> KitIcons.checks
+        ShellKind.Build -> KitIcons.build
+        ShellKind.Install -> KitIcons.download
+        ShellKind.Fetch -> KitIcons.globe
+        ShellKind.Delete -> KitIcons.delete
+        ShellKind.ChangeFiles -> KitIcons.copy
+        ShellKind.Wait -> KitIcons.waiting
+        ShellKind.Program,
+        ShellKind.Unknown -> KitIcons.terminal
+    }
+
 /** Which tense a step's plain words take: it happened, it happens now, or it is asked for (not run, or stopped). */
 internal enum class StepTense { Done, Now, Ask }
 
@@ -339,6 +384,44 @@ internal fun runTitle(family: StepFamily, count: Int): String {
             StepFamily.Lists -> pluralStringResource(Res.plurals.kitWorkListed, count, count)
         }
     return words.replaceFirstChar { it.uppercase() }
+}
+
+/** A live run's count, after what runs now: "6 commands", "3 files", "2 searches", "2 folders". */
+@Composable
+internal fun runCount(family: StepFamily, count: Int): String =
+    when (family) {
+        StepFamily.Commands -> pluralStringResource(Res.plurals.stepRunCommands, count, count)
+        StepFamily.Reads -> pluralStringResource(Res.plurals.stepRunFiles, count, count)
+        StepFamily.Searches -> pluralStringResource(Res.plurals.stepRunSearches, count, count)
+        StepFamily.Lists -> pluralStringResource(Res.plurals.stepRunFolders, count, count)
+    }
+
+/**
+ * A finished turn's work in one line (its summary row): the kinds it did, the most done first, "Ran 11 commands · read 1
+ * file · 2 other steps"; first letter upper.
+ */
+@Composable
+internal fun turnWorkWords(work: TurnWork): String {
+    // Only work that happened is said in the past tense: a refused write is no "edited 1 file" (review #2).
+    val c = WorkLineRules.split(work).done
+    val counted =
+        listOf(
+                c.ran to Res.plurals.kitWorkRan,
+                c.read to Res.plurals.kitWorkRead,
+                c.edited to Res.plurals.kitWorkEdited,
+                c.searched to Res.plurals.kitWorkSearched,
+                c.listed to Res.plurals.kitWorkListed,
+                c.fetched to Res.plurals.kitWorkFetched,
+                c.delegated to Res.plurals.kitWorkDelegated,
+                c.other to Res.plurals.kitWorkOther,
+                c.notRun to Res.plurals.kitWorkNotRun,
+            )
+            .filter { it.first > 0 }
+            .sortedByDescending { it.first }
+    val segments = counted.map { (n, res) -> pluralStringResource(res, n, n) }.toMutableList()
+    if (segments.isEmpty()) return pluralStringResource(Res.plurals.kitWorkSteps, work.steps.size, work.steps.size)
+    segments[0] = segments[0].replaceFirstChar { it.uppercase() }
+    return segments.joinToString(stringResource(Res.string.kitWorkSeparator))
 }
 
 /** A step's status in words (the screen reader hears it; the row draws it). */

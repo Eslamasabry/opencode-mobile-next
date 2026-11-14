@@ -611,6 +611,9 @@ internal fun ChatTranscriptList(
                             else if (retryWayOut) reply?.onChooseModel
                             else onStopLive,
                         ask = ask,
+                        // D1: under the steps of a turn whose step is in hand, the line stands on their rail (owner
+                        // 2026-11-14: its dot sat off the rail's axis, tight under the last row).
+                        onRail = runWork?.now != null && runWork.steps.isNotEmpty() && !streaming,
                     )
                 } else if (
                     RunTailRules.liveLineShown(

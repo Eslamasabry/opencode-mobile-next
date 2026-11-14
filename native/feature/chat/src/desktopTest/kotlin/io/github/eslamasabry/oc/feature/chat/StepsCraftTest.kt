@@ -7,6 +7,13 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onAllNodesWithTag
+import androidx.compose.ui.test.onNodeWithTag
+import io.github.eslamasabry.oc.engine.transcript.ledger.WorkLineState
+import io.github.eslamasabry.oc.feature.chat.ui.stepGlyph
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
+import kotlin.math.abs
+import kotlin.test.assertFalse
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.v2.runDesktopComposeUiTest
@@ -50,8 +57,8 @@ class StepsCraftTest {
         }
 
     @Composable
-    private fun Root(content: @Composable () -> Unit) {
-        KitTheme(platform = DesktopKitPlatform(), appearance = KitAppearance(motion = MotionLevel.Off), localeTag = "en", stillFrame = true) {
+    private fun Root(motion: MotionLevel = MotionLevel.Off, content: @Composable () -> Unit) {
+        KitTheme(platform = DesktopKitPlatform(), appearance = KitAppearance(motion = motion), localeTag = "en", stillFrame = motion == MotionLevel.Off) {
             CompositionLocalProvider(LocalKitRedactor provides Redactor(), content = content)
         }
     }
@@ -69,8 +76,14 @@ class StepsCraftTest {
         assertEquals(listOf("step:c1", "step:c3", "step:c8", "step:c10"), runs.map { it.key }, "a run keeps its first step's row key")
         assertEquals(6, rows.count { it is StepEntry.Detail }, "the six sentences between steps")
         assertEquals(listOf("t1", "t2", "c6", "c7"), rows.filterIsInstance<StepEntry.Step>().map { it.step.partId })
+        // While it runs the newest three rows stay in view; the other eleven fold behind one row.
         val fold = assertNotNull(StepListRules.cut(rows).fold)
-        assertEquals(9, fold.hidden)
+        assertEquals(11, fold.hidden)
+        // Ended well, the whole turn is one row; ended on a failure or waiting for the person, it stays open.
+        assertTrue(StepListRules.sums(work.state))
+        assertFalse(StepListRules.sums(WorkLineState.EndedFailed))
+        assertFalse(StepListRules.sums(WorkLineState.WaitingForYou))
+        assertFalse(StepListRules.sums(WorkLineState.Running))
     }
 
     @Test
@@ -95,7 +108,7 @@ class StepsCraftTest {
         runDesktopComposeUiTest(412, 2600) {
             val actions = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
             setContent { Root { ChatScreen(StepsCraftScene.doneState(), actions, composer, facts = StepsCraftScene.doneFacts()) } }
-            onNodeWithText("Show 9 earlier steps").assertIsDisplayed().performClick()
+            onNodeWithText(SUMMARY).assertIsDisplayed().performClick()
             waitForIdle()
             // No raw command line and no tool id is ever a row's words.
             onAllNodesWithText("cd /home", substring = true).assertCountEquals(0)
@@ -119,29 +132,97 @@ class StepsCraftTest {
         }
 
     @Test
-    fun `STEPS-CRAFT-012 a folded run is exactly one row, and the folded list ends right where its last row does`() =
+    fun `STEPS-CRAFT-012 a finished turn is exactly one row, and the folded list ends right where that row does`() =
         runDesktopComposeUiTest(412, 2600) {
             val actions = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
             setContent { Root { ChatScreen(StepsCraftScene.doneState(), actions, composer, facts = StepsCraftScene.doneFacts()) } }
             waitForIdle()
-            val run = boundsOfTag("chat-step-run-c10")
-            assertEquals(32f, run.height, 0.6f, "a folded run is one 32 dp row: $run")
-            // Owner's picture: the folded line was followed by about 90 dp of nothing. The list ends on its last row.
+            // Owner: a finished turn took a quarter of the screen ("Show 9 earlier steps" and five rows above the reply).
+            onAllNodesWithText("Show", substring = true).assertCountEquals(0)
+            onAllNodesWithText("Ran 2 commands").assertCountEquals(0)
+            val summary = boundsOfTag("chat-work-summary")
+            assertEquals(32f, summary.height, 0.6f, "a finished turn is one 32 dp row: $summary")
+            // Owner's picture: the folded line was followed by about 90 dp of nothing. The list ends on its one row.
             val list = boundsOfTag("chat-work-line")
-            assertEquals(run.bottom, list.bottom, 0.6f, "nothing is kept under the last row: $run in $list")
+            assertEquals(summary.bottom, list.bottom, 0.6f, "nothing is kept under the row: $summary in $list")
             val reply = boundsOfText(StepsCraftScene.REPLY)
             assertTrue(reply.top - list.bottom < 48f, "the reply follows the steps without a gap: ${reply.top - list.bottom}")
+            // Opened, a run is one 32 dp row too.
+            onNodeWithTag("chat-work-summary").performClick()
+            waitForIdle()
+            assertEquals(32f, boundsOfTag("chat-step-run-c10").height, 0.6f)
         }
 
     @Test
-    fun `STEPS-CRAFT-013 a running run says what runs now in plain words and keeps its count`() =
+    fun `STEPS-CRAFT-013 a running run leads with what runs now and keeps its count`() =
         runDesktopComposeUiTest(412, 2600) {
             val actions = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
             setContent { Root { ChatScreen(StepsCraftScene.runningState(), actions, composer, facts = StepsCraftScene.runningFacts()) } }
             waitForIdle()
-            // The eleventh command is a search: the run says so while it runs.
+            // The eleventh command is a search: the run says so first, then how many commands it holds (never "Ran 5
+            // commands Searching files", past and present in one row).
             onNodeWithText("Searching files").assertIsDisplayed()
-            onAllNodesWithText("Ran 5 commands").assertCountEquals(2)
+            onNodeWithText("6 commands").assertIsDisplayed()
+            onAllNodesWithText("Ran 5 commands").assertCountEquals(1)
             onAllNodesWithText("cd /home", substring = true).assertCountEquals(0)
         }
+
+    @Test
+    fun `STEPS-CRAFT-014 a tap on a run opens its steps in place under it, with the motion on`() =
+        runDesktopComposeUiTest(412, 2600) {
+            val actions = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
+            mainClock.autoAdvance = false
+            setContent { Root(MotionLevel.Full) { ChatScreen(StepsCraftScene.doneState(), actions, composer, facts = StepsCraftScene.doneFacts()) } }
+            mainClock.advanceTimeBy(900)
+            onNodeWithTag("chat-work-summary").performClick()
+            mainClock.advanceTimeBy(900)
+            onAllNodesWithTag("chat-step-c11", useUnmergedTree = true).assertCountEquals(0)
+            onNodeWithTag("chat-step-run-c10").performClick()
+            mainClock.advanceTimeBy(900)
+            // The run's own steps, each a row of its own under the run: "Checked the changes", "Searched files".
+            val run = boundsOfTag("chat-step-run-c10")
+            val c10 = boundsOfTag("chat-step-c10")
+            val c11 = boundsOfTag("chat-step-c11")
+            assertTrue(c10.top >= run.bottom - 0.6f && c11.top >= c10.bottom - 0.6f, "in place, in order: $run $c10 $c11")
+            assertEquals(32f, c11.height, 0.6f)
+            onNodeWithText("Checked the changes").assertIsDisplayed()
+            // A second tap folds them away again.
+            onNodeWithTag("chat-step-run-c10").performClick()
+            mainClock.advanceTimeBy(900)
+            onAllNodesWithTag("chat-step-c11", useUnmergedTree = true).assertCountEquals(0)
+        }
+
+    @Test
+    fun `STEPS-CRAFT-015 a row's glyph follows what the step did, the terminal only for a command of no known kind`() {
+        val f = StepsCraftScene.doneFacts()
+        val work = assertNotNull(f.work[StepsCraftScene.TURN])
+        val glyph = work.steps.associate { it.partId to stepGlyph(it.facts) }
+        assertEquals(KitIcons.experiments, glyph["c1"], "flutter test: tests")
+        assertEquals(KitIcons.search, glyph["c2"], "grep: a search")
+        assertEquals(KitIcons.build, glyph["c3"], "gradlew assembleDebug: a build")
+        assertEquals(KitIcons.terminal, glyph["c4"], "adb: a program of no known kind")
+        assertEquals(KitIcons.stopCircle, glyph["c6"], "pkill: a stopped process")
+        assertEquals(KitIcons.fileText, glyph["c7"], "cat: a read")
+        assertEquals(KitIcons.processor, glyph["c8"], "pgrep: processes")
+        assertEquals(KitIcons.branch, glyph["c10"], "git status: the changes")
+        assertEquals(KitIcons.stopCircle, glyph["t2"], "TaskStop: a stopped task")
+        assertEquals(setOf(KitIcons.experiments, KitIcons.search, KitIcons.build, KitIcons.terminal), setOf(glyph["c1"], glyph["c2"], glyph["c3"], glyph["c4"]), "four kinds, four glyphs")
+    }
+
+    @Test
+    fun `STEPS-CRAFT-016 every time ends on one right edge, with or without a chevron`() =
+        runDesktopComposeUiTest(412, 2600) {
+            val actions = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
+            setContent { Root { ChatScreen(StepsCraftScene.doneState(), actions, composer, facts = StepsCraftScene.doneFacts()) } }
+            onNodeWithTag("chat-work-summary").performClick()
+            waitForIdle()
+            val ends = onAllNodesWithTag("kit-tool-duration", useUnmergedTree = true).fetchSemanticsNodes().map { it.boundsInRoot.right }
+            assertTrue(ends.size >= 8, "rows with a time: $ends")
+            assertTrue(ends.all { abs(it - ends[0]) < 0.6f }, "one right edge for every time: $ends")
+        }
+
+    private companion object {
+        /** The finished turn's one row: what it did, the most done first. */
+        const val SUMMARY = "Ran 11 commands · 2 other steps"
+    }
 }
