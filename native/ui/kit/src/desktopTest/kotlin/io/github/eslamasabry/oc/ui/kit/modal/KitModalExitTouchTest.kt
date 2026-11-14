@@ -87,7 +87,8 @@ class KitModalExitTouchTest {
             // The owner's state turns (one frame), the kit's own state turns (the next): the exit has only begun.
             mainClock.advanceTimeByFrame()
             mainClock.advanceTimeByFrame()
-            onNodeWithText(label).assertExists()
+            // A sheet or dialog is still on screen; a fading menu has already left the accessibility tree.
+            if (kind != Kind.Menu) onNodeWithText(label).assertExists()
             // By place, not by node: the page is out of the accessibility tree until the modal has gone.
             onRoot().performTouchInput { click(Offset(20f, 20f)) }
             mainClock.advanceTimeByFrame()

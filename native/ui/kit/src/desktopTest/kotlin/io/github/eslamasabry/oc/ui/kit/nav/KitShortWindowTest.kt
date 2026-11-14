@@ -58,8 +58,9 @@ class KitShortWindowTest {
         waitForIdle()
         val rail = onNodeWithTag("kit-nav-rail").getBoundsInRoot()
         assertEquals(30.dp, rail.left, "the rail starts after the cutout")
-        assertEquals(24.dp, rail.top, "the rail's top is under the status bar, so the clock is never drawn over the lens")
-        assertEquals(411.dp - 16.dp, rail.bottom, "the rail ends above the navigation bar")
+        // The tagged part is the rail's inside, a step (8 dp) in from its pane's top and bottom.
+        assertEquals(24.dp + 8.dp, rail.top, "the rail's pane starts under the status bar, so the clock is never drawn over the lens")
+        assertEquals(411.dp - 16.dp - 8.dp, rail.bottom, "the rail's pane ends above the navigation bar")
     }
 
     @Test
