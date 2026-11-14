@@ -359,7 +359,8 @@ internal fun RailNode(
     // edge crosses is faint, never cut at full ink, and at Full motion it settles the last few dp into place (#001).
     val reveal = LocalRailReveal.current
     val at = remember { arrayOfNulls<LayoutCoordinates>(1) }
-    SideEffect { if (reveal != null) rail.shares[key] = { reveal.shown(at[0]) } else rail.shares.remove(key) }
+    val fadePx = with(density) { REVEAL_FADE_DP.dp.toPx() }
+    SideEffect { if (reveal != null) rail.shares[key] = { reveal.ink(at[0], fadePx) } else rail.shares.remove(key) }
     val rise = if (KitMotion.state.travels) ARRIVAL_RISE_DP.dp else 0.dp // F: lib/ui/kit/chat/kit_step_timeline.dart:531 _StepArrival.rise
     Box(
         modifier
@@ -367,9 +368,8 @@ internal fun RailNode(
             .onPlaced { at[0] = it }
             .graphicsLayer {
                 if (reveal != null) {
-                    val share = reveal.shown(at[0])
-                    alpha = share * share
-                    translationY = rise.toPx() * (1f - share)
+                    alpha = reveal.ink(at[0], fadePx)
+                    translationY = rise.toPx() * (1f - reveal.shown(at[0]))
                 }
             }
     ) {

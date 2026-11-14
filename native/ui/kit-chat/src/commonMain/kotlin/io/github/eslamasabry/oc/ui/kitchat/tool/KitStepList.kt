@@ -121,7 +121,7 @@ public fun KitStepList(
                 val shares = shown.sortedBy { it.first.start }.map { it.second }
                 strokes.forEachIndexed { i, stroke ->
                     val a = minOf(shares.getOrElse(i) { 1f }, shares.getOrElse(i + 1) { 1f })
-                    drawStepStrokes(listOf(stroke), ink, alpha = a * a)
+                    drawStepStrokes(listOf(stroke), ink, alpha = a)
                 }
             },
     ) {

@@ -50,6 +50,20 @@ internal class RailReveal(private val parent: RailReveal?, private val progress:
         return share
     }
 
+    /**
+     * How strongly [node] is drawn (0..1) while a fold moves: by how much of it is still hidden, never by the share of it
+     * in view (a two-line sentence cut through its last line was 85 % in view and drew at 72 % ink, a cut glyph read
+     * whole): hidden by [fadePx] or more it is not drawn; less, it fades in as the edge uncovers it.
+     */
+    fun ink(node: LayoutCoordinates?, fadePx: Float): Float {
+        val share = shown(node)
+        if (share >= 1f) return 1f
+        val h = node?.takeIf { it.isAttached }?.size?.height?.toFloat() ?: return share * share
+        if (h <= 0f || fadePx <= 0f) return share * share
+        val left = (1f - (1f - share) * h / fadePx).coerceIn(0f, 1f)
+        return left * left
+    }
+
     private fun own(node: LayoutCoordinates?): Float {
         val p = progress().coerceIn(0f, 1f)
         if (p >= 1f) return 1f
@@ -135,6 +149,9 @@ public fun KitStepReveal(
 
 /** How far past its sides a moving fold still draws (the rail column and the glyphs sit outside its box). */
 private const val SIDE_REACH = 4096f
+
+/** How much of a row may still be hidden while it is drawn at all: a row fades in over its last 24 dp of uncovering. */
+internal const val REVEAL_FADE_DP: Int = 24
 
 /** The gap between two rows that open together (#002 Stagger). */
 public const val STEP_STAGGER_MS: Int = 24
