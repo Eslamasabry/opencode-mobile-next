@@ -16,6 +16,7 @@ import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kit.platform.LocalKitPlatform
@@ -32,6 +33,11 @@ internal fun CodeOverflow(
     fill: Color,
     ink: Color,
     modifier: Modifier = Modifier,
+    /**
+     * The corner where floating controls sit over the lines' top end: the lines beside them are cleared there (with the
+     * same short fade at its edge) and have that much room after their last glyph to scroll out from under it.
+     */
+    reserve: DpSize? = null,
     content: @Composable () -> Unit,
 ) {
     val scroll = rememberScrollState()
@@ -46,6 +52,18 @@ internal fun CodeOverflow(
             // Flutter's fade of the block's fill over them and leaves the fill itself untouched.
             Modifier.fillMaxWidth().graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }.drawWithContent {
                 drawContent()
+                if (reserve != null) {
+                    val room = Size(reserve.width.toPx(), reserve.height.toPx())
+                    val fade = Space.S6.dp.toPx()
+                    val left = size.width - room.width
+                    drawRect(
+                        Brush.horizontalGradient(listOf(Color.Transparent, Color.Black), left - fade, left),
+                        Offset(left - fade, 0f),
+                        Size(fade, room.height),
+                        blendMode = BlendMode.DstOut,
+                    )
+                    drawRect(Color.Black, Offset(left, 0f), room, blendMode = BlendMode.DstOut)
+                }
                 // Read while drawing, not from the composition: the scroller learns its range while it is laid out, and
                 // a fade that waited for a recomposition could stay off on a block that plainly runs past its edge
                 // (device pictures 2026-11-13: a listing cut inside a glyph with no fade).
@@ -87,6 +105,8 @@ internal fun CodeOverflow(
         ) {
             Row(
                 Modifier.horizontalScroll(scroll)
+                    // After its last glyph the first lines have the controls' corner to scroll out of.
+                    .padding(end = reserve?.width ?: 0.dp)
                     .padding(bottom = if (fine.finePointer || hasOverflow) Space.S2.dp else 0.dp) // F: lib/ui/kit/kit_code_block_parts.dart:191,192
             ) {
                 content()
