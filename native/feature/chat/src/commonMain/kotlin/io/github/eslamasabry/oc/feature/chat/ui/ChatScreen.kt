@@ -546,10 +546,10 @@ public fun ChatScreen(
     val waitingHint = remember(waitingWords) { ReplyHint(waitingWords) {} }
     val replyHint = if (inPlaceRequests != null && InPlaceRules.waiting(placedRequests)) waitingHint else arrivalHint
     val frost = rememberKitFrostState()
-    // Find no longer moves the page to the stacked layout (audit 2026-11-14): its one row stands in the bottom block over
-    // the message box, the transcript ends above the block (and above "Jump to latest", which stays apart over no words),
-    // as in every other bottom state.
-    val overlays = state.phase == ChatPhase.Live && state.status == null
+    // The conversation keeps the frame's overlaid layout in every state: loading, live, could not load, with or without a
+    // status line, with Find open (its one row stands in the bottom block over the message box). Switching layouts moved
+    // the message box, with its own subcomposition, to another parent inside the navigation's lookahead pass, which
+    // crashed the app right after a conversation went from loading to live (2026-11-14).
     val headerUnder by remember(list) { derivedStateOf { list.lazy.canScrollForward } }
     val scheduledId by actions.laterScheduled.collectAsState()
     val chrome =
@@ -770,7 +770,7 @@ public fun ChatScreen(
                 KitScreen(
                     modifier = Modifier.fillMaxSize(),
                     page = true,
-                    overlayChrome = overlays,
+                    overlayChrome = true,
                     hideStatusWhenTyping = true,
                     // N-52/N-57: the header and the composer lie on the page's ground (frosted under Glass), so the
                     // transcript never draws through them.
