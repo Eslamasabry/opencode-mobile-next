@@ -29,6 +29,8 @@
     <string name="agentsUpdateWaitingSwitch">agent update waits for the phone server move to finish</string>
     <string name="agentsUpdateWaitingMetered">agent update waits for Wi-Fi</string>
     <string name="agentsUpdateUpdating">updating %1$s</string>
+    <string name="agentsUpdateUpdated">updated %1$s</string>
+    <string name="agentsUpdateNeedsSignIn">%1$s needs you to sign in</string>
     <string name="agentsUpdateReadFailed">agent update could not check your agents, it tries again when the app opens</string>
     <string name="agentsUpdateRefused">agent update could not start, use Install on the agent</string>
     <string name="agentsCheckAgain">Refresh</string>

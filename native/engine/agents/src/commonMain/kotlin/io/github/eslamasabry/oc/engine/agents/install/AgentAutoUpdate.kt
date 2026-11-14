@@ -127,6 +127,9 @@ public enum class AgentUpdateStep {
     /** The install of [AgentUpdateDecision.agent] was started. */
     Updating,
 
+    /** The install of [AgentUpdateDecision.agent] ended; the line stays until the next decision. */
+    Updated,
+
     /** The install was refused (no room, not installable here): the manual Install says why. */
     Refused,
 }
@@ -144,6 +147,7 @@ public data class AgentUpdateDecision(val step: AgentUpdateStep, val agent: Agen
             AgentUpdateStep.WaitingSwitch -> "agent update: waiting, a server move is pending"
             AgentUpdateStep.WaitingMetered -> "agent update: waiting, network is metered"
             AgentUpdateStep.Updating -> "agent update: started ${agent?.raw ?: "an agent"}"
+            AgentUpdateStep.Updated -> "agent update: finished ${agent?.raw ?: "an agent"}"
             AgentUpdateStep.Refused -> "agent update: install refused for ${agent?.raw ?: "an agent"}"
         }
 }
@@ -209,6 +213,11 @@ public class AgentAutoUpdater(
         }
     }
 
+    /** The binding saw the install of [agent] end (Done): the line says it was updated until the next decision. */
+    public fun finished(agent: AgentId) {
+        publish(AgentUpdateDecision(AgentUpdateStep.Updated, agent))
+    }
+
     private fun hold(step: AgentUpdateStep) {
         note("a read of the installed agents is due; waiting: $step")
         publish(AgentUpdateDecision(step))
@@ -239,7 +248,10 @@ public class AgentAutoUpdater(
         // An update the app was stopped in the middle of runs again first (the install skips what is in place).
         val resume = host.resume?.takeIf { "$key/${it.raw}" !in attempted }
         val target = resume ?: AgentAutoUpdateRule.target(host.installed, behind, helperBehind)
-        val busy = target != null && workBusy()
+        // Only an install that replaces or restarts the helper waits for the agents to be idle. An agent-only update
+        // (the helper already on its pin) replaces that agent's own files and link; another agent's conversation keeps
+        // running on its own copy, so it never waits for it.
+        val busy = target != null && host.helperBehind && workBusy()
         val running = jobs.running
         val problem = host.installProblem || jobs.failed
         val go =
@@ -268,8 +280,11 @@ public class AgentAutoUpdater(
             when {
                 // The install it started runs on: keep saying so until that job ends.
                 target == null ->
-                    if (state.value.step == AgentUpdateStep.Updating && running) return
-                    else AgentUpdateStep.NothingBehind
+                    when {
+                        state.value.step == AgentUpdateStep.Updating && running -> return
+                        state.value.step == AgentUpdateStep.Updated -> return
+                        else -> AgentUpdateStep.NothingBehind
+                    }
                 running -> AgentUpdateStep.WaitingSetup
                 host.switchPending -> AgentUpdateStep.WaitingSwitch
                 problem -> AgentUpdateStep.WaitingSetup

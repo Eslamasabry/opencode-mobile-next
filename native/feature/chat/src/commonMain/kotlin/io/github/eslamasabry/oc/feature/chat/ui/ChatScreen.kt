@@ -1484,6 +1484,7 @@ private fun connectionLine(
                 when (wait) {
                     io.github.eslamasabry.oc.feature.chat.world.ChatServerWait.Updating -> Res.string.connectUpdatingPhone
                     io.github.eslamasabry.oc.feature.chat.world.ChatServerWait.UpdatingAgents -> Res.string.connectUpdatingAgents
+                    io.github.eslamasabry.oc.feature.chat.world.ChatServerWait.AgentNeedsSignIn -> Res.string.connectAgentNeedsSignIn
                     io.github.eslamasabry.oc.feature.chat.world.ChatServerWait.Starting -> Res.string.connectStartingPhone
                     io.github.eslamasabry.oc.feature.chat.world.ChatServerWait.Connecting -> Res.string.launchUiSessionWaiting
                 }

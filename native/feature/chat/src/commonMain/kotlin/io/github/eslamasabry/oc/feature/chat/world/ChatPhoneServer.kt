@@ -43,6 +43,9 @@ public enum class PhoneServerWait {
 
     /** The phone's agents (Claude Code and the others) are being updated; their helper is down meanwhile. */
     UpdatingAgents,
+
+    /** A phone agent needs the person to sign in; its conversations wait for that and say so. */
+    AgentNeedsSignIn,
 }
 
 private val NotWaiting: StateFlow<PhoneServerWait> = MutableStateFlow(PhoneServerWait.None)
