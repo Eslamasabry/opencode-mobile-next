@@ -37,6 +37,12 @@ public data class SurfaceRequest(
     val edgeWidthDp: Float = 1f,
     /** The control is an action the person presses (a button, Send), not a mark or a choice. */
     val action: Boolean = false,
+    /**
+     * The surface lies inside another outlined surface (a chip or a disc in the message box, a disc in its tray): it takes
+     * the style's edge but casts no shadow of its own, so shadows never stack inside a pane, and it reads quieter than
+     * the pane it sits in.
+     */
+    val nested: Boolean = false,
     /** The glass look's numbers (Glass only): its clear panes' blur, sheen, lit corner, specular and glint. */
     val look: GlassLook = GlassLook.Default,
 ) {
