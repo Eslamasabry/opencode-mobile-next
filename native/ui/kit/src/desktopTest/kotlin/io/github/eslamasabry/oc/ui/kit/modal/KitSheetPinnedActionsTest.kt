@@ -123,6 +123,29 @@ class KitSheetPinnedActionsTest {
         assertTrue(box("Edit c2.txt?").top.value > 0f, "the sheet stays under the cap")
     }
 
+    @Test
+    fun `B-SHEET-HALF-001 a Half sheet grows to show its whole body, so no section is cut under the pinned actions`() = runComposeUiTest {
+        // Cut audit 2, finding 16: the agent sheet's "Mode" heading sat above Done with its control hidden under it.
+        setContent {
+            Sheet(KitSheetHeight.Half, answerPair = true) {
+                for (i in 0 until 8) Box(Modifier.fillMaxWidth().height(60.dp))
+                KitText("Mode")
+                Box(Modifier.fillMaxWidth().height(48.dp).testTag("mode-control"))
+            }
+        }
+        settle()
+        val control = onNodeWithTag("mode-control").getUnclippedBoundsInRoot()
+        assertTrue(control.bottom <= box("Allow").top, "the section's control shows whole above the pinned actions")
+        assertTrue(box("Edit c2.txt?").top.value >= 915f * 0.1f - 1f, "and the sheet stays under the content cap")
+    }
+
+    @Test
+    fun `B-SHEET-HALF-002 a Half sheet with a short body keeps half the window`() = runComposeUiTest {
+        setContent { Sheet(KitSheetHeight.Half, answerPair = true, body = short) }
+        settle()
+        assertTrue(box("Edit c2.txt?").top.value <= 915f / 2f + 80f, "a short body still gets a half-height sheet")
+    }
+
     /** The red channel of the rendered window at [x], [y] (density 1: px = dp). */
     private fun ComposeUiTest.redAt(x: Int, y: Int): Float {
         val map = onRoot().captureToImage().toPixelMap()
