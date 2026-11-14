@@ -18,12 +18,13 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.test.ComposeUiTest
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.captureToImage
-import androidx.compose.ui.test.onAllNodesWithText
-import androidx.compose.ui.test.onLast
-import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onRoot
-import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.v2.runDesktopComposeUiTest
+import androidx.compose.ui.test.click
+import androidx.compose.ui.test.performMouseInput
+import androidx.compose.ui.test.v2.runSkikoComposeUiTest
+import androidx.compose.ui.geometry.Size
+import kotlin.time.Duration.Companion.minutes
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.security.Redactor
@@ -52,7 +53,7 @@ import kotlin.test.fail
 /**
  * Pictures for the owner (2026-11-14, the steps of a long turn): the owner's turn of thirteen steps, 11 commands and 2
  * other steps with the agent's words between them, at phone size (412 x 915 dp at 2.625 px/dp), in the owner's look
- * (Glass, dark, Contour lines) and in Solid dark and Solid light: folded, opened (the earlier steps and one run of
+ * (Glass, dark, Contour lines) and in Solid dark and Solid light: folded, opened (the turn's one row and one run of
  * commands open), and while its last command runs (the step light mid-lap). Two frame strips in the owner's look: the
  * fold opening and a new step arriving, five frames each at 0, 25, 50, 75 and 100 % of the motion.
  */
@@ -131,20 +132,23 @@ class StepsCraftPicturesTest {
     }
 
     private fun shot(look: Look, moment: Moment) =
-        runDesktopComposeUiTest(WIDTH, HEIGHT) {
+        runSkikoComposeUiTest(Size(WIDTH.toFloat(), HEIGHT.toFloat()), testTimeout = SCENE_TIMEOUT) {
             mainClock.autoAdvance = false
             screen(look, running = moment == Moment.Running)
             mainClock.advanceTimeBy(SETTLE)
             if (moment == Moment.Opened) {
-                onNodeWithText("Show 9 earlier steps").performClick()
+                tap("chat-work-summary")
                 mainClock.advanceTimeBy(SETTLE)
-                onAllNodesWithText("Ran 2 commands").onLast().performClick()
+                tap("chat-step-run-c10")
                 mainClock.advanceTimeBy(SETTLE)
             }
             // The running step's light, part-way round its node.
             if (moment == Moment.Running) mainClock.advanceTimeBy(LIGHT_MID)
-            compareGolden("steps-craft-${look.id}-${moment.name.lowercase()}")
-            end()
+            try {
+                compareGolden("steps-craft-${look.id}-${moment.name.lowercase()}")
+            } finally {
+                end()
+            }
         }
 
     @Test fun glassDarkContourFolded() = shot(Look.GlassDarkContour, Moment.Folded)
@@ -170,29 +174,47 @@ class StepsCraftPicturesTest {
 
     @Test
     fun glassDarkContourFoldOpeningStrip() =
-        runDesktopComposeUiTest(WIDTH, HEIGHT) {
+        runSkikoComposeUiTest(Size(WIDTH.toFloat(), HEIGHT.toFloat()), testTimeout = SCENE_TIMEOUT) {
             mainClock.autoAdvance = false
             screen(Look.GlassDarkContour, running = false)
             mainClock.advanceTimeBy(SETTLE)
-            onNodeWithText("Show 9 earlier steps").performClick()
-            strip("steps-craft-glass-dark-contour-strip-fold-opening", foldMs)
-            end()
+            tap("chat-work-summary")
+            try {
+                strip("steps-craft-glass-dark-contour-strip-fold-opening", foldMs, top = .08f, bottom = .86f)
+            } finally {
+                end()
+            }
         }
 
     @Test
     fun glassDarkContourStepArrivingStrip() =
-        runDesktopComposeUiTest(WIDTH, HEIGHT) {
+        runSkikoComposeUiTest(Size(WIDTH.toFloat(), HEIGHT.toFloat()), testTimeout = SCENE_TIMEOUT) {
             var arrived by mutableStateOf(false)
             mainClock.autoAdvance = false
             screen(Look.GlassDarkContour, running = true, arrived = { arrived })
             mainClock.advanceTimeBy(SETTLE)
             arrived = true
-            strip("steps-craft-glass-dark-contour-strip-step-arriving", MotionTokens.STANDARD)
-            end()
+            // Cropped low enough that the arriving row is whole in every frame.
+            try {
+                strip("steps-craft-glass-dark-contour-strip-step-arriving", MotionTokens.STANDARD, top = .55f, bottom = .90f)
+            } finally {
+                end()
+            }
         }
 
-    /** Five frames of a motion [totalMs] long (0, 25, 50, 75, 100 %), side by side, each the middle of the screen. */
-    private fun ComposeUiTest.strip(name: String, totalMs: Int) {
+    /**
+     * A tap on the row tagged [tag], then the pointer leaves the window: a desktop mouse left at the tap draws a hover
+     * band a phone never shows.
+     */
+    private fun ComposeUiTest.tap(tag: String) {
+        onNodeWithTag(tag).performMouseInput {
+            click()
+            exit()
+        }
+    }
+
+    /** Five frames of a motion [totalMs] long (0, 25, 50, 75, 100 %), side by side, each the band [top]..[bottom] of the screen. */
+    private fun ComposeUiTest.strip(name: String, totalMs: Int, top: Float = .18f, bottom: Float = .80f) {
         val frames = ArrayList<BufferedImage>()
         var at = 0L
         mainClock.advanceTimeByFrame()
@@ -202,17 +224,17 @@ class StepsCraftPicturesTest {
             at = maxOf(at, target)
             frames += onRoot().captureToImage().toAwtImage()
         }
-        val top = (HEIGHT * .18f).toInt()
-        val bottom = (HEIGHT * .80f).toInt()
+        val y0 = (HEIGHT * top).toInt()
+        val y1 = (HEIGHT * bottom).toInt()
         val w = WIDTH / 2
-        val h = (bottom - top) / 2
+        val h = (y1 - y0) / 2
         val gap = 12
         val out = BufferedImage(frames.size * w + (frames.size - 1) * gap, h, BufferedImage.TYPE_INT_ARGB)
         val g = out.createGraphics()
         g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR)
         frames.forEachIndexed { i, f ->
             val x = i * (w + gap)
-            g.drawImage(f, x, 0, x + w, h, 0, top, WIDTH, bottom, null)
+            g.drawImage(f, x, 0, x + w, h, 0, y0, WIDTH, y1, null)
         }
         g.dispose()
         val dir = File(System.getProperty("oc.goldens.dir") ?: "src/desktopTest/goldens")
@@ -231,5 +253,8 @@ class StepsCraftPicturesTest {
         const val HEIGHT = 2402
         const val SETTLE = 900L
         const val LIGHT_MID = 1100L
+
+        /** Glass over the Contour lines renders slowly on a runner without a GPU; one minute was too short for a scene. */
+        val SCENE_TIMEOUT = 6.minutes
     }
 }
