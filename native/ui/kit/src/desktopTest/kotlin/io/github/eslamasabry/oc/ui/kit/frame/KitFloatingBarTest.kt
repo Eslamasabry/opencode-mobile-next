@@ -348,63 +348,41 @@ class KitFloatingBarTest {
     }
 
     @Test
-    fun `B-KIT-FLOAT-002 scrolled, the content passes under the bar and is blurred and cleared under the status bar`() {
+    fun `B-KIT-FLOAT-002 scrolled, the content passes under the bar and nothing of it shows under the status bar or the pane`() {
+        // Owner 2026-11-14 (nothing readable under a floating control; audit 2: Settings' glass bar and status bar showed
+        // blurred copies of the page's words): the page is gone above the pane's bottom edge, its glass and the status
+        // bar's edge included, and dissolves in below it.
         for (page in Page.entries) {
-            var ground = Color.Unspecified
-            // About 120 dp past the spacer's resting height (Home's pane keeps its room under the chips too).
-            val s = shot(page, floating = true, act = { drag(-120f - roomBelow(page)) }, check = { ground = it.ground })
-            val g = luma(ground)
-            // Under the status bar, above where the edge's dissolve starts: blur only, no sharp row edge.
-            val (statusMean, statusStep) = column(s.image, W / 2f, 1f, STATUS_DP * STATUS_EDGE_SOLID_SHARE - 1f)
-            assertTrue(statusMean >= g + 20f, "$page: content under the status bar, mean $statusMean over ground $g")
-            assertTrue(statusStep <= BLUR_STEP, "$page: cleared to a blur under the status bar, a step of $statusStep")
-            // Inside the pane, beside the title past its words: the rows show through its glass, blurred.
+            val drag: ComposeUiTest.(Seen) -> Unit = { drag(-120f - roomBelow(page)) }
+            val s = shot(page, floating = true, act = drag)
+            val none = shot(page, floating = true, act = drag, extras = Extras(rowsDraw = false))
             val capsule = s.bounds["kit-liquid-bar"]!!
-            val bar = s.bounds["bar"]!!
             debugPng(s.image, "scrolled-$page")
-            // Words on the pane's glass: the copy of the page it bends is whole at the pane's bottom edge and gone by the
-            // inner end of its lens rim, so the rows show through its last few dp, not behind the title.
-            val inside = capsule.right.value - 24f
-            val from = capsule.bottom.value - 10f
-            val to = capsule.bottom.value - 3f
-            val (capsuleMean, capsuleStep) = column(s.image, inside, from, to)
-            println("$page pane $capsule, column at $inside: " + stepsAt(s.image, inside, from, to))
-            assertTrue(capsuleMean >= g + 15f, "$page: content behind the capsule, mean $capsuleMean over ground $g")
-            assertTrue(capsuleStep <= BLUR_STEP, "$page: blurred behind the capsule, a step of $capsuleStep")
-            // Beside the pane (its 6 dp margin), below the status edge's blur and above the pane's bottom edge: nothing of
-            // the page shows there but its ground (one body: content shows above that edge only through the glass).
-            val sideFrom = STATUS_DP + STATUS_EDGE_REACH_DP + 1f
-            val (sideMean, sideStep) = column(s.image, 2f, sideFrom, capsule.bottom.value - 1f)
-            assertTrue(abs(sideMean - g) <= 3f && sideStep <= 3f, "$page: cleared beside the pane, mean $sideMean over ground $g, step $sideStep: " + stepsAt(s.image, 2f, sideFrom, capsule.bottom.value - 1f))
-            // Below the pane's bottom edge the rows run on sharp: they really pass under it.
-            val (_, belowStep) = column(s.image, 2f, capsule.bottom.value + 1f, capsule.bottom.value + 80f)
+            // Under the status bar and across the whole pane, its rim included: the rows add nothing.
+            val (mean, max) = diff(s.image, none.image, 0f, 0f, W.toFloat(), capsule.bottom.value - .5f)
+            assertTrue(mean <= WORDS_MEAN && max <= WORDS_MAX, "$page: the rows show above the pane's bottom edge: mean $mean, max $max\n" + map(s.image, none.image, 0f, 0f, W.toFloat(), capsule.bottom.value + 4f))
+            // Below the pane's bottom edge the rows run on sharp once the dissolve is past: they really pass under it.
+            val (_, belowStep) = column(s.image, 2f, capsule.bottom.value + TOP_DISSOLVE_DP + 1f, capsule.bottom.value + 100f)
             assertTrue(belowStep >= 100f, "$page: the rows run on below the pane, steepest step $belowStep")
-            println("$page scrolled: status mean $statusMean step $statusStep, capsule mean $capsuleMean step $capsuleStep, ground $g")
         }
     }
 
     @Test
-    fun `B-KIT-FLOAT-013 words on the pane - bright rows add nothing under the title and the chips and still show in the pane's rim`() {
+    fun `B-KIT-FLOAT-013 words on the pane - bright rows add nothing under the title, the chips or the pane's rim`() {
         for (page in Page.entries) {
             val drag: ComposeUiTest.(Seen) -> Unit = { drag(-120f - roomBelow(page)) }
             val bright = shot(page, floating = true, act = drag)
             val none = shot(page, floating = true, act = drag, extras = Extras(rowsDraw = false))
             val capsule = bright.bounds["kit-liquid-bar"]!!
             val bar = bright.bounds["bar"]!!
-            // The title's line (the bar's rows) and, on Home, the chips' line, down to where the lens rim begins (the
-            // recipe's rim: 22 dp, or 40 % of the pane's short side).
-            val rimDp = minOf(22f, 0.4f * (capsule.bottom - capsule.top).value)
-            val clear = capsule.bottom.value - rimDp - 1f
             val lines = listOfNotNull(bar, bright.bounds["pills"])
             for (line in lines) {
-                val (mean, max) = diff(bright.image, none.image, line.left.value + 8f, line.top.value + 10f, line.right.value - 8f, minOf(line.bottom.value - 2f, clear))
+                val (mean, max) = diff(bright.image, none.image, line.left.value + 8f, line.top.value + 10f, line.right.value - 8f, minOf(line.bottom.value - 2f, capsule.bottom.value - 1f))
                 println("$page words over $line: mean $mean max $max")
                 assertTrue(mean <= WORDS_MEAN && max <= WORDS_MAX, "$page: bright rows show behind the words on the pane at $line: mean $mean, max $max of 255, pane $capsule\n" + map(bright.image, none.image, 0f, 0f, W.toFloat(), capsule.bottom.value + 4f))
             }
-            // Beside the words, in the pane's rim above its bottom edge, the rows still bend under the glass.
-            val (rim, _) = diff(bright.image, none.image, capsule.left.value + 40f, capsule.bottom.value - 8f, capsule.right.value - 40f, capsule.bottom.value - 3f)
-            println("$page rim: mean $rim over $capsule")
-            assertTrue(rim >= RIM_MEAN, "$page: the pane's rim shows nothing of the rows: mean $rim of 255")
+            val (rim, rimMax) = diff(bright.image, none.image, capsule.left.value + 40f, capsule.bottom.value - 8f, capsule.right.value - 40f, capsule.bottom.value - 1f)
+            assertTrue(rim <= WORDS_MEAN && rimMax <= WORDS_MAX, "$page: the pane's rim still bends the rows: mean $rim, max $rimMax")
         }
     }
 
@@ -626,7 +604,5 @@ class KitFloatingBarTest {
         const val WORDS_MEAN = 2f
         const val WORDS_MAX = 8f
 
-        /** In the pane's rim the rows still show: at least this much on average. */
-        const val RIM_MEAN = 15f
     }
 }
