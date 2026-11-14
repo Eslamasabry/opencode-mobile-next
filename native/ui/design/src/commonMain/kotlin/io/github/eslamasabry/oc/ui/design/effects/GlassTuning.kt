@@ -113,6 +113,13 @@ public data class GlassKnobs(
      * shipped: all of it past the lens rim, so nothing bright runs through the words; 0: the page shows fully).
      */
     val wordsClear: Float,
+    /**
+     * A modal pane's band of the page ([ModalBand], [LiquidEdge.modalBand]): how far in from an edge it shares with the
+     * visible page the page shows whole, dp, and over how many dp more it fades out. Past it the pane shows only the page's
+     * picture. Menus, sheets and dialogs; 0 for the other kinds.
+     */
+    val pageKeepDp: Float = 0f,
+    val pageFadeDp: Float = 0f,
 )
 
 /** One slider of the lab: its words, its unit, its range and step, and the knob it moves. */
@@ -126,6 +133,8 @@ public enum class GlassKnob(
     public val group: String,
     internal val get: (GlassKnobs) -> Float,
     internal val put: (GlassKnobs, Float) -> GlassKnobs,
+    /** The pane kinds this knob changes; null: every kind. */
+    private val kinds: Set<GlassPaneKind>? = null,
 ) {
     // Light refraction: what makes glass read as liquid (the bend at the edge, its glint and how much page comes through).
     LensStrength("lenss", "Refraction strength", "dp the page is bent", 0f, 120f, 1f, GLASS_REFRACTION_GROUP, { it.lensStrengthDp }, { k, v -> k.copy(lensStrengthDp = v) }),
@@ -168,7 +177,13 @@ public enum class GlassKnob(
     SoftenKeep("slope", "Softening slope", "share of light kept", 0f, 1f, .01f, "Words", { it.softenKeep }, { k, v -> k.copy(softenKeep = v) }),
     ColourLimit("colour", "Colour limit", "most chroma, 0 = none", 0f, 1f, .01f, "Words", { it.colourLimit }, { k, v -> k.copy(colourLimit = v) }),
     WordsClear("clear", "Page hidden under the words", "bar and message box: 1 hidden, 0 shows fully", 0f, 1f, .01f, "Words", { it.wordsClear }, { k, v -> k.copy(wordsClear = v) }),
+    // The page behind a modal pane: only a band along its open edges, so nothing behind reads in its middle.
+    PageKeep("pagekeep", "Page kept along the open edge", "dp in from the edge", 0f, 120f, 1f, GLASS_PAGE_GROUP, { it.pageKeepDp }, { k, v -> k.copy(pageKeepDp = v) }, kinds = MODAL_KINDS),
+    PageFade("pagefade", "Page fading out past it", "dp", 0f, 64f, 1f, GLASS_PAGE_GROUP, { it.pageFadeDp }, { k, v -> k.copy(pageFadeDp = v) }, kinds = MODAL_KINDS),
     ;
+
+    /** Whether this knob changes [kind]'s glass (the lab shows it for that kind, or for all kinds linked when null). */
+    public fun appliesTo(kind: GlassPaneKind?): Boolean = kind == null || kinds == null || kind in kinds
 
     public fun of(k: GlassKnobs): Float = get(k)
 
@@ -188,6 +203,12 @@ public enum class GlassKnob(
 
 /** The lab's first group of sliders (the coordinator's "Light refraction", 2026-11-13). */
 public const val GLASS_REFRACTION_GROUP: String = "Light refraction"
+
+/** The lab's group for what a modal pane shows of the page behind it. */
+public const val GLASS_PAGE_GROUP: String = "Page behind a menu, sheet or dialog"
+
+/** The pane kinds that are modal: they show the page only in a band along their open edges ([LiquidEdge.modalBand]). */
+private val MODAL_KINDS: Set<GlassPaneKind> = setOf(GlassPaneKind.Menu, GlassPaneKind.Sheet, GlassPaneKind.Dialog)
 
 /** A pane kind in one theme. */
 public data class GlassPaneKey(val kind: GlassPaneKind, val dark: Boolean)
@@ -288,8 +309,14 @@ public data class GlassTuning(val panes: Map<GlassPaneKey, GlassKnobs> = emptyMa
                 inkRim = r.hold.inkRim,
                 joinReachDp = if (kind == GlassPaneKind.Chip) LiquidJoin.REACH_PILL_DP else LiquidJoin.REACH_MENU_DP,
                 wordsClear = 1f,
+                pageKeepDp = LiquidEdge.modalBand(kind)?.keepDp ?: 0f,
+                pageFadeDp = LiquidEdge.modalBand(kind)?.fadeDp ?: 0f,
             )
         }
+
+        /** [kind]'s band of the page as [knobs] set it; null for a kind that is not modal. */
+        public fun bandOf(kind: GlassPaneKind, knobs: GlassKnobs): ModalBand? =
+            if (LiquidEdge.modalBand(kind) == null) null else ModalBand(knobs.pageKeepDp.coerceAtLeast(0f), knobs.pageFadeDp.coerceAtLeast(0f))
 
         /** The specular's bright segment's shipped reach, dp (the kit's `SPECULAR_REACH_DP`). */
         public const val SPECULAR_REACH_DP: Float = 120f

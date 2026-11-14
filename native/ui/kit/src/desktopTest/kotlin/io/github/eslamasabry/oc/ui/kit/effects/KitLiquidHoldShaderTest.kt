@@ -130,26 +130,28 @@ class KitLiquidHoldShaderTest {
 
     /**
      * The plain pane's hold over a white page with two 3 px black strokes (a letter's stem: one in the rim at x 2-4, one
-     * in the middle at x 19-21), every pixel of row 20 (a 40 px pane, rim 20 px).
+     * in the middle at x 39-41), every pixel of row 40 (an 80 px pane, rim 20 px). Cut audit 2: the pane has a calm middle
+     * (a 40 px pane was all rim; the middle's mean is now taken from the middle, LOCAL_HOLD, so a pane with none keeps
+     * more of its strokes there, as a rim does).
      */
     private fun plainStrokes(knee: FloatArray, local: FloatArray): IntArray {
         val program = assertNotNull(DesktopLiveShader.compile(LiquidHoldShader.SOURCE))
-        LiquidHoldUniforms(knee, 0f, 0f, 0f, 20f, 20f, 8f, 20f, 1f, 1f, 0f, local).set(program)
+        LiquidHoldUniforms(knee, 0f, 0f, 0f, 40f, 40f, 8f, 20f, 1f, 1f, 0f, local).set(program)
         val filter = assertNotNull((program as DesktopLiveShader).filter(0f))
         val bitmap = Bitmap()
-        bitmap.allocPixels(ImageInfo.makeN32(40, 40, ColorAlphaType.PREMUL))
+        bitmap.allocPixels(ImageInfo.makeN32(80, 80, ColorAlphaType.PREMUL))
         val canvas = Canvas(bitmap)
         canvas.saveLayer(null, Paint().apply { imageFilter = filter })
         canvas.drawPaint(Paint().apply { color = org.jetbrains.skia.Color.makeRGB(255, 255, 255) })
-        for (x in listOf(2f, 19f)) canvas.drawRect(org.jetbrains.skia.Rect.makeXYWH(x, 0f, 3f, 40f), Paint().apply { color = org.jetbrains.skia.Color.makeRGB(0, 0, 0) })
+        for (x in listOf(2f, 39f)) canvas.drawRect(org.jetbrains.skia.Rect.makeXYWH(x, 0f, 3f, 80f), Paint().apply { color = org.jetbrains.skia.Color.makeRGB(0, 0, 0) })
         canvas.restore()
-        return IntArray(40) { x -> (bitmap.getColor(x, 20) shr 8) and 0xFF }
+        return IntArray(80) { x -> (bitmap.getColor(x, 40) shr 8) and 0xFF }
     }
 
     @Test
     fun `B-GLASS-LIQ-002 the detail hold softens fine detail in the middle and leaves the rim's bent content whole`() {
         val row = plainStrokes(KNEE_OFF, floatArrayOf(13f, 0f, .15f))
-        val middle = row.slice(14..26).let { it.max() - it.min() }
+        val middle = row.slice(34..46).let { it.max() - it.min() }
         val rim = row.slice(0..8).let { it.max() - it.min() }
         println("stripes under the detail hold: middle contrast $middle, rim contrast $rim")
         assertTrue(rim >= 240, "the rim's outer half keeps its detail: $rim")

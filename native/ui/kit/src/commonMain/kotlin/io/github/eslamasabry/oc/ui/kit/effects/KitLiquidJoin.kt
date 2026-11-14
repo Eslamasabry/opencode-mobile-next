@@ -109,6 +109,12 @@ public sealed class KitLiquidJoinPart(
     internal var backdrop: KitLiquidBackdrop? by mutableStateOf(null)
 
     /**
+     * The band of the page a modal pane keeps along its open edges (written by `kitLiquidFace`; null: not modal). A joined
+     * menu shows its body's picture through it (cut audit 2): the body's content only along the menu's free edges.
+     */
+    internal var band: io.github.eslamasabry.oc.ui.design.effects.ModalBand? = null
+
+    /**
      * Whether the face was last composed as the joined pane (written by `kitLiquidFace` in composition; read after it
      * in the same composition by a part that hosts its joined face outside a clip, and in the draw phase by the pane's
      * own touch light, which then leaves the light to the joined pane).
@@ -385,6 +391,19 @@ private class JoinedPaneNode(
     private var back: GraphicsLayer? = null
     private var mask: GraphicsLayer? = null
 
+    /** A joined drop's modal view of its body's picture, made once per picture (draw phase; see drawJoined). */
+    private var view: KitLiquidBackdrop? = null
+    private var viewOf: KitLiquidBackdrop? = null
+    private var dropBand: io.github.eslamasabry.oc.ui.design.effects.ModalBand = LiquidEdge.MENU_BAND
+    private var dropClosed: Int = 0
+
+    private fun dropView(body: KitLiquidBackdrop): KitLiquidBackdrop {
+        val made = view
+        if (made != null && viewOf === body) return made
+        viewOf = body
+        return kitModalView(body, { dropBand }, closed = { dropClosed }).also { view = it }
+    }
+
     override fun onAttach() {
         val g = requireGraphicsContext()
         back = g.createGraphicsLayer()
@@ -442,7 +461,23 @@ private class JoinedPaneNode(
         // pills over the page, and its hold pulled the bar's tint into a band under the bar, ending in a rounded corner on
         // the line where the two sides meet. A drop draws its side from its body's picture, as the body does, unless it
         // lies in that picture itself (KitLiquidJoinDrop.ownPicture: the jump pill): its own then, never a cycle.
-        val source = if ((part as? KitLiquidJoinDrop)?.ownPicture == false && theirs != null) partner?.backdrop ?: backdrop else backdrop
+        // And a menu is modal while it is open (cut audit 2, the home row's menu full of the chips and icons behind it):
+        // its side shows the body's picture whole and the body's content (the transcript under the bar) only in its band
+        // along its free edges, none along the edge it hangs from, as every modal pane does ([kitModalView]). The bar's
+        // picture never holds the menu (the menu lies in the window's menu layer, above the page).
+        val body = if ((part as? KitLiquidJoinDrop)?.ownPicture == false && theirs != null) partner?.backdrop ?: backdrop else null
+        // Only a modal drop (a menu) is masked; a drop that is not modal sees its picture whole.
+        val band = part.band
+        val source =
+            when {
+                body == null -> backdrop
+                band == null -> body
+                else -> {
+                    dropBand = band
+                    dropClosed = sideFacing(mine, theirs!!)
+                    dropView(body)
+                }
+            }
         // Only this pane's side is drawn, and it lies within reach/6 of this pane's own box.
         val origin = c.positionInWindow()
         val grow = reach / 6f + 2f
@@ -541,6 +576,12 @@ private class JoinedPaneNode(
  * The frost of a body joined to a menu: the body's [body] moved towards the menu's [menu] by [t] (0 to 1), blur and
  * nothing else (the bend, rim and tint ease by the join's own band): linear in [t], so it has no step.
  */
+/**
+ * The edge of a drop's box [mine] that hangs from its body [theirs], as [ModalSides] bits: a drop joins its body above or
+ * below it (a menu under its bar: its top; a pill on the message box: its bottom).
+ */
+internal fun sideFacing(mine: Rect, theirs: Rect): Int = if (theirs.center.y <= mine.center.y) ModalSides.TOP else ModalSides.BOTTOM
+
 internal fun joinedFrost(body: io.github.eslamasabry.oc.ui.design.effects.LiquidRecipe, menu: io.github.eslamasabry.oc.ui.design.effects.LiquidRecipe, t: Float): io.github.eslamasabry.oc.ui.design.effects.LiquidRecipe =
     body.copy(blurDp = body.blurDp + (menu.blurDp - body.blurDp) * t.coerceIn(0f, 1f))
 
@@ -727,6 +768,13 @@ float4 holdSample(float2 p) {
     float3 rgb = s.rgb / max(s.a, 0.0001);
     float l = dot(rgb, float3(0.213, 0.715, 0.072));
     return float4(clamp(cc.y * (l + cc.x * (rgb - l)) + (0.5 - 0.5 * cc.y + cc.z), 0.0, 1.0), s.a);
+}
+// How deep inside the body a sample (lens-pass px) lies, in this side's rim widths, for the local hold's mean (the plain
+// union of the two boxes: the blend's few px do not matter here); far inside where there is no rim.
+float rimDepth(float2 q) {
+    float2 p = q / res;
+    float depth = -min(sdBox(p, a, ra), sdBox(p, b, rb));
+    return rim.x > 0.0 ? depth / rim.x : 1000.0;
 }
 """ + LiquidHoldShader.LOCAL_HOLD + """
 

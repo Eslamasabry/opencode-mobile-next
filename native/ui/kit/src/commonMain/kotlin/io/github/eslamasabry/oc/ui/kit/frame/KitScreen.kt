@@ -649,9 +649,11 @@ public fun KitScreen(
             val barFace =
                 when {
                     stackTop == null -> null
-                    frost != null -> kitLiquidFace(LiquidRole.Bar, frost, LiquidBarShape)
-                    lifted != null -> kitLiquidFace(LiquidRole.Bar, liftedFade?.faded ?: lifted, LiquidBarShape)
-                    runs -> kitLiquidFace(LiquidRole.Bar, underFade?.fadedSource ?: under, LiquidBarShape)
+                    // A page's top pane (the home's title and chips, a Settings bar) has no outline: glass by its
+                    // bend alone (owner 2026-11-14: "Get rid of the border around the top conversation area").
+                    frost != null -> kitLiquidFace(LiquidRole.Bar, frost, LiquidBarShape, rimless = true)
+                    lifted != null -> kitLiquidFace(LiquidRole.Bar, liftedFade?.faded ?: lifted, LiquidBarShape, rimless = true)
+                    runs -> kitLiquidFace(LiquidRole.Bar, underFade?.fadedSource ?: under, LiquidBarShape, rimless = true)
                     else -> null
                 }
             var barPx by remember { mutableIntStateOf(0) }

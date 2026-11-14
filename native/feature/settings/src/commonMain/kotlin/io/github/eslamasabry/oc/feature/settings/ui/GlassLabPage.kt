@@ -378,7 +378,8 @@ private fun androidx.compose.foundation.layout.ColumnScope.GlassLabControls(ui: 
             typeField = stringResource(Res.string.glassLabTypeField),
             typeConfirm = stringResource(Res.string.glassLabTypeConfirm),
         )
-    for ((group, knobsInGroup) in GlassKnob.entries.groupBy { it.group }) {
+    // A knob that does nothing for the kind shown (the page band of a bar) is not offered.
+    for ((group, knobsInGroup) in GlassKnob.entries.filter { it.appliesTo(shown) }.groupBy { it.group }) {
         KitSectionLabel(group)
         for (knob in knobsInGroup) {
             KitSlider(
