@@ -85,6 +85,11 @@ New reports arrive with `bug` + `needs triage` from the in-app **Report a bug** 
 Do not open a public issue for a vulnerability. Report it privately through GitHub's private vulnerability reporting
 on this repository.
 
+## Documentation
+
+[llms.txt](llms.txt) lists the documents that are current for the native app. When you add, move or retire one of
+them, update that file; `LlmsTxtTest` in `:quality:test` checks its links, descriptions and the newest release note.
+
 ## Developer agent skills
 
 Prompt packs under `.claude/skills/` are **not** part of this repository: third-party content installed locally,

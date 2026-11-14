@@ -52,6 +52,8 @@ they can never be delivered.
 
 1. Write the release notes on master: `docs/releases/v<name>+<code>.md`, first line `# OpenCode Mobile <name>+<code>`.
    `scripts/native-release.sh` (dry run) tells you the code it will take.
+   Then add the notes to `llms.txt` at the repository root, which lists the current documents; `LlmsTxtTest` in
+   `:quality:test` fails until the newest release note is linked there.
 2. Dry run, on a clean master equal to `origin/master`:
 
    ```bash
