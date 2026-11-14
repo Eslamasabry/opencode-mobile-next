@@ -29,7 +29,10 @@ public data class LedgerSnapshot(val version: Long, val messages: List<MessageWi
  * reducer keeps only what its rows draw; the turn facts (steps, durations, results, context, background work) need
  * core's whole [Part], so this keeps the core values the gateway delivered, keyed by id, and nothing else.
  *
- * Text deltas are not appended (the facts only ask whether a reply has words), so a long stream costs O(1) here.
+ * A text delta costs O(1) here: the first one gives the part its words (a reply that has words reads so at once); later
+ * ones are kept on the side and folded into the part when the snapshot is next built for a real change (a step, a
+ * message's end), never one rebuild per delta. Owner 2026-11-14: the agent's words between steps read "I", "Two find",
+ * "My": the ledger kept only the first delta of each streamed text part, and the step list draws those words.
  * Single-threaded: the chat world calls it from its one collector context.
  */
 public class TurnLedger(private val sessionId: String) {
@@ -38,6 +41,16 @@ public class TurnLedger(private val sessionId: String) {
 
         /** When each part last changed (the ledger's [version] at that change): the history fence reads it. */
         val partStamps = HashMap<String, Long>()
+
+        /** Text streamed into a part after its first delta, not yet folded into the part (see [snapshot]). */
+        val streams = HashMap<String, StringBuilder>()
+
+        /** The part [id] with the words streamed into it so far folded in (once: the side buffer empties). */
+        fun fold(id: String) {
+            val more = streams.remove(id) ?: return
+            val part = parts[id] ?: return
+            if (more.isNotEmpty()) parts[id] = part.copy(text = part.text + more)
+        }
     }
 
     private val messages = LinkedHashMap<String, Entry>()
@@ -65,7 +78,11 @@ public class TurnLedger(private val sessionId: String) {
                 } else {
                     val entry = messages[event.messageId.raw]
                     val part = entry?.parts?.get(event.partId.raw)
-                    if (part == null || part.text.isNotEmpty() || event.delta.isEmpty()) {
+                    if (part == null || event.delta.isEmpty()) {
+                        false
+                    } else if (part.text.isNotEmpty()) {
+                        // Kept, not published: the words reach the snapshot with the next real change.
+                        entry.streams.getOrPut(part.id) { StringBuilder() }.append(event.delta)
                         false
                     } else {
                         entry.parts[part.id] = part.copy(text = event.delta)
@@ -107,6 +124,7 @@ public class TurnLedger(private val sessionId: String) {
             // Parts the page no longer has are gone, unless they arrived live after the request started.
             existing.parts.keys.retainAll { it in pageIds || (existing.partStamps[it] ?: 0) > beforeVersion }
             existing.partStamps.keys.retainAll(existing.parts.keys)
+            existing.streams.keys.retainAll(existing.parts.keys)
             val kept = LinkedHashMap<String, Part>()
             for (p in m.parts) {
                 val live = existing.parts[p.id]
@@ -115,6 +133,8 @@ public class TurnLedger(private val sessionId: String) {
                 } else {
                     kept[p.id] = p
                     existing.partStamps[p.id] = stamp
+                    // The page has the part whole: words streamed before it are in it already.
+                    existing.streams.remove(p.id)
                 }
             }
             for ((id, p) in existing.parts) if (id !in kept) kept[id] = p
@@ -127,6 +147,7 @@ public class TurnLedger(private val sessionId: String) {
     /** The current snapshot; built once per change. */
     public fun snapshot(): LedgerSnapshot {
         if (cached.version == version) return cached
+        for (entry in messages.values) if (entry.streams.isNotEmpty()) entry.streams.keys.toList().forEach(entry::fold)
         // Server order (B-CHAT-100): by creation time; a stable sort keeps the order the server gave equal times in
         // (history pages and live arrivals both insert in server order). Ids are not compared: they need not ascend.
         val ordered =
@@ -152,7 +173,9 @@ public class TurnLedger(private val sessionId: String) {
     private fun upsertPart(part: Part): Boolean {
         val entry = messages[part.messageId] ?: return false
         if (entry.parts[part.id] == part) return false
-        // A later upsert of a text part arrives without the words streamed so far; keep "has words" true.
+        // A later upsert of a text part arrives without the words streamed so far: they stay (folded in now); an upsert
+        // with words of its own is the part whole, and replaces them.
+        if (part.text.isEmpty()) entry.fold(part.id) else entry.streams.remove(part.id)
         val old = entry.parts[part.id]
         var next = if (old != null && part.text.isEmpty() && old.text.isNotEmpty()) part.copy(text = old.text) else part
         // B-CHAT-117: a late "still running" report (a replay, a reconnect) never revives a finished call.
