@@ -68,7 +68,6 @@ import io.github.eslamasabry.oc.ui.words.res.nlibCustomSavedTitle
 import io.github.eslamasabry.oc.ui.words.res.nlibCustomUnavailableBody
 import io.github.eslamasabry.oc.ui.words.res.nlibCustomUnavailableTitle
 import io.github.eslamasabry.oc.ui.words.res.nlibDetails
-import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 
 /**
@@ -208,14 +207,10 @@ private fun CustomProviderResult(state: LibraryUi, ui: CustomProviderUi, actions
         dismissible = !state.working,
         primary = if (loaded) addKey else restart,
     ) {
-        val words = resultWords(ui.stage)
-        KitNotice(
-            stringResource(words.second),
-            title = stringResource(words.first, ui.name),
-            tone = resultTone(ui.stage),
-        )
+        val (title, body) = resultWords(ui.stage, ui.name)
+        KitNotice(body, title = title, tone = resultTone(ui.stage))
         // A restart the page could not ask for (the server changed meanwhile): the declaration stays saved.
-        ui.refusal?.let { KitNotice(stringResource(refusalWords(it))) }
+        ui.refusal?.let { KitNotice(refusalWords(it)) }
         ui.detail?.let { CustomProviderDetails(it) }
     }
 }
@@ -223,7 +218,7 @@ private fun CustomProviderResult(state: LibraryUi, ui: CustomProviderUi, actions
 @Composable
 private fun RefusalNotice(refusal: CustomProviderRefusal, detail: String?) {
     KitNotice(
-        stringResource(refusalWords(refusal)),
+        refusalWords(refusal),
         title = stringResource(Res.string.nlibCustomRefusedTitle),
         tone = StatusTone.Failure,
     )
@@ -240,14 +235,18 @@ private fun CustomProviderDetails(detail: String) {
     )
 }
 
-private fun resultWords(stage: CustomProviderStage): Pair<StringResource, StringResource> =
+/** The result notice's title (naming the provider [name]) and body for [stage]. */
+@Composable
+private fun resultWords(stage: CustomProviderStage, name: String): Pair<String, String> =
     when (stage) {
-        CustomProviderStage.Loaded -> Res.string.nlibCustomLoadedTitle to Res.string.nlibCustomLoadedBody
+        CustomProviderStage.Loaded ->
+            stringResource(Res.string.nlibCustomLoadedTitle, name) to stringResource(Res.string.nlibCustomLoadedBody)
         CustomProviderStage.RestartFailed ->
-            Res.string.nlibCustomRestartFailedTitle to Res.string.nlibCustomRestartFailedBody
+            stringResource(Res.string.nlibCustomRestartFailedTitle, name) to
+                stringResource(Res.string.nlibCustomRestartFailedBody)
         CustomProviderStage.NotLoadedAfterRestart ->
-            Res.string.nlibCustomNotLoadedTitle to Res.string.nlibCustomNotLoadedBody
-        else -> Res.string.nlibCustomSavedTitle to Res.string.nlibCustomSavedBody
+            stringResource(Res.string.nlibCustomNotLoadedTitle, name) to stringResource(Res.string.nlibCustomNotLoadedBody)
+        else -> stringResource(Res.string.nlibCustomSavedTitle, name) to stringResource(Res.string.nlibCustomSavedBody)
     }
 
 private fun resultTone(stage: CustomProviderStage): StatusTone =
@@ -278,16 +277,19 @@ private fun problemWords(problem: CustomProviderProblem?): String? =
         )
     }
 
-private fun refusalWords(refusal: CustomProviderRefusal): StringResource =
-    when (refusal) {
-        CustomProviderRefusal.Unavailable -> Res.string.nlibCustomUnavailableBody
-        CustomProviderRefusal.Changed -> Res.string.nlibChanged
-        CustomProviderRefusal.CouldNotCheck -> Res.string.nlibCustomRefusedCheck
-        CustomProviderRefusal.NotSetUp -> Res.string.nlibCustomRefusedNotSetUp
-        CustomProviderRefusal.Unreadable -> Res.string.nlibCustomRefusedUnreadable
-        CustomProviderRefusal.HandManaged -> Res.string.nlibCustomRefusedHandKept
-        CustomProviderRefusal.Unsafe -> Res.string.nlibCustomRefusedUnsafe
-        CustomProviderRefusal.Busy -> Res.string.nlibCustomRefusedBusy
-        CustomProviderRefusal.AlreadyDeclared -> Res.string.nlibCustomRefusedDeclared
-        CustomProviderRefusal.Failed -> Res.string.nlibCustomRefusedFailed
-    }
+@Composable
+private fun refusalWords(refusal: CustomProviderRefusal): String =
+    stringResource(
+        when (refusal) {
+            CustomProviderRefusal.Unavailable -> Res.string.nlibCustomUnavailableBody
+            CustomProviderRefusal.Changed -> Res.string.nlibChanged
+            CustomProviderRefusal.CouldNotCheck -> Res.string.nlibCustomRefusedCheck
+            CustomProviderRefusal.NotSetUp -> Res.string.nlibCustomRefusedNotSetUp
+            CustomProviderRefusal.Unreadable -> Res.string.nlibCustomRefusedUnreadable
+            CustomProviderRefusal.HandManaged -> Res.string.nlibCustomRefusedHandKept
+            CustomProviderRefusal.Unsafe -> Res.string.nlibCustomRefusedUnsafe
+            CustomProviderRefusal.Busy -> Res.string.nlibCustomRefusedBusy
+            CustomProviderRefusal.AlreadyDeclared -> Res.string.nlibCustomRefusedDeclared
+            CustomProviderRefusal.Failed -> Res.string.nlibCustomRefusedFailed
+        }
+    )
