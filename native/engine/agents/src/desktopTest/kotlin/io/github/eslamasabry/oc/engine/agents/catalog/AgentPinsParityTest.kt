@@ -115,25 +115,25 @@ class AgentPinsParityTest {
 
     @Test
     fun `B-AGENT-008 Claude Code pins equal the release manifest values and the install script`() {
-        // Moved after the freeze (2.1.319 -> 2.1.321: Paseo 0.15.4 lists Fable 5.2 only for Claude Code 2.1.321 or
+        // Moved after the freeze (2.1.319 -> 2.1.325 (Paseo 0.15.4 lists Fable 5.2 only for Claude Code 2.1.321 or
         // newer).
         // Each SHA-256 and size is the release manifest's, and equals the bytes of the downloaded binary.
         val recipe = AgentPins.builtIn.catalog().byId(AgentId("claude"))!!.recipe!!
-        assertEquals("2.1.321", recipe.version)
+        assertEquals("2.1.325", recipe.version)
         assertEquals(ClaudeScripts.VERSION, recipe.version)
         val arm = recipe.artifacts.getValue(AgentArchitecture.Arm64)
-        assertEquals("https://downloads.claude.ai/claude-code-releases/2.1.321/linux-arm64/claude", arm.url)
-        assertEquals("6bea0633074627ba79328e00115ed0588c3acf906a8463612b25db696dbfd3f0", arm.sha256)
+        assertEquals("https://downloads.claude.ai/claude-code-releases/2.1.325/linux-arm64/claude", arm.url)
+        assertEquals("7b6e484b1989a5a14a4b354709ccc8672518a3ec5b9ccd7981fc6254327fde67", arm.sha256)
         assertEquals(ClaudeScripts.ARM64_SHA256, arm.sha256)
-        assertEquals(341501368L, arm.downloadBytes)
-        assertEquals(341501368L, arm.installedBytes)
+        assertEquals(364701112L, arm.downloadBytes)
+        assertEquals(364701112L, arm.installedBytes)
         assertEquals(AgentArtifactFormat.Executable, arm.format)
         val x64 = recipe.artifacts.getValue(AgentArchitecture.X64)
-        assertEquals("https://downloads.claude.ai/claude-code-releases/2.1.321/linux-x64/claude", x64.url)
-        assertEquals("426c33815ca6645a772f722fbff10dbf2cbdb124a8aeab733c1365dbf8bbf61f", x64.sha256)
+        assertEquals("https://downloads.claude.ai/claude-code-releases/2.1.325/linux-x64/claude", x64.url)
+        assertEquals("0dc4f4a9a165fc60746d7ae8489712e5fc352f1e7ad4eb22e7141bd0812eb0cf", x64.sha256)
         assertEquals(ClaudeScripts.X64_SHA256, x64.sha256)
-        assertEquals(341910032L, x64.downloadBytes)
-        assertEquals(341910032L, x64.installedBytes)
+        assertEquals(365842960L, x64.downloadBytes)
+        assertEquals(365842960L, x64.installedBytes)
         assertEquals(AgentArtifactFormat.Executable, x64.format)
     }
 
@@ -414,9 +414,9 @@ class AgentPinsParityTest {
         assertEquals(dartConst("nodeX64Sha256"), pins.node.sha256[AgentArchitecture.X64])
         assertEquals("/home/oc/.local/share/oc-paseo/0.15.4-b61e82dd777f", PaseoPhoneScripts.INSTALL_DIRECTORY)
         val tested = Regex("claudeCodeTestedVersions = \\{([^}]*)\\}").find(testedVersions)!!.groupValues[1]
-        // 2.1.321 moved after the freeze (Fable 5.2 needs Claude Code 2.1.321 or newer): the freeze set plus that pin.
+        // 2.1.321 and 2.1.325 moved after the freeze (Fable 5.2 needs 2.1.321 or newer): the freeze set plus both.
         assertEquals(
-            Regex("'([^']+)'").findAll(tested).map { it.groupValues[1] }.toList() + "2.1.321",
+            Regex("'([^']+)'").findAll(tested).map { it.groupValues[1] }.toList() + listOf("2.1.321", "2.1.325"),
             pins.claudeCodeTestedVersions,
         )
         val paseoTested = Regex("paseoTestedVersions = \\{([^}]*)\\}").find(testedVersions)!!.groupValues[1]

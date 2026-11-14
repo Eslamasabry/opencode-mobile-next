@@ -68,7 +68,7 @@ class AgentAutoUpdateTest {
         override var installed: List<AgentId> = listOf(AgentId("claude"))
         override var behind: Set<AgentId> = setOf(AgentId("claude"))
         override var helperBehind: Boolean = true
-        override var pinKey: String = "paseo 0.15.4 claude 2.1.321"
+        override var pinKey: String = "paseo 0.15.4 claude 2.1.325"
         override var switchPending: Boolean = false
         override var installProblem: Boolean = false
         override var metered: Boolean = false
