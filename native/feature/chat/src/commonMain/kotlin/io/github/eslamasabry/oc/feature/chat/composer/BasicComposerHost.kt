@@ -166,7 +166,6 @@ import io.github.eslamasabry.oc.ui.words.res.phoneServerCardStopping
 import io.github.eslamasabry.oc.ui.words.res.promptHistorySaveFailed
 import io.github.eslamasabry.oc.ui.words.res.tipSendLaterTitle
 import io.github.eslamasabry.oc.ui.words.res.upgradeComposerAsk
-import io.github.eslamasabry.oc.ui.words.res.upgradeComposerFree
 import io.github.eslamasabry.oc.ui.words.res.workspaceDismissNotice
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
@@ -1302,10 +1301,9 @@ private fun modelWords(state: BasicComposerUi, chrome: ComposerChrome): String {
             state.models.variant,
             state.models.agent,
         )
-    // N-52: "DeepSeek V4.1 Flash Free · Free" said it twice.
-    val free = stringResource(Res.string.upgradeComposerFree)
-    val freeWord = free.trimStart(' ', '·').trim()
-    return named + if (chrome.freeModel() && !named.contains(freeWord, ignoreCase = true)) free else ""
+    // One rule (audit 1, f2/x1): the chip says the model's name and nothing else, as the list and the home do. A free
+    // model is marked by the list's own quiet "Free" tag; a suffix here appeared only once the free list had loaded.
+    return named
 }
 
 private fun modelLabel(model: String, level: String, agent: String?): String =
