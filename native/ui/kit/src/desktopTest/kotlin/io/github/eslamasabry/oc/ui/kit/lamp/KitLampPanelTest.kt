@@ -100,7 +100,11 @@ class KitLampPanelTest {
             panel(scene, height = 480)
             waitForIdle()
             val list = onNodeWithTag(LAMP_PANEL_LIST_TAG).getUnclippedBoundsInRoot()
-            val tops = onAllNodesWithTag(LAMP_PANEL_HEADING_TAG, useUnmergedTree = true).fetchSemanticsNodes().map { it.boundsInRoot.top }
+            // A heading scrolled out above the list reports its bounds clipped to the list's top edge with no height:
+            // only the headings in view count.
+            val tops =
+                onAllNodesWithTag(LAMP_PANEL_HEADING_TAG, useUnmergedTree = true).fetchSemanticsNodes()
+                    .map { it.boundsInRoot }.filter { it.height > 0.5f }.map { it.top }
             val first = tops.filter { it >= list.top.value - 0.5f }.minOrNull() ?: error("no heading in view")
             near(list.top.value + 12f, first, "the first group in view starts at the list's top (its heading 12 dp below)")
             onNodeWithText("Edit").assertIsDisplayed()
@@ -134,7 +138,7 @@ class KitLampPanelTest {
         }
 
     @Test
-    fun `B-LAMP-K2-023 stop_iconButtonNamesTarget_holdsWithUndo - 44 dp, Commit, then the draining receipt`() =
+    fun `B-LAMP-K2-023 stop_iconButtonNamesTarget_holdsWithUndo - 48 dp to touch, Commit, then the draining receipt`() =
         runDesktopComposeUiTest(412, 1000) {
             val platform = FakeKitPlatform()
             val scene = Scene(K2.model())
@@ -142,8 +146,8 @@ class KitLampPanelTest {
             waitForIdle()
             val name = "Stop “create a file proof.txt with one line”"
             val b = onNodeWithContentDescription(name, useUnmergedTree = true).getUnclippedBoundsInRoot()
-            near(44f, b.w(), "the stop touch box is 44 dp wide")
-            near(44f, b.h(), "and 44 dp tall")
+            near(48f, b.w(), "the stop touch box is 48 dp wide")
+            near(48f, b.h(), "and 48 dp tall")
             onNodeWithContentDescription(name).performClick()
             assertEquals(listOf("stop:proof"), scene.events)
             assertTrue(KitHaptic.Commit in platform.haptics, "Stop plays Commit")
@@ -197,7 +201,7 @@ class KitLampPanelTest {
         }
 
     @Test
-    fun `B-LAMP-K2-026 the panel measured - header, 24 dp marks at the gutter, 44 dp stop, 56 dp footer, every style, mode, direction, width and text size`() {
+    fun `B-LAMP-K2-026 the panel measured - header, 24 dp marks at the gutter, 48 dp stop, 56 dp footer, every style, mode, direction, width and text size`() {
         for (style in K2.styles) for (dark in listOf(true, false)) for (rtl in listOf(false, true)) for (width in listOf(360, 412)) for (scale in listOf(1f, 1.3f)) {
             runDesktopComposeUiTest(width, 1400) {
                 val scene = Scene(K2.model())
@@ -220,8 +224,8 @@ class KitLampPanelTest {
                 assertTrue(s >= 2, "$what: the running rows carry stop")
                 for (i in 0 until s) {
                     val b = stops[i].getUnclippedBoundsInRoot()
-                    near(44f, b.w(), "$what: stop is 44 dp")
-                    near(44f, b.h(), "$what: stop is 44 dp")
+                    near(48f, b.w(), "$what: stop is 48 dp to touch")
+                    near(48f, b.h(), "$what: stop is 48 dp to touch")
                 }
                 val list = onNodeWithTag(LAMP_PANEL_LIST_TAG).getUnclippedBoundsInRoot()
                 assertTrue(list.top.value - p.top.value >= 60f - 0.5f, "$what: the header is at least 60 dp")

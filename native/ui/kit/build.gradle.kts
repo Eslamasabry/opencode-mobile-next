@@ -76,4 +76,6 @@ tasks
 tasks.withType<Test>().matching { it.name == "desktopTest" }.configureEach {
     outputs.upToDateWhen { false }
     outputs.cacheIf { false }
+    // A failing kit test names its broken assertion in the CI log (the report is not uploaded).
+    testLogging { exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL }
 }

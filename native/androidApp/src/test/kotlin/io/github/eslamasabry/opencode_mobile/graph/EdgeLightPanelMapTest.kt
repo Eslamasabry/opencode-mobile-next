@@ -3,6 +3,8 @@ package io.github.eslamasabry.opencode_mobile.graph
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.common.ids.SessionId
+import io.github.eslamasabry.oc.core.common.text.NumberSymbols
+import io.github.eslamasabry.oc.core.common.text.Numbers
 import io.github.eslamasabry.oc.engine.attention.dock.DockRequestKind
 import io.github.eslamasabry.oc.feature.chats.lamp.LampAnswerUi
 import io.github.eslamasabry.oc.feature.chats.lamp.LampChildState
@@ -35,6 +37,8 @@ import io.github.eslamasabry.oc.ui.kit.status.KitStepTreeKind
 import io.github.eslamasabry.oc.ui.kit.status.KitTreeStepState
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
+import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
@@ -45,6 +49,11 @@ class EdgeLightPanelMapTest {
     // Every word is its own name; templates keep their holes, so a test can see what went where.
     private val t = LampTexts(LampWord.entries.associateWith { "${it.name}(%1\$s,%2\$s)" }, mapOf(3 to "3 sub-agents"))
     private fun ref(s: String) = ConversationRef(ProfileId("p"), SessionId(s))
+
+    // The digits come from the phone's locale, which a plain JVM test has none of: pin them.
+    @BeforeTest fun latin() { Numbers.pinned = NumberSymbols.Latin }
+
+    @AfterTest fun unpin() { Numbers.pinned = null }
 
     private fun row(
         key: String,
