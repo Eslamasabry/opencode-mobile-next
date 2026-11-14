@@ -7,7 +7,6 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.test.ExperimentalTestApi
-import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import androidx.compose.ui.unit.Density
@@ -59,12 +58,12 @@ class HomeKeptTapScreenTest {
             }
             waitForIdle()
             val rows = onAllNodesWithTag("kit-recent-row", useUnmergedTree = true)
-            words = rows.fetchSemanticsNodes().mapNotNull {
-                it.config.getOrNull(androidx.compose.ui.semantics.SemanticsProperties.ContentDescription)?.joinToString(" ")
-            }
-            if (waiting) rows.filter(hasContentDescription("Connecting", substring = true)).fetchSemanticsNodes().let {
-                assertEquals(1, it.size, "rows: $words")
-            }
+            val description = androidx.compose.ui.semantics.SemanticsProperties.ContentDescription
+            words =
+                rows.fetchSemanticsNodes().mapNotNull { node ->
+                    if (description in node.config) node.config[description].joinToString(" ") else null
+                }
+            if (waiting) assertEquals(1, words.count { "Connecting" in it }, "rows: $words")
         }
         return words
     }
