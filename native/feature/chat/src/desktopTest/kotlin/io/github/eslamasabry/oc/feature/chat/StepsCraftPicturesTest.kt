@@ -21,6 +21,7 @@ import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.click
+import androidx.compose.ui.test.percentOffset
 import androidx.compose.ui.test.performMouseInput
 import androidx.compose.ui.test.v2.runSkikoComposeUiTest
 import androidx.compose.ui.geometry.Size
@@ -203,14 +204,13 @@ class StepsCraftPicturesTest {
         }
 
     /**
-     * A tap on the row tagged [tag], then the pointer leaves the window: a desktop mouse left at the tap draws a hover
-     * band a phone never shows.
+     * A tap on the row tagged [tag], then the pointer moves off the rows: a desktop mouse left at the tap draws a hover
+     * band (on whatever row moves under it) that a phone never shows.
      */
     private fun ComposeUiTest.tap(tag: String) {
-        onNodeWithTag(tag).performMouseInput {
-            click()
-            exit()
-        }
+        onNodeWithTag(tag).performMouseInput { click() }
+        // Off every row: the screen's end margin, half way down.
+        onRoot().performMouseInput { moveTo(percentOffset(.995f, .5f)) }
     }
 
     /** Five frames of a motion [totalMs] long (0, 25, 50, 75, 100 %), side by side, each the band [top]..[bottom] of the screen. */
