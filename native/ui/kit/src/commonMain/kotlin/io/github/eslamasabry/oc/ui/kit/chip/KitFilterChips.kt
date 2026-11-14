@@ -61,24 +61,11 @@ public object FilterChipsRules {
     public const val CLEAR_PART: Float = 1f / 3f
 
     /**
-     * The gap between chips at rest, in px. [sizes] are the chips' widths in reading order, [gap] the line's own gap
-     * and [room] how much of the line shows from its first chip's start to its end edge. Where the end edge cuts a
-     * chip and less than [minPeek] of it would show, the gaps before it grow just enough to carry it wholly past the
-     * edge, so the last chip shown is whole; a chip cut with [minPeek] or more showing, an edge falling between chips
-     * and a line that fits keep [gap]. The first chip is never pushed.
+     * The gap between chips at rest: always [gap]. A chip the end edge cuts stays where it is and is thinned by the
+     * edge fade, which is the cue that the line scrolls on (coordinator decision 2026-11-14: no chip is ever carried out
+     * of view to avoid a stump). The other arguments are kept for callers.
      */
-    public fun restGap(sizes: IntArray, gap: Float, room: Float, minPeek: Float): Float {
-        // The first chip the end edge cuts, and how much of it shows; none when the edge falls between chips.
-        var x = 0f
-        var i = 0
-        while (i < sizes.size && x + sizes[i] <= room) {
-            x += sizes[i] + gap
-            i++
-        }
-        val cut = if (i < sizes.size && x < room) i else -1
-        val shown = room - x
-        return if (room <= 0f || cut <= 0 || shown >= minPeek) gap else gap + (shown + 1f) / cut
-    }
+    public fun restGap(sizes: IntArray, gap: Float, room: Float, minPeek: Float): Float = gap
 
     /**
      * The chips' spans in the line's window, in reading order: (start, end) from its start edge, for chips of [sizes]

@@ -33,61 +33,9 @@ class KitChipLineRestTest {
     private val chips = listOf("All projects", "All connections", "All sources", "Running", "Needs you")
 
     @Test
-    fun `B-KIT-CHIP-018 at rest a chip line never ends on a stump of a chip, at any width`() = runComposeUiTest {
-        var width by mutableIntStateOf(200)
-        setContent {
-            CompositionLocalProvider(LocalDensity provides Density(1f, 1f)) {
-                KitTheme(KitAppearance(motion = MotionLevel.Off), FakeKitPlatform(), "en", stillFrame = true) {
-                    InWindow(480, 300) {
-                        Box(Modifier.width(width.dp)) {
-                            KitFilterChips(bleed = true) {
-                                chips.forEachIndexed { i, label ->
-                                    KitChip(label, Modifier.testTag("chip-$i"), kind = KitChipKind.Action, onClick = {})
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        var widened = 0
-        var cutWell = 0
-        for (w in 160..460 step 3) {
-            width = w
-            waitForIdle()
-            val line = onNodeWithTag("kit-filter-chips").getUnclippedBoundsInRoot()
-            val boxes = chips.indices.map { onNodeWithTag("chip-$it", useUnmergedTree = true).getUnclippedBoundsInRoot() }
-            for (b in boxes) {
-                if (b.left < line.right && b.right > line.right + 0.5.dp) {
-                    val shown = (line.right - b.left).value
-                    assertTrue(
-                        shown >= FilterChipsRules.MIN_PEEK_DP - 1f,
-                        "at $w dp the line rests on a ${shown}dp piece of a chip ($b in $line)",
-                    )
-                    cutWell++
-                }
-            }
-            val gap = (boxes[1].left - boxes[0].right).value
-            if (gap > 8.5f) widened++
-        }
-        assertTrue(widened > 0, "some widths would have ended on a stump and widened the gaps instead")
-        assertTrue(cutWell > 0, "some widths end on a chip cut with enough of it showing")
-    }
-
-    @Test
-    fun `B-KIT-CHIP-019 the rest gap carries a stump past the edge and leaves a good cut alone`() {
+    fun `B-KIT-CHIP-019 the rest gap never moves a chip out of view`() {
         val sizes = intArrayOf(100, 120, 90)
-        // Natural: chip 1 spans 108..228. At room 130 only 22 px of it would show: the one gap before it grows to 31.
-        assertEquals(8f + 23f, FilterChipsRules.restGap(sizes, 8f, 130f, 64f))
-        // 80 px of it showing: a good cut, the gap stays.
-        assertEquals(8f, FilterChipsRules.restGap(sizes, 8f, 188f, 64f))
-        // The edge falls in the gap between chips, or everything fits: nothing changes.
-        assertEquals(8f, FilterChipsRules.restGap(sizes, 8f, 104f, 64f))
-        assertEquals(8f, FilterChipsRules.restGap(sizes, 8f, 500f, 64f))
-        // The first chip is never pushed.
-        assertEquals(8f, FilterChipsRules.restGap(sizes, 8f, 40f, 64f))
-        // A stump of the third chip: both gaps before it share the push.
-        assertEquals(8f + 11f, FilterChipsRules.restGap(sizes, 8f, 257f, 64f))
+        for (room in listOf(40f, 104f, 130f, 188f, 257f, 500f)) assertEquals(8f, FilterChipsRules.restGap(sizes, 8f, room, 64f))
     }
 
     @Test
