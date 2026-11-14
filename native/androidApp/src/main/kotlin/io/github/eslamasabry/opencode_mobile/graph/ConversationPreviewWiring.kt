@@ -109,6 +109,7 @@ class StoredConversationPreviews(
         val rich =
             NativeSessionInventory.richRows((stores.prefs.get(key(server)) as? PrefValue.Str)?.value, scope)
         var size = 0
+        val backend = stores.profiles.profile(server.profile)?.profile?.backend
         for (session in sessions.take(MAX_ROWS)) {
             if (session.id.raw.isEmpty() || session.id.raw.length > 512) continue
             val row =
@@ -118,7 +119,7 @@ class StoredConversationPreviews(
                         "id" to session.id.raw,
                         "title" to redactor.redact(session.title.orEmpty()).take(256),
                         "updated" to (session.time?.updatedMs ?: session.time?.createdMs ?: 0L),
-                    ),
+                    ).apply { if (backend != null) putAll(NativeSessionInventory.described(backend, session)) },
                 )
             val bytes = DartJson.encode(row).encodeToByteArray().size
             if (size + bytes > MAX_BYTES - 512) break

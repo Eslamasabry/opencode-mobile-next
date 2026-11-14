@@ -109,6 +109,8 @@ public data class AllRowUi(
     val appStart: AppStart? = null,
     /** The person tapped it while its server was starting: it opens by itself when the server connects. */
     val waiting: Boolean = false,
+    /** Its kept tap was dropped: its server did not connect within the wait's limit ("Not answering"). */
+    val gaveUp: Boolean = false,
     /** Its server can move it into the project that is open (Flutter "Continue here"). */
     val canContinueHere: Boolean = false,
     /** Last change the server reported, epoch ms; 0 = not told. The row says how long ago. */

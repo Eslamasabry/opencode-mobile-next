@@ -649,13 +649,35 @@ public class ChatsAllViewModel(
         AllConversationsRules.savedRef(m, key)?.let { saved ->
             if (SourceStartRules.takesTap(m.sources[saved.profileId]?.appStart)) {
                 keptFrom = nav.top.value
-                model.update { it.copy(keptOpen = saved) }
+                model.update { it.copy(keptOpen = saved, keptGaveUp = null) }
+                watchKept(saved)
             }
             return
         }
         val (profile, session) = AllConversationsRules.find(m, key) ?: return
         commitDelete()
         openNow(ConversationRef(profile, session.id))
+    }
+
+    private var keptTimer: kotlinx.coroutines.Job? = null
+
+    /**
+     * A kept tap ends: within [KeptTapRules.LIMIT_MS] of waiting with nothing in progress (an agent update does not
+     * count) its server connects and the conversation opens, or the tap is dropped and the row says Not answering.
+     */
+    private fun watchKept(ref: ConversationRef) {
+        keptTimer?.cancel()
+        keptTimer =
+            viewModelScope.launch {
+                var waited = 0L
+                while (waited < KeptTapRules.LIMIT_MS) {
+                    kotlinx.coroutines.delay(KeptTapRules.STEP_MS)
+                    if (model.value.keptOpen != ref) return@launch
+                    if (model.value.sources[ref.profileId]?.appStart != AppStart.AgentsUpdating)
+                        waited += KeptTapRules.STEP_MS
+                }
+                model.update { if (it.keptOpen == ref) it.copy(keptOpen = null, keptGaveUp = ref) else it }
+            }
     }
 
     /** Opens [target] (asking first for an agent conversation that cannot be resumed). */

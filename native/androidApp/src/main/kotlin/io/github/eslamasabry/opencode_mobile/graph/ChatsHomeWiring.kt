@@ -20,6 +20,7 @@ import io.github.eslamasabry.oc.core.common.ids.SessionId
 import dev.zacsweers.metro.ContributesIntoSet
 import io.github.eslamasabry.oc.engine.agents.AgentId
 import io.github.eslamasabry.oc.engine.agents.catalog.AgentCatalog
+import io.github.eslamasabry.oc.engine.agents.install.AgentUpdateStep
 import io.github.eslamasabry.oc.engine.agents.certification.AgentCertification
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentStatus
 import io.github.eslamasabry.oc.feature.agents.hub.phoneAgentSignedOut
@@ -58,6 +59,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -85,6 +87,8 @@ class AppChatsHome(
     private val monitor: AppChatsMonitor,
     private val phone: BuiltinRuntime,
     private val phoneServer: AndroidChatPhoneServer,
+    /** The automatic agent update: while it installs, the agents' source says "Updating …" (no silent minutes). */
+    private val agentUpdate: PhoneAgentUpdateStatus,
     appScope: AppCoroutineScope,
     dispatchers: AppDispatchers,
 ) : ChatsHomeExtras, HomeFeedCache {
@@ -111,6 +115,15 @@ class AppChatsHome(
                 stopWatch.observe(stopped, owner)
             }
         }
+        // When the agents' update is done their helper is asked again, so the source that was refused during the
+        // install joins the list and its kept taps open (the update restarts the helper, nothing re-joined the list).
+        scope.launch {
+            agentUpdate.decision
+                .map { it.step == AgentUpdateStep.Updating }
+                .distinctUntilChanged()
+                .drop(1)
+                .collect { updating -> if (!updating) runtime.synchronizeListSources() }
+        }
         scope.launch {
             if (stores.warm() is Outcome.Failed) return@launch
             combine(
@@ -118,8 +131,11 @@ class AppChatsHome(
                     runtime.busy,
                     runtime.snapshot,
                     runtime.profiles.activeId,
-                    // A source the app starts that stopped answering no longer says it is starting.
-                    combine(monitor.snapshot, phone.serverFacts, runtime.sourceFailureState) { _, _, _ -> Unit },
+                    // A source the app starts that stopped answering no longer says it is starting; an agent update says
+                    // it runs.
+                    combine(monitor.snapshot, phone.serverFacts, runtime.sourceFailureState, agentUpdate.decision) { _, _, _, _ ->
+                        Unit
+                    },
                 ) { _, _, _, _, _ ->
                     Unit
                 }
@@ -132,6 +148,7 @@ class AppChatsHome(
 
     private fun publish() {
         val active = runtime.profiles.activeId.value
+        val updating = agentUpdate.decision.value.takeIf { it.step == AgentUpdateStep.Updating }
         val sources =
             runtime.profiles.profiles.value
                 .map { loaded ->
@@ -148,7 +165,9 @@ class AppChatsHome(
                         onThisPhone = runtime.sourceOnThisPhone(loaded.profile),
                         unreachable = !agents && loaded.id in runtime.sourceFailures,
                         agents = agents,
-                        starting = runtime.startingSource(loaded.id),
+                        starting = runtime.startingSource(loaded.id, agentsUpdating = agents && updating != null),
+                        updatingAgent =
+                            updating?.agent?.takeIf { agents }?.let { AgentCatalog.builtIn.byId(it)?.name },
                         secret =
                             when {
                                 loaded.reentry.password ->
@@ -380,10 +399,17 @@ class AppChatsHome(
             .distinctBy { it.identity }
     }
 
+    /**
+     * Saves the list of every source whose live list is read, not only the server in use: the agents on this phone
+     * (and any other source that joined the list) were saved only when All conversations was opened, so their saved
+     * rows were days old and without their agent or folder when the app next started.
+     */
     private suspend fun saveCurrentInventory() {
-        val id = runtime.profiles.activeId.value ?: return
+        for (id in runtime.loadedSourceIds()) saveInventory(id)
+    }
+
+    private suspend fun saveInventory(id: ProfileId) {
         val owner = runtime.profiles.profile(id) ?: return
-        if (!runtime.activeListReady()) return
         val graph = registry.live.value[id] ?: return
         val signature = inventoryScope(owner)
         val items =
