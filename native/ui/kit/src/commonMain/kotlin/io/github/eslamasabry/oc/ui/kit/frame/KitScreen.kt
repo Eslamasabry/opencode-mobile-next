@@ -402,8 +402,9 @@ public fun KitScreen(
             // reads as a cut. It grows with what lies under the bar (none at rest, so a page at rest looks as it did:
             // its first row whole right below the bar). The bar's glass sees the same dissolve.
             val dissolvePx = with(density) { TOP_DISSOLVE_DP.dp.toPx() }
-            // At least a pixel: the bar's copy clears nothing without a rim (KitWordsFade.record).
-            val topDissolve: () -> Float = { (dissolvePx * under()).coerceAtLeast(1f) }
+            val topDissolve: () -> Float = { dissolvePx * under() }
+            // The bar's copy: at least a pixel, as its copy clears nothing without a rim (KitWordsFade.record).
+            val barDissolve: () -> Float = { topDissolve().coerceAtLeast(1f) }
             // The window's insets include the keyboard, which moves every frame while it opens: each side is read
             // through a derived value, so the page is composed again only when that side's own size changes (the top
             // never does while typing), and the bottom is read only by a page that draws a ground under its bottom block.
@@ -471,7 +472,7 @@ public fun KitScreen(
                             // reads it).
                             .then(
                                 if (topFade == null) Modifier
-                                else Modifier.kitWordsFadeRecorder(topFade, { topBottom + topDissolve() }, topDissolve, after = true, clear = { barClear })
+                                else Modifier.kitWordsFadeRecorder(topFade, { topBottom + barDissolve() }, barDissolve, after = true, clear = { barClear })
                             )
                             .then(
                                 if (!edgesFade) Modifier
