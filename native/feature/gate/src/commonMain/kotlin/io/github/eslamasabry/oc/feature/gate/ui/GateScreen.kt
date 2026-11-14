@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.gate.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageScrollState
 import io.github.eslamasabry.oc.feature.gate.GateDeferredFeature
 import io.github.eslamasabry.oc.feature.gate.GateFailureScreen
 import io.github.eslamasabry.oc.feature.gate.GatePresenter
@@ -198,7 +199,7 @@ private fun FailedScreen(state: GateUi.Failed, onRow: (GateRow) -> Unit, onConfi
         }
     KitScreen(title = stringResource(title)) {
         Column(
-            Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).testTag("gate-rows"),
+            Modifier.fillMaxWidth().verticalScroll(kitPageScrollState()).testTag("gate-rows"),
             verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
         ) {
             KitText(body, role = TypeRole.Body, tone = TextTone.Secondary)

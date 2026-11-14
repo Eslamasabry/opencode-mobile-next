@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.team.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageListState
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.frame.kitPageGutter
 import androidx.compose.foundation.layout.Arrangement
@@ -263,6 +264,7 @@ private fun Conversation(
         Modifier.fillMaxSize(),
         contentPadding = PaddingValues(top = Space.S2.dp, bottom = Space.S6.dp),
         verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
+        state = kitPageListState(),
     ) {
         if (state.stale) item(key = "stale") { KitNotice(stringResource(Res.string.teamProjectTaskStale)) }
         state.refusal?.let { r ->

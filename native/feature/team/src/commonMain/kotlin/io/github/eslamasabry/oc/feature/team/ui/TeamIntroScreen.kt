@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.team.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageListState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -88,6 +89,7 @@ internal fun TeamIntro(intro: TeamIntroUi, actions: TeamIntroActions) {
         Modifier.fillMaxSize().testTag("team-intro"),
         contentPadding = PaddingValues(top = Space.S2.dp, bottom = Space.S4.dp),
         verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
+        state = kitPageListState(),
     ) {
         item(key = "intro") {
             Column(inset, verticalArrangement = Arrangement.spacedBy(Space.S2.dp)) {

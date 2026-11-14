@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.team.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageListState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -65,6 +66,7 @@ public fun TeamSetupScreen(state: TeamSetupUi, actions: TeamSetupActions) {
                 Modifier.fillMaxSize().testTag("team-setup"),
                 contentPadding = PaddingValues(top = Space.S2.dp, bottom = Space.S6.dp),
                 verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
+                state = kitPageListState(),
             ) {
                 item(key = "state") { SetupHeader(state, actions) }
                 if (state.phase == SetupPhase.Done && state.protection != null) {

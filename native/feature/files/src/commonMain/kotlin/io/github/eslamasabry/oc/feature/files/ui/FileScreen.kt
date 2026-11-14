@@ -1,5 +1,7 @@
 package io.github.eslamasabry.oc.feature.files.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageListState
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageScrollState
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -421,7 +423,7 @@ private fun Body(state: FileUi, actions: FileActions) {
                                 body.text,
                                 formatted = {
                                     KitMarkdownSelection(
-                                        Modifier.fillMaxSize().verticalScroll(rememberScrollState())
+                                        Modifier.fillMaxSize().verticalScroll(kitPageScrollState())
                                     ) {
                                         KitMarkdown(
                                             blocks,
@@ -535,7 +537,7 @@ private fun Pdf(state: FileUi, actions: FileActions) {
         return
     }
     val failedWords = stringResource(Res.string.filePdfFailed)
-    LazyColumn(Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
+    LazyColumn(Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(Space.S3.dp), state = kitPageListState()) {
         items(state.pdfPageCount, key = { it }) { index ->
             LaunchedEffect(index) { actions.pdfPage(index) }
             val page = state.pdfPages[index]

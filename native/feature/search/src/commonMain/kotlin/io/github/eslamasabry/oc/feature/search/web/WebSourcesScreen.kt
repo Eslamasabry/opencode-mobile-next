@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.search.web
 
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageScrollState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -54,7 +55,7 @@ public fun WebSourcesScreen(state: WebSourcesUi, actions: WebSourcesActions) {
     ) {
         Column(
             Modifier.fillMaxSize()
-                .verticalScroll(rememberScrollState())
+                .verticalScroll(kitPageScrollState())
                 .padding(horizontal = LocalKitTokens.current.gutter.dp, vertical = Space.S3.dp),
             verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
         ) {

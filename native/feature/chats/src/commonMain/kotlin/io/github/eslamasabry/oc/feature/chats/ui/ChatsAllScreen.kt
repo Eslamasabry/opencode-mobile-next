@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.chats.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.KitReportPageScroll
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -237,7 +238,7 @@ public fun ChatsAllScreen(state: AllConversationsUi, actions: ChatsAllActions) {
             }
                 .collect { near -> if (near) actions.loadMore() }
         }
-        LazyColumn(state = list, verticalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
+        LazyColumn(state = list.also { KitReportPageScroll(it) }, verticalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
             if (state.incomplete.isNotEmpty()) {
                 item(key = "incomplete", contentType = "incomplete") {
                     KitNotice(

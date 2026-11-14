@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.chatcomposer.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageScrollState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.TextFieldState
@@ -47,7 +48,7 @@ internal fun PromptEditorScreen(visible: Boolean, field: TextFieldState, onClose
             bottom = { KitActionBlock(primary = KitAction(stringResource(Res.string.promptEditorDone), onClose, icon = KitIcons.check)) },
             edges = KitScreenEdges.Bleed,
         ) {
-            Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = LocalKitTokens.current.gutter.dp).padding(top = Space.S2.dp, bottom = Space.S4.dp)) {
+            Column(Modifier.fillMaxSize().verticalScroll(kitPageScrollState()).padding(horizontal = LocalKitTokens.current.gutter.dp).padding(top = Space.S2.dp, bottom = Space.S4.dp)) {
                 KitField(
                     state = field,
                     label = stringResource(Res.string.promptEditorFieldLabel),

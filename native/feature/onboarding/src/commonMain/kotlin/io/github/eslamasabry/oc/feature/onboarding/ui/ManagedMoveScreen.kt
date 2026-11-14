@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.onboarding.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageScrollState
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -45,7 +46,7 @@ public fun ManagedMoveScreen(state: ManagedMoveUi, actions: ManagedMoveActions) 
     KitScreen(width = KitScreenWidth.Reading, page = true, edges = KitScreenEdges.Bleed) {
         BoxWithConstraints(Modifier.fillMaxSize()) {
             val available = maxHeight
-            Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).heightIn(min = available)
+            Column(Modifier.fillMaxWidth().verticalScroll(kitPageScrollState()).heightIn(min = available)
             .padding(horizontal = LocalKitTokens.current.gutter.dp).testTag("managed-opencode2-upgrade"),
             verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
             val failed = state.failure

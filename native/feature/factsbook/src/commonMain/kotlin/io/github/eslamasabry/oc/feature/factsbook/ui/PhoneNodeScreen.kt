@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.factsbook.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageListState
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -120,7 +121,7 @@ public fun PhoneNodeScreen(state: PhoneNodeUi, actions: PhoneNodeActions) {
                 },
             edges = KitScreenEdges.Bleed,
         ) {
-            LazyColumn(Modifier.fillMaxSize()) {
+            LazyColumn(Modifier.fillMaxSize(), state = kitPageListState()) {
                 if (state.removed) {
                     item("removed") {
                         KitNotice(

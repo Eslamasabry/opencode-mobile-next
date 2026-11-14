@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.chats.monitor
 
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageScrollState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
@@ -38,7 +39,7 @@ public fun MonitorInboxScreen(state: MonitorInboxUi, actions: MonitorInboxAction
         edges = KitScreenEdges.Bleed,
     ) {
         Column(
-            Modifier.verticalScroll(rememberScrollState())
+            Modifier.verticalScroll(kitPageScrollState())
                 .padding(horizontal = LocalKitTokens.current.gutter.dp, vertical = Space.S3.dp),
             verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
         ) {

@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.settings.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageScrollState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -73,7 +74,7 @@ internal fun PermissionSettingsContent(
     ) {
         Column(
             Modifier.fillMaxSize()
-                .verticalScroll(rememberScrollState())
+                .verticalScroll(kitPageScrollState())
                 .testTag("permissions-automation")
                 .padding(top = Space.S2.dp, bottom = Space.S6.dp),
             verticalArrangement = Arrangement.spacedBy(LocalKitTokens.current.sectionGap.dp),

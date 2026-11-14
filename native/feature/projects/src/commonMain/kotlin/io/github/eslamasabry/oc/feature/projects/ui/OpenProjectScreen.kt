@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.projects.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageListState
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Spacer
@@ -122,7 +123,7 @@ public fun OpenProjectScreen(state: OpenProjectUi, actions: OpenProjectActions) 
         width = KitScreenWidth.Reading,
         edges = KitScreenEdges.Bleed,
     ) {
-        LazyColumn(verticalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
+        LazyColumn(verticalArrangement = Arrangement.spacedBy(Space.S3.dp), state = kitPageListState()) {
             when (state.step) {
                 OpenProjectStep.Servers -> {
                     // Flutter's start page: the projects opened before come first, a tap opens one.

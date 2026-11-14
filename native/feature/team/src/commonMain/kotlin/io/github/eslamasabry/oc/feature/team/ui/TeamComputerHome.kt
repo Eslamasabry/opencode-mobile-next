@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.team.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageListState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -143,6 +144,7 @@ private fun Ready(ui: FleetHomeUi, nowMs: Long, actions: TeamHomeActions) {
         Modifier.fillMaxSize().testTag("team-computer-home"),
         contentPadding = PaddingValues(top = Space.S2.dp, bottom = Space.S6.dp),
         verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
+        state = kitPageListState(),
     ) {
         if (ui.stale) {
             item(key = "stale") {

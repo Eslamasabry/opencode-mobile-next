@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.linux.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageScrollState
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
@@ -140,7 +141,7 @@ public fun LinuxHomeScreen(
         loading = state.presence == null || state.working,
         edges = KitScreenEdges.Bleed,
     ) {
-        Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
+        Column(Modifier.fillMaxWidth().verticalScroll(kitPageScrollState())) {
             val dismiss =
                 KitLineAction(stringResource(Res.string.workspaceDismissNotice), actions::dismiss)
             when (val notice = state.notice) {

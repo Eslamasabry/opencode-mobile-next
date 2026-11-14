@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.schedules.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageListState
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
@@ -174,6 +175,7 @@ private fun ScheduleList(
     LazyColumn(
         Modifier.fillMaxSize(),
         contentPadding = PaddingValues(top = Space.S2.dp, bottom = Space.S6.dp),
+        state = kitPageListState(),
     ) {
         state.error?.let { code -> item(key = "error") { KitGroupNote(words.error(code)) } }
         if (state.started != null) item(key = "started") { KitNotice(words.started) }

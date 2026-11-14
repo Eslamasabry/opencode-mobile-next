@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.managespace.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageScrollState
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -66,7 +67,7 @@ public fun ManageSpaceScreen(state: ManageSpaceState, actions: ManageSpaceAction
             loadingLabel = stringResource(Res.string.manageSpaceMeasuring),
             edges = KitScreenEdges.Bleed,
         ) {
-            Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
+            Column(Modifier.fillMaxWidth().verticalScroll(kitPageScrollState())) {
                 if (state.loading && state.facts == null) KitSkeletonRows()
                 else if (initialFacts != null)
                     KitNotice(

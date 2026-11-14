@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.settings.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageScrollState
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -92,7 +93,7 @@ public fun ServerConfigurationScreen(
         edges = KitScreenEdges.Bleed,
     ) {
         Column(
-            Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
+            Modifier.fillMaxSize().verticalScroll(kitPageScrollState()),
             verticalArrangement = Arrangement.spacedBy(LocalKitTokens.current.sectionGap.dp),
         ) {
             KitGroupNote(stringResource(Res.string.configInspectionExplanation))

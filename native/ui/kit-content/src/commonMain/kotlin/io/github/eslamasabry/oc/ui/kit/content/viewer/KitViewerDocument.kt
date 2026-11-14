@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.kit.content.viewer
 
+import io.github.eslamasabry.oc.ui.kit.frame.KitReportPageScroll
 import androidx.compose.ui.platform.testTag
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.frame.kitPageGutter
@@ -195,7 +196,7 @@ public fun KitViewerDocument(
                         .then(
                             if (wrapOn) Modifier else Modifier.horizontalScroll(rememberScrollState())
                         ),
-                    state = list,
+                    state = list.also { KitReportPageScroll(it) },
                     contentPadding = PaddingValues(horizontal = rail, vertical = Space.S3.dp),
                 ) {
                     itemsIndexed(lines, key = { i, _ -> i }) { i, line ->

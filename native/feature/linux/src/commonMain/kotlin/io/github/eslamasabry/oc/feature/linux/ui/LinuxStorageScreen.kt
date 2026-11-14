@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.linux.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageScrollState
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -86,7 +87,7 @@ public fun LinuxStorageScreen(state: LinuxStorageUi, actions: LinuxStorageAction
         loadingLabel = stringResource(Res.string.linuxMgrMeasuring),
         edges = KitScreenEdges.Bleed,
     ) {
-        Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
+        Column(Modifier.fillMaxWidth().verticalScroll(kitPageScrollState())) {
             if (state.report == null) {
                 if (state.loading) KitSkeletonRows()
                 else

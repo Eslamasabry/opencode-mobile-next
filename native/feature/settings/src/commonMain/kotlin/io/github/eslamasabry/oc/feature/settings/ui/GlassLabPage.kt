@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.settings.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageListState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -222,7 +223,7 @@ private fun GlassLabChat(frost: KitFrostState, context: Boolean, onContext: (Boo
     val links = remember { KitMarkdownActions(onLink = {}) }
     val gutter = Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp)
     val ask = stringResource(Res.string.glassLabSampleAsk)
-    LazyColumn(Modifier.fillMaxSize().kitFrostSource(frost), contentPadding = kitScreenChromePadding()) {
+    LazyColumn(Modifier.fillMaxSize().kitFrostSource(frost), contentPadding = kitScreenChromePadding(), state = kitPageListState()) {
         // Twice over, so there is always text to pass under the bar and the message box.
         repeat(2) { round ->
             item(key = "ask$round", contentType = "ask") { KitPromptBubble(ask, gutter.padding(vertical = Space.S3.dp)) }
@@ -263,7 +264,7 @@ private fun GlassLabHome(frost: KitFrostState) {
     val ask = stringResource(Res.string.glassLabSampleAskTwo)
     val needs = KitRowState(stringResource(Res.string.glassLabSampleNeedsYou), KitRowStateTone.NeedsYou)
     val running = KitRowState(stringResource(Res.string.glassLabSampleRunning), KitRowStateTone.Running)
-    LazyColumn(Modifier.fillMaxSize().kitFrostSource(frost), contentPadding = kitScreenChromePadding()) {
+    LazyColumn(Modifier.fillMaxSize().kitFrostSource(frost), contentPadding = kitScreenChromePadding(), state = kitPageListState()) {
         // The home's status pill rides in the bar's second row on the real page; here it heads the list, so the bar
         // keeps one row and its Back.
         item(key = "pill", contentType = "pill") { Box(Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp)) { HomePill() } }

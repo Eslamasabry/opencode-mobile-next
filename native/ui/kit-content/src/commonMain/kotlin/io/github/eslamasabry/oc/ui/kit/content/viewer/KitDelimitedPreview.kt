@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.kit.content.viewer
 
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageScrollState
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -28,7 +29,7 @@ public fun KitDelimitedPreview(
 ) {
     val columns = maxOf(headers.size, rows.maxOfOrNull { it.size } ?: 0).coerceAtMost(32)
     Column(
-        modifier.verticalScroll(rememberScrollState()).horizontalScroll(rememberScrollState()),
+        modifier.verticalScroll(kitPageScrollState()).horizontalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
     ) {
         DelimitedRow(headers, columns, true)

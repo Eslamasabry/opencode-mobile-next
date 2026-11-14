@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.widgetpanels.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageScrollState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.placeCursorAtEnd
@@ -49,7 +50,7 @@ public fun WidgetPanelScreen(state: WidgetPanelUi, actions: WidgetPanelActions) 
     ) {
         when (state.route) {
             is WidgetPanel.Steer ->
-                Column(Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState())) {
+                Column(Modifier.weight(1f, fill = false).verticalScroll(kitPageScrollState())) {
                     ComposeBody(state, actions, title)
                 }
             is WidgetPanel.Style -> {
@@ -61,7 +62,7 @@ public fun WidgetPanelScreen(state: WidgetPanelUi, actions: WidgetPanelActions) 
                 )
                 Column(
                     Modifier.weight(1f, fill = false)
-                        .verticalScroll(rememberScrollState())
+                        .verticalScroll(kitPageScrollState())
                         .padding(top = Space.S3.dp)
                 ) {
                     KitWidgetStyleForm(
@@ -102,7 +103,7 @@ public fun WidgetPanelScreen(state: WidgetPanelUi, actions: WidgetPanelActions) 
                     enabled,
                 )
                 Spacer(Modifier.height(Space.S3.dp))
-                Column(Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState())) {
+                Column(Modifier.weight(1f, fill = false).verticalScroll(kitPageScrollState())) {
                     ProjectBody(state, actions)
                 }
                 state.problem?.let {

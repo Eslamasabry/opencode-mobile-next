@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.voice.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.KitReportPageScroll
 import androidx.compose.foundation.layout.fillMaxWidth
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.KitButton
@@ -166,7 +167,7 @@ public fun VoiceSettingsScreen(state: VoiceSettingsUi, actions: VoiceSettingsPre
         LaunchedEffect(headline) { if (headline) scroll.animateScrollTo(0) }
         Column(
             Modifier.fillMaxSize()
-                .verticalScroll(scroll)
+                .verticalScroll(scroll.also { KitReportPageScroll(it) })
                 .padding(top = Space.S2.dp, bottom = Space.S6.dp)
                 .testTag("voice-settings-list")
         ) {

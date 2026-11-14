@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.background.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageScrollState
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -104,7 +105,7 @@ public fun BackgroundScreen(
     ) {
         Column(
             Modifier.fillMaxSize()
-                .verticalScroll(rememberScrollState())
+                .verticalScroll(kitPageScrollState())
                 .padding(top = Space.S2.dp, bottom = Space.S6.dp)
         ) {
             if (state.supported && state.timeoutNotice) {

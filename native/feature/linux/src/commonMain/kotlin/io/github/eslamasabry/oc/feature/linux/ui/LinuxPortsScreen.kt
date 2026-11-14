@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.linux.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageScrollState
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -133,7 +134,7 @@ public fun LinuxPortsScreen(state: LinuxPortsUi, actions: LinuxPortsActions) {
                 primary = KitAction(stringResource(Res.string.commonRetry), actions::retry),
             )
         } else {
-            Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
+            Column(Modifier.fillMaxWidth().verticalScroll(kitPageScrollState())) {
                 if (state.loading && state.ports.isEmpty()) KitSkeletonRows()
                 state.problem?.let { problem ->
                     KitErrorNotice(

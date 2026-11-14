@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.prompts.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageScrollState
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -83,7 +84,7 @@ private fun ListFrame(title: String, onBack: () -> Unit, updating: Boolean = fal
     ) {
         Column(
             Modifier.fillMaxSize()
-                .verticalScroll(rememberScrollState())
+                .verticalScroll(kitPageScrollState())
                 .padding(horizontal = LocalKitTokens.current.gutter.dp, vertical = Space.S3.dp),
             verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
         ) {

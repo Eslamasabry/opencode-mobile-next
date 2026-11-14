@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.servers.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageScrollState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.TextFieldState
@@ -111,7 +112,7 @@ public fun ServersScreen(
         },
         edges = KitScreenEdges.Bleed,
     ) {
-        Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+        Column(Modifier.fillMaxSize().verticalScroll(kitPageScrollState())) {
             state.issue?.takeIf { it != ServerIssue.Connected }?.let { issue ->
                 // s23-oc1move: a computer still on OpenCode 1 gets its guided update, not a dead end.
                 val guide = state.openCode1?.let { id ->

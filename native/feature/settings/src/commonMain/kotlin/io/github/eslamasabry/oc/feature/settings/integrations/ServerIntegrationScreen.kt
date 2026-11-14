@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.settings.integrations
 
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageScrollState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -58,7 +59,7 @@ public fun ServerIntegrationScreen(state: ServerIntegrationUi, actions: ServerIn
         loading = state.loading,
     ) {
         Column(
-            Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
+            Modifier.fillMaxSize().verticalScroll(kitPageScrollState()),
             verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
         ) {
             state.failure?.let {

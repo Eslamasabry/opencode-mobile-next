@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.factsbook.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageListState
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -135,7 +136,7 @@ public fun AreasScreen(state: AreasUi, actions: AreasActions) {
             areas == null && state.error == null -> KitSkeletonRows()
             areas == null -> ErrorState(state.error, actions::reload)
             else ->
-                LazyColumn(Modifier.fillMaxSize()) {
+                LazyColumn(Modifier.fillMaxSize(), state = kitPageListState()) {
                     item("intro") {
                         KitText(
                             stringResource(Res.string.fbAreasIntro),
@@ -241,7 +242,7 @@ public fun ThingScreen(state: ThingUi, actions: ThingActions) {
             thing == null && state.error == null -> KitSkeletonRows()
             thing == null -> ErrorState(state.error, actions::reload)
             else ->
-                LazyColumn(Modifier.fillMaxSize()) {
+                LazyColumn(Modifier.fillMaxSize(), state = kitPageListState()) {
                     if (thing.sensitive) {
                         item("locked") {
                             KitNotice(stringResource(Res.string.fbThingLocked), Modifier.padding(horizontal = gutter(), vertical = Space.S2.dp))
@@ -426,7 +427,7 @@ public fun SearchScreen(state: SearchUi, actions: SearchActions) {
             state.error != null -> ErrorState(state.error) { actions.search(field.text.toString().ifBlank { state.query }) }
             result == null -> KitSkeletonRows()
             else ->
-                LazyColumn(Modifier.fillMaxSize()) {
+                LazyColumn(Modifier.fillMaxSize(), state = kitPageListState()) {
                     item("count") {
                         Column(Modifier.padding(horizontal = gutter()), verticalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
                             KitText(
@@ -498,7 +499,7 @@ public fun CaptureScreen(state: CaptureUi, actions: CaptureActions) {
         },
         edges = KitScreenEdges.Bleed,
     ) {
-        LazyColumn(Modifier.fillMaxSize()) {
+        LazyColumn(Modifier.fillMaxSize(), state = kitPageListState()) {
             item("form") {
                 Column(Modifier.padding(horizontal = gutter(), vertical = Space.S2.dp), verticalArrangement = Arrangement.spacedBy(Space.S4.dp)) {
                     KitSegmented(
@@ -639,7 +640,7 @@ public fun NotSavedScreen(state: NotSavedUi, actions: NotSavedActions) {
                 icon = KitIcons.checkCircle,
             )
         } else {
-            LazyColumn(Modifier.fillMaxSize()) {
+            LazyColumn(Modifier.fillMaxSize(), state = kitPageListState()) {
                 item("intro") {
                     KitText(
                         stringResource(Res.string.fbNotSavedIntro),
@@ -787,7 +788,7 @@ public fun ConnectScreen(state: ConnectUi, actions: ConnectActions) {
         },
         edges = KitScreenEdges.Bleed,
     ) {
-        LazyColumn(Modifier.fillMaxSize()) {
+        LazyColumn(Modifier.fillMaxSize(), state = kitPageListState()) {
             item("form") {
                 Column(Modifier.padding(horizontal = gutter(), vertical = Space.S2.dp), verticalArrangement = Arrangement.spacedBy(Space.S4.dp)) {
                     KitText(stringResource(Res.string.fbConnectIntro), role = TypeRole.Secondary, tone = TextTone.Secondary)

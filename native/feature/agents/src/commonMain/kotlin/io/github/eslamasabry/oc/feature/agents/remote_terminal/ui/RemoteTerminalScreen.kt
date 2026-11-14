@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.agents.remote_terminal.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageScrollState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
@@ -106,7 +107,7 @@ public fun RemoteTerminalScreen(state: RemoteTerminalUi, actions: RemoteTerminal
                         enabled = enabled,
                     )
                 }
-                Column(Modifier.weight(1f).verticalScroll(rememberScrollState())) {
+                Column(Modifier.weight(1f).verticalScroll(kitPageScrollState())) {
                     if (state.terminals.isEmpty() && !state.busy)
                         KitText(stringResource(Res.string.remoteTerminalEmpty))
                     for (terminal in state.terminals) {

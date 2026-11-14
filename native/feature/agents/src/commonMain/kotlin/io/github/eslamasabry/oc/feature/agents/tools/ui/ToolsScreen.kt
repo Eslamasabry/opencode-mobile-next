@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.agents.tools.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageScrollState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.TextFieldState
@@ -48,7 +49,7 @@ public fun ToolsScreen(state: ToolsUi, actions: ToolsActions) {
         edges = KitScreenEdges.Bleed,
     ) {
         Column(
-            Modifier.fillMaxSize().verticalScroll(rememberScrollState()).kitImePadding(),
+            Modifier.fillMaxSize().verticalScroll(kitPageScrollState()).kitImePadding(),
             verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
         ) {
             KitButton(

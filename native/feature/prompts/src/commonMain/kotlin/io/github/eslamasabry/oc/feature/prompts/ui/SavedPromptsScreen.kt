@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.prompts.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageScrollState
 import io.github.eslamasabry.oc.ui.words.res.promptStashDeleteAction
 import io.github.eslamasabry.oc.ui.words.res.promptStashRowActions
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
@@ -128,7 +129,7 @@ public fun SavedPromptsScreen(state: SavedPromptsUi, actions: SavedPromptsAction
         Column(
             Modifier.fillMaxSize()
                 .kitImePadding()
-                .verticalScroll(rememberScrollState())
+                .verticalScroll(kitPageScrollState())
                 .padding(vertical = Space.S3.dp),
             verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
         ) {

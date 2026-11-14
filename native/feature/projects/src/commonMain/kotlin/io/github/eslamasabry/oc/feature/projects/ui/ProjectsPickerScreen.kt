@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.projects.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageListState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -128,7 +129,7 @@ public fun ProjectsPickerScreen(state: ProjectsPickerUi, actions: ProjectsPicker
             },
         width = KitScreenWidth.Reading,
     ) {
-        LazyColumn(verticalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
+        LazyColumn(verticalArrangement = Arrangement.spacedBy(Space.S3.dp), state = kitPageListState()) {
             when (state.phase) {
                 ProjectsPhase.NoServer ->
                     item(key = "no-server") {

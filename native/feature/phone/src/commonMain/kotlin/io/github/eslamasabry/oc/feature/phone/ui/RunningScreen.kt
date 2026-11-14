@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.phone.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageScrollState
 import io.github.eslamasabry.oc.ui.kit.text.kitUnits
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.Column
@@ -128,7 +129,7 @@ public fun RunningScreen(state: RunningUi, actions: RunningActions) {
     ) {
         Column(
             Modifier.fillMaxWidth()
-                .verticalScroll(rememberScrollState())
+                .verticalScroll(kitPageScrollState())
                 .padding(vertical = Space.S2.dp)
         ) {
             if (state.loading && state.rows.isEmpty()) KitSkeletonRows()

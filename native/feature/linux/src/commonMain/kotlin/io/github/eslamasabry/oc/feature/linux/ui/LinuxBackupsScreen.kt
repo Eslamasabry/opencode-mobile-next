@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.linux.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageScrollState
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -79,7 +80,7 @@ public fun LinuxBackupsScreen(state: LinuxBackupsUi, actions: LinuxBackupsAction
         edges = KitScreenEdges.Bleed,
     ) {
         Column(
-            Modifier.fillMaxWidth().testTag("linux-backups").verticalScroll(rememberScrollState()),
+            Modifier.fillMaxWidth().testTag("linux-backups").verticalScroll(kitPageScrollState()),
             verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
         ) {
             if (backup.busy && backup.problem != null)

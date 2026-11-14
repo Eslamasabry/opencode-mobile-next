@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.widgetactions.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageScrollState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.placeCursorAtEnd
@@ -51,7 +52,7 @@ public fun WidgetActionScreen(state: WidgetActionUi, actions: WidgetActionAction
         if (sending) null else actions::close,
         stringResource(Res.string.widgetV2Cancel),
     ) {
-        Column(Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState())) {
+        Column(Modifier.weight(1f, fill = false).verticalScroll(kitPageScrollState())) {
             KitSteerBox(
                 title =
                     stringResource(

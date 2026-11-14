@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.agenttools.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageListState
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.lazy.LazyColumn
@@ -72,7 +73,7 @@ public fun AgentToolsScreen(state: AgentToolsUi, actions: AgentToolsActions) {
         edges = KitScreenEdges.Bleed,
         loading = state.loading && state.hasRows(), // quiet: kept rows stay, a thin line says they update
     ) {
-        LazyColumn(verticalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
+        LazyColumn(verticalArrangement = Arrangement.spacedBy(Space.S3.dp), state = kitPageListState()) {
             if (!state.connected)
                 item(key = "unavailable") {
                     KitStateView(

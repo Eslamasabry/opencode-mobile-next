@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.settings.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageListState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.input.TextFieldState
@@ -125,6 +126,7 @@ public fun LibraryScreen(state: LibraryUi, actions: LibraryActions) {
         LazyColumn(
             Modifier.fillMaxSize(),
             contentPadding = PaddingValues(top = Space.S2.dp, bottom = Space.S6.dp),
+            state = kitPageListState(),
         ) {
             item {
                 if (!state.available)

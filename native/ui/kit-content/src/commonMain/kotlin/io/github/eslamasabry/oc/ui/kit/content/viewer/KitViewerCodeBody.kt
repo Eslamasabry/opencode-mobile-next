@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.kit.content.viewer
 
+import io.github.eslamasabry.oc.ui.kit.frame.KitReportPageScroll
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -103,7 +104,7 @@ public fun KitViewerCodeBody(
             LazyColumn(
                 Modifier.fillMaxSize().testTag(KIT_VIEWER_LINES_TAG)
                     .then(if (wrap) Modifier else Modifier.horizontalScroll(rememberScrollState())),
-                state = listState,
+                state = listState.also { KitReportPageScroll(it) },
                 contentPadding = PaddingValues(horizontal = gutter, vertical = gutter / 2),
             ) {
                 if (partial != null) {
@@ -185,7 +186,7 @@ internal fun ViewerCodeBody(
     val extent = with(density) { mono.lineHeight.toDp() }
     val list = rememberLazyListState(initialFirstVisibleItemIndex = initialLine?.minus(1)?.coerceIn(0, maxOf(0, lines.size - 1)) ?: 0)
     val block: @Composable (Modifier) -> Unit = { m ->
-        LazyColumn(m.fillMaxWidth().kitMaxWidth(CapRole.List).fillMaxWidth().testTag(KIT_VIEWER_LINES_TAG), state = list) {
+        LazyColumn(m.fillMaxWidth().kitMaxWidth(CapRole.List).fillMaxWidth().testTag(KIT_VIEWER_LINES_TAG), state = list.also { KitReportPageScroll(it) }) {
             itemsIndexed(lines, key = { i, _ -> i }) { i, line ->
                 val annotated = buildAnnotatedString {
                     append(line)

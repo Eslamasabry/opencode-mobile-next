@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.team.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageScrollState
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -156,7 +157,7 @@ private fun Graph(state: TeamBoardUi, actions: TeamBoardActions) {
                 dependsOn = card.dependsOn,
             )
         }
-    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(vertical = Space.S2.dp)) {
+    Column(Modifier.fillMaxSize().verticalScroll(kitPageScrollState()).padding(vertical = Space.S2.dp)) {
         KitWorkGraph(nodes = nodes, onOpen = actions::openTask, emptyText = stringResource(Res.string.teamProjectNoTasks))
     }
 }

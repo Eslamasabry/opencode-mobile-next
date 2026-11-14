@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.chats.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageScrollState
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -214,7 +215,7 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
         ) {
             Column(
                 Modifier.fillMaxSize()
-                    .verticalScroll(rememberScrollState())
+                    .verticalScroll(kitPageScrollState())
                     .padding(top = Space.S3.dp, bottom = Space.S3.dp),
                 verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
             ) {
@@ -452,7 +453,7 @@ private fun NewConversationSheet(state: NewConversationUi, actions: NewConversat
         ) {
             Column(
                 Modifier.fillMaxSize()
-                    .verticalScroll(rememberScrollState())
+                    .verticalScroll(kitPageScrollState())
                     .padding(top = Space.S3.dp)
             ) {
                 ClaudeImportBody(state, actions)

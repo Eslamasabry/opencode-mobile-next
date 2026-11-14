@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.kit.content.viewer
 
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageListState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
@@ -72,7 +73,7 @@ public fun KitViewerTableBody(
         Box(modifier.fillMaxSize().horizontalScroll(rememberScrollState())) {
             Column(Modifier.width(widths.fold(0.dp) { a, b -> a + b })) {
                 if (header && rows.isNotEmpty()) TableRow(rows.first(), true)
-                LazyColumn(Modifier.weight(1f)) {
+                LazyColumn(Modifier.weight(1f), state = kitPageListState()) {
                     val start = if (header && rows.isNotEmpty()) 1 else 0
                     items((rows.size - start).coerceAtLeast(0)) {
                         TableRow(rows[it + start], false)
@@ -130,7 +131,7 @@ internal fun ViewerTable(rows: List<List<String>>, header: Boolean) {
             Box(Modifier.fillMaxSize().horizontalScroll(rememberScrollState())) {
                 Column(Modifier.width(width).height(height)) {
                     if (head != null) ViewerTableRow(head, widths, header = true)
-                    LazyColumn(Modifier.fillMaxWidth().weight(1f)) {
+                    LazyColumn(Modifier.fillMaxWidth().weight(1f), state = kitPageListState()) {
                         items(body.size) { ViewerTableRow(body[it], widths, header = false) }
                     }
                 }

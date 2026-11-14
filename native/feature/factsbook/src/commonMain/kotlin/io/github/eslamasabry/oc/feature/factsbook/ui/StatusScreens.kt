@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.factsbook.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageListState
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -183,7 +184,7 @@ public fun StatusScreen(state: StatusUi, actions: StatusActions) {
 private fun StatusBody(state: StatusUi, status: NodeStatus, actions: StatusActions, name: String) {
     val gutter = pageGutter()
     val found = problems(state, status)
-    LazyColumn(Modifier.fillMaxSize()) {
+    LazyColumn(Modifier.fillMaxSize(), state = kitPageListState()) {
         item("summary") {
             KitRowGroup {
                 KitRow(
@@ -328,7 +329,7 @@ public fun SettingsScreen(state: SettingsUi, actions: SettingsActions) {
             settings == null -> PageError(state.error, actions::reload)
             else ->
               KitRefresh(state.loading, actions::reload, Modifier.fillMaxSize()) {
-                LazyColumn(Modifier.fillMaxSize()) {
+                LazyColumn(Modifier.fillMaxSize(), state = kitPageListState()) {
                     if (!state.canApprove) {
                         item("owner") {
                             KitNotice(

@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.team.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageListState
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -83,6 +84,7 @@ public fun TeamServersScreen(state: TeamServersUi, actions: TeamServersActions) 
                 Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(top = Space.S2.dp, bottom = Space.S6.dp),
                 verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
+                state = kitPageListState(),
             ) {
                 item(key = "problem") {
                     when (state.phoneProblem) {
@@ -237,6 +239,7 @@ public fun TeamTimelineScreen(state: TeamTimelineUi, actions: TeamTimelineAction
             Modifier.fillMaxSize(),
             contentPadding = PaddingValues(top = Space.S2.dp, bottom = Space.S6.dp),
             verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
+            state = kitPageListState(),
         ) {
             items(state.days, key = { "d:${it.day}" }) { day ->
                 KitPhaseCard(
