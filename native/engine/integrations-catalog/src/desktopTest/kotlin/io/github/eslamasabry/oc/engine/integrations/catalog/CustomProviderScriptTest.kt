@@ -1,0 +1,214 @@
+package io.github.eslamasabry.oc.engine.integrations.catalog
+
+import java.io.File
+import java.nio.file.Files
+import java.nio.file.attribute.PosixFilePermission
+import java.util.concurrent.TimeUnit
+import kotlin.test.AfterTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
+
+/**
+ * Pull request 142, ported: the real settings writer of [CustomProviderScript] (the Python text the phone runs, taken
+ * out of the shipped script) against a temporary tree. Only the host identity is replaced (uid 0 and root-owned
+ * folders, as proot reports them; one path can be made foreign), the way `CardsInstallScriptsTest` runs the card
+ * installer, never the file logic. Needs /usr/bin/python3.
+ */
+class CustomProviderScriptTest {
+    private val root: File = Files.createTempDirectory("custom-provider-").toFile().canonicalFile
+    private val config = File(root, "config")
+    private val cards = File(root, "cards")
+    private val file = File(config, "opencode.json")
+
+    @AfterTest
+    fun clean() {
+        root.deleteRecursively()
+    }
+
+    private fun declaration(name: String = "My box", id: String = "my-box") =
+        CustomProviderDraft(name, id, "http://models.example.net:8080/v1", "llama-3\nqwen").declaration(emptySet())!!
+
+    /** The program exactly as the shipped script quotes it. */
+    private fun program(): String {
+        val script = CustomProviderScript.script()
+        val start = script.indexOf("-c '") + "-c '".length
+        return script.substring(start, script.indexOf("' '", start))
+    }
+
+    private fun write(input: String = declaration().input(), foreign: String = ""): Int {
+        val harness =
+            program()
+                .replaceFirst(
+                    "try: main()",
+                    """
+FOREIGN = ${JsonPrimitive(foreign)}
+import os as _os
+_os.getuid = lambda: 0
+_real = _os.lstat
+def _lstat(path, *args, **kwargs):
+    info = _real(path, *args, **kwargs)
+    values = list(info)
+    values[4] = 1000 if str(path) == FOREIGN else 0
+    values[0] &= ~0o022
+    return _os.stat_result(values)
+_os.lstat = _lstat
+try: main()""",
+                )
+        val process =
+            ProcessBuilder("/usr/bin/python3", "-I", "-c", harness, config.path, cards.path, "0")
+                .directory(root)
+                .redirectOutput(ProcessBuilder.Redirect.DISCARD)
+                .redirectError(ProcessBuilder.Redirect.DISCARD)
+                .start()
+        process.outputStream.use { it.write(input.encodeToByteArray()) }
+        check(process.waitFor(60, TimeUnit.SECONDS)) { "the writer did not finish" }
+        return process.exitValue()
+    }
+
+    /** Runs [block] while another process holds an exclusive lock on [lock]. */
+    private fun <T> holding(lock: File, block: () -> T): T {
+        val holder =
+            ProcessBuilder(
+                    "/usr/bin/python3",
+                    "-I",
+                    "-c",
+                    "import fcntl, os, sys, time\n" +
+                        "fd = os.open(sys.argv[1], os.O_RDWR | os.O_CREAT, 0o600)\n" +
+                        "fcntl.flock(fd, fcntl.LOCK_EX)\n" +
+                        "print(\"held\", flush=True)\n" +
+                        "time.sleep(60)\n",
+                    lock.path,
+                )
+                .redirectError(ProcessBuilder.Redirect.DISCARD)
+                .start()
+        try {
+            check(holder.inputStream.bufferedReader().readLine() == "held") { "the lock was not taken" }
+            return block()
+        } finally {
+            holder.destroyForcibly()
+            holder.waitFor(10, TimeUnit.SECONDS)
+        }
+    }
+
+    private fun json(): JsonObject = Json.parseToJsonElement(file.readText()).jsonObject
+
+    private fun assertRefused(code: Int, before: String, run: () -> Int) {
+        assertEquals(code, run())
+        assertEquals(before, file.readText(), "a refused write leaves the file as it was")
+    }
+
+    @Test
+    fun `PR142-12 the declaration is data, never code - quotes and shell words land in the file as typed`() {
+        config.mkdirs()
+        val name = "a'b\"; \$(touch OWNED) `id`"
+        val declared = declaration(name = name)
+        val script = CustomProviderScript.script()
+        assertFalse("'" in program(), "the program sits in single quotes, so it holds none")
+        val typed = listOf(name, "models.example.net", "llama")
+        assertFalse(typed.any { it in script }, "the script never holds typed words")
+        assertTrue("'${CustomProviderScript.CONFIG_DIR}' '${CustomProviderScript.CARDS_DIR}' 0" in script)
+        val parsed = ProcessBuilder("sh", "-n", "-c", script).start()
+        check(parsed.waitFor(30, TimeUnit.SECONDS))
+        assertEquals(0, parsed.exitValue(), "the shell parses the script")
+        assertEquals(0, write(declared.input()))
+        val block = json().getValue("providers").jsonObject.getValue("my-box").jsonObject
+        assertEquals(name, block.getValue("name").jsonPrimitive.content)
+        assertEquals(declared.block, block)
+        assertFalse(File(root, "OWNED").exists())
+        assertEquals(
+            setOf(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_WRITE),
+            Files.getPosixFilePermissions(file.toPath()),
+        )
+    }
+
+    @Test
+    fun `PR142-13 every other setting and provider is kept`() {
+        config.mkdirs()
+        file.writeText(
+            """{"mcp":{"servers":{"oc-ui":{"type":"local"}}},"providers":{"other":{"name":"Other"}},"keep":42}"""
+        )
+        assertEquals(0, write())
+        val after = json()
+        assertEquals(setOf("mcp", "providers", "keep"), after.keys)
+        assertEquals(42, after.getValue("keep").jsonPrimitive.content.toInt())
+        assertEquals(setOf("other", "my-box"), after.getValue("providers").jsonObject.keys)
+        assertEquals("""{"servers":{"oc-ui":{"type":"local"}}}""", after.getValue("mcp").toString())
+    }
+
+    @Test
+    fun `PR142-14 a second provider with the same id is refused and the first stays`() {
+        config.mkdirs()
+        assertEquals(0, write())
+        val first = file.readText()
+        assertRefused(CustomProviderWrite.AlreadyDeclared.code, first) { write(declaration(name = "Other").input()) }
+    }
+
+    @Test
+    fun `PR142-15 a file with comments, a providers list or over 1 MiB is unreadable and left alone`() {
+        config.mkdirs()
+        val unreadable = listOf("{\"model\":\"a/b\" // mine\n}", """{"providers":[]}""", "[1]", " ".repeat(1_048_577))
+        for (text in unreadable) {
+            file.writeText(text)
+            assertRefused(CustomProviderWrite.Unreadable.code, text) { write() }
+        }
+    }
+
+    @Test
+    fun `PR142-16 a hand-kept opencode jsonc beside it is never overwritten`() {
+        config.mkdirs()
+        file.writeText("{}")
+        File(config, "opencode.jsonc").writeText("{\"providers\":{}}")
+        assertRefused(CustomProviderWrite.HandManaged.code, "{}") { write() }
+        assertEquals("{\"providers\":{}}", File(config, "opencode.jsonc").readText())
+    }
+
+    @Test
+    fun `PR142-17 a symlinked file or folder and a foreign owner are refused`() {
+        config.mkdirs()
+        val elsewhere = File(root, "elsewhere.json").apply { writeText("{}") }
+        Files.createSymbolicLink(file.toPath(), elsewhere.toPath())
+        assertEquals(CustomProviderWrite.Unsafe.code, write())
+        assertEquals("{}", elsewhere.readText())
+        file.delete()
+        file.writeText("{}")
+        assertRefused(CustomProviderWrite.Unsafe.code, "{}") { write(foreign = file.path) }
+        val linked = File(root, "linked").apply { mkdirs() }
+        config.deleteRecursively()
+        Files.createSymbolicLink(config.toPath(), linked.toPath())
+        assertEquals(CustomProviderWrite.Unsafe.code, write())
+        assertFalse(File(linked, "opencode.json").exists())
+    }
+
+    @Test
+    fun `PR142-18 no settings folder means not set up, and input that is not a declaration is refused`() {
+        assertEquals(CustomProviderWrite.NotSetUp.code, write())
+        assertFalse(config.exists())
+        config.mkdirs()
+        assertEquals(CustomProviderWrite.Failed.code, write("not json"))
+        assertEquals(CustomProviderWrite.Failed.code, write("""{"id":"x; rm -rf /","block":{}}"""))
+        assertEquals(
+            CustomProviderWrite.Failed.code,
+            write("""{"id":"k","block":{"name":"n","package":"p","settings":{},"models":{},"apiKey":"x"}}"""),
+        )
+        assertFalse(file.exists())
+    }
+
+    @Test
+    fun `PR142-19 a write while another settings change holds either lock is busy and changes nothing`() {
+        config.mkdirs()
+        file.writeText("{}")
+        assertRefused(CustomProviderWrite.Busy.code, "{}") {
+            holding(File(config, ".oc-provider.lock")) { write() }
+        }
+        cards.mkdirs()
+        assertRefused(CustomProviderWrite.Busy.code, "{}") { holding(File(cards, "lock")) { write() } }
+        assertEquals(0, write())
+    }
+}

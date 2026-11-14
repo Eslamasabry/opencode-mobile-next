@@ -3,6 +3,8 @@ package io.github.eslamasabry.oc.engine.integrations.catalog
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.FeatureId
 import io.github.eslamasabry.oc.core.common.Outcome
+import io.github.eslamasabry.oc.core.common.getOrNull
+import io.github.eslamasabry.oc.core.common.label
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.core.domain.*
@@ -30,6 +32,13 @@ public interface LibrarySource {
     public val capabilities: ServerCapabilities
     public val server: ServerGateway
     public val operations: ServerOperationsGateway
+
+    /**
+     * The writer of this server's own settings file (pull request 142). Only this phone's own OpenCode has one; with
+     * it, [capabilities] carries `customProviders`.
+     */
+    public val customProviders: CustomProviderHost?
+        get() = null
 
     public fun current(): Boolean
 }
@@ -473,6 +482,92 @@ public class LibrarySession(
         }
 
     /**
+     * Pull request 142: checks the form against the ids the server lists now (an id it already has would patch that
+     * provider), writes the declaration into the server's own settings file, then gives the server a moment to load
+     * it by itself. Never restarts on its own: a restart stops replies in progress, so the person asks for it.
+     */
+    public suspend fun addCustomProvider(draft: CustomProviderDraft): CustomProviderOutcome = lane.withLock {
+        val src = current()
+        val host = src?.let { live -> live.customProviders.takeIf { live.capabilities.customProviders } }
+        val outcome =
+            when {
+                src == null -> CustomProviderOutcome.Refused(CustomProviderRefusal.Changed)
+                host == null -> CustomProviderOutcome.Refused(CustomProviderRefusal.Unavailable)
+                else -> declare(src, host, draft)
+            }
+        if (src?.current() == true) refreshInside()
+        outcome
+    }
+
+    /** Restarts this phone's OpenCode for a saved declaration, then waits for the server to list [providerId]. */
+    public suspend fun restartForCustomProvider(providerId: String): CustomProviderOutcome = lane.withLock {
+        val src = current()
+        val host = src?.let { live -> live.customProviders.takeIf { live.capabilities.customProviders } }
+        val outcome =
+            when (val restarted = host?.restart()) {
+                null ->
+                    CustomProviderOutcome.Refused(
+                        if (src == null) CustomProviderRefusal.Changed else CustomProviderRefusal.Unavailable
+                    )
+                is Outcome.Failed -> CustomProviderOutcome.RestartFailed(restarted.failure.label())
+                is Outcome.Ok ->
+                    if (listed(providerId, RESTART_TRIES)) CustomProviderOutcome.Loaded
+                    else CustomProviderOutcome.NotLoadedAfterRestart
+            }
+        if (current() != null) refreshInside()
+        outcome
+    }
+
+    private suspend fun declare(
+        src: LibrarySource,
+        host: CustomProviderHost,
+        draft: CustomProviderDraft,
+    ): CustomProviderOutcome {
+        val rows = src.operations.integrations()
+        val taken = rows.getOrNull()?.let(::takenProviderIds).orEmpty()
+        val declaration = draft.declaration(taken)
+        return when {
+            rows is Outcome.Failed ->
+                CustomProviderOutcome.Refused(CustomProviderRefusal.CouldNotCheck, rows.failure.label())
+            declaration == null -> CustomProviderOutcome.Invalid(draft.problems(taken))
+            else -> written(declaration, host.write(declaration))
+        }
+    }
+
+    private suspend fun written(declaration: CustomProviderDeclaration, result: Outcome<Int>): CustomProviderOutcome {
+        val code = result.getOrNull()
+        val write = code?.let(CustomProviderWrite::ofExitCode)
+        return when {
+            result is Outcome.Failed ->
+                CustomProviderOutcome.Refused(CustomProviderRefusal.Failed, result.failure.label())
+            write != CustomProviderWrite.Saved ->
+                CustomProviderOutcome.Refused((write ?: CustomProviderWrite.Failed).refusal(), "Exit $code")
+            listed(declaration.providerId, SETTLE_TRIES) -> CustomProviderOutcome.Loaded
+            else -> CustomProviderOutcome.SavedNotLoaded
+        }
+    }
+
+    /** Every id a declaration must not take: the server's integrations, its catalog and the rows already shown. */
+    private fun takenProviderIds(rows: List<IntegrationInfo>): Set<String> = buildSet {
+        rows.forEach { add(it.id) }
+        mutable.value.providers.forEach { add(it.id) }
+        mutable.value.catalog?.providers?.forEach { provider ->
+            add(provider.id)
+            provider.integrationId?.let { add(it) }
+        }
+    }
+
+    /** True once the server's integrations list [providerId]; asks [tries] times, a second apart. */
+    private suspend fun listed(providerId: String, tries: Int): Boolean {
+        repeat(tries) { index ->
+            if (index > 0) delay(LISTED_WAIT_MS)
+            val rows = current()?.operations?.integrations()?.getOrNull()
+            if (rows?.any { it.id == providerId } == true) return true
+        }
+        return false
+    }
+
+    /**
      * Starts once. A lost launch reply blocks a second start until the person explicitly forgets
      * it.
      */
@@ -803,6 +898,11 @@ public class LibrarySession(
         id.length <= 256 && id != "." && id != ".." && Regex("^[A-Za-z0-9_.:-]+$").matches(id)
 
     private companion object {
+        /** After a write: OpenCode 2 reloads a changed settings file by itself within about a second. */
+        const val SETTLE_TRIES: Int = 5
+        /** After a restart: a phone's OpenCode can take most of a minute to answer again. */
+        const val RESTART_TRIES: Int = 60
+        const val LISTED_WAIT_MS: Long = 1_000
         const val RETENTION: Long = 24 * 60 * 60 * 1000L
         val LOCATION_CONTROLS = Regex("[\\x00-\\x1f\\x7f-\\x9f]")
     }
