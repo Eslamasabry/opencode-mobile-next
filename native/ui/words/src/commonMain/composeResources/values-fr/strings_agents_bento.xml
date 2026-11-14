@@ -39,4 +39,12 @@
     <string name="agentsChipSetUp">Configurer</string>
     <string name="agentsSetUpAction">Configurer %1$s</string>
     <string name="agentsSetUpTypeAuth">Tapez /auth et suivez les étapes.</string>
+    <string name="agentsUpdateReading">vérification des mises à jour de vos agents</string>
+    <string name="agentsUpdateWaitingBusy">la mise à jour des agents attend que vos agents soient libres</string>
+    <string name="agentsUpdateWaitingSetup">la mise à jour des agents attend la fin de la configuration du téléphone</string>
+    <string name="agentsUpdateWaitingSwitch">la mise à jour des agents attend la fin du changement de serveur du téléphone</string>
+    <string name="agentsUpdateWaitingMetered">la mise à jour des agents attend le Wi-Fi</string>
+    <string name="agentsUpdateUpdating">mise à jour de %1$s</string>
+    <string name="agentsUpdateReadFailed">la mise à jour des agents n’a pas pu vérifier vos agents, elle réessaie à l’ouverture de l’app</string>
+    <string name="agentsUpdateRefused">la mise à jour des agents n’a pas pu démarrer, utilisez Installer sur l’agent</string>
 </resources>

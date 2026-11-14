@@ -39,4 +39,12 @@
     <string name="agentsChipSetUp">Thiết lập</string>
     <string name="agentsSetUpAction">Thiết lập %1$s</string>
     <string name="agentsSetUpTypeAuth">Gõ /auth rồi làm theo các bước.</string>
+    <string name="agentsUpdateReading">đang kiểm tra bản cập nhật cho các tác nhân của bạn</string>
+    <string name="agentsUpdateWaitingBusy">cập nhật tác nhân đợi đến khi các tác nhân của bạn rảnh</string>
+    <string name="agentsUpdateWaitingSetup">cập nhật tác nhân đợi thiết lập điện thoại xong</string>
+    <string name="agentsUpdateWaitingSwitch">cập nhật tác nhân đợi việc chuyển máy chủ điện thoại xong</string>
+    <string name="agentsUpdateWaitingMetered">cập nhật tác nhân đợi Wi-Fi</string>
+    <string name="agentsUpdateUpdating">đang cập nhật %1$s</string>
+    <string name="agentsUpdateReadFailed">cập nhật tác nhân không kiểm tra được các tác nhân của bạn, sẽ thử lại khi mở ứng dụng</string>
+    <string name="agentsUpdateRefused">cập nhật tác nhân không bắt đầu được, hãy dùng Cài đặt trên tác nhân</string>
 </resources>

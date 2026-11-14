@@ -39,4 +39,12 @@
     <string name="agentsChipSetUp">Siapkan</string>
     <string name="agentsSetUpAction">Siapkan %1$s</string>
     <string name="agentsSetUpTypeAuth">Ketik /auth lalu ikuti langkahnya.</string>
+    <string name="agentsUpdateReading">memeriksa pembaruan agen Anda</string>
+    <string name="agentsUpdateWaitingBusy">pembaruan agen menunggu sampai agen Anda menganggur</string>
+    <string name="agentsUpdateWaitingSetup">pembaruan agen menunggu penyiapan ponsel selesai</string>
+    <string name="agentsUpdateWaitingSwitch">pembaruan agen menunggu pemindahan server ponsel selesai</string>
+    <string name="agentsUpdateWaitingMetered">pembaruan agen menunggu Wi-Fi</string>
+    <string name="agentsUpdateUpdating">memperbarui %1$s</string>
+    <string name="agentsUpdateReadFailed">pembaruan agen tidak dapat memeriksa agen Anda, akan dicoba lagi saat aplikasi dibuka</string>
+    <string name="agentsUpdateRefused">pembaruan agen tidak dapat dimulai, gunakan Pasang pada agen</string>
 </resources>

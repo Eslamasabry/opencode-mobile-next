@@ -39,4 +39,12 @@
     <string name="agentsChipSetUp">Настроить</string>
     <string name="agentsSetUpAction">Настроить %1$s</string>
     <string name="agentsSetUpTypeAuth">Введите /auth и следуйте шагам.</string>
+    <string name="agentsUpdateReading">проверка обновлений ваших агентов</string>
+    <string name="agentsUpdateWaitingBusy">обновление агентов ждёт, пока ваши агенты освободятся</string>
+    <string name="agentsUpdateWaitingSetup">обновление агентов ждёт завершения настройки телефона</string>
+    <string name="agentsUpdateWaitingSwitch">обновление агентов ждёт завершения переноса сервера на телефон</string>
+    <string name="agentsUpdateWaitingMetered">обновление агентов ждёт Wi-Fi</string>
+    <string name="agentsUpdateUpdating">обновление: %1$s</string>
+    <string name="agentsUpdateReadFailed">не удалось проверить агентов для обновления, повторная попытка при открытии приложения</string>
+    <string name="agentsUpdateRefused">не удалось начать обновление агентов, нажмите «Установить» у агента</string>
 </resources>

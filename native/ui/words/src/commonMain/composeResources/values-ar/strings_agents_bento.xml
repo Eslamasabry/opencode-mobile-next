@@ -39,4 +39,12 @@
     <string name="agentsChipSetUp">إعداد</string>
     <string name="agentsSetUpAction">إعداد %1$s</string>
     <string name="agentsSetUpTypeAuth">اكتب /auth واتبع الخطوات.</string>
+    <string name="agentsUpdateReading">جارٍ فحص تحديثات وكلائك</string>
+    <string name="agentsUpdateWaitingBusy">تحديث الوكلاء ينتظر حتى يصبح وكلاؤك خاملين</string>
+    <string name="agentsUpdateWaitingSetup">تحديث الوكلاء ينتظر اكتمال إعداد الهاتف</string>
+    <string name="agentsUpdateWaitingSwitch">تحديث الوكلاء ينتظر اكتمال نقل خادم الهاتف</string>
+    <string name="agentsUpdateWaitingMetered">تحديث الوكلاء ينتظر شبكة Wi-Fi</string>
+    <string name="agentsUpdateUpdating">جارٍ تحديث %1$s</string>
+    <string name="agentsUpdateReadFailed">تعذّر على تحديث الوكلاء فحص وكلائك، وسيحاول مجددًا عند فتح التطبيق</string>
+    <string name="agentsUpdateRefused">تعذّر بدء تحديث الوكلاء، استخدم «تثبيت» على الوكيل</string>
 </resources>
