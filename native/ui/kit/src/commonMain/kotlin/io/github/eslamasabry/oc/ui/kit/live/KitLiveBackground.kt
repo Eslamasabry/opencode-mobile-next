@@ -103,6 +103,7 @@ public fun KitLiveBackground(modifier: Modifier = Modifier, shared: Boolean = fa
     // every step.
     val drift = remember(clock) { derivedStateOf { floor(clock.seconds * AuroraImage.FRAMES_PER_SECOND) / AuroraImage.FRAMES_PER_SECOND } }
     SideEffect {
+        io.github.eslamasabry.oc.ui.kit.foundation.KitFrameProbe.hit("liveBackground.compose")
         // What the picture steps with, so every pane over it draws again on the same frame as the picture (glass-live).
         backdrop.stepping =
             when {

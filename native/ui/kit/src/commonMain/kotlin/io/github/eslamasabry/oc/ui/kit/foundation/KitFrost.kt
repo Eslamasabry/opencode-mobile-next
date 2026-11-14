@@ -86,6 +86,7 @@ public fun Modifier.kitFrostSource(state: KitFrostState): Modifier =
     this.onGloballyPositioned { state.sourceOrigin = it.positionInRoot() }
         .drawWithContent {
             kitRecord(state.layer) { this@drawWithContent.drawContent() }
+            io.github.eslamasabry.oc.ui.kit.foundation.KitFrameProbe.hit("frostSource.record")
             androidx.compose.runtime.snapshots.Snapshot.withoutReadObservation { state.version++ }
             kitDrawLayer(state.layer)
         }

@@ -252,6 +252,7 @@ private class LiquidBodyNode(
     }
 
     override fun ContentDrawScope.draw() {
+        io.github.eslamasabry.oc.ui.kit.foundation.KitFrameProbe.hit("body.draw")
         drawBody()
         drawContent()
     }

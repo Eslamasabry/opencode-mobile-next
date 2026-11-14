@@ -162,6 +162,14 @@ public fun KitTheme(
     androidx.compose.runtime.SideEffect { io.github.eslamasabry.oc.ui.kit.foundation.KitLayerCycles.strict = platform.isDebug }
     // One live background for every page under this root (smoothness round 2): one clock, one picture per page size.
     val live = io.github.eslamasabry.oc.ui.kit.live.rememberKitLiveShare()
+    androidx.compose.runtime.LaunchedEffect(Unit) {
+        val probeLog = io.github.eslamasabry.oc.core.common.AppLog.tagged("kitprobe")
+        while (true) {
+            kotlinx.coroutines.delay(5_000)
+            val s = io.github.eslamasabry.oc.ui.kit.foundation.KitFrameProbe.drain()
+            probeLog.w { "probe5s clock.idle=${live.clock.resting} wants=${live.clock.wantsFrames} $s" }
+        }
+    }
     CompositionLocalProvider(
         io.github.eslamasabry.oc.ui.kit.live.LocalKitLiveShare provides live,
         LocalKitPlatform provides platform,

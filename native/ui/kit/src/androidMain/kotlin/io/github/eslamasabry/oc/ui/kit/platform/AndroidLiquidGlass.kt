@@ -165,6 +165,7 @@ internal object AndroidLiquidGlass {
         override val isCoordinatesDependent: Boolean = true
 
         override fun DrawScope.drawBackdrop(density: Density, coordinates: LayoutCoordinates?, layerBlock: (GraphicsLayerScope.() -> Unit)?) {
+            io.github.eslamasabry.oc.ui.kit.foundation.KitFrameProbe.hit("library.backdrop")
             val c = coordinates?.takeIf { it.isAttached } ?: return
             kit.draw(this, c)
         }

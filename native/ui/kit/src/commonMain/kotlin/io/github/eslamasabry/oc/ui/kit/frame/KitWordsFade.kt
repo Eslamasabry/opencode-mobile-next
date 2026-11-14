@@ -80,6 +80,7 @@ internal class KitWordsFade private constructor(
      * edge for [KitWordsClear.Above]) over its lens rim [rim]. Records nothing onto this scope's canvas.
      */
     fun DrawScope.record(edge: Float, rim: Float, clearAbove: Boolean = false, clear: Float = 1f) {
+        io.github.eslamasabry.oc.ui.kit.foundation.KitFrameProbe.hit("wordsFade.record")
         val from = layerOf()
         val origin = originOf()
         sync()

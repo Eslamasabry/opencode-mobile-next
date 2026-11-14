@@ -1106,6 +1106,7 @@ private class LiquidSourceNode(var source: KitLiquidSource) : Modifier.Node(), D
         // Read in the draw phase: a pane arriving or leaving redraws this once, to start or stop recording.
         if (source.users > 0) {
             kitRecord(source.layer) { this@draw.drawContent() }
+            io.github.eslamasabry.oc.ui.kit.foundation.KitFrameProbe.hit("liquidSource.record")
             androidx.compose.runtime.snapshots.Snapshot.withoutReadObservation { source.version++ }
             kitDrawLayer(source.layer)
         } else {

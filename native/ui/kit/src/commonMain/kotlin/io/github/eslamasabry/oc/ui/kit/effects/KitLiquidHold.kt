@@ -255,6 +255,7 @@ public fun kitLiquidPlainStandIn(spec: KitLiquidPaneSpec, backdrop: KitLiquidBac
             // own, so neither clamps at the pane's own edge; without one, as before (no padding).
             val pad = if (spec.recipe.hold.local) kotlin.math.ceil(r + spec.recipe.hold.localDp.dp.toPx() + 2f) else 0f
             onDrawBehind {
+                io.github.eslamasabry.oc.ui.kit.foundation.KitFrameProbe.hit("hold.draw")
                 val c = at[0] ?: return@onDrawBehind
                 val radius = maxOf(shape.topStart.toPx(size, this), shape.topEnd.toPx(size, this), shape.bottomStart.toPx(size, this), shape.bottomEnd.toPx(size, this))
                 val colour = floatArrayOf(spec.recipe.saturation, spec.recipe.contrast, spec.recipe.brightness)

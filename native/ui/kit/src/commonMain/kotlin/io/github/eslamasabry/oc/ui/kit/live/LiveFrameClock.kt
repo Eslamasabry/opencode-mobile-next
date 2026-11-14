@@ -100,6 +100,7 @@ public class LiveFrameClock(private val idleAfterNanos: Long = IDLE_AFTER_NANOS)
      * clock runs, however fast the display refreshes.
      */
     public fun frame(nanos: Long): Boolean {
+        io.github.eslamasabry.oc.ui.kit.foundation.KitFrameProbe.hit("clock.frame")
         if (lastActive == NONE || touched) {
             lastActive = nanos
             touched = false
@@ -126,6 +127,7 @@ public class LiveFrameClock(private val idleAfterNanos: Long = IDLE_AFTER_NANOS)
                 last = nanos
             }
         }
+        if (steps) io.github.eslamasabry.oc.ui.kit.foundation.KitFrameProbe.hit("clock.step")
         return steps
     }
 

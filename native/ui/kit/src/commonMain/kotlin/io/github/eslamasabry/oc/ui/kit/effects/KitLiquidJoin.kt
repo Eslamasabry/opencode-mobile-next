@@ -429,6 +429,7 @@ private class JoinedPaneNode(
     }
 
     private fun ContentDrawScope.drawJoined() {
+        io.github.eslamasabry.oc.ui.kit.foundation.KitFrameProbe.hit("join.draw")
         val c = coordinates?.takeIf { it.isAttached } ?: return
         val back = back ?: return
         val mask = mask ?: return

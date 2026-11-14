@@ -571,6 +571,7 @@ private data class BackdropSourceElement(
         node.shared = shared
         node.backdrop = backdrop
         node.paint = paint
+        io.github.eslamasabry.oc.ui.kit.foundation.KitFrameProbe.hit("picture.update")
         node.invalidateDraw()
         // Another paint (a look, a theme, the strength): every pane showing the picture draws again.
         backdrop.paintVersion++
@@ -643,6 +644,7 @@ private class BackdropSourceNode(
         // Recorded in the layer's own scope, never through this node's: the picture cannot draw into, or ask for its
         // density from, the scope that is drawing it (N-29, a sample's paint reading toPx() recursed for ever).
         recordDetached(layer, paint)
+        io.github.eslamasabry.oc.ui.kit.foundation.KitFrameProbe.hit("picture.record")
         kitDrawLayer(layer)
         drawContent()
     }
@@ -710,6 +712,7 @@ private class GlassFrostNode(
         val full = picture.size
         val now = bd.frame()
         if (frost.from !== picture || frost.size != full || layer.renderEffect == null || frost.frame != now) {
+            io.github.eslamasabry.oc.ui.kit.foundation.KitFrameProbe.hit("glassFrost.rerecord")
             frost.from = picture
             frost.size = full
             frost.frame = now
@@ -734,6 +737,7 @@ private class GlassFrostNode(
     private fun nested(): Boolean = findNearestAncestor(GlassTraverseKey) is GlassFrostNode
 
     override fun ContentDrawScope.draw() {
+        io.github.eslamasabry.oc.ui.kit.foundation.KitFrameProbe.hit("glassFrost.draw")
         if (nested()) {
             drawContent()
             return
@@ -951,6 +955,7 @@ private class RimLightNode(var backdrop: KitGlassBackdrop, var shape: Shape, var
     }
 
     override fun ContentDrawScope.draw() {
+        io.github.eslamasabry.oc.ui.kit.foundation.KitFrameProbe.hit("rimLight.draw")
         drawContent()
         val bd = backdrop
         bd.frame()

@@ -71,6 +71,7 @@ internal fun Modifier.kitFrostPane(
             val rim = spec.rimDp.dp.toPx()
             val small = IntSize(ceil(size.width * k).toInt().coerceAtLeast(1), ceil(size.height * k).toInt().coerceAtLeast(1))
             onDrawBehind {
+                io.github.eslamasabry.oc.ui.kit.foundation.KitFrameProbe.hit("frostPane.draw")
                 // Read in the draw: the pane draws again whenever its backdrop records again.
                 backdrop.version()
                 place.value
