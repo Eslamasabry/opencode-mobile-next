@@ -483,7 +483,7 @@ private fun PermissionDetailsSheet(
             if (full != null && shownChange == null)
                 CommandOrTarget(mask(full), details.command)
             if (shownChange != null) WholeChange(shownChange, mask)
-            else if (change == null) details.diff?.let { diff -> KitCodeBlock(mask(diff), KitCodeKind.Code, wrap = true, showWrapToggle = false) }
+            else if (change == null) details.diff?.let { diff -> KitCodeBlock(changeBodyText(mask(diff)), KitCodeKind.Code, wrap = true, showWrapToggle = false) }
             if (change?.missing == true)
                 KitText(
                     stringResource(Res.string.approvalChangeMissing),
@@ -568,7 +568,7 @@ private fun WholeChange(change: PermissionChangeUi, mask: (String) -> String) {
             .ifEmpty { listOfNotNull(change.combined?.let { null as String? to it }) }
     for ((path, patch) in blocks) {
         key(path, patch) {
-            val masked = remember(patch, mask) { mask(patch) }
+            val masked = remember(patch, mask) { changeBodyText(mask(patch)) }
             val copy =
                 rememberKitRedactedCopyAction(
                     stringResource(Res.string.approvalCopyChange),
