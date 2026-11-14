@@ -20,7 +20,7 @@ class AgentPinsParityTest {
      */
     // Agents whose pins moved after the Flutter freeze (Flutter takes no new work since 2026-11-08): checked on their
     // own below, and their old Flutter entries are left out of the comparison.
-    private val postFreeze = setOf("antigravity", "opencode2", "claude", "codex", "goose", "omp-acp")
+    private val postFreeze = setOf("antigravity", "opencode2", "claude", "codex", "goose", "omp-acp", "fx")
 
     private val repo: File = generateSequence(File("").absoluteFile) { it.parentFile }
         .first { File(it, "native/settings.gradle.kts").isFile }
@@ -219,6 +219,38 @@ class AgentPinsParityTest {
         assertEquals(287484080L, x64.installedBytes)
         assertEquals(null, x64.archiveMember)
         assertEquals(AgentArtifactFormat.Executable, x64.format)
+    }
+
+    @Test
+    fun `B-AGENT-008 fx pins equal the downloads checked on 2026-11-14`() {
+        // Moved after the freeze. Each SHA-256 equals GitHub's digest for the release asset; installedBytes is the member's size.
+        val recipe = AgentPins.builtIn.catalog().byId(io.github.eslamasabry.oc.engine.agents.AgentId("fx"))!!.recipe!!
+        assertEquals("0.0.16", recipe.version)
+        assertEquals("fx", recipe.executable)
+        assertEquals(listOf("acp"), recipe.launchArgs)
+        assertEquals(listOf("login"), recipe.signInArgs)
+        val arm = recipe.artifacts.getValue(AgentArchitecture.Arm64)
+        assertEquals(
+            "https://github.com/vercel-labs/fx/releases/download/v0.0.16/" +
+                "fx-linux-aarch64.tar.gz",
+            arm.url,
+        )
+        assertEquals("ca9441b104357e2105039dbfd4c2eaf0d6ee65a84085f23f51e880c95cbf46af", arm.sha256)
+        assertEquals(5562847L, arm.downloadBytes)
+        assertEquals(10832712L, arm.installedBytes)
+        assertEquals("fx", arm.archiveMember)
+        assertEquals(AgentArtifactFormat.TarGz, arm.format)
+        val x64 = recipe.artifacts.getValue(AgentArchitecture.X64)
+        assertEquals(
+            "https://github.com/vercel-labs/fx/releases/download/v0.0.16/" +
+                "fx-linux-x86_64.tar.gz",
+            x64.url,
+        )
+        assertEquals("f0fb822c7be546c80bcc89d50521bc1454435e0c6f586e8420c4e2b84fa80599", x64.sha256)
+        assertEquals(5680318L, x64.downloadBytes)
+        assertEquals(12814000L, x64.installedBytes)
+        assertEquals("fx", x64.archiveMember)
+        assertEquals(AgentArtifactFormat.TarGz, x64.format)
     }
 
     @Test
