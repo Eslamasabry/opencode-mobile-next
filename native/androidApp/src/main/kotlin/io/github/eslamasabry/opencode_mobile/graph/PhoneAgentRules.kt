@@ -111,6 +111,42 @@ internal object PhoneAgentRules {
         else builtinOwner?.takeIf { it != id && it in saved } ?: savedOwner?.takeIf { it in saved }
 
     /**
+     * Whose phone a payload lease on the agent helper is taken for: [phone] is the app's own OpenCode profile the lease
+     * is checked against (pref `oc.builtinServerOwner`), [helper] the owner the helper runs under, whose secret
+     * (`oc.agentHostSecret.<helper>`) and status the lease reads.
+     */
+    data class PayloadOwner(val phone: String, val helper: String)
+
+    /**
+     * The payload owner of a connection to the helper's port by [alias]: the transient `<phone>.agents` alias by its
+     * native ownership proof ([transientOwner]); the saved helper `<owner>-agents` (the home's This phone agent rows,
+     * "one This phone") by its phone ([phoneOf]) and the owner it was saved for ([savedOwner], whose secret
+     * AppLocalAgentHostStarter writes and whose password the saved profile carries); any other saved profile as
+     * itself. Null: no owner, the lease is refused.
+     */
+    fun payloadOwner(
+        alias: String,
+        transientOwner: String?,
+        savedOwner: String?,
+        builtinOwner: String?,
+        saved: Set<String>,
+    ): PayloadOwner? =
+        when {
+            transientOwner != null -> PayloadOwner(transientOwner, transientOwner)
+            savedOwner != null && isHelperProfile(alias, savedOwner) ->
+                phoneOf(alias, savedOwner, builtinOwner, saved)?.let { PayloadOwner(it, savedOwner) }
+            alias in saved -> PayloadOwner(alias, alias)
+            else -> null
+        }
+
+    /** The owner part of the lease's check: an owner whose phone is still saved and still the app's own OpenCode. */
+    fun payloadOwnerHolds(owner: PayloadOwner?, builtinOwner: String?, saved: Set<String>): Boolean =
+        owner != null && owner.phone in saved && builtinOwner == owner.phone
+
+    /** The secret part: the helper's stored secret is the one the connection presents. */
+    fun payloadSecretMatches(stored: String?, presented: String?): Boolean = !stored.isNullOrEmpty() && stored == presented
+
+    /**
      * Whether a source's list counts as reaching every project. F: phone_agents.dart:1207-1210: the phone agents' list
      * is read folder by folder and never makes the whole list look single-project; OpenCode's own answer
      * ([globalSessionSearch]) decides.

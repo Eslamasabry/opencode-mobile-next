@@ -43,4 +43,17 @@ class PaseoSubfoldersTest {
         val ids = (h.gateway.allSessions() as Outcome.Ok).value.map { it.id.raw }
         assertEquals(listOf("root"), ids)
     }
+
+    @Test
+    fun `a gateway moved to one project by a new conversation still holds every project under its root`() = runTest {
+        val h = GatewayHarness(this, daemon())
+        h.gateway.includeSubfolders = true
+        h.gateway.subfolderRoot = DIR
+        assertEquals(
+            Outcome.Ok(Unit),
+            h.gateway.changeLocation(io.github.eslamasabry.oc.core.model.ServerLocation(directory = "$DIR/project-one")),
+        )
+        val ids = (h.gateway.allSessions() as Outcome.Ok).value.map { it.id.raw }
+        assertEquals(listOf("root", "project", "deep"), ids)
+    }
 }
