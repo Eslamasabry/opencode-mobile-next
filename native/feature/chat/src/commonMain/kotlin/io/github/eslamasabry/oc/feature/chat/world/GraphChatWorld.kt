@@ -502,6 +502,18 @@ internal class GraphChatWorld(
 
     private var attached: Attached? = null
     private var stopWatching: (() -> Unit)? = null
+
+    /**
+     * Open while starting: the conversation's server is not ready yet (this phone's server starting or stopped for the
+     * OpenCode update, its connection not open yet, or a read refused because the connection it ran on moved). The page
+     * keeps its loading state, says why on the connection line, and reads again by itself; [NOT_READY_LIMIT_MS] of
+     * waiting with nothing in progress ends in the failure page.
+     */
+    private val loadWaiting = MutableStateFlow(false)
+    private val mutableServerWait = MutableStateFlow<ChatServerWait?>(null)
+    override val serverWait: StateFlow<ChatServerWait?> = mutableServerWait.asStateFlow()
+    private var notReadyJob: Job? = null
+    private var notReadyWaitedMs = 0L
     /**
      * Cache-first: the last rows this conversation showed (kept from a past visit, or live), held while a reload,
      * a reconnect or a missing server has nothing newer to draw, so the chat never blanks or swaps layouts.
@@ -751,6 +763,7 @@ internal class GraphChatWorld(
      */
     fun attach() {
         if (stopWatching != null) return
+        endWait()
         showKept()
         draftStore?.open(ref)?.let { reopened ->
             // Empty closed sessions can retire while this world remains for pending chat work.
@@ -775,7 +788,95 @@ internal class GraphChatWorld(
                         bind(graph)
                 }
             }
-        stopWatching = { watcher.cancel() }
+        val phoneWaits = phoneServer?.waiting(ref.profileId) ?: MutableStateFlow(PhoneServerWait.None)
+        val waits =
+            registry.appScope.launch(registry.mainContext) {
+                combine(phoneWaits, mutableLink, loadWaiting) { phone, link, waiting ->
+                        // The server's own state speaks while the page waits for it, or while its link is down (the
+                        // update stops the server under an open conversation too).
+                        val down = waiting || link != ChatLink.Live
+                        when {
+                            down && phone == PhoneServerWait.Updating -> ChatServerWait.Updating
+                            down && phone == PhoneServerWait.Starting -> ChatServerWait.Starting
+                            waiting -> ChatServerWait.Connecting
+                            else -> null
+                        }
+                    }
+                    .collect { mutableServerWait.value = it }
+            }
+        stopWatching = {
+            watcher.cancel()
+            waits.cancel()
+        }
+    }
+
+    /** This phone's server is starting or updating: a wait for it does not count toward [NOT_READY_LIMIT_MS]. */
+    private fun phoneBusy(): Boolean =
+        (phoneServer?.waiting(ref.profileId)?.value ?: PhoneServerWait.None) != PhoneServerWait.None
+
+    /**
+     * True when [failure] only says the server is not ready yet: a read refused because the connection it ran on was
+     * replaced or moved, and, for this phone's own server (which the app starts by itself), not answering yet.
+     */
+    private fun notReady(failure: Failure): Boolean =
+        when (failure) {
+            is Failure.Refused ->
+                failure.reason == RefusalReason.StaleScope || failure.reason == RefusalReason.ProfileClosing
+            is Failure.Network,
+            is Failure.TimedOut -> serverOnThisPhone
+            is Failure.Busy ->
+                serverOnThisPhone &&
+                    (failure.kind == BusyKind.Starting ||
+                        failure.kind == BusyKind.Stopping ||
+                        failure.kind == BusyKind.Overloaded)
+            else -> false
+        }
+
+    /**
+     * The conversation could not load because of [failure]. One that only means "not ready yet" keeps the loading
+     * state and reads again by itself; a real one, or one past the wait's limit, is the failure page.
+     */
+    private fun loadFailed(failure: Failure) {
+        if (notReady(failure) && waitForServer()) return
+        notReadyJob?.cancel()
+        notReadyJob = null
+        loadWaiting.value = false
+        mutableLoad.value = ChatLoad.Failed(failure)
+    }
+
+    /** Keeps the page loading and schedules the next read; false once the wait's limit is spent. */
+    private fun waitForServer(): Boolean {
+        if (notReadyWaitedMs >= NOT_READY_LIMIT_MS && !phoneBusy()) return false
+        mutableLoad.value = ChatLoad.Loading
+        loadWaiting.value = true
+        if (notReadyJob?.isActive == true) return true
+        notReadyJob =
+            registry.appScope.launch(registry.mainContext) {
+                delay(NOT_READY_RETRY_MS)
+                if (!phoneBusy()) notReadyWaitedMs += NOT_READY_RETRY_MS
+                notReadyJob = null
+                retryNotReady()
+            }
+        return true
+    }
+
+    private suspend fun retryNotReady() {
+        if (stopWatching == null || mutableLoad.value is ChatLoad.Live || !loadWaiting.value) return
+        val a = currentAttached()
+        if (a != null) {
+            readHistory(a.gateway, a.handle, P3Bridge(sid.raw))
+            return
+        }
+        // A connection that has just opened is bound by the registry watch; until one exists, keep waiting.
+        if (registry.graphFor(ref) == null) loadFailed(OFFLINE)
+    }
+
+    /** A loaded conversation (or a person's Try again, a new visit) starts any later wait from zero. */
+    private fun endWait() {
+        notReadyJob?.cancel()
+        notReadyJob = null
+        notReadyWaitedMs = 0
+        loadWaiting.value = false
     }
 
     private fun bind(graph: ConnectionGraph?) {
@@ -800,7 +901,10 @@ internal class GraphChatWorld(
         knownUserPrompts.clear()
         if (graph == null) {
             mutableLink.value = ChatLink.Offline
-            mutableLoad.value = ChatLoad.Failed(Failure.Network(NetworkWhy.Offline))
+            // This phone's server: the app opens its connection by itself (after a start or an update), so the page
+            // waits for it instead of failing. A computer's lost connection says so at once, as before.
+            if (serverOnThisPhone && mutableLoad.value !is ChatLoad.Live) loadFailed(OFFLINE)
+            else mutableLoad.value = ChatLoad.Failed(OFFLINE)
             publishVoiceConversation()
             return
         }
@@ -1103,6 +1207,8 @@ internal class GraphChatWorld(
     fun detach() {
         stopWatching?.invoke()
         stopWatching = null
+        endWait()
+        mutableServerWait.value = null
         attached?.handle?.let(::keepLastKnown)
         closeKept()
         unbind(flushHeld = true)
@@ -1235,13 +1341,16 @@ internal class GraphChatWorld(
                 val session = gateway.session(sid)
                 if (session is Outcome.Failed) {
                     if (
-                        currentAttached()?.handle === handle && mutableLoad.value !is ChatLoad.Live
+                        cursor == null && currentAttached()?.handle === handle && mutableLoad.value !is ChatLoad.Live
                     ) {
-                        mutableLoad.value = ChatLoad.Failed(session.failure)
+                        loadFailed(session.failure)
                     }
                     return session
                 }
                 if (currentAttached()?.handle !== handle || gateway.location.value != at) {
+                    // The connection moved while it was read: read again where it is now (it never stays loading).
+                    if (cursor == null && currentAttached()?.handle === handle && mutableLoad.value !is ChatLoad.Live)
+                        loadFailed(STALE)
                     return Outcome.Failed(Failure.Refused(RefusalReason.StaleScope))
                 }
                 val details = (session as Outcome.Ok).value
@@ -1301,13 +1410,16 @@ internal class GraphChatWorld(
                 publishShown()
                 keepLastKnown(handle)
                 refreshDraftProtection()
+                endWait()
                 mutableLoad.value = ChatLoad.Live
                 if (cursor == null) confirmIdle(gateway, handle)
                 Outcome.Ok(Unit)
             }
             is Outcome.Failed -> {
-                if (currentAttached()?.handle === handle && mutableLoad.value !is ChatLoad.Live)
-                    mutableLoad.value = ChatLoad.Failed(page.failure)
+                if (currentAttached()?.handle === handle && mutableLoad.value !is ChatLoad.Live) {
+                    // An older page that fails leaves the loaded conversation as it is; only the first read waits.
+                    if (cursor == null) loadFailed(page.failure) else mutableLoad.value = ChatLoad.Failed(page.failure)
+                }
                 page
             }
         }
@@ -2592,6 +2704,8 @@ internal class GraphChatWorld(
     }
 
     override suspend fun reload(): Outcome<Unit> {
+        // A person's Try again waits for a server that is not ready yet afresh.
+        endWait()
         bind(registry.graphFor(ref))
         return when (val l = mutableLoad.value) {
             is ChatLoad.Failed -> Outcome.Failed(l.failure)
@@ -2818,6 +2932,16 @@ internal class GraphChatWorld(
     private companion object {
         const val HISTORY_PAGE = 100
         val STALE = Failure.Refused(RefusalReason.StaleScope)
+        val OFFLINE = Failure.Network(NetworkWhy.Offline)
+
+        /** How often a conversation waiting for its server reads again. */
+        const val NOT_READY_RETRY_MS = 2_000L
+
+        /**
+         * How long a conversation waits for a server that is not ready while nothing says it is starting or updating
+         * (the home's start window is 90 s too); then the failure page.
+         */
+        const val NOT_READY_LIMIT_MS = 90_000L
     }
 }
 

@@ -225,6 +225,8 @@ public class ChatPresenter(
                     ChatInputs(f.t, f.l, f.ti, f.c, f.k, p, d)
                 }
                 .combine(retryFacts()) { i, r -> i.copy(retry = r) }
+                // Open while starting: what the page waits for, said on the connection line.
+                .combine(world.serverWait) { i, w -> i.copy(retry = i.retry.copy(serverWait = w)) }
                 .combine(setUpChanges()) { i, _ -> i }
         // Read acknowledgement follows the world, not the screen's composition (plan 09 §6.7).
         combine(world.load, world.transcript, local) { _, _, _ ->
@@ -342,6 +344,7 @@ public class ChatPresenter(
             nowMs = clock?.now()?.toEpochMilliseconds() ?: 0,
             onThisPhone = world.serverOnThisPhone,
             stopped = world.linkStopped.value,
+            serverWait = world.serverWait.value,
         )
 
     /** S24-CHAT: ticks once a second only while a retry is scheduled (Flutter's `_Ticker`). */
