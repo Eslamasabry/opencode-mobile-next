@@ -400,7 +400,10 @@ private fun Modifier.liquidPane(
     val spec = kitLiquidPaneSpec(role, flip, chosen, keepRim, dialog = dialog)
     val platform = LocalKitPlatform.current
     val words = kitLiquidWords(backdrop, flip)
-    if (join != null) SideEffect { join.spec = spec }
+    if (join != null) SideEffect {
+        join.spec = spec
+        join.backdrop = backdrop
+    }
     if (joined && join != null) {
         // One body with its partner: the joined pane draws this side (no clip to its own shape, no rim of its own).
         return this.kitLiquidJoinedPane(join.owner, join, spec, backdrop).kitGlassStackRoot().kitLiquidPlateHost(words)
