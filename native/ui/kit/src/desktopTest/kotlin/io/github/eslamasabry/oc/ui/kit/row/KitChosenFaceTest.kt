@@ -92,8 +92,9 @@ class KitChosenFaceTest {
     private fun faceSpanOnSheet(style: Style) {
         val (plain, _) = runComposeUiTestFor { serverSheet(style, chosen = false) }
         val (chosen, row) = runComposeUiTestFor { serverSheet(style, chosen = true) }
-        // A line through the row's top band, under the face's top inset and above the icon and the words.
-        val y = (row.top.value + ChosenFaceRules.TOP_INSET_DP + 3).toInt()
+        // A line through the row's middle, where the face's sides are straight (its corners round in above): the icon
+        // and the check lie on it too, so the first and last changed pixels are the face's own edges.
+        val y = ((row.top.value + row.bottom.value) / 2f).toInt()
         val xs = (0 until width).filter { differs(plain, chosen, it, y) }
         assertTrue(xs.isNotEmpty(), "$style: the chosen row shows a face")
         val left = xs.first()
