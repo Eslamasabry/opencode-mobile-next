@@ -1144,4 +1144,6 @@
     <string name="chatStepMalformedCall">Agen memintanya dengan cara yang salah, jadi tidak ada yang dijalankan. Minta agen mencoba lagi.</string>
     <string name="chatUiRetryWhyUnreachable">Tidak bisa menjangkau penyedia model. Periksa koneksi ponsel ini.</string>
     <string name="chatUiRetryWhyBusy">Penyedia model sedang tidak merespons.</string>
+    <string name="transcriptFindPosition">%1$s dari %2$s</string>
+    <string name="chatUiShowEarlierMessages">Tampilkan pesan sebelumnya</string>
 </resources>

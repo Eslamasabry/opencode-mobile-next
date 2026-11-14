@@ -1943,6 +1943,7 @@ chatUiShareSession	0725b586b0
 chatUiShareThisSession	e28373f2e2
 chatUiSharedAnyoneWithTheLinkCanView	8159e5c9bf
 chatUiShowAllSubagentSessions	f6b4d03e47
+chatUiShowEarlierMessages	dea0bcdeea
 chatUiShowTimestamps	a22a80be61
 chatUiSkill	d0d5e68e24
 chatUiSkills	9714c1cf73
@@ -13272,6 +13273,7 @@ transcriptFindHint	35e5badf88
 transcriptFindNext	2e9895f34e
 transcriptFindNone	ac6088ef4f
 transcriptFindPartial	c3a5181a26
+transcriptFindPosition	833cebab86
 transcriptFindPrevious	9e8b418ce8
 transcriptFindReasoning	99d39232fd
 transcriptFindStopSearchingAll	6c7ad1bfa5

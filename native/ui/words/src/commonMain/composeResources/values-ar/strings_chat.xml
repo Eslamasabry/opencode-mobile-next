@@ -1410,4 +1410,6 @@
     <string name="chatStepMalformedCall">طلب الوكيل هذا بطريقة غير صحيحة، فلم يتم تنفيذ شيء. اطلب منه المحاولة مرة أخرى.</string>
     <string name="chatUiRetryWhyUnreachable">تعذّر الوصول إلى مزوّد النموذج. تحقّق من اتصال هذا الهاتف.</string>
     <string name="chatUiRetryWhyBusy">مزوّد النموذج لا يردّ الآن.</string>
+    <string name="transcriptFindPosition">%1$s من %2$s</string>
+    <string name="chatUiShowEarlierMessages">عرض الرسائل السابقة</string>
 </resources>

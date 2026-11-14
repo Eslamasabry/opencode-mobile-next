@@ -1250,4 +1250,6 @@
     <string name="chatStepMalformedCall">L’agent a fait cette demande de travers, donc rien ne s’est exécuté. Demandez-lui de réessayer.</string>
     <string name="chatUiRetryWhyUnreachable">Impossible de joindre le fournisseur du modèle. Vérifiez la connexion de ce téléphone.</string>
     <string name="chatUiRetryWhyBusy">Le fournisseur du modèle ne répond pas pour le moment.</string>
+    <string name="transcriptFindPosition">%1$s sur %2$s</string>
+    <string name="chatUiShowEarlierMessages">Afficher les messages précédents</string>
 </resources>

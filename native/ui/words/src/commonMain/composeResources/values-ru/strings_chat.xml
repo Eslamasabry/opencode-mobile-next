@@ -1304,4 +1304,6 @@
     <string name="chatStepMalformedCall">Агент задал это неверно, поэтому ничего не выполнилось. Попросите его повторить.</string>
     <string name="chatUiRetryWhyUnreachable">Не удаётся связаться с провайдером модели. Проверьте подключение этого телефона.</string>
     <string name="chatUiRetryWhyBusy">Провайдер модели сейчас не отвечает.</string>
+    <string name="transcriptFindPosition">%1$s из %2$s</string>
+    <string name="chatUiShowEarlierMessages">Показать более ранние сообщения</string>
 </resources>

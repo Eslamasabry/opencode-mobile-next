@@ -1145,4 +1145,6 @@
     <string name="chatStepMalformedCall">智能体的请求方式有误，所以什么也没有运行。请让它再试一次。</string>
     <string name="chatUiRetryWhyUnreachable">连不上模型的提供方。请检查这部手机的网络连接。</string>
     <string name="chatUiRetryWhyBusy">模型的提供方暂时没有响应。</string>
+    <string name="transcriptFindPosition">%1$s / %2$s</string>
+    <string name="chatUiShowEarlierMessages">显示更早的消息</string>
 </resources>
