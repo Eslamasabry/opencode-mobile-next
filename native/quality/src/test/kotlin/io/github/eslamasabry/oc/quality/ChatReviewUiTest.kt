@@ -81,10 +81,11 @@ class ChatReviewUiTest {
             }
             onNodeWithText("Allow once").performClick()
             assertEquals(1, allowed)
-            // The composer shows once the conversation has loaded (no composer under the skeleton or the load
-            // error). With it there, a waiting request puts Stop in it and tells it so (the Flutter-parity box keeps
-            // its field and a Send that is disabled while empty; only the keyboard's Send key is held back).
-            if (phase == ChatPhase.Live) {
+            // The composer stands in its place while the conversation loads and once it has loaded (owner
+            // 2026-11-14, e6f640ee06: Send waits for the load); the could-not-load page has none. Where it shows, a
+            // waiting request puts Stop in it and tells it so (the Flutter-parity box keeps its field and a Send that
+            // is disabled while empty; only the keyboard's Send key is held back).
+            if (phase == ChatPhase.Live || phase == ChatPhase.Loading) {
                 onNodeWithText("Request owns composer").assertExists()
                 onNodeWithTag("chat-stop-button").assertExists()
             } else {
