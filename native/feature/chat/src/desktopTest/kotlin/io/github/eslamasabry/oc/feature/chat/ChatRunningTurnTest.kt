@@ -150,8 +150,11 @@ class ChatRunningTurnTest {
             onAllNodesWithText("Running npm test", substring = true).assertCountEquals(0)
             // The steps, the finished one and the running one, in view without a tap.
             onNodeWithTag("chat-work-line").assertExists()
-            onNodeWithText("git status", substring = true).assertIsDisplayed()
-            onNodeWithText("npm test", substring = true).assertIsDisplayed()
+            // Owner 2026-11-14: two commands one after another are one row ("Ran 1 command" while the second runs), and
+            // the running one says what it does in plain words, never its raw command line.
+            onNodeWithText("Ran 1 command").assertIsDisplayed()
+            onNodeWithText("Running tests", substring = true).assertIsDisplayed()
+            onAllNodesWithText("npm test", substring = true).assertCountEquals(0)
         }
 
     @Test

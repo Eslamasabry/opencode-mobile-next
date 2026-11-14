@@ -280,7 +280,8 @@ class StepsTreeTest {
             setContent { Root { ChatScreen(screen(), actions, composer, facts = facts(), onOpenSession = { opened += it }) } }
             // No summary line: the newest steps are in view at once.
             onAllNodesWithText("Read 1 file", substring = true).assertCountEquals(0)
-            onNodeWithText("npm test", substring = true).assertIsDisplayed()
+            // Owner 2026-11-14: the tests step says what it did, never its command line.
+            onNodeWithText("Ran tests").assertIsDisplayed()
             onNodeWithText("Show 3 earlier steps").assertIsDisplayed()
             onNodeWithText("1 declined · 1 failed").assertIsDisplayed()
             onAllNodesWithText("You declined this").assertCountEquals(0)

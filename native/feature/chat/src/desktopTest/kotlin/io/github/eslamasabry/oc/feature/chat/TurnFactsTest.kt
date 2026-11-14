@@ -366,8 +366,9 @@ class TurnFactsTest {
             val actions = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
             setContent { Root { ChatScreen(screenState(), actions, composer, facts = screenFacts()) } }
             onAllNodesWithText("Read 1 file · edited 1 file · ran 1 command").assertCountEquals(0)
-            // E20-S25: a shell step's line is its command in mono (Flutter `_buildTimelineStep`).
-            onNodeWithText("npm test", substring = true).assertIsDisplayed()
+            // Owner 2026-11-14 (was E20-S25, the command in mono): a shell step says what it did in plain words.
+            onNodeWithText("Ran tests").assertIsDisplayed()
+            onAllNodesWithText("npm test", substring = true).assertCountEquals(0)
             onNodeWithText("4.2s", substring = true).assertIsDisplayed()
         }
 
@@ -391,9 +392,9 @@ class TurnFactsTest {
             setContent { Root { ChatScreen(screenState(), actions, composer, facts = screenFacts()) } }
             // N-45: a turn with a work line says what it edited and ran there; no second "Edited … · ran …" row.
             onNodeWithTag("chat-turn-result").assertDoesNotExist()
-            // The read step and the edit step both name the file; the shell step names the command.
+            // The read step and the edit step both name the file; the shell step says what it did (its command is inside).
             onAllNodesWithText("a.kt", substring = true).assertCountEquals(2)[1].assertIsDisplayed()
-            onNodeWithText("npm test", substring = true).assertIsDisplayed()
+            onNodeWithText("Ran tests").assertIsDisplayed()
         }
 
     @Test
@@ -476,7 +477,9 @@ class TurnFactsTest {
             val facts = TurnFactsPresenter(FixedClock).present(k.feed.value, 3_000)
             val actions = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
             setContent { Root { ChatScreen(screenState(), actions, composer, facts = facts) } }
-            onNodeWithText("curl -H 'Authorization:", substring = true).assertIsDisplayed()
+            // Owner 2026-11-14: the running row says what it does in plain words; no part of the command (and so no
+            // token) is on its line.
+            onNodeWithText("Fetching a web page").assertIsDisplayed()
             onAllNodesWithText(bearerTail, substring = true).assertCountEquals(0)
         }
 

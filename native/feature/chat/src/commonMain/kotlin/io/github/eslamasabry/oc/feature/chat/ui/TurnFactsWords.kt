@@ -12,6 +12,11 @@ import io.github.eslamasabry.oc.engine.transcript.turnfacts.ReplyTiming
 import io.github.eslamasabry.oc.engine.transcript.turnfacts.ToolDuration
 import io.github.eslamasabry.oc.engine.transcript.turnfacts.ToolFacts
 import io.github.eslamasabry.oc.engine.transcript.turnfacts.ToolPhrase
+import io.github.eslamasabry.oc.engine.transcript.turnfacts.ToolKind
+import io.github.eslamasabry.oc.engine.transcript.turnfacts.ShellIntent
+import io.github.eslamasabry.oc.engine.transcript.turnfacts.ShellKind
+import io.github.eslamasabry.oc.feature.chat.presentation.StepFamily
+import io.github.eslamasabry.oc.ui.kitchat.header.rememberKitMask
 import io.github.eslamasabry.oc.engine.transcript.turnfacts.TurnStallNotice
 import io.github.eslamasabry.oc.engine.transcript.turnfacts.formatRetryCountdown
 import io.github.eslamasabry.oc.engine.transcript.turnfacts.toolDuration
@@ -45,6 +50,59 @@ import io.github.eslamasabry.oc.ui.words.res.chatUiFindFiles
 import io.github.eslamasabry.oc.ui.words.res.chatUiLanguageServer
 import io.github.eslamasabry.oc.ui.words.res.chatUiList
 import io.github.eslamasabry.oc.ui.words.res.chatUiLoadTools
+import io.github.eslamasabry.oc.ui.words.res.chatUiStopBackgroundTask
+import io.github.eslamasabry.oc.ui.words.res.chatUiReadTaskOutput
+import io.github.eslamasabry.oc.ui.words.res.chatLiveReading
+import io.github.eslamasabry.oc.ui.words.res.chatLiveReadingAny
+import io.github.eslamasabry.oc.ui.words.res.liveStepRunning
+import io.github.eslamasabry.oc.ui.words.res.liveStepRunningCommand
+import io.github.eslamasabry.oc.ui.words.res.teamAgentStepCommand
+import io.github.eslamasabry.oc.ui.words.res.teamAgentStepRead
+import io.github.eslamasabry.oc.ui.words.res.stepShellAnalyze
+import io.github.eslamasabry.oc.ui.words.res.stepShellAnalyzeNow
+import io.github.eslamasabry.oc.ui.words.res.stepShellBuild
+import io.github.eslamasabry.oc.ui.words.res.stepShellBuildNow
+import io.github.eslamasabry.oc.ui.words.res.stepShellChangeFiles
+import io.github.eslamasabry.oc.ui.words.res.stepShellChangeFilesNow
+import io.github.eslamasabry.oc.ui.words.res.stepShellChanges
+import io.github.eslamasabry.oc.ui.words.res.stepShellChangesNow
+import io.github.eslamasabry.oc.ui.words.res.stepShellDelete
+import io.github.eslamasabry.oc.ui.words.res.stepShellDeleteNow
+import io.github.eslamasabry.oc.ui.words.res.stepShellFetch
+import io.github.eslamasabry.oc.ui.words.res.stepShellFetchNow
+import io.github.eslamasabry.oc.ui.words.res.stepShellInstall
+import io.github.eslamasabry.oc.ui.words.res.stepShellInstallNow
+import io.github.eslamasabry.oc.ui.words.res.stepShellList
+import io.github.eslamasabry.oc.ui.words.res.stepShellListNow
+import io.github.eslamasabry.oc.ui.words.res.stepShellProcesses
+import io.github.eslamasabry.oc.ui.words.res.stepShellProcessesNow
+import io.github.eslamasabry.oc.ui.words.res.stepShellProgram
+import io.github.eslamasabry.oc.ui.words.res.stepShellReadMany
+import io.github.eslamasabry.oc.ui.words.res.stepShellReadManyNow
+import io.github.eslamasabry.oc.ui.words.res.stepShellReadOne
+import io.github.eslamasabry.oc.ui.words.res.stepShellSearch
+import io.github.eslamasabry.oc.ui.words.res.stepShellSearchNow
+import io.github.eslamasabry.oc.ui.words.res.stepShellStop
+import io.github.eslamasabry.oc.ui.words.res.stepShellStopNow
+import io.github.eslamasabry.oc.ui.words.res.stepShellTests
+import io.github.eslamasabry.oc.ui.words.res.stepShellTestsNow
+import io.github.eslamasabry.oc.ui.words.res.stepShellWait
+import io.github.eslamasabry.oc.ui.words.res.stepShellWaitNow
+import io.github.eslamasabry.oc.ui.words.res.stepShellTestsAsk
+import io.github.eslamasabry.oc.ui.words.res.stepShellSearchAsk
+import io.github.eslamasabry.oc.ui.words.res.stepShellListAsk
+import io.github.eslamasabry.oc.ui.words.res.stepShellProcessesAsk
+import io.github.eslamasabry.oc.ui.words.res.stepShellStopAsk
+import io.github.eslamasabry.oc.ui.words.res.stepShellChangesAsk
+import io.github.eslamasabry.oc.ui.words.res.stepShellAnalyzeAsk
+import io.github.eslamasabry.oc.ui.words.res.stepShellBuildAsk
+import io.github.eslamasabry.oc.ui.words.res.stepShellInstallAsk
+import io.github.eslamasabry.oc.ui.words.res.stepShellFetchAsk
+import io.github.eslamasabry.oc.ui.words.res.stepShellDeleteAsk
+import io.github.eslamasabry.oc.ui.words.res.stepShellChangeFilesAsk
+import io.github.eslamasabry.oc.ui.words.res.stepShellWaitAsk
+import io.github.eslamasabry.oc.ui.words.res.stepShellProgramAsk
+import io.github.eslamasabry.oc.ui.words.res.stepShellUnknownAsk
 import io.github.eslamasabry.oc.ui.words.res.chatUiProviderSearch
 import io.github.eslamasabry.oc.ui.words.res.chatUiQuestions
 import io.github.eslamasabry.oc.ui.words.res.chatUiRateLimitCountdown
@@ -104,6 +162,7 @@ import io.github.eslamasabry.oc.ui.words.res.toolCardExitPassed
 import io.github.eslamasabry.oc.ui.words.res.toolCardPlan
 import io.github.eslamasabry.oc.ui.words.res.toolCardUpdatedTasks
 import io.github.eslamasabry.oc.ui.words.res.toolCardWorktreeSetup
+import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 
@@ -190,6 +249,8 @@ private fun phraseWords(phrase: ToolPhrase, arg0: String, arg1: String): String 
         ToolPhrase.MessageTo -> stringResource(Res.string.chatUiToolMessageTo, arg(0))
         ToolPhrase.MessageToAgent -> stringResource(Res.string.chatUiToolMessageToAgent)
         ToolPhrase.LoadTools -> stringResource(Res.string.chatUiLoadTools)
+        ToolPhrase.StopBackgroundTask -> stringResource(Res.string.chatUiStopBackgroundTask)
+        ToolPhrase.ReadTaskOutput -> stringResource(Res.string.chatUiReadTaskOutput)
         ToolPhrase.SearchedConnectors -> stringResource(Res.string.chatUiToolSearchedConnectors)
         ToolPhrase.ShowCard -> stringResource(Res.string.chatUiToolShowCard)
         ToolPhrase.McpTool -> stringResource(Res.string.chatUiToolFrom, arg(0), arg(1))
@@ -202,6 +263,82 @@ private fun phraseWords(phrase: ToolPhrase, arg0: String, arg1: String): String 
         ToolPhrase.ServerTitle,
         ToolPhrase.Generic -> arg(0)
     }
+}
+
+/** Which tense a step's plain words take: it happened, it happens now, or it is asked for (not run, or stopped). */
+internal enum class StepTense { Done, Now, Ask }
+
+/** The tense of a step in [state]; a step that waits for the person ([waiting]) is asked for, not running. */
+internal fun stepTense(state: StepState, waiting: Boolean = false): StepTense =
+    when {
+        waiting -> StepTense.Ask
+        state == StepState.Done || state == StepState.Failed -> StepTense.Done
+        state == StepState.Running -> StepTense.Now
+        else -> StepTense.Ask
+    }
+
+/**
+ * A step row's title (owner 2026-11-14): a shell step says what it did in plain words, judged from its command after
+ * the set-up it opens with ("Ran tests", "Searched files", "Read notes.md"), "Running tests" while it runs and "Run
+ * tests" while it is asked for, refused or stopped (never a claim that it happened); every other step keeps its title.
+ * The command itself is in the opened step, in mono.
+ */
+@Composable
+internal fun stepRowTitle(f: ToolFacts, tense: StepTense): String {
+    val intent = f.shell
+    return if (f.kind == ToolKind.Shell && intent != null) shellWords(intent, tense) else stepTitle(f)
+}
+
+/** [intent] in words in [tense]. A name it carries (a file, a program) reads redacted. */
+@Composable
+internal fun shellWords(intent: ShellIntent, tense: StepTense): String {
+    val mask = rememberKitMask()
+    val arg = intent.arg?.let(mask) ?: ""
+    fun pick(done: StringResource, now: StringResource, ask: StringResource) =
+        when (tense) {
+            StepTense.Done -> done
+            StepTense.Now -> now
+            StepTense.Ask -> ask
+        }
+    return when (intent.kind) {
+        ShellKind.Tests -> stringResource(pick(Res.string.stepShellTests, Res.string.stepShellTestsNow, Res.string.stepShellTestsAsk))
+        ShellKind.Search -> stringResource(pick(Res.string.stepShellSearch, Res.string.stepShellSearchNow, Res.string.stepShellSearchAsk))
+        ShellKind.ReadOne ->
+            if (tense == StepTense.Now) stringResource(Res.string.chatLiveReading, arg) else stringResource(Res.string.stepShellReadOne, arg)
+        ShellKind.ReadFile -> stringResource(pick(Res.string.teamAgentStepRead, Res.string.chatLiveReadingAny, Res.string.teamAgentStepRead))
+        ShellKind.ReadMany -> stringResource(pick(Res.string.stepShellReadMany, Res.string.stepShellReadManyNow, Res.string.stepShellReadMany))
+        ShellKind.List -> stringResource(pick(Res.string.stepShellList, Res.string.stepShellListNow, Res.string.stepShellListAsk))
+        ShellKind.Processes ->
+            stringResource(pick(Res.string.stepShellProcesses, Res.string.stepShellProcessesNow, Res.string.stepShellProcessesAsk))
+        ShellKind.StopProcess -> stringResource(pick(Res.string.stepShellStop, Res.string.stepShellStopNow, Res.string.stepShellStopAsk))
+        ShellKind.CheckChanges ->
+            stringResource(pick(Res.string.stepShellChanges, Res.string.stepShellChangesNow, Res.string.stepShellChangesAsk))
+        ShellKind.Analyze -> stringResource(pick(Res.string.stepShellAnalyze, Res.string.stepShellAnalyzeNow, Res.string.stepShellAnalyzeAsk))
+        ShellKind.Build -> stringResource(pick(Res.string.stepShellBuild, Res.string.stepShellBuildNow, Res.string.stepShellBuildAsk))
+        ShellKind.Install -> stringResource(pick(Res.string.stepShellInstall, Res.string.stepShellInstallNow, Res.string.stepShellInstallAsk))
+        ShellKind.Fetch -> stringResource(pick(Res.string.stepShellFetch, Res.string.stepShellFetchNow, Res.string.stepShellFetchAsk))
+        ShellKind.Delete -> stringResource(pick(Res.string.stepShellDelete, Res.string.stepShellDeleteNow, Res.string.stepShellDeleteAsk))
+        ShellKind.ChangeFiles ->
+            stringResource(pick(Res.string.stepShellChangeFiles, Res.string.stepShellChangeFilesNow, Res.string.stepShellChangeFilesAsk))
+        ShellKind.Wait -> stringResource(pick(Res.string.stepShellWait, Res.string.stepShellWaitNow, Res.string.stepShellWaitAsk))
+        ShellKind.Program ->
+            stringResource(pick(Res.string.stepShellProgram, Res.string.liveStepRunning, Res.string.stepShellProgramAsk), arg)
+        ShellKind.Unknown ->
+            stringResource(pick(Res.string.teamAgentStepCommand, Res.string.liveStepRunningCommand, Res.string.stepShellUnknownAsk))
+    }
+}
+
+/** A run's title: how many steps of its family ran, "Ran 6 commands", "Read 3 files" (first letter upper). */
+@Composable
+internal fun runTitle(family: StepFamily, count: Int): String {
+    val words =
+        when (family) {
+            StepFamily.Commands -> pluralStringResource(Res.plurals.kitWorkRan, count, count)
+            StepFamily.Reads -> pluralStringResource(Res.plurals.kitWorkRead, count, count)
+            StepFamily.Searches -> pluralStringResource(Res.plurals.kitWorkSearched, count, count)
+            StepFamily.Lists -> pluralStringResource(Res.plurals.kitWorkListed, count, count)
+        }
+    return words.replaceFirstChar { it.uppercase() }
 }
 
 /** A step's status in words (the screen reader hears it; the row draws it). */
