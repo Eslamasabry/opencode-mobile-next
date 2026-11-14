@@ -1,5 +1,10 @@
 package io.github.eslamasabry.oc.feature.chat
 
+import androidx.compose.ui.test.performSemanticsAction
+import androidx.compose.ui.test.onFirst
+import androidx.compose.ui.test.hasAnyAncestor
+import androidx.compose.ui.test.hasTestTag
+import androidx.compose.ui.test.hasClickAction
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -116,6 +121,17 @@ internal fun ComposeUiTest.boundsOfText(text: String, substring: Boolean = false
 @OptIn(ExperimentalTestApi::class)
 internal fun ComposeUiTest.boundsOfTag(tag: String): Rect =
     onNodeWithTag(tag, useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
+
+/**
+ * Activates the row tagged [tag] as TalkBack does: no finger lands, so no row is held in place (P-010) and what opens
+ * grows into view in a short test conversation. For tests about what a row says or holds, not about where it stays.
+ */
+@OptIn(ExperimentalTestApi::class)
+internal fun ComposeUiTest.activate(tag: String) {
+    onAllNodes(hasClickAction() and (hasTestTag(tag) or hasAnyAncestor(hasTestTag(tag))))
+        .onFirst()
+        .performSemanticsAction(SemanticsActions.OnClick)
+}
 
 /** Whether the words of the text node [text] end in "…" (their layout overflows its box). */
 @OptIn(ExperimentalTestApi::class)

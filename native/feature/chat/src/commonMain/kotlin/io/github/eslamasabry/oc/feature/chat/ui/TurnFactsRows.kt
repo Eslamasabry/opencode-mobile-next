@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateMapOf
@@ -224,6 +225,11 @@ internal fun TurnWorkLine(
         }
     }
     val folded = if (summed) rows.size else cut.earlier.size
+    // Rows that fold away while nobody tapped (a new step arrived, the turn ended) fold at the arrival's pace, so the
+    // list's height holds while one row goes and another comes (owner 2026-11-14, "flashing").
+    val openBefore = remember(foldKey) { booleanArrayOf(open) }
+    val tapped = openBefore[0] != open
+    SideEffect { openBefore[0] = open }
     KitStepList(
         // The reply's 16 dp edge: the glyphs and the rail sit on it, the steps' words one column in.
         modifier = Modifier.padding(start = Space.S4.dp, end = REPLY_ACTIONS_EDGE_INSET.dp).testTag("chat-work-line"),
@@ -238,7 +244,7 @@ internal fun TurnWorkLine(
         // behind the fold as new ones arrive folds away while the new one grows in, so the reply below moves smoothly
         // and no row is composed again.
         rows.forEachIndexed { i, row ->
-            key(row.key) { KitStepItem(visible = i >= folded || open, order = i) { entry(row) } }
+            key(row.key) { KitStepItem(visible = i >= folded || open, order = i, makesRoom = !tapped) { entry(row) } }
         }
     }
 }
@@ -271,7 +277,9 @@ private fun WorkSummaryRow(work: TurnWork, open: Boolean, onToggle: () -> Unit) 
                 subject = null,
                 detail = note,
                 status = KitToolStatus.Done,
-                durationLabel = total?.takeIf { it >= 100 }?.let { durationWords(it) },
+                // One time on a folded turn: its footer says how long the turn took; opened, the row says the steps'
+                // own.
+                durationLabel = total?.takeIf { it >= 100 && open }?.let { durationWords(it) },
                 added = null,
                 removed = null,
                 statusLabel = stepStatus(StepState.Done, null),
@@ -572,7 +580,8 @@ private fun StepRow(
         )
         steps.forEachIndexed { i, s ->
             key(s.partId) {
-                KitStepItem(visible = runOpen, order = i) {
+                // The run's own steps stand one step in, the rail bending in from the run's node to them.
+                KitStepItem(visible = runOpen, order = i, nested = true) {
                     StepRow(listOf(s), null, work, nowMs, folds, onOpenSession, onOpenFile, reply, stopping)
                 }
             }

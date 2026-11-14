@@ -23,7 +23,9 @@ import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.click
 import androidx.compose.ui.test.percentOffset
 import androidx.compose.ui.test.performMouseInput
+import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.v2.runSkikoComposeUiTest
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import kotlin.time.Duration.Companion.minutes
 import androidx.compose.ui.unit.Density
@@ -138,9 +140,13 @@ class StepsCraftPicturesTest {
             screen(look, running = moment == Moment.Running)
             mainClock.advanceTimeBy(SETTLE)
             if (moment == Moment.Opened) {
+                // The turn's row stays under the finger (P-010) and its steps open below it, the reply going on below.
                 tap("chat-work-summary")
                 mainClock.advanceTimeBy(SETTLE)
-                // The build run (a build, then two adb commands): its steps open in the middle of the screen.
+                // The person reads on: the build run (a build, then two adb commands) is brought to the middle of the
+                // screen, then opened there.
+                dragToMiddle("chat-step-run-c3")
+                mainClock.advanceTimeBy(SETTLE)
                 tap("chat-step-run-c3")
                 mainClock.advanceTimeBy(SETTLE)
             }
@@ -180,9 +186,12 @@ class StepsCraftPicturesTest {
             mainClock.autoAdvance = false
             screen(Look.GlassDarkContour, running = false)
             mainClock.advanceTimeBy(SETTLE)
-            tap("chat-work-summary")
             try {
-                strip("steps-craft-glass-dark-contour-strip-fold-opening", foldMs, top = .08f, bottom = .86f)
+                // The first frame is the folded row before the finger lands (the tap's own press fill is not the fold's
+                // motion); the row then stays where it was tapped while its steps open below it.
+                strip("steps-craft-glass-dark-contour-strip-fold-opening", foldMs, top = .40f, bottom = .88f) {
+                    tap("chat-work-summary")
+                }
             } finally {
                 end()
             }
@@ -214,12 +223,46 @@ class StepsCraftPicturesTest {
         onRoot().performMouseInput { moveTo(percentOffset(.995f, .5f)) }
     }
 
-    /** Five frames of a motion [totalMs] long (0, 25, 50, 75, 100 %), side by side, each the band [top]..[bottom] of the screen. */
-    private fun ComposeUiTest.strip(name: String, totalMs: Int, top: Float = .18f, bottom: Float = .80f) {
+    /**
+     * A slow drag (no fling) that brings the row tagged [tag] to the middle of the screen, as a person reading on
+     * would.
+     */
+    private fun ComposeUiTest.dragToMiddle(tag: String) {
+        val row = onNodeWithTag(tag).fetchSemanticsNode().boundsInRoot
+        val by = (row.center.y - HEIGHT / 2f)
+        if (by <= 0f) return
+        onNodeWithTag("transcript-list").performTouchInput {
+            val start = Offset(width * .5f, height * .7f)
+            down(start)
+            val steps = 24
+            // The touch slop is crossed first, then every move scrolls.
+            repeat(steps) { moveBy(Offset(0f, -(by + SLOP) / steps), delayMillis = 16) }
+            // Still for a moment before lifting: no speed is left for a fling.
+            moveBy(Offset.Zero, delayMillis = 200)
+            up()
+        }
+    }
+
+    /**
+     * Five frames of a motion [totalMs] long (0, 25, 50, 75, 100 %), side by side, each the band [top]..[bottom] of the
+     * screen. [start] (a tap), when given, runs after the first frame: that frame is the moment before the motion.
+     */
+    private fun ComposeUiTest.strip(
+        name: String,
+        totalMs: Int,
+        top: Float = .18f,
+        bottom: Float = .80f,
+        start: (() -> Unit)? = null,
+    ) {
         val frames = ArrayList<BufferedImage>()
         var at = 0L
         mainClock.advanceTimeByFrame()
-        for (share in listOf(0f, .25f, .5f, .75f, 1f)) {
+        if (start != null) {
+            frames += onRoot().captureToImage().toAwtImage()
+            start()
+            mainClock.advanceTimeByFrame()
+        }
+        for (share in if (start != null) listOf(.25f, .5f, .75f, 1f) else listOf(0f, .25f, .5f, .75f, 1f)) {
             val target = (totalMs * share).toLong() + if (share >= 1f) 48 else 0
             if (target > at) mainClock.advanceTimeBy(target - at)
             at = maxOf(at, target)
@@ -254,6 +297,9 @@ class StepsCraftPicturesTest {
         const val HEIGHT = 2402
         const val SETTLE = 900L
         const val LIGHT_MID = 1100L
+
+        /** More than the touch slop (8 dp at 2.625 px/dp), crossed before a drag scrolls. */
+        const val SLOP = 24f
 
         /** Glass over the Contour lines renders slowly on a runner without a GPU; one minute was too short for a scene. */
         val SCENE_TIMEOUT = 6.minutes

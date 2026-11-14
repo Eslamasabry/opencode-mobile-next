@@ -331,6 +331,9 @@ internal object ListKeys {
     /** "Show earlier messages": the transcript's first row while older history is not loaded. */
     const val EARLIER: String = "earlier"
 
+    /** P-010: room lent above everything so a row opened in a short conversation stays under the finger. */
+    const val HOLD_ROOM: String = "hold-room"
+
     fun pending(localId: Long): String = "pending:$localId"
 }
 
@@ -445,7 +448,7 @@ internal fun ChatTranscriptList(
                 }
             }
         }
-    val anchor = rememberFoldAnchor()
+    val anchor = rememberFoldAnchor(list.lazy)
     // B0: a repeated key kills the whole screen (LazyColumn throws), so the list never sees one.
     val unique = remember(rows) { rows.distinctKeys() }
     val tables = remember(unique) { LongTable.of(unique) }
@@ -799,6 +802,11 @@ internal fun ChatTranscriptList(
                         loading = older.loading,
                         modifier = Modifier.padding(vertical = Space.S2.dp),
                     )
+            }
+        // P-010: blank room above everything, lent while a row opened in a short conversation is held in place.
+        if (anchor.room > 0)
+            item(key = ListKeys.HOLD_ROOM, contentType = "hold-room") {
+                Spacer(Modifier.height(with(LocalDensity.current) { anchor.room.toDp() }))
             }
     }
 }

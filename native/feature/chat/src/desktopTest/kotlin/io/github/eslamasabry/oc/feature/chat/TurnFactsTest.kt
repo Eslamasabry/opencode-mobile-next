@@ -340,7 +340,7 @@ class TurnFactsTest {
 
     /** Opens a finished turn's one work row (owner 2026-11-14: a finished turn's work is one row until tapped). */
     private fun androidx.compose.ui.test.ComposeUiTest.openWork() {
-        onNodeWithTag("chat-work-summary").performClick()
+        activate("chat-work-summary")
         waitForIdle()
     }
 
@@ -450,7 +450,7 @@ class TurnFactsTest {
             // D1: a lone sub-agent is a step of its own on the rail (two that ran together make a group), under the
             // finished turn's one row.
             openWork()
-            onNodeWithTag("chat-step-t9").performClick()
+            activate("chat-step-t9")
             onNodeWithText("Open its conversation").assertIsDisplayed().performClick()
             assertEquals(listOf("child-1"), opened)
         }
@@ -477,7 +477,7 @@ class TurnFactsTest {
             setContent { Root { ChatScreen(screenState(), actions, composer, facts = facts) } }
             // N-45: the command is read on the turn's shell step (no separate turn result row), under the turn's one row.
             openWork()
-            onNodeWithTag("chat-step-t1").performClick()
+            activate("chat-step-t1")
             waitForIdle()
             onAllNodesWithText("curl -H 'Authorization:", substring = true).onFirst().assertIsDisplayed()
             onAllNodesWithText(bearerTail, substring = true).assertCountEquals(0)
@@ -519,7 +519,7 @@ class TurnFactsTest {
                 .onFirst()
                 .assertExists()
             openWork()
-            onNodeWithTag("chat-step-t5").performClick()
+            activate("chat-step-t5")
             onNodeWithText("report.pdf").assertIsDisplayed().performClick()
             assertEquals(listOf<io.github.eslamasabry.oc.ui.routes.AppRoute>(io.github.eslamasabry.oc.ui.routes.FilesRoute.File(Ref, "/p/out/report.pdf")), nav.opened)
         }

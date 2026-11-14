@@ -1,5 +1,7 @@
 package io.github.eslamasabry.oc.feature.chat
 
+import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
@@ -283,7 +285,7 @@ class StepsTreeTest {
             onNodeWithText("1 declined · 1 failed").assertIsDisplayed()
             onAllNodesWithText("Ran tests").assertCountEquals(0)
             onAllNodesWithText("You declined this").assertCountEquals(0)
-            onNodeWithTag("chat-work-summary").performClick()
+            activate("chat-work-summary")
             waitForIdle()
             // Opened, every step in plain words (the tests step says what it did, never its command line).
             onNodeWithText("Ran tests").assertIsDisplayed()
@@ -291,7 +293,7 @@ class StepsTreeTest {
             // The two sub-agents are one row, folded; opened, each is named and opens its own conversation.
             onNodeWithText("2 sub-agents").assertIsDisplayed()
             onNodeWithText("2 done").assertIsDisplayed()
-            onNodeWithText("2 sub-agents").performClick()
+            onNodeWithText("2 sub-agents").performSemanticsAction(SemanticsActions.OnClick)
             waitForIdle()
             onNodeWithText("Compare the old copies").assertIsDisplayed().performClick()
             assertEquals(listOf("c2"), opened)
