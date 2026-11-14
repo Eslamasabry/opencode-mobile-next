@@ -1006,6 +1006,23 @@ private fun DrawScope.drawPageAtOpenEdges(box: androidx.compose.ui.geometry.Rect
         if (open[1] > 0f) drawRect(androidx.compose.ui.graphics.Brush.verticalGradient(0f to off, 1f to on(open[1]), startY = bot1, endY = bot0), Offset(x0, bot1), Size(x1 - x0, y1 - bot1))
         if (open[2] > 0f) drawRect(androidx.compose.ui.graphics.Brush.horizontalGradient(0f to on(open[2]), 1f to off, startX = left0, endX = left1), Offset(x0, y0), Size(left1 - x0, y1 - y0))
         if (open[3] > 0f) drawRect(androidx.compose.ui.graphics.Brush.horizontalGradient(0f to off, 1f to on(open[3]), startX = right1, endX = right0), Offset(right1, y0), Size(x1 - right1, y1 - y0))
+        // A closed edge (on the window's edge, or joined to glass) takes the page away again in its own band, across the
+        // open edges' bands too (wave-one check, c-5-details-topright: a hard white wedge in the Details sheet's top-right
+        // corner). The lens's bend turns at a corner's diagonal, from reading down into the top band to reading in from
+        // the side; with the top band running into the corner, the side's half read the page (a bubble) while the top's
+        // read the background, so the diagonal showed as a hard edge. With nothing of the page near a closed side, both
+        // halves read the background and the corner follows the pane's radius.
+        val k = 1f - b
+        fun cut(a: Float) = Color.Black.copy(alpha = a)
+        val cl = (1f - open[2]) * k
+        val cr = (1f - open[3]) * k
+        val ct = (1f - open[0]) * k
+        val cb = (1f - open[1]) * k
+        val dstOut = androidx.compose.ui.graphics.BlendMode.DstOut
+        if (ct > 0f) drawRect(androidx.compose.ui.graphics.Brush.verticalGradient(0f to cut(ct), 1f to off, startY = top0, endY = top1), Offset(x0, y0), Size(x1 - x0, top1 - y0), blendMode = dstOut)
+        if (cb > 0f) drawRect(androidx.compose.ui.graphics.Brush.verticalGradient(0f to off, 1f to cut(cb), startY = bot1, endY = bot0), Offset(x0, bot1), Size(x1 - x0, y1 - bot1), blendMode = dstOut)
+        if (cl > 0f) drawRect(androidx.compose.ui.graphics.Brush.horizontalGradient(0f to cut(cl), 1f to off, startX = left0, endX = left1), Offset(x0, y0), Size(left1 - x0, y1 - y0), blendMode = dstOut)
+        if (cr > 0f) drawRect(androidx.compose.ui.graphics.Brush.horizontalGradient(0f to off, 1f to cut(cr), startX = right1, endX = right0), Offset(right1, y0), Size(x1 - right1, y1 - y0), blendMode = dstOut)
     }
     drawIntoCanvas { it.restore() }
     drawIntoCanvas { it.restore() }

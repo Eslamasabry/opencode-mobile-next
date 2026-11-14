@@ -69,6 +69,8 @@ class KitModalSheetPageTest {
         val controls: Boolean = false,
         val topBlock: Boolean = false,
         val sideBlock: Boolean = false,
+        /** A bright block across the sheet's top-right corner (a reply's bubble ending near the window's edge). */
+        val cornerBlock: Boolean = false,
         /** The page's picture is recorded (a live background); false: the page is its only picture. */
         val live: Boolean = true,
     )
@@ -92,6 +94,7 @@ class KitModalSheetPageTest {
         // A bright block across the sheet's top edge (the transcript above it), and a green one across its left edge.
         if (page.topBlock) rect(if (dark) Color.White else Color.Black, 40f, 220f, 120f, 290f)
         if (page.sideBlock) rect(Color(0f, 1f, 0f), -20f, 360f, 30f, 420f)
+        if (page.cornerBlock) rect(if (dark) Color.White else Color.Black, 300f, 220f, 380f, 300f)
     }
 
     @Composable
@@ -197,6 +200,21 @@ class KitModalSheetPageTest {
         assertTrue(s <= 2f, "the page along the window's edge shows in the sheet's rim: $s")
         // And the page beside the sheet (above its top) is drawn as it was: the scene is real.
         assertTrue(peakDiff(bare, top, 50f, 225f, 110f, 245f) >= 100f, "the bright block lies on the page above the sheet")
+    }
+
+    @Test
+    fun `B-GLASS-MODAL-005 a top corner on the window's edge shows none of the page, so the lens's turn there has no hard wedge`() {
+        // Wave-one check (c-5-details-topright): a hard white wedge in the Details sheet's top-right corner. The top band
+        // ran into the corner, where the side's rim (on the window's edge) read the page and the top's read the
+        // background. Within the side's band nothing of the page is left, the top's band included.
+        val bare = shot(Page())
+        val corner = shot(Page(cornerBlock = true))
+        val inCorner = peakDiff(bare, corner, W - 28f, SHEET_TOP + 2f, W - 2f, SHEET_TOP + 30f)
+        // Away from the side the top band still shows the page (the same block's left part, 300-312 dp, lies 48-60 dp in).
+        val apart = peakDiff(bare, corner, 300f, SHEET_TOP + 2f, 310f, SHEET_TOP + 20f)
+        println("MODAL corner: in the top-right corner $inCorner, 50-60 dp from the side $apart")
+        assertTrue(inCorner <= 2f, "the page shows in the sheet's top corner on the window's edge: $inCorner")
+        assertTrue(apart >= 10f, "the top band away from the side still shows the page: $apart")
     }
 
     private companion object {
