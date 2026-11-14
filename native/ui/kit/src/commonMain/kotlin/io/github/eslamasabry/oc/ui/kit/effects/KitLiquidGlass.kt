@@ -260,7 +260,7 @@ internal fun kitLiquidFace(
     val ground = LocalKitColors.current.ground.copy(alpha = 1f)
     val picture = LocalKitGlassBackdrop.current
     val live = io.github.eslamasabry.oc.ui.kit.foundation.LocalKitLivePicture.current?.backdrop
-    val backdrop = remember(source, ground, picture, live) { source?.let { liquidSourceBackdrop(it, ground, picture, live) } }
+    val backdrop = remember(source, ground, picture, live, role) { source?.let { pageBackdrop(role, it, ground, picture, live) } }
     return liquidFace(role, source, backdrop, shape, transform, join = join, dialog = dialog)
 }
 
@@ -296,7 +296,7 @@ private fun kitFrostedPanelFace(role: LiquidRole, source: KitLiquidSource?, shap
     val ground = LocalKitColors.current.ground.copy(alpha = 1f)
     val picture = LocalKitGlassBackdrop.current
     val live = io.github.eslamasabry.oc.ui.kit.foundation.LocalKitLivePicture.current?.backdrop
-    val backdrop = remember(source, ground, picture, live) { liquidSourceBackdrop(source!!, ground, picture, live) }
+    val backdrop = remember(source, ground, picture, live, role) { pageBackdrop(role, source!!, ground, picture, live) }
     val flip = liquidFlipFor(source, role)
     val spec = kitLiquidPaneSpec(role, flip ?: remember { LiquidFlip() }, chosen = false, keepRim = true, dialog = dialog)
     return Modifier.kitBackdropRimLight(shape)
@@ -807,6 +807,89 @@ private fun liquidSourceBackdrop(source: KitLiquidSource, ground: Color, picture
             else s.positionOnScreen() - c.positionOnScreen()
         translate(shift.x, shift.y) { drawLayer(source.layer) }
     }
+
+/** The page as [role]'s pane sees it: a sheet sees only its picture in its middle ([modalSourceBackdrop]). */
+private fun pageBackdrop(role: LiquidRole, source: KitLiquidSource, ground: Color, picture: KitGlassBackdrop?, live: KitGlassBackdrop?): KitLiquidBackdrop =
+    if (role == LiquidRole.Sheet) modalSourceBackdrop(source, ground, picture, live) else liquidSourceBackdrop(source, ground, picture, live)
+
+/**
+ * The page under a modal sheet or dialog (cut audit 1, LiquidEdge.MODAL_PAGE_KEEP_DP): its ground and its picture (the
+ * live background) everywhere, the page's own content only along the sheet's edges that border the visible page, as far
+ * in as the rim bends it and fading out past that ([LiquidEdge.modalPageKept]). So no control, card or word of the page
+ * reads through the sheet's middle (the green "Allow once" ghost, the send button's smear, the card's dark plate), while
+ * the background's colour passes and the top rim still bends the page. Where the page shows no recorded picture (the
+ * live background off or not painted yet) the page is the only picture there is, and the sheet shows it as a menu does.
+ */
+internal fun modalSourceBackdrop(source: KitLiquidSource, ground: Color, picture: KitGlassBackdrop?, live: KitGlassBackdrop?): KitLiquidBackdrop =
+    KitLiquidBackdrop({ source.version }) { c ->
+        source.version
+        val bg = picture ?: live
+        drawGroundUnder(ground, bg, c)
+        val s = source.coordinates?.takeIf { it.isAttached } ?: return@KitLiquidBackdrop
+        val shift =
+            if (s.findRootCoordinates() === c.findRootCoordinates()) c.localPositionOf(s, Offset.Zero)
+            else s.positionOnScreen() - c.positionOnScreen()
+        val drawPage: DrawScope.() -> Unit = { translate(shift.x, shift.y) { drawLayer(source.layer) } }
+        if (bg == null || !bg.painted || bg.layer == null || bg.root !== c.findRootCoordinates()) {
+            drawPage(this)
+            return@KitLiquidBackdrop
+        }
+        drawPageAtOpenEdges(ModalEdges.of(c, density), c.size.width.toFloat(), c.size.height.toFloat(), drawPage)
+    }
+
+/** How far each edge of a pane lies from the window's edge, dp (negative: past it). */
+internal data class ModalEdges(val left: Float, val top: Float, val right: Float, val bottom: Float) {
+    companion object {
+        fun of(c: LayoutCoordinates, density: Float): ModalEdges {
+            val root = c.findRootCoordinates().size
+            val at = c.positionInRoot()
+            val w = c.size.width
+            val h = c.size.height
+            return ModalEdges(at.x / density, at.y / density, (root.width - at.x - w) / density, (root.height - at.y - h) / density)
+        }
+    }
+}
+
+/**
+ * Draws [page] (in pane-local px, the pane [w] x [h]) kept only along the open edges of [edges] (LiquidEdge.modalPageKept,
+ * each edge's band reaching out past the pane): the page in a layer of its own, cut by a mask layer of the edges' bands
+ * (DstIn). Nothing is drawn when no edge is open. The bands' ends are whole pixels (a DstIn gradient at fractional pixels
+ * once crashed an emulator's colour buffer).
+ */
+private fun DrawScope.drawPageAtOpenEdges(edges: ModalEdges, w: Float, h: Float, page: DrawScope.() -> Unit) {
+    val keep = LiquidEdge.MODAL_PAGE_KEEP_DP.dp.toPx()
+    val fade = LiquidEdge.MODAL_PAGE_FADE_DP.dp.toPx()
+    val out = kotlin.math.ceil(keep + fade + maxOf(w, h)).toFloat()
+    fun open(gapDp: Float) = LiquidEdge.modalPageKept(0f, gapDp)
+    val bands =
+        listOf(
+            ModalSide.Top to open(edges.top),
+            ModalSide.Bottom to open(edges.bottom),
+            ModalSide.Left to open(edges.left),
+            ModalSide.Right to open(edges.right),
+        ).filter { it.second > 0f }
+    if (bands.isEmpty()) return
+    val k0 = kotlin.math.floor(keep)
+    val k1 = kotlin.math.ceil(keep + fade)
+    val bounds = androidx.compose.ui.geometry.Rect(-out, -out, w + out, h + out)
+    drawIntoCanvas { it.saveLayer(bounds, Paint()) }
+    page(this)
+    drawIntoCanvas { it.saveLayer(bounds, Paint().apply { blendMode = BlendMode.DstIn }) }
+    for ((edge, a) in bands) {
+        val on = Color.Black.copy(alpha = a)
+        val off = Color.Transparent
+        when (edge) {
+            ModalSide.Top -> drawRect(androidx.compose.ui.graphics.Brush.verticalGradient(0f to on, 1f to off, startY = k0, endY = k1), Offset(-out, -out), Size(w + 2 * out, out + k1))
+            ModalSide.Bottom -> drawRect(androidx.compose.ui.graphics.Brush.verticalGradient(0f to off, 1f to on, startY = h - k1, endY = h - k0), Offset(-out, kotlin.math.floor(h - k1)), Size(w + 2 * out, out + k1 + 1f))
+            ModalSide.Left -> drawRect(androidx.compose.ui.graphics.Brush.horizontalGradient(0f to on, 1f to off, startX = k0, endX = k1), Offset(-out, -out), Size(out + k1, h + 2 * out))
+            ModalSide.Right -> drawRect(androidx.compose.ui.graphics.Brush.horizontalGradient(0f to off, 1f to on, startX = w - k1, endX = w - k0), Offset(kotlin.math.floor(w - k1), -out), Size(out + k1 + 1f, h + 2 * out))
+        }
+    }
+    drawIntoCanvas { it.restore() }
+    drawIntoCanvas { it.restore() }
+}
+
+private enum class ModalSide { Top, Bottom, Left, Right }
 
 private data class LiquidSourceElement(val source: KitLiquidSource) : ModifierNodeElement<LiquidSourceNode>() {
     override fun create(): LiquidSourceNode = LiquidSourceNode(source)

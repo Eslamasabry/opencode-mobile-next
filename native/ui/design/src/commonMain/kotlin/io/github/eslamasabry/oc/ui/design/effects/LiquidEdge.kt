@@ -169,6 +169,38 @@ public object LiquidEdge {
     /** A sheet's hold: a sheet is modal and holds a list, so the page's words between its rows may be held harder. */
     public val SHEET_HOLD: LiquidHold = MODAL_HOLD
 
+    /**
+     * What a modal sheet (and a dialog) shows of the page it covers (cut audit 1, 2026-11-14: the green "Allow once"
+     * button read as a big green ghost under the Details sheet's field, the send button as a green smear by a row's star
+     * in the model sheet, the permission card's code box as a dark plate behind a row; no hold can tell a control from a
+     * field of colour). The page under a sheet is not live content, so the sheet's middle shows the page's own picture
+     * (the live background) and its ground, through the same glass: the colour and the light of the background pass, no
+     * control, word or card of the page. The page itself shows only along an edge the sheet shares with the visible page
+     * (a bottom sheet's top, every edge of a centred dialog): whole for [MODAL_PAGE_KEEP_DP] in from that edge (the rim
+     * and the furthest its bend reads, [modalPageKept]) and fading out over [MODAL_PAGE_FADE_DP] more, held there as
+     * before ([SHEET_HOLD]). An edge on the window's own edge shows none of the page. Menus are not modal and keep the
+     * whole page.
+     */
+    public const val MODAL_PAGE_KEEP_DP: Float = 48f
+
+    /** How far, past [MODAL_PAGE_KEEP_DP], the page fades out of a modal sheet, dp. */
+    public const val MODAL_PAGE_FADE_DP: Float = 32f
+
+    /** How far, dp, a sheet's edge lies from the window's edge before it shows the page whole (a predictive-back shrink). */
+    public const val MODAL_PAGE_OPEN_DP: Float = 8f
+
+    /**
+     * The share of the page a modal sheet keeps at [depthDp] in from one of its edges, that edge lying [gapDp] from the
+     * window's edge: 1 within [MODAL_PAGE_KEEP_DP], easing linearly to 0 over [MODAL_PAGE_FADE_DP] more; scaled by how
+     * open the edge is (0 on the window's edge, 1 from [MODAL_PAGE_OPEN_DP] in). Outside the sheet (negative depth) as at
+     * its edge.
+     */
+    public fun modalPageKept(depthDp: Float, gapDp: Float): Float {
+        val open = (gapDp / MODAL_PAGE_OPEN_DP).coerceIn(0f, 1f)
+        val fade = 1f - ((depthDp - MODAL_PAGE_KEEP_DP) / MODAL_PAGE_FADE_DP).coerceIn(0f, 1f)
+        return open * fade
+    }
+
     /** The edge dock's pulled-out list keeps the sheet's old frost (the dock's glass is not part of this retune). */
     public const val DOCK_LIST_BLUR_DP: Float = 12f
 
