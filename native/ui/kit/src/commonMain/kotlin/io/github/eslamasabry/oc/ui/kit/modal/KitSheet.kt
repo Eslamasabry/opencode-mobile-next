@@ -536,6 +536,12 @@ private fun SheetLayer(state: KitSheetHostState) {
                                     Modifier.grownHeight(growth)
                                 entry.height == KitSheetHeight.Content ->
                                     Modifier.heightIn(max = maxSheet)
+                                // Finding 16 (cut audit 2): a Half sheet is at least half the window and grows to
+                                // show its whole body up to the content cap, so no section is cut under the pinned
+                                // actions (the agent sheet's Mode heading showed above Done with its control hidden
+                                // in Solid, and the whole section hid below the fold in Glass's taller panel). Only a
+                                // body taller than the cap scrolls. A body that fills keeps the exact half.
+                                entry.height == KitSheetHeight.Half && !entry.fills -> Modifier.heightIn(min = half, max = maxSheet)
                                 entry.height == KitSheetHeight.Half -> Modifier.height(half)
                                 else -> Modifier.height(maxSheet)
                             }

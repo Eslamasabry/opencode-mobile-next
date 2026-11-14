@@ -63,8 +63,7 @@ import io.github.eslamasabry.oc.ui.kit.foundation.shape
 import io.github.eslamasabry.oc.ui.kit.state.KitSkeletonRows
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
-import io.github.eslamasabry.oc.ui.kit.row.kitChosenPlate
-import io.github.eslamasabry.oc.ui.kit.row.kitChosenPlateRadius
+import io.github.eslamasabry.oc.ui.kit.row.kitChosenFace
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.kitChoiceCurrent
@@ -260,23 +259,13 @@ public fun KitChoiceRow(
     // P-008: on a sheet's rail the row's box reaches past the rail to the sheet's edges (its band and tap area run edge
     // to edge, as a page row's do on the window), and its words start back on the rail, the sheet title's edge.
     val bleed = ChoiceRowGeometry.bleed(LocalKitOnRail.current).dp
-    // The plate wraps the words with room on both sides: it reaches back past the rail by space3 (never past the sheet).
-    val glassChosen = io.github.eslamasabry.oc.ui.kit.effects.kitGlassChosenRow((bleed - Space.S3.dp).coerceAtLeast(0.dp))
     Row(
         modifier
             .fillMaxWidth()
             .bleedSideways(bleed)
-            // C04: the chosen wash is the row group's own plate on a flat list (as KitRow's), a band elsewhere.
-            // Never a square band (owner 2026-11-09, "ugly tint": a flat slab that ignored the card's corners): Glass
-            // draws the chosen row's own glass face, concentric with its group; every other style a rounded plate.
-            .then(
-                glassChosen?.takeIf { selected && on }
-                    // On a rail the row's box reaches the sheet's edges and the plate ends space2 short of them, so
-                    // the words (on the rail) and the trailing star both lie inside it. It used to step in by the
-                    // whole bleed as well, which started the plate after the words and left the star outside it
-                    // (owner 2026-11-10).
-                    ?: Modifier.kitChosenPlate(fill, radius = kitChosenPlateRadius()),
-            )
+            // The one chosen look (ChosenFaceRules), as KitRow's: inset from the container's edge (the sheet's, which
+            // this box already reaches on a rail), with the words and the trailing tick inside it.
+            .kitChosenFace(selected && on, ownReach = bleed, tint = fill)
             // Flutter floors a choice row at the two-line row height (64, 56 compact): F: lib/ui/kit/kit_choice_list.dart:635-637.
             .heightIn(min = tokens.rowHeightTwo.dp)
             .kitEdge(KitEdge.Bleed) // a row's highlight runs edge to edge (native/docs/kit/LAYOUT-RULES.md §2)
