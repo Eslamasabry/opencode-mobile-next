@@ -490,14 +490,6 @@
         <item quantity="other">يُضاف %1$s مرجع كنص عند الإرسال. لا تُحفظ مع مسودتك.</item>
     </plurals>
     <string name="chatUiAttachedCount">%1$s مرفق</string>
-    <plurals name="chatUiEarlierMessageCount">
-        <item quantity="zero">لا رسائل سابقة</item>
-        <item quantity="one">رسالة سابقة واحدة</item>
-        <item quantity="two">رسالتان سابقتان</item>
-        <item quantity="few">%1$s رسائل سابقة</item>
-        <item quantity="many">%1$s رسالة سابقة</item>
-        <item quantity="other">%1$s رسالة سابقة</item>
-    </plurals>
     <string name="chatUiTokenCount">%1$s رمز</string>
     <string name="chatUiPositionOfTotal">%1$s من %2$s</string>
     <string name="chatUiSubagentCount">وكيل فرعي · %1$s</string>

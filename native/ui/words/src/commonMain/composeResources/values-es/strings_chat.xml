@@ -237,11 +237,6 @@
         <item quantity="other">%1$s referencias se añaden como texto al enviar. No se guardan con tu borrador.</item>
     </plurals>
     <string name="chatUiAttachedCount">%1$s adjuntos</string>
-    <plurals name="chatUiEarlierMessageCount">
-        <item quantity="one">1 mensaje anterior</item>
-        <item quantity="many">%1$s mensajes anteriores</item>
-        <item quantity="other">%1$s mensajes anteriores</item>
-    </plurals>
     <string name="chatUiPositionOfTotal">%1$s de %2$s</string>
     <string name="chatUiSubagentCount">Conversación delegada · %1$s</string>
     <plurals name="chatUiFileCount">

@@ -431,9 +431,6 @@
         <item quantity="other">发送时会将 %1$s 条引用作为文字添加。不会随草稿保存。</item>
     </plurals>
     <string name="chatUiAttachedCount">已添加 %1$s 个附件</string>
-    <plurals name="chatUiEarlierMessageCount">
-        <item quantity="other">%1$s 条更早的消息</item>
-    </plurals>
     <string name="chatUiTokenCount">%1$s tok</string>
     <string name="chatUiPositionOfTotal">第 %1$s / 共 %2$s</string>
     <string name="chatUiSubagentCount">已委派的对话 · %1$s</string>
