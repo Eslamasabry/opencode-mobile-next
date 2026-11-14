@@ -220,6 +220,8 @@ public data class ChatsUi(
     val confirmWatched: ChatsWatchedRequestUi? = null,
     /** H4: the "Start a new conversation?" question for a tapped agent conversation that cannot be reopened. */
     val startNew: StartNewUi? = null,
+    /** B-333: the row tapped while it could not open yet; it opens by itself when it can, and says it is waiting. */
+    val waitingOpen: ConversationRef? = null,
     val answering: ImmutableSet<String> = persistentSetOf(),
     val answerFailure: io.github.eslamasabry.oc.core.common.Failure? = null,
     /** Row keys whose server can archive them (OpenCode conversations on a server with `sessionArchive`). */

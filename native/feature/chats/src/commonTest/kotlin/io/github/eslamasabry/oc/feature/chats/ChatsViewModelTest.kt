@@ -34,6 +34,7 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.time.Clock
 import kotlin.time.Instant
@@ -55,7 +56,7 @@ import kotlinx.coroutines.test.setMain
 class ChatsViewModelTest {
     private class RecordingNavigator : AppNavigator {
         val calls = mutableListOf<String>()
-        override val top: StateFlow<AppRoute?> = MutableStateFlow(null)
+        override val top = MutableStateFlow<AppRoute?>(null)
 
         val routes = mutableListOf<AppRoute>()
 
@@ -442,6 +443,44 @@ class ChatsViewModelTest {
         vm.addServer()
         assertEquals(listOf<AppRoute>(ServersRoute.Edit()), nav.routes)
         assertEquals(null, vm.state.value.sheet)
+    }
+
+    @Test
+    fun `B-333 a row tapped while its server opens is kept, says it waits, and opens once it can`() = runTest {
+        val nav = RecordingNavigator()
+        val home = Home(listOf(source("main", main = true)))
+        val feed = Feed()
+        val vm = ChatsViewModel(feed, Briefs(), Door(false), { Instant.fromEpochMilliseconds(0) }, clock, nav, home = home)
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
+        home.snapshot.value =
+            home.snapshot.value.copy(opening = ChatsOpeningUi(ChatsOpeningPhase.Connecting, "This phone", profile = P1))
+        val ref = ConversationRef(P1, io.github.eslamasabry.oc.core.common.ids.SessionId("s1"))
+        vm.openConversation(ref)
+        assertEquals(ref, vm.state.value.waitingOpen, "the tap is kept and the row says it waits")
+        // The server answered, but its list is not verified yet: still kept, nothing opens.
+        home.snapshot.value = home.snapshot.value.copy(opening = null)
+        feed.snapshot.value = ChatFeedSnapshot(persistentListOf(item("s1").copy(canReopen = false)))
+        assertEquals(emptyList(), nav.calls)
+        assertEquals(ref, vm.state.value.waitingOpen)
+        feed.snapshot.value = ChatFeedSnapshot(persistentListOf(item("s1")))
+        assertEquals(listOf("openChat s1"), nav.calls)
+        assertNull(vm.state.value.waitingOpen)
+    }
+
+    @Test
+    fun `B-333 a kept tap is dropped when the person moves on, so it never opens a conversation they left`() = runTest {
+        val nav = RecordingNavigator()
+        val feed = Feed().apply { snapshot.value = ChatFeedSnapshot(persistentListOf(item("s1").copy(canReopen = false), item("s2"))) }
+        val vm = ChatsViewModel(feed, Briefs(), Door(false), { Instant.fromEpochMilliseconds(0) }, clock, nav)
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
+        val ref = ConversationRef(P1, io.github.eslamasabry.oc.core.common.ids.SessionId("s1"))
+        vm.openConversation(ref)
+        nav.top.value = ChatsRoute.All("running")
+        feed.snapshot.value = ChatFeedSnapshot(persistentListOf(item("s1"), item("s2")))
+        assertEquals(emptyList(), nav.calls, "another page is on top: the kept tap is dropped")
+        nav.top.value = null
+        vm.openConversation(ref.copy(sessionId = io.github.eslamasabry.oc.core.common.ids.SessionId("s2")))
+        assertEquals(listOf("openChat s2"), nav.calls, "another tap replaces it")
     }
 
     @Test
