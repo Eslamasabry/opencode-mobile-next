@@ -100,6 +100,9 @@ class AppEdgeDockPort(
         dock.list(DockReader.list()).stateIn(main, SharingStarted.WhileSubscribed(PEEK_KEEP_MS), DockListModel())
     }
 
+    /** The home's "All conversations" number, for the panel's footer (0 until the home list is read). */
+    val allCount: StateFlow<Int> by lazy { dock.allConversations.stateIn(main, SharingStarted.WhileSubscribed(PEEK_KEEP_MS), 0) }
+
     /** The light's saved place as the list's own kind of place. */
     val lampPlace: StateFlow<LampPlace> by lazy {
         dock.lightPlace.map { it.toLampPlace() }.stateIn(main, SharingStarted.Eagerly, dock.lightPlace.value.toLampPlace())

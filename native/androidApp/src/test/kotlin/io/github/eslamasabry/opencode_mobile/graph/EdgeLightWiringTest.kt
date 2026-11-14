@@ -272,4 +272,23 @@ class EdgeLightWiringTest {
             assertTrue(at >= low, "$h at $at")
         }
     }
+
+    @Test
+    fun `middle and high stay put while the chrome under them grows, low follows the chrome`() {
+        val page = 760f
+        val gap = EdgeLightRules.LOW_ABOVE_CHROME_DP
+        val withChips = 150f
+        val withoutChips = 100f
+        for (h in listOf(EdgeLightHeight.Middle, EdgeLightHeight.High)) {
+            assertEquals(
+                EdgeLightRules.bottomFromPageDp(h, page, withoutChips, gap),
+                EdgeLightRules.bottomFromPageDp(h, page, withChips, gap),
+                "$h does not jump when the chips come",
+            )
+        }
+        assertEquals(withChips + gap, EdgeLightRules.bottomFromPageDp(EdgeLightHeight.Low, page, withChips, gap))
+        assertEquals(withoutChips + gap, EdgeLightRules.bottomFromPageDp(EdgeLightHeight.Low, page, withoutChips, gap))
+        // A tall chrome lifts Middle rather than covering it.
+        assertTrue(EdgeLightRules.bottomFromPageDp(EdgeLightHeight.Middle, page, 500f, gap) >= 500f + gap)
+    }
 }

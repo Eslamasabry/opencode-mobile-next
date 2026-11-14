@@ -193,6 +193,13 @@ class AppEdgeDock(
     fun list(reader: DockReader = DockReader.list()): Flow<DockListModel> =
         controller.ui(reader).map { DockList.build(it, facts, peeks::newest) }
 
+    /**
+     * How many conversations the home's "All conversations" counts: its list's top-level conversations, the number
+     * the edge light's footer shows (the light's own list holds only the conversations the dock follows).
+     */
+    val allConversations: Flow<Int>
+        get() = runtime.snapshot.map { list -> list.items.count { it.parentId == null } }.distinctUntilChanged()
+
     /** What the person chose in Settings › Other conversations. Rings is the default. */
     val mode: StateFlow<OtherConversationsMode> = modeState.asStateFlow()
 

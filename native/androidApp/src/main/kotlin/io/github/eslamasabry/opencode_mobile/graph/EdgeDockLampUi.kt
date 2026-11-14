@@ -217,7 +217,9 @@ internal fun EdgeLightPanelLayer(
     val ui by controller.ui.collectAsStateWithLifecycle()
     val t = rememberLampTexts(ui)
     val index = remember(ui) { LampIndex(ui) }
-    val model = remember(ui, t) { LampPanelMap.model(ui, t) }
+    // The footer counts what "All conversations" opens: the home's number, not the light's shorter list.
+    val all by port.allCount.collectAsStateWithLifecycle()
+    val model = remember(ui, t, all) { LampPanelMap.model(ui, t).let { if (all > 0) it.copy(all = all) else it } }
     val words = remember(ui, t) { lampPanelWords(t, ui) }
     val toasts = LocalKitToasts.current
     var renaming by remember { mutableStateOf<ConversationRef?>(null) }

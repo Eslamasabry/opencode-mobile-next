@@ -101,6 +101,20 @@ class EdgeLightPanelMapTest {
     }
 
     @Test
+    fun `in Recent and Done the newest row is the one by the thumb, at the bottom`() {
+        val model =
+            LampPanelMap.model(
+                ui(
+                    group(LampGroupKind.Working, row("w1", LampState.Working), row("w2", LampState.Working)),
+                    group(LampGroupKind.Recent, row("newest", LampState.Idle), row("older", LampState.Idle), row("oldest", LampState.Idle)),
+                ),
+                t,
+            )
+        assertEquals(listOf("oldest", "older", "newest"), model.sections.single { it.group == KitLampGroup.Recent }.rows.map { it.key })
+        assertEquals(listOf("w1", "w2"), model.sections.single { it.group == KitLampGroup.Working }.rows.map { it.key }, "other groups keep their order")
+    }
+
+    @Test
     fun `a task list gives progress and its words, a stuck run says for how long in amber`() {
         val working = LampPanelMap.row(row("w", LampState.Working, LampStateLine.TasksDone(1, 4)), t)
         assertEquals(0.25f, working.progress)
@@ -108,6 +122,8 @@ class EdgeLightPanelMapTest {
         assertEquals(KitLampRowMark.Working, working.mark)
         val needs = LampPanelMap.row(row("n", LampState.NeedsYou, LampStateLine.For(RelativeAge.Minutes(4))), t)
         assertEquals(KitLampTone.Attention, needs.stateTone)
+        assertNull(needs.time, "the age is said once, in the state line, not again at the end")
+        assertTrue(working.time != null, "a row without the age in its state keeps it at the end")
         assertTrue(needs.state!!.startsWith("For("))
         assertNull(LampPanelMap.row(row("x", LampState.Working), t).progress)
     }

@@ -7,6 +7,7 @@ import io.github.eslamasabry.oc.feature.chats.lamp.LampAnswerUi
 import io.github.eslamasabry.oc.feature.chats.lamp.LampChildState
 import io.github.eslamasabry.oc.feature.chats.lamp.LampChildUi
 import io.github.eslamasabry.oc.feature.chats.lamp.LampGroupKind
+import io.github.eslamasabry.oc.feature.chats.lamp.LampGroupUi
 import io.github.eslamasabry.oc.feature.chats.lamp.LampHeight
 import io.github.eslamasabry.oc.feature.chats.lamp.LampPlace
 import io.github.eslamasabry.oc.feature.chats.lamp.LampRequestUi
@@ -81,7 +82,7 @@ internal object LampPanelMap {
         KitLampPanelModel(
             sections =
                 ui.groups
-                    .map { g -> KitLampSection(group(g.kind), groupTitle(g.kind, t), g.rows.map { row(it, t) }) }
+                    .map { g -> KitLampSection(group(g.kind), groupTitle(g.kind, t), byThumb(g).map { row(it, t) }) }
                     // The kit lists top to bottom with Needs you by the thumb, the opposite of the presenter's order.
                     .sortedBy { it.group.ordinal },
             hidden =
@@ -93,6 +94,14 @@ internal object LampPanelMap {
             editing = ui.editing,
             youAreIn = ui.openTitle?.let { t.fmt(LampWord.YouAreIn, it) },
         )
+
+    /**
+     * The list fills from the bottom, so the row nearest the thumb is the last one. Done and Recent come newest first
+     * from the presenter; drawn as given, the conversation just used sat at the far top of a long Recent group
+     * (device 2026-11-14). They are turned round so the newest is by the thumb; the other groups keep their order.
+     */
+    private fun byThumb(g: LampGroupUi): List<LampRowUi> =
+        if (g.kind == LampGroupKind.Recent || g.kind == LampGroupKind.Done) g.rows.asReversed() else g.rows
 
     fun group(kind: LampGroupKind): KitLampGroup =
         when (kind) {
@@ -143,7 +152,8 @@ internal object LampPanelMap {
                     else -> KitLampTone.Accent
                 },
             newest = r.subAgentOf?.let { t.fmt(LampWord.SubAgentOf, it) } ?: r.newestLine,
-            time = r.age?.let { age(it, t) },
+            // A stuck row says "for 4m" in its state line; the same age again at the end would say it twice.
+            time = if (r.stateLine is LampStateLine.For) null else r.age?.let { age(it, t) },
             server = r.server,
             pinned = r.pinned,
             request = r.request?.let { request(it, t) },

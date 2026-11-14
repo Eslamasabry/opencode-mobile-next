@@ -197,6 +197,25 @@ internal object EdgeLightRules {
     const val HIGH_SHARE: Float = 0.70f
 
     /**
+     * Distance from the bottom of the page box to the bottom of the touch box. [pageDp] is the page's height under its
+     * top chrome, [chromeDp] the bottom chrome's height (the message block with its chips), [lowDp] the gap Low keeps
+     * above that chrome. Low follows the chrome; Middle and High are shares of the whole page box, so they stay where
+     * they are while the phrase chips, a status strip or a request card come and go below them (device 2026-11-14: at
+     * Middle the light jumped by the chips' height whenever a run started or ended). Neither sinks below Low, and the
+     * tallest touch box never leaves the page.
+     */
+    fun bottomFromPageDp(height: EdgeLightHeight, pageDp: Float, chromeDp: Float, lowDp: Float): Float {
+        val touchMax = (KitLampDims.MAX_H + 2 * KitLampDims.TOUCH_PAD).toFloat()
+        val low = chromeDp + lowDp
+        val top = maxOf(low, pageDp - touchMax)
+        return when (height) {
+            EdgeLightHeight.Low -> minOf(low, top)
+            EdgeLightHeight.Middle -> (pageDp * MIDDLE_SHARE).coerceIn(minOf(low, top), top)
+            EdgeLightHeight.High -> (pageDp * HIGH_SHARE).coerceIn(minOf(low, top), top)
+        }
+    }
+
+    /**
      * Distance from the bottom of the free area to the bottom of the touch box. [areaDp] is the free height (between
      * the top chrome and the bottom chrome), [lowDp] what Low is on this page. The light never goes below Low and
      * never above the area (a short window, a landscape phone, puts all three where it fits).

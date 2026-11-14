@@ -115,9 +115,12 @@ internal fun EdgeLightMount(
             onClose = {
                 open = false
                 closedJustNow = true
+                // The list opens as a list next time, not still in Edit (device 2026-11-14).
+                controller.done()
             },
             onMove = {
                 open = false
+                controller.done()
                 placing = true
             },
         )
@@ -142,8 +145,8 @@ internal fun EdgeLightMount(
             onPick = { controller.move(LampPanelMap.place(it)) },
             onDone = { placing = false },
         )
-        BoxWithConstraints(Modifier.fillMaxSize().padding(top = top, bottom = bottom)) {
-            val offset = EdgeLightRules.bottomOffsetDp(place.height, maxHeight.value, lowAbove.value).dp
+        BoxWithConstraints(Modifier.fillMaxSize().padding(top = top)) {
+            val offset = EdgeLightRules.bottomFromPageDp(place.height, maxHeight.value, bottom.value, lowAbove.value).dp
             KitLamp(
                 face = face.copy(open = open),
                 label = if (open) stringResource(Res.string.edgeLightFaceClose) else label,
