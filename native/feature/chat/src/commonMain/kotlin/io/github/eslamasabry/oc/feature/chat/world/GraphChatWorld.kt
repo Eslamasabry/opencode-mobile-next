@@ -817,6 +817,7 @@ internal class GraphChatWorld(
      */
     private val appStartsServer: Boolean
         get() = serverOnThisPhone || serverIsAgentHelper
+
     /** The phone's agents are being updated and this conversation's server is their helper: it waits and says so. */
     private fun agentsUpdating(): Boolean =
         phoneServer?.waiting(ref.profileId)?.value == PhoneServerWait.UpdatingAgents
