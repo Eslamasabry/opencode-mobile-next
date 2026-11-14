@@ -680,7 +680,7 @@ private fun ConnectionStatusPill(connection: HomeConnectionUi, actions: ChatsAct
     )
     val switchLabel = stringResource(Res.string.serverSwitcherOpen)
     KitStatusPill(
-        label = connection.server,
+        label = serverNameShown(connection.server),
         tone = when (state) {
             HomeConnectionState.Connected -> KitConnectionTone.Ok
             HomeConnectionState.Connecting -> KitConnectionTone.Working
@@ -688,7 +688,7 @@ private fun ConnectionStatusPill(connection: HomeConnectionUi, actions: ChatsAct
         },
         // The dot says connected; a word only when it is not.
         word = status.takeUnless { state == HomeConnectionState.Connected },
-        spoken = "${connection.server}, $status, $switchLabel",
+        spoken = "${serverNameShown(connection.server)}, $status, $switchLabel",
         onClickLabel = switchLabel,
         // F: lib/ui/screens/home_screen.dart:434-470: the one-tap switcher, not the Servers page.
         onClick = actions::openServerSwitcher,
@@ -964,7 +964,7 @@ private fun ConversationRow(
             }
     val project = row.project.takeIf { flags.showProject && it.isNotBlank() }
     // No line to show: the row says where it lives instead (its project when no dot names it, and its server).
-    val meta = HomePreviewRules.fallback(row.project, row.server, projectShown = project != null)
+    val meta = HomePreviewRules.fallback(row.project, serverNameShown(row.server), projectShown = project != null)
     val permission = row.permission
     val question = row.question
     val form = row.form
