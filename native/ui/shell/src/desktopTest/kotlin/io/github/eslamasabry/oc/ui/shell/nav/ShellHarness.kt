@@ -120,6 +120,8 @@ class Harness(scale: Float = 1f) {
             LocalKitPlatform provides TestPlatform,
             LocalNavigationEventDispatcherOwner provides owner,
             LocalLayoutDirection provides if (rtl) LayoutDirection.Rtl else LayoutDirection.Ltr,
+            // The row → page transform is off in the app (the lookahead crash); these tests keep proving it works.
+            LocalShellRowTransform provides true,
         ) {
             KitTheme(appearance = KitAppearance(mode = AppearanceMode.Light), platform = TestPlatform, localeTag = "en") { NavShell(start = ChatsRoute.Home, deps = deps, gate = gate) }
         }
