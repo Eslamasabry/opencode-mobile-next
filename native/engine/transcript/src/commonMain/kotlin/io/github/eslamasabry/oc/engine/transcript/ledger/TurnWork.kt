@@ -101,6 +101,7 @@ public fun turnWork(
     busy: Boolean,
     stopped: Boolean = false,
     waitingForYou: Boolean = false,
+    declinedCalls: Set<String> = emptySet(),
 ): Map<String, TurnWork> {
     if (snapshot.messages.isEmpty()) return emptyMap()
     val settled = settleStaleLive(snapshot.messages, busy)
@@ -114,6 +115,7 @@ public fun turnWork(
                 busy = busy,
                 stopped = stopped && newest,
                 waiting = waitingForYou && newest,
+                declinedCalls = declinedCalls,
             )
             ?.let { out[turn.turnId] = it }
     }
@@ -126,6 +128,7 @@ private fun work(
     busy: Boolean,
     stopped: Boolean,
     waiting: Boolean,
+    declinedCalls: Set<String>,
 ): TurnWork? {
     val steps = ArrayList<TurnStep>()
     var counts = WorkCounts()
@@ -140,7 +143,7 @@ private fun work(
             if (p.type != PartType.Tool) continue
             // Claude Code's "a background task ended" notice is a notice, not a step of this turn.
             if (isBackgroundTaskNotice(p.toolName ?: "")) continue
-            val step = step(p, live = newest && busy) ?: continue
+            val step = step(p, live = newest && busy, declinedCalls) ?: continue
             steps += step
             counts = count(counts, p, step, editedFiles)
         }
@@ -185,7 +188,7 @@ public fun endsOnRefusal(turn: LedgerTurn): Boolean {
     return tool.status == ToolStatus.Error && isDeclinedToolError(toolOutputView(tool, last.toolName).errorText)
 }
 
-private fun step(p: Part, live: Boolean): TurnStep? {
+private fun step(p: Part, live: Boolean, declinedCalls: Set<String> = emptySet()): TurnStep? {
     val tool = p.tool ?: return null
     val state =
         when {
@@ -219,11 +222,18 @@ private fun step(p: Part, live: Boolean): TurnStep? {
         else tool
     val output = toolOutputView(outputTool, p.toolName)
     val refused = settled == StepState.Failed && isDeclinedToolError(output.errorText)
+    // The person pressed Deny and the server has not finished the call yet: it reads declined now, with no running
+    // time. When the server's own result arrives it says the same, so nothing changes on screen.
+    val declinedNow =
+        !refused &&
+            (settled == StepState.Pending || settled == StepState.Running) &&
+            p.callId != null &&
+            p.callId in declinedCalls
     return TurnStep(
         p.id,
         toolFacts(p),
-        if (refused) StepState.Declined else settled,
-        toolDurationMs(tool),
+        if (refused || declinedNow) StepState.Declined else settled,
+        if (declinedNow) null else toolDurationMs(tool),
         tool.startedAtMs,
         output,
     )

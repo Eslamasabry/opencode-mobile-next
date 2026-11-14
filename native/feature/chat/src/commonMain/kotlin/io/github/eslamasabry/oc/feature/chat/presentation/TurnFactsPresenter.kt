@@ -41,6 +41,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.onEach
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext
@@ -146,6 +147,7 @@ public class TurnFactsPresenter(private val clock: Clock) {
         scope: CoroutineScope,
         started: SharingStarted,
         work: CoroutineContext = EmptyCoroutineContext,
+        declined: Flow<Set<String>> = flowOf(emptySet()),
     ): StateFlow<TurnFactsUi> {
         val progress = MutableStateFlow<Long?>(null)
         val core =
@@ -153,9 +155,9 @@ public class TurnFactsPresenter(private val clock: Clock) {
                 .onEach { progress.value = it.lastProgressAtMs }
                 .distinctUntilChanged(::sameApartFromProgress)
         val ticks = factTicks(clock, core.map { ticking(it) }, TICK_MS)
-        return combine(core, waiting, ticks) { f, w, now ->
+        return combine(core, waiting, ticks, declined) { f, w, now, d ->
                 val newest = progress.value
-                present(if (f.lastProgressAtMs == newest) f else f.copy(lastProgressAtMs = newest), now, w)
+                present(if (f.lastProgressAtMs == newest) f else f.copy(lastProgressAtMs = newest), now, w, d)
             }
             .flowOn(work)
             .stateIn(scope, started, TurnFactsUi.Empty)
@@ -174,9 +176,15 @@ public class TurnFactsPresenter(private val clock: Clock) {
 
     /**
      * The facts at [nowMs]. [waitingForYou]: a request card waits for the person (no stall, no
-     * spinner).
+     * spinner). [declinedCalls]: tool call ids the person has just denied; their steps read declined at once (the
+     * server's own result replaces this when it arrives).
      */
-    public fun present(feed: TurnFeed, nowMs: Long, waitingForYou: Boolean = false): TurnFactsUi {
+    public fun present(
+        feed: TurnFeed,
+        nowMs: Long,
+        waitingForYou: Boolean = false,
+        declinedCalls: Set<String> = emptySet(),
+    ): TurnFactsUi {
         val snapshot = feed.ledger
         // W4: a run the person's refusal ended is not a stop, nor a server restart (OC2 reports it as "shutdown").
         val outcome = StoppedSteps.outcomeBesidesRefusal(feed.lastOutcome, snapshot.turns.lastOrNull(), feed.busy)
@@ -197,7 +205,13 @@ public class TurnFactsPresenter(private val clock: Clock) {
         val stopped = outcome is RunOutcome.Interrupted
         // P-102: a step the stop ended reads Stopped, not Failed, live and after a relaunch.
         val work =
-            turnWork(snapshot, feed.busy, stopped = stopped, waitingForYou = waitingForYou)
+            turnWork(
+                    snapshot,
+                    feed.busy,
+                    stopped = stopped,
+                    waitingForYou = waitingForYou,
+                    declinedCalls = declinedCalls,
+                )
                 .mapValues { StoppedSteps.settle(it.value) }
         val results = HashMap<String, TurnResultUi>()
         for ((index, turn) in snapshot.turns.withIndex()) {
