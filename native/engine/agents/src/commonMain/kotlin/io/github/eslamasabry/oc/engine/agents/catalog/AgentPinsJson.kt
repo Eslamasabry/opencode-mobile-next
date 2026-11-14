@@ -253,7 +253,7 @@ internal const val AGENT_PINS_JSON: String = """{
       "providerId": "kilo",
       "signInMethod": "browserOAuthHost",
       "recipe": {
-        "version": "7.8.18",
+        "version": "7.8.27",
         "executable": "kilo",
         "launchArgs": [
           "acp"
@@ -264,20 +264,20 @@ internal const val AGENT_PINS_JSON: String = """{
         ],
         "artifacts": {
           "arm64": {
-            "url": "https://registry.npmjs.org/@kilocode/cli-linux-arm64/-/cli-linux-arm64-7.8.18.tgz",
-            "sha256": "0f1bd0fb983f67ec1edf53c185e9521268f8f133af2a4cec2f1967e5d60e45ef",
+            "url": "https://registry.npmjs.org/@kilocode/cli-linux-arm64/-/cli-linux-arm64-7.8.27.tgz",
+            "sha256": "992a0d0f4956926c6f624de742792eeab140516640f66a5cf5b7f9c357c06eb4",
             "format": "tarGz",
             "member": "package/bin/kilo",
-            "downloadBytes": 83529597,
-            "installedBytes": 258264056
+            "downloadBytes": 83530144,
+            "installedBytes": 258198520
           },
           "x64": {
-            "url": "https://registry.npmjs.org/@kilocode/cli-linux-x64/-/cli-linux-x64-7.8.18.tgz",
-            "sha256": "bde638d0a493155088e4454fbe4a9697571443665e2a22d5a78cad645b96b554",
+            "url": "https://registry.npmjs.org/@kilocode/cli-linux-x64/-/cli-linux-x64-7.8.27.tgz",
+            "sha256": "1da75cf0996f249abc9e1ae10bdcebcefd760dd375c440e704ae70bb9be3ce0b",
             "format": "tarGz",
             "member": "package/bin/kilo",
-            "downloadBytes": 84132773,
-            "installedBytes": 259213488
+            "downloadBytes": 84123912,
+            "installedBytes": 259201200
           }
         }
       }
