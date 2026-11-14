@@ -20,7 +20,7 @@ class AgentPinsParityTest {
      */
     // Agents whose pins moved after the Flutter freeze (Flutter takes no new work since 2026-11-08): checked on their
     // own below, and their old Flutter entries are left out of the comparison.
-    private val postFreeze = setOf("antigravity", "opencode2", "claude", "codex")
+    private val postFreeze = setOf("antigravity", "opencode2", "claude", "codex", "goose")
 
     private val repo: File = generateSequence(File("").absoluteFile) { it.parentFile }
         .first { File(it, "native/settings.gradle.kts").isFile }
@@ -154,6 +154,38 @@ class AgentPinsParityTest {
         assertEquals(117805733L, x64.downloadBytes)
         assertEquals(294277432L, x64.installedBytes)
         assertEquals("codex-x86_64-unknown-linux-musl", x64.archiveMember)
+        assertEquals(AgentArtifactFormat.TarGz, x64.format)
+    }
+
+    @Test
+    fun `B-AGENT-008 Goose pins equal the downloads checked on 2026-11-14`() {
+        // Moved after the freeze. Each SHA-256 equals GitHub's digest for the release asset; installedBytes is the member's size.
+        val recipe = AgentPins.builtIn.catalog().byId(io.github.eslamasabry.oc.engine.agents.AgentId("goose"))!!.recipe!!
+        assertEquals("1.59.1", recipe.version)
+        assertEquals("goose", recipe.executable)
+        assertEquals(listOf("acp"), recipe.launchArgs)
+        assertEquals(listOf("configure"), recipe.signInArgs)
+        val arm = recipe.artifacts.getValue(AgentArchitecture.Arm64)
+        assertEquals(
+            "https://github.com/aaif-goose/goose/releases/download/v1.59.1/" +
+                "goose-aarch64-unknown-linux-gnu.tar.gz",
+            arm.url,
+        )
+        assertEquals("e3619b2ebf76dbbe8924561fd748220f289a34671e2757cda1cd833e44194f8e", arm.sha256)
+        assertEquals(63280232L, arm.downloadBytes)
+        assertEquals(195103264L, arm.installedBytes)
+        assertEquals("./goose", arm.archiveMember)
+        assertEquals(AgentArtifactFormat.TarGz, arm.format)
+        val x64 = recipe.artifacts.getValue(AgentArchitecture.X64)
+        assertEquals(
+            "https://github.com/aaif-goose/goose/releases/download/v1.59.1/" +
+                "goose-x86_64-unknown-linux-gnu.tar.gz",
+            x64.url,
+        )
+        assertEquals("04c08900ab2ae78b8e2f556f1ed535a91b61c080a3ff62e9fd8b280cceb544ef", x64.sha256)
+        assertEquals(62448338L, x64.downloadBytes)
+        assertEquals(208579376L, x64.installedBytes)
+        assertEquals("./goose", x64.archiveMember)
         assertEquals(AgentArtifactFormat.TarGz, x64.format)
     }
 
