@@ -696,7 +696,7 @@ internal fun ChatTranscriptList(
                         is NoticeRow -> row.key.removePrefix("notice:")
                         else -> null
                     }
-                if (source in facts.reading.hiddenPartKeys) return@itemsIndexed
+                if (source in facts.reading.hiddenPartKeys) return@CompositionLocalProvider
                 // A table longer than one chunk is drawn whole by its first chunk; its later chunks
                 // draw nothing.
                 if (reply != null && row is BlockRow && row.key in tables) {
