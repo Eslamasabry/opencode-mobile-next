@@ -24,12 +24,10 @@ import io.github.eslamasabry.oc.ui.kit.foundation.KitGlassBackdrop
 import io.github.eslamasabry.oc.ui.kit.foundation.LocalKitGlassBackdrop
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopLiveShader
 import io.github.eslamasabry.oc.ui.kit.platform.KitPlatform
-import kotlin.coroutines.EmptyCoroutineContext
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
 import kotlin.test.assertTrue
-import kotlin.time.Duration.Companion.minutes
 
 /**
  * Device 2026-11-14 (Glass, Aurora drift): the rule for a visible page over a live background. It draws while the
@@ -52,8 +50,9 @@ class LivePictureRestTest {
         var picture: KitGlassBackdrop? = null
         var clock: LiveFrameClock? = null
         var draws = 0
-        // 33 s of frames: past the default minute of a test on a slow runner, so it gets five.
-        runDesktopComposeUiTest(120, 120, EmptyCoroutineContext, EmptyCoroutineContext, 5.minutes) {
+        // 33 s of frames, each the aurora drawn on the CPU: about 42 ms a frame at 120 px (75 s, past the test's minute;
+        // runDesktopComposeUiTest keeps that minute whatever timeout it is given), 7 ms at 48 px. The reader is 8 dp.
+        runDesktopComposeUiTest(48, 48) {
             mainClock.autoAdvance = false
             setContent {
                 KitTheme(
