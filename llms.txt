@@ -1,0 +1,39 @@
+# opencode-mobile-next
+
+> An Android app that runs coding agents like Claude Code, Codex and OpenCode either in a built-in Linux environment on the phone or connected to an agent on your computer.
+
+Native Kotlin app for Android 8+, installed as an APK from GitHub releases; the first run downloads about 210 MB for an Ubuntu environment with Git and Node. It supports ten agents per conversation, command approval via notifications and widgets, an in-app preview, diffs and Git operations in the chat. Projects live inside the app, so uninstalling deletes them; pairing with a computer uses opencode2 pair and a QR code, optional Tailscale for remote access.
+
+## Docs
+
+- [opencode-mobile-next README](https://raw.githubusercontent.com/Eslamasabry/opencode-mobile-next/master/README.md): App that runs ten coding agents on Android in its own Linux, with downloads, demo, license and comparison.
+- [Privacy Policy](https://raw.githubusercontent.com/Eslamasabry/opencode-mobile-next/master/PRIVACY.md): What data the app sends to your chosen OpenCode server, optional developer reports, and HTTPS requirements.
+- [Run an AI team on your computer (AI Team · Gas City)](https://raw.githubusercontent.com/Eslamasabry/opencode-mobile-next/master/docs/ai-team-host.md): Setting up a Gas City supervisor on a computer so the phone steers several agents on a Tailscale network.
+- [Aptabase telemetry integration plan](https://raw.githubusercontent.com/Eslamasabry/opencode-mobile-next/master/docs/aptabase-telemetry-plan.md): Plan for opt-in, anonymous Aptabase usage statistics that keeps F-Droid builds free of analytics.
+- [Check-in reminders for long runs](https://raw.githubusercontent.com/Eslamasabry/opencode-mobile-next/master/docs/check-in-reminders.md): How a per-server monitor reminds you to check in on long busy agent runs, and its polling limits.
+- [Claude Code on this phone](https://raw.githubusercontent.com/Eslamasabry/opencode-mobile-next/master/docs/claude-on-this-phone.md): Retired guide to installing Claude Code on the phone inside Termux with the Paseo daemon, kept as history.
+- [Connect the app to Codex app-server](https://raw.githubusercontent.com/Eslamasabry/opencode-mobile-next/master/docs/codex-connection.md): Host setup with a capability token and WebSocket endpoint, plus ADB tunneling and app-side Codex connection steps.
+- [Common file previews](https://raw.githubusercontent.com/Eslamasabry/opencode-mobile-next/master/docs/common-file-previews.md): How CSV/TSV, SVG, and PDF previews work locally, including truncation limits, format recognition rules, and non-goals.
+- [Local connection help and private networks](https://raw.githubusercontent.com/Eslamasabry/opencode-mobile-next/master/docs/connectivity-private-networks.md): Local address explanation tooling and steps for HTTPS access to private networks via Tailscale Serve or reverse proxy.
+- [Design inspiration notes (Mobbin research)](https://raw.githubusercontent.com/Eslamasabry/opencode-mobile-next/master/docs/design-inspiration.md): Mobbin iOS patterns from apps like Gemini, Claude, and ChatGPT, and how they map onto this app's screens.
+- [Desktop feasibility: Linux and Windows](https://raw.githubusercontent.com/Eslamasabry/opencode-mobile-next/master/docs/desktop-feasibility.md): Original Linux and Windows feasibility study with dependency audit, Windows analysis, and a summary of landed desktop work.
+
+## Optional
+
+- [Changelog](https://raw.githubusercontent.com/Eslamasabry/opencode-mobile-next/master/CHANGELOG.md): Release-by-release changes for the public alpha, including built-in Linux fixes, Git publishing, and privacy switches.
+- [Contributing](https://raw.githubusercontent.com/Eslamasabry/opencode-mobile-next/master/CONTRIBUTING.md): Build and contribution rules: Kotlin toolchain, required Gradle checks, strings pipeline, test naming conventions, and module boundaries.
+- [OpenCode Mobile audit reports](https://raw.githubusercontent.com/Eslamasabry/opencode-mobile-next/master/docs/audits/README.md): Two 2026 audits of commit 9e7d5ce with post-remediation status marking each finding closed, partially closed, or open.
+- [Continuous app improvement](https://raw.githubusercontent.com/Eslamasabry/opencode-mobile-next/master/docs/backlog/README.md): Backlog queues tracking evidence-backed stories, implementation cycles, backend and frontend items, and V1 release readiness.
+- [Good first issues](https://raw.githubusercontent.com/Eslamasabry/opencode-mobile-next/master/docs/contributing/good-first-issues.md): Five small self-contained tasks with file, problem, and done criteria, none needing a device or server.
+- [FG5: the key set for the five new languages](https://raw.githubusercontent.com/Eslamasabry/opencode-mobile-next/master/docs/l10n/fg5-key-set.md): Which messages the five new languages must carry, how the set was chosen, and fallback behavior for missing keys.
+- [OpenCode mobile outreach demo](https://raw.githubusercontent.com/Eslamasabry/opencode-mobile-next/master/docs/marketing/marketing/opencode-mobile-demo/README.md): Caption-led vertical demo video recorded against a real OpenCode server in Termux, with suggested outreach post copy.
+- [Codex second-eye reviews (native)](https://raw.githubusercontent.com/Eslamasabry/opencode-mobile-next/master/docs/native/reviews/INDEX.md): Read-only Codex review reports for landed units, mention counts, and the rule that findings need fixes and tests.
+- [Gas City as an optional plugin — the plan](https://raw.githubusercontent.com/Eslamasabry/opencode-mobile-next/master/docs/plans/gas-city-plugin-2026-09-10/00-README.md): Plan to integrate Gas City as an optional, off-by-default plugin, covering naming, host types and UX decisions.
+- [Optional saved crash details](https://raw.githubusercontent.com/Eslamasabry/opencode-mobile-next/master/docs/privacy/bd7-crash-diagnostics.md): Opt-in crash diagnostics: what error data is saved on Flutter and native, what is never stored, and privacy guarantees.
+- [Agent experience — portfolio A scope ledger](https://raw.githubusercontent.com/Eslamasabry/opencode-mobile-next/master/docs/product/agent-experience.md): Scope ledger for voice and agent experience work: implemented voice reply pipeline, non-goals, evidence and user journey.
+- [OpenCode Mobile 1.1.0](https://raw.githubusercontent.com/Eslamasabry/opencode-mobile-next/master/docs/release/1.1.0-github-release.md): Release notes for 1.1.0: redesign, built-in server, project-level AI Team, chat, inbox, multi-server support and fixes.
+- [Control-plane research sprint — executive summary (2026-09-10)](https://raw.githubusercontent.com/Eslamasabry/opencode-mobile-next/master/docs/research/control-plane-2026-09-10/README.md): Executive summary of research on Gas Town and Gas City, their architecture, and links to findings and proposals.
+- [Threat model: a phone that can approve shell commands](https://raw.githubusercontent.com/Eslamasabry/opencode-mobile-next/master/docs/security/threat-model.md): Assets at risk, attacker scenarios for an unlocked phone, and unmitigated gaps.
+- [Health and diagnostics telemetry (2.1.5 and native 3.0)](https://raw.githubusercontent.com/Eslamasabry/opencode-mobile-next/master/docs/telemetry/health-and-diagnostics.md): Telemetry contract for Flutter 2.1.5 and native 3.0: consent choices, allowed values, event sections.
+- [Capabilities and supported hosts](https://raw.githubusercontent.com/Eslamasabry/opencode-mobile-next/master/docs/ux-system/capabilities.md): Feature support per host type, setup flows for OpenCode 2, phone builtin, Termux and paseo servers.
+- [External A2A agents — implementation evidence](https://raw.githubusercontent.com/Eslamasabry/opencode-mobile-next/master/docs/verification/a2a-client-2026-09-08.md): Finish-line criteria, protocol and SDK versions, and non-goals for external A2A agent support.
