@@ -139,6 +139,11 @@ public data class KitSurfaceInput(
     val ownLook: Boolean = false,
     /** Per-corner token radii (a bubble's tail corner), each run through the Corners knob; overrides [shape]'s radius. */
     val corners: Radii? = null,
+    /**
+     * Each corner its own named shape ([KitCorners]), resolved per corner as [shape] is (Corners knob, sharp radius,
+     * pane boost). Overrides [shape]'s radius, [radius], [exactRadius] and [corners]; [shape] still names the part's kind.
+     */
+    val cornerShapes: KitCorners? = null,
 )
 
 /**
@@ -176,7 +181,7 @@ public fun kitSurfaceLook(input: KitSurfaceInput): KitSurfaceLook {
     val sheet = input.shape == KitShapeId.Sheet && !input.roundSheetBottom
     // A pane's corners grow with the style's pane inset (Glass, owner 2026-11-09), as its named shape does.
     // The look's shape is the named shape itself unless the part gives a radius or rounds a sheet's bottom.
-    val named = input.radius == null && input.exactRadius == null && input.corners == null && !(input.shape == KitShapeId.Sheet && input.roundSheetBottom)
+    val named = input.radius == null && input.exactRadius == null && input.corners == null && input.cornerShapes == null && !(input.shape == KitShapeId.Sheet && input.roundSheetBottom)
     // A named sheet's Sharp corner is the named shape's (KitShapes: at most 4 dp, twice the style's sharp radius), so
     // the decoration's corners and the shape a part clips to stay one (2026-11-13).
     val paneSharp = if (named && input.shape == KitShapeId.Sheet) minOf(4f, sharp * 2f) else sharp
@@ -185,7 +190,17 @@ public fun kitSurfaceLook(input: KitSurfaceInput): KitSurfaceLook {
         else if (input.shape.isPane) StyleResolver.paneCorner(base, style.knobs.corners, style.spec.tokens.copy(sharpRadius = paneSharp))
         else StyleResolver.corner(base, style.knobs.corners, sharp)
     val radii =
-        input.corners?.map { StyleResolver.corner(it, style.knobs.corners, sharp) }
+        input.cornerShapes?.let { c ->
+            fun one(id: KitShapeId): Float {
+                if (id == KitShapeId.Square) return 0f
+                val token = id.radiusDp()
+                val oneSharp = if (id == KitShapeId.Sheet) minOf(SHEET_SHARP_MAX_DP, sharp * 2f) else sharp
+                return if (id.isPane) StyleResolver.paneCorner(token, style.knobs.corners, style.spec.tokens.copy(sharpRadius = oneSharp))
+                else StyleResolver.corner(token, style.knobs.corners, sharp)
+            }
+            Radii(one(c.topStart), one(c.topEnd), one(c.bottomStart), one(c.bottomEnd))
+        }
+            ?: input.corners?.map { StyleResolver.corner(it, style.knobs.corners, sharp) }
             ?: if (sheet) Radii(r, r, 0f, 0f) else Radii.all(if (input.shape == KitShapeId.Square) 0f else r)
     val shape =
         if (named) {
@@ -203,7 +218,7 @@ public fun kitSurfaceLook(input: KitSurfaceInput): KitSurfaceLook {
             knobs = style.knobs,
             level = input.level,
             radii = radii,
-            circle = input.shape == KitShapeId.Circle,
+            circle = input.shape == KitShapeId.Circle && input.cornerShapes == null,
             color = input.color?.toArgb(),
             selected = input.selected,
             pressed = input.pressed,
@@ -248,7 +263,7 @@ public fun kitSurfaceLook(input: KitSurfaceInput): KitSurfaceLook {
     val frost = Modifier.kitSurfaceGlass(if (glass) decoration else null)
     // The plain look as a decoration, so Solid can fade to and from the other styles.
     val ownFill = input.ownFill?.let { if (input.faceAlpha >= 1f) it else it.copy(alpha = it.alpha * input.faceAlpha) }
-    val plain = SurfaceDecoration(radii = radii, circle = input.shape == KitShapeId.Circle, fill = ownFill?.toArgb())
+    val plain = SurfaceDecoration(radii = radii, circle = input.shape == KitShapeId.Circle && input.cornerShapes == null, fill = ownFill?.toArgb())
     val shown = rememberSurfaceFade(decoration, plain, style.style)
     // A style that squares a round control (Paper's Send, mic, icon discs) clips it square too: the face and the clip a
     // part takes from the look stay one shape (a square disc under a round clip lost its corners).
@@ -508,6 +523,9 @@ public fun kitShadowReach(role: SurfaceRole = SurfaceRole.Control): Dp {
 }
 
 private const val BLUR_TAIL = 1.5f
+
+/** A sheet's Sharp corner is at most this (KitShapes: twice the style's sharp radius, at most 4 dp). */
+private const val SHEET_SHARP_MAX_DP = 4f
 
 /**
  * Grows a clipping container by [room] above and below without changing the space it takes: the content is laid out

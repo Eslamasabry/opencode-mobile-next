@@ -77,6 +77,9 @@ class KitReceiptCountdownTest {
     @Test
     fun `B-LAMP-K1-041 Undo cancels the hold`() =
         runDesktopComposeUiTest(400, 240) {
+            // The clock moves only when the test says: with auto-advance, finding Undo waited for the drain to finish
+            // (the 3 s fill keeps frames coming), so the hold had already ended before the tap (run 43462209245).
+            mainClock.autoAdvance = false
             val scene = Scene()
             host(scene, label = "Stopping “Bank API migration”…")
             mainClock.advanceTimeBy(1_000)
@@ -84,6 +87,20 @@ class KitReceiptCountdownTest {
             mainClock.advanceTimeBy(5_000)
             assertEquals(1, scene.undos)
             assertEquals(0, scene.ends, "an undone hold never ends")
+        }
+
+    @Test
+    fun `B-LAMP-K1-045 once the hold has ended its Undo is gone`() =
+        runDesktopComposeUiTest(400, 240) {
+            mainClock.autoAdvance = false
+            val scene = Scene()
+            host(scene)
+            mainClock.advanceTimeBy(1_000)
+            onNodeWithText("Undo").assertExists()
+            mainClock.advanceTimeBy(2_500)
+            assertEquals(1, scene.ends, "the hold ended")
+            mainClock.advanceTimeBy(500)
+            onNodeWithText("Undo").assertDoesNotExist()
         }
 
     @Test
@@ -111,9 +128,11 @@ class KitReceiptCountdownTest {
     fun `B-LAMP-K1-044 the held pill is drawn in every style`() {
         for (style in listOf(Style.Solid, Style.Glass, Style.Soft, Style.Brutal, Style.Paper)) {
             runDesktopComposeUiTest(400, 240) {
+                // Looked at mid-hold: with auto-advance the 3 s drain runs out first, and an ended hold has no Undo.
+                mainClock.autoAdvance = false
                 val scene = Scene()
                 host(scene, style = style)
-                waitForIdle()
+                mainClock.advanceTimeBy(500)
                 onNodeWithTag(RECEIPT_HOLD_TAG, useUnmergedTree = true).assertExists()
                 onNodeWithText("Undo").assertExists()
             }

@@ -8,6 +8,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
@@ -39,6 +40,7 @@ import io.github.eslamasabry.oc.ui.design.motion.MotionTokens
 import io.github.eslamasabry.oc.ui.design.style.SurfaceRole
 import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
 import io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel
+import io.github.eslamasabry.oc.ui.kit.foundation.KitCorners
 import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceInput
 import io.github.eslamasabry.oc.ui.kit.foundation.kitSurface
 import io.github.eslamasabry.oc.ui.kit.foundation.kitSurfaceLook
@@ -89,6 +91,9 @@ public class KitGrowFromAnchorState internal constructor(open: Boolean) {
     internal var back: () -> Float = { 0f }
     internal var anchorInPane: Rect by mutableStateOf(Rect.Zero)
 
+    /** How far down its space the pane's top sits (a pane as tall as its content stands at the bottom). */
+    internal var paneTop: Float by mutableFloatStateOf(0f)
+
     public val fraction: Float get() = body.value
     public val contentShown: Float get() = content.value
     public fun backProgress(): Float = back()
@@ -105,7 +110,7 @@ public fun rememberKitGrowFromAnchorState(open: Boolean = false): KitGrowFromAnc
  * move from [anchorInWindow] (a rect in window px; read when laid out, so an anchor that moves keeps its pane honest)
  * to the pane's own bounds: a bounds morph with a clip, the content laid out once at full size and never scaled
  * (MOT-2). The body is the style's face for [role] at [level], by role (Glass draws its own Glass roles), with
- * [shape]'s corners; its outline follows the moving bounds whole, never cut.
+ * [shape]'s corners, or each corner its own with [corners]; its outline follows the moving bounds whole, never cut.
  *
  * [open] turns it either way at any moment: a change mid-flight turns the body around from where it is, with its
  * velocity (springs). Opening: the body grows on `spatial`; the content fades in and rises
@@ -133,6 +138,13 @@ public fun KitGrowFromAnchor(
     role: SurfaceRole = SurfaceRole.Floating,
     level: SurfaceLevel = SurfaceLevel.Surface1,
     shape: KitShapeId = KitShapeId.Dialog,
+    /** Each corner its own named shape (the edge light's panel: sheet corners toward the middle, panel corners on the edge). */
+    corners: KitCorners? = null,
+    /**
+     * The pane is as tall as its content (at most the space given) and stands at the bottom of that space, as the edge
+     * light's bottom-filled list does; the space itself never moves, so the first frame of an open starts at the anchor.
+     */
+    wrapHeight: Boolean = false,
     content: @Composable () -> Unit,
 ) {
     val specs = KitMotion.specs
@@ -177,7 +189,7 @@ public fun KitGrowFromAnchor(
     }
     val anchorNow by rememberUpdatedState(anchorInWindow)
     val colors = LocalKitColors.current
-    val look = kitSurfaceLook(KitSurfaceInput(role = role, shape = shape, level = level, ownFill = colors.surface1))
+    val look = kitSurfaceLook(KitSurfaceInput(role = role, shape = shape, level = level, ownFill = colors.surface1, cornerShapes = corners))
     val calm = level0 == MotionLevel.Calm
     val rise = MotionTokens.ENTRANCE_RISE_DP.dp
     Layout(
@@ -189,7 +201,7 @@ public fun KitGrowFromAnchor(
                 Modifier
                     .testTag(GROW_CONTENT_TAG)
                     .graphicsLayer {
-                        val r = GrowFromAnchorRules.bounds(state.anchorInPane, Rect(Offset.Zero, size), state.body.value)
+                        val r = GrowFromAnchorRules.bounds(state.anchorInPane.translate(0f, -state.paneTop), Rect(Offset.Zero, size), state.body.value)
                         this.shape = BodyClip(r, look.shape)
                         clip = true
                     },
@@ -227,15 +239,19 @@ public fun KitGrowFromAnchor(
     ) { measurables, constraints ->
         val w = if (constraints.hasBoundedWidth) constraints.maxWidth else constraints.minWidth
         val h = if (constraints.hasBoundedHeight) constraints.maxHeight else constraints.minHeight
-        val pane = Rect(0f, 0f, w.toFloat(), h.toFloat())
+        val contentP =
+            if (wrapHeight) measurables[1].measure(Constraints(minWidth = w, maxWidth = w, minHeight = 0, maxHeight = h))
+            else measurables[1].measure(Constraints.fixed(w, h))
+        val top = if (wrapHeight) (h - contentP.height).coerceAtLeast(0) else 0
+        if (top.toFloat() != state.paneTop) state.paneTop = top.toFloat()
+        val pane = Rect(0f, top.toFloat(), w.toFloat(), (top + contentP.height).toFloat())
         val a = anchorNow().translate(-place.at.x, -place.at.y)
         if (a != state.anchorInPane) state.anchorInPane = a
         val r = GrowFromAnchorRules.bounds(a, pane, state.body.value)
         val bodyP = measurables[0].measure(Constraints.fixed(r.width.toInt().coerceAtLeast(0), r.height.toInt().coerceAtLeast(0)))
-        val contentP = measurables[1].measure(Constraints.fixed(w, h))
         layout(w, h) {
             bodyP.place(r.left.toInt(), r.top.toInt())
-            contentP.place(0, 0)
+            contentP.place(0, top)
         }
     }
 }

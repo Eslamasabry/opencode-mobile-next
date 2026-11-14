@@ -5,7 +5,19 @@ package io.github.eslamasabry.oc.ui.kit
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.test.hasTestTag
+import io.github.eslamasabry.oc.ui.design.style.SurfaceRole
+import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
+import io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel
+import io.github.eslamasabry.oc.ui.kit.foundation.KitCorners
+import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceInput
+import io.github.eslamasabry.oc.ui.kit.foundation.kitSurfaceLook
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -100,6 +112,41 @@ class OutlineCornersTest {
     @Test fun `Solid dark - a field's focus and error outline goes round all four corners`() = fields(Style.Solid, dark = true)
 
     @Test fun `Solid light - a field's focus and error outline goes round all four corners`() = fields(Style.Solid, dark = false)
+
+    // K2 (edge light panel): a surface whose four corners each take their own named shape (the panel's sheet corners
+    // toward the middle, panel corners on the edge). Its face, edge and clip follow the same four corners, so the state
+    // outline stays whole at each one, in every style, dark and light; one corner is square.
+    private val ownCorners =
+        Case("surface with its own four corners", hasTestTag(OWN_CORNERS_TAG)) {
+            val colors = LocalKitColors.current
+            val look =
+                kitSurfaceLook(
+                    KitSurfaceInput(
+                        SurfaceRole.Field,
+                        KitShapeId.Button,
+                        SurfaceLevel.Surface1,
+                        ownFill = colors.surface1,
+                        selected = true,
+                        cornerShapes = KitCorners(KitShapeId.Panel, KitShapeId.Button, KitShapeId.Tile, KitShapeId.Square),
+                    )
+                )
+            // Solid keeps the part's own look (as KitField does there): its outline drawn on the look's own shape.
+            val solid = LocalKitStyle.current.style == Style.Solid
+            Box(
+                Modifier
+                    .size(320.dp, 160.dp)
+                    .testTag(OWN_CORNERS_TAG)
+                    .then(look.modifier)
+                    .then(if (solid) Modifier.border(2.dp, colors.accent, look.shape) else Modifier)
+                    .clip(look.shape),
+            )
+        }
+
+    @Test
+    fun `B-LAMP-K2-060 every style - a surface with its own four corners keeps its outline whole at each`() {
+        val gaps = Style.entries.flatMap { style -> listOf(true, false).flatMap { dark -> check(style, dark, ownCorners) } }
+        assertTrue(gaps.isEmpty(), "Outlines cut at the corners:\n" + gaps.joinToString("\n"))
+    }
 
     @Test
     fun `every style is covered`() = kotlin.test.assertEquals(6, Style.entries.size, "a new style needs its corner tests here")
@@ -218,5 +265,6 @@ class OutlineCornersTest {
         const val WIDTH = 1080
         const val HEIGHT = 720
         const val DENSITY = 2.625f
+        const val OWN_CORNERS_TAG = "own-corners"
     }
 }
