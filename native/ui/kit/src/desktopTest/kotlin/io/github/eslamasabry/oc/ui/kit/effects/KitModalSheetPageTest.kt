@@ -209,7 +209,9 @@ class KitModalSheetPageTest {
         // background. Within the side's band nothing of the page is left, the top's band included.
         val bare = shot(Page())
         val corner = shot(Page(cornerBlock = true))
-        val inCorner = peakDiff(bare, corner, W - 28f, SHEET_TOP + 2f, W - 2f, SHEET_TOP + 30f)
+        // The corner's rim, its outer half (where the wedge was; deeper in, the detail hold's 28 dp mean may still carry a
+        // trace of the band's fading part 20 dp to the left, as anywhere a band fades).
+        val inCorner = peakDiff(bare, corner, W - 28f, SHEET_TOP + 2f, W - 2f, SHEET_TOP + 14f)
         // Away from the side the top band still shows the page (the same block's left part, 300-312 dp, lies 48-60 dp in).
         val apart = peakDiff(bare, corner, 300f, SHEET_TOP + 2f, 310f, SHEET_TOP + 20f)
         println("MODAL corner: in the top-right corner $inCorner, 50-60 dp from the side $apart")
