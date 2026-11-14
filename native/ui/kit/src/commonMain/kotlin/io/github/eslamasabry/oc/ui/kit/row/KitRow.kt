@@ -290,7 +290,7 @@ private fun RowBody(
                 if (!selected) Modifier
                 // On a flat list (Solid) the chosen row is a rounded plate inset space2 from the row's ends, never a
                 // square band across the page (kit_row.dart:672-690).
-                else if (LocalKitStyle.current.spec.tokens.flatLists) Modifier.kitChosenPlate(colors.accent.copy(alpha = CHOSEN_ROW_TINT))
+                else if (LocalKitStyle.current.spec.tokens.flatLists) Modifier.kitChosenPlate(colors.accent.copy(alpha = CHOSEN_ROW_TINT), radius = kitChosenPlateRadius())
                 // Glass: accent-tinted frost with the accent rim, its corners following the group's (owner 2026-11-08).
                 else glassChosen ?: Modifier.kitSelectedFill(colors.accent.copy(alpha = CHOSEN_ROW_TINT), onRail)
             )
@@ -544,11 +544,19 @@ internal const val CHOSEN_ROW_TINT: Float = 0.06f
 
 private const val CARET_INK_END = .28125f // F: lib/ui/kit/kit_optical.dart:26
 
-/** The chosen row's plate on a flat list: surface3, card corners, inset space2 from both ends (kit_row.dart:676-686). */
-internal fun Modifier.kitChosenPlate(color: androidx.compose.ui.graphics.Color, extraInset: androidx.compose.ui.unit.Dp = 0.dp): Modifier =
+/**
+ * The chosen row's plate on a flat list: surface3, card corners, inset space2 from both ends (kit_row.dart:676-686).
+ * [radius] is the card corner under the Corners knob in force ([kitChosenPlateRadius]): Paper's plate is square, not a
+ * rounded pill beside its square sheet (audit 2026-11-14).
+ */
+internal fun Modifier.kitChosenPlate(
+    color: androidx.compose.ui.graphics.Color,
+    extraInset: androidx.compose.ui.unit.Dp = 0.dp,
+    radius: androidx.compose.ui.unit.Dp = io.github.eslamasabry.oc.ui.design.generated.FlutterKitTokens.CARD_RADIUS.dp,
+): Modifier =
     drawBehind {
         val inset = Space.S2.dp.toPx() + extraInset.toPx()
-        val r = io.github.eslamasabry.oc.ui.design.generated.FlutterKitTokens.CARD_RADIUS.dp.toPx()
+        val r = radius.toPx()
         drawRoundRect(
             color,
             topLeft = androidx.compose.ui.geometry.Offset(inset, 0f),
@@ -556,6 +564,17 @@ internal fun Modifier.kitChosenPlate(color: androidx.compose.ui.graphics.Color, 
             cornerRadius = androidx.compose.ui.geometry.CornerRadius(r, r),
         )
     }
+
+/** The chosen plate's corner: the card radius under the Corners knob in force (Round keeps it). */
+@androidx.compose.runtime.Composable
+internal fun kitChosenPlateRadius(): androidx.compose.ui.unit.Dp {
+    val style = LocalKitStyle.current
+    return io.github.eslamasabry.oc.ui.design.style.StyleResolver.corner(
+        io.github.eslamasabry.oc.ui.design.generated.FlutterKitTokens.CARD_RADIUS.toFloat(),
+        style.knobs.corners,
+        style.spec.tokens.sharpRadius,
+    ).dp
+}
 
 /** True when [trailing] is a 48 dp glyph target that ends near the row's edge, on the top bar's ⋯ line (P-112). */
 internal fun rowTargetOnEdge(trailing: KitRowTrailing?): Boolean =

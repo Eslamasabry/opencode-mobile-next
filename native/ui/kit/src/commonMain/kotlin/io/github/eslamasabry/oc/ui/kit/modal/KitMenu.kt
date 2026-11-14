@@ -1,6 +1,10 @@
 package io.github.eslamasabry.oc.ui.kit.modal
 
 import androidx.compose.ui.geometry.Offset
+import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceInput
+import io.github.eslamasabry.oc.ui.kit.foundation.kitDressedLook
+import io.github.eslamasabry.oc.ui.design.style.SurfaceRole
+import io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel
 import androidx.compose.ui.geometry.Rect
 import io.github.eslamasabry.oc.ui.kit.effects.kitLiquidTouchLight
 import io.github.eslamasabry.oc.ui.kit.effects.kitLiquidTouchWatch
@@ -653,10 +657,14 @@ public fun KitMenuPanel(
     // Joined to the glass it opened from: its glass is drawn beyond its box (it falls, then fills), so it is not
     // clipped to its own shape; its rows are clipped to the glass instead.
     val joined = join != null && join.owner.partnerOf(join) != null
+    // Brutal and Paper dress the pane as a floating part (audit 2026-11-14: Brutal's menu stayed a soft rounded plate):
+    // Brutal's ink edge and hard shadow, Paper's ink box with square corners. Drawn before the pane's clip, so the
+    // shadow outside it stays whole. Null in every other style.
+    val dressed = kitDressedLook(KitSurfaceInput(role = SurfaceRole.Floating, shape = KitShapeId.Panel, level = SurfaceLevel.Surface2))
     val menuFace =
         liquidFace
             ?: kitGlassSheet(KitShapeId.Panel, colors.surface2)
-            ?: Modifier.background(colors.surface2).border(1.dp, colors.hairline, shape)
+            ?: if (dressed != null) Modifier else Modifier.background(colors.surface2).border(1.dp, colors.hairline, shape)
     // Glass: a soft light gathers under the finger and follows it down the rows (KitLiquidTouch.kt).
     val touch = io.github.eslamasabry.oc.ui.kit.effects.rememberKitLiquidTouch(on = liquidFace != null)
     Column(
@@ -665,6 +673,7 @@ public fun KitMenuPanel(
             // As wide as its widest row needs (owner 2026-11-11: "size should be determined based on the content"),
             // within the limits; the rows fill that width. A joined menu's rest box, column and fill follow it.
             .width(androidx.compose.foundation.layout.IntrinsicSize.Max)
+            .then(dressed?.modifier ?: Modifier)
             .then(if (joined) Modifier else Modifier.clip(shape))
             .kitLiquidTouchWatch(touch)
             .kitLiquidJoinRest(join, shape)

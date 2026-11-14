@@ -23,6 +23,7 @@ public object BrutalSpec : StyleSpec {
             live = LivePolicy(maxStrength = .7f),
             glow = StyleGlow(halo = false, lineWidthDp = 2f),
             flattensNested = true,
+            dressesOwnLooks = true,
             linkUnderline = EDGE,
             needsYou = NeedsYouLook(tag = NeedsYouTag.Pill, tint = false, ring = false, startEdge = false),
             type = StyleType(displayWeight = 800, displayTracking = -.03f, bodyWeight = 500, monoLabels = true, firmWeights = true),
@@ -99,7 +100,9 @@ public object BrutalSpec : StyleSpec {
         val fall = offsetOf(r.role, r.knobs.density == io.github.eslamasabry.oc.ui.design.tokens.Density.Compact)
         val even = r.role != SurfaceRole.Sheet || r.radii.uniform
         val down = r.selected || r.pressed
-        val sink = if (r.pressed && raised && even) fall else 0f
+        // A nested part (a chip in the message box) casts no shadow of its own, so it has none to sink into either.
+        val casts = raised && even && !r.nested
+        val sink = if (r.pressed && casts) fall else 0f
         val rest = if (r.role == SurfaceRole.Control) roles.surface2 else r.levelFill
         if (r.disabled && r.role == SurfaceRole.Control) {
             return SurfaceDecoration(
@@ -113,7 +116,7 @@ public object BrutalSpec : StyleSpec {
         }
         val fill = own(r) ?: (if (down) roles.surface3 else rest)
         val keepsEdge = r.knobs.edges == Edges.Hairline || r.role == SurfaceRole.Control || r.role == SurfaceRole.Track
-        val offset = if (raised && !down && even) fall else 0f
+        val offset = if (casts && !down) fall else 0f
         val ringed = roles.dark && r.selected && r.color == null && (r.role == SurfaceRole.Content || r.role == SurfaceRole.Control)
         val line = if (ringed) roles.accent else ink
         val edged = keepsEdge || ringed

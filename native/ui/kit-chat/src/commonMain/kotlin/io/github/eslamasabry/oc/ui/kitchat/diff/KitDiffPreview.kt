@@ -1,6 +1,10 @@
 package io.github.eslamasabry.oc.ui.kitchat.diff
 
 import androidx.compose.foundation.background
+import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceInput
+import io.github.eslamasabry.oc.ui.kit.foundation.kitDressedLook
+import io.github.eslamasabry.oc.ui.kit.foundation.kitSurface
+import io.github.eslamasabry.oc.ui.design.style.SurfaceRole
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -218,6 +222,8 @@ public fun KitDiffPreviewCard(
     val fontScale = LocalDensity.current.fontScale
     val gutterWidth = ceil(width * GUTTER_DP_PER_CHAR * fontScale).dp
     val shape = KitShapeId.Code.toShape()
+    // Brutal and Paper: the style's code face (its edge and corner, no shadow); null keeps the card's own.
+    val dressed = kitDressedLook(KitSurfaceInput(role = SurfaceRole.Code, shape = KitShapeId.Code, color = colors.surface1))
     KitTappable(
         onOpen,
         modifier
@@ -232,7 +238,7 @@ public fun KitDiffPreviewCard(
             // The card's room above its first line and below its last lies inside those lines' rows, so an added or
             // removed line's tint runs to the card's edge and takes its shape (audit 2026-11-14, c21: a square-ended
             // green strip inside the rounded card, with dark slivers above and below it).
-            Box(Modifier.fillMaxWidth().clip(shape).background(colors.surface1).testTag("kit-diff-preview-face")) {
+            Box(Modifier.fillMaxWidth().then(dressed?.let { Modifier.kitSurface(it) } ?: Modifier.clip(shape).background(colors.surface1)).testTag("kit-diff-preview-face")) {
                 // The lines are read as the card's one name, not one by one.
                 Column(
                     Modifier.fillMaxWidth()

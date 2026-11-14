@@ -1,6 +1,6 @@
 # K20-kit-surfaces: hand-painted surface lines per kit file (KitSurfaces.kt; allowlist kit-surfaces-allow.txt).
 # A count may only fall: move a paint behind kitSurfaceLook, then lower its number (or delete the line at 0).
-# Never raise a number or add a file by hand. Total: 80
+# Never raise a number or add a file by hand. Total: 76
 # 2026-11-11, KitScreen.kt 4 to 6: the floating header's pane asks the effects layer for its face on two lines (the bar's glass on the floating path), the same hand-wired lens call the bar already made; counted by the rewrite run, not a new painted surface.
 # 2026-11-11, added by hand for the dock's glass: DockFace.kt 1, the edge dock's glass body asked of the effects layer (kitLiquidFace, LiquidRole.Dock), as every liquid pane is.
 ui/kit-chat/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kitchat/card/KitAgentCard.kt	2
@@ -14,7 +14,7 @@ ui/kit-chat/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kitchat/markdown/K
 ui/kit-chat/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kitchat/markdown/KitPictureTiles.kt	1
 ui/kit-chat/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kitchat/request/KitPermissionCard.kt	1
 ui/kit-chat/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kitchat/request/KitRequestFrame.kt	4
-ui/kit-chat/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kitchat/request/KitRequestTargets.kt	4
+ui/kit-chat/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kitchat/request/KitRequestTargets.kt	2
 ui/kit-chat/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kitchat/tool/KitCommandBox.kt	2
 ui/kit-chat/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kitchat/tool/KitToolOutput.kt	2
 ui/kit-chat/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kitchat/transcript/KitPromptBubble.kt	3
@@ -27,7 +27,7 @@ ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/choice/KitStepSlide
 ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/choice/KitWheel.kt	1
 ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/dock/DockFace.kt	1
 ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/foundation/KitPanel.kt	1
-ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/frame/KitJumpPill.kt	4
+ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/frame/KitJumpPill.kt	3
 ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/frame/KitScreen.kt	6
 ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/frame/KitShellBar.kt	1
 ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/input/KitAskField.kt	1
@@ -36,7 +36,7 @@ ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/input/KitSearchFiel
 ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/modal/KitMenu.kt	2
 ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/modal/KitSheet.kt	3
 ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/modal/KitSideSheet.kt	1
-ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/modal/KitToast.kt	2
+ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/modal/KitToast.kt	1
 ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/modal/KitUndoBar.kt	2
 ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/motion/KitMotionBuilders.kt	1
 ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/motion/KitRefresh.kt	1

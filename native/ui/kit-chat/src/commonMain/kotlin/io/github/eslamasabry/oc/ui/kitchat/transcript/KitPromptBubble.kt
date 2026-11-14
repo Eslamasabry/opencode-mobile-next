@@ -43,6 +43,12 @@ import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappable
 import io.github.eslamasabry.oc.ui.kit.foundation.kitHairline
+import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceInput
+import io.github.eslamasabry.oc.ui.kit.foundation.kitDressedLook
+import io.github.eslamasabry.oc.ui.kit.foundation.kitSurface
+import io.github.eslamasabry.oc.ui.design.style.Radii
+import io.github.eslamasabry.oc.ui.design.style.SurfaceRole
+import io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
 import io.github.eslamasabry.oc.ui.kit.motion.KitPace
 import io.github.eslamasabry.oc.ui.kit.motion.pace
@@ -94,6 +100,15 @@ internal fun kitBubbleShape(): RoundedCornerShape =
         bottomStart = FlutterKitTokens.BUBBLE_RADIUS.dp,
     )
 
+/** The bubble's token corners ([kitBubbleShape]) as radii a style runs through its Corners knob. */
+internal fun kitBubbleRadii(): Radii =
+    Radii(
+        topStart = FlutterKitTokens.BUBBLE_RADIUS.toFloat(),
+        topEnd = FlutterKitTokens.BUBBLE_RADIUS.toFloat(),
+        bottomStart = FlutterKitTokens.BUBBLE_RADIUS.toFloat(),
+        bottomEnd = FlutterKitTokens.BUBBLE_TAIL_RADIUS.toFloat(),
+    )
+
 /**
  * The bubble's fill (Flutter `kitPromptBubbleFill`, kit_message.dart:303-306). Dark: `surface2`. Light: `surface2` is
  * white, the page's own colour, so the bubble would vanish; it is `text1` at 7 % over the ground instead.
@@ -120,6 +135,18 @@ public fun KitPromptBubble(
 ) {
     val colors = LocalKitColors.current
     val shape = kitBubbleShape()
+    // Brutal and Paper dress the bubble as a card on the page (audit 2026-11-14: it stayed soft and rounded beside
+    // Brutal's ink-edged box): its own fill, the style's edge, shadow and corners (the tail corner too). Null keeps it.
+    val dressed =
+        kitDressedLook(
+            KitSurfaceInput(
+                role = SurfaceRole.Content,
+                shape = KitShapeId.Card,
+                level = SurfaceLevel.Surface2,
+                color = kitPromptBubbleFill(colors),
+                corners = kitBubbleRadii(),
+            )
+        )
     Box(modifier.then(column()), contentAlignment = Alignment.CenterEnd) {
         Column(Modifier.fillMaxWidth(BUBBLE_MAX_SHARE), horizontalAlignment = Alignment.End) {
             Column(
@@ -127,8 +154,7 @@ public fun KitPromptBubble(
                 // (kit_message.dart:629-641).
                 (if (attachments.isEmpty()) Modifier else Modifier.fillMaxWidth())
                     .testTag(PROMPT_BUBBLE_TAG)
-                    .background(kitPromptBubbleFill(colors), shape)
-                    .border(kitHairline(), colors.hairline, shape)
+                    .then(dressed?.let { Modifier.kitSurface(it) } ?: Modifier.background(kitPromptBubbleFill(colors), shape).border(kitHairline(), colors.hairline, shape))
                     .padding(horizontal = Space.S3.dp, vertical = BUBBLE_PADDING_VERTICAL.dp)
             ) {
                 if (text.isNotEmpty()) PromptWords(text)

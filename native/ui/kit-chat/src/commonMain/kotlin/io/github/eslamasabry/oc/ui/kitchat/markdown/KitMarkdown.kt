@@ -1,6 +1,10 @@
 package io.github.eslamasabry.oc.ui.kitchat.markdown
 
 import androidx.compose.foundation.background
+import io.github.eslamasabry.oc.ui.kit.foundation.kitDressedDecoration
+import io.github.eslamasabry.oc.ui.kit.foundation.edgeColor
+import io.github.eslamasabry.oc.ui.design.style.SurfaceRole
+import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
 import androidx.compose.foundation.border
 import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.RepeatMode
@@ -588,6 +592,7 @@ public fun KitMarkdownTable(
         }
     val scroll = rememberScrollState()
     val scope = rememberCoroutineScope()
+    val tableFrame = kitDressedDecoration(SurfaceRole.Code, KitShapeId.Square, color = Color.Transparent)
     BoxWithConstraints(modifier.fillMaxWidth()) {
         val available = constraints.maxWidth
         Box(
@@ -617,8 +622,10 @@ public fun KitMarkdownTable(
                 .semantics { collectionInfo = CollectionInfo(rows.size, columns) }
         ) {
             Layout(
-                // C-024: the table's frame is one device-pixel hairline on every side.
-                modifier = Modifier.border((1f / LocalDensity.current.density).dp, colors.hairline),
+                // C-024: the table's frame is one device-pixel hairline on every side. Brutal and Paper frame it with
+                // the style's code edge (Brutal's ink, Paper's ink rule; audit 2026-11-14), square, drawn over the
+                // header band so it reads the same width on every side.
+                modifier = tableFrame?.let { f -> f.edgeColor?.let { Modifier.border(f.edgeWidthDp.dp, it) } } ?: Modifier.border((1f / LocalDensity.current.density).dp, colors.hairline),
                 content = {
                     rows.forEachIndexed { r, row ->
                         for (c in 0 until columns) {

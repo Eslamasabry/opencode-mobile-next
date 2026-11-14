@@ -64,6 +64,7 @@ import io.github.eslamasabry.oc.ui.kit.state.KitSkeletonRows
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
 import io.github.eslamasabry.oc.ui.kit.row.kitChosenPlate
+import io.github.eslamasabry.oc.ui.kit.row.kitChosenPlateRadius
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.kitChoiceCurrent
@@ -274,7 +275,7 @@ public fun KitChoiceRow(
                     // the words (on the rail) and the trailing star both lie inside it. It used to step in by the
                     // whole bleed as well, which started the plate after the words and left the star outside it
                     // (owner 2026-11-10).
-                    ?: Modifier.kitChosenPlate(fill),
+                    ?: Modifier.kitChosenPlate(fill, radius = kitChosenPlateRadius()),
             )
             // Flutter floors a choice row at the two-line row height (64, 56 compact): F: lib/ui/kit/kit_choice_list.dart:635-637.
             .heightIn(min = tokens.rowHeightTwo.dp)
