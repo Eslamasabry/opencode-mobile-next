@@ -115,8 +115,8 @@ public fun KitComposerLimitStrip(
         exit = if (motion.reduced) ExitTransition.None else shrinkVertically(specs.quick()) + fadeOut(specs.quick()),
         label = "composer-limit-strip",
     ) {
-        val shown = notice ?: held[0] ?: return@AnimatedVisibility
-        LimitBand(shown, onViewUsage, onDismiss)
+        val shown = notice ?: held[0]
+        if (shown != null) LimitBand(shown, onViewUsage, onDismiss)
     }
 }
 

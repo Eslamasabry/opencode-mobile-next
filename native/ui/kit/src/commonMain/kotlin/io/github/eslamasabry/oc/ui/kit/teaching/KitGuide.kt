@@ -294,8 +294,8 @@ private fun Rail(items: List<KitGuideItem>, selected: String?, group: KitGuideGr
                     }
                 }
             }
-            return@Column
-        }
+        } else {
+        // No early return out of this block: the rest of the body is the else branch.
         val at = items.indexOfFirst { it.id == selected }
         Crumb(group, items.size, at)
         Spacer(Modifier.height(Space.S2.dp))
@@ -311,6 +311,7 @@ private fun Rail(items: List<KitGuideItem>, selected: String?, group: KitGuideGr
                     chip(item, Modifier.weight(1f).fillMaxHeight())
                 }
             }
+        }
         }
     }
 }

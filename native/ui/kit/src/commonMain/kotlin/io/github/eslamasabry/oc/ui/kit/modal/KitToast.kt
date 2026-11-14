@@ -116,8 +116,8 @@ public fun KitToastHost(state: KitToastState, modifier: Modifier = Modifier) {
                 else fadeOut(specs.exit()),
             label = "kit.toast",
         ) {
-            val shown = toast ?: return@AnimatedVisibility
-            ToastPill(shown)
+            val shown = toast
+            if (shown != null) ToastPill(shown)
         }
     }
 }

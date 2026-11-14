@@ -84,8 +84,8 @@ public fun KitBreadcrumb(
 
         if (segments.isEmpty()) {
             Trail { Current(rootLabel, semibold, Modifier.weight(1f, fill = false)) }
-            return@BoxWithConstraints
-        }
+        } else {
+        // No early return out of this block: the rest of the body is the else branch.
 
         val count = segments.size
         val parentIndex = count - 2 // F: lib/ui/kit/kit_breadcrumb.dart:113
@@ -130,6 +130,7 @@ public fun KitBreadcrumb(
             }
             sep()
             Current(segments.last(), semibold, Modifier.weight(1f, fill = false))
+        }
         }
     }
 }

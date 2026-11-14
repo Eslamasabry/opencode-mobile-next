@@ -388,9 +388,8 @@ public fun KitTopBar(
                 }
                 actionRow()
             }
-            return@Column
-        }
-        if (back) {
+        } else if (back) {
+            // No early return out of this block: leaving a composable lambda half way unwinds its groups by marker.
             BackBar(
                 exit = { ExitButton(ExitGlyph.Back, exitLabel.orEmpty(), onExit, -1f) },
                 // E20-S10: with a line under it, the title's room (and its tap area) ends just under its words, and it
@@ -412,8 +411,8 @@ public fun KitTopBar(
                 },
                 actions = actionRow,
             )
-            return@Column
-        } else Row(
+        } else {
+        Row(
             Modifier.fillMaxWidth().heightIn(min = (if (hasLine) tokens.minTarget else tokens.rowHeightOne).dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(Space.S1.dp),
@@ -450,6 +449,7 @@ public fun KitTopBar(
             ) {
                 under()
             }
+        }
         }
     }
 }

@@ -825,7 +825,9 @@ private fun BranchSheet(state: GitUi, actions: GitActions) {
                 enabled = reason?.let { KitEnabled.Disabled(it) } ?: hold,
             ),
     ) {
-        val branches = snapshot?.branches ?: return@KitSheet
+        // No early return out of a composable block: nothing is drawn until the branches are known.
+        val branches = snapshot?.branches
+        if (branches != null) {
         val choices =
             branches.local.map { branch ->
                 KitChoice(
@@ -868,6 +870,7 @@ private fun BranchSheet(state: GitUi, actions: GitActions) {
                     if (invalid) stringResource(Res.string.gitProblemInvalidBranchName) else null,
                 modifier = Modifier.testTag("git-new-branch"),
             )
+        }
         }
     }
 }

@@ -59,7 +59,8 @@ internal fun ChatTimelineSheet(timeline: TimelineUi?, actions: ChatActions, nowM
         title = stringResource(Res.string.chatUiMessageTimeline),
         subtitle = if (timeline?.entries?.any { it.forkable } == true) stringResource(Res.string.chatUiJumpAnywhereForkRestoresAPromptFor) else null,
     ) {
-        if (timeline == null) return@KitSheet
+        // No early return out of a composable block: the rest of the body sits inside this if.
+        if (timeline != null) {
         val field = rememberTextFieldState(timeline.query)
         val mask = rememberKitMask()
         val platform = LocalKitPlatform.current
@@ -141,6 +142,7 @@ internal fun ChatTimelineSheet(timeline: TimelineUi?, actions: ChatActions, nowM
                 modifier = Modifier.testTag("timeline-row-${entry.messageId}"),
                 onClick = { actions.timelineSelect(entry.messageId) },
             )
+        }
         }
         }
     }

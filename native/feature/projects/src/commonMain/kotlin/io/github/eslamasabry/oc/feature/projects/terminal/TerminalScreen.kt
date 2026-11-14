@@ -217,8 +217,8 @@ public fun TerminalScreen(state: TerminalUi, actions: TerminalActions) {
                         else Res.string.terminal40Unavailable
                     )
                 )
-                return@Column
-            }
+            } else {
+            // No early return out of this block: the rest of the page is the else branch.
             state.failure?.let { failure ->
                 KitErrorNotice(
                     message = stringResource(Res.string.terminal40Failed),
@@ -353,6 +353,7 @@ public fun TerminalScreen(state: TerminalUi, actions: TerminalActions) {
                         actions.key(terminalActionKey(key))
                     },
                 )
+            }
             }
         }
         KitInputDialog(

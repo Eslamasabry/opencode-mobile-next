@@ -51,6 +51,9 @@ public fun MemorySectionContent(state: MemorySectionUi, actions: MemorySectionAc
     // Off, or not read yet: nothing to say.
     if (!state.shown || !state.loaded) return
     val title = stringResource(Res.string.fbMemoryTitle)
+    // Stopped or starting on this phone: said in words, with Start, instead of "did not answer".
+    val unanswered = state.load == FactsBookLoad.Failed || state.error != null
+    // No early return out of the column: one if / else-if chain picks what it draws.
     Column(modifier.fillMaxWidth().testTag("factsbook-memory")) {
         if (!state.paired) {
             KitRowGroup(label = title) {
@@ -62,11 +65,7 @@ public fun MemorySectionContent(state: MemorySectionUi, actions: MemorySectionAc
                     onClick = actions::setUp,
                 )
             }
-            return@Column
-        }
-        // Stopped or starting on this phone: said in words, with Start, instead of "did not answer".
-        val unanswered = state.load == FactsBookLoad.Failed || state.error != null
-        if ((unanswered || state.nodeStarting) && (state.nodeStopped || state.nodeStarting)) {
+        } else if ((unanswered || state.nodeStarting) && (state.nodeStopped || state.nodeStarting)) {
             KitRowGroup(label = title) {
                 KitRow(
                     title = stringResource(if (state.nodeStarting) Res.string.fbMemoryStarting else Res.string.fbMemoryStopped),
@@ -78,8 +77,7 @@ public fun MemorySectionContent(state: MemorySectionUi, actions: MemorySectionAc
                         else KitRowTrailing.Action(KitLineAction(stringResource(Res.string.fbMemoryStart), actions::startNode, semanticsLabel = stringResource(Res.string.fbNodeStart))),
                 )
             }
-            return@Column
-        }
+        } else {
         // The label above the loading rows, or above the error when nothing is held on this phone (F: memory_section.dart:291).
         if (state.load == FactsBookLoad.Loading || (state.load == FactsBookLoad.Failed && state.needsYou.isEmpty())) {
             KitText(
@@ -133,6 +131,7 @@ public fun MemorySectionContent(state: MemorySectionUi, actions: MemorySectionAc
                 trailing = KitRowTrailing.Chevron,
                 onClick = actions::addSomething,
             )
+        }
         }
     }
 }

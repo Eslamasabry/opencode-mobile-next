@@ -72,8 +72,7 @@ internal fun PhoneBody(sheet: HeaderSheet.ContinueOnPhone, actions: ChatHeaderAc
                 modifier = Modifier.testTag("continue-on-phone-unavailable"),
                 message = stringResource(Res.string.handoffUiPhoneUnavailable),
             )
-            return@Column
-        }
+        } else {
         KitText(
             stringResource(
                 if (include && offer != null) Res.string.sessionAddressIntro else Res.string.handoffUiPhoneIntro
@@ -127,6 +126,7 @@ internal fun PhoneBody(sheet: HeaderSheet.ContinueOnPhone, actions: ChatHeaderAc
                 )
             }
             PhoneSheetShow.None -> Unit
+        }
         }
     }
 }

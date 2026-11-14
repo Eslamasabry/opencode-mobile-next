@@ -1024,10 +1024,8 @@ private fun UndoFromHereContent(state: UndoFromHereUi, actions: UndoFromHereActi
     ) {
         if (!state.available) {
             KitStateView(KitStateKind.Calm, stringResource(Res.string.reviewUndoUnavailable))
-            return@KitScreen
-        }
-        if (state.load != ReviewLoad.Ready) return@KitScreen
-        Page {
+        } else if (state.load == ReviewLoad.Ready) Page {
+            // No early return out of a composable block: nothing is drawn until the review is ready.
             val count = state.messagesAfter
             KitText(
                 when {
@@ -1145,17 +1143,17 @@ private fun StagedContent(state: StagedUi, actions: StagedActions) {
         edges = KitScreenEdges.Bleed,
     ) {
         val back = KitAction(stringResource(Res.string.reviewRevertBackAction), actions::back)
-        state.loadFailure?.let {
+        // No early return out of a composable block: a failed load or the phase picks what is drawn.
+        val loadFailure = state.loadFailure
+        if (loadFailure != null) {
             KitStateView(
                 KitStateKind.Error,
                 stringResource(Res.string.reviewRevertFailed),
-                failure = it,
+                failure = loadFailure,
                 onRetry = actions::retry,
                 retryLabel = stringResource(Res.string.kitTryAgain),
             )
-            return@KitScreen
-        }
-        when (state.phase) {
+        } else when (state.phase) {
             StagedPhase.Loading -> Unit
             StagedPhase.None ->
                 KitStateView(

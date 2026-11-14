@@ -73,8 +73,8 @@ public fun KeepRunningScreen(state: KeepRunningUi, actions: KeepRunningActions) 
         loading = !state.loaded,
         edges = KitScreenEdges.Bleed,
     ) {
-        if (!state.loaded) return@KitScreen
-        Column(Modifier.fillMaxWidth().verticalScroll(kitPageScrollState())) {
+        // No early return out of a composable block: nothing is drawn until the state is loaded.
+        if (state.loaded) Column(Modifier.fillMaxWidth().verticalScroll(kitPageScrollState())) {
             if (state.allSet) {
                 KitNotice(
                     title = stringResource(Res.string.keepRunningAllSetTitle),

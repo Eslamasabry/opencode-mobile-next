@@ -38,20 +38,23 @@ internal fun ImportConversationSheet(import: ImportUi?, actions: ChatsAllActions
         title = stringResource(Res.string.libraryImportAConversation),
         closeLabel = stringResource(Res.string.kitSheetClose),
     ) {
-        val open = import ?: return@KitSheet
-        val session = open.session
-        if (session == null) {
-            KitRowGroup {
-                open.choices.forEach { server ->
-                    KitRow(
-                        title = server.name,
-                        trailing = KitRowTrailing.Chevron,
-                        onClick = { actions.importPick(server.profile) },
-                    )
+        // No early return out of a composable block: nothing is drawn while the sheet closes.
+        val open = import
+        val session = open?.session
+        if (open != null) {
+            if (session == null) {
+                KitRowGroup {
+                    open.choices.forEach { server ->
+                        KitRow(
+                            title = server.name,
+                            trailing = KitRowTrailing.Chevron,
+                            onClick = { actions.importPick(server.profile) },
+                        )
+                    }
                 }
+            } else {
+                ImportBody(session, actions)
             }
-        } else {
-            ImportBody(session, actions)
         }
     }
 }

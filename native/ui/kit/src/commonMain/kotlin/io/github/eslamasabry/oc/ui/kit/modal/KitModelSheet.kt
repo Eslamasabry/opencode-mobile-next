@@ -471,9 +471,11 @@ private fun ColumnScope.ModelSheetBody(
                         maxTabs = Int.MAX_VALUE,
                     )
                     KitTabPages(tabs, Modifier.weight(1f).fillMaxWidth(), pageTitle = { labels.getOrNull(it).orEmpty() }) { i ->
-                        val page = pages.getOrNull(i) ?: return@KitTabPages
-                        val items = remember(page, offersServerDefault, lead, twins, current) { pageItems(page, offersServerDefault, lead, twins, current) }
-                        list(items, entrance.takeIf { page.key == entrancePage })
+                        val page = pages.getOrNull(i)
+                        if (page != null) {
+                            val items = remember(page, offersServerDefault, lead, twins, current) { pageItems(page, offersServerDefault, lead, twins, current) }
+                            list(items, entrance.takeIf { page.key == entrancePage })
+                        }
                     }
                 }
             else -> {

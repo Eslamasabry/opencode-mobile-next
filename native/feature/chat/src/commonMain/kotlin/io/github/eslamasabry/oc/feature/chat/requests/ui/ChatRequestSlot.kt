@@ -514,7 +514,9 @@ private fun PermissionDetailsSheet(
             })
         },
     ) {
-        val details = shown ?: return@KitSheet
+        // No early return out of a composable block: the rest of the body sits inside this if.
+        val details = shown
+        if (details != null) {
         Column(
             Modifier.fillMaxWidth().testTag("chat-permission-details"),
             verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
@@ -574,6 +576,7 @@ private fun PermissionDetailsSheet(
                 // The note travels with Deny only; Allow once never sends it.
                 helper = stringResource(Res.string.approvalNoteDenyOnly),
             )
+        }
         }
     }
 }

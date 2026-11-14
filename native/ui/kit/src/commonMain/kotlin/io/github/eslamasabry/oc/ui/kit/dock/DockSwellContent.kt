@@ -102,8 +102,8 @@ internal fun DockSwellContent(state: KitEdgeDockState, layout: SwellLayout, ring
     ) {
         if (layout.kind == SwellKind.Rename) {
             RenameField(state, layout, ring, words, boxW)
-            return@Box
-        }
+        } else {
+        // No early return out of this block: the rest of the body is the else branch.
         val hot = state.target
         val order = remember(ring.children) { childOrder(ring.children) }
         for (t in layout.targets) {
@@ -147,6 +147,7 @@ internal fun DockSwellContent(state: KitEdgeDockState, layout: SwellLayout, ring
                     )
                 }
             }
+        }
         }
     }
 }

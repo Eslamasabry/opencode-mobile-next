@@ -144,8 +144,8 @@ private fun RowDetailsSheet(details: io.github.eslamasabry.oc.feature.chats.pres
         subtitle = shown?.let { rowTitleWords(it.title) },
         closeLabel = stringResource(Res.string.kitSheetClose),
     ) {
-        val facts = shown ?: return@KitSheet
-        Column(Modifier.testTag("chats-row-details")) {
+        val facts = shown
+        if (facts != null) Column(Modifier.testTag("chats-row-details")) {
             KitRowGroup {
                 facts.server?.let { KitRow(stringResource(Res.string.chatHeaderServer), trailing = KitRowTrailing.Value(KitBidi.auto(it), chevron = false)) }
                 facts.project?.let { KitRow(stringResource(Res.string.continueWithFactProject), trailing = KitRowTrailing.Value(KitBidi.auto(it), chevron = false)) }

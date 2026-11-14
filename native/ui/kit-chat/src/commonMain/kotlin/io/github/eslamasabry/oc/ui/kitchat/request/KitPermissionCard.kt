@@ -208,8 +208,8 @@ public fun KitPermissionCard(
     ) {
         if (question) {
             QuestionWords(title, summary, toolLabel, targets, subject, waitingAge, waitingMore, onDetails)
-            return@KitRequestFrame
-        }
+        } else {
+        // No early return out of this block: the rest of the body is the else branch.
         val titleText: @Composable () -> Unit = {
             KitText(
                 title,
@@ -262,6 +262,7 @@ public fun KitPermissionCard(
             }
         }
         if (change != null) ChangePreview(change)
+        }
     }
 }
 

@@ -496,7 +496,8 @@ internal fun PhoneAgentSheet(state: AgentsUi, actions: AgentsActions, enabled: K
                     )
             },
     ) {
-        if (tile == null) return@KitSheet
+        // No early return out of a composable block: the rest of the body sits inside this if.
+        if (tile != null) {
         when {
             tile.state == AgentTileState.Installing -> {
                 KitProgressView(tileProgress(tile))
@@ -526,6 +527,7 @@ internal fun PhoneAgentSheet(state: AgentsUi, actions: AgentsActions, enabled: K
             tile.state == AgentTileState.Unavailable && tile.agent.signInUnchecked ->
                 KitText(stringResource(Res.string.agentsSignInUncheckedBody))
             else -> Unit
+        }
         }
     }
 }
