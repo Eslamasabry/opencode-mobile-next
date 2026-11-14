@@ -51,6 +51,7 @@ import io.github.eslamasabry.oc.ui.kitchat.tool.KitToolRow
 import io.github.eslamasabry.oc.ui.kitchat.tool.KitToolStatus
 import io.github.eslamasabry.oc.ui.kitchat.tool.KitToolView
 import io.github.eslamasabry.oc.ui.kitchat.transcript.KitQuietLine
+import io.github.eslamasabry.oc.ui.kitchat.transcript.REPLY_ACTIONS_EDGE_INSET
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.chatUiConnectorSearchEmpty
 import io.github.eslamasabry.oc.ui.words.res.chatUiConnectorSearchNotLoaded
@@ -216,7 +217,7 @@ internal fun TurnWorkLine(
         }
     KitStepList(
         // The reply's 16 dp edge: the glyphs and the rail sit on it, the steps' words one column in.
-        modifier = Modifier.padding(horizontal = Space.S4.dp).testTag("chat-work-line"),
+        modifier = Modifier.padding(start = Space.S4.dp, end = REPLY_ACTIONS_EDGE_INSET.dp).testTag("chat-work-line"),
         fold = cut.fold?.let { stepFoldLine(it, open) { folds.open[foldKey] = !open } },
         earlier = earlier,
     ) {
@@ -408,7 +409,7 @@ internal fun ThoughtWorkLine(
         }
     KitStepList(
         // The reply's 16 dp edge, as the turn's other steps.
-        modifier = Modifier.padding(horizontal = Space.S4.dp).testTag("chat-work-line"),
+        modifier = Modifier.padding(start = Space.S4.dp, end = REPLY_ACTIONS_EDGE_INSET.dp).testTag("chat-work-line"),
         fold = cut.fold?.let { stepFoldLine(it, open) { folds.open[foldKey] = !open } },
         earlier = earlier,
     ) {
@@ -424,7 +425,7 @@ internal fun ThoughtWorkLine(
 internal fun FoldedThoughtLine(rowKey: String, text: String, folds: TranscriptFolds?) {
     val key = "thought-line:$rowKey"
     val open = folds?.open?.get(key) ?: false
-    KitStepList(modifier = Modifier.padding(horizontal = Space.S4.dp).testTag("chat-work-line")) {
+    KitStepList(modifier = Modifier.padding(start = Space.S4.dp, end = REPLY_ACTIONS_EDGE_INSET.dp).testTag("chat-work-line")) {
         KitStepFold(
             title = stringResource(Res.string.kitMessageThought),
             expanded = open,
