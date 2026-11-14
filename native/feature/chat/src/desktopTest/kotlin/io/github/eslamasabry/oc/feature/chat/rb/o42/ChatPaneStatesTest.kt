@@ -1,5 +1,8 @@
 package io.github.eslamasabry.oc.feature.chat.rb.o42
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertCountEquals
@@ -56,14 +59,28 @@ class ChatPaneStatesTest {
     }
 
     @Test
-    fun `E3 first load shows two placeholder turns at the bottom and no composer`() = runDesktopComposeUiTest(412, 915) {
-        val scene = ChatScene()
-        setContent { E20Scene { scene.Screen(scene.live().copy(phase = ChatPhase.Loading, rows = persistentListOf())) } }
-        waitForIdle()
-        val skeleton = boundsOfTag("chat-loading")
-        assertTrue(skeleton.bottom > 915f * 0.75f, "the placeholder turns rest at the bottom, ended at ${skeleton.bottom}")
-        onAllNodesWithTag("kit-composer-box", useUnmergedTree = true).assertCountEquals(0)
-    }
+    // Owner 2026-11-14 (a loading conversation was a top bar and nothing else): was "... and no composer". The message
+    // box stands in its place while the conversation loads, so the page keeps its shape and nothing moves when it has.
+    fun `E3 first load shows two placeholder turns at the bottom over the message box, which keeps its place`() =
+        runDesktopComposeUiTest(412, 915) {
+            val scene = ChatScene()
+            var state by mutableStateOf(scene.live().copy(phase = ChatPhase.Loading, rows = persistentListOf()))
+            setContent { E20Scene { scene.Screen(state) } }
+            waitForIdle()
+            val skeleton = boundsOfTag("chat-loading")
+            val loadingBox = boundsOfTag("kit-composer-box")
+            assertTrue(skeleton.bottom > 915f * 0.6f, "the placeholder turns rest at the bottom, ended at ${skeleton.bottom}")
+            assertTrue(skeleton.bottom <= loadingBox.top + 0.5f, "the turns $skeleton end above the message box $loadingBox")
+            state = scene.live()
+            waitForIdle()
+            val liveBox = boundsOfTag("kit-composer-box")
+            for ((what, pair) in listOf(
+                "top" to (loadingBox.top to liveBox.top),
+                "bottom" to (loadingBox.bottom to liveBox.bottom),
+                "left" to (loadingBox.left to liveBox.left),
+                "right" to (loadingBox.right to liveBox.right),
+            )) assertEquals(pair.first, pair.second, 0.5f, "the message box's $what while loading and live")
+        }
 
     @Test
     fun `E4 could not load is a centred page with the cable, Report a problem and Details, without a composer`() =
