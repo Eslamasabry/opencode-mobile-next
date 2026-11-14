@@ -172,4 +172,18 @@ class AgentOwnershipTest {
         assertFalse(o.retainedAfterRemoving(two, ids("two")))
         assertEquals(emptySet(), o.retainedPreferenceKeys(two, ids("two")))
     }
+
+    @Test
+    fun `B-AGENT-REG-003 the agent registry is the owner's, kept with a retained home`() {
+        val prefs =
+            FakeAgentPrefs(
+                mapOf(
+                    "oc.phoneAgentFacts.one" to "{\"codex\":{\"installed\":true,\"found\":\"0.160.0\"}}",
+                    "oc.phoneAgentFacts.two" to "{}",
+                ),
+            )
+        val o = AgentOwnership(prefs)
+        assertTrue("oc.phoneAgentFacts.one" in o.ownerPreferenceKeys(one))
+        assertFalse("oc.phoneAgentFacts.two" in o.ownerPreferenceKeys(one))
+    }
 }
