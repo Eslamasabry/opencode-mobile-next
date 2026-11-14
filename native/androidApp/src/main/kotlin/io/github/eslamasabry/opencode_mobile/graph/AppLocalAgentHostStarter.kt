@@ -110,7 +110,9 @@ class AppLocalAgentHostStarter(
                     )
             }
         // The rows are read at every start, saved source or not: New conversation lists the phone's agents from them,
-        // and without this read they stayed empty until the Agents page was opened.
+        // and without this read they stayed empty until the Agents page was opened. What the saved registry knows is
+        // published first, so no reader waits for the read's checks.
+        phone.recall()
         phone.refresh()
         if (saved) return Outcome.Ok(null)
         val state = phone.state.value

@@ -80,7 +80,11 @@ internal object PhoneAgentRules {
 
     /**
      * This phone's own install of the pinned version is verified by its install step, so it needs no earlier proof; a
-     * version proved by the Flutter app counts while its helper is a tested one.
+     * version proved by the Flutter app counts while its helper is a tested one; and so does a version this phone's
+     * registry ([record]) saw able to start a conversation, after an app update moved the agent's pin past it (the
+     * automatic update brings the pinned copy; until then the copy that ran yesterday still runs, as the engine's
+     * `GateInspection.behindPin` says). Before, every such agent read "Phone check needed" from the first frame after
+     * the update and was absent from New conversation until the update or a check ended.
      */
     fun qualified(
         agent: AgentDescriptor,
@@ -88,9 +92,23 @@ internal object PhoneAgentRules {
         gate: JsonObject?,
         found: String?,
         pins: AgentPins = AgentPins.builtIn,
+        record: PhoneAgentFacts.Fact? = null,
     ): Boolean =
         found != null &&
-            (found == agent.recipe?.version || PhoneGate.qualifies(gate, agent, architecture, pins, found))
+            (found == agent.recipe?.version ||
+                PhoneGate.qualifies(gate, agent, architecture, pins, found) ||
+                PhoneAgentFacts.provenRuns(record, found, pins))
+
+    /**
+     * A row past the phone check: it can start a conversation, or would once signed in, resumed or past its limit.
+     * The version it runs is then proven ([PhoneAgentFacts.Fact.proven]).
+     */
+    fun pastCheck(status: PhoneAgentStatus): Boolean =
+        status == PhoneAgentStatus.Ready ||
+            status == PhoneAgentStatus.SetUpAtFirstUse ||
+            status == PhoneAgentStatus.SignInNeeded ||
+            status == PhoneAgentStatus.Stopped ||
+            status == PhoneAgentStatus.Limit
 
     /**
      * Whether saved server [id] is the helper's own "Phone agents" server, whose helper the app starts when the server

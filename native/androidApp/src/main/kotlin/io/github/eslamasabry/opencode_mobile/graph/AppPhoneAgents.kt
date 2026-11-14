@@ -146,11 +146,17 @@ class AppPhoneAgents(
 
     private fun gatePrefs(owner: ProfileId) = KvAgentPrefs(stores.prefs, stores.lanes.forProfile(owner))
 
-    /** The proof stored for [site]'s agent is dropped before a check, as Flutter did (a failed check proves nothing). */
+    /**
+     * The proof stored for [site]'s agent is dropped before a check, as Flutter did (a failed check proves nothing),
+     * and so is the registry's proof of the version that ran ([PhoneAgentFacts.Fact.proven]).
+     */
     internal suspend fun clearGate(site: CheckSite): Outcome<Unit> {
         val prefs = gatePrefs(site.owner)
         val gates = LinkedHashMap<String, JsonElement>(PhoneGate.read(prefs, site.owner)).apply { remove(site.agent.id.raw) }
         forgetVersion(site)
+        keepFacts(site.owner) {
+            PhoneAgentFacts.forget(it, site.agent.id.raw, version = false, signIn = false, proof = true)
+        }
         return PhoneGate.write(prefs, site.owner, gates)
     }
 
@@ -320,19 +326,20 @@ class AppPhoneAgents(
             }
         if ((read as? Outcome.Ok)?.value != true) return false
         // The versions just read are kept as facts; a kept sign-in answer stays (this read does not probe it).
-        val kept = keptFacts(owner)
         val merged =
-            PhoneAgentFacts.merge(
-                kept,
-                agents.associate { agent ->
-                    agent.id.raw to
-                        PhoneAgentFacts.of(knownVersion(owner, agent), null)
-                            .copy(signedIn = kept[agent.id.raw]?.signedIn)
-                },
-            )
-        if (merged != kept) {
-            gatePrefs(owner).commit { putString(PhoneAgentFacts.key(owner.raw), PhoneAgentFacts.encode(merged)) }
-        }
+            keepFacts(owner) { kept ->
+                PhoneAgentFacts.merge(
+                    kept,
+                    agents.associate { agent ->
+                        agent.id.raw to
+                            PhoneAgentFacts.of(knownVersion(owner, agent), null, helperPin, appBuild)
+                                .copy(
+                                    signedIn = kept[agent.id.raw]?.signedIn,
+                                    signedInAt = kept[agent.id.raw]?.signedInAt,
+                                )
+                    },
+                )
+            }
         val anyInstalled = merged.values.any { it.installed == true || it.found != null }
         if (anyInstalled) {
             val place =
@@ -493,6 +500,33 @@ class AppPhoneAgents(
      */
     override suspend fun refresh(): Outcome<Unit> = lane.read { stop -> refreshLocked(stop) } ?: Outcome.Ok(Unit)
 
+    /** How many states [publish] has set: [recall] publishes only over the catalog's first rows. */
+    private var published = 0L
+
+    /**
+     * The rows the registry ([PhoneAgentFacts]) holds, published at once when nothing was read yet in this run: no
+     * check starts and no lane is taken (the payload folders and the helper's status record are only looked at). Every
+     * reader of [state] (New conversation, the home, the widget, the Agents page) then has what is known from its first
+     * frame after a cold start, an app update or a phone restart, instead of the catalog's "Checking" rows (which
+     * New conversation cannot offer) until the first read publishes.
+     */
+    override suspend fun recall() {
+        if (needsRestart || synchronized(admission) { published } > 0) return
+        if (stores.warm() is Outcome.Failed) return
+        val owner = ownerId()
+        val authOwner = agentOwner(owner) ?: return
+        val before = synchronized(admission) { published }
+        if (before > 0) return
+        val known = native { snapshot(owner, authOwner, null, false, phoneCatalog(), final = false) }
+        if (known !is Outcome.Ok) return
+        synchronized(admission) {
+            // A read that published meanwhile knows more: its state stands.
+            if (published != before || (owner != null && owner in denied) || authOwner in denied) return
+            published++
+            mutable.value = withUpdateNote(known.value)
+        }
+    }
+
     /** A step's re-read at its end, under the lane the step holds; it gives way to the next step as well. */
     private suspend fun rereadLocked(): Outcome<Unit> =
         lane.readHeld { stop -> refreshLocked(stop) } ?: Outcome.Ok(Unit)
@@ -584,7 +618,7 @@ class AppPhoneAgents(
         return when (val rows = native { snapshot(owner, authOwner, shown, installing, agents, final = true) }) {
             is Outcome.Ok -> {
                 publish(owner, rows.value, final = true)
-                if (authOwner != null && !installing) remember(authOwner, agents)
+                if (authOwner != null && !installing) remember(authOwner, agents, rows.value.agents)
                 Outcome.Ok(Unit)
             }
             is Outcome.Failed -> rows
@@ -598,10 +632,12 @@ class AppPhoneAgents(
             if (final) installation(owner).dismissResult(owner)
             shownState = shownState.copy(installation = null)
         }
-        mutable.value =
-            if (owner != null && synchronized(admission) { owner in denied })
-                PhoneAgentsState(needsRestart = needsRestart)
-            else withUpdateNote(shownState)
+        synchronized(admission) {
+            published++
+            mutable.value =
+                if (owner != null && owner in denied) PhoneAgentsState(needsRestart = needsRestart)
+                else withUpdateNote(shownState)
+        }
     }
 
     /**
@@ -652,7 +688,10 @@ class AppPhoneAgents(
                 )
             } else null
         val showing = mutable.value.agents.associateBy { it.id }
-        val kept = if (final || authOwner == null) emptyMap() else keptFacts(authOwner)
+        // The registry: its proof counts in every read; its answers stand in while checks run, and in a read under an
+        // install, which runs no check at all (before, every row then lost its answers and read "Checking").
+        val record = if (authOwner == null) emptyMap() else keptFacts(authOwner)
+        val kept = if (final && !installing) emptyMap() else record
         return PhoneAgentsState(
             available = installed,
             owner = owner,
@@ -708,6 +747,7 @@ class AppPhoneAgents(
                                                             authOwner,
                                                         )[agent.id.raw],
                                                         PhoneAgentRules.foundVersion(version),
+                                                        record = record[agent.id.raw],
                                                     ),
                                             signIn = signIn,
                                             helperRunning = helperRunning,
@@ -813,27 +853,81 @@ class AppPhoneAgents(
     private fun keptFacts(owner: ProfileId): Map<String, PhoneAgentFacts.Fact> =
         PhoneAgentFacts.decode(gatePrefs(owner).string(PhoneAgentFacts.key(owner.raw)))
 
-    /** This read's answers, kept for the next app start ([PhoneAgentFacts]); written only when they changed. */
-    private suspend fun remember(owner: ProfileId, agents: List<AgentDescriptor>) {
+    /**
+     * This read's answers, kept for the next app start ([PhoneAgentFacts]); written only when they changed. A row past
+     * the phone check ([rows], [PhoneAgentRules.pastCheck]) proves the version it runs, under this helper pin and
+     * build; a version the registry already proves keeps the proof it has (a row qualified by that proof is no new
+     * check).
+     */
+    private suspend fun remember(owner: ProfileId, agents: List<AgentDescriptor>, rows: List<PhoneAgentRow>) {
+        val shown = rows.associateBy { it.id }
+        val record = keptFacts(owner)
+        val wallNow = System.currentTimeMillis()
+        val bootNow = SystemClock.elapsedRealtime()
         val facts =
             synchronized(admission) {
                 if (owner in denied) return
                 agents.associate { agent ->
+                    val key = owner to agent.id
+                    val fact =
+                        PhoneAgentFacts.of(
+                            versions[key]?.second,
+                            accounts[key],
+                            helperPin,
+                            appBuild,
+                            signedInAt = answeredAt[key]?.let { wallNow - (bootNow - it) },
+                        )
+                    val row = shown[agent.id.raw]
+                    val runs = row?.installedVersion
                     agent.id.raw to
-                        PhoneAgentFacts.of(versions[owner to agent.id]?.second, accounts[owner to agent.id])
+                        if (
+                            row != null &&
+                                runs != null &&
+                                PhoneAgentRules.pastCheck(row.status) &&
+                                fact.proven == null &&
+                                record[agent.id.raw]?.proven != runs
+                        )
+                            PhoneAgentFacts.proven(fact, runs, helperPin, appBuild)
+                        else fact
                 }
             }
-        val kept = keptFacts(owner)
-        val merged = PhoneAgentFacts.merge(kept, facts)
-        if (merged == kept) return
-        gatePrefs(owner).commit { putString(PhoneAgentFacts.key(owner.raw), PhoneAgentFacts.encode(merged)) }
+        keepFacts(owner) { PhoneAgentFacts.merge(it, facts) }
     }
+
+    /**
+     * The one path that writes the registry ([PhoneAgentFacts]): every read, step and check that changes what is known
+     * about [owner]'s agents goes through here, so each change reaches every reader of [state]. Written only when it
+     * changed; answers the record as it now stands.
+     */
+    private suspend fun keepFacts(
+        owner: ProfileId,
+        change: (Map<String, PhoneAgentFacts.Fact>) -> Map<String, PhoneAgentFacts.Fact>,
+    ): Map<String, PhoneAgentFacts.Fact> {
+        val kept = keptFacts(owner)
+        val next = change(kept)
+        if (next != kept)
+            gatePrefs(owner).commit { putString(PhoneAgentFacts.key(owner.raw), PhoneAgentFacts.encode(next)) }
+        return next
+    }
+
+    /** The helper pin and the app build a proof is checked against ([PhoneAgentFacts.provenRuns]). */
+    private val helperPin: String
+        get() = AgentPins.builtIn.paseo.version
+
+    private val appBuild: Long
+        get() = BuildConfig.VERSION_CODE.toLong()
 
     /**
      * A person's step on [agent] forgets what was known about it, here and across app starts, so neither the next
      * read nor the tile shown while it runs uses an answer the step may have changed. Other agents keep theirs.
      */
-    private suspend fun forgetFacts(owner: ProfileId, agent: AgentId, version: Boolean, signIn: Boolean) {
+    private suspend fun forgetFacts(
+        owner: ProfileId,
+        agent: AgentId,
+        version: Boolean,
+        signIn: Boolean,
+        proof: Boolean = false,
+    ) {
         val key = owner to agent
         synchronized(admission) {
             if (version) {
@@ -846,22 +940,12 @@ class AppPhoneAgents(
                 answeredAt.remove(key)
             }
         }
-        val kept = keptFacts(owner)
-        val left = PhoneAgentFacts.forget(kept, agent.raw, version, signIn)
-        if (left == kept) return
-        gatePrefs(owner).commit { putString(PhoneAgentFacts.key(owner.raw), PhoneAgentFacts.encode(left)) }
+        keepFacts(owner) { PhoneAgentFacts.forget(it, agent.raw, version, signIn, proof) }
     }
 
     /** Every kept "signed in" or "signed out" of [owner]'s agents (their versions stay). */
     private suspend fun forgetSignIns(owner: ProfileId) {
-        val kept = keptFacts(owner)
-        if (kept.values.none { it.signedIn != null }) return
-        gatePrefs(owner).commit {
-            putString(
-                PhoneAgentFacts.key(owner.raw),
-                PhoneAgentFacts.encode(kept.mapValues { (_, fact) -> fact.copy(signedIn = null) }),
-            )
-        }
+        keepFacts(owner) { kept -> kept.mapValues { (_, fact) -> fact.copy(signedIn = null, signedInAt = null) } }
     }
 
     override suspend fun install(id: String): Outcome<PhoneAgentInstallResult> = lane.step {
@@ -989,7 +1073,7 @@ class AppPhoneAgents(
             }
         synchronized(admission) { versions.clear() }
         agentOwner(ProfileId(owner))?.let {
-            forgetFacts(it, AgentId(id), version = true, signIn = true)
+            forgetFacts(it, AgentId(id), version = true, signIn = true, proof = answer is PhoneAgentRemoval.Removed)
         }
         rereadLocked()
         Outcome.Ok(answer)

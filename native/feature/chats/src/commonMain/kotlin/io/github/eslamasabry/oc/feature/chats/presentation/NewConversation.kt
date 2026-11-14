@@ -81,11 +81,15 @@ public data class NewConversationModel(
     val variants: List<String> = emptyList(),
 )
 
-/** One agent this phone can run, as New conversation offers it (Flutter `ChatAgentChoice` / a set-up row). */
+/**
+ * One agent this phone can run, as New conversation offers it (Flutter `ChatAgentChoice` / a set-up row). [checking]:
+ * its install, update or phone check runs now; its set-up row says "Checking…" instead of "Set up".
+ */
 public data class NewConversationPhoneAgent(
     val id: String,
     val name: String,
     val iconKey: String,
+    val checking: Boolean = false,
 )
 
 /**

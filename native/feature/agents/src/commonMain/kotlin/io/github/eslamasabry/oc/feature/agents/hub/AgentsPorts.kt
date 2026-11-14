@@ -103,6 +103,13 @@ public interface PhoneAgents {
     public suspend fun refresh(): Outcome<Unit> =
         Outcome.Failed(Failure.Unavailable(FeatureId("phoneAgents")))
 
+    /**
+     * Publishes what the phone's saved agent registry knows, at once, when nothing was read yet in this run (no check
+     * starts). A reader that offers agents calls it before it reads [state], so it never shows an empty or "Checking"
+     * list for agents the phone already has.
+     */
+    public suspend fun recall() {}
+
     public suspend fun resetSavedSignIns(): Outcome<Unit> =
         Outcome.Failed(Failure.SecretUnavailable())
 

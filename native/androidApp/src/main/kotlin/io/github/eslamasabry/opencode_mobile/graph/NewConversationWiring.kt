@@ -54,9 +54,13 @@ import io.github.eslamasabry.oc.engine.delivery.receipts.CommandReceiptState
 import io.github.eslamasabry.oc.engine.git.GitLinkRepairReport
 import io.github.eslamasabry.oc.engine.git.GitLinkRepairService
 import io.github.eslamasabry.oc.feature.chat.world.ChatGraphAccessors
+import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentInstallPhase
+import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentRow
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentStatus
-import io.github.eslamasabry.oc.feature.agents.hub.phoneAgentStartsConversation
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgents
+import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentsState
+import io.github.eslamasabry.oc.feature.agents.hub.installed
+import io.github.eslamasabry.oc.feature.agents.hub.phoneAgentStartsConversation
 import io.github.eslamasabry.oc.feature.chat.world.RecentModelsBacking
 import io.github.eslamasabry.oc.feature.chats.presentation.*
 import io.github.eslamasabry.oc.protocol.paseo.gateway.PaseoGateway
@@ -517,26 +521,7 @@ class AndroidNewConversationHost(
             ?: state.owner?.let { ProfileId("${it.raw}${AppLocalAgentHostStarter.SUFFIX}") }
     }
 
-    private fun phoneFacts(): List<PhoneChatFact> =
-        phoneAgents.state.value.agents.mapNotNull { row ->
-            val descriptor = AgentCatalog.builtIn.byId(AgentId(row.id)) ?: return@mapNotNull null
-            PhoneChatFact(
-                id = descriptor.id,
-                name = row.name,
-                iconKey = descriptor.iconKey,
-                // The Agents card's own rule, so the card's New conversation and this list agree.
-                ready = phoneAgentStartsConversation(row),
-                // Flutter's fixAction: install, sign in, phone check, resume.
-                fixable =
-                    when (row.status) {
-                        PhoneAgentStatus.NotInstalled -> row.supportedInstallation
-                        PhoneAgentStatus.SignInNeeded,
-                        PhoneAgentStatus.PhoneCheck,
-                        PhoneAgentStatus.Stopped -> true
-                        else -> false
-                    },
-            )
-        }
+    private fun phoneFacts(): List<PhoneChatFact> = NewConversationPhoneRules.facts(phoneAgents.state.value)
 
     private fun phoneOffer(profile: ProfileId): NewConversationPhone? {
         val state = phoneAgents.state.value
@@ -552,7 +537,10 @@ class AndroidNewConversationHost(
         return NewConversationPhone(
             helper = helper,
             choices = offer.choices.map { NewConversationPhoneAgent(it.id.raw, it.name, it.iconKey) },
-            needsSetup = offer.needsSetup.map { NewConversationPhoneAgent(it.id.raw, it.name, it.iconKey) },
+            needsSetup =
+                offer.needsSetup.map {
+                    NewConversationPhoneAgent(it.id.raw, it.name, it.iconKey, checking = it.checking)
+                },
             selected = selected.takeIf { it != AgentId.OPENCODE }?.raw,
         )
     }
@@ -602,7 +590,7 @@ class AndroidNewConversationHost(
         val provider =
             AgentCatalog.builtIn.byId(AgentId(agentId))?.providerId ?: return refused()
         val agentReady =
-            phoneAgents.state.value.agents.any { it.id == agentId && phoneAgentStartsConversation(it) }
+            phoneAgents.state.value.agents.any { it.id == agentId && NewConversationPhoneRules.startsHere(it) }
         // The helper's first model list takes about ten seconds: the screen asks while the person types.
         return withTimeoutOrNull(PHONE_MODELS_WAIT_MS) {
                 when (val ready = phoneHelperReady(helper)) {
@@ -750,10 +738,11 @@ class AndroidNewConversationHost(
                 val gateway = graph.session.server
                 val ops = gateway.facet<ServerOperationsGateway>()
                 val caps = gateway.capabilities.value
-                // Flutter read the agent rows when New conversation opened. The start-up read usually has them
-                // already; when it has not finished, wait for one read, briefly, so the list is not missing them.
-                if (phoneAgents.state.value.agents.isEmpty())
-                    withTimeoutOrNull(PHONE_ROWS_WAIT_MS) { phoneAgents.refresh() }
+                // The rows come from the phone's saved agent registry first: when no read has published yet in this
+                // run (a cold start, an app update), the registry's rows are published now, without a check. Before,
+                // this waited only for an empty list, which never happens (the catalog's "Checking" rows stand in),
+                // so a page opened early listed no phone agent at all.
+                withTimeoutOrNull(PHONE_ROWS_WAIT_MS) { phoneAgents.recall() }
                 val projects =
                     if (caps.projectManagement && ops != null)
                         when (val r = ops.listProjects()) {
@@ -1512,4 +1501,43 @@ class AndroidNewConversationHost(
                 }
             }
         }
+}
+
+/** How New conversation reads the phone's agent rows (pure, so the rules are tested with the real ones). */
+internal object NewConversationPhoneRules {
+    /** The facts [PhoneChatAgents.offer] lists from, one per catalog agent in [state]. */
+    fun facts(state: PhoneAgentsState): List<PhoneChatFact> =
+        state.agents.mapNotNull { row ->
+            val descriptor = AgentCatalog.builtIn.byId(AgentId(row.id)) ?: return@mapNotNull null
+            val updating =
+                state.installation?.let { it.id == row.id && it.phase == PhoneAgentInstallPhase.Installing } == true
+            PhoneChatFact(
+                id = descriptor.id,
+                name = row.name,
+                iconKey = descriptor.iconKey,
+                ready = !updating && startsHere(row),
+                // Flutter's fixAction: install, sign in, phone check, resume.
+                fixable =
+                    when (row.status) {
+                        PhoneAgentStatus.NotInstalled -> row.supportedInstallation
+                        PhoneAgentStatus.SignInNeeded,
+                        PhoneAgentStatus.PhoneCheck,
+                        PhoneAgentStatus.Stopped -> true
+                        else -> false
+                    },
+                installed = row.status.installed,
+                // Its install, update or phone check runs now: listed as checking, never dropped meanwhile.
+                checking = updating,
+            )
+        }
+
+    /**
+     * The Agents card's own rule ([phoneAgentStartsConversation]), so the card's New conversation and this list agree,
+     * and an agent whose helper is not running yet: a start here starts the helper itself (`phoneHelperReady`). After
+     * every app start, app update or phone restart the helper is down until something starts it, and every proven
+     * agent reads "Stopped" until then; before, New conversation offered none of them (and dropped every agent the
+     * bundled matrix does not know) until the Agents page, which starts the helper, had been opened.
+     */
+    fun startsHere(row: PhoneAgentRow): Boolean =
+        phoneAgentStartsConversation(row) || row.status == PhoneAgentStatus.Stopped
 }
