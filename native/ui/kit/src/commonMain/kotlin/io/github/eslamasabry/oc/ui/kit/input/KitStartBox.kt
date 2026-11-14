@@ -121,7 +121,18 @@ public fun KitStartBox(
     LaunchedEffect(state) {
         snapshotFlow { state.text.toString() }.distinctUntilChanged().drop(1).collect { changed.value?.invoke(it) }
     }
-    LaunchedEffect(autofocus, focusKey) { if (autofocus || focusKey != null) focus.requestFocus() }
+    // [autofocus] puts the cursor in the box when the page arrives, once. A page that turns it off while a sheet is up
+    // and on again as the sheet closes must not raise the keyboard the person had put away (cut audit 2, finding 14:
+    // closing New conversation's sheets with Back brought the keyboard back up, under the next tap). A new [focusKey]
+    // still brings the cursor back, on its own change only.
+    var arrived by remember { mutableStateOf(false) }
+    LaunchedEffect(autofocus) {
+        if (autofocus && !arrived) {
+            arrived = true
+            focus.requestFocus()
+        }
+    }
+    LaunchedEffect(focusKey) { if (focusKey != null) focus.requestFocus() }
     // The halo needs room above the box: a page scroller clips at its top, and the box is often the first thing on the
     // page (New conversation in Soft, device pass 2026-11-13: the glow ended in a hard band under the header). The
     // box keeps that room itself, so no screen has to know how far its halo reaches.
