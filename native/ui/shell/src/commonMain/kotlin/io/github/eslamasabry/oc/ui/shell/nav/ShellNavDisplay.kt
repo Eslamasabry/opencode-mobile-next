@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.ProvidableCompositionLocal
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -21,6 +22,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
@@ -46,7 +48,8 @@ import io.github.eslamasabry.oc.ui.shell.nav.ShellMotion.pop
  * The container transform runs on tap, on button-back and under a predictive back gesture (motion lead 2026-11-07,
  * replacing option A): the gesture seeks the same transform, so a chat shrinks toward its row with the finger, a cancel
  * grows it back and a commit finishes the flight into the row. Other routes keep the Material predictive preview. The
- * gate is cleared by state (entries composed ≤ 1), never by a timer.
+ * gate is cleared by state (entries composed ≤ 1), never by a timer. The transform is switched off in the app for now
+ * (`LocalShellRowTransform`).
  */
 @Composable
 public fun ShellNavDisplay(
@@ -113,8 +116,9 @@ public fun ShellNavDisplay(
     // Flutter's fade-forwards paints the page colour under both pages (its backgroundColor): while the covered page has
     // faded and the arriving one is still a quarter width short and half transparent, the ground shows there, never
     // the window (dark under a light theme: the "weird" grey flash of owner 2026-11-09).
-    SharedTransitionLayout(Modifier.background(LocalKitColors.current.ground.copy(alpha = 1f))) {
-        val sharedScope = this
+    val ground = Modifier.background(LocalKitColors.current.ground.copy(alpha = 1f))
+    val pages: @Composable (SharedTransitionScope?) -> Unit = { sharedScope ->
+        val transform = sharedScope != null
         val growDecorator = remember(sharedScope, gate) {
             NavEntryDecorator<NavKey>(
                 decorate = { entry ->
@@ -124,8 +128,11 @@ public fun ShellNavDisplay(
                         onDispose { signals.composedEntries-- }
                     }
                     val host =
-                        remember(contentScope) { ShellGrowHost(sharedScope, contentScope, gate, levelState, growRoutes) }
-                    val grows = (entry.metadata[ShellMotion.MOTION_KEY] as? RouteMotion) == RouteMotion.GrowFromRow
+                        remember(contentScope) {
+                            sharedScope?.let { ShellGrowHost(it, contentScope, gate, levelState, growRoutes) }
+                        }
+                    val grows =
+                        transform && (entry.metadata[ShellMotion.MOTION_KEY] as? RouteMotion) == RouteMotion.GrowFromRow
                     Box(Modifier.predictiveCorners(contentScope, gate, signals, previewCornerPx, levelState.value, grows)) {
                         CompositionLocalProvider(LocalKitGrowHost provides host) { entry.Content() }
                     }
@@ -141,21 +148,40 @@ public fun ShellNavDisplay(
             },
             entryDecorators = baseDecorators + growDecorator,
             sharedTransitionScope = sharedScope,
-            transitionSpec = { forward(targetState.motion(), levelState.value) },
-            popTransitionSpec = { pop(initialState.motion(), levelState.value) },
+            transitionSpec = { forward(targetState.motion().withTransform(transform), levelState.value) },
+            popTransitionSpec = { pop(initialState.motion().withTransform(transform), levelState.value) },
             predictivePopTransitionSpec = { edge ->
                 ShellMotion.predictivePop(
                     edge,
                     levelState.value,
                     edgeShiftPx,
-                    initialState.motion(),
+                    initialState.motion().withTransform(transform),
                     keep = ExitTransition.KeepUntilTransitionsFinished,
                 )
             },
             entryProvider = withMotion,
         )
     }
+    if (LocalShellRowTransform.current) {
+        SharedTransitionLayout(ground) { pages(this) }
+    } else {
+        Box(ground) { pages(null) }
+    }
 }
+
+/**
+ * Whether the pages are composed inside a `SharedTransitionLayout`, which the row → page grow, the title that flies
+ * from the row into the bar and the card → sheet morph need. Off in the app (2026-11-14): inside that layout every page
+ * is measured in a lookahead pass, and that pass threw a NullPointerException twice on the owner's phone
+ * (`LookaheadPassDelegate.forEachChildAlignmentLinesOwner`). Outside it no page has a lookahead pass, so that crash
+ * cannot happen; a page that grows from a row opens and closes like every other page instead (slide and fade, with
+ * the full predictive-back preview). The shell's transform tests turn it on.
+ */
+internal val LocalShellRowTransform: ProvidableCompositionLocal<Boolean> = staticCompositionLocalOf { false }
+
+/** Without the transform, a page that grows from a row moves like every other page. */
+private fun RouteMotion?.withTransform(transform: Boolean): RouteMotion? =
+    if (!transform && this == RouteMotion.GrowFromRow) RouteMotion.SharedAxisX else this
 
 private fun androidx.navigation3.scene.Scene<NavKey>.motion(): RouteMotion? =
     entries.lastOrNull()?.metadata?.get(ShellMotion.MOTION_KEY) as? RouteMotion
