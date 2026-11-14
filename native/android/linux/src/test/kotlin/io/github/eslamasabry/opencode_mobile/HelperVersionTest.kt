@@ -7,15 +7,15 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class HelperVersionTest {
-    private val tested = setOf("0.9.2", "0.11.2", "0.15.3")
+    private val tested = setOf("0.9.2", "0.11.2", "0.15.3", "0.15.4")
 
     @Test fun plainVersionLineIsRead() {
         assertEquals("0.11.2", HelperVersion.parse("0.11.2\n"))
     }
 
     @Test fun warningLinesAroundTheVersionDoNotHideIt() {
-        val output = "(node:42) ExperimentalWarning: something 20.1.0 is new\n0.15.3\nwarning: low memory\n"
-        assertEquals("0.15.3", HelperVersion.parse(output))
+        val output = "(node:42) ExperimentalWarning: something 20.1.0 is new\n0.15.4\nwarning: low memory\n"
+        assertEquals("0.15.4", HelperVersion.parse(output))
     }
 
     @Test fun versionInsideASentenceIsStillFound() {
@@ -28,12 +28,12 @@ class HelperVersionTest {
     }
 
     @Test fun olderTestedHelperRuns() {
-        assertTrue(HelperVersion.runs("0.11.2", "0.15.3", tested))
-        assertTrue(HelperVersion.runs("0.15.3", "0.15.3", tested))
+        assertTrue(HelperVersion.runs("0.11.2", "0.15.4", tested))
+        assertTrue(HelperVersion.runs("0.15.4", "0.15.4", tested))
     }
 
     @Test fun untestedOrMissingHelperDoesNot() {
-        assertFalse(HelperVersion.runs("0.10.0", "0.15.3", tested))
-        assertFalse(HelperVersion.runs(null, "0.15.3", tested))
+        assertFalse(HelperVersion.runs("0.10.0", "0.15.4", tested))
+        assertFalse(HelperVersion.runs(null, "0.15.4", tested))
     }
 }

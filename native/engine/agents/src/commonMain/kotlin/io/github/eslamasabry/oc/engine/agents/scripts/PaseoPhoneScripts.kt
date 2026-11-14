@@ -27,15 +27,15 @@ public class PaseoPinUnavailable : IllegalArgumentException("The agent host inst
  * byte-faithful except the gzip bytes of the embedded lock, which come from [PaseoLockCodec].
  */
 public object PaseoPhoneScripts {
-    public const val VERSION: String = "0.15.3"
+    public const val VERSION: String = "0.15.4"
     public const val NODE_VERSION: String = "v24.22.2"
     public const val NODE_ARM64_SHA256: String = "95c264150aceb7f3437a29fd6984924f5f8d1511ea3cbd6c508b83f6c555dae2"
     public const val NODE_X64_SHA256: String = "361718c444e49af2ca5a110c83ba6a8901143f23ab285ebbef0341f391f482a9"
     public const val PACKAGE_LOCK_ASSET: String = "assets/agents/paseo-package-lock.json"
-    public const val PACKAGE_LOCK_SHA256: String = "9a676a737ac42bc021d3a6fcf74b8e9d5b7c3bb9a300cb9288ca7254919c5f6a"
-    public const val INSTALL_DIRECTORY: String = "/home/oc/.local/share/oc-paseo/$VERSION-9a676a737ac4"
+    public const val PACKAGE_LOCK_SHA256: String = "b61e82dd777fab352dcc19ad1989ea3d2ad978c69c1ebe87b4481cad83ae9226"
+    public const val INSTALL_DIRECTORY: String = "/home/oc/.local/share/oc-paseo/$VERSION-b61e82dd777f"
 
-    // Registry artifact https://registry.npmjs.org/@getpaseo/cli/-/cli-0.15.3.tgz, checked against the lock's SRI.
+    // Registry artifact https://registry.npmjs.org/@getpaseo/cli/-/cli-0.15.4.tgz, checked against the lock's SRI.
     public const val CLI_RELATIVE_PATH: String = "node_modules/@getpaseo/cli/bin/paseo"
     public const val CLI_SHA256: String = "2b761f40e5a6416e4aaa733f38a47d5a4639b42cc1f88fc060256d2c4ed8cf94"
     public const val PAYLOAD_RELATIVE_PATH: String = "node_modules/@getpaseo/cli/dist/index.js"
