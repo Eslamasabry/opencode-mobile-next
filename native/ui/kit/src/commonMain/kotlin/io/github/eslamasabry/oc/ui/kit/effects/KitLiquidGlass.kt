@@ -30,7 +30,6 @@ import androidx.compose.ui.graphics.drawscope.ContentDrawScope
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.layer.GraphicsLayer
-import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.compose.ui.graphics.rememberGraphicsLayer
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.findRootCoordinates
@@ -88,6 +87,8 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitMotion
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitRoles
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
+import io.github.eslamasabry.oc.ui.kit.foundation.kitRecord
+import io.github.eslamasabry.oc.ui.kit.foundation.kitDrawLayer
 
 /*
  * Glass's liquid edges (docs/designs/liquid-glass.md; owner 2026-11-08 "go full blown glass"), drawn by
@@ -579,7 +580,7 @@ private class PlateHostNode(var words: KitLiquidWords) :
                         own.sample(w, h, requireDensity(), small) ?: continue
                     } else {
                         val layer = sample ?: requireGraphicsContext().createGraphicsLayer().also { sample = it }
-                        layer.record(requireDensity(), LayoutDirection.Ltr, IntSize(w, h), small)
+                        layer.kitRecord(requireDensity(), LayoutDirection.Ltr, IntSize(w, h), small)
                         val read = IntArray(w * h)
                         // A sample the platform could not read back (empty or clear) says nothing about the content.
                         if (!platform.readPixels(layer.toImageBitmap(), read, w, h)) continue
@@ -778,7 +779,7 @@ private fun DrawScope.drawGroundUnder(ground: Color, picture: KitGlassBackdrop?,
     val layer = bd.layer ?: return
     if (!bd.painted || bd.root !== at.findRootCoordinates()) return
     val shift = bd.origin - at.positionInRoot()
-    translate(shift.x, shift.y) { drawLayer(layer) }
+    translate(shift.x, shift.y) { kitDrawLayer(layer) }
 }
 
 /** A feature's [KitFrostState] (its content recorded by [kitFrostSource]) seen from a pane in the same window. */
@@ -788,7 +789,7 @@ internal fun frostStateBackdrop(state: KitFrostState, ground: Color, picture: Ki
         state.version
         drawGroundUnder(ground, picture, c)
         val shift = state.sourceOrigin - c.positionInRoot()
-        translate(shift.x, shift.y) { drawLayer(state.layer) }
+        translate(shift.x, shift.y) { kitDrawLayer(state.layer) }
     }
 
 /**
@@ -805,7 +806,7 @@ private fun liquidSourceBackdrop(source: KitLiquidSource, ground: Color, picture
         val shift =
             if (s.findRootCoordinates() === c.findRootCoordinates()) c.localPositionOf(s, Offset.Zero)
             else s.positionOnScreen() - c.positionOnScreen()
-        translate(shift.x, shift.y) { drawLayer(source.layer) }
+        translate(shift.x, shift.y) { kitDrawLayer(source.layer) }
     }
 
 /** The page as [role]'s pane sees it: a sheet sees only its picture in its middle ([modalSourceBackdrop]). */
@@ -829,7 +830,7 @@ internal fun modalSourceBackdrop(source: KitLiquidSource, ground: Color, picture
         val shift =
             if (s.findRootCoordinates() === c.findRootCoordinates()) c.localPositionOf(s, Offset.Zero)
             else s.positionOnScreen() - c.positionOnScreen()
-        val drawPage: DrawScope.() -> Unit = { translate(shift.x, shift.y) { drawLayer(source.layer) } }
+        val drawPage: DrawScope.() -> Unit = { translate(shift.x, shift.y) { kitDrawLayer(source.layer) } }
         if (bg == null || !bg.painted || bg.layer == null || bg.root !== c.findRootCoordinates()) {
             drawPage(this)
             return@KitLiquidBackdrop
@@ -918,9 +919,9 @@ private class LiquidSourceNode(var source: KitLiquidSource) : Modifier.Node(), D
     override fun ContentDrawScope.draw() {
         // Read in the draw phase: a pane arriving or leaving redraws this once, to start or stop recording.
         if (source.users > 0) {
-            source.layer.record { this@draw.drawContent() }
+            kitRecord(source.layer) { this@draw.drawContent() }
             androidx.compose.runtime.snapshots.Snapshot.withoutReadObservation { source.version++ }
-            drawLayer(source.layer)
+            kitDrawLayer(source.layer)
         } else {
             drawContent()
         }

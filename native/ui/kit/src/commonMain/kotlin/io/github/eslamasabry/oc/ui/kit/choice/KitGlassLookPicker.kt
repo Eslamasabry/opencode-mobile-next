@@ -38,7 +38,6 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.layer.GraphicsLayer
-import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.compose.ui.graphics.rememberGraphicsLayer
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
@@ -95,6 +94,8 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitRoles
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlinx.coroutines.channels.Channel
+import io.github.eslamasabry.oc.ui.kit.foundation.kitRecord
+import io.github.eslamasabry.oc.ui.kit.foundation.kitDrawLayer
 
 /*
  * The Glass look picker's parts (docs/designs/glass-looks-2026-11-09.md v2, §4-§5; D1 B: a 2×2 grid; D2 B: colour plus
@@ -377,10 +378,10 @@ public fun KitLookField(
                     val small = IntSize((area.width * k).toInt().coerceAtLeast(1), (area.height * k).toInt().coerceAtLeast(1))
                     // The recording's scope is `small`: the field is drawn over its own full size, scaled down into it
                     // (it once filled only the recording's size, scaled down again: a quarter of the field).
-                    layer.record(this, layoutDirection, small) {
+                    layer.kitRecord(this, layoutDirection, small) {
                         scale(k, k, Offset.Zero) { drawLookField(t, ground, blobs, ink, area, lines) }
                     }
-                    scale(1f / k, 1f / k, Offset.Zero) { drawLayer(layer) }
+                    scale(1f / k, 1f / k, Offset.Zero) { kitDrawLayer(layer) }
                 }
         )
         content()
@@ -395,7 +396,7 @@ private fun fieldBackdrop(state: KitLookFieldState): KitLiquidBackdrop =
         val field = state.coordinates?.takeIf { it.isAttached } ?: return@KitLiquidBackdrop
         val shift = at.localPositionOf(field, Offset.Zero)
         translate(shift.x, shift.y) {
-            scale(1f / LookFieldPolicy.RECORD_SCALE, 1f / LookFieldPolicy.RECORD_SCALE, Offset.Zero) { drawLayer(layer) }
+            scale(1f / LookFieldPolicy.RECORD_SCALE, 1f / LookFieldPolicy.RECORD_SCALE, Offset.Zero) { kitDrawLayer(layer) }
         }
     }
 

@@ -6,13 +6,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.graphics.BlurEffect
 import androidx.compose.ui.graphics.drawscope.translate
-import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.effects.LiquidEdge
 import io.github.eslamasabry.oc.ui.kit.live.LiveShaderProgram
 import io.github.eslamasabry.oc.ui.kit.platform.KitPlatform
+import io.github.eslamasabry.oc.ui.kit.foundation.kitRecord
+import io.github.eslamasabry.oc.ui.kit.foundation.kitDrawLayer
 
 /*
  * What the plain liquid pane holds back (words on glass 3, owner 2026-11-11). The joined shader (KitLiquidJoin.kt) has
@@ -251,15 +252,15 @@ public fun kitLiquidPlainStandIn(spec: KitLiquidPaneSpec, backdrop: KitLiquidBac
                         platform.liquidJoinEffect(it, r)
                     } ?: BlurEffect(r, r)
                 if (pad <= 0f) {
-                    layer.record { backdrop.draw(this, c) }
-                    drawLayer(layer)
+                    kitRecord(layer) { backdrop.draw(this, c) }
+                    kitDrawLayer(layer)
                 } else {
                     val w = size.width.toInt() + 2 * pad.toInt()
                     val h = size.height.toInt() + 2 * pad.toInt()
-                    layer.record(androidx.compose.ui.unit.Density(density, fontScale), layoutDirection, androidx.compose.ui.unit.IntSize(w, h)) {
+                    layer.kitRecord(androidx.compose.ui.unit.Density(density, fontScale), layoutDirection, androidx.compose.ui.unit.IntSize(w, h)) {
                         translate(pad, pad) { backdrop.draw(this, c) }
                     }
-                    translate(-pad, -pad) { drawLayer(layer) }
+                    translate(-pad, -pad) { kitDrawLayer(layer) }
                 }
                 drawLiquidTint(spec, shape)
                 drawKitRim(spec, shape, rim)

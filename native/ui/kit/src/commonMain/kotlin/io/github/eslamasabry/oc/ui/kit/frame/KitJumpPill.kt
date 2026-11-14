@@ -157,7 +157,9 @@ public fun KitJumpPill(
             label = "kit.jump",
         ) {
             val leaving = transition.targetState == EnterExitState.PostExit
-            val drop = io.github.eslamasabry.oc.ui.kit.effects.rememberKitLiquidJoinDrop("bottom")
+            // The pill lies in the transcript the page records, which the box's glass reads: it draws its side of the
+            // body from its own recording of the list, never from the box's (that would draw it into itself).
+            val drop = io.github.eslamasabry.oc.ui.kit.effects.rememberKitLiquidJoinDrop("bottom", ownPicture = true)
             val motion = if (drop != null) kitJumpJoinMotion(drop, leaving) else null
             val outer = remember { androidx.compose.runtime.mutableStateOf(androidx.compose.ui.geometry.Rect.Zero) }
             val sinkPx = with(LocalDensity.current) { io.github.eslamasabry.oc.ui.design.effects.LiquidJoin.PILL_SINK_DP.dp.toPx() }

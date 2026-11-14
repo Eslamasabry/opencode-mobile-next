@@ -46,7 +46,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.drawWithContent
-import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.layout.onGloballyPositioned
@@ -112,6 +111,7 @@ import io.github.eslamasabry.oc.ui.kit.status.kitStatusSlotAbove
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitWindow
+import io.github.eslamasabry.oc.ui.kit.foundation.kitDrawLayer
 
 /** The most of the room under the bar the status line may take (Flutter `KitStatusLineSlot`: 0.4). */
 internal const val STATUS_ROOM_SHARE: Float = 0.4f
