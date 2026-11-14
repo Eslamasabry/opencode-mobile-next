@@ -1,6 +1,7 @@
 package io.github.eslamasabry.oc.ui.kit.foundation
 
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.draw
 import androidx.compose.ui.graphics.layer.GraphicsLayer
 import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.compose.ui.unit.Density
@@ -140,17 +141,46 @@ internal object KitLayerCycles {
 }
 
 /**
- * Records [block] into [layer] at [size] through this scope (the `DrawScope.record` shorthand: this scope's density and
- * direction), tracked by [KitLayerCycles].
+ * Records [block] into [layer] at [size] through this scope, tracked by [KitLayerCycles]. As the framework's
+ * `DrawScope.record` shorthand does, [block] runs on this scope with its canvas swapped for the recording's, so
+ * `drawContent()` still works inside it; unlike the shorthand, the recording's density is a plain copy of this scope's
+ * ([kitDensityOf]), never the scope itself.
+ *
+ * Device 2026-11-14 (Glass, Back from a conversation just after its "…" menu closed): a StackOverflowError on the main
+ * thread, `CanvasDrawScope.getDensity` and `LayoutNodeDrawScope.getDensity` calling each other. The shorthand hands the
+ * recording this scope as its density, then runs the block on this scope with the recording's density, so the window's
+ * one shared `LayoutNodeDrawScope` took itself as its own density: any `density` or `toPx()` read directly in the block
+ * (the joined menu's side of the glass, `kitModalView` measuring the menu's edges) chased itself for ever. The layer also
+ * kept the scope as its density, so re-making its display list later did the same.
  */
 internal fun DrawScope.kitRecord(layer: GraphicsLayer, size: IntSize = this.size.toIntSize(), block: DrawScope.() -> Unit) {
-    KitLayerCycles.tracked(layer, { inner -> layer.record(size, inner) }, block)
+    val outer = this
+    val snapshot = kitDensityOf(this)
+    val direction = layoutDirection
+    KitLayerCycles.tracked(
+        layer,
+        { inner ->
+            layer.record(snapshot, direction, size) {
+                val c = drawContext
+                outer.draw(c.density, c.layoutDirection, c.canvas, c.size, c.graphicsLayer, inner)
+            }
+        },
+        block,
+    )
 }
 
-/** Records [block] into this layer in its own draw scope ([density], [layoutDirection], [size]), tracked by [KitLayerCycles]. */
+/**
+ * Records [block] into this layer in its own draw scope ([density], [layoutDirection], [size]), tracked by
+ * [KitLayerCycles]. [density] is copied first ([kitDensityOf]): a draw scope passed as the density would be read, by
+ * this recording and by every later re-making of it, through whatever that shared scope points at then.
+ */
 internal fun GraphicsLayer.kitRecord(density: Density, layoutDirection: LayoutDirection, size: IntSize, block: DrawScope.() -> Unit) {
-    KitLayerCycles.tracked(this, { inner -> record(density, layoutDirection, size, inner) }, block)
+    val snapshot = kitDensityOf(density)
+    KitLayerCycles.tracked(this, { inner -> record(snapshot, layoutDirection, size, inner) }, block)
 }
+
+/** A plain copy of [density]'s values: what every kit recording takes as its density, never a draw scope. */
+internal fun kitDensityOf(density: Density): Density = Density(density.density, density.fontScale)
 /**
  * Draws [layer] here, unless that would close a cycle of recordings ([KitLayerCycles]): then debug, test and preview
  * builds throw and a release build leaves it out. Inside a kit recording it is noted as drawn by that recording.
