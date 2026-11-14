@@ -37,6 +37,7 @@ import io.github.eslamasabry.oc.ui.kit.KitAction
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.action.KitActionBlock
 import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
+import io.github.eslamasabry.oc.ui.kit.frame.kitScreenChromePadding
 import io.github.eslamasabry.oc.ui.kit.motion.KitReveal
 import io.github.eslamasabry.oc.ui.kit.platform.LocalKitVisibility
 import io.github.eslamasabry.oc.ui.kit.scene.KitDrawnIllustration
@@ -93,7 +94,13 @@ internal fun ChatLoadingBody(label: String?, modifier: Modifier = Modifier) {
         visibility.tick(ChatPane.LOADING_WORDS_AFTER_MS)
         late = true
     }
-    Box(modifier.fillMaxSize().chatPane(), contentAlignment = Alignment.BottomCenter) {
+    // The frame's overlaid chrome lies over the body (the chat keeps one layout while it loads): the turns rest above the
+    // message box as the transcript's newest line does (the list's own 8 dp over the frame's room), the words in the
+    // middle of what is left.
+    Box(
+        modifier.fillMaxSize().padding(kitScreenChromePadding()).padding(bottom = Space.S2.dp).chatPane(),
+        contentAlignment = Alignment.BottomCenter,
+    ) {
         KitSkeletonTranscript(Modifier.fillMaxWidth().testTag("chat-loading"))
         KitReveal(
             visible = late && label != null,
@@ -120,7 +127,8 @@ internal fun ChatLoadError(
 ) {
     val tokens = LocalKitTokens.current
     val report = onReport?.let { KitAction(stringResource(Res.string.kitReportProblem), it) }
-    BoxWithConstraints(modifier.fillMaxSize().testTag("chat-load-error")) {
+    // Inside the room the frame's overlaid bar and bottom block leave (the chat keeps one layout in every state).
+    BoxWithConstraints(modifier.fillMaxSize().padding(kitScreenChromePadding()).testTag("chat-load-error")) {
         val room = if (constraints.hasBoundedHeight) maxHeight else 0.dp
         Box(
             Modifier.fillMaxWidth()

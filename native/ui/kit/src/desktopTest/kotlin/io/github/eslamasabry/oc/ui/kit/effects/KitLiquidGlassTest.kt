@@ -154,7 +154,7 @@ class KitLiquidGlassTest {
     }
 
     @Test
-    fun `B-KIT-018 the composer stays liquid when the loading line moves the chat into the stacked layout`() = runComposeUiTest {
+    fun `B-KIT-018 the composer stays liquid while the loading line shows`() = runComposeUiTest {
         var loading by mutableStateOf(false)
         var liquid = false
         setContent {
@@ -164,7 +164,7 @@ class KitLiquidGlassTest {
         assertTrue(liquid, "overlaid layout")
         loading = true
         waitForIdle()
-        assertTrue(liquid, "stacked layout: no flip to frost")
+        assertTrue(liquid, "loading: no flip to frost")
     }
 
     /** [Scene] alone in a fresh composition, captured once it is idle. */

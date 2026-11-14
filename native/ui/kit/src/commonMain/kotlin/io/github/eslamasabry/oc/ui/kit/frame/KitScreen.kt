@@ -332,9 +332,11 @@ public fun KitScreen(
     val bottomState = remember { KitScreenBottom() }
     val window = LocalKitWindow.current
     val cap = if (window.cls == WindowClass.Compact) CapRole.Fill else width.cap
-    // Overlaid chrome swaps between the overlay Box and the plain Column (a status line, Find,
-    // loading): the bar, body and bottom move between them instead of being rebuilt, so the
-    // composer keeps its field, focus and keyboard and the body keeps its scroll position.
+    // The frame's parts are movable content: a page whose layout changes (a floating bar that comes or goes, Find's or a
+    // header's slot on a page without overlaid chrome) moves the bar, body and bottom instead of rebuilding them, so a
+    // field keeps its focus and the body its scroll position. A page with overlaid chrome (a conversation) never changes
+    // layout through loading or a status line: a move there ran inside the navigation's lookahead pass and crashed it
+    // (KitScreenOneLayoutTest, ShellLookaheadTest).
     val latestTop = rememberUpdatedState(topBar)
     val latestBottom = rememberUpdatedState(bottom)
     val latestBody = rememberUpdatedState(body)
@@ -359,7 +361,11 @@ public fun KitScreen(
     // bar, body and bottom block to the other layout, which made the transcript jump and dropped the message box's
     // focus, so the keyboard closed (emulator 2026-11-10, the demo chat; owner, a new install's first chat: "steals
     // focus from composer whenever there's a tool tip below the top bar"). The overlaid layout now draws the line
-    // itself, under the bar; only Find's own slot, a scrolling header or the loading line use the stacked layout.
+    // itself, under the bar; only Find's own slot or a scrolling header use the stacked layout.
+    // Nor does the loading line (2026-11-14, the lookahead crash): Loading → Live moved the bar, the body and the message
+    // box (with its own subcomposition) to the other layout inside the navigation's lookahead pass, and the next pass
+    // met a node without its lookahead half (NullPointerException in LookaheadPassDelegate). The overlaid layout draws
+    // the line itself, right under the bar and its status line, so a page with overlaid chrome keeps one layout.
     val inner: @Composable (line: KitStatus?, ownsLine: Boolean) -> Unit = { line, ownsLine ->
         // Review item 8: the keyboard's room is the kit's settled reading (kitKeyboardInsets), never the raw animated
         // inset, so a keyboard whose closing animation never ends here cannot hold the page up.
@@ -370,7 +376,7 @@ public fun KitScreen(
         val sheetHost = LocalKitSheetHost.current
         val chromeMark = remember { Any() }
         androidx.compose.runtime.DisposableEffect(sheetHost) { onDispose { sheetHost?.releaseChrome(chromeMark) } }
-        if (overlayChrome && search == null && header == null && !loading) {
+        if (overlayChrome && search == null && header == null) {
             var topPx by remember { mutableIntStateOf(0) }
             var bottomPx by remember { mutableIntStateOf(0) }
             val density = LocalDensity.current
@@ -579,6 +585,19 @@ public fun KitScreen(
                             )
                     }
                 }
+                // The one loading line, right under the bar and its status line, over the top of the body (whose content
+                // rests below that edge). Always composed, so loading coming or going adds or removes nothing here.
+                KitLoadingBar(
+                    loading,
+                    loadingLabel.orEmpty(),
+                    Modifier.align(Alignment.TopCenter)
+                        .layout { measurable, constraints ->
+                            val placeable = measurable.measure(constraints)
+                            // Where the body's content starts (its top room, kitScreenChromePadding).
+                            layout(placeable.width, placeable.height) { placeable.place(0, statusPx + topPx) }
+                        }
+                        .then(if (loading) Modifier.testTag("kit-screen-loading") else Modifier),
+                )
                 bottomPart?.let {
                     Box(
                         Modifier.align(Alignment.BottomCenter)
