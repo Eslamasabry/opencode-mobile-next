@@ -55,7 +55,8 @@ import androidx.compose.ui.unit.IntSize
 import io.github.eslamasabry.oc.ui.design.color.ThemeResolver
 import io.github.eslamasabry.oc.ui.design.effects.LiquidInk
 import io.github.eslamasabry.oc.ui.design.effects.LiquidInkRule
-import kotlinx.coroutines.delay
+import androidx.compose.runtime.snapshotFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import androidx.compose.ui.node.findNearestAncestor
@@ -81,7 +82,9 @@ import io.github.eslamasabry.oc.ui.kit.foundation.kitGlassFrostAvailable
 import io.github.eslamasabry.oc.ui.kit.foundation.kitGlassStackRoot
 import io.github.eslamasabry.oc.ui.kit.live.kitLivePictureSpots
 import io.github.eslamasabry.oc.ui.kit.platform.KitBackdropSampler
+import io.github.eslamasabry.oc.ui.kit.platform.KitPlatform
 import io.github.eslamasabry.oc.ui.kit.platform.LocalKitPlatform
+import io.github.eslamasabry.oc.ui.kit.platform.LocalKitVisibility
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitAppearance
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitMotion
@@ -637,32 +640,43 @@ private class PlateHostNode(var words: KitLiquidWords) :
         // One sampler for the pane's life (smoothness 2026-11-09): a sample reuses one small target and never holds the
         // UI thread on the GPU. Without one (desktop), a snapshot of a small layer is read back as before.
         val own = platform.backdropSampler().also { sampler = it }
+        // Background CPU 2026-11-14: this loop used to wake ten times a second per pane, shown or hidden, and sample
+        // whenever the content had recorded again (every frame of a live background). It now waits for the content to
+        // change, samples once the change settles (or every INK_STALE_MS while it keeps moving), backs off when the
+        // sampler skips, and parks while the app is hidden.
+        val visibility = currentValueOf(LocalKitVisibility)
+        // Hidden: nothing draws, so nothing will be sampled; the GPU target is freed (the next sample makes a new one).
+        if (own != null) coroutineScope.launch { visibility.visible.collect { shown -> if (!shown) own.release() } }
         coroutineScope.launch {
+            // A new value each time the content behind the pane records (a scroll, new words, a step of a live
+            // picture). Snapshot state: waiting for the next one arms no timer, so a still page costs nothing.
+            val versions = snapshotFlow { backdrop.version() }
             var seen = Int.MIN_VALUE
+            var retry = 0L
             while (isActive) {
-                delay(LiquidInkRule.SAMPLE_MS)
-                // Only while the content moves: a source that has not recorded again shows nothing new.
-                val v = backdrop.version()
-                if (v == seen) continue
-                val c = coordinates?.takeIf { it.isAttached } ?: continue
-                val w = (c.size.width / SAMPLE_SCALE).coerceAtLeast(1)
-                val h = (c.size.height / SAMPLE_SCALE).coerceAtLeast(1)
-                val small: DrawScope.() -> Unit = { scale(1f / SAMPLE_SCALE, 1f / SAMPLE_SCALE, Offset.Zero) { backdrop.draw(this, c) } }
-                val pixels =
-                    if (own != null) {
-                        own.sample(w, h, requireDensity(), small) ?: continue
-                    } else {
-                        val layer = sample ?: requireGraphicsContext().createGraphicsLayer().also { sample = it }
-                        layer.kitRecord(requireDensity(), LayoutDirection.Ltr, IntSize(w, h), small)
-                        val read = IntArray(w * h)
-                        // A sample the platform could not read back (empty or clear) says nothing about the content.
-                        if (!platform.readPixels(layer.toImageBitmap(), read, w, h)) continue
-                        read
-                    }
-                // Counted as seen only once a sample came back: a sample the sampler skipped (another pane's was in
-                // flight, or the GPU is slow) is asked for again on the next tick, not only when the content next moves.
+                var v = versions.first { it != seen }
+                // Settle: sample once the content held still for INK_SETTLE_MS, or after INK_STALE_MS while it keeps
+                // moving (a fling, a live picture), never at the rate it records.
+                var waited = 0L
+                while (waited < INK_STALE_MS) {
+                    visibility.tick(INK_SETTLE_MS)
+                    waited += INK_SETTLE_MS
+                    val now = backdrop.version()
+                    if (now == v) break
+                    v = now
+                }
+                val pixels = sampleOnce(own, platform, backdrop)
+                if (pixels == null) {
+                    // Skipped (another pane's sample in flight, a slow GPU, the pane not placed yet): asked again,
+                    // later each time, not on every tick.
+                    retry = (retry * 2).coerceIn(INK_SETTLE_MS, INK_RETRY_MAX_MS)
+                    visibility.tick(retry)
+                    continue
+                }
+                retry = 0L
+                // Counted as seen only once a sample came back.
                 seen = v
-                if (pixels.size < w * h || pixels.count { (it ushr 24) > 0x80 } < pixels.size / 2) continue
+                if (pixels.isEmpty() || pixels.count { (it ushr 24) > 0x80 } < pixels.size / 2) continue
                 val (mean, _) = LiquidInkRule.measure(pixels)
                 val next = LiquidInkRule.next(ink, mean)
                 if (next != ink) {
@@ -671,6 +685,27 @@ private class PlateHostNode(var words: KitLiquidWords) :
                 }
             }
         }
+    }
+
+    /** One small picture of what lies behind the pane, or null when none could be read this time. */
+    private suspend fun sampleOnce(own: KitBackdropSampler?, platform: KitPlatform, backdrop: KitLiquidBackdrop): IntArray? {
+        val c = coordinates?.takeIf { it.isAttached } ?: return null
+        val w = (c.size.width / SAMPLE_SCALE).coerceAtLeast(1)
+        val h = (c.size.height / SAMPLE_SCALE).coerceAtLeast(1)
+        val small: DrawScope.() -> Unit = { scale(1f / SAMPLE_SCALE, 1f / SAMPLE_SCALE, Offset.Zero) { backdrop.draw(this, c) } }
+        val pixels =
+            if (own != null) {
+                own.sample(w, h, requireDensity(), small) ?: return null
+            } else {
+                val layer = sample ?: requireGraphicsContext().createGraphicsLayer().also { sample = it }
+                layer.kitRecord(requireDensity(), LayoutDirection.Ltr, IntSize(w, h), small)
+                val read = IntArray(w * h)
+                // A sample the platform could not read back (empty or clear) says nothing about the content.
+                if (!platform.readPixels(layer.toImageBitmap(), read, w, h)) return null
+                read
+            }
+        // A short read says nothing either; an empty array is "read, but nothing to judge by".
+        return if (pixels.size < w * h) IntArray(0) else pixels
     }
 
     override fun onDetach() {
@@ -684,6 +719,15 @@ private class PlateHostNode(var words: KitLiquidWords) :
 
 /** The sampled copy of a pane's backdrop is this many times smaller on each side. */
 private const val SAMPLE_SCALE: Int = 8
+
+/** How long the content behind a pane holds still before its words' ink is sampled. */
+internal const val INK_SETTLE_MS: Long = 150
+
+/** While the content keeps moving (a fling, a live picture), a pane samples at most this often. */
+internal const val INK_STALE_MS: Long = 600
+
+/** The longest wait before asking a sampler that keeps skipping again. */
+internal const val INK_RETRY_MAX_MS: Long = 5_000
 
 /**
  * A text on a liquid pane: its ink cross-fades to the other theme's while the pane flips (adaptive glass). It draws no
