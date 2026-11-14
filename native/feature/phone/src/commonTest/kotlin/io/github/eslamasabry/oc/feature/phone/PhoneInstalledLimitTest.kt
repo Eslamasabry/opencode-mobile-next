@@ -104,7 +104,7 @@ class PhoneInstalledLimitTest {
             details.gate.complete(Unit)
             runCurrent()
             val shown = model.state.value.details
-            assertEquals(listOf("Linux base", "Git"), shown.installedNames)
+            assertEquals(listOf("Linux base", "Git"), shown.installedNames?.toList())
             assertNull(installedFailureShown(shown))
             assertTrue(!shown.loading)
         }
