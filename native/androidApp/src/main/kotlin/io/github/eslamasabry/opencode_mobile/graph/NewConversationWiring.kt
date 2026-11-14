@@ -1066,7 +1066,7 @@ class AndroidNewConversationHost(
                         val created =
                             gateway.createSession(
                                 NewSession(
-                                    title = text.lineSequence().firstOrNull()?.take(80),
+                                    title = io.github.eslamasabry.oc.core.common.text.ConversationTitle.from(text),
                                     location = ServerLocation(directory = attempt.directory),
                                 )
                             )

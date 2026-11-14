@@ -156,4 +156,40 @@ class KitCodeBlockOverflowTest {
         assertFadesAtEnd("command box") {
             KitCommandBox(command = "ls", output = listing, moreLabel = "Show all", onMore = {}, exitLabel = null)
         }
+
+    /**
+     * Audit 1, item 3: with Copy and Wrap in the block, the lines stopped about 160 px before the block's right edge and
+     * the whole side down the block stayed empty. The lines now run to the inner edge (ending in the short fade); only
+     * the first lines, beside the buttons, are cleared under them.
+     */
+    @Test
+    fun `lines run to the inner edge under the buttons' corner, not to an empty band`() {
+        var blockHeight = 0
+        var beside = 1f
+        var below = 0f
+        var edge = 1f
+        runDesktopComposeUiTest(400, 400) {
+            setContent {
+                ChatTestTheme {
+                    Box(Modifier.width(300.dp).testTag("blk")) {
+                        KitCodeBlock(
+                            source = List(8) { "W".repeat(120) }.joinToString("\n"),
+                            kind = KitCodeKind.Code,
+                            onCopy = {},
+                        )
+                    }
+                }
+            }
+            waitForIdle()
+            val img = onNodeWithTag("blk").captureToImage()
+            blockHeight = img.height
+            // Columns 255-258 dp: past where the old layout stopped the lines (the block's width minus 77 dp).
+            below = ink(img, 255, 258, blockHeight - 60, blockHeight - 30, blockHeight - 2)
+            beside = ink(img, 255, 258, 12, 40, blockHeight - 2)
+            edge = ink(img, 281, 284, blockHeight - 60, blockHeight - 30, blockHeight - 2)
+        }
+        assertTrue(below > 0.2f, "a line below the buttons is drawn out to the inner edge ($below)")
+        assertTrue(beside < below * 0.2f, "the lines beside the buttons are cleared under them ($beside vs $below)")
+        assertTrue(edge < below * 0.5f, "and the lines thin out in the short fade at the inner edge ($edge vs $below)")
+    }
 }

@@ -52,6 +52,7 @@ import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.generated.FlutterKitTokens
@@ -342,18 +343,18 @@ public fun KitCodeBlock(
                     if (hasCap && onMore == null) KitReveal(visible = expanded) { rows(tail, head.size) }
                 }
             }
-        Row(Modifier.padding(padding), verticalAlignment = Alignment.Top) {
-            // The lines, then the cap, in one left-to-right column beside the controls (`_buildBounded`): the
-            // hairline and the button end where the text does, before the Copy column.
+        // One column of lines (and the cap under them), left to right beside or under the controls.
+        val textColumn =
+            @Composable { columnModifier: Modifier, reserve: DpSize? ->
             CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-                Column(Modifier.weight(1f)) {
+                Column(columnModifier) {
                     Box(
                         // Without Copy or Wrap there is nothing to touch: the block is its lines plus the padding.
                         if (inline) Modifier.padding(top = insetTop.dp, bottom = insetBottom.dp)
                         else Modifier
                     ) {
                         if (effectiveWrap) Box(Modifier.fillMaxWidth()) { body() }
-                        else CodeOverflow(colors.fill, colors.gutter) { body() }
+                        else CodeOverflow(colors.fill, colors.gutter, reserve = reserve) { body() }
                     }
                     if (capped) {
                         DisableSelection {
@@ -377,16 +378,40 @@ public fun KitCodeBlock(
                     }
                 }
             }
-            if (inline) {
-                // A real gap before the controls, so a long line's faded end never meets the glyphs.
-                Spacer(Modifier.width(Space.S3.dp))
+            }
+        val controls =
+            @Composable { modifier: Modifier ->
                 CodeControls(
                     copyLabel = copyName,
                     copiedLabel = copiedLabel,
                     onCopy = onCopy?.let { copy -> { copy(display) } },
                     wrapOn = if (overflow) effectiveWrap else null,
                     onWrap = if (overflow) ({ effectiveWrap = !effectiveWrap }) else null,
+                    modifier = modifier,
                 )
+            }
+        if (inline && !effectiveWrap && LocalLayoutDirection.current == LayoutDirection.Ltr) {
+            // Audit 1, item 3: the lines run to the block's inner edge and fade there, over the kit's short fade. The
+            // controls float at the top end; the lines beside them (and only those) are cleared under the buttons, with
+            // the same short fade at their edge, so no empty band is left down the block's side.
+            val targets = (if (copying) 1 else 0) + (if (overflow) 1 else 0)
+            val endPad = if (copying) CODE_COPY_END else Space.S1
+            val reserve =
+                DpSize(
+                    (FlutterKitTokens.MIN_TARGET + Space.S3 - (Space.S4 - endPad)).dp,
+                    (FlutterKitTokens.MIN_TARGET * targets - insetTop).dp,
+                )
+            Box(Modifier.padding(padding)) {
+                textColumn(Modifier.fillMaxWidth().padding(end = (Space.S4 - endPad).dp), reserve)
+                controls(Modifier.align(Alignment.TopEnd))
+            }
+        } else
+        Row(Modifier.padding(padding), verticalAlignment = Alignment.Top) {
+            textColumn(Modifier.weight(1f), null)
+            if (inline) {
+                // A real gap before the controls, so a long line's faded end never meets the glyphs.
+                Spacer(Modifier.width(Space.S3.dp))
+                controls(Modifier)
             }
         }
     }

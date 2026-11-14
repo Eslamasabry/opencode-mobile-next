@@ -483,7 +483,7 @@ private fun PermissionDetailsSheet(
             if (full != null && shownChange == null)
                 CommandOrTarget(mask(full), details.command)
             if (shownChange != null) WholeChange(shownChange, mask)
-            else if (change == null) details.diff?.let { diff -> KitCodeBlock(mask(diff), KitCodeKind.Code, wrap = true, showWrapToggle = false) }
+            else if (change == null) details.diff?.let { diff -> KitCodeBlock(changeBodyText(mask(diff)), KitCodeKind.Code, wrap = true, showWrapToggle = false) }
             if (change?.missing == true)
                 KitText(
                     stringResource(Res.string.approvalChangeMissing),
@@ -496,7 +496,12 @@ private fun PermissionDetailsSheet(
             val values =
                 details.facts
                     .filter { fact -> fact !is PermissionFact.AlsoCovers || offersAlways }
-                    .map { fact -> permissionFactValue(fact, redactor).copy(copyable = false) }
+                    .mapNotNull { fact ->
+                        // Audit 1: the tool is said in plain words ("File edit"), never as its id ("edit").
+                        if (fact is PermissionFact.Tool)
+                            ask?.let { KitTechnicalValue(stringResource(Res.string.chatRequestDetailTool), redactor.details(askToolKind(it))).copy(copyable = false) }
+                        else permissionFactValue(fact, redactor).copy(copyable = false)
+                    }
             val scope = request?.takeIf { offersAlways }?.let(AlwaysScopes::of)?.let { scopeWords(it, mask) }
             // The scope is for the person, so it reads in plain words above the technical fold.
             if (scope != null)
@@ -568,7 +573,7 @@ private fun WholeChange(change: PermissionChangeUi, mask: (String) -> String) {
             .ifEmpty { listOfNotNull(change.combined?.let { null as String? to it }) }
     for ((path, patch) in blocks) {
         key(path, patch) {
-            val masked = remember(patch, mask) { mask(patch) }
+            val masked = remember(patch, mask) { changeBodyText(mask(patch)) }
             val copy =
                 rememberKitRedactedCopyAction(
                     stringResource(Res.string.approvalCopyChange),

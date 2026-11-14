@@ -86,7 +86,6 @@ import io.github.eslamasabry.oc.ui.words.res.kitComposerVoice
 import io.github.eslamasabry.oc.ui.words.res.kitTryAgain
 import io.github.eslamasabry.oc.ui.words.res.kitTurnLiveStopShort
 import io.github.eslamasabry.oc.ui.words.res.upgradeComposerAsk
-import io.github.eslamasabry.oc.ui.words.res.upgradeComposerFree
 import org.jetbrains.compose.resources.stringResource
 
 /**
@@ -254,8 +253,8 @@ private fun ChipRow(state: ComposerUi, actions: ComposerActions, freeModel: Bool
             else
                 ({
                     KitComposerModelChip(
-                        modelChipWords(model) +
-                            if (freeModel) stringResource(Res.string.upgradeComposerFree) else "",
+                        // One rule: the name only; a free model's tag lives in the model list.
+                        modelChipWords(model),
                         onClick = {
                             focus.clearFocus()
                             actions.onModelChip()
