@@ -102,7 +102,7 @@ internal fun rememberDockFace(state: KitEdgeDockState): DockFace {
     val glass =
         kitLiquidFace(
             LiquidRole.Dock, LocalKitDockGlass.current, rest = LiquidRole.Dock, grown = LiquidRole.Menu, boxes = boxes, wordsArea = area,
-            rank = LiquidEdge.dockRank(grownNow), listed = LiquidRole.Sheet,
+            rank = LiquidEdge.dockRank(grownNow), listed = LiquidEdge.DOCK_LIST_ROLE,
         )
     if (glass != null) {
         // Read in composition: the dock's marks follow the ink flip (180 ms, only when the content behind changes).
@@ -133,7 +133,7 @@ private fun dockBodyBoxes(state: KitEdgeDockState): (KitLiquidBodyBoxes) -> Bool
         out.bRadius = body.secondRadius
         out.reach = body.joinReach
         out.growth = body.growth
-        // The list frosts as a sheet; its share rises with the list's own growth (no step from the swell's glass).
+        // The list wears a menu's glass; its share rises with the list's own growth (no step from the swell's glass).
         out.listShare = if (body.secondIsList) body.growth.coerceIn(0f, 1f) else 0f
         true
     }

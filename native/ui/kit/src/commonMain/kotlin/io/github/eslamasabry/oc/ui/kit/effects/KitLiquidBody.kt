@@ -127,12 +127,16 @@ internal fun kitLiquidFace(
     val roles = LocalKitRoles.current
     val appearance = LocalKitAppearance.current
     val ground = LocalKitColors.current.ground.copy(alpha = 1f)
-    val picture = LocalKitGlassBackdrop.current
+    // The page's live background under the recording: the window's picture, or the page's own where the dock lies
+    // outside the background's frame (the dock's list shows only this in its middle, kitModalView).
+    val picture = LocalKitGlassBackdrop.current ?: io.github.eslamasabry.oc.ui.kit.foundation.LocalKitLivePicture.current?.backdrop
     val backdrop = remember(source, ground, picture) { frostStateBackdrop(source, ground, picture) }
     val flip = liquidFlipFor(source, role) ?: remember { LiquidFlip() }
     val restSpec = kitLiquidPaneSpec(rest, flip, chosen = false, keepRim = false)
     val grownSpec = kitLiquidPaneSpec(grown, flip, chosen = false, keepRim = false, swell = true)
     val listedSpec = listed?.let { kitLiquidPaneSpec(it, flip, chosen = false, keepRim = false) }
+    // The list is modal while it is out (a tap beside it closes it): it keeps only its band of the page (cut audit 2).
+    val listBand = listed?.let { kitModalBand(it) }
     // The words sample what lies under the body only: the body's bounds stretched over the node's whole area.
     val sampled = remember(backdrop, wordsArea) { areaBackdrop(backdrop, wordsArea) }
     val words = kitLiquidWords(sampled, flip)
@@ -142,7 +146,7 @@ internal fun kitLiquidFace(
     val flipInk = Color(other.text1.v)
     return KitLiquidBodyFace(
         face = Modifier.semantics { this[KitLiquidBodyDrawn] = if (granted) role.name else "${role.name} frost" } then
-            LiquidBodyElement(boxes, restSpec, grownSpec, backdrop, lens = granted, listed = listedSpec),
+            LiquidBodyElement(boxes, restSpec, grownSpec, backdrop, lens = granted, listed = listedSpec, listBand = listBand),
         words = Modifier.kitLiquidPlateHost(words),
         ink = ink,
         ink2 = lerp(Color(roles.text2.v), ink, second),
@@ -171,8 +175,9 @@ private data class LiquidBodyElement(
     val backdrop: KitLiquidBackdrop,
     val lens: Boolean,
     val listed: KitLiquidPaneSpec? = null,
+    val listBand: io.github.eslamasabry.oc.ui.design.effects.ModalBand? = null,
 ) : ModifierNodeElement<LiquidBodyNode>() {
-    override fun create(): LiquidBodyNode = LiquidBodyNode(boxes, rest, grown, backdrop, lens, listed)
+    override fun create(): LiquidBodyNode = LiquidBodyNode(boxes, rest, grown, backdrop, lens, listed, listBand)
 
     override fun update(node: LiquidBodyNode) {
         node.boxes = boxes
@@ -181,6 +186,7 @@ private data class LiquidBodyElement(
         node.backdrop = backdrop
         node.lens = lens
         node.listed = listed
+        node.listBand = listBand
         node.invalidateDraw()
     }
 
@@ -198,9 +204,29 @@ private class LiquidBodyNode(
     var lens: Boolean,
     /** The pulled-out list's frost (a sheet's), mixed in by [KitLiquidBodyBoxes.listShare]; null: none. */
     var listed: KitLiquidPaneSpec? = null,
+    /** The pulled-out list's band of the page (a menu's): past it the list shows only the page's picture. */
+    var listBand: io.github.eslamasabry.oc.ui.design.effects.ModalBand? = null,
 ) : androidx.compose.ui.Modifier.Node(), DrawModifierNode, GlobalPositionAwareModifierNode, CompositionLocalConsumerModifierNode {
     private val join = KitLiquidJoin()
     private val frame = KitLiquidBodyBoxes()
+
+    /**
+     * What the body sees while its list is out (cut audit 2, c-dock: the home rows' icons read through the list as dark
+     * blocks behind its rings and names): the page's picture whole, the page's content whole under the strip and the
+     * swell as before, and as the list grows only along the list's open edges, in its band ([kitModalView]). Made once
+     * per backdrop; it reads the frame drawn now.
+     */
+    private var listView: KitLiquidBackdrop? = null
+    private var listViewOf: KitLiquidBackdrop? = null
+
+    private fun seen(): KitLiquidBackdrop {
+        val band = listBand ?: return backdrop
+        if (!(frame.hasB && frame.listShare > 0f)) return backdrop
+        val made = listView
+        if (made != null && listViewOf === backdrop) return made
+        listViewOf = backdrop
+        return kitModalView(backdrop, { listBand ?: band }, base = { 1f - frame.listShare.coerceIn(0f, 1f) }, box = { frame.b }).also { listView = it }
+    }
     private var coordinates: LayoutCoordinates? = null
     private var back: GraphicsLayer? = null
     private var mask: GraphicsLayer? = null
@@ -262,6 +288,11 @@ private class LiquidBodyNode(
         val rim = LiquidEdge.rimPx(shortSide, density, recipe)
         val refraction = if (lens) recipe.refractionDp.dp.toPx() else 0f
         val tint = lerp(tintNow(rest), tintNow(grown), g)
+        val seen = seen()
+        // The list wears a menu's holds as it grows (one family): the colour limit eased in from none (a limit above 1
+        // holds nothing back) and the detail hold's reach growing with it, as a joined menu's comes in with its rows.
+        val listHold = listed?.recipe?.hold?.takeIf { f.listShare > 0f }
+        val share = f.listShare.coerceIn(0f, 1f)
         val u =
             JoinUniforms(
                 geometry = geometry,
@@ -275,6 +306,8 @@ private class LiquidBodyNode(
                 contrast = recipe.contrast,
                 brightness = recipe.brightness,
                 knee = kneeOf(rest),
+                hold = listHold?.takeIf { it.chroma > 0f }?.let { NO_LIMIT + (it.chroma - NO_LIMIT) * share } ?: 0f,
+                local = listHold?.let { localOf(it, it.localDp.dp.toPx() * share) } ?: floatArrayOf(0f, 0f, 1f, 1f, 1f),
                 tintMine = tint,
                 tintTheirs = tint,
                 rimPx = rest.rimDp.dp.toPx(),
@@ -288,7 +321,7 @@ private class LiquidBodyNode(
         u.set(programs.lens, mode = 0f, res = res)
         back.renderEffect = platform.liquidJoinEffect(programs.lens, recipe.blurDp.dp.toPx() * res)
         back.record(small) {
-            scale(res, res, Offset.Zero) { translate(-local.x, -local.y) { backdrop.draw(this, c) } }
+            scale(res, res, Offset.Zero) { translate(-local.x, -local.y) { seen.draw(this, c) } }
         }
         // 2. The tint, then the body's cover (both sides: every pixel is this node's).
         mask.record(full) {
@@ -312,6 +345,9 @@ private class LiquidBodyNode(
         }
     }
 }
+
+/** A colour limit that holds nothing back (the shader's limit starts at .4 of it, above any chroma). */
+private const val NO_LIMIT: Float = 4f
 
 /**
  * The join shader's four boxes for a body drawn whole by one node: box A and box B as the field sees them, A as this

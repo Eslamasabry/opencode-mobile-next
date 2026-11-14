@@ -31,7 +31,25 @@ public class KitLiquidBackdrop(
 ) {
     /** The platform's own wrapper for this backdrop, made once (Android: the library's `Backdrop`). */
     internal var platformHandle: Any? = null
+
+    /**
+     * The backdrop's two parts, when it has them: the picture under the content and the content alone. A modal pane
+     * (a sheet, a dialog, a menu, the dock's list) draws its picture whole and its content only in a band along the
+     * pane's open edges ([kitModalView]). Null: one picture, drawn whole.
+     */
+    internal var layers: KitBackdropLayers? = null
 }
+
+/**
+ * A backdrop in two parts: [under] (the page's ground and its live background) and [page] (the page's content: its
+ * controls, cards and words), both drawn at a pane's place; [pictured] says whether [under] holds a picture of the page's
+ * background here (false: the content is the only picture there is, and a modal pane shows it whole, as before).
+ */
+internal class KitBackdropLayers(
+    val under: DrawScope.(LayoutCoordinates) -> Unit,
+    val page: DrawScope.(LayoutCoordinates) -> Unit,
+    val pictured: (LayoutCoordinates) -> Boolean,
+)
 
 /** One liquid pane's look, resolved by the kit from `LiquidEdge` and handed to the platform to draw. */
 @Immutable
