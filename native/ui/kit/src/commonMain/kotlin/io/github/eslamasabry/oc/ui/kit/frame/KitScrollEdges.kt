@@ -70,6 +70,8 @@ internal fun Modifier.kitScrollEdges(
     bottomReachPx: (() -> Float)? = null,
     /** How much of the bottom fade shows, 0-1, read while drawing (0 leaves the bottom whole). */
     bottomStrength: () -> Float = { 1f },
+    /** The bottom px left alone below the fade (a pinned foot inside the faded box), read while drawing. */
+    keepBottomPx: () -> Float = { 0f },
 ): Modifier {
     if (clearAbove == null && fadeFromBottom == null) return this
     return graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
@@ -101,8 +103,9 @@ internal fun Modifier.kitScrollEdges(
                     val r = wholePx(from + (bottomReachPx?.invoke() ?: bottomReach.toPx())) - y0
                     if (r > 0f) drawRect(bottom.of(0f, 1f, kb, y0, y0 + r), Offset(0f, y0), Size(w, r), blendMode = BlendMode.DstOut)
                     val below = y0 + r
-                    if (below < size.height)
-                        drawRect(Color.Black.copy(alpha = kb), Offset(0f, below), Size(w, size.height - below), blendMode = BlendMode.DstOut)
+                    val kept = wholePx((size.height - keepBottomPx()).coerceIn(below, size.height))
+                    if (below < kept)
+                        drawRect(Color.Black.copy(alpha = kb), Offset(0f, below), Size(w, kept - below), blendMode = BlendMode.DstOut)
                 }
             }
         }

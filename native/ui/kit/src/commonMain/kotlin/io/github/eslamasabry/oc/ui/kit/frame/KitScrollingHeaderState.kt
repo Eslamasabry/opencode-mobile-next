@@ -11,21 +11,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
-import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.BlendMode
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.CompositingStrategy
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.Constraints
-import androidx.compose.ui.unit.dp
 
 /**
  * How a screen's header scrolls with its body (P-006), pure so it is tested without Compose. The header is the body's
@@ -84,9 +76,9 @@ public class KitScrollingHeaderState {
 
 /**
  * The screen's header and body as one scrolling column (P-006): the header slides up under the bar as the body scrolls
- * and comes back at the body's top; the body takes the room the header gives up. The cut under the bar fades over the
- * kit's 12 dp chrome fade once anything is under it, never a hard line through a row. Direct manipulation only, so
- * there is no motion to reduce.
+ * and comes back at the body's top; the body takes the room the header gives up. Where it meets the bar the frame's one
+ * page edge dissolves it (KitScreen's page edges, audit 2 2026-11-14), never a hard line through a row. Direct
+ * manipulation only, so there is no motion to reduce.
  */
 @Composable
 internal fun KitScrollingHeaderFrame(
@@ -103,30 +95,7 @@ internal fun KitScrollingHeaderFrame(
         modifier =
             modifier
                 .clipToBounds()
-                .nestedScroll(state.connection)
-                .graphicsLayer {
-                    compositingStrategy =
-                        if (state.fade(HEADER_FADE_DP.dp.toPx()) > 0f) CompositingStrategy.Offscreen
-                        else CompositingStrategy.Auto
-                }
-                .drawWithContent {
-                    drawContent()
-                    val reach = HEADER_FADE_DP.dp.toPx()
-                    val t = state.fade(reach)
-                    if (t > 0f) {
-                        drawRect(
-                            Brush.verticalGradient(
-                                0f to Color.Black.copy(alpha = 1f - t),
-                                1f to Color.Black,
-                                startY = 0f,
-                                endY = reach,
-                            ),
-                            topLeft = Offset.Zero,
-                            size = Size(size.width, reach),
-                            blendMode = BlendMode.DstIn,
-                        )
-                    }
-                },
+                .nestedScroll(state.connection),
     ) { measurables, constraints ->
         val head = measurables[0].measure(constraints.copy(minHeight = 0, maxHeight = Constraints.Infinity))
         state.height = head.height

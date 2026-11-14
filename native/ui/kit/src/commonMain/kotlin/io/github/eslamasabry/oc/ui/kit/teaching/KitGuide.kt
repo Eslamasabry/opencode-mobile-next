@@ -457,7 +457,7 @@ private fun Body(
     val reduced = KitMotion.state.reduced
     val page: @Composable (KitGuideQuestion?) -> Unit = { open ->
         val end = Space.S4.dp + kitBottomInset().bottom
-        val m = if (scrolls) Modifier.fillMaxSize().verticalScroll(rememberScrollState()) else Modifier.fillMaxWidth()
+        val m = if (scrolls) Modifier.fillMaxSize().verticalScroll(io.github.eslamasabry.oc.ui.kit.frame.kitPageScrollState()) else Modifier.fillMaxWidth()
         Column(m.padding(bottom = end)) {
             notice?.invoke()
             if (open != null) {

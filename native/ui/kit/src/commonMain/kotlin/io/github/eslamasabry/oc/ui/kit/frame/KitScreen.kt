@@ -50,6 +50,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.foundation.relocation.bringIntoViewResponder
@@ -329,6 +330,11 @@ public fun KitScreen(
         // inset, so a keyboard whose closing animation never ends here cannot hold the page up.
         val keyboard = kitKeyboardInsets()
         val insets = (LocalKitScreenInsets.current ?: kitSystemInsets()).union(keyboard)
+        // Audit 2 (2026-11-14, a tall sheet's top edge sliced the bar's subtitle): the page tells its sheets where its top
+        // chrome ends, so a tall sheet rests below the bar's words (KitSheet's detents).
+        val sheetHost = LocalKitSheetHost.current
+        val chromeMark = remember { Any() }
+        androidx.compose.runtime.DisposableEffect(sheetHost) { onDispose { sheetHost?.releaseChrome(chromeMark) } }
         if (overlayChrome && search == null && header == null && !loading) {
             var topPx by remember { mutableIntStateOf(0) }
             var bottomPx by remember { mutableIntStateOf(0) }
@@ -510,7 +516,10 @@ public fun KitScreen(
                             .fillMaxWidth()
                             .then(if (statusPx > 0) Modifier.padding(top = with(density) { statusPx.toDp() }) else Modifier)
                             .onSizeChanged { topPx = it.height }
-                            .onGloballyPositioned { topBottom = it.positionInRoot().y + it.size.height }
+                            .onGloballyPositioned {
+                                topBottom = it.positionInRoot().y + it.size.height
+                                if (topPart != null) sheetHost?.holdChrome(chromeMark, topBottom)
+                            }
                             .then(if (edgesFade || barFace != null) Modifier else Modifier.kitChromeGround(FrostRole.ChatHeader, frost, reach = insetTop))
                     ) {
                         topPart?.let {
@@ -581,8 +590,6 @@ public fun KitScreen(
             // recording cleared above the pane's bottom edge less its lens rim; the original keeps recording.
             val floatPane = remember { KitTopPane() }
             val liftedFade = if (lifted != null) rememberKitWordsFade(lifted, KitWordsClear.Above) else null
-            val underFade = if (floats && lifted == null) rememberKitWordsFade(under, KitWordsClear.Above) else null
-            val floatFade = liftedFade ?: underFade
             // No lens (or a short window) with scrollsElsewhere: no pinned bar; the bar and its second row are the
             // scrolling header's first parts, as the page laid them out before it floated.
             val barInHeader = floatingBar != null && floatingBar.scrollsElsewhere && !floats && topPart != null
@@ -601,6 +608,11 @@ public fun KitScreen(
                     else -> header
                 }
             val runs = (frost == null && stackTop != null && pageHeader != null && lens) || floats
+            // What the bar's glass (and the status bar's edge) sees of a body that runs under it: the kit's recording,
+            // cleared as the page itself is (audit 2, 2026-11-14: Settings' glass bar and status bar showed blurred copies
+            // of the page's words). The floating pane and a pinned glass bar both read it.
+            val underFade = if (runs && lifted == null) rememberKitWordsFade(under, KitWordsClear.Above) else null
+            val floatFade = liftedFade ?: underFade
             val barFace =
                 when {
                     stackTop == null -> null
@@ -620,8 +632,6 @@ public fun KitScreen(
             val topScroll = remember(headerState) { KitScreenScroll().also { it.reporter = { headerState.offset < 0f } } }
             val headerUnder = kitUnderTop(topScroll)
             val edgeLayers = rememberStatusEdgeLayers()
-            val statusBlur = if (runs && statusRun > 0) kitStatusEdgeBlur() else null
-            val reachPx = with(density) { STATUS_EDGE_REACH_DP.dp.toPx() }
             // How far the floating pane's bottom edge sits above the bottom of the bar's box (KitLiquidBarPane).
             val paneInsetPx = with(density) { LIQUID_BAR_INSET_Y.dp.roundToPx() }
             val runPx by androidx.compose.animation.core.animateIntAsState(
@@ -629,6 +639,32 @@ public fun KitScreen(
                 if (KitMotion.state.reduced) androidx.compose.animation.core.snap<Int>() else KitMotion.specs.enter<Int>(),
                 label = "kit.screen.under-bar",
             )
+            // Audit 2 (2026-11-14: a hard clip sliced the last row above the navigation bar, headings were cut at the bar's
+            // lower edge, a heading ran into a page's footer): one page edge for every page, every style. Content never
+            // ends in a hard line. Under the top chrome it is gone, and it dissolves in below it over TOP_DISSOLVE_DP once
+            // anything lies under the chrome (at rest nothing is faded); above the bottom edge (the navigation bar, a
+            // fixed button, a pinned foot) it dissolves out over the same length while more of it lies below, gone
+            // FOOT_GAP_DP before a footer. The page's scroller says where its content lies (kitPageScrollState,
+            // kitPageListState, KitPinnedFootBody); a body that says nothing is watched for the person's own scrolling.
+            val pageScroll = remember { KitScreenScroll().also { it.guessing = true } }
+            val edgeWatch = remember(pageScroll) { KitScreenEdgeWatch(pageScroll) }
+            val bodyUnder = kitUnderTop(pageScroll)
+            val moreBelow = kitMoreBelow(pageScroll)
+            val dissolvePx = with(density) { TOP_DISSOLVE_DP.dp.toPx() }
+            val footGapPx = with(density) { FOOT_GAP_DP.dp.toPx() }
+            val topUnder: () -> Float = { maxOf(headerUnder(), bodyUnder()) }
+            // Where the chrome ends inside the scrolling box: a body that runs under the bar is gone above the floating
+            // pane's bottom edge (the pinned glass bar's); every other body starts below its chrome.
+            val topClear: () -> Float = {
+                when {
+                    floats -> (runPx - paneInsetPx).coerceAtLeast(0).toFloat()
+                    runs -> runPx.toFloat()
+                    else -> 0f
+                }
+            }
+            val topDissolve: () -> Float = { dissolvePx * topUnder() }
+            // The bar's copy of the recording: at least a pixel, as its copy clears nothing without a rim.
+            val barDissolve: () -> Float = { topDissolve().coerceAtLeast(1f) }
             Column(
                 Modifier.fillMaxSize()
                     .then(if (framed) Modifier.windowInsetsPadding(insets) else Modifier)
@@ -651,7 +687,13 @@ public fun KitScreen(
                                     // it never reaches a row that has scrolled under it.
                                     .kitTouchSink()
                                 runs -> Modifier.zIndex(1f).onSizeChanged { barPx = it.height }
-                                    .then(if (barFace != null) kitLiquidWordsHost(LiquidRole.Bar, under) else Modifier.background(LocalKitColors.current.ground.copy(alpha = 1f)))
+                                    .then(if (barFace != null) kitLiquidWordsHost(LiquidRole.Bar, underFade?.fadedSource ?: under) else Modifier.background(LocalKitColors.current.ground.copy(alpha = 1f)))
+                                    .then(
+                                        if (underFade == null || barFace == null) Modifier
+                                        else
+                                            Modifier.kitTopPaneReport(floatPane, 0, 0)
+                                                .kitWordsFadeRecorder(underFade, { floatPane.bottom + barDissolve() }, barDissolve, clear = { barClear })
+                                    )
                                 barFace != null -> kitLiquidWordsHost(LiquidRole.Bar, frost)
                                 else -> Modifier
                             }
@@ -677,7 +719,10 @@ public fun KitScreen(
                                         if (floatFade == null || barFace == null) Modifier
                                         else
                                             Modifier.kitTopPaneReport(floatPane, LIQUID_BAR_INSET_X, LIQUID_BAR_INSET_Y)
-                                                .kitWordsFadeRecorder(floatFade, { floatPane.bottom }, { floatPane.rim }, clear = { barClear })
+                                                // Owner 2026-11-14 (nothing readable under a floating control): the pane's
+                                                // glass sees the page as the page shows it, gone above the pane's bottom
+                                                // edge and dissolving in below it, as the conversation's bar does.
+                                                .kitWordsFadeRecorder(floatFade, { floatPane.bottom + barDissolve() }, barDissolve, clear = { barClear })
                                     )
                             ) {
                                 CompositionLocalProvider(io.github.eslamasabry.oc.ui.kit.effects.LocalKitOnLiquidGlass provides (barFace != null)) {
@@ -722,41 +767,19 @@ public fun KitScreen(
                             else
                                 Modifier.kitRunUnderBar { runPx }
                                     .then(if (lifted != null) Modifier.onGloballyPositioned { bodyOrigin[0] = it.positionInRoot() } else Modifier)
-                                    // Chat edge A: the body shows on behind the glass bar (the bar's glass bends it)
-                                    // and, under the status bar, dissolves into a blur of itself with a dim while the
-                                    // header has scrolled under; both ease with the run.
+                                    // Chat edge A, as the conversation now has it (owner 2026-11-14: nothing readable
+                                    // under a floating control): the body is gone under the status bar and the bar (the
+                                    // page edges below clear it); the status bar keeps only the dim of the page's ground
+                                    // while the header has scrolled under, easing with the run. No blurred copy of the
+                                    // page is drawn there.
                                     .then(
                                         if (barFace == null || statusRun <= 0) Modifier
                                         else
                                             Modifier.drawWithContent {
                                                 drawContent()
                                                 val k = runShare(runPx, barPx + statusRun)
-                                                if (k > 0f)
-                                                    drawStatusEdge(edgeLayers, statusRun.toFloat(), statusBlur, headerUnder() * k, alpha = k) {
-                                                        // A floating bar over the feature's own recording draws that
-                                                        // recording where it lies in the body.
-                                                        if (lifted != null) {
-                                                            val shift = lifted.sourceOrigin - bodyOrigin[0]
-                                                            translate(shift.x, shift.y) { drawLayer(lifted.layer) }
-                                                        } else drawLayer(under.layer)
-                                                    }
+                                                if (k > 0f) drawStatusEdge(edgeLayers, statusRun.toFloat(), null, headerUnder() * k, alpha = k) {}
                                             }
-                                                .kitScrollEdges(
-                                                    // A floating bar: nothing of the body shows above the pane's bottom
-                                                    // edge except through the glass (beside the pane's rounded ends and
-                                                    // in its margins it is cleared); the status edge's blur is drawn
-                                                    // over it as before.
-                                                    clearAbove =
-                                                        if (floats) ({ (runPx - paneInsetPx).coerceAtLeast(0).toFloat() })
-                                                        else ({ statusEdgeSolid(statusRun.toFloat()) }),
-                                                    topReach = HEADER_FADE_DP.dp,
-                                                    fadeFromBottom = null,
-                                                    bottomReach = 0.dp,
-                                                    strength = { runShare(runPx, barPx + statusRun) },
-                                                    topReachPx =
-                                                        if (floats) ({ 0f })
-                                                        else ({ statusRun + reachPx - statusEdgeSolid(statusRun.toFloat()) }),
-                                                )
                                     )
                                     // The kit records the body only when no feature recording stands in for it.
                                     .then(if (lifted != null) Modifier else Modifier.kitLiquidSource(under))
@@ -791,6 +814,39 @@ public fun KitScreen(
                                     else ({ with(density) { COMPOSER_FADE_DP.dp.toPx() } }),
                                 bottomReach = COMPOSER_FADE_DP.dp,
                             )
+                    // Glass with the lens (the bar floats): the bottom block is a pane like the bar. The body runs on
+                    // under it, so rows pass behind its glass instead of being cut at its top; the frame tells the body
+                    // the block's height (kitScreenChromePadding) so the last row rests above it.
+                    val footFloats = floats && bottomPart != null
+                    var footPx by remember { mutableIntStateOf(0) }
+                    // Every other page: the one page edge (above). One offscreen layer for the page's scrolling part. A
+                    // floating foot pane is the body's to clear under: the content is gone FOOT_GAP_DP above it. A foot
+                    // pinned inside the body (KitPinnedFootBody) is kept whole; the content is gone the same gap above it.
+                    val pageEdges =
+                        if (frost != null) stackedEdges
+                        else
+                            Modifier.onGloballyPositioned { c ->
+                                // Only a page with chrome pinned at its top tells its sheets where that chrome ends.
+                                if (stackTop != null || search != null) sheetHost?.holdChrome(chromeMark, c.positionInRoot().y + topClear())
+                            }
+                                .kitScrollEdges(
+                                    clearAbove = topClear,
+                                    topReach = 0.dp,
+                                    topReachPx = topDissolve,
+                                    fadeFromBottom = {
+                                        val foot = pageScroll.footRoom.toFloat()
+                                        val floating = if (footFloats) footPx + footGapPx else 0f
+                                        foot + (if (foot > 0f) footGapPx else 0f) + floating + dissolvePx
+                                    },
+                                    bottomReach = 0.dp,
+                                    bottomReachPx = { dissolvePx },
+                                    bottomStrength = moreBelow,
+                                    keepBottomPx = { pageScroll.footRoom.toFloat() },
+                                )
+                    // The body: its scroller reports to the page's edges; a body that reports nothing is watched.
+                    val pageBody: @Composable () -> Unit = {
+                        CompositionLocalProvider(LocalKitScreenScroll provides pageScroll) { KitScreenBody(edges) { bodyPart() } }
+                    }
                     // A floating bar: a part brought into view (a focused field, a keyboard move) that would rest under
                     // the bar brings the spacer back, so it lies below the bar (KitFloatingBar.kt).
                     val reducedMotion = KitMotion.state.reduced
@@ -808,25 +864,18 @@ public fun KitScreen(
                             val runDp = with(LocalDensity.current) { runPx.toDp() }
                             val shownHeader: @Composable ColumnScope.() -> Unit =
                                 if (!runs) pageHeader else ({ Spacer(Modifier.height(runDp)); pageHeader() })
-                            KitScrollingHeaderFrame(shownHeader, m.then(intoView), headerState) {
+                            KitScrollingHeaderFrame(shownHeader, m.then(intoView).then(pageEdges), headerState) {
                                 KitLoadingBar(loading, loadingLabel.orEmpty(), if (loading) Modifier.testTag("kit-screen-loading") else Modifier)
-                                Box(Modifier.fillMaxWidth().weight(1f)) { KitScreenBody(edges) { bodyPart() } }
+                                Box(Modifier.fillMaxWidth().weight(1f).nestedScroll(edgeWatch)) { pageBody() }
                             }
                         } else {
                             // Dart: KitLoadingBar(loading:, label:) always takes its 2 dp, so the page never jumps.
                             Column(m) {
                                 KitLoadingBar(loading, loadingLabel.orEmpty(), if (loading) Modifier.testTag("kit-screen-loading") else Modifier)
-                                Box(Modifier.fillMaxWidth().weight(1f).then(stackedEdges)) {
-                                    KitScreenBody(edges) { bodyPart() }
-                                }
+                                Box(Modifier.fillMaxWidth().weight(1f).nestedScroll(edgeWatch).then(pageEdges)) { pageBody() }
                             }
                         }
                     }
-                    // Glass with the lens (the bar floats): the bottom block is a pane like the bar. The body runs on
-                    // under it, so rows pass behind its glass instead of being cut at its top; the frame tells the body
-                    // the block's height (kitScreenChromePadding) so the last row rests above it.
-                    val footFloats = floats && bottomPart != null
-                    var footPx by remember { mutableIntStateOf(0) }
                     val scrollArea: @Composable (Modifier) -> Unit = { area ->
                         if (refresh != null) {
                             KitRefresh(
@@ -1143,6 +1192,12 @@ internal const val HEADER_FADE_DP = 12
  * content reads as a cut: every dp of it changes the content's strength by at most a sixteenth.
  */
 internal const val TOP_DISSOLVE_DP = 24
+
+/**
+ * How far above a footer (a pinned foot's words, a floating foot pane) a page's content is already gone, dp (audit 2,
+ * 2026-11-14: Report a problem's "Performance" heading ran straight into the footer's words).
+ */
+internal const val FOOT_GAP_DP = Space.S2
 
 /** How far above a control floating over the body (the jump pill) the body is already gone, dp. */
 internal const val FLOAT_GAP_DP = 8
