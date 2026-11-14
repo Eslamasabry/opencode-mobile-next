@@ -140,7 +140,8 @@ class StepsCraftPicturesTest {
             if (moment == Moment.Opened) {
                 tap("chat-work-summary")
                 mainClock.advanceTimeBy(SETTLE)
-                tap("chat-step-run-c10")
+                // The build run (a build, then two adb commands): its steps open in the middle of the screen.
+                tap("chat-step-run-c3")
                 mainClock.advanceTimeBy(SETTLE)
             }
             // The running step's light, part-way round its node.
