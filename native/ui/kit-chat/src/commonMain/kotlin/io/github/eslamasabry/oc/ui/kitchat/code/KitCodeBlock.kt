@@ -901,8 +901,8 @@ public fun KitCodeFill(
             Box(modifier.padding(Space.S3.dp)) {
                 KitText(stringResource(Res.string.kitCodeEmpty), role = TypeRole.Mono, tone = TextTone.Tertiary)
             }
-            return@CompositionLocalProvider
-        }
+        } else {
+        // No early return out of this block (see ChatTranscript's row): the body below is the else branch.
         val lines = remember(display) { codeSplitLines(display) }
         val starts = remember(lines) { codeLineStarts(lines) }
         val colors = KitCodeColors.of(LocalKitColors.current)
@@ -969,8 +969,7 @@ public fun KitCodeFill(
             }
         if (wrap) {
             list(modifier)
-            return@CompositionLocalProvider
-        }
+        } else {
         BoxWithConstraints(modifier) {
             if (natural <= maxWidth.value) {
                 list(Modifier.fillMaxWidth())
@@ -979,6 +978,8 @@ public fun KitCodeFill(
                     list(Modifier.width(natural.dp).fillMaxHeight())
                 }
             }
+        }
+        }
         }
     }
 }
