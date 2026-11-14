@@ -79,7 +79,9 @@ class StyleSchoolSceneTest {
                             Modifier.fillMaxSize().background(ground).padding(horizontal = 16.dp, vertical = 24.dp),
                             verticalArrangement = Arrangement.spacedBy(28.dp),
                         ) {
-                            Box(Modifier.width(370.dp)) {
+                            // The parts' own handles sit inside their padding: each pane is measured on a box that
+                            // hugs its face.
+                            Box(Modifier.width(370.dp).testTag(BOX)) {
                                 KitComposerBox(
                                     running = false,
                                     stacked = true,
@@ -99,7 +101,9 @@ class StyleSchoolSceneTest {
                                 KitCodeBlock("print(1)\nprint(2)", KitCodeKind.Code, Modifier.testTag(CODE))
                             }
                             Box(Modifier.padding(start = 40.dp)) {
-                                KitMenuPanel(listOf(KitMenuItem("Find", {}), KitMenuItem("Rename", {})), onChoose = {})
+                                Box(Modifier.testTag(MENU)) {
+                                    KitMenuPanel(listOf(KitMenuItem("Find", {}), KitMenuItem("Rename", {})), onChoose = {})
+                                }
                             }
                         }
                     }
@@ -112,14 +116,14 @@ class StyleSchoolSceneTest {
                 Shot(
                     onAllNodes(isRoot())[0].captureToImage().toPixelMap(),
                     mapOf(
-                        "message box" to bounds("kit-composer-box"),
+                        "message box" to bounds(BOX),
                         "model chip" to bounds(COMPOSER_CHIP_FACE_TAG, 0),
                         "approval chip" to bounds(COMPOSER_CHIP_FACE_TAG, 1),
                         "Send disc" to bounds("kit-composer-send-disc"),
                         "jump pill" to bounds(JUMP_PILL_FACE_TAG),
                         "bubble" to bounds(PROMPT_BUBBLE_TAG),
                         "code block" to bounds(CODE),
-                        "menu" to bounds("kit-menu"),
+                        "menu" to bounds(MENU),
                     ),
                 )
         }
@@ -173,7 +177,7 @@ class StyleSchoolSceneTest {
         for ((name, r) in s.parts) if (!outlined(s.image, r)) faults += "$name has no ink edge"
         for (name in listOf("message box", "jump pill", "bubble", "menu")) if (!shadowed(s.image, s.parts.getValue(name))) faults += "$name on the page casts no hard shadow"
         for (name in listOf("model chip", "approval chip", "Send disc")) if (shadowed(s.image, s.parts.getValue(name))) faults += "$name inside the box casts a second shadow"
-        assertTrue(faults.isEmpty(), "Brutal $mode is half applied: ${faults.joinToString("; ")}")
+        report("Brutal $mode", s, faults)
     }
 
     private fun paper(dark: Boolean) {
@@ -184,7 +188,27 @@ class StyleSchoolSceneTest {
         // Paper's primary is an accent face with no rule; every other part is ruled.
         for ((name, r) in s.parts) if (name != "Send disc" && !outlined(s.image, r)) faults += "$name has no rule"
         for ((name, r) in s.parts) if (shadowed(s.image, r)) faults += "$name casts a shadow"
-        assertTrue(faults.isEmpty(), "Paper $mode is half applied: ${faults.joinToString("; ")}")
+        report("Paper $mode", s, faults)
+    }
+
+    private fun hex(p: FloatArray): String = p.joinToString("") { it.toInt().coerceIn(0, 255).toString(16).padStart(2, '0') }
+
+    /** The samples the checks read, as hex colours. */
+    private fun probe(image: PixelMap, r: Rect): String {
+        val x = r.center.x
+        val top = (-8..8).joinToString(" ") { hex(rgb(image, x, r.top + it * D / 2f)) }
+        return "top $top | below-mid ${hex(rgb(image, r.center.x + 2f * D, r.bottom + 2f * D))} below-start ${hex(rgb(image, r.left - 2f * D, r.bottom + 2f * D))}" +
+            " | corner ${hex(rgb(image, r.left + .33f * D, r.top + .33f * D))} ${hex(rgb(image, r.left + .66f * D, r.top + .66f * D))} outside ${hex(rgb(image, r.left - 3f * D, r.top - 3f * D))}"
+    }
+
+    /** Prints what was measured (the run's log shows it) and fails with the faults. */
+    private fun report(what: String, s: Shot, faults: List<String>) {
+        if (faults.isNotEmpty()) {
+            println("$what parts: " + s.parts.entries.joinToString { (n, r) -> "$n=(${r.left.toInt()},${r.top.toInt()},${r.right.toInt()},${r.bottom.toInt()})" })
+            println("$what is half applied: ${faults.joinToString("; ")}")
+            for ((n, r) in s.parts) println("$what $n: " + probe(s.image, r))
+        }
+        assertTrue(faults.isEmpty(), "$what is half applied: ${faults.joinToString("; ")}")
     }
 
     @Test fun `B-KIT-STY-05 Brutal light - every part in a conversation has the ink edge, shadows only on the page`() = brutal(dark = false)
@@ -200,6 +224,8 @@ class StyleSchoolSceneTest {
         const val H = 2100
         const val D = 2.625f
         const val CODE = "scene-code"
+        const val BOX = "scene-box"
+        const val MENU = "scene-menu"
 
         /** Colour distance (0-255 per channel, Euclidean) that reads as a drawn line or block. */
         const val LINE = 40f
