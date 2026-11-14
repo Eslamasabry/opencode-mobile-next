@@ -1,11 +1,7 @@
 package io.github.eslamasabry.oc.ui.kit.state
 
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -17,8 +13,6 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -46,6 +40,7 @@ import io.github.eslamasabry.oc.ui.kit.foundation.kitSurfaceLook
 import io.github.eslamasabry.oc.ui.kit.foundation.shape
 import io.github.eslamasabry.oc.ui.kit.live.kitLivePictureSpots
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
+import io.github.eslamasabry.oc.ui.kit.motion.breath
 import io.github.eslamasabry.oc.ui.kit.platform.LocalKitVisibility
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitRoles
@@ -180,12 +175,11 @@ public fun KitSkeletonTranscript(modifier: Modifier = Modifier, turns: Int = 2) 
  */
 @Composable
 private fun skeletonBreath(): State<Float>? {
-    val visible by LocalKitVisibility.current.visible.collectAsState()
-    if (!KitMotion.state.ambientLoops || !visible) return null
+    if (!KitMotion.state.ambientLoops || !LocalKitVisibility.current.shown) return null
     return rememberInfiniteTransition(label = "kit-skeleton").animateFloat(
         initialValue = 0f,
         targetValue = 1f,
-        animationSpec = infiniteRepeatable(tween(MotionTokens.STEP_BREATHE, easing = FastOutSlowInEasing), RepeatMode.Reverse),
+        animationSpec = KitMotion.specs.breath(MotionTokens.STEP_BREATHE),
         label = "breath",
     )
 }

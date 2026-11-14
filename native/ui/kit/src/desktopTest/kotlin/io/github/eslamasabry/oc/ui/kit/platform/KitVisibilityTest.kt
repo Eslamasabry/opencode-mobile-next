@@ -1,5 +1,10 @@
+@file:OptIn(androidx.compose.ui.test.ExperimentalTestApi::class)
+
 package io.github.eslamasabry.oc.ui.kit.platform
 
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.SideEffect
+import androidx.compose.ui.test.v2.runComposeUiTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.time.Duration.Companion.milliseconds
@@ -59,5 +64,24 @@ class KitVisibilityTest {
     @Test
     fun `BG-CPU-001 the signal of the app starts visible so desktop and tests run as before`() {
         assertEquals(true, KitVisibility.App.visible.value)
+    }
+
+    @Test
+    fun `BG-CPU-002 a part reads shown without a collector and recomposes when the app hides and shows`() = runComposeUiTest {
+        val visibility = KitVisibility()
+        val seen = mutableListOf<Boolean>()
+        setContent {
+            CompositionLocalProvider(LocalKitVisibility provides visibility) {
+                val shown = LocalKitVisibility.current.shown
+                SideEffect { seen += shown }
+            }
+        }
+        waitForIdle()
+        visibility.set(false)
+        waitForIdle()
+        assertEquals(false, visibility.visible.value, "the flow and the state say the same")
+        visibility.set(true)
+        waitForIdle()
+        assertEquals(listOf(true, false, true), seen)
     }
 }

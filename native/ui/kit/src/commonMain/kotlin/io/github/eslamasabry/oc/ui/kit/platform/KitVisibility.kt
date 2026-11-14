@@ -2,6 +2,7 @@ package io.github.eslamasabry.oc.ui.kit.platform
 
 import androidx.compose.runtime.ProvidableCompositionLocal
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.staticCompositionLocalOf
 import kotlin.time.Duration
 import kotlinx.coroutines.delay
@@ -25,12 +26,20 @@ import kotlinx.coroutines.flow.first
 @Stable
 public class KitVisibility(visible: Boolean = true) {
     private val state = MutableStateFlow(visible)
+    private val shownState = mutableStateOf(visible)
 
     /** True while any of the app's windows is started (on screen). */
     public val visible: StateFlow<Boolean> = state.asStateFlow()
 
+    /**
+     * [visible] as Compose state: a part that reads it while composing recomposes when the app hides or shows, with no
+     * collector of its own (a `collectAsState` would keep collecting below STARTED).
+     */
+    public val shown: Boolean get() = shownState.value
+
     public fun set(visible: Boolean) {
         state.value = visible
+        shownState.value = visible
     }
 
     /** Returns at once while the app shows; otherwise parks, with no timer armed, until it shows again. */
