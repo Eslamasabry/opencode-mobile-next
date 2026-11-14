@@ -3,7 +3,7 @@
 <resources>
     <string name="telemetryCrashReportsTitle">Kirim laporan error ke pengembang (Google Firebase)</string>
     <string name="telemetryCrashReportsBody">Saat aplikasi mogok atau suatu langkah gagal, aplikasi mengirim jenis masalah, versi aplikasi dan Android, serta daftar singkat lokasi kode. Pesan, file, alamat, dan kunci Anda tidak pernah dikirim.</string>
-    <string name="telemetryConsentChoose">Pilih</string>
+    <string name="telemetryConsentChoose">Pilih yang dibagikan</string>
     <string name="telemetryConsentSave">Simpan pilihan saya</string>
     <string name="sendReportTitle">Kirim laporan masalah</string>
     <string name="sendReportSubtitle">Inilah seluruh isi laporan. Tidak ada yang dikirim sampai Anda mengetuk Kirim.</string>

@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.widgetactions.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageScrollState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -36,7 +37,7 @@ public fun WidgetPanelScreen(state: WidgetPanelUi, actions: WidgetPanelActions) 
     ) {
         KitPanelHeading(title, stringResource(Res.string.widgetV2Cancel), actions::close, enabled)
         Spacer(Modifier.height(Space.S3.dp))
-        Column(Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState())) {
+        Column(Modifier.weight(1f, fill = false).verticalScroll(kitPageScrollState())) {
             if (style) {
                 KitWidgetStyleForm(
                     preview,

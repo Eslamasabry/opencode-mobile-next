@@ -991,4 +991,6 @@
     <string name="agentIsolatedCancel">Прекратить ожидание</string>
     <string name="agentElsewhereCounts">Ожидают: %1$d · выполняются: %2$d · с ошибкой: %3$d</string>
     <string name="agentElsewhereStale">Ожидание обновления</string>
+    <string name="gitProblemNoWorkingSpace">Git не хватает места для работы там, где находится этот проект. Освободите там память и повторите попытку.</string>
+    <string name="gitProblemServerRefusedCommand">Сервер ответил, но не стал выполнять команду Git. Проверьте вход на нём и повторите попытку.</string>
 </resources>

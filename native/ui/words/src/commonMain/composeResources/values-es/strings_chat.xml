@@ -237,11 +237,6 @@
         <item quantity="other">%1$s referencias se añaden como texto al enviar. No se guardan con tu borrador.</item>
     </plurals>
     <string name="chatUiAttachedCount">%1$s adjuntos</string>
-    <plurals name="chatUiEarlierMessageCount">
-        <item quantity="one">1 mensaje anterior</item>
-        <item quantity="many">%1$s mensajes anteriores</item>
-        <item quantity="other">%1$s mensajes anteriores</item>
-    </plurals>
     <string name="chatUiPositionOfTotal">%1$s de %2$s</string>
     <string name="chatUiSubagentCount">Conversación delegada · %1$s</string>
     <plurals name="chatUiFileCount">
@@ -1251,4 +1246,6 @@
     <string name="chatStepMalformedCall">El agente lo pidió de forma incorrecta, así que no se ejecutó nada. Pídele que lo intente de nuevo.</string>
     <string name="chatUiRetryWhyUnreachable">No se puede conectar con el proveedor del modelo. Revisa la conexión de este teléfono.</string>
     <string name="chatUiRetryWhyBusy">El proveedor del modelo no responde por ahora.</string>
+    <string name="transcriptFindPosition">%1$s de %2$s</string>
+    <string name="chatUiShowEarlierMessages">Mostrar mensajes anteriores</string>
 </resources>

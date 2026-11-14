@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.usage.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageListState
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -221,7 +222,7 @@ public fun UsageContent(state: UsageUi, actions: UsageActions) {
     LaunchedEffect(state.modelSearch) {
         if (state.modelSearch.isEmpty() && recordsField.text.isNotEmpty()) recordsField.clearText()
     }
-    LazyColumn(contentPadding = PaddingValues(top = Space.S3.dp, bottom = Space.S6.dp)) {
+    LazyColumn(contentPadding = PaddingValues(top = Space.S3.dp, bottom = Space.S6.dp), state = kitPageListState()) {
         if (state.phase == UsagePhase.NoServer) {
             item(key = "no-server") {
                 KitStateView(

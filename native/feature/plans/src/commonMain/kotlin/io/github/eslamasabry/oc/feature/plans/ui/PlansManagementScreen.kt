@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.plans.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageScrollState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -72,7 +73,7 @@ public fun PlansManagementScreen(
         edges = KitScreenEdges.Bleed,
     ) {
         Column(
-            Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
+            Modifier.fillMaxSize().verticalScroll(kitPageScrollState()),
             verticalArrangement =
                 Arrangement.spacedBy(
                     if (state.page == PlanManagePage.Widget || state.page == PlanManagePage.Reader)

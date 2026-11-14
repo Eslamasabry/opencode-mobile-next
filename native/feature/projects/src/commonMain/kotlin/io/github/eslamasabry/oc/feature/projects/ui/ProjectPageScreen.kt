@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.projects.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageListState
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.lazy.LazyColumn
@@ -113,6 +114,7 @@ public fun ProjectPageScreen(
         LazyColumn(
             verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
             contentPadding = PaddingValues(top = Space.S2.dp, bottom = Space.S4.dp),
+            state = kitPageListState(),
         ) {
             if (state.storageBlock != SharedStorageBlock.None) {
                 item(key = "shared-storage-access") { SharedStorageNotice(state, actions) }

@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.team.fleet
 
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageListState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -26,7 +27,6 @@ import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
 import io.github.eslamasabry.oc.ui.kit.state.KitDetailsFold
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitTechnicalValue
-import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.*
 import org.jetbrains.compose.resources.stringResource
 
@@ -55,7 +55,7 @@ public fun FleetConnectScreen(state: FleetConnectUi, actions: FleetConnectAction
                 },
                 bottom = {
                     KitActionBlock(
-                        Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp, vertical = Space.S2.dp).testTag("team-address-actions"),
+                        Modifier.padding(vertical = Space.S2.dp).testTag("team-address-actions"),
                         primary =
                             KitAction(
                                 stringResource(if (state.testing) Res.string.teamUiAddTesting else Res.string.teamUiAddSubmit),
@@ -76,6 +76,7 @@ public fun FleetConnectScreen(state: FleetConnectUi, actions: FleetConnectAction
                     Modifier.fillMaxSize().testTag("team-address"),
                     contentPadding = PaddingValues(top = Space.S2.dp, bottom = Space.S4.dp),
                     verticalArrangement = Arrangement.spacedBy(Space.S4.dp),
+                    state = kitPageListState(),
                 ) {
                     item(key = "url") {
                         KitField(

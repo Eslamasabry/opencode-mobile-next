@@ -385,6 +385,7 @@ private fun ColumnScope.AppearanceControls(
                         title = stringResource(Res.string.glassLabTitle),
                         modifier = Modifier.testTag("appearance-glass-lab"),
                         supporting = stringResource(Res.string.glassLabRowLine),
+                        supportingMaxLines = 2,
                         trailing = KitRowTrailing.Chevron,
                         onClick = { actions.onOpen(io.github.eslamasabry.oc.feature.settings.presentation.SettingsPage.GlassLab) },
                     )

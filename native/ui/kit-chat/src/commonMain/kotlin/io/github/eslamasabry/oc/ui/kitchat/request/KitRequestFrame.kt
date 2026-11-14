@@ -1,6 +1,14 @@
 package io.github.eslamasabry.oc.ui.kitchat.request
 
 import androidx.compose.foundation.background
+import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceInput
+import io.github.eslamasabry.oc.ui.kit.foundation.kitDressedLook
+import io.github.eslamasabry.oc.ui.kit.foundation.kitSurface
+import io.github.eslamasabry.oc.ui.kit.foundation.LocalKitNested
+import io.github.eslamasabry.oc.ui.design.style.SurfaceRole
+import io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
@@ -83,8 +91,21 @@ public fun KitRequestFrame(
     val colors = LocalKitColors.current
     val shape = KitShapeId.Card.toShape()
     val question = look == KitRequestLook.Question
+    // Brutal and Paper dress the card as a card on the page (audit 2026-11-14): Brutal's ink edge and hard shadow,
+    // Paper's ink box with square corners; the attention stays in its fill (standard) or its start edge (question). The
+    // controls inside are nested in its outline (LocalKitNested): edged, never a second shadow.
+    val dressed =
+        kitDressedLook(
+            KitSurfaceInput(
+                role = SurfaceRole.Content,
+                shape = KitShapeId.Card,
+                level = SurfaceLevel.Surface2,
+                color = if (question) colors.surface1 else colors.attentionSurface.compositeOver(colors.surface1),
+            )
+        )
     val face =
         if (LocalKitAppearance.current.style == KitSurfaceStyle.Signal) Modifier
+        else if (dressed != null) Modifier.kitSurface(dressed).then(if (question) Modifier.questionEdge().questionPadding() else Modifier.padding(Space.S4.dp))
         else if (question) Modifier.questionFace(shape)
         else
             Modifier.clip(shape)
@@ -109,6 +130,7 @@ public fun KitRequestFrame(
             // Question look: the answers sit space4 under the words (kit_request_question.dart:183-186).
             verticalArrangement = Arrangement.spacedBy(if (question) Space.S4.dp else Space.S3.dp),
         ) {
+        CompositionLocalProvider(LocalKitNested provides (dressed != null)) {
             Column(
                 Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState()),
                 // The question look spaces its own lines (tag 8, title 4, block 16); the standard card keeps 8.
@@ -116,6 +138,7 @@ public fun KitRequestFrame(
                 content = content,
             )
             answers()
+        }
         }
     }
 }
@@ -128,17 +151,28 @@ public fun KitRequestFrame(
 @Composable
 private fun Modifier.questionFace(shape: Shape): Modifier {
     val colors = LocalKitColors.current
-    val edge = FlutterKitTokens.NEEDS_YOU_EDGE_WIDTH.dp
     return clip(shape)
         .background(colors.surface1)
-        .drawBehind {
-            val w = edge.toPx()
-            val x = if (layoutDirection == LayoutDirection.Rtl) size.width - w else 0f
-            drawRect(colors.attention, topLeft = Offset(x, 0f), size = Size(w, size.height))
-        }
+        .questionEdge()
         .border(kitHairline(), colors.attention.copy(alpha = FlutterKitTokens.NEEDS_YOU_LINE_ALPHA), shape)
-        .padding(start = Space.S4.dp + edge, top = Space.S4.dp, end = Space.S4.dp, bottom = Space.S4.dp)
+        .questionPadding()
 }
+
+/** The question look's [FlutterKitTokens.NEEDS_YOU_EDGE_WIDTH] attention edge along the start side. */
+@Composable
+private fun Modifier.questionEdge(): Modifier {
+    val attention = LocalKitColors.current.attention
+    val edge = FlutterKitTokens.NEEDS_YOU_EDGE_WIDTH.dp
+    return drawBehind {
+        val w = edge.toPx()
+        val x = if (layoutDirection == LayoutDirection.Rtl) size.width - w else 0f
+        drawRect(attention, topLeft = Offset(x, 0f), size = Size(w, size.height))
+    }
+}
+
+/** The question look's padding: its words start the attention edge's width further in. */
+private fun Modifier.questionPadding(): Modifier =
+    padding(start = Space.S4.dp + FlutterKitTokens.NEEDS_YOU_EDGE_WIDTH.dp, top = Space.S4.dp, end = Space.S4.dp, bottom = Space.S4.dp)
 
 /**
  * "● Needs you · 3 s" (kit_request_question.dart:201-245): the 8 dp attention dot and the words in the label role and

@@ -65,6 +65,11 @@ public data class ChatUi(
     /** B-CHAT-064: file paths in replies the server confirmed exist; only these become tappable. */
     val confirmedPaths: ImmutableSet<String> = persistentSetOf(),
     val timeline: TimelineUi? = null,
+    /**
+     * Earlier messages the server still has (audit 1, 2026-11-14): the transcript's first row offers them; null = the
+     * whole conversation is loaded.
+     */
+    val older: OlderUi? = null,
     val reasoningExpanded: Boolean = false,
     /** Lookup-only receipt checks, kept for this visit; never authorizes another send. */
     val receiptChecks: ImmutableMap<Long, ReceiptCheckUi> = persistentMapOf(),
@@ -236,7 +241,13 @@ public data class FindUi(
     val searchingAll: Boolean = false,
     val loadingOlder: Boolean = false,
     val olderFailure: Failure? = null,
-    val excerpt: String? = null,
+    /**
+     * Which match of its own text the current hit is (0 = the first in that row's text): the transcript marks that one
+     * with the stronger tint. Counted among the hits of the same row and text, in reading order.
+     */
+    val currentOrdinal: Int = 0,
+    /** The part of the row the current hit is in (a step's or a thought's own id); equals the row's key for its text. */
+    val currentSource: String? = null,
 )
 
 public data class TimelineEntryUi(
@@ -249,6 +260,9 @@ public data class TimelineEntryUi(
     /** The tools a message with no words of its own did; the screen names them in plain words. */
     val tools: ImmutableList<ToolFacts> = persistentListOf(),
 )
+
+/** Earlier messages not loaded yet: a read is in flight ([loading]), or the last one failed ([failure]). */
+public data class OlderUi(val loading: Boolean, val failure: Failure?)
 
 public data class TimelineUi(
     val query: String,
@@ -504,7 +518,7 @@ public interface ChatActions {
 
     public fun findPrevious()
 
-    /** The earlier-messages pill (plan 09 §7.3 rule 6). */
+    /** Loads the next page of earlier messages ("Show earlier messages", the transcript's first row). */
     public fun loadOlder() {}
 
     public fun openTimeline()

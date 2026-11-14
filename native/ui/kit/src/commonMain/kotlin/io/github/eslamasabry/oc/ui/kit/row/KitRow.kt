@@ -1,7 +1,6 @@
 package io.github.eslamasabry.oc.ui.kit.row
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.BasicText
@@ -16,7 +15,6 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.Spacer
-import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -29,7 +27,6 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.selected
-import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.AnnotatedString
@@ -76,8 +73,11 @@ public fun kitRowSupportingLines(textScale: Float, asked: Int = 1): Int =
         else -> asked
     }
 
-/** A row title: one line below 1.3×, two from 1.3× (the full value stays in semantics). */
-public fun kitRowTitleLines(textScale: Float, asked: Int = 1): Int = if (TextScalePolicy.isLargeText(textScale)) maxOf(asked, 2) else asked
+/**
+ * A row title: two lines at every size, never "…" while a second line is free (audit 2: "Permissions and automati…"
+ * beside its value). A caller may ask for more; the full value stays in semantics.
+ */
+public fun kitRowTitleLines(@Suppress("UNUSED_PARAMETER") textScale: Float, asked: Int = 1): Int = maxOf(asked, 2)
 
 /**
  * A file name that wraps only after `_`, `-` or before the extension's dot, never mid-word (Dart `kitBreakableFileName`).
@@ -235,8 +235,6 @@ private fun RowBody(
     kitAssert(enabled || !disabledReason.isNullOrBlank()) { "KitRow: a disabled row must say why (B-KIT-051)" }
     val colors = LocalKitColors.current
     val tokens = LocalKitTokens.current
-    val onRail = LocalKitOnRail.current
-    val glassChosen = if (selected) io.github.eslamasabry.oc.ui.kit.effects.kitGlassChosenRow() else null
     val scale = kitTextScale()
     val large = TextScalePolicy.isLargeText(scale)
     val supportLine =
@@ -263,6 +261,9 @@ private fun RowBody(
             .kitMaxWidth(CapRole.List)
             .fillMaxWidth()
             .kitGrowSource(growKey)
+            // The one chosen look (ChosenFaceRules): before the tap target, which clips to the row's box, because the
+            // face reaches to its container's edge (a sheet's, a panel's), with the lead icon and the check inside it.
+            .kitChosenFace(selected)
             .then(
                 if (tappable) {
                     Modifier.kitTappable(
@@ -283,14 +284,6 @@ private fun RowBody(
                 if (selected) this.selected = true
                 if (titleIsFileName) contentDescription = title
             }
-            .then(
-                if (!selected) Modifier
-                // On a flat list (Solid) the chosen row is a rounded plate inset space2 from the row's ends, never a
-                // square band across the page (kit_row.dart:672-690).
-                else if (LocalKitStyle.current.spec.tokens.flatLists) Modifier.kitChosenPlate(colors.accent.copy(alpha = CHOSEN_ROW_TINT))
-                // Glass: accent-tinted frost with the accent rim, its corners following the group's (owner 2026-11-08).
-                else glassChosen ?: Modifier.kitSelectedFill(colors.accent.copy(alpha = CHOSEN_ROW_TINT), onRail)
-            )
             .heightIn(min = (if (supportLine != null || state != null) tokens.rowHeightTwo else tokens.rowHeightOne).dp)
             // A row's 48 dp glyph target (its ⋯ menu or a labelled glyph) ends near the edge, so its glyph lines up
             // with the chevrons of the rows around it and with the top bar's ⋯ (P-112: Files' row ⋯ sat 12 dp in).
@@ -451,7 +444,9 @@ private fun RowBody(
                         else RowValue(value)
                     // One tertiary button, trailing (Dart `KitButton.fromAction(enable, role: tertiary, expand: false)`); it
                     // keeps its own side padding beside the words.
-                    action != null && !actionBelow -> Box(Modifier.padding(horizontal = Space.S2.dp)) {
+                    // Its words end on the row's end rail like a chevron's ink does (audit 2: "Update and import" ended 12 dp in,
+                    // a gutter's 4 dp short): the row keeps space1 at its end, the box the rest of the gutter.
+                    action != null && !actionBelow -> Box(Modifier.padding(start = Space.S2.dp, end = maxOf(Space.S2.dp, kitRowGutter() - Space.S1.dp))) {
                         io.github.eslamasabry.oc.ui.kit.KitButton(
                             io.github.eslamasabry.oc.ui.kit.KitAction(
                                 action.label, action.onClick,
@@ -511,23 +506,6 @@ private fun RowMenu(menu: KitRowTrailing.Menu, enabled: Boolean, disabledReason:
 }
 
 /**
- * A selected row's fill (E20-S08). On the page it is the row's box, which bleeds to the window edges. On a sheet's rail
- * the row sits 20 dp in from the sheet's edges, so the fill reaches past the rail to them too: the highlight starts
- * on the sheet's edge, as a page row's does on the window's, not on a third edge of its own.
- */
-private fun Modifier.kitSelectedFill(color: androidx.compose.ui.graphics.Color, onRail: Boolean): Modifier =
-    if (!onRail) background(color)
-    else
-        drawBehind {
-            val rail = io.github.eslamasabry.oc.ui.design.generated.FlutterKitTokens.RAIL.dp.toPx()
-            drawRect(
-                color,
-                topLeft = androidx.compose.ui.geometry.Offset(-rail, 0f),
-                size = androidx.compose.ui.geometry.Size(size.width + 2 * rail, size.height),
-            )
-        }
-
-/**
  * The room after a caret's box so its ink ends on the row's end rail (Dart `KitOptical.endPad` with the row's
  * `trailingRail` = space4 - space1): the caret-right glyph's ink ends .28125 of its size short of its box.
  */
@@ -538,19 +516,6 @@ internal fun chevronEndPad(size: Float): androidx.compose.ui.unit.Dp =
 internal const val CHOSEN_ROW_TINT: Float = 0.06f
 
 private const val CARET_INK_END = .28125f // F: lib/ui/kit/kit_optical.dart:26
-
-/** The chosen row's plate on a flat list: surface3, card corners, inset space2 from both ends (kit_row.dart:676-686). */
-internal fun Modifier.kitChosenPlate(color: androidx.compose.ui.graphics.Color, extraInset: androidx.compose.ui.unit.Dp = 0.dp): Modifier =
-    drawBehind {
-        val inset = Space.S2.dp.toPx() + extraInset.toPx()
-        val r = io.github.eslamasabry.oc.ui.design.generated.FlutterKitTokens.CARD_RADIUS.dp.toPx()
-        drawRoundRect(
-            color,
-            topLeft = androidx.compose.ui.geometry.Offset(inset, 0f),
-            size = androidx.compose.ui.geometry.Size(size.width - inset - inset, size.height),
-            cornerRadius = androidx.compose.ui.geometry.CornerRadius(r, r),
-        )
-    }
 
 /** True when [trailing] is a 48 dp glyph target that ends near the row's edge, on the top bar's ⋯ line (P-112). */
 internal fun rowTargetOnEdge(trailing: KitRowTrailing?): Boolean =

@@ -16,6 +16,12 @@ public object PaperSpec : StyleSpec {
     public const val CHOSEN_RULE: Float = 2f
     public const val SECTION_ALPHA: Float = .9f
     public const val HOVER_ALPHA: Float = .03f
+
+    /**
+     * A nested control's rule (a chip or a disc inside the message box's ink box): quieter than the box it sits in, still
+     * a 3:1 boundary on the page's paper in light and dark.
+     */
+    public const val NESTED_ALPHA: Float = .45f
     public fun pressStep(roles: Roles): Float = if (roles.dark) .10f else .07f
     public fun invertedInk(roles: Roles): Argb = roles.text1.opaque()
 
@@ -32,6 +38,7 @@ public object PaperSpec : StyleSpec {
             keepsUnderHighContrast = true,
             live = LivePolicy(offWhenChosen = true),
             glow = StyleGlow(halo = false, lineWidthDp = 1f),
+            dressesOwnLooks = true,
             type = StyleType(displayWeight = 750, displayTracking = -.03f, largeTitleSize = 34, titleSize = 24, monoLabels = true, firmWeights = true),
         )
 
@@ -84,7 +91,7 @@ public object PaperSpec : StyleSpec {
         val shadows =
             if (r.knobs.depth == Depth.Raised && r.role == SurfaceRole.Floating) listOf(floatingLift(roles)) else emptyList()
         val chosen = r.selected && r.role != SurfaceRole.Floating
-        val edge = if (inverted(r)) fill else ink
+        val edge = if (inverted(r)) fill else if (r.nested && !chosen) roles.text1.withAlpha(NESTED_ALPHA) else ink
         return SurfaceDecoration(
             radii = if (r.knobs.corners == Corners.Sharp) Radii.Zero else r.radii,
             circle = r.circle && !squared(r),

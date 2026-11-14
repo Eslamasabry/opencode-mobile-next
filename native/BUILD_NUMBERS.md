@@ -61,3 +61,4 @@ wiped (see Floor); they never come back and do not raise the floor.
 | 10004 | build | 2026-11-06 | native dev line (internal builds), first number the allocator handed out |
 | 10010 | release | 2026-11-07 | E01-S01 switch release 3.0.0: first native release number (native/s15-release) |
 | 10020 | release | 2026-11-10 | native release 3.0.0+10020 (owner lineage) |
+| 10021 | build | 2026-11-14 | owner takeover build ca1e857d4 |

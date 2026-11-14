@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.factsbook.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageListState
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenRefresh
 import androidx.compose.foundation.layout.fillMaxSize
@@ -69,7 +70,7 @@ public fun AboutYouScreen(state: AboutYouUi, actions: AboutYouActions) {
         },
         edges = KitScreenEdges.Bleed,
     ) {
-        LazyColumn(Modifier.fillMaxSize()) {
+        LazyColumn(Modifier.fillMaxSize(), state = kitPageListState()) {
             item("search") {
                 KitSearchField(
                     label = stringResource(Res.string.fbSearchLabel),

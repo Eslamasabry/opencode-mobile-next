@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.factsbook.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageListState
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -152,7 +153,7 @@ public fun RemindersScreen(state: RemindersUi, actions: RemindersActions) {
                     primary = KitAction(stringResource(Res.string.commonRetry), actions::reload),
                 )
             else ->
-                LazyColumn(Modifier.fillMaxSize()) {
+                LazyColumn(Modifier.fillMaxSize(), state = kitPageListState()) {
                     state.notice?.let { notice ->
                         item("notice") {
                             KitNotice(
@@ -283,7 +284,7 @@ public fun ReminderEditScreen(state: ReminderEditUi, actions: ReminderEditAction
             else KitStateView(KitStateKind.Missing, stringResource(Res.string.fbErrorTitle), body = failureWords(state.error))
             return@KitScreen
         }
-        LazyColumn(Modifier.fillMaxSize()) {
+        LazyColumn(Modifier.fillMaxSize(), state = kitPageListState()) {
             item("form") { DraftForm(draft, state, actions) }
         }
     }

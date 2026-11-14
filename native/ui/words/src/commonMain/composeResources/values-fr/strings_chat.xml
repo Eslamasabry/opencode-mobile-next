@@ -456,11 +456,6 @@
         <item quantity="other">%1$s références sont ajoutées sous forme de texte à l'envoi. Elles ne sont pas enregistrées avec votre brouillon.</item>
     </plurals>
     <string name="chatUiAttachedCount">%1$s joint(s)</string>
-    <plurals name="chatUiEarlierMessageCount">
-        <item quantity="one">1 message précédent</item>
-        <item quantity="many">%1$s de messages précédents</item>
-        <item quantity="other">%1$s messages précédents</item>
-    </plurals>
     <string name="chatUiTokenCount">%1$s jetons</string>
     <string name="chatUiPositionOfTotal">%1$s sur %2$s</string>
     <string name="chatUiSubagentCount">Conversation déléguée · %1$s</string>
@@ -1250,4 +1245,6 @@
     <string name="chatStepMalformedCall">L’agent a fait cette demande de travers, donc rien ne s’est exécuté. Demandez-lui de réessayer.</string>
     <string name="chatUiRetryWhyUnreachable">Impossible de joindre le fournisseur du modèle. Vérifiez la connexion de ce téléphone.</string>
     <string name="chatUiRetryWhyBusy">Le fournisseur du modèle ne répond pas pour le moment.</string>
+    <string name="transcriptFindPosition">%1$s sur %2$s</string>
+    <string name="chatUiShowEarlierMessages">Afficher les messages précédents</string>
 </resources>

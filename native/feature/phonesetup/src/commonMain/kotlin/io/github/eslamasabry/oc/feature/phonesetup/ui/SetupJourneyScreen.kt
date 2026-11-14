@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.phonesetup.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageScrollState
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
 import androidx.compose.foundation.layout.*
@@ -637,7 +638,7 @@ private fun Job(state: SetupJourneyUi, actions: SetupJourneyActions) {
         val availableHeight = (maxHeight - Space.S4.dp).coerceAtLeast(0.dp)
         Box(
             Modifier.fillMaxWidth()
-                .verticalScroll(rememberScrollState())
+                .verticalScroll(kitPageScrollState())
                 .padding(bottom = Space.S4.dp)
         ) {
             Box(

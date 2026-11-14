@@ -970,4 +970,6 @@
     <string name="agentIsolatedCancel">Parar de aguardar</string>
     <string name="agentElsewhereCounts">%1$d aguardando · %2$d em execução · %3$d com falha</string>
     <string name="agentElsewhereStale">Aguardando uma atualização</string>
+    <string name="gitProblemNoWorkingSpace">O Git não tem espaço para trabalhar onde este projeto fica. Libere algum armazenamento lá e tente novamente.</string>
+    <string name="gitProblemServerRefusedCommand">O servidor respondeu, mas não quis executar o comando do Git. Confira o login dele e tente novamente.</string>
 </resources>

@@ -12,6 +12,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
@@ -33,7 +34,6 @@ import androidx.compose.ui.graphics.RenderEffect
 import androidx.compose.ui.graphics.drawOutline
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.translate
-import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.compose.ui.graphics.rememberGraphicsLayer
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.findRootCoordinates
@@ -63,6 +63,8 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitMotion
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitRoles
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
+import io.github.eslamasabry.oc.ui.kit.foundation.kitRecord
+import io.github.eslamasabry.oc.ui.kit.foundation.kitDrawLayer
 
 /*
  * The top edge of a page whose body runs edge to edge under its chrome (owner's pick 2026-11-09, chat edge option A:
@@ -105,11 +107,95 @@ internal enum class KitTopEdgeLook {
 public class KitScreenScroll internal constructor() {
     internal var reporter: (() -> Boolean)? by mutableStateOf(null)
 
+    /** Whether more of the body lies below the frame's bottom edge (the page's scroller reports it); null: unknown. */
+    internal var moreReporter: (() -> Boolean)? by mutableStateOf(null)
+
+    /**
+     * How much of the body's own bottom is a pinned foot (KitPinnedFootBody's "4 of 4 / Finish" bar, a footer line) and
+     * the gap above it, px: the frame's fade ends above it and never touches it.
+     */
+    internal var footRoom: Int by mutableIntStateOf(0)
+
+    /**
+     * A page frame that watches its body's scrolling (the stacked layout): for a body whose scroller reports nothing,
+     * whether the person has scrolled its content up under the chrome ([KitScreenEdgeWatch]). Only changes on a
+     * crossing, so it never recomposes per frame.
+     */
+    internal var guessing: Boolean = false
+    internal var guessed: Boolean by mutableStateOf(false)
+
     internal val under: Boolean
-        get() = reporter?.invoke() ?: true
+        get() = reporter?.invoke() ?: if (guessing) guessed else true
+
+    internal val more: Boolean
+        get() = moreReporter?.invoke() ?: false
 }
 
 internal val LocalKitScreenScroll = staticCompositionLocalOf<KitScreenScroll?> { null }
+
+/**
+ * The page's scroller tells its frame where its content lies (audit 2, 2026-11-14: on most pages a hard clip cut the last
+ * row's letters above the navigation bar and headings were sliced at the bar's lower edge): content scrolled up under
+ * the top chrome ([ScrollableState.canScrollBackward]) dissolves below it, content running on past the bottom edge
+ * ([ScrollableState.canScrollForward]) dissolves above it, and at rest neither edge touches a line. The first scroller in
+ * a page reports; a nested one inside it (a code block, a card's own list) does not take over. Outside a page frame, or
+ * inside a sheet, nothing.
+ */
+@Composable
+public fun KitReportPageScroll(state: androidx.compose.foundation.gestures.ScrollableState) {
+    val scroll = LocalKitScreenScroll.current ?: return
+    DisposableEffect(scroll, state) {
+        val under: () -> Boolean = { state.canScrollBackward }
+        val more: () -> Boolean = { state.canScrollForward }
+        // First come keeps it: an outer page scroller composes (and reports) before anything scrolling inside it.
+        val took = scroll.reporter == null && scroll.moreReporter == null
+        if (took) {
+            scroll.reporter = under
+            scroll.moreReporter = more
+        }
+        onDispose {
+            if (took && scroll.reporter === under) scroll.reporter = null
+            if (took && scroll.moreReporter === more) scroll.moreReporter = null
+        }
+    }
+}
+
+/** A page's [androidx.compose.foundation.ScrollState] that reports to its frame ([KitReportPageScroll]). */
+@Composable
+public fun kitPageScrollState(initial: Int = 0): androidx.compose.foundation.ScrollState {
+    val state = androidx.compose.foundation.rememberScrollState(initial)
+    KitReportPageScroll(state)
+    return state
+}
+
+/** A page's [androidx.compose.foundation.lazy.LazyListState] that reports to its frame ([KitReportPageScroll]). */
+@Composable
+public fun kitPageListState(): androidx.compose.foundation.lazy.LazyListState {
+    val state = androidx.compose.foundation.lazy.rememberLazyListState()
+    KitReportPageScroll(state)
+    return state
+}
+
+/**
+ * Watches a body that reports nothing ([KitScreenScroll.guessing]): a scroll that moves its content up puts content
+ * under the chrome; a pull that the content cannot follow (it is at its top) or a way back of the same length takes it
+ * out. A scroll made by the app (a restored place, a jump) is not seen: the page then keeps a clean edge, as before.
+ */
+internal class KitScreenEdgeWatch(private val scroll: KitScreenScroll) : androidx.compose.ui.input.nestedscroll.NestedScrollConnection {
+    private var moved = 0f
+
+    override fun onPostScroll(
+        consumed: Offset,
+        available: Offset,
+        source: androidx.compose.ui.input.nestedscroll.NestedScrollSource,
+    ): Offset {
+        moved = (moved - consumed.y).coerceAtLeast(0f)
+        if (available.y > 0f) moved = 0f
+        val under = moved > 0.5f
+        if (scroll.guessed != under) scroll.guessed = under
+        return Offset.Zero
+    }
+}
 
 /**
  * Tells the screen frame whether this body's content lies under the top chrome ([under]: read as state, e.g. a lazy
@@ -135,7 +221,7 @@ public fun KitReportScrolledUnder(under: () -> Boolean) {
 @Composable
 internal fun kitUnderTop(scroll: KitScreenScroll): () -> Float {
     val target = if (scroll.under) 1f else 0f
-    val reported = scroll.reporter != null
+    val reported = scroll.reporter != null || scroll.guessing
     val anim = remember { Animatable(target) }
     val settled = remember { mutableStateOf(false) }
     val reduced = KitMotion.state.reduced
@@ -145,6 +231,24 @@ internal fun kitUnderTop(scroll: KitScreenScroll): () -> Float {
         settled.value = true
     }
     return remember(scroll, anim) { { if (settled.value) anim.value else if (scroll.under) 1f else 0f } }
+}
+
+/**
+ * How strongly the bottom edge's dissolve shows (0–1, read while drawing): in while more of the body lies below the
+ * frame's bottom edge, out at its end, easing over frost's [KitFrostRules.FADE_MS] (at once under reduced motion; the
+ * first reading lands at once).
+ */
+@Composable
+internal fun kitMoreBelow(scroll: KitScreenScroll): () -> Float {
+    val target = if (scroll.more) 1f else 0f
+    val anim = remember { Animatable(target) }
+    val settled = remember { mutableStateOf(false) }
+    val reduced = KitMotion.state.reduced
+    LaunchedEffect(target, reduced) {
+        if (!settled.value || reduced) anim.snapTo(target) else anim.animateTo(target, tween(KitFrostRules.FADE_MS))
+        settled.value = true
+    }
+    return remember(scroll, anim) { { if (settled.value) anim.value else if (scroll.more) 1f else 0f } }
 }
 
 /** How far below the status bar the status edge's blur and dim reach, in dp (the mockup's 24 px under a 34 px bar). */
@@ -215,7 +319,7 @@ internal fun BoxScope.KitStatusEdge(source: KitFrostState, statusPx: Int, under:
             .drawBehind {
                 drawStatusEdge(edge, statusPx.toFloat(), blur, under()) {
                     val shift = source.sourceOrigin - origin[0]
-                    translate(shift.x, shift.y) { drawLayer(source.layer) }
+                    translate(shift.x, shift.y) { kitDrawLayer(source.layer) }
                 }
             }
             .testTag("kit-status-edge")
@@ -255,10 +359,10 @@ internal fun DrawScope.drawStatusEdge(
     if (effect != null) {
         val box = IntSize(w.toInt().coerceAtLeast(1), h.toInt().coerceAtLeast(1))
         layers.blur.renderEffect = effect
-        layers.blur.record(box) { content() }
+        kitRecord(layers.blur, box) { content() }
         layers.mask.compositingStrategy = androidx.compose.ui.graphics.layer.CompositingStrategy.Offscreen
-        layers.mask.record(box) {
-            drawLayer(layers.blur)
+        kitRecord(layers.mask, box) {
+            kitDrawLayer(layers.blur)
             // Keep the blur where the body is cleared: all of it above [solid], none at the edge's end.
             drawRect(Color.Black, Offset.Zero, Size(w, solid), blendMode = BlendMode.DstIn)
             drawRect(
@@ -269,7 +373,7 @@ internal fun DrawScope.drawStatusEdge(
             )
         }
         layers.mask.alpha = alpha.coerceIn(0f, 1f)
-        drawLayer(layers.mask)
+        kitDrawLayer(layers.mask)
     }
     val k = under.coerceIn(0f, 1f)
     if (k > 0f) {
@@ -316,20 +420,20 @@ internal fun kitFrostedBarFace(frost: KitFrostState?): Modifier? {
         .drawBehind {
             val c = at[0]?.takeIf { it.isAttached }
             blur.renderEffect = effect
-            blur.record {
+            kitRecord(blur) {
                 drawRect(ground)
                 if (c != null) {
                     val bd = picture
                     val pl = bd?.layer
                     if (bd != null && pl != null && bd.painted && bd.root === c.findRootCoordinates()) {
                         val shift = bd.origin - c.positionInRoot()
-                        translate(shift.x, shift.y) { drawLayer(pl) }
+                        translate(shift.x, shift.y) { kitDrawLayer(pl) }
                     }
                     val shift = frost.sourceOrigin - c.positionInRoot()
-                    translate(shift.x, shift.y) { drawLayer(frost.layer) }
+                    translate(shift.x, shift.y) { kitDrawLayer(frost.layer) }
                 }
             }
-            drawLayer(blur)
+            kitDrawLayer(blur)
             drawRect(tint)
             drawOutline(LiquidBarShape.createOutline(size, layoutDirection, this), rim, style = Stroke(RIM_LIGHT_DP.dp.toPx()))
         }

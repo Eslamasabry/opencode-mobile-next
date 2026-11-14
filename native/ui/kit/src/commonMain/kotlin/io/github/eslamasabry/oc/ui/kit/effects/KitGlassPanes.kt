@@ -4,30 +4,22 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.drawscope.inset
-import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.color.Argb
 import io.github.eslamasabry.oc.ui.design.color.Roles
 import io.github.eslamasabry.oc.ui.design.color.over
 import io.github.eslamasabry.oc.ui.design.effects.FrostConditions
 import io.github.eslamasabry.oc.ui.design.effects.FrostPolicy
-import io.github.eslamasabry.oc.ui.design.generated.FlutterKitTokens
 import io.github.eslamasabry.oc.ui.design.style.GlassFinish
 import io.github.eslamasabry.oc.ui.design.style.GlassLook
 import io.github.eslamasabry.oc.ui.design.style.GlassSpec
 import io.github.eslamasabry.oc.ui.design.style.Radii
 import io.github.eslamasabry.oc.ui.design.style.Style
-import io.github.eslamasabry.oc.ui.design.style.StyleResolver
 import io.github.eslamasabry.oc.ui.design.style.SurfaceDecoration
 import io.github.eslamasabry.oc.ui.design.style.SurfaceRequest
 import io.github.eslamasabry.oc.ui.design.style.SurfaceRole
-import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel
 import io.github.eslamasabry.oc.ui.kit.foundation.LocalKitGlassBackdrop
-import io.github.eslamasabry.oc.ui.kit.foundation.drawGlassFace
 import io.github.eslamasabry.oc.ui.kit.foundation.kitGlassBlurs
 import io.github.eslamasabry.oc.ui.kit.platform.LocalKitPlatform
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitAppearance
@@ -99,11 +91,11 @@ private fun Color.toArgbValue(): Argb =
 
 /**
  * A chosen row's face under Glass (owner 2026-11-08: "why is selected looking like this"): accent-tinted frost with the
- * accent rim light, set [CHOSEN_ROW_INSET_DP] in from the row's edges with corners that follow its group's (the panel
- * radius under the Corners knob, less the inset), never Solid's opaque surface3 band. Null under every other style.
+ * accent rim light, never Solid's opaque surface3 band, at [radiusDp] (the row's container's inner radius). Where it
+ * lies is the row's business (`kitChosenFace`, one place for every style). Null under every other style.
  */
 @Composable
-internal fun kitGlassChosenRow(extraInset: androidx.compose.ui.unit.Dp = 0.dp): Modifier? {
+internal fun kitGlassChosenFace(radiusDp: Float): SurfaceDecoration? {
     val style = LocalKitStyle.current
     if (style.style != Style.Glass) return null
     val roles = LocalKitRoles.current
@@ -111,23 +103,11 @@ internal fun kitGlassChosenRow(extraInset: androidx.compose.ui.unit.Dp = 0.dp): 
     val blurs = kitGlassBlurs(backdrop)
     val clear = kitClearPanesOn() && blurs
     val spots = if (blurs && backdrop != null) backdrop.frostedSpots else emptyList()
-    // Concentric with its group: the group's (grown) panel corner, less the group's pane inset and the row's own inset.
-    val panel = StyleResolver.paneCorner(FlutterKitTokens.PANEL_CORNER_RADIUS.toFloat(), style.knobs.corners, style.spec.tokens)
-    val radius = (panel - style.spec.tokens.paneInsetDp - CHOSEN_ROW_INSET_DP).coerceAtLeast(0f)
     val look = kitGlassLook().spec
-    val face =
-        remember(roles, style, clear, spots, radius, look) {
-            chosenRowFace(roles, style.knobs, clear, spots, radius, look)
-        }
-    return Modifier.drawBehind {
-        val i = CHOSEN_ROW_INSET_DP.dp.toPx()
-        val side = i + extraInset.toPx()
-        inset(side, i, side, i) { drawGlassFace(face) }
+    return remember(roles, style, clear, spots, radiusDp, look) {
+        chosenRowFace(roles, style.knobs, clear, spots, radiusDp, look)
     }
 }
-
-/** The inset of a chosen row's face from the row's edges, in dp. */
-internal const val CHOSEN_ROW_INSET_DP: Float = Space.S1.toFloat()
 
 /**
  * A chosen row's face: GlassSpec's chosen control over its group's pane, thickened until the row's words read over the

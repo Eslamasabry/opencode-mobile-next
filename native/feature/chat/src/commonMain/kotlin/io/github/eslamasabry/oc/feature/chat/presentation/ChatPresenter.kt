@@ -384,7 +384,8 @@ public class ChatPresenter(
                     searchingAll = l.searchingAll,
                     loadingOlder = l.loadingOlder,
                     olderFailure = l.olderFailure,
-                    excerpt = hit?.let { findExcerpt(t, it) },
+                    currentOrdinal = TranscriptFind.ordinalOf(hits, cursor),
+                    currentSource = hit?.sourceId,
                 )
             }
         val arrival =
@@ -483,6 +484,7 @@ public class ChatPresenter(
                         l.olderFailure,
                     )
                 },
+            older = if (world.hasOlder.value) OlderUi(l.loadingOlder, l.olderFailure) else null,
             receiptChecks = receiptChecksShown(l.receiptChecks, i.pending),
             limitSwitch = limitOffers(t, i.capabilities, l.switches),
             switchOnline = i.link == ChatLink.Live,
@@ -1329,13 +1331,8 @@ public class ChatPresenter(
                     MessageAction.Fork,
                 )
         } else {
-            if (query.isNotBlank()) {
-                find(query)
-                val hits = TranscriptFind.search(t, query)
-                val cursor = hits.indexOfFirst { it.rowKey == entry.rowKey }
-                if (cursor >= 0)
-                    local.update { it.copy(findKey = hits[cursor], findCursor = cursor) }
-            }
+            // Audit 1 (2026-11-14): a tap goes to that message and nothing else opens. It opened Find with the query,
+            // whose first hit (inside a code block of another message) took the view instead of the message picked.
             local.update {
                 it.copy(
                     arrival =

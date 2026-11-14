@@ -64,3 +64,5 @@ zh	setupOutputWaiting
 en	sendReportRowDetail
 # 2026-11-12: Help > Tips mini tutorial "Make it yours" step 2 names all six styles (Glass and Signal were missing), spelled as the Style page spells them.
 en	tourMakeItYoursStyle
+en	telemetryConsentChoose
+en	telemetryConsentShare

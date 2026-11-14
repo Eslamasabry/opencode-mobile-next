@@ -435,7 +435,7 @@ class PartADesktopTest {
         assertEquals(2, kitRowSupportingLines(1.2999999523f))
         assertEquals(3, kitRowSupportingLines(2f))
         assertEquals(4, kitRowSupportingLines(2f, asked = 4))
-        assertEquals(1, kitRowTitleLines(1f))
+        assertEquals(2, kitRowTitleLines(1f)) // a title wraps to a second line before it is cut
         assertEquals(2, kitRowTitleLines(1.3f))
     }
 

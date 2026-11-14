@@ -181,6 +181,15 @@ public object TranscriptFind {
         return if (kept >= 0) kept else cursor.coerceIn(0, hits.size - 1)
     }
 
+    /**
+     * Which match of its own text the hit at [cursor] is: how many hits of the same row and text come before it
+     * (0 for the first). The transcript marks that match, counted the same way in what it draws.
+     */
+    public fun ordinalOf(hits: List<FindHit>, cursor: Int): Int {
+        val hit = hits.getOrNull(cursor) ?: return 0
+        return hits.subList(0, cursor).count { it.rowKey == hit.rowKey && it.sourceId == hit.sourceId }
+    }
+
     /** Next (+1) or previous (-1), wrapping (Flutter `_navigateFind`). */
     public fun step(size: Int, cursor: Int, by: Int): Int =
         if (size == 0) -1 else ((cursor + by) % size + size) % size
@@ -259,42 +268,6 @@ public object ReplyText {
         }
         if (sb.isNotEmpty()) parts += sb.toString()
         return parts.joinToString("\n\n").takeIf { it.isNotBlank() }
-    }
-}
-
-/**
- * The "N earlier messages" pill (plan 09 §7.3 rule 6; Flutter `_earlierMessageCount`): the count of
- * whole messages fully above the viewport is the oldest-first ordinal of the oldest visible row's
- * message. Built once per rows instance (O(rows)), then O(1) per scroll. S2-TX request:
- * `TranscriptState.messageOrder` makes this free.
- */
-public class MessageOrder(rows: List<TranscriptRow>) {
-    private val ordinal = IntArray(rows.size)
-
-    /** Distinct messages among the rows. */
-    public val messageCount: Int
-
-    init {
-        val seen = HashMap<String, Int>()
-        var current = 0
-        for (i in rows.indices.reversed()) {
-            val id = RowIds.messageIdOf(rows[i])
-            if (id != null) current = seen.getOrPut(id) { seen.size }
-            ordinal[i] = current
-        }
-        messageCount = seen.size
-    }
-
-    /** Messages fully above the row at newest-first [oldestVisibleRow]; 0 outside the rows. */
-    public fun earlierCount(oldestVisibleRow: Int): Int =
-        if (oldestVisibleRow in ordinal.indices) ordinal[oldestVisibleRow] else 0
-
-    public companion object {
-        /** Flutter shows the pill only for conversations longer than 30 messages. */
-        public const val MIN_MESSAGES: Int = 30
-
-        public fun pillVisible(awayFromLatest: Boolean, messageCount: Int, earlier: Int): Boolean =
-            awayFromLatest && messageCount > MIN_MESSAGES && earlier > 0
     }
 }
 

@@ -3,7 +3,7 @@
 <resources>
     <string name="telemetryCrashReportsTitle">向开发者发送崩溃报告（Google Firebase）</string>
     <string name="telemetryCrashReportsBody">当应用崩溃或某个步骤失败时，它会发送问题的类型、应用和 Android 版本，以及一份简短的代码位置列表。绝不会发送你的消息、文件、地址或密钥。</string>
-    <string name="telemetryConsentChoose">选择</string>
+    <string name="telemetryConsentChoose">选择要分享的内容</string>
     <string name="telemetryConsentSave">保存我的选择</string>
     <string name="sendReportTitle">发送问题报告</string>
     <string name="sendReportSubtitle">这就是报告包含的全部内容。在你点按“发送”之前不会发送任何内容。</string>

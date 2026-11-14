@@ -29,7 +29,6 @@ import androidx.compose.ui.graphics.drawscope.inset
 import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.layer.GraphicsLayer
-import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.findRootCoordinates
 import androidx.compose.ui.layout.positionInRoot
@@ -366,7 +365,7 @@ private class GlassFaceNode(var d: SurfaceDecoration) : Modifier.Node(), DrawMod
                 val wide = kotlin.math.ceil(faceWidth).toInt() + 2 * margin
                 val tall = kotlin.math.ceil(faceHeight).toInt() + 2 * margin
                 // A snapshot of the density, as recordDetached: the scope itself as the picture's density loops back.
-                layer.record(Density(density, fontScale), layoutDirection, IntSize(wide, tall)) {
+                layer.kitRecord(Density(density, fontScale), layoutDirection, IntSize(wide, tall)) {
                     // The face is painted at the pane's own size, [margin] in from the picture's top and start.
                     inset(m, m, wide - m - faceWidth, tall - m - faceHeight) { drawGlassFace(face) }
                 }
@@ -375,7 +374,7 @@ private class GlassFaceNode(var d: SurfaceDecoration) : Modifier.Node(), DrawMod
                 ofDirection = layoutDirection
             }
             val m = margin.toFloat()
-            translate(-m, -m) { drawLayer(layer) }
+            translate(-m, -m) { kitDrawLayer(layer) }
         }
         drawContent()
     }
@@ -554,7 +553,7 @@ internal const val SPECULAR_REACH_SHARE: Float = .45f
  */
 private fun DrawScope.recordDetached(layer: GraphicsLayer, block: DrawScope.() -> Unit) {
     val snapshot = Density(density, fontScale)
-    layer.record(snapshot, layoutDirection, size.toIntSize(), block)
+    layer.kitRecord(snapshot, layoutDirection, size.toIntSize(), block)
 }
 
 /** Shared by both Glass nodes: the nearest one up the tree tells a pane whether it is nested. */
@@ -644,7 +643,7 @@ private class BackdropSourceNode(
         // Recorded in the layer's own scope, never through this node's: the picture cannot draw into, or ask for its
         // density from, the scope that is drawing it (N-29, a sample's paint reading toPx() recursed for ever).
         recordDetached(layer, paint)
-        drawLayer(layer)
+        kitDrawLayer(layer)
         drawContent()
     }
 }
@@ -724,8 +723,8 @@ private class GlassFrostNode(
             layer.scaleY = full.height.toFloat() / small.height
             // A reference to the picture's layer, drawn small: each new frame of the picture is blurred again by the GPU
             // with nothing recorded here.
-            layer.record(Density(density, fontScale), layoutDirection, small) {
-                scale(small.width.toFloat() / full.width, small.height.toFloat() / full.height, Offset.Zero) { drawLayer(picture) }
+            layer.kitRecord(Density(density, fontScale), layoutDirection, small) {
+                scale(small.width.toFloat() / full.width, small.height.toFloat() / full.height, Offset.Zero) { kitDrawLayer(picture) }
             }
         }
         return layer
@@ -751,7 +750,7 @@ private class GlassFrostNode(
         ) {
             val layer = shared(bd, picture, fx)
             val shift = bd.origin - c.positionInRoot()
-            clipPath(Path().apply { addOutline(outline) }) { translate(shift.x, shift.y) { drawLayer(layer) } }
+            clipPath(Path().apply { addOutline(outline) }) { translate(shift.x, shift.y) { kitDrawLayer(layer) } }
             drawContent()
             // Over the face's own rim: the backdrop's light where the picture behind is bright (dark themes).
             light?.let { rim.draw(this, requireGraphicsContext(), picture, shift, shape, it) }
@@ -792,9 +791,9 @@ internal class BackdropRimLight {
                 filtered = light
             }
             l.alpha = light.max
-            recordDetached(l) { translate(shift.x, shift.y) { drawLayer(picture) } }
+            recordDetached(l) { translate(shift.x, shift.y) { kitDrawLayer(picture) } }
             // The rim's own ring, round the whole outline: the light is the rim, never a stroke of its own.
-            clipPath(ringOf(shape, size, layoutDirection, this, band)) { drawLayer(l) }
+            clipPath(ringOf(shape, size, layoutDirection, this, band)) { kitDrawLayer(l) }
         }
     }
 

@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.review.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageScrollState
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -241,7 +242,7 @@ private fun TopBar(title: String, onBack: () -> Unit) {
 private fun Page(content: @Composable () -> Unit) {
     Column(
         Modifier.fillMaxSize()
-            .verticalScroll(rememberScrollState())
+            .verticalScroll(kitPageScrollState())
             .padding(horizontal = LocalKitTokens.current.gutter.dp, vertical = Space.S3.dp),
         verticalArrangement = Arrangement.spacedBy(Space.S4.dp),
     ) {
@@ -819,7 +820,7 @@ private fun DiffBody(diff: FileDiff, fullContext: Boolean, state: FileDiffUi, ac
     var unplaced by remember(diff) { mutableStateOf(false) }
     Column(
         Modifier.fillMaxSize()
-            .verticalScroll(rememberScrollState())
+            .verticalScroll(kitPageScrollState())
             .padding(vertical = Space.S3.dp),
         verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
     ) {

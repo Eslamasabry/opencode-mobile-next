@@ -135,6 +135,13 @@ public data class StyleTokens(
      * runs into the lit rim; docs/designs/glass-in-the-kit.md 1c). 0 runs them to the edge.
      */
     val dividerEndGutters: Float = 0f,
+    /**
+     * Whether the style draws its own face on the parts that otherwise keep a look of their own (the message box's chips
+     * and discs, the jump pill, the person's bubble, code, tables, menus, sheets, toasts), so one screen reads as one
+     * school (audit 2026-11-14: Brutal outlined the box but left the model chip, the bubble and the code soft; Paper set
+     * square boxes beside rounded ones). Brutal and Paper; Solid, Soft, Glass and Signal keep those parts' own looks.
+     */
+    val dressesOwnLooks: Boolean = false,
 ) {
     public val fieldHaloShown: Boolean get() = fieldHalo ?: glow.halo
 }

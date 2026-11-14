@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
@@ -31,6 +32,7 @@ import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.text.Numbers
 import io.github.eslamasabry.oc.core.model.transcript.MessageErrorKind
 import io.github.eslamasabry.oc.engine.agents.errors.AgentErrorText
+import io.github.eslamasabry.oc.feature.chat.presentation.FindUi
 import io.github.eslamasabry.oc.feature.chat.presentation.RunTailRules
 import io.github.eslamasabry.oc.feature.chat.presentation.ErrorFix
 import io.github.eslamasabry.oc.feature.chat.presentation.ErrorRecovery
@@ -70,7 +72,10 @@ import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
 import io.github.eslamasabry.oc.ui.kit.motion.KitReveal
 import io.github.eslamasabry.oc.ui.kitchat.turn.KitLiveAsk
 import io.github.eslamasabry.oc.ui.kitchat.turn.KitTurnLiveLine
-import io.github.eslamasabry.oc.ui.kit.motion.kitItemMotion
+import io.github.eslamasabry.oc.ui.kitchat.transcript.kitTranscriptItemMotion
+import io.github.eslamasabry.oc.ui.kitchat.transcript.KitEarlierMessages
+import io.github.eslamasabry.oc.feature.chat.presentation.OlderUi
+import io.github.eslamasabry.oc.ui.words.res.chatUiShowEarlierMessages
 import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.words.res.chatStalledStop
 import io.github.eslamasabry.oc.ui.words.res.chatStopAfterStepUndo
@@ -101,7 +106,9 @@ import io.github.eslamasabry.oc.ui.kitchat.code.KitCodeKind
 import io.github.eslamasabry.oc.ui.kitchat.code.KitStandaloneRedaction
 import io.github.eslamasabry.oc.ui.kitchat.header.rememberKitMask
 import io.github.eslamasabry.oc.ui.kitchat.markdown.KitMarkdownActions
+import io.github.eslamasabry.oc.ui.kitchat.markdown.KitFindMarks
 import io.github.eslamasabry.oc.ui.kitchat.markdown.KitMarkdownBlock
+import io.github.eslamasabry.oc.ui.kitchat.markdown.LocalKitFindMarks
 import io.github.eslamasabry.oc.ui.kitchat.markdown.KitMdBlock
 import io.github.eslamasabry.oc.ui.kitchat.markdown.KitMdReveal
 import io.github.eslamasabry.oc.ui.kitchat.markdown.KitMdSource
@@ -319,6 +326,9 @@ internal object ListKeys {
     /** S28 story 8: the continued line (Continued in / from …), above the oldest message. */
     const val CONTINUED: String = "continued"
 
+    /** "Show earlier messages": the transcript's first row while older history is not loaded. */
+    const val EARLIER: String = "earlier"
+
     fun pending(localId: Long): String = "pending:$localId"
 }
 
@@ -411,8 +421,14 @@ internal fun ChatTranscriptList(
     onStarDismiss: () -> Unit = {},
     /** Extra room (px) under the newest content: the edge dock's Undo bar while it shows. */
     extraBottomPx: Int = 0,
+    /** Earlier messages not loaded yet: "Show earlier messages" is the transcript's first row; null = all loaded. */
+    older: OlderUi? = null,
+    onLoadOlder: () -> Unit = {},
+    /** Find, while it is open: the text parts mark its matches, and the current match's folded parts open. */
+    find: FindUi? = null,
 ) {
     val currentRows by rememberUpdatedState(rows)
+    FindOpensFolds(find, rows, facts, folds)
     // B-SEC-094 / R18: a code block's Copy hands over what the block shows (redacted), never the
     // raw fence; only
     // Copy reply copies the reply as written (plan 09 §6.6).
@@ -451,10 +467,8 @@ internal fun ChatTranscriptList(
             pending.isNotEmpty() -> ListKeys.pending(pending.first().localId)
             else -> unique.firstOrNull()?.key
         }
-    // Lists breathe (motion lead 2026-11-07): rows fade in and out, and glide to new places when rows are added or
-    // removed. While a reply streams the rows above it never glide (the growing reply would drag them a few pixels
-    // behind every frame); the newest row stays on the bottom edge either way (reverse layout keeps it anchored).
-    val glide = live == null
+    // Rows fade in where they belong; nothing glides or fades out in place, so no row ever lies over another
+    // (kitTranscriptItemMotion; audit 1, 2026-11-14).
     // The dock's room is a new item at index 0, but the newest key does not change, so the kit's follow (which asks
     // for index 0 when the newest key changes) does not run, and the list anchors on the old first key: on a long
     // transcript the room landed out of view below and the bar still covered the newest reply (gate, w4-undo-room).
@@ -473,13 +487,15 @@ internal fun ChatTranscriptList(
     val runningSteps: Boolean? = if (live == null) null else stepsShown
     // The same keys, in the same order, as the items below: the reader's place is kept by key (see KeepScrollPlace).
     val itemKeys =
-        remember(unique, pending, live != null, listWords != null, extraBottomPx > 0, facts.background.isNotEmpty()) {
+        remember(unique, pending, live != null, listWords != null, extraBottomPx > 0, facts.background.isNotEmpty(), topLine != null, older != null) {
             buildList {
                 if (extraBottomPx > 0) add(ListKeys.DOCK_ROOM)
                 if (live != null && listWords != null) add(ListKeys.LIVE)
                 if (facts.background.isNotEmpty() && listWords != null) add(ListKeys.BACKGROUND)
                 if (listWords != null) pending.forEach { add(ListKeys.pending(it.localId)) }
                 unique.forEach { add(it.key) }
+                if (topLine != null) add(ListKeys.CONTINUED)
+                if (older != null) add(ListKeys.EARLIER)
             }
         }
     KeepScrollPlace(list, itemKeys)
@@ -492,6 +508,9 @@ internal fun ChatTranscriptList(
         // F: chat_transcript.dart:160-165 and kit_turn.dart:591: the newest turn ends space2 + space2 above the
         // composer's clearance; the composer pane already keeps its own space2 on top (ChatScreen), the rest here.
         contentPadding = PaddingValues(top = Space.S4.dp, bottom = Space.S2.dp),
+        // Reading back to the top of what is loaded brings the earlier messages by itself; the row stays the visible
+        // way to them (and the way to try again after a read that failed).
+        onReachOldest = if (older != null && !older.loading && older.failure == null) onLoadOlder else null,
     ) {
         // The dock's Undo bar takes this room under the newest content. An item, not padding: the list keeps the
         // row the person reads in place by its key, and at the end the newest content rides up with the room.
@@ -502,7 +521,7 @@ internal fun ChatTranscriptList(
         }
         if (live != null && listWords != null) {
             item(key = ListKeys.LIVE, contentType = "live") {
-              Box(kitItemMotion(placement = glide)) {
+              Box(kitTranscriptItemMotion()) {
                 // No Stop here (plan 09 §4.4): Stop sits in the composer's row.
                 // Retry, stall and shortening fold into the live line: no new bar
                 // (CHAT-TRANSCRIPT).
@@ -620,7 +639,7 @@ internal fun ChatTranscriptList(
             item(key = ListKeys.BACKGROUND, contentType = "background") {
                 KitQuietLine(
                     backgroundWords(facts.background, facts.nowMs),
-                    kitItemMotion(placement = glide).testTag("chat-background-work"),
+                    kitTranscriptItemMotion().testTag("chat-background-work"),
                 )
             }
         }
@@ -632,7 +651,7 @@ internal fun ChatTranscriptList(
             ) { p ->
               // The bubble rose from the field on its own; when the server's copy replaces it, neither fades (no
               // flash, no double bubble).
-              Box(kitItemMotion(fadeIn = false, fadeOut = false, placement = glide)) {
+              Box(kitTranscriptItemMotion(fadeIn = false)) {
                 PendingBubble(
                     p,
                     listWords,
@@ -651,9 +670,19 @@ internal fun ChatTranscriptList(
             // P-010: a row the person opens stays under their finger. The person's own prompt replaces its pending
             // bubble in place, so it never fades in.
             Column(
-                kitItemMotion(fadeIn = row !is PromptRow, placement = glide)
+                kitTranscriptItemMotion(fadeIn = row !is PromptRow)
                     .foldAnchor(row.key, anchor, list.lazy)
             ) {
+              // Find: every match in this row is tinted by the kit's text parts; the current match of the current row
+              // (a message or a prompt: one text) is the stronger one. Nothing is provided while Find is closed.
+              val marks =
+                  remember(find?.query, find?.currentKey, find?.currentOrdinal, row.key, row is BlockRow || row is PromptRow) {
+                      find?.takeIf { it.query.isNotBlank() }?.let {
+                          val current = row.key == it.currentKey && (row is BlockRow || row is PromptRow)
+                          KitFindMarks(it.query, if (current) it.currentOrdinal else -1)
+                      }
+                  }
+              CompositionLocalProvider(LocalKitFindMarks provides marks) {
                 // The turn's rhythm (Flutter kit_turn.dart:484-516): the rows above stand apart as Flutter's turn.
                 val gap = turnGap(row, unique.getOrNull(index + 1))
                 if (gap > 0) Spacer(Modifier.height(gap.dp))
@@ -667,7 +696,7 @@ internal fun ChatTranscriptList(
                         is NoticeRow -> row.key.removePrefix("notice:")
                         else -> null
                     }
-                if (source in facts.reading.hiddenPartKeys) return@itemsIndexed
+                if (source in facts.reading.hiddenPartKeys) return@CompositionLocalProvider
                 // A table longer than one chunk is drawn whole by its first chunk; its later chunks
                 // draw nothing.
                 if (reply != null && row is BlockRow && row.key in tables) {
@@ -726,11 +755,24 @@ internal fun ChatTranscriptList(
                         }
                     if (created != null) KitMessageTimestamp(created, facts.nowMs)
                 }
+              }
             }
         }
         // S28 story 8 (Flutter chat_handoff_link.dart): where this work came from or went sits above the
         // conversation's oldest loaded message (the list is newest first, so this item is drawn on top).
         if (topLine != null) item(key = ListKeys.CONTINUED, contentType = "continued") { topLine() }
+        // Audit 1 (2026-11-14): the way to the earlier messages is the transcript's first row, not a pill over it.
+        if (older != null)
+            item(key = ListKeys.EARLIER, contentType = "earlier") {
+                if (older.failure != null) HistoryReadFailure(older.failure, onLoadOlder)
+                else
+                    KitEarlierMessages(
+                        stringResource(Res.string.chatUiShowEarlierMessages),
+                        onLoadOlder,
+                        loading = older.loading,
+                        modifier = Modifier.padding(vertical = Space.S2.dp),
+                    )
+            }
     }
 }
 

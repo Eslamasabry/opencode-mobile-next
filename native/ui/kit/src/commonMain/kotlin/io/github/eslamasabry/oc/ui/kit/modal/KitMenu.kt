@@ -1,6 +1,10 @@
 package io.github.eslamasabry.oc.ui.kit.modal
 
 import androidx.compose.ui.geometry.Offset
+import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceInput
+import io.github.eslamasabry.oc.ui.kit.foundation.kitDressedLook
+import io.github.eslamasabry.oc.ui.design.style.SurfaceRole
+import io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel
 import androidx.compose.ui.geometry.Rect
 import io.github.eslamasabry.oc.ui.kit.effects.kitLiquidTouchLight
 import io.github.eslamasabry.oc.ui.kit.effects.kitLiquidTouchWatch
@@ -206,7 +210,16 @@ public fun KitMenu(
     // control just pressed, not from the empty box in the screen's corner (which put it over that ⋯).
     val origin = LocalKitPressOrigin.current
     val open = expanded && items.isNotEmpty()
-    val pressed = remember(open) { if (open) origin.take() else null }
+    val pressed = remember(open) { if (open) origin.takePress() else null }
+    // Finding 13: the row or message whose hold opened this menu keeps its held face while the menu is open.
+    val holder = pressed?.owner
+    if (holder != null) {
+        androidx.compose.runtime.DisposableEffect(holder) {
+            origin.holding = holder
+            onDispose { if (origin.holding === holder) origin.holding = null }
+        }
+    }
+    val band = with(androidx.compose.ui.platform.LocalDensity.current) { (MenuPlacement.HOLD_BAND_DP).dp.roundToPx() }
     // M-004: the transition lives above the Popup, so a closing menu stays composed until its fade has run (the Popup
     // used to leave on the frame the menu closed). What it shows while it fades is what it showed when it closed.
     val shown = remember { MutableTransitionState(false) }
@@ -219,7 +232,7 @@ public fun KitMenu(
     Box(modifier.onGloballyPositioned { own = it.menuAnchorBox() }) {
         anchor()
         if (MenuRules.composed(shown.currentState, shown.targetState) && last.items.isNotEmpty()) {
-            if (open) last.at = MenuPlacement.anchorFor(own, pressed)
+            if (open) last.at = MenuPlacement.anchorFor(own, pressed, band)
             // Smoothness round 2: in the window's own menu layer (KitSheetHost), never a popup window of its own (a new
             // window per open cost 11-13 % late frames in every style). Outside a host, the popup as before.
             val layer = LocalKitMenuLayer.current
@@ -361,22 +374,30 @@ private fun LayerMenu(layer: KitMenuLayerState, shown: MutableTransitionState<Bo
     Box(
         Modifier.fillMaxSize()
             .onSizeChanged { layerSize = it }
-            .pointerInput(shown) {
-                awaitEachGesture {
-                    val down = awaitFirstDown(requireUnconsumed = false)
-                    down.consume()
-                    close()
-                    do {
-                        val event = awaitPointerEvent()
-                        event.changes.forEach { it.consume() }
-                    } while (event.changes.any { it.pressed })
-                }
-            }
+            // A closing menu is picture only (cut audit 2, finding 11): while it fades, a press beside it is the page's.
+            .then(
+                if (!shown.targetState) Modifier
+                else
+                    Modifier.pointerInput(shown) {
+                        awaitEachGesture {
+                            val down = awaitFirstDown(requireUnconsumed = false)
+                            down.consume()
+                            close()
+                            do {
+                                val event = awaitPointerEvent()
+                                event.changes.forEach { it.consume() }
+                            } while (event.changes.any { it.pressed })
+                        }
+                    }
+            )
     )
     Layout(
         content = {
             // The panel takes every press on it (its padding too): only a press beside it closes the menu.
-            Box(Modifier.pointerInput(Unit) { awaitPointerEventScope { while (true) awaitPointerEvent() } }) {
+            Box(
+                if (shown.targetState) Modifier.pointerInput(Unit) { awaitPointerEventScope { while (true) awaitPointerEvent() } }
+                else Modifier.modalInert()
+            ) {
                 MenuContent(shown, last, onDismissRequest, anchor, room, joins = true)
             }
         },
@@ -645,10 +666,14 @@ public fun KitMenuPanel(
     // Joined to the glass it opened from: its glass is drawn beyond its box (it falls, then fills), so it is not
     // clipped to its own shape; its rows are clipped to the glass instead.
     val joined = join != null && join.owner.partnerOf(join) != null
+    // Brutal and Paper dress the pane as a floating part (audit 2026-11-14: Brutal's menu stayed a soft rounded plate):
+    // Brutal's ink edge and hard shadow, Paper's ink box with square corners. Drawn before the pane's clip, so the
+    // shadow outside it stays whole. Null in every other style.
+    val dressed = kitDressedLook(KitSurfaceInput(role = SurfaceRole.Floating, shape = KitShapeId.Panel, level = SurfaceLevel.Surface2))
     val menuFace =
         liquidFace
             ?: kitGlassSheet(KitShapeId.Panel, colors.surface2)
-            ?: Modifier.background(colors.surface2).border(1.dp, colors.hairline, shape)
+            ?: if (dressed != null) Modifier else Modifier.background(colors.surface2).border(1.dp, colors.hairline, shape)
     // Glass: a soft light gathers under the finger and follows it down the rows (KitLiquidTouch.kt).
     val touch = io.github.eslamasabry.oc.ui.kit.effects.rememberKitLiquidTouch(on = liquidFace != null)
     Column(
@@ -657,6 +682,7 @@ public fun KitMenuPanel(
             // As wide as its widest row needs (owner 2026-11-11: "size should be determined based on the content"),
             // within the limits; the rows fill that width. A joined menu's rest box, column and fill follow it.
             .width(androidx.compose.foundation.layout.IntrinsicSize.Max)
+            .then(dressed?.modifier ?: Modifier)
             .then(if (joined) Modifier else Modifier.clip(shape))
             .kitLiquidTouchWatch(touch)
             .kitLiquidJoinRest(join, shape)
@@ -793,6 +819,31 @@ public object MenuPlacement {
      */
     public fun anchorFor(own: IntRect, pressed: IntRect?): IntRect =
         if (pressed != null && own.width == 0 && own.height == 0) pressed else own
+
+    /**
+     * The box a menu opens from, with the press that opened it (cut audit 2, finding 13). A hold that knows where the
+     * finger was opens the menu AT what was held: beside the finger across (the panel starts or ends on its x), and
+     * just above or below the held part, or a [band] around the finger when the part is taller than that (a long
+     * message), never from a corner of the screen. That holds for an anchor-less menu and for a menu whose own anchor
+     * holds the finger (a home row wraps its menu). A press without a point keeps [anchorFor]'s rule.
+     */
+    public fun anchorFor(own: IntRect, press: io.github.eslamasabry.oc.ui.kit.foundation.KitPress?, band: Int): IntRect {
+        val point = press?.point ?: return anchorFor(own, press?.bounds)
+        val empty = own.width == 0 && own.height == 0
+        if (!empty && !own.contains(point)) return own
+        return held(press.bounds, point, band)
+    }
+
+    /** [anchorFor]'s box for a part held at [point]: zero wide on the finger, the part's height or [band] around it. */
+    public fun held(bounds: IntRect, point: IntOffset, band: Int): IntRect {
+        val x = point.x.coerceIn(bounds.left, bounds.right)
+        if (bounds.height <= band) return IntRect(x, bounds.top, x, bounds.bottom)
+        val top = (point.y - band / 2).coerceIn(bounds.top, bounds.bottom - band)
+        return IntRect(x, top, x, top + band)
+    }
+
+    /** How tall a held part may be before its menu opens beside the finger's band instead of beside the whole part. */
+    public const val HOLD_BAND_DP: Int = 96
 
     /**
      * The height a menu may take: the roomier side of the anchor, inside the window's top and bottom room (the safe

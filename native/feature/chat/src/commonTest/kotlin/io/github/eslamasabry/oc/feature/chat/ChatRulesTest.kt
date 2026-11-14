@@ -12,7 +12,6 @@ import io.github.eslamasabry.oc.feature.chat.presentation.FindHit
 import io.github.eslamasabry.oc.feature.chat.presentation.Landing
 import io.github.eslamasabry.oc.feature.chat.presentation.MessageAction
 import io.github.eslamasabry.oc.feature.chat.presentation.MessageActions
-import io.github.eslamasabry.oc.feature.chat.presentation.MessageOrder
 import io.github.eslamasabry.oc.feature.chat.presentation.ReadAck
 import io.github.eslamasabry.oc.feature.chat.presentation.ReplyText
 import io.github.eslamasabry.oc.feature.chat.presentation.RowIds
@@ -360,36 +359,6 @@ class ChatRulesTest {
                 footer("u2"),
             )
         assertEquals("Run this:\n\n```py\nx = 1 + \\\n    2\n```", ReplyText.of(s.rows, "u2"))
-    }
-
-    // ---- The earlier-messages pill (plan 09 §7.3 rule 6) ----
-
-    @Test
-    fun `09-7_3 the earlier-messages count is the whole messages above the oldest visible row`() {
-        val rows = (1..20).flatMap { turn(it) } // 20 prompts + 20 replies = 40 messages, 60 rows
-        val s = stateOf(*rows.toTypedArray())
-        val order = MessageOrder(s.rows)
-        assertEquals(40, order.messageCount)
-        assertEquals(0, order.earlierCount(s.rows.size - 1), "the oldest row: nothing above it")
-        assertEquals(
-            39,
-            order.earlierCount(0),
-            "the newest footer belongs to the newest reply: 39 messages above",
-        )
-        val reply5 = s.indexOf("b:a5/p5:0")
-        assertEquals(9, order.earlierCount(reply5), "u1,a1 … u4,a4 and u5 sit above reply a5")
-        assertEquals(9, order.earlierCount(s.indexOf("footer:u5")), "a footer counts as its reply")
-        assertEquals(0, order.earlierCount(-1))
-        assertTrue(MessageOrder.pillVisible(awayFromLatest = true, messageCount = 40, earlier = 9))
-        assertFalse(
-            MessageOrder.pillVisible(awayFromLatest = false, messageCount = 40, earlier = 9),
-            "only while away",
-        )
-        assertFalse(
-            MessageOrder.pillVisible(awayFromLatest = true, messageCount = 30, earlier = 9),
-            "only past 30 messages",
-        )
-        assertFalse(MessageOrder.pillVisible(awayFromLatest = true, messageCount = 40, earlier = 0))
     }
 
     @Test

@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.chat.cards
 
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageScrollState
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -103,7 +104,7 @@ public fun CardsSettingsScreen(
     ) {
         Column(
             Modifier.fillMaxSize()
-                .verticalScroll(rememberScrollState())
+                .verticalScroll(kitPageScrollState())
                 .padding(vertical = Space.S2.dp)
         ) {
             KitText(

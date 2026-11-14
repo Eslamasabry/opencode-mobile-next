@@ -28,6 +28,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.dropWhile
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
@@ -83,17 +84,25 @@ public class ChatViewModel(
      * the rows).
      */
     public val facts: StateFlow<TurnFactsUi> =
-        TurnFactsPresenter(clock)
-            .states(
-                (world as? TurnFeedSource)?.turnFeed ?: flowOf(TurnFeed.Empty),
-                world.requests.latest { model ->
-                    // Review #12: a decision being sent or a card the stop retired waits on no one.
-                    model?.state?.map { slot -> RunTailRules.waitsForYou(slot.cards.map { it.state }) } ?: flowOf(false)
-                },
-                viewModelScope,
-                SharingStarted.WhileSubscribed(STOP_AFTER_MS),
-                world.work,
-            )
+        run {
+            // Review #12: a decision being sent or a card the stop retired waits on no one. An answered permission
+            // card no longer holds its step "waiting for you", and a Deny reads declined on the step at once.
+            val reading =
+                world.requests
+                    .latest { model ->
+                        model?.state?.map { slot -> StepRequestReading.of(slot.cards) } ?: flowOf(StepRequestReading())
+                    }
+                    .distinctUntilChanged()
+            TurnFactsPresenter(clock)
+                .states(
+                    (world as? TurnFeedSource)?.turnFeed ?: flowOf(TurnFeed.Empty),
+                    reading.map { it.waiting },
+                    viewModelScope,
+                    SharingStarted.WhileSubscribed(STOP_AFTER_MS),
+                    world.work,
+                    reading.map { it.declined }.distinctUntilChanged(),
+                )
+        }
 
     /**
      * B-CHAT-110: a task step opens the conversation its sub-agent ran in (same server, same

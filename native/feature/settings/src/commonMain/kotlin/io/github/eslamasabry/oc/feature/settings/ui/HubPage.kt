@@ -1,5 +1,7 @@
 package io.github.eslamasabry.oc.feature.settings.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.KitReportPageScroll
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageScrollState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Column
@@ -140,7 +142,7 @@ private fun SettingsPanes(
             Column(
                 Modifier.fillMaxSize()
                     .testTag("settings-list-pane")
-                    .verticalScroll(paneScroll)
+                    .verticalScroll(paneScroll.also { KitReportPageScroll(it) })
                     .padding(top = Space.S2.dp, bottom = Space.S6.dp)
             ) {
                 HubBody(state, actions, selected = selected?.id, selectedPushed = pushed)
@@ -152,7 +154,7 @@ private fun SettingsPanes(
                     Column(
                         Modifier.fillMaxSize()
                             .testTag("settings-detail-pane")
-                            .verticalScroll(rememberScrollState())
+                            .verticalScroll(kitPageScrollState())
                             // F: lib/ui/screens/settings/settings_group_page.dart:399-401
                             .padding(top = Space.S5.dp, bottom = Space.S6.dp)
                     ) {

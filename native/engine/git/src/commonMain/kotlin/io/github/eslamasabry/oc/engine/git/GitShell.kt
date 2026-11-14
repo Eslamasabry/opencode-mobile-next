@@ -35,6 +35,9 @@ public enum class GitShellFailure {
 
     /** The script did not finish in time. */
     TimedOut,
+
+    /** The server answered the request with an error: it is there, but it would not run the command. */
+    Refused,
 }
 
 /** Thrown only for a NUL byte, which no shell word can carry. The value is never echoed. */

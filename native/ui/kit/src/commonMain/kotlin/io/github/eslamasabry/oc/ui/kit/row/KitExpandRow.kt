@@ -167,11 +167,15 @@ public fun KitExpandRow(
             if (bare) {
                 Column(Modifier.fillMaxWidth(), content = content)
             } else {
-                Column(
-                    Modifier.fillMaxWidth().padding(horizontal = gutter, vertical = Space.S2.dp),
-                    verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
-                    content = content,
-                )
+                // The content sits between the gutters this row just gave it, so it is on a rail: a group of rows or a
+                // card inside adds no second gutter (audit 2: an opened card stood 85 px in, the page's cards 42).
+                androidx.compose.runtime.CompositionLocalProvider(LocalKitOnRail provides true) {
+                    Column(
+                        Modifier.fillMaxWidth().padding(horizontal = gutter, vertical = Space.S2.dp),
+                        verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
+                        content = content,
+                    )
+                }
             }
         }
     }

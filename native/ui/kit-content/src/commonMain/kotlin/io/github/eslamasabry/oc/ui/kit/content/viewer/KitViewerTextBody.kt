@@ -1,5 +1,7 @@
 package io.github.eslamasabry.oc.ui.kit.content.viewer
 
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageListState
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageScrollState
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -60,6 +62,7 @@ public fun KitViewerTextBody(text: String, modifier: Modifier = Modifier, wrap: 
                 Modifier.fillMaxSize().testTag(KIT_VIEWER_LINES_TAG)
                     .then(if (wrap) Modifier else Modifier.horizontalScroll(rememberScrollState())),
                 contentPadding = PaddingValues(horizontal = gutter, vertical = gutter / 2),
+                state = kitPageListState(),
             ) {
                 if (partial != null) {
                     item(key = "partial", contentType = "notice") {
@@ -83,7 +86,7 @@ public fun KitViewerTextBody(text: String, modifier: Modifier = Modifier, wrap: 
 internal fun ViewerProse(source: String, interactive: Boolean, markdown: (@Composable (String) -> Unit)?) {
     val tokens = LocalKitTokens.current
     Box(
-        Modifier.fillMaxSize().verticalScroll(rememberScrollState())
+        Modifier.fillMaxSize().verticalScroll(kitPageScrollState())
             .padding(horizontal = tokens.gutter.dp, vertical = Space.S4.dp),
         contentAlignment = Alignment.TopCenter,
     ) {

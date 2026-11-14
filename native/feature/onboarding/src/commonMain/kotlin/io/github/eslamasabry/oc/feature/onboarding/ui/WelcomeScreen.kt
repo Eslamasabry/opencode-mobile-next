@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.onboarding.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageScrollState
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -87,7 +88,7 @@ public fun WelcomeScreen(state: WelcomeUi, actions: WelcomeActions) {
     ) {
         Column(Modifier.fillMaxSize().testTag("welcome-body")) {
             Column(
-                Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = Space.S4.dp),
+                Modifier.weight(1f).verticalScroll(kitPageScrollState()).padding(horizontal = Space.S4.dp),
             ) {
                 // Air above the question (Flutter: space6 + space6).
                 Spacer(Modifier.height((Space.S6 + Space.S6).dp))

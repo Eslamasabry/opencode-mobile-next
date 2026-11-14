@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.phone.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageScrollState
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.*
@@ -172,7 +173,7 @@ public fun ThisPhoneScreen(
     ) {
         BoxWithConstraints(Modifier.fillMaxSize()) {
         val available = maxHeight
-        Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
+        Column(Modifier.fillMaxWidth().verticalScroll(kitPageScrollState())) {
             state.exitNotice?.let { exit ->
                 KitNotice(
                     modifier = noticeEdge,

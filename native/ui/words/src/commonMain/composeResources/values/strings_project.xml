@@ -666,6 +666,8 @@
     <string name="gitProblemGitMissing">Git isn’t installed where this project lives. Install it there, then try again.</string>
     <string name="gitProblemFolderMissing">The project folder wasn’t found. It may have been moved or deleted.</string>
     <string name="gitProblemEnvironmentUnavailable">Couldn’t reach the place this project lives. Check that it’s running, then try again.</string>
+    <string name="gitProblemNoWorkingSpace">Git has no room to work where this project lives. Free up some storage there, then try again.</string>
+    <string name="gitProblemServerRefusedCommand">The server answered but wouldn’t run the Git command. Check its sign-in, then try again.</string>
     <string name="gitProblemServerCannotRunCommands">This server can’t run Git commands for the app.</string>
     <string name="gitProblemOutputTooLarge">There are too many changes to read here. Commit or clean up some files, then try again.</string>
     <string name="gitProblemTimedOut">Git took too long to answer. Try again.</string>

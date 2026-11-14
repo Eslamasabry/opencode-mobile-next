@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.linux.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageScrollState
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.rememberScrollState
@@ -56,7 +57,7 @@ public fun LinuxServicesScreen(state: LinuxServicesUi, actions: LinuxServicesAct
         width = KitScreenWidth.Reading,
         loading = state.loading,
     ) {
-        Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
+        Column(Modifier.fillMaxWidth().verticalScroll(kitPageScrollState())) {
             if (state.failure != null || state.refusal != null) {
                 KitErrorNotice(
                     title = stringResource(Res.string.linuxSvcFailed),

@@ -29,7 +29,8 @@ import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.layer.CompositingStrategy
 import androidx.compose.ui.graphics.layer.GraphicsLayer
-import androidx.compose.ui.graphics.layer.drawLayer
+import io.github.eslamasabry.oc.ui.kit.foundation.kitDrawLayer
+import io.github.eslamasabry.oc.ui.kit.foundation.kitRecord
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.onGloballyPositioned
@@ -220,6 +221,14 @@ public class KitLiquidJoinDrop internal constructor(owner: KitLiquidJoin, body: 
     /** How much of its content (a menu's rows) shows now, 0 to 1. Read in the draw phase. */
     internal var content: () -> Float = { 1f }
 
+    /**
+     * It is drawn inside the picture its body reads (the jump pill lies in the transcript the page records, and the
+     * message box reads that recording), so it draws its side of the body from its own picture: drawing its body's would
+     * draw it into itself, a cycle of render nodes that overflows the renderer's stack (device 2026-11-14, Glass, the
+     * first scroll up a long conversation). A menu (in a popup, outside the page) reads its body's picture.
+     */
+    internal var ownPicture: Boolean = false
+
     override fun glass(): Rect {
         val r = rest
         if (r.width <= 0f || r.height <= 0f) return r
@@ -284,11 +293,12 @@ internal fun rememberKitLiquidJoinBody(join: KitLiquidJoin?, name: String): KitL
 
 /** A drop of the body named [body] while this part is composed and [on]; null where the screen has no joined glass. */
 @Composable
-public fun rememberKitLiquidJoinDrop(body: String, on: Boolean = true): KitLiquidJoinDrop? {
+public fun rememberKitLiquidJoinDrop(body: String, on: Boolean = true, ownPicture: Boolean = false): KitLiquidJoinDrop? {
     val join = LocalKitLiquidJoin.current
     if (join == null || !on) return null
     val drop = remember(join) { KitLiquidJoinDrop(join, body) }
     drop.body = body
+    drop.ownPicture = ownPicture
     DisposableEffect(join, drop) {
         join.drops += drop
         onDispose { join.drops -= drop }
@@ -449,12 +459,14 @@ private class JoinedPaneNode(
         // One body reads one picture (cut audit 1, c14/c25: a darker rounded shape inside the joined bar and menu, about
         // x385 y320 on the emulator): the menu's side used to draw from the page, which holds the bar's own face and the
         // pills over the page, and its hold pulled the bar's tint into a band under the bar, ending in a rounded corner on
-        // the line where the two sides meet. A drop draws its side from its body's picture, as the body does.
+        // the line where the two sides meet. A drop draws its side from its body's picture, as the body does, unless it
+        // lies in that picture itself (KitLiquidJoinDrop.ownPicture: the jump pill): its own then, never a cycle.
         // And a menu is modal while it is open (cut audit 2, the home row's menu full of the chips and icons behind it):
         // its side shows the body's picture whole and the body's content (the transcript under the bar) only in its band
-        // along its free edges, none along the edge it hangs from, as every modal pane does ([kitModalView]).
-        val body = if (part is KitLiquidJoinDrop && theirs != null) partner?.backdrop ?: backdrop else null
-        // Only a modal drop (a menu; the jump pill is not modal and sees its body's picture whole).
+        // along its free edges, none along the edge it hangs from, as every modal pane does ([kitModalView]). The bar's
+        // picture never holds the menu (the menu lies in the window's menu layer, above the page).
+        val body = if ((part as? KitLiquidJoinDrop)?.ownPicture == false && theirs != null) partner?.backdrop ?: backdrop else null
+        // Only a modal drop (a menu) is masked; a drop that is not modal sees its picture whole.
         val band = part.band
         val source =
             when {
@@ -512,19 +524,19 @@ private class JoinedPaneNode(
         // 1. The backdrop at the body's resolution, blurred by the body's frost, bent and pressed by the lens pass.
         u.set(programs.lens, mode = 0f, res = res)
         back.renderEffect = platform.liquidJoinEffect(programs.lens, recipe.blurDp.dp.toPx() * res)
-        back.record(small) {
+        kitRecord(back, small) {
             scale(res, res, Offset.Zero) { translate(-local.x, -local.y) { source.draw(this, c) } }
         }
         // 2. The tint eased over the band, then this side's cover.
-        mask.record(full) {
-            scale(1f / res, 1f / res, Offset.Zero) { drawLayer(back) }
+        kitRecord(mask, full) {
+            scale(1f / res, 1f / res, Offset.Zero) { kitDrawLayer(back) }
             u.set(programs.brush, mode = 3f, res = 1f)
             drawRect(programs.brush.brush)
             u.set(programs.brush, mode = 1f, res = 1f)
             drawRect(programs.brush.brush, blendMode = BlendMode.DstIn)
         }
         translate(local.x, local.y) {
-            drawLayer(mask)
+            kitDrawLayer(mask)
             // 3. One rim light along the body's outline on this side (the library's highlight on the body's direction).
             u.set(programs.brush, mode = 2f, res = 1f)
             drawRect(

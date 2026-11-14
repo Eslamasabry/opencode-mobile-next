@@ -15,7 +15,6 @@ import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.layer.CompositingStrategy
 import androidx.compose.ui.graphics.layer.GraphicsLayer
-import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.node.CompositionLocalConsumerModifierNode
@@ -46,6 +45,8 @@ import kotlin.math.ceil
 import kotlin.math.floor
 import kotlin.math.max
 import kotlin.math.min
+import io.github.eslamasabry.oc.ui.kit.foundation.kitRecord
+import io.github.eslamasabry.oc.ui.kit.foundation.kitDrawLayer
 
 /*
  * A liquid body drawn whole by ONE node (the edge dock, owner 2026-11-11 "Why isn't it glass?"): two rounded boxes,
@@ -320,19 +321,19 @@ private class LiquidBodyNode(
         // 1. The backdrop at one resolution, blurred by the mixed frost, bent and pressed by the lens pass.
         u.set(programs.lens, mode = 0f, res = res)
         back.renderEffect = platform.liquidJoinEffect(programs.lens, recipe.blurDp.dp.toPx() * res)
-        back.record(small) {
+        kitRecord(back, small) {
             scale(res, res, Offset.Zero) { translate(-local.x, -local.y) { seen.draw(this, c) } }
         }
         // 2. The tint, then the body's cover (both sides: every pixel is this node's).
-        mask.record(full) {
-            scale(1f / res, 1f / res, Offset.Zero) { drawLayer(back) }
+        kitRecord(mask, full) {
+            scale(1f / res, 1f / res, Offset.Zero) { kitDrawLayer(back) }
             u.set(programs.brush, mode = 3f, res = 1f)
             drawRect(programs.brush.brush)
             u.set(programs.brush, mode = 1f, res = 1f)
             drawRect(programs.brush.brush, blendMode = BlendMode.DstIn)
         }
         translate(local.x, local.y) {
-            drawLayer(mask)
+            kitDrawLayer(mask)
             // 3. One rim light along the whole body's outline.
             u.set(programs.brush, mode = 2f, res = 1f)
             drawRect(

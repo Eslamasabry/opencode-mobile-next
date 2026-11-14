@@ -8,6 +8,6 @@
     <string name="telemetryConsentBody">Se você concordar, o app envia números anônimos de uso e de saúde do app, além de relatórios de falhas, pelo Google Firebase. Você pode mudar cada um em Configurações › Privacidade e dados.</string>
     <string name="telemetryConsentSends">Enviado: páginas e recursos usados, se conectar, enviar e configurar funcionam, velocidade do app, faixas de memória e de armazenamento, relatórios de falhas. Um ID de instalação aleatório.</string>
     <string name="telemetryConsentNever">Nunca enviado: seu código, conversas, arquivos, endereços de servidor ou chaves. Nenhum ID de publicidade.</string>
-    <string name="telemetryConsentShare">Compartilhar os dois</string>
+    <string name="telemetryConsentShare">Compartilhar uso e relatórios de falhas</string>
     <string name="telemetryConsentNotNow">Agora não</string>
 </resources>

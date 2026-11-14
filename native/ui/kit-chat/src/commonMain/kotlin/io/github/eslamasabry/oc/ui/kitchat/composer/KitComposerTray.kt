@@ -30,6 +30,12 @@ import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.KitTextKind
 import io.github.eslamasabry.oc.ui.kit.foundation.KitDivider
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappable
+import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceInput
+import io.github.eslamasabry.oc.ui.kit.foundation.kitDressedLook
+import io.github.eslamasabry.oc.ui.kit.foundation.kitSurface
+import io.github.eslamasabry.oc.ui.design.style.SurfaceRole
+import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
+import io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcon
 import io.github.eslamasabry.oc.ui.kit.icon.KitIconSize
 import io.github.eslamasabry.oc.ui.kit.motion.KitReveal
@@ -124,6 +130,11 @@ private fun TrayButton(action: KitComposerTrayAction, labelDensity: Density?) {
     // Every style shows the word under its glyph (coordinator 2026-11-14, audit finding 20: Glass showed bare glyphs while
     // Solid named them). On the slab of glass the disc is the slab's quiet tint, never an opaque plate.
     val slab = LocalKitComposerSlab.current
+    // Brutal and Paper: a control nested in the box's outline, the style's edge and corner, no shadow of its own.
+    val dressed =
+        kitDressedLook(
+            KitSurfaceInput(role = SurfaceRole.Control, shape = KitShapeId.Circle, level = SurfaceLevel.Surface2, nested = true)
+        )
     KitTappable(
         onClick = action.onPick,
         modifier = if (action.testTag != null) Modifier.testTag(action.testTag) else Modifier,
@@ -139,7 +150,11 @@ private fun TrayButton(action: KitComposerTrayAction, labelDensity: Density?) {
             // A round matte disc (Solid's control face), the glyph at the card-mark size.
             Box(
                 Modifier.size(tokens.minTarget.dp)
-                    .background(if (slab) colors.text1.copy(alpha = TRAY_SLAB_TINT) else colors.surface3, CircleShape),
+                    .then(
+                        dressed?.let { Modifier.kitSurface(it) }
+                            ?: Modifier.background(if (slab) colors.text1.copy(alpha = TRAY_SLAB_TINT) else colors.surface3, CircleShape)
+                    )
+                    .testTag(TRAY_DISC_TAG),
                 contentAlignment = Alignment.Center,
             ) {
                 KitIcon(
@@ -164,6 +179,9 @@ private fun TrayButton(action: KitComposerTrayAction, labelDensity: Density?) {
         }
     }
 }
+
+/** The test handle of a tray action's disc. */
+public const val TRAY_DISC_TAG: String = "kit-composer-tray-disc"
 
 /** A tray disc's face on the slab of glass: the words' ink at this alpha, as the slab's chips. */
 private const val TRAY_SLAB_TINT = .08f

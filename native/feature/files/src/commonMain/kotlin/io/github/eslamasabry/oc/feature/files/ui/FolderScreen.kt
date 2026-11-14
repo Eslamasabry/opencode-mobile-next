@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.files.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageListState
 import androidx.compose.runtime.saveable.rememberSaveable
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.Arrangement
@@ -257,7 +258,7 @@ public fun FolderScreen(state: FolderUi, actions: FolderActions) {
             width = KitScreenWidth.List,
             edges = KitScreenEdges.Bleed,
         ) {
-            LazyColumn(verticalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
+            LazyColumn(verticalArrangement = Arrangement.spacedBy(Space.S1.dp), state = kitPageListState()) {
                 if (state.actionFailure != null)
                     item("action-failed", contentType = "action-failed") {
                         KitErrorNotice(

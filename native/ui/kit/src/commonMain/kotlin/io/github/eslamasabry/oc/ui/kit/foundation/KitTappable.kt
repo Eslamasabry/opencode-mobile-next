@@ -20,13 +20,24 @@ import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.unit.IntRect
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.changedToDownIgnoreConsumed
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.unit.IntOffset
+import kotlin.math.roundToInt
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.drawOutline
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.motion.KitHaptic
+import io.github.eslamasabry.oc.ui.design.tokens.Alphas
 import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
 import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.kit.platform.LocalKitPlatform
@@ -122,8 +133,11 @@ internal fun Modifier.kitTappable(
     val placed = remember { PlacedBox() }
     return this
         .onPlaced { placed.coordinates = it }
+        .then(if (onLongClick != null) Modifier.kitPressPoint(placed) else Modifier)
         .sizeIn(minWidth = tokens.minTarget.dp, minHeight = tokens.minTarget.dp)
         .clip(pressClip ?: shape.shape())
+        // Finding 13 (cut audit 2): a part whose hold opens its menu keeps a held face while that menu is open.
+        .then(if (onLongClick != null) Modifier.kitHeldFace(inkColor) { origin.holding === placed } else Modifier)
         .then(role.edgeMark())
         .semantics { if (!enabled && disabledReason != null) stateDescription = disabledReason }
         .then(if (focusFill) Modifier else Modifier.indication(drawn, indication))
@@ -137,7 +151,9 @@ internal fun Modifier.kitTappable(
             onLongClick =
                 onLongClick?.let { long ->
                     {
-                        placed.pressed()?.let(origin::record)
+                        // The hold records where the finger was and who was held, so the menu opens beside the finger
+                        // and this part keeps its held face while the menu is open.
+                        placed.held()?.let(origin::record)
                         if (hapticsOn) platform.haptic(KitHaptic.LongPress)
                         long()
                     }
@@ -151,11 +167,79 @@ internal fun Modifier.kitTappable(
         )
 }
 
-/** Where a tappable was last placed; its window box is worked out only when it is pressed. */
+/** Where a part was last placed and last touched; its window box is worked out only when it is pressed. */
 private class PlacedBox {
     var coordinates: LayoutCoordinates? = null
 
+    /** Where the last finger landed, in the part's own px. */
+    var down: Offset? = null
+
     fun pressed(): IntRect? = coordinates?.takeIf { it.isAttached }?.boundsInWindow()?.toIntRect()
+
+    /** The press a hold records: the part's box, the finger's point in the window, and this part as the held one. */
+    fun held(): KitPress? {
+        val c = coordinates?.takeIf { it.isAttached } ?: return null
+        val point = down?.let { c.localToWindow(it) }?.let { IntOffset(it.x.roundToInt(), it.y.roundToInt()) }
+        return KitPress(c.boundsInWindow().toIntRect(), point, owner = this)
+    }
+}
+
+/** Notes where each finger lands on [placed], without taking the touch from anyone. */
+private fun Modifier.kitPressPoint(placed: PlacedBox): Modifier =
+    pointerInput(placed) {
+        awaitPointerEventScope {
+            while (true) {
+                val event = awaitPointerEvent(PointerEventPass.Initial)
+                event.changes.firstOrNull { it.changedToDownIgnoreConsumed() }?.let { placed.down = it.position }
+            }
+        }
+    }
+
+/**
+ * The held face: the press fill kept, behind the content, while the menu a hold opened is open, so the row or message
+ * it acts on stays marked (the same ink and strength as the press the person just saw).
+ */
+internal fun Modifier.kitHeldFace(ink: Color, shape: Shape = RectangleShape, held: () -> Boolean): Modifier =
+    drawBehind {
+        if (!held()) return@drawBehind
+        drawOutline(shape.createOutline(size, layoutDirection, this), ink.copy(alpha = Alphas.PRESSED))
+    }
+
+/**
+ * Reading content whose tap and hold open its menu (a message in the conversation): both open [onOpen] and record
+ * the press for the menu (the content's box and where the finger was), so the menu opens at the message, beside the
+ * finger, instead of from the screen's corner; while that menu is open the content keeps a held face in [shape]
+ * behind it, so it is plain which message the menu acts on (cut audit 2, finding 13). The hold plays `LongPress`. No
+ * minimum size and no resting surface: the content keeps its natural height.
+ */
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+public fun Modifier.kitMenuHold(label: String, onOpen: () -> Unit, shape: Shape = RectangleShape): Modifier {
+    val platform = LocalKitPlatform.current
+    val hapticsOn = LocalKitAppearance.current.haptics
+    val ink = LocalKitColors.current.tone(TextTone.Primary)
+    val origin = LocalKitPressOrigin.current
+    val placed = remember { PlacedBox() }
+    return this
+        .onPlaced { placed.coordinates = it }
+        .kitPressPoint(placed)
+        .kitHeldFace(ink, shape) { origin.holding === placed }
+        .combinedClickable(
+            interactionSource = remember { MutableInteractionSource() },
+            indication = null,
+            onClickLabel = label,
+            onLongClickLabel = label,
+            hapticFeedbackEnabled = false,
+            onClick = {
+                placed.held()?.let(origin::record)
+                onOpen()
+            },
+            onLongClick = {
+                placed.held()?.let(origin::record)
+                if (hapticsOn) platform.haptic(KitHaptic.LongPress)
+                onOpen()
+            },
+        )
 }
 
 /** A row's highlight runs edge to edge; its words keep the gutter (native/docs/kit/LAYOUT-RULES.md §2). */

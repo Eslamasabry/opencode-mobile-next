@@ -929,4 +929,6 @@
     <string name="agentIsolatedCancel">停止等待</string>
     <string name="agentElsewhereCounts">%1$d 个等待中 · %2$d 个运行中 · %3$d 个失败</string>
     <string name="agentElsewhereStale">等待更新</string>
+    <string name="gitProblemNoWorkingSpace">项目所在位置没有足够空间供 Git 工作。请在那里释放一些存储空间后重试。</string>
+    <string name="gitProblemServerRefusedCommand">服务器有响应，但不肯运行 Git 命令。请检查其登录状态，然后重试。</string>
 </resources>

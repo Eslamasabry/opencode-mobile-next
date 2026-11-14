@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.chats.attention
 
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageListState
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.lazy.LazyColumn
@@ -49,7 +50,7 @@ public fun AttentionScreen(state: AttentionUi, actions: AttentionActions) {
         width = KitScreenWidth.Reading,
         edges = KitScreenEdges.Bleed,
     ) {
-        LazyColumn(verticalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
+        LazyColumn(verticalArrangement = Arrangement.spacedBy(Space.S1.dp), state = kitPageListState()) {
             if (state.loading) item("loading") { KitSkeletonRows() }
             if (state.incomplete)
                 item("incomplete") {

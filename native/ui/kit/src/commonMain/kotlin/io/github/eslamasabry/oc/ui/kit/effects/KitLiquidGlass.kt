@@ -30,7 +30,6 @@ import androidx.compose.ui.graphics.drawscope.ContentDrawScope
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.layer.GraphicsLayer
-import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.compose.ui.graphics.rememberGraphicsLayer
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.findRootCoordinates
@@ -88,6 +87,8 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitMotion
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitRoles
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
+import io.github.eslamasabry.oc.ui.kit.foundation.kitRecord
+import io.github.eslamasabry.oc.ui.kit.foundation.kitDrawLayer
 
 /*
  * Glass's liquid edges (docs/designs/liquid-glass.md; owner 2026-11-08 "go full blown glass"), drawn by
@@ -240,11 +241,13 @@ public fun kitLiquidFace(
      * liquid too, the face is the joined pane, drawn with it as one body of glass; alone it is the library's pane.
      */
     join: KitLiquidJoinPart? = null,
+    /** No rim light and no edge highlight: glass known by its bend alone (the top pane of a page, owner 2026-11-14). */
+    rimless: Boolean = false,
 ): Modifier? {
     val ground = LocalKitColors.current.ground.copy(alpha = 1f)
     val picture = LocalKitGlassBackdrop.current
     val backdrop = remember(source, ground, picture) { source?.let { frostStateBackdrop(it, ground, picture) } }
-    return liquidFace(role, source, backdrop, shape, transform, chosen, join)
+    return liquidFace(role, source, backdrop, shape, transform, chosen, join, rimless = rimless)
 }
 
 /** [role]'s liquid face over a kit-owned [source] (the page, a body under its bar); null keeps the part's own face. */
@@ -257,6 +260,8 @@ internal fun kitLiquidFace(
     join: KitLiquidJoinPart? = null,
     /** A dialog's panel: drawn with the sheet's role, tuned as a dialog (the Glass lab). */
     dialog: Boolean = false,
+    /** No rim light and no edge highlight (the top pane of a page). */
+    rimless: Boolean = false,
 ): Modifier? {
     val ground = LocalKitColors.current.ground.copy(alpha = 1f)
     val picture = LocalKitGlassBackdrop.current
@@ -265,7 +270,7 @@ internal fun kitLiquidFace(
     val backdrop = remember(source, ground, picture, live, band) { source?.let { pageBackdrop(band, it, ground, picture, live) } }
     // A joined menu draws from its body's picture: it keeps the same band there (KitLiquidJoin.kt).
     if (join != null) SideEffect { join.band = band }
-    return liquidFace(role, source, backdrop, shape, transform, join = join, dialog = dialog)
+    return liquidFace(role, source, backdrop, shape, transform, join = join, dialog = dialog, rimless = rimless)
 }
 
 /**
@@ -399,6 +404,7 @@ private fun liquidFace(
     chosen: Boolean = false,
     join: KitLiquidJoinPart? = null,
     dialog: Boolean = false,
+    rimless: Boolean = false,
 ): Modifier? {
     val on = kitLiquidOn() && backdrop != null
     val shaped = liquidShapeOk(shape)
@@ -429,7 +435,7 @@ private fun liquidFace(
     val face = if (granted) transform else HeldFrost
     val joined = joinable && join!!.owner.partnerOf(join) != null
     join?.composedJoined = joined
-    return Modifier.liquidPane(role, backdrop, shape as CornerBasedShape, face, liquidFlipFor(source, role), chosen, keepRim = !granted, join = join, joined = joined, dialog = dialog)
+    return Modifier.liquidPane(role, backdrop, shape as CornerBasedShape, face, liquidFlipFor(source, role), chosen, keepRim = !granted, join = join, joined = joined, dialog = dialog, rimless = rimless)
 }
 
 /** A claim beyond the budget: all frost, no lens. */
@@ -458,10 +464,14 @@ private fun Modifier.liquidPane(
     join: KitLiquidJoinPart? = null,
     joined: Boolean = false,
     dialog: Boolean = false,
+    rimless: Boolean = false,
 ): Modifier {
     val own = remember { LiquidFlip() }
     val flip = shared ?: own
-    val spec = kitLiquidPaneSpec(role, flip, chosen, keepRim, dialog = dialog)
+    val whole = kitLiquidPaneSpec(role, flip, chosen, keepRim, dialog = dialog)
+    // Owner 2026-11-14: "Get rid of the border around the top conversation area." A rimless pane keeps its glass and
+    // its bend; nothing is drawn along its outline.
+    val spec = if (rimless) remember(whole) { whole.copy(rim = Color.Transparent, specular = Color.Transparent) } else whole
     val platform = LocalKitPlatform.current
     val words = kitLiquidWords(backdrop, flip)
     if (join != null) SideEffect {
@@ -474,7 +484,7 @@ private fun Modifier.liquidPane(
     }
     val latest by rememberUpdatedState(transform)
     // The rim catches the live picture's light over the whole pane (glass-live): drawn after it, so it lies on top.
-    return this.kitBackdropRimLight(shape).then(platform.liquidPane(spec, backdrop, shape) { latest() }).kitGlassStackRoot().kitLiquidPlateHost(words)
+    return (if (rimless) this else this.kitBackdropRimLight(shape)).then(platform.liquidPane(spec, backdrop, shape) { latest() }).kitGlassStackRoot().kitLiquidPlateHost(words)
 }
 
 /** [role]'s liquid pane as the look here draws it: its face measured for its words, its recipe, rim and gloss. */
@@ -643,7 +653,7 @@ private class PlateHostNode(var words: KitLiquidWords) :
                         own.sample(w, h, requireDensity(), small) ?: continue
                     } else {
                         val layer = sample ?: requireGraphicsContext().createGraphicsLayer().also { sample = it }
-                        layer.record(requireDensity(), LayoutDirection.Ltr, IntSize(w, h), small)
+                        layer.kitRecord(requireDensity(), LayoutDirection.Ltr, IntSize(w, h), small)
                         val read = IntArray(w * h)
                         // A sample the platform could not read back (empty or clear) says nothing about the content.
                         if (!platform.readPixels(layer.toImageBitmap(), read, w, h)) continue
@@ -842,14 +852,14 @@ private fun DrawScope.drawGroundUnder(ground: Color, picture: KitGlassBackdrop?,
     val layer = bd.layer ?: return
     if (!bd.painted || bd.root !== at.findRootCoordinates()) return
     val shift = bd.origin - at.positionInRoot()
-    translate(shift.x, shift.y) { drawLayer(layer) }
+    translate(shift.x, shift.y) { kitDrawLayer(layer) }
 }
 
 /** A feature's [KitFrostState] (its content recorded by [kitFrostSource]) seen from a pane in the same window. */
 internal fun frostStateBackdrop(state: KitFrostState, ground: Color, picture: KitGlassBackdrop?): KitLiquidBackdrop {
     val page: DrawScope.(LayoutCoordinates) -> Unit = { c ->
         val shift = state.sourceOrigin - c.positionInRoot()
-        translate(shift.x, shift.y) { drawLayer(state.layer) }
+        translate(shift.x, shift.y) { kitDrawLayer(state.layer) }
     }
     return KitLiquidBackdrop({ state.version }) { c ->
         // Read here so the pane draws again when the content behind it records again (a scroll under the bar).
@@ -874,7 +884,7 @@ private fun liquidSourceBackdrop(source: KitLiquidSource, ground: Color, picture
         val shift =
             if (s.findRootCoordinates() === c.findRootCoordinates()) c.localPositionOf(s, Offset.Zero)
             else s.positionOnScreen() - c.positionOnScreen()
-        translate(shift.x, shift.y) { drawLayer(source.layer) }
+        translate(shift.x, shift.y) { kitDrawLayer(source.layer) }
     }
     val bg = picture ?: live
     return KitLiquidBackdrop({ source.version }) { c ->
@@ -1055,9 +1065,9 @@ private class LiquidSourceNode(var source: KitLiquidSource) : Modifier.Node(), D
     override fun ContentDrawScope.draw() {
         // Read in the draw phase: a pane arriving or leaving redraws this once, to start or stop recording.
         if (source.users > 0) {
-            source.layer.record { this@draw.drawContent() }
+            kitRecord(source.layer) { this@draw.drawContent() }
             androidx.compose.runtime.snapshots.Snapshot.withoutReadObservation { source.version++ }
-            drawLayer(source.layer)
+            kitDrawLayer(source.layer)
         } else {
             drawContent()
         }

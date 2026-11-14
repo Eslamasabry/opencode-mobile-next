@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.setupreview.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageScrollState
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -127,7 +128,7 @@ private fun urgency(status: SetupMcpState): Int =
 private fun SetupList(state: SetupReviewUi, actions: SetupReviewActions) {
     val servers = state.content.servers.sortedBy { urgency(it.status) }
     Column(
-        Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
+        Modifier.fillMaxSize().verticalScroll(kitPageScrollState()),
         verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
     ) {
         KitGroupNote(

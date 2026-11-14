@@ -1,6 +1,8 @@
 package io.github.eslamasabry.oc.ui.kitchat.transcript
 
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
+import io.github.eslamasabry.oc.ui.kit.motion.kitItemMotion
+import androidx.compose.foundation.lazy.LazyItemScope
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.kit.frame.JUMP_PILL_FACE_DP
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
@@ -148,6 +150,12 @@ public fun KitTranscriptList(
     motion: KitMotionLevel,
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(vertical = Space.S4.dp),
+    /**
+     * Called when the person, reading history, brings the list's oldest item (its top) into view: the transcript loads
+     * its earlier messages there by itself. Items added on top never move the row being read (the list keeps its
+     * bottom row in place), so this is safe mid-scroll. Null: nothing.
+     */
+    onReachOldest: (() -> Unit)? = null,
     content: LazyListScope.() -> Unit,
 ) {
     val lastKey = remember { arrayOfNulls<String>(1) }
@@ -164,9 +172,22 @@ public fun KitTranscriptList(
             if (it is DragInteraction.Start) state.following = false
         }
     }
+    // Back at the newest message, the list follows again once the scroll has stopped. Audit 1 (2026-11-14, k6: "Jump
+    // to latest" right after a send with the newest message in view): read on the edge alone, a drag that ended there
+    // never resumed following (the edge was reached mid-drag and did not change after it), so the next send landed
+    // below the rows in view and the list stood "away".
     LaunchedEffect(state) {
-        snapshotFlow { state.atLiveEdge }
-            .collect { if (it && !state.lazy.isScrollInProgress) state.following = true }
+        snapshotFlow { state.atLiveEdge && !state.lazy.isScrollInProgress }
+            .collect { if (it) state.following = true }
+    }
+    val reachOldest = androidx.compose.runtime.rememberUpdatedState(onReachOldest)
+    LaunchedEffect(state) {
+        snapshotFlow {
+                val info = state.lazy.layoutInfo
+                val top = info.visibleItemsInfo.lastOrNull()
+                !state.following && top != null && top.index == info.totalItemsCount - 1
+            }
+            .collect { if (it) reachOldest.value?.invoke() }
     }
     // Chat edge A (owner 2026-11-09): the frame shows its scrolled-container ground only while older rows lie under the
     // header (the list is reversed: older rows are forward, above).
@@ -260,6 +281,18 @@ public fun KitTranscriptList(
         )
     }
 }
+
+/**
+ * The motion every transcript item takes (audit 1, 2026-11-14: a new prompt drawn under the previous answer's copy and
+ * "…" icons, a step row on the bubble's line, "60 sixty1 one" with a blank band under it, each for 6–15 s on a loaded
+ * phone). A row that arrives fades in where it belongs, below what is already there; the rows around it take their new
+ * places at once. Nothing glides (a row on its way to a new place lies over the row now there) and nothing fades out in
+ * place (a leaving row's ghost lies over the row that took its place). [fadeIn] false: the row is already on screen in
+ * another form (the person's own prompt replacing the bubble that rose from the field).
+ */
+@Composable
+public fun LazyItemScope.kitTranscriptItemMotion(fadeIn: Boolean = true): Modifier =
+    kitItemMotion(fadeIn = fadeIn, fadeOut = false, placement = false)
 
 /** E20-S30: the gap between the pill and the composer, the soft fade's height and its strongest alpha. */
 internal const val JUMP_GAP_DP = 8

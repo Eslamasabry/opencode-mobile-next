@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.chats.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.KitReportPageScroll
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -237,7 +238,7 @@ public fun ChatsAllScreen(state: AllConversationsUi, actions: ChatsAllActions) {
             }
                 .collect { near -> if (near) actions.loadMore() }
         }
-        LazyColumn(state = list, verticalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
+        LazyColumn(state = list.also { KitReportPageScroll(it) }, verticalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
             if (state.incomplete.isNotEmpty()) {
                 item(key = "incomplete", contentType = "incomplete") {
                     KitNotice(
@@ -472,7 +473,7 @@ private fun rememberAllRowWords(): AllRowWords =
 private fun AllRow(row: AllRowUi, selecting: Boolean, words: AllRowWords, nowMs: Long, actions: ChatsAllActions) {
     val title = rowTitle(row.title)
     val project = row.project ?: words.unknownLocation
-    val location = row.server?.let { "$it · $project" } ?: project
+    val location = serverNameShownOrNull(row.server)?.let { "$it · $project" } ?: project
     val place =
         row.contextPercent?.let {
             "$location · " + stringResource(Res.string.stateContextUsage, it)

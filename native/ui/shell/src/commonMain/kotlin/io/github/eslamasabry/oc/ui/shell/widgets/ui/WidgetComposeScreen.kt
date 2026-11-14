@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.shell.widgets.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageScrollState
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -66,7 +67,7 @@ public fun WidgetComposeScreen(state: WidgetComposeUi, actions: WidgetComposeAct
         edges = KitScreenEdges.Bleed,
     ) {
         Column(
-            Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(Space.S4.dp),
+            Modifier.fillMaxWidth().verticalScroll(kitPageScrollState()).padding(Space.S4.dp),
             verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
         ) {
             val notice = when (state.notice) {

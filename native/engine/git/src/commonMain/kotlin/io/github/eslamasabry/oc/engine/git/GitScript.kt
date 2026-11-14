@@ -59,7 +59,11 @@ public data class GitScript(
         b.append("printf '@@OCG begin\\n'\n")
         b.append("cd -- ").append(shQuote(directory)).append(" 2>/dev/null || { printf '@@OCG nodir\\n'; exit 0; }\n")
         b.append("command -v git >/dev/null 2>&1 || { printf '@@OCG nogit\\n'; exit 0; }\n")
-        b.append("ocg_t=\$(mktemp -d 2>/dev/null) || { printf '@@OCG notemp\\n'; exit 0; }\n")
+        // The system temp folder may be missing or unwritable (a phone's Ubuntu): fall back to a folder of our own
+        // under HOME, removed on exit, before saying there is no room to work.
+        b.append("ocg_t=\$(mktemp -d 2>/dev/null || { ocg_d=\"\${HOME:-/tmp}/.cache/oc-git.\$\$\"; ")
+        b.append("mkdir -p \"\$ocg_d\" 2>/dev/null && printf '%s' \"\$ocg_d\"; }) && [ -d \"\$ocg_t\" ] ")
+        b.append("|| { printf '@@OCG notemp\\n'; exit 0; }\n")
         val cleanup = (listOf("rm -rf \"\$ocg_t\"") + removeOnExit.map { "rm -f -- " + shQuote(it) }).joinToString("; ")
         b.append("trap ").append(shQuote(cleanup)).append(" EXIT\n")
         val env = LinkedHashMap(GitBaseEnvironment).apply { putAll(environment) }

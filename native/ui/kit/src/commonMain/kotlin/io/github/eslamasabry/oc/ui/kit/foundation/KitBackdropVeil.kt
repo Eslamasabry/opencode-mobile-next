@@ -19,7 +19,6 @@ import androidx.compose.ui.graphics.drawOutline
 import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.drawscope.translate
-import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.compose.ui.graphics.rememberGraphicsLayer
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInRoot
@@ -145,10 +144,10 @@ public fun Modifier.kitBackdropVeil(
                     val small = IntSize(ceil(size.width * s).toInt().coerceAtLeast(1), ceil(size.height * s).toInt().coerceAtLeast(1))
                     val shift = source.sourceOrigin - origin[0]
                     blur.renderEffect = effect
-                    blur.record(Density(density * s, fontScale), layoutDirection, small) {
-                        scale(s, s, pivot = Offset.Zero) { translate(shift.x, shift.y) { drawLayer(source.layer) } }
+                    blur.kitRecord(Density(density * s, fontScale), layoutDirection, small) {
+                        scale(s, s, pivot = Offset.Zero) { translate(shift.x, shift.y) { kitDrawLayer(source.layer) } }
                     }
-                    scale(1f / s, 1f / s, pivot = Offset.Zero) { drawLayer(blur) }
+                    scale(1f / s, 1f / s, pivot = Offset.Zero) { kitDrawLayer(blur) }
                     drawRect(tint.copy(alpha = tint.alpha * veil.tintAlpha))
                 }
             }

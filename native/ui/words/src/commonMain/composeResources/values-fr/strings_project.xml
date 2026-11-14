@@ -970,4 +970,6 @@
     <string name="agentIsolatedCancel">Arrêter d’attendre</string>
     <string name="agentElsewhereCounts">%1$d en attente · %2$d en cours · %3$d en échec</string>
     <string name="agentElsewhereStale">En attente d’une mise à jour</string>
+    <string name="gitProblemNoWorkingSpace">Git n’a pas la place de travailler là où se trouve ce projet. Libérez de l’espace de stockage à cet endroit, puis réessayez.</string>
+    <string name="gitProblemServerRefusedCommand">Le serveur a répondu mais a refusé d’exécuter la commande Git. Vérifiez sa connexion, puis réessayez.</string>
 </resources>

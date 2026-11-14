@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.settings.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageScrollState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
@@ -106,7 +107,7 @@ public fun ServerSettingsScreen(state: ServerSettingsUi, actions: ServerSettings
                 state.modelWorking,
     ) {
         Column(
-            Modifier.verticalScroll(rememberScrollState()).padding(vertical = Space.S3.dp),
+            Modifier.verticalScroll(kitPageScrollState()).padding(vertical = Space.S3.dp),
             verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
         ) {
             state.failure?.let { failure ->

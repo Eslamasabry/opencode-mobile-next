@@ -1,6 +1,11 @@
 package io.github.eslamasabry.oc.ui.kit.modal
 
 import androidx.compose.animation.AnimatedVisibility
+import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceInput
+import io.github.eslamasabry.oc.ui.kit.foundation.kitDressedLook
+import io.github.eslamasabry.oc.ui.kit.foundation.kitSurface
+import io.github.eslamasabry.oc.ui.design.style.SurfaceRole
+import io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
@@ -121,11 +126,11 @@ public fun KitToastHost(state: KitToastState, modifier: Modifier = Modifier) {
 private fun ToastPill(toast: KitToast) {
     val colors = LocalKitColors.current
     val shape = KitShapeId.Pill.shape()
+    // Brutal and Paper dress the toast as a floating part (its ink edge and hard shadow; Paper's ink box, square).
+    val dressed = kitDressedLook(KitSurfaceInput(role = SurfaceRole.Floating, shape = KitShapeId.Pill, level = SurfaceLevel.Surface2))
     Row(
         Modifier.widthIn(max = MAX_DP.dp)
-            .clip(shape)
-            .background(colors.surface3)
-            .border(1.dp, colors.hairline, shape)
+            .then(dressed?.let { Modifier.kitSurface(it) } ?: Modifier.clip(shape).background(colors.surface3).border(1.dp, colors.hairline, shape))
             .padding(horizontal = Space.S4.dp, vertical = Space.S2.dp)
             .semantics { liveRegion = LiveRegionMode.Polite }
             .testTag("kit-toast"),

@@ -158,6 +158,8 @@ public fun KitTheme(
                 )
         }
     platform.SystemBars(darkContent = !colors.dark, ground = colors.ground)
+    // A layer drawn inside its own recording throws where rules throw (debug, test, preview), else is left out.
+    androidx.compose.runtime.SideEffect { io.github.eslamasabry.oc.ui.kit.foundation.KitLayerCycles.strict = platform.isDebug }
     // One live background for every page under this root (smoothness round 2): one clock, one picture per page size.
     val live = io.github.eslamasabry.oc.ui.kit.live.rememberKitLiveShare()
     CompositionLocalProvider(

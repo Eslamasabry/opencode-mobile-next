@@ -36,7 +36,6 @@ import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.graphics.layer.GraphicsLayer
-import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.rememberGraphicsLayer
 import androidx.compose.material3.ColorScheme
@@ -45,6 +44,8 @@ import io.github.eslamasabry.oc.ui.kit.motion.ThemeSwitchTimings
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import io.github.eslamasabry.oc.ui.kit.foundation.kitRecord
+import io.github.eslamasabry.oc.ui.kit.foundation.kitDrawLayer
 
 /**
  * The theme change (P-029, M-019): dark to light, a new pack or accent fades over [MS] instead of jumping. The old
@@ -252,7 +253,7 @@ internal fun Modifier.kitThemeCover(cover: KitThemeCover): Modifier =
             val shot = cover.shot
             // Worked out here, not inside record: the recording scope's density is the content's (a cycle).
             val holes = if (shot != null) cover.holePath(layoutDirection, Density(density, fontScale)) else null
-            cover.layer.record {
+            kitRecord(cover.layer) {
                 content.drawContent()
                 if (shot != null) {
                     // The old screen stays whole outside a circle that grows from the touch to the farthest corner;
@@ -271,7 +272,7 @@ internal fun Modifier.kitThemeCover(cover: KitThemeCover): Modifier =
                     clipPath(open, ClipOp.Difference) { drawImage(shot, topLeft = Offset(-at.x, -at.y)) }
                 }
             }
-            drawLayer(cover.layer)
+            kitDrawLayer(cover.layer)
         }
 
 /** The reveal's curve: it leaves the control at once (no wait inside it), sweeps the screen and settles. */

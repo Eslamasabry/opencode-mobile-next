@@ -20,6 +20,8 @@ import io.github.eslamasabry.oc.ui.kit.FakeKitPlatform
 import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
+import io.github.eslamasabry.oc.ui.kit.state.KitNotice
+import androidx.compose.foundation.layout.padding
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -116,5 +118,31 @@ class KitScreenGutterTest {
             assertEquals(0.dp, inner, "a part inside the gutter keeps no second page gutter")
             val row = onNodeWithTag("row").getBoundsInRoot()
             close(screen.left + gutter, row.left, "the row sits on the rail")
+        }
+
+    @Test
+    fun `W2-009 a notice set bare in a Bleed body keeps the page gutter and one padded by its screen gets no second`() =
+        runDesktopComposeUiTest(width, 800) {
+            setContent {
+                KitTheme(platform = FakeKitPlatform(), localeTag = "en") {
+                    KitScreen(topBar = { KitTopBar("Storage") }, edges = KitScreenEdges.Bleed) {
+                        Column {
+                            KitNotice("A long warning that fills its lines to the end, so its last word would touch the edge.", Modifier.testTag("bare"))
+                            KitNotice(
+                                "Padded by the screen.",
+                                Modifier.padding(horizontal = gutter).testTag("padded"),
+                            )
+                        }
+                    }
+                }
+            }
+            waitForIdle()
+            val screen = onNodeWithTag("kit-screen").getBoundsInRoot()
+            val words = onAllNodesWithTag("kit-notice-message", useUnmergedTree = true)
+            val bare = words[0].getBoundsInRoot()
+            val padded = words[1].getBoundsInRoot()
+            assertTrue(bare.right <= screen.right - gutter + 0.5.dp, "the bare notice's words end at ${bare.right}")
+            assertTrue(bare.left > screen.left + gutter, "its glyph and words start inside the gutter: ${bare.left}")
+            close(bare.left, padded.left, "a notice the screen already padded gets no second gutter")
         }
 }

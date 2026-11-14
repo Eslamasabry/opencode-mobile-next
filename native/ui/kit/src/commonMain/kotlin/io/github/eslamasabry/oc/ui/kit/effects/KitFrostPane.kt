@@ -14,7 +14,6 @@ import androidx.compose.ui.graphics.drawOutline
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.scale
-import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInWindow
@@ -24,6 +23,8 @@ import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.effects.FrostSpec
 import io.github.eslamasabry.oc.ui.kit.platform.LocalKitPlatform
 import kotlin.math.ceil
+import io.github.eslamasabry.oc.ui.kit.foundation.kitRecord
+import io.github.eslamasabry.oc.ui.kit.foundation.kitDrawLayer
 
 /*
  * Frost of what lies behind a pane, drawn with the platform's common blur (Android 12+, desktop), no lens: a glass look
@@ -76,8 +77,8 @@ internal fun Modifier.kitFrostPane(
                 val c = at[0]?.takeIf { it.isAttached }
                 if (c != null) {
                     layer.renderEffect = blur
-                    layer.record(small) { scale(k, k, Offset.Zero) { backdrop.draw(this, c) } }
-                    clipPath(clip) { scale(1f / k, 1f / k, Offset.Zero) { drawLayer(layer) } }
+                    kitRecord(layer, small) { scale(k, k, Offset.Zero) { backdrop.draw(this, c) } }
+                    clipPath(clip) { scale(1f / k, 1f / k, Offset.Zero) { kitDrawLayer(layer) } }
                 }
                 clipPath(clip) {
                     drawLiquidTint(spec, shape)

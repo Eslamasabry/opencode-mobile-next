@@ -7,6 +7,6 @@
     <string name="telemetryConsentBody">إن وافقت يرسل التطبيق أعداد استخدام وصحة مجهولة وتقارير أعطال عبر Google Firebase. يمكنك تغيير كل منها من الإعدادات › الخصوصية والبيانات.</string>
     <string name="telemetryConsentSends">يُرسل: الصفحات والميزات المستخدمة، وهل ينجح الاتصال والإرسال والإعداد، وسرعة التطبيق، ونطاقات الذاكرة والمساحة، وتقارير الأعطال. مع معرّف تثبيت عشوائي.</string>
     <string name="telemetryConsentNever">لا يُرسل أبدًا: شيفرتك ومحادثاتك وملفاتك وعناوين خوادمك ومفاتيحك. ولا معرّف إعلاني.</string>
-    <string name="telemetryConsentShare">مشاركة الاثنين</string>
+    <string name="telemetryConsentShare">مشاركة أرقام الاستخدام وتقارير الأعطال</string>
     <string name="telemetryConsentNotNow">ليس الآن</string>
 </resources>

@@ -1,6 +1,10 @@
 package io.github.eslamasabry.oc.ui.kitchat.markdown
 
 import androidx.compose.foundation.background
+import io.github.eslamasabry.oc.ui.kit.foundation.kitDressedDecoration
+import io.github.eslamasabry.oc.ui.kit.foundation.edgeColor
+import io.github.eslamasabry.oc.ui.design.style.SurfaceRole
+import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
 import androidx.compose.foundation.border
 import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.RepeatMode
@@ -554,6 +558,22 @@ public fun KitMarkdownTable(
                 }
             }
         }
+    // Find: the cells with the open search's matches tinted; the matches are counted across the cells in reading order,
+    // so one table has one current match.
+    val find = LocalKitFindMarks.current
+    val accent = colors.accent
+    val shownCells =
+        remember(cells, find, accent) {
+            if (find == null || !find.active) cells
+            else {
+                var before = 0
+                cells.map { row ->
+                    row.map { cell ->
+                        cell.withFindMarks(find, accent, before).also { before += find.ranges(cell.text).size }
+                    }
+                }
+            }
+        }
     val bodyStyle = style
     val headStyle = style.copy(fontWeight = FontWeight.SemiBold)
     // The narrowest each column may be (audit 1, item 2): its widest unbroken word plus the cell's padding. Android's
@@ -572,6 +592,7 @@ public fun KitMarkdownTable(
         }
     val scroll = rememberScrollState()
     val scope = rememberCoroutineScope()
+    val tableFrame = kitDressedDecoration(SurfaceRole.Code, KitShapeId.Square, color = Color.Transparent)
     BoxWithConstraints(modifier.fillMaxWidth()) {
         val available = constraints.maxWidth
         Box(
@@ -601,8 +622,10 @@ public fun KitMarkdownTable(
                 .semantics { collectionInfo = CollectionInfo(rows.size, columns) }
         ) {
             Layout(
-                // C-024: the table's frame is one device-pixel hairline on every side.
-                modifier = Modifier.border((1f / LocalDensity.current.density).dp, colors.hairline),
+                // C-024: the table's frame is one device-pixel hairline on every side. Brutal and Paper frame it with
+                // the style's code edge (Brutal's ink, Paper's ink rule; audit 2026-11-14), square, drawn over the
+                // header band so it reads the same width on every side.
+                modifier = tableFrame?.let { f -> f.edgeColor?.let { Modifier.border(f.edgeWidthDp.dp, it) } } ?: Modifier.border((1f / LocalDensity.current.density).dp, colors.hairline),
                 content = {
                     rows.forEachIndexed { r, row ->
                         for (c in 0 until columns) {
@@ -613,7 +636,7 @@ public fun KitMarkdownTable(
                                     else -> TextAlign.Start
                                 }
                             BasicText(
-                                cells[r][c],
+                                shownCells[r][c],
                                 Modifier.then(
                                         if (r == 0) Modifier.background(colors.surface1) // C-024: Flutter header band
                                         else Modifier
@@ -875,10 +898,14 @@ private fun MdText(
 ) {
     val inline = rememberInlineStyle()
     val sink = rememberSink(actions)
-    val text: AnnotatedString =
+    val built: AnnotatedString =
         remember(inlines, inline, actions.confirmedPaths) {
             inlineAnnotated(inlines, inline, sink) { it in actions.confirmedPaths }
         }
+    // Find: every match of the open search is tinted, the current one stronger (the kit's find marks).
+    val find = LocalKitFindMarks.current
+    val accent = LocalKitColors.current.accent
+    val text: AnnotatedString = remember(built, find, accent) { built.withFindMarks(find, accent) }
     val holder = remember { LayoutHolder() }
     val state =
         if (reveal != null && reveal.streamed)

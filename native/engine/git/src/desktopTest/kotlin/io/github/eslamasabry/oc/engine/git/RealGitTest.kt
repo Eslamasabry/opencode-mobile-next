@@ -59,6 +59,27 @@ class RealGitTest {
     }
 
     @Test
+    fun `W2-019 a missing system temp folder does not make a plain folder unreachable`() = runTest {
+        val plain = File(root, "plain folder").apply { mkdirs() }
+        val noTemp =
+            GitShell { script, timeoutMs ->
+                val process =
+                    ProcessBuilder("sh", "-c", script)
+                        .redirectErrorStream(true)
+                        .apply {
+                            environment()["HOME"] = root.absolutePath
+                            environment()["TMPDIR"] = File(root, "no such temp").absolutePath
+                            environment()["GIT_CONFIG_NOSYSTEM"] = "1"
+                        }
+                        .start()
+                val text = process.inputStream.bufferedReader().readText()
+                process.waitFor(timeoutMs, TimeUnit.MILLISECONDS)
+                GitShellReply.Output(text)
+            }
+        assertEquals(GitSnapshotResult.NotRepository, GitRepository(noTemp, plain.absolutePath).snapshot())
+    }
+
+    @Test
     fun `B-BUILD-017 snapshot handles unicode renames, untracked files and no upstream`() = runTest {
         val dir = repo("my repo")
         File(dir, "old name.md").writeText("hello\n")

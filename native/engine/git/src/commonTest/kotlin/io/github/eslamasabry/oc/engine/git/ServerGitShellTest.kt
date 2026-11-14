@@ -95,7 +95,8 @@ class ServerGitShellTest {
         assertEquals(GitShellFailure.Unsupported, reply.failure)
         assertFalse("secret" in reply.details)
         val down = shell { json("{}", HttpStatusCode.InternalServerError) }
-        assertEquals(GitShellFailure.Unavailable, assertIs<GitShellReply.Failed>(down.run("x", 1_000)).failure)
+        // A server that answered with an error is there: it refused, it is not unreachable.
+        assertEquals(GitShellFailure.Refused, assertIs<GitShellReply.Failed>(down.run("x", 1_000)).failure)
     }
 
     @Test

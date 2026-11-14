@@ -82,6 +82,9 @@ import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceInput
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappable
 import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
 import io.github.eslamasabry.oc.ui.kit.foundation.kitSurfaceLook
+import io.github.eslamasabry.oc.ui.kit.foundation.kitDressedLook
+import io.github.eslamasabry.oc.ui.kit.foundation.kitSurface
+import androidx.compose.ui.graphics.compositeOver
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcon
 import io.github.eslamasabry.oc.ui.kit.icon.KitIconSize
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
@@ -191,7 +194,8 @@ public fun KitComposerBox(
         val liquid = kitLiquidFace(LiquidRole.Composer, LocalKitLiquidChrome.current, look.shape, join = joinBody)
         val slab = kitComposerSlab()
         // Nothing inside the box is glass of its own: its chips and Stop are parts of this one pane.
-        CompositionLocalProvider(LocalKitLiquidChrome provides null, LocalKitComposerSlab provides slab) {
+        // Every part inside is nested in the box's outline (Brutal: edged, never a second shadow).
+        CompositionLocalProvider(LocalKitLiquidChrome provides null, LocalKitComposerSlab provides slab, io.github.eslamasabry.oc.ui.kit.foundation.LocalKitNested provides true) {
         // The slab answers a finger on its controls: a soft light under it, a brighter edge.
         val touch = io.github.eslamasabry.oc.ui.kit.effects.rememberKitLiquidTouch(on = liquid != null)
         Column(
@@ -296,13 +300,30 @@ public fun KitComposerChip(
             LocalKitComposerSlab.current -> colors.text1.copy(alpha = SLAB_CHIP_TINT)
             else -> colors.surface3
         }
+    // Brutal and Paper dress the chip as a control nested in the box's outline (audit 2026-11-14: the model chip stayed
+    // a soft grey capsule beside Brutal's ink box): the style's edge and corner, no shadow of its own. An "on" chip keeps
+    // its accent tint as its fill. Every other style keeps the chip's own face below.
+    val dressed =
+        kitDressedLook(
+            KitSurfaceInput(
+                role = SurfaceRole.Control,
+                shape = if (wordless && icon != null) KitShapeId.Circle else KitShapeId.Pill,
+                level = SurfaceLevel.Surface2,
+                color = if (active) colors.accent.copy(alpha = ACTIVE_CHIP_TINT).compositeOver(colors.surface2) else null,
+                nested = true,
+            )
+        )
     if (wordless && icon != null) {
         KitTappable(
             onClick = onClick,
             modifier = modifier.semantics { contentDescription = semanticsLabel ?: label },
             shape = KitShapeId.Circle,
         ) {
-            Box(Modifier.size(32.dp).clip(CircleShape).background(face, CircleShape), contentAlignment = Alignment.Center) {
+            Box(
+                Modifier.size(32.dp).then(dressed?.let { Modifier.kitSurface(it) } ?: Modifier.clip(CircleShape).background(face, CircleShape))
+                    .testTag(COMPOSER_CHIP_FACE_TAG),
+                contentAlignment = Alignment.Center,
+            ) {
                 KitIcon(icon, size = KitIconSize.Small, tone = if (active) TextTone.Accent else TextTone.Secondary)
             }
         }
@@ -320,8 +341,8 @@ public fun KitComposerChip(
     ) {
         Row(
             Modifier.heightIn(min = 32.dp)
-                .clip(CircleShape)
-                .background(face, RoundedCornerShape(50))
+                .then(dressed?.let { Modifier.kitSurface(it) } ?: Modifier.clip(CircleShape).background(face, RoundedCornerShape(50)))
+                .testTag(COMPOSER_CHIP_FACE_TAG)
                 .padding(horizontal = Space.S3.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(Space.S1.dp),
@@ -408,6 +429,8 @@ public fun KitComposerSend(
                 ownFill = if (on) colors.accent else colors.surface3,
                 color = if (on) colors.accent else null,
                 action = true,
+                // Inside the box's outline: the style's edge, no second shadow (Brutal).
+                nested = true,
             )
         )
     val ink = if (on) look.words ?: colors.onAccent else colors.text3
@@ -560,6 +583,12 @@ private const val RING = 44
 
 /** The longest a composer chip's words grow before they end in "…" (the model's name stays readable). */
 private const val COMPOSER_CHIP_WORDS_MAX = 180
+
+/** The test handle of a message-box chip's visible face (inside its 48 dp target). */
+public const val COMPOSER_CHIP_FACE_TAG: String = "kit-composer-chip-face"
+
+/** An "on" chip's accent tint over the box, where the style dresses the chip (Brutal, Paper). */
+private const val ACTIVE_CHIP_TINT = .22f
 
 /** A slab chip's face: the words' ink at this alpha over the glass. */
 private const val SLAB_CHIP_TINT = .08f

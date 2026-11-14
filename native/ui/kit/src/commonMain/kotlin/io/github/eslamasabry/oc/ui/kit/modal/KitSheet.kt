@@ -1,6 +1,10 @@
 package io.github.eslamasabry.oc.ui.kit.modal
 
 import io.github.eslamasabry.oc.ui.kit.frame.kitKeyboardPadding
+import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceInput
+import io.github.eslamasabry.oc.ui.kit.foundation.kitDressedLook
+import io.github.eslamasabry.oc.ui.design.style.SurfaceRole
+import io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.platform.LocalLayoutDirection
 import io.github.eslamasabry.oc.ui.kit.foundation.kitPaneInset
@@ -52,6 +56,9 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.input.pointer.util.VelocityTracker
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
@@ -64,6 +71,7 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalDensity
@@ -154,6 +162,21 @@ public object SheetLayout {
     /** A content sheet never covers more than 90 % of the window's height. */
     public const val CONTENT_MAX_SHARE: Float = 0.9f
 
+    /** How far below the page's top chrome a tall sheet's top rests at the least (dp). */
+    public const val BELOW_CHROME_DP: Int = Space.S2
+
+    /**
+     * The kit's tall detent (audit 2, 2026-11-14): a Full sheet, and the cap of a content sheet, in a window [window]
+     * tall whose page's top chrome (status bar, bar, its second row) ends [chromeBottom] from the window's top. At most
+     * [CONTENT_MAX_SHARE] of the window, and its top at least [BELOW_CHROME_DP] below the chrome, so it rests clearly
+     * below the bar's words, never through them. Null chrome (no page said where it ends): the share alone.
+     */
+    public fun tallHeight(window: Dp, chromeBottom: Dp?): Dp {
+        val share = window * CONTENT_MAX_SHARE
+        if (chromeBottom == null) return share
+        return minOf(share, (window - chromeBottom - BELOW_CHROME_DP.dp).coerceAtLeast(0.dp))
+    }
+
     public fun placement(windowWidthDp: Float, height: KitSheetHeight): KitSheetPlacement =
         when {
             windowWidthDp < EXPANDED_FROM_DP -> KitSheetPlacement.Bottom
@@ -199,6 +222,26 @@ public class KitSheetHostState internal constructor() {
 
     internal fun hideDialog(d: DialogEntry) {
         if (dialog === d) dialogShown.targetState = false
+    }
+
+    /**
+     * Where the page's top chrome ends (root px; NaN: no page has said), so a tall sheet rests below the bar's words and
+     * never through them (audit 2, 2026-11-14). The page that said it last holds it until it leaves.
+     */
+    internal var chromeBottom: Float by mutableFloatStateOf(Float.NaN)
+        private set
+
+    private var chromeOwner: Any? = null
+
+    internal fun holdChrome(owner: Any, bottom: Float) {
+        chromeOwner = owner
+        if (chromeBottom != bottom) chromeBottom = bottom
+    }
+
+    internal fun releaseChrome(owner: Any) {
+        if (chromeOwner !== owner) return
+        chromeOwner = null
+        chromeBottom = Float.NaN
     }
 
     internal fun releaseDialog(d: DialogEntry) {
@@ -491,21 +534,26 @@ private fun SheetLayer(state: KitSheetHostState) {
                 .graphicsLayer { alpha = 1f - drag.fraction() }
                 .background(colors.scrim)
                 .testTag("kit-sheet-scrim")
-                .pointerInput(
-                entry
-            ) {
-                detectTapGestures { entry.requestDismiss() }
-            }
+                // Cut audit 2, finding 11: from the moment the sheet is dismissed (scrim, Back, a choice) its exit is
+                // picture only. A scrim kept taking taps while it faded, and on a busy phone that lasted seconds: the
+                // first tap on the page after a sheet closed did nothing.
+                .then(if (state.shown.targetState) Modifier.pointerInput(entry) { detectTapGestures { entry.requestDismiss() } } else Modifier)
         )
     }
-    BoxWithConstraints(Modifier.fillMaxSize()) {
+    val hostTop = remember { floatArrayOf(0f) }
+    BoxWithConstraints(Modifier.fillMaxSize().onGloballyPositioned { hostTop[0] = it.positionInRoot().y }) {
         // A growing sheet keeps one place for both of its heights.
         val placement =
             SheetLayout.placement(
                 maxWidth.value,
                 if (entry.grows) KitSheetHeight.Half else entry.height,
             )
-        val maxSheet = maxHeight * SheetLayout.CONTENT_MAX_SHARE
+        // Audit 2 (2026-11-14: the tall model sheet's top edge sliced the bar's subtitle): a sheet's resting top lies
+        // clearly below the page's top chrome, never through a line of its words (SheetLayout.tallHeight).
+        val density = LocalDensity.current
+        val chromeDp = with(density) { (state.chromeBottom - hostTop[0]).toDp() }
+        val maxSheet = SheetLayout.tallHeight(maxHeight, if (state.chromeBottom.isNaN()) null else chromeDp)
+        val centredMax = maxHeight * SheetLayout.CONTENT_MAX_SHARE
         val half = maxHeight * 0.5f
         val growth = sheetGrowth(entry, half, maxSheet)
         when (placement) {
@@ -532,6 +580,12 @@ private fun SheetLayer(state: KitSheetHostState) {
                                     Modifier.grownHeight(growth)
                                 entry.height == KitSheetHeight.Content ->
                                     Modifier.heightIn(max = maxSheet)
+                                // Finding 16 (cut audit 2): a Half sheet is at least half the window and grows to
+                                // show its whole body up to the content cap, so no section is cut under the pinned
+                                // actions (the agent sheet's Mode heading showed above Done with its control hidden
+                                // in Solid, and the whole section hid below the fold in Glass's taller panel). Only a
+                                // body taller than the cap scrolls. A body that fills keeps the exact half.
+                                entry.height == KitSheetHeight.Half && !entry.fills -> Modifier.heightIn(min = half, max = maxSheet)
                                 entry.height == KitSheetHeight.Half -> Modifier.height(half)
                                 else -> Modifier.height(maxSheet)
                             }
@@ -547,6 +601,7 @@ private fun SheetLayer(state: KitSheetHostState) {
                                 .clip(KitShapeId.Sheet.shape()),
                             handle = true,
                             shape = KitShapeId.Sheet,
+                            open = state.shown.targetState,
                             drag = drag,
                             stillShown = { state.shown.targetState },
                             shrink = { LiquidMotion.shrinkFraction(back.value()) },
@@ -572,12 +627,14 @@ private fun SheetLayer(state: KitSheetHostState) {
                                 .then(
                                     if (entry.grows && entry.height != KitSheetHeight.Content)
                                         Modifier.grownHeight(growth)
-                                    else Modifier.heightIn(max = maxSheet)
+                                    // A centred panel sits in the middle of a wide window, away from the chrome.
+                                    else Modifier.heightIn(max = centredMax)
                                 )
                                 .predictiveShrink(back, TransformOrigin.Center)
                                 .clip(KitShapeId.Dialog.shape()),
                             handle = false,
                             shape = KitShapeId.Dialog,
+                            open = state.shown.targetState,
                             shrink = { LiquidMotion.shrinkFraction(back.value()) },
                         )
                     }
@@ -599,6 +656,7 @@ private fun SheetLayer(state: KitSheetHostState) {
                                 .predictiveShrink(back, TransformOrigin(if (endSign > 0) 1f else 0f, 0.5f)),
                             handle = false,
                             shape = KitShapeId.Square,
+                            open = state.shown.targetState,
                             shrink = { LiquidMotion.shrinkFraction(back.value()) },
                         )
                     }
@@ -649,6 +707,17 @@ internal fun Modifier.predictiveShrink(back: KitBackProgress, origin: TransformO
     }
 
 /**
+ * A modal that is leaving is picture only: its panel takes the presses over itself (so nothing in it acts while it
+ * slides or fades away) and its scrim takes none at all, so every touch beside it is the page's at once.
+ */
+internal fun Modifier.modalInert(): Modifier =
+    pointerInput(Unit) {
+        awaitPointerEventScope {
+            while (true) awaitPointerEvent(PointerEventPass.Initial).changes.forEach { it.consume() }
+        }
+    }
+
+/**
  * The Glass face every modal panel shares (KitSheet's panels and KitDialogFrame's bottom and centred faces): liquid glass
  * over the window's page source within the window's liquid budget, else the frosted pane; null in every other style, so
  * each caller keeps its own solid face pixel for pixel. [shrink] is the predictive back gesture's way into frost.
@@ -663,6 +732,8 @@ private fun SheetPanel(
     modifier: Modifier,
     handle: Boolean,
     shape: KitShapeId,
+    /** False from the moment the sheet is dismissed: its exit is picture only ([modalInert]). */
+    open: Boolean = true,
     drag: SheetDrag? = null,
     stillShown: () -> Boolean = { true },
     /** How far the predictive back gesture has shrunk the panel (0–1): liquid glass eases into frost meanwhile. */
@@ -672,11 +743,17 @@ private fun SheetPanel(
     val tokens = LocalKitTokens.current
     // Glass: the sheet is liquid glass over the page (Android 13+, not held), else a frosted pane (opaque over the page
     // whenever nothing blurs); every other style keeps surface2.
-    val face = kitModalGlassFace(shape, shrink) ?: Modifier.background(colors.surface2)
+    // Brutal and Paper dress the panel (audit 2026-11-14): the style's edge on the paper face, Brutal's softened and
+    // Paper's square corners; Brutal casts no shadow from a sheet (it lies on the scrim).
+    val face =
+        kitModalGlassFace(shape, shrink)
+            ?: kitDressedLook(KitSurfaceInput(role = SurfaceRole.Sheet, shape = shape, level = SurfaceLevel.Surface2))?.modifier
+            ?: Modifier.background(colors.surface2)
     Column(
         modifier
             .then(face)
-            .pointerInput(Unit) { detectTapGestures {} } // taps on the sheet never reach the scrim
+            // Taps on the sheet never reach the scrim; a leaving sheet's controls no longer act.
+            .then(if (open) Modifier.pointerInput(Unit) { detectTapGestures {} } else Modifier.modalInert())
             .semantics {
                 paneTitle = entry.title
                 isTraversalGroup = true

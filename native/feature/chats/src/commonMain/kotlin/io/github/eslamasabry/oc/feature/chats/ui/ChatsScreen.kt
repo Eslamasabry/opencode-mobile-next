@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.chats.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.KitReportPageScroll
 import io.github.eslamasabry.oc.ui.kit.frame.kitScreenChromePadding
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import io.github.eslamasabry.oc.ui.design.layout.Layout
@@ -332,7 +333,7 @@ public fun ChatsScreen(
         // between list items put every row 4 px lower than the one before it.
         val list = rememberLazyListState()
         LazyColumn(
-            state = list,
+            state = list.also { KitReportPageScroll(it) },
             modifier = Modifier.kitGlassSource(listGlass),
             // The calm empty page fills the room and keeps its own end space, so it never scrolls by that much.
             // The foot bar is the frame's own block under the list; under Glass the list runs on under its pane and the
@@ -680,7 +681,7 @@ private fun ConnectionStatusPill(connection: HomeConnectionUi, actions: ChatsAct
     )
     val switchLabel = stringResource(Res.string.serverSwitcherOpen)
     KitStatusPill(
-        label = connection.server,
+        label = serverNameShown(connection.server),
         tone = when (state) {
             HomeConnectionState.Connected -> KitConnectionTone.Ok
             HomeConnectionState.Connecting -> KitConnectionTone.Working
@@ -688,7 +689,7 @@ private fun ConnectionStatusPill(connection: HomeConnectionUi, actions: ChatsAct
         },
         // The dot says connected; a word only when it is not.
         word = status.takeUnless { state == HomeConnectionState.Connected },
-        spoken = "${connection.server}, $status, $switchLabel",
+        spoken = "${serverNameShown(connection.server)}, $status, $switchLabel",
         onClickLabel = switchLabel,
         // F: lib/ui/screens/home_screen.dart:434-470: the one-tap switcher, not the Servers page.
         onClick = actions::openServerSwitcher,
@@ -964,7 +965,7 @@ private fun ConversationRow(
             }
     val project = row.project.takeIf { flags.showProject && it.isNotBlank() }
     // No line to show: the row says where it lives instead (its project when no dot names it, and its server).
-    val meta = HomePreviewRules.fallback(row.project, row.server, projectShown = project != null)
+    val meta = HomePreviewRules.fallback(row.project, serverNameShownOrNull(row.server), projectShown = project != null)
     val permission = row.permission
     val question = row.question
     val form = row.form

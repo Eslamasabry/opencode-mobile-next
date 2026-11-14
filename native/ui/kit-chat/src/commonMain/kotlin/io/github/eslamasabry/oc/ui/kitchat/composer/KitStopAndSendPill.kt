@@ -1,6 +1,11 @@
 package io.github.eslamasabry.oc.ui.kitchat.composer
 
 import androidx.compose.foundation.background
+import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceInput
+import io.github.eslamasabry.oc.ui.kit.foundation.kitDressedLook
+import io.github.eslamasabry.oc.ui.kit.foundation.kitSurface
+import io.github.eslamasabry.oc.ui.design.style.SurfaceRole
+import io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -45,6 +50,11 @@ public fun KitStopAndSendPill(label: String, onClick: () -> Unit, modifier: Modi
     val tokens = LocalKitTokens.current
     val style = LocalKitTypography.current.style(TypeRole.Body).copy(color = colors.onAttentionFill)
     val shape = KitShapeId.Pill.shape()
+    // Brutal and Paper: a control nested in the box's outline, its attention fill kept, the style's edge and corner.
+    val dressed =
+        kitDressedLook(
+            KitSurfaceInput(role = SurfaceRole.Control, shape = KitShapeId.Pill, level = SurfaceLevel.Surface2, color = colors.attentionFill, action = true, nested = true)
+        )
     KitTappable(
         onClick = onClick,
         modifier = modifier.testTag(PILL_TAG).semantics { contentDescription = label },
@@ -54,7 +64,7 @@ public fun KitStopAndSendPill(label: String, onClick: () -> Unit, modifier: Modi
         Row(
             Modifier.clearAndSetSemantics {}
                 .heightIn(min = PILL_HEIGHT_DP.dp)
-                .background(colors.attentionFill, shape)
+                .then(dressed?.let { Modifier.kitSurface(it) } ?: Modifier.background(colors.attentionFill, shape))
                 .padding(horizontal = Space.S4.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(Space.S2.dp),

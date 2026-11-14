@@ -1779,7 +1779,6 @@ chatUiDraftsQueued	0fcf93c8dd
 chatUiDurationMinutesSeconds	fd882d5b11
 chatUiDurationSeconds	45ee867035
 chatUiEachAttachmentMustBe10MBOr	8520aa6253
-chatUiEarlierMessageCount	9d95c1248e
 chatUiEdit	c88ae9f64f
 chatUiEditDraft	7e3755d590
 chatUiEditTheCurrentPromptInAFocused	a7042fe7d3
@@ -1943,6 +1942,7 @@ chatUiShareSession	0725b586b0
 chatUiShareThisSession	e28373f2e2
 chatUiSharedAnyoneWithTheLinkCanView	8159e5c9bf
 chatUiShowAllSubagentSessions	f6b4d03e47
+chatUiShowEarlierMessages	dea0bcdeea
 chatUiShowTimestamps	a22a80be61
 chatUiSkill	d0d5e68e24
 chatUiSkills	9714c1cf73
@@ -4811,6 +4811,7 @@ gitProblemNetwork	64bea70c4d
 gitProblemNoPermission	fda1a3f2bd
 gitProblemNoRemote	713e2307b5
 gitProblemNoUpstream	97835e8971
+gitProblemNoWorkingSpace	eab39a271e
 gitProblemNotARepository	ef3e690f2b
 gitProblemNothingSelected	9af1db5537
 gitProblemNothingToCommit	abc9ed3ea3
@@ -4822,6 +4823,7 @@ gitProblemRemoteExists	a1ee176692
 gitProblemRemoteNotFound	ccbacbb26f
 gitProblemRepositoryLocked	3f63254425
 gitProblemServerCannotRunCommands	4373b3c6f7
+gitProblemServerRefusedCommand	727051ac50
 gitProblemSigningFailed	9a49714848
 gitProblemTimedOut	c4d97e8931
 gitProblemUnknown	ea8b6e83d3
@@ -12788,12 +12790,12 @@ teamWorkSheetNotOnHost	af34a83f34
 teamWorkSheetOpenAgentConversation	4e9f65a018
 teamWorkSheetOpenStepConversation	37cefe0fe9
 telemetryConsentBody	0dc3e8cfe5
-telemetryConsentChoose	5c136ce46a
+telemetryConsentChoose	b555f31376
 telemetryConsentNever	e6a0d97516
 telemetryConsentNotNow	7212523f9d
 telemetryConsentSave	ffac864ef1
 telemetryConsentSends	a5de61b48d
-telemetryConsentShare	34fc30842f
+telemetryConsentShare	3c4ed36fc5
 telemetryConsentTitle	34baa887e3
 telemetryCrashReportsBody	4013fb6fee
 telemetryCrashReportsTitle	08563cd497
@@ -13272,6 +13274,7 @@ transcriptFindHint	35e5badf88
 transcriptFindNext	2e9895f34e
 transcriptFindNone	ac6088ef4f
 transcriptFindPartial	c3a5181a26
+transcriptFindPosition	833cebab86
 transcriptFindPrevious	9e8b418ce8
 transcriptFindReasoning	99d39232fd
 transcriptFindStopSearchingAll	6c7ad1bfa5

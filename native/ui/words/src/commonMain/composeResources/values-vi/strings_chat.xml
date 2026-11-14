@@ -434,9 +434,6 @@
         <item quantity="other">%1$s tham chiếu sẽ được thêm dưới dạng văn bản khi bạn gửi. Không được lưu cùng bản nháp.</item>
     </plurals>
     <string name="chatUiAttachedCount">Đã đính kèm %1$s</string>
-    <plurals name="chatUiEarlierMessageCount">
-        <item quantity="other">%1$s tin nhắn trước đó</item>
-    </plurals>
     <string name="chatUiTokenCount">%1$s token</string>
     <string name="chatUiPositionOfTotal">%1$s trên %2$s</string>
     <string name="chatUiSubagentCount">Cuộc trò chuyện được giao · %1$s</string>
@@ -1144,4 +1141,6 @@
     <string name="chatStepMalformedCall">Tác nhân đã yêu cầu sai cách nên chưa có gì chạy. Hãy bảo nó thử lại.</string>
     <string name="chatUiRetryWhyUnreachable">Không kết nối được với nhà cung cấp mô hình. Hãy kiểm tra kết nối của điện thoại này.</string>
     <string name="chatUiRetryWhyBusy">Nhà cung cấp mô hình hiện chưa phản hồi.</string>
+    <string name="transcriptFindPosition">%1$s trên %2$s</string>
+    <string name="chatUiShowEarlierMessages">Hiện các tin nhắn trước đó</string>
 </resources>

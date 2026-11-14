@@ -193,7 +193,8 @@ class AuditClassGuardDTest {
             val b = onNodeWithTag("sel", useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
             val px = onRoot().captureToImage().toPixelMap()
             val page = px[2, 2]
-            val y = (b.top + 2 * density.density).roundToInt()
+            // The face keeps ChosenFaceRules.TOP_INSET_DP from the row's top (cut audit 2, finding 3): sample just under it.
+            val y = (b.top + (io.github.eslamasabry.oc.ui.kit.row.ChosenFaceRules.TOP_INSET_DP + 2) * density.density).roundToInt()
             val xs = (0 until px.width).filter { !same(px[it, y], page) }
             var count = 0
             for (x in (b.right - 56 * density.density).roundToInt() until b.right.roundToInt())

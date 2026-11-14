@@ -83,7 +83,14 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitMotion
  * (hook H3, null = the part's own), [faceShift] sinks the face while pressed (hook H2).
  */
 @Immutable
-public data class KitSurfaceLook(val modifier: Modifier, val words: Color?, val shape: Shape, val paints: Boolean = false)
+public data class KitSurfaceLook(
+    val modifier: Modifier,
+    val words: Color?,
+    val shape: Shape,
+    val paints: Boolean = false,
+    /** The style settled on a decoration of its own for this surface (not the part's own fill). */
+    val dressed: Boolean = false,
+)
 
 /**
  * Paints [look] (its fill, edge and shadows, all on [KitSurfaceLook.shape]) and clips what follows (the part's own
@@ -123,7 +130,24 @@ public data class KitSurfaceInput(
      * must not be run through the Corners knob a second time.
      */
     val exactRadius: Dp? = null,
+    /** Inside another outlined surface (a chip or disc in the message box): the style's edge, never a second shadow. */
+    val nested: Boolean = false,
+    /**
+     * The part draws its own face unless the style dresses every part (`StyleTokens.dressesOwnLooks`: Brutal, Paper);
+     * use [kitDressedLook], which answers null where the part keeps its own.
+     */
+    val ownLook: Boolean = false,
+    /** Per-corner token radii (a bubble's tail corner), each run through the Corners knob; overrides [shape]'s radius. */
+    val corners: Radii? = null,
 )
+
+/**
+ * True inside a pane a style dresses with its own outline (the message box, a request card): every surface inside is
+ * nested ([KitSurfaceInput.nested]), so it takes the style's edge but never casts a second shadow (Brutal; shadows do
+ * not stack inside a pane). Styles that do not read nesting are unchanged.
+ */
+public val LocalKitNested: androidx.compose.runtime.ProvidableCompositionLocal<Boolean> =
+    androidx.compose.runtime.staticCompositionLocalOf { false }
 
 private fun Argb.faded(a: Float): Argb = withAlpha(alpha / 255f * a)
 
@@ -152,7 +176,7 @@ public fun kitSurfaceLook(input: KitSurfaceInput): KitSurfaceLook {
     val sheet = input.shape == KitShapeId.Sheet && !input.roundSheetBottom
     // A pane's corners grow with the style's pane inset (Glass, owner 2026-11-09), as its named shape does.
     // The look's shape is the named shape itself unless the part gives a radius or rounds a sheet's bottom.
-    val named = input.radius == null && input.exactRadius == null && !(input.shape == KitShapeId.Sheet && input.roundSheetBottom)
+    val named = input.radius == null && input.exactRadius == null && input.corners == null && !(input.shape == KitShapeId.Sheet && input.roundSheetBottom)
     // A named sheet's Sharp corner is the named shape's (KitShapes: at most 4 dp, twice the style's sharp radius), so
     // the decoration's corners and the shape a part clips to stay one (2026-11-13).
     val paneSharp = if (named && input.shape == KitShapeId.Sheet) minOf(4f, sharp * 2f) else sharp
@@ -160,7 +184,9 @@ public fun kitSurfaceLook(input: KitSurfaceInput): KitSurfaceLook {
         if (input.exactRadius != null) base
         else if (input.shape.isPane) StyleResolver.paneCorner(base, style.knobs.corners, style.spec.tokens.copy(sharpRadius = paneSharp))
         else StyleResolver.corner(base, style.knobs.corners, sharp)
-    val radii = if (sheet) Radii(r, r, 0f, 0f) else Radii.all(if (input.shape == KitShapeId.Square) 0f else r)
+    val radii =
+        input.corners?.map { StyleResolver.corner(it, style.knobs.corners, sharp) }
+            ?: if (sheet) Radii(r, r, 0f, 0f) else Radii.all(if (input.shape == KitShapeId.Square) 0f else r)
     val shape =
         if (named) {
             input.shape.shape()
@@ -184,6 +210,7 @@ public fun kitSurfaceLook(input: KitSurfaceInput): KitSurfaceLook {
             disabled = input.disabled,
             withinGroup = input.withinGroup,
             action = input.action,
+            nested = input.nested || LocalKitNested.current,
             look = if (style.style == Style.Glass) io.github.eslamasabry.oc.ui.kit.effects.kitGlassLook().spec else io.github.eslamasabry.oc.ui.design.style.GlassLook.Default,
         )
     val isGlass = style.style == Style.Glass
@@ -192,8 +219,13 @@ public fun kitSurfaceLook(input: KitSurfaceInput): KitSurfaceLook {
     // Glass's in-flow panes are clear frosted glass where they blur a picture and nothing holds them (owner 2026-11-08);
     // floating parts and sheets resolve as before.
     val clear = isGlass && blurs && kitClearPanesOn()
-    val resolved = remember(request, style, clear) { if (clear) GlassSpec.resolveClear(request) else style.spec.resolve(request) }
-    val words = remember(request, style) { style.spec.onColor(request)?.toColor() }
+    // A part with a look of its own keeps it unless the style dresses every part (Brutal, Paper).
+    val keepsOwn = input.ownLook && !style.spec.tokens.dressesOwnLooks
+    val resolved =
+        remember(request, style, clear, keepsOwn) {
+            if (keepsOwn) null else if (clear) GlassSpec.resolveClear(request) else style.spec.resolve(request)
+        }
+    val words = remember(request, style, keepsOwn) { if (keepsOwn) null else style.spec.onColor(request)?.toColor() }
     val glass = isGlass && resolved != null
     // Glass: the pane thickens until its words read as on the Solid surface it stands for, over the ground and, while
     // it blurs a picture, over the picture's spots (GlassFinish; Dart thickenedOver, kit_surface_look.dart:814-889). A
@@ -218,6 +250,9 @@ public fun kitSurfaceLook(input: KitSurfaceInput): KitSurfaceLook {
     val ownFill = input.ownFill?.let { if (input.faceAlpha >= 1f) it else it.copy(alpha = it.alpha * input.faceAlpha) }
     val plain = SurfaceDecoration(radii = radii, circle = input.shape == KitShapeId.Circle, fill = ownFill?.toArgb())
     val shown = rememberSurfaceFade(decoration, plain, style.style)
+    // A style that squares a round control (Paper's Send, mic, icon discs) clips it square too: the face and the clip a
+    // part takes from the look stay one shape (a square disc under a round clip lost its corners).
+    val faceShape = if (decoration != null && input.shape == KitShapeId.Circle && !decoration.circle) decoration.shape() else shape
     val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
     if (shown == null) {
         if (decoration == null) {
@@ -227,14 +262,52 @@ public fun kitSurfaceLook(input: KitSurfaceInput): KitSurfaceLook {
         }
         val sink = if (decoration.faceShiftDp > 0f) Modifier.graphicsLayer { translationY = decoration.faceShiftDp * density } else Modifier
         val face = if (glass) frost.kitGlassFace(decoration) else Modifier.kitDecorated(decoration, rtl)
-        return KitSurfaceLook(face.then(sink), words, shape, decoration.paints())
+        return KitSurfaceLook(face.then(sink), words, faceShape, decoration.paints(), dressed = true)
     }
     // Mid-fade: the in-between look, painted the Glass way when either end is Glass.
     val (mid, glassy) = shown
     val sink = if (mid.faceShiftDp > 0f) Modifier.graphicsLayer { translationY = mid.faceShiftDp * density } else Modifier
     val face = if (glassy) frost.kitGlassFace(mid) else Modifier.kitDecorated(mid, rtl)
-    return KitSurfaceLook(face.then(sink), words, shape, mid.paints() || (decoration ?: plain).paints())
+    return KitSurfaceLook(face.then(sink), words, faceShape, mid.paints() || (decoration ?: plain).paints(), dressed = decoration != null)
 }
+
+/**
+ * The style's face for a part that otherwise draws a look of its own (the jump pill, the person's bubble, code, menus,
+ * the message box's chips): non-null only where the style dresses every part (`StyleTokens.dressesOwnLooks`: Brutal's
+ * ink edge and hard shadow, Paper's rules and square corners), so one screen reads as one school. Null keeps the part's
+ * own look pixel for pixel (Solid, Soft, Glass, Signal). The [input]'s own fill is ignored: the part draws it itself.
+ */
+@Composable
+public fun kitDressedLook(input: KitSurfaceInput): KitSurfaceLook? =
+    kitSurfaceLook(input.copy(ownLook = true, ownFill = null)).takeIf { it.dressed }
+
+/**
+ * The style's decoration as data, for a part that draws its own frame by hand (a code block's open-sided chunks, a
+ * table's grid, a diff's face): the fill, edge and corners the style gives a [role] surface of [shape] with the part's
+ * own [color], where the style dresses every part ([kitDressedLook]); null keeps the part's own look. No fade.
+ */
+@Composable
+public fun kitDressedDecoration(role: SurfaceRole, shape: KitShapeId, level: SurfaceLevel = SurfaceLevel.Surface1, color: Color? = null): SurfaceDecoration? {
+    val style = LocalKitStyle.current
+    if (!style.spec.tokens.dressesOwnLooks) return null
+    val roles = LocalKitRoles.current
+    val r = StyleResolver.corner(shape.radiusDp(), style.knobs.corners, style.spec.tokens.sharpRadius)
+    val request =
+        SurfaceRequest(
+            roles = roles,
+            role = role,
+            knobs = style.knobs,
+            level = level,
+            radii = Radii.all(if (shape == KitShapeId.Square) 0f else r),
+            circle = shape == KitShapeId.Circle,
+            color = color?.toArgb(),
+        )
+    return remember(request, style) { style.spec.resolve(request) }
+}
+
+/** The decoration's edge as one colour (its start), or null when it draws none. */
+public val SurfaceDecoration.edgeColor: Color?
+    get() = if (edgeWidthDp > 0f) (edgeStart ?: edgeEnd)?.let { Color(it.v) } else null
 
 private fun SurfaceDecoration.paints(): Boolean =
     fill?.let { it.v ushr 24 != 0 } == true ||

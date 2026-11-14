@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.team.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageListState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -215,6 +216,7 @@ private fun Page(state: FleetRunState, actions: FleetRunActions, merge: FleetMer
         Modifier.fillMaxSize().testTag("fleet-run"),
         contentPadding = PaddingValues(top = Space.S2.dp, bottom = Space.S6.dp),
         verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
+        state = kitPageListState(),
     ) {
         if (ui.stale) item(key = "stale") { FleetStaleNotice(ui.readAtMs, state.nowMs, "fleet-run-stale", actions::refresh) }
         if (ui.questions.isNotEmpty()) {

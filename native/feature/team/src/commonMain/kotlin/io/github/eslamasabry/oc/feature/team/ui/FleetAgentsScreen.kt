@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.team.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageListState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -72,6 +73,7 @@ public fun FleetAgentsScreen(state: FleetAgentsState, actions: FleetAgentsAction
                     Modifier.fillMaxSize().testTag("fleet-agents"),
                     contentPadding = PaddingValues(top = Space.S2.dp, bottom = Space.S6.dp),
                     verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
+                    state = kitPageListState(),
                 ) {
                     if (ui.stale) {
                         item(key = "stale") { FleetStaleNotice(ui.readAtMs, state.nowMs, "fleet-agents-stale", actions::refresh) }

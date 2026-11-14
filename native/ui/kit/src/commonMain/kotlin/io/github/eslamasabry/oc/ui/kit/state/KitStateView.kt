@@ -318,7 +318,7 @@ public fun KitStateView(
         val bounded = constraints.hasBoundedHeight
         Box(
             Modifier.fillMaxWidth()
-                .then(if (bounded) Modifier.verticalScroll(rememberScrollState()) else Modifier)
+                .then(if (bounded) Modifier.verticalScroll(io.github.eslamasabry.oc.ui.kit.frame.kitPageScrollState()) else Modifier)
                 .heightIn(min = if (bounded) maxHeight else 0.dp),
             contentAlignment = Alignment.Center,
         ) {
@@ -372,7 +372,7 @@ private fun CalmState(
         val end = Space.S4.dp + if (bounded) inset else 0.dp
         Column(
             Modifier.fillMaxWidth()
-                .then(if (bounded) Modifier.verticalScroll(rememberScrollState()) else Modifier)
+                .then(if (bounded) Modifier.verticalScroll(io.github.eslamasabry.oc.ui.kit.frame.kitPageScrollState()) else Modifier)
                 .heightIn(min = if (bounded) maxHeight else 0.dp)
                 .padding(bottom = end)
                 .padding(horizontal = kitPageGutter())

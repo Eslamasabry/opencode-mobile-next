@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.servers.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageScrollState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
@@ -52,7 +53,7 @@ public fun ServerSetupScreen(state: ServerSetupUi, actions: ServerSetupActions) 
         edges = KitScreenEdges.Bleed,
     ) {
         Column(
-            Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(Space.S3.dp),
+            Modifier.fillMaxSize().verticalScroll(kitPageScrollState()).padding(Space.S3.dp),
             verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
         ) {
             KitNotice(stringResource(Res.string.secSetupReadOnly))

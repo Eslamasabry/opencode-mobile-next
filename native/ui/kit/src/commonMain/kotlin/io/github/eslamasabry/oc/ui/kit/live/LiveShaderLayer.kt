@@ -21,12 +21,13 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.graphics.drawscope.DrawScope
-import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.compose.ui.graphics.rememberGraphicsLayer
 import io.github.eslamasabry.oc.ui.kit.platform.LocalKitPlatform
 import kotlin.math.floor
 import kotlin.math.max
 import kotlin.math.roundToInt
+import io.github.eslamasabry.oc.ui.kit.foundation.kitRecord
+import io.github.eslamasabry.oc.ui.kit.foundation.kitDrawLayer
 
 /**
  * Draws [look]'s shader as one rect over the whole node, in its own layer, at the look's own resolution
@@ -117,7 +118,7 @@ internal fun rememberLiveShaderBackdrop(
                 reduced.pivotOffset = Offset.Zero
                 reduced.scaleX = size.width / sw
                 reduced.scaleY = size.height / sh
-                reduced.record(Density(density), LayoutDirection.Ltr, IntSize(sw, sh)) {
+                reduced.kitRecord(Density(density), LayoutDirection.Ltr, IntSize(sw, sh)) {
                     program.setSize(sw.toFloat(), sh.toFloat(), density * scale)
                     program.setFrame(look, t, strength, palette, encoded)
                     drawRect(program.brush)
@@ -128,12 +129,12 @@ internal fun rememberLiveShaderBackdrop(
                 // The finish: the reduced layer filtered up into a full-size layer, decoded and dithered at full resolution.
                 finished.renderEffect = finish
                 finished.compositingStrategy = androidx.compose.ui.graphics.layer.CompositingStrategy.Offscreen
-                finished.record(Density(density), LayoutDirection.Ltr, IntSize(max(1, size.width.roundToInt()), max(1, size.height.roundToInt()))) {
-                    drawLayer(reduced)
+                finished.kitRecord(Density(density), LayoutDirection.Ltr, IntSize(max(1, size.width.roundToInt()), max(1, size.height.roundToInt()))) {
+                    kitDrawLayer(reduced)
                 }
-                drawLayer(finished)
+                kitDrawLayer(finished)
             } else {
-                drawLayer(reduced)
+                kitDrawLayer(reduced)
             }
         }
     }

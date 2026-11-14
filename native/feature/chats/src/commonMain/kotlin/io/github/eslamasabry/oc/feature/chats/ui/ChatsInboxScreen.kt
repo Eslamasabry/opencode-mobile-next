@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.chats.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageListState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
@@ -50,7 +51,7 @@ internal fun ChatsInboxScreen(state: ChatsUi, actions: ChatsActions) {
         width = KitScreenWidth.Reading,
         edges = KitScreenEdges.Bleed,
     ) {
-        LazyColumn(Modifier.fillMaxSize().testTag("inbox-scroll")) {
+        LazyColumn(Modifier.fillMaxSize().testTag("inbox-scroll"), state = kitPageListState()) {
             state.answerFailure?.let { failure ->
                 item("answer-failure", contentType = "answer-failure") { KitErrorNotice(stringResource(Res.string.chatHomeAnswerFailed), failure = failure) }
             }

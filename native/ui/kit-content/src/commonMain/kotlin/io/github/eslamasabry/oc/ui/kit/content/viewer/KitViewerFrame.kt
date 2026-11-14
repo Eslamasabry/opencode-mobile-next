@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.kit.content.viewer
 
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageScrollState
 import androidx.compose.foundation.layout.wrapContentHeight
 import io.github.eslamasabry.oc.core.common.Redacted
 import io.github.eslamasabry.oc.ui.kit.state.KitStateSize
@@ -762,6 +763,6 @@ private fun ViewerBody(
 private fun ViewerCentred(content: @Composable () -> Unit) {
     val tokens = LocalKitTokens.current
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.CenterStart) {
-        Box(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(vertical = tokens.gutter.dp)) { content() }
+        Box(Modifier.fillMaxWidth().verticalScroll(kitPageScrollState()).padding(vertical = tokens.gutter.dp)) { content() }
     }
 }

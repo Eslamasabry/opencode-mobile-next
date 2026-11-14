@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.setupassistant.ui
 
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageScrollState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -44,7 +45,7 @@ public fun SetupScreen(state: SetupUi, actions: SetupActions) {
         edges = KitScreenEdges.Bleed,
     ) {
         Column(
-            Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(Space.S3.dp),
+            Modifier.fillMaxSize().verticalScroll(kitPageScrollState()).padding(Space.S3.dp),
             verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
         ) {
             if (state.loading) KitSkeletonRows()

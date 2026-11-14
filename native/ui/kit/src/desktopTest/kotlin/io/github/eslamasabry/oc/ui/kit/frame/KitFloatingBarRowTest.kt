@@ -211,12 +211,11 @@ class KitFloatingBarRowTest {
         val face0 = rest.bounds["chip-0"]!!
         val faceTop = face0.top.value + 8f
         val faceBottom = face0.bottom.value - 8f
-        // At rest more lies past the end. Review 2026-11-13 #18: the last chip shown is whole, or a chip runs under the
-        // end edge with at least MIN_PEEK_DP of it showing (never a 1-3 letter stump), its outer third there cleared.
+        // At rest more lies past the end: the chip that does not fit stays where it is and runs under the end edge, its
+        // outer third there cleared (audit 2, 2026-11-14: a chip is never moved out of view to avoid a short piece; at
+        // 1.3x text that hid "All connections" with nothing to say there was more. The fade is the cue).
         // (A node's bounds are clipped to the line, so a chip running past its end ends on it.)
         val cut = CHIPS.indices.map { rest.bounds["chip-$it"]!! }.firstOrNull { it.left.value < line.right.value - 1f && it.right.value >= line.right.value - .5f }
-        if (cut != null)
-            assertTrue((cut.right - cut.left).value >= FilterChipsRules.MIN_PEEK_DP - 1f, "a chip cut at rest shows enough to name it: $cut in $line")
         val endCleared = diff(rest, restBare, line.right.value - fade / 3f + .5f, line.right.value - .5f, faceTop, faceBottom)
         assertTrue(endCleared < 1f, "at rest the end that has more to show is faded out at its edge: $endCleared")
         val endFading = diff(rest, restBare, line.right.value - fade + 1f, line.right.value - fade / 3f, faceTop, faceBottom)

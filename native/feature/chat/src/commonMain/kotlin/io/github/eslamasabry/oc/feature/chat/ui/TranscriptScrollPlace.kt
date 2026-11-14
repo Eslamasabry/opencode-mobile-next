@@ -6,11 +6,14 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import io.github.eslamasabry.oc.engine.transcript.state.TranscriptRow
 import io.github.eslamasabry.oc.feature.chat.presentation.FindUi
+import io.github.eslamasabry.oc.feature.chat.presentation.TurnFactsUi
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.runtime.withFrameNanos
 import io.github.eslamasabry.oc.ui.kitchat.transcript.TranscriptListState
 import kotlinx.coroutines.flow.first
 
@@ -124,7 +127,51 @@ internal fun FindJump(find: FindUi?, loaded: Boolean, itemsBelowRows: Int, list:
         if (now.currentIndex >= 0 && token != jumped) {
             jumped = token
             list.following = false
-            list.lazy.scrollToItem(below + now.currentIndex)
+            val target = below + now.currentIndex
+            list.lazy.scrollToItem(target)
+            // Once the row is laid out, put it clear of the top bar and of the bottom block (the list's content
+            // padding is the room those two take): a row that fits stands in the middle of the room, a taller one
+            // starts at the top edge of the room. Offsets count from the newest edge, so scrolling forward lowers them.
+            withFrameNanos { }
+            val info = list.lazy.layoutInfo
+            val item = info.visibleItemsInfo.firstOrNull { it.index == target } ?: return@LaunchedEffect
+            val room = info.viewportSize.height - info.beforeContentPadding - info.afterContentPadding
+            if (room > 0) list.lazy.dispatchRawDelta(findScrollDelta(item.offset, item.size, room))
         }
     }
 }
+
+/**
+ * How far to scroll forward (positive: toward older rows, lowering the row's offset from the newest edge) so a row of
+ * [size] at [offset] stands clear in a [room] tall: centred when it fits, its top at the room's top edge when it is
+ * taller.
+ */
+internal fun findScrollDelta(offset: Int, size: Int, room: Int): Float =
+    if (size >= room) (offset + size - room).toFloat() else (offset - (room - size) / 2).toFloat()
+
+/**
+ * Find looks inside what is folded away: when the current match is in a thought or in a step's text, that thought, step
+ * and the work line holding them open (once per hit), so the marked match is on screen. The person can close them again;
+ * the next hit opens its own. A match in the message text needs no fold. Closing Find opens nothing.
+ */
+@Composable
+internal fun FindOpensFolds(find: FindUi?, rows: List<TranscriptRow>, facts: TurnFactsUi, folds: TranscriptFolds) {
+    val latestRows by rememberUpdatedState(rows)
+    val latestFacts by rememberUpdatedState(facts)
+    LaunchedEffect(find?.currentKey, find?.current, find?.query, find?.currentSource) {
+        val hit = find ?: return@LaunchedEffect
+        val key = hit.currentKey ?: return@LaunchedEffect
+        val turn = latestRows.firstOrNull { it.key == key }?.turnId
+        for (fold in findFoldKeys(key, hit.currentSource, turn, latestFacts)) folds.open[fold] = true
+    }
+}
+
+/** The fold keys that must be open to show a match in [rowKey]'s part [source] (empty for a message's own words). */
+internal fun findFoldKeys(rowKey: String, source: String?, turnId: String?, facts: TurnFactsUi): List<String> =
+    when {
+        rowKey.startsWith("thought:") ->
+            listOfNotNull(facts.reading.details[rowKey]?.key, turnId?.let { "work:$it" })
+        rowKey.startsWith("work:") ->
+            listOfNotNull(rowKey, source?.substringAfter('/', "")?.takeIf { it.isNotEmpty() }?.let { "step:$it" })
+        else -> emptyList()
+    }
