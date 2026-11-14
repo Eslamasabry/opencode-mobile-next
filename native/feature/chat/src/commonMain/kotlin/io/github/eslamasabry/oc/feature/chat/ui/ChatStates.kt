@@ -12,6 +12,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -32,6 +37,8 @@ import io.github.eslamasabry.oc.ui.kit.KitAction
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.action.KitActionBlock
 import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
+import io.github.eslamasabry.oc.ui.kit.motion.KitReveal
+import io.github.eslamasabry.oc.ui.kit.platform.LocalKitVisibility
 import io.github.eslamasabry.oc.ui.kit.scene.KitDrawnIllustration
 import io.github.eslamasabry.oc.ui.kit.scene.StatesUnpluggedScene
 import io.github.eslamasabry.oc.ui.kit.state.KitDetailsFold
@@ -57,6 +64,9 @@ public object ChatPane {
     /** The illustration's width on a page state (Flutter kit_state_view.dart:733, `page ? 140 : 88`). */
     public const val ILLUSTRATION_PAGE_DP: Int = 140
 
+    /** How long a first load runs before the page says in words what it is doing. */
+    public const val LOADING_WORDS_AFTER_MS: Long = 1_000
+
     /**
      * What the details fold names for a load failure, above its redacted details when it has any: the failure's
      * stable label (`Refused · StaleScope`), never a class name, which a release build renames (it printed `un5`).
@@ -68,11 +78,29 @@ public object ChatPane {
 @Composable
 internal fun Modifier.chatPane(): Modifier = kitMaxWidth(ChatPane.maxWidth(LocalKitTokens.current.gutter), CapAlign.Center)
 
-/** First load (Flutter `_ChatLoadingBody`): two placeholder turns at the bottom, where the newest will be. */
+/**
+ * First load: two placeholder turns at the bottom, where the newest will be, and, once the load has taken
+ * [ChatPane.LOADING_WORDS_AFTER_MS], [label] in quiet words in the middle of the room (owner 2026-11-14: a ten-second
+ * load said nothing). The middle, not under the turns: on an empty page the eye goes there first, and the turns stay
+ * where the conversation's newest lines will land. Null [label]: the screen's line already says what is happening
+ * (starting, updating, connecting), and the page does not say a second thing.
+ */
 @Composable
-internal fun ChatLoadingBody(modifier: Modifier = Modifier) {
+internal fun ChatLoadingBody(label: String?, modifier: Modifier = Modifier) {
+    var late by remember { mutableStateOf(false) }
+    val visibility = LocalKitVisibility.current
+    LaunchedEffect(visibility) {
+        visibility.tick(ChatPane.LOADING_WORDS_AFTER_MS)
+        late = true
+    }
     Box(modifier.fillMaxSize().chatPane(), contentAlignment = Alignment.BottomCenter) {
         KitSkeletonTranscript(Modifier.fillMaxWidth().testTag("chat-loading"))
+        KitReveal(
+            visible = late && label != null,
+            modifier = Modifier.align(Alignment.Center).padding(horizontal = LocalKitTokens.current.gutter.dp),
+        ) {
+            KitText(label.orEmpty(), Modifier.testTag("chat-loading-words"), tone = TextTone.Secondary)
+        }
     }
 }
 
