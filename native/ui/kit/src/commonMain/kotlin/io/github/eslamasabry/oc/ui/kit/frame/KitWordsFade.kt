@@ -65,6 +65,8 @@ internal class KitWordsFade private constructor(
     private val target: GraphicsLayer,
     private val layerOf: () -> GraphicsLayer,
     private val originOf: () -> Offset,
+    /** The source's recording count (read while drawing: the caller draws again after each recording of the body). */
+    private val versionOf: () -> Int,
     private val sync: () -> Unit,
     private val bump: () -> Unit,
     /** The copy as a feature's recording; null when the source is the kit's. */
@@ -73,6 +75,9 @@ internal class KitWordsFade private constructor(
     val fadedSource: KitLiquidSource?,
 ) {
     private val brush = EdgeBrush()
+
+    /** What the copy was last recorded from (see [record]). */
+    private var recorded: Any? = null
 
     /**
      * Records the copy again (the source's version is read by the caller's draw, so this runs after each recording of
@@ -85,6 +90,12 @@ internal class KitWordsFade private constructor(
         sync()
         // Nothing recorded yet (the body's first frame): nothing to see.
         if (from.size.width <= 0 || from.size.height <= 0) return
+        // Device 2026-11-14 (Glass, an untouched page kept drawing every frame): the copy is recorded again, and its count
+        // bumped, only when the body recorded again or the clearing moved. A pane that reads the copy's count and draws in
+        // this node's layer would otherwise draw this again, bump the count again, and so on every frame.
+        val key = listOf(versionOf(), from, origin, edge, rim, clearAbove, clear, from.size, layoutDirection)
+        if (key == recorded) return
+        recorded = key
         target.kitRecord(this, layoutDirection, from.size) {
             kitDrawLayer(from)
             // [clear]: how much of the page under the words goes (1, as shipped: all of it; the Glass lab may lower it).
@@ -124,7 +135,7 @@ internal class KitWordsFade private constructor(
         fun of(source: KitFrostState, layer: GraphicsLayer, side: KitWordsClear): KitWordsFade {
             val copy = KitFrostState(layer)
             return KitWordsFade(
-                side, layer, { source.layer }, { source.version; source.sourceOrigin },
+                side, layer, { source.layer }, { source.version; source.sourceOrigin }, { source.version },
                 { copy.sourceOrigin = source.sourceOrigin }, { copy.version++ }, copy, null,
             )
         }
@@ -134,6 +145,7 @@ internal class KitWordsFade private constructor(
             return KitWordsFade(
                 side, layer, { source.layer },
                 { source.version; source.coordinates?.takeIf { it.isAttached }?.positionInRoot() ?: Offset.Zero },
+                { source.version },
                 // The copy lies where the recording lies: the panes place it by the source's own coordinates.
                 { copy.coordinates = source.coordinates }, { copy.version++ }, null, copy,
             )
