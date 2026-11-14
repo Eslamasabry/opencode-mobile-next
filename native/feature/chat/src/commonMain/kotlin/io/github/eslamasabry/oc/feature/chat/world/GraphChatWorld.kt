@@ -810,6 +810,13 @@ internal class GraphChatWorld(
         }
     }
 
+    /**
+     * The app itself starts this conversation's server: This phone's OpenCode or its agents' helper (the Claude Code
+     * conversations of This phone). Opened from the dock, a notification or search while it starts, the page waits.
+     */
+    private val appStartsServer: Boolean
+        get() = serverOnThisPhone || serverIsAgentHelper
+
     /** This phone's server is starting or updating: a wait for it does not count toward [NOT_READY_LIMIT_MS]. */
     private fun phoneBusy(): Boolean =
         (phoneServer?.waiting(ref.profileId)?.value ?: PhoneServerWait.None) != PhoneServerWait.None
@@ -823,9 +830,9 @@ internal class GraphChatWorld(
             is Failure.Refused ->
                 failure.reason == RefusalReason.StaleScope || failure.reason == RefusalReason.ProfileClosing
             is Failure.Network,
-            is Failure.TimedOut -> serverOnThisPhone
+            is Failure.TimedOut -> appStartsServer
             is Failure.Busy ->
-                serverOnThisPhone &&
+                appStartsServer &&
                     (failure.kind == BusyKind.Starting ||
                         failure.kind == BusyKind.Stopping ||
                         failure.kind == BusyKind.Overloaded)
@@ -903,7 +910,7 @@ internal class GraphChatWorld(
             mutableLink.value = ChatLink.Offline
             // This phone's server: the app opens its connection by itself (after a start or an update), so the page
             // waits for it instead of failing. A computer's lost connection says so at once, as before.
-            if (serverOnThisPhone && mutableLoad.value !is ChatLoad.Live) loadFailed(OFFLINE)
+            if (appStartsServer && mutableLoad.value !is ChatLoad.Live) loadFailed(OFFLINE)
             else mutableLoad.value = ChatLoad.Failed(OFFLINE)
             publishVoiceConversation()
             return

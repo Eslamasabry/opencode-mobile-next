@@ -95,6 +95,13 @@ class PreviewRuntime(
         )
     internal val snapshot = MutableStateFlow(ChatFeedSnapshot())
     private val unverifiedListings = mutableSetOf<ProfileId>()
+
+    /**
+     * Sources the app itself starts (This phone's own server, its agents' helper) whose saved rows stand in the list
+     * while they start, before any connection exists: unverified (a tap is kept) and replaced in place when the source
+     * connects. Only ever touched inside [command].
+     */
+    private val seededListings = mutableSetOf<ProfileId>()
     private val listings = mutableMapOf<ProfileId, MutableStateFlow<OpenCodeListing>>()
     private val mutableSourceFailures = MutableStateFlow<Map<ProfileId, Failure>>(emptyMap())
     internal val sourceFailureState: StateFlow<Map<ProfileId, Failure>> =
@@ -383,7 +390,7 @@ class PreviewRuntime(
             if (
                 profile.id != profiles.activeId.value &&
                     listSourceShown(profile.id) &&
-                    profile.id !in listings
+                    (profile.id !in listings || profile.id in seededListings)
             ) {
                 // The phone's agent helper may need a start of up to 30 s: it joins later and never holds the
                 // OpenCode list (or any other command) while it starts.
@@ -406,6 +413,47 @@ class PreviewRuntime(
 
     private fun isPhoneHelper(profile: LoadedProfile): Boolean = stores.isPhoneHelper(profile)
 
+    /**
+     * While a source the app itself starts is starting, its rows saved last time stand in the list (unverified, so a
+     * tap is kept and opens it when it can). Nothing when it is already listed or nothing was saved.
+     */
+    private fun seedWhileStarting(id: ProfileId) {
+        if (id in listings || !listSourceShown(id)) return
+        val loaded = profiles.profile(id) ?: return
+        val cached = inventory.read(loaded.profile)
+        if (cached.isEmpty()) return
+        seededListings += id
+        unverifiedListings += id
+        listings[id] = MutableStateFlow(OpenCodeListing(sessions = cached, loading = true, complete = false))
+        rebuildFeed()
+    }
+
+    /** The source is connecting now: its real listing takes the saved rows' place (same rows, same identities). */
+    private fun dropSeed(id: ProfileId) {
+        if (seededListings.remove(id)) listings.remove(id)
+    }
+
+    /**
+     * What the app is starting for list source [id], when it is one the app itself starts (This phone's own server,
+     * its agents' helper), it is shown, it is not the server in use (the opening card speaks for that one), its list
+     * has not been read yet and it has not failed. Null otherwise.
+     */
+    internal fun startingSource(id: ProfileId): io.github.eslamasabry.oc.feature.chats.presentation.AppStart? {
+        if (id == profiles.activeId.value || !listSourceShown(id)) return null
+        if (id in loadedSources.value || id in mutableSourceFailures.value) return null
+        val loaded = profiles.profile(id) ?: return null
+        return appStart(loaded)
+    }
+
+    /** Whether the app itself starts [loaded]'s server, and which kind; null for a server the person connects. */
+    internal fun appStart(loaded: LoadedProfile): io.github.eslamasabry.oc.feature.chats.presentation.AppStart? =
+        when {
+            isPhoneHelper(loaded) -> io.github.eslamasabry.oc.feature.chats.presentation.AppStart.Agents
+            io.github.eslamasabry.oc.engine.runtime.switching.ManagedLocalServer.isBuiltin(loaded.profile.baseUrl) ->
+                io.github.eslamasabry.oc.feature.chats.presentation.AppStart.Phone
+            else -> null
+        }
+
     /** The phone agents' helper profile: part of This phone, never listed or chosen as a server. */
     internal fun isPhoneHelper(id: ProfileId): Boolean = stores.isPhoneHelper(id)
 
@@ -416,14 +464,23 @@ class PreviewRuntime(
         if (!synchronized(joiningHelpers) { joiningHelpers.add(id) }) return
         scope.launch {
             try {
-                if (phoneHelper.value.ensureHelper(id) is Outcome.Ok) {
-                    command {
-                        if (id !in listings && listSourceShown(id)) {
-                            connectForHome(id, makeActive = false)
-                            rebuildFeed()
+                command {
+                    seedWhileStarting(id)
+                    Unit.ok()
+                }
+                when (val helper = phoneHelper.value.ensureHelper(id)) {
+                    is Outcome.Ok ->
+                        command {
+                            if ((id !in listings || id in seededListings) && listSourceShown(id)) {
+                                dropSeed(id)
+                                // A connection that fails keeps the saved rows on show.
+                                if (connectForHome(id, makeActive = false) is Outcome.Failed) seedWhileStarting(id)
+                                rebuildFeed()
+                            }
+                            Unit.ok()
                         }
-                        Unit.ok()
-                    }
+                    // The saved rows stay; the source is not answering, so it no longer says it is starting.
+                    is Outcome.Failed -> mutableSourceFailures.update { it + (id to helper.failure) }
                 }
             } finally {
                 synchronized(joiningHelpers) { joiningHelpers.remove(id) }
@@ -438,9 +495,15 @@ class PreviewRuntime(
         if (!synchronized(joiningServers) { joiningServers.add(id) }) return
         scope.launch {
             try {
+                command {
+                    seedWhileStarting(id)
+                    Unit.ok()
+                }
                 connectCommand(id, makeActive = false) { turn ->
-                    if (id !in listings && listSourceShown(id)) {
-                        connectForHome(id, makeActive = false, local = turn.local)
+                    if ((id !in listings || id in seededListings) && listSourceShown(id)) {
+                        dropSeed(id)
+                        // A connection that fails keeps the saved rows on show.
+                        if (connectForHome(id, makeActive = false, local = turn.local) is Outcome.Failed) seedWhileStarting(id)
                         rebuildFeed()
                     }
                     Unit.ok()
@@ -508,6 +571,7 @@ class PreviewRuntime(
             registry.close(id)
             eventJobs.remove(id)?.cancel()
             listings.remove(id)
+            seededListings.remove(id)
         }
         rebuildFeed()
         Unit.ok()
@@ -566,6 +630,7 @@ class PreviewRuntime(
             }
             eventJobs.remove(id)?.cancelAndJoin()
             listings.remove(id)
+            seededListings.remove(id)
             loadedSources.update { it - id }
             mutableSourceFailures.update { it - id }
             rebuildFeed()
@@ -1221,7 +1286,8 @@ anySourceLoaded = true
 
     internal suspend fun refresh(): Outcome<Unit> = command {
         var failed: Outcome.Failed? = null
-        listings.keys.toList().forEach {
+        // A source still starting has no connection to read yet; its saved rows wait for it.
+        listings.keys.filterNot { it in seededListings }.forEach {
             val result = refreshOne(it)
             if (result is Outcome.Failed) failed = result
         }
@@ -1251,6 +1317,7 @@ anySourceLoaded = true
         failedRuns.remove(id)
         requests.remove(id)
         listings.remove(id)
+        seededListings.remove(id)
         loadedSources.update { it - id }
         unverifiedListings.remove(id)
         rebuildFeed()
@@ -1456,6 +1523,7 @@ anySourceLoaded = true
             registry.close(id)
             eventJobs.remove(id)?.cancel()
             listings.remove(id)
+            seededListings.remove(id)
             loadedSources.update { it - id }
             mutableSourceFailures.update { it - id }
             rebuildFeed()

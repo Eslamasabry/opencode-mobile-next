@@ -84,6 +84,8 @@ public data class ChatsListSourceUi(
      * phone's, with their own switch in "Connections in this list", but they are never a server to switch to.
      */
     val agents: Boolean = false,
+    /** The app itself is starting this source (This phone's server, its agents) and it is not connected yet. */
+    val starting: AppStart? = null,
 )
 
 public data class ChatsHomeExtraState(

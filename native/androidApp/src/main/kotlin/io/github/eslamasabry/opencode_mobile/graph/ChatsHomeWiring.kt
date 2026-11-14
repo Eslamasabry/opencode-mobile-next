@@ -118,7 +118,8 @@ class AppChatsHome(
                     runtime.busy,
                     runtime.snapshot,
                     runtime.profiles.activeId,
-                    combine(monitor.snapshot, phone.serverFacts) { _, _ -> Unit },
+                    // A source the app starts that stopped answering no longer says it is starting.
+                    combine(monitor.snapshot, phone.serverFacts, runtime.sourceFailureState) { _, _, _ -> Unit },
                 ) { _, _, _, _, _ ->
                     Unit
                 }
@@ -147,6 +148,7 @@ class AppChatsHome(
                         onThisPhone = runtime.sourceOnThisPhone(loaded.profile),
                         unreachable = !agents && loaded.id in runtime.sourceFailures,
                         agents = agents,
+                        starting = runtime.startingSource(loaded.id),
                         secret =
                             when {
                                 loaded.reentry.password ->
