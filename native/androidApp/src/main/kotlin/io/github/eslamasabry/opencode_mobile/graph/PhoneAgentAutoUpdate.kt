@@ -55,6 +55,7 @@ class PhoneAgentAutoUpdate(
     private val appScope: AppCoroutineScope,
 ) {
     private var started = false
+    @Volatile private var updaterRef: AgentAutoUpdater? = null
     private val log = AppLog.tagged("AgentAutoUpdate")
 
     fun start() {
@@ -151,6 +152,7 @@ class PhoneAgentAutoUpdate(
                     now - since > BUSY_BOUND_MS
                 }
             }
+        updaterRef = updater
         // Everything runs off the main thread: the decision reads the helper's status in the phone's Linux. Nothing the
         // updater does may end the app: an error in a look is logged by its type only and the next look goes on.
         appScope.launch(dispatchers.io) {
@@ -197,7 +199,9 @@ class PhoneAgentAutoUpdate(
                 PhoneAgentInstallPhase.Installing -> Unit
                 PhoneAgentInstallPhase.Done -> {
                     restartOlderHelper()
+                    phones.noteHelperInPlace()
                     phones.markUpdating(null)
+                    updaterRef?.finished(agent)
                     return
                 }
                 // No record of it (yet or any more): the mark stays, so the next run checks it again.

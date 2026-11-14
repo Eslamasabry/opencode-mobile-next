@@ -423,6 +423,9 @@ public enum class ChatServerWait {
 
     /** The phone's agents are being updated; the conversation opens when that is done. */
     UpdatingAgents,
+
+    /** A phone agent needs the person to sign in; the conversation opens after that. */
+    AgentNeedsSignIn,
 }
 
 /** A prompt the person sent that the transcript does not show yet. */

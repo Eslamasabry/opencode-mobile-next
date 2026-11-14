@@ -359,6 +359,7 @@
     <string name="workServerRestart">Restart</string>
     <string name="connectStartingPhone">Starting OpenCode on this phone…</string>
     <string name="connectUpdatingPhone">Updating OpenCode on this phone…</string>
+    <string name="connectAgentNeedsSignIn">Your agent needs you to sign in. Open Agents and tap Sign in; the conversation opens after that.</string>
     <string name="connectUpdatingAgents">Updating your agents on this phone. The conversation opens when it is done.</string>
     <string name="serverRowConnected">Connected</string>
     <string name="phoneServerRowRestarting">Restarting</string>

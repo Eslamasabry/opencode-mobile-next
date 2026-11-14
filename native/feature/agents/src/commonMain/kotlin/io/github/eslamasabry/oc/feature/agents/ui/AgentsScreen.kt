@@ -524,7 +524,12 @@ private fun PhoneStatusLine(state: AgentsUi, actions: AgentsActions, enabled: Ki
         if (device == null) stringResource(Res.string.agentsPhoneReady)
         else stringResource(Res.string.agentsPhoneReadyDetails, device.processor, device.android)
     // The automatic update says what it does or waits for on this same line, never as a new row.
-    val update = phoneUpdateNote(state.phone.updateNote, state.phone.updateAgentName)
+    val named = state.phone.updateNote?.let { it.name.startsWith("Waiting") } == true
+    val update =
+        phoneUpdateNote(state.phone.updateNote, state.phone.updateAgentName)?.let { text ->
+            // A wait names the agent it is for ("Antigravity: agent update waits until your agents are idle").
+            if (named && state.phone.updateAgentName != null) "${state.phone.updateAgentName}: $text" else text
+        }
     KitStatusLine(
         if (update == null) ready else "$ready · $update",
         tone = StatusTone.Ok,
@@ -550,6 +555,8 @@ private fun phoneUpdateNote(note: PhoneAgentUpdateNote?, agent: String?): String
         PhoneAgentUpdateNote.WaitingMetered -> stringResource(Res.string.agentsUpdateWaitingMetered)
         PhoneAgentUpdateNote.Updating ->
             stringResource(Res.string.agentsUpdateUpdating, agent.orEmpty())
+        PhoneAgentUpdateNote.Updated -> stringResource(Res.string.agentsUpdateUpdated, agent.orEmpty())
+        PhoneAgentUpdateNote.NeedsSignIn -> stringResource(Res.string.agentsUpdateNeedsSignIn, agent.orEmpty())
         PhoneAgentUpdateNote.ReadFailed -> stringResource(Res.string.agentsUpdateReadFailed)
         PhoneAgentUpdateNote.Refused -> stringResource(Res.string.agentsUpdateRefused)
     }
