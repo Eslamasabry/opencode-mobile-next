@@ -12,11 +12,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -38,12 +33,11 @@ import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.action.KitActionBlock
 import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
 import io.github.eslamasabry.oc.ui.kit.frame.kitScreenChromePadding
-import io.github.eslamasabry.oc.ui.kit.motion.KitReveal
-import io.github.eslamasabry.oc.ui.kit.platform.LocalKitVisibility
 import io.github.eslamasabry.oc.ui.kit.scene.KitDrawnIllustration
 import io.github.eslamasabry.oc.ui.kit.scene.StatesUnpluggedScene
 import io.github.eslamasabry.oc.ui.kit.state.KitDetailsFold
 import io.github.eslamasabry.oc.ui.kit.state.KitSkeletonTranscript
+import io.github.eslamasabry.oc.ui.kit.state.KitSlowWords
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.kitCopyDetails
@@ -88,12 +82,6 @@ internal fun Modifier.chatPane(): Modifier = kitMaxWidth(ChatPane.maxWidth(Local
  */
 @Composable
 internal fun ChatLoadingBody(label: String?, modifier: Modifier = Modifier) {
-    var late by remember { mutableStateOf(false) }
-    val visibility = LocalKitVisibility.current
-    LaunchedEffect(visibility) {
-        visibility.tick(ChatPane.LOADING_WORDS_AFTER_MS)
-        late = true
-    }
     // The frame's overlaid chrome lies over the body (the chat keeps one layout while it loads): the turns rest above the
     // message box as the transcript's newest line does (the list's own 8 dp over the frame's room), the words in the
     // middle of what is left.
@@ -102,12 +90,12 @@ internal fun ChatLoadingBody(label: String?, modifier: Modifier = Modifier) {
         contentAlignment = Alignment.BottomCenter,
     ) {
         KitSkeletonTranscript(Modifier.fillMaxWidth().testTag("chat-loading"))
-        KitReveal(
-            visible = late && label != null,
-            modifier = Modifier.align(Alignment.Center).padding(horizontal = LocalKitTokens.current.gutter.dp),
-        ) {
-            KitText(label.orEmpty(), Modifier.testTag("chat-loading-words"), tone = TextTone.Secondary)
-        }
+        KitSlowWords(
+            label,
+            ChatPane.LOADING_WORDS_AFTER_MS,
+            Modifier.align(Alignment.Center).padding(horizontal = LocalKitTokens.current.gutter.dp),
+            textModifier = Modifier.testTag("chat-loading-words"),
+        )
     }
 }
 
