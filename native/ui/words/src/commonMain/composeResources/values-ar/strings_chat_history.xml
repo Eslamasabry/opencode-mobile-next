@@ -9,4 +9,8 @@
     <string name="chatHistoryEmpty">لا توجد طلبات أخيرة بعد.</string>
     <string name="chatHistoryLoading">جارٍ تحميل الطلبات الأخيرة…</string>
     <string name="chatHistoryLoadFailed">تعذّر تحميل الطلبات الأخيرة. لا يزال بإمكانك استخدام طلبات هذه المحادثة.</string>
+    <string name="chatReplyFooterTokensK">%1$s ألف رمز</string>
+    <string name="chatReplyFooterTokensM">%1$s مليون رمز</string>
+    <string name="chatReplyFooterCost">$%1$s</string>
+    <string name="chatReplyFooterCostUnderCent">أقل من 0.01 دولار</string>
 </resources>

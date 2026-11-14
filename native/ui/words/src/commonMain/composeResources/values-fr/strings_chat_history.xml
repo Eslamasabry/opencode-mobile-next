@@ -10,4 +10,8 @@
     <string name="chatHistoryEmpty">Aucune invite récente pour l’instant.</string>
     <string name="chatHistoryLoading">Chargement des invites récentes…</string>
     <string name="chatHistoryLoadFailed">Impossible de charger les invites récentes. Vous pouvez toujours utiliser celles de cette conversation.</string>
+    <string name="chatReplyFooterTokensK">%1$s k jetons</string>
+    <string name="chatReplyFooterTokensM">%1$s M jetons</string>
+    <string name="chatReplyFooterCost">%1$s $</string>
+    <string name="chatReplyFooterCostUnderCent">moins de 0,01 $</string>
 </resources>

@@ -1247,4 +1247,36 @@
     <string name="chatUiRetryWhyBusy">Le fournisseur du modèle ne répond pas pour le moment.</string>
     <string name="transcriptFindPosition">%1$s sur %2$s</string>
     <string name="chatUiShowEarlierMessages">Afficher les messages précédents</string>
+    <string name="kitWorkHideEarlierSteps">Masquer les étapes précédentes</string>
+    <plurals name="kitWorkFoldDeclined">
+        <item quantity="one">%1$d refusée</item>
+        <item quantity="many">%1$d refusées</item>
+        <item quantity="other">%1$d refusées</item>
+    </plurals>
+    <plurals name="kitWorkFoldFailed">
+        <item quantity="one">%1$d en échec</item>
+        <item quantity="many">%1$d en échec</item>
+        <item quantity="other">%1$d en échec</item>
+    </plurals>
+    <plurals name="kitWorkSubAgents">
+        <item quantity="one">%1$d sous-agent</item>
+        <item quantity="many">%1$d sous-agents</item>
+        <item quantity="other">%1$d sous-agents</item>
+    </plurals>
+    <plurals name="kitWorkSubAgentsDone">
+        <item quantity="one">%1$d terminé</item>
+        <item quantity="many">%1$d terminés</item>
+        <item quantity="other">%1$d terminés</item>
+    </plurals>
+    <plurals name="kitWorkSubAgentsWorking">
+        <item quantity="one">%1$d en cours</item>
+        <item quantity="many">%1$d en cours</item>
+        <item quantity="other">%1$d en cours</item>
+    </plurals>
+    <plurals name="kitWorkSubAgentsStopped">
+        <item quantity="one">%1$d arrêté</item>
+        <item quantity="many">%1$d arrêtés</item>
+        <item quantity="other">%1$d arrêtés</item>
+    </plurals>
+    <string name="kitWorkSubAgentSpoken">%1$s, sous-agent, %2$s</string>
 </resources>

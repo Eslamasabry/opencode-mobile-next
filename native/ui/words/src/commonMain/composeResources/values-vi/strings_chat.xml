@@ -1143,4 +1143,24 @@
     <string name="chatUiRetryWhyBusy">Nhà cung cấp mô hình hiện chưa phản hồi.</string>
     <string name="transcriptFindPosition">%1$s trên %2$s</string>
     <string name="chatUiShowEarlierMessages">Hiện các tin nhắn trước đó</string>
+    <string name="kitWorkHideEarlierSteps">Ẩn các bước trước đó</string>
+    <plurals name="kitWorkFoldDeclined">
+        <item quantity="other">%1$d bị từ chối</item>
+    </plurals>
+    <plurals name="kitWorkFoldFailed">
+        <item quantity="other">%1$d không thành công</item>
+    </plurals>
+    <plurals name="kitWorkSubAgents">
+        <item quantity="other">%1$d tác nhân phụ</item>
+    </plurals>
+    <plurals name="kitWorkSubAgentsDone">
+        <item quantity="other">%1$d đã xong</item>
+    </plurals>
+    <plurals name="kitWorkSubAgentsWorking">
+        <item quantity="other">%1$d đang làm việc</item>
+    </plurals>
+    <plurals name="kitWorkSubAgentsStopped">
+        <item quantity="other">%1$d đã dừng</item>
+    </plurals>
+    <string name="kitWorkSubAgentSpoken">%1$s, tác nhân phụ, %2$s</string>
 </resources>

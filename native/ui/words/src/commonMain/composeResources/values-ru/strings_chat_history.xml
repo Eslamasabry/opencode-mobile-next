@@ -10,4 +10,8 @@
     <string name="chatHistoryEmpty">Недавних запросов пока нет.</string>
     <string name="chatHistoryLoading">Загружаем недавние запросы…</string>
     <string name="chatHistoryLoadFailed">Не удалось загрузить недавние запросы. Запросы из этого чата по-прежнему доступны.</string>
+    <string name="chatReplyFooterTokensK">%1$s тыс. токенов</string>
+    <string name="chatReplyFooterTokensM">%1$s млн токенов</string>
+    <string name="chatReplyFooterCost">%1$s $</string>
+    <string name="chatReplyFooterCostUnderCent">меньше 0,01 $</string>
 </resources>

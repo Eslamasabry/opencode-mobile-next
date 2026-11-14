@@ -1143,4 +1143,24 @@
     <string name="chatUiRetryWhyBusy">Penyedia model sedang tidak merespons.</string>
     <string name="transcriptFindPosition">%1$s dari %2$s</string>
     <string name="chatUiShowEarlierMessages">Tampilkan pesan sebelumnya</string>
+    <string name="kitWorkHideEarlierSteps">Sembunyikan langkah sebelumnya</string>
+    <plurals name="kitWorkFoldDeclined">
+        <item quantity="other">%1$d ditolak</item>
+    </plurals>
+    <plurals name="kitWorkFoldFailed">
+        <item quantity="other">%1$d gagal</item>
+    </plurals>
+    <plurals name="kitWorkSubAgents">
+        <item quantity="other">%1$d subagen</item>
+    </plurals>
+    <plurals name="kitWorkSubAgentsDone">
+        <item quantity="other">%1$d selesai</item>
+    </plurals>
+    <plurals name="kitWorkSubAgentsWorking">
+        <item quantity="other">%1$d bekerja</item>
+    </plurals>
+    <plurals name="kitWorkSubAgentsStopped">
+        <item quantity="other">%1$d dihentikan</item>
+    </plurals>
+    <string name="kitWorkSubAgentSpoken">%1$s, subagen, %2$s</string>
 </resources>

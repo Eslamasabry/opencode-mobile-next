@@ -1404,4 +1404,54 @@
     <string name="chatUiRetryWhyBusy">مزوّد النموذج لا يردّ الآن.</string>
     <string name="transcriptFindPosition">%1$s من %2$s</string>
     <string name="chatUiShowEarlierMessages">عرض الرسائل السابقة</string>
+    <string name="kitWorkHideEarlierSteps">إخفاء الخطوات السابقة</string>
+    <plurals name="kitWorkFoldDeclined">
+        <item quantity="zero">مرفوض: %1$d</item>
+        <item quantity="one">مرفوض: %1$d</item>
+        <item quantity="two">مرفوض: %1$d</item>
+        <item quantity="few">مرفوض: %1$d</item>
+        <item quantity="many">مرفوض: %1$d</item>
+        <item quantity="other">مرفوض: %1$d</item>
+    </plurals>
+    <plurals name="kitWorkFoldFailed">
+        <item quantity="zero">فشل: %1$d</item>
+        <item quantity="one">فشل: %1$d</item>
+        <item quantity="two">فشل: %1$d</item>
+        <item quantity="few">فشل: %1$d</item>
+        <item quantity="many">فشل: %1$d</item>
+        <item quantity="other">فشل: %1$d</item>
+    </plurals>
+    <plurals name="kitWorkSubAgents">
+        <item quantity="zero">%1$d من الوكلاء الفرعيين</item>
+        <item quantity="one">%1$d وكيل فرعي</item>
+        <item quantity="two">%1$d وكيلان فرعيان</item>
+        <item quantity="few">%1$d وكلاء فرعيين</item>
+        <item quantity="many">%1$d وكيلًا فرعيًا</item>
+        <item quantity="other">%1$d وكيل فرعي</item>
+    </plurals>
+    <plurals name="kitWorkSubAgentsDone">
+        <item quantity="zero">اكتمل: %1$d</item>
+        <item quantity="one">اكتمل: %1$d</item>
+        <item quantity="two">اكتمل: %1$d</item>
+        <item quantity="few">اكتمل: %1$d</item>
+        <item quantity="many">اكتمل: %1$d</item>
+        <item quantity="other">اكتمل: %1$d</item>
+    </plurals>
+    <plurals name="kitWorkSubAgentsWorking">
+        <item quantity="zero">قيد العمل: %1$d</item>
+        <item quantity="one">قيد العمل: %1$d</item>
+        <item quantity="two">قيد العمل: %1$d</item>
+        <item quantity="few">قيد العمل: %1$d</item>
+        <item quantity="many">قيد العمل: %1$d</item>
+        <item quantity="other">قيد العمل: %1$d</item>
+    </plurals>
+    <plurals name="kitWorkSubAgentsStopped">
+        <item quantity="zero">متوقف: %1$d</item>
+        <item quantity="one">متوقف: %1$d</item>
+        <item quantity="two">متوقف: %1$d</item>
+        <item quantity="few">متوقف: %1$d</item>
+        <item quantity="many">متوقف: %1$d</item>
+        <item quantity="other">متوقف: %1$d</item>
+    </plurals>
+    <string name="kitWorkSubAgentSpoken">%1$s، وكيل فرعي، %2$s</string>
 </resources>

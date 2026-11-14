@@ -10,4 +10,8 @@
     <string name="chatHistoryEmpty">Belum ada perintah terbaru.</string>
     <string name="chatHistoryLoading">Memuat perintah terbaru…</string>
     <string name="chatHistoryLoadFailed">Perintah terbaru tidak bisa dimuat. Perintah dari percakapan ini tetap bisa dipakai.</string>
+    <string name="chatReplyFooterTokensK">%1$sk token</string>
+    <string name="chatReplyFooterTokensM">%1$sM token</string>
+    <string name="chatReplyFooterCost">$%1$s</string>
+    <string name="chatReplyFooterCostUnderCent">kurang dari $0,01</string>
 </resources>

@@ -5,4 +5,5 @@
     <string name="upgradeComposerVoiceHold">اضغط مطولًا على الميكروفون وتحدث، وارفع إصبعك لتظهر كلماتك في الخانة. لمحادثة صوتية، افتح + واختر محادثة صوتية.</string>
     <string name="upgradeComposerHoldDictate">اضغط مطولًا للإملاء</string>
     <string name="chatReplyInHint">رد في %1$s</string>
+    <string name="chatWaitingForAnswerAbove">بانتظار إجابتك أعلاه</string>
 </resources>

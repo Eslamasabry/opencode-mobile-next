@@ -1527,6 +1527,10 @@ chatReplyFailedModel	f5bd865ed5
 chatReplyFailedNoCredit	fcae63bfb6
 chatReplyFailedOther	8397cca955
 chatReplyFailedSignIn	a3a1bf06e2
+chatReplyFooterCost	272730a767
+chatReplyFooterCostUnderCent	45627b8751
+chatReplyFooterTokensK	db977e3dbf
+chatReplyFooterTokensM	9670f1c075
 chatReplyInHint	3be834c597
 chatRequestAlwaysAllowAnyCommand	5665200806
 chatRequestAlwaysAllowCommands	cc90b5e9ea
@@ -2040,6 +2044,7 @@ chatUiWrite	4fc3e940b9
 chatUiWriteYourOpenCodePrompt	7b00480381
 chatUiYou	8a79a5f8c0
 chatUiYourOriginalComposerDraftAndAttachmentsWill	560fc0219e
+chatWaitingForAnswerAbove	841f880119
 chatWatchBackToTask	362b57bd6f
 chatWatchBackToWorker	2ae49f37e6
 chatWatchEmptyBody	e7f81036b3
@@ -6237,12 +6242,15 @@ kitWorkEdited	ca985145e0
 kitWorkEdited__eq1	da29d2bd8e
 kitWorkFetched	b0712513f3
 kitWorkFetched__eq1	0b2d9e6413
+kitWorkFoldDeclined	1bb544184f
+kitWorkFoldFailed	5bc10f0000
 kitWorkGraph	a36d84210e
 kitWorkGraphEmpty	d967939c22
 kitWorkGraphNeeds	8865f29594
 kitWorkGraphNeedsMore	e912de5c8a
 kitWorkGraphNeedsMore__eq1	83ef7fa204
 kitWorkGraphNode	bdb6f2d4dd
+kitWorkHideEarlierSteps	a42712aee2
 kitWorkListed	6be049ab39
 kitWorkListed__eq1	6916368b6b
 kitWorkNotRun	cd275f5445
@@ -6259,6 +6267,11 @@ kitWorkSeparator	b0685c64f9
 kitWorkSteps	dde9166fea
 kitWorkSteps__eq1	ee275584b9
 kitWorkStopped	de2f135c98
+kitWorkSubAgentSpoken	f98e65c003
+kitWorkSubAgents	3390baa7a9
+kitWorkSubAgentsDone	03a6ed4af0
+kitWorkSubAgentsStopped	788c277884
+kitWorkSubAgentsWorking	9ec3a6533c
 kitWorkWaitingForYou	d3e4595269
 kitWorkWorking	254b725d16
 kitWorking	254b725d16

@@ -7,4 +7,5 @@
     <string name="upgradeComposerVoiceHold">Giữ micro và nói; thả tay để đưa lời nói của bạn vào ô nhập. Để trò chuyện bằng giọng nói, mở + rồi chọn Trò chuyện bằng giọng nói.</string>
     <string name="upgradeComposerHoldDictate">Giữ để đọc chính tả</string>
     <string name="chatReplyInHint">Trả lời trong %1$s</string>
+    <string name="chatWaitingForAnswerAbove">Đang chờ câu trả lời của bạn ở trên</string>
 </resources>

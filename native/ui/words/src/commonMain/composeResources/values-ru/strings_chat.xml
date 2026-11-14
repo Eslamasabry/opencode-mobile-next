@@ -1300,4 +1300,42 @@
     <string name="chatUiRetryWhyBusy">Провайдер модели сейчас не отвечает.</string>
     <string name="transcriptFindPosition">%1$s из %2$s</string>
     <string name="chatUiShowEarlierMessages">Показать более ранние сообщения</string>
+    <string name="kitWorkHideEarlierSteps">Скрыть предыдущие шаги</string>
+    <plurals name="kitWorkFoldDeclined">
+        <item quantity="one">отклонено: %1$d</item>
+        <item quantity="few">отклонено: %1$d</item>
+        <item quantity="many">отклонено: %1$d</item>
+        <item quantity="other">отклонено: %1$d</item>
+    </plurals>
+    <plurals name="kitWorkFoldFailed">
+        <item quantity="one">с ошибкой: %1$d</item>
+        <item quantity="few">с ошибкой: %1$d</item>
+        <item quantity="many">с ошибкой: %1$d</item>
+        <item quantity="other">с ошибкой: %1$d</item>
+    </plurals>
+    <plurals name="kitWorkSubAgents">
+        <item quantity="one">субагентов: %1$d</item>
+        <item quantity="few">субагентов: %1$d</item>
+        <item quantity="many">субагентов: %1$d</item>
+        <item quantity="other">субагентов: %1$d</item>
+    </plurals>
+    <plurals name="kitWorkSubAgentsDone">
+        <item quantity="one">завершено: %1$d</item>
+        <item quantity="few">завершено: %1$d</item>
+        <item quantity="many">завершено: %1$d</item>
+        <item quantity="other">завершено: %1$d</item>
+    </plurals>
+    <plurals name="kitWorkSubAgentsWorking">
+        <item quantity="one">работают: %1$d</item>
+        <item quantity="few">работают: %1$d</item>
+        <item quantity="many">работают: %1$d</item>
+        <item quantity="other">работают: %1$d</item>
+    </plurals>
+    <plurals name="kitWorkSubAgentsStopped">
+        <item quantity="one">остановлено: %1$d</item>
+        <item quantity="few">остановлено: %1$d</item>
+        <item quantity="many">остановлено: %1$d</item>
+        <item quantity="other">остановлено: %1$d</item>
+    </plurals>
+    <string name="kitWorkSubAgentSpoken">%1$s, субагент, %2$s</string>
 </resources>

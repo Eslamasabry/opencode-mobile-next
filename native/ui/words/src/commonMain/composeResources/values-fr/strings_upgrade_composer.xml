@@ -7,4 +7,5 @@
     <string name="upgradeComposerVoiceHold">Maintenez le micro et parlez\u00A0; relâchez pour placer vos mots dans la zone de saisie. Pour une conversation vocale, ouvrez + et choisissez Conversation vocale.</string>
     <string name="upgradeComposerHoldDictate">Maintenir pour dicter</string>
     <string name="chatReplyInHint">Répondre dans %1$s</string>
+    <string name="chatWaitingForAnswerAbove">En attente de votre réponse plus haut</string>
 </resources>

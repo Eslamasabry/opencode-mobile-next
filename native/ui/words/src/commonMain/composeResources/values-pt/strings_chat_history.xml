@@ -10,4 +10,8 @@
     <string name="chatHistoryEmpty">Ainda não há pedidos recentes.</string>
     <string name="chatHistoryLoading">Carregando pedidos recentes…</string>
     <string name="chatHistoryLoadFailed">Não foi possível carregar os pedidos recentes. Você ainda pode usar os pedidos desta conversa.</string>
+    <string name="chatReplyFooterTokensK">%1$sk tokens</string>
+    <string name="chatReplyFooterTokensM">%1$sM tokens</string>
+    <string name="chatReplyFooterCost">US$ %1$s</string>
+    <string name="chatReplyFooterCostUnderCent">menos de US$ 0,01</string>
 </resources>

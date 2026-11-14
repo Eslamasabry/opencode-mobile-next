@@ -10,4 +10,8 @@
     <string name="chatHistoryEmpty">Aún no hay mensajes recientes.</string>
     <string name="chatHistoryLoading">Cargando mensajes recientes…</string>
     <string name="chatHistoryLoadFailed">No se pudieron cargar los mensajes recientes. Aún puedes usar los mensajes de esta conversación.</string>
+    <string name="chatReplyFooterTokensK">%1$sk tokens</string>
+    <string name="chatReplyFooterTokensM">%1$sM tokens</string>
+    <string name="chatReplyFooterCost">$%1$s</string>
+    <string name="chatReplyFooterCostUnderCent">menos de $0.01</string>
 </resources>

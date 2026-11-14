@@ -7,4 +7,5 @@
     <string name="upgradeComposerVoiceHold">Tahan mikrofon dan bicara; lepas untuk memasukkan ucapan Anda ke kotak. Untuk percakapan suara, buka + lalu pilih Percakapan suara.</string>
     <string name="upgradeComposerHoldDictate">Tahan untuk mendikte</string>
     <string name="chatReplyInHint">Balas di %1$s</string>
+    <string name="chatWaitingForAnswerAbove">Menunggu jawaban Anda di atas</string>
 </resources>

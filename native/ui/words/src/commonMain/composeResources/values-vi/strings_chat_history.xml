@@ -10,4 +10,8 @@
     <string name="chatHistoryEmpty">Chưa có lời nhắc gần đây.</string>
     <string name="chatHistoryLoading">Đang tải lời nhắc gần đây…</string>
     <string name="chatHistoryLoadFailed">Không thể tải lời nhắc gần đây. Bạn vẫn dùng được các lời nhắc trong cuộc trò chuyện này.</string>
+    <string name="chatReplyFooterTokensK">%1$sk token</string>
+    <string name="chatReplyFooterTokensM">%1$sM token</string>
+    <string name="chatReplyFooterCost">$%1$s</string>
+    <string name="chatReplyFooterCostUnderCent">dưới $0,01</string>
 </resources>
