@@ -77,3 +77,8 @@ tasks.withType<Test>().matching { it.name == "desktopTest" }.configureEach {
     outputs.upToDateWhen { false }
     outputs.cacheIf { false }
 }
+
+// The Android host tests name their broken assertion in the CI log too (the report is not uploaded).
+tasks.withType<Test>().matching { it.name == "testAndroidHostTest" }.configureEach {
+    testLogging { exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL }
+}
