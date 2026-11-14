@@ -263,8 +263,7 @@ class ChatPresenterTest {
     }
 
     @Test
-    fun `09-7_3 the earlier-messages pill opens the timeline sheet`() {
-        // Flutter chat_transcript.dart:210: the pill opens the timeline sheet (now built), not find.
+    fun `09-7_3 the message timeline opens with an empty search, not find`() {
         val p = presenter()
         p.openTimeline()
         assertEquals("", p.current().timeline?.query)
