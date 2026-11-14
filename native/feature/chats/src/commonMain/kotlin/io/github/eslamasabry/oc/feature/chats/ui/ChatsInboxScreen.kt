@@ -130,7 +130,7 @@ internal fun ChatsInboxScreen(state: ChatsUi, actions: ChatsActions) {
                                     KitRowStateTone.Quiet,
                                 ),
                                 done = true,
-                                onClick = if (row.canOpen) ({ actions.openConversation(row.ref) }) else null,
+                                onClick = { actions.openConversation(row.ref) },
                             )
                         }
                     }

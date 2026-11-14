@@ -1,6 +1,7 @@
 package io.github.eslamasabry.oc.engine.updates
 
 import io.github.eslamasabry.oc.core.common.AppLog
+import io.github.eslamasabry.oc.core.common.label
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.ok
@@ -440,7 +441,7 @@ public class AppUpdates(
     }
 
     /** Failure kind and status only: never raw exception text (rule 5). */
-    private fun shape(failure: Failure): String = failure.details?.text ?: (failure::class.simpleName ?: "Failure")
+    private fun shape(failure: Failure): String = failure.details?.text ?: failure.label()
 
     public companion object {
         public val CHECK_INTERVAL: Duration = 6.hours

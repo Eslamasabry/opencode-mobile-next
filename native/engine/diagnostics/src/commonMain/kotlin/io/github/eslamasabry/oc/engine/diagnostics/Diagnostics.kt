@@ -2,6 +2,7 @@ package io.github.eslamasabry.oc.engine.diagnostics
 
 import io.github.eslamasabry.oc.core.common.AppLog
 import io.github.eslamasabry.oc.core.common.Failure
+import io.github.eslamasabry.oc.core.common.label
 import io.github.eslamasabry.oc.core.security.Redactor
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.PersistentList
@@ -176,27 +177,8 @@ public class Diagnostics(
         private val REPORT_JSON = Json { prettyPrint = true }
         private val log = AppLog.tagged("diagnostics")
 
-        /** The failure's kind, e.g. `Network Reset`; never its details. */
-        internal fun failureLabel(failure: Failure): String {
-            val name = failure::class.simpleName ?: "Failure"
-            val why =
-                when (failure) {
-                    is Failure.Refused -> failure.reason.name
-                    is Failure.Folder -> failure.problem.name
-                    is Failure.Unavailable -> failure.feature.name
-                    is Failure.Network -> failure.why.name
-                    is Failure.Certificate -> failure.why.name
-                    is Failure.SignIn -> failure.why.name
-                    is Failure.Busy -> failure.kind.name
-                    is Failure.Incompatible -> failure.kind.name
-                    is Failure.Media -> failure.problem.name
-                    is Failure.Runtime -> failure.problem.name
-                    is Failure.Rejected -> failure.status?.let { "HTTP $it" }
-                    is Failure.Server -> failure.status?.let { "HTTP $it" }
-                    else -> null
-                }
-            return if (why == null) name else "$name $why"
-        }
+        /** The failure's stable label, e.g. `Network · Reset`; never its details, never a class name. */
+        internal fun failureLabel(failure: Failure): String = failure.label()
     }
 }
 

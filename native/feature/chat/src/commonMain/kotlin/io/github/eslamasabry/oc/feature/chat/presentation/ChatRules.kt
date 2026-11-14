@@ -460,13 +460,15 @@ public data class LinkRetryFacts(
     val onThisPhone: Boolean = false,
     /** Why the link stopped for good (a rejected password or token), if it did. */
     val stopped: io.github.eslamasabry.oc.core.common.Failure? = null,
+    /** What the page waits for while its server is not ready (open while starting); null for nothing. */
+    val serverWait: io.github.eslamasabry.oc.feature.chat.world.ChatServerWait? = null,
 ) {
     /** Whole seconds left, rounded up (Flutter `(left.inMilliseconds / 1000).ceil()`); never below 0. */
     public val secondsLeft: Int?
         get() = retryAtMs?.let { at -> ((at - nowMs).coerceAtLeast(0) + 999).div(1000).toInt() }
 
     public fun line(id: String, kind: ChatStatusKind): ChatStatusUi =
-        ChatStatusUi(id, kind, stopped, retryInSeconds = secondsLeft, canRestart = onThisPhone)
+        ChatStatusUi(id, kind, stopped, retryInSeconds = secondsLeft, canRestart = onThisPhone, serverWait = serverWait)
 
     public companion object {
         public val None: LinkRetryFacts = LinkRetryFacts()

@@ -292,10 +292,13 @@ class AppChatsHome(
             result
         }
 
+    /**
+     * The place the saved rows are kept under: the saved location only, as [NativeSessionInventory] and the opening
+     * rows read it before any connection exists. It used to prefer the live connection's place, which moves (a
+     * terminal or a schedule sets it) and is Default before it is restored, so a list saved under one place was not
+     * found at the next cold start and the home said "No conversations yet" until the server answered.
+     */
     private fun location(owner: LoadedProfile): ServerLocation {
-        registry.live.value[owner.id]?.session?.server?.location?.value?.let {
-            return it
-        }
         if (owner.profile.usesAgentSocket)
             return ServerLocation(directory = owner.profile.codexDirectory)
         val saved =

@@ -153,6 +153,11 @@ public data class ChatStatusUi(
     val startingAgent: Boolean = false,
     /** Starting the helper failed; the line says so in plain words and offers the action again. */
     val agentFailed: Boolean = false,
+    /**
+     * Open while starting: the conversation waits for its server (connecting, or this phone's OpenCode starting or
+     * updating) and opens by itself; the connection line says which, without a Try again.
+     */
+    val serverWait: io.github.eslamasabry.oc.feature.chat.world.ChatServerWait? = null,
 )
 
 /** A receipt check is only a read. Its timestamp is intentionally not persisted. */
