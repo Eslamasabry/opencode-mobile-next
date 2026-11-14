@@ -203,6 +203,11 @@ class AppPhoneAgents(
     @Volatile private var helperInPlace: Boolean? = null
 
     /** The app build the last [readForUpdate] ran under, kept per phone: `oc.agentUpdateRead.<owner>`. */
+    /** An install that brings the helper to its pin ended: the on-disk check no longer says behind. */
+    internal fun noteHelperInPlace() {
+        helperInPlace = true
+    }
+
     /** The stores are loaded before the updater reads the owner and the kept facts (they load lazily). */
     internal suspend fun warmForUpdate(): Boolean = stores.warm() is Outcome.Ok
 
@@ -223,10 +228,20 @@ class AppPhoneAgents(
                 AgentUpdateStep.WaitingSwitch -> PhoneAgentUpdateNote.WaitingSwitch
                 AgentUpdateStep.WaitingMetered -> PhoneAgentUpdateNote.WaitingMetered
                 AgentUpdateStep.Updating -> PhoneAgentUpdateNote.Updating
+                AgentUpdateStep.Updated -> PhoneAgentUpdateNote.Updated
                 AgentUpdateStep.Refused -> PhoneAgentUpdateNote.Refused
             }
         updateNote = note to name
         mutable.update { it.copy(updateNote = note, updateAgentName = name) }
+    }
+
+    /** The state with the updater's note; a signed-out agent is the more important thing to say once the update is done. */
+    private fun withUpdateNote(state: PhoneAgentsState): PhoneAgentsState {
+        val base = state.copy(updateNote = updateNote.first, updateAgentName = updateNote.second)
+        val needs = base.agents.firstOrNull { it.status == PhoneAgentStatus.SignInNeeded && !it.signInCheckFailed }
+        return if (needs != null && (base.updateNote == null || base.updateNote == PhoneAgentUpdateNote.Updated))
+            base.copy(updateNote = PhoneAgentUpdateNote.NeedsSignIn, updateAgentName = needs.name)
+        else base
     }
 
     private fun updateReadKey(owner: ProfileId) = "oc.agentUpdateRead.${owner.raw}"
@@ -318,7 +333,7 @@ class AppPhoneAgents(
         if (merged != kept) {
             gatePrefs(owner).commit { putString(PhoneAgentFacts.key(owner.raw), PhoneAgentFacts.encode(merged)) }
         }
-        val anyInstalled = merged.values.any { it.installed == true }
+        val anyInstalled = merged.values.any { it.installed == true || it.found != null }
         if (anyInstalled) {
             val place =
                 native { linux.run(PaseoPhoneScripts.check, 120, agentUser = true, logOutput = false).exitCode }
@@ -344,7 +359,10 @@ class AppPhoneAgents(
         if (needsRestart || !linux.installed) return null
         val owner = agentOwner(ownerId()) ?: return null
         val kept = keptFacts(owner)
-        val installed = phoneCatalog().filter { kept[it.id.raw]?.installed == true }
+        // A copy that runs but is not the pinned version has installed=false in the version answer (that field means
+        // "the pin is installed") and a found version: it is installed, and behind.
+        val installed =
+            phoneCatalog().filter { kept[it.id.raw]?.let { fact -> fact.installed == true || fact.found != null } == true }
         val behind =
             installed
                 .filter { agent ->
@@ -583,7 +601,7 @@ class AppPhoneAgents(
         mutable.value =
             if (owner != null && synchronized(admission) { owner in denied })
                 PhoneAgentsState(needsRestart = needsRestart)
-            else shownState.copy(updateNote = updateNote.first, updateAgentName = updateNote.second)
+            else withUpdateNote(shownState)
     }
 
     /**
@@ -716,6 +734,7 @@ class AppPhoneAgents(
                                     shown?.phase != PhoneAgentInstallPhase.Installing &&
                                     authOwner != null &&
                                     knownPrevious(authOwner, agent, PhoneAgentRules.foundVersion(version)),
+                            installedVersion = PhoneAgentRules.foundVersion(version),
                             removable =
                                 removal.removable(agent.id) &&
                                     present == true &&

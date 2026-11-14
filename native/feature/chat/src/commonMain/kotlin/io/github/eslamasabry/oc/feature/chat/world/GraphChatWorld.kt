@@ -798,6 +798,7 @@ internal class GraphChatWorld(
                         when {
                             down && phone == PhoneServerWait.Updating -> ChatServerWait.Updating
                             down && phone == PhoneServerWait.UpdatingAgents -> ChatServerWait.UpdatingAgents
+                            down && phone == PhoneServerWait.AgentNeedsSignIn -> ChatServerWait.AgentNeedsSignIn
                             down && phone == PhoneServerWait.Starting -> ChatServerWait.Starting
                             waiting -> ChatServerWait.Connecting
                             else -> null
@@ -820,7 +821,9 @@ internal class GraphChatWorld(
 
     /** The phone's agents are being updated and this conversation's server is their helper: it waits and says so. */
     private fun agentsUpdating(): Boolean =
-        phoneServer?.waiting(ref.profileId)?.value == PhoneServerWait.UpdatingAgents
+        phoneServer?.waiting(ref.profileId)?.value.let {
+            it == PhoneServerWait.UpdatingAgents || it == PhoneServerWait.AgentNeedsSignIn
+        }
 
     /** This phone's server is starting or updating: a wait for it does not count toward [NOT_READY_LIMIT_MS]. */
     private fun phoneBusy(): Boolean =

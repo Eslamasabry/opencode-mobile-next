@@ -233,6 +233,35 @@ class AgentAutoUpdateTest {
         }
 
     @Test
+    fun `AGENT-AUTO-UPDATE an agent-only update does not wait for agents that are busy, a helper update does`() =
+        runTest {
+            val host = Host().apply {
+                installed = listOf(claude, codex); behind = setOf(codex); helperBehind = false
+            }
+            val jobs = Jobs()
+            // Claude's conversation is busy; Codex's own files are replaced now, the helper is untouched.
+            AgentAutoUpdater(host, jobs) { true }.changed()
+            assertEquals(listOf(codex), jobs.started)
+            val second = Jobs()
+            host.pinKey = "other"
+            host.helperBehind = true
+            AgentAutoUpdater(host, second) { true }.changed()
+            assertTrue(second.started.isEmpty())
+        }
+
+    @Test
+    fun `AGENT-AUTO-UPDATE the line says updated for the agent whose install ended`() = runTest {
+        val host = Host()
+        val updater = AgentAutoUpdater(host, Jobs()) { false }
+        updater.changed()
+        updater.finished(claude)
+        assertEquals(AgentUpdateStep.Updated, updater.decision.value.step)
+        assertEquals("agent update: finished claude", updater.decision.value.line())
+        updater.changed()
+        assertEquals(AgentUpdateStep.Updated, updater.decision.value.step)
+    }
+
+    @Test
     fun `AGENT-AUTO-UPDATE a read that cannot finish is reported and not repeated this run`() = runTest {
         val host = Host().apply { due = true }
         host.keepDueAfterRead = true

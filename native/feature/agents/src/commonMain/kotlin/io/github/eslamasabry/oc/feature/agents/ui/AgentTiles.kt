@@ -411,7 +411,8 @@ internal fun PhoneAgentSheet(state: AgentsUi, actions: AgentsActions, enabled: K
         visible = tile != null,
         onDismissRequest = actions::closeAgent,
         title = agent?.name ?: stringResource(Res.string.agentsStateReady),
-        subtitle = tile?.let { tileWords(it) },
+        // Where it stands, and the version that runs: so "updated or not" is visible.
+        subtitle = tile?.let { words -> tileWords(words).let { w -> agent?.installedVersion?.let { "$w · $it" } ?: w } },
         primary =
             when (tile?.act) {
                 AgentTileAct.Install ->

@@ -16,7 +16,10 @@ import io.github.eslamasabry.oc.feature.chat.world.ChatPhoneServer
 import io.github.eslamasabry.oc.feature.chat.world.PhoneServerWait
 import io.github.eslamasabry.oc.feature.phone.presentation.PhoneServerFacts
 import io.github.eslamasabry.oc.feature.phone.presentation.RecoveryFacts
+import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentStatus
+import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgents
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -38,6 +41,7 @@ class AndroidChatPhoneServer(
     private val server: PhoneServerSource,
     private val agentHost: Lazy<AppLocalAgentHostStarter>,
     private val agentUpdate: PhoneAgentUpdateStatus,
+    private val phoneAgents: Lazy<PhoneAgents>,
     private val appScope: AppCoroutineScope,
 ) : ChatPhoneServer {
     override fun runsHere(profile: ProfileId): Boolean =
@@ -73,8 +77,16 @@ class AndroidChatPhoneServer(
      * replaced, so an agent conversation waits and says so instead of showing a saved list or a failure.
      */
     private val agentsWait: StateFlow<PhoneServerWait> by lazy {
-        agentUpdate.decision
-            .map { if (it.step == AgentUpdateStep.Updating) PhoneServerWait.UpdatingAgents else PhoneServerWait.None }
+        // Updating wins; otherwise a phone agent that needs a sign-in is said, so a conversation never reads only
+        // "Connecting" for something the person has to do.
+        combine(agentUpdate.decision, phoneAgents.value.state) { decision, agents ->
+                when {
+                    decision.step == AgentUpdateStep.Updating -> PhoneServerWait.UpdatingAgents
+                    agents.agents.any { it.status == PhoneAgentStatus.SignInNeeded && !it.signInCheckFailed } ->
+                        PhoneServerWait.AgentNeedsSignIn
+                    else -> PhoneServerWait.None
+                }
+            }
             .distinctUntilChanged()
             .stateIn(appScope, SharingStarted.Eagerly, PhoneServerWait.None)
     }

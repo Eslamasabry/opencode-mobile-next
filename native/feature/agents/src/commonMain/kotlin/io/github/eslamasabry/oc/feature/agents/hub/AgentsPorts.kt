@@ -162,7 +162,8 @@ public data class PhoneAgentsState(
 
 /** What the automatic agent update says on the phone's status line (the words live in the screen). */
 public enum class PhoneAgentUpdateNote {
-    Reading, WaitingBusy, WaitingSetup, WaitingSwitch, WaitingMetered, Updating, ReadFailed, Refused
+    Reading, WaitingBusy, WaitingSetup, WaitingSwitch, WaitingMetered, Updating, Updated, NeedsSignIn, ReadFailed,
+    Refused
 }
 
 /** The phone's processor ("arm64") and Android version ("15"), as read by the platform. */
@@ -193,6 +194,8 @@ public data class PhoneAgentRow(
      * other place names it signed out (Flutter: failed is "Sign-in could not be checked. Try signing in again.").
      */
     val signInCheckFailed: Boolean = false,
+    /** The version of the copy that runs on this phone ("1.5.9"); null when none runs or it was not read. */
+    val installedVersion: String? = null,
 )
 
 /** Whether [row] is known to be signed out: a sign-in check ran and found no sign-in (not one that could not run). */
