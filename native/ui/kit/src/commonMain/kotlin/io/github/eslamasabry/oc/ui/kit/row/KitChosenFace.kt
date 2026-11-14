@@ -26,8 +26,9 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
 
 /**
- * The container a row lies in, as the chosen face needs it: [reachDp], how far the container's inner edge lies past the
- * row's own box on each side (a sheet's rail, a Glass panel's pane inset; 0 where the row's box already reaches it), and
+ * The container a row lies in, as the chosen face needs it: [reachDp], how far the container's edge lies past the
+ * row's own box on each side (a sheet's rail and pane inset, a Glass panel's pane inset; 0 where the row's box already
+ * reaches it), and
  * [radiusDp], the container's corner radius.
  */
 @Immutable
@@ -39,7 +40,7 @@ public val LocalKitRowContainer: ProvidableCompositionLocal<KitRowContainer?> = 
 /**
  * The one chosen look for a row in a list or a sheet (cut audit 2, finding 3). Every picker draws it through
  * [kitChosenFace], so the chosen row looks the same in every sheet:
- * - the face spans the row's container from edge to edge, inset [SIDE_INSET_DP] (space2) from the container's inner
+ * - the face spans the row's container from edge to edge, inset [SIDE_INSET_DP] (space2) from the container's
  *   edge, so the row's lead icon and its end check lie inside it with the row's own padding around them;
  * - it keeps [TOP_INSET_DP] (space1) from the row's top and bottom, and the container's inner radius (its corner less
  *   the side inset), so it is concentric with the panel or sheet it lies in;
@@ -48,13 +49,13 @@ public val LocalKitRowContainer: ProvidableCompositionLocal<KitRowContainer?> = 
  * The face itself is the style's: Glass's accent-lit glass, every other style an accent tint ([CHOSEN_ROW_TINT]).
  */
 public object ChosenFaceRules {
-    /** From the container's inner edge to the face, each side. */
+    /** From the container's edge to the face, each side. */
     public const val SIDE_INSET_DP: Int = Space.S2
 
     /** From the row's top and bottom to the face. */
     public const val TOP_INSET_DP: Int = Space.S1
 
-    /** The face's box in the row's own px; [reachPx] is how far the container's inner edge lies past the row's box. */
+    /** The face's box in the row's own px; [reachPx] is how far the container's edge lies past the row's box. */
     public fun box(width: Float, height: Float, reachPx: Float, sidePx: Float, topPx: Float): Rect =
         Rect(sidePx - reachPx, topPx, width + reachPx - sidePx, height - topPx)
 
@@ -86,8 +87,10 @@ internal fun kitRowContainer(): KitRowContainer {
     val style = LocalKitStyle.current
     val corners = style.knobs.corners
     val tokens = style.spec.tokens
+    // On a sheet's rail the sheet's edge lies the rail plus the style's pane inset (Glass keeps room for its rim) past
+    // the row's box: the face is set from the sheet's own edge, as from a panel's.
     return if (LocalKitOnRail.current)
-        KitRowContainer(FlutterKitTokens.RAIL.toFloat(), StyleResolver.paneCorner(FlutterKitTokens.SHEET_RADIUS.toFloat(), corners, tokens))
+        KitRowContainer(FlutterKitTokens.RAIL + tokens.paneInsetDp, StyleResolver.paneCorner(FlutterKitTokens.SHEET_RADIUS.toFloat(), corners, tokens))
     else KitRowContainer(0f, StyleResolver.paneCorner(FlutterKitTokens.PANEL_CORNER_RADIUS.toFloat(), corners, tokens))
 }
 
