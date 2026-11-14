@@ -1,6 +1,7 @@
 package io.github.eslamasabry.oc.ui.kitchat.markdown
 
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.ProvidableCompositionLocal
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.AnnotatedString
@@ -50,7 +51,7 @@ public class KitFindMarks(public val query: String, public val current: Int = -1
 }
 
 /** The find marks of the row being drawn; null when Find is closed. */
-public val LocalKitFindMarks = compositionLocalOf<KitFindMarks?> { null }
+public val LocalKitFindMarks: ProvidableCompositionLocal<KitFindMarks?> = compositionLocalOf { null }
 
 /**
  * [this] with the matches of [marks] painted: the tint behind each, the stronger tint behind the one whose number

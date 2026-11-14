@@ -12,7 +12,7 @@ class KitFindMarksTest {
     @Test
     fun `A2-02 matches are literal, case-blind and do not overlap`() {
         val marks = KitFindMarks("  aa ")
-        assertEquals(listOf(0 until 2, 3 until 5), marks.ranges("aaa AA a"))
+        assertEquals(listOf(0 until 2, 4 until 6), marks.ranges("aaa AA a"))
         assertEquals(emptyList(), KitFindMarks("   ").ranges("anything"))
         assertEquals(emptyList(), KitFindMarks("longer than the text").ranges("short"))
     }

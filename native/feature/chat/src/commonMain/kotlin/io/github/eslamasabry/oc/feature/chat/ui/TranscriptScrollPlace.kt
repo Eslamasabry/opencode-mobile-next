@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.chat.ui
 
+import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
