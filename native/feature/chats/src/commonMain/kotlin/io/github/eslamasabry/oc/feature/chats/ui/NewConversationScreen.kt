@@ -606,7 +606,8 @@ private fun NewConversationAgentStep(state: NewConversationUi, actions: NewConve
                 title = agent.name,
                 leading = KitRowLeading.Logo(agent.iconKey, agent.name, agent = true),
                 trailing = KitRowTrailing.Chevron,
-                supporting = stringResource(Res.string.chatsNewSetUp),
+                supporting =
+                    stringResource(if (agent.checking) Res.string.r40PhoneChecking else Res.string.chatsNewSetUp),
                 onClick = { actions.setUpPhoneAgent(agent.id) },
                 modifier = Modifier.testTag("chats-new-agent-${agent.id}"),
             )
