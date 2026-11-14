@@ -6,6 +6,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.getBoundsInRoot
+import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.v2.runComposeUiTest
@@ -129,10 +130,11 @@ class StoppedOnceScreenTest {
         )
 
     @Test
-    fun `a live stopped turn with one step says Stopped once and its work line says 1 step`() = runComposeUiTest {
+    // D1: was "... and its work line says 1 step"; the turn's work is its step, in view, and "Stopped" is said once.
+    fun `a live stopped turn with one step says Stopped once and shows its step`() = runComposeUiTest {
         show(stepRows, listOf(ask, reply(step)), live = true)
         onAllNodesWithText("Stopped", useUnmergedTree = true).assertCountEquals(1)
-        onNodeWithText("1 step", useUnmergedTree = true).assertExists()
+        onAllNodesWithTag("chat-step-t-read", useUnmergedTree = true).assertCountEquals(1)
         onNodeWithText("1 step · Stopped", useUnmergedTree = true).assertDoesNotExist()
     }
 
@@ -140,7 +142,7 @@ class StoppedOnceScreenTest {
     fun `the same turn reopened draws the same lines`() = runComposeUiTest {
         show(stepRows, listOf(ask, reply(step)), live = false)
         onAllNodesWithText("Stopped", useUnmergedTree = true).assertCountEquals(1)
-        onNodeWithText("1 step", useUnmergedTree = true).assertExists()
+        onAllNodesWithTag("chat-step-t-read", useUnmergedTree = true).assertCountEquals(1)
         onNodeWithText("1 step · Stopped", useUnmergedTree = true).assertDoesNotExist()
     }
 

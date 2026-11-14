@@ -27,6 +27,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.collapse
@@ -292,6 +293,9 @@ private fun Modifier.share(share: Float): Modifier = layout { measurable, constr
  * every step, 32 dp (more only for larger text), a quiet dot on the rail, [title] in the secondary role and tone, no
  * chevron (a tap opens it) and the 48 dp target centred on the line. Opened, [body] sits at the text's own x under the
  * line and fades in over QUICK. Outside a timeline nothing is drawn: the host keeps its own row there.
+ *
+ * [icon] (D1 "steps only", 2026-11-14): a step of its own kind on the rail (a thought: the idea glyph) draws that glyph
+ * at the steps' glyph size in place of the dot, so the rail meets it as it meets every step.
  */
 @Composable
 public fun KitStepFold(
@@ -299,6 +303,7 @@ public fun KitStepFold(
     expanded: Boolean,
     onToggle: () -> Unit,
     modifier: Modifier = Modifier,
+    icon: ImageVector? = null,
     body: @Composable () -> Unit,
 ) {
     if (!kitOnStepRail()) return
@@ -328,10 +333,12 @@ public fun KitStepFold(
         box = m.stepLine,
         top = 0.dp,
         modifier = modifier.widthIn(max = 700.dp), // F: lib/ui/kit/kit_layout.dart:48 paneDetailMaxWidth
-        half = 3.dp,
+        half = if (icon != null) null else 3.dp,
         node = {
+            // The steps' own node: the glyph bare, at the size every step's glyph has.
+            if (icon != null) KitStepTile(icon, KitStepNodeLook.Plain, m.glyph)
             // F: lib/ui/kit/chat/kit_step_node.dart:63-68 a 6 dp dot in text3
-            Box(Modifier.size(6.dp).background(colors.text3, CircleShape)) // F: lib/ui/kit/chat/kit_step_node.dart:38
+            else Box(Modifier.size(6.dp).background(colors.text3, CircleShape)) // F: lib/ui/kit/chat/kit_step_node.dart:38
         },
     ) {
         Column(Modifier.fillMaxWidth()) {

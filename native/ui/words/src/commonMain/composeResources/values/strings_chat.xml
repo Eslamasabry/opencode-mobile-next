@@ -653,6 +653,32 @@
         <item quantity="other">Show %1$d earlier steps</item>
     </plurals>
     <string name="kitWorkEarlierSteps__eq1">Show 1 earlier step</string>
+    <string name="kitWorkHideEarlierSteps">Hide earlier steps</string>
+    <plurals name="kitWorkFoldDeclined">
+        <item quantity="one">%1$d declined</item>
+        <item quantity="other">%1$d declined</item>
+    </plurals>
+    <plurals name="kitWorkFoldFailed">
+        <item quantity="one">%1$d failed</item>
+        <item quantity="other">%1$d failed</item>
+    </plurals>
+    <plurals name="kitWorkSubAgents">
+        <item quantity="one">%1$d sub-agent</item>
+        <item quantity="other">%1$d sub-agents</item>
+    </plurals>
+    <plurals name="kitWorkSubAgentsDone">
+        <item quantity="one">%1$d done</item>
+        <item quantity="other">%1$d done</item>
+    </plurals>
+    <plurals name="kitWorkSubAgentsWorking">
+        <item quantity="one">%1$d working</item>
+        <item quantity="other">%1$d working</item>
+    </plurals>
+    <plurals name="kitWorkSubAgentsStopped">
+        <item quantity="one">%1$d stopped</item>
+        <item quantity="other">%1$d stopped</item>
+    </plurals>
+    <string name="kitWorkSubAgentSpoken">%1$s, sub-agent, %2$s</string>
     <string name="kitAgentStripLabel">Agents on this task</string>
     <string name="kitAgentOpen">Open %1$s's conversation</string>
     <string name="kitAgentLabel__yes">%1$s, %2$s, %3$s</string>

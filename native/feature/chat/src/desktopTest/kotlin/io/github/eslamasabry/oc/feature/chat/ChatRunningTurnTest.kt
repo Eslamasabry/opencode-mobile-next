@@ -137,20 +137,21 @@ class ChatRunningTurnTest {
         )
 
     @Test
-    fun `B-CHAT-063 while a step runs the live line names it with the time and the work line waits behind it`() =
+    // D1 "steps only" (owner 2026-11-14) replaces "the live line names the step and the work line waits behind it": the
+    // steps stay in view while the turn runs, the running one on the rail, and the live line under them says the agent
+    // works and for how long without naming that step a second time.
+    fun `B-CHAT-063 while a step runs the steps stay in view and the live line says how long the turn has run`() =
         runComposeUiTest {
             val actions = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
             val state = running(WorkLineRow("work:m1", "m1", calls = 2, failed = 0, state = WorkState.Running), prompt("m1", "fix the build"))
             setContent { Root { ChatScreen(state, actions, composerSlot, facts = runningFacts()) } }
-            // Flutter kit_turn.dart:910-919: the step in hand and, after five seconds, how long the turn has run.
-            onNodeWithText("Running npm test · 12 s").assertIsDisplayed()
-            // transcript_rows.dart:464: the live line names the step, so the work draws nothing meanwhile.
-            onNodeWithTag("chat-work-line").assertDoesNotExist()
-            // chat_stop_after_step.dart:155: a tap on the live line shows the steps, opened.
-            onNodeWithTag("chat-live-line").performClick()
-            waitForIdle()
+            // Flutter kit_turn.dart:910-919: after five seconds, how long the turn has run ("12 s" never breaks).
+            onNodeWithText("Working · 12 s").assertIsDisplayed()
+            onAllNodesWithText("Running npm test", substring = true).assertCountEquals(0)
+            // The steps, the finished one and the running one, in view without a tap.
             onNodeWithTag("chat-work-line").assertExists()
             onNodeWithText("git status", substring = true).assertIsDisplayed()
+            onNodeWithText("npm test", substring = true).assertIsDisplayed()
         }
 
     @Test

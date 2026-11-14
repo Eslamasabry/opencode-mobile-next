@@ -15,6 +15,7 @@ import io.github.eslamasabry.oc.ui.words.res.kitTurnLiveMinutes
 import io.github.eslamasabry.oc.ui.words.res.kitTurnLiveNow
 import io.github.eslamasabry.oc.ui.words.res.kitTurnLiveSeconds
 import io.github.eslamasabry.oc.ui.words.res.kitTurnLiveThinking
+import io.github.eslamasabry.oc.ui.words.res.kitTurnLiveWorking
 import io.github.eslamasabry.oc.ui.words.res.kitTurnLiveWriting
 import org.jetbrains.compose.resources.stringResource
 
@@ -74,7 +75,9 @@ internal fun liveLineWords(
     val now = work?.now
     val words =
         when {
-            now != null && work != null -> nowWords(now, work.counts)
+            // D1 "steps only" (2026-11-14): the step in hand is in view on the turn's step list with its light and its
+            // time, so the live line says that the agent works and for how long, never the same step a second time.
+            now != null && work != null -> stringResource(Res.string.kitTurnLiveWorking)
             writing -> stringResource(Res.string.kitTurnLiveWriting)
             else -> stringResource(Res.string.kitTurnLiveThinking)
         }

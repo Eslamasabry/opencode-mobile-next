@@ -11,6 +11,9 @@ import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.compositionLocalOf
+import io.github.eslamasabry.oc.ui.kitchat.request.KitRequestLook
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.runtime.LaunchedEffect
@@ -168,16 +171,22 @@ public fun ChatRequestSlot(
     /** The edge light asks the slot to show this request's card (scrolled into view once), then [onShown]. */
     show: RequestShow? = null,
     onShown: (seq: Long) -> Unit = {},
+    /** D1: cards drawn in place under their steps on the turn's step list ([ChatRequestInPlace]); the slot skips them. */
+    placed: Set<RequestId> = emptySet(),
+    /** The card whose Details sheet is open, when the page holds it (a card in place opens the same sheet). */
+    details: MutableState<RequestId?>? = null,
 ) {
     // P-009: the slot stays composed while its last card folds away (fade + collapse, instant under
     // reduced motion), and a card that arrives right after another left unfolds in the same stack
     // instead of swapping in.
     val held = remember { RequestSlotHold() }
-    val cards = held.cards(state.cards)
+    val own = if (placed.isEmpty()) state.cards else state.cards.filterNot { it.id in placed }
+    val cards = held.cards(own)
     // P-103: the first waiting card in full, the others one line each until the person opens one.
     var opened by remember { mutableStateOf(emptySet<RequestId>()) }
     // S28 story 4: the card whose Details sheet is open (screen state, never a route).
-    var details by remember { mutableStateOf<RequestId?>(null) }
+    val detailsState = details ?: remember { mutableStateOf<RequestId?>(null) }
+    var details by detailsState
     val open = RequestStackRules.stillOpened(opened, cards)
     val folded = RequestStackRules.folded(cards, open, state.focused)
     // "Show this request": once its card is in the slot and open in full, the slot scrolls to it and says it did.
@@ -194,7 +203,7 @@ public fun ChatRequestSlot(
             shownBack(show.seq)
         }
     }
-    KitReveal(visible = state.cards.isNotEmpty(), modifier = modifier) {
+    KitReveal(visible = own.isNotEmpty(), modifier = modifier) {
         val total = cards.size
         KitRequestStack(
             items = cards,
@@ -215,7 +224,7 @@ public fun ChatRequestSlot(
                 alignment = Alignment.TopStart,
             ) { isFolded ->
                 if (isFolded) FoldedRequestRow(card) { opened = open + card.id }
-                else key(card.id, card.captured) { RequestCard(card, actions, nowMs) { details = card.id } }
+                else key(card.id, card.captured) { RequestCard(card, actions, nowMs, onDetails = { details = card.id }) }
             }
         }
     }
@@ -264,6 +273,7 @@ private fun RequestCard(
     actions: ChatRequestActions,
     nowMs: Long?,
     onDetails: () -> Unit,
+    inPlace: Boolean = false,
 ) {
     LaunchedEffect(card.id) { actions.shown(card.id) }
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
@@ -271,15 +281,21 @@ private fun RequestCard(
             CardState.Waiting -> {
                 val since = card.waitingSinceMs
                 // C02: the caption keeps the page gutter, as the card under it does; it used to start on the window's
-                // edge (and was clipped there in Arabic).
-                KitRequestWaitingCaption(
-                    waiting =
-                        if (nowMs != null && since != null) waitedWords(nowMs - since) else null,
-                    modifier = Modifier.padding(horizontal = kitPageGutter()),
-                )
+                // edge (and was clipped there in Arabic). In place the step's own row already says it waits.
+                if (!inPlace)
+                    KitRequestWaitingCaption(
+                        waiting =
+                            if (nowMs != null && since != null) waitedWords(nowMs - since) else null,
+                        modifier = Modifier.padding(horizontal = kitPageGutter()),
+                    )
                 when (card) {
                     is RequestCardUi.Permission -> {
-                        PermissionWaiting(card, actions, onDetails.takeIf { card.captured != null })
+                        PermissionWaiting(
+                            card,
+                            actions,
+                            onDetails.takeIf { card.captured != null },
+                            if (inPlace) KitRequestLook.InPlace else KitRequestLook.Standard,
+                        )
                         card.invitationFailure?.let {
                             KitErrorNotice(
                                 stringResource(Res.string.consentAlwaysAllowFailed),
@@ -308,15 +324,19 @@ private fun RequestCard(
                     is RequestCardUi.Question -> QuestionWaiting(card, actions)
                 }
             }
-            is CardState.Held -> HeldLine(card, receiptWords(card, phase.words), actions)
+            is CardState.Held -> HeldLine(card, receiptWords(card, phase.words), actions, inPlace)
             is CardState.Sending ->
-                AnsweredLine(card, receiptWords(card, phase.words), KitReceiptState.Sending, null)
+                AnsweredLine(card, receiptWords(card, phase.words), KitReceiptState.Sending, null, inPlace)
             is CardState.Sent ->
-                AnsweredLine(card, receiptWords(card, phase.words), KitReceiptState.Sent, null)
+                AnsweredLine(card, receiptWords(card, phase.words), KitReceiptState.Sent, null, inPlace)
             is CardState.NotAccepted ->
-                AnsweredLine(card, receiptWords(card, phase.words), KitReceiptState.Refused(null)) {
-                    actions.performReviewed(card, ReviewedRequestAction.Retry)
-                }
+                AnsweredLine(
+                    card,
+                    receiptWords(card, phase.words),
+                    KitReceiptState.Refused(null),
+                    onRetry = { actions.performReviewed(card, ReviewedRequestAction.Retry) },
+                    inPlace = inPlace,
+                )
             CardState.NoLongerNeeded -> NoLongerNeededLine(card)
         }
     }
@@ -384,6 +404,7 @@ private fun PermissionWaiting(
     card: RequestCardUi.Permission,
     actions: ChatRequestActions,
     onDetails: (() -> Unit)?,
+    look: KitRequestLook = KitRequestLook.Standard,
 ) {
     val always = card.canAlwaysAllow && !card.invitation
     val copies = RequestCardRules.copiesTargets(card.ask)
@@ -422,6 +443,7 @@ private fun PermissionWaiting(
         onDeny = { actions.performReviewed(card, ReviewedRequestAction.Reject) },
         onDetails = onDetails,
         change = card.change?.let { changeOnCard(it, card.ask, onDetails) },
+        look = look,
     )
 }
 
@@ -730,11 +752,12 @@ private fun OtherField(
  * like the card it replaces (it was drawn from the window's edge).
  */
 @Composable
-private fun HeldLine(card: RequestCardUi, words: String, actions: ChatRequestActions) {
+private fun HeldLine(card: RequestCardUi, words: String, actions: ChatRequestActions, inPlace: Boolean = false) {
     KitRequestAnsweredRow(
         icon = if (card is RequestCardUi.Question) KitIcons.question else KitIcons.permissions,
         title = words,
         modifier = Modifier.testTag("chat-request-answered").semantics { liveRegion = LiveRegionMode.Polite },
+        inPlace = inPlace,
     ) {
         KitButton(
             stringResource(Res.string.chatStopAfterStepUndo),
@@ -746,12 +769,34 @@ private fun HeldLine(card: RequestCardUi, words: String, actions: ChatRequestAct
 
 /** After the hold: the answer and its receipt ("Sent" is never "Done"), on the page's edge (the kit's answered row). */
 @Composable
-private fun AnsweredLine(card: RequestCardUi, words: String, receipt: KitReceiptState, onRetry: (() -> Unit)?) {
+private fun AnsweredLine(card: RequestCardUi, words: String, receipt: KitReceiptState, onRetry: (() -> Unit)?, inPlace: Boolean = false) {
     KitRequestAnsweredRow(
         icon = if (card is RequestCardUi.Question) KitIcons.question else KitIcons.permissions,
         title = words,
         modifier = Modifier.testTag("chat-request-answered"),
+        inPlace = inPlace,
     ) {
         KitReceipt(receipt, onRetry = onRetry)
+    }
+}
+
+/**
+ * D1 "steps only" (owner 2026-11-14): the permission asks of the turn in view drawn in place under the step each one is
+ * for ([byCall], by the tool call), and how one is drawn ([draw]). The request slot above the message box skips them.
+ */
+internal class InPlaceRequests(val byCall: Map<String, RequestCardUi>, val draw: @Composable (RequestCardUi) -> Unit)
+
+/** The page's in-place asks for the transcript's step list; null where the page has none. */
+internal val LocalInPlaceRequests = compositionLocalOf<InPlaceRequests?> { null }
+
+/**
+ * One permission ask in place under its step (D1): no card ([KitRequestLook.InPlace]), no waiting caption (the step's
+ * row says it waits); the same answers, Always allow where the server keeps grants, Undo, receipts and Details as the
+ * card in the slot has, from the same states and actions.
+ */
+@Composable
+internal fun ChatRequestInPlace(card: RequestCardUi, actions: ChatRequestActions, onDetails: () -> Unit, modifier: Modifier = Modifier) {
+    Column(modifier.fillMaxWidth().padding(top = Space.S1.dp, bottom = Space.S2.dp).testTag("chat-request-in-place")) {
+        RequestCard(card, actions, nowMs = null, onDetails = onDetails, inPlace = true)
     }
 }

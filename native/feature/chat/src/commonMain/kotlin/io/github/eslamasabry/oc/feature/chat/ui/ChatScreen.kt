@@ -71,10 +71,15 @@ import io.github.eslamasabry.oc.feature.chat.presentation.StatusPick
 import io.github.eslamasabry.oc.feature.chat.presentation.TurnFactsUi
 import io.github.eslamasabry.oc.feature.chat.requests.presentation.ChatRequestActions
 import io.github.eslamasabry.oc.feature.chat.requests.presentation.RequestSlotUi
+import io.github.eslamasabry.oc.feature.chat.requests.presentation.InPlaceRules
+import io.github.eslamasabry.oc.feature.chat.requests.ui.ChatRequestInPlace
 import io.github.eslamasabry.oc.feature.chat.requests.ui.ChatRequestSlot
+import io.github.eslamasabry.oc.feature.chat.requests.ui.InPlaceRequests
+import io.github.eslamasabry.oc.feature.chat.requests.ui.LocalInPlaceRequests
 import io.github.eslamasabry.oc.feature.chat.requests.ui.RequestShow
 import io.github.eslamasabry.oc.core.common.ids.RequestId
 import io.github.eslamasabry.oc.ui.words.res.chatReplyInHint
+import io.github.eslamasabry.oc.ui.words.res.chatWaitingForAnswerAbove
 import io.github.eslamasabry.oc.ui.words.res.commandUntitledChat
 import io.github.eslamasabry.oc.ui.words.res.workspaceNewSession
 import io.github.eslamasabry.oc.feature.chat.header.ui.LocalChatHeaderActs
@@ -498,12 +503,25 @@ public fun ChatScreen(
     val newWords = stringResource(Res.string.workspaceNewSession)
     val replyInWords =
         state.title?.let { stringResource(Res.string.chatReplyInHint, ConversationTitle.display(it, untitledWords, newWords)) }
-    val replyHint =
+    val arrivalHint =
         remember(switchArrival?.seq, switchArrival?.hint, replyInWords) {
             if (switchArrival?.hint == true && replyInWords != null)
                 ReplyHint(replyInWords) { onHintTyped(switchArrival.seq) }
             else null
         }
+    // D1 "steps only" (owner 2026-11-14): a permission ask for a step of the turn in view is answered in place under that
+    // step; the slot above the message box skips it, and the box says the answer is above while it waits.
+    val requestDetails = remember { mutableStateOf<RequestId?>(null) }
+    val placedRequests = remember(requests.cards, facts.work) { InPlaceRules.placed(requests.cards, facts.work.values.lastOrNull()) }
+    val inPlaceRequests =
+        remember(placedRequests, requestActions) {
+            val answer = requestActions
+            if (answer == null || placedRequests.isEmpty()) null
+            else InPlaceRequests(placedRequests) { card -> ChatRequestInPlace(card, answer, onDetails = { requestDetails.value = card.id }) }
+        }
+    val waitingWords = stringResource(Res.string.chatWaitingForAnswerAbove)
+    val waitingHint = remember(waitingWords) { ReplyHint(waitingWords) {} }
+    val replyHint = if (inPlaceRequests != null && InPlaceRules.waiting(placedRequests)) waitingHint else arrivalHint
     val frost = rememberKitFrostState()
     // Find no longer moves the page to the stacked layout (audit 2026-11-14): its one row stands in the bottom block over
     // the message box, the transcript ends above the block (and above "Jump to latest", which stays apart over no words),
@@ -964,6 +982,8 @@ public fun ChatScreen(
                                     modifier = Modifier,
                                     show = requestFocus?.let { RequestShow(RequestId(it.requestId), it.seq) },
                                     onShown = onRequestShown,
+                                    placed = if (inPlaceRequests == null) emptySet() else placedRequests.values.mapTo(HashSet()) { it.id },
+                                    details = requestDetails,
                                 )
                             if (requests.card == null) formSlot?.invoke(Modifier)
                             // The composer is the conversation's: it shows once the conversation has loaded
@@ -1023,6 +1043,7 @@ public fun ChatScreen(
                                             remember(state.setUpReplies, actions) {
                                                 AgentSetUpReply(state.setUpReplies, actions::setUpAgent)
                                             },
+                                        LocalInPlaceRequests provides inPlaceRequests,
                                     ) {
                                         ChatTranscriptList(
                                             folds = folds,

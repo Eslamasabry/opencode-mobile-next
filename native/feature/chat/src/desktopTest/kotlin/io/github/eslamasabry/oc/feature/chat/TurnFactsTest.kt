@@ -359,25 +359,27 @@ class TurnFactsTest {
     }
 
     @Test
-    fun `B-CHAT-063 B-CHAT-111 B-CHAT-109 the work line folds the steps and opens to plain-word steps with durations`() =
+    // D1 "steps only" (owner 2026-11-14): was "the work line folds the steps and opens to ..."; there is no summary line
+    // any more, the steps themselves are the turn's work, in view at once.
+    fun `B-CHAT-063 B-CHAT-111 B-CHAT-109 the turn's work is its plain-word steps with durations, in view without a tap`() =
         runComposeUiTest {
             val actions = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
             setContent { Root { ChatScreen(screenState(), actions, composer, facts = screenFacts()) } }
-            onNodeWithText("Read 1 file · edited 1 file · ran 1 command").assertIsDisplayed().performClick()
+            onAllNodesWithText("Read 1 file · edited 1 file · ran 1 command").assertCountEquals(0)
             // E20-S25: a shell step's line is its command in mono (Flutter `_buildTimelineStep`).
             onNodeWithText("npm test", substring = true).assertIsDisplayed()
             onNodeWithText("4.2s", substring = true).assertIsDisplayed()
         }
 
     @Test
-    fun `E20-S25 the opened work line's steps hang off the rail with no chevron of their own`() =
+    fun `E20-S25 the turn's steps hang off the rail with no chevron of their own`() =
         runComposeUiTest {
             val actions = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
             setContent { Root { ChatScreen(screenState(), actions, composer, facts = screenFacts()) } }
-            onNodeWithText("Read 1 file · edited 1 file · ran 1 command").assertIsDisplayed().performClick()
             waitForIdle()
-            // The group's line has the one chevron; the three steps each draw a node on the rail and no chevron.
-            onAllNodesWithTag("kit-step-timeline-chevron", useUnmergedTree = true).assertCountEquals(1)
+            // D1: no summary line and so no chevron of its own; the three steps each draw a node on the rail and no chevron.
+            onAllNodesWithTag("kit-step-timeline-chevron", useUnmergedTree = true).assertCountEquals(0)
+            onAllNodesWithTag("chat-work-line", useUnmergedTree = true).assertCountEquals(1)
             onAllNodesWithTag("kit-tool-chevron", useUnmergedTree = true).assertCountEquals(0)
             onAllNodesWithTag("kit-step-node", useUnmergedTree = true).assertCountEquals(3)
         }
@@ -389,7 +391,6 @@ class TurnFactsTest {
             setContent { Root { ChatScreen(screenState(), actions, composer, facts = screenFacts()) } }
             // N-45: a turn with a work line says what it edited and ran there; no second "Edited … · ran …" row.
             onNodeWithTag("chat-turn-result").assertDoesNotExist()
-            onNodeWithText("Read 1 file · edited 1 file · ran 1 command").assertIsDisplayed().performClick()
             // The read step and the edit step both name the file; the shell step names the command.
             onAllNodesWithText("a.kt", substring = true).assertCountEquals(2)[1].assertIsDisplayed()
             onNodeWithText("npm test", substring = true).assertIsDisplayed()
@@ -432,7 +433,7 @@ class TurnFactsTest {
             val opened = mutableListOf<String>()
             val actions = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
             setContent { Root { ChatScreen(screenState(), actions, composer, facts = facts, onOpenSession = { opened += it }) } }
-            onNodeWithText("Delegated 1 task").assertIsDisplayed().performClick()
+            // D1: a lone sub-agent is a step of its own on the rail (two that ran together make a group).
             onNodeWithTag("chat-step-t9").performClick()
             onNodeWithText("Open its conversation").assertIsDisplayed().performClick()
             assertEquals(listOf("child-1"), opened)
@@ -458,8 +459,7 @@ class TurnFactsTest {
             val facts = TurnFactsPresenter(FixedClock).present(k.feed.value, 5_000)
             val actions = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
             setContent { Root { ChatScreen(screenState(), actions, composer, facts = facts) } }
-            // N-45: the command is read on the work line's shell step (no separate turn result row).
-            onNodeWithText("Ran 1 command", substring = true, ignoreCase = true).performClick()
+            // N-45: the command is read on the turn's shell step (no separate turn result row); D1: in view at once.
             onNodeWithTag("chat-step-t1").performClick()
             waitForIdle()
             onAllNodesWithText("curl -H 'Authorization:", substring = true).onFirst().assertIsDisplayed()
@@ -495,9 +495,10 @@ class TurnFactsTest {
             val nav = RecordingNavigator()
             val actions = ChatPresenter(world, nav, Immediate)
             setContent { Root { ChatScreen(screenState(), actions, composer, facts = facts) } }
+            // D1: the step is in view on the turn's step list; it sits there, tappable, without a summary line to open.
             onAllNodes(hasClickAction() and androidx.compose.ui.test.hasAnyAncestor(androidx.compose.ui.test.hasTestTag("chat-work-line")))
                 .onFirst()
-                .performClick()
+                .assertExists()
             onNodeWithTag("chat-step-t5").performClick()
             onNodeWithText("report.pdf").assertIsDisplayed().performClick()
             assertEquals(listOf<io.github.eslamasabry.oc.ui.routes.AppRoute>(io.github.eslamasabry.oc.ui.routes.FilesRoute.File(Ref, "/p/out/report.pdf")), nav.opened)

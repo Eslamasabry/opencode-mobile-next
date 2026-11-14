@@ -101,12 +101,13 @@ public fun KitReplyFooter(
 }
 
 /**
- * The newest turn's meta words at the start of its footer ("7:01 PM · Parity model · 150 tok"; Flutter
- * kit_turn.dart:719-721): Caption, tertiary. Goes in [KitReplyFooter]'s `metadata`.
+ * A finished reply's quiet line at the start of its footer (D1, 2026-11-14: "10:38 · 1m 12s · 19.3k tokens · $0.06";
+ * Flutter kit_turn.dart:719-721): Caption, tertiary, tabular figures so the times and counts of the replies above and
+ * below line up. Goes in [KitReplyFooter]'s `metadata`.
  */
 @Composable
 public fun KitReplyMeta(text: String, modifier: Modifier = Modifier) {
-    KitText(text, modifier.testTag(REPLY_META_TAG), role = TypeRole.Caption, tone = TextTone.Tertiary)
+    KitText(text, modifier.testTag(REPLY_META_TAG), role = TypeRole.Caption, tone = TextTone.Tertiary, tabular = true)
 }
 
 /**
