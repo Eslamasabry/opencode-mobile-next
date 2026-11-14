@@ -1,6 +1,11 @@
 package io.github.eslamasabry.oc.ui.shell.nav
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -72,6 +77,11 @@ public fun ShellRailFrame(top: AppRoute?, onSelect: (ShellDestination) -> Unit, 
                 modifier = Modifier.fillMaxHeight().testTag("shell-rail"),
             )
         }
-        Box(Modifier.weight(1f).fillMaxHeight()) { content() }
+        // The rail stands in the window's start-side room (a cutout or bar on a phone on its side), so the page beside it
+        // does not keep that room a second time.
+        Box(
+            Modifier.weight(1f).fillMaxHeight()
+                .then(if (shown) Modifier.consumeWindowInsets(WindowInsets.safeDrawing.only(WindowInsetsSides.Start)) else Modifier)
+        ) { content() }
     }
 }
