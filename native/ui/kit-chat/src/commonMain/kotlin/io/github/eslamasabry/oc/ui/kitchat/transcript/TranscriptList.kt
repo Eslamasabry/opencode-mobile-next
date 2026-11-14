@@ -1,6 +1,8 @@
 package io.github.eslamasabry.oc.ui.kitchat.transcript
 
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
+import io.github.eslamasabry.oc.ui.kit.motion.kitItemMotion
+import androidx.compose.foundation.lazy.LazyItemScope
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.kit.frame.JUMP_PILL_FACE_DP
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
@@ -289,8 +291,8 @@ public fun KitTranscriptList(
  * another form (the person's own prompt replacing the bubble that rose from the field).
  */
 @Composable
-public fun androidx.compose.foundation.lazy.LazyItemScope.kitTranscriptItemMotion(fadeIn: Boolean = true): Modifier =
-    io.github.eslamasabry.oc.ui.kit.motion.kitItemMotion(fadeIn = fadeIn, fadeOut = false, placement = false)
+public fun LazyItemScope.kitTranscriptItemMotion(fadeIn: Boolean = true): Modifier =
+    kitItemMotion(fadeIn = fadeIn, fadeOut = false, placement = false)
 
 /** E20-S30: the gap between the pill and the composer, the soft fade's height and its strongest alpha. */
 internal const val JUMP_GAP_DP = 8
