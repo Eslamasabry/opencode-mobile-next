@@ -43,7 +43,7 @@ internal enum class LampWord {
     PausedUntilAnswer, SubAgentOf, MoreSubAgents, MoreInside, AsksRun, AsksEdit, AsksRead, AsksFolder, AsksPermission,
     AsksQuestion, AsksQuestionBare, AsksForm, AsksFormBare, Answer, Allowed, Denied, Stopping, Stopped, Reorder, MoveUp,
     MoveDown, YouAreIn, FactOf, ChildLabel, ChildLabelFact, AllowOnce, Deny, ActionOn, NotStarted, ShowSubAgents,
-    HideSubAgents, AgeNow, AgeMinutes, AgeHours, AgeDays, EdgeLight, Move, TurnOff, BackNote, PlaceTitle, PlaceBody,
+    HideSubAgents, AgeNow, AgeMinutes, AgeHours, AgeDays, EdgeLight, Move, TurnOff, PlaceTitle, PlaceBody,
     Left, Right, High, Middle, Low, OffNotice, RenameFailed, StopFailed, AnswerFailed, HiddenNotice, RenameTitle, Cancel, RenameConfirm,
 }
 

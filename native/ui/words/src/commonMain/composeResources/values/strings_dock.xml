@@ -153,7 +153,6 @@
     <string name="edgeLightAgeMinutes">%1$sm</string>
     <string name="edgeLightAgeHours">%1$sh</string>
     <string name="edgeLightAgeDays">%1$sd</string>
-    <string name="edgeLightBackNote">Back returns to “%1$s”</string>
     <string name="edgeLightRenameFailed">Couldn't rename %1$s</string>
     <!-- Settings › Conversations: the dock's on/off row. -->
     <string name="dockSettingTitle">Edge dock</string>

@@ -29,6 +29,7 @@ import io.github.eslamasabry.oc.engine.attention.dock.DockReader
 import io.github.eslamasabry.oc.engine.attention.dock.DockRequestRef
 import io.github.eslamasabry.oc.engine.attention.dock.DockSide
 import io.github.eslamasabry.oc.engine.attention.dock.DockUi
+import io.github.eslamasabry.oc.feature.chat.arrival.ChatArrivals
 import io.github.eslamasabry.oc.feature.chat.ui.ChatEdgeDock
 import io.github.eslamasabry.oc.feature.chats.lamp.HeldStops
 import io.github.eslamasabry.oc.feature.chats.lamp.LampListController
@@ -73,6 +74,7 @@ class AppEdgeDockPort(
     private val stops: HeldStops,
     private val lampPort: AppLampPort,
     private val clock: Clock,
+    private val arrivals: ChatArrivals,
 ) : EdgeDockPort {
     private val main = CoroutineScope(appScope.coroutineContext + dispatchers.main)
 
@@ -103,12 +105,14 @@ class AppEdgeDockPort(
         dock.lightPlace.map { it.toLampPlace() }.stateIn(main, SharingStarted.Eagerly, dock.lightPlace.value.toLampPlace())
     }
 
-    /** How many Back notes and tips the light showed so far. */
-    val taught: StateFlow<EdgeLightTaught>
-        get() = dock.lightTaught
-
-    /** Counts one more Back note shown. */
-    fun backNoteShown() = dock.taughtMore(backNotes = 1)
+    /**
+     * The light is about to switch to [target], leaving the conversation titled [leftTitle] (null on a page with no
+     * conversation of its own): the target's page says "Reply in ‹title›" and, the first three times on this device,
+     * where Back goes. Called right before the switch, never for a notification, a home row or a ring.
+     */
+    fun arriving(target: ConversationRef, leftTitle: String?) {
+        arrivals.switched(target, leftTitle)
+    }
 
     /**
      * The panel's brain, made when a light is mounted and cancelled with [scope] (the screen's): the list, the shared

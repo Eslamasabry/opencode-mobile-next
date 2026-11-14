@@ -2,14 +2,17 @@ package io.github.eslamasabry.opencode_mobile.graph
 
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.BindingContainer
+import dev.zacsweers.metro.ContributesIntoSet
 import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
+import dev.zacsweers.metro.binding
 import io.github.eslamasabry.oc.core.common.AppCoroutineScope
 import io.github.eslamasabry.oc.core.common.AppDispatchers
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
+import io.github.eslamasabry.oc.feature.chat.arrival.BackNoteCount
 import io.github.eslamasabry.oc.feature.chats.lamp.HeldStops
 import io.github.eslamasabry.oc.feature.chats.lamp.LampHeight
 import io.github.eslamasabry.oc.feature.chats.lamp.LampPlace
@@ -97,3 +100,16 @@ internal fun EdgeLightPlace.toLampPlace(): LampPlace =
                 EdgeLightHeight.High -> LampHeight.High
             },
     )
+
+/**
+ * How many "Back returns to ‹title›" notes this device has shown, for the conversation page's note after an edge-light
+ * switch: the light's own device-wide count (`oc.edgeLight.backNotes`), so it survives a restart and is never swept with
+ * a profile.
+ */
+@ContributesIntoSet(AppScope::class, binding = binding<BackNoteCount>())
+@Inject
+class AppBackNoteCount(private val dock: AppEdgeDock) : BackNoteCount {
+    override fun shown(): Int = dock.lightTaught.value.backNotes
+
+    override fun recordShown() = dock.taughtMore(backNotes = 1)
+}

@@ -123,7 +123,6 @@ private fun lampWordKey(word: LampWord): StringResource =
         LampWord.EdgeLight -> Res.string.dockModeEdgeLight
         LampWord.Move -> Res.string.edgeLightMove
         LampWord.TurnOff -> Res.string.edgeLightTurnOff
-        LampWord.BackNote -> Res.string.edgeLightBackNote
         LampWord.PlaceTitle -> Res.string.edgeLightPlaceTitle
         LampWord.PlaceBody -> Res.string.edgeLightPlaceBody
         LampWord.Left -> Res.string.edgeLightSideLeft
@@ -216,7 +215,6 @@ internal fun EdgeLightPanelLayer(
     onMove: () -> Unit,
 ) {
     val ui by controller.ui.collectAsStateWithLifecycle()
-    val taught by port.taught.collectAsStateWithLifecycle()
     val t = rememberLampTexts(ui)
     val index = remember(ui) { LampIndex(ui) }
     val model = remember(ui, t) { LampPanelMap.model(ui, t) }
@@ -243,21 +241,18 @@ internal fun EdgeLightPanelLayer(
     }
 
     fun openConversation(ref: ConversationRef) {
-        // Where Back goes after this switch, told the first three times (the conversation the person is leaving).
-        val leaving = ui.openTitle
+        // The page switched to says "Reply in ‹title›" and, the first three times, where Back goes (the conversation
+        // being left); told right before the switch so a fresh page and a kept one both read it.
+        port.arriving(ref, ui.openTitle)
         controller.open(ref)
         onClose()
-        if (leaving != null && taught.backNotes < BACK_NOTES) {
-            toasts?.show(t.fmt(LampWord.BackNote, leaving))
-            port.backNoteShown()
-        }
     }
 
     fun requestOf(key: Any, stepKey: Any?): LampRequestUi? =
         if (stepKey != null) index.child(stepKey)?.second?.request else index.row(key)?.request
 
     val actions =
-        remember(index, ui, t, taught) {
+        remember(index, ui, t) {
             KitLampPanelActions(
                 onOpen = { key -> index.row(key)?.let { openConversation(it.ref) } },
                 onOpenStep = { _, step -> index.child(step.key)?.let { openConversation(it.second.ref) } },
@@ -267,6 +262,7 @@ internal fun EdgeLightPanelLayer(
                 onDeny = { key, step -> requestOf(key, step?.key)?.let { controller.deny(it.owner, it.requestId) } },
                 onAnswer = { key, step ->
                     requestOf(key, step?.key)?.let {
+                        port.arriving(it.owner, ui.openTitle)
                         controller.answer(it.owner, it.requestId)
                         onClose()
                     }
@@ -343,5 +339,3 @@ internal fun EdgeLightPanelLayer(
     }
 }
 
-/** The first three switches say where Back goes. */
-private const val BACK_NOTES: Int = 3
