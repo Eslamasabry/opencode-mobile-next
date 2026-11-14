@@ -563,13 +563,14 @@ public object LiquidEdge {
 
     /**
      * The lowest contrast any ink of [role] has where it sits: on the face (with and without its sheen) over what it
-     * floats over ([themeSpots]; the +: its glyph on the accent face over either end of any backdrop). No
+     * floats over ([themeSpots]; the +: its glyph on its clear face). No
      * plate. For tests and the QA note.
      */
     public fun worstContrast(roles: Roles, role: LiquidRole): Double {
         val face = face(roles, role)
         val recipe = recipe(role, roles.dark)
-        val spots = if (role == LiquidRole.Action) backdropEnds(recipe).toList() else themeSpots(roles, recipe)
+        // The + is clear glass like every pane (owner 2026-11-14), so it is measured where every pane is.
+        val spots = themeSpots(roles, recipe)
         return listOfNotNull(face.fill, face.fillStart).minOf { f ->
             spots.minOf { e ->
                 val bare = f.over(e)
@@ -586,9 +587,7 @@ public object LiquidEdge {
         val face = face(roles, role)
         val recipe = recipe(role, roles.dark)
         val ground = roles.ground.opaqueArgb()
-        val rest =
-            if (role == LiquidRole.Action) backdropEnds(recipe).toList()
-            else listOf(ground, roles.surface1.over(ground), roles.surface2.over(ground), roles.surface3.over(ground)).map { filtered(it, recipe) }
+        val rest = listOf(ground, roles.surface1.over(ground), roles.surface2.over(ground), roles.surface3.over(ground)).map { filtered(it, recipe) }
         return inks(roles, role).map { (ink, target) ->
             Triple(ink, target, listOfNotNull(face.fill, face.fillStart).minOf { f -> rest.minOf { e -> wcagContrast(ink, f.over(e)) } })
         }
@@ -602,7 +601,8 @@ public object LiquidEdge {
     public fun movingContrast(roles: Roles, role: LiquidRole): Double {
         val face = face(roles, role)
         val recipe = recipe(role, roles.dark)
-        val spots = if (role == LiquidRole.Action) backdropEnds(recipe).toList() else themeSpots(roles, recipe)
+        // The + is clear glass like every pane (owner 2026-11-14), so it is measured where every pane is.
+        val spots = themeSpots(roles, recipe)
         val ink = inks(roles, role).first().first
         return listOfNotNull(face.fill, face.fillStart).minOf { f -> spots.minOf { e -> wcagContrast(ink, f.over(e)) } }
     }
