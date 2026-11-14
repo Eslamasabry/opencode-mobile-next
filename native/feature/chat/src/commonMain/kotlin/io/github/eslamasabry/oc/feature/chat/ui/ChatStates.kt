@@ -20,6 +20,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.Failure
+import io.github.eslamasabry.oc.core.common.label
 import io.github.eslamasabry.oc.ui.design.generated.FlutterKitTokens
 import io.github.eslamasabry.oc.ui.design.layout.CapAlign
 import io.github.eslamasabry.oc.ui.design.layout.CapRole
@@ -57,11 +58,10 @@ public object ChatPane {
     public const val ILLUSTRATION_PAGE_DP: Int = 140
 
     /**
-     * What the details fold shows for a load failure (Flutter `productErrorDetails(error) ?? error.toString()`): the
-     * failure's own redacted details, else its plain kind, so the fold is never empty.
+     * What the details fold names for a load failure, above its redacted details when it has any: the failure's
+     * stable label (`Refused · StaleScope`), never a class name, which a release build renames (it printed `un5`).
      */
-    public fun detailsNote(failure: Failure): String? =
-        if (failure.details != null) null else failure::class.simpleName
+    public fun detailsNote(failure: Failure): String = failure.label()
 }
 
 /** Holds [content] to the conversation's width, centred (Flutter: `Center(ConstrainedBox(maxWidth))`). */
@@ -115,7 +115,7 @@ internal fun ChatLoadError(
                 KitDetailsFold(
                     label = stringResource(Res.string.kitDetails),
                     copyLabel = stringResource(Res.string.kitCopyDetails),
-                    notes = listOfNotNull(ChatPane.detailsNote(failure)),
+                    notes = listOf(ChatPane.detailsNote(failure)),
                     text = failure.details,
                 )
             }

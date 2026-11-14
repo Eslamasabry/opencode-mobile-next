@@ -1,6 +1,7 @@
 package io.github.eslamasabry.oc.feature.settings.presentation
 
 import io.github.eslamasabry.oc.core.common.LogEntry
+import io.github.eslamasabry.oc.core.common.label
 import io.github.eslamasabry.oc.core.common.Severity
 import io.github.eslamasabry.oc.core.model.StreamStatus
 
@@ -27,7 +28,7 @@ public object HandledErrors {
     public fun fromStream(previous: StreamStatus?, next: StreamStatus): HandledError? =
         when {
             next is StreamStatus.Stopped && previous !is StreamStatus.Stopped ->
-                HandledError(SOURCE, "connection stopped: ${next.failure::class.simpleName ?: "Failure"}")
+                HandledError(SOURCE, "connection stopped: ${next.failure.label()}")
             next is StreamStatus.Disconnected && previous !is StreamStatus.Disconnected ->
                 HandledError(SOURCE, "connection lost after ${next.attempt} tries")
             else -> null

@@ -29,6 +29,7 @@ import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.Failure
+import io.github.eslamasabry.oc.core.common.label
 import io.github.eslamasabry.oc.core.common.text.Numbers
 import io.github.eslamasabry.oc.core.model.transcript.MessageErrorKind
 import io.github.eslamasabry.oc.engine.agents.errors.AgentErrorText
@@ -310,7 +311,7 @@ internal fun failureCode(f: Failure): String =
         is Failure.Busy -> "Busy"
         is Failure.Server -> "Server.${f.status ?: "-"}"
         is Failure.SignIn -> "SignIn.${f.why.name}"
-        else -> f::class.simpleName ?: "Failure"
+        else -> f.label()
     }
 
 /** Keys of the two item kinds the feature adds above the engine rows (plan 09 §7.2). */
