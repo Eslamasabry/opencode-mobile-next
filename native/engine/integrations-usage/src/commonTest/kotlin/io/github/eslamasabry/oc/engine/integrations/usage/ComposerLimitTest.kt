@@ -123,6 +123,14 @@ class ComposerLimitTest {
     }
 
     @Test
+    fun `S24-LIMIT-008 a Mythos window applies only to a Mythos model`() {
+        val mythosWeek = UsageWindow("seven_day_mythos", 95.0, durationSeconds = 604_800, resetsAt = NOW + 3.days, label = "Mythos weekly")
+        val r = reading("claude", "pc", account = "acct-1", windows = windows(10.0, 10.0) + mythosWeek)
+        assertNull(notice(snapshot(r), CLAUDE_ON_PC.copy(modelId = "claude-fable-5-2")))
+        assertEquals("seven_day_mythos", notice(snapshot(r), CLAUDE_ON_PC.copy(modelId = "claude-mythos-5-2"))?.windowId)
+    }
+
+    @Test
     fun `S24-LIMIT-009 the conversation's provider id maps onto Usage's names`() {
         assertEquals("claude", composerLimitProvider("anthropic"))
         assertEquals("codex", composerLimitProvider("openai"))
