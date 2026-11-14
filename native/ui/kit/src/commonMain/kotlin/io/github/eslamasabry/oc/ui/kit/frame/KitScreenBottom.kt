@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.foundation.layout.offset
 import io.github.eslamasabry.oc.ui.kit.foundation.KitFrostState
 import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.platform.LocalDensity
@@ -69,6 +70,9 @@ public class KitScreenBottom internal constructor() {
     /** Whether the body is away from its newest end ([KitReportAwayFromLatest]); read in composition. */
     internal var away: () -> Boolean by mutableStateOf({ false })
 
+    /** How many parts of the screen ask the phrase row to fold away now ([KitFoldPhraseRow]: Find is open). */
+    internal var folds: Int by androidx.compose.runtime.mutableIntStateOf(0)
+
     /**
      * The top edge, in root px, of a control that floats over the body just above the block (the jump pill's face);
      * NaN while none shows. The body is gone above it too ([kitScreenFloat]).
@@ -119,6 +123,31 @@ public fun Modifier.kitScreenFloat(edge: KitJumpEdge): Modifier {
 }
 
 /**
+ * Seats a control floating just above the screen's bottom block (the jump pill standing apart) on the block's first
+ * part: its touch target ends where the block's own top room ends, so the room the page keeps clear for it is the
+ * target and no more (coordinator 2026-11-14, audit finding 25: in Solid the standing pill left a dead band of about
+ * 190 px above the box). It moves down at most [FLOAT_SEAT_MAX_DP]; never up. Apply it on the box the control's target
+ * is laid out in. Outside a screen frame, or at the top edge: nothing.
+ */
+@Composable
+internal fun Modifier.kitScreenFloatSeat(edge: KitJumpEdge): Modifier {
+    val bottom = LocalKitScreenBottom.current?.takeIf { edge == KitJumpEdge.Bottom } ?: return this
+    val density = LocalDensity.current
+    val room = with(density) { io.github.eslamasabry.oc.ui.design.tokens.Space.S2.dp.toPx() }
+    val most = with(density) { FLOAT_SEAT_MAX_DP.dp.toPx() }
+    val lower = androidx.compose.runtime.remember { androidx.compose.runtime.mutableFloatStateOf(0f) }
+    // Measured before the shift (this callback sees the box as laid out), so the seat never feeds back into itself.
+    return onGloballyPositioned { c ->
+        val block = bottom.blockTop
+        val end = c.positionInRoot().y + c.size.height
+        lower.floatValue = if (block.isNaN() || c.size.height == 0) 0f else (block + room - end).coerceIn(0f, most)
+    }.offset { androidx.compose.ui.unit.IntOffset(0, kotlin.math.round(lower.floatValue).toInt()) }
+}
+
+/** The most a floating control is moved down onto the bottom block's first part, dp. */
+internal const val FLOAT_SEAT_MAX_DP: Int = 16
+
+/**
  * Tells the screen frame whether its body is away from its newest end (a transcript scrolled up into its history). The
  * phrase row folds away meanwhile ([kitScreenAwayFromLatest]). Outside such a frame: nothing.
  */
@@ -135,6 +164,27 @@ public fun KitReportAwayFromLatest(away: () -> Boolean) {
 /** Whether this screen's body is away from its newest end ([KitReportAwayFromLatest]); false outside a frame. */
 @Composable
 public fun kitScreenAwayFromLatest(): Boolean = LocalKitScreenBottom.current?.away?.invoke() == true
+
+/**
+ * While [fold] is true, the screen's phrase row folds away as it does while the body is away from its newest end
+ * (coordinator 2026-11-14: while Find is open its one row takes the phrase row's place, so the block above the message
+ * box is one row, never four). Outside a screen frame: nothing.
+ */
+@Composable
+public fun KitFoldPhraseRow(fold: Boolean) {
+    val bottom = LocalKitScreenBottom.current ?: return
+    DisposableEffect(bottom, fold) {
+        if (fold) bottom.folds++
+        onDispose { if (fold) bottom.folds-- }
+    }
+}
+
+/** Whether this screen's phrase row is folded away now: the body is away from its newest end, or a part asks it to. */
+@Composable
+internal fun kitScreenPhraseRowFolded(): Boolean {
+    val bottom = LocalKitScreenBottom.current ?: return false
+    return bottom.folds > 0 || bottom.away()
+}
 
 /**
  * The recording this screen's bottom block reads, cleared where the body is ([KitScreenBottom.glass]); null outside a

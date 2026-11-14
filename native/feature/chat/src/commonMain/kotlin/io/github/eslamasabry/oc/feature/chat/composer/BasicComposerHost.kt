@@ -674,6 +674,8 @@ public fun BasicComposer(
                 },
                 onHide = actions::hidePhrase,
                 modifier = Modifier.testTag("chat-phrase-chips"),
+                // Audit 2026-11-14 (finding 21): away while a message is being sent or a reply runs.
+                away = busy || state.sending,
             )
         }
         // E20-S20: the tray lives inside the message box (KitComposerBox `above`, Flutter concept C); its More, and

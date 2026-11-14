@@ -83,7 +83,7 @@ class E20S30JumpPillTest {
     }
 
     @Test
-    fun `E20-S30 away from the latest the calm pill sits bottom centre 16 dp above the composer with no band of ground`() =
+    fun `E20-S30 away from the latest the calm pill sits bottom centre 8 dp above the composer with no band of ground`() =
         runComposeUiTest {
             setContent(scene())
             waitForIdle()
@@ -94,9 +94,11 @@ class E20S30JumpPillTest {
             // Centred (it used to sit at the end of the line).
             val centre = (face.left + face.right) / 2
             assertTrue(abs((centre - 206.dp).value) <= 1f, "pill centre $centre")
-            // The calmer 32 dp face, 16 dp clear of the composer's veil (the frame's bottom room holds 8 dp of the fade).
+            // The calmer 32 dp face. Audit 2026-11-14 (finding 25): its 48 dp target sits on the block's first part (the
+            // composer), so the face is the target's own 8 dp clear of the composer and no dead band stands above it.
             assertEquals(32.dp, face.bottom - face.top)
-            assertTrue(abs((veil - face.bottom - 16.dp).value) <= .5f, "gap ${veil - face.bottom}")
+            val composer = onNodeWithTag("composer").getBoundsInRoot().top
+            assertTrue(abs((composer - face.bottom - 8.dp).value) <= .5f, "gap ${composer - face.bottom}, veil at $veil")
             // 2026-11-14: a page that records its body ends the list itself above the pill (kitScreenListEdges), so no
             // band of ground is laid there any more.
             onNodeWithTag("transcript-jump-fade").assertDoesNotExist()

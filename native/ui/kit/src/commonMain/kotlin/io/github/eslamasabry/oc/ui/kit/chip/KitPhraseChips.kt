@@ -18,7 +18,7 @@ import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.layout.CapRole
 import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
-import io.github.eslamasabry.oc.ui.kit.frame.kitScreenAwayFromLatest
+import io.github.eslamasabry.oc.ui.kit.frame.kitScreenPhraseRowFolded
 import io.github.eslamasabry.oc.ui.kit.frame.kitScreenFoldsWhileAway
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
 import androidx.compose.animation.expandVertically
@@ -48,13 +48,19 @@ public fun KitPhraseChips(
     editLabel: String? = null,
     onEdit: ((String) -> Unit)? = null,
     bleed: Boolean = true,
+    /**
+     * The row is away for now (coordinator 2026-11-14, audit finding 21): while a message is being sent or a reply
+     * runs, a phrase is not what the person reaches for. It folds as it does while reading history.
+     */
+    away: Boolean = false,
 ) {
     if (phrases.isEmpty()) return
     // Owner 2026-11-14: while the person reads history (the page is away from its newest message) the row folds away,
-    // so "Jump to latest" rises out of the message box; the same chips come back at the newest message.
+    // so "Jump to latest" rises out of the message box; the same chips come back at the newest message. Find open
+    // folds it too (KitFoldPhraseRow), and the host's [away].
     val specs = KitMotion.specs
     androidx.compose.animation.AnimatedVisibility(
-        visible = !kitScreenAwayFromLatest(),
+        visible = !away && !kitScreenPhraseRowFolded(),
         modifier = Modifier.kitScreenFoldsWhileAway(),
         enter = expandVertically(specs.quick()) + fadeIn(specs.quick()),
         exit = shrinkVertically(specs.quick()) + fadeOut(specs.quick()),

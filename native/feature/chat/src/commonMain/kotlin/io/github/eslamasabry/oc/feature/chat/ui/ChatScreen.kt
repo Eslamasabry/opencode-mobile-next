@@ -472,7 +472,10 @@ public fun ChatScreen(
     }
 
     val frost = rememberKitFrostState()
-    val overlays = state.phase == ChatPhase.Live && state.status == null && state.find == null
+    // Find no longer moves the page to the stacked layout (audit 2026-11-14): its one row stands in the bottom block over
+    // the message box, the transcript ends above the block (and above "Jump to latest", which stays apart over no words),
+    // as in every other bottom state.
+    val overlays = state.phase == ChatPhase.Live && state.status == null
     val headerUnder by remember(list) { derivedStateOf { list.lazy.canScrollForward } }
     val scheduledId by actions.laterScheduled.collectAsState()
     val chrome =

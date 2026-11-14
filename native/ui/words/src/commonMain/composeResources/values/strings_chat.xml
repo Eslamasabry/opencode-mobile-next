@@ -99,6 +99,7 @@
     </plurals>
     <string name="transcriptFindCount__eq0">%2$d of %1$d matches</string>
     <string name="transcriptFindCount__eq1">1 match</string>
+    <string name="transcriptFindPosition">%1$s of %2$s</string>
     <string name="transcriptFindPartial">Loaded messages only. Load older messages to search further.</string>
     <string name="transcriptFindTool">Tool data</string>
     <string name="transcriptFindFile">File name</string>

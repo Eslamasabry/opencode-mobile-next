@@ -134,7 +134,7 @@ public fun KitJumpPill(
     kitAssert(label.isNotBlank()) { "KitJumpPill: a pill always carries words" }
     val state = KitMotion.state
     if (state.reduced) {
-        if (visible) PillFace(label, onClick, modifier, edge, backdrop)
+        if (visible) PillFace(label, onClick, modifier.kitScreenFloatSeat(edge), edge, backdrop)
         return
     }
     val specs = KitMotion.specs
@@ -198,7 +198,8 @@ public fun KitJumpPill(
         fadeOut(specs.pace(KitPace.Quick)) +
             (if (risePx != 0) slideOutVertically(specs.pace<IntOffset>(KitPace.Quick)) { risePx } else ExitTransition.None) +
             if (grows) scaleOut(specs.spatialFast(), targetScale = PILL_ENTER_SCALE) else ExitTransition.None
-    AnimatedVisibility(visible, modifier, enter = enter, exit = exit, label = "kit.jump") {
+    // Standing apart above the bottom block, its target sits on the block's first part (kitScreenFloatSeat).
+    AnimatedVisibility(visible, modifier.kitScreenFloatSeat(edge), enter = enter, exit = exit, label = "kit.jump") {
         PillFace(label, onClick, Modifier.kitLeaving(transition.targetState == EnterExitState.PostExit), edge, backdrop)
     }
 }
