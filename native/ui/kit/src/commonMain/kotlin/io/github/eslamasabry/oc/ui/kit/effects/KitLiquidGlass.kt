@@ -642,7 +642,7 @@ private class PlateHostNode(var words: KitLiquidWords) :
         val own = platform.backdropSampler().also { sampler = it }
         // Background CPU 2026-11-14: this loop used to wake ten times a second per pane, shown or hidden, and sample
         // whenever the content had recorded again (every frame of a live background). It now waits for the content to
-        // change, samples once the change settles (or every INK_STALE_MS while it keeps moving), backs off when the
+        // change, samples once the change settles (or once a second while it keeps moving), backs off when the
         // sampler skips, and parks while the app is hidden.
         val visibility = currentValueOf(LocalKitVisibility)
         // Hidden: nothing draws, so nothing will be sampled; the GPU target is freed (the next sample makes a new one).
@@ -654,17 +654,13 @@ private class PlateHostNode(var words: KitLiquidWords) :
             var seen = Int.MIN_VALUE
             var retry = 0L
             while (isActive) {
-                var v = versions.first { it != seen }
-                // Settle: sample once the content held still for INK_SETTLE_MS, or after INK_STALE_MS while it keeps
-                // moving (a fling, a live picture), never at the rate it records.
-                var waited = 0L
-                while (waited < INK_STALE_MS) {
-                    visibility.tick(INK_SETTLE_MS)
-                    waited += INK_SETTLE_MS
-                    val now = backdrop.version()
-                    if (now == v) break
-                    v = now
-                }
+                val changed = versions.first { it != seen }
+                // Settle: sample once the content held still for INK_SETTLE_MS; while it keeps moving (a fling, a live
+                // picture) wait out the rest of INK_STALE_MS once. Two wakes a sample at most, never one per frame
+                // (each wake of a composition coroutine posts a frame callback to the main thread).
+                visibility.tick(INK_SETTLE_MS)
+                if (backdrop.version() != changed) visibility.tick(INK_STALE_MS - INK_SETTLE_MS)
+                val v = backdrop.version()
                 val pixels = sampleOnce(own, platform, backdrop)
                 if (pixels == null) {
                     // Skipped (another pane's sample in flight, a slow GPU, the pane not placed yet): asked again,
@@ -724,7 +720,7 @@ private const val SAMPLE_SCALE: Int = 8
 internal const val INK_SETTLE_MS: Long = 150
 
 /** While the content keeps moving (a fling, a live picture), a pane samples at most this often. */
-internal const val INK_STALE_MS: Long = 600
+internal const val INK_STALE_MS: Long = 1_000
 
 /** The longest wait before asking a sampler that keeps skipping again. */
 internal const val INK_RETRY_MAX_MS: Long = 5_000

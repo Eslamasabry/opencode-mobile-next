@@ -152,7 +152,7 @@ class KitLiquidInkHiddenTest {
                 mainClock.advanceTimeBy(16)
             }
             val moving = sampler.samples - 2
-            assertTrue(moving in 3..6, "about one sample per ${INK_STALE_MS} ms while the content keeps moving, got $moving in 3 s")
+            assertTrue(moving in 2..4, "about one sample per ${INK_STALE_MS} ms while the content keeps moving, got $moving in 3 s")
         }
 
     private companion object {
