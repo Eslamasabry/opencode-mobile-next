@@ -289,8 +289,9 @@ private class LiquidBodyNode(
         val refraction = if (lens) recipe.refractionDp.dp.toPx() else 0f
         val tint = lerp(tintNow(rest), tintNow(grown), g)
         val seen = seen()
-        // The list wears a menu's holds as it grows (one family): the colour limit eased in from none (a limit above 1
-        // holds nothing back) and the detail hold's reach growing with it, as a joined menu's comes in with its rows.
+        // The list wears a menu's colour limit as it grows (one family), eased in from none (a limit above 1 holds nothing
+        // back). Not the detail hold: past its band the list shows no page detail to hold (only the background), and its
+        // 37 taps a pixel over the whole dock area cost more than they hold.
         val listHold = listed?.recipe?.hold?.takeIf { f.listShare > 0f }
         val share = f.listShare.coerceIn(0f, 1f)
         val u =
@@ -307,7 +308,6 @@ private class LiquidBodyNode(
                 brightness = recipe.brightness,
                 knee = kneeOf(rest),
                 hold = listHold?.takeIf { it.chroma > 0f }?.let { NO_LIMIT + (it.chroma - NO_LIMIT) * share } ?: 0f,
-                local = listHold?.let { localOf(it, it.localDp.dp.toPx() * share) } ?: floatArrayOf(0f, 0f, 1f, 1f, 1f),
                 tintMine = tint,
                 tintTheirs = tint,
                 rimPx = rest.rimDp.dp.toPx(),
