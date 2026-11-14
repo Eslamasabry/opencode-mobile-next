@@ -28,12 +28,11 @@ class LiquidMenuFrostTest {
     }
 
     @Test
-    fun `the dock's strip, swell and list keep their numbers - the swell is the menu's old glass`() {
+    fun `the dock's strip and swell keep their numbers - the swell is the menu's old glass, the list a menu's`() {
         for (dark in listOf(true, false)) {
             assertEquals(3f, LiquidEdge.dockRecipe(dark, 0f).blurDp, "strip (dark=$dark)")
             assertEquals(if (dark) 6f else 3f, LiquidEdge.dockRecipe(dark, 1f).blurDp, "swell (dark=$dark)")
-            assertEquals(LiquidEdge.DOCK_LIST_BLUR_DP, LiquidEdge.dockRecipe(dark, 1f, GlassLooks.Glossy, list = 1f).blurDp, "list (dark=$dark)")
-            assertEquals(12f, LiquidEdge.DOCK_LIST_BLUR_DP, "the dock's list keeps its old frost")
+            assertEquals(LiquidEdge.MODAL_BLUR_DP, LiquidEdge.dockRecipe(dark, 1f, GlassLooks.Glossy, list = 1f).blurDp, "list (dark=$dark): a menu's frost (cut audit 2)")
             assertEquals(3f + if (dark) 3f else 0f, LiquidEdge.swellRecipe(dark).blurDp)
             assertEquals(LiquidEdge.recipe(LiquidRole.Menu, dark).refractionDp, LiquidEdge.swellRecipe(dark).refractionDp)
         }

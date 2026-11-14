@@ -85,6 +85,31 @@ class GlassLabPageTest {
     }
 
     @Test
+    fun `B-GLASS-LAB-032 a menu's band of the page has its sliders, which a bar (and all kinds linked) does not offer`() = runComposeUiTest {
+        var lab: GlassLabPresenter? = null
+        setContent {
+            SettingsThemed(dark = true) {
+                val scope = rememberCoroutineScope()
+                val presenter = lab ?: GlassLabPresenter(scope, Port).also { lab = it }
+                val ui by presenter.state.collectAsState()
+                GlassLabPage(ui, presenter, onBack = {})
+            }
+        }
+        waitForIdle()
+        // Linked (the bar's numbers shown): a bar has no band of the page.
+        onNode(hasContentDescription("Page kept along the open edge") and canSetProgress).assertDoesNotExist()
+        onNodeWithText("Menu", useUnmergedTree = true).performClick()
+        waitForIdle()
+        onNode(hasContentDescription("Page kept along the open edge") and canSetProgress).performSemanticsAction(SemanticsActions.SetProgress) { it(12f) }
+        onNode(hasContentDescription("Page fading out past it") and canSetProgress).performSemanticsAction(SemanticsActions.SetProgress) { it(3f) }
+        waitForIdle()
+        val menu = lab!!.state.value.tuning.knobs(GlassPaneKind.Menu, true)
+        assertEquals(12f, menu.pageKeepDp)
+        assertEquals(3f, menu.pageFadeDp)
+        assertEquals(LiquidEdge.SHEET_BAND.keepDp, lab!!.state.value.tuning.knobs(GlassPaneKind.Sheet, true).pageKeepDp, "only the menu moved")
+    }
+
+    @Test
     fun `B-GLASS-LAB-031 Appearance offers the Glass lab row under Glass in a build that has it`() = runComposeUiTest {
         fun ui(lab: Boolean) =
             SettingsUi(

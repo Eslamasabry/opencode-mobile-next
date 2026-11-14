@@ -121,6 +121,16 @@ public data class LiquidHold(
     }
 }
 
+/**
+ * The band of the page a modal pane (a sheet, a dialog, a menu, the dock's list) shows along each edge it shares with the
+ * visible page: whole for [keepDp] in from that edge, fading out over [fadeDp] more ([LiquidEdge.modalPageKept]). Past it
+ * the pane shows only the page's own picture (its ground and live background), never the page's controls or words.
+ */
+public data class ModalBand(val keepDp: Float, val fadeDp: Float) {
+    /** Where the band is gone, dp in from the edge. */
+    public val endDp: Float get() = keepDp + fadeDp
+}
+
 public object LiquidEdge {
     /** The rim the lens bends in on a large pane: at most this many dp ... */
     public const val RIM_MAX_DP: Float = 22f
@@ -178,8 +188,8 @@ public object LiquidEdge {
      * control, word or card of the page. The page itself shows only along an edge the sheet shares with the visible page
      * (a bottom sheet's top, every edge of a centred dialog): whole for [MODAL_PAGE_KEEP_DP] in from that edge (the rim
      * and the furthest its bend reads, [modalPageKept]) and fading out over [MODAL_PAGE_FADE_DP] more, held there as
-     * before ([SHEET_HOLD]). An edge on the window's own edge shows none of the page. Menus are not modal and keep the
-     * whole page.
+     * before ([SHEET_HOLD]). An edge on the window's own edge shows none of the page. A small pane (a menu, a dialog, the
+     * dock's list) keeps a narrower band, its rim ([smallPaneBand]).
      */
     public const val MODAL_PAGE_KEEP_DP: Float = 48f
 
@@ -195,14 +205,46 @@ public object LiquidEdge {
      * open the edge is (0 on the window's edge, 1 from [MODAL_PAGE_OPEN_DP] in). Outside the sheet (negative depth) as at
      * its edge.
      */
-    public fun modalPageKept(depthDp: Float, gapDp: Float): Float {
+    public fun modalPageKept(depthDp: Float, gapDp: Float, band: ModalBand = SHEET_BAND): Float {
         val open = (gapDp / MODAL_PAGE_OPEN_DP).coerceIn(0f, 1f)
-        val fade = 1f - ((depthDp - MODAL_PAGE_KEEP_DP) / MODAL_PAGE_FADE_DP).coerceIn(0f, 1f)
+        val fade = if (band.fadeDp <= 0f) (if (depthDp <= band.keepDp) 1f else 0f) else 1f - ((depthDp - band.keepDp) / band.fadeDp).coerceIn(0f, 1f)
         return open * fade
     }
 
-    /** The edge dock's pulled-out list keeps the sheet's old frost (the dock's glass is not part of this retune). */
-    public const val DOCK_LIST_BLUR_DP: Float = 12f
+    /** A bottom sheet's band of the page along its open top edge (wave one): its handle and title lie there. */
+    public val SHEET_BAND: ModalBand = ModalBand(MODAL_PAGE_KEEP_DP, MODAL_PAGE_FADE_DP)
+
+    /**
+     * How far, dp, the page fades out at the inner end of a small pane's rim (a menu, a dialog, the dock's list): the page
+     * is whole up to this much short of the rim's end and gone at the rim's end ([smallPaneBand]).
+     */
+    public const val SMALL_PANE_FADE_DP: Float = 6f
+
+    /**
+     * The band of the page a small modal pane keeps along each open edge (cut audit 2, 2026-11-14, c-rowmenu-top,
+     * c-rowmenu-bot, c-dock: the home row's menu and the dock's list showed the chips, the row icons and a button behind them
+     * as blobs and dark blocks). A menu or a centred dialog borders the visible page on every side, so a sheet's band (48 dp
+     * whole, 32 dp fading) would cover most of it: a 220 dp menu kept 80 dp of page on each side. Its band is its rim:
+     * whole to [SMALL_PANE_FADE_DP] short of [rimMaxDp] and gone at the rim's end, so the bend still reads the page
+     * (strongest a few dp in from the edge) and nothing past the rim does: no control, icon, chip or word behind the pane
+     * reaches its calm middle, where its rows lie. A menu of 26 dp rim keeps 10-15 % of its width on each side.
+     */
+    public fun smallPaneBand(rimMaxDp: Float): ModalBand = ModalBand((rimMaxDp - SMALL_PANE_FADE_DP).coerceAtLeast(0f), SMALL_PANE_FADE_DP)
+
+    /** A menu's band of the page (its rim, [smallPaneBand]). */
+    public val MENU_BAND: ModalBand get() = smallPaneBand(baseRecipe(LiquidRole.Menu, dark = true).rimMaxDp)
+
+    /** A centred dialog's band of the page (its rim: it borders the page on every side, as a menu does). */
+    public val DIALOG_BAND: ModalBand get() = smallPaneBand(baseRecipe(LiquidRole.Sheet, dark = true).rimMaxDp)
+
+    /** The band of the page [kind]'s pane keeps along its open edges; null for a pane that is not modal (it sees the page). */
+    public fun modalBand(kind: GlassPaneKind): ModalBand? =
+        when (kind) {
+            GlassPaneKind.Menu -> MENU_BAND
+            GlassPaneKind.Sheet -> SHEET_BAND
+            GlassPaneKind.Dialog -> DIALOG_BAND
+            else -> null
+        }
 
     /** How far the glass presses the backdrop's contrast together (1 keeps it): lightly, so the content shows. */
     public const val PRESS: Float = 1f
@@ -230,8 +272,8 @@ public object LiquidEdge {
 
     /**
      * The menu's glass as the edge dock's swell wears it: the dock grows out of its strip towards this (blur 6 dp dark,
-     * 3 light, no hold), then towards its list's frost when its list is out ([dockRecipe], [DOCK_LIST_BLUR_DP]). Menus
-     * themselves frost at [MODAL_BLUR_DP] ([recipe]); the dock's strip and swell keep what they were.
+     * 3 light, no hold), then towards the menu's own glass when its list is out ([dockRecipe]). Menus themselves frost at
+     * [MODAL_BLUR_DP] ([recipe]); the dock's strip and swell keep what they were.
      */
     public fun swellRecipe(dark: Boolean, look: GlassLookPreset = GlassLooks.Glossy): LiquidRecipe =
         recipe(LiquidRole.Menu, dark, look).copy(blurDp = if (dark) 6f else 3f, hold = LiquidHold.Off)
@@ -298,12 +340,19 @@ public object LiquidEdge {
      * the whole body, its blur, bend, rim and tint moving together as it grows.
      */
     public fun dockRecipe(dark: Boolean, growth: Float, look: GlassLookPreset = GlassLooks.Glossy, list: Float = 0f): LiquidRecipe =
-        toward(mix(recipe(LiquidRole.Dock, dark, look), swellRecipe(dark, look), growth), recipe(LiquidRole.Sheet, dark, look).copy(blurDp = DOCK_LIST_BLUR_DP), list)
+        toward(mix(recipe(LiquidRole.Dock, dark, look), swellRecipe(dark, look), growth), recipe(DOCK_LIST_ROLE, dark, look), list)
 
     /**
-     * [from] with its blur and its bend moved towards [sheet]'s by [t] (0 keeps [from], 1 has the sheet's): the pulled-out
-     * dock list reads rows of words over a page of words, so its glass frosts as a sheet's does (12 dp, bend 48) while its
-     * tint, rim and saturation stay the dock's. Linear in [t], so the change from the swell's glass to the list's has no step.
+     * The glass the dock's pulled-out list wears (cut audit 2, c-dock: it kept a sheet's old 12 dp frost, and the row icons
+     * behind it read through as dark blocks): a menu's, the family of every small modal pane: its blur, its bend, its
+     * holds ([LiquidHold]) and its band of the page ([MENU_BAND]).
+     */
+    public val DOCK_LIST_ROLE: LiquidRole = LiquidRole.Menu
+
+    /**
+     * [from] with its blur and its bend moved towards [sheet]'s by [t] (0 keeps [from], 1 has the other's): the pulled-out
+     * dock list reads rows of words over a page of words, so its glass frosts as a menu's does ([DOCK_LIST_ROLE]) while
+     * its tint, rim and saturation stay the dock's. Linear in [t], so the change from the swell's glass to the list's has no step.
      */
     public fun toward(from: LiquidRecipe, sheet: LiquidRecipe, t: Float): LiquidRecipe {
         val f = t.coerceIn(0f, 1f)
