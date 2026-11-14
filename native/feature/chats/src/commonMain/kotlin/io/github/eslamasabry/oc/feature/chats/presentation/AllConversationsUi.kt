@@ -105,6 +105,10 @@ public data class AllRowUi(
     val pinned: Boolean = false,
     val contextPercent: Int? = null,
     val readOnly: Boolean = false,
+    /** A saved row ([readOnly]) whose server the app is starting: it says so and takes a tap that is kept. */
+    val appStart: AppStart? = null,
+    /** The person tapped it while its server was starting: it opens by itself when the server connects. */
+    val waiting: Boolean = false,
     /** Its server can move it into the project that is open (Flutter "Continue here"). */
     val canContinueHere: Boolean = false,
     /** Last change the server reported, epoch ms; 0 = not told. The row says how long ago. */

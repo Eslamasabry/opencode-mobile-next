@@ -1,6 +1,7 @@
 package io.github.eslamasabry.oc.feature.chats.presentation
 
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
+import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.engine.agents.feed.ChatFeedItem
 
 /** What the home does with a row tapped while it could not open yet (B-333). */
@@ -32,4 +33,25 @@ public object KeptTapRules {
             !serverAnswered -> KeptTap.Wait
             else -> items.firstOrNull { it.ref == kept && it.canReopen }?.let { KeptTap.Open(it) } ?: KeptTap.Wait
         }
+
+    /**
+     * All conversations' kept tap: a saved row of a server the app is starting opens once that server is connected
+     * ([live]), while the person is still on the page they tapped it on.
+     */
+    public fun decideOnServer(kept: ConversationRef?, onTappedPage: Boolean, live: Set<ProfileId>): KeptServerTap =
+        when {
+            kept == null -> KeptServerTap.Wait
+            !onTappedPage -> KeptServerTap.Drop
+            kept.profileId in live -> KeptServerTap.Open(kept)
+            else -> KeptServerTap.Wait
+        }
+}
+
+/** What All conversations does with a row tapped while its server was starting. */
+public sealed interface KeptServerTap {
+    public data object Wait : KeptServerTap
+
+    public data object Drop : KeptServerTap
+
+    public data class Open(val ref: ConversationRef) : KeptServerTap
 }

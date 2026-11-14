@@ -21,6 +21,8 @@ public data class SourcePages(
     val pinned: Set<SessionId> = emptySet(),
     val contextUsage: Map<SessionId, Double> = emptyMap(),
     val preview: Boolean = false,
+    /** Saved rows ([preview]) of a server the app itself is starting: they say so and keep a tap. */
+    val appStart: AppStart? = null,
 )
 
 /**
@@ -65,6 +67,8 @@ public data class AllModel(
     val moving: MovingHere? = null,
     /** H4: the tapped agent conversation that cannot be reopened, waiting for "Start new conversation". */
     val startNew: StartNewUi? = null,
+    /** B-333 on All conversations: the row tapped while its server was starting; it opens when the server connects. */
+    val keptOpen: ConversationRef? = null,
     /** Per row key: needs-you and unread, from the home feed. */
     val attention: Map<String, RowAttention> = emptyMap(),
     /** Servers that can import a conversation file (`sessionImportExport` and the import door). */
@@ -83,7 +87,12 @@ public data class ImportModel(
 public data class MovingHere(val key: String, val working: Boolean = false, val failed: Boolean = false)
 
 /** A server's id and the name the person gave it. */
-public data class ServerName(val profile: ProfileId, val name: String)
+public data class ServerName(
+    val profile: ProfileId,
+    val name: String,
+    /** The app itself starts this server (This phone's, its agents'): its saved rows say it is starting. */
+    val appStart: AppStart? = null,
+)
 
 /** Pure rules of All conversations (07 §5 B12, Dart GlobalSessionsScreen). */
 public object AllConversationsRules {
@@ -154,8 +163,9 @@ public object AllConversationsRules {
             model.titles[key(e.profile, e.session.id)] ?: e.session.title
         val sorted =
             entries.sortedWith(
-                // Rows read from a saved list (their server is not connected) come after every live row, as one group.
-                compareBy<Entry> { model.sources[it.profile]?.preview == true }
+                // Rows read from a saved list (their server is not connected) come after every live row, as one group;
+                // those of a server the app is starting keep their normal place, as the home's do.
+                compareBy<Entry> { model.sources[it.profile]?.let { s -> s.preview && s.appStart == null } == true }
                     .thenByDescending {
                         it.session.id in model.sources[it.profile]?.pinned.orEmpty()
                     }
@@ -188,6 +198,8 @@ public object AllConversationsRules {
                         !archivedOf(e) &&
                         model.sources[e.profile]?.preview != true,
                 readOnly = model.sources[e.profile]?.preview == true,
+                appStart = model.sources[e.profile]?.takeIf { it.preview }?.appStart,
+                waiting = model.keptOpen == ConversationRef(e.profile, e.session.id),
                 canShare = e.profile in model.shareCapable && model.sources[e.profile]?.preview != true,
                 pinned = e.session.id in model.sources[e.profile]?.pinned.orEmpty(),
                 canContinueHere =
@@ -312,6 +324,14 @@ public object AllConversationsRules {
      * The server a key belongs to (keys are `<profile>/<session>`; session ids never hold a slash).
      */
     public fun profileOf(key: String): ProfileId = ProfileId(key.substringBeforeLast('/'))
+
+    /** The conversation a saved row's key names (its server is not connected), or null for any other key. */
+    public fun savedRef(model: AllModel, key: String): ConversationRef? {
+        val profile = profileOf(key)
+        val source = model.sources[profile]?.takeIf { it.preview } ?: return null
+        val id = key.substringAfterLast('/')
+        return source.sessions.firstOrNull { it.id.raw == id }?.let { ConversationRef(profile, it.id) }
+    }
 
     /** The session a key names, with its server. */
     public fun find(model: AllModel, key: String): Pair<ProfileId, Session>? {

@@ -29,6 +29,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
@@ -103,10 +104,31 @@ public class ChatsAllViewModel(
                 AllConversationsRules.build(model.value),
             )
 
+    /** The page the kept tap ([AllModel.keptOpen]) was made on: moving elsewhere drops it. */
+    private var keptFrom: io.github.eslamasabry.oc.ui.routes.AppRoute? = null
+
     init {
         viewModelScope.launch {
             combine(connections.servers, connections.waiting) { live, waiting -> live to waiting }
                 .collect { (live, waiting) -> adopt(live, waiting) }
+        }
+        // B-333 here too: a saved row of a server the app is starting opens once that server connects. One decision,
+        // acted on only when it changes.
+        viewModelScope.launch {
+            combine(model.map { it.keptOpen }, connections.servers, nav.top) { kept, live, top ->
+                    KeptTapRules.decideOnServer(kept, top == keptFrom, live.mapTo(HashSet()) { it.profile })
+                }
+                .distinctUntilChanged()
+                .collect { decision ->
+                    when (decision) {
+                        KeptServerTap.Wait -> Unit
+                        KeptServerTap.Drop -> model.update { it.copy(keptOpen = null) }
+                        is KeptServerTap.Open -> {
+                            model.update { it.copy(keptOpen = null) }
+                            openNow(decision.ref)
+                        }
+                    }
+                }
         }
         // Pins stored by another surface: re-read each live server's set.
         viewModelScope.launch {
@@ -174,8 +196,9 @@ public class ChatsAllViewModel(
             val kept =
                 waitingOnly.associate { w ->
                     w.profile to
-                        (m.sources[w.profile]?.takeIf { it.preview }
+                        ((m.sources[w.profile]?.takeIf { it.preview }
                             ?: SourcePages(sessions = previews.read(w.profile), preview = true))
+                            .copy(appStart = w.appStart))
                 }
             m.copy(
                 sources = m.sources.filterKeys { id -> live.any { it.profile == id } } + kept,
@@ -621,9 +644,22 @@ public class ChatsAllViewModel(
             }
             return
         }
+        // A saved row (its server is not connected): only a server the app is starting takes the tap, and keeps it
+        // until that server connects; a computer's saved row stays inert.
+        AllConversationsRules.savedRef(m, key)?.let { saved ->
+            if (SourceStartRules.takesTap(m.sources[saved.profileId]?.appStart)) {
+                keptFrom = nav.top.value
+                model.update { it.copy(keptOpen = saved) }
+            }
+            return
+        }
         val (profile, session) = AllConversationsRules.find(m, key) ?: return
         commitDelete()
-        val target = ConversationRef(profile, session.id)
+        openNow(ConversationRef(profile, session.id))
+    }
+
+    /** Opens [target] (asking first for an agent conversation that cannot be resumed). */
+    private fun openNow(target: ConversationRef) {
         // H4: an agent conversation the helper cannot resume asks before anything opens.
         val item = feed.snapshot.value.items.firstOrNull { it.ref == target }
         AgentResumeRules.ask(item, item?.let { ChatsState.row(it).agentName })?.let { ask ->
