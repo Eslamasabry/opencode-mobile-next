@@ -384,6 +384,9 @@ class PreviewRuntime(
 
     internal fun activeListReady(): Boolean = profiles.activeId.value in loadedSources.value
 
+    /** Every list source whose list has been read in this run (the server in use and the ones that joined it). */
+    internal fun loadedSourceIds(): Set<ProfileId> = loadedSources.value
+
     internal suspend fun synchronizeListSources(): Outcome<Unit> = command {
         var failed: Outcome.Failed? = null
         for (profile in profiles.profiles.value) {
@@ -438,16 +441,28 @@ class PreviewRuntime(
      * its agents' helper), it is shown, it is not the server in use (the opening card speaks for that one), its list
      * has not been read yet and it has not failed. Null otherwise.
      */
-    internal fun startingSource(id: ProfileId): io.github.eslamasabry.oc.feature.chats.presentation.AppStart? {
+    internal fun startingSource(
+        id: ProfileId,
+        agentsUpdating: Boolean = false,
+    ): io.github.eslamasabry.oc.feature.chats.presentation.AppStart? {
         if (id == profiles.activeId.value || !listSourceShown(id)) return null
-        if (id in loadedSources.value || id in mutableSourceFailures.value) return null
         val loaded = profiles.profile(id) ?: return null
-        return appStart(loaded)
+        val kind = appStart(loaded, agentsUpdating) ?: return null
+        // The agents' update keeps their helper down whatever happened before: it says so until it is done (a start
+        // refused during the install is not "not answering"; the helper is asked again afterwards).
+        if (kind == io.github.eslamasabry.oc.feature.chats.presentation.AppStart.AgentsUpdating) return kind
+        if (id in loadedSources.value || id in mutableSourceFailures.value) return null
+        return kind
     }
 
     /** Whether the app itself starts [loaded]'s server, and which kind; null for a server the person connects. */
-    internal fun appStart(loaded: LoadedProfile): io.github.eslamasabry.oc.feature.chats.presentation.AppStart? =
+    internal fun appStart(
+        loaded: LoadedProfile,
+        agentsUpdating: Boolean = false,
+    ): io.github.eslamasabry.oc.feature.chats.presentation.AppStart? =
         when {
+            isPhoneHelper(loaded) && agentsUpdating ->
+                io.github.eslamasabry.oc.feature.chats.presentation.AppStart.AgentsUpdating
             isPhoneHelper(loaded) -> io.github.eslamasabry.oc.feature.chats.presentation.AppStart.Agents
             io.github.eslamasabry.oc.engine.runtime.switching.ManagedLocalServer.isBuiltin(loaded.profile.baseUrl) ->
                 io.github.eslamasabry.oc.feature.chats.presentation.AppStart.Phone
@@ -972,11 +987,13 @@ class PreviewRuntime(
                         registry.live.value[id]?.let {
                             sessionReads.locationKey(it.profile, it.session.server.location.value)
                         },
-                    // An agents server's rows say which agent runs them (Claude Code, Codex, ...).
+                    // An agents server's rows say which agent runs them (Claude Code, Codex, ...); its saved rows,
+                    // shown before it answers, say the agent each row kept, never OpenCode.
                     agentOf =
-                        if (profiles.profile(id)?.profile?.backend == BackendKind.Paseo)
-                            PhoneConversationRules::agentOf
-                        else ({ _: Session -> null }),
+                        profiles.profile(id)?.profile?.takeIf { it.backend == BackendKind.Paseo }?.let { stored ->
+                            val saved = if (id in unverifiedListings) inventory.agents(stored) else emptyMap()
+                            ({ session: Session -> PhoneConversationRules.agentOf(session) ?: saved[session.id.raw] })
+                        } ?: ({ _: Session -> null }),
                     // H4: an agent conversation the helper can no longer reopen offers a new one on tap.
                     needsNewChat = { ListRowFacts.needsNewChat(registry.live.value[id], it.id) },
                     refresh = { refreshOne(id) },

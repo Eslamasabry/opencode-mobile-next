@@ -27,6 +27,7 @@ import io.github.eslamasabry.oc.feature.chats.presentation.ChatsAllActions
 import io.github.eslamasabry.oc.feature.chats.presentation.RowAct
 import io.github.eslamasabry.oc.feature.chats.presentation.SavedRowLine
 import io.github.eslamasabry.oc.feature.chats.presentation.SourceStartRules
+import io.github.eslamasabry.oc.feature.chats.presentation.WaitingWord
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
@@ -501,14 +502,20 @@ private fun AllRow(row: AllRowUi, selecting: Boolean, words: AllRowWords, nowMs:
         // A server the app itself starts (This phone's, its agents'): the row says it is starting and takes the tap,
         // which opens it when the server connects. Tapped, it says it is connecting.
         val line =
-            if (row.waiting) stringResource(Res.string.e7WorkspaceConnecting)
-            else
-                stringResource(
-                    when (SourceStartRules.savedLine(row.appStart)) {
-                        SavedRowLine.AgentsStarting -> Res.string.connectionAgentStarting
-                        else -> Res.string.connectStartingPhone
-                    }
-                )
+            stringResource(
+                when {
+                    row.waiting ->
+                        if (SourceStartRules.waitingWord(row.appStart) == WaitingWord.Updating) Res.string.agentsStateUpdatingHelper
+                        else Res.string.e7WorkspaceConnecting
+                    row.gaveUp -> Res.string.phoneServerRowNotAnswering
+                    else ->
+                        when (SourceStartRules.savedLine(row.appStart)) {
+                            SavedRowLine.AgentsStarting -> Res.string.connectionAgentStarting
+                            SavedRowLine.AgentsUpdating -> Res.string.connectUpdatingAgents
+                            else -> Res.string.connectStartingPhone
+                        }
+                }
+            )
         KitRow(
             title = title,
             titleMaxLines = 2,

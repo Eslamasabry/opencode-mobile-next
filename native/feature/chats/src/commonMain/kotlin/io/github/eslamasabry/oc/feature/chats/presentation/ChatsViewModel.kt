@@ -172,6 +172,10 @@ public class ChatsViewModel(
      * so a conversation the person walked away from never opens. [waitingFrom] is the page the tap was made on.
      */
     private val waitingOpen = MutableStateFlow<ConversationRef?>(null)
+
+    /** The row tapped while it could not open, which did not open within the wait's limit: it says Not answering. */
+    private val keptGaveUp = MutableStateFlow<ConversationRef?>(null)
+    private var keptTimer: kotlinx.coroutines.Job? = null
     private var waitingFrom: io.github.eslamasabry.oc.ui.routes.AppRoute? = null
 
     /** How many times a row was actually opened (tests: a kept tap opens once, however often the feed moves). */
@@ -224,6 +228,7 @@ public class ChatsViewModel(
             }
             .combine(startNewAsk) { base, ask -> base.copy(startNew = ask) }
             .combine(waitingOpen) { base, waiting -> base.copy(waitingOpen = waiting) }
+            .combine(keptGaveUp) { base, gaveUp -> base.copy(keptGaveUp = gaveUp) }
             .combine(renaming) { base, rename ->
                 base.copy(
                     renamable = editable(feed.snapshot.value),
@@ -349,17 +354,27 @@ public class ChatsViewModel(
         // The decision is reduced to one value and acted on only when it changes, and acting never re-enters the tap
         // path, so a feed or home that emits while the row still waits does no work and writes no state.
         viewModelScope.launch {
-            combine(waitingOpen, home.snapshot, feed.snapshot, nav.top) { ref, extra, snapshot, top ->
-                    KeptTapRules.decide(ref, top == waitingFrom, extra.opening == null, snapshot.items)
+            combine(waitingOpen, home.snapshot, feed.snapshot, nav.top, connections.servers) { ref, extra, snapshot, top, live ->
+                    KeptTapRules.decide(
+                        ref,
+                        top == waitingFrom,
+                        extra.opening == null,
+                        snapshot.items,
+                        live.mapTo(HashSet()) { it.profile },
+                    )
                 }
                 .distinctUntilChanged()
                 .collect { decision ->
                     when (decision) {
                         KeptTap.Wait -> Unit
-                        KeptTap.Drop -> waitingOpen.value = null
+                        KeptTap.Drop -> endKept()
                         is KeptTap.Open -> {
-                            waitingOpen.value = null
+                            endKept()
                             openNow(decision.item)
+                        }
+                        is KeptTap.OpenRef -> {
+                            endKept()
+                            openRef(decision.ref)
                         }
                     }
                 }
@@ -575,13 +590,56 @@ public class ChatsViewModel(
         val openable = items.firstOrNull { it.ref == ref && it.canReopen }
         // B-333: a row that cannot open yet (its server is still opening, or its list is not verified yet) keeps the
         // tap and opens by itself when it can, instead of ignoring it.
+        keptGaveUp.value = null
         if (home.snapshot.value.opening != null || openable == null) {
             waitingFrom = nav.top.value
-            waitingOpen.value = if (home.snapshot.value.opening != null || items.any { it.ref == ref }) ref else null
+            val keep = home.snapshot.value.opening != null || items.any { it.ref == ref }
+            waitingOpen.value = if (keep) ref else null
+            if (keep) watchKept(ref) else keptTimer?.cancel()
             return
         }
-        waitingOpen.value = null
+        endKept()
         openNow(openable)
+    }
+
+    /**
+     * A kept tap ends: within [KeptTapRules.LIMIT_MS] of waiting with nothing in progress (an agent update does not
+     * count, as on the conversation page) the source has connected and the row opened, or the tap is dropped and the
+     * row says its source is not answering.
+     */
+    private fun watchKept(ref: ConversationRef) {
+        keptTimer?.cancel()
+        keptTimer =
+            viewModelScope.launch {
+                var waited = 0L
+                while (waited < KeptTapRules.LIMIT_MS) {
+                    kotlinx.coroutines.delay(KeptTapRules.STEP_MS)
+                    if (waitingOpen.value != ref) return@launch
+                    val updating =
+                        home.snapshot.value.sources.any {
+                            it.profile == ref.profileId && it.starting == AppStart.AgentsUpdating
+                        }
+                    if (!updating) waited += KeptTapRules.STEP_MS
+                }
+                if (waitingOpen.value == ref) {
+                    waitingOpen.value = null
+                    keptGaveUp.value = ref
+                }
+            }
+    }
+
+    private fun endKept() {
+        keptTimer?.cancel()
+        keptTimer = null
+        waitingOpen.value = null
+    }
+
+    /** Opens a conversation by its ref: its source is connected and its list read, but the list does not show it. */
+    private fun openRef(ref: ConversationRef) {
+        openAttempts++
+        sheet.value = null
+        feed.prefetch(ref)
+        nav.openChat(ref)
     }
 
     /** Opens a row that can open now. Never keeps a tap: the kept-tap path calls it once, with the row it checked. */

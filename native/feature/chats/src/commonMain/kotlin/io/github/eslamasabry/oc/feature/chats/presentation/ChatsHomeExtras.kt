@@ -86,6 +86,8 @@ public data class ChatsListSourceUi(
     val agents: Boolean = false,
     /** The app itself is starting this source (This phone's server, its agents) and it is not connected yet. */
     val starting: AppStart? = null,
+    /** While [starting] is [AppStart.AgentsUpdating]: the agent being installed, by its name, when known. */
+    val updatingAgent: String? = null,
 )
 
 public data class ChatsHomeExtraState(

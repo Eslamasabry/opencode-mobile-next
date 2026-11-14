@@ -74,6 +74,7 @@ class LiveConversationServers(
     appScope: AppCoroutineScope,
     runtime: PreviewRuntime,
     private val conversationsLeft: ConversationsLeft,
+    agentUpdate: PhoneAgentUpdateStatus,
 ) : ConversationServers {
     override fun prefetch(ref: io.github.eslamasabry.oc.core.common.ids.ConversationRef) {
         registry.graphFor(ref)?.session?.reads?.prefetch(ref.sessionId)
@@ -101,11 +102,13 @@ class LiveConversationServers(
 
     // Cache-first: the shown saved servers not connected yet draw their kept rows on All conversations.
     override val waiting: StateFlow<ImmutableList<ServerName>> =
-        combine(registry.live, stores.profiles.profiles, stores.profiles.activeId) { live, saved, _ ->
+        combine(registry.live, stores.profiles.profiles, stores.profiles.activeId, agentUpdate.decision) { live, saved, _, update ->
+                val updating = update.step == io.github.eslamasabry.oc.engine.agents.install.AgentUpdateStep.Updating
                 saved
                     .filter { it.id !in live && runtime.listSourceShown(it.id) }
-                    // This phone's server and its agents are started by the app: their rows say so and keep a tap.
-                    .map { ServerName(it.id, it.profile.name, runtime.appStart(it)) }
+                    // This phone's server and its agents are started by the app: their rows say so (updating while the
+                    // agents update) and keep a tap.
+                    .map { ServerName(it.id, it.profile.name, runtime.appStart(it, agentsUpdating = updating)) }
                     .toImmutableList()
             }
             .stateIn(appScope, SharingStarted.Eagerly, persistentListOf())

@@ -508,6 +508,46 @@ class ChatsViewModelTest {
     }
 
     @Test
+    fun `B-333 a kept tap ends - after the wait's limit the row stops saying Connecting and says Not answering`() = runTest {
+        val nav = RecordingNavigator()
+        val home = Home(listOf(source("main", main = true)))
+        val feed = Feed().apply { snapshot.value = ChatFeedSnapshot(persistentListOf(item("s1").copy(canReopen = false))) }
+        val vm = ChatsViewModel(feed, Briefs(), Door(false), { Instant.fromEpochMilliseconds(0) }, clock, nav, home = home)
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
+        val ref = ConversationRef(P1, io.github.eslamasabry.oc.core.common.ids.SessionId("s1"))
+        vm.openConversation(ref)
+        advanceTimeBy(60_000)
+        assertEquals(ref, vm.state.value.waitingOpen)
+        advanceTimeBy(40_000)
+        assertNull(vm.state.value.waitingOpen)
+        assertEquals(ref, vm.state.value.keptGaveUp)
+        assertEquals(emptyList(), nav.calls)
+        // A new tap waits again and clears the old word.
+        vm.openConversation(ref)
+        assertEquals(ref, vm.state.value.waitingOpen)
+        assertNull(vm.state.value.keptGaveUp)
+    }
+
+    @Test
+    fun `B-333 a kept tap does not run out while the app updates the source's agents`() = runTest {
+        val nav = RecordingNavigator()
+        val updating =
+            io.github.eslamasabry.oc.feature.chats.presentation.ChatsListSourceUi(
+                P1, "Claude Code", shown = true, main = false, onThisPhone = true, unreachable = false, agents = true,
+                starting = io.github.eslamasabry.oc.feature.chats.presentation.AppStart.AgentsUpdating,
+            )
+        val home = Home(listOf(source("main", main = true), updating))
+        val feed = Feed().apply { snapshot.value = ChatFeedSnapshot(persistentListOf(item("s1").copy(canReopen = false))) }
+        val vm = ChatsViewModel(feed, Briefs(), Door(false), { Instant.fromEpochMilliseconds(0) }, clock, nav, home = home)
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
+        val ref = ConversationRef(P1, io.github.eslamasabry.oc.core.common.ids.SessionId("s1"))
+        vm.openConversation(ref)
+        advanceTimeBy(10 * 60_000)
+        assertEquals(ref, vm.state.value.waitingOpen)
+        assertNull(vm.state.value.keptGaveUp)
+    }
+
+    @Test
     fun `B-333 the kept-tap decision opens only a row that can open, on the page it was tapped on`() {
         val ref = ConversationRef(P1, io.github.eslamasabry.oc.core.common.ids.SessionId("s1"))
         val shut = listOf(item("s1").copy(canReopen = false))
