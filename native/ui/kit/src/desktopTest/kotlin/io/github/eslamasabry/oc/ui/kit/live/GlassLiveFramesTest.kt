@@ -70,7 +70,10 @@ class GlassLiveFramesTest {
     @Test
     fun `B-KIT-LIVE-053 a glass pane shows the background's next frame and a new look at once, never a stale picture`() {
         var look by mutableStateOf("aurora")
-        runDesktopComposeUiTest(320, 420) {
+        // A quarter of the pixels it had: every frame here is the aurora drawn on the CPU and replayed under the pane's
+        // frost and its rim light. Since the rim light became a ring round the whole outline (its clip's bounds are the
+        // whole pane) each frame cost about 0.65 s at 320 x 420 and the 130 frames passed the runner's minute.
+        runDesktopComposeUiTest(160, 210) {
             mainClock.autoAdvance = false
             setContent {
                 KitTheme(
@@ -80,8 +83,8 @@ class GlassLiveFramesTest {
                 ) {
                     KitLiveBackground(Modifier.fillMaxSize()) {
                         Box(
-                            Modifier.padding(24.dp)
-                                .size(240.dp, 300.dp)
+                            Modifier.padding(12.dp)
+                                .size(120.dp, 150.dp)
                                 .then(kitSurfaceLook(KitSurfaceInput(SurfaceRole.Content, KitShapeId.Card, SurfaceLevel.Surface1)).modifier)
                                 .testTag("pane")
                         )
