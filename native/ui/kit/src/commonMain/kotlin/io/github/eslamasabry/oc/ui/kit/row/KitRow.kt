@@ -76,8 +76,11 @@ public fun kitRowSupportingLines(textScale: Float, asked: Int = 1): Int =
         else -> asked
     }
 
-/** A row title: one line below 1.3×, two from 1.3× (the full value stays in semantics). */
-public fun kitRowTitleLines(textScale: Float, asked: Int = 1): Int = if (TextScalePolicy.isLargeText(textScale)) maxOf(asked, 2) else asked
+/**
+ * A row title: two lines at every size, never "…" while a second line is free (audit 2: "Permissions and automati…"
+ * beside its value). A caller may ask for more; the full value stays in semantics.
+ */
+public fun kitRowTitleLines(@Suppress("UNUSED_PARAMETER") textScale: Float, asked: Int = 1): Int = maxOf(asked, 2)
 
 /**
  * A file name that wraps only after `_`, `-` or before the extension's dot, never mid-word (Dart `kitBreakableFileName`).
@@ -451,7 +454,9 @@ private fun RowBody(
                         else RowValue(value)
                     // One tertiary button, trailing (Dart `KitButton.fromAction(enable, role: tertiary, expand: false)`); it
                     // keeps its own side padding beside the words.
-                    action != null && !actionBelow -> Box(Modifier.padding(horizontal = Space.S2.dp)) {
+                    // Its words end on the row's end rail like a chevron's ink does (audit 2: "Update and import" ended 12 dp in,
+                    // a gutter's 4 dp short): the row keeps space1 at its end, the box the rest of the gutter.
+                    action != null && !actionBelow -> Box(Modifier.padding(start = Space.S2.dp, end = maxOf(Space.S2.dp, kitRowGutter() - Space.S1.dp))) {
                         io.github.eslamasabry.oc.ui.kit.KitButton(
                             io.github.eslamasabry.oc.ui.kit.KitAction(
                                 action.label, action.onClick,

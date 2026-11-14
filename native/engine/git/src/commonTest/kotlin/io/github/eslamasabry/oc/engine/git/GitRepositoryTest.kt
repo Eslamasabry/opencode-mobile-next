@@ -53,6 +53,8 @@ class GitRepositoryTest {
             assertIs<GitSnapshotResult.Failed>(GitRepository(FakeShell { reply }, "/p").snapshot()).failure.problem
         assertEquals(GitProblem.ServerCannotRunCommands, problemOf(GitShellReply.Failed(GitShellFailure.Unsupported)))
         assertEquals(GitProblem.EnvironmentUnavailable, problemOf(GitShellReply.Failed(GitShellFailure.Unavailable)))
+        assertEquals(GitProblem.ServerRefusedCommand, problemOf(GitShellReply.Failed(GitShellFailure.Refused)))
+        assertEquals(GitProblem.NoWorkingSpace, problemOf(GitShellReply.Output("@@OCG begin\n@@OCG notemp\n")))
         assertEquals(GitProblem.TimedOut, problemOf(GitShellReply.Failed(GitShellFailure.TimedOut)))
         assertEquals(GitProblem.FolderMissing, problemOf(GitShellReply.Output("@@OCG begin\n@@OCG nodir\n")))
         assertEquals(GitProblem.GitMissing, problemOf(GitShellReply.Output("@@OCG begin\n@@OCG nogit\n")))

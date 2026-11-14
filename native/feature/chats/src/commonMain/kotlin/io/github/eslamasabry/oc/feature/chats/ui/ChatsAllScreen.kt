@@ -472,7 +472,7 @@ private fun rememberAllRowWords(): AllRowWords =
 private fun AllRow(row: AllRowUi, selecting: Boolean, words: AllRowWords, nowMs: Long, actions: ChatsAllActions) {
     val title = rowTitle(row.title)
     val project = row.project ?: words.unknownLocation
-    val location = row.server?.let { "$it · $project" } ?: project
+    val location = serverNameShownOrNull(row.server)?.let { "$it · $project" } ?: project
     val place =
         row.contextPercent?.let {
             "$location · " + stringResource(Res.string.stateContextUsage, it)

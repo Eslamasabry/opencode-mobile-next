@@ -345,7 +345,7 @@ private fun ServerSwitcher(
             val needsYouNow = server.needsYou > 0 && !held
             val opening = switcher.switching == server.profile
             KitRow(
-                title = server.name,
+                title = serverNameShown(server.name),
                 leading = KitRowLeading.Glyph(if (server.onThisPhone) KitIcons.phone else KitIcons.server, current = server.current),
                 supporting = if (opening) stringResource(Res.string.e7WorkspaceConnecting) else words.joinToString(" · "),
                 selected = server.current,
@@ -452,7 +452,7 @@ private fun SourceChoices(state: ChatsUi, actions: ChatsActions) {
     KitRowGroup {
         state.home.sources.forEach { source ->
             KitSwitchRow(
-                title = source.name,
+                title = serverNameShown(source.name),
                 // F: chats_sources_sheet.dart:26-48: the agents on this phone are one switch, marked as Claude Code's.
                 leading =
                     if (source.agents) KitRowLeading.Logo("claude", source.name, agent = true)

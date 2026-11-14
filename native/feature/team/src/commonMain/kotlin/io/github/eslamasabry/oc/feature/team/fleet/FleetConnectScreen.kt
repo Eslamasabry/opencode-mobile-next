@@ -26,7 +26,6 @@ import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
 import io.github.eslamasabry.oc.ui.kit.state.KitDetailsFold
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitTechnicalValue
-import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.*
 import org.jetbrains.compose.resources.stringResource
 
@@ -55,7 +54,7 @@ public fun FleetConnectScreen(state: FleetConnectUi, actions: FleetConnectAction
                 },
                 bottom = {
                     KitActionBlock(
-                        Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp, vertical = Space.S2.dp).testTag("team-address-actions"),
+                        Modifier.padding(vertical = Space.S2.dp).testTag("team-address-actions"),
                         primary =
                             KitAction(
                                 stringResource(if (state.testing) Res.string.teamUiAddTesting else Res.string.teamUiAddSubmit),

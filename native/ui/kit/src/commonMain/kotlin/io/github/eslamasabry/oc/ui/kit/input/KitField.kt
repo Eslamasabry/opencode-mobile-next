@@ -307,7 +307,9 @@ public fun KitField(
             error ?: if (enabled.isEnabled) helper else enabled.reason?.takeIf { it.isNotEmpty() }
         val length = state.text.length
         val counter = KitFieldRules.showCounter(length, maxLength)
-        if (!composer || checking || note != null || counter) {
+        // Only a line that has something to say: an empty one still cost the column's step above it, so a field's
+        // box ended 4 dp above its bottom edge and a button beside it, aligned to that edge, sat lower than the box.
+        if (checking || note != null || counter) {
             Row(
                 Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(Space.S2.dp),

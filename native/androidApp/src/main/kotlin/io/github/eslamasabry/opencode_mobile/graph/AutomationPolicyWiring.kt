@@ -121,7 +121,7 @@ class AppAutomationPolicies(
         mutable.value =
             mutable.value.copy(
                 servers =
-                    stores.profiles.profiles.value
+                    automationListed(stores.profiles.profiles.value) { stores.isPhoneHelper(it) }
                         .mapNotNull { profile ->
                             val policy =
                                 forProfile(profile.id)?.value?.value ?: return@mapNotNull null
@@ -162,3 +162,10 @@ class AppAutomationPolicies(
         return 0.ok()
     }
 }
+
+/**
+ * The servers "What runs by itself" lists: the phone agents' helper profile is part of This phone, never a second
+ * server of its own (the project rule "One This phone"), as the monitoring list and the Servers page already hold.
+ */
+internal fun <T> automationListed(profiles: List<T>, isPhoneHelper: (T) -> Boolean): List<T> =
+    profiles.filterNot(isPhoneHelper)

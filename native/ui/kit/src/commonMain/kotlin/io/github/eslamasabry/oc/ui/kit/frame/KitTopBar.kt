@@ -15,6 +15,7 @@ import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.zIndex
 import androidx.compose.ui.platform.testTag
+import io.github.eslamasabry.oc.ui.kit.foundation.kitTextScale
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.isTraversalGroup
@@ -368,7 +369,9 @@ public fun KitTopBar(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 ExitButton(ExitGlyph.Back, exitLabel.orEmpty(), onExit, -1f)
-                Column(Modifier.weight(1f).padding(vertical = Space.S1.dp)) {
+                // Large text: the block outgrows the 48 dp row and its 4 dp step is all that is left above the words (audit
+                // 2: at 1.3x the title's first line sat 15 px under the bar's rim); keep the roomier step there.
+                Column(Modifier.weight(1f).padding(vertical = if (kitTextScale() >= LARGE_BAR_SCALE) Space.S2.dp else Space.S1.dp)) {
                     Box(
                         if (under != null) Modifier.zIndex(1f).clipToBounds().endUnderText(titleLine, 0.dp)
                         else Modifier
@@ -550,6 +553,9 @@ private fun BackBar(
         }
     }
 }
+
+/** From this text scale the compact bar keeps a step of space2, not space1, above and below its words. */
+private const val LARGE_BAR_SCALE = 1.2f
 
 /** The most of the bar's free width the inline actions may take (QA wave 4 N1). */
 private const val ACTIONS_SHARE = 0.5f

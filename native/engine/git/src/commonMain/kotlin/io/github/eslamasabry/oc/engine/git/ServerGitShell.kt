@@ -57,10 +57,7 @@ public class ServerGitShell(
             }
         val id =
             when (started) {
-                is Outcome.Failed ->
-                    return GitShellReply.Failed(
-                        if (started.failure is Failure.NotFound) GitShellFailure.Unsupported else GitShellFailure.Unavailable,
-                    )
+                is Outcome.Failed -> return GitShellReply.Failed(startFailure(started.failure))
                 is Outcome.Ok -> started.value.data()?.string("id") ?: return GitShellReply.Failed(GitShellFailure.Unavailable)
             }
         try {
@@ -88,6 +85,18 @@ public class ServerGitShell(
             withContext(NonCancellable) { exchange(HttpMethod.Delete, "/shell/$id", query) }
         }
     }
+
+    /**
+     * Only a server that did not answer is "unavailable": a missing endpoint is "unsupported", and any other answer
+     * (a sign-in refusal, a server error) means the server is there but would not run the command.
+     */
+    private fun startFailure(failure: Failure): GitShellFailure =
+        when (failure) {
+            is Failure.NotFound, is Failure.Unavailable -> GitShellFailure.Unsupported
+            is Failure.SignIn, is Failure.Server, is Failure.Rejected, is Failure.Conflict, is Failure.Busy ->
+                GitShellFailure.Refused
+            else -> GitShellFailure.Unavailable
+        }
 
     private suspend fun readOutput(id: String, query: Map<String, String>): String? {
         val out = StringBuilder()
