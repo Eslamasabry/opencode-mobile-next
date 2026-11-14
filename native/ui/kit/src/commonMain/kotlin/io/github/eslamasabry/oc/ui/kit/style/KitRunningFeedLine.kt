@@ -17,7 +17,7 @@ import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitText
 import kotlin.time.TimeSource
-import kotlinx.coroutines.delay
+import io.github.eslamasabry.oc.ui.kit.platform.LocalKitVisibility
 
 /** The Signal feed's segment time and one command; wall time is supplied by its engine. */
 @Composable
@@ -34,11 +34,12 @@ public fun KitRunningFeedLine(
         remember(sinceMs, nowMs) {
             mutableLongStateOf((nowMs - (sinceMs ?: nowMs)).coerceAtLeast(0))
         }
-    LaunchedEffect(sinceMs, nowMs) {
+    val visibility = LocalKitVisibility.current
+    LaunchedEffect(sinceMs, nowMs, visibility) {
         if (sinceMs == null) return@LaunchedEffect
         while (true) {
             elapsed = (nowMs - sinceMs).coerceAtLeast(0) + started.elapsedNow().inWholeMilliseconds
-            delay(1_000)
+            visibility.tick(1_000) // parks while the app is hidden (no second hand to move off screen)
         }
     }
     Row(horizontalArrangement = Arrangement.spacedBy(Space.S1.dp)) {

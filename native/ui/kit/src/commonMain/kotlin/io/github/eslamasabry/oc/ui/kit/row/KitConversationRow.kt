@@ -52,7 +52,7 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTypography
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.kitPinned
 import kotlin.time.TimeSource
-import kotlinx.coroutines.delay
+import io.github.eslamasabry.oc.ui.kit.platform.LocalKitVisibility
 import org.jetbrains.compose.resources.stringResource
 
 /**
@@ -298,11 +298,12 @@ private fun rememberLiveLabel(live: KitRowLive): String {
             mutableLongStateOf(live.sinceMs?.let { (live.nowMs - it).coerceAtLeast(0) } ?: -1L)
         }
     val still = LocalKitMotion.current.stillFrame
-    LaunchedEffect(live.sinceMs, live.nowMs, still) {
+    val visibility = LocalKitVisibility.current
+    LaunchedEffect(live.sinceMs, live.nowMs, still, visibility) {
         // A still frame (tests, screenshots) keeps the length it was given.
         val since = live.sinceMs?.takeUnless { still } ?: return@LaunchedEffect
         while (true) {
-            delay(LIVE_TICK_MS)
+            visibility.tick(LIVE_TICK_MS) // parks while the app is hidden
             elapsed = (live.nowMs - since).coerceAtLeast(0) + started.elapsedNow().inWholeMilliseconds
         }
     }

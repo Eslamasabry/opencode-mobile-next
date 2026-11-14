@@ -7,7 +7,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import io.github.eslamasabry.oc.ui.design.motion.MotionTokens
-import kotlinx.coroutines.delay
+import io.github.eslamasabry.oc.ui.kit.platform.LocalKitVisibility
 import kotlin.time.Clock
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
@@ -115,10 +115,11 @@ public fun KitSince(
 ) {
     var status by remember(since, ticks) { mutableStateOf(kitSinceStatusOf(since, now())) }
     LaunchedEffect(since) { if (since != null && kitSinceStatusOf(since, now()).isSlow) onEscalated?.invoke() }
-    LaunchedEffect(since, ticks) {
+    val visibility = LocalKitVisibility.current
+    LaunchedEffect(since, ticks, visibility) {
         while (true) {
             val wait = kitSinceNextWait(status, ticks) ?: break
-            delay(wait)
+            visibility.tick(wait) // parks while the app is hidden; the status is read fresh after
             val next = kitSinceStatusOf(since, now())
             if (next.isSlow && !status.isSlow) onEscalated?.invoke()
             status = next

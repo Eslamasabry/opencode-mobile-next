@@ -125,6 +125,7 @@ import io.github.eslamasabry.oc.ui.words.res.kitLogTitle
 import io.github.eslamasabry.oc.ui.words.res.kitLogWarningLine
 import io.github.eslamasabry.oc.ui.words.res.kitTryAgain
 import kotlinx.coroutines.delay
+import io.github.eslamasabry.oc.ui.kit.platform.LocalKitVisibility
 import kotlinx.coroutines.launch
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
@@ -468,11 +469,13 @@ public fun KitLogPanel(
     // Polling (PERF-4): every 2 s while the panel is composed, never overlapping, until it ends or a read fails.
     var readFailed by remember { mutableStateOf(false) }
     var attempt by remember { mutableIntStateOf(0) }
-    LaunchedEffect(onRefresh, ended, readFailed, attempt) {
+    val visibility = LocalKitVisibility.current
+    LaunchedEffect(onRefresh, ended, readFailed, attempt, visibility) {
         val refresh = onRefresh ?: return@LaunchedEffect
         if (ended != null || readFailed) return@LaunchedEffect
         while (true) {
-            delay(FlutterKitMotion.LOG_POLL_MS.toLong())
+            // Parks while the app is hidden: nobody reads the log off screen; back on screen it reads at once.
+            visibility.tick(FlutterKitMotion.LOG_POLL_MS.toLong())
             if (!refresh()) {
                 readFailed = true
                 return@LaunchedEffect
