@@ -93,8 +93,14 @@ public class AndroidKitPlatform(
             context.registerReceiver(saver, saverChanged)
         }
         if (power != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            power.addThermalStatusListener(context.mainExecutor) { status ->
-                state.update { it.copy(severeHeat = status >= PowerManager.THERMAL_STATUS_SEVERE) }
+            // A device whose thermal service cannot take a listener throws here ("Thermal status listener failed to
+            // set"); that must never stop the app from starting. Without it the heat signal just stays off.
+            try {
+                power.addThermalStatusListener(context.mainExecutor) { status ->
+                    state.update { it.copy(severeHeat = status >= PowerManager.THERMAL_STATUS_SEVERE) }
+                }
+            } catch (_: RuntimeException) {
+                // No heat signal on this device.
             }
         }
     }

@@ -82,7 +82,19 @@ class AndroidKitPlatformTest {
         activity.window.navigationBarDividerColor = android.graphics.Color.RED
         io.github.eslamasabry.oc.ui.kit.platform.applySystemBars(activity.window, darkContent = true, ground = android.graphics.Color.WHITE)
         assertEquals(android.graphics.Color.TRANSPARENT, activity.window.navigationBarDividerColor)
-        @Suppress("DEPRECATION")
-        assertEquals(android.graphics.Color.WHITE, activity.window.navigationBarColor)
+        // From API 35 (edge-to-edge) the window ignores the navigation bar's colour and reads back transparent; the kit
+        // paints the ground under the bar itself, so the colour is only the kit's to set below 35.
+        if (android.os.Build.VERSION.SDK_INT < 35) {
+            @Suppress("DEPRECATION")
+            assertEquals(android.graphics.Color.WHITE, activity.window.navigationBarColor)
+        }
+    }
+
+    @Test
+    fun `a device whose thermal service refuses a listener still starts the platform`() {
+        val view = RecordingView(ApplicationProvider.getApplicationContext())
+        // Robolectric's PowerManager throws "Thermal status listener failed to set", as some real devices do.
+        val platform = AndroidKitPlatform(view)
+        assertEquals(false, platform.signals.value.severeHeat)
     }
 }
