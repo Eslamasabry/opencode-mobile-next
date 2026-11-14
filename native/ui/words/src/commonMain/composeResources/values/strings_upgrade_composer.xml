@@ -1,6 +1,7 @@
 <resources>
     <string name="upgradeComposerAsk">Ask %1$s…</string>
     <string name="chatReplyInHint">Reply in %1$s</string>
+    <string name="chatWaitingForAnswerAbove">Waiting for your answer above</string>
     <string name="upgradeComposerFree"> · Free</string>
     <string name="upgradeComposerVoiceHoldTitle">Talk with the agent</string>
     <string name="upgradeComposerVoiceHold">Hold the mic and talk; let go to put your words in the box. For a voice conversation, open + and choose Voice conversation.</string>

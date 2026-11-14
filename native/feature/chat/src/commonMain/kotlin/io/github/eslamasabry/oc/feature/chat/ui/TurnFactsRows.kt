@@ -30,6 +30,7 @@ import io.github.eslamasabry.oc.feature.chat.presentation.StepListRules
 import io.github.eslamasabry.oc.feature.chat.presentation.TranscriptDetailUi
 import io.github.eslamasabry.oc.feature.chat.presentation.TurnResultUi
 import io.github.eslamasabry.oc.feature.chat.presentation.WorkEntryUi
+import io.github.eslamasabry.oc.feature.chat.requests.ui.LocalInPlaceRequests
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
@@ -193,11 +194,16 @@ internal fun TurnWorkLine(
     val cut = remember(rows) { StepListRules.cut(rows) }
     val open = folds.open[foldKey] == true
     val treeWords = rememberStepTreeWords()
+    // D1: a permission ask for one of these steps is answered in place, right under the step it is for.
+    val inPlace = LocalInPlaceRequests.current
     val entry: @Composable (StepEntry) -> Unit = { row ->
         key(row.key) {
             when (row) {
-                is StepEntry.Step ->
+                is StepEntry.Step -> {
                     StepRow(row.step, nowMs, folds, onOpenSession, onOpenFile, reply, waitingForYou = stepWaitsForYou(row.step.state, work.state))
+                    val ask = row.step.callId?.let { inPlace?.byCall?.get(it) }
+                    if (inPlace != null && ask != null) inPlace.draw(ask)
+                }
                 is StepEntry.Detail -> TranscriptDetail(row.detail, folds, reasoningExpanded, reply, onCompactAgain, onOpenSession)
                 is StepEntry.Group -> SubAgentGroup(row, work.state, onOpenSession, treeWords)
             }

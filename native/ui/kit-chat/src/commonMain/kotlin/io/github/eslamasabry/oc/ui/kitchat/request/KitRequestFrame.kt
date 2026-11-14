@@ -75,6 +75,13 @@ public enum class KitRequestLook {
      * bordered mono block with Details in it, Reject and the primary, and the named standing grant as an underlined link.
      */
     Question,
+
+    /**
+     * D1 "steps only" (owner 2026-11-14): the ask in place under the step that waits for it on a conversation's step
+     * list. No card, no fill, no edge: the step's own row already says "Waiting for you" in the attention ink, so the
+     * ask's words and its answers stand on the page, one material with the steps around them.
+     */
+    InPlace,
 }
 
 /**
@@ -91,11 +98,13 @@ public fun KitRequestFrame(
     val colors = LocalKitColors.current
     val shape = KitShapeId.Card.toShape()
     val question = look == KitRequestLook.Question
+    val inPlace = look == KitRequestLook.InPlace
     // Brutal and Paper dress the card as a card on the page (audit 2026-11-14): Brutal's ink edge and hard shadow,
     // Paper's ink box with square corners; the attention stays in its fill (standard) or its start edge (question). The
     // controls inside are nested in its outline (LocalKitNested): edged, never a second shadow.
     val dressed =
-        kitDressedLook(
+        if (inPlace) null
+        else kitDressedLook(
             KitSurfaceInput(
                 role = SurfaceRole.Content,
                 shape = KitShapeId.Card,
@@ -104,7 +113,7 @@ public fun KitRequestFrame(
             )
         )
     val face =
-        if (LocalKitAppearance.current.style == KitSurfaceStyle.Signal) Modifier
+        if (inPlace || LocalKitAppearance.current.style == KitSurfaceStyle.Signal) Modifier
         else if (dressed != null) Modifier.kitSurface(dressed).then(if (question) Modifier.questionEdge().questionPadding() else Modifier.padding(Space.S4.dp))
         else if (question) Modifier.questionFace(shape)
         else
@@ -119,7 +128,7 @@ public fun KitRequestFrame(
     // under it does. The question look and Signal keep their place as before.
     val ringWidth = FlutterKitTokens.NEEDS_YOU_RING_WIDTH.dp
     val ring =
-        if (question || LocalKitAppearance.current.style == KitSurfaceStyle.Signal) Modifier.padding(horizontal = ringWidth)
+        if (!inPlace && (question || LocalKitAppearance.current.style == KitSurfaceStyle.Signal)) Modifier.padding(horizontal = ringWidth)
         else Modifier
     KitSignalSlip(
         modifier.widthIn(max = 700.dp).fillMaxWidth().heightIn(max = maxCardHeight()),
@@ -230,23 +239,26 @@ public fun KitRequestWaitingCaption(waiting: String?, modifier: Modifier = Modif
 
 /**
  * The collapsed answered row (kit_request_card.dart `_collapsed`): no card, border or attention colour. The request's glyph
- * at the start, the ask in small secondary words, and the [outcome] (the receipt, then any Undo) under it.
+ * at the start, the ask in small secondary words, and the [outcome] (the receipt, then any Undo) under it. [inPlace]
+ * (D1): under its step on a conversation's step list it starts on the steps' words, with no glyph and no page gutter of
+ * its own (the step's glyph is on the rail beside it).
  */
 @Composable
 public fun KitRequestAnsweredRow(
     icon: ImageVector,
     title: String,
     modifier: Modifier = Modifier,
+    inPlace: Boolean = false,
     outcome: @Composable () -> Unit,
 ) {
     // kitRequestPlacement: the page gutter less the 4 dp ring across (12 dp), space1 (4 dp) above and below.
     Row(
-        modifier.fillMaxWidth().padding(horizontal = Space.S3.dp, vertical = Space.S1.dp)
-            .heightIn(min = LocalKitTokens.current.rowHeightOne.dp).padding(horizontal = Space.S4.dp),
+        modifier.fillMaxWidth().padding(horizontal = if (inPlace) 0.dp else Space.S3.dp, vertical = Space.S1.dp)
+            .heightIn(min = LocalKitTokens.current.rowHeightOne.dp).padding(horizontal = if (inPlace) 0.dp else Space.S4.dp),
         horizontalArrangement = Arrangement.spacedBy(Space.S3.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        KitIcon(icon, size = KitIconSize.Small, tone = TextTone.Secondary)
+        if (!inPlace) KitIcon(icon, size = KitIconSize.Small, tone = TextTone.Secondary)
         Column(Modifier.weight(1f)) {
             KitText(title, role = TypeRole.Secondary, tone = TextTone.Secondary, kind = KitTextKind.Reading)
             outcome()
@@ -266,6 +278,7 @@ public fun <T> KitRequestAnsweredRow(
     title: String,
     outcomeKey: T,
     modifier: Modifier = Modifier,
+    inPlace: Boolean = false,
     outcome: @Composable (T) -> Unit,
 ) {
     // Named, without outcomeKey: only the plain row fits (this overload needs a key).
@@ -273,6 +286,7 @@ public fun <T> KitRequestAnsweredRow(
         icon = icon,
         title = title,
         modifier = modifier,
+        inPlace = inPlace,
         outcome = {
             KitSwap(outcomeKey, Modifier.fillMaxWidth(), pace = KitPace.Quick, alignment = Alignment.CenterStart) { shown ->
                 outcome(shown)

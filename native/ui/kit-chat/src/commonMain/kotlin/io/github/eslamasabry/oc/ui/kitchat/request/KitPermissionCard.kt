@@ -217,7 +217,8 @@ public fun KitPermissionCard(
                     heading()
                     liveRegion = LiveRegionMode.Polite
                 },
-                role = TypeRole.Headline,
+                // In place under its step the ask reads at the reply's size, not as a card's headline.
+                role = if (look == KitRequestLook.InPlace) TypeRole.Body else TypeRole.Headline,
                 tone = TextTone.Primary,
                 kind = KitTextKind.Reading,
             )

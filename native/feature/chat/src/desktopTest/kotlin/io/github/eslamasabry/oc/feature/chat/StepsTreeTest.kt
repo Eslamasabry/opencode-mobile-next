@@ -108,7 +108,7 @@ class StepsTreeTest {
 
     private fun msg(info: MessageInfo, vararg parts: Part) = MessageWithParts(info, parts.toList().toImmutableList())
 
-    private val prompt = msg(info("m1", Role.User, 1_000), text("p1", "m1", "merge the rivers files"))
+    private val sent = msg(info("m1", Role.User, 1_000), text("p1", "m1", "merge the rivers files"))
 
     /**
      * Nine steps: a read, a refused delete, a failed edit, a search, an edit, a new file, the tests, then two sub-agents
@@ -116,7 +116,7 @@ class StepsTreeTest {
      */
     private fun turn(cost: Double = 0.06, tokens: Tokens = Tokens(input = 19_000, output = 340)): List<MessageWithParts> =
         listOf(
-            prompt,
+            sent,
             msg(
                 info("m2", Role.Assistant, 2_000, done = 74_000, tokens = tokens, cost = cost),
                 tool("t1", "read", ToolStatus.Completed, mapOf("filePath" to "/p/rivers.txt"), 2_000, 2_300, output = "x"),
@@ -156,7 +156,7 @@ class StepsTreeTest {
         val f =
             facts(
                 listOf(
-                    prompt,
+                    sent,
                     msg(
                         info("m2", Role.Assistant, 2_000, done = 9_000),
                         tool("a", "task", ToolStatus.Completed, mapOf("description" to "first"), 2_000, 3_000, output = "x"),
@@ -311,5 +311,80 @@ class StepsTreeTest {
             onNodeWithText("1m 13s", substring = true).assertExists()
             onAllNodesWithText("tokens", substring = true).assertCountEquals(0)
             onAllNodesWithText("$", substring = true).assertCountEquals(0)
+        }
+
+    private class Answers : io.github.eslamasabry.oc.feature.chat.requests.presentation.ChatRequestActions {
+        val allowed = mutableListOf<String>()
+        override fun shown(id: io.github.eslamasabry.oc.core.common.ids.RequestId) = Unit
+        override fun allowOnce(id: io.github.eslamasabry.oc.core.common.ids.RequestId) {
+            allowed += id.raw
+        }
+        override fun reject(id: io.github.eslamasabry.oc.core.common.ids.RequestId) = Unit
+        override fun askAlwaysAllow(id: io.github.eslamasabry.oc.core.common.ids.RequestId) = Unit
+        override fun confirmAlwaysAllow() = Unit
+        override fun cancelAlwaysAllow() = Unit
+        override fun keepAsking(id: io.github.eslamasabry.oc.core.common.ids.RequestId) = Unit
+        override fun choose(id: io.github.eslamasabry.oc.core.common.ids.RequestId, option: String) = Unit
+        override fun openOther(id: io.github.eslamasabry.oc.core.common.ids.RequestId) = Unit
+        override fun editOther(id: io.github.eslamasabry.oc.core.common.ids.RequestId, text: String) = Unit
+        override fun sendOther(id: io.github.eslamasabry.oc.core.common.ids.RequestId) = Unit
+        override fun openSheet(id: io.github.eslamasabry.oc.core.common.ids.RequestId) = Unit
+        override fun closeSheet(id: io.github.eslamasabry.oc.core.common.ids.RequestId) = Unit
+        override fun chooseInSheet(id: io.github.eslamasabry.oc.core.common.ids.RequestId, prompt: Int, label: String) = Unit
+        override fun editSheetOther(id: io.github.eslamasabry.oc.core.common.ids.RequestId, prompt: Int, text: String) = Unit
+        override fun sendSheet(id: io.github.eslamasabry.oc.core.common.ids.RequestId) = Unit
+        override fun undo(id: io.github.eslamasabry.oc.core.common.ids.RequestId) = Unit
+        override fun retry(id: io.github.eslamasabry.oc.core.common.ids.RequestId) = Unit
+    }
+
+    @Test
+    fun `D1-ASK-001 an ask is placed under its step only when its call is a step of the turn in view`() {
+        val facts = TurnFactsPresenter(FixedClock).present(runningEditFeed(), 58_000, waitingForYou = true)
+        val work = assertNotNull(facts.work["m1"])
+        assertEquals("call-1", work.steps.single().callId, "a step keeps its call")
+        val card = permissionCard(io.github.eslamasabry.oc.feature.chat.requests.presentation.CardState.Waiting)
+        val placed = io.github.eslamasabry.oc.feature.chat.requests.presentation.InPlaceRules.placed(listOf(card), work)
+        assertEquals(setOf("call-1"), placed.keys)
+        assertTrue(io.github.eslamasabry.oc.feature.chat.requests.presentation.InPlaceRules.waiting(placed))
+        assertTrue(io.github.eslamasabry.oc.feature.chat.requests.presentation.InPlaceRules.placed(listOf(card), null).isEmpty(), "no turn in view: the slot keeps it")
+        val other = work.copy(steps = work.steps.map { it.copy(callId = "call-9") })
+        assertTrue(io.github.eslamasabry.oc.feature.chat.requests.presentation.InPlaceRules.placed(listOf(card), other).isEmpty(), "another call: the slot keeps it")
+        val held = permissionCard(io.github.eslamasabry.oc.feature.chat.requests.presentation.CardState.Held(io.github.eslamasabry.oc.feature.chat.requests.presentation.AnswerWords.Allowed))
+        assertEquals(false, io.github.eslamasabry.oc.feature.chat.requests.presentation.InPlaceRules.waiting(io.github.eslamasabry.oc.feature.chat.requests.presentation.InPlaceRules.placed(listOf(held), work)))
+    }
+
+    @Test
+    fun `D1-ASK-002 the waiting step carries Allow once and Deny in place, with no card, and the slot above the box stays empty`() =
+        runComposeUiTest {
+            val facts = TurnFactsPresenter(FixedClock).present(runningEditFeed(), 58_000, waitingForYou = true)
+            val answers = Answers()
+            val state =
+                ChatUi.loading(Ref).copy(
+                    title = "Native chat",
+                    phase = ChatPhase.Live,
+                    rows = persistentListOf(WorkLineRow("work:m1", "m1", calls = 1, failed = 0, state = WorkState.Running), prompt("m1", "edit it")),
+                    live = io.github.eslamasabry.oc.feature.chat.presentation.LiveTurnUi(stopping = false),
+                )
+            val actions = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
+            setContent {
+                Root {
+                    ChatScreen(
+                        state,
+                        actions,
+                        composer,
+                        facts = facts,
+                        requests = io.github.eslamasabry.oc.feature.chat.requests.presentation.RequestSlotUi(permissionCard(io.github.eslamasabry.oc.feature.chat.requests.presentation.CardState.Waiting)),
+                        requestActions = answers,
+                    )
+                }
+            }
+            waitForIdle()
+            val inSteps = androidx.compose.ui.test.hasAnyAncestor(androidx.compose.ui.test.hasTestTag("chat-work-line"))
+            onNode(androidx.compose.ui.test.hasTestTag("chat-request-in-place") and inSteps).assertExists()
+            onNodeWithText("Waiting for you").assertExists()
+            // One ask, one place: the answers are under the step, never a second time above the message box.
+            onAllNodesWithText("Allow once").assertCountEquals(1)
+            onNode(androidx.compose.ui.test.hasText("Allow once") and inSteps).performClick()
+            assertEquals(listOf("r1"), answers.allowed)
         }
 }

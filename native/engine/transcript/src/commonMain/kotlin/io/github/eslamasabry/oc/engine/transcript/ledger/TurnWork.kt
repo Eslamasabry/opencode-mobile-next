@@ -49,6 +49,8 @@ public data class TurnStep(
     /** When it started, for a running step's own clock; null if the server gave no time. */
     val startedAtMs: Long?,
     val output: ToolOutputView,
+    /** The server's id of the tool call (a permission ask names the call it is for); null when it gave none. */
+    val callId: String? = null,
 )
 
 /**
@@ -235,6 +237,7 @@ private fun step(p: Part, live: Boolean, declinedCalls: Set<String> = emptySet()
         if (declinedNow) null else toolDurationMs(tool),
         tool.startedAtMs,
         output,
+        p.callId,
     )
 }
 
