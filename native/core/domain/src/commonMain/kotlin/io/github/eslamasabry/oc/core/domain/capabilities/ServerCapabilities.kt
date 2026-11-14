@@ -115,6 +115,12 @@ public data class ServerCapabilities(
      * `/session/{id}/prompt` model). Gates Switch model on a failed reply.
      */
     val promptModelChoice: Boolean = false,
+    /**
+     * Pull request 142: a provider the server's catalog does not list can be declared in the server's own settings
+     * file. Only where the app owns that file (this phone's own OpenCode); OpenCode 2 has no settings-write endpoint, so
+     * no protocol gateway ever sets it. Applied by the app with [withCustomProviders].
+     */
+    val customProviders: Boolean = false,
 ) {
     /** Whether a conversation runs shell commands here (Dart `conversationShellOn`). */
     public val conversationShellOn: Boolean
@@ -128,6 +134,9 @@ public data class ServerCapabilities(
 
     /** Preserve every protocol capability while applying [claudeAgent] (Dart `withClaudeAgent`). */
     public fun withClaudeAgent(value: Boolean): ServerCapabilities = copy(claudeAgent = value)
+
+    /** Preserve every protocol capability while applying [customProviders] (the app owns the server's settings). */
+    public fun withCustomProviders(value: Boolean): ServerCapabilities = copy(customProviders = value)
 
     /**
      * Every flag by name, in declaration order. Derived from the serial form, so it cannot drift.

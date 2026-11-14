@@ -18,9 +18,11 @@ import io.github.eslamasabry.oc.engine.composer.drafts.DraftLocation
 import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
 import io.github.eslamasabry.oc.engine.integrations.catalog.*
 import io.github.eslamasabry.oc.engine.profiles.ProfileKeys
+import io.github.eslamasabry.oc.feature.phone.presentation.PhoneServerSource
 import io.github.eslamasabry.oc.feature.settings.presentation.LibraryHost
 import io.github.eslamasabry.oc.feature.settings.presentation.LibraryLink
 import io.github.eslamasabry.oc.ui.kitchat.KitCopy
+import io.github.eslamasabry.opencode_mobile.BuiltinLinux
 import java.io.File
 import kotlin.time.Clock
 import kotlinx.coroutines.CoroutineScope
@@ -51,7 +53,10 @@ class AndroidLibraryHost(
     private val registryFactory: LibraryRegistryFactory,
     private val redactor: Redactor,
     private val keptLibrary: io.github.eslamasabry.oc.engine.integrations.catalog.LibraryLastKnown,
+    phoneServer: Lazy<PhoneServerSource>,
 ) : LibraryHost {
+    private val phoneProviders = PhoneCustomProviders(application, stores, dispatchers, phoneServer)
+
     private data class ContextKey(
         val profile: ServerProfile,
         val location: ServerLocation,
@@ -159,8 +164,11 @@ class AndroidLibraryHost(
                             override val profile = captured.id
                             override val origin = capturedOrigin
                             override val location = pinnedLocation
+                            override val customProviders =
+                                phoneProviders.host(profile).takeIf { graph.profile.managedOnPhone }
                             override val capabilities
-                                get() = graph.session.capabilities.value
+                                get() =
+                                    graph.session.capabilities.value.withCustomProviders(customProviders != null)
 
                             override val server = graph.session.server
                             override val operations: ServerOperationsGateway =
@@ -365,3 +373,48 @@ class AndroidLibraryHost(
         }
     }
 }
+
+/**
+ * Pull request 142: this phone's own OpenCode 2 reads its settings from a folder the app owns, so a provider the
+ * catalog lacks is declared there by the fixed [CustomProviderScript] (the declaration on stdin) and loaded through the
+ * phone server's one restart path. Null for every other server: OpenCode 2 has no settings-write endpoint.
+ */
+private class PhoneCustomProviders(
+    private val application: Application,
+    private val stores: PreviewStores,
+    private val dispatchers: AppDispatchers,
+    private val phoneServer: Lazy<PhoneServerSource>,
+) {
+    /** The built-in server's owner (`oc.builtinServerOwner`): only that profile's OpenCode runs on this phone. */
+    private fun runsHere(profile: ProfileId): Boolean =
+        (stores.prefs.get("oc.builtinServerOwner") as? PrefValue.Str)?.value == profile.raw
+
+    fun host(profile: ProfileId): CustomProviderHost? =
+        if (!runsHere(profile)) null
+        else
+            object : CustomProviderHost {
+                override suspend fun write(declaration: CustomProviderDeclaration): Outcome<Int> =
+                    withContext(dispatchers.io) {
+                        attempt({ Failure.Runtime(RuntimeProblem.Generic) }) {
+                            val linux = BuiltinLinux.get(application)
+                            if (!runsHere(profile) || !linux.installed) CustomProviderWrite.NotSetUp.code
+                            else
+                                linux
+                                    .run(
+                                        CustomProviderScript.script(),
+                                        CUSTOM_PROVIDER_WRITE_SECONDS,
+                                        logOutput = false,
+                                        stdin = declaration.input(),
+                                    )
+                                    .exitCode
+                        }
+                    }
+
+                override suspend fun restart(): Outcome<Unit> =
+                    if (runsHere(profile)) phoneServer.value.restart()
+                    else Failure.Unavailable(FeatureId("restartPhoneServer")).failed()
+            }
+}
+
+/** The settings write reads and replaces one small file; a minute covers a slow phone. */
+private const val CUSTOM_PROVIDER_WRITE_SECONDS = 60L

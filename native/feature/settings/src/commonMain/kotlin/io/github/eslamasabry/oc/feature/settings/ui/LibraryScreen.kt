@@ -387,6 +387,20 @@ public fun LibraryScreen(state: LibraryUi, actions: LibraryActions) {
                     }
                 val rows = providerRows(inventory, { values -> match(*values) }, modelTerms)
                 val empty = rows.isEmpty() && inventory.attempts.isEmpty()
+                // Pull request 142: an endpoint the list does not have. Offered wherever the list is; a server whose
+                // settings the app does not own answers on the sheet with why, instead of a form that cannot save.
+                val canAddProvider = inventory.capabilities?.serverCatalog == true
+                val emptyAdd =
+                    empty && query.isEmpty() && !inventory.coldLoading &&
+                        selectedSection !in inventory.failedSections
+                if (canAddProvider && !emptyAdd && !inventory.coldLoading)
+                    item {
+                        KitButton(
+                            stringResource(Res.string.nlibCustomAdd),
+                            { actions.show(LibrarySheet.AddProvider) },
+                            role = KitButtonRole.Secondary,
+                        )
+                    }
                 if (empty)
                     item {
                         LibraryEmpty(
@@ -395,6 +409,13 @@ public fun LibraryScreen(state: LibraryUi, actions: LibraryActions) {
                             inventory.coldLoading,
                             selectedSection in inventory.failedSections,
                             state.tab,
+                            addAction =
+                                if (canAddProvider)
+                                    KitAction(
+                                        stringResource(Res.string.nlibCustomAdd),
+                                        { actions.show(LibrarySheet.AddProvider) },
+                                    )
+                                else null,
                         )
                     }
                 kitSliverRowGroup(
@@ -528,6 +549,14 @@ private fun LibraryEmpty(
             primary = addAction,
             modifier = Modifier.padding(bottom = Space.S3.dp),
         )
+    } else if (tab == LibraryTab.Providers) {
+        KitInlineStateView(
+            title = stringResource(Res.string.e7LibraryNoProviderConnectionsAvailable),
+            icon = KitIcons.server,
+            body = stringResource(Res.string.e7LibraryThisServerDidNotReturnAnyProvider),
+            primary = addAction,
+            modifier = Modifier.padding(bottom = Space.S3.dp),
+        )
     } else if (tab == LibraryTab.Skills || tab == LibraryTab.References) {
         KitInlineStateView(
             title = stringResource(title),
@@ -609,6 +638,7 @@ private fun LibrarySheetBody(sheet: LibrarySheet, state: LibraryUi, actions: Lib
                     )
                 }
             LibrarySheet.Registry -> LibraryRegistrySheet(state, actions)
+            LibrarySheet.AddProvider -> CustomProviderSheet(state, actions)
             is LibrarySheet.RegistryNode ->
                 KitSheet(
                     true,

@@ -99,6 +99,9 @@ public sealed interface LibrarySheet {
     public data object Registry : LibrarySheet
 
     public data class RegistryNode(val draft: McpServerDraft) : LibrarySheet
+
+    /** Pull request 142: declare an endpoint the catalog does not list (or say why this server cannot). */
+    public data object AddProvider : LibrarySheet
 }
 
 public data class LibraryUi(
@@ -115,6 +118,7 @@ public data class LibraryUi(
     val onPhone: Boolean = false,
     val skillConversation: SkillConversationResult? = null,
     val skillConversationRef: ConversationRef? = null,
+    val customProvider: CustomProviderUi = CustomProviderUi(),
 )
 
 public interface LibraryActions {
@@ -186,6 +190,12 @@ public interface LibraryActions {
     public fun registryForget()
 
     public fun phoneTools()
+
+    /** Save on the add-a-provider sheet: problems show only now, then the declaration is written. */
+    public fun addProvider(draft: CustomProviderDraft)
+
+    /** Restart this phone's OpenCode so it loads the saved provider. */
+    public fun restartForProvider()
 }
 
 @AssistedInject
@@ -258,6 +268,8 @@ public class LibraryViewModel(
                 notice = null,
                 skillConversation = null,
                 skillConversationRef = null,
+                customProvider =
+                    if (sheet == LibrarySheet.AddProvider) CustomProviderUi() else it.customProvider,
             )
         }
         if (sheet == LibrarySheet.Registry && registryStore == null)
@@ -317,6 +329,58 @@ public class LibraryViewModel(
 
     override fun phoneTools() {
         nav.open(PhoneRoute.ThisPhone)
+    }
+
+    override fun addProvider(draft: CustomProviderDraft) {
+        val library = session
+        val problems = draft.problems(shownProviderIds(mutable.value.inventory))
+        when {
+            library == null || mutable.value.working -> Unit
+            problems.isNotEmpty() ->
+                mutable.update {
+                    it.copy(customProvider = it.customProvider.after(CustomProviderOutcome.Invalid(problems)))
+                }
+            else -> {
+                mutable.update {
+                    it.copy(
+                        working = true,
+                        customProvider =
+                            CustomProviderUi(
+                                stage = CustomProviderStage.Saving,
+                                name = draft.name.trim(),
+                                providerId = draft.providerId,
+                            ),
+                    )
+                }
+                customProviderStep { library.addCustomProvider(draft) }
+            }
+        }
+    }
+
+    override fun restartForProvider() {
+        val library = session
+        val id = mutable.value.customProvider.providerId
+        if (library != null && !mutable.value.working && id.isNotEmpty()) {
+            mutable.update {
+                it.copy(
+                    working = true,
+                    customProvider =
+                        it.customProvider.copy(stage = CustomProviderStage.Restarting, refusal = null, detail = null),
+                )
+            }
+            customProviderStep { library.restartForCustomProvider(id) }
+        }
+    }
+
+    private fun customProviderStep(block: suspend () -> CustomProviderOutcome) {
+        viewModelScope.launch {
+            try {
+                val outcome = block()
+                mutable.update { it.copy(customProvider = it.customProvider.after(outcome)) }
+            } finally {
+                mutable.update { it.copy(working = false) }
+            }
+        }
     }
 
     private fun act(block: suspend (LibrarySession) -> Outcome<Unit>, success: () -> Unit = {}) {
