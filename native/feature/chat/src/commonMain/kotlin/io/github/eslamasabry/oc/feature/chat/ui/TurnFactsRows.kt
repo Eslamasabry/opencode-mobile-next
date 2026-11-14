@@ -203,7 +203,16 @@ internal fun TurnWorkLine(
         key(row.key) {
             when (row) {
                 is StepEntry.Step -> {
-                    StepRow(row.step, nowMs, folds, onOpenSession, onOpenFile, reply, waitingForYou = !stopping && stepWaitsForYou(row.step.state, work.state))
+                    StepRow(
+                        row.step,
+                        nowMs,
+                        folds,
+                        onOpenSession,
+                        onOpenFile,
+                        reply,
+                        waitingForYou = !stopping && stepWaitsForYou(row.step.state, work.state),
+                        stopSaidBelow = row.step === work.steps.lastOrNull(),
+                    )
                     val ask = row.step.callId?.let { inPlace?.byCall?.get(it) }
                     if (inPlace != null && ask != null) inPlace.draw(ask)
                 }
@@ -487,6 +496,11 @@ private fun StepRow(
     onOpenFile: ((ToolArtifact) -> Unit)?,
     reply: ReplyActions? = null,
     waitingForYou: Boolean = false,
+    /**
+     * Owner 2026-11-13 ("Stopped" once): the step the person's Stop ended is the turn's last; the reply's footer says the
+     * turn stopped, so its row draws no second "Stopped" (TalkBack still hears it in the row's state).
+     */
+    stopSaidBelow: Boolean = false,
 ) {
     val key = "step:${step.partId}"
     val f = step.facts
@@ -507,7 +521,10 @@ private fun StepRow(
                     ?: stepSubjectWords(f),
             detail = declinedWith ?: stepDetailWords(f),
             // P-105: a step blocked on the person reads "Waiting for you" with the attention mark and no clock.
-            status = if (waitingForYou) KitToolStatus.WaitingForYou else step.state.toKit(),
+            status =
+                if (waitingForYou) KitToolStatus.WaitingForYou
+                else if (stopSaidBelow && step.state == StepState.Stopped) KitToolStatus.Done
+                else step.state.toKit(),
             // E20-S14: under a tenth of a second there is no time to show ("0.0s" said nothing).
             durationLabel =
                 if (waitingForYou) null
