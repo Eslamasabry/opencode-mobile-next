@@ -35,7 +35,6 @@ import io.github.eslamasabry.oc.ui.kit.icon.KitIconSize
 import io.github.eslamasabry.oc.ui.kit.motion.KitReveal
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitAppDensity
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
-import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTypography
 
@@ -122,21 +121,9 @@ private fun TrayButton(action: KitComposerTrayAction, labelDensity: Density?) {
     val colors = LocalKitColors.current
     val tokens = LocalKitTokens.current
     val enabled = action.disabledReason == null
-    // Glass: a bare glyph straight on the message box's glass, no disc and no word under it (owner 2026-11-08: "remove
-    // the titles, it's self explanatory"). The word stays its name for the screen reader and its long-press tooltip;
-    // the target stays 48 dp.
-    if (LocalKitStyle.current.style == io.github.eslamasabry.oc.ui.design.style.Style.Glass) {
-        io.github.eslamasabry.oc.ui.kit.action.KitIconButton(
-            action.icon,
-            action.label,
-            action.onPick,
-            modifier = if (action.testTag != null) Modifier.testTag(action.testTag) else Modifier,
-            enabled = action.disabledReason?.let { io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled.Disabled(it) }
-                ?: io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled.Enabled,
-            size = GLASS_TRAY_GLYPH_DP,
-        )
-        return
-    }
+    // Every style shows the word under its glyph (coordinator 2026-11-14, audit finding 20: Glass showed bare glyphs while
+    // Solid named them). On the slab of glass the disc is the slab's quiet tint, never an opaque plate.
+    val slab = LocalKitComposerSlab.current
     KitTappable(
         onClick = action.onPick,
         modifier = if (action.testTag != null) Modifier.testTag(action.testTag) else Modifier,
@@ -151,7 +138,8 @@ private fun TrayButton(action: KitComposerTrayAction, labelDensity: Density?) {
         ) {
             // A round matte disc (Solid's control face), the glyph at the card-mark size.
             Box(
-                Modifier.size(tokens.minTarget.dp).background(colors.surface3, CircleShape),
+                Modifier.size(tokens.minTarget.dp)
+                    .background(if (slab) colors.text1.copy(alpha = TRAY_SLAB_TINT) else colors.surface3, CircleShape),
                 contentAlignment = Alignment.Center,
             ) {
                 KitIcon(
@@ -177,5 +165,5 @@ private fun TrayButton(action: KitComposerTrayAction, labelDensity: Density?) {
     }
 }
 
-/** The tray's glyph under Glass, in dp (owner 2026-11-08: bare icons, about 26-28 dp). */
-internal const val GLASS_TRAY_GLYPH_DP: Int = 28
+/** A tray disc's face on the slab of glass: the words' ink at this alpha, as the slab's chips. */
+private const val TRAY_SLAB_TINT = .08f
