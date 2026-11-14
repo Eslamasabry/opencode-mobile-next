@@ -1,6 +1,5 @@
 package io.github.eslamasabry.oc.feature.chat.ui
 
-import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -137,7 +136,7 @@ internal fun FindJump(find: FindUi?, loaded: Boolean, itemsBelowRows: Int, list:
             val info = list.lazy.layoutInfo
             val item = info.visibleItemsInfo.firstOrNull { it.index == target } ?: return@LaunchedEffect
             val room = info.viewportSize.height - info.beforeContentPadding - info.afterContentPadding
-            if (room > 0) list.lazy.scrollBy(findScrollDelta(item.offset, item.size, room))
+            if (room > 0) list.lazy.dispatchRawDelta(findScrollDelta(item.offset, item.size, room))
         }
     }
 }
