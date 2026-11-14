@@ -371,13 +371,11 @@ public fun KitScreen(
             // it covers or nothing. Every style: a pane that frosts what is behind it frosts the same.
             val wordsFade = if (edgesFade && bottomPart != null) rememberKitWordsFade(frost!!) else null
             SideEffect { bottomState.glass = wordsFade?.faded }
-            // A control floating under the bar (the chat's "N earlier messages") and one floating just above the block
-            // (the jump pill): the body ends, by its fade, before them too, so neither stands on a line of text. The
-            // page eases its edge to the new place; the glass sees the new place at once (it must never bend the pill's
-            // own picture).
-            val topFloat = remember { KitScreenTopFloat() }
+            // A control floating just above the block (the jump pill): the body ends, by its fade, before it too, so it
+            // never stands on a line of text. The page eases its edge to the new place; the glass sees the new place at
+            // once (it must never bend the pill's own picture). Nothing floats under the bar (audit 1, 2026-11-14: the
+            // chat's "N earlier messages" is the transcript's first row now), so the top edge is the bar's alone.
             var topBottom by remember { mutableFloatStateOf(Float.NaN) }
-            val fadeTopPx = with(density) { HEADER_FADE_DP.dp.toPx() }
             val fadeBottomPx = with(density) { COMPOSER_FADE_DP.dp.toPx() }
             val floatGapPx = with(density) { FLOAT_GAP_DP.dp.toPx() }
             val bottomExtraTarget by remember(floatGapPx) {
@@ -387,32 +385,25 @@ public fun KitScreen(
                     if (f.isNaN() || b.isNaN()) 0f else (b - f + floatGapPx).coerceAtLeast(0f)
                 }
             }
-            val topExtraTarget by remember {
-                derivedStateOf {
-                    val f = topFloat.bottom
-                    if (f.isNaN() || topBottom.isNaN()) 0f else (f - topBottom).coerceAtLeast(0f)
-                }
-            }
             val bottomExtra = remember { androidx.compose.animation.core.Animatable(0f) }
-            val topExtra = remember { androidx.compose.animation.core.Animatable(0f) }
             val zoneSpec by rememberUpdatedState(KitMotion.specs.quick<Float>())
             LaunchedEffect(bottomExtra) {
                 snapshotFlow { bottomExtraTarget }.collectLatest { bottomExtra.animateTo(it, zoneSpec) }
             }
-            LaunchedEffect(topExtra) {
-                snapshotFlow { topExtraTarget }.collectLatest { topExtra.animateTo(it, zoneSpec) }
-            }
             val blockShown by rememberUpdatedState(bottomPart != null)
             val zones =
-                remember(bottomState, topFloat) {
-                    KitScreenZones(
-                        topClear = { topBottom + topExtra.value },
-                        topOn = { if (topExtra.value > 0.5f) 1f else 0f },
-                        bottomGone = { if (!blockShown) Float.NaN else bottomState.blockTop - bottomExtra.value },
-                    )
+                remember(bottomState) {
+                    KitScreenZones(bottomGone = { if (!blockShown) Float.NaN else bottomState.blockTop - bottomExtra.value })
                 }
             val scroll = remember { KitScreenScroll() }
             val under = kitUnderTop(scroll)
+            // Audit 1 (2026-11-14: a bubble's top cut flat under the bar, a copy icon cut by a line just below the bar's
+            // rim): what scrolls under the bar dissolves over TOP_DISSOLVE_DP, in every look, never a short ramp that
+            // reads as a cut. It grows with what lies under the bar (none at rest, so a page at rest looks as it did:
+            // its first row whole right below the bar). The bar's glass sees the same dissolve.
+            val dissolvePx = with(density) { TOP_DISSOLVE_DP.dp.toPx() }
+            // At least a pixel: the bar's copy clears nothing without a rim (KitWordsFade.record).
+            val topDissolve: () -> Float = { (dissolvePx * under()).coerceAtLeast(1f) }
             // The window's insets include the keyboard, which moves every frame while it opens: each side is read
             // through a derived value, so the page is composed again only when that side's own size changes (the top
             // never does while typing), and the bottom is read only by a page that draws a ground under its bottom block.
@@ -471,7 +462,6 @@ public fun KitScreen(
                     LocalChromePadding provides padding,
                     LocalKitScreenScroll provides scroll,
                     LocalKitScreenBottom provides bottomState,
-                    LocalKitScreenTopFloat provides topFloat,
                     LocalKitScreenZones provides (if (edgesFade) zones else null),
                     LocalKitLiquidJoin provides join,
                 ) {
@@ -481,27 +471,22 @@ public fun KitScreen(
                             // reads it).
                             .then(
                                 if (topFade == null) Modifier
-                                else Modifier.kitWordsFadeRecorder(topFade, { topBottom + topExtraTarget + fadeTopPx }, { fadeTopPx }, after = true, clear = { barClear })
+                                else Modifier.kitWordsFadeRecorder(topFade, { topBottom + topDissolve() }, topDissolve, after = true, clear = { barClear })
                             )
                             .then(
                                 if (!edgesFade) Modifier
                                 else
                                     Modifier.kitScrollEdges(
                                         // Owner 2026-11-14 ("Wtfff"): floating things own their ground. Nothing of the
-                                        // body is drawn under the status bar, the bar or its status line; it fades in
-                                        // over 12 dp below them. Below a control floating under the bar, a list ends
-                                        // itself (kitScreenListEdges).
+                                        // body is drawn under the status bar, the bar or its status line; it dissolves
+                                        // in below them over TOP_DISSOLVE_DP.
                                         clearAbove = if (topPart == null) null else ({ (statusPx + topPx).toFloat() }),
-                                        topReach = HEADER_FADE_DP.dp,
+                                        topReach = TOP_DISSOLVE_DP.dp,
                                         // Owner 2026-11-14 ("solids ... on the header"): the clear look lays nothing
-                                        // behind the chrome, so the body's fade alone ends the content before the bar.
-                                        // It grows with what lies under the chrome (none at rest: a page at rest looks
-                                        // as it did; at once under reduced motion, a clean edge at the bar's bottom
-                                        // meanwhile), and gives way to a list that ends itself below a control floating
-                                        // under the bar, so that control is never faded with the words.
-                                        topReachPx =
-                                            if (look != KitTopEdgeLook.Clear) null
-                                            else ({ if (zones.topOn() > 0f) 0f else fadeTopPx * under() }),
+                                        // behind the chrome, so the body's dissolve alone ends the content before the
+                                        // bar; Glass's the same. It grows with what lies under the chrome (none at
+                                        // rest: a page at rest looks as it did; at once under reduced motion).
+                                        topReachPx = topDissolve,
                                         // And nothing in or under the bottom block (its chips row, the message box): the
                                         // body fades out over the 16 dp above it. A list that ends itself (above the jump
                                         // pill too) takes this over, so the pill, drawn beside the list, stays whole.
@@ -1150,6 +1135,13 @@ internal const val EDGE_LEAD_DP = 8
 
 /** How far the chat header's ground fades down into the body. */
 internal const val HEADER_FADE_DP = 12
+
+/**
+ * How far what scrolls under an edge-to-edge page's top chrome dissolves below the bar, dp (audit 1, 2026-11-14: over
+ * [HEADER_FADE_DP] a bubble's top read as cut flat and an icon as cut by a line). Long enough that no edge of the
+ * content reads as a cut: every dp of it changes the content's strength by at most a sixteenth.
+ */
+internal const val TOP_DISSOLVE_DP = 24
 
 /** How far above a control floating over the body (the jump pill) the body is already gone, dp. */
 internal const val FLOAT_GAP_DP = 8

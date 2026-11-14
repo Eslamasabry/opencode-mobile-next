@@ -15,7 +15,6 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CornerBasedShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
@@ -68,7 +67,8 @@ import kotlin.test.assertTrue
 /**
  * Chat edge (owner's pick 2026-11-09, option A, amended 2026-11-14 after the owner's "Wtfff" screenshot): an
  * edge-to-edge chat frame. At rest its first row lies wholly below the bar; scrolled, nothing of the content shows under
- * the status bar or the bar and it fades in over 12 dp below the bar. Glass bends or frosts the body's recording in its
+ * the status bar or the bar and it dissolves in over [TOP_DISSOLVE_DP] below the bar (audit 1: over 12 dp it read as a
+ * cut). Glass bends or frosts the body's recording in its
  * capsule; the other styles (owner 2026-11-14: "solids ... on the header") lay nothing behind the chrome, so the page's
  * background runs unbroken from the window's top, and the fade below the bar shows only while something lies under it.
  */
@@ -94,12 +94,9 @@ class ChatEdgeATest {
         }
     }
 
-    /**
-     * A chat frame: [rows] rows of [rowColor] ([gap] dp apart) in a list scrolled to [first], a 56 dp bar, a 96 dp block;
-     * with [pill], a control floating 8 dp under the bar ("N earlier messages") and a list that ends itself before it.
-     */
+    /** A chat frame: [rows] rows of [rowColor] ([gap] dp apart) in a list scrolled to [first], a 56 dp bar, a 96 dp block. */
     @Composable
-    private fun Scene(rows: Int, first: Int, gap: Dp, paint: Boolean = true, rowColor: Color = Color.White, pill: Boolean = false) {
+    private fun Scene(rows: Int, first: Int, gap: Dp, paint: Boolean = true, rowColor: Color = Color.White) {
         CompositionLocalProvider(LocalKitScreenInsets provides WindowInsets(top = STATUS_DP.dp, bottom = NAV_DP.dp)) {
             Box(Modifier.size(W.dp, H.dp).testTag("scene")) {
                 val source = rememberKitFrostState()
@@ -117,10 +114,7 @@ class ChatEdgeATest {
                         LazyColumn(
                             state = list,
                             contentPadding = kitScreenChromePadding(),
-                            modifier =
-                                Modifier.fillMaxSize().kitFrostSource(source)
-                                    .then(if (pill) Modifier.kitScreenListEdges() else Modifier)
-                                    .testTag("list"),
+                            modifier = Modifier.fillMaxSize().kitFrostSource(source).testTag("list"),
                         ) {
                             items(rows) { i ->
                                 Box(
@@ -130,15 +124,6 @@ class ChatEdgeATest {
                                 )
                             }
                         }
-                        if (pill)
-                            Box(
-                                Modifier.align(Alignment.TopCenter)
-                                    .padding(top = kitScreenChromePadding().calculateTopPadding() + PILL_GAP_DP.dp)
-                                    .kitScreenFloat(KitJumpEdge.Top)
-                                    .size(PILL_W_DP.dp, PILL_H_DP.dp)
-                                    .background(PILL)
-                                    .testTag("pill")
-                            )
                     }
                 }
             }
@@ -156,20 +141,19 @@ class ChatEdgeATest {
         ground: ((Color) -> Color)? = null,
         paint: Boolean = true,
         rowColor: Color = Color.White,
-        pill: Boolean = false,
     ): Shot {
         lateinit var shot: Shot
         runDesktopComposeUiTest((W * D).toInt(), (H * D).toInt()) {
             setContent {
                 CompositionLocalProvider(LocalDensity provides Density(D)) {
                     KitTheme(appearance = appearance, platform = platform, localeTag = "en", stillFrame = true) {
-                        if (ground == null) Scene(rows, first, gap, paint, rowColor, pill)
+                        if (ground == null) Scene(rows, first, gap, paint, rowColor)
                         else {
                             // A busy picture behind a see-through ground, for "no band at rest".
                             Box(Modifier.size(W.dp, H.dp).drawBehind { stripes() }) {
                                 val colors = LocalKitColors.current
                                 CompositionLocalProvider(LocalKitColors provides colors.copy(ground = ground(colors.ground))) {
-                                    Scene(rows, first, gap, paint, rowColor, pill)
+                                    Scene(rows, first, gap, paint, rowColor)
                                 }
                             }
                         }
@@ -202,24 +186,32 @@ class ChatEdgeATest {
 
     /**
      * Below the bar's bottom edge in column [x]: how far [s] is from [none] (the same scene whose rows draw nothing) at
-     * the bar's edge and every pixel down to 2 dp past the fade, and 20 dp below the bar.
+     * the bar's edge and every pixel down to 2 dp past the dissolve, and 8 dp past it.
      */
     private fun fadeBelow(s: Shot, none: Shot, x: Int): Pair<List<Float>, Float> {
         val barBottom = s.bar.bottom.value
-        val full = abs(luma(s.image[x, ((barBottom + 20) * D).toInt()]) - luma(none.image[x, ((barBottom + 20) * D).toInt()]))
-        val ramp = (0..((HEADER_FADE_DP + 2) * D).toInt()).map { k ->
+        val whole = ((barBottom + TOP_DISSOLVE_DP + 8) * D).toInt()
+        val full = abs(luma(s.image[x, whole]) - luma(none.image[x, whole]))
+        val ramp = (0..((TOP_DISSOLVE_DP + 2) * D).toInt()).map { k ->
             val y = (barBottom * D).toInt() + k
             abs(luma(s.image[x, y]) - luma(none.image[x, y]))
         }
         return ramp to full
     }
 
-    /** The rows come in below the bar over 12 dp as a soft fade: none at its edge, whole past it, no dip and no step. */
+    /**
+     * The rows come in below the bar as a dissolve: none at its edge, whole past it, no dip and no step. Audit 1
+     * (2026-11-14: a bubble's top cut flat under the bar, a copy icon cut by a line below its rim): over any 1 dp the rows'
+     * strength changes by at most [MAX_PER_DP] of their whole, so no edge of the content reads as a cut (12 dp changed it
+     * by an eighth).
+     */
     private fun assertSoftFadeIn(what: String, ramp: List<Float>, full: Float) {
         println("$what: full $full ramp ${ramp.map { it.toInt() }}")
-        assertTrue(full >= 150f, "$what: the rows are whole 20 dp below the bar, $full")
+        assertTrue(full >= 150f, "$what: the rows are whole ${TOP_DISSOLVE_DP + 8} dp below the bar, $full")
         assertTrue(ramp.first() <= CLEAR_MAX, "$what: nothing of the rows at the bar's bottom edge, ${ramp.first()}")
-        assertTrue(ramp.last() >= full * .9f, "$what: the rows are whole by ${HEADER_FADE_DP + 2} dp below the bar, ${ramp.last()} of $full")
+        assertTrue(ramp.last() >= full * .9f, "$what: the rows are whole by ${TOP_DISSOLVE_DP + 2} dp below the bar, ${ramp.last()} of $full")
+        val perDp = ramp.windowed(D.toInt() + 1).maxOf { abs(it.last() - it.first()) }
+        assertTrue(perDp <= full * MAX_PER_DP, "$what: a dissolve, not a cut: $perDp of $full over 1 dp, at most ${full * MAX_PER_DP}")
         assertTrue(ramp.zipWithNext().all { (a, b) -> b >= a - 2f }, "$what: the rows come in without a dip: ${ramp.map { it.toInt() }}")
         val levels = ramp.filter { it > CLEAR_MAX && it < full * .9f }.map { (it / 8f).toInt() }.distinct()
         assertTrue(levels.size >= 4, "$what: a soft fade, not a cut: ${levels.size} steps in ${ramp.map { it.toInt() }}")
@@ -262,7 +254,7 @@ class ChatEdgeATest {
     /**
      * Owner 2026-11-14 ("Wtfff": transcript text under the bar showed as a blurred band inside its lower edge), the
      * coordinator's option A for chat edge: scrolled, nothing of the content is drawn under the status bar or the bar,
-     * through its glass or beside it, and it fades in over 12 dp below the bar. Was: "the content blurs behind the
+     * through its glass or beside it, and it fades in below the bar. Was: "the content blurs behind the
      * status bar and the bar" (chat edge A, 2026-11-09). Compared with the same scene whose rows draw nothing.
      */
     @Test
@@ -272,7 +264,7 @@ class ChatEdgeATest {
             val none = shot(appearance, LensPlatform(), first = 8, gap = 0.dp, paint = false)
             // Under the status bar, in the capsule and beside it: the same picture as with no rows at all.
             assertNothingUnderChrome(what, s, none)
-            // Below the bar, beside the middle: the rows come in over 12 dp in steps, whole past it.
+            // Below the bar, beside the middle: the rows dissolve in, in steps, whole past it.
             val (ramp, full) = fadeBelow(s, none, (W * D / 4).toInt())
             assertSoftFadeIn(what, ramp, full)
         }
@@ -303,7 +295,7 @@ class ChatEdgeATest {
     }
 
     /**
-     * The clear styles' content is gone above the bar's bottom edge and fades in over 12 dp below it, the same fade as
+     * The clear styles' content is gone above the bar's bottom edge and dissolves in below it, the same dissolve as
      * Glass's; its fills dissolve with its words. Was: "the page's ground runs through the status bar and the bar".
      */
     @Test
@@ -328,7 +320,7 @@ class ChatEdgeATest {
         for ((what, appearance) in listOf("dark" to dark(Style.Solid), "light" to light(Style.Solid))) {
             val s = shot(appearance, FakeKitPlatform(), rows = 0, ground = { it.copy(alpha = .6f) })
             val far = ((H / 2) * D).toInt()
-            for (y in 0 until ((STATUS_DP + BAR_DP + HEADER_FADE_DP + 4) * D).toInt() step 3)
+            for (y in 0 until ((STATUS_DP + BAR_DP + TOP_DISSOLVE_DP + 4) * D).toInt() step 3)
                 for (x in 0 until s.image.width step 5) {
                     val d = abs(luma(s.image[x, y]) - luma(s.image[x, far]))
                     assertTrue(d <= 2f, "Solid $what at rest: a band at (${x / D}, ${y / D}) dp, $d of 255 off the picture")
@@ -347,32 +339,6 @@ class ChatEdgeATest {
             val l = luma(s.image[x, y])
             assertTrue(l >= 250f, "Solid at rest: the first row is faded at y=${y / D} dp (${row0.top} is its top), $l")
         }
-    }
-
-    /**
-     * A control floating under the bar ("N earlier messages") is chrome, not content: scrolled, in Solid, it stays whole
-     * (the body's fade below the bar gives way to the list's own end below the control), and the rows beside it are gone
-     * down to its bottom.
-     */
-    @Test
-    fun `E20-S30 scrolled in Solid a control floating under the bar stays whole and no row shows beside it`() {
-        val s = shot(dark(Style.Solid), FakeKitPlatform(), first = 8, gap = 0.dp, pill = true)
-        val none = shot(dark(Style.Solid), FakeKitPlatform(), first = 8, gap = 0.dp, paint = false, pill = true)
-        val barBottom = s.bar.bottom.value
-        val pillTop = barBottom + PILL_GAP_DP
-        val mid = (W * D / 2).toInt()
-        val want = luma(PILL)
-        for (y in ((pillTop + .5f) * D).toInt() until ((pillTop + PILL_H_DP - .5f) * D).toInt()) {
-            val l = luma(s.image[mid, y])
-            assertTrue(abs(l - want) <= CLEAR_MAX, "the floating control is faded at y=${y / D} dp (its top $pillTop), $l of $want")
-        }
-        // Beside it, from the bar down to its bottom: the rows are gone.
-        val side = (W * D / 8).toInt()
-        for (y in (barBottom * D).toInt() until ((pillTop + PILL_H_DP) * D).toInt()) {
-            val d = abs(luma(s.image[side, y]) - luma(none.image[side, y]))
-            assertTrue(d <= CLEAR_MAX, "a row shows beside the floating control at y=${y / D} dp, $d of 255")
-        }
-        assertNothingUnderChrome("Solid with a floating control", s, none)
     }
 
     @Test
@@ -467,10 +433,7 @@ class ChatEdgeATest {
         /** Where nothing of the content may show: at most this brightness of 255 against the scene with no rows. */
         const val CLEAR_MAX = 3f
 
-        /** The control floating under the bar: its gap below the bar, its size (dp) and its colour. */
-        const val PILL_GAP_DP = 8
-        const val PILL_W_DP = 80
-        const val PILL_H_DP = 24
-        val PILL = Color(0xFFE0402A)
+        /** The most a dissolve may change the content's strength over 1 dp: a sixteenth, with room for rounding. */
+        const val MAX_PER_DP = .08f
     }
 }

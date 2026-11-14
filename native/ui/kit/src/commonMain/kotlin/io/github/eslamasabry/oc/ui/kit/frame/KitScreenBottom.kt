@@ -84,38 +84,17 @@ public class KitScreenBottom internal constructor() {
 }
 
 /**
- * Where a control floating under a screen's top chrome ends (the chat's "N earlier messages"): the body fades in below it
- * as it does below the bar, so the control never stands on a line of text ([kitScreenFloat]).
- */
-@Stable
-internal class KitScreenTopFloat {
-    /** The control's bottom edge, root px; NaN while none shows. */
-    var bottom: Float by mutableFloatStateOf(Float.NaN)
-}
-
-internal val LocalKitScreenTopFloat = staticCompositionLocalOf<KitScreenTopFloat?> { null }
-
-/**
- * Marks this node as a control that floats over the screen's body at its [edge]: under the top chrome ([KitJumpEdge.Top])
- * or just above the bottom block ([KitJumpEdge.Bottom]). The frame then ends its body, by its soft fade, before the
- * control, so no line of text runs under it and its glass sees none. Outside a screen frame: nothing.
+ * Marks this node as a control that floats over the screen's body just above the bottom block ([KitJumpEdge.Bottom]).
+ * The frame then ends its body, by its soft fade, before the control, so no line of text runs under it and its glass
+ * sees none. Nothing floats under the top chrome (audit 1, 2026-11-14: what would, the chat's "N earlier messages", is
+ * the transcript's own first row), so a [KitJumpEdge.Top] control, and any control outside a screen frame, is left as
+ * it is.
  */
 @Composable
 public fun Modifier.kitScreenFloat(edge: KitJumpEdge): Modifier {
-    val top = LocalKitScreenTopFloat.current.takeIf { edge == KitJumpEdge.Top }
-    val bottom = LocalKitScreenBottom.current.takeIf { edge == KitJumpEdge.Bottom }
-    if (top == null && bottom == null) return this
-    DisposableEffect(top, bottom) {
-        onDispose {
-            top?.bottom = Float.NaN
-            bottom?.floatTop = Float.NaN
-        }
-    }
-    return onGloballyPositioned {
-        val y = it.positionInRoot().y
-        if (top != null) top.bottom = y + it.size.height
-        if (bottom != null) bottom.floatTop = y
-    }
+    val bottom = LocalKitScreenBottom.current.takeIf { edge == KitJumpEdge.Bottom } ?: return this
+    DisposableEffect(bottom) { onDispose { bottom.floatTop = Float.NaN } }
+    return onGloballyPositioned { bottom.floatTop = it.positionInRoot().y }
 }
 
 /**
@@ -198,16 +177,11 @@ public fun Modifier.kitScreenWordsPane(role: LiquidRole): Modifier {
 }
 
 /**
- * Where a page that records its body ends its scrolling content (root px, read while drawing): cleared above [topClear]
- * (while [topOn] says so) and gone below [bottomGone], each with the frame's soft fade. A scrolling list applies it to
- * itself ([kitScreenListEdges]), so the controls floating beside it (the jump pill, "N earlier messages"), which are not
- * part of the list, stay whole while the words under them go.
+ * Where a page that records its body ends its scrolling content at the bottom (root px, read while drawing): gone below
+ * [bottomGone], with the frame's soft fade. A scrolling list applies it to itself ([kitScreenListEdges]), so the control
+ * floating beside it (the jump pill), which is not part of the list, stays whole while the words under it go.
  */
-internal class KitScreenZones(
-    val topClear: () -> Float,
-    val topOn: () -> Float,
-    val bottomGone: () -> Float,
-) {
+internal class KitScreenZones(val bottomGone: () -> Float) {
     /** How many lists end themselves here; while one does, the frame leaves the body's bottom to them. */
     var claims: Int by androidx.compose.runtime.mutableIntStateOf(0)
 }
@@ -216,9 +190,9 @@ internal val LocalKitScreenZones = staticCompositionLocalOf<KitScreenZones?> { n
 
 /**
  * Ends this scrolling content where its page's floating controls begin (2026-11-14, the owner's "Wtfff" screenshot):
- * it fades out over 16 dp above the bottom block or the jump pill floating over it and is gone below, and fades in over
- * 12 dp below a control floating under the bar. Apply it to the list itself, not to a box that also holds those
- * controls: they must not be cleared with it. Outside a page that records its body: nothing.
+ * it fades out over 16 dp above the bottom block or the jump pill floating over it and is gone below. Apply it to the
+ * list itself, not to a box that also holds that pill: it must not be cleared with it. Outside a page that records its
+ * body: nothing.
  */
 @Composable
 public fun Modifier.kitScreenListEdges(): Modifier {
@@ -240,14 +214,11 @@ public fun Modifier.kitScreenListEdges(): Modifier {
         // the free-standing pill's ink kept the flip it took over the words that were there before.
         .drawWithContent {
             zones.bottomGone()
-            zones.topClear()
-            zones.topOn()
             drawContent()
         }
         .kitScrollEdges(
-        clearAbove = { zones.topClear().let { if (it.isNaN() || at[0].isNaN()) 0f else it - at[0] } },
-        topReach = HEADER_FADE_DP.dp,
-        strength = zones.topOn,
+        clearAbove = null,
+        topReach = 0.dp,
         fadeFromBottom = {
             val gone = zones.bottomGone()
             if (gone.isNaN() || at[0].isNaN()) 0f else at[0] + at[1] - gone + bottomFade
