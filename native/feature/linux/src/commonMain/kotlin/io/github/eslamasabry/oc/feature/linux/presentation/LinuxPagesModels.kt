@@ -320,8 +320,12 @@ public class LinuxStorageModel(
         if (visible && ui.value.report == null) retry()
     }
 
+    private var reading: kotlinx.coroutines.Job? = null
+
+    /** One reading at a time: a Try again while one runs waits for it instead of queuing a second. */
     override fun retry() {
-        scope.launch { load() }
+        if (reading?.isActive == true) return
+        reading = scope.launch { load() }
     }
 
     private suspend fun load() {
