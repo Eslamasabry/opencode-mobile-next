@@ -64,6 +64,7 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalDensity
@@ -491,11 +492,10 @@ private fun SheetLayer(state: KitSheetHostState) {
                 .graphicsLayer { alpha = 1f - drag.fraction() }
                 .background(colors.scrim)
                 .testTag("kit-sheet-scrim")
-                .pointerInput(
-                entry
-            ) {
-                detectTapGestures { entry.requestDismiss() }
-            }
+                // Cut audit 2, finding 11: from the moment the sheet is dismissed (scrim, Back, a choice) its exit is
+                // picture only. A scrim kept taking taps while it faded, and on a busy phone that lasted seconds: the
+                // first tap on the page after a sheet closed did nothing.
+                .then(if (state.shown.targetState) Modifier.pointerInput(entry) { detectTapGestures { entry.requestDismiss() } } else Modifier)
         )
     }
     BoxWithConstraints(Modifier.fillMaxSize()) {
@@ -547,6 +547,7 @@ private fun SheetLayer(state: KitSheetHostState) {
                                 .clip(KitShapeId.Sheet.shape()),
                             handle = true,
                             shape = KitShapeId.Sheet,
+                            open = state.shown.targetState,
                             drag = drag,
                             stillShown = { state.shown.targetState },
                             shrink = { LiquidMotion.shrinkFraction(back.value()) },
@@ -578,6 +579,7 @@ private fun SheetLayer(state: KitSheetHostState) {
                                 .clip(KitShapeId.Dialog.shape()),
                             handle = false,
                             shape = KitShapeId.Dialog,
+                            open = state.shown.targetState,
                             shrink = { LiquidMotion.shrinkFraction(back.value()) },
                         )
                     }
@@ -599,6 +601,7 @@ private fun SheetLayer(state: KitSheetHostState) {
                                 .predictiveShrink(back, TransformOrigin(if (endSign > 0) 1f else 0f, 0.5f)),
                             handle = false,
                             shape = KitShapeId.Square,
+                            open = state.shown.targetState,
                             shrink = { LiquidMotion.shrinkFraction(back.value()) },
                         )
                     }
@@ -649,6 +652,17 @@ internal fun Modifier.predictiveShrink(back: KitBackProgress, origin: TransformO
     }
 
 /**
+ * A modal that is leaving is picture only: its panel takes the presses over itself (so nothing in it acts while it
+ * slides or fades away) and its scrim takes none at all, so every touch beside it is the page's at once.
+ */
+internal fun Modifier.modalInert(): Modifier =
+    pointerInput(Unit) {
+        awaitPointerEventScope {
+            while (true) awaitPointerEvent(PointerEventPass.Initial).changes.forEach { it.consume() }
+        }
+    }
+
+/**
  * The Glass face every modal panel shares (KitSheet's panels and KitDialogFrame's bottom and centred faces): liquid glass
  * over the window's page source within the window's liquid budget, else the frosted pane; null in every other style, so
  * each caller keeps its own solid face pixel for pixel. [shrink] is the predictive back gesture's way into frost.
@@ -663,6 +677,8 @@ private fun SheetPanel(
     modifier: Modifier,
     handle: Boolean,
     shape: KitShapeId,
+    /** False from the moment the sheet is dismissed: its exit is picture only ([modalInert]). */
+    open: Boolean = true,
     drag: SheetDrag? = null,
     stillShown: () -> Boolean = { true },
     /** How far the predictive back gesture has shrunk the panel (0–1): liquid glass eases into frost meanwhile. */
@@ -676,7 +692,8 @@ private fun SheetPanel(
     Column(
         modifier
             .then(face)
-            .pointerInput(Unit) { detectTapGestures {} } // taps on the sheet never reach the scrim
+            // Taps on the sheet never reach the scrim; a leaving sheet's controls no longer act.
+            .then(if (open) Modifier.pointerInput(Unit) { detectTapGestures {} } else Modifier.modalInert())
             .semantics {
                 paneTitle = entry.title
                 isTraversalGroup = true

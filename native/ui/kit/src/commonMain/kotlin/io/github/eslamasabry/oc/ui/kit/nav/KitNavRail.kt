@@ -4,6 +4,10 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -104,6 +108,12 @@ public fun KitNavRail(
     onSelect: (KitNavDestination) -> Unit,
     modifier: Modifier = Modifier,
     header: (@Composable ColumnScope.() -> Unit)? = null,
+    /**
+     * The system's room on the rail's side of the window: the status bar above it, the navigation bar under it and a
+     * cutout or bar at its start. The rail floats inside them, so the clock is never drawn over the chosen lens
+     * (cut audit 2, finding 10: on a phone on its side the rail ran up under the status bar).
+     */
+    insets: WindowInsets = io.github.eslamasabry.oc.ui.kit.frame.kitSystemInsets().only(WindowInsetsSides.Vertical + WindowInsetsSides.Start),
 ) {
     val colors = LocalKitColors.current
     val radius = FlutterKitTokens.NAV_RADIUS.dp
@@ -134,6 +144,7 @@ public fun KitNavRail(
     val hairline = kitHairline()
     Column(
         modifier
+            .windowInsetsPadding(insets)
             .width(Layout.RAIL_WIDTH.dp)
             .fillMaxHeight()
             .then(look.modifier)

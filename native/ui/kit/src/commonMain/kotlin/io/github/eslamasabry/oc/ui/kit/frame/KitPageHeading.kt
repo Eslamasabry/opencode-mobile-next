@@ -74,8 +74,17 @@ public fun KitPageHeading(
             .padding(start = tokens.gutter.dp, end = if (actions == null) tokens.gutter.dp else (tokens.gutter - 12).dp, top = Space.S2.dp)
             .testTag("kit-page-heading"),
     ) {
+        // A short window (a phone on its side, cut audit 2 finding 10): the large title took a fifth of the height above
+        // a list that had room for half a row, so the heading drops to the title size on one line there. It still
+        // scrolls away with the list like every other part of the header.
+        val short = io.github.eslamasabry.oc.ui.kit.theme.LocalKitWindow.current.short
         val titleText: @Composable (Modifier) -> Unit = { m ->
-            KitText(title, m.semantics { heading() }, role = TypeRole.LargeTitle, maxLines = 2) // F: lib/ui/kit/kit_page_heading.dart:133
+            KitText(
+                title,
+                m.semantics { heading() },
+                role = if (short) TypeRole.Title else TypeRole.LargeTitle, // F: lib/ui/kit/kit_page_heading.dart:133
+                maxLines = if (short) 1 else 2,
+            )
         }
         if (actions == null) titleText(Modifier)
         else Row(verticalAlignment = Alignment.CenterVertically) {

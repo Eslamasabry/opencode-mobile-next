@@ -79,7 +79,6 @@ import io.github.eslamasabry.oc.ui.kit.choice.rememberKitHaptics
 import io.github.eslamasabry.oc.ui.kit.foundation.kitTextScale
 import io.github.eslamasabry.oc.ui.kit.icon.KitIconSize
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
-import io.github.eslamasabry.oc.ui.kit.modal.KitBackGuard
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
 import io.github.eslamasabry.oc.ui.kit.motion.breath
 import io.github.eslamasabry.oc.ui.kit.motion.lap
@@ -273,7 +272,8 @@ public fun KitEdgeDock(
             }
             if (state.panelShown) DockPanel(state, model, words, inks, intents)
         }
-        KitBackGuard(enabled = state.anythingOpen) {
+        // An open strip, panel or ring is open like a sheet: it answers Back at the overlay priority, before the page.
+        io.github.eslamasabry.oc.ui.kit.modal.KitPredictiveBack(enabled = state.anythingOpen) {
             when {
                 state.renaming != null -> state.endRename(save = false, text = "")
                 state.panelOpen -> state.closePanel()

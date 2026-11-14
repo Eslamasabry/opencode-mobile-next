@@ -361,22 +361,30 @@ private fun LayerMenu(layer: KitMenuLayerState, shown: MutableTransitionState<Bo
     Box(
         Modifier.fillMaxSize()
             .onSizeChanged { layerSize = it }
-            .pointerInput(shown) {
-                awaitEachGesture {
-                    val down = awaitFirstDown(requireUnconsumed = false)
-                    down.consume()
-                    close()
-                    do {
-                        val event = awaitPointerEvent()
-                        event.changes.forEach { it.consume() }
-                    } while (event.changes.any { it.pressed })
-                }
-            }
+            // A closing menu is picture only (cut audit 2, finding 11): while it fades, a press beside it is the page's.
+            .then(
+                if (!shown.targetState) Modifier
+                else
+                    Modifier.pointerInput(shown) {
+                        awaitEachGesture {
+                            val down = awaitFirstDown(requireUnconsumed = false)
+                            down.consume()
+                            close()
+                            do {
+                                val event = awaitPointerEvent()
+                                event.changes.forEach { it.consume() }
+                            } while (event.changes.any { it.pressed })
+                        }
+                    }
+            )
     )
     Layout(
         content = {
             // The panel takes every press on it (its padding too): only a press beside it closes the menu.
-            Box(Modifier.pointerInput(Unit) { awaitPointerEventScope { while (true) awaitPointerEvent() } }) {
+            Box(
+                if (shown.targetState) Modifier.pointerInput(Unit) { awaitPointerEventScope { while (true) awaitPointerEvent() } }
+                else Modifier.modalInert()
+            ) {
                 MenuContent(shown, last, onDismissRequest, anchor, room, joins = true)
             }
         },
