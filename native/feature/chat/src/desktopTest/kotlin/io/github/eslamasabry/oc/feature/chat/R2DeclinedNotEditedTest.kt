@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.v2.runComposeUiTest
@@ -194,7 +195,7 @@ class R2DeclinedNotEditedTest {
             }
         }
         onAllNodesWithText("Edited 1 file", substring = true, useUnmergedTree = true).assertCountEquals(0)
-        // D1: the turn's work is its step, which says what the person decided (was: a summary line "1 step").
-        onAllNodesWithText("You declined this", useUnmergedTree = true)[0].assertExists()
+        // D1: the turn's work is its own step row, in view (was: a summary line "1 step").
+        onAllNodesWithTag("chat-step-t1", useUnmergedTree = true).assertCountEquals(1)
     }
 }
