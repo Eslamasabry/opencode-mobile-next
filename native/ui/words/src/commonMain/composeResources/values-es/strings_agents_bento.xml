@@ -47,4 +47,6 @@
     <string name="agentsUpdateUpdating">actualizando %1$s</string>
     <string name="agentsUpdateReadFailed">la actualización de agentes no pudo revisar tus agentes, lo intenta de nuevo al abrir la app</string>
     <string name="agentsUpdateRefused">la actualización de agentes no pudo empezar, usa Instalar en el agente</string>
+    <string name="agentsUpdateUpdated">%1$s actualizado</string>
+    <string name="agentsUpdateNeedsSignIn">%1$s necesita que inicies sesión</string>
 </resources>

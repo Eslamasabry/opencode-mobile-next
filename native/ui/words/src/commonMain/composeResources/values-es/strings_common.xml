@@ -720,4 +720,5 @@
     <string name="capabilityScreenHeading">Lo que puede hacer este servidor</string>
     <string name="connectUpdatingPhone">Actualizando OpenCode en este teléfono…</string>
     <string name="connectUpdatingAgents">Actualizando tus agentes en este teléfono. La conversación se abre cuando termine.</string>
+    <string name="connectAgentNeedsSignIn">Tu agente necesita que inicies sesión. Abre Agentes y toca Iniciar sesión; la conversación se abre después.</string>
 </resources>

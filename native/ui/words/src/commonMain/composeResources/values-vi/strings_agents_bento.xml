@@ -47,4 +47,6 @@
     <string name="agentsUpdateUpdating">đang cập nhật %1$s</string>
     <string name="agentsUpdateReadFailed">cập nhật tác nhân không kiểm tra được các tác nhân của bạn, sẽ thử lại khi mở ứng dụng</string>
     <string name="agentsUpdateRefused">cập nhật tác nhân không bắt đầu được, hãy dùng Cài đặt trên tác nhân</string>
+    <string name="agentsUpdateUpdated">đã cập nhật %1$s</string>
+    <string name="agentsUpdateNeedsSignIn">%1$s cần bạn đăng nhập</string>
 </resources>

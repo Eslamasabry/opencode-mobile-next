@@ -47,4 +47,6 @@
     <string name="agentsUpdateUpdating">جارٍ تحديث %1$s</string>
     <string name="agentsUpdateReadFailed">تعذّر على تحديث الوكلاء فحص وكلائك، وسيحاول مجددًا عند فتح التطبيق</string>
     <string name="agentsUpdateRefused">تعذّر بدء تحديث الوكلاء، استخدم «تثبيت» على الوكيل</string>
+    <string name="agentsUpdateUpdated">تم تحديث %1$s</string>
+    <string name="agentsUpdateNeedsSignIn">%1$s يحتاج منك تسجيل الدخول</string>
 </resources>

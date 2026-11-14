@@ -753,4 +753,5 @@
     <string name="capabilityScreenHeading">ما يستطيع هذا الخادم فعله</string>
     <string name="connectUpdatingPhone">جارٍ تحديث OpenCode على هذا الهاتف…</string>
     <string name="connectUpdatingAgents">جارٍ تحديث وكلائك على هذا الهاتف. ستُفتح المحادثة عند الانتهاء.</string>
+    <string name="connectAgentNeedsSignIn">وكيلك يحتاج منك تسجيل الدخول. افتح «الوكلاء» واضغط «تسجيل الدخول»، وستُفتح المحادثة بعد ذلك.</string>
 </resources>

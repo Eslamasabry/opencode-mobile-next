@@ -731,4 +731,5 @@
     <string name="capabilityScreenHeading">Что умеет этот сервер</string>
     <string name="connectUpdatingPhone">Обновление OpenCode на этом телефоне…</string>
     <string name="connectUpdatingAgents">Обновление агентов на этом телефоне. Чат откроется, когда обновление завершится.</string>
+    <string name="connectAgentNeedsSignIn">Агенту нужно, чтобы вы вошли. Откройте «Агенты» и нажмите «Войти» — после этого чат откроется.</string>
 </resources>

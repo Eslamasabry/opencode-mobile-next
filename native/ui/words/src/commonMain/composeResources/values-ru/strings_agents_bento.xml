@@ -47,4 +47,6 @@
     <string name="agentsUpdateUpdating">обновление: %1$s</string>
     <string name="agentsUpdateReadFailed">не удалось проверить агентов для обновления, повторная попытка при открытии приложения</string>
     <string name="agentsUpdateRefused">не удалось начать обновление агентов, нажмите «Установить» у агента</string>
+    <string name="agentsUpdateUpdated">обновлено: %1$s</string>
+    <string name="agentsUpdateNeedsSignIn">%1$s: нужно войти</string>
 </resources>

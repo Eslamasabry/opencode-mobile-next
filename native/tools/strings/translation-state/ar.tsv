@@ -724,9 +724,11 @@ agentsTileStepHelper	27ffd1db44
 agentsTileStepLinux	44349442f0
 agentsTileStepRuntime	8c66999cc0
 agentsTileStillWorking	a4d052801d
+agentsUpdateNeedsSignIn	7c94ef237e
 agentsUpdateReadFailed	482fb205cd
 agentsUpdateReading	283d5615fc
 agentsUpdateRefused	b4753e6305
+agentsUpdateUpdated	d753851233
 agentsUpdateUpdating	934b5468fe
 agentsUpdateWaitingBusy	b3da3d5bf3
 agentsUpdateWaitingMetered	454cbfe9ee
@@ -2120,6 +2122,7 @@ chatsSourcesOnPhone	30451c91d1
 chatsSourcesSheetTitle	904bdfeb95
 chatsSourcesSome	be2d7c556f
 chatsSourcesUnreachable	b50ad2aa18
+chatsSourcesUpdating	45be7fbbf3
 chats_all_filter	462c2778fd
 chats_all_none	ddf419f904
 chats_all_title	b0e54f6c5d
@@ -2392,6 +2395,7 @@ connCheckVersionNotReady	ae39eb13f8
 connCheckVersionOk	48e0e06764
 connCheckVersionOkUnknown	aaaa722d85
 connCheckVersionUnsupported	2c79e290fb
+connectAgentNeedsSignIn	bfd375f72e
 connectStartingBody	033f5405c0
 connectStartingPhone	58039cd7bc
 connectUpdatingAgents	63e7dfd306

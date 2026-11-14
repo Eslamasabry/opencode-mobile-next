@@ -697,4 +697,5 @@
     <string name="capabilityScreenHeading">Máy chủ này làm được gì</string>
     <string name="connectUpdatingPhone">Đang cập nhật OpenCode trên điện thoại này…</string>
     <string name="connectUpdatingAgents">Đang cập nhật các tác nhân trên điện thoại này. Cuộc trò chuyện sẽ mở khi hoàn tất.</string>
+    <string name="connectAgentNeedsSignIn">Tác nhân cần bạn đăng nhập. Mở Tác nhân và nhấn Đăng nhập; cuộc trò chuyện sẽ mở sau đó.</string>
 </resources>

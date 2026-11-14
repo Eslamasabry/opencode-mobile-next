@@ -47,4 +47,6 @@
     <string name="agentsUpdateUpdating">memperbarui %1$s</string>
     <string name="agentsUpdateReadFailed">pembaruan agen tidak dapat memeriksa agen Anda, akan dicoba lagi saat aplikasi dibuka</string>
     <string name="agentsUpdateRefused">pembaruan agen tidak dapat dimulai, gunakan Pasang pada agen</string>
+    <string name="agentsUpdateUpdated">%1$s diperbarui</string>
+    <string name="agentsUpdateNeedsSignIn">%1$s perlu Anda masuk</string>
 </resources>
