@@ -30,13 +30,7 @@ import androidx.compose.ui.semantics.dismiss
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
-import androidx.navigationevent.NavigationEventInfo
-import androidx.navigationevent.NavigationEventTransitionState
-import androidx.navigationevent.compose.LocalNavigationEventDispatcherOwner
-import androidx.navigationevent.compose.NavigationBackHandler
-import androidx.navigationevent.compose.rememberNavigationEventState
 import io.github.eslamasabry.oc.ui.design.motion.MotionTokens
-import io.github.eslamasabry.oc.ui.kit.motion.KitEasing
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import kotlinx.coroutines.launch
@@ -121,23 +115,17 @@ public fun KitSideSheet(
     }
     if (!present && !visible) return
     // Back: the topmost sheet owns it. The preview follows the gesture (not under Off); completion asks to close.
-    val back =
-        if (LocalNavigationEventDispatcherOwner.current != null) {
-            val state = rememberNavigationEventState(currentInfo = NavigationEventInfo.None)
-            NavigationBackHandler(state = state, isBackEnabled = visible, onBackCompleted = { dismiss() })
-            state
-        } else {
-            null
-        }
+    // At the overlay priority (KitPredictiveBack), so a page's own Back never answers while the sheet is open.
+    val back = KitPredictiveBack(enabled = visible) { dismiss() }
     val preview: () -> Float = {
-        val t = back?.transitionState
-        if (motion.reduced || t !is NavigationEventTransitionState.InProgress) 0f
-        else SideSheetRules.predictiveShift(KitEasing.PredictiveBack.transform(t.latestEvent.progress), widthPx, rtl)
+        val p = back.value()
+        if (motion.reduced || p == 0f) 0f else SideSheetRules.predictiveShift(p, widthPx, rtl)
     }
     val drag =
         rememberDraggableState { delta ->
             scope.launch { offset.snapTo(SideSheetRules.clampDrag(offset.value + delta, widthPx, rtl)) }
         }
+    val scrimTaps = remember { MutableInteractionSource() }
     Box(modifier.fillMaxSize()) {
         Box(
             Modifier.fillMaxSize()
@@ -146,7 +134,12 @@ public fun KitSideSheet(
                     val shownShare = 1f - (abs(offset.value) / widthPx).coerceIn(0f, 1f)
                     drawRect(colors.scrim, alpha = MotionTokens.DIM_MOST * shownShare)
                 }
-                .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) { dismiss() },
+                // From the moment it is dismissed the sheet is picture only: its scrim takes no touch while it leaves,
+                // so a tap meant for the page is the page's (cut audit 2, finding 11).
+                .then(
+                    if (!visible) Modifier
+                    else Modifier.clickable(interactionSource = scrimTaps, indication = null) { dismiss() }
+                ),
         )
         Box(
             Modifier.align(Alignment.CenterEnd)

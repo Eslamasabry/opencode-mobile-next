@@ -202,9 +202,15 @@ public fun KitSearchField(
     }
     val query = state.text.toString()
     // The back gesture behaves as Esc: clears first, then lets the screen leave.
+    // Inside a sheet or dialog it asks at the modal's own (overlay) priority, added after the modal's, so Back still
+    // clears the words before it closes the sheet (KitPredictiveBack).
     if (query.isNotEmpty() && LocalNavigationEventDispatcherOwner.current != null) {
-        val back = rememberNavigationEventState(currentInfo = NavigationEventInfo.None)
-        NavigationBackHandler(state = back, isBackEnabled = true, onBackCompleted = { state.clearText() })
+        if (io.github.eslamasabry.oc.ui.kit.effects.LocalKitLiquidOverModal.current) {
+            io.github.eslamasabry.oc.ui.kit.modal.KitPredictiveBack(enabled = true) { state.clearText() }
+        } else {
+            val back = rememberNavigationEventState(currentInfo = NavigationEventInfo.None)
+            NavigationBackHandler(state = back, isBackEnabled = true, onBackCompleted = { state.clearText() })
+        }
     }
     // A filled, fully rounded field with no outline (the Flutter search look): the magnifier and the words carry it.
     val shapeId = if (prominent || bar) KitShapeId.Pill else KitShapeId.Button
