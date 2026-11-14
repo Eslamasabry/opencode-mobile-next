@@ -95,6 +95,18 @@ class StepsCraftPicturesTest {
 
     private enum class Moment { Folded, Opened, Running }
 
+    /**
+     * The screen is composed while true. Glass over the Contour lines keeps a ticker (its words' ink sampler) alive, which
+     * fails the test's end ("uncompleted coroutines") although the picture is written: each test takes the screen away
+     * before it ends.
+     */
+    private var alive by mutableStateOf(true)
+
+    private fun ComposeUiTest.end() {
+        alive = false
+        mainClock.advanceTimeByFrame()
+    }
+
     private fun ComposeUiTest.screen(look: Look, running: Boolean, arrived: () -> Boolean = { false }) {
         val scene = ChatScene()
         val appearance =
@@ -107,7 +119,7 @@ class StepsCraftPicturesTest {
             )
         val platform = if (look.style == Style.Glass) LensPlatform() else DesktopKitPlatform()
         setContent {
-            CompositionLocalProvider(LocalDensity provides Density(DENSITY)) {
+            if (alive) CompositionLocalProvider(LocalDensity provides Density(DENSITY)) {
                 KitTheme(appearance, platform, "en", stillFrame = false) {
                     CompositionLocalProvider(LocalKitRedactor provides Redactor()) {
                         if (running) scene.Screen(StepsCraftScene.runningState(), facts = StepsCraftScene.runningFacts(arrived()), projectName = "demo_app")
@@ -132,6 +144,7 @@ class StepsCraftPicturesTest {
             // The running step's light, part-way round its node.
             if (moment == Moment.Running) mainClock.advanceTimeBy(LIGHT_MID)
             compareGolden("steps-craft-${look.id}-${moment.name.lowercase()}")
+            end()
         }
 
     @Test fun glassDarkContourFolded() = shot(Look.GlassDarkContour, Moment.Folded)
@@ -163,6 +176,7 @@ class StepsCraftPicturesTest {
             mainClock.advanceTimeBy(SETTLE)
             onNodeWithText("Show 9 earlier steps").performClick()
             strip("steps-craft-glass-dark-contour-strip-fold-opening", foldMs)
+            end()
         }
 
     @Test
@@ -174,6 +188,7 @@ class StepsCraftPicturesTest {
             mainClock.advanceTimeBy(SETTLE)
             arrived = true
             strip("steps-craft-glass-dark-contour-strip-step-arriving", MotionTokens.STANDARD)
+            end()
         }
 
     /** Five frames of a motion [totalMs] long (0, 25, 50, 75, 100 %), side by side, each the middle of the screen. */
