@@ -96,8 +96,11 @@ class TurnLedgerTest {
         val ledger = TurnLedger(S)
         ledger.load(listOf(prompt, msg(info("m2", Role.Assistant, 2), text("x", "m2", ""))))
         assertTrue(ledger.apply(GatewayEvent.PartDelta(SessionId(S), MessageId("m2"), PartId("x"), DeltaField.Text, "Hel")))
+        val first = ledger.snapshot()
+        assertEquals("Hel", first.messages.last().parts.single().text)
+        // A later delta changes nothing anyone redraws: the same snapshot, not rebuilt (its words join at the next change).
         assertFalse(ledger.apply(GatewayEvent.PartDelta(SessionId(S), MessageId("m2"), PartId("x"), DeltaField.Text, "lo")))
-        assertEquals("Hel", ledger.snapshot().messages.last().parts.single().text)
+        assertTrue(first === ledger.snapshot())
     }
 
     @Test
