@@ -20,7 +20,7 @@ class AgentPinsParityTest {
      */
     // Agents whose pins moved after the Flutter freeze (Flutter takes no new work since 2026-11-08): checked on their
     // own below, and their old Flutter entries are left out of the comparison.
-    private val postFreeze = setOf("antigravity", "opencode2", "claude", "codex", "goose", "omp-acp", "fx", "qwen", "kilo")
+    private val postFreeze = setOf("antigravity", "opencode2", "claude", "codex", "goose", "omp-acp", "fx", "qwen", "kilo", "antigravity")
 
     private val repo: File = generateSequence(File("").absoluteFile) { it.parentFile }
         .first { File(it, "native/settings.gradle.kts").isFile }
@@ -314,6 +314,38 @@ class AgentPinsParityTest {
         assertEquals(84123912L, x64.downloadBytes)
         assertEquals(259201200L, x64.installedBytes)
         assertEquals("package/bin/kilo", x64.archiveMember)
+        assertEquals(AgentArtifactFormat.TarGz, x64.format)
+    }
+
+    @Test
+    fun `B-AGENT-008 Antigravity 1.5.9 pins equal the downloads checked on 2026-11-14`() {
+        // Moved after the freeze. Each SHA-256 is of the downloaded bytes, whose sha512 equals the release manifest's value for that platform.
+        val recipe = AgentPins.builtIn.catalog().byId(io.github.eslamasabry.oc.engine.agents.AgentId("antigravity"))!!.recipe!!
+        assertEquals("1.5.9", recipe.version)
+        assertEquals("agy", recipe.executable)
+        assertEquals(listOf("acp", "--disable-telemetry"), recipe.launchArgs)
+        assertEquals(listOf("acp", "--login"), recipe.signInArgs)
+        val arm = recipe.artifacts.getValue(AgentArchitecture.Arm64)
+        assertEquals(
+            "https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.9-4515810895593472/linux-arm/" +
+                "cli_linux_arm64.tar.gz",
+            arm.url,
+        )
+        assertEquals("3a18c238c7ee6661e43df7e824a7d4c1bed78aeeda09430921a0f1dbfe825bca", arm.sha256)
+        assertEquals(90318517L, arm.downloadBytes)
+        assertEquals(249582256L, arm.installedBytes)
+        assertEquals("antigravity", arm.archiveMember)
+        assertEquals(AgentArtifactFormat.TarGz, arm.format)
+        val x64 = recipe.artifacts.getValue(AgentArchitecture.X64)
+        assertEquals(
+            "https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.9-4515810895593472/linux-x64/" +
+                "cli_linux_x64.tar.gz",
+            x64.url,
+        )
+        assertEquals("8b1f5e56779f2434a0af36f1b715a8392a084de550f8c68bc79821f95fabf3fa", x64.sha256)
+        assertEquals(99166075L, x64.downloadBytes)
+        assertEquals(265700040L, x64.installedBytes)
+        assertEquals("antigravity", x64.archiveMember)
         assertEquals(AgentArtifactFormat.TarGz, x64.format)
     }
 
