@@ -20,7 +20,7 @@ class AgentPinsParityTest {
      */
     // Agents whose pins moved after the Flutter freeze (Flutter takes no new work since 2026-11-08): checked on their
     // own below, and their old Flutter entries are left out of the comparison.
-    private val postFreeze = setOf("antigravity", "opencode2", "claude", "codex", "goose", "omp-acp", "fx", "qwen")
+    private val postFreeze = setOf("antigravity", "opencode2", "claude", "codex", "goose", "omp-acp", "fx", "qwen", "kilo")
 
     private val repo: File = generateSequence(File("").absoluteFile) { it.parentFile }
         .first { File(it, "native/settings.gradle.kts").isFile }
@@ -283,6 +283,38 @@ class AgentPinsParityTest {
         assertEquals(159348420L, x64.installedBytes)
         assertEquals("package/cli-entry.js", x64.archiveMember)
         assertEquals(AgentArtifactFormat.NpmTarGz, x64.format)
+    }
+
+    @Test
+    fun `B-AGENT-008 Kilo pins equal the downloads checked on 2026-11-14`() {
+        // Moved after the freeze. Each SHA-256 is of the registry tarball, whose sha512 equals dist.integrity; installedBytes is the member's size.
+        val recipe = AgentPins.builtIn.catalog().byId(io.github.eslamasabry.oc.engine.agents.AgentId("kilo"))!!.recipe!!
+        assertEquals("7.8.27", recipe.version)
+        assertEquals("kilo", recipe.executable)
+        assertEquals(listOf("acp"), recipe.launchArgs)
+        assertEquals(listOf("auth", "login"), recipe.signInArgs)
+        val arm = recipe.artifacts.getValue(AgentArchitecture.Arm64)
+        assertEquals(
+            "https://registry.npmjs.org/@kilocode/cli-linux-arm64/-/" +
+                "cli-linux-arm64-7.8.27.tgz",
+            arm.url,
+        )
+        assertEquals("992a0d0f4956926c6f624de742792eeab140516640f66a5cf5b7f9c357c06eb4", arm.sha256)
+        assertEquals(83530144L, arm.downloadBytes)
+        assertEquals(258198520L, arm.installedBytes)
+        assertEquals("package/bin/kilo", arm.archiveMember)
+        assertEquals(AgentArtifactFormat.TarGz, arm.format)
+        val x64 = recipe.artifacts.getValue(AgentArchitecture.X64)
+        assertEquals(
+            "https://registry.npmjs.org/@kilocode/cli-linux-x64/-/" +
+                "cli-linux-x64-7.8.27.tgz",
+            x64.url,
+        )
+        assertEquals("1da75cf0996f249abc9e1ae10bdcebcefd760dd375c440e704ae70bb9be3ce0b", x64.sha256)
+        assertEquals(84123912L, x64.downloadBytes)
+        assertEquals(259201200L, x64.installedBytes)
+        assertEquals("package/bin/kilo", x64.archiveMember)
+        assertEquals(AgentArtifactFormat.TarGz, x64.format)
     }
 
     @Test
