@@ -611,17 +611,16 @@ public class ChatsViewModel(
         keptTimer?.cancel()
         keptTimer =
             viewModelScope.launch {
-                var waited = 0L
-                while (waited < KeptTapRules.LIMIT_MS) {
-                    kotlinx.coroutines.delay(KeptTapRules.STEP_MS)
-                    if (waitingOpen.value != ref) return@launch
-                    val updating =
-                        home.snapshot.value.sources.any {
-                            it.profile == ref.profileId && it.starting == AppStart.AgentsUpdating
+                val waits =
+                    combine(waitingOpen, home.snapshot) { waiting, extras ->
+                        when {
+                            waiting != ref -> KeptWait.Ended
+                            extras.sources.any { it.profile == ref.profileId && it.starting == AppStart.AgentsUpdating } ->
+                                KeptWait.Updating
+                            else -> KeptWait.Quiet
                         }
-                    if (!updating) waited += KeptTapRules.STEP_MS
-                }
-                if (waitingOpen.value == ref) {
+                    }
+                if (KeptTapRules.limitSpent(waits) && waitingOpen.value == ref) {
                     waitingOpen.value = null
                     keptGaveUp.value = ref
                 }
