@@ -2394,6 +2394,7 @@ connCheckVersionOkUnknown	aaaa722d85
 connCheckVersionUnsupported	2c79e290fb
 connectStartingBody	033f5405c0
 connectStartingPhone	58039cd7bc
+connectUpdatingAgents	63e7dfd306
 connectUpdatingPhone	7413955795
 connectionCheckAction	5c241d82f8
 connectionCheckAddress	900ba4c11c
