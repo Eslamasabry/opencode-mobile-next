@@ -451,7 +451,9 @@ private fun RowBody(
                         else RowValue(value)
                     // One tertiary button, trailing (Dart `KitButton.fromAction(enable, role: tertiary, expand: false)`); it
                     // keeps its own side padding beside the words.
-                    action != null && !actionBelow -> Box(Modifier.padding(horizontal = Space.S2.dp)) {
+                    // Its words end on the row's end rail like a chevron's ink does (audit 2: "Update and import" ended 12 dp in,
+                    // a gutter's 4 dp short): the row keeps space1 at its end, the box the rest of the gutter.
+                    action != null && !actionBelow -> Box(Modifier.padding(start = Space.S2.dp, end = maxOf(Space.S2.dp, kitRowGutter() - Space.S1.dp))) {
                         io.github.eslamasabry.oc.ui.kit.KitButton(
                             io.github.eslamasabry.oc.ui.kit.KitAction(
                                 action.label, action.onClick,
