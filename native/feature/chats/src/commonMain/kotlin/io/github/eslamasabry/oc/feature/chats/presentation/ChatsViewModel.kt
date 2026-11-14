@@ -33,6 +33,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -172,6 +173,10 @@ public class ChatsViewModel(
      */
     private val waitingOpen = MutableStateFlow<ConversationRef?>(null)
     private var waitingFrom: io.github.eslamasabry.oc.ui.routes.AppRoute? = null
+
+    /** How many times a row was actually opened (tests: a kept tap opens once, however often the feed moves). */
+    internal var openAttempts: Int = 0
+        private set
 
     public val state: StateFlow<ChatsUi> =
         combine(
@@ -341,16 +346,23 @@ public class ChatsViewModel(
             home.snapshot.collect { extra -> extra.opening?.rows?.let { previews.seed(it) } }
         }
         // B-333: the kept tap opens its row once the row can open, while the person is still on the page they tapped.
+        // The decision is reduced to one value and acted on only when it changes, and acting never re-enters the tap
+        // path, so a feed or home that emits while the row still waits does no work and writes no state.
         viewModelScope.launch {
             combine(waitingOpen, home.snapshot, feed.snapshot, nav.top) { ref, extra, snapshot, top ->
-                    if (ref == null) return@combine
-                    if (top != waitingFrom) {
-                        waitingOpen.value = null
-                        return@combine
-                    }
-                    if (extra.opening == null && snapshot.items.any { it.ref == ref && it.canReopen }) openConversation(ref)
+                    KeptTapRules.decide(ref, top == waitingFrom, extra.opening == null, snapshot.items)
                 }
-                .collect {}
+                .distinctUntilChanged()
+                .collect { decision ->
+                    when (decision) {
+                        KeptTap.Wait -> Unit
+                        KeptTap.Drop -> waitingOpen.value = null
+                        is KeptTap.Open -> {
+                            waitingOpen.value = null
+                            openNow(decision.item)
+                        }
+                    }
+                }
         }
         viewModelScope.launch { previews.texts.collect { if (it.isNotEmpty()) home.rememberPreviews(it) } }
         // B-161: the branch port reads the folders the list shows, and only those. A1: the last message of the rows on
@@ -559,19 +571,23 @@ public class ChatsViewModel(
     }
 
     override fun openConversation(ref: ConversationRef) {
-        val listed = feed.snapshot.value.items.firstOrNull { it.ref == ref }
-        val opening = home.snapshot.value.opening
+        val items = feed.snapshot.value.items
+        val openable = items.firstOrNull { it.ref == ref && it.canReopen }
         // B-333: a row that cannot open yet (its server is still opening, or its list is not verified yet) keeps the
         // tap and opens by itself when it can, instead of ignoring it.
-        if (opening != null || listed?.canReopen == false) {
-            if (opening != null || listed != null) {
-                waitingOpen.value = ref
-                waitingFrom = nav.top.value
-            }
+        if (home.snapshot.value.opening != null || openable == null) {
+            waitingFrom = nav.top.value
+            waitingOpen.value = if (home.snapshot.value.opening != null || items.any { it.ref == ref }) ref else null
             return
         }
         waitingOpen.value = null
-        val item = listed ?: return
+        openNow(openable)
+    }
+
+    /** Opens a row that can open now. Never keeps a tap: the kept-tap path calls it once, with the row it checked. */
+    private fun openNow(item: io.github.eslamasabry.oc.engine.agents.feed.ChatFeedItem) {
+        val ref = item.ref
+        openAttempts++
         // H4: an agent conversation the helper cannot resume asks before anything opens (F: chats_home_screen.dart:186).
         AgentResumeRules.ask(item, ChatsState.row(item).agentName)?.let {
             sheet.value = null
