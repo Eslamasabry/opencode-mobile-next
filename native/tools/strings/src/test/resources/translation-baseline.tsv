@@ -29,8 +29,6 @@ english	fr	chatUiQuestions
 english	fr	chatUiQuestionsSummary
 english	fr	chatsFilterChatCount
 english	fr	chatsFilterChatCount__eq1
-english	fr	chatsHomeTitle
-english	fr	chats_title
 english	fr	commandDestination
 english	fr	composerFullAgent
 english	fr	composerTrayPhotos
@@ -96,7 +94,6 @@ english	fr	monitorMinutes
 english	fr	monitorMinutes__eq1
 english	fr	monitorNativeConversation
 english	fr	monitorSession
-english	fr	nativeSearchPlaceChats
 english	fr	nativeSearchPlaceNotifications
 english	fr	nlibConversation
 english	fr	notify_status_minutes
@@ -109,7 +106,6 @@ english	fr	readerUiSymbolModule
 english	fr	readerUiSymbolVariable
 english	fr	schedule40Conversation
 english	fr	scheduleTarget
-english	fr	searchB1Conversations
 english	fr	searchB1ProjectConversations
 english	fr	secHistoryEntry
 english	fr	serverRowDetailsVersion
@@ -118,10 +114,8 @@ english	fr	servicesPorts__eq1
 english	fr	sessionExportFormatLabel
 english	fr	sessionNoteFieldLabel
 english	fr	settingsHubGroupAgent
-english	fr	settingsHubGroupConversations
 english	fr	settingsV3Notifications
 english	fr	setupNativeSuggestions
-english	fr	shellTabChats
 english	fr	teamBoardTypeEpic
 english	fr	teamProjectEditorBudget
 english	fr	teamProjectEditorInstructions
@@ -152,14 +146,11 @@ english	fr	upgradeFindVersion
 english	fr	upgradeMode
 english	fr	upgradeReadyVersion
 english	fr	usageBudgetTitle
-english	fr	usageSessions
 english	fr	widgetActionMessage
 english	fr	widgetPanelAccent
 english	fr	widgetPanelTransparent
 english	fr	widgetV2BackgroundTransparent
-english	fr	widget_conversations_title
 english	fr	widget_label
-english	fr	widget_label_wide
 english	fr	workTimeoutFifteenMinutes
 english	fr	workTimeoutFiveMinutes
 english	fr	workTimeoutOneMinute
