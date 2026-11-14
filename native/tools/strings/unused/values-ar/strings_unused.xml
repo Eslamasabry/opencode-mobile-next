@@ -452,4 +452,12 @@
     <string name="phoneSetupErrorNodeUnsupported">لا يستطيع نظام هذا الهاتف تشغيل Node.js داخل Linux المدمج. ما زال بإمكانك استخدام OpenCode Mobile بربطه بحاسوبك.</string>
     <string name="phoneSetupConnectComputer">ربط حاسوب</string>
     <string name="capabilityStateHere">يعمل هنا</string>
+    <plurals name="chatUiEarlierMessageCount">
+        <item quantity="zero">لا رسائل سابقة</item>
+        <item quantity="one">رسالة سابقة واحدة</item>
+        <item quantity="two">رسالتان سابقتان</item>
+        <item quantity="few">%1$s رسائل سابقة</item>
+        <item quantity="many">%1$s رسالة سابقة</item>
+        <item quantity="other">%1$s رسالة سابقة</item>
+    </plurals>
 </resources>
