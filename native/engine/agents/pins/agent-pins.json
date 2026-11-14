@@ -319,7 +319,7 @@
       "providerId": "goose",
       "signInMethod": "apiKeyHost",
       "recipe": {
-        "version": "1.54.0",
+        "version": "1.59.1",
         "executable": "goose",
         "launchArgs": [
           "acp"
@@ -329,20 +329,20 @@
         ],
         "artifacts": {
           "arm64": {
-            "url": "https://github.com/aaif-goose/goose/releases/download/v1.54.0/goose-aarch64-unknown-linux-gnu.tar.gz",
-            "sha256": "0f174b5118a53888cd4e65b7ca9a4b72dd0b887e89142c8ce41e2409205e40d5",
+            "url": "https://github.com/aaif-goose/goose/releases/download/v1.59.1/goose-aarch64-unknown-linux-gnu.tar.gz",
+            "sha256": "e3619b2ebf76dbbe8924561fd748220f289a34671e2757cda1cd833e44194f8e",
             "format": "tarGz",
             "member": "./goose",
-            "downloadBytes": 93850226,
-            "installedBytes": 294298272
+            "downloadBytes": 63280232,
+            "installedBytes": 195103264
           },
           "x64": {
-            "url": "https://github.com/aaif-goose/goose/releases/download/v1.54.0/goose-x86_64-unknown-linux-gnu.tar.gz",
-            "sha256": "ab396c95aebbd28b4d38c175234be8d4a3ea0c96e7ccb24c307e4618c9be57e1",
+            "url": "https://github.com/aaif-goose/goose/releases/download/v1.59.1/goose-x86_64-unknown-linux-gnu.tar.gz",
+            "sha256": "04c08900ab2ae78b8e2f556f1ed535a91b61c080a3ff62e9fd8b280cceb544ef",
             "format": "tarGz",
             "member": "./goose",
-            "downloadBytes": 90912367,
-            "installedBytes": 307756800
+            "downloadBytes": 62448338,
+            "installedBytes": 208579376
           }
         }
       }
