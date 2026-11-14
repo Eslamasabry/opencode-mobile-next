@@ -14,6 +14,13 @@ import kotlin.test.assertTrue
  * jump pill is joined to it, in the box's own px, and the box's own outline while it stands alone.
  */
 class KitJoinedOutlineTest {
+    /** Runs [check] on the test's UI thread inside a composition test, as the draw phase calls these. */
+    @OptIn(androidx.compose.ui.test.ExperimentalTestApi::class)
+    private fun onUi(check: () -> Unit) = androidx.compose.ui.test.v2.runComposeUiTest {
+        setContent {}
+        runOnIdle { check() }
+    }
+
     private fun scene(dropGranted: Boolean): Pair<KitLiquidJoinBody, KitLiquidJoinDrop> {
         val join = KitLiquidJoin()
         val body = KitLiquidJoinBody(join, "bottom")
@@ -32,7 +39,7 @@ class KitJoinedOutlineTest {
     }
 
     @Test
-    fun `B-GLASS-JOIN-OUTLINE-06 a joined body's band runs over the drop, in the body's own px`() {
+    fun `B-GLASS-JOIN-OUTLINE-06 a joined body's band runs over the drop, in the body's own px`() = onUi {
         val (body, _) = scene(dropGranted = true)
         assertTrue(body.joined)
         val band = assertNotNull(body.joinedBand(4f, centred = false))
@@ -46,7 +53,7 @@ class KitJoinedOutlineTest {
     }
 
     @Test
-    fun `B-GLASS-JOIN-OUTLINE-07 the same geometry is traced once, and a body alone has no joined outline`() {
+    fun `B-GLASS-JOIN-OUTLINE-07 the same geometry is traced once, and a body alone has no joined outline`() = onUi {
         val (body, drop) = scene(dropGranted = true)
         assertSame(body.joinedBand(4f, centred = false), body.joinedBand(4f, centred = false))
         drop.granted = false

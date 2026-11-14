@@ -21,7 +21,8 @@ class JoinOutlineTest {
     @Test
     fun `B-GLASS-JOIN-OUTLINE-01 the joined outline runs over the pill, never along the box's top under it`() {
         val line = points(box, pill, reach, 0f)
-        val overPill = line.filter { (x, _) -> x in 470f..530f }.map { it.second }
+        // The top half only: the box's bottom edge lies under the pill's centre too.
+        val overPill = line.filter { (x, y) -> x in 470f..530f && y < 250f }.map { it.second }
         assertTrue(overPill.isNotEmpty() && overPill.all { abs(it - pill.top) < 1.5f }, "over the pill the line is its top edge: $overPill")
         val underFoot = line.filter { (x, y) -> x in 430f..570f && abs(y - box.top) < 2f }
         assertTrue(underFoot.isEmpty(), "no point on the box's top edge under the pill: $underFoot")
@@ -39,7 +40,7 @@ class JoinOutlineTest {
 
     @Test
     fun `B-GLASS-JOIN-OUTLINE-03 an inside band lies its width inside the outline`() {
-        val inner = points(box, pill, reach, 4f).filter { (x, _) -> x in 470f..530f }.map { it.second }
+        val inner = points(box, pill, reach, 4f).filter { (x, y) -> x in 470f..530f && y < 250f }.map { it.second }
         assertTrue(inner.isNotEmpty() && inner.all { abs(it - (pill.top + 4f)) < 1.5f }, "4 px inside the pill's top: $inner")
     }
 
