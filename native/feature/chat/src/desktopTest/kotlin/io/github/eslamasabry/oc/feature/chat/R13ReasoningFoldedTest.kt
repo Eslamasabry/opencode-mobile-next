@@ -108,14 +108,19 @@ class R13ReasoningFoldedTest {
     }
 
     @Test
-    fun `R13 with Show reasoning on the thought is still inside the fold, and two thoughts share one line`() = runComposeUiTest {
+    // D1 "steps only" (owner 2026-11-14): was "with Show reasoning on the thought is still inside the fold, and two
+    // thoughts share one line". There is no summary line any more: each thought is its own "Thought" step on the turn's
+    // rail, opened as the person's Show reasoning says, and never loose in the reply area (always inside the step list).
+    fun `R13 with Show reasoning on each thought opens on its own Thought step, never loose in the reply`() = runComposeUiTest {
         show(reasoningExpanded = true, thinking, "Keep it to one word.")
-        onAllNodesWithText("Respond briefly", substring = true, useUnmergedTree = true).assertCountEquals(0)
-        onAllNodesWithText("Keep it to one word", substring = true, useUnmergedTree = true).assertCountEquals(0)
-        onAllNodesWithText("Thought", useUnmergedTree = true).assertCountEquals(1)
-        onNodeWithText("Thought").performClick()
-        waitForIdle()
+        onAllNodesWithText("Thought", useUnmergedTree = true).assertCountEquals(2)
+        val inSteps = androidx.compose.ui.test.hasAnyAncestor(androidx.compose.ui.test.hasTestTag("chat-work-line"))
+        onAllNodes(androidx.compose.ui.test.hasText("Respond briefly", substring = true) and inSteps, useUnmergedTree = true).assertCountEquals(1)
+        onAllNodes(androidx.compose.ui.test.hasText("Keep it to one word", substring = true) and inSteps, useUnmergedTree = true).assertCountEquals(1)
         onAllNodesWithText("Respond briefly", substring = true, useUnmergedTree = true).assertCountEquals(1)
-        onAllNodesWithText("Keep it to one word", substring = true, useUnmergedTree = true).assertCountEquals(1)
+        // Closed by a tap, it is a step again.
+        onAllNodesWithText("Thought")[0].performClick()
+        waitForIdle()
+        onAllNodesWithText("Thought", useUnmergedTree = true).assertCountEquals(2)
     }
 }

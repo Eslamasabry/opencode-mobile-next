@@ -591,7 +591,8 @@ internal fun ChatTranscriptList(
                         tone = line.tone,
                         spoken = line.spoken,
                         step = line.step,
-                        onTap = if (runWork == null) null else ({ stepsShown = !stepsShown }),
+                        // D1: the steps are always in view above, so the live line opens nothing.
+                        onTap = null,
                         tapLabel =
                             stringResource(
                                 if (stepsShown) Res.string.chatLiveHideSteps else Res.string.chatLiveShowSteps
@@ -1059,24 +1060,19 @@ private fun ChatRow(
             Column {
                 val work = facts.work[row.turnId]
                 if (work != null && folds != null) {
-                    // Flutter `_WorkGroup.hideWhileRunning` (owner decision 5, 20 Oct 2026): while the turn's live
-                    // line names the step in hand, the work draws nothing; once the step ends it unfolds back in
-                    // where the steps were. A tap on the live line shows the steps, opened.
-                    val running = work.state == WorkLineState.Running && runningSteps != null
-                    KitReveal(visible = !running || runningSteps == true) {
-                        TurnWorkLine(
-                            work,
-                            facts.nowMs,
-                            folds,
-                            onOpenSession,
-                            onOpenFile,
-                            facts.reading.workEntries[row.turnId].orEmpty(),
-                            reasoningExpanded,
-                            reply,
-                            onCompactAgain,
-                            openWhileRunning = if (running && runningSteps == true) onHideSteps else null,
-                        )
-                    }
+                    // D1 "steps only" (owner 2026-11-14): the steps stay in view while the turn runs (the newest five,
+                    // the live one with its light); the live line under them no longer names the step they show.
+                    TurnWorkLine(
+                        work,
+                        facts.nowMs,
+                        folds,
+                        onOpenSession,
+                        onOpenFile,
+                        facts.reading.workEntries[row.turnId].orEmpty(),
+                        reasoningExpanded,
+                        reply,
+                        onCompactAgain,
+                    )
                 }
                 else
                     KitQuietLine(
@@ -1370,11 +1366,11 @@ private fun ChatRow(
                                     onSendAgain,
                                 )
                             }
-                            // F: kit_turn.dart:675-721: the newest turn's footer leads with its meta words
-                            // (message_view.dart:423-427: the model, when it changed).
+                            // D1 (owner 2026-11-14): every finished reply ends with its quiet line: clock time · how
+                            // long · model (only when not the one in use now) · tokens · cost, each only when known.
                             facts.reading.metadata[row.turnId]
-                                ?.takeIf { it.latest }
-                                ?.footerModel
+                                ?.let { replyFooterWords(it) }
+                                ?.takeIf { it.isNotEmpty() }
                                 ?.let { KitReplyMeta(it) }
                         }
                     }

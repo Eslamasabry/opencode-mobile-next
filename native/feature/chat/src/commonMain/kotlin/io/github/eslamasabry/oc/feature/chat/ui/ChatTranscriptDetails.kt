@@ -23,6 +23,7 @@ import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.row.KitExpandRow
 import io.github.eslamasabry.oc.ui.kit.state.KitDetailsFold
 import io.github.eslamasabry.oc.ui.kitchat.header.rememberKitMask
@@ -167,6 +168,20 @@ internal fun TranscriptDetail(
         val thoughtTitle = if (thinking) stringResource(Res.string.kitMessageThinking) else firstLine
         val body = remember(part.text, thinking) { if (thinking) part.text else thoughtBody(part.text) }
         val open = (if (settled) folds.open[key] else null) ?: reasoningExpanded
+        // D1 "steps only" (2026-11-14): on a turn's step list a thought is a step of its own kind: the idea glyph on the
+        // rail, "Thought" ("Thinking…" while it is written), opening to the whole thought.
+        if (kitOnStepRail()) {
+            KitStepFold(
+                title = if (thinking) stringResource(Res.string.kitMessageThinking) else stringResource(Res.string.kitMessageThought),
+                expanded = open,
+                onToggle = { folds.open[key] = !open },
+                modifier = Modifier.testTag("assistant-reasoning-block"),
+                icon = KitIcons.idea,
+            ) {
+                DetailMarkdown(key, part.text.trim(), reply, thought = true)
+            }
+            return
+        }
         val bodyPart: @Composable () -> Unit = { DetailMarkdown(key, body, reply, thought = true) }
         // On an opened work line's rail a thought is one line like every step: a dot, its words, no chevron (Flutter
         // `_Fold` on a timeline); anywhere else it keeps its row with the kit's chevron. A one-line thought has nothing

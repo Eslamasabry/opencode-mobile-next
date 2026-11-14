@@ -2,6 +2,10 @@
 <resources>
     <string name="chatHistoryReadFailed">Older messages could not be loaded. Your loaded messages are still here. Try again.</string>
     <string name="chatTranscriptTokens">%1$s tokens</string>
+    <string name="chatReplyFooterTokensK">%1$sk tokens</string>
+    <string name="chatReplyFooterTokensM">%1$sM tokens</string>
+    <string name="chatReplyFooterCost">$%1$s</string>
+    <string name="chatReplyFooterCostUnderCent">under $0.01</string>
     <string name="chatTranscriptCost">Estimated cost: $%1$s</string>
     <string name="chatHistoryTitle">Reuse a prompt</string>
     <string name="chatHistorySubtitle">Choose words from this conversation or your recent sends. They are added to your draft; nothing is sent.</string>

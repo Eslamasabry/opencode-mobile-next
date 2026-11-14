@@ -30,6 +30,17 @@ public data class TurnMetadataUi(
      * model than the turn before it, or changed model part-way ("Sonnet 4", "Sonnet 4 → Opus 4.1"); null otherwise.
      */
     val footerModel: String? = null,
+    /** When the reply finished (its newest assistant message's end, else its start), for the footer's clock time. */
+    val endedAtMs: Long? = null,
+    /** How long it took, from the prompt being sent to [endedAtMs]; null when either time is unknown. */
+    val tookMs: Long? = null,
+    /**
+     * D1 footer: the model that wrote the turn, named only when it is not the model of the conversation's newest reply
+     * (the model in use now); null otherwise.
+     */
+    val otherModel: String? = null,
+    /** The turn's own model id (`provider/model`), newest last; null when the server named none. */
+    val model: String? = null,
 )
 
 public enum class TurnEndNote {
@@ -238,7 +249,11 @@ internal fun transcriptReading(
                 }
         // F: transcript_turns.dart `_messageMeta`: the model is named when it differs from the one before the turn.
         val changed = models.isNotEmpty() && (models.size > 1 || models.first() != previousModel)
-        if (!live && assistants.isNotEmpty())
+        if (!live && assistants.isNotEmpty()) {
+            val ended = assistants.mapNotNull { it.info.time?.completedMs ?: it.info.time?.createdMs }.maxOrNull()
+            val sent =
+                turn.messages.firstOrNull { it.info.role == Role.User }?.info?.time?.createdMs
+                    ?: assistants.mapNotNull { it.info.time?.createdMs }.minOrNull()
             metadata[turn.turnId] =
                 TurnMetadataUi(
                     models,
@@ -247,7 +262,11 @@ internal fun transcriptReading(
                     turnIndex == snapshot.turns.lastIndex,
                     footerModel =
                         if (changed) models.joinToString(" → ") { ReplyModelNames.fromId(it) } else null,
+                    endedAtMs = ended,
+                    tookMs = if (ended != null && sent != null && ended > sent) ended - sent else null,
+                    model = models.lastOrNull(),
                 )
+        }
         if (models.isNotEmpty()) previousModel = models.last()
         val parts =
             turn.messages.flatMap { m ->
@@ -317,6 +336,12 @@ internal fun transcriptReading(
                 thoughts.drop(1).forEach { p -> hidden += "${p.messageId}/${p.id}" }
             }
         }
+    }
+    // D1 footer: a reply names its model only when it is not the model of the conversation's newest reply.
+    val now = previousModel
+    for ((turnId, meta) in metadata.entries.toList().map { it.key to it.value }) {
+        val own = meta.model
+        if (own != null && now != null && own != now) metadata[turnId] = meta.copy(otherModel = ReplyModelNames.fromId(own))
     }
     return TranscriptReadingUi(details, hidden, work, metadata, endNotes, switches, thoughtWork)
 }

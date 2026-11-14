@@ -1,9 +1,11 @@
 package io.github.eslamasabry.oc.feature.chat.ui
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.Saver
@@ -21,32 +23,66 @@ import io.github.eslamasabry.oc.engine.transcript.turnfacts.ConnectorSearchOutco
 import io.github.eslamasabry.oc.engine.transcript.turnfacts.ToolArtifact
 import io.github.eslamasabry.oc.engine.transcript.turnfacts.ToolDetail
 import io.github.eslamasabry.oc.engine.transcript.turnfacts.ToolKind
+import io.github.eslamasabry.oc.core.common.text.Numbers
+import io.github.eslamasabry.oc.feature.chat.presentation.StepEntry
+import io.github.eslamasabry.oc.feature.chat.presentation.StepFold
+import io.github.eslamasabry.oc.feature.chat.presentation.StepListRules
 import io.github.eslamasabry.oc.feature.chat.presentation.TranscriptDetailUi
 import io.github.eslamasabry.oc.feature.chat.presentation.TurnResultUi
 import io.github.eslamasabry.oc.feature.chat.presentation.WorkEntryUi
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
-import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
+import io.github.eslamasabry.oc.ui.kit.request.KitRequestWords
+import io.github.eslamasabry.oc.ui.kit.status.KitStepTreeActions
+import io.github.eslamasabry.oc.ui.kit.status.KitStepTreeWords
+import io.github.eslamasabry.oc.ui.kit.status.KitTreeStep
+import io.github.eslamasabry.oc.ui.kit.status.KitTreeStepState
 import io.github.eslamasabry.oc.ui.kit.row.KitExpandRow
 import io.github.eslamasabry.oc.ui.kitchat.header.rememberKitMask
 import io.github.eslamasabry.oc.ui.kitchat.tool.KitCommandBox
+import io.github.eslamasabry.oc.ui.kitchat.tool.KitStepFold
+import io.github.eslamasabry.oc.ui.kitchat.tool.KitStepFoldLine
+import io.github.eslamasabry.oc.ui.kitchat.tool.KitStepGroup
+import io.github.eslamasabry.oc.ui.kitchat.tool.KitStepList
 import io.github.eslamasabry.oc.ui.kitchat.tool.KitToolKind
 import io.github.eslamasabry.oc.ui.kitchat.tool.KitToolRow
 import io.github.eslamasabry.oc.ui.kitchat.tool.KitToolStatus
 import io.github.eslamasabry.oc.ui.kitchat.tool.KitToolView
-import io.github.eslamasabry.oc.ui.kitchat.tool.kitWorkIcon
 import io.github.eslamasabry.oc.ui.kitchat.transcript.KitQuietLine
-import io.github.eslamasabry.oc.ui.kitchat.turn.KIT_WORK_STEP_CAP
-import io.github.eslamasabry.oc.ui.kitchat.turn.KitWorkLine
-import io.github.eslamasabry.oc.ui.kitchat.turn.KitWorkState
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.chatUiConnectorSearchEmpty
 import io.github.eslamasabry.oc.ui.words.res.chatUiConnectorSearchNotLoaded
 import io.github.eslamasabry.oc.ui.words.res.chatUiConnectorSearchOff
 import io.github.eslamasabry.oc.ui.words.res.chatUiConnectorSearchUnavailable
 import io.github.eslamasabry.oc.ui.words.res.chatStepDeclinedNote
+import io.github.eslamasabry.oc.ui.words.res.approvalDeny
+import io.github.eslamasabry.oc.ui.words.res.chatUiDurationMinutesSeconds
+import io.github.eslamasabry.oc.ui.words.res.chatUiDurationSeconds
 import io.github.eslamasabry.oc.ui.words.res.chatUiGeneratedFile
+import io.github.eslamasabry.oc.ui.words.res.edgeLightActionOn
+import io.github.eslamasabry.oc.ui.words.res.edgeLightAnswer
+import io.github.eslamasabry.oc.ui.words.res.edgeLightHideSubAgents
+import io.github.eslamasabry.oc.ui.words.res.edgeLightMoreInside
+import io.github.eslamasabry.oc.ui.words.res.edgeLightMoreSubAgents
+import io.github.eslamasabry.oc.ui.words.res.edgeLightNotStarted
+import io.github.eslamasabry.oc.ui.words.res.edgeLightPausedUntilAnswer
+import io.github.eslamasabry.oc.ui.words.res.edgeLightShowSubAgents
+import io.github.eslamasabry.oc.ui.words.res.edgeLightStop
+import io.github.eslamasabry.oc.ui.words.res.edgeLightWorking
+import io.github.eslamasabry.oc.ui.words.res.kitRequestAllowOnce
+import io.github.eslamasabry.oc.ui.words.res.kitToolDeclined
+import io.github.eslamasabry.oc.ui.words.res.kitToolFailed
+import io.github.eslamasabry.oc.ui.words.res.kitToolStopped
+import io.github.eslamasabry.oc.ui.words.res.kitWorkFoldDeclined
+import io.github.eslamasabry.oc.ui.words.res.kitWorkFoldFailed
+import io.github.eslamasabry.oc.ui.words.res.kitWorkHideEarlierSteps
+import io.github.eslamasabry.oc.ui.words.res.kitWorkSeparator
+import io.github.eslamasabry.oc.ui.words.res.kitWorkSubAgentSpoken
+import io.github.eslamasabry.oc.ui.words.res.kitWorkSubAgents
+import io.github.eslamasabry.oc.ui.words.res.kitWorkSubAgentsDone
+import io.github.eslamasabry.oc.ui.words.res.kitWorkSubAgentsStopped
+import io.github.eslamasabry.oc.ui.words.res.kitWorkSubAgentsWorking
 import io.github.eslamasabry.oc.ui.words.res.kitCodeShowAll
 import io.github.eslamasabry.oc.ui.words.res.toolCardRunCommandAgain
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
@@ -131,20 +167,14 @@ internal fun rememberTranscriptFolds(): TranscriptFolds =
         TranscriptFolds(mutableStateMapOf(), mutableStateMapOf(), mutableStateMapOf())
     }
 
-private fun WorkLineState.toKit(): KitWorkState =
-    when (this) {
-        WorkLineState.Running -> KitWorkState.Running
-        WorkLineState.WaitingForYou -> KitWorkState.WaitingForYou
-        WorkLineState.Done -> KitWorkState.Done
-        WorkLineState.EndedFailed -> KitWorkState.EndedFailed
-        WorkLineState.Stopped -> KitWorkState.Stopped
-    }
-
 /**
- * A turn's work under ONE line (B-CHAT-063, plan 09 chat-transcript-turn-model). Folded, it says
- * what was done (or, while running, what is happening now); open, it lists the steps oldest first,
- * each a [KitToolRow] in plain words with its status, duration and counts (B-CHAT-109/111), opening
- * to its output (B-CHAT-112). Ended-failed work opens by itself until the person folds it.
+ * A turn's work as its steps (D1 "steps only", owner 2026-11-14; B-CHAT-063, plan 09 chat-transcript-turn-model): no
+ * summary line. One row per step on a thin rail, in the order it happened: each tool step a [KitToolRow] in plain words
+ * with its status, duration and counts (B-CHAT-109/111), opening to its output (B-CHAT-112); a thought or short passing
+ * words where they happened; sub-agents started together as one group row with its children on a small tree. The
+ * newest [StepListRules.SHOWN] rows stay in view while the turn runs and after it ends; older ones fold behind one first
+ * row that names what it hides that matters ("1 declined · 1 failed"). That fold is the transcript's "work:<turn>" fold,
+ * so Find opens it for a match inside.
  */
 @Composable
 internal fun TurnWorkLine(
@@ -157,89 +187,182 @@ internal fun TurnWorkLine(
     reasoningExpanded: Boolean = false,
     reply: ReplyActions? = null,
     onCompactAgain: (() -> Unit)? = null,
-    /**
-     * Non-null while a step runs and the person tapped the live line to see the steps (Flutter `openWhileRunning`):
-     * the line is drawn opened, and tapping it hides the steps again.
-     */
-    openWhileRunning: (() -> Unit)? = null,
 ) {
-    val key = "work:${work.turnId}"
-    val kitState = work.state.toKit()
-    val expanded = openWhileRunning != null || (folds.open[key] ?: kitState.opensByDefault)
-    val summary = workSummary(work)
-    val now = work.now
-    // Folded while the turn runs, the line names the real current step with its count; opened, it says the summary
-    // and the running step on the rail carries the progress (Flutter `KitWorkLine`).
-    val nowLabel = if (now != null) nowWords(now, work.counts) else null
-    val c = work.counts
-    // F: kit_work_line.dart:273-281 and transcript_rows.dart:489-491: a running line keeps its newest three steps in
-    // view (when at least three more came before them); the earlier ones fold behind "Show N earlier steps".
-    val window =
-        if (work.state == WorkLineState.Running && work.steps.size >= RUNNING_TAIL + 3) RUNNING_TAIL
-        else KIT_WORK_STEP_CAP
-    val hidden =
-        if (work.state == WorkLineState.Running)
-            (work.steps.size - window - (folds.earlier[key] ?: 0)).coerceAtLeast(0)
-        else 0
-    val earlier =
-        if (expanded && hidden > 0) {
-            val n = minOf(hidden, KIT_WORK_STEP_CAP)
-            KitLineAction(
-                pluralStringResource(Res.plurals.kitWorkEarlierSteps, n, n),
-                {
-                    folds.earlier[key] = (folds.earlier[key] ?: 0) + n
-                },
-            )
-        } else null
-    KitWorkLine(
-        label = summary,
-        stateWords = workStateWords(work.state),
-        state = kitState,
-        expanded = expanded,
-        onToggle = { if (openWhileRunning != null) openWhileRunning() else folds.open[key] = it },
-        earlier = earlier,
-        icon = kitWorkIcon(c.read, c.searched, c.listed, c.edited, c.ran, c.fetched, c.delegated, c.other),
-        now = nowLabel,
-        // The reply's 16 dp edge: the line's glyph and the rail sit on it, the steps' words one column in.
-        modifier = Modifier.padding(horizontal = Space.S4.dp).testTag("chat-work-line"),
-    ) {
-        if (entries.isEmpty()) {
-            val shown = work.steps.drop(hidden).distinctBy(::stepIdentity)
-            shown.forEach { step ->
-                StepRow(step, nowMs, folds, onOpenSession, onOpenFile, reply, waitingForYou = stepWaitsForYou(step.state, work.state))
-            }
-        } else {
-            var skipped = 0
-            // N-45: the same step reported twice (same part, same command, same state) is one row.
-            val seen = HashSet<String>()
-            val stepQueues = work.steps.groupBy { it.partId }.mapValues { ArrayDeque(it.value) }
-            for (entry in entries) when (entry) {
-                is WorkEntryUi.Step -> {
-                    val step = stepQueues[entry.partId]?.removeFirstOrNull() ?: continue
-                    if (!seen.add(stepIdentity(step))) continue
-                    if (skipped++ >= hidden)
-                        StepRow(step, nowMs, folds, onOpenSession, onOpenFile, reply, waitingForYou = stepWaitsForYou(step.state, work.state))
-                }
-                is WorkEntryUi.Detail ->
-                    if (skipped >= hidden)
-                        TranscriptDetail(
-                            entry.value,
-                            folds,
-                            reasoningExpanded,
-                            reply,
-                            onCompactAgain,
-                            onOpenSession,
-                        )
+    val foldKey = "work:${work.turnId}"
+    val rows = remember(work, entries) { StepListRules.entries(work, entries) }
+    val cut = remember(rows) { StepListRules.cut(rows) }
+    val open = folds.open[foldKey] == true
+    val treeWords = rememberStepTreeWords()
+    val entry: @Composable (StepEntry) -> Unit = { row ->
+        key(row.key) {
+            when (row) {
+                is StepEntry.Step ->
+                    StepRow(row.step, nowMs, folds, onOpenSession, onOpenFile, reply, waitingForYou = stepWaitsForYou(row.step.state, work.state))
+                is StepEntry.Detail -> TranscriptDetail(row.detail, folds, reasoningExpanded, reply, onCompactAgain, onOpenSession)
+                is StepEntry.Group -> SubAgentGroup(row, work.state, onOpenSession, treeWords)
             }
         }
+    }
+    val earlier: (@Composable ColumnScope.() -> Unit)? =
+        if (cut.earlier.isEmpty()) null
+        else {
+            { cut.earlier.forEach { entry(it) } }
+        }
+    KitStepList(
+        // The reply's 16 dp edge: the glyphs and the rail sit on it, the steps' words one column in.
+        modifier = Modifier.padding(horizontal = Space.S4.dp).testTag("chat-work-line"),
+        fold = cut.fold?.let { stepFoldLine(it, open) { folds.open[foldKey] = !open } },
+        earlier = earlier,
+    ) {
+        cut.shown.forEach { entry(it) }
+    }
+}
+
+/** The fold row's words: "Show 5 earlier steps" and what lies inside ("1 declined · 1 failed"), or "Hide earlier steps". */
+@Composable
+private fun stepFoldLine(fold: StepFold, open: Boolean, onToggle: () -> Unit): KitStepFoldLine {
+    val sep = stringResource(Res.string.kitWorkSeparator)
+    val note =
+        listOfNotNull(
+                fold.declined.takeIf { it > 0 }?.let { pluralStringResource(Res.plurals.kitWorkFoldDeclined, it, it) },
+                fold.failed.takeIf { it > 0 }?.let { pluralStringResource(Res.plurals.kitWorkFoldFailed, it, it) },
+            )
+            .joinToString(sep)
+            .ifEmpty { null }
+    return KitStepFoldLine(
+        label =
+            if (open) stringResource(Res.string.kitWorkHideEarlierSteps)
+            else pluralStringResource(Res.plurals.kitWorkEarlierSteps, fold.hidden, fold.hidden),
+        // Opened, the problems are in view on their own rows.
+        note = if (open) null else note,
+        open = open,
+        onToggle = onToggle,
+    )
+}
+
+/**
+ * Sub-agents the agent started together (D1): one row, "2 sub-agents · 1 done · 1 working", folded until the person
+ * opens it; opened, each sub-agent hangs on the shared step tree by its own description, in its own state, and a tap
+ * opens the conversation it ran in. A finished one says how long its call took (its own start and end); a working one
+ * says only that it works (sub-agents carry no clock of their own).
+ */
+@Composable
+private fun SubAgentGroup(
+    group: StepEntry.Group,
+    work: WorkLineState,
+    onOpenSession: ((String) -> Unit)?,
+    words: KitStepTreeWords,
+) {
+    val mask = rememberKitMask()
+    val c = StepListRules.counts(group)
+    val sep = stringResource(Res.string.kitWorkSeparator)
+    val note =
+        listOfNotNull(
+                c.done.takeIf { it > 0 }?.let { pluralStringResource(Res.plurals.kitWorkSubAgentsDone, it, it) },
+                c.working.takeIf { it > 0 }?.let { pluralStringResource(Res.plurals.kitWorkSubAgentsWorking, it, it) },
+                c.failed.takeIf { it > 0 }?.let { pluralStringResource(Res.plurals.kitWorkFoldFailed, it, it) },
+                c.declined.takeIf { it > 0 }?.let { pluralStringResource(Res.plurals.kitWorkFoldDeclined, it, it) },
+                c.stopped.takeIf { it > 0 }?.let { pluralStringResource(Res.plurals.kitWorkSubAgentsStopped, it, it) },
+            )
+            .joinToString(sep)
+            .ifEmpty { null }
+    val stopped = stringResource(Res.string.kitToolStopped)
+    val sessions = group.steps.associate { it.partId to it.facts.childSessionId }
+    val children =
+        group.steps.map { s ->
+            val name = s.facts.subject?.takeIf { it.isNotBlank() }?.let(mask) ?: stepTitle(s.facts)
+            KitTreeStep(
+                key = s.partId,
+                name = name,
+                state = subAgentState(s.state),
+                seconds = s.durationMs?.takeIf { s.state == StepState.Done }?.let { it / 1_000 },
+                denied = s.state == StepState.Declined,
+                word = if (s.state == StepState.Stopped || s.state == StepState.NotRun) stopped else null,
+            )
+        }
+    KitStepGroup(
+        name = pluralStringResource(Res.plurals.kitWorkSubAgents, group.steps.size, group.steps.size),
+        note = note,
+        children = children,
+        words = words,
+        modifier = Modifier.testTag("chat-step-group-${group.steps.first().partId}"),
+        live = c.working > 0 && work == WorkLineState.Running,
+        actions =
+            KitStepTreeActions(
+                onOpen = { step -> sessions[step.key.toString()]?.let { id -> onOpenSession?.invoke(id) } }
+            ),
+    )
+}
+
+/** A sub-agent's place on the tree, from its call's state (a declined one is drawn failed, said "You declined this"). */
+private fun subAgentState(state: StepState): KitTreeStepState =
+    when (state) {
+        StepState.Pending,
+        StepState.Running -> KitTreeStepState.Working
+        StepState.Done -> KitTreeStepState.Done
+        StepState.Failed,
+        StepState.Declined -> KitTreeStepState.Failed
+        StepState.Stopped,
+        StepState.NotRun -> KitTreeStepState.NotStarted
+    }
+
+/** The shared step tree's words in the conversation (the edge light's own words where they are the same). */
+@Composable
+internal fun rememberStepTreeWords(): KitStepTreeWords {
+    val working = stringResource(Res.string.edgeLightWorking)
+    val notStarted = stringResource(Res.string.edgeLightNotStarted)
+    val needsYou = stringResource(Res.string.kitWorkWaitingForYou)
+    val paused = stringResource(Res.string.edgeLightPausedUntilAnswer)
+    val denied = stringResource(Res.string.kitToolDeclined)
+    val failed = stringResource(Res.string.kitToolFailed)
+    val moreInside = stringResource(Res.string.edgeLightMoreInside)
+    val more = stringResource(Res.string.edgeLightMoreSubAgents)
+    val seconds = stringResource(Res.string.chatUiDurationSeconds)
+    val minutes = stringResource(Res.string.chatUiDurationMinutesSeconds)
+    val stop = stringResource(Res.string.edgeLightStop)
+    val spoken = stringResource(Res.string.kitWorkSubAgentSpoken)
+    val unfold = stringResource(Res.string.edgeLightShowSubAgents)
+    val fold = stringResource(Res.string.edgeLightHideSubAgents)
+    val allowOnce = stringResource(Res.string.kitRequestAllowOnce)
+    val deny = stringResource(Res.string.approvalDeny)
+    val answer = stringResource(Res.string.edgeLightAnswer)
+    val actionOn = stringResource(Res.string.edgeLightActionOn)
+    return remember(working, notStarted, needsYou, paused, denied, failed, moreInside, more, seconds, minutes, stop, spoken, unfold, fold, allowOnce, deny, answer, actionOn) {
+        fun on(action: String, target: String) = actionOn.replace("%1\$s", action).replace("%2\$s", target)
+        KitStepTreeWords(
+            working = working,
+            notStarted = notStarted,
+            needsYou = needsYou,
+            paused = paused,
+            denied = denied,
+            failed = failed,
+            moreInside = { moreInside.replace("%1\$s", Numbers.format(it)) },
+            more = { more.replace("%1\$s", Numbers.format(it)) },
+            duration = { s ->
+                if (s < 60) seconds.replace("%1\$s", Numbers.format(s))
+                else minutes.replace("%1\$s", Numbers.format(s / 60)).replace("%2\$s", (s % 60).toString().padStart(2, '0'))
+            },
+            stop = { stop.replace("%1\$s", it) },
+            spoken = { step, said -> spoken.replace("%1\$s", step.name).replace("%2\$s", said) },
+            unfold = unfold,
+            fold = fold,
+            request =
+                KitRequestWords(
+                    allowOnce = allowOnce,
+                    deny = deny,
+                    answer = answer,
+                    allowOn = { on(allowOnce, it) },
+                    denyOn = { on(deny, it) },
+                    answerOn = { on(answer, it) },
+                ),
+        )
     }
 }
 
 /**
- * Review #13 (C-022): the work line of a turn whose only work is thinking. Reasoning is work: it folds under one line,
- * "Thought", shut by default like every finished work line, never a loose paragraph above the reply. Opened, each
- * thought is a line on the rail and opens as the chat's reasoning setting says ([reasoningExpanded]). Nothing is drawn
- * when no thought has words.
+ * Review #13 (C-022): the work of a turn whose only work is thinking. Reasoning is work: each thought is a "Thought"
+ * row on the step list's rail (D1), folded like every step and opening as the chat's reasoning setting says
+ * ([reasoningExpanded]); never a loose paragraph above the reply. Nothing is drawn when no thought has words.
  */
 @Composable
 internal fun ThoughtWorkLine(
@@ -255,58 +378,57 @@ internal fun ThoughtWorkLine(
 ) {
     val shown = thoughts.filter { hasThoughtWords(it.part.text) || thinking && it === thoughts.last() }
     if (shown.isEmpty()) return
-    val key = "work:$turnId"
-    val expanded = folds.open[key] ?: false
-    KitWorkLine(
-        label = stringResource(Res.string.kitMessageThought),
-        stateWords = null,
-        state = KitWorkState.Done,
-        expanded = expanded,
-        onToggle = { folds.open[key] = it },
-        icon = KitIcons.idea,
-        // The reply's 16 dp edge, as the turn's other work lines.
-        modifier = Modifier.padding(horizontal = Space.S4.dp).testTag("chat-work-line"),
-    ) {
-        shown.forEach { thought ->
+    val foldKey = "work:$turnId"
+    val rows = remember(shown) { shown.map { StepEntry.Detail(it) } }
+    val cut = remember(rows) { StepListRules.cut(rows) }
+    val open = folds.open[foldKey] == true
+    val entry: @Composable (StepEntry.Detail) -> Unit = { row ->
+        key(row.key) {
             TranscriptDetail(
-                thought,
+                row.detail,
                 folds,
                 reasoningExpanded,
                 reply,
                 onCompactAgain,
                 onOpenSession,
-                thinking = thinking && thought === thoughts.last(),
+                thinking = thinking && row.detail === thoughts.last(),
             )
         }
+    }
+    val earlier: (@Composable ColumnScope.() -> Unit)? =
+        if (cut.earlier.isEmpty()) null
+        else {
+            { cut.earlier.forEach { entry(it as StepEntry.Detail) } }
+        }
+    KitStepList(
+        // The reply's 16 dp edge, as the turn's other steps.
+        modifier = Modifier.padding(horizontal = Space.S4.dp).testTag("chat-work-line"),
+        fold = cut.fold?.let { stepFoldLine(it, open) { folds.open[foldKey] = !open } },
+        earlier = earlier,
+    ) {
+        cut.shown.forEach { entry(it as StepEntry.Detail) }
     }
 }
 
 /**
  * Audit 1, item 6: a thought the transcript's reading does not know (a row that arrived before the ledger held its part)
- * is still a folded "Thought" line, never its words printed as a grey paragraph; opened, it shows the thought's text.
+ * is still a folded "Thought" step, never its words printed as a grey paragraph; opened, it shows the thought's text.
  */
 @Composable
 internal fun FoldedThoughtLine(rowKey: String, text: String, folds: TranscriptFolds?) {
     val key = "thought-line:$rowKey"
-    KitWorkLine(
-        label = stringResource(Res.string.kitMessageThought),
-        stateWords = null,
-        state = KitWorkState.Done,
-        expanded = folds?.open?.get(key) ?: false,
-        onToggle = { folds?.open?.put(key, it) },
-        icon = KitIcons.idea,
-        modifier = Modifier.padding(horizontal = Space.S4.dp).testTag("chat-work-line"),
-    ) {
-        if (text.isNotBlank()) KitQuietLine(text.trim())
+    val open = folds?.open?.get(key) ?: false
+    KitStepList(modifier = Modifier.padding(horizontal = Space.S4.dp).testTag("chat-work-line")) {
+        KitStepFold(
+            title = stringResource(Res.string.kitMessageThought),
+            expanded = open,
+            onToggle = { folds?.open?.put(key, !open) },
+            icon = KitIcons.idea,
+        ) {
+            if (text.isNotBlank()) KitQuietLine(text.trim())
+        }
     }
 }
-
-/** How many of the newest steps a running work line keeps in view when opened (Dart `tail: 3`). */
-private const val RUNNING_TAIL = 3
-
-/** What makes two step rows the same step: its part, its kind, what it ran and how it ended. */
-private fun stepIdentity(step: TurnStep): String =
-    "${step.partId}|${step.facts.kind}|${step.facts.subject}|${step.state}"
 
 @Composable
 internal fun nowWords(step: TurnStep, counts: WorkCounts): String {
