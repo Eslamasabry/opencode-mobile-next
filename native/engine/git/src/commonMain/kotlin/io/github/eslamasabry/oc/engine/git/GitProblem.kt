@@ -11,6 +11,12 @@ public enum class GitProblem {
     GitMissing,
     FolderMissing,
     EnvironmentUnavailable,
+
+    /** The place answered but has no room to run a command (no temporary folder it can write). */
+    NoWorkingSpace,
+
+    /** The server answered, and refused to run the command (a sign-in or server error, not a missing server). */
+    ServerRefusedCommand,
     ServerCannotRunCommands,
     OutputTooLarge,
     TimedOut,

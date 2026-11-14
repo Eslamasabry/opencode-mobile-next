@@ -25,6 +25,8 @@ internal fun gitProblemText(problem: GitProblem, offersGitHubSignIn: Boolean = f
             GitProblem.GitMissing -> Res.string.gitProblemGitMissing
             GitProblem.FolderMissing -> Res.string.gitProblemFolderMissing
             GitProblem.EnvironmentUnavailable -> Res.string.gitProblemEnvironmentUnavailable
+            GitProblem.NoWorkingSpace -> Res.string.gitProblemNoWorkingSpace
+            GitProblem.ServerRefusedCommand -> Res.string.gitProblemServerRefusedCommand
             GitProblem.ServerCannotRunCommands -> Res.string.gitProblemServerCannotRunCommands
             GitProblem.OutputTooLarge -> Res.string.gitProblemOutputTooLarge
             GitProblem.TimedOut -> Res.string.gitProblemTimedOut

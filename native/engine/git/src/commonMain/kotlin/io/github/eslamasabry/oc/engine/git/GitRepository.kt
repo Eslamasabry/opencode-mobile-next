@@ -950,6 +950,7 @@ public class GitRepository(
                                 GitShellFailure.Unavailable -> GitProblem.EnvironmentUnavailable
                                 GitShellFailure.Unsupported -> GitProblem.ServerCannotRunCommands
                                 GitShellFailure.TimedOut -> GitProblem.TimedOut
+                                GitShellFailure.Refused -> GitProblem.ServerRefusedCommand
                             },
                             reply.details,
                         )
@@ -975,7 +976,7 @@ public class GitRepository(
                     when (problem) {
                         GitEnvelopeProblem.FolderMissing -> GitProblem.FolderMissing
                         GitEnvelopeProblem.GitMissing -> GitProblem.GitMissing
-                        GitEnvelopeProblem.NoTemp -> GitProblem.EnvironmentUnavailable
+                        GitEnvelopeProblem.NoTemp -> GitProblem.NoWorkingSpace
                         GitEnvelopeProblem.Truncated -> GitProblem.OutputTooLarge
                     }
                 )
