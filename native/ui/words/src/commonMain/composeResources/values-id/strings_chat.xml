@@ -434,9 +434,6 @@
         <item quantity="other">%1$s referensi ditambahkan sebagai teks saat Anda mengirim. Tidak disimpan bersama draf.</item>
     </plurals>
     <string name="chatUiAttachedCount">%1$s dilampirkan</string>
-    <plurals name="chatUiEarlierMessageCount">
-        <item quantity="other">%1$s pesan sebelumnya</item>
-    </plurals>
     <string name="chatUiTokenCount">%1$s token</string>
     <string name="chatUiPositionOfTotal">%1$s dari %2$s</string>
     <string name="chatUiSubagentCount">Percakapan yang didelegasikan · %1$s</string>

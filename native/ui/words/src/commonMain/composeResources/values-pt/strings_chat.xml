@@ -672,11 +672,6 @@
         <item quantity="many">%1$s de perguntas</item>
         <item quantity="other">%1$s perguntas</item>
     </plurals>
-    <plurals name="chatUiEarlierMessageCount">
-        <item quantity="one">1 mensagem anterior</item>
-        <item quantity="many">%1$s de mensagens anteriores</item>
-        <item quantity="other">%1$s mensagens anteriores</item>
-    </plurals>
     <string name="chatUiTokenCount">%1$s tokens</string>
     <string name="chatUiPositionOfTotal">%1$s de %2$s</string>
     <string name="chatUiToolsSummary">Ferramentas: %1$s</string>

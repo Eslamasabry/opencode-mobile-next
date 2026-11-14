@@ -77,7 +77,7 @@ class FindBarTest {
         val presenter = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
         setContent {
             KitTheme(platform = DesktopKitPlatform(), appearance = KitAppearance(motion = MotionLevel.Off)) {
-                TranscriptFindBar(FindUi("below", 4, 3, "hit", 0, false, excerpt = "values below one are clamped"), presenter)
+                TranscriptFindBar(FindUi("below", 4, 3, "hit", 0, false), presenter)
             }
         }
         val field = onNodeWithTag("kit-search-field", useUnmergedTree = true).getBoundsInRoot()

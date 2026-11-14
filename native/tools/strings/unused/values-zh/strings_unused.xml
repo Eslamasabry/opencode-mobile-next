@@ -378,4 +378,7 @@
     <string name="termuxRetiredNotice">Termux 已不再受支持。请在此手机上设置内置 Linux，或连接你的电脑。你在 Termux 中的项目仍然在那里；把它们复制到手机的共享存储，或用 Git 推送，即可迁移过来。</string>
     <string name="termuxRetiredSetUpLinux">设置内置 Linux</string>
     <string name="capabilityStateHere">此处可用</string>
+    <plurals name="chatUiEarlierMessageCount">
+        <item quantity="other">%1$s 条更早的消息</item>
+    </plurals>
 </resources>

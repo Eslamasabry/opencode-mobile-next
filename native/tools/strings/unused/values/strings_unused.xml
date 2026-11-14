@@ -432,4 +432,8 @@
     <string name="phoneSetupErrorNodeUnsupported">This phone's system can't run Node.js inside built-in Linux. You can still use OpenCode Mobile by connecting to your computer.</string>
     <string name="phoneSetupConnectComputer">Connect a computer</string>
     <string name="capabilityStateHere">Works here</string>
+    <plurals name="chatUiEarlierMessageCount">
+        <item quantity="one">1 earlier message</item>
+        <item quantity="other">%1$s earlier messages</item>
+    </plurals>
 </resources>

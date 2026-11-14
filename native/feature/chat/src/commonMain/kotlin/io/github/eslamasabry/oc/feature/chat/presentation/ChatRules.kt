@@ -181,6 +181,15 @@ public object TranscriptFind {
         return if (kept >= 0) kept else cursor.coerceIn(0, hits.size - 1)
     }
 
+    /**
+     * Which match of its own text the hit at [cursor] is: how many hits of the same row and text come before it
+     * (0 for the first). The transcript marks that match, counted the same way in what it draws.
+     */
+    public fun ordinalOf(hits: List<FindHit>, cursor: Int): Int {
+        val hit = hits.getOrNull(cursor) ?: return 0
+        return hits.subList(0, cursor).count { it.rowKey == hit.rowKey && it.sourceId == hit.sourceId }
+    }
+
     /** Next (+1) or previous (-1), wrapping (Flutter `_navigateFind`). */
     public fun step(size: Int, cursor: Int, by: Int): Int =
         if (size == 0) -1 else ((cursor + by) % size + size) % size

@@ -241,7 +241,13 @@ public data class FindUi(
     val searchingAll: Boolean = false,
     val loadingOlder: Boolean = false,
     val olderFailure: Failure? = null,
-    val excerpt: String? = null,
+    /**
+     * Which match of its own text the current hit is (0 = the first in that row's text): the transcript marks that one
+     * with the stronger tint. Counted among the hits of the same row and text, in reading order.
+     */
+    val currentOrdinal: Int = 0,
+    /** The part of the row the current hit is in (a step's or a thought's own id); equals the row's key for its text. */
+    val currentSource: String? = null,
 )
 
 public data class TimelineEntryUi(
