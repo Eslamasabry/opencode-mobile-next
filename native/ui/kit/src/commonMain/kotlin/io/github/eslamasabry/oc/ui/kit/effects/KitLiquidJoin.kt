@@ -757,13 +757,12 @@ float4 holdSample(float2 p) {
     float l = dot(rgb, float3(0.213, 0.715, 0.072));
     return float4(clamp(cc.y * (l + cc.x * (rgb - l)) + (0.5 - 0.5 * cc.y + cc.z), 0.0, 1.0), s.a);
 }
-// How deep inside the body's rim a sample (lens-pass px) lies, for the local hold's mean: 0 in the rim's outer half, 1
-// from its inner end on (this side's rim, the plain union of the two boxes: the blend's few px do not matter here).
-float deepAt(float2 q) {
+// How deep inside the body a sample (lens-pass px) lies, in this side's rim widths, for the local hold's mean (the plain
+// union of the two boxes: the blend's few px do not matter here); far inside where there is no rim.
+float rimDepth(float2 q) {
     float2 p = q / res;
     float depth = -min(sdBox(p, a, ra), sdBox(p, b, rb));
-    float rw = rim.x;
-    return rw > 0.0 ? ss(0.5 * rw, rw, depth) : 1.0;
+    return rim.x > 0.0 ? depth / rim.x : 1000.0;
 }
 """ + LiquidHoldShader.LOCAL_HOLD + """
 

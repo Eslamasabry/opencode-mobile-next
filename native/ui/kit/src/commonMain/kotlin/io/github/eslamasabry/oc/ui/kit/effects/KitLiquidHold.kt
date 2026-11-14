@@ -40,9 +40,11 @@ internal object LiquidHoldShader {
      * 37 taps per pixel, as before.
      *
      * Cut audit 2 (2026-11-14): a point in the calm middle takes its mean from the calm middle only (each sample weighted
-     * by how deep it lies, `deepAt`, which each shader defines before this): the rim, where a modal pane shows the page
-     * it borders, would otherwise carry that page into the middle as a soft cloud of its colour (a chip across a menu's
-     * edge as a green haze under its first row). A point in the rim's outer half reads every sample, as before.
+     * by how deep it lies, `rimDepth`, which each shader defines before this: a sample counts from three quarters of the
+     * rim's width in): the rim, where a modal pane shows the page it borders, would otherwise carry that page into the
+     * middle as a soft cloud of its colour (a chip across a menu's edge as a green haze under its first row; modelled on a
+     * white block across a menu's edge: 68/255 just past the rim, 30 at 34-50 dp; now none). A point in the rim's outer
+     * half reads every sample, as before.
      */
     const val LOCAL_HOLD: String =
         """
@@ -62,7 +64,7 @@ float3 localHold(float2 at, float3 rgb, float deep, float scale, float lightInk)
         float t = 2.39996323 * float(i);
         float2 sp = at + float2(cos(t), sin(t)) * r;
         float4 s = holdSample(sp);
-        float wt = s.a * mix(1.0, deepAt(sp), deep);
+        float wt = s.a * mix(1.0, ss(0.75, 1.0, rimDepth(sp)), deep);
         sum += s.rgb * wt;
         wsum += wt;
         float k = inkOf(s.rgb, lightInk);
@@ -122,13 +124,13 @@ float4 holdSample(float2 p) {
     return float4(controlled(c.rgb / max(c.a, 0.0001)), c.a);
 }
 
-// How deep inside the lens's rim a point lies: 0 in the rim's outer half, 1 from its inner end on.
-float deepAt(float2 q) {
-    if (corner.y <= 0.0) return 1.0;
+// How deep inside the pane a point lies, in rim widths (1: the rim's inner end); far inside where there is no rim.
+float rimDepth(float2 q) {
+    if (corner.y <= 0.0) return 1000.0;
     float k = clamp(corner.x, 0.0, min(box.z, box.w));
     float2 d = abs(q - (box.xy + box.zw)) - box.zw + k;
     float depth = -(length(max(d, 0.0)) + min(max(d.x, d.y), 0.0) - k);
-    return ss(0.5 * corner.y, corner.y, depth);
+    return depth / corner.y;
 }
 """ + LOCAL_HOLD + """
 half4 main(float2 q) {
@@ -136,7 +138,7 @@ half4 main(float2 q) {
     float3 rgb = controls(q);
     // How deep inside the lens's rim this point lies: 0 in the rim's outer half, 1 from its inner end on. The rim, where
     // the bent content must show, keeps its detail and its colour.
-    float deep = deepAt(q);
+    float deep = ss(0.5, 1.0, rimDepth(q));
     // The local hold (LOCAL_HOLD): the page's detail pressed to its local mean, what looks like the pane's ink lifted to
     // the page's ground; then the knee below, as without it.
     if (local.x > 0.0) rgb = localHold(q, rgb, deep, 1.0, knee.z);
