@@ -1920,6 +1920,24 @@ internal class Oc2Gateway(
     override fun managedShellsAt(location: ServerLocation): ManagedShellGateway =
         Oc2ManagedShells(this, location)
 
+    /**
+     * Flutter api2 `loadBackgroundWorkSupport`: OpenCode 2 moves a running reply's sub-agents and shell commands to
+     * the background (stable 2.x and beta both serve `POST /session/{id}/background`). Without this the interface
+     * default (Unavailable) hid "Keep chatting while it runs" on every OpenCode 2 conversation.
+     */
+    override suspend fun backgroundWorkSupport(): Outcome<BackgroundWorkSupport> =
+        BackgroundWorkSupport.SubagentsAndShells.ok()
+
+    /**
+     * `POST /session/{id}/background` in the active location → 204. The server only acknowledges the request (an
+     * idle conversation is a no-op), so the answer is [BackgroundWorkResult.Requested]; the chat reads the
+     * conversation again.
+     */
+    override suspend fun backgroundSession(session: SessionId): Outcome<BackgroundWorkResult> =
+        json("/session/${sid(session)}/background", HttpMethod.Post, query = locationQuery()).map {
+            BackgroundWorkResult.Requested
+        }
+
     override suspend fun startManagedShell(
         command: String,
         directory: String,
