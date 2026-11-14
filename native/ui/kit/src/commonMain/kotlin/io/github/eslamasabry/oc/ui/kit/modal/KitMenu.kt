@@ -206,7 +206,16 @@ public fun KitMenu(
     // control just pressed, not from the empty box in the screen's corner (which put it over that ⋯).
     val origin = LocalKitPressOrigin.current
     val open = expanded && items.isNotEmpty()
-    val pressed = remember(open) { if (open) origin.take() else null }
+    val pressed = remember(open) { if (open) origin.takePress() else null }
+    // Finding 13: the row or message whose hold opened this menu keeps its held face while the menu is open.
+    val holder = pressed?.owner
+    if (holder != null) {
+        androidx.compose.runtime.DisposableEffect(holder) {
+            origin.holding = holder
+            onDispose { if (origin.holding === holder) origin.holding = null }
+        }
+    }
+    val band = with(androidx.compose.ui.platform.LocalDensity.current) { (MenuPlacement.HOLD_BAND_DP).dp.roundToPx() }
     // M-004: the transition lives above the Popup, so a closing menu stays composed until its fade has run (the Popup
     // used to leave on the frame the menu closed). What it shows while it fades is what it showed when it closed.
     val shown = remember { MutableTransitionState(false) }
@@ -219,7 +228,7 @@ public fun KitMenu(
     Box(modifier.onGloballyPositioned { own = it.menuAnchorBox() }) {
         anchor()
         if (MenuRules.composed(shown.currentState, shown.targetState) && last.items.isNotEmpty()) {
-            if (open) last.at = MenuPlacement.anchorFor(own, pressed)
+            if (open) last.at = MenuPlacement.anchorFor(own, pressed, band)
             // Smoothness round 2: in the window's own menu layer (KitSheetHost), never a popup window of its own (a new
             // window per open cost 11-13 % late frames in every style). Outside a host, the popup as before.
             val layer = LocalKitMenuLayer.current
@@ -793,6 +802,31 @@ public object MenuPlacement {
      */
     public fun anchorFor(own: IntRect, pressed: IntRect?): IntRect =
         if (pressed != null && own.width == 0 && own.height == 0) pressed else own
+
+    /**
+     * The box a menu opens from, with the press that opened it (cut audit 2, finding 13). A hold that knows where the
+     * finger was opens the menu AT what was held: beside the finger across (the panel starts or ends on its x), and
+     * just above or below the held part, or a [band] around the finger when the part is taller than that (a long
+     * message), never from a corner of the screen. That holds for an anchor-less menu and for a menu whose own anchor
+     * holds the finger (a home row wraps its menu). A press without a point keeps [anchorFor]'s rule.
+     */
+    public fun anchorFor(own: IntRect, press: io.github.eslamasabry.oc.ui.kit.foundation.KitPress?, band: Int): IntRect {
+        val point = press?.point ?: return anchorFor(own, press?.bounds)
+        val empty = own.width == 0 && own.height == 0
+        if (!empty && !own.contains(point)) return own
+        return held(press.bounds, point, band)
+    }
+
+    /** [anchorFor]'s box for a part held at [point]: zero wide on the finger, the part's height or [band] around it. */
+    public fun held(bounds: IntRect, point: IntOffset, band: Int): IntRect {
+        val x = point.x.coerceIn(bounds.left, bounds.right)
+        if (bounds.height <= band) return IntRect(x, bounds.top, x, bounds.bottom)
+        val top = (point.y - band / 2).coerceIn(bounds.top, bounds.bottom - band)
+        return IntRect(x, top, x, top + band)
+    }
+
+    /** How tall a held part may be before its menu opens beside the finger's band instead of beside the whole part. */
+    public const val HOLD_BAND_DP: Int = 96
 
     /**
      * The height a menu may take: the roomier side of the anchor, inside the window's top and bottom room (the safe
