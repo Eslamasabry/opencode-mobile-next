@@ -3,6 +3,7 @@ package io.github.eslamasabry.oc.feature.chat.presentation
 import io.github.eslamasabry.oc.engine.transcript.ledger.StepState
 import io.github.eslamasabry.oc.engine.transcript.ledger.TurnStep
 import io.github.eslamasabry.oc.engine.transcript.ledger.TurnWork
+import io.github.eslamasabry.oc.engine.transcript.ledger.WorkLineState
 import io.github.eslamasabry.oc.engine.transcript.turnfacts.ToolKind
 
 /** One row of a turn's step list (D1 "steps only", owner 2026-11-14), in the turn's real order. */
@@ -26,7 +27,20 @@ public sealed interface StepEntry {
         override val key: String
             get() = "group:${steps.first().partId}"
     }
+
+    /**
+     * Steps of one [family] one after another (owner 2026-11-14: eleven command rows read the same): one row with a
+     * count ("Ran 6 commands") that opens in place to each step. Its key is its first step's row key, so a step a second
+     * one joins keeps its row (it does not leave and come back) and nothing flashes.
+     */
+    public data class Run(val family: StepFamily, val steps: List<TurnStep>) : StepEntry {
+        override val key: String
+            get() = "step:${steps.first().partId}"
+    }
 }
+
+/** The kinds of step that fold into one row when they come one after another. Edits stay rows of their own. */
+public enum class StepFamily { Commands, Reads, Searches, Lists }
 
 /** What the fold row says: [hidden] rows behind it, and how many [declined] and [failed] steps lie among them. */
 public data class StepFold(val hidden: Int, val declined: Int, val failed: Int)
@@ -40,14 +54,24 @@ public data class GroupCounts(val done: Int, val working: Int, val failed: Int, 
 /**
  * The rules of a turn's step list (D1): which rows it has, which sub-agents make one group, and what folds.
  *
- * Fold rule (settled 2026-11-14 from the drawn direction): the newest [SHOWN] rows stay in view while the turn runs and
- * after it ends; older rows fold behind ONE first row only when at least two would fold (one row behind a row saves
- * nothing). That row names the declined and failed steps inside it (a group counts its children), so a problem is
- * never folded away silently. A step that waits for the person is the newest row, so it is never folded.
+ * Fold rule (owner 2026-11-14, "when collapsed it takes a huge space"; the Flutter app's one quiet line): a turn that
+ * ended well ([sums]) is ONE row that opens in place to every step. While the turn runs, and when it ended on a failure,
+ * was stopped (it "shows its step", said Stopped once) or waits for the person, the newest [SHOWN] rows stay in view; older rows fold behind ONE first
+ * row only when at least two would fold (one row behind a row saves nothing). That row names the declined and failed
+ * steps inside it (a group counts its children), so a problem is never folded away silently. A step that waits for the
+ * person is the newest row, so it is never folded. (D1's first fold rule kept five rows in view after the turn ended
+ * too; it was the plan's own choice, not an owner decision, and the owner's picture showed it took a quarter of the
+ * screen.)
  */
 public object StepListRules {
-    /** Rows that stay in view (the drawn direction shows five). */
-    public const val SHOWN: Int = 5
+    /** Rows that stay in view while a turn runs: the newest three, live. */
+    public const val SHOWN: Int = 3
+
+    /**
+     * A turn in [state] shows its work as one summary row: it ended well. A turn that runs, waits for the person, was
+     * stopped or ended on a failure stays open at its newest steps, so the step where it stands is in view.
+     */
+    public fun sums(state: WorkLineState): Boolean = state == WorkLineState.Done
 
     /**
      * The rows of [work] in the order they happened. [entries] is the reading's order of steps and folded words (empty
@@ -71,7 +95,55 @@ public object StepListRules {
                 }
             }
         }
-        return group(rows)
+        return runs(group(rows), waiting = work.state == WorkLineState.WaitingForYou)
+    }
+
+    /** The family [step] folds into a run with, or null for a step that is always its own row. */
+    public fun family(step: TurnStep): StepFamily? =
+        when (step.facts.kind) {
+            ToolKind.Shell -> StepFamily.Commands
+            ToolKind.Read,
+            ToolKind.Lsp -> StepFamily.Reads
+            ToolKind.Grep,
+            ToolKind.Glob -> StepFamily.Searches
+            ToolKind.List -> StepFamily.Lists
+            else -> null
+        }
+
+    /**
+     * Steps of one family one after another become one [StepEntry.Run] (two or more); anything else between them (the
+     * agent's words, a thought, another kind of step) ends the run. A step that waits for the person ([waiting]: the
+     * turn waits and the step has not run) stays its own row, so its question is in view under it.
+     */
+    internal fun runs(rows: List<StepEntry>, waiting: Boolean = false): List<StepEntry> {
+        val out = ArrayList<StepEntry>(rows.size)
+        var run = ArrayList<TurnStep>()
+        var kind: StepFamily? = null
+        fun flush() {
+            val f = kind
+            when {
+                run.isEmpty() -> Unit
+                run.size == 1 || f == null -> run.forEach { out += StepEntry.Step(it) }
+                else -> out += StepEntry.Run(f, run)
+            }
+            run = ArrayList()
+            kind = null
+        }
+        for (row in rows) {
+            val step = (row as? StepEntry.Step)?.step
+            val f = step?.let { family(it) }
+            val asks = step != null && waiting && (step.state == StepState.Running || step.state == StepState.Pending)
+            if (step == null || f == null || asks) {
+                flush()
+                out += row
+                continue
+            }
+            if (f != kind) flush()
+            kind = f
+            run += step
+        }
+        flush()
+        return out
     }
 
     /** [entries] cut into what folds and what stays in view ([shown] rows, see the fold rule). */
@@ -156,6 +228,7 @@ public object StepListRules {
         when (row) {
             is StepEntry.Step -> listOf(row.step.state)
             is StepEntry.Group -> row.steps.map { it.state }
+            is StepEntry.Run -> row.steps.map { it.state }
             is StepEntry.Detail -> emptyList()
         }
 

@@ -1,6 +1,7 @@
 package io.github.eslamasabry.oc.ui.kitchat.tool
 
 import androidx.compose.runtime.Immutable
+import androidx.compose.ui.graphics.vector.ImageVector
 
 /**
  * What kind of step it was (plan 06 §7.8, plan 09 §0.4 C5). It picks the glyph only; the words are the caller's
@@ -29,6 +30,8 @@ public enum class KitToolStatus { Pending, Running, Done, Failed, Stopped, Waiti
  * @param durationLabel how long it took, in words ("2 s").
  * @param added lines added (shown "+n"); @param removed lines removed (shown "−n").
  * @param statusLabel the status in words ("Stopped"), always given: a screen reader reads it.
+ * @param icon the glyph when the caller knows more than [kind] (owner 2026-11-14: a command that ran tests draws the
+ *   test glyph, a search the magnifier, git the branch); null draws the kind's own glyph.
  */
 @Immutable
 public data class KitToolView(
@@ -42,4 +45,5 @@ public data class KitToolView(
     val added: Int?,
     val removed: Int?,
     val statusLabel: String,
+    val icon: ImageVector? = null,
 )

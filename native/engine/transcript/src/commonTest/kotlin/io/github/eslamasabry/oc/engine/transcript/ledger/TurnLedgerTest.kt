@@ -92,12 +92,33 @@ class TurnLedgerTest {
     }
 
     @Test
-    fun `B-CHAT-117 a text delta marks words without copying the stream`() {
+    fun `B-CHAT-117 a text delta marks words without a rebuild per delta`() {
         val ledger = TurnLedger(S)
         ledger.load(listOf(prompt, msg(info("m2", Role.Assistant, 2), text("x", "m2", ""))))
         assertTrue(ledger.apply(GatewayEvent.PartDelta(SessionId(S), MessageId("m2"), PartId("x"), DeltaField.Text, "Hel")))
+        val first = ledger.snapshot()
+        assertEquals("Hel", first.messages.last().parts.single().text)
+        // A later delta changes nothing anyone redraws: the same snapshot, not rebuilt (its words join at the next change).
         assertFalse(ledger.apply(GatewayEvent.PartDelta(SessionId(S), MessageId("m2"), PartId("x"), DeltaField.Text, "lo")))
-        assertEquals("Hel", ledger.snapshot().messages.last().parts.single().text)
+        assertTrue(first === ledger.snapshot())
+    }
+
+    @Test
+    fun `STEPS-CRAFT-001 the words streamed between steps are whole once the reply moves on, never their first delta`() {
+        // Owner 2026-11-14: the agent's words between steps read "I", "Two find", "My" (the first delta of each part).
+        val ledger = TurnLedger(S)
+        ledger.load(listOf(prompt, msg(info("m2", Role.Assistant, 2), text("x", "m2", ""))))
+        for (d in listOf("I", " checked the box", " before changing", " anything.")) {
+            ledger.apply(GatewayEvent.PartDelta(SessionId(S), MessageId("m2"), PartId("x"), DeltaField.Text, d))
+        }
+        // The next real change (a step, the message's end) publishes the words whole.
+        assertTrue(ledger.apply(GatewayEvent.PartUpserted(tool("t1", "m2", "bash", ToolStatus.Running, start = 3))))
+        assertEquals("I checked the box before changing anything.", ledger.snapshot().messages.last().parts.first().text)
+        // A later upsert without words keeps them; one with words is the part whole.
+        ledger.apply(GatewayEvent.PartUpserted(text("x", "m2", "")))
+        assertEquals("I checked the box before changing anything.", ledger.snapshot().messages.last().parts.first().text)
+        ledger.apply(GatewayEvent.PartUpserted(text("x", "m2", "Whole words.")))
+        assertEquals("Whole words.", ledger.snapshot().messages.last().parts.first().text)
     }
 
     @Test

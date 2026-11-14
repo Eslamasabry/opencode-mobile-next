@@ -171,6 +171,8 @@ internal fun KitStepLight(
     val motion = KitMotion.state
     // F: kit_step_light.dart:78-82 Calm runs the lap at half speed
     val speed = if (motion.level == MotionLevel.Calm) .5f else 1f
+    // The lap runs on the frame clock (withInfiniteAnimationFrameNanos), never a timer: a hidden window sends no frames,
+    // so it parks with the app (LocalKitVisibility's rule) and wakes nothing while hidden.
     val moving = animate && !motion.reduced && !motion.stillFrame
     val phase = rememberLoopPhase(moving, lap, speed, still = STILL_PHASE)
     Canvas(modifier.size(size)) {

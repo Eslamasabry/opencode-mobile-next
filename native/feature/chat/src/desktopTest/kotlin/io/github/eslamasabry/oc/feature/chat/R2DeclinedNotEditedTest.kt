@@ -5,6 +5,9 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.onAllNodesWithTag
+import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.v2.runComposeUiTest
@@ -195,7 +198,13 @@ class R2DeclinedNotEditedTest {
             }
         }
         onAllNodesWithText("Edited 1 file", substring = true, useUnmergedTree = true).assertCountEquals(0)
-        // D1: the turn's work is its own step row, in view (was: a summary line "1 step").
+        // Owner 2026-11-14: the finished turn's work is one row: "1 step", and what went wrong inside it (the write refused
+        // with a note ends as an error: "1 failed").
+        onNodeWithText("1 step", useUnmergedTree = true).assertExists()
+        onNodeWithText("1 failed", useUnmergedTree = true).assertExists()
+        onNodeWithTag("chat-work-summary").performClick()
+        waitForIdle()
+        onAllNodesWithText("Edited 1 file", substring = true, useUnmergedTree = true).assertCountEquals(0)
         onAllNodesWithTag("chat-step-t1", useUnmergedTree = true).assertCountEquals(1)
     }
 }

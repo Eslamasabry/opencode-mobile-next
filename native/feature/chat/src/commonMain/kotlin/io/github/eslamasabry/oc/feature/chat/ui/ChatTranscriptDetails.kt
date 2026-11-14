@@ -141,7 +141,8 @@ internal fun TranscriptDetail(
     if (part.type == PartType.Text) {
         // Inside an opened work line the words are a sentence on the rail (a dot, the steps' text edge, Flutter
         // `KitStepTimeline.sentence`); anywhere else they sit on the reply's 16 dp edge, never on the screen's.
-        if (kitOnStepRail()) KitStepSentence { DetailMarkdown(key, part.text, reply) }
+        // Owner 2026-11-14: whole, at the steps' own size in the secondary ink, so the reply below stays the lead.
+        if (kitOnStepRail()) KitStepSentence { DetailMarkdown(key, part.text, reply, thought = true) }
         else Box(Modifier.padding(horizontal = Space.S4.dp)) { DetailMarkdown(key, part.text, reply) }
         return
     }

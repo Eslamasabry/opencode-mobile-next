@@ -1,6 +1,5 @@
 package io.github.eslamasabry.oc.ui.kitchat.tool
 
-import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,7 +18,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.compositionLocalOf
@@ -34,6 +32,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.LayoutCoordinates
@@ -64,7 +63,6 @@ import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
 import io.github.eslamasabry.oc.ui.kit.motion.KitPace
 import io.github.eslamasabry.oc.ui.kit.motion.KitReveal
 import io.github.eslamasabry.oc.ui.kit.motion.KitSpin
-import io.github.eslamasabry.oc.ui.kit.motion.pace
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import kotlin.math.roundToInt
@@ -232,15 +230,17 @@ public fun KitStepSentence(modifier: Modifier = Modifier, content: @Composable (
     }
     val m = railMeasures()
     val colors = LocalKitColors.current
-    // F: lib/ui/kit/chat/kit_step_timeline.dart:365-370 a 24 dp first line, one step down, padded one step
+    // Owner 2026-11-14: the words between steps are drawn at the steps' own size (the caller's secondary role), so the
+    // sentence keeps a step row's rhythm: the same padding round its first line, its dot in the middle of that line.
+    val pad = (m.stepLine - m.first) / 2
     RailNode(
-        box = 24.dp * m.scale, // F: lib/ui/kit/chat/kit_step_timeline.dart:365
-        top = Space.S1.dp,
+        box = m.first,
+        top = pad,
         modifier = modifier,
         half = 3.dp,
         node = { Box(Modifier.size(6.dp).background(colors.text3, CircleShape)) }, // F: lib/ui/kit/chat/kit_step_node.dart:38,66
     ) {
-        Box(Modifier.padding(vertical = Space.S1.dp)) { content() }
+        Box(Modifier.padding(vertical = pad)) { content() }
     }
 }
 
@@ -274,6 +274,23 @@ internal class StepRail {
 
     /** The open steps have been shown once: a step composed after this arrived while the timeline was open. */
     var settled by mutableStateOf(false)
+
+    /**
+     * How much of each node is in view (1 unless a fold around it moves): read while the rail is drawn, so the rail's ink
+     * to a row that opens, folds or arrives fades with the row. Plain map: written after composition, read in draw.
+     */
+    val shares = HashMap<Any, () -> Float>()
+
+    /** Rows that arrived in the composition under way, so several that arrive together stagger (#002). */
+    private var arrivals = 0
+
+    /** The next arriving row's place in its group of arrivals. */
+    fun nextArrival(): Int = arrivals++
+
+    /** A composition of the list ended: the next arrivals start a new group. */
+    fun arrived() {
+        arrivals = 0
+    }
 }
 
 internal val LocalKitStepRail = compositionLocalOf<StepRail?> { null }
@@ -301,8 +318,9 @@ internal class RailMeasures(
 internal fun railMeasures(): RailMeasures {
     val tokens = LocalKitTokens.current
     val scale = kitTextScale()
-    // F: lib/ui/kit/chat/kit_step_timeline.dart:723 iconSize(smallIconSize).roundToDouble()
-    val glyph = (tokens.smallIcon * minOf(scale, tokens.maxIconScale)).roundToInt().dp
+    // Owner 2026-11-14 ("icons are tiny and unrecognisable"): the node is the kit's large icon size (24 dp), so its glyph
+    // draws about 18 dp of ink (Flutter's iconSize(smallIconSize), 20 dp with a 12 dp glyph, read as a speck).
+    val glyph = (KitIconSize.Large.dp * minOf(scale, tokens.maxIconScale)).roundToInt().dp
     val first = 20.dp * scale // F: lib/ui/kit/chat/kit_step_timeline.dart:958 rail.line(20)
     val stepLine = maxOf(32.dp, 20.dp * scale + Space.S1.dp * 2) // F: lib/ui/kit/chat/kit_step_timeline.dart:355
     return RailMeasures(glyph, first, stepLine, scale)
@@ -311,8 +329,8 @@ internal fun railMeasures(): RailMeasures {
 /**
  * Draws [node] in the free column at the start of the step, centred in a [box]-high band [top] down (Dart
  * `_StepNode`); the node is decoration (no semantics, no taps) and sits outside [content]'s own box. It reports its
- * centre so the rail can end on the last node. A step composed while its timeline is already open arrives: it fades
- * in over STANDARD and, at Full motion, rises 6 dp; under reduced motion it is simply there.
+ * centre so the rail can end on the last node. Inside a fold that moves ([KitStepItem], [KitStepReveal]) the row is
+ * drawn by how much of it is in view and, at Full motion, settles its last 6 dp into place; at rest nothing moves.
  */
 @Composable
 internal fun RailNode(
@@ -334,23 +352,34 @@ internal fun RailNode(
         onDispose {
             rail.centres.remove(key)
             rail.spans.remove(key)
+            rail.shares.remove(key)
         }
     }
     val density = LocalDensity.current
     val nodeHalf = with(density) { (half ?: m.glyph / 2).toPx() }
     // F: kit_step_light.dart:367 the last step's light runs a 14 dp tail below its node
     val light = remember(rail, key) { rail.light(key, with(density) { 14.dp.toPx() }) }
-    val motion = KitMotion.state
-    val arrives = remember { rail.settled && !motion.reduced }
-    val shown = remember { Animatable(if (arrives) 0f else 1f) }
-    val standard = KitMotion.specs.pace<Float>(KitPace.Standard)
-    LaunchedEffect(Unit) { if (shown.value < 1f) shown.animateTo(1f, standard) }
-    val rise = if (motion.travels) 6.dp else 0.dp // F: lib/ui/kit/chat/kit_step_timeline.dart:531 _StepArrival.rise
+    // A row in a fold that moves (opening, folding, arriving) is drawn by how much of it is in view: a row the fold's
+    // edge crosses is faint, never cut at full ink, and at Full motion it settles the last few dp into place (#001).
+    val reveal = LocalRailReveal.current
+    val at = remember { arrayOfNulls<LayoutCoordinates>(1) }
+    val fadePx = with(density) { REVEAL_FADE_DP.dp.toPx() }
+    SideEffect { if (reveal != null) rail.shares[key] = { reveal.ink(at[0], fadePx) } else rail.shares.remove(key) }
+    val rise = if (KitMotion.state.travels) ARRIVAL_RISE_DP.dp else 0.dp // F: lib/ui/kit/chat/kit_step_timeline.dart:531 _StepArrival.rise
     Box(
-        modifier.fillMaxWidth().graphicsLayer {
-            alpha = shown.value
-            translationY = rise.toPx() * (1f - shown.value)
-        }
+        modifier
+            .fillMaxWidth()
+            .onPlaced { at[0] = it }
+            .graphicsLayer {
+                if (reveal != null) {
+                    alpha = reveal.ink(at[0], fadePx)
+                    translationY = rise.toPx() * (1f - reveal.shown(at[0]))
+                    // The node sits outside the row's box, in the rail's column: an offscreen layer (what a faded layer
+                    // draws into by default) is cut to the box and dropped the glyph until the row stood at full ink, so
+                    // rows popped their glyph in at the end (owner 2026-11-14). The fade is applied to each mark instead.
+                    compositingStrategy = CompositingStrategy.ModulateAlpha
+                }
+            }
     ) {
         content()
         Box(
@@ -371,4 +400,21 @@ internal fun RailNode(
             CompositionLocalProvider(LocalStepLightRail provides light) { node() }
         }
     }
+}
+
+/** How far a row that arrives or opens rises into place at Full motion (Flutter `_StepArrival.rise`). */
+internal const val ARRIVAL_RISE_DP: Int = 6
+
+/**
+ * One row of a step list that comes and goes with the list's motion (owner 2026-11-14): shown while [visible]; a row
+ * composed after the list first showed arrives (#001 Pop-in: it grows in from nothing, fading, and the rows below move
+ * down with it instead of jumping), several arriving together stagger (#002); rows that open together start [order]
+ * apart. Folding it ([visible] false) shrinks it away over QUICK. Keyed by the caller, a row keeps its node while it
+ * updates, so a step that finishes changes in place and never flashes.
+ */
+@Composable
+public fun KitStepItem(visible: Boolean = true, order: Int = 0, content: @Composable () -> Unit) {
+    val rail = LocalKitStepRail.current
+    val arrival = remember { if (rail != null && rail.settled && visible) rail.nextArrival() else -1 }
+    KitStepReveal(visible, arrives = arrival >= 0, order = if (arrival >= 0) arrival else order, content = content)
 }

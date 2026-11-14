@@ -91,7 +91,8 @@ private const val END_SHARE = 0.45f
  *
  * Inside an opened [KitStepTimeline] the row takes its timeline form (Dart `_buildTimelineStep`): one 32 dp line, its
  * node on the rail, no chevron of its own (the group's line has the one chevron); [onOpen] (a step that opens another
- * page, with no [body]) keeps a forward chevron.
+ * page, with no [body]) keeps a forward chevron. On a rail, [group] makes the row stand for several steps that open in
+ * place under it (the caller draws them): the whole row toggles [opened] and carries the fold chevron.
  *
  * Text: frame (≤ 1.3×) for title, detail and status; the subject is mono, left to right.
  */
@@ -103,9 +104,10 @@ public fun KitToolRow(
     modifier: Modifier = Modifier,
     body: (@Composable () -> Unit)? = null,
     onOpen: (() -> Unit)? = null,
+    group: Boolean = false,
 ) {
     if (kitOnStepRail()) {
-        TimelineStep(view, opened, onToggle, modifier, body, onOpen)
+        TimelineStep(view, opened, onToggle, modifier, body, onOpen, group)
         return
     }
     val tokens = LocalKitTokens.current

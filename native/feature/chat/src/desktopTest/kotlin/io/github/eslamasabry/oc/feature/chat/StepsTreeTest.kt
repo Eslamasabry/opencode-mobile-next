@@ -173,24 +173,24 @@ class StepsTreeTest {
     }
 
     @Test
-    fun `D1-STEPS-003 the newest five stay in view, the rest fold behind one row naming the declined and the failed`() {
+    fun `D1-STEPS-003 the newest three stay in view, the rest fold behind one row naming the declined and the failed`() {
         val f = facts()
         val rows = StepListRules.entries(assertNotNull(f.work["m1"]), f.reading.workEntries["m1"].orEmpty())
         val cut = StepListRules.cut(rows)
-        assertEquals(5, cut.shown.size)
-        assertEquals(3, cut.earlier.size)
+        assertEquals(3, cut.shown.size)
+        assertEquals(5, cut.earlier.size)
         val fold = assertNotNull(cut.fold)
-        assertEquals(3, fold.hidden)
+        assertEquals(5, fold.hidden)
         assertEquals(1, fold.declined)
         assertEquals(1, fold.failed)
-        // Six rows fold nothing: one row behind a row saves nothing.
-        assertNull(StepListRules.cut(rows.take(6)).fold)
-        assertEquals(6, StepListRules.cut(rows.take(6)).shown.size)
-        assertEquals(2, assertNotNull(StepListRules.cut(rows.take(7)).fold).hidden)
+        // Four rows fold nothing: one row behind a row saves nothing.
+        assertNull(StepListRules.cut(rows.take(4)).fold)
+        assertEquals(4, StepListRules.cut(rows.take(4)).shown.size)
+        assertEquals(2, assertNotNull(StepListRules.cut(rows.take(5)).fold).hidden)
         // A group's children count inside the fold.
         val group = rows.last() as StepEntry.Group
         val failedGroup = StepEntry.Group(group.steps.map { it.copy(state = StepState.Failed) })
-        val withGroup = listOf<StepEntry>(failedGroup) + rows.take(6)
+        val withGroup = listOf<StepEntry>(failedGroup) + rows.take(4)
         assertEquals(2, assertNotNull(StepListRules.cut(withGroup).fold).failed)
         val counts = StepListRules.counts(group)
         assertEquals(2, counts.done)
@@ -273,17 +273,21 @@ class StepsTreeTest {
         )
 
     @Test
-    fun `D1-SCREEN-001 the steps show without a summary line, the fold names the problems and opens, the footer says time and cost`() =
+    fun `D1-SCREEN-001 a finished turn is one row naming the problems, it opens to every step, the footer says time and cost`() =
         runComposeUiTest {
             val opened = mutableListOf<String>()
             val actions = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
             setContent { Root { ChatScreen(screen(), actions, composer, facts = facts(), onOpenSession = { opened += it }) } }
-            // No summary line: the newest steps are in view at once.
-            onAllNodesWithText("Read 1 file", substring = true).assertCountEquals(0)
-            onNodeWithText("npm test", substring = true).assertIsDisplayed()
-            onNodeWithText("Show 3 earlier steps").assertIsDisplayed()
+            // Owner 2026-11-14: a finished turn's work is one row that says what lies inside that matters.
+            onNodeWithTag("chat-work-summary").assertIsDisplayed()
             onNodeWithText("1 declined · 1 failed").assertIsDisplayed()
+            onAllNodesWithText("Ran tests").assertCountEquals(0)
             onAllNodesWithText("You declined this").assertCountEquals(0)
+            onNodeWithTag("chat-work-summary").performClick()
+            waitForIdle()
+            // Opened, every step in plain words (the tests step says what it did, never its command line).
+            onNodeWithText("Ran tests").assertIsDisplayed()
+            onNodeWithText("You declined this").assertExists()
             // The two sub-agents are one row, folded; opened, each is named and opens its own conversation.
             onNodeWithText("2 sub-agents").assertIsDisplayed()
             onNodeWithText("2 done").assertIsDisplayed()
@@ -291,11 +295,6 @@ class StepsTreeTest {
             waitForIdle()
             onNodeWithText("Compare the old copies").assertIsDisplayed().performClick()
             assertEquals(listOf("c2"), opened)
-            // The fold opens to every step, the refused one in words.
-            onNodeWithText("Show 3 earlier steps").performClick()
-            waitForIdle()
-            onNodeWithText("Hide earlier steps").assertIsDisplayed()
-            onNodeWithText("You declined this").assertExists()
             // The footer: how long, tokens and cost, said once.
             onNodeWithText("1m 13s", substring = true).assertExists()
             onNodeWithText("19.3k tokens", substring = true).assertExists()

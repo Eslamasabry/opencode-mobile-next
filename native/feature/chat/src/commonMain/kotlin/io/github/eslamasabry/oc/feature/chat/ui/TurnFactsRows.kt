@@ -25,11 +25,13 @@ import io.github.eslamasabry.oc.engine.transcript.turnfacts.ToolDetail
 import io.github.eslamasabry.oc.engine.transcript.turnfacts.ToolKind
 import io.github.eslamasabry.oc.core.common.text.Numbers
 import io.github.eslamasabry.oc.feature.chat.presentation.StepEntry
+import io.github.eslamasabry.oc.feature.chat.presentation.StepFamily
 import io.github.eslamasabry.oc.feature.chat.presentation.StepFold
 import io.github.eslamasabry.oc.feature.chat.presentation.StepListRules
 import io.github.eslamasabry.oc.feature.chat.presentation.TranscriptDetailUi
 import io.github.eslamasabry.oc.feature.chat.presentation.TurnResultUi
 import io.github.eslamasabry.oc.feature.chat.presentation.WorkEntryUi
+import io.github.eslamasabry.oc.feature.chat.presentation.WorkLineRules
 import io.github.eslamasabry.oc.feature.chat.requests.ui.LocalInPlaceRequests
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kit.KitButton
@@ -45,11 +47,13 @@ import io.github.eslamasabry.oc.ui.kitchat.tool.KitCommandBox
 import io.github.eslamasabry.oc.ui.kitchat.tool.KitStepFold
 import io.github.eslamasabry.oc.ui.kitchat.tool.KitStepFoldLine
 import io.github.eslamasabry.oc.ui.kitchat.tool.KitStepGroup
+import io.github.eslamasabry.oc.ui.kitchat.tool.KitStepItem
 import io.github.eslamasabry.oc.ui.kitchat.tool.KitStepList
 import io.github.eslamasabry.oc.ui.kitchat.tool.KitToolKind
 import io.github.eslamasabry.oc.ui.kitchat.tool.KitToolRow
 import io.github.eslamasabry.oc.ui.kitchat.tool.KitToolStatus
 import io.github.eslamasabry.oc.ui.kitchat.tool.KitToolView
+import io.github.eslamasabry.oc.ui.kitchat.tool.kitWorkIcon
 import io.github.eslamasabry.oc.ui.kitchat.transcript.KitQuietLine
 import io.github.eslamasabry.oc.ui.kitchat.transcript.REPLY_ACTIONS_EDGE_INSET
 import io.github.eslamasabry.oc.ui.words.res.Res
@@ -196,44 +200,98 @@ internal fun TurnWorkLine(
     val rows = remember(work, entries) { StepListRules.entries(work, entries) }
     val cut = remember(rows) { StepListRules.cut(rows) }
     val open = folds.open[foldKey] == true
+    // Owner 2026-11-14: a finished turn's work is ONE quiet row that opens in place; a turn that runs, failed or waits
+    // for the person keeps its newest rows in view.
+    val summed = StepListRules.sums(work.state)
     val treeWords = rememberStepTreeWords()
     // D1: a permission ask for one of these steps is answered in place, right under the step it is for.
     val inPlace = LocalInPlaceRequests.current
     val entry: @Composable (StepEntry) -> Unit = { row ->
-        key(row.key) {
-            when (row) {
-                is StepEntry.Step -> {
-                    StepRow(
-                        row.step,
-                        nowMs,
-                        folds,
-                        onOpenSession,
-                        onOpenFile,
-                        reply,
-                        waitingForYou = !stopping && stepWaitsForYou(row.step.state, work.state),
-                        stopSaidBelow = row.step === work.steps.lastOrNull(),
-                    )
-                    val ask = row.step.callId?.let { inPlace?.byCall?.get(it) }
-                    if (inPlace != null && ask != null) inPlace.draw(ask)
-                }
-                is StepEntry.Detail -> TranscriptDetail(row.detail, folds, reasoningExpanded, reply, onCompactAgain, onOpenSession)
-                is StepEntry.Group -> SubAgentGroup(row, work.state, onOpenSession, treeWords)
+        when (row) {
+            // One call for a step and for a run of steps: a step that a second one joins keeps its row (same key, same
+            // node), so it changes in place and never flashes.
+            is StepEntry.Step,
+            is StepEntry.Run -> {
+                val run = row as? StepEntry.Run
+                val steps = run?.steps ?: listOf((row as StepEntry.Step).step)
+                StepRow(steps, run?.family, work, nowMs, folds, onOpenSession, onOpenFile, reply, stopping)
+                val lone = (row as? StepEntry.Step)?.step
+                val ask = lone?.callId?.let { inPlace?.byCall?.get(it) }
+                if (inPlace != null && ask != null) inPlace.draw(ask)
             }
+            is StepEntry.Detail -> TranscriptDetail(row.detail, folds, reasoningExpanded, reply, onCompactAgain, onOpenSession)
+            is StepEntry.Group -> SubAgentGroup(row, work.state, onOpenSession, treeWords)
         }
     }
-    val earlier: (@Composable ColumnScope.() -> Unit)? =
-        if (cut.earlier.isEmpty()) null
-        else {
-            { cut.earlier.forEach { entry(it) } }
-        }
+    val folded = if (summed) rows.size else cut.earlier.size
     KitStepList(
         // The reply's 16 dp edge: the glyphs and the rail sit on it, the steps' words one column in.
         modifier = Modifier.padding(start = Space.S4.dp, end = REPLY_ACTIONS_EDGE_INSET.dp).testTag("chat-work-line"),
-        fold = cut.fold?.let { stepFoldLine(it, open) { folds.open[foldKey] = !open } },
-        earlier = earlier,
+        fold = if (summed) null else cut.fold?.let { stepFoldLine(it, open) { folds.open[foldKey] = !open } },
     ) {
-        cut.shown.forEach { entry(it) }
+        if (summed)
+            key("summary:${work.turnId}") {
+                KitStepItem { WorkSummaryRow(work, open) { folds.open[foldKey] = !open } }
+            }
+        // Every row in one sequence, each with its own fold (owner 2026-11-14, "clipping flashing"): opening the
+        // turn's work or its earlier steps unfolds them one after another from the top (#052, #002); a row that moves
+        // behind the fold as new ones arrive folds away while the new one grows in, so the reply below moves smoothly
+        // and no row is composed again.
+        rows.forEachIndexed { i, row ->
+            key(row.key) { KitStepItem(visible = i >= folded || open, order = i) { entry(row) } }
+        }
     }
+}
+
+/**
+ * A finished turn's work as one row (owner 2026-11-14: "when collapsed it takes a huge space"; the Flutter app's "one
+ * quiet line that opens in place"): the glyph of what it mostly did, "Ran 11 commands · 2 other steps", what went wrong
+ * if anything did, the time the steps took and the fold chevron. A tap opens every step under it on the rail.
+ */
+@Composable
+private fun WorkSummaryRow(work: TurnWork, open: Boolean, onToggle: () -> Unit) {
+    val c = WorkLineRules.split(work).done
+    val sep = stringResource(Res.string.kitWorkSeparator)
+    val failed = work.steps.count { it.state == StepState.Failed }
+    val declined = work.steps.count { it.state == StepState.Declined }
+    val note =
+        listOfNotNull(
+                declined.takeIf { it > 0 }?.let { pluralStringResource(Res.plurals.kitWorkFoldDeclined, it, it) },
+                failed.takeIf { it > 0 }?.let { pluralStringResource(Res.plurals.kitWorkFoldFailed, it, it) },
+            )
+            .joinToString(sep)
+            .ifEmpty { null }
+    val total = work.steps.mapNotNull { it.durationMs }.takeIf { it.isNotEmpty() && it.size == work.steps.size }?.sum()
+    KitToolRow(
+        view =
+            KitToolView(
+                id = "summary:${work.turnId}",
+                kind = KitToolKind.Other,
+                title = turnWorkWords(work),
+                subject = null,
+                detail = note,
+                status = KitToolStatus.Done,
+                durationLabel = total?.takeIf { it >= 100 }?.let { durationWords(it) },
+                added = null,
+                removed = null,
+                statusLabel = stepStatus(StepState.Done, null),
+                icon =
+                    kitWorkIcon(
+                        read = c.read,
+                        searched = c.searched,
+                        listed = c.listed,
+                        edited = c.edited,
+                        ran = c.ran,
+                        fetched = c.fetched,
+                        delegated = c.delegated,
+                        other = c.other,
+                    ),
+            ),
+        opened = open,
+        onToggle = onToggle,
+        modifier = Modifier.testTag("chat-work-summary"),
+        group = true,
+    )
 }
 
 /** The fold row's words: "Show 5 earlier steps" and what lies inside ("1 declined · 1 failed"), or "Hide earlier steps". */
@@ -401,30 +459,25 @@ internal fun ThoughtWorkLine(
     val cut = remember(rows) { StepListRules.cut(rows) }
     val open = folds.open[foldKey] == true
     val entry: @Composable (StepEntry.Detail) -> Unit = { row ->
-        key(row.key) {
-            TranscriptDetail(
-                row.detail,
-                folds,
-                reasoningExpanded,
-                reply,
-                onCompactAgain,
-                onOpenSession,
-                thinking = thinking && row.detail === thoughts.last(),
-            )
-        }
+        TranscriptDetail(
+            row.detail,
+            folds,
+            reasoningExpanded,
+            reply,
+            onCompactAgain,
+            onOpenSession,
+            thinking = thinking && row.detail === thoughts.last(),
+        )
     }
-    val earlier: (@Composable ColumnScope.() -> Unit)? =
-        if (cut.earlier.isEmpty()) null
-        else {
-            { cut.earlier.forEach { entry(it as StepEntry.Detail) } }
-        }
+    val folded = cut.earlier.size
     KitStepList(
         // The reply's 16 dp edge, as the turn's other steps.
         modifier = Modifier.padding(start = Space.S4.dp, end = REPLY_ACTIONS_EDGE_INSET.dp).testTag("chat-work-line"),
         fold = cut.fold?.let { stepFoldLine(it, open) { folds.open[foldKey] = !open } },
-        earlier = earlier,
     ) {
-        cut.shown.forEach { entry(it as StepEntry.Detail) }
+        (cut.earlier + cut.shown).forEachIndexed { i, row ->
+            key(row.key) { KitStepItem(visible = i >= folded || open, order = i) { entry(row as StepEntry.Detail) } }
+        }
     }
 }
 
@@ -487,8 +540,109 @@ internal fun nowWords(step: TurnStep, counts: WorkCounts): String {
 private fun liveStepCount(res: PluralStringResource, count: Int): String =
     pluralStringResource(res, count.coerceAtLeast(1), count.coerceAtLeast(1))
 
+/**
+ * One row of a turn's steps: a step, or a run of steps of one family ([family] non-null, two or more [steps]: "Ran 6
+ * commands", the running one's words or what they did as its quiet second label, the fold chevron) that opens in place
+ * to each of its steps on the same rail. Both are the same row (one [KitToolRow] call), so a step that a second one joins
+ * keeps its node and never flashes.
+ */
 @Composable
 private fun StepRow(
+    steps: List<TurnStep>,
+    family: StepFamily?,
+    work: TurnWork,
+    nowMs: Long,
+    folds: TranscriptFolds,
+    onOpenSession: ((String) -> Unit)?,
+    onOpenFile: ((ToolArtifact) -> Unit)?,
+    reply: ReplyActions?,
+    stopping: Boolean,
+) {
+    val lead = steps.first()
+    val run = family != null && steps.size > 1
+    if (run && family != null) {
+        val runKey = "run:${lead.partId}"
+        val runOpen = folds.open[runKey] == true
+        KitToolRow(
+            view = runView(steps, family, nowMs),
+            opened = runOpen,
+            onToggle = { folds.open[runKey] = !runOpen },
+            modifier = Modifier.testTag("chat-step-run-${lead.partId}"),
+            group = true,
+        )
+        steps.forEachIndexed { i, s ->
+            key(s.partId) {
+                KitStepItem(visible = runOpen, order = i) {
+                    StepRow(listOf(s), null, work, nowMs, folds, onOpenSession, onOpenFile, reply, stopping)
+                }
+            }
+        }
+        return
+    }
+    OneStep(
+        lead,
+        nowMs,
+        folds,
+        onOpenSession,
+        onOpenFile,
+        reply,
+        waitingForYou = !stopping && stepWaitsForYou(lead.state, work.state),
+        stopSaidBelow = lead === work.steps.lastOrNull(),
+    )
+}
+
+/** A run's row: "Ran 6 commands", what they did (or the running one's words), how long; failures named. */
+@Composable
+private fun runView(steps: List<TurnStep>, family: StepFamily, nowMs: Long): KitToolView {
+    val mask = rememberKitMask()
+    val live = steps.lastOrNull { it.state == StepState.Running || it.state == StepState.Pending }
+    val ended = steps.count { it.state != StepState.Running && it.state != StepState.Pending }
+    val sep = stringResource(Res.string.kitWorkSeparator)
+    val failed = steps.count { it.state == StepState.Failed }
+    val declined = steps.count { it.state == StepState.Declined }
+    val parts = ArrayList<String>()
+    if (failed > 0) parts += pluralStringResource(Res.plurals.kitWorkFoldFailed, failed, failed)
+    if (declined > 0) parts += pluralStringResource(Res.plurals.kitWorkFoldDeclined, declined, declined)
+    // A live run leads with what runs now ("Searching files · 6 commands"), never past and present in one row.
+    if (live != null) parts += runCount(family, steps.size)
+    else
+        for (s in steps) {
+            val said =
+                if (family == StepFamily.Commands) stepRowTitle(s.facts, stepTense(s.state))
+                else s.facts.subject?.takeIf { it.isNotBlank() }?.let(mask) ?: stepTitle(s.facts)
+            if (said !in parts) parts += said
+        }
+    val total = steps.mapNotNull { it.durationMs }.takeIf { it.size == steps.size }?.sum()
+    val shownMs =
+        if (live != null) shownStepDurationMs(live.state, live.durationMs, live.startedAtMs, nowMs)
+        else shownStepDurationMs(StepState.Done, total, null, nowMs)
+    val status = if (live != null) KitToolStatus.Running else KitToolStatus.Done
+    return KitToolView(
+        id = "run:${steps.first().partId}",
+        kind =
+            when (family) {
+                StepFamily.Commands -> KitToolKind.Shell
+                StepFamily.Reads -> KitToolKind.Read
+                StepFamily.Searches -> KitToolKind.Search
+                StepFamily.Lists -> KitToolKind.List
+            },
+        title = if (live != null) stepRowTitle(live.facts, stepTense(live.state)) else runTitle(family, if (ended > 0) ended else steps.size),
+        subject = null,
+        detail = parts.joinToString(sep).ifEmpty { null },
+        status = status,
+        durationLabel = shownMs?.let { durationWords(it) },
+        added = null,
+        removed = null,
+        statusLabel = stepStatus(if (live != null) StepState.Running else StepState.Done, null),
+        // What runs now, or what all of them did when they did one thing ("Ran 3 commands" of tests: the flask).
+        icon =
+            if (live != null) stepGlyph(live.facts)
+            else steps.map { stepGlyph(it.facts) }.distinct().singleOrNull(),
+    )
+}
+
+@Composable
+private fun OneStep(
     step: TurnStep,
     nowMs: Long,
     folds: TranscriptFolds,
@@ -514,11 +668,14 @@ private fun StepRow(
         KitToolView(
             id = step.partId,
             kind = f.kind.toKit(),
-            title = stepTitle(f),
+            // Owner 2026-11-14: a shell step says what it did ("Ran tests"); its command is in the opened step.
+            title = stepRowTitle(f, stepTense(step.state, waiting = waitingForYou)),
+            // Owner 2026-11-14: the glyph follows what the step did (tests, a search, git), not only its tool.
+            icon = stepGlyph(f),
             // E20-S14: a waiting Write (Read, Edit) names its file as soon as the call's input has the path.
             subject =
-                stepRowSubject(f.kind, step.state, f.subject, out.input, out.rawInput)
-                    ?: stepSubjectWords(f),
+                if (f.kind == ToolKind.Shell && f.shell != null) null
+                else stepRowSubject(f.kind, step.state, f.subject, out.input, out.rawInput) ?: stepSubjectWords(f),
             detail = declinedWith ?: stepDetailWords(f),
             // P-105: a step blocked on the person reads "Waiting for you" with the attention mark and no clock.
             status =

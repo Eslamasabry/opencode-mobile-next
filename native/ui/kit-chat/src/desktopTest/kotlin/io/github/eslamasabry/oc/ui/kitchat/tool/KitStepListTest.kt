@@ -249,10 +249,10 @@ class KitStepListTest {
                 val marksAll = onAllNodesWithTag(STEP_MARK_TAG, useUnmergedTree = true)
                 val marks = marksAll.fetchSemanticsNodes().indices.map { marksAll[it].getUnclippedBoundsInRoot() }
                 assertEquals(2, marks.size, "$what: two children")
-                // The children's marks stand just past the steps' text column (16 + 20 + 12 + 4 = 52 dp from the start).
+                // The children's marks stand just past the steps' text column (16 + 24 + 12 + 4 = 56 dp from the start).
                 for (m in marks) {
-                    if (!rtl) assertEquals(52f, m.left.value, 0.6f, "$what: child mark")
-                    else assertEquals(412f - 52f, m.right.value, 0.6f, "$what: child mark")
+                    if (!rtl) assertEquals(56f, m.left.value, 0.6f, "$what: child mark")
+                    else assertEquals(412f - 56f, m.right.value, 0.6f, "$what: child mark")
                 }
                 val ink = inkAt(density)
                 val first = marks.first()

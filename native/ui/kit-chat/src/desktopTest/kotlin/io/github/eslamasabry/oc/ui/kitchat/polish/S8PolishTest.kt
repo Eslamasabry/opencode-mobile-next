@@ -188,9 +188,10 @@ class S8PolishTest {
             val summary = onNodeWithText("Read 1 file", useUnmergedTree = true).box()
             val step = onNodeWithText("Opened", useUnmergedTree = true).box()
             near(summary.left, step.left, 0.5f, "step name edge")
-            // Flutter's step timeline (kit_step_timeline.dart:736 `_Rail.column`): the 20 dp glyph + one 12 dp step. The
-            // work line has no page gutter of its own any more; the transcript gives it the 16 dp edge.
-            near(20f + Space.S3, step.left, 0.5f, "text edge")
+            // Flutter's step timeline (kit_step_timeline.dart:736 `_Rail.column`): the glyph + one 12 dp step; the glyph is
+            // the kit's 24 dp large icon since 2026-11-14 (owner: "icons are tiny"). The work line has no page gutter of its
+            // own any more; the transcript gives it the 16 dp edge.
+            near(24f + Space.S3, step.left, 0.5f, "text edge")
         }
 
     private fun textLayout(node: SemanticsNodeInteraction): TextLayoutResult {
