@@ -8,6 +8,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
@@ -43,6 +46,8 @@ class SheetDetentTest {
     @Test
     fun `SHEET-DETENT-02 a full sheet over a page with a two-line bar rests below the bar`() {
         runDesktopComposeUiTest((W * D).toInt(), (H * D).toInt()) {
+            // The page's nodes leave the tree while a modal owns the window: the bar is read before the sheet opens.
+            var open by mutableStateOf(false)
             setContent {
                 CompositionLocalProvider(LocalDensity provides Density(D)) {
                     KitTheme(platform = FakeKitPlatform(), localeTag = "en", stillFrame = true) {
@@ -52,7 +57,7 @@ class SheetDetentTest {
                                     page = true,
                                     topBar = { Box(Modifier.fillMaxWidth().height(BAR_DP.dp).testTag("bar")) },
                                 ) {
-                                    KitSheet(visible = true, onDismissRequest = {}, title = "Choose a model", height = KitSheetHeight.Full) {
+                                    KitSheet(visible = open, onDismissRequest = {}, title = "Choose a model", height = KitSheetHeight.Full) {
                                         KitText("Server default")
                                     }
                                 }
@@ -63,6 +68,8 @@ class SheetDetentTest {
             }
             waitForIdle()
             val bar = onNodeWithTag("bar").getBoundsInRoot()
+            open = true
+            waitForIdle()
             val sheet = onNodeWithTag("kit-sheet", useUnmergedTree = true).getBoundsInRoot()
             assertTrue(sheet.top >= bar.bottom + 8.dp - 0.5.dp, "the sheet's top ${sheet.top} lies in the bar ending at ${bar.bottom}")
         }

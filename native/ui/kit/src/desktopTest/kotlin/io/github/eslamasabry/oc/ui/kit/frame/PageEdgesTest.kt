@@ -213,19 +213,23 @@ class PageEdgesTest {
     private fun chromeBottom(s: Shot, variant: Variant, style: Style): Float =
         if (style == Style.Glass && (variant == Variant.Floating || variant == Variant.PinnedFoot)) s.bar.bottom.value - 4f else s.bar.bottom.value
 
-    @Test
-    fun `PAGE-EDGES-01 content never ends in a hard line at the chrome or a footer, at rest or scrolled`() {
+    /** Check 1 for one variant in every style. */
+    private fun noHardLine(variant: Variant) {
         val failures = mutableListOf<String>()
-        for (variant in Variant.entries) for (style in styles) {
+        for (style in styles) {
             val bright = shots(variant, style, ROWS, paint = true)
             val none = shots(variant, style, ROWS, paint = false)
             for (at in At.entries) {
                 val s = bright.getValue(at)
                 val n = none.getValue(at)
-                // Scrolled, the content may neither start nor end in a cut anywhere; at rest it starts right below the
-                // chrome (its first row's own top edge), so only its end is checked there.
+                // Scrolled, the content may neither start nor end in a cut; at rest it starts right below the chrome (its
+                // first row's own top edge), so only its end is checked there. At its end the last row's own bottom edge
+                // is where the content ends, not a cut.
                 val fromDp = chromeBottom(s, variant, style) - 2f
-                val found = cuts(s, n, fromDp, H.toFloat(), downOnly = at == At.Rest)
+                val lastEnd = s.last?.bottom?.value
+                val found =
+                    cuts(s, n, fromDp, H.toFloat(), downOnly = at == At.Rest)
+                        .filterNot { y -> at == At.End && lastEnd != null && abs(y - lastEnd) <= 1f }
                 // A body that reports nothing keeps its end as it was: only its top edge is the frame's to guess.
                 val shown = if (variant == Variant.Unreported) found.filter { it < H / 2f } else found
                 if (shown.isNotEmpty()) failures += "$variant, $style, $at: a hard line at ${shown.take(4)} dp (chrome ends ${chromeBottom(s, variant, style)}, foot ${s.foot})"
@@ -233,6 +237,18 @@ class PageEdgesTest {
         }
         assertTrue(failures.isEmpty(), failures.joinToString("\n"))
     }
+
+    @Test fun `PAGE-EDGES-01 plain page - content never ends in a hard line`() = noHardLine(Variant.Plain)
+
+    @Test fun `PAGE-EDGES-01 fixed button - content never ends in a hard line`() = noHardLine(Variant.FixedButton)
+
+    @Test fun `PAGE-EDGES-01 pinned foot - content never ends in a hard line`() = noHardLine(Variant.PinnedFoot)
+
+    @Test fun `PAGE-EDGES-01 scrolling heading - content never ends in a hard line`() = noHardLine(Variant.Heading)
+
+    @Test fun `PAGE-EDGES-01 floating bar - content never ends in a hard line`() = noHardLine(Variant.Floating)
+
+    @Test fun `PAGE-EDGES-01 unreported body - its top never ends in a hard line`() = noHardLine(Variant.Unreported)
 
     @Test
     fun `PAGE-EDGES-02 scrolled, nothing of the content lies under the status bar or the bar`() {
