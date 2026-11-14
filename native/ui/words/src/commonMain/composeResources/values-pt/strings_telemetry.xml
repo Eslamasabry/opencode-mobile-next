@@ -3,7 +3,7 @@
 <resources>
     <string name="telemetryCrashReportsTitle">Enviar relatórios de falha ao desenvolvedor (Google Firebase)</string>
     <string name="telemetryCrashReportsBody">Quando o app falha ou uma etapa dá erro, ele envia o tipo de problema, as versões do app e do Android e uma lista curta de locais do código. Nunca envia suas mensagens, arquivos, endereços ou chaves.</string>
-    <string name="telemetryConsentChoose">Escolher</string>
+    <string name="telemetryConsentChoose">Escolher o que compartilhar</string>
     <string name="telemetryConsentSave">Salvar minhas escolhas</string>
     <string name="sendReportTitle">Enviar um relatório de problema</string>
     <string name="sendReportSubtitle">Isto é tudo o que o relatório contém. Nada é enviado até você tocar em Enviar.</string>

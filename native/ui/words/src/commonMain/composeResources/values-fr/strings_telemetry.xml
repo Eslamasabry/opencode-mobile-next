@@ -3,7 +3,7 @@
 <resources>
     <string name="telemetryCrashReportsTitle">Envoyer les rapports de plantage au développeur (Google Firebase)</string>
     <string name="telemetryCrashReportsBody">Quand l'application plante ou qu'une étape échoue, elle envoie le type de problème, la version de l'application et d'Android, et une courte liste d'emplacements dans le code. Elle n'envoie jamais vos messages, fichiers, adresses ni clés.</string>
-    <string name="telemetryConsentChoose">Choisir</string>
+    <string name="telemetryConsentChoose">Choisir ce qui est partagé</string>
     <string name="telemetryConsentSave">Enregistrer mes choix</string>
     <string name="sendReportTitle">Envoyer un rapport de problème</string>
     <string name="sendReportSubtitle">Voici tout ce que contient le rapport. Rien n'est envoyé tant que vous n'appuyez pas sur Envoyer.</string>

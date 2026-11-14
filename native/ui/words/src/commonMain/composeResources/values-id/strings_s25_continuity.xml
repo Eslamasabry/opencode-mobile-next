@@ -8,6 +8,6 @@
     <string name="telemetryConsentBody">Jika Anda setuju, aplikasi mengirim angka penggunaan dan kesehatan aplikasi yang anonim, serta laporan crash, melalui Google Firebase. Anda dapat mengubah masing-masing di Pengaturan › Privasi dan data.</string>
     <string name="telemetryConsentSends">Dikirim: halaman dan fitur yang digunakan, apakah koneksi, pengiriman, dan penyiapan berhasil, kecepatan aplikasi, rentang memori dan penyimpanan, laporan crash. ID instalasi acak.</string>
     <string name="telemetryConsentNever">Tidak pernah dikirim: kode, percakapan, file, alamat server, atau kunci Anda. Tanpa ID iklan.</string>
-    <string name="telemetryConsentShare">Bagikan keduanya</string>
+    <string name="telemetryConsentShare">Bagikan penggunaan dan laporan kerusakan</string>
     <string name="telemetryConsentNotNow">Nanti saja</string>
 </resources>

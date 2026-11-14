@@ -3,7 +3,7 @@
     <string name="telemetryCrashReportsTitle">إرسال تقارير الأعطال إلى المطوّر (Google Firebase)</string>
     <string name="telemetryCrashReportsBody">عند تعطّل التطبيق أو فشل خطوة، يُرسل نوع المشكلة وإصدار التطبيق وأندرويد وقائمة قصيرة بمواضع الشيفرة. لا يُرسل رسائلك ولا ملفاتك ولا عناوينك ولا مفاتيحك أبدًا.</string>
     <!-- B-180/B-190: Flutter 2.1.5 app_ar.arb, word for word. -->
-    <string name="telemetryConsentChoose">اختيار</string>
+    <string name="telemetryConsentChoose">اختيار ما تشاركه</string>
     <string name="telemetryConsentSave">حفظ اختياري</string>
     <string name="sendReportTitle">إرسال تقرير مشكلة</string>
     <string name="sendReportRowDetail">راجع ما سيُرسل ثم أرسله</string>

@@ -8,6 +8,6 @@
     <string name="telemetryConsentBody">If you agree, the app sends anonymous usage and app health numbers, and crash reports, through Google Firebase. You can change each in Settings › Privacy and data.</string>
     <string name="telemetryConsentSends">Sent: pages and features used, whether connecting, sending and setup work, app speed, memory and storage ranges, crash reports. A random install ID.</string>
     <string name="telemetryConsentNever">Never sent: your code, conversations, files, server addresses or keys. No advertising ID.</string>
-    <string name="telemetryConsentShare">Share both</string>
+    <string name="telemetryConsentShare">Share usage and crash reports</string>
     <string name="telemetryConsentNotNow">Not now</string>
 </resources>

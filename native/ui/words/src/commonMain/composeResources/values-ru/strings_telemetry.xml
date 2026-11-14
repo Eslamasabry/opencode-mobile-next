@@ -3,7 +3,7 @@
 <resources>
     <string name="telemetryCrashReportsTitle">Отправлять отчёты о сбоях разработчику (Google Firebase)</string>
     <string name="telemetryCrashReportsBody">Когда приложение вылетает или шаг не удаётся, оно отправляет тип проблемы, версии приложения и Android и короткий список мест в коде. Ваши сообщения, файлы, адреса и ключи никогда не отправляются.</string>
-    <string name="telemetryConsentChoose">Выбрать</string>
+    <string name="telemetryConsentChoose">Выбрать, что отправлять</string>
     <string name="telemetryConsentSave">Сохранить мой выбор</string>
     <string name="sendReportTitle">Отправить отчёт о проблеме</string>
     <string name="sendReportSubtitle">Это всё, что содержит отчёт. Ничего не отправляется, пока вы не нажмёте «Отправить».</string>

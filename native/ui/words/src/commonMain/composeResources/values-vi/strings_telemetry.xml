@@ -3,7 +3,7 @@
 <resources>
     <string name="telemetryCrashReportsTitle">Gửi báo cáo sự cố cho nhà phát triển (Google Firebase)</string>
     <string name="telemetryCrashReportsBody">Khi ứng dụng bị lỗi hoặc một bước không thành công, ứng dụng gửi loại sự cố, phiên bản ứng dụng và Android cùng một danh sách ngắn các vị trí trong mã. Ứng dụng không bao giờ gửi tin nhắn, tệp, địa chỉ hay khóa của bạn.</string>
-    <string name="telemetryConsentChoose">Chọn</string>
+    <string name="telemetryConsentChoose">Chọn nội dung chia sẻ</string>
     <string name="telemetryConsentSave">Lưu lựa chọn của tôi</string>
     <string name="sendReportTitle">Gửi báo cáo sự cố</string>
     <string name="sendReportSubtitle">Đây là toàn bộ nội dung của báo cáo. Sẽ không gửi gì cho đến khi bạn nhấn Gửi.</string>
