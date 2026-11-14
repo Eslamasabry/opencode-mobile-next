@@ -153,6 +153,7 @@ import io.github.eslamasabry.oc.ui.words.res.queuedResendTitle
 import io.github.eslamasabry.oc.ui.words.res.kitTurnMore
 import io.github.eslamasabry.oc.ui.words.res.queuedReceiptStillUncertain
 import io.github.eslamasabry.oc.ui.words.res.queuedReceiptStorageProblem
+import io.github.eslamasabry.oc.ui.words.res.runningWorkOpen
 import kotlin.time.Instant
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.ImmutableMap
@@ -427,6 +428,8 @@ internal fun ChatTranscriptList(
     onLoadOlder: () -> Unit = {},
     /** Find, while it is open: the text parts mark its matches, and the current match's folded parts open. */
     find: FindUi? = null,
+    /** A tap on the background line opens the conversation's running work; null leaves the line as plain text. */
+    onOpenBackground: (() -> Unit)? = null,
 ) {
     val currentRows by rememberUpdatedState(rows)
     FindOpensFolds(find, rows, facts, folds)
@@ -639,10 +642,24 @@ internal fun ChatTranscriptList(
         }
         if (facts.background.isNotEmpty() && listWords != null) {
             item(key = ListKeys.BACKGROUND, contentType = "background") {
-                KitQuietLine(
-                    backgroundWords(facts.background, facts.nowMs),
-                    kitTranscriptItemMotion().testTag("chat-background-work"),
-                )
+                // The facts' clock ticks only for the stream's own background work; a server command still running
+                // after the reply counts its minutes here, so its time never stands still.
+                val first = facts.background.first()
+                val lineModifier = kitTranscriptItemMotion().testTag("chat-background-work")
+                io.github.eslamasabry.oc.ui.kitchat.turn.KitSince(
+                    Instant.fromEpochMilliseconds(first.sinceMs),
+                    io.github.eslamasabry.oc.ui.kitchat.turn.KitSinceTicks.Minutes,
+                ) { since ->
+                    io.github.eslamasabry.oc.ui.kitchat.transcript.KitBackgroundWorkLine(
+                        backgroundWords(
+                            facts.background,
+                            maxOf(facts.nowMs, first.sinceMs + since.elapsed.inWholeMilliseconds),
+                        ),
+                        lineModifier,
+                        onOpen = onOpenBackground,
+                        openLabel = stringResource(Res.string.runningWorkOpen),
+                    )
+                }
             }
         }
         if (listWords != null) {

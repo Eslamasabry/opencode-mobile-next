@@ -10,7 +10,10 @@ import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.model.BackgroundWorkResult
 import io.github.eslamasabry.oc.core.model.ManagedShell
 import io.github.eslamasabry.oc.core.model.ManagedShellStatus
+import io.github.eslamasabry.oc.engine.transcript.turnfacts.BackgroundTask
+import io.github.eslamasabry.oc.engine.transcript.turnfacts.backgroundTaskName
 import io.github.eslamasabry.oc.feature.chat.work.ChatWorkModel
+import io.github.eslamasabry.oc.feature.chat.work.RunningWork
 import io.github.eslamasabry.oc.feature.chat.work.ChatWorkUi
 import io.github.eslamasabry.oc.feature.chat.work.ShellOutputUi
 import io.github.eslamasabry.oc.feature.chat.work.WorkTimeout
@@ -42,18 +45,28 @@ import io.github.eslamasabry.oc.ui.words.res.chatRunShellHint
 import io.github.eslamasabry.oc.ui.words.res.chatRunShellLabel
 import io.github.eslamasabry.oc.ui.words.res.chatUiRunShellCommand
 import io.github.eslamasabry.oc.ui.words.res.commandRun
+import io.github.eslamasabry.oc.ui.words.res.chatUiShowAllSubagentSessions
+import io.github.eslamasabry.oc.ui.words.res.kitBackgroundWorkGoToStep
+import io.github.eslamasabry.oc.ui.words.res.kitBackgroundWorkHours
+import io.github.eslamasabry.oc.ui.words.res.kitBackgroundWorkMinutes
 import io.github.eslamasabry.oc.ui.words.res.kitConfirmFailed
 import io.github.eslamasabry.oc.ui.words.res.kitSheetDismiss
 import io.github.eslamasabry.oc.ui.words.res.runningWorkBackgroundAction
 import io.github.eslamasabry.oc.ui.words.res.runningWorkBackgroundBody
+import io.github.eslamasabry.oc.ui.words.res.runningWorkBackgroundUnavailable
 import io.github.eslamasabry.oc.ui.words.res.runningWorkCommandState
 import io.github.eslamasabry.oc.ui.words.res.runningWorkCommandsFailed
 import io.github.eslamasabry.oc.ui.words.res.runningWorkEmptyBody
 import io.github.eslamasabry.oc.ui.words.res.runningWorkEmptyTitle
+import io.github.eslamasabry.oc.ui.words.res.runningWorkMenu
+import io.github.eslamasabry.oc.ui.words.res.runningWorkNotReported
+import io.github.eslamasabry.oc.ui.words.res.runningWorkTasksNoStop
 import io.github.eslamasabry.oc.ui.words.res.runningWorkTitle
+import io.github.eslamasabry.oc.ui.words.res.sessionMenuSubagents
 import io.github.eslamasabry.oc.ui.words.res.shellOutputLimitTitle
 import io.github.eslamasabry.oc.ui.words.res.workBackgroundPending
 import io.github.eslamasabry.oc.ui.words.res.workBackgroundRequested
+import io.github.eslamasabry.oc.ui.words.res.workCount
 import io.github.eslamasabry.oc.ui.words.res.workExitCode
 import io.github.eslamasabry.oc.ui.words.res.workFinished
 import io.github.eslamasabry.oc.ui.words.res.workMoreOutput
@@ -76,7 +89,24 @@ import io.github.eslamasabry.oc.ui.words.res.workTimeoutOneHour
 import io.github.eslamasabry.oc.ui.words.res.workTimeoutOneMinute
 import io.github.eslamasabry.oc.ui.words.res.workTrimmed
 import io.github.eslamasabry.oc.ui.words.res.workUnavailable
+import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
+
+/**
+ * The conversation's "…" entry to its running work (owner 2026-11-14: "where is it?"): always there where the chat
+ * has the sheet ([offered]), with the count while anything runs besides the reply; the sheet says when nothing runs
+ * or when the server does not report it.
+ */
+@Composable
+internal fun runningWorkAction(offered: Boolean, running: Int, onOpen: () -> Unit): KitLineAction? {
+    if (!offered) return null
+    return KitLineAction(
+        if (running > 0) stringResource(Res.string.workCount, running) else stringResource(Res.string.runningWorkMenu),
+        onOpen,
+        testTag = "chat-work-open",
+        icon = KitIcons.branch,
+    )
+}
 
 /**
  * Flutter `running_work_sheet.dart` for the commands this conversation started: the list, one
@@ -89,6 +119,14 @@ internal fun ChatWorkSheet(
     visible: Boolean,
     model: ChatWorkModel,
     onDismiss: () -> Unit,
+    /** Work the agent's stream says goes on in the background (Claude Code's background commands), oldest first. */
+    tasks: List<BackgroundTask> = emptyList(),
+    nowMs: Long = 0,
+    /** The server keeps sub-agent conversations: the sheet links to them. */
+    subagents: Boolean = false,
+    onShowSubagents: (() -> Unit)? = null,
+    /** Go to the step that started [BackgroundTask] (the sheet closes first). */
+    onShowTask: (BackgroundTask) -> Unit = {},
 ) {
     val output = state.output
     KitSheet(
@@ -114,7 +152,8 @@ internal fun ChatWorkSheet(
                             model::dismissActionFailure,
                         ),
                 )
-            if (output == null) WorkList(state, model) else ShellOutput(output, state, model)
+            if (output == null) WorkList(state, model, tasks, nowMs, subagents, onShowSubagents, onShowTask)
+            else ShellOutput(output, state, model)
         }
     }
     KitConfirm(
@@ -132,15 +171,51 @@ internal fun ChatWorkSheet(
     )
 }
 
+/**
+ * The list: what runs (the stream's background work, then the server's commands), the way to the sub-agents, then
+ * what the server can do with a running reply. Each place stays and says so where this server cannot do it.
+ */
 @Composable
-private fun WorkList(state: ChatWorkUi, model: ChatWorkModel) {
-    WorkListRows(state, model)
+private fun WorkList(
+    state: ChatWorkUi,
+    model: ChatWorkModel,
+    tasks: List<BackgroundTask>,
+    nowMs: Long,
+    subagents: Boolean,
+    onShowSubagents: (() -> Unit)?,
+    onShowTask: (BackgroundTask) -> Unit,
+) {
+    if (!RunningWork.reported(state.supported, subagents, tasks))
+        KitNotice(
+            message = stringResource(Res.string.runningWorkNotReported),
+            tone = StatusTone.Neutral,
+            modifier = Modifier.testTag("chat-work-not-reported"),
+        )
+    else WorkListRows(state, model, tasks, nowMs, onShowTask)
+    if (subagents && onShowSubagents != null)
+        KitRowGroup {
+            KitRow(
+                title = stringResource(Res.string.sessionMenuSubagents),
+                supporting = stringResource(Res.string.chatUiShowAllSubagentSessions),
+                leading = KitRowLeading.Glyph(KitIcons.branch),
+                modifier = Modifier.testTag("chat-work-subagents"),
+                onClick = onShowSubagents,
+            )
+        }
     BackgroundNotice(state, model)
 }
 
 /** Flutter `running-work-background`: what moving the work frees, then the act, then what the server said. */
 @Composable
 private fun BackgroundNotice(state: ChatWorkUi, model: ChatWorkModel) {
+    if (state.backgroundSupported == false) {
+        KitNotice(
+            message = stringResource(Res.string.runningWorkBackgroundUnavailable),
+            tone = StatusTone.Neutral,
+            modifier = Modifier.testTag("running-work-background-unavailable"),
+        )
+        return
+    }
     if (!state.backgroundNotice) return
     val result = state.backgroundResult
     if (result == null)
@@ -175,8 +250,44 @@ private fun BackgroundNotice(state: ChatWorkUi, model: ChatWorkModel) {
 }
 
 @Composable
-private fun WorkListRows(state: ChatWorkUi, model: ChatWorkModel) {
+private fun WorkListRows(
+    state: ChatWorkUi,
+    model: ChatWorkModel,
+    tasks: List<BackgroundTask>,
+    nowMs: Long,
+    onShowTask: (BackgroundTask) -> Unit,
+) {
+    if (tasks.isNotEmpty()) {
+        KitRowGroup {
+            tasks.forEach { task ->
+                KitRow(
+                    title = task.name,
+                    supporting = stringResource(Res.string.kitBackgroundWorkGoToStep),
+                    meta = elapsedWords(task.sinceMs, nowMs),
+                    leading = KitRowLeading.Glyph(KitIcons.terminal),
+                    modifier = Modifier.testTag("chat-work-task-${task.callId}"),
+                    onClick = { onShowTask(task) },
+                )
+            }
+        }
+        // The stream reports this work but the server has no way to stop one piece of it on its own.
+        KitNotice(
+            message = stringResource(Res.string.runningWorkTasksNoStop),
+            tone = StatusTone.Neutral,
+            modifier = Modifier.testTag("chat-work-tasks-no-stop"),
+        )
+        if (state.shells.isEmpty()) return
+    }
     when {
+        !state.supported && tasks.isEmpty() ->
+            KitStateView(
+                kind = KitStateKind.Empty,
+                title = stringResource(Res.string.runningWorkEmptyTitle),
+                body = stringResource(Res.string.runningWorkEmptyBody),
+                icon = KitIcons.terminal,
+                modifier = Modifier.testTag("chat-work-empty"),
+            )
+        !state.supported -> Unit
         state.failed && state.shells.isEmpty() ->
             KitNotice(
                 message = stringResource(Res.string.runningWorkCommandsFailed),
@@ -186,6 +297,7 @@ private fun WorkListRows(state: ChatWorkUi, model: ChatWorkModel) {
             )
         state.loading && state.shells.isEmpty() ->
             KitNotice(message = stringResource(Res.string.workRunning), tone = StatusTone.Progress)
+        state.shells.isEmpty() && tasks.isNotEmpty() -> Unit
         state.shells.isEmpty() ->
             KitStateView(
                 kind = KitStateKind.Empty,
@@ -197,8 +309,9 @@ private fun WorkListRows(state: ChatWorkUi, model: ChatWorkModel) {
         else ->
             KitRowGroup {
                 state.shells.forEach { shell ->
+                    // A plain name on the row; the command itself is the opened row's title.
                     KitRow(
-                        title = shell.command.lineSequence().firstOrNull().orEmpty(),
+                        title = backgroundTaskName(shell.command),
                         supporting =
                             stringResource(Res.string.runningWorkCommandState, stateWords(shell)),
                         leading = KitRowLeading.Glyph(KitIcons.terminal),
@@ -209,6 +322,17 @@ private fun WorkListRows(state: ChatWorkUi, model: ChatWorkModel) {
             }
     }
 }
+
+/** "12 min", "1 h 5 min", "under a minute": how long work started at [sinceMs] has run. */
+@Composable
+private fun elapsedWords(sinceMs: Long, nowMs: Long): String {
+    val minutes = ((nowMs - sinceMs).coerceAtLeast(0) / MINUTE_MS).toInt()
+    return if (minutes < HOUR_MINUTES) pluralStringResource(Res.plurals.kitBackgroundWorkMinutes, minutes, minutes)
+    else stringResource(Res.string.kitBackgroundWorkHours, minutes / HOUR_MINUTES, minutes % HOUR_MINUTES)
+}
+
+private const val MINUTE_MS = 60_000L
+private const val HOUR_MINUTES = 60
 
 @Composable
 private fun stateWords(shell: ManagedShell): String =

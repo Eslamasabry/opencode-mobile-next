@@ -1133,6 +1133,7 @@ public class ChatPresenter(
             agents = c.agentSelection,
             approvals = c.permissionRequests,
             health = c.languageServiceStatus || c.formatterStatus,
+            subagents = c.subagentSessions,
         )
 
     override fun openPlace(place: ChatPlace) {
@@ -1290,6 +1291,15 @@ public class ChatPresenter(
             // Acknowledgement is not a job record: read the conversation again (Flutter reconciles the same way).
             if (result is Outcome.Ok) world.reload()
         }
+    }
+
+    /**
+     * The running-work sheet's "go to what started it": the transcript lands on the message whose step started the
+     * work (as a timeline pick does). A message the transcript does not hold (not loaded) changes nothing.
+     */
+    override fun showWorkStart(messageId: String) {
+        val rowKey = messageRowKey(feed.value, world.transcript.value, messageId) ?: return
+        local.update { it.copy(arrival = PendingArrival(nextId++, false, false, rowKey = rowKey)) }
     }
 
     override fun compactRequested() {

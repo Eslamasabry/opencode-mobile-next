@@ -112,6 +112,11 @@
     <string name="runningWorkEmptyBody">Agents and commands this conversation starts show here while they run and after they end.</string>
     <string name="runningWorkBackgroundBody">The work keeps running on the server and its results come back here.</string>
     <string name="runningWorkBackgroundAction">Keep chatting while it runs</string>
+    <string name="runningWorkBackgroundUnavailable">This server can't move a running reply's work to the background.</string>
+    <string name="runningWorkNotReported">This server doesn't report work that runs in the background.</string>
+    <string name="runningWorkTasksNoStop">This server can't stop these one at a time.</string>
+    <string name="runningWorkMenu">Running work</string>
+    <string name="runningWorkOpen">Open running work</string>
     <string name="shellOutputCopyFirst">Copy output first</string>
     <string name="shellOutputLimitTitle">Stop it after…</string>
     <string name="shellOutputStopsIn">stops in %1$s</string>

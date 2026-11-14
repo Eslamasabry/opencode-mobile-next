@@ -449,6 +449,8 @@ public data class ChatCapabilitiesUi(
     val approvals: Boolean = false,
     /** Language services or formatters report a status (Project health has something to show). */
     val health: Boolean = false,
+    /** `subagentSessions`: the agents a conversation starts are conversations of their own (the Relations page). */
+    val subagents: Boolean = false,
 )
 
 /**
@@ -547,6 +549,9 @@ public interface ChatActions {
 
     /** S30 story 3: Prompt tools › Background: the running work goes on by itself while the chat stays usable. */
     public fun backgroundWork() {}
+
+    /** Running work › a task's row: the transcript shows the message whose step started it. */
+    public fun showWorkStart(messageId: String) {}
 
     /** The person said yes to "Shorten this conversation?". */
     public fun confirmCompact() {}
