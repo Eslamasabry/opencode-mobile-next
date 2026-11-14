@@ -1,4 +1,5 @@
 <resources>
     <string name="tipMessageDetailsTitle">تفاصيل الرسالة</string>
     <string name="tipMessageDetails">اضغط مطولاً على رسالة لفتح التفاصيل، أو استخدم زر المزيد، لرؤية النموذج والوقت المستغرق.</string>
+    <string name="tipBackReturnsTo">يعيدك زر الرجوع إلى %1$s، حيث تركتها.</string>
 </resources>

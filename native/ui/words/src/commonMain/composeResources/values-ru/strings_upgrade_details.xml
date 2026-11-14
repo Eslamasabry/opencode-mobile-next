@@ -3,4 +3,5 @@
 <resources>
     <string name="tipMessageDetailsTitle">Подробности сообщения</string>
     <string name="tipMessageDetails">Удерживайте сообщение и выберите «Подробности» или нажмите кнопку «Ещё», чтобы увидеть модель и время.</string>
+    <string name="tipBackReturnsTo">Кнопка «Назад» вернёт вас в «%1$s», где вы остановились.</string>
 </resources>

@@ -3,4 +3,5 @@
 <resources>
     <string name="tipMessageDetailsTitle">Chi tiết tin nhắn</string>
     <string name="tipMessageDetails">Giữ một tin nhắn để chọn Chi tiết, hoặc dùng nút Thêm của nó, để xem mô hình và thời gian.</string>
+    <string name="tipBackReturnsTo">Nút Quay lại đưa bạn về %1$s, nơi bạn đã rời đi.</string>
 </resources>

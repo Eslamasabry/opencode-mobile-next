@@ -736,4 +736,5 @@
     <string name="kitConsequenceKept">محفوظ</string>
     <string name="kitConsequenceInfo">ملاحظة</string>
     <string name="kitPinned">مثبّتة</string>
+    <string name="kitReceiptCountdownSpoken">%1$s. تراجع خلال %2$s ثوانٍ</string>
 </resources>

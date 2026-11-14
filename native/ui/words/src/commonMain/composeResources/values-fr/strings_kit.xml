@@ -654,4 +654,5 @@
     <string name="kitConsequenceKept">Conservé</string>
     <string name="kitConsequenceInfo">Remarque</string>
     <string name="kitPinned">Épinglé</string>
+    <string name="kitReceiptCountdownSpoken">%1$s. Annuler dans les %2$s secondes</string>
 </resources>

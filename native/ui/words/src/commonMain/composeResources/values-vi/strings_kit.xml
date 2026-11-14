@@ -600,4 +600,5 @@
     <string name="kitConsequenceKept">Được giữ lại</string>
     <string name="kitConsequenceInfo">Lưu ý</string>
     <string name="kitPinned">Đã ghim</string>
+    <string name="kitReceiptCountdownSpoken">%1$s. Hoàn tác trong %2$s giây</string>
 </resources>

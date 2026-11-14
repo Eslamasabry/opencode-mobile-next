@@ -655,4 +655,5 @@
     <string name="kitConsequenceKept">Mantido</string>
     <string name="kitConsequenceInfo">Observação</string>
     <string name="kitPinned">Fixado</string>
+    <string name="kitReceiptCountdownSpoken">%1$s. Desfazer em até %2$s segundos</string>
 </resources>

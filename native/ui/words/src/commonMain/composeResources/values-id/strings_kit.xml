@@ -600,4 +600,5 @@
     <string name="kitConsequenceKept">Dipertahankan</string>
     <string name="kitConsequenceInfo">Catatan</string>
     <string name="kitPinned">Disematkan</string>
+    <string name="kitReceiptCountdownSpoken">%1$s. Batalkan dalam %2$s detik</string>
 </resources>

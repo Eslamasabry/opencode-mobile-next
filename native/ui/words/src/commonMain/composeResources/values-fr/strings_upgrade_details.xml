@@ -3,4 +3,5 @@
 <resources>
     <string name="tipMessageDetailsTitle">Détails du message</string>
     <string name="tipMessageDetails">Maintenez un message appuyé pour afficher Détails, ou utilisez son bouton Plus, afin de voir le modèle et la durée.</string>
+    <string name="tipBackReturnsTo">Retour ramène à %1$s, là où vous l’aviez laissée.</string>
 </resources>

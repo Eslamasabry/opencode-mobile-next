@@ -601,4 +601,5 @@
     <string name="kitConsequenceKept">保留</string>
     <string name="kitConsequenceInfo">注意</string>
     <string name="kitPinned">已固定</string>
+    <string name="kitReceiptCountdownSpoken">%1$s。%2$s 秒内可撤销</string>
 </resources>

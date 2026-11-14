@@ -655,4 +655,5 @@
     <string name="kitConsequenceKept">Se conserva</string>
     <string name="kitConsequenceInfo">Nota</string>
     <string name="kitPinned">Fijado</string>
+    <string name="kitReceiptCountdownSpoken">%1$s. Deshacer en %2$s segundos</string>
 </resources>
