@@ -165,8 +165,13 @@ public class ChatsViewModel(
     private val shownFeed =
         combine(feed.snapshot, home.snapshot, pinTick) { snapshot, extra, _ -> HomeCachedRows.merge(snapshot, extra.opening) }
 
-    /** A row tapped while its server was still answering: it opens the moment the server does. */
-    private var pendingOpen: ConversationRef? = null
+    /**
+     * B-333: a row tapped while it cannot open yet (its server still opening, or its list not verified yet): it opens
+     * by itself the moment it can, and the row says it is waiting. Any other tap or a move to another page drops it,
+     * so a conversation the person walked away from never opens. [waitingFrom] is the page the tap was made on.
+     */
+    private val waitingOpen = MutableStateFlow<ConversationRef?>(null)
+    private var waitingFrom: io.github.eslamasabry.oc.ui.routes.AppRoute? = null
 
     public val state: StateFlow<ChatsUi> =
         combine(
@@ -203,6 +208,8 @@ public class ChatsViewModel(
                 answers,
             ) { base, extra, open, selected, answering ->
                 base.copy(
+                    // Saved rows not there and the server not answered yet: "not known yet", never "no conversations".
+                    phase = HomeCachedRows.phase(base.phase, extra.opening),
                     home = extra,
                     answering = answering.first.toImmutableSet(),
                     answerFailure = answering.second,
@@ -211,6 +218,7 @@ public class ChatsViewModel(
                 )
             }
             .combine(startNewAsk) { base, ask -> base.copy(startNew = ask) }
+            .combine(waitingOpen) { base, waiting -> base.copy(waitingOpen = waiting) }
             .combine(renaming) { base, rename ->
                 base.copy(
                     renamable = editable(feed.snapshot.value),
@@ -330,14 +338,19 @@ public class ChatsViewModel(
     init {
         viewModelScope.launch { pins.changes.collect { pinTick.update { it + 1 } } }
         viewModelScope.launch {
-            home.snapshot.collect { extra ->
-                extra.opening?.rows?.let { previews.seed(it) }
-                val ref = pendingOpen
-                if (ref != null && extra.opening == null) {
-                    pendingOpen = null
-                    openConversation(ref)
+            home.snapshot.collect { extra -> extra.opening?.rows?.let { previews.seed(it) } }
+        }
+        // B-333: the kept tap opens its row once the row can open, while the person is still on the page they tapped.
+        viewModelScope.launch {
+            combine(waitingOpen, home.snapshot, feed.snapshot, nav.top) { ref, extra, snapshot, top ->
+                    if (ref == null) return@combine
+                    if (top != waitingFrom) {
+                        waitingOpen.value = null
+                        return@combine
+                    }
+                    if (extra.opening == null && snapshot.items.any { it.ref == ref && it.canReopen }) openConversation(ref)
                 }
-            }
+                .collect {}
         }
         viewModelScope.launch { previews.texts.collect { if (it.isNotEmpty()) home.rememberPreviews(it) } }
         // B-161: the branch port reads the folders the list shows, and only those. A1: the last message of the rows on
@@ -546,12 +559,19 @@ public class ChatsViewModel(
     }
 
     override fun openConversation(ref: ConversationRef) {
-        if (state.value.home.opening != null) {
-            pendingOpen = ref
+        val listed = feed.snapshot.value.items.firstOrNull { it.ref == ref }
+        val opening = home.snapshot.value.opening
+        // B-333: a row that cannot open yet (its server is still opening, or its list is not verified yet) keeps the
+        // tap and opens by itself when it can, instead of ignoring it.
+        if (opening != null || listed?.canReopen == false) {
+            if (opening != null || listed != null) {
+                waitingOpen.value = ref
+                waitingFrom = nav.top.value
+            }
             return
         }
-        // A row whose conversation cannot be reopened yet (its workspace is still connecting) stays shut.
-        val item = feed.snapshot.value.items.firstOrNull { it.ref == ref && it.canReopen } ?: return
+        waitingOpen.value = null
+        val item = listed ?: return
         // H4: an agent conversation the helper cannot resume asks before anything opens (F: chats_home_screen.dart:186).
         AgentResumeRules.ask(item, ChatsState.row(item).agentName)?.let {
             sheet.value = null
@@ -574,6 +594,7 @@ public class ChatsViewModel(
     }
 
     override fun rowAct(row: ConversationRowUi, act: RowAct) {
+        waitingOpen.value = null
         // P14 (F: session_menu.dart:42-48, Details does not need the conversation): the row's facts in a sheet over the
         // home; Back closes it and the person is still on the list.
         if (act == RowAct.Details) {
@@ -591,6 +612,7 @@ public class ChatsViewModel(
     }
 
     override fun archive(row: ConversationRowUi) {
+        waitingOpen.value = null
         if (row.key !in state.value.archivable) return
         // One offer at a time: a new archive sends the earlier one first.
         commitArchive()
@@ -738,6 +760,7 @@ public class ChatsViewModel(
     }
 
     override fun newConversation() {
+        waitingOpen.value = null
         // A server that is not answering cannot start a conversation; the home says so instead of doing nothing.
         if (state.value.home.opening == null) nav.open(ChatsRoute.New(profile = null)) else newRefused.value = true
     }

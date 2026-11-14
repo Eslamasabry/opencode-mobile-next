@@ -49,4 +49,15 @@ class HomeCachedRowsTest {
         val live = ChatFeedSnapshot(items = persistentListOf(item("a", at = 5_000, title = "Fix login")))
         assertEquals(live, HomeCachedRows.merge(live, opening))
     }
+
+    @Test
+    fun `B-HOME-CACHE-004 a server that has not answered never makes the home say No conversations yet`() {
+        val opening = ChatsOpeningUi(ChatsOpeningPhase.Connecting, "This phone", profile = P1)
+        // Nothing saved and no live rows yet: the list is not known, so the home keeps its opening state.
+        val unknown = ui(HomeCachedRows.merge(ChatFeedSnapshot(), opening))
+        assertEquals(ChatsPhase.Opening, HomeCachedRows.phase(unknown.phase, opening))
+        // Only a verified empty list (the server answered) is the empty state.
+        assertEquals(ChatsPhase.Empty, HomeCachedRows.phase(ui(ChatFeedSnapshot()).phase, null))
+        assertEquals(ChatsPhase.List, HomeCachedRows.phase(ChatsPhase.List, opening))
+    }
 }

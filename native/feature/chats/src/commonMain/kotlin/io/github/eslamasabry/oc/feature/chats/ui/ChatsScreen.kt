@@ -815,6 +815,8 @@ private data class HomeRowWords(
     val stopped: String,
     val interrupted: String,
     val cantReopen: String,
+    /** B-333: a tapped row that waits for its server to open says so. */
+    val connecting: String,
     val archive: String,
     val otherAgent: String,
     val rowActions: String,
@@ -841,6 +843,7 @@ private fun rememberHomeRowWords(): HomeRowWords =
         stopped = stringResource(Res.string.chatsHomeStopped),
         interrupted = stringResource(Res.string.chatsHomeInterrupted),
         cantReopen = stringResource(Res.string.agentsStateCantReopen),
+        connecting = stringResource(Res.string.e7WorkspaceConnecting),
         archive = stringResource(Res.string.sessionMenuArchive),
         otherAgent = stringResource(Res.string.agentPersonaOtherName),
         rowActions = stringResource(Res.string.chatsRowActions),
@@ -875,6 +878,8 @@ private data class HomeRowFlags(
     val showProject: Boolean,
     val showAgents: Boolean,
     val nowMs: Long,
+    /** B-333: the person tapped this row while it could not open yet; it opens by itself when it can. */
+    val waiting: Boolean = false,
 )
 
 private fun rowFlags(row: ConversationRowUi, state: ChatsUi): HomeRowFlags =
@@ -895,6 +900,7 @@ private fun rowFlags(row: ConversationRowUi, state: ChatsUi): HomeRowFlags =
         showProject = state.showProjects,
         showAgents = state.showAgents,
         nowMs = state.nowMs,
+        waiting = state.waitingOpen == row.ref,
     )
 
 /**
@@ -917,6 +923,8 @@ private fun ConversationRow(
         // While the person's answer is held ("Allowed · Undo" under the row) or a chosen answer to a question is held or
         // on its way, the state word must not say "Needs you".
         if (flags.held != null || flags.heldQuestion != null || flags.questionSending) null
+        // B-333: the tap is kept; the row says it waits for its server instead of looking dead.
+        else if (flags.waiting) words.connecting
         // H4 (F: chats_home_screen.dart:901): a finished conversation that cannot reopen says so before Done/Stopped.
         else if (HomeRowStatusRules.saysCantReopen(row)) words.cantReopen
         else when (row.status) {
@@ -1010,7 +1018,8 @@ private fun ConversationRow(
                 title = title,
                 agent = agent,
                 time = time,
-                onClick = if (row.canOpen) ({ actions.openConversation(row.ref) }) else null,
+                // B-333: a row that cannot open yet still takes the tap; the home keeps it and opens the row when it can.
+                onClick = { actions.openConversation(row.ref) },
                 preview = preview,
                 meta = meta,
                 project = project,
