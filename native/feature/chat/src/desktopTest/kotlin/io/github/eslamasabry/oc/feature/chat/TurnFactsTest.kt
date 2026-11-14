@@ -379,7 +379,7 @@ class TurnFactsTest {
             waitForIdle()
             // D1: no summary line and so no chevron of its own; the three steps each draw a node on the rail and no chevron.
             onAllNodesWithTag("kit-step-timeline-chevron", useUnmergedTree = true).assertCountEquals(0)
-            onAllNodesWithTag("kit-step-list", useUnmergedTree = true).assertCountEquals(1)
+            onAllNodesWithTag("chat-work-line", useUnmergedTree = true).assertCountEquals(1)
             onAllNodesWithTag("kit-tool-chevron", useUnmergedTree = true).assertCountEquals(0)
             onAllNodesWithTag("kit-step-node", useUnmergedTree = true).assertCountEquals(3)
         }
