@@ -89,7 +89,7 @@ private fun PhraseRow(
             .padding(bottom = Space.S2.dp) // F: lib/ui/kit/chat/kit_phrase_chips.dart:56-58
             .semantics { contentDescription = label },
     ) {
-        KitFilterChips(bleed = bleed) {
+        KitFilterChips(bleed = bleed, endOnGutter = bleed) {
             phrases.forEach { phrase ->
                 var menu by remember(phrase) { mutableStateOf(false) }
                 KitMenu(

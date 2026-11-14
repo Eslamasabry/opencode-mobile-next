@@ -154,6 +154,12 @@ private class ChipLine(private val baseGap: Dp, private val minPeek: Dp) : Arran
 public fun KitFilterChips(
     modifier: Modifier = Modifier,
     bleed: Boolean = false,
+    /**
+     * The line's end is a block's gutter (the chat's phrase row in the bottom block): it ends there, its end fade inside
+     * it (audit 2026-11-14, finding 21). Elsewhere (the home's chips beside the server pill) the clip grows past the
+     * line's end by the chips' shadow reach, so the last chip's style shadow keeps its room (SoftShadowRoomTest).
+     */
+    endOnGutter: Boolean = false,
     chips: @Composable RowScope.() -> Unit,
 ) {
     val tokens = LocalKitTokens.current
@@ -176,10 +182,11 @@ public fun KitFilterChips(
     // shadow's reach and the chips keep their place, so their shadows stay whole; the fade's clear part covers it.
     // On the floating glass pane the clip stays at the pane's sides (nothing draws beside the pane).
     val growStart = if (onPane) 0.dp else (room - restStart).coerceAtLeast(0.dp)
-    // A line on a block that keeps the gutter ([bleed], the chat's phrase row) ends on that gutter: its end fade, clear
-    // third included, lies inside it, so the last chip thins out before the block's edge and is never cut flat beside
-    // the screen's edge (audit 2026-11-14, finding 21).
-    val growEnd = if (onPane || bleed) 0.dp else (room - restEnd).coerceAtLeast(0.dp)
+    // A line on a block that keeps the gutter ([endOnGutter], the chat's phrase row) ends on that gutter: its end fade,
+    // clear third included, lies inside it, so the last chip thins out before the block's edge and is never cut flat
+    // beside the screen's edge (audit 2026-11-14, finding 21). Any other line's end keeps its chips' shadow room (audit
+    // 2, 2026-11-14: pinned chrome under the bar is never clipped; its style shadows keep their room).
+    val growEnd = if (onPane || endOnGutter) 0.dp else (room - restEnd).coerceAtLeast(0.dp)
     val startPad = restStart + growStart
     val endPad = restEnd + growEnd
     val line = remember { ChipLine(Space.S2.dp, FilterChipsRules.MIN_PEEK_DP.dp) }
