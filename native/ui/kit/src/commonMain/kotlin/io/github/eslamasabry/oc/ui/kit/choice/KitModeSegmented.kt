@@ -4,7 +4,6 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationVector1D
 import androidx.compose.animation.core.FiniteAnimationSpec
 import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -37,7 +36,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameMillis
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
+import io.github.eslamasabry.oc.ui.kit.row.kitContainer
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
@@ -57,7 +56,6 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Density
-import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.motion.KitHaptic
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
@@ -147,7 +145,8 @@ public fun <T> KitModeSegmented(
     val fontScale = appDensity.fontScale
     val reasons = segments.mapNotNull { it.enabled.reason }.distinct()
     Column(
-        modifier.fillMaxWidth().semantics {
+        // Finding 17: reports its span to its stack, so a card set right under it keeps the container gap.
+        modifier.kitContainer(spaced = false).fillMaxWidth().semantics {
             contentDescription = semanticsLabel
         }
     ) {
@@ -610,7 +609,6 @@ private fun RowScope.ModeSegment(
     val colors = LocalKitColors.current
     val tokens = LocalKitTokens.current
     val density = LocalDensity.current
-    val hairline = kitHairline()
     val inset = (Space.S1 / 2f).dp
     val captionSize = with(density) { LocalKitTypography.current.style(TypeRole.Caption).fontSize.toDp() }
     val captionLine = captionSize * ModeLook.CAPTION_LINE * density.fontScale
@@ -622,19 +620,9 @@ private fun RowScope.ModeSegment(
             chosen -> TextTone.Primary
             else -> TextTone.Secondary
         }
-    val seam = SegmentedRules.seamAfter(i, slot.count, motion.shown, tall = true)
-    val seamAlpha by animateFloatAsState(if (seam) 1f else 0f, KitMotion.specs.quick(), label = "mode-seam")
-    val seamColor = colors.hairline
     Box(
         Modifier.weight(1f)
             .height(tallHeight)
-            .drawBehind {
-                if (seamAlpha > 0f) {
-                    val x = if (layoutDirection == LayoutDirection.Rtl) 0f else size.width
-                    val line = seamColor.copy(alpha = seamColor.alpha * seamAlpha)
-                    drawLine(line, Offset(x, 0f), Offset(x, size.height), hairline.toPx())
-                }
-            }
             .kitSelectTap(chosen, Role.RadioButton, segEnabled, haptic = null, KitShapeId.Tile, onTap)
             .padding(inset)
             .padding(horizontal = (Space.S2.toFloat() - Space.S1 / 2f).dp), // F: lib/ui/kit/kit_segmented.dart:629

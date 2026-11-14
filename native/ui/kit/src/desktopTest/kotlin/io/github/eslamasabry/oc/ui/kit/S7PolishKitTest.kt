@@ -275,15 +275,12 @@ class S7PolishKitTest {
     // P-027 ------------------------------------------------------------------------------------------------------
 
     @Test
-    fun `P-027 the tall track parts resting segments only, never beside the chosen one`() {
-        // Auto · Light · Dark with Dark chosen: one seam, between Auto and Light (Flutter's design).
-        assertTrue(SegmentedRules.seamAfter(0, 3, 2, tall = true))
-        assertFalse(SegmentedRules.seamAfter(1, 3, 2, tall = true))
-        assertFalse(SegmentedRules.seamAfter(2, 3, 2, tall = true), "never after the last")
-        // Light chosen: no seam at all (both seams touch it).
-        assertFalse(SegmentedRules.seamAfter(0, 3, 1, tall = true))
-        assertFalse(SegmentedRules.seamAfter(1, 3, 1, tall = true))
-        assertFalse(SegmentedRules.seamAfter(0, 3, 2, tall = false), "the short track has none")
+    fun `P-027 the track draws no seam between segments, whichever is chosen (cut audit 2, finding 21)`() {
+        // Seams only between resting segments left one lone line beside the chosen block that moved with the choice.
+        for (count in 2..4) for (chosen in 0 until count) for (i in 0 until count) {
+            assertFalse(SegmentedRules.seamAfter(i, count, chosen, tall = true), "no seam after $i of $count, $chosen chosen")
+            assertFalse(SegmentedRules.seamAfter(i, count, chosen, tall = false))
+        }
     }
 
     // P-029 ------------------------------------------------------------------------------------------------------

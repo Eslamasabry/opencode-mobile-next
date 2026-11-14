@@ -1,19 +1,15 @@
 package io.github.eslamasabry.oc.ui.kit.choice
 
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.ui.geometry.Offset
 import io.github.eslamasabry.oc.core.common.text.Numbers
 import io.github.eslamasabry.oc.ui.design.style.Style
 import io.github.eslamasabry.oc.ui.kit.foundation.kitHairline
@@ -35,6 +31,7 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import io.github.eslamasabry.oc.ui.kit.row.kitContainer
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalDensity
@@ -135,12 +132,12 @@ public object SegmentedRules {
         if (!groupEnabled || !tapped.enabled.isEnabled || tapped.value == selected) null else tapped.value
 
     /**
-     * Whether the tall track draws a hairline after segment [index] (at its end edge): between two resting segments
-     * only, never beside the chosen block (Flutter `kit_segmented.dart`). With three segments and the last chosen, the
-     * one seam is between the first two: that is the design, not a missing divider (P-027).
+     * Whether the track draws a hairline after segment [index]: never (cut audit 2, finding 21). Seams only between
+     * resting segments left one lone line on one side of the chosen block that moved with the choice (Mode: Dark |
+     * Saver with Light chosen); the segments are parted by their own room and the chosen block, symmetrically.
      */
-    public fun seamAfter(index: Int, count: Int, selectedIndex: Int, tall: Boolean): Boolean =
-        tall && index < count - 1 && index != selectedIndex && index + 1 != selectedIndex
+    @Suppress("UNUSED_PARAMETER")
+    public fun seamAfter(index: Int, count: Int, selectedIndex: Int, tall: Boolean): Boolean = false
 }
 
 /**
@@ -184,7 +181,9 @@ public fun <T> KitSegmented(
         if (!enabled.isEnabled) listOfNotNull(enabled.reason)
         else segments.mapNotNull { it.enabled.reason }.distinct()
     Column(
-        modifier.fillMaxWidth().semantics {
+        // Finding 17 (cut audit 2): the control reports its span to the stack it is in, so a card or row group set
+        // right under it keeps the kit's container gap instead of touching it (the control itself never moves).
+        modifier.kitContainer(spaced = false).fillMaxWidth().semantics {
             contentDescription = semanticsLabel
             if (!reasonShown && reasons.isNotEmpty()) stateDescription = reasons.joinToString(". ")
         }
@@ -281,22 +280,9 @@ private fun <T> RowSegments(segments: List<KitSegment<T>>, selected: T, enabled:
             val ink = inkColors.tone(words)
             // The chosen glyph and check take the accent, the control's one accent mark.
             val glyph = if (chosen && on) colors.accent else ink
-            // The tall track parts its resting segments with a hairline at each one's end edge (its left in
-            // Arabic), none beside the chosen block (Flutter BorderDirectional.end); a seam eases in and out as the
-            // choice moves.
-            val seam = SegmentedRules.seamAfter(i, segments.size, selectedIndex, tall)
-            val seamAlpha by animateFloatAsState(if (seam) 1f else 0f, specs.quick(), label = "segment-seam")
-            val seamColor = colors.hairline
             Box(
                 Modifier.weight(1f)
                     .let { if (tall) it.height(tallHeight) else it.heightIn(min = tokens.minTarget.dp) }
-                    .drawBehind {
-                        if (seamAlpha > 0f) {
-                            val x = if (layoutDirection == LayoutDirection.Rtl) 0f else size.width
-                            val ink = seamColor.copy(alpha = seamColor.alpha * seamAlpha)
-                            drawLine(ink, Offset(x, 0f), Offset(x, size.height), hairline.toPx())
-                        }
-                    }
                     // The 48 dp target is the whole segment (the track is minTarget plus its hairlines); the chosen
                     // block is drawn inset by half a space1 inside it (F: lib/ui/kit/kit_segmented.dart:629, :678-686).
                     // A target inside the inset made every track 4 dp taller than Flutter's.
