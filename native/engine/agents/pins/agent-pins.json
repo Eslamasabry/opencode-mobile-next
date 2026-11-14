@@ -354,7 +354,7 @@
       "providerId": "omp-acp",
       "signInMethod": "browserOAuthHost",
       "recipe": {
-        "version": "18.5.1",
+        "version": "18.20.0",
         "executable": "omp",
         "launchArgs": [
           "acp"
@@ -364,20 +364,20 @@
         ],
         "artifacts": {
           "arm64": {
-            "url": "https://github.com/can1357/oh-my-pi/releases/download/v18.5.1/omp-linux-arm64",
-            "sha256": "e7b81b96b3f9f391ec8afc7ee64c052ce1783290f88bbb59ba36d15b3b4e927c",
+            "url": "https://github.com/can1357/oh-my-pi/releases/download/v18.20.0/omp-linux-arm64",
+            "sha256": "8b5e197db7c58b7ebabf83c6f03597f89bae3a766a84c6481b3a942a125f5e22",
             "format": "executable",
             "member": null,
-            "downloadBytes": 230476072,
-            "installedBytes": 230476072
+            "downloadBytes": 244435960,
+            "installedBytes": 244435960
           },
           "x64": {
-            "url": "https://github.com/can1357/oh-my-pi/releases/download/v18.5.1/omp-linux-x64",
-            "sha256": "fb7638e82f0c9d087e96e15d3eb83a662d92374cd907187d6d4d2605e39f1e3a",
+            "url": "https://github.com/can1357/oh-my-pi/releases/download/v18.20.0/omp-linux-x64",
+            "sha256": "c8694be8c6e6a1f45e3636dd8a8e9eaa78878ad629a89000b403ec5e456d3f89",
             "format": "executable",
             "member": null,
-            "downloadBytes": 280536544,
-            "installedBytes": 280536544
+            "downloadBytes": 287484080,
+            "installedBytes": 287484080
           }
         }
       }

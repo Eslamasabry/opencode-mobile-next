@@ -20,7 +20,7 @@ class AgentPinsParityTest {
      */
     // Agents whose pins moved after the Flutter freeze (Flutter takes no new work since 2026-11-08): checked on their
     // own below, and their old Flutter entries are left out of the comparison.
-    private val postFreeze = setOf("antigravity", "opencode2", "claude", "codex", "goose")
+    private val postFreeze = setOf("antigravity", "opencode2", "claude", "codex", "goose", "omp-acp")
 
     private val repo: File = generateSequence(File("").absoluteFile) { it.parentFile }
         .first { File(it, "native/settings.gradle.kts").isFile }
@@ -187,6 +187,38 @@ class AgentPinsParityTest {
         assertEquals(208579376L, x64.installedBytes)
         assertEquals("./goose", x64.archiveMember)
         assertEquals(AgentArtifactFormat.TarGz, x64.format)
+    }
+
+    @Test
+    fun `B-AGENT-008 Oh My Pi pins equal the downloads checked on 2026-11-14`() {
+        // Moved after the freeze. Each SHA-256 equals GitHub's digest for the release asset; the executable's size is both sizes.
+        val recipe = AgentPins.builtIn.catalog().byId(io.github.eslamasabry.oc.engine.agents.AgentId("omp-acp"))!!.recipe!!
+        assertEquals("18.20.0", recipe.version)
+        assertEquals("omp", recipe.executable)
+        assertEquals(listOf("acp"), recipe.launchArgs)
+        assertEquals(listOf("login"), recipe.signInArgs)
+        val arm = recipe.artifacts.getValue(AgentArchitecture.Arm64)
+        assertEquals(
+            "https://github.com/can1357/oh-my-pi/releases/download/v18.20.0/" +
+                "omp-linux-arm64",
+            arm.url,
+        )
+        assertEquals("8b5e197db7c58b7ebabf83c6f03597f89bae3a766a84c6481b3a942a125f5e22", arm.sha256)
+        assertEquals(244435960L, arm.downloadBytes)
+        assertEquals(244435960L, arm.installedBytes)
+        assertEquals(null, arm.archiveMember)
+        assertEquals(AgentArtifactFormat.Executable, arm.format)
+        val x64 = recipe.artifacts.getValue(AgentArchitecture.X64)
+        assertEquals(
+            "https://github.com/can1357/oh-my-pi/releases/download/v18.20.0/" +
+                "omp-linux-x64",
+            x64.url,
+        )
+        assertEquals("c8694be8c6e6a1f45e3636dd8a8e9eaa78878ad629a89000b403ec5e456d3f89", x64.sha256)
+        assertEquals(287484080L, x64.downloadBytes)
+        assertEquals(287484080L, x64.installedBytes)
+        assertEquals(null, x64.archiveMember)
+        assertEquals(AgentArtifactFormat.Executable, x64.format)
     }
 
     @Test
