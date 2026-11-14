@@ -1,6 +1,7 @@
 package io.github.eslamasabry.oc.engine.runtime.setup.jobs
 
 import io.github.eslamasabry.oc.core.common.Failure
+import io.github.eslamasabry.oc.core.common.label
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.Redacted
 import io.github.eslamasabry.oc.core.common.RuntimeProblem
@@ -232,7 +233,7 @@ public class SetupJobEngine(
             jobId = record.jobId,
             id = SetupIds.START,
             ok = failure == null,
-            error = failure?.let { it.details?.text ?: it::class.simpleName },
+            error = failure?.let { it.details?.text ?: it.label() },
             version = version,
         )
         if (acknowledged is Outcome.Failed) {

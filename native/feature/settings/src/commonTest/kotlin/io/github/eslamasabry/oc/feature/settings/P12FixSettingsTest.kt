@@ -176,7 +176,7 @@ class P12FixSettingsTest {
     @Test
     fun `I18 a connection that stops or drops is kept once, by its failure kind, and recovery is not an error`() {
         val stopped = StreamStatus.Stopped(Failure.SignIn(SignInWhy.entries.first()))
-        assertEquals(HandledError("connection", "connection stopped: SignIn"), HandledErrors.fromStream(StreamStatus.Connected, stopped))
+        assertEquals(HandledError("connection", "connection stopped: SignIn · ${SignInWhy.entries.first().name}"), HandledErrors.fromStream(StreamStatus.Connected, stopped))
         assertNull(HandledErrors.fromStream(stopped, stopped))
         val lost = StreamStatus.Disconnected(attempt = 6, nextAttemptAtMs = null)
         assertEquals(HandledError("connection", "connection lost after 6 tries"), HandledErrors.fromStream(StreamStatus.Reconnecting(5, null), lost))

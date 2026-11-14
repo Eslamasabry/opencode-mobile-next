@@ -112,7 +112,7 @@ class DiagnosticsTest {
         diagnostics.failureShown(failure)
         diagnostics.failureShown(Failure.Refused(RefusalReason.ConsentMissing))
         assertEquals(listOf<Failure>(failure, Failure.Refused(RefusalReason.ConsentMissing)), signals.errors)
-        assertEquals(listOf("Network Reset", "Refused ConsentMissing"), diagnostics.errors.value.map { it.message })
+        assertEquals(listOf("Network · Reset", "Refused · ConsentMissing"), diagnostics.errors.value.map { it.message })
         assertFalse("synthetic-provider-secret" in diagnostics.reportText())
     }
 
