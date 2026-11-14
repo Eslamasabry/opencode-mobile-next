@@ -66,3 +66,4 @@ wiped (see Floor); they never come back and do not raise the floor.
 | 10030 | release | 2026-11-14 | native release 3.0.0+10030 (owner lineage) |
 | 10031 | build | 2026-11-14 | owner fix build of 0e4be570e (fix-only branch over release 10030) |
 | 10032 | build | 2026-11-14 | owner fix build of 11d62865c (release 10030 + open-while-starting incl. the Claude Code conversation fix) |
+| 10035 | build | 2026-11-14 | owner build of 679a414bc2 (10032 + Paseo 0.15.4, all agent pins, automatic agent update, visible loading) |
