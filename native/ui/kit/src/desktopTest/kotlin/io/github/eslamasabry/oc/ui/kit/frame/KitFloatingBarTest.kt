@@ -348,29 +348,19 @@ class KitFloatingBarTest {
     }
 
     @Test
-    fun `B-KIT-FLOAT-002 scrolled, the content passes under the bar and is blurred and cleared under the status bar`() {
+    fun `B-KIT-FLOAT-002 scrolled, the content passes under the bar, and nothing of it shows above the pane, in its glass or under the status bar`() {
         for (page in Page.entries) {
             var ground = Color.Unspecified
             // About 120 dp past the spacer's resting height (Home's pane keeps its room under the chips too).
             val s = shot(page, floating = true, act = { drag(-120f - roomBelow(page)) }, check = { ground = it.ground })
             val g = luma(ground)
-            // Under the status bar, above where the edge's dissolve starts: blur only, no sharp row edge.
-            val (statusMean, statusStep) = column(s.image, W / 2f, 1f, STATUS_DP * STATUS_EDGE_SOLID_SHARE - 1f)
-            assertTrue(statusMean >= g + 20f, "$page: content under the status bar, mean $statusMean over ground $g")
-            assertTrue(statusStep <= BLUR_STEP, "$page: cleared to a blur under the status bar, a step of $statusStep")
-            // Inside the pane, beside the title past its words: the rows show through its glass, blurred.
+            // Cut audit 2 (c-app-sbghost, c-style-top: dark blurred copies of the page's words in the status bar, over a
+            // body cleared there): the status edge draws the copy the pane's glass sees, cleared above the pane, so the
+            // rows the body no longer shows leave no copy under the status bar.
+            val (statusMean, statusStep) = column(s.image, W / 2f, 1f, STATUS_DP + 3f)
+            assertTrue(abs(statusMean - g) <= 3f && statusStep <= 3f, "$page: a copy of the rows under the status bar, mean $statusMean over ground $g, step $statusStep")
             val capsule = s.bounds["kit-liquid-bar"]!!
-            val bar = s.bounds["bar"]!!
             debugPng(s.image, "scrolled-$page")
-            // Words on the pane's glass: the copy of the page it bends is whole at the pane's bottom edge and gone by the
-            // inner end of its lens rim, so the rows show through its last few dp, not behind the title.
-            val inside = capsule.right.value - 24f
-            val from = capsule.bottom.value - 10f
-            val to = capsule.bottom.value - 3f
-            val (capsuleMean, capsuleStep) = column(s.image, inside, from, to)
-            println("$page pane $capsule, column at $inside: " + stepsAt(s.image, inside, from, to))
-            assertTrue(capsuleMean >= g + 15f, "$page: content behind the capsule, mean $capsuleMean over ground $g")
-            assertTrue(capsuleStep <= BLUR_STEP, "$page: blurred behind the capsule, a step of $capsuleStep")
             // Beside the pane (its 6 dp margin), below the status edge's blur and above the pane's bottom edge: nothing of
             // the page shows there but its ground (one body: content shows above that edge only through the glass).
             val sideFrom = STATUS_DP + STATUS_EDGE_REACH_DP + 1f
@@ -379,12 +369,12 @@ class KitFloatingBarTest {
             // Below the pane's bottom edge the rows run on sharp: they really pass under it.
             val (_, belowStep) = column(s.image, 2f, capsule.bottom.value + 1f, capsule.bottom.value + 80f)
             assertTrue(belowStep >= 100f, "$page: the rows run on below the pane, steepest step $belowStep")
-            println("$page scrolled: status mean $statusMean step $statusStep, capsule mean $capsuleMean step $capsuleStep, ground $g")
+            println("$page scrolled: status mean $statusMean step $statusStep, ground $g")
         }
     }
 
     @Test
-    fun `B-KIT-FLOAT-013 words on the pane - bright rows add nothing under the title and the chips and still show in the pane's rim`() {
+    fun `B-KIT-FLOAT-013 words on the pane - bright rows add nothing under the title, the chips or in the pane's rim`() {
         for (page in Page.entries) {
             val drag: ComposeUiTest.(Seen) -> Unit = { drag(-120f - roomBelow(page)) }
             val bright = shot(page, floating = true, act = drag)
@@ -401,10 +391,13 @@ class KitFloatingBarTest {
                 println("$page words over $line: mean $mean max $max")
                 assertTrue(mean <= WORDS_MEAN && max <= WORDS_MAX, "$page: bright rows show behind the words on the pane at $line: mean $mean, max $max of 255, pane $capsule\n" + map(bright.image, none.image, 0f, 0f, W.toFloat(), capsule.bottom.value + 4f))
             }
-            // Beside the words, in the pane's rim above its bottom edge, the rows still bend under the glass.
-            val (rim, _) = diff(bright.image, none.image, capsule.left.value + 40f, capsule.bottom.value - 8f, capsule.right.value - 40f, capsule.bottom.value - 3f)
-            println("$page rim: mean $rim over $capsule")
-            assertTrue(rim >= RIM_MEAN, "$page: the pane's rim shows nothing of the rows: mean $rim of 255")
+            // Cut audit 2 (c-style-top: a green ghost of the preview's button inside the bar's lower edge): the pane's
+            // glass sees the body as the chat's bar does (owner 2026-11-14, "nothing readable under a floating control"),
+            // gone above the pane's bottom edge and fading in below it, so its rim bends nothing of the rows either. Only
+            // the glass's blur may carry a trace of the faded rows across that edge into its last dp.
+            val (rim, rimMax) = diff(bright.image, none.image, capsule.left.value + 40f, capsule.bottom.value - 12f, capsule.right.value - 40f, capsule.bottom.value - 5f)
+            println("$page rim: mean $rim max $rimMax over $capsule")
+            assertTrue(rim <= RIM_CLEAR_MEAN && rimMax <= RIM_CLEAR_MAX, "$page: the rows show in the pane's rim: mean $rim, max $rimMax of 255")
         }
     }
 
@@ -627,6 +620,8 @@ class KitFloatingBarTest {
         const val WORDS_MAX = 8f
 
         /** In the pane's rim the rows still show: at least this much on average. */
-        const val RIM_MEAN = 15f
+        /** What the glass's blur may carry of the faded rows into the pane's rim (5 to 12 dp above its edge: about 2). */
+        const val RIM_CLEAR_MEAN = 4f
+        const val RIM_CLEAR_MAX = 10f
     }
 }

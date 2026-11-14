@@ -597,6 +597,7 @@ public fun KitScreen(
             val liftedFade = if (lifted != null) rememberKitWordsFade(lifted, KitWordsClear.Above) else null
             val underFade = if (floats && lifted == null) rememberKitWordsFade(under, KitWordsClear.Above) else null
             val floatFade = liftedFade ?: underFade
+            val floatFadePx = with(density) { HEADER_FADE_DP.dp.toPx() }
             // No lens (or a short window) with scrollsElsewhere: no pinned bar; the bar and its second row are the
             // scrolling header's first parts, as the page laid them out before it floated.
             val barInHeader = floatingBar != null && floatingBar.scrollsElsewhere && !floats && topPart != null
@@ -691,7 +692,12 @@ public fun KitScreen(
                                         if (floatFade == null || barFace == null) Modifier
                                         else
                                             Modifier.kitTopPaneReport(floatPane, LIQUID_BAR_INSET_X, LIQUID_BAR_INSET_Y)
-                                                .kitWordsFadeRecorder(floatFade, { floatPane.bottom }, { floatPane.rim }, clear = { barClear })
+                                                // Cut audit 2 (c-style-top: a green ghost of the preview's button inside
+                                                // the bar's lower edge): the floating pane's glass sees the body as the
+                                                // chat's bar does (owner 2026-11-14, "nothing readable under a floating
+                                                // control"): gone above the pane's bottom edge, where the body itself is
+                                                // cleared, and fading in over the same 12 dp below it. Not in its rim.
+                                                .kitWordsFadeRecorder(floatFade, { floatPane.bottom + floatFadePx }, { floatFadePx }, clear = { barClear })
                                     )
                             ) {
                                 CompositionLocalProvider(io.github.eslamasabry.oc.ui.kit.effects.LocalKitOnLiquidGlass provides (barFace != null)) {
@@ -748,11 +754,16 @@ public fun KitScreen(
                                                 if (k > 0f)
                                                     drawStatusEdge(edgeLayers, statusRun.toFloat(), statusBlur, headerUnder() * k, alpha = k) {
                                                         // A floating bar over the feature's own recording draws that
-                                                        // recording where it lies in the body.
-                                                        if (lifted != null) {
-                                                            val shift = lifted.sourceOrigin - bodyOrigin[0]
-                                                            translate(shift.x, shift.y) { drawLayer(lifted.layer) }
-                                                        } else drawLayer(under.layer)
+                                                        // recording where it lies in the body. Cut audit 2 (c-app-sbghost,
+                                                        // c-style-top: dark blurred copies of the page's words in the
+                                                        // status bar, over a body that is cleared there): a floating pane's
+                                                        // edge draws the copy its glass sees, cleared above the pane, never
+                                                        // the raw recording.
+                                                        val seen = liftedFade?.faded ?: lifted
+                                                        if (seen != null) {
+                                                            val shift = seen.sourceOrigin - bodyOrigin[0]
+                                                            translate(shift.x, shift.y) { drawLayer(seen.layer) }
+                                                        } else drawLayer((underFade?.fadedSource ?: under).layer)
                                                     }
                                             }
                                                 .kitScrollEdges(
