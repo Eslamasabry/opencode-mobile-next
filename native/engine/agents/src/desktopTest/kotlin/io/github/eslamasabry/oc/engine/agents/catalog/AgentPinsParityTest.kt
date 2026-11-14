@@ -20,7 +20,7 @@ class AgentPinsParityTest {
      */
     // Agents whose pins moved after the Flutter freeze (Flutter takes no new work since 2026-11-08): checked on their
     // own below, and their old Flutter entries are left out of the comparison.
-    private val postFreeze = setOf("antigravity", "opencode2", "claude")
+    private val postFreeze = setOf("antigravity", "opencode2", "claude", "codex")
 
     private val repo: File = generateSequence(File("").absoluteFile) { it.parentFile }
         .first { File(it, "native/settings.gradle.kts").isFile }
@@ -130,6 +130,31 @@ class AgentPinsParityTest {
         assertEquals(341910032L, x64.downloadBytes)
         assertEquals(341910032L, x64.installedBytes)
         assertEquals(AgentArtifactFormat.Executable, x64.format)
+    }
+
+    @Test
+    fun `B-AGENT-008 Codex pins equal the release assets checked on 2026-11-14`() {
+        // Moved after the freeze (0.167.0 -> 0.169.0). Each SHA-256 equals GitHub's own asset digest and the bytes fetched;
+        // installedBytes is the archive member's size.
+        val recipe = AgentPins.builtIn.catalog().byId(io.github.eslamasabry.oc.engine.agents.AgentId("codex"))!!.recipe!!
+        assertEquals("0.169.0", recipe.version)
+        assertEquals("codex", recipe.executable)
+        assertEquals(listOf("app-server"), recipe.launchArgs)
+        assertEquals(listOf("login", "--device-auth"), recipe.signInArgs)
+        val arm = recipe.artifacts.getValue(AgentArchitecture.Arm64)
+        assertEquals("https://github.com/openai/codex/releases/download/rust-v0.169.0/codex-aarch64-unknown-linux-musl.tar.gz", arm.url)
+        assertEquals("97b97d87eea075c5cb7709c7f6156a451622a7667953ecda40e0276637196f3f", arm.sha256)
+        assertEquals(119987185L, arm.downloadBytes)
+        assertEquals(290069784L, arm.installedBytes)
+        assertEquals("codex-aarch64-unknown-linux-musl", arm.archiveMember)
+        assertEquals(AgentArtifactFormat.TarGz, arm.format)
+        val x64 = recipe.artifacts.getValue(AgentArchitecture.X64)
+        assertEquals("https://github.com/openai/codex/releases/download/rust-v0.169.0/codex-x86_64-unknown-linux-musl.tar.gz", x64.url)
+        assertEquals("9af4d751fce183faedea629437d5252dbf458eeb04130cf4f97be844621ea985", x64.sha256)
+        assertEquals(117805733L, x64.downloadBytes)
+        assertEquals(294277432L, x64.installedBytes)
+        assertEquals("codex-x86_64-unknown-linux-musl", x64.archiveMember)
+        assertEquals(AgentArtifactFormat.TarGz, x64.format)
     }
 
     @Test
