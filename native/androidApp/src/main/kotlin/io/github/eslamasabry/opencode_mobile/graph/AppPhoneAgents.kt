@@ -234,8 +234,21 @@ class AppPhoneAgents(
                 !stop.isStopped
             }
         if ((read as? Outcome.Ok)?.value != true) return false
-        remember(owner, agents)
-        val anyInstalled = keptFacts(owner).values.any { it.installed == true }
+        // The versions just read are kept as facts; a kept sign-in answer stays (this read does not probe it).
+        val kept = keptFacts(owner)
+        val merged =
+            PhoneAgentFacts.merge(
+                kept,
+                agents.associate { agent ->
+                    agent.id.raw to
+                        PhoneAgentFacts.of(knownVersion(owner, agent), null)
+                            .copy(signedIn = kept[agent.id.raw]?.signedIn)
+                },
+            )
+        if (merged != kept) {
+            gatePrefs(owner).commit { putString(PhoneAgentFacts.key(owner.raw), PhoneAgentFacts.encode(merged)) }
+        }
+        val anyInstalled = merged.values.any { it.installed == true }
         if (anyInstalled) {
             val place =
                 native { linux.run(PaseoPhoneScripts.check, 120, agentUser = true, logOutput = false).exitCode }
