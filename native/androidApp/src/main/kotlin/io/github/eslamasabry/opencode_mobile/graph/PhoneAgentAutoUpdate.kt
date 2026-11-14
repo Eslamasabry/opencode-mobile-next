@@ -190,7 +190,15 @@ class PhoneAgentAutoUpdate(
     private suspend fun restartOlderHelper() {
         val facts = phones.updateFacts() ?: return
         val pinned = AgentPins.builtIn.paseo.version
-        if (!facts.helperRunning || facts.helperVersion == null || facts.helperVersion == pinned) return
+        if (!facts.helperRunning) {
+            // The helper is not up (it was not running, or the update kept it from starting): start it the way any
+            // connect does, so the agents' conversations connect again without a tap. It needs the app in front;
+            // otherwise the next connect starts it.
+            val started = helper.checkHelper()
+            log.i { "helper start after the update ${if (started is Outcome.Ok) "done" else "refused"}" }
+            return
+        }
+        if (facts.helperVersion == null || facts.helperVersion == pinned) return
         // Refused while work runs: the older helper then keeps running and the next start brings the pinned one.
         val answer = helper.restartForUpdate()
         log.i { "helper restart ${if (answer is Outcome.Ok) "done" else "refused"}" }
