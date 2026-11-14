@@ -135,7 +135,9 @@ internal fun DialogLayer(state: KitSheetHostState) {
     }
     AnimatedVisibility(state.dialogShown, enter = still.enter { fadeIn(specs.enter()) }, exit = still.exit { fadeOut(specs.exit()) }) {
         Box(
-            Modifier.fillMaxSize().background(colors.scrim).testTag("kit-dialog-scrim").pointerInput(entry) { detectTapGestures { dismiss() } },
+            // A leaving dialog's scrim takes no touch (cut audit 2, finding 11): its exit is picture only.
+            Modifier.fillMaxSize().background(colors.scrim).testTag("kit-dialog-scrim")
+                .then(if (state.dialogShown.targetState) Modifier.pointerInput(entry) { detectTapGestures { dismiss() } } else Modifier),
         )
     }
     BoxWithConstraints(Modifier.fillMaxSize()) {
@@ -147,7 +149,7 @@ internal fun DialogLayer(state: KitSheetHostState) {
         val bottomCap = if (window == WindowClass.Compact) SheetLayout.BOTTOM_MAX_DP else Layout.CONFIRM_WIDTH
         val cap = maxHeight * SheetLayout.CONTENT_MAX_SHARE
         val panel =
-            Modifier.pointerInput(Unit) { detectTapGestures { } }
+            (if (state.dialogShown.targetState) Modifier.pointerInput(Unit) { detectTapGestures { } } else Modifier.modalInert())
                 .semantics {
                     paneTitle = entry.title
                     isTraversalGroup = true
