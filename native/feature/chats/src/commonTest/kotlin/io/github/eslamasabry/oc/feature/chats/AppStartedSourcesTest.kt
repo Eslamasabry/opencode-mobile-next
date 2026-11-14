@@ -22,6 +22,9 @@ import io.github.eslamasabry.oc.feature.chats.presentation.SavedRowLine
 import io.github.eslamasabry.oc.feature.chats.presentation.ServerName
 import io.github.eslamasabry.oc.feature.chats.presentation.SourceStartRules
 import io.github.eslamasabry.oc.feature.chats.presentation.SourcesChipLabel
+import io.github.eslamasabry.oc.feature.chats.presentation.WaitingWord
+import io.github.eslamasabry.oc.feature.chats.presentation.KeptTap
+import io.github.eslamasabry.oc.feature.chats.presentation.KeptTapRules
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.AppRoute
 import io.github.eslamasabry.oc.ui.routes.ChatsRoute
@@ -83,6 +86,35 @@ class AppStartedSourcesTest {
         assertFalse(SourceStartRules.takesTap(null))
         assertTrue(SourceStartRules.takesTap(AppStart.Agents))
         assertTrue(SourceStartRules.takesTap(AppStart.Phone))
+    }
+
+    @Test
+    fun `APPSTART-005 while the app updates the agents the chip says so, and their rows say updating`() {
+        val sources =
+            listOf(source(phone), source(agents, starting = AppStart.AgentsUpdating).copy(updatingAgent = "Claude Code"))
+        assertEquals(SourcesChipLabel.Updating("Claude Code"), SourceStartRules.chip(sources))
+        // Without the agent's name the source's own name is said.
+        assertEquals(
+            SourcesChipLabel.Updating("phone-agents"),
+            SourceStartRules.chip(listOf(source(phone), source(agents, starting = AppStart.AgentsUpdating))),
+        )
+        assertEquals(SavedRowLine.AgentsUpdating, SourceStartRules.savedLine(AppStart.AgentsUpdating))
+        assertTrue(SourceStartRules.takesTap(AppStart.AgentsUpdating))
+        assertEquals(WaitingWord.Updating, SourceStartRules.waitingWord(AppStart.AgentsUpdating))
+        assertEquals(WaitingWord.Connecting, SourceStartRules.waitingWord(AppStart.Agents))
+        assertEquals(WaitingWord.Connecting, SourceStartRules.waitingWord(null))
+    }
+
+    @Test
+    fun `APPSTART-006 a kept tap whose source is connected opens by ref when the fresh list no longer shows it`() {
+        val kept = ConversationRef(agents, SessionId("old"))
+        val fresh = listOf(item("new").copy(profileId = agents))
+        // Connected and its list read, but the row is gone from it: open by ref (its page says if it is gone).
+        assertEquals(KeptTap.OpenRef(kept), KeptTapRules.decide(kept, true, true, fresh, setOf(agents)))
+        // Still reading its list (rows not verified): wait.
+        assertEquals(KeptTap.Wait, KeptTapRules.decide(kept, true, true, fresh.map { it.copy(canReopen = false) }, setOf(agents)))
+        // Not connected: wait.
+        assertEquals(KeptTap.Wait, KeptTapRules.decide(kept, true, true, fresh, emptySet()))
     }
 
     private class Nav : AppNavigator {

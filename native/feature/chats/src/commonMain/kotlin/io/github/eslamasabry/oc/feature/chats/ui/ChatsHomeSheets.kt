@@ -86,10 +86,11 @@ internal fun HomeFilterChips(state: ChatsUi, actions: ChatsActions) {
                 when (val chip = SourceStartRules.chip(state.home.sources)) {
                     SourcesChipLabel.All -> stringResource(Res.string.chatsSourcesAll)
                     is SourcesChipLabel.Some -> stringResource(Res.string.chatsSourcesSome, chip.shown, chip.total)
+                    is SourcesChipLabel.Updating -> stringResource(Res.string.chatsSourcesUpdating, chip.agent)
                     is SourcesChipLabel.Starting ->
                         stringResource(
                             when (chip.kind) {
-                                AppStart.Agents -> Res.string.connectionAgentStarting
+                                AppStart.Agents, AppStart.AgentsUpdating -> Res.string.connectionAgentStarting
                                 AppStart.Phone -> Res.string.connectStartingPhone
                             }
                         )

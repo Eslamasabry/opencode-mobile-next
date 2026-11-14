@@ -68,11 +68,25 @@ class NativeSessionInventory(
                 Session(
                     id = SessionId(id),
                     title = redactor.diagnostics(title, 256),
-                    directory = directory,
+                    // The conversation's own folder when the row kept it (an agent's project), else the list's.
+                    directory = (row["dir"] as? String)?.takeIf { it.isNotBlank() }?.take(1024) ?: directory,
                     time = SessionTime(updatedMs = updated),
                 )
         }
         return result
+    }
+
+    /**
+     * The agent each saved row of an agents server was run by (id, label), when the row kept it: a saved agent
+     * conversation shows its own agent's mark and name, never OpenCode's, before its server answers.
+     */
+    fun agents(profile: StoredProfile): Map<String, Pair<String, String?>> {
+        val raw = (stores.prefs.get(PREFIX + profile.id.raw) as? PrefValue.Str)?.value ?: return emptyMap()
+        return richRows(raw, scope(profile)).mapNotNull { (id, row) ->
+            (row["agent"] as? String)
+                ?.takeIf { it.isNotBlank() && it != OPENCODE }
+                ?.let { id to (it to (row["agentLabel"] as? String)?.takeIf { label -> label.isNotBlank() }) }
+        }.toMap()
     }
 
     /** User-visible list time only, used by Paseo's no-restamp idle guard. */
@@ -100,7 +114,7 @@ class NativeSessionInventory(
                         "id" to session.id.raw,
                         "title" to redactor.diagnostics(session.title.orEmpty(), 256),
                         "updated" to (session.time?.updatedMs ?: session.time?.createdMs ?: 0L),
-                    ),
+                    ) + described(profile.backend, session),
                 )
             val bytes = DartJson.encode(row).encodeToByteArray().size + 1
             if (used + bytes > MAX_BYTES - 512) break
@@ -147,9 +161,27 @@ class NativeSessionInventory(
         fun withRich(rich: Map<String, Map<*, *>>, row: Map<String, Any>): Map<String, Any> {
             val saved = rich[row["id"]] ?: return row
             val extra = LinkedHashMap<String, Any>()
-            for ((k, v) in saved) if (k is String && k !in PLAIN && v != null) extra[k] = v
+            // What this save knows itself (its folder, its agent) wins over what an earlier save kept.
+            for ((k, v) in saved) if (k is String && k !in PLAIN && k !in row && v != null) extra[k] = v
             return if (extra.isEmpty()) row else LinkedHashMap(row).apply { putAll(extra) }
         }
+
+        /**
+         * What a plain list save can say of [session] besides its id, title and time: its own folder, and on an
+         * agents server (Paseo) the agent that runs it. Without them a saved agent conversation came back as an
+         * OpenCode one in the list's root folder ("projects") until its server answered.
+         */
+        fun described(backend: BackendKind, session: Session): Map<String, Any> =
+            buildMap {
+                session.directory?.takeIf { it.isNotBlank() }?.let { put("dir", it.take(1024)) }
+                if (backend == BackendKind.Paseo)
+                    PhoneConversationRules.agentOf(session)?.let { (id, label) ->
+                        put("agent", id.take(128))
+                        label?.let { put("agentLabel", it.take(128)) }
+                    }
+            }
+
+        private const val OPENCODE = "opencode"
         private const val MAX_SESSIONS = 100
         private const val MAX_BYTES = 65_536
     }

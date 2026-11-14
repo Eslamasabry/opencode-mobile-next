@@ -209,6 +209,7 @@
     <string name="chatsSourcesUnreachable">Isn't answering</string>
     <string name="chatsSourcesAll">All connections</string>
     <string name="chatsSourcesSome">%1$d of %2$d connections</string>
+    <string name="chatsSourcesUpdating">Updating %1$s…</string>
     <string name="chatsSourcesSheetTitle">Connections in this list</string>
     <string name="chatsSourcesMain">New conversations start here</string>
     <string name="chatsSourcesOnPhone">On this phone</string>

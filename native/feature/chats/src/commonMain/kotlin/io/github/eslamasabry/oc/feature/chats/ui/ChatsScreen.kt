@@ -186,6 +186,9 @@ import io.github.eslamasabry.oc.ui.words.res.chatsHomeTitle
 import io.github.eslamasabry.oc.ui.words.res.chatsReturnBriefMore
 import io.github.eslamasabry.oc.ui.words.res.chats_back
 import io.github.eslamasabry.oc.ui.words.res.e7WorkspaceConnecting
+import io.github.eslamasabry.oc.ui.words.res.agentsStateUpdatingHelper
+import io.github.eslamasabry.oc.feature.chats.presentation.SourceStartRules
+import io.github.eslamasabry.oc.feature.chats.presentation.WaitingWord
 import io.github.eslamasabry.oc.ui.words.res.e7WorkspaceDaysAgo
 import io.github.eslamasabry.oc.ui.words.res.e7WorkspaceHoursAgo
 import io.github.eslamasabry.oc.ui.words.res.e7WorkspaceJustNow
@@ -817,6 +820,10 @@ private data class HomeRowWords(
     val cantReopen: String,
     /** B-333: a tapped row that waits for its server to open says so. */
     val connecting: String,
+    /** B-333: ... or that its agents are being updated. */
+    val updating: String,
+    /** B-333: ... or, when it did not connect in time, that it is not answering. */
+    val notAnswering: String,
     val archive: String,
     val otherAgent: String,
     val rowActions: String,
@@ -844,6 +851,8 @@ private fun rememberHomeRowWords(): HomeRowWords =
         interrupted = stringResource(Res.string.chatsHomeInterrupted),
         cantReopen = stringResource(Res.string.agentsStateCantReopen),
         connecting = stringResource(Res.string.e7WorkspaceConnecting),
+        updating = stringResource(Res.string.agentsStateUpdatingHelper),
+        notAnswering = stringResource(Res.string.phoneServerRowNotAnswering),
         archive = stringResource(Res.string.sessionMenuArchive),
         otherAgent = stringResource(Res.string.agentPersonaOtherName),
         rowActions = stringResource(Res.string.chatsRowActions),
@@ -880,6 +889,10 @@ private data class HomeRowFlags(
     val nowMs: Long,
     /** B-333: the person tapped this row while it could not open yet; it opens by itself when it can. */
     val waiting: Boolean = false,
+    /** What the waiting row says: connecting, or updating while the app updates its source's agents. */
+    val waitingWord: WaitingWord = WaitingWord.Connecting,
+    /** Its kept tap was dropped: its source did not connect within the wait's limit. */
+    val gaveUp: Boolean = false,
 )
 
 private fun rowFlags(row: ConversationRowUi, state: ChatsUi): HomeRowFlags =
@@ -901,6 +914,9 @@ private fun rowFlags(row: ConversationRowUi, state: ChatsUi): HomeRowFlags =
         showAgents = state.showAgents,
         nowMs = state.nowMs,
         waiting = state.waitingOpen == row.ref,
+        waitingWord =
+            SourceStartRules.waitingWord(state.home.sources.firstOrNull { it.profile == row.ref.profileId }?.starting),
+        gaveUp = state.keptGaveUp == row.ref,
     )
 
 /**
@@ -924,7 +940,8 @@ private fun ConversationRow(
         // on its way, the state word must not say "Needs you".
         if (flags.held != null || flags.heldQuestion != null || flags.questionSending) null
         // B-333: the tap is kept; the row says it waits for its server instead of looking dead.
-        else if (flags.waiting) words.connecting
+        else if (flags.waiting) (if (flags.waitingWord == WaitingWord.Updating) words.updating else words.connecting)
+        else if (flags.gaveUp) words.notAnswering
         // H4 (F: chats_home_screen.dart:901): a finished conversation that cannot reopen says so before Done/Stopped.
         else if (HomeRowStatusRules.saysCantReopen(row)) words.cantReopen
         else when (row.status) {

@@ -69,6 +69,8 @@ public data class AllModel(
     val startNew: StartNewUi? = null,
     /** B-333 on All conversations: the row tapped while its server was starting; it opens when the server connects. */
     val keptOpen: ConversationRef? = null,
+    /** The kept tap whose server did not connect within the wait's limit: its row says Not answering. */
+    val keptGaveUp: ConversationRef? = null,
     /** Per row key: needs-you and unread, from the home feed. */
     val attention: Map<String, RowAttention> = emptyMap(),
     /** Servers that can import a conversation file (`sessionImportExport` and the import door). */
@@ -200,6 +202,7 @@ public object AllConversationsRules {
                 readOnly = model.sources[e.profile]?.preview == true,
                 appStart = model.sources[e.profile]?.takeIf { it.preview }?.appStart,
                 waiting = model.keptOpen == ConversationRef(e.profile, e.session.id),
+                gaveUp = model.keptGaveUp == ConversationRef(e.profile, e.session.id),
                 canShare = e.profile in model.shareCapable && model.sources[e.profile]?.preview != true,
                 pinned = e.session.id in model.sources[e.profile]?.pinned.orEmpty(),
                 canContinueHere =
