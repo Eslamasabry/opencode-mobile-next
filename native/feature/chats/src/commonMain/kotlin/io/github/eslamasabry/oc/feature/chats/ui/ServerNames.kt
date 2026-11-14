@@ -18,4 +18,4 @@ internal fun serverNameShown(saved: String, phoneWord: String): String = if (sav
 internal fun serverNameShown(saved: String): String = serverNameShown(saved, stringResource(Res.string.settingsV3ThisPhone))
 
 @Composable
-internal fun serverNameShown(saved: String?): String? = saved?.let { serverNameShown(it) }
+internal fun serverNameShownOrNull(saved: String?): String? = saved?.let { serverNameShown(it) }

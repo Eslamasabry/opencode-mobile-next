@@ -964,7 +964,7 @@ private fun ConversationRow(
             }
     val project = row.project.takeIf { flags.showProject && it.isNotBlank() }
     // No line to show: the row says where it lives instead (its project when no dot names it, and its server).
-    val meta = HomePreviewRules.fallback(row.project, serverNameShown(row.server), projectShown = project != null)
+    val meta = HomePreviewRules.fallback(row.project, serverNameShownOrNull(row.server), projectShown = project != null)
     val permission = row.permission
     val question = row.question
     val form = row.form
