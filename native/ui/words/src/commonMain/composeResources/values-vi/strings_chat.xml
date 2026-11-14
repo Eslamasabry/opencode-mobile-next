@@ -1163,4 +1163,63 @@
         <item quantity="other">%1$d đã dừng</item>
     </plurals>
     <string name="kitWorkSubAgentSpoken">%1$s, tác nhân phụ, %2$s</string>
+    <string name="chatUiStopBackgroundTask">Đã dừng một tác vụ nền</string>
+    <string name="chatUiReadTaskOutput">Đã đọc kết quả của một tác vụ nền</string>
+    <plurals name="stepRunCommands">
+        <item quantity="other">%1$d lệnh</item>
+    </plurals>
+    <plurals name="stepRunFiles">
+        <item quantity="other">%1$d tệp</item>
+    </plurals>
+    <plurals name="stepRunSearches">
+        <item quantity="other">%1$d lần tìm</item>
+    </plurals>
+    <plurals name="stepRunFolders">
+        <item quantity="other">%1$d thư mục</item>
+    </plurals>
+    <string name="stepShellTests">Đã chạy kiểm thử</string>
+    <string name="stepShellTestsNow">Đang chạy kiểm thử</string>
+    <string name="stepShellSearch">Đã tìm trong tệp</string>
+    <string name="stepShellSearchNow">Đang tìm trong tệp</string>
+    <string name="stepShellReadOne">Đã đọc %1$s</string>
+    <string name="stepShellReadMany">Đã đọc tệp</string>
+    <string name="stepShellReadManyNow">Đang đọc tệp</string>
+    <string name="stepShellList">Đã liệt kê tệp</string>
+    <string name="stepShellListNow">Đang liệt kê tệp</string>
+    <string name="stepShellProcesses">Đã kiểm tra tiến trình đang chạy</string>
+    <string name="stepShellProcessesNow">Đang kiểm tra tiến trình đang chạy</string>
+    <string name="stepShellStop">Đã dừng một tiến trình</string>
+    <string name="stepShellStopNow">Đang dừng một tiến trình</string>
+    <string name="stepShellChanges">Đã kiểm tra các thay đổi</string>
+    <string name="stepShellChangesNow">Đang kiểm tra các thay đổi</string>
+    <string name="stepShellAnalyze">Đã kiểm tra mã</string>
+    <string name="stepShellAnalyzeNow">Đang kiểm tra mã</string>
+    <string name="stepShellBuild">Đã xây dựng dự án</string>
+    <string name="stepShellBuildNow">Đang xây dựng dự án</string>
+    <string name="stepShellInstall">Đã cài đặt gói</string>
+    <string name="stepShellInstallNow">Đang cài đặt gói</string>
+    <string name="stepShellFetch">Đã tải một trang web</string>
+    <string name="stepShellFetchNow">Đang tải một trang web</string>
+    <string name="stepShellDelete">Đã xóa tệp</string>
+    <string name="stepShellDeleteNow">Đang xóa tệp</string>
+    <string name="stepShellChangeFiles">Đã sửa tệp</string>
+    <string name="stepShellChangeFilesNow">Đang sửa tệp</string>
+    <string name="stepShellWait">Đã chờ</string>
+    <string name="stepShellWaitNow">Đang chờ</string>
+    <string name="stepShellProgram">Đã chạy %1$s</string>
+    <string name="stepShellTestsAsk">Chạy kiểm thử</string>
+    <string name="stepShellSearchAsk">Tìm trong tệp</string>
+    <string name="stepShellListAsk">Liệt kê tệp</string>
+    <string name="stepShellProcessesAsk">Kiểm tra tiến trình đang chạy</string>
+    <string name="stepShellStopAsk">Dừng một tiến trình</string>
+    <string name="stepShellChangesAsk">Kiểm tra các thay đổi</string>
+    <string name="stepShellAnalyzeAsk">Kiểm tra mã</string>
+    <string name="stepShellBuildAsk">Xây dựng dự án</string>
+    <string name="stepShellInstallAsk">Cài đặt gói</string>
+    <string name="stepShellFetchAsk">Tải một trang web</string>
+    <string name="stepShellDeleteAsk">Xóa tệp</string>
+    <string name="stepShellChangeFilesAsk">Sửa tệp</string>
+    <string name="stepShellWaitAsk">Chờ</string>
+    <string name="stepShellProgramAsk">Chạy %1$s</string>
+    <string name="stepShellUnknownAsk">Chạy một lệnh</string>
 </resources>
