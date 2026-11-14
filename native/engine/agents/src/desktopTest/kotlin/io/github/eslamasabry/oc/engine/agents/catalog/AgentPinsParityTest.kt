@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.engine.agents.catalog
 
+import io.github.eslamasabry.oc.engine.agents.scripts.ClaudeScripts
 import io.github.eslamasabry.oc.engine.agents.scripts.PaseoPhoneScripts
 import io.github.eslamasabry.oc.engine.agents.scripts.freezeTipSource
 import java.io.File
@@ -19,7 +20,7 @@ class AgentPinsParityTest {
      */
     // Agents whose pins moved after the Flutter freeze (Flutter takes no new work since 2026-11-08): checked on their
     // own below, and their old Flutter entries are left out of the comparison.
-    private val postFreeze = setOf("antigravity", "opencode2")
+    private val postFreeze = setOf("antigravity", "opencode2", "claude")
 
     private val repo: File = generateSequence(File("").absoluteFile) { it.parentFile }
         .first { File(it, "native/settings.gradle.kts").isFile }
@@ -109,6 +110,29 @@ class AgentPinsParityTest {
     }
 
     @Test
+    fun `B-AGENT-008 Claude Code pins equal the release manifest values and the install script`() {
+        // Moved after the freeze (2.1.319 -> 2.1.321: Paseo 0.15.4 lists Fable 5.2 only for Claude Code 2.1.321 or newer).
+        // Each SHA-256 and size is the release manifest's, and equals the bytes of the downloaded binary.
+        val recipe = AgentPins.builtIn.catalog().byId(io.github.eslamasabry.oc.engine.agents.AgentId("claude"))!!.recipe!!
+        assertEquals("2.1.321", recipe.version)
+        assertEquals(ClaudeScripts.VERSION, recipe.version)
+        val arm = recipe.artifacts.getValue(AgentArchitecture.Arm64)
+        assertEquals("https://downloads.claude.ai/claude-code-releases/2.1.321/linux-arm64/claude", arm.url)
+        assertEquals("6bea0633074627ba79328e00115ed0588c3acf906a8463612b25db696dbfd3f0", arm.sha256)
+        assertEquals(ClaudeScripts.ARM64_SHA256, arm.sha256)
+        assertEquals(341501368L, arm.downloadBytes)
+        assertEquals(341501368L, arm.installedBytes)
+        assertEquals(AgentArtifactFormat.Executable, arm.format)
+        val x64 = recipe.artifacts.getValue(AgentArchitecture.X64)
+        assertEquals("https://downloads.claude.ai/claude-code-releases/2.1.321/linux-x64/claude", x64.url)
+        assertEquals("426c33815ca6645a772f722fbff10dbf2cbdb124a8aeab733c1365dbf8bbf61f", x64.sha256)
+        assertEquals(ClaudeScripts.X64_SHA256, x64.sha256)
+        assertEquals(341910032L, x64.downloadBytes)
+        assertEquals(341910032L, x64.installedBytes)
+        assertEquals(AgentArtifactFormat.Executable, x64.format)
+    }
+
+    @Test
     fun `B-AGENT-008 OpenCode 2 pins equal the native pin of commit 93fcf4049`() {
         // Moved after the freeze (2.2.5 -> 2.2.6). Each SHA-256 is the registry tarball's, whose sha512 matches npm's
         // published integrity; the same values pin the in-app Ubuntu install (OpenCodePins).
@@ -153,7 +177,8 @@ class AgentPinsParityTest {
         assertEquals(dartConst("nodeX64Sha256"), pins.node.sha256[AgentArchitecture.X64])
         assertEquals("/home/oc/.local/share/oc-paseo/0.15.4-b61e82dd777f", PaseoPhoneScripts.INSTALL_DIRECTORY)
         val tested = Regex("claudeCodeTestedVersions = \\{([^}]*)\\}").find(testedVersions)!!.groupValues[1]
-        assertEquals(Regex("'([^']+)'").findAll(tested).map { it.groupValues[1] }.toList(), pins.claudeCodeTestedVersions)
+        // 2.1.321 moved after the freeze (Fable 5.2 needs Claude Code 2.1.321 or newer): the freeze set plus that pin.
+        assertEquals(Regex("'([^']+)'").findAll(tested).map { it.groupValues[1] }.toList() + "2.1.321", pins.claudeCodeTestedVersions)
         val paseoTested = Regex("paseoTestedVersions = \\{([^}]*)\\}").find(testedVersions)!!.groupValues[1]
         assertEquals(Regex("'([^']+)'").findAll(paseoTested).map { it.groupValues[1] }.toList() + listOf("0.15.3", "0.15.4"), pins.paseoTestedVersions)
     }

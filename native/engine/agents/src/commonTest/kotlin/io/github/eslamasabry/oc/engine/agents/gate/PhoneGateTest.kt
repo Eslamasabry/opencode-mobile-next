@@ -24,13 +24,13 @@ class PhoneGateTest {
     @Test
     fun `B-LINUX-134 the gate fingerprint is Dart jsonEncode of the six pins, byte for byte`() {
         assertEquals(
-            "[\"claude\",\"2.1.319\",\"a7e687fd1cb054d651c7588223de3786c99d4c682365e3c3ae1e59ce7f3a591f\"," +
+            "[\"claude\",\"2.1.321\",\"6bea0633074627ba79328e00115ed0588c3acf906a8463612b25db696dbfd3f0\"," +
                 "\"0.15.4\",\"b61e82dd777fab352dcc19ad1989ea3d2ad978c69c1ebe87b4481cad83ae9226\",\"v24.22.2\"]",
             PhoneGate.fingerprint(claude, AgentArchitecture.Arm64, pins),
         )
         // The x64 artifact differs, so an x64 pass can never stand in for arm64 proof.
         assertEquals(
-            "dabafec82ca1319fa43d8be36a10fc61b1d11821cb98ad5df04ad95e199b8eed",
+            "426c33815ca6645a772f722fbff10dbf2cbdb124a8aeab733c1365dbf8bbf61f",
             (AgentJson.parseOrNull(PhoneGate.fingerprint(claude, AgentArchitecture.X64, pins)) as JsonArray)[2]
                 .let { (it as JsonPrimitive).content },
         )
@@ -38,7 +38,7 @@ class PhoneGateTest {
 
     @Test
     fun `B-LINUX-132 an unchanged pair keeps proof and a changed pin names why a check is needed`() {
-        val v = "2.1.319"
+        val v = "2.1.321"
         val sha = claude.artifactFor(AgentArchitecture.Arm64)!!.sha256
         assertEquals(CheckRequiredReason.FirstCheck, PhoneGate.changeReason(null, claude, pins))
         assertEquals(CheckRequiredReason.AgentVersion, PhoneGate.changeReason(gate("claude", "2.1.294", sha, "0.15.4", pins.paseo.packageLockSha256, "v24.22.2"), claude, pins))
@@ -70,15 +70,15 @@ class PhoneGateTest {
         val flutter = gate("claude", "2.1.316", sha, "0.11.2", "other-lock", "v22.0.0")
         // The agent runs at the version the proof was given on, and that version is a tested one.
         assertTrue(PhoneGate.qualifies(flutter, claude, AgentArchitecture.Arm64, pins, "2.1.316"))
-        assertFalse(PhoneGate.qualifies(flutter, claude, AgentArchitecture.Arm64, pins, "2.1.319"))
+        assertFalse(PhoneGate.qualifies(flutter, claude, AgentArchitecture.Arm64, pins, "2.1.321"))
         assertFalse(PhoneGate.qualifies(flutter, claude, AgentArchitecture.X64, pins, "2.1.316"))
         assertFalse(PhoneGate.qualifies(null, claude, AgentArchitecture.Arm64, pins, "2.1.316"))
         // A helper that was never tested does not carry proof.
         val odd = gate("claude", "2.1.316", sha, "0.1.0", lock, "v24.22.2")
         assertFalse(PhoneGate.qualifies(odd, claude, AgentArchitecture.Arm64, pins, "2.1.316"))
         // The current pair qualifies exactly.
-        val now = gate("claude", "2.1.319", sha, "0.15.4", lock, "v24.22.2")
-        assertTrue(PhoneGate.qualifies(now, claude, AgentArchitecture.Arm64, pins, "2.1.319"))
+        val now = gate("claude", "2.1.321", sha, "0.15.4", lock, "v24.22.2")
+        assertTrue(PhoneGate.qualifies(now, claude, AgentArchitecture.Arm64, pins, "2.1.321"))
     }
 
     @Test
