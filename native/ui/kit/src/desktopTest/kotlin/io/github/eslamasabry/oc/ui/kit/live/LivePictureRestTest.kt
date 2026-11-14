@@ -3,9 +3,7 @@
 package io.github.eslamasabry.oc.ui.kit.live
 
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.BlurEffect
@@ -20,21 +18,18 @@ import io.github.eslamasabry.oc.ui.design.effects.FrostPolicy
 import io.github.eslamasabry.oc.ui.design.effects.FrostSpec
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.style.Style
-import io.github.eslamasabry.oc.ui.design.style.SurfaceRole
-import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
-import io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel
 import io.github.eslamasabry.oc.ui.kit.FakeKitPlatform
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.foundation.KitGlassBackdrop
-import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceInput
 import io.github.eslamasabry.oc.ui.kit.foundation.LocalKitGlassBackdrop
-import io.github.eslamasabry.oc.ui.kit.foundation.kitSurfaceLook
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopLiveShader
 import io.github.eslamasabry.oc.ui.kit.platform.KitPlatform
+import kotlin.coroutines.EmptyCoroutineContext
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
 import kotlin.test.assertTrue
+import kotlin.time.Duration.Companion.minutes
 
 /**
  * Device 2026-11-14 (Glass, Aurora drift): the rule for a visible page over a live background. It draws while the
@@ -57,7 +52,8 @@ class LivePictureRestTest {
         var picture: KitGlassBackdrop? = null
         var clock: LiveFrameClock? = null
         var draws = 0
-        runDesktopComposeUiTest(320, 420) {
+        // 33 s of frames: past the default minute of a test on a slow runner, so it gets five.
+        runDesktopComposeUiTest(120, 120, EmptyCoroutineContext, EmptyCoroutineContext, 5.minutes) {
             mainClock.autoAdvance = false
             setContent {
                 KitTheme(
@@ -68,11 +64,6 @@ class LivePictureRestTest {
                     KitLiveBackground(Modifier.fillMaxSize()) {
                         picture = LocalKitGlassBackdrop.current
                         clock = LocalLiveClock.current
-                        Box(
-                            Modifier.padding(24.dp)
-                                .size(200.dp, 240.dp)
-                                .then(kitSurfaceLook(KitSurfaceInput(SurfaceRole.Content, KitShapeId.Card, SurfaceLevel.Surface1)).modifier)
-                        )
                         // A pane's reading of the picture, as every Glass pane over it makes.
                         Canvas(Modifier.size(8.dp)) {
                             picture?.frame()

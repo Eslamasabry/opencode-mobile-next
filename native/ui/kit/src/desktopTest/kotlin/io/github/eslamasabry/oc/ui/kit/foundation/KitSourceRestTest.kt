@@ -17,6 +17,10 @@ import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.kit.effects.KitLiquidSource
 import io.github.eslamasabry.oc.ui.kit.effects.kitLiquidSource
 import io.github.eslamasabry.oc.ui.kit.effects.rememberKitLiquidSource
+import io.github.eslamasabry.oc.ui.kit.frame.KitWordsClear
+import io.github.eslamasabry.oc.ui.kit.frame.KitWordsFade
+import io.github.eslamasabry.oc.ui.kit.frame.kitWordsFadeRecorder
+import io.github.eslamasabry.oc.ui.kit.frame.rememberKitWordsFade
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -91,6 +95,36 @@ class KitSourceRestTest {
             val v0 = source!!.version
             repeat(60) { mainClock.advanceTimeByFrame() }
             assertEquals(v0, source!!.version, "an untouched page records nothing for a second of frames")
+        }
+    }
+
+    @Test
+    fun `GLASS-REST-04 a bar's copy of the page is recorded again only when the page recorded again`() {
+        var fade: KitWordsFade? = null
+        var draws = 0
+        runDesktopComposeUiTest(200, 200) {
+            mainClock.autoAdvance = false
+            setContent {
+                val s = rememberKitLiquidSource()
+                val f = rememberKitWordsFade(s, KitWordsClear.Above).also { fade = it }
+                Box(Modifier.fillMaxSize()) {
+                    Box(Modifier.fillMaxSize().kitLiquidSource(s)) { Box(Modifier.size(40.dp).background(Color.Red)) }
+                    // The bar: it records its copy, and a part of it drawn in the same layer reads the copy's count.
+                    Box(Modifier.size(60.dp).kitWordsFadeRecorder(f, { 30f }, { 4f })) {
+                        Canvas(Modifier.size(10.dp)) {
+                            f.fadedSource!!.version
+                            draws++
+                            drawRect(Color.Blue)
+                        }
+                    }
+                }
+            }
+            mainClock.advanceTimeBy(500)
+            val v0 = fade!!.fadedSource!!.version
+            val d0 = draws
+            repeat(60) { mainClock.advanceTimeByFrame() }
+            assertEquals(v0, fade!!.fadedSource!!.version, "the copy is not recorded again while the page rests")
+            assertTrue(draws - d0 <= 1, "the bar drew ${draws - d0} times in a second at rest")
         }
     }
 }
