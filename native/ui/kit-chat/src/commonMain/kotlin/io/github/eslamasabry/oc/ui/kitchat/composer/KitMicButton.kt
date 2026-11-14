@@ -37,6 +37,11 @@ import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.motion.KitHaptic
 import io.github.eslamasabry.oc.ui.kit.foundation.KitFillIndication
+import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceInput
+import io.github.eslamasabry.oc.ui.kit.foundation.kitDressedLook
+import io.github.eslamasabry.oc.ui.design.style.SurfaceRole
+import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
+import io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel
 import io.github.eslamasabry.oc.ui.kit.platform.LocalKitPlatform
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitAppearance
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
@@ -83,7 +88,22 @@ public fun KitMicButton(
     val armedChanged by rememberUpdatedState(onArmedChanged)
     val interactions = remember { MutableInteractionSource() }
     val filled = active || prominent
-    val ink = if (filled) colors.onAccent else if (enabled) colors.text1 else colors.text3
+    // Brutal and Paper dress the filled disc as Send's (a control nested in the box's outline: the style's edge and
+    // corner, no shadow of its own); every other style keeps the plain accent circle below.
+    val dressed =
+        if (!filled) null
+        else
+            kitDressedLook(
+                KitSurfaceInput(
+                    role = SurfaceRole.Control,
+                    shape = KitShapeId.Circle,
+                    level = SurfaceLevel.Surface3,
+                    color = colors.accent,
+                    action = true,
+                    nested = true,
+                )
+            )
+    val ink = if (filled) dressed?.words ?: colors.onAccent else if (enabled) colors.text1 else colors.text3
     val indication = remember(platform, ink, reduced) { if (reduced) KitFillIndication(ink) else platform.pressIndication(ink) }
     val press =
         remember {
@@ -104,13 +124,13 @@ public fun KitMicButton(
             // The filled mic is Send's 40 dp disc inside the 48 dp target, so it keeps the box's inner margin
             // instead of filling the target to the box's edge.
             .drawBehind {
-                if (filled)
+                if (filled && dressed == null)
                     drawCircle(
                         colors.accent,
                         radius = minOf(FlutterKitTokens.COMPOSER_ACTION_SIZE.dp.toPx(), size.minDimension) / 2f,
                     )
             }
-            .clip(CircleShape)
+            .clip(dressed?.shape ?: CircleShape)
             .indication(interactions, indication)
             .testTag(MIC_TAG)
             .semantics {
@@ -193,6 +213,7 @@ public fun KitMicButton(
             ),
         contentAlignment = Alignment.Center,
     ) {
+        if (dressed != null) Box(Modifier.size(FlutterKitTokens.COMPOSER_ACTION_SIZE.dp).then(dressed.modifier).testTag(MIC_DISC_TAG))
         Image(
             MicGlyph,
             contentDescription = null,
@@ -201,6 +222,9 @@ public fun KitMicButton(
         )
     }
 }
+
+/** Test handle of the dressed mic's disc (Brutal, Paper). */
+public const val MIC_DISC_TAG: String = "kit-composer-mic-dressed-disc"
 
 /** Test handle of the mic. */
 public const val MIC_TAG: String = "kit-composer-mic"

@@ -1,6 +1,10 @@
 package io.github.eslamasabry.oc.ui.kitchat.request
 
 import androidx.compose.foundation.background
+import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceInput
+import io.github.eslamasabry.oc.ui.kit.foundation.kitDressedLook
+import io.github.eslamasabry.oc.ui.kit.foundation.kitSurface
+import io.github.eslamasabry.oc.ui.design.style.SurfaceRole
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -65,12 +69,12 @@ public fun KitRequestTargets(
     val colors = LocalKitColors.current
     val shape = KitShapeId.Code.toShape()
     val hidden = (targets.size - TARGET_LIMIT).coerceAtLeast(0)
+    // Brutal and Paper: the style's code face (its edge and corner, no shadow); null keeps the box's own.
+    val dressed = kitDressedLook(KitSurfaceInput(role = SurfaceRole.Code, shape = KitShapeId.Code, color = colors.ground))
     Column(
         modifier
             .fillMaxWidth()
-            .clip(shape)
-            .background(colors.ground)
-            .border(1.dp, colors.hairline, shape)
+            .then(dressed?.let { Modifier.kitSurface(it) } ?: Modifier.clip(shape).background(colors.ground).border(1.dp, colors.hairline, shape))
             .padding(Space.S3.dp),
         verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
     ) {
@@ -142,6 +146,7 @@ public fun KitRequestTargetBlock(
     var expanded by remember(targets) { mutableStateOf(false) }
     val colors = LocalKitColors.current
     val shape = KitShapeId.Code.toShape()
+    val dressed = kitDressedLook(KitSurfaceInput(role = SurfaceRole.Code, shape = KitShapeId.Code, color = colors.ground))
     val single = targets.size == 1
     val shown = if (expanded) targets else targets.take(TARGET_LIMIT)
     val hidden = targets.size - shown.size
@@ -152,9 +157,7 @@ public fun KitRequestTargetBlock(
         modifier
             .fillMaxWidth()
             .testTag("kit-request-target-block")
-            .clip(shape)
-            .background(colors.ground)
-            .border(kitHairline(), colors.hairline, shape),
+            .then(dressed?.let { Modifier.kitSurface(it) } ?: Modifier.clip(shape).background(colors.ground).border(kitHairline(), colors.hairline, shape)),
     ) {
         shown.forEachIndexed { index, target ->
             if (index > 0) KitDivider()

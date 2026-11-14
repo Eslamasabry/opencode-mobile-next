@@ -44,6 +44,8 @@ public fun KitComposerMic(
                 ownFill = if (quiet) colors.surface3 else colors.accent,
                 color = if (quiet) null else colors.accent,
                 action = true,
+                // Inside the box's outline: the style's edge, no second shadow (Brutal).
+                nested = true,
             )
         )
     val ink = if (quiet) colors.text2 else look.words ?: colors.onAccent

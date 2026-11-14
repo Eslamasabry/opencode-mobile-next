@@ -34,6 +34,10 @@ import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.kit.action.KitIconButton
 import io.github.eslamasabry.oc.ui.kit.foundation.kitHairline
+import io.github.eslamasabry.oc.ui.kit.foundation.kitDressedDecoration
+import io.github.eslamasabry.oc.ui.kit.foundation.edgeColor
+import io.github.eslamasabry.oc.ui.design.style.SurfaceRole
+import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.words.res.Res
@@ -60,17 +64,33 @@ internal const val CODE_COPY_END: Int = 1
  * bare page. Corners are `codeRadius` (14).
  */
 @Immutable
-public data class CodeFrameLook(val fill: Color, val edge: Color, val edgeWidth: Dp) {
-    public val radius: Dp
-        get() = FlutterKitTokens.CODE_RADIUS.dp
-}
+public data class CodeFrameLook(
+    val fill: Color,
+    val edge: Color,
+    val edgeWidth: Dp,
+    val radius: Dp = FlutterKitTokens.CODE_RADIUS.dp,
+)
 
-/** The [CodeFrameLook] of the current theme. */
+/**
+ * The [CodeFrameLook] of the current theme. Where the style dresses every part (Brutal, Paper; audit 2026-11-14: code
+ * stayed a soft rounded plate beside Brutal's ink box) the block takes the style's code face: its edge (Brutal's ink,
+ * Paper's ink rule, in dark too) and its corner (Brutal's softened, Paper's square), never a shadow.
+ */
 @Composable
 public fun codeFrameLook(): CodeFrameLook {
     val c = LocalKitColors.current
+    val fill = codeFill(c)
+    val dressed = kitDressedDecoration(SurfaceRole.Code, KitShapeId.Code, color = fill)
+    if (dressed != null) {
+        return CodeFrameLook(
+            fill = dressed.fill?.let { Color(it.v) } ?: fill,
+            edge = dressed.edgeColor ?: Color.Transparent,
+            edgeWidth = dressed.edgeWidthDp.dp,
+            radius = dressed.radii.topStart.dp,
+        )
+    }
     return CodeFrameLook(
-        fill = codeFill(c),
+        fill = fill,
         edge = if (c.dark) Color.Transparent else c.text1.copy(alpha = 0.16f),
         edgeWidth = kitHairline(),
     )
@@ -101,7 +121,7 @@ private fun Modifier.codeEdge(look: CodeFrameLook, continued: Boolean, continues
                     look.edge,
                     Offset(w / 2, top),
                     Size(size.width - w, bottom - top),
-                    CornerRadius(r - w / 2),
+                    CornerRadius((r - w / 2).coerceAtLeast(0f)),
                     style = Stroke(w),
                 )
             }

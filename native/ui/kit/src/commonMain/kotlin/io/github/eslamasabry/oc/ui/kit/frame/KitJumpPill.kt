@@ -38,6 +38,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
+import io.github.eslamasabry.oc.ui.design.style.SurfaceRole
+import io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel
+import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceInput
+import io.github.eslamasabry.oc.ui.kit.foundation.kitDressedLook
+import io.github.eslamasabry.oc.ui.kit.foundation.kitSurface
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
@@ -259,6 +264,18 @@ private fun kitJumpJoinMotion(drop: io.github.eslamasabry.oc.ui.kit.effects.KitL
     return remember { JumpJoinMotion { ((fill.value - j.LABEL_FROM) / .25f).coerceIn(0f, 1f) } }
 }
 
+/**
+ * The standing pill's face where the style dresses every part (audit 2026-11-14: Brutal left "Jump to latest" a soft
+ * grey capsule beside its ink-edged box and chips): a control standing on the page, so Brutal's ink edge and hard
+ * shadow, Paper's ink box with square corners. Null keeps the pill's own face (Solid, Soft, Glass, Signal).
+ */
+@Composable
+private fun kitJumpPillDressed(): io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceLook? =
+    kitDressedLook(KitSurfaceInput(role = SurfaceRole.Control, shape = KitShapeId.Pill, level = SurfaceLevel.Surface2))
+
+/** The test handle of the standing pill's visible face. */
+public const val JUMP_PILL_FACE_TAG: String = "kit-jump-pill-face"
+
 /** E20-S30: the veiled pill's visible face height (inside its 48 dp target). */
 public const val JUMP_PILL_FACE_DP: Int = 32
 
@@ -282,6 +299,7 @@ private fun PillFace(
         VeiledPillFace(label, onClick, modifier, edge, backdrop, drop, labelAlpha)
         return
     }
+    val dressed = kitJumpPillDressed()
     // A small floating pill (36 dp face) inside its 48 dp target: it points the way without covering the reading
     // column (owner 2026-11-06: the full-size button sat on the words).
     Box(
@@ -296,8 +314,8 @@ private fun PillFace(
             Modifier.heightIn(min = 36.dp)
                 // Its page ends its words before the pill (owner 2026-11-14): the pill never sits on a line.
                 .kitScreenFloat(edge)
-                .background(colors.surface3, shape)
-                .border(1.dp, colors.hairline, shape)
+                .then(dressed?.let { Modifier.kitSurface(it) } ?: Modifier.background(colors.surface3, shape).border(1.dp, colors.hairline, shape))
+                .testTag(JUMP_PILL_FACE_TAG)
                 .padding(horizontal = Space.S3.dp, vertical = Space.S1.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(Space.S1.dp),
@@ -333,6 +351,7 @@ private fun VeiledPillFace(
     // were cut off and the page showed through (owner 2026-11-11: "a dark spot right and left from this droplet").
     // The joined pane draws from the drop's own box (kitLiquidJoinRest, on the row), whichever node wears it.
     val hoisted = liquid != null && drop?.composedJoined == true
+    val dressed = if (liquid == null) kitJumpPillDressed() else null
     Box(
         modifier.kitLiquidSwell(liquidPress)
             .then(if (hoisted && liquid != null) liquid else Modifier)
@@ -352,6 +371,7 @@ private fun VeiledPillFace(
                     when {
                         hoisted -> Modifier
                         liquid != null -> liquid
+                        dressed != null -> Modifier.kitSurface(dressed)
                         else -> Modifier.kitBackdropVeil(backdrop, veil, colors.surface3, shape).border(1.dp, colors.hairline, shape)
                     }
                 )

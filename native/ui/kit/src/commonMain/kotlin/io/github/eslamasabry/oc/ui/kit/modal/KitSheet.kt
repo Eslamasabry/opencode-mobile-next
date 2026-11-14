@@ -1,6 +1,10 @@
 package io.github.eslamasabry.oc.ui.kit.modal
 
 import io.github.eslamasabry.oc.ui.kit.frame.kitKeyboardPadding
+import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceInput
+import io.github.eslamasabry.oc.ui.kit.foundation.kitDressedLook
+import io.github.eslamasabry.oc.ui.design.style.SurfaceRole
+import io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.platform.LocalLayoutDirection
 import io.github.eslamasabry.oc.ui.kit.foundation.kitPaneInset
@@ -672,7 +676,12 @@ private fun SheetPanel(
     val tokens = LocalKitTokens.current
     // Glass: the sheet is liquid glass over the page (Android 13+, not held), else a frosted pane (opaque over the page
     // whenever nothing blurs); every other style keeps surface2.
-    val face = kitModalGlassFace(shape, shrink) ?: Modifier.background(colors.surface2)
+    // Brutal and Paper dress the panel (audit 2026-11-14): the style's edge on the paper face, Brutal's softened and
+    // Paper's square corners; Brutal casts no shadow from a sheet (it lies on the scrim).
+    val face =
+        kitModalGlassFace(shape, shrink)
+            ?: kitDressedLook(KitSurfaceInput(role = SurfaceRole.Sheet, shape = shape, level = SurfaceLevel.Surface2))?.modifier
+            ?: Modifier.background(colors.surface2)
     Column(
         modifier
             .then(face)
