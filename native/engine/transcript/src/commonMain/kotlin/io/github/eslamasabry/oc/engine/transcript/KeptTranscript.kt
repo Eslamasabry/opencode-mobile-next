@@ -51,7 +51,7 @@ public data class KeptTranscript(val title: String? = null, val history: List<Ke
          * large inline pictures trimmed. Null when not even the newest message fits.
          */
         public fun fit(title: String?, messages: List<CoreMessage>, maxBytes: Int): KeptTranscript? {
-            val trimmed = messages.takeLast(MAX_MESSAGES).map(KeptMessage::of)
+            val trimmed = messages.takeLast(MAX_MESSAGES).map { KeptMessage.of(it) }
             var from = 0
             while (from < trimmed.size) {
                 val kept = KeptTranscript(title, trimmed.subList(from, trimmed.size).toList())
@@ -106,7 +106,7 @@ public data class KeptTranscript(val title: String? = null, val history: List<Ke
         internal fun trimJson(value: JsonElement): JsonElement =
             when (value) {
                 is JsonObject -> trim(value)
-                is JsonArray -> JsonArray(value.map(::trimJson))
+                is JsonArray -> JsonArray(value.map { trimJson(it) })
                 is JsonPrimitive ->
                     if (value.isString && value.content.length > MAX_TOOL_TEXT) JsonPrimitive(trim(value.content))
                     else value
@@ -123,7 +123,7 @@ public data class KeptMessage(val info: KeptInfo, val parts: List<KeptPart> = em
     public fun toCore(): CoreMessage = CoreMessage(info.toCore(), parts.map { it.toCore() }.toImmutableList())
 
     public companion object {
-        public fun of(m: CoreMessage): KeptMessage = KeptMessage(KeptInfo.of(m.info), m.parts.map(KeptPart::of))
+        public fun of(m: CoreMessage): KeptMessage = KeptMessage(KeptInfo.of(m.info), m.parts.map { KeptPart.of(it) })
     }
 }
 
@@ -240,7 +240,7 @@ public data class KeptPart(
                 text = p.text,
                 callId = p.callId,
                 toolName = p.toolName,
-                tool = p.tool?.let(KeptTool::of),
+                tool = p.tool?.let { KeptTool.of(it) },
                 mime = p.mime,
                 filename = p.filename,
                 url = KeptTranscript.url(p.url),
@@ -296,9 +296,9 @@ public data class KeptTool(
                 input = KeptTranscript.trim(t.input),
                 inputRaw = KeptTranscript.trim(t.inputRaw),
                 output = KeptTranscript.trim(t.output),
-                outputValue = t.outputValue?.let(KeptTranscript::trimJson),
+                outputValue = t.outputValue?.let { KeptTranscript.trimJson(it) },
                 metadata = t.metadata?.let { KeptTranscript.trim(it) },
-                outputFiles = t.outputFiles.map(KeptFile::of),
+                outputFiles = t.outputFiles.map { KeptFile.of(it) },
                 segments =
                     t.segments.map { s ->
                         when (s) {

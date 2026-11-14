@@ -121,7 +121,7 @@ class ReopenTruthTest {
         val scope: CoroutineScope,
     ) : ChatLastKnown {
         var page: String? = null
-        private val json = Json { ignoreUnknownKeys = true; encodeDefaults = false; explicitNulls = false }
+        private val json = Json { ignoreUnknownKeys = true; encodeDefaults = false }
 
         override fun peek(ref: ConversationRef): KeptTranscript? =
             page?.let { json.decodeFromString(KeptTranscript.serializer(), it) }
