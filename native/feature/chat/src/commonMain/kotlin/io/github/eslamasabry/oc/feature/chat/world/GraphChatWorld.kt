@@ -924,7 +924,7 @@ internal class GraphChatWorld(
                             mutableLoad.value = ChatLoad.Failed(Failure.NotFound())
                             nextCursor = null
                             mutableOlder.value = false
-                            feedKeeper.reset()
+                            feedKeeper.reset(keepShown = false)
                             recentModels.rememberSession(ref.profileId.raw, sid.raw, null)
                         }
                     }
@@ -1119,10 +1119,14 @@ internal class GraphChatWorld(
         keptJob =
             registry.appScope.launch(registry.mainContext) {
                 val kept = memory.peek(ref) ?: memory.read(ref) ?: return@launch
-                if (historyReconciled || kept.messages.isEmpty()) return@launch
+                if (historyReconciled || kept.history.isEmpty()) return@launch
+                val messages = kept.messages()
                 val handle = memory.detached(ref)
                 keptHandle = handle
                 if (mutableTitle.value == null) kept.title?.let { mutableTitle.value = it }
+                // The turn facts read the same kept messages as the rows, and are there before the rows draw: a
+                // declined step reads "You declined this" and an edit keeps its files from the first frame.
+                feedKeeper.showKept(messages)
                 launch {
                     handle.state.collect { s ->
                         if (historyReconciled || s.rows.isEmpty()) return@collect
@@ -1132,7 +1136,8 @@ internal class GraphChatWorld(
                         }
                     }
                 }
-                handle.loadHistory(kept.messages)
+                val bridge = P3Bridge(sid.raw)
+                handle.loadHistory(messages.map(bridge::message))
             }
     }
 
@@ -1158,8 +1163,11 @@ internal class GraphChatWorld(
         val memory = lastKnown ?: return
         if (!historyReconciled) return
         val title = mutableTitle.value
+        // The full messages the turn facts read (taken now: a reload resets the ledger), with the words the rows drew.
+        val ledger = feedKeeper.liveMessages()
         registry.appScope.launch(registry.mainContext) {
-            val messages = handle.keptMessages()
+            val messages =
+                io.github.eslamasabry.oc.engine.transcript.KeptTranscript.withWords(ledger, handle.keptMessages())
             if (messages.isNotEmpty()) memory.keep(ref, title, messages)
         }
     }

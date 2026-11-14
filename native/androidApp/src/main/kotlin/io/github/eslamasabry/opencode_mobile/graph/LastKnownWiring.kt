@@ -19,6 +19,7 @@ import io.github.eslamasabry.oc.core.data.cache.CacheShelf
 import io.github.eslamasabry.oc.core.data.cache.FileLastKnown
 import io.github.eslamasabry.oc.core.data.cache.LastKnown
 import io.github.eslamasabry.oc.core.data.cache.ServerMark
+import io.github.eslamasabry.oc.core.model.transcript.MessageWithParts
 import io.github.eslamasabry.oc.engine.git.GitLastKnown
 import io.github.eslamasabry.oc.engine.git.KeptGit
 import io.github.eslamasabry.oc.engine.profiles.DeletionOptions
@@ -32,7 +33,6 @@ import io.github.eslamasabry.oc.engine.team.TeamLastKnown
 import io.github.eslamasabry.oc.engine.transcript.KeptTranscript
 import io.github.eslamasabry.oc.engine.transcript.TranscriptHandle
 import io.github.eslamasabry.oc.engine.transcript.detachedTranscript
-import io.github.eslamasabry.oc.engine.transcript.state.MessageWithParts
 import io.github.eslamasabry.oc.feature.chat.world.ChatLastKnown
 import io.github.eslamasabry.oc.feature.projects.presentation.FolderRowUi
 import io.github.eslamasabry.oc.feature.projects.presentation.KeptFolderList
