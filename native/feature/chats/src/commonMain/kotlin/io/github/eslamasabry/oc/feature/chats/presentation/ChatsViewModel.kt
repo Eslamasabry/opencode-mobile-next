@@ -59,6 +59,10 @@ public class ChatsViewModel(
     private val pins: ConversationPins = NoConversationPins(),
     private val agentNotices: Set<HomeAgentNoticeSource> = emptySet(),
     dispatchers: AppDispatchers? = null,
+    /** The app-wide undo window shared with the edge light's list; null builds this page's own (tests, previews). */
+    sharedHeld: HeldAnswers? = null,
+    /** Stops a running conversation from a row's menu (the chat's own stop path); null: the menu offers no Stop. */
+    private val stopper: HomeStop? = null,
 ) : ViewModel(), ChatsActions {
     /** Where the home's list is built: off the main thread in the app; where the caller stands in a test. */
     private val work: kotlin.coroutines.CoroutineContext =
@@ -130,9 +134,10 @@ public class ChatsViewModel(
      * by request id. The conversation to answer and the reply are kept beside the words the row shows. The switcher's
      * Allow once uses the same hold, so a request answered in either place is held once and shows Undo in both.
      */
-    private val heldAnswers = MutableStateFlow<Map<String, HomeHeldReply>>(emptyMap())
-    private val heldRows = HashMap<String, Pair<ConversationRef, HomePermissionReply>>()
-    private val holdJobs = HashMap<String, kotlinx.coroutines.Job>()
+    private val ownsHeld = sharedHeld == null
+    private val heldStore: HeldAnswers =
+        sharedHeld ?: HeldAnswers(viewModelScope, ANSWER_HOLD_MS) { ref, id, reply -> sendAnswer(ref, id, reply) }
+    private val heldAnswers: StateFlow<Map<String, HomeHeldReply>> get() = heldStore.held
 
     /**
      * H1: question answers from a row: held for the undo window ([QuestionAnswersState.held], the words the person
@@ -223,7 +228,7 @@ public class ChatsViewModel(
                     alwaysAllowable = alwaysAllowable(snapshot),
                 )
             }
-            .combine(confirmingAlways) { base, row -> base.copy(confirmAlways = row) }
+            .combine(confirmingAlways) { base, row -> base.copy(confirmAlways = row, stoppable = stopper != null) }
             .combine(rowDetails) { base, details -> base.copy(rowDetails = details) }
             .combine(heldAnswers) { base, held -> base.copy(held = held.toImmutableMap()) }
             .combine(questionState) { base, q ->
@@ -394,29 +399,8 @@ public class ChatsViewModel(
     /** Holds the answer for the undo window, then sends it once. A second tap on the same request does nothing. */
     private fun hold(ref: ConversationRef, id: String, reply: HomePermissionReply) {
         if (permissionAnswers.singleOrNull() == null) return
-        if (id in heldRows || id in answers.value.first) return
-        heldRows[id] = ref to reply
-        heldAnswers.update {
-            it + (id to
-                when (reply) {
-                    HomePermissionReply.Once -> HomeHeldReply.Allowed
-                    HomePermissionReply.Reject -> HomeHeldReply.Rejected
-                    HomePermissionReply.Always -> HomeHeldReply.AlwaysAllowed
-                })
-        }
-        holdJobs[id] =
-            viewModelScope.launch {
-                kotlinx.coroutines.delay(ANSWER_HOLD_MS)
-                release(id)
-            }
-    }
-
-    /** The undo window ended: the answer leaves now. */
-    private fun release(id: String) {
-        val (ref, reply) = heldRows.remove(id) ?: return
-        holdJobs.remove(id)
-        sendAnswer(ref, id, reply)
-        heldAnswers.update { it - id }
+        if (id in answers.value.first) return
+        heldStore.hold(ref, id, reply)
     }
 
     override fun undoAnswer(row: ConversationRowUi) {
@@ -431,9 +415,7 @@ public class ChatsViewModel(
     }
 
     private fun undoHeld(id: String) {
-        if (heldRows.remove(id) == null) return
-        holdJobs.remove(id)?.cancel()
-        heldAnswers.update { it - id }
+        heldStore.undo(id)
     }
 
     override fun answerQuestion(row: ConversationRowUi, answers: List<List<String>>, shown: String) {
@@ -636,6 +618,15 @@ public class ChatsViewModel(
         }
     }
 
+    override fun stopRow(row: ConversationRowUi) {
+        val port = stopper ?: return
+        if (row.running == null) return
+        viewModelScope.launch {
+            port.stop(row.ref)
+            feed.refresh()
+        }
+    }
+
     override fun togglePin(row: ConversationRowUi) {
         if (row.key !in state.value.pinnable) return
         val server = connections.servers.value.firstOrNull { it.profile == row.ref.profileId } ?: return
@@ -734,12 +725,12 @@ public class ChatsViewModel(
         // Leaving the page inside an undo window still sends what the person answered (the app scope outlives it).
         val port = permissionAnswers.singleOrNull()
         val scope = appScope
-        if (port != null && scope != null)
-            heldRows.toList().forEach { (id, held) ->
-                val (ref, reply) = held
-                scope.launch { port.answer(ref, id, reply) }
-            }
-        heldRows.clear()
+        // A shared store keeps its holds (it lives in the app scope); only this page's own store is sent and dropped.
+        if (ownsHeld) {
+            if (port != null && scope != null)
+                heldStore.pending().forEach { (ref, id, reply) -> scope.launch { port.answer(ref, id, reply) } }
+            heldStore.discard()
+        }
         if (port != null && scope != null)
             questionRows.toList().forEach { (id, held) -> scope.launch { port.answerQuestion(held.ref, id, held.answers) } }
         questionRows.clear()
@@ -1083,6 +1074,14 @@ private data class QuestionAnswersState(
     val sending: Set<String> = emptySet(),
     val refused: Set<String> = emptySet(),
 )
+
+/**
+ * Stops the running turn of [ref] by the chat's own stop path (the app binds `stopLikeTheChat`). Used by the home row
+ * menu's Stop.
+ */
+public fun interface HomeStop {
+    public suspend fun stop(ref: ConversationRef): io.github.eslamasabry.oc.core.common.Outcome<Unit>
+}
 
 /** What a list row answers a waiting permission. */
 public enum class HomePermissionReply { Once, Always, Reject }

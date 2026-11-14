@@ -145,6 +145,7 @@ import io.github.eslamasabry.oc.ui.words.res.chatHomeAnswerFailed
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeClearFilters
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeDone
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeStopped
+import io.github.eslamasabry.oc.ui.words.res.dockStop
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeInterrupted
 import io.github.eslamasabry.oc.ui.words.res.agentsStateCantReopen
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeRowStatusRules
@@ -825,6 +826,7 @@ private data class HomeRowWords(
     val related: String,
     val handoff: String,
     val delete: String,
+    val stop: String,
     /** "Working", or "Working 34m" once the run's start is known (B-161). */
     val runningFor: (Long?) -> String,
 )
@@ -850,6 +852,7 @@ private fun rememberHomeRowWords(): HomeRowWords =
         related = stringResource(Res.string.sessionOpenRelated),
         handoff = stringResource(Res.string.sessionCopyHandoff),
         delete = stringResource(Res.string.sessionMenuDelete),
+        stop = stringResource(Res.string.dockStop),
         runningFor = liveRunWords(),
     )
 
@@ -858,6 +861,7 @@ private data class HomeRowFlags(
     val canArchive: Boolean,
     val pinnable: Boolean,
     val shareable: Boolean,
+    val stoppable: Boolean,
     val pinned: Boolean,
     val renamable: Boolean,
     val deletable: Boolean,
@@ -878,6 +882,7 @@ private fun rowFlags(row: ConversationRowUi, state: ChatsUi): HomeRowFlags =
         canArchive = row.key in state.archivable,
         pinnable = row.key in state.pinnable,
         shareable = row.key in state.shareable,
+        stoppable = state.stoppable && row.running != null,
         pinned = row.key in state.pinned,
         renamable = row.key in state.renamable,
         deletable = row.key in state.deletable,
@@ -981,6 +986,7 @@ private fun ConversationRow(
         // N-30: the same acts, in the same order, as a row on All conversations (a tap already opens it). Built only
         // while the menu is open; a closed menu keeps what it last showed for its fade.
         items = if (!menuOpen) emptyList() else buildList {
+            if (flags.stoppable) add(KitMenuItem(words.stop, { menuOpen = false; actions.stopRow(row) }, icon = KitIcons.stop))
             if (flags.pinnable) {
                 add(KitMenuItem(if (flags.pinned) words.unpin else words.pin, { menuOpen = false; actions.togglePin(row) }, icon = if (flags.pinned) KitIcons.unpin else KitIcons.pin))
             }
