@@ -37,7 +37,7 @@ class KitRowActionRailTest {
                 }
             }
         }
-        val words = onNodeWithText("Update and import").getUnclippedBoundsInRoot()
+        val words = onNodeWithText("Update and import", useUnmergedTree = true).getUnclippedBoundsInRoot()
         assertTrue(abs((412.dp - words.right).value - 16f) < 1f, "the words end ${412.dp - words.right} from the edge")
     }
 }

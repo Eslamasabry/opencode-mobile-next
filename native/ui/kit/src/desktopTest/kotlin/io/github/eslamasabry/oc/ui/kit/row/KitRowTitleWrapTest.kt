@@ -33,8 +33,8 @@ class KitRowTitleWrapTest {
                 }
             }
         }
-        val short = onNodeWithText("Permissions").getUnclippedBoundsInRoot()
-        val long = onNodeWithText("Permissions and automatic actions").getUnclippedBoundsInRoot()
+        val short = onNodeWithText("Permissions", useUnmergedTree = true).getUnclippedBoundsInRoot()
+        val long = onNodeWithText("Permissions and automatic actions", useUnmergedTree = true).getUnclippedBoundsInRoot()
         val shortH = (short.bottom - short.top).value
         val longH = (long.bottom - long.top).value
         assertTrue(longH > shortH * 1.5f, "short $shortH, long $longH")
