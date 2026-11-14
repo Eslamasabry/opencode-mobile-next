@@ -86,7 +86,7 @@ class KitLayerCycleTest {
                 Canvas(Modifier.size(20.dp)) {
                     KitLayerCycles.strict = strict
                     try {
-                        block(a, b)
+                        block(this, a, b)
                     } catch (e: KitRuleBroken) {
                         thrown = e
                     }

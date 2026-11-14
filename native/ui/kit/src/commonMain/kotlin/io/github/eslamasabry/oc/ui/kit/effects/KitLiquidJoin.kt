@@ -442,7 +442,7 @@ private class JoinedPaneNode(
         // pills over the page, and its hold pulled the bar's tint into a band under the bar, ending in a rounded corner on
         // the line where the two sides meet. A drop draws its side from its body's picture, as the body does, unless it
         // lies in that picture itself (KitLiquidJoinDrop.ownPicture: the jump pill): its own then, never a cycle.
-        val source = if (part is KitLiquidJoinDrop && !part.ownPicture && theirs != null) partner?.backdrop ?: backdrop else backdrop
+        val source = if ((part as? KitLiquidJoinDrop)?.ownPicture == false && theirs != null) partner?.backdrop ?: backdrop else backdrop
         // Only this pane's side is drawn, and it lies within reach/6 of this pane's own box.
         val origin = c.positionInWindow()
         val grow = reach / 6f + 2f
