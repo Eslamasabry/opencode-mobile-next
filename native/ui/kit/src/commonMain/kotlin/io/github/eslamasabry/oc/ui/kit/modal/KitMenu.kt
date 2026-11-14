@@ -21,6 +21,7 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.unit.round
@@ -42,8 +43,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -110,6 +109,9 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 /** Plan 06 §7.4: a menu panel is at most 320 dp wide. */
 internal const val MENU_MAX_WIDTH_DP: Int = 320
 private const val MENU_MIN_WIDTH_DP = 180
+
+/** The least room, in rows, a menu is held to beside its anchor before it may take the whole safe height. */
+private const val MENU_MIN_ROOM_ROWS = 3
 
 /** A named group in a menu; its [heading] leads the group's first item (Dart `KitMenuGroup`). */
 @Immutable public data class KitMenuGroup(val id: String, val heading: String? = null)
@@ -214,7 +216,7 @@ public fun KitMenu(
         last.items = items
         last.title = title
     }
-    Box(modifier.onGloballyPositioned { own = it.boundsInWindow().toIntRect() }) {
+    Box(modifier.onGloballyPositioned { own = it.menuAnchorBox() }) {
         anchor()
         if (MenuRules.composed(shown.currentState, shown.targetState) && last.items.isNotEmpty()) {
             if (open) last.at = MenuPlacement.anchorFor(own, pressed)
@@ -224,6 +226,17 @@ public fun KitMenu(
             if (layer != null) MenuInLayer(layer, shown, last, onDismissRequest) else MenuPopup(shown, last, onDismissRequest, own)
         }
     }
+}
+
+/**
+ * The anchor's box in the window, px. `boundsInWindow` is `Rect.Zero` for an empty box, so an anchor-less menu (the
+ * chat's message menu: an empty box in the screen's bottom end) read as opening from the window's top-left corner and
+ * drew its first row under the status bar (cut audit 1, c7). An empty box keeps where it lies.
+ */
+internal fun LayoutCoordinates.menuAnchorBox(): IntRect {
+    val seen = boundsInWindow()
+    if (seen.width > 0f && seen.height > 0f) return seen.toIntRect()
+    return IntRect(positionInWindow().round(), size)
 }
 
 /**
@@ -238,19 +251,32 @@ private class MenuShown {
 }
 
 /**
- * The room a menu keeps, in px: the page's gutter from each side (a dp count used as pixels left the menu ~10 px from
- * the screen's edge under a full-width row), and the system bars plus a step at the top and bottom (E20-S08: its last
- * item was cut under the navigation bar), less how far its host already lies inside them ([windowTop]: the host's top
- * in the window; [windowBottomGap]: from the host's bottom to the window's).
+ * The room a menu keeps, in px: the safe area (system bars and display cutout) plus the page's gutter at each side (a
+ * dp count used as pixels left the menu ~10 px from the screen's edge under a full-width row) and a step at the top
+ * and bottom (E20-S08: its last item was cut under the navigation bar), less how far its host already lies inside
+ * them ([windowTop], [windowLeft]: the host's top and left in the window; [windowBottomGap], [windowRightGap]: from
+ * the host's bottom and right to the window's).
  */
 @Composable
-private fun menuRoom(windowTop: Int, windowBottomGap: Int): Triple<Int, Int, Int> {
+private fun menuRoom(windowTop: Int, windowBottomGap: Int, windowLeft: Int = 0, windowRightGap: Int = 0): MenuRoom {
     val density = LocalDensity.current
     val gutter = with(density) { LocalKitTokens.current.gutter.dp.roundToPx() }
     val step = with(density) { Space.S2.dp.roundToPx() }
-    val top = (WindowInsets.systemBars.getTop(density) - windowTop).coerceAtLeast(0) + step
-    val bottom = (WindowInsets.systemBars.getBottom(density) - windowBottomGap).coerceAtLeast(0) + step
-    return Triple(gutter, top, bottom)
+    // The safe area: the system bars and the display cutout (a cutout in landscape lies at a side).
+    val safe = io.github.eslamasabry.oc.ui.kit.frame.kitSystemInsets()
+    val dir = androidx.compose.ui.platform.LocalLayoutDirection.current
+    val top = (safe.getTop(density) - windowTop).coerceAtLeast(0) + step
+    val bottom = (safe.getBottom(density) - windowBottomGap).coerceAtLeast(0) + step
+    val left = (safe.getLeft(density, dir) - windowLeft).coerceAtLeast(0) + gutter
+    val right = (safe.getRight(density, dir) - windowRightGap).coerceAtLeast(0) + gutter
+    val rows = with(density) { (LocalKitTokens.current.minTarget * MENU_MIN_ROOM_ROWS).dp.roundToPx() }
+    return MenuRoom(left, top, right, bottom, rows)
+}
+
+/** The room a menu keeps from each side of its host, px ([menuRoom]). */
+@Immutable
+internal data class MenuRoom(val left: Int, val top: Int, val right: Int, val bottom: Int, val minRoom: Int) {
+    fun window(width: Int, height: Int): MenuWindow = MenuWindow(width, height, minOf(left, right), top, bottom, left, right, minRoom)
 }
 
 /**
@@ -320,16 +346,21 @@ private fun LayerMenu(layer: KitMenuLayerState, shown: MutableTransitionState<Bo
     // A menu already fading out does not ask to close again.
     val close = { if (shown.targetState) onDismissRequest() }
     KitPredictiveBack(enabled = shown.targetState) { close() }
-    val windowHeight = LocalWindowInfo.current.containerSize.height
-    var layerHeight by remember { mutableStateOf(0) }
+    val windowSize = LocalWindowInfo.current.containerSize
+    var layerSize by remember { mutableStateOf(IntSize.Zero) }
     val origin = layer.origin
-    val (gutter, top, bottom) =
-        menuRoom(windowTop = origin.y, windowBottomGap = if (layerHeight > 0) (windowHeight - origin.y - layerHeight).coerceAtLeast(0) else 0)
+    val room =
+        menuRoom(
+            windowTop = origin.y,
+            windowBottomGap = if (layerSize.height > 0) (windowSize.height - origin.y - layerSize.height).coerceAtLeast(0) else 0,
+            windowLeft = origin.x,
+            windowRightGap = if (layerSize.width > 0) (windowSize.width - origin.x - layerSize.width).coerceAtLeast(0) else 0,
+        )
     val at = last.at
     val anchor = IntRect(at.left - origin.x, at.top - origin.y, at.right - origin.x, at.bottom - origin.y)
     Box(
         Modifier.fillMaxSize()
-            .onSizeChanged { layerHeight = it.height }
+            .onSizeChanged { layerSize = it }
             .pointerInput(shown) {
                 awaitEachGesture {
                     val down = awaitFirstDown(requireUnconsumed = false)
@@ -346,14 +377,14 @@ private fun LayerMenu(layer: KitMenuLayerState, shown: MutableTransitionState<Bo
         content = {
             // The panel takes every press on it (its padding too): only a press beside it closes the menu.
             Box(Modifier.pointerInput(Unit) { awaitPointerEventScope { while (true) awaitPointerEvent() } }) {
-                MenuContent(shown, last, onDismissRequest, anchor, gutter, top, bottom, joins = true)
+                MenuContent(shown, last, onDismissRequest, anchor, room, joins = true)
             }
         },
     ) { measurables, constraints ->
         val loose = constraints.copy(minWidth = 0, minHeight = 0)
         val placeables = measurables.map { it.measure(loose) }
         layout(constraints.maxWidth, constraints.maxHeight) {
-            val window = MenuWindow(constraints.maxWidth, constraints.maxHeight, gutter, top, bottom)
+            val window = room.window(constraints.maxWidth, constraints.maxHeight)
             placeables.forEach { p ->
                 p.place(MenuPlacement.offset(anchor, IntSize(p.width, p.height), layoutDirection == LayoutDirection.Rtl, window))
             }
@@ -380,21 +411,21 @@ private fun MenuPopup(
 ) {
     val anchor = last.at
     val override = anchor.takeIf { it != own }
-    val (gutter, top, bottom) = menuRoom(windowTop = 0, windowBottomGap = 0)
-    val provider = remember(gutter, top, bottom, override) { MenuPosition(gutter, top, bottom, override) }
+    val room = menuRoom(windowTop = 0, windowBottomGap = 0)
+    val provider = remember(room, override) { MenuPosition(room, override) }
     Popup(
         popupPositionProvider = provider,
         // A menu already fading out does not ask to close again.
         onDismissRequest = { if (shown.targetState) onDismissRequest() },
         properties = PopupProperties(focusable = true),
     ) {
-        MenuContent(shown, last, onDismissRequest, anchor, gutter, top, bottom)
+        MenuContent(shown, last, onDismissRequest, anchor, room)
     }
 }
 
 /**
  * The menu's panel and its motion, placed by its host (the window's menu layer, or a popup): [anchor] is the box it
- * opens from and [gutter], [top] and [bottom] the room it keeps, all in the host's pixels, whose size the panel is
+ * opens from and [room] the room it keeps from each side, all in the host's pixels, whose size the panel is
  * measured against.
  */
 @Composable
@@ -403,9 +434,7 @@ private fun MenuContent(
     last: MenuShown,
     onDismissRequest: () -> Unit,
     anchor: IntRect,
-    gutter: Int,
-    top: Int,
-    bottom: Int,
+    room: MenuRoom,
     /** In the window's menu layer, where its glass may join the glass it opened from; a popup's window never does. */
     joins: Boolean = false,
 ) {
@@ -491,9 +520,9 @@ private fun MenuContent(
                             val placeable = measurable.measure(constraints.copy(minHeight = 0))
                             return@layout layout(placeable.width, placeable.height) { placeable.place(0, 0) }
                         }
-                        val window = MenuWindow(constraints.maxWidth, constraints.maxHeight, gutter, top, bottom)
-                        val room = MenuPlacement.room(anchorTop, anchorBottom, window)
-                        val placeable = measurable.measure(constraints.copy(minHeight = 0, maxHeight = room))
+                        val window = room.window(constraints.maxWidth, constraints.maxHeight)
+                        val tall = MenuPlacement.room(anchorTop, anchorBottom, window)
+                        val placeable = measurable.measure(constraints.copy(minHeight = 0, maxHeight = tall))
                         opensAbove.value = MenuPlacement.opensAbove(anchorTop, anchorBottom, placeable.height, window)
                         layout(placeable.width, placeable.height) { placeable.place(0, 0) }
                     },
@@ -729,7 +758,18 @@ public data class MenuWindow(
     val margin: Int = 0,
     val top: Int = 0,
     val bottom: Int = 0,
-)
+    /** The room kept free at the left and right (the gutter, plus a side navigation bar or a cutout). */
+    val left: Int = margin,
+    val right: Int = margin,
+    /**
+     * The least room a menu is held to (about three rows). When neither side of its anchor has that much (a message as
+     * tall as the screen), the menu takes the whole safe height and may lie over its anchor.
+     */
+    val minRoom: Int = 0,
+) {
+    /** The lowest a panel may end: above the bottom room, never above the top room. */
+    internal val floor: Int get() = maxOf(top, height - bottom)
+}
 
 /**
  * Where a menu opens (P-017), pure so it is tested without a window. Across: the panel starts on the anchor's start
@@ -754,14 +794,24 @@ public object MenuPlacement {
     public fun anchorFor(own: IntRect, pressed: IntRect?): IntRect =
         if (pressed != null && own.width == 0 && own.height == 0) pressed else own
 
-    /** The height a menu may take: the roomier side of the anchor, inside the window's top and bottom room. */
-    public fun room(anchorTop: Int, anchorBottom: Int, window: MenuWindow): Int =
-        maxOf(window.height - window.bottom - anchorBottom, anchorTop - window.top).coerceAtLeast(0)
+    /**
+     * The height a menu may take: the roomier side of the anchor, inside the window's top and bottom room (the safe
+     * area). An anchor that lies partly under a system bar counts only from the safe area's edge, so the room never
+     * reaches under the bar (cut audit 1: the message menu's first row was drawn under the clock).
+     */
+    public fun room(anchorTop: Int, anchorBottom: Int, window: MenuWindow): Int {
+        val side = maxOf(below(anchorBottom, window), above(anchorTop, window)).coerceAtLeast(0)
+        return if (side < window.minRoom) window.floor - window.top else side
+    }
+
+    private fun below(anchorBottom: Int, window: MenuWindow): Int = window.floor - anchorBottom.coerceIn(window.top, window.floor)
+
+    private fun above(anchorTop: Int, window: MenuWindow): Int = anchorTop.coerceIn(window.top, window.floor) - window.top
 
     /** True when a panel [height] tall opens above its anchor. */
     public fun opensAbove(anchorTop: Int, anchorBottom: Int, height: Int, window: MenuWindow): Boolean {
-        val below = window.height - window.bottom - anchorBottom
-        val above = anchorTop - window.top
+        val below = below(anchorBottom, window)
+        val above = above(anchorTop, window)
         return when {
             height <= below -> false
             height <= above -> true
@@ -769,10 +819,14 @@ public object MenuPlacement {
         }
     }
 
-    /** The panel's top-left corner in the window. */
+    /**
+     * The panel's top-left corner in the window, always inside its safe area: never under the status bar, the
+     * navigation bar or a cutout, and the gutter from each side. A panel taller than the room is held to it by its
+     * measure ([room]) and scrolls; if it is still taller, its top stays in the safe area.
+     */
     public fun offset(anchor: IntRect, content: IntSize, rtl: Boolean, window: MenuWindow): IntOffset {
-        val minX = window.margin
-        val maxX = maxOf(window.margin, window.width - content.width - window.margin)
+        val minX = window.left
+        val maxX = maxOf(window.left, window.width - content.width - window.right)
         // The reading start edge of the anchor, then its end edge: the panel grows away from the edge it starts on.
         val fromStart = if (rtl) anchor.right - content.width else anchor.left
         val fromEnd = if (rtl) anchor.left else anchor.right - content.width
@@ -782,20 +836,19 @@ public object MenuPlacement {
                 fromEnd in minX..maxX -> fromEnd
                 else -> fromEnd.coerceIn(minX, maxX)
             }
+        val lowest = maxOf(window.top, window.floor - content.height)
         val y =
             if (opensAbove(anchor.top, anchor.bottom, content.height, window)) {
-                (anchor.top - content.height).coerceAtLeast(window.top)
+                anchor.top.coerceIn(window.top, window.floor) - content.height
             } else {
-                anchor.bottom.coerceAtMost(maxOf(anchor.bottom, window.height - window.bottom - content.height))
+                anchor.bottom.coerceIn(window.top, window.floor)
             }
-        return IntOffset(x, y)
+        return IntOffset(x, y.coerceIn(window.top, lowest))
     }
 }
 
 private class MenuPosition(
-    private val margin: Int,
-    private val top: Int = 0,
-    private val bottom: Int = 0,
+    private val room: MenuRoom,
     private val override: IntRect? = null,
 ) : PopupPositionProvider {
     override fun calculatePosition(
@@ -804,7 +857,7 @@ private class MenuPosition(
         layoutDirection: LayoutDirection,
         popupContentSize: IntSize,
     ): IntOffset {
-        val window = MenuWindow(windowSize.width, windowSize.height, margin, top, bottom)
+        val window = room.window(windowSize.width, windowSize.height)
         return MenuPlacement.offset(override ?: anchorBounds, popupContentSize, layoutDirection == LayoutDirection.Rtl, window)
     }
 }
