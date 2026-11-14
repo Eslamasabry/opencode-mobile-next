@@ -69,6 +69,12 @@ public interface AgentUpdateHost {
     /** The helper runs, or is installed, at a version other than the pin. False when unknown. */
     public val helperBehind: Boolean
 
+    /**
+     * An agent whose automatic update was started in an earlier run of the app and never finished (the app was
+     * stopped or crashed mid-install): its install is run again, once per run. Null when none.
+     */
+    public val resume: AgentId? get() = null
+
     /** A line naming the pinned versions (agents and helper): one automatic try is spent per value. */
     public val pinKey: String
 
@@ -230,7 +236,9 @@ public class AgentAutoUpdater(
         // does not keep another agent that is behind from being updated.
         val behind = host.behind.filterTo(mutableSetOf()) { "$key/${it.raw}" !in attempted }
         val helperBehind = host.helperBehind && "$key/$HELPER" !in attempted
-        val target = AgentAutoUpdateRule.target(host.installed, behind, helperBehind)
+        // An update the app was stopped in the middle of runs again first (the install skips what is in place).
+        val resume = host.resume?.takeIf { "$key/${it.raw}" !in attempted }
+        val target = resume ?: AgentAutoUpdateRule.target(host.installed, behind, helperBehind)
         val busy = target != null && workBusy()
         val running = jobs.running
         val problem = host.installProblem || jobs.failed

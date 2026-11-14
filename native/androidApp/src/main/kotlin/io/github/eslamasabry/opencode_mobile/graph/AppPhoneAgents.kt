@@ -235,11 +235,50 @@ class AppPhoneAgents(
      * True at the first look after an app update (the build differs from the one the last read ran under) or before
      * any read: the automatic update then asks for one [readForUpdate] before it decides.
      */
-    internal fun updateReadDue(): Boolean {
-        if (needsRestart) return false
-        val owner = agentOwner(ownerId()) ?: return false
-        return gatePrefs(owner).string(updateReadKey(owner)) != BuildConfig.VERSION_CODE.toString()
+    @Suppress("TooGenericExceptionCaught")
+    internal fun updateReadDue(): Boolean =
+        try {
+            if (needsRestart) false
+            else {
+                val owner = agentOwner(ownerId())
+                owner != null && gatePrefs(owner).string(updateReadKey(owner)) != BuildConfig.VERSION_CODE.toString()
+            }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            false
+        }
+
+    /** The agent whose automatic update was started and not finished, kept per phone: `oc.agentUpdating.<owner>`. */
+    private fun updatingKey(owner: ProfileId) = "oc.agentUpdating.${owner.raw}"
+
+    /** Records that the automatic update of [agent] runs (null: it ended), so a stop in the middle is resumed. */
+    @Suppress("TooGenericExceptionCaught")
+    internal suspend fun markUpdating(agent: AgentId?) {
+        try {
+            val owner = agentOwner(ownerId()) ?: return
+            gatePrefs(owner).commit {
+                if (agent == null) remove(updatingKey(owner)) else putString(updatingKey(owner), agent.raw)
+            }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            // A mark that could not be kept only means the next run does not resume; it never stops the update.
+        }
     }
+
+    /** The agent whose automatic update an earlier run of the app started and did not finish; null when none. */
+    @Suppress("TooGenericExceptionCaught")
+    internal fun interruptedUpdate(): AgentId? =
+        try {
+            val owner = agentOwner(ownerId())
+            val raw = owner?.let { gatePrefs(it).string(updatingKey(it)) }
+            raw?.takeIf { ID_SHAPE.matches(it) }?.let(::AgentId)?.takeIf { catalog.byId(it)?.recipe != null }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            null
+        }
 
     /**
      * One read of every catalog agent's installed version (the Agents page's own cheap read: the payload check and
@@ -258,7 +297,8 @@ class AppPhoneAgents(
                 if (!linux.installed) return@native false
                 for (agent in agents) {
                     if (stop.isStopped) return@native false
-                    val payload = PhoneAgentPayloads.present(linux, agent.recipe!!.executable)
+                    val executable = agent.recipe?.executable ?: continue
+                    val payload = PhoneAgentPayloads.present(linux, executable)
                     versionOf(owner, agent, payload, installing = false, stop = stop)
                 }
                 !stop.isStopped
@@ -289,7 +329,18 @@ class AppPhoneAgents(
         return true
     }
 
-    internal fun updateFacts(): UpdateFacts? {
+    @Suppress("TooGenericExceptionCaught")
+    internal fun updateFacts(): UpdateFacts? =
+        try {
+            updateFactsRead()
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            null
+        }
+
+    @Suppress("TooGenericExceptionCaught")
+    private fun updateFactsRead(): UpdateFacts? {
         if (needsRestart || !linux.installed) return null
         val owner = agentOwner(ownerId()) ?: return null
         val kept = keptFacts(owner)
@@ -302,7 +353,16 @@ class AppPhoneAgents(
                 }
                 .map { it.id }
                 .toSet()
-        val helper = linux.agentHost.status(owner.raw)
+        // A helper whose status cannot be read (a half-written record after a stop in the middle of an install) is
+        // simply not known to run; it never ends the app.
+        val helper =
+            try {
+                linux.agentHost.status(owner.raw)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Exception) {
+                emptyMap()
+            }
         return UpdateFacts(
             installed.map { it.id },
             behind,
@@ -1300,6 +1360,9 @@ class AppPhoneAgents(
 
     private companion object {
         const val VERSION_REUSE_MS = 60_000L
+
+        /** An agent id as the kept marker holds it. */
+        val ID_SHAPE = Regex("[a-z0-9-]{1,40}")
 
         /** A version answer a step made out of date ([forgetFacts]). */
         const val STALE = Long.MIN_VALUE
