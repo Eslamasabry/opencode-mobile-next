@@ -35,6 +35,8 @@ class KitRowTitleWrapTest {
         }
         val short = onNodeWithText("Permissions").getUnclippedBoundsInRoot()
         val long = onNodeWithText("Permissions and automatic actions").getUnclippedBoundsInRoot()
-        assertTrue(long.height.value > short.height.value * 1.5f, "short ${short.height}, long ${long.height}")
+        val shortH = (short.bottom - short.top).value
+        val longH = (long.bottom - long.top).value
+        assertTrue(longH > shortH * 1.5f, "short $shortH, long $longH")
     }
 }

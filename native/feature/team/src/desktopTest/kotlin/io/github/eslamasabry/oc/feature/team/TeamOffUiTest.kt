@@ -3,6 +3,7 @@ package io.github.eslamasabry.oc.feature.team
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
+import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.unit.dp
 import kotlin.test.assertTrue
@@ -88,8 +89,8 @@ class TeamOffUiTest {
                 )
             }
         }
-        val window = onNodeWithTag("kit-screen").getUnclippedBoundsInRoot()
-        val actions = onNodeWithTag("team-intro-actions").getUnclippedBoundsInRoot()
+        val window = onAllNodesWithTag("kit-screen", useUnmergedTree = true)[0].getUnclippedBoundsInRoot()
+        val actions = onAllNodesWithTag("team-intro-actions", useUnmergedTree = true)[0].getUnclippedBoundsInRoot()
         val gutter = 16.dp
         assertTrue(
             (actions.left - window.left) < gutter + 1.dp,
