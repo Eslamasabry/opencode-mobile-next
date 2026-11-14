@@ -212,11 +212,14 @@ class KitModalSheetPageTest {
         // background. Within the side's band nothing of the page is left, the top's band included.
         val bare = shot(Page())
         val corner = shot(Page(cornerBlock = true))
-        // The corner's rim and below it: before, the top band ran into the corner and showed the block whole there. (That
-        // the top band still shows the page away from the sides is B-GLASS-MODAL-004.)
-        val inCorner = peakDiff(bare, corner, W - 28f, SHEET_TOP + 2f, W - 2f, SHEET_TOP + 30f)
-        println("MODAL corner: in the top-right corner $inCorner")
+        // Inside the sheet's rounded corner (its 28 dp arc: outside it the page itself shows, the sheet is not drawn
+        // there) and along the side just below it: before, the top band ran into the corner and showed the block whole
+        // there. (That the top band still shows the page away from the sides is B-GLASS-MODAL-004.)
+        val inCorner = peakDiff(bare, corner, W - 24f, SHEET_TOP + 10f, W - 14f, SHEET_TOP + 20f)
+        val belowCorner = peakDiff(bare, corner, W - 20f, SHEET_TOP + 30f, W - 2f, SHEET_TOP + 46f)
+        println("MODAL corner: inside the top-right corner $inCorner, along the side below it $belowCorner")
         assertTrue(inCorner <= 2f, "the page shows in the sheet's top corner on the window's edge: $inCorner")
+        assertTrue(belowCorner <= 2f, "the page shows along the sheet's side on the window's edge, in the top band: $belowCorner")
     }
 
     private companion object {
