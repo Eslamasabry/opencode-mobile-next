@@ -26,6 +26,7 @@ class PhonePayloadGuard(
     private val stores: PreviewStores,
     private val dispatchers: AppDispatchers,
     private val transientOwners: TransientOwners,
+    private val redactor: io.github.eslamasabry.oc.core.security.Redactor,
 ) : ProfileCloser {
     override val owner = ":engine:agents/payloads"
     private val lock = Any()
@@ -109,64 +110,88 @@ class PhonePayloadGuard(
         val alias = spec.profile.id
         // A transient helper is admitted by the registry before its factory runs. Its native
         // ownership proof is the authority; an alias prefix or a preference is never sufficient.
-        val transientOwner = transientOwners.ownerOf(alias)
-        val owner = transientOwner ?: alias.takeIf { stores.profiles.profile(it) != null }
+        val transient = transientOwners.ownerOf(alias) != null
+        // The saved helper `<owner>-agents` (This phone's agent rows since "one This phone") belongs to its phone:
+        // before, it was checked as a phone of its own and every history read was refused as stale.
+        val owner = ownerOf(alias)
         val callback: () -> Outcome<PaseoPayloadLease> = {
-            if (owner == null) stale() else reserve(spec, owner, transientOwner != null)
+            if (owner == null) stale(OWNER) else reserve(spec, owner, transient)
         }
         if (owner != null)
             synchronized(lock) {
                 callbacks[alias] = callback
-                callbackOwners[alias] = owner
+                callbackOwners[alias] = ProfileId(owner.phone)
             }
         return callback
     }
+
+    /** [PhoneAgentRules.payloadOwner] over today's prefs and saved profiles. */
+    private fun ownerOf(alias: ProfileId): PhoneAgentRules.PayloadOwner? =
+        PhoneAgentRules.payloadOwner(
+            alias.raw,
+            transientOwners.ownerOf(alias)?.raw,
+            (stores.prefs.get("oc.phoneAgentOwner.${alias.raw}") as? PrefValue.Str)?.value,
+            (stores.prefs.get("oc.builtinServerOwner") as? PrefValue.Str)?.value,
+            stores.profiles.profiles.value.mapTo(HashSet()) { it.id.raw },
+        )
 
     /** Uses the original authenticated live-factory binding; never reconstructs a phone target. */
     fun reserveForProfile(profile: ProfileId): Outcome<PaseoPayloadLease> =
         synchronized(lock) { callbacks[profile] }?.invoke() ?: stale()
 
-    private fun sourceCurrent(spec: GatewaySpec, profile: ProfileId, transient: Boolean): Boolean =
-        spec.scope.coroutineContext[Job]?.isActive == true &&
-            profile !in closed &&
+    /**
+     * The lease's owner still holds: the connection lives, neither it nor its phone was closed, the phone is still
+     * saved and still the app's own OpenCode, and the connection still resolves to the same owner (a transient alias
+     * by its native proof, the saved helper by its phone).
+     */
+    private fun sourceCurrent(spec: GatewaySpec, owner: PhoneAgentRules.PayloadOwner, transient: Boolean): Boolean {
+        val phone = ProfileId(owner.phone)
+        return spec.scope.coroutineContext[Job]?.isActive == true &&
+            phone !in closed &&
             spec.profile.id !in closed &&
-            stores.profiles.profile(profile) != null &&
-            (if (transient) transientOwners.ownerOf(spec.profile.id) == profile
-            else spec.profile.id == profile && transientOwners.ownerOf(spec.profile.id) == null) &&
-            (stores.prefs.get("oc.builtinServerOwner") as? PrefValue.Str)?.value == profile.raw
+            stores.profiles.profile(phone) != null &&
+            (transientOwners.ownerOf(spec.profile.id) != null) == transient &&
+            ownerOf(spec.profile.id) == owner &&
+            PhoneAgentRules.payloadOwnerHolds(
+                owner,
+                (stores.prefs.get("oc.builtinServerOwner") as? PrefValue.Str)?.value,
+                stores.profiles.profiles.value.mapTo(HashSet()) { it.id.raw },
+            )
+    }
 
     private fun reserve(
         spec: GatewaySpec,
-        profile: ProfileId,
+        owner: PhoneAgentRules.PayloadOwner,
         transient: Boolean,
     ): Outcome<PaseoPayloadLease> =
         synchronized(lock) {
-            if (!sourceCurrent(spec, profile, transient)) return@synchronized stale()
+            if (!sourceCurrent(spec, owner, transient)) return@synchronized stale(OWNER)
             if (mutating || SetupRunner.get(app).running || readers >= 32)
                 return@synchronized busy()
             readers++
             var released = false
             object : PaseoPayloadLease {
                     override suspend fun awaitReady(): Outcome<Unit> {
+                        // The key the helper's starter writes: its owner's (AppLocalAgentHostStarter, the handoff).
                         val password =
-                            (stores.secrets.read("oc.agentHostSecret.${profile.raw}")
+                            (stores.secrets.read("oc.agentHostSecret.${owner.helper}")
                                     as? Outcome.Ok)
                                 ?.value
-                        if (password.isNullOrEmpty() || password != spec.credentials.secret)
-                            return stale()
+                        if (!PhoneAgentRules.payloadSecretMatches(password, spec.credentials.secret))
+                            return stale(SECRET)
                         val running =
                             withContext(dispatchers.io) {
                                 (attempt({ Failure.Runtime(RuntimeProblem.Generic) }) {
                                         BuiltinLinux.get(app)
                                             .agentHost
-                                            .status(profile.raw)["running"] == true &&
+                                            .status(owner.helper)["running"] == true &&
                                             !SetupRunner.get(app).running
                                     }
                                         as? Outcome.Ok)
                                     ?.value == true
                             }
                         return synchronized(lock) {
-                            if (released || !sourceCurrent(spec, profile, transient)) stale()
+                            if (released || !sourceCurrent(spec, owner, transient)) stale(OWNER)
                             else if (!running || mutating) busy() else Unit.ok()
                         }
                     }
@@ -212,4 +237,13 @@ class PhonePayloadGuard(
     private fun busy(): Outcome<Nothing> = Failure.Busy(BusyKind.Overloaded).failed()
 
     private fun stale(): Outcome<Nothing> = Failure.Refused(RefusalReason.StaleScope).failed()
+
+    /** A lease refusal whose Details name the check that refused ([OWNER], [SECRET]). */
+    private fun stale(check: String): Outcome<Nothing> =
+        Failure.Refused(RefusalReason.StaleScope, redactor.details(check)).failed()
+
+    private companion object {
+        const val OWNER = "payload owner"
+        const val SECRET = "payload secret"
+    }
 }
