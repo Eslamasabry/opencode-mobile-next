@@ -17,6 +17,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.SideEffect
+import io.github.eslamasabry.oc.ui.kit.motion.KitPace
+import io.github.eslamasabry.oc.ui.kit.motion.KitSwap
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -109,7 +111,11 @@ public fun KitStepList(
             .onPlaced { rail.root = it }
             .drawBehind {
                 // A row a moving fold hides is off the rail; the ink to a row partly in view is as faint as the row.
-                val shown = rail.spans.entries.map { (k, span) -> span to (rail.shares[k]?.invoke() ?: 1f) }.filter { it.second > MIN_SHARE }
+                val shown =
+                    rail.spans.entries
+                        .map { (k, span) -> Triple(span, rail.columns[k], rail.shares[k]?.invoke() ?: 1f) }
+                        .filter { it.third > MIN_SHARE }
+                        .sortedBy { it.first.start }
                 val strokes =
                     stepListRail(
                         shown.map { it.first },
@@ -117,8 +123,9 @@ public fun KitStepList(
                         width = size.width,
                         rtl = layoutDirection == LayoutDirection.Rtl,
                         bend = StepTreeDims.BEND.dp.toPx(),
+                        columns = shown.map { it.second },
                     )
-                val shares = shown.sortedBy { it.first.start }.map { it.second }
+                val shares = shown.map { it.third }
                 strokes.forEachIndexed { i, stroke ->
                     val a = minOf(shares.getOrElse(i) { 1f }, shares.getOrElse(i + 1) { 1f })
                     drawStepStrokes(listOf(stroke), ink, alpha = a)
@@ -128,7 +135,16 @@ public fun KitStepList(
         // The words keep one column in from the rail; each step's node is drawn back in that free column.
         Column(Modifier.fillMaxWidth().padding(start = m.column)) {
             CompositionLocalProvider(LocalKitStepRail provides rail) {
-                if (fold != null) StepFoldRow(fold)
+                // The fold row comes and goes as a row does (owner 2026-11-14: it popped in while two rows folded
+                // behind it): at a step's arrival it grows in at the same pace as the new row and the rows folding
+                // behind it, so the list's height holds; its count then changes in place.
+                val lastFold = remember { arrayOfNulls<KitStepFoldLine>(1) }
+                if (fold != null) lastFold[0] = fold
+                val foldShown = fold ?: lastFold[0]
+                if (foldShown != null)
+                    KitStepReveal(visible = fold != null, arrives = rail.settled, leave = KitPace.Standard) {
+                        StepFoldRow(foldShown)
+                    }
                 if (earlier != null)
                     KitStepReveal(visible = fold?.open == true) {
                         Column(Modifier.fillMaxWidth()) { earlier() }
@@ -143,13 +159,18 @@ public fun KitStepList(
     }
 }
 
+/** A node closer to the rail than this share of the bend is on it. */
+private const val ON_RAIL_SHARE = .25f
+
 /** A row less in view than this is off the rail while its fold moves. */
 private const val MIN_SHARE = .02f
 
 /**
  * The rail of a [KitStepList]: one quiet line from each node's bottom to the next node's top, in the order shown, on
  * the glyph column [x] from the start edge (from the end of [width] in Arabic). [spans] are the nodes' top and bottom.
- * The step tree's own sequence rule draws it, so it meets every glyph exactly, as the tree meets its marks.
+ * [columns], when given (in the order of [spans]), are the nodes' measured centres across: a node that stands in from
+ * the rail (a run's own steps) is one level deeper, and the rail bends in to it and back out after it. The step tree's
+ * own sequence rule draws it, so it meets every glyph exactly, as the tree meets its marks.
  */
 internal fun stepListRail(
     spans: List<ClosedFloatingPointRange<Float>>,
@@ -157,15 +178,23 @@ internal fun stepListRail(
     width: Float,
     rtl: Boolean,
     bend: Float,
+    columns: List<Float?>? = null,
 ): List<StepStroke> {
     if (spans.size < 2) return emptyList()
     val cx = if (rtl) width - x else x
     val marks =
-        spans.sortedBy { it.start }.mapIndexed { i, s ->
-            StepMark(i, null, 1, KitTreeStepState.Done, Offset(cx, (s.start + s.endInclusive) / 2f), (s.endInclusive - s.start) / 2f)
+        spans.indices.sortedBy { spans[it].start }.mapIndexed { i, at ->
+            val s = spans[at]
+            // A node within a quarter bend of the rail is on it (rounding moves a measured centre by a pixel).
+            val col = columns?.getOrNull(at)?.takeIf { kotlin.math.abs(it - cx) >= bend * ON_RAIL_SHARE } ?: cx
+            val depth = if (col != cx) 2 else 1
+            val centre = Offset(col, (s.start + s.endInclusive) / 2f)
+            StepMark(i, null, depth, KitTreeStepState.Done, centre, (s.endInclusive - s.start) / 2f)
         }
     // A turn's steps are done or under way: the rail is never progress, so every piece is the quiet guide.
-    return StepTreeRules.sequence(marks, bend).map { it.copy(tone = StepTone.Guide) }
+    // Node to node only: the tree's closing curve back to its first column (a list ending on a run's step) is not
+    // drawn.
+    return StepTreeRules.sequence(marks, bend).take(marks.size - 1).map { it.copy(tone = StepTone.Guide) }
 }
 
 /** The fold row: the unfold glyph on the rail, the label, the quiet note; one 32 dp line in a 48 dp target. */
@@ -181,6 +210,7 @@ private fun StepFoldRow(fold: KitStepFoldLine) {
         box = m.stepLine,
         top = 0.dp,
         modifier = Modifier.testTag(STEP_FOLD_ROW_TAG),
+        half = railGlyphHalf(m),
         // The rows' own glyph look (same size, same ink), never a boxed outline heavier than them.
         node = { KitStepTile(if (open) KitIcons.unfoldLess else KitIcons.unfoldMore, KitStepNodeLook.Plain, m.glyph) },
     ) {
@@ -188,12 +218,17 @@ private fun StepFoldRow(fold: KitStepFoldLine) {
             Box(Modifier.fillMaxWidth().heightIn(min = m.stepLine).align(Alignment.CenterStart), contentAlignment = Alignment.CenterStart) {
                 if (m.wide)
                     Column(Modifier.padding(vertical = pad)) {
-                        KitText(fold.label, role = TypeRole.Secondary, tone = TextTone.Secondary, maxLines = 2)
+                        KitSwap(fold.label, alignment = Alignment.CenterStart) {
+                            KitText(it, role = TypeRole.Secondary, tone = TextTone.Secondary, maxLines = 2)
+                        }
                         if (note != null) KitText(note, role = TypeRole.Caption, tone = TextTone.Secondary, maxLines = 2)
                     }
                 else
                     Row(Modifier.padding(vertical = pad), verticalAlignment = Alignment.CenterVertically) {
-                        KitText(fold.label, role = TypeRole.Secondary, tone = TextTone.Secondary, maxLines = 1)
+                        // "Show 2 earlier steps" becomes "Show 3 earlier steps" in place, as a cross-fade.
+                        KitSwap(fold.label, alignment = Alignment.CenterStart) {
+                            KitText(it, role = TypeRole.Secondary, tone = TextTone.Secondary, maxLines = 1)
+                        }
                         if (note != null) {
                             Spacer(Modifier.width(Space.S2.dp))
                             KitText(note, Modifier.weight(1f, fill = false), role = TypeRole.Caption, tone = TextTone.Secondary, maxLines = 1)
@@ -259,6 +294,7 @@ public fun KitStepGroup(
         RailNode(
             box = m.stepLine,
             top = 0.dp,
+            half = if (live) null else railGlyphHalf(m),
             node = {
                 KitStepTile(KitIcons.agent, if (live) KitStepNodeLook.Running else KitStepNodeLook.Plain, m.glyph, Modifier.stepTreeRoot())
             },

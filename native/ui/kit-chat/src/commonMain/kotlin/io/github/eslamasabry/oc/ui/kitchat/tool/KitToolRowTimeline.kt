@@ -246,10 +246,13 @@ internal fun TimelineStep(
     }
 
     val spoken = Modifier.semantics { stateDescription = view.statusLabel }
+    // A node in an outline (the step light, queued, waiting) meets the rail at its box; a still glyph at its ink.
+    val outlined = live || status == KitToolStatus.Pending || status == KitToolStatus.WaitingForYou
     RailNode(
         box = m.stepLine,
         top = 0.dp,
         modifier = modifier.widthIn(max = 700.dp), // F: lib/ui/kit/kit_layout.dart:48 paneDetailMaxWidth
+        half = if (outlined) null else railGlyphHalf(m),
         node = { KitToolNode(view, m.glyph, onRail = true) },
     ) {
         Column(Modifier.fillMaxWidth()) {
@@ -367,7 +370,7 @@ public fun KitStepFold(
         box = m.stepLine,
         top = 0.dp,
         modifier = modifier.widthIn(max = 700.dp), // F: lib/ui/kit/kit_layout.dart:48 paneDetailMaxWidth
-        half = if (icon != null) null else 3.dp,
+        half = if (icon != null) railGlyphHalf(m) else 3.dp,
         node = {
             // The steps' own node: the glyph bare, at the size every step's glyph has.
             if (icon != null) KitStepTile(icon, KitStepNodeLook.Plain, m.glyph)

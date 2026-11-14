@@ -271,4 +271,79 @@ class KitStepCraftTest {
             assertEquals(h0 + 32f, last, 0.6f, "the arrived step is one whole row at the end")
             assertEquals(first, onNodeWithTag("row0", useUnmergedTree = true).fetchSemanticsNode().id, "the row above kept its node")
         }
+
+    @Test
+    fun `STEPS-CRAFT-025 a run's own steps stand one step in, the rail bending in from the run and back out`() =
+        runDesktopComposeUiTest(412, 700) {
+            host {
+                KitStepList {
+                    KitStepItem {
+                        val run = view("r", "Ran 2 commands")
+                        KitToolRow(run, opened = true, onToggle = {}, modifier = Modifier.testTag("run"), group = true)
+                        for (i in 0 until 2)
+                            KitStepItem(visible = true, order = i, nested = true) {
+                                KitToolRow(view("c$i", "Ran tests"), false, {}, modifier = Modifier.testTag("c$i"))
+                            }
+                    }
+                    KitStepItem {
+                        val next = view("n", "Edited player.dart", kind = KitToolKind.Edit)
+                        KitToolRow(next, false, {}, modifier = Modifier.testTag("next"))
+                    }
+                }
+            }
+            waitForIdle()
+            val all = onAllNodesWithTag("kit-step-node", useUnmergedTree = true)
+            val nodes =
+                all.fetchSemanticsNodes().indices.map { all[it].getUnclippedBoundsInRoot() }.sortedBy { it.top.value }
+            assertEquals(4, nodes.size, "the run, its two steps and the next row")
+            val inset = STEP_RUN_INSET.toFloat()
+            assertEquals(nodes[0].left.value + inset, nodes[1].left.value, 0.6f, "the run's first step stands in")
+            assertEquals(nodes[1].left.value, nodes[2].left.value, 0.6f, "its steps share their own column")
+            assertEquals(nodes[0].left.value, nodes[3].left.value, 0.6f, "the next row is back on the rail")
+            val run = onNodeWithTag("run", useUnmergedTree = true).getUnclippedBoundsInRoot()
+            val c0 = onNodeWithTag("c0", useUnmergedTree = true).getUnclippedBoundsInRoot()
+            assertEquals(run.left.value + inset, c0.left.value, 0.6f, "and so do its words")
+            assertEquals(run.right.value, c0.right.value, 0.6f, "its time keeps the rows' one end edge")
+            // The rail: from the run's node it bends to the steps' column, runs down it, and bends back out.
+            val image = onAllNodes(isRoot())[0].captureToImage().toPixelMap()
+            fun ink(x: Float, y: Float): Float {
+                val c = image[x.toInt().coerceIn(0, image.width - 1), y.toInt().coerceIn(0, image.height - 1)]
+                return maxOf(c.red, c.green, c.blue) * 255f
+            }
+            fun across(y: Float, from: Float, to: Float): Boolean =
+                (from.toInt()..to.toInt()).any { ink(it.toFloat(), y) > LINE_INK_CRAFT }
+            fun mid(a: Int, b: Int) = (nodes[a].bottom.value + nodes[b].top.value) / 2f
+            val x0 = (nodes[0].left.value + nodes[0].right.value) / 2f
+            val x1 = (nodes[1].left.value + nodes[1].right.value) / 2f
+            assertTrue(across(mid(0, 1), x0 - 1f, x1 + 1f), "the rail bends from the run to its steps")
+            assertTrue(ink(x1, mid(1, 2)) > LINE_INK_CRAFT, "the steps' own column has the rail")
+            assertTrue(across(mid(2, 3), x0 - 1f, x1 + 1f), "it bends back out to the next row")
+            assertTrue(ink(x0, mid(1, 2)) < LINE_INK_CRAFT, "no second rail runs past the steps")
+        }
+
+    @Test
+    fun `STEPS-CRAFT-026 a running step's glyph keeps clear of the light's outline, a still one fills its node`() =
+        runDesktopComposeUiTest(412, 700) {
+            host {
+                KitStepList {
+                    KitToolRow(view("a", "Searched files", kind = KitToolKind.Search), false, {})
+                    KitToolRow(view("b", "Searching files", KitToolStatus.Running, KitToolKind.Search), false, {})
+                }
+            }
+            waitForIdle()
+            val glyphs = onAllNodesWithTag(STEP_GLYPH_TAG, useUnmergedTree = true)
+            val sizes =
+                glyphs.fetchSemanticsNodes().indices
+                    .map { glyphs[it].getUnclippedBoundsInRoot() }
+                    .sortedBy { it.top.value }
+                    .map { (it.right - it.left).value }
+            assertEquals(2, sizes.size)
+            assertEquals(22f, sizes[0], 0.6f, "a still glyph is drawn at 22 dp in its 24 dp node")
+            assertEquals(18f, sizes[1], 0.6f, "in the light's outline 18 dp: a magnifier's handle clears the corner")
+        }
+
+    private companion object {
+        /** A pixel this strong on the black ground is ink (the rail is the guide's quiet ink). */
+        const val LINE_INK_CRAFT = 30f
+    }
 }
