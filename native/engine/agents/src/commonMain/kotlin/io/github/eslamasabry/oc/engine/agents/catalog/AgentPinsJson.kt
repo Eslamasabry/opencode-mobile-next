@@ -150,7 +150,7 @@ internal const val AGENT_PINS_JSON: String = """{
       "providerId": "antigravity",
       "signInMethod": "browserOAuthHost",
       "recipe": {
-        "version": "1.5.3",
+        "version": "1.5.9",
         "executable": "agy",
         "launchArgs": [
           "acp",
@@ -162,20 +162,20 @@ internal const val AGENT_PINS_JSON: String = """{
         ],
         "artifacts": {
           "arm64": {
-            "url": "https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.3-6604829099950080/linux-arm/cli_linux_arm64.tar.gz",
-            "sha256": "2d50060c7b1327995e5c81ec58829c91c2564ebb9fec165d3f9f1325ec188675",
+            "url": "https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.9-4515810895593472/linux-arm/cli_linux_arm64.tar.gz",
+            "sha256": "3a18c238c7ee6661e43df7e824a7d4c1bed78aeeda09430921a0f1dbfe825bca",
             "format": "tarGz",
             "member": "antigravity",
-            "downloadBytes": 69843447,
-            "installedBytes": 235622776
+            "downloadBytes": 90318517,
+            "installedBytes": 249582256
           },
           "x64": {
-            "url": "https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.3-6604829099950080/linux-x64/cli_linux_x64.tar.gz",
-            "sha256": "1b4850599cce73a17f94ffb422df3bf9531531b77dbddc40c1a435e0c2c16807",
+            "url": "https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.9-4515810895593472/linux-x64/cli_linux_x64.tar.gz",
+            "sha256": "8b1f5e56779f2434a0af36f1b715a8392a084de550f8c68bc79821f95fabf3fa",
             "format": "tarGz",
             "member": "antigravity",
-            "downloadBytes": 73694700,
-            "installedBytes": 246837648
+            "downloadBytes": 99166075,
+            "installedBytes": 265700040
           }
         }
       }
