@@ -33,6 +33,7 @@ import io.github.eslamasabry.oc.ui.kit.foundation.KitTappable
 import io.github.eslamasabry.oc.ui.kit.motion.KitReveal
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTypography
+import io.github.eslamasabry.oc.ui.kitchat.tool.railMeasures
 
 /** How a turn's live line reads (Dart `_KitTurnLiveLine` tones): working, waiting for the person, or nothing answering. */
 public enum class KitTurnLiveTone { Working, WaitingForYou, Quiet }
@@ -45,6 +46,10 @@ public enum class KitTurnLiveTone { Working, WaitingForYou, Quiet }
  * without the seconds). [step] is the muted second line under the words, not under the dot ("Step 3 of 5", or the
  * newest line a running command printed); it unfolds in and out. [onTap] makes the line a button ([tapLabel], "Show
  * steps"): the host shows the turn's steps.
+ *
+ * [onRail]: the line sits right under a turn's step list (D1): its dot stands on the list's rail axis and its words on
+ * the steps' words column, with a step row's gap above, so it reads as the list's last line, not a stray row under it
+ * (owner 2026-11-14). The caller keeps the list's start edge.
  *
  * Motion: the sweep (a progress loop, still under Off and while it waits); the step line reveals (size and fade).
  */
@@ -62,11 +67,17 @@ public fun KitTurnLiveLine(
     onAction: (() -> Unit)? = null,
     /** A one-time ask under the words (see [KitLiveAsk]); null draws none. It unfolds in and folds away. */
     ask: KitLiveAsk? = null,
+    onRail: Boolean = false,
 ) {
     val colors = LocalKitColors.current
     val style = LocalKitTypography.current.style(TypeRole.Secondary)
     val firstLine = with(LocalDensity.current) { style.lineHeight.toDp() }
     val dot = FlutterKitTokens.LIVE_DOT.dp
+    val rail = if (onRail) railMeasures() else null
+    // On a step list's rail: the dot's middle on the rail axis, the words on the steps' column, a row's gap above.
+    val lead = if (rail != null) rail.glyph / 2 - dot / 2 else 0.dp
+    val gap = if (rail != null) rail.column - lead - dot else Space.S2.dp
+    val above = if (rail != null) (rail.stepLine - rail.first) / 2 else 0.dp
     val dotColor =
         when (tone) {
             KitTurnLiveTone.Working -> colors.accent
@@ -90,19 +101,20 @@ public fun KitTurnLiveLine(
             verticalAlignment = Alignment.Top,
         ) {
             Box(
-                Modifier.padding(top = maxOf(0.dp, (firstLine - dot) / 2))
+                Modifier.padding(start = lead, top = maxOf(0.dp, (firstLine - dot) / 2))
                     .size(dot)
                     .background(dotColor, CircleShape)
                     .clearAndSetSemantics {}
             )
-            Spacer(Modifier.width(Space.S2.dp))
+            Spacer(Modifier.width(gap))
             // F: kit_turn.dart:1063 waiting for the person, nothing sweeps: nothing works meanwhile
             KitLiveSweep(working = tone == KitTurnLiveTone.Working) {
                 KitText(words, role = TypeRole.Secondary, tone = ink, tabular = true)
             }
         }
     }
-    Column(modifier) {
+    val under = lead + dot + gap
+    Column(modifier.padding(top = above)) {
         if (onTap == null) line(Modifier)
         else
             // F: kit_turn.dart:1100-1109 a tap on the line shows the turn's steps; one step of padding keeps it a target
@@ -114,7 +126,7 @@ public fun KitTurnLiveLine(
                 actionLabel,
                 onAction,
                 role = KitButtonRole.Tertiary,
-                modifier = Modifier.padding(start = dot + Space.S2.dp).testTag(LIVE_ACTION_TAG),
+                modifier = Modifier.padding(start = under).testTag(LIVE_ACTION_TAG),
             )
         // The leaving line keeps its words while it folds away.
         val held = remember { arrayOfNulls<String>(1) }
@@ -123,7 +135,7 @@ public fun KitTurnLiveLine(
             // F: kit_turn.dart:1127-1139 under the words, not under the dot; two lines at most
             KitText(
                 step?.takeIf { it.isNotEmpty() } ?: held[0].orEmpty(),
-                Modifier.padding(start = dot + Space.S2.dp).testTag(LIVE_STEP_TAG),
+                Modifier.padding(start = under).testTag(LIVE_STEP_TAG),
                 role = TypeRole.Secondary,
                 tone = TextTone.Secondary,
                 maxLines = 2,

@@ -224,6 +224,12 @@ internal fun TimelineStep(
                     // F: lib/ui/kit/chat/kit_tool_row.dart:1357-1371 _ForwardChevron, 20 dp text2, mirrored in RTL
                     KitIcon(KitIcons.chevronRight, Modifier.testTag("kit-tool-forward"), size = KitIconSize.Small, tone = TextTone.Secondary)
                 }
+                if (!group && !forward) {
+                    // Every row keeps the chevron's slot, so every time ends on one right edge (owner 2026-11-14: "4.8s ⌄"
+                    // beside "2.4s" read ragged).
+                    Spacer(Modifier.width(Space.S1.dp))
+                    Spacer(Modifier.width(KitIconSize.Small.dp.dp).testTag(STEP_CHEVRON_SLOT_TAG))
+                }
             }
         }
     }
@@ -305,6 +311,9 @@ internal fun TimelineStep(
 
 /** A group row's fold chevron, for tests. */
 public const val STEP_RUN_CHEVRON_TAG: String = "kit-step-run-chevron"
+
+/** The empty chevron slot at the end of a row without a chevron, for tests. */
+public const val STEP_CHEVRON_SLOT_TAG: String = "kit-step-chevron-slot"
 
 /** At most [share] of the line's width (a child of a Row measured before the weighted ones). */
 private fun Modifier.share(share: Float): Modifier = layout { measurable, constraints ->

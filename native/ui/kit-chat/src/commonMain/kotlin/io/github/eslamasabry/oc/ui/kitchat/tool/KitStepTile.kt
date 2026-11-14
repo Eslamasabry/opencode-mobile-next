@@ -75,10 +75,10 @@ internal fun KitStepTile(
 
 /**
  * The glyph's share of its node. Flutter's 0.6 sat in a tile; bare, the glyph fills most of the square (owner
- * 2026-11-14: at 0.7 the glyphs' ink was about 11 dp and read as tiny): 17 dp in the 20 dp node, its ink about 14 dp,
- * still clear of the step light's outline at the node's edge.
+ * 2026-11-14: "icons are tiny"; measured in the pictures a 17 dp glyph drew about 12 dp of ink): the kit's medium icon
+ * (22 dp) in the 24 dp node, about 18 dp of ink with a 1.4 dp stroke, still clear of the step light's outline.
  */
-internal const val GLYPH_SHARE: Float = .85f
+internal const val GLYPH_SHARE: Float = 22f / 24f
 
 /** How strong a still step's glyph is against the words' primary ink. */
 internal const val GLYPH_INK: Float = .82f

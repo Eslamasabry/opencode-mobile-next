@@ -116,6 +116,9 @@ class KitStepCraftTest {
         }
 
     /** The colour of row [i] (rows are told apart by hue, so adjacent rows never merge). */
+    /** The rail's glyph column (the kit's large icon size). */
+    private val KitIconSizeLarge = io.github.eslamasabry.oc.ui.kit.icon.KitIconSize.Large.dp
+
     private val hues = listOf(Color(1f, 0f, 0f), Color(0f, 1f, 0f), Color(0f, 0f, 1f), Color(1f, 1f, 0f))
 
     @Test
@@ -155,6 +158,54 @@ class KitStepCraftTest {
                     for ((i, seen) in rows) assertTrue(seen.first >= 31 && seen.second > 0.97f, "row $i settles whole: $seen")
                 }
             }
+        }
+
+    @Test
+    fun `STEPS-CRAFT-024 while the fold opens a row travels with its glyph, never words without their node`() =
+        runDesktopComposeUiTest(412, 400) {
+            var open by mutableStateOf(false)
+            mainClock.autoAdvance = false
+            host(motion = MotionLevel.Full) {
+                KitStepList {
+                    for (i in hues.indices)
+                        key(i) {
+                            KitStepItem(visible = open, order = i) {
+                                RailNode(box = 32.dp, top = 0.dp, node = { Box(Modifier.size(20.dp).background(Color.White)) }) {
+                                    Box(Modifier.fillMaxWidth().height(32.dp).background(hues[i]))
+                                }
+                            }
+                        }
+                }
+            }
+            mainClock.advanceTimeByFrame()
+            open = true
+            val total = MotionTokens.STANDARD + STEP_STAGGER_MS * (hues.size - 1)
+            var at = 0L
+            var seenFaint = 0
+            for (share in listOf(.25f, .5f, .75f, 1f)) {
+                val target = (total * share).toLong() + if (share >= 1f) 64 else 0
+                mainClock.advanceTimeBy(maxOf(16L, target - at))
+                at = maxOf(at + 16, target)
+                val image = onAllNodes(isRoot())[0].captureToImage().toPixelMap()
+                // The node column: the list's start (16) plus half the rail's glyph column.
+                val nodeX = 16 + KitIconSizeLarge / 2
+                val spans = HashMap<Int, IntRange>()
+                for (y in 0 until image.height) {
+                    val c = image[200, y]
+                    val strongest = maxOf(c.red, c.green, c.blue)
+                    if (strongest < 0.3f) continue
+                    val i = hues.indices.minByOrNull { h -> abs(hues[h].red - c.red / strongest) + abs(hues[h].green - c.green / strongest) + abs(hues[h].blue - c.blue / strongest) } ?: continue
+                    val r = spans[i]
+                    spans[i] = if (r == null) y..y else minOf(r.first, y)..maxOf(r.last, y)
+                }
+                for ((i, ys) in spans) {
+                    val words = ys.maxOf { y -> image[200, y].let { maxOf(it.red, it.green, it.blue) } }
+                    val node = ys.maxOf { y -> image[nodeX, y].let { minOf(it.red, it.green, it.blue) } }
+                    if (words < 0.97f) seenFaint++
+                    assertTrue(node >= words * 0.8f, "$share: row $i shows its words at $words but its glyph at $node")
+                }
+            }
+            assertTrue(seenFaint > 0, "the frames caught rows part-way in")
         }
 
     /** Each coloured row's visible height (px = dp here) and its strongest ink (0..1), read down the content column. */

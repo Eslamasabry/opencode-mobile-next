@@ -181,7 +181,8 @@ private fun StepFoldRow(fold: KitStepFoldLine) {
         box = m.stepLine,
         top = 0.dp,
         modifier = Modifier.testTag(STEP_FOLD_ROW_TAG),
-        node = { KitStepTile(if (open) KitIcons.unfoldLess else KitIcons.unfoldMore, KitStepNodeLook.Queued, m.glyph) },
+        // The rows' own glyph look (same size, same ink), never a boxed outline heavier than them.
+        node = { KitStepTile(if (open) KitIcons.unfoldLess else KitIcons.unfoldMore, KitStepNodeLook.Plain, m.glyph) },
     ) {
         val line: @Composable BoxScope.() -> Unit = {
             Box(Modifier.fillMaxWidth().heightIn(min = m.stepLine).align(Alignment.CenterStart), contentAlignment = Alignment.CenterStart) {

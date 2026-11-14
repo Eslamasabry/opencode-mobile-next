@@ -32,6 +32,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.LayoutCoordinates
@@ -229,15 +230,17 @@ public fun KitStepSentence(modifier: Modifier = Modifier, content: @Composable (
     }
     val m = railMeasures()
     val colors = LocalKitColors.current
-    // F: lib/ui/kit/chat/kit_step_timeline.dart:365-370 a 24 dp first line, one step down, padded one step
+    // Owner 2026-11-14: the words between steps are drawn at the steps' own size (the caller's secondary role), so the
+    // sentence keeps a step row's rhythm: the same padding round its first line, its dot in the middle of that line.
+    val pad = (m.stepLine - m.first) / 2
     RailNode(
-        box = 24.dp * m.scale, // F: lib/ui/kit/chat/kit_step_timeline.dart:365
-        top = Space.S1.dp,
+        box = m.first,
+        top = pad,
         modifier = modifier,
         half = 3.dp,
         node = { Box(Modifier.size(6.dp).background(colors.text3, CircleShape)) }, // F: lib/ui/kit/chat/kit_step_node.dart:38,66
     ) {
-        Box(Modifier.padding(vertical = Space.S1.dp)) { content() }
+        Box(Modifier.padding(vertical = pad)) { content() }
     }
 }
 
@@ -315,8 +318,9 @@ internal class RailMeasures(
 internal fun railMeasures(): RailMeasures {
     val tokens = LocalKitTokens.current
     val scale = kitTextScale()
-    // F: lib/ui/kit/chat/kit_step_timeline.dart:723 iconSize(smallIconSize).roundToDouble()
-    val glyph = (tokens.smallIcon * minOf(scale, tokens.maxIconScale)).roundToInt().dp
+    // Owner 2026-11-14 ("icons are tiny and unrecognisable"): the node is the kit's large icon size (24 dp), so its glyph
+    // draws about 18 dp of ink (Flutter's iconSize(smallIconSize), 20 dp with a 12 dp glyph, read as a speck).
+    val glyph = (KitIconSize.Large.dp * minOf(scale, tokens.maxIconScale)).roundToInt().dp
     val first = 20.dp * scale // F: lib/ui/kit/chat/kit_step_timeline.dart:958 rail.line(20)
     val stepLine = maxOf(32.dp, 20.dp * scale + Space.S1.dp * 2) // F: lib/ui/kit/chat/kit_step_timeline.dart:355
     return RailMeasures(glyph, first, stepLine, scale)
@@ -370,6 +374,10 @@ internal fun RailNode(
                 if (reveal != null) {
                     alpha = reveal.ink(at[0], fadePx)
                     translationY = rise.toPx() * (1f - reveal.shown(at[0]))
+                    // The node sits outside the row's box, in the rail's column: an offscreen layer (what a faded layer
+                    // draws into by default) is cut to the box and dropped the glyph until the row stood at full ink, so
+                    // rows popped their glyph in at the end (owner 2026-11-14). The fade is applied to each mark instead.
+                    compositingStrategy = CompositingStrategy.ModulateAlpha
                 }
             }
     ) {

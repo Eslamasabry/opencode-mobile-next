@@ -109,7 +109,7 @@ internal fun KitToolNode(view: KitToolView, size: Dp, modifier: Modifier = Modif
         // Flutter's step node (kit_step_light.dart `_StepLightState.build`): the glyph in its small tile, the light round
         // it while the step runs; a step that finishes flashes once (a tick that springs back to the glyph, a neutral
         // outline that fades before the failed mark, the accent outline fading on a stop).
-        val icon = view.kind.icon()
+        val icon = view.icon ?: view.kind.icon()
         val tickShare =
             MotionTokens.STEP_TICK.toFloat() / (MotionTokens.STEP_TICK + MotionTokens.STEP_SPRING)
         val settling = finishedFromRunning && transition.value < 1f
@@ -169,8 +169,8 @@ internal fun KitToolNode(view: KitToolView, size: Dp, modifier: Modifier = Modif
             }
         // A lone running step: Flutter's `KitStepTimeline.alone`, the glyph in the accent with the light round it (no
         // rail above or below); the glyph keeps one size so nothing jumps when it starts or ends.
-        else if (running) KitStepTile(view.kind.icon(), KitStepNodeLook.Running, size)
-        else KitToolGlyph(view.kind, colors.text2, size * GLYPH_SHARE)
+        else if (running) KitStepTile(view.icon ?: view.kind.icon(), KitStepNodeLook.Running, size)
+        else KitToolGlyph(view.icon ?: view.kind.icon(), colors.text2, size * GLYPH_SHARE)
         if (!running && finishedFromRunning && transition.value < 1f && view.status != KitToolStatus.Done)
             Canvas(Modifier.size(size)) {
                 drawRoundRect(

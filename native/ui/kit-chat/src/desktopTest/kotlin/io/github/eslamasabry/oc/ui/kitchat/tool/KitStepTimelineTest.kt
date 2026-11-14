@@ -98,12 +98,13 @@ class KitStepTimelineTest {
             val line = onNodeWithTag("kit-step-line", useUnmergedTree = true).box()
             assertEquals(32f, (line.bottom - line.top).value, .5f, "one 32 dp line: $line")
             val node = onNodeWithTag("kit-step-node", useUnmergedTree = true).box()
-            // The rail's column: the 20 dp node on the 16 dp edge, the words 12 dp after it (glyph + space3).
+            // The rail's column: the 24 dp node on the 16 dp edge (owner 2026-11-14: glyphs read as specks at 20), the words
+            // 12 dp after it (glyph + space3).
             assertEquals(16f, node.left.value, .5f, "the node on the reply's edge: $node")
-            assertEquals(20f, (node.right - node.left).value, .5f, "a 20 dp node: $node")
+            assertEquals(24f, (node.right - node.left).value, .5f, "a 24 dp node: $node")
             assertTrue(abs((node.top + node.bottom).value / 2 - (line.top + line.bottom).value / 2) < 1f, "node centred on the line: $node vs $line")
             val title = onNodeWithText("Read", useUnmergedTree = true).box()
-            assertEquals(48f, title.left.value, .5f, "the words start one column in (16 + 20 + 12): $title")
+            assertEquals(52f, title.left.value, .5f, "the words start one column in (16 + 24 + 12): $title")
             // One line: the path follows the verb and the duration ends the line, all on the same row.
             val path = onNodeWithText("lib/ui/router.dart", useUnmergedTree = true).box()
             val time = onNodeWithTag("kit-tool-duration", useUnmergedTree = true).box()
@@ -117,7 +118,7 @@ class KitStepTimelineTest {
             setContent { Work(expanded = false) {} }
             waitForIdle()
             val words = onNodeWithText("Read 1 file · ran 1 command", useUnmergedTree = true).box()
-            assertEquals(48f, words.left.value, .5f, "the summary starts where the steps' words do: $words")
+            assertEquals(52f, words.left.value, .5f, "the summary starts where the steps' words do: $words")
             val chevron = onNodeWithTag("kit-step-timeline-chevron", useUnmergedTree = true).box()
             assertTrue(chevron.left >= words.right, "the chevron follows the words: $chevron after $words")
         }
@@ -170,7 +171,7 @@ class KitStepTimelineTest {
             val node = onNodeWithTag("kit-step-node", useUnmergedTree = true).box()
             assertEquals(412f - 16f, node.right.value, .5f, "the node on the right edge: $node")
             val title = onNodeWithText("قراءة", useUnmergedTree = true).box()
-            assertEquals(412f - 48f, title.right.value, .5f, "the words end one column in: $title")
+            assertEquals(412f - 52f, title.right.value, .5f, "the words end one column in: $title")
         }
 
     @Test

@@ -1,7 +1,7 @@
 package io.github.eslamasabry.oc.ui.kitchat.tool
 
 import androidx.compose.animation.core.Animatable
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -125,7 +125,8 @@ public fun KitStepReveal(
     val parent = LocalRailReveal.current
     val reveal = remember(parent) { RailReveal(parent) { shown.value } }
     CompositionLocalProvider(LocalRailReveal provides reveal) {
-        Box(
+        // A column: a row and what hangs under it (a run's steps, an answer asked in place) stack, never overlap.
+        Column(
             modifier
                 .drawWithContent {
                     // Cut at the top and the moving bottom edge only while it moves (a settled row's light may reach
