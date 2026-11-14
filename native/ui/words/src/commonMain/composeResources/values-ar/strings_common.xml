@@ -751,4 +751,5 @@
     <string name="chatRequestAskReadFolder">قراءة هذا المجلد؟</string>
     <string name="appUpdateUpdatedTo">تم التحديث إلى الإصدار %1$s</string>
     <string name="capabilityScreenHeading">ما يستطيع هذا الخادم فعله</string>
+    <string name="connectUpdatingPhone">جارٍ تحديث OpenCode على هذا الهاتف…</string>
 </resources>

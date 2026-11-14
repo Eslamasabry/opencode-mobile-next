@@ -695,4 +695,5 @@
     <string name="chatRequestAskReadFolder">Đọc thư mục này?</string>
     <string name="appUpdateUpdatedTo">Đã cập nhật lên phiên bản %1$s</string>
     <string name="capabilityScreenHeading">Máy chủ này làm được gì</string>
+    <string name="connectUpdatingPhone">Đang cập nhật OpenCode trên điện thoại này…</string>
 </resources>
