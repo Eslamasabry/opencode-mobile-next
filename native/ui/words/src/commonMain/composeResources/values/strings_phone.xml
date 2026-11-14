@@ -417,6 +417,7 @@
     <string name="linuxMgrProblemSetup">Setup is running. Wait until it finishes.</string>
     <string name="linuxMgrProblemJob">A package task is running. Wait until it finishes.</string>
     <string name="linuxMgrProblemUnavailable">Linux is not set up or is not answering. Open This phone to set it up.</string>
+    <string name="linuxMgrProblemNotAnswering">Linux is taking a long time to answer. Try again in a moment.</string>
     <string name="linuxMgrProblemFailed">That did not finish. Try again.</string>
     <string name="linuxMgrLoadFailedTitle">Could not read Linux</string>
     <plurals name="linuxMgrProcSummary">

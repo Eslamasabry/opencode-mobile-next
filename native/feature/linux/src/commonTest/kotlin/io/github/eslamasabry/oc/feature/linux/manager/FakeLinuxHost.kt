@@ -17,6 +17,10 @@ class FakeLinuxHost(
     var answer: (String) -> Outcome<ShellRun> = { Outcome.Ok(ShellRun(0, "")) },
 ) : LinuxHost {
     val scripts = mutableListOf<String>()
+    /** The limit each run was given, in order. */
+    val timeouts = mutableListOf<Long>()
+    /** How long each run takes before it answers, on the test's virtual clock. */
+    var latencyMs: Long = 0
     val failures = ArrayDeque<Failure>()
     var setup = false
     val running = mutableSetOf<String>()
@@ -28,6 +32,8 @@ class FakeLinuxHost(
 
     override suspend fun run(script: String, timeoutSeconds: Long): Outcome<ShellRun> {
         scripts += script
+        timeouts += timeoutSeconds
+        if (latencyMs > 0) delay(latencyMs)
         failures.removeFirstOrNull()?.let { return Outcome.Failed(it) }
         return answer(script)
     }
