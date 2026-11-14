@@ -43,6 +43,7 @@ import io.github.eslamasabry.oc.ui.kit.action.KitIconButton
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
+import io.github.eslamasabry.oc.ui.kit.frame.kitBleedGutter
 import io.github.eslamasabry.oc.ui.kit.foundation.kitTextScale
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcon
 import io.github.eslamasabry.oc.ui.kit.icon.KitIconSize
@@ -195,7 +196,7 @@ private fun NoticeFrame(
     key: Any?,
     content: @Composable () -> Unit,
 ) {
-    KitEntrance(modifier.kitMaxWidth(CapRole.Reading).fillMaxWidth().testTag(tag), key = key) {
+    KitEntrance(modifier.kitBleedGutter().kitMaxWidth(CapRole.Reading).fillMaxWidth().testTag(tag), key = key) {
         Box(
             Modifier.fillMaxWidth()
                 .semantics { if (liveRegion) this.liveRegion = LiveRegionMode.Polite }

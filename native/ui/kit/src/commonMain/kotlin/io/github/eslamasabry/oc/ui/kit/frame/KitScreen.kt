@@ -5,6 +5,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.unit.offset
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -168,6 +169,31 @@ public enum class KitScreenEdges {
     Bleed,
 }
 
+/**
+ * The width of a [KitScreenEdges.Bleed] body, set by the frame (null elsewhere; 0 until measured). A part that is
+ * meant to sit between the gutters (a notice) uses it to tell a bare placement, as wide as the body, from one its
+ * screen already padded, so a bare one keeps the gutter and a padded one never gets a second.
+ */
+internal val LocalKitBleedBodyWidth = compositionLocalOf<androidx.compose.runtime.State<Int>?> { null }
+
+/**
+ * Keeps the page gutter around a part that [KitScreenEdges.Bleed] left against the window edge: when the part is
+ * offered the whole width of the Bleed body, and sits on no rail, it is inset by the gutter on each side. A screen that
+ * already padded it is offered less, so it is left alone.
+ */
+@Composable
+internal fun Modifier.kitBleedGutter(): Modifier {
+    val body = LocalKitBleedBodyWidth.current ?: return this
+    if (io.github.eslamasabry.oc.ui.kit.row.LocalKitOnRail.current) return this
+    val gutter = LocalKitTokens.current.gutter.dp
+    return layout { measurable, constraints ->
+        val whole = body.value > 0 && constraints.hasBoundedWidth && constraints.maxWidth >= body.value
+        val side = if (whole) gutter.roundToPx() else 0
+        val placeable = measurable.measure(constraints.offset(horizontal = -2 * side))
+        layout(placeable.width + 2 * side, placeable.height) { placeable.place(side, 0) }
+    }
+}
+
 /** True inside a body that already sits between the page gutters: a nested [KitScreen] adds none of its own. */
 internal val LocalKitScreenGutter = compositionLocalOf { false }
 
@@ -213,6 +239,13 @@ public fun Modifier.kitPageBleed(): Modifier {
 @Composable
 internal fun KitScreenBody(edges: KitScreenEdges, content: @Composable () -> Unit) {
     val placed = LocalKitScreenGutter.current || io.github.eslamasabry.oc.ui.kit.row.LocalKitOnRail.current
+    if (edges == KitScreenEdges.Bleed && !placed) {
+        val width = remember { mutableIntStateOf(0) }
+        Box(Modifier.fillMaxWidth().onSizeChanged { width.intValue = it.width }) {
+            CompositionLocalProvider(LocalKitBleedBodyWidth provides width) { content() }
+        }
+        return
+    }
     if (edges == KitScreenEdges.Bleed || placed) {
         content()
         return
