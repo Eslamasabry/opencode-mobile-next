@@ -48,8 +48,8 @@ import io.github.eslamasabry.oc.ui.shell.nav.ShellMotion.pop
  * The container transform runs on tap, on button-back and under a predictive back gesture (motion lead 2026-11-07,
  * replacing option A): the gesture seeks the same transform, so a chat shrinks toward its row with the finger, a cancel
  * grows it back and a commit finishes the flight into the row. Other routes keep the Material predictive preview. The
- * gate is cleared by state (entries composed ≤ 1), never by a timer. The transform is switched off in the app for now
- * (`LocalShellRowTransform`).
+ * gate is cleared by state (entries composed ≤ 1), never by a timer. `LocalShellRowTransform` can switch the transform
+ * off.
  */
 @Composable
 public fun ShellNavDisplay(
@@ -171,13 +171,18 @@ public fun ShellNavDisplay(
 
 /**
  * Whether the pages are composed inside a `SharedTransitionLayout`, which the row → page grow, the title that flies
- * from the row into the bar and the card → sheet morph need. Off in the app (2026-11-14): inside that layout every page
- * is measured in a lookahead pass, and that pass threw a NullPointerException twice on the owner's phone
- * (`LookaheadPassDelegate.forEachChildAlignmentLinesOwner`). Outside it no page has a lookahead pass, so that crash
- * cannot happen; a page that grows from a row opens and closes like every other page instead (slide and fade, with
- * the full predictive-back preview). The shell's transform tests turn it on.
+ * from the row into the bar and the card → sheet morph need. On (the default). Inside that layout every page is measured
+ * in a lookahead pass first. That pass threw a NullPointerException twice on the owner's phone (2026-11-14,
+ * `LookaheadPassDelegate.forEachChildAlignmentLinesOwner`) right after a conversation's frame moved its message box,
+ * which holds its own subcomposition, to another layout as the conversation went from loading to live; the frame keeps
+ * one layout there now (ShellLookaheadTest). The rule for every page under this layout: never move content that owns a
+ * subcomposition (BoxWithConstraints, a lazy list, SubcomposeLayout) between two parents by state.
+ *
+ * A kill switch: false composes the pages outside the layout, so no page has a lookahead pass; a page that grows from a
+ * row then opens and closes like every other page (slide and fade, with the full predictive-back preview) and a sheet
+ * that grows out of its control slides up.
  */
-internal val LocalShellRowTransform: ProvidableCompositionLocal<Boolean> = staticCompositionLocalOf { false }
+internal val LocalShellRowTransform: ProvidableCompositionLocal<Boolean> = staticCompositionLocalOf { true }
 
 /** Without the transform, a page that grows from a row moves like every other page. */
 private fun RouteMotion?.withTransform(transform: Boolean): RouteMotion? =
