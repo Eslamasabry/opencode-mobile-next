@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.State
@@ -543,7 +544,11 @@ private fun DockRingNode(
     // Loops (the comet, the breath) run only where the kit allows ambient loops: never under reduced motion or stills.
     val specs = KitMotion.specs
     val loops = LocalKitMotion.current.ambientLoops
-    val transition = if (loops) rememberInfiniteTransition(label = "kit.dock.ring") else null
+    // Background CPU 2026-11-14: tucked, the dock shows only its nub's dots, yet a Working or Thinking ring (or one with a
+    // running sub-agent) kept its comet or breath going at the display's rate; under Glass every such frame re-recorded
+    // the page and re-blurred every pane (emulator: ~68 frames a second on an untouched home, 0 with the dock off).
+    val tucked by remember(state) { derivedStateOf { state.tucked } }
+    val transition = if (ringLoopsRun(loops, tucked)) rememberInfiniteTransition(label = "kit.dock.ring") else null
     val spin: State<Float>? =
         if (transition != null && ring.state == KitDockRingState.Working) {
             transition.animateFloat(0f, 360f, specs.lap((360f / COMET_DEG_PER_S * 1000f).toInt()), label = "kit.dock.comet")
@@ -927,3 +932,6 @@ private class DockSharesTouchesNode(var state: KitEdgeDockState) : Modifier.Node
 
     override fun sharePointerInputWithSiblings(): Boolean = true
 }
+
+/** Whether a ring's loops (the comet, the breath) run: only where ambient loops are allowed and the dock is out. */
+internal fun ringLoopsRun(ambientLoops: Boolean, tucked: Boolean): Boolean = ambientLoops && !tucked
