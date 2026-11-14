@@ -1,9 +1,6 @@
 package io.github.eslamasabry.oc.engine.agents.install
 
 import io.github.eslamasabry.oc.engine.agents.AgentId
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.sync.Mutex
 
 /**
@@ -92,64 +89,11 @@ public interface AgentUpdateJobs {
     public suspend fun update(agent: AgentId): Boolean
 }
 
-/** What the automatic agent update last decided, for the Agents page's status line and the problem report. */
-public enum class AgentUpdateStep {
-    /** Nothing looked yet this run. */
-    NotLooked,
-
-    /** The one read of the installed agents' versions runs. */
-    Reading,
-
-    /** The read could not finish; it is not tried again until the app opens again. */
-    ReadFailed,
-
-    /** Every installed agent and the helper are on their pins (or nothing is installed). */
-    NothingBehind,
-
-    /** An agent is behind but the agents' own work is running (the binding bounds a stale reading of it). */
-    WaitingAgentsBusy,
-
-    /** A setup or install job runs. */
-    WaitingSetup,
-
-    /** A phone server move is half finished. */
-    WaitingSwitch,
-
-    /** The network charges for data. */
-    WaitingMetered,
-
-    /** The install of [AgentUpdateDecision.agent] was started. */
-    Updating,
-
-    /** The install was refused (no room, not installable here): the manual Install says why. */
-    Refused,
-}
-
-public data class AgentUpdateDecision(val step: AgentUpdateStep, val agent: AgentId? = null) {
-    /** One plain line for the redacted problem report; no names of people, paths or addresses. */
-    public fun line(): String =
-        when (step) {
-            AgentUpdateStep.NotLooked -> "agent update: not looked yet"
-            AgentUpdateStep.Reading -> "agent update: reading installed agents"
-            AgentUpdateStep.ReadFailed -> "agent update: read failed, not retried this run"
-            AgentUpdateStep.NothingBehind -> "agent update: nothing behind"
-            AgentUpdateStep.WaitingAgentsBusy -> "agent update: waiting, agents busy"
-            AgentUpdateStep.WaitingSetup -> "agent update: waiting, a setup job runs"
-            AgentUpdateStep.WaitingSwitch -> "agent update: waiting, a server move is pending"
-            AgentUpdateStep.WaitingMetered -> "agent update: waiting, network is metered"
-            AgentUpdateStep.Updating -> "agent update: started ${agent?.raw ?: "an agent"}"
-            AgentUpdateStep.Refused -> "agent update: install refused for ${agent?.raw ?: "an agent"}"
-        }
-}
-
 /**
- * Moves the installed agents and the helper to this app's pins by itself, once per agent and pinned set. The binding
- * calls [changed] at start and whenever the host's state or the work changes; a call while one is deciding returns at
- * once. The job it starts is the Agents page's own install, so the row, the tile and the composer show it as they
- * show any install. [decision] says what it is doing or waiting for.
- *
- * The one read of the installed versions needs no idle phone (it only asks each agent its version); only the install
- * waits for [workBusy] to be false.
+ * Moves the installed agents and the helper to this app's pins by itself, once per app run and pinned set. The
+ * binding calls [changed] at start and whenever the host's state or the work changes; a call while one is deciding
+ * returns at once. The job it starts is the Agents page's own install, so the row, the tile and the composer show it
+ * as they show any install.
  */
 public class AgentAutoUpdater(
     private val host: AgentUpdateHost,
@@ -162,27 +106,18 @@ public class AgentAutoUpdater(
     private val attempted = mutableSetOf<String>()
     private val checking = Mutex()
     private var readTried = false
-    private val state = MutableStateFlow(AgentUpdateDecision(AgentUpdateStep.NotLooked))
-
-    public val decision: StateFlow<AgentUpdateDecision> = state.asStateFlow()
 
     public suspend fun changed() {
         if (!checking.tryLock()) return
         try {
             if (host.readDue && !readTried) {
-                // The read starts a process per installed agent: not under a setup job or a half-finished move, and
-                // once per run, so a read that cannot finish never repeats.
-                when {
-                    jobs.running -> return hold(AgentUpdateStep.WaitingSetup)
-                    host.switchPending -> return hold(AgentUpdateStep.WaitingSwitch)
-                }
-                readTried = true
-                publish(AgentUpdateDecision(AgentUpdateStep.Reading))
-                host.read()
-                if (host.readDue) {
-                    publish(AgentUpdateDecision(AgentUpdateStep.ReadFailed))
+                // The read starts a process per installed agent: only while nothing is working, and once per run.
+                if (workBusy() || jobs.running || host.switchPending || host.installProblem) {
+                    note("a read of the installed agents is due; waiting for the phone to be idle")
                     return
                 }
+                readTried = true
+                host.read()
             }
             val key = host.pinKey
             if (decide(key, explain = true) == null) return
@@ -193,25 +128,12 @@ public class AgentAutoUpdater(
             if (jobs.update(target)) {
                 attempted += "$key/${target.raw}"
                 attempted += "$key/$HELPER"
-                publish(AgentUpdateDecision(AgentUpdateStep.Updating, target))
             } else {
                 note("refused before it started; will try again")
-                publish(AgentUpdateDecision(AgentUpdateStep.Refused, target))
             }
         } finally {
             checking.unlock()
         }
-    }
-
-    private fun hold(step: AgentUpdateStep) {
-        note("a read of the installed agents is due; waiting: $step")
-        publish(AgentUpdateDecision(step))
-    }
-
-    private fun publish(decision: AgentUpdateDecision) {
-        if (state.value == decision) return
-        state.value = decision
-        note(decision.line())
     }
 
     private companion object {
@@ -224,16 +146,17 @@ public class AgentAutoUpdater(
         log?.invoke(line)
     }
 
-    /** The agent to install now, or null while something holds the update back (or nothing is behind). */
+    /** The agent to install now, or null while something holds the update back. */
     private fun decide(key: String, explain: Boolean = false): AgentId? {
         // One automatic try per agent (and per helper) and pinned set: an agent that was tried is not asked again, and
         // does not keep another agent that is behind from being updated.
         val behind = host.behind.filterTo(mutableSetOf()) { "$key/${it.raw}" !in attempted }
         val helperBehind = host.helperBehind && "$key/$HELPER" !in attempted
         val target = AgentAutoUpdateRule.target(host.installed, behind, helperBehind)
-        val busy = target != null && workBusy()
+        val busy = workBusy()
         val running = jobs.running
         val problem = host.installProblem || jobs.failed
+        val tried = false
         val go =
             AgentAutoUpdateRule.shouldUpdate(
                 target = target,
@@ -242,10 +165,9 @@ public class AgentAutoUpdater(
                 switchPending = host.switchPending,
                 installProblem = problem,
                 metered = host.metered,
-                attemptedThisRun = false,
+                attemptedThisRun = tried,
             )
         if (explain) {
-            publishDecide(target, busy, running, problem)
             note(
                 "behind=${behind.size} helperBehind=$helperBehind busy=$busy setupRunning=$running " +
                     "switchPending=${host.switchPending} installProblem=$problem metered=${host.metered} " +
@@ -253,22 +175,5 @@ public class AgentAutoUpdater(
             )
         }
         return if (go) target else null
-    }
-
-    private fun publishDecide(target: AgentId?, busy: Boolean, running: Boolean, problem: Boolean) {
-        val step =
-            when {
-                // The install it started runs on: keep saying so until that job ends.
-                target == null ->
-                    if (state.value.step == AgentUpdateStep.Updating && running) return
-                    else AgentUpdateStep.NothingBehind
-                running -> AgentUpdateStep.WaitingSetup
-                host.switchPending -> AgentUpdateStep.WaitingSwitch
-                problem -> AgentUpdateStep.WaitingSetup
-                host.metered -> AgentUpdateStep.WaitingMetered
-                busy -> AgentUpdateStep.WaitingAgentsBusy
-                else -> return
-            }
-        publish(AgentUpdateDecision(step, target))
     }
 }

@@ -31,7 +31,6 @@ import io.github.eslamasabry.oc.feature.agents.hub.ComputerCheck
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentRemoval
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentRemovalIssue
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentStatus
-import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentUpdateNote
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.feature.agents.hub.AgentsTab
 import io.github.eslamasabry.oc.ui.design.color.StatusTone
@@ -520,13 +519,9 @@ private fun PhoneTab(
 private fun PhoneStatusLine(state: AgentsUi, actions: AgentsActions, enabled: KitEnabled) {
     if (!state.phone.available || state.phone.needsRestart) return
     val device = state.phone.device
-    val ready =
-        if (device == null) stringResource(Res.string.agentsPhoneReady)
-        else stringResource(Res.string.agentsPhoneReadyDetails, device.processor, device.android)
-    // The automatic update says what it does or waits for on this same line, never as a new row.
-    val update = phoneUpdateNote(state.phone.updateNote, state.phone.updateAgentName)
     KitStatusLine(
-        if (update == null) ready else "$ready · $update",
+        if (device == null) stringResource(Res.string.agentsPhoneReady)
+        else stringResource(Res.string.agentsPhoneReadyDetails, device.processor, device.android),
         tone = StatusTone.Ok,
         action =
             KitLineAction(
@@ -538,21 +533,6 @@ private fun PhoneStatusLine(state: AgentsUi, actions: AgentsActions, enabled: Ki
         quiet = true,
     )
 }
-
-@Composable
-private fun phoneUpdateNote(note: PhoneAgentUpdateNote?, agent: String?): String? =
-    when (note) {
-        null -> null
-        PhoneAgentUpdateNote.Reading -> stringResource(Res.string.agentsUpdateReading)
-        PhoneAgentUpdateNote.WaitingBusy -> stringResource(Res.string.agentsUpdateWaitingBusy)
-        PhoneAgentUpdateNote.WaitingSetup -> stringResource(Res.string.agentsUpdateWaitingSetup)
-        PhoneAgentUpdateNote.WaitingSwitch -> stringResource(Res.string.agentsUpdateWaitingSwitch)
-        PhoneAgentUpdateNote.WaitingMetered -> stringResource(Res.string.agentsUpdateWaitingMetered)
-        PhoneAgentUpdateNote.Updating ->
-            stringResource(Res.string.agentsUpdateUpdating, agent.orEmpty())
-        PhoneAgentUpdateNote.ReadFailed -> stringResource(Res.string.agentsUpdateReadFailed)
-        PhoneAgentUpdateNote.Refused -> stringResource(Res.string.agentsUpdateRefused)
-    }
 
 /**
  * "On computers": with no computer connected, the one call to add one comes first; then each computer's agents as

@@ -321,15 +321,4 @@ class ProblemReportTest {
         assertTrue(link.uri.length <= 2048)
         assertTrue("paste it here" in query(link.uri)["what-happened"]!!)
     }
-
-    @Test
-    fun `AGENT-AUTO-UPDATE the report carries the agent update's last decision as one line in Environment`() {
-        val report =
-            ProblemReport.build(
-                Redactor(), "it broke", "3.0.0+10001", "Android", agentUpdate = "agent update: waiting, agents busy",
-            )
-        assertTrue("Platform: Android\nagent update: waiting, agents busy" in report.text, report.text)
-        val without = ProblemReport.build(Redactor(), "it broke", "3.0.0+10001", "Android")
-        assertFalse("agent update" in without.text)
-    }
 }

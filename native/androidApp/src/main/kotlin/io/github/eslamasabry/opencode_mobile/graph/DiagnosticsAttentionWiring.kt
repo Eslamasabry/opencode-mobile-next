@@ -405,7 +405,6 @@ class GitHubProblemReporter(
     private val report: ReportProblemStartup,
     private val opener: ExternalLinkOpener,
     private val build: AppBuildInfo,
-    private val agentUpdate: PhoneAgentUpdateStatus,
     private val dispatchers: AppDispatchers,
     appScope: AppCoroutineScope,
 ) {
@@ -494,7 +493,6 @@ class GitHubProblemReporter(
                 fallbackTitle = headline,
                 events = events,
                 update = updateCheck,
-                agentUpdate = agentUpdate.line(),
             )
         return Prepared(description, problem)
     }
