@@ -180,14 +180,27 @@ internal object PaneRimScenes {
     /**
      * Shows [content] and lets it settle on the test clock, without waiting for the clock to run on its own: a scene with
      * a running animation (a live picture, a frame-driven sampler) is never idle while the clock advances itself.
+     *
+     * It stops at the first step in which nothing changed (no state applied: every part is at rest), after
+     * [SETTLE_LEAST_STEPS]. The desktop test draws the whole scene again on every frame, at rest or not: the joined bar
+     * and menu (at rest after about 0.6 s) cost about 4.7 s a frame on the build server, and 1.5 s of frames passed the
+     * scene's five minutes there.
      */
     @OptIn(androidx.compose.ui.test.ExperimentalTestApi::class)
     fun settle(test: androidx.compose.ui.test.ComposeUiTest, content: @Composable () -> Unit) {
         test.mainClock.autoAdvance = false
         test.setContent(content)
-        repeat(SETTLE_STEPS) {
-            test.mainClock.advanceTimeBy(SETTLE_STEP_MS)
-            test.waitForIdle()
+        val changed = java.util.concurrent.atomic.AtomicBoolean(false)
+        val watch = androidx.compose.runtime.snapshots.Snapshot.registerApplyObserver { _, _ -> changed.set(true) }
+        try {
+            for (step in 1..SETTLE_STEPS) {
+                changed.set(false)
+                test.mainClock.advanceTimeBy(SETTLE_STEP_MS)
+                test.waitForIdle()
+                if (step >= SETTLE_LEAST_STEPS && !changed.get()) break
+            }
+        } finally {
+            watch.dispose()
         }
     }
 
@@ -199,13 +212,22 @@ internal object PaneRimScenes {
     val SCENE_TIMEOUT: kotlin.time.Duration = kotlin.time.Duration.parse("5m")
 
     private const val SETTLE_STEPS = 12
+    private const val SETTLE_LEAST_STEPS = 4
     private const val SETTLE_STEP_MS = 125L
 
-    /** The pane's whole box: a part's tag may sit inside its own padding, so the widest box its modifiers lay out. */
-    fun paneBox(node: androidx.compose.ui.semantics.SemanticsNode): Rect =
-        node.layoutInfo.getModifierInfo().filter { it.coordinates.isAttached }.map { it.coordinates.boundsInRoot() }.plus(node.boundsInRoot)
-            .filter { it.left.isFinite() && it.top.isFinite() && it.right.isFinite() && it.bottom.isFinite() }
-            .maxBy { it.width * it.height }
+    /**
+     * The pane's whole box: a part's tag may sit inside its own padding, so the widest box its modifiers lay out; of
+     * boxes equally wide, the innermost one, where the pane is drawn. A joined menu is laid out under its control and an
+     * offset moves it to rest under the bar's end: the modifiers before that offset report the box it left (26 px in and
+     * 20 px up from its glass at the phone's density), and every ray read the ground there instead of the rim.
+     */
+    fun paneBox(node: androidx.compose.ui.semantics.SemanticsNode): Rect {
+        val boxes =
+            node.layoutInfo.getModifierInfo().filter { it.coordinates.isAttached }.map { it.coordinates.boundsInRoot() }.plus(node.boundsInRoot)
+                .filter { it.left.isFinite() && it.top.isFinite() && it.right.isFinite() && it.bottom.isFinite() }
+        val widest = boxes.maxOf { it.width * it.height }
+        return boxes.last { it.width * it.height >= widest - .5f }
+    }
 
     /**
      * How far the page's light spreads (0-255, brightest less darkest) on a coarse grid down its middle column, between
