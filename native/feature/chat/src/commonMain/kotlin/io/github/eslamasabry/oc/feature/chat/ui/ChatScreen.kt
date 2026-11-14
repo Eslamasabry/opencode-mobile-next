@@ -710,6 +710,23 @@ public fun ChatScreen(
                     }
                     .chatTypingLanding(chrome.typing, pageFocus) { coveredNow }
             ) {
+                val screenStatus =
+                    if (demoMode)
+                        KitStatus(
+                            KitStatusKind.Info,
+                            stringResource(Res.string.stateDemoDisclosure),
+                            id = "offline-demo",
+                        )
+                    else
+                        KitStatus.highest(
+                            listOf(
+                                // An unconfirmed send is said once, on its own bubble with Check again.
+                                state.status
+                                    ?.takeUnless { it.kind == ChatStatusKind.SendUnconfirmed }
+                                    ?.let { statusLine(it, actions, header?.state?.serverName, ::openConnectionDetails) },
+                                appStatus,
+                            )
+                        )
                 KitScreen(
                     modifier = Modifier.fillMaxSize(),
                     page = true,
@@ -916,23 +933,7 @@ public fun ChatScreen(
                             }
                         }
                     },
-                    status =
-                        if (demoMode)
-                            KitStatus(
-                                KitStatusKind.Info,
-                                stringResource(Res.string.stateDemoDisclosure),
-                                id = "offline-demo",
-                            )
-                        else
-                            KitStatus.highest(
-                                listOf(
-                                    // An unconfirmed send is said once, on its own bubble with Check again.
-                                    state.status
-                                        ?.takeUnless { it.kind == ChatStatusKind.SendUnconfirmed }
-                                        ?.let { statusLine(it, actions, header?.state?.serverName, ::openConnectionDetails) },
-                                    appStatus,
-                                )
-                            ),
+                    status = screenStatus,
                     loading = state.phase == ChatPhase.Loading,
                     loadingLabel = stringResource(Res.string.chatLoadingConversation),
                     bottom = {
@@ -994,7 +995,9 @@ public fun ChatScreen(
                         // First load: the skeleton under the loading line, never an empty-state
                         // text
                         // (plan 09 §6.5).
-                        ChatPhase.Loading -> ChatLoadingBody()
+                        // A slow load says what it does in words, unless the screen's line already says something.
+                        ChatPhase.Loading ->
+                            ChatLoadingBody(stringResource(Res.string.chatLoadingConversation).takeIf { screenStatus == null })
                         is ChatPhase.Failed ->
                             ChatLoadError(
                                 title = stringResource(Res.string.chatLoadFailedTitle),
