@@ -102,6 +102,24 @@ class AgentAutoUpdateTest {
     }
 
     @Test
+    fun `AGENT-AUTO-UPDATE every agent that is behind gets its own one try, in turn`() = runTest {
+        val host = Host().apply {
+            installed = listOf(claude, codex)
+            behind = setOf(claude, codex)
+        }
+        val jobs = Jobs()
+        val updater = AgentAutoUpdater(host, jobs) { false }
+        updater.changed()
+        assertEquals(listOf(claude), jobs.started)
+        // Claude's install brought the helper too; Codex is behind and still gets its try.
+        host.helperBehind = false
+        updater.changed()
+        assertEquals(listOf(claude, codex), jobs.started)
+        updater.changed()
+        assertEquals(listOf(claude, codex), jobs.started)
+    }
+
+    @Test
     fun `AGENT-AUTO-UPDATE the runner does not start while work runs and starts when it ends`() = runTest {
         val host = Host()
         val jobs = Jobs()

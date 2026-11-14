@@ -123,11 +123,21 @@ public class AgentAutoUpdater(
             if (decide(key, explain = true) == null) return
             host.refresh()
             val target = decide(key) ?: return
-            // A try refused before the job started is not spent: the next look tries again.
-            if (jobs.update(target)) attempted += key else note("refused before it started; will try again")
+            // A try refused before the job started is not spent: the next look tries again. A started one is spent for
+            // that agent and for the helper (its install brings the helper too); another agent behind is next.
+            if (jobs.update(target)) {
+                attempted += "$key/${target.raw}"
+                attempted += "$key/$HELPER"
+            } else {
+                note("refused before it started; will try again")
+            }
         } finally {
             checking.unlock()
         }
+    }
+
+    private companion object {
+        const val HELPER = "helper"
     }
 
     private fun note(line: String) {
@@ -138,11 +148,15 @@ public class AgentAutoUpdater(
 
     /** The agent to install now, or null while something holds the update back. */
     private fun decide(key: String, explain: Boolean = false): AgentId? {
-        val target = AgentAutoUpdateRule.target(host.installed, host.behind, host.helperBehind)
+        // One automatic try per agent (and per helper) and pinned set: an agent that was tried is not asked again, and
+        // does not keep another agent that is behind from being updated.
+        val behind = host.behind.filterTo(mutableSetOf()) { "$key/${it.raw}" !in attempted }
+        val helperBehind = host.helperBehind && "$key/$HELPER" !in attempted
+        val target = AgentAutoUpdateRule.target(host.installed, behind, helperBehind)
         val busy = workBusy()
         val running = jobs.running
         val problem = host.installProblem || jobs.failed
-        val tried = key in attempted
+        val tried = false
         val go =
             AgentAutoUpdateRule.shouldUpdate(
                 target = target,
@@ -155,9 +169,9 @@ public class AgentAutoUpdater(
             )
         if (explain) {
             note(
-                "behind=${host.behind.size} helperBehind=${host.helperBehind} busy=$busy setupRunning=$running " +
+                "behind=${behind.size} helperBehind=$helperBehind busy=$busy setupRunning=$running " +
                     "switchPending=${host.switchPending} installProblem=$problem metered=${host.metered} " +
-                    "attempted=$tried -> ${if (go) "update" else "hold"}",
+                    "tried=${attempted.size} -> ${if (go) "update" else "hold"}",
             )
         }
         return if (go) target else null
