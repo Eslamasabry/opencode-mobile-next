@@ -67,6 +67,15 @@ class PhoneAgentAutoUpdate(
                 // The decision reads the kept facts of the last reads (no probe), so there is nothing to read again.
                 override suspend fun refresh() = Unit
 
+                // The first look after an app update (or before any read) asks for one read of the installed
+                // agents' versions, so the update never depends on the Agents page having been opened.
+                override val readDue: Boolean get() = phones.updateReadDue()
+
+                override suspend fun read() {
+                    val done = phones.readForUpdate()
+                    log.i { "read of the installed agents ${if (done) "done" else "did not finish"}" }
+                }
+
                 override val installed: List<AgentId>
                     get() = phones.updateFacts()?.installed.orEmpty()
 
@@ -76,7 +85,8 @@ class PhoneAgentAutoUpdate(
                 override val helperBehind: Boolean
                     get() =
                         phones.updateFacts()?.let {
-                            it.helperRunning && it.helperVersion != null && it.helperVersion != pins.paseo.version
+                            it.helperOnDiskBehind ||
+                                (it.helperRunning && it.helperVersion != null && it.helperVersion != pins.paseo.version)
                         } == true
 
                 override val pinKey: String = pinned
@@ -134,7 +144,7 @@ class PhoneAgentAutoUpdate(
             while (true) {
                 // The idle reading is made only while something is behind: a phone on its pins reads nothing.
                 val facts = phones.updateFacts()
-                if (facts != null && (facts.behind.isNotEmpty() || host.helperBehind)) {
+                if (host.readDue || (facts != null && (facts.behind.isNotEmpty() || host.helperBehind))) {
                     val now = runtime.readWorkIdle()
                     if (now != idle.get()) {
                         log.i { "work idle=${now.idle} lease=${now.lease} direct=${now.direct} agent=${now.agent}" }
