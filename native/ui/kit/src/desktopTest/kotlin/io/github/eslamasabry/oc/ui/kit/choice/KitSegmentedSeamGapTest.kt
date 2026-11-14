@@ -14,7 +14,7 @@ import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onRoot
-import androidx.compose.ui.test.v2.runComposeUiTest
+import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import androidx.compose.ui.unit.Density
 import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
@@ -63,7 +63,7 @@ class KitSegmentedSeamGapTest {
     )
 
     @Test
-    fun `B-SEG-SEAM-001 no lone hairline between two resting segments beside the chosen one`() = runComposeUiTest {
+    fun `B-SEG-SEAM-001 no lone hairline between two resting segments beside the chosen one`() = runDesktopComposeUiTest(412, 915) {
         setContent {
             Themed {
                 Column(Modifier.fillMaxWidth()) {
@@ -87,7 +87,7 @@ class KitSegmentedSeamGapTest {
     }
 
     @Test
-    fun `B-SEG-GAP-001 a card set right under a segmented control keeps the container gap`() = runComposeUiTest {
+    fun `B-SEG-GAP-001 a card set right under a segmented control keeps the container gap`() = runDesktopComposeUiTest(412, 915) {
         setContent {
             Themed(Style.Glass) {
                 KitStackScope {

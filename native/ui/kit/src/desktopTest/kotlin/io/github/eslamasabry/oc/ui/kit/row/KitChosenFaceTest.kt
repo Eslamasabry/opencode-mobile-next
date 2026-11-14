@@ -16,7 +16,7 @@ import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onRoot
-import androidx.compose.ui.test.v2.runComposeUiTest
+import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import androidx.compose.ui.unit.Density
 import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
@@ -108,7 +108,7 @@ class KitChosenFaceTest {
 
     private fun <T> runComposeUiTestFor(block: ComposeUiTest.() -> T): T {
         var out: T? = null
-        runComposeUiTest { out = block() }
+        runDesktopComposeUiTest(width, height) { out = block() }
         @Suppress("UNCHECKED_CAST")
         return out as T
     }
@@ -123,7 +123,7 @@ class KitChosenFaceTest {
     fun `B-ROW-CHOSEN-003 Soft the chosen face is the same shape, never a band to the sheet's edges`() = faceSpanOnSheet(Style.Soft)
 
     @Test
-    fun `B-ROW-CHOSEN-004 no hairline is drawn beside a chosen row in a list`() = runComposeUiTest {
+    fun `B-ROW-CHOSEN-004 no hairline is drawn beside a chosen row in a list`() = runDesktopComposeUiTest(width, height) {
         var ground = androidx.compose.ui.graphics.Color.Unspecified
         setContent {
             Themed(Style.Solid) {
