@@ -58,6 +58,9 @@ import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
 import io.github.eslamasabry.oc.ui.words.res.*
 import io.github.eslamasabry.oc.feature.chats.presentation.StartNewUi
+import io.github.eslamasabry.oc.feature.chats.presentation.AppStart
+import io.github.eslamasabry.oc.feature.chats.presentation.SourceStartRules
+import io.github.eslamasabry.oc.feature.chats.presentation.SourcesChipLabel
 import io.github.eslamasabry.oc.ui.kit.text.KitBidi
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
@@ -78,8 +81,19 @@ internal fun HomeFilterChips(state: ChatsUi, actions: ChatsActions) {
     )
     if (state.home.sources.size > 1) {
         KitChip(
-            label = if (state.home.sources.all { it.shown }) stringResource(Res.string.chatsSourcesAll)
-                else stringResource(Res.string.chatsSourcesSome, state.home.sources.count { it.shown }, state.home.sources.size),
+            // A source the app itself starts says it is starting here, instead of silently leaving its rows out.
+            label =
+                when (val chip = SourceStartRules.chip(state.home.sources)) {
+                    SourcesChipLabel.All -> stringResource(Res.string.chatsSourcesAll)
+                    is SourcesChipLabel.Some -> stringResource(Res.string.chatsSourcesSome, chip.shown, chip.total)
+                    is SourcesChipLabel.Starting ->
+                        stringResource(
+                            when (chip.kind) {
+                                AppStart.Agents -> Res.string.connectionAgentStarting
+                                AppStart.Phone -> Res.string.connectStartingPhone
+                            }
+                        )
+                },
             kind = KitChipKind.Action,
             // It opens a sheet of choices, so it carries the same chevron as the project chip beside it (P-023).
             opensMenu = true,

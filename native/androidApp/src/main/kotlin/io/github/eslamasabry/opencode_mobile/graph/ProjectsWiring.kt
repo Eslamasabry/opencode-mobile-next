@@ -104,7 +104,8 @@ class LiveConversationServers(
         combine(registry.live, stores.profiles.profiles, stores.profiles.activeId) { live, saved, _ ->
                 saved
                     .filter { it.id !in live && runtime.listSourceShown(it.id) }
-                    .map { ServerName(it.id, it.profile.name) }
+                    // This phone's server and its agents are started by the app: their rows say so and keep a tap.
+                    .map { ServerName(it.id, it.profile.name, runtime.appStart(it)) }
                     .toImmutableList()
             }
             .stateIn(appScope, SharingStarted.Eagerly, persistentListOf())

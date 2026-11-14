@@ -25,6 +25,8 @@ import io.github.eslamasabry.oc.feature.chats.presentation.AllProblemKind
 import io.github.eslamasabry.oc.feature.chats.presentation.AllRowUi
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsAllActions
 import io.github.eslamasabry.oc.feature.chats.presentation.RowAct
+import io.github.eslamasabry.oc.feature.chats.presentation.SavedRowLine
+import io.github.eslamasabry.oc.feature.chats.presentation.SourceStartRules
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
@@ -332,7 +334,9 @@ public fun ChatsAllScreen(state: AllConversationsUi, actions: ChatsAllActions) {
                     itemsIndexed(state.rows, key = { _, row -> row.key }, contentType = { _, _ -> "conversation" }) { index, row ->
                         // Saved-only rows (their server is not connected) are one group at the end, named as such.
                         Column {
-                            if (row.readOnly && state.rows.getOrNull(index - 1)?.readOnly != true)
+                            // Rows of a server the app is starting keep their place and are not "not connected".
+                            fun saved(r: AllRowUi?) = r != null && r.readOnly && r.appStart == null
+                            if (saved(row) && !saved(state.rows.getOrNull(index - 1)))
                                 KitSectionLabel(stringResource(Res.string.chatsAllSavedGroup))
                             AllRow(row, state.selecting, rowWords, state.nowMs, actions)
                         }
@@ -493,6 +497,26 @@ private fun AllRow(row: AllRowUi, selecting: Boolean, words: AllRowWords, nowMs:
     val ago = row.updatedMs.takeIf { it > 0 && nowMs > 0 }?.let { kitRelativeAge(it, nowMs) }
     // ANDR-1: the visible More action takes the trailing slot, so Running moves into the line.
     val supporting = listOfNotNull(status, ago, place).joinToString(" · ")
+    if (row.readOnly && !selecting && SourceStartRules.takesTap(row.appStart)) {
+        // A server the app itself starts (This phone's, its agents'): the row says it is starting and takes the tap,
+        // which opens it when the server connects. Tapped, it says it is connecting.
+        val line =
+            if (row.waiting) stringResource(Res.string.e7WorkspaceConnecting)
+            else
+                stringResource(
+                    when (SourceStartRules.savedLine(row.appStart)) {
+                        SavedRowLine.AgentsStarting -> Res.string.connectionAgentStarting
+                        else -> Res.string.connectStartingPhone
+                    }
+                )
+        KitRow(
+            title = title,
+            titleMaxLines = 2,
+            supporting = listOfNotNull(line, ago, place).joinToString(" · "),
+            onClick = { actions.tapRow(row.key) },
+        )
+        return
+    }
     if (row.readOnly) {
         KitRow(
             title = title,
