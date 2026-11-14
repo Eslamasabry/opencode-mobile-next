@@ -71,7 +71,10 @@ internal object PaneRim {
     private fun strength(image: PixelMap, box: Rect, ox: Float, oy: Float, dx: Float, dy: Float, band: Float, outside: Float, density: Float): Float {
         val candidates = mutableListOf<FloatArray>()
         var inside: FloatArray? = null
-        var beyond: FloatArray? = null
+        // The ground beyond the rim: the middle (by light) of the samples past it, not the last one. A pane inset in
+        // another (a segmented control's chosen thumb, 4 dp inside its track) has that pane's own rim line out there; a
+        // ray whose last sample fell on it took the track's bright line for the ground and read the thumb's rim at 17 %.
+        val beyond = mutableListOf<FloatArray>()
         var t = 0f
         while (true) {
             val x = ox + dx * t
@@ -84,13 +87,13 @@ internal object PaneRim {
             if (depth > band) inside = c
             else if (depth > -outside) candidates += c
             else {
-                beyond = c
+                beyond += c
                 if (depth < -outside - 2f * density) break
             }
             t += .5f
         }
         val i = inside ?: return 0f
-        val e = beyond ?: candidates.lastOrNull() ?: return 0f
+        val e = beyond.sortedBy { it[0] + it[1] + it[2] }.getOrNull(beyond.size / 2) ?: candidates.lastOrNull() ?: return 0f
         return candidates.maxOfOrNull { distanceToSegment(it, i, e) } ?: 0f
     }
 
