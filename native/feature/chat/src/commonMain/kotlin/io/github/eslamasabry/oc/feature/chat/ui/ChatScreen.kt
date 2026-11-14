@@ -218,6 +218,7 @@ import io.github.eslamasabry.oc.ui.words.res.connectionReconnectingQuiet
 import io.github.eslamasabry.oc.ui.words.res.connectionAgentStartFailed
 import io.github.eslamasabry.oc.ui.words.res.connectionAgentStarting
 import io.github.eslamasabry.oc.ui.words.res.connectStartingPhone
+import io.github.eslamasabry.oc.ui.words.res.connectAgentNeedsSignIn
 import io.github.eslamasabry.oc.ui.words.res.connectUpdatingAgents
 import io.github.eslamasabry.oc.ui.words.res.connectUpdatingPhone
 import io.github.eslamasabry.oc.ui.words.res.launchUiSessionWaiting
