@@ -30,6 +30,7 @@ import androidx.compose.ui.graphics.drawscope.ContentDrawScope
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.layer.GraphicsLayer
+import io.github.eslamasabry.oc.ui.kit.foundation.kitSourceLayer
 import androidx.compose.ui.graphics.rememberGraphicsLayer
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.findRootCoordinates
@@ -167,8 +168,13 @@ public fun rememberKitLiquidSource(): KitLiquidSource {
     return remember(layer) { KitLiquidSource(layer) }
 }
 
-/** Draws the content as usual and, while a liquid pane uses [source], records it there too. */
-public fun Modifier.kitLiquidSource(source: KitLiquidSource): Modifier = this then LiquidSourceElement(source)
+/**
+ * Draws the content as usual and, while a liquid pane uses [source], records it there too. The recording lies in a layer
+ * of its own ([io.github.eslamasabry.oc.ui.kit.foundation.kitSourceLayer]): a pane beside it that reads
+ * [KitLiquidSource.version] never makes it record again.
+ */
+public fun Modifier.kitLiquidSource(source: KitLiquidSource): Modifier =
+    this.kitSourceLayer().then(LiquidSourceElement(source))
 
 /**
  * A feature's scroll content recorded for the liquid panes over it (the conversations list under its +): the content

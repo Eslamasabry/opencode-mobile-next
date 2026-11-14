@@ -12,6 +12,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Canvas
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.ImageShader
@@ -55,6 +56,16 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
 import io.github.eslamasabry.oc.ui.design.style.Style
 
 /**
+ * A page source's own layer (device 2026-11-14, Glass with the Aurora drift: a page nobody touched drew about 60 frames
+ * a second long after the live background had come to rest). A source records its content whenever its node draws and
+ * counts the recordings in snapshot state that the panes over it read while drawing. Drawn in its parent's layer, a pane
+ * beside it (the edge dock beside the conversations list, a bar beside the body) that read the count was redrawn by the
+ * new count, which redrew the parent's layer, which drew the source again: a new count every frame, for ever. In a
+ * layer of its own the source's draw runs only when its content changed; the parent's layer draws it as it stands.
+ */
+internal fun Modifier.kitSourceLayer(): Modifier = this.graphicsLayer {}
+
+/**
  * What scrolls behind a frost surface, recorded once per frame (plan 06 K12). Compose cannot blur
  * "what is behind" without a source, so `KitScreen` hoists this and the transcript list wears
  * [kitFrostSource].
@@ -81,9 +92,13 @@ public fun rememberKitFrostState(): KitFrostState {
 
 /**
  * Records the content into [state] and draws it as usual. A kit modifier on the feature allowlist.
+ *
+ * The recording lies in a layer of its own ([kitSourceLayer]): it records again only when its own content changed,
+ * never because a pane beside it that reads [KitFrostState.version] drew again.
  */
 public fun Modifier.kitFrostSource(state: KitFrostState): Modifier =
     this.onGloballyPositioned { state.sourceOrigin = it.positionInRoot() }
+        .kitSourceLayer()
         .drawWithContent {
             kitRecord(state.layer) { this@drawWithContent.drawContent() }
             androidx.compose.runtime.snapshots.Snapshot.withoutReadObservation { state.version++ }
