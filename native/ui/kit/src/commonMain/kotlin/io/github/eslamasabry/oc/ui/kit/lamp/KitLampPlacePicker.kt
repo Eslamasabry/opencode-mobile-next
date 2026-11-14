@@ -2,6 +2,7 @@ package io.github.eslamasabry.oc.ui.kit.lamp
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,7 +23,9 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.testTag
@@ -51,6 +54,7 @@ import io.github.eslamasabry.oc.ui.kit.foundation.kitPaneInset
 import io.github.eslamasabry.oc.ui.kit.foundation.kitSurface
 import io.github.eslamasabry.oc.ui.kit.foundation.kitSurfaceLook
 import io.github.eslamasabry.oc.ui.kit.foundation.kitTappable
+import io.github.eslamasabry.oc.ui.kit.modal.KitPredictiveBack
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 
@@ -207,6 +211,55 @@ public fun KitLampPlacePicker(
         }
     }
 }
+
+/**
+ * The six-spot picker as a modal over the page (LAMP-CRAFT §5 "Move…"): the page dims behind it, a tap on the dimmed
+ * page or Back closes it ([onDone]), and Back closes only the picker (it owns Back at the modal priority while shown,
+ * as every kit modal does). The caller composes the real light AFTER this layer so the light stays lit above the scrim
+ * and moves as a spot is picked.
+ *
+ * States: shown, gone
+ * Text: as [KitLampPlacePicker]
+ * Cap: Dialog
+ * Motion: none of its own; Off = same
+ * Replaces: none
+ */
+@Composable
+public fun KitLampPlaceLayer(
+    visible: Boolean,
+    place: KitLampPlace,
+    words: KitLampPlaceWords,
+    onPick: (KitLampPlace) -> Unit,
+    onDone: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    KitPredictiveBack(enabled = visible, onBack = onDone)
+    if (!visible) return
+    val scrim = LocalKitColors.current.scrim
+    Box(
+        modifier
+            .fillMaxSize()
+            .testTag(LAMP_PLACE_SCRIM_TAG)
+            .drawBehind { drawRect(scrim.copy(alpha = PLACE_SCRIM_ALPHA)) }
+            .pointerInput(onDone) { detectTapGestures { onDone() } },
+        contentAlignment = Alignment.Center,
+    ) {
+        // A tap on the picker itself never reaches the scrim behind it.
+        KitLampPlacePicker(
+            place,
+            words,
+            onPick,
+            onDone,
+            Modifier.padding(horizontal = Space.S4.dp).pointerInput(Unit) { detectTapGestures { } },
+        )
+    }
+}
+
+/** The picker's scrim strength (LAMP-CRAFT §5: the page dims, the real light stays lit above it). */
+private const val PLACE_SCRIM_ALPHA: Float = 0.5f // NV: LAMP-CRAFT §6, 50 % scrim
+
+/** The picker layer's scrim, for tests. */
+public const val LAMP_PLACE_SCRIM_TAG: String = "kit-lamp-place-scrim"
 
 /** The phone figure and its six spots, laid out physically (left is the screen's left in every language). */
 @Composable

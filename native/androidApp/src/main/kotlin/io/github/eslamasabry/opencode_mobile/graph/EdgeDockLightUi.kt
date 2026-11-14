@@ -41,7 +41,7 @@ import io.github.eslamasabry.oc.ui.kit.frame.kitKeyboardVisible
 import io.github.eslamasabry.oc.ui.kit.lamp.KitLamp
 import io.github.eslamasabry.oc.ui.kit.lamp.KitLampFace
 import io.github.eslamasabry.oc.ui.kit.lamp.KitLampMarkKind
-import io.github.eslamasabry.oc.ui.kit.lamp.KitLampPlacePicker
+import io.github.eslamasabry.oc.ui.kit.lamp.KitLampPlaceLayer
 import io.github.eslamasabry.oc.ui.kit.lamp.KitLampPlaceWords
 import io.github.eslamasabry.oc.ui.kit.lamp.KitLampSide
 import io.github.eslamasabry.oc.ui.routes.AppRoute
@@ -121,12 +121,38 @@ internal fun EdgeLightMount(
                 placing = true
             },
         )
+        // Move…: the six spots over a dimmed page; the real light is composed after it, so it stays lit above the
+        // scrim and moves as a spot is picked. Back or a tap on the dimmed page closes only the picker.
+        val placeUi by controller.ui.collectAsStateWithLifecycle()
+        val placeWords = rememberLampTexts(placeUi)
+        KitLampPlaceLayer(
+            visible = placing,
+            place = LampPanelMap.place(placeUi.place),
+            words =
+                KitLampPlaceWords(
+                    title = placeWords[LampWord.PlaceTitle],
+                    body = placeWords[LampWord.PlaceBody],
+                    left = placeWords[LampWord.Left],
+                    right = placeWords[LampWord.Right],
+                    high = placeWords[LampWord.High],
+                    middle = placeWords[LampWord.Middle],
+                    low = placeWords[LampWord.Low],
+                    done = placeWords[LampWord.Done],
+                ),
+            onPick = { controller.move(LampPanelMap.place(it)) },
+            onDone = { placing = false },
+        )
         BoxWithConstraints(Modifier.fillMaxSize().padding(top = top, bottom = bottom)) {
             val offset = EdgeLightRules.bottomOffsetDp(place.height, maxHeight.value, lowAbove.value).dp
             KitLamp(
                 face = face.copy(open = open),
                 label = if (open) stringResource(Res.string.edgeLightFaceClose) else label,
-                onClick = { if (!closedJustNow) open = !open },
+                onClick = {
+                    when {
+                        placing -> placing = false
+                        !closedJustNow -> open = !open
+                    }
+                },
                 modifier =
                     Modifier.align(if (place.side == KitLampSide.Start) Alignment.BottomStart else Alignment.BottomEnd)
                         .padding(bottom = offset)
@@ -135,28 +161,6 @@ internal fun EdgeLightMount(
                 side = place.side,
                 visible = EdgeLightRules.visible(keyboardUp),
             )
-        }
-        if (placing) {
-            val ui by controller.ui.collectAsStateWithLifecycle()
-            val t = rememberLampTexts(ui)
-            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                KitLampPlacePicker(
-                    place = LampPanelMap.place(ui.place),
-                    words =
-                        KitLampPlaceWords(
-                            title = t[LampWord.PlaceTitle],
-                            body = t[LampWord.PlaceBody],
-                            left = t[LampWord.Left],
-                            right = t[LampWord.Right],
-                            high = t[LampWord.High],
-                            middle = t[LampWord.Middle],
-                            low = t[LampWord.Low],
-                            done = t[LampWord.Done],
-                        ),
-                    onPick = { controller.move(LampPanelMap.place(it)) },
-                    onDone = { placing = false },
-                )
-            }
         }
     }
 }

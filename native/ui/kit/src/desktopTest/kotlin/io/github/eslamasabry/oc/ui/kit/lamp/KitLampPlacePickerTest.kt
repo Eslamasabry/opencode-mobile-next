@@ -14,6 +14,8 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.click
+import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.motion.KitHaptic
@@ -54,6 +56,24 @@ class KitLampPlacePickerTest {
             }
         }
     }
+
+    @Test
+    fun `B-LAMP-K2-052 Move as a modal - a tap on the dimmed page closes it, a tap on the picker does not`() =
+        runDesktopComposeUiTest(412, 800) {
+            var shown by mutableStateOf(true)
+            var done = 0
+            k2Host {
+                KitLampPlaceLayer(shown, KitLampPlace(), K2.place, {}, { done++; shown = false })
+            }
+            waitForIdle()
+            onNodeWithText("Right · Low").performClick()
+            waitForIdle()
+            assertEquals(0, done, "a tap on the picker stays in the picker")
+            onNodeWithTag(LAMP_PLACE_SCRIM_TAG).performTouchInput { click(androidx.compose.ui.geometry.Offset(10f, 10f)) }
+            waitForIdle()
+            assertEquals(1, done, "a tap on the dimmed page closes it")
+            onNodeWithTag(LAMP_PLACE_SCRIM_TAG).assertDoesNotExist()
+        }
 
     @Test
     fun `B-LAMP-K2-051 the real light - Low 196 dp above the bottom, a height change glides, a side change fades across`() =
