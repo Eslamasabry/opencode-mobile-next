@@ -221,8 +221,11 @@ internal fun askWhat(ask: AskView): String? {
 
 /** "Tool: Terminal command": what kind of thing is asking, in plain words (never the tool id). */
 @Composable
-internal fun askToolLine(ask: AskView): String {
-    val kind =
+internal fun askToolLine(ask: AskView): String = stringResource(Res.string.approvalToolLabel, askToolKind(ask))
+
+/** The kind of thing asking, in plain words ("Terminal command", "File edit"); never the tool's id. */
+@Composable
+internal fun askToolKind(ask: AskView): String =
         when (ask.verb) {
             AskVerb.Run -> stringResource(Res.string.approvalToolTerminal)
             AskVerb.Edit, AskVerb.Create, AskVerb.Delete -> stringResource(Res.string.approvalToolEdit)
@@ -232,8 +235,6 @@ internal fun askToolLine(ask: AskView): String {
                 stringResource(Res.string.approvalToolOutside)
             else -> stringResource(Res.string.approvalToolOther)
         }
-    return stringResource(Res.string.approvalToolLabel, kind)
-}
 
 /**
  * The collapsed receipt line: "Allowed: npm test", "Always allowed: npm test", "Denied, asked to do this instead: ...".

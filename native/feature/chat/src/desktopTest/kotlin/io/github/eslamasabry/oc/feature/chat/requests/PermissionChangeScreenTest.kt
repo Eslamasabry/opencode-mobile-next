@@ -197,6 +197,16 @@ class PermissionChangeScreenTest {
                 ).fetchSemanticsNodes().isNotEmpty(),
                 "Details holds every line of the change",
             )
+            // Audit 1: the tool is said in plain words, never as its id.
+            val inDetails = androidx.compose.ui.test.hasAnyAncestor(hasTestTag("chat-permission-details"))
+            assertTrue(
+                onAllNodes(hasText("File change") and inDetails, useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty(),
+                "Details names the tool as a file change",
+            )
+            assertTrue(
+                onAllNodes(hasText("edit") and inDetails, useUnmergedTree = true).fetchSemanticsNodes().isEmpty(),
+                "Details never shows the raw tool id",
+            )
         }
 
     @Test
