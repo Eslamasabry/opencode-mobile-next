@@ -158,8 +158,8 @@ class KitLampPanelTest {
             onNodeWithText("create a file notes.txt with one line").performClick()
             waitForIdle()
             assertEquals(emptyList(), scene.events, "in Edit a row's tap opens nothing")
-            onNodeWithContentDescription("Pin to top: create a file hello.txt with one line").performClick()
-            assertEquals(listOf("pin:hello:true"), scene.events, "the row's own edit actions still work")
+            onNodeWithContentDescription("Pin to top: create a file notes.txt with one line").performClick()
+            assertEquals(listOf("pin:notes:true"), scene.events, "the row's own edit actions still work")
         }
 
     @Test
