@@ -338,4 +338,9 @@
     <string name="chatsHomeNotReadBody">Сервер ответил, но эта страница не смогла прочитать его список, поэтому не может сказать, что чатов нет. Повторите, чтобы прочитать его.</string>
     <string name="chatsNewSetupFailed">Не удалось прочитать проекты и модели этого сервера.</string>
     <string name="chatsSourcesUpdating">Обновление: %1$s…</string>
+    <string name="runningWorkBackgroundUnavailable">Этот сервер не может перевести работу выполняемого ответа в фоновый режим.</string>
+    <string name="runningWorkNotReported">Этот сервер не сообщает о работе, выполняемой в фоновом режиме.</string>
+    <string name="runningWorkTasksNoStop">Этот сервер не может останавливать их по одной.</string>
+    <string name="runningWorkMenu">Выполняемая работа</string>
+    <string name="runningWorkOpen">Открыть выполняемую работу</string>
 </resources>

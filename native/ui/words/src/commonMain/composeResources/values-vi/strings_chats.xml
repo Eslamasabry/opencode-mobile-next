@@ -325,4 +325,9 @@
     <string name="chatsHomeNotReadBody">Máy chủ đã trả lời nhưng trang này không đọc được danh sách, nên không thể nói là chưa có cuộc trò chuyện nào. Hãy thử lại để đọc.</string>
     <string name="chatsNewSetupFailed">Không đọc được các dự án và mô hình của máy chủ này.</string>
     <string name="chatsSourcesUpdating">Đang cập nhật %1$s…</string>
+    <string name="runningWorkBackgroundUnavailable">Máy chủ này không thể chuyển công việc của câu trả lời đang chạy xuống nền.</string>
+    <string name="runningWorkNotReported">Máy chủ này không báo cáo công việc chạy nền.</string>
+    <string name="runningWorkTasksNoStop">Máy chủ này không thể dừng từng việc một.</string>
+    <string name="runningWorkMenu">Công việc đang chạy</string>
+    <string name="runningWorkOpen">Mở công việc đang chạy</string>
 </resources>

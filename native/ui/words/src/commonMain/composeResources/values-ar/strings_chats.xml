@@ -347,4 +347,9 @@
     <string name="chatsHomeNotReadBody">ردّ الخادم، لكن هذه الصفحة لم تتمكن من قراءة قائمته، فلا يمكنها القول إنه لا توجد محادثات. حاول مرة أخرى لقراءتها.</string>
     <string name="chatsNewSetupFailed">تعذّرت قراءة مشاريع هذا الخادم ونماذجه.</string>
     <string name="chatsSourcesUpdating">جارٍ تحديث %1$s…</string>
+    <string name="runningWorkBackgroundUnavailable">لا يستطيع هذا الخادم نقل عمل ردٍّ قيد التشغيل إلى الخلفية.</string>
+    <string name="runningWorkNotReported">لا يُبلِّغ هذا الخادم عن العمل الذي يجري في الخلفية.</string>
+    <string name="runningWorkTasksNoStop">لا يستطيع هذا الخادم إيقاف هذه المهام واحدةً تلو الأخرى.</string>
+    <string name="runningWorkMenu">العمل الجاري</string>
+    <string name="runningWorkOpen">فتح العمل الجاري</string>
 </resources>

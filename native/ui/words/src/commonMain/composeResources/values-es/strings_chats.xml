@@ -334,4 +334,9 @@
     <string name="chatsHomeNotReadBody">El servidor respondió, pero esta página no pudo leer su lista, así que no puede decir que no hay ninguna. Inténtalo de nuevo para leerla.</string>
     <string name="chatsNewSetupFailed">No se pudieron leer los proyectos y modelos de este servidor.</string>
     <string name="chatsSourcesUpdating">Actualizando %1$s…</string>
+    <string name="runningWorkBackgroundUnavailable">Este servidor no puede pasar a segundo plano el trabajo de una respuesta en curso.</string>
+    <string name="runningWorkNotReported">Este servidor no informa del trabajo que se ejecuta en segundo plano.</string>
+    <string name="runningWorkTasksNoStop">Este servidor no puede detenerlas una por una.</string>
+    <string name="runningWorkMenu">Trabajo en curso</string>
+    <string name="runningWorkOpen">Abrir el trabajo en curso</string>
 </resources>

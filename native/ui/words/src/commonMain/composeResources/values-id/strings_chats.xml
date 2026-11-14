@@ -325,4 +325,9 @@
     <string name="chatsHomeNotReadBody">Server menjawab, tetapi halaman ini tidak bisa membaca daftarnya, jadi tidak bisa bilang tidak ada percakapan. Coba lagi untuk membacanya.</string>
     <string name="chatsNewSetupFailed">Proyek dan model server ini tidak dapat dibaca.</string>
     <string name="chatsSourcesUpdating">Memperbarui %1$s…</string>
+    <string name="runningWorkBackgroundUnavailable">Server ini tidak dapat memindahkan pekerjaan balasan yang sedang berjalan ke latar belakang.</string>
+    <string name="runningWorkNotReported">Server ini tidak melaporkan pekerjaan yang berjalan di latar belakang.</string>
+    <string name="runningWorkTasksNoStop">Server ini tidak dapat menghentikannya satu per satu.</string>
+    <string name="runningWorkMenu">Pekerjaan berjalan</string>
+    <string name="runningWorkOpen">Buka pekerjaan berjalan</string>
 </resources>
