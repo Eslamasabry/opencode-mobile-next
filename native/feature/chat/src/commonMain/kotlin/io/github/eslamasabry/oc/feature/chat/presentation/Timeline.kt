@@ -119,22 +119,3 @@ internal fun timelineEntries(
 }
 
 private fun plainPreview(text: String): String = PlainMarkdown.oneLine(text)
-
-internal fun findExcerpt(state: TranscriptState, hit: FindHit): String? {
-    val text =
-        state.searchText
-            .firstOrNull { it.sourceId == hit.sourceId && it.rowKey == hit.rowKey }
-            ?.text
-            ?: when (val row = state.rows.firstOrNull { it.key == hit.rowKey }) {
-                is io.github.eslamasabry.oc.engine.transcript.state.PromptRow -> row.text
-                is io.github.eslamasabry.oc.engine.transcript.state.BlockRow -> row.text
-                is io.github.eslamasabry.oc.engine.transcript.state.ThoughtRow -> row.firstLine
-                else -> null
-            }
-            ?: return null
-    val from = (hit.start - 60).coerceAtLeast(0).coerceAtMost(text.length)
-    val end = (hit.end + 100).coerceAtMost(text.length)
-    return (if (from > 0) "…" else "") +
-        text.substring(from, end) +
-        (if (end < text.length) "…" else "")
-}

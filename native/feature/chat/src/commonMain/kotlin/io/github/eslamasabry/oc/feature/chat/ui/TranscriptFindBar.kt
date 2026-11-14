@@ -45,7 +45,7 @@ import org.jetbrains.compose.resources.stringResource
 /**
  * Find, by the message box (audit 2026-11-14, coordinator's decision): ONE row. The field with the match count at its
  * end, previous and next beside it, then Close. The phrase row folds away while Find is open, and no excerpt row: the
- * transcript brings the match into view. A notice (part of the history searched, a read that failed) shows only while
+ * transcript marks every match and brings the current one into view. A notice (part of the history searched, a read that failed) shows only while
  * it is true.
  */
 @Composable

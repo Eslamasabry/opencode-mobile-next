@@ -143,7 +143,7 @@ private fun work(
             if (p.type != PartType.Tool) continue
             // Claude Code's "a background task ended" notice is a notice, not a step of this turn.
             if (isBackgroundTaskNotice(p.toolName ?: "")) continue
-            val step = step(p, live = newest && busy, declinedCalls) ?: continue
+            val step = step(p, live = newest && busy, declinedCalls = declinedCalls) ?: continue
             steps += step
             counts = count(counts, p, step, editedFiles)
         }
@@ -227,8 +227,7 @@ private fun step(p: Part, live: Boolean, declinedCalls: Set<String> = emptySet()
     val declinedNow =
         !refused &&
             (settled == StepState.Pending || settled == StepState.Running) &&
-            p.callId != null &&
-            p.callId in declinedCalls
+            p.callId?.let { it in declinedCalls } == true
     return TurnStep(
         p.id,
         toolFacts(p),

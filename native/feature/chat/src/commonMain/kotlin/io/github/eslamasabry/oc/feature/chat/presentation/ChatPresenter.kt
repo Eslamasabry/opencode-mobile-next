@@ -384,7 +384,8 @@ public class ChatPresenter(
                     searchingAll = l.searchingAll,
                     loadingOlder = l.loadingOlder,
                     olderFailure = l.olderFailure,
-                    excerpt = hit?.let { findExcerpt(t, it) },
+                    currentOrdinal = TranscriptFind.ordinalOf(hits, cursor),
+                    currentSource = hit?.sourceId,
                 )
             }
         val arrival =

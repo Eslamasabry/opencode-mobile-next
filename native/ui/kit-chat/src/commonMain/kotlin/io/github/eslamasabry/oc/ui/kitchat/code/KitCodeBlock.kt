@@ -70,6 +70,7 @@ import io.github.eslamasabry.oc.ui.kit.theme.KitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTypography
 import io.github.eslamasabry.oc.ui.kitchat.LocalKitChatWork
+import io.github.eslamasabry.oc.ui.kitchat.markdown.LocalKitFindMarks
 import io.github.eslamasabry.oc.ui.kitchat.LocalKitRedactor
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.kitCodeChanges
@@ -291,6 +292,11 @@ public fun KitCodeBlock(
     val measurer = rememberTextMeasurer()
     val copying = onCopy != null
     val lineHeight = codeLineHeight(lineStyle)
+    // Find: the open search's matches in this block's displayed text, the current one stronger (the kit's find marks).
+    val find = LocalKitFindMarks.current
+    val findRanges = remember(display, find) { find?.ranges(display).orEmpty() }
+    val findActive = find?.current?.takeIf { it in findRanges.indices }
+    val findAccent = LocalKitColors.current.accent
 
     BoxWithConstraints(modifier.fillMaxWidth().widthIn(max = 960.dp).codeSurface(look)) {
         // Flutter measures the lines shown now (the head while capped) against the room the trailing controls leave.
@@ -328,7 +334,7 @@ public fun KitCodeBlock(
                                 }
                             }
                             BasicText(
-                                text = lineText(line, tokens, colors),
+                                text = markLine(lineText(line, tokens, colors), line.start, findRanges, findActive, findAccent),
                                 style = lineStyle,
                                 softWrap = effectiveWrap,
                             )
@@ -814,15 +820,23 @@ private fun CodeGutterRows(
     mono: TextStyle,
     colors: KitCodeColors,
 ) {
+    // Find: the whole block's matches (counted over the block's own text, so one block has one current match).
+    val find = LocalKitFindMarks.current
+    val findRanges = remember(lines, find) { find?.ranges(lines.joinToString("\n") { it.text }).orEmpty() }
+    val findActive = find?.current?.takeIf { it in findRanges.indices }
+    val findAccent = LocalKitColors.current.accent
     if (prompts == null && !lineNumbers) {
         val text =
-            remember(lines, range, tokens, colors) {
-                buildAnnotatedString {
-                    for (i in range) {
-                        if (i > range.first) append('\n')
-                        append(lineText(lines[i], tokens, colors))
+            remember(lines, range, tokens, colors, findRanges, findActive, findAccent) {
+                val joined =
+                    buildAnnotatedString {
+                        for (i in range) {
+                            if (i > range.first) append('\n')
+                            append(lineText(lines[i], tokens, colors))
+                        }
                     }
-                }
+                if (range.isEmpty()) joined
+                else markLine(joined, lines[range.first].start, findRanges, findActive, findAccent)
             }
         BasicText(text, style = mono, softWrap = wrap, overflow = TextOverflow.Clip)
         return
@@ -840,7 +854,7 @@ private fun CodeGutterRows(
                 }
                 Spacer(Modifier.width(Space.S2.dp))
                 BasicText(
-                    lineText(lines[i], tokens, colors),
+                    markLine(lineText(lines[i], tokens, colors), lines[i].start, findRanges, findActive, findAccent),
                     if (wrap) Modifier.weight(1f) else Modifier,
                     style = mono,
                     softWrap = wrap,

@@ -1067,6 +1067,7 @@ public fun ChatScreen(
                                             topLine = handoffLine,
                                             older = state.older,
                                             onLoadOlder = actions::loadOlder,
+                                            find = state.find,
                                         )
                                     }
                             }

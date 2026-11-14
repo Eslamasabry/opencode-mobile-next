@@ -1,6 +1,9 @@
 package io.github.eslamasabry.oc.ui.kitchat.transcript
 
 import androidx.compose.animation.Crossfade
+import androidx.compose.ui.text.AnnotatedString
+import io.github.eslamasabry.oc.ui.kitchat.markdown.LocalKitFindMarks
+import io.github.eslamasabry.oc.ui.kitchat.markdown.withFindMarks
 import androidx.compose.animation.core.FiniteAnimationSpec
 import androidx.compose.animation.core.snap
 import androidx.compose.foundation.Image
@@ -214,8 +217,11 @@ public const val PROMPT_PHOTO_TAG: String = "kit-prompt-photo"
 private fun PromptWords(text: String) {
     val colors = LocalKitColors.current
     val holder = remember { LayoutHolder() }
+    // Find: the matches of the open search in the person's own words, the current one stronger.
+    val find = LocalKitFindMarks.current
+    val shown = remember(text, find, colors.accent) { AnnotatedString(text).withFindMarks(find, colors.accent) }
     BasicText(
-        text = text,
+        text = shown,
         style =
             // QA wave 4 B12: the person's own words read in their own direction (an English prompt in an
             // Arabic interface is left to right, its full stop at the end).

@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
@@ -31,6 +32,7 @@ import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.text.Numbers
 import io.github.eslamasabry.oc.core.model.transcript.MessageErrorKind
 import io.github.eslamasabry.oc.engine.agents.errors.AgentErrorText
+import io.github.eslamasabry.oc.feature.chat.presentation.FindUi
 import io.github.eslamasabry.oc.feature.chat.presentation.RunTailRules
 import io.github.eslamasabry.oc.feature.chat.presentation.ErrorFix
 import io.github.eslamasabry.oc.feature.chat.presentation.ErrorRecovery
@@ -104,7 +106,9 @@ import io.github.eslamasabry.oc.ui.kitchat.code.KitCodeKind
 import io.github.eslamasabry.oc.ui.kitchat.code.KitStandaloneRedaction
 import io.github.eslamasabry.oc.ui.kitchat.header.rememberKitMask
 import io.github.eslamasabry.oc.ui.kitchat.markdown.KitMarkdownActions
+import io.github.eslamasabry.oc.ui.kitchat.markdown.KitFindMarks
 import io.github.eslamasabry.oc.ui.kitchat.markdown.KitMarkdownBlock
+import io.github.eslamasabry.oc.ui.kitchat.markdown.LocalKitFindMarks
 import io.github.eslamasabry.oc.ui.kitchat.markdown.KitMdBlock
 import io.github.eslamasabry.oc.ui.kitchat.markdown.KitMdReveal
 import io.github.eslamasabry.oc.ui.kitchat.markdown.KitMdSource
@@ -420,8 +424,11 @@ internal fun ChatTranscriptList(
     /** Earlier messages not loaded yet: "Show earlier messages" is the transcript's first row; null = all loaded. */
     older: OlderUi? = null,
     onLoadOlder: () -> Unit = {},
+    /** Find, while it is open: the text parts mark its matches, and the current match's folded parts open. */
+    find: FindUi? = null,
 ) {
     val currentRows by rememberUpdatedState(rows)
+    FindOpensFolds(find, rows, facts, folds)
     // B-SEC-094 / R18: a code block's Copy hands over what the block shows (redacted), never the
     // raw fence; only
     // Copy reply copies the reply as written (plan 09 §6.6).
@@ -666,6 +673,16 @@ internal fun ChatTranscriptList(
                 kitTranscriptItemMotion(fadeIn = row !is PromptRow)
                     .foldAnchor(row.key, anchor, list.lazy)
             ) {
+              // Find: every match in this row is tinted by the kit's text parts; the current match of the current row
+              // (a message or a prompt: one text) is the stronger one. Nothing is provided while Find is closed.
+              val marks =
+                  remember(find?.query, find?.currentKey, find?.currentOrdinal, row.key, row is BlockRow || row is PromptRow) {
+                      find?.takeIf { it.query.isNotBlank() }?.let {
+                          val current = row.key == it.currentKey && (row is BlockRow || row is PromptRow)
+                          KitFindMarks(it.query, if (current) it.currentOrdinal else -1)
+                      }
+                  }
+              CompositionLocalProvider(LocalKitFindMarks provides marks) {
                 // The turn's rhythm (Flutter kit_turn.dart:484-516): the rows above stand apart as Flutter's turn.
                 val gap = turnGap(row, unique.getOrNull(index + 1))
                 if (gap > 0) Spacer(Modifier.height(gap.dp))
@@ -738,6 +755,7 @@ internal fun ChatTranscriptList(
                         }
                     if (created != null) KitMessageTimestamp(created, facts.nowMs)
                 }
+              }
             }
         }
         // S28 story 8 (Flutter chat_handoff_link.dart): where this work came from or went sits above the
