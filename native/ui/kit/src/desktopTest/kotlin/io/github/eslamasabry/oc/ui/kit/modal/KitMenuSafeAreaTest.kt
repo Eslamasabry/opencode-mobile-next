@@ -2,6 +2,7 @@ package io.github.eslamasabry.oc.ui.kit.modal
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -15,6 +16,8 @@ import androidx.compose.ui.unit.IntSize
 import io.github.eslamasabry.oc.ui.kit.FakeKitPlatform
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.KitTheme
+import io.github.eslamasabry.oc.ui.kit.foundation.KitPressOrigin
+import io.github.eslamasabry.oc.ui.kit.foundation.LocalKitPressOrigin
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
 import kotlin.test.Test
@@ -89,6 +92,8 @@ class KitMenuSafeAreaTest {
         runDesktopComposeUiTest(400, 800) {
             var open by mutableStateOf(false)
             setContent {
+                // A record of its own: a press another test made a moment ago must not open this menu.
+                CompositionLocalProvider(LocalKitPressOrigin provides KitPressOrigin()) {
                 KitTheme(platform = FakeKitPlatform(), localeTag = "en") {
                     KitScreen(topBar = { KitTopBar("Chat") }) {
                         Box(Modifier.fillMaxSize()) {
@@ -103,6 +108,7 @@ class KitMenuSafeAreaTest {
                             ) {}
                         }
                     }
+                }
                 }
             }
             open = true

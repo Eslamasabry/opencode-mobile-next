@@ -16,19 +16,21 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PixelMap
 import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.onNodeWithTag
-import androidx.compose.ui.test.onRoot
-import androidx.compose.ui.test.v2.runDesktopComposeUiTest
+import androidx.compose.ui.test.isRoot
+import androidx.compose.ui.test.v2.runSkikoComposeUiTest
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.style.Style
 import io.github.eslamasabry.oc.ui.kit.FakeKitPlatform
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.KitTheme
+import io.github.eslamasabry.oc.ui.kit.PaneRimScenes
 import io.github.eslamasabry.oc.ui.kit.foundation.kitFrostSource
 import io.github.eslamasabry.oc.ui.kit.foundation.rememberKitFrostState
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
@@ -89,21 +91,27 @@ class KitLiquidJoinOnePictureTest {
         }
     }
 
-    private class Shot(val img: PixelMap, val menu: Rect)
+    private class Shot(val img: PixelMap, val menu: Rect, val joined: Int)
 
     private fun shot(overlay: Boolean): Shot {
         lateinit var out: Shot
-        runDesktopComposeUiTest(412, 800) {
+        // The join shader runs on the CPU every frame (PaneRimScenes.SCENE_TIMEOUT: over two minutes on a slow machine):
+        // a test that honours its timeout, the clock stepped by hand.
+        runSkikoComposeUiTest(Size(412f, 800f), testTimeout = PaneRimScenes.SCENE_TIMEOUT) {
             var open by mutableStateOf(false)
+            mainClock.autoAdvance = false
             setContent { KitTheme(appearance = glass, platform = platform(), localeTag = "en", stillFrame = true) { Scene(overlay, open) } }
+            mainClock.advanceTimeBy(125)
             waitForIdle()
             // Opened once the bar has been placed, as a person opens it: the menu joins the bar's glass.
             open = true
-            waitForIdle()
-            mainClock.advanceTimeBy(1_500)
-            waitForIdle()
+            repeat(12) {
+                mainClock.advanceTimeBy(125)
+                waitForIdle()
+            }
             val menu = onNodeWithTag("kit-menu", useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
-            out = Shot(onRoot().captureToImage().toPixelMap(), menu)
+            val joined = onAllNodes(androidx.compose.ui.test.SemanticsMatcher.keyIsDefined(KitLiquidJoined), useUnmergedTree = true).fetchSemanticsNodes().size
+            out = Shot(onAllNodes(isRoot())[0].captureToImage().toPixelMap(), menu, joined)
         }
         return out
     }
@@ -113,6 +121,8 @@ class KitLiquidJoinOnePictureTest {
         val plain = shot(overlay = false)
         val over = shot(overlay = true)
         val m = plain.menu
+        kotlin.test.assertEquals(2, plain.joined, "the bar and the menu are one body (the bar's side and the menu's side)")
+        kotlin.test.assertEquals(2, over.joined)
         assertTrue(m.width > 100f && m.height > 100f, "the menu is open: $m")
         // The menu's glass from its top (the junction with the bar) down, clear of its sides' rims.
         val inset = 30f
