@@ -13,6 +13,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.layout
+import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
@@ -93,7 +94,17 @@ public fun KitRowGroup(
         if (seam > 0) androidx.compose.foundation.layout.Spacer(Modifier.height(seam.dp).testTag("kit-row-group-seam"))
         Column(panelModifier) {
             // A panel is a surface of its own: its rows keep their gutter inside it, off the sheet's rail (P-008).
-            androidx.compose.runtime.CompositionLocalProvider(LocalKitOnRail provides (onRail && !panel)) {
+            // A panel is its rows' container: a chosen row's face is inset from the panel's inner edge (ChosenFaceRules).
+            val style = LocalKitStyle.current
+            val container =
+                if (!panel) LocalKitRowContainer.current
+                else KitRowContainer(
+                    paneInset.value,
+                    io.github.eslamasabry.oc.ui.design.style.StyleResolver.paneCorner(
+                        io.github.eslamasabry.oc.ui.design.generated.FlutterKitTokens.PANEL_CORNER_RADIUS.toFloat(), style.knobs.corners, style.spec.tokens,
+                    ),
+                )
+            androidx.compose.runtime.CompositionLocalProvider(LocalKitOnRail provides (onRail && !panel), LocalKitRowContainer provides container) {
                 HairlineColumn(inset, rowGutter.dp, hairline, rows, seams = rowSeams)
                 destructive?.let { HairlineColumn(rowGutter.dp, rowGutter.dp, hairline, it, ruleAbove = true, seams = endSeams) }
             }
@@ -151,18 +162,27 @@ private fun HairlineColumn(
     prominent: KitProminentRule? = null,
     seams: Seams = remember { Seams() },
 ) {
+    // The chosen rows of this list (ChosenFaceRules): no seam touches a chosen row's face.
+    val chosen = remember { ChosenRows() }
+    val own = remember { ChosenRowBox() }
+    androidx.compose.runtime.CompositionLocalProvider(LocalKitChosenRows provides chosen) {
     Layout(
         content = content,
         modifier =
-            Modifier.fillMaxWidth().drawWithContent {
+            Modifier.fillMaxWidth().onPlaced { own.coordinates = it }.drawWithContent {
                 drawContent()
                 val start = inset.toPx()
                 val end = endInset.toPx()
                 val rtl = layoutDirection == LayoutDirection.Rtl
                 val (x0, x1) = if (rtl) end to size.width - start else start to size.width - end
                 val ys = if (ruleAbove) intArrayOf(0) + seams.ys else seams.ys
+                val list = own.coordinates?.takeIf { it.isAttached }
+                val spans = if (list == null) emptyList() else chosen.rows.mapNotNull { row ->
+                    row.coordinates?.takeIf { it.isAttached }?.let { list.localBoundingBoxOf(it, clipBounds = false) }
+                }
                 ys.forEach { y ->
                     if (x1 <= x0) return@forEach
+                    if (spans.any { ChosenFaceRules.seamTouches(y, it.top, it.bottom) }) return@forEach
                     if (prominent == null) drawLine(hairline, Offset(x0, y + 0.5f), Offset(x1, y + 0.5f), 1f)
                     else {
                         // B-173: the line starts on the seam's pixel row and is at least 1 dp thick, in the theme's tertiary ink at 30 %.
@@ -189,5 +209,6 @@ private fun HairlineColumn(
                 top += it.height
             }
         }
+    }
     }
 }
