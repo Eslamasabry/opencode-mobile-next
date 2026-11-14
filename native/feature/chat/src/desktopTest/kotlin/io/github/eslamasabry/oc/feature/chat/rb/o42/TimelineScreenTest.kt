@@ -96,7 +96,9 @@ class TimelineScreenTest {
         setContent {
             KitTheme(platform = DesktopKitPlatform()) {
                 Column(Modifier.width(240.dp)) {
-                    KitRow(title, Modifier.testTag("one-line"))
+                    // A short title is one line; a long one wraps to two (every row may, since audit 2: a row title
+                    // never ends in "…" while a second line fits), and the timeline asks for two by name.
+                    KitRow("Short", Modifier.testTag("one-line"))
                     KitRow(title, Modifier.testTag("two-lines"), titleMaxLines = 2)
                 }
             }
