@@ -144,6 +144,25 @@ class KitLampPanelTest {
         }
 
     @Test
+    fun `B-LAMP-K2-070 edit_rowTapOpensNothing - a row's tap opens its conversation outside Edit and does nothing in Edit`() =
+        runDesktopComposeUiTest(412, 1000) {
+            val scene = Scene(K2.model())
+            panel(scene, height = 1000)
+            waitForIdle()
+            onNodeWithText("create a file hello.txt with one line").performClick()
+            assertEquals(listOf("open:hello"), scene.events, "outside Edit the row opens")
+            scene.events.clear()
+            onNodeWithText("Edit").performClick()
+            waitForIdle()
+            onNodeWithText("create a file hello.txt with one line").performClick()
+            onNodeWithText("create a file notes.txt with one line").performClick()
+            waitForIdle()
+            assertEquals(emptyList(), scene.events, "in Edit a row's tap opens nothing")
+            onNodeWithContentDescription("Pin to top: create a file hello.txt with one line").performClick()
+            assertEquals(listOf("pin:hello:true"), scene.events, "the row's own edit actions still work")
+        }
+
+    @Test
     fun `B-LAMP-K2-023 stop_iconButtonNamesTarget_holdsWithUndo - 48 dp to touch, Commit, then the draining receipt`() =
         runDesktopComposeUiTest(412, 1000) {
             val platform = FakeKitPlatform()

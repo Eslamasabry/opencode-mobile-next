@@ -429,7 +429,7 @@ private fun LampBlock(row: KitLampRow, editing: Boolean, words: KitLampPanelWord
         words.steps,
         actions =
             KitStepTreeActions(
-                onOpen = { actions.onOpenStep(row.key, it) },
+                onOpen = { if (!editing) actions.onOpenStep(row.key, it) },
                 onStop = { actions.onStopStep(row.key, it) },
                 onAllow = { actions.onAllow(row.key, it) },
                 onDeny = { actions.onDeny(row.key, it) },
@@ -461,7 +461,8 @@ private fun LampRowView(
             Row(
                 Modifier
                     .weight(1f)
-                    .kitTappable(onClick = { actions.onOpen(row.key) }, role = KitTappableRole.Row)
+                    // In Edit a row's tap does nothing of its own: opening is for outside Edit; the row has pin, rename, hide.
+                    .then(if (editing) Modifier else Modifier.kitTappable(onClick = { actions.onOpen(row.key) }, role = KitTappableRole.Row))
                     .padding(start = if (handle != null) 0.dp else Space.S4.dp, top = Space.S3.dp, bottom = Space.S3.dp, end = Space.S2.dp),
                 verticalAlignment = Alignment.Top,
             ) {
