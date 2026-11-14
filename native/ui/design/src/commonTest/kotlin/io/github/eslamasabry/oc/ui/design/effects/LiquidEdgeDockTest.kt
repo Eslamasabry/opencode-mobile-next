@@ -46,20 +46,19 @@ class LiquidEdgeDockTest {
     }
 
     @Test
-    fun `dock glass - the pulled-out list frosts as a sheet does, 12 dp and bend 48, and keeps the menu's tint and rim`() {
+    fun `dock glass - the pulled-out list wears a menu's glass, 4 dp and bend 48, and keeps the swell's tint and rim`() {
         for (dark in listOf(true, false)) {
             val menu = LiquidEdge.swellRecipe(dark)
-            val sheet = LiquidEdge.recipe(LiquidRole.Sheet, dark)
-            assertEquals(LiquidEdge.MODAL_BLUR_DP, sheet.blurDp, "the sheet's blur (dark=$dark)")
-            assertEquals(48f, sheet.refractionDp, "the sheet's bend (dark=$dark)")
+            val own = LiquidEdge.recipe(LiquidRole.Menu, dark)
+            assertEquals(LiquidRole.Menu, LiquidEdge.DOCK_LIST_ROLE, "cut audit 2: the list is a menu of the dock, not a sheet")
             assertEquals(menu, LiquidEdge.dockRecipe(dark, 1f, list = 0f), "no list: the menu's (dark=$dark)")
             val list = LiquidEdge.dockRecipe(dark, 1f, list = 1f)
-            close(list.blurDp, 12f, "the list's blur dark=$dark")
-            close(list.refractionDp, 48f, "the list's bend dark=$dark")
+            close(list.blurDp, own.blurDp, "the list's blur is a menu's dark=$dark")
+            close(list.blurDp, LiquidEdge.MODAL_BLUR_DP, "no longer the sheet's old 12 dp dark=$dark")
+            close(list.refractionDp, own.refractionDp, "the list's bend is a menu's dark=$dark")
             close(list.tint, menu.tint, "the tint stays the menu's dark=$dark")
             close(list.rimMaxDp, menu.rimMaxDp, "the rim stays the menu's dark=$dark")
             close(list.saturation, menu.saturation, "saturation stays dark=$dark")
-            assertTrue(list.blurDp > menu.blurDp, "the list frosts more than the swell did (dark=$dark)")
             // No step as the list opens: the blur and the bend move together, a little each hundredth.
             var last = LiquidEdge.dockRecipe(dark, 1f, list = 0f)
             for (i in 1..100) {
