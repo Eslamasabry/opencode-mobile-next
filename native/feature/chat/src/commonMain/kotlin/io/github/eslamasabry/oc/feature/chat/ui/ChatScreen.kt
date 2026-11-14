@@ -518,6 +518,8 @@ public fun ChatScreen(
         remember(actions, prompts) {
             ComposerChrome(
                 busy = { latest.live != null },
+                // The box stands in its place while the conversation loads; Send waits for the load.
+                loading = { latest.phase == ChatPhase.Loading },
                 // Review #12: the box agrees with the run's state; a decision on its way waits on no one.
                 requestWaiting = { RunTailRules.waitsForYou(requestState.cards.map { it.state }) || formPending },
                 // A send brings the newest message into view at once (audit 1, k6: "Jump to latest" showed after a send
@@ -970,10 +972,11 @@ public fun ChatScreen(
                                     onShown = onRequestShown,
                                 )
                             if (requests.card == null) formSlot?.invoke(Modifier)
-                            // The composer is the conversation's: it shows once the conversation has loaded
-                            // (Flutter chat_states.dart: no composer under the skeleton or the could-not-load
-                            // page), as wide as the conversation's pane (E20-S27).
-                            if (state.phase == ChatPhase.Live)
+                            // The composer is the conversation's, as wide as the conversation's pane (E20-S27). It
+                            // stands in its place while the conversation loads (owner 2026-11-14: the page lost its
+                            // shape and showed nothing), so the person sees where they will type; Send waits for the
+                            // load (ComposerChrome.loading). The could-not-load page has none.
+                            if (state.phase == ChatPhase.Live || state.phase == ChatPhase.Loading)
                               CompositionLocalProvider(LocalReplyHint provides replyHint) {
                                 composerHost.Composer(
                                     ComposerTarget(
