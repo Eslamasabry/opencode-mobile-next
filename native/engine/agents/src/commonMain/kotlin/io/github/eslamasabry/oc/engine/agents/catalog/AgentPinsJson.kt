@@ -24,7 +24,8 @@ internal const val AGENT_PINS_JSON: String = """{
     "2.1.283",
     "2.1.294",
     "2.1.316",
-    "2.1.319"
+    "2.1.319",
+    "2.1.321"
   ],
   "paseoTestedVersions": [
     "0.9.2",
@@ -78,7 +79,7 @@ internal const val AGENT_PINS_JSON: String = """{
       "providerId": "claude",
       "signInMethod": "browserOAuthHost",
       "recipe": {
-        "version": "2.1.319",
+        "version": "2.1.321",
         "executable": "claude",
         "launchArgs": [],
         "signInArgs": [
@@ -88,20 +89,20 @@ internal const val AGENT_PINS_JSON: String = """{
         ],
         "artifacts": {
           "arm64": {
-            "url": "https://downloads.claude.ai/claude-code-releases/2.1.319/linux-arm64/claude",
-            "sha256": "a7e687fd1cb054d651c7588223de3786c99d4c682365e3c3ae1e59ce7f3a591f",
+            "url": "https://downloads.claude.ai/claude-code-releases/2.1.321/linux-arm64/claude",
+            "sha256": "6bea0633074627ba79328e00115ed0588c3acf906a8463612b25db696dbfd3f0",
             "format": "executable",
             "member": null,
-            "downloadBytes": 339797432,
-            "installedBytes": 339797432
+            "downloadBytes": 341501368,
+            "installedBytes": 341501368
           },
           "x64": {
-            "url": "https://downloads.claude.ai/claude-code-releases/2.1.319/linux-x64/claude",
-            "sha256": "dabafec82ca1319fa43d8be36a10fc61b1d11821cb98ad5df04ad95e199b8eed",
+            "url": "https://downloads.claude.ai/claude-code-releases/2.1.321/linux-x64/claude",
+            "sha256": "426c33815ca6645a772f722fbff10dbf2cbdb124a8aeab733c1365dbf8bbf61f",
             "format": "executable",
             "member": null,
-            "downloadBytes": 340226576,
-            "installedBytes": 340226576
+            "downloadBytes": 341910032,
+            "installedBytes": 341910032
           }
         }
       }

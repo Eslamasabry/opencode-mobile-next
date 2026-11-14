@@ -151,7 +151,7 @@ class NativeCardsQualifier(
                 // Qualification belongs to these recorded pins, not to a future recipe or a
                 // provider label.
                 if (
-                    claude != "2.1.319" ||
+                    claude != "2.1.321" ||
                         pins.node.version != "v24.22.2" ||
                         pins.paseo.version != "0.15.4" ||
                         hostVersion != pins.paseo.version
