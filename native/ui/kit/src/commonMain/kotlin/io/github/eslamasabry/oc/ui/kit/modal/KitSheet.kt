@@ -52,6 +52,9 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.input.pointer.util.VelocityTracker
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
@@ -154,6 +157,21 @@ public object SheetLayout {
     /** A content sheet never covers more than 90 % of the window's height. */
     public const val CONTENT_MAX_SHARE: Float = 0.9f
 
+    /** How far below the page's top chrome a tall sheet's top rests at the least (dp). */
+    public const val BELOW_CHROME_DP: Int = Space.S2
+
+    /**
+     * The kit's tall detent (audit 2, 2026-11-14): a Full sheet, and the cap of a content sheet, in a window [window]
+     * tall whose page's top chrome (status bar, bar, its second row) ends [chromeBottom] from the window's top. At most
+     * [CONTENT_MAX_SHARE] of the window, and its top at least [BELOW_CHROME_DP] below the chrome, so it rests clearly
+     * below the bar's words, never through them. Null chrome (no page said where it ends): the share alone.
+     */
+    public fun tallHeight(window: Dp, chromeBottom: Dp?): Dp {
+        val share = window * CONTENT_MAX_SHARE
+        if (chromeBottom == null) return share
+        return minOf(share, (window - chromeBottom - BELOW_CHROME_DP.dp).coerceAtLeast(0.dp))
+    }
+
     public fun placement(windowWidthDp: Float, height: KitSheetHeight): KitSheetPlacement =
         when {
             windowWidthDp < EXPANDED_FROM_DP -> KitSheetPlacement.Bottom
@@ -199,6 +217,26 @@ public class KitSheetHostState internal constructor() {
 
     internal fun hideDialog(d: DialogEntry) {
         if (dialog === d) dialogShown.targetState = false
+    }
+
+    /**
+     * Where the page's top chrome ends (root px; NaN: no page has said), so a tall sheet rests below the bar's words and
+     * never through them (audit 2, 2026-11-14). The page that said it last holds it until it leaves.
+     */
+    internal var chromeBottom: Float by mutableFloatStateOf(Float.NaN)
+        private set
+
+    private var chromeOwner: Any? = null
+
+    internal fun holdChrome(owner: Any, bottom: Float) {
+        chromeOwner = owner
+        if (chromeBottom != bottom) chromeBottom = bottom
+    }
+
+    internal fun releaseChrome(owner: Any) {
+        if (chromeOwner !== owner) return
+        chromeOwner = null
+        chromeBottom = Float.NaN
     }
 
     internal fun releaseDialog(d: DialogEntry) {
@@ -498,14 +536,19 @@ private fun SheetLayer(state: KitSheetHostState) {
             }
         )
     }
-    BoxWithConstraints(Modifier.fillMaxSize()) {
+    val hostTop = remember { floatArrayOf(0f) }
+    BoxWithConstraints(Modifier.fillMaxSize().onGloballyPositioned { hostTop[0] = it.positionInRoot().y }) {
         // A growing sheet keeps one place for both of its heights.
         val placement =
             SheetLayout.placement(
                 maxWidth.value,
                 if (entry.grows) KitSheetHeight.Half else entry.height,
             )
-        val maxSheet = maxHeight * SheetLayout.CONTENT_MAX_SHARE
+        // Audit 2 (2026-11-14: the tall model sheet's top edge sliced the bar's subtitle): a sheet's resting top lies
+        // clearly below the page's top chrome, never through a line of its words (SheetLayout.tallHeight).
+        val density = LocalDensity.current
+        val chromeDp = with(density) { (state.chromeBottom - hostTop[0]).toDp() }
+        val maxSheet = SheetLayout.tallHeight(maxHeight, if (state.chromeBottom.isNaN()) null else chromeDp)
         val half = maxHeight * 0.5f
         val growth = sheetGrowth(entry, half, maxSheet)
         when (placement) {
@@ -572,7 +615,8 @@ private fun SheetLayer(state: KitSheetHostState) {
                                 .then(
                                     if (entry.grows && entry.height != KitSheetHeight.Content)
                                         Modifier.grownHeight(growth)
-                                    else Modifier.heightIn(max = maxSheet)
+                                    // A centred panel sits in the middle of a wide window, away from the chrome.
+                                    else Modifier.heightIn(max = maxHeight * SheetLayout.CONTENT_MAX_SHARE)
                                 )
                                 .predictiveShrink(back, TransformOrigin.Center)
                                 .clip(KitShapeId.Dialog.shape()),
