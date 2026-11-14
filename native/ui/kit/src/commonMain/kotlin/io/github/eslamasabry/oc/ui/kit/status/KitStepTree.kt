@@ -156,8 +156,11 @@ public object StepTreeDims {
     /** A sequence's S-bend between columns (`Space.S4`). */
     public const val BEND: Int = Space.S4
 
-    /** A nested row: 12 dp above and below a 20 dp line. */
-    public const val ROW: Int = Space.S3 * 2 + Space.S5
+    /**
+     * A nested row: 12 dp above and below a 24 dp line, the kit's 48 dp touch target (owner 2026-11-14: the rows keep
+     * the kit's touch rule; the craft spec's 44 dp would be cut by `kitTappable`'s minimum anyway).
+     */
+    public const val ROW: Int = Space.S3 * 2 + Space.S6
 
     /** The conversation's (the header's) mark. */
     public const val ROOT_MARK: Int = Space.S6

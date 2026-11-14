@@ -107,7 +107,7 @@ class StepTreeRulesTest {
         assertEquals(3, StepTreeRules.descendants(KitTreeStep("x", "x", KitTreeStepState.Working, children = listOf(deep))))
         assertEquals(75, StepTreeDims.GRAND_INDENT)
         assertEquals(52, StepTreeDims.CHILD_INDENT)
-        assertEquals(44, StepTreeDims.ROW)
+        assertEquals(48, StepTreeDims.ROW)
         assertEquals(StepTreeRules.seconds(KitTreeStep("t", "t", KitTreeStepState.Working, seconds = 40), 3), 43L, "a working timer counts on")
         assertEquals(StepTreeRules.seconds(KitTreeStep("t", "t", KitTreeStepState.Done, seconds = 40), 3), 40L, "a finished step keeps the time it took")
     }

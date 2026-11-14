@@ -43,7 +43,7 @@ import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 /**
- * The step tree measured (LAMP-CRAFT §4a-b): 44 dp lines, the 52 / 75 dp columns mirrored in Arabic, the trunk and the
+ * The step tree measured (LAMP-CRAFT §4a-b): 48 dp lines, the 52 / 75 dp columns mirrored in Arabic, the trunk and the
  * branches meeting each mark's ring (read off the picture), "+N more inside", the waiting child in place with its
  * answers, the fold (height only), the live timer once a second, nothing running at rest; five styles, both modes,
  * both directions, 360 and 412 dp, text at 1.0 and 1.3.
@@ -100,7 +100,7 @@ class KitStepTreeTest {
         assertTrue(abs(expected - actual) < tol, "$what: expected $expected, was $actual")
 
     @Test
-    fun `B-LAMP-K2-010 lines are 44 dp, children hang at 52 dp and grandchildren at 75 dp, mirrored in Arabic, every style, width and text size`() {
+    fun `B-LAMP-K2-010 lines are 48 dp, children hang at 52 dp and grandchildren at 75 dp, mirrored in Arabic, every style, width and text size`() {
         for (style in K2.styles) for (dark in listOf(true, false)) for (rtl in listOf(false, true)) for (width in listOf(360, 412)) for (scale in listOf(1f, 1.3f)) {
             runDesktopComposeUiTest(width, 900) {
                 val scene = Scene(K2.deployChildren())
@@ -121,7 +121,7 @@ class KitStepTreeTest {
                 for (i in 0 until 6) {
                     val b = rows[i].getUnclippedBoundsInRoot()
                     val h = (b.bottom - b.top).value
-                    if (scale == 1f) near(44f, h, "$what: line $i is 44 dp") else assertTrue(h >= 44f - 0.5f, "$what: line $i at least 44 dp at 1.3x")
+                    if (scale == 1f) near(48f, h, "$what: line $i is 48 dp") else assertTrue(h >= 48f - 0.5f, "$what: line $i at least 48 dp at 1.3x")
                 }
                 onNodeWithText("+2 more inside").assertExists()
             }

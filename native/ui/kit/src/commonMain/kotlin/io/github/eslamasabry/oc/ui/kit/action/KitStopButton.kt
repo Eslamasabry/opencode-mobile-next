@@ -29,11 +29,11 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
 
 /** The stop button's measures (LAMP-CRAFT §4, §4a). */
 public object KitStopDims {
-    /** Always this much to touch (`Space.S6` + `Space.S5`). */
-    public const val TOUCH: Int = Space.S6 + Space.S5
+    /** Always this much to touch: the kit's 48 dp target (owner 2026-11-14: rows keep the kit's touch targets). */
+    public const val TOUCH: Int = Space.S6 * 2
 
-    /** A conversation row's visible circle: the whole touch box. */
-    public const val CIRCLE_ROW: Int = TOUCH
+    /** A conversation row's visible circle (`Space.S6` + `Space.S5`), inside the touch box. */
+    public const val CIRCLE_ROW: Int = Space.S6 + Space.S5
 
     /** A sub-agent's visible circle, inside the same touch box (`Space.S6` + `Space.S1`). */
     public const val CIRCLE_STEP: Int = Space.S6 + Space.S1
@@ -43,13 +43,13 @@ public object KitStopDims {
 }
 
 /**
- * Stop for a running conversation or sub-agent (LAMP-PLAN §C): a stop square in a quiet circle, no word, 44 dp to touch.
- * [label] names the target ("Stop “Bank API migration”"). [compact] is the sub-agent's 28 dp circle inside the same
- * 44 dp touch box. A tap plays [KitHaptic.Commit]; the caller then holds the stop and shows its receipt.
+ * Stop for a running conversation or sub-agent (LAMP-PLAN §C): a stop square in a quiet 44 dp circle, no word, 48 dp to
+ * touch. [label] names the target ("Stop “Bank API migration”"). [compact] is the sub-agent's 28 dp circle inside the
+ * same 48 dp touch box. A tap plays [KitHaptic.Commit]; the caller then holds the stop and shows its receipt.
  *
  * States: default, pressed; Solid draws a hairline ring, the other styles their control face by role
  * Text: none (the label is semantics only)
- * Cap: none (44 dp square)
+ * Cap: none (48 dp square)
  * Motion: the platform press only
  * Replaces: none
  */
