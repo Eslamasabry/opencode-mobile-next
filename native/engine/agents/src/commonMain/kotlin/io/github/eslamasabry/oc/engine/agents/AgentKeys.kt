@@ -17,6 +17,13 @@ public object AgentKeys {
     public const val PHONE_AGENT_OWNER_PREFIX: String = "oc.phoneAgentOwner."
     public fun phoneAgentGateMigration(owner: OwnerId): String = "oc.phoneAgentGateMigration.${owner.raw}"
     public fun agentPhoneGate(owner: OwnerId): String = "oc.agentPhoneGate.${owner.raw}"
+
+    /**
+     * The phone's agent registry: per agent, the last installed version, the signed-in answer and when it was read, and
+     * the version last proven able to start a conversation with what it was checked against. Answers only, never a
+     * credential. Swept with the owner.
+     */
+    public fun phoneAgentFacts(owner: OwnerId): String = "oc.phoneAgentFacts.${owner.raw}"
     public fun agentInstall(owner: OwnerId): String = "oc.agentInstall.${owner.raw}"
 
     /** The last install that failed or was interrupted, kept until the next attempt or until it is dismissed. */

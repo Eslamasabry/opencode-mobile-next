@@ -45,6 +45,37 @@ class PhoneChatAgentsTest {
         assertEquals(emptyList(), offer.needsSetup.map { it.id })
     }
 
+    // Owner report 2026-11-14: after an app update Codex and Antigravity were installed and signed in, yet absent from
+    // "Who works on it": neither has a matrix row at its new pin, and a not-ready uncertified agent was dropped.
+    @Test
+    fun `B-AGENT-REG-001 an installed agent that needs something is a set-up row whether or not the matrix knows it`() {
+        val antigravity = AgentId("antigravity")
+        val offer =
+            PhoneChatAgents.offer(
+                listOf(
+                    fact(codex, ready = false, fixable = true).copy(installed = true),
+                    fact(antigravity, ready = false, fixable = true).copy(installed = true),
+                    // Not on this phone and not certified: still left to the Agents page.
+                    fact(AgentId("gemini"), ready = false, fixable = true),
+                ),
+                AgentId.OPENCODE,
+            )
+        assertEquals(emptyList(), offer.choices.map { it.id })
+        assertEquals(listOf(codex, antigravity), offer.needsSetup.map { it.id })
+    }
+
+    @Test
+    fun `B-AGENT-REG-002 an agent being installed or checked stays listed, as checking`() {
+        val antigravity = AgentId("antigravity")
+        val offer =
+            PhoneChatAgents.offer(
+                listOf(fact(antigravity, ready = false, fixable = false).copy(installed = true, checking = true)),
+                AgentId.OPENCODE,
+            )
+        assertEquals(listOf(antigravity), offer.needsSetup.map { it.id })
+        assertEquals(true, offer.needsSetup.single().checking)
+    }
+
     @Test
     fun `PHONE-CHAT a certified agent with no way forward is left out`() {
         val offer = PhoneChatAgents.offer(listOf(fact(claude, ready = false, fixable = false)), AgentId.OPENCODE)
