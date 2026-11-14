@@ -100,7 +100,7 @@ internal object CacheFirstGate {
             f("prompts", "ui/KeptPromptsScreen.kt") to Review(1, Local),
             f("prompts", "ui/SavedPromptsScreen.kt") to Review(1, Local),
             f("prompts", "ui/ServerListsScreens.kt") to Review(3, Cold("CF-81")),
-            f("review", "ui/ReviewScreens.kt") to Review(3, Cold("CF-74")),
+            f("review", "ui/ReviewScreens.kt") to Review(2, Cold("CF-74")),
             f("schedules", "ui/ScheduleEditScreen.kt") to Review(1, Cold("CF-71")),
             f("schedules", "ui/SchedulesScreen.kt") to Review(1, Cold("CF-70")),
             f("servers", "account/ui/AgentAccountScreen.kt") to Review(2, Cold("CF-93")),
@@ -114,6 +114,10 @@ internal object CacheFirstGate {
             f("team", "ui/TeamBoardScreen.kt") to Review(1, Cold("CF-46")),
             f("team", "ui/TeamEditorScreen.kt") to Review(1, Cold("CF-46")),
             f("team", "ui/TeamHomeScreen.kt") to Review(1, Cold("CF-46")),
+            // The project's servers and timeline pages read the same kept workspace (engine.polled, as the project page):
+            // Loading only before anything was ever kept. Their blank body was a labelled return until a77bb7e002 made it
+            // a when branch the scan sees.
+            f("team", "ui/TeamProjectPagesScreens.kt") to Review(2, Cold("CF-46")),
             f("team", "ui/TeamProjectScreen.kt") to Review(1, Cold("CF-46")),
             f("team", "ui/TeamTaskScreen.kt") to Review(1, Cold("CF-46")),
             f("terminal", "ui/TerminalScreen.kt") to Review(1, Cold("CF-43")),
