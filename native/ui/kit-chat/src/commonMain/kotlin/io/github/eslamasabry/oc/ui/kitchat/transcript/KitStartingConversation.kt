@@ -77,7 +77,7 @@ public fun KitStartingConversation(
     KitScreen(
         topBar = {
             KitTopBar(
-                title = text.lineSequence().firstOrNull().orEmpty().take(80),
+                title = io.github.eslamasabry.oc.core.common.text.ConversationTitle.from(text).orEmpty(),
                 subtitle = project,
                 exit = KitTopBarExit.Back,
                 exitLabel = backLabel,
