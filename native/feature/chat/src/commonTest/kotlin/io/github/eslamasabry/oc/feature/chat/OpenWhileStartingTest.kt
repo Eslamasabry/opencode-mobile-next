@@ -194,6 +194,23 @@ class OpenWhileStartingTest {
     }
 
     @Test
+    fun `OWS-006 while this phone's agents update, an agent conversation waits for them and says so`() = runTest {
+        // The helper's server is not "this phone's OpenCode" (here = false): it still waits instead of failing.
+        val phone = Phone(here = false)
+        phone.wait.value = PhoneServerWait.UpdatingAgents
+        val world = GraphChatWorld(ref, registry(), phoneServer = phone)
+        world.attach()
+        runCurrent()
+        assertEquals(ChatServerWait.UpdatingAgents, world.serverWait.value)
+        advanceTimeBy(10 * 60_000)
+        runCurrent()
+        assertEquals(ChatLoad.Loading, world.load.value)
+        phone.wait.value = PhoneServerWait.None
+        runCurrent()
+        world.detach()
+    }
+
+    @Test
     fun `OWS-004 a computer that is not connected still says so at once`() = runTest {
         val world = GraphChatWorld(ref, registry(), phoneServer = Phone(here = false))
         world.attach()

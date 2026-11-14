@@ -40,6 +40,9 @@ public enum class PhoneServerWait {
     None,
     Starting,
     Updating,
+
+    /** The phone's agents (Claude Code and the others) are being updated; their helper is down meanwhile. */
+    UpdatingAgents,
 }
 
 private val NotWaiting: StateFlow<PhoneServerWait> = MutableStateFlow(PhoneServerWait.None)

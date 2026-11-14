@@ -420,6 +420,9 @@ public enum class ChatServerWait {
 
     /** This phone's server is stopped for the OpenCode update. */
     Updating,
+
+    /** The phone's agents are being updated; the conversation opens when that is done. */
+    UpdatingAgents,
 }
 
 /** A prompt the person sent that the transcript does not show yet. */
