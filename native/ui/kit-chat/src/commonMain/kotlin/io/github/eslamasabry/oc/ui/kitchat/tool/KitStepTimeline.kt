@@ -1,6 +1,5 @@
 package io.github.eslamasabry.oc.ui.kitchat.tool
 
-import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,7 +18,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.compositionLocalOf
@@ -64,7 +62,6 @@ import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
 import io.github.eslamasabry.oc.ui.kit.motion.KitPace
 import io.github.eslamasabry.oc.ui.kit.motion.KitReveal
 import io.github.eslamasabry.oc.ui.kit.motion.KitSpin
-import io.github.eslamasabry.oc.ui.kit.motion.pace
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import kotlin.math.roundToInt
@@ -274,6 +271,23 @@ internal class StepRail {
 
     /** The open steps have been shown once: a step composed after this arrived while the timeline was open. */
     var settled by mutableStateOf(false)
+
+    /**
+     * How much of each node is in view (1 unless a fold around it moves): read while the rail is drawn, so the rail's ink
+     * to a row that opens, folds or arrives fades with the row. Plain map: written after composition, read in draw.
+     */
+    val shares = HashMap<Any, () -> Float>()
+
+    /** Rows that arrived in the composition under way, so several that arrive together stagger (#002). */
+    private var arrivals = 0
+
+    /** The next arriving row's place in its group of arrivals. */
+    fun nextArrival(): Int = arrivals++
+
+    /** A composition of the list ended: the next arrivals start a new group. */
+    fun arrived() {
+        arrivals = 0
+    }
 }
 
 internal val LocalKitStepRail = compositionLocalOf<StepRail?> { null }
@@ -311,8 +325,8 @@ internal fun railMeasures(): RailMeasures {
 /**
  * Draws [node] in the free column at the start of the step, centred in a [box]-high band [top] down (Dart
  * `_StepNode`); the node is decoration (no semantics, no taps) and sits outside [content]'s own box. It reports its
- * centre so the rail can end on the last node. A step composed while its timeline is already open arrives: it fades
- * in over STANDARD and, at Full motion, rises 6 dp; under reduced motion it is simply there.
+ * centre so the rail can end on the last node. Inside a fold that moves ([KitStepItem], [KitStepReveal]) the row is
+ * drawn by how much of it is in view and, at Full motion, settles its last 6 dp into place; at rest nothing moves.
  */
 @Composable
 internal fun RailNode(
@@ -334,23 +348,30 @@ internal fun RailNode(
         onDispose {
             rail.centres.remove(key)
             rail.spans.remove(key)
+            rail.shares.remove(key)
         }
     }
     val density = LocalDensity.current
     val nodeHalf = with(density) { (half ?: m.glyph / 2).toPx() }
     // F: kit_step_light.dart:367 the last step's light runs a 14 dp tail below its node
     val light = remember(rail, key) { rail.light(key, with(density) { 14.dp.toPx() }) }
-    val motion = KitMotion.state
-    val arrives = remember { rail.settled && !motion.reduced }
-    val shown = remember { Animatable(if (arrives) 0f else 1f) }
-    val standard = KitMotion.specs.pace<Float>(KitPace.Standard)
-    LaunchedEffect(Unit) { if (shown.value < 1f) shown.animateTo(1f, standard) }
-    val rise = if (motion.travels) 6.dp else 0.dp // F: lib/ui/kit/chat/kit_step_timeline.dart:531 _StepArrival.rise
+    // A row in a fold that moves (opening, folding, arriving) is drawn by how much of it is in view: a row the fold's
+    // edge crosses is faint, never cut at full ink, and at Full motion it settles the last few dp into place (#001).
+    val reveal = LocalRailReveal.current
+    val at = remember { arrayOfNulls<LayoutCoordinates>(1) }
+    SideEffect { if (reveal != null) rail.shares[key] = { reveal.shown(at[0]) } else rail.shares.remove(key) }
+    val rise = if (KitMotion.state.travels) ARRIVAL_RISE_DP.dp else 0.dp // F: lib/ui/kit/chat/kit_step_timeline.dart:531 _StepArrival.rise
     Box(
-        modifier.fillMaxWidth().graphicsLayer {
-            alpha = shown.value
-            translationY = rise.toPx() * (1f - shown.value)
-        }
+        modifier
+            .fillMaxWidth()
+            .onPlaced { at[0] = it }
+            .graphicsLayer {
+                if (reveal != null) {
+                    val share = reveal.shown(at[0])
+                    alpha = share * share
+                    translationY = rise.toPx() * (1f - share)
+                }
+            }
     ) {
         content()
         Box(
@@ -371,4 +392,21 @@ internal fun RailNode(
             CompositionLocalProvider(LocalStepLightRail provides light) { node() }
         }
     }
+}
+
+/** How far a row that arrives or opens rises into place at Full motion (Flutter `_StepArrival.rise`). */
+internal const val ARRIVAL_RISE_DP: Int = 6
+
+/**
+ * One row of a step list that comes and goes with the list's motion (owner 2026-11-14): shown while [visible]; a row
+ * composed after the list first showed arrives (#001 Pop-in: it grows in from nothing, fading, and the rows below move
+ * down with it instead of jumping), several arriving together stagger (#002); rows that open together start [order]
+ * apart. Folding it ([visible] false) shrinks it away over QUICK. Keyed by the caller, a row keeps its node while it
+ * updates, so a step that finishes changes in place and never flashes.
+ */
+@Composable
+public fun KitStepItem(visible: Boolean = true, order: Int = 0, content: @Composable () -> Unit) {
+    val rail = LocalKitStepRail.current
+    val arrival = remember { if (rail != null && rail.settled && visible) rail.nextArrival() else -1 }
+    KitStepReveal(visible, arrives = arrival >= 0, order = if (arrival >= 0) arrival else order, content = content)
 }

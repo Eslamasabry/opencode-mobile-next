@@ -40,7 +40,6 @@ import io.github.eslamasabry.oc.ui.kit.foundation.KitTappableRole
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcon
 import io.github.eslamasabry.oc.ui.kit.icon.KitIconSize
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
-import io.github.eslamasabry.oc.ui.kit.motion.KitReveal
 import io.github.eslamasabry.oc.ui.kit.status.KitStepTree
 import io.github.eslamasabry.oc.ui.kit.status.KitStepTreeActions
 import io.github.eslamasabry.oc.ui.kit.status.KitStepTreeKind
@@ -79,15 +78,17 @@ public class KitStepFoldLine(
  * and one thin rail runs from each glyph's bottom to the next one's top (the step tree's sequence, quiet, in the
  * tree's own ink: 1.5 dp, Brutal 2 dp of ink, Paper a 1 dp rule; mirrored in Arabic).
  *
- * [fold] is the first row while older steps are folded; [earlier] are those steps, shown under it while it is open
- * (they unfold with the kit's one layout motion: STANDARD in, QUICK out, instant under reduced motion). A step that
- * arrives while the list is shown fades in and rises into place over STANDARD. Nothing here moves at rest: the only
- * moving mark is a running step's light, which runs on frames (so it stops with the window) and ends with the step.
+ * [fold] is the first row while older steps are folded; [earlier] are those steps, shown under it while it is open. A
+ * caller that keys its rows draws each through [KitStepItem] instead (owner 2026-11-14, "clipping flashing"): the
+ * earlier rows unfold one after another from the top like an accordion (#052, #002), a row that arrives grows in
+ * (#001) so the reply below moves smoothly instead of jumping, and a row that a fold's edge crosses is faint, as is
+ * the rail's ink to it, never cut at full ink. Nothing here moves at rest: the only moving mark is a running step's
+ * light, which runs on frames while the app is on screen and ends with the step.
  *
  * States: with or without the fold row, folded or open; a step arriving
  * Text: frame (the steps' own roles; the fold row Secondary, its note Caption)
  * Cap: 700 dp, as the reply column
- * Motion: KitReveal for the earlier steps; RailNode's arrival for a new step; nothing at rest
+ * Motion: KitStepReveal (STANDARD in, QUICK out, staggered; instant under reduced motion); nothing at rest
  * Replaces: [KitWorkLine]'s summary line and its separate "Thought" line in the transcript
  */
 @Composable
@@ -107,15 +108,21 @@ public fun KitStepList(
             .testTag(STEP_LIST_TAG)
             .onPlaced { rail.root = it }
             .drawBehind {
+                // A row a moving fold hides is off the rail; the ink to a row partly in view is as faint as the row.
+                val shown = rail.spans.entries.map { (k, span) -> span to (rail.shares[k]?.invoke() ?: 1f) }.filter { it.second > MIN_SHARE }
                 val strokes =
                     stepListRail(
-                        rail.spans.values.toList(),
+                        shown.map { it.first },
                         x = m.glyph.toPx() / 2f,
                         width = size.width,
                         rtl = layoutDirection == LayoutDirection.Rtl,
                         bend = StepTreeDims.BEND.dp.toPx(),
                     )
-                drawStepStrokes(strokes, ink)
+                val shares = shown.sortedBy { it.first.start }.map { it.second }
+                strokes.forEachIndexed { i, stroke ->
+                    val a = minOf(shares.getOrElse(i) { 1f }, shares.getOrElse(i + 1) { 1f })
+                    drawStepStrokes(listOf(stroke), ink, alpha = a * a)
+                }
             },
     ) {
         // The words keep one column in from the rail; each step's node is drawn back in that free column.
@@ -123,15 +130,21 @@ public fun KitStepList(
             CompositionLocalProvider(LocalKitStepRail provides rail) {
                 if (fold != null) StepFoldRow(fold)
                 if (earlier != null)
-                    KitReveal(visible = fold?.open == true) {
+                    KitStepReveal(visible = fold?.open == true) {
                         Column(Modifier.fillMaxWidth()) { earlier() }
                     }
                 steps()
             }
-            SideEffect { rail.settled = true }
+            SideEffect {
+                rail.settled = true
+                rail.arrived()
+            }
         }
     }
 }
+
+/** A row less in view than this is off the rail while its fold moves. */
+private const val MIN_SHARE = .02f
 
 /**
  * The rail of a [KitStepList]: one quiet line from each node's bottom to the next node's top, in the order shown, on

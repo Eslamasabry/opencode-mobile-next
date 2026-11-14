@@ -46,7 +46,9 @@ internal fun KitStepTile(
         glyphColor ?: when {
             live -> colors.accent
             look == KitStepNodeLook.Queued -> colors.text3
-            else -> colors.text2
+            // Owner 2026-11-14 ("icons are tiny and unrecognisable"): a step's glyph is drawn near the words' own ink,
+            // so a read, a search, an edit and a command tell apart at arm's length.
+            else -> colors.text1.copy(alpha = colors.text1.alpha * GLYPH_INK)
         }
     Box(modifier.size(size).testTag("kit-step-node"), contentAlignment = Alignment.Center) {
         KitToolGlyph(icon, glyph, size * GLYPH_SHARE * glyphScale)
@@ -72,10 +74,14 @@ internal fun KitStepTile(
 }
 
 /**
- * The glyph's share of its node. Flutter's 0.6 sat in a tile; bare, the glyph takes a little more of the square so it
- * reads at the same weight as the words beside it.
+ * The glyph's share of its node. Flutter's 0.6 sat in a tile; bare, the glyph fills most of the square (owner
+ * 2026-11-14: at 0.7 the glyphs' ink was about 11 dp and read as tiny): 17 dp in the 20 dp node, its ink about 14 dp,
+ * still clear of the step light's outline at the node's edge.
  */
-internal const val GLYPH_SHARE: Float = .7f
+internal const val GLYPH_SHARE: Float = .85f
+
+/** How strong a still step's glyph is against the words' primary ink. */
+internal const val GLYPH_INK: Float = .82f
 
 /** A still outline inside the tile's own edge (Dart `_Look.still`). */
 @Composable

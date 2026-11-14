@@ -65,8 +65,11 @@ private const val WORDS_SHARE = .3f // F: lib/ui/kit/chat/kit_tool_row.dart:576
 
 /**
  * A step inside an opened [KitStepTimeline] (Dart `_KitToolRowState._buildTimelineStep`, kit_tool_row.dart:400-709):
- * ONE line, 32 dp (taller only for larger text). A shell step's line is its command in mono; any other step reads as
- * one sentence, "Read lib/x.dart", "Edit checkout_test.dart +3 −1". Its node (the step's glyph in a small tile; the
+ * ONE line, 32 dp (taller only for larger text). Every step reads as one sentence, "Ran tests", "Read lib/x.dart",
+ * "Edit checkout_test.dart +3 −1" (owner 2026-11-14: a shell step's raw command as its line made eleven rows read
+ * the same; the command lives in the opened step, in mono); only a shell step with no words of its own shows its
+ * command. [group]: the row stands for several steps that open in place under it, and carries the fold chevron, which
+ * turns as it opens (#052). Its node (the step's glyph in a small tile; the
  * light while it runs) sits on the rail and nothing else marks the line: no frame, no fill, no chevron. The end says
  * how the step stands: the running time, how long it took, or the status word. A tap opens it; the opened body sits at
  * the text's own x under the line and fades in over QUICK. A step that opens another page keeps a forward chevron.
@@ -79,6 +82,7 @@ internal fun TimelineStep(
     modifier: Modifier,
     body: (@Composable () -> Unit)?,
     onOpen: (() -> Unit)?,
+    group: Boolean = false,
 ) {
     val m = railMeasures()
     val tokens = LocalKitTokens.current
@@ -87,11 +91,11 @@ internal fun TimelineStep(
     val wide = m.wide
     // F: lib/ui/kit/chat/kit_tool_row.dart:430 the first line sits in the middle of the 32 dp
     val pad = (m.stepLine - m.first) / 2 // F: lib/ui/kit/chat/kit_tool_row.dart:430
-    // F: lib/ui/kit/chat/kit_tool_row.dart:432-438 (native folds not-run into Stopped, read as quiet)
-    val tone = if (live || status == KitToolStatus.Failed) TextTone.Primary else TextTone.Secondary
+    // Owner 2026-11-14 ("organised", D1): what a step did reads in the primary ink; a stopped or queued step is quiet.
+    val tone = if (status == KitToolStatus.Stopped || status == KitToolStatus.Pending) TextTone.Secondary else TextTone.Primary
     val subject = view.subject?.takeIf { it.isNotEmpty() }
     val detail = view.detail?.takeIf { it.isNotEmpty() }
-    val shellLine = view.kind == KitToolKind.Shell && subject != null
+    val shellLine = view.kind == KitToolKind.Shell && subject != null && view.title.isBlank()
     val hasCounts = view.added != null || view.removed != null
     val open = opened && body != null
 
@@ -110,11 +114,11 @@ internal fun TimelineStep(
         when {
             shellLine -> null
             subject != null -> {
-                { KitMonoText(redacted(subject), tone = tone, cut = KitMonoCut.Middle, maxLines = 1) }
+                { KitMonoText(redacted(subject), tone = TextTone.Secondary, cut = KitMonoCut.Middle, maxLines = 1) }
             }
             detail != null -> {
                 {
-                    KitText(redacted(detail), role = TypeRole.Secondary, tone = TextTone.Tertiary, maxLines = if (wide) 3 else 1) // F: lib/ui/kit/chat/kit_tool_row.dart:454
+                    KitText(redacted(detail), role = TypeRole.Secondary, tone = TextTone.Secondary, maxLines = if (wide) 3 else 1) // F: lib/ui/kit/chat/kit_tool_row.dart:454
                 }
             }
             else -> null
@@ -196,8 +200,8 @@ internal fun TimelineStep(
                 { KitText(view.statusLabel, role = TypeRole.Secondary, tone = TextTone.Secondary, maxLines = wordLines) }
             }
         }
-    // Only the group's line has a chevron; a step that opens another page keeps its forward arrow (it leaves this list).
-    val forward = onOpen != null && body == null
+    // Only a group's line has a chevron; a step that opens another page keeps its forward arrow (it leaves this list).
+    val forward = onOpen != null && body == null && !group
 
     val lineBox: @Composable BoxScope.() -> Unit = {
         Box(Modifier.fillMaxWidth().heightIn(min = m.stepLine).align(Alignment.CenterStart).testTag("kit-step-line"), contentAlignment = Alignment.CenterStart) {
@@ -209,6 +213,11 @@ internal fun TimelineStep(
                 if (words != null) {
                     Spacer(Modifier.width(Space.S2.dp)) // F: lib/ui/kit/chat/kit_tool_row.dart:573
                     Box(Modifier.share(WORDS_SHARE).testTag("kit-tool-end")) { words() }
+                }
+                if (group) {
+                    Spacer(Modifier.width(Space.S1.dp))
+                    // #052: the one fold chevron, turning half a turn as the steps open under the row.
+                    KitFoldChevron(opened, Modifier.testTag(STEP_RUN_CHEVRON_TAG))
                 }
                 if (forward) {
                     Spacer(Modifier.width(Space.S1.dp)) // F: lib/ui/kit/chat/kit_tool_row.dart:581
@@ -239,6 +248,19 @@ internal fun TimelineStep(
     ) {
         Column(Modifier.fillMaxWidth()) {
             when {
+                group ->
+                    Target { target ->
+                        KitTappable(
+                            onClick = onToggle,
+                            modifier =
+                                target.then(spoken).semantics {
+                                    if (opened) collapse { onToggle(); true } else expand { onToggle(); true }
+                                },
+                            role = KitTappableRole.Row,
+                            shape = KitShapeId.Tile,
+                            content = lineBox,
+                        )
+                    }
                 body != null ->
                     Target { target ->
                         KitTappable(
@@ -280,6 +302,9 @@ internal fun TimelineStep(
         }
     }
 }
+
+/** A group row's fold chevron, for tests. */
+public const val STEP_RUN_CHEVRON_TAG: String = "kit-step-run-chevron"
 
 /** At most [share] of the line's width (a child of a Row measured before the weighted ones). */
 private fun Modifier.share(share: Float): Modifier = layout { measurable, constraints ->
