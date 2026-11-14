@@ -499,7 +499,7 @@ private fun PermissionDetailsSheet(
                     .mapNotNull { fact ->
                         // Audit 1: the tool is said in plain words ("File edit"), never as its id ("edit").
                         if (fact is PermissionFact.Tool)
-                            ask?.let { KitTechnicalValue(stringResource(Res.string.chatRequestDetailTool), askToolKind(it)).copy(copyable = false) }
+                            ask?.let { KitTechnicalValue(stringResource(Res.string.chatRequestDetailTool), redactor.details(askToolKind(it))).copy(copyable = false) }
                         else permissionFactValue(fact, redactor).copy(copyable = false)
                     }
             val scope = request?.takeIf { offersAlways }?.let(AlwaysScopes::of)?.let { scopeWords(it, mask) }

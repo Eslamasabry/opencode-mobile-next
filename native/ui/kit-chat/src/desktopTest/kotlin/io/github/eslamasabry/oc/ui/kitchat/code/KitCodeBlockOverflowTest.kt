@@ -173,7 +173,7 @@ class KitCodeBlockOverflowTest {
                 ChatTestTheme {
                     Box(Modifier.width(300.dp).testTag("blk")) {
                         KitCodeBlock(
-                            source = List(14) { "W".repeat(120) }.joinToString("\n"),
+                            source = List(8) { "W".repeat(120) }.joinToString("\n"),
                             kind = KitCodeKind.Code,
                             onCopy = {},
                         )
