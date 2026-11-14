@@ -729,4 +729,5 @@
     <string name="chatRequestAskReadFolder">Прочитать эту папку?</string>
     <string name="appUpdateUpdatedTo">Обновлено до версии %1$s</string>
     <string name="capabilityScreenHeading">Что умеет этот сервер</string>
+    <string name="connectUpdatingPhone">Обновление OpenCode на этом телефоне…</string>
 </resources>
