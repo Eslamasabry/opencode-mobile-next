@@ -119,6 +119,10 @@ public enum class ToolPhrase {
     MessageToAgent,
     /** `chatUiLoadTools` ("Load tools"). */
     LoadTools,
+    /** `chatUiStopBackgroundTask` ("Stopped a background task"): Claude Code's TaskStop / KillShell. */
+    StopBackgroundTask,
+    /** `chatUiReadTaskOutput` ("Read a background task's output"): Claude Code's TaskOutput / BashOutput. */
+    ReadTaskOutput,
     /** `chatUiToolSearchedConnectors` ("Searched connectors"). */
     SearchedConnectors,
     /** `chatUiToolShowCard` ("Show card"). */
@@ -240,6 +244,8 @@ public data class ToolFacts(
     /** The native v2 `subagent` tool (not OpenCode's `task`). */
     val nativeSubagent: Boolean = false,
     val notice: ToolNotice? = null,
+    /** A shell step's command in plain terms (what ran, after its set-up); null for every other kind. */
+    val shell: ShellIntent? = null,
 )
 
 /** [toolFacts] of a tool part; a part with no state reads as a finished call (Dart `toolLabel` with no state). */
@@ -265,6 +271,7 @@ public fun toolFacts(rawName: String, state: ToolState): ToolFacts {
     var removed: Int? = null
     var exitCode: Int? = null
     var notice: ToolNotice? = null
+    var shell: ShellIntent? = null
 
     fun count(kind: ToolCountKind, value: Long) {
         details += ToolDetail.Count(ToolCount(kind, value))
@@ -315,6 +322,7 @@ public fun toolFacts(rawName: String, state: ToolState): ToolFacts {
             phrase = ToolPhrase.Shell
             subject = jsonText(input["command"])
             technical = true
+            shell = shellIntent(subject)
             // OpenCode's bash tool says in words what the command is for.
             jsonText(input["description"])?.let { details += ToolDetail.ServerText(it) }
             exitCode = jsonWholeNumber(metadata["exit"])?.toInt()
@@ -468,10 +476,19 @@ public fun toolFacts(rawName: String, state: ToolState): ToolFacts {
             subject = if (phrase == ToolPhrase.MessageSummary) null else message.summary
         }
         name == "toolsearch" -> {
-            // Claude Code looking up which of its tools to load.
+            // Claude Code looking up which of its tools to load. "select:TaskStop,Monitor" names tools by id: they read as
+            // words ("Task stop, Monitor"), as a quiet second label, never the raw query in mono.
             kind = ToolKind.Generic
             phrase = ToolPhrase.LoadTools
-            subject = jsonText(input["query"])
+            toolSearchWords(jsonText(input["query"]))?.let { details += ToolDetail.ServerText(it) }
+        }
+        name in STOP_TASK_NAMES -> {
+            kind = ToolKind.Generic
+            phrase = ToolPhrase.StopBackgroundTask
+        }
+        name in TASK_OUTPUT_NAMES -> {
+            kind = ToolKind.Generic
+            phrase = ToolPhrase.ReadTaskOutput
         }
         isConnectorSearchTool(rawName) -> {
             // The agent searching the connector catalogue already on this phone.
@@ -495,7 +512,8 @@ public fun toolFacts(rawName: String, state: ToolState): ToolFacts {
             val mcp = MCP_ID.find(rawName)
             val words = toolIdWords(rawName)
             when {
-                own != null && own.isNotEmpty() && own != rawName.trim() -> {
+                // A title that only repeats the id ("Taskstop" for TaskStop) is not the server's own words.
+                own != null && own.isNotEmpty() && idKey(own) != idKey(rawName) -> {
                     phrase = ToolPhrase.ServerTitle
                     titleArgs = listOf(own)
                 }
@@ -529,6 +547,7 @@ public fun toolFacts(rawName: String, state: ToolState): ToolFacts {
         exitCode = exitCode,
         nativeSubagent = name == "subagent",
         notice = notice,
+        shell = shell,
     )
 }
 
@@ -586,6 +605,22 @@ private val CONNECTOR_SEARCH_NAMES = setOf("mcp__oc-ui__find_connectors", "oc-ui
 private val CHILD_SESSION_KEYS = listOf("sessionId", "sessionID", "session_id")
 
 private val MCP_ID = Regex("^mcp__(.+?)__(.+)$")
+
+/** Claude Code's tools that stop a background task, and those that read one's output (ids lower-cased). */
+private val STOP_TASK_NAMES = setOf("taskstop", "killshell", "killbash", "kill_shell", "task_stop")
+private val TASK_OUTPUT_NAMES = setOf("taskoutput", "bashoutput", "task_output", "bash_output")
+
+/** An id or a title reduced to its letters and digits, lower case: "TaskStop", "Taskstop" and "task_stop" are one. */
+private fun idKey(value: String): String = value.trim().lowercase().filter { it.isLetterOrDigit() }
+
+/** A tool search's query as words: "select:TaskStop,Monitor" → "Task stop, Monitor"; plain words stay as they are. */
+internal fun toolSearchWords(query: String?): String? {
+    val q = query?.trim()?.ifEmpty { null } ?: return null
+    if (!q.startsWith("select:", ignoreCase = true)) return q
+    val names = q.substringAfter(':').split(',').map { toolIdWords(it) }.filter { it.isNotEmpty() }
+    if (names.isEmpty()) return null
+    return names.joinToString(", ") { it.replaceFirstChar { c -> c.uppercase() } }
+}
 private val CAMEL_BOUNDARY = Regex("([a-z0-9])([A-Z])")
 private val ID_SEPARATORS = Regex("[_\\-.\\s]+")
 private val UNDERSCORES = Regex("[_]+")
