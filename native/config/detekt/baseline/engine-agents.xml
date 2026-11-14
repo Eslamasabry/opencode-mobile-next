@@ -235,8 +235,6 @@
     <ID>MaxLineLength:AgentPins.kt$AgentPins.Companion$/** Throws on a malformed file: the bundled pins are build input, so a bad file is a bug, never a runtime state. */</ID>
     <ID>MaxLineLength:AgentPins.kt$AgentPins.Companion$private fun JsonObject.str(key: String): String</ID>
     <ID>MaxLineLength:AgentPins.kt$AgentPins.Companion$requireNotNull(AgentArchitecture.fromWire(arch)) { "Unknown architecture." } to artifact(a.jsonObject)</ID>
-    <ID>MaxLineLength:AgentPinsParityTest.kt$AgentPinsParityTest$"https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.3-6604829099950080/linux-arm/cli_linux_arm64.tar.gz"</ID>
-    <ID>MaxLineLength:AgentPinsParityTest.kt$AgentPinsParityTest$"https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.3-6604829099950080/linux-x64/cli_linux_x64.tar.gz"</ID>
     <ID>MaxLineLength:AgentPinsParityTest.kt$AgentPinsParityTest$assertEquals(Regex("'([^']+)'").findAll(paseoTested).map { it.groupValues[1] }.toList(), pins.paseoTestedVersions)</ID>
     <ID>MaxLineLength:AgentPinsParityTest.kt$AgentPinsParityTest$assertEquals(Regex("'([^']+)'").findAll(tested).map { it.groupValues[1] }.toList(), pins.claudeCodeTestedVersions)</ID>
     <ID>MaxLineLength:AgentReadinessTest.kt$AgentReadinessTest$Line</ID>
