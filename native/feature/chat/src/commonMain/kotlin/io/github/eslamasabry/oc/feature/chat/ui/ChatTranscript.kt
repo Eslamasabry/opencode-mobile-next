@@ -1009,7 +1009,7 @@ private fun ChatRow(
                     onOpenSession,
                     thinking = row.live,
                 )
-            else KitQuietLine(words.thought(row.firstLine))
+            else FoldedThoughtLine(row.key, row.text, folds)
         }
         is WorkLineRow ->
             // P12-CHAT-CARDS: a turn's agent cards stand right under its work line, in the reply

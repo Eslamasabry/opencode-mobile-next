@@ -168,6 +168,17 @@ class ChatRunningTurnTest {
         }
 
     @Test
+    fun `audit 1 a thought the reading does not know folds under Thought and never prints its words`() =
+        runComposeUiTest {
+            val actions = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
+            val thought = "User asks to create file. Previous write attempts were declined."
+            val state = running(ThoughtRow("thought:m2/r1", "m1", thought, thought), prompt("m1", "make a file"))
+            setContent { Root { ChatScreen(state, actions, composerSlot, facts = TurnFactsUi()) } }
+            onNodeWithText("Thought").assertIsDisplayed()
+            onAllNodesWithText("User asks to create file", substring = true).assertCountEquals(0)
+        }
+
+    @Test
     fun `B-CHAT-063 a thought's body starts after its first line`() {
         assertEquals("second\n\nthird", thoughtBody("\n**first**\nsecond\n\nthird\n"))
         assertEquals("", thoughtBody("only one line"))
@@ -193,6 +204,32 @@ class ChatRunningTurnTest {
             onNode(hasTestTag("chat-stop-button") and hasAnyAncestor(hasTestTag("kit-composer-box")), useUnmergedTree = true).assertExists()
             onNodeWithTag("composer-status-strip", useUnmergedTree = true).assertDoesNotExist()
             onNode(hasTestTag("chat-model-button") and hasAnyAncestor(hasTestTag("kit-composer-box")), useUnmergedTree = true).assertExists()
+        }
+
+    @Test
+    fun `audit 1 the model chip says the model's name only, free or not, as the list and the home do`() =
+        runComposeUiTest {
+            val actions =
+                object : BasicComposerActions {
+                    override fun draftChanged(text: String) {}
+
+                    override suspend fun send(text: String): Boolean = true
+
+                    override suspend fun selectModel(choice: ComposerModel?, variant: String): Boolean = true
+                }
+            val pickle = ComposerModel("opencode", "big-pickle", "Big Pickle", supportsAttachments = false)
+            val ui =
+                BasicComposerUi(
+                    available = true,
+                    sending = false,
+                    steers = false,
+                    models = io.github.eslamasabry.oc.feature.chat.world.ComposerModels(choices = listOf(pickle), selected = pickle),
+                    targetKey = "p/s",
+                )
+            val chrome = ComposerChrome({ false }, { false }, {}, { null }, {}, { null }, {}, {}, { false }, freeModel = { true })
+            setContent { Root { Box(Modifier.width(360.dp)) { BasicComposer(ui, actions, chrome) } } }
+            onNodeWithText("Big Pickle", substring = true, useUnmergedTree = true).assertExists()
+            onAllNodesWithText("Free", substring = true, useUnmergedTree = true).assertCountEquals(0)
         }
 
     private object FixedClock : Clock {

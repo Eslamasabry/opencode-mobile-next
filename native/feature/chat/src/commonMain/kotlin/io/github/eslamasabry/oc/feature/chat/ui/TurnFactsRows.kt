@@ -281,6 +281,26 @@ internal fun ThoughtWorkLine(
     }
 }
 
+/**
+ * Audit 1, item 6: a thought the transcript's reading does not know (a row that arrived before the ledger held its part)
+ * is still a folded "Thought" line, never its words printed as a grey paragraph; opened, it shows the thought's text.
+ */
+@Composable
+internal fun FoldedThoughtLine(rowKey: String, text: String, folds: TranscriptFolds?) {
+    val key = "thought-line:$rowKey"
+    KitWorkLine(
+        label = stringResource(Res.string.kitMessageThought),
+        stateWords = null,
+        state = KitWorkState.Done,
+        expanded = folds?.open?.get(key) ?: false,
+        onToggle = { folds?.open?.put(key, it) },
+        icon = KitIcons.idea,
+        modifier = Modifier.padding(horizontal = Space.S4.dp).testTag("chat-work-line"),
+    ) {
+        if (text.isNotBlank()) KitQuietLine(text.trim())
+    }
+}
+
 /** How many of the newest steps a running work line keeps in view when opened (Dart `tail: 3`). */
 private const val RUNNING_TAIL = 3
 
