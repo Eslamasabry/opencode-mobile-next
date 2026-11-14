@@ -103,7 +103,7 @@ internal fun Modifier.kitScrollEdges(
                     val r = wholePx(from + (bottomReachPx?.invoke() ?: bottomReach.toPx())) - y0
                     if (r > 0f) drawRect(bottom.of(0f, 1f, kb, y0, y0 + r), Offset(0f, y0), Size(w, r), blendMode = BlendMode.DstOut)
                     val below = y0 + r
-                    val kept = wholePx((size.height - keepBottomPx()).coerceIn(below, size.height))
+                    val kept = wholePx((size.height - keepBottomPx()).coerceAtMost(size.height))
                     if (below < kept)
                         drawRect(Color.Black.copy(alpha = kb), Offset(0f, below), Size(w, kept - below), blendMode = BlendMode.DstOut)
                 }

@@ -549,6 +549,7 @@ private fun SheetLayer(state: KitSheetHostState) {
         val density = LocalDensity.current
         val chromeDp = with(density) { (state.chromeBottom - hostTop[0]).toDp() }
         val maxSheet = SheetLayout.tallHeight(maxHeight, if (state.chromeBottom.isNaN()) null else chromeDp)
+        val centredMax = maxHeight * SheetLayout.CONTENT_MAX_SHARE
         val half = maxHeight * 0.5f
         val growth = sheetGrowth(entry, half, maxSheet)
         when (placement) {
@@ -616,7 +617,7 @@ private fun SheetLayer(state: KitSheetHostState) {
                                     if (entry.grows && entry.height != KitSheetHeight.Content)
                                         Modifier.grownHeight(growth)
                                     // A centred panel sits in the middle of a wide window, away from the chrome.
-                                    else Modifier.heightIn(max = maxHeight * SheetLayout.CONTENT_MAX_SHARE)
+                                    else Modifier.heightIn(max = centredMax)
                                 )
                                 .predictiveShrink(back, TransformOrigin.Center)
                                 .clip(KitShapeId.Dialog.shape()),
