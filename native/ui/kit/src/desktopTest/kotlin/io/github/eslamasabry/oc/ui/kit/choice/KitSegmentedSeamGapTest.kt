@@ -76,8 +76,8 @@ class KitSegmentedSeamGapTest {
         val map = onRoot().captureToImage().toPixelMap()
         // A line near the track's top, across Dark and Saver (Light chosen): the old seam stood at their meeting edge.
         val y = (seg.top.value + 4f).toInt()
-        val from = (seg.left.value + seg.width.value * 0.55f).toInt()
-        val to = (seg.left.value + seg.width.value * 0.9f).toInt()
+        val from = (seg.left.value + (seg.right - seg.left).value * 0.55f).toInt()
+        val to = (seg.left.value + (seg.right - seg.left).value * 0.9f).toInt()
         val first = map[from, y]
         val odd = (from..to).filter { x ->
             val p = map[x, y]
