@@ -225,6 +225,22 @@ class ComposerModelsFilesTest {
         }
 
     @Test
+    fun `LOAD-6 while the conversation loads the box keeps its words and Send waits for the load`() = runComposeUiTest {
+        val actions = Actions()
+        val loading = mutableStateOf(true)
+        val loadingChrome =
+            ComposerChrome({ false }, { false }, {}, { null }, {}, { null }, {}, {}, { false }, loading = { loading.value })
+        setContent { Theme { BasicComposer(ui(draft = DraftFacts(text = "hello")), actions, loadingChrome) } }
+        onControl("chat-send-button").assertIsNotEnabled()
+        onControl("chat-send-button").performClick()
+        assertEquals(emptyList(), actions.calls.filter { it.startsWith("send") }, "nothing is sent while the conversation loads")
+        runOnIdle { loading.value = false }
+        onControl("chat-send-button").assertIsEnabled()
+        onControl("chat-send-button").performClick()
+        assertEquals(listOf("send <hello>"), actions.calls.filter { it.startsWith("send") })
+    }
+
+    @Test
     fun `09-10_2 a running pick keeps Send off and files alone can send`() = runComposeUiTest {
         val actions = Actions()
         val state = mutableStateOf(ui(pickingFile = true))
