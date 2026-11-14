@@ -43,7 +43,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalClipboardManager
@@ -600,7 +599,7 @@ private fun FieldBox(
                     keyboardOptions = keyboard,
                     onKeyboardAction = submit,
                     interactionSource = interactions,
-                    cursorBrush = SolidColor(colors.accent),
+                    cursorBrush = kitCaret(colors.accent),
                     textObfuscationMode =
                         if (revealed) TextObfuscationMode.Visible
                         else TextObfuscationMode.RevealLastTyped,
@@ -640,7 +639,7 @@ private fun FieldBox(
         onKeyboardAction = submit,
         lineLimits = lines,
         interactionSource = interactions,
-        cursorBrush = SolidColor(colors.accent),
+        cursorBrush = kitCaret(colors.accent),
         decorator = { decorator(it) },
     )
 }
