@@ -173,7 +173,7 @@ sync() {
     @Test
     fun `B-LINUX-114 shipped lock freezes every HTTPS tarball with SRI`() {
         assertEquals(PaseoPhoneScripts.PACKAGE_LOCK_SHA256, sha256Hex(lock.toByteArray()))
-        assertEquals("0.15.3", packages.getValue("node_modules/@getpaseo/cli").jsonObject.getValue("version").jsonPrimitive.content)
+        assertEquals("0.15.4", packages.getValue("node_modules/@getpaseo/cli").jsonObject.getValue("version").jsonPrimitive.content)
         for ((key, value) in packages) {
             if (key.isEmpty()) continue
             assertTrue(value.jsonObject.getValue("resolved").jsonPrimitive.content.startsWith("https://registry.npmjs.org/"), key)

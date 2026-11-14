@@ -142,7 +142,7 @@ class AgentPinsParityTest {
             "nodeX64Sha256" to "361718c444e49af2ca5a110c83ba6a8901143f23ab285ebbef0341f391f482a9",
         )
         fun dartConst(name: String) = node.getValue(name)
-        // Paseo moved to 0.15.3 after the Flutter freeze (B-193): the pins equal the install script's own checks.
+        // Paseo moved to 0.15.4 after the Flutter freeze (B-193): the pins equal the install script's own checks.
         assertEquals(PaseoPhoneScripts.VERSION, pins.paseo.version)
         assertEquals(PaseoPhoneScripts.PACKAGE_LOCK_SHA256, pins.paseo.packageLockSha256)
         assertEquals(PaseoPhoneScripts.CLI_SHA256, pins.paseo.cliSha256)
@@ -151,10 +151,10 @@ class AgentPinsParityTest {
         assertEquals(dartConst("nodeVersion"), pins.node.version)
         assertEquals(dartConst("nodeArm64Sha256"), pins.node.sha256[AgentArchitecture.Arm64])
         assertEquals(dartConst("nodeX64Sha256"), pins.node.sha256[AgentArchitecture.X64])
-        assertEquals("/home/oc/.local/share/oc-paseo/0.15.3-9a676a737ac4", PaseoPhoneScripts.INSTALL_DIRECTORY)
+        assertEquals("/home/oc/.local/share/oc-paseo/0.15.4-b61e82dd777f", PaseoPhoneScripts.INSTALL_DIRECTORY)
         val tested = Regex("claudeCodeTestedVersions = \\{([^}]*)\\}").find(testedVersions)!!.groupValues[1]
         assertEquals(Regex("'([^']+)'").findAll(tested).map { it.groupValues[1] }.toList(), pins.claudeCodeTestedVersions)
         val paseoTested = Regex("paseoTestedVersions = \\{([^}]*)\\}").find(testedVersions)!!.groupValues[1]
-        assertEquals(Regex("'([^']+)'").findAll(paseoTested).map { it.groupValues[1] }.toList() + "0.15.3", pins.paseoTestedVersions)
+        assertEquals(Regex("'([^']+)'").findAll(paseoTested).map { it.groupValues[1] }.toList() + listOf("0.15.3", "0.15.4"), pins.paseoTestedVersions)
     }
 }
