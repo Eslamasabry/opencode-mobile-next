@@ -1,3 +1,5 @@
+@file:Suppress("TooGenericExceptionCaught")
+
 package io.github.eslamasabry.opencode_mobile.graph
 
 import android.app.Application
@@ -67,6 +69,9 @@ class PhoneAgentAutoUpdate(
                 // The decision reads the kept facts of the last reads (no probe), so there is nothing to read again.
                 override suspend fun refresh() = Unit
 
+                // An update an earlier run of the app started and did not finish (stopped or crashed mid-install).
+                override val resume: AgentId? get() = phones.interruptedUpdate()
+
                 // The first look after an app update (or before any read) asks for one read of the installed
                 // agents' versions, so the update never depends on the Agents page having been opened.
                 override val readDue: Boolean get() = phones.updateReadDue()
@@ -116,7 +121,9 @@ class PhoneAgentAutoUpdate(
                     return when (answer) {
                         PhoneAgentInstallResult.Started -> {
                             log.i { "update started" }
-                            appScope.launch { finish(agent) }
+                            // Kept until the install ends, so a stop or crash in the middle resumes it next run.
+                            phones.markUpdating(agent)
+                            appScope.launch(dispatchers.io) { safely { finish(agent) } }
                             true
                         }
                         is PhoneAgentInstallResult.Refused ->
@@ -144,27 +151,39 @@ class PhoneAgentAutoUpdate(
                     now - since > BUSY_BOUND_MS
                 }
             }
-        // Everything runs off the main thread: the decision reads the helper's status in the phone's Linux.
+        // Everything runs off the main thread: the decision reads the helper's status in the phone's Linux. Nothing the
+        // updater does may end the app: an error in a look is logged by its type only and the next look goes on.
         appScope.launch(dispatchers.io) {
-            updater.decision.collect {
-                status.set(it)
-                phones.setUpdateNote(it)
-            }
+            safely { updater.decision.collect { status.set(it); phones.setUpdateNote(it) } }
         }
         appScope.launch(dispatchers.io) {
-            // Let the app finish starting before the first look.
             delay(FIRST_LOOK.seconds)
-            phones.warmForUpdate()
-            updater.changed()
-            merge(combine(setup.progress, leases.busy) { _, _ -> }, settled).collect { updater.changed() }
+            safely { phones.warmForUpdate() }
+            safely { updater.changed() }
+            safely {
+                merge(combine(setup.progress, leases.busy) { _, _ -> }, settled).collect {
+                    safely { updater.changed() }
+                }
+            }
         }
         appScope.launch(dispatchers.io) {
             delay(FIRST_LOOK.seconds)
             while (true) {
-                phones.warmForUpdate()
-                updater.changed()
+                safely { phones.warmForUpdate() }
+                safely { updater.changed() }
                 delay(LOOK_EVERY.seconds)
             }
+        }
+    }
+
+    /** Runs [block]; any error but a cancellation is logged by its type and swallowed (the updater never ends the app). */
+    private suspend fun safely(block: suspend () -> Unit) {
+        try {
+            block()
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            log.i { "agent update look failed: ${e::class.simpleName}" }
         }
     }
 
@@ -176,7 +195,12 @@ class PhoneAgentAutoUpdate(
             val installation = phones.state.value.installation?.takeIf { it.id == agent.raw }
             when (installation?.phase) {
                 PhoneAgentInstallPhase.Installing -> Unit
-                PhoneAgentInstallPhase.Done,
+                PhoneAgentInstallPhase.Done -> {
+                    restartOlderHelper()
+                    phones.markUpdating(null)
+                    return
+                }
+                // No record of it (yet or any more): the mark stays, so the next run checks it again.
                 null -> {
                     restartOlderHelper()
                     return
@@ -190,7 +214,15 @@ class PhoneAgentAutoUpdate(
     private suspend fun restartOlderHelper() {
         val facts = phones.updateFacts() ?: return
         val pinned = AgentPins.builtIn.paseo.version
-        if (!facts.helperRunning || facts.helperVersion == null || facts.helperVersion == pinned) return
+        if (!facts.helperRunning) {
+            // The helper is not up (it was not running, or the update kept it from starting): start it the way any
+            // connect does, so the agents' conversations connect again without a tap. It needs the app in front;
+            // otherwise the next connect starts it.
+            val started = helper.checkHelper()
+            log.i { "helper start after the update ${if (started is Outcome.Ok) "done" else "refused"}" }
+            return
+        }
+        if (facts.helperVersion == null || facts.helperVersion == pinned) return
         // Refused while work runs: the older helper then keeps running and the next start brings the pinned one.
         val answer = helper.restartForUpdate()
         log.i { "helper restart ${if (answer is Outcome.Ok) "done" else "refused"}" }

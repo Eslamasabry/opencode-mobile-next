@@ -797,6 +797,7 @@ internal class GraphChatWorld(
                         val down = waiting || link != ChatLink.Live
                         when {
                             down && phone == PhoneServerWait.Updating -> ChatServerWait.Updating
+                            down && phone == PhoneServerWait.UpdatingAgents -> ChatServerWait.UpdatingAgents
                             down && phone == PhoneServerWait.Starting -> ChatServerWait.Starting
                             waiting -> ChatServerWait.Connecting
                             else -> null
@@ -817,6 +818,10 @@ internal class GraphChatWorld(
     private val appStartsServer: Boolean
         get() = serverOnThisPhone || serverIsAgentHelper
 
+    /** The phone's agents are being updated and this conversation's server is their helper: it waits and says so. */
+    private fun agentsUpdating(): Boolean =
+        phoneServer?.waiting(ref.profileId)?.value == PhoneServerWait.UpdatingAgents
+
     /** This phone's server is starting or updating: a wait for it does not count toward [NOT_READY_LIMIT_MS]. */
     private fun phoneBusy(): Boolean =
         (phoneServer?.waiting(ref.profileId)?.value ?: PhoneServerWait.None) != PhoneServerWait.None
@@ -830,12 +835,12 @@ internal class GraphChatWorld(
             is Failure.Refused ->
                 failure.reason == RefusalReason.StaleScope || failure.reason == RefusalReason.ProfileClosing
             is Failure.Network,
-            is Failure.TimedOut -> appStartsServer
+            is Failure.TimedOut -> appStartsServer || agentsUpdating()
             is Failure.Busy ->
-                appStartsServer &&
+                (appStartsServer &&
                     (failure.kind == BusyKind.Starting ||
                         failure.kind == BusyKind.Stopping ||
-                        failure.kind == BusyKind.Overloaded)
+                        failure.kind == BusyKind.Overloaded)) || agentsUpdating()
             else -> false
         }
 
@@ -910,7 +915,7 @@ internal class GraphChatWorld(
             mutableLink.value = ChatLink.Offline
             // This phone's server: the app opens its connection by itself (after a start or an update), so the page
             // waits for it instead of failing. A computer's lost connection says so at once, as before.
-            if (appStartsServer && mutableLoad.value !is ChatLoad.Live) loadFailed(OFFLINE)
+            if ((appStartsServer || agentsUpdating()) && mutableLoad.value !is ChatLoad.Live) loadFailed(OFFLINE)
             else mutableLoad.value = ChatLoad.Failed(OFFLINE)
             publishVoiceConversation()
             return

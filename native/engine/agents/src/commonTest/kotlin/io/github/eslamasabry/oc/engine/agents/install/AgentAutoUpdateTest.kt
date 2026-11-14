@@ -73,6 +73,7 @@ class AgentAutoUpdateTest {
         override var switchPending: Boolean = false
         override var installProblem: Boolean = false
         override var metered: Boolean = false
+        override var resume: AgentId? = null
     }
 
     private class Jobs : AgentUpdateJobs {
@@ -214,6 +215,22 @@ class AgentAutoUpdateTest {
         updater.changed()
         assertEquals(AgentUpdateStep.NothingBehind, updater.decision.value.step)
     }
+
+    @Test
+    fun `AGENT-AUTO-UPDATE an update the app was stopped in the middle of runs again once, even with nothing known`() =
+        runTest {
+            // Force-stopped mid-install: the install forgot the agent's kept facts, so nothing counts as installed or
+            // behind; the interrupted update is still resumed, once.
+            val host = Host().apply {
+                installed = emptyList(); behind = emptySet(); helperBehind = false; resume = claude
+            }
+            val jobs = Jobs()
+            val updater = AgentAutoUpdater(host, jobs) { false }
+            updater.changed()
+            assertEquals(listOf(claude), jobs.started)
+            updater.changed()
+            assertEquals(listOf(claude), jobs.started)
+        }
 
     @Test
     fun `AGENT-AUTO-UPDATE a read that cannot finish is reported and not repeated this run`() = runTest {
