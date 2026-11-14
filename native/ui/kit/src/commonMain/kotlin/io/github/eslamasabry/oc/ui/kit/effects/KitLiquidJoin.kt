@@ -102,6 +102,12 @@ public sealed class KitLiquidJoinPart(
     internal var spec: KitLiquidPaneSpec? by mutableStateOf(null)
 
     /**
+     * What it reads (written by `kitLiquidFace`): the bar and the box their body's recording, a menu the page. A joined
+     * drop draws its side from its body's ([JoinedPaneNode]): one picture for the one body.
+     */
+    internal var backdrop: KitLiquidBackdrop? by mutableStateOf(null)
+
+    /**
      * Whether the face was last composed as the joined pane (written by `kitLiquidFace` in composition; read after it
      * in the same composition by a part that hosts its joined face outside a clip, and in the draw phase by the pane's
      * own touch light, which then leaves the light to the joined pane).
@@ -357,6 +363,11 @@ private class JoinedPaneNode(
                     dropIsMine = part === drop,
                     reachesCentre = drop.reachesCentre,
                 )
+        // One body reads one picture (cut audit 1, c14/c25: a darker rounded shape inside the joined bar and menu, about
+        // x385 y320 on the emulator): the menu's side used to draw from the page, which holds the bar's own face and the
+        // pills over the page, and its hold pulled the bar's tint into a band under the bar, ending in a rounded corner on
+        // the line where the two sides meet. A drop draws its side from its body's picture, as the body does.
+        val source = if (part is KitLiquidJoinDrop && theirs != null) partner?.backdrop ?: backdrop else backdrop
         // Only this pane's side is drawn, and it lies within reach/6 of this pane's own box.
         val origin = c.positionInWindow()
         val grow = reach / 6f + 2f
@@ -404,7 +415,7 @@ private class JoinedPaneNode(
         u.set(programs.lens, mode = 0f, res = res)
         back.renderEffect = platform.liquidJoinEffect(programs.lens, recipe.blurDp.dp.toPx() * res)
         back.record(small) {
-            scale(res, res, Offset.Zero) { translate(-local.x, -local.y) { backdrop.draw(this, c) } }
+            scale(res, res, Offset.Zero) { translate(-local.x, -local.y) { source.draw(this, c) } }
         }
         // 2. The tint eased over the band, then this side's cover.
         mask.record(full) {
