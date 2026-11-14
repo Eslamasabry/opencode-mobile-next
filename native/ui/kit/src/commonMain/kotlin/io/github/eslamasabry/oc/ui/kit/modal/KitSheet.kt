@@ -111,6 +111,7 @@ import io.github.eslamasabry.oc.ui.kit.effects.rememberKitLiquidSource
 import io.github.eslamasabry.oc.ui.kit.foundation.shape
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
+import io.github.eslamasabry.oc.ui.kit.motion.LocalKitGrowHost
 import io.github.eslamasabry.oc.ui.kit.motion.LocalKitGrowTitle
 import io.github.eslamasabry.oc.ui.kit.motion.KitGrowMotion
 import io.github.eslamasabry.oc.ui.kit.motion.kitMorphTarget
@@ -559,8 +560,9 @@ private fun SheetLayer(state: KitSheetHostState) {
         when (placement) {
             KitSheetPlacement.Bottom ->
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter) {
-                    // A sheet that grows out of its card (kitMorphSource) lets the morph carry it; it only fades.
-                    val morphs = entry.morph != null && KitMotion.state.travels
+                    // A sheet that grows out of its card (kitMorphSource) lets the morph carry it; it only fades. With no
+                    // grow host (the shell composes pages outside a shared-transition layout) there is no morph: slide.
+                    val morphs = entry.morph != null && KitMotion.state.travels && LocalKitGrowHost.current != null
                     AnimatedVisibility(
                         state.shown,
                         enter =
