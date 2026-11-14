@@ -125,7 +125,71 @@ internal val NoTouchLight: () -> Float = { 0f }
 
 /** A large pane a drop joins (the bar's capsule "bar", the message box "bottom"). */
 @Stable
-public class KitLiquidJoinBody internal constructor(owner: KitLiquidJoin, internal val name: String) : KitLiquidJoinPart(owner)
+public class KitLiquidJoinBody internal constructor(owner: KitLiquidJoin, internal val name: String) : KitLiquidJoinPart(owner) {
+    /** The last outlines traced for this body (plain fields: written and read in the draw phase). */
+    internal val outlines: JoinedOutlines = JoinedOutlines()
+}
+
+/**
+ * Owner 2026-11-14 (c26, the message box's running glow): a line drawn along a body joined to its drop runs round the
+ * one body of glass, never across the drop's foot along the body's own box. The band [widthPx] wide along this body's
+ * joined outline now, inside it ([centred] false) or centred on it, as an even-odd path in this body's own px (its box's
+ * top-left at [origin]); null while the body stands alone (its own box is then its outline). Read in the draw phase: it
+ * follows the drop as it rises, rests joined and leaves.
+ */
+public fun KitLiquidJoinBody.joinedBand(widthPx: Float, centred: Boolean, origin: Offset = Offset.Zero): androidx.compose.ui.graphics.Path? =
+    joinedPath(if (centred) -widthPx / 2f else 0f, if (centred) widthPx / 2f else widthPx, origin)
+
+/** Whether a drop is joined to this body now (snapshot read: a composition reading it runs again as a drop joins or leaves). */
+public val KitLiquidJoinBody.joined: Boolean get() = owner.partnerOf(this) != null
+
+/** The joined body's whole outline now, filled, in this body's own px (its box's top-left at [origin]); null while it stands alone. */
+public fun KitLiquidJoinBody.joinedFill(origin: Offset = Offset.Zero): androidx.compose.ui.graphics.Path? = joinedPath(0f, null, origin)
+
+private fun KitLiquidJoinBody.joinedPath(outer: Float, inner: Float?, origin: Offset): androidx.compose.ui.graphics.Path? {
+    val drop = owner.partnerOf(this) as? KitLiquidJoinDrop ?: return null
+    val me = rest
+    val them = drop.glass()
+    if (me.width <= 0f || me.height <= 0f || them.width <= 0f || them.height <= 0f) return null
+    val a = JoinBox.of(me.left, me.top, me.right, me.bottom, max(radius, 0f))
+    val b = JoinBox.of(them.left, them.top, them.right, them.bottom, max(drop.radius, 0f))
+    return outlines.path(a, b, drop.reach(), outer, inner, origin - me.topLeft)
+}
+
+/** A body's last few traced outlines, by their geometry (a glow asks for two or three widths every frame). */
+internal class JoinedOutlines {
+    private class Entry(val key: FloatArray, val path: androidx.compose.ui.graphics.Path)
+
+    private val entries = ArrayList<Entry>(SLOTS)
+
+    fun path(a: JoinBox, b: JoinBox, reach: Float, outer: Float, inner: Float?, shift: Offset): androidx.compose.ui.graphics.Path {
+        val key =
+            floatArrayOf(a.cx, a.cy, a.hx, a.hy, a.r, b.cx, b.cy, b.hx, b.hy, b.r, reach, outer, inner ?: Float.NaN, shift.x, shift.y)
+        entries.firstOrNull { it.key.contentEquals(key) }?.let { return it.path }
+        val path = androidx.compose.ui.graphics.Path()
+        path.fillType = androidx.compose.ui.graphics.PathFillType.EvenOdd
+        path.addPolygon(io.github.eslamasabry.oc.ui.design.effects.JoinOutline.trace(a, b, reach, outer), shift)
+        if (inner != null) path.addPolygon(io.github.eslamasabry.oc.ui.design.effects.JoinOutline.trace(a, b, reach, inner), shift)
+        if (entries.size >= SLOTS) entries.removeAt(0)
+        entries += Entry(key, path)
+        return path
+    }
+
+    private fun androidx.compose.ui.graphics.Path.addPolygon(points: FloatArray, shift: Offset) {
+        if (points.size < 6) return
+        moveTo(points[0] + shift.x, points[1] + shift.y)
+        var i = 2
+        while (i < points.size) {
+            lineTo(points[i] + shift.x, points[i + 1] + shift.y)
+            i += 2
+        }
+        close()
+    }
+
+    private companion object {
+        const val SLOTS = 6
+    }
+}
 
 /** A drop of the body named [body] (a menu, the jump pill), joined to it while both are liquid. */
 @Stable

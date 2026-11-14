@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.widthIn
 import io.github.eslamasabry.oc.ui.kit.foundation.kitShadowRoom
 import io.github.eslamasabry.oc.ui.kit.foundation.kitMayTruncate
 import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
@@ -138,11 +139,15 @@ public fun KitComposerBox(
         // The box's corner grows with the style's pane inset (Glass), as its face's does (kitSurfaceLook).
         StyleResolver.paneCorner(radius.value, style.knobs.corners, style.spec.tokens).dp
     val shadowRoom = io.github.eslamasabry.oc.ui.kit.foundation.kitShadowReach()
+    // Joined glass: the box is the body the jump pill joins ("bottom"), one body of glass while both are liquid; the
+    // running glow follows that one body's outline.
+    val joinBody = rememberKitLiquidJoinBody("bottom")
     KitComposerGlow(
         active = running,
         modifier = modifier.kitMaxWidth(CapRole.Conversation).fillMaxWidth(),
         choice = KitGlowChoice.of(appearance.activityGlow, appearance.softGlow),
         corner = corner,
+        join = joinBody,
     ) {
         val colors = LocalKitColors.current
         // E20-S30: on the chat's translucent bottom veil the face is translucent too (the surface colour at the veil's
@@ -183,8 +188,6 @@ public fun KitComposerBox(
         val hairline = io.github.eslamasabry.oc.ui.kit.foundation.kitHairline()
         // Glass: on the chat's overlaid bottom block the box is liquid glass over the transcript scrolling behind it
         // (Android 13+, where not held); null keeps the style's own face.
-        // Joined glass: the box is the body the jump pill joins ("bottom"), one body of glass while both are liquid.
-        val joinBody = rememberKitLiquidJoinBody("bottom")
         val liquid = kitLiquidFace(LiquidRole.Composer, LocalKitLiquidChrome.current, look.shape, join = joinBody)
         val slab = kitComposerSlab()
         // Nothing inside the box is glass of its own: its chips and Stop are parts of this one pane.
@@ -222,7 +225,9 @@ public fun KitComposerBox(
                 ) {
                     field()
                 }
-                if (!stacked) trailing() else fieldEnd()
+                // Stop at the end of the words' row keeps Send's inset (audit 2026-11-14: it sat 12 px from the rim while
+                // Send's disc sits a target's margin in), so the two read as one column of actions.
+                if (!stacked) trailing() else Row(Modifier.composerActionInset(tokens.minTarget), verticalAlignment = Alignment.CenterVertically) { fieldEnd() }
             }
             if (stacked) {
                 // At large text sizes choices get the full measure above the action targets.
@@ -529,6 +534,19 @@ public fun KitComposerStopRing(
         }
     }
 }
+
+/**
+ * The end margin a control at the end of the box's rows keeps so its face ends where Send's 40 dp disc does inside its
+ * [minTarget] target: half the difference. Nothing there (an empty slot): no margin, so the words keep the row.
+ */
+internal fun Modifier.composerActionInset(minTarget: Int): Modifier =
+    layout { measurable, constraints ->
+        val inset = ((minTarget - FlutterKitTokens.COMPOSER_ACTION_SIZE) / 2).dp.roundToPx().coerceAtLeast(0)
+        val max = if (constraints.hasBoundedWidth) (constraints.maxWidth - inset).coerceAtLeast(0) else constraints.maxWidth
+        val placeable = measurable.measure(constraints.copy(minWidth = 0, maxWidth = max))
+        val room = if (placeable.width > 0) inset else 0
+        layout(placeable.width + room, placeable.height) { placeable.placeRelative(0, 0) }
+    }
 
 /** E20-S30: the composer face's alpha on [veil] under [style]: the veil's, except Glass (its own pane) and no veil. */
 internal fun composerFaceAlpha(veil: ChromeVeil?, style: io.github.eslamasabry.oc.ui.design.style.Style): Float =
