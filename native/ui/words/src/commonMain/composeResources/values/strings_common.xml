@@ -358,6 +358,7 @@
     <string name="agentNotAnsweringPhone">%1$s on this phone isn't answering</string>
     <string name="workServerRestart">Restart</string>
     <string name="connectStartingPhone">Starting OpenCode on this phone…</string>
+    <string name="connectUpdatingPhone">Updating OpenCode on this phone…</string>
     <string name="serverRowConnected">Connected</string>
     <string name="phoneServerRowRestarting">Restarting</string>
     <string name="phoneServerRowNotRunning">Not running</string>

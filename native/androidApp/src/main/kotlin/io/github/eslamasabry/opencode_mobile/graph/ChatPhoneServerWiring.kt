@@ -10,7 +10,17 @@ import io.github.eslamasabry.oc.core.common.FeatureId
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.data.kv.PrefValue
+import io.github.eslamasabry.oc.core.common.AppCoroutineScope
 import io.github.eslamasabry.oc.feature.chat.world.ChatPhoneServer
+import io.github.eslamasabry.oc.feature.chat.world.PhoneServerWait
+import io.github.eslamasabry.oc.feature.phone.presentation.PhoneServerFacts
+import io.github.eslamasabry.oc.feature.phone.presentation.RecoveryFacts
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import io.github.eslamasabry.oc.feature.phone.presentation.PhoneServerSource
 
 /*
@@ -26,6 +36,7 @@ class AndroidChatPhoneServer(
     private val stores: PreviewStores,
     private val server: PhoneServerSource,
     private val agentHost: Lazy<AppLocalAgentHostStarter>,
+    private val appScope: AppCoroutineScope,
 ) : ChatPhoneServer {
     override fun runsHere(profile: ProfileId): Boolean =
         (stores.prefs.get("oc.builtinServerOwner") as? PrefValue.Str)?.value == profile.raw
@@ -47,7 +58,27 @@ class AndroidChatPhoneServer(
         if (isAgentHelper(profile)) agentHost.value.ensureHelper(profile)
         else Outcome.Ok(Unit)
 
+    /**
+     * Starting (the one start path, or the crash recovery about to start it) or stopped for the OpenCode update (the
+     * automatic one included): a conversation of this phone waits and says so instead of failing.
+     */
+    private val wait: StateFlow<PhoneServerWait> by lazy {
+        server.facts.map(::waitOf).distinctUntilChanged().stateIn(appScope, SharingStarted.Eagerly, waitOf(server.facts.value))
+    }
+
+    override fun waiting(profile: ProfileId): StateFlow<PhoneServerWait> = if (runsHere(profile)) wait else NOT_WAITING
+
     override suspend fun restart(profile: ProfileId): Outcome<Unit> =
         if (runsHere(profile)) server.restart()
         else Outcome.Failed(Failure.Unavailable(FeatureId("restartPhoneServer")))
 }
+
+private val NOT_WAITING: StateFlow<PhoneServerWait> = MutableStateFlow(PhoneServerWait.None)
+
+internal fun waitOf(facts: PhoneServerFacts): PhoneServerWait =
+    when {
+        facts.updateRunning -> PhoneServerWait.Updating
+        facts.starting || facts.recovery is RecoveryFacts.Waiting || facts.recovery == RecoveryFacts.Restarting ->
+            PhoneServerWait.Starting
+        else -> PhoneServerWait.None
+    }

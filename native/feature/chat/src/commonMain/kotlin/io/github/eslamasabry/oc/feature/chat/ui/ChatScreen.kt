@@ -212,6 +212,9 @@ import io.github.eslamasabry.oc.ui.words.res.chatStopAfterStepPrompt
 import io.github.eslamasabry.oc.ui.words.res.connectionReconnectingQuiet
 import io.github.eslamasabry.oc.ui.words.res.connectionAgentStartFailed
 import io.github.eslamasabry.oc.ui.words.res.connectionAgentStarting
+import io.github.eslamasabry.oc.ui.words.res.connectStartingPhone
+import io.github.eslamasabry.oc.ui.words.res.connectUpdatingPhone
+import io.github.eslamasabry.oc.ui.words.res.launchUiSessionWaiting
 import io.github.eslamasabry.oc.ui.words.res.connectionRestartAgent
 import io.github.eslamasabry.oc.ui.words.res.connectionRestartPhoneServer
 import io.github.eslamasabry.oc.ui.words.res.workServerNotAnswering
@@ -1447,6 +1450,23 @@ private fun connectionLine(
                     actions::editServer,
                     testTag = if (token) "chat-banner-update-token" else "chat-banner-update-password",
                 ),
+            more = listOf(details, changeServer),
+        )
+    }
+    // Open while starting: the page waits for its server and opens by itself, so the line says what the server is doing
+    // and offers no Try again (Details and Change server stay one tap away).
+    val wait = line.serverWait
+    if (wait != null) {
+        return KitStatus(
+            KitStatusKind.Connection,
+            stringResource(
+                when (wait) {
+                    io.github.eslamasabry.oc.feature.chat.world.ChatServerWait.Updating -> Res.string.connectUpdatingPhone
+                    io.github.eslamasabry.oc.feature.chat.world.ChatServerWait.Starting -> Res.string.connectStartingPhone
+                    io.github.eslamasabry.oc.feature.chat.world.ChatServerWait.Connecting -> Res.string.launchUiSessionWaiting
+                }
+            ),
+            id = "chat-status-${line.id}",
             more = listOf(details, changeServer),
         )
     }

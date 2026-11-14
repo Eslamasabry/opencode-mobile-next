@@ -73,6 +73,13 @@ public interface ChatWorld {
     public val linkStopped: StateFlow<Failure?>
         get() = NoStop
 
+    /**
+     * What the page waits for while its server is not ready (starting, updating OpenCode on this phone, or its
+     * connection still opening); null when it waits for nothing. The connection line says it.
+     */
+    public val serverWait: StateFlow<ChatServerWait?>
+        get() = NoServerWait
+
     /** The conversation that delegated this one (a subagent's child session); null for a top-level one. */
     public val parent: StateFlow<ConversationRef?>
         get() = NoParent
@@ -403,6 +410,18 @@ public enum class ChatLink {
     Offline,
 }
 
+/** What a conversation that cannot load yet is waiting for (open while starting). */
+public enum class ChatServerWait {
+    /** The connection to its server is still opening. */
+    Connecting,
+
+    /** This phone's server is starting. */
+    Starting,
+
+    /** This phone's server is stopped for the OpenCode update. */
+    Updating,
+}
+
 /** A prompt the person sent that the transcript does not show yet. */
 public data class PendingSend(
     val localId: Long,
@@ -515,6 +534,7 @@ public data class ReadOnlyChat(val parent: ConversationRef? = null)
 
 private val NoParent: StateFlow<ConversationRef?> = kotlinx.coroutines.flow.MutableStateFlow(null)
 private val NoStop: StateFlow<Failure?> = kotlinx.coroutines.flow.MutableStateFlow(null)
+private val NoServerWait: StateFlow<ChatServerWait?> = kotlinx.coroutines.flow.MutableStateFlow(null)
 private val NoRetry: StateFlow<Long?> = kotlinx.coroutines.flow.MutableStateFlow(null)
 
 private val NoReadOnly = kotlinx.coroutines.flow.MutableStateFlow<ReadOnlyChat?>(null)
