@@ -77,7 +77,7 @@ class AgentPinsParityTest {
     }
 
     @Test
-    fun `B-AGENT-008 Antigravity keeps its route, sign-in and limitation and its pins equal the 1.5.9 download`() {
+    fun `B-AGENT-008 Antigravity keeps its route, sign-in and limitation and its pins equal the 1-5-9 download`() {
         val agent = AgentPins.builtIn.catalog().byId(io.github.eslamasabry.oc.engine.agents.AgentId("antigravity"))!!
         val recipe = agent.recipe!!
         assertEquals("Antigravity", agent.name)
@@ -337,7 +337,7 @@ class AgentPinsParityTest {
     }
 
     @Test
-    fun `B-AGENT-008 Antigravity 1.5.9 pins equal the downloads checked on 2026-11-14`() {
+    fun `B-AGENT-008 Antigravity 1-5-9 pins equal the downloads checked on 2026-11-14`() {
         // Moved after the freeze. Each SHA-256 is of the downloaded bytes, whose sha512 equals the release manifest's
         // value for that platform.
         val recipe = AgentPins.builtIn.catalog().byId(AgentId("antigravity"))!!.recipe!!
