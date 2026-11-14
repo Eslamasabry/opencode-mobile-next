@@ -4831,6 +4831,7 @@ gitProblemNetwork	64bea70c4d
 gitProblemNoPermission	fda1a3f2bd
 gitProblemNoRemote	713e2307b5
 gitProblemNoUpstream	97835e8971
+gitProblemNoWorkingSpace	eab39a271e
 gitProblemNotARepository	ef3e690f2b
 gitProblemNothingSelected	9af1db5537
 gitProblemNothingToCommit	abc9ed3ea3
@@ -4842,6 +4843,7 @@ gitProblemRemoteExists	a1ee176692
 gitProblemRemoteNotFound	ccbacbb26f
 gitProblemRepositoryLocked	3f63254425
 gitProblemServerCannotRunCommands	4373b3c6f7
+gitProblemServerRefusedCommand	727051ac50
 gitProblemSigningFailed	9a49714848
 gitProblemTimedOut	c4d97e8931
 gitProblemUnknown	ea8b6e83d3

@@ -1034,4 +1034,6 @@
     <string name="agentIsolatedCancel">إيقاف الانتظار</string>
     <string name="agentElsewhereCounts">%1$d بانتظارك · %2$d قيد التشغيل · %3$d فشل</string>
     <string name="agentElsewhereStale">بانتظار تحديث</string>
+    <string name="gitProblemNoWorkingSpace">لا يجد Git مساحة للعمل حيث يوجد هذا المشروع. أفرِغ بعض مساحة التخزين هناك ثم حاول مجددًا.</string>
+    <string name="gitProblemServerRefusedCommand">ردّ الخادم لكنه رفض تنفيذ أمر Git. تحقّق من تسجيل الدخول إليه ثم حاول مجددًا.</string>
 </resources>

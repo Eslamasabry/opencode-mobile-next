@@ -928,4 +928,6 @@
     <string name="agentIsolatedCancel">Ngừng chờ</string>
     <string name="agentElsewhereCounts">%1$d đang chờ · %2$d đang chạy · %3$d thất bại</string>
     <string name="agentElsewhereStale">Đang chờ cập nhật</string>
+    <string name="gitProblemNoWorkingSpace">Git không còn chỗ để làm việc ở nơi dự án này đang nằm. Hãy giải phóng bớt dung lượng ở đó, rồi thử lại.</string>
+    <string name="gitProblemServerRefusedCommand">Máy chủ có trả lời nhưng không chịu chạy lệnh Git. Hãy kiểm tra việc đăng nhập của nó, rồi thử lại.</string>
 </resources>

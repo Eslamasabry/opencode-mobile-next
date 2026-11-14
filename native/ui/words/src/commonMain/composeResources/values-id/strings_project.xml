@@ -928,4 +928,6 @@
     <string name="agentIsolatedCancel">Berhenti menunggu</string>
     <string name="agentElsewhereCounts">%1$d menunggu · %2$d berjalan · %3$d gagal</string>
     <string name="agentElsewhereStale">Menunggu pembaruan</string>
+    <string name="gitProblemNoWorkingSpace">Git tidak punya ruang untuk bekerja di tempat proyek ini berada. Kosongkan sebagian penyimpanan di sana, lalu coba lagi.</string>
+    <string name="gitProblemServerRefusedCommand">Server menjawab tetapi tidak mau menjalankan perintah Git. Periksa proses masuknya, lalu coba lagi.</string>
 </resources>
