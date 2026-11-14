@@ -65,6 +65,11 @@ public data class ChatUi(
     /** B-CHAT-064: file paths in replies the server confirmed exist; only these become tappable. */
     val confirmedPaths: ImmutableSet<String> = persistentSetOf(),
     val timeline: TimelineUi? = null,
+    /**
+     * Earlier messages the server still has (audit 1, 2026-11-14): the transcript's first row offers them; null = the
+     * whole conversation is loaded.
+     */
+    val older: OlderUi? = null,
     val reasoningExpanded: Boolean = false,
     /** Lookup-only receipt checks, kept for this visit; never authorizes another send. */
     val receiptChecks: ImmutableMap<Long, ReceiptCheckUi> = persistentMapOf(),
@@ -249,6 +254,9 @@ public data class TimelineEntryUi(
     /** The tools a message with no words of its own did; the screen names them in plain words. */
     val tools: ImmutableList<ToolFacts> = persistentListOf(),
 )
+
+/** Earlier messages not loaded yet: a read is in flight ([loading]), or the last one failed ([failure]). */
+public data class OlderUi(val loading: Boolean, val failure: Failure?)
 
 public data class TimelineUi(
     val query: String,
@@ -504,7 +512,7 @@ public interface ChatActions {
 
     public fun findPrevious()
 
-    /** The earlier-messages pill (plan 09 §7.3 rule 6). */
+    /** Loads the next page of earlier messages ("Show earlier messages", the transcript's first row). */
     public fun loadOlder() {}
 
     public fun openTimeline()

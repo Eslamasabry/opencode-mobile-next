@@ -263,42 +263,6 @@ public object ReplyText {
 }
 
 /**
- * The "N earlier messages" pill (plan 09 §7.3 rule 6; Flutter `_earlierMessageCount`): the count of
- * whole messages fully above the viewport is the oldest-first ordinal of the oldest visible row's
- * message. Built once per rows instance (O(rows)), then O(1) per scroll. S2-TX request:
- * `TranscriptState.messageOrder` makes this free.
- */
-public class MessageOrder(rows: List<TranscriptRow>) {
-    private val ordinal = IntArray(rows.size)
-
-    /** Distinct messages among the rows. */
-    public val messageCount: Int
-
-    init {
-        val seen = HashMap<String, Int>()
-        var current = 0
-        for (i in rows.indices.reversed()) {
-            val id = RowIds.messageIdOf(rows[i])
-            if (id != null) current = seen.getOrPut(id) { seen.size }
-            ordinal[i] = current
-        }
-        messageCount = seen.size
-    }
-
-    /** Messages fully above the row at newest-first [oldestVisibleRow]; 0 outside the rows. */
-    public fun earlierCount(oldestVisibleRow: Int): Int =
-        if (oldestVisibleRow in ordinal.indices) ordinal[oldestVisibleRow] else 0
-
-    public companion object {
-        /** Flutter shows the pill only for conversations longer than 30 messages. */
-        public const val MIN_MESSAGES: Int = 30
-
-        public fun pillVisible(awayFromLatest: Boolean, messageCount: Int, earlier: Int): Boolean =
-            awayFromLatest && messageCount > MIN_MESSAGES && earlier > 0
-    }
-}
-
-/**
  * Read acknowledgement (plan 09 §6.7): only while loaded, without a load error, at the live edge.
  */
 public object ReadAck {

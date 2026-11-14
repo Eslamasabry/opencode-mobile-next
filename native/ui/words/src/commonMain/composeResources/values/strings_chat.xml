@@ -451,6 +451,7 @@
         <item quantity="one">1 earlier message</item>
         <item quantity="other">%1$s earlier messages</item>
     </plurals>
+    <string name="chatUiShowEarlierMessages">Show earlier messages</string>
     <string name="chatUiTokenCount">%1$s tok</string>
     <string name="chatUiPositionOfTotal">%1$s of %2$s</string>
     <string name="chatUiSubagentCount">Delegated conversation · %1$s</string>

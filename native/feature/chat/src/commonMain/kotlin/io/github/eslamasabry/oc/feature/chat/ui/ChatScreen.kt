@@ -62,7 +62,6 @@ import io.github.eslamasabry.oc.feature.chat.presentation.ChatStatusKind
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatStatusUi
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatUi
 import io.github.eslamasabry.oc.feature.chat.presentation.MessageAction
-import io.github.eslamasabry.oc.feature.chat.presentation.MessageOrder
 import io.github.eslamasabry.oc.feature.chat.presentation.PictureUi
 import io.github.eslamasabry.oc.feature.chat.presentation.ReceiptCheckResult
 import io.github.eslamasabry.oc.feature.chat.presentation.ReplyFailureKind
@@ -91,8 +90,6 @@ import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
 import io.github.eslamasabry.oc.ui.kit.frame.kitScreenChromePadding
-import io.github.eslamasabry.oc.ui.kit.frame.kitScreenFloat
-import io.github.eslamasabry.oc.ui.kit.frame.KitJumpEdge
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.modal.KitBackGuard
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
@@ -195,7 +192,6 @@ import io.github.eslamasabry.oc.ui.words.res.chatUiCompactSession
 import io.github.eslamasabry.oc.ui.words.res.chatUiContextCompacted
 import io.github.eslamasabry.oc.ui.words.res.chatUiDeleteMessage
 import io.github.eslamasabry.oc.ui.words.res.chatUiDeleteThisMessage
-import io.github.eslamasabry.oc.ui.words.res.chatUiEarlierMessageCount
 import io.github.eslamasabry.oc.ui.words.res.chatUiExpandReasoning
 import io.github.eslamasabry.oc.ui.words.res.chatUiFiles
 import io.github.eslamasabry.oc.ui.words.res.chatUiNotConnectedToTheServerRightNow
@@ -451,7 +447,11 @@ public fun ChatScreen(
     val reveal = rememberRevealRegistry()
     val motion = kitChatMotion()
     val latest by rememberUpdatedState(state)
-    val itemsBelowRows = (if (state.live != null) 1 else 0) + state.pending.size + (if (dockRoomPx > 0) 1 else 0)
+    // Every item the transcript draws below the engine's rows (ChatTranscriptList): a jump to a row (a timeline pick, a
+    // Find hit, an arrival) counts them, or it lands one row off while background work shows.
+    val itemsBelowRows =
+        (if (state.live != null) 1 else 0) + state.pending.size + (if (dockRoomPx > 0) 1 else 0) +
+            (if (facts.background.isNotEmpty()) 1 else 0)
 
     // Read acknowledgement follows the visible list (plan 09 §6.7).
     LaunchedEffect(list) {
@@ -484,7 +484,12 @@ public fun ChatScreen(
                 busy = { latest.live != null },
                 // Review #12: the box agrees with the run's state; a decision on its way waits on no one.
                 requestWaiting = { RunTailRules.waitsForYou(requestState.cards.map { it.state }) || formPending },
-                onSent = { list.following = true },
+                // A send brings the newest message into view at once (audit 1, k6: "Jump to latest" showed after a send
+                // made while reading back, until the next row arrived).
+                onSent = {
+                    list.following = true
+                    list.keepAtBottom()
+                },
                 // "Edit and resend" (P12-CHAT-FEEL) first, then saved prompts and slash commands
                 // (P12-PROMPTS); each
                 // acknowledgement goes back to the side that offered it. Agent ```choices arrive
@@ -1060,23 +1065,10 @@ public fun ChatScreen(
                                                 if (state.capabilities.compact) actions::compactAgain
                                                 else null,
                                             topLine = handoffLine,
+                                            older = state.older,
+                                            onLoadOlder = actions::loadOlder,
                                         )
                                     }
-                                EarlierMessagesPill(
-                                    state,
-                                    list,
-                                    itemsBelowRows,
-                                    actions,
-                                    Modifier.align(Alignment.TopCenter)
-                                        .padding(
-                                            top =
-                                                Space.S2.dp +
-                                                    kitScreenChromePadding().calculateTopPadding()
-                                        )
-                                        // It floats under the bar: the transcript ends before it, never under it
-                                        // (owner 2026-11-14).
-                                        .kitScreenFloat(KitJumpEdge.Top),
-                                )
                             }
                     }
                     // The edge dock: over the transcript, clear of the header and the composer. Beside the
@@ -1195,49 +1187,6 @@ public fun ChatScreen(
                 )
             }
         }
-    }
-}
-
-/**
- * The "N earlier messages" pill (plan 09 §7.3 rule 6). The count is a derivedStateOf over the
- * list's layout, read only here, so scrolling recomposes the pill only when the number changes.
- * Message order is built once per rows instance and only while the pill could show.
- */
-@Composable
-private fun EarlierMessagesPill(
-    state: ChatUi,
-    list: TranscriptListState,
-    itemsBelowRows: Int,
-    actions: ChatActions,
-    modifier: Modifier,
-) {
-    val rows = state.rows
-    val order = remember(rows) { lazy { MessageOrder(rows) } }
-    val count by
-        remember(order, itemsBelowRows) {
-            derivedStateOf {
-                if (!list.awayFromLatest) {
-                    0
-                } else {
-                    val oldest =
-                        list.lazy.layoutInfo.visibleItemsInfo.maxOfOrNull { it.index } ?: -1
-                    val o = order.value
-                    val earlier = o.earlierCount(oldest - itemsBelowRows)
-                    if (MessageOrder.pillVisible(true, o.messageCount, earlier)) earlier else 0
-                }
-            }
-        }
-    if (count > 0) {
-        KitChip(
-            label =
-                pluralStringResource(
-                    Res.plurals.chatUiEarlierMessageCount,
-                    count,
-                    Numbers.format(count),
-                ),
-            onClick = actions::openTimeline,
-            modifier = modifier.testTag("earlier-messages-pill"),
-        )
     }
 }
 

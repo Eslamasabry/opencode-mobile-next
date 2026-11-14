@@ -64,8 +64,6 @@ import io.github.eslamasabry.oc.ui.kit.foundation.kitFrostSource
 import io.github.eslamasabry.oc.ui.kit.foundation.rememberKitFrostState
 import io.github.eslamasabry.oc.ui.kit.frame.KitReportBottomSlab
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
-import io.github.eslamasabry.oc.ui.kit.frame.KitJumpEdge
-import io.github.eslamasabry.oc.ui.kit.frame.kitScreenFloat
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
@@ -152,8 +150,6 @@ class ChatWordsGlassTest {
         val block: DpRect? = null,
         /** The jump pill's face (its glass), when it shows. */
         val pillFace: DpRect? = null,
-        /** The "N earlier messages" chip under the bar (a scene with it), else null. */
-        val earlier: DpRect? = null,
         /** How many phrase rows are laid out. */
         val chipRows: Int = 0,
         /** How many panes are drawn as one joined body of glass (the box and the pill). */
@@ -177,7 +173,6 @@ class ChatWordsGlassTest {
         card: Boolean = false,
         chips: Boolean = false,
         outlined: Boolean = false,
-        earlier: Boolean = false,
         tall: Boolean = false,
     ) {
         CompositionLocalProvider(LocalKitScreenInsets provides WindowInsets(top = statusDp.dp, bottom = NAV_DP.dp)) {
@@ -254,16 +249,6 @@ class ChatWordsGlassTest {
                                 )
                             }
                         }
-                        if (earlier)
-                            io.github.eslamasabry.oc.ui.kit.chip.KitChip(
-                                "40 earlier messages",
-                                onClick = {},
-                                modifier =
-                                    Modifier.align(Alignment.TopCenter)
-                                        .padding(top = 8.dp + io.github.eslamasabry.oc.ui.kit.frame.kitScreenChromePadding().calculateTopPadding())
-                                        .kitScreenFloat(KitJumpEdge.Top)
-                                        .testTag("earlier"),
-                            )
                     }
                 }
             }
@@ -279,7 +264,6 @@ class ChatWordsGlassTest {
         card: Boolean = false,
         chips: Boolean = false,
         outlined: Boolean = false,
-        earlier: Boolean = false,
         scrollTo: Int = SCROLLED_TO,
         /** Rows as tall as a code block, filled (with [bright]). */
         tall: Boolean = false,
@@ -295,7 +279,7 @@ class ChatWordsGlassTest {
             setContent {
                 CompositionLocalProvider(LocalDensity provides Density(D)) {
                     KitTheme(appearance = appearance, platform = platform, localeTag = "en", stillFrame = true) {
-                        Scene(bright, notice, seen, lazy, statusDp, card, chips, outlined, earlier, tall)
+                        Scene(bright, notice, seen, lazy, statusDp, card, chips, outlined, tall)
                     }
                 }
             }
@@ -348,7 +332,6 @@ class ChatWordsGlassTest {
                     bottomSawSome = seen[0] != null,
                     block = bounds("kit-screen-bottom"),
                     pillFace = boundsOrNull("kit-jump-pill-veiled"),
-                    earlier = if (earlier) bounds("earlier") else null,
                     chipRows = onAllNodesWithTag("chat-phrase-chips", useUnmergedTree = true).fetchSemanticsNodes().size,
                     joined =
                         onAllNodes(SemanticsMatcher.keyIsDefined(io.github.eslamasabry.oc.ui.kit.effects.KitLiquidJoined), useUnmergedTree = true)
@@ -486,23 +469,6 @@ class ChatWordsGlassTest {
         assertFadesOut(bright.image, none.image, x = 8f, from = face.top.value - 40f, to = face.top.value, what = "over the card")
     }
 
-    /** Owner 2026-11-14: "40 earlier messages" sat on a line of the transcript. */
-    @Test
-    fun `B-CHAT-COL-05 nothing of the transcript shows behind N earlier messages, and it fades in below it`() {
-        val bright = shot(dark(Style.Glass), LensPlatform(), bright = true, earlier = true)
-        val none = shot(dark(Style.Glass), LensPlatform(), bright = false, earlier = true)
-        val chip = bright.earlier!!
-        val (mean, max) = diff(bright.image, none.image, 0f, 0f, W.toFloat(), chip.bottom.value)
-        println("earlier: mean $mean max $max at $chip, bar ${bright.bar}")
-        assertTrue(mean <= WORDS_MEAN && max <= WORDS_MAX, "the rows show above or behind the earlier-messages chip: mean $mean, max $max\n" + map(bright.image, none.image, 0f, 0f, W.toFloat(), chip.bottom.value + 24f))
-        // Below it the rows come back over 12 dp, as below the bar: read the fade upward.
-        val px = (8f * D).roundToInt()
-        val ramp = ((chip.bottom.value * D).roundToInt()..((chip.bottom.value + 16f) * D).roundToInt()).map { y -> abs(luma(bright.image[px, y]) - luma(none.image[px, y])) }
-        println("earlier fade ${ramp.map { it.toInt() }}")
-        assertTrue(ramp.first() <= WORDS_MAX && ramp.last() >= 150f, "the rows fade in below the chip: ${ramp.map { it.toInt() }}")
-        assertTrue(ramp.filter { it > WORDS_MAX && it < ramp.last() * .9f }.map { (it / 8f).toInt() }.distinct().size >= 4, "a soft fade: ${ramp.map { it.toInt() }}")
-    }
-
     @Test
     fun `a bright row never shows behind the Needs your decision label above the box, and the pill stays above the card`() {
         val bright = shot(dark(Style.Glass), LensPlatform(), bright = true, card = true)
@@ -544,7 +510,7 @@ class ChatWordsGlassTest {
 
     /**
      * Owner 2026-11-14 ("Wtfff": transcript text ran up under the bar and showed inside its lower edge as a blurred band):
-     * nothing of the transcript shows under the status bar or the bar, its rim included; it fades in over 12 dp below.
+     * nothing of the transcript shows under the status bar or the bar, its rim included; it dissolves in below.
      * Was: "...and still shows in the bar's rim".
      */
     @Test
