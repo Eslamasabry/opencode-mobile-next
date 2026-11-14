@@ -75,8 +75,8 @@ class CatalogInventoryTest {
 
     /**
      * Pins that moved on native after the Flutter freeze, old text to new, applied to that agent's saved entry only:
-     * OpenCode 2 2.2.5 -> 2.2.6 (93fcf4049; the values AgentPinsParityTest checks literally); omp's set-up command. Every other field still
-     * has to equal the inventory byte for byte.
+     * OpenCode 2 2.2.5 -> 2.2.6 (93fcf4049; the values AgentPinsParityTest checks literally); omp's set-up command; the 2026-11-14 agent upgrades
+     * below. Every other field still has to equal the inventory byte for byte.
      */
     private val postFreezeMoves = mapOf(
         "opencode2" to listOf(
@@ -87,8 +87,100 @@ class CatalogInventoryTest {
                 "00d8b036689fc35927d8f20f57000d5c091fe7a5a3345fef5326f330bfe6d0ce",
         ),
         // 2026-11-13: omp is set up in the app's terminal with `omp login` (its bare TUI was the old sign-in command).
-        "omp-acp" to listOf("\"signInArgs\":[]" to "\"signInArgs\":[\"login\"]"),
+        "omp-acp" to listOf(
+            "\"signInArgs\":[]" to "\"signInArgs\":[\"login\"]",
+            text("18.5.1", "18.20.0"),
+            text("https://github.com/can1357/oh-my-pi/releases/download/v18.5.1/omp-linux-arm64", "https://github.com/can1357/oh-my-pi/releases/download/v18.20.0/omp-linux-arm64"),
+            text("e7b81b96b3f9f391ec8afc7ee64c052ce1783290f88bbb59ba36d15b3b4e927c", "8b5e197db7c58b7ebabf83c6f03597f89bae3a766a84c6481b3a942a125f5e22"),
+            number("downloadBytes", 230476072, 244435960),
+            number("installedBytes", 230476072, 244435960),
+            text("https://github.com/can1357/oh-my-pi/releases/download/v18.5.1/omp-linux-x64", "https://github.com/can1357/oh-my-pi/releases/download/v18.20.0/omp-linux-x64"),
+            text("fb7638e82f0c9d087e96e15d3eb83a662d92374cd907187d6d4d2605e39f1e3a", "c8694be8c6e6a1f45e3636dd8a8e9eaa78878ad629a89000b403ec5e456d3f89"),
+            number("downloadBytes", 280536544, 287484080),
+            number("installedBytes", 280536544, 287484080),
+        ),
+        // 2026-11-14 agent upgrades (owner: upgrade all agents to latest), each from its own commit: Claude Code
+        // 2.1.325, Codex 0.169.0, Antigravity 1.5.9, Qwen Code 0.27.3, Kilo 7.8.27, Goose 1.59.1, Oh My Pi 18.20.0 (above)
+        // and fx 0.0.16. Version, URLs, hashes and sizes are the pins file's values; AgentPinsParityTest checks the
+        // same agents' pins literally. Gemini CLI and Cline did not move.
+        "claude" to listOf(
+            text("2.1.319", "2.1.325"),
+            text("https://downloads.claude.ai/claude-code-releases/2.1.319/linux-arm64/claude", "https://downloads.claude.ai/claude-code-releases/2.1.325/linux-arm64/claude"),
+            text("a7e687fd1cb054d651c7588223de3786c99d4c682365e3c3ae1e59ce7f3a591f", "7b6e484b1989a5a14a4b354709ccc8672518a3ec5b9ccd7981fc6254327fde67"),
+            number("downloadBytes", 339797432, 364701112),
+            number("installedBytes", 339797432, 364701112),
+            text("https://downloads.claude.ai/claude-code-releases/2.1.319/linux-x64/claude", "https://downloads.claude.ai/claude-code-releases/2.1.325/linux-x64/claude"),
+            text("dabafec82ca1319fa43d8be36a10fc61b1d11821cb98ad5df04ad95e199b8eed", "0dc4f4a9a165fc60746d7ae8489712e5fc352f1e7ad4eb22e7141bd0812eb0cf"),
+            number("downloadBytes", 340226576, 365842960),
+            number("installedBytes", 340226576, 365842960),
+        ),
+        "codex" to listOf(
+            text("0.167.0", "0.169.0"),
+            text("https://github.com/openai/codex/releases/download/rust-v0.167.0/codex-aarch64-unknown-linux-musl.tar.gz", "https://github.com/openai/codex/releases/download/rust-v0.169.0/codex-aarch64-unknown-linux-musl.tar.gz"),
+            text("843489acb4d4b1079745c36b03c5963b887b83155af208fd53584e33ee8eb281", "97b97d87eea075c5cb7709c7f6156a451622a7667953ecda40e0276637196f3f"),
+            number("downloadBytes", 114300898, 119987185),
+            number("installedBytes", 278794648, 290069784),
+            text("https://github.com/openai/codex/releases/download/rust-v0.167.0/codex-x86_64-unknown-linux-musl.tar.gz", "https://github.com/openai/codex/releases/download/rust-v0.169.0/codex-x86_64-unknown-linux-musl.tar.gz"),
+            text("9d64836106d5b374e90ee4454c7ebcde7ca7106558bd7e41a34b9f26ebda251a", "9af4d751fce183faedea629437d5252dbf458eeb04130cf4f97be844621ea985"),
+            number("downloadBytes", 122587028, 117805733),
+            number("installedBytes", 320575976, 294277432),
+        ),
+        "antigravity" to listOf(
+            text("1.5.3", "1.5.9"),
+            text("https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.3-6604829099950080/linux-arm/cli_linux_arm64.tar.gz", "https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.9-4515810895593472/linux-arm/cli_linux_arm64.tar.gz"),
+            text("2d50060c7b1327995e5c81ec58829c91c2564ebb9fec165d3f9f1325ec188675", "3a18c238c7ee6661e43df7e824a7d4c1bed78aeeda09430921a0f1dbfe825bca"),
+            number("downloadBytes", 69843447, 90318517),
+            number("installedBytes", 235622776, 249582256),
+            text("https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.3-6604829099950080/linux-x64/cli_linux_x64.tar.gz", "https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.9-4515810895593472/linux-x64/cli_linux_x64.tar.gz"),
+            text("1b4850599cce73a17f94ffb422df3bf9531531b77dbddc40c1a435e0c2c16807", "8b1f5e56779f2434a0af36f1b715a8392a084de550f8c68bc79821f95fabf3fa"),
+            number("downloadBytes", 73694700, 99166075),
+            number("installedBytes", 246837648, 265700040),
+        ),
+        "qwen" to listOf(
+            text("0.26.4", "0.27.3"),
+            text("https://registry.npmjs.org/@qwen-code/qwen-code/-/qwen-code-0.26.4.tgz", "https://registry.npmjs.org/@qwen-code/qwen-code/-/qwen-code-0.27.3.tgz"),
+            text("a7640f1c0656b7e54ea5995335ed6cc18ee219b8b4200fe8a6141cff148aaa89", "313a567f05dd036b489b9142b0f20f21dfe348532e5d07b6f0818a47c5ac5333"),
+            number("downloadBytes", 42796897, 43802478),
+            number("installedBytes", 154807157, 159348420),
+        ),
+        "kilo" to listOf(
+            text("7.8.18", "7.8.27"),
+            text("https://registry.npmjs.org/@kilocode/cli-linux-arm64/-/cli-linux-arm64-7.8.18.tgz", "https://registry.npmjs.org/@kilocode/cli-linux-arm64/-/cli-linux-arm64-7.8.27.tgz"),
+            text("0f1bd0fb983f67ec1edf53c185e9521268f8f133af2a4cec2f1967e5d60e45ef", "992a0d0f4956926c6f624de742792eeab140516640f66a5cf5b7f9c357c06eb4"),
+            number("downloadBytes", 83529597, 83530144),
+            number("installedBytes", 258264056, 258198520),
+            text("https://registry.npmjs.org/@kilocode/cli-linux-x64/-/cli-linux-x64-7.8.18.tgz", "https://registry.npmjs.org/@kilocode/cli-linux-x64/-/cli-linux-x64-7.8.27.tgz"),
+            text("bde638d0a493155088e4454fbe4a9697571443665e2a22d5a78cad645b96b554", "1da75cf0996f249abc9e1ae10bdcebcefd760dd375c440e704ae70bb9be3ce0b"),
+            number("downloadBytes", 84132773, 84123912),
+            number("installedBytes", 259213488, 259201200),
+        ),
+        "goose" to listOf(
+            text("1.54.0", "1.59.1"),
+            text("https://github.com/aaif-goose/goose/releases/download/v1.54.0/goose-aarch64-unknown-linux-gnu.tar.gz", "https://github.com/aaif-goose/goose/releases/download/v1.59.1/goose-aarch64-unknown-linux-gnu.tar.gz"),
+            text("0f174b5118a53888cd4e65b7ca9a4b72dd0b887e89142c8ce41e2409205e40d5", "e3619b2ebf76dbbe8924561fd748220f289a34671e2757cda1cd833e44194f8e"),
+            number("downloadBytes", 93850226, 63280232),
+            number("installedBytes", 294298272, 195103264),
+            text("https://github.com/aaif-goose/goose/releases/download/v1.54.0/goose-x86_64-unknown-linux-gnu.tar.gz", "https://github.com/aaif-goose/goose/releases/download/v1.59.1/goose-x86_64-unknown-linux-gnu.tar.gz"),
+            text("ab396c95aebbd28b4d38c175234be8d4a3ea0c96e7ccb24c307e4618c9be57e1", "04c08900ab2ae78b8e2f556f1ed535a91b61c080a3ff62e9fd8b280cceb544ef"),
+            number("downloadBytes", 90912367, 62448338),
+            number("installedBytes", 307756800, 208579376),
+        ),
+        "fx" to listOf(
+            text("0.0.13", "0.0.16"),
+            text("https://github.com/vercel-labs/fx/releases/download/v0.0.13/fx-linux-aarch64.tar.gz", "https://github.com/vercel-labs/fx/releases/download/v0.0.16/fx-linux-aarch64.tar.gz"),
+            text("78f6a8171193a1d2033f93d1b5a2940ea4a62147daf60a37ae670a9bf85f12e9", "ca9441b104357e2105039dbfd4c2eaf0d6ee65a84085f23f51e880c95cbf46af"),
+            number("downloadBytes", 5692736, 5562847),
+            number("installedBytes", 11167446, 10832712),
+            text("https://github.com/vercel-labs/fx/releases/download/v0.0.13/fx-linux-x86_64.tar.gz", "https://github.com/vercel-labs/fx/releases/download/v0.0.16/fx-linux-x86_64.tar.gz"),
+            text("53a3b30ce1541048f8fa4b42b7bc68161466bb2e3708db104449a58af3807430", "f0fb822c7be546c80bcc89d50521bc1454435e0c6f586e8420c4e2b84fa80599"),
+            number("downloadBytes", 5787883, 5680318),
+            number("installedBytes", 13194918, 12814000),
+        ),
     )
+
+    private fun text(old: String, new: String) = "\"$old\"" to "\"$new\""
+
+    private fun number(key: String, old: Long, new: Long) = "\"$key\":$old" to "\"$key\":$new"
 
     @Test
     fun `B-BUILD-006 the phone agent catalog inventory file is the live catalog`() {
