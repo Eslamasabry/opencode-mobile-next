@@ -198,7 +198,7 @@ internal fun TeamIntroBottom(intro: TeamIntroUi, actions: TeamIntroActions) {
         }
     KitActionBlock(
         Modifier
-            .padding(horizontal = LocalKitTokens.current.gutter.dp, vertical = Space.S2.dp)
+            .padding(vertical = Space.S2.dp)
             .testTag("team-intro-actions"),
         primary = primary,
     )

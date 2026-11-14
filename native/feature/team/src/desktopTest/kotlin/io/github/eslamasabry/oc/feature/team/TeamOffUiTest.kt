@@ -2,7 +2,10 @@ package io.github.eslamasabry.oc.feature.team
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.unit.dp
+import kotlin.test.assertTrue
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
@@ -73,6 +76,25 @@ class TeamOffUiTest {
         assertEquals(listOf("turnOn"), actions.calls)
         // The old dead end is gone.
         onNodeWithText("AI Team is off").assertDoesNotExist()
+    }
+
+    @Test
+    fun `W2-023 the turn on button stands on the page gutter, not a second one in`() = runComposeUiTest {
+        setContent {
+            Themed {
+                TeamHomeScreen(
+                    off(TeamIntroUi(TeamServer(TeamServerKind.ThisPhone, "This phone"), canTurnOn = true)),
+                    Recorder(),
+                )
+            }
+        }
+        val window = onNodeWithTag("kit-screen").getUnclippedBoundsInRoot()
+        val actions = onNodeWithTag("team-intro-actions").getUnclippedBoundsInRoot()
+        val gutter = 16.dp
+        assertTrue(
+            (actions.left - window.left) < gutter + 1.dp,
+            "the button block starts ${actions.left - window.left} in, the page's gutter is $gutter",
+        )
     }
 
     @Test

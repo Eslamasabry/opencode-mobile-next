@@ -49,7 +49,6 @@ import io.github.eslamasabry.oc.ui.kit.state.KitStateSize
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
 import io.github.eslamasabry.oc.ui.kit.team.KitProjectRow
 import io.github.eslamasabry.oc.ui.kit.team.KitTeamState
-import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.*
 import org.jetbrains.compose.resources.stringResource
 
@@ -151,7 +150,7 @@ public fun TeamHomeScreen(state: TeamHomeUi, actions: TeamHomeActions) {
                     (if (state.computer.kind == FleetHomeKind.Ready && state.computer.canGiveTask)
                         ({
                             KitActionBlock(
-                                Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp, vertical = Space.S2.dp),
+                                Modifier.padding(vertical = Space.S2.dp),
                                 primary = KitAction(stringResource(Res.string.teamUiStartRunFab), actions::startRun, icon = KitIcons.add),
                             )
                         })
@@ -160,7 +159,7 @@ public fun TeamHomeScreen(state: TeamHomeUi, actions: TeamHomeActions) {
                 else
                     ({
                         KitActionBlock(
-                            Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp, vertical = Space.S2.dp),
+                            Modifier.padding(vertical = Space.S2.dp),
                             primary = KitAction(stringResource(Res.string.teamProjectNew), { actions.openEditor(EditorKind.Create) }),
                             tertiary =
                                 listOf(KitAction(stringResource(Res.string.teamProjectQuick), { actions.openEditor(EditorKind.Quick) })),
