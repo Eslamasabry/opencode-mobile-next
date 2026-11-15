@@ -113,13 +113,9 @@ public class DockFacts(private val now: () -> Long) {
     }
 
     private fun touch(ref: ConversationRef, at: Long = now()) {
-        // Eviction follows the time, never the insertion order: an old record re-seen must not push out a recent one.
-        val kept = heard[ref]
+        val kept = heard.remove(ref)
         heard[ref] = if (kept != null) maxOf(kept, at) else at
-        while (heard.size > MAX_CONVERSATIONS) {
-            val oldest = heard.entries.minByOrNull { it.value }?.key ?: break
-            heard.remove(oldest)
-        }
+        while (heard.size > MAX_CONVERSATIONS) heard.remove(heard.keys.first())
     }
 
     private fun remember(ref: ConversationRef, entry: DockRequestWords) {
