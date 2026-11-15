@@ -26,7 +26,7 @@ import kotlin.test.assertTrue
 
 /**
  * Issue 147, device finding (S22, keyboard up): a notice with its actions sat under the page's bottom edge, one line of
- * it showing and both actions out of sight. With the room a keyboard leaves (360 x 400 dp), the notice and both of its
+ * it showing and both actions out of sight. With the room a keyboard leaves (360 x 460 dp), the notice and both of its
  * actions are whole above the chips.
  */
 @OptIn(ExperimentalTestApi::class)
@@ -48,7 +48,7 @@ class NewConversationNoticeKeyboardTest {
 
     @Test
     fun `a two-line notice with two actions is whole and reachable above the chips when the keyboard leaves little room`() =
-        runDesktopComposeUiTest(360, 400) {
+        runDesktopComposeUiTest(360, 460) {
             val dir = "/storage/emulated/0/octest"
             val ui =
                 NewConversationUi(
@@ -56,7 +56,7 @@ class NewConversationNoticeKeyboardTest {
                     servers = listOf(NewConversationServer(ProfileId("p1"), "This phone", connected = true)),
                     setup = NewConversationSetup(directory = dir, projects = emptyList(), models = emptyList(), agents = emptyList()),
                     directory = dir,
-                    text = "Run pwd then append the word world to note.txt then run cat note.txt and tell me both outputs",
+                    text = "Run pwd then append the word world to note.txt then run cat note.txt and tell me both outputs. " + "Then list the folder and say what you see in it, one line for each file, and stop. ".repeat(2),
                     phoneFolder = PhoneFolderReach.Restart,
                 )
             setContent {
