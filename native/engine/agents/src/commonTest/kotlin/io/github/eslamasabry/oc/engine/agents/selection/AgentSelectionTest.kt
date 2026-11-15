@@ -114,10 +114,24 @@ class AgentSelectionTest {
     fun `B-AGENT-SEL-004 phone agents work only in projects under root projects and never in a separate copy`() {
         assertTrue(AgentSelection.folderAllowed(AgentId.CLAUDE, "/root/projects/app"))
         assertFalse(AgentSelection.folderAllowed(AgentId.CLAUDE, "/root/projects"))
-        assertFalse(AgentSelection.folderAllowed(AgentId.CLAUDE, "/sdcard/app"))
         assertFalse(AgentSelection.folderAllowed(AgentId.CLAUDE, null))
+        assertFalse(AgentSelection.folderAllowed(AgentId.CLAUDE, "/etc/app"))
         assertTrue(AgentSelection.folderAllowed(AgentId.OPENCODE, "/sdcard/app"))
         assertFalse(AgentSelection.separateCopyOffered(AgentId.CLAUDE))
         assertTrue(AgentSelection.separateCopyOffered(AgentId.OPENCODE))
+    }
+
+    @Test
+    fun `B-AGENT-SEL-005 a folder chosen in phone storage is a project, the storage root and system folders are not`() {
+        assertTrue(AgentSelection.folderAllowed(AgentId.CLAUDE, "/sdcard/app"))
+        assertTrue(AgentSelection.folderAllowed(AgentId.CLAUDE, "/sdcard/Documents/site/"))
+        assertTrue(AgentSelection.folderAllowed(AgentId("codex"), "/storage/emulated/0/Download/notes"))
+        assertFalse(AgentSelection.folderAllowed(AgentId.CLAUDE, "/sdcard"))
+        assertFalse(AgentSelection.folderAllowed(AgentId.CLAUDE, "/sdcard/"))
+        assertFalse(AgentSelection.folderAllowed(AgentId.CLAUDE, "/storage/emulated/0"))
+        assertFalse(AgentSelection.folderAllowed(AgentId.CLAUDE, "/sdcard/Android/data/some.app"))
+        assertFalse(AgentSelection.folderAllowed(AgentId.CLAUDE, "/sdcard/.thumbnails"))
+        assertFalse(AgentSelection.folderAllowed(AgentId.CLAUDE, "/sdcard/../etc"))
+        assertFalse(AgentSelection.folderAllowed(AgentId.CLAUDE, "/sdcardx/app"))
     }
 }

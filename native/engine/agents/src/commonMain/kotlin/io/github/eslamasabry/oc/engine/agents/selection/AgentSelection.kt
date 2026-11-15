@@ -126,7 +126,24 @@ public class AgentSelection(
          * Choose one of those."). OpenCode has no such rule.
          */
         public fun folderAllowed(agent: AgentId, directory: String?): Boolean =
-            agent == AgentId.OPENCODE || (directory != null && directory.startsWith(PHONE_PROJECTS_PREFIX))
+            agent == AgentId.OPENCODE ||
+                (directory != null && (directory.startsWith(PHONE_PROJECTS_PREFIX) || inPhoneStorageProject(directory)))
+
+        /** The phone's shared storage, as the phone's Linux sees it. */
+        private val STORAGE_ROOTS = listOf("/sdcard", "/storage/emulated/0")
+
+        /**
+         * A folder the person chose in the phone's storage (Downloads, Documents and the rest) counts as a project
+         * (issue 147 walk): never the storage root itself, never a system folder (`Android`, hidden ones), never a
+         * path that climbs out.
+         */
+        private fun inPhoneStorageProject(directory: String): Boolean {
+            val path = directory.trimEnd('/')
+            val root = STORAGE_ROOTS.firstOrNull { path.startsWith("$it/") } ?: return false
+            val parts = path.removePrefix("$root/").split('/')
+            if (parts.any { it.isEmpty() || it == "." || it == ".." }) return false
+            return !parts.first().startsWith(".") && parts.first() != "Android"
+        }
 
         /** "In a separate copy" (worktree launch) is hidden for phone agents. */
         public fun separateCopyOffered(agent: AgentId): Boolean = agent == AgentId.OPENCODE
