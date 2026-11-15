@@ -38,6 +38,8 @@ import io.github.eslamasabry.oc.ui.words.res.composerToolsAgentPicturesOnly
 import io.github.eslamasabry.oc.ui.words.res.composerToolsMore
 import io.github.eslamasabry.oc.ui.words.res.composerToolsTextOnly
 import io.github.eslamasabry.oc.ui.words.res.kitSheetClose
+import io.github.eslamasabry.oc.ui.words.res.composerTrayCamera
+import io.github.eslamasabry.oc.ui.words.res.composerTrayPhotos
 import io.github.eslamasabry.oc.ui.words.res.photoCameraAction
 import io.github.eslamasabry.oc.ui.words.res.photoLibraryAction
 import io.github.eslamasabry.oc.ui.words.res.photoLibraryDescription
@@ -45,6 +47,15 @@ import io.github.eslamasabry.oc.ui.words.res.promptStashTitle
 import io.github.eslamasabry.oc.ui.words.res.tipSendLaterTitle
 import io.github.eslamasabry.oc.ui.words.res.usagePrompts
 import org.jetbrains.compose.resources.stringResource
+
+/**
+ * The words of the two ways to add a picture, as the person sees them on screen: the tray's buttons ("Photos",
+ * "Camera") while they are in the tray, else the rows of the tools list ("Photo library", "Take photo"). A help line
+ * names a button by its own label, never by another word for it (F-008).
+ */
+internal fun pictureWays(inTray: List<TrayItem>): Pair<org.jetbrains.compose.resources.StringResource, org.jetbrains.compose.resources.StringResource> =
+    if (TrayItem.Photos in inTray && TrayItem.Camera in inTray) Res.string.composerTrayPhotos to Res.string.composerTrayCamera
+    else Res.string.photoLibraryAction to Res.string.photoCameraAction
 
 /** The four places of the composer's "+" tray (Flutter `composer_tray.dart`), in Flutter's order. */
 public enum class TrayItem { Photos, Camera, File, More }
@@ -184,7 +195,14 @@ private fun ToolsBody(choices: ComposerToolsChoices, run: (() -> Unit) -> Unit, 
                     enabled = false,
                     disabledReason =
                         if (state.imagesOnly)
-                            stringResource(Res.string.composerToolsAgentPicturesOnly, choices.agentName)
+                            pictureWays(choices.inTray).let { (photos, camera) ->
+                                stringResource(
+                                    Res.string.composerToolsAgentPicturesOnly,
+                                    choices.agentName,
+                                    stringResource(photos),
+                                    stringResource(camera),
+                                )
+                            }
                         else stringResource(Res.string.composerToolsTextOnly),
                     modifier = Modifier.testTag("composer-tool-attach"),
                 )
