@@ -161,7 +161,7 @@ class GlassTruthKitRenders {
                         supporting = "From the conversation \"Fix the login\"",
                         detail = "./gradlew :app:test",
                     )
-                    Row(Modifier.padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Row(Modifier.padding(horizontal = 16.dp).height(110.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         KitAgentChoice(KitAgentGridItem("OpenCode", KitIcons.terminal, {}, selected = true), Modifier.weight(1f), wide = true)
                         KitAgentChoice(KitAgentGridItem("Claude", KitIcons.terminal, {}), Modifier.weight(1f), wide = true)
                     }
