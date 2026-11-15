@@ -88,6 +88,7 @@ import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
 import io.github.eslamasabry.oc.ui.kit.foundation.shape
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.modal.KitMenu
+import io.github.eslamasabry.oc.ui.kit.modal.KitReportsModal
 import io.github.eslamasabry.oc.ui.kit.modal.KitMenuGroup
 import io.github.eslamasabry.oc.ui.kit.modal.KitMenuItem
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
@@ -353,6 +354,7 @@ public fun KitViewerModal(
         if (visible) viewer(Modifier.fillMaxSize().background(colors.ground))
         return
     }
+    KitReportsModal(visible)
     AnimatedVisibility(
         visible,
         enter = if (reduced) fadeIn(snapIn()) else fadeIn(specs.enter()),

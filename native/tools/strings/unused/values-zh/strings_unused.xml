@@ -382,4 +382,5 @@
         <item quantity="other">%1$s 条更早的消息</item>
     </plurals>
     <string name="composerToolsAgentPicturesOnly">%1$s 只接受图片：请使用“照片库”或“拍照”</string>
+    <string name="reviewLooksGood">没问题</string>
 </resources>

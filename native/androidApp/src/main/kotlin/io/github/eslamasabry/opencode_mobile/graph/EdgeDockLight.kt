@@ -149,8 +149,11 @@ internal object EdgeLightRules {
     /** Pages the shell mounts the light on. A conversation's own page mounts it inside its frame (under its sheets). */
     fun shellPageConversation(route: AppRoute?): ConversationRef? = if (route is ChatRoute) null else pageConversation(route)
 
-    /** Hidden while the keyboard is up (the kit's one value; its own settle hold applies, no extra delay here). */
-    fun visible(keyboardUp: Boolean): Boolean = !keyboardUp
+    /**
+     * Hidden while the keyboard is up (the kit's one value; its own settle hold applies, no extra delay here) and while
+     * any kit modal part (sheet, dialog, menu) is open over the page.
+     */
+    fun visible(keyboardUp: Boolean, modalOpen: Boolean = false): Boolean = !keyboardUp && !modalOpen
 
     /**
      * The face for [model]: a mark per other conversation that needs the person, failed or is working, and the number

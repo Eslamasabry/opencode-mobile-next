@@ -35,7 +35,9 @@ internal fun lastLine(last: LastRunUi, nowMs: Long, words: ScheduleWords): Strin
     val at = moment(last.atMs, nowMs, words)
     val line =
         when (last.status) {
-            RunStatus.Ran -> if (last.sessionId != null) words.lastRan(at) else words.lastStarted(at)
+            // "replied" only for a run followed to its reply; one the server accepted but never confirmed was "started".
+            RunStatus.Ran ->
+                if (last.sessionId != null && last.errorCode == null) words.lastRan(at) else words.lastStarted(at)
             RunStatus.Skipped -> words.lastSkipped(at)
             RunStatus.Failed -> words.lastFailed(at)
             RunStatus.Running -> words.lastRunning(at)

@@ -112,8 +112,14 @@ Always FAIL, never noise (`tool/ci/summary.py`, `tool/ci/test_report.py` reading
 - a selected module with no test results (its task never ran);
 - a failing test in `quality`, `tools/strings`, `ui/words`, `core/security`, `ui/gate`, or in a Drift / Konsist / Detekt / Lint / SpecFile / Glossary class.
 
+The Android library unit tests (`:android:*:test`, `:androidApp:testPreviewDebugUnitTest`) run in the `android-unit` job of
+every fast and full lane run and every push run, and a failure there is FAIL. Untick the `android_unit` input for a quicker run
+without them; such a run does not count for a release. The summary job also writes `verdict.json` (artifact `ci-verdict`),
+which `scripts/native-release.sh` reads through `release_verdict.py`.
+
 Noise (does not FAIL): an individual failing test class from a test report that also fails in the base reports, is listed in
-`known_failures.txt`, or is quarantined. `tool/ci/test_gate.py` (run by the `plan` job) plants logs for each case.
+`known_failures.txt`, or is quarantined. `known_failures.txt` can only shrink (`KnownFailuresCeiling` in `test_gate.py`) and a
+line may name one test (`<module> :: <Class> > <test>`, exact). `tool/ci/test_gate.py` (run by the `plan` job) plants logs for each case.
 
 ## Self-hosted runner (`oc-native`)
 

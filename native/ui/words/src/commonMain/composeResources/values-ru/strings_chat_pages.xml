@@ -446,7 +446,6 @@
     </plurals>
     <string name="reviewSummary__eq1">Изменён 1 файл · +%2$d −%3$d</string>
     <string name="reviewAlreadyApplied">Агент уже внёс эти изменения в ваш проект.</string>
-    <string name="reviewLooksGood">Выглядит хорошо</string>
     <string name="reviewUndoAll">Откатить всё</string>
     <string name="reviewSendBackWithNote">Вернуть с заметкой</string>
     <plurals name="reviewUndoTitle">
@@ -457,4 +456,5 @@
     </plurals>
     <string name="reviewUndoTitle__eq1">Откатить 1 изменённый файл?</string>
     <string name="reviewUndoBody">Ваш проект вернётся к состоянию до начала работы агента. Чат останется.</string>
+    <string name="reviewDone">Готово</string>
 </resources>

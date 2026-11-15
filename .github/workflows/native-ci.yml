@@ -32,9 +32,9 @@ on:
         type: boolean
         default: false
       android_unit:
-        description: "Also run the Android library unit tests (native/android/*) and the :androidApp unit tests; no other lane runs them"
+        description: "Run the Android library unit tests (native/android/*) and the :androidApp unit tests with the fast and full lanes; they count in the verdict. Untick for a quicker run that skips them"
         type: boolean
-        default: false
+        default: true
       runner:
         description: "self: the always-warm oc-native runner (falls back to GitHub-hosted when it is offline). github: force GitHub-hosted runners"
         type: choice
@@ -125,6 +125,8 @@ jobs:
           fetch-depth: 0
       - name: "Gate self-test (planted logs: a test-compile or drift failure must be FAIL)"
         run: python3 -I tool/ci/test_gate.py
+      - name: Release gate self-test (the release script refuses without a CI verdict and a device smoke)
+        run: python3 -I tool/ci/test_release_gate.py
       - name: Pick the lane and the modules
         id: p
         env:
@@ -491,8 +493,9 @@ jobs:
   android-unit:
     name: android unit tests
     needs: where
-    if: ${{ inputs.android_unit == true }}
-    # Opt-in (workflow_dispatch input android_unit). Not part of the summary verdict, as for custom tasks.
+    # Part of the fast and full lanes and of every push run (a push has no inputs); counts in the summary verdict like the
+    # desktop shards. Opt out with the android_unit input; a tasks-only, apk-only or goldens run never runs them.
+    if: ${{ inputs.tasks == '' && !inputs.apk_only && inputs.lane != 'goldens' && (github.event_name == 'push' || inputs.android_unit == true) }}
     continue-on-error: ${{ github.ref_name != 'native/next' && !startsWith(github.ref_name, 'native/screens-merge') && github.ref_name != 'master' }}
     runs-on: ${{ fromJSON(needs.where.outputs.runs_on) }}
     timeout-minutes: 90
@@ -513,6 +516,7 @@ jobs:
             m="$(basename "$d")"
             if [ -d "$d/src/test" ]; then tasks="$tasks :android:$m:test"; fi
           done
+          echo "AU_TASKS=$tasks :androidApp:testPreviewDebugUnitTest" >> "$GITHUB_ENV"
           tool/ci/gradle_retry.sh "$RUNNER_TEMP/android-unit.log" $tasks :androidApp:testPreviewDebugUnitTest $GRADLE_FLAGS
       - name: Android unit report
         if: always()
@@ -522,7 +526,19 @@ jobs:
           mkdir -p reports
           failed=false; [ "$JOB_STATUS" = failure ] && failed=true
           ran=false; grep -Eq '^(> Task :|BUILD )' "$RUNNER_TEMP/android-unit.log" 2>/dev/null && ran=true
-          echo "{\"failed\":$failed,\"gradle_ran\":$ran}" > reports/android-unit.json
+          # The failing tests and tasks, in words, for the summary (test_report.py reads the JUnit XML and the Gradle log).
+          mkdir -p "$RUNNER_TEMP/au"
+          GRADLE_LOG="$RUNNER_TEMP/android-unit.log" TASKS="$AU_TASKS" JOB_STATUS="$JOB_STATUS" \
+            python3 -I tool/ci/test_report.py android-unit "$RUNNER_TEMP/au" >> "$GITHUB_STEP_SUMMARY" || true
+          python3 -I - "$RUNNER_TEMP/au/report-android-unit.json" "$failed" "$ran" > reports/android-unit.json <<'PY'
+          import json, sys
+          try:
+              r = json.load(open(sys.argv[1]))
+          except OSError:
+              r = {}
+          print(json.dumps({'failed': sys.argv[2] == 'true', 'gradle_ran': sys.argv[3] == 'true', 'tests': r.get('tests', 0),
+                            'failing': [f['id'] for f in r.get('failures', [])][:40], 'real': r.get('real_failures', [])[:20]}))
+          PY
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: always()
         with:
@@ -533,7 +549,7 @@ jobs:
 
   summary:
     name: summary
-    needs: [where, plan, compile, test, apk, record, custom]
+    needs: [where, plan, compile, test, apk, record, custom, android-unit]
     if: ${{ always() }}
     # No job-level continue-on-error: this job's exit code is summary.py's verdict on every branch (1 = FAIL, 2 = integrity:
     # Gradle never ran, a shard left no report), so the run page reads red exactly when the summary says FAIL.
@@ -549,6 +565,7 @@ jobs:
       RESULT_APK: ${{ needs.apk.result }}
       RESULT_RECORD: ${{ needs.record.result }}
       RESULT_CUSTOM: ${{ needs.custom.result }}
+      RESULT_ANDROID_UNIT: ${{ needs.android-unit.result }}
       PLANNED_SHARDS: ${{ join(fromJSON(needs.plan.outputs.shards || '[]'), ',') }}
     defaults:
       run:
@@ -575,7 +592,23 @@ jobs:
         run: |
           lane="${{ inputs.lane || 'full (push)' }}"; [ -n "${{ inputs.tasks }}" ] && lane="custom tasks"; [ "${{ inputs.apk_only }}" = true ] && lane="apk only"
           rc=0; python3 -I native/tool/ci/summary.py reports base "$lane" >> "$GITHUB_STEP_SUMMARY" || rc=$?
+          # The verdict as a small file for scripts/native-release.sh (it reads this, never a job colour): which commit,
+          # which lane, whether the Android unit tests were part of it, and summary.py's exit code (0 = PASS).
+          python3 -I - "$rc" "$lane" "${{ github.sha }}" "${{ needs.android-unit.result }}" "${{ needs.test.result }}" "${{ needs.compile.result }}" "${{ needs.custom.result }}" > verdict.json <<'PY'
+          import json, sys
+          rc, lane, sha, android, test, compile_, custom = sys.argv[1:8]
+          print(json.dumps({'sha': sha, 'lane': lane, 'exit': int(rc), 'android_unit': android not in ('', 'skipped'),
+                            'desktop_tests': test not in ('', 'skipped'), 'compile': compile_ not in ('', 'skipped'),
+                            'custom_tasks': custom not in ('', 'skipped')}))
+          PY
           if [ "$rc" = 2 ]; then echo "::error::Native CI integrity failure: Gradle did not run or reports are missing (see the summary)"; exit 1; fi
           # FAIL (1) reds the run on every branch, work branches included, so a run whose own summary says FAIL never
           # reads green. The individual jobs stay continue-on-error on work branches, so every shard still reports.
           exit "$rc"
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: ci-verdict
+          path: verdict.json
+          retention-days: 90
+          if-no-files-found: ignore

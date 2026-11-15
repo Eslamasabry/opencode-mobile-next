@@ -833,6 +833,10 @@ private fun NewConversationModelSheet(state: NewConversationUi, actions: NewConv
         onChoose = { option -> actions.chooseModel(option?.let { ModelRef(it.providerId, it.modelId) }) },
         favorites = favorites,
         onToggleFavorite = { actions.toggleFavorite(ModelRef(it.providerId, it.modelId)) },
+        // What "Server default" means on this server, named on its row (a phone agent's list has its own default).
+        serverDefault =
+            if (state.phoneAgent != null) null
+            else state.setup?.serverDefault?.let { ref -> options.firstOrNull { it.matches(ref) } },
         resetKey = state.profile,
         // A read of the agent's models is running: the kit says "Loading models…" (no list yet) or marks the last
         // known list while it is read again.

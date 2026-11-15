@@ -38,6 +38,8 @@ import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.binding
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.ui.kit.frame.kitKeyboardVisible
+import io.github.eslamasabry.oc.ui.kit.modal.KitModalOpen
+import io.github.eslamasabry.oc.ui.kit.modal.KitOwnModalLayer
 import io.github.eslamasabry.oc.ui.kit.lamp.KitLamp
 import io.github.eslamasabry.oc.ui.kit.lamp.KitLampFace
 import io.github.eslamasabry.oc.ui.kit.lamp.KitLampMarkKind
@@ -102,49 +104,54 @@ internal fun EdgeLightMount(
     }
     // The keyboard comes up: the panel goes with the light.
     LaunchedEffect(keyboardUp) { if (keyboardUp) open = false }
+    // A kit sheet, dialog or menu opens over the page: the light stands down, its panel with it.
+    val modalOpen = KitModalOpen.isOpen
+    LaunchedEffect(modalOpen) { if (modalOpen) open = false }
     AnnounceNewNeeds(face, label, open)
     Box(modifier.fillMaxSize()) {
-        EdgeLightPanelLayer(
-            port = port,
-            controller = controller,
-            open = open,
-            side = place.side,
-            anchor = { anchor },
-            top = top,
-            bottom = bottom,
-            onClose = {
-                open = false
-                closedJustNow = true
-                // The list opens as a list next time, not still in Edit (device 2026-11-14).
-                controller.done()
-            },
-            onMove = {
-                open = false
-                controller.done()
-                placing = true
-            },
-        )
-        // Move…: the six spots over a dimmed page; the real light is composed after it, so it stays lit above the
-        // scrim and moves as a spot is picked. Back or a tap on the dimmed page closes only the picker.
-        val placeUi by controller.ui.collectAsStateWithLifecycle()
-        val placeWords = rememberLampTexts(placeUi)
-        KitLampPlaceLayer(
-            visible = placing,
-            place = LampPanelMap.place(placeUi.place),
-            words =
-                KitLampPlaceWords(
-                    title = placeWords[LampWord.PlaceTitle],
-                    body = placeWords[LampWord.PlaceBody],
-                    left = placeWords[LampWord.Left],
-                    right = placeWords[LampWord.Right],
-                    high = placeWords[LampWord.High],
-                    middle = placeWords[LampWord.Middle],
-                    low = placeWords[LampWord.Low],
-                    done = placeWords[LampWord.Done],
-                ),
-            onPick = { controller.move(LampPanelMap.place(it)) },
-            onDone = { placing = false },
-        )
+        KitOwnModalLayer {
+            EdgeLightPanelLayer(
+                port = port,
+                controller = controller,
+                open = open,
+                side = place.side,
+                anchor = { anchor },
+                top = top,
+                bottom = bottom,
+                onClose = {
+                    open = false
+                    closedJustNow = true
+                    // The list opens as a list next time, not still in Edit (device 2026-11-14).
+                    controller.done()
+                },
+                onMove = {
+                    open = false
+                    controller.done()
+                    placing = true
+                },
+            )
+            // Move…: the six spots over a dimmed page; the real light is composed after it, so it stays lit above the
+            // scrim and moves as a spot is picked. Back or a tap on the dimmed page closes only the picker.
+            val placeUi by controller.ui.collectAsStateWithLifecycle()
+            val placeWords = rememberLampTexts(placeUi)
+            KitLampPlaceLayer(
+                visible = placing,
+                place = LampPanelMap.place(placeUi.place),
+                words =
+                    KitLampPlaceWords(
+                        title = placeWords[LampWord.PlaceTitle],
+                        body = placeWords[LampWord.PlaceBody],
+                        left = placeWords[LampWord.Left],
+                        right = placeWords[LampWord.Right],
+                        high = placeWords[LampWord.High],
+                        middle = placeWords[LampWord.Middle],
+                        low = placeWords[LampWord.Low],
+                        done = placeWords[LampWord.Done],
+                    ),
+                onPick = { controller.move(LampPanelMap.place(it)) },
+                onDone = { placing = false },
+            )
+        }
         BoxWithConstraints(Modifier.fillMaxSize().padding(top = top)) {
             val offset = EdgeLightRules.bottomFromPageDp(place.height, maxHeight.value, bottom.value, lowAbove.value).dp
             KitLamp(
@@ -162,7 +169,7 @@ internal fun EdgeLightMount(
                         .onGloballyPositioned { anchor = it.boundsInWindow() }
                         .sharePointerInputWithSiblings(),
                 side = place.side,
-                visible = EdgeLightRules.visible(keyboardUp),
+                visible = EdgeLightRules.visible(keyboardUp, modalOpen),
             )
         }
     }
@@ -210,8 +217,8 @@ private fun edgeLightLabel(counts: EdgeLightCounts): String {
  * appears only on Home and Settings, never on these pages, so a wide window changes nothing here: the light sits on
  * the window's edge.
  *
- * TODO(K1 layer): this overlay is above the page's own sheets and menus, which the conversation's mount is not;
- * until the kit's cover sink exists the light stays on top of a Files sheet's scrim.
+ * This overlay is above the page's own sheets and menus (the conversation's mount is not), so the light stands down
+ * while any kit modal part is open ([KitModalOpen]) and comes back when it has closed.
  */
 @ContributesIntoSet(AppScope::class, binding = binding<ShellPageLight>())
 @Inject

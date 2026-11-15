@@ -467,7 +467,6 @@
     </plurals>
     <string name="reviewSummary__eq1">تغيّر ملف واحد · +%2$d −%3$d</string>
     <string name="reviewAlreadyApplied">أجرى الوكيل هذه التغييرات في مشروعك بالفعل.</string>
-    <string name="reviewLooksGood">يبدو جيدًا</string>
     <string name="reviewUndoAll">تراجع عن الكل</string>
     <string name="reviewSendBackWithNote">أعِدها مع ملاحظة</string>
     <plurals name="reviewUndoTitle">
@@ -480,4 +479,5 @@
     </plurals>
     <string name="reviewUndoTitle__eq1">التراجع عن ملف واحد تغيّر؟</string>
     <string name="reviewUndoBody">يعود مشروعك كما كان قبل أن يبدأ الوكيل. وتبقى المحادثة.</string>
+    <string name="reviewDone">تمّ</string>
 </resources>

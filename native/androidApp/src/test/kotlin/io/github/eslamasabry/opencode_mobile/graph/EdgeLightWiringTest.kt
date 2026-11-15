@@ -196,6 +196,13 @@ class EdgeLightWiringTest {
         assertTrue(EdgeLightRules.visible(keyboardUp = false))
     }
 
+    @Test
+    fun `hidden_whileAKitModalIsOpen_andBackAfter`() {
+        assertFalse(EdgeLightRules.visible(keyboardUp = false, modalOpen = true))
+        assertFalse(EdgeLightRules.visible(keyboardUp = true, modalOpen = true))
+        assertTrue(EdgeLightRules.visible(keyboardUp = false, modalOpen = false))
+    }
+
     // ---- the face ---------------------------------------------------------------------------------------------------
 
     @Test

@@ -417,7 +417,6 @@
     </plurals>
     <string name="reviewSummary__eq1">1 个文件已更改 · +%2$d −%3$d</string>
     <string name="reviewAlreadyApplied">智能体已经在你的项目中做了这些更改。</string>
-    <string name="reviewLooksGood">没问题</string>
     <string name="reviewUndoAll">全部撤销</string>
     <string name="reviewSendBackWithNote">附上备注退回</string>
     <plurals name="reviewUndoTitle">

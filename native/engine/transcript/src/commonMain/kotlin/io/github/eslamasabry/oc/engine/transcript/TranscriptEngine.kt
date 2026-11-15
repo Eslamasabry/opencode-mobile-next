@@ -110,6 +110,17 @@ public class TranscriptCounters {
      */
     public var rowWrites: Long = 0
         internal set
+
+    /**
+     * Issue 147: messages, turns and parts a derive walks to group turns, find the changed ones and gather the search
+     * text. Per publish while a reply streams it must not grow with the number of settled turns loaded.
+     */
+    public var historyVisits: Long = 0
+        internal set
+
+    /** Characters copied into Find's search text (issue 147: a settled turn's text is copied once, not per publish). */
+    public var searchChars: Long = 0
+        internal set
 }
 
 public class TranscriptHandle

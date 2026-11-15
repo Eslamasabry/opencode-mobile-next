@@ -159,6 +159,8 @@ public data class ComposerModels(
     val agent: String? = null,
     /** The session names no model: the server default applies. */
     val usesDefault: Boolean = false,
+    /** The model the server resolves "Server default" to, when it says (one of [choices]). */
+    val serverDefault: ComposerModel? = null,
     /** B3: models picked lately on this server, newest first (from [choices]). */
     val recent: List<ComposerModel> = emptyList(),
     val favorites: List<ComposerModel> = emptyList(),

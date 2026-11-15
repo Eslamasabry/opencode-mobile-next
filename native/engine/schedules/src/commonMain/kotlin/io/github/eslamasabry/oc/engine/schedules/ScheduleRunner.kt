@@ -301,7 +301,8 @@ public class ScheduleRunner(
                 // until fresh output finishes. Remote servers continue independently after
                 // admission.
                 if (opened.startedPhoneServer) throw e
-                result(RunStatus.Ran)
+                // Accepted, but what came of it is not known: "sent", never "replied" (settled later by [settle]).
+                result(RunStatus.Ran, UNCONFIRMED)
             }
         }
 
@@ -346,7 +347,35 @@ public class ScheduleRunner(
         }
     }
 
+    /**
+     * Settles one run the server accepted but whose reply could not be followed, from the conversation itself. Reads
+     * only; sends nothing. Null while it is still unknown (still working, or too soon to say).
+     */
+    public suspend fun settle(gateway: ServerGateway, run: ScheduledRun, nowMs: Long): ScheduledRun? {
+        val target = SessionId(run.sessionId ?: return null)
+        val session = (gateway.session(target) as? Outcome.Ok)?.value ?: return null
+        val page = (gateway.messagePage(target) as? Outcome.Ok)?.value ?: return null
+        // Replies that began after this run was admitted (the conversation may hold older ones).
+        val replies =
+            page.items.filter { it.info.role == Role.Assistant && (it.info.time?.createdMs ?: 0L) >= run.startedAtMs }
+        if (session.lastRunFailed || replies.any { it.info.errorText != null }) return run.copy(status = RunStatus.Failed, errorCode = "agent_failed")
+        val statuses = (gateway.sessionStatuses() as? Outcome.Ok)?.value ?: return null
+        val status = statuses[target]
+        if (status != null && status != SessionStatus.Idle) return null // still working
+        if ((gateway.pendingPermissions() as? Outcome.Ok)?.value.orEmpty().any { it.sessionId == target }) {
+            return run.copy(status = RunStatus.Failed, errorCode = "needs_you")
+        }
+        if (replies.any { it.info.time?.completedMs != null }) return run.copy(errorCode = null)
+        // Idle for a good while and nothing came back: it did not reply. Sooner than that, keep waiting.
+        if (nowMs - run.startedAtMs >= NO_REPLY_AFTER_MS) return run.copy(status = RunStatus.Failed, errorCode = "uncertain_delivery")
+        return null
+    }
+
     public companion object {
+        /** The stored code of a run the server accepted whose reply was not followed to its end. */
+        public const val UNCONFIRMED: String = "unconfirmed"
+
+        private const val NO_REPLY_AFTER_MS = 600_000L
         private const val CLOSE_WAIT_MS = 3_000L
         private const val PHONE_READY_MS = 90_000L
 

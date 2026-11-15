@@ -31,7 +31,6 @@ import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.PersistentMap
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentMapOf
-import kotlinx.collections.immutable.toImmutableList
 
 internal class PartEntry(var part: Part, var version: Long) {
     /**
@@ -79,6 +78,8 @@ internal class TurnEntry(
     val members: List<MsgEntry>,
     val versions: LongArray,
     val rows: List<TranscriptRow>,
+    /** Find's text of this turn's thoughts, steps, notices and files, made with its rows (issue 147). */
+    val search: List<SearchText>,
 ) {
     fun matches(other: List<MsgEntry>): Boolean {
         if (other.size != members.size) return false
@@ -121,9 +122,18 @@ internal class TranscriptModel(
 
     // Derive caches
     private var turnCache = HashMap<String, TurnEntry>()
-    private var prefixEntries: List<TurnEntry> = emptyList()
+    private val prefixEntries = ArrayList<TurnEntry>()
+
+    // Issue 147: the last grouping into turns, the turn each message is in, and the first turn a change since the last
+    // derive can move. Messages only ever join at the end (a history page reorders, and regroups everything), so a
+    // derive groups again only from the turn before the first changed one.
+    private val turns = ArrayList<Pair<String, List<MsgEntry>>>()
+    private val turnOf = HashMap<String, Int>()
+    private val joined = ArrayList<MsgEntry>()
+    private var changedFrom = REGROUP_ALL
     private var prefixList: PersistentList<TranscriptRow> = persistentListOf()
     private var prefixPositions: PersistentMap<String, Int> = persistentMapOf()
+    private var prefixSearch: PersistentList<SearchText> = persistentListOf()
     private val rowCache = HashMap<String, TranscriptRow>()
 
     // STREAM-FIX newest-turn cache: the published list is prefix + newest rows; a publish rewrites
@@ -226,6 +236,20 @@ internal class TranscriptModel(
         messages.forEach { (id, m) -> ordered.putIfAbsent(id, m) }
         messages.clear()
         messages.putAll(ordered)
+        // A page puts messages before the ones already loaded: group every turn again.
+        changedFrom = REGROUP_ALL
+    }
+
+    /** [m] changed: its turn, and the turn before it (its prompt may have stopped being one), group again. */
+    private fun touched(m: MsgEntry) {
+        val at = turnOf[m.info.id] ?: (turns.size - 1)
+        if (at < changedFrom) changedFrom = at.coerceAtLeast(0)
+    }
+
+    /** A new message: it joins after every message already grouped, so only the last turn can take it. */
+    private fun joinedAtEnd(m: MsgEntry) {
+        joined += m
+        if (turns.size - 1 < changedFrom) changedFrom = (turns.size - 1).coerceAtLeast(0)
     }
 
     private fun setRun(next: RunFacts): Boolean {
@@ -240,10 +264,11 @@ internal class TranscriptModel(
         val v = stamp()
         val entry = messages[info.id]
         if (entry == null) {
-            messages[info.id] = MsgEntry(info, v)
+            messages[info.id] = MsgEntry(info, v).also(::joinedAtEnd)
         } else {
             entry.info = info
             entry.version = v
+            touched(entry)
         }
         if (info.completedMs != null) messages[info.id]?.let(::endParts)
         deferredParts.remove(info.id)?.forEach { upsertPart(it) }
@@ -254,7 +279,7 @@ internal class TranscriptModel(
         val v = stamp()
         val msg =
             messages[part.messageId]
-                ?: if (create != null) MsgEntry(create, v).also { messages[create.id] = it }
+                ?: if (create != null) MsgEntry(create, v).also { messages[create.id] = it; joinedAtEnd(it) }
                 else null
         if (msg == null) {
             deferredParts.getOrPut(part.messageId) { mutableListOf() } += part
@@ -262,6 +287,7 @@ internal class TranscriptModel(
             return false
         }
         msg.version = v
+        touched(msg)
         val existing = msg.parts[part.id]
         val entry = existing ?: PartEntry(part, v).also { msg.parts[part.id] = it }
         entry.part = part
@@ -305,6 +331,7 @@ internal class TranscriptModel(
             return false
         }
         msg.version = v
+        touched(msg)
         entry.version = v
         appendDelta(entry, e.field, e.delta)
         // Streamed raw tool input is never parsed and draws nothing in P3 (§3.3).
@@ -348,6 +375,7 @@ internal class TranscriptModel(
             if (m.parts.values.any { !it.part.ended }) {
                 endParts(m)
                 m.version = stamp()
+                touched(m)
             }
         }
     }
@@ -356,50 +384,65 @@ internal class TranscriptModel(
 
     fun derive(revision: Long): TranscriptState {
         counters.derives++
-        val turns = groupTurns()
+        val from = regroup()
         val newestIndex = turns.lastIndex
-        // Settled prefix: every turn but the newest. Reuse the cached rows of unchanged turns, and
-        // the previous
-        // persistent prefix when it is a prefix of this one (the common case while a reply
-        // streams).
-        val entries = ArrayList<TurnEntry>(turns.size)
-        for (i in 0 until newestIndex) {
+        val settledCount = newestIndex.coerceAtLeast(0)
+        // Settled prefix: every turn but the newest. The turns before [from] did not change and keep their entries (the
+        // same objects); from there, reuse the cached rows of unchanged turns, and the previous persistent prefix when
+        // it is a prefix of this one (the common case while a reply streams).
+        val start = minOf(from, settledCount, prefixEntries.size)
+        val fresh = ArrayList<TurnEntry>(settledCount - start)
+        for (i in start until settledCount) {
             val (turnId, members) = turns[i]
+            counters.historyVisits += 1 + members.size
             val cached = turnCache[turnId]
-            entries +=
+            fresh +=
                 if (cached != null && cached.matches(members)) {
                     cached
                 } else {
                     buildTurn(turnId, members, finished = true).also { turnCache[turnId] = it }
                 }
         }
-        var common = 0
+        var common = start
         while (
             common < prefixEntries.size &&
-                common < entries.size &&
-                prefixEntries[common] === entries[common]
-        ) common++
+                common < settledCount &&
+                prefixEntries[common] === fresh[common - start]
+        ) {
+            common++
+            counters.historyVisits++
+        }
+        val oldSize = prefixEntries.size
+        prefixEntries.subList(start, prefixEntries.size).clear()
+        prefixEntries.addAll(fresh)
+        val entries: List<TurnEntry> = prefixEntries
         var list: PersistentList<TranscriptRow>
         var positions: PersistentMap<String, Int>
-        if (common == prefixEntries.size) {
+        var search: PersistentList<SearchText>
+        if (common == oldSize) {
             list = prefixList
             positions = prefixPositions
+            search = prefixSearch
         } else {
             list = persistentListOf()
             positions = persistentMapOf()
+            search = persistentListOf()
             common = 0
         }
         for (i in common until entries.size) {
             val (l, p) = appendRows(list, positions, entries[i].rows)
             list = l
             positions = p
+            if (entries[i].search.isNotEmpty()) search = search.addAll(entries[i].search)
         }
-        prefixEntries = entries
         prefixList = list
         prefixPositions = positions
+        prefixSearch = search
         if (newestIndex >= 0) {
             val (turnId, members) = turns[newestIndex]
-            val rows = buildTurn(turnId, members, finished = !run.busy).rows
+            val newest = buildTurn(turnId, members, finished = !run.busy)
+            val rows = newest.rows
+            if (newest.search.isNotEmpty()) search = search.addAll(newest.search)
             if (newestBase === list && newestTurnId == turnId) {
                 replaceNewest(list.size, rows)
             } else {
@@ -418,40 +461,13 @@ internal class TranscriptModel(
             newestTurnId = null
             newestRows = emptyList()
         }
-        val searchable = ArrayList<SearchText>()
-        for ((turnId, members) in turns) {
-            for (m in members) for (entry in m.parts.values) {
-                val part = entry.part
-                val key =
-                    when (part.type) {
-                        PartType.Reasoning -> "thought:${part.messageId}/${part.id}"
-                        PartType.Tool -> "work:$turnId"
-                        PartType.Notice,
-                        PartType.Switch,
-                        PartType.Compaction -> "notice:${part.messageId}/${part.id}"
-                        PartType.File ->
-                            "footer:$turnId".takeIf { it in positions }
-                                ?: "prompt:$turnId".takeIf { it in positions }
-                                ?: list.firstOrNull { it.turnId == turnId }?.key
-                        else -> null
-                    } ?: continue
-                if (key !in positions) continue
-                val text =
-                    if (part.type == PartType.Reasoning) entry.raw?.toString().orEmpty()
-                    else
-                        listOf(part.searchText, entry.raw?.toString().orEmpty())
-                            .filter { it.isNotBlank() }
-                            .joinToString("\n")
-                if (text.isNotBlank())
-                    searchable += SearchText(key, "${part.messageId}/${part.id}", text)
-            }
-        }
         return TranscriptState(
             revision,
-            NewestFirst(list),
+            // The settled turns' rows go with them as one list, the same instance while none changed (issue 147).
+            NewestFirst(list, prefixList),
             positions,
             run,
-            searchable.toImmutableList(),
+            search,
         )
     }
 
@@ -494,13 +510,34 @@ internal class TranscriptModel(
 
     /**
      * Turns by prompt (never by `role != assistant`, §3.6): a user message that is not a notice
-     * starts a turn.
+     * starts a turn. Issue 147: only from the turn before the first one a change since the last derive touched (a
+     * changed first message may have stopped being a prompt and joined it); the turns before it keep their grouping.
+     * Returns the index of the first turn grouped again ([turns]' size when nothing changed).
      */
-    private fun groupTurns(): List<Pair<String, List<MsgEntry>>> {
-        val out = ArrayList<Pair<String, List<MsgEntry>>>()
+    private fun regroup(): Int {
+        val from: Int
+        val again: List<MsgEntry>
+        if (changedFrom == REGROUP_ALL || turns.isEmpty()) {
+            from = 0
+            again = messages.values.toList()
+            turns.clear()
+            turnOf.clear()
+        } else if (changedFrom == NOTHING_CHANGED) {
+            return turns.size
+        } else {
+            from = (changedFrom - 1).coerceAtLeast(0)
+            val tail = ArrayList<MsgEntry>()
+            for (i in from until turns.size) tail.addAll(turns[i].second)
+            tail.addAll(joined)
+            again = tail
+            turns.subList(from, turns.size).clear()
+        }
+        joined.clear()
+        changedFrom = NOTHING_CHANGED
         var current: ArrayList<MsgEntry>? = null
         var currentId = "head"
-        for (m in messages.values) {
+        for (m in again) {
+            counters.historyVisits++
             // A picture or file sent without words is a prompt too (its own turn, shown with its thumbnail).
             val isPrompt =
                 m.info.role == Role.User &&
@@ -509,14 +546,15 @@ internal class TranscriptModel(
                             (it.part.type == PartType.File && !it.part.synthetic)
                     }
             if (isPrompt || current == null) {
-                current?.let { out += currentId to it }
+                current?.let { turns += currentId to it }
                 current = ArrayList()
                 currentId = if (isPrompt) m.info.id else "head"
             }
             current.add(m)
+            turnOf[m.info.id] = turns.size
         }
-        current?.let { out += currentId to it }
-        return out
+        current?.let { turns += currentId to it }
+        return from
     }
 
     private fun buildTurn(turnId: String, members: List<MsgEntry>, finished: Boolean): TurnEntry {
@@ -646,7 +684,57 @@ internal class TranscriptModel(
                     )
                 )
         }
-        return TurnEntry(turnId, members, LongArray(members.size) { members[it].version }, rows)
+        return TurnEntry(
+            turnId,
+            members,
+            LongArray(members.size) { members[it].version },
+            rows,
+            searchOf(turnId, members, rows),
+        )
+    }
+
+    /**
+     * Find's text of one turn's parts that draw no text row of their own (thoughts, steps, notices, files), each tied
+     * to the row that shows it. Made with the turn's rows, so a settled turn's text is made once, never per publish
+     * (issue 147). A thought reuses its row's text instead of copying the part again.
+     */
+    private fun searchOf(turnId: String, members: List<MsgEntry>, rows: List<TranscriptRow>): List<SearchText> {
+        var out: ArrayList<SearchText>? = null
+        var byKey: HashMap<String, TranscriptRow>? = null
+        fun row(key: String): TranscriptRow? =
+            (byKey ?: HashMap<String, TranscriptRow>(rows.size * 2).also { map ->
+                for (r in rows) map.getOrPut(r.key) { r }
+                byKey = map
+            })[key]
+        for (m in members) for (entry in m.parts.values) {
+            counters.historyVisits++
+            val part = entry.part
+            val key =
+                when (part.type) {
+                    PartType.Reasoning -> "thought:${part.messageId}/${part.id}"
+                    PartType.Tool -> "work:$turnId"
+                    PartType.Notice,
+                    PartType.Switch,
+                    PartType.Compaction -> "notice:${part.messageId}/${part.id}"
+                    PartType.File ->
+                        "footer:$turnId".takeIf { row(it) != null }
+                            ?: "prompt:$turnId".takeIf { row(it) != null }
+                            ?: rows.firstOrNull()?.key
+                    else -> null
+                } ?: continue
+            val shown = row(key) ?: continue
+            val text =
+                if (part.type == PartType.Reasoning) (shown as? ThoughtRow)?.text ?: entry.raw?.toString().orEmpty()
+                else
+                    listOf(part.searchText, entry.raw?.toString().orEmpty())
+                        .filter { it.isNotBlank() }
+                        .joinToString("\n")
+                        .also { counters.searchChars += it.length }
+            if (text.isNotBlank())
+                (out ?: ArrayList<SearchText>().also { out = it }) +=
+                    SearchText(key, "${part.messageId}/${part.id}", text)
+        }
+        return out ?: emptyList()
     }
 
     private fun promptRowOf(
@@ -762,6 +850,8 @@ internal class TranscriptModel(
     private fun deltaKey(messageId: String, partId: String) = "$messageId\u0000$partId"
 
     private companion object {
+        const val REGROUP_ALL = -1
+        const val NOTHING_CHANGED = Int.MAX_VALUE
         const val MAX_DEFERRED_KEYS = 256
         const val MAX_DEFERRED_CHARS = 1 shl 20
     }
