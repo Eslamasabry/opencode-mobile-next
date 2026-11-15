@@ -50,13 +50,22 @@ class AndroidGitLinkRepairService(
                     stores.phoneOfHelper(profile),
                     (stores.prefs.get("oc.builtinServerOwner") as? PrefValue.Str)?.value,
                 )
-            val saved = phone?.let { stores.profiles.profile(it)?.profile }
-            registry.live.value[profile] != null &&
-                saved != null &&
-                saved.managedOnPhone &&
-                saved.origin.scheme == "http" &&
-                AddressRules.isLoopback(saved.origin.host) &&
-                saved.origin.port == PhoneServerScripts.PORT
+            val graph = registry.live.value[profile]
+            when {
+                phone == null || graph == null -> false
+                // The phone's own server: the live connection's profile says it is the app's loopback server.
+                phone == profile ->
+                    graph.profile.managedOnPhone &&
+                        graph.profile.origin.scheme == "http" &&
+                        AddressRules.isLoopback(graph.profile.origin.host) &&
+                        graph.profile.origin.port == PhoneServerScripts.PORT &&
+                        stores.profiles.profile(profile) != null
+                // The phone agents' helper: the phone it belongs to must be the saved app-owned server.
+                else ->
+                    stores.profiles.profile(phone)?.profile?.baseUrl?.let(
+                        io.github.eslamasabry.oc.engine.runtime.switching.ManagedLocalServer::isBuiltin
+                    ) == true
+            }
         } catch (_: Exception) {
             false
         }

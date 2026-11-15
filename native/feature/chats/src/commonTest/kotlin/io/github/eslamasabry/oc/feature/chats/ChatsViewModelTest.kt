@@ -927,6 +927,7 @@ class ChatsViewModelTest {
         val home = Home(listOf(source("main", main = true)))
         home.storage = io.github.eslamasabry.oc.feature.chats.presentation.PhoneStorageAccess.Off
         val vm = sourcesVm(home)
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
         assertNull(vm.state.value.phoneStorage, "not read until the sheet opens")
         vm.showProjectChoices()
         assertEquals(io.github.eslamasabry.oc.feature.chats.presentation.PhoneStorageAccess.Off, vm.state.value.phoneStorage)
@@ -934,6 +935,7 @@ class ChatsViewModelTest {
         assertEquals(1, home.storageRequests)
         // A server that is not this phone's own offers no such row.
         val remote = sourcesVm(Home(listOf(source("main", main = true))))
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { remote.state.collect {} }
         remote.showProjectChoices()
         assertNull(remote.state.value.phoneStorage)
     }
