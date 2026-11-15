@@ -32,6 +32,13 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
+import io.github.eslamasabry.oc.ui.design.style.Style
+import io.github.eslamasabry.oc.ui.design.style.SurfaceRole
+import io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel
+import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceInput
+import io.github.eslamasabry.oc.ui.kit.foundation.kitDressedLook
+import io.github.eslamasabry.oc.ui.kit.foundation.kitSurface
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
@@ -126,11 +133,22 @@ private fun LimitBand(notice: KitLimitNotice, onViewUsage: () -> Unit, onDismiss
     val tokens = LocalKitTokens.current
     // Concentric with the composer face: its corner less the face's inner padding.
     val corner = (tokens.composerRadius.toFloat() - Space.S1).coerceAtLeast(Space.S2.toFloat()).dp
+    // glass-truth 2026-11-16: the band lies inside the message box, so it is a quiet inset of the box's pane, never a
+    // pane of its own. Under Glass an opaque surface1 band sat inside the glass box (a plate in the glass): it is the
+    // words' ink at a low alpha over the glass, as the slab's chips are. Brutal and Paper dress it as a part nested in the
+    // box's outline (their edge, no shadow); Solid, Soft and Signal keep surface1.
+    val glass = LocalKitStyle.current.style == Style.Glass
+    val dressed = if (glass) null else kitDressedLook(KitSurfaceInput(SurfaceRole.Content, KitShapeId.Panel, SurfaceLevel.Surface1, radius = corner, nested = true))
     Row(
         Modifier.fillMaxWidth()
             .padding(bottom = Space.S1.dp)
-            .clip(RoundedCornerShape(corner))
-            .background(colors.surface1)
+            .then(
+                when {
+                    glass -> Modifier.clip(RoundedCornerShape(corner)).background(colors.text1.copy(alpha = GLASS_INSET_TINT))
+                    dressed != null -> Modifier.kitSurface(dressed)
+                    else -> Modifier.clip(RoundedCornerShape(corner)).background(colors.surface1)
+                }
+            )
             .padding(start = Space.S4.dp, top = Space.S2.dp, bottom = Space.S2.dp)
             .testTag(LIMIT_STRIP_TAG),
         verticalAlignment = Alignment.CenterVertically,
@@ -227,5 +245,8 @@ public const val LIMIT_STRIP_TAG: String = "kit-composer-limit-strip"
 public const val LIMIT_VIEW_TAG: String = "kit-composer-limit-view"
 
 private const val LIMIT_PILL_HEIGHT = 40
+
+/** The band's face under Glass: the words' ink at this alpha over the message box's glass (the slab chips' tint). */
+private const val GLASS_INSET_TINT = .08f
 private const val LIMIT_PILL_MAX_WIDTH = 160
 private const val LIMIT_CLOSE_GLYPH = 20

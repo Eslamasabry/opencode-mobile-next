@@ -93,6 +93,45 @@ internal object KitSurfaces {
         return Count(counted.filterValues { it.isNotEmpty() }, allow.filter { it !in used })
     }
 
+    /**
+     * K20b, own faces (glass-truth 2026-11-16): the voice pill, the side sheet, the undo bar, the toast and their kind
+     * painted their own outer face and never asked the style, so Glass drew an opaque Solid card among its glass. A kit
+     * file that paints a surface by hand (a counted K20 line) must also ask a style path Glass answers ([ASKS]:
+     * `kitSurfaceLook` or a wrapper of it, `kitStyledFace`, a liquid face, the modal glass face); `kitDressedLook` alone
+     * does not count, it answers only for Brutal and Paper. A file that may keep its own face (content inside another
+     * pane, a state layer, an engine primitive) is listed with its reason in `quality/config/kit-own-face-allow.txt`.
+     */
+    val ASKS: Regex =
+        Regex("""\b\w*[sS]urfaceLook\(|\bkitStyledFace\(|\bkitLiquid\w*Face\(|\bkitModalGlassFace\(|\bkitGlassSheet\(|\bKitSurface(?:Panel|Inset|Tile)?\(""")
+
+    /** Whether a code line of [text] asks the style for a face Glass answers ([ASKS]). */
+    fun asksTheStyle(text: String): Boolean = code(text).any { (_, l) -> ASKS.containsMatchIn(l) }
+
+    /** One own-face allowlist line: a kit file that may paint its own face, and why. */
+    data class OwnFace(val path: String, val reason: String, val source: String)
+
+    /** Parses the own-face allowlist (`path | reason`); a line without both fields is returned as an error. */
+    fun parseOwnFaces(text: String): Pair<List<OwnFace>, List<String>> {
+        val entries = mutableListOf<OwnFace>()
+        val errors = mutableListOf<String>()
+        text.lines().map { it.trim() }.filter { it.isNotEmpty() && !it.startsWith("#") }.forEach { raw ->
+            val parts = raw.split(" | ").map { it.trim() }
+            if (parts.size != 2 || parts.any { it.isEmpty() }) errors += "needs `path | reason`, both filled: $raw" else entries += OwnFace(parts[0], parts[1], raw)
+        }
+        return entries to errors
+    }
+
+    /** K20b's result: files that paint by hand and never ask the style, and allowlist entries no such file needs any more. */
+    data class OwnFaces(val unasked: List<String>, val stale: List<OwnFace>)
+
+    /** The files of [files] with a counted K20 line ([allow] applied) and no [ASKS] call, against the own-face list [own]. */
+    fun ownFaces(files: Map<String, String>, allow: List<Allow>, own: List<OwnFace>): OwnFaces {
+        val painting = count(files, allow).counted.keys
+        val unasked = painting.filter { !asksTheStyle(files.getValue(it)) }.toSet()
+        val listed = own.map { it.path }.toSet()
+        return OwnFaces(unasked.filter { it !in listed }.sorted(), own.filter { it.path !in unasked })
+    }
+
     /** The baseline file's `path<TAB>count` lines. */
     fun parseBaseline(text: String): Map<String, Int> =
         text.lines().map { it.trim() }.filter { it.isNotEmpty() && !it.startsWith("#") }.associate { line ->

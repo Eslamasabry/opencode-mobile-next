@@ -1,5 +1,14 @@
 package io.github.eslamasabry.oc.ui.kit.row
 
+import io.github.eslamasabry.oc.ui.design.style.SurfaceRole
+import io.github.eslamasabry.oc.ui.design.style.Style
+import io.github.eslamasabry.oc.ui.design.style.Radii
+import io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel
+import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
+import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceInput
+import io.github.eslamasabry.oc.ui.kit.foundation.KitPaneCell
+import io.github.eslamasabry.oc.ui.kit.foundation.kitSurfaceLook
+import io.github.eslamasabry.oc.ui.kit.foundation.kitSurface
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -116,7 +125,26 @@ private fun Cell(index: Int, total: Int, leads: Boolean, margin: Dp?, row: @Comp
             bottomStart = if (last) radius else 0.dp,
             bottomEnd = if (last) radius else 0.dp,
         )
-        val panel = if (flat) Modifier else Modifier.background(colors.surface1, shape).clip(shape)
+        // glass-truth 2026-11-16: the cells were surface1 in every style that draws a panel. Under Glass each cell is its
+        // share of one frosted panel through the resolver (KitPaneCell: the lit corner and the sheen on the first cell
+        // only, no rim between rows). The other styles keep surface1.
+        val cell = when {
+            first -> KitPaneCell.First
+            last -> KitPaneCell.Last
+            else -> KitPaneCell.Middle
+        }
+        val glass = !flat && LocalKitStyle.current.style == Style.Glass
+        val styled =
+            if (glass) {
+                kitSurfaceLook(
+                    KitSurfaceInput(
+                        SurfaceRole.Content, KitShapeId.Panel, SurfaceLevel.Surface1, ownFill = colors.surface1,
+                        corners = Radii(if (first) radius.value else 0f, if (first) radius.value else 0f, if (last) radius.value else 0f, if (last) radius.value else 0f),
+                        cell = cell,
+                    )
+                ).takeIf { it.dressed }
+            } else null
+        val panel = if (flat) Modifier else styled?.let { Modifier.kitSurface(it) } ?: Modifier.background(colors.surface1, shape).clip(shape)
         Column(Modifier.fillMaxWidth().then(panel)) {
             if (!first) KitDivider(inset = if (leads) KitDividerInset.Text else KitDividerInset.Gutter, endInset = reach)
             row()

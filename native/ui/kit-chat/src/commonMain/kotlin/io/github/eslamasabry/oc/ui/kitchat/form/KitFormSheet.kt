@@ -20,6 +20,14 @@ import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
+import androidx.compose.ui.graphics.compositeOver
+import io.github.eslamasabry.oc.ui.design.style.Style
+import io.github.eslamasabry.oc.ui.design.style.SurfaceRole
+import io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel
+import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceInput
+import io.github.eslamasabry.oc.ui.kit.foundation.kitStyledFace
+import io.github.eslamasabry.oc.ui.kit.foundation.kitSurface
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
@@ -120,14 +128,26 @@ public fun KitFormCard(
 ) {
     val colors = LocalKitColors.current
     val shape = KitShapeId.Card.shape()
+    // glass-truth 2026-11-16: the card was surface1 under the attention wash in every style. It holds reading content in
+    // the transcript, so under Glass it is a frosted card through the resolver, the attention wash and line on it; Brutal
+    // and Paper dress it (the attention kept in its fill); Solid, Soft and Signal keep its own face.
+    val glass = LocalKitStyle.current.style == Style.Glass
+    val face = colors.attentionSurface.compositeOver(colors.surface1)
+    val styled =
+        kitStyledFace(
+            KitSurfaceInput(SurfaceRole.Content, KitShapeId.Card, SurfaceLevel.Surface1, ownFill = face, color = if (glass) null else face)
+        )
     Column(
         modifier
             .widthIn(max = 700.dp)
             .fillMaxWidth()
-            .clip(shape)
-            .background(colors.surface1)
-            .background(colors.attentionSurface)
-            .border(1.dp, colors.attentionLine, shape)
+            .then(
+                when {
+                    styled == null -> Modifier.clip(shape).background(colors.surface1).background(colors.attentionSurface).border(1.dp, colors.attentionLine, shape)
+                    glass -> Modifier.kitSurface(styled).background(colors.attentionSurface).border(1.dp, colors.attentionLine, styled.shape)
+                    else -> Modifier.kitSurface(styled)
+                }
+            )
             .padding(Space.S4.dp),
         verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
     ) {

@@ -1,5 +1,10 @@
 package io.github.eslamasabry.oc.ui.kit.state
 
+import io.github.eslamasabry.oc.ui.design.style.SurfaceRole
+import io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel
+import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceInput
+import io.github.eslamasabry.oc.ui.kit.foundation.kitStyledFace
+import io.github.eslamasabry.oc.ui.kit.foundation.kitSurface
 import io.github.eslamasabry.oc.ui.kit.row.kitContainer
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -66,6 +71,10 @@ public fun KitSummaryCard(
     val colors = LocalKitColors.current
     val tokens = LocalKitTokens.current
     val shape = KitShapeId.Card.shape()
+    // glass-truth 2026-11-16: the card was surface2 in every style. It holds reading content, so under Glass it is a
+    // frosted card through the resolver; Brutal and Paper dress it; Solid, Soft and Signal keep surface2. Its command
+    // box inside stays a quiet inset of the card.
+    val styled = kitStyledFace(KitSurfaceInput(SurfaceRole.Content, KitShapeId.Card, SurfaceLevel.Surface2, ownFill = colors.surface2))
     Column(
         modifier
             .kitContainer()
@@ -76,7 +85,7 @@ public fun KitSummaryCard(
                 if (onClick != null) Modifier.kitTappable(onClick = onClick, onClickLabel = onClickLabel, role = KitTappableRole.Row, shape = KitShapeId.Card)
                 else Modifier
             )
-            .background(colors.surface2, shape)
+            .then(styled?.let { Modifier.kitSurface(it) } ?: Modifier.background(colors.surface2, shape))
             .padding(Space.S4.dp)
             .testTag("kit-summary-card"),
         verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
