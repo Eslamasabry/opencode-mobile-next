@@ -110,16 +110,24 @@ class CompactWidthKitTest {
 
     @Test
     fun `COMPACT-022 the rest snap puts both edges between tabs and keeps the chosen tab whole`() {
-        // Four tabs 100 wide, 8 apart, 16 in: content 448; a 360 window.
+        // Four tabs 100 wide, 8 apart, 16 in: content 456; a 360 window.
         val lefts = floatArrayOf(16f, 124f, 232f, 340f)
         val widths = floatArrayOf(100f, 100f, 100f, 100f)
-        val max = 448 - 360
+        val max = 456 - 360
         for (selected in 0..3) for (value in 0..max) {
-            val v = TabRules.restSnap(value, max, 360f, lefts, widths, selected, 16f, rtl = false)
+            val v = TabRules.restSnap(value, max, 360f, lefts, widths, selected, 16f, rtl = false)!!
             val edges = listOf(v.toFloat(), v + 360f)
             for (e in edges) for (i in 0..3) assertTrue(!(e > lefts[i] + 0.5f && e < lefts[i] + widths[i] - 0.5f), "edge $e cuts tab $i (value $value, chosen $selected, got $v)")
             assertTrue(lefts[selected] >= v - 0.5f && lefts[selected] + 100f <= v + 360f + 0.5f, "chosen $selected shown whole at $v")
         }
+    }
+
+    @Test
+    fun `COMPACT-024 a strip that overruns by less than a tab has no whole place to rest and says so`() {
+        // 456 wide in a 420 window: every window of 420 starts or ends inside a tab.
+        val lefts = floatArrayOf(16f, 124f, 232f, 340f)
+        val widths = floatArrayOf(100f, 100f, 100f, 100f)
+        assertEquals(null, TabRules.restSnap(0, 36, 420f, lefts, widths, 1, 16f, rtl = false))
     }
 
     @Test

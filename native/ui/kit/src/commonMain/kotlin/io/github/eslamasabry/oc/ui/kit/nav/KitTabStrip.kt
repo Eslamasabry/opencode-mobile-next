@@ -169,13 +169,13 @@ public object TabRules {
 
     /**
      * Where a strip of tabs rests so that no tab is cut by either edge and the chosen tab is whole: the scroll value
-     * nearest [value] whose window starts and ends between tabs (or at the line's own ends). A strip too narrow for any
-     * such place keeps [value]. [lefts] and [widths] are the tabs in the line's own (left-to-right) coordinates, [max]
+     * nearest [value] whose window starts and ends between tabs (or at the line's own ends). Null when no window of this width starts and ends between tabs (the tabs overrun it by less than a tab): the strip
+     * then packs its tabs closer. [lefts] and [widths] are the tabs in the line's own (left-to-right) coordinates, [max]
      * the scroll range and [view] the window's width; in a right-to-left line the scroll counts from the right.
      */
     internal fun restSnap(
         value: Int, max: Int, view: Float, lefts: FloatArray, widths: FloatArray, selected: Int, pad: Float, rtl: Boolean,
-    ): Int {
+    ): Int? {
         if (max <= 0 || lefts.isEmpty()) return value
         fun at(v: Int): Float = if (rtl) (max - v).toFloat() else v.toFloat()
         fun back(x: Float): Int = (if (rtl) max - x else x).roundToInt().coerceIn(0, max)
@@ -202,7 +202,7 @@ public object TabRules {
             candidates += (lefts[i] - pad).coerceIn(0f, max.toFloat())
             candidates += (lefts[i] + widths[i] + pad - view).coerceIn(0f, max.toFloat())
         }
-        val best = candidates.filter { whole(it) }.minByOrNull { abs(it - here) } ?: return value
+        val best = candidates.filter { whole(it) }.minByOrNull { abs(it - here) } ?: return null
         return back(best)
     }
 
@@ -353,9 +353,12 @@ internal fun TabStrip(
     // The strip follows the pill: its scroll is the pill's own place (TabPill.stripScroll), set as the pages move. A
     // strip the person has scrolled by hand eases back under the pill as the pages travel, never in one jump.
     val padPx = with(LocalDensity.current) { gutter.toPx() }
+    // A strip that overruns its window by less than a tab has no place to rest on whole tabs: it packs the tabs closer
+    // (the Appearance page's four tabs at 360 dp), and only then scrolls.
+    var tight by remember(tabs) { mutableStateOf(false) }
     val rest: (Int) -> Int = { v ->
         val s = model.slots
-        TabRules.restSnap(v, scroll.maxValue, scroll.viewportSize.toFloat(), s.lefts, s.widths, selected, padPx, rtl)
+        TabRules.restSnap(v, scroll.maxValue, scroll.viewportSize.toFloat(), s.lefts, s.widths, selected, padPx, rtl) ?: v
     }
     LaunchedEffect(model, scroll, rtl, elastic) {
         var last = Float.NaN
@@ -382,14 +385,15 @@ internal fun TabStrip(
     }
     // A strip that overflows never comes to rest with a tab cut by an edge: once the pages stop and no finger is on it,
     // it eases to the nearest place that starts and ends between tabs and keeps the chosen tab whole.
-    LaunchedEffect(model, scroll, rtl, selected) {
+    LaunchedEffect(model, scroll, rtl, selected, tight) {
         snapshotFlow {
             val s = model.slots
             if (s.lefts.isEmpty() || scroll.viewportSize == 0 || scroll.isScrollInProgress) null else Triple(position(), scroll.value, s)
         }.filterNotNull().collectLatest {
             delay(STRIP_SETTLE_MS)
-            val goal = rest(scroll.value)
-            if (goal != scroll.value) scroll.animateScrollTo(goal)
+            val s = model.slots
+            val goal = TabRules.restSnap(scroll.value, scroll.maxValue, scroll.viewportSize.toFloat(), s.lefts, s.widths, selected, padPx, rtl)
+            if (goal == null) tight = true else if (goal != scroll.value) scroll.animateScrollTo(goal)
         }
     }
     val solid = style.style == Style.Solid
@@ -514,7 +518,7 @@ internal fun TabStrip(
                                 if (needsYouWords != null) stateDescription = needsYouWords
                             }
                             .tabSplit(model, i, onPill = false, position, elastic, inset, squash, corner, snap = !solid)
-                            .padding(horizontal = Space.S3.dp),
+                            .padding(horizontal = if (tight) Space.S1.dp else Space.S3.dp),
                         contentAlignment = Alignment.Center,
                     ) {
                         // A count stays in the first ink beside its quieter word, as it always has.
@@ -527,7 +531,7 @@ internal fun TabStrip(
                         Modifier
                             .clearAndSetSemantics {}
                             .tabSplit(model, i, onPill = true, position, elastic, inset, squash, corner, snap = !solid)
-                            .padding(horizontal = Space.S3.dp),
+                            .padding(horizontal = if (tight) Space.S1.dp else Space.S3.dp),
                         contentAlignment = Alignment.Center,
                     ) {
                         TabFace(tab, onPill, onPill, rtl)
@@ -537,7 +541,7 @@ internal fun TabStrip(
         ) { measurables, constraints ->
             val n = tabs.size
             val pad = gutter.roundToPx()
-            val between = gap.roundToPx()
+            val between = (if (tight) Space.S1.dp else gap).roundToPx()
             val loose = Constraints(maxHeight = constraints.maxHeight)
             val base = ArrayList<Placeable>(n)
             var height = 0
