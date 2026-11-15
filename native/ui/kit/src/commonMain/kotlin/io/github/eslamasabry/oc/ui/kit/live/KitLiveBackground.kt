@@ -85,7 +85,11 @@ public fun KitLiveBackground(modifier: Modifier = Modifier, shared: Boolean = fa
     // Glass blurs a shader look as it blurs the painted aurora, wherever its panes blur at all (kitGlassBlurs' holds).
     val glassBlurs = style.spec.tokens.blursBehind && kitGlassFrostAvailable()
     val animates = motion.ambientLoops && (plate != null || render == LiveRender.Shader)
-    val time = rememberLiveTime(clock, animates)
+    // c2-performance (2026-11-15): a page background moves at most LIVE_LOOK_FPS steps a second. Following every display
+    // frame, a still page with a look rendered every frame for the half minute after each touch (a Galaxy S22 home sitting
+    // still: 36 frames a second over a minute); a drift reads the same at a few steps a second, and between steps
+    // nothing on the page draws.
+    val time = rememberLiveTime(clock, animates, LIVE_LOOK_FPS)
     // The picture every pane blurs steps at the look's own pace up to GLASS_PICTURE_FPS: on a 120 Hz screen every other
     // frame re-records no picture and re-blurs no pane (the shader alone still follows every frame where it draws itself).
     val pictureTime = rememberLiveTime(clock, animates, GLASS_PICTURE_FPS)
@@ -208,8 +212,11 @@ public val LocalKitPageInkLift: androidx.compose.runtime.ProvidableCompositionLo
 internal val LocalKitFlatGround: androidx.compose.runtime.ProvidableCompositionLocal<androidx.compose.ui.graphics.Color> =
     androidx.compose.runtime.staticCompositionLocalOf { androidx.compose.ui.graphics.Color.Unspecified }
 
-/** The most steps a second the glass picture takes (the shader looks); a 60, 90 or 120 Hz screen draws it at most 60. */
-internal const val GLASS_PICTURE_FPS: Int = 60
+/** The most steps a second a page's live background takes (c2-performance, 2026-11-15; the painted aurora takes 6). */
+internal const val LIVE_LOOK_FPS: Int = 15
+
+/** The most steps a second the glass picture takes (the shader looks): the page's own cap, [LIVE_LOOK_FPS]. */
+internal const val GLASS_PICTURE_FPS: Int = LIVE_LOOK_FPS
 
 /**
  * What the page's live background can put behind a liquid face's content right now (glass-live 2026-11-09), for
