@@ -34,4 +34,16 @@
     <string name="chatPhoneFolderMissing">La carpeta de esta conversación ya no está en el almacenamiento del teléfono, así que aquí no se puede enviar nada.</string>
     <string name="chatPhoneFolderDenied">El agente no puede abrir ni cambiar archivos en la carpeta de esta conversación en el almacenamiento del teléfono, así que aquí no se puede enviar nada.</string>
     <string name="chatSendPhoneFolder">No enviado: el agente no puede llegar ahora a la carpeta de esta conversación en el almacenamiento del teléfono. La línea de arriba dice qué hacer.</string>
+    <string name="chatsNewPhoneFolderChecking">Comprobando esta carpeta en el almacenamiento del teléfono…</string>
+    <string name="chatsNewPhoneFolderAllowing">Activa el acceso a todos los archivos en la página de Android y vuelve aquí.</string>
+    <string name="chatsNewPhoneFolderRestartingAgents">Reiniciando los agentes del teléfono para que %1$s pueda ver esta carpeta. Tarda alrededor de medio minuto.</string>
+    <string name="chatsNewPhoneFolderRestartingServer">Reiniciando el OpenCode de este teléfono para que pueda ver esta carpeta…</string>
+    <string name="chatsNewPhoneFolderRestartedAgents">Los agentes del teléfono se reiniciaron. %1$s ya puede ver esta carpeta.</string>
+    <string name="chatsNewPhoneFolderRestartedServer">El OpenCode de este teléfono se reinició y ya puede ver esta carpeta.</string>
+    <string name="chatsNewPhoneFolderAllowed">El acceso al almacenamiento del teléfono está activado. %1$s ya puede trabajar en esta carpeta.</string>
+    <string name="chatsNewStorageFolderNew">Nueva carpeta aquí</string>
+    <string name="chatsNewStorageFolderNewDetail">Crea una carpeta vacía dentro de %1$s y trabaja en ella</string>
+    <string name="chatsNewStorageFolderDialogTitle">Nueva carpeta en %1$s</string>
+    <string name="chatsNewStorageFolderDialogHelper">Una carpeta vacía en el almacenamiento del teléfono. No se le añade nada más.</string>
+    <string name="chatPhoneFolderRestartingAgents">Reiniciando los agentes del teléfono para que el agente de esta conversación pueda ver su carpeta. Tarda alrededor de medio minuto.</string>
 </resources>

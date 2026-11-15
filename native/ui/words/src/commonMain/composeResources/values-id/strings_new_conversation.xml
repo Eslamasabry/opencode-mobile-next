@@ -34,4 +34,16 @@
     <string name="chatPhoneFolderMissing">Folder percakapan ini sudah tidak ada di penyimpanan ponsel, jadi tidak ada yang dapat dikirim di sini.</string>
     <string name="chatPhoneFolderDenied">Agen tidak dapat membuka atau mengubah file di folder percakapan ini di penyimpanan ponsel, jadi tidak ada yang dapat dikirim di sini.</string>
     <string name="chatSendPhoneFolder">Tidak terkirim: agen tidak dapat menjangkau folder percakapan ini di penyimpanan ponsel saat ini. Baris di atas menjelaskan apa yang harus dilakukan.</string>
+    <string name="chatsNewPhoneFolderChecking">Memeriksa folder ini di penyimpanan ponsel…</string>
+    <string name="chatsNewPhoneFolderAllowing">Aktifkan akses ke semua file di halaman Android, lalu kembali ke sini.</string>
+    <string name="chatsNewPhoneFolderRestartingAgents">Memulai ulang agen di ponsel agar %1$s dapat melihat folder ini. Ini memakan waktu sekitar setengah menit.</string>
+    <string name="chatsNewPhoneFolderRestartingServer">Memulai ulang OpenCode di ponsel ini agar dapat melihat folder ini…</string>
+    <string name="chatsNewPhoneFolderRestartedAgents">Agen di ponsel telah dimulai ulang. %1$s sekarang dapat melihat folder ini.</string>
+    <string name="chatsNewPhoneFolderRestartedServer">OpenCode di ponsel ini telah dimulai ulang dan sekarang dapat melihat folder ini.</string>
+    <string name="chatsNewPhoneFolderAllowed">Akses ke penyimpanan ponsel aktif. %1$s sekarang dapat bekerja di folder ini.</string>
+    <string name="chatsNewStorageFolderNew">Folder baru di sini</string>
+    <string name="chatsNewStorageFolderNewDetail">Membuat folder kosong di dalam %1$s dan bekerja di dalamnya</string>
+    <string name="chatsNewStorageFolderDialogTitle">Folder baru di %1$s</string>
+    <string name="chatsNewStorageFolderDialogHelper">Folder kosong di penyimpanan ponsel. Tidak ada hal lain yang ditambahkan ke dalamnya.</string>
+    <string name="chatPhoneFolderRestartingAgents">Memulai ulang agen di ponsel agar agen percakapan ini dapat melihat foldernya. Ini memakan waktu sekitar setengah menit.</string>
 </resources>

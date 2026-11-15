@@ -34,4 +34,16 @@
     <string name="chatPhoneFolderMissing">A pasta desta conversa não está mais no armazenamento do celular, então nada pode ser enviado aqui.</string>
     <string name="chatPhoneFolderDenied">O agente não consegue abrir nem alterar arquivos na pasta desta conversa no armazenamento do celular, então nada pode ser enviado aqui.</string>
     <string name="chatSendPhoneFolder">Não enviado: o agente não consegue alcançar agora a pasta desta conversa no armazenamento do celular. A linha no topo diz o que fazer.</string>
+    <string name="chatsNewPhoneFolderChecking">Verificando esta pasta no armazenamento do celular…</string>
+    <string name="chatsNewPhoneFolderAllowing">Ative o acesso a todos os arquivos na página do Android e volte aqui.</string>
+    <string name="chatsNewPhoneFolderRestartingAgents">Reiniciando os agentes do celular para que o %1$s possa ver esta pasta. Leva cerca de meio minuto.</string>
+    <string name="chatsNewPhoneFolderRestartingServer">Reiniciando o OpenCode deste celular para que ele possa ver esta pasta…</string>
+    <string name="chatsNewPhoneFolderRestartedAgents">Os agentes do celular foram reiniciados. O %1$s já pode ver esta pasta.</string>
+    <string name="chatsNewPhoneFolderRestartedServer">O OpenCode deste celular foi reiniciado e já pode ver esta pasta.</string>
+    <string name="chatsNewPhoneFolderAllowed">O acesso ao armazenamento do celular está ativado. O %1$s já pode trabalhar nesta pasta.</string>
+    <string name="chatsNewStorageFolderNew">Nova pasta aqui</string>
+    <string name="chatsNewStorageFolderNewDetail">Cria uma pasta vazia dentro de %1$s e trabalha nela</string>
+    <string name="chatsNewStorageFolderDialogTitle">Nova pasta em %1$s</string>
+    <string name="chatsNewStorageFolderDialogHelper">Uma pasta vazia no armazenamento do celular. Nada mais é adicionado a ela.</string>
+    <string name="chatPhoneFolderRestartingAgents">Reiniciando os agentes do celular para que o agente desta conversa possa ver a pasta dela. Leva cerca de meio minuto.</string>
 </resources>

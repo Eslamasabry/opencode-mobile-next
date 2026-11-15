@@ -33,4 +33,16 @@
     <string name="chatPhoneFolderMissing">لم يعد مجلد هذه المحادثة موجودًا في تخزين الهاتف، لذا لا يمكن إرسال شيء هنا.</string>
     <string name="chatPhoneFolderDenied">لا يستطيع الوكيل فتح الملفات في مجلد هذه المحادثة في تخزين الهاتف أو تغييرها، لذا لا يمكن إرسال شيء هنا.</string>
     <string name="chatSendPhoneFolder">لم تُرسل: لا يستطيع الوكيل الوصول إلى مجلد هذه المحادثة في تخزين الهاتف الآن. السطر في الأعلى يوضح ما يجب فعله.</string>
+    <string name="chatsNewPhoneFolderChecking">جارٍ فحص هذا المجلد في تخزين الهاتف…</string>
+    <string name="chatsNewPhoneFolderAllowing">فعّل الوصول إلى جميع الملفات في صفحة Android ثم عد إلى هنا.</string>
+    <string name="chatsNewPhoneFolderRestartingAgents">جارٍ إعادة تشغيل وكلاء الهاتف ليتمكن %1$s من رؤية هذا المجلد. يستغرق ذلك نحو نصف دقيقة.</string>
+    <string name="chatsNewPhoneFolderRestartingServer">جارٍ إعادة تشغيل OpenCode على هذا الهاتف ليتمكن من رؤية هذا المجلد…</string>
+    <string name="chatsNewPhoneFolderRestartedAgents">أُعيد تشغيل وكلاء الهاتف. يستطيع %1$s رؤية هذا المجلد الآن.</string>
+    <string name="chatsNewPhoneFolderRestartedServer">أُعيد تشغيل OpenCode على هذا الهاتف ويستطيع رؤية هذا المجلد الآن.</string>
+    <string name="chatsNewPhoneFolderAllowed">الوصول إلى تخزين الهاتف مفعّل. يستطيع %1$s العمل في هذا المجلد الآن.</string>
+    <string name="chatsNewStorageFolderNew">مجلد جديد هنا</string>
+    <string name="chatsNewStorageFolderNewDetail">ينشئ مجلدًا فارغًا داخل %1$s ويعمل فيه</string>
+    <string name="chatsNewStorageFolderDialogTitle">مجلد جديد في %1$s</string>
+    <string name="chatsNewStorageFolderDialogHelper">مجلد فارغ في تخزين الهاتف. لا يُضاف إليه أي شيء آخر.</string>
+    <string name="chatPhoneFolderRestartingAgents">جارٍ إعادة تشغيل وكلاء الهاتف ليتمكن وكيل هذه المحادثة من رؤية مجلدها. يستغرق ذلك نحو نصف دقيقة.</string>
 </resources>

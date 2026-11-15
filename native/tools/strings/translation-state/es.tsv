@@ -1587,6 +1587,7 @@ chatPhoneFolderDenied	d417aea706
 chatPhoneFolderMissing	95c19c319a
 chatPhoneFolderRestartAgents	89ed0293d3
 chatPhoneFolderRestartServer	ab9d29ab71
+chatPhoneFolderRestartingAgents	7f454d77b4
 chatPhraseHide	67611ba83d
 chatProjectChipFilesSemantics	dcb28a874f
 chatProjectChipSemantics	433a0d535c
@@ -2222,6 +2223,9 @@ chatsNewModelRow	c522c54aff
 chatsNewNeedProject	c983526668
 chatsNewPhoneFolderAccess	743b99e07e
 chatsNewPhoneFolderAllow	06e4e59f0c
+chatsNewPhoneFolderAllowed	69320619e8
+chatsNewPhoneFolderAllowing	eb8fa8f5e6
+chatsNewPhoneFolderChecking	1c98b89d0b
 chatsNewPhoneFolderDenied	0aa44527e5
 chatsNewPhoneFolderHelp	2d00c80da3
 chatsNewPhoneFolderHelpTitle	21c2db49a7
@@ -2231,6 +2235,10 @@ chatsNewPhoneFolderRestartAgentsAction	581f621808
 chatsNewPhoneFolderRestartFailed	8582f46f1f
 chatsNewPhoneFolderRestartServer	cb1a7c84e4
 chatsNewPhoneFolderRestartServerAction	8b587c5ace
+chatsNewPhoneFolderRestartedAgents	4c5e01cc42
+chatsNewPhoneFolderRestartedServer	9747284f1a
+chatsNewPhoneFolderRestartingAgents	b617e98c96
+chatsNewPhoneFolderRestartingServer	2d25852a64
 chatsNewPhoneFolderWhere	3fd0b26213
 chatsNewPhoneFolderWhy	aa8c1148ee
 chatsNewPhoneStorage	0596028729
@@ -2243,6 +2251,10 @@ chatsNewSetUp	81f28272a0
 chatsNewSetupFailed	25a29105a7
 chatsNewStartWith	f800dd30a2
 chatsNewStartingAgent	edab4cd01e
+chatsNewStorageFolderDialogHelper	9af1295389
+chatsNewStorageFolderDialogTitle	51ca21edbf
+chatsNewStorageFolderNew	3635ec718e
+chatsNewStorageFolderNewDetail	ce8a5047d2
 chatsReturnBriefMore	f1ebf95da8
 chatsRowActions	f1e3718af3
 chatsRowArchived	e8b53e071c

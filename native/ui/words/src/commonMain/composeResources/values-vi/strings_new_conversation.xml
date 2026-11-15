@@ -34,4 +34,16 @@
     <string name="chatPhoneFolderMissing">Thư mục của cuộc trò chuyện này không còn trong bộ nhớ điện thoại, nên không thể gửi gì ở đây.</string>
     <string name="chatPhoneFolderDenied">Tác nhân không thể mở hoặc thay đổi tệp trong thư mục của cuộc trò chuyện này trong bộ nhớ điện thoại, nên không thể gửi gì ở đây.</string>
     <string name="chatSendPhoneFolder">Chưa gửi: hiện tác nhân không thể truy cập thư mục của cuộc trò chuyện này trong bộ nhớ điện thoại. Dòng ở trên cùng cho biết cần làm gì.</string>
+    <string name="chatsNewPhoneFolderChecking">Đang kiểm tra thư mục này trong bộ nhớ điện thoại…</string>
+    <string name="chatsNewPhoneFolderAllowing">Hãy bật quyền truy cập tất cả tệp trên trang của Android, rồi quay lại đây.</string>
+    <string name="chatsNewPhoneFolderRestartingAgents">Đang khởi động lại các tác nhân của điện thoại để %1$s nhìn thấy thư mục này. Việc này mất khoảng nửa phút.</string>
+    <string name="chatsNewPhoneFolderRestartingServer">Đang khởi động lại OpenCode trên điện thoại này để nó nhìn thấy thư mục này…</string>
+    <string name="chatsNewPhoneFolderRestartedAgents">Các tác nhân của điện thoại đã khởi động lại. %1$s giờ đã nhìn thấy thư mục này.</string>
+    <string name="chatsNewPhoneFolderRestartedServer">OpenCode trên điện thoại này đã khởi động lại và giờ đã nhìn thấy thư mục này.</string>
+    <string name="chatsNewPhoneFolderAllowed">Quyền truy cập bộ nhớ điện thoại đã bật. %1$s giờ có thể làm việc trong thư mục này.</string>
+    <string name="chatsNewStorageFolderNew">Thư mục mới tại đây</string>
+    <string name="chatsNewStorageFolderNewDetail">Tạo một thư mục trống bên trong %1$s và làm việc trong đó</string>
+    <string name="chatsNewStorageFolderDialogTitle">Thư mục mới trong %1$s</string>
+    <string name="chatsNewStorageFolderDialogHelper">Một thư mục trống trong bộ nhớ điện thoại. Không có gì khác được thêm vào.</string>
+    <string name="chatPhoneFolderRestartingAgents">Đang khởi động lại các tác nhân của điện thoại để tác nhân của cuộc trò chuyện này nhìn thấy thư mục của nó. Việc này mất khoảng nửa phút.</string>
 </resources>

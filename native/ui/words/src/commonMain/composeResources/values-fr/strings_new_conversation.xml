@@ -34,4 +34,16 @@
     <string name="chatPhoneFolderMissing">Le dossier de cette conversation n’est plus dans le stockage du téléphone, rien ne peut donc être envoyé ici.</string>
     <string name="chatPhoneFolderDenied">L’agent ne peut ni ouvrir ni modifier les fichiers du dossier de cette conversation dans le stockage du téléphone, rien ne peut donc être envoyé ici.</string>
     <string name="chatSendPhoneFolder">Non envoyé\u00A0: l’agent ne peut pas atteindre pour l’instant le dossier de cette conversation dans le stockage du téléphone. La ligne en haut indique quoi faire.</string>
+    <string name="chatsNewPhoneFolderChecking">Vérification de ce dossier dans le stockage du téléphone…</string>
+    <string name="chatsNewPhoneFolderAllowing">Activez l’accès à tous les fichiers sur la page Android, puis revenez ici.</string>
+    <string name="chatsNewPhoneFolderRestartingAgents">Redémarrage des agents du téléphone pour que %1$s puisse voir ce dossier. Cela prend environ une demi-minute.</string>
+    <string name="chatsNewPhoneFolderRestartingServer">Redémarrage de l’OpenCode de ce téléphone pour qu’il puisse voir ce dossier…</string>
+    <string name="chatsNewPhoneFolderRestartedAgents">Les agents du téléphone ont redémarré. %1$s peut maintenant voir ce dossier.</string>
+    <string name="chatsNewPhoneFolderRestartedServer">L’OpenCode de ce téléphone a redémarré et peut maintenant voir ce dossier.</string>
+    <string name="chatsNewPhoneFolderAllowed">L’accès au stockage du téléphone est activé. %1$s peut maintenant travailler dans ce dossier.</string>
+    <string name="chatsNewStorageFolderNew">Nouveau dossier ici</string>
+    <string name="chatsNewStorageFolderNewDetail">Crée un dossier vide dans %1$s et y travaille</string>
+    <string name="chatsNewStorageFolderDialogTitle">Nouveau dossier dans %1$s</string>
+    <string name="chatsNewStorageFolderDialogHelper">Un dossier vide dans le stockage du téléphone. Rien d’autre n’y est ajouté.</string>
+    <string name="chatPhoneFolderRestartingAgents">Redémarrage des agents du téléphone pour que l’agent de cette conversation puisse voir son dossier. Cela prend environ une demi-minute.</string>
 </resources>
