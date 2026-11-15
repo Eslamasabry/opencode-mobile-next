@@ -34,6 +34,11 @@ class AgentSetUpReplyTest {
 
     private class Outside(private val owner: ProfileId?, private val phoneServer: Boolean = true) : ChatOutside {
         val setUp = mutableSetOf<String>()
+        val answered = mutableListOf<Pair<ProfileId, String>>()
+
+        override fun agentAnswered(owner: ProfileId, agent: String) {
+            answered += owner to agent
+        }
 
         override fun isPhoneServer(ref: ConversationRef): Boolean = phoneServer
 
@@ -118,6 +123,36 @@ class AgentSetUpReplyTest {
         assertTrue(chat(null, rows("u1", "Authentication required", "codex")).current().setUpReplies.isEmpty())
         // Not this phone's agents: nothing to set up from here.
         assertTrue(chat("omp-acp", rows("u1", "No model selected.", "omp-acp"), Outside(null)).current().setUpReplies.isEmpty())
+    }
+
+    // Owner 2026-11-15: an agent the app never saw set up leads with Set up until it is. A reply that came back well is
+    // the agent working: the registry is told once, so the Agents page and New conversation offer it as a choice.
+    @Test
+    fun `B-AGENT-SETUP-020 the first answer of an agent set up at first use tells the registry once`() {
+        val answeredRows = listOf<TranscriptRow>(footer("u1"), prompt("u1", "hello"))
+        val outside = Outside(owner)
+        val p = chat("omp-acp", answeredRows, outside)
+        p.current()
+        p.current()
+        assertEquals(listOf(owner to "omp-acp"), outside.answered)
+
+        // The conversation's runtime unknown: the answer's own agent names it.
+        val byReply = Outside(owner)
+        val reply = FooterRow("footer:u1", "u1", failed = false, providerId = "qwen")
+        chat(null, listOf(reply, prompt("u1", "hello")), byReply).current()
+        assertEquals(listOf(owner to "qwen"), byReply.answered)
+
+        // A failed reply, an agent already known set up, an agent with its own sign-in check, or a conversation that
+        // is not this phone's agents: nothing is said.
+        val failed = Outside(owner)
+        chat("omp-acp", rows("u1", "No model selected.", "omp-acp"), failed).current()
+        val known = Outside(owner).apply { setUp += "omp-acp" }
+        chat("omp-acp", answeredRows, known).current()
+        val codex = Outside(owner)
+        chat("codex", answeredRows, codex).current()
+        val elsewhere = Outside(null)
+        chat("omp-acp", answeredRows, elsewhere).current()
+        for (port in listOf(failed, known, codex, elsewhere)) assertEquals(emptyList(), port.answered)
     }
 
     @Test
