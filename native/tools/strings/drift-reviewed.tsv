@@ -4,6 +4,10 @@
 # 2026-11-11: dropped the entries whose XML matches the ARB again; added the divergences found by the first full run (native English wording, and Spanish/Chinese/Arabic copy the translation pipeline or the native screens wrote after the ARB froze).
 # 2026-11-11: native corrects Flutter's wrong place name 'Work' (archived empty text), the remove-server sentence's missing full stop, and the English '(99 %)' spacing.
 # 2026-11-11: rule added in Drift (Inputs.owned): a key whose translation is recorded in translation-state/<tag>.tsv with the hash of the current English is pipeline output, not drift; its rows were dropped (3328 rows -> 56).
+# 2026-11-11: problem reports no longer hold a log, so the row says what happens (other languages fall back to English until translated).
+# 2026-11-12: Help > Tips mini tutorial "Make it yours" step 2 names all six styles (Glass and Signal were missing), spelled as the Style page spells them.
+# 2026-11-15: the attach help names the tray's own buttons (two more arguments), and the Git page's copy row is reworded in plain words (first-time-user walk F-008, F-021).
+ar	composerToolsAgentPicturesOnly
 ar	e7SettingsUi93
 ar	kitCapClaudeLocalWhy
 ar	manageSpaceKeptAll
@@ -14,20 +18,23 @@ ar	setupOutputWaiting
 en	agentErrorRequestTooLargeHint
 en	agentsSignInTerminalIntro
 en	capabilityCompact
+en	chatsHomeOnlyProject
 en	chatUiCompactAgain
 en	chatUiCompactConfirmAction
 en	chatUiCompactConfirmBody
 en	chatUiCompactConfirmTitle
 en	chatUiCompactContext
-en	chatUiCompactSession
 en	chatUiCompactingConversation
 en	chatUiCompactionFailed
 en	chatUiCompactionStarted
+en	chatUiCompactSession
 en	chatUiSelectAModelBeforeCompactingThisSession
-en	chatsHomeOnlyProject
+en	composerToolsAgentPicturesOnly
 en	e7SettingsAlphaBody
 en	e7SettingsUi93
 en	e7SetupStopLocal
+en	gitCloneRow
+en	gitCloneRowHint
 en	gitPullNoRemote
 en	gitSendNoRemote
 en	globalSessionsArchivedEmptyMessage
@@ -44,6 +51,7 @@ en	runningPhoneLimitBody
 en	safetyStopLocalServerTitle
 en	searchClaudeCodeGateDesktop
 en	searchClaudeCodeGateDevice
+en	sendReportRowDetail
 en	serversRemoveServerKeeps
 en	sessionContextCompactAction
 en	sessionContextCompactConfirm
@@ -52,7 +60,18 @@ en	sessionContextCompactTitle
 en	sessionContextNearLimitBody
 en	settingsHubSearchPhoneAliases
 en	setupOutputWaiting
+en	telemetryConsentChoose
+en	telemetryConsentShare
+en	tourMakeItYoursStyle
+es	composerToolsAgentPicturesOnly
 es	e7SettingsUi93
+fr	composerToolsAgentPicturesOnly
+id	composerToolsAgentPicturesOnly
+ja	composerToolsAgentPicturesOnly
+pt	composerToolsAgentPicturesOnly
+ru	composerToolsAgentPicturesOnly
+vi	composerToolsAgentPicturesOnly
+zh	composerToolsAgentPicturesOnly
 zh	e7SettingsUi93
 zh	kitCapClaudeLocalWhy
 zh	manageSpaceKeptAll

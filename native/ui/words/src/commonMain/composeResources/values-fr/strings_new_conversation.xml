@@ -24,4 +24,14 @@
     <string name="chatsNewPhoneFolderMissing">Ce dossier n’est plus dans le stockage du téléphone. Choisissez un autre dossier.</string>
     <string name="chatsNewPhoneFolderDenied">%1$s ne peut ni ouvrir ni modifier les fichiers de ce dossier. Choisissez un autre dossier dans le stockage du téléphone.</string>
     <string name="chatsNewPhoneFolderRestartFailed">Redémarrage impossible. Si un agent travaille encore, réessayez quand il aura terminé.</string>
+    <string name="chatsNewPhoneFolderWhere">Travaille dans %1$s, dans le stockage du téléphone, qui ne peut ni contenir de liens ni lancer directement des programmes.</string>
+    <string name="chatsNewPhoneFolderWhy">Pourquoi</string>
+    <string name="chatsNewPhoneFolderHelpTitle">Travailler dans le stockage du téléphone</string>
+    <string name="chatsNewPhoneFolderHelp">Android réserve le stockage du téléphone à toutes les applications, comme une carte mémoire. Il ne peut pas contenir de liens entre fichiers et ne lance pas un programme qui y est stocké.\n\nDans ce dossier, installez donc les paquets avec npm install --no-bin-links et lancez un script avec sh script.sh au lieu de ./script.sh. Ici, Git ignore les modes de fichier. Les projets du dossier propre à l’application n’ont aucune de ces limites.\n\nQuand Claude Code ou Codex démarre ici, la même chose lui est indiquée.</string>
+    <string name="chatPhoneFolderAccess">Le dossier de cette conversation se trouve dans le stockage du téléphone et l’application n’a plus accès à tous les fichiers. Rien n’est envoyé tant que vous ne l’autorisez pas de nouveau.</string>
+    <string name="chatPhoneFolderRestartServer">L’OpenCode de ce téléphone ne peut pas voir le dossier de cette conversation tant qu’il n’a pas redémarré. Rien n’est envoyé d’ici là.</string>
+    <string name="chatPhoneFolderRestartAgents">Les agents du téléphone ne peuvent pas voir le dossier de cette conversation tant qu’ils n’ont pas redémarré. Rien n’est envoyé d’ici là.</string>
+    <string name="chatPhoneFolderMissing">Le dossier de cette conversation n’est plus dans le stockage du téléphone, rien ne peut donc être envoyé ici.</string>
+    <string name="chatPhoneFolderDenied">L’agent ne peut ni ouvrir ni modifier les fichiers du dossier de cette conversation dans le stockage du téléphone, rien ne peut donc être envoyé ici.</string>
+    <string name="chatSendPhoneFolder">Non envoyé\u00A0: l’agent ne peut pas atteindre pour l’instant le dossier de cette conversation dans le stockage du téléphone. La ligne en haut indique quoi faire.</string>
 </resources>

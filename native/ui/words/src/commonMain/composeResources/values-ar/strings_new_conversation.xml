@@ -23,4 +23,14 @@
     <string name="chatsNewPhoneFolderMissing">لم يعد هذا المجلد موجودًا في تخزين الهاتف. اختر مجلدًا آخر.</string>
     <string name="chatsNewPhoneFolderDenied">لا يستطيع %1$s فتح الملفات في هذا المجلد أو تغييرها. اختر مجلدًا آخر في تخزين الهاتف.</string>
     <string name="chatsNewPhoneFolderRestartFailed">تعذّرت إعادة التشغيل. إذا كان أحد الوكلاء ما زال يعمل، فحاول مرة أخرى عند انتهائه.</string>
+    <string name="chatsNewPhoneFolderWhere">يعمل في %1$s، في تخزين الهاتف، الذي لا يحفظ الروابط ولا يشغّل البرامج مباشرة.</string>
+    <string name="chatsNewPhoneFolderWhy">لماذا</string>
+    <string name="chatsNewPhoneFolderHelpTitle">العمل في تخزين الهاتف</string>
+    <string name="chatsNewPhoneFolderHelp">يحتفظ Android بتخزين الهاتف لكل التطبيقات، مثل بطاقة ذاكرة. لا يمكنه حفظ الروابط بين الملفات، ولا يشغّل برنامجًا مخزّنًا فيه.\n\nلذلك ثبّت الحزم في هذا المجلد باستخدام npm install --no-bin-links، وشغّل السكربت باستخدام sh script.sh بدلًا من ./script.sh. يتجاهل Git هنا أذونات الملفات. المشاريع في مجلد التطبيق الخاص لا تخضع لأي من هذه القيود.\n\nعندما يبدأ Claude Code أو Codex هنا، يُبلَّغ بالأمر نفسه.</string>
+    <string name="chatPhoneFolderAccess">مجلد هذه المحادثة موجود في تخزين الهاتف، ولم يعد للتطبيق وصول إلى جميع الملفات. لن يُرسل شيء حتى تسمح بذلك من جديد.</string>
+    <string name="chatPhoneFolderRestartServer">لا يستطيع OpenCode على هذا الهاتف رؤية مجلد هذه المحادثة حتى يُعاد تشغيله. لن يُرسل شيء حتى ذلك الحين.</string>
+    <string name="chatPhoneFolderRestartAgents">لا يستطيع وكلاء الهاتف رؤية مجلد هذه المحادثة حتى يُعاد تشغيلهم. لن يُرسل شيء حتى ذلك الحين.</string>
+    <string name="chatPhoneFolderMissing">لم يعد مجلد هذه المحادثة موجودًا في تخزين الهاتف، لذا لا يمكن إرسال شيء هنا.</string>
+    <string name="chatPhoneFolderDenied">لا يستطيع الوكيل فتح الملفات في مجلد هذه المحادثة في تخزين الهاتف أو تغييرها، لذا لا يمكن إرسال شيء هنا.</string>
+    <string name="chatSendPhoneFolder">لم تُرسل: لا يستطيع الوكيل الوصول إلى مجلد هذه المحادثة في تخزين الهاتف الآن. السطر في الأعلى يوضح ما يجب فعله.</string>
 </resources>

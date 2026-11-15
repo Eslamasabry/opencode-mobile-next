@@ -158,7 +158,8 @@ class PermissionChangeScreenTest {
     fun `B-CHAT-REV1-001 a new file's card says Create and shows its first lines before the answers`() = runComposeUiTest {
         setContent { Slot(RequestSlotUi(newFile(listOf("hello from the agent")))) }
         onNode(reads("Create e9.txt?")).assertIsDisplayed()
-        onNode(describes("The change to e9.txt"), useUnmergedTree = true).assertExists()
+        // A file that does not exist yet says so (F-015): "New file: e9.txt", not "The change to e9.txt".
+        onNode(describes("New file: e9.txt"), useUnmergedTree = true).assertExists()
         assertTrue(
             onAllNodes(hasText("hello from the agent", substring = true), useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty(),
             "the line it will write is on the card",

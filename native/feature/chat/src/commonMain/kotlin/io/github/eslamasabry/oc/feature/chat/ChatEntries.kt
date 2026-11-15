@@ -77,6 +77,15 @@ import io.github.eslamasabry.oc.ui.routes.WebSourcesRoute
 import io.github.eslamasabry.oc.ui.words.res.continuedFrom
 import io.github.eslamasabry.oc.ui.words.res.continuedIn
 import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.chatPhoneFolderAccess
+import io.github.eslamasabry.oc.ui.words.res.chatPhoneFolderRestartServer
+import io.github.eslamasabry.oc.ui.words.res.chatPhoneFolderRestartAgents
+import io.github.eslamasabry.oc.ui.words.res.chatPhoneFolderMissing
+import io.github.eslamasabry.oc.ui.words.res.chatPhoneFolderDenied
+import io.github.eslamasabry.oc.ui.words.res.chatsNewPhoneFolderAllow
+import io.github.eslamasabry.oc.ui.words.res.chatsNewPhoneFolderRestartServerAction
+import io.github.eslamasabry.oc.ui.words.res.chatsNewPhoneFolderRestartAgentsAction
+import io.github.eslamasabry.oc.ui.words.res.chatsNewPhoneFolderRestartFailed
 import io.github.eslamasabry.oc.ui.words.res.activeContextTitle
 import io.github.eslamasabry.oc.ui.words.res.chatQueueMoveTitle
 import io.github.eslamasabry.oc.ui.words.res.chatStopAfterStepPrompt
@@ -342,9 +351,19 @@ public class ChatEntries(
                             more = moves.drop(1),
                         )
                     }
+            // Issue 147: the conversation's folder in phone storage can't be reached now (access taken back, folder gone,
+            // a side started without it). Read when the page comes back; nothing is sent there meanwhile.
+            androidx.lifecycle.compose.LifecycleEventEffect(androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
+                vm.checkPhoneFolder()
+            }
+            val phoneFolder by vm.phoneFolder.collectAsStateWithLifecycle()
+            val fixingPhoneFolder by vm.fixingPhoneFolder.collectAsStateWithLifecycle()
+            val phoneFolderFailure by vm.phoneFolderFailure.collectAsStateWithLifecycle()
+            val phoneFolderStatus =
+                phoneFolder?.let { reach -> phoneFolderStatus(reach, vm.phoneFolderOnServer, fixingPhoneFolder, phoneFolderFailure != null, vm::fixPhoneFolder) }
             val appStatus =
                 KitStatus.highest(
-                    listOf(appNoticeStatus, pendingStatus, evictedStatus, othersStatus, offerStatus)
+                    listOf(phoneFolderStatus, appNoticeStatus, pendingStatus, evictedStatus, othersStatus, offerStatus)
                 )
             // The explanation and opt-in belong in a sheet, never a tall transcript banner.
             // The compact strip only opens the review; enabling still requires its explicit action.
@@ -736,4 +755,44 @@ public class ChatEntries(
             }
         }
     }
+}
+
+/**
+ * Issue 147: the one line an open conversation shows while its folder in the phone's storage can't be reached by the
+ * side that works in it, with the way forward where there is one ([onServer]: this phone's OpenCode, else the agents'
+ * helper). [failed]: the last restart was refused (an agent still working).
+ */
+@androidx.compose.runtime.Composable
+internal fun phoneFolderStatus(
+    reach: io.github.eslamasabry.oc.feature.chat.world.ChatPhoneFolder,
+    onServer: Boolean,
+    fixing: Boolean,
+    failed: Boolean,
+    fix: () -> Unit,
+): KitStatus? {
+    val words =
+        when (reach) {
+            io.github.eslamasabry.oc.feature.chat.world.ChatPhoneFolder.Ready -> return null
+            io.github.eslamasabry.oc.feature.chat.world.ChatPhoneFolder.AppAccess -> Res.string.chatPhoneFolderAccess
+            io.github.eslamasabry.oc.feature.chat.world.ChatPhoneFolder.Restart ->
+                if (onServer) Res.string.chatPhoneFolderRestartServer else Res.string.chatPhoneFolderRestartAgents
+            io.github.eslamasabry.oc.feature.chat.world.ChatPhoneFolder.Missing -> Res.string.chatPhoneFolderMissing
+            io.github.eslamasabry.oc.feature.chat.world.ChatPhoneFolder.Denied -> Res.string.chatPhoneFolderDenied
+        }
+    val action =
+        when (reach) {
+            io.github.eslamasabry.oc.feature.chat.world.ChatPhoneFolder.AppAccess -> Res.string.chatsNewPhoneFolderAllow
+            io.github.eslamasabry.oc.feature.chat.world.ChatPhoneFolder.Restart ->
+                if (onServer) Res.string.chatsNewPhoneFolderRestartServerAction
+                else Res.string.chatsNewPhoneFolderRestartAgentsAction
+            else -> null
+        }
+    return KitStatus(
+        KitStatusKind.Connection,
+        stringResource(words),
+        id = "phone-folder:${reach.name}",
+        tone = io.github.eslamasabry.oc.ui.design.color.StatusTone.Attention,
+        supporting = if (failed) stringResource(Res.string.chatsNewPhoneFolderRestartFailed) else null,
+        action = action?.let { KitLineAction(stringResource(it), fix, enabled = !fixing) },
+    )
 }

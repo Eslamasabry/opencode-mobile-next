@@ -58,6 +58,27 @@ enum class SharedFolderReach(val code: String) {
                 "exit 0\n"
 
         /**
+         * Git settings for a repository that lives in Android's shared storage, run in the chosen folder `$1` as the
+         * phone's Linux: that storage keeps no execute bit (chmod does nothing), makes no symbolic links and does not
+         * tell upper from lower case, like a memory card. A repository brought from a computer says otherwise in its
+         * own config (`filemode = true`, which beats any system setting), and Git then shows every executable file as
+         * changed. Applied to the repository that holds the folder and to each repository one level inside it, only
+         * when that repository's top is under `$2` (the storage root as Linux sees it: never the guest's own `/`).
+         */
+        const val GIT_STORAGE: String =
+            "d=\"\$1\"; under=\"\$2\"\n" +
+                "command -v git >/dev/null 2>&1 || exit 0\n" +
+                "fix() {\n" +
+                "  case \"\$1/\" in \"\$under\"/*) ;; *) return 0 ;; esac\n" +
+                "  for kv in core.fileMode=false core.symlinks=false core.ignoreCase=true; do\n" +
+                "    git -c safe.directory='*' -C \"\$1\" config \"\${kv%%=*}\" \"\${kv#*=}\" || return 1\n" +
+                "  done\n" +
+                "}\n" +
+                "top=\$(git -c safe.directory='*' -C \"\$d\" rev-parse --show-toplevel 2>/dev/null) && { fix \"\$top\" || exit 7; }\n" +
+                "for g in \"\$d\"/*/.git; do [ -e \"\$g\" ] && { fix \"\${g%/.git}\" || exit 7; }; done\n" +
+                "exit 0\n"
+
+        /**
          * [appAccess]: Android's All files access; [appSeesFolder]: the app itself finds the folder; [running]: the
          * binds of the identity's process running now (null when none runs: the next start binds what [probeExit]
          * saw); [probeExit]: the [PROBE]'s exit status, null when it could not run.

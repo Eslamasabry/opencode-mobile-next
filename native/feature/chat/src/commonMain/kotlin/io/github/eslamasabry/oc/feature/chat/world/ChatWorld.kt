@@ -98,6 +98,19 @@ public interface ChatWorld {
     public val serverOnThisPhone: Boolean
         get() = false
 
+    /**
+     * Issue 147: this conversation's folder in the phone's storage when the side that works in it cannot reach it now
+     * (anything but Ready); null otherwise. Read when the page comes back and before each message.
+     */
+    public val phoneFolder: StateFlow<ChatPhoneFolder?>
+        get() = NoPhoneFolder
+
+    /** Reads [phoneFolder] again, thoroughly (the page came back). */
+    public suspend fun checkPhoneFolder() {}
+
+    /** The notice's way forward for [phoneFolder]; read again afterwards. */
+    public suspend fun fixPhoneFolder(): Outcome<Unit> = Outcome.Ok(Unit)
+
     /** Flutter "Restart OpenCode" for this phone's server, after the person confirmed. */
     public suspend fun restartPhoneServer(): Outcome<Unit> =
         Outcome.Failed(Failure.Unavailable(FeatureId("restartPhoneServer")))
@@ -555,6 +568,8 @@ private val NoServerWait: StateFlow<ChatServerWait?> = kotlinx.coroutines.flow.M
 private val NoRetry: StateFlow<Long?> = kotlinx.coroutines.flow.MutableStateFlow(null)
 
 private val NoReadOnly = kotlinx.coroutines.flow.MutableStateFlow<ReadOnlyChat?>(null)
+
+private val NoPhoneFolder: StateFlow<ChatPhoneFolder?> = kotlinx.coroutines.flow.MutableStateFlow(null)
 
 /** S28 story 3: undone turns of a conversation and how they come back. */
 public enum class ChatUndone {

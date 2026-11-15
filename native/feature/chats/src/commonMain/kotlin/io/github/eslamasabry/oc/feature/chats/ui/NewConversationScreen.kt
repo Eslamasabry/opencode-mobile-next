@@ -73,6 +73,7 @@ import io.github.eslamasabry.oc.ui.kit.input.KitStartBox
 import io.github.eslamasabry.oc.ui.kit.modal.KitBackGuard
 import io.github.eslamasabry.oc.ui.kit.modal.KitPageOverlay
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
+import io.github.eslamasabry.oc.ui.kit.row.KitGroupNote
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHeight
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
 import io.github.eslamasabry.oc.ui.kit.modal.KitModelOption
@@ -391,6 +392,23 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                                 detailsLabel = stringResource(Res.string.kitDetails),
                                 copyLabel = stringResource(Res.string.kitCopyDetails),
                             )
+                        }
+                    }
+                    // Issue 147: a folder in the phone's storage is named in full once, with what that storage can't do
+                    // behind Why (the agents are told the same at their start).
+                    if (state.phoneFolder == PhoneFolderReach.Ready && !state.directory.isNullOrBlank()) {
+                        var why by remember(state.directory) { mutableStateOf(false) }
+                        KitGroupNote(
+                            stringResource(Res.string.chatsNewPhoneFolderWhere, state.directory.orEmpty()),
+                            inset.testTag("chats-new-phone-folder"),
+                            action = KitAction(stringResource(Res.string.chatsNewPhoneFolderWhy), { why = true }),
+                        )
+                        KitSheet(
+                            visible = why,
+                            onDismissRequest = { why = false },
+                            title = stringResource(Res.string.chatsNewPhoneFolderHelpTitle),
+                        ) {
+                            KitText(stringResource(Res.string.chatsNewPhoneFolderHelp))
                         }
                     }
                     if (state.draftFailed) KitNotice(stringResource(Res.string.p12NewDraftFailed), inset)

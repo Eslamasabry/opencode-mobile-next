@@ -231,7 +231,11 @@ public fun Modifier.kitScreenWordsPane(role: LiquidRole): Modifier {
  * [bottomGone], with the frame's soft fade. A scrolling list applies it to itself ([kitScreenListEdges]), so the control
  * floating beside it (the jump pill), which is not part of the list, stays whole while the words under it go.
  */
-internal class KitScreenZones(val bottomGone: () -> Float) {
+internal class KitScreenZones(
+    val bottomGone: () -> Float,
+    /** The page's flat ground, when it has one (LocalKitFlatGround): a list ends itself over it without a layer. */
+    val ground: androidx.compose.ui.graphics.Color = androidx.compose.ui.graphics.Color.Unspecified,
+) {
     /** How many lists end themselves here; while one does, the frame leaves the body's bottom to them. */
     var claims: Int by androidx.compose.runtime.mutableIntStateOf(0)
 }
@@ -275,5 +279,6 @@ public fun Modifier.kitScreenListEdges(): Modifier {
         },
         bottomReach = COMPOSER_FADE_DP.dp,
         bottomStrength = { if (zones.bottomGone().isNaN() || at[0].isNaN()) 0f else 1f },
+        ground = zones.ground,
     )
 }

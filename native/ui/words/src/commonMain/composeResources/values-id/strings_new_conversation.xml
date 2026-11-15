@@ -24,4 +24,14 @@
     <string name="chatsNewPhoneFolderMissing">Folder ini sudah tidak ada di penyimpanan ponsel. Pilih folder lain.</string>
     <string name="chatsNewPhoneFolderDenied">%1$s tidak dapat membuka atau mengubah file di folder ini. Pilih folder lain di penyimpanan ponsel.</string>
     <string name="chatsNewPhoneFolderRestartFailed">Tidak dapat memulai ulang. Jika ada agen yang masih bekerja, coba lagi setelah selesai.</string>
+    <string name="chatsNewPhoneFolderWhere">Bekerja di %1$s, di penyimpanan ponsel, yang tidak dapat menyimpan tautan atau menjalankan program secara langsung.</string>
+    <string name="chatsNewPhoneFolderWhy">Mengapa</string>
+    <string name="chatsNewPhoneFolderHelpTitle">Bekerja di penyimpanan ponsel</string>
+    <string name="chatsNewPhoneFolderHelp">Android menyediakan penyimpanan ponsel untuk semua aplikasi, seperti kartu memori. Penyimpanan itu tidak dapat menyimpan tautan antarfile, dan tidak akan menjalankan program yang tersimpan di dalamnya.\n\nJadi di folder ini, pasang paket dengan npm install --no-bin-links, dan jalankan skrip dengan sh script.sh, bukan ./script.sh. Git di sini mengabaikan mode file. Proyek di folder milik aplikasi tidak memiliki batasan ini.\n\nSaat Claude Code atau Codex dimulai di sini, hal yang sama diberitahukan kepadanya.</string>
+    <string name="chatPhoneFolderAccess">Folder percakapan ini berada di penyimpanan ponsel, dan aplikasi tidak lagi memiliki akses ke semua file. Tidak ada yang dikirim sampai Anda mengizinkannya lagi.</string>
+    <string name="chatPhoneFolderRestartServer">OpenCode di ponsel ini tidak dapat melihat folder percakapan ini sampai dimulai ulang. Tidak ada yang dikirim sampai saat itu.</string>
+    <string name="chatPhoneFolderRestartAgents">Agen di ponsel tidak dapat melihat folder percakapan ini sampai dimulai ulang. Tidak ada yang dikirim sampai saat itu.</string>
+    <string name="chatPhoneFolderMissing">Folder percakapan ini sudah tidak ada di penyimpanan ponsel, jadi tidak ada yang dapat dikirim di sini.</string>
+    <string name="chatPhoneFolderDenied">Agen tidak dapat membuka atau mengubah file di folder percakapan ini di penyimpanan ponsel, jadi tidak ada yang dapat dikirim di sini.</string>
+    <string name="chatSendPhoneFolder">Tidak terkirim: agen tidak dapat menjangkau folder percakapan ini di penyimpanan ponsel saat ini. Baris di atas menjelaskan apa yang harus dilakukan.</string>
 </resources>

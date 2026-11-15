@@ -46,6 +46,7 @@ class AndroidChatPhoneServer(
     private val phoneAgents: Lazy<PhoneAgents>,
     private val appScope: AppCoroutineScope,
     private val registry: Lazy<ConnectionRegistry>,
+    private val folders: Lazy<PhoneFolderPreflight>,
 ) : ChatPhoneServer {
     override fun runsHere(profile: ProfileId): Boolean =
         (stores.prefs.get("oc.builtinServerOwner") as? PrefValue.Str)?.value == profile.raw
@@ -104,6 +105,25 @@ class AndroidChatPhoneServer(
     /** Issue 147: the agents helper's own answer, the same one the home list reads ([ListRowFacts.needsNewChat]). */
     override fun needsNewSession(ref: ConversationRef): Boolean? =
         ListRowFacts.needsNewChat(registry.value.live.value[ref.profileId], ref.sessionId)
+
+    // Issue 147: the conversation's folder in phone storage, checked from the side that works in it.
+    override suspend fun phoneFolder(
+        ref: ConversationRef,
+        directory: String?,
+        thorough: Boolean,
+    ): io.github.eslamasabry.oc.feature.chat.world.ChatPhoneFolder? =
+        folders.value.checkConversation(ref.profileId, directory, thorough)?.let {
+            io.github.eslamasabry.oc.feature.chat.world.ChatPhoneFolder.valueOf(it.name)
+        }
+
+    override suspend fun fixPhoneFolder(
+        ref: ConversationRef,
+        reach: io.github.eslamasabry.oc.feature.chat.world.ChatPhoneFolder,
+    ): Outcome<Unit> =
+        folders.value.fixConversation(
+            ref.profileId,
+            io.github.eslamasabry.oc.feature.chats.presentation.PhoneFolderReach.valueOf(reach.name),
+        )
 
     override suspend fun restart(profile: ProfileId): Outcome<Unit> =
         if (runsHere(profile)) server.restart()
