@@ -341,7 +341,7 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                     // Issue 147: the folder in phone storage is not ready for the side that will work in it. Said before
                     // Start, with the way forward; the message is never sent into another folder.
                     if (phoneFolderWords != null && !state.deliveryUnconfirmed) {
-                      NoticeInView(phoneFolderWords + state.phoneFolder?.name) {
+                      NoticeInView(phoneFolderWords + state.phoneFolder?.name) { ways ->
                         KitNotice(phoneFolderWords, inset)
                         val fix =
                             when (state.phoneFolder) {
@@ -357,7 +357,7 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                                 { actions.sheet(NewConversationSheet.Projects) },
                             )
                         KitActionBlock(
-                            inset,
+                            inset.then(ways),
                             secondary =
                                 fix?.let {
                                     KitAction(
@@ -444,7 +444,7 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                     }
                     // N-48: an unconfirmed send is said once (above); a failed read behind it adds no second notice.
                     if (failureShown) {
-                      NoticeInView(state.failure) {
+                      NoticeInView(state.failure) { ways ->
                         KitErrorNotice(
                             modifier = inset,
                             message =
@@ -469,7 +469,7 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                                 KitAction(stringResource(Res.string.gitRepairAction), actions::repair)
                                     .takeIf { state.repairAvailable && state.failure is Failure.ProjectGit }
                             KitActionBlock(
-                                inset,
+                                inset.then(ways),
                                 secondary =
                                     KitAction(
                                         stringResource(Res.string.commonRetry),
@@ -495,20 +495,24 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
  */
 @Composable
 @OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
-private fun NoticeInView(key: Any?, content: @Composable () -> Unit) {
+private fun NoticeInView(key: Any?, content: @Composable (ways: Modifier) -> Unit) {
     val requester = remember { androidx.compose.foundation.relocation.BringIntoViewRequester() }
+    val waysRequester = remember { androidx.compose.foundation.relocation.BringIntoViewRequester() }
     val keyboard = io.github.eslamasabry.oc.ui.kit.frame.kitKeyboardVisible()
     LaunchedEffect(key, keyboard) {
         androidx.compose.runtime.withFrameNanos {}
+        // The whole notice; when the room cannot hold it with its actions, the actions win (they are the way out).
         requester.bringIntoView()
+        waysRequester.bringIntoView()
         // Again once the keyboard has finished sliding: the room changes while it moves.
         kotlinx.coroutines.delay(400)
         requester.bringIntoView()
+        waysRequester.bringIntoView()
     }
     Column(
         Modifier.fillMaxWidth().bringIntoViewRequester(requester),
         verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
-    ) { content() }
+    ) { content(Modifier.bringIntoViewRequester(waysRequester)) }
 }
 
 /** Compact upgrade choices stay beside Start while the keyboard is open. */
