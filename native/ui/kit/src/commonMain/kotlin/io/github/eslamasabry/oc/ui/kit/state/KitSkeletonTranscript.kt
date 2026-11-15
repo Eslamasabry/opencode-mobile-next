@@ -56,6 +56,9 @@ internal val SKELETON_REPLY_WIDTHS: List<List<Float>> =
 /** The line of words inside a placeholder prompt, as a share of the prompt's width. */
 internal const val SKELETON_PROMPT_LINE: Float = 0.55f
 
+/** A placeholder prompt's width, as a share of the column: a bubble at the end side, not a bar across the page. */
+internal const val SKELETON_PROMPT_WIDTH: Float = 0.72f
+
 /**
  * The placeholder's ink (owner 2026-11-14: a conversation loading on Glass over Contour lines showed nothing at all; its
  * bars were `surface3`, dark grey on a near-black ground). The placeholder lines stand for words, so they are drawn in
@@ -138,11 +141,18 @@ public fun KitSkeletonTranscript(modifier: Modifier = Modifier, turns: Int = 2) 
         ) {
             for (turn in 0 until turns) {
                 if (turn > 0) Spacer(Modifier.height((Space.S4 + Space.S3).dp))
-                Box(
-                    Modifier.fillMaxWidth().height(promptHeight.dp).then(prompt.modifier).testTag("kit-skeleton-prompt"),
-                    contentAlignment = Alignment.CenterStart,
-                ) {
-                    Box(Modifier.padding(horizontal = Space.S3.dp).fillMaxWidth(SKELETON_PROMPT_LINE).then(line))
+                // The person's prompt sits at the end side and is narrower than the column, as the real bubble is.
+                Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
+                    Box(
+                        Modifier
+                            .fillMaxWidth(SKELETON_PROMPT_WIDTH)
+                            .height(promptHeight.dp)
+                            .then(prompt.modifier)
+                            .testTag("kit-skeleton-prompt"),
+                        contentAlignment = Alignment.CenterStart,
+                    ) {
+                        Box(Modifier.padding(horizontal = Space.S3.dp).fillMaxWidth(SKELETON_PROMPT_LINE).then(line))
+                    }
                 }
                 Spacer(Modifier.height(Space.S4.dp))
                 for ((i, width) in SKELETON_REPLY_WIDTHS[turn % SKELETON_REPLY_WIDTHS.size].withIndex()) {
