@@ -53,6 +53,7 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.positionInRoot
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.foundation.relocation.bringIntoViewResponder
 import androidx.compose.ui.unit.LayoutDirection
@@ -98,6 +99,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.ui.zIndex
 import io.github.eslamasabry.oc.ui.kit.live.KitLiveBackground
+import io.github.eslamasabry.oc.ui.kit.live.LocalKitFlatGround
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
 import io.github.eslamasabry.oc.ui.kit.modal.LocalKitSheetHost
 import io.github.eslamasabry.oc.ui.kit.modal.KitToastHost
@@ -371,6 +373,9 @@ public fun KitScreen(
         // inset, so a keyboard whose closing animation never ends here cannot hold the page up.
         val keyboard = kitKeyboardInsets()
         val insets = (LocalKitScreenInsets.current ?: kitSystemInsets()).union(keyboard)
+        // A framed page lies on its own live background (below): when that draws only the flat ground, the body's scroll
+        // edges lay that ground over the content instead of clearing it in an offscreen layer (KitScrollEdges.kt).
+        val flatGround = if (framed) LocalKitFlatGround.current else Color.Unspecified
         // Audit 2 (2026-11-14, a tall sheet's top edge sliced the bar's subtitle): the page tells its sheets where its top
         // chrome ends, so a tall sheet rests below the bar's words (KitSheet's detents).
         val sheetHost = LocalKitSheetHost.current
@@ -439,8 +444,8 @@ public fun KitScreen(
             }
             val blockShown by rememberUpdatedState(bottomPart != null)
             val zones =
-                remember(bottomState) {
-                    KitScreenZones(bottomGone = { if (!blockShown) Float.NaN else bottomState.blockTop - bottomExtra.value })
+                remember(bottomState, flatGround) {
+                    KitScreenZones(bottomGone = { if (!blockShown) Float.NaN else bottomState.blockTop - bottomExtra.value }, ground = flatGround)
                 }
             val scroll = remember { KitScreenScroll() }
             val under = kitUnderTop(scroll)
@@ -541,6 +546,7 @@ public fun KitScreen(
                                         fadeFromBottom = if (bottomPart == null) null else ({ bottomPx + fadeBottomPx }),
                                         bottomReach = COMPOSER_FADE_DP.dp,
                                         bottomStrength = { if (zones.claims > 0) 0f else 1f },
+                                        ground = flatGround,
                                     )
                             )
                             .kitMaxWidth(cap)
@@ -869,6 +875,7 @@ public fun KitScreen(
                                     if (bottomPart == null) null
                                     else ({ with(density) { COMPOSER_FADE_DP.dp.toPx() } }),
                                 bottomReach = COMPOSER_FADE_DP.dp,
+                                ground = flatGround,
                             )
                     // Glass with the lens (the bar floats): the bottom block is a pane like the bar. The body runs on
                     // under it, so rows pass behind its glass instead of being cut at its top; the frame tells the body
@@ -898,6 +905,7 @@ public fun KitScreen(
                                     bottomReachPx = { dissolvePx },
                                     bottomStrength = moreBelow,
                                     keepBottomPx = { pageScroll.footRoom.toFloat() },
+                                    ground = flatGround,
                                 )
                     // The body: its scroller reports to the page's edges; a body that reports nothing is watched.
                     val pageBody: @Composable () -> Unit = {
