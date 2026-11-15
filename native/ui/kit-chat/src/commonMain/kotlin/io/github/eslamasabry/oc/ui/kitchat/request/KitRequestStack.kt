@@ -50,7 +50,7 @@ internal fun requestStackFades(value: Int, max: Int): Pair<Boolean, Boolean> = (
  *
  * States: one card, several cards (scroll inside the stack), a card arriving, a card leaving
  * Text: [label] per item (the caller words it)
- * Cap: one card at its cap plus its caption (permission cards: 34 % of the window); more cards scroll so the composer stays on screen, and an edge with more
+ * Cap: one card at its cap plus its caption (permission cards: 45 % of the window); more cards scroll so the composer stays on screen, and an edge with more
  *   past it fades over [EDGE_FADE_DP] (a card is never cut hard mid-line)
  * Motion: [KitAnimatedRows]: a card unfolds and fades in over STANDARD, folds out over QUICK;
  * Off = instant
