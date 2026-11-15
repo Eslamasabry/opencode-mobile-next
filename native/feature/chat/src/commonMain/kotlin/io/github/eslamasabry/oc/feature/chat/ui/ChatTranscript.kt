@@ -126,6 +126,8 @@ import io.github.eslamasabry.oc.ui.kitchat.transcript.KitMessageActions
 import io.github.eslamasabry.oc.ui.kitchat.transcript.KitMessageTimestamp
 import io.github.eslamasabry.oc.ui.kitchat.transcript.KitPromptBubble
 import io.github.eslamasabry.oc.ui.kitchat.transcript.KitQuietLine
+import io.github.eslamasabry.oc.ui.kitchat.transcript.KitSendFailed
+import io.github.eslamasabry.oc.ui.kitchat.transcript.KitSendFailedDetails
 import io.github.eslamasabry.oc.ui.kitchat.transcript.KitTranscriptActions
 import io.github.eslamasabry.oc.ui.kitchat.transcript.KitReplyBlock
 import io.github.eslamasabry.oc.ui.kitchat.transcript.KitReplyFooter
@@ -847,12 +849,11 @@ private fun PendingBubble(
         val setUp = p.setUp?.takeIf { onSetUp != null && p.state != PendingState.Sending }
         // Set up at first use: the agent was never set up, so the one way on is its set-up (the words stay above).
         if (setUp != null) {
-            KitQuietLine(words.setUpNeeded(setUp.name))
-            KitButton(
-                words.setUpAction(setUp.name),
-                { onSetUp?.invoke(setUp.agentId) },
-                role = KitButtonRole.Tertiary,
-                modifier = Modifier.testTag("chat-send-set-up"),
+            KitSendFailed(
+                lines = listOf(words.setUpNeeded(setUp.name)),
+                actionLabel = words.setUpAction(setUp.name),
+                onAction = { onSetUp?.invoke(setUp.agentId) },
+                actionTag = "chat-send-set-up",
             )
         } else when (p.state) {
             PendingState.Sending -> KitQuietLine(words.sending)
@@ -867,23 +868,17 @@ private fun PendingBubble(
                     onSendAgain = onRetry.takeIf { !p.reviewable },
                 )
             PendingState.Failed -> {
-                KitQuietLine(words.notSent)
-                p.failure?.let { failure ->
-                    val line = words.sendFailure(failure)
-                    if (line.isNotEmpty()) KitQuietLine(line)
-                    if (words.details.isNotEmpty())
-                        KitDetailsFold(
-                            label = words.details,
-                            copyLabel = words.copyDetails,
-                            notes = listOf(failureCode(failure)),
-                            modifier = Modifier.testTag("chat-send-failure-details"),
-                        )
-                }
-                KitButton(
-                    words.tryAgain,
-                    onRetry,
-                    role = KitButtonRole.Tertiary,
-                    modifier = Modifier.testTag("chat-send-error-try-again"),
+                val failure = p.failure
+                KitSendFailed(
+                    lines = listOfNotNull(words.notSent, failure?.let(words.sendFailure)),
+                    actionLabel = words.tryAgain,
+                    onAction = onRetry,
+                    details =
+                        failure
+                            ?.takeIf { words.details.isNotEmpty() }
+                            ?.let { KitSendFailedDetails(words.details, words.copyDetails, failureCode(it), it.details) },
+                    detailsTag = "chat-send-failure-details",
+                    actionTag = "chat-send-error-try-again",
                 )
             }
         }
