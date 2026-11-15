@@ -17,7 +17,9 @@ public fun interface ProblemThermalReadings {
  * opening the report and keep it for the app's life; [close] before letting go of its sources.
  *
  * Errors and finished timings buffered before attachment are captured once (only the report's
- * capacity of timings). A repeated error is kept again; a long span that finishes after newer ones
+ * capacity of timings). A repeated error is kept as a count (B-332): each change of a ring entry adds
+ * the occurrences it gained, with the entry's first time, so repeats folded before attachment or
+ * coalesced in one update keep their count; a long span that finishes after newer ones
  * is still kept. A finished timing reaches disk in the same call that finished it. Clearing
  * [Diagnostics] (Settings › Clear) also erases the restored persisted evidence, even when the
  * in-memory ring is empty, and never replays old timings. With [typedAndroidExits] the diagnostics
@@ -81,14 +83,21 @@ public class ReportProblemCapture(
             seenErrors.keys.retainAll(current)
             for (entry in list) {
                 val revision = entry.at to entry.occurrences
-                if (seenErrors[entry.id] == revision) continue
+                val seen = seenErrors[entry.id]
+                if (seen == revision) continue
                 seenErrors[entry.id] = revision
                 if (typedAndroidExits && entry.source == ReportProblem.ANDROID_EXIT_SOURCE) continue
+                // An entry seen for the first time brings all its repeats; a known one, what it gained.
+                val added =
+                    if (seen == null) entry.occurrences
+                    else (entry.occurrences - seen.second).coerceAtLeast(1)
                 report.recordError(
                     entry.message,
                     entry.stack.ifEmpty { null },
                     entry.source,
                     entry.at,
+                    count = added,
+                    firstAt = entry.firstAt,
                 )
             }
         }

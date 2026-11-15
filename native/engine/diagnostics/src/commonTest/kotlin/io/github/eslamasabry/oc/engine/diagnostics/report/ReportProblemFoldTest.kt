@@ -125,4 +125,31 @@ class ReportProblemFoldTest {
         assertEquals(at, failed.firstAt)
         assertEquals(at + 3.seconds, failed.at)
     }
+
+    @Test
+    fun `B-332 repeats the ring folded before the saved report attached keep their count and first time`() {
+        val diagnostics = Diagnostics(redactor, clock)
+        diagnostics.record("chat", "failed", at = at)
+        diagnostics.record("files", "other", at = at + 1.seconds)
+        diagnostics.record("chat", "failed", at = at + 2.seconds)
+        diagnostics.record("chat", "failed", at = at + 3.seconds)
+        val report = open()
+        val capture = ReportProblemCapture(report, diagnostics, PerfTrace(redactor, clock))
+        try {
+            val buffered = report.entries.single { it.message == "failed" }
+            assertEquals(2, report.entries.size)
+            assertEquals(3, buffered.count)
+            assertEquals(at, buffered.firstAt)
+            assertEquals(at + 3.seconds, buffered.at)
+
+            diagnostics.record("chat", "failed", at = at + 4.seconds) // after attaching: one more, not three
+            val failed = report.entries.single { it.message == "failed" }
+            assertEquals(4, failed.count)
+            assertEquals(at, failed.firstAt)
+            assertEquals(at + 4.seconds, failed.at)
+        } finally {
+            capture.close()
+        }
+        assertEquals(4, open().entries.single { it.message == "failed" }.count)
+    }
 }

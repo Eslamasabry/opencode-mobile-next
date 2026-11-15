@@ -109,8 +109,29 @@ public class ReportProblem private constructor(
 
     public val storageFailed: Boolean get() = mutableState.value.storageFailed
 
-    public fun recordError(message: String, stack: String? = null, source: String = "app", at: Instant = clock.now()): Outcome<Unit> =
-        record(ProblemEvent(ProblemEventKind.Error, at, source, message, stack.orEmpty()))
+    /**
+     * Keeps an error. [count] and [firstAt] carry repeats already folded elsewhere (the diagnostics ring, B-332): the
+     * error happened [count] times, first at [firstAt], last at [at].
+     */
+    public fun recordError(
+        message: String,
+        stack: String? = null,
+        source: String = "app",
+        at: Instant = clock.now(),
+        count: Int = 1,
+        firstAt: Instant = at,
+    ): Outcome<Unit> =
+        record(
+            ProblemEvent(
+                ProblemEventKind.Error,
+                at,
+                source,
+                message,
+                stack.orEmpty(),
+                count.coerceAtLeast(1),
+                minOf(firstAt, at),
+            ),
+        )
 
     public fun recordTiming(span: PerfSpan): Outcome<Unit> = record(timing(span))
 
