@@ -28,4 +28,11 @@ internal object FirstMessageRules {
                 TypedKind.of(request.typedText.trim()) !is TypedKind.Prompt
         return !command
     }
+
+    /**
+     * Whether New conversation opens the conversation page as soon as the first message is queued. A server's own
+     * conversation exists the moment it is made, so it opens at once. A phone agent's conversation exists only once its
+     * helper created the agent, so its page opens when the first message is Accepted and never before.
+     */
+    fun opensAtOnce(startsOnPhoneAgents: Boolean): Boolean = !startsOnPhoneAgents
 }

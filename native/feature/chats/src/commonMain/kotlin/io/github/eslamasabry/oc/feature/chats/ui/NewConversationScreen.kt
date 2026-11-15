@@ -36,6 +36,7 @@ import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationModel
 import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationSheet
 import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationStarter
 import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationWait
+import io.github.eslamasabry.oc.feature.chats.presentation.PhoneStartWay
 import io.github.eslamasabry.oc.feature.chats.presentation.projectPlace
 import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationUi
 import io.github.eslamasabry.oc.feature.chats.presentation.filterNewConversationModels
@@ -810,6 +811,18 @@ private fun StartingConversation(state: NewConversationUi, actions: NewConversat
             else -> KitStartingPhase.NotSent
         }
     val notSent = phase == KitStartingPhase.NotSent
+    val problem = state.phoneStartProblem.takeIf { notSent }
+    val startingAgent = state.phoneAgentName.takeIf { state.busy }
+    val agentName = problem?.agentName.orEmpty()
+    val reasonWords =
+        when (problem?.way) {
+            PhoneStartWay.SetUp -> stringResource(Res.string.chatSendFailureNeedsSetUp, agentName)
+            PhoneStartWay.ChooseModel -> stringResource(Res.string.chatsNewAgentModelMissing, agentName)
+            PhoneStartWay.TryAgain -> stringResource(Res.string.chatsNewAgentDidNotStart, agentName)
+            null -> null
+        }
+    val setUpWords = stringResource(Res.string.agentsSetUpAction, agentName)
+    val chooseModelWords = stringResource(Res.string.chatUiChooseAnotherModel)
     KitStartingConversation(
         text = state.text,
         project = state.directory?.let(::importFolder).orEmpty(),
@@ -817,31 +830,56 @@ private fun StartingConversation(state: NewConversationUi, actions: NewConversat
         agent = agentChipLabel(state),
         phase = phase,
         status =
-            stringResource(
-                when {
-                    state.busy -> Res.string.upgradeStartSending
-                    state.deliveryUnconfirmed -> Res.string.p12NewDeliveryUnconfirmed
-                    state.creationUnconfirmed -> Res.string.p12NewCreationUnconfirmed
-                    else -> Res.string.chatSendFailed
-                }
-            ),
+            if (startingAgent != null) stringResource(Res.string.chatsNewStartingAgent, startingAgent)
+            else
+                stringResource(
+                    when {
+                        state.busy -> Res.string.upgradeStartSending
+                        state.deliveryUnconfirmed -> Res.string.p12NewDeliveryUnconfirmed
+                        state.creationUnconfirmed -> Res.string.p12NewCreationUnconfirmed
+                        else -> Res.string.chatSendFailed
+                    }
+                ),
         reason =
             if (!notSent) null
             else
-                stringResource(
-                    if (state.repairAvailable && state.failure is Failure.ProjectGit)
-                        Res.string.gitRepairFailureWords
-                    else Res.string.upgNewChatKept
-                ),
+                reasonWords
+                    ?: stringResource(
+                        if (state.repairAvailable && state.failure is Failure.ProjectGit)
+                            Res.string.gitRepairFailureWords
+                        else Res.string.upgNewChatKept
+                    ),
         details = state.failure?.details?.takeIf { notSent },
         detailsLabel = stringResource(Res.string.kitDetails),
         copyLabel = stringResource(Res.string.kitCopyDetails),
         backLabel = stringResource(Res.string.kitTopBarBack),
         onBack = actions::back,
-        retryLabel = stringResource(Res.string.commonRetry),
-        onRetry = if (notSent) actions::start else null,
+        // The one way forward: Set up <agent>, Choose another model, or Try again (never two of them).
+        retryLabel =
+            when (problem?.way) {
+                PhoneStartWay.SetUp -> setUpWords
+                PhoneStartWay.ChooseModel -> chooseModelWords
+                else -> stringResource(Res.string.commonRetry)
+            },
+        onRetry =
+            if (!notSent) null
+            else {
+                val agentId = problem?.agentId.orEmpty()
+                val way = problem?.way
+                val forward: () -> Unit = {
+                    when (way) {
+                        PhoneStartWay.SetUp -> actions.setUpPhoneAgent(agentId)
+                        PhoneStartWay.ChooseModel -> {
+                            actions.editPrompt()
+                            actions.sheet(NewConversationSheet.Models)
+                        }
+                        else -> actions.start()
+                    }
+                }
+                forward
+            },
         editLabel = stringResource(Res.string.upgNewChatEdit),
-        onEdit = if (notSent) actions::editPrompt else null,
+        onEdit = if (notSent && problem?.way != PhoneStartWay.ChooseModel) actions::editPrompt else null,
         reviewLabel = stringResource(Res.string.p12NewOpenCreated),
         onReview = if (state.reviewConversation != null) actions::openCreatedConversation else null,
         recheckLabel = stringResource(Res.string.chatReceiptCheckAgain),

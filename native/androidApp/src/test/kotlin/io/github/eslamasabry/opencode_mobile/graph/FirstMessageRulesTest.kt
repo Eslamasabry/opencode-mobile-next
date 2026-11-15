@@ -44,4 +44,10 @@ class FirstMessageRulesTest {
             )
         )
     }
+
+    @Test
+    fun `ONE-OP a phone agent's page opens only after its helper answered, a server's own at once`() {
+        assertTrue(FirstMessageRules.opensAtOnce(startsOnPhoneAgents = false), "a server's conversation exists when made")
+        assertFalse(FirstMessageRules.opensAtOnce(startsOnPhoneAgents = true), "a phone agent's does not exist until started")
+    }
 }

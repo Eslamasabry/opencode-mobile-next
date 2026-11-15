@@ -22,6 +22,7 @@ import io.github.eslamasabry.oc.core.domain.ImportableConversations
 import io.github.eslamasabry.oc.core.model.ModelDisplayName
 import io.github.eslamasabry.oc.core.model.ModelRef
 import io.github.eslamasabry.oc.engine.agents.AgentId
+import io.github.eslamasabry.oc.engine.agents.catalog.AgentCatalog
 import io.github.eslamasabry.oc.engine.agents.selection.AgentSelection
 import io.github.eslamasabry.oc.engine.git.GitLinkRepairReport
 import io.github.eslamasabry.oc.engine.git.GitLinkRepairResult
@@ -397,6 +398,39 @@ public enum class NewConversationWait {
     Sending,
 }
 
+/** The one way forward after a phone agent's conversation did not start. */
+public enum class PhoneStartWay {
+    /** The agent needs setting up (not ready, not signed in): open its set-up. */
+    SetUp,
+
+    /** The chosen model is not one the helper lists for the agent: choose another. */
+    ChooseModel,
+
+    /** Anything else: try again. */
+    TryAgain,
+}
+
+/** A phone agent's refused start: [agentName] is named on screen, [way] is the one action offered. */
+public data class PhoneStartProblem(val agentId: String, val agentName: String, val way: PhoneStartWay)
+
+/** Reads a refused phone-agent start into the one way forward (the helper's sentence is matched, never shown). */
+public object PhoneStartRules {
+    private val NOT_READY =
+        Regex(
+            "is not ready|is disabled|not installed|auth(?:entication)?[ _-]?required|authenticate|sign[ -]?in|" +
+                "log ?in|No model selected|No API key",
+            RegexOption.IGNORE_CASE,
+        )
+
+    public fun way(failure: Failure, chosen: ModelRef?, listed: List<NewConversationModel>): PhoneStartWay =
+        when {
+            chosen != null && listed.isNotEmpty() && listed.none { it.model == chosen } -> PhoneStartWay.ChooseModel
+            failure is Failure.ComputerDidNotAnswer && NOT_READY.containsMatchIn(failure.details?.text.orEmpty()) ->
+                PhoneStartWay.SetUp
+            else -> PhoneStartWay.TryAgain
+        }
+}
+
 public data class NewConversationUi(
     val servers: List<NewConversationServer> = emptyList(),
     val profile: ProfileId? = null,
@@ -455,6 +489,23 @@ public data class NewConversationUi(
     /** A separate copy is OpenCode only: a phone agent hides it (Flutter `_start`). */
     val canCopy: Boolean
         get() = phoneAgent == null && setup?.projects?.any { it.directory == directory && it.separateCopy } == true
+
+    /** The chosen phone agent's name (its row while offered, else the catalog's). */
+    val phoneAgentName: String?
+        get() =
+            phoneAgent?.let { id ->
+                phoneAgentChoice?.name ?: AgentCatalog.builtIn.agents.firstOrNull { it.id.raw == id }?.name
+            }
+
+    /** Why a phone agent's start was refused, once it was and nothing is running; null otherwise. */
+    val phoneStartProblem: PhoneStartProblem?
+        get() {
+            val id = phoneAgent ?: return null
+            val failed = failure ?: return null
+            val name = phoneAgentName ?: return null
+            if (busy || !openingChat) return null
+            return PhoneStartProblem(id, name, PhoneStartRules.way(failed, phoneModel, phoneModels))
+        }
 
     /** The chosen phone agent's row, while it is still offered. */
     val phoneAgentChoice: NewConversationPhoneAgent?
@@ -680,6 +731,9 @@ public class NewConversationViewModel(
     override fun back() {
         val shown = mutable.value
         val profile = shown.profile ?: return nav.back()
+        // Leaving while a conversation starts cancels nothing already sent: the words and the queued message are
+        // saved, and the conversation appears in the list when it is made; no page opens by itself.
+        if (shown.busy && shown.openingChat) return nav.back()
         if (shown.busy) return
         mutable.update { it.copy(busy = true) }
         viewModelScope.launch {
@@ -1457,7 +1511,10 @@ public class NewConversationViewModel(
                 edits.withLock { host.saveDraft(target, directory, "") }
             if (result.dispatched) report(NewChatOutcome.FirstMessageSent)
             else if (result.deliveryUnconfirmed) report(NewChatOutcome.Unknown)
-            if ((result.dispatched || result.deliveryUnconfirmed) && result.ref != null) {
+            // A phone agent's conversation exists only once its helper made the agent: a start that was not confirmed
+            // never opens a page that may not exist. It stays here, saying so, and the words are kept.
+            val unopenedPhoneStart = phone != null && openedConversation == null && !result.dispatched
+            if (!unopenedPhoneStart && (result.dispatched || result.deliveryUnconfirmed) && result.ref != null) {
                 // Once the session exists, its chat owns the receipt and always has an editor.
                 // An uncertain send must not strand the person on the chip-only starting frame.
                 if (openedConversation == null && nav.top.value == route) {
@@ -1487,7 +1544,7 @@ public class NewConversationViewModel(
                         failure = result.failure.takeIf { openedConversation == null },
                         creationUnconfirmed = result.creationAttempted && result.ref == null,
                         deliveryUnconfirmed = result.deliveryUnconfirmed,
-                        reviewConversation = result.ref.takeIf { result.deliveryUnconfirmed },
+                        reviewConversation = result.ref.takeIf { result.deliveryUnconfirmed && phone == null },
                     )
                 }
         }
