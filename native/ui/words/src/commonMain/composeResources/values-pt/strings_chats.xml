@@ -343,4 +343,8 @@
     <string name="chatsNewAgentModelMissing">O %1$s não oferece o modelo que você escolheu. Suas palavras foram mantidas.</string>
     <string name="chatsNewAgentDidNotStart">O %1$s não iniciou. Suas palavras foram mantidas.</string>
     <string name="chatsNewAgentUnconfirmed">O %1$s não confirmou esta mensagem. Atualize para conferir de novo, ou descarte para recomeçar. Suas palavras continuam salvas aqui.</string>
+    <string name="chatsNewAgentNoProjects">O %1$s só trabalha nos projetos deste celular, e ainda não há nenhum. Toque aqui para criar seu primeiro projeto.</string>
+    <string name="chatsNewPhoneStorage">Armazenamento do celular</string>
+    <string name="chatsNewPhoneStorageOff">Permite que os agentes deste celular leiam e alterem arquivos do armazenamento do celular, como Downloads e Documentos. Abre a página do Android para isso.</string>
+    <string name="chatsNewPhoneStorageOn">Os agentes deste celular podem ler e alterar arquivos em Downloads, Documentos e no restante do armazenamento do celular.</string>
 </resources>

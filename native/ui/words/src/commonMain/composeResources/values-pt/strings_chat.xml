@@ -1351,4 +1351,7 @@
     <string name="chatLoadFailedAgentsBody">Nada foi perdido. Tente novamente quando os agentes do celular responderem.</string>
     <string name="chatLoadMissingAgentBody">O %1$s não tem esta conversa: ela pode ter parado antes de começar. Tente novamente, ou configure o %1$s e inicie uma nova conversa.</string>
     <string name="chatLoadMissingAgentsBody">Os agentes do celular não têm esta conversa: o agente dela pode ter parado antes de começar. Tente novamente ou inicie uma nova conversa.</string>
+    <string name="kitCommandNoOutput">Sem saída</string>
+    <string name="kitCommandFailedNoOutput">Falhou antes de mostrar qualquer coisa</string>
+    <string name="kitCommandStoppedEarly">Parou antes de terminar</string>
 </resources>

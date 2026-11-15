@@ -342,4 +342,8 @@
     <string name="chatsNewAgentModelMissing">%1$s ne propose pas le modèle que vous avez choisi. Vos mots sont conservés.</string>
     <string name="chatsNewAgentDidNotStart">%1$s n'a pas démarré. Vos mots sont conservés.</string>
     <string name="chatsNewAgentUnconfirmed">%1$s n’a pas confirmé ce message. Actualisez pour vérifier à nouveau, ou abandonnez-le pour recommencer. Votre texte reste enregistré ici.</string>
+    <string name="chatsNewAgentNoProjects">%1$s fonctionne uniquement avec les projets de ce téléphone, et il n’y en a pas encore. Touchez ici pour créer votre premier projet.</string>
+    <string name="chatsNewPhoneStorage">Stockage du téléphone</string>
+    <string name="chatsNewPhoneStorageOff">Permet aux agents de ce téléphone de lire et de modifier les fichiers du stockage du téléphone, comme Téléchargements et Documents. Ouvre la page Android correspondante.</string>
+    <string name="chatsNewPhoneStorageOn">Les agents de ce téléphone peuvent lire et modifier les fichiers dans Téléchargements, Documents et le reste du stockage du téléphone.</string>
 </resources>

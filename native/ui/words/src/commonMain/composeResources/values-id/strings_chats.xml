@@ -334,4 +334,8 @@
     <string name="chatsNewAgentModelMissing">%1$s tidak menawarkan model yang Anda pilih. Tulisan Anda tetap tersimpan.</string>
     <string name="chatsNewAgentDidNotStart">%1$s tidak dimulai. Tulisan Anda tetap tersimpan.</string>
     <string name="chatsNewAgentUnconfirmed">%1$s tidak mengonfirmasi pesan ini. Segarkan untuk memeriksa lagi, atau buang untuk memulai ulang. Tulisan Anda tetap tersimpan di sini.</string>
+    <string name="chatsNewAgentNoProjects">%1$s hanya bekerja di proyek pada ponsel ini, dan belum ada satu pun. Ketuk di sini untuk membuat proyek pertama Anda.</string>
+    <string name="chatsNewPhoneStorage">Penyimpanan ponsel</string>
+    <string name="chatsNewPhoneStorageOff">Mengizinkan agen di ponsel ini membaca dan mengubah file di penyimpanan ponsel, seperti Unduhan dan Dokumen. Membuka halaman Android untuk itu.</string>
+    <string name="chatsNewPhoneStorageOn">Agen di ponsel ini dapat membaca dan mengubah file di Unduhan, Dokumen, dan penyimpanan ponsel lainnya.</string>
 </resources>

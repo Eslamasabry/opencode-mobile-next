@@ -1537,4 +1537,7 @@
     <string name="chatLoadFailedAgentsBody">لم يضِع شيء. حاول مرة أخرى عندما تستجيب الوكلاء على الهاتف.</string>
     <string name="chatLoadMissingAgentBody">لا توجد هذه المحادثة لدى %1$s: ربما توقفت قبل أن تبدأ. حاول مرة أخرى، أو أعدّ %1$s وابدأ محادثة جديدة.</string>
     <string name="chatLoadMissingAgentsBody">لا توجد هذه المحادثة لدى الوكلاء على الهاتف: ربما توقف وكيلها قبل أن تبدأ. حاول مرة أخرى أو ابدأ محادثة جديدة.</string>
+    <string name="kitCommandNoOutput">لا مخرجات</string>
+    <string name="kitCommandFailedNoOutput">فشل قبل أن يطبع أي شيء</string>
+    <string name="kitCommandStoppedEarly">توقّف قبل أن ينتهي</string>
 </resources>

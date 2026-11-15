@@ -1413,4 +1413,7 @@
     <string name="chatLoadFailedAgentsBody">Ничего не потеряно. Повторите, когда ответят агенты телефона.</string>
     <string name="chatLoadMissingAgentBody">В %1$s нет этого чата: возможно, он остановился, не начавшись. Повторите или настройте %1$s и начните новый чат.</string>
     <string name="chatLoadMissingAgentsBody">У агентов телефона нет этого чата: возможно, его агент остановился, не начавшись. Повторите или начните новый чат.</string>
+    <string name="kitCommandNoOutput">Нет вывода</string>
+    <string name="kitCommandFailedNoOutput">Сбой до того, как что-либо было выведено</string>
+    <string name="kitCommandStoppedEarly">Остановлено до завершения</string>
 </resources>

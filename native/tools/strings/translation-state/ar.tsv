@@ -2100,6 +2100,7 @@ chatsNewAddAgent	c3c155e5e8
 chatsNewAgentDidNotStart	47d520b781
 chatsNewAgentModelMissing	b5a345c40d
 chatsNewAgentNeedsProjectsFolder	33b0fb0b97
+chatsNewAgentNoProjects	88cbf1df59
 chatsNewAgentUnconfirmed	096e14b0a4
 chatsNewBuildPrompt	018a236ec9
 chatsNewChooseProject	1d43ead9f8
@@ -2113,6 +2114,9 @@ chatsNewGettingReady	707c51907d
 chatsNewGettingReadySlow	9b0c7c0602
 chatsNewModelRow	c522c54aff
 chatsNewNeedProject	c983526668
+chatsNewPhoneStorage	0596028729
+chatsNewPhoneStorageOff	719ecc4c4e
+chatsNewPhoneStorageOn	c5e5d57076
 chatsNewProjectRow	d45d0dc299
 chatsNewSeparateCopy	669f3baf69
 chatsNewSeparateCopyDetail	d78bffb9af
@@ -5726,6 +5730,9 @@ kitCodeCopyOutput	863ccb0c7f
 kitCodeEmpty	732ee38c49
 kitCodeOpenFull	436320809f
 kitCodeShowAll	c1f3d4cbfd
+kitCommandFailedNoOutput	33e03bee35
+kitCommandNoOutput	9c51115e52
+kitCommandStoppedEarly	dc85518d12
 kitComposerAddToTurn	026af1e0a5
 kitComposerAddsToReply	af2c23c5d4
 kitComposerCannotSendYet	e8d24e183e

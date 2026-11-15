@@ -1351,4 +1351,7 @@
     <string name="chatLoadFailedAgentsBody">No se perdió nada. Inténtalo de nuevo cuando respondan los agentes del teléfono.</string>
     <string name="chatLoadMissingAgentBody">%1$s no tiene esta conversación: puede que se detuviera antes de empezar. Inténtalo de nuevo, o configura %1$s y empieza una conversación nueva.</string>
     <string name="chatLoadMissingAgentsBody">Los agentes del teléfono no tienen esta conversación: su agente puede que se detuviera antes de empezar. Inténtalo de nuevo o empieza una conversación nueva.</string>
+    <string name="kitCommandNoOutput">Sin salida</string>
+    <string name="kitCommandFailedNoOutput">Falló antes de mostrar nada</string>
+    <string name="kitCommandStoppedEarly">Se detuvo antes de terminar</string>
 </resources>

@@ -347,4 +347,8 @@
     <string name="chatsNewAgentModelMissing">%1$s не предлагает выбранную вами модель. Ваш текст сохранён.</string>
     <string name="chatsNewAgentDidNotStart">%1$s не запустился. Ваш текст сохранён.</string>
     <string name="chatsNewAgentUnconfirmed">%1$s не подтвердил это сообщение. Обновите, чтобы проверить ещё раз, или отмените его, чтобы начать заново. Ваш текст сохранён здесь.</string>
+    <string name="chatsNewAgentNoProjects">%1$s работает только с проектами на этом телефоне, а их пока нет. Нажмите здесь, чтобы создать первый проект.</string>
+    <string name="chatsNewPhoneStorage">Память телефона</string>
+    <string name="chatsNewPhoneStorageOff">Позволяет агентам на этом телефоне читать и изменять файлы в памяти телефона, например в «Загрузках» и «Документах». Открывает нужную страницу Android.</string>
+    <string name="chatsNewPhoneStorageOn">Агенты на этом телефоне могут читать и изменять файлы в «Загрузках», «Документах» и остальной памяти телефона.</string>
 </resources>

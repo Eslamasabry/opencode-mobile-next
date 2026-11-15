@@ -1226,4 +1226,7 @@
     <string name="chatLoadFailedAgentsBody">Không mất gì cả. Hãy thử lại khi các tác nhân trên điện thoại phản hồi.</string>
     <string name="chatLoadMissingAgentBody">%1$s không có cuộc trò chuyện này: có thể nó đã dừng trước khi bắt đầu. Hãy thử lại, hoặc thiết lập %1$s rồi bắt đầu cuộc trò chuyện mới.</string>
     <string name="chatLoadMissingAgentsBody">Các tác nhân trên điện thoại không có cuộc trò chuyện này: tác nhân của nó có thể đã dừng trước khi bắt đầu. Hãy thử lại hoặc bắt đầu cuộc trò chuyện mới.</string>
+    <string name="kitCommandNoOutput">Không có đầu ra</string>
+    <string name="kitCommandFailedNoOutput">Lỗi trước khi in ra bất cứ gì</string>
+    <string name="kitCommandStoppedEarly">Đã dừng trước khi xong</string>
 </resources>

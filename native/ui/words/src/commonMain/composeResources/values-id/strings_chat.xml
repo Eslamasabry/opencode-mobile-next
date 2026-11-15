@@ -1226,4 +1226,7 @@
     <string name="chatLoadFailedAgentsBody">Tidak ada yang hilang. Coba lagi saat agen di ponsel menjawab.</string>
     <string name="chatLoadMissingAgentBody">%1$s tidak memiliki percakapan ini: mungkin berhenti sebelum dimulai. Coba lagi, atau siapkan %1$s dan mulai percakapan baru.</string>
     <string name="chatLoadMissingAgentsBody">Agen di ponsel tidak memiliki percakapan ini: agennya mungkin berhenti sebelum dimulai. Coba lagi atau mulai percakapan baru.</string>
+    <string name="kitCommandNoOutput">Tidak ada keluaran</string>
+    <string name="kitCommandFailedNoOutput">Gagal sebelum mencetak apa pun</string>
+    <string name="kitCommandStoppedEarly">Berhenti sebelum selesai</string>
 </resources>

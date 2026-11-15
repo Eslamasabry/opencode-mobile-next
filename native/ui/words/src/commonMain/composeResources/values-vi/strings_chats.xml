@@ -334,4 +334,8 @@
     <string name="chatsNewAgentModelMissing">%1$s không cung cấp mô hình bạn đã chọn. Nội dung của bạn vẫn được giữ.</string>
     <string name="chatsNewAgentDidNotStart">%1$s không khởi động được. Nội dung của bạn vẫn được giữ.</string>
     <string name="chatsNewAgentUnconfirmed">%1$s chưa xác nhận tin nhắn này. Hãy làm mới để kiểm tra lại, hoặc hủy để bắt đầu lại. Nội dung của bạn vẫn được lưu ở đây.</string>
+    <string name="chatsNewAgentNoProjects">%1$s chỉ hoạt động trong các dự án trên điện thoại này, và hiện chưa có dự án nào. Nhấn vào đây để tạo dự án đầu tiên.</string>
+    <string name="chatsNewPhoneStorage">Bộ nhớ điện thoại</string>
+    <string name="chatsNewPhoneStorageOff">Cho phép các tác nhân trên điện thoại này đọc và thay đổi tệp trong bộ nhớ điện thoại, như Tải xuống và Tài liệu. Mở trang của Android cho việc này.</string>
+    <string name="chatsNewPhoneStorageOn">Các tác nhân trên điện thoại này có thể đọc và thay đổi tệp trong Tải xuống, Tài liệu và phần còn lại của bộ nhớ điện thoại.</string>
 </resources>

@@ -1350,4 +1350,7 @@
     <string name="chatLoadFailedAgentsBody">Rien n'est perdu. Réessayez quand les agents du téléphone répondront.</string>
     <string name="chatLoadMissingAgentBody">%1$s n'a pas cette conversation : elle a peut-être été interrompue avant de commencer. Réessayez, ou configurez %1$s et démarrez une nouvelle conversation.</string>
     <string name="chatLoadMissingAgentsBody">Les agents du téléphone n'ont pas cette conversation : son agent s'est peut-être arrêté avant de commencer. Réessayez ou démarrez une nouvelle conversation.</string>
+    <string name="kitCommandNoOutput">Aucune sortie</string>
+    <string name="kitCommandFailedNoOutput">Échec avant d’avoir rien affiché</string>
+    <string name="kitCommandStoppedEarly">Arrêté avant la fin</string>
 </resources>
