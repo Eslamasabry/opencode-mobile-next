@@ -46,6 +46,19 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitMotion
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 
+/**
+ * A seam for the tap audit (test-only use): told when a kit tappable ran its action ([acted]) or, when it was disabled
+ * with a reason, answered the tap by saying it ([explained]). The box is the part's, in window pixels. Null in the app.
+ */
+public interface KitTapObserver {
+    public fun acted(bounds: IntRect)
+
+    public fun explained(bounds: IntRect, reason: String)
+}
+
+public val LocalKitTapObserver: androidx.compose.runtime.ProvidableCompositionLocal<KitTapObserver?> =
+    androidx.compose.runtime.staticCompositionLocalOf { null }
+
 /** What a tappable is to a screen reader. */
 public enum class KitTappableRole { Button, Row, Tab, Switch }
 
@@ -130,6 +143,7 @@ internal fun Modifier.kitTappable(
     val hapticsOn = appearance.haptics
     // P-108: the control's box, read only when it is pressed, so a menu it opens can open beside it.
     val origin = LocalKitPressOrigin.current
+    val observer = LocalKitTapObserver.current
     val placed = remember { PlacedBox() }
     return this
         .onPlaced { placed.coordinates = it }
@@ -161,6 +175,7 @@ internal fun Modifier.kitTappable(
             hapticFeedbackEnabled = false,
             onClick = {
                 placed.pressed()?.let(origin::record)
+                if (observer != null) placed.pressed()?.let(observer::acted)
                 if (hapticsOn && haptic != null) platform.haptic(haptic)
                 onClick()
             },
@@ -219,6 +234,7 @@ public fun Modifier.kitMenuHold(label: String, onOpen: () -> Unit, shape: Shape 
     val hapticsOn = LocalKitAppearance.current.haptics
     val ink = LocalKitColors.current.tone(TextTone.Primary)
     val origin = LocalKitPressOrigin.current
+    val observer = LocalKitTapObserver.current
     val placed = remember { PlacedBox() }
     return this
         .onPlaced { placed.coordinates = it }
@@ -232,6 +248,7 @@ public fun Modifier.kitMenuHold(label: String, onOpen: () -> Unit, shape: Shape 
             hapticFeedbackEnabled = false,
             onClick = {
                 placed.held()?.let(origin::record)
+                if (observer != null) placed.pressed()?.let(observer::acted)
                 onOpen()
             },
             onLongClick = {
@@ -275,7 +292,10 @@ public fun Modifier.kitContentPress(
     val ink = LocalKitColors.current.tone(TextTone.Primary)
     val indication = remember(platform, ink, reduced) { if (reduced) KitFillIndication(ink) else platform.pressIndication(ink) }
     val interactions = interactionSource ?: remember { MutableInteractionSource() }
+    val observer = LocalKitTapObserver.current
+    val placed = remember { PlacedBox() }
     return this
+        .onPlaced { placed.coordinates = it }
         .clip(shape)
         .combinedClickable(
             interactionSource = interactions,
@@ -287,6 +307,9 @@ public fun Modifier.kitContentPress(
                 if (hapticsOn) platform.haptic(KitHaptic.LongPress)
                 onLongClick()
             },
-            onClick = onClick,
+            onClick = {
+                if (observer != null) placed.pressed()?.let(observer::acted)
+                onClick()
+            },
         )
 }
