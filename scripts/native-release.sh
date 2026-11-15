@@ -16,10 +16,17 @@
 # The GitHub release itself is made by the native-release workflow as a DRAFT (make_latest=false); a person
 # publishes it by hand after the GO checklist.
 #
-# Refuses unless: on master, the tree is clean (untracked files too), master equals <remote>/master, version.properties
-# holds a plain X.Y.Z versionName. --go also needs the lineage key (OC_KEY_PROPERTIES, native/key.properties or the old
+# Refuses unless (dry run and --go alike): on master, the tree is clean (untracked files too), master equals
+# <remote>/master, version.properties holds a plain X.Y.Z versionName, AND the commit has both
+#   * a passing Native CI verdict: the newest completed fast or full lane run for HEAD's commit that included the
+#     Android library unit tests, read from the verdict file its summary job writes (native/tool/ci/release_verdict.py,
+#     `gh` as the person running this), and
+#   * a passing device smoke result for HEAD's commit and the current versionCode (native/tool/qa/release_smoke.sh,
+#     run on one phone or emulator against the APK this script builds; file in native/build/release-smoke/).
+# The gates are checked before the bump commit, so they describe the commit that is being released. --go also needs the lineage key (OC_KEY_PROPERTIES, native/key.properties or the old
 # android/key.properties: the file the build reads) and release notes docs/releases/v<X.Y.Z+N>.md. Key values are never read or printed here.
-# Environment: OC_RELEASE_REMOTE (default origin).
+# Environment: OC_RELEASE_REMOTE (default origin); OC_RELEASE_GH_REPO (owner/repo for the CI verdict, default from the
+# remote's URL); OC_SMOKE_RESULT_DIR (default native/build/release-smoke).
 # Exit: 0 done (dry run or release), 1 refused or a gate failed, 2 could not run.
 set -euo pipefail
 
@@ -28,7 +35,7 @@ readonly OWNER_LOCAL="1DE5BF08146F269BCD9EB5C2FFC94469CE4617D37806285955F978A624
 readonly PUBLIC_CI="842284B27AA297FB74CF831779FD16498517E1BC2104451459FEC2EA7AC11D1C"
 readonly REMOTE="${OC_RELEASE_REMOTE:-origin}"
 
-usage() { sed -n '2,25p' "$0" | sed 's/^# \{0,1\}//'; }
+usage() { sed -n '2,33p' "$0" | sed 's/^# \{0,1\}//'; }
 fail() { echo "native-release: REFUSED: $*" >&2; exit 1; }
 cannot() { echo "native-release: cannot run: $*" >&2; exit 2; }
 say() { printf '%s\n' "$*"; }
@@ -96,6 +103,59 @@ if [[ -f "$key_file" ]]; then
 fi
 say "  signing     $($key_ready && echo "key file present ($key_file)" || echo "no complete key file: the APKs stay unsigned and the identity gate will refuse them")"
 
+# ---- the two gates that prove tests ran: CI verdict and device smoke (both modes; read before anything is committed) -----
+HEAD_SHA="$(git rev-parse HEAD)"
+gate_fail=false
+gh_repo="${OC_RELEASE_GH_REPO:-}"
+if [[ -z "$gh_repo" ]]; then
+  gh_repo="$(git remote get-url "$REMOTE" 2>/dev/null | sed -n 's#^.*github\.com[:/]\(.*\)$#\1#p' | sed 's#\.git$##')"
+fi
+if command -v python3 >/dev/null && command -v "${OC_GH:-gh}" >/dev/null; then
+  if verdict="$(python3 -I "$NATIVE/tool/ci/release_verdict.py" "$HEAD_SHA" "$gh_repo" 2>&1)"; then
+    say "  ci verdict  ${verdict#release verdict: }"
+  else
+    say "  ci verdict  REFUSED: ${verdict#release verdict: }"
+    say "              run Native CI (fast or full lane, Android unit tests ticked) on ${HEAD_SHA:0:10}, then try again"
+    gate_fail=true
+  fi
+else
+  say "  ci verdict  REFUSED: python3 and gh are needed to read the CI verdict"
+  gate_fail=true
+fi
+SMOKE_DIR="${OC_SMOKE_RESULT_DIR:-$NATIVE/build/release-smoke}"
+SMOKE_FILE="$SMOKE_DIR/smoke-$HEAD_SHA.json"
+smoke_reason=""
+if [[ ! -f "$SMOKE_FILE" ]]; then
+  smoke_reason="no result file for ${HEAD_SHA:0:10}"
+else
+  smoke_reason="$(python3 -I - "$SMOKE_FILE" "$HEAD_SHA" "$CURRENT" <<'PY'
+import json, sys
+path, sha, code = sys.argv[1:4]
+try:
+    r = json.load(open(path))
+except (OSError, ValueError):
+    print('the result file cannot be read'); sys.exit(0)
+bad = [k for k in ('a', 'b', 'c', 'd') if not (r.get('checks', {}).get(k) or {}).get('pass') is True]
+if r.get('commit') != sha: print('the result file is for another commit')
+elif str(r.get('version_code')) != code: print(f"the result file tested versionCode {r.get('version_code')}, this tree has {code}")
+elif not r.get('device_model'): print('the result file names no device')
+elif bad: print('failed or missing checks: ' + ', '.join(bad))
+elif r.get('pass') is not True: print('the result file does not say pass')
+PY
+)"
+fi
+if [[ -z "$smoke_reason" ]]; then
+  say "  smoke       PASS ($(python3 -I -c "import json,sys; r=json.load(open(sys.argv[1])); print(r['device_model'], r['time_utc'])" "$SMOKE_FILE"))"
+else
+  say "  smoke       REFUSED: $smoke_reason"
+  say "              build the APK (dry run does it), then on one device or emulator:"
+  say "              OC_SMOKE_SERIAL=<adb serial> native/tool/qa/release_smoke.sh --new-apk <switch arm64-v8a APK> [--previous-apk <last release APK>]"
+  gate_fail=true
+fi
+GATE_MSG="a release needs a passing CI verdict and a passing device smoke for the commit (see above); nothing was committed, tagged or pushed."
+# --go stops here. A dry run goes on to build, so the APK exists to run the smoke on, and refuses at its end.
+if $GO && $gate_fail; then fail "$GATE_MSG"; fi
+
 TAG="v$NAME+$NEXT"
 NOTES="$ROOT/docs/releases/$TAG.md"
 if $GO; then
@@ -123,9 +183,14 @@ OUT="$NATIVE/build/native-release/$TAG"
 if $BUILD; then
   built_code="$($GO && echo "$NEXT" || echo "$CURRENT")"
   rm -rf "$OUT" && mkdir -p "$OUT"
-  say "  building    :androidApp:assembleSwitchRelease, lintSwitchRelease, unit tests (this takes a while)"
+  # Every android/* library that has unit tests (the same list as the android-unit job of native-ci.yml).
+  android_tests=()
+  for d in "$NATIVE"/android/*/; do
+    if [[ -d "${d}src/test" ]]; then android_tests+=(":android:$(basename "$d"):test"); fi
+  done
+  say "  building    :androidApp:assembleSwitchRelease, lintSwitchRelease, app and ${#android_tests[@]} Android library unit test tasks (this takes a while)"
   (cd "$NATIVE" && ./gradlew --console=plain :androidApp:assembleSwitchRelease :androidApp:lintSwitchRelease \
-    :androidApp:testSwitchDebugUnitTest) >"$OUT/gradle.log" 2>&1 ||
+    :androidApp:testSwitchDebugUnitTest "${android_tests[@]}") >"$OUT/gradle.log" 2>&1 ||
     fail "the build or a gate failed; see $OUT/gradle.log$($GO && echo " (the bump commit is local: push it to keep the number spent, never reuse it)")"
   say "  gate        :quality:test with the merged switch-release manifest (component freeze)"
   (cd "$NATIVE" && ./gradlew --console=plain :quality:test -Poc.mergedManifest=required) >>"$OUT/gradle.log" 2>&1 ||
@@ -160,8 +225,9 @@ GO checklist for $TAG ($LINEAGE lineage) — every line is a person's check, in 
   [ ] owner phone: native/tool/qa/owner_preflight.sh --expect-signer <installed lineage> PASS (docs/native/switch-day.md)
   [ ] run the native-release workflow on $TAG (Actions › Native release › Run workflow); it makes a DRAFT release
   [ ] the draft holds the three APKs and SHA256SUMS, identical to the ones built here (compare SHA256SUMS)
-  [ ] install the matching APK over the current build on one phone; it updates in place and keeps its projects
+  [ ] device smoke PASS for this commit (checked above; native/tool/qa/release_smoke.sh on the APK built here)
   [ ] publish the draft by hand; never mark it latest until the owner says GO
 EOF
+if $gate_fail; then fail "dry run built and gated the tree, but $GATE_MSG"; fi
 $GO || say "Dry run finished: re-run with --go to take $NAME+$NEXT, tag and push."
 exit 0
