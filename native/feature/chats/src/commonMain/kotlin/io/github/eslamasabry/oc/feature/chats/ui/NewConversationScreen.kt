@@ -165,6 +165,7 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
             state.directory.isNullOrBlank() -> stringResource(Res.string.chatsNewNeedProject)
             state.folderMissing -> stringResource(Res.string.chatsNewFolderMissing)
             phoneFolderWords != null -> phoneFolderWords
+            state.checkingPhoneFolder -> stringResource(Res.string.chatsNewPhoneFolderChecking)
             state.phoneNeedsProjectsFolder ->
                 stringResource(
                     if (state.phoneHasNoProject) Res.string.chatsNewAgentNoProjects
@@ -332,7 +333,8 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                     if (phoneFolderWords != null && !state.deliveryUnconfirmed) {
                         KitNotice(phoneFolderWords, inset)
                         val fix =
-                            when (state.phoneFolder) {
+                            if (state.fixingPhoneFolder && state.phoneFolder == PhoneFolderReach.AppAccess) null
+                            else when (state.phoneFolder) {
                                 PhoneFolderReach.AppAccess -> Res.string.chatsNewPhoneFolderAllow
                                 PhoneFolderReach.Restart ->
                                     if (state.phoneAgent != null) Res.string.chatsNewPhoneFolderRestartAgentsAction
@@ -351,10 +353,14 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                                     KitAction(
                                         stringResource(it),
                                         actions::fixPhoneFolder,
+                                        // Busy at once and never tapped twice while the restart runs.
+                                        enabled =
+                                            if (state.fixingPhoneFolder) KitEnabled.Disabled(phoneFolderWords)
+                                            else KitEnabled.Enabled,
                                         working = state.fixingPhoneFolder,
                                     )
-                                } ?: another,
-                            tertiary = if (fix != null) listOf(another) else emptyList(),
+                                } ?: another.takeUnless { state.fixingPhoneFolder },
+                            tertiary = if (fix != null && !state.fixingPhoneFolder) listOf(another) else emptyList(),
                         )
                         state.phoneFolderFailure?.let { failure ->
                             KitErrorNotice(
@@ -398,6 +404,8 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                     }
                     // Issue 147: a folder in the phone's storage is named in full once, with what that storage can't do
                     // behind Why (the agents are told the same at their start).
+                    // Issue 147: what the action just did, said once it is done (a restart takes half a minute).
+                    phoneFolderDoneWords(state)?.let { KitNotice(it, inset.testTag("chats-new-phone-folder-done")) }
                     if (state.phoneFolder == PhoneFolderReach.Ready && !state.directory.isNullOrBlank()) {
                         var why by remember(state.directory) { mutableStateOf(false) }
                         KitGroupNote(
@@ -1193,11 +1201,30 @@ private fun phoneFolderWords(state: NewConversationUi): String? {
     return when (state.phoneFolder) {
         null,
         PhoneFolderReach.Ready -> null
-        PhoneFolderReach.AppAccess -> stringResource(Res.string.chatsNewPhoneFolderAccess)
+        PhoneFolderReach.AppAccess ->
+            if (state.fixingPhoneFolder) stringResource(Res.string.chatsNewPhoneFolderAllowing)
+            else stringResource(Res.string.chatsNewPhoneFolderAccess)
         PhoneFolderReach.Restart ->
-            if (state.phoneAgent != null) stringResource(Res.string.chatsNewPhoneFolderRestartAgents, agent)
+            if (state.fixingPhoneFolder)
+                if (state.phoneAgent != null) stringResource(Res.string.chatsNewPhoneFolderRestartingAgents, agent)
+                else stringResource(Res.string.chatsNewPhoneFolderRestartingServer)
+            else if (state.phoneAgent != null) stringResource(Res.string.chatsNewPhoneFolderRestartAgents, agent)
             else stringResource(Res.string.chatsNewPhoneFolderRestartServer)
         PhoneFolderReach.Missing -> stringResource(Res.string.chatsNewPhoneFolderMissing)
         PhoneFolderReach.Denied -> stringResource(Res.string.chatsNewPhoneFolderDenied, agent)
+    }
+}
+
+/** Issue 147: the one line saying the last action worked (the access is on, the side restarted); null otherwise. */
+@Composable
+private fun phoneFolderDoneWords(state: NewConversationUi): String? {
+    if (state.phoneFolder != PhoneFolderReach.Ready) return null
+    val agent = state.phoneAgentName ?: "OpenCode"
+    return when (state.phoneFolderFixed) {
+        PhoneFolderReach.Restart ->
+            if (state.phoneAgent != null) stringResource(Res.string.chatsNewPhoneFolderRestartedAgents, agent)
+            else stringResource(Res.string.chatsNewPhoneFolderRestartedServer)
+        PhoneFolderReach.AppAccess -> stringResource(Res.string.chatsNewPhoneFolderAllowed, agent)
+        else -> null
     }
 }

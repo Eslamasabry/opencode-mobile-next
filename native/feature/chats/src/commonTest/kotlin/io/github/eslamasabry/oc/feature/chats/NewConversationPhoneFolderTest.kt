@@ -73,8 +73,13 @@ class NewConversationPhoneFolderTest {
         var fixAnswer: Outcome<Unit> = Outcome.Ok(Unit)
         val starts = mutableListOf<Pair<ProfileId, String>>()
 
+        /** Holds the next checks back until completed (null answers at once). */
+        var checkGate: kotlinx.coroutines.CompletableDeferred<Unit>? = null
+        var fixGate: kotlinx.coroutines.CompletableDeferred<Unit>? = null
+
         override suspend fun phoneFolder(profile: ProfileId, phoneAgent: String?, directory: String): PhoneFolderReach? {
             checks += phoneAgent to directory
+            checkGate?.await()
             return reach[phoneAgent]
         }
 
@@ -84,6 +89,7 @@ class NewConversationPhoneFolderTest {
             reach: PhoneFolderReach,
         ): Outcome<Unit> {
             fixes += phoneAgent to reach
+            fixGate?.await()
             return fixAnswer
         }
 
@@ -208,5 +214,59 @@ class NewConversationPhoneFolderTest {
         assertTrue(vm.state.value.phoneFolderBlocked)
         vm.start()
         assertTrue(host.starts.isEmpty())
+    }
+
+    @Test
+    fun `I147-STORAGE a restart shows at once that it is running, cannot be tapped twice, and says when it is done`() {
+        val host = Host()
+        host.reach["claude"] = PhoneFolderReach.Restart
+        val vm = vm(host)
+        vm.choosePhoneAgent("claude")
+        vm.draftChanged("hello")
+        assertEquals(PhoneFolderReach.Restart, vm.state.value.phoneFolder)
+        val gate = kotlinx.coroutines.CompletableDeferred<Unit>()
+        host.fixGate = gate
+        vm.fixPhoneFolder()
+        assertTrue(vm.state.value.fixingPhoneFolder, "busy at once, before the restart answers")
+        vm.fixPhoneFolder()
+        assertEquals(1, host.fixes.size, "a second tap while it runs does nothing")
+        vm.start()
+        assertTrue(host.starts.isEmpty())
+        host.reach["claude"] = PhoneFolderReach.Ready
+        gate.complete(Unit)
+        assertFalse(vm.state.value.fixingPhoneFolder)
+        assertEquals(PhoneFolderReach.Ready, vm.state.value.phoneFolder)
+        assertEquals(PhoneFolderReach.Restart, vm.state.value.phoneFolderFixed, "the page says the restart is done")
+    }
+
+    @Test
+    fun `I147-STORAGE a refused restart says why and keeps the notice and its action`() {
+        val host = Host()
+        host.reach["claude"] = PhoneFolderReach.Restart
+        host.fixAnswer = Outcome.Failed(Failure.Unavailable(FeatureId("busy")))
+        val vm = vm(host)
+        vm.choosePhoneAgent("claude")
+        vm.fixPhoneFolder()
+        assertFalse(vm.state.value.fixingPhoneFolder)
+        assertEquals(PhoneFolderReach.Restart, vm.state.value.phoneFolder)
+        assertTrue(vm.state.value.phoneFolderFailure != null)
+        assertEquals(null, vm.state.value.phoneFolderFixed)
+    }
+
+    @Test
+    fun `I147-STORAGE the phone's own OpenCode is checked when the folder is chosen, and Start waits for the answer`() {
+        val host = Host()
+        host.reach[null] = PhoneFolderReach.Restart
+        val gate = kotlinx.coroutines.CompletableDeferred<Unit>()
+        host.checkGate = gate
+        val vm = vm(host)
+        vm.draftChanged("hello")
+        assertEquals(null to folder, host.checks.first(), "checked for the server itself, with no agent chosen")
+        assertTrue(vm.state.value.checkingPhoneFolder, "the page says it is checking")
+        vm.start()
+        assertTrue(host.starts.isEmpty(), "Start waits while the folder is read")
+        gate.complete(Unit)
+        assertFalse(vm.state.value.checkingPhoneFolder)
+        assertEquals(PhoneFolderReach.Restart, vm.state.value.phoneFolder, "said before the person taps Start")
     }
 }

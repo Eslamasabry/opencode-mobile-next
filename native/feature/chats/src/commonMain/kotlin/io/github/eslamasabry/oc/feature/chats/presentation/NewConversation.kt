@@ -101,7 +101,15 @@ public enum class PhoneFolderReach {
     Missing,
 
     /** The app sees the folder, but that side cannot open or change files in it. */
-    Denied,
+    Denied;
+
+    public companion object {
+        /** Whether [directory] is spelled as a folder in the phone's storage (the check itself decides the rest). */
+        public fun looksLikePhoneStorage(directory: String?): Boolean {
+            val path = directory?.trim() ?: return false
+            return listOf("/storage/", "/sdcard/", "/mnt/sdcard/").any { path.startsWith(it) }
+        }
+    }
 }
 
 public data class NewConversationModel(
@@ -570,6 +578,10 @@ public data class NewConversationUi(
     val phoneFolder: PhoneFolderReach? = null,
     val fixingPhoneFolder: Boolean = false,
     val phoneFolderFailure: Failure? = null,
+    /** The chosen folder in phone storage is being read; Start waits and the page says so. */
+    val checkingPhoneFolder: Boolean = false,
+    /** What the last action fixed (the access, a restart), once the folder reads Ready again; the page says it once. */
+    val phoneFolderFixed: PhoneFolderReach? = null,
     val remakingFolder: Boolean = false,
     val remakeFailure: Failure? = null,
     /** The chosen server is this phone's own OpenCode and the person stopped it: no list can be read until it starts. */
@@ -1275,6 +1287,7 @@ public class NewConversationViewModel(
                 remakeFailure = null,
                 phoneFolder = null,
                 phoneFolderFailure = null,
+                phoneFolderFixed = null,
             )
         }
         checkFolder(profile, directory.trim())
@@ -1393,6 +1406,7 @@ public class NewConversationViewModel(
                 agent = if (agent != null) null else it.agent,
                 separateCopy = if (agent != null) false else it.separateCopy,
                 // The list last read for this agent shows at once; the read below replaces it.
+                phoneFolderFixed = null,
                 phoneModels = agent?.let { a -> host.cachedPhoneAgentModels(profile, a) }?.models.orEmpty(),
                 phoneModel = agent?.let { a -> host.cachedPhoneAgentModels(profile, a) }?.model,
                 variant = null,
@@ -1603,15 +1617,21 @@ public class NewConversationViewModel(
     /** The newest phone-folder check: only its answer is shown. */
     private var phoneFolderRead = 0
 
-    /** Issue 147: what the chosen folder in phone storage is to the side that will work in it (for the agent shown). */
+    /**
+     * Issue 147: what the chosen folder in phone storage is to the side that will work in it (for the agent shown).
+     * While it is read, a folder that looks like the phone's storage holds Start and says so: the answer (a restart, the
+     * access) must be on the page before the person types and taps Start.
+     */
     private fun checkPhoneFolder(profile: ProfileId, directory: String) {
         val read = ++phoneFolderRead
         val agent = mutable.value.phoneAgent
+        if (PhoneFolderReach.looksLikePhoneStorage(directory))
+            mutable.update { if (it.directory == directory) it.copy(checkingPhoneFolder = true) else it }
         viewModelScope.launch {
             val reach = host.phoneFolder(profile, agent, directory)
             mutable.update {
                 if (read == phoneFolderRead && it.profile == profile && it.directory == directory)
-                    it.copy(phoneFolder = reach)
+                    it.copy(phoneFolder = reach, checkingPhoneFolder = false)
                 else it
             }
         }
@@ -1624,14 +1644,25 @@ public class NewConversationViewModel(
         val reach = shown.phoneFolder ?: return
         if (shown.fixingPhoneFolder || (reach != PhoneFolderReach.AppAccess && reach != PhoneFolderReach.Restart))
             return
-        mutable.update { it.copy(fixingPhoneFolder = true, phoneFolderFailure = null) }
+        // At once: the notice says what is happening and the action waits (a restart of the agents takes half a
+        // minute); it ends with the folder read again, so the page says it is done or why not.
+        val read = ++phoneFolderRead
+        mutable.update { it.copy(fixingPhoneFolder = true, phoneFolderFailure = null, phoneFolderFixed = null) }
         viewModelScope.launch {
             val fixed = host.fixPhoneFolder(profile, shown.phoneAgent, reach)
+            val now = host.phoneFolder(profile, shown.phoneAgent, directory)
             mutable.update {
-                it.copy(fixingPhoneFolder = false, phoneFolderFailure = (fixed as? Outcome.Failed)?.failure)
+                if (read != phoneFolderRead || it.profile != profile || it.directory != directory)
+                    it.copy(fixingPhoneFolder = false)
+                else
+                    it.copy(
+                        fixingPhoneFolder = false,
+                        checkingPhoneFolder = false,
+                        phoneFolder = now,
+                        phoneFolderFailure = (fixed as? Outcome.Failed)?.failure,
+                        phoneFolderFixed = reach.takeIf { fixed is Outcome.Ok && now == PhoneFolderReach.Ready },
+                    )
             }
-            if (mutable.value.profile == profile && mutable.value.directory == directory)
-                checkPhoneFolder(profile, directory)
         }
     }
 
@@ -1769,6 +1800,7 @@ public class NewConversationViewModel(
                 shown.folderMissing ||
                 shown.phoneFolderBlocked ||
                 shown.fixingPhoneFolder ||
+                shown.checkingPhoneFolder ||
                 shown.phoneNeedsProjectsFolder
         )
             return
