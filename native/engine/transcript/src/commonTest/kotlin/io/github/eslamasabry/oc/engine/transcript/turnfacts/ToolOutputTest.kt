@@ -163,4 +163,29 @@ class ToolOutputTest {
             )
         assertEquals(listOf(ToolArtifact("/tmp/out/log.txt", null, null, "log.txt")), view.artifacts)
     }
+
+    @Test
+    fun `B-CHAT-115 a running command's output so far is kept as a bounded live tail`() {
+        val metadata = obj("""{"output":"a\nb\nc\n"}""")
+        val view = toolOutputView(ToolState(ToolStatus.Running, metadata = metadata), "bash")
+        assertEquals("a\nb\nc", view.liveTail)
+        assertTrue(view.text.isEmpty())
+        val fromText = toolOutputView(ToolState(ToolStatus.Running, output = "x\ny"), "bash")
+        assertEquals("x\ny", fromText.liveTail)
+        // A finished call has its whole answer in text and no live tail.
+        assertEquals("", toolOutputView(ToolState(ToolStatus.Completed, output = "x\ny"), "bash").liveTail)
+    }
+
+    @Test
+    fun `B-CHAT-115 the live tail is the last 40 lines and at most 4 KB`() {
+        val many = (1..500).joinToString("\n") { "row $it" }
+        val tail = boundedTail(many)
+        assertEquals(40, tail.lines().size)
+        assertEquals("row 500", tail.lines().last())
+        assertEquals("row 461", tail.lines().first())
+        val wide = (1..10).joinToString("\n") { "x".repeat(1_000) }
+        assertTrue(boundedTail(wide).length <= LIVE_TAIL_CHARS)
+        assertEquals("", boundedTail(""))
+        assertEquals("only", boundedTail("only\n"))
+    }
 }

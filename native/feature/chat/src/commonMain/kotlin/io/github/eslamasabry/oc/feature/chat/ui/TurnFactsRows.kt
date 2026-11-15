@@ -44,6 +44,7 @@ import io.github.eslamasabry.oc.ui.kit.status.KitTreeStep
 import io.github.eslamasabry.oc.ui.kit.status.KitTreeStepState
 import io.github.eslamasabry.oc.ui.kit.row.KitExpandRow
 import io.github.eslamasabry.oc.ui.kitchat.header.rememberKitMask
+import io.github.eslamasabry.oc.ui.kitchat.tool.KIT_COMMAND_OUTPUT_LINES
 import io.github.eslamasabry.oc.ui.kitchat.tool.KitCommandBox
 import io.github.eslamasabry.oc.ui.kitchat.tool.KitStepFold
 import io.github.eslamasabry.oc.ui.kitchat.tool.KitStepFoldLine
@@ -704,7 +705,8 @@ private fun OneStep(
                 if (waitingForYou) stringResource(Res.string.kitWorkWaitingForYou)
                 else stepStatus(step.state, f.exitCode),
         )
-    val text = out.text.takeIf { it.isNotEmpty() }
+    // A running command shows what it has put out so far, its last lines, growing in place; a finished one its answer.
+    val text = stepOutputShown(step, folds.full[key] == true)
     val shell = f.kind == ToolKind.Shell
     val child = f.childSessionId?.takeIf { onOpenSession != null }
     // B-CHAT-114: an explicit file the step produced (an attachment, a `filePath` output) is a
@@ -876,3 +878,21 @@ private fun inputHasBody(kind: ToolKind, state: StepState): Boolean =
         kind != ToolKind.Shell &&
         kind != ToolKind.Lsp &&
         kind != ToolKind.ConnectorSearch
+
+/**
+ * What a step's command box shows, as text (null when there is none): a running command its last lines so far, growing in
+ * place; a failed command its last lines (the error is at the end of what it printed) until "Show all"; any other step
+ * the answer it gave.
+ */
+internal fun stepOutputShown(step: TurnStep, showAll: Boolean): String? {
+    val out = step.output
+    val last = KIT_COMMAND_OUTPUT_LINES
+    val shown =
+        when {
+            step.state == StepState.Running -> out.liveTail.lines().takeLast(last).joinToString("\n")
+            step.state == StepState.Failed && step.facts.kind == ToolKind.Shell && !showAll ->
+                out.text.trimEnd().lines().takeLast(last).joinToString("\n")
+            else -> out.text
+        }
+    return shown.takeIf { it.isNotEmpty() }
+}

@@ -95,7 +95,7 @@ internal fun liveLineWords(
     // F: chat_transcript.dart:310-323 the newest line a running command printed rides in the muted second slot.
     val printed =
         now?.takeIf { it.facts.kind == ToolKind.Shell && it.state == StepState.Running }
-            ?.output?.text
+            ?.output?.liveTail
             ?.lineSequence()
             ?.map { it.trim() }
             ?.lastOrNull { it.isNotEmpty() }
