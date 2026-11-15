@@ -11,6 +11,9 @@ import io.github.eslamasabry.oc.ui.gate.FlutterGoldenGate.Frame
 import io.github.eslamasabry.oc.ui.gate.LayoutGuard
 import io.github.eslamasabry.oc.ui.gate.LayoutGuard.Window
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
+import androidx.compose.runtime.CompositionLocalProvider
+import io.github.eslamasabry.oc.ui.kitchat.LocalKitRedactor
+import io.github.eslamasabry.oc.core.security.Redactor
 import kotlinx.collections.immutable.persistentListOf
 import kotlin.test.Test
 import kotlin.test.assertTrue
@@ -34,7 +37,7 @@ class ChatsHomeHeaderCompactTest {
                     sources = persistentListOf(source("p1", "This phone", true, true), source("p2", "Laptop", false, false)),
                 ),
             )
-        val scene = LayoutGuard.Scene(Frame.Screen) { KitSheetHost { ChatsScreen(state, RecordingChatsActions(), shellBar = true) } }
+        val scene = LayoutGuard.Scene(Frame.Screen) { CompositionLocalProvider(LocalKitRedactor provides Redactor()) { KitSheetHost { ChatsScreen(state, RecordingChatsActions(), shellBar = true) } } }
         val all = try {
             LayoutGuard.audit(scene, listOf(Window.Compact, Window.CompactLarge, Window.Narrow))
         } catch (t: Throwable) {
