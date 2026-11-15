@@ -12,7 +12,6 @@ import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.map
 import io.github.eslamasabry.oc.core.common.Redacted
-import io.github.eslamasabry.oc.core.common.RedactorApi
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.data.kv.PrefType
 import io.github.eslamasabry.oc.core.data.scope.KeyScope
@@ -160,7 +159,6 @@ class AppPhoneOwnAgents(
         }
 
     /** One script as the agent user; nothing it prints is kept or logged, the answer is its exit code. */
-    @OptIn(RedactorApi::class)
     private suspend fun run(script: String, timeoutSeconds: Int, stdin: String): Outcome<Int> =
         withContext(dispatchers.io) {
             try {
