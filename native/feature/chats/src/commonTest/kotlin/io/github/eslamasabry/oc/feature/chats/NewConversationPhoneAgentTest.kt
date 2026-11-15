@@ -103,7 +103,11 @@ class NewConversationPhoneAgentTest {
         /** Holds the agent's model list back until completed (null answers at once). */
         var modelsGate: CompletableDeferred<Unit>? = null
 
+        /** Holds the page's setup back until completed (null answers at once). */
+        var setupGate: CompletableDeferred<Unit>? = null
+
         override suspend fun setup(profile: ProfileId): Outcome<NewConversationSetup> {
+            setupGate?.await()
             val picked = if (listedOnceChosen == null) saved else chosen.lastOrNull()?.second ?: saved
             return Outcome.Ok(
                 NewConversationSetup(
@@ -271,6 +275,43 @@ class NewConversationPhoneAgentTest {
 
     private val antigravity = NewConversationPhoneAgent("antigravity", "Antigravity", "antigravity")
     private val antigravityModel = ModelRef("antigravity", "gemini-3-pro")
+
+    @Test
+    fun `START-LIVE the agent's model list being read never holds Start back, it starts with the last known model`() {
+        val host = Host(saved = "claude")
+        host.modelsGate = CompletableDeferred()
+        host.cached = NewConversationPhoneModels(listOf(NewConversationModel(claudeModel, "Sonnet")), claudeModel)
+        val vm = vm(host)
+        vm.draftChanged("Find the bug")
+        assertTrue(vm.state.value.phoneModelsBusy, "the list is still being read")
+        vm.start()
+        assertEquals(1, host.starts.size, "Start acted on the first tap")
+        assertEquals(claudeModel, host.starts.single().model)
+    }
+
+    @Test
+    fun `START-LIVE a Start pressed while the page is getting ready is kept and starts when it is ready`() {
+        val host = Host()
+        val gate = CompletableDeferred<Unit>()
+        host.setupGate = gate
+        val vm = vm(host)
+        vm.draftChanged("Find the bug")
+        vm.start()
+        assertTrue(vm.state.value.startQueued, "the tap is kept")
+        assertTrue(host.starts.isEmpty(), "nothing starts before the page knows its folder")
+        gate.complete(Unit)
+        assertEquals(1, host.starts.size, "it started the moment the page was ready")
+        assertFalse(vm.state.value.startQueued)
+    }
+
+    @Test
+    fun `START-LIVE a Start with nothing typed while the page is getting ready is not kept`() {
+        val host = Host()
+        host.setupGate = CompletableDeferred()
+        val vm = vm(host)
+        vm.start()
+        assertFalse(vm.state.value.startQueued)
+    }
 
     @Test
     fun `AGENT-CARD New conversation from an agent's card opens with that agent chosen, not the remembered one`() {

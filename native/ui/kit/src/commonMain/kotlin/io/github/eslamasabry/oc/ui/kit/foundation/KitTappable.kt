@@ -34,12 +34,14 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.drawOutline
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.disabled
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.motion.KitHaptic
 import io.github.eslamasabry.oc.ui.design.tokens.Alphas
 import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
 import io.github.eslamasabry.oc.ui.design.type.TextTone
+import io.github.eslamasabry.oc.ui.kit.modal.LocalKitToasts
 import io.github.eslamasabry.oc.ui.kit.platform.LocalKitPlatform
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitAppearance
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
@@ -144,26 +146,33 @@ internal fun Modifier.kitTappable(
     // P-108: the control's box, read only when it is pressed, so a menu it opens can open beside it.
     val origin = LocalKitPressOrigin.current
     val observer = LocalKitTapObserver.current
+    val toasts = LocalKitToasts.current
+    // Issue 147: a disabled control that says why is still touched: the tap answers with the reason (a toast), so a
+    // grey control is never a silent one. Without a reason it stays inert (the debug check above forbids that).
+    val explain = disabledReason?.takeIf { !enabled && it.isNotBlank() }
     val placed = remember { PlacedBox() }
     return this
         .onPlaced { placed.coordinates = it }
-        .then(if (onLongClick != null) Modifier.kitPressPoint(placed) else Modifier)
+        .then(if (onLongClick != null && enabled) Modifier.kitPressPoint(placed) else Modifier)
         .sizeIn(minWidth = tokens.minTarget.dp, minHeight = tokens.minTarget.dp)
         .clip(pressClip ?: shape.shape())
         // Finding 13 (cut audit 2): a part whose hold opens its menu keeps a held face while that menu is open.
         .then(if (onLongClick != null) Modifier.kitHeldFace(inkColor) { origin.holding === placed } else Modifier)
         .then(role.edgeMark())
-        .semantics { if (!enabled && disabledReason != null) stateDescription = disabledReason }
+        .semantics {
+            if (!enabled && disabledReason != null) stateDescription = disabledReason
+            if (explain != null) disabled()
+        }
         .then(if (focusFill) Modifier else Modifier.indication(drawn, indication))
         .combinedClickable(
             interactionSource = interactions,
             indication = if (focusFill) indication else null,
-            enabled = enabled,
+            enabled = enabled || explain != null,
             onClickLabel = onClickLabel,
             role = role.toSemantics(),
             onLongClickLabel = onLongClickLabel,
             onLongClick =
-                onLongClick?.let { long ->
+                onLongClick?.takeIf { enabled }?.let { long ->
                     {
                         // The hold records where the finger was and who was held, so the menu opens beside the finger
                         // and this part keeps its held face while the menu is open.
@@ -174,16 +183,23 @@ internal fun Modifier.kitTappable(
                 },
             hapticFeedbackEnabled = false,
             onClick = {
-                placed.pressed()?.let(origin::record)
-                if (observer != null) placed.pressed()?.let(observer::acted)
-                if (hapticsOn && haptic != null) platform.haptic(haptic)
-                onClick()
+                if (!enabled) {
+                    explain?.let { reason ->
+                        toasts?.show(reason)
+                        placed.pressed()?.let { box -> observer?.explained(box, reason) }
+                    }
+                } else {
+                    placed.pressed()?.let(origin::record)
+                    if (observer != null) placed.pressed()?.let(observer::acted)
+                    if (hapticsOn && haptic != null) platform.haptic(haptic)
+                    onClick()
+                }
             },
         )
 }
 
 /** Where a part was last placed and last touched; its window box is worked out only when it is pressed. */
-private class PlacedBox {
+internal class PlacedBox {
     var coordinates: LayoutCoordinates? = null
 
     /** Where the last finger landed, in the part's own px. */

@@ -113,13 +113,26 @@ public class OpenCodeChatFeedSource(
             acrossProjects = listing.acrossProjects,
         )
 
+    /**
+     * Failed only when the last run really failed. When the server reports how the last run ended, that word decides
+     * (a run it says succeeded or was cut is not a failure, whatever flag an earlier failed run left here); the flag
+     * speaks only where the server reported nothing.
+     */
+    private fun lastRunFailed(session: Session): Boolean =
+        when (session.lastRunOutcome) {
+            SessionRunOutcome.Failed -> true
+            SessionRunOutcome.Succeeded,
+            SessionRunOutcome.Interrupted -> false
+            null -> session.lastRunFailed
+        }
+
     private fun row(session: Session, listing: OpenCodeListing): ChatFeedItem {
         val status = listing.statuses[session.id]
         val chatStatus =
             when {
                 session.id in listing.needsYou -> ChatStatus.NeedsYou
                 status == SessionStatus.Busy || status == SessionStatus.Retry -> ChatStatus.Running
-                session.lastRunFailed || session.lastRunOutcome == SessionRunOutcome.Failed -> ChatStatus.Failed
+                lastRunFailed(session) -> ChatStatus.Failed
                 else -> ChatStatus.Idle
             }
         val directory = session.directory

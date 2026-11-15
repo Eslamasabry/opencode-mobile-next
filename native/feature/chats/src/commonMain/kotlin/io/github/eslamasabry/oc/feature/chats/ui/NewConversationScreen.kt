@@ -134,7 +134,6 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
     val preparing = state.wait == NewConversationWait.Preparing
     val gettingReady =
         stringResource(if (state.preparingSlow) Res.string.chatsNewGettingReadySlow else Res.string.chatsNewGettingReady)
-    val loadingModels = stringResource(Res.string.chat_model_loading)
     val phoneOffWords = stringResource(Res.string.homePhoneOffTitle)
     val unconfirmedWords = unconfirmedWords(state)
     val enabled =
@@ -145,8 +144,12 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
     // A page that could not read its server says that, never "the conversation didn't start" (nothing was sent).
     val setupFailed = state.setup == null && state.failure != null
     val failureShown = state.failure != null && !state.deliveryUnconfirmed
+    // Issue 147: with words typed, Start takes the tap while the page gets ready and starts once it is (the button
+    // shows it is working); only with nothing typed does it say what it waits for.
+    val keepsTap = preparing && state.text.isNotBlank() && !state.phoneOff
     val startBlocked =
         when {
+            keepsTap -> null
             state.phoneOff -> phoneOffWords
             preparing -> gettingReady
             state.busy -> working
@@ -162,7 +165,6 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                     else Res.string.chatsNewAgentNeedsProjectsFolder,
                     state.phoneAgentChoice?.name.orEmpty(),
                 )
-            state.phoneModelsBusy -> loadingModels
             state.text.isBlank() -> stringResource(Res.string.chatsNewBuildPrompt)
             else -> null
         }
@@ -216,7 +218,7 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                                     if (startBlocked == null) KitEnabled.Enabled
                                     else KitEnabled.Disabled(startBlocked),
                                 // A spinner only once Start was pressed.
-                                working = state.wait == NewConversationWait.Sending,
+                                working = state.wait == NewConversationWait.Sending || state.startQueued,
                             ),
                         modifier = Modifier.fillMaxWidth(),
                         hero = true,
@@ -834,7 +836,7 @@ private fun agentChipLabel(state: NewConversationUi): String {
 @Composable
 private fun modelLabel(state: NewConversationUi): String =
     state.shownModels.firstOrNull { it.model == state.shownModel }?.name
-        ?: stringResource(Res.string.modelServerDefault)
+        ?: stringResource(if (state.modelsLoading) Res.string.chat_model_loading else Res.string.modelServerDefault)
 
 /**
  * The chat frame from the moment Start is tapped: the prompt is already the first bubble, the

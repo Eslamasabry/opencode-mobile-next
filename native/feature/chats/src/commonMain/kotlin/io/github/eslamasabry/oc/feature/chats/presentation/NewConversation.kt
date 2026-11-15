@@ -512,6 +512,11 @@ public data class NewConversationUi(
     val preparingSlow: Boolean = false,
     /** The thinking effort chosen for the shown model; null is the model's own default. */
     val variant: String? = null,
+    /**
+     * Issue 147: Start was pressed while the page was still getting ready: the tap is kept, and the conversation starts
+     * the moment the page is ready (it is never dropped, and Start never sits grey with nothing said).
+     */
+    val startQueued: Boolean = false,
 ) {
     /** A separate copy is OpenCode only: a phone agent hides it (Flutter `_start`). */
     val canCopy: Boolean
@@ -841,7 +846,7 @@ public class NewConversationViewModel(
             when (val loaded = answered) {
                 is Outcome.Failed ->
                     if (ticket == generation)
-                        mutable.update { it.copy(busy = false, failure = loaded.failure) }
+                        mutable.update { it.copy(busy = false, failure = loaded.failure, startQueued = false) }
                 is Outcome.Ok ->
                     if (ticket == generation) {
                         val setup = loaded.value
@@ -901,6 +906,11 @@ public class NewConversationViewModel(
                         restore(profile, setup.directory)
                         setup.directory?.let { checkFolder(profile, it) }
                         startInWantedFolder(profile, setup.directory)
+                        // The tap kept while the page got ready: the words and the folder are settled now.
+                        if (ticket == generation && mutable.value.startQueued) {
+                            mutable.update { it.copy(startQueued = false) }
+                            start()
+                        }
                     }
             }
         }
@@ -1523,8 +1533,18 @@ public class NewConversationViewModel(
 
     override fun start() {
         val shown = mutable.value
+        // Issue 147: a tap on Start while the page is still getting ready is kept and acts when it is ready.
+        if (
+            shown.setup == null && shown.busy && !shown.repairing && !shown.openingChat && !shown.startQueued &&
+                shown.profile != null && shown.text.isNotBlank()
+        ) {
+            mutable.update { it.copy(startQueued = true) }
+            return
+        }
         val profile = shown.profile ?: return
         val directory = shown.directory ?: return
+        // The model list being read never holds Start back: it starts with the model last known for the agent, and the
+        // read goes on behind (the chip that is loading says so).
         if (
             shown.busy ||
                 shown.text.isBlank() ||
@@ -1532,8 +1552,7 @@ public class NewConversationViewModel(
                 shown.creationUnconfirmed ||
                 shown.deliveryUnconfirmed ||
                 shown.folderMissing ||
-                shown.phoneNeedsProjectsFolder ||
-                shown.phoneModelsBusy
+                shown.phoneNeedsProjectsFolder
         )
             return
         if (shown.separateCopy) {
