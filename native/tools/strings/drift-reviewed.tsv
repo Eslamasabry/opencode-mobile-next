@@ -66,3 +66,6 @@ en	sendReportRowDetail
 en	tourMakeItYoursStyle
 en	telemetryConsentChoose
 en	telemetryConsentShare
+# 2026-11-15: issue 147 walk F-021: the Git page copy rewritten in plain words (Clone a repository -> Copy a project from the web).
+en	gitCloneRow
+en	gitCloneRowHint
