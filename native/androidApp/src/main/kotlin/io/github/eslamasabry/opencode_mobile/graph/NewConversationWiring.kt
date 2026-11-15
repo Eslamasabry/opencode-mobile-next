@@ -151,6 +151,20 @@ class AndroidNewConversationHost(
         reach: io.github.eslamasabry.oc.feature.chats.presentation.PhoneFolderReach,
     ): Outcome<Unit> = phoneFolders.fix(profile, phoneAgent != null, reach)
 
+    override suspend fun fixPhoneFolder(
+        profile: ProfileId,
+        phoneAgent: String?,
+        reach: io.github.eslamasabry.oc.feature.chats.presentation.PhoneFolderReach,
+        directory: String,
+    ): Outcome<Unit> = phoneFolders.fix(profile, phoneAgent != null, reach, directory)
+
+    override suspend fun phoneFolderBothSides(profile: ProfileId, phoneAgent: String?, directory: String): Boolean =
+        phoneFolders.bothSides(profile, phoneAgent != null, directory)
+
+    override suspend fun phoneFolderWaiting(
+        profile: ProfileId
+    ): Set<io.github.eslamasabry.oc.feature.chats.presentation.PhoneFolderSide> = phoneFolders.waiting(profile)
+
     override fun canRepair(profile: ProfileId, directory: String): Boolean =
         gitRepair.availableProject(profile, directory)
 

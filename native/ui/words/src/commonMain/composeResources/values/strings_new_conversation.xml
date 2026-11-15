@@ -32,6 +32,12 @@
     <string name="chatsNewPhoneFolderRestartingServer">Restarting this phone’s OpenCode so it can see this folder…</string>
     <string name="chatsNewPhoneFolderRestartedAgents">The phone’s agents restarted. %1$s can see this folder now.</string>
     <string name="chatsNewPhoneFolderRestartedServer">This phone’s OpenCode restarted and can see this folder now.</string>
+    <string name="chatsNewPhoneFolderRestartBoth">The phone’s agents and its OpenCode started before you chose this folder, so %1$s can’t see it yet. Restart them to work here.</string>
+    <string name="chatsNewPhoneFolderRestartBothAction">Restart the phone’s agents and OpenCode</string>
+    <string name="chatsNewPhoneFolderRestartingBoth">Restarting the phone’s agents and OpenCode so every agent can see this folder. This takes about half a minute.</string>
+    <string name="chatsNewPhoneFolderRestartedBoth">The phone’s agents and OpenCode restarted. Every agent can see this folder now.</string>
+    <string name="chatsNewPhoneFolderWaitingServer">This phone’s OpenCode is writing a reply, so it restarts by itself when the reply ends. Nothing is interrupted.</string>
+    <string name="chatsNewPhoneFolderWaitingAgents">An agent on this phone is working, so the phone’s agents restart by themselves when it’s done. Nothing is interrupted.</string>
     <string name="chatsNewPhoneFolderAllowed">Access to the phone’s storage is on. %1$s can work in this folder now.</string>
     <string name="chatsNewStorageFolderNew">New folder here</string>
     <string name="chatsNewStorageFolderNewDetail">Makes an empty folder inside %1$s and works in it</string>
