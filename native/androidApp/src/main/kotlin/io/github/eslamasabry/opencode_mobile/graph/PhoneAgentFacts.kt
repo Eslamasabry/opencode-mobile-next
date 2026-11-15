@@ -54,23 +54,92 @@ internal object PhoneAgentFacts {
         val setUp: Boolean = false,
         /**
          * Issue 147: wall-clock millis when a run of this agent reported that its sign-in no longer works (a create the
-         * helper refused for it, or a turn that ended on it). While set the agent reads "Sign in needed" everywhere,
-         * whatever its sign-in check says (Claude Code's `auth status` reads a stored sign-in as signed in even when it
-         * can no longer refresh). Only a completed sign-in ([signInDoneAt]) clears it; no read does.
+         * helper refused for it, or a turn that ended on it). It is evidence like any other: it stands while it is the
+         * newest word on the sign-in ([lapseStands]), so a sign-in check that answered after it, or a sign-in that
+         * completed after it, decides instead. Before, it stood until a sign-in in the app completed, whatever every
+         * later check said, and the agent read "Sign in needed" for hours while it worked.
          */
         val lapsedAt: Long? = null,
         /** Wall-clock millis of the last sign-in that completed in the app: a lapse reported from before it is old. */
         val signInDoneAt: Long? = null,
+        /** Where the lapse came from ([LapseSource]), for Details; never the agent's words. */
+        val lapseSource: LapseSource? = null,
+        /**
+         * signin-truth (Galaxy, build 10050): wall-clock millis when a reply of this agent was its plan's usage limit
+         * ("You've hit your weekly limit · resets Nov 20, 1am (UTC)"). The agent is signed in and reads "Plan limit
+         * reached" until [limitResetAt] (or [LIMIT_WITHOUT_RESET_MS] when the agent named no reset), never signed out.
+         */
+        val limitAt: Long? = null,
+        /** Wall-clock millis the agent said its limit resets; null when it named none. */
+        val limitResetAt: Long? = null,
     ) {
         /** Something worth keeping. */
         val known: Boolean
             get() =
                 installed != null || signedIn != null || proven != null || setUp || lapsedAt != null ||
-                    signInDoneAt != null
+                    signInDoneAt != null || limitAt != null
 
-        /** A run said the sign-in no longer works, and no sign-in completed since. */
+        /** A run said the sign-in no longer works, and nothing newer said otherwise ([lapseStands]). */
         val lapsed: Boolean
-            get() = lapsedAt != null
+            get() = lapseStands(this, signedInAt.takeIf { signedIn != null })
+    }
+
+    /** What reported a lapse: a reply that ended on the agent's sign-in, or a start the helper refused for it. */
+    enum class LapseSource(val raw: String) {
+        Reply("reply"),
+        Start("start");
+
+        companion object {
+            fun of(raw: String?): LapseSource? = entries.firstOrNull { it.raw == raw }
+        }
+    }
+
+    /**
+     * signin-truth: the one rule every reader of an agent's sign-in goes through (the Agents page, the home, the "Agent
+     * and model" chooser all read the state AppPhoneAgents builds with it). A reported lapse stands only while it is
+     * the newest evidence: a sign-in check that answered (signed in or out) and was asked at or after it
+     * ([checkedAtMs], wall clock), or a sign-in that completed at or after it, is newer and decides. A check with no
+     * time proves nothing newer; one that could not answer (timed out, no answer) is no evidence at all.
+     */
+    fun lapseStands(fact: Fact?, checkedAtMs: Long?): Boolean {
+        val lapsedAt = fact?.lapsedAt ?: return false
+        if (fact.signInDoneAt != null && fact.signInDoneAt >= lapsedAt) return false
+        if (fact.limitAt != null && fact.limitAt > lapsedAt) return false
+        return checkedAtMs == null || checkedAtMs < lapsedAt
+    }
+
+    /**
+     * Whether [fact]'s reported usage limit still stands at [nowMs]: until the reset the agent named, or for
+     * [LIMIT_WITHOUT_RESET_MS] when it named none, and only while no lapse was reported after it. A sign-in check never
+     * ends it (the check reads the sign-in, not the plan's usage).
+     */
+    fun limitStands(fact: Fact?, nowMs: Long): Boolean {
+        val limitAt = fact?.limitAt ?: return false
+        if (fact.lapsedAt != null && fact.lapsedAt > limitAt) return false
+        val until = fact.limitResetAt ?: (limitAt + LIMIT_WITHOUT_RESET_MS)
+        return nowMs < until
+    }
+
+    /** The shortest plan window Claude Code reports (five hours): a limit with no named reset is not kept longer. */
+    const val LIMIT_WITHOUT_RESET_MS: Long = 5 * 60 * 60 * 1000L
+
+    /**
+     * [kept] with [agent]'s plan limit reached as a reply at [atMs] said, resetting at [resetAtMs] when it said so. An
+     * older report than the kept one changes nothing. A limit is the agent working, signed in: it ends a lapse reported
+     * before it.
+     */
+    fun limited(kept: Map<String, Fact>, agent: String, atMs: Long, resetAtMs: Long?): Map<String, Fact> {
+        val fact = kept[agent] ?: Fact(installed = null, found = null, signedIn = null)
+        if (fact.limitAt != null && fact.limitAt >= atMs) return kept
+        val lapseOlder = fact.lapsedAt != null && fact.lapsedAt < atMs
+        return kept +
+            (agent to
+                fact.copy(
+                    limitAt = atMs,
+                    limitResetAt = resetAtMs?.takeIf { it > atMs },
+                    lapsedAt = fact.lapsedAt.takeUnless { lapseOlder },
+                    lapseSource = fact.lapseSource.takeUnless { lapseOlder },
+                ))
     }
 
     fun key(owner: String): String = AgentKeys.phoneAgentFacts(ProfileId(owner))
@@ -124,17 +193,25 @@ internal object PhoneAgentFacts {
      * [kept] with [agent]'s sign-in lapsed as a run reported at [atMs]; a report from before the last completed
      * sign-in ([Fact.signInDoneAt]) is old news and changes nothing.
      */
-    fun lapsed(kept: Map<String, Fact>, agent: String, atMs: Long): Map<String, Fact> {
+    fun lapsed(
+        kept: Map<String, Fact>,
+        agent: String,
+        atMs: Long,
+        source: LapseSource? = null,
+    ): Map<String, Fact> {
         val fact = kept[agent] ?: Fact(installed = null, found = null, signedIn = null)
         if (fact.signInDoneAt != null && atMs <= fact.signInDoneAt) return kept
         if (fact.lapsedAt != null && fact.lapsedAt >= atMs) return kept
-        return kept + (agent to fact.copy(lapsedAt = atMs))
+        // A sign-in check that answered after the reported failure is newer: an old reply read again (its conversation
+        // opened again) changes nothing.
+        if (fact.signedIn != null && fact.signedInAt != null && atMs <= fact.signedInAt) return kept
+        return kept + (agent to fact.copy(lapsedAt = atMs, lapseSource = source))
     }
 
     /** [kept] after a sign-in of [agent] completed at [atMs]: its lapse is cleared. */
     fun signedInAgain(kept: Map<String, Fact>, agent: String, atMs: Long): Map<String, Fact> {
         val fact = kept[agent] ?: Fact(installed = null, found = null, signedIn = null)
-        return kept + (agent to fact.copy(lapsedAt = null, signInDoneAt = atMs))
+        return kept + (agent to fact.copy(lapsedAt = null, lapseSource = null, signInDoneAt = atMs))
     }
 
     /** The agents of [kept] the app has seen set up. */
@@ -183,19 +260,24 @@ internal object PhoneAgentFacts {
                         if (now.proven != null) now
                         else if (before.proven != null) before
                         else before.copy(proven = before.found?.takeIf { before.installed == true })
+                    val signedInAt =
+                        now.signedInAt
+                            ?: before.signedInAt?.takeIf { now.signedIn != null && now.signedIn == before.signedIn }
+                    // A read never brings a lapse; one that answered after it is newer evidence and ends it
+                    // ([lapseStands]). A read with no time, or one that could not answer, leaves it standing.
+                    val ended =
+                        before.lapsedAt != null && !lapseStands(before, signedInAt.takeIf { now.signedIn != null })
                     now.copy(
-                        signedInAt =
-                            now.signedInAt
-                                ?: before.signedInAt?.takeIf {
-                                    now.signedIn != null && now.signedIn == before.signedIn
-                                },
+                        signedInAt = signedInAt,
                         proven = proof.proven,
                         provenHelper = proof.provenHelper,
                         provenBuild = proof.provenBuild,
                         setUp = now.setUp || before.setUp,
-                        // A read never clears a lapse (only a completed sign-in does) and never brings one.
-                        lapsedAt = before.lapsedAt,
+                        lapsedAt = before.lapsedAt.takeUnless { ended },
+                        lapseSource = before.lapseSource.takeUnless { ended },
                         signInDoneAt = before.signInDoneAt,
+                        limitAt = before.limitAt,
+                        limitResetAt = before.limitResetAt,
                     )
                 }
 
@@ -226,6 +308,9 @@ internal object PhoneAgentFacts {
                     setUp = fact.setUp && !setUp,
                     // A removal or a sign-out ends the lapse too (the row then says what is true).
                     lapsedAt = fact.lapsedAt.takeUnless { setUp },
+                    lapseSource = fact.lapseSource.takeUnless { setUp },
+                    limitAt = fact.limitAt.takeUnless { setUp },
+                    limitResetAt = fact.limitResetAt.takeUnless { setUp },
                 ))
     }
 
@@ -234,7 +319,17 @@ internal object PhoneAgentFacts {
      * reset deletes the agents' own settings with their sign-ins). Versions and proofs stay.
      */
     fun forgetSignIns(kept: Map<String, Fact>): Map<String, Fact> =
-        kept.mapValues { (_, fact) -> fact.copy(signedIn = null, signedInAt = null, setUp = false, lapsedAt = null) }
+        kept.mapValues { (_, fact) ->
+            fact.copy(
+                signedIn = null,
+                signedInAt = null,
+                setUp = false,
+                lapsedAt = null,
+                lapseSource = null,
+                limitAt = null,
+                limitResetAt = null,
+            )
+        }
 
     fun encode(facts: Map<String, Fact>): String =
         JsonObject(
@@ -253,6 +348,9 @@ internal object PhoneAgentFacts {
                                 if (fact.setUp) put("setUp", JsonPrimitive(true))
                                 fact.lapsedAt?.let { put("signInLapsedAt", JsonPrimitive(it)) }
                                 fact.signInDoneAt?.let { put("signInDoneAt", JsonPrimitive(it)) }
+                                fact.lapseSource?.let { put("signInLapseSource", JsonPrimitive(it.raw)) }
+                                fact.limitAt?.let { put("limitAt", JsonPrimitive(it)) }
+                                fact.limitResetAt?.let { put("limitResetAt", JsonPrimitive(it)) }
                             }
                         )
                     }
@@ -279,6 +377,9 @@ internal object PhoneAgentFacts {
                         setUp = fields["setUp"]?.jsonPrimitive?.booleanOrNull == true,
                         lapsedAt = fields["signInLapsedAt"]?.jsonPrimitive?.longOrNull,
                         signInDoneAt = fields["signInDoneAt"]?.jsonPrimitive?.longOrNull,
+                        lapseSource = LapseSource.of(fields["signInLapseSource"]?.jsonPrimitive?.contentOrNull),
+                        limitAt = fields["limitAt"]?.jsonPrimitive?.longOrNull,
+                        limitResetAt = fields["limitResetAt"]?.jsonPrimitive?.longOrNull,
                     )
                 }
         } catch (_: Exception) {

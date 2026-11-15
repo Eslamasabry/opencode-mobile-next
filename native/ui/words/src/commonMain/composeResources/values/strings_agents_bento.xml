@@ -43,7 +43,12 @@
     <string name="agentsConversationsStoredOn">Copy a conversation from %1$s</string>
     <string name="agentsHostAccount">Host account: %1$s</string>
     <string name="agentsStateSignInUnchecked">Installed, but this app can't check its sign-in yet</string>
-    <string name="agentsStateSignInCheckFailed">Sign-in could not be checked. Try signing in again.</string>
+    <!-- signin-truth: the sign-in check gave no answer (timed out, no answer, the agent busy in a conversation): nothing is known about the account. -->
+    <string name="agentsStateSignInNotConfirmed">Sign-in not confirmed</string>
+    <!-- The agent sheet's line under it; %1$s is the agent ("Claude Code"). -->
+    <string name="agentsSignInNotConfirmedBody">The app could not confirm whether %1$s is signed in. Checking again asks %1$s now.</string>
+    <!-- The one action for it, on the card and in the sheet; %1$s is the agent ("Check Claude Code again"). -->
+    <string name="agentsCheckSignInAgain">Check %1$s again</string>
     <string name="agentsSignInUncheckedBody">It can't be used for conversations yet. You can remove it.</string>
     <!-- An installed agent whose sign-in cannot be read ahead (Qwen Code, Goose, omp): usable, set up in its own terminal. -->
     <string name="agentsStateSetUpAtFirstUse">Installed. Set it up the first time you use it.</string>
