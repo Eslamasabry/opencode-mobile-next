@@ -74,10 +74,17 @@ public object HomeNotices {
     public fun unreachable(state: ChatsUi): List<ChatsListSourceUi> =
         state.home.sources.filter { it.shown && it.unreachable && it.profile != state.home.opening?.profile }
 
-    /** The servers whose list is only partly read and that have no line of their own. */
+    /**
+     * The servers whose list is only partly read and that have no line of their own. A source the app itself is
+     * starting (This phone's server, the phone's agents) is not "couldn't load": its saved rows stand in while it
+     * starts and the chip says it is starting (issue 147: after an app update "This phone couldn't load · Try again"
+     * showed for about 25 s of an ordinary start).
+     */
     public fun partial(state: ChatsUi): List<String> =
         state.incomplete.filterNot { name ->
-            unreachable(state).any { it.name == name } || name == state.home.opening?.serverName
+            unreachable(state).any { it.name == name } ||
+                name == state.home.opening?.serverName ||
+                state.home.sources.any { it.starting != null && it.name == name }
         }
 
     /** Every kind the home currently has something to say about. */
