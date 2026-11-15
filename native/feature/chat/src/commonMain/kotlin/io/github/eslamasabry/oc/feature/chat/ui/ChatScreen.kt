@@ -265,6 +265,7 @@ import io.github.eslamasabry.oc.ui.words.res.kitTopBarSearch
 import io.github.eslamasabry.oc.ui.words.res.kitTurnLiveSending
 import io.github.eslamasabry.oc.ui.words.res.chatSendFolderMissing
 import io.github.eslamasabry.oc.ui.words.res.chatSendPhoneFolder
+import io.github.eslamasabry.oc.ui.words.res.chatSendNoPlanMode
 import io.github.eslamasabry.oc.ui.words.res.kitTurnLiveWorking
 import io.github.eslamasabry.oc.ui.words.res.kitTurnMore
 import io.github.eslamasabry.oc.ui.words.res.kitWorkDidntFinish
@@ -2082,7 +2083,8 @@ private fun rememberSendFailureWords(): (Failure) -> String {
     val phoneCheckFailed = stringResource(Res.string.schedulePhoneCheckFailed)
     val folderMissing = stringResource(Res.string.chatSendFolderMissing)
     val phoneFolder = stringResource(Res.string.chatSendPhoneFolder)
-    return remember(authored, changed, phoneBusy, phoneCheckFailed, folderMissing, phoneFolder) {
+    val noPlanMode = stringResource(Res.string.chatSendNoPlanMode)
+    return remember(authored, changed, phoneBusy, phoneCheckFailed, folderMissing, phoneFolder, noPlanMode) {
         { failure ->
             when {
                 // B-063: the server refused the message because the project's folder is gone.
@@ -2092,6 +2094,8 @@ private fun rememberSendFailureWords(): (Failure) -> String {
                     failure.feature.name == io.github.eslamasabry.oc.feature.chat.world.PHONE_FOLDER_FEATURE -> phoneFolder
                 failure is Failure.Unavailable && failure.feature.name == "schedulePhoneBusy" ->
                     phoneBusy
+                // The person chose Plan and this agent has no plan or read-only mode: said, never run in its own mode.
+                failure is Failure.Unavailable && failure.feature.name == "agentPlanMode" -> noPlanMode
                 failure is Failure.Unavailable &&
                     failure.feature.name == "schedulePhoneCheckFailed" -> phoneCheckFailed
                 failure is Failure.Refused && failure.reason == RefusalReason.StaleScope -> changed

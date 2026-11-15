@@ -1549,4 +1549,5 @@
     <string name="chatContinueBriefChanged">الملفات التي تغيّرت:</string>
     <string name="chatContinueBriefStopped">أين توقّف العمل:</string>
     <string name="chatUiContinuedAfterCommand">كان أحد الأوامر ما زال يعمل، فطُلب من الوكيل أن ينتظره ثم يتابع</string>
+    <string name="chatSendNoPlanMode">لا يوجد وضع للخطة عند هذا الوكيل، لذلك لم يُرسَل شيء. أوقف «الخطة» لإرسالها بوضع الوكيل نفسه.</string>
 </resources>

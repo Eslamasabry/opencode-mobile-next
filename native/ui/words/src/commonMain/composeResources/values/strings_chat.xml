@@ -1251,6 +1251,7 @@
     <string name="chatAgentTurnLostConnection">%1$s lost its connection to its model provider, so the turn stopped.</string>
     <string name="chatBackgroundWorkWaitingFor">Waiting for %1$s</string>
     <string name="chatSendFailureSignInAction">Sign in</string>
+    <string name="chatSendNoPlanMode">This agent has no plan mode, so nothing was sent. Turn Plan off to send it in the agent's own mode.</string>
     <string name="chatSendFailureAccountAction">Open account</string>
     <string name="chatSendFailureNewConversation">This agent can't continue this conversation</string>
     <string name="chatSendFailureSignInToAgent">Sign in to %1$s</string>

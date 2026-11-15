@@ -1238,4 +1238,5 @@
     <string name="chatContinueBriefChanged">File yang berubah:</string>
     <string name="chatContinueBriefStopped">Di mana terhenti:</string>
     <string name="chatUiContinuedAfterCommand">Sebuah perintah masih berjalan, jadi agen diminta menunggunya lalu melanjutkan</string>
+    <string name="chatSendNoPlanMode">Agen ini tidak punya mode rencana, jadi tidak ada yang dikirim. Matikan Rencana untuk mengirimnya dalam mode agen itu sendiri.</string>
 </resources>

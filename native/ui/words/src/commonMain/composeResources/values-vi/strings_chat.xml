@@ -1238,4 +1238,5 @@
     <string name="chatContinueBriefChanged">Các tệp đã thay đổi:</string>
     <string name="chatContinueBriefStopped">Nơi đã dừng lại:</string>
     <string name="chatUiContinuedAfterCommand">Một lệnh vẫn đang chạy, nên tác nhân được yêu cầu chờ lệnh đó rồi tiếp tục</string>
+    <string name="chatSendNoPlanMode">Tác nhân này không có chế độ kế hoạch nên chưa gửi gì. Tắt Kế hoạch để gửi ở chế độ riêng của tác nhân.</string>
 </resources>
