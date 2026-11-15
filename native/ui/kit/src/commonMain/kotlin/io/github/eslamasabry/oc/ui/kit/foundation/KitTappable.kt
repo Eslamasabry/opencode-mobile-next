@@ -118,6 +118,8 @@ internal fun Modifier.kitTappable(
     interactionSource: MutableInteractionSource? = null,
     focusFill: Boolean = true,
     pressClip: Shape? = null,
+    /** What a tap on this disabled part does instead of showing its reason as a toast. */
+    disabledAnswer: (() -> Unit)? = null,
 ): Modifier {
     val platform = LocalKitPlatform.current
     val appearance = LocalKitAppearance.current
@@ -184,7 +186,8 @@ internal fun Modifier.kitTappable(
             hapticFeedbackEnabled = false,
             onClick = {
                 if (!enabled) {
-                    explain?.let { reason ->
+                    if (explain != null && disabledAnswer != null) disabledAnswer()
+                    else explain?.let { reason ->
                         toasts?.show(reason)
                         placed.pressed()?.let { box -> observer?.explained(box, reason) }
                     }

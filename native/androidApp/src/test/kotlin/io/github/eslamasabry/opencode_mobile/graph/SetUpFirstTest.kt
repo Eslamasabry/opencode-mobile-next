@@ -215,4 +215,14 @@ class SetUpFirstTest {
         val ready = PhoneAgentRow("claude", "Claude Code", PhoneAgentStatus.Ready)
         assertEquals(emptySet(), NewConversationPhoneRules.signInNeeded(PhoneAgentsState(available = true, agents = persistentListOf(ready))))
     }
+
+    @Test
+    fun `I147-FIRST-RUN every catalog agent has its own name in the host agent list, never the generic one`() {
+        for (descriptor in AgentCatalog.builtIn.agents)
+            assertEquals(
+                descriptor.name,
+                io.github.eslamasabry.oc.protocol.paseo.requests.paseoHostAgentName(descriptor.providerId),
+                "the box placeholder and the model chip of ${descriptor.id.raw} read this name",
+            )
+    }
 }

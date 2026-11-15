@@ -1,6 +1,9 @@
 package io.github.eslamasabry.oc.ui.kit.input
 
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.tween
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
@@ -85,6 +88,12 @@ public fun KitStartBox(
     autofocus: Boolean = false,
     onTextChanged: ((String) -> Unit)? = null,
     focusKey: Any? = null,
+    /**
+     * A reminder from the page that the box is what is missing (Start tapped on an empty box): a new value above zero
+     * brings the cursor to the box and gives it one short nudge, so the reminder is on the box itself and never a
+     * message dropped over the page's title (issue 147, F-041). Calm and Off motion bring the cursor only.
+     */
+    remind: Int = 0,
 ) {
     val focus = remember { FocusRequester() }
     var focused by remember { mutableStateOf(false) }
@@ -133,12 +142,21 @@ public fun KitStartBox(
         }
     }
     LaunchedEffect(focusKey) { if (focusKey != null) focus.requestFocus() }
+    val nudge = remember { Animatable(0f) }
+    val travels = KitMotion.state.travels
+    LaunchedEffect(remind) {
+        if (remind <= 0) return@LaunchedEffect
+        focus.requestFocus()
+        if (!travels) return@LaunchedEffect
+        for (target in floatArrayOf(-1f, 1f, -.6f, .6f, 0f)) nudge.animateTo(target, tween(48))
+    }
     // The halo needs room above the box: a page scroller clips at its top, and the box is often the first thing on the
     // page (New conversation in Soft, device pass 2026-11-13: the glow ended in a hard band under the header). The
     // box keeps that room itself, so no screen has to know how far its halo reaches.
     val haloRoom = if (halo === Modifier) 0.dp else START_BOX_HALO_ROOM_DP.dp
     Box(
         modifier
+            .graphicsLayer { translationX = nudge.value * NUDGE_DP.dp.toPx() }
             .padding(top = haloRoom)
             .kitMaxWidth(CapRole.Conversation)
             .fillMaxWidth()
@@ -180,3 +198,5 @@ public fun KitStartBox(
         )
     }
 }
+
+private const val NUDGE_DP = 6

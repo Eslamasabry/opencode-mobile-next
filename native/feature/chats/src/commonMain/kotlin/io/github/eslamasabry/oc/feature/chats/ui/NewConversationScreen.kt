@@ -20,6 +20,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
@@ -120,6 +121,8 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
         return
     }
     val field = rememberTextFieldState()
+    // F-041: Start tapped on an empty box answers at the box (cursor and a nudge), never with a toast over the title.
+    var remind by remember { mutableIntStateOf(0) }
     // The last words the field told the presenter. Words typed since, not yet reported, are newer than any state
     // text (a stored draft arriving late, say) and are never written over.
     var reported by remember { mutableStateOf("") }
@@ -270,6 +273,8 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                                 onClick = actions::start,
                                 enabled =
                                     if (startBlocked == null) KitEnabled.Enabled
+                                    else if (startBlocked == stringResource(Res.string.chatsNewBuildPrompt))
+                                        KitEnabled.Disabled(startBlocked, answer = { remind++ })
                                     else KitEnabled.Disabled(startBlocked),
                                 // A spinner only once Start was pressed.
                                 working = state.wait == NewConversationWait.Sending || state.startQueued,
@@ -322,6 +327,7 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                             actions.draftChanged(it)
                         },
                         focusKey = state.focusRevision.takeIf { it > 0 },
+                        remind = remind,
                     )
                     // Ways to start fill the empty prompt; nothing is sent until Start.
                     KitReveal(
