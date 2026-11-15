@@ -8,7 +8,7 @@ release_smoke.py still names words the app has.
 The release script runs in a throw-away git repository with a fake `gh` (OC_GH) and a fake version allocator; --no-build
 means no Gradle, so only the preflight and the two gates are exercised.
 """
-import importlib.util, json, os, shutil, subprocess, sys, tempfile, unittest, warnings
+import importlib.util, json, os, re, shutil, subprocess, sys, tempfile, unittest, warnings
 
 warnings.simplefilter("ignore", ResourceWarning)
 
@@ -57,7 +57,8 @@ class ReleaseGate(unittest.TestCase):
         g('remote', 'add', 'origin', os.path.join(t, 'remote.git'))
         g('push', '-q', 'origin', 'master')
         self.sha = g('rev-parse', 'HEAD').stdout.strip()
-        self.code = '10050'
+        # The tree's own versionCode: every owner build bumps it, so a fixed number goes stale.
+        self.code = re.search(r'^versionCode=(\d+)', open(os.path.join(REPO, 'native/version.properties')).read(), re.M).group(1)
         os.makedirs(os.path.join(t, 'bin'))
         gh = os.path.join(t, 'bin/gh')
         open(gh, 'w').write(FAKE_GH)
