@@ -18,6 +18,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.text.SpanStyle
@@ -58,7 +59,7 @@ public const val KIT_COMMAND_INLINE_CAP: Int = 200
  * any interface language. The prompt sign is drawn outside the command's own text: selection skips
  * it and a screen reader does not read it. Command and output display redacted (R18). When the
  * output has more lines, [moreLabel] opens the rest ([onMore]); [exitLabel] says how it ended
- * ("Exit code 1").
+ * ("Exit code 1"); [emptyLabel] ("No output") shows when it printed nothing and the caller says it ended.
  *
  * Text: command and output reading mono (full size, left to right); the more button and exit line
  * frame.
@@ -72,6 +73,7 @@ public fun KitCommandBox(
     onMore: () -> Unit,
     exitLabel: String?,
     modifier: Modifier = Modifier,
+    emptyLabel: String? = null,
 ) {
     val colors = LocalKitColors.current
     val shape = KitShapeId.Code.shape()
@@ -132,6 +134,16 @@ public fun KitCommandBox(
                     }
                 }
             }
+        }
+        // A command that ended and printed nothing says so, so "ran, printed nothing" is not mistaken for lost output.
+        if (lines.isEmpty() && !emptyLabel.isNullOrEmpty()) {
+            KitText(
+                emptyLabel,
+                Modifier.testTag("kit-command-no-output"),
+                role = TypeRole.Caption,
+                tone = TextTone.Secondary,
+                kind = KitTextKind.Frame,
+            )
         }
         if (!exitLabel.isNullOrEmpty()) {
             KitText(

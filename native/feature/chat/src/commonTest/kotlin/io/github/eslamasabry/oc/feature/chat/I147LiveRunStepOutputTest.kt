@@ -12,6 +12,16 @@ import io.github.eslamasabry.oc.core.domain.events.GatewayEvent
 import io.github.eslamasabry.oc.core.model.PermissionRequest
 import io.github.eslamasabry.oc.feature.chat.world.TurnFeedKeeper
 import kotlinx.collections.immutable.persistentListOf
+import io.github.eslamasabry.oc.core.model.transcript.MessageInfo
+import io.github.eslamasabry.oc.core.model.transcript.MessageWithParts
+import io.github.eslamasabry.oc.core.model.transcript.MsgTime
+import io.github.eslamasabry.oc.core.model.transcript.Part
+import io.github.eslamasabry.oc.core.model.transcript.PartType
+import io.github.eslamasabry.oc.core.model.transcript.Role
+import io.github.eslamasabry.oc.feature.chat.presentation.TurnFactsPresenter
+import kotlin.time.Clock
+import kotlin.time.Instant
+import kotlinx.collections.immutable.toImmutableList
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
@@ -84,5 +94,37 @@ class I147LiveRunStepOutputTest {
         keeper.event(GatewayEvent.PermissionSettled(Ref.sessionId, RequestId("a")), 30_000)
         keeper.event(GatewayEvent.PermissionSettled(Ref.sessionId, RequestId("b")), 40_000)
         assertEquals(30_000L, keeper.feed.value.runStartedAtMs)
+    }
+
+    private object FixedClock : Clock {
+        override fun now(): Instant = Instant.fromEpochMilliseconds(0)
+    }
+
+    /** A turn whose command runs; the server (the phone agents' helper) reported no start time for it. */
+    private fun runningTurn(): List<MessageWithParts> {
+        val sid = Ref.sessionId.raw
+        val user =
+            MessageWithParts(
+                MessageInfo("m1", sid, Role.User, time = MsgTime(100, null)),
+                listOf(Part("t0", "m1", sid, PartType.Text, "text", text = "run it", ended = true)).toImmutableList(),
+            )
+        val tool = Part("c1", "m2", sid, PartType.Tool, "tool", callId = "c1", toolName = "bash", tool = ToolState(ToolStatus.Running, input = input))
+        val assistant = MessageWithParts(MessageInfo("m2", sid, Role.Assistant, time = MsgTime(200, null)), listOf(tool).toImmutableList())
+        return listOf(user, assistant)
+    }
+
+    @Test
+    fun `B-CHAT-116 a running step with no start time from the server gets its own clock from when it was first seen`() {
+        val keeper = TurnFeedKeeper(Ref.sessionId.raw)
+        keeper.running(100)
+        keeper.history(runningTurn(), newest = true)
+        val presenter = TurnFactsPresenter(FixedClock)
+        fun step(now: Long, waiting: Boolean = false) =
+            presenter.present(keeper.feed.value, now, waiting).work.values.single().steps.single()
+        // A turn that waits for the person has no running clock yet.
+        assertNull(step(5_000, waiting = true).startedAtMs)
+        assertEquals(10_000L, step(10_000).startedAtMs)
+        // 15 s later it is still the same start: the row reads 15 s.
+        assertEquals(10_000L, step(25_000).startedAtMs)
     }
 }

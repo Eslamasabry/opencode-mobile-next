@@ -3,6 +3,7 @@ package io.github.eslamasabry.oc.feature.chat.presentation
 import io.github.eslamasabry.oc.core.domain.events.RunOutcome
 import io.github.eslamasabry.oc.engine.transcript.ledger.LedgerTurn
 import io.github.eslamasabry.oc.engine.transcript.ledger.StepState
+import io.github.eslamasabry.oc.engine.transcript.ledger.TurnStep
 import io.github.eslamasabry.oc.engine.transcript.ledger.TurnWork
 import io.github.eslamasabry.oc.engine.transcript.ledger.WorkLineState
 import io.github.eslamasabry.oc.engine.transcript.ledger.factTicks
@@ -212,7 +213,8 @@ public class TurnFactsPresenter(private val clock: Clock) {
                     waitingForYou = waitingForYou,
                     declinedCalls = declinedCalls,
                 )
-                .mapValues { StoppedSteps.settle(it.value) }
+                .mapValues { withOwnClock(StoppedSteps.settle(it.value), nowMs) }
+        seenRunning.keys.retainAll(work.values.flatMap { w -> w.steps.map { it.partId } }.toSet())
         val results = HashMap<String, TurnResultUi>()
         for ((index, turn) in snapshot.turns.withIndex()) {
             val newest = index == snapshot.turns.lastIndex
@@ -311,6 +313,24 @@ public class TurnFactsPresenter(private val clock: Clock) {
             )
         }
         return stall.diagnosisFor(sessionKey)?.let { LiveNoticeUi.Stall(it.notice) }
+    }
+
+    /**
+     * Issue 147: a running step's own clock. A server that reports no start time for a call (the phone agents' helper)
+     * still gets a time on its row: from the first moment the step was seen running, not counting a wait for the
+     * person's decision (the clock starts when that wait ends).
+     */
+    private val seenRunning = HashMap<String, Long>()
+
+    private fun withOwnClock(w: TurnWork, nowMs: Long): TurnWork {
+        if (w.state == WorkLineState.WaitingForYou) return w
+        fun stamp(step: TurnStep): TurnStep =
+            if (step.state == StepState.Running && step.startedAtMs == null)
+                step.copy(startedAtMs = seenRunning.getOrPut(step.partId) { nowMs })
+            else step
+        val steps = w.steps.map(::stamp)
+        val now = w.now?.let { n -> steps.firstOrNull { it.partId == n.partId } ?: n }
+        return if (steps == w.steps) w else w.copy(steps = steps, now = now)
     }
 
     private companion object {
