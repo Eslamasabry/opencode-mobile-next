@@ -1,13 +1,13 @@
 <resources>
-    <string name="linuxGitRepairAction">Repair linked Git files</string>
-    <string name="linuxGitRepairWorking">Repairing Git files…</string>
-    <string name="linuxGitRepairHealthy">Git can read this project. No object files needed repair.</string>
+    <string name="linuxGitRepairAction">Fix a damaged project history</string>
+    <string name="linuxGitRepairWorking">Fixing the project history…</string>
+    <string name="linuxGitRepairHealthy">This project’s history reads fine. Nothing needed fixing.</string>
     <plurals name="linuxGitRepairRestored">
-        <item quantity="one">1 Git object file restored. Git can read the project again.</item>
-        <item quantity="other">%1$d Git object files restored. Git can read the project again.</item>
+        <item quantity="one">1 history file brought back. The project reads fine again.</item>
+        <item quantity="other">%1$d history files brought back. The project reads fine again.</item>
     </plurals>
-    <string name="linuxGitRepairMissing">Some Git objects could not be recovered or verified. Clone the project again or restore a copy.</string>
-    <string name="linuxGitRepairNotProject">Only Git projects in this phone’s projects folder can be repaired here.</string>
-    <string name="linuxGitRepairFailed">The phone could not finish repairing Git files. Try again.</string>
-    <string name="linuxGitRepairDetailLocal">Restore verified Git objects from copies inside this project. Project files are kept.</string>
+    <string name="linuxGitRepairMissing">Some of the history could not be brought back. Copy the project again or restore a backup.</string>
+    <string name="linuxGitRepairNotProject">Only projects in this phone’s projects folder can be fixed here.</string>
+    <string name="linuxGitRepairFailed">The phone could not finish fixing the history. Try again.</string>
+    <string name="linuxGitRepairDetailLocal">Brings back history files from copies inside this project. Your project files are kept.</string>
 </resources>
