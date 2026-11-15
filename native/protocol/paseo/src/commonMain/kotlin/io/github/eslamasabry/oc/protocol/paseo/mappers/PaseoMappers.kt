@@ -211,6 +211,9 @@ private fun openCodeDeclined(item: JsonObject): Boolean {
 
 private const val OPENCODE_DECLINED = "The user declined this tool call"
 
+private fun JsonElement?.isNullishOutput(): Boolean =
+    this == null || this is JsonNull || (this is JsonPrimitive && isString && content.isEmpty())
+
 /** Dart `paseoMergeToolCall`: a later report of the same call merged into the earlier one. */
 public fun paseoMergeToolCall(earlier: JsonObject?, later: JsonObject): JsonObject {
     if (earlier == null || earlier["type"].stringOrNull() != "tool_call" || later["type"].stringOrNull() != "tool_call") {
@@ -230,6 +233,16 @@ public fun paseoMergeToolCall(earlier: JsonObject?, later: JsonObject): JsonObje
         merged["name"] = earlier["name"] ?: JsonNull
     }
     if (!parsed(later["detail"]) && parsed(earlier["detail"])) merged["detail"] = earlier["detail"]!!
+    // A closing report that names no output keeps what the step already put out: output the agent streamed (or sent
+    // with an earlier snapshot) is not lost because the last snapshot of the call carries only its exit code.
+    val earlierDetail = earlier["detail"].objectOrNull()
+    val laterDetail = merged["detail"].objectOrNull()
+    if (earlierDetail != null && laterDetail != null && parsed(laterDetail) &&
+        earlierDetail["type"].stringOrNull() == laterDetail["type"].stringOrNull() &&
+        laterDetail["output"].isNullishOutput() && !earlierDetail["output"].isNullishOutput()
+    ) {
+        merged["detail"] = JsonObject(LinkedHashMap<String, JsonElement>(laterDetail).apply { put("output", earlierDetail["output"]!!) })
+    }
     if (earlierMeta != null || laterMeta != null) {
         merged["metadata"] = JsonObject(LinkedHashMap<String, JsonElement>().apply {
             earlierMeta?.let(::putAll)
@@ -346,7 +359,7 @@ public fun paseoItemMessage(
             }
             val error: JsonElement? = if (status == ToolStatus.Error) {
                 // The card reads this as the person's choice, not a failure.
-                if (paseoDeclinedToolCall(item)) JsonPrimitive(DECLINED_TEXT) else toolOutput(item, detail)
+                if (paseoDeclinedToolCall(item)) JsonPrimitive(DECLINED_TEXT) else failedShellOutput(detail) ?: toolOutput(item, detail)
             } else {
                 null
             }

@@ -190,6 +190,9 @@ internal fun ToolStepBody(step: TurnStep, reply: ReplyActions?) {
             TechnicalText(text.removePrefix("Error:").trim(), reply)
             return
         }
+        // A failed command's lines are in the command box above this body (its last lines, all of them on "Show all"):
+        // saying them again here is the same text twice.
+        if (kind == ToolKind.Shell && text.isNotBlank()) return
         if (kind == ToolKind.Generic)
             Readable(input, reply, stringResource(Res.string.toolCardWhatWasSent))
         if (kind == ToolKind.AgentMessage) AgentMessageBody(step, reply)

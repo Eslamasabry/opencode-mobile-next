@@ -51,10 +51,30 @@ internal fun toolState(
         status = status,
         input = input as? JsonObject ?: EMPTY,
         inputRaw = (input as? JsonPrimitive)?.takeIf { it.isString }?.content,
-        output = if (status == ToolStatus.Completed || status == ToolStatus.Error) pretty(value) else "",
+        output = when (status) {
+            ToolStatus.Completed, ToolStatus.Error -> pretty(value)
+            // A running call keeps what it has put out so far, only its last lines: the step shows it growing in place.
+            ToolStatus.Running -> (output as? JsonPrimitive)?.takeIf { it.isString }?.content?.let(::runningTail) ?: ""
+            else -> ""
+        },
         outputValue = value,
         metadata = metadata,
     )
+}
+
+/**
+ * A failed command's own output: the lines it printed before it failed are the explanation the person needs, not the
+ * provider's raw error text (which stays out of the copy). Null for any other step, or a command that printed nothing.
+ */
+internal fun failedShellOutput(detail: JsonObject): JsonElement? {
+    if (detail["type"].stringOrNull() != "shell") return null
+    val output = detail["output"]
+    val text = when {
+        output is JsonPrimitive && output.isString -> output.content
+        output is JsonObject -> output["output"].stringOrNull() ?: output["text"].stringOrNull()
+        else -> null
+    } ?: return null
+    return if (text.isBlank()) null else JsonPrimitive(paseoText(JsonPrimitive(text)))
 }
 
 @OptIn(ExperimentalSerializationApi::class)
@@ -309,3 +329,25 @@ private fun structured(value: JsonElement): JsonElement {
     val encoded = PaseoWireJson.encodeToString(JsonElement.serializer(), value)
     return if (encoded.length > PASEO_TEXT_MAX) JsonPrimitive(paseoText(JsonPrimitive(encoded))) else value
 }
+
+/** A running command's output kept as its last 40 lines and 4 KB (the same bound the transcript's live tail uses). */
+private fun runningTail(text: String): String {
+    val kept = text.trimEnd('\n', '\r')
+    var start = 0
+    var newlines = 0
+    var at = kept.length
+    while (at > 0) {
+        at = kept.lastIndexOf('\n', at - 1)
+        if (at < 0) break
+        newlines++
+        if (newlines == RUNNING_TAIL_LINES) {
+            start = at + 1
+            break
+        }
+    }
+    val tail = kept.substring(start)
+    return if (tail.length > RUNNING_TAIL_CHARS) tail.substring(tail.length - RUNNING_TAIL_CHARS) else tail
+}
+
+private const val RUNNING_TAIL_LINES = 40
+private const val RUNNING_TAIL_CHARS = 4 * 1024

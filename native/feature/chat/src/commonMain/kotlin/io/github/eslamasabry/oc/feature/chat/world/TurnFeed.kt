@@ -150,8 +150,44 @@ internal class TurnFeedKeeper(private val sessionId: String) {
                 )
     }
 
+    /** The requests (permission or question) of this conversation that wait for the person now, and since when. */
+    private val asks = HashSet<String>()
+    private var waitingSinceMs: Long? = null
+
+    /**
+     * Issue 147: the turn's clock ("Working · 12 s") does not count the time the run spent waiting for the person's
+     * decision. While a request waits nothing runs; when the last one is answered the run's start moves forward by the
+     * time it waited, so the clock goes on from where it stopped. A run that ended starts its next clock fresh.
+     */
+    private fun waitClock(event: GatewayEvent, atMs: Long) {
+        fun ask(id: String) {
+            if (asks.add(id) && waitingSinceMs == null) waitingSinceMs = atMs
+        }
+
+        fun answered(id: String) {
+            if (!asks.remove(id) || asks.isNotEmpty()) return
+            val since = waitingSinceMs ?: return
+            waitingSinceMs = null
+            val s = state.value
+            val started = s.runStartedAtMs ?: return
+            state.value = s.copy(runStartedAtMs = started + (atMs - since).coerceAtLeast(0))
+        }
+        when (event) {
+            is GatewayEvent.PermissionAsked -> if (event.request.sessionId.raw == sessionId) ask("p:" + event.request.id.raw)
+            is GatewayEvent.PermissionSettled -> if (event.sessionId.raw == sessionId) answered("p:" + event.requestId.raw)
+            is GatewayEvent.QuestionAsked -> if (event.question.sessionId.raw == sessionId) ask("q:" + event.question.id.raw)
+            is GatewayEvent.QuestionSettled -> if (event.sessionId.raw == sessionId) answered("q:" + event.requestId.raw)
+            is GatewayEvent.RunEnded -> {
+                asks.clear()
+                waitingSinceMs = null
+            }
+            else -> Unit
+        }
+    }
+
     fun event(event: GatewayEvent, atMs: Long) {
         time(event, atMs)
+        waitClock(event, atMs)
         val s = state.value
         when (event) {
             is GatewayEvent.RunStarted ->
