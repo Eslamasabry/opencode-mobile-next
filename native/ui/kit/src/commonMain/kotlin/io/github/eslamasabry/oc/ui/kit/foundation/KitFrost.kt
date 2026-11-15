@@ -29,7 +29,6 @@ import io.github.eslamasabry.oc.ui.design.effects.FrostSpec
 import io.github.eslamasabry.oc.ui.design.effects.FrostStrength
 import kotlin.random.Random
 import androidx.compose.runtime.Stable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -52,6 +51,7 @@ import io.github.eslamasabry.oc.ui.kit.platform.LocalKitPlatform
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitAppearance
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitMotion
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitSignals
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
 import io.github.eslamasabry.oc.ui.design.style.Style
 
@@ -122,7 +122,7 @@ public fun Modifier.kitFrost(
     val appearance = LocalKitAppearance.current
     val colors = LocalKitColors.current
     val reduced = LocalKitMotion.current.reduced
-    val signals by platform.signals.collectAsState()
+    val signals = LocalKitSignals.current
     val density = LocalDensity.current.density
     val conditions =
         FrostConditions(

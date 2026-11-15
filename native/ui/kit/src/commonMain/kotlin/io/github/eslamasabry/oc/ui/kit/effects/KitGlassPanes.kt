@@ -1,8 +1,6 @@
 package io.github.eslamasabry.oc.ui.kit.effects
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
 import io.github.eslamasabry.oc.ui.design.color.Argb
@@ -25,6 +23,7 @@ import io.github.eslamasabry.oc.ui.kit.platform.LocalKitPlatform
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitAppearance
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitMotion
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitRoles
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitSignals
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
 
 /*
@@ -39,7 +38,7 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
 @Composable
 internal fun kitClearPanesOn(): Boolean {
     val platform = LocalKitPlatform.current
-    val signals by platform.signals.collectAsState()
+    val signals = LocalKitSignals.current
     val appearance = LocalKitAppearance.current
     val conditions =
         FrostConditions(

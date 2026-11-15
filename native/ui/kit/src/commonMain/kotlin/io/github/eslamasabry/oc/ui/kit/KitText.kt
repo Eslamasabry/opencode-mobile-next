@@ -14,6 +14,7 @@ import io.github.eslamasabry.oc.ui.design.layout.CapAlign
 import io.github.eslamasabry.oc.ui.design.layout.CapRole
 import io.github.eslamasabry.oc.ui.kit.foundation.kitMaxWidth
 import io.github.eslamasabry.oc.ui.kit.foundation.kitMayTruncate
+import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.platform.LocalDensity
@@ -29,6 +30,7 @@ import io.github.eslamasabry.oc.ui.design.text.TextScalePolicy
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitAppDensity
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTypography
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitWindow
 
 /** Frame text is capped at 1.3×; reading text follows the person's size up to 2.5× (plan 06 §9). */
 public enum class KitTextKind { Frame, Reading }
@@ -217,7 +219,12 @@ public enum class KitSelectMode { Always, FinePointer }
 /** Makes the text under it selectable and copyable (Dart `KitSelectable`); long-press on touch, drag with a mouse. */
 @Composable
 public fun KitSelectable(modifier: Modifier = Modifier, mode: KitSelectMode = KitSelectMode.Always, content: @Composable () -> Unit) {
-    SelectionContainer(modifier) { content() }
+    val active = mode == KitSelectMode.Always || LocalKitWindow.current.finePointer
+    when {
+        active -> SelectionContainer(modifier) { content() }
+        modifier != Modifier -> Box(modifier, propagateMinConstraints = true) { content() }
+        else -> content()
+    }
 }
 
 /** Text under it is left out of selection (Dart `KitSelectable.excluded`). */

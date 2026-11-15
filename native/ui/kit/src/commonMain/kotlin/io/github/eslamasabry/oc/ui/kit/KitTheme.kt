@@ -36,6 +36,8 @@ import io.github.eslamasabry.oc.ui.design.tokens.Alphas
 import io.github.eslamasabry.oc.ui.design.tokens.Density
 import io.github.eslamasabry.oc.ui.design.tokens.Tokens
 import io.github.eslamasabry.oc.ui.kit.foundation.rememberAppTextDensity
+import io.github.eslamasabry.oc.ui.kit.icon.LocalKitIconFamilies
+import io.github.eslamasabry.oc.ui.kit.icon.rememberKitIconFamilies
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotionState
 import io.github.eslamasabry.oc.ui.kit.platform.KitPlatform
 import io.github.eslamasabry.oc.ui.kit.platform.LocalKitPlatform
@@ -47,6 +49,7 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.KitStyleState
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitMotion
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitRoles
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitSignals
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitLocaleTag
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
@@ -122,6 +125,7 @@ public fun KitTheme(
     val targetColors = remember(roles) { roles.toKitColors() }
     val arabic = isArabic(localeTag)
     val fonts = rememberKitFonts(arabic)
+    val iconFamilies = rememberKitIconFamilies()
     val typography = remember(fonts, arabic) { KitTypography(fonts, arabic) }
     // Saver makes the effective knobs none (Dart KitEffects.underSaver).
     val tokens = Tokens.of(styleState.knobs.density)
@@ -165,6 +169,8 @@ public fun KitTheme(
     CompositionLocalProvider(
         io.github.eslamasabry.oc.ui.kit.live.LocalKitLiveShare provides live,
         LocalKitPlatform provides platform,
+        LocalKitSignals provides signals,
+        LocalKitIconFamilies provides iconFamilies,
         LocalKitAppearance provides effectiveAppearance,
         LocalKitStyle provides styleState,
         // The Glass lab's tuning, while its "Use in the whole app" switch is on (null: the shipped glass).

@@ -3,7 +3,6 @@ package io.github.eslamasabry.oc.ui.kit.foundation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ProvidableCompositionLocal
 import androidx.compose.runtime.Stable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -54,6 +53,7 @@ import io.github.eslamasabry.oc.ui.design.style.SurfaceDecoration
 import io.github.eslamasabry.oc.ui.kit.platform.LocalKitPlatform
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitMotion
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitSignals
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
 
 /*
@@ -241,7 +241,7 @@ internal fun Modifier.kitSurfaceGlass(decoration: SurfaceDecoration?): Modifier 
     if (decoration == null || decoration.frost <= 0f) return this
     if (LocalKitStyle.current.style != Style.Glass) return this
     val platform = LocalKitPlatform.current
-    val signals by platform.signals.collectAsState()
+    val signals = LocalKitSignals.current
     val reduced = LocalKitMotion.current.reduced
     val density = LocalDensity.current.density
     val backdrop = LocalKitGlassBackdrop.current
@@ -280,7 +280,7 @@ internal fun kitGlassBlurs(backdrop: KitGlassBackdrop?): Boolean {
 @Composable
 internal fun kitGlassFrostAvailable(): Boolean {
     val platform = LocalKitPlatform.current
-    val signals by platform.signals.collectAsState()
+    val signals = LocalKitSignals.current
     if (LocalKitMotion.current.reduced || signals.highContrast) return false
     val density = LocalDensity.current.density
     return remember(platform, density) { platform.frostEffect(FrostSpec(1f, FROST_SATURATION, 0f), density) != null }

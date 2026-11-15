@@ -15,7 +15,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -50,8 +49,8 @@ import io.github.eslamasabry.oc.ui.kit.foundation.shape
 import io.github.eslamasabry.oc.ui.kit.frame.kitPageGutter
 import io.github.eslamasabry.oc.ui.kit.frame.kitTouchSink
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
-import io.github.eslamasabry.oc.ui.kit.platform.LocalKitPlatform
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitSignals
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.kitSheetDismiss
@@ -126,7 +125,7 @@ public fun KitUndoBar(
     val tokens = LocalKitTokens.current
     val specs = KitMotion.specs
     val travels = KitMotion.state.travels
-    val signals by LocalKitPlatform.current.signals.collectAsState()
+    val signals = LocalKitSignals.current
     val a11y = LocalAccessibilityManager.current
     val last = remember { LastOffer() }
     if (offer != null) last.offer = offer

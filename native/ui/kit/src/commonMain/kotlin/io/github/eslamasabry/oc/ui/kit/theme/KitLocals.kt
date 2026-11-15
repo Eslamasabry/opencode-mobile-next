@@ -14,6 +14,7 @@ import io.github.eslamasabry.oc.ui.design.style.StyleSpec
 import io.github.eslamasabry.oc.ui.design.style.SolidSpec
 import io.github.eslamasabry.oc.ui.design.tokens.Tokens
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotionState
+import io.github.eslamasabry.oc.ui.kit.platform.KitSystemSignals
 
 public val LocalKitLocaleTag: ProvidableCompositionLocal<String> = staticCompositionLocalOf { "en" }
 
@@ -80,3 +81,9 @@ public val LocalKitStyle: ProvidableCompositionLocal<KitStyleState> = staticComp
  * for the same reason as [LocalKitColors].
  */
 public val LocalKitRoles: ProvidableCompositionLocal<Roles> = compositionLocalOf { missing("Roles") }
+
+/**
+ * The platform's live [KitSystemSignals], collected once at [io.github.eslamasabry.oc.ui.kit.KitTheme] so kit
+ * composables read signals without attaching per-node flow collectors.
+ */
+public val LocalKitSignals: ProvidableCompositionLocal<KitSystemSignals> = compositionLocalOf { KitSystemSignals() }
