@@ -22,5 +22,11 @@
     <string name="chatsNewPhoneFolderMissing">This folder isn’t in the phone’s storage any more. Choose another folder.</string>
     <string name="chatsNewPhoneFolderDenied">%1$s can’t open or change files in this folder. Choose another folder in the phone’s storage.</string>
     <string name="chatsNewPhoneFolderRestartFailed">Couldn’t restart. If an agent is still working, try again when it’s done.</string>
+    <string name="chatPhoneFolderAccess">This conversation’s folder is in the phone’s storage, and the app no longer has access to all files. Nothing is sent until you allow it again.</string>
+    <string name="chatPhoneFolderRestartServer">This phone’s OpenCode can’t see this conversation’s folder until it restarts. Nothing is sent until then.</string>
+    <string name="chatPhoneFolderRestartAgents">The phone’s agents can’t see this conversation’s folder until they restart. Nothing is sent until then.</string>
+    <string name="chatPhoneFolderMissing">This conversation’s folder isn’t in the phone’s storage any more, so nothing can be sent here.</string>
+    <string name="chatPhoneFolderDenied">The agent can’t open or change files in this conversation’s folder in the phone’s storage, so nothing can be sent here.</string>
+    <string name="chatSendPhoneFolder">Not sent: the agent can’t reach this conversation’s folder in the phone’s storage right now. The line at the top says what to do.</string>
     <string name="chatSendFolderMissing">This project’s folder isn’t on the server any more, so the message wasn’t sent. Start a new conversation to make the folder again or choose another project.</string>
 </resources>

@@ -264,6 +264,7 @@ import io.github.eslamasabry.oc.ui.words.res.kitTopBarMore
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarSearch
 import io.github.eslamasabry.oc.ui.words.res.kitTurnLiveSending
 import io.github.eslamasabry.oc.ui.words.res.chatSendFolderMissing
+import io.github.eslamasabry.oc.ui.words.res.chatSendPhoneFolder
 import io.github.eslamasabry.oc.ui.words.res.kitTurnLiveWorking
 import io.github.eslamasabry.oc.ui.words.res.kitTurnMore
 import io.github.eslamasabry.oc.ui.words.res.kitWorkDidntFinish
@@ -2067,11 +2068,15 @@ private fun rememberSendFailureWords(): (Failure) -> String {
     val phoneBusy = stringResource(Res.string.schedulePhoneBusy)
     val phoneCheckFailed = stringResource(Res.string.schedulePhoneCheckFailed)
     val folderMissing = stringResource(Res.string.chatSendFolderMissing)
-    return remember(authored, changed, phoneBusy, phoneCheckFailed, folderMissing) {
+    val phoneFolder = stringResource(Res.string.chatSendPhoneFolder)
+    return remember(authored, changed, phoneBusy, phoneCheckFailed, folderMissing, phoneFolder) {
         { failure ->
             when {
                 // B-063: the server refused the message because the project's folder is gone.
                 io.github.eslamasabry.oc.feature.chat.presentation.SendFailureRules.folderMissing(failure) -> folderMissing
+                // Issue 147: never sent into a folder in the phone's storage the agent cannot reach now.
+                failure is Failure.Unavailable &&
+                    failure.feature.name == io.github.eslamasabry.oc.feature.chat.world.PHONE_FOLDER_FEATURE -> phoneFolder
                 failure is Failure.Unavailable && failure.feature.name == "schedulePhoneBusy" ->
                     phoneBusy
                 failure is Failure.Unavailable &&

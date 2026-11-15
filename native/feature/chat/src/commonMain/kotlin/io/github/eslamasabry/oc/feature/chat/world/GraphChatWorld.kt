@@ -325,6 +325,21 @@ internal class GraphChatWorld(
             ownDirectory?.takeIf { it.isNotBlank() }
                 ?: currentAttached()?.gateway?.location?.value?.directory?.takeIf { it.isNotBlank() }
 
+    private val mutablePhoneFolder = MutableStateFlow<ChatPhoneFolder?>(null)
+    override val phoneFolder: StateFlow<ChatPhoneFolder?> = mutablePhoneFolder
+
+    override suspend fun checkPhoneFolder() {
+        mutablePhoneFolder.value =
+            phoneServer?.phoneFolder(ref, directory, thorough = true)?.takeUnless { it == ChatPhoneFolder.Ready }
+    }
+
+    override suspend fun fixPhoneFolder(): Outcome<Unit> {
+        val reach = mutablePhoneFolder.value ?: return Outcome.Ok(Unit)
+        val fixed = phoneServer?.fixPhoneFolder(ref, reach) ?: Outcome.Failed(Failure.Unavailable(FeatureId(PHONE_FOLDER_FEATURE)))
+        checkPhoneFolder()
+        return fixed
+    }
+
     override val serverOnThisPhone: Boolean
         get() = phoneServer?.runsHere(ref.profileId) == true
 
@@ -1205,6 +1220,8 @@ internal class GraphChatWorld(
                     val session = (graph.session.reads.session(sid) as? Outcome.Ok)?.value
                     session?.title?.let { mutableTitle.value = it }
                     ownDirectory = session?.directory
+                    // Issue 147: a folder in the phone's storage the agent cannot reach is said as the page opens.
+                    checkPhoneFolder()
                     refreshReadOnly(gateway, session)
                     val statuses = gateway.sessionStatuses()
                     if (statuses is Outcome.Ok && statuses.value[sid] == SessionStatus.Busy) {
@@ -2192,6 +2209,11 @@ internal class GraphChatWorld(
         again: List<PromptAttachment> = emptyList(),
     ): Outcome<Unit> {
         if (readOnlyNow()) return readOnlyFailure()
+        // Issue 147: never into a folder in the phone's storage the agent cannot reach now; the notice says why.
+        phoneServer.phoneFolderRefusal(ref, directory)?.let { (failure, reach) ->
+            mutablePhoneFolder.value = reach
+            return Outcome.Failed(failure)
+        }
         val id = nextLocalId++
         if (mutableLoad.value !is ChatLoad.Live)
             return Outcome.Failed(Failure.Busy(BusyKind.Starting))
@@ -2253,6 +2275,10 @@ internal class GraphChatWorld(
 
     override suspend fun sendRepeated(text: String, expectedRevision: Long): Outcome<Unit> {
         if (readOnlyNow()) return readOnlyFailure()
+        phoneServer.phoneFolderRefusal(ref, directory)?.let { (failure, reach) ->
+            mutablePhoneFolder.value = reach
+            return Outcome.Failed(failure)
+        }
         val session =
             draftSession ?: return Outcome.Failed(Failure.Unavailable(FeatureId("draftRepeat")))
         val captured = session.state.value
