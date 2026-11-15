@@ -91,6 +91,21 @@ class GatewaySendLinkSelectionTest {
         }
 
     @Test
+    fun `SEND-STALE-6 a model that read back differently says so in its Details, never only "connection changed"`() =
+        runTest {
+            val g = Server()
+            g.readback(known(ModelRef("p", "gemini-3.8-flash"), "Think"))
+            val link = GatewaySendLink(P1, "http://h", g)
+            val failed = assertIs<Outcome.Failed>(link.applySelection(S1, sel(id = "gemini-3.8-flash-high"), null))
+            val details = assertIs<Failure.Refused>(failed.failure).details?.text.orEmpty()
+            assertTrue("model read back differently" in details && "model" in details.substringAfter(":"), details)
+            assertFalse("gemini" in details, "never the ids: $details")
+            g.readback(known(ModelRef("p", "m"), ""))
+            val effort = assertIs<Outcome.Failed>(link.applySelection(S1, sel(), null))
+            assertTrue("effort" in assertIs<Failure.Refused>(effort.failure).details?.text.orEmpty())
+        }
+
+    @Test
     fun `B-STATE-119 DLV-12 a missing or unknown readback fails closed`() = runTest {
         val g = Server()
         g.readback(null)
