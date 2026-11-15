@@ -131,6 +131,9 @@
     <string name="shellOutputReading">Reading output</string>
     <string name="chatsNewAgentNeedsProjectsFolder">%1$s works only in the projects on this phone. Choose one of them.</string>
     <string name="chatsNewAgentNoProjects">%1$s works only in the projects on this phone, and there are none yet. Tap here to make your first project.</string>
+    <string name="chatsNewPhoneStorage">Phone storage</string>
+    <string name="chatsNewPhoneStorageOff">Lets agents on this phone read and change files in the phone's storage, such as Downloads and Documents. Opens Android's page for it.</string>
+    <string name="chatsNewPhoneStorageOn">Agents on this phone can read and change files in Downloads, Documents and the rest of the phone's storage.</string>
     <string name="libraryImportAConversation">Import a conversation</string>
     <string name="handoffUiComputerCommandLabel">Terminal command</string>
     <string name="sessionsOlderLoadFailed">Could not load older conversations.</string>

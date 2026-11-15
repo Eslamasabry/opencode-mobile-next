@@ -37,6 +37,7 @@ import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationSheet
 import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationStarter
 import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationWait
 import io.github.eslamasabry.oc.feature.chats.presentation.PhoneStartWay
+import io.github.eslamasabry.oc.feature.chats.presentation.PhoneStorageAccess
 import io.github.eslamasabry.oc.feature.chats.presentation.projectPlace
 import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationUi
 import io.github.eslamasabry.oc.feature.chats.presentation.filterNewConversationModels
@@ -507,6 +508,22 @@ private fun NewConversationSheet(state: NewConversationUi, actions: NewConversat
                 }
                 if (state.canCreateProject)
                     KitNewProjectRow(actions::askNewProject, working = state.creatingProject)
+                // This phone's own storage (Downloads, Documents): says what the access gives, opens Android's page
+                // for it, and once on it picks the storage folder.
+                state.phoneStorage?.let { access ->
+                    val on = access == PhoneStorageAccess.On
+                    KitRow(
+                        title = stringResource(Res.string.chatsNewPhoneStorage),
+                        supporting =
+                            stringResource(
+                                if (on) Res.string.chatsNewPhoneStorageOn else Res.string.chatsNewPhoneStorageOff
+                            ),
+                        leading = KitRowLeading.Glyph(KitIcons.folders, tile = true),
+                        trailing = if (on) KitRowTrailing.None else KitRowTrailing.Chevron,
+                        onClick = { if (on) actions.chooseDirectory(PHONE_STORAGE_FOLDER) else actions.requestPhoneStorage() },
+                        modifier = Modifier.testTag("chats-new-phone-storage"),
+                    )
+                }
             }
             state.projectFailure?.let { problem ->
                 KitErrorNotice(
@@ -1025,3 +1042,6 @@ private fun NewProjectDialog(state: NewConversationUi, actions: NewConversationA
         onDismissRequest = { actions.createProject(null) },
     )
 }
+
+/** The phone's shared storage as a folder: where Downloads and Documents live. */
+private const val PHONE_STORAGE_FOLDER = "/sdcard"

@@ -14,6 +14,7 @@ import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationHost
 import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationModel
 import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationProject
 import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationSheet
+import io.github.eslamasabry.oc.feature.chats.presentation.PhoneStorageAccess
 import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationPhone
 import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationPhoneAgent
 import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationPhoneModels
@@ -84,6 +85,13 @@ class NewConversationPhoneAgentTest {
     ) : NewConversationHost {
         val starts = mutableListOf<Started>()
         override fun canCreateProject(profile: ProfileId): Boolean = true
+        var storage: PhoneStorageAccess? = null
+        var storageRequests = 0
+        override suspend fun phoneStorage(profile: ProfileId): PhoneStorageAccess? = storage
+        override suspend fun requestPhoneStorage(profile: ProfileId): Outcome<Unit> {
+            storageRequests++
+            return Outcome.Ok(Unit)
+        }
         var projectList = emptyList<NewConversationProject>()
         val chosen = mutableListOf<Pair<ProfileId, String?>>()
         val savedModels = mutableListOf<Triple<ProfileId, String, ModelRef?>>()
@@ -448,6 +456,29 @@ class NewConversationPhoneAgentTest {
         second.chooseProjectForAgent()
         assertFalse(second.state.value.askingProjectName)
         assertEquals(NewConversationSheet.Projects, second.state.value.sheet)
+    }
+
+    @Test
+    fun `I147-FIRST-RUN the project sheet offers Phone storage, opens Android's page, and reads the answer on return`() {
+        val host = Host()
+        host.storage = PhoneStorageAccess.Off
+        val vm = vm(host)
+        vm.sheet(NewConversationSheet.Projects)
+        assertEquals(PhoneStorageAccess.Off, vm.state.value.phoneStorage)
+        vm.requestPhoneStorage()
+        assertEquals(1, host.storageRequests, "one tap opens Android's page")
+        // The person turned it on and came back: the page's next start reads it again.
+        host.storage = PhoneStorageAccess.On
+        vm.shown()
+        assertEquals(PhoneStorageAccess.On, vm.state.value.phoneStorage)
+        vm.requestPhoneStorage()
+        assertEquals(1, host.storageRequests, "with access on there is nothing to ask")
+        vm.chooseDirectory("/sdcard")
+        assertEquals("/sdcard", vm.state.value.directory)
+        // A server that is not this phone's own offers no such row.
+        val remote = vm(Host())
+        remote.sheet(NewConversationSheet.Projects)
+        assertEquals(null, remote.state.value.phoneStorage)
     }
 
     // ---- Owner 11-12 on the phone (Paseo helper): thinking effort, a list being read, the last known list

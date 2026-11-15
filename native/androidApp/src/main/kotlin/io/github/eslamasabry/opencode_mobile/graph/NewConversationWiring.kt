@@ -102,6 +102,7 @@ class AndroidNewConversationHost(
     private val phoneServer: AndroidChatPhoneServer,
     private val phoneAgents: PhoneAgents,
     private val phoneHelper: AppLocalAgentHostStarter,
+    private val sharedStorage: Set<io.github.eslamasabry.oc.core.domain.platform.SharedStorageAccess>,
     appScope: AppCoroutineScope,
     dispatchers: AppDispatchers,
 ) : NewConversationHost {
@@ -145,6 +146,27 @@ class AndroidNewConversationHost(
     // New project in the picker: the same phone-server folder creator as Projects (a Git folder under /root/projects).
     override fun canCreateProject(profile: ProfileId): Boolean =
         projectServer(profile)?.let(projectCreation::available) == true
+
+    /** Only this phone's own OpenCode reaches the phone's storage; a remote server's /sdcard is its own. */
+    override suspend fun phoneStorage(profile: ProfileId): PhoneStorageAccess? {
+        val access = sharedStorage.singleOrNull() ?: return null
+        if (!phoneServer.runsHere(profile)) return null
+        val graph = registry.live.value[profile] ?: return null
+        val block = (access.check(profile, PHONE_STORAGE_FOLDER, graph.session.server) as? Outcome.Ok)?.value ?: return null
+        return if (block == io.github.eslamasabry.oc.core.domain.platform.SharedStorageBlock.None) PhoneStorageAccess.On
+        else PhoneStorageAccess.Off
+    }
+
+    override suspend fun requestPhoneStorage(profile: ProfileId): Outcome<Unit> {
+        val access = sharedStorage.singleOrNull() ?: return refused()
+        val graph = registry.live.value[profile] ?: return refused()
+        return access.request(
+            profile,
+            PHONE_STORAGE_FOLDER,
+            io.github.eslamasabry.oc.core.domain.platform.SharedStorageBlock.AppAccess,
+            graph.session.server,
+        )
+    }
 
     override suspend fun createProject(profile: ProfileId, name: String): Outcome<String> {
         val server = projectServer(profile) ?: return refused()
@@ -1578,3 +1600,5 @@ internal object NewConversationPhoneRules {
     fun startsHere(row: PhoneAgentRow): Boolean =
         phoneAgentStartsConversation(row) || row.status == PhoneAgentStatus.Stopped
 }
+
+private const val PHONE_STORAGE_FOLDER = "/sdcard"
