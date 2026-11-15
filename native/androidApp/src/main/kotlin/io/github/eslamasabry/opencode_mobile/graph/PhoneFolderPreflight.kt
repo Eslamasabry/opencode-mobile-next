@@ -119,15 +119,24 @@ class PhoneFolderPreflight(
     /** Adds [root] to [owner]'s granted shared folders (`oc.sharedProjects.<owner>`) and rewrites the runtime's list. */
     private suspend fun remember(owner: ProfileId, root: String): Outcome<Unit> {
         val key = "$SHARED_PROJECTS${owner.raw}"
-        val known = stores.prefs.stringList(key).orEmpty()
-        if (root !in known) {
-            val saved =
-                stores.prefs.commit(stores.lanes.forProfile(owner)) {
-                    putStringList(key, (known + root).distinct().sorted())
-                }
-            if (saved is Outcome.Failed) return saved
+        // Compared and set: another writer of this list (a Files grant, a project opened from storage) adding its
+        // folder at the same moment never drops this one, nor this one theirs.
+        repeat(LIST_TRIES) {
+            val before = stores.prefs.get(key)
+            if (before != null && before !is PrefValue.StrList) return Outcome.Failed(Failure.StorageRefused())
+            val known = (before as? PrefValue.StrList)?.value.orEmpty()
+            if (root in known) return roots.syncNow()
+            when (
+                val saved =
+                    stores.prefs.compareAndCommit(stores.lanes.forProfile(owner), mapOf(key to before)) {
+                        putStringList(key, (known + root).distinct().sorted())
+                    }
+            ) {
+                is Outcome.Failed -> return saved
+                is Outcome.Ok -> if (saved.value) return roots.syncNow()
+            }
         }
-        return roots.syncNow()
+        return Outcome.Failed(Failure.Conflict())
     }
 
     /** The helper's own id in the phone's Linux (the one its agents run under): `<owner>`, as its start names it. */
@@ -138,6 +147,7 @@ class PhoneFolderPreflight(
 
     private companion object {
         const val SHARED_PROJECTS = "oc.sharedProjects."
+        const val LIST_TRIES = 3
         val ID = Regex("[A-Za-z0-9_-]{1,80}")
 
         fun reachOf(code: String): PhoneFolderReach? =

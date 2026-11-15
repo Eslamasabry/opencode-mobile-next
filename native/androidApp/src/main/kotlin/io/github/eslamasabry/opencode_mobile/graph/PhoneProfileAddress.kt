@@ -16,7 +16,7 @@ internal object PhoneProfileAddress {
     const val FLUTTER_PORT: Int = 4097
 
     /** The ports this app's phone server takes (BuiltinLinux's PhoneServerPorts). */
-    private fun ownPort(port: Int): Boolean = port == FLUTTER_PORT || port == 4098 || port in 4100..4199
+    fun ownPort(port: Int): Boolean = port == FLUTTER_PORT || port == 4098 || port in 4100..4199
 
     /** The address to save instead of [baseUrl], or null when nothing needs to change. */
     fun adopted(baseUrl: String, nativePort: Int): String? {
