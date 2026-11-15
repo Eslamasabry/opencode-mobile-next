@@ -299,6 +299,19 @@ class ChatsScreenTest {
         }
 
     @Test
+    fun `I147-ROW-002 an old agent conversation's row reads like any other, with no sentence beside its title`() =
+        runComposeUiTest {
+            val old = item("ag", "/work/habits", at = 9_000, title = "Build the habit tracker", unseen = true)
+                .copy(agentId = "antigravity", needsNewChat = true)
+            setContent { Themed { ChatsScreen(ui(old), RecordingChatsActions()) } }
+            val spoken = onNodeWithContentDescription("Build the habit tracker", substring = true)
+                .fetchSemanticsNode().config.getOrNull(androidx.compose.ui.semantics.SemanticsProperties.ContentDescription)
+                .orEmpty().joinToString()
+            assertTrue("Done" in spoken, spoken)
+            assertTrue("reopen" !in spoken, spoken)
+        }
+
+    @Test
     fun `SCREENS-NAV-27 G2 one row follows the next with only its hairline between them`() =
         runComposeUiTest {
             setContent { Themed { ChatsScreen(ui(*rows), RecordingChatsActions()) } }

@@ -76,6 +76,12 @@ public object KitRecentRowRules {
     /** The project dot beside the project's name. */
     public const val DOT_DP: Int = 7
 
+    /**
+     * The most of the row's width its end (the time over the state word) takes: a long state word is cut there with
+     * an ellipsis, so it never crushes the title and the project to a few letters (issue 147: "Build …" at 360 dp).
+     */
+    public const val END_SHARE: Float = 0.38f
+
     /** Where the hairline between two rows starts: past the mark, on the words' edge. */
     public fun textStartDp(gutter: Int): Int = gutter + MARK_DP + MARK_GAP_DP
 
@@ -163,31 +169,34 @@ public fun KitRecentRow(
             .testTag("kit-recent-row")
             .semantics(mergeDescendants = true) { contentDescription = words }
     val body: @Composable () -> Unit = {
-        Row(
-            Modifier.fillMaxWidth()
-                .heightIn(min = KitRecentRowRules.MIN_HEIGHT_DP.dp)
-                .padding(start = gutter, end = gutter, top = Space.S3.dp, bottom = if (below == null) Space.S3.dp else Space.S2.dp)
-                .clearAndSetSemantics {},
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Mark(agent)
-            Spacer(Modifier.width(KitRecentRowRules.MARK_GAP_DP.dp))
-            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
-                    BasicText(
-                        title,
-                        Modifier.weight(1f, fill = false).kitGrowTitle(growKey),
-                        style = LocalKitTypography.current.style(TypeRole.RowTitle).copy(color = colors.text1, fontWeight = FontWeight.SemiBold),
-                        maxLines = if (large) 2 else 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                    if (pinned) KitGlyph(KitIcons.pin, colors.text2, 14.dp)
+        BoxWithConstraints(Modifier.fillMaxWidth()) {
+            val endMax = maxWidth * KitRecentRowRules.END_SHARE
+            Row(
+                Modifier.fillMaxWidth()
+                    .heightIn(min = KitRecentRowRules.MIN_HEIGHT_DP.dp)
+                    .padding(start = gutter, end = gutter, top = Space.S3.dp, bottom = if (below == null) Space.S3.dp else Space.S2.dp)
+                    .clearAndSetSemantics {},
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Mark(agent)
+                Spacer(Modifier.width(KitRecentRowRules.MARK_GAP_DP.dp))
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
+                        BasicText(
+                            title,
+                            Modifier.weight(1f, fill = false).kitGrowTitle(growKey),
+                            style = LocalKitTypography.current.style(TypeRole.RowTitle).copy(color = colors.text1, fontWeight = FontWeight.SemiBold),
+                            maxLines = if (large) 2 else 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                        if (pinned) KitGlyph(KitIcons.pin, colors.text2, 14.dp)
+                    }
+                    if (line != null || shownProject != null) SecondLine(shownProject, line)
                 }
-                if (line != null || shownProject != null) SecondLine(shownProject, line)
-            }
-            if (time != null || state?.word != null) {
-                Spacer(Modifier.width(Space.S3.dp))
-                End(time, state)
+                if (time != null || state?.word != null) {
+                    Spacer(Modifier.width(Space.S3.dp))
+                    End(time, state, Modifier.widthIn(max = endMax))
+                }
             }
         }
     }
@@ -246,12 +255,15 @@ private fun SecondLine(project: String?, line: String?) {
     }
 }
 
-/** The time on top; the state word under it in its colour (Working with a small green dot). */
+/**
+ * The time on top; the state word under it in its colour (Working with a small green dot). [modifier] caps its width
+ * ([KitRecentRowRules.END_SHARE]); a longer word is cut with an ellipsis.
+ */
 @Composable
-private fun End(time: String?, state: KitRowState?) {
+private fun End(time: String?, state: KitRowState?, modifier: Modifier = Modifier) {
     val colors = LocalKitColors.current
     val typography = LocalKitTypography.current
-    Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
+    Column(modifier, horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
         if (time != null)
             KitText(time.replace(' ', ' '), role = TypeRole.Caption, tone = io.github.eslamasabry.oc.ui.design.type.TextTone.Secondary, maxLines = 1)
         val word = state?.word
@@ -263,12 +275,14 @@ private fun End(time: String?, state: KitRowState?) {
                     Box(Modifier.size(6.dp).clip(CircleShape).background(color).testTag("kit-recent-live-dot"))
                 BasicText(
                     word,
+                    Modifier.weight(1f, fill = false),
                     style =
                         typography.style(TypeRole.Secondary).copy(
                             color = color,
                             fontWeight = if (tone == KitRowStateTone.NeedsYou || tone == KitRowStateTone.Running) FontWeight.SemiBold else null,
                         ),
                     maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                 )
             }
         }

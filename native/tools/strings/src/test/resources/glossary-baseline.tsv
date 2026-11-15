@@ -26,6 +26,7 @@ noun	teamUiWorkSheetOpenSession
 technical	a2aSupportedConnection
 technical	a2aUnsupported
 technical	agentAccountUnsupportedDetail
+technical	agentsHelpFilesBody
 technical	agentsHubFolderHint
 technical	agentsHubInvalidFolder
 technical	browserEditorInsecureOrigin

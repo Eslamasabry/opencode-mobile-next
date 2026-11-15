@@ -1229,4 +1229,12 @@
     <string name="kitCommandNoOutput">Tidak ada keluaran</string>
     <string name="kitCommandFailedNoOutput">Gagal sebelum mencetak apa pun</string>
     <string name="kitCommandStoppedEarly">Berhenti sebelum selesai</string>
+    <string name="chatOldAgentReadOnly">%1$s tidak dapat melanjutkan percakapan ini lagi. Baca di sini, atau lanjutkan di percakapan baru.</string>
+    <string name="chatOldAgentReadOnlyUnnamed">Agen ini tidak dapat melanjutkan percakapan ini lagi. Baca di sini, atau lanjutkan di percakapan baru.</string>
+    <string name="chatContinueInNewConversation">Lanjutkan di percakapan baru</string>
+    <string name="chatContinueBriefIntro">Mari lanjutkan "%1$s". Anda tidak dapat melihat percakapan itu, jadi inilah yang terjadi di sana.</string>
+    <string name="chatContinueBriefIntroUntitled">Mari lanjutkan percakapan sebelumnya. Anda tidak dapat melihatnya, jadi inilah yang terjadi di sana.</string>
+    <string name="chatContinueBriefAsked">Yang saya minta:</string>
+    <string name="chatContinueBriefChanged">File yang berubah:</string>
+    <string name="chatContinueBriefStopped">Di mana terhenti:</string>
 </resources>

@@ -147,7 +147,6 @@ import io.github.eslamasabry.oc.ui.words.res.chatsHomeDone
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeStopped
 import io.github.eslamasabry.oc.ui.words.res.dockStop
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeInterrupted
-import io.github.eslamasabry.oc.ui.words.res.agentsStateCantReopen
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeRowStatusRules
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeEmptyCalmBody
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeEmptyTitle
@@ -817,7 +816,6 @@ private data class HomeRowWords(
     val done: String,
     val stopped: String,
     val interrupted: String,
-    val cantReopen: String,
     /** B-333: a tapped row that waits for its server to open says so. */
     val connecting: String,
     /** B-333: ... or that its agents are being updated. */
@@ -849,7 +847,6 @@ private fun rememberHomeRowWords(): HomeRowWords =
         done = stringResource(Res.string.chatsHomeDone),
         stopped = stringResource(Res.string.chatsHomeStopped),
         interrupted = stringResource(Res.string.chatsHomeInterrupted),
-        cantReopen = stringResource(Res.string.agentsStateCantReopen),
         connecting = stringResource(Res.string.e7WorkspaceConnecting),
         updating = stringResource(Res.string.agentsStateUpdatingHelper),
         notAnswering = stringResource(Res.string.phoneServerRowNotAnswering),
@@ -942,8 +939,7 @@ private fun ConversationRow(
         // B-333: the tap is kept; the row says it waits for its server instead of looking dead.
         else if (flags.waiting) (if (flags.waitingWord == WaitingWord.Updating) words.updating else words.connecting)
         else if (flags.gaveUp) words.notAnswering
-        // H4 (F: chats_home_screen.dart:901): a finished conversation that cannot reopen says so before Done/Stopped.
-        else if (HomeRowStatusRules.saysCantReopen(row)) words.cantReopen
+        // Issue 147: an old agent conversation opens and continues like any other, so its row reads like any other.
         else when (row.status) {
             RowStatus.NeedsYou -> words.needsYou
             RowStatus.Running ->

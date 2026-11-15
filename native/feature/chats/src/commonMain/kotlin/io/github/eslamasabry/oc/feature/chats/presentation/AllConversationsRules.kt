@@ -65,8 +65,6 @@ public data class AllModel(
     /** The folder each server is open on now, trimmed; "Continue here" moves into it. */
     val openFolders: Map<ProfileId, String> = emptyMap(),
     val moving: MovingHere? = null,
-    /** H4: the tapped agent conversation that cannot be reopened, waiting for "Start new conversation". */
-    val startNew: StartNewUi? = null,
     /** B-333 on All conversations: the row tapped while its server was starting; it opens when the server connects. */
     val keptOpen: ConversationRef? = null,
     /** The kept tap whose server did not connect within the wait's limit: its row says Not answering. */
@@ -283,7 +281,6 @@ public object AllConversationsRules {
                     .map { it.name }
                     .toImmutableList(),
             problem = model.problem,
-            startNew = model.startNew,
             moveHere =
                 model.moving?.let { moving ->
                     val row = rows.firstOrNull { it.key == moving.key }
