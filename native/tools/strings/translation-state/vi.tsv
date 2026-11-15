@@ -1218,6 +1218,7 @@ approvalModeNowAsk	7d8b2152b6
 approvalModeNowAuto	91140471eb
 approvalModeNowEverything	fb340266fc
 approvalModeSettings	fd4e14df25
+approvalNewFileOf	d84cc3c58c
 approvalNoteDenyOnly	f65701f371
 approvalReplyBack	357885fe4b
 approvalReplyEmpty	f456ac58fd
@@ -2478,7 +2479,7 @@ composerToolCommandsTitle	77c51aeeb5
 composerToolNothingToSave	9e1c442602
 composerToolSaveForLater	22ef822580
 composerToolSavedSubtitle	91e861c1d6
-composerToolsAgentPicturesOnly	8a550dc9ac
+composerToolsAgentPicturesOnly	20bfa0f8c2
 composerToolsAgentTextOnly	46d33978b6
 composerToolsMore	c128486b1d
 composerToolsTextOnly	92deaba741
@@ -7655,6 +7656,8 @@ modelPickerDetailsOutput	39bf3b85f8
 modelPickerDetailsPrice	e54f7dde0c
 modelPickerFree	01e7818492
 modelPickerInUse	d1461c4c1a
+modelPickerModeAutoName	3cbc06cfd7
+modelPickerModeDefaultName	cf003bbfa9
 modelPickerReasonCheapest	96ba505dda
 modelPickerReasonDefault	cf003bbfa9
 modelPickerReasonRecent	44268c9b85

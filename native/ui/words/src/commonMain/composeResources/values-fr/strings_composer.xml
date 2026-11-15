@@ -403,4 +403,6 @@
     <string name="claudeAgentCheckAgain">Vérifier de nouveau</string>
     <string name="claudeAgentCheckAgainLabel">Vérifier de nouveau Claude Agent</string>
     <string name="claudeAgentReady">Claude Agent est prêt. Ses modèles sont marqués Essai.</string>
+    <string name="modelPickerModeDefaultName">Par défaut</string>
+    <string name="modelPickerModeAutoName">Automatique</string>
 </resources>

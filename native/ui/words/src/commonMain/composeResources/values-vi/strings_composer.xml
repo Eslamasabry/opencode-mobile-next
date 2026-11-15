@@ -381,4 +381,6 @@
     <string name="claudeAgentCheckAgain">Kiểm tra lại</string>
     <string name="claudeAgentCheckAgainLabel">Kiểm tra lại Claude Agent</string>
     <string name="claudeAgentReady">Claude Agent đã sẵn sàng. Các mô hình của nó được đánh dấu Dùng thử.</string>
+    <string name="modelPickerModeDefaultName">Mặc định</string>
+    <string name="modelPickerModeAutoName">Tự động</string>
 </resources>

@@ -381,4 +381,6 @@
     <string name="claudeAgentCheckAgain">Periksa lagi</string>
     <string name="claudeAgentCheckAgainLabel">Periksa Claude Agent lagi</string>
     <string name="claudeAgentReady">Claude Agent siap. Modelnya ditandai Uji coba.</string>
+    <string name="modelPickerModeDefaultName">Bawaan</string>
+    <string name="modelPickerModeAutoName">Otomatis</string>
 </resources>

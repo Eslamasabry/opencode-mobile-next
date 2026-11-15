@@ -437,4 +437,6 @@
     <string name="claudeAgentCheckAgain">تحقّق مرة أخرى</string>
     <string name="claudeAgentCheckAgainLabel">تحقّق من Claude Agent مرة أخرى</string>
     <string name="claudeAgentReady">Claude Agent جاهز. نماذجه موسومة بكلمة تجربة.</string>
+    <string name="modelPickerModeDefaultName">الافتراضي</string>
+    <string name="modelPickerModeAutoName">تلقائي</string>
 </resources>

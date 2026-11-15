@@ -41,6 +41,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupPositionProvider
 import androidx.compose.ui.window.PopupProperties
+import io.github.eslamasabry.oc.ui.kit.modal.LocalKitSheetHost
 import io.github.eslamasabry.oc.ui.kit.modal.MenuLayerEntry
 import io.github.eslamasabry.oc.ui.kit.modal.LocalKitMenuLayer
 import io.github.eslamasabry.oc.ui.kit.modal.KitMenuLayerState
@@ -149,9 +150,14 @@ public fun KitTip(
     val motion = KitMotion.state
     val specs = KitMotion.specs
     val shown = remember { MutableTransitionState(false) }
-    shown.targetState = visible
-    LaunchedEffect(visible, holdMs) {
-        if (visible) {
+    // One rule for every tip (F-005): a tip is never drawn over an open sheet or dialog. It waits, and shows once the
+    // modal has gone (its hold starts then, so the person gets the whole of it).
+    val host = LocalKitSheetHost.current
+    val modalOpen = host != null && (host.isShowing || host.isDialogShowing)
+    val show = visible && !modalOpen
+    shown.targetState = show
+    LaunchedEffect(show, holdMs) {
+        if (show) {
             delay(holdMs)
             dismiss()
         }

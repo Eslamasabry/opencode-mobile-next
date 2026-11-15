@@ -874,7 +874,7 @@
     <string name="composerBusyReason">جارٍ تجهيز طلبك…</string>
     <string name="composerToolsTextOnly">يقبل هذا الخادم النصوص فقط</string>
     <string name="composerToolsAgentTextOnly">يقبل %1$s النص فقط هنا</string>
-    <string name="composerToolsAgentPicturesOnly">يقبل %1$s الصور فقط: استخدم مكتبة الصور أو التقاط صورة</string>
+    <string name="composerToolsAgentPicturesOnly">يقبل %1$s الصور فقط: استخدم %2$s أو %3$s</string>
     <string name="composerToolSavedSubtitle">إعادة طلب محفوظ إلى المسودة</string>
     <string name="composerToolSaveForLater">حفظ الطلب لوقت لاحق</string>
     <string name="composerToolNothingToSave">اكتب شيئًا أو أرفقه أولًا</string>

@@ -26,11 +26,16 @@ public data class PermissionChangeUi(
 ) {
     /** The diff the card previews: the first file's own, else the combined one. */
     val first: String?
-        get() = files.firstNotNullOfOrNull { it.patch?.takeIf(String::isNotBlank) } ?: combined?.takeIf(String::isNotBlank)
+        get() =
+            files.firstNotNullOfOrNull { it.patch?.takeIf(::hasChangedLine) } ?: combined?.takeIf(::hasChangedLine)
 
     val missing: Boolean
         get() = first == null && files.any { it.kind != ChangeKind.Delete }
 }
+
+/** A unified diff says something only when it holds a changed line; a bare `@@ -0,0 +0,0 @@` header is no content. */
+internal fun hasChangedLine(diff: String): Boolean =
+    diff.lineSequence().any { (it.startsWith("+") && !it.startsWith("+++")) || (it.startsWith("-") && !it.startsWith("---")) }
 
 /**
  * Reads the change from what each server sends with the ask (no extra call):

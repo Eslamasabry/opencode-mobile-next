@@ -46,13 +46,15 @@ public fun paseoPermission(agentId: String, request: JsonObject): PermissionRequ
                 metadata["filePath"] = JsonPrimitive(path)
             }
             val unified = text("unifiedDiff", 1024 * 1024)
-            metadata["diff"] = JsonPrimitive(
+            val diff =
                 when {
                     type == "write" -> unifiedPatch(path, null, text("content", 1024 * 1024))
                     unified.isNotEmpty() -> unified
                     else -> unifiedPatch(path, text("oldString", 512 * 1024), text("newString", 512 * 1024))
-                },
-            )
+                }
+            // An agent that sends no content leaves no diff: an empty hunk would read as a complete, empty change.
+            if (diff.lineSequence().any { (it.startsWith("+") && !it.startsWith("+++")) || (it.startsWith("-") && !it.startsWith("---")) })
+                metadata["diff"] = JsonPrimitive(diff)
         }
         type == "shell" -> {
             permission = "bash"

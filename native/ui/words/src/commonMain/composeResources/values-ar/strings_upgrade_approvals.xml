@@ -32,4 +32,5 @@
     <string name="approvalAlwaysCoversWords">سيشمل «السماح دائمًا» أيضًا %1$s.</string>
     <string name="approvalAlwaysPattern">نمط «السماح دائمًا»</string>
     <string name="approvalNoteDenyOnly">تُرسل فقط إذا اخترت «رفض».</string>
+    <string name="approvalNewFileOf">ملف جديد: %1$s</string>
 </resources>
