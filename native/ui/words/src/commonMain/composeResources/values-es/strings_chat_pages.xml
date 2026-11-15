@@ -446,4 +446,5 @@
     </plurals>
     <string name="reviewUndoTitle__eq1">¿Deshacer 1 archivo modificado?</string>
     <string name="reviewUndoBody">Tu proyecto vuelve a como estaba antes de que el agente empezara. La conversación se queda.</string>
+    <string name="reviewDone">Listo</string>
 </resources>

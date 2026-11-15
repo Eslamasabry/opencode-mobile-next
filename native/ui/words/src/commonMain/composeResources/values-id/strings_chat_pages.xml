@@ -423,4 +423,5 @@
     </plurals>
     <string name="reviewUndoTitle__eq1">Urungkan 1 file yang berubah?</string>
     <string name="reviewUndoBody">Proyek Anda kembali seperti sebelum agen mulai. Percakapan tetap ada.</string>
+    <string name="reviewDone">Selesai</string>
 </resources>

@@ -456,4 +456,5 @@
     </plurals>
     <string name="reviewUndoTitle__eq1">Откатить 1 изменённый файл?</string>
     <string name="reviewUndoBody">Ваш проект вернётся к состоянию до начала работы агента. Чат останется.</string>
+    <string name="reviewDone">Готово</string>
 </resources>

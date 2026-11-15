@@ -423,4 +423,5 @@
     </plurals>
     <string name="reviewUndoTitle__eq1">Hoàn tác 1 tệp đã thay đổi?</string>
     <string name="reviewUndoBody">Dự án của bạn trở về như trước khi tác nhân bắt đầu. Cuộc trò chuyện vẫn được giữ.</string>
+    <string name="reviewDone">Xong</string>
 </resources>

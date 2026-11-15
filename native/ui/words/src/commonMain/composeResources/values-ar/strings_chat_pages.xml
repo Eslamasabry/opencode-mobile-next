@@ -479,4 +479,5 @@
     </plurals>
     <string name="reviewUndoTitle__eq1">التراجع عن ملف واحد تغيّر؟</string>
     <string name="reviewUndoBody">يعود مشروعك كما كان قبل أن يبدأ الوكيل. وتبقى المحادثة.</string>
+    <string name="reviewDone">تمّ</string>
 </resources>

@@ -445,4 +445,5 @@
     </plurals>
     <string name="reviewUndoTitle__eq1">Annuler 1 fichier modifié\u00A0?</string>
     <string name="reviewUndoBody">Votre projet revient à son état d'avant le début du travail de l'agent. La conversation est conservée.</string>
+    <string name="reviewDone">Terminé</string>
 </resources>
