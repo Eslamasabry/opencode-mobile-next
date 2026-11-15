@@ -890,8 +890,6 @@ public class ChatsViewModel(
     private val phoneStorage = MutableStateFlow<PhoneStorageAccess?>(null)
 
     private fun readPhoneStorage() {
-        // TEMP-RED
-        if (phoneStorage.value == null) return
         viewModelScope.launch { phoneStorage.value = home.phoneStorage() }
     }
 

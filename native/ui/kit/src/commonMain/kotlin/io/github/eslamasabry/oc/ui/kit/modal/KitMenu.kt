@@ -423,7 +423,7 @@ public object MenuScrollRules {
     public const val FADE_DP: Int = 28
 
     /** Which edges fade for a scroll position [value] of [max]: (top, bottom). */
-    public fun fades(value: Int, max: Int): Pair<Boolean, Boolean> = false to false // TEMP-RED-4
+    public fun fades(value: Int, max: Int): Pair<Boolean, Boolean> = (value > 0 && max > 0) to (value < max)
 
     /** The menu's moving fade, read in draw so it follows the scroll without recomposing. */
     internal fun Modifier.menuScrollFade(state: androidx.compose.foundation.ScrollState): Modifier =

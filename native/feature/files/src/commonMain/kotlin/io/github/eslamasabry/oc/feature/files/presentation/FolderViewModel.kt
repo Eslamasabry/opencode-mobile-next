@@ -679,7 +679,6 @@ public class FolderViewModel(
         val access = storageAccess.singleOrNull() ?: return
         val top = FilePaths.normalize(route.path).let { it.isEmpty() || it == "/" || it == "." }
         if (!top) return
-        return // TEMP-RED
         val block = access.phoneStorage(ref)
         if (mine == loads && files.isCurrent(gateway)) local.update { it.copy(phoneStorage = block) }
     }

@@ -29,6 +29,6 @@ internal fun phoneGitOwner(
  */
 internal fun phoneRepairOwner(profile: ProfileId, helperOf: ProfileId?, builtinOwner: String?): ProfileId? {
     if (builtinOwner.isNullOrEmpty()) return null
-    if (helperOf != null) return null // TEMP-RED-3
+    if (helperOf != null) return helperOf.takeIf { it.raw == builtinOwner }
     return profile.takeIf { it.raw == builtinOwner }
 }
