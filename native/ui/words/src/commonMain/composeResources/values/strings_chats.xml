@@ -245,6 +245,9 @@
     <string name="chatsNewStartWith">Start with %1$s</string>
     <string name="chatsNewChooseProject">Choose a project</string>
     <string name="chatsNewNeedProject">Choose a project to start a conversation.</string>
+    <string name="chatsNewStartingAgent">Starting %1$s…</string>
+    <string name="chatsNewAgentModelMissing">%1$s doesn't offer the model you chose. Your words are kept.</string>
+    <string name="chatsNewAgentDidNotStart">%1$s didn't start. Your words are kept.</string>
     <string name="chatsNewFailed">The conversation didn't start. Your message is still here.</string>
     <string name="chatsNewFailedTitle">The conversation didn't start</string>
     <string name="chatsNewFailedReportHint">Report a problem includes these details.</string>

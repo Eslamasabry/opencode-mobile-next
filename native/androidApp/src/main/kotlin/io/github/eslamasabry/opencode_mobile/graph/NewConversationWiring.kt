@@ -1209,6 +1209,13 @@ class AndroidNewConversationHost(
                     )
                 // Once the chat opened, it owns the first message's bubble: a put-back result is left for it to adopt.
                 var chatOpened = false
+                // A phone agent's conversation does not exist until its helper created the agent: its page opens only
+                // when the first message is Accepted (below); until then the person stays in New conversation.
+                val opensAtOnce = FirstMessageRules.opensAtOnce(graph.session.server is PaseoGateway)
+                val open: (ConversationRef) -> Unit = {
+                    chatOpened = true
+                    onStarted(it)
+                }
                 val receipt =
                     awaitFirstMessage(
                         delivery,
@@ -1217,10 +1224,9 @@ class AndroidNewConversationHost(
                         directory,
                         expectedTarget,
                         request,
-                    ) {
-                        chatOpened = true
-                        onStarted(it)
-                    }
+                        opensAtOnce,
+                        open,
+                    )
                 if (!currentTarget(graph, directory) || target(graph, directory) != expectedTarget)
                     return@withLock attempt.copy(
                         ref = null,
@@ -1272,6 +1278,13 @@ class AndroidNewConversationHost(
                             }
                         }
                         receipt.outcome?.let(delivery::acknowledge)
+                        if (
+                            !opensAtOnce &&
+                                !chatOpened &&
+                                currentTarget(graph, directory) &&
+                                target(graph, directory) == expectedTarget
+                        )
+                            open(ref)
                         attempt.copy(dispatched = true, failure = null)
                     }
                     is FirstMessage.PutBack -> {
@@ -1324,6 +1337,7 @@ class AndroidNewConversationHost(
         directory: String,
         expectedTarget: String,
         request: SendRequest,
+        opensAtOnce: Boolean,
         onStarted: (ConversationRef) -> Unit,
     ): FirstMessage = coroutineScope {
         val observed = MutableStateFlow(FirstMessageObservations())
@@ -1400,7 +1414,8 @@ class AndroidNewConversationHost(
                     // The engine owns the pending send now. Open its real conversation with
                     // the composer immediately while this owner reconciles its first receipt.
                     if (
-                        observed.value.current &&
+                        opensAtOnce &&
+                            observed.value.current &&
                             currentTarget(owner, directory) &&
                             target(owner, directory) == expectedTarget
                     )
