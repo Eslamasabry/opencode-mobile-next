@@ -164,10 +164,19 @@ class PhoneAgentHost(private val linux: BuiltinLinux) {
         // A changed symlink alone says nothing about its loaded version.
         val installedVersion =
             request.helper.expectedVersion?.let { expected ->
-                HelperVersion.parse(checks.runVersion(profile, PASEO_PATH)).also {
-                    if (!HelperVersion.runs(it, expected, request.helper.testedVersions))
-                        throw Failure("helper_update_required")
+                val output = checks.runVersion(profile, PASEO_PATH)
+                val installed =
+                    java.nio.file.Files.exists(
+                        java.io.File(linux.rootfs, PASEO_PATH.removePrefix("/")).toPath(),
+                        java.nio.file.LinkOption.NOFOLLOW_LINKS,
+                    )
+                when (HelperVersion.verdict(output, installed, expected, request.helper.testedVersions)) {
+                    HelperVersion.Verdict.Runs -> Unit
+                    HelperVersion.Verdict.UpdateRequired -> throw Failure("helper_update_required")
+                    // A start failure: the app tries the start again (never "update required", which nothing retried).
+                    HelperVersion.Verdict.NoAnswer -> throw Failure("helper_no_answer")
                 }
+                HelperVersion.parse(output)
             }
         admission.previous?.let { retire(profile, it) }
         linux.writeAgentConfig(profile, request.config)
