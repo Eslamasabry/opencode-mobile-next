@@ -103,6 +103,7 @@ class AndroidNewConversationHost(
     private val phoneAgents: PhoneAgents,
     private val phoneHelper: AppLocalAgentHostStarter,
     private val sharedStorage: Set<io.github.eslamasabry.oc.core.domain.platform.SharedStorageAccess>,
+    private val phoneFolders: PhoneFolderPreflight,
     appScope: AppCoroutineScope,
     dispatchers: AppDispatchers,
 ) : NewConversationHost {
@@ -130,6 +131,20 @@ class AndroidNewConversationHost(
 
     override suspend fun startPhoneServer(profile: ProfileId): Outcome<Unit> =
         phoneServer.start(profile)
+
+    // Issue 147: a folder in this phone's storage, checked from the Linux side that will work in it.
+    override suspend fun phoneFolder(
+        profile: ProfileId,
+        phoneAgent: String?,
+        directory: String,
+    ): io.github.eslamasabry.oc.feature.chats.presentation.PhoneFolderReach? =
+        phoneFolders.check(profile, phoneAgent != null, directory)
+
+    override suspend fun fixPhoneFolder(
+        profile: ProfileId,
+        phoneAgent: String?,
+        reach: io.github.eslamasabry.oc.feature.chats.presentation.PhoneFolderReach,
+    ): Outcome<Unit> = phoneFolders.fix(profile, phoneAgent != null, reach)
 
     override fun canRepair(profile: ProfileId, directory: String): Boolean =
         gitRepair.availableProject(profile, directory)
