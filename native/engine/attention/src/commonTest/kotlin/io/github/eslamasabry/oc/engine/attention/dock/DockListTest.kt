@@ -180,6 +180,25 @@ class DockListTest {
     }
 
     @Test
+    fun `eviction drops the oldest by time, so re-seeing an old record keeps the recently active conversation`() {
+        val max = DockFacts.MAX_CONVERSATIONS
+        // The old one first, then the recent one, then others up to exactly the bound.
+        clock = 1_000L
+        facts.feed(p, GatewayEvent.RunStarted(SessionId("old")))
+        clock = 1_000_000L
+        val recent = SessionId("recent")
+        facts.feed(p, GatewayEvent.RunStarted(recent))
+        for (i in 1 until max - 1) { clock += 10; facts.feed(p, GatewayEvent.RunStarted(SessionId("s$i"))) }
+        // Full now (old + recent + max-2 others). Re-seeing the old record (server time 2_000) must not move it
+        // to the newest place: adding one more conversation then evicts the oldest by time, never the recent one.
+        facts.feed(p, GatewayEvent.SessionUpserted(Session(SessionId("old"), "old", time = SessionTime(updatedMs = 2_000L))))
+        clock += 10
+        facts.feed(p, GatewayEvent.RunStarted(SessionId("extra")))
+        assertEquals(1_000_000L, facts.lastActivity(ConversationRef(p, recent)))
+        assertNull(facts.lastActivity(ConversationRef(p, SessionId("old"))))
+    }
+
+    @Test
     fun `a hidden conversation is listed with its state and comes back with restore`() {
         var m = DockModel.empty(cap = 20).reduce(DockEvent.RunStarted(a)).reduce(DockEvent.RunStarted(b)).reduce(DockEvent.RunEnded(b, DockRunEnd.Failed))
         m = m.reduce(DockEvent.Remove(b))
