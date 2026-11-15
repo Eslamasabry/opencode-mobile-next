@@ -192,6 +192,11 @@ public class PaseoGateway(
     sharedBackgroundTasks: PaseoBackgroundTasks? = null,
     /** AGENT-2: the phone helper's payload lease, taken around daemon work ([withPayloadLease]). */
     private val payloadLease: (() -> Outcome<PaseoPayloadLease>)? = null,
+    /**
+     * The drafts and app-id aliases of this server's conversations, shared by every gateway the app opens to it
+     * ([PaseoIdentityBook]): a gateway closed or moved to another folder no longer forgets a conversation it started.
+     */
+    internal val identities: PaseoIdentityBook = PaseoIdentityBook(),
 ) :
     ServerGateway,
     SessionSelectionGateway,
@@ -553,9 +558,40 @@ public class PaseoGateway(
             paseoFail(PaseoFailureKind.ScopeMismatch)
     }
 
-    internal fun real(appId: String): String = realIds[appId] ?: appId
+    internal fun real(appId: String): String = realIds[appId] ?: identities.real(appId) ?: appId
 
-    internal fun app(realId: String): String = appIds[realId] ?: realId
+    internal fun app(realId: String): String = appIds[realId] ?: identities.app(realId) ?: realId
+
+    /**
+     * Takes back from [identities] what an earlier gateway to this server knew about [id] (lane-confined): the agent
+     * its first message created, or the draft it still is. Without this a conversation started on a gateway that was
+     * closed or moved since was asked for by the app's own id and the daemon answered that it has no such agent. A
+     * draft of a folder this gateway does not show is another folder's conversation: refused as stale, never "gone".
+     */
+    internal fun recall(id: String) {
+        if (id in drafts || id in sessions || id in realIds) return
+        identities.real(id)?.let { realId ->
+            realIds[id] = realId
+            appIds[realId] = id
+            publishedAliases.value = realIds.toMap()
+            return
+        }
+        val draft = identities.draft(id) ?: return
+        if (!holds(directoryValue, draft.session.directory)) paseoFail(PaseoFailureKind.ScopeMismatch)
+        sessions[id] = draft.session
+        statuses[id] = SessionStatus.Idle
+        drafts += id
+        draft.provider?.let { draftProviders[id] = it }
+        draft.model?.let { draftModels[id] = it }
+        draft.variant?.let { draftVariants[id] = it }
+    }
+
+    /** Records the draft [id] as it is now in [identities], so another gateway to this server can take it back. */
+    internal fun keepDraft(id: String) {
+        val session = sessions[id] ?: return
+        if (id !in drafts) return
+        identities.keepDraft(id, PaseoIdentityBook.Draft(session, draftProviders[id], draftModels[id], draftVariants[id]))
+    }
 
     /**
      * The daemon's own id for [appId] once its agent exists (another gateway on the daemon opens it
@@ -753,6 +789,7 @@ public class PaseoGateway(
         sessions[session.id.raw] = session
         statuses[session.id.raw] = SessionStatus.Idle
         drafts += session.id.raw
+        keepDraft(session.id.raw)
         return session
     }
 
@@ -773,6 +810,7 @@ public class PaseoGateway(
                         )
                 )
             sessions[session.id.raw] = session
+            keepDraft(session.id.raw)
             session
         }
 
@@ -782,16 +820,19 @@ public class PaseoGateway(
      */
     public suspend fun seedDraftProvider(session: SessionId, providerId: String): Outcome<Unit> =
         call {
+            recall(session.raw)
             if (session.raw !in drafts || !isPaseoProviderId(providerId))
                 paseoFail(PaseoFailureKind.Unavailable)
             draftProviders[session.raw] = providerId
+            keepDraft(session.raw)
         }
 
     /** Runtime identity of a known agent or a local draft. */
     override fun providerIdForSession(session: SessionId): String? =
-        agents[session.raw]?.str("provider") ?: draftProviders[session.raw]
+        agents[session.raw]?.str("provider") ?: draftProviders[session.raw] ?: identities.draft(session.raw)?.provider
 
     override suspend fun session(id: SessionId): Outcome<Session> = call {
+        recall(id.raw)
         if (id.raw in drafts || isSubagent(id.raw)) return@call sessions.getValue(id.raw)
         fetchAgent(id.raw)
         sessions[id.raw] ?: paseoFail(PaseoFailureKind.NotFound)
@@ -800,8 +841,10 @@ public class PaseoGateway(
     override suspend fun renameSession(id: SessionId, title: String): Outcome<Unit> = call {
         if (isReadOnlySession(id)) paseoFail(PaseoFailureKind.Unavailable)
         val name = paseoString(title.trim(), max = 200)
+        recall(id.raw)
         if (id.raw in drafts) {
             sessions[id.raw] = sessions.getValue(id.raw).copy(title = name)
+            keepDraft(id.raw)
             return@call
         }
         if (id.raw !in sessions) fetchAgent(id.raw)
@@ -815,6 +858,7 @@ public class PaseoGateway(
     /** Archives rather than deletes: the daemon keeps the provider's own session (B-AGENT-164). */
     override suspend fun deleteSession(id: SessionId): Outcome<Unit> = call {
         if (isReadOnlySession(id)) paseoFail(PaseoFailureKind.Unavailable)
+        recall(id.raw)
         if (id.raw !in drafts) {
             if (id.raw !in sessions) fetchAgent(id.raw)
             // The list shows a conversation by its newest record: its older records go with it (PaseoListCopies.kt).
@@ -825,15 +869,20 @@ public class PaseoGateway(
                 mutation = true,
             )
             forget(id.raw)
+            identities.forget(id.raw)
             archiveOlderCopies(older)
             return@call
         }
         forget(id.raw)
+        identities.forget(id.raw)
     }
 
     /** Drops a conversation that never reached the daemon (a start that failed). */
     public suspend fun discardDraft(id: SessionId) {
-        withContext(lane) { if (id.raw in drafts) forget(id.raw) }
+        withContext(lane) {
+            if (id.raw in drafts) forget(id.raw)
+            identities.forget(id.raw)
+        }
     }
 
     override suspend fun sessionStatuses(): Outcome<ImmutableMap<SessionId, SessionStatus>> = call {
@@ -845,6 +894,7 @@ public class PaseoGateway(
     override suspend fun lastPromptIdentity(session: SessionId): Outcome<PromptRunIdentity?> =
         call {
             val id = paseoString(session.raw, max = 256)
+            recall(id)
             if (id in drafts && !draftStarted(id)) return@call null
             if (isSubagent(id)) paseoFail(PaseoFailureKind.Unavailable)
             val directory = scopeDir
@@ -889,6 +939,7 @@ public class PaseoGateway(
     ): Outcome<ServerPage<MessageWithParts>> {
         val page: suspend () -> Outcome<ServerPage<MessageWithParts>> = {
             call {
+                recall(id.raw)
                 if (cursor != null) paseoFail(PaseoFailureKind.Unavailable)
                 ServerPage(readMessages(id.raw), null)
             }
@@ -896,7 +947,9 @@ public class PaseoGateway(
         // A timeline read loads the saved agent on the helper (the in-place resume), so it takes
         // the payload lease (B-AGENT-173). Read-only sub-agent children and unstarted drafts load
         // nothing there and stay readable while the host refuses new agent work.
-        val loadsNothing = isReadOnlySession(id) || (id.raw in drafts && id.raw !in uncertain)
+        val loadsNothing =
+            isReadOnlySession(id) ||
+                ((id.raw in drafts || identities.draft(id.raw) != null) && id.raw !in uncertain)
         return if (loadsNothing) page() else withPayloadLease(page)
     }
 
@@ -1202,6 +1255,7 @@ public class PaseoGateway(
         // A card observed by another gateway carries the daemon id; local state stays keyed by the
         // app id.
         val sessionId = app(rawSessionId)
+        recall(sessionId)
         if (isReadOnlySession(SessionId(sessionId))) paseoFail(PaseoFailureKind.Unavailable)
         if (existingOnly && sessionId in drafts) paseoFail(PaseoFailureKind.Unavailable)
         if (
@@ -1434,6 +1488,7 @@ public class PaseoGateway(
         val realId = paseoString(agent["id"], max = 256)
         realIds[id] = realId
         appIds[realId] = id
+        identities.created(id, realId)
         remember(agent) ?: paseoFail(PaseoFailureKind.ScopeMismatch)
         if (agent.str("status") != "error" && agent.str("status") != "closed")
             liveAgentSessions += id
@@ -1574,6 +1629,7 @@ public class PaseoGateway(
     ): Outcome<Unit> = call {
         if (isReadOnlySession(session)) paseoFail(PaseoFailureKind.Unavailable)
         val id = session.raw
+        recall(id)
         if (id in drafts) {
             val provider = providerIdForSession(session)
             if (provider != null && provider != model.providerId)
@@ -1594,6 +1650,7 @@ public class PaseoGateway(
                             )
                     )
             }
+            keepDraft(id)
             return@call
         }
         if (id !in agents) fetchAgent(id)
@@ -2040,7 +2097,7 @@ public class PaseoGateway(
     internal fun remember(raw: JsonObject, reconcileStatus: Boolean = true): Session? {
         var agent = raw
         agent.str("id")?.let { realId ->
-            appIds[realId]?.let { agent = agent.with("id", JsonPrimitive(it)) }
+            app(realId).takeIf { it != realId }?.let { agent = agent.with("id", JsonPrimitive(it)) }
         }
         val id0 = agent.str("id")
         // A reloaded record can come back without its title: the known one stays.
@@ -2254,6 +2311,7 @@ public class PaseoGateway(
     private fun removed(id: String?) {
         if (id == null || id !in sessions) return
         forget(id)
+        identities.forget(id)
         emit(GatewayEvent.SessionDeleted(SessionId(id)))
     }
 

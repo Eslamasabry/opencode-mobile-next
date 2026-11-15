@@ -119,6 +119,7 @@ class GatewayHarness(
     defaultProviderModes: Map<String, String> = emptyMap(),
     trackLocalWork: Boolean = false,
     val clock: TestClock = TestClock(Instant.parse("2026-09-19T03:36:00Z")),
+    identities: PaseoIdentityBook = PaseoIdentityBook(),
 ) {
     val lane = StandardTestDispatcher(test.testScheduler)
     val transport = PaseoTransport(
@@ -137,6 +138,7 @@ class GatewayHarness(
         defaultProviderModes = defaultProviderModes,
         trackLocalWork = trackLocalWork,
         providerWarmupIntervalMs = 0,
+        identities = identities,
     )
     val events = mutableListOf<GatewayEvent>()
 

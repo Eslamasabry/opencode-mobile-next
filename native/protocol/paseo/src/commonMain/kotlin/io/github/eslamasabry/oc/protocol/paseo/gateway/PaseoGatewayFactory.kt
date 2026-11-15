@@ -25,6 +25,8 @@ import kotlin.time.Clock
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.update
 
 /**
  * Backend plug-in for Paseo (plan 03 S3, plan 04 §8): `probe` reads health only; `open` builds the
@@ -53,6 +55,27 @@ public class PaseoGatewayFactory(
     private val localWorkForProfile: ((GatewaySpec) -> Boolean)? = null,
 ) : GatewayFactory {
     override val backend: BackendKind = BackendKind.Paseo
+
+    /**
+     * One [PaseoIdentityBook] per server (profile and address) for the factory's lifetime: every gateway this factory
+     * opens to a server shares it, so a reconnect, a replaced connection or a gateway moved to another folder still
+     * knows the drafts and agents of conversations an earlier gateway started. A small bound drops the oldest server.
+     */
+    private val identityBooks = MutableStateFlow<Map<String, PaseoIdentityBook>>(emptyMap())
+
+    private fun identityBook(spec: GatewaySpec): PaseoIdentityBook {
+        val key = "${spec.profile.id.raw}|${spec.profile.origin}"
+        identityBooks.value[key]?.let { return it }
+        val made = PaseoIdentityBook()
+        identityBooks.update { books ->
+            if (key in books) books
+            else LinkedHashMap(books).apply {
+                put(key, made)
+                while (size > MAX_IDENTITY_BOOKS) remove(keys.first())
+            }
+        }
+        return identityBooks.value[key] ?: made
+    }
 
     /**
      * Validate → hello. Never sends the password to an address the rules refuse (B-SEC-124,
@@ -124,6 +147,7 @@ public class PaseoGatewayFactory(
                 trackLocalWork = localWorkForProfile?.invoke(spec) ?: trackLocalWork,
                 sharedBackgroundTasks = backgroundTasks?.invoke(spec),
                 payloadLease = payloadUse?.invoke(spec),
+                identities = identityBook(spec),
             )
         savedTitles?.let { lookup -> gateway.savedTitle = { key -> lookup(spec.profile.id, key) } }
         configureGateway?.invoke(spec, gateway)
@@ -171,6 +195,10 @@ public class PaseoGatewayFactory(
                 scope.coroutineContext[kotlinx.coroutines.Job]?.cancel()
             }
         }
+
+    private companion object {
+        const val MAX_IDENTITY_BOOKS = 32
+    }
 }
 
 /** A profile origin as a daemon address (`ws://host:port`). */
