@@ -316,6 +316,8 @@
     <string name="chatsNewSetupFailed">This server's projects and models couldn't be read.</string>
     <string name="chatsNewProjectRow">Project</string>
     <string name="chatsNewRunsOn">Runs on</string>
+    <string name="chatsNewWhereSpoken">Where it runs: %1$s. Opens the project and connection choices.</string>
+    <string name="chatsNewAgentChipSpoken">Who works on it: %1$s, %2$s. Opens the agent and model choices.</string>
     <string name="chatsNewModelRow">Model</string>
     <string name="chatsNewSeparateCopyDetail">Works on its own copy, so your files stay as they are.</string>
     <string name="chatsHomeUnreachableShort">%1$s isn't answering</string>

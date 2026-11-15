@@ -3,9 +3,11 @@ package io.github.eslamasabry.oc.feature.chats
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.onAllNodesWithTag
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onNodeWithTag
-import androidx.compose.ui.test.assertExists
+import androidx.compose.ui.test.assertIsDisplayed
 import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationProject
 import kotlin.test.assertEquals
 import androidx.compose.ui.test.performClick
@@ -75,7 +77,7 @@ class NewConversationHostChipTest {
             waitForIdle()
             mainClock.advanceTimeBy(1_000)
             waitForIdle()
-            onNodeWithText("my-app · Dev box").assertExists()
+            onNodeWithText("my-app · Dev box").assertIsDisplayed()
             runOnIdle { current = ui(NewConversationSheet.Projects) }
             waitForIdle()
             mainClock.advanceTimeBy(1_000)

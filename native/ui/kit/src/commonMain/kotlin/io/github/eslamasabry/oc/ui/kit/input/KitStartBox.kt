@@ -4,6 +4,9 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
@@ -94,6 +97,12 @@ public fun KitStartBox(
      * message dropped over the page's title (issue 147, F-041). Calm and Off motion bring the cursor only.
      */
     remind: Int = 0,
+    /**
+     * Layout B (New conversation): the box's own foot, one row under the words inside the same box (the agent and model
+     * chip). With it the box fills the room its parent gives it: it grows with the words up to that room, then the words
+     * scroll inside it with the caret in view, and the foot stays whole at the bottom of the box.
+     */
+    foot: (@Composable () -> Unit)? = null,
 ) {
     val focus = remember { FocusRequester() }
     var focused by remember { mutableStateOf(false) }
@@ -166,10 +175,12 @@ public fun KitStartBox(
             .then(edge)
             .padding(horizontal = Space.S5.dp, vertical = Space.S4.dp)
     ) {
+      Column {
         BasicTextField(
             state = state,
             modifier =
                 Modifier.fillMaxWidth()
+                    .then(if (foot != null) Modifier.weight(1f, fill = false) else Modifier)
                     .focusRequester(focus)
                     .onFocusChanged { focused = it.hasFocus }
                     .semantics { contentDescription = question },
@@ -181,7 +192,10 @@ public fun KitStartBox(
                     keyboardType = KeyboardType.Text,
                     imeAction = ImeAction.Default,
                 ),
-            lineLimits = startBoxLines(minLines).let { TextFieldLineLimits.MultiLine(it.first, it.last) },
+            lineLimits =
+                startBoxLines(minLines).let {
+                    TextFieldLineLimits.MultiLine(it.first, if (foot != null) Int.MAX_VALUE else it.last)
+                },
             cursorBrush = SolidColor(accent),
             decorator = { inner ->
                 Box(Modifier.fillMaxWidth()) {
@@ -196,6 +210,11 @@ public fun KitStartBox(
                 }
             },
         )
+        if (foot != null) {
+            Spacer(Modifier.height(Space.S3.dp))
+            foot()
+        }
+      }
     }
 }
 
