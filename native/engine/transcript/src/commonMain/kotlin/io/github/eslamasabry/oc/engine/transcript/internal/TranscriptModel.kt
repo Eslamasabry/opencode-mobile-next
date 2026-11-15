@@ -365,6 +365,7 @@ internal class TranscriptModel(
         val entries = ArrayList<TurnEntry>(turns.size)
         for (i in 0 until newestIndex) {
             val (turnId, members) = turns[i]
+            counters.historyVisits += 1 + members.size
             val cached = turnCache[turnId]
             entries +=
                 if (cached != null && cached.matches(members)) {
@@ -378,7 +379,10 @@ internal class TranscriptModel(
             common < prefixEntries.size &&
                 common < entries.size &&
                 prefixEntries[common] === entries[common]
-        ) common++
+        ) {
+            common++
+            counters.historyVisits++
+        }
         var list: PersistentList<TranscriptRow>
         var positions: PersistentMap<String, Int>
         if (common == prefixEntries.size) {
@@ -421,6 +425,7 @@ internal class TranscriptModel(
         val searchable = ArrayList<SearchText>()
         for ((turnId, members) in turns) {
             for (m in members) for (entry in m.parts.values) {
+                counters.historyVisits++
                 val part = entry.part
                 val key =
                     when (part.type) {
@@ -442,6 +447,7 @@ internal class TranscriptModel(
                         listOf(part.searchText, entry.raw?.toString().orEmpty())
                             .filter { it.isNotBlank() }
                             .joinToString("\n")
+                counters.searchChars += text.length
                 if (text.isNotBlank())
                     searchable += SearchText(key, "${part.messageId}/${part.id}", text)
             }
@@ -501,6 +507,7 @@ internal class TranscriptModel(
         var current: ArrayList<MsgEntry>? = null
         var currentId = "head"
         for (m in messages.values) {
+            counters.historyVisits++
             // A picture or file sent without words is a prompt too (its own turn, shown with its thumbnail).
             val isPrompt =
                 m.info.role == Role.User &&
