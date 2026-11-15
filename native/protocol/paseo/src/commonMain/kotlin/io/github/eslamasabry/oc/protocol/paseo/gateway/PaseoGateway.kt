@@ -35,6 +35,7 @@ import io.github.eslamasabry.oc.core.domain.events.GatewayEnvelope
 import io.github.eslamasabry.oc.core.domain.events.GatewayEvent
 import io.github.eslamasabry.oc.core.domain.events.GatewayEvents
 import io.github.eslamasabry.oc.core.domain.events.HintKind
+import io.github.eslamasabry.oc.core.domain.events.InterruptReason
 import io.github.eslamasabry.oc.core.domain.events.RunOutcome
 import io.github.eslamasabry.oc.core.domain.lastPromptIdentity
 import io.github.eslamasabry.oc.core.domain.unavailable
@@ -2135,6 +2136,7 @@ public class PaseoGateway(
         if (!holds(directoryValue, session.directory) || agent["archivedAt"].stringOrNull() != null)
             return null
         val id = session.id.raw
+        val before = agents[id]
         agents[id] = agent
         noteAgentProcess(id, agent)
         sessions.remove(id)
@@ -2148,9 +2150,24 @@ public class PaseoGateway(
         if (reconcileStatus) {
             val now = nowMs()
             val turn = id in awaitingTurn || id in turnActive
-            val next = if (turn) SessionStatus.Busy else paseoSessionStatus(agent, now)
+            // Issue 147: the helper ran this agent's turn (its loaded snapshot) and now only has its saved record, still
+            // "running", so the helper started again under it (Android stopped it or the phone's Linux) and the turn is
+            // gone. It ends as stopped by a restart (words and Continue), never as a finished reply after 3 more
+            // minutes of "working". A record saved as idle finished its turn before the restart.
+            val lost =
+                !turn &&
+                    statuses[id] == SessionStatus.Busy &&
+                    before?.containsKey("activeTurn") == true &&
+                    !agent.containsKey("activeTurn") &&
+                    (status == "running" || status == "initializing")
+            val next =
+                when {
+                    turn -> SessionStatus.Busy
+                    lost -> SessionStatus.Idle
+                    else -> paseoSessionStatus(agent, now)
+                }
             recordBusyExpiry.remove(id)?.cancel()
-            val until = if (turn) null else paseoRecordBusyUntilMs(agent)
+            val until = if (turn || lost) null else paseoRecordBusyUntilMs(agent)
             if (next == SessionStatus.Busy && until != null) {
                 recordBusyExpiry[id] = scope.launch {
                     delay((until - now).coerceAtLeast(0))
@@ -2160,7 +2177,9 @@ public class PaseoGateway(
             val previous = statuses[id]
             emitStatus(id, next)
             if (previous != null && previous != next && next == SessionStatus.Idle) {
-                emit(GatewayEvent.RunEnded(SessionId(id), RunOutcome.Succeeded))
+                val outcome =
+                    if (lost) RunOutcome.Interrupted(InterruptReason.Shutdown) else RunOutcome.Succeeded
+                emit(GatewayEvent.RunEnded(SessionId(id), outcome))
             }
         }
         drafts.remove(id)
