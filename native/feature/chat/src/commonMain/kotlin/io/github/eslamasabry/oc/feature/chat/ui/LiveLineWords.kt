@@ -95,7 +95,9 @@ internal fun liveLineWords(
     // F: chat_transcript.dart:310-323 the newest line a running command printed rides in the muted second slot.
     val printed =
         now?.takeIf { it.facts.kind == ToolKind.Shell && it.state == StepState.Running }
-            ?.output?.liveTail
+            // The step's own opened box shows the live tail. This slot appearing and going with each command would
+            // resize the live line while steps arrive (STEPS-CRAFT-017: the prompt above never moves down).
+            ?.output?.text
             ?.lineSequence()
             ?.map { it.trim() }
             ?.lastOrNull { it.isNotEmpty() }
