@@ -59,14 +59,22 @@ public class AgentsViewModel(
             clock = clock,
             drafts = drafts,
             openNewChat = { profile, agent ->
-                nav.open(io.github.eslamasabry.oc.ui.routes.ChatsRoute.New(profile = profile, phoneAgent = agent))
+                nav.open(
+                    io.github.eslamasabry.oc.ui.routes.ChatsRoute.New(
+                        profile = profile,
+                        phoneAgent = agent,
+                    )
+                )
             },
             openSignIn = { owner, agent -> nav.open(AgentsRoute.SignInTerminal(owner, agent)) },
         )
 
     public val state: StateFlow<AgentsUi> = presenter.state
 
-    /** Issue 147: the own-provider and "How this works" sheets; its state rides on [hubState] (no second collector). */
+    /**
+     * Issue 147: the own-provider and "How this works" sheets; its state rides on [hubState] (no
+     * second collector).
+     */
     private val own =
         OwnProviderPresenter(viewModelScope, ownProviders.singleOrNull()) { phone.refresh() }
 
@@ -76,13 +84,18 @@ public class AgentsViewModel(
 
     private val localHub = MutableStateFlow(AgentsHubControlsUi())
     public val hubState: StateFlow<AgentsHubControlsUi> =
-        combine(localHub, hub.state, own.state, ownAgent.state) { local, connection, ownUi, agentsUi ->
-            local.copy(connection = connection, own = ownUi, ownAgents = agentsUi)
-        }
+        combine(localHub, hub.state, own.state, ownAgent.state) { local, connection, ownUi, agentsUi
+                ->
+                local.copy(connection = connection, own = ownUi, ownAgents = agentsUi)
+            }
             .stateIn(
                 viewModelScope,
                 SharingStarted.Eagerly,
-                localHub.value.copy(connection = hub.state.value, own = own.state.value, ownAgents = ownAgent.state.value),
+                localHub.value.copy(
+                    connection = hub.state.value,
+                    own = own.state.value,
+                    ownAgents = ownAgent.state.value,
+                ),
             )
 
     override fun openOwnProvider(agent: String): Unit = own.openOwnProvider(agent)
@@ -91,8 +104,12 @@ public class AgentsViewModel(
 
     override fun editedOwnProvider(): Unit = own.editedOwnProvider()
 
-    override fun saveOwnProvider(agent: String, endpoint: String, key: String, model: String): Unit =
-        own.saveOwnProvider(agent, endpoint, key, model)
+    override fun saveOwnProvider(
+        agent: String,
+        endpoint: String,
+        key: String,
+        model: String,
+    ): Unit = own.saveOwnProvider(agent, endpoint, key, model)
 
     override fun removeOwnProvider(agent: String): Unit = own.removeOwnProvider(agent)
 
@@ -108,8 +125,12 @@ public class AgentsViewModel(
 
     override fun editedOwnAgent(): Unit = ownAgent.editedOwnAgent()
 
-    override fun saveOwnAgent(name: String, start: String, install: String, env: List<Pair<String, String>>): Unit =
-        ownAgent.saveOwnAgent(name, start, install, env)
+    override fun saveOwnAgent(
+        name: String,
+        start: String,
+        install: String,
+        env: List<Pair<String, String>>,
+    ): Unit = ownAgent.saveOwnAgent(name, start, install, env)
 
     override fun checkOwnAgent(): Unit = ownAgent.checkOwnAgent()
 
@@ -196,7 +217,17 @@ public class AgentsViewModel(
 
     override fun dismissInstall(): Unit = presenter.dismissInstall()
 
-    override fun signInPhone(id: String): Unit = presenter.signInPhone(id)
+    override fun signInPhone(id: String) {
+        if (
+            io.github.eslamasabry.oc.engine.agents.catalog.AgentCatalog.builtIn
+                .forProvider(id)
+                ?.setupMethod ==
+                io.github.eslamasabry.oc.engine.agents.catalog.AgentSetupMethod.KeyOrLocalServer
+        ) {
+            presenter.closeAgent()
+            own.openOwnProvider(id)
+        } else presenter.signInPhone(id)
+    }
 
     override fun installPhone(id: String): Unit = presenter.installPhone(id)
 

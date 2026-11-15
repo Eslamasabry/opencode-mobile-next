@@ -2,6 +2,13 @@
 <!-- Converted once from lib/l10n/app_en.arb by native/tools/strings (plan 06 §13.3).
      The ARB files are frozen with Flutter: edit this file, not the ARB. -->
 <resources>
+    <string name="agentNeverAsks">Never asks</string>
+    <string name="agentsRequiredModelHint">The exact model name your server provides.</string>
+    <string name="agentsRemovePrivateDataBody">This removes the agent, its provider setup, saved conversations, and Python environment from this phone. Project files stay.</string>
+    <string name="agentsKeyLocalBody">Use an API key or a local OpenAI-compatible server. Enter a model. A server on this phone can leave Key empty.</string>
+    <string name="agentsRequiredModel">Model</string>
+    <string name="agentRunsCommandsWithoutAsking">This agent runs commands without asking.</string>
+    <string name="agentDownloadNotAvailableYet">The download is not available yet.</string>
     <string name="a2aDraftSaveError">Draft changes could not be saved. Keep this screen open and retry before leaving.</string>
     <string name="a2aRetryDraftSave">Try saving draft again</string>
     <string name="a2aSavingDraft">Saving draft changes…</string>

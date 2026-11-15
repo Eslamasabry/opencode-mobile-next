@@ -2,6 +2,11 @@ name: Unharnessed feasibility
 
 on:
   workflow_dispatch:
+    inputs:
+      app_checks:
+        description: Run app contracts and quality instead of rebuilding the bundle
+        type: boolean
+        default: false
   push:
     branches: [native/agent-unharnessed]
     paths:
@@ -17,6 +22,7 @@ concurrency:
 
 jobs:
   feasibility:
+    if: ${{ inputs.app_checks != true }}
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 100
     steps:
@@ -37,10 +43,11 @@ jobs:
         run: |
           test "$GITHUB_ACTIONS" = true
           test "$RUNNER_ENVIRONMENT" = github-hosted
+          docker build -t unharnessed-trial -f tool/unharnessed/Trial.Dockerfile tool/unharnessed
           docker run --rm --network=none --cpus=4 --memory=8g \
             -v "$GITHUB_WORKSPACE/tool/unharnessed:/probe:ro" \
             -v "$RUNNER_TEMP/unharnessed-facts:/facts" \
-            ubuntu:22.04 /bin/bash /probe/test-bundle.sh
+            unharnessed-trial /bin/bash /probe/test-bundle.sh
       - name: Keep measurements and binary even if a later probe fails
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
@@ -48,4 +55,56 @@ jobs:
           name: unharnessed-arm64-feasibility
           path: ${{ runner.temp }}/unharnessed-facts/
           if-no-files-found: error
+          retention-days: 14
+  app-contracts:
+    if: ${{ inputs.app_checks == true }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    defaults:
+      run:
+        working-directory: native
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/native-setup
+      - name: App contracts and complete quality gate
+        run: |
+          tool/ci/gradle_retry.sh "$RUNNER_TEMP/unharnessed-app.log" \
+            :engine:agents:desktopTest --tests '*UnharnessedProviderTest*' --tests '*UnharnessedAdapterTest*' --tests '*UnharnessedProviderScriptTest*' --tests '*UnharnessedRemovalTest*' --tests '*AgentPinsParityTest*' --tests '*PaseoConfigGoldenTest*' --tests '*OwnProviderStoreTest*' \
+            :feature:agents:desktopTest --tests '*OwnProviderScreenTest*' \
+            :feature:chat:desktopTest --tests '*UnharnessedApprovalTest*' --tests '*UnharnessedApprovalScreenTest*' \
+            :feature:chats:desktopTest --tests '*NewConversationStableLayoutTest*' \
+            :protocol:paseo:desktopTest --tests '*UnharnessedStepTest*' \
+            :androidApp:testPreviewDebugUnitTest --tests '*UnharnessedReadinessTest*' \
+            :tools:strings:test --tests '*AndroidStringsTest*' --tests '*UnitTest*' \
+            :quality:test --continue --stacktrace
+      - name: Prove the behavior tests fail with the guarded changes reverted
+        run: |
+          python3 -B ../tool/unharnessed/app_red_proof.py
+          set +e
+          tool/ci/gradle_retry.sh "$RUNNER_TEMP/unharnessed-red.log" \
+            :engine:agents:desktopTest --tests '*UnharnessedProviderTest*' --tests '*UnharnessedProviderScriptTest*' --tests '*UnharnessedRemovalTest*' \
+            :feature:agents:desktopTest --tests '*OwnProviderScreenTest*B-AGENT-UH*' \
+            :feature:chat:desktopTest --tests '*UnharnessedApprovalTest*' --tests '*UnharnessedApprovalScreenTest*' \
+            :feature:chats:desktopTest --tests '*NewConversationStableLayoutTest*B-AGENT-UH*' \
+            :protocol:paseo:desktopTest --tests '*UnharnessedStepTest*' \
+            :androidApp:testPreviewDebugUnitTest --tests '*UnharnessedReadinessTest*' --continue --stacktrace
+          result=$?
+          set -e
+          test "$result" != 0
+          python3 -B ../tool/unharnessed/app_red_proof.py --verify
+      - name: Keep tests, mutation evidence and screenshots
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: unharnessed-app-evidence
+          path: |
+            native/**/build/test-results/**/TEST-*Unharnessed*.xml
+            native/**/build/test-results/**/TEST-*OwnProviderScreenTest*.xml
+            native/**/build/test-results/**/TEST-*NewConversationStableLayoutTest*.xml
+            native/**/build/reports/unharnessed/*.png
+            native/unharnessed-green-results/
+            native/unharnessed-*.json
+            ${{ runner.temp }}/unharnessed-*.log
           retention-days: 14

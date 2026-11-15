@@ -136,6 +136,17 @@ def session_id(frame, old, new):
     return result
 
 
+def present_step(frame):
+    """Keep all original fields, adding readable command input for Paseo."""
+    params = frame.get("params", {})
+    update = params.get("update", {})
+    raw = update.get("rawInput", {})
+    if (frame.get("method") == "session/update" and update.get("sessionUpdate") == "tool_call"
+            and update.get("kind") == "execute" and isinstance(raw, dict) and isinstance(raw.get("code"), str)):
+        return dict(frame, params=dict(params, update=dict(update, rawInput=dict(raw, command=raw["code"]))))
+    return frame
+
+
 class Adapter:
     def __init__(self, root, command, env=None):
         self.index = SessionIndex(root)
@@ -262,7 +273,18 @@ class Adapter:
                 self.public = self.real = result["sessionId"]
             elif method == DELETE:
                 self.index.remove(request.get("params", {}).get("sessionId"))
+            elif method == "session/list":
+                with self.index.locked():
+                    known = {entry["id"]: public for public, entry in self.index.read().items()}
+                result = frame["result"]
+                if isinstance(result.get("sessions"), list):
+                    frame = dict(frame, result=dict(result, sessions=[
+                        dict(row, sessionId=known.get(row.get("sessionId"), row.get("sessionId")))
+                        for row in result["sessions"]
+                    ]))
         outgoing = session_id(frame, self.real, self.public) if self.public else frame
+        if os.environ.get("UNHARNESSED_PRESENT_STEPS") == "1":
+            outgoing = present_step(outgoing)
         self.emit(outgoing)
         if request and request.get("method") == "session/load" and "error" in frame:
             self.public = self.real = None

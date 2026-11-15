@@ -1,18 +1,13 @@
 package io.github.eslamasabry.oc.feature.chats.ui
 
-import io.github.eslamasabry.oc.ui.kit.frame.kitPageScrollState
-import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
@@ -24,7 +19,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
-import io.github.eslamasabry.oc.ui.kit.foundation.KitNoticeInView
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -37,17 +31,16 @@ import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationAction
 import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationModel
 import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationSheet
 import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationStarter
-import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationWait
-import io.github.eslamasabry.oc.feature.chats.presentation.PhoneStartWay
-import io.github.eslamasabry.oc.feature.chats.presentation.PHONE_STORAGE_ROOT
-
-import io.github.eslamasabry.oc.feature.chats.presentation.PhoneFolderReach
-import io.github.eslamasabry.oc.feature.chats.presentation.PhoneStorageAccess
-import io.github.eslamasabry.oc.feature.chats.presentation.projectPlace
 import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationUi
+import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationWait
+import io.github.eslamasabry.oc.feature.chats.presentation.PHONE_STORAGE_ROOT
+import io.github.eslamasabry.oc.feature.chats.presentation.PhoneFolderReach
+import io.github.eslamasabry.oc.feature.chats.presentation.PhoneStartWay
+import io.github.eslamasabry.oc.feature.chats.presentation.PhoneStorageAccess
 import io.github.eslamasabry.oc.feature.chats.presentation.filterNewConversationModels
 import io.github.eslamasabry.oc.feature.chats.presentation.isStartableAgent
 import io.github.eslamasabry.oc.feature.chats.presentation.newConversationStarters
+import io.github.eslamasabry.oc.feature.chats.presentation.projectPlace
 import io.github.eslamasabry.oc.ui.design.color.StatusTone
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
@@ -55,33 +48,37 @@ import io.github.eslamasabry.oc.ui.kit.KitAction
 import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.KitText
+import io.github.eslamasabry.oc.ui.kit.action.KitActionBlock
 import io.github.eslamasabry.oc.ui.kit.chip.KitChip
 import io.github.eslamasabry.oc.ui.kit.chip.KitChipWrap
 import io.github.eslamasabry.oc.ui.kit.chip.KitFilterChips
-import io.github.eslamasabry.oc.ui.kit.modal.KitNewProjectDialog
-import io.github.eslamasabry.oc.ui.kit.modal.KitNewProjectRow
-import io.github.eslamasabry.oc.ui.kit.row.KitExpandRow
 import io.github.eslamasabry.oc.ui.kit.choice.KitSegment
 import io.github.eslamasabry.oc.ui.kit.choice.KitSegmented
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
+import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
+import io.github.eslamasabry.oc.ui.kit.foundation.KitNoticeInView
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenWidth
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageScrollState
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.input.KitField
 import io.github.eslamasabry.oc.ui.kit.input.KitFieldKind
 import io.github.eslamasabry.oc.ui.kit.input.KitStartBox
 import io.github.eslamasabry.oc.ui.kit.modal.KitBackGuard
-import io.github.eslamasabry.oc.ui.kit.modal.KitPageOverlay
-import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
 import io.github.eslamasabry.oc.ui.kit.modal.KitInputOperationDialog
-import io.github.eslamasabry.oc.ui.kit.row.KitGroupNote
-import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHeight
-import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
 import io.github.eslamasabry.oc.ui.kit.modal.KitModelOption
 import io.github.eslamasabry.oc.ui.kit.modal.KitModelSheet
+import io.github.eslamasabry.oc.ui.kit.modal.KitNewProjectDialog
+import io.github.eslamasabry.oc.ui.kit.modal.KitNewProjectRow
+import io.github.eslamasabry.oc.ui.kit.modal.KitPageOverlay
+import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
+import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHeight
+import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
 import io.github.eslamasabry.oc.ui.kit.motion.KitReveal
+import io.github.eslamasabry.oc.ui.kit.row.KitExpandRow
 import io.github.eslamasabry.oc.ui.kit.row.KitGroupNote
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
@@ -91,8 +88,6 @@ import io.github.eslamasabry.oc.ui.kit.row.KitSectionLabel
 import io.github.eslamasabry.oc.ui.kit.row.KitSwitchRow
 import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
-import io.github.eslamasabry.oc.ui.kit.action.KitActionBlock
-import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.state.KitSkeletonRows
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
@@ -102,6 +97,7 @@ import io.github.eslamasabry.oc.ui.kitchat.transcript.KitStartingConversation
 import io.github.eslamasabry.oc.ui.kitchat.transcript.KitStartingPhase
 import io.github.eslamasabry.oc.ui.words.res.*
 import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.agentRunsCommandsWithoutAsking
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 
@@ -120,13 +116,15 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
         return
     }
     val field = rememberTextFieldState()
-    // The last words the field told the presenter. Words typed since, not yet reported, are newer than any state
+    // The last words the field told the presenter. Words typed since, not yet reported, are newer
+    // than any state
     // text (a stored draft arriving late, say) and are never written over.
     var reported by remember { mutableStateOf("") }
     LaunchedEffect(state.textRevision) {
         val now = field.text.toString()
         if (now == state.text) {
-            // Already the same words (a fill by code is not always reported back): they are the baseline now.
+            // Already the same words (a fill by code is not always reported back): they are the
+            // baseline now.
             reported = now
             return@LaunchedEffect
         }
@@ -136,20 +134,30 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
         }
     }
     val working = stringResource(Res.string.serversWorking)
-    // Getting the page ready is not "the current action": the button says what it waits for, and after a few
+    // Getting the page ready is not "the current action": the button says what it waits for, and
+    // after a few
     // seconds the strip and the line under the field name the thing being read.
     val preparing = state.wait == NewConversationWait.Preparing
     val gettingReady =
-        stringResource(if (state.preparingSlow) Res.string.chatsNewGettingReadySlow else Res.string.chatsNewGettingReady)
+        stringResource(
+            if (state.preparingSlow) Res.string.chatsNewGettingReadySlow
+            else Res.string.chatsNewGettingReady
+        )
     val phoneOffWords = stringResource(Res.string.homePhoneOffTitle)
     val unconfirmedWords = unconfirmedWords(state)
     val phoneFolderWords = phoneFolderWords(state)
-    // Issue 147: a notice that BLOCKS starting hands its primary action to the pinned bottom block, in Start's place: one main
-    // button, always above the keyboard; Start comes back when the notice is gone. Its sentence and the secondary action stay
+    // Issue 147: a notice that BLOCKS starting hands its primary action to the pinned bottom block,
+    // in Start's place: one main
+    // button, always above the keyboard; Start comes back when the notice is gone. Its sentence and
+    // the secondary action stay
     // with the notice in the scrolling part.
     val phoneBlocks = phoneFolderWords != null && !state.deliveryUnconfirmed
     val phoneFixRes =
-        if (!phoneBlocks || (state.fixingPhoneFolder && state.phoneFolder == PhoneFolderReach.AppAccess)) null
+        if (
+            !phoneBlocks ||
+                (state.fixingPhoneFolder && state.phoneFolder == PhoneFolderReach.AppAccess)
+        )
+            null
         else
             when (state.phoneFolder) {
                 PhoneFolderReach.AppAccess -> Res.string.chatsNewPhoneFolderAllow
@@ -167,21 +175,27 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                 KitAction(
                     phoneFixLabel,
                     actions::fixPhoneFolder,
-                    enabled = if (state.fixingPhoneFolder) KitEnabled.Disabled(phoneFolderWords.orEmpty()) else KitEnabled.Enabled,
+                    enabled =
+                        if (state.fixingPhoneFolder) KitEnabled.Disabled(phoneFolderWords.orEmpty())
+                        else KitEnabled.Enabled,
                     working = state.fixingPhoneFolder,
                 )
-            !state.fixingPhoneFolder -> KitAction(chooseAnotherLabel, { actions.sheet(NewConversationSheet.Projects) })
+            !state.fixingPhoneFolder ->
+                KitAction(chooseAnotherLabel, { actions.sheet(NewConversationSheet.Projects) })
             else -> null
         }
     val enabled =
         if (state.phoneOff) KitEnabled.Disabled(phoneOffWords)
         else if (state.deliveryUnconfirmed) KitEnabled.Disabled(unconfirmedWords)
-        // Getting ready never locks the field: the person can type ahead; only Start waits (RC1 device pass).
+        // Getting ready never locks the field: the person can type ahead; only Start waits (RC1
+        // device pass).
         else if (state.busy && !preparing) KitEnabled.Disabled(working) else KitEnabled.Enabled
-    // A page that could not read its server says that, never "the conversation didn't start" (nothing was sent).
+    // A page that could not read its server says that, never "the conversation didn't start"
+    // (nothing was sent).
     val setupFailed = state.setup == null && state.failure != null
     val failureShown = state.failure != null && !state.deliveryUnconfirmed
-    // Issue 147: with words typed, Start takes the tap while the page gets ready and starts once it is (the button
+    // Issue 147: with words typed, Start takes the tap while the page gets ready and starts once it
+    // is (the button
     // shows it is working); only with nothing typed does it say what it waits for.
     val keepsTap = preparing && state.text.isNotBlank() && !state.phoneOff
     val startBlocked =
@@ -228,17 +242,26 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                     verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
                 ) {
                     if (state.servers.isNotEmpty()) NewConversationChoices(state, actions)
-                    // The empty prompt already says it in the field; repeating it is the stray line (N-32).
+                    // The empty prompt already says it in the field; repeating it is the stray line
+                    // (N-32).
                     val promptHint = stringResource(Res.string.chatsNewBuildPrompt)
-                    // N-48: an unconfirmed send already has its notice above; the reason is said once. A failure
+                    // N-48: an unconfirmed send already has its notice above; the reason is said
+                    // once. A failure
                     // notice on the page is that reason too: never the same sentence twice.
                     val showsReason =
-                        startBlocked != null && startBlocked != promptHint && (!state.busy || preparing) && !state.phoneOff &&
+                        startBlocked != null &&
+                            startBlocked != promptHint &&
+                            (!state.busy || preparing) &&
+                            !state.phoneOff &&
                             !failureShown &&
-                            !state.deliveryUnconfirmed && !state.creationUnconfirmed &&
-                            !state.folderMissing && phoneFolderWords == null
-                    // Issue 147 (F-034): the chips and Start keep one place from the first frame to the settled page. The
-                    // reason line sits between them, so a line of its height stays when there is no reason (it used to come
+                            !state.deliveryUnconfirmed &&
+                            !state.creationUnconfirmed &&
+                            !state.folderMissing &&
+                            phoneFolderWords == null
+                    // Issue 147 (F-034): the chips and Start keep one place from the first frame to
+                    // the settled page. The
+                    // reason line sits between them, so a line of its height stays when there is no
+                    // reason (it used to come
                     // and go, and the chips jumped up and down as the page got ready).
                     if (!showsReason)
                         KitText(
@@ -247,7 +270,8 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                             role = TypeRole.Secondary,
                         )
                     if (showsReason && startBlocked != null)
-                        // The sentence is the way out: one tap makes a project (none yet) or opens the chooser.
+                        // The sentence is the way out: one tap makes a project (none yet) or opens
+                        // the chooser.
                         if (state.phoneNeedsProjectsFolder)
                             KitButton(
                                 startBlocked,
@@ -263,20 +287,23 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                             modifier = Modifier.fillMaxWidth().testTag("chats-new-main-action"),
                             hero = true,
                         )
-                    else KitButton(
-                        action =
-                            KitAction(
-                                label = stringResource(Res.string.upgradeNewStart),
-                                onClick = actions::start,
-                                enabled =
-                                    if (startBlocked == null) KitEnabled.Enabled
-                                    else KitEnabled.Disabled(startBlocked),
-                                // A spinner only once Start was pressed.
-                                working = state.wait == NewConversationWait.Sending || state.startQueued,
-                            ),
-                        modifier = Modifier.fillMaxWidth(),
-                        hero = true,
-                    )
+                    else
+                        KitButton(
+                            action =
+                                KitAction(
+                                    label = stringResource(Res.string.upgradeNewStart),
+                                    onClick = actions::start,
+                                    enabled =
+                                        if (startBlocked == null) KitEnabled.Enabled
+                                        else KitEnabled.Disabled(startBlocked),
+                                    // A spinner only once Start was pressed.
+                                    working =
+                                        state.wait == NewConversationWait.Sending ||
+                                            state.startQueued,
+                                ),
+                            modifier = Modifier.fillMaxWidth(),
+                            hero = true,
+                        )
                 }
             },
             edges = KitScreenEdges.Bleed,
@@ -315,7 +342,8 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                             .testTag("chats-new-field"),
                         enabled = enabled,
                         minLines = 2,
-                        // B-098: not while a sheet is open; coming back from agent setup re-ran this and the keyboard covered the sheet.
+                        // B-098: not while a sheet is open; coming back from agent setup re-ran
+                        // this and the keyboard covered the sheet.
                         autofocus = (!state.busy || preparing) && state.sheet == null,
                         onTextChanged = {
                             reported = it
@@ -323,6 +351,17 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                         },
                         focusKey = state.focusRevision.takeIf { it > 0 },
                     )
+                    if (
+                        io.github.eslamasabry.oc.engine.agents.catalog.AgentCatalog.builtIn
+                            .forProvider(state.phoneAgent)
+                            ?.commandApproval ==
+                            io.github.eslamasabry.oc.engine.agents.catalog.AgentCommandApproval
+                                .NeverAsks
+                    )
+                        KitText(
+                            stringResource(Res.string.agentRunsCommandsWithoutAsking),
+                            Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp),
+                        )
                     // Ways to start fill the empty prompt; nothing is sent until Start.
                     KitReveal(
                         visible =
@@ -333,9 +372,11 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                     ) {
                         NewConversationStarters(state, actions)
                     }
-                    // The form's notices and ways forward keep the gutter like the field above them.
+                    // The form's notices and ways forward keep the gutter like the field above
+                    // them.
                     val inset = Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp)
-                    // The person turned this phone's OpenCode off: say so, and the way forward is Start.
+                    // The person turned this phone's OpenCode off: say so, and the way forward is
+                    // Start.
                     if (state.phoneOff)
                         KitNotice(
                             message = stringResource(Res.string.thisPhoneAnswerOffLine),
@@ -351,21 +392,38 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                                 ),
                         )
                     if (state.deliveryUnconfirmed) {
-                        // N-48: the field already says it once (its own reason); under it only the ways forward: the
-                        // conversation (where it can be sent again) and Discard, which opens this form again.
+                        // N-48: the field already says it once (its own reason); under it only the
+                        // ways forward: the
+                        // conversation (where it can be sent again) and Discard, which opens this
+                        // form again.
                         val open =
                             state.reviewConversation?.let {
-                                KitAction(stringResource(Res.string.p12NewOpenCreated), actions::openCreatedConversation)
+                                KitAction(
+                                    stringResource(Res.string.p12NewOpenCreated),
+                                    actions::openCreatedConversation,
+                                )
                             }
-                        val discard = KitAction(stringResource(Res.string.nativePendingDiscard), actions::discardUnconfirmed)
-                        // B-096: with nothing to open (the server is not answering, or the record cannot be read),
+                        val discard =
+                            KitAction(
+                                stringResource(Res.string.nativePendingDiscard),
+                                actions::discardUnconfirmed,
+                            )
+                        // B-096: with nothing to open (the server is not answering, or the record
+                        // cannot be read),
                         // "Check again" reads it once more; Discard is not the only way out.
-                        val again = KitAction(stringResource(Res.string.chatReceiptCheckAgain), actions::recheckUnconfirmed)
+                        val again =
+                            KitAction(
+                                stringResource(Res.string.chatReceiptCheckAgain),
+                                actions::recheckUnconfirmed,
+                            )
                         // A phone agent's: its set-up is a way forward too (SEND-STALE).
                         val setUp =
                             state.phoneAgent?.let { agent ->
                                 KitAction(
-                                    stringResource(Res.string.agentsSetUpAction, state.phoneAgentName.orEmpty()),
+                                    stringResource(
+                                        Res.string.agentsSetUpAction,
+                                        state.phoneAgentName.orEmpty(),
+                                    ),
                                     { actions.setUpPhoneAgent(agent) },
                                 )
                             }
@@ -375,29 +433,37 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                             tertiary = listOfNotNull(setUp, discard),
                         )
                     }
-                    // Issue 147: the folder in phone storage is not ready for the side that will work in it. Said before
+                    // Issue 147: the folder in phone storage is not ready for the side that will
+                    // work in it. Said before
                     // Start, with the way forward; the message is never sent into another folder.
                     if (phoneFolderWords != null && !state.deliveryUnconfirmed) {
-                      KitNoticeInView(phoneFolderWords + state.phoneFolder?.name) { ways ->
-                        KitNotice(phoneFolderWords, inset)
-                        // The main action is the bottom block's; here only the other way, when the main one is a fix.
-                        if (phoneFixLabel != null && !state.fixingPhoneFolder)
-                            KitActionBlock(
-                                inset.then(ways),
-                                secondary = KitAction(chooseAnotherLabel, { actions.sheet(NewConversationSheet.Projects) }),
-                            )
-                        state.phoneFolderFailure?.let { failure ->
-                            KitErrorNotice(
-                                modifier = inset,
-                                message = stringResource(Res.string.chatsNewPhoneFolderRestartFailed),
-                                failure = failure,
-                                detailsLabel = stringResource(Res.string.kitDetails),
-                                copyLabel = stringResource(Res.string.kitCopyDetails),
-                            )
+                        KitNoticeInView(phoneFolderWords + state.phoneFolder?.name) { ways ->
+                            KitNotice(phoneFolderWords, inset)
+                            // The main action is the bottom block's; here only the other way, when
+                            // the main one is a fix.
+                            if (phoneFixLabel != null && !state.fixingPhoneFolder)
+                                KitActionBlock(
+                                    inset.then(ways),
+                                    secondary =
+                                        KitAction(
+                                            chooseAnotherLabel,
+                                            { actions.sheet(NewConversationSheet.Projects) },
+                                        ),
+                                )
+                            state.phoneFolderFailure?.let { failure ->
+                                KitErrorNotice(
+                                    modifier = inset,
+                                    message =
+                                        stringResource(Res.string.chatsNewPhoneFolderRestartFailed),
+                                    failure = failure,
+                                    detailsLabel = stringResource(Res.string.kitDetails),
+                                    copyLabel = stringResource(Res.string.kitCopyDetails),
+                                )
+                            }
                         }
-                      }
                     }
-                    // B-063: the server still lists a project whose folder is gone; a message sent there is
+                    // B-063: the server still lists a project whose folder is gone; a message sent
+                    // there is
                     // refused. Say it before Start, with the two ways forward.
                     if (state.folderMissing && !state.deliveryUnconfirmed) {
                         KitNotice(stringResource(Res.string.chatsNewFolderMissing), inset)
@@ -427,16 +493,30 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                             )
                         }
                     }
-                    // Issue 147: a folder in the phone's storage is named in full once, with what that storage can't do
+                    // Issue 147: a folder in the phone's storage is named in full once, with what
+                    // that storage can't do
                     // behind Why (the agents are told the same at their start).
-                    // Issue 147: what the action just did, said once it is done (a restart takes half a minute).
-                    phoneFolderDoneWords(state)?.let { KitNotice(it, inset.testTag("chats-new-phone-folder-done")) }
-                    if (state.phoneFolder == PhoneFolderReach.Ready && !state.directory.isNullOrBlank()) {
+                    // Issue 147: what the action just did, said once it is done (a restart takes
+                    // half a minute).
+                    phoneFolderDoneWords(state)?.let {
+                        KitNotice(it, inset.testTag("chats-new-phone-folder-done"))
+                    }
+                    if (
+                        state.phoneFolder == PhoneFolderReach.Ready &&
+                            !state.directory.isNullOrBlank()
+                    ) {
                         var why by remember(state.directory) { mutableStateOf(false) }
                         KitGroupNote(
-                            stringResource(Res.string.chatsNewPhoneFolderWhere, state.directory.orEmpty()),
+                            stringResource(
+                                Res.string.chatsNewPhoneFolderWhere,
+                                state.directory.orEmpty(),
+                            ),
                             inset.testTag("chats-new-phone-folder"),
-                            action = KitAction(stringResource(Res.string.chatsNewPhoneFolderWhy), { why = true }),
+                            action =
+                                KitAction(
+                                    stringResource(Res.string.chatsNewPhoneFolderWhy),
+                                    { why = true },
+                                ),
                         )
                         KitSheet(
                             visible = why,
@@ -446,8 +526,10 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                             KitText(stringResource(Res.string.chatsNewPhoneFolderHelp))
                         }
                     }
-                    if (state.draftFailed) KitNotice(stringResource(Res.string.p12NewDraftFailed), inset)
-                    if (state.repairing) KitNotice(stringResource(Res.string.gitRepairLooking), inset)
+                    if (state.draftFailed)
+                        KitNotice(stringResource(Res.string.p12NewDraftFailed), inset)
+                    if (state.repairing)
+                        KitNotice(stringResource(Res.string.gitRepairLooking), inset)
                     state.repair?.let { result ->
                         KitNotice(
                             stringResource(
@@ -462,43 +544,53 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                             )
                         )
                     }
-                    // N-48: an unconfirmed send is said once (above); a failed read behind it adds no second notice.
+                    // N-48: an unconfirmed send is said once (above); a failed read behind it adds
+                    // no second notice.
                     if (failureShown) {
-                      KitNoticeInView(state.failure) { ways ->
-                        KitErrorNotice(
-                            modifier = inset,
-                            message =
-                                stringResource(
-                                    if (state.creationUnconfirmed)
-                                        Res.string.p12NewCreationUnconfirmed
-                                    else if (setupFailed) Res.string.chatsNewSetupFailed
-                                    else if (
-                                        state.repairAvailable && state.failure is Failure.ProjectGit
-                                    )
-                                        Res.string.gitRepairFailureWords
-                                    else Res.string.chatsNewFailed
-                                ),
-                            failure = state.failure,
-                            detailsLabel = stringResource(Res.string.kitDetails),
-                            copyLabel = stringResource(Res.string.kitCopyDetails),
-                        )
-                        // The ways forward sit on the page gutter like the notice above them (a bare text button
-                        // touched the screen's left edge).
-                        if (!state.creationUnconfirmed) {
-                            val repair =
-                                KitAction(stringResource(Res.string.gitRepairAction), actions::repair)
-                                    .takeIf { state.repairAvailable && state.failure is Failure.ProjectGit }
-                            KitActionBlock(
-                                inset.then(ways),
-                                secondary =
-                                    KitAction(
-                                        stringResource(Res.string.commonRetry),
-                                        if (state.setup == null) actions::retryLoad else actions::start,
+                        KitNoticeInView(state.failure) { ways ->
+                            KitErrorNotice(
+                                modifier = inset,
+                                message =
+                                    stringResource(
+                                        if (state.creationUnconfirmed)
+                                            Res.string.p12NewCreationUnconfirmed
+                                        else if (setupFailed) Res.string.chatsNewSetupFailed
+                                        else if (
+                                            state.repairAvailable &&
+                                                state.failure is Failure.ProjectGit
+                                        )
+                                            Res.string.gitRepairFailureWords
+                                        else Res.string.chatsNewFailed
                                     ),
-                                tertiary = listOfNotNull(repair),
+                                failure = state.failure,
+                                detailsLabel = stringResource(Res.string.kitDetails),
+                                copyLabel = stringResource(Res.string.kitCopyDetails),
                             )
+                            // The ways forward sit on the page gutter like the notice above them (a
+                            // bare text button
+                            // touched the screen's left edge).
+                            if (!state.creationUnconfirmed) {
+                                val repair =
+                                    KitAction(
+                                            stringResource(Res.string.gitRepairAction),
+                                            actions::repair,
+                                        )
+                                        .takeIf {
+                                            state.repairAvailable &&
+                                                state.failure is Failure.ProjectGit
+                                        }
+                                KitActionBlock(
+                                    inset.then(ways),
+                                    secondary =
+                                        KitAction(
+                                            stringResource(Res.string.commonRetry),
+                                            if (state.setup == null) actions::retryLoad
+                                            else actions::start,
+                                        ),
+                                    tertiary = listOfNotNull(repair),
+                                )
+                            }
                         }
-                      }
                     }
                 }
             }
@@ -517,8 +609,10 @@ private fun NewConversationChoices(state: NewConversationUi, actions: NewConvers
         focus.clearFocus()
         actions.sheet(sheet)
     }
-    // P22 (F: new_chat_screen.dart:584-641 shows every choice whole, as rows): the three chips sit above Start on one
-    // line when they fit and wrap onto a second when the names are long, so the project is never cut at the edge or
+    // P22 (F: new_chat_screen.dart:584-641 shows every choice whole, as rows): the three chips sit
+    // above Start on one
+    // line when they fit and wrap onto a second when the names are long, so the project is never
+    // cut at the edge or
     // hidden past a fade (the sideways line of N-32 hid it on a phone).
     KitChipWrap(Modifier.fillMaxWidth().testTag("chats-new-choices")) {
         // Three chips only: who works (with Plan when chosen), the model, the
@@ -590,16 +684,19 @@ private fun NewConversationSheet(state: NewConversationUi, actions: NewConversat
             val directory = rememberTextFieldState(state.directory.orEmpty())
             var byPath by remember { mutableStateOf(false) }
             val working = stringResource(Res.string.serversWorking)
-            // Recent projects first, one tap each; then New project as an obvious row; the typed path stays folded.
+            // Recent projects first, one tap each; then New project as an obvious row; the typed
+            // path stays folded.
             KitRowGroup(leadingTiles = true) {
                 // E20-S08: one row per folder (the server listed some twice).
                 state.projectChoices.forEach { project ->
                     val chosen = state.isChosen(project)
                     KitRow(
                         title = project.name,
-                        // The folders it sits in tell same-named projects apart; the phone's own /root is never part of it.
+                        // The folders it sits in tell same-named projects apart; the phone's own
+                        // /root is never part of it.
                         supporting = projectPlace(project.directory),
-                        leading = KitRowLeading.Glyph(KitIcons.folderOpen, tile = true, current = chosen),
+                        leading =
+                            KitRowLeading.Glyph(KitIcons.folderOpen, tile = true, current = chosen),
                         trailing = if (chosen) KitRowTrailing.Check else KitRowTrailing.None,
                         selected = chosen,
                         onClick = { actions.chooseDirectory(project.directory) },
@@ -607,7 +704,8 @@ private fun NewConversationSheet(state: NewConversationUi, actions: NewConversat
                 }
                 if (state.canCreateProject)
                     KitNewProjectRow(actions::askNewProject, working = state.creatingProject)
-                // This phone's own storage (Downloads, Documents): says what the access gives, opens Android's page
+                // This phone's own storage (Downloads, Documents): says what the access gives,
+                // opens Android's page
                 // for it, and once on it picks the storage folder.
                 state.phoneStorage?.let { access ->
                     val on = access == PhoneStorageAccess.On
@@ -615,12 +713,16 @@ private fun NewConversationSheet(state: NewConversationUi, actions: NewConversat
                         title = stringResource(Res.string.chatsNewPhoneStorage),
                         supporting =
                             stringResource(
-                                if (on) Res.string.chatsNewPhoneStorageOn else Res.string.chatsNewPhoneStorageOff
+                                if (on) Res.string.chatsNewPhoneStorageOn
+                                else Res.string.chatsNewPhoneStorageOff
                             ),
                         leading = KitRowLeading.Glyph(KitIcons.folders, tile = true),
                         trailing = KitRowTrailing.Chevron,
-                        onClick = { if (on) actions.browsePhoneStorage() else actions.requestPhoneStorage() },
-                        // On: a folder list of phone storage opens, to choose or make the project folder in it.
+                        onClick = {
+                            if (on) actions.browsePhoneStorage() else actions.requestPhoneStorage()
+                        },
+                        // On: a folder list of phone storage opens, to choose or make the project
+                        // folder in it.
                         modifier = Modifier.testTag("chats-new-phone-storage"),
                     )
                 }
@@ -672,8 +774,9 @@ private fun NewConversationSheet(state: NewConversationUi, actions: NewConversat
 }
 
 /**
- * Who works and how: at half height the agents a person can start, Build/Plan as a stepped control and
- * the model row. The model row (and the Model chip) opens the kit's one model sheet, the chat's own.
+ * Who works and how: at half height the agents a person can start, Build/Plan as a stepped control
+ * and the model row. The model row (and the Model chip) opens the kit's one model sheet, the chat's
+ * own.
  */
 @Composable
 private fun AgentModelSheet(state: NewConversationUi, actions: NewConversationActions) {
@@ -713,8 +816,10 @@ private fun NewConversationAgentStep(state: NewConversationUi, actions: NewConve
     val named = state.setup?.agents.orEmpty().filter(::isStartableAgent).distinct()
     val phoneRows = phone != null && (phone.choices.isNotEmpty() || phone.needsSetup.isNotEmpty())
     KitRowGroup(label = stringResource(Res.string.upgNewChatAgents)) {
-        // "Add an agent" leads the empty state, and otherwise sits right after the default, in the first
-        // rows (Flutter chatsNewAddAgent). With agents on this phone it closes the list, after their rows.
+        // "Add an agent" leads the empty state, and otherwise sits right after the default, in the
+        // first
+        // rows (Flutter chatsNewAddAgent). With agents on this phone it closes the list, after
+        // their rows.
         // It opens agent setup; Back returns to this same unsent draft.
         if (named.isEmpty() && !phoneRows) AddAgentRow(actions)
         KitRow(
@@ -732,11 +837,14 @@ private fun NewConversationAgentStep(state: NewConversationUi, actions: NewConve
                 title = agent.name,
                 leading = KitRowLeading.Logo(agent.iconKey, agent.name, agent = true),
                 selected = state.phoneAgent == agent.id,
-                trailing = if (state.phoneAgent == agent.id) KitRowTrailing.Check else KitRowTrailing.None,
-                // The Agents page's own words: an agent whose sign-in no check can read is "Ready" only by its first answer.
+                trailing =
+                    if (state.phoneAgent == agent.id) KitRowTrailing.Check else KitRowTrailing.None,
+                // The Agents page's own words: an agent whose sign-in no check can read is "Ready"
+                // only by its first answer.
                 supporting =
                     stringResource(
-                        if (agent.setUpAtFirstUse) Res.string.agentsStateSetUpAtFirstUse else Res.string.upgradeAgentReady
+                        if (agent.setUpAtFirstUse) Res.string.agentsStateSetUpAtFirstUse
+                        else Res.string.upgradeAgentReady
                     ),
                 onClick = { actions.choosePhoneAgent(agent.id) },
                 modifier = Modifier.testTag("chats-new-agent-${agent.id}"),
@@ -797,16 +905,19 @@ private fun NewConversationAgentStep(state: NewConversationUi, actions: NewConve
             leading = KitRowLeading.Glyph(KitIcons.model),
             // Nothing to choose: the row only says which model is used and opens nothing.
             trailing = KitRowTrailing.Value(modelLabel(state), chevron = state.modelChoosable),
-            onClick = if (state.modelChoosable) ({ actions.sheet(NewConversationSheet.Models) }) else null,
+            onClick =
+                if (state.modelChoosable) ({ actions.sheet(NewConversationSheet.Models) })
+                else null,
         )
     }
 }
 
 /**
- * Whether the presenter's text may replace what the field holds: not when the field holds words the presenter has not
- * heard yet (typed in a burst, before the field's report arrived).
+ * Whether the presenter's text may replace what the field holds: not when the field holds words the
+ * presenter has not heard yet (typed in a burst, before the field's report arrived).
  */
-internal fun fieldMayTakeState(fieldText: String, reportedText: String): Boolean = fieldText == reportedText
+internal fun fieldMayTakeState(fieldText: String, reportedText: String): Boolean =
+    fieldText == reportedText
 
 /** N-51: the chat's model sheet, with this server's favourites; choosing a model closes it. */
 @Composable
@@ -822,20 +933,25 @@ private fun NewConversationModelSheet(state: NewConversationUi, actions: NewConv
         onDismissRequest = { actions.sheet(null) },
         options = options,
         current = state.shownModel?.let { ref -> options.firstOrNull { it.matches(ref) }?.key },
-        onChoose = { option -> actions.chooseModel(option?.let { ModelRef(it.providerId, it.modelId) }) },
+        onChoose = { option ->
+            actions.chooseModel(option?.let { ModelRef(it.providerId, it.modelId) })
+        },
         favorites = favorites,
         onToggleFavorite = { actions.toggleFavorite(ModelRef(it.providerId, it.modelId)) },
         resetKey = state.profile,
-        // A read of the agent's models is running: the kit says "Loading models…" (no list yet) or marks the last
+        // A read of the agent's models is running: the kit says "Loading models…" (no list yet) or
+        // marks the last
         // known list while it is read again.
         loading = state.modelsLoading,
         above = {
-            // "No models" only after a read ended with none (the kit draws no `above` while loading, this keeps it so).
+            // "No models" only after a read ended with none (the kit draws no `above` while
+            // loading, this keeps it so).
             if (options.isEmpty() && !state.modelsLoading)
                 KitText(stringResource(Res.string.upgNewChatModelsNone), role = TypeRole.Secondary)
         },
         below = {
-            // The chosen model's thinking efforts, as the chat's model sheet offers them (Default first).
+            // The chosen model's thinking efforts, as the chat's model sheet offers them (Default
+            // first).
             val levels = state.shownVariants
             if (options.isNotEmpty() && levels.isNotEmpty()) {
                 KitSectionLabel(stringResource(Res.string.composerFullThinking))
@@ -843,7 +959,8 @@ private fun NewConversationModelSheet(state: NewConversationUi, actions: NewConv
                     (listOf<String?>(null) + levels).forEach { level ->
                         KitChip(
                             label =
-                                if (level == null) stringResource(Res.string.composerFullThinkingDefault)
+                                if (level == null)
+                                    stringResource(Res.string.composerFullThinkingDefault)
                                 else effortWords(level),
                             kind = io.github.eslamasabry.oc.ui.kit.chip.KitChipKind.Action,
                             selected = level == state.variant,
@@ -856,7 +973,10 @@ private fun NewConversationModelSheet(state: NewConversationUi, actions: NewConv
     )
 }
 
-/** A thinking effort as people read it (the chat's model sheet, Flutter `presentedEffort`); unknown ids as they are. */
+/**
+ * A thinking effort as people read it (the chat's model sheet, Flutter `presentedEffort`); unknown
+ * ids as they are.
+ */
 @Composable
 private fun effortWords(id: String): String =
     when (id.trim().lowercase()) {
@@ -874,8 +994,8 @@ private fun KitModelOption.matches(ref: ModelRef): Boolean =
     providerId == ref.providerId && modelId == ref.modelId
 
 /**
- * The models a person can name (never the server's "default" alias), each under its provider, its host app
- * as the second line where it differs from the provider.
+ * The models a person can name (never the server's "default" alias), each under its provider, its
+ * host app as the second line where it differs from the provider.
  */
 internal fun newConversationModelOptions(models: List<NewConversationModel>): List<KitModelOption> =
     filterNewConversationModels(models, "").map { model ->
@@ -893,9 +1013,7 @@ internal fun newConversationModelOptions(models: List<NewConversationModel>): Li
 @Composable
 private fun NewConversationStarters(state: NewConversationUi, actions: NewConversationActions) {
     val ways = stringResource(Res.string.chatStartSuggestionsLabel)
-    KitFilterChips(
-        Modifier.semantics { contentDescription = ways }.testTag("chats-new-starters"),
-    ) {
+    KitFilterChips(Modifier.semantics { contentDescription = ways }.testTag("chats-new-starters")) {
         newConversationStarters(state.directory).forEach { starter ->
             val label = starterLabel(starter)
             KitChip(label = label, onClick = { actions.chooseStarter(starter, label) })
@@ -925,7 +1043,9 @@ private fun modeLabel(mode: String): String =
  */
 @Composable
 private fun agentChipLabel(state: NewConversationUi): String {
-    state.phoneAgentChoice?.let { return it.name }
+    state.phoneAgentChoice?.let {
+        return it.name
+    }
     val name = state.agent?.takeIf(::isStartableAgent) ?: state.setup?.defaultRuntime ?: "OpenCode"
     return if (state.agent?.lowercase() == "plan")
         stringResource(
@@ -939,7 +1059,10 @@ private fun agentChipLabel(state: NewConversationUi): String {
 @Composable
 private fun modelLabel(state: NewConversationUi): String =
     state.shownModels.firstOrNull { it.model == state.shownModel }?.name
-        ?: stringResource(if (state.modelsLoading) Res.string.chat_model_loading else Res.string.modelServerDefault)
+        ?: stringResource(
+            if (state.modelsLoading) Res.string.chat_model_loading
+            else Res.string.modelServerDefault
+        )
 
 /**
  * The chat frame from the moment Start is tapped: the prompt is already the first bubble, the
@@ -961,17 +1084,22 @@ private fun StartingConversation(state: NewConversationUi, actions: NewConversat
     val reasonWords =
         when (problem?.way) {
             PhoneStartWay.SetUp -> stringResource(Res.string.chatSendFailureNeedsSetUp, agentName)
-            PhoneStartWay.ChooseModel -> stringResource(Res.string.chatsNewAgentModelMissing, agentName)
+            PhoneStartWay.ChooseModel ->
+                stringResource(Res.string.chatsNewAgentModelMissing, agentName)
             PhoneStartWay.TryAgain -> stringResource(Res.string.chatsNewAgentDidNotStart, agentName)
             PhoneStartWay.SignIn -> stringResource(Res.string.chatSendFailureSignInAgain, agentName)
             null -> null
         }
     val setUpWords = stringResource(Res.string.agentsSetUpAction, agentName)
     val chooseModelWords = stringResource(Res.string.chatUiChooseAnotherModel)
-    // SEND-STALE: a phone agent's start that its helper did not confirm names the agent and offers its set-up beside
-    // Check again and Discard (it said "The server" and "Open the created conversation", with nothing to open).
+    // SEND-STALE: a phone agent's start that its helper did not confirm names the agent and offers
+    // its set-up beside
+    // Check again and Discard (it said "The server" and "Open the created conversation", with
+    // nothing to open).
     val unconfirmedAgent =
-        state.phoneAgent?.takeIf { phase == KitStartingPhase.Unconfirmed && state.deliveryUnconfirmed }
+        state.phoneAgent?.takeIf {
+            phase == KitStartingPhase.Unconfirmed && state.deliveryUnconfirmed
+        }
     val unconfirmedName = state.phoneAgentName.orEmpty()
     val unconfirmedSetUp = stringResource(Res.string.agentsSetUpAction, unconfirmedName)
     val unconfirmedWords = unconfirmedWords(state)
@@ -983,7 +1111,8 @@ private fun StartingConversation(state: NewConversationUi, actions: NewConversat
         phase = phase,
         status =
             when {
-                startingAgent != null -> stringResource(Res.string.chatsNewStartingAgent, startingAgent)
+                startingAgent != null ->
+                    stringResource(Res.string.chatsNewStartingAgent, startingAgent)
                 state.busy -> stringResource(Res.string.upgradeStartSending)
                 state.deliveryUnconfirmed -> unconfirmedWords
                 state.creationUnconfirmed -> stringResource(Res.string.p12NewCreationUnconfirmed)
@@ -1003,13 +1132,15 @@ private fun StartingConversation(state: NewConversationUi, actions: NewConversat
         copyLabel = stringResource(Res.string.kitCopyDetails),
         backLabel = stringResource(Res.string.kitTopBarBack),
         onBack = actions::back,
-        // The one way forward: Set up <agent>, Choose another model, or Try again (never two of them).
+        // The one way forward: Set up <agent>, Choose another model, or Try again (never two of
+        // them).
         retryLabel =
             when {
                 unconfirmedAgent != null -> unconfirmedSetUp
                 problem?.way == PhoneStartWay.SetUp -> setUpWords
                 problem?.way == PhoneStartWay.ChooseModel -> chooseModelWords
-                problem?.way == PhoneStartWay.SignIn -> stringResource(Res.string.chatSendFailureSignInAction)
+                problem?.way == PhoneStartWay.SignIn ->
+                    stringResource(Res.string.chatSendFailureSignInAction)
                 else -> stringResource(Res.string.commonRetry)
             },
         onRetry =
@@ -1020,7 +1151,8 @@ private fun StartingConversation(state: NewConversationUi, actions: NewConversat
                 val way = problem?.way
                 val forward: () -> Unit = {
                     when (way) {
-                        PhoneStartWay.SetUp, PhoneStartWay.SignIn -> actions.setUpPhoneAgent(agentId)
+                        PhoneStartWay.SetUp,
+                        PhoneStartWay.SignIn -> actions.setUpPhoneAgent(agentId)
                         PhoneStartWay.ChooseModel -> {
                             actions.editPrompt()
                             actions.sheet(NewConversationSheet.Models)
@@ -1031,25 +1163,37 @@ private fun StartingConversation(state: NewConversationUi, actions: NewConversat
                 forward
             },
         editLabel = stringResource(Res.string.upgNewChatEdit),
-        onEdit = if (notSent && problem?.way != PhoneStartWay.ChooseModel) actions::editPrompt else null,
+        onEdit =
+            if (notSent && problem?.way != PhoneStartWay.ChooseModel) actions::editPrompt else null,
         reviewLabel = stringResource(Res.string.p12NewOpenCreated),
         onReview = if (state.reviewConversation != null) actions::openCreatedConversation else null,
         recheckLabel = stringResource(Res.string.chatReceiptCheckAgain),
-        onRecheck = if (phase == KitStartingPhase.Unconfirmed && state.deliveryUnconfirmed && state.reviewConversation == null) actions::recheckUnconfirmed else null,
+        onRecheck =
+            if (
+                phase == KitStartingPhase.Unconfirmed &&
+                    state.deliveryUnconfirmed &&
+                    state.reviewConversation == null
+            )
+                actions::recheckUnconfirmed
+            else null,
         discardLabel = stringResource(Res.string.nativePendingDiscard),
-        onDiscard = if (phase == KitStartingPhase.Unconfirmed) actions::discardUnconfirmed else null,
+        onDiscard =
+            if (phase == KitStartingPhase.Unconfirmed) actions::discardUnconfirmed else null,
     )
 }
 
 /**
- * What an unconfirmed first message says: a phone agent's names the agent (its helper, not "the server", is what did
- * not answer, and there may be no conversation to open); a server's own keeps its words.
+ * What an unconfirmed first message says: a phone agent's names the agent (its helper, not "the
+ * server", is what did not answer, and there may be no conversation to open); a server's own keeps
+ * its words.
  */
 @Composable
 private fun unconfirmedWords(state: NewConversationUi): String =
-    state.phoneAgentName?.takeIf { state.phoneAgent != null }?.let {
-        stringResource(Res.string.chatsNewAgentUnconfirmed, it)
-    } ?: stringResource(Res.string.p12NewDeliveryUnconfirmed)
+    state.phoneAgentName
+        ?.takeIf { state.phoneAgent != null }
+        ?.let {
+            stringResource(Res.string.chatsNewAgentUnconfirmed, it)
+        } ?: stringResource(Res.string.p12NewDeliveryUnconfirmed)
 
 /** Flutter import list uses the final non-empty path segment, including a trailing slash. */
 private fun importFolder(directory: String): String =
@@ -1127,7 +1271,10 @@ internal fun ClaudeImportBody(state: NewConversationUi, actions: NewConversation
         )
 }
 
-/** New project's name (the same dialog and rules as Projects › New project): a Git folder under the projects root. */
+/**
+ * New project's name (the same dialog and rules as Projects › New project): a Git folder under the
+ * projects root.
+ */
 @Composable
 private fun NewProjectDialog(state: NewConversationUi, actions: NewConversationActions) {
     if (!state.askingProjectName) return
@@ -1137,12 +1284,15 @@ private fun NewProjectDialog(state: NewConversationUi, actions: NewConversationA
     val validate: (String) -> String? = { name ->
         when (io.github.eslamasabry.oc.engine.agents.workspace.ProjectFolderName.problem(name)) {
             io.github.eslamasabry.oc.engine.agents.workspace.ProjectFolderNameProblem.Empty -> empty
-            io.github.eslamasabry.oc.engine.agents.workspace.ProjectFolderNameProblem.NotSingleSegment -> segment
-            io.github.eslamasabry.oc.engine.agents.workspace.ProjectFolderNameProblem.InvalidCharacters -> characters
+            io.github.eslamasabry.oc.engine.agents.workspace.ProjectFolderNameProblem
+                .NotSingleSegment -> segment
+            io.github.eslamasabry.oc.engine.agents.workspace.ProjectFolderNameProblem
+                .InvalidCharacters -> characters
             null -> null
         }
     }
-    // Issue 147: in the phone's storage the name makes an empty folder in the folder shown, not a Git project.
+    // Issue 147: in the phone's storage the name makes an empty folder in the folder shown, not a
+    // Git project.
     state.storagePath?.let { path ->
         val here =
             if (path == PHONE_STORAGE_ROOT) stringResource(Res.string.folderBrowserInternalStorage)
@@ -1167,10 +1317,15 @@ private fun NewProjectDialog(state: NewConversationUi, actions: NewConversationA
         initial = "",
         working = state.creatingProject,
         validate = { name ->
-            when (io.github.eslamasabry.oc.engine.agents.workspace.ProjectFolderName.problem(name)) {
-                io.github.eslamasabry.oc.engine.agents.workspace.ProjectFolderNameProblem.Empty -> empty
-                io.github.eslamasabry.oc.engine.agents.workspace.ProjectFolderNameProblem.NotSingleSegment -> segment
-                io.github.eslamasabry.oc.engine.agents.workspace.ProjectFolderNameProblem.InvalidCharacters -> characters
+            when (
+                io.github.eslamasabry.oc.engine.agents.workspace.ProjectFolderName.problem(name)
+            ) {
+                io.github.eslamasabry.oc.engine.agents.workspace.ProjectFolderNameProblem.Empty ->
+                    empty
+                io.github.eslamasabry.oc.engine.agents.workspace.ProjectFolderNameProblem
+                    .NotSingleSegment -> segment
+                io.github.eslamasabry.oc.engine.agents.workspace.ProjectFolderNameProblem
+                    .InvalidCharacters -> characters
                 null -> null
             }
         },
@@ -1179,10 +1334,9 @@ private fun NewProjectDialog(state: NewConversationUi, actions: NewConversationA
     )
 }
 
-
 /**
- * The folder list under the Phone storage row: enter folders, make a new one, and use the one shown as the project
- * (the storage root itself cannot be one). Ends with a chosen folder in one flow.
+ * The folder list under the Phone storage row: enter folders, make a new one, and use the one shown
+ * as the project (the storage root itself cannot be one). Ends with a chosen folder in one flow.
  */
 @Composable
 private fun StorageFoldersSheet(state: NewConversationUi, actions: NewConversationActions) {
@@ -1199,7 +1353,9 @@ private fun StorageFoldersSheet(state: NewConversationUi, actions: NewConversati
         subtitle = stringResource(Res.string.folderBrowserPlacePhone),
         leading =
             KitAction(
-                stringResource(if (atRoot) Res.string.kitTopBarBack else Res.string.folderBrowserUp),
+                stringResource(
+                    if (atRoot) Res.string.kitTopBarBack else Res.string.folderBrowserUp
+                ),
                 {
                     if (atRoot) actions.closeStorageFolders()
                     else actions.enterStorageFolder(path.substringBeforeLast('/'))
@@ -1209,7 +1365,12 @@ private fun StorageFoldersSheet(state: NewConversationUi, actions: NewConversati
         height = KitSheetHeight.Content,
         primary =
             if (atRoot || state.storageLoading || state.storageFailure != null) null
-            else KitAction(stringResource(Res.string.folderBrowserOpen, name), actions::useStorageFolder, icon = KitIcons.folderOpen),
+            else
+                KitAction(
+                    stringResource(Res.string.folderBrowserOpen, name),
+                    actions::useStorageFolder,
+                    icon = KitIcons.folderOpen,
+                ),
     ) {
         if (atRoot)
             KitText(stringResource(Res.string.andrStorageRootHere), role = TypeRole.Secondary)
@@ -1221,13 +1382,20 @@ private fun StorageFoldersSheet(state: NewConversationUi, actions: NewConversati
                     failure = state.storageFailure,
                     detailsLabel = stringResource(Res.string.kitDetails),
                     copyLabel = stringResource(Res.string.kitCopyDetails),
-                    retry = KitLineAction(stringResource(Res.string.folderBrowserRetry), { actions.enterStorageFolder(path) }),
+                    retry =
+                        KitLineAction(
+                            stringResource(Res.string.folderBrowserRetry),
+                            { actions.enterStorageFolder(path) },
+                        ),
                 )
             else ->
                 KitRowGroup(leadingTiles = true) {
-                    // Issue 147: in the phone's storage the row makes an empty folder here (no Git), and says so; the
+                    // Issue 147: in the phone's storage the row makes an empty folder here (no
+                    // Git), and says so; the
                     // app's own projects keep "New project" (a folder in the projects, with Git).
-                    val here = if (atRoot) stringResource(Res.string.folderBrowserInternalStorage) else name
+                    val here =
+                        if (atRoot) stringResource(Res.string.folderBrowserInternalStorage)
+                        else name
                     val wait = stringResource(Res.string.serversWorking)
                     KitRow(
                         title = stringResource(Res.string.chatsNewStorageFolderNew),
@@ -1266,7 +1434,10 @@ private fun StorageFoldersSheet(state: NewConversationUi, actions: NewConversati
     }
 }
 
-/** Issue 147: why the chosen folder in phone storage keeps Start back, naming the agent; null when it does not. */
+/**
+ * Issue 147: why the chosen folder in phone storage keeps Start back, naming the agent; null when
+ * it does not.
+ */
 @Composable
 private fun phoneFolderWords(state: NewConversationUi): String? {
     val agent = state.phoneAgentName ?: "OpenCode"
@@ -1278,23 +1449,29 @@ private fun phoneFolderWords(state: NewConversationUi): String? {
             else stringResource(Res.string.chatsNewPhoneFolderAccess)
         PhoneFolderReach.Restart ->
             if (state.fixingPhoneFolder)
-                if (state.phoneAgent != null) stringResource(Res.string.chatsNewPhoneFolderRestartingAgents, agent)
+                if (state.phoneAgent != null)
+                    stringResource(Res.string.chatsNewPhoneFolderRestartingAgents, agent)
                 else stringResource(Res.string.chatsNewPhoneFolderRestartingServer)
-            else if (state.phoneAgent != null) stringResource(Res.string.chatsNewPhoneFolderRestartAgents, agent)
+            else if (state.phoneAgent != null)
+                stringResource(Res.string.chatsNewPhoneFolderRestartAgents, agent)
             else stringResource(Res.string.chatsNewPhoneFolderRestartServer)
         PhoneFolderReach.Missing -> stringResource(Res.string.chatsNewPhoneFolderMissing)
         PhoneFolderReach.Denied -> stringResource(Res.string.chatsNewPhoneFolderDenied, agent)
     }
 }
 
-/** Issue 147: the one line saying the last action worked (the access is on, the side restarted); null otherwise. */
+/**
+ * Issue 147: the one line saying the last action worked (the access is on, the side restarted);
+ * null otherwise.
+ */
 @Composable
 private fun phoneFolderDoneWords(state: NewConversationUi): String? {
     if (state.phoneFolder != PhoneFolderReach.Ready) return null
     val agent = state.phoneAgentName ?: "OpenCode"
     return when (state.phoneFolderFixed) {
         PhoneFolderReach.Restart ->
-            if (state.phoneAgent != null) stringResource(Res.string.chatsNewPhoneFolderRestartedAgents, agent)
+            if (state.phoneAgent != null)
+                stringResource(Res.string.chatsNewPhoneFolderRestartedAgents, agent)
             else stringResource(Res.string.chatsNewPhoneFolderRestartedServer)
         PhoneFolderReach.AppAccess -> stringResource(Res.string.chatsNewPhoneFolderAllowed, agent)
         else -> null

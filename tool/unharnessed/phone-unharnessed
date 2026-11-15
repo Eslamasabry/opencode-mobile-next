@@ -1,0 +1,27 @@
+#!/usr/bin/python3
+"""Distribution-Python entrypoint; never exposes upstream subscription login."""
+import hashlib
+import os
+from pathlib import Path
+import subprocess
+import sys
+
+package = Path(__file__).resolve().parent
+os.umask(0o077)
+if sys.argv[1:] == ["--version"]:
+    print("unharnessed 0.9.8-phone.1")
+    raise SystemExit(0)
+if sys.argv[1:]:
+    print("Set up your key or local server on the Agents page.", file=sys.stderr)
+    raise SystemExit(2)
+root = Path(os.environ.get("UNHARNESSED_CODING_AGENT_DIR", str(Path.home() / "unharnessed")))
+wanted = hashlib.sha256((package / "requirements.lock").read_bytes() + (package / "manifest.json").read_bytes() + str(package).encode()).hexdigest()
+try:
+    ready = (root / ".kernel-lock").read_text() == wanted
+except OSError:
+    ready = False
+if not ready:
+    subprocess.run([sys.executable, "-B", str(package / "bootstrap.py"), str(root)], stdout=sys.stderr, check=True)
+os.environ["UNHARNESSED_CODING_AGENT_DIR"] = str(root)
+os.environ["UNHARNESSED_PRESENT_STEPS"] = "1"
+os.execv(sys.executable, [sys.executable, "-B", str(package / "adapter.py")])

@@ -50,6 +50,7 @@ import io.github.eslamasabry.oc.ui.words.res.agentsHelpRowBody
 import io.github.eslamasabry.oc.ui.words.res.agentsHelpTitle
 import io.github.eslamasabry.oc.ui.words.res.agentsHelpWhatBody
 import io.github.eslamasabry.oc.ui.words.res.agentsHelpWhatTitle
+import io.github.eslamasabry.oc.ui.words.res.agentsKeyLocalBody
 import io.github.eslamasabry.oc.ui.words.res.agentsOwnProviderBadEndpoint
 import io.github.eslamasabry.oc.ui.words.res.agentsOwnProviderBadKey
 import io.github.eslamasabry.oc.ui.words.res.agentsOwnProviderBadModel
@@ -65,6 +66,8 @@ import io.github.eslamasabry.oc.ui.words.res.agentsOwnProviderRemove
 import io.github.eslamasabry.oc.ui.words.res.agentsOwnProviderSave
 import io.github.eslamasabry.oc.ui.words.res.agentsOwnProviderTitle
 import io.github.eslamasabry.oc.ui.words.res.agentsOwnProviderUnsupported
+import io.github.eslamasabry.oc.ui.words.res.agentsRequiredModel
+import io.github.eslamasabry.oc.ui.words.res.agentsRequiredModelHint
 import io.github.eslamasabry.oc.ui.words.res.kitCopyDetails
 import io.github.eslamasabry.oc.ui.words.res.kitDetails
 import io.github.eslamasabry.oc.ui.words.res.serversCancel
@@ -72,8 +75,8 @@ import io.github.eslamasabry.oc.ui.words.res.serversWorking
 import org.jetbrains.compose.resources.stringResource
 
 /**
- * The phone tab's one row for issue 147 (a row of the page's own kind, under the agents, never a new level): what runs
- * on this phone and how to use an own provider, in [AgentsHelpSheet].
+ * The phone tab's one row for issue 147 (a row of the page's own kind, under the agents, never a
+ * new level): what runs on this phone and how to use an own provider, in [AgentsHelpSheet].
  */
 @Composable
 internal fun AgentsHelpRow(actions: OwnProviderActions, modifier: Modifier = Modifier) {
@@ -88,7 +91,10 @@ internal fun AgentsHelpRow(actions: OwnProviderActions, modifier: Modifier = Mod
     )
 }
 
-/** "How agents work on this phone": short, one title and one or two sentences per question the reporter asked. */
+/**
+ * "How agents work on this phone": short, one title and one or two sentences per question the
+ * reporter asked.
+ */
 @Composable
 internal fun AgentsHelpSheet(own: OwnProviderUi, actions: OwnProviderActions) {
     KitSheet(
@@ -99,13 +105,34 @@ internal fun AgentsHelpSheet(own: OwnProviderUi, actions: OwnProviderActions) {
         height = KitSheetHeight.Half,
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
-            HelpPart(stringResource(Res.string.agentsHelpWhatTitle), stringResource(Res.string.agentsHelpWhatBody))
-            HelpPart(stringResource(Res.string.agentsHelpProviderTitle), stringResource(Res.string.agentsHelpProviderBody))
-            HelpPart(stringResource(Res.string.agentsHelpInstallTitle), stringResource(Res.string.agentsHelpInstallBody))
-            HelpPart(stringResource(Res.string.agentsHelpFilesTitle), stringResource(Res.string.agentsHelpFilesBody))
-            HelpPart(stringResource(Res.string.agentsHelpKeysTitle), stringResource(Res.string.agentsHelpKeysBody))
-            HelpPart(stringResource(Res.string.agentsHelpNeedsTitle), stringResource(Res.string.agentsHelpNeedsBody))
-            HelpPart(stringResource(Res.string.agentsHelpNotTitle), stringResource(Res.string.agentsHelpNotBody))
+            HelpPart(
+                stringResource(Res.string.agentsHelpWhatTitle),
+                stringResource(Res.string.agentsHelpWhatBody),
+            )
+            HelpPart(
+                stringResource(Res.string.agentsHelpProviderTitle),
+                stringResource(Res.string.agentsHelpProviderBody),
+            )
+            HelpPart(
+                stringResource(Res.string.agentsHelpInstallTitle),
+                stringResource(Res.string.agentsHelpInstallBody),
+            )
+            HelpPart(
+                stringResource(Res.string.agentsHelpFilesTitle),
+                stringResource(Res.string.agentsHelpFilesBody),
+            )
+            HelpPart(
+                stringResource(Res.string.agentsHelpKeysTitle),
+                stringResource(Res.string.agentsHelpKeysBody),
+            )
+            HelpPart(
+                stringResource(Res.string.agentsHelpNeedsTitle),
+                stringResource(Res.string.agentsHelpNeedsBody),
+            )
+            HelpPart(
+                stringResource(Res.string.agentsHelpNotTitle),
+                stringResource(Res.string.agentsHelpNotBody),
+            )
         }
     }
 }
@@ -120,15 +147,20 @@ private fun HelpPart(title: String, body: String) {
 }
 
 /**
- * "Your own provider for {agent}": endpoint, key and model. The key field is never prefilled: a saved key shows
- * "Saved · Replace", and saving without replacing it keeps the saved one. The typed key lives only in this field until
- * Save hands it to the port.
+ * "Your own provider for {agent}": endpoint, key and model. The key field is never prefilled: a
+ * saved key shows "Saved · Replace", and saving without replacing it keeps the saved one. The typed
+ * key lives only in this field until Save hands it to the port.
  */
 @Composable
 internal fun OwnProviderSheet(state: AgentsUi, own: OwnProviderUi, actions: OwnProviderActions) {
     val agent = own.editing
     val name = agent?.let { id -> state.phone.agents.firstOrNull { it.id == id }?.name } ?: ""
     val saved = agent?.let { own.saved[it] }
+    val keyOrLocal =
+        io.github.eslamasabry.oc.engine.agents.catalog.AgentCatalog.builtIn
+            .forProvider(agent)
+            ?.setupMethod ==
+            io.github.eslamasabry.oc.engine.agents.catalog.AgentSetupMethod.KeyOrLocalServer
     val endpoint = remember(agent) { TextFieldState(saved?.endpoint.orEmpty()) }
     val model = remember(agent) { TextFieldState(saved?.model.orEmpty()) }
     // Never rememberSaveable: a key must not enter saved instance state.
@@ -138,10 +170,17 @@ internal fun OwnProviderSheet(state: AgentsUi, own: OwnProviderUi, actions: OwnP
         snapshotFlow { Triple(endpoint.text.toString(), key.text.length, model.text.toString()) }
             .collect { actions.editedOwnProvider() }
     }
-    val enabled = if (own.working) KitEnabled.Disabled(stringResource(Res.string.serversWorking)) else KitEnabled.Enabled
+    val enabled =
+        if (own.working) KitEnabled.Disabled(stringResource(Res.string.serversWorking))
+        else KitEnabled.Enabled
     val save = {
         if (agent != null)
-            actions.saveOwnProvider(agent, endpoint.text.toString(), key.text.toString(), model.text.toString())
+            actions.saveOwnProvider(
+                agent,
+                endpoint.text.toString(),
+                key.text.toString(),
+                model.text.toString(),
+            )
     }
     KitSheet(
         visible = agent != null,
@@ -158,7 +197,12 @@ internal fun OwnProviderSheet(state: AgentsUi, own: OwnProviderUi, actions: OwnP
                     working = own.working,
                 )
             },
-        secondary = KitAction(stringResource(Res.string.serversCancel), actions::closeOwnProvider, enabled = enabled),
+        secondary =
+            KitAction(
+                stringResource(Res.string.serversCancel),
+                actions::closeOwnProvider,
+                enabled = enabled,
+            ),
         tertiary =
             buildList {
                 if (agent != null && saved != null)
@@ -174,7 +218,10 @@ internal fun OwnProviderSheet(state: AgentsUi, own: OwnProviderUi, actions: OwnP
             },
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
-            KitText(stringResource(Res.string.agentsOwnProviderBody, name))
+            KitText(
+                if (keyOrLocal) stringResource(Res.string.agentsKeyLocalBody)
+                else stringResource(Res.string.agentsOwnProviderBody, name)
+            )
             val problem = own.problem
             if (problem == OwnProviderProblem.Unsupported)
                 KitErrorNotice(stringResource(Res.string.agentsOwnProviderUnsupported, name))
@@ -183,7 +230,10 @@ internal fun OwnProviderSheet(state: AgentsUi, own: OwnProviderUi, actions: OwnP
                 stringResource(Res.string.agentsOwnProviderEndpoint),
                 kind = KitFieldKind.Url,
                 helper = stringResource(Res.string.agentsOwnProviderEndpointHint),
-                error = if (problem == OwnProviderProblem.Endpoint) stringResource(Res.string.agentsOwnProviderBadEndpoint) else null,
+                error =
+                    if (problem == OwnProviderProblem.Endpoint)
+                        stringResource(Res.string.agentsOwnProviderBadEndpoint)
+                    else null,
                 enabled = enabled,
             )
             KitField(
@@ -191,17 +241,31 @@ internal fun OwnProviderSheet(state: AgentsUi, own: OwnProviderUi, actions: OwnP
                 stringResource(Res.string.agentsOwnProviderKey),
                 kind = KitFieldKind.Secret,
                 helper = stringResource(Res.string.agentsOwnProviderKeyHint),
-                error = if (problem == OwnProviderProblem.Key) stringResource(Res.string.agentsOwnProviderBadKey) else null,
-                secretPresence = if (replacing) SecretFieldPresence.Editing else SecretFieldPresence.Saved,
+                error =
+                    if (problem == OwnProviderProblem.Key)
+                        stringResource(Res.string.agentsOwnProviderBadKey)
+                    else null,
+                secretPresence =
+                    if (replacing) SecretFieldPresence.Editing else SecretFieldPresence.Saved,
                 onReplaceSecret = { replacing = true },
                 enabled = enabled,
             )
             KitField(
                 model,
-                stringResource(Res.string.agentsOwnProviderModel),
+                stringResource(
+                    if (keyOrLocal) Res.string.agentsRequiredModel
+                    else Res.string.agentsOwnProviderModel
+                ),
                 kind = KitFieldKind.Mono,
-                helper = stringResource(Res.string.agentsOwnProviderModelHint),
-                error = if (problem == OwnProviderProblem.Model) stringResource(Res.string.agentsOwnProviderBadModel) else null,
+                helper =
+                    stringResource(
+                        if (keyOrLocal) Res.string.agentsRequiredModelHint
+                        else Res.string.agentsOwnProviderModelHint
+                    ),
+                error =
+                    if (problem == OwnProviderProblem.Model)
+                        stringResource(Res.string.agentsOwnProviderBadModel)
+                    else null,
                 onSubmit = save,
                 enabled = enabled,
             )

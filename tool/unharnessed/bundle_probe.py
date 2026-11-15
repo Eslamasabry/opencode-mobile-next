@@ -25,7 +25,7 @@ class Client:
         }
         self.error = open("/facts/adapter-stderr.txt", "a")
         self.process = subprocess.Popen(
-            [sys.executable, "-B", str(package / "adapter.py")], cwd=project, env=env,
+            [str(package / "phone-unharnessed")], cwd=project, env=env,
             stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=self.error,
             text=True, bufsize=1,
         )
@@ -79,6 +79,8 @@ try:
     answer = client.request(3, "session/prompt", {"sessionId": public, "prompt": prompt})
     assert answer.get("result", {}).get("stopReason") == "end_turn", answer
     assert (project / "hello.py").read_text() == "print('hello from phone')\n"
+    call = next(f["received"]["params"]["update"] for f in frames if f.get("received", {}).get("params", {}).get("update", {}).get("sessionUpdate") == "tool_call")
+    assert call["rawInput"]["command"] == code
     assert any("hello from phone" in json.dumps(f.get("received", {}).get("params", {}).get("update", {}).get("content")) for f in frames)
     assert "result" in client.request(4, "session/close", {"sessionId": public})
     client.stop()

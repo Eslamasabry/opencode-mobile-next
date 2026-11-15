@@ -20,3 +20,25 @@ The normal `:engine:agents:desktopTest --tests '*UnharnessedAdapterTest*'` task 
 fake child only. Real binary/kernel tests run exclusively in the dedicated hosted workflow. The install
 bundle includes the exact binary and skills, pinned uv, standalone CPython and a wheelhouse installed with
 hash-locked requirements, without network access. All bundle file hashes and component costs are artifacts.
+
+The production entrypoint adds a `command` view of the original `rawInput.code` on execute steps. The original
+code, outputs and other fields remain present. This lets the pinned helper retain Python input in its shell-step
+mapping. The underlying identity bridge otherwise rewrites only ACP envelope ids. Session-list ids are translated
+for known entries; an explicit successful upstream deletion removes the matching mapping. No kernel venv is needed
+to run the adapter itself.
+
+| Catalog row | Behavior |
+|---|---|
+| B-AGENT-UH-010 | An unhosted pin has no install action; never-asks and key/local setup come from the descriptor. |
+| B-AGENT-UH-011 | Remote endpoints need a key; local servers may omit it; both need a model. |
+| B-AGENT-UH-012 | Readiness needs configured secure credentials or a local server, and removal clears setup. |
+| B-AGENT-UH-013 | Runtime provider copies use private files and stdin; clearing preserves saved sessions. |
+| B-AGENT-UH-020 | A never-asking agent has a warning, no approval control and no automatic approval sweep. |
+| B-AGENT-UH-021 | Captured real ACP code/output become a readable completed step through the app mapper. |
+| B-AGENT-UH-022 | A model list cannot make an unconfigured agent selectable. |
+| B-AGENT-UH-023 | Removing the agent erases its private runtime in every profile, retaining other agents and projects. |
+| B-AGENT-UH-030 | The pending Agents card shows the unavailable download and command policy. |
+| B-AGENT-UH-031 | Setup routes to the key/local form. |
+| B-AGENT-UH-032 | The form states the required model and offers no subscription login. |
+| B-AGENT-UH-033 | The composer states never asks using static text. |
+| B-AGENT-UH-034 | A prefilled first message still has the full warning before Start. |

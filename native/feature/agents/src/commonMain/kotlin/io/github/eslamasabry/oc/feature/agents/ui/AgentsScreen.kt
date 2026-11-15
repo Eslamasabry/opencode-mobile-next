@@ -1,15 +1,11 @@
 package io.github.eslamasabry.oc.feature.agents.ui
 
-import io.github.eslamasabry.oc.ui.kit.frame.kitPageScrollState
-import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxSize
-import io.github.eslamasabry.oc.ui.kit.frame.kitImePadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.*
@@ -26,35 +22,35 @@ import io.github.eslamasabry.oc.feature.agents.hub.AgentsHubActions
 import io.github.eslamasabry.oc.feature.agents.hub.AgentsHubControlsUi
 import io.github.eslamasabry.oc.feature.agents.hub.AgentsIssue
 import io.github.eslamasabry.oc.feature.agents.hub.AgentsProblem
+import io.github.eslamasabry.oc.feature.agents.hub.AgentsTab
 import io.github.eslamasabry.oc.feature.agents.hub.AgentsUi
+import io.github.eslamasabry.oc.feature.agents.hub.ComputerCheck
 import io.github.eslamasabry.oc.feature.agents.hub.OwnAgentActions
 import io.github.eslamasabry.oc.feature.agents.hub.OwnProviderActions
-import io.github.eslamasabry.oc.feature.agents.hub.ComputerCheck
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentRemoval
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentRemovalIssue
-import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentStatus
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentUpdateNote
-import io.github.eslamasabry.oc.ui.design.tokens.Space
-import io.github.eslamasabry.oc.feature.agents.hub.AgentsTab
 import io.github.eslamasabry.oc.ui.design.color.StatusTone
+import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitAction
-import io.github.eslamasabry.oc.ui.kit.action.KitIconButton
-import io.github.eslamasabry.oc.ui.kit.choice.KitSegment
-import io.github.eslamasabry.oc.ui.kit.choice.KitSegmented
-import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
-import io.github.eslamasabry.oc.ui.kit.frame.KitScreenRefresh
-import io.github.eslamasabry.oc.ui.kit.state.KitActionCard
-import io.github.eslamasabry.oc.ui.kit.status.KitStatusLine
 import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.KitText
+import io.github.eslamasabry.oc.ui.kit.action.KitIconButton
+import io.github.eslamasabry.oc.ui.kit.choice.KitSegment
+import io.github.eslamasabry.oc.ui.kit.choice.KitSegmented
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
+import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
+import io.github.eslamasabry.oc.ui.kit.frame.KitScreenRefresh
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenWidth
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
+import io.github.eslamasabry.oc.ui.kit.frame.kitImePadding
+import io.github.eslamasabry.oc.ui.kit.frame.kitPageScrollState
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.input.KitField
 import io.github.eslamasabry.oc.ui.kit.input.KitFieldKind
@@ -65,19 +61,18 @@ import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
 import io.github.eslamasabry.oc.ui.kit.row.*
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
-import io.github.eslamasabry.oc.ui.kit.row.KitSectionLabel
+import io.github.eslamasabry.oc.ui.kit.state.KitActionCard
 import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
+import io.github.eslamasabry.oc.ui.kit.status.KitStatusLine
 import io.github.eslamasabry.oc.ui.kit.teaching.KitTip
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.*
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.addServerCheckFailedPlain
-import io.github.eslamasabry.oc.ui.words.res.agentAccountsTitle
 import io.github.eslamasabry.oc.ui.words.res.agentComputerCodex
 import io.github.eslamasabry.oc.ui.words.res.agentComputerCodexNote
 import io.github.eslamasabry.oc.ui.words.res.agentComputerPaseo
-import io.github.eslamasabry.oc.ui.words.res.agentDraftTitle
 import io.github.eslamasabry.oc.ui.words.res.agentsHelperMayHaveStopped
 import io.github.eslamasabry.oc.ui.words.res.agentsHelperStartAgain
 import io.github.eslamasabry.oc.ui.words.res.agentsHelperStopped
@@ -86,8 +81,6 @@ import io.github.eslamasabry.oc.ui.words.res.agentsHubAddFailed
 import io.github.eslamasabry.oc.ui.words.res.agentsHubAdded
 import io.github.eslamasabry.oc.ui.words.res.agentsHubAgentsFailed
 import io.github.eslamasabry.oc.ui.words.res.agentsHubCheck
-import io.github.eslamasabry.oc.ui.words.res.agentsHubCheckAgents
-import io.github.eslamasabry.oc.ui.words.res.agentsHubComputersEmpty
 import io.github.eslamasabry.oc.ui.words.res.agentsHubDefaultName
 import io.github.eslamasabry.oc.ui.words.res.agentsHubFolderHint
 import io.github.eslamasabry.oc.ui.words.res.agentsHubInvalidAddress
@@ -95,7 +88,6 @@ import io.github.eslamasabry.oc.ui.words.res.agentsHubInvalidFolder
 import io.github.eslamasabry.oc.ui.words.res.agentsHubInvalidPassword
 import io.github.eslamasabry.oc.ui.words.res.agentsHubNotAnswering
 import io.github.eslamasabry.oc.ui.words.res.agentsHubNotConnected
-import io.github.eslamasabry.oc.ui.words.res.agentsHubOnComputers
 import io.github.eslamasabry.oc.ui.words.res.agentsHubOnPhone
 import io.github.eslamasabry.oc.ui.words.res.agentsHubPasswordNeeded
 import io.github.eslamasabry.oc.ui.words.res.agentsHubSignInFailed
@@ -105,13 +97,13 @@ import io.github.eslamasabry.oc.ui.words.res.agentsPreviousVersion
 import io.github.eslamasabry.oc.ui.words.res.agentsPreviousVersionBody
 import io.github.eslamasabry.oc.ui.words.res.agentsPreviousVersionFailed
 import io.github.eslamasabry.oc.ui.words.res.agentsPreviousVersionRestored
+import io.github.eslamasabry.oc.ui.words.res.agentsRemovePrivateDataBody
 import io.github.eslamasabry.oc.ui.words.res.agentsResetSavedSignIns
 import io.github.eslamasabry.oc.ui.words.res.agentsResetSavedSignInsBody
 import io.github.eslamasabry.oc.ui.words.res.agentsResetSavedSignInsFailed
 import io.github.eslamasabry.oc.ui.words.res.agentsRestartAfterReset
 import io.github.eslamasabry.oc.ui.words.res.agentsRunOnBuiltIn
 import io.github.eslamasabry.oc.ui.words.res.agentsSectionTitle
-import io.github.eslamasabry.oc.ui.words.res.cardsFromAgentsSupporting
 import io.github.eslamasabry.oc.ui.words.res.cardsFromAgentsTitle
 import io.github.eslamasabry.oc.ui.words.res.codexProjectFolder
 import io.github.eslamasabry.oc.ui.words.res.computerToolsOpen
@@ -119,7 +111,6 @@ import io.github.eslamasabry.oc.ui.words.res.kitCopyDetails
 import io.github.eslamasabry.oc.ui.words.res.kitDetails
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarBack
 import io.github.eslamasabry.oc.ui.words.res.linuxAgentPayloadBusy
-import io.github.eslamasabry.oc.ui.words.res.linuxAgentPayloadRefresh
 import io.github.eslamasabry.oc.ui.words.res.linuxAgentPayloadRemove
 import io.github.eslamasabry.oc.ui.words.res.linuxAgentPayloadRemoveBody
 import io.github.eslamasabry.oc.ui.words.res.linuxAgentPayloadRemoveTitle
@@ -136,7 +127,6 @@ import io.github.eslamasabry.oc.ui.words.res.paseoSetupNotice
 import io.github.eslamasabry.oc.ui.words.res.serversAddress
 import io.github.eslamasabry.oc.ui.words.res.serversCancel
 import io.github.eslamasabry.oc.ui.words.res.serversConnected
-import io.github.eslamasabry.oc.ui.words.res.serversCreate
 import io.github.eslamasabry.oc.ui.words.res.serversSave
 import io.github.eslamasabry.oc.ui.words.res.serversWorking
 import io.github.eslamasabry.oc.ui.words.res.whatsNewShowAgents
@@ -144,11 +134,12 @@ import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 
 /**
- * Settings › Agents (owner's pick C2, 2026-11-08): two tabs, "On this phone" and "On computers". The phone tab is
- * a bento grid of agent tiles (a large mark, the name, one state line, at most one small act; a tap opens the agent's
- * sheet) with one status line under it. The computers tab leads with "Add a computer" while none is connected, then
- * each computer's agents as tiles. Settings live in the top bar's ⋯; there is no Refresh row (the page reads on its
- * own, and a pull reads again) and no "Connect phone agents" button (they connect on their own). Kit parts only.
+ * Settings › Agents (owner's pick C2, 2026-11-08): two tabs, "On this phone" and "On computers".
+ * The phone tab is a bento grid of agent tiles (a large mark, the name, one state line, at most one
+ * small act; a tap opens the agent's sheet) with one status line under it. The computers tab leads
+ * with "Add a computer" while none is connected, then each computer's agents as tiles. Settings
+ * live in the top bar's ⋯; there is no Refresh row (the page reads on its own, and a pull reads
+ * again) and no "Connect phone agents" button (they connect on their own). Kit parts only.
  */
 @Composable
 public fun AgentsScreen(
@@ -156,7 +147,10 @@ public fun AgentsScreen(
     actions: AgentsActions,
     hub: AgentsHubControlsUi? = null,
     hubActions: AgentsHubActions? = null,
-    /** Issue 147: own provider for a built-in agent and "How this works"; null where the app binds none. */
+    /**
+     * Issue 147: own provider for a built-in agent and "How this works"; null where the app binds
+     * none.
+     */
     ownActions: OwnProviderActions? = null,
     /** Issue 147: "Add your own agent"; null where the app binds none. */
     ownAgentActions: OwnAgentActions? = null,
@@ -205,17 +199,18 @@ public fun AgentsScreen(
                 onExit = actions::back,
                 more =
                     if (menu.isEmpty()) null
-                    else { _ ->
-                        val moreLabel = stringResource(Res.string.kitTopBarMore)
-                        KitMenu(
-                            expanded = menuOpen,
-                            items = menu,
-                            onDismissRequest = { menuOpen = false },
-                            title = moreLabel,
-                        ) {
-                            KitIconButton(KitIcons.more, moreLabel, { menuOpen = true })
-                        }
-                    },
+                    else
+                        { _ ->
+                            val moreLabel = stringResource(Res.string.kitTopBarMore)
+                            KitMenu(
+                                expanded = menuOpen,
+                                items = menu,
+                                onDismissRequest = { menuOpen = false },
+                                title = moreLabel,
+                            ) {
+                                KitIconButton(KitIcons.more, moreLabel, { menuOpen = true })
+                            }
+                        },
             )
         },
         width = KitScreenWidth.Reading,
@@ -235,8 +230,16 @@ public fun AgentsScreen(
             KitTip(stringResource(Res.string.whatsNewShowAgents), showArrival, dismissArrival) {
                 KitSegmented(
                     listOf(
-                        KitSegment(AgentsTab.Phone, stringResource(Res.string.agentsHubOnPhone), KitIcons.phone),
-                        KitSegment(AgentsTab.Computers, stringResource(Res.string.agentsTabComputers), KitIcons.computer),
+                        KitSegment(
+                            AgentsTab.Phone,
+                            stringResource(Res.string.agentsHubOnPhone),
+                            KitIcons.phone,
+                        ),
+                        KitSegment(
+                            AgentsTab.Computers,
+                            stringResource(Res.string.agentsTabComputers),
+                            KitIcons.computer,
+                        ),
                     ),
                     state.tab,
                     stringResource(Res.string.agentsTabsLabel),
@@ -247,11 +250,19 @@ public fun AgentsScreen(
             when (state.tab) {
                 AgentsTab.Phone -> {
                     PhoneTab(state, actions, hub, hubActions, enabled, gutter)
-                    if (ownAgentActions != null && hub?.ownAgents?.available == true && state.phone.available)
+                    if (
+                        ownAgentActions != null &&
+                            hub?.ownAgents?.available == true &&
+                            state.phone.available
+                    )
                         OwnAgentRows(hub.ownAgents, ownAgentActions, gutter)
-                    if (ownActions != null && hub?.own?.available == true) AgentsHelpRow(ownActions, gutter)
+                    if (ownActions != null && hub?.own?.available == true)
+                        AgentsHelpRow(ownActions, gutter)
                 }
-                AgentsTab.Computers -> ComputersTab(state, actions, enabled, gutter) { AddComputerForm(state, actions, enabled, gutter, fields) }
+                AgentsTab.Computers ->
+                    ComputersTab(state, actions, enabled, gutter) {
+                        AddComputerForm(state, actions, enabled, gutter, fields)
+                    }
             }
         }
         PhoneAgentSheet(state, actions, enabled, hub?.own, ownActions)
@@ -259,7 +270,8 @@ public fun AgentsScreen(
             OwnProviderSheet(state, hub.own, ownActions)
             AgentsHelpSheet(hub.own, ownActions)
         }
-        if (ownAgentActions != null && hub != null) OwnAgentSheet(hub.ownAgents, ownAgentActions, ownActions)
+        if (ownAgentActions != null && hub != null)
+            OwnAgentSheet(hub.ownAgents, ownAgentActions, ownActions)
         KitSheet(
             visible = state.revertingAgent != null,
             onDismissRequest = actions::cancelPreviousVersion,
@@ -332,7 +344,18 @@ public fun AgentsScreen(
                     title = stringResource(Res.string.linuxAgentPayloadRemoveTitle, agent.name),
                     confirmLabel = stringResource(Res.string.linuxAgentPayloadRemove, agent.name),
                     kind = KitConfirmKind.Destructive,
-                    body = stringResource(Res.string.linuxAgentPayloadRemoveBody),
+                    body =
+                        stringResource(
+                            if (
+                                io.github.eslamasabry.oc.engine.agents.catalog.AgentCatalog.builtIn
+                                    .forProvider(agent.id)
+                                    ?.setupMethod ==
+                                    io.github.eslamasabry.oc.engine.agents.catalog.AgentSetupMethod
+                                        .KeyOrLocalServer
+                            )
+                                Res.string.agentsRemovePrivateDataBody
+                            else Res.string.linuxAgentPayloadRemoveBody
+                        ),
                 )
             },
             onConfirm = actions::confirmRemoval,
@@ -362,10 +385,12 @@ private fun IssueNotice(issue: AgentsProblem, modifier: Modifier) {
 private fun issueWords(issue: AgentsProblem): String =
     stringResource(
         when (issue.failure) {
-            // The daemon asked for a password and none was given (`hello.rejected` "password_required"): say the
+            // The daemon asked for a password and none was given (`hello.rejected`
+            // "password_required"): say the
             // computer needs one, not that it refused one.
             is Failure.SignIn ->
-                if ((issue.failure as Failure.SignIn).why == SignInWhy.PasswordMissing) Res.string.agentsHubPasswordNeeded
+                if ((issue.failure as Failure.SignIn).why == SignInWhy.PasswordMissing)
+                    Res.string.agentsHubPasswordNeeded
                 else Res.string.agentsHubSignInFailed
             is Failure.ComputerDidNotAnswer,
             is Failure.Network,
@@ -380,8 +405,6 @@ private fun issueWords(issue: AgentsProblem): String =
                 }
         }
     )
-
-
 
 /** The add-a-computer form's fields, kept by the screen so a save can clear them. */
 private class ComputerFields(
@@ -402,11 +425,27 @@ private fun agentsMenu(
 ): List<KitMenuItem> {
     val phoneAvailable = state.phone.available
     val items = mutableListOf<KitMenuItem>()
-    fun item(label: String, icon: androidx.compose.ui.graphics.vector.ImageVector, onSelect: () -> Unit) {
-        items += KitMenuItem(label, { close(); onSelect() }, icon = icon)
+    fun item(
+        label: String,
+        icon: androidx.compose.ui.graphics.vector.ImageVector,
+        onSelect: () -> Unit,
+    ) {
+        items +=
+            KitMenuItem(
+                label,
+                {
+                    close()
+                    onSelect()
+                },
+                icon = icon,
+            )
     }
     if (phoneAvailable && hub?.connection?.usingBuiltIn != false && hubActions != null)
-        item(stringResource(Res.string.cardsFromAgentsTitle), KitIcons.category, hubActions::openCardsSettings)
+        item(
+            stringResource(Res.string.cardsFromAgentsTitle),
+            KitIcons.category,
+            hubActions::openCardsSettings,
+        )
     val sources = state.draftSources
     for (source in sources) {
         item(
@@ -417,10 +456,18 @@ private fun agentsMenu(
             actions.openDrafts(source.id)
         }
     }
-    for (account in state.accounts)
-        item(stringResource(Res.string.agentsHostAccount, account.name), KitIcons.account) { actions.openAccount(account.id) }
+    for (account in state.accounts) item(
+        stringResource(Res.string.agentsHostAccount, account.name),
+        KitIcons.account,
+    ) {
+        actions.openAccount(account.id)
+    }
     if (phoneAvailable)
-        item(stringResource(Res.string.agentsResetSavedSignIns), KitIcons.login, actions::requestSignInReset)
+        item(
+            stringResource(Res.string.agentsResetSavedSignIns),
+            KitIcons.login,
+            actions::requestSignInReset,
+        )
     return items
 }
 
@@ -475,8 +522,7 @@ private fun PhoneTab(
                     stringResource(
                         when (removal.issue) {
                             PhoneAgentRemovalIssue.Busy -> Res.string.linuxAgentPayloadBusy
-                            PhoneAgentRemovalIssue.Unsafe ->
-                                Res.string.linuxAgentPayloadUnsafe
+                            PhoneAgentRemovalIssue.Unsafe -> Res.string.linuxAgentPayloadUnsafe
                             PhoneAgentRemovalIssue.Unconfirmed ->
                                 Res.string.linuxAgentPayloadUnconfirmed
                             PhoneAgentRemovalIssue.Unavailable ->
@@ -513,7 +559,9 @@ private fun PhoneTab(
             stringResource(Res.string.agentsSwitchToBuiltIn),
             hubActions::switchToBuiltIn,
             gutter,
-            enabled = if (hub.working) KitEnabled.Disabled(stringResource(Res.string.serversWorking)) else enabled,
+            enabled =
+                if (hub.working) KitEnabled.Disabled(stringResource(Res.string.serversWorking))
+                else enabled,
             working = hub.working,
         )
     }
@@ -531,7 +579,10 @@ private fun PhoneTab(
     PhoneStatusLine(state, actions, enabled)
 }
 
-/** "This phone is ready · arm64 · Android 15" with Check again, under the tiles (it replaces "Check this phone"). */
+/**
+ * "This phone is ready · arm64 · Android 15" with Check again, under the tiles (it replaces "Check
+ * this phone").
+ */
 @Composable
 private fun PhoneStatusLine(state: AgentsUi, actions: AgentsActions, enabled: KitEnabled) {
     if (!state.phone.available || state.phone.needsRestart) return
@@ -543,8 +594,11 @@ private fun PhoneStatusLine(state: AgentsUi, actions: AgentsActions, enabled: Ki
     val named = state.phone.updateNote?.let { it.name.startsWith("Waiting") } == true
     val update =
         phoneUpdateNote(state.phone.updateNote, state.phone.updateAgentName)?.let { text ->
-            // A wait names the agent it is for ("Antigravity: agent update waits until your agents are idle").
-            if (named && state.phone.updateAgentName != null) "${state.phone.updateAgentName}: $text" else text
+            // A wait names the agent it is for ("Antigravity: agent update waits until your agents
+            // are idle").
+            if (named && state.phone.updateAgentName != null)
+                "${state.phone.updateAgentName}: $text"
+            else text
         }
     KitStatusLine(
         if (update == null) ready else "$ready · $update",
@@ -571,15 +625,17 @@ private fun phoneUpdateNote(note: PhoneAgentUpdateNote?, agent: String?): String
         PhoneAgentUpdateNote.WaitingMetered -> stringResource(Res.string.agentsUpdateWaitingMetered)
         PhoneAgentUpdateNote.Updating ->
             stringResource(Res.string.agentsUpdateUpdating, agent.orEmpty())
-        PhoneAgentUpdateNote.Updated -> stringResource(Res.string.agentsUpdateUpdated, agent.orEmpty())
-        PhoneAgentUpdateNote.NeedsSignIn -> stringResource(Res.string.agentsUpdateNeedsSignIn, agent.orEmpty())
+        PhoneAgentUpdateNote.Updated ->
+            stringResource(Res.string.agentsUpdateUpdated, agent.orEmpty())
+        PhoneAgentUpdateNote.NeedsSignIn ->
+            stringResource(Res.string.agentsUpdateNeedsSignIn, agent.orEmpty())
         PhoneAgentUpdateNote.ReadFailed -> stringResource(Res.string.agentsUpdateReadFailed)
         PhoneAgentUpdateNote.Refused -> stringResource(Res.string.agentsUpdateRefused)
     }
 
 /**
- * "On computers": with no computer connected, the one call to add one comes first; then each computer's agents as
- * tiles under its name, and the add form or a quiet Add a computer at the end.
+ * "On computers": with no computer connected, the one call to add one comes first; then each
+ * computer's agents as tiles under its name, and the add form or a quiet Add a computer at the end.
  */
 @Composable
 private fun ComputersTab(
@@ -595,7 +651,11 @@ private fun ComputersTab(
         KitActionCard(
             KitIcons.computer,
             stringResource(Res.string.agentsAddComputerLine),
-            KitAction(stringResource(Res.string.agentsHubAddComputer), actions::startAdding, enabled = enabled),
+            KitAction(
+                stringResource(Res.string.agentsHubAddComputer),
+                actions::startAdding,
+                enabled = enabled,
+            ),
             gutter,
         )
     }
@@ -605,22 +665,44 @@ private fun ComputersTab(
             title = computer.name,
             server = computer.folder.ifEmpty { computer.address },
             supporting =
-                stringResource(if (computer.connected) Res.string.serversConnected else Res.string.agentsHubNotConnected),
+                stringResource(
+                    if (computer.connected) Res.string.serversConnected
+                    else Res.string.agentsHubNotConnected
+                ),
             leading = KitRowLeading.Glyph(KitIcons.computer),
-            // A named way to the computer's page (update its agents, import conversations), never a bare chevron.
+            // A named way to the computer's page (update its agents, import conversations), never a
+            // bare chevron.
             trailing =
                 KitRowTrailing.Action(
-                    KitLineAction(stringResource(Res.string.computerToolsOpen), { actions.openComputer(computer.id) })
+                    KitLineAction(
+                        stringResource(Res.string.computerToolsOpen),
+                        { actions.openComputer(computer.id) },
+                    )
                 ),
         )
         val ready = state.ready[computer.id]
         when {
             computer.id in state.unreadComputers ->
-                KitText(stringResource(Res.string.agentsComputerReadFailed), gutter, role = TypeRole.Secondary, tone = TextTone.Secondary)
+                KitText(
+                    stringResource(Res.string.agentsComputerReadFailed),
+                    gutter,
+                    role = TypeRole.Secondary,
+                    tone = TextTone.Secondary,
+                )
             ready == null ->
-                KitText(stringResource(Res.string.agentsComputerLooking), gutter, role = TypeRole.Secondary, tone = TextTone.Secondary)
+                KitText(
+                    stringResource(Res.string.agentsComputerLooking),
+                    gutter,
+                    role = TypeRole.Secondary,
+                    tone = TextTone.Secondary,
+                )
             ready.isEmpty() ->
-                KitText(stringResource(Res.string.paseoCheckNoneReady), gutter, role = TypeRole.Secondary, tone = TextTone.Secondary)
+                KitText(
+                    stringResource(Res.string.paseoCheckNoneReady),
+                    gutter,
+                    role = TypeRole.Secondary,
+                    tone = TextTone.Secondary,
+                )
             else -> ComputerAgentTiles(computer.id, ready, actions, gutter)
         }
     }
@@ -637,7 +719,13 @@ private fun ComputersTab(
 }
 
 @Composable
-private fun AddComputerForm(state: AgentsUi, actions: AgentsActions, enabled: KitEnabled, gutter: Modifier, fields: ComputerFields) {
+private fun AddComputerForm(
+    state: AgentsUi,
+    actions: AgentsActions,
+    enabled: KitEnabled,
+    gutter: Modifier,
+    fields: ComputerFields,
+) {
     val address = fields.address
     val folder = fields.folder
     val password = fields.password
@@ -647,8 +735,7 @@ private fun AddComputerForm(state: AgentsUi, actions: AgentsActions, enabled: Ki
             for (kind in AgentComputerKind.entries) {
                 KitButton(
                     stringResource(
-                        if (kind == AgentComputerKind.Paseo)
-                            Res.string.agentComputerPaseo
+                        if (kind == AgentComputerKind.Paseo) Res.string.agentComputerPaseo
                         else Res.string.agentComputerCodex
                     ),
                     { actions.selectComputerKind(kind) },
@@ -661,8 +748,7 @@ private fun AddComputerForm(state: AgentsUi, actions: AgentsActions, enabled: Ki
         }
         KitNotice(
             stringResource(
-                if (state.computerKind == AgentComputerKind.Paseo)
-                    Res.string.paseoSetupNotice
+                if (state.computerKind == AgentComputerKind.Paseo) Res.string.paseoSetupNotice
                 else Res.string.agentComputerCodexNote
             )
         )
@@ -673,13 +759,11 @@ private fun AddComputerForm(state: AgentsUi, actions: AgentsActions, enabled: Ki
             kind = KitFieldKind.Url,
             placeholder =
                 stringResource(
-                    if (state.computerKind == AgentComputerKind.Codex)
-                        Res.string.codexAddressHint
+                    if (state.computerKind == AgentComputerKind.Codex) Res.string.codexAddressHint
                     else Res.string.paseoAddressHint
                 ),
             error =
-                if (invalid?.address == true)
-                    stringResource(Res.string.agentsHubInvalidAddress)
+                if (invalid?.address == true) stringResource(Res.string.agentsHubInvalidAddress)
                 else null,
             enabled = enabled,
         )
@@ -689,16 +773,14 @@ private fun AddComputerForm(state: AgentsUi, actions: AgentsActions, enabled: Ki
             kind = KitFieldKind.Path,
             placeholder = stringResource(Res.string.agentsHubFolderHint),
             error =
-                if (invalid?.folder == true)
-                    stringResource(Res.string.agentsHubInvalidFolder)
+                if (invalid?.folder == true) stringResource(Res.string.agentsHubInvalidFolder)
                 else null,
             enabled = enabled,
         )
         KitField(
             password,
             stringResource(
-                if (state.computerKind == AgentComputerKind.Codex)
-                    Res.string.codexTokenLabel
+                if (state.computerKind == AgentComputerKind.Codex) Res.string.codexTokenLabel
                 else Res.string.paseoPasswordLabel
             ),
             kind = KitFieldKind.Secret,
@@ -709,8 +791,7 @@ private fun AddComputerForm(state: AgentsUi, actions: AgentsActions, enabled: Ki
                     else Res.string.paseoPasswordHelp
                 ),
             error =
-                if (invalid?.password == true)
-                    stringResource(Res.string.agentsHubInvalidPassword)
+                if (invalid?.password == true) stringResource(Res.string.agentsHubInvalidPassword)
                 else null,
             enabled = enabled,
         )
@@ -722,8 +803,7 @@ private fun AddComputerForm(state: AgentsUi, actions: AgentsActions, enabled: Ki
         )
         (state.check as? ComputerCheck.Ready)?.let { ready ->
             KitNotice(
-                if (ready.agents.isEmpty())
-                    stringResource(Res.string.paseoCheckNoneReady)
+                if (ready.agents.isEmpty()) stringResource(Res.string.paseoCheckNoneReady)
                 else
                     stringResource(
                         Res.string.paseoCheckReady,

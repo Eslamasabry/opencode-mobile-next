@@ -45,10 +45,14 @@ public data class ApprovalChipUi(
     val inheritToChildren: Boolean = false,
     /** C2: where the mode comes from when it is not this conversation's own choice. */
     val setBy: ApprovalSetBy = ApprovalSetBy.Itself,
-    /** C2: this conversation has its own choice and a parent exists, so it can go back to following the parent. */
+    /**
+     * C2: this conversation has its own choice and a parent exists, so it can go back to following
+     * the parent.
+     */
     val canFollowParent: Boolean = false,
     /** C2: the permissions approved automatically here, newest first (at most five). */
     val approvedPermissions: List<String> = emptyList(),
+    val neverAsks: Boolean = false,
 )
 
 /** Where the effective approval mode was decided. */
@@ -92,6 +96,7 @@ public class ApprovalPresenter(
     private val port: ApprovalPort,
     private val launcher: ChatLauncher,
     clock: Clock,
+    private val neverAsks: StateFlow<Boolean> = MutableStateFlow(false),
 ) : ApprovalChipActions {
     private data class Local(
         val menuOpen: Boolean = false,
@@ -126,9 +131,11 @@ public class ApprovalPresenter(
     private fun present(caps: ServerCapabilities, l: Local): ApprovalChipUi {
         val effective = effective(ref.sessionId)
         return ApprovalChipUi(
-            offered = store != null && caps.permissionRequests,
+            offered = store != null && caps.permissionRequests && !neverAsks.value,
+            neverAsks = neverAsks.value,
             choice = choiceOf(effective),
-            inheritToChildren = effective.explicit && settings()[ref.sessionId.raw]?.inheritToChildren == true,
+            inheritToChildren =
+                effective.explicit && settings()[ref.sessionId.raw]?.inheritToChildren == true,
             setBy =
                 when {
                     effective.explicit -> ApprovalSetBy.Itself
@@ -154,7 +161,8 @@ public class ApprovalPresenter(
         val revision = store?.revision ?: MutableStateFlow(0L)
         combine(port.waiting, revision) { waiting, _ -> waiting }
             .onEach { waiting ->
-                if (store == null || !capabilities.value.permissionRequests) return@onEach
+                if (store == null || !capabilities.value.permissionRequests || neverAsks.value)
+                    return@onEach
                 val answered = sweep.sweep(waiting)
                 val mine = answered.count { id ->
                     waiting.any { it.id == id && it.sessionId == ref.sessionId }
@@ -162,11 +170,19 @@ public class ApprovalPresenter(
                 if (mine > 0) local.update { it.copy(autoAnswered = it.autoAnswered + mine) }
             }
             .launchIn(scope)
-        return combine(capabilities, local, revision, AutoApprovalRecords.revision) { c, l, _, _ -> present(c, l) }
+        return combine(capabilities, local, revision, AutoApprovalRecords.revision, neverAsks) {
+                c,
+                l,
+                _,
+                _,
+                _ ->
+                present(c, l)
+            }
             .stateIn(scope, started, current())
     }
 
     override fun openApprovalMenu() {
+        if (!current().offered) return
         local.update { it.copy(menuOpen = true) }
     }
 
@@ -178,6 +194,7 @@ public class ApprovalPresenter(
      * Only "Approve everything" asks first; this conversation's own modes apply at once (Flutter).
      */
     override fun chooseApproval(choice: ApprovalChoice) {
+        if (!current().offered) return
         local.update { it.copy(menuOpen = false) }
         val now = choiceOf(effective(ref.sessionId))
         if (choice == now) return
@@ -244,7 +261,8 @@ public class ApprovalPresenter(
                                 session,
                                 SessionApproval(
                                     ApprovalMode.AutoOnce,
-                                    inheritToChildren = s.settings(profile)[session]?.inheritToChildren == true,
+                                    inheritToChildren =
+                                        s.settings(profile)[session]?.inheritToChildren == true,
                                 ),
                             )
                         ApprovalChoice.Everything -> {

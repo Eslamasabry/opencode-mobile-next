@@ -28,6 +28,8 @@ cp /tmp/uv-aarch64-unknown-linux-gnu/uv /bundle/bin/uv
 cp -R unharnessed-runtime skills /bundle/
 cp LICENSE README.md /bundle/
 cp /probe/adapter.py /probe/bootstrap.py /bundle/
+cp /probe/phone-unharnessed /bundle/
+chmod 700 /bundle/phone-unharnessed
 printf '%s\n' '{"name":"unharnessed","version":"0.9.8","piConfig":{"name":"unharnessed","configDir":".unharnessed"}}' > /bundle/package.json
 /bundle/bin/uv python install 3.11.18 --install-dir /bundle/python
 python=$(find /bundle/python -path '*/bin/python3.11' | head -n 1)
@@ -64,9 +66,12 @@ fi
 /tmp/build-venv/bin/python -m pip download --require-hashes --only-binary=:all: \
   --find-links /bundle/wheels -r /bundle/requirements.lock -d /bundle/wheels
 cp /bundle/requirements.lock /facts/requirements.lock
+python3 /probe/flatten_bundle.py /bundle
 python3 /probe/manifest.py /bundle
 cp /bundle/manifest.json /facts/manifest.json
+sha256sum /bundle/manifest.json > /facts/manifest-sha256.txt
 python3 /probe/package_bundle.py /bundle /facts/unharnessed-arm64.tar.gz
 sha256sum /facts/unharnessed-arm64.tar.gz > /facts/bundle-sha256.txt
 stat -c %s /facts/unharnessed-arm64.tar.gz > /facts/bundle-download-bytes.txt
 python3 -B /probe/test_adapter.py
+python3 -B /probe/red_proof.py

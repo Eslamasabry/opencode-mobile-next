@@ -1,8 +1,12 @@
 package io.github.eslamasabry.oc.feature.chats
 
+import androidx.compose.ui.graphics.toAwtImage
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.domain.ImportableConversation
@@ -18,27 +22,41 @@ import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
+import java.io.File
+import javax.imageio.ImageIO
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
 /**
- * Issue 147 (F-034): a person taps where a chip was. The chips and Start keep ONE place from the first frame, through
- * "getting ready", to the settled page (the reason line between them used to come and go).
+ * Issue 147 (F-034): a person taps where a chip was. The chips and Start keep ONE place from the
+ * first frame, through "getting ready", to the settled page (the reason line between them used to
+ * come and go).
  */
 @OptIn(ExperimentalTestApi::class)
 class NewConversationStableLayoutTest {
     private object Actions : NewConversationActions {
         override fun back() {}
+
         override fun addServer() {}
+
         override fun chooseServer(profile: ProfileId) {}
+
         override fun draftChanged(text: String) {}
+
         override fun chooseDirectory(directory: String) {}
+
         override fun chooseModel(model: ModelRef?) {}
+
         override fun chooseAgent(agent: String?) {}
+
         override fun separateCopy(on: Boolean) {}
+
         override fun sheet(sheet: NewConversationSheet?) {}
+
         override fun start() {}
+
         override fun import(conversation: ImportableConversation) {}
+
         override fun retryLoad() {}
     }
 
@@ -48,7 +66,13 @@ class NewConversationStableLayoutTest {
         NewConversationUi(
             servers = listOf(server),
             profile = p1,
-            setup = NewConversationSetup("/root/projects/shop", listOf(NewConversationProject("/root/projects/shop", "shop", false)), emptyList(), emptyList()),
+            setup =
+                NewConversationSetup(
+                    "/root/projects/shop",
+                    listOf(NewConversationProject("/root/projects/shop", "shop", false)),
+                    emptyList(),
+                    emptyList(),
+                ),
             directory = "/root/projects/shop",
         )
 
@@ -56,7 +80,11 @@ class NewConversationStableLayoutTest {
         var out = emptyList<Float>()
         runDesktopComposeUiTest(412, 915) {
             setContent {
-                KitTheme(platform = DesktopKitPlatform(), localeTag = "en", appearance = KitAppearance(motion = MotionLevel.Off)) {
+                KitTheme(
+                    platform = DesktopKitPlatform(),
+                    localeTag = "en",
+                    appearance = KitAppearance(motion = MotionLevel.Off),
+                ) {
                     NewConversationScreen(ui, Actions)
                 }
             }
@@ -71,7 +99,15 @@ class NewConversationStableLayoutTest {
     @Test
     fun `F-034 the chips and Start stand in one place at the first frame, while loading and when ready`() {
         val first = places(NewConversationUi(servers = listOf(server), profile = p1, busy = true))
-        val slow = places(NewConversationUi(servers = listOf(server), profile = p1, busy = true, preparingSlow = true))
+        val slow =
+            places(
+                NewConversationUi(
+                    servers = listOf(server),
+                    profile = p1,
+                    busy = true,
+                    preparingSlow = true,
+                )
+            )
         val settled = places(ready)
         val typed = places(ready.copy(text = "Find the bug"))
         val noProject = places(ready.copy(directory = null, text = "hello"))
@@ -80,4 +116,27 @@ class NewConversationStableLayoutTest {
         assertEquals(settled, typed, "words typed")
         assertEquals(settled, noProject, "no project chosen")
     }
+
+    @Test
+    fun `B-AGENT-UH-034 a prefilled first message still shows the never asks warning before Start`() =
+        runDesktopComposeUiTest(412, 915) {
+            setContent {
+                KitTheme(
+                    platform = DesktopKitPlatform(),
+                    localeTag = "en",
+                    appearance = KitAppearance(motion = MotionLevel.Off),
+                ) {
+                    NewConversationScreen(
+                        ready.copy(phoneAgent = "unharnessed", text = "Create and run hello.py"),
+                        Actions,
+                    )
+                }
+            }
+            onNodeWithText("This agent runs commands without asking.").assertExists()
+            val file =
+                File("build/reports/unharnessed/before-first-message.png").apply {
+                    parentFile.mkdirs()
+                }
+            ImageIO.write(onRoot().captureToImage().toAwtImage(), "png", file)
+        }
 }

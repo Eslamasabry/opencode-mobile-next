@@ -1,20 +1,16 @@
 package io.github.eslamasabry.oc.feature.chat.header.ui
 
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.feature.chat.header.approval.ApprovalChipActions
 import io.github.eslamasabry.oc.feature.chat.header.approval.ApprovalChipUi
 import io.github.eslamasabry.oc.feature.chat.header.approval.ApprovalChoice
-import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
-import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
-import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
-import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.ui.unit.dp
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
 import io.github.eslamasabry.oc.feature.chat.header.approval.ApprovalSetBy
 import io.github.eslamasabry.oc.feature.chat.nudges.permissionWords
 import io.github.eslamasabry.oc.ui.design.tokens.Space
@@ -25,13 +21,33 @@ import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.choice.KitChoice
 import io.github.eslamasabry.oc.ui.kit.choice.KitChoiceList
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
+import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
+import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
+import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
+import io.github.eslamasabry.oc.ui.kit.row.KitLeadingSwitchRow
+import io.github.eslamasabry.oc.ui.kit.row.KitRow
+import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
 import io.github.eslamasabry.oc.ui.kit.row.KitSwitchRow
 import io.github.eslamasabry.oc.ui.kit.state.KitDetailsFold
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
+import io.github.eslamasabry.oc.ui.kit.status.KitStatus
+import io.github.eslamasabry.oc.ui.kit.status.KitStatusContribution
+import io.github.eslamasabry.oc.ui.kit.status.KitStatusKind
+import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.agentNeverAsks
 import io.github.eslamasabry.oc.ui.words.res.approvalModeAskDetail
+import io.github.eslamasabry.oc.ui.words.res.approvalModeAskTitle
 import io.github.eslamasabry.oc.ui.words.res.approvalModeAutoDetail
+import io.github.eslamasabry.oc.ui.words.res.approvalModeAutoTitle
+import io.github.eslamasabry.oc.ui.words.res.approvalModeConfirmEverythingAction
+import io.github.eslamasabry.oc.ui.words.res.approvalModeConfirmEverythingBody
+import io.github.eslamasabry.oc.ui.words.res.approvalModeConfirmEverythingTitle
 import io.github.eslamasabry.oc.ui.words.res.approvalModeEverythingDetail
+import io.github.eslamasabry.oc.ui.words.res.approvalModeEverythingTitle
+import io.github.eslamasabry.oc.ui.words.res.approvalModeMenuLabel
+import io.github.eslamasabry.oc.ui.words.res.approvalModeSettings
 import io.github.eslamasabry.oc.ui.words.res.approvalsSheetFootnote
 import io.github.eslamasabry.oc.ui.words.res.approvalsSheetHistory
 import io.github.eslamasabry.oc.ui.words.res.approvalsSheetSetByServer
@@ -39,60 +55,61 @@ import io.github.eslamasabry.oc.ui.words.res.approvalsSheetSubagents
 import io.github.eslamasabry.oc.ui.words.res.approvalsUiAutoApproved
 import io.github.eslamasabry.oc.ui.words.res.approvalsUiFollowParent
 import io.github.eslamasabry.oc.ui.words.res.approvalsUiInheritedFrom
-import io.github.eslamasabry.oc.ui.words.res.kitCopy
-import io.github.eslamasabry.oc.ui.kit.row.KitLeadingSwitchRow
-import io.github.eslamasabry.oc.ui.kit.row.KitRow
-import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
-import io.github.eslamasabry.oc.ui.kit.status.KitStatus
-import io.github.eslamasabry.oc.ui.kit.status.KitStatusContribution
-import io.github.eslamasabry.oc.ui.kit.status.KitStatusKind
-import io.github.eslamasabry.oc.ui.words.res.Res
-import io.github.eslamasabry.oc.ui.words.res.approvalModeAskTitle
-import io.github.eslamasabry.oc.ui.words.res.approvalModeAutoTitle
-import io.github.eslamasabry.oc.ui.words.res.approvalModeConfirmEverythingAction
-import io.github.eslamasabry.oc.ui.words.res.approvalModeConfirmEverythingBody
-import io.github.eslamasabry.oc.ui.words.res.approvalModeConfirmEverythingTitle
-import io.github.eslamasabry.oc.ui.words.res.approvalModeEverythingTitle
-import io.github.eslamasabry.oc.ui.words.res.approvalModeMenuLabel
-import io.github.eslamasabry.oc.ui.words.res.approvalModeSettings
-import io.github.eslamasabry.oc.ui.words.res.chatStripAutoApprove
-import io.github.eslamasabry.oc.ui.words.res.composerSettingApprovalDetail
 import io.github.eslamasabry.oc.ui.words.res.chatChipAutoApproveOn
 import io.github.eslamasabry.oc.ui.words.res.chatHeaderApprovalSaveFailed
+import io.github.eslamasabry.oc.ui.words.res.chatStripAutoApprove
+import io.github.eslamasabry.oc.ui.words.res.composerSettingApprovalDetail
+import io.github.eslamasabry.oc.ui.words.res.kitCopy
 import io.github.eslamasabry.oc.ui.words.res.kitSheetDismiss
 import org.jetbrains.compose.resources.stringResource
 
 /** What the chat hands the composer row for the approval chip. */
 @Immutable
-public class ApprovalChipSlot(public val state: ApprovalChipUi, public val actions: ApprovalChipActions)
+public class ApprovalChipSlot(
+    public val state: ApprovalChipUi,
+    public val actions: ApprovalChipActions,
+)
 
 /**
- * The approval chip at the start of the message box's own row: "Ask first" or "Auto-approve on" (the shield alone on a
- * phone); a tap opens the three modes, the current one checked. Only "Approve
- * everything" asks first. Hidden where the server never asks.
+ * The approval chip at the start of the message box's own row: "Ask first" or "Auto-approve on"
+ * (the shield alone on a phone); a tap opens the three modes, the current one checked. Only
+ * "Approve everything" asks first. Hidden where the server never asks.
  */
 @Composable
 public fun ApprovalChip(slot: ApprovalChipSlot, modifier: Modifier = Modifier) {
     val state = slot.state
     val actions = slot.actions
+    if (state.neverAsks) {
+        io.github.eslamasabry.oc.ui.kit.KitText(
+            stringResource(Res.string.agentNeverAsks),
+            modifier = modifier,
+            role = TypeRole.Caption,
+        )
+        return
+    }
     if (!state.offered) return
     androidx.compose.foundation.layout.Box(modifier) {
-        // "Ask first" while asking and "Auto-approve on" for either automatic mode; the menu says which one.
+        // "Ask first" while asking and "Auto-approve on" for either automatic mode; the menu says
+        // which one.
         val words =
             when (state.choice) {
                 ApprovalChoice.Ask -> stringResource(Res.string.approvalModeAskTitle)
                 ApprovalChoice.Auto,
                 ApprovalChoice.Everything -> stringResource(Res.string.chatChipAutoApproveOn)
             }
-        // The chip is a quiet part of the message box's own row in every style (the box holds its own controls). On a
-        // phone it is the shield alone, tinted while approvals are automatic, so the model's name keeps the room:
-        // with its words it cut "DeepSeek V4.1 Flash Free" down to "Dee…" beside "Auto-approve on". The menu and the
+        // The chip is a quiet part of the message box's own row in every style (the box holds its
+        // own controls). On a
+        // phone it is the shield alone, tinted while approvals are automatic, so the model's name
+        // keeps the room:
+        // with its words it cut "DeepSeek V4.1 Flash Free" down to "Dee…" beside "Auto-approve on".
+        // The menu and the
         // screen reader still say the words.
         io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerChip(
             label = words,
             onClick = actions::openApprovalMenu,
             modifier = Modifier.testTag("chat-approval-chip"),
-            icon = if (state.choice != ApprovalChoice.Ask) KitIcons.shieldFilled else KitIcons.shield,
+            icon =
+                if (state.choice != ApprovalChoice.Ask) KitIcons.shieldFilled else KitIcons.shield,
             opensPicker = false,
             semanticsLabel = words,
             active = state.choice != ApprovalChoice.Ask,
@@ -124,14 +141,15 @@ public fun ApprovalChip(slot: ApprovalChipSlot, modifier: Modifier = Modifier) {
                 onDismiss = actions::dismissApprovalFailure,
                 dismissLabel = stringResource(Res.string.kitSheetDismiss),
             )
-        },
+        }
     )
 }
 
 /**
- * The approval rows of the composer's "+" sheet (Flutter `_composerSettings`, chat_composer_region.dart:134-160):
- * "Auto-approve" with its switch (on for either automatic mode; off asks first), then "Approval settings…", which
- * opens the three modes. Nothing where the server never asks. [close] closes the sheet before the modes open.
+ * The approval rows of the composer's "+" sheet (Flutter `_composerSettings`,
+ * chat_composer_region.dart:134-160): "Auto-approve" with its switch (on for either automatic mode;
+ * off asks first), then "Approval settings…", which opens the three modes. Nothing where the server
+ * never asks. [close] closes the sheet before the modes open.
  */
 @Composable
 public fun ApprovalSettingsRows(slot: ApprovalChipSlot, close: () -> Unit) {
@@ -142,7 +160,9 @@ public fun ApprovalSettingsRows(slot: ApprovalChipSlot, close: () -> Unit) {
         title = stringResource(Res.string.chatStripAutoApprove),
         leading = KitRowLeading.Glyph(KitIcons.shield),
         checked = state.choice != ApprovalChoice.Ask,
-        onCheckedChange = { on -> actions.chooseApproval(if (on) ApprovalChoice.Auto else ApprovalChoice.Ask) },
+        onCheckedChange = { on ->
+            actions.chooseApproval(if (on) ApprovalChoice.Auto else ApprovalChoice.Ask)
+        },
         supporting = stringResource(Res.string.composerSettingApprovalDetail),
         supportingMaxLines = 2, // F: lib/ui/screens/chat/composer_tools.dart:142
         modifier = Modifier.testTag("composer-setting-approval"),
@@ -159,9 +179,10 @@ public fun ApprovalSettingsRows(slot: ApprovalChipSlot, close: () -> Unit) {
 }
 
 /**
- * C2 (Flutter `approvals_sheet.dart`): the three modes with a sentence each, where the mode comes from, the switch that
- * lets sub-agents follow an automatic conversation, "Follow parent again", the record of what was approved on the
- * person's behalf (last five), and the note that the server's own rules still apply.
+ * C2 (Flutter `approvals_sheet.dart`): the three modes with a sentence each, where the mode comes
+ * from, the switch that lets sub-agents follow an automatic conversation, "Follow parent again",
+ * the record of what was approved on the person's behalf (last five), and the note that the
+ * server's own rules still apply.
  */
 @Composable
 private fun ApprovalSheet(state: ApprovalChipUi, actions: ApprovalChipActions) {
@@ -177,7 +198,10 @@ private fun ApprovalSheet(state: ApprovalChipUi, actions: ApprovalChipActions) {
         title = stringResource(Res.string.approvalModeMenuLabel),
         icon = KitIcons.shield,
     ) {
-        Column(Modifier.fillMaxWidth().testTag("approvals-sheet"), verticalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
+        Column(
+            Modifier.fillMaxWidth().testTag("approvals-sheet"),
+            verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
+        ) {
             KitChoiceList(
                 choices =
                     listOf(
@@ -231,7 +255,11 @@ private fun ApprovalSheet(state: ApprovalChipUi, actions: ApprovalChipActions) {
                         Column {
                             state.approvedPermissions.forEach { permission ->
                                 KitRow(
-                                    title = stringResource(Res.string.approvalsUiAutoApproved, permissionWords(permission)),
+                                    title =
+                                        stringResource(
+                                            Res.string.approvalsUiAutoApproved,
+                                            permissionWords(permission),
+                                        )
                                 )
                             }
                         }

@@ -1,9 +1,12 @@
 package io.github.eslamasabry.oc.engine.agents.catalog
 
-// A byte-for-byte copy of native/engine/agents/pins/agent-pins.json, which is the source of truth (hand-owned since
-// 2026-11-13). Edit the JSON (only with an app release, S3-PINS) and paste it here; AgentPinsParityTest fails when
+// A byte-for-byte copy of native/engine/agents/pins/agent-pins.json, which is the source of truth
+// (hand-owned since
+// 2026-11-13). Edit the JSON (only with an app release, S3-PINS) and paste it here;
+// AgentPinsParityTest fails when
 // the two differ.
-internal const val AGENT_PINS_JSON: String = """{
+internal const val AGENT_PINS_JSON: String =
+    """{
   "schema": 1,
   "source": "lib/domain/agent_catalog.dart _builtInCatalog(), lib/builtin/agents/paseo_scripts.dart, lib/paseo/tested_versions.dart (copied verbatim; a pin moves only with an app release)",
   "paseo": {
@@ -419,6 +422,32 @@ internal const val AGENT_PINS_JSON: String = """{
             "member": "fx",
             "downloadBytes": 5680318,
             "installedBytes": 12814000
+          }
+        }
+      }
+    },
+    {
+      "id": "unharnessed",
+      "name": "Unharnessed",
+      "route": "acpPaseo",
+      "providerId": "unharnessed",
+      "signInMethod": "apiKeyHost",
+      "commandApproval": "neverAsks",
+      "setupMethod": "keyOrLocalServer",
+      "recipe": {
+        "version": "0.9.8-phone.1",
+        "executable": "unharnessed",
+        "upstreamCommit": "fe2cf2815f78463464b91c598fc0c31c0af98f4c",
+        "launchArgs": [],
+        "signInArgs": [],
+        "artifacts": {
+          "arm64": {
+            "url": null,
+            "sha256": "c7b577b7dabcafd64a7f349df341c4d32c934cb437c252eed635510d50163ade",
+            "format": "tarGz",
+            "member": "phone-unharnessed",
+            "downloadBytes": 140705042,
+            "installedBytes": 534841943
           }
         }
       }

@@ -417,6 +417,32 @@
           }
         }
       }
+    },
+    {
+      "id": "unharnessed",
+      "name": "Unharnessed",
+      "route": "acpPaseo",
+      "providerId": "unharnessed",
+      "signInMethod": "apiKeyHost",
+      "commandApproval": "neverAsks",
+      "setupMethod": "keyOrLocalServer",
+      "recipe": {
+        "version": "0.9.8-phone.1",
+        "executable": "unharnessed",
+        "upstreamCommit": "fe2cf2815f78463464b91c598fc0c31c0af98f4c",
+        "launchArgs": [],
+        "signInArgs": [],
+        "artifacts": {
+          "arm64": {
+            "url": null,
+            "sha256": "c7b577b7dabcafd64a7f349df341c4d32c934cb437c252eed635510d50163ade",
+            "format": "tarGz",
+            "member": "phone-unharnessed",
+            "downloadBytes": 140705042,
+            "installedBytes": 534841943
+          }
+        }
+      }
     }
   ]
 }

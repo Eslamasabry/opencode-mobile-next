@@ -24,6 +24,8 @@ import io.github.eslamasabry.oc.ui.routes.ChatRoute
 import kotlin.time.Clock
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 /**
@@ -66,6 +68,18 @@ public class ChatHeaderViewModel(
             port.approvals ?: NoApprovals,
             launcher,
             clock,
+            combine(world.models, port.facts) { models, facts ->
+                    val catalog =
+                        io.github.eslamasabry.oc.engine.agents.catalog.AgentCatalog.builtIn
+                    val agent =
+                        catalog.forProvider(models.agent)
+                            ?: catalog.forProvider(facts.agent)
+                            ?: catalog.forProvider(facts.providerId)
+                    agent?.commandApproval ==
+                        io.github.eslamasabry.oc.engine.agents.catalog.AgentCommandApproval
+                            .NeverAsks
+                }
+                .stateIn(viewModelScope, SharingStarted.Eagerly, false),
         )
 
     public val state: StateFlow<ChatHeaderUi> =

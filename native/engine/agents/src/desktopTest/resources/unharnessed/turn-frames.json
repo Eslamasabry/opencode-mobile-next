@@ -1,0 +1,1447 @@
+[
+  {
+    "sent": {
+      "jsonrpc": "2.0",
+      "id": 1,
+      "method": "initialize",
+      "params": {
+        "protocolVersion": 1,
+        "clientCapabilities": {}
+      }
+    }
+  },
+  {
+    "received": {
+      "jsonrpc": "2.0",
+      "id": 1,
+      "result": {
+        "protocolVersion": 1,
+        "agentCapabilities": {
+          "loadSession": true,
+          "promptCapabilities": {
+            "image": true,
+            "embeddedContext": true
+          },
+          "mcpCapabilities": {
+            "http": true
+          },
+          "sessionCapabilities": {
+            "close": {},
+            "list": {}
+          }
+        },
+        "agentInfo": {
+          "name": "unharnessed",
+          "title": "Unharnessed",
+          "version": "0.9.8"
+        },
+        "_meta": {
+          "unharnessed": {}
+        }
+      }
+    }
+  },
+  {
+    "sent": {
+      "jsonrpc": "2.0",
+      "id": 2,
+      "method": "session/new",
+      "params": {
+        "cwd": "/trial/project",
+        "mcpServers": []
+      }
+    }
+  },
+  {
+    "received": {
+      "jsonrpc": "2.0",
+      "id": 2,
+      "result": {
+        "sessionId": "dfbac57d-4b29-4802-bbe9-8f9feb10404e",
+        "configOptions": [
+          {
+            "id": "model",
+            "name": "Model",
+            "type": "select",
+            "category": "model",
+            "currentValue": "[\"faux\",\"faux-1\"]",
+            "options": [
+              {
+                "value": "[\"faux\",\"faux-1\"]",
+                "name": "Faux Model (faux)",
+                "_meta": {
+                  "unharnessed": {
+                    "model": {
+                      "id": "faux-1",
+                      "name": "Faux Model",
+                      "provider": "faux",
+                      "contextWindow": 100000,
+                      "input": [
+                        "text"
+                      ],
+                      "cost": {
+                        "input": 0,
+                        "output": 0,
+                        "cacheRead": 0,
+                        "cacheWrite": 0
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        ],
+        "_meta": {
+          "unharnessed": {
+            "saved": {
+              "sessionId": "01a1e13c-3d9d-70b7-a411-9fbe98b0a341",
+              "path": "/trial/agent/sessions/01a1e13c-3d9d-70b7-a411-9fbe98b0a341.jsonl"
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "sent": {
+      "jsonrpc": "2.0",
+      "id": 3,
+      "method": "session/prompt",
+      "params": {
+        "sessionId": "dfbac57d-4b29-4802-bbe9-8f9feb10404e",
+        "prompt": [
+          {
+            "type": "text",
+            "text": "Create hello.py, run it, and tell me what it printed."
+          }
+        ]
+      }
+    }
+  },
+  {
+    "received": {
+      "jsonrpc": "2.0",
+      "method": "session/update",
+      "params": {
+        "sessionId": "dfbac57d-4b29-4802-bbe9-8f9feb10404e",
+        "update": {
+          "sessionUpdate": "available_commands_update",
+          "availableCommands": [
+            {
+              "name": "compact",
+              "description": "Compact the session context; optional instructions focus the summary",
+              "input": {
+                "hint": "[instructions]"
+              },
+              "_meta": {
+                "unharnessed": {
+                  "kind": "command"
+                }
+              }
+            },
+            {
+              "name": "goal",
+              "description": "Set or view a persistent goal; supports pause, resume, and clear",
+              "input": {
+                "hint": "[objective]"
+              },
+              "_meta": {
+                "unharnessed": {
+                  "kind": "command"
+                }
+              }
+            },
+            {
+              "name": "autonomous",
+              "description": "Set or view autonomous mode with an optional budget",
+              "input": {
+                "hint": "[status|off|on [--max-continuations <n>] [--max-turns <n>] [--max-tokens <n>] [--timeout-ms <n>] [--gate <command>]]"
+              },
+              "_meta": {
+                "unharnessed": {
+                  "kind": "command"
+                }
+              }
+            },
+            {
+              "name": "skill:attach-image",
+              "description": "Use this to see an image.",
+              "_meta": {
+                "unharnessed": {
+                  "kind": "skill",
+                  "source": "builtin"
+                }
+              }
+            },
+            {
+              "name": "skill:goal",
+              "description": "Use this to start a goal when the user asks for one, check it, or mark it complete.",
+              "_meta": {
+                "unharnessed": {
+                  "kind": "skill",
+                  "source": "builtin"
+                }
+              }
+            },
+            {
+              "name": "skill:mcp",
+              "description": "Use this to call tools on the user's MCP services.",
+              "_meta": {
+                "unharnessed": {
+                  "kind": "skill",
+                  "source": "builtin"
+                }
+              }
+            }
+          ],
+          "_meta": {
+            "unharnessed": {
+              "promptTurnId": 0,
+              "eventSequence": 1,
+              "phase": "event"
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "received": {
+      "jsonrpc": "2.0",
+      "method": "session/update",
+      "params": {
+        "sessionId": "dfbac57d-4b29-4802-bbe9-8f9feb10404e",
+        "update": {
+          "sessionUpdate": "session_info_update",
+          "_meta": {
+            "unharnessed": {
+              "promptTurnId": 0,
+              "eventSequence": 2,
+              "phase": "event",
+              "usage": {
+                "window": 100000,
+                "compactAt": 79520,
+                "cost": 0.0,
+                "billed": false,
+                "cacheReusable": 0,
+                "cacheReused": 0,
+                "cacheSaved": 0.0,
+                "compacting": false
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "received": {
+      "jsonrpc": "2.0",
+      "method": "session/update",
+      "params": {
+        "sessionId": "dfbac57d-4b29-4802-bbe9-8f9feb10404e",
+        "update": {
+          "sessionUpdate": "config_option_update",
+          "configOptions": [
+            {
+              "id": "model",
+              "name": "Model",
+              "type": "select",
+              "category": "model",
+              "currentValue": "[\"faux\",\"faux-1\"]",
+              "options": [
+                {
+                  "value": "[\"faux\",\"faux-1\"]",
+                  "name": "Faux Model (faux)"
+                }
+              ]
+            }
+          ],
+          "_meta": {
+            "unharnessed": {
+              "promptTurnId": 0,
+              "eventSequence": 3,
+              "phase": "event"
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "received": {
+      "jsonrpc": "2.0",
+      "method": "session/update",
+      "params": {
+        "sessionId": "dfbac57d-4b29-4802-bbe9-8f9feb10404e",
+        "update": {
+          "sessionUpdate": "session_info_update",
+          "_meta": {
+            "unharnessed": {
+              "promptTurnId": 1,
+              "eventSequence": 4,
+              "phase": "event",
+              "turnStart": {
+                "origin": "prompt",
+                "rewindTo": "52e07b42"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "received": {
+      "jsonrpc": "2.0",
+      "method": "session/update",
+      "params": {
+        "sessionId": "dfbac57d-4b29-4802-bbe9-8f9feb10404e",
+        "update": {
+          "sessionUpdate": "session_info_update",
+          "_meta": {
+            "unharnessed": {
+              "promptTurnId": 0,
+              "eventSequence": 5,
+              "phase": "event",
+              "usage": {
+                "tokens": 963,
+                "window": 100000,
+                "compactAt": 79520,
+                "cost": 0.0,
+                "billed": false,
+                "cacheReusable": 0,
+                "cacheReused": 0,
+                "cacheSaved": 0.0,
+                "compacting": false
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "received": {
+      "jsonrpc": "2.0",
+      "method": "session/update",
+      "params": {
+        "sessionId": "dfbac57d-4b29-4802-bbe9-8f9feb10404e",
+        "update": {
+          "sessionUpdate": "tool_call",
+          "toolCallId": "cell-1",
+          "title": "Python cell",
+          "kind": "execute",
+          "status": "in_progress",
+          "rawInput": {
+            "code": "from pathlib import Path\nPath('hello.py').write_text(\"print('hello from phone')\\n\")\nresult = await bash('python3 hello.py')\nprint(result.output)"
+          },
+          "_meta": {
+            "unharnessed": {
+              "promptTurnId": 1,
+              "eventSequence": 6,
+              "phase": "event"
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "received": {
+      "jsonrpc": "2.0",
+      "method": "session/update",
+      "params": {
+        "sessionId": "dfbac57d-4b29-4802-bbe9-8f9feb10404e",
+        "update": {
+          "sessionUpdate": "tool_call_update",
+          "toolCallId": "cell-1",
+          "status": "completed",
+          "content": [
+            {
+              "type": "content",
+              "content": {
+                "type": "text",
+                "text": "hello from phone\n\n"
+              }
+            }
+          ],
+          "_meta": {
+            "unharnessed": {
+              "promptTurnId": 1,
+              "eventSequence": 7,
+              "phase": "event"
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "received": {
+      "jsonrpc": "2.0",
+      "method": "session/update",
+      "params": {
+        "sessionId": "dfbac57d-4b29-4802-bbe9-8f9feb10404e",
+        "update": {
+          "sessionUpdate": "session_info_update",
+          "_meta": {
+            "unharnessed": {
+              "promptTurnId": 0,
+              "eventSequence": 8,
+              "phase": "event",
+              "usage": {
+                "tokens": 968,
+                "window": 100000,
+                "compactAt": 79520,
+                "cost": 0.0,
+                "billed": false,
+                "cacheReusable": 0,
+                "cacheReused": 0,
+                "cacheSaved": 0.0,
+                "compacting": false
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "received": {
+      "jsonrpc": "2.0",
+      "method": "session/update",
+      "params": {
+        "sessionId": "dfbac57d-4b29-4802-bbe9-8f9feb10404e",
+        "update": {
+          "sessionUpdate": "agent_message_chunk",
+          "messageId": "unharnessed-assistant-2",
+          "content": {
+            "type": "text",
+            "text": "Created hello.py and"
+          },
+          "_meta": {
+            "unharnessed": {
+              "promptTurnId": 1,
+              "eventSequence": 9,
+              "phase": "event"
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "received": {
+      "jsonrpc": "2.0",
+      "method": "session/update",
+      "params": {
+        "sessionId": "dfbac57d-4b29-4802-bbe9-8f9feb10404e",
+        "update": {
+          "sessionUpdate": "agent_message_chunk",
+          "messageId": "unharnessed-assistant-2",
+          "content": {
+            "type": "text",
+            "text": " ran it."
+          },
+          "_meta": {
+            "unharnessed": {
+              "promptTurnId": 1,
+              "eventSequence": 10,
+              "phase": "event"
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "received": {
+      "jsonrpc": "2.0",
+      "method": "session/update",
+      "params": {
+        "sessionId": "dfbac57d-4b29-4802-bbe9-8f9feb10404e",
+        "update": {
+          "sessionUpdate": "session_info_update",
+          "_meta": {
+            "unharnessed": {
+              "promptTurnId": 0,
+              "eventSequence": 11,
+              "phase": "event",
+              "usage": {
+                "tokens": 982,
+                "window": 100000,
+                "compactAt": 79520,
+                "cost": 0.0,
+                "billed": false,
+                "cacheReusable": 1083,
+                "cacheReused": 868,
+                "cacheSaved": 0.0,
+                "compacting": false
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "received": {
+      "jsonrpc": "2.0",
+      "method": "session/update",
+      "params": {
+        "sessionId": "dfbac57d-4b29-4802-bbe9-8f9feb10404e",
+        "update": {
+          "sessionUpdate": "session_info_update",
+          "_meta": {
+            "unharnessed": {
+              "promptTurnId": 1,
+              "eventSequence": 12,
+              "phase": "responseBoundary",
+              "outcome": "result",
+              "terminalQuiescenceExpected": true
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "received": {
+      "jsonrpc": "2.0",
+      "method": "session/update",
+      "params": {
+        "sessionId": "dfbac57d-4b29-4802-bbe9-8f9feb10404e",
+        "update": {
+          "sessionUpdate": "session_info_update",
+          "_meta": {
+            "unharnessed": {
+              "promptTurnId": 1,
+              "eventSequence": 13,
+              "phase": "event",
+              "quiescence": {
+                "remainingAutonomousContinuations": 0
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "received": {
+      "jsonrpc": "2.0",
+      "method": "session/update",
+      "params": {
+        "sessionId": "dfbac57d-4b29-4802-bbe9-8f9feb10404e",
+        "update": {
+          "sessionUpdate": "session_info_update",
+          "_meta": {
+            "unharnessed": {
+              "promptTurnId": 1,
+              "eventSequence": 14,
+              "phase": "terminalQuiescence",
+              "outcome": "result",
+              "quiescence": {
+                "remainingAutonomousContinuations": 0
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "received": {
+      "jsonrpc": "2.0",
+      "id": 3,
+      "result": {
+        "stopReason": "end_turn"
+      }
+    }
+  },
+  {
+    "sent": {
+      "jsonrpc": "2.0",
+      "id": 4,
+      "method": "session/close",
+      "params": {
+        "sessionId": "dfbac57d-4b29-4802-bbe9-8f9feb10404e"
+      }
+    }
+  },
+  {
+    "received": {
+      "jsonrpc": "2.0",
+      "id": 4,
+      "result": {}
+    }
+  },
+  {
+    "sent": {
+      "jsonrpc": "2.0",
+      "id": 5,
+      "method": "initialize",
+      "params": {
+        "protocolVersion": 1,
+        "clientCapabilities": {}
+      }
+    }
+  },
+  {
+    "received": {
+      "jsonrpc": "2.0",
+      "id": 5,
+      "result": {
+        "protocolVersion": 1,
+        "agentCapabilities": {
+          "loadSession": true,
+          "promptCapabilities": {
+            "image": true,
+            "embeddedContext": true
+          },
+          "mcpCapabilities": {
+            "http": true
+          },
+          "sessionCapabilities": {
+            "close": {},
+            "list": {}
+          }
+        },
+        "agentInfo": {
+          "name": "unharnessed",
+          "title": "Unharnessed",
+          "version": "0.9.8"
+        },
+        "_meta": {
+          "unharnessed": {}
+        }
+      }
+    }
+  },
+  {
+    "sent": {
+      "jsonrpc": "2.0",
+      "id": 6,
+      "method": "session/load",
+      "params": {
+        "sessionId": "dfbac57d-4b29-4802-bbe9-8f9feb10404e",
+        "cwd": "/trial/project",
+        "mcpServers": []
+      }
+    }
+  },
+  {
+    "received": {
+      "jsonrpc": "2.0",
+      "method": "session/update",
+      "params": {
+        "sessionId": "dfbac57d-4b29-4802-bbe9-8f9feb10404e",
+        "update": {
+          "sessionUpdate": "session_info_update",
+          "_meta": {
+            "unharnessed": {
+              "promptTurnId": 1,
+              "eventSequence": 1,
+              "phase": "event",
+              "turnStart": {
+                "origin": "prompt",
+                "rewindTo": "52e07b42"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "received": {
+      "jsonrpc": "2.0",
+      "method": "session/update",
+      "params": {
+        "sessionId": "dfbac57d-4b29-4802-bbe9-8f9feb10404e",
+        "update": {
+          "sessionUpdate": "user_message_chunk",
+          "messageId": "unharnessed-user-1",
+          "content": {
+            "type": "text",
+            "text": "Create hello.py, run it, and tell me what it printed."
+          },
+          "_meta": {
+            "unharnessed": {
+              "promptTurnId": 1,
+              "eventSequence": 2,
+              "phase": "event"
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "received": {
+      "jsonrpc": "2.0",
+      "method": "session/update",
+      "params": {
+        "sessionId": "dfbac57d-4b29-4802-bbe9-8f9feb10404e",
+        "update": {
+          "sessionUpdate": "tool_call",
+          "toolCallId": "cell-1",
+          "title": "Python cell",
+          "kind": "execute",
+          "status": "in_progress",
+          "rawInput": {
+            "code": "from pathlib import Path\nPath('hello.py').write_text(\"print('hello from phone')\\n\")\nresult = await bash('python3 hello.py')\nprint(result.output)"
+          },
+          "_meta": {
+            "unharnessed": {
+              "promptTurnId": 1,
+              "eventSequence": 3,
+              "phase": "event"
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "received": {
+      "jsonrpc": "2.0",
+      "method": "session/update",
+      "params": {
+        "sessionId": "dfbac57d-4b29-4802-bbe9-8f9feb10404e",
+        "update": {
+          "sessionUpdate": "tool_call_update",
+          "toolCallId": "cell-1",
+          "status": "completed",
+          "content": [
+            {
+              "type": "content",
+              "content": {
+                "type": "text",
+                "text": "hello from phone\n\n"
+              }
+            }
+          ],
+          "_meta": {
+            "unharnessed": {
+              "promptTurnId": 1,
+              "eventSequence": 4,
+              "phase": "event"
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "received": {
+      "jsonrpc": "2.0",
+      "method": "session/update",
+      "params": {
+        "sessionId": "dfbac57d-4b29-4802-bbe9-8f9feb10404e",
+        "update": {
+          "sessionUpdate": "agent_message_chunk",
+          "messageId": "unharnessed-assistant-2",
+          "content": {
+            "type": "text",
+            "text": "Created hello.py and ran it."
+          },
+          "_meta": {
+            "unharnessed": {
+              "promptTurnId": 1,
+              "eventSequence": 5,
+              "phase": "event"
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "received": {
+      "jsonrpc": "2.0",
+      "method": "session/update",
+      "params": {
+        "sessionId": "dfbac57d-4b29-4802-bbe9-8f9feb10404e",
+        "update": {
+          "sessionUpdate": "session_info_update",
+          "_meta": {
+            "unharnessed": {
+              "promptTurnId": 1,
+              "eventSequence": 6,
+              "phase": "event",
+              "turnEnd": {
+                "state": "done"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "received": {
+      "jsonrpc": "2.0",
+      "id": 6,
+      "result": {
+        "sessionId": "dfbac57d-4b29-4802-bbe9-8f9feb10404e",
+        "configOptions": [
+          {
+            "id": "model",
+            "name": "Model",
+            "type": "select",
+            "category": "model",
+            "currentValue": "[\"faux\",\"faux-1\"]",
+            "options": [
+              {
+                "value": "[\"faux\",\"faux-1\"]",
+                "name": "Faux Model (faux)",
+                "_meta": {
+                  "unharnessed": {
+                    "model": {
+                      "id": "faux-1",
+                      "name": "Faux Model",
+                      "provider": "faux",
+                      "contextWindow": 100000,
+                      "input": [
+                        "text"
+                      ],
+                      "cost": {
+                        "input": 0,
+                        "output": 0,
+                        "cacheRead": 0,
+                        "cacheWrite": 0
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        ],
+        "_meta": {
+          "unharnessed": {
+            "saved": {
+              "sessionId": "01a1e13c-3d9d-70b7-a411-9fbe98b0a341",
+              "path": "/trial/agent/sessions/01a1e13c-3d9d-70b7-a411-9fbe98b0a341.jsonl"
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "sent": {
+      "jsonrpc": "2.0",
+      "id": 7,
+      "method": "session/prompt",
+      "params": {
+        "sessionId": "dfbac57d-4b29-4802-bbe9-8f9feb10404e",
+        "prompt": [
+          {
+            "type": "text",
+            "text": "Continue: run the same file again."
+          }
+        ]
+      }
+    }
+  },
+  {
+    "received": {
+      "jsonrpc": "2.0",
+      "method": "session/update",
+      "params": {
+        "sessionId": "dfbac57d-4b29-4802-bbe9-8f9feb10404e",
+        "update": {
+          "sessionUpdate": "available_commands_update",
+          "availableCommands": [
+            {
+              "name": "compact",
+              "description": "Compact the session context; optional instructions focus the summary",
+              "input": {
+                "hint": "[instructions]"
+              },
+              "_meta": {
+                "unharnessed": {
+                  "kind": "command"
+                }
+              }
+            },
+            {
+              "name": "goal",
+              "description": "Set or view a persistent goal; supports pause, resume, and clear",
+              "input": {
+                "hint": "[objective]"
+              },
+              "_meta": {
+                "unharnessed": {
+                  "kind": "command"
+                }
+              }
+            },
+            {
+              "name": "autonomous",
+              "description": "Set or view autonomous mode with an optional budget",
+              "input": {
+                "hint": "[status|off|on [--max-continuations <n>] [--max-turns <n>] [--max-tokens <n>] [--timeout-ms <n>] [--gate <command>]]"
+              },
+              "_meta": {
+                "unharnessed": {
+                  "kind": "command"
+                }
+              }
+            },
+            {
+              "name": "skill:attach-image",
+              "description": "Use this to see an image.",
+              "_meta": {
+                "unharnessed": {
+                  "kind": "skill",
+                  "source": "builtin"
+                }
+              }
+            },
+            {
+              "name": "skill:goal",
+              "description": "Use this to start a goal when the user asks for one, check it, or mark it complete.",
+              "_meta": {
+                "unharnessed": {
+                  "kind": "skill",
+                  "source": "builtin"
+                }
+              }
+            },
+            {
+              "name": "skill:mcp",
+              "description": "Use this to call tools on the user's MCP services.",
+              "_meta": {
+                "unharnessed": {
+                  "kind": "skill",
+                  "source": "builtin"
+                }
+              }
+            }
+          ],
+          "_meta": {
+            "unharnessed": {
+              "promptTurnId": 0,
+              "eventSequence": 7,
+              "phase": "event"
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "received": {
+      "jsonrpc": "2.0",
+      "method": "session/update",
+      "params": {
+        "sessionId": "dfbac57d-4b29-4802-bbe9-8f9feb10404e",
+        "update": {
+          "sessionUpdate": "session_info_update",
+          "_meta": {
+            "unharnessed": {
+              "promptTurnId": 0,
+              "eventSequence": 8,
+              "phase": "event",
+              "usage": {
+                "tokens": 982,
+                "window": 100000,
+                "compactAt": 79520,
+                "cost": 0.0,
+                "billed": false,
+                "cacheReusable": 1083,
+                "cacheReused": 868,
+                "cacheSaved": 0.0,
+                "compacting": false
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "received": {
+      "jsonrpc": "2.0",
+      "method": "session/update",
+      "params": {
+        "sessionId": "dfbac57d-4b29-4802-bbe9-8f9feb10404e",
+        "update": {
+          "sessionUpdate": "session_info_update",
+          "_meta": {
+            "unharnessed": {
+              "promptTurnId": 2,
+              "eventSequence": 9,
+              "phase": "event",
+              "turnStart": {
+                "origin": "prompt",
+                "rewindTo": "6869464d"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "received": {
+      "jsonrpc": "2.0",
+      "method": "session/update",
+      "params": {
+        "sessionId": "dfbac57d-4b29-4802-bbe9-8f9feb10404e",
+        "update": {
+          "sessionUpdate": "config_option_update",
+          "configOptions": [
+            {
+              "id": "model",
+              "name": "Model",
+              "type": "select",
+              "category": "model",
+              "currentValue": "[\"faux\",\"faux-1\"]",
+              "options": [
+                {
+                  "value": "[\"faux\",\"faux-1\"]",
+                  "name": "Faux Model (faux)"
+                }
+              ]
+            }
+          ],
+          "_meta": {
+            "unharnessed": {
+              "promptTurnId": 0,
+              "eventSequence": 10,
+              "phase": "event"
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "received": {
+      "jsonrpc": "2.0",
+      "method": "session/update",
+      "params": {
+        "sessionId": "dfbac57d-4b29-4802-bbe9-8f9feb10404e",
+        "update": {
+          "sessionUpdate": "session_info_update",
+          "_meta": {
+            "unharnessed": {
+              "promptTurnId": 0,
+              "eventSequence": 11,
+              "phase": "event",
+              "usage": {
+                "tokens": 991,
+                "window": 100000,
+                "compactAt": 79520,
+                "cost": 0.0,
+                "billed": false,
+                "cacheReusable": 1083,
+                "cacheReused": 868,
+                "cacheSaved": 0.0,
+                "compacting": false
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "received": {
+      "jsonrpc": "2.0",
+      "method": "session/update",
+      "params": {
+        "sessionId": "dfbac57d-4b29-4802-bbe9-8f9feb10404e",
+        "update": {
+          "sessionUpdate": "session_info_update",
+          "_meta": {
+            "unharnessed": {
+              "promptTurnId": 0,
+              "eventSequence": 12,
+              "phase": "event",
+              "usage": {
+                "tokens": 1035,
+                "window": 100000,
+                "compactAt": 79520,
+                "cost": 0.0,
+                "billed": false,
+                "cacheReusable": 2166,
+                "cacheReused": 868,
+                "cacheSaved": 0.0,
+                "compacting": false
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "received": {
+      "jsonrpc": "2.0",
+      "method": "session/update",
+      "params": {
+        "sessionId": "dfbac57d-4b29-4802-bbe9-8f9feb10404e",
+        "update": {
+          "sessionUpdate": "tool_call",
+          "toolCallId": "cell-2",
+          "title": "Python cell",
+          "kind": "execute",
+          "status": "in_progress",
+          "rawInput": {
+            "code": "from pathlib import Path\nassert Path('hello.py').is_file()\nresult = await bash('python3 hello.py')\nprint('continued: ' + result.output)"
+          },
+          "_meta": {
+            "unharnessed": {
+              "promptTurnId": 2,
+              "eventSequence": 13,
+              "phase": "event"
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "received": {
+      "jsonrpc": "2.0",
+      "method": "_unharnessed/kernel/restored",
+      "params": {
+        "sessionId": "dfbac57d-4b29-4802-bbe9-8f9feb10404e",
+        "restored": true
+      }
+    }
+  },
+  {
+    "received": {
+      "jsonrpc": "2.0",
+      "method": "_unharnessed/kernel/changed",
+      "params": {
+        "sessionId": "dfbac57d-4b29-4802-bbe9-8f9feb10404e",
+        "variables": [
+          {
+            "name": "result",
+            "type": "BashResult",
+            "rev": "ff9434b64910"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "received": {
+      "jsonrpc": "2.0",
+      "method": "_unharnessed/kernel/changed",
+      "params": {
+        "sessionId": "dfbac57d-4b29-4802-bbe9-8f9feb10404e",
+        "commands": []
+      }
+    }
+  },
+  {
+    "received": {
+      "jsonrpc": "2.0",
+      "method": "session/update",
+      "params": {
+        "sessionId": "dfbac57d-4b29-4802-bbe9-8f9feb10404e",
+        "update": {
+          "sessionUpdate": "tool_call_update",
+          "toolCallId": "cell-2",
+          "status": "completed",
+          "content": [
+            {
+              "type": "content",
+              "content": {
+                "type": "text",
+                "text": "continued: hello from phone\n\n"
+              }
+            }
+          ],
+          "_meta": {
+            "unharnessed": {
+              "promptTurnId": 2,
+              "eventSequence": 14,
+              "phase": "event"
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "received": {
+      "jsonrpc": "2.0",
+      "method": "session/update",
+      "params": {
+        "sessionId": "dfbac57d-4b29-4802-bbe9-8f9feb10404e",
+        "update": {
+          "sessionUpdate": "session_info_update",
+          "_meta": {
+            "unharnessed": {
+              "promptTurnId": 0,
+              "eventSequence": 15,
+              "phase": "event",
+              "usage": {
+                "tokens": 1043,
+                "window": 100000,
+                "compactAt": 79520,
+                "cost": 0.0,
+                "billed": false,
+                "cacheReusable": 2166,
+                "cacheReused": 868,
+                "cacheSaved": 0.0,
+                "compacting": false
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "received": {
+      "jsonrpc": "2.0",
+      "method": "session/update",
+      "params": {
+        "sessionId": "dfbac57d-4b29-4802-bbe9-8f9feb10404e",
+        "update": {
+          "sessionUpdate": "agent_message_chunk",
+          "messageId": "unharnessed-assistant-2",
+          "content": {
+            "type": "text",
+            "text": "Continued th"
+          },
+          "_meta": {
+            "unharnessed": {
+              "promptTurnId": 2,
+              "eventSequence": 16,
+              "phase": "event"
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "received": {
+      "jsonrpc": "2.0",
+      "method": "session/update",
+      "params": {
+        "sessionId": "dfbac57d-4b29-4802-bbe9-8f9feb10404e",
+        "update": {
+          "sessionUpdate": "agent_message_chunk",
+          "messageId": "unharnessed-assistant-2",
+          "content": {
+            "type": "text",
+            "text": "e saved conv"
+          },
+          "_meta": {
+            "unharnessed": {
+              "promptTurnId": 2,
+              "eventSequence": 17,
+              "phase": "event"
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "received": {
+      "jsonrpc": "2.0",
+      "method": "session/update",
+      "params": {
+        "sessionId": "dfbac57d-4b29-4802-bbe9-8f9feb10404e",
+        "update": {
+          "sessionUpdate": "agent_message_chunk",
+          "messageId": "unharnessed-assistant-2",
+          "content": {
+            "type": "text",
+            "text": "ersation and"
+          },
+          "_meta": {
+            "unharnessed": {
+              "promptTurnId": 2,
+              "eventSequence": 18,
+              "phase": "event"
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "received": {
+      "jsonrpc": "2.0",
+      "method": "session/update",
+      "params": {
+        "sessionId": "dfbac57d-4b29-4802-bbe9-8f9feb10404e",
+        "update": {
+          "sessionUpdate": "agent_message_chunk",
+          "messageId": "unharnessed-assistant-2",
+          "content": {
+            "type": "text",
+            "text": " ran hello.py again."
+          },
+          "_meta": {
+            "unharnessed": {
+              "promptTurnId": 2,
+              "eventSequence": 19,
+              "phase": "event"
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "received": {
+      "jsonrpc": "2.0",
+      "method": "session/update",
+      "params": {
+        "sessionId": "dfbac57d-4b29-4802-bbe9-8f9feb10404e",
+        "update": {
+          "sessionUpdate": "session_info_update",
+          "_meta": {
+            "unharnessed": {
+              "promptTurnId": 0,
+              "eventSequence": 20,
+              "phase": "event",
+              "usage": {
+                "tokens": 1064,
+                "window": 100000,
+                "compactAt": 79520,
+                "cost": 0.0,
+                "billed": false,
+                "cacheReusable": 3323,
+                "cacheReused": 1811,
+                "cacheSaved": 0.0,
+                "compacting": false
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "received": {
+      "jsonrpc": "2.0",
+      "method": "session/update",
+      "params": {
+        "sessionId": "dfbac57d-4b29-4802-bbe9-8f9feb10404e",
+        "update": {
+          "sessionUpdate": "session_info_update",
+          "_meta": {
+            "unharnessed": {
+              "promptTurnId": 2,
+              "eventSequence": 21,
+              "phase": "responseBoundary",
+              "outcome": "result",
+              "terminalQuiescenceExpected": true
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "received": {
+      "jsonrpc": "2.0",
+      "method": "session/update",
+      "params": {
+        "sessionId": "dfbac57d-4b29-4802-bbe9-8f9feb10404e",
+        "update": {
+          "sessionUpdate": "session_info_update",
+          "_meta": {
+            "unharnessed": {
+              "promptTurnId": 2,
+              "eventSequence": 22,
+              "phase": "event",
+              "quiescence": {
+                "remainingAutonomousContinuations": 0
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "received": {
+      "jsonrpc": "2.0",
+      "method": "session/update",
+      "params": {
+        "sessionId": "dfbac57d-4b29-4802-bbe9-8f9feb10404e",
+        "update": {
+          "sessionUpdate": "session_info_update",
+          "_meta": {
+            "unharnessed": {
+              "promptTurnId": 2,
+              "eventSequence": 23,
+              "phase": "terminalQuiescence",
+              "outcome": "result",
+              "quiescence": {
+                "remainingAutonomousContinuations": 0
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "received": {
+      "jsonrpc": "2.0",
+      "id": 7,
+      "result": {
+        "stopReason": "end_turn"
+      }
+    }
+  },
+  {
+    "sent": {
+      "jsonrpc": "2.0",
+      "id": 8,
+      "method": "session/close",
+      "params": {
+        "sessionId": "dfbac57d-4b29-4802-bbe9-8f9feb10404e"
+      }
+    }
+  },
+  {
+    "received": {
+      "jsonrpc": "2.0",
+      "id": 8,
+      "result": {}
+    }
+  },
+  {
+    "sent": {
+      "jsonrpc": "2.0",
+      "id": 9,
+      "method": "session/load",
+      "params": {
+        "sessionId": "unknown",
+        "cwd": "/trial/project",
+        "mcpServers": []
+      }
+    }
+  },
+  {
+    "received": {
+      "jsonrpc": "2.0",
+      "id": 9,
+      "error": {
+        "code": -32000,
+        "message": "Conversation is unavailable. Reopen it or start a new conversation."
+      }
+    }
+  }
+]

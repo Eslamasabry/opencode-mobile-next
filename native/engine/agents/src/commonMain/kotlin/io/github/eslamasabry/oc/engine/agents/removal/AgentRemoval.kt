@@ -7,14 +7,24 @@ import io.github.eslamasabry.oc.engine.agents.OwnerId
 import io.github.eslamasabry.oc.engine.agents.catalog.AgentCatalog
 import io.github.eslamasabry.oc.engine.agents.store.SecureBytes
 
-/** What the fixed removal script reports. [receipt] is the bounded private receipt, read back once; null if unreadable. */
+/**
+ * What the fixed removal script reports. [receipt] is the bounded private receipt, read back once;
+ * null if unreadable.
+ */
 public data class RemovalRun(val exitCode: Int, val receipt: RemovalReceipt?)
 
 public data class RemovalReceipt(val freedBytes: Long, val wasAbsent: Boolean)
 
-/** Runs `AgentRemovalScripts.remove` / `readReceipt` (kept scripts, 11 S11-3) in the fixed oc setup view. */
+/**
+ * Runs `AgentRemovalScripts.remove` / `readReceipt` (kept scripts, 11 S11-3) in the fixed oc setup
+ * view.
+ */
 public interface AgentRemovalRunner {
-    public suspend fun remove(owner: OwnerId, agent: AgentId, receiptId: String): Outcome<RemovalRun>
+    public suspend fun remove(
+        owner: OwnerId,
+        agent: AgentId,
+        receiptId: String,
+    ): Outcome<RemovalRun>
 }
 
 public sealed interface RemovalResult {
@@ -38,8 +48,9 @@ public enum class RemovalRefusal {
 }
 
 /**
- * Remove an agent (AGENTS-BACKENDS-12, plan 17 §1.5). Only the catalog executables `codex gemini agy qwen kilo cline goose
- * omp fx`; keeps accounts, chats, shared tools and the gate metadata; a partial payload stays removable.
+ * Remove an agent (AGENTS-BACKENDS-12, plan 17 §1.5). Only the catalog executables `codex gemini
+ * agy qwen kilo cline goose omp fx`; keeps accounts, chats, shared tools and the gate metadata; a
+ * partial payload stays removable.
  */
 public class AgentRemoval(
     private val runner: AgentRemovalRunner,
@@ -50,27 +61,50 @@ public class AgentRemoval(
         catalog.byId(agent)?.recipe?.executable?.let { it in REMOVABLE_EXECUTABLES } == true
 
     /** [busy]: setup running or unknown, an install, a pending preparation or a phone check. */
-    public suspend fun remove(owner: OwnerId, agent: AgentId, busy: Boolean): Outcome<RemovalResult> {
+    public suspend fun remove(
+        owner: OwnerId,
+        agent: AgentId,
+        busy: Boolean,
+    ): Outcome<RemovalResult> {
         if (!removable(agent)) return RemovalResult.Refused(RemovalRefusal.NotRemovable).ok()
         if (busy) return RemovalResult.Refused(RemovalRefusal.Busy).ok()
-        val receiptId = random.next(16).joinToString("") { (it.toInt() and 0xff).toString(16).padStart(2, '0') }
+        val receiptId =
+            random.next(16).joinToString("") { (it.toInt() and 0xff).toString(16).padStart(2, '0') }
         require(RECEIPT.matches(receiptId))
-        val run = when (val r = runner.remove(owner, agent, receiptId)) {
-            is Outcome.Failed -> return r
-            is Outcome.Ok -> r.value
-        }
-        val result = when (run.exitCode) {
-            0 -> run.receipt?.let { RemovalResult.Removed(if (it.wasAbsent) 0 else it.freedBytes.coerceAtLeast(0)) }
-                ?: RemovalResult.Refused(RemovalRefusal.Unconfirmed)
-            16 -> RemovalResult.Refused(RemovalRefusal.Busy)
-            17 -> RemovalResult.Refused(RemovalRefusal.Unsafe)
-            else -> RemovalResult.Refused(RemovalRefusal.Failed)
-        }
+        val run =
+            when (val r = runner.remove(owner, agent, receiptId)) {
+                is Outcome.Failed -> return r
+                is Outcome.Ok -> r.value
+            }
+        val result =
+            when (run.exitCode) {
+                0 ->
+                    run.receipt?.let {
+                        RemovalResult.Removed(
+                            if (it.wasAbsent) 0 else it.freedBytes.coerceAtLeast(0)
+                        )
+                    } ?: RemovalResult.Refused(RemovalRefusal.Unconfirmed)
+                16 -> RemovalResult.Refused(RemovalRefusal.Busy)
+                17 -> RemovalResult.Refused(RemovalRefusal.Unsafe)
+                else -> RemovalResult.Refused(RemovalRefusal.Failed)
+            }
         return result.ok()
     }
 
     public companion object {
-        public val REMOVABLE_EXECUTABLES: Set<String> = setOf("codex", "gemini", "agy", "qwen", "kilo", "cline", "goose", "omp", "fx")
+        public val REMOVABLE_EXECUTABLES: Set<String> =
+            setOf(
+                "codex",
+                "gemini",
+                "agy",
+                "qwen",
+                "kilo",
+                "cline",
+                "goose",
+                "omp",
+                "fx",
+                "unharnessed",
+            )
         public val RECEIPT: Regex = Regex("^[a-f0-9]{32}$")
     }
 }

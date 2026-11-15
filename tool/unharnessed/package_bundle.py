@@ -25,7 +25,7 @@ def normalize(info):
 with destination.open("wb") as output:
     for member in sorted(root.iterdir()):
         raw = io.BytesIO()
-        archive = tarfile.open(fileobj=raw, mode="w", format=tarfile.PAX_FORMAT)
+        archive = tarfile.open(fileobj=raw, mode="w", format=tarfile.PAX_FORMAT, dereference=True)
         archive.add(member, arcname=member.name, filter=normalize)
         length = archive.offset
         archive.close()

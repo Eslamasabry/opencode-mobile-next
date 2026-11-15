@@ -7,6 +7,9 @@ import json
 from pathlib import Path
 import sys
 import tempfile
+import subprocess
+import queue
+import threading
 import unittest
 
 spec = importlib.util.spec_from_file_location("phone_adapter", Path(__file__).with_name("adapter.py"))
@@ -15,6 +18,48 @@ spec.loader.exec_module(adapter)
 
 
 class AdapterTest(unittest.TestCase):
+    def test_B_AGENT_UH_005_a_child_crash_answers_pending_calls_and_adapter_stays_alive(self):
+        with tempfile.TemporaryDirectory() as root:
+            child = "import json,sys\nfor line in sys.stdin:\n m=json.loads(line)\n if m.get('method')=='crash': sys.exit(3)\n print(json.dumps({'jsonrpc':'2.0','id':m['id'],'result':{'protocolVersion':1}}),flush=True)\n"
+            program = "import asyncio,importlib.util,json,sys; s=importlib.util.spec_from_file_location('bridge',sys.argv[1]); m=importlib.util.module_from_spec(s); s.loader.exec_module(m); asyncio.run(m.Adapter(sys.argv[2],[sys.executable,'-u','-c',sys.argv[3]],{}).run())"
+            process = subprocess.Popen([sys.executable, "-B", "-c", program, str(Path(__file__).with_name("adapter.py")), root, child],
+                stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, env={"PATH": "/usr/bin:/bin"})
+            replies = queue.Queue()
+            def read():
+                for line in process.stdout:
+                    replies.put(json.loads(line))
+            threading.Thread(target=read, daemon=True).start()
+            def request(number, method):
+                process.stdin.write(json.dumps({"jsonrpc": "2.0", "id": number, "method": method, "params": {"protocolVersion": 1, "sessionId": "unknown"}}) + "\n")
+                process.stdin.flush()
+                reply = replies.get(timeout=5)
+                self.assertEqual(reply["id"], number)
+                return reply
+            try:
+                self.assertIn("result", request(1, "initialize"))
+                self.assertIn("error", request(2, "crash"))
+                self.assertIn("error", request(3, "session/load"))
+                self.assertIn("result", request(4, "initialize"))
+            finally:
+                process.stdin.close()
+                try:
+                    process.wait(timeout=10)
+                except subprocess.TimeoutExpired:
+                    process.kill()
+                    process.wait(timeout=5)
+                process.stdout.close()
+                process.stderr.close()
+            self.assertEqual(process.returncode, 0)
+
+    def test_B_AGENT_UH_004_step_input_keeps_original_code_and_gives_helper_a_command(self):
+        frame = {"jsonrpc": "2.0", "method": "session/update", "params": {"sessionId": "public", "update": {
+            "sessionUpdate": "tool_call", "kind": "execute", "title": "Python cell", "rawInput": {"code": "print(1)"},
+        }}}
+        shown = adapter.present_step(frame)
+        self.assertEqual(shown["params"]["update"]["rawInput"], {"code": "print(1)", "command": "print(1)"})
+        self.assertEqual(frame["params"]["update"]["rawInput"], {"code": "print(1)"})
+        self.assertEqual(adapter.present_step({"jsonrpc": "2.0", "method": "other"}), {"jsonrpc": "2.0", "method": "other"})
+
     def test_B_AGENT_UH_001_mapping_is_atomic_private_and_keeps_other_sessions(self):
         with tempfile.TemporaryDirectory() as temporary:
             index = adapter.SessionIndex(temporary)

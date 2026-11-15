@@ -4,44 +4,54 @@ import io.github.eslamasabry.oc.engine.agents.catalog.AgentDescriptor
 import io.github.eslamasabry.oc.engine.agents.catalog.AgentRoute
 
 /**
- * Port of lib/builtin/agents/agent_removal_scripts.dart, byte-faithful: catalog-authored payload removal in the fixed
- * oc setup view, run by [io.github.eslamasabry.oc.engine.agents.removal.AgentRemovalRunner]. This never signs out,
+ * Port of lib/builtin/agents/agent_removal_scripts.dart, byte-faithful: catalog-authored payload
+ * removal in the fixed oc setup view, run by
+ * [io.github.eslamasabry.oc.engine.agents.removal.AgentRemovalRunner]. This never signs out,
  * deletes a profile home, stops a helper, or kills a process.
  */
 public object AgentRemovalScripts {
-    private val executables = mapOf(
-        "codex" to "codex",
-        "gemini" to "gemini",
-        "antigravity" to "agy",
-        "qwen" to "qwen",
-        "kilo" to "kilo",
-        "cline" to "cline",
-        "goose" to "goose",
-        "omp-acp" to "omp",
-        "fx" to "fx",
-    )
+    private val executables =
+        mapOf(
+            "codex" to "codex",
+            "gemini" to "gemini",
+            "antigravity" to "agy",
+            "qwen" to "qwen",
+            "kilo" to "kilo",
+            "cline" to "cline",
+            "goose" to "goose",
+            "omp-acp" to "omp",
+            "fx" to "fx",
+            "unharnessed" to "unharnessed",
+        )
 
     private val VERSION = Regex("^[0-9A-Za-z][0-9A-Za-z._+-]{0,79}$")
     private val RECEIPT = Regex("^[a-f0-9]{32}$")
 
     /**
-     * Exit codes are stable: 0 absent/removed, 16 busy, 17 unsafe, 18 failed. Only native-whitelisted check receipts
-     * cross the setup channel. Throws [IllegalArgumentException] for an agent without a safe recipe or a bad receipt id.
+     * Exit codes are stable: 0 absent/removed, 16 busy, 17 unsafe, 18 failed. Only
+     * native-whitelisted check receipts cross the setup channel. Throws [IllegalArgumentException]
+     * for an agent without a safe recipe or a bad receipt id.
      */
     public fun remove(agent: AgentDescriptor, receiptId: String): String {
         validateReceiptId(receiptId)
         val recipe = agent.recipe
         val id = agent.id.raw
         require(
-            recipe != null && executables[id] != null && recipe.executable == executables[id] &&
-                agent.route in setOf(AgentRoute.PaseoNative, AgentRoute.AcpPaseo) && VERSION.matches(recipe.version),
-        ) { "This agent has no safe payload removal recipe." }
+            recipe != null &&
+                executables[id] != null &&
+                recipe.executable == executables[id] &&
+                agent.route in setOf(AgentRoute.PaseoNative, AgentRoute.AcpPaseo) &&
+                VERSION.matches(recipe.version)
+        ) {
+            "This agent has no safe payload removal recipe."
+        }
         return "set -u\n" +
             "printf '%s\\n' '::oc-check-begin agent-$id'\n" +
             "oc_result=18\n" +
             "if command -v python3 >/dev/null 2>&1; then\n" +
             "  python3 - '$id' '${recipe.executable}' '${recipe.version}' '$receiptId' 2>/dev/null <<'OC_AGENT_REMOVE'\n" +
-            REMOVE_PY + "\n" +
+            REMOVE_PY +
+            "\n" +
             "OC_AGENT_REMOVE\n" +
             "  oc_result=\$?\n" +
             "fi\n" +
@@ -55,21 +65,23 @@ public object AgentRemovalScripts {
     }
 
     /**
-     * Root-authored reader for a single operation. Emits only bytes and a 0/1 absence flag, then deletes the bounded
-     * private receipt. Never runs data.
+     * Root-authored reader for a single operation. Emits only bytes and a 0/1 absence flag, then
+     * deletes the bounded private receipt. Never runs data.
      */
     public fun readReceipt(receiptId: String): String {
         validateReceiptId(receiptId)
         return "set -u\n" +
             "python3 - '$receiptId' 2>/dev/null <<'OC_AGENT_REMOVAL_RECEIPT'\n" +
-            READ_RECEIPT_PY + "\n" +
+            READ_RECEIPT_PY +
+            "\n" +
             "OC_AGENT_REMOVAL_RECEIPT\n"
     }
 
-    internal val REMOVE_PY: String = """import json, os, pathlib, re, shutil, stat, sys
+    internal val REMOVE_PY: String =
+        """import json, os, pathlib, re, shutil, stat, sys
 agent, executable, version, receipt_id = sys.argv[1:]
 allowed = {'codex': 'codex', 'gemini': 'gemini', 'antigravity': 'agy', 'qwen': 'qwen',
-           'kilo': 'kilo', 'cline': 'cline', 'goose': 'goose', 'omp-acp': 'omp', 'fx': 'fx'}
+           'kilo': 'kilo', 'cline': 'cline', 'goose': 'goose', 'omp-acp': 'omp', 'fx': 'fx', 'unharnessed': 'unharnessed'}
 if (allowed.get(agent) != executable or
     not re.fullmatch(r'[0-9A-Za-z][0-9A-Za-z._+-]{0,79}', version) or
     not re.fullmatch(r'[a-f0-9]{32}', receipt_id) or
@@ -104,6 +116,20 @@ def tree(path):
             if not (stat.S_ISDIR(entry.st_mode) or stat.S_ISREG(entry.st_mode) or
                     stat.S_ISLNK(entry.st_mode)):
                 raise Refused(17)
+def data_trees():
+    if agent != 'unharnessed': return []
+    profiles = root / '.oc-profiles'
+    entry = info(profiles)
+    if entry is None: return []
+    if not stat.S_ISDIR(entry.st_mode): raise Refused(17)
+    found = []
+    for profile in profiles.iterdir():
+        if not re.fullmatch(r'[A-Za-z0-9_-]{1,80}', profile.name): continue
+        if not stat.S_ISDIR(profile.lstat().st_mode): raise Refused(17)
+        data = profile / 'unharnessed'
+        tree(data)
+        if info(data) is not None: found.append(data)
+    return found
 def targets():
     tree(base)
     entry = info(link)
@@ -127,6 +153,7 @@ def authored(target):
 def live_target():
     guest_base = str(base).encode() + b'/'
     guest_link = str(link).encode()
+    private_roots = [str(path).encode() + b'/' for path in data_trees()]
     # Linux exe links may show the host rootfs prefix rather than guest paths.
     native_suffix = '/home/oc/.local/share/oc-agents/' + agent + '/'
     installer = re.compile(rb'(?m)^oc_lock=' + re.escape(str(lock).encode()) + rb'(?:\r?\n|;|${'$'})')
@@ -135,6 +162,7 @@ def live_target():
         try:
             args = (path / 'cmdline').read_bytes().split(b'\0')
             if any(arg == guest_link or arg.startswith(guest_base) for arg in args): return True
+            if any(arg.startswith(prefix) for arg in args for prefix in private_roots): return True
             # The authored installer may hold an empty lock before its first
             # target path reaches curl/Node argv. Never steal that live lock.
             for index in range(len(args) - 2):
@@ -203,7 +231,7 @@ try:
     if info(receipt) is not None: raise Refused(17)
     stale = lock_entry()
     if live_target(): raise Refused(16)
-    absent = info(base) is None and info(link) is None and not transient and stale is None
+    absent = info(base) is None and info(link) is None and not transient and stale is None and not data_trees()
     if absent:
         result = 0
     else:
@@ -226,10 +254,13 @@ try:
         transient = targets()
         if live_target(): raise Refused(16)
         if not shutil.rmtree.avoids_symlink_attacks: raise Refused(18)
-        size = allocated([base, link] + transient) + stale_bytes
+        private_data = data_trees()
+        size = allocated([base, link] + transient + private_data) + stale_bytes
         if info(link) is not None: link.unlink()
         for path in transient: path.unlink()
         if info(base) is not None: shutil.rmtree(base)
+        for data in private_data: shutil.rmtree(data)
+        if data_trees(): raise Refused(18)
         if info(base) is not None or info(link) is not None or targets():
             raise Refused(18)
         if live_target(): raise Refused(18)
@@ -254,7 +285,8 @@ if result == 0:
 sys.exit(result)
 """
 
-    internal val READ_RECEIPT_PY: String = """import json, os, pathlib, re, stat, sys
+    internal val READ_RECEIPT_PY: String =
+        """import json, os, pathlib, re, stat, sys
 receipt_id = sys.argv[1]
 if not re.fullmatch(r'[a-f0-9]{32}', receipt_id) or os.getuid() != 0: sys.exit(18)
 root = pathlib.Path('/home/oc')

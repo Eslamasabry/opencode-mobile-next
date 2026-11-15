@@ -1,6 +1,7 @@
 """Install the kernel solely from the bundle's hash-locked wheelhouse."""
 
 import hashlib
+import fcntl
 import json
 import os
 from pathlib import Path
@@ -10,6 +11,9 @@ import sys
 
 def bootstrap(package, root):
     package, root = Path(package).resolve(), Path(root).absolute()
+    os.umask(0o077)
+    if any(parent.is_symlink() for parent in (root, *root.parents)):
+        raise ValueError("Agent data must be a private folder")
     root.mkdir(parents=True, mode=0o700, exist_ok=True)
     manifest = json.loads((package / "manifest.json").read_text())
     for name, expected in manifest["sha256"].items():
@@ -22,12 +26,18 @@ def bootstrap(package, root):
     uv = str(package / "bin/uv")
     python = str(package / manifest["python"])
     venv = root / "kernel-venv"
-    subprocess.run([uv, "venv", str(venv), "--python", python, "--relocatable"], env=env, check=True)
-    subprocess.run([
-        uv, "pip", "sync", "--python", str(venv / "bin/python"),
-        "--no-index", "--find-links", str(package / "wheels"), "--require-hashes",
-        str(package / "requirements.lock"),
-    ], env=env, check=True)
+    wanted = hashlib.sha256((package / "requirements.lock").read_bytes() + (package / "manifest.json").read_bytes() + str(package).encode()).hexdigest()
+    with (root / ".kernel-bootstrap.lock").open("a") as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        if (root / ".kernel-lock").is_file() and (root / ".kernel-lock").read_text() == wanted:
+            return
+        subprocess.run([uv, "venv", str(venv), "--python", python, "--relocatable", "--clear"], env=env, check=True)
+        subprocess.run([
+            uv, "pip", "sync", "--python", str(venv / "bin/python"),
+            "--no-index", "--find-links", str(package / "wheels"), "--require-hashes",
+            str(package / "requirements.lock"),
+        ], env=env, check=True)
+        (root / ".kernel-lock").write_text(wanted)
 
 
 if __name__ == "__main__":

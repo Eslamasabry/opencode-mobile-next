@@ -6,6 +6,7 @@ test "$(uname -m)" = aarch64
 test ! -e /src
 exec > >(tee /facts/bundle-test.log) 2>&1
 mkdir -p /empty/bundle /trial/home /trial/agent /trial/project
+tar -tzf /facts/unharnessed-arm64.tar.gz > /facts/bundle-members.txt
 tar -xzf /facts/unharnessed-arm64.tar.gz -C /empty/bundle
 python=$(find /empty/bundle/python -path '*/bin/python3.11' | head -n 1)
 test -n "$python"
@@ -16,3 +17,4 @@ printf '%s\n' "$(( $(date +%s) - start ))" > /facts/locked-bootstrap-seconds.txt
 env -i HOME=/trial/home PATH=/usr/bin:/bin PYTHONDONTWRITEBYTECODE=1 \
   "$python" /probe/bundle_probe.py /empty/bundle /trial/agent /trial/project
 du -sb /empty/bundle /trial/agent /trial/project > /facts/first-reply-disk-bytes.txt
+du -sb /empty/bundle/* /trial/agent/* > /facts/disk-by-part.txt
