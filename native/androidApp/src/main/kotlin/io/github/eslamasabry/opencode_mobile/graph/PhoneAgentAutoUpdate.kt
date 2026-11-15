@@ -4,6 +4,7 @@ package io.github.eslamasabry.opencode_mobile.graph
 
 import android.app.Application
 import android.net.ConnectivityManager
+import android.os.Build
 import android.os.SystemClock
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesTo
@@ -17,6 +18,8 @@ import io.github.eslamasabry.oc.engine.agents.AgentId
 import io.github.eslamasabry.oc.engine.agents.catalog.AgentCatalog
 import io.github.eslamasabry.oc.engine.agents.catalog.AgentPins
 import io.github.eslamasabry.oc.engine.agents.install.AgentAutoUpdater
+import io.github.eslamasabry.oc.engine.agents.install.AgentInstallRecord
+import io.github.eslamasabry.oc.engine.agents.install.AgentInstallRecorded
 import io.github.eslamasabry.oc.engine.agents.install.AgentUpdateHost
 import io.github.eslamasabry.oc.engine.agents.install.AgentUpdateJobs
 import io.github.eslamasabry.oc.engine.runtime.server.OpenCodeIdleSettle
@@ -24,6 +27,7 @@ import io.github.eslamasabry.oc.engine.runtime.setup.SetupState
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentInstallIssue
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentInstallPhase
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentInstallResult
+import io.github.eslamasabry.opencode_mobile.BuiltinLinux
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -55,6 +59,30 @@ class PhoneAgentAutoUpdate(
     private val appScope: AppCoroutineScope,
 ) {
     private var started = false
+
+    /** What each agent's install of its pinned version recorded (issue 147); empty until read. */
+    @Volatile private var records: Map<AgentId, AgentInstallRecorded> = emptyMap()
+    @Volatile private var recordsRead = false
+
+    /**
+     * Reads the install records (one small root script that only reads files; nothing is started). Kept until the next
+     * read: once per run, after the read of versions, and before the updater acts.
+     */
+    private fun readRecords() {
+        val linux = BuiltinLinux.get(app)
+        if (!linux.installed) return
+        val run = linux.run(AgentInstallRecord.readScript(AgentCatalog.builtIn), 30, logOutput = false)
+        if (run.exitCode == 0) {
+            records = AgentInstallRecord.parse(run.output)
+            recordsRead = true
+        }
+    }
+
+    /** Installed agents whose install of the pinned version is not this app's pin (same version, other artifact). */
+    private fun recordBehind(installed: List<AgentId>): Set<AgentId> {
+        val architecture = PhoneAgentRules.architectureOf(Build.SUPPORTED_ABIS.toList()) ?: return emptySet()
+        return AgentInstallRecord.behind(installed, records, AgentCatalog.builtIn, architecture)
+    }
     @Volatile private var updaterRef: AgentAutoUpdater? = null
     private val log = AppLog.tagged("AgentAutoUpdate")
 
@@ -62,13 +90,18 @@ class PhoneAgentAutoUpdate(
         if (started) return
         started = true
         val pins = AgentPins.builtIn
+        // The artifact's checksum is part of a pin: the same version from another artifact is another pin (issue 147).
         val pinned =
             "paseo ${pins.paseo.version} " +
-                AgentCatalog.builtIn.agents.joinToString(" ") { "${it.id.raw} ${it.recipe?.version}" }
+                AgentCatalog.builtIn.agents.joinToString(" ") { agent ->
+                    "${agent.id.raw} ${agent.recipe?.version} " +
+                        agent.recipe?.artifacts?.values?.joinToString(",") { it.sha256.take(12) }
+                }
         val host =
             object : AgentUpdateHost {
-                // The decision reads the kept facts of the last reads (no probe), so there is nothing to read again.
-                override suspend fun refresh() = Unit
+                // The decision reads the kept facts of the last reads (no probe); only the install records are read
+                // again, as an install may have just rewritten them.
+                override suspend fun refresh() = readRecords()
 
                 // An update an earlier run of the app started and did not finish (stopped or crashed mid-install).
                 override val resume: AgentId? get() = phones.interruptedUpdate()
@@ -79,6 +112,7 @@ class PhoneAgentAutoUpdate(
 
                 override suspend fun read() {
                     val done = phones.readForUpdate()
+                    if (done) readRecords()
                     log.i { "read of the installed agents ${if (done) "done" else "did not finish"}" }
                 }
 
@@ -86,7 +120,12 @@ class PhoneAgentAutoUpdate(
                     get() = phones.updateFacts()?.installed.orEmpty()
 
                 override val behind: Set<AgentId>
-                    get() = phones.updateFacts()?.behind.orEmpty()
+                    get() =
+                        phones.updateFacts()?.let { facts -> facts.behind + recordBehind(facts.installed) }.orEmpty()
+
+                override val reinstall: Set<AgentId>
+                    get() =
+                        phones.updateFacts()?.let { facts -> recordBehind(facts.installed) - facts.behind }.orEmpty()
 
                 override val helperBehind: Boolean
                     get() =
@@ -161,6 +200,8 @@ class PhoneAgentAutoUpdate(
         appScope.launch(dispatchers.io) {
             delay(FIRST_LOOK.seconds)
             safely { phones.warmForUpdate() }
+            // Once per run: an install of the pinned version from another artifact counts as behind (issue 147).
+            safely { if (!recordsRead) readRecords() }
             safely { updater.changed() }
             safely {
                 merge(combine(setup.progress, leases.busy) { _, _ -> }, settled).collect {

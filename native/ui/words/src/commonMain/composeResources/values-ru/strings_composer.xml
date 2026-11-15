@@ -415,4 +415,6 @@
     <string name="claudeAgentCheckAgain">Проверить снова</string>
     <string name="claudeAgentCheckAgainLabel">Проверить агент Claude снова</string>
     <string name="claudeAgentReady">Агент Claude готов. Его модели помечены меткой «Пробная».</string>
+    <string name="modelPickerModeDefaultName">По умолчанию</string>
+    <string name="modelPickerModeAutoName">Авто</string>
 </resources>

@@ -23,6 +23,8 @@ class PaseoSubfoldersTest {
                         mapOf("agent" to agentJson("sibling", cwd = "$DIR-other")),
                         mapOf("agent" to agentJson("escape", cwd = "$DIR/../secret")),
                         mapOf("agent" to agentJson("archived", cwd = "$DIR/project-one", archivedAt = "2026-09-19T04:00:00.000Z")),
+                        mapOf("agent" to agentJson("storage", cwd = "/storage/emulated/0/MyProj")),
+                        mapOf("agent" to agentJson("storage-escape", cwd = "/storage/emulated/0/MyProj/../../../root")),
                     ),
                     "pageInfo" to mapOf("hasMore" to false),
                 )
@@ -55,5 +57,15 @@ class PaseoSubfoldersTest {
         )
         val ids = (h.gateway.allSessions() as Outcome.Ok).value.map { it.id.raw }
         assertEquals(listOf("root", "project", "deep"), ids)
+    }
+
+    @Test
+    fun `I147-STORAGE a conversation in a phone-storage folder stays held after the helper is pinned back to its projects`() = runTest {
+        val h = GatewayHarness(this, daemon())
+        h.gateway.includeSubfolders = true
+        h.gateway.subfolderRoot = DIR
+        h.gateway.heldRoots = listOf("/storage", "/sdcard")
+        val ids = (h.gateway.allSessions() as Outcome.Ok).value.map { it.id.raw }
+        assertEquals(listOf("root", "project", "deep", "storage"), ids)
     }
 }

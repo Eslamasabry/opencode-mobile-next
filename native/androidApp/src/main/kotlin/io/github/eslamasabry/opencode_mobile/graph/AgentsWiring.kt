@@ -254,6 +254,8 @@ class AppPaseoGatewayFactory(
                     gateway.includeSubfolders = true
                     // New conversation moves the helper to one project; every project stays readable.
                     gateway.subfolderRoot = spec.location.directory
+                    // Issue 147: a conversation in a folder chosen in the phone's storage stays readable too.
+                    gateway.heldRoots = listOf("/storage", "/sdcard")
                 }
             },
             savedTitles = { profile, key ->

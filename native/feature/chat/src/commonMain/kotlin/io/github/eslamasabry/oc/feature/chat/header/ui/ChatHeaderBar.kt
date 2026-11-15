@@ -633,7 +633,7 @@ private fun DetailsBody(facts: DetailsUi) {
             )
             KitRow(
                 stringResource(Res.string.chatUiAgent),
-                trailing = KitRowTrailing.Value(facts.agent ?: none, chevron = false),
+                trailing = KitRowTrailing.Value(facts.agent?.let { io.github.eslamasabry.oc.feature.chat.composer.agentTitle(it) } ?: none, chevron = false),
             )
             val percent = facts.contextPercent
             val context =

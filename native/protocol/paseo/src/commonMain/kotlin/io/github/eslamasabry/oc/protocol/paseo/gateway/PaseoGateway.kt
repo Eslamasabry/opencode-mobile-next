@@ -324,10 +324,19 @@ public class PaseoGateway(
      */
     public var subfolderRoot: String? = null
 
+    /**
+     * Further folders whose conversations this gateway holds wherever it is pinned ([includeSubfolders] gateways): the
+     * phone's shared storage for the phone helper (issue 147). A conversation started in a folder the person chose in
+     * the phone's storage stays readable after the helper reconnects to its own projects folder.
+     */
+    public var heldRoots: List<String> = emptyList()
+
     /** Whether a conversation that runs in [directory] belongs to the folder [scope] this gateway is pinned to. */
     internal fun holds(scope: String?, directory: String?): Boolean =
         directory == scope ||
-            (includeSubfolders && (under(scope, directory) || directory == subfolderRoot || under(subfolderRoot, directory)))
+            (includeSubfolders &&
+                (under(scope, directory) || directory == subfolderRoot || under(subfolderRoot, directory) ||
+                    heldRoots.any { under(it, directory) }))
 
     private fun under(scope: String?, directory: String?): Boolean =
         scope != null &&

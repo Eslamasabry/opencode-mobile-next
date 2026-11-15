@@ -667,6 +667,8 @@ agentsOwnAgentName	8a2912497a
 agentsOwnAgentNoAnswer	3c904a3703
 agentsOwnAgentNotAcp	af5785e061
 agentsOwnAgentNotFound	af49a2ed57
+agentsOwnAgentReadyLater	25fd6820f4
+agentsOwnAgentReadyNow	b37e2355b4
 agentsOwnAgentRemove	a8c5d1f7cd
 agentsOwnAgentRowBody	4d9ff39885
 agentsOwnAgentSave	9fec1eafa9
@@ -1218,6 +1220,7 @@ approvalModeNowAsk	7d8b2152b6
 approvalModeNowAuto	91140471eb
 approvalModeNowEverything	fb340266fc
 approvalModeSettings	fd4e14df25
+approvalNewFileOf	d84cc3c58c
 approvalNoteDenyOnly	f65701f371
 approvalReplyBack	357885fe4b
 approvalReplyEmpty	f456ac58fd
@@ -2229,6 +2232,15 @@ chatsNewGettingReady	707c51907d
 chatsNewGettingReadySlow	9b0c7c0602
 chatsNewModelRow	c522c54aff
 chatsNewNeedProject	c983526668
+chatsNewPhoneFolderAccess	743b99e07e
+chatsNewPhoneFolderAllow	06e4e59f0c
+chatsNewPhoneFolderDenied	0aa44527e5
+chatsNewPhoneFolderMissing	5608242160
+chatsNewPhoneFolderRestartAgents	ed1d30fb04
+chatsNewPhoneFolderRestartAgentsAction	581f621808
+chatsNewPhoneFolderRestartFailed	8582f46f1f
+chatsNewPhoneFolderRestartServer	cb1a7c84e4
+chatsNewPhoneFolderRestartServerAction	8b587c5ace
 chatsNewPhoneStorage	0596028729
 chatsNewPhoneStorageOff	719ecc4c4e
 chatsNewPhoneStorageOn	c5e5d57076
@@ -2478,7 +2490,7 @@ composerToolCommandsTitle	77c51aeeb5
 composerToolNothingToSave	9e1c442602
 composerToolSaveForLater	22ef822580
 composerToolSavedSubtitle	91e861c1d6
-composerToolsAgentPicturesOnly	8a550dc9ac
+composerToolsAgentPicturesOnly	20bfa0f8c2
 composerToolsAgentTextOnly	46d33978b6
 composerToolsMore	c128486b1d
 composerToolsTextOnly	92deaba741
@@ -7655,6 +7667,8 @@ modelPickerDetailsOutput	39bf3b85f8
 modelPickerDetailsPrice	e54f7dde0c
 modelPickerFree	01e7818492
 modelPickerInUse	d1461c4c1a
+modelPickerModeAutoName	3cbc06cfd7
+modelPickerModeDefaultName	cf003bbfa9
 modelPickerReasonCheapest	96ba505dda
 modelPickerReasonDefault	cf003bbfa9
 modelPickerReasonRecent	44268c9b85

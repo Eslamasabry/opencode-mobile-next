@@ -15,4 +15,13 @@
     <string name="chatsNewFolderRemake">Criar a pasta de novo</string>
     <string name="chatsNewFolderChooseAnother">Escolher outro projeto</string>
     <string name="chatSendFolderMissing">A pasta deste projeto não está mais no servidor, então a mensagem não foi enviada. Inicie uma nova conversa para criar a pasta de novo ou escolha outro projeto.</string>
+    <string name="chatsNewPhoneFolderAccess">Os agentes não conseguem abrir pastas do armazenamento deste celular até você permitir que este app acesse todos os arquivos.</string>
+    <string name="chatsNewPhoneFolderAllow">Permitir acesso ao armazenamento do celular</string>
+    <string name="chatsNewPhoneFolderRestartServer">O OpenCode deste celular foi iniciado antes de você escolher esta pasta, então ainda não a enxerga. Reinicie-o para trabalhar aqui.</string>
+    <string name="chatsNewPhoneFolderRestartServerAction">Reiniciar o OpenCode deste celular</string>
+    <string name="chatsNewPhoneFolderRestartAgents">Os agentes do celular foram iniciados antes de você escolher esta pasta, então o %1$s ainda não a enxerga. Reinicie-os para trabalhar aqui.</string>
+    <string name="chatsNewPhoneFolderRestartAgentsAction">Reiniciar os agentes do celular</string>
+    <string name="chatsNewPhoneFolderMissing">Esta pasta não está mais no armazenamento do celular. Escolha outra pasta.</string>
+    <string name="chatsNewPhoneFolderDenied">O %1$s não consegue abrir nem alterar arquivos nesta pasta. Escolha outra pasta no armazenamento do celular.</string>
+    <string name="chatsNewPhoneFolderRestartFailed">Não foi possível reiniciar. Se um agente ainda estiver trabalhando, tente de novo quando ele terminar.</string>
 </resources>

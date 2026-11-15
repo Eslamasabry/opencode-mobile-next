@@ -693,7 +693,7 @@
     <string name="composerBusyReason">Menyiapkan perintah Anda…</string>
     <string name="composerToolsTextOnly">Server ini hanya menerima teks</string>
     <string name="composerToolsAgentTextOnly">%1$s hanya menerima teks di sini</string>
-    <string name="composerToolsAgentPicturesOnly">%1$s hanya menerima gambar: gunakan Pustaka foto atau Ambil foto</string>
+    <string name="composerToolsAgentPicturesOnly">%1$s hanya menerima gambar: gunakan %2$s atau %3$s</string>
     <string name="composerToolSavedSubtitle">Kembalikan perintah yang Anda simpan ke draf</string>
     <string name="composerToolSaveForLater">Simpan perintah untuk nanti</string>
     <string name="composerToolNothingToSave">Ketik atau lampirkan sesuatu dulu</string>

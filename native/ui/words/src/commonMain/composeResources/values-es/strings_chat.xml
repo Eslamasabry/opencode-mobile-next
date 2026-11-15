@@ -481,7 +481,7 @@
     <string name="composerBusyReason">Preparando tu mensaje…</string>
     <string name="composerToolsTextOnly">Este servidor solo acepta texto</string>
     <string name="composerToolsAgentTextOnly">Aquí %1$s solo acepta texto</string>
-    <string name="composerToolsAgentPicturesOnly">%1$s solo acepta imágenes: usa «Galería de fotos» o «Tomar foto»</string>
+    <string name="composerToolsAgentPicturesOnly">%1$s solo acepta imágenes: usa %2$s o %3$s</string>
     <string name="composerToolSavedSubtitle">Vuelve a poner en el borrador un mensaje guardado</string>
     <string name="composerToolSaveForLater">Guardar mensaje para después</string>
     <string name="composerToolNothingToSave">Escribe o adjunta algo primero</string>

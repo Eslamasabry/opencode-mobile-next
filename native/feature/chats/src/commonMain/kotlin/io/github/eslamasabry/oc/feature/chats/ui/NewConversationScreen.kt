@@ -38,6 +38,8 @@ import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationStarte
 import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationWait
 import io.github.eslamasabry.oc.feature.chats.presentation.PhoneStartWay
 import io.github.eslamasabry.oc.feature.chats.presentation.PHONE_STORAGE_ROOT
+
+import io.github.eslamasabry.oc.feature.chats.presentation.PhoneFolderReach
 import io.github.eslamasabry.oc.feature.chats.presentation.PhoneStorageAccess
 import io.github.eslamasabry.oc.feature.chats.presentation.projectPlace
 import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationUi
@@ -138,6 +140,7 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
     val loadingModels = stringResource(Res.string.chat_model_loading)
     val phoneOffWords = stringResource(Res.string.homePhoneOffTitle)
     val unconfirmedWords = unconfirmedWords(state)
+    val phoneFolderWords = phoneFolderWords(state)
     val enabled =
         if (state.phoneOff) KitEnabled.Disabled(phoneOffWords)
         else if (state.deliveryUnconfirmed) KitEnabled.Disabled(unconfirmedWords)
@@ -157,6 +160,7 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                 if (setupFailed) stringResource(Res.string.chatsNewSetupFailed) else gettingReady
             state.directory.isNullOrBlank() -> stringResource(Res.string.chatsNewNeedProject)
             state.folderMissing -> stringResource(Res.string.chatsNewFolderMissing)
+            phoneFolderWords != null -> phoneFolderWords
             state.phoneNeedsProjectsFolder ->
                 stringResource(
                     if (state.phoneHasNoProject) Res.string.chatsNewAgentNoProjects
@@ -196,7 +200,7 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                         startBlocked != null && startBlocked != promptHint && (!state.busy || preparing) && !state.phoneOff &&
                             !failureShown &&
                             !state.deliveryUnconfirmed && !state.creationUnconfirmed &&
-                            !state.folderMissing
+                            !state.folderMissing && phoneFolderWords == null
                     )
                         // The sentence is the way out: one tap makes a project (none yet) or opens the chooser.
                         if (state.phoneNeedsProjectsFolder)
@@ -319,6 +323,45 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                             secondary = open ?: again,
                             tertiary = listOfNotNull(setUp, discard),
                         )
+                    }
+                    // Issue 147: the folder in phone storage is not ready for the side that will work in it. Said before
+                    // Start, with the way forward; the message is never sent into another folder.
+                    if (phoneFolderWords != null && !state.deliveryUnconfirmed) {
+                        KitNotice(phoneFolderWords, inset)
+                        val fix =
+                            when (state.phoneFolder) {
+                                PhoneFolderReach.AppAccess -> Res.string.chatsNewPhoneFolderAllow
+                                PhoneFolderReach.Restart ->
+                                    if (state.phoneAgent != null) Res.string.chatsNewPhoneFolderRestartAgentsAction
+                                    else Res.string.chatsNewPhoneFolderRestartServerAction
+                                else -> null
+                            }
+                        val another =
+                            KitAction(
+                                stringResource(Res.string.chatsNewFolderChooseAnother),
+                                { actions.sheet(NewConversationSheet.Projects) },
+                            )
+                        KitActionBlock(
+                            inset,
+                            secondary =
+                                fix?.let {
+                                    KitAction(
+                                        stringResource(it),
+                                        actions::fixPhoneFolder,
+                                        working = state.fixingPhoneFolder,
+                                    )
+                                } ?: another,
+                            tertiary = if (fix != null) listOf(another) else emptyList(),
+                        )
+                        state.phoneFolderFailure?.let { failure ->
+                            KitErrorNotice(
+                                modifier = inset,
+                                message = stringResource(Res.string.chatsNewPhoneFolderRestartFailed),
+                                failure = failure,
+                                detailsLabel = stringResource(Res.string.kitDetails),
+                                copyLabel = stringResource(Res.string.kitCopyDetails),
+                            )
+                        }
                     }
                     // B-063: the server still lists a project whose folder is gone; a message sent there is
                     // refused. Say it before Start, with the two ways forward.
@@ -1116,5 +1159,24 @@ private fun StorageFoldersSheet(state: NewConversationUi, actions: NewConversati
                 copyLabel = stringResource(Res.string.kitCopyDetails),
             )
         }
+    }
+}
+
+/** The phone's shared storage as a folder: where Downloads and Documents live. */
+private const val PHONE_STORAGE_FOLDER = "/sdcard"
+
+/** Issue 147: why the chosen folder in phone storage keeps Start back, naming the agent; null when it does not. */
+@Composable
+private fun phoneFolderWords(state: NewConversationUi): String? {
+    val agent = state.phoneAgentName ?: "OpenCode"
+    return when (state.phoneFolder) {
+        null,
+        PhoneFolderReach.Ready -> null
+        PhoneFolderReach.AppAccess -> stringResource(Res.string.chatsNewPhoneFolderAccess)
+        PhoneFolderReach.Restart ->
+            if (state.phoneAgent != null) stringResource(Res.string.chatsNewPhoneFolderRestartAgents, agent)
+            else stringResource(Res.string.chatsNewPhoneFolderRestartServer)
+        PhoneFolderReach.Missing -> stringResource(Res.string.chatsNewPhoneFolderMissing)
+        PhoneFolderReach.Denied -> stringResource(Res.string.chatsNewPhoneFolderDenied, agent)
     }
 }
