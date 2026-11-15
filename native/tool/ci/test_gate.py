@@ -69,6 +69,13 @@ class Gate(unittest.TestCase):
         self.assertEqual(code, 0, md)
         self.assertIn('## Native CI: PASS', md)
 
+    def test_a_fast_run_whose_compile_and_tests_never_ran_is_integrity_not_pass(self):
+        code, md = run_gate('> Task :feature:chats:desktopTest\n', ':feature:chats:desktopTest', [('feature/chats', f'{PKG}.feature.chats.XTest', ())],
+                            results={'RESULT_COMPILE': 'skipped', 'RESULT_TEST': 'skipped'})
+        self.assertEqual(code, 2, md)
+        self.assertIn('## Native CI: FAIL', md)
+        self.assertIn('compile: the job did not run', md)
+
     def test_test_compile_failure_is_fail(self):
         log = ("> Task :feature:settings:compileTestKotlinDesktop FAILED\n"
                "e: file:///native/feature/settings/src/desktopTest/kotlin/A.kt:3:5 Name contains illegal characters: ;\n\n"

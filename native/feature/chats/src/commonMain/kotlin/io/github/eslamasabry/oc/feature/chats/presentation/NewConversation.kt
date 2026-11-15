@@ -50,6 +50,8 @@ import kotlin.time.Duration.Companion.seconds
 /** How long the page waits for a server's first answer before it says so and offers Try again. */
 internal val SETUP_WAIT = 90.seconds
 
+private val ALWAYS_READ: StateFlow<Boolean> = MutableStateFlow(true)
+
 public data class NewConversationServer(
     val profile: ProfileId,
     val name: String,
@@ -138,6 +140,10 @@ public data class NewConversationPhoneAgent(
     val updating: Boolean = false,
     /** Installed, but the app cannot read its sign-in: the Agents page says "Set it up the first time you use it". */
     val setUpAtFirstUse: Boolean = false,
+    /** Signed out: the Agents page says "Sign in needed", and so does this row (F-040). */
+    val signInNeeded: Boolean = false,
+    /** Needs its phone check: the Agents page says "Phone check needed", and so does this row. */
+    val phoneCheck: Boolean = false,
 )
 
 /**
@@ -269,6 +275,13 @@ public interface NewConversationHost {
         Outcome.Failed(Failure.Unavailable(FeatureId("projectFolderCreation")))
 
     public val servers: StateFlow<List<NewConversationServer>>
+
+    /**
+     * Whether [servers] is the real saved list. False while the app is still reading its saved connections (a cold
+     * start): an empty list then is "not read yet", never "no server" (issue 147, F-039).
+     */
+    public val serversRead: StateFlow<Boolean>
+        get() = ALWAYS_READ
 
     /** Starts this phone's own OpenCode after the person stopped it. */
     public suspend fun startPhoneServer(profile: ProfileId): Outcome<Unit> =
@@ -532,6 +545,8 @@ public object PhoneStartRules {
 
 public data class NewConversationUi(
     val servers: List<NewConversationServer> = emptyList(),
+    /** False while the saved connections are still being read: an empty [servers] is then not "no server". */
+    val serversRead: Boolean = true,
     val profile: ProfileId? = null,
     val setup: NewConversationSetup? = null,
     val directory: String? = null,
@@ -662,6 +677,7 @@ public data class NewConversationUi(
         get() =
             when {
                 openingChat -> NewConversationWait.Sending
+                !serversRead -> NewConversationWait.Preparing
                 busy && setup == null && !repairing -> NewConversationWait.Preparing
                 busy && setup != null && !repairing && text.isNotBlank() -> NewConversationWait.Sending
                 phoneModelsBusy && !busy -> NewConversationWait.Models
@@ -826,6 +842,17 @@ public class NewConversationViewModel(
     private var attempt: NewConversationAttempt? = null
 
     init {
+        viewModelScope.launch {
+            host.serversRead.collect { read ->
+                mutable.update { it.copy(serversRead = read) }
+                // A tap kept for the list that the page's own setup outran: the list is read now, so it goes on.
+                val kept = mutable.value
+                if (read && kept.startQueued && kept.setup != null && !kept.busy) {
+                    mutable.update { it.copy(startQueued = false) }
+                    start()
+                }
+            }
+        }
         viewModelScope.launch {
             host.servers.collect { servers ->
                 mutable.update { it.copy(servers = servers) }
@@ -1783,8 +1810,8 @@ public class NewConversationViewModel(
         val shown = mutable.value
         // Issue 147: a tap on Start while the page is still getting ready is kept and acts when it is ready.
         if (
-            shown.setup == null && shown.busy && !shown.repairing && !shown.openingChat && !shown.startQueued &&
-                shown.profile != null && shown.text.isNotBlank()
+            ((shown.setup == null && shown.busy && !shown.repairing && shown.profile != null) || !shown.serversRead) &&
+                !shown.openingChat && !shown.startQueued && shown.text.isNotBlank()
         ) {
             mutable.update { it.copy(startQueued = true) }
             return

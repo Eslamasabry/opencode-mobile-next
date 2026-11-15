@@ -36,7 +36,7 @@ public fun KitTopBarScope(
             val style = LocalKitTypography.current.style(TypeRole.Secondary)
             val measurer = rememberTextMeasurer()
             val density = LocalDensity.current
-            val whole = if (server.isNullOrEmpty()) project else "$project · $server"
+            val whole = kitProjectServerLabel(project, server)
             val needed = with(density) { measurer.measure(whole, style).size.width.toDp() }
             val words = if (needed <= maxWidth) whole else project
             ScopeWord(words, projectLabel, onProject)
@@ -97,3 +97,10 @@ public fun KitServerName(name: String, modifier: Modifier = Modifier) {
             }
     }
 }
+
+/**
+ * Where a project is, in one line: "docsdemo · This phone". The chat's header and New conversation's project chip say it
+ * with these same words; a project with no server name is just the project.
+ */
+public fun kitProjectServerLabel(project: String, server: String?): String =
+    if (server.isNullOrEmpty()) project else "$project · $server"

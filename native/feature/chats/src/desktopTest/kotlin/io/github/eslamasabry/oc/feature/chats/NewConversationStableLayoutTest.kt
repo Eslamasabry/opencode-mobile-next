@@ -61,9 +61,10 @@ class NewConversationStableLayoutTest {
                 }
             }
             waitForIdle()
-            val chips = onNodeWithTag("chats-new-choices").getBoundsInRoot()
+            val where = onNodeWithTag("kit-where-line").getBoundsInRoot()
+            val chip = onNodeWithTag("kit-agent-model-chip").getBoundsInRoot()
             val start = onNodeWithTag("kit-button-hero").getBoundsInRoot()
-            out = listOf(chips.top.value, start.top.value)
+            out = listOf(where.top.value, chip.top.value, start.top.value)
         }
         return out
     }
