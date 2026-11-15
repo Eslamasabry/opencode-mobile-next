@@ -122,10 +122,12 @@ import io.github.eslamasabry.oc.ui.kitchat.rememberKitRedactedCopyAction
 import io.github.eslamasabry.oc.ui.kitchat.request.KitRequestChange
 import io.github.eslamasabry.oc.ui.words.res.approvalChangeMissing
 import io.github.eslamasabry.oc.ui.words.res.approvalChangeOf
+import io.github.eslamasabry.oc.ui.words.res.approvalNewFileOf
 import io.github.eslamasabry.oc.ui.words.res.approvalCopyChange
 import io.github.eslamasabry.oc.ui.words.res.kitSuggestionsShowAll
 import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.ui.kitchat.LocalKitRedactor
+import io.github.eslamasabry.oc.feature.chat.requests.presentation.ChangeKind
 import io.github.eslamasabry.oc.feature.chat.requests.presentation.PermissionFact
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHeight
@@ -461,7 +463,12 @@ private fun changeOnCard(change: PermissionChangeUi, ask: AskView, onDetails: ((
     val open = onDetails ?: {}
     return KitRequestChange(
         preview = preview,
-        label = stringResource(Res.string.approvalChangeOf, KitBidi.ltr(mask(name.orEmpty()))),
+        // A file that does not exist yet says so: "New file: index.html", then its size and first lines.
+        label =
+            stringResource(
+                if (change.files.firstOrNull()?.kind == ChangeKind.Create) Res.string.approvalNewFileOf else Res.string.approvalChangeOf,
+                KitBidi.ltr(mask(name.orEmpty())),
+            ),
         showAllLabel =
             if (onDetails != null && (preview.more || change.files.size > 1)) stringResource(Res.string.kitSuggestionsShowAll)
             else null,
