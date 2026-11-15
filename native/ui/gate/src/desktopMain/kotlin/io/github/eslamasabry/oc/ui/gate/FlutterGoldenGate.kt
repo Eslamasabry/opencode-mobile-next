@@ -145,7 +145,7 @@ object FlutterGoldenGate {
         style: Style = Style.Solid,
         ref: GateRef = GateRef.Product,
         modes: List<String> = listOf("light", "dark"),
-        wrap: @Composable (@Composable () -> Unit) -> Unit = { it() },
+        wrap: @Composable (@Composable () -> Unit) -> Unit = NoWrap,
         textScale: Float? = null,
         window: Pair<Int, Int>? = null,
         density: Float? = null,
@@ -395,7 +395,7 @@ object FlutterGoldenGate {
         part: String,
         caps: Map<String, String> = emptyMap(),
         frame: Frame = Frame.Part,
-        wrap: @Composable (@Composable () -> Unit) -> Unit = { it() },
+        wrap: @Composable (@Composable () -> Unit) -> Unit = NoWrap,
         content: @Composable () -> Unit,
     ) {
         val lines = ArrayList<String>()

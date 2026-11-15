@@ -68,7 +68,7 @@ object LayoutGuard {
     class Scene(
         val frame: FlutterGoldenGate.Frame = FlutterGoldenGate.Frame.Screen,
         val style: Style = Style.Solid,
-        val wrap: @Composable (@Composable () -> Unit) -> Unit = { it() },
+        val wrap: @Composable (@Composable () -> Unit) -> Unit = NoWrap,
         val act: (ComposeUiTest.() -> Unit)? = null,
         val content: @Composable () -> Unit,
     )
@@ -139,12 +139,14 @@ object LayoutGuard {
         val all = LinkedHashMap<String, Finding>()
         val screen = scene.frame == FlutterGoldenGate.Frame.Screen
         // A compact window checks that words fit, which light and dark agree on: one render each, not two.
+        // A wrapper frames the content at a size of its own (a capture frame), so a small window cannot judge its width.
+        val judgeCut = screen && scene.wrap === NoWrap
         for (window in windows) for (dark in if (window.compact) listOf(false) else listOf(false, true)) {
             val axes = FlutterGoldenGate.Axes(rtl = false, scale = window.scale, w = window.w, h = window.h)
             val read: ComposeUiTest.() -> Unit = {
                 val roots = onAllNodes(isRoot(), useUnmergedTree = true)
                     .fetchSemanticsNodes(atLeastOneRootRequired = false)
-                for (f in inspect(roots, window, screen)) all.putIfAbsent(f.key, f)
+                for (f in inspect(roots, window, screen, judgeCut)) all.putIfAbsent(f.key, f)
                 if (window == Window.Phone && !dark) onPhone?.invoke(roots, window)
             }
             FlutterGoldenGate.render(
@@ -156,8 +158,8 @@ object LayoutGuard {
     }
 
     /** The checks over one rendered tree; [screen] adds the page rules (gutter, title edge) a lone part cannot meet. */
-    internal fun inspect(roots: List<SemanticsNode>, window: Window, screen: Boolean): List<Finding> =
-        LayoutWalk(window, roots).run(screen)
+    internal fun inspect(roots: List<SemanticsNode>, window: Window, screen: Boolean, judgeCut: Boolean = screen): List<Finding> =
+        LayoutWalk(window, roots).run(screen, judgeCut)
 
     // --------------------------------------------------------------------------------------------- the baseline
 
@@ -183,3 +185,6 @@ object LayoutGuard {
         }
     }
 }
+
+/** The default scene wrapper: none. A scene with any other wrapper frames its content itself. */
+internal val NoWrap: @Composable (@Composable () -> Unit) -> Unit = { it() }

@@ -62,8 +62,8 @@ internal class LayoutWalk(private val window: Window, roots: List<SemanticsNode>
     }
 
     /** Every finding; [screen] adds the page rules (gutter, title edge) that a lone part cannot meet. */
-    fun run(screen: Boolean): List<Finding> {
-        if (window.compact) return fits(screen)
+    fun run(screen: Boolean, judgeCut: Boolean = screen): List<Finding> {
+        if (window.compact) return fits(judgeCut)
         for (n in items.filter { it.visible && it.bounds.right > 0f && it.bounds.left < w }) {
             targets(n)
             truncation(n)
@@ -84,10 +84,10 @@ internal class LayoutWalk(private val window: Window, roots: List<SemanticsNode>
      * that scrolls sideways must carry the kit's cue that there is more (`scroll-cue`). `cut-off` is judged on screens
      * only: a part gallery scene lays several parts out at a width of its own, which a small window rightly clips.
      */
-    private fun fits(screen: Boolean): List<Finding> {
+    private fun fits(judgeCut: Boolean): List<Finding> {
         for (n in items.filter { it.visible && it.bounds.right > 0f && it.bounds.left < w }) {
             truncation(n)
-            if (screen) cutOff(n)
+            if (judgeCut) cutOff(n)
             scrollCue(n)
         }
         return found
