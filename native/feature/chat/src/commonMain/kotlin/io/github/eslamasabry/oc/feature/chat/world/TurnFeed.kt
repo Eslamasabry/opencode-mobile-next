@@ -32,6 +32,11 @@ public data class TurnFeed(
     /** Receipt time of the newest event that showed progress in this conversation. */
     val lastProgressAtMs: Long? = null,
     val retry: RunRetry? = null,
+    /**
+     * The stretches of this run the person was asked and had not answered yet, as (asked, answered) receipt times: a
+     * running step's own clock leaves them out (it runs only after the decision).
+     */
+    val waits: List<Pair<Long, Long>> = emptyList(),
     /** How the last run ended; null while running or before any end. */
     val lastOutcome: RunOutcome? = null,
     /** `providerId/modelId` → context window in tokens; empty until the catalog is read. */
@@ -170,7 +175,11 @@ internal class TurnFeedKeeper(private val sessionId: String) {
             waitingSinceMs = null
             val s = state.value
             val started = s.runStartedAtMs ?: return
-            state.value = s.copy(runStartedAtMs = started + (atMs - since).coerceAtLeast(0))
+            state.value =
+                s.copy(
+                    runStartedAtMs = started + (atMs - since).coerceAtLeast(0),
+                    waits = (s.waits + (since to atMs)).takeLast(64),
+                )
         }
         when (event) {
             is GatewayEvent.PermissionAsked -> if (event.request.sessionId.raw == sessionId) ask("p:" + event.request.id.raw)
@@ -180,6 +189,7 @@ internal class TurnFeedKeeper(private val sessionId: String) {
             is GatewayEvent.RunEnded -> {
                 asks.clear()
                 waitingSinceMs = null
+                if (state.value.waits.isNotEmpty()) state.value = state.value.copy(waits = emptyList())
             }
             else -> Unit
         }

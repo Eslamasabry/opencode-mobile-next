@@ -571,6 +571,7 @@ public fun ChatScreen(
                 requestWaiting = { RunTailRules.waitsForYou(requestState.cards.map { it.state }) || formPending },
                 // F-023: a tap in the box while a decision waits takes the page to it.
                 jumpToWaiting = { waitingJump += 1 },
+                requestAsking = { RunTailRules.asksYou(requestState.cards.map { it.state }) || formPending },
                 // A send brings the newest message into view at once (audit 1, k6: "Jump to latest" showed after a send
                 // made while reading back, until the next row arrived).
                 onSent = {

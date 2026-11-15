@@ -56,6 +56,12 @@ public object RunTailRules {
     public fun waitsForYou(card: CardState?): Boolean =
         card is CardState.Waiting || card is CardState.Held || card is CardState.NotAccepted
 
+    /**
+     * Whether a decision is still to be made: asked and not answered, or refused and to be tried again. An answer inside
+     * its Undo hold is made (the composer stops saying it waits).
+     */
+    public fun asksYou(cards: List<CardState>): Boolean = cards.any { it is CardState.Waiting || it is CardState.NotAccepted }
+
     /** Whether any of the chat's request cards still waits on the person. */
     public fun waitsForYou(cards: List<CardState>): Boolean = cards.any { waitsForYou(it) }
 

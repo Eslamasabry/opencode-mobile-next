@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.key
@@ -726,6 +727,10 @@ private fun OneStep(
             child != null ||
             files.isNotEmpty())
     val full = folds.full[key] == true
+    // Issue 147 (F-033): a command that is running and has put something out opens by itself, so its growing tail is in
+    // view without a tap. It stays open when the command ends (its output stays readable); the person's own fold wins.
+    if (opensItself(step, waitingForYou, text != null))
+        LaunchedEffect(key) { if (folds.open[key] == null) folds.open[key] = true }
     KitToolRow(
         view = view,
         opened = folds.open[key] == true,
@@ -907,3 +912,7 @@ internal fun stepOutputShown(step: TurnStep, showAll: Boolean): String? {
         }
     return shown.takeIf { it.isNotEmpty() }
 }
+
+/** Whether a step opens by itself: a running command, not blocked on the person, that has printed something. */
+internal fun opensItself(step: TurnStep, waitingForYou: Boolean, hasOutput: Boolean): Boolean =
+    step.state == StepState.Running && !waitingForYou && step.facts.kind == ToolKind.Shell && hasOutput
