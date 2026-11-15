@@ -59,6 +59,10 @@ class PreviewStores(
         io.github.eslamasabry.oc.core.data.scope.DefaultProfileScope(prefs, secrets, lanes.app)
     private val warming = Mutex()
     @Volatile private var prepared = false
+    private val mutableRead = kotlinx.coroutines.flow.MutableStateFlow(false)
+
+    /** True once the saved connections have been read; before it, an empty list means "not read yet". */
+    val savedRead: kotlinx.coroutines.flow.StateFlow<Boolean> = mutableRead
 
     /** Every synchronous composer read follows both preference warm-up and profile restoration. */
     suspend fun warm(): Outcome<Unit> = warming.withLock {
@@ -74,7 +78,7 @@ class PreviewStores(
                 }
         ) {
             is Outcome.Failed -> result
-            is Outcome.Ok -> result.value.also { if (it is Outcome.Ok) prepared = true }
+            is Outcome.Ok -> result.value.also { if (it is Outcome.Ok) { prepared = true; mutableRead.value = true } }
         }
     }
 
