@@ -24,6 +24,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
@@ -199,12 +200,21 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                     val promptHint = stringResource(Res.string.chatsNewBuildPrompt)
                     // N-48: an unconfirmed send already has its notice above; the reason is said once. A failure
                     // notice on the page is that reason too: never the same sentence twice.
-                    if (
+                    val showsReason =
                         startBlocked != null && startBlocked != promptHint && (!state.busy || preparing) && !state.phoneOff &&
                             !failureShown &&
                             !state.deliveryUnconfirmed && !state.creationUnconfirmed &&
                             !state.folderMissing && phoneFolderWords == null
-                    )
+                    // Issue 147 (F-034): the chips and Start keep one place from the first frame to the settled page. The
+                    // reason line sits between them, so a line of its height stays when there is no reason (it used to come
+                    // and go, and the chips jumped up and down as the page got ready).
+                    if (!showsReason)
+                        KitText(
+                            "\u00A0",
+                            Modifier.clearAndSetSemantics {}.testTag("chats-new-reason-room"),
+                            role = TypeRole.Secondary,
+                        )
+                    if (showsReason && startBlocked != null)
                         // The sentence is the way out: one tap makes a project (none yet) or opens the chooser.
                         if (state.phoneNeedsProjectsFolder)
                             KitButton(

@@ -160,6 +160,7 @@ import io.github.eslamasabry.oc.ui.words.res.kitTryAgain
 import io.github.eslamasabry.oc.ui.words.res.agentsRestartLine
 import io.github.eslamasabry.oc.ui.words.res.agentsResumeAction
 import io.github.eslamasabry.oc.ui.words.res.agentsSignInAction
+import io.github.eslamasabry.oc.ui.words.res.agentsStateSignInNeeded
 import io.github.eslamasabry.oc.ui.words.res.agentsSignedOutLine
 import io.github.eslamasabry.oc.ui.words.res.agentsStoppedLine
 import io.github.eslamasabry.oc.ui.words.res.agentsLimitUnknown
@@ -816,6 +817,8 @@ private data class HomeRowWords(
     val needsYou: String,
     val working: String,
     val failed: String,
+    /** A failed run of an agent whose sign-in lapsed reads this, not "Failed" (issue 147). */
+    val signInNeeded: String,
     val done: String,
     val stopped: String,
     val interrupted: String,
@@ -847,6 +850,7 @@ private fun rememberHomeRowWords(): HomeRowWords =
         needsYou = stringResource(Res.string.chatsHomeNeedsYou),
         working = stringResource(Res.string.chatsHomeRowWorking),
         failed = stringResource(Res.string.chatsHomeFailed),
+        signInNeeded = stringResource(Res.string.agentsStateSignInNeeded),
         done = stringResource(Res.string.chatsHomeDone),
         stopped = stringResource(Res.string.chatsHomeStopped),
         interrupted = stringResource(Res.string.chatsHomeInterrupted),
@@ -893,6 +897,8 @@ private data class HomeRowFlags(
     val waitingWord: WaitingWord = WaitingWord.Connecting,
     /** Its kept tap was dropped: its source did not connect within the wait's limit. */
     val gaveUp: Boolean = false,
+    /** The row's last run failed and its agent is signed out: the row says Sign in needed. */
+    val signedOut: Boolean = false,
 )
 
 private fun rowFlags(row: ConversationRowUi, state: ChatsUi): HomeRowFlags =
@@ -917,6 +923,9 @@ private fun rowFlags(row: ConversationRowUi, state: ChatsUi): HomeRowFlags =
         waitingWord =
             SourceStartRules.waitingWord(state.home.sources.firstOrNull { it.profile == row.ref.profileId }?.starting),
         gaveUp = state.keptGaveUp == row.ref,
+        signedOut =
+            row.status == RowStatus.Failed &&
+                state.agentNotices.lines.any { it.kind == HomeAgentNoticeKind.SignedOut && it.agentName == row.agentName },
     )
 
 /**
@@ -948,7 +957,7 @@ private fun ConversationRow(
             RowStatus.Running ->
                 // H5 (F: chats_host.dart:188-199): how long the run has gone, when its start is known.
                 words.runningFor(row.running?.sinceMs?.takeIf { flags.nowMs > 0 }?.let { flags.nowMs - it })
-            RowStatus.Failed -> words.failed
+            RowStatus.Failed -> if (flags.signedOut) words.signInNeeded else words.failed
             RowStatus.Done -> words.done
             RowStatus.Stopped -> words.stopped
             RowStatus.Interrupted -> words.interrupted
@@ -959,7 +968,7 @@ private fun ConversationRow(
         else when (row.status) {
             RowStatus.NeedsYou -> KitRowStateTone.NeedsYou
             RowStatus.Running -> KitRowStateTone.Running
-            RowStatus.Failed -> KitRowStateTone.Failed
+            RowStatus.Failed -> if (flags.signedOut) KitRowStateTone.NeedsYou else KitRowStateTone.Failed
             else -> KitRowStateTone.Quiet
         }
     var menuOpen by remember(row.key) { mutableStateOf(false) }
