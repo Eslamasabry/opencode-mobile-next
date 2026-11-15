@@ -287,7 +287,7 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                     .padding(top = Space.S3.dp, bottom = Space.S3.dp),
                 verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
             ) {
-                if (state.servers.isEmpty()) {
+                if (state.servers.isEmpty() && state.serversRead) {
                     KitStateView(
                         kind = KitStateKind.Empty,
                         title = stringResource(Res.string.serversEmpty),
@@ -751,6 +751,8 @@ private fun NewConversationAgentStep(state: NewConversationUi, actions: NewConve
                     when {
                         agent.updating -> stringResource(Res.string.agentsUpdatingAgent, agent.name)
                         agent.checking -> stringResource(Res.string.r40PhoneChecking)
+                        agent.signInNeeded -> stringResource(Res.string.agentsStateSignInNeeded)
+                        agent.phoneCheck -> stringResource(Res.string.agentsStatePhoneCheck)
                         else -> stringResource(Res.string.chatsNewSetUp)
                     },
                 onClick = { actions.setUpPhoneAgent(agent.id) },

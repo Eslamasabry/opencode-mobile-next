@@ -203,4 +203,16 @@ class SetUpFirstTest {
         )
         assertTrue(PhoneAgentFacts.encode(PhoneAgentFacts.seenSetUp(emptyMap(), "omp-acp")).contains("\"setUp\":true"))
     }
+
+    @Test
+    fun `I147-FIRST-RUN a signed-out agent is no Ready choice and is worded Sign in needed like the Agents page`() {
+        val claude = PhoneAgentRow("claude", "Claude Code", PhoneAgentStatus.SignInNeeded, installable = true, signInAvailable = true)
+        val state = PhoneAgentsState(available = true, agents = persistentListOf(claude))
+        val offer = PhoneChatAgents.offer(NewConversationPhoneRules.facts(state), AgentId.OPENCODE)
+        assertEquals(emptyList(), offer.choices.map { it.id.raw }, "never marked Ready")
+        assertEquals(listOf("claude"), offer.needsSetup.map { it.id.raw })
+        assertEquals(setOf("claude"), NewConversationPhoneRules.signInNeeded(state))
+        val ready = PhoneAgentRow("claude", "Claude Code", PhoneAgentStatus.Ready)
+        assertEquals(emptySet(), NewConversationPhoneRules.signInNeeded(PhoneAgentsState(available = true, agents = persistentListOf(ready))))
+    }
 }

@@ -134,6 +134,14 @@ class AndroidNewConversationHost(
             }
             .stateIn(appScope, SharingStarted.Eagerly, emptyList())
 
+    // F-039: a saved connection that is still connecting is not "no server". The list is read once the saved
+    // connections are loaded and the connection list shows them (or there is none saved to show).
+    override val serversRead: StateFlow<Boolean> =
+        kotlinx.coroutines.flow.combine(connections.servers, stores.profiles.profiles, stores.savedRead) { rows, saved, read ->
+                read && (rows.isNotEmpty() || saved.none { stores.phoneOfHelper(it.id) == null })
+            }
+            .stateIn(appScope, SharingStarted.Eagerly, false)
+
     override suspend fun startPhoneServer(profile: ProfileId): Outcome<Unit> =
         phoneServer.start(profile)
 
@@ -640,6 +648,8 @@ class AndroidNewConversationHost(
                         it.iconKey,
                         checking = it.checking,
                         updating = it.checking && it.installed,
+                        signInNeeded = it.id.raw in NewConversationPhoneRules.signInNeeded(state),
+                        phoneCheck = it.id.raw in NewConversationPhoneRules.phoneCheck(state),
                     )
                 },
             selected = selected.takeIf { it != AgentId.OPENCODE }?.raw,
@@ -1697,6 +1707,14 @@ internal object NewConversationPhoneRules {
             fixable = row.status == PhoneAgentStatus.Stopped,
             installed = true,
         )
+
+    /** The agents the Agents page words "Sign in needed" (one status source: [phoneAgentShown]). */
+    fun signInNeeded(state: PhoneAgentsState): Set<String> =
+        state.agents.filter { phoneAgentShown(it, state.installation) == PhoneAgentShown.SignInNeeded }.map { it.id }.toSet()
+
+    /** The agents the Agents page words "Phone check needed". */
+    fun phoneCheck(state: PhoneAgentsState): Set<String> =
+        state.agents.filter { it.status == PhoneAgentStatus.PhoneCheck }.map { it.id }.toSet()
 
     /** The agents the Agents page words "Installed. Set it up the first time you use it." (status, not the seen fact). */
     fun setUpAtFirstUse(state: PhoneAgentsState): Set<String> =
