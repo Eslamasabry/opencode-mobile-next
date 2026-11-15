@@ -25,6 +25,16 @@ tags: [linux-setup]
     env:
       HOOK: appop
       ARGS: '{"op": "SCHEDULE_EXACT_ALARM", "mode": "allow"}'
+# Flutter 2.1.5 asks "Help improve OpenCode Mobile?" once on the first start (2.1.4 does not): answer "Not now".
+- extendedWaitUntil:
+    visible: "Help improve OpenCode Mobile\\?"  # literal-ok: 2.1.5 telemetryConsentTitle
+    timeout: 12000
+    optional: true
+- runFlow:
+    when:
+      visible: "Help improve OpenCode Mobile\\?"  # literal-ok: 2.1.5 telemetryConsentTitle
+    commands:
+      - tapOn: "Not now"  # literal-ok: 2.1.5 telemetryConsentNotNow
 # Flutter 2.1.4 opens on "Where should your agent run?" with "On this phone" chosen; choosing the computer card
 # turns the main button into "Connect to my computer" (connect-server.yaml taps it).
 - extendedWaitUntil:

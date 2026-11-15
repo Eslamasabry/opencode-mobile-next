@@ -12,7 +12,7 @@
 # Android's update check only compares signers, so this proves the data migration; the signing lineage of the public
 # files is proven separately with apksigner.
 name: Native device
-run-name: Upgrade-in-place proof · app ${{ github.sha }}
+run-name: Upgrade-in-place proof (throwaway branch)
 
 on:
   workflow_dispatch:
