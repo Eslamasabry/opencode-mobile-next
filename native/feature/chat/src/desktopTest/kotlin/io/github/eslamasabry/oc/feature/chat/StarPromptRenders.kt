@@ -62,6 +62,7 @@ import io.github.eslamasabry.oc.ui.kitchat.LocalKitRedactor
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerMic
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerVoice
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitVoiceField
+import io.github.eslamasabry.oc.ui.kitchat.turn.LIVE_ASK_ACTION_TAG
 import java.io.File
 import java.util.Locale
 import javax.imageio.ImageIO
@@ -124,7 +125,7 @@ class StarPromptRenders {
         }
 
     @Composable
-    private fun Screen(style: Style, dark: Boolean, ask: Boolean, tag: String) {
+    private fun Screen(style: Style, dark: Boolean, ask: Boolean, tag: String, running: Boolean = false) {
         CompositionLocalProvider(LocalDensity provides Density(DENSITY)) {
             KitTheme(
                 appearance =
@@ -145,7 +146,7 @@ class StarPromptRenders {
                                 title = "Fix the flaky checkout test",
                                 phase = ChatPhase.Live,
                                 rows = rows.toPersistentList(),
-                                live = LiveTurnUi(stopping = false),
+                                live = if (running) LiveTurnUi(stopping = false) else null,
                                 starAsk = ask,
                             )
                         ChatScreen(state, ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate), host)
@@ -166,6 +167,19 @@ class StarPromptRenders {
             ImageIO.write(image, "png", File(out, "$name.png"))
         }
         Locale.setDefault(Locale.forLanguageTag("en"))
+    }
+
+    @Test
+    fun `B-STAR-018 the ask is its own card at rest and never rides a running turn`() {
+        runDesktopComposeUiTest(WIDTH, HEIGHT) {
+            var running by mutableStateOf(false)
+            setContent { Screen(Style.Solid, dark = true, ask = true, tag = "en", running = running) }
+            waitForIdle()
+            onNodeWithTag(LIVE_ASK_ACTION_TAG).assertExists()
+            running = true
+            waitForIdle()
+            onNodeWithTag(LIVE_ASK_ACTION_TAG).assertDoesNotExist()
+        }
     }
 
     @Test

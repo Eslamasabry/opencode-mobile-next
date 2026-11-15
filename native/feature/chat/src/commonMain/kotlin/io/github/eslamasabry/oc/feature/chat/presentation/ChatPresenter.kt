@@ -266,16 +266,19 @@ public class ChatPresenter(
                 val before = wasBusy
                 wasBusy = busy
                 if (before == false && busy && world.link.value == ChatLink.Live) {
+                    // Never while a turn runs: a new turn takes the ask down, and counting it asks nothing.
+                    local.update { it.copy(starAsk = false) }
+                    launcher.launch { port.promptStarted() }
+                } else if (before == true && !busy) {
+                    local.update { it.copy(starAsk = false) }
+                    val good = StarPromptTurn.succeeded(t.rows)
                     launcher.launch {
-                        if (port.promptStarted() && world.transcript.value.run.busy) {
+                        // The ask comes at rest: this turn is over and nothing new started meanwhile.
+                        if (port.replyEnded(good) && !world.transcript.value.run.busy && world.link.value == ChatLink.Live) {
                             local.update { it.copy(starAsk = true) }
                             port.report(StarPromptEvent.Shown)
                         }
                     }
-                } else if (before == true && !busy) {
-                    local.update { it.copy(starAsk = false) }
-                    val good = StarPromptTurn.succeeded(t.rows)
-                    launcher.launch { port.replyEnded(good) }
                 }
             }
             .launchIn(scope)
@@ -494,7 +497,9 @@ public class ChatPresenter(
             switchOnline = i.link == ChatLink.Live,
             switching = l.switching,
             attachAgain = l.attachAgain,
-            starAsk = l.starAsk && t.run.busy && i.link == ChatLink.Live,
+            starAsk =
+                l.starAsk && !t.run.busy && i.link == ChatLink.Live &&
+                    world.requests.value?.state?.value?.card == null,
             setUpReplies = setUpReplies(t.rows),
         )
     }
