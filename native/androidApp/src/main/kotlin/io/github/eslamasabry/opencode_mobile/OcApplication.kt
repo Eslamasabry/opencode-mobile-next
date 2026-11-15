@@ -59,6 +59,7 @@ class OcApplication : Application(), GraphOwner {
     override fun onCreate() {
         super.onCreate()
         // Phones stay upright, tablets rotate: one rule for every activity of the app (PhoneOrientation).
+        PhoneOrientation.install(this)
         // The isolated PDF parser in ":local_pdf" has no storage and no UserManager: opening SharedPreferences there
         // throws and kills the process before it can answer, so every PDF showed "could not be displayed". It needs
         // none of the product below, so any process but the main one stops here.

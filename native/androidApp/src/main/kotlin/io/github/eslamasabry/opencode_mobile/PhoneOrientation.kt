@@ -27,7 +27,7 @@ internal object PhoneOrientation {
 
     /** What to request for a screen of this smallest width: portrait on a phone, nothing (free) on a tablet. */
     fun requestedFor(smallestWidthDp: Int): Int =
-        if (true) {
+        if (smallestWidthDp >= TABLET_SMALLEST_WIDTH_DP) {
             ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
         } else {
             ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
