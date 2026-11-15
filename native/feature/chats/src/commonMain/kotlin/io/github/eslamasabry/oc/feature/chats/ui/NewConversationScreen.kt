@@ -24,6 +24,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
+import io.github.eslamasabry.oc.ui.kit.foundation.KitNoticeInView
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -342,6 +343,7 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                     // Issue 147: the folder in phone storage is not ready for the side that will work in it. Said before
                     // Start, with the way forward; the message is never sent into another folder.
                     if (phoneFolderWords != null && !state.deliveryUnconfirmed) {
+                      KitNoticeInView(phoneFolderWords + state.phoneFolder?.name) { ways ->
                         KitNotice(phoneFolderWords, inset)
                         val fix =
                             if (state.fixingPhoneFolder && state.phoneFolder == PhoneFolderReach.AppAccess) null
@@ -358,7 +360,7 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                                 { actions.sheet(NewConversationSheet.Projects) },
                             )
                         KitActionBlock(
-                            inset,
+                            inset.then(ways),
                             secondary =
                                 fix?.let {
                                     KitAction(
@@ -382,6 +384,7 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                                 copyLabel = stringResource(Res.string.kitCopyDetails),
                             )
                         }
+                      }
                     }
                     // B-063: the server still lists a project whose folder is gone; a message sent there is
                     // refused. Say it before Start, with the two ways forward.
@@ -450,6 +453,7 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                     }
                     // N-48: an unconfirmed send is said once (above); a failed read behind it adds no second notice.
                     if (failureShown) {
+                      KitNoticeInView(state.failure) { ways ->
                         KitErrorNotice(
                             modifier = inset,
                             message =
@@ -474,7 +478,7 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                                 KitAction(stringResource(Res.string.gitRepairAction), actions::repair)
                                     .takeIf { state.repairAvailable && state.failure is Failure.ProjectGit }
                             KitActionBlock(
-                                inset,
+                                inset.then(ways),
                                 secondary =
                                     KitAction(
                                         stringResource(Res.string.commonRetry),
@@ -483,6 +487,7 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                                 tertiary = listOfNotNull(repair),
                             )
                         }
+                      }
                     }
                 }
             }
