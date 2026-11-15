@@ -68,7 +68,7 @@ class PhoneOrientationTest {
         val manifests =
             RepoFiles.native.walkTopDown()
                 .onEnter { it.name != "build" && it.name != ".gradle" && it.name != "test" }
-                .filter { it.name == "AndroidManifest.xml" && it.parentFile.parentFile?.name == "src" }
+                .filter { it.name == "AndroidManifest.xml" && it.parentFile?.parentFile?.name == "src" }
                 .toList()
         assertTrue(manifests.size >= 5, "the scan found the app's and the libraries' manifests")
         var activities = 0
@@ -81,7 +81,7 @@ class PhoneOrientationTest {
                 val activity = nodes.item(i) as Element
                 val name = activity.getAttributeNS(android, "name")
                 val full = if (name.startsWith(".")) "io.github.eslamasabry.opencode_mobile$name" else name
-                val where = "${manifest.parentFile.parentFile.parentFile.name}: $name"
+                val where = "${manifest.parentFile?.parentFile?.parentFile?.name}: $name"
                 assertTrue(
                     full.startsWith("io.github.eslamasabry.opencode_mobile."),
                     "$where is outside the package the rule covers; widen PhoneOrientation.covers",
