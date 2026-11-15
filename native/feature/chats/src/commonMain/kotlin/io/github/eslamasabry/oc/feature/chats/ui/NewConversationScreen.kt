@@ -144,6 +144,35 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
     val phoneOffWords = stringResource(Res.string.homePhoneOffTitle)
     val unconfirmedWords = unconfirmedWords(state)
     val phoneFolderWords = phoneFolderWords(state)
+    // Issue 147: a notice that BLOCKS starting hands its primary action to the pinned bottom block, in Start's place: one main
+    // button, always above the keyboard; Start comes back when the notice is gone. Its sentence and the secondary action stay
+    // with the notice in the scrolling part.
+    val phoneBlocks = phoneFolderWords != null && !state.deliveryUnconfirmed
+    val phoneFixRes =
+        if (!phoneBlocks || (state.fixingPhoneFolder && state.phoneFolder == PhoneFolderReach.AppAccess)) null
+        else
+            when (state.phoneFolder) {
+                PhoneFolderReach.AppAccess -> Res.string.chatsNewPhoneFolderAllow
+                PhoneFolderReach.Restart ->
+                    if (state.phoneAgent != null) Res.string.chatsNewPhoneFolderRestartAgentsAction
+                    else Res.string.chatsNewPhoneFolderRestartServerAction
+                else -> null
+            }
+    val phoneFixLabel = phoneFixRes?.let { stringResource(it) }
+    val chooseAnotherLabel = stringResource(Res.string.chatsNewFolderChooseAnother)
+    val phoneMain: KitAction? =
+        when {
+            !phoneBlocks -> null
+            phoneFixLabel != null ->
+                KitAction(
+                    phoneFixLabel,
+                    actions::fixPhoneFolder,
+                    enabled = if (state.fixingPhoneFolder) KitEnabled.Disabled(phoneFolderWords.orEmpty()) else KitEnabled.Enabled,
+                    working = state.fixingPhoneFolder,
+                )
+            !state.fixingPhoneFolder -> KitAction(chooseAnotherLabel, { actions.sheet(NewConversationSheet.Projects) })
+            else -> null
+        }
     val enabled =
         if (state.phoneOff) KitEnabled.Disabled(phoneOffWords)
         else if (state.deliveryUnconfirmed) KitEnabled.Disabled(unconfirmedWords)
@@ -228,7 +257,13 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                                 maxLines = 4,
                             )
                         else KitText(startBlocked, role = TypeRole.Secondary)
-                    KitButton(
+                    if (phoneMain != null)
+                        KitButton(
+                            action = phoneMain,
+                            modifier = Modifier.fillMaxWidth().testTag("chats-new-main-action"),
+                            hero = true,
+                        )
+                    else KitButton(
                         action =
                             KitAction(
                                 label = stringResource(Res.string.upgradeNewStart),
@@ -345,36 +380,12 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                     if (phoneFolderWords != null && !state.deliveryUnconfirmed) {
                       KitNoticeInView(phoneFolderWords + state.phoneFolder?.name) { ways ->
                         KitNotice(phoneFolderWords, inset)
-                        val fix =
-                            if (state.fixingPhoneFolder && state.phoneFolder == PhoneFolderReach.AppAccess) null
-                            else when (state.phoneFolder) {
-                                PhoneFolderReach.AppAccess -> Res.string.chatsNewPhoneFolderAllow
-                                PhoneFolderReach.Restart ->
-                                    if (state.phoneAgent != null) Res.string.chatsNewPhoneFolderRestartAgentsAction
-                                    else Res.string.chatsNewPhoneFolderRestartServerAction
-                                else -> null
-                            }
-                        val another =
-                            KitAction(
-                                stringResource(Res.string.chatsNewFolderChooseAnother),
-                                { actions.sheet(NewConversationSheet.Projects) },
+                        // The main action is the bottom block's; here only the other way, when the main one is a fix.
+                        if (phoneFixLabel != null && !state.fixingPhoneFolder)
+                            KitActionBlock(
+                                inset.then(ways),
+                                secondary = KitAction(chooseAnotherLabel, { actions.sheet(NewConversationSheet.Projects) }),
                             )
-                        KitActionBlock(
-                            inset.then(ways),
-                            secondary =
-                                fix?.let {
-                                    KitAction(
-                                        stringResource(it),
-                                        actions::fixPhoneFolder,
-                                        // Busy at once and never tapped twice while the restart runs.
-                                        enabled =
-                                            if (state.fixingPhoneFolder) KitEnabled.Disabled(phoneFolderWords)
-                                            else KitEnabled.Enabled,
-                                        working = state.fixingPhoneFolder,
-                                    )
-                                } ?: another.takeUnless { state.fixingPhoneFolder },
-                            tertiary = if (fix != null && !state.fixingPhoneFolder) listOf(another) else emptyList(),
-                        )
                         state.phoneFolderFailure?.let { failure ->
                             KitErrorNotice(
                                 modifier = inset,
