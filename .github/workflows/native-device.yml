@@ -33,7 +33,7 @@ permissions:
   actions: read
 
 concurrency:
-  group: upgrade-proof-${{ github.ref }}
+  group: upgrade-proof-${{ github.run_id }}
   cancel-in-progress: false
 
 env:
