@@ -35,7 +35,15 @@ class ChatsHomeHeaderCompactTest {
                 ),
             )
         val scene = LayoutGuard.Scene(Frame.Screen) { KitSheetHost { ChatsScreen(state, RecordingChatsActions(), shellBar = true) } }
-        val found = LayoutGuard.audit(scene, listOf(Window.Compact, Window.CompactLarge, Window.Narrow))
+        val all = try {
+            LayoutGuard.audit(scene, listOf(Window.Compact, Window.CompactLarge, Window.Narrow))
+        } catch (t: Throwable) {
+            var c: Throwable? = t
+            val chain = StringBuilder()
+            while (c != null) { chain.append(c::class.simpleName).append(": ").append(c.message).append(" @ ").append(c.stackTrace.take(4).joinToString(" < ")).append(" || "); c = c.cause }
+            error(chain.toString())
+        }
+        val found = all
             .filter { it.rule == "rest-cut" || it.rule == "clipped" || it.rule == "cut-off" }
             .map { "${it.window.name} ${it.rule} ${it.subject}" }
         assertTrue(found.isEmpty(), found.toString())
