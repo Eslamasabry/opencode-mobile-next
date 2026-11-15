@@ -236,4 +236,13 @@ class PermissionAskTest {
         metadata: Map<String, String> = emptyMap(),
     ): PermissionRequest =
         permission(id, S1, permission, patterns, always, metadata).copy(id = RequestId(id), patterns = patterns.toImmutableList())
+
+    @Test
+    fun `B-CHAT-REQ-NEWFILE-02 a patch with no changed line gives no size, never plus 0 minus 0`() {
+        val empty = "--- /dev/null\n+++ b/index.html\n@@ -0,0 +0,0 @@"
+        val ask = of(permission("p", permission = "edit", patterns = listOf("$dir/index.html"), metadata = mapOf("diff" to empty)))
+        val target = ask.targets.single()
+        assertNull(target.added)
+        assertNull(target.removed)
+    }
 }

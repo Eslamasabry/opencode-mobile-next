@@ -155,6 +155,8 @@ public fun KitRecentRow(
     below: (@Composable () -> Unit)? = null,
     /** False when every row is the same agent: its mark still shows, its name is not said on each row. */
     speakAgent: Boolean = true,
+    /** How many lines the [preview] may take: 1 for a quiet line, more where the words decide something (a command to allow). */
+    previewLines: Int = 1,
 ) {
     val colors = LocalKitColors.current
     val gutter = kitRowGutter()
@@ -191,7 +193,7 @@ public fun KitRecentRow(
                         )
                         if (pinned) KitGlyph(KitIcons.pin, colors.text2, 14.dp)
                     }
-                    if (line != null || shownProject != null) SecondLine(shownProject, line)
+                    if (line != null || shownProject != null) SecondLine(shownProject, line, previewLines)
                 }
                 if (time != null || state?.word != null) {
                     Spacer(Modifier.width(Space.S3.dp))
@@ -223,9 +225,35 @@ private fun Mark(agent: KitFeedAgent) {
 
 /** The project's dot and name (when shown), then the preview or the quiet words, on one line cut with an ellipsis. */
 @Composable
-private fun SecondLine(project: String?, line: String?) {
+private fun SecondLine(project: String?, line: String?, previewLines: Int) {
     val colors = LocalKitColors.current
     val style = LocalKitTypography.current.style(TypeRole.Secondary).copy(color = colors.text2)
+    if (previewLines > 1 && line != null) {
+        // Words that decide something (a command to allow) read in full on their own lines, under the project.
+        Column(Modifier.fillMaxWidth()) {
+            if (project != null) {
+                val palette = KitRecentRowRules.palette(colors)
+                val slot = remember(project, palette.size) { KitRecentRowRules.paletteSlot(project, palette.size) }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        Modifier.size(KitRecentRowRules.DOT_DP.dp)
+                            .clip(CircleShape)
+                            .background(palette.getOrElse(slot) { colors.text3 })
+                            .testTag("kit-recent-project-dot")
+                    )
+                    Spacer(Modifier.width(6.dp))
+                    BasicText(
+                        "\u2068$project\u2069",
+                        style = style.copy(color = colors.text1.copy(alpha = PROJECT_ALPHA)),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+            }
+            BasicText(line, Modifier.fillMaxWidth(), style = style, maxLines = previewLines, overflow = TextOverflow.Ellipsis)
+        }
+        return
+    }
     BoxWithConstraints(Modifier.fillMaxWidth()) {
         // A project name next to a preview takes at most 40 % of the line, so the preview always reads.
         val projectMax = if (line != null) maxWidth * PROJECT_SHARE else maxWidth
