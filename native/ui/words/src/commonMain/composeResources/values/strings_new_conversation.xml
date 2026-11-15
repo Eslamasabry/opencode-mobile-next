@@ -22,6 +22,10 @@
     <string name="chatsNewPhoneFolderMissing">This folder isn’t in the phone’s storage any more. Choose another folder.</string>
     <string name="chatsNewPhoneFolderDenied">%1$s can’t open or change files in this folder. Choose another folder in the phone’s storage.</string>
     <string name="chatsNewPhoneFolderRestartFailed">Couldn’t restart. If an agent is still working, try again when it’s done.</string>
+    <string name="chatsNewPhoneFolderWhere">Works in %1$s, in the phone’s storage, which can’t hold links or start programs directly.</string>
+    <string name="chatsNewPhoneFolderWhy">Why</string>
+    <string name="chatsNewPhoneFolderHelpTitle">Working in the phone’s storage</string>
+    <string name="chatsNewPhoneFolderHelp">Android keeps the phone’s storage for every app, like a memory card. It can’t hold links between files, and it won’t start a program that is stored in it.\n\nSo in this folder, install packages with npm install --no-bin-links, and run a script with sh script.sh instead of ./script.sh. Git here ignores file modes. Projects in the app’s own folder have none of these limits.\n\nWhen Claude Code or Codex starts here, it is told the same.</string>
     <string name="chatPhoneFolderAccess">This conversation’s folder is in the phone’s storage, and the app no longer has access to all files. Nothing is sent until you allow it again.</string>
     <string name="chatPhoneFolderRestartServer">This phone’s OpenCode can’t see this conversation’s folder until it restarts. Nothing is sent until then.</string>
     <string name="chatPhoneFolderRestartAgents">The phone’s agents can’t see this conversation’s folder until they restart. Nothing is sent until then.</string>
