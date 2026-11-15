@@ -888,10 +888,19 @@ public class PromptDelivery(
     private fun running(ref: ConversationRef): Boolean =
         facts.running(ref) || mutableLocalTurns.value[ref] != null
 
-    private fun sameTarget(link: SendLink, origin: DispatchScope): Boolean =
-        connection.link.value?.epoch === link.epoch &&
-            link.scope == origin &&
-            connection.activeProfile.value == origin.profileId
+    private fun sameTarget(link: SendLink, origin: DispatchScope): Boolean {
+        val replaced = connection.link.value?.epoch !== link.epoch
+        val moved = link.scope != origin
+        val switched = connection.activeProfile.value != origin.profileId
+        // SEND-STALE: which part changed is the only clue a "connection changed while sending" leaves (fixed words).
+        if (replaced || moved || switched)
+            log.w {
+                "send target changed: " +
+                    listOfNotNull("connection replaced".takeIf { replaced }, "folder moved".takeIf { moved }, "profile switched".takeIf { switched })
+                        .joinToString()
+            }
+        return !replaced && !moved && !switched
+    }
 
     private fun currentLink(ref: ConversationRef): SendLink? =
         connection.link.value?.takeIf { it.scope.profileId == ref.profileId }

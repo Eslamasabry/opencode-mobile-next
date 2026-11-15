@@ -26,9 +26,9 @@ class InteractiveScheduleAdmission(
     private val dispatchers: AppDispatchers,
 ) : InteractiveSendCheck {
     override suspend fun check(profile: ServerProfile): Outcome<Unit> {
-        val saved = profiles.profile(profile.id) ?: return stale()
-        val current = saved.toServerProfile(profile.managedOnPhone) ?: return stale()
-        if (current != profile) return stale()
+        val saved = profiles.profile(profile.id) ?: return stale("server removed")
+        val current = saved.toServerProfile(profile.managedOnPhone) ?: return stale("server unreadable")
+        if (current != profile) return stale("server edited since it connected")
         // Agent sockets and remote servers do not use the scheduled OpenCode phone runtime.
         val address = URI(profile.origin.toString())
         if (
@@ -54,6 +54,14 @@ class InteractiveScheduleAdmission(
     }
 
     private fun stale(): Outcome.Failed = Outcome.Failed(Failure.Refused(RefusalReason.StaleScope))
+
+    /** SEND-STALE: the refusal, with the one clue a report needs (fixed words). */
+    private fun stale(why: String): Outcome.Failed {
+        log.w { "send refused as stale: $why" }
+        return stale()
+    }
+
+    private val log = io.github.eslamasabry.oc.core.common.AppLog.tagged("send-admission")
 
     private companion object {
         val LOOPBACK = setOf("127.0.0.1", "localhost", "::1", "[::1]")

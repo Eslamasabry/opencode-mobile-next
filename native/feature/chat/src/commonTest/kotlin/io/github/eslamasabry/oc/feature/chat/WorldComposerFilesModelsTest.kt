@@ -1517,6 +1517,69 @@ class WorldComposerFilesModelsTest {
         assertIs<Outcome.Ok<Unit>>(f.world.selectModel(m2))
         assertEquals(listOf("m2"), f.world.models.value.recent.map { it.modelId })
     }
+
+    // ---- SEND-STALE: a phone agent's conversation opens at Accepted (one operation); its second message is sent ----
+
+    private fun agentSnapshot() =
+        CatalogSnapshot(
+            persistentListOf(CatalogProvider("antigravity", "Antigravity", true, null)),
+            persistentListOf(catalogModel("flash", provider = "antigravity", name = "Gemini Flash (High)")),
+            persistentListOf(),
+        )
+
+    private suspend fun TestScope.secondSendAfter(opensBeforeAccepted: Boolean): List<String> {
+        val f = Fixture(this, selection = ModelRef("antigravity", "flash"), runtime = "antigravity")
+        f.operations.catalog = Outcome.Ok(agentSnapshot())
+        f.operations.defaults = Outcome.Ok(ChatDefaults(null, null))
+        f.base.capabilities.value = f.base.capabilities.value.copy(serverCatalog = true, promptSteering = true)
+        f.connect()
+        val engine = f.engine()
+        val first =
+            SendRequest(
+                ref,
+                "Hi test",
+                model = io.github.eslamasabry.oc.core.model.ModelSelection(ModelRef("antigravity", "flash")),
+            )
+        assertIs<Outcome.Ok<*>>(engine.send(first))
+        if (opensBeforeAccepted) {
+            f.world
+            runCurrent()
+        }
+        runCurrent()
+        advanceTimeBy(60)
+        runCurrent()
+        // New conversation takes the Accepted result, then (one operation) opens the page.
+        engine.outcomes.value.filter { it.ref == ref }.forEach { engine.acknowledge(it.id) }
+        f.world
+        runCurrent()
+        f.base.events.emit(GatewayEvent.MessageUpserted(MessageInfo("u1", ref.sessionId.raw, Role.User)))
+        f.base.events.emit(GatewayEvent.PartUpserted(Part("t1", "u1", ref.sessionId.raw, PartType.Text, "text", "Hi test")))
+        runCurrent()
+        advanceTimeBy(60)
+        runCurrent()
+        f.world.loadModels()
+        runCurrent()
+        f.world.draftChanged("Hi")
+        val sent = f.world.send("Hi")
+        runCurrent()
+        advanceTimeBy(60)
+        runCurrent()
+        return listOf("send=$sent") +
+            f.world.pending.value.map { "${it.text}:${it.state}:${it.failure}" } +
+            f.base.sentPrompts.map { "wire:${it.second.text}" }
+    }
+
+    @Test
+    fun `SEND-STALE-1e a page opened once the first message was Accepted sends the second message`() = runTest {
+        val seen = secondSendAfter(opensBeforeAccepted = false)
+        assertTrue(seen.contains("wire:Hi"), seen.toString())
+    }
+
+    @Test
+    fun `SEND-STALE-1f a page opened while the first message was on its way sends the second message`() = runTest {
+        val seen = secondSendAfter(opensBeforeAccepted = true)
+        assertTrue(seen.contains("wire:Hi"), seen.toString())
+    }
 }
 
 /** The header port's context-usage memory, unused by these tests. */
