@@ -93,9 +93,10 @@ enum class SharedFolderReach(val code: String) {
             when {
                 !appAccess -> AppAccess
                 !appSeesFolder -> Missing
-                probeExit == null -> Unknown
-                probeExit != 0 -> Denied
+                probeExit != null && probeExit != 0 -> Denied
+                // Known from the binds alone: a check that could not run never hides a process started without it.
                 running != null && !running.covers(path) -> Restart
+                probeExit == null -> Unknown
                 else -> Ready
             }
     }

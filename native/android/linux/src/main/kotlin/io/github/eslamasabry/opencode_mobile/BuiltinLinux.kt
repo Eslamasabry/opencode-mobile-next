@@ -1804,10 +1804,12 @@ class BuiltinLinux(private val context: Context) {
             process.outputStream.close()
             if (process.waitFor(FOLDER_CHECK_SECONDS, TimeUnit.SECONDS)) process.exitValue()
             else {
+                Log.w(TAG, "Shared-folder check timed out")
                 stopTree(process)
                 null
             }
-        } catch (_: Exception) {
+        } catch (error: Exception) {
+            Log.w(TAG, "Shared-folder check did not run: ${error.javaClass.simpleName}")
             null
         }
     }

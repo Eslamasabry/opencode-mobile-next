@@ -58,7 +58,8 @@ class PhoneFolderPreflight(
         // The choice is the person's consent to this folder: it is bound from the next start of either side. A whole
         // volume is never bound on its own; the check below then says the side can't reach it.
         val root = SharedStoragePath.projectRoot(directory)
-        if (thorough && root != null && remember(owner, root) is Outcome.Failed) return null
+        // A list that could not be saved only matters for the next start; the check below still answers for now.
+        if (thorough && root != null) remember(owner, root)
         val code =
             withContext(dispatchers.io) {
                 attempt({ Failure.Device() }) {
