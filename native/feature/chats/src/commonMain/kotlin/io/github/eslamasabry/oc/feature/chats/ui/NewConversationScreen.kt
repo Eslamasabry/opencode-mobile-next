@@ -23,8 +23,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.ui.platform.testTag
+import io.github.eslamasabry.oc.ui.kit.foundation.KitNoticeInView
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -341,7 +341,7 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                     // Issue 147: the folder in phone storage is not ready for the side that will work in it. Said before
                     // Start, with the way forward; the message is never sent into another folder.
                     if (phoneFolderWords != null && !state.deliveryUnconfirmed) {
-                      NoticeInView(phoneFolderWords + state.phoneFolder?.name) { ways ->
+                      KitNoticeInView(phoneFolderWords + state.phoneFolder?.name) { ways ->
                         KitNotice(phoneFolderWords, inset)
                         val fix =
                             when (state.phoneFolder) {
@@ -444,7 +444,7 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                     }
                     // N-48: an unconfirmed send is said once (above); a failed read behind it adds no second notice.
                     if (failureShown) {
-                      NoticeInView(state.failure) { ways ->
+                      KitNoticeInView(state.failure) { ways ->
                         KitErrorNotice(
                             modifier = inset,
                             message =
@@ -485,34 +485,6 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
         }
         NewConversationSheet(state, actions)
     }
-}
-
-/**
- * Issue 147: a notice with its ways forward is always fully readable and reachable. The page's middle scrolls under the
- * keyboard, so when the notice appears, and again once the keyboard has settled, the page scrolls to bring it whole into
- * view (the message box may scroll up out of sight meanwhile); before, a person who had just typed saw one line of it and
- * none of its actions.
- */
-@Composable
-@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
-private fun NoticeInView(key: Any?, content: @Composable (ways: Modifier) -> Unit) {
-    val requester = remember { androidx.compose.foundation.relocation.BringIntoViewRequester() }
-    val waysRequester = remember { androidx.compose.foundation.relocation.BringIntoViewRequester() }
-    val keyboard = io.github.eslamasabry.oc.ui.kit.frame.kitKeyboardVisible()
-    LaunchedEffect(key, keyboard) {
-        androidx.compose.runtime.withFrameNanos {}
-        // The whole notice; when the room cannot hold it with its actions, the actions win (they are the way out).
-        requester.bringIntoView()
-        waysRequester.bringIntoView()
-        // Again once the keyboard has finished sliding: the room changes while it moves.
-        kotlinx.coroutines.delay(400)
-        requester.bringIntoView()
-        waysRequester.bringIntoView()
-    }
-    Column(
-        Modifier.fillMaxWidth().bringIntoViewRequester(requester),
-        verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
-    ) { content(Modifier.bringIntoViewRequester(waysRequester)) }
 }
 
 /** Compact upgrade choices stay beside Start while the keyboard is open. */
