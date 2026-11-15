@@ -337,6 +337,54 @@ public class GitRepository(
         return GitDiffResult.Ready(path, patch, binary)
     }
 
+    /**
+     * What one commit changed, as one patch (all its files). [id] is a hexadecimal commit name; anything else is
+     * refused before a script runs, so it can never be read as an option.
+     */
+    public suspend fun commitPatch(id: String): GitDiffResult {
+        if (!COMMIT_ID.matches(id)) return GitDiffResult.Failed(GitFailure(GitProblem.Unknown))
+        return patchOf(GitStep("show", GIT + listOf("show", "--no-color", "-M", "--format=", "--patch", id)), "")
+    }
+
+    /**
+     * Everything this branch has, as one patch: against the merge base with `main` (or `master`), or, where the branch
+     * is that base itself or there is none, against the empty tree, so a project whose work all sits on `main` still
+     * lists it (issue 147 recheck F-020: a committed file's row had no diff to open).
+     */
+    public suspend fun branchPatch(): GitDiffResult =
+        patchOf(
+            GitStep(
+                "branch",
+                listOf(
+                    "sh",
+                    "-c",
+                    "h=\$(git rev-parse HEAD) || exit 1; " +
+                        "b=\$(git merge-base HEAD main 2>/dev/null || git merge-base HEAD master 2>/dev/null); " +
+                        "if [ -z \"\$b\" ] || [ \"\$b\" = \"\$h\" ]; then b=$EMPTY_TREE; fi; " +
+                        "git --no-pager -c color.ui=false diff --no-color -M \"\$b\" HEAD",
+                ),
+            ),
+            "",
+        )
+
+    private suspend fun patchOf(step: GitStep, path: String): GitDiffResult {
+        val envelope =
+            when (val run = run(GitScript(directory, listOf(step)), readTimeoutMs)) {
+                is Run.Failed -> return GitDiffResult.Failed(run.failure)
+                is Run.Done -> run.envelope
+            }
+        val result = envelope[step.name] ?: return GitDiffResult.Failed(GitFailure(GitProblem.Unknown))
+        if (!result.ok)
+            return GitDiffResult.Failed(
+                GitFailure(
+                    classifyGitError(result.stderr) ?: GitProblem.Unknown,
+                    scrubGitText(result.stderr.trim(), emptyList()),
+                )
+            )
+        val patch = result.stdout.trimEnd('\n')
+        return GitDiffResult.Ready(path, patch, BINARY_LINE.containsMatchIn(patch))
+    }
+
     // --------------------------------------------------------------- writes
 
     /**
@@ -999,6 +1047,11 @@ public class GitRepository(
 
     public companion object {
         private val GIT = listOf("git", "--no-pager", "-c", "color.ui=false")
+
+        private val COMMIT_ID = Regex("^[0-9a-fA-F]{4,64}$")
+
+        /** Git's own name for the tree with nothing in it. */
+        private const val EMPTY_TREE = "4b825dc642cb6eb9a060e54bf8d69288fbee4904"
 
         private val BINARY_LINE = Regex("^Binary files .* differ$", RegexOption.MULTILINE)
 
