@@ -8,6 +8,7 @@ import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.RuntimeProblem
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.engine.agents.persona.AgentPersona
+import io.github.eslamasabry.oc.engine.agents.providers.OwnAgentRules
 import io.github.eslamasabry.oc.feature.agents.hub.AgentTileAct
 import io.github.eslamasabry.oc.feature.agents.hub.AgentTileModel
 import io.github.eslamasabry.oc.feature.agents.hub.AgentTileState
@@ -79,6 +80,8 @@ import io.github.eslamasabry.oc.ui.words.res.agentsChipSetUp
 import io.github.eslamasabry.oc.ui.words.res.agentsSetUpAction
 import io.github.eslamasabry.oc.ui.words.res.agentsSignInUncheckedBody
 import io.github.eslamasabry.oc.ui.words.res.agentsStateUnavailable
+import io.github.eslamasabry.oc.ui.words.res.agentsHelperStartAgain
+import io.github.eslamasabry.oc.ui.words.res.chatsHomeAgentsUnreachable
 import io.github.eslamasabry.oc.ui.words.res.agentsCheckDownload
 import io.github.eslamasabry.oc.ui.words.res.agentsCheckDownloadUnknown
 import io.github.eslamasabry.oc.ui.words.res.agentsInstalling
@@ -129,7 +132,8 @@ internal fun PhoneAgentTiles(state: AgentsUi, actions: AgentsActions, modifier: 
         KitText(stringResource(Res.string.agentsChecking), modifier.then(gutter))
         return
     }
-    val tiles = state.phone.agents.map { tileOf(it, state) }
+    // A person's own agents are listed and managed in their own rows under the tiles (issue 147).
+    val tiles = state.phone.agents.filterNot { OwnAgentRules.isOwn(it.id) }.map { tileOf(it, state) }
     // A ready agent starts a conversation once the phone's agents are connected (never beside "did not start").
     val chat = phoneChatOffered(state)
     KitAgentTiles(
@@ -191,6 +195,7 @@ private fun AgentTile(tile: AgentTileModel, actions: AgentsActions, chat: Boolea
                 AgentTileState.InstallFailed -> KitAgentTileTone.NeedsYou
                 AgentTileState.CannotRun,
                 AgentTileState.Unavailable -> KitAgentTileTone.Dimmed
+                AgentTileState.HelperDown -> KitAgentTileTone.NeedsYou
                 else -> KitAgentTileTone.Calm
             },
         progress = if (tile.state == AgentTileState.Installing) tileProgress(tile) else null,
@@ -253,6 +258,16 @@ private fun AgentTile(tile: AgentTileModel, actions: AgentsActions, chat: Boolea
                     ) {
                         actions.resumePhoneAgent(agent.id)
                     }
+                // The helper did not start: Try again starts it again, as the page's own failure line does.
+                AgentTileAct.StartAgain ->
+                    KitAgentTileAction(
+                        stringResource(Res.string.kitTryAgain),
+                        stringResource(Res.string.agentsHelperStartAgain),
+                        icon = KitIcons.retry,
+                        prominent = true,
+                    ) {
+                        actions.connectPhoneHelper()
+                    }
                 // Try again opens the install review (as Install does), so it answers at once even while a step runs.
                 AgentTileAct.Retry ->
                     KitAgentTileAction(
@@ -304,6 +319,7 @@ internal fun tileWords(tile: AgentTileModel): String {
         AgentTileState.Limit -> stringResource(Res.string.agentsStateLimit)
         // Installed, but the app cannot read its sign-in, so it can never start a conversation: say that, not a bare
         // "not available" (device 2026-11-12, Gemini CLI). Signing in or installing again would not change it.
+        AgentTileState.HelperDown -> stringResource(Res.string.chatsHomeAgentsUnreachable)
         AgentTileState.Unavailable ->
             if (agent.signInUnchecked) stringResource(Res.string.agentsStateSignInUnchecked)
             else stringResource(Res.string.agentsStateUnavailable)
@@ -462,6 +478,8 @@ internal fun PhoneAgentSheet(
                         { actions.resumePhoneAgent(tile.agent.id) },
                         enabled = can,
                     )
+                AgentTileAct.StartAgain ->
+                    KitAction(stringResource(Res.string.agentsHelperStartAgain), actions::connectPhoneHelper, enabled = can)
                 // The failed install's way forward: the install review again (it reads the space again first).
                 AgentTileAct.Retry ->
                     KitAction(

@@ -44,6 +44,9 @@ public enum class OwnAgentProblem { Name, Start, Install, EnvName, EnvValue, Too
 public object OwnAgentRules {
     public const val PREFIX: String = "own-"
     public const val MAX_AGENTS: Int = 8
+
+    /** Whether [id] is a person's own agent (its id is also its provider id in the helper's config). */
+    public fun isOwn(id: String): Boolean = id.startsWith(PREFIX) && id.length > PREFIX.length
     private val ENV_NAME = Regex("^[A-Z_][A-Z0-9_]{0,63}$")
 
     /** Names the app never lets a person override: they would change how every program in the Linux runs. */
