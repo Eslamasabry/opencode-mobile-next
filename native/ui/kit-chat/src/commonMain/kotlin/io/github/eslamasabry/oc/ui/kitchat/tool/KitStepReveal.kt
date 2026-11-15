@@ -90,7 +90,8 @@ internal val LocalRailReveal = compositionLocalOf<RailReveal?> { null }
  * [arrives]: composed visible, it still grows in from nothing (#001 Pop-in: a step that arrives while the list shows).
  * [order]: rows that open together start [STEP_STAGGER_MS] apart (#002 Stagger), at most [STEP_STAGGER_MAX] steps. A
  * part composed visible shows at once (a list scrolled back into view does not replay); reduced motion is instant. A
- * leaving part is picture only (no semantics).
+ * leaving part is picture only (no semantics). [leave]: how fast it folds; a part that folds because another arrives
+ * (the list moved on, nobody tapped) folds at the arrival's STANDARD pace, so the two moves add up to one.
  */
 @Composable
 public fun KitStepReveal(
@@ -98,6 +99,7 @@ public fun KitStepReveal(
     modifier: Modifier = Modifier,
     arrives: Boolean = false,
     order: Int = 0,
+    leave: KitPace = KitPace.Quick,
     content: @Composable () -> Unit,
 ) {
     val motion = KitMotion.state
@@ -106,7 +108,7 @@ public fun KitStepReveal(
     val shown = remember { Animatable(if (visible && (!arrives || reduced)) 1f else 0f) }
     var present by remember { mutableStateOf(visible) }
     val enter = specs.pace<Float>(KitPace.Standard)
-    val exit = specs.pace<Float>(KitPace.Quick)
+    val exit = specs.pace<Float>(leave)
     val wait = specs.delayMs(min(order, STEP_STAGGER_MAX) * STEP_STAGGER_MS.toFloat())
     LaunchedEffect(visible, reduced) {
         if (visible) {

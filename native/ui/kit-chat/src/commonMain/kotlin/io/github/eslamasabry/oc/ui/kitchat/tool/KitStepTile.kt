@@ -50,8 +50,12 @@ internal fun KitStepTile(
             // so a read, a search, an edit and a command tell apart at arm's length.
             else -> colors.text1.copy(alpha = colors.text1.alpha * GLYPH_INK)
         }
+    // In an outline (the step light, queued, waiting) the glyph keeps clear of it: a magnifier's handle reaching into
+    // the corner touched the light's rounded square at the full share (owner 2026-11-15); the terminal's box had room.
+    val framed = look != KitStepNodeLook.Plain
     Box(modifier.size(size).testTag("kit-step-node"), contentAlignment = Alignment.Center) {
-        KitToolGlyph(icon, glyph, size * GLYPH_SHARE * glyphScale)
+        val share = if (framed) GLYPH_SHARE_FRAMED else GLYPH_SHARE
+        KitToolGlyph(icon, glyph, size * share * glyphScale, Modifier.testTag(STEP_GLYPH_TAG))
         when (look) {
             KitStepNodeLook.Running,
             KitStepNodeLook.Background ->
@@ -79,6 +83,15 @@ internal fun KitStepTile(
  * (22 dp) in the 24 dp node, about 18 dp of ink with a 1.4 dp stroke, still clear of the step light's outline.
  */
 internal const val GLYPH_SHARE: Float = 22f / 24f
+
+/**
+ * The glyph's share of a node drawn in an outline: about 18 dp in the 24 dp node, so even a glyph that reaches into its
+ * corners (the magnifier's handle) stands about 2 dp clear of the outline's rounded corner, as the terminal does.
+ */
+internal const val GLYPH_SHARE_FRAMED: Float = 18f / 24f
+
+/** A node's glyph, for tests. */
+internal const val STEP_GLYPH_TAG: String = "kit-step-glyph"
 
 /** How strong a still step's glyph is against the words' primary ink. */
 internal const val GLYPH_INK: Float = .82f

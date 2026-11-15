@@ -257,6 +257,9 @@ internal class StepRail {
     /** Each node's top and bottom on the rail, px from the timeline's top: the step light runs between them. */
     val spans = mutableStateMapOf<Any, ClosedFloatingPointRange<Float>>()
 
+    /** Each node's centre across, px from the list's left edge: a run's own steps stand one step in from the rail. */
+    val columns = mutableStateMapOf<Any, Float>()
+
     /** Where the rail starts under the line's glyph, px from the timeline's top. */
     var headerStart: Float = 0f
 
@@ -352,6 +355,7 @@ internal fun RailNode(
         onDispose {
             rail.centres.remove(key)
             rail.spans.remove(key)
+            rail.columns.remove(key)
             rail.shares.remove(key)
         }
     }
@@ -390,9 +394,11 @@ internal fun RailNode(
                 .onGloballyPositioned { c ->
                     val root = rail.root ?: return@onGloballyPositioned
                     if (root.isAttached && c.isAttached) {
-                        val centre = root.localPositionOf(c, Offset(0f, c.size.height / 2f)).y // F: lib/ui/kit/chat/kit_step_node.dart:72
+                        val at = root.localPositionOf(c, Offset(c.size.width / 2f, c.size.height / 2f))
+                        val centre = at.y // F: lib/ui/kit/chat/kit_step_node.dart:72
                         rail.centres[key] = centre
                         rail.spans[key] = (centre - nodeHalf)..(centre + nodeHalf)
+                        rail.columns[key] = at.x
                     }
                 },
             contentAlignment = Alignment.Center,
@@ -409,12 +415,42 @@ internal const val ARRIVAL_RISE_DP: Int = 6
  * One row of a step list that comes and goes with the list's motion (owner 2026-11-14): shown while [visible]; a row
  * composed after the list first showed arrives (#001 Pop-in: it grows in from nothing, fading, and the rows below move
  * down with it instead of jumping), several arriving together stagger (#002); rows that open together start [order]
- * apart. Folding it ([visible] false) shrinks it away over QUICK. Keyed by the caller, a row keeps its node while it
- * updates, so a step that finishes changes in place and never flashes.
+ * apart. Folding it ([visible] false) shrinks it away over QUICK; [makesRoom] (it folds because a new row arrives, not
+ * because the person tapped) over the arrival's STANDARD, so a row folding away at the top and one growing in at the
+ * end are one movement and the list's height holds (owner 2026-11-14, "flashing"). [nested]: the row is one of a run's
+ * own steps, opened under the run's row: its node and words stand one step ([STEP_RUN_INSET]) in from the rail, and the
+ * rail bends in from the run's node to them and back out after the last. Keyed by the caller, a row keeps its node
+ * while it updates, so a step that finishes changes in place and never flashes.
  */
 @Composable
-public fun KitStepItem(visible: Boolean = true, order: Int = 0, content: @Composable () -> Unit) {
+public fun KitStepItem(
+    visible: Boolean = true,
+    order: Int = 0,
+    makesRoom: Boolean = false,
+    nested: Boolean = false,
+    content: @Composable () -> Unit,
+) {
     val rail = LocalKitStepRail.current
     val arrival = remember { if (rail != null && rail.settled && visible) rail.nextArrival() else -1 }
-    KitStepReveal(visible, arrives = arrival >= 0, order = if (arrival >= 0) arrival else order, content = content)
+    KitStepReveal(
+        visible,
+        arrives = arrival >= 0,
+        order = if (arrival >= 0) arrival else order,
+        leave = if (makesRoom) KitPace.Standard else KitPace.Quick,
+    ) {
+        if (nested) Column(Modifier.fillMaxWidth().padding(start = STEP_RUN_INSET.dp)) { content() } else content()
+    }
 }
+
+/** How far a run's own steps stand in from the rail, dp: one step of the spacing scale. */
+public const val STEP_RUN_INSET: Int = Space.S4
+
+/**
+ * How far a still glyph's rail reaches into its node, as a share of the node's half: the glyph is drawn at
+ * [GLYPH_SHARE] of the node and its ink fills about 80 % of that, so the rail meets the ink (about a dp clear of it)
+ * instead of the node's empty box edge, and two glyph rows 32 dp apart are joined by one line, not an 8 dp dash.
+ */
+internal const val GLYPH_RAIL_REACH: Float = .78f
+
+/** The half height of a still glyph's node on the rail (a node drawn in an outline keeps its whole box). */
+internal fun railGlyphHalf(m: RailMeasures): Dp = m.glyph * GLYPH_RAIL_REACH / 2

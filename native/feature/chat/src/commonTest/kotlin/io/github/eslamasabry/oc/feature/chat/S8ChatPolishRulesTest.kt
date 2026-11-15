@@ -175,6 +175,14 @@ class S8ChatPolishRulesTest {
         assertEquals(0f, FoldAnchorRules.scrollFor(held = true, before = -1, after = 490))
     }
 
+    @Test
+    fun `P-010 growth the list cannot scroll is lent as room, the empty space first, then the rest`() {
+        assertEquals(0, FoldAnchorRules.lend(scroll = 40f, left = 0f, empty = 300), "all paid by scrolling: no room")
+        assertEquals(300 + 40, FoldAnchorRules.lend(scroll = 40f, left = 40f, empty = 300))
+        assertEquals(13, FoldAnchorRules.lend(scroll = 40f, left = 12.4f), "whole pixels")
+        assertEquals(0, FoldAnchorRules.lend(scroll = -40f, left = -40f, empty = 300), "a fold never lends")
+    }
+
     // ---- P-005: never the raw model id ----
 
     @Test

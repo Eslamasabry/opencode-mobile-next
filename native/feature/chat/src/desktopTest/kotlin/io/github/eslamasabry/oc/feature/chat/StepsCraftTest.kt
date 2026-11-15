@@ -1,6 +1,13 @@
 package io.github.eslamasabry.oc.feature.chat
 
+import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.runtime.Composable
+import io.github.eslamasabry.oc.ui.kitchat.tool.STEP_FOLD_ROW_TAG
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.ExperimentalTestApi
@@ -15,7 +22,6 @@ import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import kotlin.math.abs
 import kotlin.test.assertFalse
 import androidx.compose.ui.test.onNodeWithText
-import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.engine.transcript.ledger.StepState
@@ -108,7 +114,8 @@ class StepsCraftTest {
         runDesktopComposeUiTest(412, 2600) {
             val actions = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
             setContent { Root { ChatScreen(StepsCraftScene.doneState(), actions, composer, facts = StepsCraftScene.doneFacts()) } }
-            onNodeWithText(SUMMARY).assertIsDisplayed().performClick()
+            // Activated without a finger (no row is held, P-010: STEPS-CRAFT-018), so what opens grows into view.
+            onNodeWithText(SUMMARY).assertIsDisplayed().performSemanticsAction(SemanticsActions.OnClick)
             waitForIdle()
             // No raw command line and no tool id is ever a row's words.
             onAllNodesWithText("cd /home", substring = true).assertCountEquals(0)
@@ -125,7 +132,7 @@ class StepsCraftTest {
             // Runs: a count, and what the commands did.
             onAllNodesWithText("Ran 2 commands").assertCountEquals(3)
             onNodeWithText("Ran tests · Searched files").assertIsDisplayed()
-            onNodeWithText("Ran 3 commands").assertIsDisplayed().performClick()
+            onNodeWithText("Ran 3 commands").assertIsDisplayed().performSemanticsAction(SemanticsActions.OnClick)
             waitForIdle()
             onNodeWithText("Built the project").assertIsDisplayed()
             onAllNodesWithText("Ran adb").assertCountEquals(2)
@@ -148,7 +155,7 @@ class StepsCraftTest {
             val reply = boundsOfText(StepsCraftScene.REPLY)
             assertTrue(reply.top - list.bottom < 48f, "the reply follows the steps without a gap: ${reply.top - list.bottom}")
             // Opened, a run is one 32 dp row too.
-            onNodeWithTag("chat-work-summary").performClick()
+            activate("chat-work-summary")
             waitForIdle()
             assertEquals(32f, boundsOfTag("chat-step-run-c10").height, 0.6f)
         }
@@ -174,10 +181,10 @@ class StepsCraftTest {
             mainClock.autoAdvance = false
             setContent { Root(MotionLevel.Full) { ChatScreen(StepsCraftScene.doneState(), actions, composer, facts = StepsCraftScene.doneFacts()) } }
             mainClock.advanceTimeBy(900)
-            onNodeWithTag("chat-work-summary").performClick()
+            activate("chat-work-summary")
             mainClock.advanceTimeBy(900)
             onAllNodesWithTag("chat-step-c11", useUnmergedTree = true).assertCountEquals(0)
-            onNodeWithTag("chat-step-run-c10").performClick()
+            activate("chat-step-run-c10")
             mainClock.advanceTimeBy(900)
             // The run's own steps, each a row of its own under the run: "Checked the changes", "Searched files".
             val run = boundsOfTag("chat-step-run-c10")
@@ -187,7 +194,7 @@ class StepsCraftTest {
             assertEquals(32f, c11.height, 0.6f)
             onNodeWithText("Checked the changes").assertIsDisplayed()
             // A second tap folds them away again.
-            onNodeWithTag("chat-step-run-c10").performClick()
+            activate("chat-step-run-c10")
             mainClock.advanceTimeBy(900)
             onAllNodesWithTag("chat-step-c11", useUnmergedTree = true).assertCountEquals(0)
         }
@@ -214,11 +221,94 @@ class StepsCraftTest {
         runDesktopComposeUiTest(412, 2600) {
             val actions = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
             setContent { Root { ChatScreen(StepsCraftScene.doneState(), actions, composer, facts = StepsCraftScene.doneFacts()) } }
-            onNodeWithTag("chat-work-summary").performClick()
+            activate("chat-work-summary")
             waitForIdle()
             val ends = onAllNodesWithTag("kit-tool-duration", useUnmergedTree = true).fetchSemanticsNodes().map { it.boundsInRoot.right }
             assertTrue(ends.size >= 8, "rows with a time: $ends")
             assertTrue(ends.all { abs(it - ends[0]) < 0.6f }, "one right edge for every time: $ends")
+        }
+
+    /** The person's prompt in the list (the header carries the same words as the conversation's title). */
+    private fun androidx.compose.ui.test.ComposeUiTest.promptTop(): Float =
+        onAllNodesWithText(StepsCraftScene.ASK, useUnmergedTree = true)
+            .fetchSemanticsNodes()
+            .maxOf { it.boundsInRoot.top }
+
+    @Test
+    fun `STEPS-CRAFT-017 a step arriving as older rows fold behind the fold row is one movement, never shrinking`() =
+        runDesktopComposeUiTest(412, 1200) {
+            val actions = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
+            var arrived by mutableStateOf(false)
+            mainClock.autoAdvance = false
+            setContent {
+                Root(MotionLevel.Full) {
+                    val facts = StepsCraftScene.runningFacts(arrived)
+                    ChatScreen(StepsCraftScene.runningState(), actions, composer, facts = facts)
+                }
+            }
+            mainClock.advanceTimeBy(900)
+            // Four rows, nothing folded yet.
+            onAllNodesWithTag(STEP_FOLD_ROW_TAG, useUnmergedTree = true).assertCountEquals(0)
+            val heights = mutableListOf(boundsOfTag("chat-work-line").height)
+            val prompts = mutableListOf(promptTop())
+            // How far the first row still in view (the stopped task) stands under the block's top: the two rows going
+            // away and the fold row coming in above it. 64 dp before, 32 dp after; a fold row that popped in made it
+            // 96.
+            fun above() = boundsOfTag("chat-step-t2").top - boundsOfTag("chat-work-line").top
+            val folds = mutableListOf(above())
+            // The edit arrives: the two oldest rows fold behind "Show 2 earlier steps" in the same frames.
+            arrived = true
+            repeat(40) {
+                mainClock.advanceTimeByFrame()
+                heights += boundsOfTag("chat-work-line").height
+                prompts += promptTop()
+                folds += above()
+            }
+            for (i in 1 until heights.size)
+                assertTrue(heights[i] >= heights[i - 1] - 0.6f, "frame $i: the block went down: $heights")
+            for (i in 1 until prompts.size)
+                assertTrue(prompts[i] <= prompts[i - 1] + 0.6f, "frame $i: the prompt moved down: $prompts")
+            assertTrue(folds.all { it <= 64.6f }, "the fold row comes in as a row does, never in one frame: $folds")
+            assertTrue(folds.any { it > 33f && it < 63f }, "it grows while the two rows fold behind it: $folds")
+            assertEquals(32f, folds.last(), 0.6f, "and ends one whole row above the rows in view")
+            onNodeWithText("Show 2 earlier steps").assertIsDisplayed()
+        }
+
+    @Test
+    fun `STEPS-CRAFT-018 a finished turn's row stays under the finger as it opens, folding it brings the reply back`() =
+        runDesktopComposeUiTest(412, 915) {
+            val actions = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
+            mainClock.autoAdvance = false
+            setContent {
+                Root(MotionLevel.Full) {
+                    ChatScreen(StepsCraftScene.doneState(), actions, composer, facts = StepsCraftScene.doneFacts())
+                }
+            }
+            mainClock.advanceTimeBy(900)
+            val row = boundsOfTag("chat-work-summary").top
+            val reply = boundsOfText(StepsCraftScene.REPLY)
+            fun tapRow() = onNodeWithTag("chat-work-summary").performTouchInput { down(center); up() }
+            // A short conversation: nothing above to scroll to, yet the row is held where it was tapped.
+            tapRow()
+            val opening = mutableListOf<Float>()
+            repeat(60) {
+                mainClock.advanceTimeByFrame()
+                opening += boundsOfTag("chat-work-summary").top
+            }
+            assertTrue(opening.all { abs(it - row) <= 1f }, "the row stays put while it opens: $row → $opening")
+            onNodeWithText("I'll start by running", substring = true).assertIsDisplayed()
+            // Folded again, still under the finger, and the reply is back where it was.
+            tapRow()
+            val closing = mutableListOf<Float>()
+            repeat(60) {
+                mainClock.advanceTimeByFrame()
+                closing += boundsOfTag("chat-work-summary").top
+            }
+            assertTrue(closing.all { abs(it - row) <= 1f }, "the row stays put while it folds: $row → $closing")
+            mainClock.advanceTimeBy(900)
+            val back = boundsOfText(StepsCraftScene.REPLY)
+            assertEquals(reply.top, back.top, 1f, "folding brings the reply back: $reply → $back")
+            onNodeWithText(StepsCraftScene.REPLY).assertIsDisplayed()
         }
 
     private companion object {

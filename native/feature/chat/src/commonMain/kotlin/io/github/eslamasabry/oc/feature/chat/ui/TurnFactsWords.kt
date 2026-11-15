@@ -2,7 +2,6 @@ package io.github.eslamasabry.oc.feature.chat.ui
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import androidx.compose.ui.graphics.vector.ImageVector
 import io.github.eslamasabry.oc.core.common.text.Numbers
 import io.github.eslamasabry.oc.engine.transcript.ledger.StepState
 import io.github.eslamasabry.oc.engine.transcript.ledger.TurnWork
@@ -168,7 +167,6 @@ import io.github.eslamasabry.oc.ui.words.res.toolCardExitPassed
 import io.github.eslamasabry.oc.ui.words.res.toolCardPlan
 import io.github.eslamasabry.oc.ui.words.res.toolCardUpdatedTasks
 import io.github.eslamasabry.oc.ui.words.res.toolCardWorktreeSetup
-import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 
@@ -277,18 +275,18 @@ private fun phraseWords(phrase: ToolPhrase, arg0: String, arg1: String): String 
  * magnifier, a read the file, git the branch, a build the hammer; the terminal stays only for a command of no known
  * kind. Null: the tool's own glyph (an edit's pencil, a read's file).
  */
-internal fun stepGlyph(f: ToolFacts): ImageVector? {
-    if (f.kind == ToolKind.Shell) return shellGlyph(f.shell?.kind ?: ShellKind.Unknown)
-    return when (f.phrase) {
-        ToolPhrase.StopBackgroundTask -> KitIcons.stopCircle
-        ToolPhrase.ReadTaskOutput -> KitIcons.fileText
-        ToolPhrase.LoadTools -> KitIcons.extensions
-        else -> null
-    }
-}
+internal fun stepGlyph(f: ToolFacts) =
+    if (f.kind == ToolKind.Shell) shellGlyph(f.shell?.kind ?: ShellKind.Unknown)
+    else
+        when (f.phrase) {
+            ToolPhrase.StopBackgroundTask -> KitIcons.stopCircle
+            ToolPhrase.ReadTaskOutput -> KitIcons.fileText
+            ToolPhrase.LoadTools -> KitIcons.extensions
+            else -> null
+        }
 
 /** The glyph for what a command did (see [stepGlyph]). */
-internal fun shellGlyph(kind: ShellKind): ImageVector =
+internal fun shellGlyph(kind: ShellKind) =
     when (kind) {
         ShellKind.Tests -> KitIcons.experiments
         ShellKind.Search -> KitIcons.search
@@ -339,7 +337,7 @@ internal fun stepRowTitle(f: ToolFacts, tense: StepTense): String {
 internal fun shellWords(intent: ShellIntent, tense: StepTense): String {
     val mask = rememberKitMask()
     val arg = intent.arg?.let(mask) ?: ""
-    fun pick(done: StringResource, now: StringResource, ask: StringResource) =
+    fun <T> pick(done: T, now: T, ask: T): T =
         when (tense) {
             StepTense.Done -> done
             StepTense.Now -> now
