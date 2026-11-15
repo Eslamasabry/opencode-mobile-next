@@ -72,7 +72,7 @@ class JourneyEventsTest {
         )
         assertEquals(setOf("ok", "fail", "skipped", "cancelled"), HealthWords.setupResults)
         assertEquals(
-            setOf("done", "stopped_by_user", "error", "connection_lost", "approval_timeout"),
+            setOf("done", "stopped_by_user", "error", "connection_lost", "approval_timeout", "no_output"),
             HealthWords.turnOutcomes,
         )
         assertEquals(setOf("1", "2", "3+"), HealthRanges.attempts.toSet())

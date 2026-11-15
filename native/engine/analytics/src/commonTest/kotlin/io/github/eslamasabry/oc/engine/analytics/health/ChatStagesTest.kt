@@ -195,6 +195,53 @@ class ChatStagesTest {
         assertFalse(r.all("send_result").any { "first_reply_range" in it })
     }
 
+    @Test
+    fun `B-JOURNEY-057 two remote servers, one drops - only its turns are affected, and the other's return recovers nothing`() = runTest {
+        val r = Rig(this)
+        r.journey.sent("a1", onPhone = false, connection = "c1")
+        r.journey.busy("a1")
+        r.journey.sent("b1", onPhone = false, connection = "c2")
+        r.journey.busy("b1")
+        r.journey.stream("c1", onPhone = false, connected = false, dropReason = "other")
+        r.now += 10_000
+        r.journey.stream("c2", onPhone = false, connected = false, dropReason = null) // c2 rests, then comes back
+        r.journey.stream("c2", onPhone = false, connected = true)
+        r.journey.reply("b1")
+        r.journey.ended("b1")
+        assertEquals("yes", r.last("chat_turn").getValue("recovered"), "c2's own turn saw its own drop and return")
+        r.now += ChatJourney.LOST_AFTER_MS
+        r.journey.checkStalls()
+        val a1 = r.last("chat_turn")
+        assertEquals("connection_lost", a1.getValue("outcome"), "c2 coming back did not recover c1's turn")
+        assertEquals("no", a1.getValue("recovered"))
+        assertEquals(2, r.all("chat_turn").size)
+    }
+
+    @Test
+    fun `B-JOURNEY-058 conn_drop is sent once per drop - recovered yes on return, no at the two-minute limit`() = runTest {
+        val r = Rig(this)
+        r.journey.stream("c1", onPhone = true, connected = false, dropReason = "network_change")
+        r.journey.stream("c1", onPhone = true, connected = false, dropReason = "other") // still the same drop
+        r.now += 30_000
+        r.journey.checkStalls()
+        assertTrue(r.all("conn_drop").isEmpty(), "not known yet")
+        r.journey.stream("c1", onPhone = true, connected = true)
+        assertEquals(listOf(mapOf("server_kind" to "phone", "reason" to "network_change", "recovered" to "yes")), r.all("conn_drop"))
+        r.journey.stream("c2", onPhone = false, connected = false, dropReason = "server_closed")
+        r.now += ChatJourney.LOST_AFTER_MS
+        r.journey.checkStalls()
+        r.journey.checkStalls()
+        r.journey.stream("c2", onPhone = false, connected = true) // too late: already counted as not recovered
+        assertEquals(
+            listOf("yes", "no"),
+            r.all("conn_drop").map { it.getValue("recovered") },
+        )
+        r.journey.stream("c3", onPhone = false, connected = false, dropReason = null) // the app let it rest: no drop
+        r.now += ChatJourney.LOST_AFTER_MS
+        r.journey.checkStalls()
+        assertEquals(2, r.all("conn_drop").size)
+    }
+
     private fun ChatJourney.reply(session: String) {
         message(session, "m9", assistant = true)
         text(session, "m9", streamed = false)

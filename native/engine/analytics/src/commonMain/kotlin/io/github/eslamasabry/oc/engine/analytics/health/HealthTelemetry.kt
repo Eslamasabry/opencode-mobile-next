@@ -102,7 +102,10 @@ public fun majorMinorOf(version: String?): String? {
 }
 
 /**
- * Slow frames per kind of page, once per session per page kind (Flutter `JankMeter`). The platform feeds frame
+ * Slow frames per kind of page, once per session per page kind (Flutter `JankMeter`): every visit to a kind of page in
+ * one foreground session is summed, and the report is made when the session ends, so a short calm first visit cannot
+ * stand for a long janky one (analytics truth, 2026-11-16). A kind of page with fewer than [minFrames] frames in the
+ * session says nothing. The platform feeds frame
  * counts only while [running] (it follows `usage`); with the switch off nothing is measured and nothing is kept.
  *
  * Two measures go out side by side (c2-performance, 2026-11-15), so today's numbers stay comparable for a release:
@@ -124,7 +127,6 @@ public class JankMeter(
 
     private var screen = ProductScreen.Other
     private val counts = HashMap<ProductScreen, Counts>()
-    private val sent = HashSet<ProductScreen>()
 
     private class Counts {
         var frames = 0
@@ -144,9 +146,8 @@ public class JankMeter(
         counts.clear()
     }
 
-    /** A page of this kind came into view. */
+    /** A page of this kind came into view: its frames add to the session's sum for that kind. */
     public fun screen(next: ProductScreen) {
-        if (running && next != screen) flush(screen)
         screen = next
     }
 
@@ -169,19 +170,16 @@ public class JankMeter(
         }
     }
 
-    /** The app went to the background: report what was measured; the next time in front is a new session. */
+    /** The app went to the background: one report per kind of page, from the session's summed visits; then a new session. */
     public fun endSession() {
         if (!running) return
-        flush(screen)
         counts.keys.toList().forEach(::flush)
-        sent.clear()
         counts.clear()
     }
 
     private fun flush(kind: ProductScreen) {
         val c = counts[kind] ?: return
-        if (c.frames < minFrames || kind in sent) return
-        sent += kind
+        if (c.frames < minFrames) return
         val shown = HealthRanges.refreshHzOf(refreshRate())
         report(
             kind,

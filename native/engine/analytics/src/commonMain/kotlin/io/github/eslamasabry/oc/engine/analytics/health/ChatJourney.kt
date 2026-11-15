@@ -43,7 +43,7 @@ public class ChatJourney(
     /** A turn that showed a reply has just ended without an error: the reply is complete (sent whatever the switches say). */
     private val onReplyDone: () -> Unit = {},
 ) {
-    private class Turn(val startMs: Long, val onPhone: Boolean, val traits: PromptTraits) {
+    private class Turn(val startMs: Long, val onPhone: Boolean, val traits: PromptTraits, val connection: String?) {
         val assistant = HashSet<String>()
         val tools = HashSet<String>()
         var busy = false
@@ -68,12 +68,18 @@ public class ChatJourney(
     private val pending = HashMap<String, Pending>()
     private var voice = false
 
+    /** A live stream that dropped, per connection (a local id, never sent), until it returns or [LOST_AFTER_MS] passes. */
+    private class Drop(val serverKind: String, val reason: String, val atMs: Long)
+
+    private val drops = HashMap<String, Drop>()
+
     /** The person dictated into the composer: the next prompt counts as a voice prompt. */
     public fun noteVoice() {
         voice = true
     }
 
-    public fun sent(sessionId: String, onPhone: Boolean, traits: PromptTraits = PromptTraits()) {
+    /** [connection] is the local id of the connection it went through: kept in memory to attribute drops, never sent. */
+    public fun sent(sessionId: String, onPhone: Boolean, traits: PromptTraits = PromptTraits(), connection: String? = null) {
         val dictated = voice
         voice = false
         val input =
@@ -93,7 +99,7 @@ public class ChatJourney(
             current.lastActivityMs = now()
             return
         }
-        val turn = Turn(now(), onPhone, traits)
+        val turn = Turn(now(), onPhone, traits, connection)
         val failed = failedAt.remove(sessionId)
         if (failed != null && now() - failed <= AFTER_FAIL_WINDOW_MS) turn.followUp = "after_fail"
         turns.update { map ->
@@ -184,11 +190,27 @@ public class ChatJourney(
         if (t.replied && errorKind == null) onReplyDone()
     }
 
-    /** The live stream of the connection (phone or computer) dropped or came back. */
+    /** The live stream of a connection of this kind dropped or came back (no connection named: every one of the kind). */
     public fun stream(onPhone: Boolean, connected: Boolean) {
+        stream(null, onPhone, connected, null)
+    }
+
+    /**
+     * The live stream of [connection] dropped or came back: only that connection's turns are affected. [dropReason] (a
+     * `conn_drop.reason` word) makes a drop count as `conn_drop`, sent once: `recovered` yes when the stream returns
+     * within [LOST_AFTER_MS], no when it has not by then ([checkStalls]).
+     */
+    public fun stream(connection: String?, onPhone: Boolean, connected: Boolean, dropReason: String? = null) {
         val at = now()
+        if (connection != null) {
+            if (!connected && dropReason != null && connection !in drops) {
+                drops[connection] = Drop(if (onPhone) "phone" else "computer", dropReason, at)
+            }
+            if (connected) drops.remove(connection)?.let { flow.connDrop(it.serverKind, it.reason, recovered = true) }
+        }
         for (t in turns.value.values) {
-            if (t.onPhone != onPhone) continue
+            val mine = if (connection != null && t.connection != null) t.connection == connection else t.onPhone == onPhone
+            if (!mine) continue
             if (!connected && t.droppedAtMs == null) t.droppedAtMs = at
             if (connected && t.droppedAtMs != null) {
                 t.droppedAtMs = null
@@ -202,6 +224,9 @@ public class ChatJourney(
         turns.value[sessionId]?.let { it.openApprovals = (it.openApprovals + delta).coerceAtLeast(0) }
     }
 
+    /** Whether the person pressed Stop for [sessionId]'s running turn. */
+    public fun runStopped(sessionId: String): Boolean = turns.value[sessionId]?.stopped == true
+
     /** An approval left without an answer from the person (the turn went on or ended without it). */
     public fun approvalExpired(sessionId: String) {
         turns.value[sessionId]?.approvalExpired = true
@@ -214,6 +239,11 @@ public class ChatJourney(
      */
     public fun checkStalls() {
         val at = now()
+        for ((connection, drop) in drops.toList()) {
+            if (at - drop.atMs < LOST_AFTER_MS) continue
+            drops.remove(connection)
+            flow.connDrop(drop.serverKind, drop.reason, recovered = false)
+        }
         for ((id, t) in turns.value) {
             val dropped = t.droppedAtMs
             if (dropped != null && at - dropped >= LOST_AFTER_MS) {
@@ -314,11 +344,16 @@ public class ChatJourney(
 }
 
 /**
- * One approval or question the person was asked (`approval`): asked, then answered (`allowed`, `always`, `denied`,
- * `declined`) or gone without an answer (`expired`). Fed from the pending list of a connection; ids and words only.
+ * One approval or question the person was asked (`approval`, stage 4). Fed from the pending list of a connection; ids
+ * and words only. An answer counts only once the server confirmed it ([confirmed], then [answered]): a held answer that
+ * was undone, or one still on its way, sends nothing. `auto` is a saved Auto or "Approve everything" answer, `stopped`
+ * a request that left because its run was stopped, `expired` one that left with no answer while the run went on.
  */
 public class ApprovalMeter(private val now: () -> Long, private val flow: HealthFlow = HealthFlow(), private val journey: () -> ChatJourney? = { null }) {
-    private class Asked(val sessionId: String, val kind: String, val atMs: Long, var answered: Boolean = false)
+    private class Asked(val sessionId: String, val kind: String, val atMs: Long) {
+        var reported = false
+        var confirmedAtMs: Long? = null
+    }
 
     private val open = MutableStateFlow<Map<String, Asked>>(emptyMap())
 
@@ -328,20 +363,41 @@ public class ApprovalMeter(private val now: () -> Long, private val flow: Health
         journey()?.approvalOpen(sessionId, +1)
     }
 
-    /** The person's answer was taken ([result] one of [HealthWords.approvalResults] except `expired`). */
-    public fun answered(id: String, result: String) {
+    /** The server confirmed an answer to [id] (whose, [answered] says): the wait ends here. */
+    public fun confirmed(id: String) {
         val a = open.value[id] ?: return
-        if (a.answered) return
-        a.answered = true
-        flow.approval(a.kind, result, now() - a.atMs)
+        if (a.confirmedAtMs == null) a.confirmedAtMs = now()
     }
 
-    /** The request left the pending list. Unanswered means it expired. */
+    /**
+     * The confirmed answer's word: one of [HealthWords.approvalResults] other than `expired` and `stopped` (`auto` for a
+     * saved mode's answer). Sent once per request; never before the server confirmed it.
+     */
+    public fun answered(id: String, result: String) {
+        val a = open.value[id] ?: return
+        if (a.reported) return
+        a.reported = true
+        flow.approval(a.kind, result, (a.confirmedAtMs ?: now()) - a.atMs)
+    }
+
+    /** The run that asked was stopped (Stop here or anywhere, or the server ended it): nothing can answer it now. */
+    public fun stopped(id: String) {
+        val a = open.value[id] ?: return
+        if (a.reported) return
+        a.reported = true
+        flow.approval(a.kind, "stopped", now() - a.atMs)
+    }
+
+    /** The request left the pending list. Unreported, it left because its run stopped, or else it expired. */
     public fun gone(id: String) {
         val a = open.value[id] ?: return
         open.update { it - id }
         journey()?.approvalOpen(a.sessionId, -1)
-        if (!a.answered) {
+        if (a.reported) return
+        a.reported = true
+        if (journey()?.runStopped(a.sessionId) == true) {
+            flow.approval(a.kind, "stopped", now() - a.atMs)
+        } else {
             flow.approval(a.kind, "expired", now() - a.atMs)
             journey()?.approvalExpired(a.sessionId)
         }

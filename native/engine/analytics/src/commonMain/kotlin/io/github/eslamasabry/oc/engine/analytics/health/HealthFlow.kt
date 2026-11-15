@@ -208,13 +208,10 @@ public class HealthFlow(private val telemetry: () -> Telemetry = { AppTelemetry.
 
     public fun updateResult(kind: String, result: String, failKind: String? = null) {
         val t = telemetry()
-        t.breadcrumb(
-            when (result) {
-                "installed" -> "update.install"
-                "failed" -> "update.fail"
-                else -> "update.offer"
-            }
-        )
+        when (result) {
+            "installed" -> t.breadcrumb("update.install")
+            "failed" -> t.breadcrumb("update.fail")
+        }
         t.track(
             ProductEvent.UpdateResult,
             buildMap {
@@ -223,6 +220,18 @@ public class HealthFlow(private val telemetry: () -> Telemetry = { AppTelemetry.
                 if (failKind != null) put("fail_kind", failKind)
             },
         )
+    }
+
+    /** The update notice or prompt appeared for a newer release (no properties; the version is never sent). */
+    public fun updateOffered() {
+        val t = telemetry()
+        t.breadcrumb("update.offer")
+        t.track(ProductEvent.UpdateOffered)
+    }
+
+    /** The person chose to connect a computer (no properties). */
+    public fun connectComputerChosen() {
+        telemetry().track(ProductEvent.ConnectComputerChosen)
     }
 
     // ---- setup journey ----
@@ -289,7 +298,11 @@ public class HealthFlow(private val telemetry: () -> Telemetry = { AppTelemetry.
 
     public fun approval(kind: String, result: String, waitedMs: Long) {
         val t = telemetry()
-        t.breadcrumb(if (result == "denied" || result == "declined") "chat.deny" else "chat.approve")
+        when (result) {
+            "denied", "declined" -> t.breadcrumb("chat.deny")
+            "expired", "stopped" -> Unit
+            else -> t.breadcrumb("chat.approve")
+        }
         t.track(
             ProductEvent.Approval,
             mapOf("kind" to kind, "result" to result, "ms_range" to HealthRanges.turnOf(waitedMs)),

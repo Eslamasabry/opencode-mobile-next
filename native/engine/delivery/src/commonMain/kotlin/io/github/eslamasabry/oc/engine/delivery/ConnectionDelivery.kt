@@ -108,7 +108,7 @@ public class ConnectionDelivery(
     private val interactiveSendChecks: Set<InteractiveSendCheck> = emptySet(),
     private val reporting: Reporting = NoReporting,
 ) {
-    private val tracing: PromptTracing? = tracers.firstOrNull()
+    private val tracing: PromptTracing? = tracers.firstOrNull()?.forConnection(profile.id.raw)
     private val reconcileLane = dispatchers.serial("delivery-reconcile")
     private val running = MutableStateFlow<Set<ConversationRef>>(emptySet())
     private val stoppedMemory = stores.singleOrNull()?.let { StoppedTurnMemory(it.store, it.lanes.app, profile.id, scope) }
@@ -229,7 +229,7 @@ public class ConnectionDelivery(
                     val now = status == StreamStatus.Connected
                     if (now != connected) {
                         connected = now
-                        trace.stream(profile.managedOnPhone, now)
+                        trace.stream(profile.id.raw, profile.managedOnPhone, now, streamDropReason(status))
                     }
                 }
             }

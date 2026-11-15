@@ -11,6 +11,12 @@ import io.github.eslamasabry.oc.engine.analytics.health.SetupJourneySaved
 import io.github.eslamasabry.oc.engine.analytics.health.SetupStepState
 import io.github.eslamasabry.oc.engine.analytics.health.SetupStepView
 import io.github.eslamasabry.oc.engine.analytics.product.TelemetryAnswers
+import io.github.eslamasabry.oc.engine.analytics.health.HealthFlow
+import io.github.eslamasabry.oc.engine.updates.AppUpdateState
+import io.github.eslamasabry.oc.engine.updates.UpdateFailure
+import io.github.eslamasabry.oc.engine.updates.UpdatePhase
+import io.github.eslamasabry.oc.ui.routes.AppRoute
+import io.github.eslamasabry.oc.ui.routes.ServersRoute
 import io.github.eslamasabry.oc.engine.requests.AnswerPhase
 import io.github.eslamasabry.oc.engine.requests.PendingRequest
 import io.github.eslamasabry.oc.engine.requests.RequestAnswer
@@ -106,17 +112,31 @@ internal class PrefsFirstReply(private val answers: TelemetryAnswers, private va
     }
 }
 
-/** One pending request as the approval meter needs it. [answer] is null while nobody has answered. */
-internal data class PendingFacts(val id: String, val sessionId: String, val kind: String, val answer: String?)
+/** Where one request's answer stands, for the approval meter: only a [Confirmed] answer is ever counted. */
+internal enum class AnswerStand {
+    /** Nobody answered, or an answer is held (still undoable), on its way, or was not accepted. */
+    Open,
+
+    /** The server confirmed the answer (`AnswerPhase.Sent`). */
+    Confirmed,
+
+    /** The run that asked was stopped (`AnswerPhase.NoLongerNeeded`). */
+    RunStopped,
+}
+
+/** One pending request as the approval meter needs it. [answer] is the confirmed answer's word, null until then. */
+internal data class PendingFacts(
+    val id: String,
+    val sessionId: String,
+    val kind: String,
+    val answer: String?,
+    val stand: AnswerStand = if (answer != null) AnswerStand.Confirmed else AnswerStand.Open,
+)
 
 internal fun pendingFacts(list: List<PendingRequest>): List<PendingFacts> =
     list.map { p ->
-        val answer: RequestAnswer? =
-            when (val phase = p.phase) {
-                is AnswerPhase.Held -> phase.answer
-                is AnswerPhase.Sending -> phase.answer
-                else -> null
-            }
+        val phase = p.phase
+        val answer: RequestAnswer? = (phase as? AnswerPhase.Sent)?.answer
         val result =
             when (answer) {
                 null -> null
@@ -134,14 +154,24 @@ internal fun pendingFacts(list: List<PendingRequest>): List<PendingFacts> =
                 is PendingRequest.Permission -> ApprovalMeter.kindOf(p.request.permission)
                 is PendingRequest.Question -> "question"
             }
-        PendingFacts(p.id.raw, p.sessionId.raw, kind, result)
+        val stand =
+            when {
+                phase is AnswerPhase.Sent -> AnswerStand.Confirmed
+                phase == AnswerPhase.NoLongerNeeded -> AnswerStand.RunStopped
+                else -> AnswerStand.Open
+            }
+        PendingFacts(p.id.raw, p.sessionId.raw, kind, result, stand)
     }
 
-/** What the feed tells: the three calls of an [ApprovalMeter]. */
+/** What the feed tells an [ApprovalMeter]. */
 internal interface ApprovalSink {
     fun asked(id: String, sessionId: String, kind: String)
 
+    fun confirmed(id: String)
+
     fun answered(id: String, result: String)
+
+    fun stopped(id: String)
 
     fun gone(id: String)
 }
@@ -150,26 +180,139 @@ internal fun ApprovalMeter.asSink(): ApprovalSink =
     object : ApprovalSink {
         override fun asked(id: String, sessionId: String, kind: String) = this@asSink.asked(id, sessionId, kind)
 
+        override fun confirmed(id: String) = this@asSink.confirmed(id)
+
         override fun answered(id: String, result: String) = this@asSink.answered(id, result)
+
+        override fun stopped(id: String) = this@asSink.stopped(id)
 
         override fun gone(id: String) = this@asSink.gone(id)
     }
 
-/** Turns the pending list of one connection into asked / answered / gone calls. */
-internal class ApprovalFeed(private val meter: ApprovalSink) {
+/**
+ * Turns the pending list of one connection into asked / confirmed / answered / stopped / gone calls. A confirmed answer
+ * is reported as `auto` when [automatic] says a saved Auto or "Approve everything" gave it (that record is written just
+ * after the server confirms, so the word waits for it, or for the request to leave); otherwise as the answer's word.
+ */
+internal class ApprovalFeed(
+    private val meter: ApprovalSink,
+    private val automatic: (PendingFacts) -> Boolean = { false },
+) {
     private val known = HashSet<String>()
+    private val waitingWord = LinkedHashMap<String, PendingFacts>()
+    private val reported = HashSet<String>()
 
     fun update(list: List<PendingFacts>) {
         val ids = list.map { it.id }.toSet()
         for (fact in list) {
             if (known.add(fact.id)) meter.asked(fact.id, fact.sessionId, fact.kind)
-            fact.answer?.let { meter.answered(fact.id, it) }
+            when (fact.stand) {
+                AnswerStand.Confirmed ->
+                    if (fact.id !in reported && fact.id !in waitingWord) {
+                        meter.confirmed(fact.id)
+                        waitingWord[fact.id] = fact
+                    }
+                AnswerStand.RunStopped -> if (reported.add(fact.id)) meter.stopped(fact.id)
+                AnswerStand.Open -> Unit
+            }
         }
+        recheck()
         for (gone in known.toList()) {
             if (gone !in ids) {
                 known.remove(gone)
+                waitingWord.remove(gone)?.let { report(it) }
+                reported.remove(gone)
                 meter.gone(gone)
             }
         }
     }
+
+    /** A saved mode may have recorded one of the confirmed answers since the last look. */
+    fun recheck() {
+        for (fact in waitingWord.values.toList()) {
+            if (automatic(fact)) {
+                waitingWord.remove(fact.id)
+                report(fact)
+            }
+        }
+    }
+
+    private fun report(fact: PendingFacts) {
+        if (!reported.add(fact.id)) return
+        meter.answered(fact.id, if (automatic(fact)) "auto" else fact.answer ?: return)
+    }
 }
+
+/**
+ * Stage 5, the app's own update (`update_offered`, `update_result` `failed` and `declined`), read from the update state
+ * the notice and the prompt draw from. Each release (its tag, kept in memory only, never sent) is offered and declined
+ * at most once per run; a failure counts when the update stops on it. `update_result` `patch` has no source in this
+ * app (there are no patch updates), and `installed` stays with the start-up version check.
+ */
+internal class UpdateMeter(private val flow: () -> HealthFlow = { HealthFlow() }) {
+    private val offered = HashSet<String>()
+    private val declined = HashSet<String>()
+    private var lastPhase: UpdatePhase? = null
+
+    fun observe(state: AppUpdateState) {
+        val tag = state.release?.tag
+        val shown = tag != null && state.phase == UpdatePhase.Available && (state.noticeVisible || state.promptOpen)
+        if (shown && offered.add(tag!!)) flow().updateOffered()
+        if (tag != null && state.notNow && tag in offered && declined.add(tag)) flow().updateResult("in_app", "declined")
+        if (state.phase == UpdatePhase.Failed && lastPhase != UpdatePhase.Failed) {
+            flow().updateResult("in_app", "failed", updateFailKind(state.failure))
+        }
+        lastPhase = state.phase
+    }
+
+    companion object {
+        /** The contract's `update_result.fail_kind` for why an update stopped. */
+        fun updateFailKind(failure: UpdateFailure?): String =
+            when (failure) {
+                UpdateFailure.Network, UpdateFailure.NoFile -> "download"
+                UpdateFailure.Checksum -> "checksum"
+                UpdateFailure.Signer -> "signer"
+                UpdateFailure.Version -> "version"
+                UpdateFailure.Installer, UpdateFailure.Package -> "installer"
+                UpdateFailure.Storage, null -> "other"
+            }
+    }
+}
+
+/**
+ * Stage 5, `bg_service_end`: the background service ended, once per run of it. `os_limit` when Android's background
+ * budget ran out (its dataSync `onTimeout`); `other` when it was destroyed for any other reason while live mode or a reply
+ * watch held it (a widget action alone is no background run and is not counted). Words only.
+ */
+internal class BackgroundServiceEnd(private val flow: () -> HealthFlow = { HealthFlow() }) {
+    private var reported = false
+
+    fun timedOut(batteryExempt: Boolean) = end("os_limit", batteryExempt)
+
+    fun destroyed(held: Boolean, batteryExempt: Boolean) {
+        if (held) end("other", batteryExempt)
+        reported = false
+    }
+
+    private fun end(reason: String, batteryExempt: Boolean) {
+        if (reported) return
+        reported = true
+        flow().bgServiceEnd(reason, batteryExempt)
+    }
+
+    companion object {
+        /** The one the service reports to (the service is one per process). */
+        val app: BackgroundServiceEnd = BackgroundServiceEnd()
+
+        /** Whether the person lifted battery optimisation for the app (a yes/no, nothing else). */
+        fun batteryExempt(context: android.content.Context): Boolean =
+            runCatching {
+                    context.getSystemService(android.os.PowerManager::class.java)
+                        ?.isIgnoringBatteryOptimizations(context.packageName) == true
+                }
+                .getOrDefault(false)
+    }
+}
+
+/** Stage 5, `connect_computer_chosen`: the person opened the form that connects a new computer (no profile yet). */
+internal fun choseToConnectComputer(route: AppRoute): Boolean = route is ServersRoute.Edit && route.profile == null

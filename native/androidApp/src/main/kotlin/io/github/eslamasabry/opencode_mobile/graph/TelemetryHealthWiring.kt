@@ -41,9 +41,12 @@ import io.github.eslamasabry.oc.engine.analytics.product.ProductLifecycle
 import io.github.eslamasabry.oc.engine.analytics.product.ProductScreen
 import io.github.eslamasabry.oc.engine.analytics.product.TelemetryAnswers
 import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
+import io.github.eslamasabry.oc.feature.chat.header.approval.AutoApprovalRecords
 import io.github.eslamasabry.oc.feature.chat.world.ChatGraphAccessors
+import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.engine.connection.ServerConnections
 import io.github.eslamasabry.oc.engine.diagnostics.exit.ExitHistory
+import io.github.eslamasabry.oc.engine.updates.AppUpdates
 import io.github.eslamasabry.oc.protocol.paseo.PaseoFailureKind
 import io.github.eslamasabry.oc.protocol.paseo.gateway.PaseoGateway
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
@@ -56,7 +59,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -82,6 +84,7 @@ class AppTelemetryHealth(
     private val connections: Lazy<ServerConnections>,
     private val registry: Lazy<ConnectionRegistry>,
     private val navigator: Lazy<AppNavigator>,
+    private val updates: Lazy<AppUpdates>,
     appScope: AppCoroutineScope,
 ) {
     private val scope = CoroutineScope(appScope.coroutineContext)
@@ -125,6 +128,7 @@ class AppTelemetryHealth(
             lifecycle.coldStart(version, answers.lastVersion())?.let { answers.setLastVersion(it) }
         }
         startJourneys()
+        followUpdates()
         followScreens(health)
         followConnections(health)
         // agent_start and its trace, from the agent host's create call (the protocol module knows no telemetry).
@@ -171,12 +175,26 @@ class AppTelemetryHealth(
                 for ((id, graph) in live) {
                     if (!watched.add(id.raw)) continue
                     val engine = (graph as? ChatGraphAccessors)?.chatRequests?.engine ?: continue
-                    val feed = ApprovalFeed(approvals.asSink())
-                    scope.launch { engine.pending.collect { feed.update(pendingFacts(it)) } }
+                    // A saved Auto or "Approve everything" answer is recorded per connection (ids in memory only).
+                    val feed =
+                        ApprovalFeed(approvals.asSink()) { fact ->
+                            AutoApprovalRecords.recent(id, SessionId(fact.sessionId)).any { it.requestId.raw == fact.id }
+                        }
+                    scope.launch {
+                        combine(engine.pending, AutoApprovalRecords.revision) { list, _ -> list }
+                            .collect { feed.update(pendingFacts(it)) }
+                    }
                 }
                 watched.retainAll(live.keys.map { it.raw }.toSet())
             }
         }
+    }
+
+    // ---- the app's own update: offered, failed, declined ----
+
+    private fun followUpdates() {
+        val meter = UpdateMeter()
+        scope.launch { updates.value.state.collect { meter.observe(it) } }
     }
 
     // ---- pages ----
@@ -186,8 +204,10 @@ class AppTelemetryHealth(
             navigator.value.top
                 .filterNotNull()
                 .distinctUntilChanged()
-                .map { screenOf(it) }
-                .collect { screen ->
+                .collect { route ->
+                    val screen = screenOf(route)
+                    // The person chose to connect a computer: the new-server form opened (from any of its entries).
+                    if (choseToConnectComputer(route)) HealthFlow().connectComputerChosen()
                     telemetry.breadcrumb("nav.open:${screen.wire}")
                     health.jank.screen(screen)
                     telemetry.track(ProductEvent.ScreenView, mapOf("screen" to screen))

@@ -216,8 +216,12 @@ public object HealthWords {
     /** `approval.kind`: what was asked for. */
     public val approvalKinds: Set<String> = linkedSetOf("run", "edit", "read", "web", "question", "other")
 
-    /** `approval.result`. */
-    public val approvalResults: Set<String> = linkedSetOf("allowed", "always", "denied", "answered", "declined", "expired")
+    /**
+     * `approval.result`: the person's confirmed answer (`allowed` ... `declined`), `auto` a saved Auto or "Approve
+     * everything" answer, `stopped` the run that asked was stopped, `expired` left unanswered while the run went on.
+     */
+    public val approvalResults: Set<String> =
+        linkedSetOf("allowed", "always", "denied", "answered", "declined", "expired", "auto", "stopped")
     public val exitKinds: Set<String> = setOf("0", "1", "126", "127", "signal", "other")
     public val signals: Set<String> = setOf("SIGILL", "SIGSEGV", "SIGBUS", "SIGKILL", "other", "none")
     public val compatModes: Set<String> = setOf("none", "armcap", "threads", "both")

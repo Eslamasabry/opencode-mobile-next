@@ -48,7 +48,7 @@ public enum class ProductEvent(public val wire: String) {
     /** The person used a feature: `feature`, from [ProductFeature]. */
     FeatureUsed("feature_used"),
 
-    /** The app went to the background: `minutes_range` it was in front, `turns_range` (messages answered meanwhile). */
+    /** The app went to the background: `minutes_range` it was in front, `turns_range` (sends the server took meanwhile). */
     SessionLength("session_length"),
 
     // ---- B-190 health and diagnostics (docs/telemetry/health-and-diagnostics.md) ----
@@ -59,16 +59,28 @@ public enum class ProductEvent(public val wire: String) {
     /** A live connection ended: `server_kind`, `reason`, `recovered`. */
     ConnDrop("conn_drop"),
 
-    /** A message was sent: `result`, `fail_kind`, `first_reply_range`, `agent`, `server_kind`, `input`. */
+    /**
+     * A message was sent, counted once when the server took it (`ok`), refused it (`fail`, with `fail_kind`) or it was
+     * kept on the phone (`queued`): `result`, `fail_kind`, `agent`, `server_kind`, `input`. No reply decides it; since
+     * 2026-11-16 `first_reply_range` rides on `chat_turn` and `first_reply` only (still listed for older builds).
+     */
     SendResult("send_result"),
 
     /** A turn stopped moving: `stage`, `minutes_range`. */
     TurnStall("turn_stall"),
 
-    /** A turn ended: `outcome`, `agent`, `server_kind`, `first_reply_range`, `ms_range`, `tools_range`, `fail_kind`, `recovered`, `follow_up`. */
+    /**
+     * A turn ended: `outcome` (`done` only with visible output, `no_output` without), `agent`, `server_kind`,
+     * `first_reply_range` (Send to the first visible text or tool row), `ms_range`, `tools_range`, `fail_kind`,
+     * `recovered` (this turn's own connection), `follow_up`.
+     */
     ChatTurn("chat_turn"),
 
-    /** An approval or question the person was asked: `kind`, `result`, `ms_range` (asked to answered). */
+    /**
+     * An approval or question the person was asked: `kind`, `result` (an answer only once the server confirmed it;
+     * `auto` a saved mode's answer, `stopped` its run was stopped, `expired` left unanswered while the run went on),
+     * `ms_range` (asked to confirmed).
+     */
     Approval("approval"),
 
     /** Queued messages were flushed: `sent`, `failed` (count ranges). */

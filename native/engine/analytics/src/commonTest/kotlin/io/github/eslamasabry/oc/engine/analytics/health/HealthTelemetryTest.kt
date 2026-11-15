@@ -152,7 +152,7 @@ class HealthTelemetryTest {
     }
 
     @Test
-    fun `B-190-044 jank is sent once per page kind, from at least 30 frames`() = runTest {
+    fun `B-190-044 jank is sent once per page kind per session, from the summed visits and at least 30 frames`() = runTest {
         val (vendor, _, health) = rig(usage = true, crashes = false, platform = FakePlatform(cold = null))
         val jank = health.jank
         jank.screen(ProductScreen.Chat)
@@ -160,18 +160,38 @@ class HealthTelemetryTest {
         jank.screen(ProductScreen.Settings)
         jank.onFrames(total = 10, slow = 10) // too few to say anything
         jank.screen(ProductScreen.Chat)
-        jank.onFrames(total = 100, slow = 100) // already sent this session
+        jank.onFrames(total = 100, slow = 100) // the second visit adds to the first: 110 of 200
         jank.endSession()
         assertEquals(
             listOf(
                 "jank" to
                     mapOf(
-                        "screen" to "chat", "janky_pct_range" to "5-15", "frozen_range" to "0", "refresh_hz" to "60",
-                        "late_pct_range" to "5-15", "seen_hz" to "60",
+                        "screen" to "chat", "janky_pct_range" to ">30", "frozen_range" to "0", "refresh_hz" to "60",
+                        "late_pct_range" to ">30", "seen_hz" to "60",
                     ),
             ),
             vendor.events,
         )
+    }
+
+    @Test
+    fun `B-190-055 two visits to one page, the second janky - the session's one report reflects both`() = runTest {
+        val (vendor, _, health) = rig(usage = true, crashes = false, platform = FakePlatform(cold = null))
+        val jank = health.jank
+        jank.screen(ProductScreen.Chat)
+        jank.onFrames(total = 60, slow = 0) // a short calm first visit, enough frames on its own
+        jank.screen(ProductScreen.Conversations)
+        jank.screen(ProductScreen.Chat)
+        jank.onFrames(total = 60, slow = 30) // the long streaming visit
+        jank.endSession()
+        val reports = vendor.events.filter { it.first == "jank" }
+        assertEquals(1, reports.size, "one report per page kind per session")
+        assertEquals("15-30", reports.single().second["late_pct_range"], "30 of 120 frames, not the calm visit's 0 of 60")
+        // The next session starts from nothing.
+        jank.screen(ProductScreen.Chat)
+        jank.onFrames(total = 40, slow = 0)
+        jank.endSession()
+        assertEquals("<1", vendor.events.last { it.first == "jank" }.second["late_pct_range"])
     }
 
     @Test
