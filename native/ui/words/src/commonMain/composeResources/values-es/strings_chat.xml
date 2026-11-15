@@ -1363,4 +1363,5 @@
     <string name="chatContinueBriefChanged">Archivos que cambiaron:</string>
     <string name="chatContinueBriefStopped">Dónde se detuvo:</string>
     <string name="chatUiContinuedAfterCommand">Un comando seguía en ejecución, así que se le pidió al agente que lo esperara y continuara</string>
+    <string name="chatSendNoPlanMode">Este agente no tiene modo de plan, así que no se envió nada. Desactiva Plan para enviarlo en el modo propio del agente.</string>
 </resources>

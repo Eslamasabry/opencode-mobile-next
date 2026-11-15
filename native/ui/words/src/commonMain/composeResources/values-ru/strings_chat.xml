@@ -1425,4 +1425,5 @@
     <string name="chatContinueBriefChanged">Изменённые файлы:</string>
     <string name="chatContinueBriefStopped">На чём остановились:</string>
     <string name="chatUiContinuedAfterCommand">Команда ещё выполнялась, поэтому агента попросили дождаться её и продолжить</string>
+    <string name="chatSendNoPlanMode">У этого агента нет режима плана, поэтому ничего не отправлено. Выключите «План», чтобы отправить в собственном режиме агента.</string>
 </resources>
