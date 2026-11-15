@@ -14,13 +14,15 @@ import io.github.eslamasabry.oc.core.data.kv.PrefValue
 import io.github.eslamasabry.oc.core.data.kv.stringList
 import io.github.eslamasabry.oc.engine.runtime.paths.SharedStoragePath
 import io.github.eslamasabry.oc.feature.chats.presentation.PhoneFolderReach
+import io.github.eslamasabry.oc.feature.phone.presentation.PhoneServerSource
 import io.github.eslamasabry.opencode_mobile.BuiltinLinux
 import io.github.eslamasabry.opencode_mobile.SharedFolderReach
 import kotlinx.coroutines.withContext
 
 /**
  * Issue 147 (the first customer: "selecting a folder must not give the false impression that the agent has access"):
- * the check New conversation runs when a folder in this phone's storage is chosen and again before the first message.
+ * the check New conversation runs when a folder in this phone's storage is chosen and again before the first message,
+ * and an open conversation runs when its page comes back and before each message.
  *
  * The chosen folder joins the folders the phone's Linux binds (the one list [NativeSharedProjectFolders] writes), then
  * the side that will work in it lists and writes it as its own Linux identity: the phone's OpenCode as root, the phone
@@ -35,28 +37,59 @@ class PhoneFolderPreflight(
     private val dispatchers: AppDispatchers,
     private val roots: NativeSharedProjectFolders,
     private val export: AndroidProjectExport,
-    private val server: AndroidChatPhoneServer,
+    private val server: PhoneServerSource,
     private val helper: AppLocalAgentHostStarter,
 ) {
-    /** What [directory] is to the side that will work in it; null when it is not this phone's storage or unknown. */
-    suspend fun check(owner: ProfileId, phoneAgent: Boolean, directory: String): PhoneFolderReach? {
-        if (!SharedStoragePath.isShared(directory) || !server.runsHere(owner)) return null
+    /**
+     * What [directory] is to the side that will work in it; null when it is not this phone's storage or unknown. A
+     * [thorough] check binds the folder for the next start, lists and writes it from that side, and gives a Git
+     * repository there the settings Android's storage needs; otherwise (before each message) only the access, the
+     * folder and the running binds are read, with no Linux started.
+     */
+    suspend fun check(
+        owner: ProfileId,
+        phoneAgent: Boolean,
+        directory: String,
+        thorough: Boolean = true,
+    ): PhoneFolderReach? {
+        if (!SharedStoragePath.isShared(directory) || !runsHere(owner)) return null
         if (stores.warm() is Outcome.Failed) return null
         if (export.storagePermissionGranted() == false) return PhoneFolderReach.AppAccess
         // The choice is the person's consent to this folder: it is bound from the next start of either side. A whole
         // volume is never bound on its own; the check below then says the side can't reach it.
         val root = SharedStoragePath.projectRoot(directory)
-        if (root != null && remember(owner, root) is Outcome.Failed) return null
+        if (thorough && root != null && remember(owner, root) is Outcome.Failed) return null
         val code =
             withContext(dispatchers.io) {
                 attempt({ Failure.Device() }) {
-                    BuiltinLinux.get(app).sharedFolderReach(directory, if (phoneAgent) helperOf(owner) else null)
+                    val linux = BuiltinLinux.get(app)
+                    val answer =
+                        linux.sharedFolderReach(directory, if (phoneAgent) helperOf(owner) else null, probe = thorough)
+                    // A repository copied from a computer would otherwise show every file as changed (best effort:
+                    // the folder works either way).
+                    if (thorough && answer == SharedFolderReach.Ready.code) linux.prepareSharedFolderGit(directory)
+                    answer
                 }
             }
         return when (code) {
             is Outcome.Failed -> null
             is Outcome.Ok -> reachOf(code.value)
         }
+    }
+
+    /**
+     * The check for an open conversation of [profile] (this phone's server, or its agents' helper) in [directory].
+     */
+    suspend fun checkConversation(profile: ProfileId, directory: String?, thorough: Boolean): PhoneFolderReach? {
+        if (directory == null) return null
+        val phone = stores.phoneOfHelper(profile)
+        return check(phone ?: profile, phoneAgent = phone != null, directory, thorough)
+    }
+
+    /** [fix] for an open conversation of [profile]. */
+    suspend fun fixConversation(profile: ProfileId, reach: PhoneFolderReach): Outcome<Unit> {
+        val phone = stores.phoneOfHelper(profile)
+        return fix(phone ?: profile, phoneAgent = phone != null, reach)
     }
 
     /** The way forward: Android's All files access page, or a new start of the side started before the choice. */
@@ -71,10 +104,16 @@ class PhoneFolderPreflight(
             PhoneFolderReach.Restart ->
                 when (val synced = roots.syncNow()) {
                     is Outcome.Failed -> synced
-                    is Outcome.Ok -> if (phoneAgent) helper.restartForFolder() else server.restart(owner)
+                    is Outcome.Ok ->
+                        if (phoneAgent) helper.restartForFolder()
+                        else if (runsHere(owner)) server.restart()
+                        else Outcome.Failed(Failure.Unavailable(FeatureId("phoneFolder")))
                 }
             else -> Outcome.Failed(Failure.Unavailable(FeatureId("phoneFolder")))
         }
+
+    private fun runsHere(profile: ProfileId): Boolean =
+        (stores.prefs.get("oc.builtinServerOwner") as? PrefValue.Str)?.value == profile.raw
 
     /** Adds [root] to [owner]'s granted shared folders (`oc.sharedProjects.<owner>`) and rewrites the runtime's list. */
     private suspend fun remember(owner: ProfileId, root: String): Outcome<Unit> {

@@ -3,6 +3,8 @@ package io.github.eslamasabry.oc.feature.chat.world
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.Multibinds
+import io.github.eslamasabry.oc.core.common.Failure
+import io.github.eslamasabry.oc.core.common.FeatureId
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
@@ -42,7 +44,52 @@ public interface ChatPhoneServer {
      * place; null when unknown (another server, or no record of it yet).
      */
     public fun needsNewSession(ref: ConversationRef): Boolean? = null
+
+    /**
+     * Issue 147: what [directory], a folder in this phone's storage, is now to the side of the phone that works in
+     * [ref]'s conversation (this phone's OpenCode, or the agents' helper). A [thorough] check lists and writes it from
+     * that side (when the page comes back); otherwise only the access, the folder and the running binds are read (before
+     * each message). Null when the folder is not in this phone's storage, the server is another one, or unknown.
+     */
+    public suspend fun phoneFolder(ref: ConversationRef, directory: String?, thorough: Boolean): ChatPhoneFolder? = null
+
+    /** The way forward for [reach]: Android's All files access page, or a new start of the side that can't see it. */
+    public suspend fun fixPhoneFolder(ref: ConversationRef, reach: ChatPhoneFolder): Outcome<Unit> =
+        Outcome.Failed(Failure.Unavailable(FeatureId("phoneFolder")))
 }
+
+/** Issue 147: a conversation's folder in this phone's storage, as the side that works in it finds it now. */
+public enum class ChatPhoneFolder {
+    Ready,
+
+    /** Android's All files access is off (taken back since the folder was chosen). */
+    AppAccess,
+
+    /** That side was started without the folder and does not see it until it starts again. */
+    Restart,
+
+    /** The folder is not on the phone any more. */
+    Missing,
+
+    /** That side cannot open or change files in it. */
+    Denied,
+}
+
+/**
+ * Issue 147: a message is never sent into a folder the agent cannot reach. Null when it may go; otherwise the failure
+ * the send answers (words: `chatSendPhoneFolder`) and the reason, which the page's notice then shows.
+ */
+public suspend fun ChatPhoneServer?.phoneFolderRefusal(
+    ref: ConversationRef,
+    directory: String?,
+): Pair<Failure, ChatPhoneFolder>? {
+    val reach = this?.phoneFolder(ref, directory, thorough = false) ?: return null
+    if (reach == ChatPhoneFolder.Ready) return null
+    return Failure.Unavailable(FeatureId(PHONE_FOLDER_FEATURE)) to reach
+}
+
+/** The feature name of a send refused because the conversation's folder in phone storage can't be reached. */
+public const val PHONE_FOLDER_FEATURE: String = "phoneFolder"
 
 /** Why this phone's server does not answer yet, as far as the app that runs it knows. */
 public enum class PhoneServerWait {

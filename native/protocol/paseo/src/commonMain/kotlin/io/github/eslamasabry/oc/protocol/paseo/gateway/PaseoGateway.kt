@@ -1489,6 +1489,8 @@ public class PaseoGateway(
                         "featureValues" to
                             (agentTools.featureValues(id)
                                 ?: draftFeatureValues[id]?.takeIf { it.isNotEmpty() }?.let(::JsonObject)),
+                        // Issue 147: an agent in a folder of the phone's storage is told what that storage can't do.
+                        "systemPrompt" to PaseoStorageNote.forFolder(scope, transport.serverVersion),
                     ).withoutNulls(),
                     "initialPrompt" to prompt,
                     "images" to images.takeIf { it.isNotEmpty() },
