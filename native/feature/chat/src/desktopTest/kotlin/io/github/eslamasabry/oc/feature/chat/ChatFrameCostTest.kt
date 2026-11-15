@@ -92,10 +92,27 @@ class ChatFrameCostTest {
             }
         }
 
-    private fun measure(appearance: KitAppearance): Pair<List<FrameCost>, List<FrameCost>> {
+    private val code =
+        "```kotlin\nfun total(cart: Cart, coupon: Coupon?): Money = cart.lines.sumOf { it.price * it.quantity }.let { sum -> coupon?.applyTo(sum) ?: sum }\n" +
+            "val settled = checkout.settle(total(cart, coupon)).also { log.info(\"settled \${it.amount} for \${cart.id} with \${coupon?.code}\") }\n```"
+
+    /** Forty finished turns; with [withCode] each reply also carries a code block wider than the screen. */
+    private fun rows(withCode: Boolean): Array<io.github.eslamasabry.oc.engine.transcript.state.TranscriptRow> =
+        (1..40).flatMap { n ->
+            val base = turn(n, "Question $n: why does the checkout test fail?", answer)
+            if (!withCode) base
+            else
+                base.take(2) +
+                    io.github.eslamasabry.oc.engine.transcript.state.BlockRow(
+                        "b:a$n/c$n:0", "u$n", io.github.eslamasabry.oc.engine.transcript.state.RowKind.Code, "c$n", 0, code,
+                        false, false, io.github.eslamasabry.oc.engine.transcript.state.Origin.Loaded,
+                    ) + base.drop(2)
+        }.toTypedArray()
+
+    private fun measure(appearance: KitAppearance, withCode: Boolean = false): Pair<List<FrameCost>, List<FrameCost>> {
         Locale.setDefault(Locale.forLanguageTag("en"))
         val world = FakeChatWorld()
-        world.transcript.value = stateOf(*(1..40).flatMap { turn(it, "Question $it: why does the checkout test fail?", answer) }.toTypedArray())
+        world.transcript.value = stateOf(*rows(withCode))
         val p = ChatPresenter(world, RecordingNavigator(), Immediate)
         val scope = CoroutineScope(SupervisorJob() + Dispatchers.Unconfined)
         val states = p.states(scope, Dispatchers.Unconfined, SharingStarted.Eagerly)
@@ -117,7 +134,9 @@ class ChatFrameCostTest {
                 meter.settle()
                 val still = meter.frames(120)
                 // The transcript rests at its newest line: a finger drags it down to read back.
+                meter.traceCauses = true
                 val drag = meter.drag(Offset(W / 2f, H * 0.3f), 40, 24f)
+                println("PERF-CHAT causes " + meter.causes.entries.sortedByDescending { it.value }.take(15).joinToString(" || ") { "${it.value}x ${it.key}" })
                 meter.close()
                 out = still to drag
             }
@@ -137,6 +156,14 @@ class ChatFrameCostTest {
         // offscreen, one inside the other, on every frame it moved.
         val most = (still + drag).maxOf { it.offscreenPx }
         assertTrue(most <= W.toLong() * H / 8, "offscreen pixels per frame $most over an eighth of the window: $numbers")
+    }
+
+    @Test
+    fun `PERF-CHAT-2 survey of a long conversation with code at the default look`() {
+        val (still, drag) = measure(KitAppearance(), withCode = true)
+        val numbers = still.summary("still") + " | " + drag.summary("drag")
+        println("PERF-CHAT-2 $numbers")
+        assertEquals(0, still.count { it.busy }, "a still conversation asks for no frames: $numbers")
     }
 
     private companion object {

@@ -79,6 +79,13 @@ public data class FrameCost(
 @OptIn(ExperimentalTestApi::class, InternalTestApi::class, ExperimentalComposeRuntimeApi::class, InternalComposeUiApi::class)
 public class FrameMeter private constructor(private val test: SkikoComposeUiTest) {
     private var scopes = 0
+
+    /**
+     * What invalidated scopes (the state's own text, shortened), counted while [traceCauses] is on: the first thing to
+     * read when a frame recomposes more than it should.
+     */
+    public val causes: MutableMap<String, Int> = LinkedHashMap()
+    public var traceCauses: Boolean = false
     private val handles = mutableListOf<CompositionObserverHandle>()
     private val frameRecomposer: FrameRecomposer =
         SkikoComposeUiTest::class.java.getDeclaredField("frameRecomposer").let {
@@ -100,7 +107,11 @@ public class FrameMeter private constructor(private val test: SkikoComposeUiTest
 
             override fun onEndComposition(composition: ObservableComposition) = Unit
 
-            override fun onScopeInvalidated(scope: RecomposeScope, value: Any?) = Unit
+            override fun onScopeInvalidated(scope: RecomposeScope, value: Any?) {
+                if (!traceCauses) return
+                val key = (value?.let { it.javaClass.simpleName + " " + it.toString() } ?: "null").take(CAUSE_CHARS)
+                causes[key] = (causes[key] ?: 0) + 1
+            }
 
             override fun onScopeDisposed(scope: RecomposeScope) = Unit
         }
@@ -263,6 +274,7 @@ public class FrameMeter private constructor(private val test: SkikoComposeUiTest
         public fun attach(test: SkikoComposeUiTest): FrameMeter = FrameMeter(test)
 
         private const val FRAME_MS = 16L
+        private const val CAUSE_CHARS = 120
         private const val SLOP_PX = 40f
     }
 }

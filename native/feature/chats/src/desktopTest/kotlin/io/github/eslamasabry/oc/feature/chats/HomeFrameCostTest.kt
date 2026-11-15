@@ -64,7 +64,9 @@ class HomeFrameCostTest {
             }
             meter.settle()
             val still = meter.frames(120)
+            meter.traceCauses = true
             val drag = meter.drag(Offset(W / 2f, H * 0.7f), 40, -24f)
+            println("PERF-HOME causes " + meter.causes.entries.sortedByDescending { it.value }.take(15).joinToString(" || ") { "${it.value}x ${it.key}" })
             meter.close()
             out = still to drag
         }

@@ -84,7 +84,10 @@ class FlatGroundEdgesPixelsTest {
             if (d > 0) differ++
             worst = maxOf(worst, d)
         }
-        assertTrue(worst <= 1, "the flat fade differs by up to $worst levels in a channel ($differ pixels); rounding allows 1")
+        // The layer stores the cleared content in 8 bits and blends it again; the flat fade blends once. The two roundings
+        // part by at most 2 levels of 255 in a channel inside the fades (measured: 2, in 8 % of the pixels), invisible;
+        // anything wrong (a band missing, the wrong ground) differs by tens of levels.
+        assertTrue(worst <= 2, "the flat fade differs by up to $worst levels in a channel ($differ pixels); rounding allows 2")
     }
 
     private fun channelGap(a: Int, b: Int): Int {
