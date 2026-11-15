@@ -348,7 +348,7 @@ class AgentsConnectTest {
         val state = presenter.state.value
         assertTrue(state.helperConnectFailed, "the page says the helper did not start")
         assertTrue(phoneHelperDown(state))
-        assertEquals(AgentTileState.Unavailable, agentTile(claudeReady, null, helperDown = phoneHelperDown(state)).state)
+        assertEquals(AgentTileState.HelperDown, agentTile(claudeReady, null, helperDown = phoneHelperDown(state)).state)
         assertFalse(phoneChatOffered(state), "a saved but unconnected helper offers no conversation")
 
         // The helper connects another way (New conversation starts it too): the failure line goes, the tiles are Ready.

@@ -56,6 +56,9 @@ import io.github.eslamasabry.oc.engine.git.GitLinkRepairService
 import io.github.eslamasabry.oc.feature.chat.world.ChatGraphAccessors
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentInstallPhase
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentRow
+import io.github.eslamasabry.oc.feature.agents.hub.phoneAgentChoosable
+import io.github.eslamasabry.oc.feature.agents.hub.phoneAgentShown
+import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentShown
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentStatus
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgents
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentsState
@@ -1360,7 +1363,10 @@ class AndroidNewConversationHost(
                         // Issue 147: the helper refused the create for the agent's sign-in: every place reads it as
                         // Sign in needed until a sign-in completes (AppPhoneAgents.noteSignInLapsed).
                         val provider = model?.providerId
-                        if (provider != null && FirstMessageRules.signInLapsed(receipt.failure))
+                        // Issue 147, second report: a start refused because the agent "is not ready" (its sign-in or
+                        // set-up the helper found missing) said "needs setting up" here while the agent list still read
+                        // Ready from the kept facts: it is noted the same way, so every place reads Sign in needed.
+                        if (provider != null && FirstMessageRules.agentNeedsYou(receipt.failure))
                             (phoneAgents as? AppPhoneAgents)?.noteSignInLapsedHere(provider, System.currentTimeMillis())
                         val cleared =
                             stores.prefs.commit(stores.lanes.forProfile(profile)) {
@@ -1598,22 +1604,22 @@ internal object NewConversationPhoneRules {
     fun facts(state: PhoneAgentsState): List<PhoneChatFact> =
         state.agents.mapNotNull { row ->
             val descriptor = AgentCatalog.builtIn.byId(AgentId(row.id)) ?: return@mapNotNull null
-            val updating =
-                state.installation?.let { it.id == row.id && it.phase == PhoneAgentInstallPhase.Installing } == true
+            // The one status the Agents page's tile and this list both read (phoneAgentShown).
+            val shown = phoneAgentShown(row, state.installation)
+            val updating = shown == PhoneAgentShown.Installing
             PhoneChatFact(
                 id = descriptor.id,
                 name = row.name,
                 iconKey = descriptor.iconKey,
-                ready = !updating && startsHere(row),
+                ready = phoneAgentChoosable(shown),
                 // Flutter's fixAction: install, sign in, phone check, resume; and the set-up of an agent the app never
                 // saw set up (a dimmed "Set up" row that opens it, never a choice whose first answer fails).
                 fixable =
-                    when (row.status) {
-                        PhoneAgentStatus.NotInstalled -> row.supportedInstallation
-                        PhoneAgentStatus.SignInNeeded,
-                        PhoneAgentStatus.PhoneCheck,
-                        PhoneAgentStatus.Stopped -> true
-                        PhoneAgentStatus.SetUpAtFirstUse -> row.needsSetUp
+                    when (shown) {
+                        PhoneAgentShown.NotInstalled -> row.supportedInstallation
+                        PhoneAgentShown.SignInNeeded,
+                        PhoneAgentShown.SetUp,
+                        PhoneAgentShown.Starting -> true
                         else -> false
                     },
                 installed = row.status.installed,
@@ -1633,8 +1639,7 @@ internal object NewConversationPhoneRules {
      * agent reads "Stopped" until then; before, New conversation offered none of them (and dropped every agent the
      * bundled matrix does not know) until the Agents page, which starts the helper, had been opened.
      */
-    fun startsHere(row: PhoneAgentRow): Boolean =
-        phoneAgentStartsConversation(row) || row.status == PhoneAgentStatus.Stopped
+    fun startsHere(row: PhoneAgentRow): Boolean = phoneAgentChoosable(phoneAgentShown(row))
 }
 
 private const val PHONE_STORAGE_FOLDER = "/sdcard"
