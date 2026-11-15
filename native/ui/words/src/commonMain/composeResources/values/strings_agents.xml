@@ -587,5 +587,6 @@
     <string name="agentsOwnAgentTooMany">This phone keeps up to 8 own agents. Remove one first.</string>
     <string name="agentsOwnAgentReadyNow">Ready to use.</string>
     <string name="agentsOwnAgentReadyLater">Will be ready when the running task ends.</string>
+    <string name="agentsUpdatingAgent">Updating %1$s</string>
     <string name="agentsOwnAgentFailed">That could not be done on this phone. Try again.</string>
 </resources>

@@ -35,7 +35,7 @@ class AgentInstallRecordTest {
         // The right artifact but a launcher that runs something else is behind too.
         val otherProgram = current.copy(program = oldBare.program)
         assertEquals(setOf(codex), AgentInstallRecord.behind(listOf(codex), mapOf(codex to otherProgram), catalog, arm))
-        // No record (installed some other way) or not installed: left alone.
+        // Neither file (installed some other way) or not installed: left alone.
         assertTrue(AgentInstallRecord.behind(listOf(codex), mapOf(codex to AgentInstallRecorded(null, null)), catalog, arm).isEmpty())
         assertTrue(AgentInstallRecord.behind(emptyList(), mapOf(codex to oldBare), catalog, arm).isEmpty())
     }
@@ -76,5 +76,20 @@ class AgentInstallRecordTest {
         assertEquals(listOf(codex), started)
         assertEquals(AgentUpdateStep.Updating, updater.decision.value.step)
         assertEquals(codex, updater.decision.value.agent)
+    }
+
+    @Test
+    fun `B-AGENT-UPD-003 an install with the app's launcher but no record at all is behind`() {
+        val launch = "#!/bin/sh\nexec \"/home/oc/.local/share/oc-agents/codex/0.169.0/payload/codex-aarch64-unknown-linux-musl\" \"\$@\"\n"
+        val noRecord = AgentInstallRecord.fromFiles(pin = null, launch = launch)
+        assertEquals(null, noRecord.record)
+        assertEquals(oldBare.program, noRecord.program)
+        assertEquals(setOf(codex), AgentInstallRecord.behind(listOf(codex), mapOf(codex to noRecord), catalog, arm))
+        // The files as the install script writes them read back exactly.
+        val read = AgentInstallRecord.fromFiles("0.169.0|arm64|97b97d87eea075c5cb7709c7f6156a451622a7667953ecda40e0276637196f3f", launch)
+        assertEquals(oldBare, read)
+        // npm agents run through node: the program is the script the launcher names.
+        val node = "#!/bin/sh\nexec /home/oc/.local/node/bin/node \"/x/payload/package/bundle/gemini.js\" \"\$@\"\n"
+        assertEquals("/x/payload/package/bundle/gemini.js", AgentInstallRecord.fromFiles(null, node).program)
     }
 }

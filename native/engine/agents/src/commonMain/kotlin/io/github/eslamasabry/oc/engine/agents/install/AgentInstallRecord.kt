@@ -20,7 +20,6 @@ public data class AgentInstallRecorded(
 )
 
 public object AgentInstallRecord {
-    private const val PREFIX = "oc-record "
     private val ID = Regex("^[a-z][a-z0-9-]{0,63}$")
     private val VERSION = Regex("^[0-9A-Za-z][0-9A-Za-z.+_-]{0,63}$")
 
@@ -45,40 +44,24 @@ public object AgentInstallRecord {
         return "$dir/payload/${artifact.archiveMember ?: agent.recipe.executable}"
     }
 
+    private val LAUNCH = Regex("^exec .*\"([^\"]*)\" \"\\$@\"$", RegexOption.MULTILINE)
+
     /**
-     * A read-only script (run as root in the phone's Linux; it only reads two small files per agent) that prints one
-     * line per agent: `oc-record <id> <record or -> <program or ->`. Records are reduced to safe characters.
+     * What one install says, from its two small files as the app reads them straight from the phone's Linux tree (no
+     * process, no wait for the setup lane): the `.oc-pin` text and the program the `launch` script runs. Null for a
+     * file that is not there.
      */
-    public fun readScript(catalog: AgentCatalog): String = readScript(catalog, root = "")
-
-    /** [readScript] over a tree at [root] (tests); the program paths it prints stay those the launcher names. */
-    internal fun readScript(catalog: AgentCatalog, root: String): String =
-        buildString {
-            appendLine("set -u")
-            for (agent in catalog.agents) {
-                val dir = installDir(agent) ?: continue
-                val id = agent.id.raw
-                appendLine("d='$root$dir'; r=-; p=-")
-                appendLine("if [ -f \"\$d/.oc-pin\" ] && [ ! -L \"\$d/.oc-pin\" ]; then r=\$(head -c 300 \"\$d/.oc-pin\" | tr -d '\\n' | tr -c 'A-Za-z0-9.|+_-' '_'); fi")
-                appendLine("if [ -f \"\$d/launch\" ] && [ ! -L \"\$d/launch\" ]; then p=\$(sed -n 's/^exec .*\"\\([^\"]*\\)\" \"\\\$@\"\$/\\1/p' \"\$d/launch\" | head -n 1 | tr -d '\\n' | tr -c 'A-Za-z0-9./+_-' '_'); fi")
-                appendLine("printf '$PREFIX%s %s %s\\n' '$id' \"\${r:--}\" \"\${p:--}\"")
-            }
-        }
-
-    public fun parse(output: String): Map<AgentId, AgentInstallRecorded> =
-        output.lineSequence()
-            .filter { it.startsWith(PREFIX) }
-            .mapNotNull { line ->
-                val parts = line.removePrefix(PREFIX).trim().split(' ')
-                if (parts.size != 3 || !ID.matches(parts[0])) return@mapNotNull null
-                AgentId(parts[0]) to AgentInstallRecorded(parts[1].takeIf { it != "-" }, parts[2].takeIf { it != "-" })
-            }
-            .toMap()
+    public fun fromFiles(pin: String?, launch: String?): AgentInstallRecorded =
+        AgentInstallRecorded(
+            record = pin?.trim()?.takeIf { it.isNotEmpty() && it.length <= 300 },
+            program = launch?.let { text -> LAUNCH.find(text)?.groupValues?.get(1) },
+        )
 
     /**
      * The installed agents whose install of the pinned version records another artifact or runs another program than
-     * the pin. Only what an install of this version wrote counts: a copy of another version is the version check's
-     * business, and an agent without a record (installed some other way) is left alone.
+     * the pin, or that this app's installer set up (it has the launcher) but which has no record at all. A copy of
+     * another version is the version check's business; an agent with neither file (installed some other way) is left
+     * alone.
      */
     public fun behind(
         installed: Collection<AgentId>,
@@ -89,8 +72,8 @@ public object AgentInstallRecord {
         installed.filterTo(LinkedHashSet()) { id ->
             val agent = catalog.byId(id) ?: return@filterTo false
             val seen = recorded[id] ?: return@filterTo false
-            val record = seen.record ?: return@filterTo false
             val expected = expectedRecord(agent, architecture) ?: return@filterTo false
+            val record = seen.record ?: return@filterTo seen.program != null
             record != expected || (seen.program != null && seen.program != expectedProgram(agent, architecture))
         }
 }
