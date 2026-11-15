@@ -591,4 +591,6 @@
     <string name="agentsOwnAgentBadEnvValue">Un valor es demasiado largo.</string>
     <string name="agentsOwnAgentTooMany">Este teléfono guarda hasta 8 agentes propios. Quita uno primero.</string>
     <string name="agentsOwnAgentFailed">No se pudo hacer en este teléfono. Inténtalo de nuevo.</string>
+    <string name="agentsOwnAgentReadyNow">Listo para usar.</string>
+    <string name="agentsOwnAgentReadyLater">Estará listo cuando termine la tarea en curso.</string>
 </resources>

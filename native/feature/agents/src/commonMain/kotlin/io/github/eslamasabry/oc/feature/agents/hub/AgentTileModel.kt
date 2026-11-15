@@ -16,6 +16,11 @@ public enum class AgentTileState {
     Stopped,
     Limit,
     Unavailable,
+    /**
+     * Ready, but the helper every phone agent runs on did not start (the page's start failed and none runs now): the
+     * agent itself is fine, the phone's agents are not running. Its act starts the helper again.
+     */
+    HelperDown,
 }
 
 /** The tile's one small act, only when it matters. */
@@ -30,6 +35,8 @@ public enum class AgentTileAct {
     Resume,
     /** Install again after a failed or interrupted install: opens the install review, as Install does. */
     Retry,
+    /** Start the phone's agent helper again after it did not start ([AgentTileState.HelperDown]). */
+    StartAgain,
 }
 
 /** One phone agent as the bento grid draws it: its state, the install's measured share, and at most one act. */
@@ -46,6 +53,59 @@ public data class AgentTileModel(
     /** The running install has shown nothing new for a while: the tile says it is still working. */
     val quiet: Boolean = false,
 )
+
+/**
+ * The one status of a phone agent that every place shows (issue 147, second report: Antigravity read Ready in New
+ * conversation's agent list while the same page asked to set it up). The Agents page's tile ([agentTile]), New
+ * conversation's "Who works on it" ([phoneAgentChoosable], [phoneAgentListedWords]) and its set-up rows all read it.
+ */
+public enum class PhoneAgentShown {
+    NotInstalled,
+    Installing,
+    /** Installed; its own set-up comes first (never seen set up, or its phone check is due). */
+    SetUp,
+    /** Installed and seen set up; no sign-in can be read ahead, so it reads "set it up the first time you use it". */
+    SetUpAtFirstUse,
+    SignInNeeded,
+    /** Its state is being read. */
+    Checking,
+    /** The helper is stopped: it can be chosen, and a start starts the helper first. */
+    Starting,
+    Ready,
+    /** Ready, but the phone's agent helper did not start. */
+    HelperDown,
+    Unavailable,
+}
+
+/** [agent]'s one status ([PhoneAgentShown]) given the running [installation] and whether the helper did not start. */
+public fun phoneAgentShown(
+    agent: PhoneAgentRow,
+    installation: PhoneAgentInstallation? = null,
+    helperDown: Boolean = false,
+): PhoneAgentShown {
+    if (installation?.id == agent.id && installation.phase == PhoneAgentInstallPhase.Installing)
+        return PhoneAgentShown.Installing
+    return when (agent.status) {
+        PhoneAgentStatus.NotInstalled -> PhoneAgentShown.NotInstalled
+        PhoneAgentStatus.SetUpAtFirstUse ->
+            when {
+                agent.needsSetUp -> PhoneAgentShown.SetUp
+                helperDown -> PhoneAgentShown.HelperDown
+                else -> PhoneAgentShown.SetUpAtFirstUse
+            }
+        PhoneAgentStatus.SignInNeeded -> PhoneAgentShown.SignInNeeded
+        PhoneAgentStatus.Ready -> if (helperDown) PhoneAgentShown.HelperDown else PhoneAgentShown.Ready
+        PhoneAgentStatus.Checking -> PhoneAgentShown.Checking
+        PhoneAgentStatus.Stopped -> PhoneAgentShown.Starting
+        PhoneAgentStatus.PhoneCheck -> PhoneAgentShown.SetUp
+        PhoneAgentStatus.Limit,
+        PhoneAgentStatus.Unavailable -> PhoneAgentShown.Unavailable
+    }
+}
+
+/** Whether [shown] can start a conversation (a start of a [PhoneAgentShown.Starting] one starts the helper itself). */
+public fun phoneAgentChoosable(shown: PhoneAgentShown): Boolean =
+    shown == PhoneAgentShown.Ready || shown == PhoneAgentShown.SetUpAtFirstUse || shown == PhoneAgentShown.Starting
 
 /**
  * The tile for [agent] given the phone's current [installation] (Flutter `agentRowLine` and its one fix chip).
@@ -75,37 +135,48 @@ public fun agentTile(
     if (ended && agent.status == PhoneAgentStatus.NotInstalled && agent.supportedInstallation)
         return AgentTileModel(agent, AgentTileState.InstallFailed, act = AgentTileAct.Retry, install = mine)
     val justInstalled = mine?.phase == PhoneAgentInstallPhase.Done && agent.status != PhoneAgentStatus.Ready
-    return when (agent.status) {
-        PhoneAgentStatus.NotInstalled ->
+    // The one status every place shows ([phoneAgentShown]); the tile adds its act and its own detail words.
+    return when (phoneAgentShown(agent, installation, helperDown)) {
+        PhoneAgentShown.Installing -> AgentTileModel(agent, AgentTileState.Installing, install = mine, quiet = quiet)
+        PhoneAgentShown.NotInstalled ->
             if (agent.supportedInstallation) AgentTileModel(agent, AgentTileState.NotInstalled, act = AgentTileAct.Install)
             else AgentTileModel(agent, AgentTileState.CannotRun)
-        PhoneAgentStatus.SetUpAtFirstUse ->
+        PhoneAgentShown.SetUp ->
+            if (agent.status == PhoneAgentStatus.PhoneCheck)
+                if (checking) AgentTileModel(agent, AgentTileState.Checking, justInstalled = justInstalled)
+                else AgentTileModel(agent, AgentTileState.PhoneCheck, act = AgentTileAct.Check, justInstalled = justInstalled)
+            else
+                AgentTileModel(
+                    agent,
+                    AgentTileState.SetUp,
+                    act = if (agent.signInAvailable) AgentTileAct.SetUp else null,
+                    justInstalled = justInstalled,
+                )
+        PhoneAgentShown.SetUpAtFirstUse ->
             AgentTileModel(
                 agent,
                 AgentTileState.SetUp,
                 act = if (agent.signInAvailable) AgentTileAct.SetUp else null,
                 justInstalled = justInstalled,
             )
-        PhoneAgentStatus.SignInNeeded ->
+        PhoneAgentShown.SignInNeeded ->
             AgentTileModel(
                 agent,
                 AgentTileState.SignInNeeded,
                 act = if (agent.signInAvailable) AgentTileAct.SignIn else null,
                 justInstalled = justInstalled,
             )
-        // The helper every phone agent runs on did not start: no agent can work, so none reads Ready (Flutter
-        // `hostAvailable == false` → unavailable). The page's failure line carries Try again.
-        PhoneAgentStatus.Ready ->
-            if (helperDown) AgentTileModel(agent, AgentTileState.Unavailable) else AgentTileModel(agent, AgentTileState.Ready)
-        PhoneAgentStatus.Checking -> AgentTileModel(agent, AgentTileState.Checking, justInstalled = justInstalled)
-        PhoneAgentStatus.PhoneCheck ->
-            if (checking) AgentTileModel(agent, AgentTileState.Checking, justInstalled = justInstalled)
-            else AgentTileModel(agent, AgentTileState.PhoneCheck, act = AgentTileAct.Check, justInstalled = justInstalled)
-        PhoneAgentStatus.Stopped ->
+        // The helper every phone agent runs on did not start: no agent can work, so none reads Ready. It says that, not
+        // "Not available on this phone yet" (the agent is installed and fine), with Try again on the tile itself.
+        PhoneAgentShown.HelperDown -> AgentTileModel(agent, AgentTileState.HelperDown, act = AgentTileAct.StartAgain)
+        PhoneAgentShown.Ready -> AgentTileModel(agent, AgentTileState.Ready)
+        PhoneAgentShown.Checking -> AgentTileModel(agent, AgentTileState.Checking, justInstalled = justInstalled)
+        PhoneAgentShown.Starting ->
             if (resuming) AgentTileModel(agent, AgentTileState.Checking)
             else AgentTileModel(agent, AgentTileState.Stopped, act = AgentTileAct.Resume)
-        PhoneAgentStatus.Limit -> AgentTileModel(agent, AgentTileState.Limit)
-        PhoneAgentStatus.Unavailable -> AgentTileModel(agent, AgentTileState.Unavailable)
+        PhoneAgentShown.Unavailable ->
+            if (agent.status == PhoneAgentStatus.Limit) AgentTileModel(agent, AgentTileState.Limit)
+            else AgentTileModel(agent, AgentTileState.Unavailable)
     }
 }
 
@@ -130,7 +201,7 @@ public fun phoneChatOffered(state: AgentsUi): Boolean {
  * ([PhoneAgentRow.needsSetUp] false); before that its set-up leads (the card's Set up, New conversation's set-up row).
  */
 public fun phoneAgentStartsConversation(row: PhoneAgentRow): Boolean =
-    row.status == PhoneAgentStatus.Ready || (row.status == PhoneAgentStatus.SetUpAtFirstUse && !row.needsSetUp)
+    phoneAgentShown(row).let { it == PhoneAgentShown.Ready || it == PhoneAgentShown.SetUpAtFirstUse }
 
 /** Whether [tile]'s card offers New conversation, given [chat] ([phoneChatOffered] for the page). */
 public fun cardOffersConversation(tile: AgentTileModel, chat: Boolean): Boolean =

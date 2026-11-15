@@ -26,6 +26,18 @@ internal object FirstMessageRules {
             io.github.eslamasabry.oc.protocol.paseo.PaseoAgentSignInTag
 
     /**
+     * Issue 147, second report: a refused start that New conversation answers with "needs setting up" or "sign in
+     * again" (the helper refused it for the sign-in, or said the agent is not ready): the agent is then noted as
+     * needing its sign-in everywhere, so no list keeps saying Ready from the kept facts.
+     */
+    fun agentNeedsYou(failure: Failure?): Boolean =
+        signInLapsed(failure) ||
+            failure?.let {
+                io.github.eslamasabry.oc.feature.chats.presentation.PhoneStartRules.way(it, null, emptyList()) ==
+                    io.github.eslamasabry.oc.feature.chats.presentation.PhoneStartWay.SetUp
+            } == true
+
+    /**
      * True when the words provably never left the phone, so they go back in the box with "not sent" and Try again.
      * The engine dispatches a prompt only after `send` returned Ok, so every synchronous refusal of a prompt wrote
      * nothing: offline with no queue (Paseo has none: `Network.Offline`, which read as "We couldn't confirm your

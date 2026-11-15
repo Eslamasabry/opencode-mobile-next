@@ -32,6 +32,45 @@ object BuiltinGitConfig {
         return !alreadySet.containsMatchIn(existing) && replaceWith(config, existing + SECTION)
     }
 
+    internal const val SHARED_BEGIN = "# Begin OpenCode Mobile: folders chosen in the phone's storage\n"
+    internal const val SHARED_END = "# End OpenCode Mobile: folders chosen in the phone's storage\n"
+
+    /**
+     * Issue 147: Git works in the folders the person chose in the phone's storage, for root and the agent user alike.
+     * Android's storage reports its own owner for every file, which need not be the Linux identity working there, and
+     * Git then refuses the repository as of "dubious ownership". Each folder (and its `/sdcard` spelling) is listed as
+     * `safe.directory` in one block the app owns in /etc/gitconfig, rewritten when the folders change and removed when
+     * none is left. True when the file was written.
+     */
+    fun trustSharedFolders(rootfs: File, folders: List<String>): Boolean {
+        val config = target(rootfs) ?: return false
+        val existing = if (config.isFile) config.readText() else ""
+        val start = existing.indexOf(SHARED_BEGIN)
+        val end = existing.indexOf(SHARED_END)
+        val outside =
+            if (start >= 0 && end > start) existing.removeRange(start, end + SHARED_END.length) else existing
+        val spellings =
+            folders
+                .mapNotNull { SharedStorageBinds.canonicalRoot(it) }
+                .flatMap { root ->
+                    listOf(root) +
+                        if (root.startsWith("$PRIMARY/")) listOf("/sdcard" + root.removePrefix(PRIMARY))
+                        else emptyList()
+                }
+                .filter { path -> path.none { it == '\n' || it == '"' || it == '\\' } }
+                .distinct()
+                .sorted()
+        val block =
+            if (spellings.isEmpty()) ""
+            // Quoted: a folder name may hold '#' or ';', which start a comment in Git's config.
+            else SHARED_BEGIN + "[safe]\n" + spellings.joinToString("") { "\tdirectory = \"$it\"\n" } + SHARED_END
+        val separated = if (block.isEmpty() || outside.isEmpty() || outside.endsWith("\n")) outside else outside + "\n"
+        val wanted = separated + block
+        return wanted != existing && replaceWith(config, wanted)
+    }
+
+    private const val PRIMARY = "/storage/emulated/0"
+
     /** /etc/gitconfig of [rootfs], or null when it (or /etc) is a link or something odd. */
     private fun target(rootfs: File): File? {
         val etc = File(rootfs, "etc")

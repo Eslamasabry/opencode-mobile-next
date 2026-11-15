@@ -585,5 +585,7 @@
     <string name="agentsOwnAgentBadEnvName">Use names of capital letters, digits and _ (not PATH or HOME), each once.</string>
     <string name="agentsOwnAgentBadEnvValue">A value is too long.</string>
     <string name="agentsOwnAgentTooMany">This phone keeps up to 8 own agents. Remove one first.</string>
+    <string name="agentsOwnAgentReadyNow">Ready to use.</string>
+    <string name="agentsOwnAgentReadyLater">Will be ready when the running task ends.</string>
     <string name="agentsOwnAgentFailed">That could not be done on this phone. Try again.</string>
 </resources>

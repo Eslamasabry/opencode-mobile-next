@@ -63,8 +63,17 @@ public interface AgentUpdateHost {
     /** The installed agents in catalog order; empty when none is installed or nothing is known yet. */
     public val installed: List<AgentId>
 
-    /** The installed agents whose copy is not their pinned version, from the last read. */
+    /**
+     * The installed agents whose copy is not their pin, from the last read: another version, or (issue 147) the same
+     * version installed from another artifact or running another program ([AgentInstallRecord]).
+     */
     public val behind: Set<AgentId>
+
+    /**
+     * The part of [behind] that is the same version installed again ([AgentInstallRecord]): its install replaces the
+     * folder a running copy of that agent works from, so it waits until the agents' work is idle, like a helper update.
+     */
+    public val reinstall: Set<AgentId> get() = emptySet()
 
     /** The helper runs, or is installed, at a version other than the pin. False when unknown. */
     public val helperBehind: Boolean
@@ -251,7 +260,8 @@ public class AgentAutoUpdater(
         // Only an install that replaces or restarts the helper waits for the agents to be idle. An agent-only update
         // (the helper already on its pin) replaces that agent's own files and link; another agent's conversation keeps
         // running on its own copy, so it never waits for it.
-        val busy = target != null && host.helperBehind && workBusy()
+        // A reinstall of the same version replaces the folder that agent's running copy uses: it waits as well.
+        val busy = target != null && (host.helperBehind || target in host.reinstall) && workBusy()
         val running = jobs.running
         val problem = host.installProblem || jobs.failed
         val go =

@@ -25,11 +25,14 @@ class OwnAgentsPresenterTest {
         override val state = MutableStateFlow<ImmutableList<OwnAgentView>>(persistentListOf())
         var refuse: OwnAgentProblem? = null
         var checkAnswer = OwnAgentCheckResult.Answered
+        override val pickup = MutableStateFlow(OwnAgentPickup.None)
+        var pickupAfterSave = OwnAgentPickup.Ready
         val calls = mutableListOf<String>()
 
         override suspend fun save(id: String?, name: String, start: String, install: String, env: List<Pair<String, String>>): Outcome<OwnAgentSave> {
             calls += "save:$id:$name:${env.size}"
             refuse?.let { return OwnAgentSave.Refused(it).ok() }
+            pickup.value = pickupAfterSave
             val newId = id ?: "own-mine"
             state.value = persistentListOf(OwnAgentView(newId, name, start, install.ifEmpty { null }, persistentListOf()))
             return OwnAgentSave.Saved(newId).ok()
@@ -89,5 +92,23 @@ class OwnAgentsPresenterTest {
             presenter.checkOwnAgent()
             assertEquals(OwnAgentCheckResult.NotAcp, presenter.state.value.checked)
             assertFalse(presenter.state.value.working)
+        }
+
+    @Test
+    fun `B-AGENT-OWN-072 after a save the sheet says when the helper takes the agent, and only then`() =
+        runTest(UnconfinedTestDispatcher()) {
+            val port = Port().apply { pickupAfterSave = OwnAgentPickup.WhenIdle }
+            val presenter = OwnAgentsPresenter(backgroundScope, port) {}
+            presenter.addOwnAgent()
+            assertEquals(OwnAgentPickup.None, presenter.state.value.pickup)
+            presenter.saveOwnAgent("Mine", "mine acp", "", emptyList())
+            assertEquals(OwnAgentPickup.WhenIdle, presenter.state.value.pickup)
+            // The helper took it once the running task ended.
+            port.pickup.value = OwnAgentPickup.Ready
+            assertEquals(OwnAgentPickup.Ready, presenter.state.value.pickup)
+            // Opening the sheet again starts without an old answer.
+            presenter.closeOwnAgent()
+            presenter.editOwnAgent("own-mine")
+            assertEquals(OwnAgentPickup.None, presenter.state.value.pickup)
         }
 }

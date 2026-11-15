@@ -11,7 +11,6 @@ import io.github.eslamasabry.oc.core.common.AppDispatchers
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.Redacted
-import io.github.eslamasabry.oc.core.common.RedactorApi
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.data.kv.PrefType
 import io.github.eslamasabry.oc.core.data.scope.KeyScope
@@ -135,7 +134,6 @@ class AppPhoneOwnProviders(
         }
 
     /** Runs the settings script as the agent user; its output is never logged, the values ride on stdin only. */
-    @OptIn(RedactorApi::class)
     private suspend fun writeSettings(owner: ProfileId, stdin: String): Outcome<Unit> =
         withContext(dispatchers.io) {
             try {
@@ -148,7 +146,7 @@ class AppPhoneOwnProviders(
                         stdin = stdin,
                     )
                 if (run.exitCode == OwnProviderScript.OK) Outcome.Ok(Unit)
-                else Outcome.Failed(Failure.Unexpected(Redacted("own provider settings: exit ${run.exitCode}")))
+                else Outcome.Failed(Failure.Unexpected(redactor.details("own provider settings: exit ${run.exitCode}")))
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {

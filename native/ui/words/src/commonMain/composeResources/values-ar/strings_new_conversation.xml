@@ -14,4 +14,13 @@
     <string name="chatsNewFolderRemake">إنشاء المجلد من جديد</string>
     <string name="chatsNewFolderChooseAnother">اختيار مشروع آخر</string>
     <string name="chatSendFolderMissing">لم يعد مجلد هذا المشروع موجودًا على الخادم، لذلك لم تُرسل الرسالة. ابدأ محادثة جديدة لإنشاء المجلد من جديد أو لاختيار مشروع آخر.</string>
+    <string name="chatsNewPhoneFolderAccess">لا يستطيع الوكلاء فتح المجلدات في تخزين هذا الهاتف حتى تسمح لهذا التطبيق بالوصول إلى جميع الملفات.</string>
+    <string name="chatsNewPhoneFolderAllow">السماح بالوصول إلى تخزين الهاتف</string>
+    <string name="chatsNewPhoneFolderRestartServer">بدأ OpenCode على هذا الهاتف قبل أن تختار هذا المجلد، لذا لا يراه بعد. أعد تشغيله للعمل هنا.</string>
+    <string name="chatsNewPhoneFolderRestartServerAction">إعادة تشغيل OpenCode على هذا الهاتف</string>
+    <string name="chatsNewPhoneFolderRestartAgents">بدأ وكلاء الهاتف قبل أن تختار هذا المجلد، لذا لا يراه %1$s بعد. أعد تشغيلهم للعمل هنا.</string>
+    <string name="chatsNewPhoneFolderRestartAgentsAction">إعادة تشغيل وكلاء الهاتف</string>
+    <string name="chatsNewPhoneFolderMissing">لم يعد هذا المجلد موجودًا في تخزين الهاتف. اختر مجلدًا آخر.</string>
+    <string name="chatsNewPhoneFolderDenied">لا يستطيع %1$s فتح الملفات في هذا المجلد أو تغييرها. اختر مجلدًا آخر في تخزين الهاتف.</string>
+    <string name="chatsNewPhoneFolderRestartFailed">تعذّرت إعادة التشغيل. إذا كان أحد الوكلاء ما زال يعمل، فحاول مرة أخرى عند انتهائه.</string>
 </resources>
