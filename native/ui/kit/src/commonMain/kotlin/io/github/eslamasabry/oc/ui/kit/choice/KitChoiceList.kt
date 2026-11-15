@@ -117,7 +117,7 @@ public object ChoiceRules {
 /**
  * One answer from a short list (Dart `KitChoiceList.single`; plan 06 §7.5): radio rows, one tap =
  * one [onSelect] call (there is no Apply; the host closes its sheet or sends). Disabled choices
- * state their reason on their own line. [sends] plays `Send` through the kit seam (the tap sends
+ * state their reason on their own line. [sends] plays the light `Select` tick through the kit seam (the tap sends
  * the person's answer). While [loading], skeleton rows; with no choices, the [empty] slot (a
  * `KitStateView`). "Current" marks the value in use while the selection differs from it. Replaces
  * dropdowns.
@@ -162,7 +162,7 @@ public fun <T> KitChoiceList(
                                 else -> null
                             },
                         enabled = c.enabled,
-                        haptic = if (sends) KitHaptic.Send else null,
+                        haptic = if (sends) KitHaptic.Select else null,
                         onClick = { onSelect(c.value) },
                     )
                 }
