@@ -555,6 +555,12 @@ public data class NewConversationUi(
             phoneAgent != null && directory != null &&
                 !AgentSelection.folderAllowed(AgentId(phoneAgent), directory)
 
+    /** [phoneNeedsProjectsFolder] and the phone has no project the agent could use: the way out is a new one. */
+    val phoneHasNoProject: Boolean
+        get() =
+            phoneNeedsProjectsFolder && phoneAgent != null &&
+                setup?.projects.orEmpty().none { AgentSelection.folderAllowed(AgentId(phoneAgent), it.directory) }
+
     /**
      * E20-S08: the project sheet's rows, one per folder. A server can list the same folder twice (a worktree, a
      * trailing "/"); the first listing wins, and it says Separate copy when any listing of that folder does.
@@ -641,6 +647,12 @@ public interface NewConversationActions {
 
     /** New project in the project sheet: asks for its name. */
     public fun askNewProject() {}
+
+    /**
+     * The sentence "this agent works only in the projects on this phone": with none to choose it asks for a new
+     * project's name right there, otherwise it opens the project chooser.
+     */
+    public fun chooseProjectForAgent() {}
 
     /** The name dialog's answer: makes the folder with Git and picks it; null closes the dialog. */
     public fun createProject(name: String?) {}
@@ -1303,6 +1315,15 @@ public class NewConversationViewModel(
         val shown = mutable.value
         if (!shown.canCreateProject || shown.creatingProject || shown.setup?.canChangeProject != true) return
         mutable.update { it.copy(askingProjectName = true, projectFailure = null) }
+    }
+
+    override fun chooseProjectForAgent() {
+        val shown = mutable.value
+        val profile = shown.profile ?: return
+        if (shown.phoneHasNoProject && host.canCreateProject(profile)) {
+            mutable.update { it.copy(canCreateProject = true) }
+            askNewProject()
+        } else sheet(NewConversationSheet.Projects)
     }
 
     override fun createProject(name: String?) {

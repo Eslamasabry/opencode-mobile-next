@@ -130,6 +130,7 @@
     <string name="shellOutputDetailId">Command ID</string>
     <string name="shellOutputReading">Reading output</string>
     <string name="chatsNewAgentNeedsProjectsFolder">%1$s works only in the projects on this phone. Choose one of them.</string>
+    <string name="chatsNewAgentNoProjects">%1$s works only in the projects on this phone, and there are none yet. Tap here to make your first project.</string>
     <string name="libraryImportAConversation">Import a conversation</string>
     <string name="handoffUiComputerCommandLabel">Terminal command</string>
     <string name="sessionsOlderLoadFailed">Could not load older conversations.</string>

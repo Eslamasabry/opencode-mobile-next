@@ -12,6 +12,8 @@ import io.github.eslamasabry.oc.core.model.ModelRef
 import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationAttempt
 import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationHost
 import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationModel
+import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationProject
+import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationSheet
 import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationPhone
 import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationPhoneAgent
 import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationPhoneModels
@@ -81,6 +83,8 @@ class NewConversationPhoneAgentTest {
         private val listedOnceChosen: NewConversationPhoneAgent? = null,
     ) : NewConversationHost {
         val starts = mutableListOf<Started>()
+        override fun canCreateProject(profile: ProfileId): Boolean = true
+        var projectList = emptyList<NewConversationProject>()
         val chosen = mutableListOf<Pair<ProfileId, String?>>()
         val savedModels = mutableListOf<Triple<ProfileId, String, ModelRef?>>()
         var modelReads = 0
@@ -96,7 +100,7 @@ class NewConversationPhoneAgentTest {
             return Outcome.Ok(
                 NewConversationSetup(
                     directory = directory,
-                    projects = emptyList(),
+                    projects = projectList,
                     models = listOf(NewConversationModel(serverModel, "Server model")),
                     agents = emptyList(),
                     model = serverModel,
@@ -422,6 +426,28 @@ class NewConversationPhoneAgentTest {
         assertTrue(host.starts.isEmpty(), "Start waits for a folder under /root/projects/")
         vm.chooseAgent(null)
         assertFalse(vm.state.value.phoneNeedsProjectsFolder, "OpenCode has no such rule")
+    }
+
+    @Test
+    fun `I147-FIRST-RUN the sentence about projects makes a project when there is none and opens the chooser otherwise`() {
+        val bare = Host(directory = "/root")
+        val vm = vm(bare)
+        vm.choosePhoneAgent("claude")
+        vm.draftChanged("hello")
+        assertTrue(vm.state.value.phoneNeedsProjectsFolder)
+        assertTrue(vm.state.value.phoneHasNoProject)
+        vm.chooseProjectForAgent()
+        assertTrue(vm.state.value.askingProjectName, "no project exists: the sentence asks for a name right there")
+        assertEquals("hello", vm.state.value.text, "the typed words stay")
+
+        val some = Host(directory = "/root")
+        some.projectList = listOf(NewConversationProject("/root/projects/app", "app", false))
+        val second = vm(some)
+        second.choosePhoneAgent("claude")
+        assertFalse(second.state.value.phoneHasNoProject)
+        second.chooseProjectForAgent()
+        assertFalse(second.state.value.askingProjectName)
+        assertEquals(NewConversationSheet.Projects, second.state.value.sheet)
     }
 
     // ---- Owner 11-12 on the phone (Paseo helper): thinking effort, a list being read, the last known list

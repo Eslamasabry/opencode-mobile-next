@@ -157,7 +157,8 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
             state.folderMissing -> stringResource(Res.string.chatsNewFolderMissing)
             state.phoneNeedsProjectsFolder ->
                 stringResource(
-                    Res.string.chatsNewAgentNeedsProjectsFolder,
+                    if (state.phoneHasNoProject) Res.string.chatsNewAgentNoProjects
+                    else Res.string.chatsNewAgentNeedsProjectsFolder,
                     state.phoneAgentChoice?.name.orEmpty(),
                 )
             state.phoneModelsBusy -> loadingModels
@@ -195,7 +196,16 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                             !state.deliveryUnconfirmed && !state.creationUnconfirmed &&
                             !state.folderMissing
                     )
-                        KitText(startBlocked, role = TypeRole.Secondary)
+                        // The sentence is the way out: one tap makes a project (none yet) or opens the chooser.
+                        if (state.phoneNeedsProjectsFolder)
+                            KitButton(
+                                startBlocked,
+                                actions::chooseProjectForAgent,
+                                Modifier.testTag("chats-new-agent-project"),
+                                role = KitButtonRole.Tertiary,
+                                maxLines = 4,
+                            )
+                        else KitText(startBlocked, role = TypeRole.Secondary)
                     KitButton(
                         action =
                             KitAction(
