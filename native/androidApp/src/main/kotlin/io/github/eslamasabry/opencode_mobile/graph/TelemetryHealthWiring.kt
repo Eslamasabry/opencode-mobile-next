@@ -28,6 +28,7 @@ import io.github.eslamasabry.oc.engine.analytics.health.AppJourneys
 import io.github.eslamasabry.oc.engine.analytics.health.ApprovalMeter
 import io.github.eslamasabry.oc.engine.analytics.health.ChatJourney
 import io.github.eslamasabry.oc.engine.analytics.health.SetupJourney
+import io.github.eslamasabry.oc.engine.analytics.health.FrameJudge
 import io.github.eslamasabry.oc.engine.analytics.health.HealthDeviceContext
 import io.github.eslamasabry.oc.engine.analytics.health.HealthFlow
 import io.github.eslamasabry.oc.engine.analytics.health.HealthExit
@@ -295,15 +296,21 @@ class AppTelemetryHealth(
         framesOn?.let { (window, listener) -> runCatching { window.removeOnFrameMetricsAvailableListener(listener) } }
         framesOn = null
         val window = activity?.window ?: return
-        val budgetNs = (1_000_000_000.0 / refreshRate()).toLong()
+        // c2-performance (2026-11-15): the period is read per frame (a phone moves between 60, 90 and 120 Hz), each frame
+        // is also judged against its own deadline on Android 12+ (FrameJudge), and a window's first frame is not judged.
+        @Suppress("DEPRECATION")
+        val display = runCatching { if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) activity.display else activity.windowManager.defaultDisplay }.getOrNull()
         val listener =
             Window.OnFrameMetricsAvailableListener { _, metrics, _ ->
-                val total = metrics.getMetric(FrameMetrics.TOTAL_DURATION)
-                health?.jank?.onFrames(
-                    total = 1,
-                    slow = if (total > budgetNs) 1 else 0,
-                    frozen = if (total > FROZEN_FRAME_NS) 1 else 0,
-                )
+                val hz = display?.refreshRate?.toDouble()?.takeIf { it > 0 } ?: 60.0
+                val frame =
+                    FrameJudge.of(
+                        totalNs = metrics.getMetric(FrameMetrics.TOTAL_DURATION),
+                        deadlineNs = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) metrics.getMetric(FrameMetrics.DEADLINE) else null,
+                        periodNs = (1_000_000_000.0 / hz).toLong(),
+                        firstDraw = metrics.getMetric(FrameMetrics.FIRST_DRAW_FRAME) == 1L,
+                    )
+                health?.jank?.onFrames(1, frame.slow, frame.frozen, frame.judged, frame.late, frame.hz)
             }
         runCatching { window.addOnFrameMetricsAvailableListener(listener, main) }.onSuccess {
             framesOn = window to listener
@@ -358,9 +365,6 @@ class AppTelemetryHealth(
     companion object {
         /** How often quiet turns and dropped streams are looked at. */
         private const val JOURNEY_TICK_MS = 30_000L
-
-        /** A frame this slow is frozen by Android vitals' definition (700 ms). */
-        private const val FROZEN_FRAME_NS = 700_000_000L
 
         /** The contract's `agent_start.fail_kind` for an agent host failure. */
         fun agentFailKind(failure: PaseoFailureKind?): String =

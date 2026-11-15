@@ -165,7 +165,10 @@ class HealthTelemetryTest {
         assertEquals(
             listOf(
                 "jank" to
-                    mapOf("screen" to "chat", "janky_pct_range" to "5-15", "frozen_range" to "0", "refresh_hz" to "60"),
+                    mapOf(
+                        "screen" to "chat", "janky_pct_range" to "5-15", "frozen_range" to "0", "refresh_hz" to "60",
+                        "late_pct_range" to "5-15", "seen_hz" to "60",
+                    ),
             ),
             vendor.events,
         )

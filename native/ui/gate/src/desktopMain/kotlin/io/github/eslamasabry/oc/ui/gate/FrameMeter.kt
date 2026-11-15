@@ -109,7 +109,8 @@ public class FrameMeter private constructor(private val test: SkikoComposeUiTest
 
             override fun onScopeInvalidated(scope: RecomposeScope, value: Any?) {
                 if (!traceCauses) return
-                val key = (value?.let { it.javaClass.simpleName + " " + it.toString() } ?: ("null@" + scope.toString())).take(CAUSE_CHARS)
+                // The state's own text names it (MutableState(value=…)); no type names (FailureLabelGuardTest).
+                val key = (value?.toString() ?: "forced @$scope").take(CAUSE_CHARS)
                 causes[key] = (causes[key] ?: 0) + 1
             }
 
