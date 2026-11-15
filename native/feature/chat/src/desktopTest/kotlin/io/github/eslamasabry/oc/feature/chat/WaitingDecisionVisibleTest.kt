@@ -5,6 +5,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.onAllNodesWithText
@@ -116,6 +117,8 @@ class WaitingDecisionVisibleTest {
             assertTrue(b.bottom <= box.top, "$word ends at ${b.bottom}, the message box starts at ${box.top}: the box covers it")
             assertTrue(b.top >= 0.dp, "$word starts at ${b.top}: it is above the page")
             if (inside != null) {
+                val range = onNodeWithTag(inside).fetchSemanticsNode().config.getOrNull(androidx.compose.ui.semantics.SemanticsProperties.VerticalScrollAxisRange)
+                assertTrue(range == null || range.maxValue() <= 0.5f, "the holder scrolls (${range?.maxValue?.invoke()} px): its last line, the answers, is past its edge")
                 val frame = onNodeWithTag(inside).getBoundsInRoot()
                 assertTrue(b.bottom <= frame.bottom + 0.5.dp, "$word ends at ${b.bottom}, past the bottom of its holder at ${frame.bottom}: cut off")
             }
