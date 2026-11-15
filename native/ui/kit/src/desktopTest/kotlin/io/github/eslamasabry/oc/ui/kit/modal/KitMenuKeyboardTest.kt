@@ -45,7 +45,7 @@ class KitMenuKeyboardTest {
                                     expanded = open,
                                     items = (1..14).map { KitMenuItem("Item $it", onSelect = {}) },
                                     onDismissRequest = { open = false },
-                                    modifier = Modifier.align(Alignment.BottomEnd),
+                                    modifier = Modifier.align(Alignment.TopEnd),
                                 ) {}
                             }
                         }
