@@ -51,6 +51,7 @@ import io.github.eslamasabry.oc.engine.analytics.SystemProps
 import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
 import io.github.eslamasabry.oc.engine.connection.ServerConnections
 import io.github.eslamasabry.oc.engine.diagnostics.Diagnostics
+import io.github.eslamasabry.oc.engine.diagnostics.ReportBuild
 import io.github.eslamasabry.oc.engine.settings.prefs.DevicePreferences
 import io.github.eslamasabry.oc.engine.settings.prefs.Preferences
 import io.github.eslamasabry.oc.engine.settings.walkthrough.AppearanceGuideMemory
@@ -99,6 +100,7 @@ import io.github.eslamasabry.oc.ui.words.res.shareAppMessage
 import java.io.File
 import java.util.Locale
 import kotlin.time.Clock
+import kotlin.time.Instant
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
@@ -982,9 +984,57 @@ object SettingsBindings {
      */
     @Provides
     @SingleIn(AppScope::class)
-    fun diagnostics(redactor: Redactor, clock: Clock): Diagnostics =
-        Diagnostics(redactor, clock).also { DiagnosticsLogSink.target = it }
+    fun diagnostics(
+        redactor: Redactor,
+        clock: Clock,
+        application: Application,
+        buildInfo: AppBuildInfo,
+    ): Diagnostics {
+        // B-332: install and update times do not change while this process lives; read them once.
+        val build by lazy { reportBuild(application, buildInfo) }
+        return Diagnostics(redactor, clock, reportBuild = { build }).also {
+            DiagnosticsLogSink.target = it
+        }
+    }
 }
+
+/**
+ * Which build a copied report came from (B-332): the version, the first install and last update
+ * time, and the Android version and API level. Nothing private (no device name or serial).
+ */
+internal fun reportBuild(application: Application, buildInfo: AppBuildInfo): ReportBuild {
+    val info =
+        try {
+            @Suppress("DEPRECATION")
+            application.packageManager.getPackageInfo(application.packageName, 0)
+        } catch (_: android.content.pm.PackageManager.NameNotFoundException) {
+            null
+        }
+    return reportBuild(
+        buildInfo,
+        info?.firstInstallTime,
+        info?.lastUpdateTime,
+        Build.VERSION.RELEASE,
+        Build.VERSION.SDK_INT,
+    )
+}
+
+/** The platform's answers as report facts; a time of 0 or less and a blank version are unknown. */
+internal fun reportBuild(
+    buildInfo: AppBuildInfo,
+    firstInstallMs: Long?,
+    lastUpdateMs: Long?,
+    androidRelease: String?,
+    apiLevel: Int,
+): ReportBuild =
+    ReportBuild(
+        versionName = buildInfo.versionName,
+        versionCode = buildInfo.versionCode.toLong(),
+        installedAt = firstInstallMs?.takeIf { it > 0 }?.let { Instant.fromEpochMilliseconds(it) },
+        updatedAt = lastUpdateMs?.takeIf { it > 0 }?.let { Instant.fromEpochMilliseconds(it) },
+        androidVersion = androidRelease?.takeIf { it.isNotBlank() },
+        apiLevel = apiLevel.takeIf { it > 0 },
+    )
 
 /**
  * The redacting log root's delegate (OcApplication): warnings and errors the app logs become Report

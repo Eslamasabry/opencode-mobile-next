@@ -3,6 +3,7 @@ package io.github.eslamasabry.oc.engine.diagnostics.report
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.security.Redactor
+import io.github.eslamasabry.oc.engine.diagnostics.Diagnostics
 import io.github.eslamasabry.oc.engine.diagnostics.exit.ExitRecord
 import io.github.eslamasabry.oc.engine.diagnostics.perf.PerfSpan
 import kotlinx.collections.immutable.ImmutableList
@@ -20,6 +21,7 @@ import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
 import kotlin.time.Clock
+import kotlin.time.Duration
 import kotlin.time.Instant
 
 /** What a persisted problem event is (Flutter `ProblemEventKind`; [wire] is the stored name). */
@@ -35,13 +37,18 @@ public enum class ProblemEventKind(public val wire: String) {
     }
 }
 
-/** One redacted, immutable event; events are ordered by capture, not wall time. */
+/**
+ * One redacted, immutable event; events are ordered by capture, not wall time. [at] is the last time it happened;
+ * a folded repeat (B-332) also has its [count] and [firstAt]. Saved without them (an older report), it happened once.
+ */
 public data class ProblemEvent(
     val kind: ProblemEventKind,
     val at: Instant,
     val source: String,
     val message: String,
     val stack: String = "",
+    val count: Int = 1,
+    val firstAt: Instant = at,
 ) {
     public fun toJson(): JsonObject =
         buildJsonObject {
@@ -50,7 +57,15 @@ public data class ProblemEvent(
             put("source", source)
             put("message", message)
             if (stack.isNotEmpty()) put("stack", stack)
+            if (count > 1) {
+                put("count", count)
+                put("firstTime", firstAt.toString())
+            }
         }
+
+    /** The same fault: same kind and the same (redacted) text. */
+    internal fun sameFault(other: ProblemEvent): Boolean =
+        kind == other.kind && source == other.source && message == other.message && stack == other.stack
 }
 
 /** What consumers read. [committed] advances only when a change reached disk (B-STATE-080). */
@@ -69,6 +84,10 @@ public data class ReportProblemState(
  * snapshot. Each file is at most [maxBytes] UTF-8 bytes; the oldest timing goes first when room is needed (a failure
  * outlives the timings after it), and an event too large for the budget alone is dropped.
  *
+ * Repeats fold (B-332): a non-timing event that is the same fault (kind, source, message and stack, after redaction) as
+ * a kept one whose last time is within [foldWindow] becomes that event again, counted, with its first and last time,
+ * and moves to the newest end. Other events in between do not stop the fold; different faults never fold.
+ *
  * Failures are values: a write or delete that did not happen answers `Failure.StorageRefused` (no path, no text), sets
  * [ReportProblemState.storageFailed] and publishes nothing as committed. Thread-safe and non-suspending.
  */
@@ -78,6 +97,7 @@ public class ReportProblem private constructor(
     private val clock: Clock,
     public val maxEntries: Int,
     public val maxBytes: Int,
+    public val foldWindow: Duration,
 ) {
     private val lock = SpinLock()
     private val mutableState = MutableStateFlow(ReportProblemState(persistentListOf(), storageFailed = false, committed = 0))
@@ -166,7 +186,25 @@ public class ReportProblem private constructor(
 
     public fun reportText(): String = PRETTY.encodeToString(JsonObject.serializer(), reportJson())
 
-    private fun record(event: ProblemEvent): Outcome<Unit> = lock.withLock { commit(entries + event) }
+    private fun record(event: ProblemEvent): Outcome<Unit> = lock.withLock { commit(folded(entries, redacted(event))) }
+
+    /** [list] with [event] added, or folded into the newest kept event that is the same fault and close in time. */
+    private fun folded(list: List<ProblemEvent>, event: ProblemEvent): List<ProblemEvent> {
+        if (event.kind == ProblemEventKind.Timing) return list + event
+        val match = list.indexOfLast { it.sameFault(event) && (event.at - it.at).absoluteValue <= foldWindow }
+        if (match < 0) return list + event
+        val previous = list[match]
+        val merged =
+            previous.copy(
+                at = maxOf(event.at, previous.at),
+                firstAt = minOf(event.firstAt, previous.firstAt),
+                count = previous.count + event.count,
+            )
+        return list.toMutableList().apply {
+            removeAt(match)
+            add(merged)
+        }
+    }
 
     private fun timing(span: PerfSpan) = ProblemEvent(ProblemEventKind.Timing, span.wallStart, TIMING_SOURCE, span.toLogLine())
 
@@ -233,8 +271,8 @@ public class ReportProblem private constructor(
                 files.delete(ReportFile.Snapshot)
                 return Outcome.Ok(Unit)
             }
-            // Today's redaction and limits are applied again before anything restored is shown.
-            return commit(restored)
+            // Today's redaction, folding and limits are applied again before anything restored is shown.
+            return commit(restored.fold(emptyList()) { kept, event -> folded(kept, redacted(event)) })
         } catch (_: Exception) {
             return Outcome.Failed(Failure.StorageRefused())
         }
@@ -248,6 +286,9 @@ public class ReportProblem private constructor(
         public const val MESSAGE_LIMIT: Int = 2_048
         public const val STACK_LIMIT: Int = 8_192
         public const val NOTIFICATION_LIMIT: Int = 300
+
+        /** How close in time a repeat must come to fold into the kept event (the diagnostics ring's window). */
+        public val FOLD_WINDOW: Duration = Diagnostics.DEDUPE_WINDOW
 
         /** The source of Android's exit record, in the report and in the diagnostics ring. */
         public const val ANDROID_EXIT_SOURCE: String = "android.exit"
@@ -267,10 +308,11 @@ public class ReportProblem private constructor(
             clock: Clock,
             maxEntries: Int = MAX_ENTRIES,
             maxBytes: Int = MAX_BYTES,
+            foldWindow: Duration = FOLD_WINDOW,
         ): Outcome<ReportProblem> {
             require(maxEntries >= 1) { "maxEntries must be at least 1" }
             require(maxBytes >= MIN_BYTES) { "maxBytes must be at least $MIN_BYTES" }
-            val report = ReportProblem(files, redactor, clock, maxEntries, maxBytes)
+            val report = ReportProblem(files, redactor, clock, maxEntries, maxBytes, foldWindow)
             return when (val restored = report.lock.withLock { report.restore() }) {
                 is Outcome.Ok -> Outcome.Ok(report)
                 is Outcome.Failed -> restored
@@ -302,7 +344,11 @@ public class ReportProblem private constructor(
             val source = string("source") ?: return null
             val message = string("message") ?: return null
             if (obj.containsKey("stack") && string("stack") == null) return null
-            return ProblemEvent(kind, Instant.parse(time), source, message, string("stack").orEmpty())
+            val at = Instant.parse(time)
+            // B-332: a report saved before folding has neither; its event happened once.
+            val count = (obj["count"] as? JsonPrimitive)?.takeIf { !it.isString }?.intOrNull ?: 1
+            val firstAt = string("firstTime")?.let(Instant::parse) ?: at
+            return ProblemEvent(kind, at, source, message, string("stack").orEmpty(), count.coerceAtLeast(1), firstAt)
         }
     }
 }

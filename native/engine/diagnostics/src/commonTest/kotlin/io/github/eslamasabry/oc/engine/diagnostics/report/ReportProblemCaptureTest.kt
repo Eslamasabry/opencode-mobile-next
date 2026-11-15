@@ -34,7 +34,7 @@ class ReportProblemCaptureTest {
     }
 
     @Test
-    fun `B-SEC-148 buffered errors and timings are captured once and repeated errors are kept`() {
+    fun `B-SEC-148 buffered errors and timings are captured once and repeated errors are kept as a count`() {
         val at = clock.now()
         diagnostics.record("test", "failed", at = at)
         trace.mark("before.attach")
@@ -43,11 +43,12 @@ class ReportProblemCaptureTest {
 
         trace.mark("after.attach")
         assertEquals(3, report.entries.size)
+        // B-332: the repeat is kept, folded into its event as a count rather than a second line.
         diagnostics.record("test", "failed", at = at)
-        assertEquals(4, report.entries.size)
+        assertEquals(3, report.entries.size)
         diagnostics.record("test", "different", at = at)
-        assertEquals(5, report.entries.size)
-        assertEquals(2, report.entries.count { it.message == "failed" })
+        assertEquals(4, report.entries.size)
+        assertEquals(2, report.entries.single { it.message == "failed" }.count)
     }
 
     @Test
