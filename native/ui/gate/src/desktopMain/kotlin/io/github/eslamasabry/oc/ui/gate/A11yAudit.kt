@@ -18,7 +18,7 @@ import kotlin.math.abs
  * proved it. Those checks need a device.
  *
  * Every control the person can act on (a click, a long click, a toggle, a slider, a text field) is an offender when it:
- * - `small`: its box is under 48 dp on a side (the laid-out box, as the kit's own tap audit reads it: a target made only of touch padding still draws a small control);
+ * - `small`: its box is under 48 dp on a side (the larger of its touch box and its laid-out box, so a control partly scrolled out of view is judged whole);
  * - `unnamed`: a screen reader would read nothing for it (no text, no content description, not even a field label);
  * - `duplicate`: another control has the same box, so one touch could mean either (ATF's duplicate clickable bounds);
  * - `outside`: its box leaves the scene's width, so part of it cannot be reached (what a mirrored or enlarged layout does).
@@ -57,9 +57,11 @@ object A11yAudit {
         for (n in acting) {
             val name = words(n)
             val label = name ?: "(unnamed, ${n.config.getOrNull(SemanticsProperties.TestTag) ?: "no tag"})"
-            val box = n.boundsInRoot
-            val w = box.width / densityScale
-            val h = box.height / densityScale
+            // The box a finger can hit, or the laid-out box, whichever is larger: a scroll area clips the first of a control
+            // that is only partly in view, and a control may lay out a little under 48 dp while its touch box is whole.
+            val touch = n.touchBoundsInRoot
+            val w = maxOf(touch.width, n.size.width.toFloat()) / densityScale
+            val h = maxOf(touch.height, n.size.height.toFloat()) / densityScale
             if (w < 47.5f || h < 47.5f) found += Offender(scene, "small", label, "${w.toInt()}x${h.toInt()} dp")
             if (name == null) found += Offender(scene, "unnamed", label, "a screen reader reads nothing")
             val b = n.boundsInRoot

@@ -5,6 +5,8 @@ package io.github.eslamasabry.oc.ui.kitchat
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -66,7 +68,7 @@ class KitChatA11yAuditTest {
             runDesktopComposeUiTest(412, 1400) {
                 setContent {
                     ChatTestTheme(dark = v.dark, localeTag = v.localeTag, fontScale = v.fontScale) {
-                        Box(Modifier.width(360.dp)) { content() }
+                        Box(Modifier.width(360.dp).verticalScroll(rememberScrollState())) { content() }
                     }
                 }
                 found += A11yAudit.run("$scene $v", this, 360f)
@@ -112,7 +114,7 @@ class KitChatA11yAuditTest {
     @Test fun `B-A11Y-CHAT message box while a reply runs`() =
         check("message box running") {
             Column {
-                KitComposerStop("Stop", "Stop Claude Code", onStop = {}, stopAfterStep = KitStopAfterStep("Stop after this step") {})
+                KitComposerStop("Stop", "Stop Claude Code", onStop = {}, stopAfterStep = KitStopAfterStep("Stop after this step") {}, afterStepButton = false)
                 KitComposerBox(
                     running = true,
                     hasLeading = true,

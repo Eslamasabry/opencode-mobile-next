@@ -7,10 +7,15 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
@@ -75,7 +80,7 @@ class KitA11yAuditTest {
                             v.localeTag,
                             stillFrame = true,
                         ) {
-                            Box(Modifier.width(360.dp)) { content(v) }
+                            Box(Modifier.width(360.dp).verticalScroll(rememberScrollState())) { content(v) }
                         }
                     }
                 }
@@ -163,7 +168,7 @@ class KitA11yAuditTest {
         val found =
             offenders("bad scene", only = listOf(variants[0])) {
                 Column {
-                    Box(Modifier.size(20.dp).clickable {})
+                    Box(Modifier.size(20.dp).semantics(mergeDescendants = true) { contentDescription = "Tiny"; onClick { true } })
                     Box(Modifier.size(48.dp).clickable {})
                     Box { Box(Modifier.size(48.dp).clickable {}); Box(Modifier.size(48.dp).clickable {}) }
                     Box(Modifier.size(40.dp, 14.dp)) { KitText("A long line that cannot fit one small box and wraps over many lines of words") }
