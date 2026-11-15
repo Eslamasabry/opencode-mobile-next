@@ -73,6 +73,7 @@ import io.github.eslamasabry.oc.ui.kit.input.KitStartBox
 import io.github.eslamasabry.oc.ui.kit.modal.KitBackGuard
 import io.github.eslamasabry.oc.ui.kit.modal.KitPageOverlay
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
+import io.github.eslamasabry.oc.ui.kit.modal.KitInputOperationDialog
 import io.github.eslamasabry.oc.ui.kit.row.KitGroupNote
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHeight
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
@@ -1107,6 +1108,35 @@ private fun NewProjectDialog(state: NewConversationUi, actions: NewConversationA
     val empty = stringResource(Res.string.stateFolderNameEmpty)
     val segment = stringResource(Res.string.stateFolderNameSegment)
     val characters = stringResource(Res.string.stateFolderNameCharacters)
+    val validate: (String) -> String? = { name ->
+        when (io.github.eslamasabry.oc.engine.agents.workspace.ProjectFolderName.problem(name)) {
+            io.github.eslamasabry.oc.engine.agents.workspace.ProjectFolderNameProblem.Empty -> empty
+            io.github.eslamasabry.oc.engine.agents.workspace.ProjectFolderNameProblem.NotSingleSegment -> segment
+            io.github.eslamasabry.oc.engine.agents.workspace.ProjectFolderNameProblem.InvalidCharacters -> characters
+            null -> null
+        }
+    }
+    // Issue 147: in the phone's storage the name makes an empty folder in the folder shown, not a Git project.
+    state.storagePath?.let { path ->
+        val here =
+            if (path == PHONE_STORAGE_ROOT) stringResource(Res.string.folderBrowserInternalStorage)
+            else path.trimEnd('/').substringAfterLast('/')
+        KitInputOperationDialog(
+            visible = true,
+            title = stringResource(Res.string.chatsNewStorageFolderDialogTitle, here),
+            fieldLabel = stringResource(Res.string.projectFolderNameLabel),
+            confirmLabel = stringResource(Res.string.projectFolderCreateAction),
+            cancelLabel = stringResource(Res.string.projectFolderCancel),
+            initial = "",
+            hint = stringResource(Res.string.projectFolderNameHint),
+            helper = stringResource(Res.string.chatsNewStorageFolderDialogHelper),
+            working = state.creatingProject,
+            validate = validate,
+            onSubmit = { name -> actions.createProject(name) },
+            onDismissRequest = { actions.createProject(null) },
+        )
+        return
+    }
     KitNewProjectDialog(
         initial = "",
         working = state.creatingProject,
@@ -1169,7 +1199,23 @@ private fun StorageFoldersSheet(state: NewConversationUi, actions: NewConversati
                 )
             else ->
                 KitRowGroup(leadingTiles = true) {
-                    KitNewProjectRow(actions::askNewStorageFolder, working = state.creatingProject)
+                    // Issue 147: in the phone's storage the row makes an empty folder here (no Git), and says so; the
+                    // app's own projects keep "New project" (a folder in the projects, with Git).
+                    val here = if (atRoot) stringResource(Res.string.folderBrowserInternalStorage) else name
+                    val wait = stringResource(Res.string.serversWorking)
+                    KitRow(
+                        title = stringResource(Res.string.chatsNewStorageFolderNew),
+                        modifier = Modifier.testTag("new-storage-folder-row"),
+                        supporting =
+                            if (state.creatingProject) wait
+                            else stringResource(Res.string.chatsNewStorageFolderNewDetail, here),
+                        leading = KitRowLeading.Glyph(KitIcons.folderAdd, tile = true),
+                        trailing = KitRowTrailing.Chevron,
+                        titleAccent = true,
+                        enabled = !state.creatingProject,
+                        disabledReason = wait,
+                        onClick = actions::askNewStorageFolder,
+                    )
                     state.storageFolders.forEach { folder ->
                         KitRow(
                             title = folder.name,

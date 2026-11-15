@@ -33,6 +33,10 @@
     <string name="chatsNewPhoneFolderRestartedAgents">The phone’s agents restarted. %1$s can see this folder now.</string>
     <string name="chatsNewPhoneFolderRestartedServer">This phone’s OpenCode restarted and can see this folder now.</string>
     <string name="chatsNewPhoneFolderAllowed">Access to the phone’s storage is on. %1$s can work in this folder now.</string>
+    <string name="chatsNewStorageFolderNew">New folder here</string>
+    <string name="chatsNewStorageFolderNewDetail">Makes an empty folder inside %1$s and works in it</string>
+    <string name="chatsNewStorageFolderDialogTitle">New folder in %1$s</string>
+    <string name="chatsNewStorageFolderDialogHelper">An empty folder in the phone’s storage. Nothing else is added to it.</string>
     <string name="chatPhoneFolderAccess">This conversation’s folder is in the phone’s storage, and the app no longer has access to all files. Nothing is sent until you allow it again.</string>
     <string name="chatPhoneFolderRestartServer">This phone’s OpenCode can’t see this conversation’s folder until it restarts. Nothing is sent until then.</string>
     <string name="chatPhoneFolderRestartAgents">The phone’s agents can’t see this conversation’s folder until they restart. Nothing is sent until then.</string>

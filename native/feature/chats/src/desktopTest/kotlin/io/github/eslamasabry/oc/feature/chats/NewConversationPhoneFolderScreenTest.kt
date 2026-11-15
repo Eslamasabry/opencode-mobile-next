@@ -157,4 +157,35 @@ class NewConversationPhoneFolderScreenTest {
             }
             assertTrue(onAllNodesWithText("Checking this folder in the phone’s storage…").fetchSemanticsNodes().isNotEmpty())
         }
+
+    @Test
+    fun `I147-STORAGE in the phone's storage the create row makes a folder here, not a project with Git`() =
+        runComposeUiTest {
+            setContent {
+                KitTheme(platform = DesktopKitPlatform(), localeTag = "en", appearance = KitAppearance(motion = MotionLevel.Off)) {
+                    NewConversationScreen(
+                        state(folder, null).copy(storagePath = "/storage/emulated/0/Documents"),
+                        Actions(),
+                    )
+                }
+            }
+            onAllNodesWithText("New folder here").assertCountEquals(1)
+            onAllNodesWithText("Makes an empty folder inside Documents and works in it").assertCountEquals(1)
+            onAllNodesWithText("Makes a folder in your projects, with Git").assertCountEquals(0)
+        }
+
+    @Test
+    fun `I147-STORAGE the name for a folder in the phone's storage says where it goes and adds no Git`() =
+        runComposeUiTest {
+            setContent {
+                KitTheme(platform = DesktopKitPlatform(), localeTag = "en", appearance = KitAppearance(motion = MotionLevel.Off)) {
+                    NewConversationScreen(
+                        state(folder, null).copy(storagePath = "/storage/emulated/0/Documents", askingProjectName = true),
+                        Actions(),
+                    )
+                }
+            }
+            onAllNodesWithText("New folder in Documents").assertCountEquals(1)
+            onAllNodesWithText("Makes a folder in your projects, with Git").assertCountEquals(0)
+        }
 }
