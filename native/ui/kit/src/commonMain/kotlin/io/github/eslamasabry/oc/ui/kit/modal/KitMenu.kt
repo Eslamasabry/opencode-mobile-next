@@ -56,6 +56,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.layout.union
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
@@ -277,7 +278,9 @@ private fun menuRoom(windowTop: Int, windowBottomGap: Int, windowLeft: Int = 0, 
     val gutter = with(density) { LocalKitTokens.current.gutter.dp.roundToPx() }
     val step = with(density) { Space.S2.dp.roundToPx() }
     // The safe area: the system bars and the display cutout (a cutout in landscape lies at a side).
-    val safe = io.github.eslamasabry.oc.ui.kit.frame.kitSystemInsets()
+    // Issue 147 (F-037): the keyboard is part of the room a menu must keep out of, as the navigation bar is (the larger of
+    // the two, never their sum): a menu opened with the keyboard up lay under it.
+    val safe = io.github.eslamasabry.oc.ui.kit.frame.kitSystemInsets().union(io.github.eslamasabry.oc.ui.kit.frame.kitKeyboardInsets())
     val dir = androidx.compose.ui.platform.LocalLayoutDirection.current
     val top = (safe.getTop(density) - windowTop).coerceAtLeast(0) + step
     val bottom = (safe.getBottom(density) - windowBottomGap).coerceAtLeast(0) + step
