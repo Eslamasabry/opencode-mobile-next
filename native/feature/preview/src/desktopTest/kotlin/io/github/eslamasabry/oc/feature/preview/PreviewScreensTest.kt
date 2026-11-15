@@ -107,6 +107,14 @@ class PreviewScreensTest {
         onNodeWithText("Preview").assertExists()
         onNodeWithText("Port 5173").assertExists()
         onNodeWithTag("fake-web-view").assertExists()
+        // Walk F-024: at 360 dp the bar's own words (Refresh, Open in browser) broke the title; they live in its menu.
+        onNodeWithText("Open in browser").assertDoesNotExist()
+    }
+
+    @Test
+    fun `B-SEC-058 Open in browser is in the bar's menu`() = runComposeUiTest {
+        val actions = Actions()
+        setContent { Themed { DevPreviewScreen(DevPreviewUi(5173, phone, phase = PagePhase.Ready, shown = phone.url, menu = true), actions, FakeWebView, egress) } }
         onNodeWithText("Open in browser").performClick()
         assertEquals(listOf("browser"), actions.calls)
     }

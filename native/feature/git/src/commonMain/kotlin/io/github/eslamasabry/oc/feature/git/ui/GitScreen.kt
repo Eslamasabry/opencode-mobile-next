@@ -54,6 +54,7 @@ import io.github.eslamasabry.oc.feature.git.presentation.GitSheet
 import io.github.eslamasabry.oc.feature.git.presentation.GitUi
 import io.github.eslamasabry.oc.feature.git.presentation.GitWay
 import io.github.eslamasabry.oc.feature.git.presentation.gitSavedNeedsSignIn
+import io.github.eslamasabry.oc.feature.git.presentation.gitSyncOpensRemotes
 import io.github.eslamasabry.oc.feature.git.presentation.gitSections
 import io.github.eslamasabry.oc.feature.git.presentation.gitWayForward
 import io.github.eslamasabry.oc.ui.design.color.StatusTone
@@ -306,7 +307,7 @@ private fun Ready(
             KitEnabled.Disabled(stringResource(Res.string.gitProblemOperationInProgress))
         else enabled
     val canPull = !branch.detached && branch.hasUpstream && !operationInProgress
-    val noPullRemote = !snapshot.hasRemote && !branch.detached && !operationInProgress
+    val noPullRemote = gitSyncOpensRemotes(snapshot.hasRemote, branch.detached, operationInProgress)
     val pullReason =
         (enabled as? KitEnabled.Disabled)?.reason
             ?: when {
@@ -594,6 +595,7 @@ private fun Ready(
                                     branch.unborn -> stringResource(Res.string.gitNoCommitsYet)
                                     else -> null
                                 },
+                        trailing = if (!snapshot.hasRemote) KitRowTrailing.Chevron else KitRowTrailing.None,
                         onClick = if (!snapshot.hasRemote) actions::openRemotes else actions::push,
                         modifier = Modifier.testTag("git-push-row"),
                     )

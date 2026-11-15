@@ -42,14 +42,30 @@ class AndroidGitLinkRepairService(
 
     private fun ownerAvailable(profile: ProfileId): Boolean =
         try {
+            // A phone agent's project sits on the helper connection of the same phone: the phone's own profile is the
+            // one that must be the saved owner and the app's loopback server.
+            val phone =
+                phoneRepairOwner(
+                    profile,
+                    stores.phoneOfHelper(profile),
+                    (stores.prefs.get("oc.builtinServerOwner") as? PrefValue.Str)?.value,
+                )
             val graph = registry.live.value[profile]
-            graph != null &&
-                graph.profile.managedOnPhone &&
-                graph.profile.origin.scheme == "http" &&
-                AddressRules.isLoopback(graph.profile.origin.host) &&
-                graph.profile.origin.port == PhoneServerScripts.PORT &&
-                stores.profiles.profile(profile) != null &&
-                (stores.prefs.get("oc.builtinServerOwner") as? PrefValue.Str)?.value == profile.raw
+            when {
+                phone == null || graph == null -> false
+                // The phone's own server: the live connection's profile says it is the app's loopback server.
+                phone == profile ->
+                    graph.profile.managedOnPhone &&
+                        graph.profile.origin.scheme == "http" &&
+                        AddressRules.isLoopback(graph.profile.origin.host) &&
+                        graph.profile.origin.port == PhoneServerScripts.PORT &&
+                        stores.profiles.profile(profile) != null
+                // The phone agents' helper: the phone it belongs to must be the saved app-owned server.
+                else ->
+                    stores.profiles.profile(phone)?.profile?.baseUrl?.let(
+                        io.github.eslamasabry.oc.engine.runtime.switching.ManagedLocalServer::isBuiltin
+                    ) == true
+            }
         } catch (_: Exception) {
             false
         }

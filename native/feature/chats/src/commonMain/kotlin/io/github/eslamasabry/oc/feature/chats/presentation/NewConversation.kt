@@ -75,6 +75,12 @@ public data class NewConversationProject(
  */
 public enum class PhoneStorageAccess { Off, On }
 
+/** One folder of the phone's storage, for the folder list under the Phone storage row. */
+public data class StorageFolder(val name: String, val path: String)
+
+/** The phone's storage as agents on this phone see it: where the Phone storage folder list starts. */
+public const val PHONE_STORAGE_ROOT: String = "/storage/emulated/0"
+
 /**
  * Issue 147: a folder in this phone's storage, as the phone's Linux side that will work in it finds it (the phone's own
  * OpenCode, or the helper that runs the phone's agents), checked when the folder is chosen and before the first
@@ -197,6 +203,14 @@ public interface NewConversationHost {
 
     /** Opens Android's page for All files access. A request to the person, never a grant; the answer is read on return. */
     public suspend fun requestPhoneStorage(profile: ProfileId): Outcome<Unit> =
+        Outcome.Failed(Failure.Unavailable(FeatureId("phoneStorage")))
+
+    /** The folders inside [path] in the phone's storage (the Phone storage folder list). */
+    public suspend fun storageFolders(path: String): Outcome<List<StorageFolder>> =
+        Outcome.Failed(Failure.Unavailable(FeatureId("phoneStorage")))
+
+    /** Makes folder [name] inside [parent] in the phone's storage; the answer is the new folder's path. */
+    public suspend fun createStorageFolder(parent: String, name: String): Outcome<String> =
         Outcome.Failed(Failure.Unavailable(FeatureId("phoneStorage")))
 
     /**
@@ -532,6 +546,11 @@ public data class NewConversationUi(
     val canCreateProject: Boolean = false,
     /** This phone's storage access, read when the project sheet opens and when the page comes back; null: not offered. */
     val phoneStorage: PhoneStorageAccess? = null,
+    /** The Phone storage folder list: the folder it shows (null: closed), its rows and what it waits on. */
+    val storagePath: String? = null,
+    val storageFolders: List<StorageFolder> = emptyList(),
+    val storageLoading: Boolean = false,
+    val storageFailure: Failure? = null,
     /** The New project name dialog is open. */
     val askingProjectName: Boolean = false,
     val creatingProject: Boolean = false,
@@ -726,6 +745,19 @@ public interface NewConversationActions {
 
     /** The project sheet's Phone storage row without access: opens Android's page for it. */
     public fun requestPhoneStorage() {}
+
+    /** The Phone storage row with access: opens the folder list of phone storage. */
+    public fun browsePhoneStorage() {}
+
+    public fun enterStorageFolder(path: String) {}
+
+    public fun closeStorageFolders() {}
+
+    /** Uses the folder shown as the project (never the storage root itself). */
+    public fun useStorageFolder() {}
+
+    /** New folder inside the folder shown: asks for its name. */
+    public fun askNewStorageFolder() {}
 
     /**
      * The sentence "this agent works only in the projects on this phone": with none to choose it asks for a new
@@ -1429,6 +1461,70 @@ public class NewConversationViewModel(
         }
     }
 
+    private var storageRun = 0
+
+    override fun browsePhoneStorage() {
+        if (mutable.value.phoneStorage != PhoneStorageAccess.On) return
+        enterStorageFolder(PHONE_STORAGE_ROOT)
+    }
+
+    override fun enterStorageFolder(path: String) {
+        if (path != PHONE_STORAGE_ROOT && !path.startsWith("$PHONE_STORAGE_ROOT/")) return
+        if (path.split('/').any { it == ".." }) return
+        val run = ++storageRun
+        mutable.update {
+            it.copy(storagePath = path, storageFolders = emptyList(), storageLoading = true, storageFailure = null)
+        }
+        viewModelScope.launch {
+            val listed = host.storageFolders(path)
+            if (run != storageRun) return@launch
+            mutable.update {
+                when (listed) {
+                    is Outcome.Ok -> it.copy(storageFolders = listed.value, storageLoading = false)
+                    is Outcome.Failed -> it.copy(storageFailure = listed.failure, storageLoading = false)
+                }
+            }
+        }
+    }
+
+    override fun closeStorageFolders() {
+        storageRun++
+        mutable.update {
+            it.copy(storagePath = null, storageFolders = emptyList(), storageLoading = false, storageFailure = null, askingProjectName = false)
+        }
+    }
+
+    override fun useStorageFolder() {
+        val shown = mutable.value
+        val path = shown.storagePath ?: return
+        if (path == PHONE_STORAGE_ROOT || shown.storageLoading || shown.storageFailure != null) return
+        closeStorageFolders()
+        chooseDirectory(path)
+    }
+
+    override fun askNewStorageFolder() {
+        val shown = mutable.value
+        if (shown.storagePath == null || shown.storageLoading || shown.creatingProject) return
+        mutable.update { it.copy(askingProjectName = true, projectFailure = null) }
+    }
+
+    private fun createStorageFolder(parent: String, name: String) {
+        val folder = io.github.eslamasabry.oc.engine.agents.workspace.ProjectFolderName.validated(name) ?: return
+        mutable.update { it.copy(askingProjectName = false, creatingProject = true, projectFailure = null) }
+        viewModelScope.launch {
+            val made = host.createStorageFolder(parent, folder)
+            mutable.update { it.copy(creatingProject = false) }
+            when (made) {
+                is Outcome.Ok -> {
+                    // A new folder is meant as the project: one flow from the row to a usable folder.
+                    closeStorageFolders()
+                    chooseDirectory(made.value)
+                }
+                is Outcome.Failed -> mutable.update { it.copy(projectFailure = made.failure) }
+            }
+        }
+    }
+
     override fun chooseProjectForAgent() {
         val shown = mutable.value
         val profile = shown.profile ?: return
@@ -1446,6 +1542,7 @@ public class NewConversationViewModel(
             return
         }
         if (shown.creatingProject) return
+        shown.storagePath?.let { return createStorageFolder(it, name) }
         val folder = io.github.eslamasabry.oc.engine.agents.workspace.ProjectFolderName.validated(name) ?: return
         mutable.update { it.copy(askingProjectName = false, creatingProject = true, projectFailure = null) }
         viewModelScope.launch {

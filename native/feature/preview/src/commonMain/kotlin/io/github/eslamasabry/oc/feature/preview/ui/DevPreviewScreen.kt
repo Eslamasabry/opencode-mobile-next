@@ -55,6 +55,7 @@ import io.github.eslamasabry.oc.ui.kitchat.composer.KitVoiceField
 import io.github.eslamasabry.oc.ui.kitchat.header.KitChatMoreMenu
 import io.github.eslamasabry.oc.ui.kitchat.header.KitClipboardEffect
 import io.github.eslamasabry.oc.ui.kitchat.header.rememberKitMask
+import io.github.eslamasabry.oc.ui.kit.state.kitGroundBackdrop
 import io.github.eslamasabry.oc.ui.words.res.*
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.devPreviewAddress
@@ -172,41 +173,35 @@ public fun DevPreviewScreen(
                                     KitChatMoreMenu(
                                         label = stringResource(Res.string.kitTopBarMore),
                                         expanded = state.menu,
+                                        // The bar's words never fit at 360 dp beside the title: Refresh, Open in browser and
+                                        // Details all live in its menu.
                                         items =
-                                            listOf(
-                                                KitMenuItem(
-                                                    label =
-                                                        stringResource(
-                                                            Res.string.devPreviewDetails
-                                                        ),
-                                                    onSelect = { actions.showDetails(true) },
+                                            buildList {
+                                                if (showing)
+                                                    add(
+                                                        KitMenuItem(
+                                                            label = reload,
+                                                            onSelect = { handle.reload() },
+                                                        )
+                                                    )
+                                                add(
+                                                    KitMenuItem(
+                                                        label = browser,
+                                                        onSelect = actions::openInBrowser,
+                                                    )
                                                 )
-                                            ),
+                                                add(
+                                                    KitMenuItem(
+                                                        label = stringResource(Res.string.devPreviewDetails),
+                                                        onSelect = { actions.showDetails(true) },
+                                                    )
+                                                )
+                                            },
                                         onOpen = { actions.menu(true) },
                                         onDismissRequest = { actions.menu(false) },
                                     )
                                 })
                             else null,
-                        actions =
-                            if (origin == null) emptyList()
-                            else
-                                buildList {
-                                    if (showing)
-                                        add(
-                                            KitLineAction(
-                                                reload,
-                                                { handle.reload() },
-                                                testTag = "dev-preview-reload",
-                                            )
-                                        )
-                                    add(
-                                        KitLineAction(
-                                            browser,
-                                            actions::openInBrowser,
-                                            testTag = "dev-preview-browser",
-                                        )
-                                    )
-                                },
                     )
                 },
                 loading = showing && state.phase == PagePhase.Loading,
@@ -285,6 +280,7 @@ public fun DevPreviewScreen(
                                     )
                                 }
                                 if (state.phase == PagePhase.Failed) {
+                                    // Our calm page only: the web view's own error page never shows through it.
                                     KitStateView(
                                         kind = KitStateKind.Error,
                                         title = stringResource(Res.string.devPreviewFailedTitle),
@@ -298,7 +294,7 @@ public fun DevPreviewScreen(
                                                 stringResource(Res.string.devPreviewRetry),
                                                 { handle.reload() },
                                             ),
-                                        modifier = Modifier.fillMaxSize(),
+                                        modifier = Modifier.fillMaxSize().kitGroundBackdrop(),
                                     )
                                 }
                             }

@@ -92,6 +92,14 @@ class NewConversationPhoneAgentTest {
             storageRequests++
             return Outcome.Ok(Unit)
         }
+        val storageTree = mutableMapOf("/storage/emulated/0" to listOf("Documents", "Download"), "/storage/emulated/0/Documents" to emptyList<String>())
+        val madeFolders = mutableListOf<Pair<String, String>>()
+        override suspend fun storageFolders(path: String): Outcome<List<io.github.eslamasabry.oc.feature.chats.presentation.StorageFolder>> =
+            Outcome.Ok(storageTree[path].orEmpty().map { io.github.eslamasabry.oc.feature.chats.presentation.StorageFolder(it, "$path/$it") })
+        override suspend fun createStorageFolder(parent: String, name: String): Outcome<String> {
+            madeFolders += parent to name
+            return Outcome.Ok("$parent/$name")
+        }
         var projectList = emptyList<NewConversationProject>()
         val chosen = mutableListOf<Pair<ProfileId, String?>>()
         val savedModels = mutableListOf<Triple<ProfileId, String, ModelRef?>>()
@@ -479,6 +487,34 @@ class NewConversationPhoneAgentTest {
         val remote = vm(Host())
         remote.sheet(NewConversationSheet.Projects)
         assertEquals(null, remote.state.value.phoneStorage)
+    }
+
+    @Test
+    fun `I147-PHONE-STORAGE Phone storage leads to a folder list and ends with a usable project folder for a phone agent`() {
+        val host = Host()
+        host.storage = PhoneStorageAccess.On
+        val vm = vm(host)
+        vm.choosePhoneAgent("claude")
+        vm.sheet(NewConversationSheet.Projects)
+        vm.browsePhoneStorage()
+        assertEquals("/storage/emulated/0", vm.state.value.storagePath)
+        assertEquals(listOf("Documents", "Download"), vm.state.value.storageFolders.map { it.name })
+        vm.useStorageFolder()
+        assertEquals("/storage/emulated/0", vm.state.value.storagePath, "the storage root itself is never the project")
+        vm.enterStorageFolder("/storage/emulated/0/Documents")
+        vm.askNewStorageFolder()
+        assertTrue(vm.state.value.askingProjectName)
+        vm.createProject("site")
+        assertEquals(listOf("/storage/emulated/0/Documents" to "site"), host.madeFolders)
+        assertEquals("/storage/emulated/0/Documents/site", vm.state.value.directory)
+        assertNull(vm.state.value.storagePath)
+        assertFalse(vm.state.value.phoneNeedsProjectsFolder, "a folder made in phone storage is a project for the agent")
+        // An existing folder can be chosen as it is.
+        vm.sheet(NewConversationSheet.Projects)
+        vm.browsePhoneStorage()
+        vm.enterStorageFolder("/storage/emulated/0/Documents")
+        vm.useStorageFolder()
+        assertEquals("/storage/emulated/0/Documents", vm.state.value.directory)
     }
 
     // ---- Owner 11-12 on the phone (Paseo helper): thinking effort, a list being read, the last known list

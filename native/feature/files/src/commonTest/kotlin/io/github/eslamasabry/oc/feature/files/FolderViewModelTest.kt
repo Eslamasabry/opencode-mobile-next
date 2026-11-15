@@ -10,6 +10,7 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -36,6 +37,50 @@ class FolderViewModelTest {
             "secret" to listOf(FileNode(".env", "secret/.env", false)),
             "empty" to emptyList(),
         )
+
+    private class PhoneAccess(var block: io.github.eslamasabry.oc.feature.files.presentation.FilesStorageBlock?) :
+        io.github.eslamasabry.oc.feature.files.presentation.FilesStorageAccess {
+        var requests = 0
+
+        override suspend fun block(ref: io.github.eslamasabry.oc.core.common.ids.ConversationRef, directory: String?) =
+            io.github.eslamasabry.oc.feature.files.presentation.FilesStorageBlock.None
+
+        override suspend fun request(
+            ref: io.github.eslamasabry.oc.core.common.ids.ConversationRef,
+            directory: String?,
+            block: io.github.eslamasabry.oc.feature.files.presentation.FilesStorageBlock,
+        ) = io.github.eslamasabry.oc.feature.files.presentation.FilesStorageResult.Failed
+
+        override suspend fun phoneStorage(ref: io.github.eslamasabry.oc.core.common.ids.ConversationRef) = block
+
+        override suspend fun requestPhoneStorage(ref: io.github.eslamasabry.oc.core.common.ids.ConversationRef): io.github.eslamasabry.oc.feature.files.presentation.FilesStorageResult {
+            requests++
+            return io.github.eslamasabry.oc.feature.files.presentation.FilesStorageResult.Cancelled
+        }
+    }
+
+    @Test
+    fun `I147-PHONE-STORAGE the project's top folder offers Phone storage on a phone connection, and asks Android once`() =
+        runTest {
+            val off = io.github.eslamasabry.oc.feature.files.presentation.FilesStorageBlock.AppPermission
+            val access = PhoneAccess(off)
+            fun model(path: String, a: PhoneAccess?) =
+                FolderViewModel(
+                    FilesRoute.Folder(conversation, path),
+                    FakeConnections(FakeFileGateway(tree)),
+                    StackNavigator(ChatRoute(conversation)),
+                    emptySet(),
+                    FakeMentions(),
+                    setOfNotNull(a),
+                )
+            val top = model("", access)
+            assertEquals(off, top.state.value.phoneStorage)
+            top.allowPhoneStorage()
+            assertEquals(1, access.requests)
+            assertNull(model("lib", access).state.value.phoneStorage, "only at the project's top folder")
+            assertNull(model("", null).state.value.phoneStorage, "a connection that is not this phone's has no row")
+            assertNull(model("", PhoneAccess(null)).state.value.phoneStorage)
+        }
 
     private fun vm(path: String = "", connections: FakeConnections = FakeConnections(FakeFileGateway(tree))) =
         FolderViewModel(

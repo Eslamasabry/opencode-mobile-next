@@ -91,6 +91,8 @@ public data class FolderUi(
     val requestingStorage: Boolean = false,
     val confirmingStorage: Boolean = false,
     val storageResult: FilesStorageResult? = null,
+    /** The Phone storage row at the project's top folder: null = not offered; None = access is on. */
+    val phoneStorage: FilesStorageBlock? = null,
     val actionFailure: Failure? = null,
     val canTerminal: Boolean = false,
     /** Running terminals of this project, for the Terminal action's words; null while unknown. */
@@ -175,6 +177,9 @@ public interface FolderActions {
     public fun addReference() {}
 
     public fun allowStorage() {}
+
+    /** The Phone storage row without access: opens Android's page for it. */
+    public fun allowPhoneStorage() {}
 
     public fun openPhone() {}
 
@@ -348,6 +353,7 @@ public class FolderViewModel(
                             }
                             loadChanges(mine)
                             checkStorage(mine, gateway)
+                            readPhoneStorage(mine, gateway)
                         }
                     }
                 }
@@ -665,6 +671,34 @@ public class FolderViewModel(
             local.update { it.copy(storageBlock = block) }
     }
 
+    private suspend fun readPhoneStorage(
+        mine: Int,
+        gateway: io.github.eslamasabry.oc.core.domain.FileGateway,
+    ) {
+        val ref = ref ?: return
+        val access = storageAccess.singleOrNull() ?: return
+        val top = FilePaths.normalize(route.path).let { it.isEmpty() || it == "/" || it == "." }
+        if (!top) return
+        val block = access.phoneStorage(ref)
+        if (mine == loads && files.isCurrent(gateway)) local.update { it.copy(phoneStorage = block) }
+    }
+
+    override fun allowPhoneStorage() {
+        val ref = ref ?: return
+        val access = storageAccess.singleOrNull() ?: return
+        if (local.value.phoneStorage == null || local.value.phoneStorage == FilesStorageBlock.None) return
+        viewModelScope.launch {
+            // Android's page opens over the app; the answer is read while the person is there and on return.
+            access.requestPhoneStorage(ref)
+            repeat(PHONE_STORAGE_POLLS) {
+                kotlinx.coroutines.delay(PHONE_STORAGE_POLL_MS)
+                val now = access.phoneStorage(ref)
+                local.update { it.copy(phoneStorage = now) }
+                if (now == FilesStorageBlock.None || now == null) return@launch
+            }
+        }
+    }
+
     override fun allowStorage() {
         if (local.value.storageBlock == FilesStorageBlock.AppPermission)
             local.update { it.copy(confirmingStorage = true) }
@@ -800,3 +834,6 @@ internal fun projectFolderName(directory: String?): String? =
     directory?.trim()?.trimEnd('/', '\\')?.substringAfterLast('/')?.substringAfterLast('\\')?.takeIf {
         it.isNotEmpty() && !it.endsWith(':')
     }
+
+private const val PHONE_STORAGE_POLLS = 30
+private const val PHONE_STORAGE_POLL_MS = 2_000L
