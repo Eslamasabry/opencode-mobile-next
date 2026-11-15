@@ -341,7 +341,7 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                     // Issue 147: the folder in phone storage is not ready for the side that will work in it. Said before
                     // Start, with the way forward; the message is never sent into another folder.
                     if (phoneFolderWords != null && !state.deliveryUnconfirmed) {
-                      NoticeInView(phoneFolderWords + state.phoneFolder.name) {
+                      NoticeInView(phoneFolderWords + state.phoneFolder?.name) {
                         KitNotice(phoneFolderWords, inset)
                         val fix =
                             when (state.phoneFolder) {
