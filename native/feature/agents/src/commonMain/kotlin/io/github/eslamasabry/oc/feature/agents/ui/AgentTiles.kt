@@ -21,8 +21,10 @@ import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentInstallPhase
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentInstallStep
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentRow
 import io.github.eslamasabry.oc.feature.agents.hub.agentTile
+import io.github.eslamasabry.oc.feature.agents.hub.installed
 import io.github.eslamasabry.oc.feature.agents.hub.phoneInstalledAgents
 import io.github.eslamasabry.oc.ui.design.color.StatusTone
+import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.kit.KitAction
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.agent.KitAgentTile
@@ -39,6 +41,9 @@ import io.github.eslamasabry.oc.ui.kit.state.KitProgress
 import io.github.eslamasabry.oc.ui.kit.state.KitProgressView
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.agentsOwnProviderAction
+import io.github.eslamasabry.oc.ui.words.res.agentsOwnProviderChange
+import io.github.eslamasabry.oc.ui.words.res.agentsOwnProviderInUse
 import io.github.eslamasabry.oc.ui.words.res.agentsChecking
 import io.github.eslamasabry.oc.ui.words.res.agentsChipSignIn
 import io.github.eslamasabry.oc.ui.words.res.agentsFailArchitecture
@@ -403,7 +408,13 @@ private fun connectFailureWords(failure: Failure?): String =
  * a notice floating over the page.
  */
 @Composable
-internal fun PhoneAgentSheet(state: AgentsUi, actions: AgentsActions, enabled: KitEnabled) {
+internal fun PhoneAgentSheet(
+    state: AgentsUi,
+    actions: AgentsActions,
+    enabled: KitEnabled,
+    own: io.github.eslamasabry.oc.feature.agents.hub.OwnProviderUi? = null,
+    ownActions: io.github.eslamasabry.oc.feature.agents.hub.OwnProviderActions? = null,
+) {
     val agent = state.sheetAgent?.let { id -> state.phone.agents.firstOrNull { it.id == id } }
     val tile = agent?.let { tileOf(it, state) }
     val working = KitEnabled.Disabled(stringResource(Res.string.serversWorking))
@@ -476,6 +487,21 @@ internal fun PhoneAgentSheet(state: AgentsUi, actions: AgentsActions, enabled: K
         tertiary =
             buildList {
                 val a = agent ?: return@buildList
+                // Issue 147: an installed agent that takes an own provider offers it here, beside its sign-in.
+                if (ownActions != null && own != null && a.id in own.supported && a.status.installed)
+                    add(
+                        KitAction(
+                            stringResource(
+                                if (a.id in own.saved) Res.string.agentsOwnProviderChange
+                                else Res.string.agentsOwnProviderAction
+                            ),
+                            {
+                                actions.closeAgent()
+                                ownActions.openOwnProvider(a.id)
+                            },
+                            enabled = can,
+                        )
+                    )
                 if (a.signOutAvailable)
                     add(KitAction(stringResource(Res.string.agentsSignOutAction, a.name), { actions.requestSignOut(a.id) }, enabled = can))
                 if (a.previousVersionAvailable)
@@ -528,6 +554,10 @@ internal fun PhoneAgentSheet(state: AgentsUi, actions: AgentsActions, enabled: K
             tile.state == AgentTileState.Unavailable && tile.agent.signInUnchecked ->
                 KitText(stringResource(Res.string.agentsSignInUncheckedBody))
             else -> Unit
+        }
+        // Which provider it uses, when it is the person's own (never the key).
+        own?.saved?.get(tile.agent.id)?.let { saved ->
+            KitText(stringResource(Res.string.agentsOwnProviderInUse, saved.endpoint), tone = TextTone.Secondary)
         }
         }
     }

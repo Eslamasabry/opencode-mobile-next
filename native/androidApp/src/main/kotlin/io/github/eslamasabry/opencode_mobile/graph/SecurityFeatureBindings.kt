@@ -61,6 +61,9 @@ object SecurityFeatureBindings {
             // AGENT-2: the phone helper's secret, collector rules, widget routing and monitor consent
             // (moved here from PreviewRuntime's local scope; the rest of its list is registered above).
             registerSecret("oc.agentHostSecret.", ":engine:agents")
+            // Issue 147: a person's own provider for a phone agent (key in secure storage, endpoint and model here).
+            OwnProviderSweep.register(this)
+            OwnAgentSweep.register(this)
             io.github.eslamasabry.oc.engine.integrations.quota.CollectorRules.register(this)
             register(
                 KeyShape(
