@@ -18,14 +18,21 @@ internal fun withFeedRows(
     feed: List<ChatFeedItem>,
     profile: ProfileId,
     query: String,
+    /** This phone's agents' helper connection (`<phone>-agents`), whose rows belong to the phone; null elsewhere. */
+    helper: ProfileId? = null,
 ): SearchConversationPage {
     val have = page.items.mapTo(HashSet()) { it.id }
     val extra =
         feed
-            .filter { it.profileId == profile && !it.isSubagent && it.sessionId !in have }
+            .filter { (it.profileId == profile || it.profileId == helper) && !it.isSubagent && it.sessionId !in have }
             .filter { !page.titlesMatched || SearchMatch.titleMatches(it.title, query) }
             .distinctBy { it.sessionId }
-            .map { SearchConversation(it.sessionId, it.title, it.directory, it.lastActivityMs.takeIf { ms -> ms > 0 }) }
+            .map {
+                SearchConversation(
+                    it.sessionId, it.title, it.directory, it.lastActivityMs.takeIf { ms -> ms > 0 },
+                    owner = it.profileId.takeIf { id -> id != profile },
+                )
+            }
     if (extra.isEmpty()) return page
     val merged = (page.items + extra).sortedByDescending { it.updatedMs ?: 0L }
     return page.copy(items = merged.toImmutableList())
