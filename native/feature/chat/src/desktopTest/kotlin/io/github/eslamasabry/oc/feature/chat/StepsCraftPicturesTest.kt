@@ -114,7 +114,7 @@ class StepsCraftPicturesTest {
     private fun ComposeUiTest.screen(
         look: Look,
         running: Boolean,
-        motion: MotionLevel = MotionLevel.Full,
+        motion: () -> MotionLevel = { MotionLevel.Full },
         arrived: () -> Boolean = { false },
     ) {
         val scene = ChatScene()
@@ -122,7 +122,7 @@ class StepsCraftPicturesTest {
             KitAppearance(
                 style = look.style,
                 mode = if (look.dark) AppearanceMode.Dark else AppearanceMode.Light,
-                motion = motion,
+                motion = motion(),
                 liveBackground = look.live != null,
                 liveStyle = look.live ?: "aurora",
             )
@@ -148,7 +148,8 @@ class StepsCraftPicturesTest {
             // by the Solid pictures and the strips.
             val quick = look.style == Style.Glass && moment == Moment.Opened
             val settle = if (quick) QUICK_SETTLE else SETTLE
-            screen(look, running = moment == Moment.Running, motion = if (quick) MotionLevel.Off else MotionLevel.Full)
+            var motion by mutableStateOf(if (quick) MotionLevel.Off else MotionLevel.Full)
+            screen(look, running = moment == Moment.Running, motion = { motion })
             mainClock.advanceTimeBy(settle)
             if (moment == Moment.Opened) {
                 // The turn's row stays under the finger (P-010) and its steps open below it, the reply going on below.
@@ -160,6 +161,12 @@ class StepsCraftPicturesTest {
                 mainClock.advanceTimeBy(settle)
                 tap("chat-step-run-c3")
                 mainClock.advanceTimeBy(settle)
+                // With motion off Glass has no lens (the bar and the message box are flat): the picture is of Glass, so
+                // motion comes back on once everything is in place, and the lens gets a few frames to appear.
+                if (quick) {
+                    motion = MotionLevel.Full
+                    mainClock.advanceTimeBy(LENS_SETTLE)
+                }
             }
             // The running step's light, part-way round its node.
             if (moment == Moment.Running) mainClock.advanceTimeBy(LIGHT_MID)
@@ -309,6 +316,9 @@ class StepsCraftPicturesTest {
 
         /** Six frames: enough for a scene with motion off to lay out, draw and settle its scroll. */
         const val QUICK_SETTLE = 96L
+
+        /** Twenty frames for the lens to come back once motion is on again. */
+        const val LENS_SETTLE = 320L
         const val LIGHT_MID = 1100L
 
         /** More than the touch slop (8 dp at 2.625 px/dp), crossed before a drag scrolls. */
