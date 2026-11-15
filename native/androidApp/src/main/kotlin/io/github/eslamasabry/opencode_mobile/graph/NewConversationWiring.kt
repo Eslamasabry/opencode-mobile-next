@@ -544,7 +544,15 @@ class AndroidNewConversationHost(
         val offer = PhoneChatAgents.offer(facts, selected)
         return NewConversationPhone(
             helper = helper,
-            choices = offer.choices.map { NewConversationPhoneAgent(it.id.raw, it.name, it.iconKey) },
+            choices =
+                offer.choices.map {
+                    NewConversationPhoneAgent(
+                        it.id.raw,
+                        it.name,
+                        it.iconKey,
+                        setUpAtFirstUse = it.id.raw in NewConversationPhoneRules.setUpAtFirstUse(state),
+                    )
+                },
             needsSetup =
                 offer.needsSetup.map {
                     NewConversationPhoneAgent(it.id.raw, it.name, it.iconKey, checking = it.checking)
@@ -1555,6 +1563,10 @@ internal object NewConversationPhoneRules {
                 checking = updating,
             )
         }
+
+    /** The agents the Agents page words "Installed. Set it up the first time you use it." (status, not the seen fact). */
+    fun setUpAtFirstUse(state: PhoneAgentsState): Set<String> =
+        state.agents.filter { it.status == PhoneAgentStatus.SetUpAtFirstUse }.map { it.id }.toSet()
 
     /**
      * The Agents card's own rule ([phoneAgentStartsConversation]), so the card's New conversation and this list agree,

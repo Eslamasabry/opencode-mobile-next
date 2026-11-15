@@ -91,6 +91,8 @@ public data class NewConversationPhoneAgent(
     val name: String,
     val iconKey: String,
     val checking: Boolean = false,
+    /** Installed, but the app cannot read its sign-in: the Agents page says "Set it up the first time you use it". */
+    val setUpAtFirstUse: Boolean = false,
 )
 
 /**

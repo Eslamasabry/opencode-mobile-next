@@ -615,7 +615,11 @@ private fun NewConversationAgentStep(state: NewConversationUi, actions: NewConve
                 leading = KitRowLeading.Logo(agent.iconKey, agent.name, agent = true),
                 selected = state.phoneAgent == agent.id,
                 trailing = if (state.phoneAgent == agent.id) KitRowTrailing.Check else KitRowTrailing.None,
-                supporting = stringResource(Res.string.upgradeAgentReady),
+                // The Agents page's own words: an agent whose sign-in no check can read is "Ready" only by its first answer.
+                supporting =
+                    stringResource(
+                        if (agent.setUpAtFirstUse) Res.string.agentsStateSetUpAtFirstUse else Res.string.upgradeAgentReady
+                    ),
                 onClick = { actions.choosePhoneAgent(agent.id) },
                 modifier = Modifier.testTag("chats-new-agent-${agent.id}"),
             )
