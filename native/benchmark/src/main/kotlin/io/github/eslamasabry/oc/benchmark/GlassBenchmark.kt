@@ -21,7 +21,7 @@ private const val GLASS = "io.github.eslamasabry.opencode_mobile.proof.GlassProo
 class GlassBenchmark {
     @get:Rule val rule = MacrobenchmarkRule()
 
-    private fun scroll(look: String, scene: String, liquid: String = "") =
+    private fun scroll(look: String, scene: String, liquid: String = "", glass: String = "") =
         rule.measureRepeated(
             packageName = PKG_NATIVE,
             metrics = listOf(FrameTimingMetric()),
@@ -35,7 +35,7 @@ class GlassBenchmark {
                 device.executeShellCommand("settings put global window_animation_scale 1")
                 killProcess()
                 startActivityAndWait(
-                    Intent().setClassName(PKG_NATIVE, GLASS).putExtra("look", look).putExtra("scene", scene).putExtra("liquid", liquid),
+                    Intent().setClassName(PKG_NATIVE, GLASS).putExtra("look", look).putExtra("scene", scene).putExtra("liquid", liquid).putExtra("glass", glass),
                 )
                 check(device.wait(Until.hasObject(By.text("Ready")), 30_000)) { "not ready" }
                 Thread.sleep(1_500) // let the page settle (first frames, the bar's liquid face)
@@ -93,6 +93,26 @@ class GlassBenchmark {
     @Test fun joinMenuGlass() = scroll("glass", "join-menu")
 
     @Test fun joinMenuGlassAurora() = scroll("glass-aurora", "join-menu")
+
+    /**
+     * Live glass (reports/live-glass.md), the same build A against B: the bar's menu turned round mid-way (opened, closed
+     * 120 ms later, reopened 100 ms later, left open, closed; eight times) over syntax-coloured code and a bright
+     * picture, still and while the transcript scrolls, with today's join and with the Glass lab's "Lens through motion"
+     * on (`Live`). Pass: the live run no worse than today's on frames more than one vsync late and on frame overrun P90.
+     */
+    @Test fun joinMenuReverseGlass() = scroll("glass", "join-menu-reverse")
+
+    @Test fun joinMenuReverseGlassLive() = scroll("glass", "join-menu-reverse", glass = "live")
+
+    @Test fun joinMenuScrollGlass() = scroll("glass", "join-menu-scroll")
+
+    @Test fun joinMenuScrollGlassLive() = scroll("glass", "join-menu-scroll", glass = "live")
+
+    @Test fun joinMenuReverseGlassAurora() = scroll("glass-aurora", "join-menu-reverse")
+
+    @Test fun joinMenuReverseGlassAuroraLive() = scroll("glass-aurora", "join-menu-reverse", glass = "live")
+
+    @Test fun joinMenuGlassLive() = scroll("glass", "join-menu", glass = "live")
 }
 
 private const val PKG_NATIVE = "io.github.eslamasabry.opencode_mobile.native"

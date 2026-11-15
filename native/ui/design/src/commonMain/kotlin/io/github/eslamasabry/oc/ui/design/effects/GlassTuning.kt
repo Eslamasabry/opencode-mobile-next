@@ -120,6 +120,12 @@ public data class GlassKnobs(
      */
     val pageKeepDp: Float = 0f,
     val pageFadeDp: Float = 0f,
+    /**
+     * The Glass lab's A/B for the bar's ⋯ menu joined to the bar (live glass, first build): 0 draws today's join, 1 the
+     * live one, whose shape, bend, blur, tint and rows all follow one progress on one spring (the kit's
+     * `KitLiquidJoinLive.kt`). Menu only; shipped 0, so an untouched tuning draws exactly today's glass.
+     */
+    val liveMotion: Float = 0f,
 )
 
 /** One slider of the lab: its words, its unit, its range and step, and the knob it moves. */
@@ -180,6 +186,8 @@ public enum class GlassKnob(
     // The page behind a modal pane: only a band along its open edges, so nothing behind reads in its middle.
     PageKeep("pagekeep", "Page kept along the open edge", "dp in from the edge", 0f, 120f, 1f, GLASS_PAGE_GROUP, { it.pageKeepDp }, { k, v -> k.copy(pageKeepDp = v) }, kinds = MODAL_KINDS),
     PageFade("pagefade", "Page fading out past it", "dp", 0f, 64f, 1f, GLASS_PAGE_GROUP, { it.pageFadeDp }, { k, v -> k.copy(pageFadeDp = v) }, kinds = MODAL_KINDS),
+    // Live glass A/B (the bar's menu): 0 today's join, 1 the live one.
+    LiveMotion("live", "Lens through motion", "0 today, 1 live (the bar's menu)", 0f, 1f, 1f, "Join", { it.liveMotion }, { k, v -> k.copy(liveMotion = v) }, kinds = setOf(GlassPaneKind.Menu)),
     ;
 
     /** Whether this knob changes [kind]'s glass (the lab shows it for that kind, or for all kinds linked when null). */

@@ -6,6 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.gestures.scrollBy
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -27,7 +28,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.unit.dp
+import io.github.eslamasabry.oc.ui.design.effects.GlassKnob
+import io.github.eslamasabry.oc.ui.design.effects.GlassPaneKind
+import io.github.eslamasabry.oc.ui.design.effects.GlassTuning
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.effects.LiquidRole
 import io.github.eslamasabry.oc.ui.design.style.Style
@@ -57,12 +63,20 @@ import io.github.eslamasabry.oc.ui.kit.platform.AndroidKitPlatform
 import io.github.eslamasabry.oc.ui.kit.platform.KitPlatform
 import io.github.eslamasabry.oc.ui.kit.platform.KitSystemSignals
 import io.github.eslamasabry.oc.ui.kit.platform.LocalKitPlatform
+import io.github.eslamasabry.oc.ui.kit.content.image.KitImage
+import io.github.eslamasabry.oc.ui.kit.content.image.KitImageSource
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitMotion
+import io.github.eslamasabry.oc.ui.kitchat.code.CodeLanguage
+import io.github.eslamasabry.oc.ui.kitchat.code.KitCodeBlock
+import io.github.eslamasabry.oc.ui.kitchat.code.KitCodeKind
 import io.github.eslamasabry.oc.ui.routes.RouteMotion
 import io.github.eslamasabry.oc.ui.shell.nav.ShellMotion.forward
 import io.github.eslamasabry.oc.ui.shell.nav.ShellMotion.pop
 import io.github.eslamasabry.oc.ui.shell.nav.ShellMotionLevel
 import io.github.eslamasabry.opencode_mobile.graph.appGraph
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
@@ -75,7 +89,12 @@ import kotlinx.coroutines.flow.StateFlow
  * `push` (a second page pushed over the chat and popped again, eight times, with the shell's fade-forwards),
  * `join-pill` (the chat scrolling with the jump pill joined to the message box: joined glass,
  * docs/designs/liquid-merge-one-body.md) or `join-menu` (the bar's menu, joined to the bar, opened and closed eight
- * times). The benchmark taps Start and waits for Done.
+ * times). Live glass (reports/live-glass.md): `join-menu-reverse` (the bar's menu turned round mid-way: opened, closed
+ * 120 ms later, reopened 100 ms later, left open, closed; eight times) and `join-menu-scroll` (the same while the
+ * transcript scrolls), both over syntax-coloured code and a bright picture under the bar's end. `glass=live` switches
+ * the Glass lab's "Lens through motion" on (today's join otherwise: the same page, the same data); `slow=<n>` slows every
+ * kit animation n times (KitMotionState.debugTimeScale) for a slowed recording. The benchmark taps Start and waits for
+ * Done.
  */
 /** Scrolls by [total] px over [ms], one step per display frame (frame-driven: no animation scale applies). */
 private suspend fun LazyListState.glide(total: Float, ms: Long) {
@@ -100,15 +119,27 @@ class GlassProofActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         val look = intent.getStringExtra("look") ?: "glass-aurora"
         val scene = intent.getStringExtra("scene") ?: "list"
+        val live = intent.getStringExtra("glass") == "live"
+        val slow = intent.getStringExtra("slow")?.toFloatOrNull()?.coerceIn(1f, 20f) ?: 1f
         // `hold`: the menu scene opens the menu once and keeps it open (for a still screenshot of the look).
         hold = intent.getBooleanExtra("hold", false)
-        val appearance =
+        val base =
             when (look) {
                 "solid" -> KitAppearance()
                 "glass" -> KitAppearance(style = Style.Glass)
                 "glass-drift" -> KitAppearance(style = Style.Glass, liveBackground = true, liveStyle = "auroraImage")
                 else -> KitAppearance(style = Style.Glass, liveBackground = true, liveStyle = "aurora")
             }
+        // The Glass lab's A/B, worn as the app wears it (its "Use in the whole app" switch on).
+        val appearance =
+            if (!live) base
+            else
+                base.copy(
+                    glassTuning =
+                        GlassTuning.Shipped.with(GlassPaneKind.Menu, true, GlassKnob.LiveMotion, 1f)
+                            .with(GlassPaneKind.Menu, false, GlassKnob.LiveMotion, 1f)
+                            .copy(inApp = true)
+                )
         // Test Lab devices run with animations off; that would hold the kit's motion (and liquid glass) and end every
         // animation at once, so the page sees the system's animator scale as 1 and scrolls by frames, not animations.
         val android = AndroidKitPlatform(window.decorView)
@@ -124,7 +155,12 @@ class GlassProofActivity : ComponentActivity() {
         setContent {
             appGraph.kitChatEnvironment.Provide {
                 CompositionLocalProvider(LocalKitPlatform provides platform) {
-                    KitTheme(appearance) { if (scene == "push") Pushes() else Page(scene) }
+                    KitTheme(appearance) {
+                        val motion = LocalKitMotion.current
+                        CompositionLocalProvider(LocalKitMotion provides if (slow == 1f) motion else motion.copy(debugTimeScale = slow)) {
+                            if (scene == "push") Pushes() else Page(scene)
+                        }
+                    }
                 }
             }
         }
@@ -161,7 +197,35 @@ class GlassProofActivity : ComponentActivity() {
         var menu by remember { mutableStateOf(false) }
         LaunchedEffect(started) {
             if (!started || !runs) return@LaunchedEffect
-            if ((scene == "menu" || scene == "join-menu") && hold) {
+            if (scene == "join-menu-reverse" || scene == "join-menu-scroll") {
+                // Live glass: the bar's menu turned round mid-way, eight times (join-menu-scroll: while the transcript
+                // scrolls down and back at a reading speed, the whole time).
+                coroutineScope {
+                    val scrolling =
+                        if (scene == "join-menu-scroll")
+                            launch {
+                                while (true) {
+                                    list.glide(3_000f, 1_500)
+                                    list.glide(-3_000f, 1_500)
+                                }
+                            }
+                        else null
+                    repeat(8) {
+                        menu = true
+                        delay(120)
+                        menu = false
+                        delay(100)
+                        menu = true
+                        delay(900)
+                        menu = false
+                        delay(700)
+                    }
+                    scrolling?.cancel()
+                }
+                done = true
+                return@LaunchedEffect
+            }
+            if ((scene == "menu" || scene.startsWith("join-menu")) && hold) {
                 menu = true
                 delay(1_500)
                 done = true
@@ -197,7 +261,7 @@ class GlassProofActivity : ComponentActivity() {
             topBar = {
                 Box(Modifier.fillMaxWidth()) {
                     KitTopBar(if (done) "Done" else if (started) "Scrolling" else "Ready")
-                    if (scene == "join-menu") {
+                    if (scene.startsWith("join-menu")) {
                         KitMenu(
                             expanded = menu,
                             items = listOf(KitMenuItem("Find", {}), KitMenuItem("Rename conversation", {}), KitMenuItem("Fork conversation", {}), KitMenuItem("Copy transcript", {})),
@@ -242,6 +306,18 @@ class GlassProofActivity : ComponentActivity() {
                             }
                         }
                     }
+                    if (scene == "join-menu-reverse" || scene == "join-menu-scroll") {
+                        // A bright picture under the bar's end and the menu, then syntax-coloured code: what the lens,
+                        // the knee and the words must hold.
+                        item(key = "picture", contentType = "picture") {
+                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                                KitImage(KitImageSource.Loader("bright") { brightPicture() }, null, width = 220.dp, height = 260.dp)
+                            }
+                        }
+                        items(40, key = { "code$it" }, contentType = { "code" }) {
+                            KitCodeBlock(PROOF_CODE, KitCodeKind.Code, Modifier.padding(horizontal = 16.dp, vertical = 6.dp), language = CodeLanguage.Kotlin, showWrapToggle = false)
+                        }
+                    }
                     items(200, key = { it }, contentType = { "row" }) { i ->
                         if (scene != "list") {
                             KitText(
@@ -267,4 +343,28 @@ class GlassProofActivity : ComponentActivity() {
             }
         }
     }
+}
+
+/** Syntax-coloured code for the live glass scenes. */
+private const val PROOF_CODE: String =
+    """fun parse(line: String): Block? {
+    val fence = "```"
+    if (line.isBlank()) return Block.Empty
+    for (i in 0 until line.length) push(line[i], depth + 1)
+    return Block(fence, "kotlin", 42)
+}"""
+
+/** A bright picture (a sun over a warm sky): the brightest thing that passes under the bar's end. */
+private fun brightPicture(): ImageBitmap {
+    val image = ImageBitmap(440, 520)
+    val canvas = androidx.compose.ui.graphics.Canvas(image)
+    val paint = androidx.compose.ui.graphics.Paint()
+    paint.shader =
+        androidx.compose.ui.graphics.RadialGradientShader(
+            androidx.compose.ui.geometry.Offset(300f, 180f),
+            420f,
+            listOf(Color.White, Color(0xFFFFF2B0), Color(0xFFFFB13B), Color(0xFFE0603A), Color(0xFF3A6EA5)),
+        )
+    canvas.drawRect(0f, 0f, 440f, 520f, paint)
+    return image
 }

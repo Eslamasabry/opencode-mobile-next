@@ -49,4 +49,9 @@ class GlassShots {
     @Test fun menuGlassFull() = shot("menu-glass-liquid-full", "glass", "menu", "--ez hold true --es liquid full", start = true)
 
     @Test fun menuSolid() = shot("menu-solid", "solid", "menu", "--ez hold true", start = true)
+
+    /** Live glass: the bar's menu open over the code and the bright picture, today's join and the live one. */
+    @Test fun joinMenuCodeGlass() = shot("join-menu-code-glass", "glass", "join-menu-reverse", "--ez hold true", start = true)
+
+    @Test fun joinMenuCodeGlassLive() = shot("join-menu-code-glass-live", "glass", "join-menu-reverse", "--ez hold true --es glass live", start = true)
 }
