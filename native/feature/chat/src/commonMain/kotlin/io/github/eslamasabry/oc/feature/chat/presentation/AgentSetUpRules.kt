@@ -20,7 +20,8 @@ internal object AgentSetUpRules {
      * - [runtimeId]: the conversation's own runtime (its provider id, from the gateway), never a reply row's.
      * - [firstMessage]: nothing in the conversation yet, so this send was to open it ([AgentFirstUse.Phase.StartConversation]);
      *   otherwise it answers a conversation that opened ([AgentFirstUse.Phase.FirstPrompt]).
-     * - [setUpDone]: the agent's set-up terminal ended, as known when this failure came.
+     * - [setUpDone]: the app had seen the agent set up (its set-up terminal ended, or it answered), as known when this
+     *   failure came.
      * - [setUpSinceFailure]: the person finished the set-up after this failure: the bubble goes back to its normal Try
      *   again, and the next failure's own text decides.
      *
@@ -67,6 +68,10 @@ internal object AgentSetUpRules {
     /** The catalog agent behind a conversation's runtime (the id its set-up terminal and set-up list use). */
     fun agentId(runtimeId: String, catalog: AgentCatalog = AgentCatalog.builtIn): String? =
         catalog.agents.firstOrNull { it.providerId == runtimeId }?.id?.raw
+
+    /** The catalog agent behind [runtimeId] when it is set up at first use ([AgentFirstUse.applies]); else null. */
+    fun firstUseAgent(runtimeId: String, catalog: AgentCatalog = AgentCatalog.builtIn): String? =
+        catalog.agents.firstOrNull { it.providerId == runtimeId }?.takeIf(AgentFirstUse::applies)?.id?.raw
 
     /** The bubbles whose failure is the agent's own answer: the ones [need] reads. */
     fun counts(bubble: PendingSend): Boolean {
