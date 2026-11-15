@@ -1,6 +1,7 @@
 package io.github.eslamasabry.oc.feature.chats
 
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
@@ -73,6 +74,9 @@ class NewConversationNoticeKeyboardTest {
                 val b = onAllNodesWithText(word, substring = true)[0].getBoundsInRoot()
                 assertTrue(b.bottom <= chips.top, "$word ends at ${b.bottom}, the chips start at ${chips.top}: it is under them")
                 assertTrue(b.top >= 0.dp, "$word starts at ${b.top}: above the page")
+                // Bounds are clipped to what shows: an action cut by the page's edge is short, one scrolled away is absent.
+                assertTrue(b.height >= 36.dp, "$word shows only ${b.height} of its height: cut off by the page's edge")
+                onAllNodesWithText(word, substring = true)[0].assertIsDisplayed()
             }
         }
 }
