@@ -32,7 +32,10 @@ public enum class FrostStrength(
     }
 }
 
-/** What holds frost solid regardless of the choice (Settings says why). Dart `KitFrostHold`. */
+/**
+ * What holds frost solid regardless of the choice (Settings says why). Dart `KitFrostHold`. [Motion] is no longer
+ * returned (glass-truth 2026-11-16): reduced motion stills what moves, never the material ([FrostConditions.reducedMotion]).
+ */
 public enum class FrostHold { Saver, Motion, Contrast, Style }
 
 /**
@@ -41,6 +44,12 @@ public enum class FrostHold { Saver, Motion, Contrast, Style }
  */
 public data class FrostConditions(
     val saver: Boolean = false,
+    /**
+     * The person's or the system's reduced motion. Not a hold (glass-truth 2026-11-16, owner ruling: "reduced motion
+     * must not take the glass away"): a still Glossy or Frosted pane needs no animation, so the lens, the clear panes
+     * and the frost stay as chosen; what moves (a join growing, a touch swell, the ambient background, the theme
+     * switch, a sliding highlight) reads the motion level itself. Kept so callers state the conditions in one place.
+     */
     val reducedMotion: Boolean = false,
     val highContrast: Boolean = false,
     val styleAllows: Boolean = true,
@@ -49,8 +58,8 @@ public data class FrostConditions(
 
 /**
  * Why Glass's floating parts are frosted rather than liquid (Settings says why). The first four are frost's own holds
- * ([FrostHold]); [Off] is frost strength Off, [Frosted] a glass look without a lens (Frosted), [Platform] no runtime shaders
- * ("Needs Android 13").
+ * ([FrostHold]; [Motion] is no longer returned, see [FrostConditions.reducedMotion]); [Off] is frost strength Off,
+ * [Frosted] a glass look without a lens (Frosted), [Platform] no runtime shaders ("Needs Android 13").
  */
 public enum class EdgeHold { Saver, Motion, Contrast, Style, Off, Frosted, Platform }
 
@@ -69,11 +78,15 @@ public object FrostPolicy {
     /** How much less tint dark mode lays over the blur than light (coordinator review 2026-10-30). */
     public const val DARK_TINT_RELIEF: Float = 0.10f
 
-    /** Dart `KitFrost.heldBy`: the first hold that applies, in Dart's order; null when the choice applies. */
+    /**
+     * Dart `KitFrost.heldBy`: the first hold that applies, in Dart's order; null when the choice applies. Reduced motion
+     * is not one (glass-truth 2026-11-16): it used to drop the lens, the clear panes and the blur itself, so a person who
+     * turned animations off got opaque panes on the ground; only what moves is gated by it now. Saver and high contrast
+     * hold as before.
+     */
     public fun heldBy(c: FrostConditions): FrostHold? =
         when {
             c.saver -> FrostHold.Saver
-            c.reducedMotion -> FrostHold.Motion
             c.highContrast -> FrostHold.Contrast
             !c.styleAllows -> FrostHold.Style
             else -> null
@@ -106,8 +119,8 @@ public object FrostPolicy {
     /**
      * Whether Glass's in-flow panes (cards, row groups, chips, fields) are clear frosted glass (owner 2026-11-08: much
      * lighter, the background's colour showing through) rather than today's thick panes. They need only the blur, not
-     * the lens, so the platform's missing lens does not hold them; every other hold keeps today's panes (Saver, reduced
-     * motion, high contrast, another style and frost Off). Every glass look keeps them clear: the Frosted look draws its
+     * the lens, so the platform's missing lens does not hold them; every other hold keeps today's panes (Saver, high
+     * contrast, another style and frost Off; reduced motion is not a hold). Every glass look keeps them clear: the Frosted look draws its
      * own lighter clear panes ([io.github.eslamasabry.oc.ui.design.style.GlassLook.Frosted]), no longer the old thick
      * ones (glass looks D7, 2026-11-09). The kit also needs the pane to blur a picture there.
      */

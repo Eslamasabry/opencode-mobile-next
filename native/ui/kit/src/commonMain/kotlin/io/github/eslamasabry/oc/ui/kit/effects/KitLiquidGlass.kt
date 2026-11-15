@@ -98,8 +98,9 @@ import io.github.eslamasabry.oc.ui.kit.foundation.kitDrawLayer
  * Glass's liquid edges (docs/designs/liquid-glass.md; owner 2026-11-08 "go full blown glass"), drawn by
  * Kyant0/AndroidLiquidGlass ("backdrop" 2.0.1, Apache-2.0). One entry point, [kitLiquidFace]: a floating part asks for
  * its liquid face and gets a modifier, or null, and then keeps exactly the face it draws today. Null whenever:
- * - FrostPolicy holds the edges (Saver, reduced motion, high contrast, a style other than Glass, frost Off, "Glass
- *   edges: Frosted", or no runtime shaders: Android below 13, desktop for now);
+ * - FrostPolicy holds the edges (Saver, high contrast, a style other than Glass, frost Off, "Glass edges: Frosted", or
+ *   no runtime shaders: Android below 13, desktop for now); reduced motion does not (glass-truth 2026-11-16: a still lens
+ *   needs no animation; what moves reads the motion level itself);
  * (beyond the window's budget, [LiquidEdge.grant], a part keeps its liquid face's shape and rim as frost, never solid);
  * - the part's shape is not a rounded kit shape (the lens bends rounded rectangles only).
  *
@@ -683,7 +684,10 @@ private class PlateHostNode(var words: KitLiquidWords) :
                 val next = LiquidInkRule.next(ink, mean)
                 if (next != ink) {
                     ink = next
-                    launch { flip.animateTo(if (next == words.themeInk) 0f else 1f, tween(LiquidInkRule.FLIP_MS)) }
+                    val target = if (next == words.themeInk) 0f else 1f
+                    // The ink's cross-fade is motion: under reduced motion it changes at once (the glass itself stays).
+                    if (currentValueOf(LocalKitMotion).reduced) launch { flip.snapTo(target) }
+                    else launch { flip.animateTo(target, tween(LiquidInkRule.FLIP_MS)) }
                 }
             }
         }
