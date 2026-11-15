@@ -17,6 +17,9 @@ appId: ${APP_ID}
     commands:
       - tapOn: ${output.s.addServerManual}
 - tapOn: ${output.s.e7SetupServerUrl + '(?s).*'}
+# Upgrade-proof branch: on the GitHub emulator the field already held "https://" when typing began
+# ("https://http://10.0.2.2:4097"), so it is emptied first.
+- eraseText: 60
 - inputText: ${ADDRESS}
 - hideKeyboard
 - tapOn: ${output.s.e7SetupServerPassword + '(,(?s).*)?'}
