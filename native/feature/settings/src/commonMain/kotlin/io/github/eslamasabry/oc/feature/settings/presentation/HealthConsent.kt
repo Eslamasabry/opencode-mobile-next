@@ -62,6 +62,8 @@ public enum class CollectItem {
     Connect,
     Drop,
     Send,
+    Turns,
+    Approvals,
     Stall,
     Queue,
     PhoneSetup,
@@ -71,6 +73,8 @@ public enum class CollectItem {
     Pages,
     Journey,
     Starters,
+    ShareIn,
+    StarAsk,
     Start,
     Smooth,
     Memory,
@@ -90,9 +94,9 @@ public enum class CollectGroup {
 }
 
 /**
- * The 2.1.5 contract as the page lists it: sections B, C and D under Usage and app health, A under Crash reports,
- * E under the problem report. [contractEvents] names the doc's event or section behind each line, so a test can
- * check none is left out.
+ * What the page lists: usage and app health, crash reports and the problem report. [contractEvents] names the event,
+ * property or key behind each line. `PrivacyNoticeSyncTest` reads it against the live allow-lists, so a name the code
+ * can send that no line names (or a line naming something the code cannot send) fails the build.
  */
 public object HealthContract {
     public val items: Map<CollectGroup, List<CollectItem>> =
@@ -102,6 +106,8 @@ public object HealthContract {
                     CollectItem.Connect,
                     CollectItem.Drop,
                     CollectItem.Send,
+                    CollectItem.Turns,
+                    CollectItem.Approvals,
                     CollectItem.Stall,
                     CollectItem.Queue,
                     CollectItem.PhoneSetup,
@@ -111,6 +117,8 @@ public object HealthContract {
                     CollectItem.Pages,
                     CollectItem.Journey,
                     CollectItem.Starters,
+                    CollectItem.ShareIn,
+                    CollectItem.StarAsk,
                     CollectItem.Start,
                     CollectItem.Smooth,
                     CollectItem.Memory,
@@ -123,19 +131,29 @@ public object HealthContract {
 
     public val contractEvents: Map<CollectItem, List<String>> =
         mapOf(
-            CollectItem.Connect to listOf("conn_attempt"),
+            CollectItem.Connect to listOf("conn_attempt", "connect_computer_chosen"),
             CollectItem.Drop to listOf("conn_drop"),
             CollectItem.Send to listOf("send_result"),
+            CollectItem.Turns to listOf("chat_turn"),
+            CollectItem.Approvals to listOf("approval"),
             CollectItem.Stall to listOf("turn_stall"),
             CollectItem.Queue to listOf("queue_flush"),
-            CollectItem.PhoneSetup to listOf("linux_setup_step"),
+            CollectItem.PhoneSetup to
+                listOf(
+                    "linux_setup_step",
+                    "setup_step_reached",
+                    "setup_done",
+                    "setup_abandoned",
+                    "setup_resumed",
+                ),
             CollectItem.Agents to listOf("agent_start"),
             CollectItem.Background to listOf("bg_service_end"),
             CollectItem.Updates to listOf("update_result", "update_offered", "update_installed"),
-            CollectItem.Pages to
-                listOf("app_open", "setup_step_*", "first_reply", "screen_view", "feature_used", "session_length"),
+            CollectItem.Pages to listOf("app_open", "first_reply", "screen_view", "feature_used", "session_length"),
             CollectItem.Journey to listOf("journey_milestone", "journey_stage"),
-            CollectItem.Starters to listOf("starter_used"),
+            CollectItem.Starters to listOf("starter_used", "use_for"),
+            CollectItem.ShareIn to listOf("share_in"),
+            CollectItem.StarAsk to listOf("star_prompt_shown", "star_prompt_tapped", "star_prompt_dismissed"),
             CollectItem.Start to listOf("app_start"),
             CollectItem.Smooth to listOf("jank"),
             CollectItem.Memory to listOf("memory_pressure"),
@@ -153,7 +171,16 @@ public object HealthContract {
             CollectItem.Exit to listOf("exit_reason"),
             CollectItem.Steps to listOf("breadcrumbs"),
             CollectItem.CrashKeys to
-                listOf("app_version", "build_kind", "server_kind", "engine_state", "connections", "oc_server_version"),
+                listOf(
+                    "app_version",
+                    "build_kind",
+                    "server_kind",
+                    "engine_state",
+                    "connections",
+                    "oc_server_version",
+                    "report_kind",
+                    "report_code",
+                ),
             CollectItem.Report to listOf("problem_report"),
         )
 }

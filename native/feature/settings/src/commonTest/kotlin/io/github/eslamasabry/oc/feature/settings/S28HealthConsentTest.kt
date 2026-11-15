@@ -1,5 +1,10 @@
 package io.github.eslamasabry.oc.feature.settings
 
+import io.github.eslamasabry.oc.engine.analytics.health.healthKeyPatterns
+import io.github.eslamasabry.oc.engine.analytics.health.healthKeyWords
+import io.github.eslamasabry.oc.engine.analytics.health.healthPropertyPatterns
+import io.github.eslamasabry.oc.engine.analytics.health.healthPropertyWords
+import io.github.eslamasabry.oc.engine.analytics.product.productSchema
 import io.github.eslamasabry.oc.feature.settings.presentation.CollectGroup
 import io.github.eslamasabry.oc.feature.settings.presentation.CollectItem
 import io.github.eslamasabry.oc.feature.settings.presentation.HealthAnswers
@@ -102,20 +107,16 @@ class S28HealthConsentTest {
     }
 
     @Test
-    fun `B-SEC-206 What we collect covers every event of the 2-1-5 contract`() {
-        val contract =
-            setOf(
-                "conn_attempt", "conn_drop", "send_result", "turn_stall", "queue_flush", "linux_setup_step",
-                "agent_start", "bg_service_end", "update_result", "app_open", "setup_step_*", "first_reply",
-                "screen_view", "feature_used", "session_length", "update_offered", "update_installed", "app_start",
-                "jank", "memory_pressure", "ram_range", "free_storage_range", "abi", "webview_major",
-                "notif_allowed", "server_kind", "oc_server_version", "exit_reason", "breadcrumbs",
-                "app_version", "build_kind", "engine_state", "connections", "problem_report",
-                // The install-to-first-reply funnel (docs/native/analytics/next-focus-2026-11-10.md).
-                "journey_milestone", "journey_stage", "starter_used",
-            )
+    fun `B-SEC-206 What we collect covers every event, property and key the code can send`() {
+        // The live allow-lists, not a copy of the old 2.1.5 contract: a new event fails here until a line names it.
+        val sendable =
+            productSchema.keys +
+                healthPropertyWords.keys + healthPropertyPatterns.keys +
+                healthKeyWords.keys + healthKeyPatterns.keys
         val listed = HealthContract.contractEvents.values.flatten().toSet()
-        assertEquals(emptySet(), contract - listed)
+        assertEquals(emptySet(), sendable - listed)
+        // And nothing listed that the code cannot send (the three crash-side lines are not events).
+        assertEquals(emptySet(), listed - sendable - setOf("crash", "breadcrumbs", "problem_report", "report_kind"))
         assertEquals(CollectItem.entries.toSet(), HealthContract.items.values.flatten().toSet())
         assertEquals(CollectGroup.entries.toSet(), HealthContract.items.keys)
     }

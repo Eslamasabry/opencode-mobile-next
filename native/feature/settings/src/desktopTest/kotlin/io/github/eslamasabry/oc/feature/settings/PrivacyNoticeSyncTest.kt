@@ -88,6 +88,7 @@ class PrivacyNoticeSyncTest {
         words += BreadcrumbWords.named.keys.flatMap { it.split('.') }
         words += BreadcrumbWords.named.values.flatten()
         words += "linux_setup" // the prefix of `linux_setup_<step>`
+        words += setOf("breadcrumbs", "problem_report") // crash-side lines that are not events
         return SendableNames(
             events = productSchema,
             traces = traces,
