@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.kit.nav
 
+import io.github.eslamasabry.oc.ui.kit.foundation.kitScrollCue
 import io.github.eslamasabry.oc.ui.kit.frame.kitScrollFade
 import androidx.compose.foundation.ExperimentalFoundationApi
 import io.github.eslamasabry.oc.ui.kit.frame.kitPageGutter
@@ -357,6 +358,7 @@ internal fun TabStrip(
         Layout(
             modifier =
                 Modifier.horizontalScroll(scroll)
+                    .kitScrollCue("edge fade")
                     .semantics {
                         selectableGroup()
                         if (semanticsLabel != null) paneTitle = semanticsLabel

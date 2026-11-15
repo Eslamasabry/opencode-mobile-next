@@ -41,6 +41,9 @@ private class Item(val node: SemanticsNode, val ancestors: List<SemanticsNode>) 
     val visible: Boolean = bounds.width > SLACK && bounds.height > SLACK
     val button: Boolean = config.getOrNull(SemanticsProperties.Role) == Role.Button
     val pageRules: Boolean = !chrome && !sideScroll
+
+    /** Inside a sideways scroller that carries the kit's cue: a partial word at its edge is the cue, not a fault. */
+    val cued: Boolean = ancestors.any { SemanticsProperties.HorizontalScrollAxisRange in it.config && KitLayoutMarks.ScrollCue in it.config }
 }
 
 /** One walk of [LayoutGuard]'s rules (native/docs/kit/LAYOUT-RULES.md) over one rendered tree at one window. */
@@ -59,6 +62,7 @@ internal class LayoutWalk(private val window: Window, roots: List<SemanticsNode>
 
     /** Every finding; [screen] adds the page rules (gutter, title edge) that a lone part cannot meet. */
     fun run(screen: Boolean): List<Finding> {
+        if (window.compact) return fits()
         for (n in items.filter { it.visible && it.bounds.right > 0f && it.bounds.left < w }) {
             targets(n)
             truncation(n)
@@ -71,6 +75,35 @@ internal class LayoutWalk(private val window: Window, roots: List<SemanticsNode>
         if (screen) titleEdges()
         if (screen) twinRows()
         return found
+    }
+
+    /**
+     * The compact windows' only question: do the words fit? A text slot may not end in "…" unless its kit part says
+     * so, may not lose words without a sign, and may not be cut by a container or the window edge (`cut-off`); a row
+     * that scrolls sideways must carry the kit's cue that there is more (`scroll-cue`).
+     */
+    private fun fits(): List<Finding> {
+        for (n in items.filter { it.visible && it.bounds.right > 0f && it.bounds.left < w }) {
+            truncation(n)
+            cutOff(n)
+            scrollCue(n)
+        }
+        return found
+    }
+
+    /** A text node whose laid-out box is wider than what shows: a container or the window edge clips its words. */
+    private fun cutOff(n: Item) {
+        if (!n.text) return
+        val lost = n.node.size.width - n.bounds.width
+        if (lost > CUT && !n.cued) add(n, "cut-off", "${fmt(lost)} dp of its width is hidden by its container or the window edge")
+    }
+
+    /** A sideways scroller with more to show than fits must say so (a fade or a partial chip), see [KitLayoutMarks.ScrollCue]. */
+    private fun scrollCue(n: Item) {
+        val range = n.config.getOrNull(SemanticsProperties.HorizontalScrollAxisRange) ?: return
+        if (range.maxValue() > 0f && KitLayoutMarks.ScrollCue !in n.config) {
+            add(n, "scroll-cue", "scrolls sideways (${fmt(range.maxValue())} dp more) with no cue that there is more")
+        }
     }
 
     private fun add(item: Item, rule: String, detail: String) {

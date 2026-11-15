@@ -1,5 +1,8 @@
 package io.github.eslamasabry.oc.ui.kit.choice
 
+import io.github.eslamasabry.oc.ui.kit.frame.kitScrollFade
+import io.github.eslamasabry.oc.ui.kit.foundation.kitScrollCue
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.border
 import androidx.compose.animation.animateColorAsState
@@ -599,8 +602,10 @@ public fun KitAccentRow(
             matchOn -> Modifier.exactEdge(matchWidth, colors.accent, matchLook.shape)
             else -> Modifier
         }
+    val scroll = rememberScrollState()
+    Box(Modifier.clipToBounds().kitScrollFade(scroll)) {
     Row(
-        group.horizontalScroll(rememberScrollState()).padding(horizontal = tokens.gutter.dp),
+        group.horizontalScroll(scroll).kitScrollCue("edge fade").padding(horizontal = tokens.gutter.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         // The tile is as tall as a swatch's target; its words may take a second line at larger text.
@@ -630,6 +635,7 @@ public fun KitAccentRow(
         }
         Spacer(Modifier.width(Space.S2.dp))
         swatches.forEach { s -> AccentCircle(s, s.id == selected, onTap = { if (s.id != selected) onChanged(s.id) }) }
+    }
     }
 }
 

@@ -31,6 +31,9 @@ import java.util.Locale
  *   ([KitLayoutMarks.MayTruncate]), and words are never cut off without a sign.
  * - `wide-text` / `wide-control` / `wide-row` (tablet): words and rows stay within the list width (960 dp), a
  *   button within the control width (400 dp).
+ * - `ellipsis` / `clipped` / `cut-off` / `scroll-cue` (compact windows: 360 dp at text 1.0 and 1.3, 320 dp at 1.0):
+ *   words fit their box, are not cut by a container or the window edge, and a row that scrolls sideways says so
+ *   ([KitLayoutMarks.ScrollCue]).
  *
  * Exceptions are declared in the kit next to the part ([KitLayoutMarks]); a screen's own leftovers live in the
  * per-module baseline `native/config/layout/baseline/<module>.tsv`, which may only shrink
@@ -43,9 +46,23 @@ object LayoutGuard {
     private const val PHONE_H = 915 // F: test/goldens/kit/kit_gallery.dart:109
     private const val TABLET_W = 1280 // F: kit-v2.md §8.5 G4 "1280×800 (tablet landscape or PC)"
     private const val TABLET_H = 800 // F: kit-v2.md §8.5 G4
+    private const val COMPACT_W = 360 // NV: a Galaxy S22 is 360 dp wide at text 1.0; most phones are this size or wider
+    private const val COMPACT_H = 780 // NV: its usable height
+    private const val NARROW_W = 320 // NV: the narrowest phone the app still supports
+    private const val NARROW_H = 640 // NV: and its height
 
-    /** The windows a scene is checked at (story E02-S13). */
-    enum class Window(val w: Int, val h: Int) { Phone(PHONE_W, PHONE_H), Tablet(TABLET_W, TABLET_H) }
+    /**
+     * The windows a scene is checked at (story E02-S13). The three compact ones (compact-width slice) are the phones
+     * most people hold: 360 dp wide at normal text, the same at 1.3 text, and 320 dp wide. They check only that words
+     * fit ([LayoutWalk.fits]); the page rules above are judged on the phone and tablet windows.
+     */
+    enum class Window(val w: Int, val h: Int, val scale: Float = 1f, val compact: Boolean = false) {
+        Phone(PHONE_W, PHONE_H),
+        Tablet(TABLET_W, TABLET_H),
+        Compact(COMPACT_W, COMPACT_H, compact = true),
+        CompactLarge(COMPACT_W, COMPACT_H, scale = 1.3f, compact = true),
+        Narrow(NARROW_W, NARROW_H, compact = true),
+    }
 
     /** What to render: the gate's frame, style, wrapper, interaction and content. */
     class Scene(
@@ -113,8 +130,9 @@ object LayoutGuard {
     ): List<Finding> {
         val all = LinkedHashMap<String, Finding>()
         val screen = scene.frame == FlutterGoldenGate.Frame.Screen
-        for (window in windows) for (dark in listOf(false, true)) {
-            val axes = FlutterGoldenGate.Axes(rtl = false, scale = 1f, w = window.w, h = window.h)
+        // A compact window checks that words fit, which light and dark agree on: one render each, not two.
+        for (window in windows) for (dark in if (window.compact) listOf(false) else listOf(false, true)) {
+            val axes = FlutterGoldenGate.Axes(rtl = false, scale = window.scale, w = window.w, h = window.h)
             val read: ComposeUiTest.() -> Unit = {
                 val roots = onAllNodes(isRoot(), useUnmergedTree = true)
                     .fetchSemanticsNodes(atLeastOneRootRequired = false)

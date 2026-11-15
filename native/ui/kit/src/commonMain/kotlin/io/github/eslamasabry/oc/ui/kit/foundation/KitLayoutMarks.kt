@@ -44,6 +44,13 @@ public object KitLayoutMarks {
      * panel's name. The guard reports one that runs past the window's edge (E20-S08).
      */
     public val Floating: SemanticsPropertyKey<String> = SemanticsPropertyKey("KitFloating")
+
+    /**
+     * Set on a row that scrolls sideways and shows that it does (an edge fade, a partial chip), with the cue's name.
+     * On a compact window the guard reports a sideways scroller without it, and does not count a word cut at the
+     * scroller's edge as lost under one that has it.
+     */
+    public val ScrollCue: SemanticsPropertyKey<String> = SemanticsPropertyKey("KitScrollCue")
 }
 
 /** Declares how this part meets the window edge (see [KitEdge]). */
@@ -60,3 +67,6 @@ public fun Modifier.kitContentEdge(slot: String): Modifier = semantics { this[Ki
 
 /** Declares a floating panel that must fit the window (see [KitLayoutMarks.Floating]); [name] names it. */
 public fun Modifier.kitFloating(name: String): Modifier = semantics { this[KitLayoutMarks.Floating] = name }
+
+/** Declares that this sideways scroller shows it scrolls (see [KitLayoutMarks.ScrollCue]); [cue] names how. */
+public fun Modifier.kitScrollCue(cue: String): Modifier = semantics { this[KitLayoutMarks.ScrollCue] = cue }
