@@ -1025,6 +1025,7 @@
     <string name="toolCardPageStatus">Page answered %1$s</string>
     <string name="toolCardAsked">Asked: %1$s</string>
     <string name="chatUiAgentNote">Note</string>
+    <string name="chatUiContinuedAfterCommand">A command was still running, so the agent was asked to wait for it and carry on</string>
     <string name="chatUiAgentWarning">Warning</string>
     <string name="chatUiAgentProblem">Problem</string>
     <string name="chatUiCompactedAutomatically">Compacted automatically to make room.</string>
