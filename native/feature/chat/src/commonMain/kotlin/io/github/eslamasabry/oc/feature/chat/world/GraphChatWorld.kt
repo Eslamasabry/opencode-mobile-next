@@ -1294,7 +1294,10 @@ internal class GraphChatWorld(
     }
 
     private fun refreshReadOnly(gateway: ServerGateway, session: Session? = null) {
-        if (session != null) mutableParent.value = session.parentId?.let { ConversationRef(ref.profileId, it) }
+        if (session != null) {
+            mutableParent.value = session.parentId?.let { ConversationRef(ref.profileId, it) }
+            sessionSeen = session
+        }
         val readOnly = gateway.facet<ReadOnlySessionsGateway>()?.isReadOnlySession(sid) == true
         mutableReadOnly.value =
             if (readOnly)
@@ -1302,7 +1305,31 @@ internal class GraphChatWorld(
                     session?.parentId?.let { ConversationRef(ref.profileId, it) }
                         ?: mutableReadOnly.value?.parent
                 )
-            else null
+            else restartOrNull()
+    }
+
+    /** The conversation as the server last described it (its agent and folder), for [restartOrNull]. */
+    private var sessionSeen: Session? = null
+
+    /**
+     * Issue 147: a phone agent's old conversation its agent cannot take up again reads as it was (kept or live rows)
+     * with the message box replaced by "Continue in a new conversation", never a refusal. Asked again after each
+     * history read: reading it loads the agent on the helper where the agent supports that, and then it continues here.
+     */
+    private fun restartOrNull(): ReadOnlyChat? {
+        if (phoneServer?.needsNewSession(ref) != true) return null
+        val session = sessionSeen
+        val agent =
+            session?.selection?.model?.providerId?.takeIf { it.isNotBlank() }
+                ?: session?.model?.substringBefore('/', "")?.takeIf { it.isNotBlank() }
+        return ReadOnlyChat(
+            restart =
+                ChatRestart(
+                    agent,
+                    session?.directory?.takeIf { it.isNotBlank() } ?: ownDirectory,
+                    agent?.let { io.github.eslamasabry.oc.feature.chat.presentation.AgentSetUpRules.catalogAgent(it)?.name },
+                )
+        )
     }
 
     private fun readOnlyNow(): Boolean =
@@ -1432,6 +1459,8 @@ internal class GraphChatWorld(
                 closeKept()
                 publishShown()
                 keepLastKnown(handle)
+                // Issue 147: the read loaded the agent where it can be loaded; ask again whether it continues here.
+                refreshReadOnly(gateway)
                 refreshDraftProtection()
                 endWait()
                 mutableLoad.value = ChatLoad.Live
@@ -1439,6 +1468,9 @@ internal class GraphChatWorld(
                 Outcome.Ok(Unit)
             }
             is Outcome.Failed -> {
+                // Issue 147: a phone agent's conversation its agent cannot take up again stays readable from the kept
+                // page, and its message box offers to continue in a new conversation.
+                if (currentAttached()?.handle === handle) refreshReadOnly(gateway)
                 if (currentAttached()?.handle === handle && mutableLoad.value !is ChatLoad.Live) {
                     // An older page that fails leaves the loaded conversation as it is; only the first read waits.
                     if (cursor == null) loadFailed(page.failure) else mutableLoad.value = ChatLoad.Failed(page.failure)

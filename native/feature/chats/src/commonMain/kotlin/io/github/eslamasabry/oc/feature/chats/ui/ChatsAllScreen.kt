@@ -353,7 +353,6 @@ public fun ChatsAllScreen(state: AllConversationsUi, actions: ChatsAllActions) {
         }
         ConversationRenameDialog(state.renaming, actions::finishRename)
         ContinueHereDialog(state, actions)
-        StartNewConversationConfirm(state.startNew, actions::confirmStartNew, actions::dismissStartNew)
         ImportConversationSheet(state.import, actions)
     }
 }

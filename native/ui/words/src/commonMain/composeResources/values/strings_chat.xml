@@ -972,6 +972,14 @@
     <string name="approvalsSheetFootnote">Stops when the app disconnects. Server deny rules still apply.</string>
     <string name="approvalsSheetHistory">Approved automatically</string>
     <string name="chatSubagentReadOnly">This sub-agent answers only its main conversation. Write there.</string>
+    <string name="chatOldAgentReadOnly">%1$s can't pick this conversation up again. Read it here, or continue in a new one.</string>
+    <string name="chatOldAgentReadOnlyUnnamed">This agent can't pick this conversation up again. Read it here, or continue in a new one.</string>
+    <string name="chatContinueInNewConversation">Continue in a new conversation</string>
+    <string name="chatContinueBriefIntro">Let's continue "%1$s". You can't see that conversation, so here is what happened there.</string>
+    <string name="chatContinueBriefIntroUntitled">Let's continue an earlier conversation. You can't see it, so here is what happened there.</string>
+    <string name="chatContinueBriefAsked">What I asked:</string>
+    <string name="chatContinueBriefChanged">Files that changed:</string>
+    <string name="chatContinueBriefStopped">Where it stopped:</string>
     <string name="chatProjectChipSemantics">Project %1$s. Opens a menu of its files, terminal and changes.</string>
     <string name="chatProjectServerChipSemantics">Project %1$s on %2$s. Opens a menu of its files, terminal and changes.</string>
     <string name="chatProjectMenuLabel">Project tools</string>

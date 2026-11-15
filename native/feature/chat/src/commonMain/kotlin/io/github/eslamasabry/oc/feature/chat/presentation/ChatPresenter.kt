@@ -412,7 +412,9 @@ public class ChatPresenter(
             title = i.title ?: lastTitle,
             status =
               agentLine(
-                (if (kept != null) i.retry.line(KEPT_OFFLINE_STATUS, ChatStatusKind.Offline) else null) ?: StatusPick.pick(i.link, pending, t.run, t.rows, l.actionFailure, l.linkRefused, i.retry)
+                // Issue 147: an old phone agent conversation that continues in a new one is not offline; its message
+                // box says what happens instead.
+                (if (kept != null && world.readOnly.value?.restart == null) i.retry.line(KEPT_OFFLINE_STATUS, ChatStatusKind.Offline) else null) ?: StatusPick.pick(i.link, pending, t.run, t.rows, l.actionFailure, l.linkRefused, i.retry)
                     ?: l.receiptResult?.let {
                         ChatStatusUi(
                             RECEIPT_STATUS,
