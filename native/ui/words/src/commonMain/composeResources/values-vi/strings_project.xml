@@ -797,8 +797,8 @@
     <string name="gitBranchRemoteOnly">Có trên %1$s, chưa có trên thiết bị này</string>
     <string name="gitBranchCurrent">Nhánh hiện tại</string>
     <string name="gitNewBranchFrom">Nhánh mới từ %1$s</string>
-    <string name="gitCloneRow">Clone một kho</string>
-    <string name="gitCloneRowHint">Sao chép một kho cạnh dự án này</string>
+    <string name="gitCloneRow">Sao chép một dự án từ web</string>
+    <string name="gitCloneRowHint">Lấy một dự án từ một địa chỉ và đặt cạnh dự án này</string>
     <string name="gitCloneAddressLabel">Địa chỉ kho</string>
     <string name="gitCloneFolderLabel">Tên thư mục</string>
     <string name="gitCloneInto">Sẽ clone vào %1$s</string>
@@ -930,4 +930,7 @@
     <string name="agentElsewhereStale">Đang chờ cập nhật</string>
     <string name="gitProblemNoWorkingSpace">Git không còn chỗ để làm việc ở nơi dự án này đang nằm. Hãy giải phóng bớt dung lượng ở đó, rồi thử lại.</string>
     <string name="gitProblemServerRefusedCommand">Máy chủ có trả lời nhưng không chịu chạy lệnh Git. Hãy kiểm tra việc đăng nhập của nó, rồi thử lại.</string>
+    <string name="gitMoreTools">Công cụ khác</string>
+    <string name="gitMoreToolsHint">Nơi các lần lưu được gửi đến, sao chép dự án, sửa lịch sử bị hỏng</string>
+    <string name="devPreviewAskNeedsText">Hãy viết điều cần thay đổi trước.</string>
 </resources>
