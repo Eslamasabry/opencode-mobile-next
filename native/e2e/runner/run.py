@@ -212,8 +212,38 @@ class HookContext:
             before = device_state.capture(self.adb, self.app_id)
             before["alarms"] = alarms
             write_state(pathlib.Path(state_dir) / "before.json", before)
+        via = os.environ.get("OC_UPGRADE_VIA_APK")
+        if via:
+            self._via(via, pathlib.Path(state_dir) if state_dir else None)
         install_apk(self.adb, apk, self.args.expect_signer)
         return {"installed": True}
+
+    def _via(self, via: str, state_dir: pathlib.Path | None) -> None:
+        """Upgrade-proof branch only: put an intermediate native build (a public pre-release) over the seeded Flutter
+        app first, open it once and let its own migration finish, then the target goes over that."""
+        install_apk(self.adb, via, self.args.expect_signer)
+        self.root()
+        self.adb(["shell", "monkey", "-p", self.app_id, "-c", "android.intent.category.LAUNCHER", "1"], check=False)
+        journal = f"/data/data/{self.app_id}/files/native/migration.json"
+        last, stable, t0 = None, 0, time.time()
+        while time.time() - t0 < 150:
+            time.sleep(5)
+            cur = self.adb(["shell", f"[ -f {journal} ] && md5sum {journal} || echo none"], check=False).strip()
+            stable = stable + 1 if cur == last and cur != "none" else 0
+            last = cur
+            if stable >= 3 and time.time() - t0 >= 45:
+                break
+        if state_dir:
+            state_dir.mkdir(parents=True, exist_ok=True)
+            (state_dir / "via-migration.json").write_text(
+                self.adb(["shell", f"cat {journal} 2>/dev/null || true"], check=False), encoding="utf-8")
+            png = subprocess.run([self.args.adb, "-s", self.args.serial, "exec-out", "screencap", "-p"],
+                                 capture_output=True, timeout=60).stdout
+            (state_dir / "via-screen.png").write_bytes(png)
+            write_state(state_dir / "via.json", device_state.capture(self.adb, self.app_id))
+        print(f"via: {os.path.basename(via)} installed and opened {round(time.time() - t0)} s, journal {last}",
+              flush=True)
+        self.adb(["shell", "am", "force-stop", self.app_id])
 
     def h_upgrade_capture(self, args):
         phase = args.get("phase")

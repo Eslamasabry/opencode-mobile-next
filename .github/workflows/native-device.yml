@@ -1,26 +1,29 @@
-# Native device lane (gap 6): Macrobenchmark start-up + frame timing, and the Baseline/Startup Profile generation, on a
-# device. Dispatch only: never on push (CI budget rule). The numbers are uploaded as the `native-device-numbers` artifact
-# and printed in the job summary.
+# THROWAWAY BRANCH ONLY (native/upgrade-proof-*): this file replaces the Native device lane here so it can be
+# dispatched with `gh workflow run native-device.yml --ref <this branch>` (a dispatchable workflow must exist on master).
+# It is never merged.
 #
-#   target=emulator  GitHub-hosted KVM emulator (API 34, x86_64 google_apis). Numbers are relative, not real-phone numbers.
-#   target=testlab   Firebase Test Lab real device (needs the GCP_TESTLAB_KEY secret = a service-account JSON for the free
-#                    project; billing stays off, so this uses the free daily quota). Skipped with a notice when the secret
-#                    is missing.
-#
-# Local equivalent: native/tool/qa/device-bench.sh (same tasks, same artifact layout).
+# Update-in-place proof for the native release candidate, on GitHub-hosted KVM emulators:
+#   build  builds the candidate (switch release, R8, the real release shape) UNSIGNED from APP_REF, makes a throwaway
+#          key on the runner, and signs the candidate and re-signs the public Flutter / native pre-release APKs with
+#          it, so both sides of every upgrade share one signer. No repository secret is read. The key is deleted.
+#   proof  one emulator per case runs native/tool/qa/upgrade_e2e.sh (E2E-39: Part A seeds the Flutter app, Part B,
+#          `adb install -r` of the candidate, Part C). The via cases first put a public native pre-release over the
+#          seeded Flutter app, open it once and let its migration finish (run.py's OC_UPGRADE_VIA_APK).
+# Android's update check only compares signers, so this proves the data migration; the signing lineage of the public
+# files is proven separately with apksigner.
 name: Native device
-run-name: Native device · ${{ github.ref_name }} · ${{ inputs.what }} · ${{ inputs.target }}
+run-name: Upgrade-in-place proof · app ${{ github.sha }}
 
 on:
   workflow_dispatch:
     inputs:
       what:
-        description: "startup: cold-start benchmarks. frames: stream frame timing. profile: regenerate baseline + startup profile. all: all three"
+        description: "unused on this branch"
         type: choice
         options: [startup, frames, profile, all]
         default: startup
       target:
-        description: "emulator: GitHub-hosted KVM emulator. testlab: Firebase Test Lab (free quota, needs secret). build: only build and upload the two APKs (run them on Test Lab by hand)"
+        description: "unused on this branch"
         type: choice
         options: [emulator, testlab, build]
         default: emulator
@@ -29,90 +32,211 @@ permissions:
   contents: read
 
 concurrency:
-  group: native-device-${{ github.ref }}
-  cancel-in-progress: true
+  group: upgrade-proof-${{ github.ref }}
+  cancel-in-progress: false
 
 env:
-  GRADLE_FLAGS: --stacktrace
+  # The app commit under test (the release candidate). Changed by a commit on this branch for each run.
+  APP_REF: 37ccdd9f32b1ebc08c8f3d35b76208220bb61ddf
+  REPO: Eslamasabry/opencode-mobile-next
   RUNNER_TRACKING_ID: ""
 
-defaults:
-  run:
-    working-directory: native
-
 jobs:
-  device:
-    name: device (${{ inputs.target }}, ${{ inputs.what }})
+  build:
     runs-on: ubuntu-latest
-    timeout-minutes: 75
+    timeout-minutes: 90
+    outputs:
+      signer: ${{ steps.sign.outputs.signer }}
+      cases: ${{ steps.sign.outputs.cases }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ env.APP_REF }}
       - uses: ./.github/actions/native-setup
-      - name: Preview signing key (so the benchmark APK carries the preview signer)
-        env:
-          KEYSTORE_B64: ${{ secrets.NATIVE_PREVIEW_KEYSTORE_B64 }}
+      - name: Build the switch release, unsigned (no key file on the runner)
+        working-directory: native
         run: |
-          if [ -n "$KEYSTORE_B64" ]; then
-            mkdir -p "$RUNNER_TEMP/android-home"
-            printf '%s' "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/android-home/debug.keystore"
-            echo "ANDROID_USER_HOME=$RUNNER_TEMP/android-home" >> "$GITHUB_ENV"
-          fi
-      - name: Build the benchmark APK and the Macrobenchmark APK
-        run: |
+          set -euo pipefail
+          export JAVA_HOME="$JAVA_HOME_21_X64"
           cat > "$RUNNER_TEMP/no-lint-vital.init.gradle" <<'EOT'
           allprojects { tasks.configureEach { if (name.startsWith("lintVital")) enabled = false } }
           EOT
-          ./gradlew :androidApp:assemblePreviewBenchmark :benchmark:assembleBenchmark \
-            -I "$RUNNER_TEMP/no-lint-vital.init.gradle" $GRADLE_FLAGS
+          ./gradlew --console=plain -I "$RUNNER_TEMP/no-lint-vital.init.gradle" :androidApp:assembleSwitchRelease
+          ls -l androidApp/build/outputs/apk/switch/release/
+      - name: Download the public APKs
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          d="$RUNNER_TEMP/public"; mkdir -p "$d"
+          gh release download 'v2.1.5+63' -R "$REPO" -D "$d" -p 'opencode-mobile-2.1.5+63.apk' -p SHA256SUMS
+          (cd "$d" && grep ' opencode-mobile-2.1.5+63.apk$' SHA256SUMS | sha256sum -c - && rm SHA256SUMS)
+          gh release download 'v2.1.4+62' -R "$REPO" -D "$d" -p 'opencode-mobile-2.1.4+62.apk' -p SHA256SUMS
+          (cd "$d" && grep ' opencode-mobile-2.1.4+62.apk$' SHA256SUMS | sha256sum -c - && rm SHA256SUMS)
+          gh release download 'v3.0.0+10020' -R "$REPO" -D "$d" -p '*-x86_64.apk' -p SHA256SUMS
+          (cd "$d" && grep -- '-x86_64.apk$' SHA256SUMS | sha256sum -c - && rm SHA256SUMS)
+          # 10030 is a draft: only visible to a token with write access, which this run does not have.
+          gh release download 'v3.0.0+10030' -R "$REPO" -D "$d" -p '*-x86_64.apk' || echo "::notice::v3.0.0+10030 not readable (draft)"
+          ls -l "$d"
+      - name: Throwaway key; sign the candidate and re-sign the public APKs with it
+        id: sign
+        run: |
+          set -euo pipefail
+          bt="$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -n 1)"
+          umask 077
+          ks="$RUNNER_TEMP/throwaway.jks"
+          TK_PASS="$(openssl rand -hex 24)"; export TK_PASS
+          keytool -genkeypair -keystore "$ks" -storetype PKCS12 -alias proof -keyalg RSA -keysize 3072 -validity 30 \
+            -dname "CN=Upgrade proof throwaway" -storepass:env TK_PASS -keypass:env TK_PASS > /dev/null 2>&1
+          out="$RUNNER_TEMP/apks"; mkdir -p "$out"
+          sign() { # in out
+            "$bt/zipalign" -P 16 -f 4 "$1" "$RUNNER_TEMP/aligned.apk"
+            "$bt/apksigner" sign --ks "$ks" --ks-key-alias proof --ks-pass env:TK_PASS --key-pass env:TK_PASS \
+              --out "$2" "$RUNNER_TEMP/aligned.apk"
+            rm -f "$RUNNER_TEMP/aligned.apk" "$2.idsig"
+          }
+          src=native/androidApp/build/outputs/apk/switch/release
+          for abi in x86_64 universal; do
+            apk="$(find "$src" -maxdepth 1 -name "*-$abi-release*.apk" | head -n 1)"
+            [ -n "$apk" ] || { echo "::error::no $abi APK"; exit 1; }
+            sign "$apk" "$out/candidate-$abi.apk"
+          done
+          for f in "$RUNNER_TEMP"/public/*.apk; do sign "$f" "$out/resigned-$(basename "$f")"; done
+          rm -f "$ks"
+          signer="$("$bt/apksigner" verify --print-certs "$out/candidate-x86_64.apk" | sed -n 's/.*certificate SHA-256 digest: //p' | head -n 1 | tr 'a-f' 'A-F')"
+          echo "signer=$signer" >> "$GITHUB_OUTPUT"
+          {
+            echo "### APKs (throwaway signer $signer)"
+            for f in "$out"/*.apk; do
+              echo; echo "- \`$(basename "$f")\` $("$bt/aapt2" dump badging "$f" | head -n 1 | grep -o "versionCode='[0-9]*' versionName='[^']*'")"
+              echo "  sha256 \`$(sha256sum "$f" | cut -c1-64)\`; signers: $("$bt/apksigner" verify --print-certs "$f" | sed -n 's/.*certificate SHA-256 digest: //p' | tr '\n' ' ')"
+            done
+            echo; echo "Original signers of the public APKs (before re-signing):"
+            for f in "$RUNNER_TEMP"/public/*.apk; do
+              echo "- \`$(basename "$f")\`: $("$bt/apksigner" verify --print-certs "$f" | sed -n 's/.*certificate SHA-256 digest: //p' | tr '\n' ' ')"
+            done
+          } | tee -a "$GITHUB_STEP_SUMMARY" > "$out/APKS.md"
+          git rev-parse HEAD > "$out/APP_COMMIT"
+          cases='["f215","via10020","f214"]'
+          [ -f "$out/resigned-opencode-mobile-3.0.0-10030-x86_64.apk" ] && cases='["f215","via10020","via10030","f214"]'
+          echo "cases=$cases" >> "$GITHUB_OUTPUT"
+      - name: Delete the throwaway key
+        if: always()
+        run: rm -f "$RUNNER_TEMP/throwaway.jks" "$RUNNER_TEMP/aligned.apk"
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: native-benchmark-apks
-          path: |
-            native/androidApp/build/outputs/apk/preview/benchmark/*.apk
-            native/benchmark/build/outputs/apk/benchmark/*.apk
+          name: proof-apks
+          path: ${{ runner.temp }}/apks/
           retention-days: 7
           if-no-files-found: error
+
+  proof:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 330
+    strategy:
+      fail-fast: false
+      matrix:
+        case: ${{ fromJSON(needs.build.outputs.cases) }}
+    name: proof (${{ matrix.case }})
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: proof-apks
+          path: ${{ runner.temp }}/apks
+      - uses: actions/setup-java@77dd5b2ce225ea11469928ac317850245a74ae78 # v6.2.0
+        with:
+          distribution: temurin
+          java-version: "17"
+      - name: Pick the APK pair
+        id: pair
+        run: |
+          set -euo pipefail
+          a="$RUNNER_TEMP/apks"
+          case "${{ matrix.case }}" in
+            f215)     fl="$a/resigned-opencode-mobile-2.1.5+63.apk"; via="" ;;
+            f214)     fl="$a/resigned-opencode-mobile-2.1.4+62.apk"; via="" ;;
+            via10020) fl="$a/resigned-opencode-mobile-2.1.5+63.apk"; via="$a/resigned-opencode-mobile-3.0.0-10020-x86_64.apk" ;;
+            via10030) fl="$a/resigned-opencode-mobile-2.1.5+63.apk"; via="$a/resigned-opencode-mobile-3.0.0-10030-x86_64.apk" ;;
+          esac
+          for f in "$fl" ${via:+"$via"} "$a/candidate-x86_64.apk"; do [ -f "$f" ] || { echo "::error::missing $f"; exit 1; }; done
+          { echo "flutter=$fl"; echo "via=$via"; echo "native=$a/candidate-x86_64.apk"; } >> "$GITHUB_OUTPUT"
+      - name: Free disk
+        run: |
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/.ghcup /usr/local/share/boost "$AGENT_TOOLSDIRECTORY/CodeQL" || true
+          df -h / | tail -n 1
       - name: Enable KVM
-        if: ${{ inputs.target == 'emulator' }}
-        working-directory: ${{ github.workspace }}
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
-      - name: Run on the emulator
-        if: ${{ inputs.target == 'emulator' }}
-        uses: reactivecircus/android-emulator-runner@69c8581131285561115a2e413eb0037446bdc2d6 # v2.35.0
-        with:
-          api-level: 34
-          arch: x86_64
-          target: google_apis
-          profile: pixel_6
-          disable-animations: true
-          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none
-          working-directory: native
-          script: tool/qa/device-bench.sh "${{ inputs.what }}" "$GITHUB_WORKSPACE/native/build/device-numbers"
-      - name: Run on Firebase Test Lab
-        if: ${{ inputs.target == 'testlab' }}
+      - name: SDK parts and the AVD (API 35 google_apis x86_64, like the PC gate AVD)
+        run: |
+          set -euo pipefail
+          sm="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          yes | "$sm" --licenses > /dev/null || true
+          "$sm" "emulator" "platform-tools" "build-tools;37.0.0" "system-images;android-35;google_apis;x86_64" > /dev/null
+          echo no | "$ANDROID_HOME/cmdline-tools/latest/bin/avdmanager" create avd -n OCN_GH \
+            -k "system-images;android-35;google_apis;x86_64" -d pixel_6 > /dev/null
+          cfg="$HOME/.android/avd/OCN_GH.avd/config.ini"
+          set_cfg() { grep -v "^$1=" "$cfg" > "$cfg.new" || true; echo "$1=$2" >> "$cfg.new"; mv "$cfg.new" "$cfg"; }
+          set_cfg hw.ramSize 4096
+          set_cfg disk.dataPartition.size 8G
+          set_cfg hw.keyboard yes
+          set_cfg hw.cpu.ncore 4
+          set_cfg hw.gpu.enabled yes
+          set_cfg hw.gpu.mode swiftshader_indirect
+          set_cfg hw.audioInput yes
+          echo "$ANDROID_HOME/emulator" >> "$GITHUB_PATH"
+          echo "$ANDROID_HOME/platform-tools" >> "$GITHUB_PATH"
+          echo "$ANDROID_HOME/build-tools/37.0.0" >> "$GITHUB_PATH"
+      - name: Maestro (pinned, hash-checked)
+        run: |
+          set -euo pipefail
+          ver="$(head -n 1 native/e2e/runner/maestro.version)"
+          sum="$(sed -n 's/^sha256 //p' native/e2e/runner/maestro.version)"
+          curl -fsSL --retry 5 -o "$RUNNER_TEMP/maestro.zip" "https://github.com/mobile-dev-inc/maestro/releases/download/cli-$ver/maestro.zip"
+          echo "$sum  $RUNNER_TEMP/maestro.zip" | sha256sum -c -
+          unzip -q "$RUNNER_TEMP/maestro.zip" -d "$RUNNER_TEMP/maestro-cli"
+          echo "MAESTRO=$RUNNER_TEMP/maestro-cli/maestro/bin/maestro" >> "$GITHUB_ENV"
+          echo "MAESTRO_CLI_NO_ANALYTICS=1" >> "$GITHUB_ENV"
+      - name: OpenCode 2 server for the fixtures (pinned 2.1.1)
+        run: |
+          set -euo pipefail
+          npm install --silent --prefix "$RUNNER_TEMP/oc2" @opencode/cli@2.1.1 > /dev/null
+          bin="$RUNNER_TEMP/oc2/node_modules/@opencode/cli-linux-x64/bin/opencode"
+          [ -x "$bin" ] || bin="$(find "$RUNNER_TEMP/oc2/node_modules/@opencode" -path '*linux-x64*' -name opencode -type f | head -n 1)"
+          "$bin" --version
+          echo "FX_OC2_BIN=$bin" >> "$GITHUB_ENV"
+      - name: The upgrade gate
+        id: gate
         env:
-          GCP_KEY: ${{ secrets.GCP_TESTLAB_KEY }}
-          WHAT: ${{ inputs.what }}
+          OC_UPGRADE_VIA_APK: ${{ steps.pair.outputs.via }}
         run: |
-          if [ -z "$GCP_KEY" ]; then
-            echo "::notice::GCP_TESTLAB_KEY is not set; Test Lab was skipped. Use target=emulator or run native/tool/qa/testlab-bench.sh locally."
-            exit 0
-          fi
-          printf '%s' "$GCP_KEY" > "$RUNNER_TEMP/gcp.json"
-          tool/qa/testlab-bench.sh "$WHAT" "$RUNNER_TEMP/gcp.json" "$GITHUB_WORKSPACE/native/build/device-numbers"
-      - name: Summary
+          set -uo pipefail
+          mkdir -p "$RUNNER_TEMP/gate"
+          native/tool/qa/upgrade_e2e.sh \
+            --flutter-apk "${{ steps.pair.outputs.flutter }}" --native-apk "${{ steps.pair.outputs.native }}" \
+            --expect-signer "${{ needs.build.outputs.signer }}" --avd OCN_GH --reseed --no-save-snapshot \
+            --seed-home "$RUNNER_TEMP/seeds" --lock "$RUNNER_TEMP/emu.lock" --out "$RUNNER_TEMP/gate/out" \
+            --evidence-dir "$RUNNER_TEMP/gate/evidence" --emulator "$ANDROID_HOME/emulator/emulator" \
+            --adb "$ANDROID_HOME/platform-tools/adb" --maestro "$MAESTRO" --skip-resource-checks \
+            2>&1 | tee "$RUNNER_TEMP/gate/gate.log"
+          rc=${PIPESTATUS[0]}
+          echo "rc=$rc" >> "$GITHUB_OUTPUT"
+          cp "$RUNNER_TEMP/apks/APKS.md" "$RUNNER_TEMP/apks/APP_COMMIT" "$RUNNER_TEMP/gate/" || true
+          { echo "### ${{ matrix.case }}: gate exit $rc"; echo '```'; grep -E '^(PASS|FAIL|NOT RUN|VERDICT|REFUSED|via:)' "$RUNNER_TEMP/gate/gate.log"; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          exit 0
+      - name: Keep the evidence
         if: always()
-        run: |
-          mkdir -p build/device-numbers
-          { echo "### Native device numbers (${{ inputs.target }}, ${{ inputs.what }})"; echo;
-            [ -f build/device-numbers/summary.md ] && cat build/device-numbers/summary.md || echo "no numbers produced"; } >> "$GITHUB_STEP_SUMMARY"
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: native-device-numbers
-          path: native/build/device-numbers
+          name: upgrade-proof-${{ matrix.case }}
+          path: |
+            ${{ runner.temp }}/gate/
+            !${{ runner.temp }}/gate/out/**/*.mp4
           retention-days: 14
-          if-no-files-found: ignore
+          if-no-files-found: warn
+      - name: Verdict
+        run: exit "${{ steps.gate.outputs.rc }}"
