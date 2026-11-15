@@ -81,4 +81,21 @@ class PaseoHelperRestartTurnTest {
         val h = runThenReconnect(agentJson("a1", status = "idle"))
         assertEquals(listOf<RunOutcome>(RunOutcome.Succeeded), h.ends())
     }
+
+    /**
+     * The app itself was stopped with the helper (Samsung ends a cached app and its Linux) and opened again within
+     * three minutes: a fresh gateway reads the saved record, still "running". It reads busy for the record's bound;
+     * then nothing newer came, so no helper ran that turn: stopped by a restart, never a finished reply.
+     */
+    @Test
+    fun `I147-AGY-2 a running record nothing newer follows ends as stopped by a restart`() = runTest {
+        val h = GatewayHarness(this, restartedHelper(agentJson("a1", status = "running", loaded = false)))
+        h.gateway.startListening()
+        h.pump()
+        assertEquals(1, h.events.count { it == GatewayEvent.RunStarted(SessionId("a1")) }, "a fresh record reads busy")
+        assertEquals(emptyList(), h.ends())
+        advanceTimeBy(200_000)
+        h.pump()
+        assertEquals(listOf<RunOutcome>(RunOutcome.Interrupted(InterruptReason.Shutdown)), h.ends())
+    }
 }
