@@ -1,7 +1,5 @@
 package io.github.eslamasabry.oc.ui.kit.chip
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -10,7 +8,6 @@ import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
@@ -21,12 +18,15 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import io.github.eslamasabry.oc.ui.design.style.SurfaceRole
 import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
+import io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
+import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceInput
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappable
-import io.github.eslamasabry.oc.ui.kit.foundation.kitHairline
-import io.github.eslamasabry.oc.ui.kit.foundation.shape
+import io.github.eslamasabry.oc.ui.kit.foundation.kitSurface
+import io.github.eslamasabry.oc.ui.kit.foundation.kitSurfaceLook
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcon
 import io.github.eslamasabry.oc.ui.kit.icon.KitIconSize
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
@@ -54,7 +54,8 @@ public fun KitAgentModelChip(
 ) {
     val colors = LocalKitColors.current
     val base = LocalKitTypography.current.style(TypeRole.Secondary)
-    val shape = KitShapeId.Pill.shape()
+    // The face comes from the kit's surface look (K20): the same control pill as a chip, in every style.
+    val look = kitSurfaceLook(KitSurfaceInput(role = SurfaceRole.Control, shape = KitShapeId.Pill, level = SurfaceLevel.Surface2))
     val text: AnnotatedString =
         buildAnnotatedString {
             withStyle(SpanStyle(color = colors.text1, fontWeight = FontWeight.SemiBold)) { append(agent) }
@@ -71,9 +72,7 @@ public fun KitAgentModelChip(
     ) {
         Row(
             Modifier.fillMaxWidth()
-                .clip(shape)
-                .background(colors.surface2)
-                .border(kitHairline(), colors.hairline, shape)
+                .kitSurface(look)
                 .padding(horizontal = Space.S3.dp, vertical = Space.S2.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(Space.S2.dp),

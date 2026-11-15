@@ -2,7 +2,6 @@ package io.github.eslamasabry.oc.ui.kit.input
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -153,11 +152,13 @@ public fun KitStartBox(
     LaunchedEffect(focusKey) { if (focusKey != null) focus.requestFocus() }
     val nudge = remember { Animatable(0f) }
     val travels = KitMotion.state.travels
+    // One 48 ms leg of the nudge, timed by the kit (debug time scale, still under reduced motion: MOT-GATE-1).
+    val nudgeLeg = KitMotion.specs.countdown<Float>(NUDGE_LEG_MS)
     LaunchedEffect(remind) {
         if (remind <= 0) return@LaunchedEffect
         focus.requestFocus()
         if (!travels) return@LaunchedEffect
-        for (target in floatArrayOf(-1f, 1f, -.6f, .6f, 0f)) nudge.animateTo(target, tween(48))
+        for (target in floatArrayOf(-1f, 1f, -.6f, .6f, 0f)) nudge.animateTo(target, nudgeLeg)
     }
     // The halo needs room above the box: a page scroller clips at its top, and the box is often the first thing on the
     // page (New conversation in Soft, device pass 2026-11-13: the glow ended in a hard band under the header). The
@@ -219,3 +220,4 @@ public fun KitStartBox(
 }
 
 private const val NUDGE_DP = 6
+private const val NUDGE_LEG_MS = 48
