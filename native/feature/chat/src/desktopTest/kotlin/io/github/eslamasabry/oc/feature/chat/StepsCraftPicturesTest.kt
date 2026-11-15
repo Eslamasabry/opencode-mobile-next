@@ -111,13 +111,18 @@ class StepsCraftPicturesTest {
         mainClock.advanceTimeByFrame()
     }
 
-    private fun ComposeUiTest.screen(look: Look, running: Boolean, arrived: () -> Boolean = { false }) {
+    private fun ComposeUiTest.screen(
+        look: Look,
+        running: Boolean,
+        motion: MotionLevel = MotionLevel.Full,
+        arrived: () -> Boolean = { false },
+    ) {
         val scene = ChatScene()
         val appearance =
             KitAppearance(
                 style = look.style,
                 mode = if (look.dark) AppearanceMode.Dark else AppearanceMode.Light,
-                motion = MotionLevel.Full,
+                motion = motion,
                 liveBackground = look.live != null,
                 liveStyle = look.live ?: "aurora",
             )
@@ -137,18 +142,24 @@ class StepsCraftPicturesTest {
     private fun shot(look: Look, moment: Moment) =
         runSkikoComposeUiTest(Size(WIDTH.toFloat(), HEIGHT.toFloat()), testTimeout = SCENE_TIMEOUT) {
             mainClock.autoAdvance = false
-            screen(look, running = moment == Moment.Running)
-            mainClock.advanceTimeBy(SETTLE)
+            // Glass draws a frame in seconds on a runner without a GPU, and the opened picture walks through some 270
+            // frames of settling and dragging: twelve minutes were not enough. Its picture is the settled end state, so
+            // for that one scene the motion is off and each wait is a few frames; the opening with motion on is proven
+            // by the Solid pictures and the strips.
+            val quick = look.style == Style.Glass && moment == Moment.Opened
+            val settle = if (quick) QUICK_SETTLE else SETTLE
+            screen(look, running = moment == Moment.Running, motion = if (quick) MotionLevel.Off else MotionLevel.Full)
+            mainClock.advanceTimeBy(settle)
             if (moment == Moment.Opened) {
                 // The turn's row stays under the finger (P-010) and its steps open below it, the reply going on below.
                 tap("chat-work-summary")
-                mainClock.advanceTimeBy(SETTLE)
+                mainClock.advanceTimeBy(settle)
                 // The person reads on: the build run (a build, then two adb commands) is brought to the middle of the
                 // screen, then opened there.
-                dragToMiddle("chat-step-run-c3")
-                mainClock.advanceTimeBy(SETTLE)
+                dragToMiddle("chat-step-run-c3", steps = if (quick) 6 else 24)
+                mainClock.advanceTimeBy(settle)
                 tap("chat-step-run-c3")
-                mainClock.advanceTimeBy(SETTLE)
+                mainClock.advanceTimeBy(settle)
             }
             // The running step's light, part-way round its node.
             if (moment == Moment.Running) mainClock.advanceTimeBy(LIGHT_MID)
@@ -227,14 +238,13 @@ class StepsCraftPicturesTest {
      * A slow drag (no fling) that brings the row tagged [tag] to the middle of the screen, as a person reading on
      * would.
      */
-    private fun ComposeUiTest.dragToMiddle(tag: String) {
+    private fun ComposeUiTest.dragToMiddle(tag: String, steps: Int = 24) {
         val row = onNodeWithTag(tag).fetchSemanticsNode().boundsInRoot
         val by = (row.center.y - HEIGHT / 2f)
         if (by <= 0f) return
         onNodeWithTag("transcript-list").performTouchInput {
             val start = Offset(width * .5f, height * .7f)
             down(start)
-            val steps = 24
             // The touch slop is crossed first, then every move scrolls.
             repeat(steps) { moveBy(Offset(0f, -(by + SLOP) / steps), delayMillis = 16) }
             // Still for a moment before lifting: no speed is left for a fling.
@@ -296,6 +306,9 @@ class StepsCraftPicturesTest {
         const val WIDTH = 1081
         const val HEIGHT = 2402
         const val SETTLE = 900L
+
+        /** Six frames: enough for a scene with motion off to lay out, draw and settle its scroll. */
+        const val QUICK_SETTLE = 96L
         const val LIGHT_MID = 1100L
 
         /** More than the touch slop (8 dp at 2.625 px/dp), crossed before a drag scrolls. */
