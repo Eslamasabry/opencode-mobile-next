@@ -1222,4 +1222,8 @@
     <string name="stepShellWaitAsk">Chờ</string>
     <string name="stepShellProgramAsk">Chạy %1$s</string>
     <string name="stepShellUnknownAsk">Chạy một lệnh</string>
+    <string name="chatLoadFailedAgentBody">Không mất gì cả. Hãy thử lại khi %1$s phản hồi.</string>
+    <string name="chatLoadFailedAgentsBody">Không mất gì cả. Hãy thử lại khi các tác nhân trên điện thoại phản hồi.</string>
+    <string name="chatLoadMissingAgentBody">%1$s không có cuộc trò chuyện này: có thể nó đã dừng trước khi bắt đầu. Hãy thử lại, hoặc thiết lập %1$s rồi bắt đầu cuộc trò chuyện mới.</string>
+    <string name="chatLoadMissingAgentsBody">Các tác nhân trên điện thoại không có cuộc trò chuyện này: tác nhân của nó có thể đã dừng trước khi bắt đầu. Hãy thử lại hoặc bắt đầu cuộc trò chuyện mới.</string>
 </resources>

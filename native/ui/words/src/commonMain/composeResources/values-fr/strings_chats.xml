@@ -338,4 +338,7 @@
     <string name="runningWorkTasksNoStop">Ce serveur ne peut pas les arrêter une par une.</string>
     <string name="runningWorkMenu">Travail en cours</string>
     <string name="runningWorkOpen">Ouvrir le travail en cours</string>
+    <string name="chatsNewStartingAgent">Démarrage de %1$s…</string>
+    <string name="chatsNewAgentModelMissing">%1$s ne propose pas le modèle que vous avez choisi. Vos mots sont conservés.</string>
+    <string name="chatsNewAgentDidNotStart">%1$s n'a pas démarré. Vos mots sont conservés.</string>
 </resources>

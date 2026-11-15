@@ -343,4 +343,7 @@
     <string name="runningWorkTasksNoStop">Этот сервер не может останавливать их по одной.</string>
     <string name="runningWorkMenu">Выполняемая работа</string>
     <string name="runningWorkOpen">Открыть выполняемую работу</string>
+    <string name="chatsNewStartingAgent">Запуск %1$s…</string>
+    <string name="chatsNewAgentModelMissing">%1$s не предлагает выбранную вами модель. Ваш текст сохранён.</string>
+    <string name="chatsNewAgentDidNotStart">%1$s не запустился. Ваш текст сохранён.</string>
 </resources>

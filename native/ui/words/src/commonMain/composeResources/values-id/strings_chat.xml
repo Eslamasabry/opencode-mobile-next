@@ -1222,4 +1222,8 @@
     <string name="stepShellWaitAsk">Tunggu</string>
     <string name="stepShellProgramAsk">Jalankan %1$s</string>
     <string name="stepShellUnknownAsk">Jalankan perintah</string>
+    <string name="chatLoadFailedAgentBody">Tidak ada yang hilang. Coba lagi saat %1$s menjawab.</string>
+    <string name="chatLoadFailedAgentsBody">Tidak ada yang hilang. Coba lagi saat agen di ponsel menjawab.</string>
+    <string name="chatLoadMissingAgentBody">%1$s tidak memiliki percakapan ini: mungkin berhenti sebelum dimulai. Coba lagi, atau siapkan %1$s dan mulai percakapan baru.</string>
+    <string name="chatLoadMissingAgentsBody">Agen di ponsel tidak memiliki percakapan ini: agennya mungkin berhenti sebelum dimulai. Coba lagi atau mulai percakapan baru.</string>
 </resources>

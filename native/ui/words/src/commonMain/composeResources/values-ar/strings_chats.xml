@@ -352,4 +352,7 @@
     <string name="runningWorkTasksNoStop">لا يستطيع هذا الخادم إيقاف هذه المهام واحدةً تلو الأخرى.</string>
     <string name="runningWorkMenu">العمل الجاري</string>
     <string name="runningWorkOpen">فتح العمل الجاري</string>
+    <string name="chatsNewStartingAgent">جارٍ تشغيل %1$s…</string>
+    <string name="chatsNewAgentModelMissing">لا يوفّر %1$s النموذج الذي اخترته. كلماتك محفوظة.</string>
+    <string name="chatsNewAgentDidNotStart">لم يبدأ %1$s. كلماتك محفوظة.</string>
 </resources>
