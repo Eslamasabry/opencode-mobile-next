@@ -4,16 +4,19 @@
     native/tool/qa/release_smoke.sh --new-apk <build.apk> [--previous-apk <old.apk>] [--out DIR] [--commit SHA]
 
 The device is chosen by the environment variable OC_SMOKE_SERIAL (an adb serial). It is never written to a file.
-Tools: adb (OC_ADB overrides), python3. Plain adb and uiautomator only; the labels it taps and looks for are read from
+Tools: adb (OC_ADB overrides; else adb on PATH, else $ANDROID_HOME or ~/Android/Sdk platform-tools), python3.
+--commit takes a full or short commit of this repository (default HEAD). Before a run: the device holds an OLDER build
+of the app with at least one conversation (adb install cannot go down), and New conversation's agent and model are the
+cheap ones you want the two prompts to use (the script sends with whatever New conversation shows). Plain adb and uiautomator only; the labels it taps and looks for are read from
 this repository's own words files (ui/words), so a renamed button changes the script's target with the app.
 
 Checks, in order (a later check still runs after an earlier one fails, so one run reports everything):
   a  install: the new APK goes over the installed build (adb install -r, never uninstall) and the app opens with its
      conversations still there. What the person owns is whatever the Conversations screen shows before the install
      that is not one of the app's own words; every such text must still be there after it.
-  b  server: Settings > This phone says the phone's own server is running (it is started with the Start button when off).
-  c  reply: a new conversation, a prompt that asks for one exact word, and that word comes back as a reply.
-  d  permission: a prompt that makes the agent write a file; the permission question appears, "Allow once" answers it,
+  b  server: Settings > Server > This phone says the phone's own server is running (it is started with the Start button when off).
+  c  reply: New conversation, a prompt that asks for one exact word, Start, and that word comes back as a reply.
+  d  permission: in that conversation's own message box, a prompt that makes the agent write a file; the permission question appears, "Allow once" answers it,
      the question goes away and the run goes on.
 
 Result file: <out>/smoke-<commit>.json with the commit, the installed version code, the device model, the time, the
@@ -21,7 +24,7 @@ APK's sha256 and each check's pass or fail ("pass": true only when all four pass
 to go on without such a file for its HEAD commit.
 Exit: 0 all four passed, 1 a check failed, 2 could not run (no device, no APK, no adb).
 """
-import argparse, datetime, glob, hashlib, json, os, re, secrets, subprocess, sys, time
+import argparse, datetime, glob, hashlib, json, os, re, secrets, shutil, subprocess, sys, time
 import xml.etree.ElementTree as ET
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -29,7 +32,17 @@ NATIVE = os.path.abspath(os.path.join(HERE, '..', '..'))
 REPO = os.path.abspath(os.path.join(NATIVE, '..'))
 WORDS = os.path.join(NATIVE, 'ui', 'words', 'src', 'commonMain', 'composeResources', 'values')
 PKG = 'io.github.eslamasabry.opencode_mobile'
-ADB = os.environ.get('OC_ADB', 'adb')
+def _find_adb():
+    if os.environ.get('OC_ADB', '').strip():
+        return os.environ['OC_ADB'].strip()
+    for c in (shutil.which('adb'), os.path.join(os.environ.get('ANDROID_HOME', '/nonexistent'), 'platform-tools', 'adb'),
+              os.path.expanduser('~/Android/Sdk/platform-tools/adb')):
+        if c and os.path.isfile(c) and os.access(c, os.X_OK):
+            return c
+    return 'adb'
+
+
+ADB = _find_adb()
 SERIAL = os.environ.get('OC_SMOKE_SERIAL', '').strip()
 DUMP = '/sdcard/oc_release_smoke_ui.xml'
 
@@ -191,7 +204,8 @@ def check_a(new_apk, previous_apk, ctx):
         print(f'  a  installed the previous build ({have}) first; create a conversation in it and run again')
         raise Fail('the previous build was only just installed, so it holds no conversations yet')
     if new_code is not None and have >= new_code:
-        raise Fail(f'the installed build ({have}) is not older than the new one ({new_code}); an update over it is not a test of updating')
+        raise Fail(f'the installed build ({have}) is not older than the new one ({new_code}); an update over it is not a test of '
+                   'updating: install an older build of the same signer first (adb install -r), open a conversation in it, run again')
     launch()
     before = user_texts(conversations_screen())
     if not before:
@@ -217,14 +231,26 @@ def open_this_phone():
     v, nodes = wait_for('Settings', 20, lambda ns: find(ns, word('settingsHubSearch'), exact=False))
     if not v:
         raise Fail('Settings did not open')
+    # Settings lists the "Server" group (its second line names the server, e.g. "This phone · Connected"); the
+    # "This phone" row is inside that group.
+    server_row = word('settingsHubServer')
     for _ in range(8):
-        hit = find(nodes, word('settingsV3ThisPhone'))
+        hit = find(nodes, server_row)
         if hit:
             tap(hit[0])
-            return
+            break
         swipe_up()
         nodes = screen()
-    raise Fail(f'no "{word("settingsV3ThisPhone")}" row in Settings')
+    else:
+        raise Fail(f'no "{server_row}" row in Settings')
+    v, nodes = wait_for('This phone row', 20, lambda ns: find(ns, word('settingsV3ThisPhone')))
+    for _ in range(6):
+        if v:
+            tap(v[0])
+            return
+        swipe_up()
+        v = find(screen(), word('settingsV3ThisPhone'))
+    raise Fail(f'no "{word("settingsV3ThisPhone")}" row under Settings > {server_row}')
 
 
 def check_b(ctx):
@@ -270,6 +296,21 @@ def new_conversation():
     return composer
 
 
+def clear_field():
+    # Select all and delete: New conversation brings back an earlier draft, which must not join the prompt.
+    shell('input', 'keycombination', 'KEYCODE_CTRL_LEFT', 'KEYCODE_A')
+    shell('input', 'keyevent', 'KEYCODE_DEL')
+
+
+def send_buttons(nodes):
+    """The button that sends: "Send" in a conversation, "Start" (or "Start with <agent>") on New conversation."""
+    hits = find(nodes, word('kitComposerSend')) or find(nodes, word('upgradeNewStart'))
+    if not hits:
+        prefix = word('chatsNewStartWith').split('%')[0].strip()
+        hits = [n for n in nodes if prefix and n.label().strip().startswith(prefix)]
+    return hits
+
+
 def send(composer, text):
     nodes = screen()
     box = composer(nodes)
@@ -277,13 +318,14 @@ def send(composer, text):
         raise Fail('no message box to type in')
     tap(box[0])
     time.sleep(1)
+    clear_field()
     type_text(text)
     time.sleep(1)
     nodes = screen()
-    send_btn = find(nodes, word('kitComposerSend'))
-    if not send_btn:
-        raise Fail(f'no "{word("kitComposerSend")}" button after typing')
-    tap(send_btn[0])
+    btn = send_buttons(nodes)
+    if not btn:
+        raise Fail(f'no "{word("kitComposerSend")}" or "{word("upgradeNewStart")}" button after typing')
+    tap(btn[0])
 
 
 def check_c(ctx):
@@ -329,9 +371,10 @@ def main():
         die(f'no APK at {a.new_apk}')
     if a.previous_apk and not os.path.isfile(a.previous_apk):
         die(f'no APK at {a.previous_apk}')
-    commit = a.commit or subprocess.run(['git', '-C', REPO, 'rev-parse', 'HEAD'], capture_output=True, text=True).stdout.strip()
+    commit = subprocess.run(['git', '-C', REPO, 'rev-parse', '--verify', '--quiet', (a.commit or 'HEAD') + '^{commit}'],
+                            capture_output=True, text=True).stdout.strip()
     if not re.fullmatch(r'[0-9a-f]{40}', commit):
-        die('could not read the commit (pass --commit <40 hex>)')
+        die(f'could not read the commit {a.commit or "HEAD"} in this repository (fetch it, or pass --commit <sha>)')
     if adb('get-state').stdout.strip() != 'device':
         die('the device in OC_SMOKE_SERIAL is not online (adb get-state)')
     model = shell('getprop', 'ro.product.model').strip() or 'unknown'

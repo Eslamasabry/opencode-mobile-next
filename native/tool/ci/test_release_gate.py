@@ -194,6 +194,17 @@ class SmokeScript(unittest.TestCase):
         nodes = [self.mod.Node(e) for e in ET.fromstring(xml).iter('node')]
         self.assertEqual(self.mod.user_texts(nodes), {'Plan the garden shed trip zq'})
 
+    def test_the_send_button_is_send_in_a_conversation_and_start_on_new_conversation(self):
+        import xml.etree.ElementTree as ET
+        def labels(*texts):
+            xml = '<hierarchy>' + ''.join(f'<node text="{t}" class="x" bounds="[0,0][1,1]"/>' for t in texts) + '</hierarchy>'
+            return [n.label() for n in self.mod.send_buttons([self.mod.Node(e) for e in ET.fromstring(xml).iter('node')])]
+        self.assertEqual(labels('Message', self.mod.word('kitComposerSend')), [self.mod.word('kitComposerSend')])
+        self.assertEqual(labels('Ask OpenCode', self.mod.word('upgradeNewStart')), [self.mod.word('upgradeNewStart')])
+        with_agent = self.mod.word('chatsNewStartWith').replace('%1$s', 'Codex')
+        self.assertEqual(labels(with_agent), [with_agent])
+        self.assertEqual(labels('Message', 'Starting'), [])
+
     def test_it_refuses_without_a_serial_and_writes_no_serial_into_the_result(self):
         env = {k: v for k, v in os.environ.items() if k != 'OC_SMOKE_SERIAL'}
         p = subprocess.run([sys.executable, '-I', os.path.join(HERE, '..', 'qa', 'release_smoke.py'), '--new-apk', __file__], env=env,
