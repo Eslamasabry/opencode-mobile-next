@@ -87,6 +87,9 @@ class AppTelemetryHealth(
     private val telemetry get() = Telemetry.service
     private val main = Handler(Looper.getMainLooper())
     private var started = false
+
+    /** A reply finished arriving (set by the consent question, which waits for it). */
+    @Volatile var onReplyFinished: (() -> Unit)? = null
     private var health: HealthTelemetry? = null
     private val lifecycle by lazy { ProductLifecycle(telemetry, clock) }
 
@@ -141,7 +144,7 @@ class AppTelemetryHealth(
         val answers = TelemetryAnswers(stores.prefs, stores.lanes.app)
         val elapsed = { SystemClock.elapsedRealtime() }
         val wall = { clock.now().toEpochMilliseconds() }
-        val chat = ChatJourney(elapsed, HealthFlow(), PrefsFirstReply(answers, scope))
+        val chat = ChatJourney(elapsed, HealthFlow(), PrefsFirstReply(answers, scope)) { onReplyFinished?.invoke() }
         val approvals = ApprovalMeter(elapsed, HealthFlow()) { AppJourneys.chatOrNull }
         val setup =
             SetupJourney(

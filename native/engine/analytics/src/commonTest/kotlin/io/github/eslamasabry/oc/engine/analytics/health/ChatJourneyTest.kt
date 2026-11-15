@@ -48,6 +48,28 @@ class ChatJourneyTest {
     }
 
     @Test
+    fun `B-JOURNEY-030 a finished reply is announced once per ended turn, even with every switch off`() = runTest {
+        var done = 0
+        val journey = ChatJourney({ 1_000L }, HealthFlow(), Once()) { done++ }
+        journey.sent("s1", onPhone = true)
+        journey.busy("s1")
+        assertEquals(0, done, "a reply that is still arriving is not finished")
+        journey.reply("s1")
+        assertEquals(0, done, "text arriving is not the end")
+        journey.ended("s1")
+        assertEquals(1, done)
+        // A turn with no reply, and a turn that ended in an error, are not a finished reply.
+        journey.sent("s2", onPhone = true)
+        journey.busy("s2")
+        journey.ended("s2")
+        journey.sent("s3", onPhone = true)
+        journey.busy("s3")
+        journey.reply("s3")
+        journey.ended("s3", errorKind = "rate_limit")
+        assertEquals(1, done)
+    }
+
+    @Test
     fun `B-JOURNEY-010 a normal turn sends first reply, then one chat_turn done with its times and tools`() = runTest {
         val r = Rig(this)
         r.journey.sent("s1", onPhone = true, PromptTraits(agent = "Build"))

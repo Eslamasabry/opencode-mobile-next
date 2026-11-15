@@ -34,6 +34,8 @@ public class ChatJourney(
     private val now: () -> Long,
     private val flow: HealthFlow = HealthFlow(),
     private val firstEver: FirstReplyOnce = FirstReplyOnce.Never,
+    /** A turn that showed a reply has just ended without an error: the reply is complete (sent whatever the switches say). */
+    private val onReplyDone: () -> Unit = {},
 ) {
     private class Turn(val startMs: Long, val onPhone: Boolean, val traits: PromptTraits, val input: String) {
         val assistant = HashSet<String>()
@@ -149,6 +151,7 @@ public class ChatJourney(
                 else -> "done"
             }
         summarize(sessionId, t, outcome, errorKind.takeIf { outcome == "error" || outcome == "approval_timeout" })
+        if (t.replied && errorKind == null) onReplyDone()
     }
 
     /** The live stream of the connection (phone or computer) dropped or came back. */
