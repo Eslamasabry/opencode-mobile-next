@@ -39,3 +39,13 @@ class GitPageOrderTest {
         )
     }
 }
+
+class GitSyncRowsTest {
+    @kotlin.test.Test
+    fun `B-GIT-147 Get latest and Send both open Remotes while there is no remote, and neither otherwise`() {
+        kotlin.test.assertTrue(io.github.eslamasabry.oc.feature.git.presentation.gitSyncOpensRemotes(false, false, false))
+        kotlin.test.assertFalse(io.github.eslamasabry.oc.feature.git.presentation.gitSyncOpensRemotes(true, false, false))
+        kotlin.test.assertFalse(io.github.eslamasabry.oc.feature.git.presentation.gitSyncOpensRemotes(false, true, false))
+        kotlin.test.assertFalse(io.github.eslamasabry.oc.feature.git.presentation.gitSyncOpensRemotes(false, false, true))
+    }
+}

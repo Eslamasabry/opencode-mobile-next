@@ -38,3 +38,10 @@ public fun gitSections(hasChanges: Boolean, hasHistory: Boolean, needsIdentity: 
         if (hasHistory) add(GitSection.History)
         add(GitSection.Tools)
     }
+
+/**
+ * Get latest and Send are the same kind of row: while the project has no remote, either one's tap opens Remotes to add
+ * one, and both say so with the same chevron (issue 147 recheck F-021: only Get latest had it).
+ */
+public fun gitSyncOpensRemotes(hasRemote: Boolean, detached: Boolean, operationInProgress: Boolean): Boolean =
+    false // TEMP-RED

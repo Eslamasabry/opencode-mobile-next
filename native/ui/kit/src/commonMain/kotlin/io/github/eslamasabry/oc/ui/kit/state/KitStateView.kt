@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import io.github.eslamasabry.oc.ui.kit.frame.kitPageGutter
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Spacer
@@ -397,3 +398,10 @@ private fun CalmState(
 private class PreviousKind {
     var kind: KitStateKind? = null
 }
+
+/**
+ * The page's own ground, opaque: for a state page laid over something that must not show through (a web view's own
+ * error page under "Nothing is answering yet"). The state view itself stays as it is.
+ */
+@Composable
+public fun Modifier.kitGroundBackdrop(): Modifier = this.background(LocalKitColors.current.ground)
