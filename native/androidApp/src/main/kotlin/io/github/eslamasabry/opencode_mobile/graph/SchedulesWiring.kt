@@ -514,11 +514,7 @@ class ScheduledPromptWorker(context: Context, params: WorkerParameters) :
     override suspend fun doWork(): Result {
         val graph = applicationContext.appGraph as SchedulesGraphAccess
         val report =
-            ScheduleWorkPolicy.run(
-                graph.schedules,
-                inputData,
-                graph.schedulesClock.now().toEpochMilliseconds(),
-            )
+            ScheduleWorkPolicy.run(graph.schedules, inputData)
         AppLog.tagged("Schedules").i { "run ended: ${report?.status ?: "nothing to do"}" }
         return Result.success()
     }

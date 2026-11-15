@@ -6,7 +6,9 @@ import io.github.eslamasabry.oc.feature.schedules.presentation.EditIssue
 import io.github.eslamasabry.oc.feature.schedules.presentation.EditorFields
 import io.github.eslamasabry.oc.feature.schedules.presentation.EditorRules
 import io.github.eslamasabry.oc.feature.schedules.presentation.ScheduleRowUi
+import io.github.eslamasabry.oc.feature.schedules.presentation.LastRunUi
 import io.github.eslamasabry.oc.feature.schedules.ui.ScheduleWords
+import io.github.eslamasabry.oc.feature.schedules.ui.lastLine
 import io.github.eslamasabry.oc.feature.schedules.ui.moment
 import io.github.eslamasabry.oc.feature.schedules.ui.repeatWords
 import io.github.eslamasabry.oc.feature.schedules.ui.scheduleLine
@@ -80,5 +82,15 @@ class ScheduleWordsTest {
         assertEquals(EditIssue.HoursInvalid, EditorRules.recurrence(base.copy(kind = RecurrenceKind.Interval, hours = "0"), t0, utc).second)
         // Flutter schedule_sheet.dart: an every-N-hours schedule first runs N hours from now (anchor = now + hours).
         assertEquals(Recurrence.interval(4, t0 + 4 * hour), EditorRules.recurrence(base.copy(kind = RecurrenceKind.Interval, hours = "4"), t0, utc).first)
+    }
+
+    @Test
+    fun `a run the server accepted but nobody saw finish says started, never replied`() {
+        val replied = LastRunUi(RunStatus.Ran, null, t0, "s1", false)
+        val unconfirmed = LastRunUi(RunStatus.Ran, "unconfirmed", t0, "s1", false)
+        assertTrue(lastLine(replied, t0, en).contains("replied"))
+        assertTrue(lastLine(unconfirmed, t0, en).contains("started"))
+        assertFalse(lastLine(unconfirmed, t0, en).contains("replied"))
+        assertTrue(en.why("unconfirmed").contains("not sent again"))
     }
 }
