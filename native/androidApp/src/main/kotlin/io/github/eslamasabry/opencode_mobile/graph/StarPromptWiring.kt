@@ -10,6 +10,7 @@ import io.github.eslamasabry.oc.engine.settings.teaching.StarPromptLedger
 import io.github.eslamasabry.oc.feature.chat.starprompt.ChatStarPrompt
 import io.github.eslamasabry.oc.feature.chat.starprompt.StarPromptEvent
 import io.github.eslamasabry.opencode_mobile.telemetry.Telemetry
+import kotlin.time.Clock
 
 /**
  * The one-time "star us on GitHub" ask: the counters live in the app-wide preference `oc.starPrompt`
@@ -18,12 +19,12 @@ import io.github.eslamasabry.opencode_mobile.telemetry.Telemetry
 @ContributesIntoSet(AppScope::class, binding = binding<ChatStarPrompt>())
 @SingleIn(AppScope::class)
 @Inject
-class AndroidStarPrompt(stores: PreviewStores) : ChatStarPrompt {
-    private val ledger = StarPromptLedger(stores.prefs, stores.lanes)
+class AndroidStarPrompt(stores: PreviewStores, clock: Clock) : ChatStarPrompt {
+    private val ledger = StarPromptLedger(stores.prefs, stores.lanes) { clock.now().toEpochMilliseconds() }
 
-    override suspend fun promptStarted(): Boolean = ledger.promptStarted()
+    override suspend fun promptStarted() = ledger.promptStarted()
 
-    override suspend fun replyEnded(success: Boolean) = ledger.replyEnded(success)
+    override suspend fun replyEnded(success: Boolean): Boolean = ledger.replyEnded(success)
 
     override fun report(event: StarPromptEvent) {
         val name =

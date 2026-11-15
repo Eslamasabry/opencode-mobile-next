@@ -2,6 +2,10 @@
 
 package io.github.eslamasabry.oc.feature.phonesetup.rb.o40
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.*
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.width
@@ -144,6 +148,74 @@ class SetupJourneyGateTest {
                     SetupDeviceInfo(listOf("arm64-v8a"), 8192, 10000000000),
                 ),
         )
+
+    private fun running(stage: String, done: Long, total: Long, overall: Double) =
+        SetupProgress(
+            SetupState.Running,
+            listOf(
+                ComponentProgress("linux", ComponentState.Done, bytesTotal = 30_000_000),
+                ComponentProgress("essentials", ComponentState.Running, stage = stage, bytesDone = done, bytesTotal = total),
+                ComponentProgress("python", ComponentState.Pending),
+            ),
+            overall,
+            current = "essentials",
+            etaSeconds = 180,
+            jobId = "one-bar-$stage",
+        )
+
+    private fun SemanticsNodeInteractionsProvider.ring(): Float =
+        onNode(SemanticsMatcher.keyIsDefined(SemanticsProperties.ProgressBarRangeInfo))
+            .fetchSemanticsNode()
+            .config[SemanticsProperties.ProgressBarRangeInfo]
+            .current
+
+    @Test
+    fun `I147-FIRST-RUN the ring is one bar for the whole setup, a download ending never reads 100 then 29`() =
+        runComposeUiTest {
+            var progress by mutableStateOf(running("Downloading files", 15_000_000, 15_000_000, .40))
+            setContent {
+                KitTheme(platform = DesktopKitPlatform(), localeTag = "en", stillFrame = true) {
+                    SetupJourneyScreen(state.copy(progress = progress), Actions())
+                }
+            }
+            waitForIdle()
+            val download = ring()
+            assertTrue(download < .99f, "the step's own download arc is not the setup: $download")
+            progress =
+                SetupProgress(
+                    SetupState.Running,
+                    progress.components.map {
+                        if (it.id == "essentials") it.copy(stage = "Unpacking files", bytesDone = 4_000_000, bytesTotal = 15_000_000)
+                        else it
+                    },
+                    .43,
+                    current = "essentials",
+                    etaSeconds = 150,
+                    jobId = progress.jobId,
+                )
+            waitForIdle()
+            assertTrue(ring() >= download, "the bar only moves forward: $download then ${ring()}")
+        }
+
+    @Test
+    fun `I147-FIRST-RUN the bytes line counts the whole download the home page promised`() =
+        runComposeUiTest {
+            setContent {
+                KitTheme(platform = DesktopKitPlatform(), localeTag = "en", stillFrame = true) {
+                    SetupJourneyScreen(state.copy(progress = running("Downloading files", 0, 15_000_000, .30)), Actions())
+                }
+            }
+            waitForIdle()
+            val total = state.bytes
+            assertTrue(total > 30_000_000, "the fixture's whole download is more than one step")
+            val whole = io.github.eslamasabry.oc.engine.runtime.setup.SetupProgressRules.formatBytePair(30_000_000, total).second
+            val said =
+                onNode(SemanticsMatcher.keyIsDefined(SemanticsProperties.ProgressBarRangeInfo))
+                    .fetchSemanticsNode()
+                    .config[SemanticsProperties.ContentDescription]
+                    .joinToString()
+            assertTrue(said.contains(whole), "the ring says: $said (whole download $whole)")
+        }
 
     @Test
     fun `measured stage keeps its furthest share but a new stage starts a new arc`() {

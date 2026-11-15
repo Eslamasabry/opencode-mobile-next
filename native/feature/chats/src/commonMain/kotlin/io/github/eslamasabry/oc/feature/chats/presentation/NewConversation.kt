@@ -69,6 +69,12 @@ public data class NewConversationProject(
     val separateCopy: Boolean,
 )
 
+/**
+ * This phone's shared storage (Downloads, Documents and the rest) for the phone's own OpenCode: whether All files
+ * access is on. A server that is not this phone's own offers none (null).
+ */
+public enum class PhoneStorageAccess { Off, On }
+
 public data class NewConversationModel(
     val model: ModelRef,
     val name: String,
@@ -91,6 +97,8 @@ public data class NewConversationPhoneAgent(
     val name: String,
     val iconKey: String,
     val checking: Boolean = false,
+    /** Installed, but the app cannot read its sign-in: the Agents page says "Set it up the first time you use it". */
+    val setUpAtFirstUse: Boolean = false,
 )
 
 /**
@@ -160,6 +168,13 @@ public interface NewConversationHost {
 
     public suspend fun repair(profile: ProfileId, directory: String): Outcome<GitLinkRepairReport> =
         Outcome.Failed(Failure.Unavailable(FeatureId("gitLinkRepair")))
+
+    /** [profile]'s phone storage access when it is this phone's own server; null when the page offers none. */
+    public suspend fun phoneStorage(profile: ProfileId): PhoneStorageAccess? = null
+
+    /** Opens Android's page for All files access. A request to the person, never a grant; the answer is read on return. */
+    public suspend fun requestPhoneStorage(profile: ProfileId): Outcome<Unit> =
+        Outcome.Failed(Failure.Unavailable(FeatureId("phoneStorage")))
 
     /** Whether [profile] can make a new project folder here (the app's own phone server only, as in Projects). */
     public fun canCreateProject(profile: ProfileId): Boolean = false
@@ -464,6 +479,8 @@ public data class NewConversationUi(
     val repairing: Boolean = false,
     /** The project sheet offers New project (the app's own phone server can make a Git folder under its projects). */
     val canCreateProject: Boolean = false,
+    /** This phone's storage access, read when the project sheet opens and when the page comes back; null: not offered. */
+    val phoneStorage: PhoneStorageAccess? = null,
     /** The New project name dialog is open. */
     val askingProjectName: Boolean = false,
     val creatingProject: Boolean = false,
@@ -555,6 +572,12 @@ public data class NewConversationUi(
             phoneAgent != null && directory != null &&
                 !AgentSelection.folderAllowed(AgentId(phoneAgent), directory)
 
+    /** [phoneNeedsProjectsFolder] and the phone has no project the agent could use: the way out is a new one. */
+    val phoneHasNoProject: Boolean
+        get() =
+            phoneNeedsProjectsFolder && phoneAgent != null &&
+                setup?.projects.orEmpty().none { AgentSelection.folderAllowed(AgentId(phoneAgent), it.directory) }
+
     /**
      * E20-S08: the project sheet's rows, one per folder. A server can list the same folder twice (a worktree, a
      * trailing "/"); the first listing wins, and it says Separate copy when any listing of that folder does.
@@ -642,6 +665,15 @@ public interface NewConversationActions {
     /** New project in the project sheet: asks for its name. */
     public fun askNewProject() {}
 
+    /** The project sheet's Phone storage row without access: opens Android's page for it. */
+    public fun requestPhoneStorage() {}
+
+    /**
+     * The sentence "this agent works only in the projects on this phone": with none to choose it asks for a new
+     * project's name right there, otherwise it opens the project chooser.
+     */
+    public fun chooseProjectForAgent() {}
+
     /** The name dialog's answer: makes the folder with Git and picks it; null closes the dialog. */
     public fun createProject(name: String?) {}
 
@@ -701,6 +733,8 @@ public class NewConversationViewModel(
     private var wantedApplied = false
 
     override fun shown() {
+        // Back from Android's All files access page: the Phone storage row says what the person answered.
+        if (mutable.value.phoneStorage != null) readPhoneStorage()
         if (!refreshOnShown) return
         val profile = mutable.value.profile ?: return
         refreshOnShown = false
@@ -1297,12 +1331,40 @@ public class NewConversationViewModel(
             )
         }
         if (sheet == NewConversationSheet.Import) loadImports()
+        if (sheet == NewConversationSheet.Projects) readPhoneStorage()
     }
 
     override fun askNewProject() {
         val shown = mutable.value
         if (!shown.canCreateProject || shown.creatingProject || shown.setup?.canChangeProject != true) return
         mutable.update { it.copy(askingProjectName = true, projectFailure = null) }
+    }
+
+    private fun readPhoneStorage() {
+        val profile = mutable.value.profile ?: return
+        viewModelScope.launch {
+            val access = host.phoneStorage(profile)
+            mutable.update { if (it.profile == profile) it.copy(phoneStorage = access) else it }
+        }
+    }
+
+    override fun requestPhoneStorage() {
+        val profile = mutable.value.profile ?: return
+        if (mutable.value.phoneStorage != PhoneStorageAccess.Off) return
+        viewModelScope.launch {
+            // Android's page opens over the app; the answer is read when the person comes back (shown()).
+            host.requestPhoneStorage(profile)
+            readPhoneStorage()
+        }
+    }
+
+    override fun chooseProjectForAgent() {
+        val shown = mutable.value
+        val profile = shown.profile ?: return
+        if (shown.phoneHasNoProject && host.canCreateProject(profile)) {
+            mutable.update { it.copy(canCreateProject = true) }
+            askNewProject()
+        } else sheet(NewConversationSheet.Projects)
     }
 
     override fun createProject(name: String?) {

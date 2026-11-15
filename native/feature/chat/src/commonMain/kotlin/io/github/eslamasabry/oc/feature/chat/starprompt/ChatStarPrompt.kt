@@ -16,11 +16,14 @@ public enum class StarPromptEvent { Shown, Tapped, Dismissed }
  * did; the app counts, remembers and sends the (opt-in) analytics.
  */
 public interface ChatStarPrompt {
-    /** A prompt started a turn. True = ask during this wait; it is already remembered as asked, so it never repeats. */
-    public suspend fun promptStarted(): Boolean
+    /** A prompt started a turn (counted; it never asks). */
+    public suspend fun promptStarted()
 
-    /** A turn ended; [success] = a reply with no error and no stop. */
-    public suspend fun replyEnded(success: Boolean)
+    /**
+     * A turn ended; [success] = a reply with no error and no stop. True = ask now, at rest: the turn is over. It is
+     * already remembered as asked, so it never repeats.
+     */
+    public suspend fun replyEnded(success: Boolean): Boolean
 
     public fun report(event: StarPromptEvent)
 }

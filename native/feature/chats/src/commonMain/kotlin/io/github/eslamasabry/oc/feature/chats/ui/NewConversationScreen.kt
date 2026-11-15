@@ -37,6 +37,7 @@ import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationSheet
 import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationStarter
 import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationWait
 import io.github.eslamasabry.oc.feature.chats.presentation.PhoneStartWay
+import io.github.eslamasabry.oc.feature.chats.presentation.PhoneStorageAccess
 import io.github.eslamasabry.oc.feature.chats.presentation.projectPlace
 import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationUi
 import io.github.eslamasabry.oc.feature.chats.presentation.filterNewConversationModels
@@ -157,7 +158,8 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
             state.folderMissing -> stringResource(Res.string.chatsNewFolderMissing)
             state.phoneNeedsProjectsFolder ->
                 stringResource(
-                    Res.string.chatsNewAgentNeedsProjectsFolder,
+                    if (state.phoneHasNoProject) Res.string.chatsNewAgentNoProjects
+                    else Res.string.chatsNewAgentNeedsProjectsFolder,
                     state.phoneAgentChoice?.name.orEmpty(),
                 )
             state.phoneModelsBusy -> loadingModels
@@ -195,7 +197,16 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                             !state.deliveryUnconfirmed && !state.creationUnconfirmed &&
                             !state.folderMissing
                     )
-                        KitText(startBlocked, role = TypeRole.Secondary)
+                        // The sentence is the way out: one tap makes a project (none yet) or opens the chooser.
+                        if (state.phoneNeedsProjectsFolder)
+                            KitButton(
+                                startBlocked,
+                                actions::chooseProjectForAgent,
+                                Modifier.testTag("chats-new-agent-project"),
+                                role = KitButtonRole.Tertiary,
+                                maxLines = 4,
+                            )
+                        else KitText(startBlocked, role = TypeRole.Secondary)
                     KitButton(
                         action =
                             KitAction(
@@ -497,6 +508,22 @@ private fun NewConversationSheet(state: NewConversationUi, actions: NewConversat
                 }
                 if (state.canCreateProject)
                     KitNewProjectRow(actions::askNewProject, working = state.creatingProject)
+                // This phone's own storage (Downloads, Documents): says what the access gives, opens Android's page
+                // for it, and once on it picks the storage folder.
+                state.phoneStorage?.let { access ->
+                    val on = access == PhoneStorageAccess.On
+                    KitRow(
+                        title = stringResource(Res.string.chatsNewPhoneStorage),
+                        supporting =
+                            stringResource(
+                                if (on) Res.string.chatsNewPhoneStorageOn else Res.string.chatsNewPhoneStorageOff
+                            ),
+                        leading = KitRowLeading.Glyph(KitIcons.folders, tile = true),
+                        trailing = if (on) KitRowTrailing.None else KitRowTrailing.Chevron,
+                        onClick = { if (on) actions.chooseDirectory(PHONE_STORAGE_FOLDER) else actions.requestPhoneStorage() },
+                        modifier = Modifier.testTag("chats-new-phone-storage"),
+                    )
+                }
             }
             state.projectFailure?.let { problem ->
                 KitErrorNotice(
@@ -605,7 +632,11 @@ private fun NewConversationAgentStep(state: NewConversationUi, actions: NewConve
                 leading = KitRowLeading.Logo(agent.iconKey, agent.name, agent = true),
                 selected = state.phoneAgent == agent.id,
                 trailing = if (state.phoneAgent == agent.id) KitRowTrailing.Check else KitRowTrailing.None,
-                supporting = stringResource(Res.string.upgradeAgentReady),
+                // The Agents page's own words: an agent whose sign-in no check can read is "Ready" only by its first answer.
+                supporting =
+                    stringResource(
+                        if (agent.setUpAtFirstUse) Res.string.agentsStateSetUpAtFirstUse else Res.string.upgradeAgentReady
+                    ),
                 onClick = { actions.choosePhoneAgent(agent.id) },
                 modifier = Modifier.testTag("chats-new-agent-${agent.id}"),
             )
@@ -1011,3 +1042,6 @@ private fun NewProjectDialog(state: NewConversationUi, actions: NewConversationA
         onDismissRequest = { actions.createProject(null) },
     )
 }
+
+/** The phone's shared storage as a folder: where Downloads and Documents live. */
+private const val PHONE_STORAGE_FOLDER = "/sdcard"

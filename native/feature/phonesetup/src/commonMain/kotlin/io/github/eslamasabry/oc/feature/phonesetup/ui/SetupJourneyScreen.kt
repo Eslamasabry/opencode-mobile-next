@@ -566,7 +566,9 @@ private fun Job(state: SetupJourneyUi, actions: SetupJourneyActions) {
         rows.isNotEmpty() &&
             rows.all { it.state == ComponentState.Checking || finished(it) } &&
             rows.any { it.state == ComponentState.Checking }
-    val measured = if (!halted) memory.measured(row) else null
+    // One bar for the whole setup: it only moves forward across steps and stages. A step's own download arc used to
+    // be the ring, so it read 100% when the download ended and 29% when the unpacking began.
+    val measured = if (!halted && memory.measured(row) != null) memory.overall(progress) else null
     val eta = memory.eta(progress, state.options?.components.orEmpty())
     val subject =
         row?.let { currentRow ->
@@ -623,11 +625,12 @@ private fun Job(state: SetupJourneyUi, actions: SetupJourneyActions) {
             SetupState.Cancelled -> stringResource(Res.string.phoneSetupRingStoppedNote)
             SetupState.Done -> null
         }
-    val bytesDone = row?.bytesDone
-    val bytesTotal = row?.bytesTotal
+    // The download as the home page promised it: all the steps' bytes, not this step's own (0 of 30 MB for a
+    // download the home page called 208 MB).
+    val wholeBytes = if (measured != null && row?.bytesDone != null) memory.bytes(rows, state.bytes) else null
     val caption =
-        if (measured != null && bytesDone != null && bytesTotal != null && bytesTotal > 0) {
-            val (received, total) = SetupProgressRules.formatBytePair(bytesDone, bytesTotal)
+        if (wholeBytes != null) {
+            val (received, total) = SetupProgressRules.formatBytePair(wholeBytes.first, wholeBytes.second)
             stringResource(
                 Res.string.setupProgressViewBytes,
                 "\u2066$received\u2069",
@@ -1011,6 +1014,32 @@ internal class JourneyProgressMemory {
         furthest = if (key == measuredKey) maxOf(furthest, fraction) else fraction
         measuredKey = key
         return furthest
+    }
+
+    private var furthestOverall = 0f
+    private var furthestBytes = 0L
+
+    /** The whole setup's fraction while it runs: never behind what it already showed, whatever stage a step is in. */
+    fun overall(progress: SetupProgress): Float? {
+        if (progress.state != SetupState.Running) return null
+        furthestOverall = maxOf(furthestOverall, progress.overall.toFloat().coerceIn(0f, 1f))
+        return furthestOverall
+    }
+
+    /** Bytes received of all the steps' downloads together ([total] is the home page's figure); null when unknown. */
+    fun bytes(rows: List<ComponentProgress>, total: Long): Pair<Long, Long>? {
+        val known = rows.sumOf { it.bytesTotal ?: 0L }
+        val whole = maxOf(total, known)
+        if (whole <= 0) return null
+        val received =
+            rows.sumOf { row ->
+                when (row.state) {
+                    ComponentState.Done, ComponentState.Skipped -> row.bytesTotal ?: 0L
+                    else -> row.bytesDone ?: 0L
+                }
+            }
+        furthestBytes = maxOf(furthestBytes, minOf(received, whole))
+        return furthestBytes to whole
     }
 
     fun eta(progress: SetupProgress, registry: List<SetupComponent>): Int? {
