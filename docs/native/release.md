@@ -54,14 +54,27 @@ they can never be delivered.
    `scripts/native-release.sh` (dry run) tells you the code it will take.
    Then add the notes to `llms.txt` at the repository root, which lists the current documents; `LlmsTxtTest` in
    `:quality:test` fails until the newest release note is linked there.
-2. Dry run, on a clean master equal to `origin/master`:
+2. Prove the commit. A release needs two things for the exact commit on master, and both the dry run and `--go` refuse
+   without them (the dry run still builds, so the APK exists to test):
+   - a **passing Native CI run** of that commit: dispatch Native CI on master (fast or full lane, "android_unit" left
+     ticked, it is on by default). The script reads the `ci-verdict` file the run's summary job wrote (summary.py's
+     verdict, not the job colour) of the newest such run; a newer red run is not rescued by an older green one.
+     `gh` must be signed in as the person releasing.
+   - a **passing device smoke result**: `OC_SMOKE_SERIAL=<adb serial> native/tool/qa/release_smoke.sh --new-apk <the
+     switch arm64-v8a APK the dry run built>` on one phone or emulator that holds the previous release with a
+     conversation in it. It checks that the update keeps the conversations, the phone's own server starts, a prompt gets a
+     reply and a permission question is answered, and writes `native/build/release-smoke/smoke-<commit>.json`.
+     Set `OC_SMOKE_PROJECT` to a project name when a new conversation asks for one. The serial is never written down.
+   `known_failures.txt` can only shrink (see `native/tool/ci/known_failures.txt`); the release build also runs the Android
+   library unit tests (`:android:<module>:test`), as CI does.
+3. Dry run, on a clean master equal to `origin/master`:
 
    ```bash
    scripts/native-release.sh --lineage public          # builds, gates, prints the GO checklist; writes nothing
    scripts/native-release.sh --lineage public --no-build   # only the checks and the plan
    ```
 
-3. When the dry run is clean and the owner has said go:
+4. When the dry run is clean and the owner has said go:
 
    ```bash
    scripts/native-release.sh --lineage public --go
@@ -71,7 +84,7 @@ they can never be delivered.
    10 above every known number: +10 from the last release when no larger build exists), commits the bump, builds,
    runs every gate, writes `native/build/native-release/<tag>/` with the APKs and `SHA256SUMS`, and only when all of
    that passed tags `v<name>+<code>` and pushes master and the tag. Nothing is published.
-4. Run the **Native release** workflow by hand (Actions › Native release › Run workflow, input: the tag). It builds
+5. Run the **Native release** workflow by hand (Actions › Native release › Run workflow, input: the tag). It builds
    the same three APKs with the Public CI key, runs the kept-classes and identity gates, and attaches the files to a
    **draft** release with `make_latest=false`. It never runs on push and never publishes.
 5. Compare the draft's `SHA256SUMS` with the local one only for the files you expect to match (signing differs between

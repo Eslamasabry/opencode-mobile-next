@@ -206,16 +206,44 @@ new_release_repo() {
   cp "$ROOT/scripts/native-release.sh" scripts/
   cp "$NATIVE/tool/version_code.sh" native/tool/; cp -r "$NATIVE/tool/lib" native/tool/lib
   cp "$NATIVE/tool/release/identity_gate.sh" native/tool/release/
+  mkdir -p native/tool/ci && cp "$NATIVE/tool/ci/release_verdict.py" native/tool/ci/
   printf 'versionName=%s\nversionCode=10010\n' "${1:-3.0.0}" >native/version.properties
   printf '# Build numbers\n\n## Ledger\n\n| versionCode | kind | date | for |\n|---|---|---|---|\n| 10010 | release | 2026-11-07 | first |\n' >native/BUILD_NUMBERS.md
   git add -A && git commit -q -m "base [skip ci]"
   git remote add origin "$origin" && git push -q origin master 2>/dev/null
   echo "$d"
 }
+# The two proofs a release needs for HEAD (native/tool/ci/release_verdict.py, native/tool/qa/release_smoke.py): a fake `gh`
+# that answers "one green fast run with the Android unit tests for the asked commit", and a passing smoke result file.
+cat >"$TMP_ROOT/gh" <<'GH'
+#!/usr/bin/env bash
+sha="$(git rev-parse HEAD)"
+case "$1 $2" in
+  "run list") echo '[{"databaseId":7,"createdAt":"2026-01-01T00:00:00Z"}]' ;;
+  "run download") d="$(sed 's/.*-D //' <<<"$*" | cut -d' ' -f1)"
+    printf '{"sha":"%s","lane":"fast","exit":0,"android_unit":true,"desktop_tests":true,"compile":true,"custom_tasks":false}' "$sha" >"$d/verdict.json" ;;
+  *) exit 3 ;;
+esac
+GH
+chmod +x "$TMP_ROOT/gh"
+export OC_GH="$TMP_ROOT/gh" OC_SMOKE_RESULT_DIR="$TMP_ROOT/smoke"
+mkdir -p "$OC_SMOKE_RESULT_DIR"
+pass_smoke() { # pass_smoke <repo> [versionCode]
+  local sha; sha="$(git -C "$1" rev-parse HEAD)"
+  printf '{"commit":"%s","version_code":%s,"device_model":"Test Phone","time_utc":"2026-01-01T00:00:00Z","pass":true,"checks":{"a":{"pass":true},"b":{"pass":true},"c":{"pass":true},"d":{"pass":true}}}' \
+    "$sha" "${2:-10010}" >"$OC_SMOKE_RESULT_DIR/smoke-$sha.json"
+}
 REL_TRAILER_CHECK() { [[ "$(git -C "$R" rev-list --count HEAD)" == 1 && -z "$(git -C "$R" tag)" && -z "$(git -C "$R" status --porcelain)" ]]; }
 
 R="$(new_release_repo)"
+expect "E01-S05 a dry run without a device smoke result is refused" 1 bash "$R/scripts/native-release.sh" --no-build
+check "E01-S05 the refusal names the smoke" has "smoke       REFUSED: no result file"
+pass_smoke "$R" 10040
+expect "E01-S05 a smoke result for another build is refused" 1 bash "$R/scripts/native-release.sh" --no-build
+check "E01-S05 the refusal names the version code" has "tested versionCode 10040"
+pass_smoke "$R"
 expect "E01-S05 a dry run passes and prints the GO checklist" 0 bash "$R/scripts/native-release.sh" --no-build
+check "E01-S05 the dry run names the CI run it used" has "ci verdict  PASS, run 7"
 check "E01-S05 the dry run says it is one" has "DRY RUN (nothing is committed, tagged, pushed or published)"
 check "E01-S05 the dry run shows the +10 version" has "the release takes 3.0.0+10020"
 check "E01-S05 the GO checklist is printed" has "GO checklist for v3.0.0+10020"
