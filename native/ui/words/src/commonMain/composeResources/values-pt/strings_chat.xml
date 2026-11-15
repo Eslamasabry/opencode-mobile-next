@@ -1354,4 +1354,12 @@
     <string name="kitCommandNoOutput">Sem saída</string>
     <string name="kitCommandFailedNoOutput">Falhou antes de mostrar qualquer coisa</string>
     <string name="kitCommandStoppedEarly">Parou antes de terminar</string>
+    <string name="chatOldAgentReadOnly">O %1$s não consegue retomar esta conversa. Leia aqui ou continue em uma nova.</string>
+    <string name="chatOldAgentReadOnlyUnnamed">Este agente não consegue retomar esta conversa. Leia aqui ou continue em uma nova.</string>
+    <string name="chatContinueInNewConversation">Continuar em uma nova conversa</string>
+    <string name="chatContinueBriefIntro">Vamos continuar "%1$s". Você não consegue ver essa conversa, então aqui está o que aconteceu nela.</string>
+    <string name="chatContinueBriefIntroUntitled">Vamos continuar uma conversa anterior. Você não consegue vê-la, então aqui está o que aconteceu nela.</string>
+    <string name="chatContinueBriefAsked">O que eu pedi:</string>
+    <string name="chatContinueBriefChanged">Arquivos que mudaram:</string>
+    <string name="chatContinueBriefStopped">Onde parou:</string>
 </resources>

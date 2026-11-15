@@ -1455,6 +1455,12 @@ chatBackgroundWorkWaitingFor	c843c94cf6
 chatChipAutoApproveOn	f4f386848e
 chatCollapseAllSteps	2b388b4247
 chatComposerNoteDismiss	190459ff5c
+chatContinueBriefAsked	18022859c3
+chatContinueBriefChanged	f5dfc2f117
+chatContinueBriefIntro	e6d6c18ef1
+chatContinueBriefIntroUntitled	a6086b0f3e
+chatContinueBriefStopped	70b5c8e68e
+chatContinueInNewConversation	fe71ec245c
 chatCopyCompleteReply	081c34c01b
 chatCopyReplySoFar	ee7e2af610
 chatCycleNext	e2bd0023a1
@@ -1555,6 +1561,8 @@ chatModelsSearch	bb132fe638
 chatNoModelSignIn	a22eaaaa49
 chatNoModelSignedIn	c1600c70c4
 chatNoReplyCameBack	7b36ca49ba
+chatOldAgentReadOnly	ed0f0d3740
+chatOldAgentReadOnlyUnnamed	910e413ab4
 chatPhraseHide	67611ba83d
 chatProjectChipFilesSemantics	dcb28a874f
 chatProjectChipSemantics	433a0d535c

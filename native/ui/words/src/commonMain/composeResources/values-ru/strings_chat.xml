@@ -1416,4 +1416,12 @@
     <string name="kitCommandNoOutput">Нет вывода</string>
     <string name="kitCommandFailedNoOutput">Сбой до того, как что-либо было выведено</string>
     <string name="kitCommandStoppedEarly">Остановлено до завершения</string>
+    <string name="chatOldAgentReadOnly">%1$s не может продолжить этот разговор. Прочитайте его здесь или продолжите в новом.</string>
+    <string name="chatOldAgentReadOnlyUnnamed">Этот агент не может продолжить этот разговор. Прочитайте его здесь или продолжите в новом.</string>
+    <string name="chatContinueInNewConversation">Продолжить в новом разговоре</string>
+    <string name="chatContinueBriefIntro">Давай продолжим «%1$s». Тебе не виден тот разговор, поэтому вот что в нём произошло.</string>
+    <string name="chatContinueBriefIntroUntitled">Давай продолжим предыдущий разговор. Тебе он не виден, поэтому вот что в нём произошло.</string>
+    <string name="chatContinueBriefAsked">Что я просил:</string>
+    <string name="chatContinueBriefChanged">Изменённые файлы:</string>
+    <string name="chatContinueBriefStopped">На чём остановились:</string>
 </resources>
