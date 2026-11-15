@@ -473,6 +473,7 @@ class GitHubProblemReporter(
                     e.source,
                     e.message,
                     e.stack,
+                    e.count, // B-332: a folded repeat says ×N once instead of N lines
                 )
             }
         val events = ProblemReports.events(stored, diagnostics.errors.value)
