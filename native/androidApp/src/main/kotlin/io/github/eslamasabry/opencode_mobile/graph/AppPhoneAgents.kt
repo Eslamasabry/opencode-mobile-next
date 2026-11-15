@@ -722,7 +722,14 @@ class AppPhoneAgents(
                             else null
                         val present = PhoneAgentRules.present(payload, version)
                         val signIn =
-                            if (present == true) knownSignIn(authOwner, agent, kept[agent.id.raw]) else null
+                            if (present == true)
+                                knownSignIn(
+                                    authOwner,
+                                    agent,
+                                    kept[agent.id.raw],
+                                    lapsed = record[agent.id.raw]?.lapsed == true,
+                                )
+                            else null
                         if (!final && ((needsVersion && version == null) || (present == true && signIn == null)))
                             return@mapNotNull showing[agent.id.raw]
                                 ?: checkingRow(agent).takeIf { agent.listedOnPhone(installed = false) }
@@ -823,8 +830,12 @@ class AppPhoneAgents(
         owner: ProfileId?,
         agent: AgentDescriptor,
         kept: PhoneAgentFacts.Fact?,
+        lapsed: Boolean = false,
     ): AgentSignInPhase? {
         if (agent.signInMethod == AgentSignInMethod.None) return AgentSignInPhase.SignedIn
+        // Issue 147: a run said this agent's sign-in no longer works (its check may still read a stored sign-in as
+        // signed in): Sign in needed until a sign-in completes ([noteSignInLapsed], [noteSignedIn]).
+        if (lapsed) return AgentSignInPhase.SignedOut
         // No script, or one that refuses this agent before it starts (Gemini CLI, Qwen Code, Goose, omp): the same
         // answer every time, so the row says it at once and never shows "Checking sign-in" first.
         if (
@@ -964,6 +975,69 @@ class AppPhoneAgents(
                             .toImmutableList()
                 )
             }
+        }
+    }
+
+    /**
+     * Issue 147: a run of [phone]'s agent behind [provider] reported at [atMs] (wall clock) that its sign-in no longer
+     * works: a create the helper refused for its sign-in, or a turn that ended on it. Kept in the registry
+     * ([PhoneAgentFacts.Fact.lapsedAt]) until a sign-in completes ([noteSignedIn]); every reader of [state] reads the
+     * agent as Sign in needed at once. A report from before the last completed sign-in changes nothing.
+     */
+    @Suppress("TooGenericExceptionCaught")
+    internal suspend fun noteSignInLapsed(phone: ProfileId, provider: String, atMs: Long) {
+        val descriptor =
+            catalog.agents.firstOrNull { it.providerId == provider && it.signInMethod != AgentSignInMethod.None }
+                ?: return
+        if (needsRestart || ownerId() != phone) return
+        val owner = agentOwner(phone) ?: return
+        if (synchronized(admission) { owner in denied || phone in denied }) return
+        val now =
+            try {
+                keepFacts(owner) { PhoneAgentFacts.lapsed(it, descriptor.id.raw, atMs) }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Exception) {
+                return
+            }
+        if (now[descriptor.id.raw]?.lapsed != true) return
+        synchronized(admission) {
+            if (owner in denied) return
+            // The kept "signed in" answer is not the truth any more: the next read keeps the lapse ([knownSignIn]).
+            accounts.remove(owner to descriptor.id)
+            mutable.update { state ->
+                state.copy(
+                    agents =
+                        state.agents
+                            .map {
+                                if (it.id == descriptor.id.raw && it.status == PhoneAgentStatus.Ready)
+                                    it.copy(status = PhoneAgentStatus.SignInNeeded, signInCheckFailed = false)
+                                else it
+                            }
+                            .toImmutableList()
+                )
+            }
+        }
+    }
+
+    /** [noteSignInLapsed] for this phone's own agents (the phone the app runs them for). */
+    internal suspend fun noteSignInLapsedHere(provider: String, atMs: Long) {
+        val phone = ownerId() ?: return
+        noteSignInLapsed(phone, provider, atMs)
+    }
+
+    /** A sign-in of [phone]'s [agent] completed (its sign-in page confirmed it): its lapse, if any, ends. */
+    @Suppress("TooGenericExceptionCaught")
+    internal suspend fun noteSignedIn(phone: ProfileId, agent: AgentId) {
+        if (needsRestart || ownerId() != phone) return
+        val owner = agentOwner(phone) ?: return
+        if (synchronized(admission) { owner in denied || phone in denied }) return
+        try {
+            keepFacts(owner) { PhoneAgentFacts.signedInAgain(it, agent.raw, System.currentTimeMillis()) }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            // Not kept this time: the next completed sign-in says it again.
         }
     }
 

@@ -52,6 +52,11 @@ public object OpeningRules {
     private fun starting(phone: PhoneStartWatch, now: Instant): Boolean {
         phone.startingSince?.let { return now - it < startWindow }
         if (phone.stoppedByPerson) return false
+        // Issue 147 (Galaxy S22, ordinary cold start): the first try can fail while the server, already running from
+        // before, or just launched, is not answering yet; the page read "This phone couldn't load · Try again" for a
+        // few seconds. The first moments after the app opened read as starting, unless the process was seen to exit.
+        val exited = phone.processAlive == false && phone.seenAlive
+        if (!exited && now - phone.since < launchGrace) return true
         return when (phone.processAlive) {
             // Not read yet: the app has only just opened.
             null -> now - phone.since < launchGrace
