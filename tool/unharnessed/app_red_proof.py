@@ -24,7 +24,7 @@ if "--verify" in sys.argv:
                 match = re.search(r"B-AGENT-UH-(\d+)", case.get("name", ""))
                 if match:
                     failed.add(match[1])
-    expected = {"010", "011", "012", "013", "020", "021", "022", "023", "030", "031", "032", "033", "034"}
+    expected = {"010", "011", "012", "013", "020", "021", "022", "023", "024", "030", "031", "032", "033", "034"}
     (native / "unharnessed-red-proof.json").write_text(json.dumps({"expectedRows": sorted(expected), "failedAsExpected": sorted(failed)}, indent=2) + "\n")
     assert expected <= failed, "Missing expected red rows: " + str(sorted(expected - failed))
     raise SystemExit(0)
@@ -62,4 +62,5 @@ mutate(chat + "header/approval/ApprovalPresenter.kt", "&& !neverAsks.value", "")
 mutate(chat + "header/approval/ApprovalPresenter.kt", "neverAsks = neverAsks.value", "neverAsks = false")
 mutate(chat + "header/ui/ApprovalChip.kt", "if (state.neverAsks)", "if (false && state.neverAsks)")
 mutate("native/androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/PhoneAgentRules.kt", "signIn != AgentSignInPhase.SignedIn", "false")
+mutate("native/androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/AppPhoneOwnProviders.kt", ".let(::ProfileId) ?: profile", ".let { profile } ?: profile")
 mutate("tool/unharnessed/adapter.py", 'return dict(frame, params=dict(params, update=dict(update, rawInput=dict(raw, command=raw["code"]))))', "return frame")

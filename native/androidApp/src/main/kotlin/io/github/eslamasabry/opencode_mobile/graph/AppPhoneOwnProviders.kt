@@ -13,6 +13,7 @@ import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.Redacted
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.data.kv.PrefType
+import io.github.eslamasabry.oc.core.data.kv.PrefValue
 import io.github.eslamasabry.oc.core.data.scope.KeyScope
 import io.github.eslamasabry.oc.core.data.scope.KeyShape
 import io.github.eslamasabry.oc.core.data.scope.ProfileScope
@@ -78,6 +79,14 @@ class AppPhoneOwnProviders(
             redactor::registerSecret,
         )
 
+    private fun providerOwner(profile: ProfileId, agent: String): ProfileId =
+        if (agent == "unharnessed")
+            PhoneProviderOwner.resolve(
+                profile,
+                (stores.prefs.get("oc.phoneAgentOwner.${profile.raw}") as? PrefValue.Str)?.value,
+            )
+        else profile
+
     override val state: StateFlow<ImmutableMap<String, OwnProviderView>> = flow {
         if (stores.warm() is Outcome.Failed) {
             emit(persistentMapOf())
@@ -94,12 +103,17 @@ class AppPhoneOwnProviders(
     }
         .stateIn(appScope, SharingStarted.Eagerly, persistentMapOf())
 
-    private fun read(owner: ProfileId): ImmutableMap<String, OwnProviderView> =
-        store(owner)
-            .read(owner)
-            .entries
+    private fun read(owner: ProfileId): ImmutableMap<String, OwnProviderView> {
+        val privateOwner = providerOwner(owner, "unharnessed")
+        val providers = store(owner).read(owner).toMutableMap()
+        providers.remove(AgentId("unharnessed"))
+        store(privateOwner).read(privateOwner)[AgentId("unharnessed")]?.let {
+            providers[AgentId("unharnessed")] = it
+        }
+        return providers.entries
             .associate { (agent, p) -> agent.raw to OwnProviderView(p.endpoint, p.model) }
             .toImmutableMap()
+    }
 
     override suspend fun save(
         agent: String,
@@ -108,7 +122,9 @@ class AppPhoneOwnProviders(
         model: String,
     ): Outcome<OwnProviderSave> = lane.withLock {
         if (key.isNotEmpty()) redactor.registerSecret(key)
-        val owner = phone.state.value.owner ?: return@withLock Outcome.Failed(Failure.Unexpected())
+        val profile =
+            phone.state.value.owner ?: return@withLock Outcome.Failed(Failure.Unexpected())
+        val owner = providerOwner(profile, agent)
         val id = AgentId(agent)
         val store = store(owner)
         // Saving without replacing the key keeps the saved one.
@@ -136,12 +152,17 @@ class AppPhoneOwnProviders(
                 )
         ) {
             is Outcome.Failed -> written
-            is Outcome.Ok -> Outcome.Ok(OwnProviderSave.Saved)
+            is Outcome.Ok -> {
+                if (agent == "unharnessed") (phone as? AppPhoneAgents)?.noteSignedIn(profile, id)
+                Outcome.Ok(OwnProviderSave.Saved)
+            }
         }
     }
 
     override suspend fun remove(agent: String): Outcome<Unit> = lane.withLock {
-        val owner = phone.state.value.owner ?: return@withLock Outcome.Failed(Failure.Unexpected())
+        val profile =
+            phone.state.value.owner ?: return@withLock Outcome.Failed(Failure.Unexpected())
+        val owner = providerOwner(profile, agent)
         // The agent's settings first: a key left there while the app forgot it could never be
         // removed from here.
         when (
@@ -192,6 +213,11 @@ class AppPhoneOwnProviders(
                 Outcome.Failed(Failure.Unexpected(Redacted.shape(e)))
             }
         }
+}
+
+internal object PhoneProviderOwner {
+    fun resolve(profile: ProfileId, alias: String?): ProfileId =
+        alias?.takeIf { Regex("[A-Za-z0-9_-]{1,80}").matches(it) }?.let(::ProfileId) ?: profile
 }
 
 /**

@@ -1,5 +1,6 @@
 package io.github.eslamasabry.opencode_mobile.graph
 
+import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.engine.agents.AgentId
 import io.github.eslamasabry.oc.engine.agents.catalog.AgentArchitecture
 import io.github.eslamasabry.oc.engine.agents.catalog.AgentArtifact
@@ -23,6 +24,14 @@ import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class UnharnessedReadinessTest {
+    @Test
+    fun `B-AGENT-UH-024 setup and readiness use the same private owner behind a phone alias`() {
+        val phone = ProfileId("phone-view")
+        assertEquals(ProfileId("private-owner"), PhoneProviderOwner.resolve(phone, "private-owner"))
+        assertEquals(phone, PhoneProviderOwner.resolve(phone, null))
+        assertEquals(phone, PhoneProviderOwner.resolve(phone, "../outside"))
+    }
+
     @Test
     fun `B-AGENT-UH-022 a listed model cannot make an unconfigured agent ready anywhere`() {
         val descriptor =

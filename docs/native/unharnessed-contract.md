@@ -39,6 +39,7 @@ to run the adapter itself.
 | B-AGENT-UH-021 | Captured real ACP code/output become a readable completed step through the app mapper. |
 | B-AGENT-UH-022 | A model list cannot make an unconfigured agent selectable. |
 | B-AGENT-UH-023 | Removing the agent erases its private runtime in every profile, retaining other agents and projects. |
+| B-AGENT-UH-024 | Setup follows the phone profile's private-owner alias, matching launcher and readiness. |
 | B-AGENT-UH-030 | The pending Agents card shows the unavailable download and command policy. |
 | B-AGENT-UH-031 | Setup routes to the key/local form. |
 | B-AGENT-UH-032 | The form states the required model and offers no subscription login. |
