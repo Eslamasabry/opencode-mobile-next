@@ -20,6 +20,7 @@ import io.github.eslamasabry.oc.core.data.scope.ProfileScope
 import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.engine.agents.AgentId
 import io.github.eslamasabry.oc.engine.agents.host.PaseoConfig
+import io.github.eslamasabry.oc.engine.agents.providers.HelperReload
 import io.github.eslamasabry.oc.engine.agents.providers.OwnAgentCheckResult
 import io.github.eslamasabry.oc.engine.agents.providers.OwnAgentCheckScript
 import io.github.eslamasabry.oc.engine.agents.providers.PhoneHelperConfig
@@ -29,6 +30,7 @@ import io.github.eslamasabry.oc.engine.agents.providers.OwnAgentProblem
 import io.github.eslamasabry.oc.engine.agents.providers.OwnAgentRules
 import io.github.eslamasabry.oc.engine.agents.providers.OwnAgentStore
 import io.github.eslamasabry.oc.engine.agents.store.AgentSecrets
+import io.github.eslamasabry.oc.feature.agents.hub.OwnAgentPickup
 import io.github.eslamasabry.oc.feature.agents.hub.OwnAgentSave
 import io.github.eslamasabry.oc.feature.agents.hub.OwnAgentView
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgents
@@ -38,6 +40,11 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -67,10 +74,72 @@ class AppPhoneOwnAgents(
     private val stores: PreviewStores,
     private val phone: PhoneAgents,
     private val redactor: Redactor,
-    appScope: AppCoroutineScope,
+    private val helper: AppLocalAgentHostStarter,
+    private val runtime: BuiltinRuntime,
+    private val appScope: AppCoroutineScope,
 ) : PhoneOwnAgents {
     private val lane = Mutex()
     private val linux by lazy { BuiltinLinux.get(app) }
+
+    private val pickupState = MutableStateFlow(OwnAgentPickup.None)
+    override val pickup: StateFlow<OwnAgentPickup> = pickupState.asStateFlow()
+    private var waiting: Job? = null
+
+    /**
+     * The helper reads its agents when it starts (issue 147). After a change: a helper that does not run takes it at
+     * its next start; an idle one is stopped (guarded: refused while its agents work) and started again with the new
+     * config, as `AgentHelper.rotate` does; a busy one is started again at the first idle moment.
+     */
+    private suspend fun pickUp(owner: ProfileId) {
+        waiting?.cancel()
+        val reload = reload(owner)
+        if (reload.tryNow()) {
+            pickupState.value = OwnAgentPickup.Ready
+            return
+        }
+        pickupState.value = OwnAgentPickup.WhenIdle
+        waiting =
+            appScope.launch(dispatchers.io) {
+                repeat(PICKUP_TRIES) {
+                    delay(PICKUP_EVERY_MS)
+                    if (reload.tryNow()) {
+                        pickupState.value = OwnAgentPickup.Ready
+                        return@launch
+                    }
+                }
+            }
+    }
+
+    private fun reload(owner: ProfileId): HelperReload =
+        HelperReload(
+            running = { helperRunning(owner) },
+            busy = { runtime.agentWorkBusy() },
+            stopGuarded = { stopGuarded(owner) },
+            // Started again the way any connect starts it, with the config that now carries the change.
+            start = { helper.checkHelper() },
+        )
+
+    private fun helperRunning(owner: ProfileId): Boolean =
+        try {
+            linux.agentHost.status(owner.raw)["running"] == true
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            false
+        }
+
+    /** The guarded stop refuses while a turn or a permission reply runs: false then. */
+    private suspend fun stopGuarded(owner: ProfileId): Boolean =
+        withContext(dispatchers.io) {
+            try {
+                linux.agentHost.stop(owner.raw, guardedForUpdate = true)
+                true
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Exception) {
+                false
+            }
+        }
 
     private fun store(owner: ProfileId): OwnAgentStore = ownAgentStore(stores, owner, redactor::registerSecret)
 
@@ -122,7 +191,10 @@ class AppPhoneOwnAgents(
                 return@withLock Outcome.Ok(OwnAgentSave.Refused(OwnAgentProblem.TooMany))
             when (val saved = store.save(owner, id?.let(::AgentId), name, start, install, env)) {
                 is Outcome.Failed -> saved
-                is Outcome.Ok -> Outcome.Ok(OwnAgentSave.Saved(saved.value.id.raw))
+                is Outcome.Ok -> {
+                    pickUp(owner)
+                    Outcome.Ok(OwnAgentSave.Saved(saved.value.id.raw))
+                }
             }
         }
 
@@ -155,7 +227,7 @@ class AppPhoneOwnAgents(
     override suspend fun remove(id: String): Outcome<Unit> =
         lane.withLock {
             val owner = phone.state.value.owner ?: return@withLock Outcome.Failed(Failure.Unexpected())
-            store(owner).remove(owner, AgentId(id))
+            store(owner).remove(owner, AgentId(id)).also { if (it is Outcome.Ok) pickUp(owner) }
         }
 
     /** One script as the agent user; nothing it prints is kept or logged, the answer is its exit code. */
@@ -174,6 +246,11 @@ class AppPhoneOwnAgents(
             }
         }
 }
+
+private const val PICKUP_EVERY_MS = 15_000L
+
+/** Two hours of 15 s looks; after that the helper takes the change at its next start anyway. */
+private const val PICKUP_TRIES = 480
 
 /** The secure store as the agents engine's port. */
 internal class StoreSecrets(private val stores: PreviewStores) : AgentSecrets {
