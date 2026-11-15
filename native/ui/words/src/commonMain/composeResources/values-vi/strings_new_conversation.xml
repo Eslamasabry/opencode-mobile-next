@@ -15,4 +15,13 @@
     <string name="chatsNewFolderRemake">Tạo lại thư mục</string>
     <string name="chatsNewFolderChooseAnother">Chọn dự án khác</string>
     <string name="chatSendFolderMissing">Thư mục của dự án này không còn trên máy chủ nên tin nhắn chưa được gửi. Hãy bắt đầu cuộc trò chuyện mới để tạo lại thư mục hoặc chọn dự án khác.</string>
+    <string name="chatsNewPhoneFolderAccess">Các tác nhân không thể mở thư mục trong bộ nhớ của điện thoại này cho đến khi bạn cho phép ứng dụng này truy cập tất cả tệp.</string>
+    <string name="chatsNewPhoneFolderAllow">Cho phép truy cập bộ nhớ điện thoại</string>
+    <string name="chatsNewPhoneFolderRestartServer">OpenCode trên điện thoại này đã khởi động trước khi bạn chọn thư mục này, nên chưa nhìn thấy nó. Hãy khởi động lại để làm việc tại đây.</string>
+    <string name="chatsNewPhoneFolderRestartServerAction">Khởi động lại OpenCode trên điện thoại này</string>
+    <string name="chatsNewPhoneFolderRestartAgents">Các tác nhân của điện thoại đã khởi động trước khi bạn chọn thư mục này, nên %1$s chưa nhìn thấy nó. Hãy khởi động lại chúng để làm việc tại đây.</string>
+    <string name="chatsNewPhoneFolderRestartAgentsAction">Khởi động lại các tác nhân của điện thoại</string>
+    <string name="chatsNewPhoneFolderMissing">Thư mục này không còn trong bộ nhớ điện thoại. Hãy chọn thư mục khác.</string>
+    <string name="chatsNewPhoneFolderDenied">%1$s không thể mở hoặc thay đổi tệp trong thư mục này. Hãy chọn một thư mục khác trong bộ nhớ điện thoại.</string>
+    <string name="chatsNewPhoneFolderRestartFailed">Không thể khởi động lại. Nếu một tác nhân vẫn đang làm việc, hãy thử lại khi nó xong.</string>
 </resources>

@@ -15,4 +15,13 @@
     <string name="chatsNewFolderRemake">Buat folder lagi</string>
     <string name="chatsNewFolderChooseAnother">Pilih proyek lain</string>
     <string name="chatSendFolderMissing">Folder proyek ini sudah tidak ada di server, jadi pesan tidak terkirim. Mulai percakapan baru untuk membuat folder lagi atau pilih proyek lain.</string>
+    <string name="chatsNewPhoneFolderAccess">Agen tidak dapat membuka folder di penyimpanan ponsel ini sampai Anda mengizinkan aplikasi ini mengakses semua file.</string>
+    <string name="chatsNewPhoneFolderAllow">Izinkan akses ke penyimpanan ponsel</string>
+    <string name="chatsNewPhoneFolderRestartServer">OpenCode di ponsel ini dimulai sebelum Anda memilih folder ini, jadi belum dapat melihatnya. Mulai ulang untuk bekerja di sini.</string>
+    <string name="chatsNewPhoneFolderRestartServerAction">Mulai ulang OpenCode di ponsel ini</string>
+    <string name="chatsNewPhoneFolderRestartAgents">Agen di ponsel dimulai sebelum Anda memilih folder ini, jadi %1$s belum dapat melihatnya. Mulai ulang agen untuk bekerja di sini.</string>
+    <string name="chatsNewPhoneFolderRestartAgentsAction">Mulai ulang agen di ponsel</string>
+    <string name="chatsNewPhoneFolderMissing">Folder ini sudah tidak ada di penyimpanan ponsel. Pilih folder lain.</string>
+    <string name="chatsNewPhoneFolderDenied">%1$s tidak dapat membuka atau mengubah file di folder ini. Pilih folder lain di penyimpanan ponsel.</string>
+    <string name="chatsNewPhoneFolderRestartFailed">Tidak dapat memulai ulang. Jika ada agen yang masih bekerja, coba lagi setelah selesai.</string>
 </resources>
