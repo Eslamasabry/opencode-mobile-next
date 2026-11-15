@@ -80,6 +80,7 @@ public class GitPresenter(
             viewDetails = ports.details((p.view as? GitPageView.Failed)?.failure),
             selected = selected,
             diff = p.diff,
+            commitView = p.commitView,
             signIn = a,
             signInDetails = (a as? GitHubSignIn.SignedOut)?.details?.let(ports.signInDetails),
             placeName = p.placeName,
@@ -250,6 +251,15 @@ public class GitPresenter(
     public fun openDiff(path: String) {
         val file = current().snapshot?.status?.files?.firstOrNull { it.path == path } ?: return
         launch { page.openDiff(file) }
+    }
+
+    public fun openCommit(id: String) {
+        val commit = current().snapshot?.commits?.firstOrNull { it.id == id } ?: return
+        launch { page.openCommit(commit) }
+    }
+
+    public fun closeCommit() {
+        page.closeCommit()
     }
 
     public fun closeDiff() {

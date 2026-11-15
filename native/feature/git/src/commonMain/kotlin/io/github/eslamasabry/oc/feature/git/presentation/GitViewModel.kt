@@ -146,6 +146,10 @@ public class GitViewModel(
 
     override fun closeDiff(): Unit = presenter.closeDiff()
 
+    override fun openCommit(id: String): Unit = presenter.openCommit(id)
+
+    override fun closeCommit(): Unit = presenter.closeCommit()
+
     override fun askDiscard(path: String): Unit = presenter.askDiscard(path)
 
     override fun confirm(): Unit {

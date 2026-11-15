@@ -58,7 +58,11 @@ public class ReviewNotes {
  */
 @SingleIn(AppScope::class)
 @Inject
-public class ReviewHub(private val registry: ConnectionRegistry) {
+public class ReviewHub(
+    private val registry: ConnectionRegistry,
+    private val gitBranch: io.github.eslamasabry.oc.feature.review.presentation.ReviewGitBranch =
+        io.github.eslamasabry.oc.feature.review.presentation.NoReviewGitBranch(),
+) {
     private val open = LinkedHashMap<ConversationRef, Pair<ConversationReview, ReviewLifetime>>()
     private val notes = HashMap<ConversationRef, ReviewNotes>()
 
@@ -96,8 +100,16 @@ public class ReviewHub(private val registry: ConnectionRegistry) {
     public fun branch(ref: ConversationRef): ReviewBranchRead =
         ReviewBranchRead {
             val ops = (registry.graphFor(ref) as? ReviewGraphAccessors)?.reviewOperations
-                ?: return@ReviewBranchRead Failure.Unavailable(FeatureId("vcsBranchDiff")).failed()
-            ops.listVcsDiffs(VcsDiffMode.Branch)
+            val served = ops?.listVcsDiffs(VcsDiffMode.Branch)
+            if (served is Outcome.Ok && served.value.isNotEmpty()) return@ReviewBranchRead served
+            // A server with no branch diff, or one that answers with nothing (the phone agents' helper), is asked
+            // through the project's own Git (the same shell and ownership as the Git page).
+            val git = gitBranch.patch(ref)
+            if (git is Outcome.Ok) {
+                val files = io.github.eslamasabry.oc.feature.review.presentation.BranchPatches.split(git.value)
+                if (files.isNotEmpty()) return@ReviewBranchRead Outcome.Ok(files)
+            }
+            served ?: Failure.Unavailable(FeatureId("vcsBranchDiff")).failed()
         }
 
     /**

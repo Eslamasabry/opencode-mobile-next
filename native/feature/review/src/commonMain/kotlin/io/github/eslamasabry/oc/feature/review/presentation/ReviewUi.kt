@@ -95,6 +95,8 @@ public data class ChangeRowUi(
     val viewed: Boolean = false,
     /** The folder's own diff path that shows it, when the tools gave no lines for it (walk F-020); null: its own. */
     val diffPath: String? = null,
+    /** [diffPath] is a file of the whole branch (a committed change), not of the uncommitted ones. */
+    val viaBranch: Boolean = false,
 )
 
 /** What "Undo all" can do here. Hidden where nothing would happen (Flutter `onUndoAll == null`). */
