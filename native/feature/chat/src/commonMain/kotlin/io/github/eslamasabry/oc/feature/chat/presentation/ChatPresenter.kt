@@ -5,6 +5,7 @@ import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.RefusalReason
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.MessageId
+import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.domain.capabilities.ServerCapabilities
 import io.github.eslamasabry.oc.engine.settings.teaching.StarPromptRules
 import io.github.eslamasabry.oc.engine.transcript.ledger.factTicks
@@ -543,6 +544,7 @@ public class ChatPresenter(
         val firstTurn = if (world.hasOlder.value) null else rows.lastOrNull { it is FooterRow }?.turnId
         val setUp = port.agentsSetUp(owner)
         val runtime = world.runtimeId()
+        noteAnswered(port, owner, rows, runtime, setUp)
         val needs = HashMap<String, AgentSetUpNeed>()
         for (footer in failed) {
             val agentRuntime = runtime ?: footer.providerId ?: continue
@@ -559,6 +561,29 @@ public class ChatPresenter(
         }
         if (needs == lastSetUpReplies) return lastSetUpReplies
         return needs.toPersistentMap().also { lastSetUpReplies = it }
+    }
+
+    /** The agents this chat already told the registry about ([noteAnswered]). */
+    private val answeredNoted = HashSet<String>()
+
+    /**
+     * Seen set up: a reply of a set-up-at-first-use agent that came back well (its turn ended, not failed, not stopped)
+     * is the agent working. Said once per agent, and only while it is not yet known set up ([setUp]).
+     */
+    private fun noteAnswered(
+        port: ChatOutside,
+        owner: ProfileId,
+        rows: ImmutableList<TranscriptRow>,
+        runtime: String?,
+        setUp: Set<String>,
+    ) {
+        // The conversation's own runtime decides when known: any other agent's conversation reads nothing more.
+        val known = runtime?.let { AgentSetUpRules.firstUseAgent(it) ?: return }
+        if (known != null && (known in setUp || known in answeredNoted)) return
+        val answered = rows.firstOrNull { it is FooterRow && !it.failed && !it.stopped } as FooterRow? ?: return
+        val agent = known ?: AgentSetUpRules.firstUseAgent(answered.providerId ?: return) ?: return
+        if (agent in setUp || !answeredNoted.add(agent)) return
+        port.agentAnswered(owner, agent)
     }
 
     /** Set up at first use ([AgentSetUpRules]): a failed send whose agent was never set up says so on its bubble. */

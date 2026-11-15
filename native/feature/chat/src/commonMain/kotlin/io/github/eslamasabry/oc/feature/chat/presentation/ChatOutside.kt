@@ -43,11 +43,20 @@ public interface ChatOutside {
      */
     public fun phoneAgentOwner(ref: ConversationRef): ProfileId? = null
 
-    /** The agent ids [owner] set up through the app's set-up terminal (engine `AgentSetUpStore`), as they are now. */
+    /**
+     * The agent ids of [owner] the app has seen set up (their set-up terminal ended, or a conversation with them got an
+     * answer: the phone's agent registry), as they are now.
+     */
     public fun agentsSetUp(owner: ProfileId): Set<String> = emptySet()
 
     /** Emits when [owner]'s set-up list may have changed (a set-up terminal ended), so the chat reads it again. */
     public fun agentsSetUpChanges(owner: ProfileId): Flow<Unit> = emptyFlow()
+
+    /**
+     * A conversation with [owner]'s set-up-at-first-use [agent] got an answer: the app has now seen it set up, so the
+     * Agents page and New conversation offer it as a normal choice. Nothing of the answer is passed.
+     */
+    public fun agentAnswered(owner: ProfileId, agent: String) {}
 
     /**
      * Puts [text] on the clipboard as given: the presenter has already [mask]ed it. False = it did not work.
