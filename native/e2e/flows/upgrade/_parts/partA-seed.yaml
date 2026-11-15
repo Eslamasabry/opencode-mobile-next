@@ -26,15 +26,19 @@ tags: [linux-setup]
       HOOK: appop
       ARGS: '{"op": "SCHEDULE_EXACT_ALARM", "mode": "allow"}'
 # Flutter 2.1.5 asks "Help improve OpenCode Mobile?" once on the first start (2.1.4 does not): answer "Not now".
+# It is a sheet that comes up some seconds after the first screen (seen at ~35 s on the GitHub emulator) and hides it.
 - extendedWaitUntil:
-    visible: "Help improve OpenCode Mobile\\?"  # literal-ok: 2.1.5 telemetryConsentTitle
-    timeout: 12000
+    visible: "(?s).*Help improve OpenCode Mobile.*"  # literal-ok: 2.1.5 telemetryConsentTitle
+    timeout: 60000
     optional: true
 - runFlow:
     when:
-      visible: "Help improve OpenCode Mobile\\?"  # literal-ok: 2.1.5 telemetryConsentTitle
+      visible: "(?s).*Help improve OpenCode Mobile.*"  # literal-ok: 2.1.5 telemetryConsentTitle
     commands:
-      - tapOn: "Not now"  # literal-ok: 2.1.5 telemetryConsentNotNow
+      - tapOn: "(?s)Not now.*"  # literal-ok: 2.1.5 telemetryConsentNotNow
+      - extendedWaitUntil:
+          notVisible: "(?s).*Help improve OpenCode Mobile.*"  # literal-ok: 2.1.5 telemetryConsentTitle
+          timeout: 10000
 # Flutter 2.1.4 opens on "Where should your agent run?" with "On this phone" chosen; choosing the computer card
 # turns the main button into "Connect to my computer" (connect-server.yaml taps it).
 - extendedWaitUntil:
