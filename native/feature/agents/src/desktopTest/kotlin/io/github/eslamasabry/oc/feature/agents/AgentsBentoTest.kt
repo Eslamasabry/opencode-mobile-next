@@ -122,6 +122,10 @@ class AgentsBentoTest {
         override fun connectPhoneHelper() {
             calls += "connect"
         }
+
+        override fun newPhoneConversation(agent: String) {
+            calls += "chat:$agent"
+        }
     }
 
     @Composable
@@ -234,6 +238,45 @@ class AgentsBentoTest {
         onNodeWithText("Remove Oh My Pi").performClick()
         assertTrue("remove:omp-acp" in actions.calls)
     }
+
+    // Owner 2026-11-15: "when oh my pi needs a setup after installation why show new conversation? instead of setup
+    // cta". With conversations on, an agent never seen set up has Set up as its card's action (no New conversation);
+    // once the app has seen it set up, the same card starts a conversation.
+    @Test
+    fun `B-AGENT-SETUP-002 the card of an agent never seen set up says Set up, then New conversation once seen`() =
+        runComposeUiTest {
+            val actions = Recorder()
+            val fresh =
+                PhoneAgentRow(
+                    "omp-acp",
+                    "Oh My Pi",
+                    PhoneAgentStatus.SetUpAtFirstUse,
+                    removable = true,
+                    signInAvailable = true,
+                    needsSetUp = true,
+                )
+            val page =
+                AgentsUi(
+                    helperConnected = true,
+                    phone =
+                        PhoneAgentsState(
+                            available = true,
+                            agents = persistentListOf(fresh),
+                            owner = ProfileId("owner"),
+                            conversations = PHONE_HELPER.id,
+                        ),
+                )
+            var state by mutableStateOf(page)
+            setContent { Screen(state, actions) }
+            onNode(hasContentDescription("New conversation with Oh My Pi")).assertDoesNotExist()
+            onNode(hasContentDescription("Set up Oh My Pi") and hasClickAction()).performClick()
+            assertEquals(listOf("signin:omp-acp"), actions.calls)
+
+            actions.calls.clear()
+            state = page.copy(phone = page.phone.copy(agents = persistentListOf(fresh.copy(needsSetUp = false))))
+            onNode(hasContentDescription("New conversation with Oh My Pi") and hasClickAction()).performClick()
+            assertEquals(listOf("chat:omp-acp"), actions.calls)
+        }
 
     @Test
     fun `B-AGENT-182 a failed connection is one line with its reason and Try again`() = runComposeUiTest {
