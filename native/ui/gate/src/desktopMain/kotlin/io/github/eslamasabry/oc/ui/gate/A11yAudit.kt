@@ -18,7 +18,7 @@ import kotlin.math.abs
  * proved it. Those checks need a device.
  *
  * Every control the person can act on (a click, a long click, a toggle, a slider, a text field) is an offender when it:
- * - `small`: its touch box is under 48 dp on a side (the box a finger can hit, so a part that pads its target counts);
+ * - `small`: its box is under 48 dp on a side (the laid-out box, as the kit's own tap audit reads it: a target made only of touch padding still draws a small control);
  * - `unnamed`: a screen reader would read nothing for it (no text, no content description, not even a field label);
  * - `duplicate`: another control has the same box, so one touch could mean either (ATF's duplicate clickable bounds);
  * - `outside`: its box leaves the scene's width, so part of it cannot be reached (what a mirrored or enlarged layout does).
@@ -57,9 +57,9 @@ object A11yAudit {
         for (n in acting) {
             val name = words(n)
             val label = name ?: "(unnamed, ${n.config.getOrNull(SemanticsProperties.TestTag) ?: "no tag"})"
-            val touch = n.touchBoundsInRoot
-            val w = touch.width / densityScale
-            val h = touch.height / densityScale
+            val box = n.boundsInRoot
+            val w = box.width / densityScale
+            val h = box.height / densityScale
             if (w < 47.5f || h < 47.5f) found += Offender(scene, "small", label, "${w.toInt()}x${h.toInt()} dp")
             if (name == null) found += Offender(scene, "unnamed", label, "a screen reader reads nothing")
             val b = n.boundsInRoot
@@ -80,7 +80,7 @@ object A11yAudit {
             if (get(results) != true) continue
             for (r in results) {
                 if (r.size.height + 1 < r.multiParagraph.height)
-                    found += Offender(scene, "clipped", r.layoutInput.text.text.take(50), "${r.lineCount} lines cut off by their box")
+                    found += Offender(scene, "clipped", r.layoutInput.text.text.take(50), "${r.lineCount} lines, box ${r.size.height} px of ${r.multiParagraph.height.toInt()} px")
             }
         }
         return found.distinct()
