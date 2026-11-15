@@ -207,4 +207,50 @@ class PaseoSendAfterStartTest {
             val home = helperGateway(helper, book)
             kotlin.test.assertEquals("real-1", home.gateway.daemonSessionId(made).raw)
         }
+
+    /**
+     * The coordinator's lead (Antigravity 1.5.9 names its models with the effort in the id, "Gemini 3.8 Flash (High)"
+     * = `gemini-3.8-flash-high`): the second message sends that exact id in `set_agent_model`, no separate effort, and
+     * the helper names it back as set (Paseo keeps `config.model` as asked, agent-manager setAgentModel), so the
+     * read-back matches and the message is sent.
+     */
+    @Test
+    fun `SEND-STALE-6b a model whose id carries its effort is set and read back as the same id`() = runTest {
+        val helper = Helper("antigravity", lottie)
+        val ids = listOf("gemini-3.8-flash-high", "gemini-4-hydrogen-high", "claude-opus-5-5-high")
+        val h =
+            GatewayHarness(this, helper.daemon().apply {
+                handlers["get_providers_snapshot_request"] = {
+                    "get_providers_snapshot_response" to jsonOf(
+                        "entries" to listOf(
+                            mapOf(
+                                "provider" to "antigravity",
+                                "status" to "ready",
+                                "enabled" to true,
+                                "models" to ids.map { mapOf("provider" to "antigravity", "id" to it, "label" to it) },
+                            ),
+                        ),
+                    )
+                }
+            }, directory = root, identities = PaseoIdentityBook()).also {
+                it.gateway.includeSubfolders = true
+                it.gateway.subfolderRoot = root
+                it.gateway.startListening()
+                it.pump()
+            }
+        h.gateway.changeLocation(ServerLocation(directory = lottie)).mustBeOk("move")
+        val id = assertIs<Outcome.Ok<io.github.eslamasabry.oc.core.model.Session>>(
+            h.gateway.createSession(NewSession(location = ServerLocation(directory = lottie)))
+        ).value.id
+        h.gateway.seedDraftProvider(id, "antigravity").mustBeOk("seed")
+        val model = ModelRef("antigravity", "gemini-3.8-flash-high")
+        h.deliver(id, 1, model, first = true).mustBeOk("first")
+        h.deliver(id, 2, model, first = false).mustBeOk("second")
+        kotlin.test.assertEquals(
+            listOf("gemini-3.8-flash-high"),
+            h.daemon.of("set_agent_model_request").map { it.str("modelId") },
+            "the chip's own id, effort included",
+        )
+        kotlin.test.assertTrue(h.daemon.of("set_agent_thinking_request").isEmpty(), "no separate effort")
+    }
 }

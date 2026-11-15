@@ -132,8 +132,20 @@ public class GatewaySendLink(
                             chosen.model?.modelId == model.model.modelId &&
                             chosen.variant.trim().let { if (it == "default") "" else it } == variant
                     if (!matches) {
-                        log.w { "send refused as stale: the conversation's model read back differently" }
-                        return Failure.Refused(RefusalReason.StaleScope).failed()
+                        // SEND-STALE: this refusal is about the model, not the connection: its Details say which
+                        // part read back differently (fixed words, never the ids), so a report can tell it apart.
+                        val parts =
+                            listOfNotNull(
+                                "unknown".takeIf { chosen == null || !chosen.modelKnown },
+                                "runtime".takeIf { chosen?.model?.providerId != model.model.providerId },
+                                "model".takeIf { chosen?.model?.modelId != model.model.modelId },
+                                "effort".takeIf {
+                                    chosen?.variant?.trim()?.let { v -> if (v == "default") "" else v } != variant
+                                },
+                            )
+                        val why = "model read back differently: " + parts.joinToString()
+                        log.w { "send refused as stale: $why" }
+                        return Failure.Refused(RefusalReason.StaleScope, SELECTION_DETAILS.details(why)).failed()
                     }
                 }
             }
@@ -318,5 +330,8 @@ public class GatewaySendLink(
 
         /** The real server answers `user` (plan 04 N4-D13); Flutter's check expected `prompt`. */
         public val PROMPT_TYPES: Set<String> = setOf("user", "prompt")
+
+        /** Only fixed words pass through it (the readback refusal's Details). */
+        private val SELECTION_DETAILS = io.github.eslamasabry.oc.core.security.Redactor()
     }
 }
