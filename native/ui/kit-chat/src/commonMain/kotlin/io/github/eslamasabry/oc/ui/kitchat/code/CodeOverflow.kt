@@ -49,8 +49,16 @@ internal fun CodeOverflow(
         val thumbOn = hasOverflow && (fine.finePointer || scroll.isScrollInProgress) // F: lib/ui/kit/kit_code_block_parts.dart:184
         Box(
             // The fades thin the lines out toward an edge (the content's own alpha, in its own layer), which reads as
-            // Flutter's fade of the block's fill over them and leaves the fill itself untouched.
-            Modifier.fillMaxWidth().graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }.drawWithContent {
+            // Flutter's fade of the block's fill over them and leaves the fill itself untouched. The layer is there only
+            // while something is cleared (c2-performance, 2026-11-15): a block whose lines fit and that keeps no corner
+            // clears nothing, and an offscreen layer per code block on screen cost the GPU a second fill of each on every
+            // frame the transcript moved. Read while drawing the layer, so the scroller learning its range switches it
+            // without composing anything again.
+            Modifier.fillMaxWidth().graphicsLayer {
+                compositingStrategy =
+                    if (reserve != null || scroll.maxValue in 1 until Int.MAX_VALUE) CompositingStrategy.Offscreen
+                    else CompositingStrategy.Auto
+            }.drawWithContent {
                 drawContent()
                 if (reserve != null) {
                     val room = Size(reserve.width.toPx(), reserve.height.toPx())
