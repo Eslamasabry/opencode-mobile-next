@@ -20,6 +20,7 @@ import io.github.eslamasabry.opencode_mobile.BuiltinLinux
 import io.github.eslamasabry.opencode_mobile.SharedFolderReach
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 
 /**
@@ -123,6 +124,10 @@ class PhoneFolderPreflight(
 
     /** W3: the sides of [owner]'s phone whose restart waits for their work to end. */
     fun waiting(owner: ProfileId): Set<PhoneFolderSide> = if (runsHere(owner)) restarts.waiting.value else emptySet()
+
+    /** [waiting] as it changes. */
+    fun waitingUpdates(owner: ProfileId): kotlinx.coroutines.flow.Flow<Set<PhoneFolderSide>> =
+        restarts.waiting.map { if (runsHere(owner)) it else emptySet() }
 
     /** Whether [side]'s process now running was started without [path] (false when it does not run). */
     private fun runsWithout(side: PhoneFolderSide, path: String): Boolean {

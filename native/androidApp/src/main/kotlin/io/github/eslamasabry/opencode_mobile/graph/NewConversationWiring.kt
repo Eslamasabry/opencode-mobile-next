@@ -165,6 +165,11 @@ class AndroidNewConversationHost(
         profile: ProfileId
     ): Set<io.github.eslamasabry.oc.feature.chats.presentation.PhoneFolderSide> = phoneFolders.waiting(profile)
 
+    override fun phoneFolderWaitingUpdates(
+        profile: ProfileId
+    ): kotlinx.coroutines.flow.Flow<Set<io.github.eslamasabry.oc.feature.chats.presentation.PhoneFolderSide>> =
+        phoneFolders.waitingUpdates(profile)
+
     override fun canRepair(profile: ProfileId, directory: String): Boolean =
         gitRepair.availableProject(profile, directory)
 

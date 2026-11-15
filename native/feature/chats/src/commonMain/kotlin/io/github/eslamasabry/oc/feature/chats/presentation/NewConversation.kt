@@ -40,6 +40,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.dropWhile
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.takeWhile
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
@@ -49,9 +50,6 @@ import kotlin.time.Duration.Companion.seconds
 
 /** How long the page waits for a server's first answer before it says so and offers Try again. */
 internal val SETUP_WAIT = 90.seconds
-
-/** W3: how often the page asks whether a side waiting for its work to end has restarted. */
-internal val WAITING_POLL = 5.seconds
 
 public data class NewConversationServer(
     val profile: ProfileId,
@@ -282,6 +280,10 @@ public interface NewConversationHost {
      * OpenCode, an agent's turn); it is never interrupted, and the side restarts by itself once idle.
      */
     public suspend fun phoneFolderWaiting(profile: ProfileId): Set<PhoneFolderSide> = emptySet()
+
+    /** [phoneFolderWaiting] as it changes (a waiting side restarts once its work ends). */
+    public fun phoneFolderWaitingUpdates(profile: ProfileId): kotlinx.coroutines.flow.Flow<Set<PhoneFolderSide>> =
+        kotlinx.coroutines.flow.flow { emit(phoneFolderWaiting(profile)) }
 
     /** Whether [profile] can make a new project folder here (the app's own phone server only, as in Projects). */
     public fun canCreateProject(profile: ProfileId): Boolean = false
@@ -1693,23 +1695,22 @@ public class NewConversationViewModel(
     private var waitingWatch: kotlinx.coroutines.Job? = null
 
     /**
-     * W3: while a side's restart waits for its work to end, the page asks now and then; when that side has restarted,
-     * the folder is read again (the notice then goes by itself).
+     * W3: while a side's restart waits for its work to end, the page follows it; when that side has restarted, the
+     * folder is read again (the notice then goes by itself).
      */
     private fun watchPhoneFolderWaiting(profile: ProfileId, directory: String) {
         if (mutable.value.phoneFolderWaiting.isEmpty() || waitingWatch?.isActive == true) return
         waitingWatch =
             viewModelScope.launch {
-                while (true) {
-                    delay(WAITING_POLL)
-                    val now = host.phoneFolderWaiting(profile)
-                    val before = mutable.value.phoneFolderWaiting
-                    if (now == before) continue
-                    mutable.update { if (it.profile == profile) it.copy(phoneFolderWaiting = now) else it }
-                    val shown = mutable.value
-                    if (shown.profile == profile && shown.directory == directory) checkPhoneFolder(profile, directory)
-                    if (now.isEmpty()) break
-                }
+                host.phoneFolderWaitingUpdates(profile)
+                    .takeWhile { mutable.value.profile == profile }
+                    .collect { now ->
+                        if (now == mutable.value.phoneFolderWaiting) return@collect
+                        mutable.update { if (it.profile == profile) it.copy(phoneFolderWaiting = now) else it }
+                        val shown = mutable.value
+                        if (shown.profile == profile && shown.directory == directory)
+                            checkPhoneFolder(profile, directory)
+                    }
             }
     }
 
