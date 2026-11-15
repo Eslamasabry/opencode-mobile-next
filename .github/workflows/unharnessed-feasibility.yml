@@ -1,0 +1,42 @@
+name: Unharnessed feasibility
+
+on:
+  push:
+    branches: [native/agent-unharnessed]
+    paths:
+      - .github/workflows/unharnessed-feasibility.yml
+      - tool/unharnessed/**
+
+permissions:
+  contents: read
+
+concurrency:
+  group: unharnessed-feasibility-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  feasibility:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 100
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Build and probe only in a disposable hosted-runner container
+        run: |
+          test "$GITHUB_ACTIONS" = true
+          test "$RUNNER_ENVIRONMENT" = github-hosted
+          test "$(uname -m)" = aarch64
+          mkdir -p "$RUNNER_TEMP/unharnessed-facts"
+          docker run --rm --cpus=4 --memory=12g \
+            -v "$GITHUB_WORKSPACE/tool/unharnessed:/probe:ro" \
+            -v "$RUNNER_TEMP/unharnessed-facts:/facts" \
+            ubuntu:22.04 /bin/bash /probe/hosted-probe.sh
+      - name: Keep measurements and binary even if a later probe fails
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: unharnessed-arm64-feasibility
+          path: ${{ runner.temp }}/unharnessed-facts/
+          if-no-files-found: error
+          retention-days: 14
