@@ -35,6 +35,7 @@ import io.github.eslamasabry.oc.core.domain.events.GatewayEnvelope
 import io.github.eslamasabry.oc.core.domain.events.GatewayEvent
 import io.github.eslamasabry.oc.core.domain.events.GatewayEvents
 import io.github.eslamasabry.oc.core.domain.events.HintKind
+import io.github.eslamasabry.oc.core.domain.events.InterruptReason
 import io.github.eslamasabry.oc.core.domain.events.RunOutcome
 import io.github.eslamasabry.oc.core.domain.lastPromptIdentity
 import io.github.eslamasabry.oc.core.domain.unavailable
@@ -416,6 +417,9 @@ public class PaseoGateway(
     internal val heldEvents = ArrayList<PaseoPush>()
     internal var providerEntries: List<JsonObject>? = null
     internal var providerRevision = 0
+
+    /** When each agent's check was last asked for again after a refusal ([recheckProvider]). */
+    private val providerRechecks = HashMap<String, Long>()
 
     // ---- events
     private val allEvents =
@@ -1850,9 +1854,9 @@ public class PaseoGateway(
 
     internal suspend fun requireProviderAvailable(id: String) {
         if (!isPaseoProviderId(id)) paseoFail(PaseoFailureKind.Unavailable)
-        val matches = providerSnapshot().filter { it.str("provider") == id }
-        if (matches.size != 1) paseoFail(PaseoFailureKind.Unavailable)
-        val entry = matches.single()
+        var entry = providerEntry(id)
+        if (!paseoProviderCanStart(entry) && entry["enabled"].boolOrNull() != false && recheckProvider(id))
+            entry = providerEntry(id)
         if (!paseoProviderCanStart(entry)) {
             // The helper's own word for why ("AuthRequired", "not installed"), for Details.
             val reason =
@@ -1861,6 +1865,42 @@ public class PaseoGateway(
                     else "Provider $id is not ready (${entry.str("status")})"
             throw PaseoException(PaseoFailureKind.Unavailable, reason)
         }
+    }
+
+    private suspend fun providerEntry(id: String): JsonObject {
+        val matches = providerSnapshot().filter { it.str("provider") == id }
+        if (matches.size != 1) paseoFail(PaseoFailureKind.Unavailable)
+        return matches.single()
+    }
+
+    /**
+     * Issue 147: the helper keeps each agent's last check (Paseo 0.15 re-checks only when asked), also one that ran
+     * before the person signed in ("Authentication required") or that a busy phone ran past while the helper started.
+     * Before, a start or a send refused on that old answer until the helper itself restarted, whatever the person did.
+     * A refusal now asks the helper to check that one agent again first, at most once per [PROVIDER_RECHECK_MS]. False
+     * when no new check was made.
+     */
+    private suspend fun recheckProvider(id: String): Boolean {
+        val now = nowMs()
+        val last = providerRechecks[id]
+        if (last != null && now - last in 0 until PROVIDER_RECHECK_MS) return false
+        providerRechecks[id] = now
+        val scope = scopeDir
+        val epoch = locationEpoch
+        try {
+            transport.request(
+                "refresh_providers_snapshot_request",
+                jsonOf("cwd" to scope, "providers" to listOf(id)),
+                timeoutMs = PROVIDERS_TIMEOUT_MS,
+            )
+        } catch (e: PaseoException) {
+            if (e.kind == PaseoFailureKind.StaleRequest) throw e
+            return false
+        }
+        checkLocation(scope, epoch)
+        providerEntries = null
+        providerRevision++
+        return true
     }
 
     internal fun modesFor(provider: String): List<String> =
@@ -2135,6 +2175,7 @@ public class PaseoGateway(
         if (!holds(directoryValue, session.directory) || agent["archivedAt"].stringOrNull() != null)
             return null
         val id = session.id.raw
+        val before = agents[id]
         agents[id] = agent
         noteAgentProcess(id, agent)
         sessions.remove(id)
@@ -2148,9 +2189,24 @@ public class PaseoGateway(
         if (reconcileStatus) {
             val now = nowMs()
             val turn = id in awaitingTurn || id in turnActive
-            val next = if (turn) SessionStatus.Busy else paseoSessionStatus(agent, now)
+            // Issue 147: the helper ran this agent's turn (its loaded snapshot) and now only has its saved record, still
+            // "running", so the helper started again under it (Android stopped it or the phone's Linux) and the turn is
+            // gone. It ends as stopped by a restart (words and Continue), never as a finished reply after 3 more
+            // minutes of "working". A record saved as idle finished its turn before the restart.
+            val lost =
+                !turn &&
+                    statuses[id] == SessionStatus.Busy &&
+                    before?.containsKey("activeTurn") == true &&
+                    !agent.containsKey("activeTurn") &&
+                    (status == "running" || status == "initializing")
+            val next =
+                when {
+                    turn -> SessionStatus.Busy
+                    lost -> SessionStatus.Idle
+                    else -> paseoSessionStatus(agent, now)
+                }
             recordBusyExpiry.remove(id)?.cancel()
-            val until = if (turn) null else paseoRecordBusyUntilMs(agent)
+            val until = if (turn || lost) null else paseoRecordBusyUntilMs(agent)
             if (next == SessionStatus.Busy && until != null) {
                 recordBusyExpiry[id] = scope.launch {
                     delay((until - now).coerceAtLeast(0))
@@ -2160,7 +2216,9 @@ public class PaseoGateway(
             val previous = statuses[id]
             emitStatus(id, next)
             if (previous != null && previous != next && next == SessionStatus.Idle) {
-                emit(GatewayEvent.RunEnded(SessionId(id), RunOutcome.Succeeded))
+                val outcome =
+                    if (lost) RunOutcome.Interrupted(InterruptReason.Shutdown) else RunOutcome.Succeeded
+                emit(GatewayEvent.RunEnded(SessionId(id), outcome))
             }
         }
         drafts.remove(id)
@@ -2173,13 +2231,18 @@ public class PaseoGateway(
         return session
     }
 
-    /** A record's running status outlived its bound with nothing newer: the session reads idle. */
+    /**
+     * A record's running status outlived its bound with nothing newer: the session reads idle. No helper ran that turn
+     * (a running agent is read loaded, with its `activeTurn`, and a turn that ends says so), so it was cut when the
+     * helper stopped under it (issue 147: the app reopened after Android stopped it): stopped by a restart, with
+     * Continue, never a finished reply.
+     */
     private fun recordBusyExpired(id: String) {
         recordBusyExpiry.remove(id)
         if (closed || id in awaitingTurn || id in turnActive || statuses[id] != SessionStatus.Busy)
             return
         emitStatus(id, SessionStatus.Idle)
-        emit(GatewayEvent.RunEnded(SessionId(id), RunOutcome.Succeeded))
+        emit(GatewayEvent.RunEnded(SessionId(id), RunOutcome.Interrupted(InterruptReason.Shutdown)))
     }
 
     private fun cancelRecordBusyExpiry() {
@@ -2534,6 +2597,10 @@ public class PaseoGateway(
         public const val SEND_TIMEOUT_MS: Long = 60_000
         public const val CREATE_TIMEOUT_MS: Long = 90_000
         public const val PROVIDERS_TIMEOUT_MS: Long = 45_000
+
+        /** A refused agent's check is asked for again at most this often (each check starts the agent once). */
+        public const val PROVIDER_RECHECK_MS: Long = 30_000
+
         public const val ANNOUNCE_GRACE_MS: Long = 3_000
 
         /** Timelines this long are mapped off the lane (docs/qa/json-decode-2026-10-28). */
