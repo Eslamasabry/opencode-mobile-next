@@ -227,6 +227,7 @@ public fun KitMenu(
     val shown = remember { MutableTransitionState(false) }
     shown.targetState = open
     val last = remember { MenuShown() }
+    KitReportsModal(MenuRules.composed(shown.currentState, shown.targetState) && last.items.isNotEmpty())
     if (open) {
         last.items = items
         last.title = title

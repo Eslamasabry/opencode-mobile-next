@@ -437,4 +437,5 @@
         <item quantity="other">%1$s earlier messages</item>
     </plurals>
     <string name="composerToolsAgentPicturesOnly">%1$s takes pictures only: use Photo library or Take photo</string>
+    <string name="reviewLooksGood">Looks good</string>
 </resources>

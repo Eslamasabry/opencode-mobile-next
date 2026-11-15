@@ -47,6 +47,7 @@ public fun KitFloatingPanel(
             KitMotion.specs.enter(),
             label = "floating-panel",
         )
+    KitReportsModal()
     KitBackGuard(true) { onDismiss?.invoke() }
     val look =
         kitSurfaceLook(

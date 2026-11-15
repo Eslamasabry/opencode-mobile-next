@@ -97,7 +97,7 @@ class ReviewScreensTest {
         )
 
     @Test
-    fun `B-CHAT-068 a turn's changed files show by name with Looks good and Undo all`() = runComposeUiTest {
+    fun `B-CHAT-068 a turn's changed files show by name with Done and Undo all`() = runComposeUiTest {
         val actions = Changes()
         setContent { Themed { ChangesScreen(ChangesUi(turn = true, load = ReviewLoad.Ready, files = files, undoAll = UndoAllUi.Offered), actions) } }
         onNodeWithText("Changes in this turn").assertIsDisplayed()
@@ -105,7 +105,8 @@ class ReviewScreensTest {
         onNodeWithContentDescription("README.md").assertIsDisplayed()
         onNodeWithContentDescription("Main.kt").performClick()
         onNodeWithText("Undo all").performClick()
-        onNodeWithText("Looks good").performClick()
+        onNodeWithText("Looks good").assertDoesNotExist() // the button only goes back: it does not read as an approval
+        onNodeWithText("Done").performClick()
         assertEquals(listOf("file src/app/Main.kt", "undo", "keep"), actions.calls)
         // Per-file undo is stated plainly, never offered as a dead control.
         onNodeWithText("Undoing one file at a time isn't available yet", substring = true).assertIsDisplayed()

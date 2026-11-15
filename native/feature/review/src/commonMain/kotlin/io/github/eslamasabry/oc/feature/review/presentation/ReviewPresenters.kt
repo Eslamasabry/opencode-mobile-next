@@ -34,7 +34,7 @@ public interface ChangesActions {
 
     public fun openFile(path: String)
 
-    /** "Looks good": keep every change and go back. Nothing is sent. */
+    /** "Done": go back. Nothing is recorded or sent; every change stays as it is. */
     public fun keepAll()
 
     /** "Undo all": asks first. */

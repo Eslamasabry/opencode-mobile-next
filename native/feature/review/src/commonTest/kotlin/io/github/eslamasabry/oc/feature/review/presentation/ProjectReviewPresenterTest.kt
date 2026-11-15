@@ -68,7 +68,7 @@ class ProjectReviewPresenterTest {
     }
 
     @Test
-    fun `a file opens its working-tree diff and Looks good goes back`() = runTest(UnconfinedTestDispatcher()) {
+    fun `a file opens its working-tree diff and Done goes back`() = runTest(UnconfinedTestDispatcher()) {
         val nav = ProjectNav()
         val presenter = ProjectChangesPresenter({ files.ok() }, nav, backgroundScope)
         presenter.openFile("lib/a.dart")

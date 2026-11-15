@@ -96,6 +96,7 @@ internal fun ModelSheet(
                 ?.let { scope.launch { actions.toggleModelFavorite(it) } }
         },
         offersServerDefault = ModelPicker.offersServerDefault(models),
+        serverDefault = models.serverDefault?.let(::kitOption),
         resetKey = targetKey,
         // The catalog read is running: "Loading models…" with no list yet, the working mark over a kept list.
         loading = models.loading,

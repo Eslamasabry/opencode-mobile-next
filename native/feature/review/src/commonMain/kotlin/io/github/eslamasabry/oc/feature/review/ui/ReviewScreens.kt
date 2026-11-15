@@ -149,7 +149,7 @@ import io.github.eslamasabry.oc.ui.words.res.revertReviewChanged
 import io.github.eslamasabry.oc.ui.words.res.revertReviewLatest
 import io.github.eslamasabry.oc.ui.words.res.reviewFileGone
 import io.github.eslamasabry.oc.ui.words.res.reviewIncomplete
-import io.github.eslamasabry.oc.ui.words.res.reviewLooksGood
+import io.github.eslamasabry.oc.ui.words.res.reviewDone
 import io.github.eslamasabry.oc.ui.words.res.reviewNoChangesBody
 import io.github.eslamasabry.oc.ui.words.res.reviewProjectNotGitBody
 import io.github.eslamasabry.oc.ui.words.res.reviewProjectOpenGit
@@ -322,7 +322,7 @@ private fun ChangesContent(state: ChangesUi, actions: ChangesActions) {
                         modifier =
                             Modifier.padding(horizontal = Space.S4.dp, vertical = Space.S2.dp),
                         primary =
-                            KitAction(stringResource(Res.string.reviewLooksGood), actions::keepAll),
+                            KitAction(stringResource(Res.string.reviewDone), actions::keepAll),
                         secondary =
                             when (state.undoAll) {
                                 UndoAllUi.Offered ->

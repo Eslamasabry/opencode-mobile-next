@@ -93,7 +93,7 @@ public class ProjectChangesPresenter(
 
     override fun openFile(path: String): Unit = nav.openWorkingTreeFile(path)
 
-    /** "Looks good": nothing to keep or send; the person is back where they came from. */
+    /** "Done": nothing to keep or send; the person is back where they came from. */
     override fun keepAll(): Unit = nav.back()
 
     override fun undoAll(): Unit = Unit
