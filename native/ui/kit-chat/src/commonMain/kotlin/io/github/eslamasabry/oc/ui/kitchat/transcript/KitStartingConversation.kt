@@ -47,6 +47,7 @@ public enum class KitStartingPhase {
  * States: sending, not sent, unconfirmed Text: reading (bubble), frame (status) Cap: Conversation
  * Motion: status and actions cross-fade QUICK; Off = instant
  */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 public fun KitStartingConversation(
     text: String,
@@ -127,10 +128,12 @@ public fun KitStartingConversation(
                             )
                     }
                     // Row follows the layout direction: in Arabic the pair sits on the start edge
-                    // of the bubble's own side, mirrored with it.
-                    Row(
+                    // of the bubble's own side, mirrored with it. Three ways (an agent's set-up, Check again,
+                    // Discard) wrap to a second line on a narrow phone instead of running off it.
+                    FlowRow(
                         horizontalArrangement = Arrangement.spacedBy(Space.S2.dp, Alignment.End),
-                        verticalAlignment = Alignment.CenterVertically,
+                        verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
+                        itemVerticalAlignment = Alignment.CenterVertically,
                     ) {
                         if (
                             shown == KitStartingPhase.NotSent && onEdit != null && editLabel != null
@@ -141,8 +144,9 @@ public fun KitStartingConversation(
                                 role = KitButtonRole.Tertiary,
                                 modifier = Modifier.testTag("starting-edit"),
                             )
+                        // An unsure start may have one way forward of its own too (a phone agent's set-up).
                         if (
-                            shown == KitStartingPhase.NotSent &&
+                            shown != KitStartingPhase.Sending &&
                                 onRetry != null &&
                                 retryLabel != null
                         )

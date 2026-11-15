@@ -248,6 +248,7 @@
     <string name="chatsNewStartingAgent">Starting %1$s…</string>
     <string name="chatsNewAgentModelMissing">%1$s doesn't offer the model you chose. Your words are kept.</string>
     <string name="chatsNewAgentDidNotStart">%1$s didn't start. Your words are kept.</string>
+    <string name="chatsNewAgentUnconfirmed">%1$s didn't confirm this message. Refresh to check again, or discard it to start over. Your words stay saved here.</string>
     <string name="chatsNewFailed">The conversation didn't start. Your message is still here.</string>
     <string name="chatsNewFailedTitle">The conversation didn't start</string>
     <string name="chatsNewFailedReportHint">Report a problem includes these details.</string>

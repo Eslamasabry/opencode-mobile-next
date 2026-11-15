@@ -50,4 +50,17 @@ class FirstMessageRulesTest {
         assertTrue(FirstMessageRules.opensAtOnce(startsOnPhoneAgents = false), "a server's conversation exists when made")
         assertFalse(FirstMessageRules.opensAtOnce(startsOnPhoneAgents = true), "a phone agent's does not exist until started")
     }
+
+    @Test
+    fun `SEND-STALE-2b a record of a phone agent's start is settled once its helper made the agent, never before`() {
+        val aliases = mapOf("draft-1" to "real-1")
+        val helper: (String) -> String = { aliases[it] ?: it }
+        // Back while "Starting <agent>…" left the record; the agent was made: the next start in the folder goes on.
+        assertTrue(FirstMessageRules.madeOnHelper("draft-1", helper))
+        // Still a draft (its first message never reached the helper, or its answer is not known): it proves nothing.
+        assertFalse(FirstMessageRules.madeOnHelper("draft-2", helper))
+        // The record written before the conversation existed names none.
+        assertFalse(FirstMessageRules.madeOnHelper("", helper))
+        assertFalse(FirstMessageRules.madeOnHelper("draft-3") { "" })
+    }
 }
