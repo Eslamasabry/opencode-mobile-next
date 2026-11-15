@@ -79,3 +79,4 @@ wiped (see Floor); they never come back and do not raise the floor.
 | 10047 | build | 2026-11-15 | owner's build of 3d5f4d2677 (issue 147 wave, second batch) |
 | 10048 | build | 2026-11-15 | owner's build of ebb0a33b37 (issue 147 wave, third batch) |
 | 10049 | build | 2026-11-15 | owner's build of 00fc35f5a7 (issue 147 wave, fourth batch) |
+| 10050 | build | 2026-11-15 | owner's build of b0ecdd9e6f (issue 147 wave, fifth batch; its commit passed full CI) |
