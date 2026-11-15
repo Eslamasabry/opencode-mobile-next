@@ -21,6 +21,29 @@ internal object HelperVersion {
         return anywhere.find(output)?.groupValues?.get(1)
     }
 
+    /** What a start makes of the helper's `--version` check. */
+    enum class Verdict {
+        /** The pinned or a tested version: it runs. */
+        Runs,
+
+        /** Another version, or no helper to ask: the update installs the pinned one. */
+        UpdateRequired,
+
+        /**
+         * Issue 147: the helper is there but its check gave no answer (it ran past its limit on a cold, busy phone):
+         * a start that did not happen, tried again, never "update required" (which nothing retried).
+         */
+        NoAnswer,
+    }
+
+    /** [output]: the check's answer, null when it gave none; [installed]: the helper's launcher is in place. */
+    fun verdict(output: String?, installed: Boolean, expected: String, tested: Set<String>): Verdict =
+        when {
+            output == null && installed -> Verdict.NoAnswer
+            runs(parse(output), expected, tested) -> Verdict.Runs
+            else -> Verdict.UpdateRequired
+        }
+
     /** True when [found] is the wanted [expected] pin or one of the [tested] versions. */
     fun runs(found: String?, expected: String, tested: Set<String>): Boolean =
         found != null && (found == expected || found in tested)

@@ -158,7 +158,7 @@ class AppChatsHome(
         val sources =
             runtime.profiles.profiles.value
                 .map { loaded ->
-                    // F: side_connections.dart:93-99: the phone agents are one switch named after Claude Code, part of
+                    // F: side_connections.dart:93-99: the phone agents are one switch (named for what they are), part of
                     // This phone: never the server. Not answering only when their helper's start failed (issue 147).
                     val agents = runtime.isPhoneHelper(loaded.id)
                     // Issue 147: an agents' source with no start, no list and no failure gets a start (never a bare
@@ -166,15 +166,17 @@ class AppChatsHome(
                     if (agents && updating == null) runtime.keepHelperListed(loaded.id)
                     ChatsListSourceUi(
                         profile = loaded.id,
-                        name =
-                            if (agents) AgentCatalog.builtIn.byId(AgentId("claude"))?.name ?: loaded.profile.name
-                            else loaded.profile.name,
+                        // Issue 147: the agents' switch is the phone's agents, never "Claude Code" for every agent; the
+                        // home's words name it "Agents on this phone" (feature/chats, ChatsListSourceUi.agents).
+                        name = loaded.profile.name,
                         shown = runtime.listSourceShown(loaded.id),
                         main = !agents && loaded.id == active,
                         onThisPhone = runtime.sourceOnThisPhone(loaded.profile),
                         // Issue 147: the agents' helper that did not start is named with its Try again (the sheet and
                         // the home's notice), never left reading "Starting"; during an update the update speaks.
-                        unreachable = loaded.id in runtime.sourceFailures && (!agents || updating == null),
+                        unreachable =
+                            loaded.id in runtime.sourceFailures &&
+                                (!agents || (updating == null && loaded.id !in runtime.helperStarting.value)),
                         agents = agents,
                         starting = runtime.startingSource(loaded.id, agentsUpdating = agents && updating != null),
                         updatingAgent =

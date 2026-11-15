@@ -102,6 +102,10 @@ class AndroidChatOutside(
         appScope.launch { phones.value.noteSetUp(owner, AgentId(agent)) }
     }
 
+    override fun agentSignInLapsed(owner: ProfileId, provider: String, atMs: Long) {
+        appScope.launch { phones.value.noteSignInLapsed(owner, provider, atMs) }
+    }
+
     override fun fileLinkPath(url: String): String? =
         try {
             val uri = URI(url.trim())

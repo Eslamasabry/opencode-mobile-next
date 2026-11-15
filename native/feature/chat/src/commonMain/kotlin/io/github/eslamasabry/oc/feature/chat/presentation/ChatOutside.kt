@@ -59,6 +59,12 @@ public interface ChatOutside {
     public fun agentAnswered(owner: ProfileId, agent: String) {}
 
     /**
+     * Issue 147: a reply of [owner]'s phone agent behind [provider] ended on its sign-in at [atMs] (wall clock): the
+     * Agents page, the chooser and New conversation read it as Sign in needed until a sign-in completes.
+     */
+    public fun agentSignInLapsed(owner: ProfileId, provider: String, atMs: Long) {}
+
+    /**
      * Puts [text] on the clipboard as given: the presenter has already [mask]ed it. False = it did not work.
      */
     public fun copy(text: String): Boolean

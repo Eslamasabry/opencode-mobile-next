@@ -338,4 +338,5 @@
     <string name="chatsNewPhoneStorage">Penyimpanan ponsel</string>
     <string name="chatsNewPhoneStorageOff">Mengizinkan agen di ponsel ini membaca dan mengubah file di penyimpanan ponsel, seperti Unduhan dan Dokumen. Membuka halaman Android untuk itu.</string>
     <string name="chatsNewPhoneStorageOn">Agen di ponsel ini dapat membaca dan mengubah file di Unduhan, Dokumen, dan penyimpanan ponsel lainnya.</string>
+    <string name="chatsHomeAgentsUnreachable">Agen di ponsel ini tidak berhasil dimulai</string>
 </resources>
