@@ -218,8 +218,6 @@ public data class ChatsUi(
     val inbox: ImmutableList<ConversationRowUi> = persistentListOf(),
     val finished: ImmutableList<ConversationRowUi> = persistentListOf(),
     val confirmWatched: ChatsWatchedRequestUi? = null,
-    /** H4: the "Start a new conversation?" question for a tapped agent conversation that cannot be reopened. */
-    val startNew: StartNewUi? = null,
     /** B-333: the row tapped while it could not open yet; it opens by itself when it can, and says it is waiting. */
     val waitingOpen: ConversationRef? = null,
     /** B-333: the row whose kept tap was dropped because its source did not connect in time ("Not answering"). */
@@ -416,11 +414,6 @@ public interface ChatsActions {
     public fun openInbox() {}
 
     public fun openConversation(ref: ConversationRef)
-
-    /** The question said yes: open the new-conversation form with the same agent. */
-    public fun confirmStartNew() {}
-
-    public fun dismissStartNew() {}
 
     /** Hides the row at once and archives it when the undo window ends; one offer at a time. */
     public fun archive(row: ConversationRowUi) {}

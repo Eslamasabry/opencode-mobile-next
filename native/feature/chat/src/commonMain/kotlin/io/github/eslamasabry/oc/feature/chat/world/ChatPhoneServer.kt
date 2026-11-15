@@ -4,6 +4,7 @@ import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.Multibinds
 import io.github.eslamasabry.oc.core.common.Outcome
+import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -33,6 +34,14 @@ public interface ChatPhoneServer {
      * nothing is in progress.
      */
     public fun waiting(profile: ProfileId): StateFlow<PhoneServerWait> = NotWaiting
+
+    /**
+     * Issue 147: true when [ref] is a phone agent's conversation the agents helper no longer holds and cannot take up
+     * again where it stopped (after a restart, for an agent whose own resume is not proven, or one that already failed
+     * to resume): it opens to read what it had, and continuing starts a new conversation. False when it continues in
+     * place; null when unknown (another server, or no record of it yet).
+     */
+    public fun needsNewSession(ref: ConversationRef): Boolean? = null
 }
 
 /** Why this phone's server does not answer yet, as far as the app that runs it knows. */

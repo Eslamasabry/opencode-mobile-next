@@ -106,6 +106,9 @@ public interface BasicComposerActions {
 
     public fun openParent() {}
 
+    /** Issue 147: an old phone agent conversation continues in a new conversation with the same agent and folder. */
+    public fun continueInNewConversation() {}
+
     public fun hidePhrase(text: String) {}
 
     public suspend fun sendAgain(text: String, expectedRevision: Long): Boolean = false
@@ -616,6 +619,22 @@ public class BasicComposerViewModel(
 
     override fun openParent() {
         world?.readOnly?.value?.parent?.let { navigator?.openChat(it) }
+    }
+
+    override fun continueInNewConversation() {
+        val w = world ?: return
+        val restart = w.readOnly.value?.restart ?: return
+        navigator?.open(
+            io.github.eslamasabry.oc.ui.routes.ChatsRoute.New(
+                profile = w.ref.profileId,
+                // The new-conversation form names an agent by its catalog id; a runtime it does not know keeps its own.
+                phoneAgent =
+                    restart.agentId?.let {
+                        io.github.eslamasabry.oc.feature.chat.presentation.AgentSetUpRules.agentId(it) ?: it
+                    },
+                directory = restart.directory,
+            )
+        )
     }
 
     override suspend fun send(text: String): Boolean {

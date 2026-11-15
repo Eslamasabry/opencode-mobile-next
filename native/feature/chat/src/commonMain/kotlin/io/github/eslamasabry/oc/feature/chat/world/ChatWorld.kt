@@ -536,7 +536,18 @@ private val NoModels = kotlinx.coroutines.flow.MutableStateFlow(ComposerModels()
 private val NoCommands =
     kotlinx.coroutines.flow.MutableStateFlow<List<ComposerCommand>>(emptyList())
 
-public data class ReadOnlyChat(val parent: ConversationRef? = null)
+/**
+ * A conversation that can be read but not written to: a sub-agent's (write to its [parent]), or, issue 147, a phone
+ * agent's old conversation its agent cannot take up again ([restart]: continuing starts a new conversation).
+ */
+public data class ReadOnlyChat(val parent: ConversationRef? = null, val restart: ChatRestart? = null)
+
+/**
+ * Issue 147: how an old phone agent conversation continues: a new conversation with the same agent ([agentId], the
+ * runtime's provider id, null when the conversation does not say; [agentName] its catalog name) in the same folder
+ * ([directory]).
+ */
+public data class ChatRestart(val agentId: String?, val directory: String?, val agentName: String? = null)
 
 private val NoParent: StateFlow<ConversationRef?> = kotlinx.coroutines.flow.MutableStateFlow(null)
 private val NoStop: StateFlow<Failure?> = kotlinx.coroutines.flow.MutableStateFlow(null)

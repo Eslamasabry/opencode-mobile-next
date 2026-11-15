@@ -682,26 +682,13 @@ public class ChatsAllViewModel(
             }
     }
 
-    /** Opens [target] (asking first for an agent conversation that cannot be resumed). */
+    /**
+     * Opens [target]. Issue 147: an agent conversation its agent cannot take up again opens too, to read; the page
+     * itself offers to continue it.
+     */
     private fun openNow(target: ConversationRef) {
-        // H4: an agent conversation the helper cannot resume asks before anything opens.
-        val item = feed.snapshot.value.items.firstOrNull { it.ref == target }
-        AgentResumeRules.ask(item, item?.let { ChatsState.row(it).agentName })?.let { ask ->
-            model.update { it.copy(startNew = ask) }
-            return
-        }
         connections.prefetch(target)
         nav.openChat(target)
-    }
-
-    override fun confirmStartNew() {
-        val ask = model.value.startNew ?: return
-        model.update { it.copy(startNew = null) }
-        nav.open(AgentResumeRules.route(ask))
-    }
-
-    override fun dismissStartNew() {
-        model.update { it.copy(startNew = null) }
     }
 
     override fun continueHere(key: String) {

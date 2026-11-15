@@ -126,6 +126,9 @@ import io.github.eslamasabry.oc.ui.words.res.phraseSuggestionsInsert
 import io.github.eslamasabry.oc.ui.words.res.phraseSuggestionsOptions
 import io.github.eslamasabry.oc.ui.words.res.chatSubagentReadOnly
 import io.github.eslamasabry.oc.ui.words.res.chatUiOpenParentSession
+import io.github.eslamasabry.oc.ui.words.res.chatOldAgentReadOnly
+import io.github.eslamasabry.oc.ui.words.res.chatOldAgentReadOnlyUnnamed
+import io.github.eslamasabry.oc.ui.words.res.chatContinueInNewConversation
 import io.github.eslamasabry.oc.ui.words.res.composerDraftCleared
 import io.github.eslamasabry.oc.ui.words.res.composerFullAttachmentsLocal
 import io.github.eslamasabry.oc.ui.words.res.composerFullDraftFull
@@ -242,6 +245,28 @@ public fun BasicComposer(
     insertedPictures: ComposerInsertedPictures? = null,
     limits: ComposerLimits? = null,
 ) {
+    state.readOnly?.restart?.let { restart ->
+        // Issue 147: an old phone agent conversation reads as it was; the box offers the one way on.
+        Column(modifier) {
+            KitNotice(
+                restart.agentName?.let {
+                    stringResource(
+                        io.github.eslamasabry.oc.ui.words.res.Res.string.chatOldAgentReadOnly,
+                        io.github.eslamasabry.oc.ui.kit.text.KitBidi.auto(it),
+                    )
+                }
+                    ?: stringResource(
+                        io.github.eslamasabry.oc.ui.words.res.Res.string.chatOldAgentReadOnlyUnnamed
+                    )
+            )
+            KitButton(
+                stringResource(io.github.eslamasabry.oc.ui.words.res.Res.string.chatContinueInNewConversation),
+                actions::continueInNewConversation,
+                role = KitButtonRole.Primary,
+            )
+        }
+        return
+    }
     if (state.readOnly != null) {
         Column(modifier) {
             KitNotice(
