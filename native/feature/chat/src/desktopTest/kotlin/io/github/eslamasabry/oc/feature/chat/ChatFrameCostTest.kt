@@ -136,6 +136,7 @@ class ChatFrameCostTest {
                 // The transcript rests at its newest line: a finger drags it down to read back.
                 meter.traceCauses = true
                 val drag = meter.drag(Offset(W / 2f, H * 0.3f), 40, 24f)
+                println("PERF-CHAT frames " + drag.joinToString(",") { it.scopes.toString() })
                 println("PERF-CHAT causes " + meter.causes.entries.sortedByDescending { it.value }.take(15).joinToString(" || ") { "${it.value}x ${it.key}" })
                 meter.close()
                 out = still to drag
@@ -156,6 +157,9 @@ class ChatFrameCostTest {
         // offscreen, one inside the other, on every frame it moved.
         val most = (still + drag).maxOf { it.offscreenPx }
         assertTrue(most <= W.toLong() * H / 8, "offscreen pixels per frame $most over an eighth of the window: $numbers")
+        // Leaving the newest line recomposed the whole page (130 scopes in one frame, 34 in the next) for a state that had
+        // not changed; a frame of the drag now composes at most the rows coming into view and the jump control.
+        assertTrue(drag.maxOf { it.scopes } <= 60, "a drag frame recomposed ${drag.maxOf { it.scopes }} scopes: $numbers")
     }
 
     @Test
