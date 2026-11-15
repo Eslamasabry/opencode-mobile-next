@@ -680,6 +680,26 @@ private fun sign(kind: DiffLineKind): String =
         else -> " "
     }
 
+/**
+ * glass-truth 2026-11-16: a removed line was found by a quiet "−" in secondary ink on a 10 % neutral wash, and receded.
+ * Never red: it carries a neutral mark at its start edge ([REMOVED_MARK_DP], secondary ink at full strength) and its
+ * sign in primary ink at [REMOVED_SIGN_WEIGHT] (the "+" has two strokes, the "−" one: at this weight the two read alike),
+ * so a removed line is found at a glance in light and dark. Shared by [KitDiffView] and the preview card.
+ */
+internal fun Modifier.diffRemovedMark(removed: Boolean, color: Color): Modifier =
+    if (!removed) this
+    else drawBehind {
+        val w = REMOVED_MARK_DP.dp.toPx()
+        val x = if (layoutDirection == LayoutDirection.Rtl) size.width - w else 0f
+        drawRect(color, topLeft = Offset(x, 0f), size = androidx.compose.ui.geometry.Size(w, size.height))
+    }
+
+/** The removed line's start mark, dp. */
+internal const val REMOVED_MARK_DP: Float = 3f
+
+/** The removed line's sign weight (and the preview's "−N" gutter). */
+internal val REMOVED_SIGN_WEIGHT: androidx.compose.ui.text.font.FontWeight = androidx.compose.ui.text.font.FontWeight.Bold
+
 /** `codeAddedSurface` / `codeRemovedSurface` (kit_diff_rows.dart `_tint`). */
 private fun tint(colors: KitColors, kind: DiffLineKind): Color =
     when (kind) {
@@ -739,7 +759,7 @@ private class Cells(
         }
     }
 
-    /** The sign, centred in its cell: `+` in success, `−` in codeRemoved (text2). */
+    /** The sign, centred in its cell: `+` in success, `−` in primary ink and weight ([diffRemovedMark]). */
     @Composable
     fun Glyph(kind: DiffLineKind?) {
         DisableSelection {
@@ -749,9 +769,10 @@ private class Cells(
                     style = mono.copy(
                         color = when (kind) {
                             DiffLineKind.Added -> colors.success
-                            DiffLineKind.Removed -> colors.text2
+                            DiffLineKind.Removed -> colors.text1
                             else -> colors.text3
                         },
+                        fontWeight = if (kind == DiffLineKind.Removed) REMOVED_SIGN_WEIGHT else mono.fontWeight,
                     ),
                 )
             }
@@ -773,7 +794,7 @@ private class Cells(
     @Composable
     fun Unified(line: DiffLine, g: Geometry) {
         val isSelected = selected?.contains(true, line.oldNo) == true || selected?.contains(false, line.newNo) == true
-        Row(Modifier.fillMaxWidth().background(rowColor(line.kind, isSelected))) {
+        Row(Modifier.fillMaxWidth().background(rowColor(line.kind, isSelected)).diffRemovedMark(line.kind == DiffLineKind.Removed, colors.text2)) {
             Number(line.oldNo, true)
             Number(line.newNo, false)
             Glyph(line.kind)
@@ -785,7 +806,7 @@ private class Cells(
     fun Half(line: DiffLine?, old: Boolean, g: Geometry, modifier: Modifier) {
         val n = if (old) line?.oldNo else line?.newNo
         val isSelected = selected?.contains(old, n) == true
-        Row(modifier.fillMaxHeight().background(if (line == null) Color.Transparent else rowColor(line.kind, isSelected))) {
+        Row(modifier.fillMaxHeight().background(if (line == null) Color.Transparent else rowColor(line.kind, isSelected)).diffRemovedMark(line?.kind == DiffLineKind.Removed, colors.text2)) {
             Number(n, old)
             Glyph(line?.kind)
             Words(line, g, Modifier.weight(1f))

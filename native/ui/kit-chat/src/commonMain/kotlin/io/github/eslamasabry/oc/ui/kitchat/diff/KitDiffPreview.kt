@@ -273,18 +273,18 @@ private fun PreviewRow(
     val (tint, number) =
         when (line.kind) {
             DiffLineKind.Added -> colors.success.copy(alpha = PREVIEW_TINT_ALPHA) to colors.success
-            DiffLineKind.Removed -> colors.text2.copy(alpha = PREVIEW_TINT_ALPHA) to colors.text2
+            DiffLineKind.Removed -> colors.text2.copy(alpha = PREVIEW_TINT_ALPHA) to colors.text1
             else -> Color.Transparent to colors.text3
         }
     Row(
-        Modifier.fillMaxWidth().testTag("kit-diff-preview-row").background(tint)
+        Modifier.fillMaxWidth().testTag("kit-diff-preview-row").background(tint).diffRemovedMark(line.kind == DiffLineKind.Removed, colors.text2)
             .padding(start = Space.S2.dp, end = Space.S2.dp, top = top, bottom = bottom),
         horizontalArrangement = Arrangement.spacedBy(Space.S2.dp),
     ) {
         BasicText(
             gutter,
             Modifier.width(gutterWidth).testTag("kit-diff-preview-gutter"),
-            style = mono.copy(color = number, textAlign = TextAlign.End),
+            style = mono.copy(color = number, textAlign = TextAlign.End, fontWeight = if (line.kind == DiffLineKind.Removed) REMOVED_SIGN_WEIGHT else mono.fontWeight),
             maxLines = 1,
             softWrap = false,
             overflow = TextOverflow.Ellipsis,
