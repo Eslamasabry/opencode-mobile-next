@@ -272,6 +272,8 @@ internal fun TranscriptDetail(
     if (kind == "unknown" && Regex("^[a-z][a-z0-9._-]*$").matches(part.text.trim())) return
     val header =
         when (kind) {
+            // Issue 147: the app carried on an agent whose turn ended with a command still running.
+            "app-continue" -> stringResource(Res.string.chatUiContinuedAfterCommand)
             "agent-info" -> stringResource(Res.string.chatUiAgentNote)
             "agent-warning" -> stringResource(Res.string.chatUiAgentWarning)
             "agent-error" -> stringResource(Res.string.chatUiAgentProblem)
@@ -289,7 +291,7 @@ internal fun TranscriptDetail(
         when (kind) {
             "instructions" -> stringResource(Res.string.sessionInstructionsApplied)
             "skill" -> if (part.filename == null) "" else part.text
-            "agent-error" -> ""
+            "agent-error", "app-continue" -> ""
             else -> part.text
         }
     ExpandNotice(key, header, body, kind?.startsWith("agent-") == true, folds, reply)

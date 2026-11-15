@@ -378,6 +378,9 @@ public class PaseoGateway(
     /** Background work and failed turns as this gateway read them (B-AGENT-151, PaseoBackgroundTasks.kt). */
     internal val backgroundTasks = PaseoBackgroundTaskBook(sharedBackgroundTasks)
 
+    /** Issue 147: the automatic continuations of agents that leave commands running (PaseoAgentContinue.kt). */
+    internal val continueBook = PaseoContinueBook()
+
     /** Claude Code's sub-agents as read-only child sessions (B-AGENT-165, PaseoSubAgents.kt). */
     internal val subagentBook = PaseoSubagentBook()
 

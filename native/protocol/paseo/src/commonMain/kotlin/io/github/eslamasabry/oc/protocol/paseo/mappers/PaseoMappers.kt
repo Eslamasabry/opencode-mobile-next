@@ -343,8 +343,17 @@ public fun paseoItemMessage(
             toolName = toolName,
             tool = tool,
         )
+    // Issue 147: the app's own continuation after a turn that left a command running reads as a quiet line, not a
+    // request of the person's (and not a turn of its own: the work it continues stays under that request).
+    if (type == "user_message" && paseoIsContinuePrompt(paseoText(item["text"]))) {
+        return MessageWithParts(
+            MessageInfo(id = id, sessionId = agentId, role = Role.User, time = MsgTime(createdMs, completedMs ?: createdMs)),
+            persistentListOf(newPart(PartType.Notice, "v2:notice", toolName = PASEO_CONTINUE_NOTICE)),
+        )
+    }
     val part: Part = when (type) {
-        "user_message", "assistant_message" -> newPart(PartType.Text, "text", text = paseoText(item["text"]))
+        "user_message" -> newPart(PartType.Text, "text", text = paseoText(item["text"]))
+        "assistant_message" -> newPart(PartType.Text, "text", text = paseoWithoutGoalMarker(paseoText(item["text"])))
         "reasoning" -> newPart(PartType.Reasoning, "reasoning", text = paseoText(item["text"]))
         "tool_call" -> {
             val status = if (paseoInterruptedToolCall(item)) ToolStatus.Cancelled else paseoToolStatus(item["status"])
@@ -363,7 +372,8 @@ public fun paseoItemMessage(
             } else {
                 null
             }
-            val metadata = withBackgroundTask(toolMetadata(detail), toolName, status, detail)
+            val metadata =
+                withTurnOutliving(withBackgroundTask(toolMetadata(detail), toolName, status, detail), provider, toolName, status)
             newPart(PartType.Tool, "tool", toolName = toolName, callId = id, tool = toolState(status, input, output, error, metadata))
         }
         "todo" -> {
