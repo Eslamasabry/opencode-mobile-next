@@ -461,24 +461,16 @@ internal fun ChatTranscriptList(
         }
     val anchor = rememberFoldAnchor(list.lazy)
     // B0: a repeated key kills the whole screen (LazyColumn throws), so the list never sees one.
-    val unique = remember(rows) { rows.distinctKeys() }
-    val tables = remember(unique) { LongTable.of(unique) }
-    val copyableTurns =
-        remember(unique) {
-            unique
-                .filterIsInstance<BlockRow>()
-                .filter { it.text.isNotBlank() }
-                .mapTo(hashSetOf()) { it.turnId }
-        }
+    val rowFacts = remember { TranscriptRowFacts() }
+    val listFacts = remember(rows) { rowFacts.of(rows) }
+    val unique = listFacts.unique
+    val tables = listFacts.tables
     val newestPrompt = unique.firstOrNull { it is PromptRow }?.key
     // B8: the newest turn's footer carries "Send again" when its reply was cut off before any words.
     val newestFooter =
         unique.firstOrNull { it is PromptRow || it is FooterRow }?.takeIf { it is FooterRow }?.key
     val newestCompleted =
-        unique
-            .filterIsInstance<FooterRow>()
-            .firstOrNull { facts.reading.metadata[it.turnId] != null }
-            ?.key
+        remember(unique, facts.reading.metadata) { rowFacts.newestCompleted(unique, facts.reading.metadata) }
     val newestKey =
         when {
             live != null -> ListKeys.LIVE
@@ -506,15 +498,19 @@ internal fun ChatTranscriptList(
     // The same keys, in the same order, as the items below: the reader's place is kept by key (see KeepScrollPlace).
     val itemKeys =
         remember(unique, pending, live != null, listWords != null, extraBottomPx > 0, facts.background.isNotEmpty(), topLine != null, older != null) {
-            buildList {
-                if (extraBottomPx > 0) add(ListKeys.DOCK_ROOM)
-                if (live != null && listWords != null) add(ListKeys.LIVE)
-                if (facts.background.isNotEmpty() && listWords != null) add(ListKeys.BACKGROUND)
-                if (listWords != null) pending.forEach { add(ListKeys.pending(it.localId)) }
-                unique.forEach { add(it.key) }
-                if (topLine != null) add(ListKeys.CONTINUED)
-                if (older != null) add(ListKeys.EARLIER)
-            }
+            rowFacts.itemKeys(
+                buildList {
+                    if (extraBottomPx > 0) add(ListKeys.DOCK_ROOM)
+                    if (live != null && listWords != null) add(ListKeys.LIVE)
+                    if (facts.background.isNotEmpty() && listWords != null) add(ListKeys.BACKGROUND)
+                    if (listWords != null) pending.forEach { add(ListKeys.pending(it.localId)) }
+                },
+                unique,
+                buildList {
+                    if (topLine != null) add(ListKeys.CONTINUED)
+                    if (older != null) add(ListKeys.EARLIER)
+                },
+            )
         }
     KeepScrollPlace(list, itemKeys)
     // F-023: a waiting decision is brought back into view whenever a newer row arrives or the person asks. The list is
@@ -781,7 +777,7 @@ internal fun ChatTranscriptList(
                             onOpenFile,
                             reasoningExpanded,
                             onCompactAgain,
-                            onCopyReply.takeIf { row.turnId in copyableTurns },
+                            onCopyReply.takeIf { listFacts.copyable(row.turnId) },
                             teachDetails = row.key == newestCompleted,
                             runningSteps = runningSteps,
                             onHideSteps = { stepsShown = false },
@@ -803,7 +799,7 @@ internal fun ChatTranscriptList(
                         onOpenFile,
                         reasoningExpanded,
                         onCompactAgain,
-                        onCopyReply.takeIf { row.turnId in copyableTurns },
+                        onCopyReply.takeIf { listFacts.copyable(row.turnId) },
                         teachDetails = row.key == newestCompleted,
                         onAllFiles = onAllFiles,
                         onSendAgain = onSendAgain.takeIf { row.key == newestPrompt || row.key == newestFooter },
@@ -845,6 +841,50 @@ internal fun ChatTranscriptList(
             item(key = ListKeys.HOLD_ROOM, contentType = "hold-room") {
                 Spacer(Modifier.height(with(LocalDensity.current) { anchor.room.toDp() }))
             }
+    }
+}
+
+/**
+ * What the transcript list takes from all of its rows each time they change: the rows without a repeated key, the
+ * long tables, the turns whose reply has words to copy, the newest completed footer and the list's item keys.
+ * [visits] counts the rows looked at (issue 147: while a reply streams the rows change up to 20 times a second).
+ */
+internal class TranscriptRowFacts {
+    var visits: Long = 0
+        private set
+
+    class Facts(
+        val unique: ImmutableList<TranscriptRow>,
+        val tables: Map<String, String?>,
+        private val copyable: Set<String>,
+    ) {
+        /** The turn's reply has words, so its footer offers Copy reply. */
+        fun copyable(turnId: String): Boolean = turnId in copyable
+    }
+
+    fun of(rows: ImmutableList<TranscriptRow>): Facts {
+        val unique = rows.distinctKeys()
+        val tables = LongTable.of(unique)
+        val blocks = unique.filterIsInstance<BlockRow>()
+        val copyable = blocks.filter { it.text.isNotBlank() }.mapTo(hashSetOf()) { it.turnId }
+        visits += rows.size + 2L * unique.size + blocks.size
+        return Facts(unique, tables, copyable)
+    }
+
+    /** The newest footer of a turn that has its reply's facts ([metadata]): it teaches where the details are. */
+    fun newestCompleted(unique: List<TranscriptRow>, metadata: Map<String, *>): String? {
+        visits += unique.size
+        return unique.filterIsInstance<FooterRow>().firstOrNull { metadata[it.turnId] != null }?.key
+    }
+
+    /** The list's item keys, newest first: [head], one per row, then [tail]. */
+    fun itemKeys(head: List<String>, unique: List<TranscriptRow>, tail: List<String>): List<String> {
+        visits += unique.size
+        return buildList {
+            addAll(head)
+            unique.forEach { add(it.key) }
+            addAll(tail)
+        }
     }
 }
 

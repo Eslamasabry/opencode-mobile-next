@@ -675,6 +675,10 @@ public class ChatPresenter(
         return shown.toPersistentMap().also { lastReceiptChecks = it }
     }
 
+    /** Issue 147 meter: rows the per-state walks over every row look at (tests read it). */
+    internal var rowVisits: Long = 0
+        private set
+
     /** B-169: the limit offer of each failed turn. */
     private fun limitOffers(
         t: TranscriptState,
@@ -685,8 +689,9 @@ public class ChatPresenter(
         val now = clock?.now()?.toEpochMilliseconds()
         var out = persistentMapOf<String, LimitSwitchUi>()
         for (row in t.rows) {
+            rowVisits++
             if (row !is FooterRow || !row.failed) continue
-            val words = t.rows.firstOrNull { it is PromptRow && it.turnId == row.turnId } as? PromptRow
+            val words = t.rows.firstOrNull { rowVisits++; it is PromptRow && it.turnId == row.turnId } as? PromptRow
             val count = words?.let { switches[LimitSwitchRules.promptKey(it.text)] } ?: 0
             val offer = LimitSwitchRules.offer(row.reason, now, caps.promptModelChoice, count)
             if (offer != LimitSwitchOffer.None)

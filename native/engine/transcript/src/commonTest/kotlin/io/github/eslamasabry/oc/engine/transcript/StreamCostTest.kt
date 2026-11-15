@@ -7,6 +7,7 @@ import io.github.eslamasabry.oc.engine.transcript.state.BlockRow
 import io.github.eslamasabry.oc.engine.transcript.state.GatewayEvent
 import io.github.eslamasabry.oc.engine.transcript.state.MessageInfo
 import io.github.eslamasabry.oc.engine.transcript.state.MessageWithParts
+import io.github.eslamasabry.oc.engine.transcript.state.NewestFirst
 import io.github.eslamasabry.oc.engine.transcript.state.Part
 import io.github.eslamasabry.oc.engine.transcript.state.PartType
 import io.github.eslamasabry.oc.engine.transcript.state.Role
@@ -17,6 +18,7 @@ import io.github.eslamasabry.oc.engine.transcript.state.TranscriptState
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
 import kotlin.test.assertSame
 import kotlin.test.assertTrue
 
@@ -182,6 +184,28 @@ class StreamCostTest {
         assertTrue(many.visits.max() <= few.visits.max(), "visits per publish grow with history: $summary")
         assertTrue(many.searchChars.max() <= few.searchChars.max(), "search text per publish grows with history: $summary")
         assertTrue(many.rowWrites.max() <= few.rowWrites.max(), "row writes per publish grow with history: $summary")
+    }
+
+    @Test
+    fun `B-CHAT-096 PB-20 a settled turn is the same object in every publish while a reply streams`() {
+        val states = streamAfter(200, keepStates = true).states
+        val first = states.first()
+        val settled = assertNotNull((first.rows as NewestFirst<*>).settled, "the settled rows are handed over")
+        val thought = first.rows[first.indexOf("thought:h7-a/reasoning-0")]
+        val search = first.searchText.first { it.rowKey == "thought:h7-a/reasoning-0" }
+        for (s in states.drop(1)) {
+            // The same settled list, rows and search text: a reader keeps what it found in them by identity.
+            assertSame(settled, (s.rows as NewestFirst<*>).settled)
+            assertSame(thought, s.rows[s.indexOf("thought:h7-a/reasoning-0")])
+            assertSame(search, s.searchText.first { it.rowKey == "thought:h7-a/reasoning-0" })
+            assertSame(first.searchText[0], s.searchText[0])
+        }
+        // The settled rows are the published list's oldest rows; the rest is the live turn.
+        val last = states.last()
+        val oldestFirst = last.rows.asReversed()
+        assertEquals(settled.toList(), oldestFirst.take(settled.size))
+        assertTrue(oldestFirst.drop(settled.size).all { it.turnId == "live" })
+        assertEquals(200 * 5, settled.size)
     }
 
     @Test
