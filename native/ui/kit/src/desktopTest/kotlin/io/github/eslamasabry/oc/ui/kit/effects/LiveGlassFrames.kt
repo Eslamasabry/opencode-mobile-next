@@ -93,7 +93,7 @@ internal object LiveGlassFrames {
         val barEnd: Double,
         val menuMiddle: Double,
         val menuRim: Double,
-        val menuRimSharp: Double,
+        val columnSharp: Double,
         val glassBottomDp: Double,
         val glassLeftDp: Double,
         val costMs: Double,
@@ -293,8 +293,9 @@ internal object LiveGlassFrames {
         val end = r(m.right - 90f, 12f, m.right - 12f, 44f)
         val middle = r(m.left + 24f, m.top + 24f, m.right - 24f, m.bottom - 24f)
         val rim = r(m.left + 2f, m.top + 24f, m.left + 10f, m.bottom - 24f)
-        // The strip just inside the menu's free side over the code (no rows' words there): the bent code's detail.
-        val rimCode = r(m.left + 2f, m.top + 70f, m.left + 12f, m.bottom - 16f)
+        // The column the menu falls as, over the code: glass from the first frames on, so a change of the body's
+        // resolution, blur or rows shows there as soon as it happens (the menu's free side is glass only once filled).
+        val column = r(m.right - 48f, m.top + 70f, m.right - 8f, m.bottom - 16f)
         val (bottom, left) = glass(px, ref, m, density)
         // Joined while the menu's glass shows below the bar (a closing menu drops its semantics, so not read from them).
         val joined = bottom > m.top + 8f
@@ -308,7 +309,7 @@ internal object LiveGlassFrames {
             barEnd = light(px, end),
             menuMiddle = light(px, middle),
             menuRim = light(px, rim),
-            menuRimSharp = sharp(px, rimCode),
+            columnSharp = sharp(px, column),
             glassBottomDp = bottom,
             glassLeftDp = left,
             costMs = cost,

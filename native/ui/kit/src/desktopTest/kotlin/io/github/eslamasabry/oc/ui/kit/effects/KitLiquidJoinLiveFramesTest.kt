@@ -20,7 +20,7 @@ class KitLiquidJoinLiveFramesTest {
             Triple("bar light", BAR_LIGHT_STEP, { f: LiveGlassFrames.Frame -> f.barLight }),
             Triple("bar sharpness", BAR_SHARP_STEP, { f: LiveGlassFrames.Frame -> f.barSharp }),
             Triple("menu rows", MENU_STEP, { f: LiveGlassFrames.Frame -> f.menuMiddle }),
-            Triple("menu rim sharpness", BAR_SHARP_STEP, { f: LiveGlassFrames.Frame -> f.menuRimSharp }),
+            Triple("column sharpness", BAR_SHARP_STEP, { f: LiveGlassFrames.Frame -> f.columnSharp }),
             Triple("glass bottom", GLASS_STEP_DP, { f: LiveGlassFrames.Frame -> f.glassBottomDp }),
             Triple("glass side", GLASS_STEP_DP, { f: LiveGlassFrames.Frame -> f.glassLeftDp }),
         )

@@ -52,7 +52,7 @@ class LiveGlassFramesRenders {
             }
             File(out, "${variant.key}-${scene.name}.csv").writeText(
                 buildString {
-                    append("frame,ms,open,joined,bar_light,bar_sharp,bar_end,menu_middle,menu_rim,menu_rim_sharp,glass_bottom_dp,glass_left_dp,cost_ms\n")
+                    append("frame,ms,open,joined,bar_light,bar_sharp,bar_end,menu_middle,menu_rim,column_sharp,glass_bottom_dp,glass_left_dp,cost_ms\n")
                     for (f in frames)
                         append(
                             "${f.index},${f.ms},${f.open},${f.joined},%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.2f,%.2f,%.1f\n".format(
@@ -61,7 +61,7 @@ class LiveGlassFramesRenders {
                                 f.barEnd,
                                 f.menuMiddle,
                                 f.menuRim,
-                                f.menuRimSharp,
+                                f.columnSharp,
                                 f.glassBottomDp,
                                 f.glassLeftDp,
                                 f.costMs,
@@ -91,7 +91,7 @@ class LiveGlassFramesRenders {
             Triple("bar end light", .3, { f: LiveGlassFrames.Frame -> f.barEnd }),
             Triple("menu middle light", .5, { f: LiveGlassFrames.Frame -> f.menuMiddle }),
             Triple("menu rim light", .5, { f: LiveGlassFrames.Frame -> f.menuRim }),
-            Triple("menu rim sharpness", .15, { f: LiveGlassFrames.Frame -> f.menuRimSharp }),
+            Triple("column sharpness", .15, { f: LiveGlassFrames.Frame -> f.columnSharp }),
             Triple("glass bottom dp", 1.5, { f: LiveGlassFrames.Frame -> f.glassBottomDp }),
             Triple("glass left dp", 1.5, { f: LiveGlassFrames.Frame -> f.glassLeftDp }),
         )
