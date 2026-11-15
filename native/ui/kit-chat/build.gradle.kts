@@ -47,8 +47,6 @@ kotlin {
         implementation(
             "androidx.compose.ui:ui-test-manifest:$cmp"
         ) // ComponentActivity for the compose rule
-        // Accessibility Test Framework checks on the semantics tree (KitChatAccessibilityChecksTest), as in :ui:kit.
-        implementation("androidx.compose.ui:ui-test-junit4-accessibility:$cmp")
         implementation("io.github.takahirom.roborazzi:roborazzi:$roborazzi")
         implementation("io.github.takahirom.roborazzi:roborazzi-compose:$roborazzi")
         implementation("io.github.takahirom.roborazzi:roborazzi-junit-rule:$roborazzi")
