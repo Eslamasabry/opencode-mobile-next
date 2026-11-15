@@ -23,7 +23,7 @@ import io.github.eslamasabry.oc.engine.agents.AgentId
 import io.github.eslamasabry.oc.engine.agents.host.PaseoConfig
 import io.github.eslamasabry.oc.engine.agents.providers.OwnAgentCheckResult
 import io.github.eslamasabry.oc.engine.agents.providers.OwnAgentCheckScript
-import io.github.eslamasabry.oc.engine.agents.providers.OwnAgentConfig
+import io.github.eslamasabry.oc.engine.agents.providers.PhoneHelperConfig
 import io.github.eslamasabry.oc.engine.agents.providers.OwnAgentInstallScript
 import io.github.eslamasabry.oc.engine.agents.providers.OwnAgentKeys
 import io.github.eslamasabry.oc.engine.agents.providers.OwnAgentProblem
@@ -192,19 +192,19 @@ internal fun ownAgentStore(stores: PreviewStores, owner: ProfileId, registerSecr
     OwnAgentStore(KvAgentPrefs(stores.prefs, stores.lanes.forProfile(owner)), StoreSecrets(stores), registerSecret)
 
 /**
- * The helper's `config.json` for [owner]: the catalog's agents ([PaseoConfig.render]) plus the person's own agents
- * (issue 147). Values that cannot be read leave the agent without them (it then says so when it starts), never the
- * helper without its config.
+ * The helper's `config.json` for [owner]: the catalog's agents ([PaseoConfig.render]), the person's own agents and
+ * Codex with its OS sandbox off (issue 147, [PhoneHelperConfig]). Values that cannot be read leave the agent without
+ * them (it then says so when it starts), never the helper without its config. Used by every start of the phone's
+ * helper; a computer's Paseo config is never written by the app.
  */
 internal suspend fun phoneHelperConfig(stores: PreviewStores, owner: String, registerSecret: (String) -> Unit): String {
     val base = PaseoConfig.render().json
-    if (!Regex("^[A-Za-z0-9_-]{1,80}$").matches(owner)) return base
+    if (!Regex("^[A-Za-z0-9_-]{1,80}$").matches(owner)) return PhoneHelperConfig.compose(base, emptyList(), emptyMap())
     val id = ProfileId(owner)
     val store = ownAgentStore(stores, id, registerSecret)
     val agents = store.read(id)
-    if (agents.isEmpty()) return base
-    val env = (store.env(id) as? Outcome.Ok)?.value.orEmpty()
-    return OwnAgentConfig.merge(base, agents, env)
+    val env = if (agents.isEmpty()) emptyMap() else (store.env(id) as? Outcome.Ok)?.value.orEmpty()
+    return PhoneHelperConfig.compose(base, agents, env)
 }
 
 /** The profile deletion finds the own agents (preferences) and their values (secure store). */
