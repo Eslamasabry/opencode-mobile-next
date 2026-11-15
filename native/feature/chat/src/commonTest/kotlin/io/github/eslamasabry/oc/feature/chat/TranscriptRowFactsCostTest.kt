@@ -67,11 +67,15 @@ class TranscriptRowFactsCostTest {
         }
     }
 
-    /** Rows looked at per publish while 120 publishes of one reply stream after [turns] settled turns. */
+    /**
+     * Rows looked at per publish while 120 publishes of one reply stream after [turns] settled turns. The conversation
+     * is open already (publish 0, not counted): what its settled turns hold was found once, as the list first drew them.
+     */
     private fun perPublish(turns: Int): List<Long> {
         val settled = (0 until turns).flatMap(::settledTurn).toPersistentList()
         val metadata = mapOf("u${turns - 1}" to Unit)
         val facts = TranscriptRowFacts()
+        facts.of(rowsOf(settled, liveTurn(0))).also { facts.newestCompleted(it.unique, metadata) }
         return (1..120).map { n ->
             val before = facts.visits
             val rows = rowsOf(settled, liveTurn(n))

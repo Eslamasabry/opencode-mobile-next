@@ -41,6 +41,7 @@ import io.github.eslamasabry.oc.feature.chat.presentation.ErrorRecovery
 import io.github.eslamasabry.oc.feature.chat.presentation.StoppedSteps
 import io.github.eslamasabry.oc.engine.transcript.state.BlockRow
 import io.github.eslamasabry.oc.engine.transcript.state.FooterRow
+import io.github.eslamasabry.oc.engine.transcript.state.NewestFirst
 import io.github.eslamasabry.oc.engine.transcript.state.NoticeKind
 import io.github.eslamasabry.oc.engine.transcript.state.NoticeRow
 import io.github.eslamasabry.oc.engine.transcript.state.Origin
@@ -161,6 +162,7 @@ import io.github.eslamasabry.oc.ui.words.res.runningWorkOpen
 import kotlin.time.Instant
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.ImmutableMap
+import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentMapOf
 import kotlinx.collections.immutable.toImmutableList
@@ -847,7 +849,9 @@ internal fun ChatTranscriptList(
 /**
  * What the transcript list takes from all of its rows each time they change: the rows without a repeated key, the
  * long tables, the turns whose reply has words to copy, the newest completed footer and the list's item keys.
- * [visits] counts the rows looked at (issue 147: while a reply streams the rows change up to 20 times a second).
+ * Issue 147: while a reply streams the rows change up to 20 times a second. The engine hands the settled turns' rows
+ * over as one list, the same instance while none of them changed ([NewestFirst.settled]); what was found in them is
+ * kept by that identity, and only the newest turn's rows are walked again. [visits] counts the rows looked at.
  */
 internal class TranscriptRowFacts {
     var visits: Long = 0
@@ -857,36 +861,125 @@ internal class TranscriptRowFacts {
         val unique: ImmutableList<TranscriptRow>,
         val tables: Map<String, String?>,
         private val copyable: Set<String>,
+        private val liveCopyable: Set<String> = emptySet(),
     ) {
         /** The turn's reply has words, so its footer offers Copy reply. */
-        fun copyable(turnId: String): Boolean = turnId in copyable
+        fun copyable(turnId: String): Boolean = turnId in liveCopyable || turnId in copyable
     }
 
+    /** What the settled rows hold, kept while the engine hands over the same settled list. */
+    private class Settled(
+        val source: List<TranscriptRow>,
+        val keys: HashSet<String>,
+        val unique: Boolean,
+        val tables: Map<String, String?>,
+        val copyable: Set<String>,
+    )
+
+    private var settled: Settled? = null
+    private var completedSource: List<TranscriptRow>? = null
+    private var completedMetadata: Map<String, *>? = null
+    private var completedSettled: String? = null
+
     fun of(rows: ImmutableList<TranscriptRow>): Facts {
+        val split = settledOf(rows) ?: return full(rows)
+        val liveCount = rows.size - split.source.size
+        // The newest turn's rows: the front of the newest-first list.
+        val live = ArrayList<TranscriptRow>(liveCount)
+        for (i in 0 until liveCount) live += rows[i]
+        // The copy, the key check, the tables and the copyable turns: four looks at each live row.
+        visits += 4L * liveCount
+        if (!split.unique) return full(rows)
+        val seen = HashSet<String>(liveCount * 2)
+        for (row in live) if (!seen.add(row.key) || row.key in split.keys) return full(rows)
+        val liveTables = LongTable.of(live)
+        val copyable = HashSet<String>()
+        for (row in live) if (row is BlockRow && row.text.isNotBlank()) copyable += row.turnId
+        return Facts(
+            rows,
+            if (liveTables.isEmpty()) split.tables else split.tables + liveTables,
+            split.copyable,
+            copyable,
+        )
+    }
+
+    /** The kept facts of [rows]' settled part, made again only when the engine hands over another settled list. */
+    private fun settledOf(rows: ImmutableList<TranscriptRow>): Settled? {
+        val source = rows.settledRows() ?: return null
+        settled?.takeIf { it.source === source }?.let { return it }
+        val view: ImmutableList<TranscriptRow> = NewestFirst(source)
+        val keys = HashSet<String>(source.size * 2)
+        var unique = true
+        val copyable = HashSet<String>()
+        for (row in source) {
+            if (!keys.add(row.key)) unique = false
+            if (row is BlockRow && row.text.isNotBlank()) copyable += row.turnId
+        }
+        visits += 2L * source.size
+        return Settled(source, keys, unique, LongTable.of(view), copyable).also { settled = it }
+    }
+
+    /** Every row walked: no settled list from the engine, or a key repeats. */
+    private fun full(rows: ImmutableList<TranscriptRow>): Facts {
         val unique = rows.distinctKeys()
         val tables = LongTable.of(unique)
-        val blocks = unique.filterIsInstance<BlockRow>()
-        val copyable = blocks.filter { it.text.isNotBlank() }.mapTo(hashSetOf()) { it.turnId }
-        visits += rows.size + 2L * unique.size + blocks.size
+        val copyable = HashSet<String>()
+        for (row in unique) if (row is BlockRow && row.text.isNotBlank()) copyable += row.turnId
+        visits += rows.size + 2L * unique.size
         return Facts(unique, tables, copyable)
     }
 
     /** The newest footer of a turn that has its reply's facts ([metadata]): it teaches where the details are. */
     fun newestCompleted(unique: List<TranscriptRow>, metadata: Map<String, *>): String? {
-        visits += unique.size
-        return unique.filterIsInstance<FooterRow>().firstOrNull { metadata[it.turnId] != null }?.key
+        val source = unique.settledRows()
+        val liveCount = if (source == null) unique.size else unique.size - source.size
+        for (i in 0 until liveCount) {
+            visits++
+            val row = unique[i]
+            if (row is FooterRow && metadata[row.turnId] != null) return row.key
+        }
+        if (source == null) return null
+        if (source !== completedSource || metadata !== completedMetadata) {
+            completedSource = source
+            completedMetadata = metadata
+            completedSettled = null
+            for (i in source.indices.reversed()) {
+                visits++
+                val row = source[i]
+                if (row is FooterRow && metadata[row.turnId] != null) {
+                    completedSettled = row.key
+                    break
+                }
+            }
+        }
+        return completedSettled
     }
 
-    /** The list's item keys, newest first: [head], one per row, then [tail]. */
-    fun itemKeys(head: List<String>, unique: List<TranscriptRow>, tail: List<String>): List<String> {
-        visits += unique.size
-        return buildList {
-            addAll(head)
-            unique.forEach { add(it.key) }
-            addAll(tail)
-        }
+    /** The list's item keys, newest first: [head], one per row, then [tail]; a view, not a copy of every key. */
+    fun itemKeys(head: List<String>, unique: List<TranscriptRow>, tail: List<String>): List<String> =
+        ItemKeys(head, unique, tail)
+
+    private class ItemKeys(
+        private val head: List<String>,
+        private val rows: List<TranscriptRow>,
+        private val tail: List<String>,
+    ) : AbstractList<String>(), RandomAccess {
+        override val size: Int
+            get() = head.size + rows.size + tail.size
+
+        override fun get(index: Int): String =
+            when {
+                index < head.size -> head[index]
+                index < head.size + rows.size -> rows[index - head.size].key
+                else -> tail[index - head.size - rows.size]
+            }
     }
 }
+
+/** The settled turns' rows the engine handed over with [this] list (oldest first), or null. */
+@Suppress("UNCHECKED_CAST")
+private fun List<TranscriptRow>.settledRows(): PersistentList<TranscriptRow>? =
+    (this as? NewestFirst<*>)?.settled as PersistentList<TranscriptRow>?
 
 /**
  * [rows] without a second row of an already used key (the first, newest, wins); same list when

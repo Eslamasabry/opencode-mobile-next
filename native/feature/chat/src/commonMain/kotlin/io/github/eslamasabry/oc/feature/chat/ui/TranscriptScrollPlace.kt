@@ -5,6 +5,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.referentialEqualityPolicy
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import io.github.eslamasabry.oc.engine.transcript.state.TranscriptRow
 import io.github.eslamasabry.oc.feature.chat.presentation.FindUi
@@ -57,7 +59,10 @@ internal object ScrollPlaceRules {
     /** The place of the row at [firstVisible] (index into [keys], newest first) with [offset] px scrolled into it. */
     fun capture(keys: List<String>, firstVisible: Int, offset: Int): ScrollPlace? {
         val key = keys.getOrNull(firstVisible) ?: return null
-        val older = keys.drop(firstVisible + 1).take(ScrollPlace.OLDER_KEYS_KEPT)
+        // Only the few keys kept (issue 147: this runs on every publish, and a copy of every older key grew with
+        // the history loaded).
+        val from = firstVisible + 1
+        val older = if (from >= keys.size) emptyList() else keys.subList(from, minOf(keys.size, from + ScrollPlace.OLDER_KEYS_KEPT)).toList()
         return ScrollPlace(key, offset, older)
     }
 
@@ -85,7 +90,11 @@ internal object ScrollPlaceRules {
 @Composable
 internal fun KeepScrollPlace(list: TranscriptListState, keys: List<String>) {
     val holder = rememberSaveable(saver = ScrollPlace.Saver) { ScrollPlaceHolder() }
-    val current by rememberUpdatedState(keys)
+    // Held by identity: a new list of keys is a new value without comparing every key (issue 147: the keys change on
+    // every publish while a reply streams, and comparing them walked every row).
+    val keysState = remember { mutableStateOf(keys, referentialEqualityPolicy()) }
+    keysState.value = keys
+    val current by keysState
     LaunchedEffect(list) {
         val saved = holder.place
         if (saved != null && !list.following) {
