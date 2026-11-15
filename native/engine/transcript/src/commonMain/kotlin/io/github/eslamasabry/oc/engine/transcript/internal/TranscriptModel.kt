@@ -31,7 +31,6 @@ import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.PersistentMap
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentMapOf
-import kotlinx.collections.immutable.toImmutableList
 
 internal class PartEntry(var part: Part, var version: Long) {
     /**
@@ -79,6 +78,8 @@ internal class TurnEntry(
     val members: List<MsgEntry>,
     val versions: LongArray,
     val rows: List<TranscriptRow>,
+    /** Find's text of this turn's thoughts, steps, notices and files, made with its rows (issue 147). */
+    val search: List<SearchText>,
 ) {
     fun matches(other: List<MsgEntry>): Boolean {
         if (other.size != members.size) return false
@@ -124,6 +125,7 @@ internal class TranscriptModel(
     private var prefixEntries: List<TurnEntry> = emptyList()
     private var prefixList: PersistentList<TranscriptRow> = persistentListOf()
     private var prefixPositions: PersistentMap<String, Int> = persistentMapOf()
+    private var prefixSearch: PersistentList<SearchText> = persistentListOf()
     private val rowCache = HashMap<String, TranscriptRow>()
 
     // STREAM-FIX newest-turn cache: the published list is prefix + newest rows; a publish rewrites
@@ -385,25 +387,32 @@ internal class TranscriptModel(
         }
         var list: PersistentList<TranscriptRow>
         var positions: PersistentMap<String, Int>
+        var search: PersistentList<SearchText>
         if (common == prefixEntries.size) {
             list = prefixList
             positions = prefixPositions
+            search = prefixSearch
         } else {
             list = persistentListOf()
             positions = persistentMapOf()
+            search = persistentListOf()
             common = 0
         }
         for (i in common until entries.size) {
             val (l, p) = appendRows(list, positions, entries[i].rows)
             list = l
             positions = p
+            if (entries[i].search.isNotEmpty()) search = search.addAll(entries[i].search)
         }
         prefixEntries = entries
         prefixList = list
         prefixPositions = positions
+        prefixSearch = search
         if (newestIndex >= 0) {
             val (turnId, members) = turns[newestIndex]
-            val rows = buildTurn(turnId, members, finished = !run.busy).rows
+            val newest = buildTurn(turnId, members, finished = !run.busy)
+            val rows = newest.rows
+            if (newest.search.isNotEmpty()) search = search.addAll(newest.search)
             if (newestBase === list && newestTurnId == turnId) {
                 replaceNewest(list.size, rows)
             } else {
@@ -422,42 +431,13 @@ internal class TranscriptModel(
             newestTurnId = null
             newestRows = emptyList()
         }
-        val searchable = ArrayList<SearchText>()
-        for ((turnId, members) in turns) {
-            for (m in members) for (entry in m.parts.values) {
-                counters.historyVisits++
-                val part = entry.part
-                val key =
-                    when (part.type) {
-                        PartType.Reasoning -> "thought:${part.messageId}/${part.id}"
-                        PartType.Tool -> "work:$turnId"
-                        PartType.Notice,
-                        PartType.Switch,
-                        PartType.Compaction -> "notice:${part.messageId}/${part.id}"
-                        PartType.File ->
-                            "footer:$turnId".takeIf { it in positions }
-                                ?: "prompt:$turnId".takeIf { it in positions }
-                                ?: list.firstOrNull { it.turnId == turnId }?.key
-                        else -> null
-                    } ?: continue
-                if (key !in positions) continue
-                val text =
-                    if (part.type == PartType.Reasoning) entry.raw?.toString().orEmpty()
-                    else
-                        listOf(part.searchText, entry.raw?.toString().orEmpty())
-                            .filter { it.isNotBlank() }
-                            .joinToString("\n")
-                counters.searchChars += text.length
-                if (text.isNotBlank())
-                    searchable += SearchText(key, "${part.messageId}/${part.id}", text)
-            }
-        }
         return TranscriptState(
             revision,
-            NewestFirst(list),
+            // The settled turns' rows go with them as one list, the same instance while none changed (issue 147).
+            NewestFirst(list, prefixList),
             positions,
             run,
-            searchable.toImmutableList(),
+            search,
         )
     }
 
@@ -653,7 +633,57 @@ internal class TranscriptModel(
                     )
                 )
         }
-        return TurnEntry(turnId, members, LongArray(members.size) { members[it].version }, rows)
+        return TurnEntry(
+            turnId,
+            members,
+            LongArray(members.size) { members[it].version },
+            rows,
+            searchOf(turnId, members, rows),
+        )
+    }
+
+    /**
+     * Find's text of one turn's parts that draw no text row of their own (thoughts, steps, notices, files), each tied
+     * to the row that shows it. Made with the turn's rows, so a settled turn's text is made once, never per publish
+     * (issue 147). A thought reuses its row's text instead of copying the part again.
+     */
+    private fun searchOf(turnId: String, members: List<MsgEntry>, rows: List<TranscriptRow>): List<SearchText> {
+        var out: ArrayList<SearchText>? = null
+        var byKey: HashMap<String, TranscriptRow>? = null
+        fun row(key: String): TranscriptRow? =
+            (byKey ?: HashMap<String, TranscriptRow>(rows.size * 2).also { map ->
+                for (r in rows) map.getOrPut(r.key) { r }
+                byKey = map
+            })[key]
+        for (m in members) for (entry in m.parts.values) {
+            counters.historyVisits++
+            val part = entry.part
+            val key =
+                when (part.type) {
+                    PartType.Reasoning -> "thought:${part.messageId}/${part.id}"
+                    PartType.Tool -> "work:$turnId"
+                    PartType.Notice,
+                    PartType.Switch,
+                    PartType.Compaction -> "notice:${part.messageId}/${part.id}"
+                    PartType.File ->
+                        "footer:$turnId".takeIf { row(it) != null }
+                            ?: "prompt:$turnId".takeIf { row(it) != null }
+                            ?: rows.firstOrNull()?.key
+                    else -> null
+                } ?: continue
+            val shown = row(key) ?: continue
+            val text =
+                if (part.type == PartType.Reasoning) (shown as? ThoughtRow)?.text ?: entry.raw?.toString().orEmpty()
+                else
+                    listOf(part.searchText, entry.raw?.toString().orEmpty())
+                        .filter { it.isNotBlank() }
+                        .joinToString("\n")
+                        .also { counters.searchChars += it.length }
+            if (text.isNotBlank())
+                (out ?: ArrayList<SearchText>().also { out = it }) +=
+                    SearchText(key, "${part.messageId}/${part.id}", text)
+        }
+        return out ?: emptyList()
     }
 
     private fun promptRowOf(
