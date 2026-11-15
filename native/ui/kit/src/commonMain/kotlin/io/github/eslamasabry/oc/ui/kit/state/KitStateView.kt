@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.Arrangement
 import io.github.eslamasabry.oc.ui.kit.frame.kitPageGutter
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Spacer
@@ -57,6 +56,9 @@ import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
 import io.github.eslamasabry.oc.ui.kit.platform.LocalKitPlatform
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitAppearance
+import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceInput
+import io.github.eslamasabry.oc.ui.kit.foundation.kitSurface
+import io.github.eslamasabry.oc.ui.kit.foundation.kitSurfaceLook
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.Res
@@ -404,4 +406,14 @@ private class PreviousKind {
  * error page under "Nothing is answering yet"). The state view itself stays as it is.
  */
 @Composable
-public fun Modifier.kitGroundBackdrop(): Modifier = this.background(LocalKitColors.current.ground)
+public fun Modifier.kitGroundBackdrop(): Modifier =
+    this.kitSurface(
+        kitSurfaceLook(
+            KitSurfaceInput(
+                role = io.github.eslamasabry.oc.ui.design.style.SurfaceRole.Ground,
+                shape = io.github.eslamasabry.oc.ui.design.tokens.KitShapeId.Square,
+                level = io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel.Ground,
+                ownFill = LocalKitColors.current.ground,
+            )
+        )
+    )
