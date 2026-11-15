@@ -20,7 +20,7 @@ import io.github.eslamasabry.oc.engine.settings.teaching.ShowMeTarget
 import io.github.eslamasabry.oc.engine.settings.teaching.ShowMeTargets
 import io.github.eslamasabry.oc.feature.agents.hub.AgentComputerKind
 import io.github.eslamasabry.oc.feature.agents.hub.AgentsViewModel
-import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentStatus
+import io.github.eslamasabry.oc.feature.agents.hub.phoneAgentStartsConversation
 import io.github.eslamasabry.oc.feature.agents.presentation.PhoneSignInRouteViewModel
 import io.github.eslamasabry.oc.feature.agents.ui.AgentsScreen
 import io.github.eslamasabry.oc.feature.agents.ui.PhoneSignInScreen
@@ -89,7 +89,8 @@ public class AgentsEntries(
             val state by vm.state.collectAsStateWithLifecycle()
             val hubState by vm.hubState.collectAsStateWithLifecycle()
             val row = state.phone.agents.firstOrNull { it.id == route.agentId }
-            val ready = row?.status == PhoneAgentStatus.Ready
+            // Ready, or an agent set up at first use the app has now seen set up (its set-up terminal ended).
+            val ready = row != null && phoneAgentStartsConversation(row)
             // The agent's own sheet opens once the page has read the agents; a sign-in or install on top of it comes back here.
             var opened by rememberSaveable { mutableStateOf(false) }
             var wasNotReady by rememberSaveable { mutableStateOf(false) }

@@ -126,10 +126,11 @@ public fun phoneChatOffered(state: AgentsUi): Boolean {
 /**
  * The one rule for whether a phone agent can start a conversation now. The Agents page's card offers New conversation
  * by it ([cardOffersConversation]) and New conversation's "Who works on it" lists by it (the app's phone offer), so
- * the two can never disagree.
+ * the two can never disagree. An agent set up at first use starts one only once the app has seen it set up
+ * ([PhoneAgentRow.needsSetUp] false); before that its set-up leads (the card's Set up, New conversation's set-up row).
  */
 public fun phoneAgentStartsConversation(row: PhoneAgentRow): Boolean =
-    row.status == PhoneAgentStatus.Ready || row.status == PhoneAgentStatus.SetUpAtFirstUse
+    row.status == PhoneAgentStatus.Ready || (row.status == PhoneAgentStatus.SetUpAtFirstUse && !row.needsSetUp)
 
 /** Whether [tile]'s card offers New conversation, given [chat] ([phoneChatOffered] for the page). */
 public fun cardOffersConversation(tile: AgentTileModel, chat: Boolean): Boolean =

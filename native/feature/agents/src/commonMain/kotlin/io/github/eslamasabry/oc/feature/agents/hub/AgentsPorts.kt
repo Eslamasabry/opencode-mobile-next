@@ -203,6 +203,13 @@ public data class PhoneAgentRow(
     val signInCheckFailed: Boolean = false,
     /** The version of the copy that runs on this phone ("1.5.9"); null when none runs or it was not read. */
     val installedVersion: String? = null,
+    /**
+     * [PhoneAgentStatus.SetUpAtFirstUse], and this app never saw the agent set up: its set-up terminal never ended and
+     * no conversation with it ever got an answer. Its set-up comes first everywhere (the card's Set up, a dimmed Set up
+     * row in New conversation); it is no choice for a conversation until then (owner 2026-11-15: right after installing
+     * Oh My Pi its card said New conversation, and only the failed first answer offered the set-up).
+     */
+    val needsSetUp: Boolean = false,
 )
 
 /** Whether [row] is known to be signed out: a sign-in check ran and found no sign-in (not one that could not run). */
@@ -250,8 +257,9 @@ public val PhoneAgentStatus.installed: Boolean
 public enum class PhoneAgentStatus {
     Ready,
     /**
-     * Installed, and its sign-in cannot be read ahead (Qwen Code, Goose, omp: no read-only status exists): usable, set up
-     * in its own terminal the first time, its truth learnt from its own answer. Never "Ready", never signed in or out.
+     * Installed, and its sign-in cannot be read ahead (Qwen Code, Goose, omp: no read-only status exists): set up in
+     * its own terminal first ([PhoneAgentRow.needsSetUp]), then usable, its truth learnt from its own answer. Never
+     * "Ready", never signed in or out.
      */
     SetUpAtFirstUse,
     NotInstalled,
