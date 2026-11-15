@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -220,7 +221,11 @@ public fun KitReportScrolledUnder(under: () -> Boolean) {
  */
 @Composable
 internal fun kitUnderTop(scroll: KitScreenScroll): () -> Float {
-    val target = if (scroll.under) 1f else 0f
+    // Through a derived value (c2-performance, 2026-11-15): a reporter reads its scroller's position (the home's header
+    // offset, every frame of a scroll), and read here directly that recomposed the whole page frame on every such frame
+    // (23 scopes a frame while the home's title and chips slid away). Only the crossing recomposes now.
+    val under by remember(scroll) { derivedStateOf { scroll.under } }
+    val target = if (under) 1f else 0f
     val reported = scroll.reporter != null || scroll.guessing
     val anim = remember { Animatable(target) }
     val settled = remember { mutableStateOf(false) }
@@ -240,7 +245,9 @@ internal fun kitUnderTop(scroll: KitScreenScroll): () -> Float {
  */
 @Composable
 internal fun kitMoreBelow(scroll: KitScreenScroll): () -> Float {
-    val target = if (scroll.more) 1f else 0f
+    // Through a derived value, as kitUnderTop: only the crossing recomposes.
+    val more by remember(scroll) { derivedStateOf { scroll.more } }
+    val target = if (more) 1f else 0f
     val anim = remember { Animatable(target) }
     val settled = remember { mutableStateOf(false) }
     val reduced = KitMotion.state.reduced

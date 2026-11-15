@@ -89,7 +89,8 @@ class LiveBackgroundDesktopTest {
             val pageDrawsBefore = pageDraws
             repeat(120) { mainClock.advanceTimeByFrame() } // two seconds at 60 Hz
             val frames = platform.draws - start
-            assertTrue(frames >= 110, "drew $frames background frames in two seconds (one per display frame)")
+            // c2-performance 2026-11-15: the look steps LIVE_LOOK_FPS times a second (it followed every display frame).
+            assertTrue(frames in 2 * LIVE_LOOK_FPS - 3..2 * LIVE_LOOK_FPS + 2, "drew $frames background frames in two seconds (LIVE_LOOK_FPS a second)")
             assertTrue(platform.times.last() > platform.times.first(), "time moved")
             assertEquals(1, pageCompositions, "the page above the background never recomposed")
             assertEquals(pageDrawsBefore, pageDraws, "the page above the background was never redrawn")

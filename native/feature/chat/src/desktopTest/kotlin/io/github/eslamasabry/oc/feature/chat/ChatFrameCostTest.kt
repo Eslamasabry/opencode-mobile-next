@@ -109,7 +109,13 @@ class ChatFrameCostTest {
                     ) + base.drop(2)
         }.toTypedArray()
 
-    private fun measure(appearance: KitAppearance, withCode: Boolean = false): Pair<List<FrameCost>, List<FrameCost>> {
+    private fun measure(
+        appearance: KitAppearance,
+        withCode: Boolean = false,
+        platform: io.github.eslamasabry.oc.ui.kit.platform.KitPlatform = DesktopKitPlatform(),
+        /** Divides the window and density, for a quicker survey. */
+        shrink: Int = 1,
+    ): Pair<List<FrameCost>, List<FrameCost>> {
         Locale.setDefault(Locale.forLanguageTag("en"))
         val world = FakeChatWorld()
         world.transcript.value = stateOf(*rows(withCode))
@@ -118,12 +124,12 @@ class ChatFrameCostTest {
         val states = p.states(scope, Dispatchers.Unconfined, SharingStarted.Eagerly)
         lateinit var out: Pair<List<FrameCost>, List<FrameCost>>
         try {
-            runDesktopComposeUiTest(W, H) {
+            runDesktopComposeUiTest(W / shrink, H / shrink) {
                 mainClock.autoAdvance = false
                 val meter = FrameMeter.attach(this)
                 setContent {
-                    CompositionLocalProvider(LocalDensity provides Density(DENSITY)) {
-                        KitTheme(appearance = appearance, platform = DesktopKitPlatform(), localeTag = "en") {
+                    CompositionLocalProvider(LocalDensity provides Density(DENSITY / shrink)) {
+                        KitTheme(appearance = appearance, platform = platform, localeTag = "en") {
                             KitStandaloneRedaction {
                                 val state by states.collectAsState()
                                 ChatScreen(state, p, host)
@@ -132,10 +138,11 @@ class ChatFrameCostTest {
                     }
                 }
                 meter.settle()
-                val still = meter.frames(120)
+                println("PERF-CHAT open scopes ${meter.scopesSoFar}")
+                val still = meter.frames(120 / shrink)
                 // The transcript rests at its newest line: a finger drags it down to read back.
                 meter.traceCauses = true
-                val drag = meter.drag(Offset(W / 2f, H * 0.3f), 40, 24f)
+                val drag = meter.drag(Offset(W / 2f / shrink, H * 0.3f / shrink), 40 / shrink, 24f / shrink)
                 println("PERF-CHAT frames " + drag.joinToString(",") { it.scopes.toString() })
                 println("PERF-CHAT causes " + meter.causes.entries.sortedByDescending { it.value }.take(15).joinToString(" || ") { "${it.value}x ${it.key}" })
                 meter.close()

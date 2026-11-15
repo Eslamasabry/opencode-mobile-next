@@ -46,26 +46,33 @@ class HomeFrameCostTest {
             )
         }
 
-    private fun measure(appearance: KitAppearance): Pair<List<FrameCost>, List<FrameCost>> {
+    private fun measure(
+        appearance: KitAppearance,
+        platform: io.github.eslamasabry.oc.ui.kit.platform.KitPlatform = DesktopKitPlatform(),
+        /** Divides the window and density, for a quicker survey. */
+        shrink: Int = 1,
+    ): Pair<List<FrameCost>, List<FrameCost>> {
         Locale.setDefault(Locale.forLanguageTag("en"))
         lateinit var out: Pair<List<FrameCost>, List<FrameCost>>
-        runDesktopComposeUiTest(W, H) {
+        runDesktopComposeUiTest(W / shrink, H / shrink) {
             mainClock.autoAdvance = false
             val meter = FrameMeter.attach(this)
             val state = ChatsUi(phase = ChatsPhase.List, recent = rows.toPersistentList())
             setContent {
-                CompositionLocalProvider(LocalDensity provides Density(DENSITY)) {
+                CompositionLocalProvider(LocalDensity provides Density(DENSITY / shrink)) {
                     ChatEnvironment {
-                        KitTheme(appearance = appearance, platform = DesktopKitPlatform(), localeTag = "en") {
+                        KitTheme(appearance = appearance, platform = platform, localeTag = "en") {
                             KitSheetHost { ChatsScreen(state, RecordingChatsActions()) }
                         }
                     }
                 }
             }
             meter.settle()
-            val still = meter.frames(120)
+            println("PERF-HOME open scopes ${meter.scopesSoFar}")
+            val still = meter.frames(120 / shrink)
             meter.traceCauses = true
-            val drag = meter.drag(Offset(W / 2f, H * 0.7f), 40, -24f)
+            val drag = meter.drag(Offset(W / 2f / shrink, H * 0.7f / shrink), 40 / shrink, -24f / shrink)
+            println("PERF-HOME frames " + drag.joinToString(",") { it.scopes.toString() })
             println("PERF-HOME causes " + meter.causes.entries.sortedByDescending { it.value }.take(15).joinToString(" || ") { "${it.value}x ${it.key}" })
             meter.close()
             out = still to drag
@@ -83,6 +90,11 @@ class HomeFrameCostTest {
         // on every frame it moved; what may remain are small parts (a chip row's fade).
         val most = (still + drag).maxOf { it.offscreenPx }
         assertTrue(most <= W.toLong() * H / 8, "offscreen pixels per frame $most over an eighth of the window: $numbers")
+        // While the title and chips slid away under the bar the whole page frame composed again on every frame (23 scopes a
+        // frame, 299 over the drag: the frame read the header's position to know whether anything lay under the bar).
+        // The one frame where something first lies under the bar composes the frame again (a crossing); no other.
+        assertTrue(drag.count { it.scopes > 10 } <= 1, "drag frames recomposing over 10 scopes: ${drag.count { it.scopes > 10 }}: $numbers")
+        assertTrue(drag.sumOf { it.scopes } <= 60, "a 40-frame drag recomposed ${drag.sumOf { it.scopes }} scopes: $numbers")
     }
 
     private companion object {

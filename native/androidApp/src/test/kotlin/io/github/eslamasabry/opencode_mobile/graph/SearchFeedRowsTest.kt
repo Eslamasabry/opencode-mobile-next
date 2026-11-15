@@ -58,4 +58,22 @@ class SearchFeedRowsTest {
         assertEquals(listOf("b"), out.items.map { it.id.raw })
         assertEquals(persistentListOf<SearchConversation>().size, 0)
     }
+
+    @Test
+    fun `B-NAV-SEARCH-147 This phone covers its agents' helper connection, each row keeps the connection it lives on`() {
+        val helper = ProfileId("phone-agents")
+        val own = SearchConversation(SessionId("oc1"), "Build a Python CLI Todo tool", "/work/todo", 5)
+        val rows =
+            listOf(
+                item("oc1", "Build a Python CLI Todo tool"),
+                item("ag1", "Run the shell command sleep 20 and then run uname -a", helper),
+                item("ag2", "hello", helper),
+                item("ag3", "Run the shell command sleep 20 and then run uname -a", helper),
+                item("far", "uname on another server", ProfileId("pc")),
+            )
+        val out = withFeedRows(page(own), rows, phone, "uname", helper = helper)
+        assertEquals(listOf("ag1", "ag2", "ag3", "oc1"), out.items.map { it.id.raw }.sorted())
+        assertEquals(setOf<ProfileId?>(null), out.items.filter { it.id.raw == "oc1" }.map { it.owner }.toSet())
+        assertEquals(setOf<ProfileId?>(helper), out.items.filter { it.id.raw.startsWith("ag") }.map { it.owner }.toSet())
+    }
 }
