@@ -45,3 +45,4 @@ to run the adapter itself.
 | B-AGENT-UH-032 | The form states the required model and offers no subscription login. |
 | B-AGENT-UH-033 | The composer states never asks using static text. |
 | B-AGENT-UH-034 | A prefilled first message still has the full warning before Start. |
+| B-AGENT-UH-035 | Composer settings state the command policy without offering an approval control. |

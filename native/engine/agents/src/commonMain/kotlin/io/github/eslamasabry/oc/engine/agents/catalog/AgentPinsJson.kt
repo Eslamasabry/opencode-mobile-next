@@ -443,11 +443,11 @@ internal const val AGENT_PINS_JSON: String =
         "artifacts": {
           "arm64": {
             "url": null,
-            "sha256": "a3ecc5e7eac9ea3a49f9beb9e19fe969f480452f381c7d5c226b56b9a7cd7467",
+            "sha256": "3afbf8f98f7e5026c8cec83c52bae0f265c5df2f53f37fc847d8e02b6f6e1b43",
             "format": "tarGz",
             "member": "phone-unharnessed",
-            "downloadBytes": 166024839,
-            "installedBytes": 602795014
+            "downloadBytes": 166024889,
+            "installedBytes": 602795324
           }
         }
       }

@@ -12,6 +12,8 @@ import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.domain.ImportableConversation
 import io.github.eslamasabry.oc.core.model.ModelRef
 import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationActions
+import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationPhone
+import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationPhoneAgent
 import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationProject
 import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationServer
 import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationSetup
@@ -127,12 +129,31 @@ class NewConversationStableLayoutTest {
                     appearance = KitAppearance(motion = MotionLevel.Off),
                 ) {
                     NewConversationScreen(
-                        ready.copy(phoneAgent = "unharnessed", text = "Create and run hello.py"),
+                        ready.copy(
+                            setup =
+                                ready.setup!!.copy(
+                                    phone =
+                                        NewConversationPhone(
+                                            ProfileId("fixture-helper"),
+                                            listOf(
+                                                NewConversationPhoneAgent(
+                                                    "unharnessed",
+                                                    "Unharnessed",
+                                                    "unharnessed",
+                                                )
+                                            ),
+                                            emptyList(),
+                                        )
+                                ),
+                            phoneAgent = "unharnessed",
+                            text = "Create and run hello.py",
+                        ),
                         Actions,
                     )
                 }
             }
             onNodeWithText("This agent runs commands without asking.").assertExists()
+            onNodeWithText("Unharnessed").assertExists()
             val file =
                 File("build/reports/unharnessed/before-first-message.png").apply {
                     parentFile.mkdirs()

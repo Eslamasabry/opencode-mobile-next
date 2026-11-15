@@ -37,6 +37,7 @@ import io.github.eslamasabry.oc.ui.kit.status.KitStatusContribution
 import io.github.eslamasabry.oc.ui.kit.status.KitStatusKind
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.agentNeverAsks
+import io.github.eslamasabry.oc.ui.words.res.agentRunsCommandsWithoutAsking
 import io.github.eslamasabry.oc.ui.words.res.approvalModeAskDetail
 import io.github.eslamasabry.oc.ui.words.res.approvalModeAskTitle
 import io.github.eslamasabry.oc.ui.words.res.approvalModeAutoDetail
@@ -155,6 +156,10 @@ public fun ApprovalChip(slot: ApprovalChipSlot, modifier: Modifier = Modifier) {
 public fun ApprovalSettingsRows(slot: ApprovalChipSlot, close: () -> Unit) {
     val state = slot.state
     val actions = slot.actions
+    if (state.neverAsks) {
+        KitText(stringResource(Res.string.agentRunsCommandsWithoutAsking))
+        return
+    }
     if (!state.offered) return
     KitLeadingSwitchRow(
         title = stringResource(Res.string.chatStripAutoApprove),
