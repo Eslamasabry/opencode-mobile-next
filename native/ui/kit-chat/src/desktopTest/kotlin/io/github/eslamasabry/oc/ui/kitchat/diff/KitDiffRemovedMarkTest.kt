@@ -65,17 +65,20 @@ class KitDiffRemovedMarkTest {
             }
             waitForIdle()
             val img = onNodeWithTag("diff").captureToImage().toPixelMap()
-            // Along the start of a removed line the mark runs down unbroken for the line's height (no glyph is that tall).
-            val best =
-                (0 until img.width / 3).maxOf { x ->
-                    var run = 0
-                    var longest = 0
-                    for (y in 0 until img.height) {
-                        run = if (near(img[x, y], mark)) run + 1 else 0
-                        longest = maxOf(longest, run)
-                    }
-                    longest
+            // A solid block of the mark's own colour, 3 px wide (3 dp at density 1) and a line tall: no glyph in the view
+            // (the old "−" in the same ink, an icon's stroke) is that wide and that tall at once.
+            fun exact(x: Int, y: Int): Boolean {
+                val c = img[x, y]
+                return abs(c.red - mark.red) < .01f && abs(c.green - mark.green) < .01f && abs(c.blue - mark.blue) < .01f
+            }
+            var best = 0
+            for (x in 0 until img.width - 2) {
+                var run = 0
+                for (y in 0 until img.height) {
+                    run = if (exact(x, y) && exact(x + 1, y) && exact(x + 2, y)) run + 1 else 0
+                    best = maxOf(best, run)
                 }
+            }
             assertTrue(best >= 14, "a removed line's start mark (dark=$dark): longest run $best px")
         }
     }

@@ -256,7 +256,7 @@ public fun KitDiffView(
                 val old = first.kind == DiffLineKind.Removed
                 val text = redactor.redact(unit.lines.joinToString("\n") { it.text })
                 val blocks = remember(text) { KitMdSource.blocks("diff-${unit.segment}", text, false) }
-                Row(Modifier.fillMaxWidth().background(tint(colors, first.kind))) {
+                Row(Modifier.fillMaxWidth().background(tint(colors, first.kind)).diffRemovedMark(old, colors.text2)) {
                     cells.Number(
                         if (old) first.oldNo else first.newNo,
                         old,
