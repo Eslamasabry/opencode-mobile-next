@@ -19,7 +19,7 @@ import kotlinx.collections.immutable.persistentSetOf
  */
 
 public data class ChatUi(
-    /** +1 per change; first so StateFlow's equality stops here (ADR §9.3). */
+    /** +1 per change, and only per change (ChatPresenter.present); first so StateFlow's equality stops here (ADR §9.3). */
     val revision: Long,
     val ref: ConversationRef,
     val title: String?,
