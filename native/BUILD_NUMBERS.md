@@ -73,3 +73,4 @@ wiped (see Floor); they never come back and do not raise the floor.
 | 10041 | build | 2026-11-15 | owner's build of 93808ba1a9 (the whole working line: agents list, step list, running work, animations back, crash fixes) |
 | 10042 | build | 2026-11-15 | owner's build of 8bd1e053f7 (10041 plus the loading skeleton's prompt bubble) |
 | 10043 | build | 2026-11-15 | owner's build of 0e0f2a721f (10042 plus the phone agents' conversation identity fix and the load-failure page naming the agent) |
+| 10044 | build | 2026-11-15 | owner's build of b117326a86 (set-up first, one operation for phone agents, problem report build info and folded repeats) |
