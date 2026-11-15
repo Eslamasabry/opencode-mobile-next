@@ -51,7 +51,7 @@ internal suspend fun PaseoGateway.adoptUncertainDraft(id: String): Boolean {
         val created = paseoMillis(entry["createdAt"])
         // Only an agent no conversation here owns yet, started for this folder and runtime around the send (ten
         // minutes allows for clocks).
-        if (realId == null || realId in appIds || entry.str("cwd") != scope || entry.str("provider") != start.provider ||
+        if (realId == null || app(realId) != realId || entry.str("cwd") != scope || entry.str("provider") != start.provider ||
             created == null || created < start.sentAtMs - 600_000
         ) {
             continue
@@ -70,6 +70,7 @@ internal suspend fun PaseoGateway.adoptUncertainDraft(id: String): Boolean {
             appIds.remove(realId)
             continue
         }
+        identities.created(id, realId)
         if (entry.str("status") != "error" && entry.str("status") != "closed") liveAgentSessions += id
         drafts.remove(id)
         draftProviders.remove(id)
