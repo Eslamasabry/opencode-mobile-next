@@ -134,6 +134,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -216,7 +217,8 @@ public class PaseoGateway(
     AgentHandoffGateway,
     BoundedCardHistoryGateway,
     FencedNewSessionPromptGateway,
-    PromptRunIdentityGateway {
+    PromptRunIdentityGateway,
+    io.github.eslamasabry.oc.core.domain.HistoryOpenGateway {
     private val payloadGeneration = MutableStateFlow(0)
     private val job = SupervisorJob(scope.coroutineContext[Job])
     internal val scope: CoroutineScope = CoroutineScope(scope.coroutineContext + job + lane)
@@ -957,6 +959,32 @@ public class PaseoGateway(
             lastPromptIdentity(paseoTimeline(id, timeline, busy = false).messages)
         }
 
+    /** The conversations a person opened in this gateway's life ([historyOpened]); written from any thread. */
+    private val historyOpen = MutableStateFlow<Set<String>>(emptySet())
+
+    /** The last history read of each conversation (its newest messages), what a reader that may not wake gets. */
+    private val keptHistory = LinkedHashMap<String, ImmutableList<MessageWithParts>>()
+
+    override fun historyOpened(session: SessionId) {
+        historyOpen.update { it + session.raw }
+    }
+
+    /**
+     * Issue 147 (Galaxy S22): Paseo 0.15 starts a saved agent's process whenever it is asked for that agent's timeline,
+     * so the home's previews, the return brief, widgets and monitors woke every earlier conversation after the helper
+     * started (six agent processes with nothing asked of them; the owner's helper, with 90 conversations, was busy for
+     * minutes). A timeline is read when the agent is already running (loaded, a turn on its way), or a person opened the
+     * conversation; otherwise the reader gets what this gateway last read of it, or nothing, and nothing starts.
+     * `fetch_agent_request` returns the saved record without starting anything.
+     */
+    private suspend fun mayWake(id: String): Boolean {
+        if (id in drafts || id in uncertain || identities.draft(id) != null || isSubagent(id)) return true
+        val opened = historyOpen.value
+        if (id in opened || app(id) in opened) return true
+        if (id in liveAgentSessions || id in turnActive || id in awaitingTurn) return true
+        return "activeTurn" in fetchAgent(id)
+    }
+
     override suspend fun messagePage(
         id: SessionId,
         cursor: String?,
@@ -966,7 +994,12 @@ public class PaseoGateway(
             call {
                 recall(id.raw)
                 if (cursor != null) paseoFail(PaseoFailureKind.Unavailable)
-                ServerPage(readMessages(id.raw), null)
+                if (!mayWake(id.raw)) return@call ServerPage(keptHistory[id.raw] ?: persistentListOf(), null)
+                val messages = readMessages(id.raw)
+                keptHistory.remove(id.raw)
+                keptHistory[id.raw] = messages.takeLast(KEPT_HISTORY_MESSAGES).toImmutableList()
+                while (keptHistory.size > KEPT_HISTORY_SESSIONS) keptHistory.remove(keptHistory.keys.first())
+                ServerPage(messages, null)
             }
         }
         // A timeline read loads the saved agent on the helper (the in-place resume), so it takes
@@ -2623,6 +2656,10 @@ public class PaseoGateway(
 
         /** A refused agent's check is asked for again at most this often (each check starts the agent once). */
         public const val PROVIDER_RECHECK_MS: Long = 30_000
+
+        /** What [messagePage] keeps of each conversation's last read, for readers that may not wake its agent. */
+        internal const val KEPT_HISTORY_MESSAGES: Int = 20
+        internal const val KEPT_HISTORY_SESSIONS: Int = 64
 
         public const val ANNOUNCE_GRACE_MS: Long = 3_000
 

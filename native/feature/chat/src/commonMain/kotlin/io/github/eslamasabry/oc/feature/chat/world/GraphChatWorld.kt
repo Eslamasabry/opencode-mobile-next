@@ -1430,6 +1430,9 @@ internal class GraphChatWorld(
                 }
                 details.stagedRevert?.messageId
             }
+        // Issue 147: this conversation is open: its history may be read in full, also where reading it starts the
+        // agent's process (Paseo); list rows and previews never do.
+        a.graph.session.server.facet<io.github.eslamasabry.oc.core.domain.HistoryOpenGateway>()?.historyOpened(sid)
         val read =
             if (boundary == null)
                 a.graph.session.reads.tail(sid, cursor = cursor, limit = HISTORY_PAGE)

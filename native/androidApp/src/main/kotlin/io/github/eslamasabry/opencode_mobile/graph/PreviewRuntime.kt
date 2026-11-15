@@ -1364,7 +1364,10 @@ anySourceLoaded = true
 
     internal fun prefetch(ref: ConversationRef) {
         if (profiles.profile(ref.profileId) == null) return
-        registry.live.value[ref.profileId]?.session?.reads?.prefetch(ref.sessionId)
+        val session = registry.live.value[ref.profileId]?.session ?: return
+        // A pressed row is about to open: its history may be read in full (issue 147, HistoryOpenGateway).
+        session.server.facet<io.github.eslamasabry.oc.core.domain.HistoryOpenGateway>()?.historyOpened(ref.sessionId)
+        session.reads.prefetch(ref.sessionId)
     }
 
     override suspend fun disconnect(id: ProfileId): Outcome<Unit> {

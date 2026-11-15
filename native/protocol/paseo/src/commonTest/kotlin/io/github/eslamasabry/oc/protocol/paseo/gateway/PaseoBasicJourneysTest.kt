@@ -78,6 +78,8 @@ class PaseoBasicJourneysTest {
         }
         val h = GatewayHarness(this, daemon)
         h.gateway.sessionPage(null, 50).ok()
+        // The person opens it (the chat page says so: issue 147, a saved agent's history wakes it).
+        (h.gateway as io.github.eslamasabry.oc.core.domain.HistoryOpenGateway).historyOpened(SessionId("a1"))
         h.gateway.messagePage(SessionId("a1"), null, 100).ok()
         assertEquals("projected", daemon.of("fetch_agent_timeline_request").single().str("projection"))
         val sent = h.gateway.prompt(SessionId("a1"), OutgoingPrompt("continue", attachments = persistentListOf(png))).ok()
@@ -109,6 +111,7 @@ class PaseoBasicJourneysTest {
         val h = GatewayHarness(this, daemon)
         val row = h.gateway.sessionPage(null, 50).ok().items.single()
         assertEquals("new", row.id.raw)
+        (h.gateway as io.github.eslamasabry.oc.core.domain.HistoryOpenGateway).historyOpened(row.id)
         h.gateway.messagePage(row.id, null, 100).ok()
         assertEquals(listOf("new"), daemon.of("fetch_agent_timeline_request").map { it.str("agentId") })
         assertEquals(PromptAdmission.Confirmed(null), h.gateway.prompt(row.id, OutgoingPrompt("continue")).ok())
