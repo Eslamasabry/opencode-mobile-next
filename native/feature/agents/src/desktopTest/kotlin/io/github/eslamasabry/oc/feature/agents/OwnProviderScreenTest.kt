@@ -138,18 +138,18 @@ class OwnProviderScreenTest {
         }
 
     @Test
-    fun `B-AGENT-OWN-041 Claude Code's sheet offers its own provider, and the provider sheet saves what was typed`() =
+    fun `B-AGENT-OWN-041 Claude Code's sheet offers its own provider`() = runComposeUiTest {
+        val actions = Recorder()
+        setContent { Screen(page(sheetAgent = "claude"), own(), actions) }
+        onNode(hasText("Use your own provider") and hasClickAction()).performScrollTo().performClick()
+        assertEquals(listOf("close-agent", "own:claude"), actions.calls)
+    }
+
+    @Test
+    fun `B-AGENT-OWN-043 the provider sheet asks for endpoint, key and model, says why a value is refused and saves`() =
         runComposeUiTest {
             val actions = Recorder()
-            var state by mutableStateOf(page(sheetAgent = "claude"))
-            var ui by mutableStateOf(own())
-            setContent { Screen(state, ui, actions) }
-            onNode(hasText("Use your own provider") and hasClickAction()).performScrollTo().performClick()
-            assertEquals(listOf("close-agent", "own:claude"), actions.calls)
-
-            state = page()
-            ui = own(editing = "claude", problem = OwnProviderProblem.Endpoint)
-            waitForIdle()
+            setContent { Screen(page(), own(editing = "claude", problem = OwnProviderProblem.Endpoint), actions) }
             onNodeWithText("Your own provider for Claude Code").assertExists()
             onNodeWithText("Endpoint").assertExists()
             onNodeWithText("Key").assertExists()
