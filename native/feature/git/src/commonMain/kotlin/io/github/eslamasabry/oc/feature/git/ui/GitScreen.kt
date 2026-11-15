@@ -571,7 +571,7 @@ private fun Ready(
                         enabled = enabled.isEnabled && (canPull || noPullRemote),
                         disabledReason =
                             if (enabled.isEnabled && (canPull || noPullRemote)) null else pullReason,
-                        trailing = if (opensRemotes) KitRowTrailing.Chevron else KitRowTrailing.None,
+                        trailing = if (noPullRemote) KitRowTrailing.Chevron else KitRowTrailing.None,
                         onClick = if (noPullRemote) actions::openRemotes else actions::pull,
                         modifier = Modifier.testTag("git-pull-row"),
                     )

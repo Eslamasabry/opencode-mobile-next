@@ -44,4 +44,4 @@ public fun gitSections(hasChanges: Boolean, hasHistory: Boolean, needsIdentity: 
  * one, and both say so with the same chevron (issue 147 recheck F-021: only Get latest had it).
  */
 public fun gitSyncOpensRemotes(hasRemote: Boolean, detached: Boolean, operationInProgress: Boolean): Boolean =
-    false // TEMP-RED
+    !hasRemote && !detached && !operationInProgress
