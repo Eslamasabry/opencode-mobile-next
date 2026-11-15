@@ -6,8 +6,7 @@
 # 2026-11-11: rule added in Drift (Inputs.owned): a key whose translation is recorded in translation-state/<tag>.tsv with the hash of the current English is pipeline output, not drift; its rows were dropped (3328 rows -> 56).
 # 2026-11-11: problem reports no longer hold a log, so the row says what happens (other languages fall back to English until translated).
 # 2026-11-12: Help > Tips mini tutorial "Make it yours" step 2 names all six styles (Glass and Signal were missing), spelled as the Style page spells them.
-# 2026-11-15: the attach help names the tray's own buttons (two more arguments), and the Git page's copy row is reworded in plain words (first-time-user walk F-008, F-021).
-ar	composerToolsAgentPicturesOnly
+# 2026-11-15: the Git page's copy row is reworded in plain words (first-time-user walk F-021). The attach help that names the tray's buttons is a new key (composerToolsPicturesOnlyUse), so it needs no entry.
 ar	e7SettingsUi93
 ar	kitCapClaudeLocalWhy
 ar	manageSpaceKeptAll
@@ -29,7 +28,6 @@ en	chatUiCompactionFailed
 en	chatUiCompactionStarted
 en	chatUiCompactSession
 en	chatUiSelectAModelBeforeCompactingThisSession
-en	composerToolsAgentPicturesOnly
 en	e7SettingsAlphaBody
 en	e7SettingsUi93
 en	e7SetupStopLocal
@@ -63,15 +61,7 @@ en	setupOutputWaiting
 en	telemetryConsentChoose
 en	telemetryConsentShare
 en	tourMakeItYoursStyle
-es	composerToolsAgentPicturesOnly
 es	e7SettingsUi93
-fr	composerToolsAgentPicturesOnly
-id	composerToolsAgentPicturesOnly
-ja	composerToolsAgentPicturesOnly
-pt	composerToolsAgentPicturesOnly
-ru	composerToolsAgentPicturesOnly
-vi	composerToolsAgentPicturesOnly
-zh	composerToolsAgentPicturesOnly
 zh	e7SettingsUi93
 zh	kitCapClaudeLocalWhy
 zh	manageSpaceKeptAll
