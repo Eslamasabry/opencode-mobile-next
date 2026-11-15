@@ -24,4 +24,14 @@
     <string name="chatsNewPhoneFolderMissing">Thư mục này không còn trong bộ nhớ điện thoại. Hãy chọn thư mục khác.</string>
     <string name="chatsNewPhoneFolderDenied">%1$s không thể mở hoặc thay đổi tệp trong thư mục này. Hãy chọn một thư mục khác trong bộ nhớ điện thoại.</string>
     <string name="chatsNewPhoneFolderRestartFailed">Không thể khởi động lại. Nếu một tác nhân vẫn đang làm việc, hãy thử lại khi nó xong.</string>
+    <string name="chatsNewPhoneFolderWhere">Làm việc trong %1$s, thuộc bộ nhớ điện thoại, nơi không thể lưu liên kết hay chạy trực tiếp chương trình.</string>
+    <string name="chatsNewPhoneFolderWhy">Vì sao</string>
+    <string name="chatsNewPhoneFolderHelpTitle">Làm việc trong bộ nhớ điện thoại</string>
+    <string name="chatsNewPhoneFolderHelp">Android dành bộ nhớ điện thoại cho mọi ứng dụng, giống như một thẻ nhớ. Nó không lưu được liên kết giữa các tệp và sẽ không chạy chương trình được lưu trong đó.\n\nVì vậy, trong thư mục này, hãy cài gói bằng npm install --no-bin-links và chạy tập lệnh bằng sh script.sh thay cho ./script.sh. Git ở đây bỏ qua chế độ tệp. Các dự án trong thư mục riêng của ứng dụng không có giới hạn nào như vậy.\n\nKhi Claude Code hoặc Codex khởi động ở đây, nó cũng được cho biết điều tương tự.</string>
+    <string name="chatPhoneFolderAccess">Thư mục của cuộc trò chuyện này nằm trong bộ nhớ điện thoại, và ứng dụng không còn quyền truy cập tất cả tệp. Sẽ không gửi gì cho đến khi bạn cho phép lại.</string>
+    <string name="chatPhoneFolderRestartServer">OpenCode trên điện thoại này không thể nhìn thấy thư mục của cuộc trò chuyện này cho đến khi được khởi động lại. Từ giờ đến lúc đó sẽ không gửi gì.</string>
+    <string name="chatPhoneFolderRestartAgents">Các tác nhân của điện thoại không thể nhìn thấy thư mục của cuộc trò chuyện này cho đến khi được khởi động lại. Từ giờ đến lúc đó sẽ không gửi gì.</string>
+    <string name="chatPhoneFolderMissing">Thư mục của cuộc trò chuyện này không còn trong bộ nhớ điện thoại, nên không thể gửi gì ở đây.</string>
+    <string name="chatPhoneFolderDenied">Tác nhân không thể mở hoặc thay đổi tệp trong thư mục của cuộc trò chuyện này trong bộ nhớ điện thoại, nên không thể gửi gì ở đây.</string>
+    <string name="chatSendPhoneFolder">Chưa gửi: hiện tác nhân không thể truy cập thư mục của cuộc trò chuyện này trong bộ nhớ điện thoại. Dòng ở trên cùng cho biết cần làm gì.</string>
 </resources>
