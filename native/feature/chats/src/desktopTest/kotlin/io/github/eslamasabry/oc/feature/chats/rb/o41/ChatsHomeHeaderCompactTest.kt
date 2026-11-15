@@ -10,6 +10,7 @@ import io.github.eslamasabry.oc.feature.chats.ui.ChatsScreen
 import io.github.eslamasabry.oc.ui.gate.FlutterGoldenGate.Frame
 import io.github.eslamasabry.oc.ui.gate.LayoutGuard
 import io.github.eslamasabry.oc.ui.gate.LayoutGuard.Window
+import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
 import kotlinx.collections.immutable.persistentListOf
 import kotlin.test.Test
 import kotlin.test.assertTrue
@@ -33,7 +34,7 @@ class ChatsHomeHeaderCompactTest {
                     sources = persistentListOf(source("p1", "This phone", true, true), source("p2", "Laptop", false, false)),
                 ),
             )
-        val scene = LayoutGuard.Scene(Frame.Screen) { ChatsScreen(state, RecordingChatsActions(), shellBar = true) }
+        val scene = LayoutGuard.Scene(Frame.Screen) { KitSheetHost { ChatsScreen(state, RecordingChatsActions(), shellBar = true) } }
         val found = LayoutGuard.audit(scene, listOf(Window.Compact, Window.CompactLarge, Window.Narrow))
             .filter { it.rule == "rest-cut" || it.rule == "clipped" || it.rule == "cut-off" }
             .map { "${it.window.name} ${it.rule} ${it.subject}" }

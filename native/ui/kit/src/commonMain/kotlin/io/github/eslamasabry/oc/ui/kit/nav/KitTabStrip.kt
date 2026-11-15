@@ -199,8 +199,9 @@ public object TabRules {
         candidates += 0f
         candidates += max.toFloat()
         for (i in lefts.indices) {
-            candidates += (lefts[i] - pad).coerceIn(0f, max.toFloat())
-            candidates += (lefts[i] + widths[i] + pad - view).coerceIn(0f, max.toFloat())
+            // An edge a hair outside a tab lies in the gap beside it, so it cuts neither that tab nor its neighbour.
+            candidates += (lefts[i] - EDGE_IN_GAP).coerceIn(0f, max.toFloat())
+            candidates += (lefts[i] + widths[i] + EDGE_IN_GAP - view).coerceIn(0f, max.toFloat())
         }
         val best = candidates.filter { whole(it) }.minByOrNull { abs(it - here) } ?: return null
         return back(best)
@@ -583,6 +584,9 @@ internal fun TabStrip(
 
 /** How fast a strip scrolled away by hand comes back under the pill: all of the way in half a page of travel. */
 private const val STRIP_RETURN: Float = 2f
+
+/** How far outside a tab a window's edge is put: inside the gap between two tabs (they are at least 4 dp apart). */
+private const val EDGE_IN_GAP: Float = 2f
 
 /** How long a strip stays still before it eases to a place where no tab is cut. */
 private const val STRIP_SETTLE_MS: Long = 120L
