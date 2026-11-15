@@ -32,6 +32,9 @@ import io.github.eslamasabry.oc.ui.kit.motion.KitAnimatedRows
  */
 internal const val STACK_HEIGHT_SHARE: Float = 0.4f
 
+/** Room the stack gives each card beyond the card's own cap: its caption line (up to 1.3x text) and the gap under it. */
+private const val STACK_EXTRA_DP = 48
+
 /** P-103: how far a card scrolled past the stack's edge melts away instead of ending in a hard cut. */
 private const val EDGE_FADE_DP = Space.S6
 
@@ -47,7 +50,7 @@ internal fun requestStackFades(value: Int, max: Int): Pair<Boolean, Boolean> = (
  *
  * States: one card, several cards (scroll inside the stack), a card arriving, a card leaving
  * Text: [label] per item (the caller words it)
- * Cap: [STACK_HEIGHT_SHARE] of the window; more cards scroll so the composer stays on screen, and an edge with more
+ * Cap: one card at its cap plus its caption (permission cards: 34 % of the window); more cards scroll so the composer stays on screen, and an edge with more
  *   past it fades over [EDGE_FADE_DP] (a card is never cut hard mid-line)
  * Motion: [KitAnimatedRows]: a card unfolds and fades in over STANDARD, folds out over QUICK;
  * Off = instant
@@ -87,10 +90,10 @@ public fun <T> KitRequestStack(
 
 @Composable
 private fun stackMaxHeight(): Dp {
-    // One card at its cap, plus the gap under it, is whole in the stack (F-016: a card taller than the stack hid its
+    // One card at its cap, plus its caption and the gap under it, is whole in the stack (F-016: a card taller than the stack hid its
     // answers behind the stack's edge); several cards scroll inside it.
     val card = maxCardHeight()
-    return if (card == Dp.Infinity) Dp.Infinity else card + Space.S2.dp
+    return if (card == Dp.Infinity) Dp.Infinity else card + STACK_EXTRA_DP.dp
 }
 
 /** Fades the top and bottom edges where more of the stack lies past them; read in draw, so it follows the scroll. */

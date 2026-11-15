@@ -324,7 +324,7 @@ class NewConversationPhoneAgentTest {
         )
 
     @Test
-    fun `SETUP-CACHE a second visit is usable on the first frame: the remembered setup shows and Start acts while the read goes on behind`() {
+    fun `SETUP-CACHE a second visit is usable on the first frame, the remembered setup shows and Start acts while the read goes on behind`() {
         val host = Host()
         host.remembered = remembered
         val gate = CompletableDeferred<Unit>()
