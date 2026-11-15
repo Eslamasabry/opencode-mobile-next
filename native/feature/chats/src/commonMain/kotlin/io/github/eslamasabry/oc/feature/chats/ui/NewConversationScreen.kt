@@ -37,6 +37,7 @@ import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationSheet
 import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationStarter
 import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationWait
 import io.github.eslamasabry.oc.feature.chats.presentation.PhoneStartWay
+import io.github.eslamasabry.oc.feature.chats.presentation.PHONE_STORAGE_ROOT
 import io.github.eslamasabry.oc.feature.chats.presentation.PhoneStorageAccess
 import io.github.eslamasabry.oc.feature.chats.presentation.projectPlace
 import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationUi
@@ -519,8 +520,9 @@ private fun NewConversationSheet(state: NewConversationUi, actions: NewConversat
                                 if (on) Res.string.chatsNewPhoneStorageOn else Res.string.chatsNewPhoneStorageOff
                             ),
                         leading = KitRowLeading.Glyph(KitIcons.folders, tile = true),
-                        trailing = if (on) KitRowTrailing.None else KitRowTrailing.Chevron,
-                        onClick = { if (on) actions.chooseDirectory(PHONE_STORAGE_FOLDER) else actions.requestPhoneStorage() },
+                        trailing = KitRowTrailing.Chevron,
+                        onClick = { if (on) actions.browsePhoneStorage() else actions.requestPhoneStorage() },
+                        // On: a folder list of phone storage opens, to choose or make the project folder in it.
                         modifier = Modifier.testTag("chats-new-phone-storage"),
                     )
                 }
@@ -566,6 +568,7 @@ private fun NewConversationSheet(state: NewConversationUi, actions: NewConversat
             }
         }
     }
+    StorageFoldersSheet(state, actions)
     NewProjectDialog(state, actions)
     AgentModelSheet(state, actions)
 }
@@ -1045,5 +1048,73 @@ private fun NewProjectDialog(state: NewConversationUi, actions: NewConversationA
     )
 }
 
-/** The phone's shared storage as a folder: where Downloads and Documents live. */
-private const val PHONE_STORAGE_FOLDER = "/sdcard"
+
+/**
+ * The folder list under the Phone storage row: enter folders, make a new one, and use the one shown as the project
+ * (the storage root itself cannot be one). Ends with a chosen folder in one flow.
+ */
+@Composable
+private fun StorageFoldersSheet(state: NewConversationUi, actions: NewConversationActions) {
+    val path = state.storagePath ?: return
+    val atRoot = path == PHONE_STORAGE_ROOT
+    val name = path.trimEnd('/').substringAfterLast('/').ifEmpty { path }
+    val held =
+        if (state.storageLoading) KitEnabled.Disabled(stringResource(Res.string.andrStorageWorking))
+        else KitEnabled.Enabled
+    KitSheet(
+        visible = true,
+        onDismissRequest = actions::closeStorageFolders,
+        title = if (atRoot) stringResource(Res.string.folderBrowserInternalStorage) else name,
+        subtitle = stringResource(Res.string.folderBrowserPlacePhone),
+        leading =
+            KitAction(
+                stringResource(if (atRoot) Res.string.kitTopBarBack else Res.string.folderBrowserUp),
+                {
+                    if (atRoot) actions.closeStorageFolders()
+                    else actions.enterStorageFolder(path.substringBeforeLast('/'))
+                },
+                enabled = held,
+            ),
+        height = KitSheetHeight.Content,
+        primary =
+            if (atRoot || state.storageLoading || state.storageFailure != null) null
+            else KitAction(stringResource(Res.string.folderBrowserOpen, name), actions::useStorageFolder, icon = KitIcons.folderOpen),
+    ) {
+        if (atRoot)
+            KitText(stringResource(Res.string.andrStorageRootHere), role = TypeRole.Secondary)
+        when {
+            state.storageLoading -> KitSkeletonRows(count = 4)
+            state.storageFailure != null ->
+                KitErrorNotice(
+                    message = stringResource(Res.string.folderBrowserErrorTitle),
+                    failure = state.storageFailure,
+                    detailsLabel = stringResource(Res.string.kitDetails),
+                    copyLabel = stringResource(Res.string.kitCopyDetails),
+                    retry = KitLineAction(stringResource(Res.string.folderBrowserRetry), { actions.enterStorageFolder(path) }),
+                )
+            else ->
+                KitRowGroup(leadingTiles = true) {
+                    KitNewProjectRow(actions::askNewStorageFolder, working = state.creatingProject)
+                    state.storageFolders.forEach { folder ->
+                        KitRow(
+                            title = folder.name,
+                            leading = KitRowLeading.Glyph(KitIcons.folderOpen),
+                            trailing = KitRowTrailing.Chevron,
+                            modifier = Modifier.testTag("storage-folder-${folder.path}"),
+                            onClick = { actions.enterStorageFolder(folder.path) },
+                        )
+                    }
+                }
+        }
+        if (state.storageFolders.isEmpty() && !state.storageLoading && state.storageFailure == null)
+            KitText(stringResource(Res.string.andrStorageFoldersEmpty), role = TypeRole.Secondary)
+        state.projectFailure?.let { problem ->
+            KitErrorNotice(
+                message = stringResource(Res.string.projectFolderCreateFailedTitle),
+                failure = problem,
+                detailsLabel = stringResource(Res.string.kitDetails),
+                copyLabel = stringResource(Res.string.kitCopyDetails),
+            )
+        }
+    }
+}

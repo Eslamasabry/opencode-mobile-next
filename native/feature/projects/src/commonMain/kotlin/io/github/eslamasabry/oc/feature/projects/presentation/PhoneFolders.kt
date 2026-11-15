@@ -21,6 +21,10 @@ public interface PhoneFolders {
 
     public suspend fun requestAccess(): Outcome<Unit> =
         Outcome.Failed(Failure.Refused(RefusalReason.StaleScope))
+
+    /** Makes folder [name] inside [parent] in the phone's shared storage; the answer is its path. */
+    public suspend fun createFolder(parent: String, name: String): Outcome<String> =
+        Outcome.Failed(Failure.Refused(RefusalReason.StaleScope))
 }
 
 public data class PhoneFolderUi(val name: String, val path: String, val hint: String? = null)
