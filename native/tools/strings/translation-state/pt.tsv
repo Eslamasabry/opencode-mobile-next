@@ -2149,6 +2149,7 @@ chatsFilterNeedsYouWord	d898f12568
 chatsFilterOpenProject	9922a5c126
 chatsFilterRunningCount	c31d1ac550
 chatsFilterSheetTitle	ac00850d3d
+chatsHomeAgentsUnreachable	18c3b33296
 chatsHomeAllProjects	90eb5fb2f6
 chatsHomeAsksToRun	1e99b16985
 chatsHomeClearFilters	ab4b291f51
@@ -2508,7 +2509,7 @@ connectStartingPhone	58039cd7bc
 connectUpdatingAgents	63e7dfd306
 connectUpdatingPhone	7413955795
 connectionAgentStartFailed	bf3300bd0a
-connectionAgentStarting	977a1344f3
+connectionAgentStarting	18e946fc12
 connectionCheckAction	5c241d82f8
 connectionCheckAddress	900ba4c11c
 connectionCheckAgain	1bef86120a
