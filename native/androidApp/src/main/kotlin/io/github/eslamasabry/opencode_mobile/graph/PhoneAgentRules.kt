@@ -15,6 +15,7 @@ import io.github.eslamasabry.oc.engine.agents.readiness.AgentHiddenReason
 import io.github.eslamasabry.oc.engine.agents.readiness.AgentReadiness
 import io.github.eslamasabry.oc.engine.agents.readiness.AgentSignInPhase
 import io.github.eslamasabry.oc.engine.agents.readiness.PhoneAgentRuntime
+import io.github.eslamasabry.oc.engine.agents.signin.SignInCommandPolicy
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentInstallPhase
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentInstallation
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentRow
@@ -228,6 +229,8 @@ internal object PhoneAgentRules {
         signIn: AgentSignInPhase?,
         /** Whether the agent helper runs now; null when it was not read (then nothing says it stopped). */
         helperRunning: Boolean? = null,
+        /** Its set-up has to come first ([setUpFirst]): it reads set up at first use even while the helper is down. */
+        setUpFirst: Boolean = false,
     ): PhoneAgentStatus {
         val row =
             AgentReadiness.row(
@@ -248,10 +251,14 @@ internal object PhoneAgentRules {
             )
         return when (row.status) {
             ReadinessStatus.Ready -> PhoneAgentStatus.Ready
+            // The helper is not running yet (after every app start until something starts it), but the set-up runs in
+            // its own terminal without it: an agent never seen set up says Set up, not Resume (which would then offer
+            // it as a choice that fails its first answer).
+            ReadinessStatus.StoppedInBackground ->
+                if (setUpFirst) PhoneAgentStatus.SetUpAtFirstUse else PhoneAgentStatus.Stopped
             ReadinessStatus.NeedsInstall -> PhoneAgentStatus.NotInstalled
             ReadinessStatus.NeedsQualification -> PhoneAgentStatus.PhoneCheck
             ReadinessStatus.SignedOut -> PhoneAgentStatus.SignInNeeded
-            ReadinessStatus.StoppedInBackground -> PhoneAgentStatus.Stopped
             ReadinessStatus.LimitReached -> PhoneAgentStatus.Limit
             ReadinessStatus.Unavailable ->
                 when (row.hiddenReason) {
@@ -277,6 +284,17 @@ internal object PhoneAgentRules {
      */
     fun signInUnchecked(agent: AgentDescriptor): Boolean =
         agent.signInMethod != AgentSignInMethod.None && !AgentAuthScripts.checksSignIn(agent.id)
+
+    /**
+     * Whether [agent]'s set-up comes before its first conversation ([PhoneAgentRow.needsSetUp]): its sign-in no check
+     * can read, the app has not [seen] it set up (`PhoneAgentFacts.Fact.setUp`), and the app can open its set-up (its
+     * own set-up command passes the sign-in terminal's policy, as `NativePhoneSignIn`'s plan asks). An agent with no
+     * set-up the app could open stays startable: its first answer is then the only way to learn.
+     */
+    fun setUpFirst(agent: AgentDescriptor, seen: Boolean): Boolean {
+        val recipe = agent.recipe ?: return false
+        return signInUnchecked(agent) && !seen && SignInCommandPolicy.allows(recipe.executable, recipe.signInArgs)
+    }
 
     /**
      * The sign-in check of an agent the probe can read did not run to an answer this time (timed out, the phone's

@@ -1516,13 +1516,15 @@ internal object NewConversationPhoneRules {
                 name = row.name,
                 iconKey = descriptor.iconKey,
                 ready = !updating && startsHere(row),
-                // Flutter's fixAction: install, sign in, phone check, resume.
+                // Flutter's fixAction: install, sign in, phone check, resume; and the set-up of an agent the app never
+                // saw set up (a dimmed "Set up" row that opens it, never a choice whose first answer fails).
                 fixable =
                     when (row.status) {
                         PhoneAgentStatus.NotInstalled -> row.supportedInstallation
                         PhoneAgentStatus.SignInNeeded,
                         PhoneAgentStatus.PhoneCheck,
                         PhoneAgentStatus.Stopped -> true
+                        PhoneAgentStatus.SetUpAtFirstUse -> row.needsSetUp
                         else -> false
                     },
                 installed = row.status.installed,
