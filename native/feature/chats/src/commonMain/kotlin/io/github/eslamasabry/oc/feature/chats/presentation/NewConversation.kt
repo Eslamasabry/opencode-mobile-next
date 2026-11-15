@@ -843,6 +843,12 @@ public class NewConversationViewModel(
         viewModelScope.launch {
             host.serversRead.collect { read ->
                 mutable.update { it.copy(serversRead = read) }
+                // A tap kept for the list that the page's own setup outran: the list is read now, so it goes on.
+                val kept = mutable.value
+                if (read && kept.startQueued && kept.setup != null && !kept.busy) {
+                    mutable.update { it.copy(startQueued = false) }
+                    start()
+                }
             }
         }
         viewModelScope.launch {
