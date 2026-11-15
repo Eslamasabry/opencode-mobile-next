@@ -484,6 +484,13 @@ private class JoinedPaneNode(
         val area = Rect(floor(mine.left - grow), floor(mine.top - grow), ceil(mine.right + grow), ceil(mine.bottom + grow))
         val local = area.topLeft - origin
         val full = IntSize(area.width.toInt().coerceAtLeast(1), area.height.toInt().coerceAtLeast(1))
+        // Live glass (the Glass lab's A/B, KitLiquidJoinLive.kt): a body whose drop runs the live motion is drawn from its
+        // one progress, at one resolution for its whole joined life.
+        val live = drop?.content as? KitLiquidJoinLive
+        if (live != null && theirs != null) {
+            drawJoinedLive(live, c, back, mask, programs, platform, part, partner, spec, theirSpec, geometry, reach, mine, theirs, source, area, local, full, currentValueOf(LocalKitRoles).dark)
+            return
+        }
         // One frost for the body, but a menu frosts as a sheet does (words on glass 3): while a menu is joined, the body's
         // frost moves from the bar's towards the menu's as the menu's rows come in (the drop's content, 0 to 1), so the
         // bar and the menu stay one body of glass and nothing steps as the menu opens or closes.

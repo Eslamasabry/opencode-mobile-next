@@ -563,7 +563,12 @@ private fun MenuContent(
                 kotlinx.coroutines.delay(JOIN_WAIT_MS)
                 waited.value = true
             }
-            if (joinable && drop != null && home != null) KitMenuJoinMotion(drop, home, last.at, placed, leaving)
+            if (joinable && drop != null && home != null) {
+                // The Glass lab's A/B (preview and dev builds): the live join, every value from one progress
+                // (KitLiquidJoinLive.kt); shipped, today's.
+                if (io.github.eslamasabry.oc.ui.kit.effects.kitLiquidJoinLiveOn()) io.github.eslamasabry.oc.ui.kit.effects.KitMenuJoinMotionLive(drop, home, last.at, leaving)
+                else KitMenuJoinMotion(drop, home, last.at, placed, leaving)
+            }
             KitMenuPanel(
                 modifier =
                     Modifier.kitLeaving(leaving)
