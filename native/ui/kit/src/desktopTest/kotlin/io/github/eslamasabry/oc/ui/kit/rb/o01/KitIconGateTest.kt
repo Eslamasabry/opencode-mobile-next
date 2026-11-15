@@ -19,6 +19,7 @@ import io.github.eslamasabry.oc.ui.design.color.StatusTone
 import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.gate.FlutterGoldenGate
+import io.github.eslamasabry.oc.ui.kit.KitPlatformScope
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.icon.KitBrandMark
 import io.github.eslamasabry.oc.ui.kit.icon.KitBrandMarkSize
@@ -26,7 +27,6 @@ import io.github.eslamasabry.oc.ui.kit.icon.KitIcon
 import io.github.eslamasabry.oc.ui.kit.icon.KitIconSize
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.icon.KitStatusIcon
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
 import io.github.eslamasabry.oc.ui.kit.platform.KitPlatform
 import io.github.eslamasabry.oc.ui.kit.platform.LocalKitPlatform
@@ -142,7 +142,7 @@ class KitIconGateTest {
                         override val signals = MutableStateFlow(base.signals.value.copy(highContrast = true))
                     }
                 }
-                CompositionLocalProvider(LocalKitPlatform provides contrast) {
+                KitPlatformScope(contrast) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         KitIcon(KitIcons.workspaceSelected)
                         Spacer(Modifier.width(12.dp))

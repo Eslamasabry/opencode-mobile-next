@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.kit.text
 
+import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -19,6 +20,7 @@ import androidx.compose.ui.platform.TextToolbarStatus
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.ComposeUiTest
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.longClick
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onRoot
@@ -142,5 +144,48 @@ class KitSelectableModeTest {
             onNodeWithTag("sel-text").performTouchInput { longClick() }
             waitForIdle()
             assertTrue(toolbar.shown, "Always mode must keep selection active on touch")
+        }
+
+    @Test
+    fun `B-KIT-SELECT-LAYOUT bounds match with selection on and off regardless of modifier`() =
+        runComposeUiTest {
+            val platform = FakeKitPlatform(KitSystemSignals(finePointer = false))
+            var mode by mutableStateOf(KitSelectMode.FinePointer)
+            var withTag by mutableStateOf(false)
+
+            setContent {
+                KitTheme(KitAppearance(motion = MotionLevel.Off), platform, "en", stillFrame = true) {
+                    Column {
+                        KitSelectable(
+                            modifier = if (withTag) Modifier.testTag("sel-wrap") else Modifier,
+                            mode = mode,
+                        ) {
+                            KitText("First line", Modifier.testTag("first-child"))
+                            KitText("Second line", Modifier.testTag("second-child"))
+                        }
+                    }
+                }
+            }
+            waitForIdle()
+
+            val offDefaultFirst = onNodeWithTag("first-child").getBoundsInRoot()
+            val offDefaultSecond = onNodeWithTag("second-child").getBoundsInRoot()
+
+            withTag = true
+            waitForIdle()
+            assertEquals(offDefaultFirst, onNodeWithTag("first-child").getBoundsInRoot())
+            assertEquals(offDefaultSecond, onNodeWithTag("second-child").getBoundsInRoot())
+
+            withTag = false
+            platform.signals.value = KitSystemSignals(finePointer = true)
+            waitForIdle()
+            assertEquals(offDefaultFirst, onNodeWithTag("first-child").getBoundsInRoot())
+            assertEquals(offDefaultSecond, onNodeWithTag("second-child").getBoundsInRoot())
+
+            platform.signals.value = KitSystemSignals(finePointer = false)
+            mode = KitSelectMode.Always
+            waitForIdle()
+            assertEquals(offDefaultFirst, onNodeWithTag("first-child").getBoundsInRoot())
+            assertEquals(offDefaultSecond, onNodeWithTag("second-child").getBoundsInRoot())
         }
 }

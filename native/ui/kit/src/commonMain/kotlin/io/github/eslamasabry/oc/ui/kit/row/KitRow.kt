@@ -468,6 +468,8 @@ private fun RowBody(
                 }
             }
         }
+        // Trade-off: toggling `value == null` or crossing `large` moves `middle` between these two call sites, so
+        // remembered state inside the row restarts once rather than paying a per-row `movableContentOf` allocation.
         if (value == null || large) {
             middle(Modifier.weight(1f), value != null)
         } else {

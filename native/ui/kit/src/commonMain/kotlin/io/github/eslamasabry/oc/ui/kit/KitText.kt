@@ -220,10 +220,11 @@ public enum class KitSelectMode { Always, FinePointer }
 @Composable
 public fun KitSelectable(modifier: Modifier = Modifier, mode: KitSelectMode = KitSelectMode.Always, content: @Composable () -> Unit) {
     val active = mode == KitSelectMode.Always || LocalKitWindow.current.finePointer
-    when {
-        active -> SelectionContainer(modifier) { content() }
-        modifier != Modifier -> Box(modifier, propagateMinConstraints = true) { content() }
-        else -> content()
+    // Match SelectionContainer's box-like layout wrapper even when off so modifier or pointer changes never reflow children.
+    if (active) {
+        SelectionContainer(modifier) { content() }
+    } else {
+        Box(modifier, propagateMinConstraints = true) { content() }
     }
 }
 

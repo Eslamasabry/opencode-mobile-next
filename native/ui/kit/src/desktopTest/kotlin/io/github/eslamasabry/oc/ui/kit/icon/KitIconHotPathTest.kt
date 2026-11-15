@@ -16,6 +16,7 @@ import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.kit.FakeKitPlatform
+import io.github.eslamasabry.oc.ui.kit.KitPlatformScope
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.platform.KitPlatform
 import io.github.eslamasabry.oc.ui.kit.platform.KitSystemSignals
@@ -83,5 +84,25 @@ class KitIconHotPathTest {
             waitForIdle()
             assertEquals(1, onNodeWithTag("icon-4", useUnmergedTree = true).fetchSemanticsNode().children.size)
             assertEquals(1, platform.collectCalls, "signal updates must not create additional collectors")
+        }
+
+    @Test
+    fun `B-KIT-ICON-SCOPE nested KitPlatformScope overrides highContrast for its subtree`() =
+        runComposeUiTest {
+            val outer = FakeKitPlatform(KitSystemSignals(highContrast = false))
+            val inner = FakeKitPlatform(KitSystemSignals(highContrast = true))
+            setContent {
+                KitTheme(KitAppearance(motion = MotionLevel.Off), outer, "en", stillFrame = true) {
+                    Column {
+                        KitIcon(KitIcons.workspaceSelected, Modifier.testTag("outer-icon"))
+                        KitPlatformScope(inner) {
+                            KitIcon(KitIcons.workspaceSelected, Modifier.testTag("inner-icon"))
+                        }
+                    }
+                }
+            }
+            waitForIdle()
+            assertEquals(2, onNodeWithTag("outer-icon", useUnmergedTree = true).fetchSemanticsNode().children.size)
+            assertEquals(1, onNodeWithTag("inner-icon", useUnmergedTree = true).fetchSemanticsNode().children.size)
         }
 }
