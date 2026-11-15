@@ -34,73 +34,98 @@ private fun fixtureAgent(
     format: AgentArtifactFormat = AgentArtifactFormat.Executable,
     member: String? = null,
     id: String = "fixture",
-) = AgentDescriptor(
-    id = AgentId(id),
-    name = "Fixture",
-    iconKey = "fixture",
-    route = AgentRoute.PaseoNative,
-    providerId = "fixture",
-    signInMethod = AgentSignInMethod.None,
-    limitation = AgentLimitation.NeedsHostSetup,
-    resumeReason = AgentResumeReason.ResumeUnverified,
-    recipe = AgentInstallRecipe(
-        version = version,
-        executable = id,
-        artifacts = mapOf(
-            AgentArchitecture.X64 to AgentArtifact(
-                url = "https://example.invalid/pinned",
-                sha256 = hash,
-                format = format,
-                archiveMember = member,
+) =
+    AgentDescriptor(
+        id = AgentId(id),
+        name = "Fixture",
+        iconKey = "fixture",
+        route = AgentRoute.PaseoNative,
+        providerId = "fixture",
+        signInMethod = AgentSignInMethod.None,
+        limitation = AgentLimitation.NeedsHostSetup,
+        resumeReason = AgentResumeReason.ResumeUnverified,
+        recipe =
+            AgentInstallRecipe(
+                version = version,
+                executable = id,
+                artifacts =
+                    mapOf(
+                        AgentArchitecture.X64 to
+                            AgentArtifact(
+                                url = "https://example.invalid/pinned",
+                                sha256 = hash,
+                                format = format,
+                                archiveMember = member,
+                            )
+                    ),
             ),
-        ),
-    ),
-)
+    )
 
 private fun q(text: String) = "'" + text.replace("'", "'\\''") + "'"
 
 /** The version check's limit as the install script spells it (the tests shorten it). */
-private val LIMIT = "\"\$oc_probe_run\" ${AgentVersionCheck.PROBE_SECONDS} ${AgentVersionCheck.KILL_AFTER_SECONDS} env -i"
+private val LIMIT =
+    "\"\$oc_probe_run\" ${AgentVersionCheck.PROBE_SECONDS} ${AgentVersionCheck.KILL_AFTER_SECONDS} env -i"
 
 /** [LIMIT] shortened to one second, and one more second before SIGKILL. */
 private const val ONE_SECOND = "\"\$oc_probe_run\" 1 1 env -i"
 
 /**
- * An isolated fake guest: rewrite the fixed home only in test input. No curl/network or root paths. This container
- * keeps python3 in /usr/local/bin, so the script's own `export PATH=…:/usr/bin:/bin` is widened by the same rewrite.
+ * An isolated fake guest: rewrite the fixed home only in test input. No curl/network or root paths.
+ * This container keeps python3 in /usr/local/bin, so the script's own `export PATH=…:/usr/bin:/bin`
+ * is widened by the same rewrite.
  */
 private class PhoneGuest(val root: File) {
-    val home get() = "${root.path}/home"
-    val bin get() = "$home/.local/bin"
-    val payload get() = "${root.path}/artifact"
-    val ran get() = "${root.path}/executed"
+    val home
+        get() = "${root.path}/home"
+
+    val bin
+        get() = "$home/.local/bin"
+
+    val payload
+        get() = "${root.path}/artifact"
+
+    val ran
+        get() = "${root.path}/executed"
 
     fun prepare(version: String = "1.2.3", architecture: String = "x86_64", uid: String = "1000") {
         mkdirs(bin)
         File("$bin/id").writeText("#!/bin/sh\nprintf \"%s\\n\" ${q(uid)}\n")
         File("$bin/uname").writeText("#!/bin/sh\nprintf \"%s\\n\" ${q(architecture)}\n")
         run(listOf("chmod", "700", "$bin/id", "$bin/uname"))
-        File(payload).writeText("#!/bin/sh\nprintf x >> ${q(ran)}\nprintf \"%s\\n\" ${q(version)}\n")
+        File(payload)
+            .writeText("#!/bin/sh\nprintf x >> ${q(ran)}\nprintf \"%s\\n\" ${q(version)}\n")
     }
 
     val hash: String
-        get() = MessageDigest.getInstance("SHA-256").digest(File(payload).readBytes()).joinToString("") { "%02x".format(it) }
+        get() =
+            MessageDigest.getInstance("SHA-256").digest(File(payload).readBytes()).joinToString(
+                ""
+            ) {
+                "%02x".format(it)
+            }
 
-    fun run(script: String, downloader: String? = null): ShResult = run(
-        listOf(
-            "bash",
-            "-c",
-            "${downloader ?: "oc_download() { cp ${q(payload)} \"\$2\"; }"}\n" +
-                "oc_stage() { :; }\n" +
-                "oc_version() { printf '::oc version %s\\n' \"\$1\"; }\n" +
-                script.replace("/home/oc", home).replace("/usr/local/bin", "$home/usr-local-bin")
-                    .replace("export PATH=$home/.local/bin:/usr/bin:/bin", "export PATH=$home/.local/bin:$TEST_PATH") +
-                "\n",
-        ),
-        environment = mapOf("HOME" to home, "PATH" to "$bin:$TEST_PATH"),
-        workingDirectory = root,
-        timeoutSeconds = 120,
-    )
+    fun run(script: String, downloader: String? = null): ShResult =
+        run(
+            listOf(
+                "bash",
+                "-c",
+                "${downloader ?: "oc_download() { cp ${q(payload)} \"\$2\"; }"}\n" +
+                    "oc_stage() { :; }\n" +
+                    "oc_version() { printf '::oc version %s\\n' \"\$1\"; }\n" +
+                    script
+                        .replace("/home/oc", home)
+                        .replace("/usr/local/bin", "$home/usr-local-bin")
+                        .replace(
+                            "export PATH=$home/.local/bin:/usr/bin:/bin",
+                            "export PATH=$home/.local/bin:$TEST_PATH",
+                        ) +
+                    "\n",
+            ),
+            environment = mapOf("HOME" to home, "PATH" to "$bin:$TEST_PATH"),
+            workingDirectory = root,
+            timeoutSeconds = 120,
+        )
 }
 
 /** Port of test/phone_agent_scripts_test.dart against [AgentPhoneScripts]. */
@@ -120,7 +145,8 @@ class AgentPhoneScriptsTest {
         temp.deleteRecursively()
     }
 
-    private val agents get() = "${guest.home}/.local/share/oc-agents"
+    private val agents
+        get() = "${guest.home}/.local/share/oc-agents"
 
     private fun archive(python: String) {
         assertEquals(0, run(listOf("python3", "-c", python, guest.payload, guest.ran)).exitCode)
@@ -140,7 +166,11 @@ class AgentPhoneScriptsTest {
         val perms = Files.getPosixFilePermissions(launcher.toPath())
         assertTrue(
             perms.containsAll(
-                listOf(PosixFilePermission.OWNER_EXECUTE, PosixFilePermission.GROUP_EXECUTE, PosixFilePermission.OTHERS_EXECUTE),
+                listOf(
+                    PosixFilePermission.OWNER_EXECUTE,
+                    PosixFilePermission.GROUP_EXECUTE,
+                    PosixFilePermission.OTHERS_EXECUTE,
+                )
             ),
             "executable",
         )
@@ -156,18 +186,22 @@ class AgentPhoneScriptsTest {
     fun `B-LINUX-119 interrupted agent download survives extraction cleanup and resumes`() {
         val agent = fixtureAgent(guest.hash, id = "claude")
         val size = File(guest.payload).length()
-        val first = guest.run(
-            AgentPhoneScripts.install(agent),
-            downloader = "oc_download() { head -c 12 ${q(guest.payload)} > \"\$2\"; return 18; }",
-        )
+        val first =
+            guest.run(
+                AgentPhoneScripts.install(agent),
+                downloader =
+                    "oc_download() { head -c 12 ${q(guest.payload)} > \"\$2\"; return 18; }",
+            )
         assertEquals(18, first.exitCode)
         val cache = File("$agents/claude/.downloads")
         val artifact = cache.listFiles()!!.filter { it.isFile }.single()
         assertEquals(12L, artifact.length())
-        val resumed = guest.run(
-            AgentPhoneScripts.install(agent),
-            downloader = "oc_download() { [ \"\$(stat -c %s \"\$2\")\" = 12 ] || return 99; tail -c +13 ${q(guest.payload)} >> \"\$2\"; }",
-        )
+        val resumed =
+            guest.run(
+                AgentPhoneScripts.install(agent),
+                downloader =
+                    "oc_download() { [ \"\$(stat -c %s \"\$2\")\" = 12 ] || return 99; tail -c +13 ${q(guest.payload)} >> \"\$2\"; }",
+            )
         assertEquals(0, resumed.exitCode, resumed.stderr)
         assertEquals(size, File("$agents/claude/1.2.3/payload/claude").length())
         assertFalse(artifact.exists())
@@ -192,7 +226,12 @@ class AgentPhoneScriptsTest {
         val current = fixtureAgent(guest.hash, id = "claude", version = "2.1.294")
         assertEquals(0, guest.run(AgentPhoneScripts.install(current)).exitCode)
         fun fixture(script: String) =
-            script.replace(AgentPhoneScripts.previousClaudeRecipe.artifacts.getValue(AgentArchitecture.X64).sha256, oldHash)
+            script.replace(
+                AgentPhoneScripts.previousClaudeRecipe.artifacts
+                    .getValue(AgentArchitecture.X64)
+                    .sha256,
+                oldHash,
+            )
         val prior = "$agents/claude/2.1.283"
         File("$prior/launch").writeText("#!/bin/sh\nexit 99\n")
         val available = guest.run(fixture(AgentPhoneScripts.previousVersion(current)))
@@ -204,7 +243,10 @@ class AgentPhoneScriptsTest {
         assertTrue(File("$agents/claude/2.1.294").isDirectory)
         File("$prior/payload/claude").writeText("#!/bin/sh\necho 2.1.283\n")
         assertNotEquals(0, guest.run(fixture(AgentPhoneScripts.previousVersion(current))).exitCode)
-        assertNotEquals(0, guest.run(fixture(AgentPhoneScripts.usePreviousVersion(current, "2.1.283"))).exitCode)
+        assertNotEquals(
+            0,
+            guest.run(fixture(AgentPhoneScripts.usePreviousVersion(current, "2.1.283"))).exitCode,
+        )
     }
 
     @Test
@@ -221,7 +263,10 @@ class AgentPhoneScriptsTest {
         Files.delete(Paths.get(base))
         link(base, outside.path)
         assertNotEquals(0, guest.run(AgentPhoneScripts.previousVersion(agent)).exitCode)
-        assertNotEquals(0, guest.run(AgentPhoneScripts.usePreviousVersion(agent, "2.1.283")).exitCode)
+        assertNotEquals(
+            0,
+            guest.run(AgentPhoneScripts.usePreviousVersion(agent, "2.1.283")).exitCode,
+        )
         assertEquals("private", sentinel.readText())
     }
 
@@ -257,11 +302,17 @@ class AgentPhoneScriptsTest {
         val original = File(guest.payload).readText()
         val agent = fixtureAgent(guest.hash, id = "claude")
         assertEquals(0, guest.run(AgentPhoneScripts.install(agent)).exitCode)
-        File(guest.payload).writeText("#!/bin/sh\ncase \"\$0\" in *\".new/\"*) printf \"1.2.3\\n\";; *) exit 2;; esac\n")
+        File(guest.payload)
+            .writeText(
+                "#!/bin/sh\ncase \"\$0\" in *\".new/\"*) printf \"1.2.3\\n\";; *) exit 2;; esac\n"
+            )
         val update = fixtureAgent(guest.hash, id = "claude")
         val result = guest.run(AgentPhoneScripts.install(update))
         assertNotEquals(0, result.exitCode)
-        assertTrue("Claude could not finish updating. Run setup again." in result.stderr, result.stderr)
+        assertTrue(
+            "Claude could not finish updating. Run setup again." in result.stderr,
+            result.stderr,
+        )
         val finalPath = "$agents/claude/1.2.3"
         assertEquals(original, File("$finalPath/payload/claude").readText())
         assertEquals(0, guest.run(AgentPhoneScripts.check(agent)).exitCode)
@@ -270,6 +321,11 @@ class AgentPhoneScriptsTest {
     @Test
     fun `B-LINUX-121 every catalog recipe generates valid shell without executing downloads`() {
         for (agent in AgentCatalog.builtIn.agents) {
+            if (agent.recipe == null) {
+                assertFailsWith<IllegalArgumentException> { AgentPhoneScripts.install(agent) }
+                assertFailsWith<IllegalArgumentException> { AgentPhoneScripts.check(agent) }
+                continue
+            }
             val file = File("${temp.path}/script.sh")
             file.writeText(AgentPhoneScripts.install(agent))
             assertEquals(0, run(listOf("bash", "-n", file.path)).exitCode, agent.id.raw)
@@ -280,14 +336,16 @@ class AgentPhoneScriptsTest {
 
     @Test
     fun `B-LINUX-123 oc bootstrap accepts PRoot identity mapping without requiring real chown`() {
-        val result = guest.run(
-            """
+        val result =
+            guest.run(
+                """
 id() { case "${'$'}*" in '-u') printf '0\n';; '-u oc'|'-g oc') printf '1000\n';; 'oc') return 0;; *) return 1;; esac; }
 getent() { case "${'$'}*" in 'group oc') printf 'oc:x:1000:\n';; 'passwd oc') printf 'oc:x:1000:1000::/home/oc:/bin/bash\n';; *) return 1;; esac; }
 install() { return 0; }
 stat() { printf '0\n'; }
-""".removePrefix("\n") + AgentPhoneScripts.bootstrapUser,
-        )
+"""
+                    .removePrefix("\n") + AgentPhoneScripts.bootstrapUser
+            )
         assertEquals(0, result.exitCode, result.stderr)
     }
 
@@ -334,12 +392,23 @@ stat() { printf '0\n'; }
     fun `B-LINUX-122 concurrent installer lock does not damage held installation files`() {
         mkdirs("$agents/.lock-fixture")
         val held = File("$agents/held").also { it.writeText("keep") }
-        // A live authored installer holds the lock (since issue 147 a lock nobody holds is taken over).
-        // Its EXIT trap keeps bash itself running (as the real installer's does), so its own command line stays.
-        val other = ProcessBuilder("bash", "-c", "oc_lock=$agents/.lock-fixture\ntrap 'true' EXIT\nsleep 60").start()
+        // A live authored installer holds the lock (since issue 147 a lock nobody holds is taken
+        // over).
+        // Its EXIT trap keeps bash itself running (as the real installer's does), so its own
+        // command line stays.
+        val other =
+            ProcessBuilder(
+                    "bash",
+                    "-c",
+                    "oc_lock=$agents/.lock-fixture\ntrap 'true' EXIT\nsleep 60",
+                )
+                .start()
         Thread.sleep(300)
         try {
-            assertNotEquals(0, guest.run(AgentPhoneScripts.install(fixtureAgent(guest.hash))).exitCode)
+            assertNotEquals(
+                0,
+                guest.run(AgentPhoneScripts.install(fixtureAgent(guest.hash))).exitCode,
+            )
         } finally {
             other.destroyForcibly()
         }
@@ -350,7 +419,8 @@ stat() { printf '0\n'; }
 
     @Test
     fun `I147-AGY-4 an install lock left by a killed installer no longer blocks every later install`() {
-        // Android stopped the app and its Linux mid-install: no EXIT trap ran, the empty lock stayed.
+        // Android stopped the app and its Linux mid-install: no EXIT trap ran, the empty lock
+        // stayed.
         mkdirs("$agents/.lock-fixture")
         val agent = fixtureAgent(guest.hash)
         val result = guest.run(AgentPhoneScripts.install(agent))
@@ -366,10 +436,18 @@ stat() { printf '0\n'; }
         assertFalse(exists(guest.ran))
         File("$agents/.lock-fixture/owner").delete()
         val remover =
-            ProcessBuilder("bash", "-c", "trap 'true' EXIT\npython3 - 'fixture' 'fixture' '1.2.3' 'r' <<'OC_AGENT_REMOVE'\nimport time; time.sleep(60)\nOC_AGENT_REMOVE\n").start()
+            ProcessBuilder(
+                    "bash",
+                    "-c",
+                    "trap 'true' EXIT\npython3 - 'fixture' 'fixture' '1.2.3' 'r' <<'OC_AGENT_REMOVE'\nimport time; time.sleep(60)\nOC_AGENT_REMOVE\n",
+                )
+                .start()
         Thread.sleep(300)
         try {
-            assertNotEquals(0, guest.run(AgentPhoneScripts.install(fixtureAgent(guest.hash))).exitCode)
+            assertNotEquals(
+                0,
+                guest.run(AgentPhoneScripts.install(fixtureAgent(guest.hash))).exitCode,
+            )
         } finally {
             remover.destroyForcibly()
         }
@@ -386,11 +464,18 @@ stat() { printf '0\n'; }
                     " if '$mode' == 'link':\n" +
                     "  m.type=tarfile.SYMTYPE; m.linkname=sys.argv[2]; t.addfile(m)\n" +
                     " else:\n" +
-                    "  data=b'malicious'; m.size=len(data); t.addfile(m, io.BytesIO(data))\n",
+                    "  data=b'malicious'; m.size=len(data); t.addfile(m, io.BytesIO(data))\n"
             )
-            val result = guest.run(
-                AgentPhoneScripts.install(fixtureAgent(guest.hash, format = AgentArtifactFormat.TarGz, member = "fixture")),
-            )
+            val result =
+                guest.run(
+                    AgentPhoneScripts.install(
+                        fixtureAgent(
+                            guest.hash,
+                            format = AgentArtifactFormat.TarGz,
+                            member = "fixture",
+                        )
+                    )
+                )
             assertNotEquals(0, result.exitCode, mode)
             assertFalse(exists(guest.ran))
             assertFalse(exists("$agents/fixture/escape"))
@@ -404,9 +489,10 @@ stat() { printf '0\n'; }
 with tarfile.open(sys.argv[1], 'w:bz2') as t:
  for name, data in [('bundle/data', b'1.2.3'), ('bundle/fixture', b'#!/bin/sh\ncat "${'$'}(dirname "${'$'}0")/data"\n')]:
   m=tarfile.TarInfo(name); m.size=len(data); m.mode=0o700; t.addfile(m, io.BytesIO(data))
-""",
+"""
         )
-        val agent = fixtureAgent(guest.hash, format = AgentArtifactFormat.TarBz2, member = "bundle/fixture")
+        val agent =
+            fixtureAgent(guest.hash, format = AgentArtifactFormat.TarBz2, member = "bundle/fixture")
         assertEquals(0, guest.run(AgentPhoneScripts.install(agent)).exitCode)
         assertEquals("1.2.3", File("$agents/fixture/1.2.3/payload/bundle/data").readText())
     }
@@ -415,20 +501,29 @@ with tarfile.open(sys.argv[1], 'w:bz2') as t:
     fun `B-LINUX-123 npm bundle wrapper keeps siblings under the pinned private Node`() {
         val node = File("${guest.home}/.local/node/bin/node")
         node.parentFile.mkdirs()
-        node.writeText("#!/bin/sh\nif [ \"\$1\" = --version ]; then echo v24.22.2; else exec /bin/sh \"\$@\"; fi\n")
+        node.writeText(
+            "#!/bin/sh\nif [ \"\$1\" = --version ]; then echo v24.22.2; else exec /bin/sh \"\$@\"; fi\n"
+        )
         run(listOf("chmod", "700", node.path))
         archive(
             """import io, sys, tarfile
 with tarfile.open(sys.argv[1], 'w:gz') as t:
  for name, data in [('package/bundle/data', b'1.2.3'), ('package/bundle/entry.js', b'#!/bin/sh\ncat "${'$'}(dirname "${'$'}0")/data"\n')]:
   m=tarfile.TarInfo(name); m.size=len(data); m.mode=0o700; t.addfile(m, io.BytesIO(data))
-""",
+"""
         )
-        val agent = fixtureAgent(guest.hash, format = AgentArtifactFormat.NpmTarGz, member = "package/bundle/entry.js")
+        val agent =
+            fixtureAgent(
+                guest.hash,
+                format = AgentArtifactFormat.NpmTarGz,
+                member = "package/bundle/entry.js",
+            )
         val installed = guest.run(AgentPhoneScripts.install(agent))
         assertEquals(0, installed.exitCode, installed.stderr)
         assertEquals(0, guest.run(AgentPhoneScripts.check(agent)).exitCode)
-        assertTrue("${guest.home}/.local/node/bin/node" in File("$agents/fixture/1.2.3/launch").readText())
+        assertTrue(
+            "${guest.home}/.local/node/bin/node" in File("$agents/fixture/1.2.3/launch").readText()
+        )
     }
 
     @Test
@@ -443,9 +538,17 @@ with tarfile.open(sys.argv[1], 'w:gz') as t:
 
     @Test
     fun `B-LINUX-121 shell metacharacters in recipe version or archive member fail generation`() {
-        assertFailsWith<IllegalArgumentException> { AgentPhoneScripts.install(fixtureAgent("0".repeat(64), version = "\$(id)")) }
         assertFailsWith<IllegalArgumentException> {
-            AgentPhoneScripts.install(fixtureAgent("0".repeat(64), format = AgentArtifactFormat.TarGz, member = "package/\$(id)"))
+            AgentPhoneScripts.install(fixtureAgent("0".repeat(64), version = "\$(id)"))
+        }
+        assertFailsWith<IllegalArgumentException> {
+            AgentPhoneScripts.install(
+                fixtureAgent(
+                    "0".repeat(64),
+                    format = AgentArtifactFormat.TarGz,
+                    member = "package/\$(id)",
+                )
+            )
         }
     }
 
@@ -454,39 +557,59 @@ with tarfile.open(sys.argv[1], 'w:gz') as t:
         archive(
             "import stat, sys, zipfile\n" +
                 "with zipfile.ZipFile(sys.argv[1], 'w') as z:\n" +
-                " m=zipfile.ZipInfo('fixture'); m.create_system=3; m.external_attr=(stat.S_IFLNK | 0o777) << 16; z.writestr(m, sys.argv[2])\n",
+                " m=zipfile.ZipInfo('fixture'); m.create_system=3; m.external_attr=(stat.S_IFLNK | 0o777) << 16; z.writestr(m, sys.argv[2])\n"
         )
-        val result = guest.run(
-            AgentPhoneScripts.install(fixtureAgent(guest.hash, format = AgentArtifactFormat.Zip, member = "fixture")),
-        )
+        val result =
+            guest.run(
+                AgentPhoneScripts.install(
+                    fixtureAgent(guest.hash, format = AgentArtifactFormat.Zip, member = "fixture")
+                )
+            )
         assertNotEquals(0, result.exitCode)
         assertFalse(exists(guest.ran))
     }
 
     /** The last fixed `[oc] ` line of a run: what the setup job keeps as the step's error. */
     private fun lastMarker(result: ShResult): String? =
-        (result.stdout + "\n" + result.stderr).lines().map { it.trim() }.lastOrNull { it.startsWith("[oc] ") }
+        (result.stdout + "\n" + result.stderr)
+            .lines()
+            .map { it.trim() }
+            .lastOrNull { it.startsWith("[oc] ") }
 
     @Test
     fun `B-AGENT-VER a pinned download that names another version fails with both versions, not its output`() {
         guest.prepare(version = "synthetic-secret 1.2.30")
         val result = guest.run(AgentPhoneScripts.install(fixtureAgent(guest.hash)))
         assertEquals(1, result.exitCode)
-        assertEquals("[oc] The agent reported version 1.2.30; this app installs 1.2.3", lastMarker(result))
+        assertEquals(
+            "[oc] The agent reported version 1.2.30; this app installs 1.2.3",
+            lastMarker(result),
+        )
         assertEquals(AgentSetupFailure.Version, AgentVersionCheck.failure(lastMarker(result)))
-        assertEquals(ReportedVersion("1.2.30", "1.2.3"), AgentVersionCheck.reported(lastMarker(result)))
+        assertEquals(
+            ReportedVersion("1.2.30", "1.2.3"),
+            AgentVersionCheck.reported(lastMarker(result)),
+        )
         assertFalse("synthetic-secret" in result.stdout + result.stderr)
         assertFalse(isLink("${guest.bin}/fixture"))
     }
 
     @Test
     fun `B-AGENT-VER each real version output format installs`() {
-        for (output in listOf(
-            "1.2.3", "codex-cli 1.2.3", "1.2.3 (Claude Code)", " 1.2.3", "fx 1.2.3",
-            // A leading v, colour codes and a banner with extra lines (gate, 2026-11-12).
-            "v1.2.3", "goose v1.2.3", "\u001B[32m1.2.3\u001B[0m", "\u001B[1mv1.2.3\u001B[0m",
-            "Welcome to Fixture\nUpdate available\n1.2.3\n",
-        )) {
+        for (output in
+            listOf(
+                "1.2.3",
+                "codex-cli 1.2.3",
+                "1.2.3 (Claude Code)",
+                " 1.2.3",
+                "fx 1.2.3",
+                // A leading v, colour codes and a banner with extra lines (gate, 2026-11-12).
+                "v1.2.3",
+                "goose v1.2.3",
+                "\u001B[32m1.2.3\u001B[0m",
+                "\u001B[1mv1.2.3\u001B[0m",
+                "Welcome to Fixture\nUpdate available\n1.2.3\n",
+            )) {
             guest.prepare(version = output)
             File("${guest.home}/.local/share/oc-agents/fixture").deleteRecursively()
             val result = guest.run(AgentPhoneScripts.install(fixtureAgent(guest.hash)))
@@ -512,9 +635,10 @@ with tarfile.open(sys.argv[1], 'w:gz') as t:
     @Test
     fun `B-AGENT-VER a first start too slow to answer gets one more run, and an answer then installs it`() {
         val mark = File(temp, "started-once")
-        File(guest.payload).writeText(
-            "#!/bin/sh\nif [ -e ${q(mark.path)} ]; then printf '%s\\n' 1.2.3; else : > ${q(mark.path)}; sleep 5; fi\n"
-        )
+        File(guest.payload)
+            .writeText(
+                "#!/bin/sh\nif [ -e ${q(mark.path)} ]; then printf '%s\\n' 1.2.3; else : > ${q(mark.path)}; sleep 5; fi\n"
+            )
         val script = AgentPhoneScripts.install(fixtureAgent(guest.hash)).replace(LIMIT, ONE_SECOND)
         val result = guest.run(script)
         assertEquals(0, result.exitCode, result.stderr)
@@ -525,11 +649,13 @@ with tarfile.open(sys.argv[1], 'w:gz') as t:
 
     @Test
     fun `B-AGENT-VER a version check past its limit leaves no process behind, even one ignoring the first signal`() {
-        // The phone stops an app's agents past 32 child processes: a hung --version must not outlive its check.
+        // The phone stops an app's agents past 32 child processes: a hung --version must not
+        // outlive its check.
         val pids = File(temp, "pids")
-        File(guest.payload).writeText(
-            "#!/bin/sh\ntrap '' TERM\nsleep 60 &\necho \$! >> ${q(pids.path)}\necho \$\$ >> ${q(pids.path)}\nwait\n"
-        )
+        File(guest.payload)
+            .writeText(
+                "#!/bin/sh\ntrap '' TERM\nsleep 60 &\necho \$! >> ${q(pids.path)}\necho \$\$ >> ${q(pids.path)}\nwait\n"
+            )
         val script = AgentPhoneScripts.install(fixtureAgent(guest.hash))
         assertTrue(LIMIT in script)
         val started = System.nanoTime()
@@ -546,23 +672,31 @@ with tarfile.open(sys.argv[1], 'w:gz') as t:
     @Test
     fun `B-AGENT-VER a program that answers but leaves a process running installs at once, and that process is gone`() {
         val pids = File(temp, "pids")
-        File(guest.payload).writeText(
-            "#!/bin/sh\nsleep 60 &\necho \$! >> ${q(pids.path)}\nprintf '%s\\n' 1.2.3\n"
-        )
+        File(guest.payload)
+            .writeText("#!/bin/sh\nsleep 60 &\necho \$! >> ${q(pids.path)}\nprintf '%s\\n' 1.2.3\n")
         val started = System.nanoTime()
         val result = guest.run(AgentPhoneScripts.install(fixtureAgent(guest.hash)))
         val seconds = (System.nanoTime() - started) / 1_000_000_000
         assertEquals(0, result.exitCode, result.stderr)
-        assertTrue(seconds < 30, "the check waited ${seconds}s for a process the program left behind")
+        assertTrue(
+            seconds < 30,
+            "the check waited ${seconds}s for a process the program left behind",
+        )
         assertEquals("$agents/fixture/1.2.3/launch", linkTarget("${guest.bin}/fixture"))
         val recorded = pids.readLines().filter { it.isNotBlank() }
         assertEquals(1, recorded.size, "$recorded")
-        assertFalse(alive(recorded.single()), "process ${recorded.single()} outlived the version check")
+        assertFalse(
+            alive(recorded.single()),
+            "process ${recorded.single()} outlived the version check",
+        )
     }
 
     /** A live process (a zombie waiting for its parent to read it has already ended). */
     private fun alive(pid: String): Boolean {
-        val stat = File("/proc/$pid/stat").takeIf { it.exists() }?.let { runCatching { it.readText() }.getOrNull() }
+        val stat =
+            File("/proc/$pid/stat")
+                .takeIf { it.exists() }
+                ?.let { runCatching { it.readText() }.getOrNull() }
         return stat != null && stat.substringAfterLast(") ").firstOrNull() != 'Z'
     }
 
@@ -573,7 +707,11 @@ with tarfile.open(sys.argv[1], 'w:gz') as t:
             val result = guest.run(AgentPhoneScripts.install(fixtureAgent(guest.hash)))
             assertEquals(1, result.exitCode, body)
             assertEquals(AgentVersionCheck.SILENT_LINE, lastMarker(result), body)
-            assertEquals(AgentSetupFailure.NotStarted, AgentVersionCheck.failure(lastMarker(result)), body)
+            assertEquals(
+                AgentSetupFailure.NotStarted,
+                AgentVersionCheck.failure(lastMarker(result)),
+                body,
+            )
             assertFalse("hello" in result.stdout + result.stderr, body)
         }
     }
@@ -581,20 +719,28 @@ with tarfile.open(sys.argv[1], 'w:gz') as t:
     @Test
     fun `B-AGENT-VER a pinned download whose address answers 404 or 410 is withdrawn, with the downloader's status`() {
         for (code in listOf("404", "410")) {
-            val result = guest.run(
-                AgentPhoneScripts.install(fixtureAgent(guest.hash)),
-                downloader = "oc_download() { oc_http=$code; echo '[oc] Download failed (curl exit 22): x' >&2; return 22; }",
-            )
+            val result =
+                guest.run(
+                    AgentPhoneScripts.install(fixtureAgent(guest.hash)),
+                    downloader =
+                        "oc_download() { oc_http=$code; echo '[oc] Download failed (curl exit 22): x' >&2; return 22; }",
+                )
             assertEquals(22, result.exitCode, code)
             assertEquals(AgentVersionCheck.WITHDRAWN_PREFIX + "1.2.3", lastMarker(result), code)
-            assertEquals(AgentSetupFailure.Withdrawn, AgentVersionCheck.failure(lastMarker(result)), code)
+            assertEquals(
+                AgentSetupFailure.Withdrawn,
+                AgentVersionCheck.failure(lastMarker(result)),
+                code,
+            )
             assertFalse(exists(guest.ran))
         }
         // A dropped connection stays the downloader's own line.
-        val dropped = guest.run(
-            AgentPhoneScripts.install(fixtureAgent(guest.hash)),
-            downloader = "oc_download() { oc_http=000; echo '[oc] Download failed (curl exit 7): x' >&2; return 7; }",
-        )
+        val dropped =
+            guest.run(
+                AgentPhoneScripts.install(fixtureAgent(guest.hash)),
+                downloader =
+                    "oc_download() { oc_http=000; echo '[oc] Download failed (curl exit 7): x' >&2; return 7; }",
+            )
         assertEquals(7, dropped.exitCode)
         assertEquals("[oc] Download failed (curl exit 7): x", lastMarker(dropped))
         assertEquals(null, AgentVersionCheck.failure(lastMarker(dropped)))
@@ -604,17 +750,25 @@ with tarfile.open(sys.argv[1], 'w:gz') as t:
     fun `B-AGENT-VER an npm bundle's version check asks Gemini CLI not to start a second Node`() {
         val node = File("${guest.home}/.local/node/bin/node")
         node.parentFile.mkdirs()
-        node.writeText("#!/bin/sh\nif [ \"\$1\" = --version ]; then echo v24.22.2; else exec /bin/sh \"\$@\"; fi\n")
+        node.writeText(
+            "#!/bin/sh\nif [ \"\$1\" = --version ]; then echo v24.22.2; else exec /bin/sh \"\$@\"; fi\n"
+        )
         run(listOf("chmod", "700", node.path))
-        // The entry answers only when asked not to relaunch, as a stand-in for the second Node.js it would start.
+        // The entry answers only when asked not to relaunch, as a stand-in for the second Node.js
+        // it would start.
         archive(
             """import io, sys, tarfile
 with tarfile.open(sys.argv[1], 'w:gz') as t:
  data=b'#!/bin/sh\n[ "${'$'}GEMINI_CLI_NO_RELAUNCH" = true ] && echo 1.2.3\n'
  m=tarfile.TarInfo('package/bundle/gemini.js'); m.size=len(data); m.mode=0o700; t.addfile(m, io.BytesIO(data))
-""",
+"""
         )
-        val agent = fixtureAgent(guest.hash, format = AgentArtifactFormat.NpmTarGz, member = "package/bundle/gemini.js")
+        val agent =
+            fixtureAgent(
+                guest.hash,
+                format = AgentArtifactFormat.NpmTarGz,
+                member = "package/bundle/gemini.js",
+            )
         val installed = guest.run(AgentPhoneScripts.install(agent))
         assertEquals(0, installed.exitCode, installed.stderr)
         assertEquals(0, guest.run(AgentPhoneScripts.check(agent)).exitCode)

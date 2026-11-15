@@ -11,31 +11,47 @@ import kotlin.test.assertTrue
 
 /** Port of test/agent_catalog_test.dart. */
 class AgentCatalogTest {
-    private fun artifact(member: String? = null, format: AgentArtifactFormat = AgentArtifactFormat.Executable) =
-        AgentArtifact(url = "https://example.test/agent-1.0.0", sha256 = "a".repeat(64), format = format, archiveMember = member)
+    private fun artifact(
+        member: String? = null,
+        format: AgentArtifactFormat = AgentArtifactFormat.Executable,
+    ) =
+        AgentArtifact(
+            url = "https://example.test/agent-1.0.0",
+            sha256 = "a".repeat(64),
+            format = format,
+            archiveMember = member,
+        )
 
     private fun recipe(
-        artifacts: Map<AgentArchitecture, AgentArtifact> = mapOf(AgentArchitecture.Arm64 to artifact()),
+        artifacts: Map<AgentArchitecture, AgentArtifact> =
+            mapOf(AgentArchitecture.Arm64 to artifact()),
         args: List<String> = emptyList(),
-    ) = AgentInstallRecipe(version = "1.0.0", executable = "agent", artifacts = artifacts, launchArgs = args)
+    ) =
+        AgentInstallRecipe(
+            version = "1.0.0",
+            executable = "agent",
+            artifacts = artifacts,
+            launchArgs = args,
+        )
 
     private fun agent(
         installRecipe: AgentInstallRecipe? = null,
         reason: AgentUnavailableReason? = null,
         availability: AgentAvailability = AgentAvailability.Limited,
-    ) = AgentDescriptor(
-        id = AgentId("new-agent"),
-        name = "New Agent",
-        iconKey = "new-agent",
-        route = AgentRoute.AcpPaseo,
-        providerId = "new-agent",
-        signInMethod = AgentSignInMethod.ApiKeyHost,
-        recipe = installRecipe,
-        unavailableReason = reason,
-        availability = availability,
-        limitation = AgentLimitation.NeedsHostSetup,
-        resumeReason = AgentResumeReason.SavedChatsNeedCheck,
-    )
+    ) =
+        AgentDescriptor(
+            id = AgentId("new-agent"),
+            name = "New Agent",
+            iconKey = "new-agent",
+            route = AgentRoute.AcpPaseo,
+            providerId = "new-agent",
+            signInMethod = AgentSignInMethod.ApiKeyHost,
+            recipe = installRecipe,
+            unavailableReason = reason,
+            availability = availability,
+            limitation = AgentLimitation.NeedsHostSetup,
+            resumeReason = AgentResumeReason.SavedChatsNeedCheck,
+        )
 
     @Test
     fun `B-AGENT-007 runtime capabilities fail closed even when installation is pinned`() {
@@ -48,32 +64,57 @@ class AgentCatalogTest {
 
     @Test
     fun `B-AGENT-007 unknown recipe stays hidden with a reason and unknown sizes stay unknown`() {
-        val entry = agent(reason = AgentUnavailableReason.RecipeUnverified, availability = AgentAvailability.Hidden)
+        val entry =
+            agent(
+                reason = AgentUnavailableReason.RecipeUnverified,
+                availability = AgentAvailability.Hidden,
+            )
         assertFalse(entry.installableOn(AgentArchitecture.Arm64))
         assertNull(entry.artifactFor(AgentArchitecture.Arm64))
         assertNull(artifact().downloadBytes)
         assertNull(artifact().installedBytes)
         assertFailsWith<IllegalArgumentException> { agent() }
-        assertFailsWith<IllegalArgumentException> { agent(installRecipe = recipe(), reason = AgentUnavailableReason.RecipeUnverified) }
+        assertFailsWith<IllegalArgumentException> {
+            agent(installRecipe = recipe(), reason = AgentUnavailableReason.RecipeUnverified)
+        }
     }
 
     @Test
     fun `B-AGENT-007 artifact rejects unpinned, credential-bearing or escaping inputs`() {
-        fun exe(url: String, sha: String = "a".repeat(64)) = AgentArtifact(url, sha, AgentArtifactFormat.Executable)
+        fun exe(url: String, sha: String = "a".repeat(64)) =
+            AgentArtifact(url, sha, AgentArtifactFormat.Executable)
         assertFailsWith<IllegalArgumentException> { exe("http://example.test/agent") }
         assertFailsWith<IllegalArgumentException> { exe("https://user:secret@example.test/agent") }
         assertFailsWith<IllegalArgumentException> { exe("https://example.test/agent#frag") }
         assertFailsWith<IllegalArgumentException> { exe("https:///agent") }
         assertFailsWith<IllegalArgumentException> { exe("https://example.test/agent", "unknown") }
-        assertFailsWith<IllegalArgumentException> { exe("https://example.test/agent", "A".repeat(64)) }
-        for (member in listOf("../agent", "/agent", "a/../agent", "a\\agent", "a//agent", "a/./b", "a\u0000b")) {
-            assertFailsWith<IllegalArgumentException>(member) { artifact(member, AgentArtifactFormat.TarGz) }
+        assertFailsWith<IllegalArgumentException> {
+            exe("https://example.test/agent", "A".repeat(64))
+        }
+        for (member in
+            listOf(
+                "../agent",
+                "/agent",
+                "a/../agent",
+                "a\\agent",
+                "a//agent",
+                "a/./b",
+                "a\u0000b",
+            )) {
+            assertFailsWith<IllegalArgumentException>(member) {
+                artifact(member, AgentArtifactFormat.TarGz)
+            }
         }
         assertFailsWith<IllegalArgumentException> { artifact(format = AgentArtifactFormat.TarGz) }
         assertFailsWith<IllegalArgumentException> { artifact(member = "agent") }
         assertEquals("./agent", artifact("./agent", AgentArtifactFormat.TarGz).archiveMember)
         assertFailsWith<IllegalArgumentException> {
-            AgentArtifact("https://example.test/a", "a".repeat(64), AgentArtifactFormat.Executable, downloadBytes = 0)
+            AgentArtifact(
+                "https://example.test/a",
+                "a".repeat(64),
+                AgentArtifactFormat.Executable,
+                downloadBytes = 0,
+            )
         }
     }
 
@@ -91,10 +132,19 @@ class AgentCatalogTest {
         assertEquals(1, installRecipe.artifacts.size)
         assertEquals(listOf("--acp"), installRecipe.launchArgs)
         assertFailsWith<IllegalArgumentException> {
-            AgentInstallRecipe("1.0.0", "agent", mapOf(AgentArchitecture.Arm64 to artifact()), listOf("a\u0000b"))
+            AgentInstallRecipe(
+                "1.0.0",
+                "agent",
+                mapOf(AgentArchitecture.Arm64 to artifact()),
+                listOf("a\u0000b"),
+            )
         }
-        assertFailsWith<IllegalArgumentException> { AgentInstallRecipe("1.0.0", "Agent", mapOf(AgentArchitecture.Arm64 to artifact())) }
-        assertFailsWith<IllegalArgumentException> { AgentInstallRecipe(" ", "agent", mapOf(AgentArchitecture.Arm64 to artifact())) }
+        assertFailsWith<IllegalArgumentException> {
+            AgentInstallRecipe("1.0.0", "Agent", mapOf(AgentArchitecture.Arm64 to artifact()))
+        }
+        assertFailsWith<IllegalArgumentException> {
+            AgentInstallRecipe(" ", "agent", mapOf(AgentArchitecture.Arm64 to artifact()))
+        }
     }
 
     @Test
@@ -110,31 +160,69 @@ class AgentCatalogTest {
     fun `B-AGENT-008 seed recipes are pinned for both architectures without runtime claims`() {
         val catalog = AgentCatalog.builtIn
         assertEquals(
-            setOf("opencode2", "claude", "codex", "antigravity", "gemini", "qwen", "kilo", "cline", "goose", "omp-acp", "fx"),
+            setOf(
+                "opencode2",
+                "claude",
+                "codex",
+                "antigravity",
+                "gemini",
+                "qwen",
+                "kilo",
+                "cline",
+                "goose",
+                "omp-acp",
+                "fx",
+                "unharnessed",
+            ),
             catalog.agents.map { it.id.raw }.toSet(),
         )
         for (entry in catalog.agents) {
             for (arch in AgentArchitecture.entries) {
-                // A retired agent (Gemini CLI) keeps its pins for an installed copy but is never installable.
-                assertEquals(!entry.retired, entry.installableOn(arch), entry.id.raw)
-                assertTrue(Regex("^[a-f0-9]{64}$").matches(entry.artifactFor(arch)!!.sha256))
+                // A retired agent (Gemini CLI) keeps its pins for an installed copy but is never
+                // installable.
+                if (entry.recipe == null) {
+                    assertFalse(entry.installableOn(arch), entry.id.raw)
+                    assertNull(entry.artifactFor(arch), entry.id.raw)
+                    assertEquals(AgentUnavailableReason.RecipeUnverified, entry.unavailableReason)
+                } else {
+                    assertEquals(!entry.retired, entry.installableOn(arch), entry.id.raw)
+                    assertTrue(Regex("^[a-f0-9]{64}$").matches(entry.artifactFor(arch)!!.sha256))
+                }
             }
             assertEquals(AgentCapabilities.None, entry.capabilities)
-            assertEquals(AgentAvailability.Limited, entry.availability)
+            assertEquals(
+                if (entry.recipe == null) AgentAvailability.Hidden else AgentAvailability.Limited,
+                entry.availability,
+            )
             assertTrue(entry.resumeUnverified)
         }
         assertEquals(AgentSignInMethod.ApiKeyHost, catalog.byId(AgentId("qwen"))!!.signInMethod)
         assertEquals(listOf("--acp"), catalog.byId(AgentId("gemini"))!!.recipe!!.launchArgs)
-        assertEquals(AgentArtifactFormat.NpmTarGz, catalog.byId(AgentId("gemini"))!!.artifactFor(AgentArchitecture.Arm64)!!.format)
+        assertEquals(
+            AgentArtifactFormat.NpmTarGz,
+            catalog.byId(AgentId("gemini"))!!.artifactFor(AgentArchitecture.Arm64)!!.format,
+        )
         assertEquals("2.1.325", catalog.byId(AgentId("claude"))!!.recipe!!.version)
-        assertEquals(listOf("auth", "login", "--claudeai"), catalog.byId(AgentId("claude"))!!.recipe!!.signInArgs)
+        assertEquals(
+            listOf("auth", "login", "--claudeai"),
+            catalog.byId(AgentId("claude"))!!.recipe!!.signInArgs,
+        )
         assertEquals(AgentLimitation.NeedsPhoneCheck, catalog.byId(AgentId("claude"))!!.limitation)
         assertEquals(AgentLimitation.GooseProvider, catalog.byId(AgentId("goose"))!!.limitation)
         // Antigravity (agy) joins Gemini CLI in the catalog; it does not replace it.
-        assertEquals(listOf("acp", "--disable-telemetry"), catalog.byId(AgentId("antigravity"))!!.recipe!!.launchArgs)
-        assertEquals(listOf("acp", "--login"), catalog.byId(AgentId("antigravity"))!!.recipe!!.signInArgs)
+        assertEquals(
+            listOf("acp", "--disable-telemetry"),
+            catalog.byId(AgentId("antigravity"))!!.recipe!!.launchArgs,
+        )
+        assertEquals(
+            listOf("acp", "--login"),
+            catalog.byId(AgentId("antigravity"))!!.recipe!!.signInArgs,
+        )
         assertEquals("agy", catalog.byId(AgentId("antigravity"))!!.recipe!!.executable)
-        assertEquals(AgentLimitation.AntigravityGoogleSignIn, catalog.byId(AgentId("antigravity"))!!.limitation)
+        assertEquals(
+            AgentLimitation.AntigravityGoogleSignIn,
+            catalog.byId(AgentId("antigravity"))!!.limitation,
+        )
     }
 
     @Test
@@ -166,24 +254,46 @@ class AgentCatalogTest {
     fun `B-AGENT-008 shared helper pins are the verified Paseo, lock and Node`() {
         val pins = AgentPins.builtIn
         assertEquals("0.15.4", pins.paseo.version)
-        assertEquals("b61e82dd777fab352dcc19ad1989ea3d2ad978c69c1ebe87b4481cad83ae9226", pins.paseo.packageLockSha256)
-        assertEquals("/home/oc/.local/share/oc-paseo/0.15.4-b61e82dd777f", pins.paseo.installDirectory)
+        assertEquals(
+            "b61e82dd777fab352dcc19ad1989ea3d2ad978c69c1ebe87b4481cad83ae9226",
+            pins.paseo.packageLockSha256,
+        )
+        assertEquals(
+            "/home/oc/.local/share/oc-paseo/0.15.4-b61e82dd777f",
+            pins.paseo.installDirectory,
+        )
         assertEquals("v24.22.2", pins.node.version)
-        assertEquals("95c264150aceb7f3437a29fd6984924f5f8d1511ea3cbd6c508b83f6c555dae2", pins.node.sha256[AgentArchitecture.Arm64])
-        assertEquals("361718c444e49af2ca5a110c83ba6a8901143f23ab285ebbef0341f391f482a9", pins.node.sha256[AgentArchitecture.X64])
+        assertEquals(
+            "95c264150aceb7f3437a29fd6984924f5f8d1511ea3cbd6c508b83f6c555dae2",
+            pins.node.sha256[AgentArchitecture.Arm64],
+        )
+        assertEquals(
+            "361718c444e49af2ca5a110c83ba6a8901143f23ab285ebbef0341f391f482a9",
+            pins.node.sha256[AgentArchitecture.X64],
+        )
         assertTrue("2.1.325" in pins.claudeCodeTestedVersions)
     }
 
-    // Owner 2026-11-13: Gemini CLI is deprecated upstream and is no longer offered. A copy already on a phone keeps its
-    // row, its recipe (the removal script and the sign-in terminal need the executable) and its Remove.
+    // Owner 2026-11-13: Gemini CLI is deprecated upstream and is no longer offered. A copy already
+    // on a phone keeps its
+    // row, its recipe (the removal script and the sign-in terminal need the executable) and its
+    // Remove.
     @Test
     fun `B-AGENT-007 Gemini CLI is no longer offered for install, but a copy on the phone stays listed`() {
         val gemini = AgentCatalog.builtIn.byId(AgentId("gemini"))!!
         for (arch in AgentArchitecture.entries) assertFalse(gemini.installableOn(arch), arch.wire)
         assertEquals("gemini", gemini.recipe!!.executable)
         assertTrue(gemini.runsOnPhoneHost)
-        val offered = AgentCatalog.builtIn.agents.filter { a -> AgentArchitecture.entries.any { a.installableOn(it) } }
-        assertEquals(AgentCatalog.builtIn.agents.map { it.id.raw } - "gemini", offered.map { it.id.raw })
+        val offered =
+            AgentCatalog.builtIn.agents.filter { a ->
+                AgentArchitecture.entries.any { a.installableOn(it) }
+            }
+        val pending = AgentCatalog.builtIn.agents.filter { it.recipe == null }.map { it.id.raw }
+        assertEquals(listOf("unharnessed"), pending)
+        assertEquals(
+            AgentCatalog.builtIn.agents.map { it.id.raw } - "gemini" - pending.toSet(),
+            offered.map { it.id.raw },
+        )
         assertTrue(gemini.retired)
         assertFalse(gemini.listedOnPhone(installed = false))
         assertTrue(gemini.listedOnPhone(installed = true))
