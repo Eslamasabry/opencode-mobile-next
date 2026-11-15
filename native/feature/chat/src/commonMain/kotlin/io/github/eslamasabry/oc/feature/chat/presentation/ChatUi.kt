@@ -126,9 +126,19 @@ public sealed interface ChatPhase {
 
     public data object Live : ChatPhase
 
-    /** "Could not load": which step failed, Try again (plan 09 §6.5). */
-    public data class Failed(val failure: Failure) : ChatPhase
+    /**
+     * "Could not load": which step failed, Try again (plan 09 §6.5). [agent]: the conversation runs on this phone's
+     * agents, so the page names that agent (or "the phone's agents") instead of OpenCode; null for a server's own.
+     */
+    public data class Failed(val failure: Failure, val agent: ChatLoadAgent? = null) : ChatPhase
 }
+
+/**
+ * OMP-OPEN: the phone agent behind a conversation that could not be opened. [name] and [agentId] are null when the
+ * phone's agents no longer say which agent it was (then the page speaks of "the phone's agents"); [agentId] is also
+ * null where this phone has no set-up terminal for it, so the page offers no Set up.
+ */
+public data class ChatLoadAgent(val name: String?, val agentId: String?)
 
 /**
  * The one status line (plan 09 §6.5, 07 §10.1). [id] is stable per condition (tag

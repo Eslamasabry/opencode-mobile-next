@@ -162,7 +162,7 @@ import io.github.eslamasabry.oc.ui.words.res.chatFeelSelectText
 import io.github.eslamasabry.oc.ui.words.res.chatFeelUndoAction
 import io.github.eslamasabry.oc.ui.words.res.chatFeelUndoBody
 import io.github.eslamasabry.oc.ui.words.res.chatFeelUndoTitle
-import io.github.eslamasabry.oc.ui.words.res.chatLoadFailedBody
+import io.github.eslamasabry.oc.ui.words.res.agentsSetUpAction
 import io.github.eslamasabry.oc.ui.words.res.chatLoadFailedTitle
 import io.github.eslamasabry.oc.ui.words.res.chatLoadingConversation
 import io.github.eslamasabry.oc.ui.words.res.chatReplyFailedBusy
@@ -1044,10 +1044,19 @@ public fun ChatScreen(
                         is ChatPhase.Failed ->
                             ChatLoadError(
                                 title = stringResource(Res.string.chatLoadFailedTitle),
-                                body = stringResource(Res.string.chatLoadFailedBody),
+                                body = chatLoadBody(phase),
                                 failure = phase.failure,
                                 retry = KitAction(stringResource(Res.string.commonRetry), actions::retryLoad),
                                 onReport = actions::reportProblem,
+                                setUp =
+                                    phase.agent?.let { agent ->
+                                        val id = agent.agentId ?: return@let null
+                                        val name = agent.name ?: return@let null
+                                        KitAction(
+                                            stringResource(Res.string.agentsSetUpAction, name),
+                                            onClick = { actions.setUpAgent(id) },
+                                        )
+                                    },
                             )
                         ChatPhase.Live ->
                             Box(Modifier.fillMaxSize().kitFrostSource(frost)) {

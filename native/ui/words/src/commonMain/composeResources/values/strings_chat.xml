@@ -590,6 +590,10 @@
     <string name="chatStartTip">Type / for commands · long-press a message for its actions</string>
     <string name="chatLoadingConversation">Loading the conversation</string>
     <string name="chatLoadFailedBody">Nothing is lost. Try again when OpenCode answers.</string>
+    <string name="chatLoadFailedAgentBody">Nothing is lost. Try again when %1$s answers.</string>
+    <string name="chatLoadFailedAgentsBody">Nothing is lost. Try again when the phone's agents answer.</string>
+    <string name="chatLoadMissingAgentBody">%1$s doesn't have this conversation: it may have stopped before it started. Try again, or set %1$s up and start a new conversation.</string>
+    <string name="chatLoadMissingAgentsBody">The phone's agents don't have this conversation: its agent may have stopped before it started. Try again, or start a new conversation.</string>
     <string name="chatSendFailed">Your message wasn't sent</string>
     <string name="chatSendFailedKept">It's back in the message box.</string>
     <string name="chatStartSuggestionsLabel">Ways to start</string>
