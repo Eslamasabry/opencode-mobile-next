@@ -667,6 +667,8 @@ agentsOwnAgentName	8a2912497a
 agentsOwnAgentNoAnswer	3c904a3703
 agentsOwnAgentNotAcp	af5785e061
 agentsOwnAgentNotFound	af49a2ed57
+agentsOwnAgentReadyLater	25fd6820f4
+agentsOwnAgentReadyNow	b37e2355b4
 agentsOwnAgentRemove	a8c5d1f7cd
 agentsOwnAgentRowBody	4d9ff39885
 agentsOwnAgentSave	9fec1eafa9

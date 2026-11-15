@@ -368,7 +368,23 @@ public class ChatPresenter(
         ) line
         else line.copy(canRestartAgent = true, startingAgent = l.startingAgent, agentFailed = l.agentFailed)
 
+    /**
+     * The page's state for these inputs. A new [ChatUi.revision] only when something in it changed (c2-performance,
+     * 2026-11-15): every input that ticks (the list leaving or reaching the live edge, a retry fact, a server wait)
+     * re-ran this, and a revision bumped every time made each run a new state, so the whole conversation page was
+     * composed again (about 170 scopes) for nothing on screen. An equal result keeps the last state, and StateFlow
+     * then hands the screen nothing.
+     */
     internal fun present(i: ChatInputs, l: ChatLocal, hits: ImmutableList<FindHit>): ChatUi {
+        val built = build(i, l, hits)
+        val last = lastUi
+        if (last != null && last == built.copy(revision = last.revision)) return last
+        return built.copy(revision = ++revision).also { lastUi = it }
+    }
+
+    private var lastUi: ChatUi? = null
+
+    private fun build(i: ChatInputs, l: ChatLocal, hits: ImmutableList<FindHit>): ChatUi {
         lastHits = hits
         // N-47: when the server goes away after the conversation was read, keep the last transcript and title on
         // screen with one offline line (Try again retries the load) instead of replacing them with an error.
@@ -407,7 +423,7 @@ public class ChatPresenter(
                 }
         val pending = withSetUp(i.pending, firstMessage = t.rows.isEmpty())
         return ChatUi(
-            revision = ++revision,
+            revision = revision,
             ref = world.ref,
             title = i.title ?: lastTitle,
             status =

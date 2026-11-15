@@ -53,7 +53,9 @@ public class AgentsPresenter(
     private var connectAgain = false
 
     /** The one automatic retry of a start that did not start is spent; a start that connects earns it back. */
-    private var startRetried = false
+    /** Automatic retries of a start that did not start, spent in [START_RETRY_MS] order; a start that connects resets it. */
+    private var startRetries = 0
+    private var startRetryJob: Job? = null
     private var followJob: Job? = null
 
     /** The agent whose running install the page is following, to notice an install that ends with no result. */
@@ -652,7 +654,7 @@ public class AgentsPresenter(
      */
     override fun refreshPhone() {
         // The page calls this each time it is shown (its resume effect): the moment to try a failed start once more.
-        retryFailedStartOnce()
+        retryFailedStart()
         if (!local.value.busy) local.update { it.copy(issue = null) }
         if (phoneRead?.isActive == true) {
             readPhoneAgain = true
@@ -796,18 +798,19 @@ public class AgentsPresenter(
     }
 
     /**
-     * The page is shown again after its own start of the helper did not start: it starts it once more by itself. The
+     * The page's own start of the helper did not start: it starts it again by itself, after 10, 30 and 90 seconds
+     * ([scheduleStartRetry]) or at once when the page is shown again, three times in all. The
      * phone's runtime refuses a helper start while another change of that runtime is under way, and that refusal passes
      * on its own: the start's admission ticket is taken before the start and checked again when the helper is launched
      * and tracked (BuiltinLinux captureAgentHostStart, withAgentHostStart, trackPrivateAgentService), and the app going
      * to the background and back, the phone server's own start (setServerWanted) or an idle resume still running
      * (tokenless admission needs the helper not idle-stopped; PhoneAgentHost refuses a second start while one runs)
-     * makes it stale. Before, nothing but Try again started it again. Once only: a start that fails again keeps the
-     * warning and its Try again, and a helper that needs an update or a phone without its Linux is not retried.
+     * makes it stale. Before, nothing but Try again started it again. After the third failure the warning and its
+     * Try again stay; a helper that needs an update or a phone without its Linux is not retried.
      */
-    private fun retryFailedStartOnce() {
+    private fun retryFailedStart() {
         val shown = local.value
-        if (startRetried || !shown.helperConnectFailed || connectJob?.isActive == true) return
+        if (startRetries >= START_RETRY_MS.size || !shown.helperConnectFailed || connectJob?.isActive == true) return
         val failure = shown.helperConnectFailure as? Failure.Runtime ?: return
         if (failure.problem == RuntimeProblem.NotInstalled || failure.problem == RuntimeProblem.HelperUpdateRequired)
             return
@@ -815,8 +818,20 @@ public class AgentsPresenter(
         // Connected another way meanwhile (New conversation starts it too): nothing to retry.
         if (computers.computers.value.any { it.id == phoneState.conversations && it.connected }) return
         if (phoneHost == null || !connectable(phoneState)) return
-        startRetried = true
+        startRetryJob?.cancel()
+        startRetries++
         connectHelper()
+    }
+
+    /** After a failed start: the next automatic try waits 10, 30, then 90 seconds; then only Try again. */
+    private fun scheduleStartRetry() {
+        if (startRetries >= START_RETRY_MS.size || startRetryJob?.isActive == true) return
+        val wait = START_RETRY_MS[startRetries]
+        startRetryJob =
+            scope.launch {
+                delay(wait)
+                retryFailedStart()
+            }
     }
 
     private fun connectable(phoneState: PhoneAgentsState): Boolean =
@@ -848,7 +863,10 @@ public class AgentsPresenter(
                         delay(AUTO_RETRY_MS)
                         result = host.connect()
                     }
-                    if (result is Outcome.Ok) startRetried = false
+                    if (result is Outcome.Ok) {
+                        startRetries = 0
+                        startRetryJob?.cancel()
+                    }
                     local.update {
                         it.copy(
                             helperConnecting = false,
@@ -858,6 +876,7 @@ public class AgentsPresenter(
                         )
                     }
                     phone.refresh()
+                    if (result is Outcome.Failed && !connectAgain) scheduleStartRetry()
                 } while (connectAgain && connectable(phone.state.value))
             }
     }
@@ -953,6 +972,9 @@ public class AgentsPresenter(
         /** How long a running install may show nothing new before its tile says it is still working. */
         const val INSTALL_QUIET_MS = 30_000L
         const val AUTO_RETRIES = 3
+
+        /** The waits before each automatic retry of a start that did not start (the other builder's request). */
+        val START_RETRY_MS: List<Long> = listOf(10_000L, 30_000L, 90_000L)
         const val AUTO_RETRY_MS = 5_000L
     }
 }

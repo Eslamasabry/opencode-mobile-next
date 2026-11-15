@@ -590,4 +590,6 @@
     <string name="agentsOwnAgentBadEnvValue">Une valeur est trop longue.</string>
     <string name="agentsOwnAgentTooMany">Ce téléphone conserve jusqu’à 8 agents personnels. Retirez-en un d’abord.</string>
     <string name="agentsOwnAgentFailed">Cela n’a pas pu être fait sur ce téléphone. Réessayez.</string>
+    <string name="agentsOwnAgentReadyNow">Prêt à l’emploi.</string>
+    <string name="agentsOwnAgentReadyLater">Sera prêt quand la tâche en cours sera terminée.</string>
 </resources>

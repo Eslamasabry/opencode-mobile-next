@@ -574,4 +574,6 @@
     <string name="agentsOwnAgentBadEnvValue">Ada nilai yang terlalu panjang.</string>
     <string name="agentsOwnAgentTooMany">Ponsel ini menyimpan hingga 8 agen sendiri. Hapus satu dulu.</string>
     <string name="agentsOwnAgentFailed">Itu tidak bisa dilakukan di ponsel ini. Coba lagi.</string>
+    <string name="agentsOwnAgentReadyNow">Siap digunakan.</string>
+    <string name="agentsOwnAgentReadyLater">Akan siap saat tugas yang sedang berjalan selesai.</string>
 </resources>

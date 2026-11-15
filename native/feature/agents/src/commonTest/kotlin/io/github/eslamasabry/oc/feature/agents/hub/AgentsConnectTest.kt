@@ -348,7 +348,7 @@ class AgentsConnectTest {
         val state = presenter.state.value
         assertTrue(state.helperConnectFailed, "the page says the helper did not start")
         assertTrue(phoneHelperDown(state))
-        assertEquals(AgentTileState.Unavailable, agentTile(claudeReady, null, helperDown = phoneHelperDown(state)).state)
+        assertEquals(AgentTileState.HelperDown, agentTile(claudeReady, null, helperDown = phoneHelperDown(state)).state)
         assertFalse(phoneChatOffered(state), "a saved but unconnected helper offers no conversation")
 
         // The helper connects another way (New conversation starts it too): the failure line goes, the tiles are Ready.
@@ -375,21 +375,31 @@ class AgentsConnectTest {
     }
 
     @Test
-    fun `HELPER-START a start that fails twice keeps the warning and is never retried in a loop`() = runTest {
-        val failure = Failure.Runtime(RuntimeProblem.ServerStartUnavailable)
-        val host = Host(Outcome.Failed(failure))
-        val presenter = presenter(this, Phone(listOf(claudeReady)), host)
-        presenter.refreshPhone()
-        assertEquals(2, host.calls)
-        assertTrue(presenter.state.value.helperConnectFailed, "the second failure still shows the warning")
-        assertEquals(failure, presenter.state.value.helperConnectFailure)
-        presenter.refreshPhone()
-        presenter.refreshPhone()
-        assertEquals(2, host.calls, "one automatic retry only")
-        // Try again stays the way forward.
-        presenter.connectPhoneHelper()
-        assertEquals(3, host.calls)
-    }
+    fun `HELPER-START a start that keeps failing is retried after 10, 30 and 90 seconds, then waits for Try again`() =
+        runTest {
+            val failure = Failure.Runtime(RuntimeProblem.ServerStartUnavailable)
+            val host = Host(Outcome.Failed(failure))
+            val presenter = presenter(this, Phone(listOf(claudeReady)), host)
+            assertEquals(1, host.calls)
+            advanceTimeBy(9_000)
+            assertEquals(1, host.calls, "not before 10 s")
+            advanceTimeBy(2_000)
+            assertEquals(2, host.calls, "the first retry after 10 s")
+            advanceTimeBy(29_000)
+            assertEquals(2, host.calls, "the second waits 30 s")
+            advanceTimeBy(2_000)
+            assertEquals(3, host.calls)
+            advanceTimeBy(91_000)
+            assertEquals(4, host.calls, "the third after 90 s")
+            advanceTimeBy(600_000)
+            presenter.refreshPhone()
+            assertEquals(4, host.calls, "never retried in a loop")
+            assertTrue(presenter.state.value.helperConnectFailed, "the last failure still shows the warning")
+            assertEquals(failure, presenter.state.value.helperConnectFailure)
+            // Try again stays the way forward.
+            presenter.connectPhoneHelper()
+            assertEquals(5, host.calls)
+        }
 
     @Test
     fun `HELPER-START the page opening tries once, a resume right after it is not a retry of a running start`() = runTest {

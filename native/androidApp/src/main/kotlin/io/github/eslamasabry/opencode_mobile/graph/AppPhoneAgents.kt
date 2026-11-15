@@ -247,11 +247,43 @@ class AppPhoneAgents(
 
     /** The state with the updater's note; a signed-out agent is the more important thing to say once the update is done. */
     private fun withUpdateNote(state: PhoneAgentsState): PhoneAgentsState {
-        val base = state.copy(updateNote = updateNote.first, updateAgentName = updateNote.second)
+        val base = withOwnAgents(state).copy(updateNote = updateNote.first, updateAgentName = updateNote.second)
         val needs = base.agents.firstOrNull { it.status == PhoneAgentStatus.SignInNeeded && !it.signInCheckFailed }
         return if (needs != null && (base.updateNote == null || base.updateNote == PhoneAgentUpdateNote.Updated))
             base.copy(updateNote = PhoneAgentUpdateNote.NeedsSignIn, updateAgentName = needs.name)
         else base
+    }
+
+    /**
+     * Issue 147: the person's own agents join the rows after the catalog's, so New conversation and every other reader
+     * offers them. Their state is set up at first use, already seen set up (they have no sign-in the app can read; their
+     * first answer tells), or Stopped while the helper is down as for every agent; never installable or removable here
+     * (the Agents page's own-agent sheet removes them).
+     */
+    private fun withOwnAgents(state: PhoneAgentsState): PhoneAgentsState {
+        val owner = state.owner ?: return state
+        if (!state.available || state.needsRestart) return state
+        val own =
+            try {
+                ownAgentStore(stores, owner, redactor::registerSecret).read(owner)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Exception) {
+                emptyList()
+            }
+        if (own.isEmpty()) return state
+        val helperDown = state.agents.any { it.status == PhoneAgentStatus.Stopped }
+        val rows =
+            own.filter { agent -> state.agents.none { it.id == agent.id.raw } }.map { agent ->
+                PhoneAgentRow(
+                    id = agent.id.raw,
+                    name = agent.name,
+                    status = if (helperDown) PhoneAgentStatus.Stopped else PhoneAgentStatus.SetUpAtFirstUse,
+                    supportedInstallation = false,
+                    needsSetUp = false,
+                )
+            }
+        return state.copy(agents = (state.agents + rows).toImmutableList())
     }
 
     private fun updateReadKey(owner: ProfileId) = "oc.agentUpdateRead.${owner.raw}"

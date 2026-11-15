@@ -40,7 +40,23 @@ public interface PhoneOwnAgents {
     public suspend fun check(id: String): Outcome<OwnAgentCheckResult>
 
     public suspend fun remove(id: String): Outcome<Unit>
+
+    /** When the agent helper takes the last change (it reads its agents when it starts); [OwnAgentPickup.None] before any. */
+    public val pickup: StateFlow<OwnAgentPickup> get() = NoPickup
 }
+
+/** When the phone's agent helper takes a saved or removed own agent (issue 147). */
+public enum class OwnAgentPickup {
+    None,
+
+    /** Taken now (the helper was idle and started again with it, or it was not running and starts with it). */
+    Ready,
+
+    /** A task runs: the helper starts again with it as soon as the agents are idle. */
+    WhenIdle,
+}
+
+private val NoPickup: StateFlow<OwnAgentPickup> = MutableStateFlow(OwnAgentPickup.None)
 
 /** An own agent as the page shows it (names of the environment values, never the values). */
 public data class OwnAgentView(
@@ -79,6 +95,8 @@ public data class OwnAgentsUi(
     val installed: Boolean? = null,
     val checking: Boolean = false,
     val installing: Boolean = false,
+    /** After a save on this sheet: when the helper takes it ("Ready to use" / "Will be ready when the running task ends"). */
+    val pickup: OwnAgentPickup = OwnAgentPickup.None,
 )
 
 public interface OwnAgentActions {
@@ -108,17 +126,25 @@ public class OwnAgentsPresenter(
 ) : OwnAgentActions {
     private val local = MutableStateFlow(OwnAgentsUi(available = port != null))
 
+    /** A save on the open sheet: only then does the sheet say when the helper takes it. */
+    private val savedOnSheet = MutableStateFlow(false)
+
     public val state: StateFlow<OwnAgentsUi> =
-        combine(local, port?.state ?: flowOf(persistentListOf())) { own, agents -> own.copy(agents = agents) }
+        combine(local, port?.state ?: flowOf(persistentListOf()), port?.pickup ?: flowOf(OwnAgentPickup.None), savedOnSheet) {
+            own, agents, pickup, savedHere ->
+            own.copy(agents = agents, pickup = if (savedHere && own.sheetOpen) pickup else OwnAgentPickup.None)
+        }
             .stateIn(scope, SharingStarted.Eagerly, local.value.copy(agents = port?.state?.value ?: persistentListOf()))
 
     override fun addOwnAgent() {
         if (port == null || local.value.working) return
+        savedOnSheet.value = false
         local.update { OwnAgentsUi(available = true, sheetOpen = true) }
     }
 
     override fun editOwnAgent(id: String) {
         if (port == null || local.value.working) return
+        savedOnSheet.value = false
         local.update { OwnAgentsUi(available = true, sheetOpen = true, editingId = id) }
     }
 
@@ -158,6 +184,7 @@ public class OwnAgentsPresenter(
                 is Outcome.Ok -> when (val answer = saved.value) {
                     is OwnAgentSave.Refused -> local.update { it.copy(problem = answer.problem) }
                     is OwnAgentSave.Saved -> {
+                        savedOnSheet.value = true
                         local.update { it.copy(editingId = answer.id, checked = null, installed = null) }
                         refreshPhone()
                     }

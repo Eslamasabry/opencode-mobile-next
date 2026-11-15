@@ -11,7 +11,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.engine.agents.providers.OwnProviderProblem
 import io.github.eslamasabry.oc.feature.agents.hub.AgentsUi
@@ -70,7 +69,6 @@ import io.github.eslamasabry.oc.ui.words.res.kitCopyDetails
 import io.github.eslamasabry.oc.ui.words.res.kitDetails
 import io.github.eslamasabry.oc.ui.words.res.serversCancel
 import io.github.eslamasabry.oc.ui.words.res.serversWorking
-import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 
 /**
@@ -101,26 +99,25 @@ internal fun AgentsHelpSheet(own: OwnProviderUi, actions: OwnProviderActions) {
         height = KitSheetHeight.Half,
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
-            for ((title, body) in HELP) {
-                Column(verticalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
-                    KitText(stringResource(title), role = TypeRole.RowTitle)
-                    KitText(stringResource(body), tone = TextTone.Secondary)
-                }
-            }
+            HelpPart(stringResource(Res.string.agentsHelpWhatTitle), stringResource(Res.string.agentsHelpWhatBody))
+            HelpPart(stringResource(Res.string.agentsHelpProviderTitle), stringResource(Res.string.agentsHelpProviderBody))
+            HelpPart(stringResource(Res.string.agentsHelpInstallTitle), stringResource(Res.string.agentsHelpInstallBody))
+            HelpPart(stringResource(Res.string.agentsHelpFilesTitle), stringResource(Res.string.agentsHelpFilesBody))
+            HelpPart(stringResource(Res.string.agentsHelpKeysTitle), stringResource(Res.string.agentsHelpKeysBody))
+            HelpPart(stringResource(Res.string.agentsHelpNeedsTitle), stringResource(Res.string.agentsHelpNeedsBody))
+            HelpPart(stringResource(Res.string.agentsHelpNotTitle), stringResource(Res.string.agentsHelpNotBody))
         }
     }
 }
 
-private val HELP: List<Pair<StringResource, StringResource>> =
-    listOf(
-        Res.string.agentsHelpWhatTitle to Res.string.agentsHelpWhatBody,
-        Res.string.agentsHelpProviderTitle to Res.string.agentsHelpProviderBody,
-        Res.string.agentsHelpInstallTitle to Res.string.agentsHelpInstallBody,
-        Res.string.agentsHelpFilesTitle to Res.string.agentsHelpFilesBody,
-        Res.string.agentsHelpKeysTitle to Res.string.agentsHelpKeysBody,
-        Res.string.agentsHelpNeedsTitle to Res.string.agentsHelpNeedsBody,
-        Res.string.agentsHelpNotTitle to Res.string.agentsHelpNotBody,
-    )
+/** One question of the help sheet: its title and one or two sentences. */
+@Composable
+private fun HelpPart(title: String, body: String) {
+    Column(verticalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
+        KitText(title, role = TypeRole.RowTitle)
+        KitText(body, tone = TextTone.Secondary)
+    }
+}
 
 /**
  * "Your own provider for {agent}": endpoint, key and model. The key field is never prefilled: a saved key shows
@@ -187,7 +184,6 @@ internal fun OwnProviderSheet(state: AgentsUi, own: OwnProviderUi, actions: OwnP
                 kind = KitFieldKind.Url,
                 helper = stringResource(Res.string.agentsOwnProviderEndpointHint),
                 error = if (problem == OwnProviderProblem.Endpoint) stringResource(Res.string.agentsOwnProviderBadEndpoint) else null,
-                imeAction = ImeAction.Next,
                 enabled = enabled,
             )
             KitField(
@@ -196,7 +192,6 @@ internal fun OwnProviderSheet(state: AgentsUi, own: OwnProviderUi, actions: OwnP
                 kind = KitFieldKind.Secret,
                 helper = stringResource(Res.string.agentsOwnProviderKeyHint),
                 error = if (problem == OwnProviderProblem.Key) stringResource(Res.string.agentsOwnProviderBadKey) else null,
-                imeAction = ImeAction.Next,
                 secretPresence = if (replacing) SecretFieldPresence.Editing else SecretFieldPresence.Saved,
                 onReplaceSecret = { replacing = true },
                 enabled = enabled,
@@ -207,7 +202,6 @@ internal fun OwnProviderSheet(state: AgentsUi, own: OwnProviderUi, actions: OwnP
                 kind = KitFieldKind.Mono,
                 helper = stringResource(Res.string.agentsOwnProviderModelHint),
                 error = if (problem == OwnProviderProblem.Model) stringResource(Res.string.agentsOwnProviderBadModel) else null,
-                imeAction = ImeAction.Done,
                 onSubmit = save,
                 enabled = enabled,
             )
