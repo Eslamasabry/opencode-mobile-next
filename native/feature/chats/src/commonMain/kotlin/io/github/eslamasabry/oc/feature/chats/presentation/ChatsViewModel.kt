@@ -73,6 +73,7 @@ public class ChatsViewModel(
 
     private val filters = MutableStateFlow(ChatsFilters())
     private val sheet = MutableStateFlow<ChatsHomeSheet?>(null)
+    private val phoneStorage = MutableStateFlow<PhoneStorageAccess?>(null)
     private val watchedSelection = MutableStateFlow<String?>(null)
     private val answers =
         MutableStateFlow<Pair<Set<String>, io.github.eslamasabry.oc.core.common.Failure?>>(
@@ -886,8 +887,6 @@ public class ChatsViewModel(
         sheet.value = ChatsHomeSheet.Projects
         readPhoneStorage()
     }
-
-    private val phoneStorage = MutableStateFlow<PhoneStorageAccess?>(null)
 
     private fun readPhoneStorage() {
         viewModelScope.launch { phoneStorage.value = home.phoneStorage() }
