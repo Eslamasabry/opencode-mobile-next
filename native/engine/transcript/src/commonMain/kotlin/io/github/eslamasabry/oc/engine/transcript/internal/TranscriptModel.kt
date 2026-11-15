@@ -122,7 +122,15 @@ internal class TranscriptModel(
 
     // Derive caches
     private var turnCache = HashMap<String, TurnEntry>()
-    private var prefixEntries: List<TurnEntry> = emptyList()
+    private val prefixEntries = ArrayList<TurnEntry>()
+
+    // Issue 147: the last grouping into turns, the turn each message is in, and the first turn a change since the last
+    // derive can move. Messages only ever join at the end (a history page reorders, and regroups everything), so a
+    // derive groups again only from the turn before the first changed one.
+    private val turns = ArrayList<Pair<String, List<MsgEntry>>>()
+    private val turnOf = HashMap<String, Int>()
+    private val joined = ArrayList<MsgEntry>()
+    private var changedFrom = REGROUP_ALL
     private var prefixList: PersistentList<TranscriptRow> = persistentListOf()
     private var prefixPositions: PersistentMap<String, Int> = persistentMapOf()
     private var prefixSearch: PersistentList<SearchText> = persistentListOf()
@@ -228,6 +236,20 @@ internal class TranscriptModel(
         messages.forEach { (id, m) -> ordered.putIfAbsent(id, m) }
         messages.clear()
         messages.putAll(ordered)
+        // A page puts messages before the ones already loaded: group every turn again.
+        changedFrom = REGROUP_ALL
+    }
+
+    /** [m] changed: its turn, and the turn before it (its prompt may have stopped being one), group again. */
+    private fun touched(m: MsgEntry) {
+        val at = turnOf[m.info.id] ?: (turns.size - 1)
+        if (at < changedFrom) changedFrom = at.coerceAtLeast(0)
+    }
+
+    /** A new message: it joins after every message already grouped, so only the last turn can take it. */
+    private fun joinedAtEnd(m: MsgEntry) {
+        joined += m
+        if (turns.size - 1 < changedFrom) changedFrom = (turns.size - 1).coerceAtLeast(0)
     }
 
     private fun setRun(next: RunFacts): Boolean {
@@ -242,10 +264,11 @@ internal class TranscriptModel(
         val v = stamp()
         val entry = messages[info.id]
         if (entry == null) {
-            messages[info.id] = MsgEntry(info, v)
+            messages[info.id] = MsgEntry(info, v).also(::joinedAtEnd)
         } else {
             entry.info = info
             entry.version = v
+            touched(entry)
         }
         if (info.completedMs != null) messages[info.id]?.let(::endParts)
         deferredParts.remove(info.id)?.forEach { upsertPart(it) }
@@ -256,7 +279,7 @@ internal class TranscriptModel(
         val v = stamp()
         val msg =
             messages[part.messageId]
-                ?: if (create != null) MsgEntry(create, v).also { messages[create.id] = it }
+                ?: if (create != null) MsgEntry(create, v).also { messages[create.id] = it; joinedAtEnd(it) }
                 else null
         if (msg == null) {
             deferredParts.getOrPut(part.messageId) { mutableListOf() } += part
@@ -264,6 +287,7 @@ internal class TranscriptModel(
             return false
         }
         msg.version = v
+        touched(msg)
         val existing = msg.parts[part.id]
         val entry = existing ?: PartEntry(part, v).also { msg.parts[part.id] = it }
         entry.part = part
@@ -307,6 +331,7 @@ internal class TranscriptModel(
             return false
         }
         msg.version = v
+        touched(msg)
         entry.version = v
         appendDelta(entry, e.field, e.delta)
         // Streamed raw tool input is never parsed and draws nothing in P3 (§3.3).
@@ -350,6 +375,7 @@ internal class TranscriptModel(
             if (m.parts.values.any { !it.part.ended }) {
                 endParts(m)
                 m.version = stamp()
+                touched(m)
             }
         }
     }
@@ -358,37 +384,42 @@ internal class TranscriptModel(
 
     fun derive(revision: Long): TranscriptState {
         counters.derives++
-        val turns = groupTurns()
+        val from = regroup()
         val newestIndex = turns.lastIndex
-        // Settled prefix: every turn but the newest. Reuse the cached rows of unchanged turns, and
-        // the previous
-        // persistent prefix when it is a prefix of this one (the common case while a reply
-        // streams).
-        val entries = ArrayList<TurnEntry>(turns.size)
-        for (i in 0 until newestIndex) {
+        val settledCount = newestIndex.coerceAtLeast(0)
+        // Settled prefix: every turn but the newest. The turns before [from] did not change and keep their entries (the
+        // same objects); from there, reuse the cached rows of unchanged turns, and the previous persistent prefix when
+        // it is a prefix of this one (the common case while a reply streams).
+        val start = minOf(from, settledCount, prefixEntries.size)
+        val fresh = ArrayList<TurnEntry>(settledCount - start)
+        for (i in start until settledCount) {
             val (turnId, members) = turns[i]
             counters.historyVisits += 1 + members.size
             val cached = turnCache[turnId]
-            entries +=
+            fresh +=
                 if (cached != null && cached.matches(members)) {
                     cached
                 } else {
                     buildTurn(turnId, members, finished = true).also { turnCache[turnId] = it }
                 }
         }
-        var common = 0
+        var common = start
         while (
             common < prefixEntries.size &&
-                common < entries.size &&
-                prefixEntries[common] === entries[common]
+                common < settledCount &&
+                prefixEntries[common] === fresh[common - start]
         ) {
             common++
             counters.historyVisits++
         }
+        val oldSize = prefixEntries.size
+        prefixEntries.subList(start, prefixEntries.size).clear()
+        prefixEntries.addAll(fresh)
+        val entries: List<TurnEntry> = prefixEntries
         var list: PersistentList<TranscriptRow>
         var positions: PersistentMap<String, Int>
         var search: PersistentList<SearchText>
-        if (common == prefixEntries.size) {
+        if (common == oldSize) {
             list = prefixList
             positions = prefixPositions
             search = prefixSearch
@@ -404,7 +435,6 @@ internal class TranscriptModel(
             positions = p
             if (entries[i].search.isNotEmpty()) search = search.addAll(entries[i].search)
         }
-        prefixEntries = entries
         prefixList = list
         prefixPositions = positions
         prefixSearch = search
@@ -480,13 +510,33 @@ internal class TranscriptModel(
 
     /**
      * Turns by prompt (never by `role != assistant`, §3.6): a user message that is not a notice
-     * starts a turn.
+     * starts a turn. Issue 147: only from the turn before the first one a change since the last derive touched (a
+     * changed first message may have stopped being a prompt and joined it); the turns before it keep their grouping.
+     * Returns the index of the first turn grouped again ([turns]' size when nothing changed).
      */
-    private fun groupTurns(): List<Pair<String, List<MsgEntry>>> {
-        val out = ArrayList<Pair<String, List<MsgEntry>>>()
+    private fun regroup(): Int {
+        val from: Int
+        val again: List<MsgEntry>
+        if (changedFrom == REGROUP_ALL || turns.isEmpty()) {
+            from = 0
+            again = messages.values.toList()
+            turns.clear()
+            turnOf.clear()
+        } else if (changedFrom == NOTHING_CHANGED) {
+            return turns.size
+        } else {
+            from = (changedFrom - 1).coerceAtLeast(0)
+            val tail = ArrayList<MsgEntry>()
+            for (i in from until turns.size) tail.addAll(turns[i].second)
+            tail.addAll(joined)
+            again = tail
+            turns.subList(from, turns.size).clear()
+        }
+        joined.clear()
+        changedFrom = NOTHING_CHANGED
         var current: ArrayList<MsgEntry>? = null
         var currentId = "head"
-        for (m in messages.values) {
+        for (m in again) {
             counters.historyVisits++
             // A picture or file sent without words is a prompt too (its own turn, shown with its thumbnail).
             val isPrompt =
@@ -496,14 +546,15 @@ internal class TranscriptModel(
                             (it.part.type == PartType.File && !it.part.synthetic)
                     }
             if (isPrompt || current == null) {
-                current?.let { out += currentId to it }
+                current?.let { turns += currentId to it }
                 current = ArrayList()
                 currentId = if (isPrompt) m.info.id else "head"
             }
             current.add(m)
+            turnOf[m.info.id] = turns.size
         }
-        current?.let { out += currentId to it }
-        return out
+        current?.let { turns += currentId to it }
+        return from
     }
 
     private fun buildTurn(turnId: String, members: List<MsgEntry>, finished: Boolean): TurnEntry {
@@ -799,6 +850,8 @@ internal class TranscriptModel(
     private fun deltaKey(messageId: String, partId: String) = "$messageId\u0000$partId"
 
     private companion object {
+        const val REGROUP_ALL = -1
+        const val NOTHING_CHANGED = Int.MAX_VALUE
         const val MAX_DEFERRED_KEYS = 256
         const val MAX_DEFERRED_CHARS = 1 shl 20
     }
