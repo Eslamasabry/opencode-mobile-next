@@ -129,6 +129,11 @@ import io.github.eslamasabry.oc.ui.words.res.chatUiOpenParentSession
 import io.github.eslamasabry.oc.ui.words.res.chatOldAgentReadOnly
 import io.github.eslamasabry.oc.ui.words.res.chatOldAgentReadOnlyUnnamed
 import io.github.eslamasabry.oc.ui.words.res.chatContinueInNewConversation
+import io.github.eslamasabry.oc.ui.words.res.chatContinueBriefIntro
+import io.github.eslamasabry.oc.ui.words.res.chatContinueBriefIntroUntitled
+import io.github.eslamasabry.oc.ui.words.res.chatContinueBriefAsked
+import io.github.eslamasabry.oc.ui.words.res.chatContinueBriefChanged
+import io.github.eslamasabry.oc.ui.words.res.chatContinueBriefStopped
 import io.github.eslamasabry.oc.ui.words.res.composerDraftCleared
 import io.github.eslamasabry.oc.ui.words.res.composerFullAttachmentsLocal
 import io.github.eslamasabry.oc.ui.words.res.composerFullDraftFull
@@ -259,9 +264,18 @@ public fun BasicComposer(
                         io.github.eslamasabry.oc.ui.words.res.Res.string.chatOldAgentReadOnlyUnnamed
                     )
             )
+            // The handoff's words; the title is filled in where the brief is built.
+            val words =
+                io.github.eslamasabry.oc.feature.chat.presentation.ContinueBrief.Words(
+                    intro = stringResource(io.github.eslamasabry.oc.ui.words.res.Res.string.chatContinueBriefIntro, "%1\$s"),
+                    introUntitled = stringResource(io.github.eslamasabry.oc.ui.words.res.Res.string.chatContinueBriefIntroUntitled),
+                    asked = stringResource(io.github.eslamasabry.oc.ui.words.res.Res.string.chatContinueBriefAsked),
+                    changed = stringResource(io.github.eslamasabry.oc.ui.words.res.Res.string.chatContinueBriefChanged),
+                    stopped = stringResource(io.github.eslamasabry.oc.ui.words.res.Res.string.chatContinueBriefStopped),
+                )
             KitButton(
                 stringResource(io.github.eslamasabry.oc.ui.words.res.Res.string.chatContinueInNewConversation),
-                actions::continueInNewConversation,
+                { actions.continueInNewConversation(words) },
                 role = KitButtonRole.Primary,
             )
         }
