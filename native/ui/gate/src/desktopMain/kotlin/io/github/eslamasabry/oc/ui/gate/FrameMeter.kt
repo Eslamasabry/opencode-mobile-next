@@ -131,6 +131,13 @@ public class FrameMeter private constructor(private val test: SkikoComposeUiTest
     private val scene: ComposeScene
         get() = test.scene
 
+    /**
+     * Composable scopes run since the meter was attached: right after the page settles, the cost of opening it (its first
+     * composition and the frames until it rests), the work a page's first frames pay on the UI thread.
+     */
+    public val scopesSoFar: Int
+        get() = scopes
+
     /** Lets the first frames run (composition, the first layout, entry motion) until a frame has no work, at most [max]. */
     public fun settle(max: Int = 600): Int {
         var n = 0
@@ -183,7 +190,9 @@ public class FrameMeter private constructor(private val test: SkikoComposeUiTest
         val s0 = scopes
         test.mainClock.advanceTimeByFrame()
         val ran = scopes - s0
-        val (draws, masks, filtered) = drawCounts()
+        // The root frame's own draw counts (drawCounts) are left out per frame: Skia's filter does not see into the
+        // layers' pictures, so they read 1 every frame, and drawing the scene again at a phone's size doubled the run.
+        val (draws, masks, filtered) = Triple(0, 0, 0)
         val (layers, px) = offscreenLayers()
         return FrameCost(draws, masks, filtered, ran, busy || ran > 0, layers, px)
     }
@@ -280,12 +289,11 @@ public class FrameMeter private constructor(private val test: SkikoComposeUiTest
     }
 }
 
-/** A short line per run of frames for a report: busy frames, then median/largest draws, masks, filtered and scopes. */
+/** A short line per run of frames for a report: busy frames, scopes (median/largest/sum), offscreen layers and px. */
 public fun List<FrameCost>.summary(name: String): String {
     if (isEmpty()) return "$name: no frames"
     fun med(f: (FrameCost) -> Int) = map(f).sorted()[size / 2]
     fun max(f: (FrameCost) -> Int) = maxOf(f)
-    return "$name busy ${count { it.busy }}/$size d ${med { it.draws }}/${max { it.draws }} m ${med { it.masks }}/${max { it.masks }} " +
-        "f ${max { it.filtered }} s ${med { it.scopes }}/${max { it.scopes }}/${sumOf { it.scopes }} " +
+    return "$name busy ${count { it.busy }}/$size s ${med { it.scopes }}/${max { it.scopes }}/${sumOf { it.scopes }} " +
         "off ${med { it.offscreen }}/${max { it.offscreen }} px ${map { it.offscreenPx }.sorted()[size / 2]}"
 }

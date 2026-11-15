@@ -51,7 +51,7 @@ class GlassLiveTest {
     }
 
     @Test
-    fun `B-KIT-LIVE-049 the glass picture steps at most 60 times a second however fast the screen`() {
+    fun `B-KIT-LIVE-049 the glass picture steps at most GLASS_PICTURE_FPS times a second however fast the screen`() {
         val clock = LiveFrameClock().apply { acquire() }
         var stepped: (() -> Float)? = null
         var every: (() -> Float)? = null
@@ -71,8 +71,9 @@ class GlassLiveTest {
             seenEvery += every!!()
             t += 8_333_333L
         }
-        assertTrue(seen.size in 55..61, "the picture took ${seen.size} steps in a second")
-        assertTrue(seenEvery.size >= 115, "the shader itself still follows every frame (${seenEvery.size})")
+        // c2-performance 2026-11-15: the page's live look and its glass picture step at LIVE_LOOK_FPS (15), not 60.
+        assertTrue(seen.size in GLASS_PICTURE_FPS - 2..GLASS_PICTURE_FPS + 1, "the picture took ${seen.size} steps in a second")
+        assertTrue(seenEvery.size >= 115, "an unstepped time still follows every frame (${seenEvery.size})")
     }
 
     @Test

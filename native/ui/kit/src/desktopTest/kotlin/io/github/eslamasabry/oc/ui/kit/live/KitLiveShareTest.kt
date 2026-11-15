@@ -89,7 +89,9 @@ class KitLiveShareTest {
                 val start = platform.draws
                 repeat(60) { mainClock.advanceTimeByFrame() }
                 val frames = platform.draws - start
-                assertTrue(frames in 50..63, "$style: the look was drawn $frames times in 60 frames (one background, not two)")
+                // 60 frames are about a second: one background steps LIVE_LOOK_FPS times in it (c2-performance 2026-11-15);
+                // two would draw twice as often.
+                assertTrue(frames in LIVE_LOOK_FPS - 3..LIVE_LOOK_FPS + 2, "$style: the look was drawn $frames times in 60 frames (one background, not two)")
                 assertEquals(1, clocks.size, "$style: both pages run on one clock")
                 assertSame(share!!.clock, clocks.single(), "$style: the theme root's clock")
                 assertEquals(1, share!!.pictures.count, "$style: one recorded picture for two pages of one size")
