@@ -106,17 +106,22 @@ class NewConversationFrameCostTest {
 
     @AfterTest fun reset() = Dispatchers.resetMain()
 
-    private fun measure(appearance: KitAppearance): Triple<Int, List<FrameCost>, List<FrameCost>> {
+    private fun measure(
+        appearance: KitAppearance,
+        platform: io.github.eslamasabry.oc.ui.kit.platform.KitPlatform = DesktopKitPlatform(),
+        /** Divides the window and density, for a quicker survey. */
+        shrink: Int = 1,
+    ): Triple<Int, List<FrameCost>, List<FrameCost>> {
         Locale.setDefault(Locale.forLanguageTag("en"))
         lateinit var out: Triple<Int, List<FrameCost>, List<FrameCost>>
-        runDesktopComposeUiTest(W, H) {
+        runDesktopComposeUiTest(W / shrink, H / shrink) {
             mainClock.autoAdvance = false
             val meter = FrameMeter.attach(this)
             val vm = NewConversationViewModel(ChatsRoute.New(phone), ReadyHost(), Nav(), Clock.System, ListenedReports())
             setContent {
-                CompositionLocalProvider(LocalDensity provides Density(DENSITY)) {
+                CompositionLocalProvider(LocalDensity provides Density(DENSITY / shrink)) {
                     ChatEnvironment {
-                        KitTheme(appearance = appearance, platform = DesktopKitPlatform(), localeTag = "en") {
+                        KitTheme(appearance = appearance, platform = platform, localeTag = "en") {
                             val state by vm.state.collectAsState()
                             NewConversationScreen(state, vm)
                         }
@@ -125,7 +130,8 @@ class NewConversationFrameCostTest {
             }
             val opening = meter.frames(30)
             val settled = meter.settle()
-            val still = meter.frames(120)
+            println("PERF-NEW open scopes ${meter.scopesSoFar}")
+            val still = meter.frames(120 / shrink)
             meter.close()
             out = Triple(settled, opening, still)
         }
