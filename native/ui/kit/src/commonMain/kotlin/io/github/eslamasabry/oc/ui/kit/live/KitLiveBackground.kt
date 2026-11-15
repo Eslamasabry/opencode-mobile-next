@@ -182,7 +182,15 @@ public fun KitLiveBackground(modifier: Modifier = Modifier, shared: Boolean = fa
             plate != null && style.style == io.github.eslamasabry.oc.ui.design.style.Style.Glass && glassBlurs &&
                 io.github.eslamasabry.oc.ui.kit.effects.kitClearPanesOn()
         val inkLift = io.github.eslamasabry.oc.ui.design.style.GlassSpec.pageInkLift(roles.dark, paintedClear)
-        CompositionLocalProvider(LocalKitGlassBackdrop provides backdrop, LocalLiveClock provides clock, LocalKitPageInkLift provides inkLift) { content() }
+        // Nothing drawn but the flat ground: a page's scroll edges lay that ground over their content instead of clearing
+        // it in an offscreen layer (KitScrollEdges.kt), the same pixels at a fraction of the GPU's work.
+        val flatGround = if (render == LiveRender.Flat && ground.alpha >= 1f) ground else androidx.compose.ui.graphics.Color.Unspecified
+        CompositionLocalProvider(
+            LocalKitGlassBackdrop provides backdrop,
+            LocalLiveClock provides clock,
+            LocalKitPageInkLift provides inkLift,
+            LocalKitFlatGround provides flatGround,
+        ) { content() }
     }
 }
 
@@ -191,6 +199,14 @@ public fun KitLiveBackground(modifier: Modifier = Modifier, shared: Boolean = fa
  * [io.github.eslamasabry.oc.ui.design.style.GlassSpec.pageInkLift], provided by [KitLiveBackground]; 0 elsewhere.
  */
 public val LocalKitPageInkLift: androidx.compose.runtime.ProvidableCompositionLocal<Float> = androidx.compose.runtime.staticCompositionLocalOf { 0f }
+
+/**
+ * The opaque flat ground a [KitLiveBackground] draws under its content when it draws nothing else (no live look, no
+ * painted picture, no still fallback); unspecified otherwise and outside one. Read only by a part that lies directly on
+ * that ground (a framed page's body, `KitScreen`), never through another surface (a sheet, a card).
+ */
+internal val LocalKitFlatGround: androidx.compose.runtime.ProvidableCompositionLocal<androidx.compose.ui.graphics.Color> =
+    androidx.compose.runtime.staticCompositionLocalOf { androidx.compose.ui.graphics.Color.Unspecified }
 
 /** The most steps a second the glass picture takes (the shader looks); a 60, 90 or 120 Hz screen draws it at most 60. */
 internal const val GLASS_PICTURE_FPS: Int = 60
