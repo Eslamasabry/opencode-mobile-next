@@ -100,7 +100,7 @@
                 android:name="android.app.shortcuts"
                 android:resource="@xml/shortcuts" />
         </activity>
-        <activity android:name=".IdleStartActivity" android:exported="false"
+        <activity android:name=".IdleStartActivity" android:screenOrientation="portrait" android:exported="false"
             android:excludeFromRecents="true" android:noHistory="true" android:theme="@style/NativeTrampolineTheme" />
         <activity
             android:name=".ManageSpaceActivity"
