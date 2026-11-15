@@ -823,8 +823,8 @@
     <string name="gitBranchRemoteOnly">Em %1$s, ainda não neste dispositivo</string>
     <string name="gitBranchCurrent">Branch atual</string>
     <string name="gitNewBranchFrom">Nova branch a partir de %1$s</string>
-    <string name="gitCloneRow">Clonar um repositório</string>
-    <string name="gitCloneRowHint">Copie um repositório ao lado deste projeto</string>
+    <string name="gitCloneRow">Copiar um projeto da web</string>
+    <string name="gitCloneRowHint">Traz um projeto de um endereço e o coloca ao lado deste</string>
     <string name="gitCloneAddressLabel">Endereço do repositório</string>
     <string name="gitCloneFolderLabel">Nome da pasta</string>
     <string name="gitCloneInto">Clona em %1$s</string>
@@ -972,4 +972,7 @@
     <string name="agentElsewhereStale">Aguardando uma atualização</string>
     <string name="gitProblemNoWorkingSpace">O Git não tem espaço para trabalhar onde este projeto fica. Libere algum armazenamento lá e tente novamente.</string>
     <string name="gitProblemServerRefusedCommand">O servidor respondeu, mas não quis executar o comando do Git. Confira o login dele e tente novamente.</string>
+    <string name="gitMoreTools">Mais ferramentas</string>
+    <string name="gitMoreToolsHint">Para onde os salvamentos são enviados, copiar um projeto, consertar um histórico danificado</string>
+    <string name="devPreviewAskNeedsText">Escreva primeiro o que mudar.</string>
 </resources>

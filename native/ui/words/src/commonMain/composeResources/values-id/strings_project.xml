@@ -797,8 +797,8 @@
     <string name="gitBranchRemoteOnly">Di %1$s, belum ada di perangkat ini</string>
     <string name="gitBranchCurrent">Cabang saat ini</string>
     <string name="gitNewBranchFrom">Cabang baru dari %1$s</string>
-    <string name="gitCloneRow">Clone repositori</string>
-    <string name="gitCloneRowHint">Salin repositori di samping proyek ini</string>
+    <string name="gitCloneRow">Salin proyek dari web</string>
+    <string name="gitCloneRowHint">Mengambil proyek dari sebuah alamat dan menaruhnya di samping proyek ini</string>
     <string name="gitCloneAddressLabel">Alamat repositori</string>
     <string name="gitCloneFolderLabel">Nama folder</string>
     <string name="gitCloneInto">Di-clone ke %1$s</string>
@@ -930,4 +930,7 @@
     <string name="agentElsewhereStale">Menunggu pembaruan</string>
     <string name="gitProblemNoWorkingSpace">Git tidak punya ruang untuk bekerja di tempat proyek ini berada. Kosongkan sebagian penyimpanan di sana, lalu coba lagi.</string>
     <string name="gitProblemServerRefusedCommand">Server menjawab tetapi tidak mau menjalankan perintah Git. Periksa proses masuknya, lalu coba lagi.</string>
+    <string name="gitMoreTools">Alat lainnya</string>
+    <string name="gitMoreToolsHint">Ke mana simpanan dikirim, menyalin proyek, memperbaiki riwayat yang rusak</string>
+    <string name="devPreviewAskNeedsText">Tulis dulu apa yang ingin diubah.</string>
 </resources>

@@ -174,6 +174,19 @@ class ChatsViewModelTest {
     }
 
     @Test
+    fun `I147-OLD-001 a phone agent's old conversation its agent cannot take up again opens on tap, nothing asks first`() {
+        val nav = RecordingNavigator()
+        val feed = Feed().apply {
+            snapshot.value = ChatFeedSnapshot(persistentListOf(item("old").copy(agentId = "antigravity", needsNewChat = true)))
+        }
+        val vm = ChatsViewModel(feed, Briefs(), Door(false), { Instant.fromEpochMilliseconds(0) }, clock, nav)
+        vm.openConversation(ConversationRef(P1, io.github.eslamasabry.oc.core.common.ids.SessionId("old")))
+        // It opens to read what it had; continuing is offered on its own page, never a refusing question here.
+        assertEquals(listOf("openChat old"), nav.calls)
+        assertNull(vm.state.value.sheet)
+    }
+
+    @Test
     fun `B-MIGR-012 a waiting release puts Update in the bar and it opens the updater`() {
         val nav = RecordingNavigator()
         var opened = 0

@@ -1353,4 +1353,13 @@
     <string name="kitCommandNoOutput">Aucune sortie</string>
     <string name="kitCommandFailedNoOutput">Échec avant d’avoir rien affiché</string>
     <string name="kitCommandStoppedEarly">Arrêté avant la fin</string>
+    <string name="chatOldAgentReadOnly">%1$s ne peut pas reprendre cette conversation. Lisez-la ici ou continuez dans une nouvelle.</string>
+    <string name="chatOldAgentReadOnlyUnnamed">Cet agent ne peut pas reprendre cette conversation. Lisez-la ici ou continuez dans une nouvelle.</string>
+    <string name="chatContinueInNewConversation">Continuer dans une nouvelle conversation</string>
+    <string name="chatContinueBriefIntro">Continuons «\u00A0%1$s\u00A0». Tu ne peux pas voir cette conversation, voici donc ce qui s’y est passé.</string>
+    <string name="chatContinueBriefIntroUntitled">Continuons une conversation précédente. Tu ne peux pas la voir, voici donc ce qui s’y est passé.</string>
+    <string name="chatContinueBriefAsked">Ce que j’ai demandé\u00A0:</string>
+    <string name="chatContinueBriefChanged">Fichiers modifiés\u00A0:</string>
+    <string name="chatContinueBriefStopped">Là où ça s’est arrêté\u00A0:</string>
+    <string name="chatUiContinuedAfterCommand">Une commande était encore en cours, l’agent a donc été invité à l’attendre puis à continuer</string>
 </resources>

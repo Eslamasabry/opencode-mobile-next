@@ -836,8 +836,8 @@
     <string name="gitBranchRemoteOnly">Есть на %1$s, на этом устройстве пока нет</string>
     <string name="gitBranchCurrent">Текущая ветка</string>
     <string name="gitNewBranchFrom">Новая ветка от %1$s</string>
-    <string name="gitCloneRow">Клонировать репозиторий</string>
-    <string name="gitCloneRowHint">Скопировать репозиторий рядом с этим проектом</string>
+    <string name="gitCloneRow">Скопировать проект из сети</string>
+    <string name="gitCloneRowHint">Берёт проект по адресу и кладёт рядом с этим</string>
     <string name="gitCloneAddressLabel">Адрес репозитория</string>
     <string name="gitCloneFolderLabel">Название папки</string>
     <string name="gitCloneInto">Клонируется в «%1$s»</string>
@@ -993,4 +993,7 @@
     <string name="agentElsewhereStale">Ожидание обновления</string>
     <string name="gitProblemNoWorkingSpace">Git не хватает места для работы там, где находится этот проект. Освободите там память и повторите попытку.</string>
     <string name="gitProblemServerRefusedCommand">Сервер ответил, но не стал выполнять команду Git. Проверьте вход на нём и повторите попытку.</string>
+    <string name="gitMoreTools">Другие инструменты</string>
+    <string name="gitMoreToolsHint">Куда отправляются сохранения, копирование проекта, починка повреждённой истории</string>
+    <string name="devPreviewAskNeedsText">Сначала напишите, что изменить.</string>
 </resources>

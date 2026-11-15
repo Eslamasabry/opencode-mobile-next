@@ -93,6 +93,8 @@ public data class ChangeRowUi(
     val hasDiff: Boolean,
     /** Its diff was opened in this visit and has not changed since (Flutter's "Viewed", session-local only). */
     val viewed: Boolean = false,
+    /** The folder's own diff path that shows it, when the tools gave no lines for it (walk F-020); null: its own. */
+    val diffPath: String? = null,
 )
 
 /** What "Undo all" can do here. Hidden where nothing would happen (Flutter `onUndoAll == null`). */

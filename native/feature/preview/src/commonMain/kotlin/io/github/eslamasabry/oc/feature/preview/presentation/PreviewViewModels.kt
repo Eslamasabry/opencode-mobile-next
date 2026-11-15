@@ -28,9 +28,10 @@ internal fun serverAddressFor(
     ref: ConversationRef?,
     servers: List<SavedServer>,
     profile: io.github.eslamasabry.oc.core.common.ids.ProfileId? = null,
+    hosts: PreviewHosts = NoPreviewHosts(),
 ): String? {
     val exact = ref?.profileId ?: profile
-    return if (exact != null) servers.firstOrNull { it.id == exact }?.address
+    return if (exact != null) servers.firstOrNull { it.id == exact }?.address ?: hosts.addressFor(exact)
     else servers.firstOrNull { it.connected }?.address
 }
 
@@ -47,9 +48,10 @@ public class DevPreviewViewModel(
     private val nav: AppNavigator,
     private val browser: PreviewBrowser,
     private val tools: PreviewTools = NoPreviewTools(),
+    private val hosts: PreviewHosts = NoPreviewHosts(),
 ) : ViewModel(), DevPreviewActions {
     private val capturedAddress =
-        serverAddressFor(route.ref, connections.servers.value, route.profile)
+        serverAddressFor(route.ref, connections.servers.value, route.profile, hosts)
     private var scopeRetired = false
     private val target =
         DevPreviewTarget.resolve(
@@ -89,7 +91,7 @@ public class DevPreviewViewModel(
                 connections.servers.collect { servers ->
                     if (
                         !scopeRetired &&
-                            serverAddressFor(route.ref, servers, route.profile) != capturedAddress
+                            serverAddressFor(route.ref, servers, route.profile, hosts) != capturedAddress
                     ) {
                         scopeRetired = true
                         egress?.revoke()
@@ -264,10 +266,11 @@ public class PortsViewModel(
     @Assisted private val route: PreviewRoute.Ports,
     connections: ServerConnections,
     private val nav: AppNavigator,
+    hosts: PreviewHosts = NoPreviewHosts(),
 ) : ViewModel(), PortsActions {
     private val mutable =
         MutableStateFlow(
-            serverAddressFor(route.ref, connections.servers.value).let { address ->
+            serverAddressFor(route.ref, connections.servers.value, null, hosts).let { address ->
                 val probe = DevPreviewTarget.resolve(PreviewLink(1), address)
                 PortsUi(
                     rows =

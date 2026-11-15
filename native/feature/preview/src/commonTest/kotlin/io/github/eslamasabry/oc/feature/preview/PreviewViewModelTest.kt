@@ -20,6 +20,7 @@ import io.github.eslamasabry.oc.feature.preview.presentation.PagePhase
 import io.github.eslamasabry.oc.feature.preview.presentation.PortRow
 import io.github.eslamasabry.oc.feature.preview.presentation.PortsViewModel
 import io.github.eslamasabry.oc.feature.preview.presentation.PreviewBlock
+import io.github.eslamasabry.oc.feature.preview.presentation.PreviewHosts
 import io.github.eslamasabry.oc.feature.preview.presentation.PreviewNotice
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.AppRoute
@@ -117,6 +118,22 @@ class PreviewViewModelTest {
         assertEquals(DevPreviewTarget.Remote("http://box.tail.ts.net:5173/", "box.tail.ts.net"), connected.state.value.target)
         assertEquals("box.tail.ts.net", connected.state.value.remoteHost)
         assertEquals("http://127.0.0.1:5173/", own.state.value.shown)
+    }
+
+    @Test
+    fun `B-CHAT-147 a phone agent's conversation previews the phone's own address, not 'connect a server'`() {
+        // The phone agents' helper is saved as a profile but never listed as a server (walk F-024).
+        val helperRef = ConversationRef(ProfileId("phone-agents"), SessionId("s"))
+        val hosts = PreviewHosts { if (it == ProfileId("phone-agents")) "http://127.0.0.1:4096" else null }
+        val view =
+            DevPreviewViewModel(PreviewRoute.Page(8000, ref = helperRef), Connections(phone), Navigator(), PolicyBrowser(Opener()), hosts = hosts)
+        assertNull(view.state.value.blocked)
+        assertEquals(DevPreviewTarget.Phone("http://127.0.0.1:8000/"), view.state.value.target)
+        val ports = PortsViewModel(PreviewRoute.Ports.from(helperRef, emptyList()), Connections(phone), Navigator(), hosts)
+        assertNull(ports.state.value.blocked)
+        // Without the phone's answer the helper has no address: that is the refusal the person saw.
+        val none = DevPreviewViewModel(PreviewRoute.Page(8000, ref = helperRef), Connections(phone), Navigator(), PolicyBrowser(Opener()))
+        assertEquals(PreviewBlock.NoServer, none.state.value.blocked)
     }
 
     @Test

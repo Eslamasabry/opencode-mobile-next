@@ -1229,4 +1229,13 @@
     <string name="kitCommandNoOutput">Không có đầu ra</string>
     <string name="kitCommandFailedNoOutput">Lỗi trước khi in ra bất cứ gì</string>
     <string name="kitCommandStoppedEarly">Đã dừng trước khi xong</string>
+    <string name="chatOldAgentReadOnly">%1$s không thể tiếp tục lại cuộc trò chuyện này. Hãy đọc ở đây, hoặc tiếp tục trong một cuộc trò chuyện mới.</string>
+    <string name="chatOldAgentReadOnlyUnnamed">Tác nhân này không thể tiếp tục lại cuộc trò chuyện này. Hãy đọc ở đây, hoặc tiếp tục trong một cuộc trò chuyện mới.</string>
+    <string name="chatContinueInNewConversation">Tiếp tục trong cuộc trò chuyện mới</string>
+    <string name="chatContinueBriefIntro">Hãy tiếp tục "%1$s". Bạn không xem được cuộc trò chuyện đó, nên đây là những gì đã diễn ra ở đó.</string>
+    <string name="chatContinueBriefIntroUntitled">Hãy tiếp tục một cuộc trò chuyện trước đó. Bạn không xem được nó, nên đây là những gì đã diễn ra ở đó.</string>
+    <string name="chatContinueBriefAsked">Điều tôi đã yêu cầu:</string>
+    <string name="chatContinueBriefChanged">Các tệp đã thay đổi:</string>
+    <string name="chatContinueBriefStopped">Nơi đã dừng lại:</string>
+    <string name="chatUiContinuedAfterCommand">Một lệnh vẫn đang chạy, nên tác nhân được yêu cầu chờ lệnh đó rồi tiếp tục</string>
 </resources>

@@ -338,4 +338,5 @@
     <string name="chatsNewPhoneStorage">Bộ nhớ điện thoại</string>
     <string name="chatsNewPhoneStorageOff">Cho phép các tác nhân trên điện thoại này đọc và thay đổi tệp trong bộ nhớ điện thoại, như Tải xuống và Tài liệu. Mở trang của Android cho việc này.</string>
     <string name="chatsNewPhoneStorageOn">Các tác nhân trên điện thoại này có thể đọc và thay đổi tệp trong Tải xuống, Tài liệu và phần còn lại của bộ nhớ điện thoại.</string>
+    <string name="chatsHomeAgentsUnreachable">Các tác nhân trên điện thoại này chưa khởi động được</string>
 </resources>

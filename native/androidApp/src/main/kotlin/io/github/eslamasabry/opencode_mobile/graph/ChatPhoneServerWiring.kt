@@ -8,7 +8,9 @@ import dev.zacsweers.metro.binding
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.FeatureId
 import io.github.eslamasabry.oc.core.common.Outcome
+import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
+import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
 import io.github.eslamasabry.oc.core.data.kv.PrefValue
 import io.github.eslamasabry.oc.core.common.AppCoroutineScope
 import io.github.eslamasabry.oc.engine.agents.install.AgentUpdateStep
@@ -43,6 +45,7 @@ class AndroidChatPhoneServer(
     private val agentUpdate: PhoneAgentUpdateStatus,
     private val phoneAgents: Lazy<PhoneAgents>,
     private val appScope: AppCoroutineScope,
+    private val registry: Lazy<ConnectionRegistry>,
 ) : ChatPhoneServer {
     override fun runsHere(profile: ProfileId): Boolean =
         (stores.prefs.get("oc.builtinServerOwner") as? PrefValue.Str)?.value == profile.raw
@@ -97,6 +100,10 @@ class AndroidChatPhoneServer(
             isAgentHelper(profile) -> agentsWait
             else -> NOT_WAITING
         }
+
+    /** Issue 147: the agents helper's own answer, the same one the home list reads ([ListRowFacts.needsNewChat]). */
+    override fun needsNewSession(ref: ConversationRef): Boolean? =
+        ListRowFacts.needsNewChat(registry.value.live.value[ref.profileId], ref.sessionId)
 
     override suspend fun restart(profile: ProfileId): Outcome<Unit> =
         if (runsHere(profile)) server.restart()

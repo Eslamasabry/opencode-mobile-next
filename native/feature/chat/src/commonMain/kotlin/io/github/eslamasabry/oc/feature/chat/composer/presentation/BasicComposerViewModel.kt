@@ -106,6 +106,12 @@ public interface BasicComposerActions {
 
     public fun openParent() {}
 
+    /**
+     * Issue 147: an old phone agent conversation continues in a new conversation with the same agent and folder, which
+     * starts with a short handoff of what was done ([words] are the words around it, resolved by the UI).
+     */
+    public fun continueInNewConversation(words: io.github.eslamasabry.oc.feature.chat.presentation.ContinueBrief.Words) {}
+
     public fun hidePhrase(text: String) {}
 
     public suspend fun sendAgain(text: String, expectedRevision: Long): Boolean = false
@@ -616,6 +622,27 @@ public class BasicComposerViewModel(
 
     override fun openParent() {
         world?.readOnly?.value?.parent?.let { navigator?.openChat(it) }
+    }
+
+    override fun continueInNewConversation(words: io.github.eslamasabry.oc.feature.chat.presentation.ContinueBrief.Words) {
+        val w = world ?: return
+        val restart = w.readOnly.value?.restart ?: return
+        // What the page holds (the kept page or the live one): the new agent cannot see the old conversation.
+        val messages = (w as? io.github.eslamasabry.oc.feature.chat.world.TurnFeedSource)?.turnFeed?.value?.ledger?.messages.orEmpty()
+        val brief = io.github.eslamasabry.oc.feature.chat.presentation.ContinueBrief.of(messages)
+        navigator?.open(
+            io.github.eslamasabry.oc.ui.routes.ChatsRoute.New(
+                profile = w.ref.profileId,
+                // The person reads and can change it before sending.
+                initialText = if (brief.isEmpty) "" else brief.text(w.title.value, words),
+                // The new-conversation form names an agent by its catalog id; a runtime it does not know keeps its own.
+                phoneAgent =
+                    restart.agentId?.let {
+                        io.github.eslamasabry.oc.feature.chat.presentation.AgentSetUpRules.agentId(it) ?: it
+                    },
+                directory = restart.directory,
+            )
+        )
     }
 
     override suspend fun send(text: String): Boolean {

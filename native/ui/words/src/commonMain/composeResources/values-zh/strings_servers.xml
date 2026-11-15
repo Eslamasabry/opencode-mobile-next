@@ -474,7 +474,7 @@
     <string name="welcomeMoreWays">其他设置方式</string>
     <string name="welcomeDemoLine">模拟对话</string>
     <string name="connectionRestartAgent">重启 Claude Code</string>
-    <string name="connectionAgentStarting">正在启动 Claude Code…</string>
+    <string name="connectionAgentStarting">正在启动此手机上的智能体…</string>
     <string name="connectionAgentStartFailed">Claude Code 未能启动。点按“重启 Claude Code”再试一次。</string>
     <string name="connectionRestartPhoneServer">重启 OpenCode</string>
     <string name="serverSwitcherAddServer">添加服务器</string>

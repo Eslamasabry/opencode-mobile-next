@@ -74,7 +74,6 @@ public class ChatsViewModel(
     private val filters = MutableStateFlow(ChatsFilters())
     private val sheet = MutableStateFlow<ChatsHomeSheet?>(null)
     private val watchedSelection = MutableStateFlow<String?>(null)
-    private val startNewAsk = MutableStateFlow<StartNewUi?>(null)
     private val answers =
         MutableStateFlow<Pair<Set<String>, io.github.eslamasabry.oc.core.common.Failure?>>(
             emptySet<String>() to null
@@ -226,7 +225,6 @@ public class ChatsViewModel(
                     confirmWatched = extra.monitoring.requests.firstOrNull { it.key == selected },
                 )
             }
-            .combine(startNewAsk) { base, ask -> base.copy(startNew = ask) }
             .combine(waitingOpen) { base, waiting -> base.copy(waitingOpen = waiting) }
             .combine(keptGaveUp) { base, gaveUp -> base.copy(keptGaveUp = gaveUp) }
             .combine(renaming) { base, rename ->
@@ -645,25 +643,11 @@ public class ChatsViewModel(
     private fun openNow(item: io.github.eslamasabry.oc.engine.agents.feed.ChatFeedItem) {
         val ref = item.ref
         openAttempts++
-        // H4: an agent conversation the helper cannot resume asks before anything opens (F: chats_home_screen.dart:186).
-        AgentResumeRules.ask(item, ChatsState.row(item).agentName)?.let {
-            sheet.value = null
-            startNewAsk.value = it
-            return
-        }
+        // Issue 147: an agent conversation its agent cannot take up again opens too, to read; the page itself offers to
+        // continue it. Nothing asks first.
         sheet.value = null
         feed.prefetch(ref)
         nav.openChat(ref)
-    }
-
-    override fun confirmStartNew() {
-        val ask = startNewAsk.value ?: return
-        startNewAsk.value = null
-        nav.open(AgentResumeRules.route(ask))
-    }
-
-    override fun dismissStartNew() {
-        startNewAsk.value = null
     }
 
     override fun rowAct(row: ConversationRowUi, act: RowAct) {

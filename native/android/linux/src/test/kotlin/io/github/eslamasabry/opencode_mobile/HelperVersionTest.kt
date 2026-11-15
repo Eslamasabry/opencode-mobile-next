@@ -36,4 +36,13 @@ class HelperVersionTest {
         assertFalse(HelperVersion.runs("0.10.0", "0.15.4", tested))
         assertFalse(HelperVersion.runs(null, "0.15.4", tested))
     }
+
+    // Issue 147: a version check that gave no answer (cold, busy phone) was "helper update required", never retried.
+    @Test fun `I147-AGY-11 a silent check of an installed helper is a start to try again, not an update`() {
+        assertEquals(HelperVersion.Verdict.NoAnswer, HelperVersion.verdict(null, installed = true, "0.15.4", tested))
+        assertEquals(HelperVersion.Verdict.UpdateRequired, HelperVersion.verdict(null, installed = false, "0.15.4", tested))
+        assertEquals(HelperVersion.Verdict.UpdateRequired, HelperVersion.verdict("0.10.0\n", installed = true, "0.15.4", tested))
+        assertEquals(HelperVersion.Verdict.UpdateRequired, HelperVersion.verdict("garbage", installed = true, "0.15.4", tested))
+        assertEquals(HelperVersion.Verdict.Runs, HelperVersion.verdict("0.15.4\n", installed = true, "0.15.4", tested))
+    }
 }

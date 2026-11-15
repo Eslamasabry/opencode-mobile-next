@@ -249,7 +249,7 @@ public fun DevPreviewScreen(
                                                     KitEnabled.Enabled
                                                 else
                                                     KitEnabled.Disabled(
-                                                        stringResource(Res.string.devPreviewAskHint)
+                                                        stringResource(Res.string.devPreviewAskNeedsText)
                                                     ),
                                             working = state.asking,
                                         )
