@@ -4,6 +4,7 @@ import io.github.eslamasabry.oc.core.common.IncompatibleKind
 import io.github.eslamasabry.oc.core.common.BusyKind
 import io.github.eslamasabry.oc.core.common.SignInWhy
 import io.github.eslamasabry.oc.core.common.Failure
+import io.github.eslamasabry.oc.core.common.FeatureId
 import io.github.eslamasabry.oc.core.common.MediaProblem
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.RefusalReason
@@ -48,6 +49,9 @@ public enum class PaseoFailureKind {
      * made, so the message was not sent. Before, that answer read as a send whose fate is unknown ("didn't confirm").
      */
     AgentRefused,
+
+    /** The person chose Plan and this agent lists no read-only or plan mode ([gateway.PaseoPlanModes]). */
+    NoPlanMode,
 }
 
 /**
@@ -91,6 +95,7 @@ public class PaseoException(
             PaseoFailureKind.IncompatibleProtocol ->
                 Failure.Incompatible(IncompatibleKind.ProtocolMismatch, details)
             // An answer, so a refusal (never "unconfirmed"); a lapsed sign-in carries its own tag.
+            PaseoFailureKind.NoPlanMode -> Failure.Unavailable(FeatureId(NO_PLAN_MODE_FEATURE), details)
             PaseoFailureKind.AgentRefused ->
                 Failure.Rejected(
                     null,
@@ -163,3 +168,6 @@ internal fun paseoAgentSignInText(reason: String?): Boolean =
             io.github.eslamasabry.oc.protocol.paseo.requests.paseoProviderNeedsSignIn(
                 kotlinx.serialization.json.JsonObject(mapOf("error" to kotlinx.serialization.json.JsonPrimitive(reason)))
             ))
+
+/** The failure feature a send in Plan to an agent without a plan mode carries (the chat words it). */
+public const val NO_PLAN_MODE_FEATURE: String = "agentPlanMode"
