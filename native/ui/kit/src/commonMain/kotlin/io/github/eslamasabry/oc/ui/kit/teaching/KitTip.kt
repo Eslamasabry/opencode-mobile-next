@@ -3,7 +3,6 @@ package io.github.eslamasabry.oc.ui.kit.teaching
 import io.github.eslamasabry.oc.ui.design.style.SurfaceRole
 import io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel
 import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
-import io.github.eslamasabry.oc.ui.kit.effects.kitLiquidMenuFace
 import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceInput
 import io.github.eslamasabry.oc.ui.kit.foundation.kitStyledFace
 import io.github.eslamasabry.oc.ui.kit.foundation.kitSurface
@@ -256,22 +255,17 @@ private fun TipInLayer(layer: KitMenuLayerState, place: PopupPositionProvider, a
 public fun KitTipBubble(message: String, modifier: Modifier = Modifier) {
     val colors = LocalKitColors.current
     val shape = RoundedCornerShape(FlutterKitTokens.POPOVER_CORNER.dp) // F: lib/ui/kit/kit_tip.dart:239 lib/ui/kit/kit_tokens.dart:137
-    // glass-truth 2026-11-16: the tip was surface2 with a hairline in every style. It floats over the page like a small
-    // menu, so under Glass it wears the menu's liquid glass over the page (the page bent at its rim only, its sentence
-    // over the page's own picture and the menu's holds); without the page's recording, Glass's floating frost. Brutal
-    // and Paper dress it; Solid, Soft and Signal keep its own face.
-    val liquid = kitLiquidMenuFace(shape, NoTipTransform)
-    val styled = if (liquid == null) kitStyledFace(KitSurfaceInput(SurfaceRole.Floating, KitShapeId.Panel, SurfaceLevel.Surface2, ownFill = colors.surface2, radius = FlutterKitTokens.POPOVER_CORNER.dp)) else null
+    // glass-truth 2026-11-16: the tip was surface2 with a hairline in every style. Under Glass it is Glass's floating
+    // frost through the resolver. Not liquid: it holds a sentence on a pane about 50 dp tall, where a lens's rim (a
+    // menu's reaches 26 dp) would reach its middle and lay the page's bright content under the words (seen in the desktop
+    // pictures). Brutal and Paper dress it; Solid, Soft and Signal keep its own face.
+    val styled = kitStyledFace(KitSurfaceInput(SurfaceRole.Floating, KitShapeId.Panel, SurfaceLevel.Surface2, ownFill = colors.surface2, radius = FlutterKitTokens.POPOVER_CORNER.dp))
     Box(
         modifier
             .testTag("kit-tip")
             .widthIn(max = TipRules.MAX_WIDTH_DP.dp)
             .then(
-                when {
-                    liquid != null -> liquid
-                    styled != null -> Modifier.kitSurface(styled)
-                    else -> Modifier.background(colors.surface2, shape).border(kitHairline(), colors.hairline, shape)
-                }
+                styled?.let { Modifier.kitSurface(it) } ?: Modifier.background(colors.surface2, shape).border(kitHairline(), colors.hairline, shape)
             )
             .padding(horizontal = Space.S3.dp, vertical = Space.S2.dp)
             .semantics { liveRegion = LiveRegionMode.Polite },
@@ -279,9 +273,6 @@ public fun KitTipBubble(message: String, modifier: Modifier = Modifier) {
         KitText(message, role = TypeRole.Secondary, tone = TextTone.Primary, kind = KitTextKind.Frame)
     }
 }
-
-/** A tip does not grow in: its glass is never mid-transform. */
-private val NoTipTransform: () -> Float = { 0f }
 
 /**
  * Above or below the anchor, aligned with the anchor's nearer edge, kept inside the window; inside a tall anchor
