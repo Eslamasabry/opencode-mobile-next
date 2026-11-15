@@ -38,12 +38,29 @@ class PhoneOpeningTest {
         val booting = PhoneStartWatch(since = opened, startingSince = opened, processAlive = true, seenAlive = true)
         assertEquals(ChatsOpeningPhase.Starting, phase(booting, after = 89))
         assertEquals(ChatsOpeningPhase.Failed, phase(booting, after = 90))
-        // Issue 147: a server already running from before the app opened gets the first moments to answer too.
+        // Issue 147: a server already running from before the app opened gets the start window to answer too.
         val running = PhoneStartWatch(since = opened, processAlive = true, uptime = 95.seconds, seenAlive = true)
-        assertEquals(ChatsOpeningPhase.Failed, phase(running, after = 16))
-        assertEquals(ChatsOpeningPhase.Connecting, phase(running, after = 16, busy = true))
+        assertEquals(ChatsOpeningPhase.Starting, phase(running, after = 16))
+        assertEquals(ChatsOpeningPhase.Failed, phase(running, after = 90))
+        assertEquals(ChatsOpeningPhase.Connecting, phase(running, after = 90, busy = true))
         val exited = PhoneStartWatch(since = opened, processAlive = false, seenAlive = true)
         assertEquals(ChatsOpeningPhase.Failed, phase(exited, after = 3))
+    }
+
+    @Test
+    fun `I147-AGY-13 after an app update the stopped server the app starts again never reads failed`() {
+        // Galaxy S22, build 10047 after an update from 10046: the install stopped the server; the app starts it
+        // again on opening and it answers at 25 s. Read every 3 s from the app opening until the answer.
+        var watch = PhoneStartWatch(since = opened, processAlive = false)
+        for (second in 0..25 step 3) {
+            if (second >= 9) watch = watch.copy(startingSince = watch.startingSince ?: (opened + 9.seconds), seenAlive = true)
+            if (second >= 15) watch = watch.copy(processAlive = true, uptime = (second - 15).seconds)
+            for (failure in listOf(noAnswer, Failure.ComputerDidNotAnswer(), null))
+                assertEquals(ChatsOpeningPhase.Starting, phase(watch, after = second, failure = failure), "at $second s")
+        }
+        // The app's start running late (the phone's Linux was still coming up) is not a failure either.
+        val late = PhoneStartWatch(since = opened, processAlive = false)
+        assertEquals(ChatsOpeningPhase.Starting, phase(late, after = 25))
     }
 
     @Test
@@ -52,18 +69,18 @@ class PhoneOpeningTest {
         val running = PhoneStartWatch(since = opened, processAlive = true, uptime = 2.seconds * 3600, seenAlive = true)
         assertEquals(ChatsOpeningPhase.Starting, phase(running, after = 3))
         assertEquals(ChatsOpeningPhase.Starting, phase(running, after = 3, failure = Failure.ComputerDidNotAnswer()))
-        // After the grace a server that still does not answer has failed.
-        assertEquals(ChatsOpeningPhase.Failed, phase(running, after = 16))
+        // After the start window a server that still does not answer has failed.
+        assertEquals(ChatsOpeningPhase.Failed, phase(running, after = 90))
     }
 
     @Test
     fun `E05-S20 before the app-open start begins the wait still reads starting, briefly`() {
         val unread = PhoneStartWatch(since = opened)
         assertEquals(ChatsOpeningPhase.Starting, phase(unread, after = 2))
-        assertEquals(ChatsOpeningPhase.Failed, phase(unread, after = 20))
+        assertEquals(ChatsOpeningPhase.Failed, phase(unread, after = 90))
         val down = PhoneStartWatch(since = opened, processAlive = false)
         assertEquals(ChatsOpeningPhase.Starting, phase(down, after = 2))
-        assertEquals(ChatsOpeningPhase.Failed, phase(down, after = 16))
+        assertEquals(ChatsOpeningPhase.Failed, phase(down, after = 91))
         // The person stopped it: nothing will start it, so home says so at once.
         assertEquals(ChatsOpeningPhase.Failed, phase(down.copy(stoppedByPerson = true), after = 2))
     }
