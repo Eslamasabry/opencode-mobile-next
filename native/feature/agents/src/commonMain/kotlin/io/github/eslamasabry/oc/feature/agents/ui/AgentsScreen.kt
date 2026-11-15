@@ -27,6 +27,8 @@ import io.github.eslamasabry.oc.feature.agents.hub.AgentsHubControlsUi
 import io.github.eslamasabry.oc.feature.agents.hub.AgentsIssue
 import io.github.eslamasabry.oc.feature.agents.hub.AgentsProblem
 import io.github.eslamasabry.oc.feature.agents.hub.AgentsUi
+import io.github.eslamasabry.oc.feature.agents.hub.OwnAgentActions
+import io.github.eslamasabry.oc.feature.agents.hub.OwnProviderActions
 import io.github.eslamasabry.oc.feature.agents.hub.ComputerCheck
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentRemoval
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentRemovalIssue
@@ -154,6 +156,10 @@ public fun AgentsScreen(
     actions: AgentsActions,
     hub: AgentsHubControlsUi? = null,
     hubActions: AgentsHubActions? = null,
+    /** Issue 147: own provider for a built-in agent and "How this works"; null where the app binds none. */
+    ownActions: OwnProviderActions? = null,
+    /** Issue 147: "Add your own agent"; null where the app binds none. */
+    ownAgentActions: OwnAgentActions? = null,
     showArrival: Boolean = false,
     dismissArrival: () -> Unit = {},
 ) {
@@ -239,11 +245,21 @@ public fun AgentsScreen(
                 )
             }
             when (state.tab) {
-                AgentsTab.Phone -> PhoneTab(state, actions, hub, hubActions, enabled, gutter)
+                AgentsTab.Phone -> {
+                    PhoneTab(state, actions, hub, hubActions, enabled, gutter)
+                    if (ownAgentActions != null && hub?.ownAgents?.available == true && state.phone.available)
+                        OwnAgentRows(hub.ownAgents, ownAgentActions, gutter)
+                    if (ownActions != null && hub?.own?.available == true) AgentsHelpRow(ownActions, gutter)
+                }
                 AgentsTab.Computers -> ComputersTab(state, actions, enabled, gutter) { AddComputerForm(state, actions, enabled, gutter, fields) }
             }
         }
-        PhoneAgentSheet(state, actions, enabled)
+        PhoneAgentSheet(state, actions, enabled, hub?.own, ownActions)
+        if (ownActions != null && hub != null) {
+            OwnProviderSheet(state, hub.own, ownActions)
+            AgentsHelpSheet(hub.own, ownActions)
+        }
+        if (ownAgentActions != null && hub != null) OwnAgentSheet(hub.ownAgents, ownAgentActions, ownActions)
         KitSheet(
             visible = state.revertingAgent != null,
             onDismissRequest = actions::cancelPreviousVersion,

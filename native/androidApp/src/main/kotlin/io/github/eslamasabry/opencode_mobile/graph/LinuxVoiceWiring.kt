@@ -27,7 +27,6 @@ import io.github.eslamasabry.oc.core.common.RuntimeProblem
 import io.github.eslamasabry.oc.core.common.attempt
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.data.kv.PrefValue
-import io.github.eslamasabry.oc.engine.agents.host.PaseoConfig
 import io.github.eslamasabry.oc.engine.agents.phonecontext.PhoneAgentContext
 import io.github.eslamasabry.oc.engine.profiles.ProfileStore
 import io.github.eslamasabry.oc.engine.profiles.SecretEdit
@@ -1133,12 +1132,14 @@ internal constructor(
                 }
             if (!current())
                 return@withLock Outcome.Failed(Failure.Runtime(RuntimeProblem.RecoveryUnavailable))
+            // Issue 147: the person's own agents join the catalog's in the helper's config (values go only there).
+            val config = phoneHelperConfig(stores, helper) {}
             val restored = mutation {
                 linux.resumeIdleStoppedAgentHost(
                     helper,
                     generation,
                     password,
-                    PaseoConfig.render().json,
+                    config,
                 )
             }
             if (restored is Outcome.Failed) return@withLock restored

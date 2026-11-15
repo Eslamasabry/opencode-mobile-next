@@ -26,6 +26,10 @@ public data class AgentsHubControlsUi(
     val connection: AgentsHubConnectionUi = AgentsHubConnectionUi(),
     val working: Boolean = false,
     val failure: Failure? = null,
+    /** Issue 147: own provider for a built-in agent, and the "How this works" sheet. */
+    val own: OwnProviderUi = OwnProviderUi(),
+    /** Issue 147: "Add your own agent". */
+    val ownAgents: OwnAgentsUi = OwnAgentsUi(),
 )
 
 public interface AgentsHubActions {

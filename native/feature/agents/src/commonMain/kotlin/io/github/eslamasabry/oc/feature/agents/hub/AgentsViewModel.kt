@@ -42,7 +42,9 @@ public class AgentsViewModel(
     accounts: AgentAccounts,
     drafts: AgentHandoffDrafts,
     clock: Clock,
-) : ViewModel(), AgentsActions, AgentsHubActions {
+    ownProviders: Set<PhoneOwnProviders>,
+    ownAgents: Set<PhoneOwnAgents>,
+) : ViewModel(), AgentsActions, AgentsHubActions, OwnProviderActions, OwnAgentActions {
     private val presenter =
         AgentsPresenter(
             viewModelScope,
@@ -64,14 +66,56 @@ public class AgentsViewModel(
 
     public val state: StateFlow<AgentsUi> = presenter.state
 
+    /** Issue 147: the own-provider and "How this works" sheets; its state rides on [hubState] (no second collector). */
+    private val own =
+        OwnProviderPresenter(viewModelScope, ownProviders.singleOrNull()) { phone.refresh() }
+
+    /** Issue 147: "Add your own agent"; its state also rides on [hubState]. */
+    private val ownAgent =
+        OwnAgentsPresenter(viewModelScope, ownAgents.singleOrNull()) { phone.refresh() }
+
     private val localHub = MutableStateFlow(AgentsHubControlsUi())
     public val hubState: StateFlow<AgentsHubControlsUi> =
-        combine(localHub, hub.state) { own, connection -> own.copy(connection = connection) }
+        combine(localHub, hub.state, own.state, ownAgent.state) { local, connection, ownUi, agentsUi ->
+            local.copy(connection = connection, own = ownUi, ownAgents = agentsUi)
+        }
             .stateIn(
                 viewModelScope,
                 SharingStarted.Eagerly,
-                localHub.value.copy(connection = hub.state.value),
+                localHub.value.copy(connection = hub.state.value, own = own.state.value, ownAgents = ownAgent.state.value),
             )
+
+    override fun openOwnProvider(agent: String): Unit = own.openOwnProvider(agent)
+
+    override fun closeOwnProvider(): Unit = own.closeOwnProvider()
+
+    override fun editedOwnProvider(): Unit = own.editedOwnProvider()
+
+    override fun saveOwnProvider(agent: String, endpoint: String, key: String, model: String): Unit =
+        own.saveOwnProvider(agent, endpoint, key, model)
+
+    override fun removeOwnProvider(agent: String): Unit = own.removeOwnProvider(agent)
+
+    override fun openAgentsHelp(): Unit = own.openAgentsHelp()
+
+    override fun closeAgentsHelp(): Unit = own.closeAgentsHelp()
+
+    override fun addOwnAgent(): Unit = ownAgent.addOwnAgent()
+
+    override fun editOwnAgent(id: String): Unit = ownAgent.editOwnAgent(id)
+
+    override fun closeOwnAgent(): Unit = ownAgent.closeOwnAgent()
+
+    override fun editedOwnAgent(): Unit = ownAgent.editedOwnAgent()
+
+    override fun saveOwnAgent(name: String, start: String, install: String, env: List<Pair<String, String>>): Unit =
+        ownAgent.saveOwnAgent(name, start, install, env)
+
+    override fun checkOwnAgent(): Unit = ownAgent.checkOwnAgent()
+
+    override fun installOwnAgent(): Unit = ownAgent.installOwnAgent()
+
+    override fun removeOwnAgent(): Unit = ownAgent.removeOwnAgent()
 
     override fun openCardsSettings(): Unit = nav.open(CardsSettingsRoute)
 

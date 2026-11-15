@@ -15,7 +15,6 @@ import io.github.eslamasabry.oc.core.data.kv.PrefValue
 import io.github.eslamasabry.oc.core.model.BackendKind
 import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.engine.agents.catalog.AgentPins
-import io.github.eslamasabry.oc.engine.agents.host.PaseoConfig
 import io.github.eslamasabry.oc.engine.connection.ServerConnections
 import io.github.eslamasabry.oc.engine.profiles.SecretEdit
 import io.github.eslamasabry.oc.engine.profiles.StoredProfile
@@ -180,6 +179,8 @@ class AppLocalAgentHostStarter(
                 is Outcome.Failed -> return@withLock saved
                 is Outcome.Ok -> Unit
             }
+        // Issue 147: the person's own agents join the catalog's in the helper's config.
+        val config = phoneHelperConfig(stores, owner.raw, redactor::registerSecret)
         val started =
             withContext(dispatchers.io) {
                 try {
@@ -190,7 +191,7 @@ class AppLocalAgentHostStarter(
                         linux.startPhoneAgentHelper(
                             owner.raw,
                             password,
-                            PaseoConfig.render().json,
+                            config,
                             expectedHelperVersion = AgentPins.builtIn.paseo.version,
                             // As the Flutter app's ordinary start: an older tested helper runs as it is. The automatic
                             // update asks for the pinned one instead (no tested older version stands in for it).
