@@ -574,4 +574,6 @@
     <string name="agentsOwnAgentBadEnvValue">Một giá trị quá dài.</string>
     <string name="agentsOwnAgentTooMany">Điện thoại này giữ tối đa 8 tác nhân riêng. Hãy gỡ một tác nhân trước.</string>
     <string name="agentsOwnAgentFailed">Không thể thực hiện việc đó trên điện thoại này. Thử lại.</string>
+    <string name="agentsOwnAgentReadyNow">Sẵn sàng sử dụng.</string>
+    <string name="agentsOwnAgentReadyLater">Sẽ sẵn sàng khi tác vụ đang chạy kết thúc.</string>
 </resources>
