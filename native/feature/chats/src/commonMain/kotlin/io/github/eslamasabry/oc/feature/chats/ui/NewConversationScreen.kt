@@ -24,6 +24,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
@@ -37,6 +38,10 @@ import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationSheet
 import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationStarter
 import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationWait
 import io.github.eslamasabry.oc.feature.chats.presentation.PhoneStartWay
+import io.github.eslamasabry.oc.feature.chats.presentation.PHONE_STORAGE_ROOT
+
+import io.github.eslamasabry.oc.feature.chats.presentation.PhoneFolderReach
+import io.github.eslamasabry.oc.feature.chats.presentation.PhoneStorageAccess
 import io.github.eslamasabry.oc.feature.chats.presentation.projectPlace
 import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationUi
 import io.github.eslamasabry.oc.feature.chats.presentation.filterNewConversationModels
@@ -69,6 +74,7 @@ import io.github.eslamasabry.oc.ui.kit.input.KitStartBox
 import io.github.eslamasabry.oc.ui.kit.modal.KitBackGuard
 import io.github.eslamasabry.oc.ui.kit.modal.KitPageOverlay
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
+import io.github.eslamasabry.oc.ui.kit.row.KitGroupNote
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHeight
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
 import io.github.eslamasabry.oc.ui.kit.modal.KitModelOption
@@ -133,9 +139,9 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
     val preparing = state.wait == NewConversationWait.Preparing
     val gettingReady =
         stringResource(if (state.preparingSlow) Res.string.chatsNewGettingReadySlow else Res.string.chatsNewGettingReady)
-    val loadingModels = stringResource(Res.string.chat_model_loading)
     val phoneOffWords = stringResource(Res.string.homePhoneOffTitle)
     val unconfirmedWords = unconfirmedWords(state)
+    val phoneFolderWords = phoneFolderWords(state)
     val enabled =
         if (state.phoneOff) KitEnabled.Disabled(phoneOffWords)
         else if (state.deliveryUnconfirmed) KitEnabled.Disabled(unconfirmedWords)
@@ -144,8 +150,12 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
     // A page that could not read its server says that, never "the conversation didn't start" (nothing was sent).
     val setupFailed = state.setup == null && state.failure != null
     val failureShown = state.failure != null && !state.deliveryUnconfirmed
+    // Issue 147: with words typed, Start takes the tap while the page gets ready and starts once it is (the button
+    // shows it is working); only with nothing typed does it say what it waits for.
+    val keepsTap = preparing && state.text.isNotBlank() && !state.phoneOff
     val startBlocked =
         when {
+            keepsTap -> null
             state.phoneOff -> phoneOffWords
             preparing -> gettingReady
             state.busy -> working
@@ -155,12 +165,13 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                 if (setupFailed) stringResource(Res.string.chatsNewSetupFailed) else gettingReady
             state.directory.isNullOrBlank() -> stringResource(Res.string.chatsNewNeedProject)
             state.folderMissing -> stringResource(Res.string.chatsNewFolderMissing)
+            phoneFolderWords != null -> phoneFolderWords
             state.phoneNeedsProjectsFolder ->
                 stringResource(
-                    Res.string.chatsNewAgentNeedsProjectsFolder,
+                    if (state.phoneHasNoProject) Res.string.chatsNewAgentNoProjects
+                    else Res.string.chatsNewAgentNeedsProjectsFolder,
                     state.phoneAgentChoice?.name.orEmpty(),
                 )
-            state.phoneModelsBusy -> loadingModels
             state.text.isBlank() -> stringResource(Res.string.chatsNewBuildPrompt)
             else -> null
         }
@@ -189,13 +200,31 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                     val promptHint = stringResource(Res.string.chatsNewBuildPrompt)
                     // N-48: an unconfirmed send already has its notice above; the reason is said once. A failure
                     // notice on the page is that reason too: never the same sentence twice.
-                    if (
+                    val showsReason =
                         startBlocked != null && startBlocked != promptHint && (!state.busy || preparing) && !state.phoneOff &&
                             !failureShown &&
                             !state.deliveryUnconfirmed && !state.creationUnconfirmed &&
-                            !state.folderMissing
-                    )
-                        KitText(startBlocked, role = TypeRole.Secondary)
+                            !state.folderMissing && phoneFolderWords == null
+                    // Issue 147 (F-034): the chips and Start keep one place from the first frame to the settled page. The
+                    // reason line sits between them, so a line of its height stays when there is no reason (it used to come
+                    // and go, and the chips jumped up and down as the page got ready).
+                    if (!showsReason)
+                        KitText(
+                            "\u00A0",
+                            Modifier.clearAndSetSemantics {}.testTag("chats-new-reason-room"),
+                            role = TypeRole.Secondary,
+                        )
+                    if (showsReason && startBlocked != null)
+                        // The sentence is the way out: one tap makes a project (none yet) or opens the chooser.
+                        if (state.phoneNeedsProjectsFolder)
+                            KitButton(
+                                startBlocked,
+                                actions::chooseProjectForAgent,
+                                Modifier.testTag("chats-new-agent-project"),
+                                role = KitButtonRole.Tertiary,
+                                maxLines = 4,
+                            )
+                        else KitText(startBlocked, role = TypeRole.Secondary)
                     KitButton(
                         action =
                             KitAction(
@@ -205,7 +234,7 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                                     if (startBlocked == null) KitEnabled.Enabled
                                     else KitEnabled.Disabled(startBlocked),
                                 // A spinner only once Start was pressed.
-                                working = state.wait == NewConversationWait.Sending,
+                                working = state.wait == NewConversationWait.Sending || state.startQueued,
                             ),
                         modifier = Modifier.fillMaxWidth(),
                         hero = true,
@@ -308,6 +337,45 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                             tertiary = listOfNotNull(setUp, discard),
                         )
                     }
+                    // Issue 147: the folder in phone storage is not ready for the side that will work in it. Said before
+                    // Start, with the way forward; the message is never sent into another folder.
+                    if (phoneFolderWords != null && !state.deliveryUnconfirmed) {
+                        KitNotice(phoneFolderWords, inset)
+                        val fix =
+                            when (state.phoneFolder) {
+                                PhoneFolderReach.AppAccess -> Res.string.chatsNewPhoneFolderAllow
+                                PhoneFolderReach.Restart ->
+                                    if (state.phoneAgent != null) Res.string.chatsNewPhoneFolderRestartAgentsAction
+                                    else Res.string.chatsNewPhoneFolderRestartServerAction
+                                else -> null
+                            }
+                        val another =
+                            KitAction(
+                                stringResource(Res.string.chatsNewFolderChooseAnother),
+                                { actions.sheet(NewConversationSheet.Projects) },
+                            )
+                        KitActionBlock(
+                            inset,
+                            secondary =
+                                fix?.let {
+                                    KitAction(
+                                        stringResource(it),
+                                        actions::fixPhoneFolder,
+                                        working = state.fixingPhoneFolder,
+                                    )
+                                } ?: another,
+                            tertiary = if (fix != null) listOf(another) else emptyList(),
+                        )
+                        state.phoneFolderFailure?.let { failure ->
+                            KitErrorNotice(
+                                modifier = inset,
+                                message = stringResource(Res.string.chatsNewPhoneFolderRestartFailed),
+                                failure = failure,
+                                detailsLabel = stringResource(Res.string.kitDetails),
+                                copyLabel = stringResource(Res.string.kitCopyDetails),
+                            )
+                        }
+                    }
                     // B-063: the server still lists a project whose folder is gone; a message sent there is
                     // refused. Say it before Start, with the two ways forward.
                     if (state.folderMissing && !state.deliveryUnconfirmed) {
@@ -336,6 +404,23 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                                 detailsLabel = stringResource(Res.string.kitDetails),
                                 copyLabel = stringResource(Res.string.kitCopyDetails),
                             )
+                        }
+                    }
+                    // Issue 147: a folder in the phone's storage is named in full once, with what that storage can't do
+                    // behind Why (the agents are told the same at their start).
+                    if (state.phoneFolder == PhoneFolderReach.Ready && !state.directory.isNullOrBlank()) {
+                        var why by remember(state.directory) { mutableStateOf(false) }
+                        KitGroupNote(
+                            stringResource(Res.string.chatsNewPhoneFolderWhere, state.directory.orEmpty()),
+                            inset.testTag("chats-new-phone-folder"),
+                            action = KitAction(stringResource(Res.string.chatsNewPhoneFolderWhy), { why = true }),
+                        )
+                        KitSheet(
+                            visible = why,
+                            onDismissRequest = { why = false },
+                            title = stringResource(Res.string.chatsNewPhoneFolderHelpTitle),
+                        ) {
+                            KitText(stringResource(Res.string.chatsNewPhoneFolderHelp))
                         }
                     }
                     if (state.draftFailed) KitNotice(stringResource(Res.string.p12NewDraftFailed), inset)
@@ -497,6 +582,23 @@ private fun NewConversationSheet(state: NewConversationUi, actions: NewConversat
                 }
                 if (state.canCreateProject)
                     KitNewProjectRow(actions::askNewProject, working = state.creatingProject)
+                // This phone's own storage (Downloads, Documents): says what the access gives, opens Android's page
+                // for it, and once on it picks the storage folder.
+                state.phoneStorage?.let { access ->
+                    val on = access == PhoneStorageAccess.On
+                    KitRow(
+                        title = stringResource(Res.string.chatsNewPhoneStorage),
+                        supporting =
+                            stringResource(
+                                if (on) Res.string.chatsNewPhoneStorageOn else Res.string.chatsNewPhoneStorageOff
+                            ),
+                        leading = KitRowLeading.Glyph(KitIcons.folders, tile = true),
+                        trailing = KitRowTrailing.Chevron,
+                        onClick = { if (on) actions.browsePhoneStorage() else actions.requestPhoneStorage() },
+                        // On: a folder list of phone storage opens, to choose or make the project folder in it.
+                        modifier = Modifier.testTag("chats-new-phone-storage"),
+                    )
+                }
             }
             state.projectFailure?.let { problem ->
                 KitErrorNotice(
@@ -539,6 +641,7 @@ private fun NewConversationSheet(state: NewConversationUi, actions: NewConversat
             }
         }
     }
+    StorageFoldersSheet(state, actions)
     NewProjectDialog(state, actions)
     AgentModelSheet(state, actions)
 }
@@ -605,7 +708,11 @@ private fun NewConversationAgentStep(state: NewConversationUi, actions: NewConve
                 leading = KitRowLeading.Logo(agent.iconKey, agent.name, agent = true),
                 selected = state.phoneAgent == agent.id,
                 trailing = if (state.phoneAgent == agent.id) KitRowTrailing.Check else KitRowTrailing.None,
-                supporting = stringResource(Res.string.upgradeAgentReady),
+                // The Agents page's own words: an agent whose sign-in no check can read is "Ready" only by its first answer.
+                supporting =
+                    stringResource(
+                        if (agent.setUpAtFirstUse) Res.string.agentsStateSetUpAtFirstUse else Res.string.upgradeAgentReady
+                    ),
                 onClick = { actions.choosePhoneAgent(agent.id) },
                 modifier = Modifier.testTag("chats-new-agent-${agent.id}"),
             )
@@ -616,7 +723,11 @@ private fun NewConversationAgentStep(state: NewConversationUi, actions: NewConve
                 leading = KitRowLeading.Logo(agent.iconKey, agent.name, agent = true),
                 trailing = KitRowTrailing.Chevron,
                 supporting =
-                    stringResource(if (agent.checking) Res.string.r40PhoneChecking else Res.string.chatsNewSetUp),
+                    when {
+                        agent.updating -> stringResource(Res.string.agentsUpdatingAgent, agent.name)
+                        agent.checking -> stringResource(Res.string.r40PhoneChecking)
+                        else -> stringResource(Res.string.chatsNewSetUp)
+                    },
                 onClick = { actions.setUpPhoneAgent(agent.id) },
                 modifier = Modifier.testTag("chats-new-agent-${agent.id}"),
             )
@@ -803,7 +914,7 @@ private fun agentChipLabel(state: NewConversationUi): String {
 @Composable
 private fun modelLabel(state: NewConversationUi): String =
     state.shownModels.firstOrNull { it.model == state.shownModel }?.name
-        ?: stringResource(Res.string.modelServerDefault)
+        ?: stringResource(if (state.modelsLoading) Res.string.chat_model_loading else Res.string.modelServerDefault)
 
 /**
  * The chat frame from the moment Start is tapped: the prompt is already the first bubble, the
@@ -827,6 +938,7 @@ private fun StartingConversation(state: NewConversationUi, actions: NewConversat
             PhoneStartWay.SetUp -> stringResource(Res.string.chatSendFailureNeedsSetUp, agentName)
             PhoneStartWay.ChooseModel -> stringResource(Res.string.chatsNewAgentModelMissing, agentName)
             PhoneStartWay.TryAgain -> stringResource(Res.string.chatsNewAgentDidNotStart, agentName)
+            PhoneStartWay.SignIn -> stringResource(Res.string.chatSendFailureSignInAgain, agentName)
             null -> null
         }
     val setUpWords = stringResource(Res.string.agentsSetUpAction, agentName)
@@ -872,6 +984,7 @@ private fun StartingConversation(state: NewConversationUi, actions: NewConversat
                 unconfirmedAgent != null -> unconfirmedSetUp
                 problem?.way == PhoneStartWay.SetUp -> setUpWords
                 problem?.way == PhoneStartWay.ChooseModel -> chooseModelWords
+                problem?.way == PhoneStartWay.SignIn -> stringResource(Res.string.chatSendFailureSignInAction)
                 else -> stringResource(Res.string.commonRetry)
             },
         onRetry =
@@ -882,7 +995,7 @@ private fun StartingConversation(state: NewConversationUi, actions: NewConversat
                 val way = problem?.way
                 val forward: () -> Unit = {
                     when (way) {
-                        PhoneStartWay.SetUp -> actions.setUpPhoneAgent(agentId)
+                        PhoneStartWay.SetUp, PhoneStartWay.SignIn -> actions.setUpPhoneAgent(agentId)
                         PhoneStartWay.ChooseModel -> {
                             actions.editPrompt()
                             actions.sheet(NewConversationSheet.Models)
@@ -1010,4 +1123,91 @@ private fun NewProjectDialog(state: NewConversationUi, actions: NewConversationA
         onSubmit = { name -> actions.createProject(name) },
         onDismissRequest = { actions.createProject(null) },
     )
+}
+
+
+/**
+ * The folder list under the Phone storage row: enter folders, make a new one, and use the one shown as the project
+ * (the storage root itself cannot be one). Ends with a chosen folder in one flow.
+ */
+@Composable
+private fun StorageFoldersSheet(state: NewConversationUi, actions: NewConversationActions) {
+    val path = state.storagePath ?: return
+    val atRoot = path == PHONE_STORAGE_ROOT
+    val name = path.trimEnd('/').substringAfterLast('/').ifEmpty { path }
+    val held =
+        if (state.storageLoading) KitEnabled.Disabled(stringResource(Res.string.andrStorageWorking))
+        else KitEnabled.Enabled
+    KitSheet(
+        visible = true,
+        onDismissRequest = actions::closeStorageFolders,
+        title = if (atRoot) stringResource(Res.string.folderBrowserInternalStorage) else name,
+        subtitle = stringResource(Res.string.folderBrowserPlacePhone),
+        leading =
+            KitAction(
+                stringResource(if (atRoot) Res.string.kitTopBarBack else Res.string.folderBrowserUp),
+                {
+                    if (atRoot) actions.closeStorageFolders()
+                    else actions.enterStorageFolder(path.substringBeforeLast('/'))
+                },
+                enabled = held,
+            ),
+        height = KitSheetHeight.Content,
+        primary =
+            if (atRoot || state.storageLoading || state.storageFailure != null) null
+            else KitAction(stringResource(Res.string.folderBrowserOpen, name), actions::useStorageFolder, icon = KitIcons.folderOpen),
+    ) {
+        if (atRoot)
+            KitText(stringResource(Res.string.andrStorageRootHere), role = TypeRole.Secondary)
+        when {
+            state.storageLoading -> KitSkeletonRows(count = 4)
+            state.storageFailure != null ->
+                KitErrorNotice(
+                    message = stringResource(Res.string.folderBrowserErrorTitle),
+                    failure = state.storageFailure,
+                    detailsLabel = stringResource(Res.string.kitDetails),
+                    copyLabel = stringResource(Res.string.kitCopyDetails),
+                    retry = KitLineAction(stringResource(Res.string.folderBrowserRetry), { actions.enterStorageFolder(path) }),
+                )
+            else ->
+                KitRowGroup(leadingTiles = true) {
+                    KitNewProjectRow(actions::askNewStorageFolder, working = state.creatingProject)
+                    state.storageFolders.forEach { folder ->
+                        KitRow(
+                            title = folder.name,
+                            leading = KitRowLeading.Glyph(KitIcons.folderOpen),
+                            trailing = KitRowTrailing.Chevron,
+                            modifier = Modifier.testTag("storage-folder-${folder.path}"),
+                            onClick = { actions.enterStorageFolder(folder.path) },
+                        )
+                    }
+                }
+        }
+        if (state.storageFolders.isEmpty() && !state.storageLoading && state.storageFailure == null)
+            KitText(stringResource(Res.string.andrStorageFoldersEmpty), role = TypeRole.Secondary)
+        state.projectFailure?.let { problem ->
+            KitErrorNotice(
+                message = stringResource(Res.string.projectFolderCreateFailedTitle),
+                failure = problem,
+                detailsLabel = stringResource(Res.string.kitDetails),
+                copyLabel = stringResource(Res.string.kitCopyDetails),
+            )
+        }
+    }
+}
+
+/** Issue 147: why the chosen folder in phone storage keeps Start back, naming the agent; null when it does not. */
+@Composable
+private fun phoneFolderWords(state: NewConversationUi): String? {
+    val agent = state.phoneAgentName ?: "OpenCode"
+    return when (state.phoneFolder) {
+        null,
+        PhoneFolderReach.Ready -> null
+        PhoneFolderReach.AppAccess -> stringResource(Res.string.chatsNewPhoneFolderAccess)
+        PhoneFolderReach.Restart ->
+            if (state.phoneAgent != null) stringResource(Res.string.chatsNewPhoneFolderRestartAgents, agent)
+            else stringResource(Res.string.chatsNewPhoneFolderRestartServer)
+        PhoneFolderReach.Missing -> stringResource(Res.string.chatsNewPhoneFolderMissing)
+        PhoneFolderReach.Denied -> stringResource(Res.string.chatsNewPhoneFolderDenied, agent)
+    }
 }

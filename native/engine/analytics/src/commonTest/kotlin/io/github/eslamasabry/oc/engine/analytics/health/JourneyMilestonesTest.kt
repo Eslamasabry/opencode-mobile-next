@@ -206,12 +206,7 @@ class JourneyMilestonesTest {
         val service = TelemetryService(vendor, available = true, scope = this)
         service.start(TelemetryConsent(usage = true), NoStore, MemoryTelemetryReportStore())
         val jank = JankMeter(
-            report = { screen, pct, frozen, hz ->
-                service.track(
-                    ProductEvent.Jank,
-                    mapOf("screen" to screen, "janky_pct_range" to pct, "frozen_range" to frozen, "refresh_hz" to hz),
-                )
-            },
+            report = { screen, frames -> service.track(ProductEvent.Jank, mapOf("screen" to screen) + frames.params()) },
         )
         jank.start()
         jank.screen(io.github.eslamasabry.oc.engine.analytics.product.ProductScreen.Chat)

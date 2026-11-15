@@ -21,7 +21,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
-/** The one-time GitHub star ask under the live line: when it shows, that it shows once, and what its actions do. */
+/** The one-time GitHub star ask: shown at rest after a finished reply, never while a turn runs, once, and what its actions do. */
 @OptIn(ExperimentalCoroutinesApi::class)
 class StarPromptPresenterTest {
     /** The app's port over the real rules, in memory. */
@@ -29,14 +29,16 @@ class StarPromptPresenterTest {
         var state = StarPromptState()
         val events = mutableListOf<StarPromptEvent>()
 
-        override suspend fun promptStarted(): Boolean {
-            val (next, ask) = StarPromptRules.afterPrompt(state)
-            state = next
-            return ask
+        var now = 1L
+
+        override suspend fun promptStarted() {
+            state = StarPromptRules.afterPrompt(state, now)
         }
 
-        override suspend fun replyEnded(success: Boolean) {
-            state = StarPromptRules.afterReply(state, success)
+        override suspend fun replyEnded(success: Boolean): Boolean {
+            val (next, ask) = StarPromptRules.afterReply(state, success, now)
+            state = next
+            return ask
         }
 
         override fun report(event: StarPromptEvent) {
@@ -66,6 +68,12 @@ class StarPromptPresenterTest {
     private val outside = Outside()
     private val busy = RunFacts(busy = true)
 
+    /** Nine good replies and three days of use behind: the next finished good reply is the moment. */
+    private fun ready() {
+        star.state = StarPromptState(prompts = 9, replies = 9, firstMs = 1)
+        star.now = 1 + StarPromptRules.ASK_AFTER_MS
+    }
+
     private fun TestScope.chat(): Pair<ChatPresenter, StateFlow<io.github.eslamasabry.oc.feature.chat.presentation.ChatUi>> {
         val p = ChatPresenter(world, RecordingNavigator(), Immediate, outside = outside, star = star)
         val flow = p.states(backgroundScope, UnconfinedTestDispatcher(testScheduler), SharingStarted.Eagerly)
@@ -87,34 +95,37 @@ class StarPromptPresenterTest {
     }
 
     @Test
-    fun `B-STAR-010 the first prompt shows no ask`() = runTest {
+    fun `B-STAR-010 the first prompt shows no ask, running or at rest`() = runTest {
         val (_, ui) = chat()
         running(asking = 1)
         assertFalse(ui.value.starAsk)
+        ended(1)
+        assertFalse(ui.value.starAsk, "the first hour is never the moment")
         assertEquals(emptyList(), star.events)
     }
 
     @Test
-    fun `B-STAR-011 the second prompt after a good reply shows the ask while it waits, and the reply folds it away`() = runTest {
+    fun `B-STAR-011 the ask never shows while a turn runs and comes at rest after the finishing reply`() = runTest {
         val (_, ui) = chat()
+        ready()
         running(asking = 1)
+        assertFalse(ui.value.starAsk, "a turn is running")
         ended(1)
-        running(1, asking = 2)
-        assertTrue(ui.value.starAsk)
+        assertTrue(ui.value.starAsk, "the reply is in and nothing runs")
         assertEquals(listOf(StarPromptEvent.Shown), star.events)
+        running(1, asking = 2)
+        assertFalse(ui.value.starAsk, "a new turn takes it down")
         ended(1, 2)
-        assertFalse(ui.value.starAsk, "the reply arrived without a tap")
-        running(1, 2, asking = 3)
         assertFalse(ui.value.starAsk, "never twice")
         assertEquals(listOf(StarPromptEvent.Shown), star.events)
     }
 
     @Test
-    fun `B-STAR-012 a failed first reply means no ask on the second prompt`() = runTest {
+    fun `B-STAR-012 a failed reply does not ask`() = runTest {
         val (_, ui) = chat()
+        ready()
         running(asking = 1)
         ended(1, failedLast = true)
-        running(1, asking = 2)
         assertFalse(ui.value.starAsk)
         assertEquals(emptyList(), star.events)
     }
@@ -122,10 +133,10 @@ class StarPromptPresenterTest {
     @Test
     fun `B-STAR-013 no ask while the link is down`() = runTest {
         val (_, ui) = chat()
+        ready()
         running(asking = 1)
-        ended(1)
         world.link.value = ChatLink.Offline
-        running(1, asking = 2)
+        ended(1)
         assertFalse(ui.value.starAsk)
         assertEquals(emptyList(), star.events)
     }
@@ -144,9 +155,9 @@ class StarPromptPresenterTest {
     @Test
     fun `B-STAR-015 Star on GitHub opens the repository through the app's own link path and ends the ask`() = runTest {
         val (p, ui) = chat()
+        ready()
         running(asking = 1)
         ended(1)
-        running(1, asking = 2)
         p.starTapped()
         runCurrent()
         assertEquals(listOf(StarPromptRules.URL), outside.ownLinks)
@@ -160,16 +171,16 @@ class StarPromptPresenterTest {
     @Test
     fun `B-STAR-016 Not now ends the ask and opens nothing`() = runTest {
         val (p, ui) = chat()
+        ready()
         running(asking = 1)
         ended(1)
-        running(1, asking = 2)
         p.starDismissed()
         runCurrent()
         assertFalse(ui.value.starAsk)
         assertEquals(emptyList(), outside.ownLinks)
         assertEquals(listOf(StarPromptEvent.Shown, StarPromptEvent.Dismissed), star.events)
+        running(1, asking = 2)
         ended(1, 2)
-        running(1, 2, asking = 3)
         assertFalse(ui.value.starAsk)
     }
 

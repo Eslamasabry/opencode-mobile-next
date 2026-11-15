@@ -62,7 +62,47 @@ public data class ToolOutputView(
     val pruned: Boolean = false,
     /** Why a failed call failed, read from its error text; null when the call did not fail (B-253). */
     val failure: ToolFailure? = null,
+    /**
+     * The last lines a running command has put out so far (at most [LIVE_TAIL_LINES] lines and [LIVE_TAIL_CHARS]
+     * characters), kept so a step that is still working can show its output growing in place; empty once the call
+     * finished (then [text] is the whole answer) and for a call that has put nothing out yet.
+     */
+    val liveTail: String = "",
 )
+
+/** A running command keeps at most this many of its last lines for the live view. */
+public const val LIVE_TAIL_LINES: Int = 40
+
+/** ... and at most this many characters of them. */
+public const val LIVE_TAIL_CHARS: Int = 4 * 1024
+
+/**
+ * The end of [text]: its last [maxLines] lines, then its last [maxChars] characters (cut at a line start when one is
+ * near), so a long-running command costs the transcript a bounded amount however much it prints.
+ */
+public fun boundedTail(text: String, maxLines: Int = LIVE_TAIL_LINES, maxChars: Int = LIVE_TAIL_CHARS): String {
+    val kept = text.trimEnd('\n', '\r')
+    if (kept.isEmpty()) return ""
+    var start = 0
+    var newlines = 0
+    var at = kept.length
+    while (at > 0) {
+        at = kept.lastIndexOf('\n', at - 1)
+        if (at < 0) break
+        newlines++
+        if (newlines == maxLines) {
+            start = at + 1
+            break
+        }
+    }
+    var tail = kept.substring(start)
+    if (tail.length > maxChars) {
+        val from = tail.length - maxChars
+        val lineStart = tail.indexOf('\n', from)
+        tail = if (lineStart in 0 until tail.length - 1 && lineStart - from < maxChars / 4) tail.substring(lineStart + 1) else tail.substring(from)
+    }
+    return tail
+}
 
 /**
  * Why a tool call failed, as far as its error text says (B-253), so a step can say it in plain words and keep the
@@ -130,7 +170,18 @@ public fun toolOutputView(state: ToolState, toolName: String?): ToolOutputView {
         artifacts = toolArtifacts(state, toolName),
         pruned = state.pruned,
         failure = toolFailureOf(errorText),
+        liveTail = if (state.status == ToolStatus.Running) liveTailOf(state) else "",
     )
+}
+
+/**
+ * What a running call has put out so far: OpenCode keeps a running command's output so far in its metadata (`output`),
+ * the phone agents' helper in the step's own output text. Bounded by [boundedTail]; nothing for a structured value.
+ */
+private fun liveTailOf(state: ToolState): String {
+    val fromMetadata = (state.metadata?.get("output") as? JsonPrimitive)?.takeIf { it.isString }?.content
+    val raw = fromMetadata?.takeIf { it.isNotEmpty() } ?: state.output ?: ""
+    return boundedTail(raw)
 }
 
 /**

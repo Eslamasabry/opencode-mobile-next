@@ -8,6 +8,7 @@ import dev.zacsweers.metro.binding
 import io.github.eslamasabry.oc.core.common.AppCoroutineScope
 import io.github.eslamasabry.oc.core.common.AppDispatchers
 import io.github.eslamasabry.oc.core.common.Failure
+import io.github.eslamasabry.oc.core.common.FeatureId
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.RefusalReason
 import io.github.eslamasabry.oc.core.common.dart.DartJson
@@ -89,6 +90,7 @@ class AppChatsHome(
     private val phoneServer: AndroidChatPhoneServer,
     /** The automatic agent update: while it installs, the agents' source says "Updating …" (no silent minutes). */
     private val agentUpdate: PhoneAgentUpdateStatus,
+    private val sharedStorage: Set<io.github.eslamasabry.oc.core.domain.platform.SharedStorageAccess>,
     appScope: AppCoroutineScope,
     dispatchers: AppDispatchers,
 ) : ChatsHomeExtras, HomeFeedCache {
@@ -133,7 +135,13 @@ class AppChatsHome(
                     runtime.profiles.activeId,
                     // A source the app starts that stopped answering no longer says it is starting; an agent update says
                     // it runs.
-                    combine(monitor.snapshot, phone.serverFacts, runtime.sourceFailureState, agentUpdate.decision) { _, _, _, _ ->
+                    combine(
+                        monitor.snapshot,
+                        phone.serverFacts,
+                        runtime.sourceFailureState,
+                        agentUpdate.decision,
+                        runtime.helperStarting,
+                    ) { _, _, _, _, _ ->
                         Unit
                     },
                 ) { _, _, _, _, _ ->
@@ -152,18 +160,25 @@ class AppChatsHome(
         val sources =
             runtime.profiles.profiles.value
                 .map { loaded ->
-                    // F: side_connections.dart:93-99: the phone agents are one switch named after Claude Code, part of
-                    // This phone: never the server, never "not answering" (their own notices say what is wrong).
+                    // F: side_connections.dart:93-99: the phone agents are one switch (named for what they are), part of
+                    // This phone: never the server. Not answering only when their helper's start failed (issue 147).
                     val agents = runtime.isPhoneHelper(loaded.id)
+                    // Issue 147: an agents' source with no start, no list and no failure gets a start (never a bare
+                    // "Starting" with nothing behind it); during an agent update the update says why it waits.
+                    if (agents && updating == null) runtime.keepHelperListed(loaded.id)
                     ChatsListSourceUi(
                         profile = loaded.id,
-                        name =
-                            if (agents) AgentCatalog.builtIn.byId(AgentId("claude"))?.name ?: loaded.profile.name
-                            else loaded.profile.name,
+                        // Issue 147: the agents' switch is the phone's agents, never "Claude Code" for every agent; the
+                        // home's words name it "Agents on this phone" (feature/chats, ChatsListSourceUi.agents).
+                        name = loaded.profile.name,
                         shown = runtime.listSourceShown(loaded.id),
                         main = !agents && loaded.id == active,
                         onThisPhone = runtime.sourceOnThisPhone(loaded.profile),
-                        unreachable = !agents && loaded.id in runtime.sourceFailures,
+                        // Issue 147: the agents' helper that did not start is named with its Try again (the sheet and
+                        // the home's notice), never left reading "Starting"; during an update the update speaks.
+                        unreachable =
+                            loaded.id in runtime.sourceFailures &&
+                                (!agents || (updating == null && loaded.id !in runtime.helperStarting.value)),
                         agents = agents,
                         starting = runtime.startingSource(loaded.id, agentsUpdating = agents && updating != null),
                         updatingAgent =
@@ -276,6 +291,38 @@ class AppChatsHome(
 
     private fun openingTries(profile: ProfileId): Int =
         openingTries?.takeIf { it.first == profile }?.second ?: 1
+
+    override suspend fun phoneStorage(): io.github.eslamasabry.oc.feature.chats.presentation.PhoneStorageAccess? {
+        val access = sharedStorage.singleOrNull() ?: return null
+        val owner = phoneOwnerProfile() ?: return null
+        val graph = registry.live.value[owner] ?: return null
+        val block = (access.check(owner, "/storage/emulated/0", graph.session.server) as? Outcome.Ok)?.value ?: return null
+        return if (block == io.github.eslamasabry.oc.core.domain.platform.SharedStorageBlock.None)
+            io.github.eslamasabry.oc.feature.chats.presentation.PhoneStorageAccess.On
+        else io.github.eslamasabry.oc.feature.chats.presentation.PhoneStorageAccess.Off
+    }
+
+    override suspend fun requestPhoneStorage(): Outcome<Unit> {
+        val access = sharedStorage.singleOrNull() ?: return Outcome.Failed(Failure.Unavailable(FeatureId("phoneStorage")))
+        val owner = phoneOwnerProfile() ?: return Outcome.Failed(Failure.Unavailable(FeatureId("phoneStorage")))
+        val graph = registry.live.value[owner] ?: return Outcome.Failed(Failure.Unavailable(FeatureId("phoneStorage")))
+        return access.request(
+            owner,
+            "/storage/emulated/0",
+            io.github.eslamasabry.oc.core.domain.platform.SharedStorageBlock.AppAccess,
+            graph.session.server,
+        )
+    }
+
+    /** The saved This phone profile, when the app owns one (its own OpenCode). */
+    private fun phoneOwnerProfile(): ProfileId? =
+        try {
+            (stores.prefs.get("oc.builtinServerOwner") as? io.github.eslamasabry.oc.core.data.kv.PrefValue.Str)?.value
+                ?.takeIf { it.isNotEmpty() }
+                ?.let(::ProfileId)
+        } catch (_: Exception) {
+            null
+        }
 
     override suspend fun retryOpening(): Outcome<Unit> {
         val active =

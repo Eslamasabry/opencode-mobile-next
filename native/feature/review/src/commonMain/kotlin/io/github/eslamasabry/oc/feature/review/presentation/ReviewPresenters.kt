@@ -197,7 +197,7 @@ public class ChangesPresenter(
                             }
                             is Outcome.Ok -> scoped.value
                         }
-                    val rows = markViewed(chosen, scopedFiles)
+                    val rows = markViewed(chosen, if (chosen == ReviewScope.Conversation) withTreeDiffs(scopedFiles) else scopedFiles)
                     val working = chosen != ReviewScope.Conversation
                     val scopes = scopes()
                     // An empty folder or branch view says why: not under Git, or a clean tree (the agent's reported
@@ -225,6 +225,43 @@ public class ChangesPresenter(
                     followGuide()
                 }
             }
+        }
+    }
+
+    /**
+     * Every listed change opens its diff (walk F-020): a row the tools reported without lines (the agent wrote it
+     * through a command) takes the folder's own diff for that file; with the folder's changes known and none for it,
+     * it is not a change any more and is not listed. With no folder diff to ask, the rows stay as the tools gave them.
+     */
+    private suspend fun withTreeDiffs(rows: List<Scoped>): List<Scoped> {
+        if (rows.all { it.row.hasDiff }) return rows
+        val tree =
+            if (review.workingTreeAvailable()) (review.workingTree() as? Outcome.Ok)?.value.orEmpty() else emptyList()
+        fun inTree(path: String) =
+            tree.firstOrNull { !it.patch.isNullOrBlank() && (it.file == path || path.endsWith("/" + it.file)) }
+        // A change already committed is in neither the tools' lines nor the uncommitted ones: the whole branch has it.
+        val committed =
+            if (rows.any { !it.row.hasDiff && inTree(it.row.path) == null } && branch != null)
+                (readBranch() as? Outcome.Ok)?.value.orEmpty()
+            else emptyList()
+        fun inBranch(path: String) =
+            committed.firstOrNull { !it.patch.isNullOrBlank() && (it.file == path || path.endsWith("/" + it.file)) }
+        if (tree.isEmpty() && committed.isEmpty()) return rows
+        return rows.mapNotNull { r ->
+            if (r.row.hasDiff) return@mapNotNull r
+            inTree(r.row.path)?.let { hit ->
+                return@mapNotNull Scoped(
+                    r.row.copy(added = hit.additions, removed = hit.deletions, hasDiff = true, diffPath = hit.file),
+                    "${hit.additions}|${hit.deletions}|${hit.status}|${hit.patch.hashCode()}",
+                )
+            }
+            inBranch(r.row.path)?.let { hit ->
+                return@mapNotNull Scoped(
+                    r.row.copy(added = hit.additions, removed = hit.deletions, hasDiff = true, diffPath = hit.file, viaBranch = true),
+                    "${hit.additions}|${hit.deletions}|branch|${hit.patch.hashCode()}",
+                )
+            }
+            null
         }
     }
 
@@ -394,7 +431,14 @@ public class ChangesPresenter(
         when (s.scope) {
             ReviewScope.WorkingTree -> nav.openWorkingTreeFile(path)
             ReviewScope.Branch -> nav.openBranchFile(path)
-            ReviewScope.Conversation -> nav.openFile(path, staged = false)
+            ReviewScope.Conversation ->
+                s.files.firstOrNull { it.path == path }?.let { row ->
+                    when {
+                        row.diffPath != null && row.viaBranch -> nav.openBranchFile(row.diffPath)
+                        row.diffPath != null -> nav.openWorkingTreeFile(row.diffPath)
+                        else -> nav.openFile(path, staged = false)
+                    }
+                } ?: nav.openFile(path, staged = false)
         }
     }
 

@@ -221,6 +221,22 @@ class ChatFeedTest {
     }
 
     @Test
+    fun `ISSUE-147 a failure flag kept here never outvotes the server's word that the last run ended well or was cut`() {
+        fun rows(listing: OpenCodeListing) =
+            OpenCodeChatFeedSource(feedProfile, null, MutableStateFlow(listing)).current().items.associateBy { it.sessionId.raw }
+        // The flag is only a memory of an earlier failed run in this app; the server has since reported another end.
+        val later = session("later", "/work/app", 5).copy(lastRunFailed = true, lastRunOutcome = SessionRunOutcome.Succeeded)
+        val cut = session("cut", "/work/app", 4).copy(lastRunFailed = true, lastRunOutcome = SessionRunOutcome.Interrupted)
+        val real = session("real", "/work/app", 3).copy(lastRunFailed = true, lastRunOutcome = SessionRunOutcome.Failed)
+        val unreported = session("unreported", "/work/app", 2).copy(lastRunFailed = true)
+        val byId = rows(OpenCodeListing(sessions = listOf(later, cut, real, unreported)))
+        assertEquals(ChatStatus.Idle, byId.getValue("later").status, "the last run succeeded")
+        assertEquals(ChatStatus.Idle, byId.getValue("cut").status, "an interrupted run is not a failed one")
+        assertEquals(ChatStatus.Failed, byId.getValue("real").status, "a run that really failed is Failed")
+        assertEquals(ChatStatus.Failed, byId.getValue("unreported").status, "no server word: the flag stands")
+    }
+
+    @Test
     fun `the server's word for the last run reaches the row, and Stopped by the person outranks Interrupted`() {
         fun rows(listing: OpenCodeListing) =
             OpenCodeChatFeedSource(feedProfile, null, MutableStateFlow(listing)).current().items.associateBy { it.sessionId.raw }

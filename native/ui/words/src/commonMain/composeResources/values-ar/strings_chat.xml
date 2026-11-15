@@ -874,7 +874,7 @@
     <string name="composerBusyReason">جارٍ تجهيز طلبك…</string>
     <string name="composerToolsTextOnly">يقبل هذا الخادم النصوص فقط</string>
     <string name="composerToolsAgentTextOnly">يقبل %1$s النص فقط هنا</string>
-    <string name="composerToolsAgentPicturesOnly">يقبل %1$s الصور فقط: استخدم مكتبة الصور أو التقاط صورة</string>
+    <string name="composerToolsPicturesOnlyUse">يقبل %1$s الصور فقط: استخدم %2$s أو %3$s</string>
     <string name="composerToolSavedSubtitle">إعادة طلب محفوظ إلى المسودة</string>
     <string name="composerToolSaveForLater">حفظ الطلب لوقت لاحق</string>
     <string name="composerToolNothingToSave">اكتب شيئًا أو أرفقه أولًا</string>
@@ -1537,4 +1537,16 @@
     <string name="chatLoadFailedAgentsBody">لم يضِع شيء. حاول مرة أخرى عندما تستجيب الوكلاء على الهاتف.</string>
     <string name="chatLoadMissingAgentBody">لا توجد هذه المحادثة لدى %1$s: ربما توقفت قبل أن تبدأ. حاول مرة أخرى، أو أعدّ %1$s وابدأ محادثة جديدة.</string>
     <string name="chatLoadMissingAgentsBody">لا توجد هذه المحادثة لدى الوكلاء على الهاتف: ربما توقف وكيلها قبل أن تبدأ. حاول مرة أخرى أو ابدأ محادثة جديدة.</string>
+    <string name="kitCommandNoOutput">لا مخرجات</string>
+    <string name="kitCommandFailedNoOutput">فشل قبل أن يطبع أي شيء</string>
+    <string name="kitCommandStoppedEarly">توقّف قبل أن ينتهي</string>
+    <string name="chatOldAgentReadOnly">لا يستطيع %1$s متابعة هذه المحادثة من جديد. اقرأها هنا، أو تابع في محادثة جديدة.</string>
+    <string name="chatOldAgentReadOnlyUnnamed">لا يستطيع هذا الوكيل متابعة هذه المحادثة من جديد. اقرأها هنا، أو تابع في محادثة جديدة.</string>
+    <string name="chatContinueInNewConversation">المتابعة في محادثة جديدة</string>
+    <string name="chatContinueBriefIntro">لنتابع «%1$s». لا يمكنك رؤية تلك المحادثة، لذا إليك ما حدث فيها.</string>
+    <string name="chatContinueBriefIntroUntitled">لنتابع محادثة سابقة. لا يمكنك رؤيتها، لذا إليك ما حدث فيها.</string>
+    <string name="chatContinueBriefAsked">ما طلبتُه:</string>
+    <string name="chatContinueBriefChanged">الملفات التي تغيّرت:</string>
+    <string name="chatContinueBriefStopped">أين توقّف العمل:</string>
+    <string name="chatUiContinuedAfterCommand">كان أحد الأوامر ما زال يعمل، فطُلب من الوكيل أن ينتظره ثم يتابع</string>
 </resources>

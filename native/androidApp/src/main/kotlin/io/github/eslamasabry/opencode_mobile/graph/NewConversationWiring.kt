@@ -32,6 +32,7 @@ import io.github.eslamasabry.oc.core.model.ServerLocation
 import io.github.eslamasabry.oc.core.model.ServerProfile
 import io.github.eslamasabry.oc.engine.agents.AgentId
 import io.github.eslamasabry.oc.engine.agents.catalog.AgentCatalog
+import io.github.eslamasabry.oc.engine.agents.providers.OwnAgentRules
 import io.github.eslamasabry.oc.engine.agents.selection.AgentSelection
 import io.github.eslamasabry.oc.engine.agents.selection.PhoneChatAgents
 import io.github.eslamasabry.oc.engine.agents.selection.PhoneChatFact
@@ -56,6 +57,9 @@ import io.github.eslamasabry.oc.engine.git.GitLinkRepairService
 import io.github.eslamasabry.oc.feature.chat.world.ChatGraphAccessors
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentInstallPhase
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentRow
+import io.github.eslamasabry.oc.feature.agents.hub.phoneAgentChoosable
+import io.github.eslamasabry.oc.feature.agents.hub.phoneAgentShown
+import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentShown
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentStatus
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgents
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentsState
@@ -102,6 +106,9 @@ class AndroidNewConversationHost(
     private val phoneServer: AndroidChatPhoneServer,
     private val phoneAgents: PhoneAgents,
     private val phoneHelper: AppLocalAgentHostStarter,
+    private val storageFolderPort: io.github.eslamasabry.oc.feature.projects.presentation.PhoneFolders,
+    private val sharedStorage: Set<io.github.eslamasabry.oc.core.domain.platform.SharedStorageAccess>,
+    private val phoneFolders: PhoneFolderPreflight,
     appScope: AppCoroutineScope,
     dispatchers: AppDispatchers,
 ) : NewConversationHost {
@@ -130,6 +137,20 @@ class AndroidNewConversationHost(
     override suspend fun startPhoneServer(profile: ProfileId): Outcome<Unit> =
         phoneServer.start(profile)
 
+    // Issue 147: a folder in this phone's storage, checked from the Linux side that will work in it.
+    override suspend fun phoneFolder(
+        profile: ProfileId,
+        phoneAgent: String?,
+        directory: String,
+    ): io.github.eslamasabry.oc.feature.chats.presentation.PhoneFolderReach? =
+        phoneFolders.check(profile, phoneAgent != null, directory)
+
+    override suspend fun fixPhoneFolder(
+        profile: ProfileId,
+        phoneAgent: String?,
+        reach: io.github.eslamasabry.oc.feature.chats.presentation.PhoneFolderReach,
+    ): Outcome<Unit> = phoneFolders.fix(profile, phoneAgent != null, reach)
+
     override fun canRepair(profile: ProfileId, directory: String): Boolean =
         gitRepair.availableProject(profile, directory)
 
@@ -145,6 +166,36 @@ class AndroidNewConversationHost(
     // New project in the picker: the same phone-server folder creator as Projects (a Git folder under /root/projects).
     override fun canCreateProject(profile: ProfileId): Boolean =
         projectServer(profile)?.let(projectCreation::available) == true
+
+    /** Only this phone's own OpenCode reaches the phone's storage; a remote server's /sdcard is its own. */
+    override suspend fun phoneStorage(profile: ProfileId): PhoneStorageAccess? {
+        val access = sharedStorage.singleOrNull() ?: return null
+        if (!phoneServer.runsHere(profile)) return null
+        val graph = registry.live.value[profile] ?: return null
+        val block = (access.check(profile, PHONE_STORAGE_FOLDER, graph.session.server) as? Outcome.Ok)?.value ?: return null
+        return if (block == io.github.eslamasabry.oc.core.domain.platform.SharedStorageBlock.None) PhoneStorageAccess.On
+        else PhoneStorageAccess.Off
+    }
+
+    override suspend fun storageFolders(path: String): Outcome<List<StorageFolder>> =
+        when (val listed = storageFolderPort.list(path)) {
+            is Outcome.Failed -> listed
+            is Outcome.Ok -> Outcome.Ok(listed.value.map { StorageFolder(it.name, it.path) })
+        }
+
+    override suspend fun createStorageFolder(parent: String, name: String): Outcome<String> =
+        storageFolderPort.createFolder(parent, name)
+
+    override suspend fun requestPhoneStorage(profile: ProfileId): Outcome<Unit> {
+        val access = sharedStorage.singleOrNull() ?: return refused()
+        val graph = registry.live.value[profile] ?: return refused()
+        return access.request(
+            profile,
+            PHONE_STORAGE_FOLDER,
+            io.github.eslamasabry.oc.core.domain.platform.SharedStorageBlock.AppAccess,
+            graph.session.server,
+        )
+    }
 
     override suspend fun createProject(profile: ProfileId, name: String): Outcome<String> {
         val server = projectServer(profile) ?: return refused()
@@ -418,6 +469,34 @@ class AndroidNewConversationHost(
             Outcome.Ok(Unit)
         }
 
+    /**
+     * Issue 147 (owner's phone): a phone agent's start was answered "didn't confirm" at once, with no create sent,
+     * because an earlier start in the folder left its first-message record (an app restart empties the helper's
+     * identity book, so nothing can settle it: SEND-STALE "Left"). A record of other words ([FirstMessageRules.otherMessage])
+     * is another message whose fate the new one does not share: it is dropped (exactly that record) and the new start
+     * goes on. A record of these same words may have reached the helper, so it still stops the start.
+     */
+    private suspend fun dropOtherHelperRecord(profile: ProfileId, directory: String?, text: String) {
+        val reviewAt = reviewKey(profile, directory)
+        val creationAt = creationKey(profile, directory)
+        val expected = linkedMapOf(reviewAt to stores.prefs.get(reviewAt), creationAt to stores.prefs.get(creationAt))
+        val raw = expected.values.firstOrNull { it != null } as? PrefValue.Str ?: return
+        if (raw.value.length > 8192) return
+        val recorded =
+            try {
+                FirstMessageReview.decode(raw.value)
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (_: Exception) {
+                null
+            } ?: return
+        if (!FirstMessageRules.otherMessage(recorded.draftDigest, DartJson.sha256Hex(text))) return
+        stores.prefs.compareAndCommit(stores.lanes.forProfile(profile), expected) {
+            remove(reviewAt)
+            remove(creationAt)
+        }
+    }
+
     /** A removed queue row alone proves nothing; only the original scoped admission does. */
     private suspend fun firstMessageConfirmed(
         graph: ConnectionGraph,
@@ -544,10 +623,24 @@ class AndroidNewConversationHost(
         val offer = PhoneChatAgents.offer(facts, selected)
         return NewConversationPhone(
             helper = helper,
-            choices = offer.choices.map { NewConversationPhoneAgent(it.id.raw, it.name, it.iconKey) },
+            choices =
+                offer.choices.map {
+                    NewConversationPhoneAgent(
+                        it.id.raw,
+                        it.name,
+                        it.iconKey,
+                        setUpAtFirstUse = it.id.raw in NewConversationPhoneRules.setUpAtFirstUse(state),
+                    )
+                },
             needsSetup =
                 offer.needsSetup.map {
-                    NewConversationPhoneAgent(it.id.raw, it.name, it.iconKey, checking = it.checking)
+                    NewConversationPhoneAgent(
+                        it.id.raw,
+                        it.name,
+                        it.iconKey,
+                        checking = it.checking,
+                        updating = it.checking && it.installed,
+                    )
                 },
             selected = selected.takeIf { it != AgentId.OPENCODE }?.raw,
         )
@@ -595,8 +688,7 @@ class AndroidNewConversationHost(
     ): Outcome<NewConversationPhoneModels> {
         val helper = phoneHelperId() ?: return refused()
         if (ahead && registry.live.value[helper] == null) return refused()
-        val provider =
-            AgentCatalog.builtIn.byId(AgentId(agentId))?.providerId ?: return refused()
+        val provider = NewConversationPhoneRules.providerOf(agentId) ?: return refused()
         val agentReady =
             phoneAgents.state.value.agents.any { it.id == agentId && NewConversationPhoneRules.startsHere(it) }
         // The helper's first model list takes about ten seconds: the screen asks while the person types.
@@ -734,7 +826,23 @@ class AndroidNewConversationHost(
         model: ModelRef?,
     ): Outcome<Unit> = selection(profile).selectModel(profile, AgentId(agentId), model?.modelId)
 
-    override suspend fun setup(profile: ProfileId): Outcome<NewConversationSetup> =
+    /** The setup last read per profile in this run, with the live connection it was read on (see [cachedSetup]). */
+    private val lastSetups = java.util.concurrent.ConcurrentHashMap<ProfileId, Pair<Any, NewConversationSetup>>()
+
+    override fun cachedSetup(profile: ProfileId): NewConversationSetup? {
+        val (graph, setup) = lastSetups[profile] ?: return null
+        return setup.takeIf { registry.live.value[profile] === graph }
+    }
+
+    override suspend fun setup(profile: ProfileId): Outcome<NewConversationSetup> {
+        val read = readSetup(profile)
+        val graph = registry.live.value[profile]
+        if (read is Outcome.Ok && graph != null) lastSetups[profile] = graph to read.value
+        else if (read is Outcome.Failed) lastSetups.remove(profile)
+        return read
+    }
+
+    private suspend fun readSetup(profile: ProfileId): Outcome<NewConversationSetup> =
         withContext(serial) {
             lane.withLock {
                 if (stores.profiles.profile(profile) == null) return@withLock refused()
@@ -983,6 +1091,9 @@ class AndroidNewConversationHost(
                 val expectedTarget = target(graph, directory)
                 if (!currentTarget(graph, directory))
                     return@withLock NewConversationAttempt(directory, failure = refused().failure)
+                // Issue 147: on the phone's helper, an earlier start's record of other words is not this message:
+                // it no longer answers "didn't confirm" before anything was sent (no create had gone out).
+                if (graph.session.server is PaseoGateway && previous == null) dropOtherHelperRecord(profile, directory, text)
                 when (val held = review(profile, directory)) {
                     is Outcome.Failed ->
                         return@withLock NewConversationAttempt(
@@ -1296,6 +1407,14 @@ class AndroidNewConversationHost(
                         attempt.copy(dispatched = true, failure = null)
                     }
                     is FirstMessage.PutBack -> {
+                        // Issue 147: the helper refused the create for the agent's sign-in: every place reads it as
+                        // Sign in needed until a sign-in completes (AppPhoneAgents.noteSignInLapsed).
+                        val provider = model?.providerId
+                        // Issue 147, second report: a start refused because the agent "is not ready" (its sign-in or
+                        // set-up the helper found missing) said "needs setting up" here while the agent list still read
+                        // Ready from the kept facts: it is noted the same way, so every place reads Sign in needed.
+                        if (provider != null && FirstMessageRules.agentNeedsYou(receipt.failure))
+                            (phoneAgents as? AppPhoneAgents)?.noteSignInLapsedHere(provider, System.currentTimeMillis())
                         val cleared =
                             stores.prefs.commit(stores.lanes.forProfile(profile)) {
                                 remove(reviewKey(profile, directory))
@@ -1531,23 +1650,25 @@ internal object NewConversationPhoneRules {
     /** The facts [PhoneChatAgents.offer] lists from, one per catalog agent in [state]. */
     fun facts(state: PhoneAgentsState): List<PhoneChatFact> =
         state.agents.mapNotNull { row ->
-            val descriptor = AgentCatalog.builtIn.byId(AgentId(row.id)) ?: return@mapNotNull null
-            val updating =
-                state.installation?.let { it.id == row.id && it.phase == PhoneAgentInstallPhase.Installing } == true
+            val descriptor =
+                AgentCatalog.builtIn.byId(AgentId(row.id))
+                    ?: return@mapNotNull if (OwnAgentRules.isOwn(row.id)) ownFact(row) else null
+            // The one status the Agents page's tile and this list both read (phoneAgentShown).
+            val shown = phoneAgentShown(row, state.installation)
+            val updating = shown == PhoneAgentShown.Installing
             PhoneChatFact(
                 id = descriptor.id,
                 name = row.name,
                 iconKey = descriptor.iconKey,
-                ready = !updating && startsHere(row),
+                ready = phoneAgentChoosable(shown),
                 // Flutter's fixAction: install, sign in, phone check, resume; and the set-up of an agent the app never
                 // saw set up (a dimmed "Set up" row that opens it, never a choice whose first answer fails).
                 fixable =
-                    when (row.status) {
-                        PhoneAgentStatus.NotInstalled -> row.supportedInstallation
-                        PhoneAgentStatus.SignInNeeded,
-                        PhoneAgentStatus.PhoneCheck,
-                        PhoneAgentStatus.Stopped -> true
-                        PhoneAgentStatus.SetUpAtFirstUse -> row.needsSetUp
+                    when (shown) {
+                        PhoneAgentShown.NotInstalled -> row.supportedInstallation
+                        PhoneAgentShown.SignInNeeded,
+                        PhoneAgentShown.SetUp,
+                        PhoneAgentShown.Starting -> true
                         else -> false
                     },
                 installed = row.status.installed,
@@ -1557,12 +1678,38 @@ internal object NewConversationPhoneRules {
         }
 
     /**
+     * The helper's provider id for an agent: the catalog's, or (issue 147) the person's own agent, whose id is its
+     * provider id in the helper's config (`OwnAgentConfig`).
+     */
+    fun providerOf(agentId: String): String? =
+        AgentCatalog.builtIn.byId(AgentId(agentId))?.providerId ?: agentId.takeIf(OwnAgentRules::isOwn)
+
+    /**
+     * A person's own agent: offered like an installed agent set up at first use (no sign-in the app can read; its first
+     * answer tells). Its mark is the kit's generic one (its first letter on a neutral face).
+     */
+    private fun ownFact(row: PhoneAgentRow): PhoneChatFact =
+        PhoneChatFact(
+            id = AgentId(row.id),
+            name = row.name,
+            iconKey = row.id,
+            ready = startsHere(row),
+            fixable = row.status == PhoneAgentStatus.Stopped,
+            installed = true,
+        )
+
+    /** The agents the Agents page words "Installed. Set it up the first time you use it." (status, not the seen fact). */
+    fun setUpAtFirstUse(state: PhoneAgentsState): Set<String> =
+        state.agents.filter { it.status == PhoneAgentStatus.SetUpAtFirstUse }.map { it.id }.toSet()
+
+    /**
      * The Agents card's own rule ([phoneAgentStartsConversation]), so the card's New conversation and this list agree,
      * and an agent whose helper is not running yet: a start here starts the helper itself (`phoneHelperReady`). After
      * every app start, app update or phone restart the helper is down until something starts it, and every proven
      * agent reads "Stopped" until then; before, New conversation offered none of them (and dropped every agent the
      * bundled matrix does not know) until the Agents page, which starts the helper, had been opened.
      */
-    fun startsHere(row: PhoneAgentRow): Boolean =
-        phoneAgentStartsConversation(row) || row.status == PhoneAgentStatus.Stopped
+    fun startsHere(row: PhoneAgentRow): Boolean = phoneAgentChoosable(phoneAgentShown(row))
 }
+
+private const val PHONE_STORAGE_FOLDER = "/storage/emulated/0"

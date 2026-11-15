@@ -112,6 +112,19 @@ public sealed interface GitPageView {
 }
 
 /** One file's diff as the page shows it. */
+/** One commit's changes, opened from Recent. */
+public sealed interface GitCommitView {
+    public val commit: GitCommit
+
+    public data class Loading(override val commit: GitCommit) : GitCommitView
+
+    public data class Ready(override val commit: GitCommit, val patch: String) : GitCommitView {
+        override fun toString(): String = "Ready(${patch.length} chars)"
+    }
+
+    public data class Failed(override val commit: GitCommit, val failure: GitFailure) : GitCommitView
+}
+
 public sealed interface GitDiffView {
     public val file: GitFileChange
 
@@ -168,6 +181,8 @@ public data class GitPageState(
     /** A refresh failed while an older snapshot is still shown (B-NAV-020). */
     val refreshFailure: GitFailure? = null,
     val diff: GitDiffView? = null,
+    /** The commit opened from Recent, with its changes. */
+    val commitView: GitCommitView? = null,
     val host: GitHost? = null,
     val placeName: String? = null,
     /** The project folder, once resolved. */
@@ -381,6 +396,36 @@ public class GitPage(
             }
         mutableState.update { if (it.diff?.file == file) it.copy(diff = shown) else it }
     }
+
+    /** Opens what one commit changed (read only). */
+    public suspend fun openCommit(commit: GitCommit) {
+        val repo = repository ?: return
+        mutableState.update { it.copy(commitView = GitCommitView.Loading(commit)) }
+        val shown =
+            when (val read = repo.commitPatch(commit.id)) {
+                is GitDiffResult.Ready -> GitCommitView.Ready(commit, read.patch)
+                is GitDiffResult.Failed -> GitCommitView.Failed(commit, read.failure)
+            }
+        mutableState.update { if (it.commitView?.commit == commit) it.copy(commitView = shown) else it }
+    }
+
+    public fun closeCommit() {
+        mutableState.update { it.copy(commitView = null) }
+    }
+
+    /** Everything this branch has, as one patch, for the review's Whole branch view; resolves the project itself. */
+    public suspend fun branchPatch(): GitDiffResult {
+        val repo = repository ?: resolveRepository() ?: return GitDiffResult.Failed(GitFailure(GitProblem.EnvironmentUnavailable))
+        return repo.branchPatch()
+    }
+
+    private suspend fun resolveRepository(): GitRepository? =
+        when (val found = workspaces.resolve(ref)) {
+            is GitWorkspaceResolution.Unavailable -> null
+            is GitWorkspaceResolution.Available ->
+                GitRepository(found.workspace.shell, found.workspace.directory, credentials = found.workspace.credentials)
+                    .also { repository = it }
+        }
 
     public fun closeDiff() {
         mutableState.update { it.copy(diff = null) }

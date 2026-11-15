@@ -117,6 +117,28 @@ class HomeNoticesTest {
     }
 
     @Test
+    fun `I147-AGY-13b a source the app is starting is not "couldn't load" while its saved rows stand in`() {
+        // Galaxy S22 after an update: "This phone couldn't load · Try again" for about 25 s of an ordinary start.
+        val source =
+            io.github.eslamasabry.oc.feature.chats.presentation.ChatsListSourceUi(
+                profile = io.github.eslamasabry.oc.core.common.ids.ProfileId("phone-agents"),
+                name = "This phone",
+                shown = true,
+                main = false,
+                onThisPhone = true,
+                unreachable = false,
+                agents = true,
+                starting = io.github.eslamasabry.oc.feature.chats.presentation.AppStart.Agents,
+            )
+        val base = ui(item("a")).copy(incomplete = persistentListOf("This phone"))
+        val starting = base.copy(home = base.home.copy(sources = persistentListOf(source)))
+        assertNull(HomeNotices.shown(active(starting)))
+        // Once it is no longer starting, a list it could not read is said again.
+        val stopped = base.copy(home = base.home.copy(sources = persistentListOf(source.copy(starting = null))))
+        assertEquals(HomeNoticeKind.ListIncomplete, HomeNotices.shown(active(stopped)))
+    }
+
+    @Test
     fun `a plan limit is said with the agent's page, after a sign-in and a stop`() {
         // New conversation does not say an agent is at its limit: without this line the person learns it from a
         // conversation that fails (Flutter keeps it on its home too, agent_notices.dart:124).

@@ -4,4 +4,5 @@
     <string name="chatDraftRepeatTitle">هل تريد إرسال هذا النص مجددًا؟</string>
     <string name="chatDraftRepeatAction">إرسال مجددًا</string>
     <string name="chatDraftRepeatBody">هذا النص موجود بالفعل في المحادثة. أرسله مجددًا فقط إذا كنت تريد ردًا جديدًا.</string>
+    <string name="chatDraftRestoreFailed">تعذّر فتح مسودتك المحفوظة. يمكنك المحاولة مرة أخرى.</string>
 </resources>

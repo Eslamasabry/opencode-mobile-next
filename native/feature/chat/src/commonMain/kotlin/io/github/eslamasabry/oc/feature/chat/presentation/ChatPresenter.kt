@@ -266,16 +266,19 @@ public class ChatPresenter(
                 val before = wasBusy
                 wasBusy = busy
                 if (before == false && busy && world.link.value == ChatLink.Live) {
+                    // Never while a turn runs: a new turn takes the ask down, and counting it asks nothing.
+                    local.update { it.copy(starAsk = false) }
+                    launcher.launch { port.promptStarted() }
+                } else if (before == true && !busy) {
+                    local.update { it.copy(starAsk = false) }
+                    val good = StarPromptTurn.succeeded(t.rows)
                     launcher.launch {
-                        if (port.promptStarted() && world.transcript.value.run.busy) {
+                        // The ask comes at rest: this turn is over and nothing new started meanwhile.
+                        if (port.replyEnded(good) && !world.transcript.value.run.busy && world.link.value == ChatLink.Live) {
                             local.update { it.copy(starAsk = true) }
                             port.report(StarPromptEvent.Shown)
                         }
                     }
-                } else if (before == true && !busy) {
-                    local.update { it.copy(starAsk = false) }
-                    val good = StarPromptTurn.succeeded(t.rows)
-                    launcher.launch { port.replyEnded(good) }
                 }
             }
             .launchIn(scope)
@@ -365,7 +368,23 @@ public class ChatPresenter(
         ) line
         else line.copy(canRestartAgent = true, startingAgent = l.startingAgent, agentFailed = l.agentFailed)
 
+    /**
+     * The page's state for these inputs. A new [ChatUi.revision] only when something in it changed (c2-performance,
+     * 2026-11-15): every input that ticks (the list leaving or reaching the live edge, a retry fact, a server wait)
+     * re-ran this, and a revision bumped every time made each run a new state, so the whole conversation page was
+     * composed again (about 170 scopes) for nothing on screen. An equal result keeps the last state, and StateFlow
+     * then hands the screen nothing.
+     */
     internal fun present(i: ChatInputs, l: ChatLocal, hits: ImmutableList<FindHit>): ChatUi {
+        val built = build(i, l, hits)
+        val last = lastUi
+        if (last != null && last == built.copy(revision = last.revision)) return last
+        return built.copy(revision = ++revision).also { lastUi = it }
+    }
+
+    private var lastUi: ChatUi? = null
+
+    private fun build(i: ChatInputs, l: ChatLocal, hits: ImmutableList<FindHit>): ChatUi {
         lastHits = hits
         // N-47: when the server goes away after the conversation was read, keep the last transcript and title on
         // screen with one offline line (Try again retries the load) instead of replacing them with an error.
@@ -404,12 +423,14 @@ public class ChatPresenter(
                 }
         val pending = withSetUp(i.pending, firstMessage = t.rows.isEmpty())
         return ChatUi(
-            revision = ++revision,
+            revision = revision,
             ref = world.ref,
             title = i.title ?: lastTitle,
             status =
               agentLine(
-                (if (kept != null) i.retry.line(KEPT_OFFLINE_STATUS, ChatStatusKind.Offline) else null) ?: StatusPick.pick(i.link, pending, t.run, t.rows, l.actionFailure, l.linkRefused, i.retry)
+                // Issue 147: an old phone agent conversation that continues in a new one is not offline; its message
+                // box says what happens instead.
+                (if (kept != null && world.readOnly.value?.restart == null) i.retry.line(KEPT_OFFLINE_STATUS, ChatStatusKind.Offline) else null) ?: StatusPick.pick(i.link, pending, t.run, t.rows, l.actionFailure, l.linkRefused, i.retry)
                     ?: l.receiptResult?.let {
                         ChatStatusUi(
                             RECEIPT_STATUS,
@@ -494,7 +515,9 @@ public class ChatPresenter(
             switchOnline = i.link == ChatLink.Live,
             switching = l.switching,
             attachAgain = l.attachAgain,
-            starAsk = l.starAsk && t.run.busy && i.link == ChatLink.Live,
+            starAsk =
+                l.starAsk && !t.run.busy && i.link == ChatLink.Live &&
+                    world.requests.value?.state?.value?.card == null,
             setUpReplies = setUpReplies(t.rows),
         )
     }
@@ -545,6 +568,7 @@ public class ChatPresenter(
         val setUp = port.agentsSetUp(owner)
         val runtime = world.runtimeId()
         noteAnswered(port, owner, rows, runtime, setUp)
+        noteSignInLapsed(port, owner, rows, runtime)
         val needs = HashMap<String, AgentSetUpNeed>()
         for (footer in failed) {
             val agentRuntime = runtime ?: footer.providerId ?: continue
@@ -584,6 +608,27 @@ public class ChatPresenter(
         val agent = known ?: AgentSetUpRules.firstUseAgent(answered.providerId ?: return) ?: return
         if (agent in setUp || !answeredNoted.add(agent)) return
         port.agentAnswered(owner, agent)
+    }
+
+    /** The turns this chat already reported as a lapsed sign-in ([noteSignInLapsed]). */
+    private val lapseNoted = HashSet<String>()
+
+    /**
+     * Issue 147: the newest reply of a phone agent ended on its sign-in (Claude Code's "OAuth session expired and could
+     * not be refreshed"): the phone's agents then read Sign in needed everywhere until a sign-in completes. Said once per
+     * turn, with the reply's own time, so an old failure read after a newer sign-in changes nothing.
+     */
+    private fun noteSignInLapsed(
+        port: ChatOutside,
+        owner: ProfileId,
+        rows: ImmutableList<TranscriptRow>,
+        runtime: String?,
+    ) {
+        val newest = rows.firstOrNull { it is FooterRow } as FooterRow? ?: return
+        if (!ChatSignInLapse.lapsed(newest)) return
+        val provider = runtime ?: newest.providerId ?: return
+        if (!lapseNoted.add(newest.turnId)) return
+        port.agentSignInLapsed(owner, provider, newest.createdMs ?: return)
     }
 
     /** Set up at first use ([AgentSetUpRules]): a failed send whose agent was never set up says so on its bubble. */

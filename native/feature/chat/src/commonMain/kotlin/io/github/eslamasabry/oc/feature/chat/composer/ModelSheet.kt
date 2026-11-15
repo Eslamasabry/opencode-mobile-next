@@ -44,6 +44,8 @@ import io.github.eslamasabry.oc.ui.words.res.modelEffortMinimal
 import io.github.eslamasabry.oc.ui.words.res.modelEffortNone
 import io.github.eslamasabry.oc.ui.words.res.modelPickerAgentBuild
 import io.github.eslamasabry.oc.ui.words.res.modelPickerAgentBuildName
+import io.github.eslamasabry.oc.ui.words.res.modelPickerModeAutoName
+import io.github.eslamasabry.oc.ui.words.res.modelPickerModeDefaultName
 import io.github.eslamasabry.oc.ui.words.res.modelPickerAgentPlan
 import io.github.eslamasabry.oc.ui.words.res.modelPickerAgentPlanName
 import kotlinx.coroutines.launch
@@ -205,10 +207,12 @@ private fun effortWords(id: String): String =
 
 /** The built-in agents by name ("Build", "Plan"); any other agent by the name its server gave it (Flutter). */
 @Composable
-private fun agentTitle(id: String): String =
+internal fun agentTitle(id: String): String =
     when (id) {
         "build" -> stringResource(Res.string.modelPickerAgentBuildName)
         "plan" -> stringResource(Res.string.modelPickerAgentPlanName)
+        "default" -> stringResource(Res.string.modelPickerModeDefaultName)
+        "auto" -> stringResource(Res.string.modelPickerModeAutoName)
         else -> id
     }
 

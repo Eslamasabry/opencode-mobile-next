@@ -813,8 +813,10 @@
     <string name="gitBranchRemoteOnly">On %1$s, not on this device yet</string>
     <string name="gitBranchCurrent">Current branch</string>
     <string name="gitNewBranchFrom">New branch from %1$s</string>
-    <string name="gitCloneRow">Clone a repository</string>
-    <string name="gitCloneRowHint">Copy a repository next to this project</string>
+    <string name="gitCloneRow">Copy a project from the web</string>
+    <string name="gitMoreTools">More tools</string>
+    <string name="gitMoreToolsHint">Where saves are sent, copying a project, fixing a damaged history</string>
+    <string name="gitCloneRowHint">Brings a project from an address next to this one</string>
     <string name="gitCloneAddressLabel">Repository address</string>
     <string name="gitCloneFolderLabel">Folder name</string>
     <string name="gitCloneInto">Clones into %1$s</string>
@@ -904,6 +906,7 @@
     <string name="devPreviewShowDetails">Show details</string>
     <string name="devPreviewAddress">Address</string>
     <string name="devPreviewAskHint">Ask for a change…</string>
+    <string name="devPreviewAskNeedsText">Write what to change first.</string>
     <string name="devPreviewAskSend">Send to the conversation</string>
     <string name="devPreviewAskStopAndSend">Stop the agent and send</string>
     <string name="devPreviewAskVoice">Speak your change</string>

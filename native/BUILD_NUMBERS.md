@@ -75,3 +75,7 @@ wiped (see Floor); they never come back and do not raise the floor.
 | 10043 | build | 2026-11-15 | owner's build of 0e0f2a721f (10042 plus the phone agents' conversation identity fix and the load-failure page naming the agent) |
 | 10044 | build | 2026-11-15 | owner's build of b117326a86 (set-up first, one operation for phone agents, problem report build info and folded repeats) |
 | 10045 | build | 2026-11-15 | owner's build of d3716893f7 (a phone agent's start not blocked by a left start; failed-send layout; stale refusals name their check) |
+| 10046 | build | 2026-11-15 | owner's build of 162c446ec2 (issue 147 wave, first batch) |
+| 10047 | build | 2026-11-15 | owner's build of 3d5f4d2677 (issue 147 wave, second batch) |
+| 10048 | build | 2026-11-15 | owner's build of ebb0a33b37 (issue 147 wave, third batch) |
+| 10049 | build | 2026-11-15 | owner's build of 00fc35f5a7 (issue 147 wave, fourth batch) |

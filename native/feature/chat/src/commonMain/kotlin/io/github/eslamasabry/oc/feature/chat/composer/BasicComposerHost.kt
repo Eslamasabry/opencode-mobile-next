@@ -119,13 +119,23 @@ import io.github.eslamasabry.oc.ui.words.res.chatDraftAlreadySent
 import io.github.eslamasabry.oc.ui.words.res.chatDraftRepeatAction
 import io.github.eslamasabry.oc.ui.words.res.chatDraftRepeatBody
 import io.github.eslamasabry.oc.ui.words.res.chatDraftRepeatTitle
+import io.github.eslamasabry.oc.ui.words.res.chatDraftRestoreFailed
 import io.github.eslamasabry.oc.ui.words.res.chatDraftRestoring
+import io.github.eslamasabry.oc.ui.words.res.kitTryAgain
 import io.github.eslamasabry.oc.ui.words.res.phraseChipsHide
 import io.github.eslamasabry.oc.ui.words.res.phraseChipsRowLabel
 import io.github.eslamasabry.oc.ui.words.res.phraseSuggestionsInsert
 import io.github.eslamasabry.oc.ui.words.res.phraseSuggestionsOptions
 import io.github.eslamasabry.oc.ui.words.res.chatSubagentReadOnly
 import io.github.eslamasabry.oc.ui.words.res.chatUiOpenParentSession
+import io.github.eslamasabry.oc.ui.words.res.chatOldAgentReadOnly
+import io.github.eslamasabry.oc.ui.words.res.chatOldAgentReadOnlyUnnamed
+import io.github.eslamasabry.oc.ui.words.res.chatContinueInNewConversation
+import io.github.eslamasabry.oc.ui.words.res.chatContinueBriefIntro
+import io.github.eslamasabry.oc.ui.words.res.chatContinueBriefIntroUntitled
+import io.github.eslamasabry.oc.ui.words.res.chatContinueBriefAsked
+import io.github.eslamasabry.oc.ui.words.res.chatContinueBriefChanged
+import io.github.eslamasabry.oc.ui.words.res.chatContinueBriefStopped
 import io.github.eslamasabry.oc.ui.words.res.composerDraftCleared
 import io.github.eslamasabry.oc.ui.words.res.composerFullAttachmentsLocal
 import io.github.eslamasabry.oc.ui.words.res.composerFullDraftFull
@@ -242,6 +252,37 @@ public fun BasicComposer(
     insertedPictures: ComposerInsertedPictures? = null,
     limits: ComposerLimits? = null,
 ) {
+    state.readOnly?.restart?.let { restart ->
+        // Issue 147: an old phone agent conversation reads as it was; the box offers the one way on.
+        Column(modifier) {
+            KitNotice(
+                restart.agentName?.let {
+                    stringResource(
+                        io.github.eslamasabry.oc.ui.words.res.Res.string.chatOldAgentReadOnly,
+                        io.github.eslamasabry.oc.ui.kit.text.KitBidi.auto(it),
+                    )
+                }
+                    ?: stringResource(
+                        io.github.eslamasabry.oc.ui.words.res.Res.string.chatOldAgentReadOnlyUnnamed
+                    )
+            )
+            // The handoff's words; the title is filled in where the brief is built.
+            val words =
+                io.github.eslamasabry.oc.feature.chat.presentation.ContinueBrief.Words(
+                    intro = stringResource(io.github.eslamasabry.oc.ui.words.res.Res.string.chatContinueBriefIntro, "%1\$s"),
+                    introUntitled = stringResource(io.github.eslamasabry.oc.ui.words.res.Res.string.chatContinueBriefIntroUntitled),
+                    asked = stringResource(io.github.eslamasabry.oc.ui.words.res.Res.string.chatContinueBriefAsked),
+                    changed = stringResource(io.github.eslamasabry.oc.ui.words.res.Res.string.chatContinueBriefChanged),
+                    stopped = stringResource(io.github.eslamasabry.oc.ui.words.res.Res.string.chatContinueBriefStopped),
+                )
+            KitButton(
+                stringResource(io.github.eslamasabry.oc.ui.words.res.Res.string.chatContinueInNewConversation),
+                { actions.continueInNewConversation(words) },
+                role = KitButtonRole.Primary,
+            )
+        }
+        return
+    }
     if (state.readOnly != null) {
         Column(modifier) {
             KitNotice(
@@ -605,11 +646,16 @@ public fun BasicComposer(
             KitErrorNotice(
                 message =
                     stringResource(
-                        if (SendFieldRules.showsAlreadySent(state.draft)) Res.string.chatDraftAlreadySent
-                        else Res.string.draftSaveFailed
+                        when {
+                            SendFieldRules.showsAlreadySent(state.draft) -> Res.string.chatDraftAlreadySent
+                            !state.draft.ready -> Res.string.chatDraftRestoreFailed
+                            else -> Res.string.draftSaveFailed
+                        }
                     ),
                 retry =
                     when {
+                        !state.draft.ready && !SendFieldRules.showsAlreadySent(state.draft) ->
+                            KitLineAction(stringResource(Res.string.kitTryAgain), actions::retrySave)
                         state.canRepeat ->
                             KitLineAction(
                                 stringResource(Res.string.chatDraftRepeatAction),
@@ -1123,7 +1169,7 @@ public fun BasicComposer(
                             // While a reply runs on a steering server the words join it
                             // (B-PROTO-025).
                             label =
-                                if (chrome.requestWaiting())
+                                if (chrome.requestAsking())
                                     stringResource(Res.string.composerFullWaitingHint)
                                 else if (busy && state.steers)
                                     stringResource(Res.string.composerFullSteerHint)
@@ -1132,16 +1178,7 @@ public fun BasicComposer(
                                 else
                                     stringResource(
                                         Res.string.upgradeComposerAsk,
-                                        state.models.agent?.takeUnless {
-                                            it.lowercase() in
-                                                setOf(
-                                                    "build",
-                                                    "plan",
-                                                    "compaction",
-                                                    "title",
-                                                    "summary",
-                                                )
-                                        } ?: chrome.agentName(),
+                                        askAs(state.models.agent, chrome.agentName()),
                                     ),
                             kind = KitFieldKind.Multiline,
                             // B6: one line when empty, so the conversation keeps its room above the
@@ -1164,7 +1201,15 @@ public fun BasicComposer(
                             focusRequester = focus,
                             enabled =
                                 if (editorReady && state.draft.ready) KitEnabled.Enabled
-                                else KitEnabled.Disabled(stringResource(Res.string.chatDraftRestoring)),
+                                else
+                                    KitEnabled.Disabled(
+                                        // Issue 147: it always ends: the draft, or a plain line that it could not be opened.
+                                        stringResource(
+                                            if (state.draft.failure != null && !state.draft.ready)
+                                                Res.string.chatDraftRestoreFailed
+                                            else Res.string.chatDraftRestoring
+                                        )
+                                    ),
                             onTextChanged = { accepted ->
                                 editor.userEditSerial += 1
                                 editor.lastReported = accepted
@@ -1174,7 +1219,10 @@ public fun BasicComposer(
                             // w4-focus: the chat asks whether the box had focus when another field opened.
                             modifier =
                                 Modifier.kitPromptOrigin()
-                                    .onFocusChanged { chrome.typing.focused = it.hasFocus }
+                                    .onFocusChanged {
+                                        chrome.typing.focused = it.hasFocus
+                                        if (it.hasFocus && chrome.requestWaiting()) chrome.jumpToWaiting()
+                                    }
                                     .testTag("chat-composer-field"),
                         )
                     }
@@ -1325,9 +1373,19 @@ private fun modelWords(state: BasicComposerUi, chrome: ComposerChrome): String {
     return named
 }
 
-private fun modelLabel(model: String, level: String, agent: String?): String =
-    listOfNotNull(agent?.takeIf { it.isNotEmpty() }, model, level.takeIf { it.isNotEmpty() })
+internal fun modelLabel(model: String, level: String, agent: String?): String =
+    listOfNotNull(agent?.takeIf { it.isNotEmpty() && !isInternalMode(it) }, model, level.takeIf { it.isNotEmpty() })
         .joinToString(" · ")
+
+/** Who the box asks ("Ask Claude Code…"): the chosen agent's own name, else [fallback]; never a mode's id. */
+internal fun askAs(mode: String?, fallback: String): String =
+    mode?.takeUnless { it.lowercase() in setOf("build", "plan", "compaction", "title", "summary") || isInternalMode(it) } ?: fallback
+
+/**
+ * The ids a coding agent keeps for its own modes ("default", "auto"): they say nothing a person chose, so the box, the
+ * model chip and Details do not show them as words (F-006). The mode picker names them ([modeName]).
+ */
+internal fun isInternalMode(id: String?): Boolean = id?.trim()?.lowercase() in setOf("default", "auto")
 
 internal fun Failure.isCameraRefusal(): Boolean =
     this is Failure.Media &&

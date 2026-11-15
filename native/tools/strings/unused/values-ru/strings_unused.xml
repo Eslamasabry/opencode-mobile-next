@@ -27,4 +27,5 @@
     <string name="phoneSetupStartTermuxProgressHeadline">Настройка в Termux выполнена на %1$d%</string>
     <string name="phoneSetupTermuxGetCurrent">Установить актуальный Termux</string>
     <string name="phoneSetupTermuxOtherRuntime">В Termux уже работает другой OpenCode. Переключите его в разделе «На этом телефоне» и продолжите настройку.</string>
+    <string name="composerToolsAgentPicturesOnly">%1$s принимает только изображения: используйте «Галерея» или «Сделать снимок»</string>
 </resources>

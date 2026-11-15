@@ -81,7 +81,38 @@ class StartupProfileGenerator {
             startActivityAndWait()
             device.waitForIdle()
             walk()
+            conversation()
         }
+
+    /**
+     * c2-performance (2026-11-15): the walk above never reached a conversation on a fresh install, so the profile held
+     * almost nothing of the transcript, its Markdown or the message box (the screen people live in ran interpreted).
+     * The offline demo is the production conversation screen with a simulated agent and needs no server: open it from
+     * the welcome ("Just show me") or from the home's or Settings' demo entry, let its reply arrive, scroll it both
+     * ways and come back.
+     */
+    private fun androidx.benchmark.macro.MacrobenchmarkScope.conversation() {
+        val entry = DEMO_ENTRIES.firstNotNullOfOrNull { device.findObject(By.text(it)) } ?: return
+        safely { entry.click() }
+        device.wait(Until.hasObject(By.text("Simulated · nothing is saved")), 10_000)
+        device.waitForIdle()
+        repeat(2) { n ->
+            safely {
+                device.findObject(By.scrollable(true))?.fling(
+                    if (n == 0) androidx.test.uiautomator.Direction.UP else androidx.test.uiautomator.Direction.DOWN
+                )
+            }
+            device.waitForIdle()
+        }
+        device.pressBack()
+        device.waitForIdle()
+        if (device.currentPackageName != PKG) startActivityAndWait()
+    }
+
+    private companion object {
+        /** Where the offline demo opens from: the welcome, the home's empty state, Settings. */
+        val DEMO_ENTRIES = listOf("Just show me", "Try it offline", "Try the demo")
+    }
 
     /** The screen changes under UiAutomator while it works; a stale node only means "look again". */
     private fun safely(block: () -> Unit) {

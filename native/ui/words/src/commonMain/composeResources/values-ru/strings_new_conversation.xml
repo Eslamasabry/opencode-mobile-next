@@ -15,4 +15,23 @@
     <string name="chatsNewFolderRemake">Создать папку заново</string>
     <string name="chatsNewFolderChooseAnother">Выбрать другой проект</string>
     <string name="chatSendFolderMissing">Папки этого проекта больше нет на сервере, поэтому сообщение не отправлено. Начните новый чат, чтобы создать папку заново, или выберите другой проект.</string>
+    <string name="chatsNewPhoneFolderAccess">Агенты не могут открывать папки в памяти этого телефона, пока вы не разрешите этому приложению доступ ко всем файлам.</string>
+    <string name="chatsNewPhoneFolderAllow">Разрешить доступ к памяти телефона</string>
+    <string name="chatsNewPhoneFolderRestartServer">OpenCode на этом телефоне был запущен до того, как вы выбрали эту папку, поэтому пока её не видит. Перезапустите его, чтобы работать здесь.</string>
+    <string name="chatsNewPhoneFolderRestartServerAction">Перезапустить OpenCode на этом телефоне</string>
+    <string name="chatsNewPhoneFolderRestartAgents">Агенты телефона были запущены до того, как вы выбрали эту папку, поэтому %1$s пока её не видит. Перезапустите их, чтобы работать здесь.</string>
+    <string name="chatsNewPhoneFolderRestartAgentsAction">Перезапустить агентов телефона</string>
+    <string name="chatsNewPhoneFolderMissing">Этой папки больше нет в памяти телефона. Выберите другую папку.</string>
+    <string name="chatsNewPhoneFolderDenied">%1$s не может открывать или изменять файлы в этой папке. Выберите другую папку в памяти телефона.</string>
+    <string name="chatsNewPhoneFolderRestartFailed">Не удалось перезапустить. Если агент ещё работает, повторите попытку, когда он закончит.</string>
+    <string name="chatsNewPhoneFolderWhere">Работает в %1$s, в памяти телефона, где нельзя хранить ссылки и напрямую запускать программы.</string>
+    <string name="chatsNewPhoneFolderWhy">Почему</string>
+    <string name="chatsNewPhoneFolderHelpTitle">Работа в памяти телефона</string>
+    <string name="chatsNewPhoneFolderHelp">Android отводит память телефона всем приложениям, как карту памяти. В ней нельзя хранить ссылки между файлами, и программа, которая в ней лежит, не запустится.\n\nПоэтому в этой папке устанавливайте пакеты командой npm install --no-bin-links, а скрипт запускайте как sh script.sh вместо ./script.sh. Git здесь не учитывает режимы файлов. У проектов в собственной папке приложения таких ограничений нет.\n\nКогда Claude Code или Codex запускается здесь, ему сообщают то же самое.</string>
+    <string name="chatPhoneFolderAccess">Папка этого разговора находится в памяти телефона, а у приложения больше нет доступа ко всем файлам. Ничего не отправляется, пока вы снова его не разрешите.</string>
+    <string name="chatPhoneFolderRestartServer">OpenCode на этом телефоне не увидит папку этого разговора, пока не будет перезапущен. До тех пор ничего не отправляется.</string>
+    <string name="chatPhoneFolderRestartAgents">Агенты телефона не увидят папку этого разговора, пока не будут перезапущены. До тех пор ничего не отправляется.</string>
+    <string name="chatPhoneFolderMissing">Папки этого разговора больше нет в памяти телефона, поэтому отправить здесь ничего нельзя.</string>
+    <string name="chatPhoneFolderDenied">Агент не может открывать или изменять файлы в папке этого разговора в памяти телефона, поэтому отправить здесь ничего нельзя.</string>
+    <string name="chatSendPhoneFolder">Не отправлено: сейчас агент не может добраться до папки этого разговора в памяти телефона. Строка вверху подскажет, что делать.</string>
 </resources>

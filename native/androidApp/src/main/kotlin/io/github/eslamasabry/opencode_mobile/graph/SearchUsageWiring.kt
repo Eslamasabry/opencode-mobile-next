@@ -140,6 +140,20 @@ class AndroidConversationSearch(
         query: String,
         cursor: String?,
     ): Outcome<SearchConversationPage> {
+        val read = gatewayConversations(profile, query, cursor)
+        // Search finds every conversation the home lists for this connection (the phone agents' ones included).
+        if (cursor != null || read !is Outcome.Ok) return read
+        return Outcome.Ok(withFeedRows(
+                read.value, feed.snapshot.value.items, profile, query,
+                helper = ProfileId("${profile.raw}${AppLocalAgentHostStarter.SUFFIX}"),
+            ))
+    }
+
+    private suspend fun gatewayConversations(
+        profile: ProfileId,
+        query: String,
+        cursor: String?,
+    ): Outcome<SearchConversationPage> {
         val gateway = shared.gateway(profile) ?: return stale()
         // The server's own title search across every project (OC2); a server that cannot is read
         // page by page here.

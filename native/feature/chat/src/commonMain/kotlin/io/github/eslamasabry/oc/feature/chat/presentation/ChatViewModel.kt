@@ -69,6 +69,34 @@ public class ChatViewModel(
     public val serverCapabilities = world.capabilities
     public val requests = world.requests
 
+    /** Issue 147: this conversation's folder in phone storage when its agent cannot reach it now (else null). */
+    public val phoneFolder: StateFlow<io.github.eslamasabry.oc.feature.chat.world.ChatPhoneFolder?> = world.phoneFolder
+    private val mutableFixingPhoneFolder = kotlinx.coroutines.flow.MutableStateFlow(false)
+    public val fixingPhoneFolder: StateFlow<Boolean> = mutableFixingPhoneFolder
+    private val mutablePhoneFolderFailure = kotlinx.coroutines.flow.MutableStateFlow<io.github.eslamasabry.oc.core.common.Failure?>(null)
+    public val phoneFolderFailure: StateFlow<io.github.eslamasabry.oc.core.common.Failure?> = mutablePhoneFolderFailure
+
+    /** True when the side that works here is this phone's OpenCode (its restart); false for the agents' helper. */
+    public val phoneFolderOnServer: Boolean
+        get() = world.serverOnThisPhone
+
+    /** The page came back: Android may have taken the access back meanwhile, or the folder may be gone. */
+    public fun checkPhoneFolder() {
+        viewModelScope.launch { world.checkPhoneFolder() }
+    }
+
+    /** The notice's action: allow All files access, or restart the side that cannot see the folder. */
+    public fun fixPhoneFolder() {
+        if (mutableFixingPhoneFolder.value) return
+        mutableFixingPhoneFolder.value = true
+        mutablePhoneFolderFailure.value = null
+        viewModelScope.launch {
+            val fixed = world.fixPhoneFolder()
+            mutablePhoneFolderFailure.value = (fixed as? io.github.eslamasabry.oc.core.common.Outcome.Failed)?.failure
+            mutableFixingPhoneFolder.value = false
+        }
+    }
+
     public val state: StateFlow<ChatUi> =
         presenter.states(viewModelScope, world.work, SharingStarted.WhileSubscribed(STOP_AFTER_MS))
 

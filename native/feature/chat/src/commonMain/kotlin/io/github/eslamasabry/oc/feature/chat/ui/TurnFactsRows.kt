@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.key
@@ -44,6 +45,7 @@ import io.github.eslamasabry.oc.ui.kit.status.KitTreeStep
 import io.github.eslamasabry.oc.ui.kit.status.KitTreeStepState
 import io.github.eslamasabry.oc.ui.kit.row.KitExpandRow
 import io.github.eslamasabry.oc.ui.kitchat.header.rememberKitMask
+import io.github.eslamasabry.oc.ui.kitchat.tool.KIT_COMMAND_OUTPUT_LINES
 import io.github.eslamasabry.oc.ui.kitchat.tool.KitCommandBox
 import io.github.eslamasabry.oc.ui.kitchat.tool.KitStepFold
 import io.github.eslamasabry.oc.ui.kitchat.tool.KitStepFoldLine
@@ -84,6 +86,9 @@ import io.github.eslamasabry.oc.ui.words.res.kitToolStopped
 import io.github.eslamasabry.oc.ui.words.res.kitWorkFoldDeclined
 import io.github.eslamasabry.oc.ui.words.res.kitWorkFoldFailed
 import io.github.eslamasabry.oc.ui.words.res.kitWorkHideEarlierSteps
+import io.github.eslamasabry.oc.ui.words.res.kitCommandFailedNoOutput
+import io.github.eslamasabry.oc.ui.words.res.kitCommandNoOutput
+import io.github.eslamasabry.oc.ui.words.res.kitCommandStoppedEarly
 import io.github.eslamasabry.oc.ui.words.res.kitWorkSeparator
 import io.github.eslamasabry.oc.ui.words.res.kitWorkSubAgentSpoken
 import io.github.eslamasabry.oc.ui.words.res.kitWorkSubAgents
@@ -704,7 +709,8 @@ private fun OneStep(
                 if (waitingForYou) stringResource(Res.string.kitWorkWaitingForYou)
                 else stepStatus(step.state, f.exitCode),
         )
-    val text = out.text.takeIf { it.isNotEmpty() }
+    // A running command shows what it has put out so far, its last lines, growing in place; a finished one its answer.
+    val text = stepOutputShown(step, folds.full[key] == true)
     val shell = f.kind == ToolKind.Shell
     val child = f.childSessionId?.takeIf { onOpenSession != null }
     // B-CHAT-114: an explicit file the step produced (an attachment, a `filePath` output) is a
@@ -721,6 +727,10 @@ private fun OneStep(
             child != null ||
             files.isNotEmpty())
     val full = folds.full[key] == true
+    // Issue 147 (F-033): a command that is running and has put something out opens by itself, so its growing tail is in
+    // view without a tap. It stays open when the command ends (its output stays readable); the person's own fold wins.
+    if (opensItself(step, waitingForYou, text != null))
+        LaunchedEffect(key) { if (folds.open[key] == null) folds.open[key] = true }
     KitToolRow(
         view = view,
         opened = folds.open[key] == true,
@@ -772,6 +782,14 @@ private fun OneStep(
                             moreLabel = pluralStringResource(Res.plurals.kitCodeShowAll, lines, lines),
                             onMore = { folds.full[key] = true },
                             exitLabel = null,
+                            // Ended and printed nothing: say so (never a blank box that reads as lost output).
+                            emptyLabel =
+                                when (step.state) {
+                                    StepState.Done -> stringResource(Res.string.kitCommandNoOutput)
+                                    StepState.Failed -> stringResource(Res.string.kitCommandFailedNoOutput)
+                                    StepState.Stopped -> stringResource(Res.string.kitCommandStoppedEarly)
+                                    else -> null
+                                },
                         )
                     }
                     val rerun = reply?.onRerunCommand
@@ -876,3 +894,25 @@ private fun inputHasBody(kind: ToolKind, state: StepState): Boolean =
         kind != ToolKind.Shell &&
         kind != ToolKind.Lsp &&
         kind != ToolKind.ConnectorSearch
+
+/**
+ * What a step's command box shows, as text (null when there is none): a running command its last lines so far, growing in
+ * place; a failed command its last lines (the error is at the end of what it printed) until "Show all"; any other step
+ * the answer it gave.
+ */
+internal fun stepOutputShown(step: TurnStep, showAll: Boolean): String? {
+    val out = step.output
+    val last = KIT_COMMAND_OUTPUT_LINES
+    val shown =
+        when {
+            step.state == StepState.Running -> out.liveTail.lines().takeLast(last).joinToString("\n")
+            step.state == StepState.Failed && step.facts.kind == ToolKind.Shell && !showAll ->
+                out.text.trimEnd().lines().takeLast(last).joinToString("\n")
+            else -> out.text
+        }
+    return shown.takeIf { it.isNotEmpty() }
+}
+
+/** Whether a step opens by itself: a running command, not blocked on the person, that has printed something. */
+internal fun opensItself(step: TurnStep, waitingForYou: Boolean, hasOutput: Boolean): Boolean =
+    step.state == StepState.Running && !waitingForYou && step.facts.kind == ToolKind.Shell && hasOutput

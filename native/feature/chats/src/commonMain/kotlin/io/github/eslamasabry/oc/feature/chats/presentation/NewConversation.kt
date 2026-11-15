@@ -69,6 +69,41 @@ public data class NewConversationProject(
     val separateCopy: Boolean,
 )
 
+/**
+ * This phone's shared storage (Downloads, Documents and the rest) for the phone's own OpenCode: whether All files
+ * access is on. A server that is not this phone's own offers none (null).
+ */
+public enum class PhoneStorageAccess { Off, On }
+
+/** One folder of the phone's storage, for the folder list under the Phone storage row. */
+public data class StorageFolder(val name: String, val path: String)
+
+/** The phone's storage as agents on this phone see it: where the Phone storage folder list starts. */
+public const val PHONE_STORAGE_ROOT: String = "/storage/emulated/0"
+
+/**
+ * Issue 147: a folder in this phone's storage, as the phone's Linux side that will work in it finds it (the phone's own
+ * OpenCode, or the helper that runs the phone's agents), checked when the folder is chosen and before the first
+ * message. Anything but [Ready] keeps Start back and says why, with the way forward: a message never goes to another
+ * folder than the one shown.
+ */
+public enum class PhoneFolderReach {
+    /** That side lists and writes the folder: the agent starts in it. */
+    Ready,
+
+    /** Android's All files access is off. */
+    AppAccess,
+
+    /** That side was started before the folder was chosen and does not see it until it starts again. */
+    Restart,
+
+    /** The folder is not on the phone any more. */
+    Missing,
+
+    /** The app sees the folder, but that side cannot open or change files in it. */
+    Denied,
+}
+
 public data class NewConversationModel(
     val model: ModelRef,
     val name: String,
@@ -91,6 +126,10 @@ public data class NewConversationPhoneAgent(
     val name: String,
     val iconKey: String,
     val checking: Boolean = false,
+    /** Its update runs now (installed and installing again): its row says "Updating <agent>" (issue 147). */
+    val updating: Boolean = false,
+    /** Installed, but the app cannot read its sign-in: the Agents page says "Set it up the first time you use it". */
+    val setUpAtFirstUse: Boolean = false,
 )
 
 /**
@@ -156,10 +195,50 @@ public data class NewConversationAttempt(
 )
 
 public interface NewConversationHost {
+    /**
+     * The setup last read for [profile] in this run (its projects, models, agents and defaults), valid while the same live
+     * connection stands; null when there is none. The page shows it at once and reads a fresh one behind it (Issue 147: every
+     * visit waited for five to eight round trips before the page was usable).
+     */
+    public fun cachedSetup(profile: ProfileId): NewConversationSetup? = null
+
     public fun canRepair(profile: ProfileId, directory: String): Boolean = false
 
     public suspend fun repair(profile: ProfileId, directory: String): Outcome<GitLinkRepairReport> =
         Outcome.Failed(Failure.Unavailable(FeatureId("gitLinkRepair")))
+
+    /** [profile]'s phone storage access when it is this phone's own server; null when the page offers none. */
+    public suspend fun phoneStorage(profile: ProfileId): PhoneStorageAccess? = null
+
+    /** Opens Android's page for All files access. A request to the person, never a grant; the answer is read on return. */
+    public suspend fun requestPhoneStorage(profile: ProfileId): Outcome<Unit> =
+        Outcome.Failed(Failure.Unavailable(FeatureId("phoneStorage")))
+
+    /** The folders inside [path] in the phone's storage (the Phone storage folder list). */
+    public suspend fun storageFolders(path: String): Outcome<List<StorageFolder>> =
+        Outcome.Failed(Failure.Unavailable(FeatureId("phoneStorage")))
+
+    /** Makes folder [name] inside [parent] in the phone's storage; the answer is the new folder's path. */
+    public suspend fun createStorageFolder(parent: String, name: String): Outcome<String> =
+        Outcome.Failed(Failure.Unavailable(FeatureId("phoneStorage")))
+
+    /**
+     * Issue 147: what [directory] is to the side of this phone that will work in it: [phoneAgent]'s helper, or the
+     * phone's own OpenCode when null. Null when the folder is not in this phone's storage, the server is not this
+     * phone's own, or it can't be told (the start itself then answers).
+     */
+    public suspend fun phoneFolder(profile: ProfileId, phoneAgent: String?, directory: String): PhoneFolderReach? =
+        null
+
+    /**
+     * The way forward for [reach]: Android's All files access page ([PhoneFolderReach.AppAccess]) or a new start of
+     * the side that was started before the folder was chosen ([PhoneFolderReach.Restart]; refused while it works).
+     */
+    public suspend fun fixPhoneFolder(
+        profile: ProfileId,
+        phoneAgent: String?,
+        reach: PhoneFolderReach,
+    ): Outcome<Unit> = Outcome.Failed(Failure.Unavailable(FeatureId("phoneFolder")))
 
     /** Whether [profile] can make a new project folder here (the app's own phone server only, as in Projects). */
     public fun canCreateProject(profile: ProfileId): Boolean = false
@@ -408,6 +487,12 @@ public enum class PhoneStartWay {
 
     /** Anything else: try again. */
     TryAgain,
+
+    /**
+     * Issue 147: the agent's own sign-in no longer works (the helper refused the start for it: "Failed to
+     * authenticate: OAuth session expired"): "<Agent> needs you to sign in again", with Sign in.
+     */
+    SignIn,
 }
 
 /** A phone agent's refused start: [agentName] is named on screen, [way] is the one action offered. */
@@ -422,8 +507,12 @@ public object PhoneStartRules {
             RegexOption.IGNORE_CASE,
         )
 
+    /** The tag the phone's helper gives a start refused for the agent's sign-in (`PaseoAgentSignInTag`). */
+    public const val SIGN_IN_TAG: String = "Paseo AgentSignIn"
+
     public fun way(failure: Failure, chosen: ModelRef?, listed: List<NewConversationModel>): PhoneStartWay =
         when {
+            failure is Failure.Rejected && failure.tag?.raw == SIGN_IN_TAG -> PhoneStartWay.SignIn
             chosen != null && listed.isNotEmpty() && listed.none { it.model == chosen } -> PhoneStartWay.ChooseModel
             failure is Failure.ComputerDidNotAnswer && NOT_READY.containsMatchIn(failure.details?.text.orEmpty()) ->
                 PhoneStartWay.SetUp
@@ -464,12 +553,23 @@ public data class NewConversationUi(
     val repairing: Boolean = false,
     /** The project sheet offers New project (the app's own phone server can make a Git folder under its projects). */
     val canCreateProject: Boolean = false,
+    /** This phone's storage access, read when the project sheet opens and when the page comes back; null: not offered. */
+    val phoneStorage: PhoneStorageAccess? = null,
+    /** The Phone storage folder list: the folder it shows (null: closed), its rows and what it waits on. */
+    val storagePath: String? = null,
+    val storageFolders: List<StorageFolder> = emptyList(),
+    val storageLoading: Boolean = false,
+    val storageFailure: Failure? = null,
     /** The New project name dialog is open. */
     val askingProjectName: Boolean = false,
     val creatingProject: Boolean = false,
     val projectFailure: Failure? = null,
     /** B-063: the chosen project's folder is not on its server any more; Start waits for a choice. */
     val folderMissing: Boolean = false,
+    /** Issue 147: the chosen folder in this phone's storage as the side that will work in it finds it; null: not one. */
+    val phoneFolder: PhoneFolderReach? = null,
+    val fixingPhoneFolder: Boolean = false,
+    val phoneFolderFailure: Failure? = null,
     val remakingFolder: Boolean = false,
     val remakeFailure: Failure? = null,
     /** The chosen server is this phone's own OpenCode and the person stopped it: no list can be read until it starts. */
@@ -485,12 +585,21 @@ public data class NewConversationUi(
     val preparingSlow: Boolean = false,
     /** The thinking effort chosen for the shown model; null is the model's own default. */
     val variant: String? = null,
+    /**
+     * Issue 147: Start was pressed while the page was still getting ready: the tap is kept, and the conversation starts
+     * the moment the page is ready (it is never dropped, and Start never sits grey with nothing said).
+     */
+    val startQueued: Boolean = false,
 ) {
     /** A separate copy is OpenCode only: a phone agent hides it (Flutter `_start`). */
     val canCopy: Boolean
         get() = phoneAgent == null && setup?.projects?.any { it.directory == directory && it.separateCopy } == true
 
     /** The chosen phone agent's name (its row while offered, else the catalog's). */
+    /** Issue 147: the chosen folder in phone storage is not ready for the side that will work in it; Start waits. */
+    val phoneFolderBlocked: Boolean
+        get() = phoneFolder != null && phoneFolder != PhoneFolderReach.Ready
+
     val phoneAgentName: String?
         get() =
             phoneAgent?.let { id ->
@@ -554,6 +663,12 @@ public data class NewConversationUi(
         get() =
             phoneAgent != null && directory != null &&
                 !AgentSelection.folderAllowed(AgentId(phoneAgent), directory)
+
+    /** [phoneNeedsProjectsFolder] and the phone has no project the agent could use: the way out is a new one. */
+    val phoneHasNoProject: Boolean
+        get() =
+            phoneNeedsProjectsFolder && phoneAgent != null &&
+                setup?.projects.orEmpty().none { AgentSelection.folderAllowed(AgentId(phoneAgent), it.directory) }
 
     /**
      * E20-S08: the project sheet's rows, one per folder. A server can list the same folder twice (a worktree, a
@@ -642,11 +757,36 @@ public interface NewConversationActions {
     /** New project in the project sheet: asks for its name. */
     public fun askNewProject() {}
 
+    /** The project sheet's Phone storage row without access: opens Android's page for it. */
+    public fun requestPhoneStorage() {}
+
+    /** The Phone storage row with access: opens the folder list of phone storage. */
+    public fun browsePhoneStorage() {}
+
+    public fun enterStorageFolder(path: String) {}
+
+    public fun closeStorageFolders() {}
+
+    /** Uses the folder shown as the project (never the storage root itself). */
+    public fun useStorageFolder() {}
+
+    /** New folder inside the folder shown: asks for its name. */
+    public fun askNewStorageFolder() {}
+
+    /**
+     * The sentence "this agent works only in the projects on this phone": with none to choose it asks for a new
+     * project's name right there, otherwise it opens the project chooser.
+     */
+    public fun chooseProjectForAgent() {}
+
     /** The name dialog's answer: makes the folder with Git and picks it; null closes the dialog. */
     public fun createProject(name: String?) {}
 
     /** B-063: makes the missing project folder again (empty, with Git). */
     public fun remakeFolder() {}
+
+    /** Issue 147: the phone-storage notice's action (allow All files access, or restart the side that can't see it). */
+    public fun fixPhoneFolder() {}
 }
 
 @AssistedInject
@@ -701,6 +841,13 @@ public class NewConversationViewModel(
     private var wantedApplied = false
 
     override fun shown() {
+        // Back from Android's All files access page: the Phone storage row says what the person answered.
+        if (mutable.value.phoneStorage != null) readPhoneStorage()
+        // Back from Android's page, or Android took the access back meanwhile: the folder is checked again.
+        mutable.value.let { now ->
+            if (now.phoneFolder != null && now.profile != null && now.directory != null)
+                checkPhoneFolder(now.profile, now.directory)
+        }
         if (!refreshOnShown) return
         val profile = mutable.value.profile ?: return
         refreshOnShown = false
@@ -790,75 +937,92 @@ public class NewConversationViewModel(
             if (ticket == generation) mutable.update { if (it.busy && it.setup == null) it.copy(preparingSlow = true) else it }
         }
         viewModelScope.launch {
+            // Issue 147: the setup last read in this run shows at once; the fresh read below revalidates it behind.
+            val cached = host.cachedSetup(profile)
+            if (cached != null && ticket == generation) applySetup(profile, ticket, cached)
             // Never wait for ever: a server that does not answer in time is a failure with a Try again.
             val answered =
                 withTimeoutOrNull(SETUP_WAIT) { host.setup(profile) }
                     ?: Outcome.Failed(Failure.Network(NetworkWhy.Unknown))
             when (val loaded = answered) {
                 is Outcome.Failed ->
-                    if (ticket == generation)
-                        mutable.update { it.copy(busy = false, failure = loaded.failure) }
+                    // A page already showing the remembered setup stays usable when the fresh read fails.
+                    if (ticket == generation && cached == null)
+                        mutable.update { it.copy(busy = false, failure = loaded.failure, startQueued = false) }
                 is Outcome.Ok ->
                     if (ticket == generation) {
-                        val setup = loaded.value
-                        mutable.update {
-                            it.copy(
-                                setup = setup,
-                                directory = setup.directory,
-                                model = setup.model,
-                                favorites = setup.favorites,
-                                agent = setup.agent,
-                                phoneAgent = setup.phone?.selected,
-                                // The default agent's last known list shows at once; the read below replaces it.
-                                phoneModels =
-                                    setup.phone?.selected?.let { a -> host.cachedPhoneAgentModels(profile, a) }
-                                        ?.models.orEmpty(),
-                                phoneModel =
-                                    setup.phone?.selected?.let { a -> host.cachedPhoneAgentModels(profile, a) }?.model,
-                                variant = null,
-                                busy = false,
-                                repairAvailable =
-                                    setup.directory?.let { dir -> host.canRepair(profile, dir) } ==
-                                        true,
-                            )
-                        }
-                        val wanted = route.phoneAgent
-                        val offer = setup.phone
-                        if (
-                            wanted != null && !wantedApplied && offer != null &&
-                                offer.choices.none { c -> c.id == wanted } &&
-                                offer.needsSetup.none { c -> c.id == wanted }
-                        ) {
-                            // A ready agent the offer lists only once chosen (not yet certified for chat, as Flutter's
-                            // agentChoosable): the Agents card's choice is saved like a tap and the offer read again,
-                            // now listing it. Before, the page dropped it and showed the remembered agent instead.
-                            wantedApplied = true
-                            if (host.choosePhoneAgent(profile, wanted) is Outcome.Ok && ticket == generation) {
-                                chooseServer(profile)
-                                return@launch
-                            }
-                        }
-                        if (
-                            wanted != null && !wantedApplied &&
-                                setup.phone?.choices?.any { c -> c.id == wanted } == true
-                        ) {
-                            // The Agents page chose this agent: it is the one chosen here, remembered like a tap.
-                            wantedApplied = true
-                            if (setup.phone?.selected != wanted) choosePhoneAgent(wanted)
-                            else loadPhoneModels(profile, wanted)
-                        } else {
-                            val chosen = setup.phone?.selected
-                            if (chosen != null) loadPhoneModels(profile, chosen)
-                            else setup.phone?.choices?.map { c -> c.id }?.takeIf { it.isNotEmpty() }?.let { ready ->
-                            // No agent chosen yet: the ready agents' lists are read now, so a pick shows one at once.
-                                viewModelScope.launch { host.prefetchPhoneAgentModels(profile, ready) }
-                            }
-                        }
-                        restore(profile, setup.directory)
-                        setup.directory?.let { checkFolder(profile, it) }
-                        startInWantedFolder(profile, setup.directory)
+                        if (cached != null) {
+                            // Behind a page already showing the remembered setup: the fresh lists replace the old in place;
+                            // the person's words, folder, model and agent stay as they are.
+                            mutable.update { it.copy(setup = loaded.value, favorites = loaded.value.favorites) }
+                        } else applySetup(profile, ticket, loaded.value)
                     }
             }
+        }
+    }
+
+    /** Shows [setup] on the page and settles what follows it (agent, models, draft, folder); the page is usable from here. */
+    private suspend fun applySetup(profile: ProfileId, ticket: Int, setup: NewConversationSetup) {
+        mutable.update {
+            it.copy(
+                setup = setup,
+                directory = setup.directory,
+                model = setup.model,
+                favorites = setup.favorites,
+                agent = setup.agent,
+                phoneAgent = setup.phone?.selected,
+                // The default agent's last known list shows at once; the read below replaces it.
+                phoneModels =
+                    setup.phone?.selected?.let { a -> host.cachedPhoneAgentModels(profile, a) }
+                        ?.models.orEmpty(),
+                phoneModel =
+                    setup.phone?.selected?.let { a -> host.cachedPhoneAgentModels(profile, a) }?.model,
+                variant = null,
+                busy = false,
+                repairAvailable =
+                    setup.directory?.let { dir -> host.canRepair(profile, dir) } ==
+                        true,
+            )
+        }
+        val wanted = route.phoneAgent
+        val offer = setup.phone
+        if (
+            wanted != null && !wantedApplied && offer != null &&
+                offer.choices.none { c -> c.id == wanted } &&
+                offer.needsSetup.none { c -> c.id == wanted }
+        ) {
+            // A ready agent the offer lists only once chosen (not yet certified for chat, as Flutter's
+            // agentChoosable): the Agents card's choice is saved like a tap and the offer read again,
+            // now listing it. Before, the page dropped it and showed the remembered agent instead.
+            wantedApplied = true
+            if (host.choosePhoneAgent(profile, wanted) is Outcome.Ok && ticket == generation) {
+                chooseServer(profile)
+                return
+            }
+        }
+        if (
+            wanted != null && !wantedApplied &&
+                setup.phone?.choices?.any { c -> c.id == wanted } == true
+        ) {
+            // The Agents page chose this agent: it is the one chosen here, remembered like a tap.
+            wantedApplied = true
+            if (setup.phone?.selected != wanted) choosePhoneAgent(wanted)
+            else loadPhoneModels(profile, wanted)
+        } else {
+            val chosen = setup.phone?.selected
+            if (chosen != null) loadPhoneModels(profile, chosen)
+            else setup.phone?.choices?.map { c -> c.id }?.takeIf { it.isNotEmpty() }?.let { ready ->
+            // No agent chosen yet: the ready agents' lists are read now, so a pick shows one at once.
+                viewModelScope.launch { host.prefetchPhoneAgentModels(profile, ready) }
+            }
+        }
+        restore(profile, setup.directory)
+        setup.directory?.let { checkFolder(profile, it) }
+        startInWantedFolder(profile, setup.directory)
+        // The tap kept while the page got ready: the words and the folder are settled now.
+        if (ticket == generation && mutable.value.startQueued) {
+            mutable.update { it.copy(startQueued = false) }
+            start()
         }
     }
 
@@ -1109,6 +1273,8 @@ public class NewConversationViewModel(
                 repair = null,
                 folderMissing = false,
                 remakeFailure = null,
+                phoneFolder = null,
+                phoneFolderFailure = null,
             )
         }
         checkFolder(profile, directory.trim())
@@ -1236,6 +1402,8 @@ public class NewConversationViewModel(
             if (host.choosePhoneAgent(profile, agent) is Outcome.Failed)
                 mutable.update { it.copy(draftFailed = true) }
         }
+        // The phone's OpenCode and the agents' helper are two Linux sides: the folder is checked for the one chosen.
+        shown.directory?.let { checkPhoneFolder(profile, it) }
         if (agent != null) loadPhoneModels(profile, agent)
         else saveChoices()
     }
@@ -1297,12 +1465,104 @@ public class NewConversationViewModel(
             )
         }
         if (sheet == NewConversationSheet.Import) loadImports()
+        if (sheet == NewConversationSheet.Projects) readPhoneStorage()
     }
 
     override fun askNewProject() {
         val shown = mutable.value
         if (!shown.canCreateProject || shown.creatingProject || shown.setup?.canChangeProject != true) return
         mutable.update { it.copy(askingProjectName = true, projectFailure = null) }
+    }
+
+    private fun readPhoneStorage() {
+        val profile = mutable.value.profile ?: return
+        viewModelScope.launch {
+            val access = host.phoneStorage(profile)
+            mutable.update { if (it.profile == profile) it.copy(phoneStorage = access) else it }
+        }
+    }
+
+    override fun requestPhoneStorage() {
+        val profile = mutable.value.profile ?: return
+        if (mutable.value.phoneStorage != PhoneStorageAccess.Off) return
+        viewModelScope.launch {
+            // Android's page opens over the app; the answer is read when the person comes back (shown()).
+            host.requestPhoneStorage(profile)
+            readPhoneStorage()
+        }
+    }
+
+    private var storageRun = 0
+
+    override fun browsePhoneStorage() {
+        if (mutable.value.phoneStorage != PhoneStorageAccess.On) return
+        enterStorageFolder(PHONE_STORAGE_ROOT)
+    }
+
+    override fun enterStorageFolder(path: String) {
+        if (path != PHONE_STORAGE_ROOT && !path.startsWith("$PHONE_STORAGE_ROOT/")) return
+        if (path.split('/').any { it == ".." }) return
+        val run = ++storageRun
+        mutable.update {
+            it.copy(storagePath = path, storageFolders = emptyList(), storageLoading = true, storageFailure = null)
+        }
+        viewModelScope.launch {
+            val listed = host.storageFolders(path)
+            if (run != storageRun) return@launch
+            mutable.update {
+                when (listed) {
+                    is Outcome.Ok -> it.copy(storageFolders = listed.value, storageLoading = false)
+                    is Outcome.Failed -> it.copy(storageFailure = listed.failure, storageLoading = false)
+                }
+            }
+        }
+    }
+
+    override fun closeStorageFolders() {
+        storageRun++
+        mutable.update {
+            it.copy(storagePath = null, storageFolders = emptyList(), storageLoading = false, storageFailure = null, askingProjectName = false)
+        }
+    }
+
+    override fun useStorageFolder() {
+        val shown = mutable.value
+        val path = shown.storagePath ?: return
+        if (path == PHONE_STORAGE_ROOT || shown.storageLoading || shown.storageFailure != null) return
+        closeStorageFolders()
+        chooseDirectory(path)
+    }
+
+    override fun askNewStorageFolder() {
+        val shown = mutable.value
+        if (shown.storagePath == null || shown.storageLoading || shown.creatingProject) return
+        mutable.update { it.copy(askingProjectName = true, projectFailure = null) }
+    }
+
+    private fun createStorageFolder(parent: String, name: String) {
+        val folder = io.github.eslamasabry.oc.engine.agents.workspace.ProjectFolderName.validated(name) ?: return
+        mutable.update { it.copy(askingProjectName = false, creatingProject = true, projectFailure = null) }
+        viewModelScope.launch {
+            val made = host.createStorageFolder(parent, folder)
+            mutable.update { it.copy(creatingProject = false) }
+            when (made) {
+                is Outcome.Ok -> {
+                    // A new folder is meant as the project: one flow from the row to a usable folder.
+                    closeStorageFolders()
+                    chooseDirectory(made.value)
+                }
+                is Outcome.Failed -> mutable.update { it.copy(projectFailure = made.failure) }
+            }
+        }
+    }
+
+    override fun chooseProjectForAgent() {
+        val shown = mutable.value
+        val profile = shown.profile ?: return
+        if (shown.phoneHasNoProject && host.canCreateProject(profile)) {
+            mutable.update { it.copy(canCreateProject = true) }
+            askNewProject()
+        } else sheet(NewConversationSheet.Projects)
     }
 
     override fun createProject(name: String?) {
@@ -1313,6 +1573,7 @@ public class NewConversationViewModel(
             return
         }
         if (shown.creatingProject) return
+        shown.storagePath?.let { return createStorageFolder(it, name) }
         val folder = io.github.eslamasabry.oc.engine.agents.workspace.ProjectFolderName.validated(name) ?: return
         mutable.update { it.copy(askingProjectName = false, creatingProject = true, projectFailure = null) }
         viewModelScope.launch {
@@ -1328,6 +1589,7 @@ public class NewConversationViewModel(
 
     /** B-063: a project whose folder is gone says so before Start, never after a refused send. */
     private fun checkFolder(profile: ProfileId, directory: String) {
+        checkPhoneFolder(profile, directory)
         viewModelScope.launch {
             val there = host.folderExists(profile, directory)
             mutable.update {
@@ -1335,6 +1597,41 @@ public class NewConversationViewModel(
                     it.copy(folderMissing = there == false)
                 else it
             }
+        }
+    }
+
+    /** The newest phone-folder check: only its answer is shown. */
+    private var phoneFolderRead = 0
+
+    /** Issue 147: what the chosen folder in phone storage is to the side that will work in it (for the agent shown). */
+    private fun checkPhoneFolder(profile: ProfileId, directory: String) {
+        val read = ++phoneFolderRead
+        val agent = mutable.value.phoneAgent
+        viewModelScope.launch {
+            val reach = host.phoneFolder(profile, agent, directory)
+            mutable.update {
+                if (read == phoneFolderRead && it.profile == profile && it.directory == directory)
+                    it.copy(phoneFolder = reach)
+                else it
+            }
+        }
+    }
+
+    override fun fixPhoneFolder() {
+        val shown = mutable.value
+        val profile = shown.profile ?: return
+        val directory = shown.directory ?: return
+        val reach = shown.phoneFolder ?: return
+        if (shown.fixingPhoneFolder || (reach != PhoneFolderReach.AppAccess && reach != PhoneFolderReach.Restart))
+            return
+        mutable.update { it.copy(fixingPhoneFolder = true, phoneFolderFailure = null) }
+        viewModelScope.launch {
+            val fixed = host.fixPhoneFolder(profile, shown.phoneAgent, reach)
+            mutable.update {
+                it.copy(fixingPhoneFolder = false, phoneFolderFailure = (fixed as? Outcome.Failed)?.failure)
+            }
+            if (mutable.value.profile == profile && mutable.value.directory == directory)
+                checkPhoneFolder(profile, directory)
         }
     }
 
@@ -1451,8 +1748,18 @@ public class NewConversationViewModel(
 
     override fun start() {
         val shown = mutable.value
+        // Issue 147: a tap on Start while the page is still getting ready is kept and acts when it is ready.
+        if (
+            shown.setup == null && shown.busy && !shown.repairing && !shown.openingChat && !shown.startQueued &&
+                shown.profile != null && shown.text.isNotBlank()
+        ) {
+            mutable.update { it.copy(startQueued = true) }
+            return
+        }
         val profile = shown.profile ?: return
         val directory = shown.directory ?: return
+        // The model list being read never holds Start back: it starts with the model last known for the agent, and the
+        // read goes on behind (the chip that is loading says so).
         if (
             shown.busy ||
                 shown.text.isBlank() ||
@@ -1460,8 +1767,9 @@ public class NewConversationViewModel(
                 shown.creationUnconfirmed ||
                 shown.deliveryUnconfirmed ||
                 shown.folderMissing ||
-                shown.phoneNeedsProjectsFolder ||
-                shown.phoneModelsBusy
+                shown.phoneFolderBlocked ||
+                shown.fixingPhoneFolder ||
+                shown.phoneNeedsProjectsFolder
         )
             return
         if (shown.separateCopy) {
@@ -1496,6 +1804,14 @@ public class NewConversationViewModel(
             it.copy(busy = true, openingChat = true, failure = null, attempted = true)
         }
         viewModelScope.launch {
+            // Issue 147: checked again from the side that will work in the folder, right before the first message.
+            val reach = host.phoneFolder(profile, shown.phoneAgent, directory)
+            if (reach != null && reach != PhoneFolderReach.Ready) {
+                mutable.update {
+                    it.copy(busy = false, openingChat = false, attempted = shown.attempted, phoneFolder = reach)
+                }
+                return@launch
+            }
             var openedConversation: ConversationRef? = null
             // A phone agent's conversation lives on the phone helper's profile, with the agent's own model.
             val phone = shown.setup?.phone?.takeIf { shown.phoneAgent != null }

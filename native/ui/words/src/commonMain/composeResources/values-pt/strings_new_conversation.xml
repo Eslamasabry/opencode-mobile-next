@@ -15,4 +15,23 @@
     <string name="chatsNewFolderRemake">Criar a pasta de novo</string>
     <string name="chatsNewFolderChooseAnother">Escolher outro projeto</string>
     <string name="chatSendFolderMissing">A pasta deste projeto não está mais no servidor, então a mensagem não foi enviada. Inicie uma nova conversa para criar a pasta de novo ou escolha outro projeto.</string>
+    <string name="chatsNewPhoneFolderAccess">Os agentes não conseguem abrir pastas do armazenamento deste celular até você permitir que este app acesse todos os arquivos.</string>
+    <string name="chatsNewPhoneFolderAllow">Permitir acesso ao armazenamento do celular</string>
+    <string name="chatsNewPhoneFolderRestartServer">O OpenCode deste celular foi iniciado antes de você escolher esta pasta, então ainda não a enxerga. Reinicie-o para trabalhar aqui.</string>
+    <string name="chatsNewPhoneFolderRestartServerAction">Reiniciar o OpenCode deste celular</string>
+    <string name="chatsNewPhoneFolderRestartAgents">Os agentes do celular foram iniciados antes de você escolher esta pasta, então o %1$s ainda não a enxerga. Reinicie-os para trabalhar aqui.</string>
+    <string name="chatsNewPhoneFolderRestartAgentsAction">Reiniciar os agentes do celular</string>
+    <string name="chatsNewPhoneFolderMissing">Esta pasta não está mais no armazenamento do celular. Escolha outra pasta.</string>
+    <string name="chatsNewPhoneFolderDenied">O %1$s não consegue abrir nem alterar arquivos nesta pasta. Escolha outra pasta no armazenamento do celular.</string>
+    <string name="chatsNewPhoneFolderRestartFailed">Não foi possível reiniciar. Se um agente ainda estiver trabalhando, tente de novo quando ele terminar.</string>
+    <string name="chatsNewPhoneFolderWhere">Trabalha em %1$s, no armazenamento do celular, que não guarda links nem inicia programas diretamente.</string>
+    <string name="chatsNewPhoneFolderWhy">Por quê</string>
+    <string name="chatsNewPhoneFolderHelpTitle">Trabalhar no armazenamento do celular</string>
+    <string name="chatsNewPhoneFolderHelp">O Android mantém o armazenamento do celular para todos os apps, como um cartão de memória. Ele não guarda links entre arquivos e não inicia um programa que esteja guardado nele.\n\nPor isso, nesta pasta, instale pacotes com npm install --no-bin-links e execute um script com sh script.sh em vez de ./script.sh. Aqui o Git ignora os modos de arquivo. Os projetos na pasta própria do app não têm nenhum desses limites.\n\nQuando o Claude Code ou o Codex inicia aqui, ele é avisado da mesma coisa.</string>
+    <string name="chatPhoneFolderAccess">A pasta desta conversa fica no armazenamento do celular, e o app não tem mais acesso a todos os arquivos. Nada é enviado até você permitir de novo.</string>
+    <string name="chatPhoneFolderRestartServer">O OpenCode deste celular não consegue ver a pasta desta conversa até ser reiniciado. Nada é enviado até lá.</string>
+    <string name="chatPhoneFolderRestartAgents">Os agentes do celular não conseguem ver a pasta desta conversa até serem reiniciados. Nada é enviado até lá.</string>
+    <string name="chatPhoneFolderMissing">A pasta desta conversa não está mais no armazenamento do celular, então nada pode ser enviado aqui.</string>
+    <string name="chatPhoneFolderDenied">O agente não consegue abrir nem alterar arquivos na pasta desta conversa no armazenamento do celular, então nada pode ser enviado aqui.</string>
+    <string name="chatSendPhoneFolder">Não enviado: o agente não consegue alcançar agora a pasta desta conversa no armazenamento do celular. A linha no topo diz o que fazer.</string>
 </resources>

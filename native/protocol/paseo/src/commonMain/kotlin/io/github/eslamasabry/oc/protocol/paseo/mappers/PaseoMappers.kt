@@ -211,6 +211,9 @@ private fun openCodeDeclined(item: JsonObject): Boolean {
 
 private const val OPENCODE_DECLINED = "The user declined this tool call"
 
+private fun JsonElement?.isNullishOutput(): Boolean =
+    this == null || this is JsonNull || (this is JsonPrimitive && isString && content.isEmpty())
+
 /** Dart `paseoMergeToolCall`: a later report of the same call merged into the earlier one. */
 public fun paseoMergeToolCall(earlier: JsonObject?, later: JsonObject): JsonObject {
     if (earlier == null || earlier["type"].stringOrNull() != "tool_call" || later["type"].stringOrNull() != "tool_call") {
@@ -230,6 +233,16 @@ public fun paseoMergeToolCall(earlier: JsonObject?, later: JsonObject): JsonObje
         merged["name"] = earlier["name"] ?: JsonNull
     }
     if (!parsed(later["detail"]) && parsed(earlier["detail"])) merged["detail"] = earlier["detail"]!!
+    // A closing report that names no output keeps what the step already put out: output the agent streamed (or sent
+    // with an earlier snapshot) is not lost because the last snapshot of the call carries only its exit code.
+    val earlierDetail = earlier["detail"].objectOrNull()
+    val laterDetail = merged["detail"].objectOrNull()
+    if (earlierDetail != null && laterDetail != null && parsed(laterDetail) &&
+        earlierDetail["type"].stringOrNull() == laterDetail["type"].stringOrNull() &&
+        laterDetail["output"].isNullishOutput() && !earlierDetail["output"].isNullishOutput()
+    ) {
+        merged["detail"] = JsonObject(LinkedHashMap<String, JsonElement>(laterDetail).apply { put("output", earlierDetail["output"]!!) })
+    }
     if (earlierMeta != null || laterMeta != null) {
         merged["metadata"] = JsonObject(LinkedHashMap<String, JsonElement>().apply {
             earlierMeta?.let(::putAll)
@@ -330,8 +343,17 @@ public fun paseoItemMessage(
             toolName = toolName,
             tool = tool,
         )
+    // Issue 147: the app's own continuation after a turn that left a command running reads as a quiet line, not a
+    // request of the person's (and not a turn of its own: the work it continues stays under that request).
+    if (type == "user_message" && paseoIsContinuePrompt(paseoText(item["text"]))) {
+        return MessageWithParts(
+            MessageInfo(id = id, sessionId = agentId, role = Role.User, time = MsgTime(createdMs, completedMs ?: createdMs)),
+            persistentListOf(newPart(PartType.Notice, "v2:notice", toolName = PASEO_CONTINUE_NOTICE)),
+        )
+    }
     val part: Part = when (type) {
-        "user_message", "assistant_message" -> newPart(PartType.Text, "text", text = paseoText(item["text"]))
+        "user_message" -> newPart(PartType.Text, "text", text = paseoText(item["text"]))
+        "assistant_message" -> newPart(PartType.Text, "text", text = paseoWithoutGoalMarker(paseoText(item["text"])))
         "reasoning" -> newPart(PartType.Reasoning, "reasoning", text = paseoText(item["text"]))
         "tool_call" -> {
             val status = if (paseoInterruptedToolCall(item)) ToolStatus.Cancelled else paseoToolStatus(item["status"])
@@ -346,11 +368,12 @@ public fun paseoItemMessage(
             }
             val error: JsonElement? = if (status == ToolStatus.Error) {
                 // The card reads this as the person's choice, not a failure.
-                if (paseoDeclinedToolCall(item)) JsonPrimitive(DECLINED_TEXT) else toolOutput(item, detail)
+                if (paseoDeclinedToolCall(item)) JsonPrimitive(DECLINED_TEXT) else failedShellOutput(detail) ?: toolOutput(item, detail)
             } else {
                 null
             }
-            val metadata = withBackgroundTask(toolMetadata(detail), toolName, status, detail)
+            val metadata =
+                withTurnOutliving(withBackgroundTask(toolMetadata(detail), toolName, status, detail), provider, toolName, status)
             newPart(PartType.Tool, "tool", toolName = toolName, callId = id, tool = toolState(status, input, output, error, metadata))
         }
         "todo" -> {

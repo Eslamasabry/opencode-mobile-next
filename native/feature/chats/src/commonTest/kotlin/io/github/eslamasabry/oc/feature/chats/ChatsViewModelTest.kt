@@ -174,6 +174,19 @@ class ChatsViewModelTest {
     }
 
     @Test
+    fun `I147-OLD-001 a phone agent's old conversation its agent cannot take up again opens on tap, nothing asks first`() {
+        val nav = RecordingNavigator()
+        val feed = Feed().apply {
+            snapshot.value = ChatFeedSnapshot(persistentListOf(item("old").copy(agentId = "antigravity", needsNewChat = true)))
+        }
+        val vm = ChatsViewModel(feed, Briefs(), Door(false), { Instant.fromEpochMilliseconds(0) }, clock, nav)
+        vm.openConversation(ConversationRef(P1, io.github.eslamasabry.oc.core.common.ids.SessionId("old")))
+        // It opens to read what it had; continuing is offered on its own page, never a refusing question here.
+        assertEquals(listOf("openChat old"), nav.calls)
+        assertNull(vm.state.value.sheet)
+    }
+
+    @Test
     fun `B-MIGR-012 a waiting release puts Update in the bar and it opens the updater`() {
         val nav = RecordingNavigator()
         var opened = 0
@@ -352,6 +365,16 @@ class ChatsViewModelTest {
         override suspend fun switchTo(profile: ProfileId): Outcome<Unit> {
             switched += profile.raw
             return answer
+        }
+
+        var storage: io.github.eslamasabry.oc.feature.chats.presentation.PhoneStorageAccess? = null
+        var storageRequests = 0
+
+        override suspend fun phoneStorage() = storage
+
+        override suspend fun requestPhoneStorage(): Outcome<Unit> {
+            storageRequests++
+            return Unit.ok()
         }
 
         val disconnected = mutableListOf<String>()
@@ -897,6 +920,24 @@ class ChatsViewModelTest {
         vm.showProjectChoices()
         vm.openFilterProject()
         assertEquals(listOf<AppRoute>(io.github.eslamasabry.oc.ui.routes.ProjectsRoute.Open), nav.routes)
+    }
+
+    @Test
+    fun `I147-PHONE-STORAGE the home's projects sheet offers Phone storage and opens Android's page once`() = runTest {
+        val home = Home(listOf(source("main", main = true)))
+        home.storage = io.github.eslamasabry.oc.feature.chats.presentation.PhoneStorageAccess.Off
+        val vm = sourcesVm(home)
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
+        assertNull(vm.state.value.phoneStorage, "not read until the sheet opens")
+        vm.showProjectChoices()
+        assertEquals(io.github.eslamasabry.oc.feature.chats.presentation.PhoneStorageAccess.Off, vm.state.value.phoneStorage)
+        vm.requestPhoneStorage()
+        assertEquals(1, home.storageRequests)
+        // A server that is not this phone's own offers no such row.
+        val remote = sourcesVm(Home(listOf(source("main", main = true))))
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { remote.state.collect {} }
+        remote.showProjectChoices()
+        assertNull(remote.state.value.phoneStorage)
     }
 
     private val termux = ProfileId("termux")

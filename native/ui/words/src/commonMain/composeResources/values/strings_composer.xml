@@ -198,6 +198,8 @@
     <string name="modelPickerShowMore__eq1">Show 1 more model</string>
     <string name="modelPickerAgentBuildName">Build</string>
     <string name="modelPickerAgentPlanName">Plan</string>
+    <string name="modelPickerModeDefaultName">Default</string>
+    <string name="modelPickerModeAutoName">Auto</string>
     <string name="runCommandReconnecting">OpenCode is reconnecting. Try again in a moment.</string>
     <string name="runCommandArgumentsHelper">Text passed to /%1$s. Leave it empty if the command takes none.</string>
     <string name="runCommandRunsIn">Runs in</string>

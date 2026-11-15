@@ -56,6 +56,9 @@ import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
 import io.github.eslamasabry.oc.ui.kit.platform.LocalKitPlatform
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitAppearance
+import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceInput
+import io.github.eslamasabry.oc.ui.kit.foundation.kitSurface
+import io.github.eslamasabry.oc.ui.kit.foundation.kitSurfaceLook
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.Res
@@ -397,3 +400,20 @@ private fun CalmState(
 private class PreviousKind {
     var kind: KitStateKind? = null
 }
+
+/**
+ * The page's own ground, opaque: for a state page laid over something that must not show through (a web view's own
+ * error page under "Nothing is answering yet"). The state view itself stays as it is.
+ */
+@Composable
+public fun Modifier.kitGroundBackdrop(): Modifier =
+    this.kitSurface(
+        kitSurfaceLook(
+            KitSurfaceInput(
+                role = io.github.eslamasabry.oc.ui.design.style.SurfaceRole.Ground,
+                shape = io.github.eslamasabry.oc.ui.design.tokens.KitShapeId.Square,
+                level = io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel.Ground,
+                ownFill = LocalKitColors.current.ground,
+            )
+        )
+    )

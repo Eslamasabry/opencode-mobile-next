@@ -48,6 +48,19 @@ class PaseoPermissionsTest {
     }
 
     @Test
+    fun `B-CHAT-REQ-NEWFILE-03 a write that carries no content sends no diff at all`() {
+        val noContent =
+            jsonOf(
+                "id" to "perm-9", "provider" to "claude", "name" to "Write", "kind" to "tool",
+                "detail" to mapOf("type" to "write", "filePath" to "$DIR/index.html"),
+            )
+        book.onPermissionRequest("a1", noContent)
+        val card = asked().single().request
+        assertEquals(listOf("$DIR/index.html"), card.patterns)
+        assertNull(card.metadata["diff"], "an empty hunk would read as a complete, empty change")
+    }
+
+    @Test
     fun `B-SEC-114 once allows and always also applies the provider's rule`() = runTest {
         book.onPermissionRequest("a1", writePermission("perm-1"))
         book.replyPermission("perm-1", PaseoPermissionAnswer.Once)

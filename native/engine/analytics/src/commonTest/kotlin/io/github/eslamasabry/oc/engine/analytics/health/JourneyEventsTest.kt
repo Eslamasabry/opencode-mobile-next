@@ -45,7 +45,11 @@ class JourneyEventsTest {
 
     /** The ones the owner is asked to add. */
     private val proposed =
-        setOf("attempt", "outcome", "input", "tools_range", "follow_up", "after_range", "turns_range", "frozen_range", "starter")
+        setOf(
+            "attempt", "outcome", "input", "tools_range", "follow_up", "after_range", "turns_range", "frozen_range", "starter",
+            // c2-performance 2026-11-15: the jank event's deadline-judged share and the refresh rate its frames were given.
+            "late_pct_range", "seen_hz",
+        )
 
     @Test
     fun `B-JOURNEY-001 every journey parameter is a closed set of safe words and fits a GA dimension`() {

@@ -366,7 +366,7 @@ public class SearchViewModel(
             if (mine != generation) return
             when (
                 val messages =
-                    source.recentMessages(server, conversation.id, SearchMatch.CONTENT_MESSAGES)
+                    source.recentMessages(conversation.owner ?: server, conversation.id, SearchMatch.CONTENT_MESSAGES)
             ) {
                 is Outcome.Failed -> failed++
                 is Outcome.Ok -> {
@@ -376,7 +376,7 @@ public class SearchViewModel(
                     local.update { s ->
                         val added = match?.let { (message, excerpt) ->
                             SearchHitUi(
-                                ConversationRef(server, conversation.id),
+                                ConversationRef(conversation.owner ?: server, conversation.id),
                                 conversation.title,
                                 SearchMatch.projectName(conversation.directory),
                                 snippet = excerpt,
@@ -411,7 +411,7 @@ public class SearchViewModel(
             .filter { page.titlesMatched || SearchMatch.titleMatches(it.title, query) }
             .map {
                 SearchHitUi(
-                    ConversationRef(server, it.id),
+                    ConversationRef(it.owner ?: server, it.id),
                     it.title,
                     SearchMatch.projectName(it.directory),
                     updatedMs = it.updatedMs,

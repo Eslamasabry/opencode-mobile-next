@@ -14,7 +14,6 @@ import io.github.eslamasabry.oc.engine.agents.catalog.*
 import io.github.eslamasabry.oc.engine.agents.certification.AgentCertification
 import io.github.eslamasabry.oc.engine.agents.gate.PhoneGate
 import io.github.eslamasabry.oc.engine.agents.handoff.*
-import io.github.eslamasabry.oc.engine.agents.host.PaseoConfig
 import io.github.eslamasabry.oc.engine.agents.store.SecureBytes
 import io.github.eslamasabry.oc.engine.connection.*
 import io.github.eslamasabry.oc.engine.profiles.*
@@ -193,13 +192,15 @@ class NativeHandoffSource(
                             ?: return@withLock Failure.SecretUnavailable().failed()
                 redactor.registerSecret(password)
                 if (!ownerCurrent(owner) || !filesystem.isCurrent()) return@withLock stale()
+                // Issue 147: the person's own agents join the catalog's in the helper's config.
+                val config = phoneHelperConfig(stores, owner.raw, redactor::registerSecret)
                 val started =
                     withContext(dispatchers.io) {
                         attempt({ Failure.Runtime(RuntimeProblem.Generic) }) {
                             linux.startTrustedAgentHelper(
                                 owner.raw,
                                 password,
-                                PaseoConfig.render().json,
+                                config,
                                 AgentPins.builtIn.paseo.version,
                             )
                         }

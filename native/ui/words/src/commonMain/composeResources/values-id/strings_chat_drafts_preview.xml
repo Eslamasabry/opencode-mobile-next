@@ -6,4 +6,5 @@
     <string name="chatDraftRepeatTitle">Kirim teks ini lagi?</string>
     <string name="chatDraftRepeatAction">Kirim lagi</string>
     <string name="chatDraftRepeatBody">Teks ini sudah ada di percakapan. Kirim lagi hanya jika Anda ingin balasan baru.</string>
+    <string name="chatDraftRestoreFailed">Draf tersimpan Anda tidak dapat dibuka. Anda dapat mencoba lagi.</string>
 </resources>

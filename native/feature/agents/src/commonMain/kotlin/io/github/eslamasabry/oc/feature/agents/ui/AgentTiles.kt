@@ -8,6 +8,7 @@ import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.RuntimeProblem
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.engine.agents.persona.AgentPersona
+import io.github.eslamasabry.oc.engine.agents.providers.OwnAgentRules
 import io.github.eslamasabry.oc.feature.agents.hub.AgentTileAct
 import io.github.eslamasabry.oc.feature.agents.hub.AgentTileModel
 import io.github.eslamasabry.oc.feature.agents.hub.AgentTileState
@@ -21,8 +22,10 @@ import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentInstallPhase
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentInstallStep
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentRow
 import io.github.eslamasabry.oc.feature.agents.hub.agentTile
+import io.github.eslamasabry.oc.feature.agents.hub.installed
 import io.github.eslamasabry.oc.feature.agents.hub.phoneInstalledAgents
 import io.github.eslamasabry.oc.ui.design.color.StatusTone
+import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.kit.KitAction
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.agent.KitAgentTile
@@ -39,6 +42,10 @@ import io.github.eslamasabry.oc.ui.kit.state.KitProgress
 import io.github.eslamasabry.oc.ui.kit.state.KitProgressView
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.agentsUpdatingAgent
+import io.github.eslamasabry.oc.ui.words.res.agentsOwnProviderAction
+import io.github.eslamasabry.oc.ui.words.res.agentsOwnProviderChange
+import io.github.eslamasabry.oc.ui.words.res.agentsOwnProviderInUse
 import io.github.eslamasabry.oc.ui.words.res.agentsChecking
 import io.github.eslamasabry.oc.ui.words.res.agentsChipSignIn
 import io.github.eslamasabry.oc.ui.words.res.agentsFailArchitecture
@@ -74,6 +81,8 @@ import io.github.eslamasabry.oc.ui.words.res.agentsChipSetUp
 import io.github.eslamasabry.oc.ui.words.res.agentsSetUpAction
 import io.github.eslamasabry.oc.ui.words.res.agentsSignInUncheckedBody
 import io.github.eslamasabry.oc.ui.words.res.agentsStateUnavailable
+import io.github.eslamasabry.oc.ui.words.res.agentsHelperStartAgain
+import io.github.eslamasabry.oc.ui.words.res.chatsHomeAgentsUnreachable
 import io.github.eslamasabry.oc.ui.words.res.agentsCheckDownload
 import io.github.eslamasabry.oc.ui.words.res.agentsCheckDownloadUnknown
 import io.github.eslamasabry.oc.ui.words.res.agentsInstalling
@@ -124,7 +133,8 @@ internal fun PhoneAgentTiles(state: AgentsUi, actions: AgentsActions, modifier: 
         KitText(stringResource(Res.string.agentsChecking), modifier.then(gutter))
         return
     }
-    val tiles = state.phone.agents.map { tileOf(it, state) }
+    // A person's own agents are listed and managed in their own rows under the tiles (issue 147).
+    val tiles = state.phone.agents.filterNot { OwnAgentRules.isOwn(it.id) }.map { tileOf(it, state) }
     // A ready agent starts a conversation once the phone's agents are connected (never beside "did not start").
     val chat = phoneChatOffered(state)
     KitAgentTiles(
@@ -186,6 +196,7 @@ private fun AgentTile(tile: AgentTileModel, actions: AgentsActions, chat: Boolea
                 AgentTileState.InstallFailed -> KitAgentTileTone.NeedsYou
                 AgentTileState.CannotRun,
                 AgentTileState.Unavailable -> KitAgentTileTone.Dimmed
+                AgentTileState.HelperDown -> KitAgentTileTone.NeedsYou
                 else -> KitAgentTileTone.Calm
             },
         progress = if (tile.state == AgentTileState.Installing) tileProgress(tile) else null,
@@ -248,6 +259,16 @@ private fun AgentTile(tile: AgentTileModel, actions: AgentsActions, chat: Boolea
                     ) {
                         actions.resumePhoneAgent(agent.id)
                     }
+                // The helper did not start: Try again starts it again, as the page's own failure line does.
+                AgentTileAct.StartAgain ->
+                    KitAgentTileAction(
+                        stringResource(Res.string.kitTryAgain),
+                        stringResource(Res.string.agentsHelperStartAgain),
+                        icon = KitIcons.retry,
+                        prominent = true,
+                    ) {
+                        actions.connectPhoneHelper()
+                    }
                 // Try again opens the install review (as Install does), so it answers at once even while a step runs.
                 AgentTileAct.Retry ->
                     KitAgentTileAction(
@@ -299,6 +320,7 @@ internal fun tileWords(tile: AgentTileModel): String {
         AgentTileState.Limit -> stringResource(Res.string.agentsStateLimit)
         // Installed, but the app cannot read its sign-in, so it can never start a conversation: say that, not a bare
         // "not available" (device 2026-11-12, Gemini CLI). Signing in or installing again would not change it.
+        AgentTileState.HelperDown -> stringResource(Res.string.chatsHomeAgentsUnreachable)
         AgentTileState.Unavailable ->
             if (agent.signInUnchecked) stringResource(Res.string.agentsStateSignInUnchecked)
             else stringResource(Res.string.agentsStateUnavailable)
@@ -324,11 +346,16 @@ internal fun installingWords(tile: AgentTileModel): String {
                 stringResource(Res.string.agentsCheckDownloadUnknown, thing, agentPayloadSize(done))
             else ->
                 when (install?.step) {
-                    null -> stringResource(Res.string.agentsTileInstalling)
+                    // An agent already on the phone installing again is its update (issue 147): say so.
+                    null ->
+                        if (tile.agent.status.installed) stringResource(Res.string.agentsUpdatingAgent, tile.agent.name)
+                        else stringResource(Res.string.agentsTileInstalling)
                     PhoneAgentInstallStep.Linux -> stringResource(Res.string.agentsTileStepLinux)
                     PhoneAgentInstallStep.Runtime -> stringResource(Res.string.agentsTileStepRuntime)
                     PhoneAgentInstallStep.Helper -> stringResource(Res.string.agentsTileStepHelper)
-                    PhoneAgentInstallStep.Agent -> stringResource(Res.string.agentsInstalling, tile.agent.name)
+                    PhoneAgentInstallStep.Agent ->
+                        if (tile.agent.status.installed) stringResource(Res.string.agentsUpdatingAgent, tile.agent.name)
+                        else stringResource(Res.string.agentsInstalling, tile.agent.name)
                 }
         }
     return if (tile.quiet) stringResource(Res.string.agentsTileStillWorking, step) else step
@@ -403,7 +430,13 @@ private fun connectFailureWords(failure: Failure?): String =
  * a notice floating over the page.
  */
 @Composable
-internal fun PhoneAgentSheet(state: AgentsUi, actions: AgentsActions, enabled: KitEnabled) {
+internal fun PhoneAgentSheet(
+    state: AgentsUi,
+    actions: AgentsActions,
+    enabled: KitEnabled,
+    own: io.github.eslamasabry.oc.feature.agents.hub.OwnProviderUi? = null,
+    ownActions: io.github.eslamasabry.oc.feature.agents.hub.OwnProviderActions? = null,
+) {
     val agent = state.sheetAgent?.let { id -> state.phone.agents.firstOrNull { it.id == id } }
     val tile = agent?.let { tileOf(it, state) }
     val working = KitEnabled.Disabled(stringResource(Res.string.serversWorking))
@@ -451,6 +484,8 @@ internal fun PhoneAgentSheet(state: AgentsUi, actions: AgentsActions, enabled: K
                         { actions.resumePhoneAgent(tile.agent.id) },
                         enabled = can,
                     )
+                AgentTileAct.StartAgain ->
+                    KitAction(stringResource(Res.string.agentsHelperStartAgain), actions::connectPhoneHelper, enabled = can)
                 // The failed install's way forward: the install review again (it reads the space again first).
                 AgentTileAct.Retry ->
                     KitAction(
@@ -476,6 +511,21 @@ internal fun PhoneAgentSheet(state: AgentsUi, actions: AgentsActions, enabled: K
         tertiary =
             buildList {
                 val a = agent ?: return@buildList
+                // Issue 147: an installed agent that takes an own provider offers it here, beside its sign-in.
+                if (ownActions != null && own != null && a.id in own.supported && a.status.installed)
+                    add(
+                        KitAction(
+                            stringResource(
+                                if (a.id in own.saved) Res.string.agentsOwnProviderChange
+                                else Res.string.agentsOwnProviderAction
+                            ),
+                            {
+                                actions.closeAgent()
+                                ownActions.openOwnProvider(a.id)
+                            },
+                            enabled = can,
+                        )
+                    )
                 if (a.signOutAvailable)
                     add(KitAction(stringResource(Res.string.agentsSignOutAction, a.name), { actions.requestSignOut(a.id) }, enabled = can))
                 if (a.previousVersionAvailable)
@@ -528,6 +578,10 @@ internal fun PhoneAgentSheet(state: AgentsUi, actions: AgentsActions, enabled: K
             tile.state == AgentTileState.Unavailable && tile.agent.signInUnchecked ->
                 KitText(stringResource(Res.string.agentsSignInUncheckedBody))
             else -> Unit
+        }
+        // Which provider it uses, when it is the person's own (never the key).
+        own?.saved?.get(tile.agent.id)?.let { saved ->
+            KitText(stringResource(Res.string.agentsOwnProviderInUse, saved.endpoint), tone = TextTone.Secondary)
         }
         }
     }

@@ -68,6 +68,12 @@ public class ComposerChrome(
     public val focusDone: (id: Long) -> Unit,
     public val onStop: () -> Unit,
     public val stopping: () -> Boolean,
+    /**
+     * Whether a decision is still waiting to be made (asked and not answered, or refused and to be tried again): the
+     * box says "Waiting for your decision" only then. An answer inside its Undo hold is a decision made (issue 147,
+     * F-033). Defaults to [requestWaiting].
+     */
+    public val requestAsking: () -> Boolean = requestWaiting,
     /** S28 story 14: the running reply looks hung (a foreground command past the limit). */
     public val stuck: () -> Boolean = { false },
     /**
@@ -127,6 +133,8 @@ public class ComposerChrome(
      * the person sees where they will type, and may start typing; Send waits until the conversation has loaded.
      */
     public val loading: () -> Boolean = { false },
+    /** F-023: asks the page to show the decision that waits (a tap in the box's "Waiting for your decision above…" line). */
+    public val jumpToWaiting: () -> Unit = {},
 )
 
 /** N-55: how the message field takes focus, registered by the composer while it is shown. */

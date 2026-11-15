@@ -147,7 +147,6 @@ import io.github.eslamasabry.oc.ui.words.res.chatsHomeDone
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeStopped
 import io.github.eslamasabry.oc.ui.words.res.dockStop
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeInterrupted
-import io.github.eslamasabry.oc.ui.words.res.agentsStateCantReopen
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeRowStatusRules
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeEmptyCalmBody
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeEmptyTitle
@@ -156,10 +155,12 @@ import io.github.eslamasabry.oc.ui.words.res.chatsHomeNotReadTitle
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeFailed
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeIncompleteNamed
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeUnreachableShort
+import io.github.eslamasabry.oc.ui.words.res.chatsHomeAgentsUnreachable
 import io.github.eslamasabry.oc.ui.words.res.kitTryAgain
 import io.github.eslamasabry.oc.ui.words.res.agentsRestartLine
 import io.github.eslamasabry.oc.ui.words.res.agentsResumeAction
 import io.github.eslamasabry.oc.ui.words.res.agentsSignInAction
+import io.github.eslamasabry.oc.ui.words.res.agentsStateSignInNeeded
 import io.github.eslamasabry.oc.ui.words.res.agentsSignedOutLine
 import io.github.eslamasabry.oc.ui.words.res.agentsStoppedLine
 import io.github.eslamasabry.oc.ui.words.res.agentsLimitUnknown
@@ -405,7 +406,9 @@ public fun ChatsScreen(
                 item(key = "unreachable-${source.profile.raw}", contentType = "unreachable") {
                     Box(kitItemMotion().padding(horizontal = LocalKitTokens.current.gutter.dp)) {
                         KitNotice(
-                            message = stringResource(Res.string.chatsHomeUnreachableShort, KitBidi.auto(source.name)),
+                            message =
+                                if (source.agents) stringResource(Res.string.chatsHomeAgentsUnreachable)
+                                else stringResource(Res.string.chatsHomeUnreachableShort, KitBidi.auto(source.name)),
                             actions = listOf(KitLineAction(stringResource(Res.string.kitTryAgain), { actions.retrySource(source.profile) })),
                         )
                     }
@@ -814,10 +817,11 @@ private data class HomeRowWords(
     val needsYou: String,
     val working: String,
     val failed: String,
+    /** A failed run of an agent whose sign-in lapsed reads this, not "Failed" (issue 147). */
+    val signInNeeded: String,
     val done: String,
     val stopped: String,
     val interrupted: String,
-    val cantReopen: String,
     /** B-333: a tapped row that waits for its server to open says so. */
     val connecting: String,
     /** B-333: ... or that its agents are being updated. */
@@ -846,10 +850,10 @@ private fun rememberHomeRowWords(): HomeRowWords =
         needsYou = stringResource(Res.string.chatsHomeNeedsYou),
         working = stringResource(Res.string.chatsHomeRowWorking),
         failed = stringResource(Res.string.chatsHomeFailed),
+        signInNeeded = stringResource(Res.string.agentsStateSignInNeeded),
         done = stringResource(Res.string.chatsHomeDone),
         stopped = stringResource(Res.string.chatsHomeStopped),
         interrupted = stringResource(Res.string.chatsHomeInterrupted),
-        cantReopen = stringResource(Res.string.agentsStateCantReopen),
         connecting = stringResource(Res.string.e7WorkspaceConnecting),
         updating = stringResource(Res.string.agentsStateUpdatingHelper),
         notAnswering = stringResource(Res.string.phoneServerRowNotAnswering),
@@ -893,6 +897,8 @@ private data class HomeRowFlags(
     val waitingWord: WaitingWord = WaitingWord.Connecting,
     /** Its kept tap was dropped: its source did not connect within the wait's limit. */
     val gaveUp: Boolean = false,
+    /** The row's last run failed and its agent is signed out: the row says Sign in needed. */
+    val signedOut: Boolean = false,
 )
 
 private fun rowFlags(row: ConversationRowUi, state: ChatsUi): HomeRowFlags =
@@ -917,6 +923,9 @@ private fun rowFlags(row: ConversationRowUi, state: ChatsUi): HomeRowFlags =
         waitingWord =
             SourceStartRules.waitingWord(state.home.sources.firstOrNull { it.profile == row.ref.profileId }?.starting),
         gaveUp = state.keptGaveUp == row.ref,
+        signedOut =
+            row.status == RowStatus.Failed &&
+                state.agentNotices.lines.any { it.kind == HomeAgentNoticeKind.SignedOut && it.agentName == row.agentName },
     )
 
 /**
@@ -942,14 +951,13 @@ private fun ConversationRow(
         // B-333: the tap is kept; the row says it waits for its server instead of looking dead.
         else if (flags.waiting) (if (flags.waitingWord == WaitingWord.Updating) words.updating else words.connecting)
         else if (flags.gaveUp) words.notAnswering
-        // H4 (F: chats_home_screen.dart:901): a finished conversation that cannot reopen says so before Done/Stopped.
-        else if (HomeRowStatusRules.saysCantReopen(row)) words.cantReopen
+        // Issue 147: an old agent conversation opens and continues like any other, so its row reads like any other.
         else when (row.status) {
             RowStatus.NeedsYou -> words.needsYou
             RowStatus.Running ->
                 // H5 (F: chats_host.dart:188-199): how long the run has gone, when its start is known.
                 words.runningFor(row.running?.sinceMs?.takeIf { flags.nowMs > 0 }?.let { flags.nowMs - it })
-            RowStatus.Failed -> words.failed
+            RowStatus.Failed -> if (flags.signedOut) words.signInNeeded else words.failed
             RowStatus.Done -> words.done
             RowStatus.Stopped -> words.stopped
             RowStatus.Interrupted -> words.interrupted
@@ -960,7 +968,7 @@ private fun ConversationRow(
         else when (row.status) {
             RowStatus.NeedsYou -> KitRowStateTone.NeedsYou
             RowStatus.Running -> KitRowStateTone.Running
-            RowStatus.Failed -> KitRowStateTone.Failed
+            RowStatus.Failed -> if (flags.signedOut) KitRowStateTone.NeedsYou else KitRowStateTone.Failed
             else -> KitRowStateTone.Quiet
         }
     var menuOpen by remember(row.key) { mutableStateOf(false) }
@@ -1047,6 +1055,8 @@ private fun ConversationRow(
                 onLongClickLabel = words.rowActions,
                 below = below,
                 speakAgent = flags.showAgents,
+                // F-022: a person is asked to allow what they can read: the command takes up to three lines.
+                previewLines = if (permission != null) 3 else 1,
             )
         }
         // Swipe toward the end of the line archives (mirrors in right-to-left); the menu and the accessibility action

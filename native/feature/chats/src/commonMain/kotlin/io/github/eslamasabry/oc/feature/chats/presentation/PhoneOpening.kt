@@ -35,12 +35,6 @@ public object OpeningRules {
      */
     public val startWindow: Duration = 90.seconds
 
-    /**
-     * Between the app opening and its one start beginning, the phone server is down and nothing is starting yet. For
-     * this long the wait still reads "starting"; after it, a server nobody is starting has failed.
-     */
-    public val launchGrace: Duration = 15.seconds
-
     public fun phase(busy: Boolean, failure: Failure?, phone: PhoneStartWatch?, now: Instant): ChatsOpeningPhase {
         val plain = if (busy) ChatsOpeningPhase.Connecting else ChatsOpeningPhase.Failed
         if (phone == null) return plain
@@ -52,12 +46,11 @@ public object OpeningRules {
     private fun starting(phone: PhoneStartWatch, now: Instant): Boolean {
         phone.startingSince?.let { return now - it < startWindow }
         if (phone.stoppedByPerson) return false
-        return when (phone.processAlive) {
-            // Not read yet: the app has only just opened.
-            null -> now - phone.since < launchGrace
-            true -> (phone.uptime ?: (now - phone.since)) < startWindow
-            // Seen alive, now gone: the process exited. Never seen: the app-open start may not have begun yet.
-            false -> !phone.seenAlive && now - phone.since < launchGrace
-        }
+        // Issue 147: after the app opened, the app itself starts this phone's server (also one an app update or the
+        // app's own restart stopped): that is not a failure. It reads starting for the same window a start gets, unless
+        // the process was seen running and then exited. Galaxy S22 after an update: about 25 s.
+        val exited = phone.processAlive == false && phone.seenAlive
+        if (!exited && now - phone.since < startWindow) return true
+        return phone.processAlive == true && (phone.uptime ?: (now - phone.since)) < startWindow
     }
 }

@@ -8,7 +8,9 @@ import dev.zacsweers.metro.binding
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.FeatureId
 import io.github.eslamasabry.oc.core.common.Outcome
+import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
+import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
 import io.github.eslamasabry.oc.core.data.kv.PrefValue
 import io.github.eslamasabry.oc.core.common.AppCoroutineScope
 import io.github.eslamasabry.oc.engine.agents.install.AgentUpdateStep
@@ -43,6 +45,8 @@ class AndroidChatPhoneServer(
     private val agentUpdate: PhoneAgentUpdateStatus,
     private val phoneAgents: Lazy<PhoneAgents>,
     private val appScope: AppCoroutineScope,
+    private val registry: Lazy<ConnectionRegistry>,
+    private val folders: Lazy<PhoneFolderPreflight>,
 ) : ChatPhoneServer {
     override fun runsHere(profile: ProfileId): Boolean =
         (stores.prefs.get("oc.builtinServerOwner") as? PrefValue.Str)?.value == profile.raw
@@ -97,6 +101,29 @@ class AndroidChatPhoneServer(
             isAgentHelper(profile) -> agentsWait
             else -> NOT_WAITING
         }
+
+    /** Issue 147: the agents helper's own answer, the same one the home list reads ([ListRowFacts.needsNewChat]). */
+    override fun needsNewSession(ref: ConversationRef): Boolean? =
+        ListRowFacts.needsNewChat(registry.value.live.value[ref.profileId], ref.sessionId)
+
+    // Issue 147: the conversation's folder in phone storage, checked from the side that works in it.
+    override suspend fun phoneFolder(
+        ref: ConversationRef,
+        directory: String?,
+        thorough: Boolean,
+    ): io.github.eslamasabry.oc.feature.chat.world.ChatPhoneFolder? =
+        folders.value.checkConversation(ref.profileId, directory, thorough)?.let {
+            io.github.eslamasabry.oc.feature.chat.world.ChatPhoneFolder.valueOf(it.name)
+        }
+
+    override suspend fun fixPhoneFolder(
+        ref: ConversationRef,
+        reach: io.github.eslamasabry.oc.feature.chat.world.ChatPhoneFolder,
+    ): Outcome<Unit> =
+        folders.value.fixConversation(
+            ref.profileId,
+            io.github.eslamasabry.oc.feature.chats.presentation.PhoneFolderReach.valueOf(reach.name),
+        )
 
     override suspend fun restart(profile: ProfileId): Outcome<Unit> =
         if (runsHere(profile)) server.restart()

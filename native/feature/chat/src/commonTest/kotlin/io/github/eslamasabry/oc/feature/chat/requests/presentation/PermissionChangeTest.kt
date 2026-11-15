@@ -71,4 +71,13 @@ class PermissionChangeTest {
         assertNull(PermissionChange.of(ask("bash", listOf("npm test"), emptyMap())))
         assertNull(PermissionChange.of(ask("read", listOf("a.kt"), emptyMap())))
     }
+
+    @Test
+    fun `B-CHAT-REQ-NEWFILE-01 a patch with no changed line is no content, so the card says the agent did not say`() {
+        val empty = "--- /dev/null\n+++ b/index.html\n@@ -0,0 +0,0 @@"
+        val request = ask("edit", listOf("index.html"), mapOf("diff" to JsonPrimitive(empty)))
+        val change = PermissionChange.of(request)!!
+        assertTrue(change.missing, "an empty hunk is not what the agent will write")
+        assertNull(change.first)
+    }
 }

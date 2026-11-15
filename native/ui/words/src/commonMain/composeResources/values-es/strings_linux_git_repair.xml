@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Translated with native/tools/strings/translate; English is the source. -->
 <resources>
-    <string name="linuxGitRepairAction">Reparar archivos de Git vinculados</string>
-    <string name="linuxGitRepairWorking">Reparando archivos de Git…</string>
-    <string name="linuxGitRepairHealthy">Git puede leer este proyecto. Ningún archivo de objetos necesitó reparación.</string>
+    <string name="linuxGitRepairAction">Reparar un historial de proyecto dañado</string>
+    <string name="linuxGitRepairWorking">Reparando el historial del proyecto…</string>
+    <string name="linuxGitRepairHealthy">El historial de este proyecto se lee bien. No hubo que reparar nada.</string>
     <plurals name="linuxGitRepairRestored">
-        <item quantity="one">Se restauró 1 archivo de objetos de Git. Git puede leer el proyecto de nuevo.</item>
-        <item quantity="many">Se restauraron %1$d de archivos de objetos de Git. Git puede leer el proyecto de nuevo.</item>
-        <item quantity="other">Se restauraron %1$d archivos de objetos de Git. Git puede leer el proyecto de nuevo.</item>
+        <item quantity="one">Se recuperó 1 archivo del historial. El proyecto vuelve a leerse bien.</item>
+        <item quantity="many">Se recuperaron %1$d archivos del historial. El proyecto vuelve a leerse bien.</item>
+        <item quantity="other">Se recuperaron %1$d archivos del historial. El proyecto vuelve a leerse bien.</item>
     </plurals>
-    <string name="linuxGitRepairMissing">No se pudieron recuperar o verificar algunos objetos de Git. Clona el proyecto de nuevo o restaura una copia.</string>
-    <string name="linuxGitRepairNotProject">Aquí solo se pueden reparar proyectos de Git que estén en la carpeta de proyectos de este teléfono.</string>
-    <string name="linuxGitRepairFailed">El teléfono no pudo terminar de reparar los archivos de Git. Inténtalo de nuevo.</string>
-    <string name="linuxGitRepairDetailLocal">Restaura objetos de Git verificados desde copias dentro de este proyecto. Los archivos del proyecto se conservan.</string>
+    <string name="linuxGitRepairMissing">Parte del historial no se pudo recuperar. Copia el proyecto de nuevo o restaura una copia de seguridad.</string>
+    <string name="linuxGitRepairNotProject">Aquí solo se pueden reparar los proyectos de la carpeta de proyectos de este teléfono.</string>
+    <string name="linuxGitRepairFailed">El teléfono no pudo terminar de reparar el historial. Inténtalo de nuevo.</string>
+    <string name="linuxGitRepairDetailLocal">Recupera archivos del historial a partir de copias dentro de este proyecto. Los archivos de tu proyecto se conservan.</string>
 </resources>

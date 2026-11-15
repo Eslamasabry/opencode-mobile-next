@@ -228,4 +228,41 @@ class PaseoToolMapperTest {
         assertEquals("shell", renamed.obj("detail")!!.str("type"))
         assertEquals("completed", renamed.str("status"))
     }
+
+    @Test
+    fun `B-CHAT-115 a running command keeps the last lines it printed, not the whole stream`() {
+        val printed = (1..100).joinToString("\n") { "line $it" }
+        val state = tool("Bash", jsonOf("type" to "shell", "command" to "make", "output" to printed), status = "running")
+        assertEquals(ToolStatus.Running, state.status)
+        assertEquals(40, state.output!!.lines().size)
+        assertEquals("line 100", state.output!!.lines().last())
+    }
+
+    @Test
+    fun `B-CHAT-115 the closing report that carries only an exit code keeps the output already sent`() {
+        val running = item(
+            "type" to "tool_call", "callId" to "c1", "name" to "Bash", "status" to "running",
+            "detail" to mapOf("type" to "shell", "command" to "uname -a", "output" to "Linux phone 6.1"),
+        )
+        val closing = item(
+            "type" to "tool_call", "callId" to "c1", "name" to "Bash", "status" to "completed",
+            "detail" to mapOf("type" to "shell", "command" to "uname -a", "exitCode" to 0),
+        )
+        val merged = paseoItemMessage("a1", paseoMergeToolCall(running, closing), id = "c1", provider = "gemini", createdMs = null, completedMs = null)!!
+        assertEquals(ToolStatus.Completed, merged.toolState.status)
+        assertEquals("Linux phone 6.1", merged.toolState.output)
+    }
+
+    @Test
+    fun `B-CHAT-115 a failed command keeps the lines it printed before it failed`() {
+        val state = tool(
+            "Bash",
+            jsonOf("type" to "shell", "command" to "make", "output" to "cc: error: no input files", "exitCode" to 2),
+            status = "failed",
+            "error" to "Command failed",
+        )
+        assertEquals(ToolStatus.Error, state.status)
+        assertEquals("cc: error: no input files", state.output)
+        assertEquals(jsonOf("exit" to 2), state.metadata)
+    }
 }

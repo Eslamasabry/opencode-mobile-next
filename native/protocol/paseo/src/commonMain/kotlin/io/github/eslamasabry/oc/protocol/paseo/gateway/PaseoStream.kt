@@ -19,6 +19,7 @@ import io.github.eslamasabry.oc.protocol.paseo.mappers.paseoItemId
 import io.github.eslamasabry.oc.protocol.paseo.mappers.paseoItemMessage
 import io.github.eslamasabry.oc.protocol.paseo.mappers.paseoDeclinedToolCall
 import io.github.eslamasabry.oc.protocol.paseo.mappers.paseoMergeToolCall
+import io.github.eslamasabry.oc.protocol.paseo.mappers.paseoWithoutGoalMarker
 import io.github.eslamasabry.oc.protocol.paseo.obj
 import io.github.eslamasabry.oc.protocol.paseo.paseoMillis
 import io.github.eslamasabry.oc.protocol.paseo.paseoText
@@ -88,6 +89,8 @@ internal fun PaseoGateway.onStream(id: String, event: JsonObject, payload: JsonO
                     },
                 )
             )
+            // Issue 147: a turn that left a command of the agent's running is carried on (PaseoAgentContinue.kt).
+            if (event.str("type") == "turn_completed") continueLeftRunning(id, state)
         }
         "turn_failed" -> {
             state.runId = null
@@ -132,6 +135,7 @@ internal fun PaseoGateway.onTimelineItem(
 ) {
     var item = raw
     val type = item.str("type") ?: return
+    if (type == "user_message") noteUserMessage(id, item)
     val streamed = type == "assistant_message" || type == "reasoning"
     val own = if (type == "reasoning") null else item.str("messageId")
     val messageId: String
@@ -162,7 +166,7 @@ internal fun PaseoGateway.onTimelineItem(
     }
     val text = state.announced[messageId]
     if (streamed && text != null) {
-        val delta = paseoText(item["text"])
+        val delta = paseoWithoutGoalMarker(paseoText(item["text"]))
         text.append(delta)
         paseoItemMessage(
                 agentId = id,

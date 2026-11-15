@@ -308,9 +308,11 @@ class GitScreenTest {
     fun `B-BUILD-014 a project without a remote reaches Remotes and Clone from visible rows`() = runComposeUiTest {
         val bare = snapshot.copy(remotes = persistentListOf())
         setContent { Screen(GitUi(view = GitPageView.Ready(bare), signIn = GitHubSignIn.SignedOut())) }
+        // Rare tools are folded and last (walk F-021): open the fold first.
+        onNodeWithText("More tools").performScrollTo().performClick()
         onNodeWithText("None yet").assertExists()
         onNodeWithText("Remotes").performScrollTo().performClick()
-        onNodeWithText("Clone a repository").performScrollTo().performClick()
+        onNodeWithText("Copy a project from the web").performScrollTo().performClick()
         assertEquals(listOf("remotes", "clone"), calls)
     }
 
@@ -340,7 +342,7 @@ class GitScreenTest {
         assertEquals(listOf("initialize"), calls)
         onNodeWithText("Keep these files here and start using Git.").assertExists()
         // It acts in place: no chevron row, and Clone stays beside it.
-        onNodeWithText("Clone a repository").assertExists()
+        onNodeWithText("Copy a project from the web").assertExists()
     }
 
     @Test

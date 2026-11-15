@@ -253,7 +253,7 @@
     <string name="composerBusyReason">Preparando sua mensagem…</string>
     <string name="composerToolsTextOnly">Este servidor aceita apenas texto</string>
     <string name="composerToolsAgentTextOnly">Aqui o %1$s aceita apenas texto</string>
-    <string name="composerToolsAgentPicturesOnly">O %1$s aceita apenas imagens: use “Galeria de fotos” ou “Tirar foto”</string>
+    <string name="composerToolsPicturesOnlyUse">O %1$s só aceita imagens: use %2$s ou %3$s</string>
     <string name="composerToolSavedSubtitle">Coloque de volta no rascunho uma mensagem salva</string>
     <string name="composerToolSaveForLater">Salvar mensagem para depois</string>
     <string name="composerToolNothingToSave">Digite ou anexe algo primeiro</string>
@@ -1351,4 +1351,16 @@
     <string name="chatLoadFailedAgentsBody">Nada foi perdido. Tente novamente quando os agentes do celular responderem.</string>
     <string name="chatLoadMissingAgentBody">O %1$s não tem esta conversa: ela pode ter parado antes de começar. Tente novamente, ou configure o %1$s e inicie uma nova conversa.</string>
     <string name="chatLoadMissingAgentsBody">Os agentes do celular não têm esta conversa: o agente dela pode ter parado antes de começar. Tente novamente ou inicie uma nova conversa.</string>
+    <string name="kitCommandNoOutput">Sem saída</string>
+    <string name="kitCommandFailedNoOutput">Falhou antes de mostrar qualquer coisa</string>
+    <string name="kitCommandStoppedEarly">Parou antes de terminar</string>
+    <string name="chatOldAgentReadOnly">O %1$s não consegue retomar esta conversa. Leia aqui ou continue em uma nova.</string>
+    <string name="chatOldAgentReadOnlyUnnamed">Este agente não consegue retomar esta conversa. Leia aqui ou continue em uma nova.</string>
+    <string name="chatContinueInNewConversation">Continuar em uma nova conversa</string>
+    <string name="chatContinueBriefIntro">Vamos continuar "%1$s". Você não consegue ver essa conversa, então aqui está o que aconteceu nela.</string>
+    <string name="chatContinueBriefIntroUntitled">Vamos continuar uma conversa anterior. Você não consegue vê-la, então aqui está o que aconteceu nela.</string>
+    <string name="chatContinueBriefAsked">O que eu pedi:</string>
+    <string name="chatContinueBriefChanged">Arquivos que mudaram:</string>
+    <string name="chatContinueBriefStopped">Onde parou:</string>
+    <string name="chatUiContinuedAfterCommand">Um comando ainda estava em execução, então o agente foi solicitado a esperá-lo e continuar</string>
 </resources>

@@ -460,4 +460,5 @@
         <item quantity="many">%1$s رسالة سابقة</item>
         <item quantity="other">%1$s رسالة سابقة</item>
     </plurals>
+    <string name="composerToolsAgentPicturesOnly">يقبل %1$s الصور فقط: استخدم مكتبة الصور أو التقاط صورة</string>
 </resources>

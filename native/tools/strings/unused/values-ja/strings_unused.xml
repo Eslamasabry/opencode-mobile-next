@@ -27,4 +27,5 @@
     <string name="phoneSetupStartTermuxProgressHeadline">Termux でのセットアップは %1$d% 完了</string>
     <string name="phoneSetupTermuxGetCurrent">最新の Termux を入手</string>
     <string name="phoneSetupTermuxOtherRuntime">Termux では別の OpenCode がすでに動いています。「このスマートフォン上で」で切り替えてから、セットアップを続けてください。</string>
+    <string name="composerToolsAgentPicturesOnly">%1$s は画像のみ対応です。「フォトライブラリ」または「写真を撮る」を使ってください</string>
 </resources>

@@ -6,4 +6,5 @@
     <string name="chatDraftRepeatTitle">Gửi lại nội dung này?</string>
     <string name="chatDraftRepeatAction">Gửi lại</string>
     <string name="chatDraftRepeatBody">Nội dung này đã có trong cuộc trò chuyện. Chỉ gửi lại nếu bạn muốn nhận phản hồi mới.</string>
+    <string name="chatDraftRestoreFailed">Không mở được bản nháp đã lưu của bạn. Bạn có thể thử lại.</string>
 </resources>

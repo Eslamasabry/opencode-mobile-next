@@ -95,6 +95,8 @@ public class KitRequestChange(
 )
 
 /** Plan 09 R13 / plan 06 §8: the card height share grows at very large text. */
+// Issue 147 (F-016): the request stack in the conversation is this tall plus room for the card's caption and gap, so a card
+// at its cap is whole in it: the answers are never cut off by the stack's own edge. (The stack was 0.40 against 0.45.)
 private const val HEIGHT_SHARE = 0.45f
 private const val HEIGHT_SHARE_LARGE_TEXT = 0.60f
 private const val LARGE_TEXT = 2.0f

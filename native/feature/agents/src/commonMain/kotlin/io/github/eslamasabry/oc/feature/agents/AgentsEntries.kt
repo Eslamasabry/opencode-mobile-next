@@ -55,7 +55,7 @@ public class AgentsEntries(
                 )
                 vm.startAdding()
             }
-            environment.Provide { AgentsScreen(state, vm, hubState, vm) }
+            environment.Provide { AgentsScreen(state, vm, hubState, vm, ownActions = vm, ownAgentActions = vm) }
         }
         entry<CapabilityAgentAccountRoute> { route ->
             val vm = metroViewModel<AgentsViewModel>()
@@ -66,7 +66,7 @@ public class AgentsEntries(
             val state by vm.state.collectAsStateWithLifecycle()
             val hubState by vm.hubState.collectAsStateWithLifecycle()
             LaunchedEffect(route) { vm.openAccount(route.profile) }
-            environment.Provide { AgentsScreen(state, vm, hubState, vm) }
+            environment.Provide { AgentsScreen(state, vm, hubState, vm, ownActions = vm, ownAgentActions = vm) }
         }
         entry<AgentsRoute.SignInTerminal> { route ->
             val vm =
@@ -106,7 +106,7 @@ public class AgentsEntries(
                     vm.leave()
                 }
             }
-            environment.Provide { AgentsScreen(state, vm, hubState, vm) }
+            environment.Provide { AgentsScreen(state, vm, hubState, vm, ownActions = vm, ownAgentActions = vm) }
         }
         entry<AgentsRoute.Home> {
             val vm = metroViewModel<AgentsViewModel>()
@@ -124,6 +124,8 @@ public class AgentsEntries(
                     vm,
                     hubState,
                     vm,
+                    ownActions = vm,
+                    ownAgentActions = vm,
                     showArrival = arrival == ShowMeTarget.Agents,
                     dismissArrival = { arrivals.dismiss(ShowMeTarget.Agents) },
                 )

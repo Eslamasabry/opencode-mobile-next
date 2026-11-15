@@ -58,6 +58,15 @@ private fun reply(id: String, at: Long, vararg edits: Pair<String, Int>) =
         }.toImmutableList(),
     )
 
+/** An edit the tools reported with no lines at all (the agent wrote the file through a command). */
+private fun replyNoDiff(id: String, at: Long, vararg paths: String) =
+    MessageWithParts(
+        MessageInfo(id, S.raw, Role.Assistant, time = MsgTime(at, at)),
+        paths.map { path ->
+            Part("t$id$path", id, S.raw, PartType.Tool, "tool", toolName = "edit", tool = ToolState(ToolStatus.Completed, input = JsonObject(mapOf("filePath" to JsonPrimitive(path)))))
+        }.toImmutableList(),
+    )
+
 /** The fake gateway starts with no confirmed capability (ServerCapabilities.Unknown); these servers undo. */
 private fun FakeServerGateway.offersRevert(): FakeServerGateway =
     apply { capabilities.value = capabilities.value.copy(sessionRevert = true) }
@@ -521,5 +530,40 @@ class ReviewPresenterTest {
         gateways.value = ReviewGateways(VcsFake(fake, listOf(FileDiff("lib/x.kt", patch = "x"))), FakeOperationsGateway())
         val p = ChangesPresenter(review(), null, nav, backgroundScope, setup = ReviewProjectSetup { io.github.eslamasabry.oc.core.model.VersionControlSetupState.Absent })
         assertFalse(p.state.value.notRepository)
+    }
+
+    @Test
+    fun `B-CHAT-147 files outside the project are not the project's changes`() = runTest(UnconfinedTestDispatcher()) {
+        fake.history = listOf(prompt("u1", 1), reply("a1", 2, "src/a.kt" to 3, "/tmp/opencode" to 1, "/work/a/src/b.kt" to 2))
+        gateways.value = ReviewGateways(VcsFake(fake, emptyList()), FakeOperationsGateway())
+        val p = ChangesPresenter(review(), null, nav, backgroundScope)
+        assertEquals(listOf("src/a.kt", "/work/a/src/b.kt"), p.state.value.files.map { it.path })
+    }
+
+    @Test
+    fun `B-CHAT-147 every listed change opens its diff, a file the tools gave no lines for takes the folder's`() = runTest(UnconfinedTestDispatcher()) {
+        fake.history = listOf(prompt("u1", 1), replyNoDiff("a1", 2, "index.html", "gone.txt"))
+        gateways.value = ReviewGateways(VcsFake(fake, listOf(FileDiff("index.html", patch = "@@ -0,0 +1 @@\n+x", additions = 1, deletions = 0))), FakeOperationsGateway())
+        val p = ChangesPresenter(review(), null, nav, backgroundScope)
+        assertEquals(ReviewScope.Conversation, p.state.value.scope)
+        val rows = p.state.value.files
+        assertEquals(listOf("index.html"), rows.map { it.path })
+        assertTrue(rows.single().hasDiff)
+        p.openFile("index.html")
+        assertEquals(listOf("working index.html"), nav.went)
+    }
+
+    @Test
+    fun `B-CHAT-147 a committed file the tools gave no lines for opens its change from the whole branch`() = runTest(UnconfinedTestDispatcher()) {
+        fake.history = listOf(prompt("u1", 1), replyNoDiff("a1", 2, "index.html", "gone.txt"))
+        // Committed already: no uncommitted diff, but the branch has it.
+        gateways.value = ReviewGateways(VcsFake(fake, emptyList()), FakeOperationsGateway())
+        val branch = ReviewBranchRead { Outcome.Ok(listOf(FileDiff("index.html", patch = "@@ -0,0 +1 @@\n+x", additions = 1, deletions = 0)).toImmutableList()) }
+        val p = ChangesPresenter(review(), null, nav, backgroundScope, branch = branch)
+        val rows = p.state.value.files
+        assertEquals(listOf("index.html"), rows.map { it.path }, "a file the branch does not have is not listed")
+        assertTrue(rows.single().hasDiff)
+        p.openFile("index.html")
+        assertEquals(listOf("branch index.html"), nav.went)
     }
 }

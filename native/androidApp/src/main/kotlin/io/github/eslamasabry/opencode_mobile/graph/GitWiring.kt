@@ -176,19 +176,26 @@ private class ServerGitWorkspaces(
         // Stored runtime ownership plus the exact managed origin, never merely a server at a
         // familiar port (Dart looksLikeInAppServer). ServerProfile.managedOnPhone is never set by
         // the profile store, so it cannot gate this.
-        fun ownsLinux(): Boolean =
+        // A phone agent's conversation sits on the helper connection of the same phone: its project is in the
+        // phone's Linux too (issue 147 walk F-017).
+        val phoneId =
             try {
-                registry.graphFor(ref) === graph &&
-                    profile.origin == ServerOrigin("http", "127.0.0.1", PhoneServerScripts.PORT) &&
-                    (stores.prefs.get("oc.builtinServerOwner") as? PrefValue.Str)?.value ==
-                        profile.id.raw
+                phoneGitOwner(
+                    profile.id,
+                    profile.origin,
+                    PhoneServerScripts.PORT,
+                    (stores.prefs.get("oc.builtinServerOwner") as? PrefValue.Str)?.value,
+                    stores.phoneOfHelper(profile.id),
+                )
             } catch (_: Exception) {
-                false
+                null
             }
+        fun ownsLinux(): Boolean =
+            phoneId != null && registry.graphFor(ref) === graph && phoneStillOwns(phoneId)
         if (ownsLinux()) {
             // The shell also re-checks the saved owner and that this app's server is the one
             // running on that port before every command.
-            val native = BuiltinGitShell(application, stores, dispatchers, graph, registry, ref)
+            val native = BuiltinGitShell(application, stores, dispatchers, graph, registry, ref, phoneId!!)
             if (!native.current())
                 return GitWorkspaceResolution.Unavailable(GitUnavailableReason.NotConnected)
             val folder =
@@ -262,6 +269,13 @@ private class ServerGitWorkspaces(
                 )
             clients[profile.id] = graph to client
             client
+        }
+
+    private fun phoneStillOwns(phone: ProfileId): Boolean =
+        try {
+            (stores.prefs.get("oc.builtinServerOwner") as? PrefValue.Str)?.value == phone.raw
+        } catch (_: Exception) {
+            false
         }
 
     private fun decodePin(value: String): ByteArray? {

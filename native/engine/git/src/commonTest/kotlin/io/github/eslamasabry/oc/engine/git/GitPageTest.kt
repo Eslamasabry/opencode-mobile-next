@@ -188,4 +188,21 @@ class GitPageTest {
         p.closeDiff()
         assertNull(p.state.value.diff)
     }
+
+    @Test
+    fun `B-GIT-147 a commit under Recent opens what it changed and closes again`() = runTest {
+        val shell =
+            FakeShell { script ->
+                val replies = snapshotSteps.toList() + listOf(StepReply("show", 0, "diff --git a/app.kt b/app.kt\n+y\n"))
+                GitShellReply.Output(envelopeOf(*replies.filter { runs(script, it.name) }.toTypedArray()))
+            }
+        val p = page(shell)
+        p.refresh()
+        val commit = GitCommit("abc1234def", "abc1234", "Test", "t\u0040example.invalid", 0L, "first")
+        p.openCommit(commit)
+        val view = assertIs<GitCommitView.Ready>(p.state.value.commitView)
+        assertTrue("+y" in view.patch)
+        p.closeCommit()
+        assertNull(p.state.value.commitView)
+    }
 }

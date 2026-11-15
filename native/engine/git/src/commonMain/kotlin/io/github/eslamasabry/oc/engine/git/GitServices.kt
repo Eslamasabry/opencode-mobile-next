@@ -33,6 +33,9 @@ public class GitServices(
     public fun page(ref: ConversationRef): GitPage =
         GitPage(ref, workspaces, account(ref.profileId), kept)
 
+    /** The conversation's whole-branch patch (everything the branch has), through the same shell as the Git page. */
+    public suspend fun branchPatch(ref: ConversationRef): GitDiffResult = GitPage(ref, workspaces, null, null).branchPatch()
+
     public fun account(profile: ProfileId): GitHubAccount =
         accounts.getOrPut(profile) { GitHubAccount(profile, tokens, flow, scope, nowMs) }
 

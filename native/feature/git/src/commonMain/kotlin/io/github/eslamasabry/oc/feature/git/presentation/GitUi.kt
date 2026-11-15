@@ -69,6 +69,8 @@ public data class GitUi(
     /** Paths ticked for the next save. */
     val selected: ImmutableSet<String> = persistentSetOf(),
     val diff: GitDiffView? = null,
+    /** The commit opened from Recent, with what it changed. */
+    val commitView: io.github.eslamasabry.oc.engine.git.GitCommitView? = null,
     val signIn: GitHubSignIn = GitHubSignIn.Loading,
     val signInDetails: Redacted? = null,
     /** The server's saved name, for "uses the Git sign-in set up on …". */
@@ -166,6 +168,11 @@ public interface GitActions {
     public fun openDiff(path: String)
 
     public fun closeDiff()
+
+    /** A commit under Recent: opens what it changed. */
+    public fun openCommit(id: String) {}
+
+    public fun closeCommit() {}
 
     public fun askDiscard(path: String)
 

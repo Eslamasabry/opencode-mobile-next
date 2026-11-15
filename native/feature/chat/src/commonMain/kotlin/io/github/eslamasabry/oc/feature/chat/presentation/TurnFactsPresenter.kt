@@ -3,6 +3,7 @@ package io.github.eslamasabry.oc.feature.chat.presentation
 import io.github.eslamasabry.oc.core.domain.events.RunOutcome
 import io.github.eslamasabry.oc.engine.transcript.ledger.LedgerTurn
 import io.github.eslamasabry.oc.engine.transcript.ledger.StepState
+import io.github.eslamasabry.oc.engine.transcript.ledger.TurnStep
 import io.github.eslamasabry.oc.engine.transcript.ledger.TurnWork
 import io.github.eslamasabry.oc.engine.transcript.ledger.WorkLineState
 import io.github.eslamasabry.oc.engine.transcript.ledger.factTicks
@@ -212,7 +213,8 @@ public class TurnFactsPresenter(private val clock: Clock) {
                     waitingForYou = waitingForYou,
                     declinedCalls = declinedCalls,
                 )
-                .mapValues { StoppedSteps.settle(it.value) }
+                .mapValues { withOwnClock(StoppedSteps.settle(it.value), nowMs, feed.waits) }
+        seenRunning.keys.retainAll(work.values.flatMap { w -> w.steps.map { it.partId } }.toSet())
         val results = HashMap<String, TurnResultUi>()
         for ((index, turn) in snapshot.turns.withIndex()) {
             val newest = index == snapshot.turns.lastIndex
@@ -313,6 +315,25 @@ public class TurnFactsPresenter(private val clock: Clock) {
         return stall.diagnosisFor(sessionKey)?.let { LiveNoticeUi.Stall(it.notice) }
     }
 
+    /**
+     * Issue 147: a running step's own clock. A server that reports no start time for a call (the phone agents' helper)
+     * still gets a time on its row: from the first moment the step was seen running, not counting a wait for the
+     * person's decision (the clock starts when that wait ends).
+     */
+    private val seenRunning = HashMap<String, Long>()
+
+    private fun withOwnClock(w: TurnWork, nowMs: Long, waits: List<Pair<Long, Long>>): TurnWork {
+        if (w.state == WorkLineState.WaitingForYou) return w
+        fun stamp(step: TurnStep): TurnStep {
+            if (step.state != StepState.Running) return step
+            val start = step.startedAtMs ?: seenRunning.getOrPut(step.partId) { nowMs }
+            return step.copy(startedAtMs = stepClockStart(start, waits))
+        }
+        val steps = w.steps.map(::stamp)
+        val now = w.now?.let { n -> steps.firstOrNull { it.partId == n.partId } ?: n }
+        return if (steps == w.steps) w else w.copy(steps = steps, now = now)
+    }
+
     private companion object {
         const val TICK_MS = 1_000L
     }
@@ -324,6 +345,7 @@ internal fun sameApartFromProgress(a: TurnFeed, b: TurnFeed): Boolean =
         a.busy == b.busy &&
         a.runStartedAtMs == b.runStartedAtMs &&
         a.retry == b.retry &&
+        a.waits == b.waits &&
         a.lastOutcome == b.lastOutcome &&
         a.link == b.link &&
         a.windows == b.windows &&
@@ -332,3 +354,17 @@ internal fun sameApartFromProgress(a: TurnFeed, b: TurnFeed): Boolean =
 
 /** Whether the work line of [work] opens by itself (Dart `KitWorkLine.opensByDefault`). */
 internal fun TurnWork.opensByDefault(): Boolean = state == WorkLineState.EndedFailed
+
+/**
+ * Where a running step's own clock starts: its start, moved on by the time the person was being asked inside it. A
+ * command is shown as started when the server marked it running (before the permission card), but it runs only after
+ * the decision; the wait is not its time (issue 147, F-033).
+ */
+internal fun stepClockStart(startMs: Long, waits: List<Pair<Long, Long>>): Long {
+    var waited = 0L
+    for ((asked, answered) in waits) {
+        val from = maxOf(asked, startMs)
+        if (answered > from) waited += answered - from
+    }
+    return startMs + waited
+}

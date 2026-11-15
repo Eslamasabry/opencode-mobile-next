@@ -356,4 +356,9 @@
     <string name="chatsNewAgentModelMissing">لا يوفّر %1$s النموذج الذي اخترته. كلماتك محفوظة.</string>
     <string name="chatsNewAgentDidNotStart">لم يبدأ %1$s. كلماتك محفوظة.</string>
     <string name="chatsNewAgentUnconfirmed">لم يؤكد %1$s هذه الرسالة. حدّث للتحقق مجددًا، أو تجاهلها للبدء من جديد. تبقى كلماتك محفوظة هنا.</string>
+    <string name="chatsNewAgentNoProjects">يعمل %1$s في مشاريع هذا الهاتف فقط، ولا توجد مشاريع بعد. اضغط هنا لإنشاء مشروعك الأول.</string>
+    <string name="chatsNewPhoneStorage">تخزين الهاتف</string>
+    <string name="chatsNewPhoneStorageOff">يتيح للوكلاء على هذا الهاتف قراءة الملفات في تخزين الهاتف وتغييرها، مثل التنزيلات والمستندات. يفتح صفحة Android الخاصة بذلك.</string>
+    <string name="chatsNewPhoneStorageOn">يستطيع الوكلاء على هذا الهاتف قراءة الملفات وتغييرها في التنزيلات والمستندات وباقي تخزين الهاتف.</string>
+    <string name="chatsHomeAgentsUnreachable">لم يبدأ تشغيل الوكلاء على هذا الهاتف</string>
 </resources>

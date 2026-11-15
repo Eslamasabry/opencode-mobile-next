@@ -159,6 +159,13 @@ public interface ChatsHomeExtras {
 
     public suspend fun retryOpening(): Outcome<Unit>
 
+    /** This phone's storage access, when the home reaches this phone's own server; null: no such row. */
+    public suspend fun phoneStorage(): PhoneStorageAccess? = null
+
+    /** Opens Android's page for All files access; a request to the person, never a grant. */
+    public suspend fun requestPhoneStorage(): Outcome<Unit> =
+        Outcome.Failed(Failure.Unavailable(FeatureId("phoneStorage")))
+
     public suspend fun setWatched(profile: ProfileId, enabled: Boolean): Outcome<Unit>
 
     public suspend fun refreshWatched(): Outcome<Unit>

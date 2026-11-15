@@ -16,6 +16,9 @@ class PhoneAgentHost(private val linux: BuiltinLinux) {
     private val generations = mutableMapOf<String, Long>()
     private val helperVersions = mutableMapOf<String, String>()
 
+    /** The shared storage each running helper was started with (issue 147): a folder chosen later is not in it. */
+    private val storageViews = mutableMapOf<String, SharedStorageView>()
+
     class Failure(
         val code: String,
         message: String = "The agent host needs attention. Open agent setup and try again.",
@@ -84,6 +87,10 @@ class PhoneAgentHost(private val linux: BuiltinLinux) {
                 }
             }
         }
+
+    /** The shared storage [profile]'s running helper (and every agent it starts) sees; null when none runs. */
+    fun storageView(profile: String): SharedStorageView? =
+        synchronized(this) { storageViews[profile]?.takeIf { children[profile]?.isAlive == true } }
 
     fun status(profile: String): Map<String, Any?> =
         synchronized(this) {
@@ -164,10 +171,19 @@ class PhoneAgentHost(private val linux: BuiltinLinux) {
         // A changed symlink alone says nothing about its loaded version.
         val installedVersion =
             request.helper.expectedVersion?.let { expected ->
-                HelperVersion.parse(checks.runVersion(profile, PASEO_PATH)).also {
-                    if (!HelperVersion.runs(it, expected, request.helper.testedVersions))
-                        throw Failure("helper_update_required")
+                val output = checks.runVersion(profile, PASEO_PATH)
+                val installed =
+                    java.nio.file.Files.exists(
+                        java.io.File(linux.rootfs, PASEO_PATH.removePrefix("/")).toPath(),
+                        java.nio.file.LinkOption.NOFOLLOW_LINKS,
+                    )
+                when (HelperVersion.verdict(output, installed, expected, request.helper.testedVersions)) {
+                    HelperVersion.Verdict.Runs -> Unit
+                    HelperVersion.Verdict.UpdateRequired -> throw Failure("helper_update_required")
+                    // A start failure: the app tries the start again (never "update required", which nothing retried).
+                    HelperVersion.Verdict.NoAnswer -> throw Failure("helper_no_answer")
                 }
+                HelperVersion.parse(output)
             }
         admission.previous?.let { retire(profile, it) }
         linux.writeAgentConfig(profile, request.config)
@@ -180,6 +196,8 @@ class PhoneAgentHost(private val linux: BuiltinLinux) {
         ) {
             linux.agentPortAnswers(request.port)
         }
+        // Read before the start: the binds this helper gets are the ones a start gets now.
+        val view = linux.sharedStorageViewForLaunch()
         val started =
             linux.startAgentProcess(profile, listOf("/bin/sh", "-c", hostScript(request.port)))
         launched.child = started
@@ -189,7 +207,7 @@ class PhoneAgentHost(private val linux: BuiltinLinux) {
             output.flush()
         }
         awaitStartup(started)
-        registerStartedHost(profile, admission.generation, started, request.port, installedVersion)
+        registerStartedHost(profile, admission.generation, started, request.port, installedVersion, view)
         return status(profile)
     }
 
@@ -209,6 +227,7 @@ class PhoneAgentHost(private val linux: BuiltinLinux) {
         child: Process,
         port: Int,
         version: String?,
+        view: SharedStorageView,
     ) {
         synchronized(this) {
             check(
@@ -217,6 +236,7 @@ class PhoneAgentHost(private val linux: BuiltinLinux) {
                     children[profile]?.isAlive != true
             )
             children[profile] = child
+            storageViews[profile] = view
             if (version != null) helperVersions[profile] = version
             else helperVersions.remove(profile)
             linux.trackPrivateAgentService("agent-host.$profile", child, port)

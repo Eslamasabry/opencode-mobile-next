@@ -33,4 +33,5 @@
     <string name="approvalAlwaysCoversWords">Selalu izinkan juga akan mencakup %1$s.</string>
     <string name="approvalAlwaysPattern">Pola Selalu izinkan</string>
     <string name="approvalNoteDenyOnly">Hanya dikirim jika Anda memilih Tolak.</string>
+    <string name="approvalNewFileOf">File baru: %1$s</string>
 </resources>

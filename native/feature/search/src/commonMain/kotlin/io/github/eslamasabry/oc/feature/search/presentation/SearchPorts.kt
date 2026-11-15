@@ -19,6 +19,12 @@ public data class SearchConversation(
     val title: String?,
     val directory: String?,
     val updatedMs: Long?,
+    /**
+     * The saved connection the conversation lives on when it is not the one searched: This phone's agents (Claude
+     * Code, Codex, Antigravity) are kept on a second, helper connection that belongs to the same phone. Null = the
+     * searched connection itself.
+     */
+    val owner: ProfileId? = null,
 )
 
 /**

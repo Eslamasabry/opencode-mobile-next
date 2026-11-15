@@ -12,6 +12,32 @@ import io.github.eslamasabry.oc.engine.delivery.port.nothingSent
  */
 internal object FirstMessageRules {
     /**
+     * Issue 147: the phone's helper refused the first message's create for the agent's own sign-in (expired, refused,
+     * missing): `Failure.Rejected` tagged `Paseo AgentSignIn`. The agent then reads Sign in needed everywhere.
+     */
+    /**
+     * Issue 147: whether a first-message record whose words hashed to [recorded] is another message than the one now
+     * sent ([now]): then its unknown fate is not this message's. A record with no digest proves nothing (kept).
+     */
+    fun otherMessage(recorded: String?, now: String): Boolean = recorded != null && recorded != now
+
+    fun signInLapsed(failure: io.github.eslamasabry.oc.core.common.Failure?): Boolean =
+        (failure as? io.github.eslamasabry.oc.core.common.Failure.Rejected)?.tag ==
+            io.github.eslamasabry.oc.protocol.paseo.PaseoAgentSignInTag
+
+    /**
+     * Issue 147, second report: a refused start that New conversation answers with "needs setting up" or "sign in
+     * again" (the helper refused it for the sign-in, or said the agent is not ready): the agent is then noted as
+     * needing its sign-in everywhere, so no list keeps saying Ready from the kept facts.
+     */
+    fun agentNeedsYou(failure: Failure?): Boolean =
+        signInLapsed(failure) ||
+            failure?.let {
+                io.github.eslamasabry.oc.feature.chats.presentation.PhoneStartRules.way(it, null, emptyList()) ==
+                    io.github.eslamasabry.oc.feature.chats.presentation.PhoneStartWay.SetUp
+            } == true
+
+    /**
      * True when the words provably never left the phone, so they go back in the box with "not sent" and Try again.
      * The engine dispatches a prompt only after `send` returned Ok, so every synchronous refusal of a prompt wrote
      * nothing: offline with no queue (Paseo has none: `Network.Offline`, which read as "We couldn't confirm your

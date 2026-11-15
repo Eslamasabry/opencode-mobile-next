@@ -21,6 +21,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
@@ -72,6 +73,7 @@ import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
 import io.github.eslamasabry.oc.ui.kit.motion.KitReveal
 import io.github.eslamasabry.oc.ui.kitchat.turn.KitLiveAsk
+import io.github.eslamasabry.oc.ui.kitchat.turn.KitLiveAskView
 import io.github.eslamasabry.oc.ui.kitchat.turn.KitTurnLiveLine
 import io.github.eslamasabry.oc.ui.kitchat.transcript.kitTranscriptItemMotion
 import io.github.eslamasabry.oc.ui.kitchat.transcript.KitEarlierMessages
@@ -321,6 +323,9 @@ internal fun failureCode(f: Failure): String =
 internal object ListKeys {
     const val LIVE: String = "live"
 
+    /** The one-time star ask, at rest after a finished reply. */
+    const val STAR_ASK: String = "star-ask"
+
     /** The room the edge dock's Undo bar takes under the newest content (first item, only while the bar shows). */
     const val DOCK_ROOM: String = "dock-room"
 
@@ -422,7 +427,7 @@ internal fun ChatTranscriptList(
     folds: TranscriptFolds = rememberTranscriptFolds(),
     /** S28 story 8: the handoff line ("Continued from …"), drawn above the oldest message; null = none. */
     topLine: (@Composable () -> Unit)? = null,
-    /** The one-time GitHub star ask rides under the live line while it is up (a turn still waiting for its reply). */
+    /** The one-time GitHub star ask: its own item at rest, after a finished reply (never while a turn runs). */
     starAsk: Boolean = false,
     onStarTap: () -> Unit = {},
     onStarDismiss: () -> Unit = {},
@@ -435,6 +440,10 @@ internal fun ChatTranscriptList(
     find: FindUi? = null,
     /** A tap on the background line opens the conversation's running work; null leaves the line as plain text. */
     onOpenBackground: (() -> Unit)? = null,
+    /** F-023: the key of the row that holds a decision waiting for the person; it is brought back into view (null = none). */
+    waitingKey: String? = null,
+    /** Bumped when the person asks to see the waiting decision (the message box's line). */
+    waitingJump: Int = 0,
 ) {
     val currentRows by rememberUpdatedState(rows)
     FindOpensFolds(find, rows, facts, folds)
@@ -508,6 +517,21 @@ internal fun ChatTranscriptList(
             }
         }
     KeepScrollPlace(list, itemKeys)
+    // F-023: a waiting decision is brought back into view whenever a newer row arrives or the person asks. The list is
+    // reversed, so scrolling to the row's index puts its end (the answers) at the foot of the page.
+    val waitingIndex = waitingKey?.let { itemKeys.indexOf(it) }?.takeIf { it >= 0 }
+    val latestWaitingIndex by rememberUpdatedState(waitingIndex)
+    // Keyed on the first row too: while a reply runs the newest key is the live line's and does not change.
+    val firstRowKey = unique.firstOrNull()?.key
+    LaunchedEffect(waitingKey, newestKey, firstRowKey, pending.size, waitingJump) {
+        if (latestWaitingIndex == null) return@LaunchedEffect
+        // After the frames in which the new row is laid out and the list's own follow (index 0) has run.
+        repeat(3) { withFrameNanos {} }
+        val at = latestWaitingIndex ?: return@LaunchedEffect
+        list.following = false
+        list.lazy.scrollToItem(at)
+        androidx.compose.runtime.snapshots.Snapshot.withoutReadObservation { list.following = false }
+    }
     KitTranscriptList(
         state = list,
         newestKey = newestKey,
@@ -526,6 +550,23 @@ internal fun ChatTranscriptList(
         if (extraBottomPx > 0) {
             item(key = ListKeys.DOCK_ROOM, contentType = "dock-room") {
                 Spacer(Modifier.height(with(LocalDensity.current) { extraBottomPx.toDp() }))
+            }
+        }
+        // The one-time star ask: at rest only, after a finished reply; never while a turn runs.
+        if (live == null && starAsk) {
+            item(key = ListKeys.STAR_ASK, contentType = "star-ask") {
+                Box(kitTranscriptItemMotion().padding(horizontal = Space.S4.dp, vertical = Space.S2.dp)) {
+                    KitLiveAskView(
+                        KitLiveAsk(
+                            stringResource(Res.string.chatStarAskTitle),
+                            stringResource(Res.string.chatStarAskBody),
+                            stringResource(Res.string.chatStarAskAction),
+                            onStarTap,
+                            stringResource(Res.string.chatStarAskDismiss),
+                            onStarDismiss,
+                        )
+                    )
+                }
             }
         }
         if (live != null && listWords != null) {
@@ -563,14 +604,6 @@ internal fun ChatTranscriptList(
                     val retryWayOut =
                         notice is LiveNoticeUi.Retry && notice.facts.offerWayOut && !live.canUndoStopAfterStep &&
                             reply?.chooseModelLabel != null
-                    val askTitle = stringResource(Res.string.chatStarAskTitle)
-                    val askBody = stringResource(Res.string.chatStarAskBody)
-                    val askAction = stringResource(Res.string.chatStarAskAction)
-                    val askDismiss = stringResource(Res.string.chatStarAskDismiss)
-                    val ask =
-                        if (starAsk && !streaming && notice == null && !live.stopping && !live.stoppingAfterStep)
-                            KitLiveAsk(askTitle, askBody, askAction, onStarTap, askDismiss, onStarDismiss)
-                        else null
                     // C6: under the steered prompt (the live item sits right below the newest row), a quiet note.
                     val steerWait = SteerWaitRules.wait(unique, facts.work, busy = true, joins = live.joinsTurn)
                     if (steerWait != null) {
@@ -618,7 +651,8 @@ internal fun ChatTranscriptList(
                             if (live.canUndoStopAfterStep) onUndoStopAfterStep
                             else if (retryWayOut) reply?.onChooseModel
                             else onStopLive,
-                        ask = ask,
+                        // The star ask never rides a running turn: it has its own item at rest (ListKeys.STAR_ASK).
+                        ask = null,
                         // D1: under the steps of a turn whose step is in hand, the line stands on their rail (owner
                         // 2026-11-14: its dot sat off the rail's axis, tight under the last row).
                         onRail = runWork?.now != null && runWork.steps.isNotEmpty() && !streaming,

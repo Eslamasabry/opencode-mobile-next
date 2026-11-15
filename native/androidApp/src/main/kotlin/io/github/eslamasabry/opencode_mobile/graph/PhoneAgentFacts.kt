@@ -52,10 +52,25 @@ internal object PhoneAgentFacts {
         val provenHelper: String? = null,
         val provenBuild: Long? = null,
         val setUp: Boolean = false,
+        /**
+         * Issue 147: wall-clock millis when a run of this agent reported that its sign-in no longer works (a create the
+         * helper refused for it, or a turn that ended on it). While set the agent reads "Sign in needed" everywhere,
+         * whatever its sign-in check says (Claude Code's `auth status` reads a stored sign-in as signed in even when it
+         * can no longer refresh). Only a completed sign-in ([signInDoneAt]) clears it; no read does.
+         */
+        val lapsedAt: Long? = null,
+        /** Wall-clock millis of the last sign-in that completed in the app: a lapse reported from before it is old. */
+        val signInDoneAt: Long? = null,
     ) {
         /** Something worth keeping. */
         val known: Boolean
-            get() = installed != null || signedIn != null || proven != null || setUp
+            get() =
+                installed != null || signedIn != null || proven != null || setUp || lapsedAt != null ||
+                    signInDoneAt != null
+
+        /** A run said the sign-in no longer works, and no sign-in completed since. */
+        val lapsed: Boolean
+            get() = lapsedAt != null
     }
 
     fun key(owner: String): String = AgentKeys.phoneAgentFacts(ProfileId(owner))
@@ -103,6 +118,23 @@ internal object PhoneAgentFacts {
     fun seenSetUp(kept: Map<String, Fact>, agent: String): Map<String, Fact> {
         val fact = kept[agent] ?: Fact(installed = null, found = null, signedIn = null)
         return if (fact.setUp) kept else kept + (agent to fact.copy(setUp = true))
+    }
+
+    /**
+     * [kept] with [agent]'s sign-in lapsed as a run reported at [atMs]; a report from before the last completed
+     * sign-in ([Fact.signInDoneAt]) is old news and changes nothing.
+     */
+    fun lapsed(kept: Map<String, Fact>, agent: String, atMs: Long): Map<String, Fact> {
+        val fact = kept[agent] ?: Fact(installed = null, found = null, signedIn = null)
+        if (fact.signInDoneAt != null && atMs <= fact.signInDoneAt) return kept
+        if (fact.lapsedAt != null && fact.lapsedAt >= atMs) return kept
+        return kept + (agent to fact.copy(lapsedAt = atMs))
+    }
+
+    /** [kept] after a sign-in of [agent] completed at [atMs]: its lapse is cleared. */
+    fun signedInAgain(kept: Map<String, Fact>, agent: String, atMs: Long): Map<String, Fact> {
+        val fact = kept[agent] ?: Fact(installed = null, found = null, signedIn = null)
+        return kept + (agent to fact.copy(lapsedAt = null, signInDoneAt = atMs))
     }
 
     /** The agents of [kept] the app has seen set up. */
@@ -161,6 +193,9 @@ internal object PhoneAgentFacts {
                         provenHelper = proof.provenHelper,
                         provenBuild = proof.provenBuild,
                         setUp = now.setUp || before.setUp,
+                        // A read never clears a lapse (only a completed sign-in does) and never brings one.
+                        lapsedAt = before.lapsedAt,
+                        signInDoneAt = before.signInDoneAt,
                     )
                 }
 
@@ -189,6 +224,8 @@ internal object PhoneAgentFacts {
                     provenHelper = fact.provenHelper.takeUnless { proof },
                     provenBuild = fact.provenBuild.takeUnless { proof },
                     setUp = fact.setUp && !setUp,
+                    // A removal or a sign-out ends the lapse too (the row then says what is true).
+                    lapsedAt = fact.lapsedAt.takeUnless { setUp },
                 ))
     }
 
@@ -197,7 +234,7 @@ internal object PhoneAgentFacts {
      * reset deletes the agents' own settings with their sign-ins). Versions and proofs stay.
      */
     fun forgetSignIns(kept: Map<String, Fact>): Map<String, Fact> =
-        kept.mapValues { (_, fact) -> fact.copy(signedIn = null, signedInAt = null, setUp = false) }
+        kept.mapValues { (_, fact) -> fact.copy(signedIn = null, signedInAt = null, setUp = false, lapsedAt = null) }
 
     fun encode(facts: Map<String, Fact>): String =
         JsonObject(
@@ -214,6 +251,8 @@ internal object PhoneAgentFacts {
                                 fact.provenHelper?.let { put("provenHelper", JsonPrimitive(it)) }
                                 fact.provenBuild?.let { put("provenBuild", JsonPrimitive(it)) }
                                 if (fact.setUp) put("setUp", JsonPrimitive(true))
+                                fact.lapsedAt?.let { put("signInLapsedAt", JsonPrimitive(it)) }
+                                fact.signInDoneAt?.let { put("signInDoneAt", JsonPrimitive(it)) }
                             }
                         )
                     }
@@ -238,6 +277,8 @@ internal object PhoneAgentFacts {
                         provenHelper = version("provenHelper"),
                         provenBuild = fields["provenBuild"]?.jsonPrimitive?.longOrNull,
                         setUp = fields["setUp"]?.jsonPrimitive?.booleanOrNull == true,
+                        lapsedAt = fields["signInLapsedAt"]?.jsonPrimitive?.longOrNull,
+                        signInDoneAt = fields["signInDoneAt"]?.jsonPrimitive?.longOrNull,
                     )
                 }
         } catch (_: Exception) {

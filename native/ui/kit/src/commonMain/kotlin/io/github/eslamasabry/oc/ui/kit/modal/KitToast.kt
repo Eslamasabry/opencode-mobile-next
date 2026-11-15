@@ -89,7 +89,7 @@ public val LocalKitToasts: ProvidableCompositionLocal<KitToastState?> = staticCo
  * only. Off: appears and leaves at once.
  *
  * States: hidden, arriving, holding, leaving
- * Text: frame, one line
+ * Text: frame, one or two lines (a disabled control answers a tap with its reason)
  * Cap: 360 dp
  * Motion: drop Spatial + fade STANDARD, lift QUICK; Calm = fade; Off = instant (class Travel)
  */
@@ -138,7 +138,7 @@ private fun ToastPill(toast: KitToast) {
         horizontalArrangement = Arrangement.spacedBy(Space.S2.dp),
     ) {
         toast.icon?.let { KitGlyph(it, colors.accent, 18.dp) }
-        KitText(toast.message, role = TypeRole.Secondary, kind = KitTextKind.Frame, maxLines = 1)
+        KitText(toast.message, role = TypeRole.Secondary, kind = KitTextKind.Frame, maxLines = 2)
     }
 }
 

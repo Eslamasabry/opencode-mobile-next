@@ -863,8 +863,8 @@
     <string name="gitBranchRemoteOnly">على %1$s، وليس على هذا الجهاز بعد</string>
     <string name="gitBranchCurrent">الفرع الحالي</string>
     <string name="gitNewBranchFrom">فرع جديد من %1$s</string>
-    <string name="gitCloneRow">استنساخ مستودع</string>
-    <string name="gitCloneRowHint">انسخ مستودعًا بجوار هذا المشروع</string>
+    <string name="gitCloneRow">نسخ مشروع من الويب</string>
+    <string name="gitCloneRowHint">يجلب مشروعًا من عنوان ويضعه بجانب هذا المشروع</string>
     <string name="gitCloneAddressLabel">عنوان المستودع</string>
     <string name="gitCloneFolderLabel">اسم المجلد</string>
     <string name="gitCloneInto">يُستنسخ في %1$s</string>
@@ -1036,4 +1036,7 @@
     <string name="agentElsewhereStale">بانتظار تحديث</string>
     <string name="gitProblemNoWorkingSpace">لا يجد Git مساحة للعمل حيث يوجد هذا المشروع. أفرِغ بعض مساحة التخزين هناك ثم حاول مجددًا.</string>
     <string name="gitProblemServerRefusedCommand">ردّ الخادم لكنه رفض تنفيذ أمر Git. تحقّق من تسجيل الدخول إليه ثم حاول مجددًا.</string>
+    <string name="gitMoreTools">أدوات أخرى</string>
+    <string name="gitMoreToolsHint">إلى أين تُرسل عمليات الحفظ، نسخ مشروع، إصلاح سجل تالف</string>
+    <string name="devPreviewAskNeedsText">اكتب أولًا ما تريد تغييره.</string>
 </resources>

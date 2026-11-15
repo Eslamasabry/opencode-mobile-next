@@ -141,7 +141,7 @@ With `usage` on, the app counts exactly these events, and no others:
 | `bg_service_end` | `reason`: os_limit, user_stopped, idle, crashed or other; `battery_exempt`: yes or no |
 | `update_result` | `kind`: in_app or patch; `result`: installed, failed or declined; `fail_kind`: download, checksum, signer, version, installer or other |
 | `app_start` | `kind`: cold or warm; `ms_range`: <500, 500-1000, 1000-2000, 2000-5000 or >5000 milliseconds |
-| `jank` | once per session per kind of page: `screen` (as `screen_view`); `janky_pct_range`: the share of slow frames (<1, 1-5, 5-15 or >15 percent); `refresh_hz`: 60, 90, 120 or other |
+| `jank` | once per session per kind of page: `screen` (as `screen_view`); `janky_pct_range`: the share of slow frames (<1, 1-5, 5-15 or >15 percent); `refresh_hz`: 60, 90, 120 or other; `late_pct_range`: the share of frames that missed their own deadline (same ranges); `seen_hz`: the refresh rate most of those frames were given (same words as `refresh_hz`) |
 | `memory_pressure` | `level`: moderate, low or critical |
 
 It also sets these device properties once, as ranges and words:

@@ -65,6 +65,33 @@ internal class AndroidFilesStorageAccess(
         return graph
     }
 
+    /** This phone's own OpenCode, or the phone agents' helper that belongs to the same phone. */
+    private fun mine(ref: ConversationRef): Boolean {
+        val owner = stores.prefs.string("oc.builtinServerOwner")?.takeIf { it.isNotEmpty() } ?: return false
+        return ref.profileId.raw == owner || stores.phoneOfHelper(ref.profileId)?.raw == owner
+    }
+
+    override suspend fun phoneStorage(ref: ConversationRef): FilesStorageBlock? {
+        if (stores.warm() is Outcome.Failed || !mine(ref)) return null
+        return withContext(dispatchers.io) {
+            when (platform.storagePermissionGranted()) {
+                false -> FilesStorageBlock.AppPermission
+                null -> FilesStorageBlock.None
+                true ->
+                    if (linux.serverCanReadSharedFolder("/storage/emulated/0")) FilesStorageBlock.None
+                    else FilesStorageBlock.SelectedFolder
+            }
+        }
+    }
+
+    override suspend fun requestPhoneStorage(ref: ConversationRef): FilesStorageResult {
+        if (stores.warm() is Outcome.Failed || !mine(ref)) return FilesStorageResult.Failed
+        return when (val granted = platform.requestStoragePermission()) {
+            is Outcome.Failed -> FilesStorageResult.Failed
+            is Outcome.Ok -> if (granted.value) FilesStorageResult.Granted else FilesStorageResult.Cancelled
+        }
+    }
+
     override suspend fun block(ref: ConversationRef, directory: String?): FilesStorageBlock {
         if (!SharedStoragePath.isShared(directory) || stores.warm() is Outcome.Failed)
             return FilesStorageBlock.None

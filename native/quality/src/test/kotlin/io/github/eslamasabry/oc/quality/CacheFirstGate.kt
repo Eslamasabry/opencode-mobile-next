@@ -72,7 +72,7 @@ internal object CacheFirstGate {
             f("chats", "attention/AttentionScreen.kt") to Review(1, Cold("CF-53")),
             f("chats", "ui/ChatsAllScreen.kt") to Review(1, Cold("CF-17")),
             f("chats", "ui/ChatsScreen.kt") to Review(1, Cold("B-HOME-CACHE-001")),
-            f("chats", "ui/NewConversationScreen.kt") to Review(1, Cold("CF-52")),
+            f("chats", "ui/NewConversationScreen.kt") to Review(2, Cold("CF-52")),
             f("factsbook", "ui/AboutYouScreen.kt") to Review(1, Cold("CF-60")),
             f("factsbook", "ui/MemorySection.kt") to Review(1, Cold("CF-61")),
             f("factsbook", "ui/NeedsYouScreen.kt") to Review(1, Cold("CF-62")),

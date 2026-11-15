@@ -96,6 +96,19 @@ class SetUpFirstTest {
     }
 
     @Test
+    fun `I147-FIRST-RUN New conversation words an agent set up at first use as the Agents page does, never Ready`() {
+        val seen = PhoneAgentFacts.seenSetUp(emptyMap(), "omp-acp")["omp-acp"]
+        val state = PhoneAgentsState(available = true, agents = persistentListOf(row(omp, seen, helperRunning = true)))
+        // A choice (it can start), but the Agents page words it "Installed. Set it up the first time you use it."
+        assertEquals(listOf("omp-acp"), offer(*state.agents.toTypedArray()).choices.map { it.id.raw })
+        assertEquals(setOf("omp-acp"), NewConversationPhoneRules.setUpAtFirstUse(state))
+        val fresh = PhoneAgentsState(available = true, agents = persistentListOf(row(omp, null, helperRunning = true)))
+        assertEquals(setOf("omp-acp"), NewConversationPhoneRules.setUpAtFirstUse(fresh))
+        val ready = PhoneAgentRow("claude", "Claude Code", PhoneAgentStatus.Ready)
+        assertEquals(emptySet(), NewConversationPhoneRules.setUpAtFirstUse(PhoneAgentsState(available = true, agents = persistentListOf(ready))))
+    }
+
+    @Test
     fun `B-AGENT-SETUP-012 the set-up comes first only for agents no check can read, until seen set up`() {
         for (id in listOf("qwen", "goose", "omp-acp")) {
             assertTrue(PhoneAgentRules.setUpFirst(agent(id), seen = false), id)

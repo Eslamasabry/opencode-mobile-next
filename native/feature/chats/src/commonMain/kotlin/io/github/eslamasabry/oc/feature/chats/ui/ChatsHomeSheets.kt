@@ -17,6 +17,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.platform.testTag
+import io.github.eslamasabry.oc.feature.chats.presentation.PhoneStorageAccess
 import io.github.eslamasabry.oc.core.common.text.Numbers
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsActions
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsHomeSheet
@@ -57,7 +58,6 @@ import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
 import io.github.eslamasabry.oc.ui.words.res.*
-import io.github.eslamasabry.oc.feature.chats.presentation.StartNewUi
 import io.github.eslamasabry.oc.feature.chats.presentation.AppStart
 import io.github.eslamasabry.oc.feature.chats.presentation.SourceStartRules
 import io.github.eslamasabry.oc.feature.chats.presentation.SourcesChipLabel
@@ -102,28 +102,6 @@ internal fun HomeFilterChips(state: ChatsUi, actions: ChatsActions) {
         )
     }
 
-}
-
-/**
- * H4 (F: chats_home_screen.dart:186-206): an old agent conversation that cannot be reopened asks first, and changes
- * nothing until the person agrees. Shared by the home and All conversations.
- */
-@Composable
-internal fun StartNewConversationConfirm(ask: StartNewUi?, onConfirm: () -> Unit, onCancel: () -> Unit) {
-    KitConfirm(
-        spec =
-            ask?.let {
-                KitConfirmSpec(
-                    title = stringResource(Res.string.agentsResumeNoticeTitle),
-                    body = stringResource(Res.string.agentsResumeNoticeBody, KitBidi.auto(it.agentName ?: it.agentId)),
-                    confirmLabel = stringResource(Res.string.agentsStartNew),
-                    cancelLabel = stringResource(Res.string.agentsCancel),
-                    kind = KitConfirmKind.Neutral,
-                )
-            },
-        onConfirm = onConfirm,
-        onCancel = onCancel,
-    )
 }
 
 /**
@@ -194,7 +172,6 @@ internal fun ChatsHomeSheets(state: ChatsUi, actions: ChatsActions) {
     KitPageOverlay(sheet == ChatsHomeSheet.Inbox, stringResource(Res.string.inboxTitle), actions::closeHomeSheet) {
         ChatsInboxScreen(state, actions)
     }
-    StartNewConversationConfirm(state.startNew, actions::confirmStartNew, actions::dismissStartNew)
     KitConfirm(
         spec =
             state.confirmWatched?.let { watched ->
@@ -286,6 +263,18 @@ private fun ProjectChoices(state: ChatsUi, actions: ChatsActions) {
             trailing = KitRowTrailing.Chevron,
             onClick = actions::openFilterProject,
         )
+        // This phone's storage (Downloads, Documents): says what the access gives and opens Android's page for it.
+        state.phoneStorage?.let { access ->
+            val on = access == PhoneStorageAccess.On
+            KitRow(
+                title = stringResource(Res.string.chatsNewPhoneStorage),
+                supporting = stringResource(if (on) Res.string.chatsNewPhoneStorageOn else Res.string.chatsNewPhoneStorageOff),
+                leading = KitRowLeading.Glyph(KitIcons.folders),
+                trailing = if (on) KitRowTrailing.None else KitRowTrailing.Chevron,
+                onClick = if (on) null else actions::requestPhoneStorage,
+                modifier = Modifier.testTag("chats-home-phone-storage"),
+            )
+        }
     }
 }
 
@@ -467,10 +456,10 @@ private fun SourceChoices(state: ChatsUi, actions: ChatsActions) {
     KitRowGroup {
         state.home.sources.forEach { source ->
             KitSwitchRow(
-                title = serverNameShown(source.name),
-                // F: chats_sources_sheet.dart:26-48: the agents on this phone are one switch, marked as Claude Code's.
+                // Issue 147: the agents on this phone are one switch, named for what it is (never "Claude Code").
+                title = if (source.agents) stringResource(Res.string.chatsSourcesAgents) else serverNameShown(source.name),
                 leading =
-                    if (source.agents) KitRowLeading.Logo("claude", source.name, agent = true)
+                    if (source.agents) KitRowLeading.Glyph(KitIcons.agent)
                     else KitRowLeading.Glyph(if (source.onThisPhone) KitIcons.phone else KitIcons.server),
                 checked = source.shown,
                 locked = source.main,
@@ -481,7 +470,7 @@ private fun SourceChoices(state: ChatsUi, actions: ChatsActions) {
                 supporting =
                     when {
                         source.main -> stringResource(Res.string.chatsSourcesMain)
-                        source.agents -> stringResource(Res.string.chatsSourcesAgents)
+                        source.agents -> stringResource(Res.string.chatsSourcesOnPhone)
                         source.unreachable -> stringResource(Res.string.chatsSourcesUnreachable)
                         source.onThisPhone -> stringResource(Res.string.chatsSourcesOnPhone)
                         else -> stringResource(Res.string.chatsSourcesElsewhere)

@@ -269,7 +269,7 @@
     <string name="composerBusyReason">Подготовка запроса…</string>
     <string name="composerToolsTextOnly">Этот сервер принимает только текст</string>
     <string name="composerToolsAgentTextOnly">Здесь %1$s принимает только текст</string>
-    <string name="composerToolsAgentPicturesOnly">%1$s принимает только изображения: используйте «Галерея» или «Сделать снимок»</string>
+    <string name="composerToolsPicturesOnlyUse">%1$s принимает только изображения: используйте %2$s или %3$s</string>
     <string name="composerToolSavedSubtitle">Вернуть сохранённый запрос в черновик</string>
     <string name="composerToolSaveForLater">Сохранить запрос на потом</string>
     <string name="composerToolNothingToSave">Сначала введите текст или прикрепите файл</string>
@@ -1413,4 +1413,16 @@
     <string name="chatLoadFailedAgentsBody">Ничего не потеряно. Повторите, когда ответят агенты телефона.</string>
     <string name="chatLoadMissingAgentBody">В %1$s нет этого чата: возможно, он остановился, не начавшись. Повторите или настройте %1$s и начните новый чат.</string>
     <string name="chatLoadMissingAgentsBody">У агентов телефона нет этого чата: возможно, его агент остановился, не начавшись. Повторите или начните новый чат.</string>
+    <string name="kitCommandNoOutput">Нет вывода</string>
+    <string name="kitCommandFailedNoOutput">Сбой до того, как что-либо было выведено</string>
+    <string name="kitCommandStoppedEarly">Остановлено до завершения</string>
+    <string name="chatOldAgentReadOnly">%1$s не может продолжить этот разговор. Прочитайте его здесь или продолжите в новом.</string>
+    <string name="chatOldAgentReadOnlyUnnamed">Этот агент не может продолжить этот разговор. Прочитайте его здесь или продолжите в новом.</string>
+    <string name="chatContinueInNewConversation">Продолжить в новом разговоре</string>
+    <string name="chatContinueBriefIntro">Давай продолжим «%1$s». Тебе не виден тот разговор, поэтому вот что в нём произошло.</string>
+    <string name="chatContinueBriefIntroUntitled">Давай продолжим предыдущий разговор. Тебе он не виден, поэтому вот что в нём произошло.</string>
+    <string name="chatContinueBriefAsked">Что я просил:</string>
+    <string name="chatContinueBriefChanged">Изменённые файлы:</string>
+    <string name="chatContinueBriefStopped">На чём остановились:</string>
+    <string name="chatUiContinuedAfterCommand">Команда ещё выполнялась, поэтому агента попросили дождаться её и продолжить</string>
 </resources>

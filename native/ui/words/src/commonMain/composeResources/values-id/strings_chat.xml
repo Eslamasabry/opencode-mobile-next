@@ -693,7 +693,7 @@
     <string name="composerBusyReason">Menyiapkan perintah Anda…</string>
     <string name="composerToolsTextOnly">Server ini hanya menerima teks</string>
     <string name="composerToolsAgentTextOnly">%1$s hanya menerima teks di sini</string>
-    <string name="composerToolsAgentPicturesOnly">%1$s hanya menerima gambar: gunakan Pustaka foto atau Ambil foto</string>
+    <string name="composerToolsPicturesOnlyUse">%1$s hanya menerima gambar: gunakan %2$s atau %3$s</string>
     <string name="composerToolSavedSubtitle">Kembalikan perintah yang Anda simpan ke draf</string>
     <string name="composerToolSaveForLater">Simpan perintah untuk nanti</string>
     <string name="composerToolNothingToSave">Ketik atau lampirkan sesuatu dulu</string>
@@ -1226,4 +1226,16 @@
     <string name="chatLoadFailedAgentsBody">Tidak ada yang hilang. Coba lagi saat agen di ponsel menjawab.</string>
     <string name="chatLoadMissingAgentBody">%1$s tidak memiliki percakapan ini: mungkin berhenti sebelum dimulai. Coba lagi, atau siapkan %1$s dan mulai percakapan baru.</string>
     <string name="chatLoadMissingAgentsBody">Agen di ponsel tidak memiliki percakapan ini: agennya mungkin berhenti sebelum dimulai. Coba lagi atau mulai percakapan baru.</string>
+    <string name="kitCommandNoOutput">Tidak ada keluaran</string>
+    <string name="kitCommandFailedNoOutput">Gagal sebelum mencetak apa pun</string>
+    <string name="kitCommandStoppedEarly">Berhenti sebelum selesai</string>
+    <string name="chatOldAgentReadOnly">%1$s tidak dapat melanjutkan percakapan ini lagi. Baca di sini, atau lanjutkan di percakapan baru.</string>
+    <string name="chatOldAgentReadOnlyUnnamed">Agen ini tidak dapat melanjutkan percakapan ini lagi. Baca di sini, atau lanjutkan di percakapan baru.</string>
+    <string name="chatContinueInNewConversation">Lanjutkan di percakapan baru</string>
+    <string name="chatContinueBriefIntro">Mari lanjutkan "%1$s". Anda tidak dapat melihat percakapan itu, jadi inilah yang terjadi di sana.</string>
+    <string name="chatContinueBriefIntroUntitled">Mari lanjutkan percakapan sebelumnya. Anda tidak dapat melihatnya, jadi inilah yang terjadi di sana.</string>
+    <string name="chatContinueBriefAsked">Yang saya minta:</string>
+    <string name="chatContinueBriefChanged">File yang berubah:</string>
+    <string name="chatContinueBriefStopped">Di mana terhenti:</string>
+    <string name="chatUiContinuedAfterCommand">Sebuah perintah masih berjalan, jadi agen diminta menunggunya lalu melanjutkan</string>
 </resources>

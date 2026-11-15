@@ -6,4 +6,5 @@
     <string name="chatDraftRepeatTitle">¿Enviar este texto de nuevo?</string>
     <string name="chatDraftRepeatAction">Enviar de nuevo</string>
     <string name="chatDraftRepeatBody">Este texto ya está en la conversación. Envíalo de nuevo solo si quieres una respuesta nueva.</string>
+    <string name="chatDraftRestoreFailed">No se pudo abrir tu borrador guardado. Puedes intentarlo de nuevo.</string>
 </resources>

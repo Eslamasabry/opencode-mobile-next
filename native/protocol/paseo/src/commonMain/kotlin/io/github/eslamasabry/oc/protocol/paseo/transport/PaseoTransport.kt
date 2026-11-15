@@ -500,7 +500,7 @@ public class PaseoTransport(
         for (listener in listeners.toList()) listener.onBinary(frame)
     }
 
-    private fun withoutPassword(text: String): String =
+    internal fun withoutPassword(text: String): String =
         if (password.length < 3) text else text.replace(password, "•••")
 
     /** Never suspends: safe to call from the reader, a timer or a failed send. */

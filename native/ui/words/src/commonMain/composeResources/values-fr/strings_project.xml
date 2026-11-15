@@ -823,8 +823,8 @@
     <string name="gitBranchRemoteOnly">Sur %1$s, pas encore sur cet appareil</string>
     <string name="gitBranchCurrent">Branche actuelle</string>
     <string name="gitNewBranchFrom">Nouvelle branche depuis %1$s</string>
-    <string name="gitCloneRow">Cloner un dépôt</string>
-    <string name="gitCloneRowHint">Copier un dépôt à côté de ce projet</string>
+    <string name="gitCloneRow">Copier un projet depuis le web</string>
+    <string name="gitCloneRowHint">Récupère un projet depuis une adresse et le place à côté de celui-ci</string>
     <string name="gitCloneAddressLabel">Adresse du dépôt</string>
     <string name="gitCloneFolderLabel">Nom du dossier</string>
     <string name="gitCloneInto">Clone dans %1$s</string>
@@ -972,4 +972,7 @@
     <string name="agentElsewhereStale">En attente d’une mise à jour</string>
     <string name="gitProblemNoWorkingSpace">Git n’a pas la place de travailler là où se trouve ce projet. Libérez de l’espace de stockage à cet endroit, puis réessayez.</string>
     <string name="gitProblemServerRefusedCommand">Le serveur a répondu mais a refusé d’exécuter la commande Git. Vérifiez sa connexion, puis réessayez.</string>
+    <string name="gitMoreTools">Plus d’outils</string>
+    <string name="gitMoreToolsHint">Où les enregistrements sont envoyés, copier un projet, réparer un historique endommagé</string>
+    <string name="devPreviewAskNeedsText">Écrivez d’abord ce qu’il faut changer.</string>
 </resources>
