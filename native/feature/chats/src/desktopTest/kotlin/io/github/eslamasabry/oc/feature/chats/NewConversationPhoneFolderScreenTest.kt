@@ -23,6 +23,7 @@ import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 /**
  * Issue 147: New conversation names a folder in the phone's storage in full once, with what that storage can't do
@@ -113,5 +114,78 @@ class NewConversationPhoneFolderScreenTest {
             onAllNodesWithTag("chats-new-phone-folder", useUnmergedTree = true).assertCountEquals(0)
             onNodeWithText("Allow access to phone storage").performClick()
             assertEquals(1, actions.fixes)
+        }
+
+    @Test
+    fun `I147-STORAGE while the restart runs the notice says so and its button cannot be tapped again`() =
+        runComposeUiTest {
+            val actions = Actions()
+            setContent {
+                KitTheme(platform = DesktopKitPlatform(), localeTag = "en", appearance = KitAppearance(motion = MotionLevel.Off)) {
+                    NewConversationScreen(
+                        state(folder, PhoneFolderReach.Restart).copy(phoneAgent = "claude", fixingPhoneFolder = true),
+                        actions,
+                    )
+                }
+            }
+            assertTrue(onAllNodesWithText("Restarting the phone’s agents", substring = true).fetchSemanticsNodes().isNotEmpty())
+            onNodeWithText("Restart the phone’s agents").performClick()
+            assertEquals(0, actions.fixes, "busy: a second tap does nothing")
+        }
+
+    @Test
+    fun `I147-STORAGE once the restart is done the page says so`() =
+        runComposeUiTest {
+            setContent {
+                KitTheme(platform = DesktopKitPlatform(), localeTag = "en", appearance = KitAppearance(motion = MotionLevel.Off)) {
+                    NewConversationScreen(
+                        state(folder, PhoneFolderReach.Ready).copy(phoneFolderFixed = PhoneFolderReach.Restart),
+                        Actions(),
+                    )
+                }
+            }
+            onAllNodesWithText("This phone’s OpenCode restarted and can see this folder now.").assertCountEquals(1)
+        }
+
+    @Test
+    fun `I147-STORAGE while the folder is being checked Start says so`() =
+        runComposeUiTest {
+            setContent {
+                KitTheme(platform = DesktopKitPlatform(), localeTag = "en", appearance = KitAppearance(motion = MotionLevel.Off)) {
+                    NewConversationScreen(state(folder, null).copy(checkingPhoneFolder = true), Actions())
+                }
+            }
+            assertTrue(onAllNodesWithText("Checking this folder in the phone’s storage…").fetchSemanticsNodes().isNotEmpty())
+        }
+
+    @Test
+    fun `I147-STORAGE in the phone's storage the create row makes a folder here, not a project with Git`() =
+        runComposeUiTest {
+            setContent {
+                KitTheme(platform = DesktopKitPlatform(), localeTag = "en", appearance = KitAppearance(motion = MotionLevel.Off)) {
+                    NewConversationScreen(
+                        state(folder, null).copy(storagePath = "/storage/emulated/0/Documents"),
+                        Actions(),
+                    )
+                }
+            }
+            onAllNodesWithText("New folder here").assertCountEquals(1)
+            onAllNodesWithText("Makes an empty folder inside Documents and works in it").assertCountEquals(1)
+            onAllNodesWithText("Makes a folder in your projects, with Git").assertCountEquals(0)
+        }
+
+    @Test
+    fun `I147-STORAGE the name for a folder in the phone's storage says where it goes and adds no Git`() =
+        runComposeUiTest {
+            setContent {
+                KitTheme(platform = DesktopKitPlatform(), localeTag = "en", appearance = KitAppearance(motion = MotionLevel.Off)) {
+                    NewConversationScreen(
+                        state(folder, null).copy(storagePath = "/storage/emulated/0/Documents", askingProjectName = true),
+                        Actions(),
+                    )
+                }
+            }
+            onAllNodesWithText("New folder in Documents").assertCountEquals(1)
+            onAllNodesWithText("Makes a folder in your projects, with Git").assertCountEquals(0)
         }
 }

@@ -74,6 +74,7 @@ import io.github.eslamasabry.oc.ui.kit.input.KitStartBox
 import io.github.eslamasabry.oc.ui.kit.modal.KitBackGuard
 import io.github.eslamasabry.oc.ui.kit.modal.KitPageOverlay
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
+import io.github.eslamasabry.oc.ui.kit.modal.KitInputOperationDialog
 import io.github.eslamasabry.oc.ui.kit.row.KitGroupNote
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHeight
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
@@ -166,6 +167,7 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
             state.directory.isNullOrBlank() -> stringResource(Res.string.chatsNewNeedProject)
             state.folderMissing -> stringResource(Res.string.chatsNewFolderMissing)
             phoneFolderWords != null -> phoneFolderWords
+            state.checkingPhoneFolder -> stringResource(Res.string.chatsNewPhoneFolderChecking)
             state.phoneNeedsProjectsFolder ->
                 stringResource(
                     if (state.phoneHasNoProject) Res.string.chatsNewAgentNoProjects
@@ -342,7 +344,8 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                     if (phoneFolderWords != null && !state.deliveryUnconfirmed) {
                         KitNotice(phoneFolderWords, inset)
                         val fix =
-                            when (state.phoneFolder) {
+                            if (state.fixingPhoneFolder && state.phoneFolder == PhoneFolderReach.AppAccess) null
+                            else when (state.phoneFolder) {
                                 PhoneFolderReach.AppAccess -> Res.string.chatsNewPhoneFolderAllow
                                 PhoneFolderReach.Restart ->
                                     if (state.phoneAgent != null) Res.string.chatsNewPhoneFolderRestartAgentsAction
@@ -361,10 +364,14 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                                     KitAction(
                                         stringResource(it),
                                         actions::fixPhoneFolder,
+                                        // Busy at once and never tapped twice while the restart runs.
+                                        enabled =
+                                            if (state.fixingPhoneFolder) KitEnabled.Disabled(phoneFolderWords)
+                                            else KitEnabled.Enabled,
                                         working = state.fixingPhoneFolder,
                                     )
-                                } ?: another,
-                            tertiary = if (fix != null) listOf(another) else emptyList(),
+                                } ?: another.takeUnless { state.fixingPhoneFolder },
+                            tertiary = if (fix != null && !state.fixingPhoneFolder) listOf(another) else emptyList(),
                         )
                         state.phoneFolderFailure?.let { failure ->
                             KitErrorNotice(
@@ -408,6 +415,8 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                     }
                     // Issue 147: a folder in the phone's storage is named in full once, with what that storage can't do
                     // behind Why (the agents are told the same at their start).
+                    // Issue 147: what the action just did, said once it is done (a restart takes half a minute).
+                    phoneFolderDoneWords(state)?.let { KitNotice(it, inset.testTag("chats-new-phone-folder-done")) }
                     if (state.phoneFolder == PhoneFolderReach.Ready && !state.directory.isNullOrBlank()) {
                         var why by remember(state.directory) { mutableStateOf(false) }
                         KitGroupNote(
@@ -1109,6 +1118,35 @@ private fun NewProjectDialog(state: NewConversationUi, actions: NewConversationA
     val empty = stringResource(Res.string.stateFolderNameEmpty)
     val segment = stringResource(Res.string.stateFolderNameSegment)
     val characters = stringResource(Res.string.stateFolderNameCharacters)
+    val validate: (String) -> String? = { name ->
+        when (io.github.eslamasabry.oc.engine.agents.workspace.ProjectFolderName.problem(name)) {
+            io.github.eslamasabry.oc.engine.agents.workspace.ProjectFolderNameProblem.Empty -> empty
+            io.github.eslamasabry.oc.engine.agents.workspace.ProjectFolderNameProblem.NotSingleSegment -> segment
+            io.github.eslamasabry.oc.engine.agents.workspace.ProjectFolderNameProblem.InvalidCharacters -> characters
+            null -> null
+        }
+    }
+    // Issue 147: in the phone's storage the name makes an empty folder in the folder shown, not a Git project.
+    state.storagePath?.let { path ->
+        val here =
+            if (path == PHONE_STORAGE_ROOT) stringResource(Res.string.folderBrowserInternalStorage)
+            else path.trimEnd('/').substringAfterLast('/')
+        KitInputOperationDialog(
+            visible = true,
+            title = stringResource(Res.string.chatsNewStorageFolderDialogTitle, here),
+            fieldLabel = stringResource(Res.string.projectFolderNameLabel),
+            confirmLabel = stringResource(Res.string.projectFolderCreateAction),
+            cancelLabel = stringResource(Res.string.projectFolderCancel),
+            initial = "",
+            hint = stringResource(Res.string.projectFolderNameHint),
+            helper = stringResource(Res.string.chatsNewStorageFolderDialogHelper),
+            working = state.creatingProject,
+            validate = validate,
+            onSubmit = { name -> actions.createProject(name) },
+            onDismissRequest = { actions.createProject(null) },
+        )
+        return
+    }
     KitNewProjectDialog(
         initial = "",
         working = state.creatingProject,
@@ -1171,7 +1209,23 @@ private fun StorageFoldersSheet(state: NewConversationUi, actions: NewConversati
                 )
             else ->
                 KitRowGroup(leadingTiles = true) {
-                    KitNewProjectRow(actions::askNewStorageFolder, working = state.creatingProject)
+                    // Issue 147: in the phone's storage the row makes an empty folder here (no Git), and says so; the
+                    // app's own projects keep "New project" (a folder in the projects, with Git).
+                    val here = if (atRoot) stringResource(Res.string.folderBrowserInternalStorage) else name
+                    val wait = stringResource(Res.string.serversWorking)
+                    KitRow(
+                        title = stringResource(Res.string.chatsNewStorageFolderNew),
+                        modifier = Modifier.testTag("new-storage-folder-row"),
+                        supporting =
+                            if (state.creatingProject) wait
+                            else stringResource(Res.string.chatsNewStorageFolderNewDetail, here),
+                        leading = KitRowLeading.Glyph(KitIcons.folderAdd, tile = true),
+                        trailing = KitRowTrailing.Chevron,
+                        titleAccent = true,
+                        enabled = !state.creatingProject,
+                        disabledReason = wait,
+                        onClick = actions::askNewStorageFolder,
+                    )
                     state.storageFolders.forEach { folder ->
                         KitRow(
                             title = folder.name,
@@ -1203,11 +1257,30 @@ private fun phoneFolderWords(state: NewConversationUi): String? {
     return when (state.phoneFolder) {
         null,
         PhoneFolderReach.Ready -> null
-        PhoneFolderReach.AppAccess -> stringResource(Res.string.chatsNewPhoneFolderAccess)
+        PhoneFolderReach.AppAccess ->
+            if (state.fixingPhoneFolder) stringResource(Res.string.chatsNewPhoneFolderAllowing)
+            else stringResource(Res.string.chatsNewPhoneFolderAccess)
         PhoneFolderReach.Restart ->
-            if (state.phoneAgent != null) stringResource(Res.string.chatsNewPhoneFolderRestartAgents, agent)
+            if (state.fixingPhoneFolder)
+                if (state.phoneAgent != null) stringResource(Res.string.chatsNewPhoneFolderRestartingAgents, agent)
+                else stringResource(Res.string.chatsNewPhoneFolderRestartingServer)
+            else if (state.phoneAgent != null) stringResource(Res.string.chatsNewPhoneFolderRestartAgents, agent)
             else stringResource(Res.string.chatsNewPhoneFolderRestartServer)
         PhoneFolderReach.Missing -> stringResource(Res.string.chatsNewPhoneFolderMissing)
         PhoneFolderReach.Denied -> stringResource(Res.string.chatsNewPhoneFolderDenied, agent)
+    }
+}
+
+/** Issue 147: the one line saying the last action worked (the access is on, the side restarted); null otherwise. */
+@Composable
+private fun phoneFolderDoneWords(state: NewConversationUi): String? {
+    if (state.phoneFolder != PhoneFolderReach.Ready) return null
+    val agent = state.phoneAgentName ?: "OpenCode"
+    return when (state.phoneFolderFixed) {
+        PhoneFolderReach.Restart ->
+            if (state.phoneAgent != null) stringResource(Res.string.chatsNewPhoneFolderRestartedAgents, agent)
+            else stringResource(Res.string.chatsNewPhoneFolderRestartedServer)
+        PhoneFolderReach.AppAccess -> stringResource(Res.string.chatsNewPhoneFolderAllowed, agent)
+        else -> null
     }
 }

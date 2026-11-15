@@ -45,6 +45,7 @@ class SharedFolderReachTest {
         assertEquals(SharedFolderReach.Ready, decide(running = SharedStorageView(false, listOf(folder))))
         assertEquals("none runs: the next start binds what the check saw", SharedFolderReach.Ready, decide(running = null))
         assertEquals(SharedFolderReach.Unknown, decide(probe = null))
+        assertEquals("a check that could not run never hides a stale start", SharedFolderReach.Restart, decide(running = started, probe = null))
     }
 
     private fun probe(path: String): Int {

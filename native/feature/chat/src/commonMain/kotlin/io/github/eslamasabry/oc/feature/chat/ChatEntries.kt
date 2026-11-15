@@ -77,6 +77,9 @@ import io.github.eslamasabry.oc.ui.routes.WebSourcesRoute
 import io.github.eslamasabry.oc.ui.words.res.continuedFrom
 import io.github.eslamasabry.oc.ui.words.res.continuedIn
 import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.chatsNewPhoneFolderAllowing
+import io.github.eslamasabry.oc.ui.words.res.chatsNewPhoneFolderRestartingServer
+import io.github.eslamasabry.oc.ui.words.res.chatPhoneFolderRestartingAgents
 import io.github.eslamasabry.oc.ui.words.res.chatPhoneFolderAccess
 import io.github.eslamasabry.oc.ui.words.res.chatPhoneFolderRestartServer
 import io.github.eslamasabry.oc.ui.words.res.chatPhoneFolderRestartAgents
@@ -773,9 +776,14 @@ internal fun phoneFolderStatus(
     val words =
         when (reach) {
             io.github.eslamasabry.oc.feature.chat.world.ChatPhoneFolder.Ready -> return null
-            io.github.eslamasabry.oc.feature.chat.world.ChatPhoneFolder.AppAccess -> Res.string.chatPhoneFolderAccess
+            // While the action runs the line says what is happening (a restart of the agents takes half a minute).
+            io.github.eslamasabry.oc.feature.chat.world.ChatPhoneFolder.AppAccess ->
+                if (fixing) Res.string.chatsNewPhoneFolderAllowing else Res.string.chatPhoneFolderAccess
             io.github.eslamasabry.oc.feature.chat.world.ChatPhoneFolder.Restart ->
-                if (onServer) Res.string.chatPhoneFolderRestartServer else Res.string.chatPhoneFolderRestartAgents
+                if (fixing)
+                    if (onServer) Res.string.chatsNewPhoneFolderRestartingServer else Res.string.chatPhoneFolderRestartingAgents
+                else if (onServer) Res.string.chatPhoneFolderRestartServer
+                else Res.string.chatPhoneFolderRestartAgents
             io.github.eslamasabry.oc.feature.chat.world.ChatPhoneFolder.Missing -> Res.string.chatPhoneFolderMissing
             io.github.eslamasabry.oc.feature.chat.world.ChatPhoneFolder.Denied -> Res.string.chatPhoneFolderDenied
         }
@@ -791,8 +799,11 @@ internal fun phoneFolderStatus(
         KitStatusKind.Connection,
         stringResource(words),
         id = "phone-folder:${reach.name}",
-        tone = io.github.eslamasabry.oc.ui.design.color.StatusTone.Attention,
+        tone =
+            if (fixing) io.github.eslamasabry.oc.ui.design.color.StatusTone.Progress
+            else io.github.eslamasabry.oc.ui.design.color.StatusTone.Attention,
         supporting = if (failed) stringResource(Res.string.chatsNewPhoneFolderRestartFailed) else null,
-        action = action?.let { KitLineAction(stringResource(it), fix, enabled = !fixing) },
+        // Never tapped twice: while it runs the line has no action, only what is happening.
+        action = action?.takeUnless { fixing }?.let { KitLineAction(stringResource(it), fix) },
     )
 }
