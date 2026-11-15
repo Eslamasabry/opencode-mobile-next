@@ -906,6 +906,7 @@
     <string name="devPreviewShowDetails">Show details</string>
     <string name="devPreviewAddress">Address</string>
     <string name="devPreviewAskHint">Ask for a change…</string>
+    <string name="devPreviewAskNeedsText">Write what to change first.</string>
     <string name="devPreviewAskSend">Send to the conversation</string>
     <string name="devPreviewAskStopAndSend">Stop the agent and send</string>
     <string name="devPreviewAskVoice">Speak your change</string>
