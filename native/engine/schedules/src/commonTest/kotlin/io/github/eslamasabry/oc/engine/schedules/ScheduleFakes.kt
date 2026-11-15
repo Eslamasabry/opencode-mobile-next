@@ -58,6 +58,12 @@ internal class ScriptedGateway(val base: FakeServerGateway = FakeServerGateway()
     var directory: String? = PROJECT
     var title: String? = "Nightly check"
 
+    /** While set, a prompt waits here before the server "accepts" it (a slow server). */
+    var holdPrompt: kotlinx.coroutines.CompletableDeferred<Unit>? = null
+
+    /** While true, reading the conversation fails (the connection dropped after the prompt was accepted). */
+    var failReads = false
+
     init {
         base.capabilities.value = ServerCapabilities(scheduledPrompts = true)
     }
@@ -77,6 +83,7 @@ internal class ScriptedGateway(val base: FakeServerGateway = FakeServerGateway()
         prompt: io.github.eslamasabry.oc.core.model.OutgoingPrompt,
         commandId: String?,
     ): Outcome<io.github.eslamasabry.oc.core.model.PromptAdmission> {
+        holdPrompt?.await()
         val result = base.prompt(session, prompt, commandId)
         val text = replyAfterPrompt
         if (result is Outcome.Ok && text != null) {
@@ -87,19 +94,22 @@ internal class ScriptedGateway(val base: FakeServerGateway = FakeServerGateway()
 
     override suspend fun messagePage(id: SessionId, cursor: String?, limit: Int): Outcome<ServerPage<MessageWithParts>> {
         base.calls += "messagePage ${id.raw}"
+        if (failReads) return Outcome.Failed(io.github.eslamasabry.oc.core.common.Failure.Unavailable(io.github.eslamasabry.oc.core.common.FeatureId("test")))
         return ServerPage(replies.filter { it.info.sessionId == id.raw }.toImmutableList(), null).ok()
     }
 
     companion object {
-        fun reply(id: String, session: String, text: String, done: Boolean = true): MessageWithParts =
+        fun reply(id: String, session: String, text: String, done: Boolean = true, at: Long = T0): MessageWithParts =
             MessageWithParts(
-                MessageInfo(id, session, Role.Assistant, time = MsgTime(T0, if (done) T0 else null)),
+                MessageInfo(id, session, Role.Assistant, time = MsgTime(at, if (done) at else null)),
                 persistentListOf(Part("$id-p", id, session, PartType.Text, "text", text = text)),
             )
     }
 }
 
 internal class FakeProfiles(var gateway: ScriptedGateway = ScriptedGateway()) : ScheduleProfiles {
+    /** Another server's own gateway; any profile not listed here uses [gateway]. */
+    val gateways = mutableMapOf<String, ScriptedGateway>()
     val fingerprints = mutableMapOf(P to "n1:server-a")
     val legacyFingerprints = mutableMapOf(P to "ab".repeat(32))
     var opens = 0
@@ -115,7 +125,7 @@ internal class FakeProfiles(var gateway: ScriptedGateway = ScriptedGateway()) : 
     override suspend fun open(profileId: String, projectPath: String, workspace: String?): Outcome<ScheduleConnection> {
         openFailure?.let { return Outcome.Failed(it) }
         opens++
-        return ScheduleConnection(gateway) { closes++ }.ok()
+        return ScheduleConnection(gateways[profileId] ?: gateway) { closes++ }.ok()
     }
 }
 
@@ -164,6 +174,7 @@ internal class Harness(
     val profiles: FakeProfiles = FakeProfiles(),
     val alarms: FakeAlarms = FakeAlarms(),
     val notices: FakeNotices = FakeNotices(),
+    laneWaitMs: Long = ScheduleEngine.LANE_WAIT_MS,
 ) {
     private var ids = 0
 
@@ -172,7 +183,7 @@ internal class Harness(
     val engine =
         ScheduleEngine(
             backend, profiles, alarms, notices, clock::ms, { TimeZone.UTC }, { "s${++ids}" }, pollMs = 1_000,
-            flutterReadable = { flutterReadable },
+            flutterReadable = { flutterReadable }, laneWaitMs = laneWaitMs,
         )
     val gateway get() = profiles.gateway
 

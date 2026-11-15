@@ -247,7 +247,9 @@ public class ScheduleStore(
                     val previous = state.runs[index]
                     if (previous.scheduleId != stored.scheduleId || previous.scheduledAtMs != stored.scheduledAtMs ||
                         previous.startedAtMs != stored.startedAtMs ||
-                        (previous.status != RunStatus.Running && previous != stored)
+                        (previous.status != RunStatus.Running && previous != stored &&
+                            // The one terminal record that may still change: accepted, reply not followed.
+                            !(previous.status == RunStatus.Ran && previous.errorCode == ScheduleRunner.UNCONFIRMED))
                     ) {
                         throw ScheduleStoreException(ScheduleCode.InvalidRunTransition)
                     }

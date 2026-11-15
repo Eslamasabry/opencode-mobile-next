@@ -178,7 +178,7 @@ public class ScheduleWords internal constructor(private val templates: Map<Sched
                 word(ScheduleWord.WhyAuth)
             "agent_failed" ->
                 word(ScheduleWord.WhyAgentFailed)
-            "timeout", "uncertain_delivery", "interrupted" ->
+            "timeout", "uncertain_delivery", "interrupted", "unconfirmed" ->
                 word(ScheduleWord.WhyUncertain)
             "busy" -> word(ScheduleWord.WhyBusy)
             "stale_target" -> word(ScheduleWord.WhyStaleTarget)
