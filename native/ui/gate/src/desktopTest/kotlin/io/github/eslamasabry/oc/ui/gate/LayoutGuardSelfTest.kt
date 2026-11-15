@@ -1,6 +1,9 @@
 package io.github.eslamasabry.oc.ui.gate
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -28,6 +31,7 @@ import io.github.eslamasabry.oc.ui.kit.foundation.kitEdge
 import io.github.eslamasabry.oc.ui.kit.foundation.kitFloating
 import io.github.eslamasabry.oc.ui.kit.foundation.kitList
 import io.github.eslamasabry.oc.ui.kit.foundation.kitMayTruncate
+import io.github.eslamasabry.oc.ui.kit.foundation.kitScrollCue
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -222,6 +226,48 @@ class LayoutGuardSelfTest {
     @Test
     fun `E02-S13 a lone part is not held to the page gutter`() {
         assertTrue("edge-text" !in rules(frame = Frame.Part) { BasicText("Part") })
+    }
+
+    @Test
+    fun `COMPACT-001 words wider than a 360 dp window are reported cut off and the same words wrapped are not`() {
+        val cut = rules(Window.Compact) {
+            Box(Modifier.horizontalScroll(rememberScrollState())) { BasicText("A label that runs on and on, well past the right edge of even a wide phone window, without any break", maxLines = 1, softWrap = false) }
+        }
+        assertTrue("cut-off" in cut, cut.toString())
+        val wrapped = rules(Window.Compact) { KitText("A label that runs on past the edge of a small phone", Modifier.padding(16.dp), kind = KitTextKind.Frame) }
+        assertTrue("cut-off" !in wrapped && "clipped" !in wrapped && "ellipsis" !in wrapped, wrapped.toString())
+    }
+
+    @Test
+    fun `COMPACT-002 an ellipsis on an unmarked label is reported at 360 dp and at 1_3 text`() {
+        val scene: @Composable () -> Unit = {
+            BasicText("New conversation now", Modifier.padding(16.dp).width(110.dp), maxLines = 1, overflow = TextOverflow.Ellipsis)
+        }
+        assertTrue("ellipsis" in rules(Window.Compact, content = scene))
+        assertTrue("ellipsis" in rules(Window.CompactLarge, content = scene))
+        assertTrue("ellipsis" in rules(Window.Narrow, content = scene))
+    }
+
+    @Test
+    fun `COMPACT-003 a sideways row with no cue is reported and a cued row keeps its partial word`() {
+        val row: @Composable (Modifier) -> Unit = { mark ->
+            Row(Modifier.then(mark).horizontalScroll(rememberScrollState())) {
+                Box(Modifier.width(300.dp))
+                for (word in listOf("Archived ones", "Older ones")) {
+                    BasicText(word, Modifier.padding(16.dp), maxLines = 1, softWrap = false)
+                }
+            }
+        }
+        val bare = rules(Window.Compact) { row(Modifier) }
+        assertTrue("scroll-cue" in bare && "cut-off" in bare, bare.toString())
+        val cued = rules(Window.Compact) { row(Modifier.kitScrollCue("fade")) }
+        assertTrue("scroll-cue" !in cued && "cut-off" !in cued, cued.toString())
+    }
+
+    @Test
+    fun `COMPACT-004 the compact windows judge only whether words fit, not the page rules`() {
+        val found = rules(Window.Compact) { KitText("Flush", kind = KitTextKind.Frame) }
+        assertTrue(found.isEmpty(), found.toString())
     }
 
     @Test

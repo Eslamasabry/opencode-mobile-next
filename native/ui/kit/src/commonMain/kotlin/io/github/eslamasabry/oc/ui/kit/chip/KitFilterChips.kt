@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.kit.chip
 
+import io.github.eslamasabry.oc.ui.kit.foundation.kitScrollCue
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -217,7 +218,7 @@ public fun KitFilterChips(
             .testTag("kit-filter-chips"),
     ) {
         Row(
-            Modifier.horizontalScroll(scroll).padding(start = startPad, end = endPad, top = room, bottom = room),
+            Modifier.horizontalScroll(scroll).kitScrollCue("edge fade").padding(start = startPad, end = endPad, top = room, bottom = room),
             horizontalArrangement = line,
             verticalAlignment = Alignment.CenterVertically,
             content = chips,

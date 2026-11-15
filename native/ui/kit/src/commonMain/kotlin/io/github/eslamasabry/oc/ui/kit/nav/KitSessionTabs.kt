@@ -11,6 +11,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
+import io.github.eslamasabry.oc.ui.kit.foundation.kitScrollCue
+import io.github.eslamasabry.oc.ui.kit.frame.kitScrollFade
 import androidx.compose.ui.semantics.*
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.style.SurfaceRole
@@ -49,9 +52,13 @@ public fun KitSessionTabs(
                 ownFill = colors.ground.copy(alpha = 0f),
             )
         ) // F: lib/ui/kit/kit_session_tabs.dart:79-84
+    // Compact width: a strip wider than the window fades at the edge with more past it, so a cut tab reads as "scrolls".
+    val scroll = rememberScrollState()
+    Box(modifier.clipToBounds().kitScrollFade(scroll)) {
     Row(
-        modifier
-            .horizontalScroll(rememberScrollState())
+        Modifier
+            .horizontalScroll(scroll)
+            .kitScrollCue("edge fade")
             .padding(horizontal = (kitPageGutter() - Space.S1.dp).coerceAtLeast(0.dp))
             .semantics {
                 contentDescription = label
@@ -120,5 +127,6 @@ public fun KitSessionTabs(
                 }
             }
         }
+    }
     }
 }

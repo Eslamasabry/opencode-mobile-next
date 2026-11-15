@@ -1,5 +1,8 @@
 # Layout guard baseline of one module (native/docs/kit/LAYOUT-RULES.md). Only shrinks.
 # shot	window	rule	subject
+kit_chip_truncated	compact	ellipsis	A genuinely long label that will never fit insid
+kit_chip_truncated	compactlarge	ellipsis	A genuinely long label that will never fit insid
+kit_chip_truncated	narrow	ellipsis	A genuinely long label that will never fit insid
 kit_chip_truncated	phone	ellipsis	A genuinely long label that will never fit insid
 kit_chip_truncated	tablet	ellipsis	A genuinely long label that will never fit insid
 kit_live_look_preview_disabled	tablet	wide-control	Live background is off. Opens the looks.
@@ -29,3 +32,5 @@ kit_tappable_enabled_text2	tablet	wide-control	Archive "Fix the login bug"
 kit_tappable_focused	tablet	wide-control	Archive "Fix the login bug"
 kit_tappable_hovered	tablet	wide-control	Archive "Fix the login bug"
 kit_tappable_pressed	tablet	wide-control	Archive "Fix the login bug"
+kit_top_bar_shell_needs_you	compactlarge	ellipsis	Laptop
+kit_top_bar_shell_needs_you	narrow	ellipsis	Laptop

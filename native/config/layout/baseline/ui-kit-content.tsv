@@ -1,0 +1,191 @@
+# Layout guard baseline of one module (native/docs/kit/LAYOUT-RULES.md). Only shrinks.
+# shot	window	rule	subject
+kit_image_gallery_disabled	compact	scroll-cue	Loading picture
+kit_image_gallery_disabled	compactlarge	scroll-cue	Loading picture
+kit_image_gallery_disabled	narrow	scroll-cue	Loading picture
+kit_image_gallery_disabled_1280x800	compact	scroll-cue	Loading picture
+kit_image_gallery_disabled_1280x800	compactlarge	scroll-cue	Loading picture
+kit_image_gallery_disabled_1280x800	narrow	scroll-cue	Loading picture
+kit_image_gallery_error	compact	scroll-cue	This picture could not be loaded
+kit_image_gallery_error	compactlarge	scroll-cue	This picture could not be loaded
+kit_image_gallery_error	narrow	scroll-cue	This picture could not be loaded
+kit_image_gallery_error_1280x800	compact	scroll-cue	This picture could not be loaded
+kit_image_gallery_error_1280x800	compactlarge	scroll-cue	This picture could not be loaded
+kit_image_gallery_error_1280x800	narrow	scroll-cue	This picture could not be loaded
+kit_image_gallery_loading	compact	scroll-cue	Loading picture
+kit_image_gallery_loading	compactlarge	scroll-cue	Loading picture
+kit_image_gallery_loading	narrow	scroll-cue	Loading picture
+kit_image_gallery_loading_1280x800	compact	scroll-cue	Loading picture
+kit_image_gallery_loading_1280x800	compactlarge	scroll-cue	Loading picture
+kit_image_gallery_loading_1280x800	narrow	scroll-cue	Loading picture
+kit_image_gallery_working	compact	scroll-cue	screen-#.png
+kit_image_gallery_working	compactlarge	scroll-cue	screen-#.png
+kit_image_gallery_working	narrow	scroll-cue	screen-#.png
+kit_image_gallery_working_1280x800	compact	scroll-cue	screen-#.png
+kit_image_gallery_working_1280x800	compactlarge	scroll-cue	screen-#.png
+kit_image_gallery_working_1280x800	narrow	scroll-cue	screen-#.png
+kit_image_gallery_working_text2	compact	scroll-cue	screen-#.png
+kit_image_gallery_working_text2	compactlarge	scroll-cue	screen-#.png
+kit_image_gallery_working_text2	narrow	scroll-cue	screen-#.png
+kit_image_gallery_working_text2_1280x800	compact	scroll-cue	screen-#.png
+kit_image_gallery_working_text2_1280x800	compactlarge	scroll-cue	screen-#.png
+kit_image_gallery_working_text2_1280x800	narrow	scroll-cue	screen-#.png
+kit_qr_default	compactlarge	ellipsis	opencode://s/shopfront/#c#f
+kit_qr_default_1280x800	compactlarge	ellipsis	opencode://s/shopfront/#c#f
+kit_qr_too_long	compactlarge	ellipsis	opencode://s/shopfront/#c#f
+kit_qr_too_long_1280x800	compactlarge	ellipsis	opencode://s/shopfront/#c#f
+kit_qr_too_long_text2	compactlarge	ellipsis	opencode://s/shopfront/#c#f
+kit_qr_too_long_text2_1280x800	compactlarge	ellipsis	opencode://s/shopfront/#c#f
+kit_terminal_view_disabled	compact	scroll-cue	Escape key
+kit_terminal_view_disabled	compactlarge	scroll-cue	Escape key
+kit_terminal_view_disabled	narrow	scroll-cue	Escape key
+kit_terminal_view_keys_compact_915x412	compact	scroll-cue	Escape key
+kit_terminal_view_keys_compact_915x412	compactlarge	scroll-cue	Escape key
+kit_terminal_view_keys_compact_915x412	narrow	scroll-cue	Escape key
+kit_terminal_view_keys_latched	compact	scroll-cue	Interrupt, Control C
+kit_terminal_view_keys_latched	compactlarge	scroll-cue	Interrupt, Control C
+kit_terminal_view_keys_latched	narrow	scroll-cue	Interrupt, Control C
+kit_terminal_view_live	compact	scroll-cue	Escape key
+kit_terminal_view_live	compactlarge	scroll-cue	Escape key
+kit_terminal_view_live	narrow	scroll-cue	Escape key
+kit_terminal_view_live_1280x800	compact	scroll-cue	Escape key
+kit_terminal_view_live_1280x800	compactlarge	scroll-cue	Escape key
+kit_terminal_view_live_1280x800	narrow	scroll-cue	Escape key
+kit_terminal_view_live_1600x1000	compact	scroll-cue	Escape key
+kit_terminal_view_live_1600x1000	compactlarge	scroll-cue	Escape key
+kit_terminal_view_live_1600x1000	narrow	scroll-cue	Escape key
+kit_terminal_view_live_360x800	compact	scroll-cue	Escape key
+kit_terminal_view_live_360x800	compactlarge	scroll-cue	Escape key
+kit_terminal_view_live_360x800	narrow	scroll-cue	Escape key
+kit_terminal_view_live_800x1280	compact	scroll-cue	Escape key
+kit_terminal_view_live_800x1280	compactlarge	scroll-cue	Escape key
+kit_terminal_view_live_800x1280	narrow	scroll-cue	Escape key
+kit_terminal_view_live_915x412	compact	scroll-cue	Escape key
+kit_terminal_view_live_915x412	compactlarge	scroll-cue	Escape key
+kit_terminal_view_live_915x412	narrow	scroll-cue	Escape key
+kit_terminal_view_live_ar	compact	scroll-cue	Escape key
+kit_terminal_view_live_ar	compactlarge	scroll-cue	Escape key
+kit_terminal_view_live_ar	narrow	scroll-cue	Escape key
+kit_terminal_view_live_ar_1280x800	compact	scroll-cue	Escape key
+kit_terminal_view_live_ar_1280x800	compactlarge	scroll-cue	Escape key
+kit_terminal_view_live_ar_1280x800	narrow	scroll-cue	Escape key
+kit_terminal_view_live_text2	compact	scroll-cue	Escape key
+kit_terminal_view_live_text2	compactlarge	scroll-cue	Escape key
+kit_terminal_view_live_text2	narrow	scroll-cue	Escape key
+kit_terminal_view_live_text2_1280x800	compact	scroll-cue	Escape key
+kit_terminal_view_live_text2_1280x800	compactlarge	scroll-cue	Escape key
+kit_terminal_view_live_text2_1280x800	narrow	scroll-cue	Escape key
+kit_viewer_code	compact	cut-off	String shout(String value) => value.toUpperCase(
+kit_viewer_code	compact	cut-off	const Greeting({super.key, required this.name});
+kit_viewer_code	compact	cut-off	final text = 'Hello, $name. Welcome back to the 
+kit_viewer_code	compact	scroll-cue	#
+kit_viewer_code	compactlarge	cut-off	String shout(String value) => value.toUpperCase(
+kit_viewer_code	compactlarge	cut-off	Widget build(BuildContext context) {
+kit_viewer_code	compactlarge	cut-off	class Greeting extends StatelessWidget {
+kit_viewer_code	compactlarge	cut-off	const Greeting({super.key, required this.name});
+kit_viewer_code	compactlarge	cut-off	final text = 'Hello, $name. Welcome back to the 
+kit_viewer_code	compactlarge	cut-off	import 'package:flutter/widgets.dart';
+kit_viewer_code	compactlarge	scroll-cue	#
+kit_viewer_code	narrow	cut-off	String shout(String value) => value.toUpperCase(
+kit_viewer_code	narrow	cut-off	Widget build(BuildContext context) {
+kit_viewer_code	narrow	cut-off	class Greeting extends StatelessWidget {
+kit_viewer_code	narrow	cut-off	const Greeting({super.key, required this.name});
+kit_viewer_code	narrow	cut-off	final text = 'Hello, $name. Welcome back to the 
+kit_viewer_code	narrow	cut-off	import 'package:flutter/widgets.dart';
+kit_viewer_code	narrow	scroll-cue	#
+kit_viewer_code_1280x800	compact	cut-off	String shout(String value) => value.toUpperCase(
+kit_viewer_code_1280x800	compact	cut-off	const Greeting({super.key, required this.name});
+kit_viewer_code_1280x800	compact	cut-off	final text = 'Hello, $name. Welcome back to the 
+kit_viewer_code_1280x800	compact	scroll-cue	#
+kit_viewer_code_1280x800	compactlarge	cut-off	String shout(String value) => value.toUpperCase(
+kit_viewer_code_1280x800	compactlarge	cut-off	Widget build(BuildContext context) {
+kit_viewer_code_1280x800	compactlarge	cut-off	class Greeting extends StatelessWidget {
+kit_viewer_code_1280x800	compactlarge	cut-off	const Greeting({super.key, required this.name});
+kit_viewer_code_1280x800	compactlarge	cut-off	final text = 'Hello, $name. Welcome back to the 
+kit_viewer_code_1280x800	compactlarge	cut-off	import 'package:flutter/widgets.dart';
+kit_viewer_code_1280x800	compactlarge	scroll-cue	#
+kit_viewer_code_1280x800	narrow	cut-off	String shout(String value) => value.toUpperCase(
+kit_viewer_code_1280x800	narrow	cut-off	Widget build(BuildContext context) {
+kit_viewer_code_1280x800	narrow	cut-off	class Greeting extends StatelessWidget {
+kit_viewer_code_1280x800	narrow	cut-off	const Greeting({super.key, required this.name});
+kit_viewer_code_1280x800	narrow	cut-off	final text = 'Hello, $name. Welcome back to the 
+kit_viewer_code_1280x800	narrow	cut-off	import 'package:flutter/widgets.dart';
+kit_viewer_code_1280x800	narrow	scroll-cue	#
+kit_viewer_code_text2	compact	cut-off	String shout(String value) => value.toUpperCase(
+kit_viewer_code_text2	compact	cut-off	const Greeting({super.key, required this.name});
+kit_viewer_code_text2	compact	cut-off	final text = 'Hello, $name. Welcome back to the 
+kit_viewer_code_text2	compact	scroll-cue	#
+kit_viewer_code_text2	compactlarge	cut-off	String shout(String value) => value.toUpperCase(
+kit_viewer_code_text2	compactlarge	cut-off	Widget build(BuildContext context) {
+kit_viewer_code_text2	compactlarge	cut-off	class Greeting extends StatelessWidget {
+kit_viewer_code_text2	compactlarge	cut-off	const Greeting({super.key, required this.name});
+kit_viewer_code_text2	compactlarge	cut-off	final text = 'Hello, $name. Welcome back to the 
+kit_viewer_code_text2	compactlarge	cut-off	import 'package:flutter/widgets.dart';
+kit_viewer_code_text2	compactlarge	scroll-cue	#
+kit_viewer_code_text2	narrow	cut-off	String shout(String value) => value.toUpperCase(
+kit_viewer_code_text2	narrow	cut-off	Widget build(BuildContext context) {
+kit_viewer_code_text2	narrow	cut-off	class Greeting extends StatelessWidget {
+kit_viewer_code_text2	narrow	cut-off	const Greeting({super.key, required this.name});
+kit_viewer_code_text2	narrow	cut-off	final text = 'Hello, $name. Welcome back to the 
+kit_viewer_code_text2	narrow	cut-off	import 'package:flutter/widgets.dart';
+kit_viewer_code_text2	narrow	scroll-cue	#
+kit_viewer_code_text2_1280x800	compact	cut-off	String shout(String value) => value.toUpperCase(
+kit_viewer_code_text2_1280x800	compact	cut-off	const Greeting({super.key, required this.name});
+kit_viewer_code_text2_1280x800	compact	cut-off	final text = 'Hello, $name. Welcome back to the 
+kit_viewer_code_text2_1280x800	compact	scroll-cue	#
+kit_viewer_code_text2_1280x800	compactlarge	cut-off	String shout(String value) => value.toUpperCase(
+kit_viewer_code_text2_1280x800	compactlarge	cut-off	Widget build(BuildContext context) {
+kit_viewer_code_text2_1280x800	compactlarge	cut-off	class Greeting extends StatelessWidget {
+kit_viewer_code_text2_1280x800	compactlarge	cut-off	const Greeting({super.key, required this.name});
+kit_viewer_code_text2_1280x800	compactlarge	cut-off	final text = 'Hello, $name. Welcome back to the 
+kit_viewer_code_text2_1280x800	compactlarge	cut-off	import 'package:flutter/widgets.dart';
+kit_viewer_code_text2_1280x800	compactlarge	scroll-cue	#
+kit_viewer_code_text2_1280x800	narrow	cut-off	String shout(String value) => value.toUpperCase(
+kit_viewer_code_text2_1280x800	narrow	cut-off	Widget build(BuildContext context) {
+kit_viewer_code_text2_1280x800	narrow	cut-off	class Greeting extends StatelessWidget {
+kit_viewer_code_text2_1280x800	narrow	cut-off	const Greeting({super.key, required this.name});
+kit_viewer_code_text2_1280x800	narrow	cut-off	final text = 'Hello, $name. Welcome back to the 
+kit_viewer_code_text2_1280x800	narrow	cut-off	import 'package:flutter/widgets.dart';
+kit_viewer_code_text2_1280x800	narrow	scroll-cue	#
+kit_viewer_delimited	compact	scroll-cue	⁨Name⁩
+kit_viewer_delimited	compactlarge	scroll-cue	⁨Name⁩
+kit_viewer_delimited	narrow	scroll-cue	⁨Name⁩
+kit_viewer_delimited_1280x800	compact	scroll-cue	⁨Name⁩
+kit_viewer_delimited_1280x800	compactlarge	scroll-cue	⁨Name⁩
+kit_viewer_delimited_1280x800	narrow	scroll-cue	⁨Name⁩
+kit_viewer_finding	compact	cut-off	String shout(String value) => value.toUpperCase(
+kit_viewer_finding	compact	cut-off	const Greeting({super.key, required this.name});
+kit_viewer_finding	compact	cut-off	final text = 'Hello, $name. Welcome back to the 
+kit_viewer_finding	compact	scroll-cue	#
+kit_viewer_finding	compactlarge	cut-off	String shout(String value) => value.toUpperCase(
+kit_viewer_finding	compactlarge	cut-off	Widget build(BuildContext context) {
+kit_viewer_finding	compactlarge	cut-off	class Greeting extends StatelessWidget {
+kit_viewer_finding	compactlarge	cut-off	const Greeting({super.key, required this.name});
+kit_viewer_finding	compactlarge	cut-off	final text = 'Hello, $name. Welcome back to the 
+kit_viewer_finding	compactlarge	cut-off	import 'package:flutter/widgets.dart';
+kit_viewer_finding	compactlarge	scroll-cue	#
+kit_viewer_finding	narrow	cut-off	String shout(String value) => value.toUpperCase(
+kit_viewer_finding	narrow	cut-off	Widget build(BuildContext context) {
+kit_viewer_finding	narrow	cut-off	class Greeting extends StatelessWidget {
+kit_viewer_finding	narrow	cut-off	const Greeting({super.key, required this.name});
+kit_viewer_finding	narrow	cut-off	final text = 'Hello, $name. Welcome back to the 
+kit_viewer_finding	narrow	cut-off	import 'package:flutter/widgets.dart';
+kit_viewer_finding	narrow	scroll-cue	#
+kit_viewer_finding_1280x800	compact	cut-off	String shout(String value) => value.toUpperCase(
+kit_viewer_finding_1280x800	compact	cut-off	const Greeting({super.key, required this.name});
+kit_viewer_finding_1280x800	compact	cut-off	final text = 'Hello, $name. Welcome back to the 
+kit_viewer_finding_1280x800	compact	scroll-cue	#
+kit_viewer_finding_1280x800	compactlarge	cut-off	String shout(String value) => value.toUpperCase(
+kit_viewer_finding_1280x800	compactlarge	cut-off	Widget build(BuildContext context) {
+kit_viewer_finding_1280x800	compactlarge	cut-off	class Greeting extends StatelessWidget {
+kit_viewer_finding_1280x800	compactlarge	cut-off	const Greeting({super.key, required this.name});
+kit_viewer_finding_1280x800	compactlarge	cut-off	final text = 'Hello, $name. Welcome back to the 
+kit_viewer_finding_1280x800	compactlarge	cut-off	import 'package:flutter/widgets.dart';
+kit_viewer_finding_1280x800	compactlarge	scroll-cue	#
+kit_viewer_finding_1280x800	narrow	cut-off	String shout(String value) => value.toUpperCase(
+kit_viewer_finding_1280x800	narrow	cut-off	Widget build(BuildContext context) {
+kit_viewer_finding_1280x800	narrow	cut-off	class Greeting extends StatelessWidget {
+kit_viewer_finding_1280x800	narrow	cut-off	const Greeting({super.key, required this.name});
+kit_viewer_finding_1280x800	narrow	cut-off	final text = 'Hello, $name. Welcome back to the 
+kit_viewer_finding_1280x800	narrow	cut-off	import 'package:flutter/widgets.dart';
+kit_viewer_finding_1280x800	narrow	scroll-cue	#

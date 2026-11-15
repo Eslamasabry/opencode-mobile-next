@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.kit.frame
 
+import io.github.eslamasabry.oc.ui.kit.foundation.kitScrollCue
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -69,7 +70,7 @@ public fun KitCarousel(
         HorizontalPager(
             state = state,
             pageSize = pageSize,
-            modifier = Modifier.fillMaxWidth().height(height.dp).padding(start = tokens.gutter.dp),
+            modifier = Modifier.fillMaxWidth().height(height.dp).padding(start = tokens.gutter.dp).kitScrollCue("next card peeks, dots"),
         ) { i ->
             Box(Modifier.padding(end = Space.S3.dp, top = Space.S1.dp, bottom = Space.S1.dp)) { item(i) }
         }

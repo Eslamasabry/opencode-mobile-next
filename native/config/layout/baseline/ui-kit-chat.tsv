@@ -1,5 +1,164 @@
 # Layout guard baseline of one module (native/docs/kit/LAYOUT-RULES.md). Only shrinks.
 # shot	window	rule	subject
+kit_agent_strip_done	compactlarge	scroll-cue	mayor, Lead, Done
+kit_agent_strip_done	narrow	scroll-cue	mayor, Lead, Done
+kit_agent_strip_done_1280x800	compactlarge	scroll-cue	mayor, Lead, Done
+kit_agent_strip_done_1280x800	narrow	scroll-cue	mayor, Lead, Done
+kit_agent_strip_mixed	compactlarge	scroll-cue	mayor, Lead, Working
+kit_agent_strip_mixed	narrow	scroll-cue	mayor, Lead, Working
+kit_agent_strip_mixed_1280x800	compactlarge	scroll-cue	mayor, Lead, Working
+kit_agent_strip_mixed_1280x800	narrow	scroll-cue	mayor, Lead, Working
+kit_agent_strip_needs_you	compactlarge	scroll-cue	mayor, Lead, Working
+kit_agent_strip_needs_you	narrow	scroll-cue	mayor, Lead, Working
+kit_agent_strip_needs_you_1280x800	compactlarge	scroll-cue	mayor, Lead, Working
+kit_agent_strip_needs_you_1280x800	narrow	scroll-cue	mayor, Lead, Working
+kit_agent_strip_overflow	compact	scroll-cue	mayor, Lead, Working
+kit_agent_strip_overflow	compactlarge	scroll-cue	mayor, Lead, Working
+kit_agent_strip_overflow	narrow	scroll-cue	mayor, Lead, Working
+kit_agent_strip_overflow_1280x800	compact	scroll-cue	mayor, Lead, Working
+kit_agent_strip_overflow_1280x800	compactlarge	scroll-cue	mayor, Lead, Working
+kit_agent_strip_overflow_1280x800	narrow	scroll-cue	mayor, Lead, Working
+kit_ask_line_ask_stacked	compact	ellipsis	Tell me the moment the agent finishes its very f
+kit_ask_line_ask_stacked	compactlarge	ellipsis	Tell me the moment the agent finishes its very f
+kit_ask_line_ask_stacked	narrow	ellipsis	Tell me the moment the agent finishes its very f
+kit_code_block_code_header	compact	scroll-cue	class ConnectionController extends ChangeNotifie
+kit_code_block_code_header	compactlarge	scroll-cue	class ConnectionController extends ChangeNotifie
+kit_code_block_code_header	narrow	scroll-cue	class ConnectionController extends ChangeNotifie
+kit_code_block_code_header_1280x800	compact	scroll-cue	class ConnectionController extends ChangeNotifie
+kit_code_block_code_header_1280x800	compactlarge	scroll-cue	class ConnectionController extends ChangeNotifie
+kit_code_block_code_header_1280x800	narrow	scroll-cue	class ConnectionController extends ChangeNotifie
+kit_code_block_code_header_text2	compact	scroll-cue	class ConnectionController extends ChangeNotifie
+kit_code_block_code_header_text2	compactlarge	scroll-cue	class ConnectionController extends ChangeNotifie
+kit_code_block_code_header_text2	narrow	scroll-cue	class ConnectionController extends ChangeNotifie
+kit_code_block_code_header_text2_1280x800	compact	scroll-cue	class ConnectionController extends ChangeNotifie
+kit_code_block_code_header_text2_1280x800	compactlarge	scroll-cue	class ConnectionController extends ChangeNotifie
+kit_code_block_code_header_text2_1280x800	narrow	scroll-cue	class ConnectionController extends ChangeNotifie
+kit_code_block_command	compact	scroll-cue	$
+kit_code_block_command	compactlarge	scroll-cue	$
+kit_code_block_command	narrow	scroll-cue	$
+kit_code_block_command_1280x800	compact	scroll-cue	$
+kit_code_block_command_1280x800	compactlarge	scroll-cue	$
+kit_code_block_command_1280x800	narrow	scroll-cue	$
+kit_code_block_commands_labelled	compact	scroll-cue	$
+kit_code_block_commands_labelled	compactlarge	scroll-cue	$
+kit_code_block_commands_labelled	narrow	scroll-cue	$
+kit_code_block_commands_labelled_1280x800	compact	scroll-cue	$
+kit_code_block_commands_labelled_1280x800	compactlarge	scroll-cue	$
+kit_code_block_commands_labelled_1280x800	narrow	scroll-cue	$
+kit_code_block_copied	compact	scroll-cue	flutter test -j # test/kit/a_test.dart
+kit_code_block_copied	compactlarge	scroll-cue	flutter test -j # test/kit/a_test.dart
+kit_code_block_copied	narrow	scroll-cue	flutter test -j # test/kit/a_test.dart
+kit_code_block_copied_1280x800	compact	scroll-cue	flutter test -j # test/kit/a_test.dart
+kit_code_block_copied_1280x800	compactlarge	scroll-cue	flutter test -j # test/kit/a_test.dart
+kit_code_block_copied_1280x800	narrow	scroll-cue	flutter test -j # test/kit/a_test.dart
+kit_code_block_fill_find	compact	scroll-cue	#
+kit_code_block_fill_find	compactlarge	scroll-cue	#
+kit_code_block_fill_find	narrow	scroll-cue	#
+kit_code_block_fill_find_1280x800	compact	scroll-cue	#
+kit_code_block_fill_find_1280x800	compactlarge	scroll-cue	#
+kit_code_block_fill_find_1280x800	narrow	scroll-cue	#
+kit_composer_chips_attachments	compact	ellipsis	lib/ui/screens/chat/composer.dart:#–#
+kit_composer_chips_attachments	compactlarge	ellipsis	lib/ui/screens/chat/composer.dart:#–#
+kit_composer_chips_attachments	narrow	ellipsis	lib/ui/screens/chat/composer.dart:#–#
+kit_composer_chips_attachments_read_only	compact	ellipsis	lib/ui/screens/chat/composer.dart:#–#
+kit_composer_chips_attachments_read_only	compactlarge	ellipsis	lib/ui/screens/chat/composer.dart:#–#
+kit_composer_chips_attachments_read_only	narrow	ellipsis	lib/ui/screens/chat/composer.dart:#–#
+kit_composer_chips_default	compact	ellipsis	lib/ui/screens/chat/composer.dart:#–#
+kit_composer_chips_default	compactlarge	ellipsis	lib/ui/screens/chat/composer.dart:#–#
+kit_composer_chips_default	narrow	ellipsis	lib/ui/screens/chat/composer.dart:#–#
+kit_composer_chips_default_1280x800	compact	ellipsis	lib/ui/screens/chat/composer.dart:#–#
+kit_composer_chips_default_1280x800	compactlarge	ellipsis	lib/ui/screens/chat/composer.dart:#–#
+kit_composer_chips_default_1280x800	narrow	ellipsis	lib/ui/screens/chat/composer.dart:#–#
+kit_composer_chips_default_text2	compact	ellipsis	lib/ui/screens/chat/composer.dart:#–#
+kit_composer_chips_default_text2	compactlarge	ellipsis	lib/ui/screens/chat/composer.dart:#–#
+kit_composer_chips_default_text2	narrow	ellipsis	lib/ui/screens/chat/composer.dart:#–#
+kit_composer_chips_default_text2_1280x800	compact	ellipsis	lib/ui/screens/chat/composer.dart:#–#
+kit_composer_chips_default_text2_1280x800	compactlarge	ellipsis	lib/ui/screens/chat/composer.dart:#–#
+kit_composer_chips_default_text2_1280x800	narrow	ellipsis	lib/ui/screens/chat/composer.dart:#–#
+kit_composer_chips_model_narrow	compact	ellipsis	explore · Sonnet #.# · High
+kit_composer_chips_model_narrow	narrow	ellipsis	explore · Sonnet #.# · High
+kit_composer_model_above	compact	ellipsis	build · Sonnet #.# · High
+kit_composer_model_above	compactlarge	ellipsis	build · Sonnet #.# · High
+kit_composer_model_above	narrow	ellipsis	build · Sonnet #.# · High
+kit_frost_default	compactlarge	scroll-cue	- padding: EdgeInsets.all(#),
+kit_frost_default	narrow	scroll-cue	- padding: EdgeInsets.all(#),
+kit_frost_default_1280x800	compactlarge	scroll-cue	- padding: EdgeInsets.all(#),
+kit_frost_default_1280x800	narrow	scroll-cue	- padding: EdgeInsets.all(#),
+kit_frost_default_1600x1000	compactlarge	scroll-cue	- padding: EdgeInsets.all(#),
+kit_frost_default_1600x1000	narrow	scroll-cue	- padding: EdgeInsets.all(#),
+kit_frost_default_360x800	compactlarge	scroll-cue	- padding: EdgeInsets.all(#),
+kit_frost_default_360x800	narrow	scroll-cue	- padding: EdgeInsets.all(#),
+kit_frost_default_800x1280	compactlarge	scroll-cue	- padding: EdgeInsets.all(#),
+kit_frost_default_800x1280	narrow	scroll-cue	- padding: EdgeInsets.all(#),
+kit_frost_default_text2	compactlarge	scroll-cue	- padding: EdgeInsets.all(#),
+kit_frost_default_text2	narrow	scroll-cue	- padding: EdgeInsets.all(#),
+kit_frost_default_text2_1280x800	compactlarge	scroll-cue	- padding: EdgeInsets.all(#),
+kit_frost_default_text2_1280x800	narrow	scroll-cue	- padding: EdgeInsets.all(#),
+kit_frost_header	compactlarge	scroll-cue	- padding: EdgeInsets.all(#),
+kit_frost_header	narrow	scroll-cue	- padding: EdgeInsets.all(#),
+kit_frost_strong	compactlarge	scroll-cue	- padding: EdgeInsets.all(#),
+kit_frost_strong	narrow	scroll-cue	- padding: EdgeInsets.all(#),
+kit_frost_weak	compactlarge	scroll-cue	- padding: EdgeInsets.all(#),
+kit_frost_weak	narrow	scroll-cue	- padding: EdgeInsets.all(#),
+kit_markdown_default	compact	scroll-cue	await controller.resume();
+kit_markdown_default	compactlarge	scroll-cue	await controller.resume();
+kit_markdown_default	narrow	scroll-cue	await controller.resume();
+kit_markdown_default_1280x800	compact	scroll-cue	await controller.resume();
+kit_markdown_default_1280x800	compactlarge	scroll-cue	await controller.resume();
+kit_markdown_default_1280x800	narrow	scroll-cue	await controller.resume();
+kit_markdown_default_text2	compact	scroll-cue	await controller.resume();
+kit_markdown_default_text2	compactlarge	scroll-cue	await controller.resume();
+kit_markdown_default_text2	narrow	scroll-cue	await controller.resume();
+kit_markdown_images_reply	compact	scroll-cue	home.png
+kit_markdown_images_reply	compactlarge	scroll-cue	home.png
+kit_markdown_images_reply	narrow	scroll-cue	home.png
+kit_markdown_images_reply_ar	compact	scroll-cue	home.png
+kit_markdown_images_reply_ar	compactlarge	scroll-cue	home.png
+kit_markdown_images_reply_ar	narrow	scroll-cue	home.png
+kit_markdown_images_unread	compact	scroll-cue	▣
+kit_markdown_images_unread	compactlarge	scroll-cue	▣
+kit_markdown_images_unread	narrow	scroll-cue	▣
+kit_markdown_streaming	compact	scroll-cue	class ShareReceiver : BroadcastReceiver() {
+kit_markdown_streaming	compactlarge	scroll-cue	class ShareReceiver : BroadcastReceiver() {
+kit_markdown_streaming	narrow	scroll-cue	class ShareReceiver : BroadcastReceiver() {
+kit_markdown_streaming_1280x800	compact	scroll-cue	class ShareReceiver : BroadcastReceiver() {
+kit_markdown_streaming_1280x800	compactlarge	scroll-cue	class ShareReceiver : BroadcastReceiver() {
+kit_markdown_streaming_1280x800	narrow	scroll-cue	class ShareReceiver : BroadcastReceiver() {
+kit_markdown_table	compact	cut-off	OpenCode #
+kit_markdown_table	compact	cut-off	Protocol
+kit_markdown_table	compact	scroll-cue	Server
+kit_markdown_table	compactlarge	scroll-cue	Server
+kit_markdown_table	narrow	cut-off	OpenCode #
+kit_markdown_table	narrow	cut-off	Protocol
+kit_markdown_table	narrow	scroll-cue	Server
+kit_markdown_table_1280x800	compact	cut-off	OpenCode #
+kit_markdown_table_1280x800	compact	cut-off	Protocol
+kit_markdown_table_1280x800	compact	scroll-cue	Server
+kit_markdown_table_1280x800	compactlarge	scroll-cue	Server
+kit_markdown_table_1280x800	narrow	cut-off	OpenCode #
+kit_markdown_table_1280x800	narrow	cut-off	Protocol
+kit_markdown_table_1280x800	narrow	scroll-cue	Server
+kit_message_reply_code	compact	scroll-cue	final total = await bloc.stream.firstWhere((s) =
+kit_message_reply_code	compact	scroll-cue	flutter test --concurrency=# test/checkout_test.
+kit_message_reply_code	compactlarge	scroll-cue	final total = await bloc.stream.firstWhere((s) =
+kit_message_reply_code	compactlarge	scroll-cue	flutter test --concurrency=# test/checkout_test.
+kit_message_reply_code	narrow	scroll-cue	final total = await bloc.stream.firstWhere((s) =
+kit_message_reply_code	narrow	scroll-cue	flutter test --concurrency=# test/checkout_test.
+kit_queued_message_default	compact	ellipsis	Then move the settings migration behind a flag s
+kit_queued_message_default	compactlarge	ellipsis	Then move the settings migration behind a flag s
+kit_queued_message_default	narrow	ellipsis	Then move the settings migration behind a flag s
+kit_queued_message_default_1280x800	compact	ellipsis	Then move the settings migration behind a flag s
+kit_queued_message_default_1280x800	compactlarge	ellipsis	Then move the settings migration behind a flag s
+kit_queued_message_default_1280x800	narrow	ellipsis	Then move the settings migration behind a flag s
+kit_queued_message_default_text2	compact	ellipsis	Then move the settings migration behind a flag s
+kit_queued_message_default_text2	compactlarge	ellipsis	Then move the settings migration behind a flag s
+kit_queued_message_default_text2	narrow	ellipsis	Then move the settings migration behind a flag s
+kit_queued_message_default_text2_1280x800	compact	ellipsis	Then move the settings migration behind a flag s
+kit_queued_message_default_text2_1280x800	compactlarge	ellipsis	Then move the settings migration behind a flag s
+kit_queued_message_default_text2_1280x800	narrow	ellipsis	Then move the settings migration behind a flag s
+kit_queued_message_offline	compact	ellipsis	Then move the settings migration behind a flag s
+kit_queued_message_offline	compactlarge	ellipsis	Then move the settings migration behind a flag s
+kit_queued_message_offline	narrow	ellipsis	Then move the settings migration behind a flag s
 kit_request_card_answered	phone	tight	Undo
 kit_request_card_answered	tablet	tight	Undo
 kit_step_glow_finish_tick	tablet	wide-text	lib/a.dart
@@ -12,17 +171,80 @@ kit_step_glow_running_t10	tablet	wide-text	lib/a.dart
 kit_step_glow_running_t10	tablet	wide-text	lib/b.dart
 kit_step_glow_running_t40_ar_text2	tablet	wide-text	lib/a.dart
 kit_step_glow_running_t40_ar_text2	tablet	wide-text	lib/b.dart
+kit_step_glow_waiting	compact	ellipsis	Waiting for you
+kit_step_glow_waiting	narrow	ellipsis	Waiting for you
+kit_step_glow_waiting_breathe	compact	ellipsis	Waiting for you
+kit_step_glow_waiting_breathe	narrow	ellipsis	Waiting for you
 kit_step_glow_waiting_breathe	phone	clipped	
 kit_step_glow_waiting_breathe	tablet	clipped	
 kit_step_glow_waiting_breathe	tablet	wide-text	lib/a.dart
 kit_step_glow_waiting_breathe	tablet	wide-text	lib/b.dart
+kit_step_timeline_collapsed	compactlarge	ellipsis	Read # file · searched once · edited # file · ra
 kit_step_timeline_collapsed	phone	tight	Read # file · searched once · edited # file · ra
 kit_step_timeline_collapsed	phone	tight	The screen is in and the route points to it.
 kit_step_timeline_collapsed	tablet	tight	Read # file · searched once · edited # file · ra
 kit_step_timeline_collapsed	tablet	tight	The screen is in and the route points to it.
 kit_step_timeline_collapsed	tablet	wide-control	Read # file · searched once · edited # file · ra
+kit_step_timeline_expanded	compactlarge	ellipsis	Read # file · searched once · edited # file · ra
+kit_step_timeline_expanded_1280x800	compactlarge	ellipsis	Read # file · searched once · edited # file · ra
+kit_step_timeline_expanded_ar	compactlarge	ellipsis	قرأ ملفًا واحدًا · بحث مرة واحدة · عدّل ملفًا وا
+kit_step_timeline_expanded_ar	narrow	ellipsis	# من الثواني
+kit_step_timeline_expanded_text2	compactlarge	ellipsis	Read # file · searched once · edited # file · ra
+kit_step_timeline_expanded_text2_1280x800	compactlarge	ellipsis	Read # file · searched once · edited # file · ra
+kit_step_timeline_running_open	compactlarge	ellipsis	Read # file · searched once · edited # files · r
+kit_tool_row_agent	compact	ellipsis	Find where checkout totals are computed and what
+kit_tool_row_agent	compactlarge	ellipsis	Find where checkout totals are computed and what
+kit_tool_row_agent	narrow	ellipsis	Find where checkout totals are computed and what
+kit_tool_row_agent_done	compact	ellipsis	Find where checkout totals are computed and what
+kit_tool_row_agent_done	narrow	ellipsis	Find where checkout totals are computed and what
+kit_tool_row_default_1280x800	compact	ellipsis	test/checkout/checkout_test.dart
+kit_tool_row_default_1280x800	narrow	ellipsis	test/checkout/checkout_test.dart
+kit_tool_row_default_text2	compact	ellipsis	test/checkout/checkout_test.dart
+kit_tool_row_default_text2	narrow	ellipsis	test/checkout/checkout_test.dart
+kit_tool_row_default_text2_1280x800	compact	ellipsis	test/checkout/checkout_test.dart
+kit_tool_row_default_text2_1280x800	narrow	ellipsis	test/checkout/checkout_test.dart
+kit_tool_row_done	compact	ellipsis	test/checkout/checkout_test.dart
+kit_tool_row_done	narrow	ellipsis	test/checkout/checkout_test.dart
+kit_tool_row_done_open	compact	ellipsis	test/checkout/checkout_test.dart
+kit_tool_row_done_open	compactlarge	scroll-cue	#:# +#: checkout step #
+kit_tool_row_done_open	narrow	ellipsis	test/checkout/checkout_test.dart
+kit_tool_row_done_open	narrow	scroll-cue	#:# +#: checkout step #
+kit_tool_row_edit_open	compact	ellipsis	test/checkout/checkout_test.dart
+kit_tool_row_edit_open	compactlarge	ellipsis	# second
+kit_tool_row_edit_open	narrow	ellipsis	# second
+kit_tool_row_edit_open	narrow	ellipsis	test/checkout/checkout_test.dart
+kit_tool_row_failed	compact	ellipsis	# seconds
+kit_tool_row_failed	compact	ellipsis	test/checkout/checkout_test.dart
+kit_tool_row_failed	compactlarge	ellipsis	# seconds
+kit_tool_row_failed	narrow	ellipsis	# seconds
+kit_tool_row_failed	narrow	ellipsis	Exit code # · # tests failed
+kit_tool_row_failed	narrow	ellipsis	test/checkout/checkout_test.dart
+kit_tool_row_failed_retry	compact	ellipsis	# seconds
+kit_tool_row_failed_retry	compact	ellipsis	test/checkout/checkout_test.dart
+kit_tool_row_failed_retry	compactlarge	ellipsis	# seconds
+kit_tool_row_failed_retry	narrow	ellipsis	# seconds
+kit_tool_row_failed_retry	narrow	ellipsis	Exit code # · # tests failed
+kit_tool_row_failed_retry	narrow	ellipsis	test/checkout/checkout_test.dart
+kit_tool_row_not_run	compact	ellipsis	lib/checkout/checkout_bloc.dart
+kit_tool_row_not_run	compact	ellipsis	test/checkout/checkout_test.dart
+kit_tool_row_not_run	narrow	ellipsis	lib/checkout/checkout_bloc.dart
+kit_tool_row_not_run	narrow	ellipsis	test/checkout/checkout_test.dart
+kit_tool_row_running	compact	ellipsis	test/checkout/checkout_test.dart
+kit_tool_row_running	narrow	ellipsis	test/checkout/checkout_test.dart
+kit_tool_row_waiting_for_you	compact	ellipsis	test/checkout/checkout_test.dart
+kit_tool_row_waiting_for_you	narrow	ellipsis	test/checkout/checkout_test.dart
+kit_turn_failed	compactlarge	ellipsis	Read # files · edited # file · Didn't finish
+kit_turn_interrupted	compactlarge	ellipsis	Read # files · edited # file · Didn't finish
+kit_turn_stopped	compactlarge	ellipsis	Read # files · edited # file · Stopped
+kit_work_line_default_1280x800	compactlarge	ellipsis	Read # files · edited # file · ran # commands
+kit_work_line_default_text2	compactlarge	ellipsis	Read # files · edited # file · ran # commands
 kit_work_line_default_text2	phone	clipped	
 kit_work_line_default_text2	phone	clipped	
 kit_work_line_default_text2	tablet	clipped	
 kit_work_line_default_text2	tablet	clipped	
 kit_work_line_default_text2	tablet	wide-row	
+kit_work_line_default_text2_1280x800	compactlarge	ellipsis	Read # files · edited # file · ran # commands
+kit_work_line_done	compactlarge	ellipsis	Read # files · edited # file · ran # commands
+kit_work_line_done_expanded	compactlarge	ellipsis	Read # files · edited # file · ran # commands
+kit_work_line_ended_failed	compactlarge	ellipsis	Read # files · edited # file · ran # commands · 
+kit_work_line_stopped	compactlarge	ellipsis	Read # files · edited # file · ran # commands · 

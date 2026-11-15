@@ -31,6 +31,9 @@ import java.util.Locale
  *   ([KitLayoutMarks.MayTruncate]), and words are never cut off without a sign.
  * - `wide-text` / `wide-control` / `wide-row` (tablet): words and rows stay within the list width (960 dp), a
  *   button within the control width (400 dp).
+ * - `ellipsis` / `clipped` / `cut-off` / `scroll-cue` (compact windows: 360 dp at text 1.0 and 1.3, 320 dp at 1.0):
+ *   words fit their box, are not cut by a container or the window edge, and a row that scrolls sideways says so
+ *   ([KitLayoutMarks.ScrollCue]).
  *
  * Exceptions are declared in the kit next to the part ([KitLayoutMarks]); a screen's own leftovers live in the
  * per-module baseline `native/config/layout/baseline/<module>.tsv`, which may only shrink
@@ -43,15 +46,29 @@ object LayoutGuard {
     private const val PHONE_H = 915 // F: test/goldens/kit/kit_gallery.dart:109
     private const val TABLET_W = 1280 // F: kit-v2.md §8.5 G4 "1280×800 (tablet landscape or PC)"
     private const val TABLET_H = 800 // F: kit-v2.md §8.5 G4
+    private const val COMPACT_W = 360 // NV: a Galaxy S22 is 360 dp wide at text 1.0; most phones are this size or wider
+    private const val COMPACT_H = 780 // NV: its usable height
+    private const val NARROW_W = 320 // NV: the narrowest phone the app still supports
+    private const val NARROW_H = 640 // NV: and its height
 
-    /** The windows a scene is checked at (story E02-S13). */
-    enum class Window(val w: Int, val h: Int) { Phone(PHONE_W, PHONE_H), Tablet(TABLET_W, TABLET_H) }
+    /**
+     * The windows a scene is checked at (story E02-S13). The three compact ones (compact-width slice) are the phones
+     * most people hold: 360 dp wide at normal text, the same at 1.3 text, and 320 dp wide. They check only that words
+     * fit ([LayoutWalk.fits]); the page rules above are judged on the phone and tablet windows.
+     */
+    enum class Window(val w: Int, val h: Int, val scale: Float = 1f, val compact: Boolean = false) {
+        Phone(PHONE_W, PHONE_H),
+        Tablet(TABLET_W, TABLET_H),
+        Compact(COMPACT_W, COMPACT_H, compact = true),
+        CompactLarge(COMPACT_W, COMPACT_H, scale = 1.3f, compact = true),
+        Narrow(NARROW_W, NARROW_H, compact = true),
+    }
 
     /** What to render: the gate's frame, style, wrapper, interaction and content. */
     class Scene(
         val frame: FlutterGoldenGate.Frame = FlutterGoldenGate.Frame.Screen,
         val style: Style = Style.Solid,
-        val wrap: @Composable (@Composable () -> Unit) -> Unit = { it() },
+        val wrap: @Composable (@Composable () -> Unit) -> Unit = NoWrap,
         val act: (ComposeUiTest.() -> Unit)? = null,
         val content: @Composable () -> Unit,
     )
@@ -77,7 +94,8 @@ object LayoutGuard {
     fun check(shot: String, scene: Scene) {
         // The alignment gate (AlignGuard) reads the phone window's light render, so it costs no render of its own.
         var align: AlignGuard.Result? = null
-        val found = audit(scene) { roots, window ->
+        val survey = surveying()
+        val found = audit(scene, if (survey) Window.entries.filter { it.compact } else Window.entries) { roots, window ->
             val screen = scene.frame == FlutterGoldenGate.Frame.Screen
             if (align == null) align = AlignGuard.inspect(roots, window.w, window.h, screen)
         }
@@ -85,6 +103,7 @@ object LayoutGuard {
         val keys = found.map { "$shot\t${it.key}" }.toSortedSet()
         out.mkdirs()
         File(out, "$shot.tsv").writeText(found.joinToString("") { "$shot\t${it.key}\t${it.detail}\n" })
+        if (survey) return
         if (System.getenv("OC_LAYOUT_BASELINE") == "update") {
             rewriteBaseline(shot, keys)
             if (aligned != null) throw AssertionError(aligned)
@@ -105,6 +124,12 @@ object LayoutGuard {
         if (failures.isNotEmpty()) throw AssertionError(failures.joinToString("\n\n"))
     }
 
+    /**
+     * `OC_LAYOUT_SURVEY=compact`: a survey run looks at the compact windows only, writes each shot's findings to
+     * `looks-out/layout/<module>/<shot>.tsv` and neither compares with nor rewrites the baseline (compact-width slice).
+     */
+    internal fun surveying(): Boolean = System.getenv("OC_LAYOUT_SURVEY") == "compact"
+
     /** Every finding for [scene] at [windows] in light and dark, once each (light and dark usually agree). */
     fun audit(
         scene: Scene,
@@ -113,12 +138,15 @@ object LayoutGuard {
     ): List<Finding> {
         val all = LinkedHashMap<String, Finding>()
         val screen = scene.frame == FlutterGoldenGate.Frame.Screen
-        for (window in windows) for (dark in listOf(false, true)) {
-            val axes = FlutterGoldenGate.Axes(rtl = false, scale = 1f, w = window.w, h = window.h)
+        // A compact window checks that words fit, which light and dark agree on: one render each, not two.
+        // A wrapper frames the content at a size of its own (a capture frame), so a small window cannot judge its width.
+        val judgeCut = screen && scene.wrap === NoWrap
+        for (window in windows) for (dark in if (window.compact) listOf(false) else listOf(false, true)) {
+            val axes = FlutterGoldenGate.Axes(rtl = false, scale = window.scale, w = window.w, h = window.h)
             val read: ComposeUiTest.() -> Unit = {
                 val roots = onAllNodes(isRoot(), useUnmergedTree = true)
                     .fetchSemanticsNodes(atLeastOneRootRequired = false)
-                for (f in inspect(roots, window, screen)) all.putIfAbsent(f.key, f)
+                for (f in inspect(roots, window, screen, judgeCut)) all.putIfAbsent(f.key, f)
                 if (window == Window.Phone && !dark) onPhone?.invoke(roots, window)
             }
             FlutterGoldenGate.render(
@@ -130,8 +158,8 @@ object LayoutGuard {
     }
 
     /** The checks over one rendered tree; [screen] adds the page rules (gutter, title edge) a lone part cannot meet. */
-    internal fun inspect(roots: List<SemanticsNode>, window: Window, screen: Boolean): List<Finding> =
-        LayoutWalk(window, roots).run(screen)
+    internal fun inspect(roots: List<SemanticsNode>, window: Window, screen: Boolean, judgeCut: Boolean = screen): List<Finding> =
+        LayoutWalk(window, roots).run(screen, judgeCut)
 
     // --------------------------------------------------------------------------------------------- the baseline
 
@@ -157,3 +185,6 @@ object LayoutGuard {
         }
     }
 }
+
+/** The default scene wrapper: none. A scene with any other wrapper frames its content itself. */
+internal val NoWrap: @Composable (@Composable () -> Unit) -> Unit = { it() }

@@ -1,5 +1,7 @@
 package io.github.eslamasabry.oc.ui.kit.log
 
+import io.github.eslamasabry.oc.ui.kit.frame.kitScrollFade
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -129,13 +131,14 @@ public fun KitLogPanel(
         val colors = LocalKitColors.current
         val style = LocalKitTypography.current.style(TypeRole.Mono).copy(color = colors.text1)
         val selectedColor = colors.accent
-        SelectionContainer(Modifier.weight(1f).fillMaxWidth().copyOnly()) {
+        val sideways = rememberScrollState()
+        SelectionContainer(Modifier.weight(1f).fillMaxWidth().copyOnly().then(if (wrap) Modifier else Modifier.clipToBounds().kitScrollFade(sideways))) {
             LazyColumn(
                 state = scroll,
                 modifier =
                     Modifier.fillMaxSize()
                         .then(
-                            if (wrap) Modifier else Modifier.horizontalScroll(rememberScrollState())
+                            if (wrap) Modifier else Modifier.horizontalScroll(sideways)
                         ),
             ) {
                 itemsIndexed(rows) { index, line ->

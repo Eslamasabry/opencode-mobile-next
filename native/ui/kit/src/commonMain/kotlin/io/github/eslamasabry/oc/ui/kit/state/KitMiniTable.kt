@@ -1,5 +1,8 @@
 package io.github.eslamasabry.oc.ui.kit.state
 
+import androidx.compose.ui.draw.clipToBounds
+import io.github.eslamasabry.oc.ui.kit.frame.kitScrollFade
+import io.github.eslamasabry.oc.ui.kit.foundation.kitScrollCue
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -139,7 +142,8 @@ public fun KitMiniTable(
         BoxWithConstraints(Modifier.fillMaxWidth()) {
             val natural = widths.sum()
             val scale = KitMiniTableRules.stretch(natural, maxWidth.value)
-            Column(Modifier.horizontalScroll(rememberScrollState())) {
+            val scroll = rememberScrollState()
+            Column(Modifier.clipToBounds().kitScrollFade(scroll).horizontalScroll(scroll).kitScrollCue("edge fade")) {
                 Line(cols, scale, header = true)
                 body.forEach { Line(it.cells, scale, header = false) }
             }

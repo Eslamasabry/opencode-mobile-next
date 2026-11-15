@@ -1,5 +1,11 @@
 # Layout guard baseline of one module (native/docs/kit/LAYOUT-RULES.md). Only shrinks.
 # shot	window	rule	subject
+chat_3_composer_busy	compactlarge	cut-off	Review the parser for edge cases
+chat_3_composer_busy_1280x800	compactlarge	cut-off	Review the parser for edge cases
+chat_3_composer_text	compactlarge	cut-off	Review the parser for edge cases
+chat_3_composer_text_1280x800	compactlarge	cut-off	Review the parser for edge cases
+chat_3_tools_sheet	compactlarge	cut-off	Review the parser for edge cases
+chat_3_tools_sheet_1280x800	compactlarge	cut-off	Review the parser for edge cases
 chat_find_open	phone	edge-tap	Fix the flaky checkout test
 chat_find_open	phone	edge-tap	More for this reply
 chat_find_open	phone	edge-tap	The flakiness comes from ⁨CheckoutBloc⁩ racing t

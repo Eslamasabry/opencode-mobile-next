@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.kit.frame
 
+import io.github.eslamasabry.oc.ui.kit.foundation.kitScrollCue
 import androidx.compose.foundation.ScrollState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -57,6 +58,7 @@ public object ScrollFadeRules {
 public fun Modifier.kitScrollFade(state: ScrollState, width: Dp = ScrollFadeRules.DEFAULT_WIDTH_DP.dp): Modifier {
     val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
     return this
+        .kitScrollCue("edge fade")
         .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
         .drawWithContent {
             drawContent()
