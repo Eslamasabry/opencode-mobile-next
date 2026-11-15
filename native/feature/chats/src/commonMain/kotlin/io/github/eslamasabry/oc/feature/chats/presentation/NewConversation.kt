@@ -948,13 +948,21 @@ public class NewConversationViewModel(
         }
     }
 
+    /**
+     * The profile a start runs on: a phone agent's conversation lives on the phone helper's, so its first-message
+     * record is read, checked and discarded there (SEND-STALE: Check again and Discard read the server's own record,
+     * found none, and the next Start was refused again by the helper's).
+     */
+    private fun startProfile(shown: NewConversationUi): ProfileId? =
+        shown.setup?.phone?.takeIf { shown.phoneAgent != null }?.helper ?: shown.profile
+
     override fun openCreatedConversation() {
         val ref = mutable.value.reviewConversation ?: return
         viewModelScope.launch {
             // Re-read the persisted scope receipt immediately before navigation; profile edits
             // never redirect it.
             val shown = mutable.value
-            val profile = shown.profile ?: return@launch
+            val profile = startProfile(shown) ?: return@launch
             val current = host.review(profile, shown.directory)
             if (current is Outcome.Ok && current.value == ref) {
                 if (nav.top.value == route) nav.back()
@@ -967,16 +975,55 @@ public class NewConversationViewModel(
         val shown = mutable.value
         val profile = shown.profile ?: return
         if (!shown.deliveryUnconfirmed) return
-        viewModelScope.launch { restore(profile, shown.directory) }
+        val target = startProfile(shown) ?: return
+        if (target == profile) {
+            viewModelScope.launch { restore(profile, shown.directory) }
+            return
+        }
+        viewModelScope.launch { recheckPhoneStart(target, shown.directory) }
+    }
+
+    /**
+     * Check again for a phone agent's start: the helper's own record decides. Confirmed (the helper made this start's
+     * conversation) opens it; a record of an earlier start that is settled now leaves the page ready to start; one
+     * that is still open keeps the notice.
+     */
+    private suspend fun recheckPhoneStart(target: ProfileId, directory: String?) {
+        edits.withLock {
+            val before = attempt
+            when (val review = host.review(target, directory)) {
+                is Outcome.Failed -> mutable.update { it.copy(failure = review.failure) }
+                is Outcome.Ok ->
+                    if (review.value == null) {
+                        attempt = null
+                        val made = before?.takeIf { it.creationAttempted }?.ref
+                        mutable.update {
+                            it.copy(
+                                deliveryUnconfirmed = false,
+                                attempted = false,
+                                failure = null,
+                                reviewConversation = null,
+                                text = if (made != null) "" else it.text,
+                                textRevision = if (made != null) it.textRevision + 1 else it.textRevision,
+                            )
+                        }
+                        if (made != null && nav.top.value == route) {
+                            nav.back()
+                            nav.openChat(made)
+                        }
+                    }
+            }
+        }
     }
 
     override fun discardUnconfirmed() {
         val shown = mutable.value
         val profile = shown.profile ?: return
         if (!shown.deliveryUnconfirmed && !shown.creationUnconfirmed) return
+        val target = startProfile(shown) ?: return
         viewModelScope.launch {
             edits.withLock {
-                when (val done = host.dismissReview(profile, shown.directory)) {
+                when (val done = host.dismissReview(target, shown.directory)) {
                     is Outcome.Failed -> mutable.update { it.copy(failure = done.failure) }
                     is Outcome.Ok -> {
                         attempt = null

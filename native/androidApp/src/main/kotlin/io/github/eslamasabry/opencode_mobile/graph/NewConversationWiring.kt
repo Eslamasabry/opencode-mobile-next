@@ -423,6 +423,14 @@ class AndroidNewConversationHost(
         graph: ConnectionGraph,
         binding: FirstMessageReview,
     ): Boolean {
+        // SEND-STALE case 2: a phone agent's first message has no receipt journal (Paseo keeps no queue), so a record
+        // left by a start the person walked away from (Back while "Starting <agent>…") was never confirmed, and every
+        // later New conversation in that folder was answered "not confirmed" before its agent was even asked. The
+        // helper creates the agent and its first message in one request: an agent it made for this conversation is
+        // the proof.
+        val helper = graph.session.server as? PaseoGateway
+        if (helper != null && FirstMessageRules.madeOnHelper(binding.session) { helper.daemonSessionId(SessionId(it)).raw })
+            return true
         val journals = deliveryStores.singleOrNull()?.journals ?: return false
         val journal = (journals.forProfile(graph.profile.id) as? Outcome.Ok)?.value ?: return false
         val rows = (journal.read() as? Outcome.Ok)?.value ?: return false

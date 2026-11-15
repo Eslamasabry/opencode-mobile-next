@@ -135,10 +135,10 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
         stringResource(if (state.preparingSlow) Res.string.chatsNewGettingReadySlow else Res.string.chatsNewGettingReady)
     val loadingModels = stringResource(Res.string.chat_model_loading)
     val phoneOffWords = stringResource(Res.string.homePhoneOffTitle)
+    val unconfirmedWords = unconfirmedWords(state)
     val enabled =
         if (state.phoneOff) KitEnabled.Disabled(phoneOffWords)
-        else if (state.deliveryUnconfirmed)
-            KitEnabled.Disabled(stringResource(Res.string.p12NewDeliveryUnconfirmed))
+        else if (state.deliveryUnconfirmed) KitEnabled.Disabled(unconfirmedWords)
         // Getting ready never locks the field: the person can type ahead; only Start waits (RC1 device pass).
         else if (state.busy && !preparing) KitEnabled.Disabled(working) else KitEnabled.Enabled
     // A page that could not read its server says that, never "the conversation didn't start" (nothing was sent).
@@ -149,7 +149,7 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
             state.phoneOff -> phoneOffWords
             preparing -> gettingReady
             state.busy -> working
-            state.deliveryUnconfirmed -> stringResource(Res.string.p12NewDeliveryUnconfirmed)
+            state.deliveryUnconfirmed -> unconfirmedWords
             state.creationUnconfirmed -> stringResource(Res.string.p12NewCreationUnconfirmed)
             state.setup == null ->
                 if (setupFailed) stringResource(Res.string.chatsNewSetupFailed) else gettingReady
@@ -294,10 +294,18 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                         // B-096: with nothing to open (the server is not answering, or the record cannot be read),
                         // "Check again" reads it once more; Discard is not the only way out.
                         val again = KitAction(stringResource(Res.string.chatReceiptCheckAgain), actions::recheckUnconfirmed)
+                        // A phone agent's: its set-up is a way forward too (SEND-STALE).
+                        val setUp =
+                            state.phoneAgent?.let { agent ->
+                                KitAction(
+                                    stringResource(Res.string.agentsSetUpAction, state.phoneAgentName.orEmpty()),
+                                    { actions.setUpPhoneAgent(agent) },
+                                )
+                            }
                         KitActionBlock(
                             inset,
                             secondary = open ?: again,
-                            tertiary = listOf(discard),
+                            tertiary = listOfNotNull(setUp, discard),
                         )
                     }
                     // B-063: the server still lists a project whose folder is gone; a message sent there is
@@ -823,6 +831,13 @@ private fun StartingConversation(state: NewConversationUi, actions: NewConversat
         }
     val setUpWords = stringResource(Res.string.agentsSetUpAction, agentName)
     val chooseModelWords = stringResource(Res.string.chatUiChooseAnotherModel)
+    // SEND-STALE: a phone agent's start that its helper did not confirm names the agent and offers its set-up beside
+    // Check again and Discard (it said "The server" and "Open the created conversation", with nothing to open).
+    val unconfirmedAgent =
+        state.phoneAgent?.takeIf { phase == KitStartingPhase.Unconfirmed && state.deliveryUnconfirmed }
+    val unconfirmedName = state.phoneAgentName.orEmpty()
+    val unconfirmedSetUp = stringResource(Res.string.agentsSetUpAction, unconfirmedName)
+    val unconfirmedWords = unconfirmedWords(state)
     KitStartingConversation(
         text = state.text,
         project = state.directory?.let(::importFolder).orEmpty(),
@@ -830,16 +845,13 @@ private fun StartingConversation(state: NewConversationUi, actions: NewConversat
         agent = agentChipLabel(state),
         phase = phase,
         status =
-            if (startingAgent != null) stringResource(Res.string.chatsNewStartingAgent, startingAgent)
-            else
-                stringResource(
-                    when {
-                        state.busy -> Res.string.upgradeStartSending
-                        state.deliveryUnconfirmed -> Res.string.p12NewDeliveryUnconfirmed
-                        state.creationUnconfirmed -> Res.string.p12NewCreationUnconfirmed
-                        else -> Res.string.chatSendFailed
-                    }
-                ),
+            when {
+                startingAgent != null -> stringResource(Res.string.chatsNewStartingAgent, startingAgent)
+                state.busy -> stringResource(Res.string.upgradeStartSending)
+                state.deliveryUnconfirmed -> unconfirmedWords
+                state.creationUnconfirmed -> stringResource(Res.string.p12NewCreationUnconfirmed)
+                else -> stringResource(Res.string.chatSendFailed)
+            },
         reason =
             if (!notSent) null
             else
@@ -856,13 +868,15 @@ private fun StartingConversation(state: NewConversationUi, actions: NewConversat
         onBack = actions::back,
         // The one way forward: Set up <agent>, Choose another model, or Try again (never two of them).
         retryLabel =
-            when (problem?.way) {
-                PhoneStartWay.SetUp -> setUpWords
-                PhoneStartWay.ChooseModel -> chooseModelWords
+            when {
+                unconfirmedAgent != null -> unconfirmedSetUp
+                problem?.way == PhoneStartWay.SetUp -> setUpWords
+                problem?.way == PhoneStartWay.ChooseModel -> chooseModelWords
                 else -> stringResource(Res.string.commonRetry)
             },
         onRetry =
-            if (!notSent) null
+            if (unconfirmedAgent != null) ({ actions.setUpPhoneAgent(unconfirmedAgent) })
+            else if (!notSent) null
             else {
                 val agentId = problem?.agentId.orEmpty()
                 val way = problem?.way
@@ -888,6 +902,16 @@ private fun StartingConversation(state: NewConversationUi, actions: NewConversat
         onDiscard = if (phase == KitStartingPhase.Unconfirmed) actions::discardUnconfirmed else null,
     )
 }
+
+/**
+ * What an unconfirmed first message says: a phone agent's names the agent (its helper, not "the server", is what did
+ * not answer, and there may be no conversation to open); a server's own keeps its words.
+ */
+@Composable
+private fun unconfirmedWords(state: NewConversationUi): String =
+    state.phoneAgentName?.takeIf { state.phoneAgent != null }?.let {
+        stringResource(Res.string.chatsNewAgentUnconfirmed, it)
+    } ?: stringResource(Res.string.p12NewDeliveryUnconfirmed)
 
 /** Flutter import list uses the final non-empty path segment, including a trailing slash. */
 private fun importFolder(directory: String): String =

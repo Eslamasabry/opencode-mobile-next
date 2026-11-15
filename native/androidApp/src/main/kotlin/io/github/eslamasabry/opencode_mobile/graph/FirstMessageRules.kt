@@ -35,4 +35,13 @@ internal object FirstMessageRules {
      * helper created the agent, so its page opens when the first message is Accepted and never before.
      */
     fun opensAtOnce(startsOnPhoneAgents: Boolean): Boolean = !startsOnPhoneAgents
+
+    /**
+     * Whether the phone's agents' helper made the agent of the conversation [session] (the app's own id): [daemonId]
+     * names it by the helper's id once its first message created it, and by the app's id while it is only a draft. The
+     * helper creates an agent and its first message in one request, so a made agent proves that first message
+     * arrived; a draft, or a record with no conversation yet, proves nothing.
+     */
+    fun madeOnHelper(session: String, daemonId: (String) -> String): Boolean =
+        session.isNotBlank() && daemonId(session).let { it.isNotBlank() && it != session }
 }
