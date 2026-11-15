@@ -181,7 +181,7 @@ class DockListTest {
 
     @Test
     fun `eviction drops the oldest by time, so re-seeing an old record keeps the recently active conversation`() {
-        val max = DockFacts.MAX_CONVERSATIONS
+        val max = 256 // the dock's bound (private in DockFacts)
         // The old one first, then the recent one, then others up to exactly the bound.
         clock = 1_000L
         facts.feed(p, GatewayEvent.RunStarted(SessionId("old")))
