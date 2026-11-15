@@ -1047,6 +1047,8 @@ private fun ConversationRow(
                 onLongClickLabel = words.rowActions,
                 below = below,
                 speakAgent = flags.showAgents,
+                // F-022: a person is asked to allow what they can read: the command takes up to three lines.
+                previewLines = if (permission != null) 3 else 1,
             )
         }
         // Swipe toward the end of the line archives (mirrors in right-to-left); the menu and the accessibility action

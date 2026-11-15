@@ -3,6 +3,9 @@ package io.github.eslamasabry.oc.ui.kit
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.onAllNodesWithTag
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.test.getBoundsInRoot
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -83,4 +86,26 @@ class KitRecentRowTest {
         onNodeWithContentDescription("All conversations, 11").performClick()
         assertEquals(1, opened)
     }
+
+    @Test
+    fun `B-NAV-WALK-022 a row that asks for a decision may show its command over several lines`() =
+        androidx.compose.ui.test.v2.runDesktopComposeUiTest(360, 780) {
+            val command = "Asks to run: python3 server.py -p 8000 -b 127.0.0.1 --directory /root/projects/habittracker --verbose"
+            setContent {
+                KitTheme(platform = DesktopKitPlatform(), localeTag = "en", appearance = KitAppearance(motion = MotionLevel.Off)) {
+                    androidx.compose.foundation.layout.Column {
+                        for (lines in listOf(1, 3)) {
+                            KitRecentRow(
+                                title = "habittracker", agent = KitFeedAgent("", "OpenCode"), time = "now",
+                                onClick = {}, preview = command, project = "habittracker",
+                                modifier = androidx.compose.ui.Modifier.testTag("row-$lines"), previewLines = lines,
+                            )
+                        }
+                    }
+                }
+            }
+            val one = onNodeWithTag("row-1").getBoundsInRoot().let { it.bottom - it.top }
+            val three = onNodeWithTag("row-3").getBoundsInRoot().let { it.bottom - it.top }
+            assertTrue(three > one, "the 3-line row ($three) is taller than the 1-line one ($one): the command shows past the first line")
+        }
 }
