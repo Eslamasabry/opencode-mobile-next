@@ -1548,4 +1548,5 @@
     <string name="chatContinueBriefAsked">ما طلبتُه:</string>
     <string name="chatContinueBriefChanged">الملفات التي تغيّرت:</string>
     <string name="chatContinueBriefStopped">أين توقّف العمل:</string>
+    <string name="chatUiContinuedAfterCommand">كان أحد الأوامر ما زال يعمل، فطُلب من الوكيل أن ينتظره ثم يتابع</string>
 </resources>

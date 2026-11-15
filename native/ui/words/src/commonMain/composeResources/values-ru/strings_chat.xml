@@ -1424,4 +1424,5 @@
     <string name="chatContinueBriefAsked">Что я просил:</string>
     <string name="chatContinueBriefChanged">Изменённые файлы:</string>
     <string name="chatContinueBriefStopped">На чём остановились:</string>
+    <string name="chatUiContinuedAfterCommand">Команда ещё выполнялась, поэтому агента попросили дождаться её и продолжить</string>
 </resources>

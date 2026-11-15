@@ -1362,4 +1362,5 @@
     <string name="chatContinueBriefAsked">O que eu pedi:</string>
     <string name="chatContinueBriefChanged">Arquivos que mudaram:</string>
     <string name="chatContinueBriefStopped">Onde parou:</string>
+    <string name="chatUiContinuedAfterCommand">Um comando ainda estava em execução, então o agente foi solicitado a esperá-lo e continuar</string>
 </resources>

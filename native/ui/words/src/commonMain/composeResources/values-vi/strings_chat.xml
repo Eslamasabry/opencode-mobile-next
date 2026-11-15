@@ -1237,4 +1237,5 @@
     <string name="chatContinueBriefAsked">Điều tôi đã yêu cầu:</string>
     <string name="chatContinueBriefChanged">Các tệp đã thay đổi:</string>
     <string name="chatContinueBriefStopped">Nơi đã dừng lại:</string>
+    <string name="chatUiContinuedAfterCommand">Một lệnh vẫn đang chạy, nên tác nhân được yêu cầu chờ lệnh đó rồi tiếp tục</string>
 </resources>

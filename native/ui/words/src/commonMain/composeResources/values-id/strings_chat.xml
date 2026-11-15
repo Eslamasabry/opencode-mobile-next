@@ -1237,4 +1237,5 @@
     <string name="chatContinueBriefAsked">Yang saya minta:</string>
     <string name="chatContinueBriefChanged">File yang berubah:</string>
     <string name="chatContinueBriefStopped">Di mana terhenti:</string>
+    <string name="chatUiContinuedAfterCommand">Sebuah perintah masih berjalan, jadi agen diminta menunggunya lalu melanjutkan</string>
 </resources>
