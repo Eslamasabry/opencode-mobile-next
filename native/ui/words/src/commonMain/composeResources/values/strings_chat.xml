@@ -4,6 +4,9 @@
 <resources>
     <string name="modelThinkingMode">Thinking mode</string>
     <string name="workCount">Tasks · %1$d running</string>
+    <string name="kitCommandNoOutput">No output</string>
+    <string name="kitCommandFailedNoOutput">It failed before it printed anything</string>
+    <string name="kitCommandStoppedEarly">Stopped before it finished</string>
     <string name="workExitCode">Exit code %1$d</string>
     <string name="composerClearTextTitle">Clear draft text</string>
     <string name="composerClearTextSubtitle">Keeps attachments · Undo available</string>

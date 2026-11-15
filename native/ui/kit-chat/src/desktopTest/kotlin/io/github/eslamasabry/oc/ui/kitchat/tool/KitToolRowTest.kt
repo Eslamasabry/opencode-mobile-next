@@ -273,4 +273,20 @@ class KitToolRowTest {
             .fetchSemanticsNodes()
             .forEach { node -> assertFalse(node.config[SemanticsProperties.Text].any { it.text.isBlank() }) }
     }
+
+    @Test
+    fun `B-CHAT-115 a command that ended with no output says so, and one with output does not`() = runComposeUiTest {
+        setContent {
+            ChatTestTheme {
+                androidx.compose.foundation.layout.Column {
+                    KitCommandBox(command = "true", output = "", moreLabel = "Show all", onMore = {}, exitLabel = null, emptyLabel = "No output")
+                    KitCommandBox(command = "pwd", output = "/root\n", moreLabel = "Show all", onMore = {}, exitLabel = null, emptyLabel = "No output")
+                    KitCommandBox(command = "sleep 5", output = null, moreLabel = "Show all", onMore = {}, exitLabel = null)
+                }
+            }
+        }
+        // Only the first box (ended, printed nothing, caller asked) says it; the running one has no label to show.
+        onAllNodesWithTag("kit-command-no-output", useUnmergedTree = true).assertCountEquals(1)
+        onNodeWithText("No output", useUnmergedTree = true).assertIsDisplayed()
+    }
 }

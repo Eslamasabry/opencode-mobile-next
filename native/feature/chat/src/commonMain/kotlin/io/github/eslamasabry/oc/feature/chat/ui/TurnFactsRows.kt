@@ -85,6 +85,9 @@ import io.github.eslamasabry.oc.ui.words.res.kitToolStopped
 import io.github.eslamasabry.oc.ui.words.res.kitWorkFoldDeclined
 import io.github.eslamasabry.oc.ui.words.res.kitWorkFoldFailed
 import io.github.eslamasabry.oc.ui.words.res.kitWorkHideEarlierSteps
+import io.github.eslamasabry.oc.ui.words.res.kitCommandFailedNoOutput
+import io.github.eslamasabry.oc.ui.words.res.kitCommandNoOutput
+import io.github.eslamasabry.oc.ui.words.res.kitCommandStoppedEarly
 import io.github.eslamasabry.oc.ui.words.res.kitWorkSeparator
 import io.github.eslamasabry.oc.ui.words.res.kitWorkSubAgentSpoken
 import io.github.eslamasabry.oc.ui.words.res.kitWorkSubAgents
@@ -774,6 +777,14 @@ private fun OneStep(
                             moreLabel = pluralStringResource(Res.plurals.kitCodeShowAll, lines, lines),
                             onMore = { folds.full[key] = true },
                             exitLabel = null,
+                            // Ended and printed nothing: say so (never a blank box that reads as lost output).
+                            emptyLabel =
+                                when (step.state) {
+                                    StepState.Done -> stringResource(Res.string.kitCommandNoOutput)
+                                    StepState.Failed -> stringResource(Res.string.kitCommandFailedNoOutput)
+                                    StepState.Stopped -> stringResource(Res.string.kitCommandStoppedEarly)
+                                    else -> null
+                                },
                         )
                     }
                     val rerun = reply?.onRerunCommand
