@@ -550,6 +550,7 @@ public class ChatPresenter(
         val setUp = port.agentsSetUp(owner)
         val runtime = world.runtimeId()
         noteAnswered(port, owner, rows, runtime, setUp)
+        noteSignInLapsed(port, owner, rows, runtime)
         val needs = HashMap<String, AgentSetUpNeed>()
         for (footer in failed) {
             val agentRuntime = runtime ?: footer.providerId ?: continue
@@ -589,6 +590,27 @@ public class ChatPresenter(
         val agent = known ?: AgentSetUpRules.firstUseAgent(answered.providerId ?: return) ?: return
         if (agent in setUp || !answeredNoted.add(agent)) return
         port.agentAnswered(owner, agent)
+    }
+
+    /** The turns this chat already reported as a lapsed sign-in ([noteSignInLapsed]). */
+    private val lapseNoted = HashSet<String>()
+
+    /**
+     * Issue 147: the newest reply of a phone agent ended on its sign-in (Claude Code's "OAuth session expired and could
+     * not be refreshed"): the phone's agents then read Sign in needed everywhere until a sign-in completes. Said once per
+     * turn, with the reply's own time, so an old failure read after a newer sign-in changes nothing.
+     */
+    private fun noteSignInLapsed(
+        port: ChatOutside,
+        owner: ProfileId,
+        rows: ImmutableList<TranscriptRow>,
+        runtime: String?,
+    ) {
+        val newest = rows.firstOrNull { it is FooterRow } as FooterRow? ?: return
+        if (!ChatSignInLapse.lapsed(newest)) return
+        val provider = runtime ?: newest.providerId ?: return
+        if (!lapseNoted.add(newest.turnId)) return
+        port.agentSignInLapsed(owner, provider, newest.createdMs ?: return)
     }
 
     /** Set up at first use ([AgentSetUpRules]): a failed send whose agent was never set up says so on its bubble. */

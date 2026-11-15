@@ -246,7 +246,10 @@ class NativePhoneSignIn(
                             )
                         }
                     }
-                return owns(owner) && (result as? Outcome.Ok)?.value?.get("state") == "signedIn"
+                val signedIn = owns(owner) && (result as? Outcome.Ok)?.value?.get("state") == "signedIn"
+                // Issue 147: a completed sign-in ends a lapse a run reported (AppPhoneAgents.noteSignedIn).
+                if (signedIn) phones.value.noteSignedIn(owner, descriptor.id)
+                return signedIn
             }
 
             // The set-up terminal ended and the person comes back: the registry has seen the agent set up, so it is a

@@ -440,6 +440,34 @@ class AndroidNewConversationHost(
             Outcome.Ok(Unit)
         }
 
+    /**
+     * Issue 147 (owner's phone): a phone agent's start was answered "didn't confirm" at once, with no create sent,
+     * because an earlier start in the folder left its first-message record (an app restart empties the helper's
+     * identity book, so nothing can settle it: SEND-STALE "Left"). A record of other words ([FirstMessageRules.otherMessage])
+     * is another message whose fate the new one does not share: it is dropped (exactly that record) and the new start
+     * goes on. A record of these same words may have reached the helper, so it still stops the start.
+     */
+    private suspend fun dropOtherHelperRecord(profile: ProfileId, directory: String?, text: String) {
+        val reviewAt = reviewKey(profile, directory)
+        val creationAt = creationKey(profile, directory)
+        val expected = linkedMapOf(reviewAt to stores.prefs.get(reviewAt), creationAt to stores.prefs.get(creationAt))
+        val raw = expected.values.firstOrNull { it != null } as? PrefValue.Str ?: return
+        if (raw.value.length > 8192) return
+        val recorded =
+            try {
+                FirstMessageReview.decode(raw.value)
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (_: Exception) {
+                null
+            } ?: return
+        if (!FirstMessageRules.otherMessage(recorded.draftDigest, DartJson.sha256Hex(text))) return
+        stores.prefs.compareAndCommit(stores.lanes.forProfile(profile), expected) {
+            remove(reviewAt)
+            remove(creationAt)
+        }
+    }
+
     /** A removed queue row alone proves nothing; only the original scoped admission does. */
     private suspend fun firstMessageConfirmed(
         graph: ConnectionGraph,
@@ -1013,6 +1041,9 @@ class AndroidNewConversationHost(
                 val expectedTarget = target(graph, directory)
                 if (!currentTarget(graph, directory))
                     return@withLock NewConversationAttempt(directory, failure = refused().failure)
+                // Issue 147: on the phone's helper, an earlier start's record of other words is not this message:
+                // it no longer answers "didn't confirm" before anything was sent (no create had gone out).
+                if (graph.session.server is PaseoGateway && previous == null) dropOtherHelperRecord(profile, directory, text)
                 when (val held = review(profile, directory)) {
                     is Outcome.Failed ->
                         return@withLock NewConversationAttempt(
@@ -1326,6 +1357,11 @@ class AndroidNewConversationHost(
                         attempt.copy(dispatched = true, failure = null)
                     }
                     is FirstMessage.PutBack -> {
+                        // Issue 147: the helper refused the create for the agent's sign-in: every place reads it as
+                        // Sign in needed until a sign-in completes (AppPhoneAgents.noteSignInLapsed).
+                        val provider = model?.providerId
+                        if (provider != null && FirstMessageRules.signInLapsed(receipt.failure))
+                            (phoneAgents as? AppPhoneAgents)?.noteSignInLapsedHere(provider, System.currentTimeMillis())
                         val cleared =
                             stores.prefs.commit(stores.lanes.forProfile(profile)) {
                                 remove(reviewKey(profile, directory))

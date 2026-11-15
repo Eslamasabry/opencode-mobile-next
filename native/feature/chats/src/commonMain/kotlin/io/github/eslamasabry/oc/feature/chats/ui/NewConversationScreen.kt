@@ -858,6 +858,7 @@ private fun StartingConversation(state: NewConversationUi, actions: NewConversat
             PhoneStartWay.SetUp -> stringResource(Res.string.chatSendFailureNeedsSetUp, agentName)
             PhoneStartWay.ChooseModel -> stringResource(Res.string.chatsNewAgentModelMissing, agentName)
             PhoneStartWay.TryAgain -> stringResource(Res.string.chatsNewAgentDidNotStart, agentName)
+            PhoneStartWay.SignIn -> stringResource(Res.string.chatSendFailureSignInAgain, agentName)
             null -> null
         }
     val setUpWords = stringResource(Res.string.agentsSetUpAction, agentName)
@@ -903,6 +904,7 @@ private fun StartingConversation(state: NewConversationUi, actions: NewConversat
                 unconfirmedAgent != null -> unconfirmedSetUp
                 problem?.way == PhoneStartWay.SetUp -> setUpWords
                 problem?.way == PhoneStartWay.ChooseModel -> chooseModelWords
+                problem?.way == PhoneStartWay.SignIn -> stringResource(Res.string.chatSendFailureSignInAction)
                 else -> stringResource(Res.string.commonRetry)
             },
         onRetry =
@@ -913,7 +915,7 @@ private fun StartingConversation(state: NewConversationUi, actions: NewConversat
                 val way = problem?.way
                 val forward: () -> Unit = {
                     when (way) {
-                        PhoneStartWay.SetUp -> actions.setUpPhoneAgent(agentId)
+                        PhoneStartWay.SetUp, PhoneStartWay.SignIn -> actions.setUpPhoneAgent(agentId)
                         PhoneStartWay.ChooseModel -> {
                             actions.editPrompt()
                             actions.sheet(NewConversationSheet.Models)
