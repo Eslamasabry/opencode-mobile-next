@@ -1,6 +1,7 @@
 name: Unharnessed feasibility
 
 on:
+  workflow_dispatch:
   push:
     branches: [native/agent-unharnessed]
     paths:
@@ -31,7 +32,15 @@ jobs:
           docker run --rm --cpus=4 --memory=12g \
             -v "$GITHUB_WORKSPACE/tool/unharnessed:/probe:ro" \
             -v "$RUNNER_TEMP/unharnessed-facts:/facts" \
-            ubuntu:22.04 /bin/bash /probe/hosted-probe.sh
+            ubuntu:22.04 /bin/bash /probe/build-bundle.sh
+      - name: Prove the bundle offline in a fresh container without source
+        run: |
+          test "$GITHUB_ACTIONS" = true
+          test "$RUNNER_ENVIRONMENT" = github-hosted
+          docker run --rm --network=none --cpus=4 --memory=8g \
+            -v "$GITHUB_WORKSPACE/tool/unharnessed:/probe:ro" \
+            -v "$RUNNER_TEMP/unharnessed-facts:/facts" \
+            ubuntu:22.04 /bin/bash /probe/test-bundle.sh
       - name: Keep measurements and binary even if a later probe fails
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
