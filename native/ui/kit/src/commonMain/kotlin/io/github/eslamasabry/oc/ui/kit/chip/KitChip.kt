@@ -92,6 +92,8 @@ public fun KitChip(
     expanded: Boolean? = null,
     onLongClick: (() -> Unit)? = null,
     adaptiveModel: Boolean = false,
+    /** A label that does not fit on one line wraps at its words (two lines) instead of ending in an ellipsis. */
+    wraps: Boolean = false,
 ) {
     kitAssert(label.isNotBlank()) { "KitChip: a chip always carries a word" }
     kitAssert(kind != KitChipKind.Removable || onRemove != null) { "KitChip: a removable chip needs onRemove" }
@@ -246,8 +248,8 @@ public fun KitChip(
                 text, Modifier.weight(1f, fill = false).testTag(if (adaptiveModel) "kit-model-chip-label" else "kit-chip-label"),
                 style = style,
                 // An action chip's label ("New conversation", on a tile half a phone wide) wraps at its words, never "New conver…".
-                maxLines = if (kind == KitChipKind.Action) 2 else if (adaptiveModel && density.fontScale >= 1.3f) 2 else 1, // F: lib/ui/kit/chat/kit_composer_chips.dart:468,523
-                softWrap = adaptiveModel || kind == KitChipKind.Action,
+                maxLines = if (wraps || kind == KitChipKind.Action) 2 else if (adaptiveModel && density.fontScale >= 1.3f) 2 else 1, // F: lib/ui/kit/chat/kit_composer_chips.dart:468,523
+                softWrap = adaptiveModel || wraps || kind == KitChipKind.Action,
                 overflow = TextOverflow.Ellipsis,
             )
             if (kind == KitChipKind.Removable || (opensMenu && (!narrow || modelPairFits)) || expanded != null) {

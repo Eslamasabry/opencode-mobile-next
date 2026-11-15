@@ -186,8 +186,11 @@ internal fun Modifier.kitTappable(
             hapticFeedbackEnabled = false,
             onClick = {
                 if (!enabled) {
-                    if (explain != null && disabledAnswer != null) disabledAnswer()
-                    else explain?.let { reason ->
+                    if (explain != null && disabledAnswer != null) {
+                        // The answer is given where the reason belongs (the box), and a tap is still an answered tap.
+                        disabledAnswer()
+                        placed.pressed()?.let { box -> observer?.explained(box, explain) }
+                    } else explain?.let { reason ->
                         toasts?.show(reason)
                         placed.pressed()?.let { box -> observer?.explained(box, reason) }
                     }

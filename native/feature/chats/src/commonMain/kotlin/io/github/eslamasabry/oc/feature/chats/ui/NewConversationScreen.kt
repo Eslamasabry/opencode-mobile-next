@@ -58,6 +58,7 @@ import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.chip.KitChip
 import io.github.eslamasabry.oc.ui.kit.chip.KitChipWrap
+import io.github.eslamasabry.oc.ui.kit.frame.kitProjectServerLabel
 import io.github.eslamasabry.oc.ui.kit.chip.KitFilterChips
 import io.github.eslamasabry.oc.ui.kit.modal.KitNewProjectDialog
 import io.github.eslamasabry.oc.ui.kit.modal.KitNewProjectRow
@@ -545,9 +546,12 @@ private fun NewConversationChoices(state: NewConversationUi, actions: NewConvers
             onClick = if (state.modelChoosable) ({ open(NewConversationSheet.Models) }) else null,
         )
         KitChip(
+            // Where it runs, in the header's own words ("docsdemo · This phone"); it wraps rather than being cut.
             label =
-                state.directory?.let(::importFolder)
-                    ?: stringResource(Res.string.chatsNewProjectRow),
+                state.directory?.let(::importFolder)?.let { folder ->
+                    kitProjectServerLabel(folder, state.servers.firstOrNull { it.profile == state.profile }?.name?.let { serverNameShown(it) })
+                } ?: stringResource(Res.string.chatsNewProjectRow),
+            wraps = true,
             icon = KitIcons.files,
             opensMenu = true,
             expanded = state.sheet == NewConversationSheet.Projects,
@@ -596,6 +600,22 @@ private fun NewConversationSheet(state: NewConversationUi, actions: NewConversat
             val directory = rememberTextFieldState(state.directory.orEmpty())
             var byPath by remember { mutableStateOf(false) }
             val working = stringResource(Res.string.serversWorking)
+            // Several saved connections: where it runs is chosen here, without leaving the page (the project list
+            // below follows the connection picked).
+            if (state.servers.size > 1)
+                KitRowGroup(label = stringResource(Res.string.chatsNewRunsOn)) {
+                    state.servers.forEach { server ->
+                        val here = server.profile == state.profile
+                        KitRow(
+                            title = serverNameShown(server.name),
+                            leading = KitRowLeading.Glyph(KitIcons.server, tile = true, current = here),
+                            trailing = if (here) KitRowTrailing.Check else KitRowTrailing.None,
+                            selected = here,
+                            onClick = { if (!here) actions.chooseServer(server.profile) },
+                            modifier = Modifier.testTag("chats-new-host-${server.profile.raw}"),
+                        )
+                    }
+                }
             // Recent projects first, one tap each; then New project as an obvious row; the typed path stays folded.
             KitRowGroup(leadingTiles = true) {
                 // E20-S08: one row per folder (the server listed some twice).

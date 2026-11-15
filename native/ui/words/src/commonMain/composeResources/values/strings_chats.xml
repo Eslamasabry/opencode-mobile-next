@@ -315,6 +315,7 @@
     <string name="chatsNewGettingReadySlow">Still reading this server's projects and models…</string>
     <string name="chatsNewSetupFailed">This server's projects and models couldn't be read.</string>
     <string name="chatsNewProjectRow">Project</string>
+    <string name="chatsNewRunsOn">Runs on</string>
     <string name="chatsNewModelRow">Model</string>
     <string name="chatsNewSeparateCopyDetail">Works on its own copy, so your files stay as they are.</string>
     <string name="chatsHomeUnreachableShort">%1$s isn't answering</string>

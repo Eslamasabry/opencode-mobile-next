@@ -3,10 +3,10 @@ package io.github.eslamasabry.oc.ui.kit.input
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
@@ -156,7 +156,7 @@ public fun KitStartBox(
     val haloRoom = if (halo === Modifier) 0.dp else START_BOX_HALO_ROOM_DP.dp
     Box(
         modifier
-            .graphicsLayer { translationX = nudge.value * NUDGE_DP.dp.toPx() }
+            .offset { androidx.compose.ui.unit.IntOffset((nudge.value * NUDGE_DP.dp.toPx()).toInt(), 0) }
             .padding(top = haloRoom)
             .kitMaxWidth(CapRole.Conversation)
             .fillMaxWidth()

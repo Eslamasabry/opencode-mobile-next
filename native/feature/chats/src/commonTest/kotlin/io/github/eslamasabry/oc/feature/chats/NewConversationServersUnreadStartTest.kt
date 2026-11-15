@@ -51,6 +51,7 @@ class NewConversationServersUnreadStartTest {
         override val servers = MutableStateFlow<List<NewConversationServer>>(emptyList())
         override val serversRead = MutableStateFlow(false)
         var starts = 0
+        val startedOn = mutableListOf<ProfileId>()
 
         override suspend fun setup(profile: ProfileId): Outcome<NewConversationSetup> =
             Outcome.Ok(NewConversationSetup(dir, emptyList(), emptyList(), emptyList()))
@@ -68,6 +69,7 @@ class NewConversationServersUnreadStartTest {
             onStarted: (ConversationRef) -> Unit,
         ): NewConversationAttempt {
             starts++
+            startedOn += profile
             return NewConversationAttempt(directory, ref = ConversationRef(profile, SessionId("s1")), creationAttempted = true)
         }
         override suspend fun imports(profile: ProfileId, directory: String): Outcome<ImportableConversations> =
@@ -93,5 +95,21 @@ class NewConversationServersUnreadStartTest {
         host.serversRead.value = true
         assertTrue(vm.state.value.serversRead)
         assertEquals(1, host.starts, "the kept tap starts once the connection is ready")
+    }
+
+    @Test
+    fun `I147-FIRST-RUN with two saved connections picking the other one changes where Start sends`() {
+        val host = Host()
+        val dev = ProfileId("dev")
+        host.servers.value =
+            listOf(NewConversationServer(phone, "This phone", connected = true), NewConversationServer(dev, "Dev box", connected = true))
+        host.serversRead.value = true
+        val vm = NewConversationViewModel(route, host, Nav, Clock.System, ListenedReports())
+        assertEquals(phone, vm.state.value.profile, "the first connected one is picked")
+        vm.chooseServer(dev)
+        assertEquals(dev, vm.state.value.profile)
+        vm.draftChanged("fix the tests")
+        vm.start()
+        assertEquals(listOf(dev), host.startedOn)
     }
 }
