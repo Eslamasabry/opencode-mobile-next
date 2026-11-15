@@ -301,7 +301,10 @@ class StepsCraftPicturesTest {
         /** More than the touch slop (8 dp at 2.625 px/dp), crossed before a drag scrolls. */
         const val SLOP = 24f
 
-        /** Glass over the Contour lines renders slowly on a runner without a GPU; one minute was too short for a scene. */
-        val SCENE_TIMEOUT = 6.minutes
+        /**
+         * Glass over the Contour lines renders slowly on a runner without a GPU; one minute was too short for a scene, and
+         * six for the opened one once it also drags the list to the build run (it recorded its picture, then ran out).
+         */
+        val SCENE_TIMEOUT = 12.minutes
     }
 }
