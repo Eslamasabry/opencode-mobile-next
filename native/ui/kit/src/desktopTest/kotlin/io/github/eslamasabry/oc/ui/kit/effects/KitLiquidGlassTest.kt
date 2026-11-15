@@ -102,9 +102,10 @@ class KitLiquidGlassTest {
     }
 
     @Test
-    fun `B-KIT-018 Saver, reduced motion and high contrast keep today's face`() {
+    fun `B-KIT-018 Saver and high contrast keep today's face, reduced motion keeps the glass`() {
         assertFalse(liquidAt(glass.copy(mode = AppearanceMode.Saver), lens), "Saver")
-        assertFalse(liquidAt(glass.copy(motion = MotionLevel.Off), lens), "reduced motion")
+        // glass-truth 2026-11-16: reduced motion stills what moves, never the material.
+        kotlin.test.assertTrue(liquidAt(glass.copy(motion = MotionLevel.Off), lens), "reduced motion")
         assertFalse(liquidAt(glass, FakeKitPlatform(KitSystemSignals(highContrast = true), liquidGlass = true)), "high contrast")
     }
 
@@ -189,7 +190,7 @@ class KitLiquidGlassTest {
             Style.entries.filter { it != Style.Glass }.flatMap { s ->
                 listOf(KitAppearance(style = s, mode = AppearanceMode.Dark), KitAppearance(style = s, mode = AppearanceMode.Light))
             } + listOf(
-                glass.copy(motion = MotionLevel.Off),
+                // (Reduced motion is no longer here: glass-truth 2026-11-16, it keeps the liquid glass.)
                 glass.copy(glassLook = GlassLookId.Frosted),
                 glass.copy(frost = FrostStrength.Off),
             )
