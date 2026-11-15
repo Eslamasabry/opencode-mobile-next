@@ -342,4 +342,5 @@
     <string name="chatsNewStartingAgent">Iniciando %1$s…</string>
     <string name="chatsNewAgentModelMissing">%1$s no ofrece el modelo que elegiste. Tus palabras se conservan.</string>
     <string name="chatsNewAgentDidNotStart">%1$s no se inició. Tus palabras se conservan.</string>
+    <string name="chatsNewAgentUnconfirmed">%1$s no confirmó este mensaje. Actualiza para comprobarlo de nuevo, o descártalo para empezar otra vez. Tus palabras siguen guardadas aquí.</string>
 </resources>

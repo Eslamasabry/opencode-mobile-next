@@ -355,4 +355,5 @@
     <string name="chatsNewStartingAgent">جارٍ تشغيل %1$s…</string>
     <string name="chatsNewAgentModelMissing">لا يوفّر %1$s النموذج الذي اخترته. كلماتك محفوظة.</string>
     <string name="chatsNewAgentDidNotStart">لم يبدأ %1$s. كلماتك محفوظة.</string>
+    <string name="chatsNewAgentUnconfirmed">لم يؤكد %1$s هذه الرسالة. حدّث للتحقق مجددًا، أو تجاهلها للبدء من جديد. تبقى كلماتك محفوظة هنا.</string>
 </resources>

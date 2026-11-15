@@ -2100,6 +2100,7 @@ chatsNewAddAgent	c3c155e5e8
 chatsNewAgentDidNotStart	47d520b781
 chatsNewAgentModelMissing	b5a345c40d
 chatsNewAgentNeedsProjectsFolder	33b0fb0b97
+chatsNewAgentUnconfirmed	096e14b0a4
 chatsNewBuildPrompt	018a236ec9
 chatsNewChooseProject	1d43ead9f8
 chatsNewFailed	a0e114afb5

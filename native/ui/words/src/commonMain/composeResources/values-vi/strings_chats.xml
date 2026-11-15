@@ -333,4 +333,5 @@
     <string name="chatsNewStartingAgent">Đang khởi động %1$s…</string>
     <string name="chatsNewAgentModelMissing">%1$s không cung cấp mô hình bạn đã chọn. Nội dung của bạn vẫn được giữ.</string>
     <string name="chatsNewAgentDidNotStart">%1$s không khởi động được. Nội dung của bạn vẫn được giữ.</string>
+    <string name="chatsNewAgentUnconfirmed">%1$s chưa xác nhận tin nhắn này. Hãy làm mới để kiểm tra lại, hoặc hủy để bắt đầu lại. Nội dung của bạn vẫn được lưu ở đây.</string>
 </resources>

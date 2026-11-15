@@ -341,4 +341,5 @@
     <string name="chatsNewStartingAgent">Démarrage de %1$s…</string>
     <string name="chatsNewAgentModelMissing">%1$s ne propose pas le modèle que vous avez choisi. Vos mots sont conservés.</string>
     <string name="chatsNewAgentDidNotStart">%1$s n'a pas démarré. Vos mots sont conservés.</string>
+    <string name="chatsNewAgentUnconfirmed">%1$s n’a pas confirmé ce message. Actualisez pour vérifier à nouveau, ou abandonnez-le pour recommencer. Votre texte reste enregistré ici.</string>
 </resources>

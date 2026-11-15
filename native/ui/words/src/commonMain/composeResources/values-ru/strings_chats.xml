@@ -346,4 +346,5 @@
     <string name="chatsNewStartingAgent">Запуск %1$s…</string>
     <string name="chatsNewAgentModelMissing">%1$s не предлагает выбранную вами модель. Ваш текст сохранён.</string>
     <string name="chatsNewAgentDidNotStart">%1$s не запустился. Ваш текст сохранён.</string>
+    <string name="chatsNewAgentUnconfirmed">%1$s не подтвердил это сообщение. Обновите, чтобы проверить ещё раз, или отмените его, чтобы начать заново. Ваш текст сохранён здесь.</string>
 </resources>

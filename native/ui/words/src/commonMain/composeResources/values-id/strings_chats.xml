@@ -333,4 +333,5 @@
     <string name="chatsNewStartingAgent">Memulai %1$s…</string>
     <string name="chatsNewAgentModelMissing">%1$s tidak menawarkan model yang Anda pilih. Tulisan Anda tetap tersimpan.</string>
     <string name="chatsNewAgentDidNotStart">%1$s tidak dimulai. Tulisan Anda tetap tersimpan.</string>
+    <string name="chatsNewAgentUnconfirmed">%1$s tidak mengonfirmasi pesan ini. Segarkan untuk memeriksa lagi, atau buang untuk memulai ulang. Tulisan Anda tetap tersimpan di sini.</string>
 </resources>
