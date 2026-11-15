@@ -8,6 +8,7 @@ import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.RuntimeProblem
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.engine.agents.persona.AgentPersona
+import io.github.eslamasabry.oc.engine.agents.providers.OwnAgentRules
 import io.github.eslamasabry.oc.feature.agents.hub.AgentTileAct
 import io.github.eslamasabry.oc.feature.agents.hub.AgentTileModel
 import io.github.eslamasabry.oc.feature.agents.hub.AgentTileState
@@ -131,7 +132,8 @@ internal fun PhoneAgentTiles(state: AgentsUi, actions: AgentsActions, modifier: 
         KitText(stringResource(Res.string.agentsChecking), modifier.then(gutter))
         return
     }
-    val tiles = state.phone.agents.map { tileOf(it, state) }
+    // A person's own agents are listed and managed in their own rows under the tiles (issue 147).
+    val tiles = state.phone.agents.filterNot { OwnAgentRules.isOwn(it.id) }.map { tileOf(it, state) }
     // A ready agent starts a conversation once the phone's agents are connected (never beside "did not start").
     val chat = phoneChatOffered(state)
     KitAgentTiles(

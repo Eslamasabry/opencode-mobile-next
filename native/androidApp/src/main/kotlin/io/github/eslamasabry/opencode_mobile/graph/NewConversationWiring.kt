@@ -32,6 +32,7 @@ import io.github.eslamasabry.oc.core.model.ServerLocation
 import io.github.eslamasabry.oc.core.model.ServerProfile
 import io.github.eslamasabry.oc.engine.agents.AgentId
 import io.github.eslamasabry.oc.engine.agents.catalog.AgentCatalog
+import io.github.eslamasabry.oc.engine.agents.providers.OwnAgentRules
 import io.github.eslamasabry.oc.engine.agents.selection.AgentSelection
 import io.github.eslamasabry.oc.engine.agents.selection.PhoneChatAgents
 import io.github.eslamasabry.oc.engine.agents.selection.PhoneChatFact
@@ -656,8 +657,7 @@ class AndroidNewConversationHost(
     ): Outcome<NewConversationPhoneModels> {
         val helper = phoneHelperId() ?: return refused()
         if (ahead && registry.live.value[helper] == null) return refused()
-        val provider =
-            AgentCatalog.builtIn.byId(AgentId(agentId))?.providerId ?: return refused()
+        val provider = NewConversationPhoneRules.providerOf(agentId) ?: return refused()
         val agentReady =
             phoneAgents.state.value.agents.any { it.id == agentId && NewConversationPhoneRules.startsHere(it) }
         // The helper's first model list takes about ten seconds: the screen asks while the person types.
@@ -1603,7 +1603,9 @@ internal object NewConversationPhoneRules {
     /** The facts [PhoneChatAgents.offer] lists from, one per catalog agent in [state]. */
     fun facts(state: PhoneAgentsState): List<PhoneChatFact> =
         state.agents.mapNotNull { row ->
-            val descriptor = AgentCatalog.builtIn.byId(AgentId(row.id)) ?: return@mapNotNull null
+            val descriptor =
+                AgentCatalog.builtIn.byId(AgentId(row.id))
+                    ?: return@mapNotNull if (OwnAgentRules.isOwn(row.id)) ownFact(row) else null
             // The one status the Agents page's tile and this list both read (phoneAgentShown).
             val shown = phoneAgentShown(row, state.installation)
             val updating = shown == PhoneAgentShown.Installing
@@ -1627,6 +1629,27 @@ internal object NewConversationPhoneRules {
                 checking = updating,
             )
         }
+
+    /**
+     * The helper's provider id for an agent: the catalog's, or (issue 147) the person's own agent, whose id is its
+     * provider id in the helper's config (`OwnAgentConfig`).
+     */
+    fun providerOf(agentId: String): String? =
+        AgentCatalog.builtIn.byId(AgentId(agentId))?.providerId ?: agentId.takeIf(OwnAgentRules::isOwn)
+
+    /**
+     * A person's own agent: offered like an installed agent set up at first use (no sign-in the app can read; its first
+     * answer tells). Its mark is the kit's generic one (its first letter on a neutral face).
+     */
+    private fun ownFact(row: PhoneAgentRow): PhoneChatFact =
+        PhoneChatFact(
+            id = AgentId(row.id),
+            name = row.name,
+            iconKey = row.id,
+            ready = startsHere(row),
+            fixable = row.status == PhoneAgentStatus.Stopped,
+            installed = true,
+        )
 
     /** The agents the Agents page words "Installed. Set it up the first time you use it." (status, not the seen fact). */
     fun setUpAtFirstUse(state: PhoneAgentsState): Set<String> =
