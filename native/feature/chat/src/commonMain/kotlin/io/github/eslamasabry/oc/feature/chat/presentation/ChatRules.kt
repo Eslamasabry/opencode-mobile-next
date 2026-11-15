@@ -117,6 +117,12 @@ public data class FindHit(
 )
 
 /**
+ * The hits of one find [query] (null: Find is closed). The query changes at once and its search finishes later on
+ * another lane, so hits carry the query they were made for and are used only while it is still the query asked.
+ */
+public data class FoundHits(val query: String?, val hits: ImmutableList<FindHit>)
+
+/**
  * Find over the loaded rows (plan 09 §6.6; port of Flutter `TranscriptSearchIndex.search`):
  * literal, case-insensitive, non-overlapping, in reading order, over the person's prompts, reply
  * blocks and thought lines (never app words). O(rows); the ViewModel runs it off the main thread.

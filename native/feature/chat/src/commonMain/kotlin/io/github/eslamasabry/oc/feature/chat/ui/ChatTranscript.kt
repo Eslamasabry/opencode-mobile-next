@@ -737,8 +737,9 @@ internal fun ChatTranscriptList(
               // Find: every match in this row is tinted by the kit's text parts; the current match of the current row
               // (a message or a prompt: one text) is the stronger one. Nothing is provided while Find is closed.
               val marks =
-                  remember(find?.query, find?.currentKey, find?.currentOrdinal, row.key, row is BlockRow || row is PromptRow) {
-                      find?.takeIf { it.query.isNotBlank() }?.let {
+                  remember(find?.query, find?.searching, find?.currentKey, find?.currentOrdinal, row.key, row is BlockRow || row is PromptRow) {
+                      // Nothing is marked while the query's hits are still being looked for.
+                      find?.takeIf { it.query.isNotBlank() && !it.searching }?.let {
                           val current = row.key == it.currentKey && (row is BlockRow || row is PromptRow)
                           KitFindMarks(it.query, if (current) it.currentOrdinal else -1)
                       }

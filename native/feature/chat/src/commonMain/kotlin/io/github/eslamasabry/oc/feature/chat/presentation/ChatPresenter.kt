@@ -194,7 +194,7 @@ public class ChatPresenter(
         val l = local.value
         val hits =
             l.findQuery?.let { TranscriptFind.search(inputs.transcript, it) } ?: persistentListOf()
-        return present(inputs, l, hits)
+        return present(inputs, l, FoundHits(l.findQuery, hits))
     }
 
     /** The production state: [work] is where find searches (never the main thread). */
@@ -209,7 +209,8 @@ public class ChatPresenter(
                 }
                 .conflate()
                 .map { (t, q) ->
-                    if (q == null) persistentListOf() else TranscriptFind.search(t, q)
+                    // Tagged with its query: the query changes at once, its hits arrive later (issue 147).
+                    FoundHits(q, if (q == null) persistentListOf() else TranscriptFind.search(t, q))
                 }
                 .flowOn(work)
         val inputs =
@@ -375,8 +376,8 @@ public class ChatPresenter(
      * composed again (about 170 scopes) for nothing on screen. An equal result keeps the last state, and StateFlow
      * then hands the screen nothing.
      */
-    internal fun present(i: ChatInputs, l: ChatLocal, hits: ImmutableList<FindHit>): ChatUi {
-        val built = build(i, l, hits)
+    internal fun present(i: ChatInputs, l: ChatLocal, found: FoundHits): ChatUi {
+        val built = build(i, l, found)
         val last = lastUi
         if (last != null && last == built.copy(revision = last.revision)) return last
         return built.copy(revision = ++revision).also { lastUi = it }
@@ -384,7 +385,11 @@ public class ChatPresenter(
 
     private var lastUi: ChatUi? = null
 
-    private fun build(i: ChatInputs, l: ChatLocal, hits: ImmutableList<FindHit>): ChatUi {
+    private fun build(i: ChatInputs, l: ChatLocal, found: FoundHits): ChatUi {
+        // Hits made for another query (the previous one, while the new one is searched) count for nothing: no mark, no
+        // jump, no step, no count until the new query's own hits arrive (issue 147).
+        val searching = l.findQuery != null && found.query != l.findQuery
+        val hits = if (found.query == l.findQuery) found.hits else persistentListOf()
         lastHits = hits
         // N-47: when the server goes away after the conversation was read, keep the last transcript and title on
         // screen with one offline line (Try again retries the load) instead of replacing them with an error.
@@ -409,6 +414,7 @@ public class ChatPresenter(
                     olderFailure = l.olderFailure,
                     currentOrdinal = TranscriptFind.ordinalOf(hits, cursor),
                     currentSource = hit?.sourceId,
+                    searching = searching,
                 )
             }
         val arrival =
