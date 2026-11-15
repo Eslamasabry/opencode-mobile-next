@@ -3,9 +3,9 @@
 
     python3 -I tool/ci/summary.py <reports-dir> <base-reports-dir> <lane>   (markdown to stdout; exit 1 = FAIL)
 
-FAIL (exit 1) means a real problem, and the table starts with FAIL and the reasons. The workflow decides whether that
-turns the run red: on work branches the summary job has continue-on-error, so the run stays green and agents read the
-FAIL in the table; on native/next, native/screens-merge* and master the run goes red.
+FAIL (exit 1) means a real problem, and the table starts with FAIL and the reasons. The workflow's summary job exits
+with this code on every branch, so the run reads red exactly when the table says FAIL (the individual jobs stay
+continue-on-error on work branches so that every shard still reports).
 
 Always real, never noise:
   * a compile error, a failed APK / record / custom job (the job's own report says failed);
@@ -118,7 +118,7 @@ if env('RESULT_CUSTOM') not in (None, '', 'skipped'):
     rows.append(('custom tasks', mark(env('RESULT_CUSTOM'))))
 
 # Integrity: a run must not look green when Gradle never ran (a failed distribution download, a dead setup step, a missing shard).
-# Exit code 2 = integrity failure; the workflow reds the run on every branch for it, unlike the ordinary FAIL (1).
+# Exit code 2 = integrity failure; the workflow reds the run on every branch for it, as it does for the ordinary FAIL (1).
 integrity = []
 planned = [x for x in env('PLANNED_SHARDS', '').split(',') if x != '']
 if env('RESULT_TEST') not in (None, '', 'skipped') and planned:

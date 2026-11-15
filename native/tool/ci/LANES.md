@@ -4,13 +4,34 @@ Workflow: `.github/workflows/native-ci.yml` (branches `native/screens-merge*`, `
 
 | lane | what runs | when |
 |---|---|---|
-| `fast` (default for a dispatch) | `plan` picks the modules changed against `base` plus their direct dependents (`tool/ci/fast_tasks.sh`); `compile` the app; desktop tests of those modules in 1-3 shards with `-PskipGoldens=true`; the preview APK. All jobs in parallel. | every iteration |
-| `full` (push default) | every module's desktop tests in 4 shards, picture tests included, compared with the committed CI-recorded goldens; `compileAllTests`; the APK | release gates, after merging |
+| `fast` (default for a dispatch) | `plan` picks the modules changed against `base` plus their direct dependents (`tool/ci/fast_tasks.sh`); `compile` the app; desktop tests of those modules in 2-8 shards with `-PskipGoldens=true` (never more shards than tasks), plus one last shard that runs `:quality:test` alone on every dispatch; the preview APK. All jobs in parallel. | every iteration |
+| `full` (push default) | every module's desktop tests in 8 shards, picture tests included, compared with the committed CI-recorded goldens; `compileAllTests`; the APK | release gates, after merging |
 | `goldens` | `-Poc.recordGoldens=true -PonlyGoldens=true` on every module that wires `oc.goldens.record`; uploads artifact `ci-goldens` (a tgz of the `src/desktopTest/goldens` trees) | after a deliberate look change, or when a runner image changes fonts |
 
 `tasks` (custom Gradle tasks) and `apk_only` work as before and ignore the lane. The last job, `summary`, prints one table
 (compile, tests run/failed, new vs base, APK artifact name) and the first failing tests, so a red run reads from the run page.
 "New vs base" diffs against the newest run on the `base` branch that kept `report-test-*` artifacts (14 days); with none it says so.
+
+Shard counts and the quality shard come from `tool/ci/plan_shards.sh` (tested in `test_gate.py`). Before, the fast lane ran
+`:quality:test` only when `fast_tasks.sh` listed it (the module list contained `:quality` or one of its dependencies) and never
+when the plan fell back to ALL, because the shard picker removes `:quality:test` from the rotation. Now it always has the last
+shard. The full lane does not run `:quality:test` (unchanged; dispatch `-f tasks=":quality:test"` for it).
+
+## Quality gates on a builder's machine
+
+`./gradlew :quality:scan` (task `scanTest`) runs the source-scan quality gates without compiling any other module or every
+module's test sources (it does not depend on `compileAllTestSources`). It compiles the files of `quality/src/test` except the
+classes that need compiled modules: `ChatHeaderUiTest`, `ChatReviewUiTest`, `ChatWorldReviewTest`, `DesktopShellUiTest`,
+`GraphSmokeTest` and `p3/*` (feature, shell and desktop graph, Compose UI tests, stream fixtures). Everything else runs: the Konsist
+rules, the planted-case tests of the K rules and gates, kit-only, kit-surfaces, motion, privacy-leak, build-rest, cache-first,
+component-freeze, scope file, module owners, llms.txt and the other text scans. `:quality:test` stays the full gate (it runs every
+class, these included, after `compileAllTestSources`), and it is what CI and a merge use; `:quality:scan` is the builder's loop.
+
+## Work-branch verdict
+
+On a work branch the shard, compile, apk and custom jobs are `continue-on-error` (so every shard still reports), but the final
+`summary` job exits with `summary.py`'s code on every branch: 1 (FAIL) or 2 (integrity) turns the run red. A green run page now
+means a PASS table.
 
 ## Dispatch
 
@@ -81,9 +102,8 @@ to `native/screens-merge*`.
 
 ## The gate (summary job): what is FAIL and what is noise
 
-The `summary` job prints `## Native CI: PASS` or `FAIL` with the reasons first. On work branches the job has
-`continue-on-error`, so the run stays green and nobody is mailed, but the table still says FAIL; on `native/next`,
-`native/screens-merge*` and `master` a FAIL turns the run red.
+The `summary` job prints `## Native CI: PASS` or `FAIL` with the reasons first, and exits 1 on FAIL and 2 on an integrity failure
+on every branch, work branches included, so the run reads red exactly when the table says FAIL.
 
 Always FAIL, never noise (`tool/ci/summary.py`, `tool/ci/test_report.py` reading the shard's Gradle log):
 - a failed compile, APK, record or custom job;

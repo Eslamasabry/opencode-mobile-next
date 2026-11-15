@@ -1,3 +1,5 @@
+import org.gradle.api.tasks.testing.Test
+
 plugins {
     id("oc.jvm.library")
     alias(libs.plugins.metro) // the graph smoke test builds one test graph (plan 03 §13.8)
@@ -28,7 +30,9 @@ dependencies {
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
-tasks.test {
+// The settings both the full gate (`test`) and the quick scan (`scanTest`) need: Konsist and the source-text gates read
+// the tree, so they rerun when it changes.
+fun Test.configureSourceGates() {
     // Konsist parses every production file into one test worker; the default 512 MB heap ran out as the tree grew
     // (OutOfMemoryError in the Kotlin parser, release gates 2026-11-10).
     maxHeapSize = "2g"
@@ -52,6 +56,8 @@ tasks.test {
         outputs.upToDateWhen { false } // the merged manifest lives under build/: always re-read it
     }
 }
+
+tasks.test { configureSourceGates() }
 
 // E02-S11c: a module whose unit-test sources stop compiling fails the gate. T1 runs only the touched modules' tests, so
 // a change to a shared API could leave another module's tests uncompilable until T2. `:quality:test` runs at every
@@ -104,6 +110,44 @@ val compileAllTestSources =
         doLast { logger.lifecycle("test sources compiled: $note") }
     }
 tasks.test { dependsOn(compileAllTestSources) }
+
+// `:quality:scan`: the quality gates that read source text and need no other module compiled, so a builder gets their
+// verdict in about a minute instead of waiting for compileAllTestSources (every module's test sources) and the
+// compiled app graph. It compiles the same test files as `:quality:test`, minus the ones below, from the same directory,
+// so nothing is copied or moved and `:quality:test` stays the full gate (it still runs every class, these included).
+//   OUT, because they need compiled modules (the feature/shell/desktop graph, Compose UI tests, the stream fixtures):
+//     ChatHeaderUiTest, ChatReviewUiTest, ChatWorldReviewTest, DesktopShellUiTest, GraphSmokeTest, p3/*
+//     (p3/TranscriptStreamUiTest, p3/Stream6000).
+//   IN: every other class in src/test (Konsist rules, K-rule and gate planted tests, kit-only, kit-surfaces, motion,
+//     privacy-leak, build-rest, cache-first, component-freeze, scope file, module owners, llms.txt, ...); a test added to
+//     src/test joins the scan by default, and fails to compile in it if it needs another module (then add it to OUT).
+testing {
+    suites {
+        register<JvmTestSuite>("scanTest") {
+            useJUnitJupiter()
+            dependencies {
+                implementation(libs.konsist)
+                implementation("org.jetbrains.kotlin:kotlin-test-junit5")
+                implementation(libs.compose.runtime) // the module applies the Compose compiler, which needs its runtime
+            }
+            targets.all { testTask.configure { configureSourceGates() } }
+        }
+    }
+}
+extensions.configure<org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension> {
+    sourceSets.named("scanTest") {
+        kotlin.srcDir("src/test/kotlin")
+        kotlin.exclude(
+            "**/ChatHeaderUiTest.kt", "**/ChatReviewUiTest.kt", "**/ChatWorldReviewTest.kt",
+            "**/DesktopShellUiTest.kt", "**/GraphSmokeTest.kt", "**/p3/**",
+        )
+    }
+}
+tasks.register("scan") {
+    group = "verification"
+    description = "Quick source-scan quality gates (no other module compiled); `:quality:test` is the full gate."
+    dependsOn("scanTest")
+}
 
 // S1-SECGATES (plan 16 §2): the K-SEC rules and the security gates. A separate suite that compiles no project module,
 // so it runs while the rest of the tree is being reconciled: `./gradlew :quality:secTest`.
