@@ -214,18 +214,27 @@ public class ConversationReview(
             is Outcome.Failed -> read
             is Outcome.Ok -> {
                 val messages = read.value.messages
+                // Files outside the conversation's folder (a temp folder, the agent's own working files) are not the
+                // project's changes (walk F-020).
+                val folder = projectFolder()
+                fun inProject(files: ImmutableList<ChangedFile>): ImmutableList<ChangedFile> =
+                    files.filter { TurnChanges.insideProject(it.path, folder) }.toImmutableList()
                 if (messageId == null) {
                     ChangeSet(
-                        TurnChanges.editedFiles(messages.filter { it.info.role == Role.Assistant }),
+                        inProject(TurnChanges.editedFiles(messages.filter { it.info.role == Role.Assistant })),
                         TurnChanges.firstPrompt(messages).takeIf { read.value.complete },
                         read.value.complete,
                     ).ok()
                 } else {
                     val steps = TurnChanges.turnSteps(messages, messageId)
-                    ChangeSet(TurnChanges.editedFiles(steps), TurnChanges.turnPrompt(messages, messageId), read.value.complete).ok()
+                    ChangeSet(inProject(TurnChanges.editedFiles(steps)), TurnChanges.turnPrompt(messages, messageId), read.value.complete).ok()
                 }
             }
         }
+
+    /** The conversation's own folder, when the server says one. */
+    private suspend fun projectFolder(): String? =
+        (gateways.value?.live?.session(session) as? Outcome.Ok)?.value?.directory?.takeIf { it.isNotBlank() }
 
     /** The working-tree diff as the server computes it, where it can (`sessionDiff`). */
     public suspend fun workingTree(): Outcome<ImmutableList<FileDiff>> {

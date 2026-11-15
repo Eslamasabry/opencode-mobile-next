@@ -49,10 +49,12 @@ import io.github.eslamasabry.oc.engine.git.isValidGitRemoteName
 import io.github.eslamasabry.oc.engine.git.suggestGitCloneFolder
 import io.github.eslamasabry.oc.feature.git.presentation.GitActions
 import io.github.eslamasabry.oc.feature.git.presentation.GitConfirm
+import io.github.eslamasabry.oc.feature.git.presentation.GitSection
 import io.github.eslamasabry.oc.feature.git.presentation.GitSheet
 import io.github.eslamasabry.oc.feature.git.presentation.GitUi
 import io.github.eslamasabry.oc.feature.git.presentation.GitWay
 import io.github.eslamasabry.oc.feature.git.presentation.gitSavedNeedsSignIn
+import io.github.eslamasabry.oc.feature.git.presentation.gitSections
 import io.github.eslamasabry.oc.feature.git.presentation.gitWayForward
 import io.github.eslamasabry.oc.ui.design.color.StatusTone
 import io.github.eslamasabry.oc.ui.design.tokens.Space
@@ -82,6 +84,7 @@ import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHeight
+import io.github.eslamasabry.oc.ui.kit.row.KitExpandRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
 import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
@@ -160,7 +163,7 @@ public fun GitScreen(state: GitUi, actions: GitActions, serverTools: @Composable
                     ),
             )
         },
-        status = statusLine(state, actions),
+        status = statusLine(state),
         loading = state.view == GitPageView.Loading || state.working,
         loadingLabel =
             if (state.repair.running) stringResource(Res.string.linuxGitRepairWorking)
@@ -176,8 +179,6 @@ public fun GitScreen(state: GitUi, actions: GitActions, serverTools: @Composable
                 .padding(vertical = Space.S3.dp),
             verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
         ) {
-            serverTools()
-            GitRepairPanel(state, actions)
             when (val view = state.view) {
                 GitPageView.Loading -> Unit
                 is GitPageView.Unavailable ->
@@ -241,12 +242,13 @@ public fun GitScreen(state: GitUi, actions: GitActions, serverTools: @Composable
                         )
                     }
                 is GitPageView.Ready ->
-                    Ready(view.snapshot, state, actions, enabled, message) { messageEdited = true }
+                    Ready(view.snapshot, state, actions, enabled, message, serverTools) { messageEdited = true }
             }
             // The app's GitHub sign-in only where a push would use it; servers push with their own
             // (B-SEC-082).
             if (state.view !is GitPageView.Loading && state.offersGitHubSignIn)
                 GitHubSection(state, actions)
+            if (state.view !is GitPageView.Ready) MoreTools(state, actions, null, serverTools)
         }
         BranchSheet(state, actions)
         RemotesSheet(state, actions)
@@ -273,7 +275,7 @@ private fun Gutter(content: @Composable () -> Unit) {
  * (with Details).
  */
 @Composable
-private fun statusLine(state: GitUi, actions: GitActions): KitStatus? {
+private fun statusLine(state: GitUi): KitStatus? {
     val busy = state.busy
     if (busy != null)
         return KitStatus(
@@ -282,16 +284,8 @@ private fun statusLine(state: GitUi, actions: GitActions): KitStatus? {
             id = "git-busy-$busy",
             tone = StatusTone.Progress,
         )
-    val result = state.result ?: return null
-    if (!result.ok) return null
-    return KitStatus(
-        KitStatusKind.Info,
-        gitDoneText(result),
-        id = "git-done-${state.generation}",
-        tone = StatusTone.Ok,
-        onDismiss = actions::dismissResult,
-        dismissLabel = stringResource(Res.string.kitSheetClose),
-    )
+    // A finished action reports in place, under the buttons that ran it (see GitSection.Result), not up here.
+    return null
 }
 
 @Composable
@@ -301,6 +295,7 @@ private fun Ready(
     actions: GitActions,
     enabled: KitEnabled,
     message: TextFieldState,
+    serverTools: @Composable () -> Unit,
     onMessageEdited: () -> Unit,
 ) {
     val branch = snapshot.status.branch
@@ -327,308 +322,369 @@ private fun Ready(
     val failed = state.result?.failure
     // Set identity puts the person in the identity block's first empty field; a focused field scrolls into view.
     val identityField = remember { FocusRequester() }
-    if (failed != null) {
-        Gutter {
-            val place = placeOf(state, snapshot)
-            val words = gitProblemText(failed.problem, state.offersGitHubSignIn)
-            // Flutter `_wayForward`: the one step that fixes it, next to the words.
-            val way =
-                gitWayForward(
-                    failed.problem,
-                    state.offersGitHubSignIn,
-                    canSignIn = state.signIn is GitHubSignIn.SignedOut,
-                )
-            val close = KitLineAction(stringResource(Res.string.kitSheetClose), actions::dismissResult)
-            val step =
-                when (way) {
-                    GitWay.SignIn -> KitLineAction(stringResource(Res.string.gitHubSignIn), actions::signIn)
-                    GitWay.GetLatest -> KitLineAction(stringResource(Res.string.gitGetLatest), actions::pull)
-                    GitWay.SetIdentity ->
-                        KitLineAction(
-                            stringResource(Res.string.gitIdentityTitle),
-                            { identityField.requestFocus() },
-                        )
-                    null -> null
-                }
-            KitErrorNotice(
-                when {
-                    state.savedNotSent &&
-                        gitSavedNeedsSignIn(failed.problem, state.offersGitHubSignIn, place.isNotEmpty()) ->
-                        stringResource(Res.string.gitSavedSignInFirst, place)
-                    state.savedNotSent -> stringResource(Res.string.gitSavedNotSent, words)
-                    else -> words
-                },
-                details = state.resultDetails,
-                detailsLabel = stringResource(Res.string.kitDetails),
-                copyLabel = stringResource(Res.string.kitCopyDetails),
-                retry = step ?: close,
-                dismiss = close.takeIf { step != null },
-            )
-        }
-    }
-    state.refreshFailure?.let { failure ->
-        Gutter {
-            KitErrorNotice(
-                gitProblemText(failure.problem),
-                details = state.refreshDetails,
-                detailsLabel = stringResource(Res.string.kitDetails),
-                copyLabel = stringResource(Res.string.kitCopyDetails),
-                retry = KitLineAction(stringResource(Res.string.commonRetry), actions::refresh),
-            )
-        }
-    }
-    gitOperationText(snapshot.operation)?.let {
-        Gutter { KitNotice(it, tone = StatusTone.Attention) }
-    }
-
-    // Branch, Get latest and Send: the obvious actions as visible rows.
-    KitRowGroup(label = stringResource(Res.string.gitDetailsBranch)) {
-        KitRow(
-            title = branch.head ?: stringResource(Res.string.gitDetachedHead),
-            leading = KitRowLeading.Glyph(KitIcons.branch),
-            supporting = if (branch.unborn) stringResource(Res.string.gitNoCommitsYet) else null,
-            trailing = KitRowTrailing.Value(stringResource(Res.string.gitSwitchRow)),
-            enabled = branchEnabled.isEnabled,
-            disabledReason = (branchEnabled as? KitEnabled.Disabled)?.reason,
-            onClickLabel = stringResource(Res.string.gitActionSwitchBranch),
-            onClick = actions::openBranches,
-            modifier = Modifier.testTag("git-branch-row"),
-        )
-        KitRow(
-            title = stringResource(Res.string.gitGetLatest),
-            leading = KitRowLeading.Glyph(KitIcons.download),
-            supporting =
-                when {
-                    !snapshot.hasRemote -> stringResource(Res.string.gitPullNoRemote)
-                    !branch.hasUpstream -> stringResource(Res.string.gitPullNotOnRemote)
-                    state.check == GitCheck.Done && branch.behind > 0 ->
-                        pluralStringResource(
-                            Res.plurals.gitGetNewFrom,
-                            branch.behind,
-                            branch.behind,
-                            placeOf(state, snapshot),
-                            branch.upstream.orEmpty(),
-                        )
-                    // "Up to date" only after the quiet look at the remote (Flutter
-                    // checkForUpdates).
-                    state.check == GitCheck.Done -> stringResource(Res.string.gitStateUpToDate)
-                    state.check == GitCheck.Failed -> stringResource(Res.string.gitCheckFailed)
-                    else -> stringResource(Res.string.gitChecking)
-                },
-            enabled = enabled.isEnabled && (canPull || noPullRemote),
-            disabledReason =
-                if (enabled.isEnabled && (canPull || noPullRemote)) null else pullReason,
-            trailing = if (noPullRemote) KitRowTrailing.Chevron else KitRowTrailing.None,
-            onClick = if (noPullRemote) actions::openRemotes else actions::pull,
-            modifier = Modifier.testTag("git-pull-row"),
-        )
-        KitRow(
-            title = stringResource(Res.string.gitSend),
-            leading = KitRowLeading.Glyph(KitIcons.upload),
-            supporting =
-                when {
-                    !snapshot.hasRemote -> stringResource(Res.string.gitSendNoRemote)
-                    !branch.hasUpstream -> stringResource(Res.string.gitStateFirstSend)
-                    branch.ahead > 0 ->
-                        pluralStringResource(Res.plurals.gitAhead, branch.ahead, branch.ahead)
-                    else -> stringResource(Res.string.gitStateNothingToSend)
-                },
-            enabled = enabled.isEnabled && !branch.detached && !branch.unborn,
-            // A disabled row always says why (KitRow refuses a silent one).
-            disabledReason =
-                (enabled as? KitEnabled.Disabled)?.reason
-                    ?: when {
-                        branch.detached -> stringResource(Res.string.gitDetachedHead)
-                        branch.unborn -> stringResource(Res.string.gitNoCommitsYet)
-                        else -> null
-                    },
-            onClick = if (!snapshot.hasRemote) actions::openRemotes else actions::push,
-            modifier = Modifier.testTag("git-push-row"),
-        )
-    }
-    // Create a GitHub repository: only while signed in to the app's GitHub and nothing is connected yet.
-    if (!snapshot.hasRemote && state.offersGitHubSignIn && state.signIn is GitHubSignIn.SignedIn) {
-        KitRowGroup {
-            KitRow(
-                title = stringResource(Res.string.gitPublishToGitHub),
-                leading = KitRowLeading.Glyph(KitIcons.github),
-                supporting = stringResource(Res.string.gitPublishToGitHubHint),
-                trailing = KitRowTrailing.Chevron,
-                enabled = enabled.isEnabled,
-                disabledReason = (enabled as? KitEnabled.Disabled)?.reason,
-                onClick = actions::openPublish,
-                modifier = Modifier.testTag("git-row-publish-github"),
-            )
-        }
-    }
-    // Remotes and Clone: visible rows, so a project without a remote can get one (B-BUILD-014).
-    KitRowGroup {
-        KitRow(
-            title = stringResource(Res.string.gitRemotesRow),
-            leading = KitRowLeading.Glyph(KitIcons.link),
-            supporting =
-                if (snapshot.remotes.isEmpty()) stringResource(Res.string.gitRemotesRowNone)
-                else snapshot.remotes.joinToString(", ") { it.name },
-            trailing = KitRowTrailing.Chevron,
-            enabled = enabled.isEnabled,
-            disabledReason = (enabled as? KitEnabled.Disabled)?.reason,
-            onClick = actions::openRemotes,
-            modifier = Modifier.testTag("git-remotes-row"),
-        )
-        KitRow(
-            title = stringResource(Res.string.gitCloneRow),
-            supporting = stringResource(Res.string.gitCloneRowHint),
-            trailing = KitRowTrailing.Chevron,
-            enabled = enabled.isEnabled,
-            disabledReason = (enabled as? KitEnabled.Disabled)?.reason,
-            onClick = actions::openClone,
-            modifier = Modifier.testTag("git-clone-row"),
-        )
-    }
-    // Every host today pushes with the Git sign-in set up where the project lives (the app never
-    // hands over its token).
-    Gutter { KitText(ownSignIn, role = KitTextRole.Supporting) }
-
-    // Changed files: tick to include in the next save; "Changes" opens the file's diff.
     val files = snapshot.status.files
-    if (files.isEmpty()) {
-        Gutter { KitText(stringResource(Res.string.gitCleanBody)) }
-    } else {
-        KitRowGroup(
-            label = pluralStringResource(Res.plurals.gitSaveChangesCount, files.size, files.size)
-        ) {
-            for (file in files) {
-                val supporting =
-                    listOfNotNull(gitChangeLabel(file), gitCounts(file)).joinToString(" · ")
-                if (file.isConflicted) {
-                    KitRow(
-                        title = file.path,
-                        supporting = supporting,
-                        titleIsFileName = true,
-                        onClick = { actions.openDiff(file.path) },
-                    )
-                } else {
-                    KitSwitchRow(
-                        title = file.path,
-                        checked = file.path in state.selected,
-                        supporting = supporting,
-                        enabled = enabled,
-                        onCheckedChange = { actions.toggleFile(file.path) },
-                        modifier = Modifier.testTag("git-file-${file.path}"),
-                    )
-                    KitRow(
-                        title = stringResource(Res.string.chatUiChanges),
-                        supporting = file.path,
-                        trailing = KitRowTrailing.Chevron,
-                        onClick = { actions.openDiff(file.path) },
-                        modifier = Modifier.testTag("git-diff-${file.path}"),
-                    )
-                }
-            }
-        }
-        if (snapshot.status.hasConflicts) {
-            val count = snapshot.status.files.count { it.isConflicted }
-            Gutter {
-                KitNotice(
-                    pluralStringResource(Res.plurals.gitConflictCount, count, count),
-                    tone = StatusTone.Attention,
-                )
-            }
-            // Flutter `_askConflictsRow`: one tap sends the agent the files to resolve, from this conversation.
-            if (state.canAskAgent) {
-                val paths = snapshot.status.files.filter { it.isConflicted }.map { it.path }
-                val prompt = stringResource(Res.string.gitAskAgentFixConflictsPrompt, paths.joinToString(", "))
-                KitRow(
-                    title = stringResource(Res.string.gitAskAgentFixConflicts),
-                    supporting = pluralStringResource(Res.plurals.gitConflictCount, count, count),
-                    leading = KitRowLeading.Glyph(KitIcons.sparkle),
-                    trailing = KitRowTrailing.Chevron,
-                    onClick = { actions.askAgent(prompt) },
-                    modifier = Modifier.testTag("git-row-ask-conflicts"),
-                )
-            }
-            if (state.askFailed) {
-                Gutter {
-                    KitErrorNotice(
-                        stringResource(Res.string.chatSendFailedRefused),
-                        retry = KitLineAction(stringResource(Res.string.kitSheetClose), actions::dismissAskFailure),
-                    )
-                }
-            }
-        }
-        // The save block. Steer, never queue: every button holds while an action runs.
-        Gutter {
-            Column(verticalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
-                KitField(
-                    message,
-                    stringResource(Res.string.gitCommitMessageHint),
-                    kind = KitFieldKind.Multiline,
-                    enabled = enabled,
-                    modifier = Modifier.testTag("git-message"),
-                    onTextChanged = { onMessageEdited() },
-                )
-                // Flutter git_sheet_steps.dart: the agent already said what it did; one tap makes that the message,
-                // which can still be edited.
-                state.summary?.takeIf { it.isNotBlank() }?.let { summary ->
-                    KitButton(
-                        stringResource(Res.string.gitWriteItForMe),
-                        {
-                            message.edit { replace(0, length, summary) }
-                            onMessageEdited()
-                        },
-                        role = KitButtonRole.Tertiary,
-                        icon = KitIcons.sparkle,
-                        enabled = enabled,
-                        modifier = Modifier.testTag("git-save-write-for-me"),
-                    )
-                }
-                val known = files.filterNot { it.isConflicted }.map { it.path }.toSet()
-                val count = state.selected.count { it in known }
-                val saveEnabled =
-                    when {
-                        snapshot.status.hasConflicts ->
-                            KitEnabled.Disabled(stringResource(Res.string.gitProblemConflicts))
-                        count == 0 ->
-                            KitEnabled.Disabled(
-                                stringResource(Res.string.gitProblemNothingSelected)
-                            )
-                        message.text.toString().trim().isEmpty() ->
-                            KitEnabled.Disabled(stringResource(Res.string.gitProblemEmptyMessage))
-                        else -> enabled
+    val needsIdentity =
+        snapshot.identity?.needsSetup == true || state.result?.problem == GitProblem.IdentityMissing
+    for (section in gitSections(
+        hasChanges = files.isNotEmpty(),
+        hasHistory = snapshot.commits.isNotEmpty(),
+        needsIdentity = needsIdentity,
+    )) {
+        when (section) {
+            GitSection.Notices -> {
+                state.refreshFailure?.let { failure ->
+                    Gutter {
+                        KitErrorNotice(
+                            gitProblemText(failure.problem),
+                            details = state.refreshDetails,
+                            detailsLabel = stringResource(Res.string.kitDetails),
+                            copyLabel = stringResource(Res.string.kitCopyDetails),
+                            retry = KitLineAction(stringResource(Res.string.commonRetry), actions::refresh),
+                        )
                     }
-                KitButton(
-                    pluralStringResource(Res.plurals.gitSaveButton, count, count),
-                    { actions.commit(message.text.toString()) },
-                    enabled = saveEnabled,
-                    working = state.busy == GitBusy.Commit,
-                    modifier = Modifier.testTag("git-save"),
-                )
-                if (snapshot.hasRemote && !branch.detached && !branch.unborn) {
-                    KitButton(
-                        stringResource(Res.string.gitSaveAndSendTitle),
-                        { actions.commitAndPush(message.text.toString()) },
-                        role = KitButtonRole.Secondary,
-                        enabled = saveEnabled,
-                        modifier = Modifier.testTag("git-save-send"),
-                    )
+                }
+                gitOperationText(snapshot.operation)?.let {
+                    Gutter { KitNotice(it, tone = StatusTone.Attention) }
                 }
             }
+            GitSection.Changes -> {
+                // Changed files: tick to include in the next save; "Changes" opens the file's diff.
+                if (files.isEmpty()) {
+                    Gutter { KitText(stringResource(Res.string.gitCleanBody)) }
+                } else {
+                    KitRowGroup(
+                        label = pluralStringResource(Res.plurals.gitSaveChangesCount, files.size, files.size)
+                    ) {
+                        for (file in files) {
+                            val supporting =
+                                listOfNotNull(gitChangeLabel(file), gitCounts(file)).joinToString(" · ")
+                            if (file.isConflicted) {
+                                KitRow(
+                                    title = file.path,
+                                    supporting = supporting,
+                                    titleIsFileName = true,
+                                    onClick = { actions.openDiff(file.path) },
+                                )
+                            } else {
+                                KitSwitchRow(
+                                    title = file.path,
+                                    checked = file.path in state.selected,
+                                    supporting = supporting,
+                                    enabled = enabled,
+                                    onCheckedChange = { actions.toggleFile(file.path) },
+                                    modifier = Modifier.testTag("git-file-${file.path}"),
+                                )
+                                KitRow(
+                                    title = stringResource(Res.string.chatUiChanges),
+                                    supporting = file.path,
+                                    trailing = KitRowTrailing.Chevron,
+                                    onClick = { actions.openDiff(file.path) },
+                                    modifier = Modifier.testTag("git-diff-${file.path}"),
+                                )
+                            }
+                        }
+                    }
+                    if (snapshot.status.hasConflicts) {
+                        val count = snapshot.status.files.count { it.isConflicted }
+                        Gutter {
+                            KitNotice(
+                                pluralStringResource(Res.plurals.gitConflictCount, count, count),
+                                tone = StatusTone.Attention,
+                            )
+                        }
+                        // Flutter `_askConflictsRow`: one tap sends the agent the files to resolve, from this conversation.
+                        if (state.canAskAgent) {
+                            val paths = snapshot.status.files.filter { it.isConflicted }.map { it.path }
+                            val prompt = stringResource(Res.string.gitAskAgentFixConflictsPrompt, paths.joinToString(", "))
+                            KitRow(
+                                title = stringResource(Res.string.gitAskAgentFixConflicts),
+                                supporting = pluralStringResource(Res.plurals.gitConflictCount, count, count),
+                                leading = KitRowLeading.Glyph(KitIcons.sparkle),
+                                trailing = KitRowTrailing.Chevron,
+                                onClick = { actions.askAgent(prompt) },
+                                modifier = Modifier.testTag("git-row-ask-conflicts"),
+                            )
+                        }
+                        if (state.askFailed) {
+                            Gutter {
+                                KitErrorNotice(
+                                    stringResource(Res.string.chatSendFailedRefused),
+                                    retry = KitLineAction(stringResource(Res.string.kitSheetClose), actions::dismissAskFailure),
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+            GitSection.Save -> {
+                // Who the saves are signed by, when Git has no name yet (or a placeholder).
+                if (
+                    snapshot.identity?.needsSetup == true || state.result?.problem == GitProblem.IdentityMissing
+                )
+                    IdentityBlock(snapshot, actions, enabled, identityField)
+                // The save block. Steer, never queue: every button holds while an action runs.
+                if (files.isNotEmpty()) Gutter {
+                    Column(verticalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
+                        KitField(
+                            message,
+                            stringResource(Res.string.gitCommitMessageHint),
+                            kind = KitFieldKind.Multiline,
+                            enabled = enabled,
+                            modifier = Modifier.testTag("git-message"),
+                            onTextChanged = { onMessageEdited() },
+                        )
+                        // Flutter git_sheet_steps.dart: the agent already said what it did; one tap makes that the message,
+                        // which can still be edited.
+                        state.summary?.takeIf { it.isNotBlank() }?.let { summary ->
+                            KitButton(
+                                stringResource(Res.string.gitWriteItForMe),
+                                {
+                                    message.edit { replace(0, length, summary) }
+                                    onMessageEdited()
+                                },
+                                role = KitButtonRole.Tertiary,
+                                icon = KitIcons.sparkle,
+                                enabled = enabled,
+                                modifier = Modifier.testTag("git-save-write-for-me"),
+                            )
+                        }
+                        val known = files.filterNot { it.isConflicted }.map { it.path }.toSet()
+                        val count = state.selected.count { it in known }
+                        val saveEnabled =
+                            when {
+                                snapshot.status.hasConflicts ->
+                                    KitEnabled.Disabled(stringResource(Res.string.gitProblemConflicts))
+                                count == 0 ->
+                                    KitEnabled.Disabled(
+                                        stringResource(Res.string.gitProblemNothingSelected)
+                                    )
+                                message.text.toString().trim().isEmpty() ->
+                                    KitEnabled.Disabled(stringResource(Res.string.gitProblemEmptyMessage))
+                                else -> enabled
+                            }
+                        KitButton(
+                            pluralStringResource(Res.plurals.gitSaveButton, count, count),
+                            { actions.commit(message.text.toString()) },
+                            enabled = saveEnabled,
+                            working = state.busy == GitBusy.Commit,
+                            modifier = Modifier.testTag("git-save"),
+                        )
+                        if (snapshot.hasRemote && !branch.detached && !branch.unborn) {
+                            KitButton(
+                                stringResource(Res.string.gitSaveAndSendTitle),
+                                { actions.commitAndPush(message.text.toString()) },
+                                role = KitButtonRole.Secondary,
+                                enabled = saveEnabled,
+                                modifier = Modifier.testTag("git-save-send"),
+                            )
+                        }
+                    }
+                }
+            }
+            GitSection.Result -> {
+                if (failed != null) {
+                    Gutter {
+                        val place = placeOf(state, snapshot)
+                        val words = gitProblemText(failed.problem, state.offersGitHubSignIn)
+                        // Flutter `_wayForward`: the one step that fixes it, next to the words.
+                        val way =
+                            gitWayForward(
+                                failed.problem,
+                                state.offersGitHubSignIn,
+                                canSignIn = state.signIn is GitHubSignIn.SignedOut,
+                            )
+                        val close = KitLineAction(stringResource(Res.string.kitSheetClose), actions::dismissResult)
+                        val step =
+                            when (way) {
+                                GitWay.SignIn -> KitLineAction(stringResource(Res.string.gitHubSignIn), actions::signIn)
+                                GitWay.GetLatest -> KitLineAction(stringResource(Res.string.gitGetLatest), actions::pull)
+                                GitWay.SetIdentity ->
+                                    KitLineAction(
+                                        stringResource(Res.string.gitIdentityTitle),
+                                        { identityField.requestFocus() },
+                                    )
+                                null -> null
+                            }
+                        KitErrorNotice(
+                            when {
+                                state.savedNotSent &&
+                                    gitSavedNeedsSignIn(failed.problem, state.offersGitHubSignIn, place.isNotEmpty()) ->
+                                    stringResource(Res.string.gitSavedSignInFirst, place)
+                                state.savedNotSent -> stringResource(Res.string.gitSavedNotSent, words)
+                                else -> words
+                            },
+                            details = state.resultDetails,
+                            detailsLabel = stringResource(Res.string.kitDetails),
+                            copyLabel = stringResource(Res.string.kitCopyDetails),
+                            retry = step ?: close,
+                            dismiss = close.takeIf { step != null },
+                        )
+                    }
+                }
+                val done = state.result?.takeIf { it.ok }
+                if (done != null) {
+                    Gutter {
+                        KitNotice(
+                            gitDoneText(done),
+                            tone = StatusTone.Ok,
+                            dismiss = KitLineAction(stringResource(Res.string.kitSheetClose), actions::dismissResult),
+                        )
+                    }
+                }
+            }
+            GitSection.Sync -> {
+                // Branch, Get latest and Send: the obvious actions as visible rows.
+                KitRowGroup(label = stringResource(Res.string.gitDetailsBranch)) {
+                    KitRow(
+                        title = branch.head ?: stringResource(Res.string.gitDetachedHead),
+                        leading = KitRowLeading.Glyph(KitIcons.branch),
+                        supporting = if (branch.unborn) stringResource(Res.string.gitNoCommitsYet) else null,
+                        trailing = KitRowTrailing.Value(stringResource(Res.string.gitSwitchRow)),
+                        enabled = branchEnabled.isEnabled,
+                        disabledReason = (branchEnabled as? KitEnabled.Disabled)?.reason,
+                        onClickLabel = stringResource(Res.string.gitActionSwitchBranch),
+                        onClick = actions::openBranches,
+                        modifier = Modifier.testTag("git-branch-row"),
+                    )
+                    KitRow(
+                        title = stringResource(Res.string.gitGetLatest),
+                        leading = KitRowLeading.Glyph(KitIcons.download),
+                        supporting =
+                            when {
+                                !snapshot.hasRemote -> stringResource(Res.string.gitPullNoRemote)
+                                !branch.hasUpstream -> stringResource(Res.string.gitPullNotOnRemote)
+                                state.check == GitCheck.Done && branch.behind > 0 ->
+                                    pluralStringResource(
+                                        Res.plurals.gitGetNewFrom,
+                                        branch.behind,
+                                        branch.behind,
+                                        placeOf(state, snapshot),
+                                        branch.upstream.orEmpty(),
+                                    )
+                                // "Up to date" only after the quiet look at the remote (Flutter
+                                // checkForUpdates).
+                                state.check == GitCheck.Done -> stringResource(Res.string.gitStateUpToDate)
+                                state.check == GitCheck.Failed -> stringResource(Res.string.gitCheckFailed)
+                                else -> stringResource(Res.string.gitChecking)
+                            },
+                        enabled = enabled.isEnabled && (canPull || noPullRemote),
+                        disabledReason =
+                            if (enabled.isEnabled && (canPull || noPullRemote)) null else pullReason,
+                        trailing = if (noPullRemote) KitRowTrailing.Chevron else KitRowTrailing.None,
+                        onClick = if (noPullRemote) actions::openRemotes else actions::pull,
+                        modifier = Modifier.testTag("git-pull-row"),
+                    )
+                    KitRow(
+                        title = stringResource(Res.string.gitSend),
+                        leading = KitRowLeading.Glyph(KitIcons.upload),
+                        supporting =
+                            when {
+                                !snapshot.hasRemote -> stringResource(Res.string.gitSendNoRemote)
+                                !branch.hasUpstream -> stringResource(Res.string.gitStateFirstSend)
+                                branch.ahead > 0 ->
+                                    pluralStringResource(Res.plurals.gitAhead, branch.ahead, branch.ahead)
+                                else -> stringResource(Res.string.gitStateNothingToSend)
+                            },
+                        enabled = enabled.isEnabled && !branch.detached && !branch.unborn,
+                        // A disabled row always says why (KitRow refuses a silent one).
+                        disabledReason =
+                            (enabled as? KitEnabled.Disabled)?.reason
+                                ?: when {
+                                    branch.detached -> stringResource(Res.string.gitDetachedHead)
+                                    branch.unborn -> stringResource(Res.string.gitNoCommitsYet)
+                                    else -> null
+                                },
+                        onClick = if (!snapshot.hasRemote) actions::openRemotes else actions::push,
+                        modifier = Modifier.testTag("git-push-row"),
+                    )
+                }
+                // Create a GitHub repository: only while signed in to the app's GitHub and nothing is connected yet.
+                if (!snapshot.hasRemote && state.offersGitHubSignIn && state.signIn is GitHubSignIn.SignedIn) {
+                    KitRowGroup {
+                        KitRow(
+                            title = stringResource(Res.string.gitPublishToGitHub),
+                            leading = KitRowLeading.Glyph(KitIcons.github),
+                            supporting = stringResource(Res.string.gitPublishToGitHubHint),
+                            trailing = KitRowTrailing.Chevron,
+                            enabled = enabled.isEnabled,
+                            disabledReason = (enabled as? KitEnabled.Disabled)?.reason,
+                            onClick = actions::openPublish,
+                            modifier = Modifier.testTag("git-row-publish-github"),
+                        )
+                    }
+                }
+                // Every host today pushes with the Git sign-in set up where the project lives (the app never
+                // hands over its token).
+                Gutter { KitText(ownSignIn, role = KitTextRole.Supporting) }
+            }
+            GitSection.History -> {
+                // Recent saves.
+                if (snapshot.commits.isNotEmpty()) {
+                    KitRowGroup(label = stringResource(Res.string.searchRecentTitle)) {
+                        for (commit in snapshot.commits.take(RECENT)) {
+                            KitRow(title = commit.subject, supporting = commit.shortId, supportingMaxLines = 1)
+                        }
+                    }
+                }
+            }
+            GitSection.Tools -> MoreTools(state, actions, snapshot, serverTools)
         }
     }
+}
 
-    // Who the saves are signed by, when Git has no name yet (or a placeholder).
-    if (
-        snapshot.identity?.needsSetup == true || state.result?.problem == GitProblem.IdentityMissing
-    )
-        IdentityBlock(snapshot, actions, enabled, identityField)
-
-    // Recent saves.
-    if (snapshot.commits.isNotEmpty()) {
-        KitRowGroup(label = stringResource(Res.string.searchRecentTitle)) {
-            for (commit in snapshot.commits.take(RECENT)) {
-                KitRow(title = commit.subject, supporting = commit.shortId, supportingMaxLines = 1)
+/**
+ * The rare tools, folded and last: remotes, copying a repository, repairing linked Git files and the server's own
+ * project tools (issue 147 walk F-021: they used to sit above the changed files).
+ */
+@Composable
+private fun MoreTools(
+    state: GitUi,
+    actions: GitActions,
+    snapshot: GitSnapshot?,
+    serverTools: @Composable () -> Unit,
+) {
+    val enabled = state.busy?.let { KitEnabled.Disabled(gitBusyText(it)) } ?: KitEnabled.Enabled
+    var open by rememberSaveable { mutableStateOf(false) }
+    KitExpandRow(
+        stringResource(Res.string.gitMoreTools),
+        open,
+        Modifier.testTag("git-more-tools"),
+        stringResource(Res.string.gitMoreToolsHint),
+        { open = it },
+        KitIcons.tools,
+        true,
+        1,
+        2,
+        true,
+    ) {
+        if (snapshot != null) {
+            // Remotes and Clone: so a project without a remote can get one (B-BUILD-014).
+            KitRowGroup {
+                KitRow(
+                    title = stringResource(Res.string.gitRemotesRow),
+                    leading = KitRowLeading.Glyph(KitIcons.link),
+                    supporting =
+                        if (snapshot.remotes.isEmpty()) stringResource(Res.string.gitRemotesRowNone)
+                        else snapshot.remotes.joinToString(", ") { it.name },
+                    trailing = KitRowTrailing.Chevron,
+                    enabled = enabled.isEnabled,
+                    disabledReason = (enabled as? KitEnabled.Disabled)?.reason,
+                    onClick = actions::openRemotes,
+                    modifier = Modifier.testTag("git-remotes-row"),
+                )
+                KitRow(
+                    title = stringResource(Res.string.gitCloneRow),
+                    supporting = stringResource(Res.string.gitCloneRowHint),
+                    trailing = KitRowTrailing.Chevron,
+                    enabled = enabled.isEnabled,
+                    disabledReason = (enabled as? KitEnabled.Disabled)?.reason,
+                    onClick = actions::openClone,
+                    modifier = Modifier.testTag("git-clone-row"),
+                )
             }
         }
+        GitRepairPanel(state, actions)
+        serverTools()
     }
 }
 

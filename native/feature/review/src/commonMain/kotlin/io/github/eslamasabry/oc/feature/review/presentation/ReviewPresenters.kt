@@ -197,7 +197,7 @@ public class ChangesPresenter(
                             }
                             is Outcome.Ok -> scoped.value
                         }
-                    val rows = markViewed(chosen, scopedFiles)
+                    val rows = markViewed(chosen, if (chosen == ReviewScope.Conversation) withTreeDiffs(scopedFiles) else scopedFiles)
                     val working = chosen != ReviewScope.Conversation
                     val scopes = scopes()
                     // An empty folder or branch view says why: not under Git, or a clean tree (the agent's reported
@@ -226,6 +226,30 @@ public class ChangesPresenter(
                 }
             }
         }
+    }
+
+    /**
+     * Every listed change opens its diff (walk F-020): a row the tools reported without lines (the agent wrote it
+     * through a command) takes the folder's own diff for that file; with the folder's changes known and none for it,
+     * it is not a change any more and is not listed. With no folder diff to ask, the rows stay as the tools gave them.
+     */
+    private suspend fun withTreeDiffs(rows: List<Scoped>): List<Scoped> {
+        if (rows.all { it.row.hasDiff } || !review.workingTreeAvailable()) return rows
+        val tree = (review.workingTree() as? Outcome.Ok)?.value.orEmpty()
+        if (tree.isEmpty()) return rows
+        val out =
+            rows.mapNotNull { r ->
+                if (r.row.hasDiff) return@mapNotNull r
+                val hit =
+                    tree.firstOrNull {
+                        !it.patch.isNullOrBlank() && (it.file == r.row.path || r.row.path.endsWith("/" + it.file))
+                    } ?: return@mapNotNull null
+                Scoped(
+                    r.row.copy(added = hit.additions, removed = hit.deletions, hasDiff = true, diffPath = hit.file),
+                    "${hit.additions}|${hit.deletions}|${hit.status}|${hit.patch.hashCode()}",
+                )
+            }
+        return out
     }
 
     /** A row and what its diff is now (compared with what it was when viewed). */
@@ -394,7 +418,8 @@ public class ChangesPresenter(
         when (s.scope) {
             ReviewScope.WorkingTree -> nav.openWorkingTreeFile(path)
             ReviewScope.Branch -> nav.openBranchFile(path)
-            ReviewScope.Conversation -> nav.openFile(path, staged = false)
+            ReviewScope.Conversation ->
+                s.files.firstOrNull { it.path == path }?.diffPath?.let(nav::openWorkingTreeFile) ?: nav.openFile(path, staged = false)
         }
     }
 

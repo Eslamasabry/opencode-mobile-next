@@ -92,6 +92,20 @@ public object TurnChanges {
         return out.toImmutableList()
     }
 
+    /**
+     * Whether a file the tools reported belongs to the project at [directory]: a relative path does (unless it climbs
+     * out with `..`), an absolute one only when it is inside the folder. A temp folder or the agent's own working files
+     * are not the project's changes (issue 147 walk F-020). With no known folder nothing is dropped.
+     */
+    public fun insideProject(path: String, directory: String?): Boolean {
+        val dir = directory?.trim()?.trimEnd('/', '\\')?.takeIf { it.isNotEmpty() } ?: return true
+        val p = path.trim().replace('\\', '/')
+        val absolute = p.startsWith("/") || (p.length > 2 && p[1] == ':' && p[2] == '/')
+        if (!absolute) return p != ".." && !p.startsWith("../")
+        val root = dir.replace('\\', '/')
+        return p == root || p.startsWith("$root/")
+    }
+
     /** The files [messages] changed in the order first touched, with the counts the tools reported (B-CHAT-068). */
     public fun editedFiles(messages: Iterable<MessageWithParts>, max: Int = MAX_FILES): ImmutableList<ChangedFile> {
         val order = LinkedHashMap<String, Acc>()

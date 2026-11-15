@@ -3,6 +3,7 @@ package io.github.eslamasabry.opencode_mobile.graph
 import android.app.Application
 import io.github.eslamasabry.oc.core.common.AppDispatchers
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
+import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.data.kv.GateNotOpen
 import io.github.eslamasabry.oc.core.data.kv.PrefValue
 import io.github.eslamasabry.oc.engine.connection.ConnectionGraph
@@ -31,6 +32,8 @@ internal class BuiltinGitShell(
     private val graph: ConnectionGraph,
     private val registry: ConnectionRegistry,
     private val ref: ConversationRef,
+    /** The saved This phone profile whose Linux holds the project (the helper's own phone for a phone agent). */
+    private val phone: ProfileId,
 ) : GitShell {
     private val linux by lazy { BuiltinLinux.get(application) }
     private val shell =
@@ -40,7 +43,7 @@ internal class BuiltinGitShell(
                     if (
                         !ownsCurrentProfile() ||
                             !linux.serverRunning ||
-                            linux.port != graph.profile.origin.port
+                            linux.port != PhoneServerScripts.PORT
                     ) {
                         return@withContext LinuxBridgeAnswer.BridgeFailed("unavailable")
                     }
@@ -66,7 +69,7 @@ internal class BuiltinGitShell(
             try {
                 ownsCurrentProfile() &&
                     linux.serverRunning &&
-                    linux.port == graph.profile.origin.port
+                    linux.port == PhoneServerScripts.PORT
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
@@ -78,7 +81,7 @@ internal class BuiltinGitShell(
         if (registry.graphFor(ref) !== graph) return false
         return try {
             (stores.prefs.get("oc.builtinServerOwner") as? PrefValue.Str)?.value ==
-                graph.profile.id.raw && stores.profiles.profile(graph.profile.id) != null
+                phone.raw && stores.profiles.profile(phone) != null
         } catch (e: GateNotOpen) {
             false
         }

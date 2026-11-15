@@ -109,4 +109,14 @@ class TurnChangesTest {
         assertEquals("", TurnChanges.promptText(p))
         assertTrue(TurnChanges.isPrompt(p))
     }
+
+    @Test
+    fun `B-CHAT-147 a path outside the project folder is not the project's`() {
+        assertTrue(TurnChanges.insideProject("src/a.kt", "/work/a"))
+        assertTrue(TurnChanges.insideProject("/work/a/src/a.kt", "/work/a/"))
+        assertFalse(TurnChanges.insideProject("/tmp/opencode", "/work/a"))
+        assertFalse(TurnChanges.insideProject("/work/ab/x.kt", "/work/a"))
+        assertFalse(TurnChanges.insideProject("../x.kt", "/work/a"))
+        assertTrue(TurnChanges.insideProject("/tmp/opencode", null))
+    }
 }
