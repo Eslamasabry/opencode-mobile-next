@@ -554,9 +554,15 @@ public class PaseoGateway(
         }
 
     internal fun checkLocation(scopeDir: String, epoch: Int) {
-        if (closed || scopeDir != directoryValue || epoch != locationEpoch)
+        if (closed || scopeDir != directoryValue || epoch != locationEpoch) {
+            // SEND-STALE: the one clue a stale refusal leaves for a report (fixed words, never the folder).
+            staleLog.w { "refused as stale: " + if (closed) "gateway closed" else "folder moved" }
             paseoFail(PaseoFailureKind.ScopeMismatch)
+        }
     }
+
+    private val staleLog: io.github.eslamasabry.oc.core.common.Log
+        get() = io.github.eslamasabry.oc.core.common.AppLog.tagged("paseo")
 
     internal fun real(appId: String): String = realIds[appId] ?: identities.real(appId) ?: appId
 
@@ -577,7 +583,10 @@ public class PaseoGateway(
             return
         }
         val draft = identities.draft(id) ?: return
-        if (!holds(directoryValue, draft.session.directory)) paseoFail(PaseoFailureKind.ScopeMismatch)
+        if (!holds(directoryValue, draft.session.directory)) {
+            staleLog.w { "refused as stale: another folder's draft" }
+            paseoFail(PaseoFailureKind.ScopeMismatch)
+        }
         sessions[id] = draft.session
         statuses[id] = SessionStatus.Idle
         drafts += id
@@ -1231,8 +1240,10 @@ public class PaseoGateway(
                 }
             if (ready is Outcome.Failed) return ready
             return withContext(lane) {
-                if (closed || directoryValue != directory || payloadGeneration.value != generation)
+                if (closed || directoryValue != directory || payloadGeneration.value != generation) {
+                    staleLog.w { "refused as stale: the connection moved while the phone's agents got ready" }
                     Outcome.Failed(PaseoException(PaseoFailureKind.ScopeMismatch).toFailure())
+                }
                 else operation()
             }
         } finally {
@@ -2221,7 +2232,10 @@ public class PaseoGateway(
                 PaseoFailureKind.InvalidResponse,
                 "fetch_agent_response: another agent",
             )
-        remember(agent, reconcileStatus) ?: paseoFail(PaseoFailureKind.ScopeMismatch)
+        remember(agent, reconcileStatus) ?: run {
+            staleLog.w { "refused as stale: the agent works in a folder this connection does not show" }
+            paseoFail(PaseoFailureKind.ScopeMismatch)
+        }
         return agent
     }
 

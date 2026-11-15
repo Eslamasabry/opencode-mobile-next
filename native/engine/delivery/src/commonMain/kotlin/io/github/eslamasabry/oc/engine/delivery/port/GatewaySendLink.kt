@@ -131,7 +131,10 @@ public class GatewaySendLink(
                             chosen.model?.providerId == model.model.providerId &&
                             chosen.model?.modelId == model.model.modelId &&
                             chosen.variant.trim().let { if (it == "default") "" else it } == variant
-                    if (!matches) return Failure.Refused(RefusalReason.StaleScope).failed()
+                    if (!matches) {
+                        log.w { "send refused as stale: the conversation's model read back differently" }
+                        return Failure.Refused(RefusalReason.StaleScope).failed()
+                    }
                 }
             }
         }

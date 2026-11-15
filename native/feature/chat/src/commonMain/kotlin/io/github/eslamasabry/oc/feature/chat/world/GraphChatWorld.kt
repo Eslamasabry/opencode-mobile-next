@@ -2173,8 +2173,11 @@ internal class GraphChatWorld(
         val captured = if (draftFiles) submissionOwner?.captureSubmission() else null
         val submission = captured?.takeIf { it.text.trim() == text.trim() }
         if (captured != null && submission == null) submissionOwner?.releaseSubmission(captured)
-        if (draftFiles && submission == null)
+        if (draftFiles && submission == null) {
+            // SEND-STALE: the one clue such a refusal leaves for a report (fixed words).
+            sendLog.w { "send refused as stale: the composer's words were not the draft's" }
             return Outcome.Failed(Failure.Refused(RefusalReason.StaleScope))
+        }
         val files = if (!draftFiles) again else submission!!.attachments
         if (text.isBlank() && files.isEmpty()) {
             if (submission != null) submissionOwner?.releaseSubmission(submission)
@@ -2383,6 +2386,9 @@ internal class GraphChatWorld(
         }
     }
 
+    private val sendLog: io.github.eslamasabry.oc.core.common.Log
+        get() = io.github.eslamasabry.oc.core.common.AppLog.tagged("chat-send")
+
     private suspend fun dispatch(
         localId: Long,
         text: String,
@@ -2390,7 +2396,10 @@ internal class GraphChatWorld(
         expected: Attached?,
     ): Outcome<Unit> {
         val a = currentAttached() ?: return fail(localId, Failure.Network(NetworkWhy.Offline))
-        if (a !== expected) return fail(localId, Failure.Refused(RefusalReason.StaleScope))
+        if (a !== expected) {
+            sendLog.w { "send refused as stale: the conversation changed connection" }
+            return fail(localId, Failure.Refused(RefusalReason.StaleScope))
+        }
         val delivery = (a.graph as ChatGraphAccessors).chatDelivery
         // A file picked from the `@` list rides only while its `@path` is still in the words, with
         // its range (B-CHAT-087); other files pass through untouched.
