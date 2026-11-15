@@ -33,6 +33,11 @@ import io.github.eslamasabry.oc.ui.kit.nav.KitTabStrip
 import io.github.eslamasabry.oc.ui.kit.nav.TabRules
 import io.github.eslamasabry.oc.ui.kit.style.KitSignalSample
 import kotlin.test.assertEquals
+import io.github.eslamasabry.oc.ui.kit.agent.agentGridOneColumn
+import io.github.eslamasabry.oc.ui.kit.agent.agentTileColumns
+import io.github.eslamasabry.oc.ui.kit.row.KitRow
+import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
+import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
@@ -151,5 +156,26 @@ class CompactWidthKitTest {
             if (c.red > 0.6f && c.green < 0.35f && c.blue < 0.35f) red++
         }
         assertEquals(0, red, "pixels that read as red")
+    }
+
+    @Test
+    fun `COMPACT-025 agent cards fall to one column where two would be narrower than 160 dp`() {
+        // A 360 dp phone leaves 328 dp inside the gutters: two columns of 158.
+        assertTrue(agentGridOneColumn(1f, 328f), "328 dp wide")
+        assertTrue(!agentGridOneColumn(1f, 412f), "412 dp wide keeps two columns")
+        assertEquals(1, agentTileColumns(328f, 1f))
+        assertEquals(2, agentTileColumns(380f, 1f))
+    }
+
+    @Test
+    fun `COMPACT-026 a row's value wraps instead of ending in an ellipsis`() {
+        val scene: @Composable () -> Unit = {
+            KitRowGroup {
+                KitRow("Account", trailing = KitRowTrailing.Value("someone.with.a.long.account.label@example.org", chevron = false))
+                KitRow("Folder", trailing = KitRowTrailing.Value("/projects/client-work/the-long-folder-name", chevron = true))
+            }
+        }
+        val bad = found(scene).filter { it.contains("ellipsis") || it.contains("clipped") }
+        assertTrue(bad.isEmpty(), bad.toString())
     }
 }

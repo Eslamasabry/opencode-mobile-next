@@ -41,7 +41,7 @@ class ChatsHomeHeaderCompactTest {
             var c: Throwable? = t
             val chain = StringBuilder()
             while (c != null) { chain.append(c::class.simpleName).append(": ").append(c.message).append(" @ ").append(c.stackTrace.take(4).joinToString(" < ")).append(" || "); c = c.cause }
-            throw AssertionError(chain.toString())
+            throw AssertionError(chain.toString().replace('\n', ' ').take(900))
         }
         val found = all
             .filter { it.rule == "rest-cut" || it.rule == "clipped" || it.rule == "cut-off" }
