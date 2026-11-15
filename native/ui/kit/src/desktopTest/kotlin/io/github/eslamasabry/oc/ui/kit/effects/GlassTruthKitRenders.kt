@@ -72,7 +72,12 @@ import kotlin.test.Test
 class GlassTruthKitRenders {
     private class Lens : KitPlatform by FakeKitPlatform(frost = true) {
         override val liquidGlass: Boolean = true
-        override val liveShaders = io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform().liveShaders
+        private val desktop = io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform()
+        override val liveShaders = desktop.liveShaders
+
+        // The stand-in draws the hold (the knee) through desktop's shader pass, as the menu's words test does.
+        override fun liquidJoinEffect(program: io.github.eslamasabry.oc.ui.kit.live.LiveShaderProgram, blurPx: Float): androidx.compose.ui.graphics.RenderEffect? =
+            desktop.liquidJoinEffect(program, blurPx)
 
         override fun liquidPane(spec: KitLiquidPaneSpec, backdrop: KitLiquidBackdrop, shape: CornerBasedShape, transform: () -> Float): Modifier =
             kitLiquidPlainStandIn(spec, backdrop, shape, this)

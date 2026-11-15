@@ -20,6 +20,7 @@ import androidx.compose.ui.graphics.BlurEffect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RenderEffect
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.toAwtImage
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.test.ExperimentalTestApi
@@ -96,7 +97,7 @@ class GlassTruthChatRenders {
         for (look in looks) for (dark in listOf(true, false)) {
             val mode = if (dark) "dark" else "light"
             shot(File(out, "chat-parts-${look.name}-$mode.png"), look, dark, 1180) { ChatParts(dark) }
-            shot(File(out, "chat-bottom-${look.name}-$mode.png"), look, dark, 560) { Bottom(dark) }
+            shot(File(out, "chat-bottom-${look.name}-$mode.png"), look, dark, 720) { Bottom(dark) }
             shot(File(out, "diff-${look.name}-$mode.png"), look, dark, 520) { Diffs() }
         }
     }
@@ -168,14 +169,24 @@ class GlassTruthChatRenders {
         }
     }
 
-    /** The bottom block over the transcript's recording: the voice pill (and its attention state) and the message box with the limit strip inside. */
+    /**
+     * The bottom block over the transcript's recording: the voice pill (and its attention state) and the message box with
+     * the limit strip inside. As in a chat, the transcript is gone under the block (KitWordsFade clears what the block's
+     * glass sees from the block's top down, fading over 16 dp above it): the bright content lies above the block, the
+     * block's glass sees the page's picture and bends the content above at its top rim.
+     */
     @Composable
     private fun Bottom(dark: Boolean) {
         val frost = rememberKitFrostState()
         Box(Modifier.fillMaxSize()) {
-            Box(Modifier.fillMaxSize().kitFrostSource(frost).drawBehind { brightPage(dark) })
+            Box(
+                Modifier.fillMaxSize().kitFrostSource(frost).drawBehind {
+                    // Gone from 16 dp above the block's top (BLOCK_TOP_DP) down, as the chat's fade leaves it.
+                    clipRect(bottom = (BLOCK_TOP_DP - 16f) * density) { brightPage(dark) }
+                }
+            )
             CompositionLocalProvider(LocalKitLiquidChrome provides frost) {
-                Column(Modifier.fillMaxSize().padding(horizontal = 12.dp, vertical = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Column(Modifier.fillMaxSize().padding(start = 12.dp, end = 12.dp, top = BLOCK_TOP_DP.dp, bottom = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     KitVoicePill("Listening", words = "Fix the login and run the tests", elapsed = "0:07", secondary = KitLineAction("Cancel", {}), primary = KitLineAction("Done", {}))
                     KitVoicePill("Let go to cancel", elapsed = "0:09", attention = true)
                     KitComposerBox(
@@ -200,6 +211,7 @@ class GlassTruthChatRenders {
     }
 
     private companion object {
+        const val BLOCK_TOP_DP = 200f
         const val W = 400
         const val D = 2.625f
     }
