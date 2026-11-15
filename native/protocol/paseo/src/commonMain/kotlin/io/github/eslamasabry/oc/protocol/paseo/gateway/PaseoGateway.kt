@@ -1489,6 +1489,7 @@ public class PaseoGateway(
                     checkLocation(scope, epoch)
                     fence()
                 },
+                answerErrors = true,
             )
         } catch (e: PaseoException) {
             if (e.kind == PaseoFailureKind.DeliveryUnknown) uncertainStarts[id] = PaseoUncertainStart(messageId, provider, sentAt)
@@ -1496,6 +1497,14 @@ public class PaseoGateway(
         } finally {
             creating--
             if (creating == 0 && closed) heldEvents.clear()
+        }
+        // Issue 147: the helper's own create handler answered that it failed (`agent_create_failed`, e.g. Claude
+        // Code's "Failed to authenticate: OAuth session expired"): nothing was made, so the message was not sent. Before,
+        // that answer read as a send of unknown fate ("didn't confirm"). Any other error answer keeps its meaning.
+        if (result.str("status") == "agent_create_failed")
+            throw PaseoException(PaseoFailureKind.AgentRefused, result.str("error")?.let(transport::withoutPassword))
+        result.str("error")?.takeIf { it.isNotEmpty() }?.let {
+            throw PaseoException(PaseoFailureKind.Unavailable, transport.withoutPassword(it))
         }
         val agent = paseoReply("create_agent_response") { paseoObject(result["agent"]) }
         checkLocation(scope, epoch)

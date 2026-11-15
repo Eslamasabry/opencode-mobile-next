@@ -42,6 +42,12 @@ public enum class PaseoFailureKind {
 
     /** `hello.rejected` / close code 4003: the daemon does not speak this app's protocol. */
     IncompatibleProtocol,
+
+    /**
+     * Issue 147: the helper answered a new conversation's create and refused it (`agent_create_failed`): nothing was
+     * made, so the message was not sent. Before, that answer read as a send whose fate is unknown ("didn't confirm").
+     */
+    AgentRefused,
 }
 
 /**
@@ -84,6 +90,13 @@ public class PaseoException(
             PaseoFailureKind.FileNotShowable -> Failure.Media(MediaProblem.FileNotShowable, details)
             PaseoFailureKind.IncompatibleProtocol ->
                 Failure.Incompatible(IncompatibleKind.ProtocolMismatch, details)
+            // An answer, so a refusal (never "unconfirmed"); a lapsed sign-in carries its own tag.
+            PaseoFailureKind.AgentRefused ->
+                Failure.Rejected(
+                    null,
+                    if (paseoAgentSignInText(reason)) PaseoAgentSignInTag else tag,
+                    details = details,
+                )
         }
     }
 
@@ -138,3 +151,15 @@ public fun tidyPaseoReason(raw: String?): String? {
 }
 
 private val WHITESPACE = Regex("\\s+")
+
+/** A refused create whose reason is the agent's own sign-in (expired, refused, missing): "Paseo AgentSignIn". */
+public val PaseoAgentSignInTag: io.github.eslamasabry.oc.core.common.WireTag =
+    io.github.eslamasabry.oc.core.common.WireTag("Paseo AgentSignIn")
+
+/** Whether the helper's [reason] is about the agent's sign-in ("Failed to authenticate", "Authentication required"). */
+internal fun paseoAgentSignInText(reason: String?): Boolean =
+    reason != null &&
+        (io.github.eslamasabry.oc.protocol.paseo.mappers.paseoSignInFailure(reason) ||
+            io.github.eslamasabry.oc.protocol.paseo.requests.paseoProviderNeedsSignIn(
+                kotlinx.serialization.json.JsonObject(mapOf("error" to kotlinx.serialization.json.JsonPrimitive(reason)))
+            ))
