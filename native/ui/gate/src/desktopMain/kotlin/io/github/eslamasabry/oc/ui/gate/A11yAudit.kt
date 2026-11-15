@@ -8,7 +8,6 @@ import androidx.compose.ui.test.ComposeUiTest
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.text.TextLayoutResult
-import androidx.compose.ui.unit.IntRect
 import kotlin.math.abs
 
 /**
@@ -58,7 +57,7 @@ object A11yAudit {
         for (n in acting) {
             val name = words(n)
             val label = name ?: "(unnamed, ${n.config.getOrNull(SemanticsProperties.TestTag) ?: "no tag"})"
-            val touch: IntRect = n.touchBoundsInRoot
+            val touch = n.touchBoundsInRoot
             val w = touch.width / densityScale
             val h = touch.height / densityScale
             if (w < 47.5f || h < 47.5f) found += Offender(scene, "small", label, "${w.toInt()}x${h.toInt()} dp")
