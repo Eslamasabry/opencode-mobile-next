@@ -133,7 +133,13 @@ class AppChatsHome(
                     runtime.profiles.activeId,
                     // A source the app starts that stopped answering no longer says it is starting; an agent update says
                     // it runs.
-                    combine(monitor.snapshot, phone.serverFacts, runtime.sourceFailureState, agentUpdate.decision) { _, _, _, _ ->
+                    combine(
+                        monitor.snapshot,
+                        phone.serverFacts,
+                        runtime.sourceFailureState,
+                        agentUpdate.decision,
+                        runtime.helperStarting,
+                    ) { _, _, _, _, _ ->
                         Unit
                     },
                 ) { _, _, _, _, _ ->
@@ -153,8 +159,11 @@ class AppChatsHome(
             runtime.profiles.profiles.value
                 .map { loaded ->
                     // F: side_connections.dart:93-99: the phone agents are one switch named after Claude Code, part of
-                    // This phone: never the server, never "not answering" (their own notices say what is wrong).
+                    // This phone: never the server. Not answering only when their helper's start failed (issue 147).
                     val agents = runtime.isPhoneHelper(loaded.id)
+                    // Issue 147: an agents' source with no start, no list and no failure gets a start (never a bare
+                    // "Starting" with nothing behind it); during an agent update the update says why it waits.
+                    if (agents && updating == null) runtime.keepHelperListed(loaded.id)
                     ChatsListSourceUi(
                         profile = loaded.id,
                         name =
@@ -163,7 +172,9 @@ class AppChatsHome(
                         shown = runtime.listSourceShown(loaded.id),
                         main = !agents && loaded.id == active,
                         onThisPhone = runtime.sourceOnThisPhone(loaded.profile),
-                        unreachable = !agents && loaded.id in runtime.sourceFailures,
+                        // Issue 147: the agents' helper that did not start is named with its Try again (the sheet and
+                        // the home's notice), never left reading "Starting"; during an update the update speaks.
+                        unreachable = loaded.id in runtime.sourceFailures && (!agents || updating == null),
                         agents = agents,
                         starting = runtime.startingSource(loaded.id, agentsUpdating = agents && updating != null),
                         updatingAgent =
