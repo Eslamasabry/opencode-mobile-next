@@ -416,7 +416,6 @@
     </plurals>
     <string name="reviewSummary__eq1">1 tệp thay đổi · +%2$d −%3$d</string>
     <string name="reviewAlreadyApplied">Tác nhân đã thực hiện các thay đổi này trong dự án của bạn.</string>
-    <string name="reviewLooksGood">Ổn rồi</string>
     <string name="reviewUndoAll">Hoàn tác tất cả</string>
     <string name="reviewSendBackWithNote">Gửi lại kèm ghi chú</string>
     <plurals name="reviewUndoTitle">

@@ -995,6 +995,10 @@ class AndroidNewConversationHost(
                                 }
                             },
                         agents = agents,
+                        serverDefault =
+                            providers.defaultProviderId?.let { p ->
+                                providers.defaultModelId?.let { ModelRef(p, it) }
+                            },
                         model =
                             draftModel
                                 ?: savedModel

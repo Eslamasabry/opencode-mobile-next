@@ -1769,6 +1769,10 @@ internal class GraphChatWorld(
                 agent = if (newer) previous.agent else session?.agent ?: catalogDefaults?.agent,
                 usesDefault =
                     if (newer) previous.usesDefault else session?.model == null && failure == null,
+                serverDefault =
+                    catalogDefaults?.model?.let { ref ->
+                        choices.firstOrNull { it.providerId == ref.providerId && it.modelId == ref.modelId }
+                    },
                 recent = recentOf(choices),
                 favorites = favoritesOf(choices),
                 displayOnly = if (newer) previous.displayOnly else failure != null,

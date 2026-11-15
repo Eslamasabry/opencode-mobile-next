@@ -416,7 +416,6 @@
     </plurals>
     <string name="reviewSummary__eq1">1 file diubah · +%2$d −%3$d</string>
     <string name="reviewAlreadyApplied">Agen sudah membuat perubahan ini di proyek Anda.</string>
-    <string name="reviewLooksGood">Sudah bagus</string>
     <string name="reviewUndoAll">Urungkan semua</string>
     <string name="reviewSendBackWithNote">Kirim kembali dengan catatan</string>
     <plurals name="reviewUndoTitle">

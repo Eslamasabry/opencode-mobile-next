@@ -180,6 +180,8 @@ public data class NewConversationSetup(
     val models: List<NewConversationModel>,
     val agents: List<String>,
     val model: ModelRef? = null,
+    /** The model this server resolves "Server default" to, when it says; null otherwise. */
+    val serverDefault: ModelRef? = null,
     val agent: String? = null,
     val importDirectory: String? = null,
     val canChangeProject: Boolean = true,

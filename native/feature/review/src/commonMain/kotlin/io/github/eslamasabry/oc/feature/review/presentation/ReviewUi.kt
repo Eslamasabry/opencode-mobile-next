@@ -114,7 +114,7 @@ public enum class UndoAllUi {
     Waiting,
 }
 
-/** "Changes" (a turn's, or the whole conversation's) with "Looks good" and "Undo all". */
+/** "Changes" (a turn's, or the whole conversation's) with "Done" and "Undo all". */
 public data class ChangesUi(
     /** True for one turn, false for the whole conversation. */
     val turn: Boolean,

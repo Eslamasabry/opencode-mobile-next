@@ -446,7 +446,6 @@
     </plurals>
     <string name="reviewSummary__eq1">Изменён 1 файл · +%2$d −%3$d</string>
     <string name="reviewAlreadyApplied">Агент уже внёс эти изменения в ваш проект.</string>
-    <string name="reviewLooksGood">Выглядит хорошо</string>
     <string name="reviewUndoAll">Откатить всё</string>
     <string name="reviewSendBackWithNote">Вернуть с заметкой</string>
     <plurals name="reviewUndoTitle">

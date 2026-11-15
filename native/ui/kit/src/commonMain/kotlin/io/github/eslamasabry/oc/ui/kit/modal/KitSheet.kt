@@ -329,6 +329,8 @@ private fun PageKeyboard(held: PageFocus) {
 @Composable
 public fun KitSheetHost(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
     val state = remember { KitSheetHostState() }
+    // Any sheet or dialog of this host dims the page: the kit says so to whatever floats above it.
+    KitReportsModal(state.isShowing || state.isDialogShowing)
     // Liquid glass: the page as the sheets and menus over it see it, recorded only while one of them is liquid.
     val page = rememberKitLiquidSource()
     // One budget per window: the floating parts that may be liquid at once, and which drop to frost first.
