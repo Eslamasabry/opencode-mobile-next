@@ -39,7 +39,13 @@ import io.github.eslamasabry.oc.ui.kit.state.KitDetailsFold
 import io.github.eslamasabry.oc.ui.kit.state.KitSkeletonTranscript
 import io.github.eslamasabry.oc.ui.kit.state.KitSlowWords
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
+import io.github.eslamasabry.oc.feature.chat.presentation.ChatPhase
 import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.chatLoadFailedAgentBody
+import io.github.eslamasabry.oc.ui.words.res.chatLoadFailedAgentsBody
+import io.github.eslamasabry.oc.ui.words.res.chatLoadFailedBody
+import io.github.eslamasabry.oc.ui.words.res.chatLoadMissingAgentBody
+import io.github.eslamasabry.oc.ui.words.res.chatLoadMissingAgentsBody
 import io.github.eslamasabry.oc.ui.words.res.kitCopyDetails
 import io.github.eslamasabry.oc.ui.words.res.kitDetails
 import io.github.eslamasabry.oc.ui.words.res.kitReportProblem
@@ -100,6 +106,25 @@ internal fun ChatLoadingBody(label: String?, modifier: Modifier = Modifier) {
 }
 
 /**
+ * OMP-OPEN: the load-failure page's words name what did not answer. A conversation of this phone's agents names its
+ * agent (its `name`), or "the phone's agents" when they no longer say which; a conversation the agents do
+ * not have ([Failure.NotFound]) says so and how to go on instead of "try again when it answers". A server's own
+ * conversation keeps its words.
+ */
+@Composable
+internal fun chatLoadBody(phase: ChatPhase.Failed): String {
+    val agent = phase.agent ?: return stringResource(Res.string.chatLoadFailedBody)
+    val name = agent.name
+    return if (phase.failure is Failure.NotFound) {
+        if (name != null) stringResource(Res.string.chatLoadMissingAgentBody, name)
+        else stringResource(Res.string.chatLoadMissingAgentsBody)
+    } else {
+        if (name != null) stringResource(Res.string.chatLoadFailedAgentBody, name)
+        else stringResource(Res.string.chatLoadFailedAgentsBody)
+    }
+}
+
+/**
  * The conversation could not load (Flutter `_ChatLoadError`, chat_states.dart:69-95): a page state with the unplugged
  * cable, the title and body, Try again, "Report a problem" one tap away, and the redacted details folded last. The
  * page is centred in the room and the composer is hidden while it shows.
@@ -112,6 +137,7 @@ internal fun ChatLoadError(
     retry: KitAction,
     onReport: (() -> Unit)?,
     modifier: Modifier = Modifier,
+    setUp: KitAction? = null,
 ) {
     val tokens = LocalKitTokens.current
     val report = onReport?.let { KitAction(stringResource(Res.string.kitReportProblem), it) }
@@ -134,7 +160,7 @@ internal fun ChatLoadError(
                 Spacer(Modifier.height(Space.S2.dp))
                 KitText(body, tone = TextTone.Secondary)
                 Spacer(Modifier.height(Space.S6.dp))
-                KitActionBlock(primary = retry, tertiary = listOfNotNull(report))
+                KitActionBlock(primary = retry, tertiary = listOfNotNull(setUp, report))
                 Spacer(Modifier.height(Space.S3.dp))
                 KitDetailsFold(
                     label = stringResource(Res.string.kitDetails),

@@ -2,6 +2,7 @@ package io.github.eslamasabry.oc.feature.chat.presentation
 
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.engine.agents.catalog.AgentCatalog
+import io.github.eslamasabry.oc.engine.agents.catalog.AgentDescriptor
 import io.github.eslamasabry.oc.engine.agents.firstuse.AgentFirstUse
 import io.github.eslamasabry.oc.feature.chat.world.AgentSetUpNeed
 import io.github.eslamasabry.oc.feature.chat.world.PendingSend
@@ -63,6 +64,10 @@ internal object AgentSetUpRules {
         val verdict = AgentFirstUse.classify(agent, AgentFirstUse.Phase.FirstPrompt, reason, setUpDone)
         return if (verdict == AgentFirstUse.Verdict.NeedsSetUp) AgentSetUpNeed(agent.id.raw, agent.name) else null
     }
+
+    /** The catalog agent whose runtime is [runtimeId] (its provider id), or null for one the catalog does not have. */
+    fun catalogAgent(runtimeId: String, catalog: AgentCatalog = AgentCatalog.builtIn): AgentDescriptor? =
+        catalog.agents.firstOrNull { it.providerId == runtimeId }
 
     /** The catalog agent behind a conversation's runtime (the id its set-up terminal and set-up list use). */
     fun agentId(runtimeId: String, catalog: AgentCatalog = AgentCatalog.builtIn): String? =

@@ -426,7 +426,7 @@ public class ChatPresenter(
                     ChatLoad.Loading -> if (t.rows.isNotEmpty()) ChatPhase.Live else ChatPhase.Loading
                     ChatLoad.Live -> ChatPhase.Live
                     is ChatLoad.Failed ->
-                        if (kept != null) ChatPhase.Live else ChatPhase.Failed(load.failure)
+                        if (kept != null) ChatPhase.Live else ChatPhase.Failed(load.failure, loadAgent())
                 },
             rows =
                 if (l.withdrawn.isEmpty() && l.hiddenStopNote == null) t.rows
@@ -502,6 +502,18 @@ public class ChatPresenter(
 
     /** Set up at first use: whether the agent was set up when each counted failure came (by bubble). */
     private val setUpAtFailure = HashMap<Long, Boolean>()
+
+    /**
+     * OMP-OPEN: who the load-failure page names. A conversation of this phone's agents names its agent (its runtime,
+     * as the gateway knows it) and offers that agent's set-up where this phone has a set-up terminal for it; a server's
+     * own conversation names nobody here (null), as before.
+     */
+    private fun loadAgent(): ChatLoadAgent? {
+        if (!world.serverIsAgentHelper) return null
+        val agent = world.runtimeId()?.let(AgentSetUpRules::catalogAgent)
+        val canSetUp = agent != null && outside?.phoneAgentOwner(world.ref) != null
+        return ChatLoadAgent(agent?.name, agent?.id?.raw?.takeIf { canSetUp })
+    }
 
     /** The set-up list of this conversation's phone owner changed: the bubbles are read again. */
     private fun setUpChanges(): Flow<Unit> {
