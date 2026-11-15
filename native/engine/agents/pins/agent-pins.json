@@ -435,11 +435,11 @@
         "artifacts": {
           "arm64": {
             "url": null,
-            "sha256": "c7b577b7dabcafd64a7f349df341c4d32c934cb437c252eed635510d50163ade",
+            "sha256": "a3ecc5e7eac9ea3a49f9beb9e19fe969f480452f381c7d5c226b56b9a7cd7467",
             "format": "tarGz",
             "member": "phone-unharnessed",
-            "downloadBytes": 140705042,
-            "installedBytes": 534841943
+            "downloadBytes": 166024839,
+            "installedBytes": 602795014
           }
         }
       }

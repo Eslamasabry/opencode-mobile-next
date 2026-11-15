@@ -15,6 +15,8 @@ credentials are passed to the child. Pending calls receive a plain error if it e
 | B-AGENT-UH-001 | A private atomic index preserves other conversations and rejects missing ids and escaping paths. |
 | B-AGENT-UH-002 | Bounded JSON-line framing changes only envelope identity, preserving prompt/tool content. |
 | B-AGENT-UH-003 | Close preserves reopen, load restarts on the saved file, history retains the public id, deletion forgets it. |
+| B-AGENT-UH-004 | Python input remains intact and is also readable by the helper. |
+| B-AGENT-UH-005 | A fake child crash answers pending calls and permits a new initialization. |
 
 The normal `:engine:agents:desktopTest --tests '*UnharnessedAdapterTest*'` task runs the bridge tests with a
 fake child only. Real binary/kernel tests run exclusively in the dedicated hosted workflow. The install

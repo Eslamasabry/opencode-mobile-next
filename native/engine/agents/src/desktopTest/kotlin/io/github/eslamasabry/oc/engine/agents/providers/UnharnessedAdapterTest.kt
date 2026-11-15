@@ -8,7 +8,7 @@ import kotlin.test.assertTrue
 
 class UnharnessedAdapterTest {
     @Test
-    fun `B-AGENT-UH-001 to 003 the ACP bridge keeps identities and frames without running the agent`() {
+    fun `B-AGENT-UH-001 to 005 the ACP bridge keeps identities and frames without running the agent`() {
         val root =
             generateSequence(File(System.getProperty("user.dir"))) { it.parentFile }
                 .first { File(it, "tool/unharnessed/test_adapter.py").isFile }

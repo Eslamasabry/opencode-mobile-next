@@ -414,22 +414,7 @@ class AppPhoneAgents(
         val owner = agentOwner(ownerId()) ?: return false
         if (mutable.value.installation?.phase == PhoneAgentInstallPhase.Installing) return false
         val agents = phoneCatalog()
-        if (authOwner != null) {
-            val configured =
-                io.github.eslamasabry.oc.engine.agents.providers
-                    .OwnProviderStore(
-                        gatePrefs(authOwner),
-                        StoreSecrets(stores),
-                        redactor::registerSecret,
-                    )
-                    .configured(authOwner)
-            val ready =
-                when (configured) {
-                    is Outcome.Ok -> configured.value
-                    is Outcome.Failed -> emptySet()
-                }
-            synchronized(admission) { configuredProviders[authOwner] = ready }
-        }
+        refreshConfiguredProviders(owner)
         val read = native {
             if (!linux.installed) return@native false
             for (agent in agents) {
@@ -653,6 +638,7 @@ class AppPhoneAgents(
         if (stores.warm() is Outcome.Failed) return
         val owner = ownerId()
         val authOwner = agentOwner(owner) ?: return
+        refreshConfiguredProviders(authOwner)
         val before = synchronized(admission) { published }
         if (before > 0) return
         val known = native {
@@ -680,6 +666,23 @@ class AppPhoneAgents(
             it.runsOnPhoneHost && it.recipe != null && it.availability != AgentAvailability.Hidden
         }
 
+    private suspend fun refreshConfiguredProviders(owner: ProfileId) {
+        val configured =
+            io.github.eslamasabry.oc.engine.agents.providers
+                .OwnProviderStore(
+                    gatePrefs(owner),
+                    StoreSecrets(stores),
+                    redactor::registerSecret,
+                )
+                .configured(owner)
+        val ready =
+            when (configured) {
+                is Outcome.Ok -> configured.value
+                is Outcome.Failed -> emptySet()
+            }
+        synchronized(admission) { configuredProviders[owner] = ready }
+    }
+
     private suspend fun refreshLocked(stop: ProbeStop): Outcome<Unit> {
         if (needsRestart) {
             mutable.value = PhoneAgentsState(needsRestart = true)
@@ -691,6 +694,7 @@ class AppPhoneAgents(
         }
         val owner = ownerId()
         val authOwner = agentOwner(owner)
+        if (authOwner != null) refreshConfiguredProviders(authOwner)
         val progress = owner?.let { id ->
             when (val restored = installation(id).restore(id)) {
                 is Outcome.Ok -> restored.value

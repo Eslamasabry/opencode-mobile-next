@@ -72,9 +72,9 @@ public class ChatHeaderViewModel(
                     val catalog =
                         io.github.eslamasabry.oc.engine.agents.catalog.AgentCatalog.builtIn
                     val agent =
-                        catalog.forProvider(models.agent)
+                        catalog.forProvider(facts.providerId)
                             ?: catalog.forProvider(facts.agent)
-                            ?: catalog.forProvider(facts.providerId)
+                            ?: catalog.forProvider(models.agent)
                     agent?.commandApproval ==
                         io.github.eslamasabry.oc.engine.agents.catalog.AgentCommandApproval
                             .NeverAsks

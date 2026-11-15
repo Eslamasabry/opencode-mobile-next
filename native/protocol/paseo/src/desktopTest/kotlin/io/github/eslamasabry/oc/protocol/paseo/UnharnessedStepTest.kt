@@ -68,8 +68,7 @@ class UnharnessedStepTest {
             )
         }
         val program =
-            "import importlib.util,json,sys; s=importlib.util.spec_from_file_location(" bridge
-                ",sys.argv[1]); m=importlib.util.module_from_spec(s); s.loader.exec_module(m); print(json.dumps(m.present_step(json.load(sys.stdin))))"
+            "import importlib.util,json,sys; s=importlib.util.spec_from_file_location('bridge',sys.argv[1]); m=importlib.util.module_from_spec(s); s.loader.exec_module(m); print(json.dumps(m.present_step(json.load(sys.stdin))))"
         val process =
             ProcessBuilder(
                     "python3",
@@ -111,6 +110,6 @@ class UnharnessedStepTest {
         val tool = message.parts.single().tool!!
         assertEquals(code, tool.input["command"]!!.jsonPrimitive.content)
         assertTrue(code.contains("hello.py"))
-        assertTrue(tool.output.contains("hello from phone"))
+        assertTrue(tool.output.orEmpty().contains("hello from phone"))
     }
 }
