@@ -263,6 +263,11 @@ public data class FindUi(
     val currentOrdinal: Int = 0,
     /** The part of the row the current hit is in (a step's or a thought's own id); equals the row's key for its text. */
     val currentSource: String? = null,
+    /**
+     * The hits of [query] are still being looked for: nothing is counted, marked or jumped to until they arrive (the
+     * previous query's hits never stand in for them).
+     */
+    val searching: Boolean = false,
 )
 
 public data class TimelineEntryUi(

@@ -74,12 +74,15 @@ internal fun TranscriptFindBar(find: FindUi, actions: ChatActions, modifier: Mod
         if (field.text.toString() != find.query) field.edit { replace(0, length, find.query) }
     }
     val none = stringResource(Res.string.transcriptFindNone)
-    val matches = if (find.count == 0) none else pluralStringResource(
+    // While the new query's hits are looked for, the field says so (never the previous query's count).
+    val searching = stringResource(Res.string.p12SearchSearching)
+    val matches = if (find.searching) searching else if (find.count == 0) none else pluralStringResource(
         Res.plurals.transcriptFindCount, find.count, find.count, find.current + 1,
     )
     // In the field: "2 of 7" (the words a screen reader hears say "matches" too); none: "No matches".
     val position =
-        if (find.count == 0) none
+        if (find.searching) searching
+        else if (find.count == 0) none
         else stringResource(Res.string.transcriptFindPosition, Numbers.format(find.current + 1), Numbers.format(find.count))
     val older = KitLineAction(
         stringResource(Res.string.transcriptFindAll), { navigationFocus.requestFocus(); actions.searchAllHistory() },
@@ -129,7 +132,7 @@ internal fun TranscriptFindBar(find: FindUi, actions: ChatActions, modifier: Mod
                     }),
             )
             if (typed) {
-                val enabled = if (find.count > 0) KitEnabled.Enabled else KitEnabled.Disabled(none)
+                val enabled = if (find.count > 0) KitEnabled.Enabled else KitEnabled.Disabled(if (find.searching) searching else none)
                 KitIconButton(KitIcons.chevronUp, stringResource(Res.string.transcriptFindPrevious), { navigationFocus.requestFocus(); actions.findPrevious() }, Modifier.testTag("transcript-find-previous"), enabled = enabled)
                 KitIconButton(KitIcons.chevronDown, stringResource(Res.string.transcriptFindNext), { navigationFocus.requestFocus(); actions.findNext() }, Modifier.testTag("transcript-find-next"), enabled = enabled)
             }
