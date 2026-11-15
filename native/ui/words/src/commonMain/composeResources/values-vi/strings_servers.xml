@@ -499,6 +499,6 @@
     <string name="serverDetailsAccessDenied">Máy chủ từ chối truy cập. Hãy kiểm tra tài khoản nào được dùng máy chủ này.</string>
     <string name="serverDetailsFixSignIn">Sửa đăng nhập</string>
     <string name="serverDetailsLastAttempt">Lần thử kết nối gần nhất: %1$s</string>
-    <string name="connectionAgentStarting">Đang khởi động Claude Code…</string>
+    <string name="connectionAgentStarting">Đang khởi động các tác nhân trên điện thoại này…</string>
     <string name="connectionAgentStartFailed">Claude Code không khởi động được. Chạm Khởi động lại Claude Code để thử một lần nữa.</string>
 </resources>

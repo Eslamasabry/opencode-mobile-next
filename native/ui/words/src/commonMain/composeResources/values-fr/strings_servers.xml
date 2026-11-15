@@ -511,6 +511,6 @@
     <string name="serverDetailsAccessDenied">Le serveur a refusé l'accès. Vérifiez quel compte peut utiliser ce serveur.</string>
     <string name="serverDetailsFixSignIn">Corriger la connexion</string>
     <string name="serverDetailsLastAttempt">Dernière tentative de connexion\u00A0: %1$s</string>
-    <string name="connectionAgentStarting">Démarrage de Claude Code…</string>
+    <string name="connectionAgentStarting">Démarrage des agents de ce téléphone…</string>
     <string name="connectionAgentStartFailed">Claude Code n’a pas démarré. Touchez Redémarrer Claude Code pour réessayer une fois.</string>
 </resources>

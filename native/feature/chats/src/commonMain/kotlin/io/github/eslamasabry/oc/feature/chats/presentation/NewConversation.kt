@@ -423,6 +423,12 @@ public enum class PhoneStartWay {
 
     /** Anything else: try again. */
     TryAgain,
+
+    /**
+     * Issue 147: the agent's own sign-in no longer works (the helper refused the start for it: "Failed to
+     * authenticate: OAuth session expired"): "<Agent> needs you to sign in again", with Sign in.
+     */
+    SignIn,
 }
 
 /** A phone agent's refused start: [agentName] is named on screen, [way] is the one action offered. */
@@ -437,8 +443,12 @@ public object PhoneStartRules {
             RegexOption.IGNORE_CASE,
         )
 
+    /** The tag the phone's helper gives a start refused for the agent's sign-in (`PaseoAgentSignInTag`). */
+    public const val SIGN_IN_TAG: String = "Paseo AgentSignIn"
+
     public fun way(failure: Failure, chosen: ModelRef?, listed: List<NewConversationModel>): PhoneStartWay =
         when {
+            failure is Failure.Rejected && failure.tag?.raw == SIGN_IN_TAG -> PhoneStartWay.SignIn
             chosen != null && listed.isNotEmpty() && listed.none { it.model == chosen } -> PhoneStartWay.ChooseModel
             failure is Failure.ComputerDidNotAnswer && NOT_READY.containsMatchIn(failure.details?.text.orEmpty()) ->
                 PhoneStartWay.SetUp

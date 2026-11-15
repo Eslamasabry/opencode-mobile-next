@@ -38,11 +38,22 @@ class PhoneOpeningTest {
         val booting = PhoneStartWatch(since = opened, startingSince = opened, processAlive = true, seenAlive = true)
         assertEquals(ChatsOpeningPhase.Starting, phase(booting, after = 89))
         assertEquals(ChatsOpeningPhase.Failed, phase(booting, after = 90))
+        // Issue 147: a server already running from before the app opened gets the first moments to answer too.
         val running = PhoneStartWatch(since = opened, processAlive = true, uptime = 95.seconds, seenAlive = true)
-        assertEquals(ChatsOpeningPhase.Failed, phase(running, after = 5))
-        assertEquals(ChatsOpeningPhase.Connecting, phase(running, after = 5, busy = true))
+        assertEquals(ChatsOpeningPhase.Failed, phase(running, after = 16))
+        assertEquals(ChatsOpeningPhase.Connecting, phase(running, after = 16, busy = true))
         val exited = PhoneStartWatch(since = opened, processAlive = false, seenAlive = true)
         assertEquals(ChatsOpeningPhase.Failed, phase(exited, after = 3))
+    }
+
+    @Test
+    fun `I147-AGY-10 an ordinary cold start never reads couldn't load while the phone's server is not answering yet`() {
+        // Galaxy S22: the server ran from before the app opened; the first try failed before it answered.
+        val running = PhoneStartWatch(since = opened, processAlive = true, uptime = 2.seconds * 3600, seenAlive = true)
+        assertEquals(ChatsOpeningPhase.Starting, phase(running, after = 3))
+        assertEquals(ChatsOpeningPhase.Starting, phase(running, after = 3, failure = Failure.ComputerDidNotAnswer()))
+        // After the grace a server that still does not answer has failed.
+        assertEquals(ChatsOpeningPhase.Failed, phase(running, after = 16))
     }
 
     @Test
