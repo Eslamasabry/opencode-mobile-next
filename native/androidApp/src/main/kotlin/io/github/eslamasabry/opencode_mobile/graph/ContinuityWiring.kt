@@ -1,7 +1,5 @@
 package io.github.eslamasabry.opencode_mobile.graph
 
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -29,6 +27,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import io.github.eslamasabry.oc.ui.kit.KitAction
+import io.github.eslamasabry.oc.ui.kit.frame.kitKeyboardVisible
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
@@ -228,12 +227,11 @@ class AppTelemetryContinuity(
 @Inject
 @ContributesIntoSet(AppScope::class, binding = binding<ShellOverlay>())
 class TelemetryConsentOverlay(private val continuity: AppTelemetryContinuity) : ShellOverlay {
-    @OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
     @Composable
     override fun Content() {
         val ask by continuity.runtime.question.collectAsStateWithLifecycle()
         // The owed question waits for the keyboard to go down.
-        val keyboardUp = WindowInsets.isImeVisible
+        val keyboardUp = kitKeyboardVisible()
         LaunchedEffect(keyboardUp) { continuity.rest(!keyboardUp) }
         KitConfirm(
             spec =
