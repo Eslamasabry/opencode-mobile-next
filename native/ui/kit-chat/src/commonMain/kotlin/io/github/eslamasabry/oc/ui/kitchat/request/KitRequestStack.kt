@@ -87,9 +87,10 @@ public fun <T> KitRequestStack(
 
 @Composable
 private fun stackMaxHeight(): Dp {
-    val heightPx = LocalWindowInfo.current.containerSize.height
-    if (heightPx <= 0) return Dp.Infinity
-    return with(LocalDensity.current) { (heightPx * STACK_HEIGHT_SHARE).toDp() }
+    // One card at its cap, plus the gap under it, is whole in the stack (F-016: a card taller than the stack hid its
+    // answers behind the stack's edge); several cards scroll inside it.
+    val card = maxCardHeight()
+    return if (card == Dp.Infinity) Dp.Infinity else card + Space.S2.dp
 }
 
 /** Fades the top and bottom edges where more of the stack lies past them; read in draw, so it follows the scroll. */

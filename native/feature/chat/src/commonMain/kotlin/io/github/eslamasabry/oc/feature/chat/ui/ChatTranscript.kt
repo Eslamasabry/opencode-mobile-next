@@ -21,6 +21,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
@@ -439,6 +440,10 @@ internal fun ChatTranscriptList(
     find: FindUi? = null,
     /** A tap on the background line opens the conversation's running work; null leaves the line as plain text. */
     onOpenBackground: (() -> Unit)? = null,
+    /** F-023: the key of the row that holds a decision waiting for the person; it is brought back into view (null = none). */
+    waitingKey: String? = null,
+    /** Bumped when the person asks to see the waiting decision (the message box's line). */
+    waitingJump: Int = 0,
 ) {
     val currentRows by rememberUpdatedState(rows)
     FindOpensFolds(find, rows, facts, folds)
@@ -512,6 +517,21 @@ internal fun ChatTranscriptList(
             }
         }
     KeepScrollPlace(list, itemKeys)
+    // F-023: a waiting decision is brought back into view whenever a newer row arrives or the person asks. The list is
+    // reversed, so scrolling to the row's index puts its end (the answers) at the foot of the page.
+    val waitingIndex = waitingKey?.let { itemKeys.indexOf(it) }?.takeIf { it >= 0 }
+    val latestWaitingIndex by rememberUpdatedState(waitingIndex)
+    // Keyed on the first row too: while a reply runs the newest key is the live line's and does not change.
+    val firstRowKey = unique.firstOrNull()?.key
+    LaunchedEffect(waitingKey, newestKey, firstRowKey, pending.size, waitingJump) {
+        if (latestWaitingIndex == null) return@LaunchedEffect
+        // After the frames in which the new row is laid out and the list's own follow (index 0) has run.
+        repeat(3) { withFrameNanos {} }
+        val at = latestWaitingIndex ?: return@LaunchedEffect
+        list.following = false
+        list.lazy.scrollToItem(at)
+        androidx.compose.runtime.snapshots.Snapshot.withoutReadObservation { list.following = false }
+    }
     KitTranscriptList(
         state = list,
         newestKey = newestKey,

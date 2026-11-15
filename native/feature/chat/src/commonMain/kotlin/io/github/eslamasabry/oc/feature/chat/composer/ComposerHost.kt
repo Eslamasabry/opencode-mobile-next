@@ -127,6 +127,8 @@ public class ComposerChrome(
      * the person sees where they will type, and may start typing; Send waits until the conversation has loaded.
      */
     public val loading: () -> Boolean = { false },
+    /** F-023: asks the page to show the decision that waits (a tap in the box's "Waiting for your decision above…" line). */
+    public val jumpToWaiting: () -> Unit = {},
 )
 
 /** N-55: how the message field takes focus, registered by the composer while it is shown. */

@@ -95,8 +95,10 @@ public class KitRequestChange(
 )
 
 /** Plan 09 R13 / plan 06 §8: the card height share grows at very large text. */
-private const val HEIGHT_SHARE = 0.45f
-private const val HEIGHT_SHARE_LARGE_TEXT = 0.60f
+// Issue 147 (F-016): the request stack in the conversation is this tall plus one gap, so a card at its cap is whole in it:
+// the answers are never cut off by the stack's own edge. (It was 0.45 against the stack's 0.40.)
+private const val HEIGHT_SHARE = 0.38f
+private const val HEIGHT_SHARE_LARGE_TEXT = 0.58f
 private const val LARGE_TEXT = 2.0f
 
 /**
@@ -492,7 +494,7 @@ private fun AlwaysLink(label: String, onAlways: () -> Unit, enabled: Boolean, re
 internal val ANSWER_HAPTIC: KitHaptic = KitHaptic.Send
 
 /**
- * 45 % of the window's height (60 % at 2× text and above), from the kit's window ([LocalKitWindow], the one window
+ * 38 % of the window's height (58 % at 2× text and above), from the kit's window ([LocalKitWindow], the one window
  * every kit part reads; the raw platform container can be another size, e.g. a test host).
  */
 @Composable
