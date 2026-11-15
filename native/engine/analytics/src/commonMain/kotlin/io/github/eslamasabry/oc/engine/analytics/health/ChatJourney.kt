@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.engine.analytics.health
 
+import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.engine.analytics.product.ProductFeature
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
@@ -22,10 +23,15 @@ public data class PromptTraits(val agent: String? = null, val hasAttachment: Boo
 
 /**
  * The chat journey, from "send" to "the reply is done" (B-190 and the journeys doc `docs/native/analytics/journeys-2026-11-09.md`).
- * Fed by the prompt timeline's signals (ids only, never text) and by the stream, stop and approval hooks, it sends:
- * `send_result` (first reply or none, with agent, server kind and how the prompt was made), `chat_turn` (the outcome,
- * times, tool count, reconnect and follow-up), `turn_stall` and `first_reply` (once per install), and
- * `feature_used` for voice and attachments. A refused send is counted where it is refused, with its failure kind.
+ * Fed by the prompt timeline's signals (ids only, never text) and by the stream, stop and approval hooks. Each stage
+ * is its own number (analytics-truth, 2026-11-16):
+ * - send: `send_result` once per send when the server took it or refused it ([settled]), with agent, server kind and
+ *   how the prompt was made; nothing about a reply decides it;
+ * - reply: `first_reply_range` is Send to the first output the person can SEE, a non-empty reply text or a tool row
+ *   ([text], [tool]); reasoning, step markers and empty text never count; `none` when the turn ended without one;
+ * - turn: `chat_turn` `done` only with visible output, `no_output` when it ended without any; a send that never saw
+ *   the server start working ends by the same two-minute rule as a lost stream instead of waiting to be evicted.
+ * Also `turn_stall`, `first_reply` (once per install) and `feature_used` for voice and attachments.
  *
  * One turn per session. A prompt sent into a running turn is a steer: it changes the turn's follow-up and starts no
  * new one. An idle left over from the previous turn does not end the new one.
@@ -37,7 +43,7 @@ public class ChatJourney(
     /** A turn that showed a reply has just ended without an error: the reply is complete (sent whatever the switches say). */
     private val onReplyDone: () -> Unit = {},
 ) {
-    private class Turn(val startMs: Long, val onPhone: Boolean, val traits: PromptTraits, val input: String) {
+    private class Turn(val startMs: Long, val onPhone: Boolean, val traits: PromptTraits) {
         val assistant = HashSet<String>()
         val tools = HashSet<String>()
         var busy = false
@@ -54,8 +60,12 @@ public class ChatJourney(
         var replied = false
     }
 
+    /** What the last send of a session carried, until the server's answer to it is known ([settled]). */
+    private class Pending(val serverKind: String, val traits: SendTraits, val steer: Boolean)
+
     private val turns = MutableStateFlow<Map<String, Turn>>(emptyMap())
     private val failedAt = HashMap<String, Long>()
+    private val pending = HashMap<String, Pending>()
     private var voice = false
 
     /** The person dictated into the composer: the next prompt counts as a voice prompt. */
@@ -64,12 +74,6 @@ public class ChatJourney(
     }
 
     public fun sent(sessionId: String, onPhone: Boolean, traits: PromptTraits = PromptTraits()) {
-        val current = turns.value[sessionId]
-        if (current != null && current.busy) {
-            current.followUp = "steer"
-            current.lastActivityMs = now()
-            return
-        }
         val dictated = voice
         voice = false
         val input =
@@ -81,7 +85,15 @@ public class ChatJourney(
             }
         if (dictated) flow.feature(ProductFeature.Voice)
         if (traits.hasAttachment) flow.feature(ProductFeature.FileAttach)
-        val turn = Turn(now(), onPhone, traits, input)
+        val current = turns.value[sessionId]
+        val steer = current != null && current.busy
+        pending[sessionId] = Pending(if (onPhone) "phone" else "computer", SendTraits(traits.agent, input), steer)
+        if (current != null && steer) {
+            current.followUp = "steer"
+            current.lastActivityMs = now()
+            return
+        }
+        val turn = Turn(now(), onPhone, traits)
         val failed = failedAt.remove(sessionId)
         if (failed != null && now() - failed <= AFTER_FAIL_WINDOW_MS) turn.followUp = "after_fail"
         turns.update { map ->
@@ -90,31 +102,54 @@ public class ChatJourney(
         }
     }
 
+    /** The send link's own answer; a send it failed starts no turn (a failed steer leaves the running turn alone). */
     public fun accepted(sessionId: String, error: Boolean) {
-        if (error) turns.update { it - sessionId }
+        if (error && pending[sessionId]?.steer != true) turns.update { it - sessionId }
+    }
+
+    /**
+     * Stage 1, `send_result`: the server took the send ([accepted]) or did not ([failure] says why, as a word). Called
+     * once per send by the delivery engine where it decides; the traits are the ones [sent] saw for this session.
+     */
+    public fun settled(sessionId: String, accepted: Boolean, failure: Failure? = null) {
+        val p = pending.remove(sessionId)
+        flow.sendResult(if (accepted) "ok" else "fail", failure.takeUnless { accepted }, p?.serverKind, p?.traits)
     }
 
     public fun message(sessionId: String, messageId: String, assistant: Boolean) {
         if (assistant) turns.value[sessionId]?.assistant?.add(messageId)
     }
 
+    /** Any part of the turn arrived: activity, never a reply by itself (a reasoning or step part shows nothing). */
     public fun part(sessionId: String, messageId: String, kind: String) {
         val t = turns.value[sessionId] ?: return
         t.lastActivityMs = now()
         t.lastKind = kind
-        if (messageId in t.assistant || kind in ASSISTANT_ONLY_KINDS) firstReply(sessionId, t)
     }
 
+    /** Any streamed piece arrived (text or reasoning): activity only. */
     public fun delta(sessionId: String) {
         val t = turns.value[sessionId] ?: return
         t.lastActivityMs = now()
         t.lastKind = "text"
-        firstReply(sessionId, t)
     }
 
-    /** A tool call of this turn (once per call; later updates of the same call are not counted again). */
+    /**
+     * Non-empty reply text the person can see: streamed text ([streamed]), or a text part of [messageId], which counts
+     * only once that message is known to be the assistant's (the person's own prompt is a text part too).
+     */
+    public fun text(sessionId: String, messageId: String, streamed: Boolean) {
+        val t = turns.value[sessionId] ?: return
+        t.lastActivityMs = now()
+        t.lastKind = "text"
+        if (streamed || messageId in t.assistant) firstReply(t)
+    }
+
+    /** A tool call of this turn (once per call; later updates of the same call are not counted again). Its row shows. */
     public fun tool(sessionId: String, partId: String) {
-        turns.value[sessionId]?.tools?.add(partId)
+        val t = turns.value[sessionId] ?: return
+        t.tools.add(partId)
+        firstReply(t)
     }
 
     public fun busy(sessionId: String) {
@@ -134,21 +169,16 @@ public class ChatJourney(
         val t = turns.value[sessionId] ?: return
         if (!t.busy) return
         turns.update { it - sessionId }
-        // A turn the model refused (rate limit, free-tier limit, sign-in needed, any model error) with no reply is a
-        // failed send, not an "ok" one; the person pressing Stop is not a failure.
-        val refused = errorKind != null && errorKind != "aborted" && !t.stopped && !t.replied
-        if (refused) {
-            flow.sendResult("fail", firstReplyMs = null, serverKind = serverKind(t), traits = send(t), failWord = sendFailWord(errorKind))
-        } else if (!t.replied) {
-            flow.sendResult("ok", firstReplyMs = null, serverKind = serverKind(t), traits = send(t))
-        }
+        // A model refusal (rate limit, free-tier limit, sign-in) is the turn's error with its kind: the send itself was
+        // taken, and `send_result` said so when it was.
         val outcome =
             when {
                 t.stopped -> "stopped_by_user"
                 errorKind == "aborted" -> "stopped_by_user"
                 t.approvalExpired && errorKind != null -> "approval_timeout"
                 errorKind != null -> "error"
-                else -> "done"
+                t.replied -> "done"
+                else -> "no_output"
             }
         summarize(sessionId, t, outcome, errorKind.takeIf { outcome == "error" || outcome == "approval_timeout" })
         if (t.replied && errorKind == null) onReplyDone()
@@ -158,7 +188,7 @@ public class ChatJourney(
     public fun stream(onPhone: Boolean, connected: Boolean) {
         val at = now()
         for (t in turns.value.values) {
-            if (t.onPhone != onPhone || !t.busy) continue
+            if (t.onPhone != onPhone) continue
             if (!connected && t.droppedAtMs == null) t.droppedAtMs = at
             if (connected && t.droppedAtMs != null) {
                 t.droppedAtMs = null
@@ -179,18 +209,24 @@ public class ChatJourney(
 
     /**
      * Called every half minute or so while a chat is open: reports a turn that went quiet (`turn_stall`, once per
-     * range) and a turn whose stream never came back (`chat_turn` with `connection_lost`).
+     * range), a turn whose stream never came back (`chat_turn` with `connection_lost`), and a send the server never
+     * started working on, after the same [LOST_AFTER_MS] of quiet (`done` with visible output, else `no_output`).
      */
     public fun checkStalls() {
         val at = now()
         for ((id, t) in turns.value) {
-            if (!t.busy) continue
             val dropped = t.droppedAtMs
             if (dropped != null && at - dropped >= LOST_AFTER_MS) {
                 turns.update { it - id }
-                if (!t.replied) flow.sendResult("ok", firstReplyMs = null, serverKind = serverKind(t), traits = send(t))
                 failedAt[id] = at
                 summarize(id, t, "connection_lost", null, recoveredOverride = "no")
+                continue
+            }
+            if (!t.busy) {
+                if (at - t.lastActivityMs >= LOST_AFTER_MS) {
+                    turns.update { it - id }
+                    summarize(id, t, if (t.replied) "done" else "no_output", null)
+                }
                 continue
             }
             val quiet = at - t.lastActivityMs
@@ -226,12 +262,13 @@ public class ChatJourney(
         )
     }
 
-    private fun firstReply(sessionId: String, t: Turn) {
+    /** Stage 2: the first output the person can see in this turn. */
+    private fun firstReply(t: Turn) {
         if (t.replied) return
         t.replied = true
         val elapsed = (now() - t.startMs).coerceAtLeast(0)
         t.firstReplyMs = elapsed
-        flow.sendResult("ok", firstReplyMs = elapsed, serverKind = serverKind(t), traits = send(t))
+        flow.replyShown(serverKind(t), elapsed)
         if (!firstEver.seen()) {
             firstEver.mark()
             flow.firstReply(serverKind(t), elapsed)
@@ -240,11 +277,8 @@ public class ChatJourney(
 
     private fun serverKind(t: Turn): String = if (t.onPhone) "phone" else "computer"
 
-    private fun send(t: Turn): SendTraits = SendTraits(t.traits.agent, t.input)
-
     public companion object {
         private const val MAX_TRACKED = 16
-        private val ASSISTANT_ONLY_KINDS = setOf("step-start", "reasoning", "tool")
         private const val AFTER_FAIL_WINDOW_MS = 120_000L
 
         /** A dropped stream that has not come back by now ends the turn as `connection_lost`. */
@@ -252,14 +286,6 @@ public class ChatJourney(
 
         /** `turn_stall` is sent when a turn has been quiet for 1, 5, 15 and 60 minutes. */
         private val STALL_STEPS_MS = listOf(60_000L, 300_000L, 900_000L, 3_600_000L)
-
-        /** The `send_result` fail kind for a turn error word. */
-        public fun sendFailWord(errorKind: String?): String =
-            when (errorKind) {
-                "provider_auth" -> "sign_in"
-                "rate_limit", "free_limit" -> errorKind
-                else -> "model_error"
-            }
 
         /**
          * The word for a message error kind's name (`ContextOverflow` becomes `context_overflow`). [tag] is the server's
@@ -349,6 +375,16 @@ public object AppJourneys {
 
     public val approvalsOrNull: ApprovalMeter?
         get() = approvals
+
+    /**
+     * Stage 1 from the delivery engine, where a send's fate is decided: [accepted] the server took it (a lost or foreign
+     * receipt is not taken). Counted by the installed journey (with the traits it saw), else as a bare result.
+     */
+    public fun sendSettled(sessionId: String, accepted: Boolean, failure: Failure?) {
+        val journey = chat
+        if (journey != null) journey.settled(sessionId, accepted, failure)
+        else HealthFlow().sendResult(if (accepted) "ok" else "fail", failure.takeUnless { accepted })
+    }
 
     public fun install(journey: ChatJourney, meter: ApprovalMeter, setupJourney: SetupJourney? = null) {
         chat = journey

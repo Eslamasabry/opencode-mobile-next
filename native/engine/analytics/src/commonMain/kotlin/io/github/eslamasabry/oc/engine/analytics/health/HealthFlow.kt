@@ -91,18 +91,19 @@ public class HealthFlow(private val telemetry: () -> Telemetry = { AppTelemetry.
         )
     }
 
-    /** [firstReplyMs] is how long the first reply took, or null for none; [serverKind] is `phone` or `computer`. */
+    /**
+     * Stage 1, one per send: `ok` the server took it, `fail` it did not ([failure] reduced to a word), `queued` kept on
+     * the phone. [serverKind] is `phone` or `computer`. Nothing about the reply rides here: the reply is stage 2
+     * ([replyShown], `chat_turn.first_reply_range`).
+     */
     public fun sendResult(
         result: String,
         failure: Failure? = null,
-        firstReplyMs: Long? = null,
         serverKind: String? = null,
         traits: SendTraits? = null,
-        /** A failure already reduced to a word of [HealthWords.modelFailKinds] (the model's side refused the turn). */
-        failWord: String? = null,
     ) {
         val t = telemetry()
-        val kindWord = failWord?.takeIf { it in HealthWords.modelFailKinds } ?: failKindOf(failure, forSend = true)
+        val kindWord = failKindOf(failure, forSend = true)
         t.breadcrumb("chat.send")
         if (result == "fail") ProblemTally.note(t.ring, kindWord)
         t.track(
@@ -110,17 +111,18 @@ public class HealthFlow(private val telemetry: () -> Telemetry = { AppTelemetry.
             buildMap {
                 put("result", result)
                 if (result == "fail") put("fail_kind", kindWord)
-                put("first_reply_range", HealthRanges.firstReplyOf(firstReplyMs))
                 if (traits != null) {
                     put("agent", chatAgentWord(traits.agent))
                     put("input", traits.input)
-                    if (serverKind != null) put("server_kind", serverKind)
                 }
+                if (serverKind != null) put("server_kind", serverKind)
             },
         )
-        if (firstReplyMs != null && serverKind != null) {
-            t.performanceTrace(PerfSchema.SEND_FIRST_REPLY, firstReplyMs, mapOf("server_kind" to serverKind))
-        }
+    }
+
+    /** Stage 2: the first output the person can see arrived [elapsedMs] after Send (the `send_first_reply` trace). */
+    public fun replyShown(serverKind: String, elapsedMs: Long) {
+        telemetry().performanceTrace(PerfSchema.SEND_FIRST_REPLY, elapsedMs, mapOf("server_kind" to serverKind))
     }
 
     public fun turnStall(stage: String, waitedMs: Long) {

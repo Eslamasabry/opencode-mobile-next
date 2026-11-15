@@ -19,6 +19,7 @@ import io.github.eslamasabry.oc.core.data.kv.KeyValueStore
 import io.github.eslamasabry.oc.core.data.kv.PrefValue
 import io.github.eslamasabry.oc.core.data.lane.WriterLanes
 import io.github.eslamasabry.oc.core.domain.ServerGateway
+import io.github.eslamasabry.oc.core.domain.events.DeltaField
 import io.github.eslamasabry.oc.core.domain.events.GatewayEvent
 import io.github.eslamasabry.oc.core.domain.events.InterruptReason
 import io.github.eslamasabry.oc.core.domain.events.RunOutcome
@@ -191,8 +192,14 @@ public class ConnectionDelivery(
             is GatewayEvent.PartUpserted -> {
                 trace.part(event.part.sessionId, event.part.messageId, event.part.rawType)
                 if (event.part.type == PartType.Tool) trace.tool(event.part.sessionId, event.part.id)
+                if (event.part.type == PartType.Text && event.part.isRenderable)
+                    trace.text(event.part.sessionId, event.part.messageId, streamed = false)
             }
-            is GatewayEvent.PartDelta -> trace.delta(event.sessionId.raw)
+            is GatewayEvent.PartDelta -> {
+                trace.delta(event.sessionId.raw)
+                if (event.field == DeltaField.Text && event.delta.isNotBlank())
+                    trace.text(event.sessionId.raw, event.messageId.raw, streamed = true)
+            }
             is GatewayEvent.RunStarted -> trace.busy(event.sessionId.raw)
             is GatewayEvent.RunEnded ->
                 when (val outcome = event.outcome) {

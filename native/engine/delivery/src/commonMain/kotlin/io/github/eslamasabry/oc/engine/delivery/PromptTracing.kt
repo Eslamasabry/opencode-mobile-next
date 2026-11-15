@@ -44,6 +44,12 @@ public interface PromptTracing {
 
     public fun delta(sessionId: String)
 
+    /**
+     * Reply text the person can see arrived: a non-empty streamed text piece ([streamed]), or a non-empty, non-synthetic
+     * text part of [messageId] (the receiver checks it is the assistant's). Reasoning and step parts never call this.
+     */
+    public fun text(sessionId: String, messageId: String, streamed: Boolean) {}
+
     public fun busy(sessionId: String)
 
     public fun idle(sessionId: String)

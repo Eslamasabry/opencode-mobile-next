@@ -197,9 +197,9 @@ public object HealthWords {
             "model_not_found", "provider_connection", "aborted", "server", "other",
         )
 
-    /** `chat_turn.outcome`. */
+    /** `chat_turn.outcome`: `done` only when the turn showed output; `no_output` when it ended cleanly with none. */
     public val turnOutcomes: Set<String> =
-        linkedSetOf("done", "stopped_by_user", "error", "connection_lost", "approval_timeout")
+        linkedSetOf("done", "stopped_by_user", "error", "connection_lost", "approval_timeout", "no_output")
 
     /** `send_result.input`: how the prompt was made. */
     public val inputs: Set<String> = linkedSetOf("text", "voice", "attachment", "voice_attachment")

@@ -97,6 +97,10 @@ class AppPromptTracing(trace: io.github.eslamasabry.oc.engine.diagnostics.perf.P
         journey?.delta(sessionId)
     }
 
+    override fun text(sessionId: String, messageId: String, streamed: Boolean) {
+        journey?.text(sessionId, messageId, streamed)
+    }
+
     override fun busy(sessionId: String) {
         timeline.observe(io.github.eslamasabry.oc.engine.diagnostics.perf.PromptSignal.Busy(sessionId))
         journey?.busy(sessionId)
