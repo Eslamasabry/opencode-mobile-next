@@ -138,6 +138,7 @@ class TelemetryContinuityTest {
     fun `B-180-018 a build that can send asks once and saves asked first - Share both, Not now, Choose`() = runTest {
         val share = Rig(this, disk())
         share.continuity.adopt(); runCurrent()
+        share.continuity.replyFinished(); runCurrent()
         assertEquals(ConsentAsk.Question, share.continuity.question.value)
         assertEquals(TelemetryConsent(), share.service.consent, "off until the person agrees")
         assertEquals(RawPref.Bool(true), share.persisted(TelemetryKeys.CONSENT_ASKED))
@@ -150,6 +151,7 @@ class TelemetryContinuityTest {
 
         val notNow = Rig(this, disk())
         notNow.continuity.adopt(); runCurrent()
+        notNow.continuity.replyFinished(); runCurrent()
         notNow.continuity.answer(share = false); runCurrent()
         assertEquals(ConsentAsk.Closed, notNow.continuity.question.value)
         assertEquals(TelemetryConsent(), notNow.service.consent)
@@ -157,6 +159,7 @@ class TelemetryContinuityTest {
 
         val choose = Rig(this, disk())
         choose.continuity.adopt(); runCurrent()
+        choose.continuity.replyFinished(); runCurrent()
         choose.continuity.choose()
         assertEquals(ConsentAsk.Choose, choose.continuity.question.value)
         choose.continuity.saveChoice(usage = false, crashes = true); runCurrent()
@@ -167,6 +170,61 @@ class TelemetryContinuityTest {
         // A build with no vendor never asks.
         val quiet = Rig(this, disk(), available = false)
         quiet.continuity.adopt(); runCurrent()
+        assertEquals(ConsentAsk.Closed, quiet.continuity.question.value)
+    }
+
+    @Test
+    fun `B-180-030 a fresh start asks nothing and stores nothing, the question is only owed`() = runTest {
+        val rig = Rig(this, disk())
+        rig.continuity.adopt(); runCurrent()
+        assertEquals(ConsentAsk.Closed, rig.continuity.question.value)
+        assertNull(rig.persisted(TelemetryKeys.CONSENT_ASKED), "not marked asked before it shows")
+        assertEquals(TelemetryConsent(), rig.service.consent)
+    }
+
+    @Test
+    fun `B-180-031 the first finished reply opens the question once, a second reply does not reopen it`() = runTest {
+        val rig = Rig(this, disk())
+        rig.continuity.adopt(); runCurrent()
+        rig.continuity.replyFinished(); runCurrent()
+        assertEquals(ConsentAsk.Question, rig.continuity.question.value)
+        assertEquals(RawPref.Bool(true), rig.persisted(TelemetryKeys.CONSENT_ASKED), "asked is saved as it shows")
+        rig.continuity.answer(share = false); runCurrent()
+        rig.continuity.replyFinished(); runCurrent()
+        assertEquals(ConsentAsk.Closed, rig.continuity.question.value)
+    }
+
+    @Test
+    fun `B-180-032 the owed question waits for the keyboard to go down`() = runTest {
+        val rig = Rig(this, disk())
+        rig.continuity.adopt(); runCurrent()
+        rig.continuity.rest(atRest = false)
+        rig.continuity.replyFinished(); runCurrent()
+        assertEquals(ConsentAsk.Closed, rig.continuity.question.value)
+        rig.continuity.rest(atRest = true); runCurrent()
+        assertEquals(ConsentAsk.Question, rig.continuity.question.value)
+    }
+
+    @Test
+    fun `B-180-033 closing before a reply keeps it owed, and an already asked install is never asked`() = runTest {
+        val disk = disk()
+        val first = Rig(this, disk)
+        first.continuity.adopt(); runCurrent()
+        // The app closed with no reply: nothing was stored, so the next start owes it again and still waits.
+        val second = Rig(this, disk)
+        second.continuity.adopt(); runCurrent()
+        assertEquals(ConsentAsk.Closed, second.continuity.question.value)
+        second.continuity.replyFinished(); runCurrent()
+        assertEquals(ConsentAsk.Question, second.continuity.question.value)
+
+        val asked = Rig(this, disk(HealthConsentKeys.ASKED to RawPref.Bool(true)))
+        asked.continuity.adopt(); runCurrent()
+        asked.continuity.replyFinished(); runCurrent()
+        assertEquals(ConsentAsk.Closed, asked.continuity.question.value)
+
+        val quiet = Rig(this, disk(), available = false)
+        quiet.continuity.adopt(); runCurrent()
+        quiet.continuity.replyFinished(); runCurrent()
         assertEquals(ConsentAsk.Closed, quiet.continuity.question.value)
     }
 

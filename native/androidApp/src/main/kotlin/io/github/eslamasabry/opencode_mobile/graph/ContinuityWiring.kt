@@ -1,6 +1,9 @@
 package io.github.eslamasabry.opencode_mobile.graph
 
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.zacsweers.metro.AppScope
@@ -66,7 +69,8 @@ import org.jetbrains.compose.resources.stringResource
  * - The two answers (`usage`, `crashes`) under Flutter's keys, carried over from 2.1.5's first single answer once
  *   (HealthConsentStore.migrate), then applied to the vendor (TelemetryService.start).
  * - The one-time "Help improve OpenCode Mobile?" question, only in a build that can send (Firebase present): "Share
- *   both", "Not now", or "Choose", which opens the two switches.
+ *   both", "Not now", or "Choose", which opens the two switches. It opens after the first finished reply, never at
+ *   start-up (owner rule: no question at the beginning).
  * - The crash offer after an unexpected close, shown on the app's status line ("Review and send" / "Not now").
  * - Privacy's "Offer crash reports" switch.
  */
@@ -84,6 +88,11 @@ class TelemetryContinuity(
     val offer: CrashOffer = CrashOffer(this, clock)
     private val asking = MutableStateFlow(ConsentAsk.Closed)
 
+    // In memory only: owed again on the next start until a reply finishes in that run.
+    @kotlin.concurrent.Volatile private var owed = false
+    @kotlin.concurrent.Volatile private var replied = false
+    @kotlin.concurrent.Volatile private var atRest = true
+
     /** The consent question (or its two switches) is open. */
     val question: StateFlow<ConsentAsk> = asking.asStateFlow()
 
@@ -95,9 +104,28 @@ class TelemetryContinuity(
         when (ConsentQuestion.decide(answers.consentAsked(), telemetry.available, consented)) {
             ConsentQuestion.Skip -> Unit
             ConsentQuestion.MarkOnly -> answers.markConsentAsked()
-            // "Asked" is saved before it shows, so Back, a swipe or the app closing count as an answer.
-            ConsentQuestion.Show -> if (answers.markConsentAsked() is Outcome.Ok) asking.value = ConsentAsk.Question
+            // Nothing opens at start-up: the question is owed until a reply has finished (see [replyFinished]).
+            ConsentQuestion.Show -> owed = true
         }
+    }
+
+    /** A reply has finished arriving (the chat journey's turn end). Opens the owed question once, at a calm moment. */
+    suspend fun replyFinished() {
+        replied = true
+        tryAsk()
+    }
+
+    /** The screen is at rest (no keyboard up). The owed question waits for rest. */
+    suspend fun rest(atRest: Boolean) {
+        this.atRest = atRest
+        tryAsk()
+    }
+
+    private suspend fun tryAsk() {
+        if (!owed || !replied || !atRest || asking.value != ConsentAsk.Closed) return
+        owed = false
+        // "Asked" is saved just before it shows, so Back, a swipe or the app closing count as an answer.
+        if (answers.markConsentAsked() is Outcome.Ok) asking.value = ConsentAsk.Question
     }
 
     /** "Share both" turns both answers on; "Not now" (or Back) leaves both off and is never asked again. */
@@ -177,9 +205,15 @@ class AppTelemetryContinuity(
         scope.launch { runtime.saveChoice(usage, crashes) }
     }
 
+    /** The overlay says whether the screen is at rest (keyboard down). */
+    fun rest(atRest: Boolean) {
+        scope.launch { runtime.rest(atRest) }
+    }
+
     fun start() {
         if (started) return
         started = true
+        health.onReplyFinished = { scope.launch { runtime.replyFinished() } }
         scope.launch {
             if (stores.warm() is Outcome.Failed) return@launch
             // Carried over once and applied before the question is decided, so an old answer is never asked again.
@@ -190,13 +224,17 @@ class AppTelemetryContinuity(
     }
 }
 
-/** The one-time question above whatever screen is open (Flutter `askTelemetryConsentOnce`). */
+/** The one-time question above whatever screen is open; it opens after the first finished reply, never at start-up. */
 @Inject
 @ContributesIntoSet(AppScope::class, binding = binding<ShellOverlay>())
 class TelemetryConsentOverlay(private val continuity: AppTelemetryContinuity) : ShellOverlay {
+    @OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
     @Composable
     override fun Content() {
         val ask by continuity.runtime.question.collectAsStateWithLifecycle()
+        // The owed question waits for the keyboard to go down.
+        val keyboardUp = WindowInsets.isImeVisible
+        LaunchedEffect(keyboardUp) { continuity.rest(!keyboardUp) }
         KitConfirm(
             spec =
                 if (ask != ConsentAsk.Question) null
