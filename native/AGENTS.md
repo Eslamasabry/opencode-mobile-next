@@ -34,7 +34,8 @@ Rules for the native (Kotlin Multiplatform) rewrite. Binding sources: `docs/desi
 |---|---|
 | Module rules | `./gradlew -p build-logic test` |
 | One module's common tests | `./gradlew :<module>:desktopTest` |
-| Architecture rules + graph smoke | `./gradlew :quality:test` |
+| Source-scan quality gates, quick (no other module compiled; builder loop) | `./gradlew :quality:scan` |
+| Architecture rules + graph smoke (the full gate) | `./gradlew :quality:test` |
 | App APK (preview id `io.github.eslamasabry.opencode_mobile.native`) | `./gradlew :androidApp:assembleDebug` |
 | Desktop compile | `./gradlew :desktopApp:compileKotlin` |
 | iOS klibs (VPS nightly only) | `tool/qa/ios-klib-nightly.sh` |

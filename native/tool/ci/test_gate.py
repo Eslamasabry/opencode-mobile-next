@@ -158,5 +158,60 @@ class Integrity(unittest.TestCase):
         self.assertEqual(code, 0, md)
 
 
+def plan(lane, selection):
+    p = subprocess.run(['bash', os.path.join(HERE, 'plan_shards.sh'), lane, selection], capture_output=True, text=True, check=True)
+    return dict(line.split('=', 1) for line in p.stdout.splitlines())
+
+
+class Plan(unittest.TestCase):
+    """The shard plan: 8 module shards by default, and the fast lane always has a last shard for :quality:test."""
+
+    def test_fast_fallback_to_all_has_eight_shards_and_a_quality_shard(self):
+        r = plan('fast', 'ALL')
+        self.assertEqual((r['mode'], r['count'], r['total']), ('all', '8', '9'))
+
+    def test_full_lane_has_eight_shards_and_no_quality_shard(self):
+        r = plan('full', 'ALL')
+        self.assertEqual((r['mode'], r['count'], r['total']), ('all', '8', '8'))
+
+    def test_fast_selection_without_quality_still_gets_a_quality_shard(self):
+        r = plan('fast', ':ui:kit:desktopTest :feature:chat:desktopTest')
+        self.assertEqual((r['mode'], r['count'], r['total']), ('list', '2', '3'))
+
+    def test_fast_selection_with_quality_does_not_count_it_as_a_module_shard(self):
+        r = plan('fast', ' '.join([':quality:test'] + [f':m{i}:desktopTest' for i in range(7)]))
+        self.assertEqual((r['count'], r['total']), ('4', '5'))
+
+    def test_large_fast_selection_gets_eight_shards(self):
+        r = plan('fast', ' '.join(f':m{i}:desktopTest' for i in range(20)))
+        self.assertEqual((r['count'], r['total']), ('8', '9'))
+
+    def test_never_more_module_shards_than_tasks(self):
+        r = plan('fast', ':ui:kit:desktopTest')
+        self.assertEqual((r['count'], r['total']), ('1', '2'))
+
+    def test_quality_only_selection_is_one_shard(self):
+        r = plan('fast', ':quality:test')
+        self.assertEqual((r['count'], r['total']), ('0', '1'))
+
+    def test_empty_selection_runs_only_the_quality_shard(self):
+        r = plan('fast', '')
+        self.assertEqual((r['mode'], r['count'], r['total']), ('list', '0', '1'))
+
+
+class Workflow(unittest.TestCase):
+    """The summary job's exit code is the run's verdict on every branch."""
+
+    def test_summary_exits_with_the_verdict_on_work_branches_too(self):
+        text = open(os.path.join(HERE, '..', '..', '..', '.github', 'workflows', 'native-ci.yml')).read()
+        step = text[text.index('python3 -I native/tool/ci/summary.py'):]
+        self.assertIn('exit "$rc"', step)
+        self.assertNotIn('WORK_BRANCH', text)
+
+    def test_fast_lane_quality_shard_does_not_depend_on_the_module_list(self):
+        text = open(os.path.join(HERE, '..', '..', '..', '.github', 'workflows', 'native-ci.yml')).read()
+        self.assertIn('[ "$LANE" = fast ] && [ "${{ matrix.shard }}" = "$COUNT" ]; then', text)
+
+
 if __name__ == '__main__':
     unittest.main(verbosity=2)
