@@ -224,6 +224,7 @@
     <string name="chatsSourcesOnPhone">On this phone</string>
     <string name="chatsSourcesElsewhere">On another computer</string>
     <string name="chatsSourcesAgents">Agents on this phone</string>
+    <string name="chatsHomeAgentsUnreachable">The agents on this phone didn't start</string>
     <string name="chatsSourcesAlways">Always shown</string>
     <string name="chatsHomeStillLoading">Loading %1$s conversations…</string>
     <string name="chatsHomeEmptyTitle">No conversations yet</string>
