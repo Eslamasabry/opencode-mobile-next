@@ -367,6 +367,16 @@ class ChatsViewModelTest {
             return answer
         }
 
+        var storage: io.github.eslamasabry.oc.feature.chats.presentation.PhoneStorageAccess? = null
+        var storageRequests = 0
+
+        override suspend fun phoneStorage() = storage
+
+        override suspend fun requestPhoneStorage(): Outcome<Unit> {
+            storageRequests++
+            return Unit.ok()
+        }
+
         val disconnected = mutableListOf<String>()
         val restarted = mutableListOf<String>()
         val started = mutableListOf<String>()
@@ -910,6 +920,22 @@ class ChatsViewModelTest {
         vm.showProjectChoices()
         vm.openFilterProject()
         assertEquals(listOf<AppRoute>(io.github.eslamasabry.oc.ui.routes.ProjectsRoute.Open), nav.routes)
+    }
+
+    @Test
+    fun `I147-PHONE-STORAGE the home's projects sheet offers Phone storage and opens Android's page once`() = runTest {
+        val home = Home(listOf(source("main", main = true)))
+        home.storage = io.github.eslamasabry.oc.feature.chats.presentation.PhoneStorageAccess.Off
+        val vm = sourcesVm(home)
+        assertNull(vm.state.value.phoneStorage, "not read until the sheet opens")
+        vm.showProjectChoices()
+        assertEquals(io.github.eslamasabry.oc.feature.chats.presentation.PhoneStorageAccess.Off, vm.state.value.phoneStorage)
+        vm.requestPhoneStorage()
+        assertEquals(1, home.storageRequests)
+        // A server that is not this phone's own offers no such row.
+        val remote = sourcesVm(Home(listOf(source("main", main = true))))
+        remote.showProjectChoices()
+        assertNull(remote.state.value.phoneStorage)
     }
 
     private val termux = ProfileId("termux")

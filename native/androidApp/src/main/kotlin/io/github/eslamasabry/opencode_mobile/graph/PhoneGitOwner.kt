@@ -22,3 +22,13 @@ internal fun phoneGitOwner(
     if (helperOf != null) return helperOf.takeIf { it.raw == builtinOwner }
     return profile.takeIf { it.raw == builtinOwner && origin == ServerOrigin("http", "127.0.0.1", phonePort) }
 }
+
+/**
+ * Whose saved This phone profile a file-side repair of linked Git files may act for: the phone's own server, or the
+ * phone agents' helper that belongs to it (a phone agent's project is in the same Linux). Null: not the phone's.
+ */
+internal fun phoneRepairOwner(profile: ProfileId, helperOf: ProfileId?, builtinOwner: String?): ProfileId? {
+    if (builtinOwner.isNullOrEmpty()) return null
+    if (helperOf != null) return null // TEMP-RED-3
+    return profile.takeIf { it.raw == builtinOwner }
+}

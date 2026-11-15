@@ -70,6 +70,7 @@ import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
@@ -413,6 +414,48 @@ private fun LayerMenu(layer: KitMenuLayerState, shown: MutableTransitionState<Bo
     }
 }
 
+/**
+ * A menu taller than the room it has scrolls; its rows past an edge melt away over [MenuScrollRules.FADE_DP] so a cut
+ * row reads as "more here", not as the end of the menu (issue 147 walk F-024: Go to ran past the bottom of a
+ * 360 x 780 dp screen and its last entry looked absent). An edge with nothing beyond it stays sharp.
+ */
+public object MenuScrollRules {
+    public const val FADE_DP: Int = 28
+
+    /** Which edges fade for a scroll position [value] of [max]: (top, bottom). */
+    public fun fades(value: Int, max: Int): Pair<Boolean, Boolean> = false to false // TEMP-RED-4
+
+    /** The menu's moving fade, read in draw so it follows the scroll without recomposing. */
+    internal fun Modifier.menuScrollFade(state: androidx.compose.foundation.ScrollState): Modifier =
+        graphicsLayer { compositingStrategy = androidx.compose.ui.graphics.CompositingStrategy.Offscreen }
+            .drawWithContent {
+                drawContent()
+                val fade = minOf(FADE_DP.dp.toPx(), size.height / 3f)
+                val (top, bottom) = fades(state.value, state.maxValue)
+                if (top)
+                    drawRect(
+                        androidx.compose.ui.graphics.Brush.verticalGradient(
+                            listOf(androidx.compose.ui.graphics.Color.Black, androidx.compose.ui.graphics.Color.Transparent),
+                            startY = 0f,
+                            endY = fade,
+                        ),
+                        size = androidx.compose.ui.geometry.Size(size.width, fade),
+                        blendMode = androidx.compose.ui.graphics.BlendMode.DstOut,
+                    )
+                if (bottom)
+                    drawRect(
+                        androidx.compose.ui.graphics.Brush.verticalGradient(
+                            listOf(androidx.compose.ui.graphics.Color.Transparent, androidx.compose.ui.graphics.Color.Black),
+                            startY = size.height - fade,
+                            endY = size.height,
+                        ),
+                        topLeft = androidx.compose.ui.geometry.Offset(0f, size.height - fade),
+                        size = androidx.compose.ui.geometry.Size(size.width, fade),
+                        blendMode = androidx.compose.ui.graphics.BlendMode.DstOut,
+                    )
+            }
+}
+
 /** The menu's motion rules, pure (M-004). */
 public object MenuRules {
     /** The menu's Popup is composed while it is open, opening or still fading out; it leaves once the fade is done. */
@@ -676,6 +719,7 @@ public fun KitMenuPanel(
             ?: if (dressed != null) Modifier else Modifier.background(colors.surface2).border(1.dp, colors.hairline, shape)
     // Glass: a soft light gathers under the finger and follows it down the rows (KitLiquidTouch.kt).
     val touch = io.github.eslamasabry.oc.ui.kit.effects.rememberKitLiquidTouch(on = liquidFace != null)
+    val scrollState = rememberScrollState()
     Column(
         modifier
             .widthIn(min = MENU_MIN_WIDTH_DP.dp, max = MENU_MAX_WIDTH_DP.dp)
@@ -689,7 +733,8 @@ public fun KitMenuPanel(
             .then(menuFace)
             .kitLiquidTouchLight(touch, shape, join = join)
             .then(if (joined && join != null) Modifier.kitLiquidJoinClip(join) else Modifier)
-            .verticalScroll(rememberScrollState())
+            .then(with(MenuScrollRules) { Modifier.menuScrollFade(scrollState) })
+            .verticalScroll(scrollState)
             // Glass keeps its pane inset inside the menu (owner 2026-11-09): rows clear of the rim, sheen and lens.
             .padding(horizontal = kitPaneInset(), vertical = Space.S1.dp + kitPaneInset())
             .semantics { if (title != null) paneTitle = title }

@@ -200,6 +200,8 @@ public data class ChatsUi(
     /** A newer app release waits (the Flutter gear dot): the bar offers Update. */
     val updateReady: Boolean = false,
     val projectChoices: ImmutableList<ProjectSummary> = persistentListOf(),
+    /** This phone's storage access for the projects sheet's Phone storage row; null: not offered. */
+    val phoneStorage: PhoneStorageAccess? = null,
     val projectNeedsYou: ImmutableSet<String> = persistentSetOf(),
     /** G4: kind and git facts of [projectChoices] by directory (glyph and "Git" pill); absent = plain folder. */
     val projectFacts: kotlinx.collections.immutable.ImmutableMap<String, HomeProjectFacts> =
@@ -555,6 +557,9 @@ public interface ChatsActions {
     public fun openDemo() {}
 
     public fun openFilterProject() {}
+
+    /** The projects sheet's Phone storage row without access: opens Android's page for it. */
+    public fun requestPhoneStorage() {}
 
     public fun finishFilterProject(directory: String?) {}
 

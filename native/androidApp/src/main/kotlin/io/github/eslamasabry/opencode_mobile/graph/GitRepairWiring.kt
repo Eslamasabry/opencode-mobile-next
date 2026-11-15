@@ -42,14 +42,21 @@ class AndroidGitLinkRepairService(
 
     private fun ownerAvailable(profile: ProfileId): Boolean =
         try {
-            val graph = registry.live.value[profile]
-            graph != null &&
-                graph.profile.managedOnPhone &&
-                graph.profile.origin.scheme == "http" &&
-                AddressRules.isLoopback(graph.profile.origin.host) &&
-                graph.profile.origin.port == PhoneServerScripts.PORT &&
-                stores.profiles.profile(profile) != null &&
-                (stores.prefs.get("oc.builtinServerOwner") as? PrefValue.Str)?.value == profile.raw
+            // A phone agent's project sits on the helper connection of the same phone: the phone's own profile is the
+            // one that must be the saved owner and the app's loopback server.
+            val phone =
+                phoneRepairOwner(
+                    profile,
+                    stores.phoneOfHelper(profile),
+                    (stores.prefs.get("oc.builtinServerOwner") as? PrefValue.Str)?.value,
+                )
+            val saved = phone?.let { stores.profiles.profile(it)?.profile }
+            registry.live.value[profile] != null &&
+                saved != null &&
+                saved.managedOnPhone &&
+                saved.origin.scheme == "http" &&
+                AddressRules.isLoopback(saved.origin.host) &&
+                saved.origin.port == PhoneServerScripts.PORT
         } catch (_: Exception) {
             false
         }

@@ -1437,7 +1437,6 @@ public class NewConversationViewModel(
         val shown = mutable.value
         val path = shown.storagePath ?: return
         if (path == PHONE_STORAGE_ROOT || shown.storageLoading || shown.storageFailure != null) return
-        if (path.isNotEmpty()) return // TEMP-RED
         closeStorageFolders()
         chooseDirectory(path)
     }

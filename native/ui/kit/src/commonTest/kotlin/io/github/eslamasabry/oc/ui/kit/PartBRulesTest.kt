@@ -307,3 +307,16 @@ class PartBRulesTest {
         assertNull(UndoRules.timeoutMs(false, offer.copy(working = true)) { it })
     }
 }
+
+class MenuScrollRulesTest {
+    @kotlin.test.Test
+    fun `B-KIT-147 a menu past its room fades the edge with more beyond it, and a menu that fits fades nowhere`() {
+        kotlin.test.assertEquals(
+            false to false,
+            io.github.eslamasabry.oc.ui.kit.modal.MenuScrollRules.fades(0, 0),
+        )
+        kotlin.test.assertEquals(false to true, io.github.eslamasabry.oc.ui.kit.modal.MenuScrollRules.fades(0, 120))
+        kotlin.test.assertEquals(true to true, io.github.eslamasabry.oc.ui.kit.modal.MenuScrollRules.fades(40, 120))
+        kotlin.test.assertEquals(true to false, io.github.eslamasabry.oc.ui.kit.modal.MenuScrollRules.fades(120, 120))
+    }
+}

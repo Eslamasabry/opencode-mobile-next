@@ -30,4 +30,13 @@ class PhoneGitOwnerTest {
         assertNull(phoneGitOwner(ProfileId("pc"), ServerOrigin("http", "10.0.0.2", port), port, phone.raw, helperOf = null))
         assertNull(phoneGitOwner(phone, local, port, null, helperOf = null))
     }
+
+    @Test
+    fun `B-GIT-147 the repair acts for a phone agent's project too, by the same ownership`() {
+        assertEquals(phone, phoneRepairOwner(helper, phone, phone.raw))
+        assertEquals(phone, phoneRepairOwner(phone, null, phone.raw))
+        assertNull(phoneRepairOwner(helper, phone, "someone-else"))
+        assertNull(phoneRepairOwner(ProfileId("pc"), null, phone.raw))
+        assertNull(phoneRepairOwner(phone, null, null))
+    }
 }

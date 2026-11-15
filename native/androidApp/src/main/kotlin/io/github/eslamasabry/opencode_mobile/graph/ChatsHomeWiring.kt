@@ -8,6 +8,7 @@ import dev.zacsweers.metro.binding
 import io.github.eslamasabry.oc.core.common.AppCoroutineScope
 import io.github.eslamasabry.oc.core.common.AppDispatchers
 import io.github.eslamasabry.oc.core.common.Failure
+import io.github.eslamasabry.oc.core.common.FeatureId
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.RefusalReason
 import io.github.eslamasabry.oc.core.common.dart.DartJson
@@ -89,6 +90,7 @@ class AppChatsHome(
     private val phoneServer: AndroidChatPhoneServer,
     /** The automatic agent update: while it installs, the agents' source says "Updating …" (no silent minutes). */
     private val agentUpdate: PhoneAgentUpdateStatus,
+    private val sharedStorage: Set<io.github.eslamasabry.oc.core.domain.platform.SharedStorageAccess>,
     appScope: AppCoroutineScope,
     dispatchers: AppDispatchers,
 ) : ChatsHomeExtras, HomeFeedCache {
@@ -289,6 +291,38 @@ class AppChatsHome(
 
     private fun openingTries(profile: ProfileId): Int =
         openingTries?.takeIf { it.first == profile }?.second ?: 1
+
+    override suspend fun phoneStorage(): io.github.eslamasabry.oc.feature.chats.presentation.PhoneStorageAccess? {
+        val access = sharedStorage.singleOrNull() ?: return null
+        val owner = phoneOwnerProfile() ?: return null
+        val graph = registry.live.value[owner] ?: return null
+        val block = (access.check(owner, "/sdcard", graph.session.server) as? Outcome.Ok)?.value ?: return null
+        return if (block == io.github.eslamasabry.oc.core.domain.platform.SharedStorageBlock.None)
+            io.github.eslamasabry.oc.feature.chats.presentation.PhoneStorageAccess.On
+        else io.github.eslamasabry.oc.feature.chats.presentation.PhoneStorageAccess.Off
+    }
+
+    override suspend fun requestPhoneStorage(): Outcome<Unit> {
+        val access = sharedStorage.singleOrNull() ?: return Outcome.Failed(Failure.Unavailable(FeatureId("phoneStorage")))
+        val owner = phoneOwnerProfile() ?: return Outcome.Failed(Failure.Unavailable(FeatureId("phoneStorage")))
+        val graph = registry.live.value[owner] ?: return Outcome.Failed(Failure.Unavailable(FeatureId("phoneStorage")))
+        return access.request(
+            owner,
+            "/sdcard",
+            io.github.eslamasabry.oc.core.domain.platform.SharedStorageBlock.AppAccess,
+            graph.session.server,
+        )
+    }
+
+    /** The saved This phone profile, when the app owns one (its own OpenCode). */
+    private fun phoneOwnerProfile(): ProfileId? =
+        try {
+            (stores.prefs.get("oc.builtinServerOwner") as? io.github.eslamasabry.oc.core.data.kv.PrefValue.Str)?.value
+                ?.takeIf { it.isNotEmpty() }
+                ?.let(::ProfileId)
+        } catch (_: Exception) {
+            null
+        }
 
     override suspend fun retryOpening(): Outcome<Unit> {
         val active =
