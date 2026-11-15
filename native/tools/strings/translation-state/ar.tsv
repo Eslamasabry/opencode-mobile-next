@@ -1463,8 +1463,12 @@ chatLiveWriting	423fb2678c
 chatLiveWritingAny	1f0e3cef6d
 chatLoadAgentMissing	e675e361df
 chatLoadAgentUnreadable	a67c5f4d6d
+chatLoadFailedAgentBody	9337076794
+chatLoadFailedAgentsBody	ef9040203b
 chatLoadFailedBody	dd9d15a7d8
 chatLoadFailedTitle	9bdf89d41d
+chatLoadMissingAgentBody	ba5ec18121
+chatLoadMissingAgentsBody	65d4a2c172
 chatLoadingConversation	25795d774f
 chatMenuContinueElsewhere	658016148c
 chatModelFailDailyLimit	ddd7ea06d3
@@ -2093,6 +2097,8 @@ chatsHomeToday	6b1be5a6a0
 chatsHomeUnreachable	5fd14af36f
 chatsHomeUnreachableShort	526e6c53d0
 chatsNewAddAgent	c3c155e5e8
+chatsNewAgentDidNotStart	47d520b781
+chatsNewAgentModelMissing	b5a345c40d
 chatsNewAgentNeedsProjectsFolder	33b0fb0b97
 chatsNewBuildPrompt	018a236ec9
 chatsNewChooseProject	1d43ead9f8
@@ -2112,6 +2118,7 @@ chatsNewSeparateCopyDetail	d78bffb9af
 chatsNewSetUp	81f28272a0
 chatsNewSetupFailed	25a29105a7
 chatsNewStartWith	f800dd30a2
+chatsNewStartingAgent	edab4cd01e
 chatsReturnBriefMore	f1ebf95da8
 chatsRowActions	f1e3718af3
 chatsRowArchived	e8b53e071c

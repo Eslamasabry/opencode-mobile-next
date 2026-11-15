@@ -1347,4 +1347,8 @@
     <string name="stepShellWaitAsk">Espere</string>
     <string name="stepShellProgramAsk">Execute %1$s</string>
     <string name="stepShellUnknownAsk">Execute um comando</string>
+    <string name="chatLoadFailedAgentBody">Nada foi perdido. Tente novamente quando o %1$s responder.</string>
+    <string name="chatLoadFailedAgentsBody">Nada foi perdido. Tente novamente quando os agentes do celular responderem.</string>
+    <string name="chatLoadMissingAgentBody">O %1$s não tem esta conversa: ela pode ter parado antes de começar. Tente novamente, ou configure o %1$s e inicie uma nova conversa.</string>
+    <string name="chatLoadMissingAgentsBody">Os agentes do celular não têm esta conversa: o agente dela pode ter parado antes de começar. Tente novamente ou inicie uma nova conversa.</string>
 </resources>

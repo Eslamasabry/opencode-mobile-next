@@ -339,4 +339,7 @@
     <string name="runningWorkTasksNoStop">Este servidor não consegue interrompê-las uma a uma.</string>
     <string name="runningWorkMenu">Trabalho em andamento</string>
     <string name="runningWorkOpen">Abrir o trabalho em andamento</string>
+    <string name="chatsNewStartingAgent">Iniciando o %1$s…</string>
+    <string name="chatsNewAgentModelMissing">O %1$s não oferece o modelo que você escolheu. Suas palavras foram mantidas.</string>
+    <string name="chatsNewAgentDidNotStart">O %1$s não iniciou. Suas palavras foram mantidas.</string>
 </resources>

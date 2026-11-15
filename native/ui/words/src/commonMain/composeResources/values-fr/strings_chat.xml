@@ -1346,4 +1346,8 @@
     <string name="stepShellWaitAsk">Attendre</string>
     <string name="stepShellProgramAsk">Exécuter %1$s</string>
     <string name="stepShellUnknownAsk">Exécuter une commande</string>
+    <string name="chatLoadFailedAgentBody">Rien n'est perdu. Réessayez quand %1$s répondra.</string>
+    <string name="chatLoadFailedAgentsBody">Rien n'est perdu. Réessayez quand les agents du téléphone répondront.</string>
+    <string name="chatLoadMissingAgentBody">%1$s n'a pas cette conversation : elle a peut-être été interrompue avant de commencer. Réessayez, ou configurez %1$s et démarrez une nouvelle conversation.</string>
+    <string name="chatLoadMissingAgentsBody">Les agents du téléphone n'ont pas cette conversation : son agent s'est peut-être arrêté avant de commencer. Réessayez ou démarrez une nouvelle conversation.</string>
 </resources>

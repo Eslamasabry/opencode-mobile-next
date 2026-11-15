@@ -330,4 +330,7 @@
     <string name="runningWorkTasksNoStop">Server ini tidak dapat menghentikannya satu per satu.</string>
     <string name="runningWorkMenu">Pekerjaan berjalan</string>
     <string name="runningWorkOpen">Buka pekerjaan berjalan</string>
+    <string name="chatsNewStartingAgent">Memulai %1$s…</string>
+    <string name="chatsNewAgentModelMissing">%1$s tidak menawarkan model yang Anda pilih. Tulisan Anda tetap tersimpan.</string>
+    <string name="chatsNewAgentDidNotStart">%1$s tidak dimulai. Tulisan Anda tetap tersimpan.</string>
 </resources>

@@ -330,4 +330,7 @@
     <string name="runningWorkTasksNoStop">Máy chủ này không thể dừng từng việc một.</string>
     <string name="runningWorkMenu">Công việc đang chạy</string>
     <string name="runningWorkOpen">Mở công việc đang chạy</string>
+    <string name="chatsNewStartingAgent">Đang khởi động %1$s…</string>
+    <string name="chatsNewAgentModelMissing">%1$s không cung cấp mô hình bạn đã chọn. Nội dung của bạn vẫn được giữ.</string>
+    <string name="chatsNewAgentDidNotStart">%1$s không khởi động được. Nội dung của bạn vẫn được giữ.</string>
 </resources>
