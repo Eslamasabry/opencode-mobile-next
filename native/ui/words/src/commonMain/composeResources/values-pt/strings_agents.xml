@@ -593,4 +593,5 @@
     <string name="agentsOwnAgentFailed">Não foi possível fazer isso neste celular. Tente novamente.</string>
     <string name="agentsOwnAgentReadyNow">Pronto para usar.</string>
     <string name="agentsOwnAgentReadyLater">Ficará pronto quando a tarefa em andamento terminar.</string>
+    <string name="agentsUpdatingAgent">Atualizando %1$s</string>
 </resources>

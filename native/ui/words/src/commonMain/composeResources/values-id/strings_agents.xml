@@ -576,4 +576,5 @@
     <string name="agentsOwnAgentFailed">Itu tidak bisa dilakukan di ponsel ini. Coba lagi.</string>
     <string name="agentsOwnAgentReadyNow">Siap digunakan.</string>
     <string name="agentsOwnAgentReadyLater">Akan siap saat tugas yang sedang berjalan selesai.</string>
+    <string name="agentsUpdatingAgent">Memperbarui %1$s</string>
 </resources>

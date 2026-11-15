@@ -806,6 +806,7 @@ agentsUpdateWaitingBusy	b3da3d5bf3
 agentsUpdateWaitingMetered	454cbfe9ee
 agentsUpdateWaitingSetup	bd0aa35e95
 agentsUpdateWaitingSwitch	765a9c7de8
+agentsUpdatingAgent	642b641646
 aiSetupAllSettings	ecf698cd74
 aiSetupAllSources	cb3ef3c564
 aiSetupDefaultAgent	b69240fda0

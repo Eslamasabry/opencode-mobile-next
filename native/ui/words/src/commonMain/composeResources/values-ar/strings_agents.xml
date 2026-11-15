@@ -619,4 +619,5 @@
     <string name="agentsOwnAgentFailed">تعذّر تنفيذ ذلك على هذا الهاتف. حاول مرة أخرى.</string>
     <string name="agentsOwnAgentReadyNow">جاهز للاستخدام.</string>
     <string name="agentsOwnAgentReadyLater">سيكون جاهزًا عند انتهاء المهمة الجارية.</string>
+    <string name="agentsUpdatingAgent">جارٍ تحديث %1$s</string>
 </resources>

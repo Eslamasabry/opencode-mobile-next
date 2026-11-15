@@ -592,4 +592,5 @@
     <string name="agentsOwnAgentFailed">Cela n’a pas pu être fait sur ce téléphone. Réessayez.</string>
     <string name="agentsOwnAgentReadyNow">Prêt à l’emploi.</string>
     <string name="agentsOwnAgentReadyLater">Sera prêt quand la tâche en cours sera terminée.</string>
+    <string name="agentsUpdatingAgent">Mise à jour de %1$s</string>
 </resources>

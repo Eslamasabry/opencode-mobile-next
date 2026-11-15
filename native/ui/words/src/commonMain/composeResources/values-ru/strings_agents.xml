@@ -601,4 +601,5 @@
     <string name="agentsOwnAgentFailed">Этого не удалось сделать на этом телефоне. Повторите попытку.</string>
     <string name="agentsOwnAgentReadyNow">Готов к работе.</string>
     <string name="agentsOwnAgentReadyLater">Будет готов, когда закончится текущая задача.</string>
+    <string name="agentsUpdatingAgent">Обновляем %1$s</string>
 </resources>
