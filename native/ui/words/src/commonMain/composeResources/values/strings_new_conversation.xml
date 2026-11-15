@@ -13,5 +13,14 @@
     <string name="chatsNewFolderMissing">This project’s folder isn’t on the server any more. Make it again as an empty project, or choose another project.</string>
     <string name="chatsNewFolderRemake">Make the folder again</string>
     <string name="chatsNewFolderChooseAnother">Choose another project</string>
+    <string name="chatsNewPhoneFolderAccess">Agents can’t open folders in this phone’s storage until you allow this app access to all files.</string>
+    <string name="chatsNewPhoneFolderAllow">Allow access to phone storage</string>
+    <string name="chatsNewPhoneFolderRestartServer">This phone’s OpenCode started before you chose this folder, so it can’t see it yet. Restart it to work here.</string>
+    <string name="chatsNewPhoneFolderRestartServerAction">Restart this phone’s OpenCode</string>
+    <string name="chatsNewPhoneFolderRestartAgents">The phone’s agents started before you chose this folder, so %1$s can’t see it yet. Restart them to work here.</string>
+    <string name="chatsNewPhoneFolderRestartAgentsAction">Restart the phone’s agents</string>
+    <string name="chatsNewPhoneFolderMissing">This folder isn’t in the phone’s storage any more. Choose another folder.</string>
+    <string name="chatsNewPhoneFolderDenied">%1$s can’t open or change files in this folder. Choose another folder in the phone’s storage.</string>
+    <string name="chatsNewPhoneFolderRestartFailed">Couldn’t restart. If an agent is still working, try again when it’s done.</string>
     <string name="chatSendFolderMissing">This project’s folder isn’t on the server any more, so the message wasn’t sent. Start a new conversation to make the folder again or choose another project.</string>
 </resources>

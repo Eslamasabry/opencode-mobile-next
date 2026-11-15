@@ -1178,16 +1178,7 @@ public fun BasicComposer(
                                 else
                                     stringResource(
                                         Res.string.upgradeComposerAsk,
-                                        state.models.agent?.takeUnless {
-                                            it.lowercase() in
-                                                setOf(
-                                                    "build",
-                                                    "plan",
-                                                    "compaction",
-                                                    "title",
-                                                    "summary",
-                                                )
-                                        } ?: chrome.agentName(),
+                                        askAs(state.models.agent, chrome.agentName()),
                                     ),
                             kind = KitFieldKind.Multiline,
                             // B6: one line when empty, so the conversation keeps its room above the
@@ -1382,9 +1373,19 @@ private fun modelWords(state: BasicComposerUi, chrome: ComposerChrome): String {
     return named
 }
 
-private fun modelLabel(model: String, level: String, agent: String?): String =
-    listOfNotNull(agent?.takeIf { it.isNotEmpty() }, model, level.takeIf { it.isNotEmpty() })
+internal fun modelLabel(model: String, level: String, agent: String?): String =
+    listOfNotNull(agent?.takeIf { it.isNotEmpty() && !isInternalMode(it) }, model, level.takeIf { it.isNotEmpty() })
         .joinToString(" · ")
+
+/** Who the box asks ("Ask Claude Code…"): the chosen agent's own name, else [fallback]; never a mode's id. */
+internal fun askAs(mode: String?, fallback: String): String =
+    mode?.takeUnless { it.lowercase() in setOf("build", "plan", "compaction", "title", "summary") || isInternalMode(it) } ?: fallback
+
+/**
+ * The ids a coding agent keeps for its own modes ("default", "auto"): they say nothing a person chose, so the box, the
+ * model chip and Details do not show them as words (F-006). The mode picker names them ([modeName]).
+ */
+internal fun isInternalMode(id: String?): Boolean = id?.trim()?.lowercase() in setOf("default", "auto")
 
 internal fun Failure.isCameraRefusal(): Boolean =
     this is Failure.Media &&

@@ -15,4 +15,13 @@
     <string name="chatsNewFolderRemake">Создать папку заново</string>
     <string name="chatsNewFolderChooseAnother">Выбрать другой проект</string>
     <string name="chatSendFolderMissing">Папки этого проекта больше нет на сервере, поэтому сообщение не отправлено. Начните новый чат, чтобы создать папку заново, или выберите другой проект.</string>
+    <string name="chatsNewPhoneFolderAccess">Агенты не могут открывать папки в памяти этого телефона, пока вы не разрешите этому приложению доступ ко всем файлам.</string>
+    <string name="chatsNewPhoneFolderAllow">Разрешить доступ к памяти телефона</string>
+    <string name="chatsNewPhoneFolderRestartServer">OpenCode на этом телефоне был запущен до того, как вы выбрали эту папку, поэтому пока её не видит. Перезапустите его, чтобы работать здесь.</string>
+    <string name="chatsNewPhoneFolderRestartServerAction">Перезапустить OpenCode на этом телефоне</string>
+    <string name="chatsNewPhoneFolderRestartAgents">Агенты телефона были запущены до того, как вы выбрали эту папку, поэтому %1$s пока её не видит. Перезапустите их, чтобы работать здесь.</string>
+    <string name="chatsNewPhoneFolderRestartAgentsAction">Перезапустить агентов телефона</string>
+    <string name="chatsNewPhoneFolderMissing">Этой папки больше нет в памяти телефона. Выберите другую папку.</string>
+    <string name="chatsNewPhoneFolderDenied">%1$s не может открывать или изменять файлы в этой папке. Выберите другую папку в памяти телефона.</string>
+    <string name="chatsNewPhoneFolderRestartFailed">Не удалось перезапустить. Если агент ещё работает, повторите попытку, когда он закончит.</string>
 </resources>

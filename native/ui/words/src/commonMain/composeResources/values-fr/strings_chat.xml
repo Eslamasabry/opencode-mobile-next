@@ -765,7 +765,7 @@
     <string name="composerBusyReason">Préparation de votre invite…</string>
     <string name="composerToolsTextOnly">Ce serveur n'accepte que du texte</string>
     <string name="composerToolsAgentTextOnly">%1$s n'accepte que du texte ici</string>
-    <string name="composerToolsAgentPicturesOnly">%1$s n'accepte que des images\u00A0: utilisez Photothèque ou Prendre une photo</string>
+    <string name="composerToolsAgentPicturesOnly">%1$s n’accepte que les images\u00A0: utilisez %2$s ou %3$s</string>
     <string name="composerToolSavedSubtitle">Remettre une invite enregistrée dans le brouillon</string>
     <string name="composerToolSaveForLater">Enregistrer l'invite pour plus tard</string>
     <string name="composerToolNothingToSave">Saisissez ou joignez d'abord quelque chose</string>

@@ -15,4 +15,13 @@
     <string name="chatsNewFolderRemake">Volver a crear la carpeta</string>
     <string name="chatsNewFolderChooseAnother">Elegir otro proyecto</string>
     <string name="chatSendFolderMissing">La carpeta de este proyecto ya no está en el servidor, así que el mensaje no se envió. Inicia una conversación nueva para volver a crear la carpeta o elige otro proyecto.</string>
+    <string name="chatsNewPhoneFolderAccess">Los agentes no pueden abrir carpetas del almacenamiento de este teléfono hasta que permitas a esta app el acceso a todos los archivos.</string>
+    <string name="chatsNewPhoneFolderAllow">Permitir el acceso al almacenamiento del teléfono</string>
+    <string name="chatsNewPhoneFolderRestartServer">El OpenCode de este teléfono se inició antes de que eligieras esta carpeta, así que aún no la ve. Reinícialo para trabajar aquí.</string>
+    <string name="chatsNewPhoneFolderRestartServerAction">Reiniciar el OpenCode de este teléfono</string>
+    <string name="chatsNewPhoneFolderRestartAgents">Los agentes del teléfono se iniciaron antes de que eligieras esta carpeta, así que %1$s aún no la ve. Reinícialos para trabajar aquí.</string>
+    <string name="chatsNewPhoneFolderRestartAgentsAction">Reiniciar los agentes del teléfono</string>
+    <string name="chatsNewPhoneFolderMissing">Esta carpeta ya no está en el almacenamiento del teléfono. Elige otra carpeta.</string>
+    <string name="chatsNewPhoneFolderDenied">%1$s no puede abrir ni cambiar archivos en esta carpeta. Elige otra carpeta del almacenamiento del teléfono.</string>
+    <string name="chatsNewPhoneFolderRestartFailed">No se pudo reiniciar. Si un agente sigue trabajando, inténtalo de nuevo cuando termine.</string>
 </resources>

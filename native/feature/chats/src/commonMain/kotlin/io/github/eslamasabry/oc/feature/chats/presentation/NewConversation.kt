@@ -75,6 +75,29 @@ public data class NewConversationProject(
  */
 public enum class PhoneStorageAccess { Off, On }
 
+/**
+ * Issue 147: a folder in this phone's storage, as the phone's Linux side that will work in it finds it (the phone's own
+ * OpenCode, or the helper that runs the phone's agents), checked when the folder is chosen and before the first
+ * message. Anything but [Ready] keeps Start back and says why, with the way forward: a message never goes to another
+ * folder than the one shown.
+ */
+public enum class PhoneFolderReach {
+    /** That side lists and writes the folder: the agent starts in it. */
+    Ready,
+
+    /** Android's All files access is off. */
+    AppAccess,
+
+    /** That side was started before the folder was chosen and does not see it until it starts again. */
+    Restart,
+
+    /** The folder is not on the phone any more. */
+    Missing,
+
+    /** The app sees the folder, but that side cannot open or change files in it. */
+    Denied,
+}
+
 public data class NewConversationModel(
     val model: ModelRef,
     val name: String,
@@ -175,6 +198,24 @@ public interface NewConversationHost {
     /** Opens Android's page for All files access. A request to the person, never a grant; the answer is read on return. */
     public suspend fun requestPhoneStorage(profile: ProfileId): Outcome<Unit> =
         Outcome.Failed(Failure.Unavailable(FeatureId("phoneStorage")))
+
+    /**
+     * Issue 147: what [directory] is to the side of this phone that will work in it: [phoneAgent]'s helper, or the
+     * phone's own OpenCode when null. Null when the folder is not in this phone's storage, the server is not this
+     * phone's own, or it can't be told (the start itself then answers).
+     */
+    public suspend fun phoneFolder(profile: ProfileId, phoneAgent: String?, directory: String): PhoneFolderReach? =
+        null
+
+    /**
+     * The way forward for [reach]: Android's All files access page ([PhoneFolderReach.AppAccess]) or a new start of
+     * the side that was started before the folder was chosen ([PhoneFolderReach.Restart]; refused while it works).
+     */
+    public suspend fun fixPhoneFolder(
+        profile: ProfileId,
+        phoneAgent: String?,
+        reach: PhoneFolderReach,
+    ): Outcome<Unit> = Outcome.Failed(Failure.Unavailable(FeatureId("phoneFolder")))
 
     /** Whether [profile] can make a new project folder here (the app's own phone server only, as in Projects). */
     public fun canCreateProject(profile: ProfileId): Boolean = false
@@ -497,6 +538,10 @@ public data class NewConversationUi(
     val projectFailure: Failure? = null,
     /** B-063: the chosen project's folder is not on its server any more; Start waits for a choice. */
     val folderMissing: Boolean = false,
+    /** Issue 147: the chosen folder in this phone's storage as the side that will work in it finds it; null: not one. */
+    val phoneFolder: PhoneFolderReach? = null,
+    val fixingPhoneFolder: Boolean = false,
+    val phoneFolderFailure: Failure? = null,
     val remakingFolder: Boolean = false,
     val remakeFailure: Failure? = null,
     /** The chosen server is this phone's own OpenCode and the person stopped it: no list can be read until it starts. */
@@ -523,6 +568,10 @@ public data class NewConversationUi(
         get() = phoneAgent == null && setup?.projects?.any { it.directory == directory && it.separateCopy } == true
 
     /** The chosen phone agent's name (its row while offered, else the catalog's). */
+    /** Issue 147: the chosen folder in phone storage is not ready for the side that will work in it; Start waits. */
+    val phoneFolderBlocked: Boolean
+        get() = phoneFolder != null && phoneFolder != PhoneFolderReach.Ready
+
     val phoneAgentName: String?
         get() =
             phoneAgent?.let { id ->
@@ -694,6 +743,9 @@ public interface NewConversationActions {
 
     /** B-063: makes the missing project folder again (empty, with Git). */
     public fun remakeFolder() {}
+
+    /** Issue 147: the phone-storage notice's action (allow All files access, or restart the side that can't see it). */
+    public fun fixPhoneFolder() {}
 }
 
 @AssistedInject
@@ -750,6 +802,11 @@ public class NewConversationViewModel(
     override fun shown() {
         // Back from Android's All files access page: the Phone storage row says what the person answered.
         if (mutable.value.phoneStorage != null) readPhoneStorage()
+        // Back from Android's page, or Android took the access back meanwhile: the folder is checked again.
+        mutable.value.let { now ->
+            if (now.phoneFolder != null && now.profile != null && now.directory != null)
+                checkPhoneFolder(now.profile, now.directory)
+        }
         if (!refreshOnShown) return
         val profile = mutable.value.profile ?: return
         refreshOnShown = false
@@ -1163,6 +1220,8 @@ public class NewConversationViewModel(
                 repair = null,
                 folderMissing = false,
                 remakeFailure = null,
+                phoneFolder = null,
+                phoneFolderFailure = null,
             )
         }
         checkFolder(profile, directory.trim())
@@ -1290,6 +1349,8 @@ public class NewConversationViewModel(
             if (host.choosePhoneAgent(profile, agent) is Outcome.Failed)
                 mutable.update { it.copy(draftFailed = true) }
         }
+        // The phone's OpenCode and the agents' helper are two Linux sides: the folder is checked for the one chosen.
+        shown.directory?.let { checkPhoneFolder(profile, it) }
         if (agent != null) loadPhoneModels(profile, agent)
         else saveChoices()
     }
@@ -1410,6 +1471,7 @@ public class NewConversationViewModel(
 
     /** B-063: a project whose folder is gone says so before Start, never after a refused send. */
     private fun checkFolder(profile: ProfileId, directory: String) {
+        checkPhoneFolder(profile, directory)
         viewModelScope.launch {
             val there = host.folderExists(profile, directory)
             mutable.update {
@@ -1417,6 +1479,41 @@ public class NewConversationViewModel(
                     it.copy(folderMissing = there == false)
                 else it
             }
+        }
+    }
+
+    /** The newest phone-folder check: only its answer is shown. */
+    private var phoneFolderRead = 0
+
+    /** Issue 147: what the chosen folder in phone storage is to the side that will work in it (for the agent shown). */
+    private fun checkPhoneFolder(profile: ProfileId, directory: String) {
+        val read = ++phoneFolderRead
+        val agent = mutable.value.phoneAgent
+        viewModelScope.launch {
+            val reach = host.phoneFolder(profile, agent, directory)
+            mutable.update {
+                if (read == phoneFolderRead && it.profile == profile && it.directory == directory)
+                    it.copy(phoneFolder = reach)
+                else it
+            }
+        }
+    }
+
+    override fun fixPhoneFolder() {
+        val shown = mutable.value
+        val profile = shown.profile ?: return
+        val directory = shown.directory ?: return
+        val reach = shown.phoneFolder ?: return
+        if (shown.fixingPhoneFolder || (reach != PhoneFolderReach.AppAccess && reach != PhoneFolderReach.Restart))
+            return
+        mutable.update { it.copy(fixingPhoneFolder = true, phoneFolderFailure = null) }
+        viewModelScope.launch {
+            val fixed = host.fixPhoneFolder(profile, shown.phoneAgent, reach)
+            mutable.update {
+                it.copy(fixingPhoneFolder = false, phoneFolderFailure = (fixed as? Outcome.Failed)?.failure)
+            }
+            if (mutable.value.profile == profile && mutable.value.directory == directory)
+                checkPhoneFolder(profile, directory)
         }
     }
 
@@ -1552,6 +1649,8 @@ public class NewConversationViewModel(
                 shown.creationUnconfirmed ||
                 shown.deliveryUnconfirmed ||
                 shown.folderMissing ||
+                shown.phoneFolderBlocked ||
+                shown.fixingPhoneFolder ||
                 shown.phoneNeedsProjectsFolder
         )
             return
@@ -1587,6 +1686,14 @@ public class NewConversationViewModel(
             it.copy(busy = true, openingChat = true, failure = null, attempted = true)
         }
         viewModelScope.launch {
+            // Issue 147: checked again from the side that will work in the folder, right before the first message.
+            val reach = host.phoneFolder(profile, shown.phoneAgent, directory)
+            if (reach != null && reach != PhoneFolderReach.Ready) {
+                mutable.update {
+                    it.copy(busy = false, openingChat = false, attempted = shown.attempted, phoneFolder = reach)
+                }
+                return@launch
+            }
             var openedConversation: ConversationRef? = null
             // A phone agent's conversation lives on the phone helper's profile, with the agent's own model.
             val phone = shown.setup?.phone?.takeIf { shown.phoneAgent != null }

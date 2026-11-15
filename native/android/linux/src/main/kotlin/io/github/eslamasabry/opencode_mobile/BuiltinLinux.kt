@@ -1113,6 +1113,12 @@ class BuiltinLinux(private val context: Context) {
         } catch (error: Exception) {
             Log.w(TAG, "Git object setting not written: ${error.javaClass.simpleName}")
         }
+        // Issue 147: Git works in the folders chosen in the phone's storage, whoever Android says owns their files.
+        try {
+            BuiltinGitConfig.trustSharedFolders(rootfs, sharedProjectRoots())
+        } catch (error: Exception) {
+            Log.w(TAG, "Git shared-folder setting not written: ${error.javaClass.simpleName}")
+        }
     }
 
     private fun procMaskBinds(): List<String> {
@@ -1732,6 +1738,69 @@ class BuiltinLinux(private val context: Context) {
             sharedStorageRootsForLaunch(),
             confined = !sharedStorageBroadAccess(),
         )
+
+    /** What a process started now gets of shared storage (the rules of [sharedStorageBinds]). */
+    @Synchronized
+    fun sharedStorageViewForLaunch(): SharedStorageView =
+        SharedStorageView(sharedStorageBroadAccess(), sharedStorageRootsForLaunch())
+
+    /**
+     * Issue 147: what [path], a folder in the phone's shared storage, is to the Linux identity that will work in it:
+     * the phone's own server when [agentProfile] is null (root), else the phone agents' helper of [agentProfile]
+     * (uid 1000). The folder is listed and written from that identity with the binds a start gets now, and compared
+     * with the binds of its process running now. Answers a [SharedFolderReach] code; nothing is started or bound.
+     */
+    fun sharedFolderReach(path: String, agentProfile: String?): String {
+        @Suppress("DEPRECATION")
+        val appAccess =
+            if (Build.VERSION.SDK_INT >= 30) android.os.Environment.isExternalStorageManager()
+            else
+                context.checkSelfPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE) ==
+                    android.content.pm.PackageManager.PERMISSION_GRANTED
+        val appSees =
+            try {
+                File(path).isDirectory
+            } catch (_: Exception) {
+                false
+            }
+        val running =
+            if (agentProfile == null)
+                synchronized(this) {
+                    if (serverRunning) SharedStorageView(serverStorageBroad, serverStorageRoots) else null
+                }
+            else agentHost.storageView(agentProfile)
+        val probe = if (appAccess && appSees) probeSharedFolder(path, agentUser = agentProfile != null) else null
+        return SharedFolderReach.decide(appAccess, appSees, path, running, probe).code
+    }
+
+    /** The [SharedFolderReach.PROBE]'s exit status from the identity, or null when it could not run. */
+    private fun probeSharedFolder(path: String, agentUser: Boolean): Int? {
+        if (!installed) return null
+        return try {
+            val process =
+                ProcessBuilder(
+                        prootCommand(
+                            listOf("/bin/sh", "-c", SharedFolderReach.PROBE, "oc-folder-check", path),
+                            agentUser = agentUser,
+                        )
+                    )
+                    .redirectErrorStream(true)
+                    .redirectOutput(File("/dev/null"))
+                    .apply {
+                        environment().clear()
+                        environment().putAll(prootEnvironment())
+                    }
+                    .start()
+            process.outputStream.close()
+            if (process.waitFor(FOLDER_CHECK_SECONDS, TimeUnit.SECONDS)) process.exitValue()
+            else {
+                stopTree(process)
+                null
+            }
+        } catch (_: Exception) {
+            null
+        }
+    }
 
     /** The executable must match argv[0], including for the native PTY bridge. */
     val prootLaunchPath: String
@@ -3193,6 +3262,11 @@ class BuiltinLinux(private val context: Context) {
         testedHelperVersions: Set<String> = emptySet(),
         /** Replaces a running helper of another version, when the phone's work is idle (the automatic agent update). */
         restartIfVersionChanged: Boolean = false,
+        /**
+         * Replaces a running helper whatever its version, when the phone's work is idle: a folder chosen in shared
+         * storage after its start is bound only by a new start (issue 147).
+         */
+        forceRestart: Boolean = false,
     ): Map<String, Any?> {
         val ticket = captureAgentHostStart(profile, false, null) ?: error("agent_host_unavailable")
         return withAgentHostStart(ticket) {
@@ -3205,6 +3279,7 @@ class BuiltinLinux(private val context: Context) {
                     PhoneAgentHost.HelperPolicy(
                         expectedVersion = expectedHelperVersion,
                         restartIfVersionChanged = restartIfVersionChanged,
+                        forceRestart = forceRestart,
                         testedVersions = testedHelperVersions,
                     ),
                 )
@@ -6993,6 +7068,9 @@ exec gc supervisor run
 
         /** The OpenCode server's service name. */
         const val SERVER = "server"
+
+        /** The shared-folder check runs a short shell; a slow phone still answers well within this. */
+        private const val FOLDER_CHECK_SECONDS = 20L
 
         /** Service names double as log file names. */
         private val NAME = Regex("[a-z][a-z0-9-]{0,31}")

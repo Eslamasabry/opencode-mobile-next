@@ -33,4 +33,5 @@
     <string name="approvalAlwaysCoversWords">Toujours autoriser couvrirait aussi %1$s.</string>
     <string name="approvalAlwaysPattern">Motif de Toujours autoriser</string>
     <string name="approvalNoteDenyOnly">Envoyé uniquement si vous choisissez Refuser.</string>
+    <string name="approvalNewFileOf">Nouveau fichier\u00A0: %1$s</string>
 </resources>

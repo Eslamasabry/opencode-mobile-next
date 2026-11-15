@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.engine.agents.providers.OwnAgentCheckResult
 import io.github.eslamasabry.oc.engine.agents.providers.OwnAgentProblem
 import io.github.eslamasabry.oc.feature.agents.hub.OwnAgentActions
+import io.github.eslamasabry.oc.feature.agents.hub.OwnAgentPickup
 import io.github.eslamasabry.oc.feature.agents.hub.OwnAgentsUi
 import io.github.eslamasabry.oc.feature.agents.hub.OwnProviderActions
 import io.github.eslamasabry.oc.ui.design.color.StatusTone
@@ -67,6 +68,8 @@ import io.github.eslamasabry.oc.ui.words.res.agentsOwnAgentName
 import io.github.eslamasabry.oc.ui.words.res.agentsOwnAgentNoAnswer
 import io.github.eslamasabry.oc.ui.words.res.agentsOwnAgentNotAcp
 import io.github.eslamasabry.oc.ui.words.res.agentsOwnAgentNotFound
+import io.github.eslamasabry.oc.ui.words.res.agentsOwnAgentReadyLater
+import io.github.eslamasabry.oc.ui.words.res.agentsOwnAgentReadyNow
 import io.github.eslamasabry.oc.ui.words.res.agentsOwnAgentRemove
 import io.github.eslamasabry.oc.ui.words.res.agentsOwnAgentRowBody
 import io.github.eslamasabry.oc.ui.words.res.agentsOwnAgentSave
@@ -218,6 +221,12 @@ internal fun OwnAgentSheet(state: OwnAgentsUi, actions: OwnAgentActions, help: O
                 if (result == OwnAgentCheckResult.Answered)
                     KitNotice(stringResource(Res.string.agentsOwnAgentAnswered, who), tone = StatusTone.Ok)
                 else KitErrorNotice(checkWords(result, who))
+            }
+            // After a save: when the phone's agent helper takes it.
+            when (state.pickup) {
+                OwnAgentPickup.Ready -> KitNotice(stringResource(Res.string.agentsOwnAgentReadyNow), tone = StatusTone.Ok)
+                OwnAgentPickup.WhenIdle -> KitNotice(stringResource(Res.string.agentsOwnAgentReadyLater))
+                OwnAgentPickup.None -> Unit
             }
             state.installed?.let { ok ->
                 if (ok) KitNotice(stringResource(Res.string.agentsOwnAgentInstalled), tone = StatusTone.Ok)

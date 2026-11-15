@@ -15,4 +15,13 @@
     <string name="chatsNewFolderRemake">Recréer le dossier</string>
     <string name="chatsNewFolderChooseAnother">Choisir un autre projet</string>
     <string name="chatSendFolderMissing">Le dossier de ce projet n’est plus sur le serveur, donc le message n’a pas été envoyé. Démarrez une nouvelle conversation pour recréer le dossier ou choisissez un autre projet.</string>
+    <string name="chatsNewPhoneFolderAccess">Les agents ne peuvent pas ouvrir les dossiers du stockage de ce téléphone tant que vous n’avez pas autorisé cette application à accéder à tous les fichiers.</string>
+    <string name="chatsNewPhoneFolderAllow">Autoriser l’accès au stockage du téléphone</string>
+    <string name="chatsNewPhoneFolderRestartServer">L’OpenCode de ce téléphone a démarré avant que vous choisissiez ce dossier, il ne le voit donc pas encore. Redémarrez-le pour travailler ici.</string>
+    <string name="chatsNewPhoneFolderRestartServerAction">Redémarrer l’OpenCode de ce téléphone</string>
+    <string name="chatsNewPhoneFolderRestartAgents">Les agents du téléphone ont démarré avant que vous choisissiez ce dossier, %1$s ne le voit donc pas encore. Redémarrez-les pour travailler ici.</string>
+    <string name="chatsNewPhoneFolderRestartAgentsAction">Redémarrer les agents du téléphone</string>
+    <string name="chatsNewPhoneFolderMissing">Ce dossier n’est plus dans le stockage du téléphone. Choisissez un autre dossier.</string>
+    <string name="chatsNewPhoneFolderDenied">%1$s ne peut ni ouvrir ni modifier les fichiers de ce dossier. Choisissez un autre dossier dans le stockage du téléphone.</string>
+    <string name="chatsNewPhoneFolderRestartFailed">Redémarrage impossible. Si un agent travaille encore, réessayez quand il aura terminé.</string>
 </resources>

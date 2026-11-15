@@ -617,4 +617,6 @@
     <string name="agentsOwnAgentBadEnvValue">إحدى القيم طويلة جدًا.</string>
     <string name="agentsOwnAgentTooMany">يحتفظ هذا الهاتف بما يصل إلى 8 وكلاء خاصين. أزل واحدًا أولًا.</string>
     <string name="agentsOwnAgentFailed">تعذّر تنفيذ ذلك على هذا الهاتف. حاول مرة أخرى.</string>
+    <string name="agentsOwnAgentReadyNow">جاهز للاستخدام.</string>
+    <string name="agentsOwnAgentReadyLater">سيكون جاهزًا عند انتهاء المهمة الجارية.</string>
 </resources>

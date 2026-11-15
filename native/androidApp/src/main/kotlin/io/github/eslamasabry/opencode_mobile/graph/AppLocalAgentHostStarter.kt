@@ -7,6 +7,7 @@ import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import dev.zacsweers.metro.binding
 import io.github.eslamasabry.oc.core.common.AppDispatchers
+import io.github.eslamasabry.oc.core.common.BusyKind
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.RuntimeProblem
@@ -78,6 +79,17 @@ class AppLocalAgentHostStarter(
             is Outcome.Ok -> Outcome.Ok(Unit)
         }
 
+    /**
+     * Issue 147: a folder chosen in the phone's storage after the helper started is bound only by a new start. Replaces
+     * the running helper (refused with Busy while an agent works) so the folder is there for every phone agent. Nothing
+     * is saved.
+     */
+    suspend fun restartForFolder(): Outcome<Unit> =
+        when (val prepared = prepare(save = false, budgetMs = GATE_BUDGET_MS, forceRestart = true)) {
+            is Outcome.Failed -> prepared
+            is Outcome.Ok -> Outcome.Ok(Unit)
+        }
+
     override suspend fun connect(): Outcome<Unit> {
         // The lock covers the helper and the saved profile only: connecting the profile asks [ensureHelper] again
         // (it is the same path any later connection of this server takes), so it must not run under the lock.
@@ -144,7 +156,12 @@ class AppLocalAgentHostStarter(
         }
     }
 
-    private suspend fun prepare(save: Boolean, budgetMs: Long, upgrade: Boolean = false): Outcome<ProfileId> = lane.withLock {
+    private suspend fun prepare(
+        save: Boolean,
+        budgetMs: Long,
+        upgrade: Boolean = false,
+        forceRestart: Boolean = false,
+    ): Outcome<ProfileId> = lane.withLock {
         if (phone.state.value.needsRestart) return@withLock unavailable()
         when (val warm = stores.warm()) {
             is Outcome.Failed -> return@withLock warm
@@ -198,19 +215,21 @@ class AppLocalAgentHostStarter(
                             testedHelperVersions =
                                 if (upgrade) emptySet() else AgentPins.builtIn.paseoTestedVersions.toSet(),
                             restartIfVersionChanged = upgrade,
+                            forceRestart = forceRestart,
                         )
                         Outcome.Ok(Unit)
                     }
                 } catch (e: CancellationException) {
                     throw e
                 } catch (e: Exception) {
-                    // A helper that is missing or too old to run is its own reason, with its own way forward.
+                    // A helper that is missing or too old to run is its own reason, with its own way forward; an agent
+                    // still working refuses a restart until it is done.
                     Outcome.Failed(
-                        Failure.Runtime(
-                            if (PhoneAgentHost.failureCode(e) == "helper_update_required")
-                                RuntimeProblem.HelperUpdateRequired
-                            else RuntimeProblem.ServerStartUnavailable
-                        )
+                        when (PhoneAgentHost.failureCode(e)) {
+                            "helper_update_required" -> Failure.Runtime(RuntimeProblem.HelperUpdateRequired)
+                            "agent_host_busy" -> Failure.Busy(BusyKind.SessionBusy)
+                            else -> Failure.Runtime(RuntimeProblem.ServerStartUnavailable)
+                        }
                     )
                 }
             }

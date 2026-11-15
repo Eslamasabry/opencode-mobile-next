@@ -33,4 +33,5 @@
     <string name="approvalAlwaysCoversWords">Luôn cho phép cũng sẽ áp dụng cho %1$s.</string>
     <string name="approvalAlwaysPattern">Mẫu Luôn cho phép</string>
     <string name="approvalNoteDenyOnly">Chỉ được gửi nếu bạn chọn Từ chối.</string>
+    <string name="approvalNewFileOf">Tệp mới: %1$s</string>
 </resources>

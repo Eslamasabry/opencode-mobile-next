@@ -599,4 +599,6 @@
     <string name="agentsOwnAgentBadEnvValue">Одно из значений слишком длинное.</string>
     <string name="agentsOwnAgentTooMany">Этот телефон хранит до 8 собственных агентов. Сначала удалите одного.</string>
     <string name="agentsOwnAgentFailed">Этого не удалось сделать на этом телефоне. Повторите попытку.</string>
+    <string name="agentsOwnAgentReadyNow">Готов к работе.</string>
+    <string name="agentsOwnAgentReadyLater">Будет готов, когда закончится текущая задача.</string>
 </resources>

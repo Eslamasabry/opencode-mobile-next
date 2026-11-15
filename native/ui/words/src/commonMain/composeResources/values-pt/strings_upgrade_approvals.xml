@@ -33,4 +33,5 @@
     <string name="approvalAlwaysCoversWords">Sempre permitir também cobriria %1$s.</string>
     <string name="approvalAlwaysPattern">Padrão de Sempre permitir</string>
     <string name="approvalNoteDenyOnly">Só é enviado se você escolher Negar.</string>
+    <string name="approvalNewFileOf">Novo arquivo: %1$s</string>
 </resources>
