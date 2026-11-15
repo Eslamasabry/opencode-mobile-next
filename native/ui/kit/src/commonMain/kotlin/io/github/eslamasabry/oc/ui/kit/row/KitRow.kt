@@ -327,28 +327,9 @@ private fun RowBody(
             state != null -> Box(lead) { RowStateMark(state.tone) }
         }
         if (leading != null || state != null) Spacer(Modifier.width(Space.S3.dp))
-        BoxWithConstraints(Modifier.weight(1f)) {
-            val measurer = rememberTextMeasurer()
-            val typography = LocalKitTypography.current
-            val density = LocalDensity.current
-            // Budget the actual title, value, gap and chevron after the leading tile has been measured.
-            val valueBelow = value != null && (large || run {
-                val titleWidth = measurer.measure(
-                    title, style = typography.style(TypeRole.RowTitle).copy(textDirection = TextDirection.Content),
-                    softWrap = false, maxLines = 1,
-                ).size.width
-                val valueWidth = measurer.measure(
-                    value.text, style = typography.style(if (value.prominent) TypeRole.Body else TypeRole.Secondary).copy(textDirection = TextDirection.Content),
-                    softWrap = false, maxLines = 1,
-                ).size.width
-                val chevron = if (value.chevron) {
-                    (Space.S1 + tokens.smallIcon * minOf(scale, TextScalePolicy.FRAME_CAP)).dp
-                } else 0.dp
-                val gapsAndChevron = with(density) { (Space.S3.dp + chevron).roundToPx() }
-                titleWidth.toLong() + valueWidth + gapsAndChevron > constraints.maxWidth
-            })
+        val middle: @Composable (Modifier, Boolean) -> Unit = { middleModifier, valueBelow ->
             // The text never runs into what trails it: space2 before the trailing part (kit_row.dart:640).
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
+            Row(middleModifier, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
                 Column(
                     Modifier.weight(1f).then(if (own) Modifier.padding(vertical = Space.S2.dp) else Modifier),
                     verticalArrangement = Arrangement.spacedBy(2.dp), // F: lib/ui/kit/kit_tokens.dart:398
@@ -427,7 +408,7 @@ private fun RowBody(
                             )
                         }
                     }
-                    if (valueBelow) RowValue(value)
+                    if (valueBelow && value != null) RowValue(value)
                     if (actionBelow) KitInlineAction(action)
                 }
                 when {
@@ -485,6 +466,34 @@ private fun RowBody(
                     )
                     else -> Unit
                 }
+            }
+        }
+        // Trade-off: toggling `value == null` or crossing `large` moves `middle` between these two call sites, so
+        // remembered state inside the row restarts once rather than paying a per-row `movableContentOf` allocation.
+        if (value == null || large) {
+            middle(Modifier.weight(1f), value != null)
+        } else {
+            BoxWithConstraints(Modifier.weight(1f)) {
+                val measurer = rememberTextMeasurer()
+                val typography = LocalKitTypography.current
+                val density = LocalDensity.current
+                // Budget the actual title, value, gap and chevron after the leading tile has been measured.
+                val titleWidth = measurer.measure(
+                    title, style = typography.style(TypeRole.RowTitle).copy(textDirection = TextDirection.Content),
+                    softWrap = false, maxLines = 1,
+                ).size.width
+                val valueRole = if (value.prominent) TypeRole.Body else TypeRole.Secondary
+                val valueWidth = measurer.measure(
+                    value.text,
+                    style = typography.style(valueRole).copy(textDirection = TextDirection.Content),
+                    softWrap = false, maxLines = 1,
+                ).size.width
+                val chevron = if (value.chevron) {
+                    (Space.S1 + tokens.smallIcon * minOf(scale, TextScalePolicy.FRAME_CAP)).dp
+                } else 0.dp
+                val gapsAndChevron = with(density) { (Space.S3.dp + chevron).roundToPx() }
+                val valueBelow = titleWidth.toLong() + valueWidth + gapsAndChevron > constraints.maxWidth
+                middle(Modifier, valueBelow)
             }
         }
     }

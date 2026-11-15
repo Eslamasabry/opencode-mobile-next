@@ -45,8 +45,8 @@ class PixelTickerGateTest {
             "ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/status/KitStatusLine.kt" to 1,
         )
 
-    /** `.collectAsState(` calls in UI code (ui/, feature/, androidApp/) on 2026-11-14. */
-    private val collectBaseline = 37
+    /** `.collectAsState(` calls in UI code (ui/, feature/, androidApp/) after moving kit signals to LocalKitSignals. */
+    private val collectBaseline = 27
 
     private fun code(text: String): List<String> =
         text.lines().mapNotNull { raw ->

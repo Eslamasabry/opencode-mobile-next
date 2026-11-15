@@ -10,7 +10,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -62,6 +61,7 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitAppearance
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitMotion
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitRoles
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitSignals
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
 import io.github.eslamasabry.oc.ui.kit.foundation.kitRecord
 import io.github.eslamasabry.oc.ui.kit.foundation.kitDrawLayer
@@ -291,9 +291,8 @@ internal fun kitStatusEdgeBlur(sigmaDp: Float = STATUS_EDGE_BLUR_DP): RenderEffe
 /** True when a hold (Saver, reduced motion, high contrast) keeps every frost of the page from drawing. */
 @Composable
 private fun frostConditionsHold(): Boolean {
-    val platform = LocalKitPlatform.current
     val appearance = LocalKitAppearance.current
-    val signals by platform.signals.collectAsState()
+    val signals = LocalKitSignals.current
     val c = FrostConditions(appearance.saver, LocalKitMotion.current.reduced, signals.highContrast, styleAllows = true)
     return FrostPolicy.heldBy(c) != null
 }
@@ -396,7 +395,7 @@ internal fun kitFrostedBarFace(frost: KitFrostState?): Modifier? {
     val appearance = LocalKitAppearance.current
     val colors = LocalKitColors.current
     val roles = LocalKitRoles.current
-    val signals by platform.signals.collectAsState()
+    val signals = LocalKitSignals.current
     val density = LocalDensity.current.density
     val conditions =
         FrostConditions(

@@ -1,12 +1,13 @@
 package io.github.eslamasabry.oc.ui.kit.icon
 
 import androidx.compose.foundation.Image
+import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.ProvidableCompositionLocal
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.LayoutDirection
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import io.github.eslamasabry.oc.ui.kit.platform.LocalKitPlatform
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.ui.Alignment
@@ -42,6 +43,7 @@ import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.kit.foundation.kitTextScale
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitSignals
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 
 /**
@@ -82,6 +84,36 @@ public fun KitIcon(
     KitGlyphBox(icon, LocalKitColors.current.tone(tone), size, modifier, label, growsWithText)
 }
 
+@Immutable
+internal class KitIconFamilies(
+    val regular: FontFamily,
+    val duotone: FontFamily,
+    val fill: FontFamily,
+) {
+    fun of(family: PhosphorFamily): FontFamily =
+        when (family) {
+            PhosphorFamily.Regular -> regular
+            PhosphorFamily.Duotone -> duotone
+            PhosphorFamily.Fill -> fill
+        }
+}
+
+internal val LocalKitIconFamilies: ProvidableCompositionLocal<KitIconFamilies?> = staticCompositionLocalOf { null }
+
+@Composable
+internal fun rememberKitIconFamilies(): KitIconFamilies {
+    val regular = Font(Res.font.phosphor_regular)
+    val duotone = Font(Res.font.phosphor_duotone)
+    val fill = Font(Res.font.phosphor_fill)
+    return remember(regular, duotone, fill) {
+        KitIconFamilies(
+            regular = FontFamily(regular),
+            duotone = FontFamily(duotone),
+            fill = FontFamily(fill),
+        )
+    }
+}
+
 @Composable
 private fun KitGlyphBox(
     icon: ImageVector,
@@ -106,12 +138,8 @@ private fun KitGlyphBox(
         )
         return
     }
-    val families =
-        mapOf(
-            PhosphorFamily.Regular to FontFamily(Font(Res.font.phosphor_regular)),
-            PhosphorFamily.Duotone to FontFamily(Font(Res.font.phosphor_duotone)),
-            PhosphorFamily.Fill to FontFamily(Font(Res.font.phosphor_fill)),
-        )
+    val families = LocalKitIconFamilies.current ?: rememberKitIconFamilies()
+    val fontFamily = families.of(glyph.family)
     // Flutter's Icon is a one-glyph Text, font size = the box, line height 1, leading split evenly, centred.
     val fontSize = with(LocalDensity.current) { dimension.dp.toSp() }
     val style =
@@ -122,7 +150,7 @@ private fun KitGlyphBox(
             textAlign = TextAlign.Center,
             color = color,
         )
-    val highContrast = LocalKitPlatform.current.signals.collectAsState().value.highContrast // F: lib/ui/kit/kit_icon.dart:218
+    val highContrast = LocalKitSignals.current.highContrast // F: lib/ui/kit/kit_icon.dart:218
     val duotoneBackground = duotoneBackgrounds[glyph.codePoint].takeIf { glyph.family == PhosphorFamily.Duotone }
     val mirrored = icon.autoMirror && LocalLayoutDirection.current == LayoutDirection.Rtl // NV: Flutter Icon mirrors matchTextDirection glyphs under RTL
     Box(
@@ -133,11 +161,11 @@ private fun KitGlyphBox(
             BasicText(
                 duotoneBackground.toChar().toString(),
                 Modifier.alpha(FlutterKitTokens.DUOTONE_WASH),
-                style.copy(fontFamily = families.getValue(glyph.family)),
+                style.copy(fontFamily = fontFamily),
                 softWrap = false,
             )
         }
-        BasicText(glyph.codePoint.toChar().toString(), style = style.copy(fontFamily = families.getValue(glyph.family)), softWrap = false)
+        BasicText(glyph.codePoint.toChar().toString(), style = style.copy(fontFamily = fontFamily), softWrap = false)
     }
 }
 

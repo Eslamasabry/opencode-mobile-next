@@ -3,9 +3,7 @@ package io.github.eslamasabry.oc.ui.kit.foundation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.ProvidableCompositionLocal
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.compositionLocalOf
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
@@ -30,6 +28,7 @@ import io.github.eslamasabry.oc.ui.design.effects.FrostStrength
 import io.github.eslamasabry.oc.ui.kit.platform.LocalKitPlatform
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitAppearance
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitSignals
 import kotlin.math.ceil
 
 /*
@@ -97,7 +96,7 @@ public val LocalKitChromeVeil: ProvidableCompositionLocal<ChromeVeil?> = composi
 public fun rememberKitChromeVeil(): ChromeVeil {
     val platform = LocalKitPlatform.current
     val appearance = LocalKitAppearance.current
-    val signals by platform.signals.collectAsState()
+    val signals = LocalKitSignals.current
     val density = LocalDensity.current.density
     val blurs = remember(platform, density) { platform.frostEffect(FrostSpec(1f, 1f, 0f), density) != null }
     return remember(signals.highContrast, appearance.saver, appearance.frost, blurs) {

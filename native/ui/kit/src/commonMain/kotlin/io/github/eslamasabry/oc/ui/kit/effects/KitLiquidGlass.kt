@@ -9,7 +9,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.ProvidableCompositionLocal
 import androidx.compose.runtime.Stable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -90,6 +89,7 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitAppearance
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitMotion
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitRoles
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitSignals
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
 import io.github.eslamasabry.oc.ui.kit.foundation.kitRecord
 import io.github.eslamasabry.oc.ui.kit.foundation.kitDrawLayer
@@ -120,7 +120,7 @@ internal fun kitLiquidOn(): Boolean = kitEdgesHeldBy() == null
 @Composable
 private fun kitEdgesHeldBy(): io.github.eslamasabry.oc.ui.design.effects.EdgeHold? {
     val platform = LocalKitPlatform.current
-    val signals by platform.signals.collectAsState()
+    val signals = LocalKitSignals.current
     val appearance = LocalKitAppearance.current
     val conditions =
         FrostConditions(

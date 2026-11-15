@@ -36,8 +36,11 @@ import io.github.eslamasabry.oc.ui.design.tokens.Alphas
 import io.github.eslamasabry.oc.ui.design.tokens.Density
 import io.github.eslamasabry.oc.ui.design.tokens.Tokens
 import io.github.eslamasabry.oc.ui.kit.foundation.rememberAppTextDensity
+import io.github.eslamasabry.oc.ui.kit.icon.LocalKitIconFamilies
+import io.github.eslamasabry.oc.ui.kit.icon.rememberKitIconFamilies
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotionState
 import io.github.eslamasabry.oc.ui.kit.platform.KitPlatform
+import io.github.eslamasabry.oc.ui.kit.platform.KitSystemSignals
 import io.github.eslamasabry.oc.ui.kit.platform.LocalKitPlatform
 import io.github.eslamasabry.oc.ui.kit.theme.KitTypography
 import io.github.eslamasabry.oc.ui.kit.theme.KitWindowInfo
@@ -47,6 +50,7 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.KitStyleState
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitMotion
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitRoles
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitSignals
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitLocaleTag
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
@@ -80,7 +84,7 @@ public fun KitTheme(
     stillFrame: Boolean = false,
     content: @Composable () -> Unit,
 ) {
-    val signals by platform.signals.collectAsState()
+    val signals = collectPlatformSignals(platform)
     val dark =
         when (appearance.mode) {
             AppearanceMode.System -> isSystemInDarkTheme()
@@ -122,6 +126,7 @@ public fun KitTheme(
     val targetColors = remember(roles) { roles.toKitColors() }
     val arabic = isArabic(localeTag)
     val fonts = rememberKitFonts(arabic)
+    val iconFamilies = rememberKitIconFamilies()
     val typography = remember(fonts, arabic) { KitTypography(fonts, arabic) }
     // Saver makes the effective knobs none (Dart KitEffects.underSaver).
     val tokens = Tokens.of(styleState.knobs.density)
@@ -165,6 +170,8 @@ public fun KitTheme(
     CompositionLocalProvider(
         io.github.eslamasabry.oc.ui.kit.live.LocalKitLiveShare provides live,
         LocalKitPlatform provides platform,
+        LocalKitSignals provides signals,
+        LocalKitIconFamilies provides iconFamilies,
         LocalKitAppearance provides effectiveAppearance,
         LocalKitStyle provides styleState,
         // The Glass lab's tuning, while its "Use in the whole app" switch is on (null: the shipped glass).
@@ -198,6 +205,36 @@ public fun KitTheme(
         }
     }
 }
+
+/**
+ * Binds [platform] and its collected signals for a subtree inside an active [KitTheme] so callers never override
+ * [LocalKitPlatform] while leaving [LocalKitSignals] pointing at the outer theme.
+ */
+@Composable
+public fun KitPlatformScope(platform: KitPlatform, content: @Composable () -> Unit) {
+    val signals = collectPlatformSignals(platform)
+    val window = LocalKitWindow.current
+    if (window.finePointer == signals.finePointer) {
+        CompositionLocalProvider(
+            LocalKitPlatform provides platform,
+            LocalKitSignals provides signals,
+            content = content,
+        )
+    } else {
+        val scopedWindow =
+            remember(window, signals.finePointer) { window.copy(finePointer = signals.finePointer) }
+        CompositionLocalProvider(
+            LocalKitPlatform provides platform,
+            LocalKitSignals provides signals,
+            LocalKitWindow provides scopedWindow,
+            content = content,
+        )
+    }
+}
+
+@Composable
+private fun collectPlatformSignals(platform: KitPlatform): KitSystemSignals =
+    platform.signals.collectAsState().value
 
 /**
  * Dart `KitInk.alpha`: the ripple is the part's ink at 12 % (M3's own default is 10 %). M3 1.5
