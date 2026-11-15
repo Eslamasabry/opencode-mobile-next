@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.kit.nav
 
+import io.github.eslamasabry.oc.ui.kit.foundation.kitScrollCue
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationSpec
 import androidx.compose.foundation.MutatePriority
@@ -219,7 +220,7 @@ public fun KitTabPages(
     val pager = state.pager
     HorizontalPager(
         state = pager,
-        modifier = modifier.testTag("kit-tab-pages"),
+        modifier = modifier.testTag("kit-tab-pages").kitScrollCue("tab strip names the pages"),
         verticalAlignment = Alignment.Top,
         key = { it },
         flingBehavior = PagerDefaults.flingBehavior(pager, snapAnimationSpec = specs.spatial()),

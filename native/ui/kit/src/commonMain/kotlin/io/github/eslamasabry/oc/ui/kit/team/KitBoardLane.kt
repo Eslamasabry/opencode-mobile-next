@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.kit.team
 
+import io.github.eslamasabry.oc.ui.kit.foundation.kitScrollCue
 import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -244,7 +245,7 @@ private fun Paged(columns: List<KitBoardColumn>, selected: Int, width: Float, se
         state = pages,
         pageSize = PageSize.Fixed(laneWidth.dp),
         contentPadding = PaddingValues(horizontal = side.dp),
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier.fillMaxSize().kitScrollCue("next lane peeks"),
         beyondViewportPageCount = 1,
     ) { index ->
         // Half of space1 on each side: space1 between two paged lanes.
@@ -302,6 +303,7 @@ private fun SideBySide(columns: List<KitBoardColumn>, selected: Int, width: Floa
     Row(
         Modifier.fillMaxSize()
             .horizontalScroll(scroll)
+            .kitScrollCue("lanes peek")
             .padding(start = tokens.gutter.dp, end = tokens.gutter.dp, bottom = Space.S2.dp),
         horizontalArrangement = Arrangement.spacedBy(Space.S3.dp),
     ) {

@@ -286,7 +286,7 @@ public fun KitSearchField(
                             },
                 )
                 if (query.isEmpty()) {
-                    KitText(label, role = TypeRole.Body, tone = TextTone.Tertiary, kind = KitTextKind.Reading, maxLines = if (LocalDensity.current.fontScale >= 1.3f) 2 else 1) // F: lib/ui/kit/kit_search_field.dart:337
+                    KitText(label, role = TypeRole.Body, tone = TextTone.Tertiary, kind = KitTextKind.Reading, maxLines = 2) // F: lib/ui/kit/kit_search_field.dart:337
                 }
             }
             if (filters.isNotEmpty()) {

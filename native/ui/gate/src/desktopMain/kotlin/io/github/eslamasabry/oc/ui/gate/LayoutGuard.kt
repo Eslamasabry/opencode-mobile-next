@@ -94,7 +94,8 @@ object LayoutGuard {
     fun check(shot: String, scene: Scene) {
         // The alignment gate (AlignGuard) reads the phone window's light render, so it costs no render of its own.
         var align: AlignGuard.Result? = null
-        val found = audit(scene) { roots, window ->
+        val survey = surveying()
+        val found = audit(scene, if (survey) Window.entries.filter { it.compact } else Window.entries) { roots, window ->
             val screen = scene.frame == FlutterGoldenGate.Frame.Screen
             if (align == null) align = AlignGuard.inspect(roots, window.w, window.h, screen)
         }
@@ -102,6 +103,7 @@ object LayoutGuard {
         val keys = found.map { "$shot\t${it.key}" }.toSortedSet()
         out.mkdirs()
         File(out, "$shot.tsv").writeText(found.joinToString("") { "$shot\t${it.key}\t${it.detail}\n" })
+        if (survey) return
         if (System.getenv("OC_LAYOUT_BASELINE") == "update") {
             rewriteBaseline(shot, keys)
             if (aligned != null) throw AssertionError(aligned)
@@ -121,6 +123,12 @@ object LayoutGuard {
         val failures = listOfNotNull(layout, aligned)
         if (failures.isNotEmpty()) throw AssertionError(failures.joinToString("\n\n"))
     }
+
+    /**
+     * `OC_LAYOUT_SURVEY=compact`: a survey run looks at the compact windows only, writes each shot's findings to
+     * `looks-out/layout/<module>/<shot>.tsv` and neither compares with nor rewrites the baseline (compact-width slice).
+     */
+    internal fun surveying(): Boolean = System.getenv("OC_LAYOUT_SURVEY") == "compact"
 
     /** Every finding for [scene] at [windows] in light and dark, once each (light and dark usually agree). */
     fun audit(

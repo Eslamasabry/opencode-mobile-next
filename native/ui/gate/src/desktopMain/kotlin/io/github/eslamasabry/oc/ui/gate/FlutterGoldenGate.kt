@@ -164,6 +164,7 @@ object FlutterGoldenGate {
             e
         }
         writeLayoutRow(name, guard?.message)
+        if (LayoutGuard.surveying()) return emptyMap() // a layout survey does not render or compare the pictures
         guard?.let { failures += it }
         val result = LinkedHashMap<String, Double>()
         for (mode in modes) {

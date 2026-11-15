@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.kit
 
+import io.github.eslamasabry.oc.ui.kit.foundation.kitMayTruncate
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
@@ -222,7 +223,7 @@ private fun PreviewCard(title: String, accent: Color) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             PreviewDot(colors.success)
             Spacer(Modifier.width(Space.S2.dp))
-            KitText(title, Modifier.weight(1f), role = TypeRole.Label, tone = TextTone.Primary, maxLines = 1)
+            KitText(title, Modifier.weight(1f).kitMayTruncate("widget-preview-title"), role = TypeRole.Label, tone = TextTone.Primary, maxLines = 1)
         }
         KitText(
             stringResource(Res.string.widgetV2PreviewStep),
@@ -289,7 +290,7 @@ private fun PreviewListRow(mark: Color, title: String, action: String, accent: C
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         PreviewDot(mark)
         Spacer(Modifier.width(Space.S2.dp))
-        KitText(title, Modifier.weight(1f), role = TypeRole.Caption, tone = TextTone.Primary, maxLines = 1)
+        KitText(title, Modifier.weight(1f).kitMayTruncate("widget-preview-title"), role = TypeRole.Caption, tone = TextTone.Primary, maxLines = 1)
         Spacer(Modifier.width(Space.S2.dp))
         PreviewChip(action, accent)
     }
