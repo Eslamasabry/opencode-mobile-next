@@ -229,7 +229,12 @@ public fun KitMarkdown(
  * first). The transcript, which shows a reply one block per row, uses the same gaps between its block rows.
  */
 public fun kitMdGap(before: KitMdBlock, after: KitMdBlock): Int =
-    if (before is KitMdBlock.ListItem && after is KitMdBlock.ListItem) Space.S2 else Space.S3
+    when {
+        // A heading belongs to the text below it: more room above it (20 dp) than below (the 12 dp block gap).
+        after is KitMdBlock.Heading -> Space.S5
+        before is KitMdBlock.ListItem && after is KitMdBlock.ListItem -> Space.S2
+        else -> Space.S3
+    }
 
 /**
  * One block (06 §7.8 names: `KitMarkdownProse`, `KitMarkdownHeading`, `KitMarkdownQuote`,
@@ -352,7 +357,13 @@ public fun KitMarkdownHeading(
     caret: Boolean = false,
     reveal: KitMdReveal? = null,
 ) {
-    val role = if (block.level <= 2) TypeRole.Headline else TypeRole.RowTitle
+    // `#` and `##` read larger than the body (Title 22), `###` is Headline, deeper levels RowTitle.
+    val role =
+        when {
+            block.level <= 2 -> TypeRole.Title
+            block.level == 3 -> TypeRole.Headline
+            else -> TypeRole.RowTitle
+        }
     MdText(
         block.key,
         block.inlines,
