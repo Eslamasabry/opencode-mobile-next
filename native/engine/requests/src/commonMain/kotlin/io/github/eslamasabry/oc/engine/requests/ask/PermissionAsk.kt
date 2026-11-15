@@ -225,7 +225,7 @@ public object PermissionAsk {
             val file = facts[path]
             val added = file?.number("additions")
             val removed = file?.number("deletions")
-            if (added != null && removed != null) return added to removed
+            if (added != null && removed != null && (added > 0 || removed > 0)) return added to removed
             return if (paths.size == 1) single else null
         }
         val verb =
@@ -311,6 +311,8 @@ public object PermissionAsk {
             if (line.startsWith("+")) added++
             if (line.startsWith("-")) removed++
         }
+        // A hunk with no changed line says nothing about the change: no size, never "+0 -0".
+        if (added == 0 && removed == 0) return null
         return added to removed
     }
 
