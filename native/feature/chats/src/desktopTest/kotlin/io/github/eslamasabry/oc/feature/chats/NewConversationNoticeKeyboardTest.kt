@@ -25,7 +25,7 @@ import kotlin.test.assertTrue
 
 /**
  * Issue 147, device finding (S22, keyboard up): a notice with its actions sat under the page's bottom edge, one line of
- * it showing and both actions out of sight. With the room a keyboard leaves (360 x 480 dp), the notice and both of its
+ * it showing and both actions out of sight. With the room a keyboard leaves (360 x 400 dp), the notice and both of its
  * actions are whole above the chips.
  */
 @OptIn(ExperimentalTestApi::class)
@@ -47,7 +47,7 @@ class NewConversationNoticeKeyboardTest {
 
     @Test
     fun `a two-line notice with two actions is whole and reachable above the chips when the keyboard leaves little room`() =
-        runDesktopComposeUiTest(360, 480) {
+        runDesktopComposeUiTest(360, 400) {
             val dir = "/storage/emulated/0/octest"
             val ui =
                 NewConversationUi(
