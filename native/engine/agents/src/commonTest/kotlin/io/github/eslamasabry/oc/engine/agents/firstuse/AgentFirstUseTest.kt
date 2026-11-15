@@ -1,17 +1,12 @@
 package io.github.eslamasabry.oc.engine.agents.firstuse
 
-import io.github.eslamasabry.oc.core.common.Outcome
-import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.engine.agents.AgentId
 import io.github.eslamasabry.oc.engine.agents.catalog.AgentCatalog
 import io.github.eslamasabry.oc.engine.agents.firstuse.AgentFirstUse.Phase
 import io.github.eslamasabry.oc.engine.agents.firstuse.AgentFirstUse.Verdict
-import io.github.eslamasabry.oc.engine.agents.testing.FakeAgentPrefs
-import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
-import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
 /**
@@ -21,8 +16,6 @@ import kotlin.test.assertTrue
  */
 class AgentFirstUseTest {
     private fun agent(id: String) = AgentCatalog.builtIn.byId(AgentId(id))!!
-
-    private val owner = ProfileId("owner")
 
     @Test
     fun `B-AGENT-113 the agents set up at first use are exactly those the check script cannot read`() {
@@ -71,18 +64,5 @@ class AgentFirstUseTest {
                 AgentFirstUse.classify(agent(id), Phase.StartConversation, "Authentication required", false),
                 id,
             )
-    }
-
-    @Test
-    fun `B-AGENT-113 the set-up mark is kept per owner under oc agentSetUp and never twice`() = runTest {
-        val prefs = FakeAgentPrefs()
-        val store = AgentSetUpStore(prefs)
-        assertFalse(store.isSetUp(owner, AgentId("goose")))
-        assertIs<Outcome.Ok<Unit>>(store.markSetUp(owner, AgentId("goose")))
-        assertIs<Outcome.Ok<Unit>>(store.markSetUp(owner, AgentId("goose")))
-        assertIs<Outcome.Ok<Unit>>(store.markSetUp(owner, AgentId("qwen")))
-        assertTrue(store.isSetUp(owner, AgentId("goose")))
-        assertFalse(store.isSetUp(ProfileId("other"), AgentId("goose")))
-        assertEquals(listOf("goose", "qwen"), prefs.stringList("oc.agentSetUp.owner"))
     }
 }

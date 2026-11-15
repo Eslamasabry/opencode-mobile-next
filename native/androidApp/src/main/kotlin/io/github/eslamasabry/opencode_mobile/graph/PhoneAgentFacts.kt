@@ -23,20 +23,25 @@ import kotlinx.serialization.json.longOrNull
  *
  * Per agent: whether the pinned copy is installed and the version that runs, whether the agent said it was signed in
  * and when that was read, and the version last proven able to start a conversation with what it was checked against
- * (the helper's pin and the app build). Never an account name, never a credential. A kept answer is never taken as
- * fresh: every read checks again, and a person's step on an agent forgets that agent's answers. The proof is the one
+ * (the helper's pin and the app build), and whether the app has seen it set up ([Fact.setUp]). Never an account name,
+ * never a credential. A kept answer is never taken as fresh: every read checks again, and a person's step on an agent
+ * forgets that agent's answers. The proof is the one
  * fact a check does not re-derive: an app update that moves an agent's pin makes the copy that runs "behind", and that
  * copy stays usable while the automatic update brings the pinned one ([provenRuns]), instead of the agent dropping
  * out of every list until then.
  *
- * Only the reads in AppPhoneAgents write it, through one path (`keepFacts`).
+ * Only AppPhoneAgents writes it, through one path (`keepFacts`): its reads, a person's steps on an agent, and
+ * `noteSetUp` (the set-up terminal ended, or a conversation got an answer).
  */
 internal object PhoneAgentFacts {
     /**
      * [installed] null: the version was not read. [signedIn] null: the sign-in was not read (or could not be).
      * [signedInAt]: wall-clock millis when [signedIn] was read. [proven]: the version last seen past every check up to
      * the sign-in (Ready, or would be once signed in), [provenHelper] the helper pin and [provenBuild] the app build it
-     * was checked under.
+     * was checked under. [setUp]: this app has seen the agent set up (its set-up terminal ended, or a conversation with
+     * it got an answer); an agent whose sign-in no check can read leads with its set-up until then. Unlike the proof it
+     * is about the agent's own settings, not a version: an update keeps it, a removal, a sign-out or a reset of the
+     * saved sign-ins drops it.
      */
     data class Fact(
         val installed: Boolean?,
@@ -46,10 +51,11 @@ internal object PhoneAgentFacts {
         val proven: String? = null,
         val provenHelper: String? = null,
         val provenBuild: Long? = null,
+        val setUp: Boolean = false,
     ) {
         /** Something worth keeping. */
         val known: Boolean
-            get() = installed != null || signedIn != null || proven != null
+            get() = installed != null || signedIn != null || proven != null || setUp
     }
 
     fun key(owner: String): String = AgentKeys.phoneAgentFacts(ProfileId(owner))
@@ -93,6 +99,23 @@ internal object PhoneAgentFacts {
         )
     }
 
+    /** [kept] with [agent] seen set up ([Fact.setUp]); the rest of what is known about it stays. */
+    fun seenSetUp(kept: Map<String, Fact>, agent: String): Map<String, Fact> {
+        val fact = kept[agent] ?: Fact(installed = null, found = null, signedIn = null)
+        return if (fact.setUp) kept else kept + (agent to fact.copy(setUp = true))
+    }
+
+    /** The agents of [kept] the app has seen set up. */
+    fun setUp(kept: Map<String, Fact>): Set<String> = kept.filterValues { it.setUp }.keys
+
+    /**
+     * [kept] with the set-up list earlier builds kept on its own (`oc.agentSetUp.<owner>`, the agent ids whose
+     * set-up terminal ended) read in as [Fact.setUp], so a set-up done before this record held it is not asked again.
+     * That list is removed the next time the record is written.
+     */
+    fun withEarlierSetUp(kept: Map<String, Fact>, earlier: List<String>?): Map<String, Fact> =
+        earlier.orEmpty().filter { ID.matches(it) }.fold(kept, ::seenSetUp)
+
     /** [fact] with [version] proven able to start a conversation under [helper] and [build]. */
     fun proven(fact: Fact, version: String, helper: String, build: Long): Fact =
         fact.copy(proven = version, provenHelper = helper, provenBuild = build)
@@ -116,7 +139,7 @@ internal object PhoneAgentFacts {
      * [kept] with this read's [fresh] answers; an agent the read could not answer for keeps its kept fact. A fresh
      * answer keeps the kept proof when it brings none (a proof is about a version, not about this read), including
      * the proof an older record carries only as "the pinned copy was installed"; and keeps when the sign-in was read
-     * while the answer is unchanged.
+     * while the answer is unchanged. A read never brings [Fact.setUp]: the kept one stays.
      */
     fun merge(kept: Map<String, Fact>, fresh: Map<String, Fact>): Map<String, Fact> =
         kept +
@@ -137,12 +160,14 @@ internal object PhoneAgentFacts {
                         proven = proof.proven,
                         provenHelper = proof.provenHelper,
                         provenBuild = proof.provenBuild,
+                        setUp = now.setUp || before.setUp,
                     )
                 }
 
     /**
      * A step on [agent] drops what it may have changed ([version], [signIn]); the other agents keep theirs. [proof]
-     * also drops the agent's proof (a removal, or a phone check that starts again from nothing).
+     * also drops the agent's proof (a removal, or a phone check that starts again from nothing); [setUp] drops that the
+     * app saw it set up (a removal, a sign-out). An install or an update keeps both.
      */
     fun forget(
         kept: Map<String, Fact>,
@@ -150,6 +175,7 @@ internal object PhoneAgentFacts {
         version: Boolean,
         signIn: Boolean,
         proof: Boolean = false,
+        setUp: Boolean = false,
     ): Map<String, Fact> {
         val fact = kept[agent] ?: return kept
         return kept +
@@ -162,8 +188,16 @@ internal object PhoneAgentFacts {
                     proven = fact.proven.takeUnless { proof },
                     provenHelper = fact.provenHelper.takeUnless { proof },
                     provenBuild = fact.provenBuild.takeUnless { proof },
+                    setUp = fact.setUp && !setUp,
                 ))
     }
+
+    /**
+     * A reset of the saved sign-ins: every kept "signed in" or "signed out", and that any agent was seen set up (the
+     * reset deletes the agents' own settings with their sign-ins). Versions and proofs stay.
+     */
+    fun forgetSignIns(kept: Map<String, Fact>): Map<String, Fact> =
+        kept.mapValues { (_, fact) -> fact.copy(signedIn = null, signedInAt = null, setUp = false) }
 
     fun encode(facts: Map<String, Fact>): String =
         JsonObject(
@@ -179,6 +213,7 @@ internal object PhoneAgentFacts {
                                 fact.proven?.let { put("proven", JsonPrimitive(it)) }
                                 fact.provenHelper?.let { put("provenHelper", JsonPrimitive(it)) }
                                 fact.provenBuild?.let { put("provenBuild", JsonPrimitive(it)) }
+                                if (fact.setUp) put("setUp", JsonPrimitive(true))
                             }
                         )
                     }
@@ -202,6 +237,7 @@ internal object PhoneAgentFacts {
                         proven = version("proven"),
                         provenHelper = version("provenHelper"),
                         provenBuild = fields["provenBuild"]?.jsonPrimitive?.longOrNull,
+                        setUp = fields["setUp"]?.jsonPrimitive?.booleanOrNull == true,
                     )
                 }
         } catch (_: Exception) {
@@ -209,4 +245,7 @@ internal object PhoneAgentFacts {
         }
 
     private val VERSION = Regex("^[0-9][A-Za-z0-9.+_-]{0,63}$")
+
+    /** An agent id as the catalog writes it. */
+    private val ID = Regex("^[a-z0-9-]{1,40}$")
 }

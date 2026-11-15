@@ -40,8 +40,10 @@ public object AgentKeys {
     public fun agentHandoffs(profile: ProfileId): String = "oc.agentHandoffs.${profile.raw}"
 
     /**
-     * The agents whose set-up terminal the person finished (ids, a list), for agents set up at first use
-     * ([io.github.eslamasabry.oc.engine.agents.firstuse.AgentFirstUse]). Swept with the owner's profile.
+     * The agents whose set-up terminal the person finished (ids, a list), as earlier builds kept it for agents set up
+     * at first use ([io.github.eslamasabry.oc.engine.agents.firstuse.AgentFirstUse]). Read only: the phone's agent
+     * registry (`oc.phoneAgentFacts.<owner>`) holds it now and removes this list when it next writes. Swept with the
+     * owner's profile.
      */
     public fun agentSetUp(owner: OwnerId): String = "oc.agentSetUp.${owner.raw}"
 

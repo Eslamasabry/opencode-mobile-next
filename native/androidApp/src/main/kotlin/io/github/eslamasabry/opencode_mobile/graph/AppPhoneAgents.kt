@@ -18,6 +18,7 @@ import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.data.kv.PrefValue
 import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.engine.agents.AgentId
+import io.github.eslamasabry.oc.engine.agents.AgentKeys
 import io.github.eslamasabry.oc.engine.agents.auth.AuthProjectionJson
 import io.github.eslamasabry.oc.engine.agents.catalog.AgentArchitecture
 import io.github.eslamasabry.oc.engine.agents.catalog.AgentAvailability
@@ -30,6 +31,7 @@ import io.github.eslamasabry.oc.engine.agents.install.AgentUpdateDecision
 import io.github.eslamasabry.oc.engine.agents.install.AgentUpdateStep
 import io.github.eslamasabry.oc.engine.agents.scripts.PaseoPhoneScripts
 import io.github.eslamasabry.oc.engine.agents.diagnostics.HelperNotice
+import io.github.eslamasabry.oc.engine.agents.firstuse.AgentFirstUse
 import io.github.eslamasabry.oc.engine.agents.gate.PhoneGate
 import io.github.eslamasabry.oc.engine.agents.host.AuthProbeError
 import io.github.eslamasabry.oc.engine.agents.host.AuthProjection
@@ -84,6 +86,8 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
@@ -724,6 +728,8 @@ class AppPhoneAgents(
                                 ?: checkingRow(agent).takeIf { agent.listedOnPhone(installed = false) }
                         // A retired agent (Gemini CLI) keeps its row, check and Remove only while a copy is here.
                         if (!agent.listedOnPhone(installed = present == true || payload == true)) return@mapNotNull null
+                        // Never seen set up (the registry's own fact): its set-up comes before its first conversation.
+                        val setUpFirst = PhoneAgentRules.setUpFirst(agent, seen = record[agent.id.raw]?.setUp == true)
                         val status =
                             when (present) {
                                 null -> PhoneAgentStatus.Unavailable
@@ -751,6 +757,7 @@ class AppPhoneAgents(
                                                     ),
                                             signIn = signIn,
                                             helperRunning = helperRunning,
+                                            setUpFirst = setUpFirst,
                                         )
                                     } ?: PhoneAgentStatus.Unavailable
                             }
@@ -775,6 +782,7 @@ class AppPhoneAgents(
                                     authOwner != null &&
                                     knownPrevious(authOwner, agent, PhoneAgentRules.foundVersion(version)),
                             installedVersion = PhoneAgentRules.foundVersion(version),
+                            needsSetUp = setUpFirst && status == PhoneAgentStatus.SetUpAtFirstUse,
                             removable =
                                 removal.removable(agent.id) &&
                                     present == true &&
@@ -850,8 +858,14 @@ class AppPhoneAgents(
     private fun knownPrevious(owner: ProfileId, agent: AgentDescriptor, found: String?): Boolean =
         synchronized(admission) { rollbacks[owner to agent.id] }?.let { it.first == found && it.second } == true
 
-    private fun keptFacts(owner: ProfileId): Map<String, PhoneAgentFacts.Fact> =
-        PhoneAgentFacts.decode(gatePrefs(owner).string(PhoneAgentFacts.key(owner.raw)))
+    /** The registry as kept, with the set-up list of earlier builds read in ([PhoneAgentFacts.withEarlierSetUp]). */
+    private fun keptFacts(owner: ProfileId): Map<String, PhoneAgentFacts.Fact> {
+        val prefs = gatePrefs(owner)
+        return PhoneAgentFacts.withEarlierSetUp(
+            PhoneAgentFacts.decode(prefs.string(PhoneAgentFacts.key(owner.raw))),
+            prefs.stringList(AgentKeys.agentSetUp(owner)),
+        )
+    }
 
     /**
      * This read's answers, kept for the next app start ([PhoneAgentFacts]); written only when they changed. A row past
@@ -902,13 +916,71 @@ class AppPhoneAgents(
     private suspend fun keepFacts(
         owner: ProfileId,
         change: (Map<String, PhoneAgentFacts.Fact>) -> Map<String, PhoneAgentFacts.Fact>,
-    ): Map<String, PhoneAgentFacts.Fact> {
-        val kept = keptFacts(owner)
-        val next = change(kept)
-        if (next != kept)
-            gatePrefs(owner).commit { putString(PhoneAgentFacts.key(owner.raw), PhoneAgentFacts.encode(next)) }
-        return next
+    ): Map<String, PhoneAgentFacts.Fact> =
+        // A conversation's first answer writes here from outside the read lane ([noteSetUp]): one change at a time.
+        factsWrite.withLock {
+            val kept = keptFacts(owner)
+            val next = change(kept)
+            if (next != kept)
+                gatePrefs(owner).commit {
+                    putString(PhoneAgentFacts.key(owner.raw), PhoneAgentFacts.encode(next))
+                    // The earlier builds' own set-up list is in the record now ([keptFacts]).
+                    remove(AgentKeys.agentSetUp(owner))
+                }
+            next
+        }
+
+    private val factsWrite = Mutex()
+
+    /**
+     * The app has seen [agent] set up: its set-up terminal ended and the person came back (`NativePhoneSignIn`), or a
+     * conversation with it got an answer (the chat, through `AndroidChatOutside`). Kept in the registry
+     * ([PhoneAgentFacts.Fact.setUp]) for [phone], this phone's own OpenCode; from then on the agent is a normal choice
+     * for conversations ([PhoneAgentRules.setUpFirst]). Only agents whose sign-in no check can read are marked; nothing
+     * about the account is read or kept.
+     */
+    @Suppress("TooGenericExceptionCaught")
+    internal suspend fun noteSetUp(phone: ProfileId, agent: AgentId) {
+        val descriptor = catalog.byId(agent)?.takeIf(AgentFirstUse::applies) ?: return
+        if (needsRestart || ownerId() != phone) return
+        val owner = agentOwner(phone) ?: return
+        if (synchronized(admission) { owner in denied || phone in denied }) return
+        try {
+            keepFacts(owner) { PhoneAgentFacts.seenSetUp(it, descriptor.id.raw) }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            // Not kept this time: the next answer or set-up says it again.
+            return
+        }
+        // Every reader of [state] has it at once; the next read builds the row from the record as well.
+        synchronized(admission) {
+            if (owner in denied) return
+            mutable.update { now ->
+                now.copy(
+                    agents =
+                        now.agents
+                            .map { if (it.id == descriptor.id.raw) it.copy(needsSetUp = false) else it }
+                            .toImmutableList()
+                )
+            }
+        }
     }
+
+    /** The agents [phone]'s registry has seen set up ([noteSetUp]); empty when none or not this phone. */
+    @Suppress("TooGenericExceptionCaught")
+    internal fun setUpAgents(phone: ProfileId): Set<String> =
+        try {
+            agentOwner(phone)?.let { PhoneAgentFacts.setUp(keptFacts(it)) }.orEmpty()
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            emptySet()
+        }
+
+    /** The preference keys whose change may change [setUpAgents] for [phone]. */
+    internal fun setUpKeys(phone: ProfileId): Set<String> =
+        agentOwner(phone)?.let { setOf(PhoneAgentFacts.key(it.raw), AgentKeys.agentSetUp(it)) }.orEmpty()
 
     /** The helper pin and the app build a proof is checked against ([PhoneAgentFacts.provenRuns]). */
     private val helperPin: String
@@ -927,6 +999,7 @@ class AppPhoneAgents(
         version: Boolean,
         signIn: Boolean,
         proof: Boolean = false,
+        setUp: Boolean = false,
     ) {
         val key = owner to agent
         synchronized(admission) {
@@ -940,12 +1013,12 @@ class AppPhoneAgents(
                 answeredAt.remove(key)
             }
         }
-        keepFacts(owner) { PhoneAgentFacts.forget(it, agent.raw, version, signIn, proof) }
+        keepFacts(owner) { PhoneAgentFacts.forget(it, agent.raw, version, signIn, proof, setUp) }
     }
 
-    /** Every kept "signed in" or "signed out" of [owner]'s agents (their versions stay). */
+    /** Every kept "signed in" or "signed out" of [owner]'s agents, and their set-up (see [PhoneAgentFacts]). */
     private suspend fun forgetSignIns(owner: ProfileId) {
-        keepFacts(owner) { kept -> kept.mapValues { (_, fact) -> fact.copy(signedIn = null, signedInAt = null) } }
+        keepFacts(owner, PhoneAgentFacts::forgetSignIns)
     }
 
     override suspend fun install(id: String): Outcome<PhoneAgentInstallResult> = lane.step {
@@ -1073,7 +1146,9 @@ class AppPhoneAgents(
             }
         synchronized(admission) { versions.clear() }
         agentOwner(ProfileId(owner))?.let {
-            forgetFacts(it, AgentId(id), version = true, signIn = true, proof = answer is PhoneAgentRemoval.Removed)
+            val removed = answer is PhoneAgentRemoval.Removed
+            // A copy installed again later starts over with its set-up.
+            forgetFacts(it, AgentId(id), version = true, signIn = true, proof = removed, setUp = removed)
         }
         rereadLocked()
         Outcome.Ok(answer)
@@ -1157,7 +1232,7 @@ class AppPhoneAgents(
             )
         }
         if (ran is Outcome.Failed) return@step ran
-        forgetFacts(owner, agent.id, version = false, signIn = true)
+        forgetFacts(owner, agent.id, version = false, signIn = true, setUp = true)
         val after = native { signInPhase(owner, agent, installing = false) }
         rereadLocked()
         when (after) {

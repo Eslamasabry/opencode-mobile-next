@@ -19,7 +19,6 @@ import io.github.eslamasabry.oc.engine.agents.catalog.AgentAvailability
 import io.github.eslamasabry.oc.engine.agents.catalog.AgentCatalog
 import io.github.eslamasabry.oc.engine.agents.catalog.AgentSignInMethod
 import io.github.eslamasabry.oc.engine.agents.firstuse.AgentFirstUse
-import io.github.eslamasabry.oc.engine.agents.firstuse.AgentSetUpStore
 import io.github.eslamasabry.oc.engine.agents.probe.AgentAuthScripts
 import io.github.eslamasabry.oc.engine.agents.probe.AuthScriptAction
 import io.github.eslamasabry.oc.engine.agents.signin.SignInCommandPolicy
@@ -82,6 +81,7 @@ class NativePhoneSignIn(
     private val dispatchers: AppDispatchers,
     private val policy: ExternalLinkPolicy,
     private val opener: ExternalLinkOpener,
+    private val phones: Lazy<AppPhoneAgents>,
 ) : PhoneSignInFactory, ProfileCloser {
     override val owner: String = "phone-sign-in"
     override val drainOrder: Int = -100
@@ -249,12 +249,13 @@ class NativePhoneSignIn(
                 return owns(owner) && (result as? Outcome.Ok)?.value?.get("state") == "signedIn"
             }
 
+            // The set-up terminal ended and the person comes back: the registry has seen the agent set up, so it is a
+            // normal choice for conversations from now on (AppPhoneAgents.noteSetUp, the registry's one writer).
             override suspend fun markSetUp(owner: ProfileId, agent: AgentRef) {
                 if (!owns(owner)) return
                 val descriptor = catalog.byId(AgentId(agent.id)) ?: return
                 if (!AgentFirstUse.applies(descriptor)) return
-                AgentSetUpStore(KvAgentPrefs(stores.prefs, stores.lanes.forProfile(owner)))
-                    .markSetUp(owner, descriptor.id)
+                phones.value.noteSetUp(owner, descriptor.id)
             }
 
             override fun read(transcript: String): SignInFound =

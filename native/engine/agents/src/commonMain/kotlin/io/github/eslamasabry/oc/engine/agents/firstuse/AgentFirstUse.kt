@@ -1,21 +1,17 @@
 package io.github.eslamasabry.oc.engine.agents.firstuse
 
-import io.github.eslamasabry.oc.core.common.Outcome
-import io.github.eslamasabry.oc.engine.agents.AgentId
-import io.github.eslamasabry.oc.engine.agents.AgentKeys
-import io.github.eslamasabry.oc.engine.agents.OwnerId
 import io.github.eslamasabry.oc.engine.agents.catalog.AgentDescriptor
 import io.github.eslamasabry.oc.engine.agents.catalog.AgentSignInMethod
 import io.github.eslamasabry.oc.engine.agents.probe.AgentAuthScripts
-import io.github.eslamasabry.oc.engine.agents.store.AgentPrefs
 
 /**
  * "Set up at first use" (coordinator ruling 2026-11-13, owner rule "don't hide a problem, just fix it"). Some phone
  * agents have no read-only way to tell signed in from signed out (Qwen Code 0.26.4 removed `qwen auth status`; Goose
  * 1.54.0's only check prompts the model; omp's ACP never refuses a session), so the sign-in check script refuses them
- * (`probeUnsupported`). The app does not pretend to know: such an agent, once installed, is usable; the person sets it
- * up in its own terminal, and the truth comes from the agent's own answer when a conversation starts — the one moment
- * creating a session is what the person asked for. Never "Ready", never "Signed in", never an account name.
+ * (`probeUnsupported`). The app does not pretend to know: such an agent, once installed, leads with its set-up in its
+ * own terminal until the app has seen it set up (that terminal ended, or a conversation with it got an answer; owner
+ * 2026-11-15), and the truth comes from the agent's own answer when a conversation starts — the one moment creating a
+ * session is what the person asked for. Never "Ready", never "Signed in", never an account name.
  *
  * Which agents: derived from the script's own supported list ([AgentAuthScripts.checksSignIn]), never a second list.
  */
@@ -41,7 +37,8 @@ public object AgentFirstUse {
     /**
      * Classifies one failure of [agent] once, from the agent's own answer. The JSON-RPC code never reaches the app (the
      * helper passes only its sentence, capped, in `Failure.details`), so [reason] is that text; it is matched, never
-     * shown. [setUpDone]: the person finished this agent's set-up terminal ([AgentSetUpStore]).
+     * shown. [setUpDone]: the app has seen this agent set up (its set-up terminal ended, or a conversation with it got
+     * an answer; the app's phone agent registry keeps it).
      *
      * - Qwen Code (and an installed Gemini CLI): `session/new` answers -32000 "authentication required" ("Use Qwen Code
      *   CLI to authenticate first.") until a provider is configured; the helper may also refuse the provider as
@@ -69,21 +66,4 @@ public object AgentFirstUse {
     private val OMP_NO_MODEL = Regex("No model selected\\.|No API key found for ")
     private const val GOOSE = "goose"
     private const val OMP = "omp-acp"
-}
-
-/**
- * Which agents the person set up through the app's set-up terminal, per owner (`oc.agentSetUp.<owner>`, a list of
- * agent ids). Marked when the terminal session ends, whatever it claims: nothing here can verify a sign-in. Swept
- * with the owner's profile by the generic `oc.<what>.<profileId>` rule.
- */
-public class AgentSetUpStore(private val prefs: AgentPrefs) {
-    public fun isSetUp(owner: OwnerId, agent: AgentId): Boolean =
-        agent.raw in prefs.stringList(AgentKeys.agentSetUp(owner)).orEmpty()
-
-    public suspend fun markSetUp(owner: OwnerId, agent: AgentId): Outcome<Unit> {
-        val key = AgentKeys.agentSetUp(owner)
-        val now = prefs.stringList(key).orEmpty()
-        if (agent.raw in now) return Outcome.Ok(Unit)
-        return prefs.commit { putStringList(key, (now + agent.raw).sorted()) }
-    }
 }

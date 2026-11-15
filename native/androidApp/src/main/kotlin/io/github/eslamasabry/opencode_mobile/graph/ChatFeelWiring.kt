@@ -25,10 +25,13 @@ import io.github.eslamasabry.oc.core.common.MediaProblem
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.data.kv.string
-import io.github.eslamasabry.oc.engine.agents.AgentKeys
+import io.github.eslamasabry.oc.core.common.AppCoroutineScope
+import io.github.eslamasabry.oc.engine.agents.AgentId
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 import io.github.eslamasabry.oc.core.security.AddressRules
 import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
 import io.github.eslamasabry.oc.core.security.ApprovedLink
@@ -71,8 +74,10 @@ class AndroidChatOutside(
     private val dispatchers: AppDispatchers,
     // E15-S05: the app's one redactor masks server text before the presenter copies or shares it.
     private val redactor: Redactor,
-    // Set up at first use: the set-up list the Agents page's set-up terminal writes (`oc.agentSetUp.<owner>`).
     private val stores: PreviewStores,
+    // Set up at first use: the phone's agent registry, which knows which agents the app has seen set up.
+    private val phones: Lazy<AppPhoneAgents>,
+    private val appScope: AppCoroutineScope,
 ) : ChatOutside {
 
     override fun isPhoneServer(ref: ConversationRef): Boolean =
@@ -81,15 +86,20 @@ class AndroidChatOutside(
     override fun phoneAgentOwner(ref: ConversationRef): ProfileId? =
         PhoneAgentOwnerRule.owner(ref.profileId, stores.prefs.string("oc.builtinServerOwner"))
 
-    override fun agentsSetUp(owner: ProfileId): Set<String> =
-        KvAgentPrefs(stores.prefs, stores.lanes.forProfile(owner))
-            .stringList(AgentKeys.agentSetUp(owner))
-            .orEmpty()
-            .toSet()
+    override fun agentsSetUp(owner: ProfileId): Set<String> = phones.value.setUpAgents(owner)
 
     override fun agentsSetUpChanges(owner: ProfileId): Flow<Unit> {
-        val key = AgentKeys.agentSetUp(owner)
-        return stores.prefs.changes.filter { key in it }.map {}
+        val keys = phones.value.setUpKeys(owner)
+        // The registry is written on most reads: only a change of who is set up is news for the chat.
+        return stores.prefs.changes
+            .filter { changed -> changed.any { it in keys } }
+            .map { agentsSetUp(owner) }
+            .distinctUntilChanged()
+            .map {}
+    }
+
+    override fun agentAnswered(owner: ProfileId, agent: String) {
+        appScope.launch { phones.value.noteSetUp(owner, AgentId(agent)) }
     }
 
     override fun fileLinkPath(url: String): String? =
