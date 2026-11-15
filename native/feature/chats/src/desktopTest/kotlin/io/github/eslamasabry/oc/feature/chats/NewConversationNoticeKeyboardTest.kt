@@ -1,7 +1,13 @@
 package io.github.eslamasabry.oc.feature.chats
 
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.onAllNodesWithTag
+import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
@@ -22,6 +28,7 @@ import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 /**
@@ -46,37 +53,53 @@ class NewConversationNoticeKeyboardTest {
         override fun retryLoad() {}
     }
 
-    @Test
-    fun `a two-line notice with two actions is whole and reachable above the chips when the keyboard leaves little room`() =
-        runDesktopComposeUiTest(360, 460) {
+    private class Counting : NewConversationActions by Actions {
+        var fixes = 0
+
+        override fun fixPhoneFolder() {
+            fixes++
+        }
+    }
+
+    private fun main(height: Int) =
+        runDesktopComposeUiTest(360, height) {
             val dir = "/storage/emulated/0/octest"
-            val ui =
+            val base =
                 NewConversationUi(
                     profile = ProfileId("p1"),
                     servers = listOf(NewConversationServer(ProfileId("p1"), "This phone", connected = true)),
                     setup = NewConversationSetup(directory = dir, projects = emptyList(), models = emptyList(), agents = emptyList()),
                     directory = dir,
                     text = "Run pwd then append the word world to note.txt then run cat note.txt and tell me both outputs. " + "Then list the folder and say what you see in it, one line for each file, and stop. ".repeat(2),
-                    phoneFolder = PhoneFolderReach.Restart,
                 )
+            var ui by androidx.compose.runtime.mutableStateOf(base.copy(phoneFolder = PhoneFolderReach.Restart))
+            val actions = Counting()
             setContent {
                 KitTheme(platform = DesktopKitPlatform(), localeTag = "en", appearance = KitAppearance(motion = MotionLevel.Off)) {
-                    NewConversationScreen(ui, Actions)
+                    NewConversationScreen(ui, actions)
                 }
             }
             waitForIdle()
             mainClock.advanceTimeBy(1_000)
             waitForIdle()
-            val chips = onNodeWithTag("chats-new-choices").getBoundsInRoot()
-            for (word in listOf("Restart", "Choose another project")) {
-                val found = onAllNodesWithText(word, substring = true).fetchSemanticsNodes()
-                assertTrue(found.isNotEmpty(), "$word is on the page")
-                val b = onAllNodesWithText(word, substring = true)[0].getBoundsInRoot()
-                assertTrue(b.bottom <= chips.top, "$word ends at ${b.bottom}, the chips start at ${chips.top}: it is under them")
-                assertTrue(b.top >= 0.dp, "$word starts at ${b.top}: above the page")
-                // Bounds are clipped to what shows: an action cut by the page's edge is short, one scrolled away is absent.
-                assertTrue((b.bottom - b.top) >= 36.dp, "$word shows only ${b.bottom - b.top} of its height: cut off by the page's edge")
-                onAllNodesWithText(word, substring = true)[0].assertIsDisplayed()
-            }
+            // The notice blocks starting: its primary action stands in Start's place, whole, above the keyboard.
+            val main = onNodeWithTag("chats-new-main-action")
+            main.assertIsDisplayed()
+            val b = main.getBoundsInRoot()
+            assertTrue((b.bottom - b.top) >= 36.dp, "the main button shows only ${b.bottom - b.top}")
+            onAllNodesWithText("Start").assertCountEquals(0)
+            main.performClick()
+            assertEquals(1, actions.fixes, "the main button does the notice's action")
+            // Resolved: the notice is gone and Start is back.
+            runOnIdle { ui = base.copy(phoneFolder = PhoneFolderReach.Ready) }
+            waitForIdle()
+            onAllNodesWithTag("chats-new-main-action").assertCountEquals(0)
+            onNodeWithText("Start").assertIsDisplayed()
         }
+
+    @Test
+    fun `a blocking notice hands its main action to the bottom block at 400 dp, keyboard up`() = main(400)
+
+    @Test
+    fun `a blocking notice hands its main action to the bottom block at 460 dp, keyboard up`() = main(460)
 }
