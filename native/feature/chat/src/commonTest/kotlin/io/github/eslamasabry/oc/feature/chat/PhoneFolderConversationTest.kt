@@ -119,7 +119,7 @@ class PhoneFolderConversationTest {
         )
     }
 
-    private fun TestScope.openWorld(phone: Phone): GraphChatWorld {
+    private suspend fun TestScope.openWorld(phone: Phone): GraphChatWorld {
         val gateway =
             FakeServerGateway(listOf(Session(ref.sessionId, directory = folder, time = SessionTime(idleMs = 20))))
         val registry = registry(gateway)
@@ -135,7 +135,7 @@ class PhoneFolderConversationTest {
     fun `I147-STORAGE a conversation whose folder Android no longer lets the app open says so as it opens`() = runTest {
         val phone = Phone(ChatPhoneFolder.AppAccess)
         val world = openWorld(phone)
-        assertEquals(folder to true, phone.checks.first(), "checked thoroughly, in the conversation's own folder")
+        assertEquals(listOf(folder to true), phone.checks.take(1), "checked thoroughly, in the conversation's own folder")
         assertEquals(ChatPhoneFolder.AppAccess, world.phoneFolder.value)
         // The person allows it again: the notice's action, then the folder is read again and the line goes.
         assertEquals(Outcome.Ok(Unit), world.fixPhoneFolder())
@@ -154,7 +154,7 @@ class PhoneFolderConversationTest {
         val sent = world.send("hello")
         val failure = assertIs<Failure.Unavailable>(assertIs<Outcome.Failed>(sent).failure)
         assertEquals(PHONE_FOLDER_FEATURE, failure.feature.name)
-        assertEquals(folder to false, phone.checks.last(), "the light check before a message starts no Linux")
+        assertEquals(listOf(folder to false), phone.checks.takeLast(1), "the light check before a message starts no Linux")
         assertEquals(ChatPhoneFolder.Missing, world.phoneFolder.value)
         assertTrue(world.pending.value.isEmpty(), "nothing left the box")
         world.detach()

@@ -11,6 +11,7 @@ import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.domain.ImportableConversation
 import io.github.eslamasabry.oc.core.model.ModelRef
 import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationActions
+import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationServer
 import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationSetup
 import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationSheet
 import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationUi
@@ -66,6 +67,7 @@ class NewConversationPhoneFolderScreenTest {
     private fun state(directory: String, reach: PhoneFolderReach?) =
         NewConversationUi(
             profile = ProfileId("p1"),
+            servers = listOf(NewConversationServer(ProfileId("p1"), "This phone", connected = true)),
             setup = NewConversationSetup(directory = directory, projects = emptyList(), models = emptyList(), agents = emptyList()),
             directory = directory,
             text = "hello",
