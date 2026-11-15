@@ -11,6 +11,7 @@ import io.github.eslamasabry.oc.engine.settings.teaching.StarPromptRules
 import io.github.eslamasabry.oc.engine.transcript.ledger.factTicks
 import io.github.eslamasabry.oc.engine.transcript.ledger.latest
 import io.github.eslamasabry.oc.engine.transcript.state.FooterRow
+import io.github.eslamasabry.oc.engine.transcript.state.NewestFirst
 import io.github.eslamasabry.oc.engine.transcript.state.PromptRow
 import io.github.eslamasabry.oc.engine.transcript.state.TranscriptRow
 import io.github.eslamasabry.oc.engine.transcript.state.TranscriptState
@@ -567,7 +568,7 @@ public class ChatPresenter(
             replySetUpAtFailure.clear()
             return persistentMapOf<String, AgentSetUpNeed>().also { lastSetUpReplies = it }
         }
-        val failed = rows.filter { it is FooterRow && it.failed && !it.reason.isNullOrBlank() }.map { it as FooterRow }
+        val failed = failedTurns(rows).map { it.footer }.filter { !it.reason.isNullOrBlank() }
         replySetUpAtFailure.keys.retainAll { turn -> failed.any { it.turnId == turn } }
         // Newest first: the oldest footer is the conversation's first answer, unless older history is not loaded.
         val firstTurn = if (world.hasOlder.value) null else rows.lastOrNull { it is FooterRow }?.turnId
@@ -679,6 +680,54 @@ public class ChatPresenter(
     internal var rowVisits: Long = 0
         private set
 
+    /** A failed turn's footer and the prompt it answered (null: the turn has none). */
+    private class FailedTurn(val footer: FooterRow, val prompt: PromptRow?)
+
+    private var failedSource: List<TranscriptRow>? = null
+    private var failedSettled: List<FailedTurn> = emptyList()
+
+    /**
+     * The failed turns, newest first. Issue 147: this runs for every state the chat presents, so on every publish while
+     * a reply streams. What the settled turns hold is kept while the engine hands over the same settled rows
+     * ([NewestFirst.settled]); only the newest turn's rows are walked again. A footer finds its prompt among its own
+     * turn's rows, which sit next to it (it used to walk every row once per failed footer).
+     */
+    private fun failedTurns(rows: ImmutableList<TranscriptRow>): List<FailedTurn> {
+        @Suppress("UNCHECKED_CAST")
+        val settled = (rows as? NewestFirst<*>)?.settled as kotlinx.collections.immutable.PersistentList<TranscriptRow>?
+        val live = failedIn(rows, if (settled == null) rows.size else rows.size - settled.size)
+        if (settled == null) return live
+        if (settled !== failedSource) {
+            failedSettled = failedIn(NewestFirst(settled), settled.size)
+            failedSource = settled
+        }
+        return if (live.isEmpty()) failedSettled else live + failedSettled
+    }
+
+    /** The failed footers among the newest [count] rows of [rows] (newest first), each with its turn's prompt. */
+    private fun failedIn(rows: List<TranscriptRow>, count: Int): List<FailedTurn> {
+        var out: ArrayList<FailedTurn>? = null
+        for (i in 0 until count) {
+            rowVisits++
+            val footer = rows[i] as? FooterRow ?: continue
+            if (!footer.failed) continue
+            var prompt: PromptRow? = null
+            var j = i + 1
+            while (j < rows.size) {
+                rowVisits++
+                val row = rows[j]
+                if (row.turnId != footer.turnId) break
+                if (row is PromptRow) {
+                    prompt = row
+                    break
+                }
+                j++
+            }
+            (out ?: ArrayList<FailedTurn>().also { out = it }) += FailedTurn(footer, prompt)
+        }
+        return out ?: emptyList()
+    }
+
     /** B-169: the limit offer of each failed turn. */
     private fun limitOffers(
         t: TranscriptState,
@@ -688,11 +737,9 @@ public class ChatPresenter(
         if (!caps.promptModelChoice) return persistentMapOf()
         val now = clock?.now()?.toEpochMilliseconds()
         var out = persistentMapOf<String, LimitSwitchUi>()
-        for (row in t.rows) {
-            rowVisits++
-            if (row !is FooterRow || !row.failed) continue
-            val words = t.rows.firstOrNull { rowVisits++; it is PromptRow && it.turnId == row.turnId } as? PromptRow
-            val count = words?.let { switches[LimitSwitchRules.promptKey(it.text)] } ?: 0
+        for (failed in failedTurns(t.rows)) {
+            val row = failed.footer
+            val count = failed.prompt?.let { switches[LimitSwitchRules.promptKey(it.text)] } ?: 0
             val offer = LimitSwitchRules.offer(row.reason, now, caps.promptModelChoice, count)
             if (offer != LimitSwitchOffer.None)
                 out = out.put(row.turnId, LimitSwitchUi(offer, stoppedModelName(row.turnId)))

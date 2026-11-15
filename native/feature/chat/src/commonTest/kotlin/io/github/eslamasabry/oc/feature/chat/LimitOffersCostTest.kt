@@ -14,6 +14,8 @@ import io.github.eslamasabry.oc.feature.chat.presentation.ChatPresenter
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
+import kotlin.time.Clock
+import kotlin.time.Instant
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.collections.immutable.toPersistentMap
@@ -24,7 +26,14 @@ import kotlinx.collections.immutable.toPersistentMap
  * walk per failed footer).
  */
 class LimitOffersCostTest {
-    private val limit = "AI_APICallError: Rate limit exceeded: free-models-per-min. (429)"
+    private object Now : Clock {
+        override fun now(): Instant = Instant.fromEpochMilliseconds(1_762_600_000_000L)
+    }
+
+    /** A daily limit: its turn offers Switch model (B-169-011). */
+    private val limit =
+        "AI_APICallError: Rate limit exceeded: free-models-per-day. Add 10 credits to unlock 1000 free model " +
+            "requests per day. (429)"
 
     private fun turn(i: Int): List<TranscriptRow> {
         val t = "u$i"
@@ -54,7 +63,7 @@ class LimitOffersCostTest {
         val world = FakeChatWorld().apply { capabilities.value = ServerCapabilities(promptModelChoice = true) }
         val settled = (0 until turns).flatMap(::turn).toPersistentList()
         world.transcript.value = state(settled, live(0), 1)
-        val p = ChatPresenter(world, RecordingNavigator(), Immediate)
+        val p = ChatPresenter(world, RecordingNavigator(), Immediate, clock = Now)
         p.current()
         var offers = 0
         val visits =
