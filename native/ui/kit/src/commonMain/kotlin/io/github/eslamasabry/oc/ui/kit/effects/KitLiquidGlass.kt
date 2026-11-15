@@ -60,6 +60,9 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import androidx.compose.ui.node.findNearestAncestor
+import androidx.compose.ui.node.TraversableNode.Companion.TraverseDescendantsAction
+import androidx.compose.ui.node.requireLayoutCoordinates
+import androidx.compose.ui.node.traverseDescendants
 import androidx.compose.ui.platform.InspectorInfo
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.testTag
@@ -680,7 +683,10 @@ private class PlateHostNode(var words: KitLiquidWords) :
                 // Counted as seen only once a sample came back.
                 seen = v
                 if (pixels.isEmpty() || pixels.count { (it ushr 24) > 0x80 } < pixels.size / 2) continue
-                val (mean, _) = LiquidInkRule.measure(pixels)
+                // glass-truth 2026-11-16: judged where the words are, not over the whole pane (a bright block at a bar's
+                // far end flipped the title's ink though nothing bright lay under the title). The backdrop is the one the
+                // pane draws, so behind a scroll-edge fade it is the faded copy: what is really behind the words.
+                val (mean, _) = LiquidInkRule.measure(pixels, wordsWeights(pixels.size))
                 val next = LiquidInkRule.next(ink, mean)
                 if (next != ink) {
                     ink = next
@@ -693,11 +699,51 @@ private class PlateHostNode(var words: KitLiquidWords) :
         }
     }
 
+    /** The sample's size the last [sampleOnce] read, in sample pixels (the pane's size over [SAMPLE_SCALE]). */
+    private var sampleW = 0
+    private var sampleH = 0
+
+    /**
+     * Each sample pixel's weight for the words' ink: 1 under a line of words on this pane (its box grown by
+     * [WORDS_PAD_DP]), 0 elsewhere; null (the whole pane, as before) when no words of this pane lie in the sample. One
+     * walk of the pane's descendants and one box per line of words, once per sample: no sampler and no timer of its own.
+     */
+    private fun wordsWeights(size: Int): FloatArray? {
+        val c = coordinates?.takeIf { it.isAttached } ?: return null
+        val w = sampleW
+        val h = sampleH
+        if (w <= 0 || h <= 0 || w * h != size) return null
+        val pad = WORDS_PAD_DP * requireDensity().density
+        val weights = FloatArray(size)
+        var any = false
+        traverseDescendants(WordsPlateKey) { node ->
+            val words = node as? WordsPlateNode
+            if (words != null && words.isAttached && words.hostNow() === this) {
+                val at = words.requireLayoutCoordinates()
+                if (at.isAttached) {
+                    val box = c.localBoundingBoxOf(at, clipBounds = false)
+                    val x0 = ((box.left - pad) / SAMPLE_SCALE).toInt().coerceIn(0, w)
+                    val x1 = kotlin.math.ceil((box.right + pad) / SAMPLE_SCALE).toInt().coerceIn(0, w)
+                    val y0 = ((box.top - pad) / SAMPLE_SCALE).toInt().coerceIn(0, h)
+                    val y1 = kotlin.math.ceil((box.bottom + pad) / SAMPLE_SCALE).toInt().coerceIn(0, h)
+                    for (y in y0 until y1) for (x in x0 until x1) {
+                        weights[y * w + x] = 1f
+                        any = true
+                    }
+                }
+            }
+            TraverseDescendantsAction.ContinueTraversal
+        }
+        return if (any) weights else null
+    }
+
     /** One small picture of what lies behind the pane, or null when none could be read this time. */
     private suspend fun sampleOnce(own: KitBackdropSampler?, platform: KitPlatform, backdrop: KitLiquidBackdrop): IntArray? {
         val c = coordinates?.takeIf { it.isAttached } ?: return null
         val w = (c.size.width / SAMPLE_SCALE).coerceAtLeast(1)
         val h = (c.size.height / SAMPLE_SCALE).coerceAtLeast(1)
+        sampleW = w
+        sampleH = h
         val small: DrawScope.() -> Unit = { scale(1f / SAMPLE_SCALE, 1f / SAMPLE_SCALE, Offset.Zero) { backdrop.draw(this, c) } }
         val pixels =
             if (own != null) {
@@ -725,6 +771,12 @@ private class PlateHostNode(var words: KitLiquidWords) :
 
 /** The sampled copy of a pane's backdrop is this many times smaller on each side. */
 private const val SAMPLE_SCALE: Int = 8
+
+/** How far round a line of words the ink sample reaches, in dp (the glyphs' own reach past their box). */
+private const val WORDS_PAD_DP: Float = 4f
+
+/** The traversal key of the words on liquid panes ([WordsPlateNode]), so a pane can find its own lines of words. */
+private object WordsPlateKey
 
 /** How long the content behind a pane holds still before its words' ink is sampled. */
 internal const val INK_SETTLE_MS: Long = 150
@@ -756,7 +808,9 @@ private object WordsPlateElement : ModifierNodeElement<WordsPlateNode>() {
     override fun equals(other: Any?): Boolean = other === this
 }
 
-private class WordsPlateNode : Modifier.Node(), DrawModifierNode {
+private class WordsPlateNode : Modifier.Node(), DrawModifierNode, TraversableNode {
+    override val traverseKey: Any get() = WordsPlateKey
+
     private var host: PlateHostNode? = null
 
     override fun onDetach() {
@@ -767,7 +821,7 @@ private class WordsPlateNode : Modifier.Node(), DrawModifierNode {
      * The pane above, looked up when drawing: a pane's host may arrive after the words (its face appears once the
      * window's budget grants it), so a lookup at attach would miss it.
      */
-    private fun hostNow(): PlateHostNode? {
+    fun hostNow(): PlateHostNode? {
         host?.takeIf { it.isAttached }?.let { return it }
         return (findNearestAncestor(LiquidPlateKey) as? PlateHostNode).also { host = it }
     }

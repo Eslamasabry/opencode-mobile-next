@@ -283,5 +283,18 @@ class LiquidEdgeTest {
         assertTrue(LiquidInkRule.measure(stripes).second > LiquidInkRule.BUSY, "black-and-white stripes are busy")
     }
 
+    @Test
+    fun `GLASS-TRUTH-2 the mean is taken where the words are when the pane weights them`() {
+        // A quarter black under the words, three quarters white beside them.
+        val pixels = IntArray(64) { if (it % 8 < 2) 0xFF000000.toInt() else 0xFFFFFFFF.toInt() }
+        val words = FloatArray(64) { if (it % 8 < 2) 1f else 0f }
+        assertEquals(.75f, LiquidInkRule.measure(pixels).first, 1e-3f)
+        assertEquals(0f, LiquidInkRule.measure(pixels, words).first, 1e-3f)
+        assertEquals(LiquidInk.Light, LiquidInkRule.next(LiquidInk.Light, LiquidInkRule.measure(pixels, words).first))
+        // No weight anywhere, or the wrong size: the whole pane, as before.
+        assertEquals(.75f, LiquidInkRule.measure(pixels, FloatArray(64)).first, 1e-3f)
+        assertEquals(.75f, LiquidInkRule.measure(pixels, FloatArray(3) { 1f }).first, 1e-3f)
+    }
+
     private fun Argb.solid(): Argb = Argb(v or (0xFF shl 24))
 }
