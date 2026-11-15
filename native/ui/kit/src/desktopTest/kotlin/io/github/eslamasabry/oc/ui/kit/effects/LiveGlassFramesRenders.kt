@@ -75,6 +75,8 @@ class LiveGlassFramesRenders {
             val stalls = LiveGlassFrames.stalls(frames)
             summary.append("  stalls: ${if (stalls.isEmpty()) "none" else stalls.joinToString { (i, n, kind) -> "#%03d %d frames %s".format(i, n, kind) }}\n")
             for ((name, tol, value) in measures) {
+                // Scrolling moves the page under the glass: where the glass is is read against the still page, so not there.
+                if (scene.scrollDpPerFrame != 0f && name.startsWith("glass")) continue
                 val steps = LiveGlassFrames.steps(frames, tol, value)
                 summary.append("  $name steps: ${if (steps.isEmpty()) "none" else steps.joinToString { (i, d) -> "#%03d %+.2f".format(i, d) }}\n")
             }
