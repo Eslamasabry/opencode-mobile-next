@@ -21,6 +21,8 @@ failures can be absorbed this way.
 Reads <reports-dir>/**/report-*.json (test shards), compile.json, apk.json, custom.json and record.json written by the
 jobs, and diffs failing test ids against <base-reports-dir> (the newest run on the base branch that kept reports).
 PLANNED_SHARDS (comma list of shard ids, from the plan job) makes a missing shard report an integrity failure (exit 2).
+In the fast and full lanes a compile or test job that did not run (skipped, for instance after a failed plan job) is an
+integrity failure too: a run with no compile and test rows is not a pass.
 Job results come from the environment: RESULT_COMPILE, RESULT_TEST, RESULT_APK, RESULT_RECORD, RESULT_CUSTOM.
 Tests for this file: tool/ci/test_gate.py.
 """
@@ -133,6 +135,12 @@ if env('RESULT_TEST') not in (None, '', 'skipped') and planned:
     missing = [x for x in planned if x not in seen]
     if missing:
         integrity.append(f'{len(missing)} of {len(planned)} planned test shard(s) left no report (shard {", ".join(missing)})')
+# A fast or full lane run whose compile or test jobs never ran (the plan job failed, or they were skipped) proved nothing:
+# no compile row and no test row is not a pass (2026-11-16: a failed plan job left a run reading PASS with zero tests).
+if lane.split(' ')[0] in ('fast', 'full'):
+    for key, label in (('RESULT_COMPILE', 'compile'), ('RESULT_TEST', 'desktop tests')):
+        if env(key) in (None, '', 'skipped', 'cancelled'):
+            integrity.append(f'{label}: the job did not run in a {lane.split(" ")[0]} lane run (did the plan job fail?)')
 for s in shards:
     if s.get('job_status') == 'failure' or s.get('pick_outcome') in ('failure', 'skipped', 'cancelled'):
         integrity.append(f'{s["name"]}: the shard job did not get as far as running Gradle (setup {s.get("pick_outcome") or "unknown"}, job {s.get("job_status") or "unknown"})')

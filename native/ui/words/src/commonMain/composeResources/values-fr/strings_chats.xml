@@ -347,4 +347,7 @@
     <string name="chatsNewPhoneStorageOff">Permet aux agents de ce téléphone de lire et de modifier les fichiers du stockage du téléphone, comme Téléchargements et Documents. Ouvre la page Android correspondante.</string>
     <string name="chatsNewPhoneStorageOn">Les agents de ce téléphone peuvent lire et modifier les fichiers dans Téléchargements, Documents et le reste du stockage du téléphone.</string>
     <string name="chatsHomeAgentsUnreachable">Les agents de ce téléphone n’ont pas démarré</string>
+    <string name="chatsNewRunsOn">S’exécute sur</string>
+    <string name="chatsNewWhereSpoken">Où ça s’exécute : %1$s. Ouvre les choix de projet et de connexion.</string>
+    <string name="chatsNewAgentChipSpoken">Qui s’en occupe : %1$s, %2$s. Ouvre les choix d’agent et de modèle.</string>
 </resources>

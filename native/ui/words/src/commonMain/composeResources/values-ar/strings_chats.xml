@@ -361,4 +361,7 @@
     <string name="chatsNewPhoneStorageOff">يتيح للوكلاء على هذا الهاتف قراءة الملفات في تخزين الهاتف وتغييرها، مثل التنزيلات والمستندات. يفتح صفحة Android الخاصة بذلك.</string>
     <string name="chatsNewPhoneStorageOn">يستطيع الوكلاء على هذا الهاتف قراءة الملفات وتغييرها في التنزيلات والمستندات وباقي تخزين الهاتف.</string>
     <string name="chatsHomeAgentsUnreachable">لم يبدأ تشغيل الوكلاء على هذا الهاتف</string>
+    <string name="chatsNewRunsOn">يعمل على</string>
+    <string name="chatsNewWhereSpoken">مكان التشغيل: %1$s. يفتح خيارات المشروع والاتصال.</string>
+    <string name="chatsNewAgentChipSpoken">من يعمل عليه: %1$s، %2$s. يفتح خيارات الوكيل والنموذج.</string>
 </resources>

@@ -269,6 +269,7 @@ public fun KitButton(
                     onClick = { if (!working) onClick() },
                     enabled = on,
                     disabledReason = enabled.reason,
+                    disabledAnswer = (enabled as? KitEnabled.Disabled)?.answer,
                     haptic = if (working) null else haptic,
                     shape = buttonShape,
                     ink = ink,
