@@ -75,7 +75,7 @@ class NewConversationNoticeKeyboardTest {
                 assertTrue(b.bottom <= chips.top, "$word ends at ${b.bottom}, the chips start at ${chips.top}: it is under them")
                 assertTrue(b.top >= 0.dp, "$word starts at ${b.top}: above the page")
                 // Bounds are clipped to what shows: an action cut by the page's edge is short, one scrolled away is absent.
-                assertTrue(b.height >= 36.dp, "$word shows only ${b.height} of its height: cut off by the page's edge")
+                assertTrue((b.bottom - b.top) >= 36.dp, "$word shows only ${b.bottom - b.top} of its height: cut off by the page's edge")
                 onAllNodesWithText(word, substring = true)[0].assertIsDisplayed()
             }
         }
