@@ -223,4 +223,21 @@ class RealGitTest {
         assertEquals(1, assertIs<GitSnapshotResult.Ready>(copy.snapshot()).snapshot.status.branch.behind)
         assertEquals(GitProblem.NoUpstream, repo.fetch().problem)
     }
+
+    @Test
+    fun `B-GIT-147 a commit's patch and the whole branch's patch name the committed file's change`() = runTest {
+        val dir = repo("committed")
+        File(dir, "index.html").writeText("hello\n")
+        git(dir, "add", "index.html")
+        git(dir, "commit", "-q", "-m", "first")
+        val repository = GitRepository(shell, dir.absolutePath)
+        // All the work sits on main: the whole branch is still listed (against the empty tree).
+        val branch = assertIs<GitDiffResult.Ready>(repository.branchPatch())
+        assertTrue("+hello" in branch.patch && "index.html" in branch.patch, branch.patch)
+        val id = ProcessBuilder("git", "rev-parse", "HEAD").directory(dir).start().inputStream.bufferedReader().readText().trim()
+        val commit = assertIs<GitDiffResult.Ready>(repository.commitPatch(id))
+        assertTrue("+hello" in commit.patch, commit.patch)
+        // A name that is not a commit id never reaches a script.
+        assertIs<GitDiffResult.Failed>(repository.commitPatch("--output=/tmp/x"))
+    }
 }

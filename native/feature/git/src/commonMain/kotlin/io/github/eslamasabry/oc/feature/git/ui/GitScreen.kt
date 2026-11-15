@@ -30,6 +30,7 @@ import io.github.eslamasabry.oc.engine.git.GitActionNote
 import io.github.eslamasabry.oc.engine.git.GitBusy
 import io.github.eslamasabry.oc.engine.git.GitChangeKind
 import io.github.eslamasabry.oc.engine.git.GitCheck
+import io.github.eslamasabry.oc.engine.git.GitCommitView
 import io.github.eslamasabry.oc.engine.git.GitDiffView
 import io.github.eslamasabry.oc.engine.git.GitFileChange
 import io.github.eslamasabry.oc.engine.git.GitHubRepository
@@ -256,6 +257,7 @@ public fun GitScreen(state: GitUi, actions: GitActions, serverTools: @Composable
         PublishSheet(state, actions)
         CloneSheet(state, actions)
         DiffSheet(state, actions, enabled)
+        CommitSheet(state, actions)
         KitConfirm(
             confirmSpec(state.confirm),
             onConfirm = actions::confirm,
@@ -624,7 +626,14 @@ private fun Ready(
                 if (snapshot.commits.isNotEmpty()) {
                     KitRowGroup(label = stringResource(Res.string.searchRecentTitle)) {
                         for (commit in snapshot.commits.take(RECENT)) {
-                            KitRow(title = commit.subject, supporting = commit.shortId, supportingMaxLines = 1)
+                            KitRow(
+                    title = commit.subject,
+                    supporting = commit.shortId,
+                    supportingMaxLines = 1,
+                    trailing = KitRowTrailing.Chevron,
+                    onClick = { actions.openCommit(commit.id) },
+                    modifier = Modifier.testTag("git-commit-${commit.shortId}"),
+                )
                         }
                     }
                 }
@@ -1321,6 +1330,48 @@ private fun DiffSheet(state: GitUi, actions: GitActions, enabled: KitEnabled) {
                         }
                     }
                 }
+            }
+        }
+    }
+}
+
+/** What one commit changed: every file of it in the kit's diff view. */
+@Composable
+private fun CommitSheet(state: GitUi, actions: GitActions) {
+    val view = state.commitView
+    KitSheet(
+        visible = view != null,
+        onDismissRequest = actions::closeCommit,
+        title = view?.commit?.subject ?: stringResource(Res.string.chatUiChanges),
+        subtitle = view?.commit?.shortId,
+        closeLabel = stringResource(Res.string.kitSheetClose),
+        height = KitSheetHeight.Full,
+    ) {
+        when (view) {
+            null -> Unit
+            is GitCommitView.Loading -> Gutter { KitText(stringResource(Res.string.gitChecking)) }
+            is GitCommitView.Failed ->
+                Gutter {
+                    KitErrorNotice(
+                        stringResource(Res.string.kitDiffLoadFailed),
+                        details = null,
+                        detailsLabel = stringResource(Res.string.kitDetails),
+                        copyLabel = stringResource(Res.string.kitCopyDetails),
+                    )
+                }
+            is GitCommitView.Ready -> {
+                val files = remember(view.patch) { DiffModel.parsePatch(view.patch) }
+                if (files.isEmpty()) Gutter { KitText(stringResource(Res.string.kitDiffNoChanges)) }
+                else
+                    for (file in files) {
+                        KitDiffView(
+                            file,
+                            maxLines = MAX_DIFF_LINES,
+                            hunkLabel = { _, _, start, end -> "$start–$end" },
+                            gapLabel = { hidden -> "… $hidden" },
+                            modifier = Modifier.testTag("git-commit-diff-view"),
+                        )
+                    }
             }
         }
     }
