@@ -19,3 +19,14 @@ kotlin {
         ) // FeedDay: the Today / Earlier boundary on the person's clock
     }
 }
+
+// These JVM tests invoke our stdlib bridge directly; Gradle must track its external sources.
+tasks.withType<Test>().configureEach {
+    inputs
+        .files(
+            rootProject.file("../tool/unharnessed/adapter.py"),
+            rootProject.file("../tool/unharnessed/test_adapter.py"),
+        )
+        .withPropertyName("unharnessedAdapterContract")
+        .withPathSensitivity(org.gradle.api.tasks.PathSensitivity.RELATIVE)
+}
