@@ -52,15 +52,16 @@ class LiveGlassFramesRenders {
             }
             File(out, "${variant.key}-${scene.name}.csv").writeText(
                 buildString {
-                    append("frame,ms,open,joined,bar_light,bar_sharp,bar_end,menu_middle,menu_rim,glass_bottom_dp,glass_left_dp,cost_ms\n")
+                    append("frame,ms,open,joined,bar_light,bar_sharp,bar_end,menu_middle,menu_rim,menu_rim_sharp,glass_bottom_dp,glass_left_dp,cost_ms\n")
                     for (f in frames)
                         append(
-                            "${f.index},${f.ms},${f.open},${f.joined},%.3f,%.3f,%.3f,%.3f,%.3f,%.2f,%.2f,%.1f\n".format(
+                            "${f.index},${f.ms},${f.open},${f.joined},%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.2f,%.2f,%.1f\n".format(
                                 f.barLight,
                                 f.barSharp,
                                 f.barEnd,
                                 f.menuMiddle,
                                 f.menuRim,
+                                f.menuRimSharp,
                                 f.glassBottomDp,
                                 f.glassLeftDp,
                                 f.costMs,
@@ -71,6 +72,8 @@ class LiveGlassFramesRenders {
             val costs = frames.drop(1).map { it.costMs }.sorted()
             fun pct(p: Double) = costs[((costs.size - 1) * p).toInt()]
             summary.append("${variant.key} ${scene.name}: ${frames.size} frames, draw cost ms p50 %.1f p90 %.1f max %.1f\n".format(pct(.5), pct(.9), costs.last()))
+            val stalls = LiveGlassFrames.stalls(frames)
+            summary.append("  stalls: ${if (stalls.isEmpty()) "none" else stalls.joinToString { (i, n, kind) -> "#%03d %d frames %s".format(i, n, kind) }}\n")
             for ((name, tol, value) in measures) {
                 val steps = LiveGlassFrames.steps(frames, tol, value)
                 summary.append("  $name steps: ${if (steps.isEmpty()) "none" else steps.joinToString { (i, d) -> "#%03d %+.2f".format(i, d) }}\n")
@@ -86,6 +89,7 @@ class LiveGlassFramesRenders {
             Triple("bar end light", .3, { f: LiveGlassFrames.Frame -> f.barEnd }),
             Triple("menu middle light", .5, { f: LiveGlassFrames.Frame -> f.menuMiddle }),
             Triple("menu rim light", .5, { f: LiveGlassFrames.Frame -> f.menuRim }),
+            Triple("menu rim sharpness", .15, { f: LiveGlassFrames.Frame -> f.menuRimSharp }),
             Triple("glass bottom dp", 1.5, { f: LiveGlassFrames.Frame -> f.glassBottomDp }),
             Triple("glass left dp", 1.5, { f: LiveGlassFrames.Frame -> f.glassLeftDp }),
         )

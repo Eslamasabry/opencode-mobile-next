@@ -30,7 +30,6 @@ import androidx.compose.ui.graphics.PixelMap
 import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.test.ComposeUiTest
-import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.isRoot
@@ -94,10 +93,14 @@ internal object LiveGlassFrames {
         val barEnd: Double,
         val menuMiddle: Double,
         val menuRim: Double,
+        val menuRimSharp: Double,
         val glassBottomDp: Double,
         val glassLeftDp: Double,
         val costMs: Double,
         val image: ImageBitmap?,
+        /** The glass is on its way (neither closed nor at rest), and its side is between the column and rest. */
+        val midway: Boolean = false,
+        val sideMidway: Boolean = false,
     )
 
     /** A scene: when the menu opens (true) or closes (false), ms from the first frame, how long it runs, and scrolling. */
@@ -159,10 +162,11 @@ internal object LiveGlassFrames {
         ) {
             LazyColumn(state = list, modifier = Modifier.fillMaxSize().kitFrostSource(source)) {
                 item {
-                    // A bright picture under the bar's end and the menu: the photo the knee and the words must hold.
+                    // A bright picture under the bar's end and the menu's top, the code under the rest of the menu: the
+                    // photo the knee and the words must hold, and detail for the lens to bend and a resolution to lose.
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
                         Box(
-                            Modifier.size(200.dp, 240.dp)
+                            Modifier.size(200.dp, 110.dp)
                                 .background(Brush.radialGradient(listOf(Color.White, Color(0xFFFFF2B0), Color(0xFFFFB13B), Color(0xFFE0603A), Color(0xFF3A6EA5))))
                         )
                     }
@@ -196,8 +200,6 @@ internal object LiveGlassFrames {
     private fun CodeLine(i: Int) {
         BasicText(lines[i % lines.size], Modifier.padding(horizontal = 16.dp, vertical = 3.dp), style = TextStyle(fontFamily = FontFamily.Monospace, fontSize = 14.sp))
     }
-
-    private val joinedPane = SemanticsMatcher.keyIsDefined(KitLiquidJoined)
 
     /** The regions measured, in dp of the window (found once per run from the menu at rest). */
     private class Regions(val menu: Rect)
@@ -245,8 +247,7 @@ internal object LiveGlassFrames {
                 waitForIdle()
                 val image = capture(this)
                 val cost = (System.nanoTime() - started) / 1e6
-                val joined = onAllNodes(joinedPane, useUnmergedTree = true).fetchSemanticsNodes().size == 2
-                out += measure(index, t, open.value, joined, image, closed, regions, density, cost, keepImages)
+                out += measure(index, t, open.value, image, closed, regions, density, cost, keepImages)
                 index++
                 t += FRAME_MS
             }
@@ -276,7 +277,6 @@ internal object LiveGlassFrames {
         index: Int,
         ms: Long,
         open: Boolean,
-        joined: Boolean,
         image: ImageBitmap,
         closed: ImageBitmap,
         regions: Regions,
@@ -293,7 +293,11 @@ internal object LiveGlassFrames {
         val end = r(m.right - 90f, 12f, m.right - 12f, 44f)
         val middle = r(m.left + 24f, m.top + 24f, m.right - 24f, m.bottom - 24f)
         val rim = r(m.left + 2f, m.top + 24f, m.left + 10f, m.bottom - 24f)
+        // The strip just inside the menu's free side over the code (no rows' words there): the bent code's detail.
+        val rimCode = r(m.left + 2f, m.top + 70f, m.left + 12f, m.bottom - 16f)
         val (bottom, left) = glass(px, ref, m, density)
+        // Joined while the menu's glass shows below the bar (a closing menu drops its semantics, so not read from them).
+        val joined = bottom > m.top + 8f
         return Frame(
             index = index,
             ms = ms,
@@ -304,10 +308,13 @@ internal object LiveGlassFrames {
             barEnd = light(px, end),
             menuMiddle = light(px, middle),
             menuRim = light(px, rim),
+            menuRimSharp = sharp(px, rimCode),
             glassBottomDp = bottom,
             glassLeftDp = left,
             costMs = cost,
             image = if (keep) image else null,
+            midway = joined && (bottom < m.bottom - 2f || left > m.left + 2f),
+            sideMidway = joined && left > m.left + 2f && left < m.right - LiquidJoinColumnDp - 2f,
         )
     }
 
@@ -357,6 +364,34 @@ internal object LiveGlassFrames {
         }
         return (lowest / density.toDouble()) to (leftmost / density.toDouble())
     }
+
+    private const val LiquidJoinColumnDp = 56f
+
+    /**
+     * Stalls: runs of [MIN_STALL] frames or more where the glass is on its way and does not move at all (both edges
+     * still), and runs of [MIN_FILL_STALL] or more where the menu is opening, its side is between the column and rest
+     * and the side does not move (the fill waiting). Returns (first frame, frames, kind).
+     */
+    fun stalls(frames: List<Frame>): List<Triple<Int, Int, String>> {
+        val out = mutableListOf<Triple<Int, Int, String>>()
+        fun runs(kind: String, least: Int, still: (Frame, Frame) -> Boolean) {
+            var start = -1
+            for (i in 1..frames.size) {
+                val s = i < frames.size && still(frames[i - 1], frames[i])
+                if (s && start < 0) start = i
+                if (!s && start >= 0) {
+                    if (i - start >= least) out += Triple(start, i - start, kind)
+                    start = -1
+                }
+            }
+        }
+        runs("still", MIN_STALL) { a, b -> a.midway && b.midway && abs(a.glassBottomDp - b.glassBottomDp) < .5 && abs(a.glassLeftDp - b.glassLeftDp) < .5 }
+        runs("fill waits", MIN_FILL_STALL) { a, b -> b.open && a.sideMidway && b.sideMidway && abs(a.glassLeftDp - b.glassLeftDp) < .5 }
+        return out
+    }
+
+    private const val MIN_STALL = 3
+    private const val MIN_FILL_STALL = 4
 
     /** Frames whose change jumps against both neighbours' changes by more than [tol]: a step. */
     fun steps(frames: List<Frame>, tol: Double, value: (Frame) -> Double): List<Pair<Int, Double>> {
