@@ -243,7 +243,10 @@ if [ "${D}oc_format" = npmTarGz ]; then
 fi
 mkdir -p /home/oc/.local/bin /home/oc/.local/share/oc-agents/${agent.id}
 oc_lock=/home/oc/.local/share/oc-agents/.lock-${recipe.executable}
-mkdir "${D}oc_lock" 2>/dev/null || { echo '[oc] Another agent install is in progress' >&2; exit 1; }
+$STALE_LOCK
+mkdir "${D}oc_lock" 2>/dev/null || { oc_lock_stale && rmdir "${D}oc_lock" 2>/dev/null && mkdir "${D}oc_lock" 2>/dev/null; } || {
+  echo '[oc] Another agent install is in progress' >&2; exit 1
+}
 oc_stage="${D}oc_final.new"
 oc_old="${D}oc_final.old.${D}${D}"
 oc_link="${D}oc_bin.new.${D}${D}"
@@ -537,6 +540,37 @@ ln -s "${'$'}oc_final/launch" "${'$'}oc_link"
 oc_update_activate "${'$'}oc_bin" "${'$'}oc_link" || exit 1
 oc_update_commit "${'$'}oc_bin" || { oc_update_recover "${'$'}oc_bin"; exit 1; }
 """
+
+    /**
+     * Issue 147: an install's lock outlives an installer Android killed (the app stopped with its Linux in the middle
+     * of an install or an automatic update: no EXIT trap runs), and every later install, update and check of that
+     * agent then failed with "Another agent install is in progress" on every app start. The lock is stale when no
+     * live process runs an authored installer for it (the removal script's same test, `live_target`): an empty one
+     * is then taken over. A live installer's lock, and a lock that holds anything, are left alone.
+     */
+    private val STALE_LOCK: String =
+        """oc_lock_stale() {
+  [ -d "${'$'}oc_lock" ] && [ ! -L "${'$'}oc_lock" ] || return 1
+  python3 - "${'$'}oc_lock" "${'$'}${'$'}" <<'OC_PY'
+import os, re, sys
+lock, me = sys.argv[1], sys.argv[2]
+if os.listdir(lock): sys.exit(1)
+installer = re.compile(rb'(?m)^oc_lock=' + re.escape(lock.encode()) + rb'(?:\r?\n|;|${'$'})')
+# The removal script takes the same lock: its shell names the executable to its Python.
+remover = b" '" + os.path.basename(lock)[len('.lock-'):].encode() + b"' "
+skip = {me, str(os.getpid()), str(os.getppid())}
+for name in os.listdir('/proc'):
+    if not name.isdecimal() or name in skip: continue
+    try: args = open('/proc/' + name + '/cmdline', 'rb').read().split(b'\0')
+    except OSError: continue
+    for index in range(len(args) - 2):
+        if args[index].rsplit(b'/', 1)[-1] in (b'sh', b'bash') and args[index + 1] == b'-c':
+            script = args[index + 2]
+            if installer.search(script) or (b"<<'OC_AGENT_REMOVE'" in script and remover in script):
+                sys.exit(1)
+sys.exit(0)
+OC_PY
+}"""
 
     private val RECOVER_AFTER_LOCK: String =
         """oc_update_recover "${'$'}oc_final"

@@ -452,6 +452,12 @@ class PreviewRuntime(
         // refused during the install is not "not answering"; the helper is asked again afterwards).
         if (kind == io.github.eslamasabry.oc.feature.chats.presentation.AppStart.AgentsUpdating) return kind
         if (id in loadedSources.value || id in mutableSourceFailures.value) return null
+        // Issue 147: the helper reads "Starting" only while a start of it runs, within its limit.
+        if (
+            kind == io.github.eslamasabry.oc.feature.chats.presentation.AppStart.Agents &&
+                id !in helperJoins.starting.value
+        )
+            return null
         return kind
     }
 
@@ -472,35 +478,66 @@ class PreviewRuntime(
     /** The phone agents' helper profile: part of This phone, never listed or chosen as a server. */
     internal fun isPhoneHelper(id: ProfileId): Boolean = stores.isPhoneHelper(id)
 
-    private val joiningHelpers = mutableSetOf<ProfileId>()
+    /**
+     * The helper's starts as a list source. Issue 147 (owner's phone, build 10045): the chip read "Starting Claude
+     * Code…" for minutes with no helper process and nothing starting it: "starting" was any shown helper source not
+     * yet listed and not failed, whether a start ran or not, and a start that never returned held it for good. Now it
+     * reads starting only while a start runs within its limit; past the limit the source has a failure; and a source
+     * that should be listed but has neither a start nor a failure is started again ([keepHelperListed]).
+     */
+    private val helperJoins = HelperJoins(scope, now = { clock.now().toEpochMilliseconds() })
+
+    /** The helper sources whose start runs now (the home's chip and rows read "Starting" only for these). */
+    internal val helperStarting: StateFlow<Set<ProfileId>> get() = helperJoins.starting
 
     /** Starts the helper outside the command lock, then adds its conversations to the list. */
     private fun joinPhoneHelper(id: ProfileId) {
-        if (!synchronized(joiningHelpers) { joiningHelpers.add(id) }) return
-        scope.launch {
-            try {
-                command {
-                    seedWhileStarting(id)
-                    Unit.ok()
-                }
-                when (val helper = phoneHelper.value.ensureHelper(id)) {
-                    is Outcome.Ok ->
-                        command {
-                            if ((id !in listings || id in seededListings) && listSourceShown(id)) {
-                                dropSeed(id)
-                                // A connection that fails keeps the saved rows on show.
-                                if (connectForHome(id, makeActive = false) is Outcome.Failed) seedWhileStarting(id)
-                                rebuildFeed()
-                            }
-                            Unit.ok()
+        helperJoins.start(
+            id,
+            onLimit = {
+                // Past its limit the start no longer says "Starting": the source did not answer (Try again: refresh).
+                if (id !in loadedSources.value)
+                    mutableSourceFailures.update {
+                        it + (id to Failure.Runtime(RuntimeProblem.ServerStartUnavailable))
+                    }
+            },
+        ) {
+            // A new start replaces an earlier failure while it runs; a failure of this one is recorded below.
+            mutableSourceFailures.update { it - id }
+            command {
+                seedWhileStarting(id)
+                Unit.ok()
+            }
+            when (val helper = phoneHelper.value.ensureHelper(id)) {
+                is Outcome.Ok ->
+                    command {
+                        // Not listed yet, also when an earlier connection left its listing unread: connect it now
+                        // (before, such a source kept "Starting" with no start and no connection behind it).
+                        if (
+                            (id !in listings || id in seededListings || id !in loadedSources.value) &&
+                                listSourceShown(id)
+                        ) {
+                            dropSeed(id)
+                            // A connection that fails keeps the saved rows on show.
+                            if (connectForHome(id, makeActive = false) is Outcome.Failed) seedWhileStarting(id)
+                            rebuildFeed()
                         }
-                    // The saved rows stay; the source is not answering, so it no longer says it is starting.
-                    is Outcome.Failed -> mutableSourceFailures.update { it + (id to helper.failure) }
-                }
-            } finally {
-                synchronized(joiningHelpers) { joiningHelpers.remove(id) }
+                        Unit.ok()
+                    }
+                // The saved rows stay; the source is not answering, so it no longer says it is starting.
+                is Outcome.Failed -> mutableSourceFailures.update { it + (id to helper.failure) }
             }
         }
+    }
+
+    /**
+     * A shown helper source that is not listed, has no failure and no start running (its connection was closed, or
+     * nothing asked for it since) is started again, at most every 30 s: it never sits unlisted with nothing behind it.
+     */
+    internal fun keepHelperListed(id: ProfileId) {
+        if (!isPhoneHelper(id) || id == profiles.activeId.value || !listSourceShown(id)) return
+        if (id in loadedSources.value || id in mutableSourceFailures.value || !helperJoins.due(id)) return
+        joinPhoneHelper(id)
     }
 
     private val joiningServers = mutableSetOf<ProfileId>()
@@ -1302,6 +1339,15 @@ anySourceLoaded = true
     }
 
     internal suspend fun refresh(): Outcome<Unit> = command {
+        // A person's refresh is the way forward for the agents' helper that did not start: it is started again.
+        profiles.profiles.value
+            .filter {
+                isPhoneHelper(it.id) &&
+                    it.id != profiles.activeId.value &&
+                    listSourceShown(it.id) &&
+                    it.id !in loadedSources.value
+            }
+            .forEach { joinPhoneHelper(it.id) }
         var failed: Outcome.Failed? = null
         // A source still starting has no connection to read yet; its saved rows wait for it.
         listings.keys.filterNot { it in seededListings }.forEach {

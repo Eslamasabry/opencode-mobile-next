@@ -334,8 +334,45 @@ stat() { printf '0\n'; }
     fun `B-LINUX-122 concurrent installer lock does not damage held installation files`() {
         mkdirs("$agents/.lock-fixture")
         val held = File("$agents/held").also { it.writeText("keep") }
-        assertNotEquals(0, guest.run(AgentPhoneScripts.install(fixtureAgent(guest.hash))).exitCode)
+        // A live authored installer holds the lock (since issue 147 a lock nobody holds is taken over).
+        // Its EXIT trap keeps bash itself running (as the real installer's does), so its own command line stays.
+        val other = ProcessBuilder("bash", "-c", "oc_lock=$agents/.lock-fixture\ntrap 'true' EXIT\nsleep 60").start()
+        Thread.sleep(300)
+        try {
+            assertNotEquals(0, guest.run(AgentPhoneScripts.install(fixtureAgent(guest.hash))).exitCode)
+        } finally {
+            other.destroyForcibly()
+        }
         assertEquals("keep", held.readText())
+        assertFalse(exists(guest.ran))
+        assertTrue(File("$agents/.lock-fixture").isDirectory, "a live installer's lock stays")
+    }
+
+    @Test
+    fun `I147-AGY-4 an install lock left by a killed installer no longer blocks every later install`() {
+        // Android stopped the app and its Linux mid-install: no EXIT trap ran, the empty lock stayed.
+        mkdirs("$agents/.lock-fixture")
+        val agent = fixtureAgent(guest.hash)
+        val result = guest.run(AgentPhoneScripts.install(agent))
+        assertEquals(0, result.exitCode, result.toString())
+        assertEquals("$agents/fixture/1.2.3/launch", linkTarget("${guest.bin}/fixture"))
+        assertFalse(File("$agents/.lock-fixture").isDirectory)
+    }
+
+    @Test
+    fun `I147-AGY-4b a lock that holds anything, or the removal of that agent, is never taken over`() {
+        File("$agents/.lock-fixture").also { it.mkdirs() }.resolve("owner").writeText("fixture")
+        assertNotEquals(0, guest.run(AgentPhoneScripts.install(fixtureAgent(guest.hash))).exitCode)
+        assertFalse(exists(guest.ran))
+        File("$agents/.lock-fixture/owner").delete()
+        val remover =
+            ProcessBuilder("bash", "-c", "trap 'true' EXIT\npython3 - 'fixture' 'fixture' '1.2.3' 'r' <<'OC_AGENT_REMOVE'\nimport time; time.sleep(60)\nOC_AGENT_REMOVE\n").start()
+        Thread.sleep(300)
+        try {
+            assertNotEquals(0, guest.run(AgentPhoneScripts.install(fixtureAgent(guest.hash))).exitCode)
+        } finally {
+            remover.destroyForcibly()
+        }
         assertFalse(exists(guest.ran))
     }
 
