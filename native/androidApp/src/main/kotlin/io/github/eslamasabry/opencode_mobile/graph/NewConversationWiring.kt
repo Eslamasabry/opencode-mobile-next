@@ -106,6 +106,7 @@ class AndroidNewConversationHost(
     private val phoneServer: AndroidChatPhoneServer,
     private val phoneAgents: PhoneAgents,
     private val phoneHelper: AppLocalAgentHostStarter,
+    private val storageFolderPort: io.github.eslamasabry.oc.feature.projects.presentation.PhoneFolders,
     private val sharedStorage: Set<io.github.eslamasabry.oc.core.domain.platform.SharedStorageAccess>,
     private val phoneFolders: PhoneFolderPreflight,
     appScope: AppCoroutineScope,
@@ -175,6 +176,15 @@ class AndroidNewConversationHost(
         return if (block == io.github.eslamasabry.oc.core.domain.platform.SharedStorageBlock.None) PhoneStorageAccess.On
         else PhoneStorageAccess.Off
     }
+
+    override suspend fun storageFolders(path: String): Outcome<List<StorageFolder>> =
+        when (val listed = storageFolderPort.list(path)) {
+            is Outcome.Failed -> listed
+            is Outcome.Ok -> Outcome.Ok(listed.value.map { StorageFolder(it.name, it.path) })
+        }
+
+    override suspend fun createStorageFolder(parent: String, name: String): Outcome<String> =
+        storageFolderPort.createFolder(parent, name)
 
     override suspend fun requestPhoneStorage(profile: ProfileId): Outcome<Unit> {
         val access = sharedStorage.singleOrNull() ?: return refused()
@@ -810,7 +820,23 @@ class AndroidNewConversationHost(
         model: ModelRef?,
     ): Outcome<Unit> = selection(profile).selectModel(profile, AgentId(agentId), model?.modelId)
 
-    override suspend fun setup(profile: ProfileId): Outcome<NewConversationSetup> =
+    /** The setup last read per profile in this run, with the live connection it was read on (see [cachedSetup]). */
+    private val lastSetups = java.util.concurrent.ConcurrentHashMap<ProfileId, Pair<Any, NewConversationSetup>>()
+
+    override fun cachedSetup(profile: ProfileId): NewConversationSetup? {
+        val (graph, setup) = lastSetups[profile] ?: return null
+        return setup.takeIf { registry.live.value[profile] === graph }
+    }
+
+    override suspend fun setup(profile: ProfileId): Outcome<NewConversationSetup> {
+        val read = readSetup(profile)
+        val graph = registry.live.value[profile]
+        if (read is Outcome.Ok && graph != null) lastSetups[profile] = graph to read.value
+        else if (read is Outcome.Failed) lastSetups.remove(profile)
+        return read
+    }
+
+    private suspend fun readSetup(profile: ProfileId): Outcome<NewConversationSetup> =
         withContext(serial) {
             lane.withLock {
                 if (stores.profiles.profile(profile) == null) return@withLock refused()
@@ -1680,4 +1706,4 @@ internal object NewConversationPhoneRules {
     fun startsHere(row: PhoneAgentRow): Boolean = phoneAgentChoosable(phoneAgentShown(row))
 }
 
-private const val PHONE_STORAGE_FOLDER = "/sdcard"
+private const val PHONE_STORAGE_FOLDER = "/storage/emulated/0"

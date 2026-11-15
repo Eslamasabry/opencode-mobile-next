@@ -43,6 +43,7 @@ import io.github.eslamasabry.oc.feature.projects.presentation.PhoneFolderUi
 import io.github.eslamasabry.oc.feature.projects.presentation.PhoneFolders
 import io.github.eslamasabry.opencode_mobile.BuiltinLinux
 import java.nio.file.AccessDeniedException
+import java.nio.file.FileAlreadyExistsException
 import java.nio.file.Files
 import java.nio.file.LinkOption
 import java.nio.file.NoSuchFileException
@@ -228,6 +229,21 @@ class AndroidPhoneFolders(
                     PhoneFolderUi(it.name, it.path, it.inside?.joinToString(", ")?.ifBlank { null })
                 }
                 .toImmutableList()
+        }
+
+    override suspend fun createFolder(parent: String, name: String): Outcome<String> =
+        withContext(dispatchers.io) {
+            attempt(::folderFailure) {
+                if (!canReadStorage() || !confined(parent)) throw AccessDeniedException(parent)
+                val base = PhoneStorageFolders.normalize(parent) ?: throw AccessDeniedException(parent)
+                if (name.isBlank() || name == "." || name == ".." || '/' in name || '\u0000' in name)
+                    throw AccessDeniedException(name)
+                val target = Paths.get(base, name)
+                if (!confined(target.toString())) throw AccessDeniedException(name)
+                if (Files.exists(target, LinkOption.NOFOLLOW_LINKS)) throw FileAlreadyExistsException(name)
+                Files.createDirectory(target)
+                target.toString()
+            }
         }
 
     override suspend fun requestAccess(): Outcome<Unit> =

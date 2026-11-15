@@ -693,7 +693,7 @@
     <string name="composerBusyReason">Đang chuẩn bị lời nhắc của bạn…</string>
     <string name="composerToolsTextOnly">Máy chủ này chỉ nhận văn bản</string>
     <string name="composerToolsAgentTextOnly">%1$s ở đây chỉ nhận văn bản</string>
-    <string name="composerToolsAgentPicturesOnly">%1$s chỉ nhận hình ảnh: hãy dùng %2$s hoặc %3$s</string>
+    <string name="composerToolsPicturesOnlyUse">%1$s chỉ nhận hình ảnh: hãy dùng %2$s hoặc %3$s</string>
     <string name="composerToolSavedSubtitle">Đưa lời nhắc đã lưu trở lại bản nháp</string>
     <string name="composerToolSaveForLater">Lưu lời nhắc để dùng sau</string>
     <string name="composerToolNothingToSave">Hãy nhập hoặc đính kèm gì đó trước</string>

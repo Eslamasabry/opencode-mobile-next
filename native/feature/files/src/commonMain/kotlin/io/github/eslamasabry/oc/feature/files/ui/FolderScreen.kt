@@ -61,6 +61,9 @@ import io.github.eslamasabry.oc.ui.kitchat.header.KitClipboardEffect
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.chatStartEmptyFolder
 import io.github.eslamasabry.oc.ui.words.res.fileReload
+import io.github.eslamasabry.oc.ui.words.res.chatsNewPhoneStorage
+import io.github.eslamasabry.oc.ui.words.res.chatsNewPhoneStorageOff
+import io.github.eslamasabry.oc.ui.words.res.chatsNewPhoneStorageOn
 import io.github.eslamasabry.oc.ui.words.res.e7LibraryProjectHealth
 import io.github.eslamasabry.oc.ui.words.res.e7LibrarySwitchProject
 import io.github.eslamasabry.oc.ui.words.res.e7LibraryWorktrees
@@ -259,6 +262,22 @@ public fun FolderScreen(state: FolderUi, actions: FolderActions) {
             edges = KitScreenEdges.Bleed,
         ) {
             LazyColumn(verticalArrangement = Arrangement.spacedBy(Space.S1.dp), state = kitPageListState()) {
+                state.phoneStorage?.let { block ->
+                    item("phone-storage", contentType = "phone-storage") {
+                        val on = block == FilesStorageBlock.None
+                        KitRow(
+                            title = stringResource(Res.string.chatsNewPhoneStorage),
+                            supporting =
+                                stringResource(
+                                    if (on) Res.string.chatsNewPhoneStorageOn else Res.string.chatsNewPhoneStorageOff
+                                ),
+                            leading = KitRowLeading.Glyph(KitIcons.folders),
+                            trailing = if (on) KitRowTrailing.None else KitRowTrailing.Chevron,
+                            onClick = if (on) null else actions::allowPhoneStorage,
+                            modifier = Modifier.testTag("files-phone-storage"),
+                        )
+                    }
+                }
                 if (state.actionFailure != null)
                     item("action-failed", contentType = "action-failed") {
                         KitErrorNotice(

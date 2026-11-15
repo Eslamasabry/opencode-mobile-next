@@ -24,4 +24,14 @@
     <string name="chatsNewPhoneFolderMissing">Esta carpeta ya no está en el almacenamiento del teléfono. Elige otra carpeta.</string>
     <string name="chatsNewPhoneFolderDenied">%1$s no puede abrir ni cambiar archivos en esta carpeta. Elige otra carpeta del almacenamiento del teléfono.</string>
     <string name="chatsNewPhoneFolderRestartFailed">No se pudo reiniciar. Si un agente sigue trabajando, inténtalo de nuevo cuando termine.</string>
+    <string name="chatsNewPhoneFolderWhere">Trabaja en %1$s, en el almacenamiento del teléfono, que no puede guardar enlaces ni iniciar programas directamente.</string>
+    <string name="chatsNewPhoneFolderWhy">Por qué</string>
+    <string name="chatsNewPhoneFolderHelpTitle">Trabajar en el almacenamiento del teléfono</string>
+    <string name="chatsNewPhoneFolderHelp">Android mantiene el almacenamiento del teléfono para todas las apps, como una tarjeta de memoria. No puede guardar enlaces entre archivos y no inicia un programa que esté guardado en él.\n\nPor eso, en esta carpeta instala paquetes con npm install --no-bin-links y ejecuta un script con sh script.sh en lugar de ./script.sh. Aquí Git ignora los modos de archivo. Los proyectos de la carpeta propia de la app no tienen ninguno de estos límites.\n\nCuando Claude Code o Codex se inicia aquí, se le dice lo mismo.</string>
+    <string name="chatPhoneFolderAccess">La carpeta de esta conversación está en el almacenamiento del teléfono y la app ya no tiene acceso a todos los archivos. No se envía nada hasta que lo permitas de nuevo.</string>
+    <string name="chatPhoneFolderRestartServer">El OpenCode de este teléfono no puede ver la carpeta de esta conversación hasta que se reinicie. No se envía nada hasta entonces.</string>
+    <string name="chatPhoneFolderRestartAgents">Los agentes del teléfono no pueden ver la carpeta de esta conversación hasta que se reinicien. No se envía nada hasta entonces.</string>
+    <string name="chatPhoneFolderMissing">La carpeta de esta conversación ya no está en el almacenamiento del teléfono, así que aquí no se puede enviar nada.</string>
+    <string name="chatPhoneFolderDenied">El agente no puede abrir ni cambiar archivos en la carpeta de esta conversación en el almacenamiento del teléfono, así que aquí no se puede enviar nada.</string>
+    <string name="chatSendPhoneFolder">No enviado: el agente no puede llegar ahora a la carpeta de esta conversación en el almacenamiento del teléfono. La línea de arriba dice qué hacer.</string>
 </resources>

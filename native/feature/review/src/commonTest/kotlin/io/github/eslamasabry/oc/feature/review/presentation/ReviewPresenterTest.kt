@@ -552,4 +552,18 @@ class ReviewPresenterTest {
         p.openFile("index.html")
         assertEquals(listOf("working index.html"), nav.went)
     }
+
+    @Test
+    fun `B-CHAT-147 a committed file the tools gave no lines for opens its change from the whole branch`() = runTest(UnconfinedTestDispatcher()) {
+        fake.history = listOf(prompt("u1", 1), replyNoDiff("a1", 2, "index.html", "gone.txt"))
+        // Committed already: no uncommitted diff, but the branch has it.
+        gateways.value = ReviewGateways(VcsFake(fake, emptyList()), FakeOperationsGateway())
+        val branch = ReviewBranchRead { Outcome.Ok(listOf(FileDiff("index.html", patch = "@@ -0,0 +1 @@\n+x", additions = 1, deletions = 0)).toImmutableList()) }
+        val p = ChangesPresenter(review(), null, nav, backgroundScope, branch = branch)
+        val rows = p.state.value.files
+        assertEquals(listOf("index.html"), rows.map { it.path }, "a file the branch does not have is not listed")
+        assertTrue(rows.single().hasDiff)
+        p.openFile("index.html")
+        assertEquals(listOf("branch index.html"), nav.went)
+    }
 }

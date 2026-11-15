@@ -269,7 +269,7 @@
     <string name="composerBusyReason">Подготовка запроса…</string>
     <string name="composerToolsTextOnly">Этот сервер принимает только текст</string>
     <string name="composerToolsAgentTextOnly">Здесь %1$s принимает только текст</string>
-    <string name="composerToolsAgentPicturesOnly">%1$s принимает только изображения: используйте %2$s или %3$s</string>
+    <string name="composerToolsPicturesOnlyUse">%1$s принимает только изображения: используйте %2$s или %3$s</string>
     <string name="composerToolSavedSubtitle">Вернуть сохранённый запрос в черновик</string>
     <string name="composerToolSaveForLater">Сохранить запрос на потом</string>
     <string name="composerToolNothingToSave">Сначала введите текст или прикрепите файл</string>

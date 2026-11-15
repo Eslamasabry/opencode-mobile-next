@@ -1473,6 +1473,7 @@ chatDraftCopy	a790592d27
 chatDraftRepeatAction	d6934b29b5
 chatDraftRepeatBody	0af6e4bfb4
 chatDraftRepeatTitle	d3c2cfcfbe
+chatDraftRestoreFailed	fbd0d19cfe
 chatDraftRestoring	8ba4e369e5
 chatErrorContentFilter	c7dee03ffd
 chatErrorContextOverflow	562eeededc
@@ -1566,6 +1567,11 @@ chatNoModelSignedIn	c1600c70c4
 chatNoReplyCameBack	7b36ca49ba
 chatOldAgentReadOnly	ed0f0d3740
 chatOldAgentReadOnlyUnnamed	910e413ab4
+chatPhoneFolderAccess	f3433f34d1
+chatPhoneFolderDenied	d417aea706
+chatPhoneFolderMissing	95c19c319a
+chatPhoneFolderRestartAgents	89ed0293d3
+chatPhoneFolderRestartServer	ab9d29ab71
 chatPhraseHide	67611ba83d
 chatProjectChipFilesSemantics	dcb28a874f
 chatProjectChipSemantics	433a0d535c
@@ -1688,6 +1694,7 @@ chatSendFailureSignInToAgent	1a10cab5d0
 chatSendFolderMissing	8cc7e7d500
 chatSendLaterOrRepeat	bdaec976a4
 chatSendLaterSaved	56d0206556
+chatSendPhoneFolder	9eaaf05e2a
 chatStallConnectionLost	d37452bf0b
 chatStallConnectionUnchecked	ff23570360
 chatStallHelperDown	727fdd5c1f
@@ -2200,12 +2207,16 @@ chatsNewNeedProject	c983526668
 chatsNewPhoneFolderAccess	743b99e07e
 chatsNewPhoneFolderAllow	06e4e59f0c
 chatsNewPhoneFolderDenied	0aa44527e5
+chatsNewPhoneFolderHelp	2d00c80da3
+chatsNewPhoneFolderHelpTitle	21c2db49a7
 chatsNewPhoneFolderMissing	5608242160
 chatsNewPhoneFolderRestartAgents	ed1d30fb04
 chatsNewPhoneFolderRestartAgentsAction	581f621808
 chatsNewPhoneFolderRestartFailed	8582f46f1f
 chatsNewPhoneFolderRestartServer	cb1a7c84e4
 chatsNewPhoneFolderRestartServerAction	8b587c5ace
+chatsNewPhoneFolderWhere	3fd0b26213
+chatsNewPhoneFolderWhy	aa8c1148ee
 chatsNewPhoneStorage	0596028729
 chatsNewPhoneStorageOff	719ecc4c4e
 chatsNewPhoneStorageOn	c5e5d57076
@@ -2455,9 +2466,9 @@ composerToolCommandsTitle	77c51aeeb5
 composerToolNothingToSave	9e1c442602
 composerToolSaveForLater	22ef822580
 composerToolSavedSubtitle	91e861c1d6
-composerToolsAgentPicturesOnly	20bfa0f8c2
 composerToolsAgentTextOnly	46d33978b6
 composerToolsMore	c128486b1d
+composerToolsPicturesOnlyUse	20bfa0f8c2
 composerToolsTextOnly	92deaba741
 composerTrayCamera	c2d911fc73
 composerTrayFile	7e575f8a42

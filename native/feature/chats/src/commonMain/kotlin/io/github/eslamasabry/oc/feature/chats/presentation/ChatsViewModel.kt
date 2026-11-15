@@ -73,6 +73,7 @@ public class ChatsViewModel(
 
     private val filters = MutableStateFlow(ChatsFilters())
     private val sheet = MutableStateFlow<ChatsHomeSheet?>(null)
+    private val phoneStorage = MutableStateFlow<PhoneStorageAccess?>(null)
     private val watchedSelection = MutableStateFlow<String?>(null)
     private val answers =
         MutableStateFlow<Pair<Set<String>, io.github.eslamasabry.oc.core.common.Failure?>>(
@@ -255,6 +256,7 @@ public class ChatsViewModel(
                 )
             }
             .combine(agentNoticeFlow) { base, notices -> base.copy(agentNotices = notices) }
+            .combine(phoneStorage) { base, access -> base.copy(phoneStorage = access) }
             .combine(newRefused) { base, refused -> base.copy(newBlocked = refused && base.home.opening != null) }
             // B-161 / B-162: each row's branch, and the Usage row's tightest limit.
             .combine(home.branches) { base, known -> HomeRows.withBranches(base, known) }
@@ -883,6 +885,25 @@ public class ChatsViewModel(
 
     override fun showProjectChoices() {
         sheet.value = ChatsHomeSheet.Projects
+        readPhoneStorage()
+    }
+
+    private fun readPhoneStorage() {
+        viewModelScope.launch { phoneStorage.value = home.phoneStorage() }
+    }
+
+    override fun requestPhoneStorage() {
+        if (phoneStorage.value != PhoneStorageAccess.Off) return
+        viewModelScope.launch {
+            // Android's page opens over the app; the answer is read again while the person is there and on return.
+            home.requestPhoneStorage()
+            repeat(PHONE_STORAGE_POLLS) {
+                kotlinx.coroutines.delay(PHONE_STORAGE_POLL_MS)
+                val now = home.phoneStorage()
+                phoneStorage.value = now
+                if (now != PhoneStorageAccess.Off) return@launch
+            }
+        }
     }
 
     override fun showSources() {
@@ -1178,3 +1199,6 @@ public interface HomePermissionBindings {
  * hold in the engine).
  */
 internal const val ANSWER_HOLD_MS: Long = 3_000L
+
+private const val PHONE_STORAGE_POLLS = 30
+private const val PHONE_STORAGE_POLL_MS = 2_000L

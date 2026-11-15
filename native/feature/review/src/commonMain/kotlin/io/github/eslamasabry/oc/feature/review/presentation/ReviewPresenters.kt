@@ -234,22 +234,35 @@ public class ChangesPresenter(
      * it is not a change any more and is not listed. With no folder diff to ask, the rows stay as the tools gave them.
      */
     private suspend fun withTreeDiffs(rows: List<Scoped>): List<Scoped> {
-        if (rows.all { it.row.hasDiff } || !review.workingTreeAvailable()) return rows
-        val tree = (review.workingTree() as? Outcome.Ok)?.value.orEmpty()
-        if (tree.isEmpty()) return rows
-        val out =
-            rows.mapNotNull { r ->
-                if (r.row.hasDiff) return@mapNotNull r
-                val hit =
-                    tree.firstOrNull {
-                        !it.patch.isNullOrBlank() && (it.file == r.row.path || r.row.path.endsWith("/" + it.file))
-                    } ?: return@mapNotNull null
-                Scoped(
+        if (rows.all { it.row.hasDiff }) return rows
+        val tree =
+            if (review.workingTreeAvailable()) (review.workingTree() as? Outcome.Ok)?.value.orEmpty() else emptyList()
+        fun inTree(path: String) =
+            tree.firstOrNull { !it.patch.isNullOrBlank() && (it.file == path || path.endsWith("/" + it.file)) }
+        // A change already committed is in neither the tools' lines nor the uncommitted ones: the whole branch has it.
+        val committed =
+            if (rows.any { !it.row.hasDiff && inTree(it.row.path) == null } && branch != null)
+                (readBranch() as? Outcome.Ok)?.value.orEmpty()
+            else emptyList()
+        fun inBranch(path: String) =
+            committed.firstOrNull { !it.patch.isNullOrBlank() && (it.file == path || path.endsWith("/" + it.file)) }
+        if (tree.isEmpty() && committed.isEmpty()) return rows
+        return rows.mapNotNull { r ->
+            if (r.row.hasDiff) return@mapNotNull r
+            inTree(r.row.path)?.let { hit ->
+                return@mapNotNull Scoped(
                     r.row.copy(added = hit.additions, removed = hit.deletions, hasDiff = true, diffPath = hit.file),
                     "${hit.additions}|${hit.deletions}|${hit.status}|${hit.patch.hashCode()}",
                 )
             }
-        return out
+            inBranch(r.row.path)?.let { hit ->
+                return@mapNotNull Scoped(
+                    r.row.copy(added = hit.additions, removed = hit.deletions, hasDiff = true, diffPath = hit.file, viaBranch = true),
+                    "${hit.additions}|${hit.deletions}|branch|${hit.patch.hashCode()}",
+                )
+            }
+            null
+        }
     }
 
     /** A row and what its diff is now (compared with what it was when viewed). */
@@ -419,7 +432,13 @@ public class ChangesPresenter(
             ReviewScope.WorkingTree -> nav.openWorkingTreeFile(path)
             ReviewScope.Branch -> nav.openBranchFile(path)
             ReviewScope.Conversation ->
-                s.files.firstOrNull { it.path == path }?.diffPath?.let(nav::openWorkingTreeFile) ?: nav.openFile(path, staged = false)
+                s.files.firstOrNull { it.path == path }?.let { row ->
+                    when {
+                        row.diffPath != null && row.viaBranch -> nav.openBranchFile(row.diffPath)
+                        row.diffPath != null -> nav.openWorkingTreeFile(row.diffPath)
+                        else -> nav.openFile(path, staged = false)
+                    }
+                } ?: nav.openFile(path, staged = false)
         }
     }
 

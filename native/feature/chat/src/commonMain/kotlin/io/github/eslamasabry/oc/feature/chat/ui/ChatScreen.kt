@@ -264,6 +264,7 @@ import io.github.eslamasabry.oc.ui.words.res.kitTopBarMore
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarSearch
 import io.github.eslamasabry.oc.ui.words.res.kitTurnLiveSending
 import io.github.eslamasabry.oc.ui.words.res.chatSendFolderMissing
+import io.github.eslamasabry.oc.ui.words.res.chatSendPhoneFolder
 import io.github.eslamasabry.oc.ui.words.res.kitTurnLiveWorking
 import io.github.eslamasabry.oc.ui.words.res.kitTurnMore
 import io.github.eslamasabry.oc.ui.words.res.kitWorkDidntFinish
@@ -542,6 +543,14 @@ public fun ChatScreen(
             if (answer == null || placedRequests.isEmpty()) null
             else InPlaceRequests(placedRequests) { card -> ChatRequestInPlace(card, answer, onDetails = { requestDetails.value = card.id }) }
         }
+    // F-023: the turn's row that holds a decision still waiting, so the list can bring it back into view.
+    val waitingKey =
+        remember(placedRequests, facts.work) {
+            val waiting = placedRequests.filterValues { it.state == io.github.eslamasabry.oc.feature.chat.requests.presentation.CardState.Waiting }.keys
+            if (waiting.isEmpty()) null
+            else facts.work.entries.firstOrNull { (_, w) -> w.steps.any { it.callId in waiting } }?.key?.let { "work:$it" }
+        }
+    var waitingJump by remember { mutableStateOf(0) }
     val waitingWords = stringResource(Res.string.chatWaitingForAnswerAbove)
     val waitingHint = remember(waitingWords) { ReplyHint(waitingWords) {} }
     val replyHint = if (inPlaceRequests != null && InPlaceRules.waiting(placedRequests)) waitingHint else arrivalHint
@@ -560,6 +569,8 @@ public fun ChatScreen(
                 loading = { latest.phase == ChatPhase.Loading },
                 // Review #12: the box agrees with the run's state; a decision on its way waits on no one.
                 requestWaiting = { RunTailRules.waitsForYou(requestState.cards.map { it.state }) || formPending },
+                // F-023: a tap in the box while a decision waits takes the page to it.
+                jumpToWaiting = { waitingJump += 1 },
                 // A send brings the newest message into view at once (audit 1, k6: "Jump to latest" showed after a send
                 // made while reading back, until the next row arrived).
                 onSent = {
@@ -1084,6 +1095,8 @@ public fun ChatScreen(
                                         LocalInPlaceRequests provides inPlaceRequests,
                                     ) {
                                         ChatTranscriptList(
+                                            waitingKey = waitingKey,
+                                            waitingJump = waitingJump,
                                             folds = folds,
                                             rows = state.rows,
                                             live = state.live,
@@ -2067,11 +2080,15 @@ private fun rememberSendFailureWords(): (Failure) -> String {
     val phoneBusy = stringResource(Res.string.schedulePhoneBusy)
     val phoneCheckFailed = stringResource(Res.string.schedulePhoneCheckFailed)
     val folderMissing = stringResource(Res.string.chatSendFolderMissing)
-    return remember(authored, changed, phoneBusy, phoneCheckFailed, folderMissing) {
+    val phoneFolder = stringResource(Res.string.chatSendPhoneFolder)
+    return remember(authored, changed, phoneBusy, phoneCheckFailed, folderMissing, phoneFolder) {
         { failure ->
             when {
                 // B-063: the server refused the message because the project's folder is gone.
                 io.github.eslamasabry.oc.feature.chat.presentation.SendFailureRules.folderMissing(failure) -> folderMissing
+                // Issue 147: never sent into a folder in the phone's storage the agent cannot reach now.
+                failure is Failure.Unavailable &&
+                    failure.feature.name == io.github.eslamasabry.oc.feature.chat.world.PHONE_FOLDER_FEATURE -> phoneFolder
                 failure is Failure.Unavailable && failure.feature.name == "schedulePhoneBusy" ->
                     phoneBusy
                 failure is Failure.Unavailable &&

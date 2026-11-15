@@ -17,6 +17,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.platform.testTag
+import io.github.eslamasabry.oc.feature.chats.presentation.PhoneStorageAccess
 import io.github.eslamasabry.oc.core.common.text.Numbers
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsActions
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsHomeSheet
@@ -262,6 +263,18 @@ private fun ProjectChoices(state: ChatsUi, actions: ChatsActions) {
             trailing = KitRowTrailing.Chevron,
             onClick = actions::openFilterProject,
         )
+        // This phone's storage (Downloads, Documents): says what the access gives and opens Android's page for it.
+        state.phoneStorage?.let { access ->
+            val on = access == PhoneStorageAccess.On
+            KitRow(
+                title = stringResource(Res.string.chatsNewPhoneStorage),
+                supporting = stringResource(if (on) Res.string.chatsNewPhoneStorageOn else Res.string.chatsNewPhoneStorageOff),
+                leading = KitRowLeading.Glyph(KitIcons.folders),
+                trailing = if (on) KitRowTrailing.None else KitRowTrailing.Chevron,
+                onClick = if (on) null else actions::requestPhoneStorage,
+                modifier = Modifier.testTag("chats-home-phone-storage"),
+            )
+        }
     }
 }
 

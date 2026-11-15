@@ -32,6 +32,7 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.time.Clock
@@ -92,6 +93,14 @@ class NewConversationPhoneAgentTest {
             storageRequests++
             return Outcome.Ok(Unit)
         }
+        val storageTree = mutableMapOf("/storage/emulated/0" to listOf("Documents", "Download"), "/storage/emulated/0/Documents" to emptyList<String>())
+        val madeFolders = mutableListOf<Pair<String, String>>()
+        override suspend fun storageFolders(path: String): Outcome<List<io.github.eslamasabry.oc.feature.chats.presentation.StorageFolder>> =
+            Outcome.Ok(storageTree[path].orEmpty().map { io.github.eslamasabry.oc.feature.chats.presentation.StorageFolder(it, "$path/$it") })
+        override suspend fun createStorageFolder(parent: String, name: String): Outcome<String> {
+            madeFolders += parent to name
+            return Outcome.Ok("$parent/$name")
+        }
         var projectList = emptyList<NewConversationProject>()
         val chosen = mutableListOf<Pair<ProfileId, String?>>()
         val savedModels = mutableListOf<Triple<ProfileId, String, ModelRef?>>()
@@ -103,7 +112,20 @@ class NewConversationPhoneAgentTest {
         /** Holds the agent's model list back until completed (null answers at once). */
         var modelsGate: CompletableDeferred<Unit>? = null
 
+        /** Holds the page's setup back until completed (null answers at once). */
+        var setupGate: CompletableDeferred<Unit>? = null
+
+        /** The setup a previous visit left (null: none). */
+        var remembered: NewConversationSetup? = null
+
+        /** How many times the page read its setup from the server. */
+        var setupReads = 0
+
+        override fun cachedSetup(profile: ProfileId): NewConversationSetup? = remembered
+
         override suspend fun setup(profile: ProfileId): Outcome<NewConversationSetup> {
+            setupReads++
+            setupGate?.await()
             val picked = if (listedOnceChosen == null) saved else chosen.lastOrNull()?.second ?: saved
             return Outcome.Ok(
                 NewConversationSetup(
@@ -271,6 +293,93 @@ class NewConversationPhoneAgentTest {
 
     private val antigravity = NewConversationPhoneAgent("antigravity", "Antigravity", "antigravity")
     private val antigravityModel = ModelRef("antigravity", "gemini-3-pro")
+
+    @Test
+    fun `START-LIVE the agent's model list being read never holds Start back, it starts with the last known model`() {
+        val host = Host(saved = "claude")
+        host.modelsGate = CompletableDeferred()
+        host.cached = NewConversationPhoneModels(listOf(NewConversationModel(claudeModel, "Sonnet")), claudeModel)
+        val vm = vm(host)
+        vm.draftChanged("Find the bug")
+        assertTrue(vm.state.value.phoneModelsBusy, "the list is still being read")
+        vm.start()
+        assertEquals(1, host.starts.size, "Start acted on the first tap")
+        assertEquals(claudeModel, host.starts.single().model)
+    }
+
+    @Test
+    fun `START-LIVE a Start pressed while the page is getting ready is kept and starts when it is ready`() {
+        val host = Host()
+        val gate = CompletableDeferred<Unit>()
+        host.setupGate = gate
+        val vm = vm(host)
+        vm.draftChanged("Find the bug")
+        vm.start()
+        assertTrue(vm.state.value.startQueued, "the tap is kept")
+        assertTrue(host.starts.isEmpty(), "nothing starts before the page knows its folder")
+        gate.complete(Unit)
+        assertEquals(1, host.starts.size, "it started the moment the page was ready")
+        assertFalse(vm.state.value.startQueued)
+    }
+
+    private val remembered =
+        NewConversationSetup(
+            directory = "/root/projects/old",
+            projects = listOf(NewConversationProject("/root/projects/old", "old", false)),
+            models = listOf(NewConversationModel(serverModel, "Server model")),
+            agents = emptyList(),
+            model = serverModel,
+        )
+
+    @Test
+    fun `SETUP-CACHE a second visit is usable on the first frame, the remembered setup shows and Start acts while the read goes on behind`() {
+        val host = Host()
+        host.remembered = remembered
+        val gate = CompletableDeferred<Unit>()
+        host.setupGate = gate
+        val vm = vm(host)
+        assertEquals(1, host.setupReads, "the fresh read is started, behind the page")
+        assertNotNull(vm.state.value.setup, "the page shows the remembered setup at once")
+        assertFalse(vm.state.value.busy, "nothing blocks the page")
+        assertEquals("/root/projects/old", vm.state.value.directory)
+        vm.draftChanged("Find the bug")
+        vm.start()
+        assertEquals(1, host.starts.size, "Start acted on the first tap, before the server answered")
+    }
+
+    @Test
+    fun `SETUP-CACHE the fresh read replaces the lists in place and never clears what was typed or chosen`() {
+        val host = Host()
+        host.remembered = remembered
+        val gate = CompletableDeferred<Unit>()
+        host.setupGate = gate
+        host.projectList = listOf(NewConversationProject("/root/projects/old", "old", false), NewConversationProject("/root/projects/new", "new", false))
+        val vm = vm(host)
+        vm.draftChanged("half a sentence")
+        gate.complete(Unit)
+        assertEquals(listOf("old", "new"), vm.state.value.setup?.projects?.map { it.name }, "the fresh list arrived")
+        assertEquals("half a sentence", vm.state.value.text, "the words stay")
+        assertEquals("/root/projects/old", vm.state.value.directory, "the folder stays")
+        assertFalse(vm.state.value.busy)
+    }
+
+    @Test
+    fun `SETUP-CACHE the first visit still waits for the read, and a read that fails shows a failure`() {
+        val host = Host()
+        host.setupGate = CompletableDeferred()
+        val vm = vm(host)
+        assertNull(vm.state.value.setup)
+        assertTrue(vm.state.value.busy)
+    }
+
+    @Test
+    fun `START-LIVE a Start with nothing typed while the page is getting ready is not kept`() {
+        val host = Host()
+        host.setupGate = CompletableDeferred()
+        val vm = vm(host)
+        vm.start()
+        assertFalse(vm.state.value.startQueued)
+    }
 
     @Test
     fun `AGENT-CARD New conversation from an agent's card opens with that agent chosen, not the remembered one`() {
@@ -479,6 +588,34 @@ class NewConversationPhoneAgentTest {
         val remote = vm(Host())
         remote.sheet(NewConversationSheet.Projects)
         assertEquals(null, remote.state.value.phoneStorage)
+    }
+
+    @Test
+    fun `I147-PHONE-STORAGE Phone storage leads to a folder list and ends with a usable project folder for a phone agent`() {
+        val host = Host()
+        host.storage = PhoneStorageAccess.On
+        val vm = vm(host)
+        vm.choosePhoneAgent("claude")
+        vm.sheet(NewConversationSheet.Projects)
+        vm.browsePhoneStorage()
+        assertEquals("/storage/emulated/0", vm.state.value.storagePath)
+        assertEquals(listOf("Documents", "Download"), vm.state.value.storageFolders.map { it.name })
+        vm.useStorageFolder()
+        assertEquals("/storage/emulated/0", vm.state.value.storagePath, "the storage root itself is never the project")
+        vm.enterStorageFolder("/storage/emulated/0/Documents")
+        vm.askNewStorageFolder()
+        assertTrue(vm.state.value.askingProjectName)
+        vm.createProject("site")
+        assertEquals(listOf("/storage/emulated/0/Documents" to "site"), host.madeFolders)
+        assertEquals("/storage/emulated/0/Documents/site", vm.state.value.directory)
+        assertNull(vm.state.value.storagePath)
+        assertFalse(vm.state.value.phoneNeedsProjectsFolder, "a folder made in phone storage is a project for the agent")
+        // An existing folder can be chosen as it is.
+        vm.sheet(NewConversationSheet.Projects)
+        vm.browsePhoneStorage()
+        vm.enterStorageFolder("/storage/emulated/0/Documents")
+        vm.useStorageFolder()
+        assertEquals("/storage/emulated/0/Documents", vm.state.value.directory)
     }
 
     // ---- Owner 11-12 on the phone (Paseo helper): thinking effort, a list being read, the last known list

@@ -1750,7 +1750,7 @@ class BuiltinLinux(private val context: Context) {
      * (uid 1000). The folder is listed and written from that identity with the binds a start gets now, and compared
      * with the binds of its process running now. Answers a [SharedFolderReach] code; nothing is started or bound.
      */
-    fun sharedFolderReach(path: String, agentProfile: String?): String {
+    fun sharedFolderReach(path: String, agentProfile: String?, probe: Boolean = true): String {
         @Suppress("DEPRECATION")
         val appAccess =
             if (Build.VERSION.SDK_INT >= 30) android.os.Environment.isExternalStorageManager()
@@ -1769,20 +1769,30 @@ class BuiltinLinux(private val context: Context) {
                     if (serverRunning) SharedStorageView(serverStorageBroad, serverStorageRoots) else null
                 }
             else agentHost.storageView(agentProfile)
-        val probe = if (appAccess && appSees) probeSharedFolder(path, agentUser = agentProfile != null) else null
-        return SharedFolderReach.decide(appAccess, appSees, path, running, probe).code
+        // Without [probe] (before each message) only the access, the folder and the binds are read: no Linux starts.
+        val exit =
+            if (!appAccess || !appSees) null
+            else if (!probe) 0
+            else runFolderScript(SharedFolderReach.PROBE, listOf(path), agentUser = agentProfile != null)
+        return SharedFolderReach.decide(appAccess, appSees, path, running, exit).code
     }
 
-    /** The [SharedFolderReach.PROBE]'s exit status from the identity, or null when it could not run. */
-    private fun probeSharedFolder(path: String, agentUser: Boolean): Int? {
+    /**
+     * Issue 147: the Git settings of Android's storage ([SharedFolderReach.GIT_STORAGE]) in the repository that holds
+     * [path] and those one level inside it. True when they are set (or there is no repository).
+     */
+    fun prepareSharedFolderGit(path: String): Boolean {
+        val under = if (path.startsWith("/sdcard/")) "/sdcard" else "/storage"
+        return runFolderScript(SharedFolderReach.GIT_STORAGE, listOf(path, under), agentUser = false) == 0
+    }
+
+    /** A short folder [script] run with [args] as `$1`... in the identity's own Linux; its exit status, or null. */
+    private fun runFolderScript(script: String, args: List<String>, agentUser: Boolean): Int? {
         if (!installed) return null
         return try {
             val process =
                 ProcessBuilder(
-                        prootCommand(
-                            listOf("/bin/sh", "-c", SharedFolderReach.PROBE, "oc-folder-check", path),
-                            agentUser = agentUser,
-                        )
+                        prootCommand(listOf("/bin/sh", "-c", script, "oc-folder-check") + args, agentUser = agentUser)
                     )
                     .redirectErrorStream(true)
                     .redirectOutput(File("/dev/null"))

@@ -199,7 +199,7 @@ class OpenProjectScreenTest {
             onNodeWithText("Git repository · /root/projects/landing-page").assertExists()
             onNodeWithText("OpenCode project · /root/projects/demo").assertExists()
             onNodeWithText("New folder").assertExists()
-            onNodeWithText("Clone a repository").assertExists()
+            onNodeWithText("Copy a project from the web").assertExists()
             onNodeWithText("Type a path").assertExists()
             onNodeWithTag("open-folder-/root/projects/notes").performClick()
             assertEquals(listOf<Pair<String, List<Any?>>>("enterFolder" to listOf("/root/projects/notes")), calls)
