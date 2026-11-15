@@ -70,3 +70,4 @@ wiped (see Floor); they never come back and do not raise the floor.
 | 10038 | build | 2026-11-14 | owner build of e5c7bf25c5 (agent update survives a stop and resumes; agent conversations wait; home says what is starting) |
 | 10039 | build | 2026-11-14 | owner build of 8716950331 (home says agents updating, sign-in said, Antigravity counts as behind, versions shown) |
 | 10040 | build | 2026-11-14 | owner's build of e0c4f0673e (10039 + layout crash stop-gap + transcript row crash fix) |
+| 10041 | build | 2026-11-15 | owner's build of 93808ba1a9 (the whole working line: agents list, step list, running work, animations back, crash fixes) |
