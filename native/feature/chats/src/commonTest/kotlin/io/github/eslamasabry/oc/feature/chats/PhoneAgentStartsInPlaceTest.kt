@@ -187,6 +187,24 @@ class PhoneAgentStartsInPlaceTest {
     }
 
     @Test
+    fun `OT-05 a form the opened conversation covers keeps its starting frame, so its box never comes back under it`() {
+        // Open-transitions (S22 recording): the form went back to its box (which takes focus whenever it comes into the
+        // page) while still drawn under the arriving conversation; the keyboard rose over the conversation and fell
+        // again as the form left.
+        for (agent in agents) {
+            val host = Host(agent.id.raw)
+            val nav = Nav(route)
+            val vm = vmFor(host, nav, agent.id.raw)
+            vm.start()
+            host.gate.complete(null)
+            assertEquals(1, nav.chats.size, "${agent.id}: the page opened")
+            val covered = vm.state.value
+            assertTrue(covered.openingChat && covered.busy, "${agent.id}: the covered form keeps its starting frame")
+            assertEquals("", covered.text, "${agent.id}: the sent words are not kept in the form")
+        }
+    }
+
+    @Test
     fun `ONE-OP an agent that refuses to start never opens a page, keeps the words and names the agent`() {
         for (agent in agents) {
             val host = Host(agent.id.raw)

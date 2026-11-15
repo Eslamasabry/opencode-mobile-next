@@ -87,6 +87,13 @@ private val testInstaller = EntryInstaller {
             }
         }
     }
+    // A page that slides up over the one it covers (as New conversation does over the home).
+    entry<ChatsRoute.New> {
+        val nav = LocalHarness.navigator
+        KitScreen(title = "Start something", backLabel = "Back", onBack = nav::back) {
+            KitText("new page")
+        }
+    }
     entry<ChatRoute> { route ->
         val nav = LocalHarness.navigator
         KitGrowPage(growKey = route.ref) {
