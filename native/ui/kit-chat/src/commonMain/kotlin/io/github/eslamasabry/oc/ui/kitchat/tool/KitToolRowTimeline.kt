@@ -61,7 +61,11 @@ import org.jetbrains.compose.resources.stringResource
 private const val TITLE_SHARE = .6f // F: lib/ui/kit/chat/kit_tool_row.dart:511
 
 /** The end words' share of the line. */
-private const val WORDS_SHARE = .3f // F: lib/ui/kit/chat/kit_tool_row.dart:576
+private const val WORDS_SHARE = .3f
+
+/** A status in words ("Waiting for you", "Stopped") has more of the line and wraps, never cut mid-word. */
+private const val STATUS_SHARE = .4f
+private const val STATUS_LINES = 2 // F: lib/ui/kit/chat/kit_tool_row.dart:576
 
 /**
  * A step inside an opened [KitStepTimeline] (Dart `_KitToolRowState._buildTimelineStep`, kit_tool_row.dart:400-709):
@@ -191,13 +195,13 @@ internal fun TimelineStep(
                 }
             // LOOK-5: a failed step's word is plain text1, never a danger colour.
             KitToolStatus.Failed -> {
-                { KitText(view.statusLabel, role = TypeRole.Secondary, tone = TextTone.Primary, maxLines = wordLines) }
+                { KitText(view.statusLabel, role = TypeRole.Secondary, tone = TextTone.Primary, maxLines = STATUS_LINES) }
             }
             // F: lib/ui/kit/chat/kit_tool_row.dart:1240 waitingForYou shows its word in secondary
             KitToolStatus.Pending,
             KitToolStatus.WaitingForYou,
             KitToolStatus.Stopped -> {
-                { KitText(view.statusLabel, role = TypeRole.Secondary, tone = TextTone.Secondary, maxLines = wordLines) }
+                { KitText(view.statusLabel, role = TypeRole.Secondary, tone = TextTone.Secondary, maxLines = STATUS_LINES) }
             }
         }
     // Only a group's line has a chevron; a step that opens another page keeps its forward arrow (it leaves this list).
@@ -212,7 +216,10 @@ internal fun TimelineStep(
                 Box(Modifier.weight(1f)) { sentence() }
                 if (words != null) {
                     Spacer(Modifier.width(Space.S2.dp)) // F: lib/ui/kit/chat/kit_tool_row.dart:573
-                    Box(Modifier.share(WORDS_SHARE).testTag("kit-tool-end")) { words() }
+                    // A status in words ("Waiting for you") wraps at its words and has the wider share: it is never cut
+                    // to "Waiting for y…" (issue 147, 360 dp). A time keeps the narrow one.
+                    val inWords = status != KitToolStatus.Running && status != KitToolStatus.Done
+                    Box(Modifier.share(if (inWords) STATUS_SHARE else WORDS_SHARE).testTag("kit-tool-end")) { words() }
                 }
                 if (group) {
                     Spacer(Modifier.width(Space.S1.dp))

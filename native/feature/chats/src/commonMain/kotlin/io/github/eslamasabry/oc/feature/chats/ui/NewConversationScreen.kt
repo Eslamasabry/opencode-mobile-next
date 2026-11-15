@@ -20,6 +20,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
@@ -56,7 +57,9 @@ import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.chip.KitChip
-import io.github.eslamasabry.oc.ui.kit.chip.KitChipWrap
+import io.github.eslamasabry.oc.ui.kit.chip.KitAgentModelChip
+import io.github.eslamasabry.oc.ui.kit.frame.KitWhereLine
+import io.github.eslamasabry.oc.ui.kit.frame.kitProjectServerLabel
 import io.github.eslamasabry.oc.ui.kit.chip.KitFilterChips
 import io.github.eslamasabry.oc.ui.kit.modal.KitNewProjectDialog
 import io.github.eslamasabry.oc.ui.kit.modal.KitNewProjectRow
@@ -120,6 +123,9 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
         return
     }
     val field = rememberTextFieldState()
+    val whereFocus = LocalFocusManager.current
+    // F-041: Start tapped on an empty box answers at the box (cursor and a nudge), never with a toast over the title.
+    var remind by remember { mutableIntStateOf(0) }
     // The last words the field told the presenter. Words typed since, not yet reported, are newer than any state
     // text (a stored draft arriving late, say) and are never written over.
     var reported by remember { mutableStateOf("") }
@@ -213,6 +219,19 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
             topBar = {
                 KitTopBar(
                     title = stringResource(Res.string.chatsHomeNewChat),
+                    // Layout B: where it runs sits under the title and opens the project sheet (with the connections).
+                    scope =
+                        if (state.servers.isEmpty()) null
+                        else {
+                            {
+                                val where = whereLabel(state)
+                                KitWhereLine(
+                                    where,
+                                    stringResource(Res.string.chatsNewWhereSpoken, where),
+                                    { whereFocus.clearFocus(); actions.sheet(NewConversationSheet.Projects) },
+                                )
+                            }
+                        },
                     centred = true,
                     exit = KitTopBarExit.Close,
                     exitLabel = stringResource(Res.string.kitSheetClose),
@@ -227,7 +246,6 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                     Modifier.fillMaxWidth(),
                     verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
                 ) {
-                    if (state.servers.isNotEmpty()) NewConversationChoices(state, actions)
                     // The empty prompt already says it in the field; repeating it is the stray line (N-32).
                     val promptHint = stringResource(Res.string.chatsNewBuildPrompt)
                     // N-48: an unconfirmed send already has its notice above; the reason is said once. A failure
@@ -270,6 +288,8 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                                 onClick = actions::start,
                                 enabled =
                                     if (startBlocked == null) KitEnabled.Enabled
+                                    else if (startBlocked == stringResource(Res.string.chatsNewBuildPrompt))
+                                        KitEnabled.Disabled(startBlocked, answer = { remind++ })
                                     else KitEnabled.Disabled(startBlocked),
                                 // A spinner only once Start was pressed.
                                 working = state.wait == NewConversationWait.Sending || state.startQueued,
@@ -281,13 +301,14 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
             },
             edges = KitScreenEdges.Bleed,
         ) {
+            // Layout B: the box comes first and takes the room its words need (up to all there is between the title and
+            // Start, then its words scroll inside it); everything else is one scroller in what is left, so the hint,
+            // the phrase chips and the notices give way first when the keyboard is up.
             Column(
-                Modifier.fillMaxSize()
-                    .verticalScroll(kitPageScrollState())
-                    .padding(top = Space.S3.dp, bottom = Space.S3.dp),
+                Modifier.fillMaxSize().padding(top = Space.S3.dp, bottom = Space.S3.dp),
                 verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
             ) {
-                if (state.servers.isEmpty()) {
+                if (state.servers.isEmpty() && state.serversRead) {
                     KitStateView(
                         kind = KitStateKind.Empty,
                         title = stringResource(Res.string.serversEmpty),
@@ -322,7 +343,23 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                             actions.draftChanged(it)
                         },
                         focusKey = state.focusRevision.takeIf { it > 0 },
+                        remind = remind,
+                        // Who works on it is in the box's own foot, one chip for the agent and its model.
+                        foot = {
+                            KitAgentModelChip(
+                                agent = agentChipLabel(state),
+                                model = modelLabel(state),
+                                markId = agentMarkId(state),
+                                spoken = stringResource(Res.string.chatsNewAgentChipSpoken, agentChipLabel(state), modelLabel(state)),
+                                onClick = { whereFocus.clearFocus(); actions.sheet(NewConversationSheet.Agents) },
+                                expanded = state.sheet == NewConversationSheet.Agents,
+                            )
+                        },
                     )
+                    Column(
+                        Modifier.weight(1f).verticalScroll(kitPageScrollState()),
+                        verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
+                    ) {
                     // Ways to start fill the empty prompt; nothing is sent until Start.
                     KitReveal(
                         visible =
@@ -500,53 +537,11 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                         }
                       }
                     }
+                    }
                 }
             }
         }
         NewConversationSheet(state, actions)
-    }
-}
-
-/** Compact upgrade choices stay beside Start while the keyboard is open. */
-@Composable
-@OptIn(ExperimentalLayoutApi::class)
-private fun NewConversationChoices(state: NewConversationUi, actions: NewConversationActions) {
-    // N-31: the keyboard goes first, so the sheet opens at its full size instead of squashed.
-    val focus = LocalFocusManager.current
-    val open: (NewConversationSheet) -> Unit = { sheet ->
-        focus.clearFocus()
-        actions.sheet(sheet)
-    }
-    // P22 (F: new_chat_screen.dart:584-641 shows every choice whole, as rows): the three chips sit above Start on one
-    // line when they fit and wrap onto a second when the names are long, so the project is never cut at the edge or
-    // hidden past a fade (the sideways line of N-32 hid it on a phone).
-    KitChipWrap(Modifier.fillMaxWidth().testTag("chats-new-choices")) {
-        // Three chips only: who works (with Plan when chosen), the model, the
-        // project. Build/Plan lives inside the agent sheet.
-        KitChip(
-            label = agentChipLabel(state),
-            icon = KitIcons.agent,
-            opensMenu = true,
-            expanded = state.sheet == NewConversationSheet.Agents,
-            onClick = { open(NewConversationSheet.Agents) },
-        )
-        KitChip(
-            label = modelLabel(state),
-            icon = KitIcons.model,
-            // With no other model to choose it only names the model in use and opens nothing.
-            opensMenu = state.modelChoosable,
-            expanded = state.modelChoosable && state.sheet == NewConversationSheet.Models,
-            onClick = if (state.modelChoosable) ({ open(NewConversationSheet.Models) }) else null,
-        )
-        KitChip(
-            label =
-                state.directory?.let(::importFolder)
-                    ?: stringResource(Res.string.chatsNewProjectRow),
-            icon = KitIcons.files,
-            opensMenu = true,
-            expanded = state.sheet == NewConversationSheet.Projects,
-            onClick = { open(NewConversationSheet.Projects) },
-        )
     }
 }
 
@@ -590,6 +585,22 @@ private fun NewConversationSheet(state: NewConversationUi, actions: NewConversat
             val directory = rememberTextFieldState(state.directory.orEmpty())
             var byPath by remember { mutableStateOf(false) }
             val working = stringResource(Res.string.serversWorking)
+            // Several saved connections: where it runs is chosen here, without leaving the page (the project list
+            // below follows the connection picked).
+            if (state.servers.size > 1)
+                KitRowGroup(label = stringResource(Res.string.chatsNewRunsOn)) {
+                    state.servers.forEach { server ->
+                        val here = server.profile == state.profile
+                        KitRow(
+                            title = serverNameShown(server.name),
+                            leading = KitRowLeading.Glyph(KitIcons.server, tile = true, current = here),
+                            trailing = if (here) KitRowTrailing.Check else KitRowTrailing.None,
+                            selected = here,
+                            onClick = { if (!here) actions.chooseServer(server.profile) },
+                            modifier = Modifier.testTag("chats-new-host-${server.profile.raw}"),
+                        )
+                    }
+                }
             // Recent projects first, one tap each; then New project as an obvious row; the typed path stays folded.
             KitRowGroup(leadingTiles = true) {
                 // E20-S08: one row per folder (the server listed some twice).
@@ -751,6 +762,8 @@ private fun NewConversationAgentStep(state: NewConversationUi, actions: NewConve
                     when {
                         agent.updating -> stringResource(Res.string.agentsUpdatingAgent, agent.name)
                         agent.checking -> stringResource(Res.string.r40PhoneChecking)
+                        agent.signInNeeded -> stringResource(Res.string.agentsStateSignInNeeded)
+                        agent.phoneCheck -> stringResource(Res.string.agentsStatePhoneCheck)
                         else -> stringResource(Res.string.chatsNewSetUp)
                     },
                 onClick = { actions.setUpPhoneAgent(agent.id) },
@@ -939,6 +952,17 @@ private fun agentChipLabel(state: NewConversationUi): String {
         )
     else name
 }
+
+/** The agent's mark in the box's foot: a phone agent's own, else a named server agent's, else OpenCode's. */
+private fun agentMarkId(state: NewConversationUi): String =
+    state.phoneAgentChoice?.iconKey ?: state.agent?.takeIf(::isStartableAgent)?.lowercase() ?: "opencode"
+
+/** Where it runs, in the header's own words ("docsdemo · This phone"); with no folder yet, the word Project. */
+@Composable
+private fun whereLabel(state: NewConversationUi): String =
+    state.directory?.let(::importFolder)?.let { folder ->
+        kitProjectServerLabel(folder, state.servers.firstOrNull { it.profile == state.profile }?.name?.let { serverNameShown(it) })
+    } ?: stringResource(Res.string.chatsNewProjectRow)
 
 @Composable
 private fun modelLabel(state: NewConversationUi): String =
