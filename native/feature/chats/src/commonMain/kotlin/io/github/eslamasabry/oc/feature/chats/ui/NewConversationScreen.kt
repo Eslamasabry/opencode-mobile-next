@@ -1162,9 +1162,6 @@ private fun StorageFoldersSheet(state: NewConversationUi, actions: NewConversati
     }
 }
 
-/** The phone's shared storage as a folder: where Downloads and Documents live. */
-private const val PHONE_STORAGE_FOLDER = "/sdcard"
-
 /** Issue 147: why the chosen folder in phone storage keeps Start back, naming the agent; null when it does not. */
 @Composable
 private fun phoneFolderWords(state: NewConversationUi): String? {

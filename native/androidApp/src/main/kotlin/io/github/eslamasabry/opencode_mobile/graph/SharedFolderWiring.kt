@@ -78,7 +78,7 @@ internal class AndroidFilesStorageAccess(
                 false -> FilesStorageBlock.AppPermission
                 null -> FilesStorageBlock.None
                 true ->
-                    if (linux.serverCanReadSharedFolder("/sdcard")) FilesStorageBlock.None
+                    if (linux.serverCanReadSharedFolder("/storage/emulated/0")) FilesStorageBlock.None
                     else FilesStorageBlock.SelectedFolder
             }
         }

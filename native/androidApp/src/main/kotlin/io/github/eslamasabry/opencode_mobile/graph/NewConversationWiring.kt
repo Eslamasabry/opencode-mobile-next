@@ -1690,4 +1690,4 @@ internal object NewConversationPhoneRules {
     fun startsHere(row: PhoneAgentRow): Boolean = phoneAgentChoosable(phoneAgentShown(row))
 }
 
-private const val PHONE_STORAGE_FOLDER = "/sdcard"
+private const val PHONE_STORAGE_FOLDER = "/storage/emulated/0"

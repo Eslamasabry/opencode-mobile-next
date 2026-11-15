@@ -296,7 +296,7 @@ class AppChatsHome(
         val access = sharedStorage.singleOrNull() ?: return null
         val owner = phoneOwnerProfile() ?: return null
         val graph = registry.live.value[owner] ?: return null
-        val block = (access.check(owner, "/sdcard", graph.session.server) as? Outcome.Ok)?.value ?: return null
+        val block = (access.check(owner, "/storage/emulated/0", graph.session.server) as? Outcome.Ok)?.value ?: return null
         return if (block == io.github.eslamasabry.oc.core.domain.platform.SharedStorageBlock.None)
             io.github.eslamasabry.oc.feature.chats.presentation.PhoneStorageAccess.On
         else io.github.eslamasabry.oc.feature.chats.presentation.PhoneStorageAccess.Off
@@ -308,7 +308,7 @@ class AppChatsHome(
         val graph = registry.live.value[owner] ?: return Outcome.Failed(Failure.Unavailable(FeatureId("phoneStorage")))
         return access.request(
             owner,
-            "/sdcard",
+            "/storage/emulated/0",
             io.github.eslamasabry.oc.core.domain.platform.SharedStorageBlock.AppAccess,
             graph.session.server,
         )
