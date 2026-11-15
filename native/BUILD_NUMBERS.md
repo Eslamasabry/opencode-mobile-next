@@ -77,3 +77,4 @@ wiped (see Floor); they never come back and do not raise the floor.
 | 10045 | build | 2026-11-15 | owner's build of d3716893f7 (a phone agent's start not blocked by a left start; failed-send layout; stale refusals name their check) |
 | 10046 | build | 2026-11-15 | owner's build of 162c446ec2 (issue 147 wave, first batch) |
 | 10047 | build | 2026-11-15 | owner's build of 3d5f4d2677 (issue 147 wave, second batch) |
+| 10048 | build | 2026-11-15 | owner's build of ebb0a33b37 (issue 147 wave, third batch) |

@@ -89,7 +89,10 @@ public enum class ProductEvent(public val wire: String) {
     /** Time to the first frame: `kind`, `ms_range`. */
     AppStart("app_start"),
 
-    /** Slow frames on one kind of page, once per session: `screen`, `janky_pct_range`, `frozen_range`, `refresh_hz`. */
+    /**
+     * Slow frames on one kind of page, once per session: `screen`, `janky_pct_range`, `frozen_range`, `refresh_hz`,
+     * `late_pct_range` (frames past their own deadline) and `seen_hz` (the rate most frames were given).
+     */
     Jank("jank"),
 
     /** Android asked the app to free memory: `level`. */
@@ -513,6 +516,8 @@ private fun healthSchema(): Map<String, Map<String, Set<String>>> {
                 "janky_pct_range" to HealthRanges.jankPct.toSet(),
                 "frozen_range" to HealthRanges.frozen.toSet(),
                 "refresh_hz" to HealthRanges.refreshHz.toSet(),
+                "late_pct_range" to HealthRanges.jankPct.toSet(),
+                "seen_hz" to HealthRanges.refreshHz.toSet(),
             ),
         ProductEvent.MemoryPressure.wire to mapOf("level" to HealthWords.memoryLevels),
     )

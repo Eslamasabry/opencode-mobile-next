@@ -221,7 +221,7 @@
     <string name="composerBusyReason">プロンプトを準備しています…</string>
     <string name="composerToolsTextOnly">このサーバーはテキストのみ対応です</string>
     <string name="composerToolsAgentTextOnly">ここでは %1$s はテキストのみ対応です</string>
-    <string name="composerToolsAgentPicturesOnly">%1$s は画像のみ対応です。%2$sまたは%3$sを使ってください</string>
+    <string name="composerToolsPicturesOnlyUse">%1$s は画像のみ対応です。%2$sまたは%3$sを使ってください</string>
     <string name="composerToolSavedSubtitle">保存したプロンプトを下書きに戻す</string>
     <string name="composerToolSaveForLater">プロンプトを後のために保存</string>
     <string name="composerToolNothingToSave">先に入力するか添付してください</string>

@@ -104,9 +104,18 @@ public fun majorMinorOf(version: String?): String? {
 /**
  * Slow frames per kind of page, once per session per page kind (Flutter `JankMeter`). The platform feeds frame
  * counts only while [running] (it follows `usage`); with the switch off nothing is measured and nothing is kept.
+ *
+ * Two measures go out side by side (c2-performance, 2026-11-15), so today's numbers stay comparable for a release:
+ * - `janky_pct_range`, as before: frames whose whole duration took longer than one refresh period. Android pipelines
+ *   frames, so a frame can take longer than a period and still be shown on time: this overstates (on a Galaxy S22 an
+ *   hour read 60 % by it, 8.3 % by Android's own count).
+ * - `late_pct_range`: frames that missed their own deadline, Android's judgement (API 31+; one period below), first
+ *   frames of a window left out (a page's first draw is not a frame anyone waited on in a scroll).
+ * With it `seen_hz`: the refresh rate most of that page's frames were given (a phone switches between 60, 90 and
+ * 120 Hz; `refresh_hz` stays the display's mode when the report is made).
  */
 public class JankMeter(
-    private val report: (screen: ProductScreen, pctRange: String, frozenRange: String, hz: String) -> Unit,
+    private val report: (screen: ProductScreen, frames: JankReport) -> Unit,
     private val refreshRate: () -> Double = { 60.0 },
     private val minFrames: Int = 30,
 ) {
@@ -114,10 +123,17 @@ public class JankMeter(
         private set
 
     private var screen = ProductScreen.Other
-    private val frames = HashMap<ProductScreen, Int>()
-    private val janky = HashMap<ProductScreen, Int>()
-    private val frozen = HashMap<ProductScreen, Int>()
+    private val counts = HashMap<ProductScreen, Counts>()
     private val sent = HashSet<ProductScreen>()
+
+    private class Counts {
+        var frames = 0
+        var janky = 0
+        var frozen = 0
+        var judged = 0
+        var late = 0
+        val hz = HashMap<String, Int>()
+    }
 
     public fun start() {
         running = true
@@ -125,9 +141,7 @@ public class JankMeter(
 
     public fun stop() {
         running = false
-        frames.clear()
-        janky.clear()
-        frozen.clear()
+        counts.clear()
     }
 
     /** A page of this kind came into view. */
@@ -136,32 +150,92 @@ public class JankMeter(
         screen = next
     }
 
-    /** The newest frames: [total] drawn, [slow] over one refresh period, [frozen] of 700 ms or more (also in [slow]). */
-    public fun onFrames(total: Int, slow: Int, frozen: Int = 0) {
+    /**
+     * The newest frames: [total] drawn, [slow] over one refresh period, [frozen] of 700 ms or more (also in [slow]);
+     * [judged] of them judged against their deadline (first draws left out), [late] of those past it; [hz] the refresh
+     * rate they were given (0 when unknown).
+     */
+    public fun onFrames(total: Int, slow: Int, frozen: Int = 0, judged: Int = total, late: Int = slow, hz: Double = 0.0) {
         if (!running) return
-        frames[screen] = (frames[screen] ?: 0) + total
-        janky[screen] = (janky[screen] ?: 0) + slow
-        this.frozen[screen] = (this.frozen[screen] ?: 0) + frozen
+        val c = counts.getOrPut(screen) { Counts() }
+        c.frames += total
+        c.janky += slow
+        c.frozen += frozen
+        c.judged += judged
+        c.late += late
+        if (hz > 0.0 && total > 0) {
+            val bucket = HealthRanges.refreshHzOf(hz)
+            c.hz[bucket] = (c.hz[bucket] ?: 0) + total
+        }
     }
 
     /** The app went to the background: report what was measured; the next time in front is a new session. */
     public fun endSession() {
         if (!running) return
         flush(screen)
-        frames.keys.toList().forEach(::flush)
+        counts.keys.toList().forEach(::flush)
         sent.clear()
-        frames.clear()
-        janky.clear()
-        frozen.clear()
+        counts.clear()
     }
 
     private fun flush(kind: ProductScreen) {
-        val count = frames[kind] ?: 0
-        if (count < minFrames || kind in sent) return
+        val c = counts[kind] ?: return
+        if (c.frames < minFrames || kind in sent) return
         sent += kind
-        val pct = (janky[kind] ?: 0) * 100.0 / count
-        report(kind, HealthRanges.jankPctOf(pct), HealthRanges.frozenOf(frozen[kind] ?: 0), HealthRanges.refreshHzOf(refreshRate()))
+        val shown = HealthRanges.refreshHzOf(refreshRate())
+        report(
+            kind,
+            JankReport(
+                pctRange = HealthRanges.jankPctOf(c.janky * 100.0 / c.frames),
+                frozenRange = HealthRanges.frozenOf(c.frozen),
+                hz = shown,
+                latePctRange = HealthRanges.jankPctOf(if (c.judged > 0) c.late * 100.0 / c.judged else 0.0),
+                seenHz = c.hz.maxByOrNull { it.value }?.key ?: shown,
+            ),
+        )
     }
+}
+
+/**
+ * How one drawn frame counts (c2-performance, 2026-11-15), from the platform's frame metrics: [totalNs] the frame's
+ * whole duration, [deadlineNs] the time it was given (Android 12+, else null), [periodNs] one refresh period now,
+ * [firstDraw] a window's first frame.
+ */
+public object FrameJudge {
+    /** A frame this slow is frozen by Android vitals' definition (700 ms). */
+    public const val FROZEN_NS: Long = 700_000_000L
+
+    public data class Frame(val slow: Int, val frozen: Int, val judged: Int, val late: Int, val hz: Double)
+
+    public fun of(totalNs: Long, deadlineNs: Long?, periodNs: Long, firstDraw: Boolean): Frame {
+        val deadline = deadlineNs?.takeIf { it > 0 } ?: periodNs
+        return Frame(
+            slow = if (totalNs > periodNs) 1 else 0,
+            frozen = if (totalNs > FROZEN_NS) 1 else 0,
+            judged = if (firstDraw) 0 else 1,
+            late = if (!firstDraw && totalNs > deadline) 1 else 0,
+            hz = if (periodNs > 0) 1e9 / periodNs else 0.0,
+        )
+    }
+}
+
+/** One page kind's frames, as the `jank` event sends them (see [JankMeter]). */
+public data class JankReport(
+    val pctRange: String,
+    val frozenRange: String,
+    val hz: String,
+    val latePctRange: String,
+    val seenHz: String,
+) {
+    /** The event's parameters besides `screen`. */
+    public fun params(): Map<String, String> =
+        mapOf(
+            "janky_pct_range" to pctRange,
+            "frozen_range" to frozenRange,
+            "refresh_hz" to hz,
+            "late_pct_range" to latePctRange,
+            "seen_hz" to seenHz,
+        )
 }
 
 /**
@@ -179,12 +253,7 @@ public class HealthTelemetry(
 ) {
     public val jank: JankMeter =
         JankMeter(
-            report = { screen, pct, frozen, hz ->
-                telemetry.track(
-                    ProductEvent.Jank,
-                    mapOf("screen" to screen, "janky_pct_range" to pct, "frozen_range" to frozen, "refresh_hz" to hz),
-                )
-            },
+            report = { screen, frames -> telemetry.track(ProductEvent.Jank, mapOf("screen" to screen) + frames.params()) },
             refreshRate = refreshRate,
         )
 

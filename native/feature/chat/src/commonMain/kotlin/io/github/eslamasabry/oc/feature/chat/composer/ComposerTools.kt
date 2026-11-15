@@ -34,7 +34,7 @@ import io.github.eslamasabry.oc.ui.words.res.mentionToolSupporting
 import io.github.eslamasabry.oc.ui.words.res.mentionToolTitle
 import io.github.eslamasabry.oc.ui.words.res.composerToolCommandsTitle
 import io.github.eslamasabry.oc.ui.words.res.composerToolSavedSubtitle
-import io.github.eslamasabry.oc.ui.words.res.composerToolsAgentPicturesOnly
+import io.github.eslamasabry.oc.ui.words.res.composerToolsPicturesOnlyUse
 import io.github.eslamasabry.oc.ui.words.res.composerToolsMore
 import io.github.eslamasabry.oc.ui.words.res.composerToolsTextOnly
 import io.github.eslamasabry.oc.ui.words.res.kitSheetClose
@@ -197,7 +197,7 @@ private fun ToolsBody(choices: ComposerToolsChoices, run: (() -> Unit) -> Unit, 
                         if (state.imagesOnly)
                             pictureWays(choices.inTray).let { (photos, camera) ->
                                 stringResource(
-                                    Res.string.composerToolsAgentPicturesOnly,
+                                    Res.string.composerToolsPicturesOnlyUse,
                                     choices.agentName,
                                     stringResource(photos),
                                     stringResource(camera),

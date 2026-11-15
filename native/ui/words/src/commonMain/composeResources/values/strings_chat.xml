@@ -832,7 +832,7 @@
     <string name="composerBusyReason">Getting your prompt ready…</string>
     <string name="composerToolsTextOnly">This server takes text only</string>
     <string name="composerToolsAgentTextOnly">%1$s takes text only here</string>
-    <string name="composerToolsAgentPicturesOnly">%1$s takes pictures only: use %2$s or %3$s</string>
+    <string name="composerToolsPicturesOnlyUse">%1$s takes pictures only: use %2$s or %3$s</string>
     <string name="composerToolSavedSubtitle">Put a prompt you saved back in the draft</string>
     <string name="composerToolSaveForLater">Save prompt for later</string>
     <string name="composerToolNothingToSave">Type or attach something first</string>

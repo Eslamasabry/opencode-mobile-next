@@ -278,4 +278,5 @@
         <item quantity="many">%1$s mensajes anteriores</item>
         <item quantity="other">%1$s mensajes anteriores</item>
     </plurals>
+    <string name="composerToolsAgentPicturesOnly">%1$s solo acepta imágenes: usa «Galería de fotos» o «Tomar foto»</string>
 </resources>

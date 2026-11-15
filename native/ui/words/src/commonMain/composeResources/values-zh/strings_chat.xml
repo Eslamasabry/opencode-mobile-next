@@ -689,7 +689,7 @@
     <string name="composerBusyReason">正在准备你的提示词…</string>
     <string name="composerToolsTextOnly">这台服务器只接受文字</string>
     <string name="composerToolsAgentTextOnly">在这里 %1$s 只接受文字</string>
-    <string name="composerToolsAgentPicturesOnly">%1$s 只接受图片：请使用%2$s或%3$s</string>
+    <string name="composerToolsPicturesOnlyUse">%1$s 只接受图片：请使用%2$s或%3$s</string>
     <string name="composerToolSavedSubtitle">把保存过的提示词放回草稿</string>
     <string name="composerToolSaveForLater">保存提示词以备后用</string>
     <string name="composerToolNothingToSave">请先输入内容或添加附件</string>
