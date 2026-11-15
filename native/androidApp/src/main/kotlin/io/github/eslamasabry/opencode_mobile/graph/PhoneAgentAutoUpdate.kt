@@ -60,28 +60,30 @@ class PhoneAgentAutoUpdate(
 ) {
     private var started = false
 
-    /** What each agent's install of its pinned version recorded (issue 147); empty until read. */
-    @Volatile private var records: Map<AgentId, AgentInstallRecorded> = emptyMap()
-    @Volatile private var recordsRead = false
-
     /**
-     * Reads the install records (one small root script that only reads files; nothing is started). Kept until the next
-     * read: once per run, after the read of versions, and before the updater acts.
+     * What each agent's install of its pinned version recorded (issue 147), read straight from the phone's Linux tree:
+     * two small files per agent, no process and no wait for the setup lane, so it is read at every look and can never
+     * be missed. (The first version ran a script for it, once; on the Galaxy it waited behind the start's version
+     * reads, did not run, and was never asked again, so Codex was never found behind.)
      */
-    private fun readRecords() {
+    private fun records(): Map<AgentId, AgentInstallRecorded> {
         val linux = BuiltinLinux.get(app)
-        if (!linux.installed) return
-        val run = linux.run(AgentInstallRecord.readScript(AgentCatalog.builtIn), 30, logOutput = false)
-        if (run.exitCode == 0) {
-            records = AgentInstallRecord.parse(run.output)
-            recordsRead = true
-        }
+        if (!linux.installed) return emptyMap()
+        return AgentCatalog.builtIn.agents.mapNotNull { agent ->
+            val dir = AgentInstallRecord.installDir(agent) ?: return@mapNotNull null
+            val folder = java.io.File(linux.rootfs, dir.removePrefix("/"))
+            fun text(name: String): String? =
+                java.io.File(folder, name)
+                    .takeIf { it.isFile && !java.nio.file.Files.isSymbolicLink(it.toPath()) && it.length() <= 4096 }
+                    ?.readText()
+            agent.id to AgentInstallRecord.fromFiles(text(".oc-pin"), text("launch"))
+        }.toMap()
     }
 
     /** Installed agents whose install of the pinned version is not this app's pin (same version, other artifact). */
     private fun recordBehind(installed: List<AgentId>): Set<AgentId> {
         val architecture = PhoneAgentRules.architectureOf(Build.SUPPORTED_ABIS.toList()) ?: return emptySet()
-        return AgentInstallRecord.behind(installed, records, AgentCatalog.builtIn, architecture)
+        return AgentInstallRecord.behind(installed, records(), AgentCatalog.builtIn, architecture)
     }
     @Volatile private var updaterRef: AgentAutoUpdater? = null
     private val log = AppLog.tagged("AgentAutoUpdate")
@@ -99,9 +101,8 @@ class PhoneAgentAutoUpdate(
                 }
         val host =
             object : AgentUpdateHost {
-                // The decision reads the kept facts of the last reads (no probe); only the install records are read
-                // again, as an install may have just rewritten them.
-                override suspend fun refresh() = readRecords()
+                // The decision reads the kept facts of the last reads (no probe) and the install records (files).
+                override suspend fun refresh() = Unit
 
                 // An update an earlier run of the app started and did not finish (stopped or crashed mid-install).
                 override val resume: AgentId? get() = phones.interruptedUpdate()
@@ -112,7 +113,6 @@ class PhoneAgentAutoUpdate(
 
                 override suspend fun read() {
                     val done = phones.readForUpdate()
-                    if (done) readRecords()
                     log.i { "read of the installed agents ${if (done) "done" else "did not finish"}" }
                 }
 
@@ -161,6 +161,9 @@ class PhoneAgentAutoUpdate(
                     return when (answer) {
                         PhoneAgentInstallResult.Started -> {
                             log.i { "update started" }
+                            // A reinstall of the same version: the helper's loaded copies of it keep running the old
+                            // files until the helper starts them again, so it is started again once the install ends.
+                            if (agent in sameVersion()) reloadAfter += agent
                             // Kept until the install ends, so a stop or crash in the middle resumes it next run.
                             phones.markUpdating(agent)
                             appScope.launch(dispatchers.io) { safely { finish(agent) } }
@@ -200,8 +203,6 @@ class PhoneAgentAutoUpdate(
         appScope.launch(dispatchers.io) {
             delay(FIRST_LOOK.seconds)
             safely { phones.warmForUpdate() }
-            // Once per run: an install of the pinned version from another artifact counts as behind (issue 147).
-            safely { if (!recordsRead) readRecords() }
             safely { updater.changed() }
             safely {
                 merge(combine(setup.progress, leases.busy) { _, _ -> }, settled).collect {
@@ -239,7 +240,7 @@ class PhoneAgentAutoUpdate(
             when (installation?.phase) {
                 PhoneAgentInstallPhase.Installing -> Unit
                 PhoneAgentInstallPhase.Done -> {
-                    restartOlderHelper()
+                    if (reloadAfter.remove(agent)) reloadHelper() else restartOlderHelper()
                     phones.noteHelperInPlace()
                     phones.markUpdating(null)
                     updaterRef?.finished(agent)
@@ -253,6 +254,53 @@ class PhoneAgentAutoUpdate(
                 PhoneAgentInstallPhase.Failed,
                 PhoneAgentInstallPhase.Interrupted -> return
             }
+        }
+    }
+
+    /** The agents behind only by their install record (same version), for the update's end. */
+    private fun sameVersion(): Set<AgentId> =
+        phones.updateFacts()?.let { facts -> recordBehind(facts.installed) - facts.behind }.orEmpty()
+
+    private val reloadAfter = java.util.concurrent.ConcurrentHashMap.newKeySet<AgentId>()
+
+    /**
+     * After a same-version reinstall: the helper is stopped with the guarded stop (refused while a turn runs) and
+     * started again, so every conversation of that agent runs the new files; while a turn runs it tries again every
+     * 15 s (up to two hours). A helper that does not run starts with the new files anyway.
+     */
+    private suspend fun reloadHelper() {
+        val owner = phones.state.value.owner ?: return
+        val linux = BuiltinLinux.get(app)
+        val reload =
+            io.github.eslamasabry.oc.engine.agents.providers.HelperReload(
+                running = {
+                    try {
+                        linux.agentHost.status(owner.raw)["running"] == true
+                    } catch (e: kotlinx.coroutines.CancellationException) {
+                        throw e
+                    } catch (_: Exception) {
+                        false
+                    }
+                },
+                busy = { runtime.agentWorkBusy() },
+                stopGuarded = {
+                    try {
+                        linux.agentHost.stop(owner.raw, guardedForUpdate = true)
+                        true
+                    } catch (e: kotlinx.coroutines.CancellationException) {
+                        throw e
+                    } catch (_: Exception) {
+                        false
+                    }
+                },
+                start = { helper.checkHelper() },
+            )
+        repeat(RELOAD_TRIES) {
+            if (reload.tryNow()) {
+                log.i { "helper started again after a reinstall" }
+                return
+            }
+            delay(RELOAD_EVERY.seconds)
         }
     }
 
@@ -281,6 +329,8 @@ class PhoneAgentAutoUpdate(
         const val LOOK_EVERY = 30L
         const val WAIT_EVERY = 5L
         const val WAIT_STEPS = 180
+        const val RELOAD_EVERY = 15L
+        const val RELOAD_TRIES = 480
     }
 }
 

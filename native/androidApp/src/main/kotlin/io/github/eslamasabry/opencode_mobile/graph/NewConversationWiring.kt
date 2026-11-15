@@ -634,7 +634,13 @@ class AndroidNewConversationHost(
                 },
             needsSetup =
                 offer.needsSetup.map {
-                    NewConversationPhoneAgent(it.id.raw, it.name, it.iconKey, checking = it.checking)
+                    NewConversationPhoneAgent(
+                        it.id.raw,
+                        it.name,
+                        it.iconKey,
+                        checking = it.checking,
+                        updating = it.checking && it.installed,
+                    )
                 },
             selected = selected.takeIf { it != AgentId.OPENCODE }?.raw,
         )

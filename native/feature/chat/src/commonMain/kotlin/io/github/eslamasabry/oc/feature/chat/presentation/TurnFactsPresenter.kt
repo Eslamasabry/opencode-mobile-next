@@ -213,7 +213,7 @@ public class TurnFactsPresenter(private val clock: Clock) {
                     waitingForYou = waitingForYou,
                     declinedCalls = declinedCalls,
                 )
-                .mapValues { withOwnClock(StoppedSteps.settle(it.value), nowMs) }
+                .mapValues { withOwnClock(StoppedSteps.settle(it.value), nowMs, feed.waits) }
         seenRunning.keys.retainAll(work.values.flatMap { w -> w.steps.map { it.partId } }.toSet())
         val results = HashMap<String, TurnResultUi>()
         for ((index, turn) in snapshot.turns.withIndex()) {
@@ -322,12 +322,13 @@ public class TurnFactsPresenter(private val clock: Clock) {
      */
     private val seenRunning = HashMap<String, Long>()
 
-    private fun withOwnClock(w: TurnWork, nowMs: Long): TurnWork {
+    private fun withOwnClock(w: TurnWork, nowMs: Long, waits: List<Pair<Long, Long>>): TurnWork {
         if (w.state == WorkLineState.WaitingForYou) return w
-        fun stamp(step: TurnStep): TurnStep =
-            if (step.state == StepState.Running && step.startedAtMs == null)
-                step.copy(startedAtMs = seenRunning.getOrPut(step.partId) { nowMs })
-            else step
+        fun stamp(step: TurnStep): TurnStep {
+            if (step.state != StepState.Running) return step
+            val start = step.startedAtMs ?: seenRunning.getOrPut(step.partId) { nowMs }
+            return step.copy(startedAtMs = stepClockStart(start, waits))
+        }
         val steps = w.steps.map(::stamp)
         val now = w.now?.let { n -> steps.firstOrNull { it.partId == n.partId } ?: n }
         return if (steps == w.steps) w else w.copy(steps = steps, now = now)
@@ -344,6 +345,7 @@ internal fun sameApartFromProgress(a: TurnFeed, b: TurnFeed): Boolean =
         a.busy == b.busy &&
         a.runStartedAtMs == b.runStartedAtMs &&
         a.retry == b.retry &&
+        a.waits == b.waits &&
         a.lastOutcome == b.lastOutcome &&
         a.link == b.link &&
         a.windows == b.windows &&
@@ -352,3 +354,17 @@ internal fun sameApartFromProgress(a: TurnFeed, b: TurnFeed): Boolean =
 
 /** Whether the work line of [work] opens by itself (Dart `KitWorkLine.opensByDefault`). */
 internal fun TurnWork.opensByDefault(): Boolean = state == WorkLineState.EndedFailed
+
+/**
+ * Where a running step's own clock starts: its start, moved on by the time the person was being asked inside it. A
+ * command is shown as started when the server marked it running (before the permission card), but it runs only after
+ * the decision; the wait is not its time (issue 147, F-033).
+ */
+internal fun stepClockStart(startMs: Long, waits: List<Pair<Long, Long>>): Long {
+    var waited = 0L
+    for ((asked, answered) in waits) {
+        val from = maxOf(asked, startMs)
+        if (answered > from) waited += answered - from
+    }
+    return startMs + waited
+}

@@ -42,6 +42,7 @@ import io.github.eslamasabry.oc.ui.kit.state.KitProgress
 import io.github.eslamasabry.oc.ui.kit.state.KitProgressView
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.agentsUpdatingAgent
 import io.github.eslamasabry.oc.ui.words.res.agentsOwnProviderAction
 import io.github.eslamasabry.oc.ui.words.res.agentsOwnProviderChange
 import io.github.eslamasabry.oc.ui.words.res.agentsOwnProviderInUse
@@ -345,11 +346,16 @@ internal fun installingWords(tile: AgentTileModel): String {
                 stringResource(Res.string.agentsCheckDownloadUnknown, thing, agentPayloadSize(done))
             else ->
                 when (install?.step) {
-                    null -> stringResource(Res.string.agentsTileInstalling)
+                    // An agent already on the phone installing again is its update (issue 147): say so.
+                    null ->
+                        if (tile.agent.status.installed) stringResource(Res.string.agentsUpdatingAgent, tile.agent.name)
+                        else stringResource(Res.string.agentsTileInstalling)
                     PhoneAgentInstallStep.Linux -> stringResource(Res.string.agentsTileStepLinux)
                     PhoneAgentInstallStep.Runtime -> stringResource(Res.string.agentsTileStepRuntime)
                     PhoneAgentInstallStep.Helper -> stringResource(Res.string.agentsTileStepHelper)
-                    PhoneAgentInstallStep.Agent -> stringResource(Res.string.agentsInstalling, tile.agent.name)
+                    PhoneAgentInstallStep.Agent ->
+                        if (tile.agent.status.installed) stringResource(Res.string.agentsUpdatingAgent, tile.agent.name)
+                        else stringResource(Res.string.agentsInstalling, tile.agent.name)
                 }
         }
     return if (tile.quiet) stringResource(Res.string.agentsTileStillWorking, step) else step

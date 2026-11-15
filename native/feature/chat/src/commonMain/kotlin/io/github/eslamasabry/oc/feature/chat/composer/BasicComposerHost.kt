@@ -1169,7 +1169,7 @@ public fun BasicComposer(
                             // While a reply runs on a steering server the words join it
                             // (B-PROTO-025).
                             label =
-                                if (chrome.requestWaiting())
+                                if (chrome.requestAsking())
                                     stringResource(Res.string.composerFullWaitingHint)
                                 else if (busy && state.steers)
                                     stringResource(Res.string.composerFullSteerHint)

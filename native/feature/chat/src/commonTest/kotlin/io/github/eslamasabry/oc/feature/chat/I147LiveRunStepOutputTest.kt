@@ -22,6 +22,13 @@ import io.github.eslamasabry.oc.feature.chat.presentation.TurnFactsPresenter
 import kotlin.time.Clock
 import kotlin.time.Instant
 import kotlinx.collections.immutable.toImmutableList
+import io.github.eslamasabry.oc.feature.chat.presentation.RunTailRules
+import io.github.eslamasabry.oc.feature.chat.presentation.stepClockStart
+import io.github.eslamasabry.oc.feature.chat.requests.presentation.AnswerWords
+import io.github.eslamasabry.oc.feature.chat.requests.presentation.CardState
+import io.github.eslamasabry.oc.feature.chat.ui.opensItself
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
@@ -126,5 +133,38 @@ class I147LiveRunStepOutputTest {
         assertEquals(10_000L, step(10_000).startedAtMs)
         // 15 s later it is still the same start: the row reads 15 s.
         assertEquals(10_000L, step(25_000).startedAtMs)
+    }
+
+    @Test
+    fun `B-CHAT-116 the box stops saying it waits once the decision is made, even inside the Undo hold`() {
+        assertTrue(RunTailRules.asksYou(listOf(CardState.Waiting)))
+        assertTrue(RunTailRules.asksYou(listOf(CardState.NotAccepted(AnswerWords.Allowed))))
+        assertFalse(RunTailRules.asksYou(listOf(CardState.Held(AnswerWords.Allowed))))
+        assertFalse(RunTailRules.asksYou(listOf(CardState.Sent(AnswerWords.Allowed))))
+        assertFalse(RunTailRules.asksYou(emptyList()))
+    }
+
+    @Test
+    fun `B-CHAT-116 a step's own clock starts after the decision, not at the permission card`() {
+        // Marked running at 1 s, asked at 5 s, answered at 100 s: it runs from 100 s less the 4 s before the ask.
+        assertEquals(96_000L, stepClockStart(1_000, listOf(5_000L to 100_000L)))
+        // An earlier step's wait that ended before this one began costs it nothing.
+        assertEquals(50_000L, stepClockStart(50_000, listOf(5_000L to 40_000L)))
+        // A wait that began before the step did counts only from the step's start.
+        assertEquals(60_000L, stepClockStart(50_000, listOf(10_000L to 60_000L)))
+        val keeper = TurnFeedKeeper(Ref.sessionId.raw)
+        keeper.running(0)
+        keeper.event(GatewayEvent.PermissionAsked(ask("r1")), 5_000)
+        keeper.event(GatewayEvent.PermissionSettled(Ref.sessionId, RequestId("r1")), 100_000)
+        assertEquals(listOf(5_000L to 100_000L), keeper.feed.value.waits)
+    }
+
+    @Test
+    fun `B-CHAT-115 a running command that has printed opens by itself, one that waits or has printed nothing does not`() {
+        val running = step(StepState.Running, ToolState(ToolStatus.Running, input = input))
+        assertTrue(opensItself(running, waitingForYou = false, hasOutput = true))
+        assertFalse(opensItself(running, waitingForYou = true, hasOutput = true))
+        assertFalse(opensItself(running, waitingForYou = false, hasOutput = false))
+        assertFalse(opensItself(step(StepState.Done, ToolState(ToolStatus.Completed, input = input)), false, true))
     }
 }

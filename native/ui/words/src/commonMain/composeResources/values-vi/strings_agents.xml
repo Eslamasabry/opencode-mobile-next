@@ -576,4 +576,5 @@
     <string name="agentsOwnAgentFailed">Không thể thực hiện việc đó trên điện thoại này. Thử lại.</string>
     <string name="agentsOwnAgentReadyNow">Sẵn sàng sử dụng.</string>
     <string name="agentsOwnAgentReadyLater">Sẽ sẵn sàng khi tác vụ đang chạy kết thúc.</string>
+    <string name="agentsUpdatingAgent">Đang cập nhật %1$s</string>
 </resources>
