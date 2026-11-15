@@ -71,14 +71,14 @@ jobs:
       - name: App contracts and complete quality gate
         run: |
           tool/ci/gradle_retry.sh "$RUNNER_TEMP/unharnessed-app.log" \
-            :engine:agents:desktopTest --tests '*UnharnessedProviderTest*' --tests '*UnharnessedAdapterTest*' --tests '*UnharnessedProviderScriptTest*' --tests '*UnharnessedRemovalTest*' --tests '*AgentPinsParityTest*' --tests '*PaseoConfigGoldenTest*' --tests '*OwnProviderStoreTest*' \
+            :engine:agents:desktopTest \
             :feature:agents:desktopTest --tests '*OwnProviderScreenTest*' \
             :feature:chat:desktopTest --tests '*UnharnessedApprovalTest*' --tests '*UnharnessedApprovalScreenTest*' \
             :feature:chats:desktopTest --tests '*NewConversationStableLayoutTest*' \
             :protocol:paseo:desktopTest --tests '*UnharnessedStepTest*' \
             :androidApp:testPreviewDebugUnitTest --tests '*UnharnessedReadinessTest*' \
             :tools:strings:test --tests '*AndroidStringsTest*' --tests '*UnitTest*' \
-            :quality:test --continue --stacktrace
+            :quality:test :androidApp:compilePreviewBenchmarkKotlin --continue --stacktrace
       - name: Prove the behavior tests fail with the guarded changes reverted
         run: |
           python3 -B ../tool/unharnessed/app_red_proof.py

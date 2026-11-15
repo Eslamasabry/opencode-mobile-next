@@ -153,7 +153,7 @@ class NewConversationStableLayoutTest {
                 }
             }
             onNodeWithText("This agent runs commands without asking.").assertExists()
-            onNodeWithText("Unharnessed").assertExists()
+            onNodeWithText("Unharnessed", useUnmergedTree = true).assertExists()
             val file =
                 File("build/reports/unharnessed/before-first-message.png").apply {
                     parentFile.mkdirs()

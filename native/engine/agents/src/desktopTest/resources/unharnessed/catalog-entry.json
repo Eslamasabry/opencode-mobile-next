@@ -1,0 +1,17 @@
+{
+  "id": "unharnessed",
+  "name": "Unharnessed",
+  "iconKey": "unharnessed",
+  "route": "acpPaseo",
+  "providerId": "unharnessed",
+  "signInMethod": "apiKeyHost",
+  "availability": "hidden",
+  "unavailableReason": "recipeUnverified",
+  "capabilities": {
+    "resumeVerified": false,
+    "modelList": false,
+    "permissions": false,
+    "images": false,
+    "cancel": false
+  }
+}

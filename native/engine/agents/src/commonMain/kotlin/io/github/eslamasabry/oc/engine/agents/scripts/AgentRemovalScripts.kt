@@ -50,7 +50,8 @@ public object AgentRemovalScripts {
             "oc_result=18\n" +
             "if command -v python3 >/dev/null 2>&1; then\n" +
             "  python3 - '$id' '${recipe.executable}' '${recipe.version}' '$receiptId' 2>/dev/null <<'OC_AGENT_REMOVE'\n" +
-            REMOVE_PY +
+            (if (id == "unharnessed") REMOVE_PY
+            else REMOVE_PY.replace(PRIVATE_DATA, "def data_trees(): return []\n")) +
             "\n" +
             "OC_AGENT_REMOVE\n" +
             "  oc_result=\$?\n" +
@@ -76,6 +77,22 @@ public object AgentRemovalScripts {
             "\n" +
             "OC_AGENT_REMOVAL_RECEIPT\n"
     }
+
+    private val PRIVATE_DATA =
+        """def data_trees():
+    if agent != 'unharnessed': return []
+    profiles = root / '.oc-profiles'
+    entry = info(profiles)
+    if entry is None: return []
+    if not stat.S_ISDIR(entry.st_mode): raise Refused(17)
+    found = []
+    for profile in profiles.iterdir():
+        if not re.fullmatch(r'[A-Za-z0-9_-]{1,80}', profile.name): continue
+        if not stat.S_ISDIR(profile.lstat().st_mode): raise Refused(17)
+        data = profile / 'unharnessed'
+        tree(data)
+        if info(data) is not None: found.append(data)
+    return found"""
 
     internal val REMOVE_PY: String =
         """import json, os, pathlib, re, shutil, stat, sys
@@ -116,20 +133,7 @@ def tree(path):
             if not (stat.S_ISDIR(entry.st_mode) or stat.S_ISREG(entry.st_mode) or
                     stat.S_ISLNK(entry.st_mode)):
                 raise Refused(17)
-def data_trees():
-    if agent != 'unharnessed': return []
-    profiles = root / '.oc-profiles'
-    entry = info(profiles)
-    if entry is None: return []
-    if not stat.S_ISDIR(entry.st_mode): raise Refused(17)
-    found = []
-    for profile in profiles.iterdir():
-        if not re.fullmatch(r'[A-Za-z0-9_-]{1,80}', profile.name): continue
-        if not stat.S_ISDIR(profile.lstat().st_mode): raise Refused(17)
-        data = profile / 'unharnessed'
-        tree(data)
-        if info(data) is not None: found.append(data)
-    return found
+$PRIVATE_DATA
 def targets():
     tree(base)
     entry = info(link)
