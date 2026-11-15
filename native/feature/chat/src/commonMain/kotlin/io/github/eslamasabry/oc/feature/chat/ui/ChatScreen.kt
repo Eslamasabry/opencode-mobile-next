@@ -543,6 +543,14 @@ public fun ChatScreen(
             if (answer == null || placedRequests.isEmpty()) null
             else InPlaceRequests(placedRequests) { card -> ChatRequestInPlace(card, answer, onDetails = { requestDetails.value = card.id }) }
         }
+    // F-023: the turn's row that holds a decision still waiting, so the list can bring it back into view.
+    val waitingKey =
+        remember(placedRequests, facts.work) {
+            val waiting = placedRequests.filterValues { it.state == io.github.eslamasabry.oc.feature.chat.requests.presentation.CardState.Waiting }.keys
+            if (waiting.isEmpty()) null
+            else facts.work.entries.firstOrNull { (_, w) -> w.steps.any { it.callId in waiting } }?.key?.let { "work:$it" }
+        }
+    var waitingJump by remember { mutableStateOf(0) }
     val waitingWords = stringResource(Res.string.chatWaitingForAnswerAbove)
     val waitingHint = remember(waitingWords) { ReplyHint(waitingWords) {} }
     val replyHint = if (inPlaceRequests != null && InPlaceRules.waiting(placedRequests)) waitingHint else arrivalHint
@@ -561,6 +569,8 @@ public fun ChatScreen(
                 loading = { latest.phase == ChatPhase.Loading },
                 // Review #12: the box agrees with the run's state; a decision on its way waits on no one.
                 requestWaiting = { RunTailRules.waitsForYou(requestState.cards.map { it.state }) || formPending },
+                // F-023: a tap in the box while a decision waits takes the page to it.
+                jumpToWaiting = { waitingJump += 1 },
                 // A send brings the newest message into view at once (audit 1, k6: "Jump to latest" showed after a send
                 // made while reading back, until the next row arrived).
                 onSent = {
@@ -1085,6 +1095,8 @@ public fun ChatScreen(
                                         LocalInPlaceRequests provides inPlaceRequests,
                                     ) {
                                         ChatTranscriptList(
+                                            waitingKey = waitingKey,
+                                            waitingJump = waitingJump,
                                             folds = folds,
                                             rows = state.rows,
                                             live = state.live,

@@ -21,6 +21,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalForInheritanceCoroutinesApi
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.async
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -318,7 +319,29 @@ internal constructor(
             }
 
     internal fun start() {
-        scope.launch(serial) { restore() }
+        scope.launch(serial) { restoreBounded() }
+        // Issue 147: "Opening your saved draft…" always ends. A read that never answers (or a lane held by another
+        // write) is named as a failure after the limit, so the composer says so and offers Try again; a late answer
+        // still lands (the restore only refuses when the draft is ready already).
+        scope.launch {
+            delay(RESTORE_LIMIT_MS + RESTORE_GRACE_MS)
+            giveUpRestore()
+        }
+    }
+
+    /** One read of the saved draft, never longer than [RESTORE_LIMIT_MS]; a read cut short is a failure to open. */
+    private suspend fun restoreBounded(): Outcome<Unit> =
+        withTimeoutOrNull(RESTORE_LIMIT_MS) { restore() }
+            ?: run {
+                giveUpRestore()
+                Outcome.Failed(Failure.TimedOut())
+            }
+
+    private fun giveUpRestore() {
+        snapshots.update { before ->
+            if (before.fenced || before.public.ready || before.public.failure != null) before
+            else before.copy(public = before.public.copy(failure = Failure.TimedOut()))
+        }
     }
 
     internal fun reopen(): Boolean {
@@ -625,7 +648,7 @@ internal constructor(
             if (snapshots.value.clearPending && snapshots.value.public.text.isEmpty())
                 return@withContext commitAttachments(snapshots.value.public.attachments)
             if (!snapshots.value.public.ready) {
-                val restored = restore()
+                val restored = restoreBounded()
                 if (restored is Outcome.Failed) return@withContext restored
             }
             if (snapshots.value.public.heldBackAttachments.isNotEmpty()) {
@@ -1010,3 +1033,9 @@ internal constructor(
         }
     }
 }
+
+/** How long reading a saved draft may take before the composer says it could not open it (issue 147). */
+internal const val RESTORE_LIMIT_MS: Long = 6_000
+
+/** The watchdog waits this much longer than the read's own limit, so a read that ends in time names itself. */
+private const val RESTORE_GRACE_MS: Long = 500

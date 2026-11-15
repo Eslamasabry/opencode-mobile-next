@@ -12,7 +12,9 @@ import io.github.eslamasabry.oc.engine.composer.drafts.Drafts
 import io.github.eslamasabry.oc.engine.composer.store.ComposerPrefs
 import io.github.eslamasabry.oc.engine.composer.store.MemoryComposerPrefs
 import io.github.eslamasabry.oc.engine.composer.vault.AttachmentVault
+import io.github.eslamasabry.oc.engine.composer.drafts.RESTORE_LIMIT_MS
 import io.github.eslamasabry.oc.engine.composer.vault.MemoryPayloadStore
+import io.github.eslamasabry.oc.engine.composer.vault.PayloadStore
 import kotlin.test.*
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -281,6 +283,34 @@ class ConversationDraftsTest {
             assertIs<Outcome.Failed>(handle.flush())
             assertEquals(original, prefs.string(Drafts.KEY))
             assertEquals(blobs, payloads.keys())
+        }
+
+    @Test
+    fun `ISSUE-147 a saved draft that never opens ends within the limit as a plain failure and Try again opens it`() =
+        runTest {
+            store().save("alpha", "same", "with a file", listOf(dataAttachment("keep.txt", "bytes")))
+            val gate = CompletableDeferred<Unit>()
+            val hanging =
+                object : PayloadStore by payloads {
+                    override suspend fun read(ownerKey: String, id: String, expectedBytes: Long): ByteArray {
+                        gate.await()
+                        return payloads.read(ownerKey, id, expectedBytes)
+                    }
+                }
+            val session =
+                facade(Drafts(prefs, AttachmentVault(hanging), profiles, TestClock())).open(ref())
+            runCurrent()
+            assertFalse(session.state.value.ready)
+            assertNull(session.state.value.failure, "still opening, nothing failed yet")
+            advanceTimeBy(RESTORE_LIMIT_MS + 1_000)
+            runCurrent()
+            assertFalse(session.state.value.ready)
+            assertIs<Failure.TimedOut>(session.state.value.failure, "it ends: the composer says it could not open")
+            gate.complete(Unit)
+            assertIs<Outcome.Ok<Unit>>(session.flush(), "Try again opens it")
+            assertTrue(session.state.value.ready)
+            assertNull(session.state.value.failure)
+            assertEquals("with a file", session.state.value.text)
         }
 
     @Test

@@ -820,7 +820,23 @@ class AndroidNewConversationHost(
         model: ModelRef?,
     ): Outcome<Unit> = selection(profile).selectModel(profile, AgentId(agentId), model?.modelId)
 
-    override suspend fun setup(profile: ProfileId): Outcome<NewConversationSetup> =
+    /** The setup last read per profile in this run, with the live connection it was read on (see [cachedSetup]). */
+    private val lastSetups = java.util.concurrent.ConcurrentHashMap<ProfileId, Pair<Any, NewConversationSetup>>()
+
+    override fun cachedSetup(profile: ProfileId): NewConversationSetup? {
+        val (graph, setup) = lastSetups[profile] ?: return null
+        return setup.takeIf { registry.live.value[profile] === graph }
+    }
+
+    override suspend fun setup(profile: ProfileId): Outcome<NewConversationSetup> {
+        val read = readSetup(profile)
+        val graph = registry.live.value[profile]
+        if (read is Outcome.Ok && graph != null) lastSetups[profile] = graph to read.value
+        else if (read is Outcome.Failed) lastSetups.remove(profile)
+        return read
+    }
+
+    private suspend fun readSetup(profile: ProfileId): Outcome<NewConversationSetup> =
         withContext(serial) {
             lane.withLock {
                 if (stores.profiles.profile(profile) == null) return@withLock refused()

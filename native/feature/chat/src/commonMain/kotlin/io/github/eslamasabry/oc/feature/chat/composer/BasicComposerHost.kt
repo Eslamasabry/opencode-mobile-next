@@ -119,7 +119,9 @@ import io.github.eslamasabry.oc.ui.words.res.chatDraftAlreadySent
 import io.github.eslamasabry.oc.ui.words.res.chatDraftRepeatAction
 import io.github.eslamasabry.oc.ui.words.res.chatDraftRepeatBody
 import io.github.eslamasabry.oc.ui.words.res.chatDraftRepeatTitle
+import io.github.eslamasabry.oc.ui.words.res.chatDraftRestoreFailed
 import io.github.eslamasabry.oc.ui.words.res.chatDraftRestoring
+import io.github.eslamasabry.oc.ui.words.res.kitTryAgain
 import io.github.eslamasabry.oc.ui.words.res.phraseChipsHide
 import io.github.eslamasabry.oc.ui.words.res.phraseChipsRowLabel
 import io.github.eslamasabry.oc.ui.words.res.phraseSuggestionsInsert
@@ -644,11 +646,16 @@ public fun BasicComposer(
             KitErrorNotice(
                 message =
                     stringResource(
-                        if (SendFieldRules.showsAlreadySent(state.draft)) Res.string.chatDraftAlreadySent
-                        else Res.string.draftSaveFailed
+                        when {
+                            SendFieldRules.showsAlreadySent(state.draft) -> Res.string.chatDraftAlreadySent
+                            !state.draft.ready -> Res.string.chatDraftRestoreFailed
+                            else -> Res.string.draftSaveFailed
+                        }
                     ),
                 retry =
                     when {
+                        !state.draft.ready && !SendFieldRules.showsAlreadySent(state.draft) ->
+                            KitLineAction(stringResource(Res.string.kitTryAgain), actions::retrySave)
                         state.canRepeat ->
                             KitLineAction(
                                 stringResource(Res.string.chatDraftRepeatAction),
@@ -1194,7 +1201,15 @@ public fun BasicComposer(
                             focusRequester = focus,
                             enabled =
                                 if (editorReady && state.draft.ready) KitEnabled.Enabled
-                                else KitEnabled.Disabled(stringResource(Res.string.chatDraftRestoring)),
+                                else
+                                    KitEnabled.Disabled(
+                                        // Issue 147: it always ends: the draft, or a plain line that it could not be opened.
+                                        stringResource(
+                                            if (state.draft.failure != null && !state.draft.ready)
+                                                Res.string.chatDraftRestoreFailed
+                                            else Res.string.chatDraftRestoring
+                                        )
+                                    ),
                             onTextChanged = { accepted ->
                                 editor.userEditSerial += 1
                                 editor.lastReported = accepted
@@ -1204,7 +1219,10 @@ public fun BasicComposer(
                             // w4-focus: the chat asks whether the box had focus when another field opened.
                             modifier =
                                 Modifier.kitPromptOrigin()
-                                    .onFocusChanged { chrome.typing.focused = it.hasFocus }
+                                    .onFocusChanged {
+                                        chrome.typing.focused = it.hasFocus
+                                        if (it.hasFocus && chrome.requestWaiting()) chrome.jumpToWaiting()
+                                    }
                                     .testTag("chat-composer-field"),
                         )
                     }
