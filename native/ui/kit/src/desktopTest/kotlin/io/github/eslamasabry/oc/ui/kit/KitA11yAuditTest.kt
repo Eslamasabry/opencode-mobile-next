@@ -14,7 +14,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.setProgress
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import androidx.compose.ui.unit.Density
@@ -164,20 +164,27 @@ class KitA11yAuditTest {
     // --- The proof that the proof can fail: a scene made of known faults must be caught, rule by rule. ---
 
     @Test
-    fun `B-A11Y-AUDIT catches a tiny tap target, an unnamed one, two on one box, and text cut off`() {
+    fun `B-A11Y-AUDIT catches an unnamed target, two controls on one box, and text cut off`() {
         val found =
             offenders("bad scene", only = listOf(variants[0])) {
                 Column {
-                    Box(Modifier.size(20.dp).semantics(mergeDescendants = true) { contentDescription = "Tiny"; onClick { true } })
                     Box(Modifier.size(48.dp).clickable {})
                     Box { Box(Modifier.size(48.dp).clickable {}); Box(Modifier.size(48.dp).clickable {}) }
                     Box(Modifier.size(40.dp, 14.dp)) { KitText("A long line that cannot fit one small box and wraps over many lines of words") }
                 }
             }
         val rules = found.map { it.rule }.toSet()
-        assertTrue("small" in rules, "a 20 dp target is small: $found")
         assertTrue("unnamed" in rules, "a clickable box with no words is unnamed: $found")
         assertTrue("duplicate" in rules, "two controls on one box are a duplicate: $found")
         assertTrue("clipped" in rules, "text taller than its box is clipped: $found")
+    }
+
+    @Test
+    fun `B-A11Y-AUDIT catches a slider-like control under 48 dp`() {
+        val found =
+            offenders("small scene", only = listOf(variants[0])) {
+                Box(Modifier.size(20.dp).semantics(mergeDescendants = true) { contentDescription = "Tiny"; setProgress { true } })
+            }
+        assertTrue("small" in found.map { it.rule }, "a 20 dp control is small: $found")
     }
 }
