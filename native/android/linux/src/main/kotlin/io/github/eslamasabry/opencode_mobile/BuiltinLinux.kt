@@ -1733,11 +1733,31 @@ class BuiltinLinux(private val context: Context) {
                 (!serverStorageBroad &&
                     serverStorageRoots.toSet() != sharedStorageRootsForLaunch().toSet()))
 
-    private fun sharedStorageBinds(): List<String> =
-        SharedStorageBinds.binds(
+    private fun sharedStorageBinds(): List<String> {
+        // A start that records what it binds passes that very view: what it says it saw is what it got (W3).
+        val view = launchStorage.get() ?: return SharedStorageBinds.binds(
             sharedStorageRootsForLaunch(),
             confined = !sharedStorageBroadAccess(),
         )
+        return SharedStorageBinds.binds(view.roots, confined = !view.broad)
+    }
+
+    private val launchStorage = ThreadLocal<SharedStorageView?>()
+
+    /**
+     * Runs [start] so the process it starts on this thread binds exactly [view] of shared storage, the view the caller
+     * records for that process; the check of a chosen folder then compares with the binds the process really has, never
+     * with a second read of the list taken a moment apart.
+     */
+    fun <T> startingWith(view: SharedStorageView, start: () -> T): T {
+        val before = launchStorage.get()
+        launchStorage.set(view)
+        try {
+            return start()
+        } finally {
+            if (before == null) launchStorage.remove() else launchStorage.set(before)
+        }
+    }
 
     /** What a process started now gets of shared storage (the rules of [sharedStorageBinds]). */
     @Synchronized
@@ -5938,12 +5958,13 @@ exec gc supervisor run
         // One log per run; the previous one stays for a look after a crash.
         if (log.isFile) log.renameTo(File(home, "$name.previous.log"))
         if (name == SERVER) serverStartLogOffset = log.length()
-        val storageRoots = if (name == SERVER) sharedStorageRootsForLaunch() else emptyList()
-        val storageBroad = name == SERVER && sharedStorageBroadAccess()
-        val process = launchServiceProcess(name, script, log, launch)
-        if (name == SERVER) {
-            serverStorageRoots = storageRoots
-            serverStorageBroad = storageBroad
+        val storage = if (name == SERVER) sharedStorageViewForLaunch() else null
+        val process =
+            if (storage == null) launchServiceProcess(name, script, log, launch)
+            else startingWith(storage) { launchServiceProcess(name, script, log, launch) }
+        if (storage != null) {
+            serverStorageRoots = storage.roots
+            serverStorageBroad = storage.broad
         }
         process.outputStream.close()
         services[name] = serviceStarted(name, process, port, notice, script)

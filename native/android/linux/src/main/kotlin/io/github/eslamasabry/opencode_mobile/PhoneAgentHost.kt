@@ -196,10 +196,12 @@ class PhoneAgentHost(private val linux: BuiltinLinux) {
         ) {
             linux.agentPortAnswers(request.port)
         }
-        // Read before the start: the binds this helper gets are the ones a start gets now.
+        // The binds this helper (and every agent it starts) gets are exactly the view recorded for it below.
         val view = linux.sharedStorageViewForLaunch()
         val started =
-            linux.startAgentProcess(profile, listOf("/bin/sh", "-c", hostScript(request.port)))
+            linux.startingWith(view) {
+                linux.startAgentProcess(profile, listOf("/bin/sh", "-c", hostScript(request.port)))
+            }
         launched.child = started
         launched.reader = drain(started)
         started.outputStream.use { output ->

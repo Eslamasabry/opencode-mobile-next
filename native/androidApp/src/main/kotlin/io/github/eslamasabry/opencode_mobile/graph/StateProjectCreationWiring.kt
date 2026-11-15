@@ -13,6 +13,7 @@ import io.github.eslamasabry.oc.core.domain.capabilities.PlatformCapabilities
 import io.github.eslamasabry.oc.engine.agents.workspace.ProjectFolderName
 import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
 import io.github.eslamasabry.oc.engine.runtime.bridge.BuiltinScripts
+import io.github.eslamasabry.oc.engine.runtime.paths.SharedStoragePath
 import io.github.eslamasabry.oc.feature.linux.host.LinuxHost
 import io.github.eslamasabry.oc.feature.linux.host.LinuxPresence
 import io.github.eslamasabry.oc.feature.projects.presentation.NoProjectCreation
@@ -120,11 +121,37 @@ class PhoneProjectCreation(
             if (!linux.serviceRunning("server")) return@withLock null
             val script = BuiltinScripts.folderExistsScript(path)
             if ('\n' in path || '\u0000' in path || !path.startsWith("/")) return@withLock null
-            when (val result = linux.run(script, timeoutSeconds = 20)) {
-                is Outcome.Failed -> null
-                is Outcome.Ok -> result.value.exitCode == 0
+            folderPresence(path, { java.io.File(it).isDirectory }) {
+                when (val result = linux.run(script, timeoutSeconds = 20)) {
+                    is Outcome.Failed -> null
+                    is Outcome.Ok -> result.value.exitCode == 0
+                }
             }
         }
+
+    internal companion object {
+        /**
+         * W3 (walker F-042): whether the folder [path] is there. A folder in the phone's shared storage is the phone's
+         * own to answer ([appFinds]): Linux sees it only once it is bound, and a folder made or chosen a moment ago is
+         * bound just after this question, so Linux said "not there" and the page said the project's folder was gone.
+         * The phone finding it answers yes; not finding it is left unsaid here (null), because the phone-storage check
+         * says exactly whether it is gone or out of reach. Any other folder is asked of Linux ([linux]).
+         */
+        suspend fun folderPresence(
+            path: String,
+            appFinds: (String) -> Boolean,
+            linux: suspend () -> Boolean?,
+        ): Boolean? =
+            if (SharedStoragePath.isShared(path)) {
+                val found =
+                    try {
+                        appFinds(path)
+                    } catch (_: Exception) {
+                        false
+                    }
+                if (found) true else null
+            } else linux()
+    }
 
     override suspend fun createAt(server: ProjectServer, path: String): Outcome<String> =
         lane.withLock {
