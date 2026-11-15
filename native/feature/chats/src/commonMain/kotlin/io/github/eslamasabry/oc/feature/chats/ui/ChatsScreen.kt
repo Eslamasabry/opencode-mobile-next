@@ -156,6 +156,7 @@ import io.github.eslamasabry.oc.ui.words.res.chatsHomeNotReadTitle
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeFailed
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeIncompleteNamed
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeUnreachableShort
+import io.github.eslamasabry.oc.ui.words.res.chatsHomeAgentsUnreachable
 import io.github.eslamasabry.oc.ui.words.res.kitTryAgain
 import io.github.eslamasabry.oc.ui.words.res.agentsRestartLine
 import io.github.eslamasabry.oc.ui.words.res.agentsResumeAction
@@ -405,7 +406,9 @@ public fun ChatsScreen(
                 item(key = "unreachable-${source.profile.raw}", contentType = "unreachable") {
                     Box(kitItemMotion().padding(horizontal = LocalKitTokens.current.gutter.dp)) {
                         KitNotice(
-                            message = stringResource(Res.string.chatsHomeUnreachableShort, KitBidi.auto(source.name)),
+                            message =
+                                if (source.agents) stringResource(Res.string.chatsHomeAgentsUnreachable)
+                                else stringResource(Res.string.chatsHomeUnreachableShort, KitBidi.auto(source.name)),
                             actions = listOf(KitLineAction(stringResource(Res.string.kitTryAgain), { actions.retrySource(source.profile) })),
                         )
                     }
