@@ -1493,7 +1493,7 @@ public class PaseoGateway(
         }
         checkLocation(scope, epoch)
         val modes = modesFor(provider)
-        val mode = requestedMode ?: defaultProviderModes[provider]
+        val mode = planned(provider, requestedMode, modes) ?: defaultProviderModes[provider]
         // A runtime with a required mode must list it (0.9.2 may list none on a phone: then it is
         // sent by name).
         if (
@@ -1591,13 +1591,14 @@ public class PaseoGateway(
         var agent = agents[id] ?: return
         val modeIds =
             agent.arr("availableModes").orEmpty().mapNotNull { it.objectOrNull()?.str("id") }
-        if (mode != null && mode != agent.str("currentModeId") && mode in modeIds) {
+        val sent = planned(agent.str("provider"), mode, modeIds)
+        if (sent != null && sent != agent.str("currentModeId") && sent in modeIds) {
             transport.request(
                 "set_agent_mode_request",
-                jsonOf("agentId" to real(id), "modeId" to mode),
+                jsonOf("agentId" to real(id), "modeId" to sent),
                 mutation = true,
             )
-            agent = agent.with("currentModeId", JsonPrimitive(mode))
+            agent = agent.with("currentModeId", JsonPrimitive(sent))
         }
         if (
             model != null &&
@@ -1750,12 +1751,25 @@ public class PaseoGateway(
         if (id in drafts) return@call
         if (id !in agents) fetchAgent(id)
         val current = agents[id] ?: paseoFail(PaseoFailureKind.Unavailable)
+        val listed = current.arr("availableModes").orEmpty().mapNotNull { it.objectOrNull()?.str("id") }
+        val mode = planned(current.str("provider"), agent, listed) ?: agent
         transport.request(
             "set_agent_mode_request",
-            jsonOf("agentId" to real(id), "modeId" to agent),
+            jsonOf("agentId" to real(id), "modeId" to mode),
             mutation = true,
         )
-        remember(current.with("currentModeId", JsonPrimitive(agent)))
+        remember(current.with("currentModeId", JsonPrimitive(mode)))
+    }
+
+    /**
+     * The mode to send for the app's [mode] ([PaseoPlanModes]): Plan becomes the agent's own read-only or plan mode;
+     * an agent that lists modes but none of those refuses Plan (nothing is sent, never run in its normal mode). Any
+     * other mode, and Plan to an agent that lists no modes at all, stay as they were.
+     */
+    private fun planned(provider: String?, mode: String?, listed: List<String>): String? {
+        if (mode != PaseoPlanModes.APP_PLAN || listed.isEmpty()) return mode
+        return PaseoPlanModes.planMode(provider, listed)
+            ?: throw PaseoException(PaseoFailureKind.NoPlanMode, "The agent lists no plan or read-only mode")
     }
 
     // ---- providers, models and modes
