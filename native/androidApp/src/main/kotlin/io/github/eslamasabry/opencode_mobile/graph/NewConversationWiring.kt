@@ -106,7 +106,7 @@ class AndroidNewConversationHost(
     private val phoneServer: AndroidChatPhoneServer,
     private val phoneAgents: PhoneAgents,
     private val phoneHelper: AppLocalAgentHostStarter,
-    private val phoneFolders: io.github.eslamasabry.oc.feature.projects.presentation.PhoneFolders,
+    private val storageFolderPort: io.github.eslamasabry.oc.feature.projects.presentation.PhoneFolders,
     private val sharedStorage: Set<io.github.eslamasabry.oc.core.domain.platform.SharedStorageAccess>,
     private val phoneFolders: PhoneFolderPreflight,
     appScope: AppCoroutineScope,
@@ -178,13 +178,13 @@ class AndroidNewConversationHost(
     }
 
     override suspend fun storageFolders(path: String): Outcome<List<StorageFolder>> =
-        when (val listed = phoneFolders.list(path)) {
+        when (val listed = storageFolderPort.list(path)) {
             is Outcome.Failed -> listed
             is Outcome.Ok -> Outcome.Ok(listed.value.map { StorageFolder(it.name, it.path) })
         }
 
     override suspend fun createStorageFolder(parent: String, name: String): Outcome<String> =
-        phoneFolders.createFolder(parent, name)
+        storageFolderPort.createFolder(parent, name)
 
     override suspend fun requestPhoneStorage(profile: ProfileId): Outcome<Unit> {
         val access = sharedStorage.singleOrNull() ?: return refused()
