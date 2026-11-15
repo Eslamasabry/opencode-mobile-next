@@ -28,6 +28,8 @@ class MappingError(Exception):
 class SessionIndex:
     def __init__(self, root):
         self.root = Path(root).absolute()
+        if any(parent.is_symlink() for parent in (self.root, *self.root.parents)):
+            raise MappingError("Agent data must be a private folder.")
         self.root.mkdir(mode=0o700, parents=True, exist_ok=True)
         if self.root.is_symlink():
             raise MappingError("Agent data must be a private folder.")
@@ -55,7 +57,7 @@ class SessionIndex:
         if len(text) > MAX_INDEX:
             raise MappingError("Saved conversation index is too large.")
         value = json.loads(text)
-        if value.get("version") != 1 or not isinstance(value.get("sessions"), dict):
+        if not isinstance(value, dict) or value.get("version") != 1 or not isinstance(value.get("sessions"), dict):
             raise MappingError("Saved conversation index is unavailable.")
         return value["sessions"]
 
@@ -139,7 +141,11 @@ def session_id(frame, old, new):
 def present_step(frame):
     """Keep all original fields, adding readable command input for Paseo."""
     params = frame.get("params", {})
+    if not isinstance(params, dict):
+        return frame
     update = params.get("update", {})
+    if not isinstance(update, dict):
+        return frame
     raw = update.get("rawInput", {})
     if (frame.get("method") == "session/update" and update.get("sessionUpdate") == "tool_call"
             and update.get("kind") == "execute" and isinstance(raw, dict) and isinstance(raw.get("code"), str)):

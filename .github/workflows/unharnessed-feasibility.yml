@@ -17,7 +17,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: unharnessed-feasibility-${{ github.ref }}
+  group: unharnessed-feasibility-${{ github.ref }}-${{ inputs.app_checks || false }}
   cancel-in-progress: false
 
 jobs:

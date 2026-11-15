@@ -59,6 +59,8 @@ class AdapterTest(unittest.TestCase):
         self.assertEqual(shown["params"]["update"]["rawInput"], {"code": "print(1)", "command": "print(1)"})
         self.assertEqual(frame["params"]["update"]["rawInput"], {"code": "print(1)"})
         self.assertEqual(adapter.present_step({"jsonrpc": "2.0", "method": "other"}), {"jsonrpc": "2.0", "method": "other"})
+        malformed = {"jsonrpc": "2.0", "method": "session/update", "params": {"update": []}}
+        self.assertEqual(adapter.present_step(malformed), malformed)
 
     def test_B_AGENT_UH_001_mapping_is_atomic_private_and_keeps_other_sessions(self):
         with tempfile.TemporaryDirectory() as temporary:
@@ -83,6 +85,14 @@ class AdapterTest(unittest.TestCase):
             with self.assertRaises(adapter.MappingError):
                 index.put("link", {"id": "p", "path": str(link)})
             self.assertFalse(list(Path(temporary).glob(".acp-sessions-*")))
+            index.path.write_text("[]")
+            with self.assertRaises(adapter.MappingError):
+                index.get("public")
+            parent_link = Path(temporary, "alias")
+            parent_link.symlink_to(temporary, target_is_directory=True)
+            with self.assertRaises(adapter.MappingError):
+                adapter.SessionIndex(parent_link / "not-created")
+            self.assertFalse(Path(temporary, "not-created").exists())
 
     def test_B_AGENT_UH_002_framing_preserves_tools_and_only_changes_envelope_ids(self):
         frame = {"jsonrpc": "2.0", "params": {"sessionId": "real", "update": {"rawInput": {"sessionId": "real", "code": "print(1)"}}}}
