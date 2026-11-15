@@ -30,6 +30,7 @@ on:
 
 permissions:
   contents: read
+  actions: read
 
 concurrency:
   group: upgrade-proof-${{ github.ref }}
@@ -39,6 +40,9 @@ env:
   # The app commit under test (the release candidate). Changed by a commit on this branch for each run.
   APP_REF: 37ccdd9f32b1ebc08c8f3d35b76208220bb61ddf
   REPO: Eslamasabry/opencode-mobile-next
+  # Non-empty: reuse the proof-apks artifact of that earlier run of this workflow (same APP_REF) instead of building.
+  REUSE_RUN: "43774035249"
+  ANDROID_AVD_HOME: /home/runner/.android/avd
   RUNNER_TRACKING_ID: ""
 
 jobs:
@@ -46,14 +50,31 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 90
     outputs:
-      signer: ${{ steps.sign.outputs.signer }}
-      cases: ${{ steps.sign.outputs.cases }}
+      signer: ${{ steps.sign.outputs.signer || steps.reuse.outputs.signer }}
+      cases: ${{ steps.sign.outputs.cases || steps.reuse.outputs.cases }}
     steps:
+      - name: Reuse the APKs of an earlier run
+        if: env.REUSE_RUN != ''
+        id: reuse
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh run download "$REUSE_RUN" -R "$REPO" -n proof-apks -D "$RUNNER_TEMP/apks"
+          [ "$(cat "$RUNNER_TEMP/apks/APP_COMMIT")" = "$APP_REF" ] || { echo "::error::run $REUSE_RUN built another commit"; exit 1; }
+          signer="$(sed -n 's/^### APKs (throwaway signer \([0-9A-F]*\)).*/\1/p' "$RUNNER_TEMP/apks/APKS.md")"
+          [ -n "$signer" ]
+          echo "signer=$signer" >> "$GITHUB_OUTPUT"
+          echo 'cases=["f215","via10020","f214"]' >> "$GITHUB_OUTPUT"
+          cat "$RUNNER_TEMP/apks/APKS.md" >> "$GITHUB_STEP_SUMMARY"
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: env.REUSE_RUN == ''
         with:
           ref: ${{ env.APP_REF }}
       - uses: ./.github/actions/native-setup
+        if: env.REUSE_RUN == ''
       - name: Build the switch release, unsigned (no key file on the runner)
+        if: env.REUSE_RUN == ''
         working-directory: native
         run: |
           set -euo pipefail
@@ -64,6 +85,7 @@ jobs:
           ./gradlew --console=plain -I "$RUNNER_TEMP/no-lint-vital.init.gradle" :androidApp:assembleSwitchRelease
           ls -l androidApp/build/outputs/apk/switch/release/
       - name: Download the public APKs
+        if: env.REUSE_RUN == ''
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -80,6 +102,7 @@ jobs:
           ls -l "$d"
       - name: Throwaway key; sign the candidate and re-sign the public APKs with it
         id: sign
+        if: env.REUSE_RUN == ''
         run: |
           set -euo pipefail
           bt="$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -n 1)"
@@ -177,9 +200,11 @@ jobs:
           sm="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
           yes | "$sm" --licenses > /dev/null || true
           "$sm" "emulator" "platform-tools" "build-tools;37.0.0" "system-images;android-35;google_apis;x86_64" > /dev/null
+          mkdir -p "$ANDROID_AVD_HOME"
           echo no | "$ANDROID_HOME/cmdline-tools/latest/bin/avdmanager" create avd -n OCN_GH \
-            -k "system-images;android-35;google_apis;x86_64" -d pixel_6 > /dev/null
-          cfg="$HOME/.android/avd/OCN_GH.avd/config.ini"
+            -k "system-images;android-35;google_apis;x86_64" -d pixel_6 -p "$ANDROID_AVD_HOME/OCN_GH.avd" > /dev/null
+          ls -la "$ANDROID_AVD_HOME" "$ANDROID_AVD_HOME/OCN_GH.avd"
+          cfg="$ANDROID_AVD_HOME/OCN_GH.avd/config.ini"
           set_cfg() { grep -v "^$1=" "$cfg" > "$cfg.new" || true; echo "$1=$2" >> "$cfg.new"; mv "$cfg.new" "$cfg"; }
           set_cfg hw.ramSize 4096
           set_cfg disk.dataPartition.size 8G
