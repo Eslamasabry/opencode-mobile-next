@@ -1,6 +1,6 @@
-# Native (B-152): Settings open: Settings > This app > Appearance, and check the kept choices on its chips. Each chip
-# shows its title and its value on separate lines ("Style" / "Soft", "Text & motion" / "Smallest, full motion");
-# settings search has no "Text size" row (walked 2026-11-07 on 5ff3ac113).
+# Native: Settings > This app > Appearance, and check the kept choices.
+# Upgrade-proof branch: since 1f5a047bde (2026-11-10) Appearance is one page with a preview and four tabs (Colours,
+# Style, Background, Text & motion); each tab shows its options as segmented choices, the kept one selected.
 appId: ${APP_ID}
 ---
 - tapOn: ${output.s.settingsHubGroupThisApp + '(\n(?s).*)?'}
@@ -8,16 +8,37 @@ appId: ${APP_ID}
 - extendedWaitUntil:
     visible: ${output.s.appearanceGroupComfort}
     timeout: 15000
-- assertVisible:
-    text: ${output.s.textSizeSmallest + '(, .*)?'}
-    below: ${output.s.appearanceGroupComfort}
-- assertVisible:
-    text: ${output.s.appearanceSurfaceSoft + '(, .*)?'}
-    below: ${output.s.appearanceChipStyle}
-# B-166 (4c012f945): the Style group asks Shape after Style; the 2.1.4 Sharp corners tweak shows there.
-- tapOn: ${output.s.appearanceChipStyle}
-- scrollUntilVisible:
-    element: ${output.s.appearanceChipShape + '(\n(?s).*)?'}
-    direction: DOWN
-    timeout: 10000
-- assertVisible: ${'(?s).*' + output.s.appearanceFineTuneCornersSharp + '.*'}  # literal-ok: built from strings
+- runFlow:
+    label: "APPEARANCE text size kept"
+    commands:
+      - tapOn: ${output.s.appearanceGroupComfort}
+      - scrollUntilVisible:
+          element:
+            text: ${output.s.textSizeSmallest + '(\n(?s).*)?'}
+          direction: DOWN
+          timeout: 10000
+      - takeScreenshot: native-appearance-text
+      - assertVisible:
+          text: ${output.s.textSizeSmallest + '(\n(?s).*)?'}
+          selected: true
+- runFlow:
+    label: "APPEARANCE style kept"
+    commands:
+      - tapOn: ${output.s.appearanceGroupStyle}
+      - scrollUntilVisible:
+          element:
+            text: ${output.s.appearanceSurfaceSoft + '(\n(?s).*)?'}
+          direction: DOWN
+          timeout: 10000
+      - takeScreenshot: native-appearance-style
+      - assertVisible:
+          text: ${output.s.appearanceSurfaceSoft + '(\n(?s).*)?'}
+          selected: true
+      - scrollUntilVisible:
+          element:
+            text: ${output.s.appearanceFineTuneCornersSharp + '(\n(?s).*)?'}
+          direction: DOWN
+          timeout: 10000
+      - assertVisible:
+          text: ${output.s.appearanceFineTuneCornersSharp + '(\n(?s).*)?'}
+          selected: true
