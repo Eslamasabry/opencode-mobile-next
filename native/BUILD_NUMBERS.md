@@ -82,3 +82,4 @@ wiped (see Floor); they never come back and do not raise the floor.
 | 10050 | build | 2026-11-15 | owner's build of b0ecdd9e6f (issue 147 wave, fifth batch; its commit passed full CI) |
 | 10051 | build | 2026-11-16 | owner's build of cc50a34105 (storage folder kept after a helper restart, schedules, release gate; CI 43767355235 passed) |
 | 10052 | build | 2026-11-16 | owner's build of f8229d2b43 (phones upright, edge light under sheets, Review Done, Find and long-chat cost; CI 43768070767 passed) |
+| 10053 | build | 2026-11-16 | owner's build of f53772b5f7 (New conversation layout B and walker fixes on top of 10052; CI 43775330858 passed) |
