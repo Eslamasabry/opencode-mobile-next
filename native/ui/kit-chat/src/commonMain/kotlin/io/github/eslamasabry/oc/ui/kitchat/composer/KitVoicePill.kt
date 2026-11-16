@@ -38,6 +38,15 @@ import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitMotion
+import io.github.eslamasabry.oc.ui.design.effects.LiquidRole
+import io.github.eslamasabry.oc.ui.design.style.SurfaceRole
+import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
+import io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel
+import io.github.eslamasabry.oc.ui.kit.effects.LocalKitLiquidChrome
+import io.github.eslamasabry.oc.ui.kit.effects.kitLiquidFace
+import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceInput
+import io.github.eslamasabry.oc.ui.kit.foundation.kitStyledFace
+import io.github.eslamasabry.oc.ui.kit.foundation.kitSurface
 
 /**
  * The voice pill above the composer field while voice runs (plan 06 §7.8 `KitComposerVoice`): what is happening in
@@ -64,13 +73,25 @@ public fun KitVoicePill(
     val colors = LocalKitColors.current
     val reduced = LocalKitMotion.current.reduced
     val shape = RoundedCornerShape(20.dp)
+    // glass-truth 2026-11-16: the pill floats in the chat's bottom block over the transcript, so under Glass it is a calm
+    // pane of liquid glass over what the block's glass sees (the pills' recipe: a narrow rim, no lens to the middle, so
+    // the words heard stay still); without that recording, Glass's floating frost; Brutal and Paper dress it. Solid,
+    // Soft and Signal keep its own face below. The attention state stays: the amber wash and line lie on the glass.
+    val liquid = LocalKitLiquidChrome.current?.let { kitLiquidFace(LiquidRole.Pill, it, shape) }
+    val styled = if (liquid == null) kitStyledFace(KitSurfaceInput(SurfaceRole.Floating, KitShapeId.Panel, SurfaceLevel.Surface2, ownFill = colors.surface2, radius = 20.dp)) else null
+    val attentionMark = if (attention) Modifier.background(colors.attentionSurface, shape).border(1.dp, colors.attentionLine, shape) else Modifier
+    val face =
+        when {
+            liquid != null -> liquid.then(attentionMark)
+            styled != null -> Modifier.kitSurface(styled).then(attentionMark)
+            else -> Modifier.background(if (attention) colors.attentionSurface else colors.surface2, shape).border(1.dp, if (attention) colors.attentionLine else colors.hairline, shape)
+        }
     Column(
         modifier
             .fillMaxWidth()
             .testTag(VOICE_PILL_TAG)
             .then(if (reduced) Modifier else Modifier.animateContentSize(KitMotion.specs.quick()))
-            .background(if (attention) colors.attentionSurface else colors.surface2, shape)
-            .border(1.dp, if (attention) colors.attentionLine else colors.hairline, shape)
+            .then(face)
             .padding(horizontal = Space.S4.dp, vertical = Space.S3.dp),
         verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
     ) {

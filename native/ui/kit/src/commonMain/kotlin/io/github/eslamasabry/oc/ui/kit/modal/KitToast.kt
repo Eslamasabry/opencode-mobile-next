@@ -1,8 +1,8 @@
 package io.github.eslamasabry.oc.ui.kit.modal
 
+import io.github.eslamasabry.oc.ui.kit.foundation.kitStyledFace
 import androidx.compose.animation.AnimatedVisibility
 import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceInput
-import io.github.eslamasabry.oc.ui.kit.foundation.kitDressedLook
 import io.github.eslamasabry.oc.ui.kit.foundation.kitSurface
 import io.github.eslamasabry.oc.ui.design.style.SurfaceRole
 import io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel
@@ -127,7 +127,9 @@ private fun ToastPill(toast: KitToast) {
     val colors = LocalKitColors.current
     val shape = KitShapeId.Pill.shape()
     // Brutal and Paper dress the toast as a floating part (its ink edge and hard shadow; Paper's ink box, square).
-    val dressed = kitDressedLook(KitSurfaceInput(role = SurfaceRole.Floating, shape = KitShapeId.Pill, level = SurfaceLevel.Surface2))
+    // glass-truth 2026-11-16: Glass drew the toast's own opaque capsule; it is Glass's floating frost through the resolver
+    // (it floats over the page, but the kit holds no recording of what lies under it, so no lens).
+    val dressed = kitStyledFace(KitSurfaceInput(role = SurfaceRole.Floating, shape = KitShapeId.Pill, level = SurfaceLevel.Surface2, ownFill = colors.surface3))
     Row(
         Modifier.widthIn(max = MAX_DP.dp)
             .then(dressed?.let { Modifier.kitSurface(it) } ?: Modifier.clip(shape).background(colors.surface3).border(1.dp, colors.hairline, shape))

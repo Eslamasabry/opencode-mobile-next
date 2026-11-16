@@ -68,4 +68,28 @@ class KitSurfacesPlantedTest {
         assertTrue(!KitSurfaces.inScope("ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/effects/KitLiquidGlass.kt"))
         assertTrue(!KitSurfaces.inScope("feature/chat/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/chat/ui/ChatScreen.kt"))
     }
+
+    @Test
+    fun `K20b a part that paints its own face and never asks the style is caught, unless listed with a reason`() {
+        // The voice pill before glass-truth: its own fill and border, no style path at all.
+        val own = "Column(Modifier.background(colors.surface2, shape).border(1.dp, colors.hairline, shape)) {}"
+        assertEquals(listOf(path), KitSurfaces.ownFaces(mapOf(path to own), emptyList(), emptyList()).unasked)
+        // Dressing for Brutal and Paper alone is not enough: Glass still draws the Solid face.
+        val dressedOnly = "val d = kitDressedLook(input)\nRow(Modifier.then(d?.let { Modifier.kitSurface(it) } ?: Modifier.background(colors.surface3)))"
+        assertEquals(listOf(path), KitSurfaces.ownFaces(mapOf(path to dressedOnly), emptyList(), emptyList()).unasked)
+        // Asking a path Glass answers clears it (the raw face stays for Solid).
+        val asked = "val s = kitStyledFace(input)\nRow(Modifier.then(s?.let { Modifier.kitSurface(it) } ?: Modifier.background(colors.surface3)))"
+        assertEquals(emptyList(), KitSurfaces.ownFaces(mapOf(path to asked), emptyList(), emptyList()).unasked)
+        val wrapped = "val look = terminalSurfaceLook(role)\nBox(Modifier.background(colors.surface2))"
+        assertEquals(emptyList(), KitSurfaces.ownFaces(mapOf(path to wrapped), emptyList(), emptyList()).unasked)
+        // A comment that names the resolver asks nothing.
+        val commented = "// kitStyledFace(input) one day\nBox(Modifier.background(colors.surface2))"
+        assertEquals(listOf(path), KitSurfaces.ownFaces(mapOf(path to commented), emptyList(), emptyList()).unasked)
+        // Listed with a reason: allowed; listed but no longer painting: stale.
+        val (listed, errors) = KitSurfaces.parseOwnFaces("$path | an inset inside the message box")
+        assertEquals(emptyList(), errors)
+        assertEquals(emptyList(), KitSurfaces.ownFaces(mapOf(path to own), emptyList(), listed).unasked)
+        assertEquals(listed, KitSurfaces.ownFaces(mapOf(path to asked), emptyList(), listed).stale)
+        assertEquals(1, KitSurfaces.parseOwnFaces("$path | ").second.size)
+    }
 }

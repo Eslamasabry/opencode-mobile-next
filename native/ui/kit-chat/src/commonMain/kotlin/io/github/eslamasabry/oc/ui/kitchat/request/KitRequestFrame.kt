@@ -1,5 +1,8 @@
 package io.github.eslamasabry.oc.ui.kitchat.request
 
+import io.github.eslamasabry.oc.ui.design.style.Style
+import io.github.eslamasabry.oc.ui.kit.foundation.kitStyledFace
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
 import androidx.compose.foundation.background
 import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceInput
 import io.github.eslamasabry.oc.ui.kit.foundation.kitDressedLook
@@ -112,9 +115,29 @@ public fun KitRequestFrame(
                 color = if (question) colors.surface1 else colors.attentionSurface.compositeOver(colors.surface1),
             )
         )
+    // glass-truth 2026-11-16: under Glass the card was surface1 under its attention, an opaque card among the glass. It
+    // holds reading content, so it is a frosted card through the resolver with the attention kept on it (the start edge
+    // and half line of the question look, the wash and line of the standard one), as the form card is.
+    val glass =
+        if (inPlace || LocalKitStyle.current.style != Style.Glass) null
+        else kitStyledFace(
+            KitSurfaceInput(
+                SurfaceRole.Content,
+                KitShapeId.Card,
+                SurfaceLevel.Surface1,
+                ownFill = if (question) colors.surface1 else colors.attentionSurface.compositeOver(colors.surface1),
+            )
+        )
     val face =
         if (inPlace || LocalKitAppearance.current.style == KitSurfaceStyle.Signal) Modifier
         else if (dressed != null) Modifier.kitSurface(dressed).then(if (question) Modifier.questionEdge().questionPadding() else Modifier.padding(Space.S4.dp))
+        else if (glass != null && question)
+            Modifier.kitSurface(glass)
+                .questionEdge()
+                .border(kitHairline(), colors.attention.copy(alpha = FlutterKitTokens.NEEDS_YOU_LINE_ALPHA), glass.shape)
+                .questionPadding()
+        else if (glass != null)
+            Modifier.kitSurface(glass).background(colors.attentionSurface).border(kitHairline(), colors.attentionLine, glass.shape).padding(Space.S4.dp)
         else if (question) Modifier.questionFace(shape)
         else
             Modifier.clip(shape)
