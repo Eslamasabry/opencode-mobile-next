@@ -123,13 +123,13 @@ class OneSignInStateTest {
     }
 
     @Test
-    fun `SIGNIN-ONE-1 signed out: tile, chooser, Usage and Home all say signed out`() =
+    fun `SIGNIN-ONE-1 signed out, all four readers say signed out`() =
         check(signedOut, null, Said.SignedOut)
 
     @Test
-    fun `SIGNIN-ONE-2 not confirmed: tile, chooser and Usage say not confirmed, Home says nothing`() =
+    fun `SIGNIN-ONE-2 not confirmed, tile chooser and Usage say so and Home says nothing`() =
         check(unconfirmed, AgentSignInPhase.Failed, Said.NotConfirmed)
 
     @Test
-    fun `SIGNIN-ONE-3 plan limit: tile, chooser, Usage and Home all say limit`() = check(limited, null, Said.Limit)
+    fun `SIGNIN-ONE-3 plan limit, all four readers say limit`() = check(limited, null, Said.Limit)
 }
