@@ -349,8 +349,10 @@ public fun ChatsScreen(
             state.home.opening?.takeIf { it.phase == ChatsOpeningPhase.Failed }?.let { opening ->
                 item(key = "opening-status", contentType = "opening-status") { Box(kitItemMotion()) { OpeningStatus(opening, actions, blocked = state.newBlocked) } }
             }
-            state.home.opening?.takeIf { state.newBlocked && it.phase != ChatsOpeningPhase.Failed }?.let { opening ->
-                item(key = "new-blocked", contentType = "new-blocked") { Box(kitItemMotion()) { NewConversationBlocked(opening, actions) } }
+            state.home.opening?.takeIf { (state.newBlocked || state.newWaiting) && it.phase != ChatsOpeningPhase.Failed }?.let { opening ->
+                item(key = "new-blocked", contentType = "new-blocked") {
+                    Box(kitItemMotion()) { NewConversationBlocked(opening, actions, waiting = state.newWaiting && !state.newBlocked) }
+                }
             }
             replyOffer?.takeIf { shownNotice == HomeNoticeKind.ReplyOffer }?.let { offer -> item(key = "reply-notification-offer", contentType = "reply-notification-offer") { Box(kitItemMotion()) { offer() } } }
             state.brief?.let { brief -> item(key = "brief", contentType = "brief") { Box(kitItemMotion()) { BriefBlock(brief, rowWords, mask, actions, state) } } }

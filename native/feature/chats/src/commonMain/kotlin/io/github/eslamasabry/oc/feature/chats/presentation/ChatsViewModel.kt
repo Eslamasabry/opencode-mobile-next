@@ -35,6 +35,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -111,6 +112,14 @@ public class ChatsViewModel(
 
     private val renaming = MutableStateFlow(Renaming())
     private val newRefused = MutableStateFlow(false)
+
+    /**
+     * Cold start (S22 build 10053): New conversation tapped while the server still opens is kept, as a row's tap is
+     * (B-333), and opens once that server answers, on the page it was tapped on. [newKeptFrom] is that page.
+     */
+    private val newKept = MutableStateFlow(false)
+    private var newKeptFrom: io.github.eslamasabry.oc.ui.routes.AppRoute? = null
+    private var newKeptTimer: kotlinx.coroutines.Job? = null
 
     /** The switcher's switch in flight, and why the last one did not happen. */
     private data class Switching(
@@ -258,6 +267,7 @@ public class ChatsViewModel(
             .combine(agentNoticeFlow) { base, notices -> base.copy(agentNotices = notices) }
             .combine(phoneStorage) { base, access -> base.copy(phoneStorage = access) }
             .combine(newRefused) { base, refused -> base.copy(newBlocked = refused && base.home.opening != null) }
+            .combine(newKept) { base, kept -> base.copy(newWaiting = kept && base.home.opening != null) }
             // B-161 / B-162: each row's branch, and the Usage row's tightest limit.
             .combine(home.branches) { base, known -> HomeRows.withBranches(base, known) }
             .combine(home.usageLimits) { base, limits -> base.copy(usage = HomeRows.tightest(limits)) }
@@ -349,6 +359,28 @@ public class ChatsViewModel(
         viewModelScope.launch { pins.changes.collect { pinTick.update { it + 1 } } }
         viewModelScope.launch {
             home.snapshot.collect { extra -> extra.opening?.rows?.let { previews.seed(it) } }
+        }
+        // Cold start: the kept New conversation tap opens New conversation once its server answers, while the person
+        // is still on the page they tapped; a server whose opening failed says so instead. Acted on only on a change.
+        viewModelScope.launch {
+            combine(newKept, home.snapshot, nav.top) { kept, extra, top ->
+                    KeptNewTapRules.decide(kept, top == newKeptFrom, extra.opening?.phase)
+                }
+                .distinctUntilChanged()
+                .collect { decision ->
+                    when (decision) {
+                        KeptNewTap.Wait -> Unit
+                        KeptNewTap.Drop -> endNewKept()
+                        KeptNewTap.Open -> {
+                            endNewKept()
+                            nav.open(ChatsRoute.New(profile = null))
+                        }
+                        KeptNewTap.Refuse -> {
+                            endNewKept()
+                            newRefused.value = true
+                        }
+                    }
+                }
         }
         // B-333: the kept tap opens its row once the row can open, while the person is still on the page they tapped.
         // The decision is reduced to one value and acted on only when it changes, and acting never re-enters the tap
@@ -591,6 +623,7 @@ public class ChatsViewModel(
         // B-333: a row that cannot open yet (its server is still opening, or its list is not verified yet) keeps the
         // tap and opens by itself when it can, instead of ignoring it.
         keptGaveUp.value = null
+        endNewKept()
         if (home.snapshot.value.opening != null || openable == null) {
             waitingFrom = nav.top.value
             val keep = home.snapshot.value.opening != null || items.any { it.ref == ref }
@@ -820,12 +853,49 @@ public class ChatsViewModel(
 
     override fun newConversation() {
         waitingOpen.value = null
-        // A server that is not answering cannot start a conversation; the home says so instead of doing nothing.
-        if (state.value.home.opening == null) nav.open(ChatsRoute.New(profile = null)) else newRefused.value = true
+        val opening = home.snapshot.value.opening
+        when {
+            opening == null -> {
+                endNewKept()
+                nav.open(ChatsRoute.New(profile = null))
+            }
+            // A server that is not answering cannot start a conversation; the home says so instead of doing nothing.
+            opening.phase == ChatsOpeningPhase.Failed -> {
+                endNewKept()
+                newRefused.value = true
+            }
+            // Cold start: the server still opens. The tap is kept and New conversation opens the moment it answers
+            // (the collector in init), never lost and never twice: a second tap while kept keeps the same one.
+            else -> {
+                newKeptFrom = nav.top.value
+                newKept.value = true
+                watchNewKept()
+            }
+        }
+    }
+
+    /** The kept New conversation tap waits [KeptTapRules.LIMIT_MS] at most; then the home says the server still opens. */
+    private fun watchNewKept() {
+        if (newKeptTimer?.isActive == true) return
+        newKeptTimer =
+            viewModelScope.launch {
+                val waits = newKept.map { kept -> if (kept) KeptWait.Quiet else KeptWait.Ended }
+                if (KeptTapRules.limitSpent(waits) && newKept.value) {
+                    newKept.value = false
+                    newRefused.value = true
+                }
+            }
+    }
+
+    private fun endNewKept() {
+        newKeptTimer?.cancel()
+        newKeptTimer = null
+        newKept.value = false
     }
 
     override fun dismissNewBlocked() {
         newRefused.value = false
+        endNewKept()
     }
 
     override fun openSettings() {
