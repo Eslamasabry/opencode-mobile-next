@@ -93,10 +93,10 @@ class OpenConversationPlainTest {
         waitForIdle()
     }
 
-    private class Frame(val ms: Long, val home: Boolean, val chat: Boolean, val chatTop: Int?)
+    private class Frame(val ms: Long, val home: Boolean, val chat: Boolean, val chatTop: Int?, val chatTrace: Boolean)
 
-    /** Count of sampled pixels where [channel] (16 red, 0 blue) leads the other two by a clear margin. */
-    private fun BufferedImage.marked(channel: Int): Pair<Int, Int?> {
+    /** Count of sampled pixels where [channel] (16 red, 0 blue) leads the other two by more than [lead]. */
+    private fun BufferedImage.marked(channel: Int, lead: Int = LEAD): Pair<Int, Int?> {
         var n = 0
         var top: Int? = null
         for (y in 0 until height step 2) for (x in 0 until width step 2) {
@@ -104,8 +104,8 @@ class OpenConversationPlainTest {
             val r = p shr 16 and 255
             val g = p shr 8 and 255
             val b = p and 255
-            val lead = if (channel == 16) r - maxOf(g, b) else b - maxOf(r, g)
-            if (lead > LEAD) {
+            val by = if (channel == 16) r - maxOf(g, b) else b - maxOf(r, g)
+            if (by > lead) {
                 n++
                 if (top == null) top = y
             }
@@ -122,18 +122,20 @@ class OpenConversationPlainTest {
             val image = onRoot().captureToImage().toAwtImage()
             val (home, _) = image.marked(16)
             val (chat, chatTop) = image.marked(0)
-            out += Frame(t, home > SEEN, chat > SEEN, chatTop.takeIf { chat > SEEN })
+            val (trace, _) = image.marked(0, TRACE)
+            out += Frame(t, home > SEEN, chat > SEEN, chatTop.takeIf { chat > SEEN }, trace > SEEN)
         }
         return out
     }
 
-    private fun assertNeverBoth(frames: List<Frame>, what: String) {
+    /** No frame after [after] ms shows both pages clearly. */
+    private fun assertNeverBoth(frames: List<Frame>, what: String, after: Long) {
         for (f in frames) {
-            if (f.ms <= CROSS_OVER_MS) continue
+            if (f.ms <= after) continue
             assertTrue(
                 !(f.home && f.chat),
-                "$what, frame at ${f.ms} ms: Home and the conversation are both on screen after the page transition's " +
-                    "cross-over ($CROSS_OVER_MS ms)",
+                "$what, frame at ${f.ms} ms: Home and the conversation are both clearly on screen (allowed only in the " +
+                    "first $after ms)",
             )
         }
     }
@@ -151,7 +153,7 @@ class OpenConversationPlainTest {
             val frames = frames(SPAN_MS)
             mainClock.autoAdvance = true
             waitForIdle()
-            assertNeverBoth(frames, "open")
+            assertNeverBoth(frames, "open", after = CROSS_OVER_MS)
             val last = frames.last()
             assertTrue(last.chat && !last.home, "the conversation is on screen alone at the end")
             // The conversation is whole in the first frame it shows: its content starts right under its bar (not at a
@@ -188,7 +190,7 @@ class OpenConversationPlainTest {
         }
 
     @Test
-    fun `OCP-03 Back from a conversation to Home shows both together only in the page transition's cross-over`() =
+    fun `OCP-03 Back from a conversation to Home never shows both clearly in one frame`() =
         runDesktopComposeUiTest(W, H) {
             show()
             runOnIdle { navigator.openChat(ref(4)) }
@@ -198,7 +200,15 @@ class OpenConversationPlainTest {
             val frames = frames(SPAN_MS)
             mainClock.autoAdvance = true
             waitForIdle()
-            assertNeverBoth(frames, "back")
+            // Fade-forwards' reverse: the conversation fades out over the first quarter while Home is still faint, so
+            // Home is never clearly drawn while any trace of the conversation is left. A page shrinking into its row
+            // over a fully drawn Home is.
+            for (f in frames) {
+                assertTrue(
+                    !(f.home && f.chatTrace),
+                    "back, frame at ${f.ms} ms: Home is fully drawn while the conversation is still on screen",
+                )
+            }
             val last = frames.last()
             assertTrue(last.home && !last.chat, "Home is on screen alone at the end")
         }
@@ -216,6 +226,9 @@ class OpenConversationPlainTest {
 
         /** A channel leads the others by this much: the block is clearly drawn, not a near-transparent trace. */
         const val LEAD = 80
+
+        /** A trace of a page: still drawn, however faint. */
+        const val TRACE = 20
 
         /** Sampled pixels needed to call a page on screen (anti-aliased edges never reach it). */
         const val SEEN = 400
