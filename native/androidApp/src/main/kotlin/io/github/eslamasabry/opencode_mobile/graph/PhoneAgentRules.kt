@@ -307,6 +307,22 @@ internal object PhoneAgentRules {
     fun signInCheckFailed(agent: AgentDescriptor, signIn: AgentSignInPhase?): Boolean =
         signIn == AgentSignInPhase.Failed && agent.signInMethod != AgentSignInMethod.None && !signInUnchecked(agent)
 
+    /** A check that gave no answer: it timed out, the phone's Linux did not answer, or Claude Code was busy. */
+    val NO_ANSWER: Set<AuthProbeError> =
+        setOf(AuthProbeError.HostUnavailable, AuthProbeError.TimedOut, AuthProbeError.AgentBusy)
+
+    /**
+     * signin-truth-2: the answer that stands when the check gave [fresh] and it is no answer ([NO_ANSWER]): this run's
+     * [previous] answer, else the registry's [kept] one (the last answer before an app start); null when [fresh] is an
+     * answer, or nothing is known (then the check's failure is kept and the sign-in reads "not confirmed"). Before,
+     * after every app start a Claude Code check that could not run read "Sign-in not confirmed" while the registry
+     * knew the last answer.
+     */
+    fun standIn(fresh: AuthProjection, previous: AuthProjection?, kept: AuthProjection?): AuthProjection? {
+        if (fresh.error !in NO_ANSWER) return null
+        return previous?.takeIf { it.state != AuthState.Error } ?: kept?.takeIf { it.state != AuthState.Error }
+    }
+
     /** The sign-in phase of the probe's [answer]: an expired sign-in is a check that ran and found none to use. */
     fun phaseOf(answer: AuthProjection): AgentSignInPhase =
         when (answer.state) {
