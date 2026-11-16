@@ -56,12 +56,12 @@ class CountsArePluralsTest {
         const val FROZEN_ARB = "frozen ARB copy (B-L10N-010); needs a plural in lib/l10n first"
 
         val notCounts: Map<String, String> = mapOf(
-        // percent (20)
+        // percent (21)
         "account40PercentUsed" to PERCENT, "agentAccountPercentUsed" to PERCENT, "agentCardProgressValue" to PERCENT,
         "e7VoiceUiDownloadPercent" to PERCENT, "languagePickerPartlyTranslated" to PERCENT,
         "voiceDownloadProgressPercent" to PERCENT,
         "m40PlansAlertAt" to PERCENT, "m40PlansLeft" to PERCENT, "m40UsageSameAsOthers" to PERCENT,
-        "phoneSetupStartProgressHeadline" to PERCENT,
+        "phoneDownloadRunningPercent" to PERCENT, "phoneSetupStartProgressHeadline" to PERCENT,
         "setupProgressViewPercent" to PERCENT, "stateContextUsage" to PERCENT, "statePlansThreshold" to PERCENT,
         "teamUiAgentContextSemantics" to PERCENT, "teamUiAgentContextShort" to PERCENT,
         "usage_widget_column" to PERCENT, "usage_widget_left" to PERCENT, "welcomePhoneSettingUp" to PERCENT,
@@ -71,7 +71,7 @@ class CountsArePluralsTest {
         "agentAccountWindowDays" to COMPOUND, "agentAccountWindowHours" to COMPOUND,
         "agentAccountWindowMinutes" to COMPOUND, "usage_widget_window_days" to COMPOUND,
         "usage_widget_window_hours" to COMPOUND,
-        // unit abbreviation (74)
+        // unit abbreviation (77)
         "chatStuckHours" to UNIT, "chatStuckMinutes" to UNIT,
         "composerLimitResetsInHours" to UNIT, "composerLimitResetsInHoursMinutes" to UNIT, "composerLimitResetsInMinutes" to UNIT, "connCheckSpeedOk" to UNIT,
         "connectionTryingAgainIn" to UNIT, "continueWithRecordSize" to UNIT, "e7SetupElapsedMinutes" to UNIT,
@@ -86,7 +86,9 @@ class CountsArePluralsTest {
         "m40PlansDurationHours" to UNIT, "m40PlansDurationHoursMinutes" to UNIT, "m40PlansDurationMinutes" to UNIT,
         "m40PlansResetHours" to UNIT, "m40PlansResetMinutes" to UNIT, "native_widget_days" to UNIT,
         "native_widget_hours" to UNIT, "native_widget_minutes" to UNIT, "notifStatusHours" to UNIT,
-        "notifStatusMinutes" to UNIT, "perfTraceStatLine" to UNIT, "runningDetailElapsed" to UNIT,
+        "notifStatusMinutes" to UNIT, "perfTraceStatLine" to UNIT,
+        "phoneDownloadAskTitle" to UNIT, "phoneDownloadWaitingHelper" to UNIT, "phoneDownloadWaitingOpenCode" to UNIT,
+        "runningDetailElapsed" to UNIT,
         "runningDetailMemory" to UNIT, "teamPhoneRemoveFrees" to UNIT, "teamProjectElapsedHours" to UNIT,
         "teamProjectElapsedMinutes" to UNIT, "teamProjectElapsedSeconds" to UNIT,
         "teamProjectPlanningElapsed" to UNIT, "teamProjectPlanningSlow" to UNIT, "teamUiRunElapsedDays" to UNIT,
