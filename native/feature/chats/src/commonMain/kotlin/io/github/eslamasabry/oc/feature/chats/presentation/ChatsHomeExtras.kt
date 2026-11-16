@@ -109,7 +109,27 @@ public data class ChatsHomeExtraState(
      * (owner 2026-11-10).
      */
     val known: Boolean = true,
+    /**
+     * What this phone is really starting right now, said at the end of the "Recent" line (owner 2026-11-16: "let's
+     * get the customer the peek of what's happening"); null when nothing is starting or no signal names a stage.
+     */
+    val stage: HomeStage? = null,
 )
+
+/** The stages home can name while this phone gets ready, in the order a cold start goes through them. */
+public enum class HomeStage {
+    /** The phone's Linux is being started. */
+    Linux,
+
+    /** This phone's OpenCode is starting inside a running Linux. */
+    OpenCode,
+
+    /** The agents' helper is being started. */
+    Helper,
+
+    /** The helper answers; the agents themselves are warming up. */
+    Agents,
+}
 
 public enum class ChatsMonitorStatus {
     Off,

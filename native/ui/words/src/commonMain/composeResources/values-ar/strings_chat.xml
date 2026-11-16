@@ -1556,6 +1556,7 @@
     <string name="stageStartingLinux">جارٍ تشغيل Linux…</string>
     <string name="stageStartingOpenCode">جارٍ تشغيل OpenCode…</string>
     <string name="stageStartingHelper">جارٍ تشغيل مساعد الوكلاء…</string>
+    <string name="stageStartingAgents">جارٍ تشغيل الوكلاء…</string>
     <string name="stageStartingAgent">جارٍ تشغيل %1$s…</string>
     <string name="stageOpeningConversation">جارٍ فتح المحادثة…</string>
 </resources>
