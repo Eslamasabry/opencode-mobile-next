@@ -95,3 +95,4 @@ wiped (see Floor); they never come back and do not raise the floor.
 | 10064 | build | 2026-11-16 | owner's try build (branch native/home-starting, NOT the release candidate): 10063 + step words on the chat page's waiting line and on Home's Recent line; built from the commit that records this row |
 | 10070 | release | 2026-11-16 | native release 3.0.0+10070 (owner lineage) |
 | 10071 | build | 2026-11-16 | owner's test build of 4c341041a1 (3.0.1 wave 1: one name for This phone, plan holds, small-screen labels, schedules from 2.1.5, first read while the server starts, reply headings, Back to the exact line, haptics) |
+| 10072 | build | 2026-11-17 | PROOF build for a clean cloud phone, not the owner's build: the first-run fix (native/first-run-start 9c3a95e761, This phone's readiness probe on direct loopback) on a side branch, cut from master 13ec57a919; not merged |
