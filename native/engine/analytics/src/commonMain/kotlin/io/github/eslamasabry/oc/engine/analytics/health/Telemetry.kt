@@ -337,13 +337,21 @@ public class TelemetryService(
         val safe = cleanProductProps(event, props) ?: return
         if (event == ProductEvent.ScreenView) safe["screen"]?.let { visibleScreen.store(it) }
         if (!usageLive) return
+        if (!deliver(event, safe)) return
+        val page = if (event == ProductEvent.AppOpen) visibleScreen.load()?.let { mapOf("screen" to it) } else null
+        val pageDelivered = page != null && deliver(ProductEvent.ScreenView, page)
+        if (!usageLive) return
+        // Publish both session records before derived milestones, then observe them in their original order.
+        safely { journeyRef.load()?.observe(event, safe) }
+        if (pageDelivered) safely { journeyRef.load()?.observe(ProductEvent.ScreenView, page!!) }
+    }
+
+    private fun deliver(event: ProductEvent, safe: Map<String, String>): Boolean {
+        if (!usageLive) return false
         ring.add("event ${event.wire}" + safe.entries.joinToString("") { " ${it.key}=${it.value}" })
         safely { vendor.event(event.wire, safe) }
-        if (event == ProductEvent.AppOpen) {
-            visibleScreen.load()?.let { track(ProductEvent.ScreenView, mapOf("screen" to it)) }
-        }
         if (event == ProductEvent.SendResult && safe["result"] == "ok") turns.incrementAndFetch()
-        safely { journeyRef.load()?.observe(event, safe) }
+        return true
     }
 
     override fun takeSessionTurns(): Int = turns.exchange(0)
@@ -365,6 +373,7 @@ public class TelemetryService(
         journeyRef.store(journey)
         if (usageLive) {
             journey.reach(Milestone.Opened)
+            visibleScreen.load()?.let { journey.observe(ProductEvent.ScreenView, mapOf("screen" to it)) }
             journey.publishStage()
         }
     }

@@ -9,6 +9,7 @@ import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Instant
 import io.github.eslamasabry.oc.engine.analytics.health.MemoryTelemetryReportStore
+import io.github.eslamasabry.oc.engine.analytics.health.MemoryJourneyMemory
 import io.github.eslamasabry.oc.engine.analytics.health.TelemetryConsent
 import io.github.eslamasabry.oc.engine.analytics.health.TelemetryConsentStore
 import io.github.eslamasabry.oc.engine.analytics.health.TelemetryService
@@ -69,28 +70,32 @@ class ProductAnalyticsTest {
         val telemetry = analytics()
         val lifecycle = ProductLifecycle(telemetry, StepClock())
         lifecycle.beginColdStart()
-        telemetry.track(ProductEvent.ScreenView, mapOf("screen" to ProductScreen.Conversations))
+        telemetry.track(ProductEvent.ScreenView, mapOf("screen" to ProductScreen.Chat))
+        telemetry.attachJourney(MemoryJourneyMemory())
         telemetry.track(ProductEvent.MemoryPressure, mapOf("level" to "low"))
         lifecycle.coldStart("3.0.1+10081", "3.0.1+10081")
-        assertEquals(listOf("app_open", "screen_view", "memory_pressure"), sink.events.map { it.first })
+        assertEquals(listOf("app_open", "screen_view", "journey_milestone", "journey_milestone", "memory_pressure"), sink.events.map { it.first })
+        assertEquals(listOf("opened", "chat_opened"), sink.events.filter { it.first == "journey_milestone" }.map { it.second["step"] })
     }
 
     @Test
     fun `B-180 enabling usage opens on the current screen without collecting the off-consent history`() = runTest {
         val telemetry = analytics(usage = false)
+        telemetry.attachJourney(MemoryJourneyMemory())
         telemetry.track(ProductEvent.ScreenView, mapOf("screen" to ProductScreen.Settings))
         telemetry.track(ProductEvent.MemoryPressure, mapOf("level" to "low"))
         telemetry.track(ProductEvent.ScreenView, mapOf("screen" to ProductScreen.Chat))
         assertTrue(sink.events.isEmpty())
         telemetry.setConsent(usage = true, crashes = false)
-        assertEquals(listOf("app_open", "screen_view"), sink.events.map { it.first })
-        assertEquals(mapOf("screen" to "chat"), sink.events.last().second)
+        assertEquals(listOf("app_open", "screen_view", "journey_milestone", "journey_milestone"), sink.events.map { it.first })
+        assertEquals(listOf("opened", "chat_opened"), sink.events.filter { it.first == "journey_milestone" }.map { it.second["step"] })
+        assertEquals(mapOf("screen" to "chat"), sink.events[1].second)
         telemetry.track(ProductEvent.AppOpen, mapOf("kind" to "warm"))
-        assertEquals(listOf("app_open", "screen_view", "app_open", "screen_view"), sink.events.map { it.first })
+        assertEquals(listOf("app_open", "screen_view", "journey_milestone", "journey_milestone", "app_open", "screen_view"), sink.events.map { it.first })
         assertEquals(mapOf("screen" to "chat"), sink.events.last().second)
         telemetry.setConsent(usage = false, crashes = false)
         telemetry.track(ProductEvent.ScreenView, mapOf("screen" to ProductScreen.Settings))
-        assertEquals(4, sink.events.size, "off-consent screen changes are not sent")
+        assertEquals(6, sink.events.size, "off-consent screen changes are not sent")
     }
 
     @Test
