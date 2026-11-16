@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.RuntimeProblem
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
+import io.github.eslamasabry.oc.core.common.text.PhoneSizes
 import io.github.eslamasabry.oc.engine.agents.persona.AgentPersona
 import io.github.eslamasabry.oc.feature.agents.hub.AgentComputer
 import io.github.eslamasabry.oc.feature.agents.hub.AgentsActions
@@ -36,6 +37,7 @@ import io.github.eslamasabry.oc.feature.agents.hub.PhoneDevice
 import io.github.eslamasabry.oc.feature.agents.hub.AgentsUi
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentInstallPhase
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentInstallation
+import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentRemoval
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentRow
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentStatus
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentsState
@@ -209,6 +211,24 @@ class AgentsBentoTest {
         onNode(hasContentDescription("Install Gemini CLI")).assertDoesNotExist()
         onNodeWithText("Remove Gemini CLI").performClick()
         assertTrue("remove:gemini" in actions.calls)
+    }
+
+    // Small-faults 301: "Program removed. Freed 101982208 bytes." was a raw byte count in the copy.
+    @Test
+    fun `B-AGENT-200 the removal message words the freed space as a size, never a raw byte count`() = runComposeUiTest {
+        val row = PhoneAgentRow("codex", "Codex", PhoneAgentStatus.Ready, removable = true)
+        setContent {
+            Screen(
+                AgentsUi(
+                    phone = PhoneAgentsState(available = true, agents = persistentListOf(row), owner = ProfileId("o")),
+                    removal = PhoneAgentRemoval.Removed(101_982_208L),
+                ),
+                Recorder(),
+            )
+        }
+        onNodeWithText("Program removed. Freed ${PhoneSizes.text(101_982_208L)}.").assertExists()
+        onNodeWithText("101982208", substring = true).assertDoesNotExist()
+        onNodeWithText("bytes", substring = true).assertDoesNotExist()
     }
 
     // Coordinator ruling 2026-11-13: Qwen Code, Goose and omp have no read-only sign-in status. Installed, each says
