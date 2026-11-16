@@ -14,7 +14,10 @@ import io.github.eslamasabry.oc.core.common.dart.DartJson
  */
 internal object LegacyFingerprints {
     /** True when [stamp] is this row's stamp under no version, the row's own, or any plausible OpenCode version. */
-    fun matches(row: Map<String, Any?>, stamp: String): Boolean {
+    fun matches(row: Map<String, Any?>, stamp: String, earlierAddresses: List<String> = emptyList()): Boolean =
+        matchesAt(row, stamp) || earlierAddresses.any { matchesAt(row + ("baseUrl" to it), stamp) }
+
+    private fun matchesAt(row: Map<String, Any?>, stamp: String): Boolean {
         if (stamp == stamp(row) || stamp == stamp(withVersion(row, null))) return true
         for (major in 1..3) for (minor in 0..40) for (patch in 0..99) {
             val v = "$major.$minor.$patch"

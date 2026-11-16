@@ -58,6 +58,16 @@ public interface ScheduleProfiles {
     public suspend fun legacyRow(profileId: String): Map<String, Any?>? = null
 
     /**
+     * The profile's earlier addresses, for the one server that moved: this phone's own server was at the old app's
+     * port and is now at this app's. Only the app's own server on this phone has any; every other server has none,
+     * so a changed address there stays a changed server (B-AGENT-218).
+     */
+    public suspend fun earlierAddresses(profileId: String): List<String> = emptyList()
+
+    /** The native [fingerprint] this same server carried at each of [earlierAddresses]. */
+    public suspend fun earlierFingerprints(profileId: String): Set<String> = emptySet()
+
+    /**
      * Opens a gateway for the profile pinned to [projectPath]. Credentials are resolved inside,
      * never stored.
      */

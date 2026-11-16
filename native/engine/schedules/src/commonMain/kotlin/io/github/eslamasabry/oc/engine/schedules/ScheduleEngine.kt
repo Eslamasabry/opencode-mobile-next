@@ -79,7 +79,8 @@ public class ScheduleEngine(
     private val runner =
         ScheduleRunner(profiles, nowMs, pollMs) { schedule ->
             fingerprints.accepts(schedule.profileId, schedule.profileFingerprint, profiles.fingerprint(schedule.profileId)) ||
-                legacyNamesThisServer(schedule.profileId, schedule.profileFingerprint, remember = true)
+                legacyNamesThisServer(schedule.profileId, schedule.profileFingerprint, remember = true) ||
+                schedule.profileFingerprint in profiles.earlierFingerprints(schedule.profileId)
         }
     private val unmatched = AtomicReference<PersistentMap<String, Boolean>>(persistentHashMapOf())
 
@@ -348,6 +349,11 @@ public class ScheduleEngine(
             }
             return
         }
+        // A native stamp from before this phone's own server moved to this app's port: the same server.
+        val moved = profiles.earlierFingerprints(profileId)
+        if (moved.isNotEmpty() && store.load(profileId).any { it.profileFingerprint in moved }) {
+            store.restamp(profileId, { it in moved }, fingerprint)
+        }
         val alias = fingerprints.alias(profileId)
         val accepted = setOfNotNull(legacy) + earlier + alias?.takeIf { it.native == fingerprint }?.legacy.orEmpty()
         if (accepted.isNotEmpty()) {
@@ -368,7 +374,7 @@ public class ScheduleEngine(
         val row = profiles.legacyRow(profileId) ?: return false
         val key = "$profileId|$stamp|${LegacyFingerprints.stamp(row)}"
         if (unmatched.load()[key] == true) return false
-        if (!LegacyFingerprints.matches(row, stamp)) {
+        if (!LegacyFingerprints.matches(row, stamp, profiles.earlierAddresses(profileId))) {
             while (true) {
                 val current = unmatched.load()
                 if (unmatched.compareAndSet(current, current.putting(key, true))) break
