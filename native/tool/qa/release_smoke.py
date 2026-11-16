@@ -188,10 +188,11 @@ def conversations_screen(timeout=90):
 
 
 def user_texts(nodes):
-    """Texts on the Conversations screen that are the person's own (not one of the app's words, no digits like times)."""
+    """Texts on the Conversations screen that are the person's own: a row's title (a row can be one label "title,
+    status, 2 min ago", whose time changes between two looks), never one of the app's words, a time or the box."""
     out = set()
     for n in nodes:
-        t = n.label().strip()
+        t = n.label().strip().split(', ')[0].strip()
         if len(t) >= 3 and not apps_words(t) and not re.search(r'\d', t) and not n.cls.endswith('EditText'):
             out.add(t)
     return out

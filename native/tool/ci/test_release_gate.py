@@ -197,6 +197,16 @@ class SmokeScript(unittest.TestCase):
         nodes = [self.mod.Node(e) for e in ET.fromstring(xml).iter('node')]
         self.assertEqual(self.mod.user_texts(nodes), {'Plan the garden shed trip zq'})
 
+    def test_a_row_is_compared_by_its_title_not_its_changing_time(self):
+        import xml.etree.ElementTree as ET
+        def texts(label):
+            xml = f'<hierarchy><node text="{label}" class="x" bounds="[0,0][1,1]"/></hierarchy>'
+            return self.mod.user_texts([self.mod.Node(e) for e in ET.fromstring(xml).iter('node')])
+        before = texts('Seed for the final smoke: reply with the word kiwi, kiwi, Just now')
+        after = texts('Seed for the final smoke: reply with the word kiwi, kiwi, 2 min ago')
+        self.assertEqual(before, {'Seed for the final smoke: reply with the word kiwi'})
+        self.assertEqual(before, after)
+
     def test_a_notice_on_the_conversations_screen_is_not_the_persons_text(self):
         import xml.etree.ElementTree as ET
         xml = ('<hierarchy><node text="The app was closed in the background, so OpenCode stopped. I" class="x" bounds="[0,0][1,1]"/>'
