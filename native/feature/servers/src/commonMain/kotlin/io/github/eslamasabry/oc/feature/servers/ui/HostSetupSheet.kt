@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.servers.ui
 
+import io.github.eslamasabry.oc.ui.kit.foundation.KitClipboardMode
 import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -43,7 +44,7 @@ internal fun HostSetupContentSheet(
     val server = serverName ?: stringResource(Res.string.e7SetupDefaultServer)
     var clip by remember { mutableStateOf<String?>(null) }
     var clipId by remember { mutableLongStateOf(0L) }
-    KitClipboardEffect(if (clip == null) null else clipId, clip, onDone = { clip = null })
+    KitClipboardEffect(if (clip == null) null else clipId, clip, onDone = { clip = null }, mode = KitClipboardMode.Public)
     val copy: (String) -> Unit = { value ->
         clipId++
         clip = value

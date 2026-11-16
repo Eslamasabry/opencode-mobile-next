@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.kitchat
 
+import io.github.eslamasabry.oc.ui.kit.foundation.KitClipboardMode
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -54,6 +55,7 @@ public fun rememberKitRedactedCopyAction(
         enabled,
         mask = rememberKitRedactingCopyMask(),
         maskedLabel = stringResource(Res.string.kitCopiedMasked),
+        clipboardMode = KitClipboardMode.Public,
     )
 
 /** `KitIconButtonCopy` for server text: masked, and the copied name says so when something was hidden. */
@@ -65,5 +67,6 @@ public fun KitRedactedCopyIconButton(text: () -> String, label: String, modifier
         label = label,
         mask = rememberKitRedactingCopyMask(),
         maskedLabel = stringResource(Res.string.kitCopiedMasked),
+        clipboardMode = KitClipboardMode.Public,
     )
 }

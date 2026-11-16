@@ -81,7 +81,7 @@ public fun KitChatMoreMenu(
  * words it, and says so when the redactor hid something (E15-S05).
  */
 @Composable
-public fun KitClipboardEffect(id: Long?, text: String?, onDone: (Long) -> Unit, announcement: String? = null) {
+public fun KitClipboardEffect(id: Long?, text: String?, onDone: (Long) -> Unit, announcement: String? = null, mode: KitClipboardMode) {
     @Suppress("DEPRECATION") // the platform clip-entry API lands with KitCopy (K1); this is the kit's one call site
     val clipboard = rememberKitClipboard()
     val done by rememberUpdatedState(onDone)
@@ -90,7 +90,7 @@ public fun KitClipboardEffect(id: Long?, text: String?, onDone: (Long) -> Unit, 
     var words by remember { mutableStateOf<String?>(null) }
     LaunchedEffect(id) {
         if (id != null && text != null) {
-            clipboard.setText(AnnotatedString(text), KitClipboardMode.Sensitive)
+            clipboard.setText(AnnotatedString(text), mode)
             words = said
             copied = id
             done(id)

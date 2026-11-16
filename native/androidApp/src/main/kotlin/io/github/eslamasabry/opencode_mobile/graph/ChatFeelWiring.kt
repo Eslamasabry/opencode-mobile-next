@@ -63,7 +63,7 @@ import kotlinx.coroutines.withContext
 
 /** The message/code-block Copy path keeps the ordinary Android preview and paste suggestion. */
 internal fun copyConversationText(context: android.content.Context, text: String) {
-    KitAndroidClipboard.write(context, text, KitClipboardMode.Sensitive, "OpenCode Mobile")
+    KitAndroidClipboard.write(context, text, KitClipboardMode.Public, "OpenCode Mobile")
 }
 
 @Inject

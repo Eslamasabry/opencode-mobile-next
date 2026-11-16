@@ -1,5 +1,7 @@
 package io.github.eslamasabry.oc.ui.kit.input
 
+import io.github.eslamasabry.oc.ui.kit.foundation.KitClipboardScope
+import io.github.eslamasabry.oc.ui.kit.foundation.KitClipboardMode
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.awaitEachGesture
@@ -575,7 +577,7 @@ private fun FieldBox(
         var revealed by rememberSaveable { mutableStateOf(false) }
         // The value is technical: left to right in an Arabic interface too, bidi-isolated by the
         // LTR box.
-        io.github.eslamasabry.oc.ui.kit.foundation.KitClipboardScope(io.github.eslamasabry.oc.ui.kit.foundation.KitClipboardMode.Public) {
+        KitClipboardScope(KitClipboardMode.Sensitive) {
             CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
                 Row(box.padding(inset).padding(end = 0.dp), verticalAlignment = Alignment.CenterVertically) {
                     BasicSecureTextField(

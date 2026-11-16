@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.chat.header.ui
 
+import io.github.eslamasabry.oc.ui.kit.foundation.KitClipboardMode
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -603,6 +604,7 @@ public fun ChatHeaderOverlays(slot: ChatHeaderSlot) {
                 ClipKind.ResumeCommand,
                 ClipKind.PhoneLink -> copied
             },
+        mode = KitClipboardMode.Public,
     )
     // S24-CHAT story 8 (Flutter `chatUiTranscriptSaved`): said once after the file was saved.
     KitCopyAnnouncement(state.saved, stringResource(Res.string.chatUiTranscriptSaved))

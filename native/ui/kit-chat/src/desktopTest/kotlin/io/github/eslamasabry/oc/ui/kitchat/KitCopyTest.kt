@@ -3,6 +3,7 @@
 
 package io.github.eslamasabry.oc.ui.kitchat
 
+import io.github.eslamasabry.oc.ui.kit.foundation.KitClipboardMode
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -174,7 +175,8 @@ class KitCopyTest {
                             clip?.second,
                             onDone = { id -> if (clip?.first == id) clip = null },
                             announcement = "Transcript copied as Markdown. Anything that looked like a password or key was hidden.",
-                        )
+        mode = KitClipboardMode.Public,
+    )
                     }
                 }
             }

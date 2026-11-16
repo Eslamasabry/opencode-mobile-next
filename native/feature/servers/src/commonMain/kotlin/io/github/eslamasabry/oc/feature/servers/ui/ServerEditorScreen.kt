@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.servers.ui
 
+import io.github.eslamasabry.oc.ui.kit.foundation.KitClipboardMode
 import io.github.eslamasabry.oc.ui.kit.frame.KitReportPageScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -110,7 +111,7 @@ public fun ServerEditorScreen(
     }
     var clip by remember { mutableStateOf<String?>(null) }
     var clipId by remember { mutableLongStateOf(0L) }
-    KitClipboardEffect(if (clip == null) null else clipId, clip, onDone = { clip = null })
+    KitClipboardEffect(if (clip == null) null else clipId, clip, onDone = { clip = null }, mode = KitClipboardMode.Public)
     val copyLabel = stringResource(Res.string.handoffCopyCommand)
     val copiedLabel = stringResource(Res.string.kitCopied)
     // App-authored commands with no credential; the block hands over its displayed source.

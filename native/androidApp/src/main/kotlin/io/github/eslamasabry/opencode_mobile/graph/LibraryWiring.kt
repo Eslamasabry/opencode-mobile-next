@@ -297,7 +297,7 @@ class AndroidLibraryHost(
         val safe = KitCopy.safeText(redactor, text).text
         return withContext(dispatchers.main) {
             attempt({ Failure.Device() }) {
-                KitAndroidClipboard.write(application, safe, KitClipboardMode.Sensitive)
+                KitAndroidClipboard.write(application, safe, KitClipboardMode.Public)
             }
         }
     }

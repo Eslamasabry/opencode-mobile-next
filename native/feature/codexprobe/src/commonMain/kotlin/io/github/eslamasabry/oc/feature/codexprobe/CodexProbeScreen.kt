@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.codexprobe
 
+import io.github.eslamasabry.oc.ui.kit.foundation.KitClipboardMode
 import io.github.eslamasabry.oc.ui.kit.frame.kitPageScrollState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -30,7 +31,7 @@ public fun CodexProbeScreen(state: CodexProbeUi, actions: CodexProbeActions) {
     val token = remember { TextFieldState() }
     var clip by remember { mutableStateOf<String?>(null) }
     var clipId by remember { mutableLongStateOf(0L) }
-    KitClipboardEffect(if (clip == null) null else clipId, clip, onDone = { clip = null })
+    KitClipboardEffect(if (clip == null) null else clipId, clip, onDone = { clip = null }, mode = KitClipboardMode.Sensitive)
     val enabled =
         if (state.busy) KitEnabled.Disabled(stringResource(Res.string.codexNativeWorking))
         else KitEnabled.Enabled

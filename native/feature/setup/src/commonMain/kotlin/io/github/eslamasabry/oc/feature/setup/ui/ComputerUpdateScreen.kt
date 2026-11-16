@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.setup.ui
 
+import io.github.eslamasabry.oc.ui.kit.foundation.KitClipboardMode
 import io.github.eslamasabry.oc.ui.kit.frame.kitPageScrollState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -95,7 +96,7 @@ public fun ComputerUpdateScreen(state: ComputerUpdateUi, actions: ComputerUpdate
 private fun GuideBody(state: ComputerUpdateUi, actions: ComputerUpdateActions) {
     var clip by remember { mutableStateOf<String?>(null) }
     var clipId by remember { mutableLongStateOf(0L) }
-    KitClipboardEffect(if (clip == null) null else clipId, clip, onDone = { clip = null })
+    KitClipboardEffect(if (clip == null) null else clipId, clip, onDone = { clip = null }, mode = KitClipboardMode.Public)
     Column(
         Modifier.fillMaxWidth().verticalScroll(kitPageScrollState()),
         verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
