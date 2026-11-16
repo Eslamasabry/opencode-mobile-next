@@ -9,6 +9,7 @@ import io.github.eslamasabry.oc.core.common.AppDispatchers
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.RuntimeProblem
+import io.github.eslamasabry.oc.core.data.cache.LastKnown
 import io.github.eslamasabry.oc.engine.runtime.storage.LinuxFolder
 import io.github.eslamasabry.oc.engine.runtime.storage.LinuxLocalStorage
 import io.github.eslamasabry.oc.engine.runtime.storage.LinuxRemovalSize
@@ -27,6 +28,8 @@ import kotlinx.coroutines.withContext
 class AndroidLinuxLocalStorage(
     private val app: Application,
     private val dispatchers: AppDispatchers,
+    private val lastKnown: LastKnown,
+    private val stores: PreviewStores,
 ) : LinuxLocalStorage {
     private val linux
         get() = BuiltinLinux.get(app)
@@ -162,5 +165,9 @@ class AndroidLinuxLocalStorage(
                 alsoDeleteProjects = deleteProjects,
                 confirmationName = confirmationName.takeIf { deleteProjects },
             )
+        }.also { result ->
+            if (result is Outcome.Ok && stores.warm() is Outcome.Ok) {
+                sweepPhoneAgentLastKnown(lastKnown, stores)
+            }
         }
 }
