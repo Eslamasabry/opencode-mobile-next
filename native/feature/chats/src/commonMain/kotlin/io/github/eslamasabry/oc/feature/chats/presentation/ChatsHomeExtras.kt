@@ -88,6 +88,13 @@ public data class ChatsListSourceUi(
     val starting: AppStart? = null,
     /** While [starting] is [AppStart.AgentsUpdating]: the agent being installed, by its name, when known. */
     val updatingAgent: String? = null,
+    /**
+     * A server on this phone that the person runs themselves and the app never starts (a profile the old app made for a
+     * Termux setup, or any server saved at this phone's own address). When it does not answer it is simply off: the
+     * switcher says so, and home does not raise "isn't answering" for it (owner's phone, 2026-11-16: the old
+     * "This device (Termux)" profile nagged on every open after the move from the old app).
+     */
+    val selfRun: Boolean = false,
 )
 
 public data class ChatsHomeExtraState(
@@ -102,7 +109,27 @@ public data class ChatsHomeExtraState(
      * (owner 2026-11-10).
      */
     val known: Boolean = true,
+    /**
+     * What this phone is really starting right now, said at the end of the "Recent" line (owner 2026-11-16: "let's
+     * get the customer the peek of what's happening"); null when nothing is starting or no signal names a stage.
+     */
+    val stage: HomeStage? = null,
 )
+
+/** The stages home can name while this phone gets ready, in the order a cold start goes through them. */
+public enum class HomeStage {
+    /** The phone's Linux is being started. */
+    Linux,
+
+    /** This phone's OpenCode is starting inside a running Linux. */
+    OpenCode,
+
+    /** The agents' helper is being started. */
+    Helper,
+
+    /** The helper answers; the agents themselves are warming up. */
+    Agents,
+}
 
 public enum class ChatsMonitorStatus {
     Off,

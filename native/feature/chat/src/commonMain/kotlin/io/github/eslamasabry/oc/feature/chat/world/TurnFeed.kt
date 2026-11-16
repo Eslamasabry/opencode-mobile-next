@@ -94,6 +94,20 @@ internal class TurnFeedKeeper(private val sessionId: String) {
     fun liveMessages(): List<MessageWithParts> = live.messages
 
     /**
+     * Messages to save in [ChatLastKnown]: empty until live messages or history arrived (never re-saves or overwrites
+     * when nothing live was seen). When a turn ends before the first live history read succeeded, any older kept
+     * messages not yet in [live] stay ahead of it so earlier turns are not lost.
+     */
+    fun messagesToKeep(historyReconciled: Boolean): List<MessageWithParts> {
+        val current = live.messages
+        if (current.isEmpty()) return emptyList()
+        if (historyReconciled) return current
+        val prior = known?.messages?.takeIf { it.isNotEmpty() } ?: return current
+        val liveIds = current.mapTo(HashSet()) { it.info.id }
+        return prior.filterNot { it.info.id in liveIds } + current
+    }
+
+    /**
      * [keepShown]: the messages shown now stay until the new live ledger has its own (a reload or another graph);
      * false forgets them too (the conversation is gone).
      */
