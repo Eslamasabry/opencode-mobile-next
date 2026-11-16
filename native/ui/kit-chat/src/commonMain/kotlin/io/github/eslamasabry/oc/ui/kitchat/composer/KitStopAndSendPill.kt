@@ -39,7 +39,7 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTypography
 /**
  * The "Stop and send" pill (plan 08 §5.2): while a reply runs and the agent must stop it to take the message
  * (`delivery == stopAndSend`), the field's Send disc becomes this amber (`attentionFill`) pill with the stop square and
- * the words, so the stop is plain before the tap (an approved amber meaning, 06 LOOK-4). It plays `KitHaptic.Send`. Its
+ * the words, so the stop is plain before the tap (an approved amber meaning, 06 LOOK-4). It plays `KitHaptic.Commit`. Its
  * wider width is taken at once (no width animation); the disc ⇄ pill change is a [KitComposerSwap] cross-fade.
  *
  * Text: frame (capped at 1.3x). Motion: none of its own (press feedback from `KitTappable`).
@@ -58,7 +58,7 @@ public fun KitStopAndSendPill(label: String, onClick: () -> Unit, modifier: Modi
     KitTappable(
         onClick = onClick,
         modifier = modifier.testTag(PILL_TAG).semantics { contentDescription = label },
-        haptic = KitHaptic.Send,
+        haptic = KitHaptic.Commit,
         shape = KitShapeId.Pill,
     ) {
         Row(

@@ -28,7 +28,7 @@ import kotlin.test.assertTrue
 /**
  * Plan 08 §5.2 `ComposerKeysUiTest` (the motion half this unit owns): the status strip unfolds with the Stop when it was
  * empty and folds when it empties; with chips present the Stop fades in beside them without moving the strip; under Off
- * all of it is instant; the "Stop and send" pill shows its words, plays Send and swaps with the disc.
+ * all of it is instant; the "Stop and send" pill shows its words, plays Commit and swaps with the disc.
  */
 @OptIn(ExperimentalTestApi::class)
 class ComposerKeysUiTest {
@@ -113,7 +113,7 @@ class ComposerKeysUiTest {
         }
 
     @Test
-    fun `a non-steering agent with words in the field shows the Stop and send pill, which plays Send`() =
+    fun `a non-steering agent with words in the field shows the Stop and send pill, which plays Commit`() =
         runComposeUiTest {
             val platform = RecordingPlatform()
             var sent = 0
@@ -133,7 +133,7 @@ class ComposerKeysUiTest {
             onNodeWithText("Stop and send", useUnmergedTree = true).assertExists()
             onNodeWithTag(PILL_TAG).performClick()
             assertEquals(1, sent)
-            assertEquals(listOf(KitHaptic.Send), platform.haptics)
+            assertEquals(listOf(KitHaptic.Commit), platform.haptics)
             onNodeWithTag("send-disc").assertDoesNotExist()
         }
 
