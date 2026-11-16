@@ -20,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.SignInWhy
+import io.github.eslamasabry.oc.core.common.text.PhoneSizes
 import io.github.eslamasabry.oc.feature.agents.hub.AgentComputerKind
 import io.github.eslamasabry.oc.feature.agents.hub.AgentsActions
 import io.github.eslamasabry.oc.feature.agents.hub.AgentsHubActions
@@ -123,7 +124,7 @@ import io.github.eslamasabry.oc.ui.words.res.linuxAgentPayloadRefresh
 import io.github.eslamasabry.oc.ui.words.res.linuxAgentPayloadRemove
 import io.github.eslamasabry.oc.ui.words.res.linuxAgentPayloadRemoveBody
 import io.github.eslamasabry.oc.ui.words.res.linuxAgentPayloadRemoveTitle
-import io.github.eslamasabry.oc.ui.words.res.linuxAgentPayloadRemoved
+import io.github.eslamasabry.oc.ui.words.res.linuxAgentPayloadRemovedFreed
 import io.github.eslamasabry.oc.ui.words.res.linuxAgentPayloadUnavailable
 import io.github.eslamasabry.oc.ui.words.res.linuxAgentPayloadUnconfirmed
 import io.github.eslamasabry.oc.ui.words.res.linuxAgentPayloadUnsafe
@@ -140,7 +141,6 @@ import io.github.eslamasabry.oc.ui.words.res.serversCreate
 import io.github.eslamasabry.oc.ui.words.res.serversSave
 import io.github.eslamasabry.oc.ui.words.res.serversWorking
 import io.github.eslamasabry.oc.ui.words.res.whatsNewShowAgents
-import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 
 /**
@@ -463,11 +463,8 @@ private fun PhoneTab(
         when (removal) {
             is PhoneAgentRemoval.Removed ->
                 KitNotice(
-                    pluralStringResource(
-                        Res.plurals.linuxAgentPayloadRemoved,
-                        removal.freedBytes.coerceAtMost(Int.MAX_VALUE.toLong()).toInt(),
-                        removal.freedBytes,
-                    ),
+                    // The app's one size words ("97 MB"), as every storage page writes them; never a raw byte count.
+                    stringResource(Res.string.linuxAgentPayloadRemovedFreed, PhoneSizes.text(removal.freedBytes)),
                     gutter,
                 )
             is PhoneAgentRemoval.Refused ->
