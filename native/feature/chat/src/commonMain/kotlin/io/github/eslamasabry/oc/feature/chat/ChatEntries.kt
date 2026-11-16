@@ -805,5 +805,6 @@ internal fun phoneFolderStatus(
         supporting = if (failed) stringResource(Res.string.chatsNewPhoneFolderRestartFailed) else null,
         // Never tapped twice: while it runs the line has no action, only what is happening.
         action = action?.takeUnless { fixing }?.let { KitLineAction(stringResource(it), fix) },
+        working = fixing,
     )
 }
