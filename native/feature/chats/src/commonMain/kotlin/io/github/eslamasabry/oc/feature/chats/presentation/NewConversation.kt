@@ -1077,9 +1077,9 @@ public class NewConversationViewModel(
             // A server that is still starting or reconnecting refuses the read at once: the page keeps waiting (it
             // stays "getting ready", with Start kept) and reads again by itself, for a bounded time. "Couldn't be
             // read" with Try again is only for a read that still fails after that (a server that is up and failing).
-            var again = 0
-            while (answered is Outcome.Failed && cached == null && answered.failure is Failure.Network && again < SETUP_RETRIES) {
-                again++
+            for (again in 1..SETUP_RETRIES) {
+                val refused = answered
+                if (refused !is Outcome.Failed || cached != null || refused.failure !is Failure.Network) break
                 delay(SETUP_RETRY_EVERY_MS)
                 if (ticket != generation) return@launch
                 answered =
