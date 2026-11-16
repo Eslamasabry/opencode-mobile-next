@@ -60,7 +60,7 @@ class KitRequestAnswersTest {
             onNodeWithText("Asks to edit: wait7.txt").assertExists()
             onNodeWithContentDescription("Allow once: create a file notes.txt").performClick()
             assertEquals(listOf("allow"), scene.events)
-            assertEquals(listOf(KitHaptic.Send), platform.haptics)
+            assertEquals(listOf(KitHaptic.Commit), platform.haptics)
         }
 
     @Test

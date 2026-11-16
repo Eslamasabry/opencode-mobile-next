@@ -177,7 +177,7 @@ class KitStepTreeTest {
             assertTrue(paused.top >= m.last().bottom, "its words are under its own line")
             onNode(hasText("Allow once")).performClick()
             assertEquals(listOf<Any>("review"), scene.allowed)
-            assertTrue(KitHaptic.Send in platform.haptics, "Allow once plays Send")
+            assertTrue(KitHaptic.Commit in platform.haptics, "Allow once plays Commit")
         }
 
     @Test

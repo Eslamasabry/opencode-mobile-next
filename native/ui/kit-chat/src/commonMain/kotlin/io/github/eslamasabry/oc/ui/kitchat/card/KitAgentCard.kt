@@ -716,7 +716,7 @@ public fun KitCardConfirm(
             Modifier.weight(1f),
             role = KitButtonRole.Secondary,
             enabled = enabled,
-            haptic = KitHaptic.Send,
+            haptic = KitHaptic.Commit,
         )
         KitButton(
             confirmLabel,
@@ -724,7 +724,7 @@ public fun KitCardConfirm(
             Modifier.weight(1f),
             destructive = danger,
             enabled = enabled,
-            haptic = KitHaptic.Send,
+            haptic = KitHaptic.Commit,
         )
     }
 }
