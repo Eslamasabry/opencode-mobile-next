@@ -266,10 +266,19 @@ public class TelemetryService(
     private fun apply(usage: Boolean, crashes: Boolean) {
         val newlyEnabled = usage && !usageFlow.value
         if (available) safely { vendor.setCollection(usage, crashes) }
-        // Listeners send what needs collection on already, so the flows change after the vendor switch.
+        // StateFlow observers can run immediately. Publish the opening/page before enabling their event feed.
+        val opening = newlyEnabled && available
+        val page = if (opening) visibleScreen.load()?.let { mapOf("screen" to it) } else null
+        if (opening) {
+            deliver(ProductEvent.AppOpen, mapOf("kind" to "cold"), startingConsent = true)
+            if (page != null) deliver(ProductEvent.ScreenView, page, startingConsent = true)
+        }
         usageFlow.value = usage
         crashesFlow.value = crashes
-        if (newlyEnabled) track(ProductEvent.AppOpen, mapOf("kind" to "cold"))
+        if (opening && usageLive) {
+            safely { journeyRef.load()?.observe(ProductEvent.AppOpen, mapOf("kind" to "cold")) }
+            if (page != null) safely { journeyRef.load()?.observe(ProductEvent.ScreenView, page) }
+        }
     }
 
     @Suppress("TooGenericExceptionCaught")
@@ -346,8 +355,8 @@ public class TelemetryService(
         if (page != null && pageDelivered) safely { journeyRef.load()?.observe(ProductEvent.ScreenView, page) }
     }
 
-    private fun deliver(event: ProductEvent, safe: Map<String, String>): Boolean {
-        if (!usageLive) return false
+    private fun deliver(event: ProductEvent, safe: Map<String, String>, startingConsent: Boolean = false): Boolean {
+        if (!usageLive && !startingConsent) return false
         ring.add("event ${event.wire}" + safe.entries.joinToString("") { " ${it.key}=${it.value}" })
         safely { vendor.event(event.wire, safe) }
         if (event == ProductEvent.SendResult && safe["result"] == "ok") turns.incrementAndFetch()
