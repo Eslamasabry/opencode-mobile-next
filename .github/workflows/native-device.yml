@@ -38,7 +38,7 @@ concurrency:
 
 env:
   # The app commit under test (the release candidate). Changed by a commit on this branch for each run.
-  APP_REF: 91d5b423b8a25425ed672b070eb84435bc07f0ea
+  APP_REF: 544bfc4c390cb04afe32db57c31639a3349aa5e3
   REPO: Eslamasabry/opencode-mobile-next
   # Non-empty: reuse the proof-apks artifact of that earlier run of this workflow (same APP_REF) instead of building.
   REUSE_RUN: ""
