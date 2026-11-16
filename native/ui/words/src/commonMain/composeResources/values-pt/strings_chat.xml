@@ -1366,4 +1366,5 @@
     <string name="chatSendNoPlanMode">Este agente não tem modo de plano, por isso nada foi enviado. Desative Plano para enviar no modo próprio do agente.</string>
     <string name="kitToolPlanStopped">Parado pelo Plano</string>
     <string name="chatStepPlanStopped">O modo de plano impediu uma alteração</string>
+    <string name="chatConnectingToAgent">Conectando ao %1$s…</string>
 </resources>
