@@ -218,6 +218,14 @@ class PrivacyNoticeSyncTest {
     @Test
     fun `B-SEC-207 every offered privacy locale names both senders and self hosting`() {
         val resources = File(repo, "native/ui/words/src/commonMain/composeResources")
+        for (page in listOf(
+            "native/feature/settings/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/settings/ui/PrivacyPages.kt",
+            "native/androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/ContinuityWiring.kt",
+        )) {
+            val source = File(repo, page).readText()
+            assertTrue("Res.string.nativeTelemetryUsageDetail" in source, "the actual Settings and consent UI use the current notice")
+            assertTrue("Res.string.telemetryUsageDetail" !in source, "the frozen Google-only notice is not shown")
+        }
         val offered = AppLanguage.entries.mapNotNull { it.tag }
         val code = liveCode()
         for (tag in offered) {
@@ -226,7 +234,7 @@ class PrivacyNoticeSyncTest {
             assertTrue(File(locale, "strings_native_privacy.xml").isFile, "$tag offers a translated policy")
             val detail = File(locale, "strings_s28_privacy.xml").readText()
             val policy = File(locale, "strings_native_privacy.xml").readText()
-            for (key in listOf("collectRules", "telemetryUsageDetail")) {
+            for (key in listOf("collectRules", "nativeTelemetryUsageDetail")) {
                 val text = Regex("""<string name="$key">(.*?)</string>""", RegexOption.DOT_MATCHES_ALL).find(detail)!!.groupValues[1]
                 assertEquals(emptyList(), recipientViolations(text), "${locale.name}: $key names the receivers")
             }

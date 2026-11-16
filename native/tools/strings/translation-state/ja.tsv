@@ -551,6 +551,7 @@ modelSelectionSaving	747ac43101
 modelServerDefault	ea63d05840
 modelSwitchSession	fc57019b4b
 nativeBundledPrivacy	5ae24bfb64
+nativeTelemetryUsageDetail	4c295c4c6b
 notifications:notify_alert_checkin_body	5d79aa9796
 notifications:notify_alert_checkin_title	e51cd67b60
 notifications:notify_alert_complete_title	2c965210d4
@@ -772,7 +773,6 @@ shellTabChats	7fd3ccb9ee
 shellTabFiles	72f8091e31
 telemetryCrashesDetail	61f10d5436
 telemetryCrashesTitle	49a006f24d
-telemetryUsageDetail	4c295c4c6b
 telemetryUsageTitle	8fa59c516a
 termuxInAppInstead	8adcfc0560
 undonePutBack	61d497adba

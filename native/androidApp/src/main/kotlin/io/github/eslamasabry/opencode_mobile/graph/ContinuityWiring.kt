@@ -44,7 +44,7 @@ import io.github.eslamasabry.oc.ui.words.res.telemetryConsentChoose
 import io.github.eslamasabry.oc.ui.words.res.telemetryConsentSave
 import io.github.eslamasabry.oc.ui.words.res.telemetryCrashesDetail
 import io.github.eslamasabry.oc.ui.words.res.telemetryCrashesTitle
-import io.github.eslamasabry.oc.ui.words.res.telemetryUsageDetail
+import io.github.eslamasabry.oc.ui.words.res.nativeTelemetryUsageDetail
 import io.github.eslamasabry.oc.ui.words.res.telemetryUsageTitle
 import io.github.eslamasabry.oc.ui.words.res.telemetryConsentNever
 import io.github.eslamasabry.oc.ui.words.res.telemetryConsentNotNow
@@ -280,8 +280,8 @@ private fun ConsentChoiceSheet(visible: Boolean, onSave: (Boolean, Boolean) -> U
                 checked = usage,
                 modifier = Modifier.testTag("telemetry-consent-usage"),
                 leading = KitRowLeading.Glyph(KitIcons.shield),
-                supporting = stringResource(Res.string.telemetryUsageDetail),
-                supportingMaxLines = 8,
+                supporting = stringResource(Res.string.nativeTelemetryUsageDetail),
+                supportingMaxLines = Int.MAX_VALUE,
                 onCheckedChange = { usage = it },
             )
             KitSwitchRow(

@@ -56,7 +56,7 @@ internal fun ColumnScope.PrivacyBody(privacy: PrivacyUi?, actions: SettingsActio
                     checked = on,
                     modifier = Modifier.testTag("privacy-send-usage"),
                     leading = KitRowLeading.Glyph(KitIcons.shield),
-                    supporting = stringResource(Res.string.telemetryUsageDetail),
+                    supporting = stringResource(Res.string.nativeTelemetryUsageDetail),
                     supportingMaxLines = Int.MAX_VALUE,
                     onCheckedChange = actions::onUsage,
                 )
