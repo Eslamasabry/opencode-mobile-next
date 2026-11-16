@@ -4,6 +4,9 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.getBoundsInRoot
+import androidx.compose.ui.test.hasAnyDescendant
+import androidx.compose.ui.test.hasScrollAction
+import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.v2.runDesktopComposeUiTest
@@ -96,11 +99,34 @@ class NewConversationNoticeWholeTest {
 
     @Test fun `I147-NOTICE sentence and every action whole at 360 x 780 dp with a 340 dp keyboard`() = scene(340)
 
-    @Test fun `I147-NOTICE sentence and every action whole at 360 x 780 dp with a 380 dp keyboard`() = scene(380)
+    private fun boxScrollsWithNotice(reach: PhoneFolderReach, shares: Boolean) =
+        runDesktopComposeUiTest(360, 780) {
+            val dir = "/storage/emulated/0/octest"
+            val ui =
+                NewConversationUi(
+                    profile = ProfileId("p1"),
+                    servers = listOf(NewConversationServer(ProfileId("p1"), "This phone", connected = true)),
+                    setup = NewConversationSetup(directory = dir, projects = emptyList(), models = emptyList(), agents = emptyList()),
+                    directory = dir,
+                    text = "",
+                    phoneFolder = reach,
+                )
+            setContent {
+                KitTheme(platform = DesktopKitPlatform(), localeTag = "en", appearance = KitAppearance(motion = MotionLevel.Off)) {
+                    CompositionLocalProvider(LocalKitScreenInsets provides WindowInsets(top = 28.dp, bottom = 304.dp)) {
+                        NewConversationScreen(ui, Actions)
+                    }
+                }
+            }
+            waitForIdle()
+            val inScroller = hasScrollAction().and(hasAnyDescendant(hasTestTag("chats-new-field")))
+            if (shares) onNode(inScroller).assertExists("the box scrolls with the blocking notice, so the notice gets room")
+            else onNode(inScroller).assertDoesNotExist()
+        }
 
-    @Test fun `I147-NOTICE sentence and every action whole at 360 x 780 dp with a 420 dp keyboard`() = scene(420)
+    @Test fun `I147-NOTICE a blocking notice shares the page's scroll with the box, so the notice is not squeezed`() =
+        boxScrollsWithNotice(PhoneFolderReach.Restart, shares = true)
 
-    @Test fun `I147-NOTICE sentence and every action whole at 360 x 780 dp with a 460 dp keyboard`() = scene(460)
-
-    @Test fun `I147-NOTICE sentence and every action whole at 360 x 780 dp with a 500 dp keyboard`() = scene(500)
+    @Test fun `I147-NOTICE with no notice the box keeps its own place above the scroller`() =
+        boxScrollsWithNotice(PhoneFolderReach.Ready, shares = false)
 }
