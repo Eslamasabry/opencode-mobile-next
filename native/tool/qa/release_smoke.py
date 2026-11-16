@@ -140,7 +140,8 @@ def tap(node):
 
 def wait_for(what, timeout, test):
     """Polls the screen every 2 s until test(nodes) is truthy; -> (value, nodes). value is None on timeout."""
-    end = time.time() + timeout
+    # OC_SMOKE_WAIT_SCALE stretches every wait on a slow or loaded device (the result note says when it was used).
+    end = time.time() + timeout * float(os.environ.get('OC_SMOKE_WAIT_SCALE', '1') or '1')
     nodes = []
     while time.time() < end:
         nodes = screen()
