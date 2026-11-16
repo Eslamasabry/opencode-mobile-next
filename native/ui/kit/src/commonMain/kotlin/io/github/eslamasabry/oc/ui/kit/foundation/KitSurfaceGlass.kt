@@ -139,8 +139,16 @@ private object Unset
 /**
  * One recorded live picture shared by every framed page of one size under a theme root (smoothness round 2: one live
  * background for the whole app), and what is made from it: its blurred copies and a shader look's reduced frame. Each
- * page showing it records it again on every draw (it is never kept across a change of the picture), and each page's
- * panes still follow their own page's [KitGlassBackdrop.frame].
+ * page's panes still follow their own page's [KitGlassBackdrop.frame].
+ *
+ * One recorder (black-frame 2026-11-16, Galaxy S22: Home → + and Close with a live background showed 1 to 6
+ * fully black frames). Before, every page showing the picture recorded it again on each of its draws, so while two
+ * pages were on screen (a push or a pop) the one layer was recorded twice a frame by two pages, each with its own
+ * content (a shader look's own finished layer): what the layer held swapped page by page inside one frame. Now the
+ * picture has exactly one [recorder] at a time: the first page that draws it while it has none. Only that page records
+ * it; every other page draws the recording as it stands, in its own frame. When the recorder lets go (it leaves, or
+ * its size changes), the pages still holding the picture are asked to draw again, and the first of them to draw takes
+ * the recording over in that draw. The picture is released only when no page holds it.
  */
 internal class KitGlassPicture {
     internal var layer: GraphicsLayer? = null
@@ -152,7 +160,14 @@ internal class KitGlassPicture {
     /** What [shader] was last recorded from: every input of the shader's frame, so an equal key is the same pixels. */
     internal var shaderKey: Any? = null
 
-    internal var users: Int = 0
+    /** The pages holding this picture, in the order they took it. */
+    internal val holders: ArrayList<KitGlassPictureHolder> = ArrayList(2)
+
+    /** The one page that records this picture now, or null until a holder draws (see the class comment). */
+    internal var recorder: KitGlassPictureHolder? = null
+
+    /** Pages holding the picture. */
+    internal val users: Int get() = holders.size
 
     internal fun release(context: androidx.compose.ui.graphics.GraphicsContext) {
         layer?.let(context::releaseGraphicsLayer)
@@ -176,18 +191,50 @@ internal class KitGlassPictures {
     /** Pictures in use (tests). */
     internal val count: Int get() = bySize.size
 
-    internal fun acquire(size: androidx.compose.ui.unit.IntSize): KitGlassPicture =
-        bySize.getOrPut(size) { KitGlassPicture() }.also { it.users++ }
+    /** Tests: told each time [KitGlassPicture] is recorded, with the page that recorded it. */
+    internal var onRecord: ((KitGlassPicture, KitGlassPictureHolder) -> Unit)? = null
 
-    internal fun release(picture: KitGlassPicture, context: androidx.compose.ui.graphics.GraphicsContext) {
-        picture.users--
-        if (picture.users > 0) return
+    internal fun acquire(size: androidx.compose.ui.unit.IntSize, holder: KitGlassPictureHolder): KitGlassPicture =
+        bySize.getOrPut(size) { KitGlassPicture() }.also { p ->
+            if (p.holders.none { it === holder }) p.holders += holder
+        }
+
+    /**
+     * [holder] lets go of [picture]. If it was the recorder, the pages still holding it draw again and the first to
+     * draw records it from then on; the recording it left stays in the layer until then, so no page ever draws it
+     * empty. The picture is released only when no page holds it any more.
+     */
+    internal fun release(
+        picture: KitGlassPicture,
+        holder: KitGlassPictureHolder,
+        context: androidx.compose.ui.graphics.GraphicsContext,
+    ) {
+        picture.holders.removeAll { it === holder }
+        if (picture.recorder === holder) {
+            picture.recorder = null
+            picture.holders.forEach { it.recorderLeft() }
+        }
+        if (picture.holders.isNotEmpty()) return
         bySize.entries.removeAll { it.value === picture }
         picture.release(context)
     }
 
+    /**
+     * Whether [holder] records [picture] in the draw it is in now: it does when it is the recorder, or when the picture
+     * has none (it then becomes the recorder). Every other holder only draws the recording.
+     */
+    internal fun records(picture: KitGlassPicture, holder: KitGlassPictureHolder): Boolean {
+        if (picture.recorder == null) picture.recorder = holder
+        return picture.recorder === holder
+    }
+
     /** The picture recorded for [size], if a page of that size is showing one. */
     internal fun at(size: androidx.compose.ui.unit.IntSize): KitGlassPicture? = bySize[size]
+}
+
+/** A page holding a shared [KitGlassPicture]: told to draw again when the picture's recorder let go of it. */
+internal fun interface KitGlassPictureHolder {
+    fun recorderLeft()
 }
 
 /** The scale the shared frost blurs the picture at. */
@@ -585,9 +632,14 @@ private class BackdropSourceNode(
     var backdrop: KitGlassBackdrop,
     var shared: KitGlassPictures?,
     var paint: DrawScope.() -> Unit,
-) : Modifier.Node(), DrawModifierNode, GlobalPositionAwareModifierNode, TraversableNode {
+) : Modifier.Node(), DrawModifierNode, GlobalPositionAwareModifierNode, TraversableNode, KitGlassPictureHolder {
     override val traverseKey: Any get() = GlassTraverseKey
     private var own: GraphicsLayer? = null
+
+    /** The picture's recorder let go: draw again, so a page still showing it can take the recording over. */
+    override fun recorderLeft() {
+        if (isAttached) invalidateDraw()
+    }
 
     /** The shared picture this page shows (smoothness round 2), and the page size it was taken for. */
     private var held: KitGlassPicture? = null
@@ -601,7 +653,7 @@ private class BackdropSourceNode(
         if (backdrop.layer === p.layer) backdrop.layer = null
         if (backdrop.frosted === p.frosted) backdrop.frosted = HashMap()
         backdrop.paintVersion++
-        if (isAttached) shared?.release(p, requireGraphicsContext())
+        if (isAttached) shared?.release(p, this, requireGraphicsContext())
     }
 
     /** The layer this page records its picture into: the shared one of its size, or its own. */
@@ -609,7 +661,7 @@ private class BackdropSourceNode(
         val pictures = shared ?: return own ?: requireGraphicsContext().createGraphicsLayer().also { own = it }
         val p = held?.takeIf { heldSize == size } ?: run {
             letGo()
-            pictures.acquire(size).also {
+            pictures.acquire(size, this).also {
                 held = it
                 heldSize = size
             }
@@ -640,9 +692,16 @@ private class BackdropSourceNode(
             // A new layer: every pane showing the old one draws again (outside this draw's own reads).
             androidx.compose.runtime.snapshots.Snapshot.withoutReadObservation { backdrop.paintVersion++ }
         }
-        // Recorded in the layer's own scope, never through this node's: the picture cannot draw into, or ask for its
-        // density from, the scope that is drawing it (N-29, a sample's paint reading toPx() recursed for ever).
-        recordDetached(layer, paint)
+        // A shared picture is recorded by its one recorder only (black-frame 2026-11-16, KitGlassPicture): every other
+        // page showing it draws the recording as it stands, so the layer is recorded once a frame, never by two pages.
+        val p = held
+        val pictures = shared
+        if (p == null || pictures == null || pictures.records(p, this@BackdropSourceNode)) {
+            // Recorded in the layer's own scope, never through this node's: the picture cannot draw into, or ask for
+            // its density from, the scope that is drawing it (N-29, a sample's paint reading toPx() recursed for ever).
+            recordDetached(layer, paint)
+            if (p != null) pictures?.onRecord?.invoke(p, this@BackdropSourceNode)
+        }
         kitDrawLayer(layer)
         drawContent()
     }
