@@ -40,7 +40,7 @@ class SecGatesTest {
     fun `QaHooksAbsentTest - no qa source wired into release, no qa class or marker in production`() {
         val findings = QaHooks.checkBuildScripts(SecTree.buildScripts(root)) +
             QaHooks.checkSources(Live.files, File(root, "version.properties").readText())
-        assertClean(findings, "QaHooksAbsentTest")
+        assertClean(findings + QaHooks.checkReleaseAar(File(root, "android/migration/build/outputs/aar/migration-release.aar")), "QaHooksAbsentTest")
     }
 
     @Test

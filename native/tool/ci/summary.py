@@ -153,7 +153,20 @@ for key, label, rep in (('RESULT_COMPILE', 'compile', compile_), ('RESULT_APK', 
         elif rep.get('failed') and rep.get('gradle_ran') is False:
             integrity.append(f'{label}: Gradle never ran (nothing started, for instance a failed distribution download)')
 
+# Security is required by every normal lane, and by custom full quality/security checkpoints.
+security_required = lane.split(' ')[0] in ('fast', 'full') or any(
+    t in (':quality:test', ':quality:secTest') for shard in shards for t in shard.get('planned', []))
+security_facts = [shard.get('security', {}) for shard in shards]
+security_ran = any(f.get('executed') and f.get('full') and f.get('tests', 0) > 0 for f in security_facts)
+security_bad = any(f.get('failed', 0) or f.get('skipped', 0) for f in security_facts)
+if security_required:
+    rows.append(('security suite', 'executed' if security_ran else 'NOT PROVED'))
+    if not security_ran:
+        integrity.append('security suite: no executed full :quality:secTest report for this run')
+
 reasons = []
+if security_required and security_bad:
+    reasons.append("security suite has failing or skipped assertions")
 for key, label, rep in (('RESULT_COMPILE', 'compile', compile_), ('RESULT_APK', 'apk', apk), ('RESULT_RECORD', 'goldens', record), ('RESULT_CUSTOM', 'custom tasks', custom)):
     if env(key) in ('failure', 'cancelled') or rep.get('failed'):
         reasons.append(f'{label} job failed')

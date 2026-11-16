@@ -28,14 +28,14 @@ object SecTextRules {
                 if (f.isKotlin && !(f.module == "ui/shell" && f.name == "App.kt")) hits("K-SEC-1", f, uriHandlerProvides) else emptyList()
         }
 
-    // ---- K-SEC-2: custom TLS trust only in :core:net-okhttp
+    // ---- K-SEC-2: custom TLS trust only in the reviewed :core:net TrustGate
     private val trustTokens =
         Regex("""\bX509(Extended)?TrustManager\b|\bHostnameVerifier\b|\.sslSocketFactory\s*[({]|\.hostnameVerifier\s*[({]""")
     private val contextInit = Regex("""\b(SSLContext|TrustManagerFactory)\b""")
     private val initCall = Regex("""\.init\s*\(""")
 
     fun kSec2(files: List<SecFile>): List<Violation> =
-        everywhere(files).filter { it.isKotlin && it.module != "core/net-okhttp" }.flatMap { f ->
+        everywhere(files).filter { it.isKotlin && !(it.module == "core/net" && it.rel.substringAfter("/kotlin/", "") == "io/github/eslamasabry/oc/core/net/okhttp/TrustGate.kt") }.flatMap { f ->
             val direct = hits("K-SEC-2", f, trustTokens)
             val init = if (contextInit.containsMatchIn(f.code)) hits("K-SEC-2", f, initCall) { "SSLContext/TrustManagerFactory ${it.value}" } else emptyList()
             direct + init
@@ -107,9 +107,29 @@ object SecTextRules {
         androidSide(files).filter { it.isKotlin && it.name !in config.mutablePendingIntentFiles }.flatMap { f ->
             pendingIntent.findAll(f.code).mapNotNull { m ->
                 val args = KotlinText.balancedArgs(f.code, m.range.last)
-                if ("FLAG_IMMUTABLE" in args) null else Violation("K-SEC-7", f.rel, f.lineOf(m.range.first), "PendingIntent.${m.groupValues[1]} without FLAG_IMMUTABLE")
+                val installer = f.rel == "android/tiles/src/main/kotlin/io/github/eslamasabry/oc/android/tiles/updates/AndroidUpdates.kt"
+                val installerCall = installer && m.groupValues[1] == "getBroadcast" &&
+                    args.replace(Regex("""\s"""), "").trimEnd(',') == "app,sessionId,intent,PendingIntent.FLAG_UPDATE_CURRENTorPendingIntent.FLAG_MUTABLE" &&
+                    Regex("""val\s+intent\s*=\s*Intent\(\)\.setClassName\(app,\s*STATUS_RECEIVER\)""").containsMatchIn(f.code) &&
+                    "session.commit(pending.intentSender)" in f.code &&
+                    "params.setRequireUserAction(PackageInstaller.SessionParams.USER_ACTION_REQUIRED)" in f.code &&
+                    "STATUS_RECEIVER: String = \"io.github.eslamasabry.opencode_mobile.AppUpdateStatusReceiver\"" in f.code &&
+                    installerReceiverPrivate(files)
+                if ("FLAG_IMMUTABLE" in args || installerCall) null
+                else Violation("K-SEC-7", f.rel, f.lineOf(m.range.first), "PendingIntent.${m.groupValues[1]} without FLAG_IMMUTABLE")
             }.toList()
         }
+
+    private fun installerReceiverPrivate(files: List<SecFile>): Boolean {
+        val manifest = files.singleOrNull { it.rel == "android/tiles/src/main/AndroidManifest.xml" } ?: return false
+        return with(Xml) {
+            val root = Xml.parse(manifest.text)
+            val receivers = root.children().filter { it.tag() == "application" }.flatMap { it.children() }
+                .filter { it.tag() == "receiver" && it.attrs()["android:name"] == "io.github.eslamasabry.opencode_mobile.AppUpdateStatusReceiver" }
+            receivers.size == 1 && receivers.single().attrs()["android:exported"] == "false" &&
+                receivers.single().children().none { it.tag() == "intent-filter" }
+        }
+    }
 
     // ---- K-SEC-8: no parseUri / getIntent / relaunching an intent taken from extras
     private val parse = Regex("""\bIntent\s*\.\s*parseUri\s*\(|\bparseUri\s*\(|\bIntent\s*\.\s*getIntent\s*\(""")

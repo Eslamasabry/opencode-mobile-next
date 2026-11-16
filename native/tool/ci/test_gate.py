@@ -22,7 +22,7 @@ def junit(root, module, cls, failing=()):
         fh.write(f'<testsuite name="{cls}">{cases}</testsuite>')
 
 
-def run_gate(files_log, tasks, xml=(), results=None, report_env=None, planned='0', jobs=None, known=None):
+def run_gate(files_log, tasks, xml=(), results=None, report_env=None, planned='0', jobs=None, known=None, security=True):
     """Plants a shard (log + XML), runs test_report.py then summary.py. -> (exit code, markdown)."""
     with tempfile.TemporaryDirectory() as tmp:
         work, reports = os.path.join(tmp, 'native'), os.path.join(tmp, 'reports')
@@ -39,6 +39,10 @@ def run_gate(files_log, tasks, xml=(), results=None, report_env=None, planned='0
                        check=True, stdout=subprocess.DEVNULL)
         for name, body in (jobs if jobs is not None else {'compile': {'failed': False, 'gradle_ran': True}, 'apk': {'failed': False, 'gradle_ran': True}}).items():
             json.dump(body, open(os.path.join(reports, f'{name}.json'), 'w'))
+        if security is not None:
+            fact = {'executed': True, 'full': True, 'tests': 60, 'failed': 0 if security else 1, 'skipped': 0}
+            json.dump({'name': 'security-proof', 'tests': 60, 'failed': fact['failed'], 'failures': [], 'modules': {}, 'security': fact},
+                      open(os.path.join(reports, 'report-security-proof.json'), 'w'))
         env = dict(os.environ, RESULT_TEST='success', RESULT_COMPILE='success', RESULT_APK='success', PLANNED_SHARDS=planned)
         env.update(results or {})
         summary = os.path.join(HERE, 'summary.py')
@@ -134,6 +138,31 @@ class Gate(unittest.TestCase):
                             results={'RESULT_COMPILE': 'failure'})
         self.assertEqual(code, 1, md)
         self.assertIn('compile job failed', md)
+
+
+class SecurityGate(unittest.TestCase):
+    def test_missing_full_security_evidence_is_integrity_failure(self):
+        code, md = run_gate('> Task :quality:test\n', ':quality:test', security=None)
+        self.assertEqual(code, 2, md)
+        self.assertIn('no executed full :quality:secTest report', md)
+
+    def test_red_security_cannot_be_rescued_by_a_green_aggregate(self):
+        code, md = run_gate('> Task :quality:test\n', ':quality:test', security=False)
+        self.assertEqual(code, 1, md)
+        self.assertIn('security suite has failing', md)
+
+    def test_paired_quality_tasks_do_not_inflate_the_module_shard_count(self):
+        r = plan('fast', ':quality:test :quality:secTest :ui:kit:desktopTest')
+        self.assertEqual((r['count'], r['total']), ('1', '2'))
+
+    def test_workflow_carries_security_into_full_fast_custom_and_release_gates(self):
+        root = os.path.join(HERE, '..', '..', '..')
+        workflow = open(os.path.join(root, '.github/workflows/native-ci.yml')).read()
+        self.assertIn('tasks=":quality:test :quality:secTest"', workflow)
+        self.assertIn('test_report.py custom reports', workflow)
+        self.assertIn("'security': security", workflow)
+        release = open(os.path.join(root, 'scripts/native-release.sh')).read()
+        self.assertIn(':quality:test :quality:secTest -Poc.mergedManifest=required', release)
 
 
 class OneTestAtATime(unittest.TestCase):

@@ -15,4 +15,6 @@ cd "$(dirname "$0")/../.."
     done
   done
   for m in desktopApp quality; do [ -f "$m/build.gradle.kts" ] && echo ":$m:test"; done
+  # The workflow keeps this with :quality:test in one shard; never rotate it independently.
+  echo ":quality:secTest"
 } | sort | awk -v i="$idx" -v n="$count" '(NR - 1) % n == i'

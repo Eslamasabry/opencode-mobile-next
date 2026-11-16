@@ -13,11 +13,14 @@ Gradle log (env GRADLE_LOG, the shard's tee'd output) and the shard's task list 
   * a selected test task that never ran ("module X: no test results"), for instance because its test sources did not compile;
   * `FAILURE: Build failed` / a build that failed with no failed task named at all.
 """
-import glob, json, os, re, sys, xml.etree.ElementTree as ET
+import glob, json, os, re, shlex, sys, xml.etree.ElementTree as ET
 
 name, out = sys.argv[1], sys.argv[2]
 mods, failures, skipped = {}, [], 0
-selected = {'/'.join(t.strip(':').split(':')[:-1]) for t in os.environ.get('TASKS', '').split()}
+arguments = shlex.split(os.environ.get('TASKS', ''))
+expected_tasks = [t for t in arguments if t.startswith(':')]
+selected = {'/'.join(t.strip(':').split(':')[:-1]) for t in expected_tasks}
+security_counts = [0, 0, 0]
 for p in glob.glob('**/build/test-results/**/TEST-*.xml', recursive=True):
     mod = p.split('/build/')[0]
     if selected and mod not in selected:
@@ -25,11 +28,18 @@ for p in glob.glob('**/build/test-results/**/TEST-*.xml', recursive=True):
     for tc in ET.parse(p).getroot().iter('testcase'):
         a = mods.setdefault(mod, [0, 0])
         a[0] += 1
+        is_security = '/quality/' in '/' + p and '/test-results/secTest/' in p.replace(os.sep, '/')
+        if is_security:
+            security_counts[0] += 1
         bad = tc.find('failure') if tc.find('failure') is not None else tc.find('error')
         if tc.find('skipped') is not None:
             skipped += 1
+            if is_security:
+                security_counts[2] += 1
         if bad is not None:
             a[1] += 1
+            if is_security:
+                security_counts[1] += 1
             msg = (bad.get('message') or (bad.text or '')).strip().splitlines()
             failures.append({'id': f'{mod} :: {tc.get("classname")} > {tc.get("name")}', 'module': mod,
                              'message': (msg[0] if msg else '')[:200]})
@@ -80,14 +90,26 @@ def gradle_ran(lines):
     return any(re.match(r'^(\S+Z\s+)?(\x1b\[[0-9;]*m)*(> Task :|BUILD (SUCCESSFUL|FAILED))', l) for l in lines)
 
 
-real_failures = analyse(log_lines(), mods, os.environ.get('TASKS', '').split())
+lines = log_lines()
+real_failures = analyse(lines, mods, expected_tasks)
+security_status = next((m.group(1) or 'RAN' for line in reversed(lines)
+                        if (m := re.match(r'^> Task :quality:secTest(?: ([A-Z-]+))?$', clean(line)))), '')
+current_task, filtered_security = '', False
+for argument in arguments:
+    if argument.startswith(':'):
+        current_task = argument
+    elif argument == '--tests' and current_task == ':quality:secTest':
+        filtered_security = True
+security = {'executed': security_status in ('RAN', 'FAILED'), 'full': not filtered_security,
+            'tests': security_counts[0], 'failed': security_counts[1], 'skipped': security_counts[2]}
+
 if os.environ.get('GRADLE_OUTCOME') == 'failure' and not failures and not real_failures:
     real_failures.append('the Gradle run failed and left no failing test and no readable task failure')
 tests = sum(v[0] for v in mods.values())
 report = {'name': name, 'tests': tests, 'failed': len(failures), 'skipped': skipped, 'failures': failures, 'modules': mods,
           'build_failed': os.environ.get('GRADLE_OUTCOME') == 'failure', 'real_failures': real_failures,
           # integrity facts for summary.py: did this shard plan work, and did Gradle really start?
-          'planned': os.environ.get('TASKS', '').split(), 'gradle_ran': gradle_ran(log_lines()),
+          'security': security, 'planned': expected_tasks, 'gradle_ran': gradle_ran(log_lines()),
           'job_status': os.environ.get('JOB_STATUS', ''), 'pick_outcome': os.environ.get('PICK_OUTCOME', '')}
 os.makedirs(out, exist_ok=True)
 json.dump(report, open(os.path.join(out, f'report-{name}.json'), 'w'))

@@ -1,3 +1,15 @@
-# ExportedSurfaceTest snapshot of androidApp/src/main/AndroidManifest.xml (plan 16 §1.8.1). One canonical line per
-# component, as ExportedSurface.render prints it. A change needs a CR16 row; review it, never refill it blindly.
-activity .MainActivity exported=true launchMode=singleTop filter(action=name:android.intent.action.MAIN category=name:android.intent.category.LAUNCHER)
+# CR16-SEC301: source components reviewed individually in the security correction report.
+activity .IdleStartActivity exported=false
+activity .MainActivity exported=true launchMode=singleTop filter(action=name:android.intent.action.MAIN category=name:android.intent.category.LAUNCHER) filter(action=name:android.intent.action.VIEW category=name:android.intent.category.BROWSABLE category=name:android.intent.category.DEFAULT data=host:session,scheme:opencode-mobile data=host:team,scheme:opencode-mobile) filter(action=name:android.intent.action.SEND category=name:android.intent.category.DEFAULT data=mimeType:text/plain) filter(action=name:android.intent.action.SEND action=name:android.intent.action.SEND_MULTIPLE category=name:android.intent.category.DEFAULT data=mimeType:*/* data=mimeType:image/*)
+activity .ManageSpaceActivity exported=true
+activity .WidgetConfigureActivity exported=true filter(action=name:android.appwidget.action.APPWIDGET_CONFIGURE)
+activity .WidgetOverlayActivity exported=false
+activity .WidgetRouteActivity exported=false
+activity .graph.FactsBookConfirmActivity exported=false
+activity .graph.ScheduleOpenActivity exported=unset
+provider androidx.core.content.FileProvider exported=false grantUriPermissions=true
+receiver .CodingActionReceiver exported=false
+receiver .LivePauseReceiver exported=false
+receiver .StatusActionReceiver exported=false
+service .BackgroundConnectionService exported=false
+service .LocalPdfService exported=false process=:local_pdf isolatedProcess=true

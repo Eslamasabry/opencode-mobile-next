@@ -86,14 +86,15 @@ object NetworkSecurityConfig {
 // --------------------------------------------------------------------------------------------------------------------
 /** `FileProviderPathsTest` (plan 16 §1.8.3): exactly the three roots, exactly as written. */
 object FileProviderPaths {
-    const val PATH = "androidApp/src/main/res/xml/local_file_paths.xml"
+    const val PATH = "androidApp/src/main/res/xml/oc_files_paths.xml"
     val IDS = setOf("FP-ABSENT", "FP-SHAPE")
 
     private val expected =
         setOf(
-            "external-path" to mapOf("name" to "shared_storage", "path" to "."),
+            "external-path" to mapOf("name" to "phone-shared", "path" to "."),
+            "external-path" to mapOf("name" to "phone-shared-storage", "path" to "."),
             "files-path" to mapOf("name" to "camera", "path" to "camera-capture-v1/"),
-            "cache-path" to mapOf("name" to "share", "path" to "share/"),
+            "cache-path" to mapOf("name" to "open-with", "path" to "open-with/"),
         )
 
     fun check(xml: String): List<Finding> {
@@ -192,9 +193,9 @@ object ExportedSurface {
                 if (a["android:name"] == "androidx.core.content.FileProvider") {
                     val meta = c.children().firstOrNull { it.tag() == "meta-data" }?.attrs()
                     val ok = exported == "false" && a["android:grantUriPermissions"] == "true" &&
-                        a["android:authorities"] == "\${applicationId}.localfiles" &&
-                        meta?.get("android:name") == "android.support.FILE_PROVIDER_PATHS" && meta["android:resource"] == "@xml/local_file_paths"
-                    if (!ok) out += Finding("SURFACE-FILEPROVIDER", "FileProvider must be \${applicationId}.localfiles, not exported, grantUriPermissions, paths @xml/local_file_paths")
+                        a["android:authorities"] == "\${applicationId}.files" &&
+                        meta?.get("android:name") == "android.support.FILE_PROVIDER_PATHS" && meta["android:resource"] == "@xml/oc_files_paths"
+                    if (!ok) out += Finding("SURFACE-FILEPROVIDER", "FileProvider must be \${applicationId}.files, not exported, grantUriPermissions, paths @xml/oc_files_paths")
                 }
             }
             out
@@ -303,13 +304,69 @@ object QaHooks {
             .flatMap { f -> Regex("""\b(?:class|object|interface)\s+([A-Z]\w*)""").findAll(f.code).map { it.groupValues[1] } }
             .toSet() + ALWAYS
 
+    private const val MIGRATION = "android/migration/src/"
+    private const val STUB_PATH = "kotlin/io/github/eslamasabry/oc/android/migration/StepInterrupters.kt"
+    private val releaseStub = """
+        package io.github.eslamasabry.oc.android.migration
+        public object StepInterrupters {
+            public fun forBuild(@Suppress("UNUSED_PARAMETER") paths: MigrationPaths): StepInterrupter = StepInterrupter.None
+        }
+    """.trimIndent()
+
+    /** A same-named qa factory is valid only alongside these exact callable no-op release/debug variants. */
+    private fun reviewedVariantStub(files: List<SecFile>): Boolean {
+        fun normalized(text: String) = KotlinText.stripComments(text).replace(Regex("""\s+"""), "")
+        return listOf("release", "debug").all { variant ->
+            files.singleOrNull { it.rel == "$MIGRATION$variant/$STUB_PATH" }?.let {
+                normalized(it.text) == normalized(releaseStub)
+            } == true
+        }
+    }
+
+    /** Inspect the built release library, not a source filename or a qa/debug artifact. */
+    fun checkReleaseAar(file: File): List<Finding> {
+        if (!file.isFile) return listOf(Finding("QA-ARTIFACT", "migration release AAR was not built"))
+        val classes = linkedMapOf<String, ByteArray>()
+        java.util.zip.ZipFile(file).use { aar ->
+            val entry = aar.getEntry("classes.jar") ?: return listOf(Finding("QA-ARTIFACT", "release AAR has no classes.jar"))
+            java.util.jar.JarInputStream(aar.getInputStream(entry)).use { jar ->
+                var item = jar.nextJarEntry
+                while (item != null) {
+                    if (item.name.endsWith(".class")) classes[item.name] = jar.readBytes()
+                    item = jar.nextJarEntry
+                }
+            }
+        }
+        return checkReleaseClasses(classes)
+    }
+
+    fun checkReleaseClasses(classes: Map<String, ByteArray>): List<Finding> = buildList {
+        val stub = classes["io/github/eslamasabry/oc/android/migration/StepInterrupters.class"]
+        if (stub == null) add(Finding("QA-ARTIFACT", "release callable StepInterrupters stub is absent"))
+        else {
+            val constants = stub.toString(Charsets.ISO_8859_1)
+            if ("forBuild" !in constants || "getNone" !in constants || "StepInterrupter" !in constants)
+                add(Finding("QA-ARTIFACT", "release factory no longer returns the callable no-op"))
+            if (listOf("QaStepInterrupter", "killProcess", "qa-kill-after", "qa-delay-ms", "Thread", "sleep").any { it in constants })
+                add(Finding("QA-ARTIFACT", "release factory contains kill/delay QA code"))
+        }
+        classes.keys.filter { path -> (ALWAYS + "QaStepInterrupter").any { name -> path.substringAfterLast('/').startsWith(name + ".") || path.substringAfterLast('/').startsWith(name + "$" ) } }
+            .forEach { add(Finding("QA-ARTIFACT", "release contains qa implementation $it")) }
+    }
+
     fun checkSources(files: List<SecFile>, versionProperties: String): List<Finding> {
+        val variantStub = reviewedVariantStub(files)
         val names = qaClassNames(files)
+        val stubConsumers = setOf(
+            "${MIGRATION}release/$STUB_PATH", "${MIGRATION}debug/$STUB_PATH",
+            "${MIGRATION}main/kotlin/io/github/eslamasabry/oc/android/migration/android/AndroidMigration.kt",
+        )
         val nameRegex = Regex("""\b(${names.joinToString("|") { Regex.escape(it) }})\b""")
         val prod = files.filter { it.isProduction }
         return buildList {
             prod.filter { it.isKotlin }.forEach { f ->
-                nameRegex.findAll(f.code).forEach { add(Finding("QA-CLASS", "${f.rel}:${f.lineOf(it.range.first)} names qa-only ${it.value}")) }
+                nameRegex.findAll(f.code).filterNot { variantStub && f.rel in stubConsumers && it.value == "StepInterrupters" }
+                    .forEach { add(Finding("QA-CLASS", "${f.rel}:${f.lineOf(it.range.first)} names qa-only ${it.value}")) }
             }
             prod.forEach { f ->
                 Regex("""qa-hooks\.json|\b10\.0\.2\.2\b""").findAll(f.code).forEach { add(Finding("QA-MARKER", "${f.rel}:${f.lineOf(it.range.first)} carries ${it.value}")) }

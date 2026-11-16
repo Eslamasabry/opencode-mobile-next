@@ -27,12 +27,12 @@ class KSecPlantedTest {
     @Test
     fun `K-SEC-2 planted trust managers outside core net-okhttp fail`() {
         val t = Planted()
-            .file("core/net/$cm/Trust.kt", """
+            .file("core/net/$cm/UnreviewedTrust.kt", """
                 object All : javax.net.ssl.X509TrustManager
                 fun c() { val ctx = SSLContext.getInstance("TLS"); ctx.init(null, null, null) }
                 fun b(x: OkHttpClient.Builder) = x.hostnameVerifier { _, _ -> true }
             """)
-            .file("core/net-okhttp/src/androidMain/kotlin/p/Pinned.kt", "class PinnedLeafTrustManager : X509ExtendedTrustManager()")
+            .file("core/net/src/jvmShared/kotlin/io/github/eslamasabry/oc/core/net/okhttp/TrustGate.kt", "class PinnedLeafTrustManager : X509ExtendedTrustManager()")
         assertCaught(SecTextRules.kSec2(t.files()), "K-SEC-2", 3, "X509TrustManager, SSLContext.init, .hostnameVerifier(")
     }
 
@@ -119,7 +119,7 @@ class KSecPlantedTest {
             """)
             .file("android/platform/$am/PackageInstallerUpdater.kt", "val r = PendingIntent.getService(ctx, id, i, FLAG_ONE_SHOT or FLAG_MUTABLE)")
             .file("feature/chat/$cm/NotAndroid.kt", "val x = PendingIntent.getActivity(ctx, 1, i, 0)")
-        assertCaught(SecTextRules.kSec7(t.files(), liveConfig), "K-SEC-7", 2, "getActivity and getForegroundService without FLAG_IMMUTABLE")
+        assertCaught(SecTextRules.kSec7(t.files(), liveConfig), "K-SEC-7", 3, "getActivity, getForegroundService and the obsolete installer filename without FLAG_IMMUTABLE")
     }
 
     @Test
