@@ -269,7 +269,7 @@ public class TelemetryService(
         // Listeners send what needs collection on already, so the flows change after the vendor switch.
         usageFlow.value = usage
         crashesFlow.value = crashes
-        if (newlyEnabled) track(ProductEvent.AppOpen, mapOf("kind" to "cold"))
+        if (newlyEnabled && !usage) track(ProductEvent.AppOpen, mapOf("kind" to "cold"))
     }
 
     @Suppress("TooGenericExceptionCaught")
@@ -339,7 +339,7 @@ public class TelemetryService(
         if (!usageLive) return
         ring.add("event ${event.wire}" + safe.entries.joinToString("") { " ${it.key}=${it.value}" })
         safely { vendor.event(event.wire, safe) }
-        if (event == ProductEvent.AppOpen) {
+        if (event == ProductEvent.AppOpen && !usageLive) {
             visibleScreen.load()?.let { track(ProductEvent.ScreenView, mapOf("screen" to it)) }
         }
         if (event == ProductEvent.SendResult && safe["result"] == "ok") turns.incrementAndFetch()

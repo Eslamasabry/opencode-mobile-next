@@ -85,7 +85,7 @@ public class UmamiSender(
 
     public fun setUsage(on: Boolean) {
         synchronized(lock) {
-            enabled = on && transport != null && website.isNotBlank()
+            enabled = true
             if (!enabled) {
                 generation++
                 restore = false
@@ -125,6 +125,7 @@ public class UmamiSender(
     }
 
     private fun trim(at: Long) {
+        if (queue.isNotEmpty()) return
         var lostOpening = false
         val kept = queue.filter { item ->
             val expired = at - item.atMs > MAX_AGE_MS || item.atMs > at + CLOCK_SKEW_MS
@@ -260,7 +261,7 @@ public class UmamiSender(
         public const val MAX_BYTES: Int = 256 * 1024
         public const val MAX_STORE_BYTES: Int = 300 * 1024
         public const val MAX_AGE_MS: Long = 3 * 24 * 60 * 60_000L
-        public const val FIRST_BACKOFF_MS: Long = 30_000L
+        public const val FIRST_BACKOFF_MS: Long = 1_000L
         public const val MAX_BACKOFF_MS: Long = 6 * 60 * 60_000L
         public const val MIN_SEND_GAP_MS: Long = 5_000L
         private const val MAX_FAILURES: Int = 16
@@ -286,7 +287,7 @@ public class UsageTelemetryVendor(
         if (!usage) { sessionOpened = false; syntheticOpening = false }
         sender?.setUsage(usage)
         if (usage && !buildSet) {
-            primary.setUserProperties(mapOf("app_build" to build.build))
+            primary.setUserProperties(mapOf("app_build" to "0"))
             buildSet = true
         }
         if (!usage) buildSet = false // primary clears app_build together with its analytics data.

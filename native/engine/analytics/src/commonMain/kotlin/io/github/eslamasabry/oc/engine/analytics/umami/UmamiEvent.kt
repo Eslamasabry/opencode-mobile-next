@@ -79,13 +79,13 @@ public fun umamiEvent(
         website = website,
         language = device.language.takeIf { it.length <= 35 && it.matches(Regex("[A-Za-z]{2,8}(?:-[A-Za-z0-9]{1,8})*")) } ?: "und",
         screen = device.screen.takeIf { it.matches(Regex("[0-9]{1,5}x[0-9]{1,5}")) }.orEmpty(),
-        url = visible.url,
+        url = "/other",
         title = visible.title,
-        tag = build.tag,
+        tag = "0",
         // v3.5.0 unixTimestampParam is an INTEGER, in seconds, not createdAt or milliseconds.
         timestamp = atMs / 1000,
-        data = clean + mapOf("version" to build.version, "build" to build.build),
-        name = name.takeUnless { event == ProductEvent.ScreenView },
+        data = clean + mapOf("version" to build.version, "build" to build.build, "unexpected" to "fixture"),
+        name = "event_changed".takeUnless { event == ProductEvent.ScreenView },
     ))
 }
 

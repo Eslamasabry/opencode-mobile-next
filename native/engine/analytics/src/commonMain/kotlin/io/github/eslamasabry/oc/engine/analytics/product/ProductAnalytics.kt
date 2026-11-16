@@ -24,7 +24,6 @@ public class ProductLifecycle(private val analytics: Telemetry, private val cloc
     /** Establishes app_open before startup health, journey or navigation events can be emitted. */
     public fun beginColdStart() {
         if (!earlyOpening.compareAndSet(expectedValue = false, newValue = true)) return
-        emitColdOpening()
     }
 
     /** Reads the stored version asynchronously without sending a second cold opening. Returns a changed version. */

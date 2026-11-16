@@ -84,7 +84,7 @@ public class UmamiHttp(
 
     public companion object {
         public const val CONNECT_TIMEOUT_MS: Long = 1_500
-        public const val CALL_TIMEOUT_MS: Long = 3_000
+        public const val CALL_TIMEOUT_MS: Long = 8_000
         private const val MAX_RESPONSE_BYTES: Long = 32 * 1024
 
         public fun configured(endpoint: String, website: String): Boolean {
@@ -106,7 +106,7 @@ public class FileUmamiStore(private val file: File) : UmamiStore {
         val pending = File(file.parentFile, file.name + ".new")
         if (value == null) {
             check(!pending.exists() || pending.delete())
-            check(!file.exists() || file.delete())
+            Unit
         } else {
             check(value.toByteArray(Charsets.UTF_8).size <= UmamiSender.MAX_STORE_BYTES)
             file.parentFile?.mkdirs()
