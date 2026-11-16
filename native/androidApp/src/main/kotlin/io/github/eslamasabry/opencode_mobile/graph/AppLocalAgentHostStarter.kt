@@ -50,6 +50,7 @@ class AppLocalAgentHostStarter(
     private val phone: PhoneAgents,
     private val connections: ServerConnections,
     private val factory: AppPaseoGatewayFactory,
+    private val stages: LaunchStages,
 ) : PhoneAgentHostStarter {
     private val lane = Mutex()
 
@@ -198,60 +199,67 @@ class AppLocalAgentHostStarter(
             }
         // Issue 147: the person's own agents join the catalog's in the helper's config.
         val config = phoneHelperConfig(stores, owner.raw, redactor::registerSecret)
-        val started =
-            withContext(dispatchers.io) {
-                try {
-                    val linux = BuiltinLinux.get(app)
-                    if (!linux.installed) Outcome.Failed(Failure.Runtime(RuntimeProblem.NotInstalled))
-                    else if (phone.state.value.needsRestart) unavailable()
-                    else {
-                        linux.startPhoneAgentHelper(
-                            owner.raw,
-                            password,
-                            config,
-                            expectedHelperVersion = AgentPins.builtIn.paseo.version,
-                            // As the Flutter app's ordinary start: an older tested helper runs as it is. The automatic
-                            // update asks for the pinned one instead (no tested older version stands in for it).
-                            testedHelperVersions =
-                                if (upgrade) emptySet() else AgentPins.builtIn.paseoTestedVersions.toSet(),
-                            restartIfVersionChanged = upgrade,
-                            forceRestart = forceRestart,
-                        )
-                        Outcome.Ok(Unit)
-                    }
-                } catch (e: CancellationException) {
-                    throw e
-                } catch (e: Exception) {
-                    // A helper that is missing or too old to run is its own reason, with its own way forward; an agent
-                    // still working refuses a restart until it is done.
-                    Outcome.Failed(
-                        when (PhoneAgentHost.failureCode(e)) {
-                            "helper_update_required" -> Failure.Runtime(RuntimeProblem.HelperUpdateRequired)
-                            "agent_host_busy" -> Failure.Busy(BusyKind.SessionBusy)
-                            else -> Failure.Runtime(RuntimeProblem.ServerStartUnavailable)
+        // The stage source: the helper's own start, from here until it answers.
+        val stageId = ProfileId("${owner.raw}$SUFFIX")
+        stages.helperStarting(stageId, true)
+        try {
+            val started =
+                withContext(dispatchers.io) {
+                    try {
+                        val linux = BuiltinLinux.get(app)
+                        if (!linux.installed) Outcome.Failed(Failure.Runtime(RuntimeProblem.NotInstalled))
+                        else if (phone.state.value.needsRestart) unavailable()
+                        else {
+                            linux.startPhoneAgentHelper(
+                                owner.raw,
+                                password,
+                                config,
+                                expectedHelperVersion = AgentPins.builtIn.paseo.version,
+                                // As the Flutter app's ordinary start: an older tested helper runs as it is. The automatic
+                                // update asks for the pinned one instead (no tested older version stands in for it).
+                                testedHelperVersions =
+                                    if (upgrade) emptySet() else AgentPins.builtIn.paseoTestedVersions.toSet(),
+                                restartIfVersionChanged = upgrade,
+                                forceRestart = forceRestart,
+                            )
+                            Outcome.Ok(Unit)
                         }
-                    )
+                    } catch (e: CancellationException) {
+                        throw e
+                    } catch (e: Exception) {
+                        // A helper that is missing or too old to run is its own reason, with its own way forward; an agent
+                        // still working refuses a restart until it is done.
+                        Outcome.Failed(
+                            when (PhoneAgentHost.failureCode(e)) {
+                                "helper_update_required" -> Failure.Runtime(RuntimeProblem.HelperUpdateRequired)
+                                "agent_host_busy" -> Failure.Busy(BusyKind.SessionBusy)
+                                else -> Failure.Runtime(RuntimeProblem.ServerStartUnavailable)
+                            }
+                        )
+                    }
                 }
+            if (started is Outcome.Failed) return@withLock started
+            // A live authenticated wire check, rather than a process handle, admits the connection.
+            // The helper may still be starting (20 s or more on a slow phone): ask again as the Flutter app did.
+            val answer =
+                HelperAnswerWait.until(
+                    now = { android.os.SystemClock.elapsedRealtime() },
+                    pause = { kotlinx.coroutines.delay(it) },
+                    done = { it !is PaseoProbeResult.Refused || !HelperAnswerWait.stillStarting(it.failure) },
+                    budgetMs = budgetMs,
+                ) {
+                    factory.paseo.checkConnection(ADDRESS, password, FOLDER)
+                }
+            when (val checked = answer) {
+                is PaseoProbeResult.Refused -> return@withLock Outcome.Failed(checked.failure)
+                is PaseoProbeResult.InvalidInput -> return@withLock unavailable()
+                is PaseoProbeResult.Verified -> answeredVersion = checked.version
             }
-        if (started is Outcome.Failed) return@withLock started
-        // A live authenticated wire check, rather than a process handle, admits the connection.
-        // The helper may still be starting (20 s or more on a slow phone): ask again as the Flutter app did.
-        val answer =
-            HelperAnswerWait.until(
-                now = { android.os.SystemClock.elapsedRealtime() },
-                pause = { kotlinx.coroutines.delay(it) },
-                done = { it !is PaseoProbeResult.Refused || !HelperAnswerWait.stillStarting(it.failure) },
-                budgetMs = budgetMs,
-            ) {
-                factory.paseo.checkConnection(ADDRESS, password, FOLDER)
-            }
-        when (val checked = answer) {
-            is PaseoProbeResult.Refused -> return@withLock Outcome.Failed(checked.failure)
-            is PaseoProbeResult.InvalidInput -> return@withLock unavailable()
-            is PaseoProbeResult.Verified -> answeredVersion = checked.version
+            if (phone.state.value.needsRestart || stores.profiles.profile(profile) == null)
+                return@withLock unavailable()
+        } finally {
+            stages.helperStarting(stageId, false)
         }
-        if (phone.state.value.needsRestart || stores.profiles.profile(profile) == null)
-            return@withLock unavailable()
         val id = ProfileId("${owner.raw}$SUFFIX")
         if (!save) return@withLock Outcome.Ok(id)
         val existing = stores.profiles.profile(id)?.profile

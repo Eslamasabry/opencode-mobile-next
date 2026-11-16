@@ -15,16 +15,24 @@ import io.github.eslamasabry.oc.core.common.AppDispatchers
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
+import io.github.eslamasabry.oc.core.common.pace.Visibility
 import io.github.eslamasabry.oc.core.data.cache.CacheShelf
 import io.github.eslamasabry.oc.core.data.cache.FileLastKnown
 import io.github.eslamasabry.oc.core.data.cache.LastKnown
 import io.github.eslamasabry.oc.core.data.cache.ServerMark
+import io.github.eslamasabry.oc.core.data.kv.KeyValueStore
+import io.github.eslamasabry.oc.core.data.kv.PrefValue
+import io.github.eslamasabry.oc.core.model.BackendKind
+import io.github.eslamasabry.oc.core.model.Session
 import io.github.eslamasabry.oc.core.model.transcript.MessageWithParts
+import io.github.eslamasabry.oc.engine.agents.feed.ChatFeedSnapshot
 import io.github.eslamasabry.oc.engine.git.GitLastKnown
 import io.github.eslamasabry.oc.engine.git.KeptGit
 import io.github.eslamasabry.oc.engine.profiles.DeletionOptions
 import io.github.eslamasabry.oc.engine.profiles.DeletionStep
+import io.github.eslamasabry.oc.engine.profiles.LoadedProfile
 import io.github.eslamasabry.oc.engine.profiles.ProfileResourceCleaner
+import io.github.eslamasabry.oc.engine.profiles.ProfileStore
 import io.github.eslamasabry.oc.engine.profiles.StoredProfile
 import io.github.eslamasabry.oc.engine.runtime.terminal.KeptTerminals
 import io.github.eslamasabry.oc.engine.runtime.terminal.TerminalLastKnown
@@ -42,7 +50,14 @@ import io.github.eslamasabry.oc.feature.projects.presentation.KeptProjectPage
 import io.github.eslamasabry.oc.feature.projects.presentation.NoProjectsLastKnown
 import io.github.eslamasabry.oc.feature.projects.presentation.OpenFolderUi
 import io.github.eslamasabry.oc.feature.projects.presentation.ProjectsLastKnown
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.time.Clock
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.conflate
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.io.files.Path
 
 /*
@@ -89,44 +104,298 @@ class ProfileShelf<T>(private val store: LastKnown, private val stores: PreviewS
     }
 }
 
-/** Deleting a profile deletes everything the last-known store kept for it (AGENTS.md rule 9). */
+/** Deleting a profile deletes everything the last-known store kept for it and its helper (AGENTS.md rule 9). */
 @ContributesIntoSet(AppScope::class, binding = binding<ProfileResourceCleaner>())
 @Inject
-class LastKnownDeletion(private val store: LastKnown) : ProfileResourceCleaner {
+class LastKnownDeletion(
+    private val store: LastKnown,
+    private val stores: PreviewStores,
+) : ProfileResourceCleaner {
     override val owner: String = ":core:data (last-known server data)"
     override val order: Int = DeletionStep.DEVICE_SURFACES
 
-    override suspend fun clear(profileId: ProfileId, options: DeletionOptions): Outcome<Int> = store.clear(profileId)
+    override suspend fun clear(profileId: ProfileId, options: DeletionOptions): Outcome<Int> =
+        clearProfileAndHelpers(store, stores.profiles, stores.prefs, profileId)
 }
 
-/** A conversation's last page, kept per profile and server; 30 conversations, half a megabyte each at most. */
+internal suspend fun clearProfileAndHelpers(
+    store: LastKnown,
+    profiles: ProfileStore?,
+    prefs: KeyValueStore?,
+    profileId: ProfileId,
+): Outcome<Int> {
+    val helpers =
+        if (profiles != null && prefs != null) helperIdsForPhone(profiles, prefs, profileId)
+        else emptyList()
+    var total =
+        when (val own = store.clear(profileId)) {
+            is Outcome.Failed -> return own
+            is Outcome.Ok -> own.value
+        }
+    for (helper in helpers) {
+        when (val cleared = store.clear(helper)) {
+            is Outcome.Failed -> return cleared
+            is Outcome.Ok -> total += cleared.value
+        }
+    }
+    return Outcome.Ok(total)
+}
+
+internal suspend fun sweepPhoneAgentLastKnown(
+    store: LastKnown,
+    stores: PreviewStores,
+    owner: ProfileId? = null,
+): Outcome<Int> = sweepPhoneAgentLastKnown(store, stores.profiles, stores.prefs, owner)
+
+internal suspend fun sweepPhoneAgentLastKnown(
+    store: LastKnown,
+    profiles: ProfileStore,
+    prefs: KeyValueStore,
+    owner: ProfileId? = null,
+): Outcome<Int> {
+    val helpers = LinkedHashSet<ProfileId>()
+    owner?.let { helpers += ProfileId("${it.raw}-agents") }
+    for (loaded in profiles.profiles.value) {
+        if (isHelperLoaded(loaded, prefs)) helpers += loaded.id
+    }
+    for (key in prefs.keys("oc.phoneAgentOwner.")) {
+        helpers += ProfileId(key.removePrefix("oc.phoneAgentOwner."))
+    }
+    var total = 0
+    for (helper in helpers) {
+        when (val cleared = store.clear(helper)) {
+            is Outcome.Failed -> return cleared
+            is Outcome.Ok -> total += cleared.value
+        }
+    }
+    return Outcome.Ok(total)
+}
+
+private fun helperIdsForPhone(
+    profiles: ProfileStore,
+    prefs: KeyValueStore,
+    phoneId: ProfileId,
+): List<ProfileId> {
+    val saved = profiles.profiles.value.map { it.id.raw }
+    val savedSet = saved.toSet()
+    val builtinOwner = (prefs.get("oc.builtinServerOwner") as? PrefValue.Str)?.value
+    return PhoneAgentRules.removedWith(phoneId.raw, saved) { id ->
+            val savedOwner = (prefs.get("oc.phoneAgentOwner.$id") as? PrefValue.Str)?.value
+            val isHelper =
+                profiles.profile(ProfileId(id))?.profile?.backend == BackendKind.Paseo &&
+                    PhoneAgentRules.isHelperProfile(id, savedOwner)
+            if (!isHelper) null
+            else PhoneAgentRules.phoneOf(id, savedOwner, builtinOwner, savedSet)
+        }
+        .map(::ProfileId)
+}
+
+private fun isHelperLoaded(loaded: LoadedProfile, prefs: KeyValueStore): Boolean =
+    loaded.profile.backend == BackendKind.Paseo &&
+        PhoneAgentRules.isHelperProfile(
+            loaded.id.raw,
+            (prefs.get("oc.phoneAgentOwner.${loaded.id.raw}") as? PrefValue.Str)?.value,
+        )
+
+/**
+ * Per-profile kept transcript pages: 30 entries for an ordinary server, and for the phone agents' helper sized from
+ * the number of phone-agent conversations with a hard cap of [AppChatLastKnown.MAX_HELPER_ENTRIES] (200) so thousands
+ * of conversations never fill the disk.
+ */
+internal class TranscriptLastKnownStore(
+    private val store: LastKnown,
+    private val profiles: ProfileStore,
+    private val prefs: KeyValueStore,
+    private val inventoryCount: (LoadedProfile) -> Int,
+) {
+    private val liveCounts = ConcurrentHashMap<ProfileId, Int>()
+
+    fun noteConversationCount(profile: ProfileId, count: Int) {
+        liveCounts[profile] = count
+    }
+
+    private fun mark(profile: ProfileId): ServerMark? =
+        profiles.profile(profile)?.profile?.lastKnownMark()
+
+    internal fun shelfFor(profile: ProfileId): CacheShelf<KeptTranscript> {
+        val loaded = profiles.profile(profile) ?: return AppChatLastKnown.TRANSCRIPTS
+        if (!isHelperLoaded(loaded, prefs)) return AppChatLastKnown.TRANSCRIPTS
+        val known = maxOf(liveCounts[profile] ?: 0, inventoryCount(loaded))
+        val entries = AppChatLastKnown.helperMaxEntries(known)
+        return if (entries == AppChatLastKnown.TRANSCRIPTS.maxEntries) AppChatLastKnown.TRANSCRIPTS
+        else
+            CacheShelf(
+                AppChatLastKnown.TRANSCRIPTS.name,
+                KeptTranscript.serializer(),
+                maxBytes = AppChatLastKnown.TRANSCRIPTS.maxBytes,
+                maxEntries = entries,
+            )
+    }
+
+    fun peek(ref: ConversationRef): KeptTranscript? =
+        mark(ref.profileId)?.let { store.peek(ref.profileId, it, shelfFor(ref.profileId), ref.sessionId.raw) }
+
+    suspend fun read(ref: ConversationRef): KeptTranscript? =
+        mark(ref.profileId)?.let { store.read(ref.profileId, it, shelfFor(ref.profileId), ref.sessionId.raw) }
+
+    suspend fun keep(ref: ConversationRef, title: String?, messages: List<MessageWithParts>) {
+        val mark = mark(ref.profileId) ?: return
+        val shelf = shelfFor(ref.profileId)
+        val kept = KeptTranscript.fit(title, messages, shelf.maxBytes - AppChatLastKnown.ENVELOPE) ?: return
+        store.write(ref.profileId, mark, shelf, ref.sessionId.raw, kept)
+    }
+}
+
+/** A conversation's last page, kept per profile and server; 30 conversations for servers, sized for phone agents. */
 @ContributesIntoSet(AppScope::class, binding = binding<ChatLastKnown>())
 @SingleIn(AppScope::class)
 @Inject
 class AppChatLastKnown(
     store: LastKnown,
     stores: PreviewStores,
+    inventory: NativeSessionInventory,
     private val dispatchers: AppDispatchers,
     private val clock: Clock,
     private val appScope: AppCoroutineScope,
 ) : ChatLastKnown {
-    private val pages = ProfileShelf(store, stores, TRANSCRIPTS)
+    private val pages =
+        TranscriptLastKnownStore(store, stores.profiles, stores.prefs) { loaded ->
+            inventory.read(loaded.profile).size
+        }
 
-    override fun peek(ref: ConversationRef): KeptTranscript? = pages.peek(ref.profileId, ref.sessionId.raw)
-
-    override suspend fun read(ref: ConversationRef): KeptTranscript? = pages.read(ref.profileId, ref.sessionId.raw)
-
-    override suspend fun keep(ref: ConversationRef, title: String?, messages: List<MessageWithParts>) {
-        val kept = KeptTranscript.fit(title, messages, TRANSCRIPTS.maxBytes - ENVELOPE) ?: return
-        pages.keep(ref.profileId, ref.sessionId.raw, kept)
+    internal fun noteConversationCount(profile: ProfileId, count: Int) {
+        pages.noteConversationCount(profile, count)
     }
+
+    override fun peek(ref: ConversationRef): KeptTranscript? = pages.peek(ref)
+
+    override suspend fun read(ref: ConversationRef): KeptTranscript? = pages.read(ref)
+
+    override suspend fun keep(ref: ConversationRef, title: String?, messages: List<MessageWithParts>) =
+        pages.keep(ref, title, messages)
 
     override fun detached(ref: ConversationRef): TranscriptHandle =
         detachedTranscript(ref.sessionId.raw, dispatchers, clock, appScope)
 
     companion object {
-        val TRANSCRIPTS = CacheShelf("transcript", KeptTranscript.serializer(), maxBytes = 512 * 1024, maxEntries = 30)
-        private const val ENVELOPE = 256
+        const val DEFAULT_ENTRIES: Int = 30
+        const val HELPER_HEADROOM: Int = 10
+        const val MAX_HELPER_ENTRIES: Int = CacheShelf.MAX_SHELF_ENTRIES
+        const val ENVELOPE: Int = 256
+        val TRANSCRIPTS =
+            CacheShelf("transcript", KeptTranscript.serializer(), maxBytes = 512 * 1024, maxEntries = DEFAULT_ENTRIES)
+
+        internal fun helperMaxEntries(conversationCount: Int): Int =
+            maxOf(DEFAULT_ENTRIES, conversationCount + HELPER_HEADROOM).coerceAtMost(MAX_HELPER_ENTRIES)
+    }
+}
+
+@ContributesTo(AppScope::class)
+interface HomeTranscriptWarmerAccessors {
+    val homeTranscriptWarmer: HomeTranscriptWarmer
+}
+
+/**
+ * Reads the newest Home rows' kept pages into memory once the app is in front, so opening any top row is a memory
+ * peek instead of a disk read.
+ */
+@SingleIn(AppScope::class)
+@Inject
+class HomeTranscriptWarmer(
+    private val runtime: PreviewRuntime,
+    private val visibility: AppVisibility,
+    private val lastKnown: AppChatLastKnown,
+    private val inventory: NativeSessionInventory,
+    private val appScope: AppCoroutineScope,
+) {
+    private val started = AtomicBoolean(false)
+    private val serial = Mutex()
+    private val attempted = HashSet<ConversationRef>()
+
+    fun start() {
+        if (!started.compareAndSet(false, true)) return
+        appScope.launch {
+            combine(visibility.state, runtime.snapshot, runtime.profiles.profiles) { vis, feed, saved ->
+                    Triple(vis, feed, saved)
+                }
+                .conflate()
+                .collect { (vis, feed, saved) ->
+                    updateHelperCounts(feed, saved)
+                    if (vis != Visibility.Foreground) {
+                        serial.withLock { attempted.clear() }
+                        return@collect
+                    }
+                    val top = topHomeRefs(feed, saved, runtime::listSourceShown, inventory::read)
+                    warmTopHomeRefs(top, lastKnown, attempted, serial) {
+                        visibility.state.value == Visibility.Foreground
+                    }
+                }
+        }
+    }
+
+    private fun updateHelperCounts(feed: ChatFeedSnapshot, saved: List<LoadedProfile>) {
+        for (loaded in saved) {
+            if (!runtime.isPhoneHelper(loaded.id)) continue
+            val liveCount = feed.items.count { it.profileId == loaded.id && !it.isSubagent }
+            if (liveCount > 0) lastKnown.noteConversationCount(loaded.id, liveCount)
+        }
+    }
+
+    internal companion object {
+        // 10 * 512 KiB maxBytes = 5 MiB < FileLastKnown.DEFAULT_MEMORY_BUDGET (6 MiB): never evicts itself on budget.
+        const val WARM_TOP_HOME_ROWS: Int = 10
+
+        internal fun topHomeRefs(
+            feed: ChatFeedSnapshot,
+            saved: List<LoadedProfile>,
+            isShown: (ProfileId) -> Boolean,
+            readInventory: (StoredProfile) -> List<Session>,
+            limit: Int = WARM_TOP_HOME_ROWS,
+        ): List<ConversationRef> {
+            val ranked = ArrayList<Pair<ConversationRef, Long>>()
+            val seenProfiles = HashSet<ProfileId>()
+            for (item in feed.items) {
+                if (item.isSubagent) continue
+                seenProfiles += item.profileId
+                ranked += item.ref to item.lastActivityMs
+            }
+            for (loaded in saved) {
+                if (loaded.id in seenProfiles || !isShown(loaded.id)) continue
+                for (session in readInventory(loaded.profile)) {
+                    val at = session.time?.updatedMs ?: session.time?.createdMs ?: 0L
+                    ranked += ConversationRef(loaded.id, session.id) to at
+                }
+            }
+            return ranked
+                .sortedByDescending { it.second }
+                .map { it.first }
+                .distinct()
+                .take(limit)
+        }
+
+        internal suspend fun warmTopHomeRefs(
+            top: List<ConversationRef>,
+            lastKnown: ChatLastKnown,
+            attempted: MutableSet<ConversationRef>,
+            serial: Mutex,
+            isForeground: () -> Boolean,
+        ) {
+            val pending =
+                serial.withLock {
+                    top.asReversed().filter { ref ->
+                        if (lastKnown.peek(ref) != null) {
+                            attempted += ref
+                            false
+                        } else {
+                            attempted.add(ref)
+                        }
+                    }
+                }
+            for (ref in pending) {
+                if (!isForeground()) break
+                lastKnown.read(ref)
+            }
+        }
     }
 }
 

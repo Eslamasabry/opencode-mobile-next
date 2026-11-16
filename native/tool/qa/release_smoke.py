@@ -2,6 +2,7 @@
 """Release smoke: four checks on ONE connected Android device or emulator, and a small result file.
 
     native/tool/qa/release_smoke.sh --new-apk <build.apk> [--previous-apk <old.apk>] [--out DIR] [--commit SHA]
+    optional env: OC_SMOKE_SERVER (shown name of a saved connection for checks c and d), OC_SMOKE_PROJECT
 
 The device is chosen by the environment variable OC_SMOKE_SERIAL (an adb serial). It is never written to a file.
 Tools: adb (OC_ADB overrides; else adb on PATH, else $ANDROID_HOME or ~/Android/Sdk platform-tools), python3.
@@ -177,17 +178,21 @@ def launch():
 
 
 def conversations_screen(timeout=90):
-    v, nodes = wait_for('Conversations', timeout, lambda ns: find(ns, word('chatsHomeTitle')))
+    # The title can be drawn before the page's own buttons on a loaded device: wait for the title AND the + button.
+    new = (word('chatsHomeNewChat'), word('chatsHomeNewShort'))
+    v, nodes = wait_for('Conversations', timeout,
+                        lambda ns: find(ns, word('chatsHomeTitle')) and (find(ns, new[0]) or find(ns, new[1])))
     if not v:
         raise Fail(f'the app did not show "{word("chatsHomeTitle")}" within {timeout} s (is the phone unlocked and the app past its setup?)')
     return nodes
 
 
 def user_texts(nodes):
-    """Texts on the Conversations screen that are the person's own (not one of the app's words, no digits like times)."""
+    """Texts on the Conversations screen that are the person's own: a row's title (a row can be one label "title,
+    status, 2 min ago", whose time changes between two looks), never one of the app's words, a time or the box."""
     out = set()
     for n in nodes:
-        t = n.label().strip()
+        t = n.label().strip().split(', ')[0].strip()
         if len(t) >= 3 and not apps_words(t) and not re.search(r'\d', t) and not n.cls.endswith('EditText'):
             out.add(t)
     return out
@@ -246,7 +251,7 @@ def open_this_phone():
     if not s:
         raise Fail(f'no "{word("librarySettingsTitle")}" entry on the Conversations screen')
     tap(s[0])
-    v, nodes = wait_for('Settings', 20, lambda ns: find(ns, word('settingsHubSearch'), exact=False))
+    v, nodes = wait_for('Settings', 60, lambda ns: find(ns, word('settingsHubSearch'), exact=False))
     if not v:
         raise Fail('Settings did not open')
     # Settings lists the "Server" group (its second line names the server, e.g. "This phone · Connected"); the
@@ -276,9 +281,10 @@ def check_b(ctx):
     conversations_screen()
     open_this_phone()
     running = word('thisPhoneAnswerRunning')
-    v, nodes = wait_for('server state', 20, lambda ns: find(ns, running) or find(ns, word('thisPhoneStart')) or find(ns, word('thisPhoneAnswerOff')))
+    # After an update the phone's own server can take minutes to come up on a loaded device; wait for an answer.
+    v, nodes = wait_for('server state', 180, lambda ns: find(ns, running) or find(ns, word('thisPhoneStart')) or find(ns, word('thisPhoneAnswerOff')))
     if not v:
-        raise Fail('the "This phone" page showed neither a running nor a stopped server')
+        raise Fail('the "This phone" page showed neither a running nor a stopped server within 180 s')
     if not find(nodes, running):
         start = find(nodes, word('thisPhoneStart'))
         if not start:
@@ -297,11 +303,13 @@ def new_conversation():
     nc = find(nodes, word('chatsHomeNewChat')) or find(nodes, word('chatsHomeNewShort'))
     if not nc:
         raise Fail(f'no "{word("chatsHomeNewChat")}" button')
-    tap(nc[0])
+    # The edge light's list can also offer "New conversation" (on the right edge, mid screen); the page's own + sits
+    # lowest on the screen, so tap the lowest match.
+    tap(max(nc, key=lambda n: n.box[3]))
 
     def composer(ns):
         return [n for n in ns if n.cls.endswith('EditText') or n.label().strip() in (word('kitComposerField'), word('chatUiAskOpenCode'))]
-    v, nodes = wait_for('composer', 15, composer)
+    v, nodes = wait_for('composer', 90, composer)
     if not v:
         project = os.environ.get('OC_SMOKE_PROJECT', '').strip()
         hit = find(nodes, project) if project else []
@@ -311,8 +319,36 @@ def new_conversation():
         v, nodes = wait_for('composer', 30, composer)
         if not v:
             raise Fail('the conversation did not open with a message box')
+    choose_server(composer)
     settle_setup()
     return composer
+
+
+def choose_server(composer):
+    """OC_SMOKE_SERVER (optional): the saved connection, by its shown name, that checks c and d run on. New conversation
+    opens on the last-used place after every relaunch, so the script picks it each time: the line under the title
+    ("Where it runs: ...") opens the project sheet, "Runs on" lists the connections, then OC_SMOKE_PROJECT picks the project."""
+    server = os.environ.get('OC_SMOKE_SERVER', '').strip()
+    if not server:
+        return
+    prefix = word('chatsNewWhereSpoken').split('%')[0].strip()
+    v, nodes = wait_for('where line', 30, lambda ns: [n for n in ns if n.label().strip().startswith(prefix)])
+    if not v:
+        raise Fail(f'no "{prefix}" line on New conversation to choose {server}')
+    tap(v[0])
+    v, nodes = wait_for('server row', 20, lambda ns: find(ns, server))
+    if not v:
+        raise Fail(f'the project sheet lists no connection named "{server}" under "{word("chatsNewRunsOn")}"')
+    tap(v[0])
+    project = os.environ.get('OC_SMOKE_PROJECT', '').strip()
+    if project:
+        v, nodes = wait_for('project row', 60, lambda ns: find(ns, project))
+        if not v:
+            raise Fail(f'{server} lists no project "{project}"')
+        tap(v[0])
+    v, nodes = wait_for('composer', 30, composer)
+    if not v:
+        raise Fail(f'New conversation did not come back with a message box after choosing {server}')
 
 
 def settle_setup(timeout=90):
