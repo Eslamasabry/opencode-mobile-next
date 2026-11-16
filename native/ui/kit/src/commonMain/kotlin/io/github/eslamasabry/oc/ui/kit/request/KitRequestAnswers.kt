@@ -67,7 +67,7 @@ public object RequestAnswersDims {
  * A request answered in place (LAMP-PLAN §5, LAMP-CRAFT §4 "Allow once / Deny"): the request's [KitRequest.words] in
  * the attention tone (unless [showWords] is false, where the row already says them), then Allow once | Deny as two
  * half-width 52 dp buttons, or one full-width Answer… for a question. Each names its [target] for TalkBack. A tap plays
- * [KitHaptic.Send]; the caller holds the answer and passes [held]: the buttons cross-fade into the receipt "‹label› ·
+ * [KitHaptic.Commit]; the caller holds the answer and passes [held]: the buttons cross-fade into the receipt "‹label› ·
  * Undo", the check growing from MARK_FROM (`KitSwap.grows`), its fill draining over HELD_ANSWER. Undo calls [onUndo];
  * the drained end calls [onHoldEnd] (the caller's hold sends; closing the list sends at once there).
  *
@@ -125,7 +125,7 @@ public fun KitRequestAnswers(
                         Modifier.weight(1f).heightIn(min = RequestAnswersDims.BUTTON_H.dp),
                         role = KitButtonRole.Primary,
                         semanticsLabel = words.allowOn(target),
-                        haptic = KitHaptic.Send,
+                        haptic = KitHaptic.Commit,
                     )
                     KitButton(
                         words.deny,
@@ -133,7 +133,7 @@ public fun KitRequestAnswers(
                         Modifier.weight(1f).heightIn(min = RequestAnswersDims.BUTTON_H.dp),
                         role = KitButtonRole.Secondary,
                         semanticsLabel = words.denyOn(target),
-                        haptic = KitHaptic.Send,
+                        haptic = KitHaptic.Commit,
                     )
                 }
             }

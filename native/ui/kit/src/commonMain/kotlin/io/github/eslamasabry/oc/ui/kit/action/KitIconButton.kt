@@ -203,7 +203,7 @@ public fun KitIconButtonCopy(
             masked = out.masked
             copied = true
         },
-        haptic = KitHaptic.Send,
+        haptic = KitHaptic.Select,
         modifier =
             if (maskedLabel == null) modifier
             else

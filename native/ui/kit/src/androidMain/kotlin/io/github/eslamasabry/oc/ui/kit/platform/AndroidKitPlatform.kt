@@ -306,7 +306,10 @@ internal fun hapticConstant(kind: KitHaptic, sdk: Int): Int? =
         // Motion lead 2026-11-07: the person's words leaving is a confirmation, not a key click.
         KitHaptic.Send -> if (sdk >= 30) HapticFeedbackConstants.CONFIRM else HapticFeedbackConstants.VIRTUAL_KEY
         KitHaptic.Done -> if (sdk >= 30) HapticFeedbackConstants.CONFIRM else null
-        KitHaptic.Commit -> HapticFeedbackConstants.KEYBOARD_TAP
+        // The consequential confirmation (approve, deny, stop, destructive): the platform's heaviest standard click on
+        // every API level, so it is always felt as different from Send (CONFIRM / VIRTUAL_KEY) and never the lightest.
+        // View.performHapticFeedback honours the system touch-feedback setting and needs no VIBRATE permission.
+        KitHaptic.Commit -> HapticFeedbackConstants.LONG_PRESS
         KitHaptic.LongPress -> HapticFeedbackConstants.LONG_PRESS
         KitHaptic.ToggleOn ->
             if (sdk >= 34) HapticFeedbackConstants.TOGGLE_ON else HapticFeedbackConstants.CLOCK_TICK

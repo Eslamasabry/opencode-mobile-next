@@ -195,7 +195,7 @@ class S10MotionKitTest {
         }
         onNodeWithContentDescription("Copy command").performClick()
         waitForIdle()
-        assertEquals(listOf(KitHaptic.Send), platform.haptics)
+        assertEquals(listOf(KitHaptic.Select), platform.haptics)
         assertEquals("git status", clipboard.text)
     }
 
