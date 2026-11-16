@@ -1308,6 +1308,7 @@ private fun StorageFoldersSheet(state: NewConversationUi, actions: NewConversati
                         supporting =
                             if (state.creatingProject) wait
                             else stringResource(Res.string.chatsNewStorageFolderNewDetail, here),
+                        supportingMaxLines = Int.MAX_VALUE,
                         leading = KitRowLeading.Glyph(KitIcons.folderAdd, tile = true),
                         trailing = KitRowTrailing.Chevron,
                         titleAccent = true,

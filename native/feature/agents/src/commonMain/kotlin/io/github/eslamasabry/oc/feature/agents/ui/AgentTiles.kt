@@ -102,6 +102,7 @@ import io.github.eslamasabry.oc.ui.words.res.kitDetails
 import io.github.eslamasabry.oc.ui.words.res.kitCopyDetails
 import io.github.eslamasabry.oc.ui.words.res.agentsStateLimitReset
 import io.github.eslamasabry.oc.ui.words.res.agentsCheckSignInAgain
+import io.github.eslamasabry.oc.ui.words.res.connCheckAgain
 import io.github.eslamasabry.oc.ui.words.res.agentsSignInNotConfirmedBody
 import io.github.eslamasabry.oc.ui.kit.state.KitDetailsFold
 import io.github.eslamasabry.oc.ui.words.res.kitTryAgain
@@ -252,7 +253,7 @@ private fun AgentTile(tile: AgentTileModel, actions: AgentsActions, chat: Boolea
                         }
                 AgentTileAct.CheckSignIn ->
                     KitAgentTileAction(
-                        stringResource(Res.string.agentsCheckSignInAgain, agent.name),
+                        stringResource(Res.string.connCheckAgain),
                         stringResource(Res.string.agentsCheckSignInAgain, agent.name),
                         icon = KitIcons.retry,
                         prominent = true,

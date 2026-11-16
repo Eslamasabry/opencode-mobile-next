@@ -1,12 +1,23 @@
 package io.github.eslamasabry.oc.feature.chats
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.v2.runComposeUiTest
+import androidx.compose.ui.test.v2.runDesktopComposeUiTest
+import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.unit.Density
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.domain.ImportableConversation
 import io.github.eslamasabry.oc.core.model.ModelRef
@@ -15,14 +26,20 @@ import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationServer
 import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationSetup
 import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationSheet
 import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationUi
+import io.github.eslamasabry.oc.feature.chats.presentation.PHONE_STORAGE_ROOT
 import io.github.eslamasabry.oc.feature.chats.presentation.PhoneFolderReach
+import io.github.eslamasabry.oc.feature.chats.presentation.StorageFolder
 import io.github.eslamasabry.oc.feature.chats.ui.NewConversationScreen
+import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
+import java.util.Locale
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 /**
@@ -209,4 +226,57 @@ class NewConversationPhoneFolderScreenTest {
             onAllNodesWithText("New folder in Documents").assertCountEquals(1)
             onAllNodesWithText("Makes a folder in your projects, with Git").assertCountEquals(0)
         }
+
+    @Test
+    fun `COMPACT-301 storage folder create row wraps full detail without ellipsis at 360 dp`() {
+        val cases =
+            listOf(
+                Triple("en", 1f, "Makes an empty folder inside Internal storage and works in it"),
+                Triple("en", 1.3f, "Makes an empty folder inside Internal storage and works in it"),
+                Triple("ar", 1f, "ينشئ مجلدًا فارغًا داخل التخزين الداخلي ويعمل فيه"),
+                Triple("ar", 1.3f, "ينشئ مجلدًا فارغًا داخل التخزين الداخلي ويعمل فيه"),
+            )
+        val previous = Locale.getDefault()
+        try {
+            for ((locale, scale, expected) in cases) {
+                Locale.setDefault(Locale.forLanguageTag(locale))
+                runDesktopComposeUiTest(360 * 3, 780 * 3) {
+                    setContent {
+                        CompositionLocalProvider(LocalDensity provides Density(3f, scale)) {
+                            KitTheme(
+                                platform = DesktopKitPlatform(),
+                                localeTag = locale,
+                                appearance = KitAppearance(mode = AppearanceMode.Dark, motion = MotionLevel.Off),
+                                stillFrame = true,
+                            ) {
+                                Box(Modifier.fillMaxSize().background(LocalKitColors.current.ground)) {
+                                    NewConversationScreen(
+                                        state(folder, null).copy(
+                                            storagePath = PHONE_STORAGE_ROOT,
+                                            storageFolders =
+                                                listOf(
+                                                    StorageFolder("Documents", "$PHONE_STORAGE_ROOT/Documents"),
+                                                    StorageFolder("Download", "$PHONE_STORAGE_ROOT/Download"),
+                                                    StorageFolder("DCIM", "$PHONE_STORAGE_ROOT/DCIM"),
+                                                ),
+                                        ),
+                                        Actions(),
+                                    )
+                                }
+                            }
+                        }
+                    }
+                    waitForIdle()
+                    val layouts = mutableListOf<TextLayoutResult>()
+                    onNodeWithText(expected, useUnmergedTree = true)
+                        .performSemanticsAction(SemanticsActions.GetTextLayoutResult) { it(layouts) }
+                    val layout = layouts.single()
+                    assertFalse(layout.hasVisualOverflow, "[$locale/$scale] visual overflow on: $expected")
+                    assertFalse((0 until layout.lineCount).any { layout.isLineEllipsized(it) }, "[$locale/$scale] ellipsized: $expected")
+                }
+            }
+        } finally {
+            Locale.setDefault(previous)
+        }
+    }
 }

@@ -92,7 +92,7 @@ public fun KitChip(
     expanded: Boolean? = null,
     onLongClick: (() -> Unit)? = null,
     adaptiveModel: Boolean = false,
-    /** A label that does not fit on one line wraps at its words (two lines) instead of ending in an ellipsis. */
+    /** A label that does not fit on one line wraps at its words onto as many lines as it needs instead of ending in an ellipsis. */
     wraps: Boolean = false,
 ) {
     kitAssert(label.isNotBlank()) { "KitChip: a chip always carries a word" }
@@ -203,18 +203,7 @@ public fun KitChip(
     val platform = LocalKitPlatform.current
     // Liquid glass answers the finger: the drop swells a little and its edge catches light (KitLiquidTouch.kt).
     val liquidPress = rememberKitLiquidPress(bodySource.face, on = liquid != null && onClick != null)
-    BoxWithConstraints(target.kitLiquidSwell(liquidPress), contentAlignment = Alignment.Center) {
-        val available = maxWidth - Space.S3.dp * 2 - iconSize * 2 - Space.S2.dp - Space.S1.dp // F: lib/ui/kit/chat/kit_composer_chips.dart:472-477
-        fun fits(probe: String): Boolean {
-            if (available <= 0.dp) return false
-            return !measurer.measure(
-                probe, style, maxLines = 1,
-                constraints = Constraints(maxWidth = with(density) { available.roundToPx() }),
-            ).hasVisualOverflow
-        }
-        val prefix = if (adaptiveModel) platform.graphemePrefix(label, 6) ?: label else label // F: lib/ui/kit/chat/kit_composer_chips.dart:478-485
-        val narrow = adaptiveModel && constraints.hasBoundedWidth && !fits(label) && (prefix == label || !fits("$prefix…"))
-        val modelPairFits = iconSize * 2 + Space.S1.dp * 2 <= maxWidth // F: lib/ui/kit/chat/kit_composer_chips.dart:504-506
+    val chipContent: @Composable BoxScope.(narrow: Boolean, modelPairFits: Boolean) -> Unit = { narrow, modelPairFits ->
         Row(
             Modifier.onSizeChanged { faceSize = it }.heightIn(min = minHeight).then(liquid ?: look.modifier)
                 .kitLiquidPressLight(liquidPress, look.shape)
@@ -248,7 +237,7 @@ public fun KitChip(
                 text, Modifier.weight(1f, fill = false).testTag(if (adaptiveModel) "kit-model-chip-label" else "kit-chip-label"),
                 style = style,
                 // An action chip's label ("New conversation", on a tile half a phone wide) wraps at its words, never "New conver…".
-                maxLines = if (wraps || kind == KitChipKind.Action) 2 else if (adaptiveModel && density.fontScale >= 1.3f) 2 else 1, // F: lib/ui/kit/chat/kit_composer_chips.dart:468,523
+                maxLines = if (wraps) Int.MAX_VALUE else if (kind == KitChipKind.Action) 2 else if (adaptiveModel && density.fontScale >= 1.3f) 2 else 1, // F: lib/ui/kit/chat/kit_composer_chips.dart:468,523
                 softWrap = adaptiveModel || wraps || kind == KitChipKind.Action,
                 overflow = TextOverflow.Ellipsis,
             )
@@ -277,6 +266,27 @@ public fun KitChip(
                 if (liveRegion) this.liveRegion = LiveRegionMode.Polite
             })
         }
+        }
+    }
+    if (adaptiveModel) {
+        BoxWithConstraints(target.kitLiquidSwell(liquidPress), contentAlignment = Alignment.Center) {
+            val available = maxWidth - Space.S3.dp * 2 - iconSize * 2 - Space.S2.dp - Space.S1.dp // F: lib/ui/kit/chat/kit_composer_chips.dart:472-477
+            fun fits(probe: String): Boolean {
+                if (available <= 0.dp) return false
+                return !measurer.measure(
+                    probe, style, maxLines = 1,
+                    constraints = Constraints(maxWidth = with(density) { available.roundToPx() }),
+                ).hasVisualOverflow
+            }
+            val prefix = platform.graphemePrefix(label, 6) ?: label // F: lib/ui/kit/chat/kit_composer_chips.dart:478-485
+            val narrow = constraints.hasBoundedWidth && !fits(label) && (prefix == label || !fits("$prefix…"))
+            val modelPairFits = iconSize * 2 + Space.S1.dp * 2 <= maxWidth // F: lib/ui/kit/chat/kit_composer_chips.dart:504-506
+            chipContent(narrow, modelPairFits)
+        }
+    } else {
+        // Non-adaptive chips use a plain Box so IntrinsicSize.Min parents (such as agent tile rows) read their wrapped height.
+        Box(target.kitLiquidSwell(liquidPress), contentAlignment = Alignment.Center) {
+            chipContent(false, true)
         }
     }
 }

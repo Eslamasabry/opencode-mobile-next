@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.selected
@@ -36,6 +37,7 @@ public fun KitOpenSwitchRow(
     enabled: KitEnabled = KitEnabled.Enabled,
     highlighted: Boolean = false,
     actions: (@Composable () -> Unit)? = null,
+    supportingMaxLines: Int = 1,
 ) {
     val tokens = LocalKitTokens.current
     val scale = kitTextScale()
@@ -66,10 +68,11 @@ public fun KitOpenSwitchRow(
                 (enabled.reason ?: supporting)?.let {
                     KitText(
                         it,
+                        Modifier.testTag("kit-row-supporting"),
                         role = TypeRole.Secondary,
                         tone = TextTone.Secondary,
                         maxLines =
-                            if (enabled.isEnabled) kitRowSupportingLines(scale) else Int.MAX_VALUE,
+                            if (enabled.isEnabled) kitRowSupportingLines(scale, supportingMaxLines) else Int.MAX_VALUE,
                     )
                 }
             }

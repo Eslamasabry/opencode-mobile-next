@@ -1,16 +1,25 @@
 package io.github.eslamasabry.oc.feature.schedules
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.v2.runComposeUiTest
+import androidx.compose.ui.test.v2.runDesktopComposeUiTest
+import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.engine.schedules.Recurrence
 import io.github.eslamasabry.oc.engine.schedules.RunStatus
@@ -25,16 +34,19 @@ import io.github.eslamasabry.oc.feature.schedules.presentation.SchedulesPhase
 import io.github.eslamasabry.oc.feature.schedules.presentation.SchedulesUi
 import io.github.eslamasabry.oc.feature.schedules.ui.ScheduleEditScreen
 import io.github.eslamasabry.oc.feature.schedules.ui.SchedulesScreen
+import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.input.KitSecretSink
 import io.github.eslamasabry.oc.ui.kit.input.LocalKitSecretSink
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import java.util.Locale
 import kotlinx.collections.immutable.persistentListOf
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 
 /** The real screens with fake state, found by visible text (plan 07 K01/K02). */
 @OptIn(ExperimentalTestApi::class)
@@ -181,5 +193,76 @@ class SchedulesScreenUiTest {
         onNodeWithText("Save schedule").performClick()
         assertEquals("Summarize", actions.saved?.prompt)
         assertEquals("09:00", actions.saved?.time)
+    }
+
+    @Test
+    fun `COMPACT-303 schedule row last-run time wraps whole without ellipsis at 360 dp`() {
+        val activeRow =
+            ScheduleRowUi(
+                id = "s1",
+                prompt = "Check for expired coupons in demo-shop",
+                recurrence = Recurrence.interval(12, t0),
+                nextRunAtMs = t0 + 3_600_000L,
+                enabled = true,
+                continuesConversation = false,
+                last = LastRunUi(RunStatus.Ran, null, t0 - 60_000L, "ses_1", late = false),
+            )
+        val endedRow =
+            ScheduleRowUi(
+                id = "s2",
+                prompt = "One-time build check",
+                recurrence = Recurrence.once(t0 - 120_000L),
+                nextRunAtMs = null,
+                enabled = false,
+                continuesConversation = false,
+                last = LastRunUi(RunStatus.Ran, null, t0 - 60_000L, "ses_2", late = false),
+            )
+        val screenState =
+            SchedulesUi(
+                phase = SchedulesPhase.List,
+                serverName = "This phone",
+                rows = persistentListOf(activeRow, endedRow),
+                nowMs = t0,
+            )
+        val previous = Locale.getDefault()
+        try {
+            for (locale in listOf("en", "ar")) {
+                Locale.setDefault(Locale.forLanguageTag(locale))
+                for (scale in listOf(1f, 1.3f)) {
+                    runDesktopComposeUiTest(360 * 3, 780 * 3) {
+                        setContent {
+                            CompositionLocalProvider(
+                                LocalDensity provides Density(3f, scale),
+                                LocalKitSecretSink provides KitSecretSink {},
+                            ) {
+                                KitTheme(
+                                    platform = DesktopKitPlatform(),
+                                    appearance = KitAppearance(mode = AppearanceMode.Dark, motion = MotionLevel.Off),
+                                    localeTag = locale,
+                                    stillFrame = true,
+                                ) {
+                                    Box(Modifier.fillMaxSize().background(LocalKitColors.current.ground)) {
+                                        SchedulesScreen(screenState, Recorder())
+                                    }
+                                }
+                            }
+                        }
+                        waitForIdle()
+                        val matches =
+                            onAllNodesWithText(if (locale == "ar") "آخر تشغيل" else "Last run", substring = true, useUnmergedTree = true)
+                        assertEquals(2, matches.fetchSemanticsNodes().size, "[$locale/$scale] expected 2 last-run rows")
+                        for (i in 0 until 2) {
+                            val layouts = mutableListOf<TextLayoutResult>()
+                            matches[i].performSemanticsAction(SemanticsActions.GetTextLayoutResult) { it(layouts) }
+                            val layout = layouts.single()
+                            assertFalse(layout.hasVisualOverflow, "[$locale/$scale] visual overflow on: ${layout.layoutInput.text}")
+                            assertFalse((0 until layout.lineCount).any { layout.isLineEllipsized(it) }, "[$locale/$scale] ellipsized: ${layout.layoutInput.text}")
+                        }
+                    }
+                }
+            }
+        } finally {
+            Locale.setDefault(previous)
+        }
     }
 }
