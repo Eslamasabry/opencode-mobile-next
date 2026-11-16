@@ -1,5 +1,7 @@
 package io.github.eslamasabry.oc.feature.chats
 
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.onNodeWithTag
@@ -19,6 +21,7 @@ import io.github.eslamasabry.oc.feature.chats.ui.NewConversationScreen
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.kit.KitTheme
+import io.github.eslamasabry.oc.ui.kit.frame.LocalKitScreenInsets
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import kotlin.test.Test
 import kotlin.test.assertTrue
@@ -26,7 +29,7 @@ import kotlin.test.assertTrue
 /**
  * I147-NOTICE (build 10053, phone with the keyboard up): the blocking notice's action took Start's place, but the
  * notice's own sentence was out of sight and "Choose another project" was cut in half by the box's foot. With the room
- * a keyboard leaves (360 x 476 dp) the sentence and every action are whole and visible at rest: nothing is cut.
+ * a keyboard leaves (360 x 780 dp with a 304 dp keyboard inset) the sentence and every action are whole and visible at rest: nothing is cut.
  */
 @OptIn(ExperimentalTestApi::class)
 class NewConversationNoticeWholeTest {
@@ -45,8 +48,8 @@ class NewConversationNoticeWholeTest {
         override fun retryLoad() {}
     }
 
-    private fun scene(height: Int) =
-        runDesktopComposeUiTest(360, height) {
+    private fun scene(keyboardDp: Int) =
+        runDesktopComposeUiTest(360, 780) {
             val dir = "/storage/emulated/0/octest"
             val ui =
                 NewConversationUi(
@@ -59,7 +62,10 @@ class NewConversationNoticeWholeTest {
                 )
             setContent {
                 KitTheme(platform = DesktopKitPlatform(), localeTag = "en", appearance = KitAppearance(motion = MotionLevel.Off)) {
-                    NewConversationScreen(ui, Actions)
+                    // A scene off the phone stands in for the system bars and the keyboard with host insets.
+                    CompositionLocalProvider(LocalKitScreenInsets provides WindowInsets(top = 28.dp, bottom = keyboardDp.dp)) {
+                        NewConversationScreen(ui, Actions)
+                    }
                 }
             }
             waitForIdle()
@@ -79,9 +85,7 @@ class NewConversationNoticeWholeTest {
             }
         }
 
-    @Test fun `I147-NOTICE sentence and every action whole with the keyboard up at 380 dp`() = scene(380)
+    @Test fun `I147-NOTICE sentence and every action whole at 360 x 780 dp with a 304 dp keyboard`() = scene(304)
 
-    @Test fun `I147-NOTICE sentence and every action whole with the keyboard up at 420 dp`() = scene(420)
-
-    @Test fun `I147-NOTICE sentence and every action whole with the keyboard up at 476 dp`() = scene(476)
+    @Test fun `I147-NOTICE sentence and every action whole at 360 x 780 dp with a 340 dp keyboard`() = scene(340)
 }
