@@ -31,6 +31,7 @@ public class ConnectionReads(
 ) {
     private val order = Mutex()
     private val sessions = HashMap<SessionId, Deferred<Outcome<Session>>>()
+    private val deletions = HashSet<SessionId>()
 
     private data class TailKey(val session: SessionId, val cursor: String?, val limit: Int)
 
@@ -45,15 +46,30 @@ public class ConnectionReads(
     private val closed = AtomicReference(false)
 
     /**
-     * A confirmed deletion/404 is a tombstone for this graph; late reads and pages cannot restore
-     * it.
+     * A confirmed deletion is permanent for this graph; late reads and startup retries cannot
+     * restore it.
      */
-    public fun forget(session: SessionId) {
-        mutableMissing.update { it + session }
+    public suspend fun forget(session: SessionId) {
+        order.withLock {
+            deletions += session
+            mutableMissing.update { it + session }
+        }
     }
 
-    /** Allows the chat's bounded startup retry to recheck a read-only NotFound. */
-    public suspend fun unforget(session: SessionId) {}
+    /**
+     * Rechecks a read-only NotFound when the chat's bounded startup wait retries. Socket connect
+     * can precede the helper's session listing, so the chat's existing wait decides when to retry.
+     * Explicit deletions stay missing.
+     */
+    public suspend fun unforget(session: SessionId) {
+        order.withLock {
+            if (session !in deletions) mutableMissing.update { it - session }
+        }
+    }
+
+    private suspend fun notFound(session: SessionId) {
+        order.withLock { mutableMissing.update { it + session } }
+    }
 
     public fun close() {
         closed.store(true)
@@ -76,7 +92,7 @@ public class ConnectionReads(
         }
         return try {
             val result = read.await()
-            if (result is Outcome.Failed && result.failure is Failure.NotFound) forget(id)
+            if (result is Outcome.Failed && result.failure is Failure.NotFound) notFound(id)
             refusal(id)?.failed() ?: result
         } finally {
             order.withLock { if (sessions[id] === read && read.isCompleted) sessions.remove(id) }
@@ -125,7 +141,7 @@ public class ConnectionReads(
         }
         return try {
             val result = entry.read.await()
-            if (result is Outcome.Failed && result.failure is Failure.NotFound) forget(id)
+            if (result is Outcome.Failed && result.failure is Failure.NotFound) notFound(id)
             if (result is Outcome.Failed)
                 order.withLock { if (tails[key] === entry) tails.remove(key) }
             refusal(id)?.failed() ?: result
