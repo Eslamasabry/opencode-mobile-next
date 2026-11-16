@@ -85,3 +85,4 @@ wiped (see Floor); they never come back and do not raise the floor.
 | 10053 | build | 2026-11-16 | owner's build of f53772b5f7 (New conversation layout B and walker fixes on top of 10052; CI 43775330858 passed) |
 | 10054 | build | 2026-11-16 | owner's build of 9713c1c40e (open-transitions, storage both-sides restart, edge light list, a11y guards; CI 43779221372 passed) |
 | 10055 | build | 2026-11-16 | owner's build of f1ccc2db57 (sign-in truth: a usage limit no longer reads as signed out; CI 43782239875 passed) |
+| 10056 | build | 2026-11-16 | owner's build of a19b8f0c31 (black frame on Home -> +, Plan holds on phone agents, Home top without a pane, sign-in follow-ups, compact width 2; CI 43788143805 passed) |
