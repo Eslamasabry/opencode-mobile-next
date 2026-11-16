@@ -49,6 +49,8 @@ class AndroidChatPhoneServer(
     private val folders: Lazy<PhoneFolderPreflight>,
     /** The home's start loop of the agents' helper ([PreviewRuntime.wantHelper]): one start path for every page. */
     private val runtime: Lazy<PreviewRuntime>,
+    /** The one stage source (what the start is really doing now). */
+    private val stages: LaunchStages,
 ) : ChatPhoneServer {
     override fun runsHere(profile: ProfileId): Boolean =
         (stores.prefs.get("oc.builtinServerOwner") as? PrefValue.Str)?.value == profile.raw
@@ -106,6 +108,14 @@ class AndroidChatPhoneServer(
             runsHere(profile) -> wait
             isAgentHelper(profile) -> agentsWait
             else -> NOT_WAITING
+        }
+
+    /** The real current stage of this server's start ([LaunchStages]); null for any other server. */
+    override fun stage(profile: ProfileId): StateFlow<io.github.eslamasabry.oc.feature.chat.world.LaunchStage?> =
+        when {
+            runsHere(profile) -> stages.stageOfPhone()
+            isAgentHelper(profile) -> stages.stageOfHelper(profile)
+            else -> super.stage(profile)
         }
 
     /** Issue 147: the agents helper's own answer, the same one the home list reads ([ListRowFacts.needsNewChat]). */
