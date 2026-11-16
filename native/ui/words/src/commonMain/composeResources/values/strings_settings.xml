@@ -804,7 +804,6 @@
     <string name="appearanceGlassLookSmokedLine">Dark tinted glass on bars and buttons</string>
     <string name="appearanceGlassLookDisclosure">The previews use bright colours so the differences show. The page behind shows your real background.</string>
     <string name="appearanceGlassLookFrostedLighter">Frosted now uses lighter cards, so more of your background shows through.</string>
-    <string name="appearanceGlassLookHeldMotion">Glass looks pause while motion is off. Turn motion back on to choose one.</string>
     <string name="appearanceGlassLookNeedsAndroid13">Bending edges need Android 13. This phone shows them blurred, in every look.</string>
     <string name="appearanceGlassCardHint">Tap Glass again to choose its look.</string>
     <string name="appearanceGlassCardLook">Glass · %1$s</string>

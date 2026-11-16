@@ -252,10 +252,12 @@ class FloatingHomeTest {
         val room = io.github.eslamasabry.oc.ui.kit.frame.FloatingPaneRow.ROOM_BELOW_DP
         assertTrue(abs(a.top.value - (b.top.value + room)) <= .5f, "the first conversation rests at ${a.top} under the lens, ${b.top} without, room $room")
         assertTrue(a.top.value >= capsule.bottom.value, "the first conversation $a rests below the block $capsule")
-        // Reduced motion holds the lens: the page is as it was.
-        val held = home(LensPlatform(), motion = MotionLevel.Off)
-        assertNull(held.bounds["kit-floating-chrome"], "reduced motion: no floating block")
-        assertTrue(abs(assertNotNull(held.bounds["first"], "reduced motion: the first conversation shows").top.value - b.top.value) <= .5f, "reduced motion: the list rests where it did")
+        // Reduced motion keeps the lens and the floating block, still, with the same room below its chips.
+        val still = home(LensPlatform(), motion = MotionLevel.Off)
+        assertNull(still.bounds["kit-liquid-bar"], "reduced motion: the title row paints no pane")
+        assertNotNull(still.bounds["kit-floating-chrome"], "reduced motion: the title and chips block still floats")
+        assertNotNull(still.bounds["kit-floating-below"], "reduced motion: the chips stay in the floating block")
+        assertTrue(abs(assertNotNull(still.bounds["first"], "reduced motion: the first conversation shows").top.value - a.top.value) <= .5f, "reduced motion: the list rests where it does under the lens")
     }
 
     @Test

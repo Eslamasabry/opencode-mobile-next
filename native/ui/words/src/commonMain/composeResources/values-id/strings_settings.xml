@@ -775,7 +775,6 @@
     <string name="appearanceGlassLookSmokedLine">Kaca gelap berwarna di bilah dan tombol</string>
     <string name="appearanceGlassLookDisclosure">Pratinjau memakai warna terang agar perbedaannya terlihat. Halaman di belakangnya menampilkan latar Anda yang sebenarnya.</string>
     <string name="appearanceGlassLookFrostedLighter">Buram kini memakai kartu yang lebih ringan, sehingga lebih banyak latar Anda yang terlihat.</string>
-    <string name="appearanceGlassLookHeldMotion">Tampilan kaca dijeda saat gerakan dimatikan. Aktifkan gerakan lagi untuk memilih.</string>
     <string name="appearanceGlassLookNeedsAndroid13">Tepi melengkung memerlukan Android 13. Ponsel ini menampilkannya buram, di semua tampilan.</string>
     <string name="appearanceGlassCardHint">Ketuk Kaca lagi untuk memilih tampilannya.</string>
     <string name="appearanceGlassCardLook">Kaca · %1$s</string>

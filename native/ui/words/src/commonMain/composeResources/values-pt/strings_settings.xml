@@ -26,7 +26,6 @@
     <string name="appearanceGlassLookSmokedLine">Vidro escuro nas barras e botões</string>
     <string name="appearanceGlassLookDisclosure">As prévias usam cores vivas para mostrar as diferenças. A página atrás mostra o seu fundo real.</string>
     <string name="appearanceGlassLookFrostedLighter">Fosco agora usa cartões mais claros, então mais do seu fundo aparece.</string>
-    <string name="appearanceGlassLookHeldMotion">As aparências do vidro pausam enquanto o movimento está desligado. Ligue o movimento para escolher uma.</string>
     <string name="appearanceGlassLookNeedsAndroid13">Bordas curvas precisam do Android 13. Este telefone as mostra desfocadas em todas as aparências.</string>
     <string name="appearanceGlassCardHint">Toque em Vidro de novo para escolher a aparência.</string>
     <string name="appearanceGlassCardLook">Vidro · %1$s</string>

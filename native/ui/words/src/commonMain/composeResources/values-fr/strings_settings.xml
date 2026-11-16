@@ -821,7 +821,6 @@
     <string name="appearanceGlassLookSmokedLine">Verre teinté sombre sur les barres et les boutons</string>
     <string name="appearanceGlassLookDisclosure">Les aperçus utilisent des couleurs vives pour faire ressortir les différences. La page derrière montre votre vrai arrière-plan.</string>
     <string name="appearanceGlassLookFrostedLighter">Le verre dépoli utilise désormais des cartes plus claires, et laisse donc mieux voir votre arrière-plan.</string>
-    <string name="appearanceGlassLookHeldMotion">Les aspects du verre sont en pause tant que les animations sont désactivées. Réactivez les animations pour en choisir un.</string>
     <string name="appearanceGlassLookNeedsAndroid13">Les bords courbés demandent Android 13. Ce téléphone les affiche floutés, quel que soit l’aspect.</string>
     <string name="appearanceGlassCardHint">Touchez Verre à nouveau pour choisir son aspect.</string>
     <string name="appearanceGlassCardLook">Verre · %1$s</string>

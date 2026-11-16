@@ -845,7 +845,6 @@
     <string name="appearanceGlassLookSmokedLine">Тёмное тонированное стекло на панелях и кнопках</string>
     <string name="appearanceGlassLookDisclosure">В превью использованы яркие цвета, чтобы были видны различия. Страница позади показывает ваш настоящий фон.</string>
     <string name="appearanceGlassLookFrostedLighter">Матовое стекло теперь использует более светлые карточки, поэтому сквозь них больше виден ваш фон.</string>
-    <string name="appearanceGlassLookHeldMotion">Виды стекла приостановлены, пока анимация выключена. Включите анимацию снова, чтобы выбрать вид.</string>
     <string name="appearanceGlassLookNeedsAndroid13">Искажение краёв требует Android 13. На этом телефоне края показаны размытыми во всех видах.</string>
     <string name="appearanceGlassCardHint">Нажмите «Стекло» ещё раз, чтобы выбрать его вид.</string>
     <string name="appearanceGlassCardLook">Стекло · %1$s</string>

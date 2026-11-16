@@ -776,7 +776,6 @@
     <string name="appearanceGlassLookSmokedLine">栏和按钮采用深色着色的玻璃</string>
     <string name="appearanceGlassLookDisclosure">预览使用了鲜艳的颜色，以便看出差别。后面的页面显示的是你真实的背景。</string>
     <string name="appearanceGlassLookFrostedLighter">磨砂现在使用更浅的卡片，因此能透出更多你的背景。</string>
-    <string name="appearanceGlassLookHeldMotion">动效关闭时，玻璃外观会暂停。请重新开启动效后再选择。</string>
     <string name="appearanceGlassLookNeedsAndroid13">折射的边缘需要 Android 13。这部手机在所有外观下都显示为模糊效果。</string>
     <string name="appearanceGlassCardHint">再次点按“玻璃”即可选择它的外观。</string>
     <string name="appearanceGlassCardLook">玻璃 · %1$s</string>

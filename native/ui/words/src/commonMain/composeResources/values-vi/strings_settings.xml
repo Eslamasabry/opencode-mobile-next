@@ -775,7 +775,6 @@
     <string name="appearanceGlassLookSmokedLine">Kính tối màu trên thanh và nút</string>
     <string name="appearanceGlassLookDisclosure">Phần xem trước dùng màu sáng để thấy rõ sự khác biệt. Trang phía sau hiện nền thật của bạn.</string>
     <string name="appearanceGlassLookFrostedLighter">Kiểu Mờ đục giờ dùng thẻ nhạt hơn, nên nền của bạn lộ ra nhiều hơn.</string>
-    <string name="appearanceGlassLookHeldMotion">Các kiểu kính tạm dừng khi chuyển động đang tắt. Hãy bật lại chuyển động để chọn một kiểu.</string>
     <string name="appearanceGlassLookNeedsAndroid13">Cạnh uốn cong cần Android 13. Điện thoại này hiện chúng ở dạng làm mờ, ở mọi kiểu.</string>
     <string name="appearanceGlassCardHint">Chạm Kính một lần nữa để chọn kiểu của nó.</string>
     <string name="appearanceGlassCardLook">Kính · %1$s</string>

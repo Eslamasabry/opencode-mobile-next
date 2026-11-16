@@ -416,7 +416,7 @@ public class SettingsPresenter(
         )
     }
 
-    /** What holds the Glass looks: motion, or the platform's missing lens (Saver has its own note). */
+    /** The platform's missing lens (Saver has its own note); reduced motion keeps the looks. */
     private fun glassLookHold(p: PersonalPrefs, f: SettingsFacts): EdgeHold? =
         FrostPolicy.edgesHeldBy(
             FrostConditions(
@@ -427,7 +427,7 @@ public class SettingsPresenter(
             ),
             FrostStrength.Balanced,
             GlassLookId.Glossy,
-        ).takeIf { it == EdgeHold.Platform || it == EdgeHold.Motion }
+        ).takeIf { it == EdgeHold.Platform }
 
     private fun appearanceQuestions(f: SettingsFacts): List<AppearanceQuestion> = buildList {
         add(AppearanceQuestion.Mode)
