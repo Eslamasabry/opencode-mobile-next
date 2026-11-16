@@ -34,6 +34,7 @@ import io.github.eslamasabry.oc.ui.kitchat.markdown.KitMarkdown
 import io.github.eslamasabry.oc.ui.kitchat.markdown.KitMdSource
 import io.github.eslamasabry.oc.ui.kitchat.transcript.KitQuietLine
 import io.github.eslamasabry.oc.ui.words.res.chatStepDeclinedNote
+import io.github.eslamasabry.oc.ui.words.res.chatStepPlanStopped
 import io.github.eslamasabry.oc.ui.words.res.chatStepMalformedCall
 import io.github.eslamasabry.oc.ui.words.res.*
 import kotlinx.serialization.json.Json
@@ -144,6 +145,10 @@ private fun countWords(count: ToolCount): String {
     }
 }
 
+/** Whether the app's Plan (not the person) stopped this call: the Paseo mapper stamps the step's metadata. */
+internal fun stoppedByPlan(metadata: JsonObject?): Boolean =
+    (metadata?.get("oc.planStopped") as? kotlinx.serialization.json.JsonPrimitive)?.content == "true"
+
 /**
  * The note the person sent with Deny, as the declined call's error carries it: the decline sentence on the first line,
  * the note after it (OpenCode 2 `permission.rejected`). Null when no note was sent.
@@ -179,6 +184,10 @@ internal fun ToolStepBody(step: TurnStep, reply: ReplyActions?) {
     }
     // A declined call: the row already says "You declined this"; the person's own note (sent with Deny) shows under it.
     if (step.state == StepState.Declined) {
+        if (stoppedByPlan(output.metadata)) {
+            KitQuietLine(stringResource(Res.string.chatStepPlanStopped))
+            return
+        }
         declinedNote(output.errorText)?.let { KitQuietLine(stringResource(Res.string.chatStepDeclinedNote, mask(it))) }
         return
     }
