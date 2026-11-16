@@ -132,7 +132,7 @@ internal fun KeepScrollPlace(list: TranscriptListState, keys: List<String>, conv
     val holder =
         rememberSaveable(saver = ScrollPlace.Saver) {
             ScrollPlaceHolder().also { fresh ->
-                val kept = conversation?.let(ScrollPlaceStore::get) ?: return@also
+                val kept = (null as KeptPlace?) ?: return@also
                 fresh.place = kept.place
                 fresh.following = kept.following
                 fresh.fromStore = true
@@ -145,21 +145,19 @@ internal fun KeepScrollPlace(list: TranscriptListState, keys: List<String>, conv
     val current by keysState
     LaunchedEffect(list) {
         val saved = holder.place
-        if (saved != null && !(holder.fromStore && holder.following)) {
+        if (saved != null && !list.following) {
             // Wait for the rows (a conversation coming back may still be reading them).
             snapshotFlow { current }.first { it.isNotEmpty() }
             ScrollPlaceRules.target(saved, current)?.let { (index, offset) ->
                 // Rows that arrived below put the place away from the newest edge: the reader stays where they were.
-                list.following = holder.following && index == 0
                 list.lazy.scrollToItem(index, offset)
             }
         }
         snapshotFlow { list.lazy.placeIn(current) to list.following }
             .collect { (place, following) ->
                 if (place == null) return@collect
-                holder.place = place
+                holder.place = if (following) null else place
                 holder.following = following
-                if (conversation != null) ScrollPlaceStore.put(conversation, place, following)
             }
     }
 }
