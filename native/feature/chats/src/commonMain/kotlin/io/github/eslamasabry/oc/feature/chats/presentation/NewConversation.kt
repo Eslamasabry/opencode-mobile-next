@@ -52,10 +52,30 @@ import kotlin.time.Duration.Companion.seconds
 internal const val SETUP_RETRY_EVERY_MS: Long = 3_000
 internal const val SETUP_RETRIES: Int = 10
 
+/** The one short re-read of This phone's server right after it came up, while it finishes opening. */
+internal const val SETUP_AFTER_UP_REREAD_MS: Long = 2_000
+
 /** How long the page waits for a server's first answer before it says so and offers Try again. */
 internal val SETUP_WAIT = 90.seconds
 
 private val ALWAYS_READ: StateFlow<Boolean> = MutableStateFlow(true)
+
+/** What the page knows about the server it reads from, before it reads (first-read-ready). */
+public enum class NewConversationServerState {
+    /** Not This phone's own server (a computer, a helper): the page reads as it always did. */
+    NotPhone,
+
+    /** This phone's server is starting or about to: the page waits, and reads by itself once it is up. */
+    Starting,
+
+    /** This phone's server answers: a read that fails now is a real failure. */
+    Up,
+
+    /** This phone's server could not start: the page says so with Try again. */
+    Failed,
+}
+
+private val NOT_PHONE: StateFlow<NewConversationServerState> = MutableStateFlow(NewConversationServerState.NotPhone)
 
 public data class NewConversationServer(
     val profile: ProfileId,
@@ -333,6 +353,9 @@ public interface NewConversationHost {
 
     /** "Check <agent> again": asks the phone's agents now, and publishes what they answer (signin-followups). */
     public suspend fun checkPhoneAgents() {}
+
+    /** The state of [profile]'s own server as the app already knows it (no poll); [NewConversationServerState.NotPhone] for others. */
+    public fun serverState(profile: ProfileId): StateFlow<NewConversationServerState> = NOT_PHONE
 
     public suspend fun setup(profile: ProfileId): Outcome<NewConversationSetup>
 
@@ -1070,21 +1093,59 @@ public class NewConversationViewModel(
             // Issue 147: the setup last read in this run shows at once; the fresh read below revalidates it behind.
             val cached = host.cachedSetup(profile)
             if (cached != null && ticket == generation) applySetup(profile, ticket, cached)
-            // Never wait for ever: a server that does not answer in time is a failure with a Try again.
-            var answered =
-                withTimeoutOrNull(SETUP_WAIT) { host.setup(profile) }
-                    ?: Outcome.Failed(Failure.Network(NetworkWhy.Unknown))
-            // A server that is still starting or reconnecting refuses the read at once: the page keeps waiting (it
-            // stays "getting ready", with Start kept) and reads again by itself, for a bounded time. "Couldn't be
-            // read" with Try again is only for a read that still fails after that (a server that is up and failing).
-            for (again in 1..SETUP_RETRIES) {
-                val refused = answered
-                if (refused !is Outcome.Failed || cached != null || refused.failure !is Failure.Network) break
-                delay(SETUP_RETRY_EVERY_MS)
-                if (ticket != generation) return@launch
+            // This phone's own server: the page waits on the server's state, not on a failed read, and reads once it is up.
+            val state = host.serverState(profile)
+            var answered: Outcome<NewConversationSetup>
+            if (state.value == NewConversationServerState.NotPhone) {
+                // Never wait for ever: a server that does not answer in time is a failure with a Try again.
                 answered =
                     withTimeoutOrNull(SETUP_WAIT) { host.setup(profile) }
                         ?: Outcome.Failed(Failure.Network(NetworkWhy.Unknown))
+                // Another computer that is reconnecting refuses the read at once: read again for a bounded time.
+                for (again in 1..SETUP_RETRIES) {
+                    val refused = answered
+                    if (refused !is Outcome.Failed || cached != null || refused.failure !is Failure.Network) break
+                    delay(SETUP_RETRY_EVERY_MS)
+                    if (ticket != generation) return@launch
+                    answered =
+                        withTimeoutOrNull(SETUP_WAIT) { host.setup(profile) }
+                            ?: Outcome.Failed(Failure.Network(NetworkWhy.Unknown))
+                }
+            } else {
+                var again = 0
+                while (true) {
+                    // Starting: follow the state as it changes; the read happens the moment it is up. Bounded by the
+                    // phone server's own start budget (its ready timeout, 90 s): past it the page says so, never waits on.
+                    if (state.value == NewConversationServerState.Starting) {
+                        val settled = withTimeoutOrNull(SETUP_WAIT) { state.first { it != NewConversationServerState.Starting } }
+                        if (settled == null) {
+                            answered = Outcome.Failed(Failure.TimedOut())
+                            break
+                        }
+                    }
+                    if (ticket != generation) return@launch
+                    if (state.value == NewConversationServerState.Failed && cached == null) {
+                        answered = Outcome.Failed(Failure.Network(NetworkWhy.Refused))
+                        break
+                    }
+                    answered =
+                        withTimeoutOrNull(SETUP_WAIT) { host.setup(profile) }
+                            ?: Outcome.Failed(Failure.Network(NetworkWhy.Unknown))
+                    if (answered !is Outcome.Failed || cached != null) break
+                    // The server went back to starting: wait for it again. Right after Up it can still be finishing
+                    // its opening: one short re-read in that case only, then the failure words.
+                    if (state.value == NewConversationServerState.Starting && again < 3) {
+                        again++
+                        continue
+                    }
+                    if (state.value == NewConversationServerState.Up && again < 1) {
+                        again++
+                        delay(SETUP_AFTER_UP_REREAD_MS)
+                        if (ticket != generation) return@launch
+                        continue
+                    }
+                    break
+                }
             }
             when (val loaded = answered) {
                 is Outcome.Failed ->
