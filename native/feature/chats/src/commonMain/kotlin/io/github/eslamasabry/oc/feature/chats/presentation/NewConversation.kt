@@ -695,6 +695,10 @@ public data class NewConversationUi(
             phoneFolder == PhoneFolderReach.Restart &&
                 (if (phoneAgent != null) PhoneFolderSide.Agents else PhoneFolderSide.Server) in phoneFolderWaiting
 
+    /** W3: a restart of OpenCode is under way and is waiting for the reply it is writing (nothing is cut). */
+    val restartWaitsForReply: Boolean
+        get() = fixingPhoneFolder && PhoneFolderSide.Server in phoneFolderWaiting
+
     val phoneAgentName: String?
         get() =
             phoneAgent?.let { id ->
@@ -1806,7 +1810,17 @@ public class NewConversationViewModel(
         val read = ++phoneFolderRead
         mutable.update { it.copy(fixingPhoneFolder = true, phoneFolderFailure = null, phoneFolderFixed = null) }
         viewModelScope.launch {
+            // While the restart runs, a side that waits for its work (OpenCode writing a reply) shows at once.
+            val following =
+                launch {
+                    host.phoneFolderWaitingUpdates(profile).collect { now ->
+                        mutable.update {
+                            if (it.profile == profile && it.fixingPhoneFolder) it.copy(phoneFolderWaiting = now) else it
+                        }
+                    }
+                }
             val fixed = host.fixPhoneFolder(profile, shown.phoneAgent, reach, directory)
+            following.cancel()
             val now = host.phoneFolder(profile, shown.phoneAgent, directory)
             val waiting = host.phoneFolderWaiting(profile)
             // W3 (F-042): a folder Linux could not find before it was bound is read again now it is.
