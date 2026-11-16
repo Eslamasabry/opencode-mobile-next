@@ -620,4 +620,7 @@
     <string name="agentsOwnAgentReadyNow">جاهز للاستخدام.</string>
     <string name="agentsOwnAgentReadyLater">سيكون جاهزًا عند انتهاء المهمة الجارية.</string>
     <string name="agentsUpdatingAgent">جارٍ تحديث %1$s</string>
+    <string name="agentsStateRetired">لم يعد متاحًا على هذا الهاتف</string>
+    <string name="agentsRetiredBody">لم يعد %1$s متاحًا على هذا الهاتف، فلا يمكن إعداده أو استخدامه من جديد. أزِله لتحرير المساحة التي يشغلها. يبقى وكلاؤك ومحادثاتك الأخرى.</string>
+    <string name="agentsRemoveChip">إزالة</string>
 </resources>

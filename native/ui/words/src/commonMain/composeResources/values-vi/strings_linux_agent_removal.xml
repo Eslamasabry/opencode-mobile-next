@@ -9,4 +9,5 @@
     <string name="linuxAgentPayloadUnsafe">Các tệp này không khớp với bản cài đặt do ứng dụng quản lý. Chưa có gì bị xóa.</string>
     <string name="linuxAgentPayloadUnconfirmed">Không xác nhận được việc gỡ bỏ. Hãy làm mới danh sách trước khi thử lại.</string>
     <string name="linuxAgentPayloadUnavailable">Không thể đọc hoặc xóa các tệp tác nhân trên điện thoại. Hãy làm mới và thử lại.</string>
+    <string name="linuxAgentPayloadRemovedFreed">Đã gỡ chương trình. Giải phóng %1$s.</string>
 </resources>

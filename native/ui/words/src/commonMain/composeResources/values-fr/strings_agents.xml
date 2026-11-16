@@ -593,4 +593,7 @@
     <string name="agentsOwnAgentReadyNow">Prêt à l’emploi.</string>
     <string name="agentsOwnAgentReadyLater">Sera prêt quand la tâche en cours sera terminée.</string>
     <string name="agentsUpdatingAgent">Mise à jour de %1$s</string>
+    <string name="agentsStateRetired">N’est plus proposé sur ce téléphone</string>
+    <string name="agentsRetiredBody">%1$s n’est plus proposé sur ce téléphone : il ne peut plus être configuré ni utilisé. Supprimez-le pour libérer la place qu’il prend. Vos autres agents et conversations restent.</string>
+    <string name="agentsRemoveChip">Supprimer</string>
 </resources>

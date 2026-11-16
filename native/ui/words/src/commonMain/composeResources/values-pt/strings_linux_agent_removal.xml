@@ -9,4 +9,5 @@
     <string name="linuxAgentPayloadUnsafe">Estes arquivos não correspondem a uma instalação do app. Nada foi removido.</string>
     <string name="linuxAgentPayloadUnconfirmed">Não foi possível confirmar a remoção. Atualize a lista antes de tentar de novo.</string>
     <string name="linuxAgentPayloadUnavailable">Não foi possível ler ou remover os arquivos dos agentes do celular. Atualize e tente novamente.</string>
+    <string name="linuxAgentPayloadRemovedFreed">Programa removido. %1$s liberados.</string>
 </resources>

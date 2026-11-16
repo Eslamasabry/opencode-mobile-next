@@ -577,4 +577,7 @@
     <string name="agentsOwnAgentReadyNow">Siap digunakan.</string>
     <string name="agentsOwnAgentReadyLater">Akan siap saat tugas yang sedang berjalan selesai.</string>
     <string name="agentsUpdatingAgent">Memperbarui %1$s</string>
+    <string name="agentsStateRetired">Tidak lagi ditawarkan di ponsel ini</string>
+    <string name="agentsRetiredBody">%1$s tidak lagi ditawarkan di ponsel ini, jadi tidak bisa disiapkan atau dipakai lagi. Hapus untuk membebaskan ruang yang dipakainya. Agen dan percakapan Anda yang lain tetap ada.</string>
+    <string name="agentsRemoveChip">Hapus</string>
 </resources>

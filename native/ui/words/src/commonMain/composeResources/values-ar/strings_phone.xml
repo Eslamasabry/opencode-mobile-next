@@ -979,4 +979,17 @@
     <string name="thisPhoneRestartBody">المحادثات الجارية تتوقف وتبقى محادثاتك محفوظة. يستغرق ذلك عادةً أقل من دقيقة.</string>
     <string name="thisPhoneRestartingRow">جارٍ إعادة التشغيل. يستغرق ذلك عادةً أقل من دقيقة…</string>
     <string name="linuxMgrProblemNotAnswering">يستغرق Linux وقتًا طويلًا في الرد. حاول مرة أخرى بعد قليل.</string>
+    <string name="phoneDownloadWaitingOpenCode">تحديث OpenCode ينتظر Wi-Fi · نحو %1$d ميغابايت</string>
+    <string name="phoneDownloadWaitingHelper">تحديث مساعد الوكلاء ينتظر Wi-Fi · نحو %1$d ميغابايت</string>
+    <string name="phoneDownloadOnMobile">التنزيل ببيانات الجوال</string>
+    <string name="phoneDownloadRunningOpenCode">جارٍ تحديث OpenCode</string>
+    <string name="phoneDownloadRunningHelper">جارٍ تحديث مساعد الوكلاء</string>
+    <string name="phoneDownloadRunningPercent">%1$s · %2$d%</string>
+    <string name="phoneDownloadFailedOpenCode">لم يكتمل تحديث OpenCode.</string>
+    <string name="phoneDownloadFailedHelper">لم يكتمل تحديث مساعد الوكلاء.</string>
+    <string name="phoneDownloadAskTitle">هل تنزّل نحو %1$d ميغابايت ببيانات الجوال؟</string>
+    <string name="phoneDownloadAskBodyOpenCode">هذا تحديث OpenCode لهذا الهاتف. يُحسب من باقة بياناتك. الانتظار حتى Wi-Fi يؤجّله إلى وقت لاحق.</string>
+    <string name="phoneDownloadAskBodyHelper">هذا تحديث مساعد الوكلاء على هذا الهاتف. يُحسب من باقة بياناتك. الانتظار حتى Wi-Fi يؤجّله إلى وقت لاحق.</string>
+    <string name="phoneDownloadAskNow">نزّل الآن</string>
+    <string name="phoneDownloadAskWait">انتظر Wi-Fi</string>
 </resources>

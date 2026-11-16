@@ -916,4 +916,17 @@
     <string name="thisPhoneRestartBody">As conversas em andamento são interrompidas e suas conversas ficam guardadas. Isso costuma levar menos de um minuto.</string>
     <string name="thisPhoneRestartingRow">Reiniciando. Isso costuma levar menos de um minuto…</string>
     <string name="linuxMgrProblemNotAnswering">O Linux está demorando muito para responder. Tente novamente em instantes.</string>
+    <string name="phoneDownloadWaitingOpenCode">Atualização do OpenCode aguardando Wi-Fi · cerca de %1$d MB</string>
+    <string name="phoneDownloadWaitingHelper">Atualização do auxiliar de agentes aguardando Wi-Fi · cerca de %1$d MB</string>
+    <string name="phoneDownloadOnMobile">Baixar com dados móveis</string>
+    <string name="phoneDownloadRunningOpenCode">Atualizando o OpenCode</string>
+    <string name="phoneDownloadRunningHelper">Atualizando o auxiliar de agentes</string>
+    <string name="phoneDownloadRunningPercent">%1$s · %2$d%</string>
+    <string name="phoneDownloadFailedOpenCode">A atualização do OpenCode não terminou.</string>
+    <string name="phoneDownloadFailedHelper">A atualização do auxiliar de agentes não terminou.</string>
+    <string name="phoneDownloadAskTitle">Baixar cerca de %1$d MB com dados móveis?</string>
+    <string name="phoneDownloadAskBodyOpenCode">Esta é a atualização do OpenCode para este telefone. Ela conta no seu plano de dados. Aguardar o Wi-Fi a deixa para depois.</string>
+    <string name="phoneDownloadAskBodyHelper">Esta é a atualização do auxiliar de agentes deste telefone. Ela conta no seu plano de dados. Aguardar o Wi-Fi a deixa para depois.</string>
+    <string name="phoneDownloadAskNow">Baixar agora</string>
+    <string name="phoneDownloadAskWait">Aguardar o Wi-Fi</string>
 </resources>

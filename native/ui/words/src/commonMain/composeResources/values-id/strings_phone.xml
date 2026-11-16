@@ -873,4 +873,17 @@
     <string name="thisPhoneRestartBody">Percakapan yang sedang berjalan akan berhenti, dan percakapan Anda tetap tersimpan. Biasanya butuh kurang dari satu menit.</string>
     <string name="thisPhoneRestartingRow">Memulai ulang. Biasanya butuh kurang dari satu menit…</string>
     <string name="linuxMgrProblemNotAnswering">Linux butuh waktu lama untuk menjawab. Coba lagi sebentar lagi.</string>
+    <string name="phoneDownloadWaitingOpenCode">Pembaruan OpenCode menunggu Wi-Fi · sekitar %1$d MB</string>
+    <string name="phoneDownloadWaitingHelper">Pembaruan pembantu agen menunggu Wi-Fi · sekitar %1$d MB</string>
+    <string name="phoneDownloadOnMobile">Unduh dengan data seluler</string>
+    <string name="phoneDownloadRunningOpenCode">Memperbarui OpenCode</string>
+    <string name="phoneDownloadRunningHelper">Memperbarui pembantu agen</string>
+    <string name="phoneDownloadRunningPercent">%1$s · %2$d%</string>
+    <string name="phoneDownloadFailedOpenCode">Pembaruan OpenCode tidak selesai.</string>
+    <string name="phoneDownloadFailedHelper">Pembaruan pembantu agen tidak selesai.</string>
+    <string name="phoneDownloadAskTitle">Unduh sekitar %1$d MB dengan data seluler?</string>
+    <string name="phoneDownloadAskBodyOpenCode">Ini pembaruan OpenCode untuk ponsel ini. Dihitung dalam paket data Anda. Menunggu Wi-Fi menyimpannya untuk nanti.</string>
+    <string name="phoneDownloadAskBodyHelper">Ini pembaruan pembantu agen di ponsel ini. Dihitung dalam paket data Anda. Menunggu Wi-Fi menyimpannya untuk nanti.</string>
+    <string name="phoneDownloadAskNow">Unduh sekarang</string>
+    <string name="phoneDownloadAskWait">Tunggu Wi-Fi</string>
 </resources>

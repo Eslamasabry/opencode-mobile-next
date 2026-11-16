@@ -22,11 +22,11 @@
     <string name="collectAgents">Apakah agen berhasil dimulai, dan jenis kegagalan</string>
     <string name="collectBackground">Mengapa layanan latar belakang berhenti</string>
     <string name="collectUpdates">Apakah pembaruan berhasil terpasang, dan jenis kegagalan</string>
-    <string name="collectPages">Jenis halaman dan fitur yang Anda gunakan, balasan pertama, lama kunjungan, dan jumlah pesan yang Anda kirim saat itu</string>
+    <string name="collectPages">Jenis halaman dan fitur yang Anda gunakan, balasan pertama setelah Anda setuju (dan bahwa Anda sudah melihat satu sebelum setuju, tidak pernah apa pun tentangnya), berapa lama satu kunjungan, dan berapa pesan yang Anda kirim di dalamnya</string>
     <string name="collectJourney">Sejauh mana Anda melangkah di langkah pertama (membuka aplikasi, menyiapkan, terhubung, mengirim pesan, menerima balasan pertama) dan kira-kira berapa lama setelah Anda setuju. Setiap langkah dihitung sekali</string>
     <string name="collectStarters">Jenis saran yang Anda ketuk di percakapan baru, dan jawaban satu kata Anda tentang apa yang ingin Anda minta bantuan. Tidak pernah kata-kata saran atau apa yang dimintanya</string>
     <string name="collectStart">Seberapa cepat aplikasi dimulai</string>
-    <string name="collectSmooth">Seberapa lancar halaman (porsi frame yang terlambat dan lambat, serta frame yang macet), dan kecepatan refresh layar</string>
+    <string name="collectSmooth">Seberapa mulus halaman (porsi frame terlambat dan lambat, serta frame macet), kecepatan refresh layar, dan di obrolan apa yang sedang terjadi (balasan masuk, menggulir, menu atau lembar terbuka, keyboard muncul, atau tidak ada)</string>
     <string name="collectMemory">Peringatan memori dari Android</string>
     <string name="collectDevice">Rentang memori dan penyimpanan kosong ponsel Anda, jenis prosesor dan versi WebView, apakah notifikasi diizinkan, serta jenis dan versi server yang Anda gunakan</string>
     <string name="collectCrashKind">Jenis kesalahan dan lokasinya di kode aplikasi, tanpa pesannya</string>
@@ -37,8 +37,8 @@
     <string name="collectReport">Apa yang Anda tulis tentang masalahnya, terakhir kali aplikasi tertutup tak terduga, versi aplikasi dan Android, rentang memori, dan jenis server, dengan kunci, alamat, dan path disamarkan. Tanpa log dan tanpa percakapan. Anda melihat semuanya dan memilih Kirim atau Batal.</string>
     <string name="privacyCrashSendTitle">Kirim data kerusakan otomatis</string>
     <string name="privacyCrashAskTitle">Tanya saya setelah kerusakan</string>
-    <string name="collectTurns">Bagaimana setiap giliran berakhir (selesai, dihentikan, error, koneksi terputus, atau persetujuan tidak dijawab), berapa lama waktunya, berapa banyak alat yang digunakan, dan apakah giliran itu pulih dari koneksi yang terputus</string>
-    <string name="collectApprovals">Jenis permintaan yang diajukan kepada Anda (menjalankan, mengedit, membaca, web, atau pertanyaan), jawaban Anda, dan berapa lama permintaan itu menunggu. Tidak pernah perintah, file, atau pertanyaannya sendiri</string>
+    <string name="collectTurns">Bagaimana setiap giliran berakhir (selesai, selesai tanpa hasil untuk ditampilkan, dihentikan, error, koneksi terputus, atau tidak ada jawaban atas persetujuan), berapa lama sampai Anda melihat balasan pertama dan sampai agen pertama kali menunjukkan tanda bekerja, berapa lama waktunya, berapa banyak alat yang dipakai, dan apakah pulih dari koneksi yang terputus</string>
+    <string name="collectApprovals">Jenis permintaan yang diajukan kepada Anda (jalankan, ubah, baca, web, atau pertanyaan), jawaban Anda atau bahwa pilihan tersimpan yang menjawab atau proses dihentikan, di mana Anda menjawab (obrolan, beranda, notifikasi, atau widget), dan berapa lama menunggu. Tidak pernah perintah, file, atau pertanyaannya sendiri</string>
     <string name="collectShareIn">Berapa banyak gambar atau file yang Anda bagikan ke aplikasi, dan apakah itu gambar atau file. Tidak pernah nama atau isinya</string>
     <string name="collectStarAsk">Apakah permintaan satu kali untuk memberi bintang pada proyek di GitHub ditampilkan, diketuk, atau ditutup</string>
 </resources>

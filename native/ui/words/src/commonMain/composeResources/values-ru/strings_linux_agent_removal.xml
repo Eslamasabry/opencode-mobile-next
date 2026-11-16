@@ -9,4 +9,5 @@
     <string name="linuxAgentPayloadUnsafe">Эти файлы не соответствуют установке, которой владеет приложение. Ничего не удалено.</string>
     <string name="linuxAgentPayloadUnconfirmed">Удаление не удалось подтвердить. Обновите список, прежде чем повторять.</string>
     <string name="linuxAgentPayloadUnavailable">Не удалось прочитать или удалить файлы агента на телефоне. Обновите и повторите.</string>
+    <string name="linuxAgentPayloadRemovedFreed">Программа удалена. Освобождено: %1$s.</string>
 </resources>

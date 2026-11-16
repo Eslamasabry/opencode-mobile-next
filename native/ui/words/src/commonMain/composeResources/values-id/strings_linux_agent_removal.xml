@@ -9,4 +9,5 @@
     <string name="linuxAgentPayloadUnsafe">File ini tidak cocok dengan instalasi milik aplikasi. Tidak ada yang dihapus.</string>
     <string name="linuxAgentPayloadUnconfirmed">Penghapusan tidak dapat dikonfirmasi. Muat ulang daftar sebelum mencoba lagi.</string>
     <string name="linuxAgentPayloadUnavailable">File agen ponsel tidak dapat dibaca atau dihapus. Muat ulang dan coba lagi.</string>
+    <string name="linuxAgentPayloadRemovedFreed">Program dihapus. %1$s dibebaskan.</string>
 </resources>

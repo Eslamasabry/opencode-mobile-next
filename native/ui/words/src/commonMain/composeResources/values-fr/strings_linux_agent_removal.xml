@@ -9,4 +9,5 @@
     <string name="linuxAgentPayloadUnsafe">Ces fichiers ne correspondent pas à une installation gérée par l’application. Rien n’a été supprimé.</string>
     <string name="linuxAgentPayloadUnconfirmed">La suppression n’a pas pu être confirmée. Actualisez la liste avant de réessayer.</string>
     <string name="linuxAgentPayloadUnavailable">Les fichiers des agents du téléphone n’ont pas pu être lus ou supprimés. Actualisez et réessayez.</string>
+    <string name="linuxAgentPayloadRemovedFreed">Programme supprimé. %1$s libérés.</string>
 </resources>

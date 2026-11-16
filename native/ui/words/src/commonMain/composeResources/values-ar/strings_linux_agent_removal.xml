@@ -7,4 +7,5 @@
     <string name="linuxAgentPayloadUnsafe">هذه الملفات لا تطابق تثبيتًا يملكه التطبيق. لم تتم إزالة أي شيء.</string>
     <string name="linuxAgentPayloadUnconfirmed">تعذر تأكيد الإزالة. حدّث القائمة قبل المحاولة مجددًا.</string>
     <string name="linuxAgentPayloadUnavailable">تعذر قراءة ملفات وكلاء الهاتف أو إزالتها. حدّث وحاول مجددًا.</string>
+    <string name="linuxAgentPayloadRemovedFreed">أُزيل البرنامج. تم تحرير %1$s.</string>
 </resources>

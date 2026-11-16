@@ -697,6 +697,7 @@ agentsPreviousVersionRestored	027ce10eae
 agentsRemoveAction	a8c5d1f7cd
 agentsRemoveBody	f626b529b4
 agentsRemoveBusy	93152138e4
+agentsRemoveChip	05cf1c0ea5
 agentsRemoveTitle	7b225b0a75
 agentsRemoveUnconfirmed	db4718f544
 agentsRemoveUnsupported	21b6cb0bf3
@@ -712,6 +713,7 @@ agentsResumeAction	82c616282f
 agentsResumeFailed	0a0de4633d
 agentsResumeNoticeBody	7d44c76ea9
 agentsResumeNoticeTitle	d7280727d4
+agentsRetiredBody	af7a503427
 agentsRunOnBuiltIn	4154ec4af9
 agentsSectionTitle	856ad88026
 agentsSetUpAction	98143b6fe0
@@ -772,6 +774,7 @@ agentsStateNotInstalled	a1b82c84b4
 agentsStateNotInstalledNoSize	1ceb5b57d8
 agentsStatePhoneCheck	f245aa91aa
 agentsStateReady	22a88a22d2
+agentsStateRetired	7dadb89caa
 agentsStateSetUpAtFirstUse	b77567ffc2
 agentsStateSignInCheckFailed	00cad5539c
 agentsStateSignInNeeded	b7fb712e5a
@@ -2340,7 +2343,7 @@ codexTokenLabel	646b556494
 codexTokenReentry	0d659e9919
 codexTokenStorageHelp	3015a1a14b
 collectAgents	d720bc6e84
-collectApprovals	63f1044c45
+collectApprovals	be736b70c0
 collectBackground	42ece457ec
 collectConnect	46cca38725
 collectCrashKeys	7fd4e40f3b
@@ -2352,7 +2355,7 @@ collectExit	34e19a2690
 collectMemory	39a3b87916
 collectNever	1843642ee2
 collectNeverLabel	67bbd8aef0
-collectPages	5e9175bfca
+collectPages	a61453d46b
 collectPhoneSetup	01b513ae13
 collectQueue	408cf673e3
 collectReport	283ae08ce9
@@ -2361,14 +2364,14 @@ collectRowSummary	55533aebc0
 collectRules	cb60c61eac
 collectSend	d1102afc52
 collectShareIn	7a97a956c2
-collectSmooth	f52443ff90
+collectSmooth	073b1e5372
 collectStall	acce6fdb1a
 collectStarAsk	b3b26f0ab5
 collectStart	6f2a8cf39d
 collectStarters	c875091d70
 collectSteps	7a98bbbf7c
 collectTitle	af3e7783d2
-collectTurns	049c691ef2
+collectTurns	bbfd870df6
 collectUpdates	8c2cc28fab
 collectUsageLabel	c23cc2bd4b
 collectUsageNotSentYet	48f6e3a6e6
@@ -6456,6 +6459,7 @@ linuxAgentPayloadRemove	a8c5d1f7cd
 linuxAgentPayloadRemoveBody	6b4033ebdd
 linuxAgentPayloadRemoveTitle	9e8a34865e
 linuxAgentPayloadRemoved	db44bc1bde
+linuxAgentPayloadRemovedFreed	2e2f4de8ae
 linuxAgentPayloadUnavailable	aa504eb106
 linuxAgentPayloadUnconfirmed	be2b7a420f
 linuxAgentPayloadUnsafe	aa6a0c7f83
@@ -7771,7 +7775,7 @@ native44Output	a063f4c7f9
 native44Price	5cca42a3ab
 nativeAboutProvenance	e0bd072c84
 nativeAboutProvenanceTitle	f97ce82c6e
-nativeBundledPrivacy	ba1e86fab1
+nativeBundledPrivacy	63e26b40e1
 nativeCapabilitiesDetail	2fd99510fe
 nativeCapabilitiesTitle	3dd91e1995
 nativeCapabilityAddExternalAgentDetail	4c2eba1208
@@ -8620,6 +8624,19 @@ permissions40RevokeBody	403477c2f0
 permissions40RevokeTitle	9bafc26017
 permissions40Revoked	887fb6afb7
 permissions40Title	fd2c9592c7
+phoneDownloadAskBodyHelper	94a20e0342
+phoneDownloadAskBodyOpenCode	8ed517fe36
+phoneDownloadAskNow	97ebd603ee
+phoneDownloadAskTitle	be5ad4c7e7
+phoneDownloadAskWait	f042122837
+phoneDownloadFailedHelper	2e2ff8b474
+phoneDownloadFailedOpenCode	ce67da4078
+phoneDownloadOnMobile	7d7fbe0518
+phoneDownloadRunningHelper	ec134bde76
+phoneDownloadRunningOpenCode	ff260fea86
+phoneDownloadRunningPercent	fa1eaf2d6a
+phoneDownloadWaitingHelper	588b12d517
+phoneDownloadWaitingOpenCode	64149ff7e6
 phoneFileFindBody	b39bda7a88
 phoneFileFindTitle	a82e1c755c
 phoneFileInstallAction	4767f59a0a
