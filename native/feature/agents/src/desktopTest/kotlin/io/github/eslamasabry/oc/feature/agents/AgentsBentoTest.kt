@@ -18,6 +18,7 @@ import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
@@ -339,7 +340,7 @@ class AgentsBentoTest {
     }
 
     @Test
-    fun `COMPACT-302 agent tile action wraps whole label without ellipsis at 360 dp`() {
+    fun `COMPACT-302 agent tile action wraps whole label in at most two lines without ellipsis at 360 dp`() {
         val state =
             EVERY_STATE.copy(
                 phone =
@@ -359,9 +360,11 @@ class AgentsBentoTest {
                 Triple("en", 1.3f, "Check Antigravity again"),
                 Triple("ar", 1f, "تحقق من Antigravity مجددًا"),
                 Triple("ar", 1.3f, "تحقق من Antigravity مجددًا"),
+                Triple("fr", 1f, "Vérifier Antigravity à nouveau"),
+                Triple("fr", 1.3f, "Vérifier Antigravity à nouveau"),
             )
         try {
-            for ((locale, scale, expected) in cases) {
+            for ((locale, scale, expectedSpoken) in cases) {
                 Locale.setDefault(Locale.forLanguageTag(locale))
                 runDesktopComposeUiTest(360 * 3, 780 * 3) {
                     setContent {
@@ -383,12 +386,19 @@ class AgentsBentoTest {
                         }
                     }
                     waitForIdle()
-                    val layouts = mutableListOf<TextLayoutResult>()
-                    onNodeWithText(expected, useUnmergedTree = true)
-                        .performSemanticsAction(SemanticsActions.GetTextLayoutResult) { it(layouts) }
-                    val layout = layouts.single()
-                    assertFalse(layout.hasVisualOverflow, "[$locale/$scale] visual overflow on: $expected")
-                    assertFalse((0 until layout.lineCount).any { layout.isLineEllipsized(it) }, "[$locale/$scale] ellipsized: $expected")
+                    onNode(hasContentDescription(expectedSpoken) and hasClickAction()).assertExists()
+                    val chips = onAllNodesWithTag("kit-chip-label", useUnmergedTree = true)
+                    val count = chips.fetchSemanticsNodes().size
+                    assertEquals(3, count, "[$locale/$scale] expected 3 tile action chips (Claude Code, Antigravity, Qwen Code)")
+                    for (i in 0 until count) {
+                        val layouts = mutableListOf<TextLayoutResult>()
+                        chips[i].performSemanticsAction(SemanticsActions.GetTextLayoutResult) { it(layouts) }
+                        val layout = layouts.single()
+                        val text = layout.layoutInput.text.text
+                        assertFalse(layout.hasVisualOverflow, "[$locale/$scale] visual overflow on: $text")
+                        assertFalse((0 until layout.lineCount).any { layout.isLineEllipsized(it) }, "[$locale/$scale] ellipsized: $text")
+                        assertTrue(layout.lineCount <= 2, "[$locale/$scale] expected <= 2 lines for '$text', got ${layout.lineCount}")
+                    }
                 }
             }
         } finally {

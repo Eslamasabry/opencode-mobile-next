@@ -79,12 +79,14 @@ public fun KitAgentGrid(children: List<@Composable () -> Unit>, modifier: Modifi
 internal const val AGENT_TILE_MIN_WIDTH: Int = 200
 
 /**
- * How many tiles side by side in [widthDp]: one above 1.3x text, else as many [AGENT_TILE_MIN_WIDTH] tiles as fit with
- * the kit's gap, never fewer than two (a phone) nor more than four (a wide window, still inside the Reading cap).
+ * How many tiles side by side in [widthDp]: one above 1.3x text (or at 1.3x on a narrow phone where two tiles would be
+ * narrower than [AGENT_TILE_MIN_WIDTH]), else as many [AGENT_TILE_MIN_WIDTH] tiles as fit with the kit's gap, never
+ * fewer than two (a phone) nor more than four (a wide window, still inside the Reading cap).
  */
 internal fun agentTileColumns(widthDp: Float, textScale: Float): Int {
     if (agentGridOneColumn(textScale)) return 1
     val gap = Space.S3.toFloat()
+    if (textScale >= 1.3f && (widthDp - gap) / 2f < AGENT_TILE_MIN_WIDTH) return 1
     val fit = ((widthDp + gap) / (AGENT_TILE_MIN_WIDTH + gap)).toInt()
     return fit.coerceIn(2, 4)
 }
