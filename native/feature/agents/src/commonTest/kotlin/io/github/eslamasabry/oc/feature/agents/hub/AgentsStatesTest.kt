@@ -91,6 +91,21 @@ class AgentsStatesTest {
     }
 
     @Test
+    fun `a retired agent reads Retired with Remove only, never the phone check, and is not choosable`() {
+        val retired = PhoneAgentRow("gemini", "Gemini CLI", PhoneAgentStatus.PhoneCheck, removable = true, retired = true)
+        val tile = agentTile(retired, null)
+        assertEquals(AgentTileState.Retired, tile.state)
+        assertEquals(AgentTileAct.Remove, tile.act)
+        assertEquals(PhoneAgentShown.Retired, phoneAgentShown(retired))
+        assertEquals(false, phoneAgentChoosable(phoneAgentShown(retired)))
+        assertEquals(false, phoneAgentStartsConversation(retired))
+        // Even a "ready" copy is not a choice once retired; it is not removable here: no act at all.
+        val stuck = retired.copy(status = PhoneAgentStatus.Ready, removable = false)
+        assertEquals(AgentTileState.Retired, agentTile(stuck, null).state)
+        assertNull(agentTile(stuck, null).act)
+    }
+
+    @Test
     fun `a check that runs, or a helper being started, reads Checking and offers no act`() {
         val checking = agentTile(needsCheck, null, checking = true)
         assertEquals(AgentTileState.Checking, checking.state)
