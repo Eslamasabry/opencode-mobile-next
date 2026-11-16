@@ -42,6 +42,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.test.assertTrue
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -190,6 +191,57 @@ class AgentOpenFlashTest {
             assertEquals(ChatLoad.Failed(Failure.NotFound()), world.load.value)
             world.detach()
         }
+
+    @Test
+    fun `B-STATE-107 a late-listed helper conversation opens on the same connection before its first connect`() = runTest {
+        lateListed(connectFirst = false)
+    }
+
+    @Test
+    fun `B-STATE-107 a connected helper still starting opens a late-listed conversation on its existing retry`() = runTest {
+        lateListed(connectFirst = true)
+    }
+
+    private suspend fun TestScope.lateListed(connectFirst: Boolean) {
+        val base = FakeServerGateway()
+        if (connectFirst) base.events.connect()
+        val gateway = ScriptedHistory(base, ArrayDeque(listOf<Failure>(Failure.NotFound())))
+        val agents = Agents()
+        agents.wait.value = PhoneServerWait.Starting
+        val seen = mutableListOf<ChatLoad>()
+        val world = open(gateway, agents, seen)
+        assertEquals(ChatLoad.Loading, world.load.value)
+        assertEquals(1, gateway.reads)
+        // The helper finishes listing after the early 404, on this same gateway and graph.
+        base.sessionList = persistentListOf(Session(ref.sessionId, time = SessionTime(idleMs = 20)))
+        assertEquals(ref.sessionId, assertIs<Outcome.Ok<ServerPage<Session>>>(gateway.sessionPage()).value.items.single().id)
+        agents.wait.value = PhoneServerWait.None
+        advanceTimeBy(2_500)
+        runCurrent()
+        assertEquals(ChatLoad.Live, world.load.value, "shown: $seen")
+        assertTrue(gateway.reads >= 2)
+        assertTrue(seen.none { it is ChatLoad.Failed }, "shown: $seen")
+        world.detach()
+    }
+
+    @Test
+    fun `B-STATE-107 a fully up helper with its list read keeps an authoritative NotFound`() = runTest {
+        val base = base()
+        base.events.connect()
+        assertIs<Outcome.Ok<ServerPage<Session>>>(base.sessionPage())
+        val gateway = ScriptedHistory(base, ArrayDeque(listOf<Failure>(Failure.NotFound())), forever = true)
+        val seen = mutableListOf<ChatLoad>()
+        val world = open(gateway, Agents(), seen)
+        advanceTimeBy(2_500)
+        runCurrent()
+        assertEquals(ChatLoad.Failed(Failure.NotFound()), world.load.value)
+        val reads = gateway.reads
+        advanceTimeBy(10_000)
+        runCurrent()
+        assertEquals(ChatLoad.Failed(Failure.NotFound()), world.load.value)
+        assertEquals(reads, gateway.reads)
+        world.detach()
+    }
 
     @Test
     fun `AOF-003 an agent that needs a sign-in shows its state at once, with no wait`() = runTest {

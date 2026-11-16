@@ -990,6 +990,7 @@ internal class GraphChatWorld(
         if (stopWatching == null || mutableLoad.value is ChatLoad.Live || !loadWaiting.value) return
         val a = currentAttached()
         if (a != null) {
+            a.graph.session.reads.unforget(sid)
             readHistory(a.gateway, a.handle, P3Bridge(sid.raw))
             return
         }
