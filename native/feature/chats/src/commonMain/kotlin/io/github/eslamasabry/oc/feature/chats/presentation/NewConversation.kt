@@ -40,6 +40,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.dropWhile
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.takeWhile
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
@@ -112,6 +113,15 @@ public enum class PhoneFolderReach {
             return listOf("/storage/", "/sdcard/", "/mnt/sdcard/").any { path.startsWith(it) }
         }
     }
+}
+
+/** W3: the two Linux sides of this phone a folder in its storage must be bound into: its OpenCode and its agents. */
+public enum class PhoneFolderSide {
+    /** The phone's own OpenCode server. */
+    Server,
+
+    /** The helper that runs the phone's agents (Claude Code, Codex, Antigravity, Qwen and the rest). */
+    Agents,
 }
 
 public data class NewConversationModel(
@@ -255,6 +265,31 @@ public interface NewConversationHost {
         phoneAgent: String?,
         reach: PhoneFolderReach,
     ): Outcome<Unit> = Outcome.Failed(Failure.Unavailable(FeatureId("phoneFolder")))
+
+    /** [fixPhoneFolder] for [directory]: the other side of this phone restarts too when it also lacks it (W3). */
+    public suspend fun fixPhoneFolder(
+        profile: ProfileId,
+        phoneAgent: String?,
+        reach: PhoneFolderReach,
+        directory: String,
+    ): Outcome<Unit> = fixPhoneFolder(profile, phoneAgent, reach)
+
+    /**
+     * W3: whether the other side of this phone (its OpenCode when [phoneAgent] is set, else its agents) also runs
+     * without [directory]. The one restart [fixPhoneFolder] makes then restarts both, so choosing another agent later
+     * never asks again for the same folder.
+     */
+    public suspend fun phoneFolderBothSides(profile: ProfileId, phoneAgent: String?, directory: String): Boolean = false
+
+    /**
+     * W3: the sides whose restart for a chosen folder waits for the work running there to end (a reply on the phone's
+     * OpenCode, an agent's turn); it is never interrupted, and the side restarts by itself once idle.
+     */
+    public suspend fun phoneFolderWaiting(profile: ProfileId): Set<PhoneFolderSide> = emptySet()
+
+    /** [phoneFolderWaiting] as it changes (a waiting side restarts once its work ends). */
+    public fun phoneFolderWaitingUpdates(profile: ProfileId): kotlinx.coroutines.flow.Flow<Set<PhoneFolderSide>> =
+        kotlinx.coroutines.flow.flow { emit(phoneFolderWaiting(profile)) }
 
     /** Whether [profile] can make a new project folder here (the app's own phone server only, as in Projects). */
     public fun canCreateProject(profile: ProfileId): Boolean = false
@@ -599,6 +634,10 @@ public data class NewConversationUi(
     val checkingPhoneFolder: Boolean = false,
     /** What the last action fixed (the access, a restart), once the folder reads Ready again; the page says it once. */
     val phoneFolderFixed: PhoneFolderReach? = null,
+    /** W3: the other side of this phone also runs without the folder; one restart restarts both. */
+    val phoneFolderBoth: Boolean = false,
+    /** W3: the sides whose restart waits for their work to end (never interrupted). */
+    val phoneFolderWaiting: Set<PhoneFolderSide> = emptySet(),
     val remakingFolder: Boolean = false,
     val remakeFailure: Failure? = null,
     /** The chosen server is this phone's own OpenCode and the person stopped it: no list can be read until it starts. */
@@ -628,6 +667,12 @@ public data class NewConversationUi(
     /** Issue 147: the chosen folder in phone storage is not ready for the side that will work in it; Start waits. */
     val phoneFolderBlocked: Boolean
         get() = phoneFolder != null && phoneFolder != PhoneFolderReach.Ready
+
+    /** W3: the side that will work in the folder restarts once its running work ends (it is never interrupted). */
+    val chosenSideWaits: Boolean
+        get() =
+            phoneFolder == PhoneFolderReach.Restart &&
+                (if (phoneAgent != null) PhoneFolderSide.Agents else PhoneFolderSide.Server) in phoneFolderWaiting
 
     val phoneAgentName: String?
         get() =
@@ -1658,12 +1703,42 @@ public class NewConversationViewModel(
             mutable.update { if (it.directory == directory) it.copy(checkingPhoneFolder = true) else it }
         viewModelScope.launch {
             val reach = host.phoneFolder(profile, agent, directory)
+            val both = reach == PhoneFolderReach.Restart && host.phoneFolderBothSides(profile, agent, directory)
+            val waiting = if (reach == null) emptySet() else host.phoneFolderWaiting(profile)
             mutable.update {
                 if (read == phoneFolderRead && it.profile == profile && it.directory == directory)
-                    it.copy(phoneFolder = reach, checkingPhoneFolder = false)
+                    it.copy(
+                        phoneFolder = reach,
+                        checkingPhoneFolder = false,
+                        phoneFolderBoth = both,
+                        phoneFolderWaiting = waiting,
+                    )
                 else it
             }
+            watchPhoneFolderWaiting(profile, directory)
         }
+    }
+
+    private var waitingWatch: kotlinx.coroutines.Job? = null
+
+    /**
+     * W3: while a side's restart waits for its work to end, the page follows it; when that side has restarted, the
+     * folder is read again (the notice then goes by itself).
+     */
+    private fun watchPhoneFolderWaiting(profile: ProfileId, directory: String) {
+        if (mutable.value.phoneFolderWaiting.isEmpty() || waitingWatch?.isActive == true) return
+        waitingWatch =
+            viewModelScope.launch {
+                host.phoneFolderWaitingUpdates(profile)
+                    .takeWhile { mutable.value.profile == profile }
+                    .collect { now ->
+                        if (now == mutable.value.phoneFolderWaiting) return@collect
+                        mutable.update { if (it.profile == profile) it.copy(phoneFolderWaiting = now) else it }
+                        val shown = mutable.value
+                        if (shown.profile == profile && shown.directory == directory)
+                            checkPhoneFolder(profile, directory)
+                    }
+            }
     }
 
     override fun fixPhoneFolder() {
@@ -1673,13 +1748,17 @@ public class NewConversationViewModel(
         val reach = shown.phoneFolder ?: return
         if (shown.fixingPhoneFolder || (reach != PhoneFolderReach.AppAccess && reach != PhoneFolderReach.Restart))
             return
+        if (shown.chosenSideWaits) return
         // At once: the notice says what is happening and the action waits (a restart of the agents takes half a
         // minute); it ends with the folder read again, so the page says it is done or why not.
         val read = ++phoneFolderRead
         mutable.update { it.copy(fixingPhoneFolder = true, phoneFolderFailure = null, phoneFolderFixed = null) }
         viewModelScope.launch {
-            val fixed = host.fixPhoneFolder(profile, shown.phoneAgent, reach)
+            val fixed = host.fixPhoneFolder(profile, shown.phoneAgent, reach, directory)
             val now = host.phoneFolder(profile, shown.phoneAgent, directory)
+            val waiting = host.phoneFolderWaiting(profile)
+            // W3 (F-042): a folder Linux could not find before it was bound is read again now it is.
+            val there = if (fixed is Outcome.Ok && shown.folderMissing) host.folderExists(profile, directory) else null
             mutable.update {
                 if (read != phoneFolderRead || it.profile != profile || it.directory != directory)
                     it.copy(fixingPhoneFolder = false)
@@ -1690,8 +1769,11 @@ public class NewConversationViewModel(
                         phoneFolder = now,
                         phoneFolderFailure = (fixed as? Outcome.Failed)?.failure,
                         phoneFolderFixed = reach.takeIf { fixed is Outcome.Ok && now == PhoneFolderReach.Ready },
+                        phoneFolderWaiting = waiting,
+                        folderMissing = if (there != null) !there else it.folderMissing,
                     )
             }
+            watchPhoneFolderWaiting(profile, directory)
         }
     }
 

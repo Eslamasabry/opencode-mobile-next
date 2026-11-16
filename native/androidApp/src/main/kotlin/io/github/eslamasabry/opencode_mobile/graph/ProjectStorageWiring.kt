@@ -43,8 +43,6 @@ class AndroidProjectStorageAccess(
     private val linux
         get() = BuiltinLinux.get(app)
 
-    private fun key(id: ProfileId) = "oc.sharedProjects.${id.raw}"
-
     private fun pending(id: ProfileId) = "oc.sharedProjectsPending.${id.raw}"
 
     private fun owns(id: ProfileId): Boolean {
@@ -71,10 +69,9 @@ class AndroidProjectStorageAccess(
             val root =
                 SharedStoragePath.projectRoot(path)
                     ?: return@withLock Outcome.Ok(ProjectStorageStatus.Allowed)
-            val raw = stores.prefs.get(key(profile))
-            if (raw != null && raw !is PrefValue.StrList)
+            if (SharedProjectList.unreadable(stores.prefs, profile))
                 return@withLock Failure.StorageRefused().failed()
-            val known = (raw as? PrefValue.StrList)?.value?.contains(root) == true
+            val known = root in SharedProjectList.read(stores.prefs, profile)
             server.refresh()
             if (!owns(profile))
                 return@withLock Failure.Refused(RefusalReason.OriginChanged).failed()
@@ -147,22 +144,12 @@ class AndroidProjectStorageAccess(
         needsRestart: Boolean,
     ): Outcome<Unit> {
         if (!owns(profile)) return Failure.Refused(RefusalReason.ProfileDeleted).failed()
-        val before = stores.prefs.get(key(profile))
-        if (before != null && before !is PrefValue.StrList) return Failure.StorageRefused().failed()
-        val next = ((before as? PrefValue.StrList)?.value.orEmpty() + root).distinct().sorted()
-        when (
-            val saved =
-                stores.prefs.compareAndCommit(
-                    stores.lanes.forProfile(profile),
-                    mapOf(key(profile) to before),
-                ) {
-                    putStringList(key(profile), next)
-                    if (needsRestart) putBool(pending(profile), true) else remove(pending(profile))
-                }
-        ) {
-            is Outcome.Failed -> return saved
-            is Outcome.Ok -> if (!saved.value) return Failure.Conflict().failed()
-        }
+        // The one writer of the list (compare and set), with the restart flag in the same commit.
+        val saved =
+            SharedProjectList.add(stores.prefs, stores.lanes.forProfile(profile), profile, root) {
+                if (needsRestart) putBool(pending(profile), true) else remove(pending(profile))
+            }
+        if (saved is Outcome.Failed) return saved
         return push()
     }
 
@@ -181,15 +168,7 @@ class AndroidProjectStorageAccess(
 
     companion object {
         fun register(scope: ProfileScope) {
-            scope.register(
-                KeyShape(
-                    "oc.sharedProjects.",
-                    KeyScope.Profile,
-                    PrefType.StrList,
-                    ":feature:projects",
-                    "Opened phone folders",
-                )
-            )
+            scope.register(SharedProjectList.shape(":feature:projects", "Opened phone folders"))
             scope.register(
                 KeyShape(
                     "oc.sharedProjectsPending.",

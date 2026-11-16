@@ -43,6 +43,7 @@ import io.github.eslamasabry.oc.feature.chats.presentation.PhoneStartWay
 import io.github.eslamasabry.oc.feature.chats.presentation.PHONE_STORAGE_ROOT
 
 import io.github.eslamasabry.oc.feature.chats.presentation.PhoneFolderReach
+import io.github.eslamasabry.oc.feature.chats.presentation.PhoneFolderSide
 import io.github.eslamasabry.oc.feature.chats.presentation.PhoneStorageAccess
 import io.github.eslamasabry.oc.feature.chats.presentation.projectPlace
 import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationUi
@@ -159,8 +160,11 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
         else
             when (state.phoneFolder) {
                 PhoneFolderReach.AppAccess -> Res.string.chatsNewPhoneFolderAllow
+                // W3: a side whose restart waits for its work to end restarts by itself; there is nothing to tap.
                 PhoneFolderReach.Restart ->
-                    if (state.phoneAgent != null) Res.string.chatsNewPhoneFolderRestartAgentsAction
+                    if (state.chosenSideWaits) null
+                    else if (state.phoneFolderBoth) Res.string.chatsNewPhoneFolderRestartBothAction
+                    else if (state.phoneAgent != null) Res.string.chatsNewPhoneFolderRestartAgentsAction
                     else Res.string.chatsNewPhoneFolderRestartServerAction
                 else -> null
             }
@@ -468,6 +472,10 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                     // behind Why (the agents are told the same at their start).
                     // Issue 147: what the action just did, said once it is done (a restart takes half a minute).
                     phoneFolderDoneWords(state)?.let { KitNotice(it, inset.testTag("chats-new-phone-folder-done")) }
+                    // W3: the other side's restart waits for its work to end; it is not interrupted.
+                    phoneFolderOtherWaitingWords(state)?.let {
+                        KitNotice(it, inset.testTag("chats-new-phone-folder-waiting"))
+                    }
                     if (state.phoneFolder == PhoneFolderReach.Ready && !state.directory.isNullOrBlank()) {
                         var why by remember(state.directory) { mutableStateOf(false) }
                         KitGroupNote(
@@ -1305,9 +1313,14 @@ private fun phoneFolderWords(state: NewConversationUi): String? {
             if (state.fixingPhoneFolder) stringResource(Res.string.chatsNewPhoneFolderAllowing)
             else stringResource(Res.string.chatsNewPhoneFolderAccess)
         PhoneFolderReach.Restart ->
-            if (state.fixingPhoneFolder)
-                if (state.phoneAgent != null) stringResource(Res.string.chatsNewPhoneFolderRestartingAgents, agent)
+            if (state.chosenSideWaits)
+                if (state.phoneAgent != null) stringResource(Res.string.chatsNewPhoneFolderWaitingAgents)
+                else stringResource(Res.string.chatsNewPhoneFolderWaitingServer)
+            else if (state.fixingPhoneFolder)
+                if (state.phoneFolderBoth) stringResource(Res.string.chatsNewPhoneFolderRestartingBoth)
+                else if (state.phoneAgent != null) stringResource(Res.string.chatsNewPhoneFolderRestartingAgents, agent)
                 else stringResource(Res.string.chatsNewPhoneFolderRestartingServer)
+            else if (state.phoneFolderBoth) stringResource(Res.string.chatsNewPhoneFolderRestartBoth, agent)
             else if (state.phoneAgent != null) stringResource(Res.string.chatsNewPhoneFolderRestartAgents, agent)
             else stringResource(Res.string.chatsNewPhoneFolderRestartServer)
         PhoneFolderReach.Missing -> stringResource(Res.string.chatsNewPhoneFolderMissing)
@@ -1316,13 +1329,25 @@ private fun phoneFolderWords(state: NewConversationUi): String? {
 }
 
 /** Issue 147: the one line saying the last action worked (the access is on, the side restarted); null otherwise. */
+/** W3: the other side of this phone restarts once its work ends (the chosen side is ready); null otherwise. */
+@Composable
+private fun phoneFolderOtherWaitingWords(state: NewConversationUi): String? {
+    if (state.phoneFolder != PhoneFolderReach.Ready) return null
+    val other = if (state.phoneAgent != null) PhoneFolderSide.Server else PhoneFolderSide.Agents
+    if (other !in state.phoneFolderWaiting) return null
+    return if (other == PhoneFolderSide.Server) stringResource(Res.string.chatsNewPhoneFolderWaitingServer)
+    else stringResource(Res.string.chatsNewPhoneFolderWaitingAgents)
+}
+
 @Composable
 private fun phoneFolderDoneWords(state: NewConversationUi): String? {
     if (state.phoneFolder != PhoneFolderReach.Ready) return null
     val agent = state.phoneAgentName ?: "OpenCode"
     return when (state.phoneFolderFixed) {
         PhoneFolderReach.Restart ->
-            if (state.phoneAgent != null) stringResource(Res.string.chatsNewPhoneFolderRestartedAgents, agent)
+            if (state.phoneFolderBoth && state.phoneFolderWaiting.isEmpty())
+                stringResource(Res.string.chatsNewPhoneFolderRestartedBoth)
+            else if (state.phoneAgent != null) stringResource(Res.string.chatsNewPhoneFolderRestartedAgents, agent)
             else stringResource(Res.string.chatsNewPhoneFolderRestartedServer)
         PhoneFolderReach.AppAccess -> stringResource(Res.string.chatsNewPhoneFolderAllowed, agent)
         else -> null
