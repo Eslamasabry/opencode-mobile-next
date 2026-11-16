@@ -142,14 +142,14 @@ internal fun ColumnScope.WhatWeCollectBody(privacy: PrivacyUi, actions: Settings
         HealthContract.items.getValue(CollectGroup.Report).forEach { CollectRow(it) }
     }
     KitRowGroup(label = stringResource(Res.string.collectNeverLabel)) {
-        KitRow(title = stringResource(Res.string.collectNever), titleMaxLines = 6)
+        KitRow(title = stringResource(Res.string.collectNever), titleMaxLines = Int.MAX_VALUE)
     }
     KitGroupNote(stringResource(Res.string.collectRules))
 }
 
 @Composable
 private fun CollectRow(item: CollectItem) {
-    KitRow(title = stringResource(collectWords(item)), titleMaxLines = 4)
+    KitRow(title = stringResource(collectWords(item)), titleMaxLines = Int.MAX_VALUE)
 }
 
 internal fun collectWords(item: CollectItem): StringResource =
