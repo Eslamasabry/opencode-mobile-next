@@ -162,6 +162,7 @@ testing {
             }
             targets.all {
                 testTask.configure {
+                    // The security declaration scan parses the same live tree as the full quality gate.
                     maxHeapSize = "2g"
                     maxParallelForks = 1
                     dependsOn(":android:migration:bundleReleaseAar")

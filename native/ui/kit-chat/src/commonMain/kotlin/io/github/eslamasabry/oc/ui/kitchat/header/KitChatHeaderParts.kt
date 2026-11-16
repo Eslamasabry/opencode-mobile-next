@@ -14,7 +14,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.path
-import androidx.compose.ui.platform.LocalClipboardManager
+import io.github.eslamasabry.oc.ui.kit.foundation.rememberKitClipboard
+import io.github.eslamasabry.oc.ui.kit.foundation.KitClipboardMode
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.contentDescription
@@ -82,14 +83,14 @@ public fun KitChatMoreMenu(
 @Composable
 public fun KitClipboardEffect(id: Long?, text: String?, onDone: (Long) -> Unit, announcement: String? = null) {
     @Suppress("DEPRECATION") // the platform clip-entry API lands with KitCopy (K1); this is the kit's one call site
-    val clipboard = LocalClipboardManager.current
+    val clipboard = rememberKitClipboard()
     val done by rememberUpdatedState(onDone)
     val said by rememberUpdatedState(announcement)
     var copied by remember { mutableStateOf<Long?>(null) }
     var words by remember { mutableStateOf<String?>(null) }
     LaunchedEffect(id) {
         if (id != null && text != null) {
-            clipboard.setText(AnnotatedString(text))
+            clipboard.setText(AnnotatedString(text), KitClipboardMode.Sensitive)
             words = said
             copied = id
             done(id)

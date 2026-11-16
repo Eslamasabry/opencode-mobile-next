@@ -1,10 +1,8 @@
 package io.github.eslamasabry.opencode_mobile.graph
 
+import io.github.eslamasabry.oc.ui.kit.foundation.KitAndroidClipboard
+import io.github.eslamasabry.oc.ui.kit.foundation.KitClipboardMode
 import android.app.Application
-import android.content.ClipData
-import android.content.ClipDescription
-import android.content.ClipboardManager
-import android.os.PersistableBundle
 import dev.zacsweers.metro.*
 import io.github.eslamasabry.oc.android.background.ForegroundFailure
 import io.github.eslamasabry.oc.android.background.ForegroundLease
@@ -394,10 +392,7 @@ class NativeAgentSignInLinks(
 @ContributesBinding(AppScope::class, binding = binding<SignInClipboard>())
 class AgentSignInClipboard(private val app: Application) : SignInClipboard {
     override fun copySensitive(text: String) {
-        val clip = ClipData.newPlainText("", text)
-        clip.description.extras =
-            PersistableBundle().apply { putBoolean(ClipDescription.EXTRA_IS_SENSITIVE, true) }
-        app.getSystemService(ClipboardManager::class.java).setPrimaryClip(clip)
+        KitAndroidClipboard.write(app, text, KitClipboardMode.Sensitive)
     }
 }
 

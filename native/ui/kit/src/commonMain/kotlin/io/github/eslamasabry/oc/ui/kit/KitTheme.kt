@@ -201,7 +201,9 @@ public fun KitTheme(
             shapes = MaterialBridge.shapes,
             typography = remember(typography) { MaterialBridge.typography(typography) },
         ) {
-            Box(Modifier.kitThemeCover(fade.cover), propagateMinConstraints = true) { content() }
+            Box(Modifier.kitThemeCover(fade.cover), propagateMinConstraints = true) {
+                platform.ClipboardBoundary(io.github.eslamasabry.oc.ui.kit.foundation.KitClipboardMode.Sensitive) { content() }
+            }
         }
     }
 }

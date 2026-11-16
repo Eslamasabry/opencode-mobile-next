@@ -1,5 +1,7 @@
 package io.github.eslamasabry.opencode_mobile.graph
 
+import io.github.eslamasabry.oc.ui.kit.foundation.KitAndroidClipboard
+import io.github.eslamasabry.oc.ui.kit.foundation.KitClipboardMode
 import android.Manifest
 import android.content.pm.PackageManager
 import android.net.Uri
@@ -8,7 +10,6 @@ import android.provider.Settings
 import android.app.Application
 import android.content.ActivityNotFoundException
 import android.content.ClipData
-import android.content.ClipboardManager
 import android.content.Intent
 import android.os.Environment
 import android.webkit.MimeTypeMap
@@ -200,8 +201,7 @@ class AndroidChatOutside(
 
     /** Writes what the presenter hands over: server text already went through [mask] (B-SEC-145). */
     override fun copy(text: String): Boolean = platformCall {
-        val clipboard = application.getSystemService(ClipboardManager::class.java)
-        clipboard.setPrimaryClip(ClipData.newPlainText("OpenCode Mobile", text))
+        KitAndroidClipboard.write(application, text, KitClipboardMode.Sensitive, "OpenCode Mobile")
     }
 
     override fun share(text: String): Boolean = platformCall {

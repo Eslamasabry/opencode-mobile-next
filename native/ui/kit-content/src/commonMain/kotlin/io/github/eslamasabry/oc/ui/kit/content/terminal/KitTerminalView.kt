@@ -87,7 +87,8 @@ import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.input.key.utf16CodePoint
 import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.platform.LocalClipboardManager
+import io.github.eslamasabry.oc.ui.kit.foundation.rememberKitClipboard
+import io.github.eslamasabry.oc.ui.kit.foundation.KitClipboardMode
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -801,7 +802,7 @@ public fun KitTerminalLiveView(
  */
 @Composable
 private fun TerminalOscHost(screen: KitTerminalScreen, modifier: Modifier, content: @Composable () -> Unit) {
-    @Suppress("DEPRECATION") val clipboard = LocalClipboardManager.current
+    @Suppress("DEPRECATION") val clipboard = rememberKitClipboard()
     var copies by remember { mutableIntStateOf(0) }
     var shown by remember { mutableStateOf(false) }
     DisposableEffect(screen, clipboard) {
@@ -809,7 +810,7 @@ private fun TerminalOscHost(screen: KitTerminalScreen, modifier: Modifier, conte
         screen.onOsc52 = { args ->
             val text = TerminalOsc52.parse(args)
             if (text != null) {
-                clipboard.setText(AnnotatedString(text))
+                clipboard.setText(AnnotatedString(text), KitClipboardMode.Sensitive)
                 shown = true
                 copies++
             }

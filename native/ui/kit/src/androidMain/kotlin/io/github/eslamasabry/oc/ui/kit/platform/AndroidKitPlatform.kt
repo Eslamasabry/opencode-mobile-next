@@ -58,6 +58,16 @@ public class AndroidKitPlatform(
     private val context: Context = view.context.applicationContext ?: view.context
     private val state = MutableStateFlow(readSignals())
 
+    override fun writeClipboard(text: String, mode: io.github.eslamasabry.oc.ui.kit.foundation.KitClipboardMode): Boolean {
+        io.github.eslamasabry.oc.ui.kit.foundation.KitAndroidClipboard.write(context, text, mode)
+        return true
+    }
+
+    @Composable
+    override fun ClipboardBoundary(mode: io.github.eslamasabry.oc.ui.kit.foundation.KitClipboardMode, content: @Composable () -> Unit) {
+        io.github.eslamasabry.oc.ui.kit.foundation.KitAndroidClipboardBoundary(context, mode, content)
+    }
+
     override val name: String = "android"
     override val family: KitPlatformFamily = KitPlatformFamily.Android
     override val signals: StateFlow<KitSystemSignals> = state.asStateFlow()

@@ -7,7 +7,8 @@ import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalClipboardManager
+import io.github.eslamasabry.oc.ui.kit.foundation.rememberKitClipboard
+import io.github.eslamasabry.oc.ui.kit.foundation.KitClipboardMode
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
@@ -99,12 +100,13 @@ public fun ToolsScreen(state: ToolsUi, actions: ToolsActions) {
                             KitRow(stringResource(Res.string.nativeToolsNoParameters))
                         tool.parameters?.let { schema ->
                             var copied by remember(tool.id) { mutableStateOf(false) }
-                            @Suppress("DEPRECATION") val clipboard = LocalClipboardManager.current
+                            @Suppress("DEPRECATION") val clipboard = rememberKitClipboard()
                             KitButton(
                                 stringResource(Res.string.e7LibraryCopyParameterSchema),
                                 {
                                     clipboard.setText(
-                                        AnnotatedString(KitRedact.text(schema.toString()))
+                                        AnnotatedString(KitRedact.text(schema.toString())),
+                                        KitClipboardMode.Sensitive,
                                     )
                                     copied = true
                                 },

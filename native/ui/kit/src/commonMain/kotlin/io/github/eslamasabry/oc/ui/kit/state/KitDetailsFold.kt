@@ -23,7 +23,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalClipboardManager
+import io.github.eslamasabry.oc.ui.kit.foundation.rememberKitClipboard
+import io.github.eslamasabry.oc.ui.kit.foundation.KitClipboardMode
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -362,7 +363,7 @@ private fun ValueRow(index: Int, value: KitTechnicalValue, wide: Boolean) {
 /** Dart `KitIconButton.copy(size: tokens.smallIconSize)`: the copy glyph at 20 dp that turns to a check for the hold. */
 @Composable
 private fun CopyValueButton(text: String, label: String, modifier: Modifier) {
-    @Suppress("DEPRECATION") val clipboard = LocalClipboardManager.current
+    @Suppress("DEPRECATION") val clipboard = rememberKitClipboard()
     var copied by remember { mutableStateOf(false) }
     LaunchedEffect(copied) {
         if (copied) {
@@ -374,7 +375,7 @@ private fun CopyValueButton(text: String, label: String, modifier: Modifier) {
         icon = if (copied) KitIcons.check else KitIcons.copy,
         label = label,
         onClick = {
-            clipboard.setText(AnnotatedString(text))
+            clipboard.setText(AnnotatedString(text), KitClipboardMode.Sensitive)
             copied = true
         },
         modifier = modifier,

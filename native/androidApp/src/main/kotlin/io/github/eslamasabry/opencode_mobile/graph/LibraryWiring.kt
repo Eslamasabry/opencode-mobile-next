@@ -1,8 +1,8 @@
 package io.github.eslamasabry.opencode_mobile.graph
 
+import io.github.eslamasabry.oc.ui.kit.foundation.KitAndroidClipboard
+import io.github.eslamasabry.oc.ui.kit.foundation.KitClipboardMode
 import android.app.Application
-import android.content.ClipData
-import android.content.ClipboardManager
 import android.net.Uri
 import dev.zacsweers.metro.*
 import io.github.eslamasabry.oc.core.common.*
@@ -297,9 +297,7 @@ class AndroidLibraryHost(
         val safe = KitCopy.safeText(redactor, text).text
         return withContext(dispatchers.main) {
             attempt({ Failure.Device() }) {
-                application
-                    .getSystemService(ClipboardManager::class.java)
-                    .setPrimaryClip(ClipData.newPlainText("", safe))
+                KitAndroidClipboard.write(application, safe, KitClipboardMode.Sensitive)
             }
         }
     }

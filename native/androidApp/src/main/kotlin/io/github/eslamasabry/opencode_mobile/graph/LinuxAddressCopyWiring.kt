@@ -1,8 +1,8 @@
 package io.github.eslamasabry.opencode_mobile.graph
 
+import io.github.eslamasabry.oc.ui.kit.foundation.KitAndroidClipboard
+import io.github.eslamasabry.oc.ui.kit.foundation.KitClipboardMode
 import android.app.Application
-import android.content.ClipData
-import android.content.ClipboardManager
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
@@ -17,12 +17,7 @@ class AndroidLinuxAddressCopy(private val app: Application) : LinuxAddressCopy {
         if (!Regex("^http://127\\.0\\.0\\.1:[0-9]{2,5}/$").matches(address))
             return Outcome.Failed(Failure.Device())
         return try {
-            val clipboard =
-                app.getSystemService(ClipboardManager::class.java)
-                    ?: return Outcome.Failed(Failure.Device())
-            clipboard.setPrimaryClip(
-                ClipData.newPlainText(app.applicationInfo.loadLabel(app.packageManager), address)
-            )
+            KitAndroidClipboard.write(app, address, KitClipboardMode.Public, app.applicationInfo.loadLabel(app.packageManager))
             Outcome.Ok(Unit)
         } catch (_: SecurityException) {
             Outcome.Failed(Failure.Device())

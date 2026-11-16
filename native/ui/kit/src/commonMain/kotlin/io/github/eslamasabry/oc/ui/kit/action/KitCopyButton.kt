@@ -2,7 +2,8 @@ package io.github.eslamasabry.oc.ui.kit.action
 
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalClipboardManager
+import io.github.eslamasabry.oc.ui.kit.foundation.rememberKitClipboard
+import io.github.eslamasabry.oc.ui.kit.foundation.KitClipboardMode
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
@@ -46,7 +47,7 @@ public fun rememberKitCopyAction(
     mask: KitCopyMask = KitCopyVerbatim,
     maskedLabel: String = copiedLabel,
 ): KitAction {
-    @Suppress("DEPRECATION") val clipboard = LocalClipboardManager.current
+    @Suppress("DEPRECATION") val clipboard = rememberKitClipboard()
     var copies by remember { mutableIntStateOf(0) }
     var copied by remember { mutableStateOf(false) }
     var masked by remember { mutableStateOf(false) }
@@ -60,7 +61,7 @@ public fun rememberKitCopyAction(
         if (!copied) label else if (masked) maskedLabel else copiedLabel,
         {
             val out = mask.apply(text())
-            clipboard.setText(AnnotatedString(out.text))
+            clipboard.setText(AnnotatedString(out.text), KitClipboardMode.Sensitive)
             masked = out.masked
             copies++
             copied = true

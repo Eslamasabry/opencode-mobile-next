@@ -18,7 +18,8 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalClipboardManager
+import io.github.eslamasabry.oc.ui.kit.foundation.rememberKitClipboard
+import io.github.eslamasabry.oc.ui.kit.foundation.KitClipboardMode
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.*
@@ -215,7 +216,7 @@ public fun KitDiffView(
         val target = display.indexOfFirst { it.segment >= (changeSegment ?: 0) }
         if (full && change > 0 && target >= 0) list.animateScrollToItem(target)
     }
-    @Suppress("DEPRECATION") val clipboard = LocalClipboardManager.current
+    @Suppress("DEPRECATION") val clipboard = rememberKitClipboard()
     val allLines =
         remember(file) {
             file.segments.flatMap {
@@ -400,7 +401,7 @@ public fun KitDiffView(
                     count = selectedLines.size,
                     onComment = onComment?.let { { it(selectedText()) } },
                     onAddToPrompt = onAddToPrompt?.let { { it(selectedText()) } },
-                    onCopy = { clipboard.setText(AnnotatedString(selectedText())) },
+                    onCopy = { clipboard.setText(AnnotatedString(selectedText()), KitClipboardMode.Sensitive) },
                     onClear = { selection = null },
                 )
             }
