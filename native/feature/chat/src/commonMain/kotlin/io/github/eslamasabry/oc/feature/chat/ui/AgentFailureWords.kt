@@ -3,7 +3,7 @@ package io.github.eslamasabry.oc.feature.chat.ui
 import androidx.compose.runtime.Composable
 import io.github.eslamasabry.oc.engine.agents.errors.AgentErrorCause
 import io.github.eslamasabry.oc.engine.agents.errors.AgentErrorText
-import io.github.eslamasabry.oc.feature.chat.presentation.ReplyLimitReset
+import io.github.eslamasabry.oc.engine.integrations.usage.LimitResetReading
 import io.github.eslamasabry.oc.ui.kit.text.kitDateTime
 import io.github.eslamasabry.oc.ui.words.res.*
 import org.jetbrains.compose.resources.stringResource
@@ -18,7 +18,7 @@ internal fun agentFailureWords(reason: String, saidAtMs: Long? = null): Pair<Str
     // A limit that names its reset says it in the headline, in the person's time zone and clock format.
     val resets =
         if (cause == AgentErrorCause.UsageLimit && saidAtMs != null)
-            ReplyLimitReset.resetAt(reason, saidAtMs)?.let { kitDateTime(it) }
+            LimitResetReading.resetAt(reason, saidAtMs)?.let { kitDateTime(it) }
         else null
     val keys =
         when (cause) {

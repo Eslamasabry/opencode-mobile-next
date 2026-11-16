@@ -59,6 +59,7 @@ class NewConversationNotConfirmedTest {
 
     private fun ui(
         needsSetup: List<NewConversationPhoneAgent> = emptyList(),
+        choices: List<NewConversationPhoneAgent> = listOf(claude),
         sheet: NewConversationSheet? = null,
         failure: Failure? = null,
         starting: Boolean = false,
@@ -72,7 +73,7 @@ class NewConversationNotConfirmedTest {
                     emptyList(),
                     emptyList(),
                     emptyList(),
-                    phone = NewConversationPhone(ProfileId("h"), listOf(claude), needsSetup, selected = "claude"),
+                    phone = NewConversationPhone(ProfileId("h"), choices, needsSetup, selected = "claude"),
                 ),
             directory = "/root/projects/a",
             sheet = sheet,
@@ -103,7 +104,7 @@ class NewConversationNotConfirmedTest {
         runDesktopComposeUiTest(360, 900) {
             val actions = Actions()
             val row = claude.copy(signInNeeded = true, signInNotConfirmed = true)
-            show(ui(needsSetup = listOf(row), sheet = NewConversationSheet.Agents), actions)
+            show(ui(needsSetup = listOf(row), choices = emptyList(), sheet = NewConversationSheet.Agents), actions)
             onNodeWithText("Sign-in not confirmed").assertExists()
             onNodeWithText("Set up").assertDoesNotExist()
             onNodeWithText("Claude Code").performClick()
@@ -114,7 +115,7 @@ class NewConversationNotConfirmedTest {
     @Test
     fun `SIGNIN-N-2 an agent at its limit says the limit, not Set up`() = runDesktopComposeUiTest(360, 900) {
         val row = claude.copy(limitReached = true, limitResets = "Nov 20, 1:00 AM")
-        show(ui(needsSetup = listOf(row), sheet = NewConversationSheet.Agents), Actions())
+        show(ui(needsSetup = listOf(row), choices = emptyList(), sheet = NewConversationSheet.Agents), Actions())
         onNodeWithText("Plan limit reached · resets Nov 20, 1:00 AM").assertExists()
         onNodeWithText("Set up").assertDoesNotExist()
     }

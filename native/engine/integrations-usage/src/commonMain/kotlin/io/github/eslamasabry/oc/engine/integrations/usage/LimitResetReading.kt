@@ -1,4 +1,4 @@
-package io.github.eslamasabry.oc.feature.chat.presentation
+package io.github.eslamasabry.oc.engine.integrations.usage
 
 import kotlin.time.Instant
 import kotlinx.datetime.LocalDate
@@ -18,7 +18,7 @@ import kotlinx.datetime.DateTimeUnit
  * - "Claude AI usage limit reached|1763600400" (epoch seconds after the bar).
  * Null when the words name no reset this can read (an unknown zone, no time).
  */
-internal object ReplyLimitReset {
+public object LimitResetReading {
     private val RESETS =
         Regex(
             """\bresets?\s+(?:(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\.?\s+(\d{1,2}),?\s+(?:at\s+)?)?""" +
@@ -29,7 +29,7 @@ internal object ReplyLimitReset {
     private val MONTHS = listOf("jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec")
 
     /** The reset [words] name, read against [saidAtMs] (when the reply came): the first such moment after it. */
-    fun resetAt(words: String, saidAtMs: Long): Long? {
+    public fun resetAt(words: String, saidAtMs: Long): Long? {
         EPOCH.find(words)?.let { return it.groupValues[1].toLong() * 1000 }
         val m = RESETS.find(words) ?: return null
         return try {

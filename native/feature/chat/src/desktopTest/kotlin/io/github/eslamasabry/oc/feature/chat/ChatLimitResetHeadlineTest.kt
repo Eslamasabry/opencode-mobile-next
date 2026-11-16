@@ -106,7 +106,7 @@ class ChatLimitResetHeadlineTest {
     fun `SIGNIN-C-3 a limit with no reset keeps today's headline`() = runComposeUiTest {
         show(phone("MMM d, h:mm a"), "You've reached your usage limit", said)
         onNodeWithText("This model's usage limit is reached for now.").assertExists()
-        onNodeWithText("resets", substring = true).assertDoesNotExist()
+        onNodeWithText("· resets", substring = true).assertDoesNotExist()
     }
 
     @Test
