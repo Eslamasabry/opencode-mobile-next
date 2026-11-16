@@ -20,13 +20,23 @@ object ReleaseVersionName {
 
     /** The name a build takes from the properties file. A name that already has a suffix is left as it is. */
     fun forBuild(base: String, versionCode: Int, publicBuild: Boolean): String =
-        base // red proof: the old behaviour, every build carries the plain name
+        if (publicBuild || base.contains('-')) base else "$base-test.$versionCode"
 
     /** What is wrong with the names the APKs of one build carry, empty when the identity is right. */
     fun problems(names: List<String>, versionCode: Int?, publicBuild: Boolean): List<String> {
         val distinct = names.distinct()
         if (distinct.size != 1) return listOf("the APKs carry different versionNames $distinct")
-        // red proof: the old check, one plain release name, whoever builds
-        return if (PUBLIC.matches(distinct.single())) emptyList() else listOf("versionName $distinct is not one plain release version")
+        val name = distinct.single()
+        if (publicBuild) {
+            return if (PUBLIC.matches(name)) emptyList()
+            else listOf("versionName $distinct is not one plain release version (3.0.0 or later, no suffix): a public release never carries -test.N")
+        }
+        val match = TEST.matchEntire(name)
+            ?: return listOf("versionName $distinct is not <version>-test.<build>: a build that is not the public release carries -test.<build>")
+        return if (versionCode != null && match.groupValues[1] != versionCode.toString()) {
+            listOf("versionName $distinct names build ${match.groupValues[1]} but the versionCode is $versionCode")
+        } else {
+            emptyList()
+        }
     }
 }

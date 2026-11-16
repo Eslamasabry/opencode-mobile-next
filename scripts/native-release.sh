@@ -25,6 +25,12 @@
 #     run on one phone or emulator against the APK this script builds; file in native/build/release-smoke/).
 # The gates are checked before the bump commit, so they describe the commit that is being released. --go also needs the lineage key (OC_KEY_PROPERTIES, native/key.properties or the old
 # android/key.properties: the file the build reads) and release notes docs/releases/v<X.Y.Z+N>.md. Key values are never read or printed here.
+# Version names (release rule 2026-11-17): version.properties holds the plain name of the NEXT public release, and every
+# public release takes a name no earlier release used. The public lineage refuses a name that already has a tag
+# v<name>+<build> (local or on the remote) and names that tag. The public lineage builds with -Poc.publicRelease=true, so
+# the APKs carry <name>. The owner lineage is a test build: its APKs carry <name>-test.<build>, the dry run builds them
+# for the owner's phone, and --go refuses (a test build takes a number with version_code.sh allocate --kind build, and
+# is never tagged, because a tag would spend the public version name).
 # Environment: OC_RELEASE_REMOTE (default origin); OC_RELEASE_GH_REPO (owner/repo for the CI verdict, default from the
 # remote's URL); OC_SMOKE_RESULT_DIR (default native/build/release-smoke).
 # Exit: 0 done (dry run or release), 1 refused or a gate failed, 2 could not run.
@@ -77,12 +83,28 @@ prop() { sed -n "s/^[[:space:]]*$1[[:space:]]*=[[:space:]]*\([^[:space:]#]*\).*/
 NAME="$(prop versionName)"
 CURRENT="$(prop versionCode)"
 [[ "$NAME" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || fail "versionName '$NAME' is not a plain X.Y.Z (a release has no suffix)."
+if [[ "$LINEAGE" == public ]]; then
+  published="$({
+    git tag -l "v$NAME+*"
+    git ls-remote --tags "$REMOTE" "refs/tags/v$NAME+*" 2>/dev/null | sed -n 's#^.*refs/tags/##p; s#\^{}$##'
+  } | { grep -v -e '-test' || true; } | sort -u | head -n 1)"
+  [[ -z "$published" ]] ||
+    fail "version $NAME is already published as $published; every public release needs a name no earlier release used. Set versionName in native/version.properties to the next one (3.0.2 for a fix, 3.1.0 for a bigger change)."
+fi
+if $GO && [[ "$LINEAGE" == owner ]]; then
+  fail "the owner lineage builds test builds ($NAME-test.<build>); a test build is never tagged. Take a number with native/tool/version_code.sh allocate --kind build, or release with --lineage public."
+fi
 NEXT="$("$NATIVE/tool/version_code.sh" next --kind release)" || cannot "the versionCode allocator did not answer"
 [[ "$NEXT" =~ ^[0-9]+$ ]] && ((NEXT > CURRENT)) || cannot "the allocator gave '$NEXT', not above $CURRENT"
 
 say "native-release: $($GO && echo "GO" || echo "DRY RUN (nothing is committed, tagged, pushed or published)")"
 say "  branch      $branch at $(git rev-parse --short HEAD), synchronized with $REMOTE"
 say "  version     $NAME+$CURRENT now; the release takes $NAME+$NEXT"
+if [[ "$LINEAGE" == public ]]; then
+  say "  name        $NAME (public release: the APKs carry the plain name)"
+else
+  say "  name        $NAME-test.<build> (owner lineage = test build: the APKs never carry the public name)"
+fi
 say "  lineage     $LINEAGE (${EXPECT_SIGNER:0:8}…)"
 
 # The same order as the build (native/build-logic ReleaseKey): OC_KEY_PROPERTIES, native/key.properties, then the old
@@ -182,6 +204,9 @@ fi
 OUT="$NATIVE/build/native-release/$TAG"
 if $BUILD; then
   built_code="$($GO && echo "$NEXT" || echo "$CURRENT")"
+  # The public lineage builds the public name; any other build is <name>-test.<build> (build-logic ReleaseVersionName).
+  gate_kind=--test-build public_flag=false built_name="$NAME-test.$built_code"
+  if [[ "$LINEAGE" == public ]]; then gate_kind=--plain-release public_flag=true built_name="$NAME"; fi
   rm -rf "$OUT" && mkdir -p "$OUT"
   # Every android/* library that has unit tests (the same list as the android-unit job of native-ci.yml).
   android_tests=()
@@ -189,24 +214,24 @@ if $BUILD; then
     if [[ -d "${d}src/test" ]]; then android_tests+=(":android:$(basename "$d"):test"); fi
   done
   say "  building    :androidApp:assembleSwitchRelease, lintSwitchRelease, app and ${#android_tests[@]} Android library unit test tasks (this takes a while)"
-  (cd "$NATIVE" && ./gradlew --console=plain :androidApp:assembleSwitchRelease :androidApp:lintSwitchRelease \
+  (cd "$NATIVE" && ./gradlew --console=plain "-Poc.publicRelease=$public_flag" :androidApp:assembleSwitchRelease :androidApp:lintSwitchRelease \
     :androidApp:testSwitchDebugUnitTest "${android_tests[@]}") >"$OUT/gradle.log" 2>&1 ||
     fail "the build or a gate failed; see $OUT/gradle.log$($GO && echo " (the bump commit is local: push it to keep the number spent, never reuse it)")"
   say "  gate        :quality:test with the merged switch-release manifest (component freeze)"
-  (cd "$NATIVE" && ./gradlew --console=plain :quality:test -Poc.mergedManifest=required) >>"$OUT/gradle.log" 2>&1 ||
+  (cd "$NATIVE" && ./gradlew --console=plain "-Poc.publicRelease=$public_flag" :quality:test -Poc.mergedManifest=required) >>"$OUT/gradle.log" 2>&1 ||
     fail ":quality:test failed; see $OUT/gradle.log"
   apk_dir="$NATIVE/androidApp/build/outputs/apk/switch/release"
   for abi in arm64-v8a x86_64 universal; do
     src="$(find "$apk_dir" -maxdepth 1 -name "*-$abi-release.apk" | head -n 1)"
     [[ -n "$src" ]] || fail "no $abi APK in $apk_dir"
-    cp "$src" "$OUT/opencode-mobile-$NAME-$built_code-$abi.apk"
+    cp "$src" "$OUT/opencode-mobile-$built_name-$built_code-$abi.apk"
   done
   (cd "$OUT" && sha256sum ./*.apk | sed 's# \./# #' >SHA256SUMS)
   say "  gate        frozen classes survive R8 in each APK (kept_classes_check.sh)"
   "$NATIVE/tool/release/kept_classes_check.sh" "$OUT"/*.apk || fail "a frozen class is missing from the minified APK."
-  say "  gate        identity gate (package, $NAME+$built_code, one signer = ${EXPECT_SIGNER:0:8}…)"
+  say "  gate        identity gate (package, $built_name+$built_code, one signer = ${EXPECT_SIGNER:0:8}…)"
   "$NATIVE/tool/release/identity_gate.sh" --expect-signer "$EXPECT_SIGNER" --version-code "$built_code" \
-    --version-name "$NAME" "$OUT"/*.apk || fail "the identity gate refused the APKs (nothing was tagged or pushed)."
+    --version-name "$built_name" "$gate_kind" "$OUT"/*.apk || fail "the identity gate refused the APKs (nothing was tagged or pushed)."
 fi
 
 # ---- tag and push (--go only, after every gate passed) ----------------------------------------------------------------
