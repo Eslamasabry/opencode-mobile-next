@@ -380,6 +380,8 @@
     <string name="kitTryAgain">Try again</string>
     <string name="kitDetails">Details</string>
     <string name="kitChipRemove">Remove %1$s</string>
+    <string name="kitChipsMore">Show more filters</string>
+    <string name="kitChipsFirst">Show the first filters</string>
     <string name="kitWorking">Working</string>
     <string name="kitCopyDetails">Copy details</string>
     <string name="kitProgressStep">Step %1$s of %2$s</string>
