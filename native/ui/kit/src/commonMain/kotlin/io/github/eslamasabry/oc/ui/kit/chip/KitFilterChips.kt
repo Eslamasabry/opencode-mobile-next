@@ -39,7 +39,16 @@ import io.github.eslamasabry.oc.ui.kit.frame.FloatingPaneRow
 import io.github.eslamasabry.oc.ui.kit.frame.LocalKitOnFloatingPane
 import io.github.eslamasabry.oc.ui.kit.frame.kitPageGutter
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
+import kotlin.math.abs
 import kotlin.math.roundToInt
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLayoutDirection
+import io.github.eslamasabry.oc.ui.kit.foundation.kitRestsWhole
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.filterNotNull
 
 /** Dart `KitFilterChips` numbers. */
 public object FilterChipsRules {
@@ -69,6 +78,39 @@ public object FilterChipsRules {
     public fun restGap(sizes: IntArray, gap: Float, room: Float, minPeek: Float): Float = gap
 
     /**
+     * Where a line that rests whole settles: the scroll of the nearest chip's start (a chip's start less the line's start
+     * padding), so the first chip showing is whole. [scroll] is where it is, [max] the end of its range.
+     */
+    public fun restStart(sizes: IntArray, gap: Float, startPad: Float, scroll: Float, max: Int): Int {
+        if (sizes.isEmpty() || max <= 0) return scroll.toInt()
+        var x = 0f
+        var best = 0f
+        var bestDistance = abs(scroll - best)
+        for (w in sizes) {
+            val at = x.coerceIn(0f, max.toFloat())
+            if (abs(scroll - at) < bestDistance) { best = at; bestDistance = abs(scroll - at) }
+            x += w + gap
+        }
+        return best.roundToInt()
+    }
+
+    /**
+     * The window's width when it ends after the last whole chip: [width] when every chip it reaches is whole, else the end
+     * of the last chip that fits, a gap after it. Chips [sizes] [gap] apart begin [startPad] in, scrolled [scroll] along.
+     */
+    public fun wholeEnd(sizes: IntArray, gap: Float, startPad: Float, scroll: Float, width: Float): Float {
+        var x = startPad - scroll
+        var end = 0f
+        var past = false
+        for (w in sizes) {
+            val right = x + w
+            if (right <= width + .5f) end = maxOf(end, right) else if (x < width) past = true else past = true
+            x += w + gap
+        }
+        return if (past && end > 0f) minOf(width, end + gap) else width
+    }
+
+    /**
      * The chips' spans in the line's window, in reading order: (start, end) from its start edge, for chips of [sizes]
      * [gap] apart that begin [startPad] in and are scrolled [scroll] along.
      */
@@ -90,12 +132,18 @@ public object FilterChipsRules {
 }
 
 /** Where a chip line keeps its chips' widths and its resting gap, between laying the chips out and drawing the fade. */
-private class ChipLine(private val baseGap: Dp, private val minPeek: Dp) : Arrangement.Horizontal {
+private class ChipLine(private val baseGap: Dp, private val minPeek: Dp, private val restWhole: Boolean = false) : Arrangement.Horizontal {
     var gap by mutableStateOf(baseGap)
     /** The window's room from the first chip's start to the end edge, set while the line measures. */
     var roomPx = 0
     var sizes = IntArray(0)
     var gapPx = 0f
+
+    /** [KitFilterChips] `restWhole`: room kept after the last chip so every chip can come to the line's start. */
+    var tail by mutableStateOf(0)
+
+    /** `restWhole`: chips lie past the window's end (the visible end was drawn in to the last whole chip). */
+    var more by mutableStateOf(false)
 
     override val spacing: Dp get() = gap
 
@@ -108,6 +156,10 @@ private class ChipLine(private val baseGap: Dp, private val minPeek: Dp) : Arran
         this@ChipLine.sizes = sizes.copyOf()
         val step = FilterChipsRules.restGap(sizes, baseGap.toPx(), roomPx.toFloat(), minPeek.toPx()).roundToInt()
         gapPx = step.toFloat()
+        if (restWhole && sizes.isNotEmpty()) {
+            val room = (roomPx - sizes.last()).coerceAtLeast(0)
+            if (room != tail) tail = room
+        }
         val dp = step.toDp()
         // Read by the row's measure: a changed gap measures the line again, so its scroll range holds the gaps.
         if (dp != gap) gap = dp
@@ -148,6 +200,12 @@ public fun KitFilterChips(
      * line's end by the chips' shadow reach, so the last chip's style shadow keeps its room (SoftShadowRoomTest).
      */
     endOnGutter: Boolean = false,
+    /**
+     * The line never rests with a chip cut by an edge (the home's chips beside the server pill, at 360 dp): it settles with
+     * its first chip whole at the start, the window ends after the last whole chip, and an end fade says there is more.
+     * Left to right only; a right-to-left line keeps the plain scroll.
+     */
+    restWhole: Boolean = false,
     chips: @Composable RowScope.() -> Unit,
 ) {
     val tokens = LocalKitTokens.current
@@ -177,7 +235,18 @@ public fun KitFilterChips(
     val growEnd = if (onPane || endOnGutter) 0.dp else (room - restEnd).coerceAtLeast(0.dp)
     val startPad = restStart + growStart
     val endPad = restEnd + growEnd
-    val line = remember { ChipLine(Space.S2.dp, FilterChipsRules.MIN_PEEK_DP.dp) }
+    val whole = restWhole && LocalLayoutDirection.current == LayoutDirection.Ltr
+    val line = remember(whole) { ChipLine(Space.S2.dp, FilterChipsRules.MIN_PEEK_DP.dp, whole) }
+    if (whole) {
+        val density = LocalDensity.current
+        LaunchedEffect(scroll, line) {
+            snapshotFlow { if (scroll.isScrollInProgress) null else scroll.value }.filterNotNull().collectLatest { at ->
+                delay(120)
+                val goal = FilterChipsRules.restStart(line.sizes, line.gapPx, with(density) { startPad.toPx() }, at.toFloat(), scroll.maxValue)
+                if (goal != at) scroll.animateScrollTo(goal)
+            }
+        }
+    }
     Box(
         modifier.kitMaxWidth(CapRole.Reading)
             .then(if (onPane) Modifier.padding(start = if (bleed) 0.dp else paneEdge, end = paneEdge) else Modifier)
@@ -185,12 +254,27 @@ public fun KitFilterChips(
             .layout { measurable, constraints ->
                 line.roomPx = if (constraints.hasBoundedWidth) constraints.maxWidth - startPad.roundToPx() else 0
                 val placeable = measurable.measure(constraints)
-                layout(placeable.width, placeable.height) { placeable.place(0, 0) }
+                var width = placeable.width
+                if (whole && constraints.hasBoundedWidth) {
+                    val edge = FilterChipsRules.wholeEnd(line.sizes, line.gapPx, startPad.toPx(), scroll.value.toFloat(), width.toFloat())
+                    line.more = edge < width.toFloat() - .5f
+                    width = edge.roundToInt().coerceIn(0, width)
+                }
+                layout(width, placeable.height) { placeable.place(0, 0) }
             }
             .clipToBounds()
             .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
             .drawWithContent {
                 drawContent()
+                if (whole && line.more) {
+                    // More chips lie past the last whole one: its end thins out, the cue that the line goes on.
+                    val fade = minOf(FilterChipsRules.CHIP_FADE_DP.dp.toPx(), size.width)
+                    drawRect(
+                        edgeMask(size.width - fade, size.width, fade * FilterChipsRules.CLEAR_PART, clearAtStart = false),
+                        Offset(size.width - fade, 0f), Size(fade, size.height), blendMode = BlendMode.DstIn,
+                    )
+                    return@drawWithContent
+                }
                 if (scroll.maxValue <= 0 || scroll.maxValue == Int.MAX_VALUE) return@drawWithContent
                 val spans = FilterChipsRules.spans(line.sizes, line.gapPx, startPad.toPx(), scroll.value.toFloat())
                 val fade = FilterChipsRules.CHIP_FADE_DP.dp.toPx()
@@ -218,7 +302,8 @@ public fun KitFilterChips(
             .testTag("kit-filter-chips"),
     ) {
         Row(
-            Modifier.horizontalScroll(scroll).kitScrollCue("edge fade").padding(start = startPad, end = endPad, top = room, bottom = room),
+            Modifier.horizontalScroll(scroll).kitScrollCue("edge fade").then(if (whole) Modifier.kitRestsWhole("filter chips") else Modifier)
+                .padding(start = startPad, end = endPad + with(LocalDensity.current) { line.tail.toDp() }, top = room, bottom = room),
             horizontalArrangement = line,
             verticalAlignment = Alignment.CenterVertically,
             content = chips,

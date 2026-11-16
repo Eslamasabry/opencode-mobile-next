@@ -27,7 +27,14 @@ import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.unit.Density
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
-import io.github.eslamasabry.oc.ui.kit.chip.KitChipFlow
+import io.github.eslamasabry.oc.ui.kit.chip.FilterChipsRules
+import io.github.eslamasabry.oc.ui.kit.chip.KitFilterChips as KitFilterChipsRest
+import io.github.eslamasabry.oc.ui.kit.agent.KitAgentTile
+import io.github.eslamasabry.oc.ui.kit.agent.KitAgentTileAction
+import io.github.eslamasabry.oc.ui.kit.rb.o23.MARKS
+import io.github.eslamasabry.oc.ui.kit.logo.LocalKitLogoLoader
+import io.github.eslamasabry.oc.ui.kit.agent.KitAgentTiles
+import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.nav.KitTab
 import io.github.eslamasabry.oc.ui.kit.nav.KitTabStrip
 import io.github.eslamasabry.oc.ui.kit.nav.TabRules
@@ -97,12 +104,12 @@ class CompactWidthKitTest {
     }
 
     @Test
-    fun `COMPACT-021 the home's chips beside the server pill are whole or on a second line, never cut`() {
+    fun `COMPACT-021 the home's chips beside the server pill rest whole, never cut, on one line`() {
         val scene: @Composable () -> Unit = {
             Row(Modifier.padding(start = 16.dp), verticalAlignment = Alignment.CenterVertically) {
                 KitChip("This phone", onClick = {})
                 Box(Modifier.weight(1f)) {
-                    KitChipFlow(bleed = true) {
+                    KitFilterChipsRest(bleed = true, restWhole = true) {
                         for (label in listOf("All projects", "All connections", "Running now")) KitChip(label, onClick = {})
                     }
                 }
@@ -171,6 +178,36 @@ class CompactWidthKitTest {
                 KitRow("Account", trailing = KitRowTrailing.Value("someone.with.a.long.account.label@example.org", chevron = false))
                 KitRow("Folder", trailing = KitRowTrailing.Value("/projects/client-work/the-long-folder-name", chevron = true))
             }
+        }
+        val bad = found(scene).filter { it.contains("ellipsis") || it.contains("clipped") }
+        assertTrue(bad.isEmpty(), bad.toString())
+    }
+
+    @Test
+    fun `COMPACT-027 a chip line that does not fit ends after its last whole chip and settles on a chip start`() {
+        val sizes = intArrayOf(113, 140, 80) // All projects, All connections, Running
+        // 187 wide window starting 0: the second chip would be cut, so the window ends after the first.
+        assertEquals(121f, FilterChipsRules.wholeEnd(sizes, 8f, 0f, 0f, 187f))
+        // everything fits: the whole width
+        assertEquals(400f, FilterChipsRules.wholeEnd(sizes, 8f, 0f, 0f, 400f))
+        // scrolled a little: the nearest chip start (121) wins over where the finger left it
+        assertEquals(121, FilterChipsRules.restStart(sizes, 8f, 0f, 90f, 400))
+        assertEquals(0, FilterChipsRules.restStart(sizes, 8f, 0f, 30f, 400))
+    }
+
+    @Test
+    fun `COMPACT-028 an agent tile's action wraps its words and never ends in an ellipsis`() {
+        val scene: @Composable () -> Unit = {
+          CompositionLocalProvider(LocalKitLogoLoader provides MARKS) {
+            KitAgentTiles(
+                listOf<@Composable () -> Unit>(
+                    { KitAgentTile("Codex", "Ready", "codex", {}, ready = true, action = KitAgentTileAction("New conversation", "New conversation with Codex", KitIcons.chat) {}) },
+                    { KitAgentTile("Claude Code", "Sign in needed", "claude", {}, action = KitAgentTileAction("Sign in", "Sign in to Claude Code", prominent = true) {}) },
+                    { KitAgentTile("Antigravity", "Ready", "ag", {}, ready = true, action = KitAgentTileAction("New conversation", "New conversation with Antigravity", KitIcons.chat) {}) },
+                    { KitAgentTile("Qwen Code", "Not installed · 44 MB", "qwen", {}, action = KitAgentTileAction("Install", "Install Qwen Code", KitIcons.download) {}) },
+                )
+            )
+          }
         }
         val bad = found(scene).filter { it.contains("ellipsis") || it.contains("clipped") }
         assertTrue(bad.isEmpty(), bad.toString())
