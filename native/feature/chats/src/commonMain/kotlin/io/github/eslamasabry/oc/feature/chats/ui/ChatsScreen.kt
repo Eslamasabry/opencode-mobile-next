@@ -135,6 +135,25 @@ import io.github.eslamasabry.oc.ui.kit.row.KitRowStateTone
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitSkeletonRows
 import io.github.eslamasabry.oc.ui.kit.status.KitStatus
+import io.github.eslamasabry.oc.feature.chats.presentation.HomeDownloadFact
+import io.github.eslamasabry.oc.feature.chats.presentation.HomeDownloadKind
+import io.github.eslamasabry.oc.feature.chats.presentation.HomeDownloadPhase
+import io.github.eslamasabry.oc.feature.chats.presentation.HomeDownloadSizes
+import io.github.eslamasabry.oc.ui.kit.status.KitStatusKind
+import io.github.eslamasabry.oc.ui.words.res.commonRetry
+import io.github.eslamasabry.oc.ui.words.res.phoneDownloadWaitingOpenCode
+import io.github.eslamasabry.oc.ui.words.res.phoneDownloadWaitingHelper
+import io.github.eslamasabry.oc.ui.words.res.phoneDownloadOnMobile
+import io.github.eslamasabry.oc.ui.words.res.phoneDownloadRunningOpenCode
+import io.github.eslamasabry.oc.ui.words.res.phoneDownloadRunningHelper
+import io.github.eslamasabry.oc.ui.words.res.phoneDownloadRunningPercent
+import io.github.eslamasabry.oc.ui.words.res.phoneDownloadFailedOpenCode
+import io.github.eslamasabry.oc.ui.words.res.phoneDownloadFailedHelper
+import io.github.eslamasabry.oc.ui.words.res.phoneDownloadAskTitle
+import io.github.eslamasabry.oc.ui.words.res.phoneDownloadAskBodyOpenCode
+import io.github.eslamasabry.oc.ui.words.res.phoneDownloadAskBodyHelper
+import io.github.eslamasabry.oc.ui.words.res.phoneDownloadAskNow
+import io.github.eslamasabry.oc.ui.words.res.phoneDownloadAskWait
 import io.github.eslamasabry.oc.ui.kit.text.kitRelativeAge
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.Res
@@ -323,7 +342,7 @@ public fun ChatsScreen(
                     onFab = actions::newConversation,
                 )
             }),
-        status = backExit ?: appStatus.takeIf { shownNotice == HomeNoticeKind.AppCondition },
+        status = backExit ?: appStatus.takeIf { shownNotice == HomeNoticeKind.AppCondition } ?: homeDownloadStatus(state.download, actions),
         // F: lib/ui/screens/chats/chats_home_screen.dart:536: pull the list down to read it again; not while the server
         // is still opening. Refresh wraps the scrolling header too (the title returns before a pull starts). The kit
         // part also answers F5 / Ctrl+R and a TalkBack "Refresh" action.
@@ -568,6 +587,7 @@ public fun ChatsScreen(
         ChatsHomeSheets(state, actions)
         ConversationRenameDialog(state.renaming, actions::finishRename)
         AlwaysAllowConfirm(state.confirmAlways, mask, actions)
+        HomeDownloadAsk(state.downloadAsk, actions)
     }
 }
 
@@ -1280,6 +1300,75 @@ public fun ChatPreviewScreen(state: ChatPreviewUi, actions: ChatPreviewActions) 
             state.lines.forEach { KitText(it, KitTextRole.Body) }
         }
     }
+}
+
+/**
+ * The phone's OpenCode refresh and the agents' helper install, said in Home's one status line (no new bar or row):
+ * what waits for Wi-Fi and how big it is, then the share done while it downloads, then plain words and Try again.
+ */
+@Composable
+private fun homeDownloadStatus(download: HomeDownloadFact?, actions: ChatsActions): KitStatus? {
+    download ?: return null
+    val openCode = download.kind == HomeDownloadKind.OpenCode
+    return when (val phase = download.phase) {
+        HomeDownloadPhase.Waiting ->
+            KitStatus(
+                kind = KitStatusKind.Update,
+                id = "phone-download:${download.kind.name}",
+                message =
+                    stringResource(
+                        if (openCode) Res.string.phoneDownloadWaitingOpenCode else Res.string.phoneDownloadWaitingHelper,
+                        download.megabytes,
+                    ),
+                tone = StatusTone.Attention,
+                action = KitLineAction(stringResource(Res.string.phoneDownloadOnMobile), actions::actOnDownload),
+            )
+        is HomeDownloadPhase.Running -> {
+            val what =
+                stringResource(if (openCode) Res.string.phoneDownloadRunningOpenCode else Res.string.phoneDownloadRunningHelper)
+            KitStatus(
+                kind = KitStatusKind.Work,
+                id = "phone-download:${download.kind.name}",
+                // Numbers only: the kit's working mark stands still when the person turned motion off.
+                message = phase.percent?.let { stringResource(Res.string.phoneDownloadRunningPercent, what, it) } ?: what,
+                tone = StatusTone.Progress,
+                working = true,
+            )
+        }
+        HomeDownloadPhase.Failed ->
+            KitStatus(
+                kind = KitStatusKind.Update,
+                id = "phone-download:${download.kind.name}",
+                message =
+                    stringResource(if (openCode) Res.string.phoneDownloadFailedOpenCode else Res.string.phoneDownloadFailedHelper),
+                tone = StatusTone.Attention,
+                action = KitLineAction(stringResource(Res.string.commonRetry), actions::actOnDownload),
+            )
+    }
+}
+
+/** The voice download's mobile-data ask (same KitConfirm structure): the size, Download now, Wait for Wi-Fi. */
+@Composable
+private fun HomeDownloadAsk(kind: HomeDownloadKind?, actions: ChatsActions) {
+    KitConfirm(
+        spec =
+            kind?.let {
+                KitConfirmSpec(
+                    title = stringResource(Res.string.phoneDownloadAskTitle, HomeDownloadSizes.of(it)),
+                    body =
+                        stringResource(
+                            if (it == HomeDownloadKind.OpenCode)
+                                Res.string.phoneDownloadAskBodyOpenCode
+                            else Res.string.phoneDownloadAskBodyHelper
+                        ),
+                    confirmLabel = stringResource(Res.string.phoneDownloadAskNow),
+                    kind = KitConfirmKind.Neutral,
+                    cancelLabel = stringResource(Res.string.phoneDownloadAskWait),
+                )
+            },
+        onConfirm = actions::downloadNow,
+        onCancel = actions::waitForWifi,
+    )
 }
 
 /** The words for the stage home names at the end of the "Recent" line. */

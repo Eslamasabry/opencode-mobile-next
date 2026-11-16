@@ -293,4 +293,45 @@ class AgentAutoUpdateTest {
         assertTrue(jobs.started.isEmpty())
         assertEquals(0, host.refreshes)
     }
+
+    @Test
+    fun `DOWNLOAD-CONSENT Download now runs the helper's install on a metered network once, and Wait keeps the hold`() =
+        runTest {
+            val host = Host().apply { due = false; metered = true }
+            val jobs = Jobs()
+            val updater = AgentAutoUpdater(host, jobs) { false }
+            repeat(3) { updater.changed() }
+            assertTrue(jobs.started.isEmpty())
+            assertEquals(AgentUpdateStep.WaitingMetered, updater.decision.value.step)
+            updater.allowMeteredOnce()
+            updater.changed()
+            assertEquals(listOf(claude), jobs.started)
+            assertEquals(AgentUpdateStep.Updating, updater.decision.value.step)
+        }
+
+    @Test
+    fun `DOWNLOAD-CONSENT the agents' consent is spent by its install and does not pass to the next pin`() = runTest {
+        val host = Host().apply { due = false; metered = true }
+        val jobs = Jobs()
+        val updater = AgentAutoUpdater(host, jobs) { false }
+        updater.allowMeteredOnce()
+        updater.changed()
+        assertEquals(1, jobs.started.size)
+        host.pinKey = "paseo 9.9.9 claude 9.9.9"
+        updater.changed()
+        assertEquals(1, jobs.started.size)
+        assertEquals(AgentUpdateStep.WaitingMetered, updater.decision.value.step)
+    }
+
+    @Test
+    fun `DOWNLOAD-CONSENT becoming unmetered while it waits runs the install`() = runTest {
+        val host = Host().apply { due = false; metered = true }
+        val jobs = Jobs()
+        val updater = AgentAutoUpdater(host, jobs) { false }
+        updater.changed()
+        assertTrue(jobs.started.isEmpty())
+        host.metered = false
+        updater.changed()
+        assertEquals(listOf(claude), jobs.started)
+    }
 }

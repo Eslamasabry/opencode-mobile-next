@@ -199,6 +199,10 @@ public data class ChatsUi(
     val settingsAvailable: Boolean = false,
     /** A newer app release waits (the Flutter gear dot): the bar offers Update. */
     val updateReady: Boolean = false,
+    /** The phone's OpenCode refresh or the agents' helper install, held, running or failed; null when nothing is. */
+    val download: HomeDownloadFact? = null,
+    /** The mobile-data ask is open for this download (opened only from the line's action). */
+    val downloadAsk: HomeDownloadKind? = null,
     val projectChoices: ImmutableList<ProjectSummary> = persistentListOf(),
     /** This phone's storage access for the projects sheet's Phone storage row; null: not offered. */
     val phoneStorage: PhoneStorageAccess? = null,
@@ -463,6 +467,15 @@ public interface ChatsActions {
 
     /** Opens the Updates page (only offered while [ChatsUi.updateReady]). */
     public fun openUpdate() {}
+
+    /** The line's action: opens the mobile-data ask for the waiting download, or starts a failed one again. */
+    public fun actOnDownload() {}
+
+    /** The ask's Download now: that one download runs on this network, once. */
+    public fun downloadNow() {}
+
+    /** The ask's Wait for Wi-Fi: closes it; the hold stays. */
+    public fun waitForWifi() {}
 
     public fun search(query: String)
 
