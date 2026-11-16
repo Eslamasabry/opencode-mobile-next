@@ -696,11 +696,11 @@ private class BackdropSourceNode(
         // page showing it draws the recording as it stands, so the layer is recorded once a frame, never by two pages.
         val p = held
         val pictures = shared
-        if (p == null || pictures == null || pictures.records(p, this)) {
+        if (p == null || pictures == null || pictures.records(p, this@BackdropSourceNode)) {
             // Recorded in the layer's own scope, never through this node's: the picture cannot draw into, or ask for
             // its density from, the scope that is drawing it (N-29, a sample's paint reading toPx() recursed for ever).
             recordDetached(layer, paint)
-            if (p != null) pictures?.onRecord?.invoke(p, this)
+            if (p != null) pictures?.onRecord?.invoke(p, this@BackdropSourceNode)
         }
         kitDrawLayer(layer)
         drawContent()
