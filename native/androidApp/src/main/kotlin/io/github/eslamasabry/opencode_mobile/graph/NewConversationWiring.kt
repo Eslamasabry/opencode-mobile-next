@@ -145,6 +145,11 @@ class AndroidNewConversationHost(
     override suspend fun startPhoneServer(profile: ProfileId): Outcome<Unit> =
         phoneServer.start(profile)
 
+    // "Check <agent> again": the Agents page's own read, so both pages show the same answer.
+    override suspend fun checkPhoneAgents() {
+        phoneAgents.refresh()
+    }
+
     // Issue 147: a folder in this phone's storage, checked from the Linux side that will work in it.
     override suspend fun phoneFolder(
         profile: ProfileId,
@@ -668,6 +673,9 @@ class AndroidNewConversationHost(
                         checking = it.checking,
                         updating = it.checking && it.installed,
                         signInNeeded = it.id.raw in NewConversationPhoneRules.signInNeeded(state),
+                        signInNotConfirmed = it.id.raw in NewConversationPhoneRules.signInNotConfirmed(state),
+                        limitReached = it.id.raw in NewConversationPhoneRules.limit(state),
+                        limitResets = NewConversationPhoneRules.limit(state)[it.id.raw],
                         phoneCheck = it.id.raw in NewConversationPhoneRules.phoneCheck(state),
                     )
                 },
@@ -1733,7 +1741,21 @@ internal object NewConversationPhoneRules {
 
     /** The agents the Agents page words "Sign in needed" (one status source: [phoneAgentShown]). */
     fun signInNeeded(state: PhoneAgentsState): Set<String> =
-        state.agents.filter { phoneAgentShown(it, state.installation) == PhoneAgentShown.SignInNeeded }.map { it.id }.toSet()
+        state.agents
+            .filter { phoneAgentShown(it, state.installation) == PhoneAgentShown.SignInNeeded && !it.signInCheckFailed }
+            .map { it.id }
+            .toSet()
+
+    /** The agents whose sign-in check could not run to an answer: "Sign-in not confirmed", asked again by a tap. */
+    fun signInNotConfirmed(state: PhoneAgentsState): Set<String> =
+        state.agents
+            .filter { phoneAgentShown(it, state.installation) == PhoneAgentShown.SignInNeeded && it.signInCheckFailed }
+            .map { it.id }
+            .toSet()
+
+    /** The agents at their plan limit, with when it resets (as this phone words it) when they said. */
+    fun limit(state: PhoneAgentsState): Map<String, String?> =
+        state.agents.filter { it.status == PhoneAgentStatus.Limit }.associate { it.id to it.limitResets }
 
     /** The agents the Agents page words "Phone check needed". */
     fun phoneCheck(state: PhoneAgentsState): Set<String> =

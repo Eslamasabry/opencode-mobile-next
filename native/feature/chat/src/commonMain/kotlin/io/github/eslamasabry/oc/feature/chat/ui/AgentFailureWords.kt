@@ -3,6 +3,8 @@ package io.github.eslamasabry.oc.feature.chat.ui
 import androidx.compose.runtime.Composable
 import io.github.eslamasabry.oc.engine.agents.errors.AgentErrorCause
 import io.github.eslamasabry.oc.engine.agents.errors.AgentErrorText
+import io.github.eslamasabry.oc.feature.chat.presentation.ReplyLimitReset
+import io.github.eslamasabry.oc.ui.kit.text.kitDateTime
 import io.github.eslamasabry.oc.ui.words.res.*
 import org.jetbrains.compose.resources.stringResource
 
@@ -11,9 +13,15 @@ import org.jetbrains.compose.resources.stringResource
  * credential-masked.
  */
 @Composable
-internal fun agentFailureWords(reason: String): Pair<String, String> {
+internal fun agentFailureWords(reason: String, saidAtMs: Long? = null): Pair<String, String> {
+    val cause = AgentErrorText.classify(reason)
+    // A limit that names its reset says it in the headline, in the person's time zone and clock format.
+    val resets =
+        if (cause == AgentErrorCause.UsageLimit && saidAtMs != null)
+            ReplyLimitReset.resetAt(reason, saidAtMs)?.let { kitDateTime(it) }
+        else null
     val keys =
-        when (AgentErrorText.classify(reason)) {
+        when (cause) {
             AgentErrorCause.ConnectionDropped ->
                 Res.string.agentErrorConnectionDropped to Res.string.agentErrorConnectionDroppedHint
             AgentErrorCause.TimedOut ->
@@ -39,5 +47,8 @@ internal fun agentFailureWords(reason: String): Pair<String, String> {
                 Res.string.agentErrorServerDiskFull to Res.string.agentErrorServerDiskFullHint
             null -> Res.string.agentErrorUnknown to Res.string.agentErrorUnknownHint
         }
-    return stringResource(keys.first) to stringResource(keys.second)
+    val headline =
+        if (resets != null) stringResource(Res.string.agentsStateLimitReset, resets)
+        else stringResource(keys.first)
+    return headline to stringResource(keys.second)
 }

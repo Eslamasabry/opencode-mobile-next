@@ -1364,7 +1364,7 @@ private fun ChatRow(
                             KitQuietLine(signInAgain, modifier = Modifier.testTag("chat-sign-in-again"))
                         else if (typed != null) KitQuietLine(typed)
                         else {
-                            val (headline, hint) = agentFailureWords(reason)
+                            val (headline, hint) = agentFailureWords(reason, row.createdMs)
                             KitQuietLine(headline)
                             KitQuietLine(hint)
                         }

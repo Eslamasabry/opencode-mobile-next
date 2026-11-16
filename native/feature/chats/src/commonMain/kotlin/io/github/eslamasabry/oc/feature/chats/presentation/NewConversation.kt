@@ -154,6 +154,11 @@ public data class NewConversationPhoneAgent(
     val signInNeeded: Boolean = false,
     /** Needs its phone check: the Agents page says "Phone check needed", and so does this row. */
     val phoneCheck: Boolean = false,
+    /** Its sign-in check could not run to an answer: the Agents page says "Sign-in not confirmed", and so does this row. */
+    val signInNotConfirmed: Boolean = false,
+    /** Its plan limit is reached: the Agents page says so, and so does this row. [limitResets] is when, when it said. */
+    val limitReached: Boolean = false,
+    val limitResets: String? = null,
 )
 
 /**
@@ -321,6 +326,9 @@ public interface NewConversationHost {
     /** Starts this phone's own OpenCode after the person stopped it. */
     public suspend fun startPhoneServer(profile: ProfileId): Outcome<Unit> =
         Outcome.Failed(Failure.Unavailable(FeatureId("startPhoneServer")))
+
+    /** "Check <agent> again": asks the phone's agents now, and publishes what they answer (signin-followups). */
+    public suspend fun checkPhoneAgents() {}
 
     public suspend fun setup(profile: ProfileId): Outcome<NewConversationSetup>
 
@@ -547,6 +555,12 @@ public enum class PhoneStartWay {
     TryAgain,
 
     /**
+     * signin-followups: the helper said the agent "is not ready": what is wrong is not known to be its set-up, so the way
+     * forward is "Check <agent> again" (asks the agent now), then the start goes again.
+     */
+    CheckAgain,
+
+    /**
      * Issue 147: the agent's own sign-in no longer works (the helper refused the start for it: "Failed to
      * authenticate: OAuth session expired"): "<Agent> needs you to sign in again", with Sign in.
      */
@@ -558,9 +572,12 @@ public data class PhoneStartProblem(val agentId: String, val agentName: String, 
 
 /** Reads a refused phone-agent start into the one way forward (the helper's sentence is matched, never shown). */
 public object PhoneStartRules {
+    /** "<Agent> is not ready": asked again before anyone is sent to set it up (signin-followups). */
+    private val NOT_YET_READY = Regex("is not ready", RegexOption.IGNORE_CASE)
+
     private val NOT_READY =
         Regex(
-            "is not ready|is disabled|not installed|auth(?:entication)?[ _-]?required|authenticate|sign[ -]?in|" +
+            "is disabled|not installed|auth(?:entication)?[ _-]?required|authenticate|sign[ -]?in|" +
                 "log ?in|No model selected|No API key",
             RegexOption.IGNORE_CASE,
         )
@@ -572,6 +589,8 @@ public object PhoneStartRules {
         when {
             failure is Failure.Rejected && failure.tag?.raw == SIGN_IN_TAG -> PhoneStartWay.SignIn
             chosen != null && listed.isNotEmpty() && listed.none { it.model == chosen } -> PhoneStartWay.ChooseModel
+            failure is Failure.ComputerDidNotAnswer && NOT_YET_READY.containsMatchIn(failure.details?.text.orEmpty()) ->
+                PhoneStartWay.CheckAgain
             failure is Failure.ComputerDidNotAnswer && NOT_READY.containsMatchIn(failure.details?.text.orEmpty()) ->
                 PhoneStartWay.SetUp
             else -> PhoneStartWay.TryAgain
@@ -828,6 +847,12 @@ public interface NewConversationActions {
 
     /** Starts this phone's OpenCode when [NewConversationUi.phoneOff]. */
     public fun startPhoneServer() {}
+
+    /**
+     * "Check <agent> again" (a start refused as "not ready", a row whose sign-in check did not answer): asks the phone's
+     * agents now. After a refused start the start then goes again; otherwise the page reads its offer again.
+     */
+    public fun checkPhoneAgents() {}
 
     /** New project in the project sheet: asks for its name. */
     public fun askNewProject() {}
@@ -1311,6 +1336,14 @@ public class NewConversationViewModel(
 
     override fun retryLoad() {
         mutable.value.profile?.let(::chooseServer)
+    }
+
+    override fun checkPhoneAgents() {
+        val refused = mutable.value.phoneStartProblem?.way == PhoneStartWay.CheckAgain
+        viewModelScope.launch {
+            host.checkPhoneAgents()
+            if (refused) start() else retryLoad()
+        }
     }
 
     override fun draftChanged(text: String) {
