@@ -29,6 +29,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
@@ -200,10 +201,12 @@ public fun KitStartBox(
             cursorBrush = SolidColor(accent),
             decorator = { inner ->
                 Box(Modifier.fillMaxWidth()) {
-                    if (state.text.isEmpty()) {
+                    // Blank (a stray space or line break too) shows the question: a box that looks empty must say what
+                    // it is for, in every language, and Start already treats blank words as nothing typed.
+                    if (state.text.isBlank()) {
                         androidx.compose.foundation.text.BasicText(
                             question,
-                            Modifier.clearAndSetSemantics {},
+                            Modifier.clearAndSetSemantics { testTag = START_BOX_HINT_TAG },
                             style = body.copy(color = colors.text2),
                         )
                     }
@@ -218,6 +221,9 @@ public fun KitStartBox(
       }
     }
 }
+
+/** The placeholder question's handle for tests; the field itself carries the spoken name. */
+internal const val START_BOX_HINT_TAG = "kit-start-box-hint"
 
 private const val NUDGE_DP = 6
 private const val NUDGE_LEG_MS = 48
