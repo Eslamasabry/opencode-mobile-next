@@ -65,6 +65,13 @@ public interface ChatOutside {
     public fun agentSignInLapsed(owner: ProfileId, provider: String, atMs: Long) {}
 
     /**
+     * signin-truth: a reply of [owner]'s phone agent behind [provider] at [atMs] was its plan's usage limit; [words] are
+     * the agent's own line, read only for the reset it names (never kept or shown). Every place then reads "Plan limit
+     * reached", never signed out.
+     */
+    public fun agentLimitReached(owner: ProfileId, provider: String, atMs: Long, words: String) {}
+
+    /**
      * Puts [text] on the clipboard as given: the presenter has already [mask]ed it. False = it did not work.
      */
     public fun copy(text: String): Boolean

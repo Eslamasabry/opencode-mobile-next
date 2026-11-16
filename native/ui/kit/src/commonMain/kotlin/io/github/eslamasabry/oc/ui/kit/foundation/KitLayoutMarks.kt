@@ -51,6 +51,13 @@ public object KitLayoutMarks {
      * scroller's edge as lost under one that has it.
      */
     public val ScrollCue: SemanticsPropertyKey<String> = SemanticsPropertyKey("KitScrollCue")
+
+    /**
+     * Set on a sideways scroller that promises to rest with every tab or chip whole (a tab strip snaps to a whole tab; a
+     * chip line that would cut one wraps instead). The guard reports any item of it that shows cut at rest (`rest-cut`),
+     * a fade over the cut word notwithstanding: the owner reads "Text & moti" as a cut label (Galaxy S22, 360 dp).
+     */
+    public val RestsWhole: SemanticsPropertyKey<String> = SemanticsPropertyKey("KitRestsWhole")
 }
 
 /** Declares how this part meets the window edge (see [KitEdge]). */
@@ -70,3 +77,6 @@ public fun Modifier.kitFloating(name: String): Modifier = semantics { this[KitLa
 
 /** Declares that this sideways scroller shows it scrolls (see [KitLayoutMarks.ScrollCue]); [cue] names how. */
 public fun Modifier.kitScrollCue(cue: String): Modifier = semantics { this[KitLayoutMarks.ScrollCue] = cue }
+
+/** Declares that this sideways scroller rests with its items whole (see [KitLayoutMarks.RestsWhole]); [name] names it. */
+public fun Modifier.kitRestsWhole(name: String): Modifier = semantics { this[KitLayoutMarks.RestsWhole] = name }

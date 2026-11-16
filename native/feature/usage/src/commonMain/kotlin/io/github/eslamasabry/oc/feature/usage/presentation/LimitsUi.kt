@@ -149,10 +149,30 @@ public data class LimitAccountUi(
     val stale: Boolean,
     /** Which account the plan belongs to, for Details (Flutter PR #136); null when nothing is known or was read. */
     val account: LimitAccountRef? = null,
+    /** The phone agent's own state when this account has no numbers and the reader found no account; else null. */
+    val agent: UsageAgentTruth? = null,
 ) {
     /** The account answered but reports no windows at all: the view says so and shows no numbers. */
     public val reportsNothing: Boolean
         get() = groups.isEmpty()
+}
+
+/**
+ * What the phone's own agent says about itself, which outranks "this reader found no account": a reader that finds no
+ * numbers cannot tell a plan limit, an unconfirmed sign-in or a real sign-out apart, the agent's own state can.
+ */
+public sealed interface UsageAgentTruth {
+    /** The agent is signed in; only its numbers cannot be read. */
+    public data object SignedIn : UsageAgentTruth
+
+    /** A sign-in check ran and found the agent signed out: the only case that says "Not signed in". */
+    public data object SignedOut : UsageAgentTruth
+
+    /** The plan's limit is reached; [resets] is when, worded for this phone, or null when the agent named none. */
+    public data class Limit(val resets: String?) : UsageAgentTruth
+
+    /** The app could not confirm either way; [agentName] names what "Check again" asks. */
+    public data class NotConfirmed(val agentName: String) : UsageAgentTruth
 }
 
 /** The Details "Account" row (Flutter `usage_subscription_screen.dart`, PR #136). */
@@ -208,6 +228,9 @@ public data class LimitsUi(
 public interface LimitsActions {
     /** The visible Refresh and pull-to-refresh: reads every source now. */
     public fun refresh()
+
+    /** "Check <agent> again": asks the phone's agent whether it is signed in, then reads the limits again. */
+    public fun checkAgent() {}
 }
 
 private fun UsageConnection.isPhone(): Boolean =
@@ -220,12 +243,18 @@ private val kindOrder =
  * Pure: the engine's snapshot as the Limits view's state at [nowMs]. [timezone] (the device's IANA zone) dates the
  * absolute times under Details; without it they are left out, never written in UTC.
  */
-public fun limitsUi(snapshot: UsageSnapshot, refreshing: Boolean, nowMs: Long, timezone: String? = null): LimitsUi {
+public fun limitsUi(
+    snapshot: UsageSnapshot,
+    refreshing: Boolean,
+    nowMs: Long,
+    timezone: String? = null,
+    agents: Map<String, UsageAgentTruth> = emptyMap(),
+): LimitsUi {
     val zone = timezone?.takeIf { it.isNotBlank() && UsageCalendar.isReadable(it) }
     val accounts =
         snapshot.subscriptions
             .sortedBy { s -> s.leastLeftPercent ?: 101.0 }
-            .map { s -> account(s, nowMs, zone) }
+            .map { s -> account(s, nowMs, zone, agents) }
     val keys =
         snapshot.apiKeyAccounts.map {
             LimitKeyUi(it.displayName, it.connection.name, it.connection.isPhone())
@@ -239,7 +268,12 @@ public fun limitsUi(snapshot: UsageSnapshot, refreshing: Boolean, nowMs: Long, t
     return LimitsUi(phase, accounts.toImmutableList(), keys.toImmutableList(), refreshing, nowMs)
 }
 
-private fun account(s: UsageSubscription, nowMs: Long, zone: String?): LimitAccountUi {
+private fun account(
+    s: UsageSubscription,
+    nowMs: Long,
+    zone: String?,
+    agents: Map<String, UsageAgentTruth>,
+): LimitAccountUi {
     val where = if (s.showConnectionName) s.readFrom ?: s.signedInOn.firstOrNull()?.connection else null
     val windows = s.windows.map { window(it, nowMs, zone) to LimitMath.lengthMs(it) }
     val groups =
@@ -251,6 +285,13 @@ private fun account(s: UsageSubscription, nowMs: Long, zone: String?): LimitAcco
             .sortedBy { kindOrder.indexOf(it.key.first) }
             .map { (key, members) -> LimitGroupUi(key.first, key.second, members.map { it.first }.toImmutableList()) }
     val fetched = s.fetchedAt?.toEpochMilliseconds()
+    // "Not signed in" only when the agent itself is signed out: a limit, an unconfirmed check or a signed-in agent
+    // whose numbers cannot be read says that instead. Only this phone's agents speak for this phone's account.
+    val reader = s.readFrom ?: s.signedInOn.firstOrNull()?.connection
+    val agent =
+        if (s.state == SubscriptionState.NotSignedIn && (reader == null || reader.isPhone()))
+            agents[s.providerId]?.takeIf { it != UsageAgentTruth.SignedOut }
+        else null
     val stale =
         s.state == SubscriptionState.OfflineStale ||
             s.resetSinceLastReading ||
@@ -269,6 +310,7 @@ private fun account(s: UsageSubscription, nowMs: Long, zone: String?): LimitAcco
         fetchedAt = fetched?.let { at -> zone?.let { UsageCalendar.stamp(at, it) } },
         stale = stale,
         account = limitAccountRef(s.accountRef, read = fetched != null),
+        agent = agent,
     )
 }
 

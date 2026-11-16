@@ -31,6 +31,11 @@ public enum class AgentTileAct {
     SetUp,
     /** Run the phone check for this agent (Flutter's "Check" chip). */
     Check,
+    /**
+     * signin-truth: the sign-in could not be confirmed (its check gave no answer): check it again now ("Check Claude Code
+     * again"), never a sign-in on a guess.
+     */
+    CheckSignIn,
     /** Start the stopped agent helper again (Flutter's "Resume" chip). */
     Resume,
     /** Install again after a failed or interrupted install: opens the install review, as Install does. */
@@ -163,7 +168,13 @@ public fun agentTile(
             AgentTileModel(
                 agent,
                 AgentTileState.SignInNeeded,
-                act = if (agent.signInAvailable) AgentTileAct.SignIn else null,
+                act =
+                    when {
+                        // Not confirmed: nothing is known about the account, so the way forward is the check itself.
+                        agent.signInCheckFailed -> AgentTileAct.CheckSignIn
+                        agent.signInAvailable -> AgentTileAct.SignIn
+                        else -> null
+                    },
                 justInstalled = justInstalled,
             )
         // The helper every phone agent runs on did not start: no agent can work, so none reads Ready. It says that, not

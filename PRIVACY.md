@@ -63,11 +63,13 @@ Off by default, and opt-in only. There are two separate switches in
 3. **Problem report**: Settings > Help > "Send a problem report". It sends
    nothing until you have read the whole report and tap **Send**.
 
-On the first start after installing or updating to 2.1.5, a build that can send
-these asks once, "Help improve OpenCode Mobile?", with three answers: "Share
-both" turns on `usage` and `crashes`, "Not now" leaves both off and the app
-does not ask again, and "Choose" opens the two switches. An answer already
-given in an earlier 2.1.5 preview carries over: its single "send reports"
+After your first finished reply (never when you first open the app), a build
+that can send these asks once, "Help improve OpenCode Mobile?", with three
+answers: "Share both" turns on `usage` and `crashes`, "Not now" leaves both off
+and the app does not ask again, and "Choose" opens the two switches. If you
+close the app before a reply has finished, the question waits for the first
+finished reply of the next run. An answer already given in an earlier 2.1.5
+preview carries over: its single "send reports"
 yes turns `usage` on, and turns `crashes` on too unless you had turned the
 "Offer crash reports" switch off. Either way each switch can be changed at any
 time. The two services are run by Google, so Google receives the data under its
@@ -90,11 +92,13 @@ With `crashes` on, the app sends:
 
 - **Fatal and non-fatal errors**: the kind of error (for example "Invalid
   state") and the code locations (library, line and column) it happened in,
-  never its message; for a failure the app handled, a fixed name such as
-  `setup_step_failed` with a few short codes (the setup step name, an exit
-  code, the pack name of a voice model, the kind of refusal). A crash in the
-  app's Android (Java or Kotlin) code carries only the exception class names
-  and their code locations.
+  never its message; for a failure the app handled, one of four fixed names with
+  a few short codes: `setup_step_failed` (the setup step, the kind of error
+  and, when the phone closed the app, why), `process_exit` (the `exit_reason`
+  below), `voice_model_download_failed` (the kind of problem and the voice
+  pack name) and `prompt_not_accepted` (whether the server refused the message
+  before or after it was sent, the kind of failure and how long it took). A crash in the app's Android (Java or Kotlin) code
+  carries only the exception class names and their code locations.
 - **Why Android ended the app last time**: on the next start, one of crash,
   crash_native, anr, low_memory, excessive_resource, signaled,
   user_requested, dependency_died or other, as `exit_reason`.
@@ -106,49 +110,62 @@ With `crashes` on, the app sends:
   step, `linux.fail`; `agent.start:` and an agent, `agent.fail`;
   `update.offer`, `update.install`, `update.fail`; `settings.change:` and a
   settings group.
-- **Custom keys**: `app_version` (for example 2.1.5), `build_kind` (store or
-  sideload), `server_kind` (phone, computer or none), `engine_state`
-  (stopped, starting, ready or failing), `connections` (0, 1, 2-3 or 4+) and
-  `oc_server_version` (major and minor only, for example 2.0).
+- **Custom keys**: `app_version` (for example 3.0.0), `build_kind` (store,
+  sideload, ci or local), `server_kind` (phone, computer or none),
+  `engine_state` (stopped, starting, ready or failing), `connections` (0, 1,
+  2-3 or 4+), `oc_server_version` (major and minor only, for example 2.0),
+  `report_kind` (crash, error, failure or problem_report) and `report_code`
+  (the code shown with a problem report).
 - What Crashlytics adds on its own: phone model, Android version, free memory
   and storage, whether the phone is rooted, a random installation identifier,
   and the time.
 
 ### Usage and app health
 
-With `usage` on, the app counts exactly these events, and no others:
+With `usage` on, the app counts exactly these events, and no others. The page "What we collect" in the app lists the same events in plain words, and a test fails the build when the code, that page, the in-app policy and this table stop agreeing.
 
 | Event | What it carries |
 | --- | --- |
 | `app_open` | `kind`: cold (the app started) or warm (it came back from the background) |
-| `setup_step_reached` | `step`: one of linux, essentials, python, node, opencode, aiteam, voice, start, other |
-| `setup_step_failed` | `step` (as above); `kind`: crash, timeout, network, space or other; `compat_mode`: true or false; `node_variant` for the Node.js step: the safe mode this phone kept (armcap, threads, both), none_worked when none worked, or other |
-| `setup_done` | `minutes`: a range (under 2, 2 to 5, 5 to 10, 10 to 20, 20 to 40, over 40) |
-| `first_reply` | `server_kind`: phone or computer; `seconds`: a range (under 5, 5 to 15, 15 to 30, 30 to 60, 60 to 180, over 180, unknown) |
+| `setup_step_reached` | `step`: linux, essentials, python, node, opencode, aiteam, voice, start or other; `attempt`: 1, 2 or 3+ |
+| `setup_done` | `minutes_range`: how long the whole setup took: under_2, 2_to_5, 5_to_10, 10_to_20, 20_to_40 or over_40; `server_kind`: phone or computer |
+| `setup_abandoned` | you left an unfinished setup for 5 minutes or more: `step` (the last one reached): linux, essentials, python, node, opencode, aiteam, voice, start or other; `reason`: background or closed; `minutes_range`: 5-15, 15-60, 60-1440 or >1440 |
+| `setup_resumed` | you came back to an unfinished setup: `step`: linux, essentials, python, node, opencode, aiteam, voice, start or other; `minutes_range` (how long you were away): 5-15, 15-60, 60-1440 or >1440 |
+| `first_reply` | the first reply this install saw: `server_kind`: phone or computer; `first_reply_range`: <2s, 2-10s, 10-30s, >30s or none |
 | `connect_computer_chosen` | nothing |
 | `update_offered` | nothing |
 | `update_installed` | nothing |
-| `screen_view` | `screen`: the kind of page, one of conversations, chat, new_chat, servers, this_phone, setup, privacy, appearance, integrations, settings, files, git, review, team, usage, agents, about, other |
+| `star_prompt_shown` | nothing (the one-time ask to star the project on GitHub came into view) |
+| `star_prompt_tapped` | nothing (you tapped Star on GitHub) |
+| `star_prompt_dismissed` | nothing (you tapped Not now) |
+| `screen_view` | `screen`: the kind of page, one of conversations, chat, new_chat, servers, this_phone, setup, privacy, appearance, integrations, settings, files, git, review, team, usage, agents, about or other |
 | `feature_used` | `feature`: one of voice, camera, file_attach, agent_switch, model_switch, server_add, git_action, review_open |
-| `session_length` | `minutes` the app was in front before going to the background: a range (under 1, 1 to 5, 5 to 15, 15 to 60, over 60) |
-| `conn_attempt` | `server_kind`: phone or computer; `result`: ok or fail; `fail_kind`: dns, tls, auth, timeout, refused, server_5xx, protocol, offline or other; `ms_range`: a range (<500, 500-2000, 2000-10000, >10000 milliseconds) |
-| `conn_drop` | `server_kind`; `reason`: network_change, server_closed, idle_timeout, background or other; `recovered`: yes or no |
-| `send_result` | `result`: ok, fail or queued; `fail_kind`: as `conn_attempt` plus rejected or too_large; `first_reply_range`: <2s, 2-10s, 10-30s, >30s or none |
+| `session_length` | `minutes_range` the app was in front before going to the background: under_1, 1_to_5, 5_to_15, 15_to_60 or over_60; `turns_range` (messages answered meanwhile): 0, 1, 2-5, 6-20 or >20 |
+| `journey_milestone` | a first-use step, counted once: `step`: opened, setup_opened, setup_started, setup_done, server_ready, chat_opened, first_prompt or first_reply; `after_range` (how long after you first agreed to usage): under_5m, 5_to_30m, 30m_to_2h, 2h_to_1d, 1_to_3d or over_3d |
+| `use_for` | your one answer to "What do you want help with?": `kind`: everyday, coding, both or looking |
+| `starter_used` | `starter`: the kind of suggestion you tapped, one of list_folder, find_bug, build_web_page, python_script, node_project, readme, explain_project, what_changed, add_tests or other (never its words) |
+| `share_in` | `count`: 0, 1, 2-5, 6-20 or >20; `kind`: image or file (never a name or address) |
+| `conn_attempt` | `server_kind`: phone or computer; `result`: ok or fail; `fail_kind`: dns, tls, auth, timeout, refused, server_5xx, protocol, offline or other; `ms_range`: <500, 500-2000, 2000-10000 or >10000 milliseconds |
+| `conn_drop` | `server_kind`: phone or computer; `reason`: network_change, server_closed, idle_timeout, background or other; `recovered`: yes or no |
+| `send_result` | `result`: ok, fail or queued; `fail_kind`: dns, tls, auth, timeout, refused, server_5xx, protocol, offline, other, rejected, too_large, rate_limit, free_limit, sign_in or model_error; `first_reply_range`: <2s, 2-10s, 10-30s, >30s or none; `agent`: build, plan, general or other; `server_kind`: phone or computer; `input`: text, voice, attachment or voice_attachment |
 | `turn_stall` | `stage`: waiting_tool, waiting_approval, streaming or other; `minutes_range`: <1, 1-5, 5-15, 15-60 or >60 |
-| `queue_flush` | `sent` and `failed`: a count range (0, 1, 2-5, 6-20, >20) |
-| `linux_setup_step` | `step`: download, unpack, essentials, node, opencode, paseo, agents or done; `result`: ok or fail; `ms_range`: <10000, 10000-60000, 60000-300000 or >300000 milliseconds; `exit_kind`: 0, 1, 126, 127, signal or other; `signal`: SIGILL, SIGSEGV, SIGBUS, SIGKILL, other or none; `compat_mode`: none, armcap, threads or both; `free_space_range`: <2, 2-8, 8-32 or >32 (GB) |
+| `chat_turn` | how a turn ended: `outcome`: done, stopped_by_user, error, connection_lost or approval_timeout; `agent`: build, plan, general or other; `server_kind`: phone or computer; `first_reply_range`: <2s, 2-10s, 10-30s, >30s or none; `ms_range`: <10s, 10-30s, 30-120s, 2-10m or >10m; `tools_range`: 0, 1-3, 4-10, 11-30 or >30; `fail_kind`: provider_auth, rate_limit, free_limit, context_overflow, output_length, content_filter, model_not_found, provider_connection, aborted, server or other; `recovered`: none, yes or no; `follow_up`: none, steer or after_fail |
+| `approval` | `kind`: what was asked, one of run, edit, read, web, question or other; `result`: allowed, always, denied, answered, declined or expired; `ms_range` (asked to answered): <10s, 10-30s, 30-120s, 2-10m or >10m. Never the command, file or question |
+| `queue_flush` | `sent` and `failed`: a count range (0, 1, 2-5, 6-20 or >20) |
+| `linux_setup_step` | `step`: download, unpack, essentials, node, opencode, paseo, agents, start, voice or done; `result`: ok, fail, skipped or cancelled; `attempt`: 1, 2 or 3+; `fail_kind`: network, storage, apt, permission, download, checksum, killed_by_system, timeout or unknown; `ms_range`: <10000, 10000-60000, 60000-300000 or >300000 milliseconds; `exit_kind`: 0, 1, 126, 127, signal or other; `signal`: SIGILL, SIGSEGV, SIGBUS, SIGKILL, other or none; `compat_mode`: none, armcap, threads or both; `free_space_range`: <2, 2-8, 8-32 or >32 (GB) |
 | `agent_start` | `agent`: claude_code, codex, gemini, antigravity, opencode or other; `result`: ok or fail; `fail_kind`: not_installed, needs_sign_in, crashed, timeout or other |
 | `bg_service_end` | `reason`: os_limit, user_stopped, idle, crashed or other; `battery_exempt`: yes or no |
 | `update_result` | `kind`: in_app or patch; `result`: installed, failed or declined; `fail_kind`: download, checksum, signer, version, installer or other |
 | `app_start` | `kind`: cold or warm; `ms_range`: <500, 500-1000, 1000-2000, 2000-5000 or >5000 milliseconds |
-| `jank` | once per session per kind of page: `screen` (as `screen_view`); `janky_pct_range`: the share of slow frames (<1, 1-5, 5-15 or >15 percent); `refresh_hz`: 60, 90, 120 or other; `late_pct_range`: the share of frames that missed their own deadline (same ranges); `seen_hz`: the refresh rate most of those frames were given (same words as `refresh_hz`) |
+| `jank` | once per session per kind of page: `screen`: as `screen_view` (conversations, chat, new_chat, servers, this_phone, setup, privacy, appearance, integrations, settings, files, git, review, team, usage, agents, about or other); `janky_pct_range`: the share of slow frames (<1, 1-5, 5-15, 15-30 or >30 percent); `frozen_range`: frames that took 700 ms or more (0, 1-2, 3-10 or >10); `refresh_hz`: 60, 90, 120 or other; `late_pct_range`: the share of frames that missed their own deadline (same ranges as `janky_pct_range`); `seen_hz`: the refresh rate most frames were given (same words as `refresh_hz`) |
 | `memory_pressure` | `level`: moderate, low or critical |
 
 It also sets these device properties once, as ranges and words:
 `ram_range` (<3, 3-4, 4-6, 6-8, 8-12 or >12 GB), `free_storage_range` (<2,
 2-8, 8-32 or >32 GB), `abi` (arm64, arm32 or x86_64), `webview_major` (a
-number), `notif_allowed` (yes or no), `server_kind` (phone, computer or both)
-and `oc_server_version` (major and minor).
+number), `notif_allowed` (yes or no), `server_kind` (phone, computer or both),
+`oc_server_version` (major and minor) and `journey_stage` (how far you are in
+first use: the same words as `journey_milestone`).
 
 Google Analytics adds on its own a random app-instance identifier, the phone
 model, Android version, app version, language, the time, and a coarse location
@@ -158,7 +175,9 @@ the length of a session. The advertising ID and Android ID (SSAID) are never
 collected (the app does not even hold the advertising-ID permission), ad
 personalisation and ad storage are denied, Analytics does not report screens
 by itself (only the page kinds above), and no data is exported to any other
-Google product.
+Google product. (When both switches are on, Crashlytics may show the app's own
+usage events beside a crash report; that stays inside the same Firebase
+project.)
 
 ### Performance
 
@@ -174,7 +193,7 @@ duration in milliseconds and attributes that are one word from a fixed list:
 | `app_cold_start` | none |
 | `conn_connect` | `server_kind`: phone or computer; `result`: ok or fail |
 | `send_first_reply` | `server_kind`: phone or computer |
-| `linux_setup_<step>` | `step`: one of download, unpack, essentials, node, opencode, paseo, agents, done; `result`: ok or fail |
+| `linux_setup_<step>` | `step`: one of download, unpack, essentials, node, opencode, paseo, agents, start, voice, done; `result`: ok or fail |
 | `agent_start` | `agent`: one of claude_code, codex, gemini, antigravity, opencode, other; `result`: ok or fail |
 
 Firebase also records its own app start time and the share of slow and frozen

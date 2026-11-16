@@ -258,6 +258,12 @@ public data class ChatsUi(
      * and offers the way forward instead of doing nothing. Clears itself once that server answers.
      */
     val newBlocked: Boolean = false,
+    /**
+     * Cold start: New conversation was tapped while the server it starts on is still opening. The tap is kept: New
+     * conversation opens by itself, once, the moment that server answers, while the person is still on the home; the
+     * home says so meanwhile, and Cancel (or any other tap or page) drops it.
+     */
+    val newWaiting: Boolean = false,
     /** Row keys whose waiting permission can be answered Always allow (its server keeps the grant). */
     val alwaysAllowable: ImmutableSet<String> = persistentSetOf(),
     /** The row whose Always allow waits on its confirm, or null. */
@@ -447,7 +453,7 @@ public interface ChatsActions {
 
     public fun newConversation()
 
-    /** Closes the notice [ChatsUi.newBlocked] shows. */
+    /** Closes the notice [ChatsUi.newBlocked] shows, and drops a kept New conversation tap ([ChatsUi.newWaiting]). */
     public fun dismissNewBlocked() {}
 
     /** The opening card's Start, when this phone's OpenCode was stopped by the person. */

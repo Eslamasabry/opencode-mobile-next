@@ -20,4 +20,6 @@
     <string name="homeNewBlockedOpening">%1$s vẫn đang mở. Hãy thử lại sau giây lát.</string>
     <string name="homePhoneOffStart">Bật OpenCode trên điện thoại này</string>
     <string name="homePhoneOffTitle">OpenCode trên điện thoại này đang tắt</string>
+    <string name="homeNewWaitingOpening">Cuộc trò chuyện mới sẽ mở ngay khi %1$s trả lời.</string>
+    <string name="homeNewWaitingCancel">Hủy Cuộc trò chuyện mới</string>
 </resources>

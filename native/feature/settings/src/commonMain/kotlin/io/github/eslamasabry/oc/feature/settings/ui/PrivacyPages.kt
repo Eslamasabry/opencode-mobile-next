@@ -157,6 +157,8 @@ internal fun collectWords(item: CollectItem): StringResource =
         CollectItem.Connect -> Res.string.collectConnect
         CollectItem.Drop -> Res.string.collectDrop
         CollectItem.Send -> Res.string.collectSend
+        CollectItem.Turns -> Res.string.collectTurns
+        CollectItem.Approvals -> Res.string.collectApprovals
         CollectItem.Stall -> Res.string.collectStall
         CollectItem.Queue -> Res.string.collectQueue
         CollectItem.PhoneSetup -> Res.string.collectPhoneSetup
@@ -166,6 +168,8 @@ internal fun collectWords(item: CollectItem): StringResource =
         CollectItem.Pages -> Res.string.collectPages
         CollectItem.Journey -> Res.string.collectJourney
         CollectItem.Starters -> Res.string.collectStarters
+        CollectItem.ShareIn -> Res.string.collectShareIn
+        CollectItem.StarAsk -> Res.string.collectStarAsk
         CollectItem.Start -> Res.string.collectStart
         CollectItem.Smooth -> Res.string.collectSmooth
         CollectItem.Memory -> Res.string.collectMemory

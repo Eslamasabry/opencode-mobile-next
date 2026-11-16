@@ -110,7 +110,8 @@ class LoadingLineTest {
         }
 
     private fun ComposeUiTest.assertOnTheEdge(at: String) {
-        val pane = bounds("kit-liquid-bar")
+        // The floating block (it paints no pane since 2026-11-16): the line lies on its foot.
+        val pane = bounds(FLOATING_CHROME_TAG)
         val line = bounds("kit-screen-loading")
         assertEquals(2f, line.height, .5f, "$at: the line keeps its 2 dp")
         assertTrue(line.top >= pane.bottom - .5f, "$at: the line $line lies under the pane $pane, not behind it")

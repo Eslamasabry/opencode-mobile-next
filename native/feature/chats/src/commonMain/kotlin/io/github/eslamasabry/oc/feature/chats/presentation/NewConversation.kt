@@ -48,6 +48,10 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.time.Duration.Companion.seconds
 
+/** A refused first read is read again this often, this many times (about 30 s), before the page says it could not read. */
+internal const val SETUP_RETRY_EVERY_MS: Long = 3_000
+internal const val SETUP_RETRIES: Int = 10
+
 /** How long the page waits for a server's first answer before it says so and offers Try again. */
 internal val SETUP_WAIT = 90.seconds
 
@@ -154,6 +158,11 @@ public data class NewConversationPhoneAgent(
     val signInNeeded: Boolean = false,
     /** Needs its phone check: the Agents page says "Phone check needed", and so does this row. */
     val phoneCheck: Boolean = false,
+    /** Its sign-in check could not run to an answer: the Agents page says "Sign-in not confirmed", and so does this row. */
+    val signInNotConfirmed: Boolean = false,
+    /** Its plan limit is reached: the Agents page says so, and so does this row. [limitResets] is when, when it said. */
+    val limitReached: Boolean = false,
+    val limitResets: String? = null,
 )
 
 /**
@@ -321,6 +330,9 @@ public interface NewConversationHost {
     /** Starts this phone's own OpenCode after the person stopped it. */
     public suspend fun startPhoneServer(profile: ProfileId): Outcome<Unit> =
         Outcome.Failed(Failure.Unavailable(FeatureId("startPhoneServer")))
+
+    /** "Check <agent> again": asks the phone's agents now, and publishes what they answer (signin-followups). */
+    public suspend fun checkPhoneAgents() {}
 
     public suspend fun setup(profile: ProfileId): Outcome<NewConversationSetup>
 
@@ -547,6 +559,12 @@ public enum class PhoneStartWay {
     TryAgain,
 
     /**
+     * signin-followups: the helper said the agent "is not ready": what is wrong is not known to be its set-up, so the way
+     * forward is "Check <agent> again" (asks the agent now), then the start goes again.
+     */
+    CheckAgain,
+
+    /**
      * Issue 147: the agent's own sign-in no longer works (the helper refused the start for it: "Failed to
      * authenticate: OAuth session expired"): "<Agent> needs you to sign in again", with Sign in.
      */
@@ -558,9 +576,12 @@ public data class PhoneStartProblem(val agentId: String, val agentName: String, 
 
 /** Reads a refused phone-agent start into the one way forward (the helper's sentence is matched, never shown). */
 public object PhoneStartRules {
+    /** "<Agent> is not ready": asked again before anyone is sent to set it up (signin-followups). */
+    private val NOT_YET_READY = Regex("is not ready", RegexOption.IGNORE_CASE)
+
     private val NOT_READY =
         Regex(
-            "is not ready|is disabled|not installed|auth(?:entication)?[ _-]?required|authenticate|sign[ -]?in|" +
+            "is disabled|not installed|auth(?:entication)?[ _-]?required|authenticate|sign[ -]?in|" +
                 "log ?in|No model selected|No API key",
             RegexOption.IGNORE_CASE,
         )
@@ -572,6 +593,8 @@ public object PhoneStartRules {
         when {
             failure is Failure.Rejected && failure.tag?.raw == SIGN_IN_TAG -> PhoneStartWay.SignIn
             chosen != null && listed.isNotEmpty() && listed.none { it.model == chosen } -> PhoneStartWay.ChooseModel
+            failure is Failure.ComputerDidNotAnswer && NOT_YET_READY.containsMatchIn(failure.details?.text.orEmpty()) ->
+                PhoneStartWay.CheckAgain
             failure is Failure.ComputerDidNotAnswer && NOT_READY.containsMatchIn(failure.details?.text.orEmpty()) ->
                 PhoneStartWay.SetUp
             else -> PhoneStartWay.TryAgain
@@ -675,6 +698,10 @@ public data class NewConversationUi(
         get() =
             phoneFolder == PhoneFolderReach.Restart &&
                 (if (phoneAgent != null) PhoneFolderSide.Agents else PhoneFolderSide.Server) in phoneFolderWaiting
+
+    /** W3: a restart of OpenCode is under way and is waiting for the reply it is writing (nothing is cut). */
+    val restartWaitsForReply: Boolean
+        get() = fixingPhoneFolder && PhoneFolderSide.Server in phoneFolderWaiting
 
     val phoneAgentName: String?
         get() =
@@ -839,6 +866,12 @@ public interface NewConversationActions {
 
     /** Starts this phone's OpenCode when [NewConversationUi.phoneOff]. */
     public fun startPhoneServer() {}
+
+    /**
+     * "Check <agent> again" (a start refused as "not ready", a row whose sign-in check did not answer): asks the phone's
+     * agents now. After a refused start the start then goes again; otherwise the page reads its offer again.
+     */
+    public fun checkPhoneAgents() {}
 
     /** New project in the project sheet: asks for its name. */
     public fun askNewProject() {}
@@ -1038,9 +1071,21 @@ public class NewConversationViewModel(
             val cached = host.cachedSetup(profile)
             if (cached != null && ticket == generation) applySetup(profile, ticket, cached)
             // Never wait for ever: a server that does not answer in time is a failure with a Try again.
-            val answered =
+            var answered =
                 withTimeoutOrNull(SETUP_WAIT) { host.setup(profile) }
                     ?: Outcome.Failed(Failure.Network(NetworkWhy.Unknown))
+            // A server that is still starting or reconnecting refuses the read at once: the page keeps waiting (it
+            // stays "getting ready", with Start kept) and reads again by itself, for a bounded time. "Couldn't be
+            // read" with Try again is only for a read that still fails after that (a server that is up and failing).
+            for (again in 1..SETUP_RETRIES) {
+                val refused = answered
+                if (refused !is Outcome.Failed || cached != null || refused.failure !is Failure.Network) break
+                delay(SETUP_RETRY_EVERY_MS)
+                if (ticket != generation) return@launch
+                answered =
+                    withTimeoutOrNull(SETUP_WAIT) { host.setup(profile) }
+                        ?: Outcome.Failed(Failure.Network(NetworkWhy.Unknown))
+            }
             when (val loaded = answered) {
                 is Outcome.Failed ->
                     // A page already showing the remembered setup stays usable when the fresh read fails.
@@ -1322,6 +1367,14 @@ public class NewConversationViewModel(
 
     override fun retryLoad() {
         mutable.value.profile?.let(::chooseServer)
+    }
+
+    override fun checkPhoneAgents() {
+        val refused = mutable.value.phoneStartProblem?.way == PhoneStartWay.CheckAgain
+        viewModelScope.launch {
+            host.checkPhoneAgents()
+            if (refused) start() else retryLoad()
+        }
     }
 
     override fun draftChanged(text: String) {
@@ -1773,7 +1826,17 @@ public class NewConversationViewModel(
         val read = ++phoneFolderRead
         mutable.update { it.copy(fixingPhoneFolder = true, phoneFolderFailure = null, phoneFolderFixed = null) }
         viewModelScope.launch {
+            // While the restart runs, a side that waits for its work (OpenCode writing a reply) shows at once.
+            val following =
+                launch {
+                    host.phoneFolderWaitingUpdates(profile).collect { now ->
+                        mutable.update {
+                            if (it.profile == profile && it.fixingPhoneFolder) it.copy(phoneFolderWaiting = now) else it
+                        }
+                    }
+                }
             val fixed = host.fixPhoneFolder(profile, shown.phoneAgent, reach, directory)
+            following.cancel()
             val now = host.phoneFolder(profile, shown.phoneAgent, directory)
             val waiting = host.phoneFolderWaiting(profile)
             // W3 (F-042): a folder Linux could not find before it was bound is read again now it is.

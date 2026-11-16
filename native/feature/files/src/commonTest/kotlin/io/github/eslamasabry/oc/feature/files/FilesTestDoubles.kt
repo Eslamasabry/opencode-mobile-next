@@ -51,7 +51,14 @@ internal class FakeConnections(
     var gateway: FileGateway? = FakeFileGateway(),
     var browse: Boolean = true,
     var dir: String? = "/work/app",
+    var changesResult: Outcome<ImmutableList<io.github.eslamasabry.oc.core.model.VersionControlFile>> =
+        Outcome.Failed(Failure.Unavailable(FeatureId("projectManagement"))),
+    var notGit: Boolean = false,
 ) : FilesConnections {
+    override suspend fun changes(ref: ConversationRef) = changesResult
+
+    override suspend fun notGitRepository(ref: ConversationRef): Boolean = notGit
+
     override fun gateway(ref: ConversationRef): FileGateway? = gateway
 
     override fun canBrowse(ref: ConversationRef): Boolean = browse

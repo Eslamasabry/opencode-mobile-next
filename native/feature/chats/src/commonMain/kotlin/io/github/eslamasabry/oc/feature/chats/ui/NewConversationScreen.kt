@@ -4,6 +4,7 @@ import io.github.eslamasabry.oc.ui.kit.frame.kitPageScrollState
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.Row
@@ -11,6 +12,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.rememberTextFieldState
@@ -96,11 +98,13 @@ import io.github.eslamasabry.oc.ui.kit.row.KitSwitchRow
 import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.action.KitActionBlock
+import io.github.eslamasabry.oc.ui.kit.action.KitWorkingMark
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.state.KitSkeletonRows
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
 import io.github.eslamasabry.oc.ui.kit.text.kitRelativeAge
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.kitchat.transcript.KitStartingConversation
 import io.github.eslamasabry.oc.ui.kitchat.transcript.KitStartingPhase
@@ -332,38 +336,46 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                                 )
                             }
                         }
-                    KitStartBox(
-                        field,
-                        stringResource(Res.string.chatsNewBuildPrompt),
-                        Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp)
-                            .padding(bottom = Space.S1.dp)
-                            .testTag("chats-new-field"),
-                        enabled = enabled,
-                        minLines = 2,
-                        // B-098: not while a sheet is open; coming back from agent setup re-ran this and the keyboard covered the sheet.
-                        autofocus = (!state.busy || preparing) && state.sheet == null,
-                        onTextChanged = {
-                            reported = it
-                            actions.draftChanged(it)
-                        },
-                        focusKey = state.focusRevision.takeIf { it > 0 },
-                        remind = remind,
-                        // Who works on it is in the box's own foot, one chip for the agent and its model.
-                        foot = {
-                            KitAgentModelChip(
-                                agent = agentChipLabel(state),
-                                model = modelLabel(state),
-                                markId = agentMarkId(state),
-                                spoken = stringResource(Res.string.chatsNewAgentChipSpoken, agentChipLabel(state), modelLabel(state)),
-                                onClick = { whereFocus.clearFocus(); actions.sheet(NewConversationSheet.Agents) },
-                                expanded = state.sheet == NewConversationSheet.Agents,
-                            )
-                        },
-                    )
+                    // Issue 147 (build 10053): a blocking notice with the keyboard up had a few lines of room under a
+                    // box that kept all of its own, so its sentence was out of sight and its action cut in half. While a
+                    // notice blocks starting the box joins the one scroller with the notice (its height capped so its
+                    // words still scroll inside it), the page scrolls to the notice whole, and nothing is squeezed.
+                    val startBox: @Composable () -> Unit = {
+                        KitStartBox(
+                            field,
+                            stringResource(Res.string.chatsNewBuildPrompt),
+                            Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp)
+                                .padding(bottom = Space.S1.dp)
+                                .testTag("chats-new-field"),
+                            enabled = enabled,
+                            minLines = 2,
+                            // B-098: not while a sheet is open; coming back from agent setup re-ran this and the keyboard covered the sheet.
+                            autofocus = (!state.busy || preparing) && state.sheet == null,
+                            onTextChanged = {
+                                reported = it
+                                actions.draftChanged(it)
+                            },
+                            focusKey = state.focusRevision.takeIf { it > 0 },
+                            remind = remind,
+                            // Who works on it is in the box's own foot, one chip for the agent and its model.
+                            foot = {
+                                KitAgentModelChip(
+                                    agent = agentChipLabel(state),
+                                    model = modelLabel(state),
+                                    markId = agentMarkId(state),
+                                    spoken = stringResource(Res.string.chatsNewAgentChipSpoken, agentChipLabel(state), modelLabel(state)),
+                                    onClick = { whereFocus.clearFocus(); actions.sheet(NewConversationSheet.Agents) },
+                                    expanded = state.sheet == NewConversationSheet.Agents,
+                                )
+                            },
+                        )
+                    }
+                    if (!phoneBlocks) startBox()
                     Column(
                         Modifier.weight(1f).verticalScroll(kitPageScrollState()),
                         verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
                     ) {
+                    if (phoneBlocks) Box(Modifier.heightIn(max = NOTICE_BOX_MAX_DP.dp)) { startBox() }
                     // Ways to start fill the empty prompt; nothing is sent until Start.
                     KitReveal(
                         visible =
@@ -420,7 +432,15 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                     // Start, with the way forward; the message is never sent into another folder.
                     if (phoneFolderWords != null && !state.deliveryUnconfirmed) {
                       KitNoticeInView(phoneFolderWords + state.phoneFolder?.name) { ways ->
-                        KitNotice(phoneFolderWords, inset)
+                        KitNotice(
+                            phoneFolderWords,
+                            inset,
+                            // A restart takes a while: the kit's working mark says it is still going on.
+                            trailing =
+                                if (state.fixingPhoneFolder) {
+                                    { KitWorkingMark(LocalKitColors.current.text2, LocalKitTokens.current.smallIcon.dp) }
+                                } else null,
+                        )
                         // The main action is the bottom block's; here only the other way, when the main one is a fix.
                         if (phoneFixLabel != null && !state.fixingPhoneFolder)
                             KitActionBlock(
@@ -770,11 +790,18 @@ private fun NewConversationAgentStep(state: NewConversationUi, actions: NewConve
                     when {
                         agent.updating -> stringResource(Res.string.agentsUpdatingAgent, agent.name)
                         agent.checking -> stringResource(Res.string.r40PhoneChecking)
+                        agent.signInNotConfirmed -> stringResource(Res.string.agentsStateSignInNotConfirmed)
+                        agent.limitReached ->
+                            agent.limitResets?.let { stringResource(Res.string.agentsStateLimitReset, it) }
+                                ?: stringResource(Res.string.agentsStateLimit)
                         agent.signInNeeded -> stringResource(Res.string.agentsStateSignInNeeded)
                         agent.phoneCheck -> stringResource(Res.string.agentsStatePhoneCheck)
                         else -> stringResource(Res.string.chatsNewSetUp)
                     },
-                onClick = { actions.setUpPhoneAgent(agent.id) },
+                // A check that did not answer is asked again here; every other row opens its set-up.
+                onClick = {
+                    if (agent.signInNotConfirmed) actions.checkPhoneAgents() else actions.setUpPhoneAgent(agent.id)
+                },
                 modifier = Modifier.testTag("chats-new-agent-${agent.id}"),
             )
         }
@@ -1007,6 +1034,7 @@ private fun StartingConversation(state: NewConversationUi, actions: NewConversat
             PhoneStartWay.ChooseModel -> stringResource(Res.string.chatsNewAgentModelMissing, agentName)
             PhoneStartWay.TryAgain -> stringResource(Res.string.chatsNewAgentDidNotStart, agentName)
             PhoneStartWay.SignIn -> stringResource(Res.string.chatSendFailureSignInAgain, agentName)
+            PhoneStartWay.CheckAgain -> stringResource(Res.string.continueWithNotReady, agentName)
             null -> null
         }
     val setUpWords = stringResource(Res.string.agentsSetUpAction, agentName)
@@ -1053,6 +1081,7 @@ private fun StartingConversation(state: NewConversationUi, actions: NewConversat
                 problem?.way == PhoneStartWay.SetUp -> setUpWords
                 problem?.way == PhoneStartWay.ChooseModel -> chooseModelWords
                 problem?.way == PhoneStartWay.SignIn -> stringResource(Res.string.chatSendFailureSignInAction)
+                problem?.way == PhoneStartWay.CheckAgain -> stringResource(Res.string.agentsCheckSignInAgain, agentName)
                 else -> stringResource(Res.string.commonRetry)
             },
         onRetry =
@@ -1064,6 +1093,7 @@ private fun StartingConversation(state: NewConversationUi, actions: NewConversat
                 val forward: () -> Unit = {
                     when (way) {
                         PhoneStartWay.SetUp, PhoneStartWay.SignIn -> actions.setUpPhoneAgent(agentId)
+                        PhoneStartWay.CheckAgain -> actions.checkPhoneAgents()
                         PhoneStartWay.ChooseModel -> {
                             actions.editPrompt()
                             actions.sheet(NewConversationSheet.Models)
@@ -1323,6 +1353,7 @@ private fun phoneFolderWords(state: NewConversationUi): String? {
             if (state.chosenSideWaits)
                 if (state.phoneAgent != null) stringResource(Res.string.chatsNewPhoneFolderWaitingAgents)
                 else stringResource(Res.string.chatsNewPhoneFolderWaitingServer)
+            else if (state.restartWaitsForReply) stringResource(Res.string.chatsNewPhoneFolderWaitingServer)
             else if (state.fixingPhoneFolder)
                 if (state.phoneFolderBoth) stringResource(Res.string.chatsNewPhoneFolderRestartingBoth)
                 else if (state.phoneAgent != null) stringResource(Res.string.chatsNewPhoneFolderRestartingAgents, agent)
@@ -1360,3 +1391,6 @@ private fun phoneFolderDoneWords(state: NewConversationUi): String? {
         else -> null
     }
 }
+
+/** The start box's tallest height while a blocking notice shares its scroller; longer words scroll inside it. */
+private const val NOTICE_BOX_MAX_DP = 220

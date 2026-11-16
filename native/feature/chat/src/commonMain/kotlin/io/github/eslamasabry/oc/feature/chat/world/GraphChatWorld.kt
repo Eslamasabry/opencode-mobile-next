@@ -801,6 +801,11 @@ internal class GraphChatWorld(
                 // An explicit conversation route may restore its proven native helper once.
                 // Passive feed observation never starts or retries a helper.
                 if (registry.graphFor(ref) == null) registry.recoverTransient(ref)
+                // Issue 147 (owner's phone, build 10057): a phone agent's conversation opened (from any page: they all
+                // open here) while its helper is not connected asks the app's own start of it to run now. Before, it
+                // only waited, and the helper stayed down until the Agents page started it.
+                val helper = phoneServer?.takeIf { it.isAgentHelper(ref.profileId) }
+                if (helper != null && registry.graphFor(ref) == null) helper.wantAgentHelper(ref.profileId)
                 registry.live.collect {
                     val graph = registry.graphFor(ref)
                     if (
@@ -820,7 +825,9 @@ internal class GraphChatWorld(
                         when {
                             down && phone == PhoneServerWait.Updating -> ChatServerWait.Updating
                             down && phone == PhoneServerWait.UpdatingAgents -> ChatServerWait.UpdatingAgents
-                            down && phone == PhoneServerWait.AgentNeedsSignIn -> ChatServerWait.AgentNeedsSignIn
+                            // Only while the page waits: once its wait is spent the helper is what did not answer,
+                            // and the line says so with its Restart (a sign-in never keeps the helper down).
+                            waiting && phone == PhoneServerWait.AgentNeedsSignIn -> ChatServerWait.AgentNeedsSignIn
                             down && phone == PhoneServerWait.Starting -> ChatServerWait.Starting
                             waiting -> ChatServerWait.Connecting
                             else -> null
@@ -847,9 +854,15 @@ internal class GraphChatWorld(
             it == PhoneServerWait.UpdatingAgents || it == PhoneServerWait.AgentNeedsSignIn
         }
 
-    /** This phone's server is starting or updating: a wait for it does not count toward [NOT_READY_LIMIT_MS]. */
+    /**
+     * This phone's server is starting or updating: a wait for it does not count toward [NOT_READY_LIMIT_MS]. A phone
+     * agent that needs a sign-in does not keep the helper from answering, so it never makes the wait endless (issue
+     * 147, owner's phone, build 10057: "Connecting" for minutes while Claude Code read Sign in needed).
+     */
     private fun phoneBusy(): Boolean =
-        (phoneServer?.waiting(ref.profileId)?.value ?: PhoneServerWait.None) != PhoneServerWait.None
+        (phoneServer?.waiting(ref.profileId)?.value ?: PhoneServerWait.None).let {
+            it != PhoneServerWait.None && it != PhoneServerWait.AgentNeedsSignIn
+        }
 
     /**
      * True when [failure] only says the server is not ready yet: a read refused because the connection it ran on was

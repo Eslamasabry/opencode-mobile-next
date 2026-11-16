@@ -113,4 +113,26 @@ class PhoneFolderRestartsTest {
         assertEquals(listOf(PhoneFolderSide.Server, PhoneFolderSide.Agents), phone.restarted)
         assertEquals(emptySet(), restarts.waiting.value)
     }
+
+    @Test
+    fun `I147-WAIT OpenCode's wait for a reply is known while the agents are still restarting`() = runTest {
+        val phone = Phone()
+        phone.replying = true
+        lateinit var restarts: PhoneFolderRestarts
+        var waitingDuringAgents: Set<PhoneFolderSide>? = null
+        restarts =
+            PhoneFolderRestarts(
+                scope = backgroundScope,
+                misses = { side, path -> path == folder && side in phone.without },
+                serverBusy = { phone.replying },
+                restartServer = { Outcome.Ok(Unit) },
+                restartAgents = {
+                    waitingDuringAgents = restarts.waiting.value
+                    Outcome.Ok(Unit)
+                },
+                every = 5.seconds,
+            )
+        restarts.restart(PhoneFolderSide.Agents, folder)
+        assertEquals(setOf(PhoneFolderSide.Server), waitingDuringAgents, "said before the agents' restart ends")
+    }
 }

@@ -74,7 +74,7 @@ import io.github.eslamasabry.oc.ui.words.res.agentsStatePhoneCheck
 import io.github.eslamasabry.oc.ui.words.res.agentsStateReady
 import io.github.eslamasabry.oc.ui.words.res.agentsStateSignInNeeded
 import io.github.eslamasabry.oc.ui.words.res.agentsStateStopped
-import io.github.eslamasabry.oc.ui.words.res.agentsStateSignInCheckFailed
+import io.github.eslamasabry.oc.ui.words.res.agentsStateSignInNotConfirmed
 import io.github.eslamasabry.oc.ui.words.res.agentsStateSignInUnchecked
 import io.github.eslamasabry.oc.ui.words.res.agentsStateSetUpAtFirstUse
 import io.github.eslamasabry.oc.ui.words.res.agentsChipSetUp
@@ -96,6 +96,11 @@ import io.github.eslamasabry.oc.ui.words.res.agentsTileStepLinux
 import io.github.eslamasabry.oc.ui.words.res.agentsTileStepRuntime
 import io.github.eslamasabry.oc.ui.words.res.agentsTileStillWorking
 import io.github.eslamasabry.oc.ui.words.res.kitDetails
+import io.github.eslamasabry.oc.ui.words.res.kitCopyDetails
+import io.github.eslamasabry.oc.ui.words.res.agentsStateLimitReset
+import io.github.eslamasabry.oc.ui.words.res.agentsCheckSignInAgain
+import io.github.eslamasabry.oc.ui.words.res.agentsSignInNotConfirmedBody
+import io.github.eslamasabry.oc.ui.kit.state.KitDetailsFold
 import io.github.eslamasabry.oc.ui.words.res.kitTryAgain
 import io.github.eslamasabry.oc.ui.words.res.linuxAgentInstallBackground
 import io.github.eslamasabry.oc.ui.words.res.linuxAgentInstallCancel
@@ -241,6 +246,15 @@ private fun AgentTile(tile: AgentTileModel, actions: AgentsActions, chat: Boolea
                         ) {
                             actions.signInPhone(agent.id)
                         }
+                AgentTileAct.CheckSignIn ->
+                    KitAgentTileAction(
+                        stringResource(Res.string.agentsCheckSignInAgain, agent.name),
+                        stringResource(Res.string.agentsCheckSignInAgain, agent.name),
+                        icon = KitIcons.retry,
+                        prominent = true,
+                    ) {
+                        actions.checkPhoneAgents()
+                    }
                 AgentTileAct.Check ->
                     KitAgentTileAction(
                         stringResource(if (checkFailed) Res.string.kitTryAgain else Res.string.agentsChipCheck),
@@ -312,12 +326,14 @@ internal fun tileWords(tile: AgentTileModel): String {
         AgentTileState.SetUp -> stringResource(Res.string.agentsStateSetUpAtFirstUse)
         // The check could not run (timed out, no answer): nothing is known about the account, so not "Sign in needed".
         AgentTileState.SignInNeeded ->
-            if (agent.signInCheckFailed) stringResource(Res.string.agentsStateSignInCheckFailed)
+            if (agent.signInCheckFailed) stringResource(Res.string.agentsStateSignInNotConfirmed)
             else stringResource(Res.string.agentsStateSignInNeeded)
         AgentTileState.Checking -> stringResource(Res.string.agentsStateChecking)
         AgentTileState.PhoneCheck -> stringResource(Res.string.agentsStatePhoneCheck)
         AgentTileState.Stopped -> stringResource(Res.string.agentsStateStopped)
-        AgentTileState.Limit -> stringResource(Res.string.agentsStateLimit)
+        AgentTileState.Limit ->
+            agent.limitResets?.let { stringResource(Res.string.agentsStateLimitReset, it) }
+                ?: stringResource(Res.string.agentsStateLimit)
         // Installed, but the app cannot read its sign-in, so it can never start a conversation: say that, not a bare
         // "not available" (device 2026-11-12, Gemini CLI). Signing in or installing again would not change it.
         AgentTileState.HelperDown -> stringResource(Res.string.chatsHomeAgentsUnreachable)
@@ -470,6 +486,15 @@ internal fun PhoneAgentSheet(
                         enabled = can,
                         working = state.busy,
                     )
+                // Runs the sign-in checks now (the page's read); a "signed in" answer is never reused for a row that
+                // could not be confirmed.
+                AgentTileAct.CheckSignIn ->
+                    KitAction(
+                        stringResource(Res.string.agentsCheckSignInAgain, tile.agent.name),
+                        actions::checkPhoneAgents,
+                        enabled = can,
+                        working = state.busy,
+                    )
                 AgentTileAct.Check ->
                     KitAction(
                         stringResource(Res.string.agentsCheckAction, tile.agent.name),
@@ -511,6 +536,15 @@ internal fun PhoneAgentSheet(
         tertiary =
             buildList {
                 val a = agent ?: return@buildList
+                // signin-truth: "Sign in needed" may rest on an old report; the check asks the agent itself now.
+                if (tile?.act == AgentTileAct.SignIn)
+                    add(
+                        KitAction(
+                            stringResource(Res.string.agentsCheckSignInAgain, a.name),
+                            actions::checkPhoneAgents,
+                            enabled = can,
+                        )
+                    )
                 // Issue 147: an installed agent that takes an own provider offers it here, beside its sign-in.
                 if (ownActions != null && own != null && a.id in own.supported && a.status.installed)
                     add(
@@ -577,8 +611,20 @@ internal fun PhoneAgentSheet(
             // Installed, but its sign-in cannot be read: what that means and the one thing that can be done here.
             tile.state == AgentTileState.Unavailable && tile.agent.signInUnchecked ->
                 KitText(stringResource(Res.string.agentsSignInUncheckedBody))
+            // signin-truth: the app cannot tell. It says so, and the one way forward is the check.
+            tile.act == AgentTileAct.CheckSignIn ->
+                KitText(stringResource(Res.string.agentsSignInNotConfirmedBody, tile.agent.name))
             else -> Unit
         }
+        // Where the sign-in state comes from (the check's answer and time, a reported lapse): technical, under Details.
+        if (tile.state == AgentTileState.SignInNeeded || tile.state == AgentTileState.Limit)
+            tile.agent.signInEvidence?.let { evidence ->
+                KitDetailsFold(
+                    label = stringResource(Res.string.kitDetails),
+                    copyLabel = stringResource(Res.string.kitCopyDetails),
+                    text = evidence,
+                )
+            }
         // Which provider it uses, when it is the person's own (never the key).
         own?.saved?.get(tile.agent.id)?.let { saved ->
             KitText(stringResource(Res.string.agentsOwnProviderInUse, saved.endpoint), tone = TextTone.Secondary)

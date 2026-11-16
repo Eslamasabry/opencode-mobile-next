@@ -89,6 +89,34 @@ public object KeptTapRules {
         }
 }
 
+/** What the home does with New conversation tapped while its server was still opening (cold start). */
+public enum class KeptNewTap {
+    /** Nothing kept, or the server still opens: nothing to do. */
+    Wait,
+
+    /** The person moved to another page: the kept tap is dropped and never opens. */
+    Drop,
+
+    /** The server answered: open New conversation, once. */
+    Open,
+
+    /** The server did not answer (its opening failed): nothing opens and the home says why, with its way forward. */
+    Refuse,
+}
+
+/** The kept New conversation tap's one decision, from what the home knows now; acted on only when it changes. */
+public object KeptNewTapRules {
+    /** [opening] is the phase of the server still opening, null once it answered. */
+    public fun decide(kept: Boolean, onTappedPage: Boolean, opening: ChatsOpeningPhase?): KeptNewTap =
+        when {
+            !kept -> KeptNewTap.Wait
+            !onTappedPage -> KeptNewTap.Drop
+            opening == null -> KeptNewTap.Open
+            opening == ChatsOpeningPhase.Failed -> KeptNewTap.Refuse
+            else -> KeptNewTap.Wait
+        }
+}
+
 /** Where a kept tap's wait stands, for [KeptTapRules.limitSpent]. */
 public enum class KeptWait {
     /** Kept, and nothing in progress: the time counts. */

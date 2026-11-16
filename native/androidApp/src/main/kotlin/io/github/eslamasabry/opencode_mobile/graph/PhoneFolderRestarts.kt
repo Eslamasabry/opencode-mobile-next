@@ -43,9 +43,13 @@ internal class PhoneFolderRestarts(
     /** [path]: the folder chosen; null when not known (then only [chosen] restarts). */
     suspend fun restart(chosen: PhoneFolderSide, path: String?): Outcome<Unit> {
         val other = if (chosen == PhoneFolderSide.Server) PhoneFolderSide.Agents else PhoneFolderSide.Server
+        val otherMisses = path != null && misses(other, path)
+        // A reply running on OpenCode is known now, not after the agents' restart (about half a minute): the page
+        // must be able to say that OpenCode waits while the agents restart, not when that is already over.
+        if (otherMisses && other == PhoneFolderSide.Server && serverBusy()) later(other)
         val first = restartSide(chosen, chosenSide = true)
         if (first is Outcome.Failed) return first
-        if (path != null && misses(other, path)) restartSide(other, chosenSide = false)
+        if (otherMisses && other !in mutableWaiting.value) restartSide(other, chosenSide = false)
         return Outcome.Ok(Unit)
     }
 

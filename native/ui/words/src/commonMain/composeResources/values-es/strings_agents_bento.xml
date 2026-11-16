@@ -33,7 +33,6 @@
     <string name="agentsInstallFailedNotStarted">%1$s se descargó, pero no arrancó en este teléfono, así que no se pudo comprobar su versión. Inténtalo de nuevo; si vuelve a pasar, en Detalles está lo que informó el teléfono.</string>
     <string name="agentsInstallFailedWithdrawn">No se pudo instalar %1$s: la versión %2$s, la que instala esta app, ya no se ofrece para descargar. Intentarlo de nuevo no lo cambiará; una actualización de esta app sí.</string>
     <string name="agentsStateSignInUnchecked">Instalado, pero esta app aún no puede comprobar su inicio de sesión</string>
-    <string name="agentsStateSignInCheckFailed">No se pudo comprobar el inicio de sesión. Intenta iniciar sesión de nuevo.</string>
     <string name="agentsSignInUncheckedBody">Aún no se puede usar en conversaciones. Puedes quitarlo.</string>
     <string name="agentsStateSetUpAtFirstUse">Instalado. Configúralo la primera vez que lo uses.</string>
     <string name="agentsChipSetUp">Configurar</string>
@@ -49,4 +48,7 @@
     <string name="agentsUpdateRefused">la actualización de agentes no pudo empezar, usa Instalar en el agente</string>
     <string name="agentsUpdateUpdated">%1$s actualizado</string>
     <string name="agentsUpdateNeedsSignIn">%1$s necesita que inicies sesión</string>
+    <string name="agentsStateSignInNotConfirmed">Inicio de sesión sin confirmar</string>
+    <string name="agentsSignInNotConfirmedBody">La app no pudo confirmar si %1$s tiene la sesión iniciada. Al comprobar de nuevo se le pregunta a %1$s ahora.</string>
+    <string name="agentsCheckSignInAgain">Comprobar %1$s de nuevo</string>
 </resources>
