@@ -39,7 +39,6 @@ SEC301-HOST-CATALOGUE | K-SEC-10 | K-SEC-10 feature/servers/src/commonMain/kotli
 SEC301-HOST-CATALOGUE | K-SEC-10 | K-SEC-10 feature/servers/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/servers/ui/TailscaleSetupSheet.kt computer.tailnet-name.ts.net is not in KnownHosts | 1
 SEC301-HOST-CATALOGUE | K-SEC-10 | K-SEC-10 feature/settings/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/settings/presentation/VoiceLicenses.kt github.com is not in KnownHosts | 3
 SEC301-HOST-CATALOGUE | K-SEC-10 | K-SEC-10 feature/settings/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/settings/presentation/VoiceLicenses.kt huggingface.co is not in KnownHosts | 1
-SEC301-SECURE-REPORT-ID | K-SEC-12 | K-SEC-12 engine/analytics/src/commonMain/kotlin/io/github/eslamasabry/oc/engine/analytics/health/Telemetry.kt import kotlin.random.Random | 1
 SEC301-TLS-INSPECTOR | K-SEC-2 | K-SEC-2 androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/ServerEditorWiring.kt X509TrustManager | 2
 SEC301-REVEAL-BOUNDARIES | K-SEC-4 | K-SEC-4 android/migration/src/main/kotlin/io/github/eslamasabry/oc/android/migration/steps/M2Secrets.kt Secret.reveal() outside secret-reveal-allowlist.txt | 2
 SEC301-NONCREDENTIAL-IDS | K-SEC-4 | K-SEC-4 android/notifications/src/main/kotlin/io/github/eslamasabry/oc/android/notifications/Alerts.kt CodingAlert.actionToken: String must be Secret | 1
@@ -52,7 +51,7 @@ SEC301-NONCREDENTIAL-IDS | K-SEC-4 | K-SEC-4 android/widgets/src/main/kotlin/io/
 SEC301-NONCREDENTIAL-IDS | K-SEC-4 | K-SEC-4 androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/LinuxBackupWiring.kt Chosen.token: String must be Secret | 1
 SEC301-REVEAL-BOUNDARIES | K-SEC-4 | K-SEC-4 androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/ServerEditorWiring.kt Secret.reveal() outside secret-reveal-allowlist.txt | 1
 SEC301-NONCREDENTIAL-IDS | K-SEC-4 | K-SEC-4 engine/attention/src/commonMain/kotlin/io/github/eslamasabry/oc/engine/attention/WidgetActionIngress.kt WidgetActionRequest.scopeToken: String must be Secret | 1
-SEC301-NONCREDENTIAL-IDS | K-SEC-4 | K-SEC-4 engine/attention/src/commonMain/kotlin/io/github/eslamasabry/oc/engine/attention/monitor/MonitorPorts.kt MonitorProfile.credential: String must be Secret | 1
+SEC301-OPAQUE-CREDENTIALS | K-SEC-4 | K-SEC-4 engine/attention/src/commonMain/kotlin/io/github/eslamasabry/oc/engine/attention/monitor/MonitorPorts.kt MonitorProfile.credential: String must be Secret | 1
 SEC301-OPAQUE-CREDENTIALS | K-SEC-4 | K-SEC-4 engine/attention/src/commonMain/kotlin/io/github/eslamasabry/oc/engine/attention/monitor/MonitorPorts.kt MonitorProfile.teamEngineToken: String must be Secret | 1
 SEC301-NONCREDENTIAL-IDS | K-SEC-4 | K-SEC-4 engine/entry/src/commonMain/kotlin/io/github/eslamasabry/oc/engine/entry/EntryDecision.kt VerifyQuotaToken.token: String must be Secret | 1
 SEC301-NONCREDENTIAL-IDS | K-SEC-4 | K-SEC-4 engine/integrations-quota/src/commonMain/kotlin/io/github/eslamasabry/oc/engine/integrations/quota/CollectorRules.kt CollectorRule.token: String must be Secret | 1

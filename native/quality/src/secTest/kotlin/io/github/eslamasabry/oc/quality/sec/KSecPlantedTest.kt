@@ -123,6 +123,21 @@ class KSecPlantedTest {
     }
 
     @Test
+    fun `K-SEC-7 current installer contract rejects an implicit exported or non-session receiver`() {
+        val path = "android/tiles/src/main/kotlin/io/github/eslamasabry/oc/android/tiles/updates/AndroidUpdates.kt"
+        val manifestPath = "android/tiles/src/main/AndroidManifest.xml"
+        val source = java.io.File(Live.root, path).readText()
+        val manifest = java.io.File(Live.root, manifestPath).readText()
+        fun findings(code: String = source, xml: String = manifest) =
+            SecTextRules.kSec7(listOf(SecFile(path, code), SecFile(manifestPath, xml)), liveConfig)
+        assertClean(findings(), "current explicit non-exported session receiver")
+        kotlin.test.assertTrue(findings(source.replace("Intent().setClassName(app, STATUS_RECEIVER)", "Intent()" )).isNotEmpty())
+        kotlin.test.assertTrue(findings(source.replace("                        sessionId,", "                        0,")).isNotEmpty())
+        kotlin.test.assertTrue(findings(xml = manifest.replace("android:exported=\"false\"", "android:exported=\"true\"")).isNotEmpty())
+        kotlin.test.assertTrue(findings(source.replace("USER_ACTION_REQUIRED", "USER_ACTION_NOT_REQUIRED")).isNotEmpty())
+    }
+
+    @Test
     fun `K-SEC-8 planted parseUri, getIntent and a relaunched extra intent fail`() {
         val t = Planted()
             .file("androidApp/$am/Entry.kt", """

@@ -142,7 +142,7 @@ if lane.split(' ')[0] in ('fast', 'full'):
         if env(key) in (None, '', 'skipped', 'cancelled'):
             integrity.append(f'{label}: the job did not run in a {lane.split(" ")[0]} lane run (did the plan job fail?)')
 for s in shards:
-    if s.get('job_status') == 'failure' or s.get('pick_outcome') in ('failure', 'skipped', 'cancelled'):
+    if (s.get('job_status') == 'failure' and not s.get('gradle_ran')) or s.get('pick_outcome') in ('failure', 'skipped', 'cancelled'):
         integrity.append(f'{s["name"]}: the shard job did not get as far as running Gradle (setup {s.get("pick_outcome") or "unknown"}, job {s.get("job_status") or "unknown"})')
     elif s.get('planned') and not s.get('gradle_ran', True):
         integrity.append(f'{s["name"]}: Gradle never ran although {len(s["planned"])} task(s) were planned (no task or BUILD line in the log)')

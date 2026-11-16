@@ -13,8 +13,8 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 PKG = 'io.github.eslamasabry.oc'
 
 
-def junit(root, module, cls, failing=()):
-    d = os.path.join(root, module, 'build', 'test-results', 'desktopTest')
+def junit(root, module, cls, failing=(), suite="desktopTest"):
+    d = os.path.join(root, module, 'build', 'test-results', suite)
     os.makedirs(d, exist_ok=True)
     cases = ''.join(f'<testcase name="{n}" classname="{cls}"><failure message="boom">x</failure></testcase>' for n in failing)
     cases += f'<testcase name="passes" classname="{cls}"/>'
@@ -163,6 +163,30 @@ class SecurityGate(unittest.TestCase):
         self.assertIn("'security': security", workflow)
         release = open(os.path.join(root, 'scripts/native-release.sh')).read()
         self.assertIn(':quality:test :quality:secTest -Poc.mergedManifest=required', release)
+
+
+class SecurityReport(unittest.TestCase):
+    def report(self, status='', tasks=':quality:secTest', xml=True):
+        with tempfile.TemporaryDirectory() as tmp:
+            if xml:
+                junit(tmp, 'quality', 'p.SecurityTest', suite='secTest')
+            log = os.path.join(tmp, 'gradle.log')
+            open(log, 'w').write('> Task :quality:secTest' + (' ' + status if status else '') + '\n')
+            env = dict(os.environ, TASKS=tasks, GRADLE_LOG=log)
+            subprocess.run([sys.executable, '-I', os.path.join(HERE, 'test_report.py'), 'security', tmp],
+                           cwd=tmp, env=env, check=True, stdout=subprocess.DEVNULL)
+            return json.load(open(os.path.join(tmp, 'report-security.json')))['security']
+
+    def test_executed_nonempty_full_suite_is_recorded(self):
+        self.assertEqual(self.report(), {'executed': True, 'full': True, 'tests': 1, 'failed': 0, 'skipped': 0})
+
+    def test_cache_and_uptodate_cannot_claim_executed_security_tests(self):
+        self.assertFalse(self.report('FROM-CACHE')['executed'])
+        self.assertFalse(self.report('UP-TO-DATE')['executed'])
+
+    def test_filtered_suite_is_not_full_and_missing_xml_is_not_evidence(self):
+        self.assertFalse(self.report(tasks=':quality:secTest --tests p.OneTest')['full'])
+        self.assertEqual(self.report(xml=False)['tests'], 0)
 
 
 class OneTestAtATime(unittest.TestCase):

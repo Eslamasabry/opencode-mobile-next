@@ -12,7 +12,8 @@ import kotlin.concurrent.atomics.AtomicInt
 import kotlin.concurrent.atomics.AtomicReference
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
 import kotlin.concurrent.atomics.incrementAndFetch
-import kotlin.random.Random
+import io.github.eslamasabry.oc.engine.analytics.IdSource
+import io.github.eslamasabry.oc.engine.analytics.SecureIdSource
 import kotlin.time.Clock
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -221,7 +222,7 @@ public class TelemetryService(
     private var store: TelemetryConsentStore? = null,
     private var reports: TelemetryReportStore = MemoryTelemetryReportStore(),
     override val ring: AppLogRing = AppLogRing(),
-    private val random: Random = Random.Default,
+    private val reportIds: IdSource = SecureIdSource,
     private val wallClockMs: () -> Long = { Clock.System.now().toEpochMilliseconds() },
 ) : Telemetry {
     private val usageFlow = MutableStateFlow(early.usage)
@@ -403,7 +404,9 @@ public class TelemetryService(
         HEX8.find(fromVendor.orEmpty())?.let { return it.value }
         var local = reports.readLocalId()
         if (local == null || !HEX8.matches(local)) {
-            local = (1..8).joinToString("") { random.nextInt(16).toString(16) }
+            val fresh = reportIds.newId().lowercase().take(8)
+            if (!HEX8.matches(fresh)) return null
+            local = fresh
             reports.writeLocalId(local)
         }
         return local
