@@ -252,7 +252,10 @@ public class ChatPresenter(
         return combine(inputs, local, hits, world.hasOlder, extra) { i, l, h, _, _ ->
                 present(i, l, h)
             }
-            .stateIn(scope, started, ChatUi.loading(world.ref))
+            // The page's first frame shows what the world already holds (kept rows, a message on its way, the title),
+            // never a loading state it would leave a frame later (open-transitions: the combine's first value arrives
+            // after the first frame is drawn).
+            .stateIn(scope, started, current())
     }
 
     /**
@@ -451,8 +454,11 @@ public class ChatPresenter(
               ),
             phase =
                 when (val load = i.load) {
-                    // Cache-first: known rows draw the real transcript while the live read is on its way.
-                    ChatLoad.Loading -> if (t.rows.isNotEmpty()) ChatPhase.Live else ChatPhase.Loading
+                    // Cache-first: known rows draw the real transcript while the live read is on its way. So do the
+                    // person's own messages on their way (open-transitions: a conversation just started from New
+                    // conversation opened on a skeleton of made-up turns instead of the message just typed): the
+                    // skeleton is only for a conversation of which nothing is known.
+                    ChatLoad.Loading -> if (t.rows.isNotEmpty() || pending.isNotEmpty()) ChatPhase.Live else ChatPhase.Loading
                     ChatLoad.Live -> ChatPhase.Live
                     is ChatLoad.Failed ->
                         if (kept != null) ChatPhase.Live else ChatPhase.Failed(load.failure, loadAgent())

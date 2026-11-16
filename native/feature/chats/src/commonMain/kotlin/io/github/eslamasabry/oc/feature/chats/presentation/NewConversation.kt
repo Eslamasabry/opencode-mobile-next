@@ -1947,15 +1947,21 @@ public class NewConversationViewModel(
                 }
                 // A screen left lower in the stack starts the next conversation afresh.
                 attempt = null
+                // Open-transitions (S22 recording): a form the opened conversation covers keeps its starting frame. It
+                // went back to its box, which takes focus whenever it comes into the page, while it was still drawn
+                // under the arriving conversation: the keyboard came up over the conversation and dropped again as the
+                // form left. It never becomes usable again (it steps off when the conversation closes), so its box is
+                // never put back.
+                val covered = openedConversation != null
                 mutable.update {
                     it.copy(
                         // Preserve the saved first prompt until its receipt is confirmed. Never
                         // insert it into the chat editor, where Send could duplicate it.
                         text = if (result.dispatched) "" else it.text,
                         textRevision = it.textRevision + 1,
-                        busy = false,
+                        busy = covered,
                         attempted = !result.dispatched,
-                        openingChat = false,
+                        openingChat = covered,
                         deliveryUnconfirmed = result.deliveryUnconfirmed,
                         reviewConversation = result.ref.takeIf { result.deliveryUnconfirmed },
                     )
