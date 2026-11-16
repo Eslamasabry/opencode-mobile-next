@@ -3,7 +3,6 @@ package io.github.eslamasabry.oc.feature.chats.rb.o41
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.SemanticsActions
-import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.hasText
@@ -78,12 +77,7 @@ class ChatsHomeHeaderCompactTest {
         val layouts = mutableListOf<TextLayoutResult>()
         label.performSemanticsAction(SemanticsActions.GetTextLayoutResult) { it(layouts) }
         val name = layouts.single()
-        val chipWidths = listOf("All projects", "All connections", "Running").associateWith { text ->
-            var node = onNodeWithText(text, useUnmergedTree = true).fetchSemanticsNode()
-            while (node.config.getOrNull(SemanticsActions.OnClick) == null && node.parent != null) node = node.parent!!
-            node.size.width
-        }
-        val numbers = "$width/text$scale pill=${(pill.right - pill.left).value} line=${(line.right - line.left).value} cues=${cues.size} name=${name.size.width} ellipsis=${name.isLineEllipsized(0)} chips=$chipWidths"
+        val numbers = "$width/text$scale pill=${(pill.right - pill.left).value} line=${(line.right - line.left).value} cues=${cues.size} name=${name.size.width} ellipsis=${name.isLineEllipsized(0)}"
         println("COMPACT-030 $numbers")
         assertTrue(cues.isNotEmpty(), "$numbers: +N must be visible, never the plain-scroll fallback")
         for (cue in cues) {
