@@ -254,13 +254,7 @@ public fun KitFilterChips(
             .layout { measurable, constraints ->
                 line.roomPx = if (constraints.hasBoundedWidth) constraints.maxWidth - startPad.roundToPx() else 0
                 val placeable = measurable.measure(constraints)
-                var width = placeable.width
-                if (whole && constraints.hasBoundedWidth) {
-                    val edge = FilterChipsRules.wholeEnd(line.sizes, line.gapPx, startPad.toPx(), scroll.value.toFloat(), width.toFloat())
-                    line.more = edge < width.toFloat() - .5f
-                    width = edge.roundToInt().coerceIn(0, width)
-                }
-                layout(width, placeable.height) { placeable.place(0, 0) }
+                layout(placeable.width, placeable.height) { placeable.place(0, 0) }
             }
             .clipToBounds()
             .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
@@ -268,7 +262,7 @@ public fun KitFilterChips(
                 drawContent()
                 if (whole && line.more) {
                     // More chips lie past the last whole one: its end thins out, the cue that the line goes on.
-                    val fade = minOf(FilterChipsRules.CHIP_FADE_DP.dp.toPx(), size.width)
+                    val fade = minOf(16.dp.toPx(), size.width)
                     drawRect(
                         edgeMask(size.width - fade, size.width, fade * FilterChipsRules.CLEAR_PART, clearAtStart = false),
                         Offset(size.width - fade, 0f), Size(fade, size.height), blendMode = BlendMode.DstIn,
@@ -298,6 +292,18 @@ public fun KitFilterChips(
                         Size(right, size.height),
                         blendMode = BlendMode.DstIn,
                     )
+            }
+            // Inside the clip and the fade: a line that rests whole is cut to the end of its last whole chip, so the clip,
+            // the fade and the guard all see that edge (a chip past it is simply not shown).
+            .layout { measurable, constraints ->
+                val placeable = measurable.measure(constraints)
+                var width = placeable.width
+                if (whole && constraints.hasBoundedWidth) {
+                    val edge = FilterChipsRules.wholeEnd(line.sizes, line.gapPx, startPad.toPx(), scroll.value.toFloat(), width.toFloat())
+                    line.more = edge < width.toFloat() - .5f
+                    width = edge.roundToInt().coerceIn(0, width)
+                }
+                layout(width, placeable.height) { placeable.place(0, 0) }
             }
             .testTag("kit-filter-chips"),
     ) {
