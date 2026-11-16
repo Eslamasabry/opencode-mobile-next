@@ -20,10 +20,14 @@ class NotFoundTombstoneTest {
     @Test
     fun `B-STATE-107 startup retry rechecks a session listed after its early NotFound`() = runTest {
         val gateway = FakeServerGateway()
-        val reads = ConnectionReads(gateway, ConnectionCoroutineScope(backgroundScope.coroutineContext))
+        val reads =
+            ConnectionReads(gateway, ConnectionCoroutineScope(backgroundScope.coroutineContext))
         assertIs<Failure.NotFound>(assertIs<Outcome.Failed>(reads.session(id)).failure)
         gateway.sessionList = persistentListOf(Session(id))
-        assertEquals(id, assertIs<Outcome.Ok<ServerPage<Session>>>(gateway.sessionPage()).value.items.single().id)
+        assertEquals(
+            id,
+            assertIs<Outcome.Ok<ServerPage<Session>>>(gateway.sessionPage()).value.items.single().id,
+        )
         reads.unforget(id)
         assertEquals(id, assertIs<Outcome.Ok<Session>>(reads.session(id)).value.id)
         assertTrue(reads.missing.value.isEmpty())
@@ -32,7 +36,8 @@ class NotFoundTombstoneTest {
     @Test
     fun `B-STATE-107 startup retry rechecks history after its early NotFound`() = runTest {
         val gateway = FakeServerGateway()
-        val reads = ConnectionReads(gateway, ConnectionCoroutineScope(backgroundScope.coroutineContext))
+        val reads =
+            ConnectionReads(gateway, ConnectionCoroutineScope(backgroundScope.coroutineContext))
         gateway.failNext = Failure.NotFound()
         assertIs<Failure.NotFound>(assertIs<Outcome.Failed>(reads.tail(id)).failure)
         gateway.sessionList = persistentListOf(Session(id))
@@ -43,29 +48,37 @@ class NotFoundTombstoneTest {
     }
 
     @Test
-    fun `B-STATE-107 a connected server with its list read keeps an authoritative NotFound without startup retry`() = runTest {
-        val gateway = FakeServerGateway()
-        gateway.events.connect()
-        assertIs<Outcome.Ok<ServerPage<Session>>>(gateway.sessionPage())
-        val reads = ConnectionReads(gateway, ConnectionCoroutineScope(backgroundScope.coroutineContext))
-        assertIs<Failure.NotFound>(assertIs<Outcome.Failed>(reads.session(id)).failure)
-        gateway.sessionList = persistentListOf(Session(id))
-        assertIs<Failure.NotFound>(assertIs<Outcome.Failed>(reads.session(id, fresh = true)).failure)
-        assertIs<Failure.NotFound>(assertIs<Outcome.Failed>(reads.tail(id)).failure)
-        assertEquals(1, gateway.calls.count { it == "session ${id.raw}" })
-    }
+    fun `B-STATE-107 a connected server with its list read keeps an authoritative NotFound without startup retry`() =
+        runTest {
+            val gateway = FakeServerGateway()
+            gateway.events.connect()
+            assertIs<Outcome.Ok<ServerPage<Session>>>(gateway.sessionPage())
+            val reads =
+                ConnectionReads(gateway, ConnectionCoroutineScope(backgroundScope.coroutineContext))
+            assertIs<Failure.NotFound>(assertIs<Outcome.Failed>(reads.session(id)).failure)
+            gateway.sessionList = persistentListOf(Session(id))
+            assertIs<Failure.NotFound>(
+                assertIs<Outcome.Failed>(reads.session(id, fresh = true)).failure
+            )
+            assertIs<Failure.NotFound>(assertIs<Outcome.Failed>(reads.tail(id)).failure)
+            assertEquals(1, gateway.calls.count { it == "session ${id.raw}" })
+        }
 
     @Test
-    fun `B-STATE-107 a confirmed remote deletion cannot be undone by startup retry or a late page`() = runTest {
-        val gateway = FakeServerGateway(listOf(Session(id)))
-        gateway.events.connect()
-        assertIs<Outcome.Ok<ServerPage<Session>>>(gateway.sessionPage())
-        val reads = ConnectionReads(gateway, ConnectionCoroutineScope(backgroundScope.coroutineContext))
-        assertIs<Outcome.Ok<Session>>(reads.session(id))
-        reads.forget(id)
-        reads.unforget(id)
-        assertIs<Failure.NotFound>(assertIs<Outcome.Failed>(reads.session(id, fresh = true)).failure)
-        assertIs<Failure.NotFound>(assertIs<Outcome.Failed>(reads.tail(id)).failure)
-        assertTrue(id in reads.missing.value)
-    }
+    fun `B-STATE-107 a confirmed remote deletion cannot be undone by startup retry or a late page`() =
+        runTest {
+            val gateway = FakeServerGateway(listOf(Session(id)))
+            gateway.events.connect()
+            assertIs<Outcome.Ok<ServerPage<Session>>>(gateway.sessionPage())
+            val reads =
+                ConnectionReads(gateway, ConnectionCoroutineScope(backgroundScope.coroutineContext))
+            assertIs<Outcome.Ok<Session>>(reads.session(id))
+            reads.forget(id)
+            reads.unforget(id)
+            assertIs<Failure.NotFound>(
+                assertIs<Outcome.Failed>(reads.session(id, fresh = true)).failure
+            )
+            assertIs<Failure.NotFound>(assertIs<Outcome.Failed>(reads.tail(id)).failure)
+            assertTrue(id in reads.missing.value)
+        }
 }

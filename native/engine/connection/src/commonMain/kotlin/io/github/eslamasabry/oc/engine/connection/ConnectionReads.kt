@@ -53,7 +53,7 @@ public class ConnectionReads(
     }
 
     /** Allows the chat's bounded startup retry to recheck a read-only NotFound. */
-    public fun unforget(session: SessionId) = Unit
+    public suspend fun unforget(session: SessionId) {}
 
     public fun close() {
         closed.store(true)

@@ -54,11 +54,12 @@ import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 
 /**
- * Agent-open-flash (owner's phone, build 10059): opening a saved Antigravity conversation while the agents' helper or
- * the agent was still starting showed "Couldn't open this conversation" with Set up Antigravity, which then went away
- * by itself. The helper's dropped socket or error answer reached the chat as ComputerDidNotAnswer, which the wait did
- * not count. Every load the world publishes is recorded: the presenter shows ChatPhase.Failed exactly for
- * ChatLoad.Failed when nothing is kept (ChatPresenter's phase), so a Failed load never published is a page never shown.
+ * Agent-open-flash (owner's phone, build 10059): opening a saved Antigravity conversation while the
+ * agents' helper or the agent was still starting showed "Couldn't open this conversation" with Set
+ * up Antigravity, which then went away by itself. The helper's dropped socket or error answer
+ * reached the chat as ComputerDidNotAnswer, which the wait did not count. Every load the world
+ * publishes is recorded: the presenter shows ChatPhase.Failed exactly for ChatLoad.Failed when
+ * nothing is kept (ChatPresenter's phase), so a Failed load never published is a page never shown.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class AgentOpenFlashTest {
@@ -75,7 +76,10 @@ class AgentOpenFlashTest {
             null,
         )
 
-    /** The agents' helper of this phone, as the chat sees it: started by the app, its wait state the app's own. */
+    /**
+     * The agents' helper of this phone, as the chat sees it: started by the app, its wait state the
+     * app's own.
+     */
     private class Agents : ChatPhoneServer {
         val wait = MutableStateFlow(PhoneServerWait.None)
 
@@ -88,7 +92,10 @@ class AgentOpenFlashTest {
         override fun waiting(profile: ProfileId): StateFlow<PhoneServerWait> = wait
     }
 
-    /** The helper answers the history read with [failures] first (the last one for good if [forever]), then history. */
+    /**
+     * The helper answers the history read with [failures] first (the last one for good if
+     * [forever]), then history.
+     */
     private class ScriptedHistory(
         val base: FakeServerGateway,
         val failures: ArrayDeque<Failure>,
@@ -96,9 +103,15 @@ class AgentOpenFlashTest {
     ) : ServerGateway by base {
         var reads = 0
 
-        override suspend fun messagePage(id: SessionId, cursor: String?, limit: Int): Outcome<ServerPage<MessageWithParts>> {
+        override suspend fun messagePage(
+            id: SessionId,
+            cursor: String?,
+            limit: Int,
+        ): Outcome<ServerPage<MessageWithParts>> {
             reads++
-            val next = if (forever && failures.size == 1) failures.first() else failures.removeFirstOrNull()
+            val next =
+                if (forever && failures.size == 1) failures.first()
+                else failures.removeFirstOrNull()
             return next?.let { Outcome.Failed(it) } ?: base.messagePage(id, cursor, limit)
         }
     }
@@ -124,11 +137,14 @@ class AgentOpenFlashTest {
                     override val profile = p
                     override val scope = scope
                     override val session = ConnectionSession(p, pair.live, scope)
-                    override val chatDelivery = ConnectionDelivery(pair.live, p, scope, clock, emptySet(), dispatchers)
-                    override val chatRequests = ConnectionRequests(pair.live, scope, dispatchers, clock)
+                    override val chatDelivery =
+                        ConnectionDelivery(pair.live, p, scope, clock, emptySet(), dispatchers)
+                    override val chatRequests =
+                        ConnectionRequests(pair.live, scope, dispatchers, clock)
                     override val chatGateway = pair.live
                     override val chatOperations = pair.operations
-                    override val transcriptEngine = TranscriptEngine(pair.live, dispatchers, clock, scope)
+                    override val transcriptEngine =
+                        TranscriptEngine(pair.live, dispatchers, clock, scope)
                 }
             },
             app,
@@ -136,7 +152,8 @@ class AgentOpenFlashTest {
         )
     }
 
-    private fun base() = FakeServerGateway(listOf(Session(ref.sessionId, time = SessionTime(idleMs = 20))))
+    private fun base() =
+        FakeServerGateway(listOf(Session(ref.sessionId, time = SessionTime(idleMs = 20))))
 
     private suspend fun TestScope.open(
         gateway: ServerGateway,
@@ -157,7 +174,8 @@ class AgentOpenFlashTest {
         runTest {
             val base = base()
             base.events.connect()
-            // Helper down: the history read finds its socket gone (Paseo Disconnected → ComputerDidNotAnswer).
+            // Helper down: the history read finds its socket gone (Paseo Disconnected →
+            // ComputerDidNotAnswer).
             val gateway = ScriptedHistory(base, ArrayDeque(listOf(Failure.ComputerDidNotAnswer())))
             val seen = mutableListOf<ChatLoad>()
             val world = open(gateway, Agents(), seen)
@@ -176,7 +194,12 @@ class AgentOpenFlashTest {
         runTest {
             val agents = Agents()
             agents.wait.value = PhoneServerWait.Starting
-            val gateway = ScriptedHistory(base(), ArrayDeque(listOf<Failure>(Failure.NotFound())), forever = true)
+            val gateway =
+                ScriptedHistory(
+                    base(),
+                    ArrayDeque(listOf<Failure>(Failure.NotFound())),
+                    forever = true,
+                )
             val seen = mutableListOf<ChatLoad>()
             val world = open(gateway, agents, seen)
             advanceTimeBy(30_000)
@@ -193,28 +216,39 @@ class AgentOpenFlashTest {
         }
 
     @Test
-    fun `B-STATE-107 a late-listed helper conversation opens on the same connection before its first connect`() = runTest {
-        lateListed(connectFirst = false)
-    }
+    fun `B-STATE-107 a late-listed helper conversation opens on the same connection before its first connect`() =
+        runTest {
+            lateListed(connectFirst = false)
+        }
 
     @Test
-    fun `B-STATE-107 a connected helper still starting opens a late-listed conversation on its existing retry`() = runTest {
-        lateListed(connectFirst = true)
-    }
+    fun `B-STATE-107 a connected helper still starting opens a late-listed conversation on its existing retry`() =
+        runTest {
+            lateListed(connectFirst = true)
+        }
 
     private suspend fun TestScope.lateListed(connectFirst: Boolean) {
         val base = FakeServerGateway()
         if (connectFirst) base.events.connect()
         val gateway = ScriptedHistory(base, ArrayDeque(listOf<Failure>(Failure.NotFound())))
+        // Detail lookup can answer while the agent's timeline is not attached yet.
+        val lateGateway =
+            object : ServerGateway by gateway {
+                override suspend fun session(id: SessionId): Outcome<Session> =
+                    Outcome.Ok(Session(id))
+            }
         val agents = Agents()
         agents.wait.value = PhoneServerWait.Starting
         val seen = mutableListOf<ChatLoad>()
-        val world = open(gateway, agents, seen)
+        val world = open(lateGateway, agents, seen)
         assertEquals(ChatLoad.Loading, world.load.value)
         assertEquals(1, gateway.reads)
         // The helper finishes listing after the early 404, on this same gateway and graph.
         base.sessionList = persistentListOf(Session(ref.sessionId, time = SessionTime(idleMs = 20)))
-        assertEquals(ref.sessionId, assertIs<Outcome.Ok<ServerPage<Session>>>(gateway.sessionPage()).value.items.single().id)
+        assertEquals(
+            ref.sessionId,
+            assertIs<Outcome.Ok<ServerPage<Session>>>(gateway.sessionPage()).value.items.single().id,
+        )
         agents.wait.value = PhoneServerWait.None
         advanceTimeBy(2_500)
         runCurrent()
@@ -225,23 +259,29 @@ class AgentOpenFlashTest {
     }
 
     @Test
-    fun `B-STATE-107 a fully up helper with its list read keeps an authoritative NotFound`() = runTest {
-        val base = base()
-        base.events.connect()
-        assertIs<Outcome.Ok<ServerPage<Session>>>(base.sessionPage())
-        val gateway = ScriptedHistory(base, ArrayDeque(listOf<Failure>(Failure.NotFound())), forever = true)
-        val seen = mutableListOf<ChatLoad>()
-        val world = open(gateway, Agents(), seen)
-        advanceTimeBy(2_500)
-        runCurrent()
-        assertEquals(ChatLoad.Failed(Failure.NotFound()), world.load.value)
-        val reads = gateway.reads
-        advanceTimeBy(10_000)
-        runCurrent()
-        assertEquals(ChatLoad.Failed(Failure.NotFound()), world.load.value)
-        assertEquals(reads, gateway.reads)
-        world.detach()
-    }
+    fun `B-STATE-107 a fully up helper with its list read keeps an authoritative NotFound`() =
+        runTest {
+            val base = base()
+            base.events.connect()
+            assertIs<Outcome.Ok<ServerPage<Session>>>(base.sessionPage())
+            val gateway =
+                ScriptedHistory(
+                    base,
+                    ArrayDeque(listOf<Failure>(Failure.NotFound())),
+                    forever = true,
+                )
+            val seen = mutableListOf<ChatLoad>()
+            val world = open(gateway, Agents(), seen)
+            advanceTimeBy(2_500)
+            runCurrent()
+            assertEquals(ChatLoad.Failed(Failure.NotFound()), world.load.value)
+            val reads = gateway.reads
+            advanceTimeBy(10_000)
+            runCurrent()
+            assertEquals(ChatLoad.Failed(Failure.NotFound()), world.load.value)
+            assertEquals(reads, gateway.reads)
+            world.detach()
+        }
 
     @Test
     fun `AOF-003 an agent that needs a sign-in shows its state at once, with no wait`() = runTest {
@@ -256,58 +296,71 @@ class AgentOpenFlashTest {
     }
 
     @Test
-    fun `AOF-004 a helper that never answers ends the bounded wait in the failure page, which then stays`() = runTest {
-        val base = base()
-        base.events.connect()
-        val gateway =
-            ScriptedHistory(base, ArrayDeque(listOf<Failure>(Failure.ComputerDidNotAnswer())), forever = true)
-        val seen = mutableListOf<ChatLoad>()
-        val world = open(gateway, Agents(), seen)
-        advanceTimeBy(60_000)
-        runCurrent()
-        assertEquals(ChatLoad.Loading, world.load.value)
-        assertTrue(seen.none { it is ChatLoad.Failed }, "shown within the wait: $seen")
-        advanceTimeBy(40_000)
-        runCurrent()
-        assertIs<ChatLoad.Failed>(world.load.value)
-        val shownAt = seen.size
-        advanceTimeBy(120_000)
-        runCurrent()
-        assertIs<ChatLoad.Failed>(world.load.value)
-        assertEquals(shownAt, seen.size, "the failure page changed by itself: $seen")
-        world.detach()
-    }
+    fun `AOF-004 a helper that never answers ends the bounded wait in the failure page, which then stays`() =
+        runTest {
+            val base = base()
+            base.events.connect()
+            val gateway =
+                ScriptedHistory(
+                    base,
+                    ArrayDeque(listOf<Failure>(Failure.ComputerDidNotAnswer())),
+                    forever = true,
+                )
+            val seen = mutableListOf<ChatLoad>()
+            val world = open(gateway, Agents(), seen)
+            advanceTimeBy(60_000)
+            runCurrent()
+            assertEquals(ChatLoad.Loading, world.load.value)
+            assertTrue(seen.none { it is ChatLoad.Failed }, "shown within the wait: $seen")
+            advanceTimeBy(40_000)
+            runCurrent()
+            assertIs<ChatLoad.Failed>(world.load.value)
+            val shownAt = seen.size
+            advanceTimeBy(120_000)
+            runCurrent()
+            assertIs<ChatLoad.Failed>(world.load.value)
+            assertEquals(shownAt, seen.size, "the failure page changed by itself: $seen")
+            world.detach()
+        }
 
     @Test
-    fun `AOF-005 a failure answered right before a success never crosses Loading to Failed to Live`() = runTest {
-        val base = base()
-        base.events.connect()
-        // Fully up, the helper answers a real failure, and a read already on its way succeeds a moment later.
-        val gateway = ScriptedHistory(base, ArrayDeque(listOf<Failure>(Failure.UnreadableReply())))
-        val seen = mutableListOf<ChatLoad>()
-        val world = open(gateway, Agents(), seen)
-        advanceTimeBy(100)
-        world.reload()
-        runCurrent()
-        assertEquals(ChatLoad.Live, world.load.value)
-        assertTrue(seen.none { it is ChatLoad.Failed }, "shown: $seen")
-        world.detach()
-    }
+    fun `AOF-005 a failure answered right before a success never crosses Loading to Failed to Live`() =
+        runTest {
+            val base = base()
+            base.events.connect()
+            // Fully up, the helper answers a real failure, and a read already on its way succeeds a
+            // moment later.
+            val gateway =
+                ScriptedHistory(base, ArrayDeque(listOf<Failure>(Failure.UnreadableReply())))
+            val seen = mutableListOf<ChatLoad>()
+            val world = open(gateway, Agents(), seen)
+            advanceTimeBy(100)
+            world.reload()
+            runCurrent()
+            assertEquals(ChatLoad.Live, world.load.value)
+            assertTrue(seen.none { it is ChatLoad.Failed }, "shown: $seen")
+            world.detach()
+        }
 
     @Test
-    fun `AOF-006 a real answer from a helper that is fully up shows the failure page and it stays`() = runTest {
-        val base = base()
-        base.events.connect()
-        val gateway =
-            ScriptedHistory(base, ArrayDeque(listOf<Failure>(Failure.UnreadableReply())), forever = true)
-        val seen = mutableListOf<ChatLoad>()
-        val world = open(gateway, Agents(), seen)
-        advanceTimeBy(1_000)
-        runCurrent()
-        assertEquals(ChatLoad.Failed(Failure.UnreadableReply()), world.load.value)
-        advanceTimeBy(120_000)
-        runCurrent()
-        assertEquals(ChatLoad.Failed(Failure.UnreadableReply()), world.load.value)
-        world.detach()
-    }
+    fun `AOF-006 a real answer from a helper that is fully up shows the failure page and it stays`() =
+        runTest {
+            val base = base()
+            base.events.connect()
+            val gateway =
+                ScriptedHistory(
+                    base,
+                    ArrayDeque(listOf<Failure>(Failure.UnreadableReply())),
+                    forever = true,
+                )
+            val seen = mutableListOf<ChatLoad>()
+            val world = open(gateway, Agents(), seen)
+            advanceTimeBy(1_000)
+            runCurrent()
+            assertEquals(ChatLoad.Failed(Failure.UnreadableReply()), world.load.value)
+            advanceTimeBy(120_000)
+            runCurrent()
+            assertEquals(ChatLoad.Failed(Failure.UnreadableReply()), world.load.value)
+            world.detach()
+        }
 }
