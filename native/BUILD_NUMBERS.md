@@ -90,3 +90,4 @@ wiped (see Floor); they never come back and do not raise the floor.
 | 10058 | build | 2026-11-16 | release candidate for 3.0.0+10060 (supersedes 10057): the owner's build of the commit that records this number (helper autostart fix on top of 10057, release notes updated) |
 | 10059 | build | 2026-11-16 | final release candidate for 3.0.0+10060 (supersedes 10058): the owner's build of the commit that records this number (10058 + connecting-alive, schedules-migrate, server-refresh-metered, smoke script fix) |
 | 10061 | build | 2026-11-16 | final release candidate 2 for 3.0.0+10070 (supersedes 10059): the owner's build of the commit that records this number (10059 + launch-timeline, agent-open-flash, notes as 3.0.0+10070) |
+| 10062 | build | 2026-11-16 | owner's try build (branch native/speed-try, NOT the release candidate): 4af56a8082 + speed-a + speed-b, built from the commit that records this number |
