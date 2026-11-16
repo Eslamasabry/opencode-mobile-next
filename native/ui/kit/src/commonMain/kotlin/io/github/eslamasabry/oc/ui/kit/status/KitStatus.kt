@@ -37,6 +37,8 @@ public data class KitStatus(
     val dismissLabel: String? = null,
     val more: List<KitLineAction> = emptyList(),
     val icon: androidx.compose.ui.graphics.vector.ImageVector? = null,
+    /** The condition is a wait that ends by itself: the line shows the kit's working mark (still when motion is off) in place of its glyph. */
+    val working: Boolean = false,
 ) {
     /** Lower is more important. */
     val priority: Int

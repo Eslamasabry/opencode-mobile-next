@@ -1241,4 +1241,5 @@
     <string name="chatSendNoPlanMode">Tác nhân này không có chế độ kế hoạch nên chưa gửi gì. Tắt Kế hoạch để gửi ở chế độ riêng của tác nhân.</string>
     <string name="kitToolPlanStopped">Đã bị Kế hoạch dừng</string>
     <string name="chatStepPlanStopped">Chế độ kế hoạch đã chặn một thay đổi</string>
+    <string name="chatConnectingToAgent">Đang kết nối với %1$s…</string>
 </resources>

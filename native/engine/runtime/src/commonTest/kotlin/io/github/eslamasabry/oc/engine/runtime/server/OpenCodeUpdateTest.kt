@@ -22,7 +22,18 @@ class OpenCodeUpdateTest {
         switchPending: Boolean = false,
         installProblem: Boolean = false,
         attempted: Boolean = false,
-    ) = OpenCodeAutoUpdateRule.shouldUpdate(installed, pinned, busy, engineRunning, switchPending, installProblem, attempted)
+        metered: Boolean = false,
+    ) =
+        OpenCodeAutoUpdateRule.shouldUpdate(
+            installed,
+            pinned,
+            busy,
+            engineRunning,
+            switchPending,
+            installProblem,
+            attempted,
+            metered = metered,
+        )
 
     @Test
     fun `B-LINUX-078 up to date does nothing, with or without a leading v, and an unknown version does nothing`() {
@@ -42,7 +53,18 @@ class OpenCodeUpdateTest {
         assertFalse(decide(attempted = true))
     }
 
-    private class Host(var version: String?, override val pinnedVersion: String) : OpenCodeHostFacts {
+    @Test
+    fun `B-LINUX-078 a phone behind the pin waits for an unmetered network, as the agents' update does`() {
+        assertFalse(decide(metered = true), "metered or unknown network: wait")
+        assertTrue(decide(metered = false), "unmetered: run")
+        assertFalse(decide(installed = pinned, metered = false))
+    }
+
+    private class Host(
+        var version: String?,
+        override val pinnedVersion: String,
+        override var metered: Boolean = false,
+    ) : OpenCodeHostFacts {
         var refreshes = 0
         override suspend fun refresh() {
             refreshes++
@@ -99,6 +121,62 @@ class OpenCodeUpdateTest {
         jobs.failed = false
         updater.changed()
         assertEquals(1, jobs.runs.size)
+    }
+
+    @Test
+    fun `B-LINUX-079 on a metered network the automatic update waits and downloads nothing`() = runTest {
+        val jobs = Jobs()
+        val updater = OpenCodeAutoUpdater(Host("2.1.1", pinned, metered = true), jobs) { false }
+        repeat(3) { updater.changed() }
+        assertEquals(emptyList(), jobs.runs)
+    }
+
+    @Test
+    fun `B-LINUX-079 a network that cannot be read waits like a metered one`() = runTest {
+        // The binding reads an unreadable network as metered (the agents' update's own reading); the updater holds.
+        val logged = mutableListOf<String>()
+        val jobs = Jobs()
+        OpenCodeAutoUpdater(Host("2.1.1", pinned, metered = true), jobs, log = { logged += it }) { false }.changed()
+        assertEquals(emptyList(), jobs.runs)
+        assertTrue(logged.single().contains("metered=true"), logged.toString())
+        assertTrue(logged.single().endsWith("hold"), logged.toString())
+    }
+
+    @Test
+    fun `B-LINUX-079 on an unmetered network the automatic update runs`() = runTest {
+        val jobs = Jobs()
+        OpenCodeAutoUpdater(Host("2.1.1", pinned, metered = false), jobs) { false }.changed()
+        assertEquals(listOf("openCode2"), jobs.runs)
+    }
+
+    @Test
+    fun `B-LINUX-079 the phone becoming unmetered while the update waits runs it once`() = runTest {
+        val host = Host("2.1.1", pinned, metered = true)
+        val jobs = Jobs()
+        val updater = OpenCodeAutoUpdater(host, jobs) { false }
+        updater.changed()
+        updater.changed()
+        assertEquals(emptyList(), jobs.runs, "the wait does not spend the run's one try")
+        host.metered = false
+        updater.changed()
+        updater.changed()
+        host.metered = true
+        updater.changed()
+        host.metered = false
+        updater.changed()
+        assertEquals(listOf("openCode2"), jobs.runs)
+    }
+
+    @Test
+    fun `B-LINUX-079 the Update row runs on a metered network while the automatic update waits`() = runTest {
+        // The row (ThisPhoneModel Update -> PhoneSources.updateOpenCode) runs the same job with no network input;
+        // only the automatic look reads the network.
+        val jobs = Jobs()
+        val updater = OpenCodeAutoUpdater(Host("2.1.1", pinned, metered = true), jobs) { false }
+        updater.changed()
+        assertEquals(emptyList(), jobs.runs)
+        assertTrue(jobs.updateOpenCode("openCode2"))
+        assertEquals(listOf("openCode2"), jobs.runs)
     }
 
     // R7: the phone server restarts itself after an OpenCode update.
