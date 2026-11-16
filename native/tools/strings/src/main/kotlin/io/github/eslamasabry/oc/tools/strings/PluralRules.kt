@@ -12,13 +12,13 @@ object PluralRules {
 
     private fun lang(locale: String) = locale.substringBefore('_').substringBefore('-').lowercase()
 
-    fun isKnown(locale: String) = lang(locale) in setOf("en", "ar", "es", "pt", "fr", "ru", "ja", "zh", "vi", "id")
+    fun isKnown(locale: String) = lang(locale) in setOf("en", "ar", "es", "pt", "fr", "it", "ru", "ja", "zh", "vi", "id")
 
     /** The categories an integer can take in [locale], in CLDR order. */
     fun categories(locale: String): List<String> = when (lang(locale)) {
         "en" -> listOf(ONE, OTHER)
         "ar" -> ALL
-        "es", "pt", "fr" -> listOf(ONE, MANY, OTHER)
+        "es", "pt", "fr", "it" -> listOf(ONE, MANY, OTHER)
         "ru" -> listOf(ONE, FEW, MANY, OTHER) // `other` is only reachable with fractions; kept for safety.
         "ja", "zh", "vi", "id" -> listOf(OTHER)
         else -> throw IllegalArgumentException("No plural rules for locale \"$locale\"; add them to PluralRules")
@@ -40,7 +40,7 @@ object PluralRules {
                 }
             }
             "es" -> when { n == 1 -> ONE; n != 0 && n % 1_000_000 == 0 -> MANY; else -> OTHER }
-            "pt", "fr" -> when { n == 0 || n == 1 -> ONE; n != 0 && n % 1_000_000 == 0 -> MANY; else -> OTHER }
+            "pt", "fr", "it" -> when { n == 0 || n == 1 -> ONE; n != 0 && n % 1_000_000 == 0 -> MANY; else -> OTHER }
             "ru" -> {
                 val m10 = n % 10; val m100 = n % 100
                 when {

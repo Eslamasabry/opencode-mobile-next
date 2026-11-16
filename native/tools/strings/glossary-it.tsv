@@ -1,0 +1,91 @@
+# Glossary for it. kinds (tab separated):
+#  keep<TAB>term: the English term stays exactly as written wherever it appears
+#  term<TAB>english regex<TAB>target regex: when the English matches, the translation must match (case-insensitive)
+#  forbid<TAB>target regex<TAB>why: the translation must not match
+#  allow<TAB>word: an English word that may stay in the translation (names, units, standards)
+keep	OpenCode
+keep	AI Team
+keep	Gas City
+keep	Tailscale
+keep	Termux
+keep	Ubuntu
+keep	Android
+keep	Wi-Fi
+keep	GitHub
+keep	Codex
+keep	Claude
+keep	Gemma
+keep	Hugging Face
+keep	Shorebird
+keep	Gemini
+keep	Antigravity
+keep	SHA-256
+keep	Markdown
+keep	JSON
+keep	SSH
+keep	HTTPS
+keep	QR
+term	\bThis phone\b	Questo telefono
+term	\b[Cc]onversations?\b	conversazione|conversazioni
+term	\bTry again\b	Riprova|riprovare|Riprovare|riprova|riprovaci|riprovare
+term	\bSettings\b	Impostazioni
+term	\bServers?\b	server
+term	\bProjects?\b	progetto
+term	\b(?<!Claude )Agents?\b	agente
+term	^Files$	File
+term	^Cancel$	Annulla
+term	^Offline$	Senza connessione|Offline
+term	^Disconnect$	Disconnetti
+term	^Allow$	Consenti
+term	^Deny$	Nega|Rifiuta
+term	^Delete$	Elimina
+term	^Search$	Cerca|ricerca
+term	^Refresh$	Aggiorna
+term	^Model$	modello
+forbid	(?s)^(?!.*(?:accedi|accesso|autentic|credenz|connession|disconnession)).*\bsessioni?\b	say conversazione, not sessione (sign-in wording is fine)
+forbid	\bchats?\b(?!\.)	say conversazione, not chat
+allow	OK
+allow	Wi-Fi
+allow	Bluetooth
+allow	URL
+allow	API
+allow	SSH
+allow	QR
+allow	PDF
+allow	GB
+allow	MB
+allow	KB
+allow	Markdown
+allow	terminal
+allow	Terminal
+allow	offline
+allow	online
+allow	email
+allow	Email
+allow	Android
+allow	Linux
+allow	Git
+allow	git
+allow	Error
+allow	Constructor
+allow	Enum
+allow	Variable
+allow	Plan
+allow	Build
+allow	English
+allow	Inglese
+allow	Italiano
+allow	min
+allow	plan
+allow	server
+allow	File
+allow	Backup
+allow	Log
+allow	Diff
+allow	Host
+allow	Token
+allow	Root
+allow	Shell
+allow	Workflow
+allow	App
+allow	web
