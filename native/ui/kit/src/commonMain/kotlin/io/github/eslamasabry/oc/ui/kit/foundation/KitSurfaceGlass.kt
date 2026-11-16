@@ -150,9 +150,9 @@ private object Unset
  * - when the recorder lets go (it leaves, or its size changes): the pages still holding the picture are asked to draw
  *   again, and the first of them to draw takes the recording over in that draw;
  * - when the recorder stops drawing while it still holds the picture (a page kept composed under another, not drawn):
- *   every holder draws on each step of the picture, and a holder that finds the step not recorded yet takes the
- *   recording over, so the picture never stops stepping under the page on top;
- * - when a page's paint changes (a look, a theme, the strength): the first page to draw records the new paint.
+ *   every holder draws on each step of the picture; a holder that finds a step unrecorded and, on a later step, finds
+ *   that one never recorded either, takes the recording over, so the picture never stops stepping under the page on
+ *   top (it misses one step at most). A recorder that is only drawn later in the same frame keeps the recording.
  * The picture is released only when no page holds it.
  */
 internal class KitGlassPicture {
@@ -176,6 +176,9 @@ internal class KitGlassPicture {
 
     /** The picture's step ([KitGlassBackdrop.stepping]) the last recording was made at. */
     internal var recordedStep: Any? = null
+
+    /** A step a holder other than the recorder found not recorded yet (null once the recorder records). */
+    internal var unrecordedStep: Any? = null
 
     internal fun release(context: androidx.compose.ui.graphics.GraphicsContext) {
         layer?.let(context::releaseGraphicsLayer)
@@ -229,12 +232,19 @@ internal class KitGlassPictures {
 
     /**
      * Whether [holder] records [picture] in the draw it is in now, at the picture's [step]: it does when it is the
-     * recorder, when the picture has none, or when the picture moved to a step its recorder has not recorded (the
-     * recorder no longer draws): it then becomes the recorder. Every other holder only draws the recording.
+     * recorder, when the picture has none, or when its recorder left a whole step unrecorded (it no longer draws): it
+     * then becomes the recorder. Every other holder only draws the recording.
      */
     internal fun records(picture: KitGlassPicture, holder: KitGlassPictureHolder, step: Any?): Boolean {
         val r = picture.recorder
-        if (r == null || (r !== holder && step != null && step != picture.recordedStep)) picture.recorder = holder
+        if (r == null) {
+            picture.recorder = holder
+        } else if (r !== holder && step != null && step != picture.recordedStep) {
+            // Not recorded yet: the recorder may still draw later in this frame. An earlier step it never recorded
+            // means it no longer draws.
+            val missed = picture.unrecordedStep
+            if (missed != null && missed != step) picture.recorder = holder else picture.unrecordedStep = step
+        }
         return picture.recorder === holder
     }
 
@@ -625,8 +635,6 @@ private data class BackdropSourceElement(
 
     override fun update(node: BackdropSourceNode) {
         if (node.backdrop !== backdrop || node.shared !== shared) node.letGo()
-        // Another paint: the first page of the shared picture to draw records it (KitGlassPicture, black-frame).
-        node.paintChanged()
         node.shared = shared
         node.backdrop = backdrop
         node.paint = paint
@@ -651,11 +659,6 @@ private class BackdropSourceNode(
     /** The picture's recorder let go: draw again, so a page still showing it can take the recording over. */
     override fun recorderLeft() {
         if (isAttached) invalidateDraw()
-    }
-
-    /** This page's paint changed: the shared picture is recorded again by the first page to draw it. */
-    fun paintChanged() {
-        held?.recorder = null
     }
 
     /** The shared picture this page shows (smoothness round 2), and the page size it was taken for. */
@@ -721,6 +724,7 @@ private class BackdropSourceNode(
             recordDetached(layer, paint)
             if (p != null) {
                 p.recordedStep = step
+                p.unrecordedStep = null
                 pictures?.onRecord?.invoke(p, this@BackdropSourceNode)
             }
         }
