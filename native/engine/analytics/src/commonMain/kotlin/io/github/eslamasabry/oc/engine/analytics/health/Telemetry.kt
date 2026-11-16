@@ -343,7 +343,7 @@ public class TelemetryService(
         if (!usageLive) return
         // Publish both session records before derived milestones, then observe them in their original order.
         safely { journeyRef.load()?.observe(event, safe) }
-        if (pageDelivered) safely { journeyRef.load()?.observe(ProductEvent.ScreenView, page!!) }
+        if (page != null && pageDelivered) safely { journeyRef.load()?.observe(ProductEvent.ScreenView, page) }
     }
 
     private fun deliver(event: ProductEvent, safe: Map<String, String>): Boolean {
