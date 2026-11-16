@@ -68,6 +68,7 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import io.github.eslamasabry.oc.core.common.holdStages
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -819,9 +820,10 @@ internal class GraphChatWorld(
                 }
             }
         val phoneWaits = phoneServer?.waiting(ref.profileId) ?: MutableStateFlow(PhoneServerWait.None)
+        val stages = phoneServer?.stage(ref.profileId) ?: NoStage
         val waits =
             registry.appScope.launch(registry.mainContext) {
-                combine(phoneWaits, mutableLink, loadWaiting) { phone, link, waiting ->
+                combine(phoneWaits, mutableLink, loadWaiting, stages) { phone, link, waiting, stage ->
                         // The server's own state speaks while the page waits for it, or while its link is down (the
                         // update stops the server under an open conversation too).
                         val down = waiting || link != ChatLink.Live
@@ -831,11 +833,17 @@ internal class GraphChatWorld(
                             // Only while the page waits: once its wait is spent the helper is what did not answer,
                             // and the line says so with its Restart (a sign-in never keeps the helper down).
                             waiting && phone == PhoneServerWait.AgentNeedsSignIn -> ChatServerWait.AgentNeedsSignIn
+                            // The real current stage of the start, when the app's signals name one.
+                            down && stage != null -> stageWait(stage)
                             down && phone == PhoneServerWait.Starting -> ChatServerWait.Starting
+                            // The server is up and the conversation itself is being read.
+                            waiting && link == ChatLink.Live && appStartsServer -> ChatServerWait.OpeningConversation
                             waiting -> ChatServerWait.Connecting
                             else -> null
                         }
                     }
+                    // Each stage holds a moment before the next shows; the page opening ends the line at once.
+                    .holdStages { it.isStage }
                     .collect { mutableServerWait.value = it }
             }
         stopWatching = {
@@ -843,6 +851,15 @@ internal class GraphChatWorld(
             waits.cancel()
         }
     }
+
+    private fun stageWait(stage: LaunchStage): ChatServerWait =
+        when (stage) {
+            LaunchStage.Linux -> ChatServerWait.StartingLinux
+            LaunchStage.OpenCode -> ChatServerWait.StartingOpenCode
+            LaunchStage.Helper -> ChatServerWait.StartingHelper
+            LaunchStage.Agent -> ChatServerWait.StartingAgent
+            LaunchStage.Conversation -> ChatServerWait.OpeningConversation
+        }
 
     /**
      * The app itself starts this conversation's server: This phone's OpenCode or its agents' helper (the Claude Code
@@ -1195,6 +1212,12 @@ internal class GraphChatWorld(
                     gateway.events.all.collect { envelope ->
                         val event = envelope.event
                         if (event is CoreEvent.SessionUpserted && event.session.id == sid) {
+                            // The helper has listed/attached this conversation. Retry its pending open now, without
+                            // waiting for the fallback tick. Live pages and unrelated conversations never reread here.
+                            if (serverIsAgentHelper && loadWaiting.value && notReadyJob?.isActive == true) {
+                                // Keep the timer running: signals must not reset or extend the bounded wait.
+                                retryNotReady()
+                            }
                             refreshReadOnly(gateway, event.session)
                             adoptUndone(gateway, event.session)
                             // Paseo names a new conversation by an agent update (an upsert, never
@@ -1268,6 +1291,9 @@ internal class GraphChatWorld(
                         )
                             reconcilePendingReceipts()
                         bridge.event(event)?.let(handle::submit)
+                        if (event is CoreEvent.RunEnded && event.sessionId == sid) {
+                            keepLastKnown(handle)
+                        }
                         if (event is CoreEvent.RevertChanged && event.sessionId == sid) {
                             readHistory(gateway, handle, bridge)
                         }
@@ -1389,13 +1415,13 @@ internal class GraphChatWorld(
         keptHandle = null
     }
 
-    /** Keeps the conversation's newest page as it reads now, once the live history answered. */
+    /** Keeps the conversation's newest page as it reads now (after a live read, or as a turn ends). */
     private fun keepLastKnown(handle: TranscriptHandle) {
         val memory = lastKnown ?: return
-        if (!historyReconciled) return
+        val ledger = feedKeeper.messagesToKeep(historyReconciled)
+        if (ledger.isEmpty()) return
         val title = mutableTitle.value
         // The full messages the turn facts read (taken now: a reload resets the ledger), with the words the rows drew.
-        val ledger = feedKeeper.liveMessages()
         registry.appScope.launch(registry.mainContext) {
             val messages =
                 io.github.eslamasabry.oc.engine.transcript.KeptTranscript.withWords(ledger, handle.keptMessages())

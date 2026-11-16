@@ -83,7 +83,16 @@ public enum class KitRowStateTone {
  * A row with nothing to say passes a null word, so it still keeps the lead column and lines up with its neighbours.
  */
 @Immutable
-public data class KitRowState(val word: String?, val tone: KitRowStateTone)
+public data class KitRowState(
+    val word: String?,
+    val tone: KitRowStateTone,
+    /**
+     * The row waits on something that ends by itself (its agent or its server getting ready). A [KitRecentRow] then
+     * shows the kit's working mark ALONE in the time's place, draws neither the time nor [word], and gives [word] to a
+     * screen reader instead ("Tidy the README, agent getting ready"). Other rows ignore it.
+     */
+    val waiting: Boolean = false,
+)
 
 /** What ends a row (Dart `KitRowValue`, `KitChevron`, the row's own action). */
 @Immutable
