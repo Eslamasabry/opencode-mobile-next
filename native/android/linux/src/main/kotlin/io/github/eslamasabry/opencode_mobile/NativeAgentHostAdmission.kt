@@ -14,6 +14,7 @@ internal object NativeAgentHostAdmission {
         val available: Boolean,
         val activityResumed: Boolean,
         val activityEpoch: Long,
+        /** The stop revision ([AgentHostRevision]): a stop moves it, the server's own start does not. */
         val wantedRevision: Long,
         val owner: String?,
         val wanted: Boolean,
