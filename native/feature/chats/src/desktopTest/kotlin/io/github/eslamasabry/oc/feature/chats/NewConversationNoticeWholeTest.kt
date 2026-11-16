@@ -7,6 +7,8 @@ import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.v2.runDesktopComposeUiTest
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.domain.ImportableConversation
@@ -59,11 +61,16 @@ class NewConversationNoticeWholeTest {
                     directory = dir,
                     text = "",
                     phoneFolder = PhoneFolderReach.Restart,
+                    phoneAgent = "codex",
                 )
             setContent {
                 KitTheme(platform = DesktopKitPlatform(), localeTag = "en", appearance = KitAppearance(motion = MotionLevel.Off)) {
                     // A scene off the phone stands in for the system bars and the keyboard with host insets.
-                    CompositionLocalProvider(LocalKitScreenInsets provides WindowInsets(top = 28.dp, bottom = keyboardDp.dp)) {
+                    // The phone's text size is often above 1; the kit lets frame text grow to 1.3.
+                    CompositionLocalProvider(
+                        LocalKitScreenInsets provides WindowInsets(top = 28.dp, bottom = keyboardDp.dp),
+                        LocalDensity provides Density(LocalDensity.current.density, fontScale = 1.3f),
+                    ) {
                         NewConversationScreen(ui, Actions)
                     }
                 }
