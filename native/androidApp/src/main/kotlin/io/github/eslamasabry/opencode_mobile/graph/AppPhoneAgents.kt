@@ -914,7 +914,7 @@ class AppPhoneAgents(
             synchronized(admission) {
                 accounts[key]?.takeIf { it.state != AuthState.Error }?.let { askedAt[key] ?: Long.MIN_VALUE }
             }
-        if (live != null) return if (live == Long.MIN_VALUE) null else wallOf(live)
+        if (live != null && live != Long.MIN_VALUE) return wallOf(live)
         return record?.signedInAt?.takeIf { record.signedIn != null }
     }
 
@@ -926,8 +926,19 @@ class AppPhoneAgents(
     private fun evidenceOf(owner: ProfileId, agent: AgentDescriptor, record: PhoneAgentFacts.Fact?): Redacted {
         val key = owner to agent.id
         val (live, asked) = synchronized(admission) { accounts[key] to askedAt[key] }
+        val noAnswer = synchronized(admission) { lastNoAnswer[key] }
         val lines = buildList {
+            when (noAnswer) {
+                null -> Unit
+                AuthProbeError.AgentBusy -> add("newest check: not run, Claude Code was working in a conversation")
+                else -> add("newest check: no answer (${noAnswer.name})")
+            }
             when {
+                live != null && asked == null && record?.signedIn != null ->
+                    add(
+                        "sign-in check (kept): ${if (record.signedIn) "signed in" else "signed out"}" +
+                            (record.signedInAt?.let { ", asked ${stamp(it)}" } ?: "")
+                    )
                 live != null ->
                     add(
                         "sign-in check: " +
@@ -1277,6 +1288,7 @@ class AppPhoneAgents(
                 accounts.remove(key)
                 answeredAt.remove(key)
                 askedAt.remove(key)
+                lastNoAnswer.remove(key)
             }
         }
         keepFacts(owner) { PhoneAgentFacts.forget(it, agent.raw, version, signIn, proof, setUp) }
@@ -1531,6 +1543,7 @@ class AppPhoneAgents(
             accounts.clear()
             answeredAt.clear()
             askedAt.clear()
+            lastNoAnswer.clear()
         }
         // Sign-ins are being reset: no tile may show a kept "signed in" after the restart.
         owners.forEach { forgetSignIns(it) }
@@ -1654,24 +1667,35 @@ class AppPhoneAgents(
                     else -> AuthProjectionJson.failed(AuthProbeError.HostUnavailable)
                 }
             } else probed
+        // signin-truth-2: a check that gave no answer is no evidence: the last answer stands, this run's or else the
+        // registry's (after an app start), with its own time; only with neither is the sign-in "not confirmed".
+        val kept =
+            if (fresh.error in PhoneAgentRules.NO_ANSWER) PhoneAgentFacts.signIn(keptFacts(owner)[agent.id.raw])
+            else null
         val answer =
             synchronized(admission) {
                 // Deletion can revoke while the native reader drains. A late read never repopulates
                 // it.
                 if (owner in denied) return AgentSignInPhase.Failed
                 val previous = accounts[key]
-                if (
-                    fresh.error in setOf(AuthProbeError.HostUnavailable, AuthProbeError.TimedOut) &&
-                        previous != null &&
-                        previous.state != AuthState.Error
-                )
-                    previous
-                else
-                    fresh.also {
-                        accounts[key] = it
-                        answeredAt[key] = android.os.SystemClock.elapsedRealtime()
-                        askedAt[key] = asked
-                    }
+                lastNoAnswer[key] = fresh.error?.takeIf { it in PhoneAgentRules.NO_ANSWER }
+                val standIn = PhoneAgentRules.standIn(fresh, previous, kept)
+                when {
+                    standIn == null ->
+                        fresh.also {
+                            accounts[key] = it
+                            answeredAt[key] = android.os.SystemClock.elapsedRealtime()
+                            askedAt[key] = asked
+                        }
+                    standIn === previous -> standIn
+                    // The registry's answer: no ask time of this run (its own time is in the registry).
+                    else ->
+                        standIn.also {
+                            accounts[key] = it
+                            answeredAt.remove(key)
+                            askedAt.remove(key)
+                        }
+                }
             }
         return phaseOf(answer)
     }
@@ -1685,6 +1709,9 @@ class AppPhoneAgents(
 
     /** When that answered check was asked: the time its evidence is from ([PhoneAgentFacts.lapseStands]). */
     private val askedAt = HashMap<Pair<ProfileId, AgentId>, Long>()
+
+    /** Why the newest check gave no answer (timed out, no answer, Claude Code busy), for Details; null when it did. */
+    private val lastNoAnswer = HashMap<Pair<ProfileId, AgentId>, AuthProbeError?>()
 
     /** Claude Code's previous version: kept or not, for the version found then ([previousOf]). */
     private val rollbacks = HashMap<Pair<ProfileId, AgentId>, Pair<String?, Boolean>>()

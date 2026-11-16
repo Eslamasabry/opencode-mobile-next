@@ -161,6 +161,11 @@ public enum class AuthState { SignedIn, SignedOut, Error }
 public enum class AuthProbeError {
     ProbeUnsupported, InvalidResponse, TimedOut, HostUnavailable, NotInstalled, InvalidContext, SignInExpired,
     SignOutFailed,
+    /**
+     * signin-truth-2: not run, because a Claude Code CLI of that profile is working (a conversation, a sign-in): a
+     * check beside it could refresh the same sign-in at once. Not news about the account: the last answer stands.
+     */
+    AgentBusy,
 }
 
 /** The narrow projection the kept probe returns (≤ 2 KB): state + optional transient account label. */

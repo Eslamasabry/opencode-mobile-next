@@ -42,10 +42,7 @@ internal class PhoneAgentAuthRuntime(
         prepare = { profile, agent ->
             val home = PhoneAgentPaths.resolve(context.filesDir, "linux/ubuntu/home/oc/.oc-profiles/$profile")
             check(home.isDirectory)
-            if (agent == "claude") {
-                check(!claudeBusy(profile))
-                clearLock(profile) { coldQuiescent(context) }
-            }
+            if (agent == "claude") clearLock(profile) { coldQuiescent(context) }
             before.set(inventory().map { it.pid to it.start }.toSet())
             true
         },
@@ -59,6 +56,11 @@ internal class PhoneAgentAuthRuntime(
 
     fun run(arguments: Map<*, *>, stop: ProbeStop? = null): Map<String, Any?> {
         val request = PhoneAgentAuthRequest.parse(arguments) ?: return PhoneAgentAuthProjection.error("invalidContext")
+        // signin-truth-2: said as its own answer ("agentBusy"), so the app keeps the last answer and says why; before,
+        // it read as "the phone did not answer" and the agent as "Sign-in not confirmed" for as long as a Claude Code
+        // conversation stayed loaded.
+        if (request.agentId == "claude" && claudeBusy(request.profileId))
+            return PhoneAgentAuthProjection.error("agentBusy")
         deadline.set(PhoneAgentAuthDeadline(request.timeoutSeconds))
         return try { probe.run(arguments, stop) }
         finally { deadline.remove(); before.remove() }

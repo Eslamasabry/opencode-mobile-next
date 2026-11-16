@@ -6,7 +6,7 @@ import java.nio.charset.CodingErrorAction
 /** Strict flat JSON and fixed errors; process text never escapes on rejection. */
 internal object PhoneAgentAuthProjection {
     private val errors = setOf("probeUnsupported", "invalidResponse", "timedOut", "hostUnavailable",
-        "notInstalled", "invalidContext", "signInExpired", "signOutFailed")
+        "notInstalled", "invalidContext", "signInExpired", "signOutFailed", "agentBusy")
     private val fields = setOf("state", "accountDisplayName", "error")
 
     fun error(code: String): Map<String, Any?> = mapOf("state" to "error",

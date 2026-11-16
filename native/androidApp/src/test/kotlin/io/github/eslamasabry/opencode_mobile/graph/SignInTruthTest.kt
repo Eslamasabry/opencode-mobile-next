@@ -191,4 +191,30 @@ class SignInTruthTest {
         assertTrue(PhoneAgentFacts.limitStands(kept, 1_000 + PhoneAgentFacts.LIMIT_WITHOUT_RESET_MS - 1))
         assertFalse(PhoneAgentFacts.limitStands(kept, 1_000 + PhoneAgentFacts.LIMIT_WITHOUT_RESET_MS))
     }
+
+    @Test
+    fun `I147-TRUTH-7 a check that gave no answer keeps the last answer, the kept one after an app start, else not confirmed`() {
+        val busy =
+            io.github.eslamasabry.oc.engine.agents.auth.AuthProjectionJson.decode(
+                kotlinx.serialization.json.JsonObject(
+                    mapOf(
+                        "state" to kotlinx.serialization.json.JsonPrimitive("error"),
+                        "error" to kotlinx.serialization.json.JsonPrimitive("agentBusy"),
+                    )
+                )
+            )
+        assertEquals(io.github.eslamasabry.oc.engine.agents.host.AuthProbeError.AgentBusy, busy.error)
+        val hostDown =
+            io.github.eslamasabry.oc.engine.agents.auth.AuthProjectionJson.failed(
+                io.github.eslamasabry.oc.engine.agents.host.AuthProbeError.HostUnavailable
+            )
+        val signedIn = AuthProjection(AuthState.SignedIn)
+        val signedOut = AuthProjection(AuthState.SignedOut)
+        // Galaxy 10055 after a cold start: no answer, nothing of this run, the registry said signed out at 05:45.
+        assertEquals(signedOut, PhoneAgentRules.standIn(hostDown, previous = null, kept = signedOut))
+        assertEquals(signedOut, PhoneAgentRules.standIn(busy, previous = null, kept = signedOut))
+        assertEquals(signedIn, PhoneAgentRules.standIn(busy, previous = signedIn, kept = signedOut), "this run's is newer")
+        assertNull(PhoneAgentRules.standIn(hostDown, previous = hostDown, kept = null), "nothing known: not confirmed")
+        assertNull(PhoneAgentRules.standIn(signedOut, previous = signedIn, kept = null), "an answer is kept as it is")
+    }
 }
