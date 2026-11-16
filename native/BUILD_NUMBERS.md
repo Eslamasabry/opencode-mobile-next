@@ -86,3 +86,4 @@ wiped (see Floor); they never come back and do not raise the floor.
 | 10054 | build | 2026-11-16 | owner's build of 9713c1c40e (open-transitions, storage both-sides restart, edge light list, a11y guards; CI 43779221372 passed) |
 | 10055 | build | 2026-11-16 | owner's build of f1ccc2db57 (sign-in truth: a usage limit no longer reads as signed out; CI 43782239875 passed) |
 | 10056 | build | 2026-11-16 | owner's build of a19b8f0c31 (black frame on Home -> +, Plan holds on phone agents, Home top without a pane, sign-in follow-ups, compact width 2; CI 43788143805 passed) |
+| 10057 | build | 2026-11-16 | release candidate for 3.0.0+10060: the owner's build of the commit that records this number (privacy wording made true, plus every release item merged by 06:45) |
