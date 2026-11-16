@@ -22,7 +22,7 @@ import io.github.eslamasabry.oc.engine.connection.ConnectionCredentialSource
 import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
 import io.github.eslamasabry.oc.engine.profiles.ProfileCloser
 import io.github.eslamasabry.oc.engine.requests.consent.AutomationBehavior
-import io.github.eslamasabry.oc.feature.chat.ui.ScrollPlaceStore
+import io.github.eslamasabry.oc.feature.chat.ui.openChatFromNotification
 import io.github.eslamasabry.oc.feature.servers.presentation.*
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import java.time.ZoneId
@@ -453,8 +453,7 @@ class AndroidProfileMonitoring(
                 return@launch
             if (engine.routeForToken(id, token) != route) return@launch
             val ref = ConversationRef(ProfileId(id), SessionId(route.sessionId))
-            ScrollPlaceStore.forget("${ref.profileId.raw}/${ref.sessionId.raw}")
-            nav.openChat(ref)
+            openChatFromNotification(ref) { nav.openChat(it) }
         }
         return true
     }

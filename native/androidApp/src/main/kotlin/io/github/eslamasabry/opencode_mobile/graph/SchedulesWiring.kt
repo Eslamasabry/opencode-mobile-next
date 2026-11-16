@@ -54,7 +54,7 @@ import io.github.eslamasabry.oc.engine.schedules.ScheduleConnection
 import io.github.eslamasabry.oc.engine.schedules.ScheduleEngine
 import io.github.eslamasabry.oc.engine.schedules.ScheduleProfiles
 import io.github.eslamasabry.oc.engine.schedules.ScheduledOpen
-import io.github.eslamasabry.oc.feature.chat.ui.ScrollPlaceStore
+import io.github.eslamasabry.oc.feature.chat.ui.openChatFromNotification
 import io.github.eslamasabry.oc.feature.schedules.presentation.ConversationSeed
 import io.github.eslamasabry.oc.feature.schedules.presentation.ModelChoice
 import io.github.eslamasabry.oc.feature.schedules.presentation.ScheduleServers
@@ -593,8 +593,7 @@ class ScheduleOpens(
                                 schedules.resolveOpen(profile, schedule, session) != target
                         )
                             return@withTimeoutOrNull false
-                        ScrollPlaceStore.forget("${ref.profileId.raw}/${ref.sessionId.raw}")
-                        navigator.openChat(ref)
+                        openChatFromNotification(ref) { navigator.openChat(it) }
                         true
                     } ?: false
                 if (opened) return@launch
