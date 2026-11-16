@@ -77,7 +77,7 @@ class ChatsHomeHeaderCompactTest {
         val layouts = mutableListOf<TextLayoutResult>()
         label.performSemanticsAction(SemanticsActions.GetTextLayoutResult) { it(layouts) }
         val name = layouts.single()
-        val numbers = "$width/text$scale pill=${pill.width.value} line=${line.width.value} cues=${cues.size} name=${name.size.width} ellipsis=${name.isLineEllipsized(0)}"
+        val numbers = "$width/text$scale pill=${(pill.right - pill.left).value} line=${(line.right - line.left).value} cues=${cues.size} name=${name.size.width} ellipsis=${name.isLineEllipsized(0)}"
         println("COMPACT-030 $numbers")
         assertTrue(cues.isNotEmpty(), "$numbers: +N must be visible, never the plain-scroll fallback")
         assertTrue(!name.hasVisualOverflow && !name.isLineEllipsized(0), "$numbers: the pill name stays whole")
@@ -89,7 +89,7 @@ class ChatsHomeHeaderCompactTest {
                     val full = onNodeWithText(text, useUnmergedTree = true).getUnclippedBoundsInRoot()
                     assertTrue(full.left.value >= clip.left - .5f && full.right.value <= clip.right + .5f,
                         "$numbers: $text whole, bounds=$full clip=$clip")
-                    assertTrue(kotlin.math.abs(full.center.y.value - pill.center.y.value) <= 1f,
+                    assertTrue(kotlin.math.abs((full.top.value + full.bottom.value - pill.top.value - pill.bottom.value) / 2f) <= 1f,
                         "$numbers: $text stays on the pill's row")
                 }
             }
