@@ -266,15 +266,15 @@ public class TelemetryService(
     private fun apply(usage: Boolean, crashes: Boolean) {
         val newlyEnabled = usage && !usageFlow.value
         if (available) safely { vendor.setCollection(usage, crashes) }
-        // StateFlow observers can run immediately. Publish the opening/page before enabling their event feed.
+        usageFlow.value = usage
+        crashesFlow.value = crashes
+        // Behavior reverted for assertion proof: observers wake before the opening/page.
         val opening = newlyEnabled && available
         val page = if (opening) visibleScreen.load()?.let { mapOf("screen" to it) } else null
         if (opening) {
             deliver(ProductEvent.AppOpen, mapOf("kind" to "cold"), startingConsent = true)
             if (page != null) deliver(ProductEvent.ScreenView, page, startingConsent = true)
         }
-        usageFlow.value = usage
-        crashesFlow.value = crashes
         if (opening && usageLive) {
             safely { journeyRef.load()?.observe(ProductEvent.AppOpen, mapOf("kind" to "cold")) }
             if (page != null) safely { journeyRef.load()?.observe(ProductEvent.ScreenView, page) }
