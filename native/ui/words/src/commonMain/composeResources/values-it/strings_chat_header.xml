@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="chatHeaderServer">Server</string>
+    <string name="chatHeaderContext">Contesto utilizzato</string>
+    <string name="chatHeaderNotReported">Non ancora riportato</string>
+    <string name="chatHeaderTokens">Token</string>
+    <string name="chatHeaderInUse">In uso</string>
+    <string name="chatHeaderRenameFailed">Impossibile rinominare la conversazione.</string>
+    <string name="chatHeaderShareFailed">Impossibile condividere la conversazione.</string>
+    <string name="chatHeaderUnshareFailed">Impossibile interrompere la condivisione.</string>
+    <string name="chatHeaderForkFailed">Impossibile duplicare la conversazione.</string>
+    <string name="chatHeaderArchiveFailed">Impossibile archiviare la conversazione.</string>
+    <string name="chatHeaderDeleteFailed">Impossibile eliminare la conversazione.</string>
+    <string name="chatHeaderFailureDetails">Dettagli</string>
+    <string name="chatHeaderApprovalSaveFailed">Impossibile salvare l'impostazione di approvazione.</string>
+</resources>

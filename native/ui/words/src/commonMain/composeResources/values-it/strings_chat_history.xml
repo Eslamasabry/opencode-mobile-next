@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="chatHistoryReadFailed">Impossibile caricare i messaggi precedenti. I messaggi già caricati sono ancora qui. Riprova.</string>
+    <string name="chatTranscriptTokens">%1$s token</string>
+    <string name="chatTranscriptCost">Costo stimato: $%1$s</string>
+    <string name="chatHistoryTitle">Riutilizza un prompt</string>
+    <string name="chatHistorySubtitle">Scegli parole da questa conversazione o dai tuoi invii recenti. Vengono aggiunte alla tua bozza; nulla viene inviato.</string>
+    <string name="chatHistorySearch">Cerca prompt recenti</string>
+    <string name="chatHistoryEmpty">Nessun prompt recente.</string>
+    <string name="chatHistoryLoading">Caricamento dei prompt recenti…</string>
+    <string name="chatHistoryLoadFailed">Impossibile caricare i prompt recenti. Puoi comunque usare i prompt di questa conversazione.</string>
+</resources>

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="composerFullThinking">Pensiero</string>
+    <string name="composerFullThinkingDefault">Predefinito</string>
+    <string name="composerFullAgent">Agente</string>
+    <string name="composerFullModels">Modelli</string>
+    <string name="composerFullModelChangeFailed">Impossibile confermare la scelta del modello. Verifica la selezione e riprova.</string>
+    <string name="composerFullAttach">Allega</string>
+    <string name="composerFullAddTitle">Aggiungi al prompt</string>
+    <string name="composerFullPhotoLibrary">Libreria foto</string>
+    <string name="composerFullTakePhoto">Scatta foto</string>
+    <string name="composerFullPasteImage">Incolla immagine dagli appunti</string>
+    <string name="composerFullPasteEmpty">Non c'è nessuna immagine negli appunti.</string>
+    <string name="composerFullDraftFull">Rimuovi prima un allegato. Una bozza contiene fino a 5 file e 20 MB in totale.</string>
+    <string name="composerFullPhotoDenied">Accesso alle foto negato. Consenti l'accesso alla fotocamera o alle foto nelle impostazioni dell'app Android, poi riprova.</string>
+    <string name="composerFullStale">La conversazione è cambiata mentre sceglievi. Riprova.</string>
+    <string name="composerFullCommands">Comandi</string>
+    <string name="composerFullFiles">File del progetto</string>
+    <string name="composerFullAttachmentsLocal">Gli allegati vengono salvati con questa bozza su questo dispositivo.</string>
+    <string name="composerFullSteerHint">Dai indicazioni mentre lavora…</string>
+    <string name="composerFullWaitingHint">In attesa della tua decisione sopra…</string>
+</resources>
