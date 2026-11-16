@@ -11,6 +11,7 @@ import io.github.eslamasabry.oc.engine.integrations.usage.UsageConnection
 import io.github.eslamasabry.oc.engine.integrations.usage.UsageConnectionKind
 import io.github.eslamasabry.oc.engine.integrations.usage.UsageFix
 import io.github.eslamasabry.oc.engine.integrations.usage.UsageSnapshot
+import io.github.eslamasabry.oc.engine.integrations.usage.UsageSubscription
 import io.github.eslamasabry.oc.engine.integrations.usage.UsageWindowKind
 import kotlin.math.roundToInt
 import kotlinx.collections.immutable.ImmutableList
