@@ -359,6 +359,7 @@ public fun ChatTranscript(
     reveal: RevealRegistry,
     motion: KitMotionLevel,
     modifier: Modifier = Modifier,
+    placeKey: String? = null,
 ) {
     val reply = remember {
         ReplyActions(KitMarkdownActions(onLink = {}), copyLabel = "Copy", copy = {})
@@ -379,6 +380,7 @@ public fun ChatTranscript(
             onRetrySend = {},
             modifier = modifier,
             reply = reply,
+            placeKey = placeKey,
         )
     }
 }
@@ -446,6 +448,8 @@ internal fun ChatTranscriptList(
     waitingKey: String? = null,
     /** Bumped when the person asks to see the waiting decision (the message box's line). */
     waitingJump: Int = 0,
+    /** Names the conversation so its place is kept for this run (null keeps it only for the entry). */
+    placeKey: String? = null,
 ) {
     val currentRows by rememberUpdatedState(rows)
     FindOpensFolds(find, rows, facts, folds)
@@ -514,7 +518,7 @@ internal fun ChatTranscriptList(
                 },
             )
         }
-    KeepScrollPlace(list, itemKeys)
+    KeepScrollPlace(list, itemKeys, placeKey)
     // F-023: a waiting decision is brought back into view whenever a newer row arrives or the person asks. The list is
     // reversed, so scrolling to the row's index puts its end (the answers) at the foot of the page.
     val waitingIndex = waitingKey?.let { itemKeys.indexOf(it) }?.takeIf { it >= 0 }

@@ -78,6 +78,7 @@ import io.github.eslamasabry.oc.core.security.ExternalLinkPolicy
 import io.github.eslamasabry.oc.core.security.LinkDecision
 import io.github.eslamasabry.oc.core.security.LinkOrigin
 import io.github.eslamasabry.oc.core.security.Redactor
+import io.github.eslamasabry.oc.feature.chat.ui.openChatFromNotification
 import io.github.eslamasabry.oc.feature.servers.links.LinkNotice
 import io.github.eslamasabry.oc.feature.servers.links.SessionAddressLinks
 import io.github.eslamasabry.oc.feature.servers.links.SessionLinkNotices
@@ -588,7 +589,7 @@ class PlatformHub(
         }
         alertTap(intent)?.takeIf { trusted }?.let { ref ->
             shade.dismiss(AlertKeys.status(ref.profileId.raw, ref.sessionId.raw))
-            navigator.openChat(ref)
+            openChatFromNotification(ref) { navigator.openChat(it) }
             return
         }
         when (val action = LaunchActions.consume(intent, trusted)) {
