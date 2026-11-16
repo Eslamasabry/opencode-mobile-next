@@ -56,6 +56,12 @@ public interface FilesConnections {
         Outcome.Failed(Failure.Unavailable(FeatureId("projectManagement")))
 
     /**
+     * True only when the server says this conversation's folder is not a Git repository, so a failed
+     * change read there is expected and says nothing. False when it is Git or not known.
+     */
+    public suspend fun notGitRepository(ref: ConversationRef): Boolean = false
+
+    /**
      * One project's files with no conversation (the project page's Files row): that server's live
      * connection, scoped to [directory]. Null while the server is not connected.
      */
@@ -81,6 +87,7 @@ public class ProjectFilesSource(
     public val changes: suspend () -> Outcome<ImmutableList<VersionControlFile>> = {
         Outcome.Failed(Failure.Unavailable(FeatureId("projectManagement")))
     },
+    public val notGitRepository: suspend () -> Boolean = { false },
 )
 
 /** Puts a project file into the conversation's draft: `@path ` in the text and its file mention. */
