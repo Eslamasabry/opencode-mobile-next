@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="secSetupTitle">Configurazione del server</string>
+    <string name="secSetupReadOnly">Esamina la configurazione del server e prepara proposte locali. L'applicazione e l'annullamento richiedono un endpoint di ripristino atomico che questo server non fornisce. Qui nulla modifica il tuo server.</string>
+    <string name="secSetupFailed">Impossibile caricare la configurazione. Riconnettiti a questo server e riprova.</string>
+    <string name="secSetupRefresh">Aggiorna configurazione del server</string>
+    <string name="secSetupConfig">Configurazione con i valori privati nascosti</string>
+    <string name="secSetupGuided">Configurazione guidata su questo dispositivo</string>
+    <string name="secSetupReview">Esamina proposta</string>
+    <string name="secSetupInvalid">Usa i campi richiesti senza credenziali. Controlla modello, comando e indirizzo, poi riprova.</string>
+    <string name="secSetupInputs">Inserisci tutti i valori richiesti senza credenziali. Gli URL non devono contenere password, query o frammenti. Nessuna modifica è stata proposta.</string>
+    <string name="secSetupUnsupported">Questo flusso richiede gli strumenti separati di accesso o di configurazione del server. Non è disponibile nella configurazione guidata.</string>
+    <string name="secSetupProposed">Proposta locale pronta per la revisione. Non è stato applicato nulla. Le proposte di connettori partono disattivate.</string>
+    <string name="secSetupRegistry">Sfoglia il registro pubblico dei connettori</string>
+    <string name="secSetupRegistryConsent">Disattivato per impostazione predefinita. Attivandolo, la scelta viene salvata senza scaricare dati. Aggiorna contatta il registro MCP pubblico senza credenziali del server.</string>
+    <string name="secSetupSearch">Cerca negli elenchi pubblici</string>
+    <string name="secSetupRegistryRefresh">Aggiorna gli elenchi pubblici</string>
+    <string name="secSetupRegistryDisabled">L'accesso al registro pubblico è disattivato.</string>
+    <string name="secSetupRegistryOffline">Sei offline. Vengono mostrati gli elenchi salvati.</string>
+    <string name="secSetupRegistryFailed">Impossibile caricare il registro pubblico. Riprova più tardi o configura manualmente.</string>
+    <string name="secSetupRegistryEmpty">Nessun elenco pubblico da mostrare.</string>
+    <string name="secSetupRegistryReady">Elenchi pubblici di connettori</string>
+    <string name="secSetupRegistryRemote">È presente un endpoint HTTPS. Esamina i dettagli prima di configurarlo sul tuo server.</string>
+    <string name="secSetupRegistryDetails">Questo elenco richiede dettagli di connessione. Configuralo manualmente.</string>
+    <string name="secSetupRegistryCommand">L'installazione del pacchetto richiede un comando verificato sul tuo server. Configuralo manualmente.</string>
+    <string name="secSetupRegistryNoEndpoint">Questo elenco non ha un endpoint HTTPS supportato. Configuralo manualmente.</string>
+    <string name="secSetupChooseModel">Scegli modello</string>
+    <string name="secSetupDefaultAgent">Agente predefinito</string>
+    <string name="secSetupPermission">Regola di autorizzazione</string>
+    <string name="secSetupRemoteMcp">Connettore remoto</string>
+    <string name="secSetupLocalMcp">Connettore locale</string>
+    <string name="secSetupRemoveMcp">Rimuovi connettore</string>
+    <string name="secSetupProvider">Accesso al provider</string>
+    <string name="secSetupAgent">Configura agente</string>
+    <string name="secSetupCommand">Configura comando</string>
+    <string name="secSetupModelField">Modello (provider/model)</string>
+    <string name="secSetupAgentField">Nome dell'agente esistente</string>
+    <string name="secSetupToolField">Nome dello strumento</string>
+    <string name="secSetupEffectField">Autorizzazione (chiedi, consenti o nega)</string>
+    <string name="secSetupUrlField">Indirizzo del connettore HTTPS o loopback</string>
+    <string name="secSetupCommandField">Argomenti del comando come elenco JSON, senza credenziali</string>
+    <string name="secSetupNameField">Nome del connettore</string>
+    <string name="secHostOfficialInstall">Pacchetto ufficiale OpenCode 2</string>
+    <string name="secHostPinnedFront">Comando front di AI Team verificato</string>
+    <string name="secHostPinnedFrontHelp">Esegui questo sul tuo computer dopo aver configurato il supervisor di Gas City. Sostituisci you@example.com con la tua identità Tailscale consentita. Il download è bloccato a un commit completo e verificato prima di essere nominato o eseguito.</string>
+</resources>
