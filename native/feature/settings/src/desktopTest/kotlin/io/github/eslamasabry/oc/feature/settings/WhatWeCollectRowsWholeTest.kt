@@ -13,8 +13,8 @@ import io.github.eslamasabry.oc.feature.settings.presentation.SettingsPage
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsUi
 import io.github.eslamasabry.oc.feature.settings.ui.SettingsScreen
 import io.github.eslamasabry.oc.feature.settings.ui.collectWords
-import io.github.eslamasabry.oc.ui.words.Res
-import io.github.eslamasabry.oc.ui.words.collectNever
+import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.collectNever
 import java.util.Locale
 import kotlin.test.Test
 import kotlin.test.assertEquals
