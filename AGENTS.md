@@ -4,6 +4,10 @@ Working notes for coding agents in this repository. The app is native Kotlin (Ko
 under `native/`. Read [native/AGENTS.md](native/AGENTS.md) first: its toolchain, module rules and tasks bind you. The
 human-facing equivalent is [CONTRIBUTING.md](CONTRIBUTING.md).
 
+The old Flutter app is retired (its last release was 2.1.5); nothing about `lib/`, Shorebird or its test gates applies.
+Issues, pull requests and forks written against it describe that old app: before saying a feature is missing, look for
+it in the native code and in the English strings (`native/ui/words/.../values/*.xml`).
+
 ## Toolchain and commands
 
 - Gradle runs on **JDK 21**; **JDK 17** must be installed too (module bytecode targets 17). Android SDK
@@ -14,13 +18,23 @@ human-facing equivalent is [CONTRIBUTING.md](CONTRIBUTING.md).
 - On a machine without the capacity for Gradle, push the branch and dispatch `native-ci.yml` on it
   (`-f tasks="..."` for named tasks, `-f lane=fast -f base=<branch>` for the changed modules, `-f apk_only=true` for
   an APK). One `tasks=` run per ref at a time: a second one cancels the first.
+- Run the WHOLE `:quality:test` before calling a branch ready. It holds the architecture rules (features arrange kit
+  parts only, and feature code may use only a small set of coroutine calls) and it runs in the release gates, so a
+  branch that skipped it blocks a release.
+- A CI run only counts if its tests ran: read the verdict from the reports (`native/tool/ci/summary.py`), not from
+  the colour of the jobs.
 
 ## Testing traps
 
 - Picture-gate scenes (`*GateTest`, `*.rb.*`) are red on purpose while the look is rebuilt; a broad filter buries
   your result. `native/tool/ci/known_failures.txt` lists what CI absorbs.
 - Tests assert behaviour, not implementation; find by visible text; add a test tag only where a test needs a handle.
-- Name every test after its catalog row: `B-AREA-NNN what it proves`, red first.
+- Name every test after its catalog row: `B-AREA-NNN what it proves`, red first. Prove a fix by watching its test
+  fail without the fix. A test that "also fails on the base" is old only if it fails at the last green commit.
+- Tests do not catch cut labels. Before a release, render the real screens with demo data at 360 dp (text 1.0 and
+  1.3) and look at each one.
+- A new commit, even a test-only or docs-only one, voids a release candidate's CI verdict, dry run and device smoke.
+  Release notes (`docs/releases/<tag>.md`) and tooling fixes go in before the last candidate.
 
 ## Architecture boundaries
 
@@ -32,6 +46,20 @@ human-facing equivalent is [CONTRIBUTING.md](CONTRIBUTING.md).
 - Single-owner units: shared modules (kit, words, routes, shell, core, connection, transcript); propose, don't edit.
 - OpenCode 2's event stream is volatile: after a reconnect, reconcile by refetch, not replay.
 
+## Behaviour rules that reviews enforce
+
+- **Waiting is not failing.** While something the app itself started is still starting (the phone's Linux, its
+  server, the agents' helper, an agent), show the waiting state and name the real stage. A failure appears only when
+  the bounded wait has ended or the thing truly refused, and it never flashes and clears by itself.
+- One name for one thing everywhere a person sees it. Actions name their target. No raw error text as copy: plain
+  words and a way forward, technical text under Details.
+- Nothing is cut at 360 dp. Frame text scales to 1.3 at most; reading text scales fully. Every kit part has a
+  maximum width. No new bar or row level: status folds into an existing row.
+- Large downloads wait for an unmetered network or ask first, and show their size and progress.
+- Usage reports leave the phone only behind the opt-in switch. The "What we collect" page and the bundled policy
+  name every field and every recipient; a guard test keeps them in step with the code.
+- A broken thing is fixed, not hidden. Hidden gestures ship with a tip.
+
 ## Security invariants: breaking these is a security regression
 
 - Every URL the app did not author goes through `ExternalLinkPolicy` → `ExternalLinkOpener`.
@@ -40,6 +68,8 @@ human-facing equivalent is [CONTRIBUTING.md](CONTRIBUTING.md).
   notification copy or test output. Log only through `AppLog`.
 - The repository is public: no home-folder paths, private addresses, e-mails, device serials or token-like strings in
   committed files or commit messages. `native/tool/scan_push.sh` checks a push.
+- Secrets ride on command lines: never print a process list with full arguments, and never pass a secret as an
+  argument. Kill processes by exact PID, never by pattern.
 
 ## Repository facts
 
@@ -50,6 +80,9 @@ human-facing equivalent is [CONTRIBUTING.md](CONTRIBUTING.md).
 - `engine/` is the AI Team engine (Rust); `scripts/byo-host/` the BYO host half; `tool/host/` the AI Team host front;
   `docs/site/` the website (`pages.yml`).
 - `.claude/skills/` is gitignored third-party content. Do not commit it.
+- `native/BUILD_NUMBERS.md` is the ledger of build numbers: one row per number, always above every number ever
+  installed. Every public release has its own version name, never reused; a build that is not the public release
+  carries `-test.<build>` in its version name, so reports can tell who is on what.
 - Nothing in background code may assume unbounded lifetime: Android 15+ caps `dataSync` foreground services at six
   background hours per rolling 24 hours.
 - Verifying against a live OpenCode 2 server: a scratch `opencode2 serve` on an unused port, HTTP Basic user
@@ -60,7 +93,11 @@ human-facing equivalent is [CONTRIBUTING.md](CONTRIBUTING.md).
 
 - Each feature gets its own branch and Git worktree, owned by one agent: the complete user journey, implementation,
   strings, tests, screenshots and local commits. Never edit another agent's checkout. The coordinator reviews the
-  whole branch, resolves conflicts and merges after validation.
+  whole branch, resolves conflicts and merges after validation. Never `git stash`, `checkout` or `reset` in a
+  checkout another agent shares.
+- Phones and emulators: never screenshot or record a maintainer's personal phone; read text only, and only this
+  app's screens. Always pass an emulator's serial and check nobody else is using it. Never type a password, key or
+  code, and never sign in: the maintainer does.
 - CI budget is limited: every commit carries `[skip ci]`; runs are dispatched on purpose. Pushes, PRs, signing and
   releases each need a fresh explicit request.
 - A replacement APK must be signed with the same certificate as the build on the maintainer's phone, or Android
@@ -81,14 +118,15 @@ human-facing equivalent is [CONTRIBUTING.md](CONTRIBUTING.md).
    engine → UI → persistence/deletion before opening another feature. A scaffold is groundwork, not a feature.
 2. **Check feasibility before building adapters.** Confirm the current callable contract, supported authentication
    and permitted credential use first. If the prerequisite fails, keep the feature unavailable.
-3. **Timebox discovery.** About ten minutes for a bounded question; then implement, name a blocker, or explain why
-   more research is needed.
+3. **Bound discovery.** Answer a bounded question from the current source and existing evidence; then implement,
+   name a blocker, or explain why more research is needed. Reopen it only for a new contradiction.
 4. **Parallelize execution, not repeated audits.** Freeze method names, arguments, results and errors before
    parallel editing. Shared modules stay single-owner. Reviewers never launch test processes.
 5. **Use a check ladder.** Format changed files only; run the affected test classes once the change is ready; after
    a failure rerun that class or test, not the repository; run `:quality:test` at an integration checkpoint.
 6. **Budget the full run.** Run the full lane at an agreed batch boundary and record the revision, the run and its
    failures. Later relevant edits invalidate it; never call partial coverage a pass.
-7. **Keep an evidence budget.** Say what now works, what remains and the next concrete action.
+7. **Keep an evidence budget.** Say what now works, what remains and the next concrete action. Report states (done,
+   in tests, waiting on X, blocked by Y), never time estimates or deadlines.
 8. **Separate shipping states.** Report implemented / enabled / verified / committed / deployed / released
    distinctly. "Get shipping" is not permission to touch live servers, credentials, tags, signing keys or releases.
