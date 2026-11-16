@@ -102,4 +102,41 @@ class ScheduleMigrateTest {
         assertFalse(LegacyFingerprints.matches(row(oldRowText(version = "2.2.6")), stamp))
         assertTrue(LegacyFingerprints.matches(row(oldRowText(version = "2.2.6")), DartJson.sha256Hex(oldRowText(version = "2.2.3"))))
     }
+
+    // ---- This phone's own server: the old app ran it at :4097, this app at :4098
+
+    @Test
+    fun `B-MIGR-013 a 2_1_5 schedule for This phone runs after the saved address moved to this app's port`() = runTest {
+        for (readable in listOf(true, false)) {
+            val h = Harness()
+            // Stamped by 2.1.5 for http://127.0.0.1:4097; the profile now reads :4098 and a newer server version.
+            h.migrated(oldRowText(), oldRowText(address = "http://127.0.0.1:4098", version = "2.2.6"), readable)
+            h.profiles.earlier[P] = listOf("http://127.0.0.1:4097")
+            h.engine.restoreAll()
+            assertEquals("ran", h.fire()!!.status, "readable=$readable")
+        }
+    }
+
+    @Test
+    fun `B-MIGR-013 a schedule already bound to This phone at the old port keeps running at the new one`() = runTest {
+        val h = Harness()
+        val before = "n1:phone-at-4097"
+        h.profiles.earlierPrints[P] = setOf(before)
+        val schedule = prompt(next = T0 + HOUR).copy(profileFingerprint = before)
+        h.backend.values["oc.scheduledPrompts.p1"] = ScheduleCodec.encodeEnvelope(ScheduleCodec.Envelope(listOf(schedule)))
+        h.engine.restoreAll()
+        assertEquals("n1:server-a", h.engine.store.load(P).single().profileFingerprint)
+        assertEquals("ran", h.fire()!!.status)
+    }
+
+    @Test
+    fun `B-AGENT-218 a schedule for another server is not rescued by This phone's old port`() = runTest {
+        val h = Harness()
+        // A computer's schedule (no earlier addresses) whose address moved: still a different server.
+        h.migrated(oldRowText(address = "http://127.0.0.1:4097"), oldRowText(address = "http://127.0.0.1:4098"), readable = false)
+        h.engine.restoreAll()
+        val report = h.fire()
+        assertEquals("stale_target", report?.errorCode)
+        assertTrue(h.gateway.prompts.isEmpty())
+    }
 }
