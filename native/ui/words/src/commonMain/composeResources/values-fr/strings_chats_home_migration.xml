@@ -20,4 +20,6 @@
     <string name="homeNewBlockedOpening">%1$s est encore en cours d’ouverture. Réessayez dans un instant.</string>
     <string name="homePhoneOffStart">Démarrer OpenCode sur ce téléphone</string>
     <string name="homePhoneOffTitle">OpenCode est arrêté sur ce téléphone</string>
+    <string name="homeNewWaitingOpening">Nouvelle conversation s’ouvre dès que %1$s répond.</string>
+    <string name="homeNewWaitingCancel">Annuler Nouvelle conversation</string>
 </resources>

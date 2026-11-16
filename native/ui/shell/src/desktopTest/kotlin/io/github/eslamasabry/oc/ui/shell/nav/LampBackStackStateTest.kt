@@ -33,6 +33,7 @@ import io.github.eslamasabry.oc.ui.routes.ChatRoute
 import io.github.eslamasabry.oc.ui.routes.ChatsRoute
 import io.github.eslamasabry.oc.ui.routes.EntryInstaller
 import io.github.eslamasabry.oc.ui.routes.FilesRoute
+import io.github.eslamasabry.oc.ui.routes.RouteMotion
 import io.github.eslamasabry.oc.ui.shell.NavShell
 import io.github.eslamasabry.oc.ui.shell.ShellDependencies
 import io.github.eslamasabry.oc.ui.shell.ShellNavigator
@@ -124,7 +125,11 @@ class LampBackStackStateTest {
         }
     }
 
-    private fun ComposeUiTest.pages(): Pages = Pages().also { p -> setContent { p.Content() } }
+    // Conversations open with the ordinary page transition, as the app ships them (ChatRoute.openMotion).
+    private fun ComposeUiTest.pages(): Pages {
+        ChatRoute.openMotion = RouteMotion.SharedAxisX
+        return Pages().also { p -> setContent { p.Content() } }
+    }
 
     private fun ComposeUiTest.act(pages: Pages, step: ShellNavigator.() -> Unit) {
         runOnIdle { pages.navigator.step() }

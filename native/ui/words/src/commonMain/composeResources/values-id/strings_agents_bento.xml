@@ -33,7 +33,6 @@
     <string name="agentsInstallFailedNotStarted">%1$s sudah diunduh tetapi tidak berjalan di ponsel ini, jadi versinya tidak dapat diperiksa. Coba lagi; jika terjadi lagi, Detail berisi apa yang dilaporkan ponsel.</string>
     <string name="agentsInstallFailedWithdrawn">%1$s tidak dapat dipasang: versi %2$s, yang dipasang aplikasi ini, tidak lagi tersedia untuk diunduh. Mencoba lagi tidak akan mengubahnya; pembaruan aplikasi ini akan mengubahnya.</string>
     <string name="agentsStateSignInUnchecked">Terpasang, tetapi aplikasi ini belum bisa memeriksa status masuknya</string>
-    <string name="agentsStateSignInCheckFailed">Status masuk tidak dapat diperiksa. Coba masuk lagi.</string>
     <string name="agentsSignInUncheckedBody">Belum bisa dipakai untuk percakapan. Anda bisa menghapusnya.</string>
     <string name="agentsStateSetUpAtFirstUse">Terpasang. Siapkan saat pertama kali digunakan.</string>
     <string name="agentsChipSetUp">Siapkan</string>
@@ -49,4 +48,7 @@
     <string name="agentsUpdateRefused">pembaruan agen tidak dapat dimulai, gunakan Pasang pada agen</string>
     <string name="agentsUpdateUpdated">%1$s diperbarui</string>
     <string name="agentsUpdateNeedsSignIn">%1$s perlu Anda masuk</string>
+    <string name="agentsStateSignInNotConfirmed">Status masuk belum dikonfirmasi</string>
+    <string name="agentsSignInNotConfirmedBody">Aplikasi tidak dapat memastikan apakah %1$s sudah masuk. Memeriksa lagi akan menanyakan %1$s sekarang.</string>
+    <string name="agentsCheckSignInAgain">Periksa %1$s lagi</string>
 </resources>

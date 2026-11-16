@@ -29,6 +29,6 @@ Run a coding agent on your Android phone, or follow the one on your computer. As
 • English and Arabic, with partial Chinese, Spanish, Japanese, Portuguese and Russian. Large text up to 200%.
 
 <b>Your data</b>
-The app talks only to the servers you choose. Passwords stay in Android's keystore. No ads, no analytics, no automatic crash upload: a report is sent only when you send one, with secrets removed. You bring your own model provider.
+The app talks only to the servers you choose. Passwords stay in Android's keystore. No ads. Optional usage counts and crash reports are off until you turn them on, and never include your messages, code, files, paths or commands. A problem report is sent only when you send one, with secrets removed. You bring your own model provider.
 
 Source code (MIT): https://github.com/Eslamasabry/opencode-mobile-next

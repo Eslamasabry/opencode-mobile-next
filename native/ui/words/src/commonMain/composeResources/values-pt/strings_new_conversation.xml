@@ -46,4 +46,10 @@
     <string name="chatsNewStorageFolderDialogTitle">Nova pasta em %1$s</string>
     <string name="chatsNewStorageFolderDialogHelper">Uma pasta vazia no armazenamento do celular. Nada mais é adicionado a ela.</string>
     <string name="chatPhoneFolderRestartingAgents">Reiniciando os agentes do celular para que o agente desta conversa possa ver a pasta dela. Leva cerca de meio minuto.</string>
+    <string name="chatsNewPhoneFolderRestartBoth">Os agentes do celular e o OpenCode dele foram iniciados antes de você escolher esta pasta, então o %1$s ainda não a enxerga. Reinicie-os para trabalhar aqui.</string>
+    <string name="chatsNewPhoneFolderRestartBothAction">Reiniciar os agentes do celular e o OpenCode</string>
+    <string name="chatsNewPhoneFolderRestartingBoth">Reiniciando os agentes do celular e o OpenCode para que todos os agentes possam ver esta pasta. Leva cerca de meio minuto.</string>
+    <string name="chatsNewPhoneFolderRestartedBoth">Os agentes do celular e o OpenCode foram reiniciados. Todos os agentes já podem ver esta pasta.</string>
+    <string name="chatsNewPhoneFolderWaitingServer">O OpenCode deste celular está escrevendo uma resposta, então ele reinicia sozinho quando a resposta terminar. Nada é interrompido.</string>
+    <string name="chatsNewPhoneFolderWaitingAgents">Um agente deste celular está trabalhando, então os agentes do celular reiniciam sozinhos quando ele terminar. Nada é interrompido.</string>
 </resources>

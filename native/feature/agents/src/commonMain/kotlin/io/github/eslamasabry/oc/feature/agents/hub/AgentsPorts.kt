@@ -201,6 +201,17 @@ public data class PhoneAgentRow(
      * other place names it signed out (Flutter: failed is "Sign-in could not be checked. Try signing in again.").
      */
     val signInCheckFailed: Boolean = false,
+    /**
+     * signin-truth: where the sign-in state shown comes from, for Details only: the sign-in check's answer (or that it
+     * gave none) and when it was asked, a reported lapse (a reply or a refused start) and when, a completed sign-in.
+     * Technical words, never the agent's own text; null when there is nothing to say.
+     */
+    val signInEvidence: io.github.eslamasabry.oc.core.common.Redacted? = null,
+    /**
+     * [PhoneAgentStatus.Limit]: when the plan's limit resets, as this phone words a date and time (the agent's own reply
+     * named it); null when it named none.
+     */
+    val limitResets: String? = null,
     /** The version of the copy that runs on this phone ("1.5.9"); null when none runs or it was not read. */
     val installedVersion: String? = null,
     /**

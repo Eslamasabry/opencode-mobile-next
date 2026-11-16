@@ -141,13 +141,7 @@ class PhoneAgentAutoUpdate(
                 override val installProblem: Boolean get() = false
 
                 // A download of hundreds of megabytes never goes over data that is paid for; unknown counts as paid.
-                override val metered: Boolean
-                    get() =
-                        try {
-                            app.getSystemService(ConnectivityManager::class.java)?.isActiveNetworkMetered ?: true
-                        } catch (_: Exception) {
-                            true
-                        }
+                override val metered: Boolean get() = activeNetworkMetered(app)
             }
         val jobs =
             object : AgentUpdateJobs {
@@ -333,6 +327,17 @@ class PhoneAgentAutoUpdate(
         const val RELOAD_TRIES = 480
     }
 }
+
+/**
+ * Whether the active network charges for data, for the automatic updates (the agents' and OpenCode's): a download of
+ * hundreds of megabytes never goes over paid data, and a network that cannot be read counts as paid.
+ */
+internal fun activeNetworkMetered(app: Application): Boolean =
+    try {
+        app.getSystemService(ConnectivityManager::class.java)?.isActiveNetworkMetered ?: true
+    } catch (_: Exception) {
+        true
+    }
 
 @ContributesTo(AppScope::class)
 interface PhoneAgentAutoUpdateAccessors {

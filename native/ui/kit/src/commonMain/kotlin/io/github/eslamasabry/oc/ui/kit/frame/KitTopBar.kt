@@ -152,17 +152,17 @@ public fun KitTopBar(
         kitAssert(
             actions.isEmpty() &&
                 more == null &&
-                scope == null &&
                 subtitle == null &&
                 onTitleTap == null
         ) {
-            "KitTopBar: a centred title stands alone beside its exit"
+            "KitTopBar: a centred title stands alone beside its exit (and, if any, one scope line under it)"
         }
+        Column(modifier.fillMaxWidth()) {
         Row(
-            modifier
+            Modifier
                 .fillMaxWidth()
                 .heightIn(min = tokens.rowHeightOne.dp)
-                .padding(vertical = Space.S2.dp),
+                .padding(top = Space.S2.dp, bottom = if (scope == null) Space.S2.dp else 0.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Box(
@@ -187,6 +187,13 @@ public fun KitTopBar(
                 if (exit == KitTopBarExit.Close && onExit != null)
                     ExitButton(ExitGlyph.Close, exitLabel.orEmpty(), onExit, 1f)
             }
+        }
+        // The scope line (where the work happens) sits under the centred title, inside the exits' room.
+        if (scope != null)
+            Box(
+                Modifier.fillMaxWidth().padding(horizontal = (tokens.minTarget + Space.S1).dp, vertical = Space.S1.dp),
+                contentAlignment = Alignment.Center,
+            ) { scope() }
         }
         return
     }

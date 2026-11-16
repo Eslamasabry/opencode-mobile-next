@@ -10,7 +10,12 @@ import androidx.compose.runtime.Immutable
 public sealed interface KitEnabled {
     public data object Enabled : KitEnabled
 
-    public data class Disabled(override val reason: String) : KitEnabled
+    /**
+     * [answer]: what a tap does instead of the reason toast, for a reason that belongs to a place on the page (an empty
+     * box: the answer is to bring the person to it). The toast drops over the page's title, so a reason that has a
+     * place of its own says it there.
+     */
+    public data class Disabled(override val reason: String, val answer: (() -> Unit)? = null) : KitEnabled
 
     public val isEnabled: Boolean get() = this is Enabled
 

@@ -247,8 +247,7 @@ public fun ChatsScreen(
     // skeleton or a filter that matched nothing had no way to start at all). A + tapped before the server is open is
     // answered by the home's "still opening" notice, so it never has to hide.
     val footBar = HomeFootBarRules.shown(state.phase)
-    // Under Glass the floating + is liquid glass over the list (the kit records it only then), and the floating bar's
-    // pane bends the same recording (glass step 4).
+    // Under Glass the floating + is liquid glass over the list (the kit records it only then).
     val listGlass = rememberKitFrostState()
     val barActions = buildList {
         add(KitLineAction(stringResource(Res.string.kitTopBarSearch), actions::openSearch, icon = KitIcons.search))
@@ -268,9 +267,10 @@ public fun ChatsScreen(
         else pluralStringResource(Res.plurals.kitNeedsYouSpan, state.needsYou, Numbers.format(state.needsYou)).trimEnd().removeSuffix("·").trimEnd()
     KitScreen(
         // The phone's top is the page's own (Flutter conv-header): title row with plain Search and Settings icons, then
-        // the connection pill beside the filters. Glass step 4: where the lens is drawn the two rows lie on one floating
-        // liquid pane over the list, which scrolls on under it; everywhere else they are the page's scrolling header, as
-        // before (KitFloatingBar's scrollsElsewhere).
+        // the connection pill beside the filters. Glass step 4: where the lens is drawn the two rows float over the list,
+        // which scrolls on under them and is gone before it reaches their words; everywhere else they are the page's
+        // scrolling header, as before (KitFloatingBar's scrollsElsewhere). In no style do they lie on a pane of their own
+        // (owner 2026-11-16): the page's background runs unbroken from the top edge.
         topBar = {
             // The page names itself under the bar (Flutter KitPageHeading); "2 need you" opens the Inbox.
             // F: lib/ui/screens/chats/chats_home_screen.dart:380-386: room under the bar before the title, and
@@ -349,8 +349,10 @@ public fun ChatsScreen(
             state.home.opening?.takeIf { it.phase == ChatsOpeningPhase.Failed }?.let { opening ->
                 item(key = "opening-status", contentType = "opening-status") { Box(kitItemMotion()) { OpeningStatus(opening, actions, blocked = state.newBlocked) } }
             }
-            state.home.opening?.takeIf { state.newBlocked && it.phase != ChatsOpeningPhase.Failed }?.let { opening ->
-                item(key = "new-blocked", contentType = "new-blocked") { Box(kitItemMotion()) { NewConversationBlocked(opening, actions) } }
+            state.home.opening?.takeIf { (state.newBlocked || state.newWaiting) && it.phase != ChatsOpeningPhase.Failed }?.let { opening ->
+                item(key = "new-blocked", contentType = "new-blocked") {
+                    Box(kitItemMotion()) { NewConversationBlocked(opening, actions, waiting = state.newWaiting && !state.newBlocked) }
+                }
             }
             replyOffer?.takeIf { shownNotice == HomeNoticeKind.ReplyOffer }?.let { offer -> item(key = "reply-notification-offer", contentType = "reply-notification-offer") { Box(kitItemMotion()) { offer() } } }
             state.brief?.let { brief -> item(key = "brief", contentType = "brief") { Box(kitItemMotion()) { BriefBlock(brief, rowWords, mask, actions, state) } } }
@@ -705,7 +707,8 @@ private fun ConnectionStatusPill(connection: HomeConnectionUi, actions: ChatsAct
 
 @Composable
 private fun Filters(state: ChatsUi, actions: ChatsActions, bleed: Boolean = false) {
-    KitFilterChips(bleed = bleed) {
+    // Never rests with a chip cut by the edge ("All connections" at 360 dp): it settles on a whole chip, with an end fade.
+    KitFilterChips(bleed = bleed, restWhole = true) {
         HomeFilterChips(state, actions)
         val runningNow = state.runningShown
         KitChip(

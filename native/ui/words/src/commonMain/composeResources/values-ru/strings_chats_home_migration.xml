@@ -20,4 +20,6 @@
     <string name="homeNewBlockedOpening">%1$s ещё открывается. Повторите через мгновение.</string>
     <string name="homePhoneOffStart">Запустить OpenCode на этом телефоне</string>
     <string name="homePhoneOffTitle">OpenCode на этом телефоне выключен</string>
+    <string name="homeNewWaitingOpening">Новый чат откроется, как только %1$s ответит.</string>
+    <string name="homeNewWaitingCancel">Отменить новый чат</string>
 </resources>

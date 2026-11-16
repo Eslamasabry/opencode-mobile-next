@@ -139,6 +139,7 @@ private val CATALOG_NAMES = mapOf(
     "opencode" to "OpenCode 2",
     "claude" to "Claude Code",
     "codex" to "Codex",
+    "antigravity" to "Antigravity",
     "gemini" to "Gemini CLI",
     "qwen" to "Qwen Code",
     "kilo" to "Kilo",

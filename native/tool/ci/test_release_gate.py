@@ -8,7 +8,7 @@ release_smoke.py still names words the app has.
 The release script runs in a throw-away git repository with a fake `gh` (OC_GH) and a fake version allocator; --no-build
 means no Gradle, so only the preflight and the two gates are exercised.
 """
-import importlib.util, json, os, shutil, subprocess, sys, tempfile, unittest, warnings
+import importlib.util, json, os, re, shutil, subprocess, sys, tempfile, unittest, warnings
 
 warnings.simplefilter("ignore", ResourceWarning)
 
@@ -57,7 +57,8 @@ class ReleaseGate(unittest.TestCase):
         g('remote', 'add', 'origin', os.path.join(t, 'remote.git'))
         g('push', '-q', 'origin', 'master')
         self.sha = g('rev-parse', 'HEAD').stdout.strip()
-        self.code = '10050'
+        # The tree's own versionCode: every owner build bumps it, so a fixed number goes stale.
+        self.code = re.search(r'^versionCode=(\d+)', open(os.path.join(REPO, 'native/version.properties')).read(), re.M).group(1)
         os.makedirs(os.path.join(t, 'bin'))
         gh = os.path.join(t, 'bin/gh')
         open(gh, 'w').write(FAKE_GH)
@@ -192,6 +193,24 @@ class SmokeScript(unittest.TestCase):
         import xml.etree.ElementTree as ET
         nodes = [self.mod.Node(e) for e in ET.fromstring(xml).iter('node')]
         self.assertEqual(self.mod.user_texts(nodes), {'Plan the garden shed trip zq'})
+
+    def test_a_notice_on_the_conversations_screen_is_not_the_persons_text(self):
+        import xml.etree.ElementTree as ET
+        xml = ('<hierarchy><node text="The app was closed in the background, so OpenCode stopped. I" class="x" bounds="[0,0][1,1]"/>'
+               '<node text="Refactor the parser module zq" class="x" bounds="[0,0][1,1]"/></hierarchy>')
+        nodes = [self.mod.Node(e) for e in ET.fromstring(xml).iter('node')]
+        self.assertEqual(self.mod.user_texts(nodes), {'Refactor the parser module zq'})
+
+    def test_the_send_button_is_send_in_a_conversation_and_start_on_new_conversation(self):
+        import xml.etree.ElementTree as ET
+        def labels(*texts):
+            xml = '<hierarchy>' + ''.join(f'<node text="{t}" class="x" bounds="[0,0][1,1]"/>' for t in texts) + '</hierarchy>'
+            return [n.label() for n in self.mod.send_buttons([self.mod.Node(e) for e in ET.fromstring(xml).iter('node')])]
+        self.assertEqual(labels('Message', self.mod.word('kitComposerSend')), [self.mod.word('kitComposerSend')])
+        self.assertEqual(labels('Ask OpenCode', self.mod.word('upgradeNewStart')), [self.mod.word('upgradeNewStart')])
+        with_agent = self.mod.word('chatsNewStartWith').replace('%1$s', 'Codex')
+        self.assertEqual(labels(with_agent), [with_agent])
+        self.assertEqual(labels('Message', 'Starting'), [])
 
     def test_it_refuses_without_a_serial_and_writes_no_serial_into_the_result(self):
         env = {k: v for k, v in os.environ.items() if k != 'OC_SMOKE_SERIAL'}

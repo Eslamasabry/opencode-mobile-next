@@ -120,7 +120,6 @@ import io.github.eslamasabry.oc.ui.words.res.chatDraftRepeatAction
 import io.github.eslamasabry.oc.ui.words.res.chatDraftRepeatBody
 import io.github.eslamasabry.oc.ui.words.res.chatDraftRepeatTitle
 import io.github.eslamasabry.oc.ui.words.res.chatDraftRestoreFailed
-import io.github.eslamasabry.oc.ui.words.res.chatDraftRestoring
 import io.github.eslamasabry.oc.ui.words.res.kitTryAgain
 import io.github.eslamasabry.oc.ui.words.res.phraseChipsHide
 import io.github.eslamasabry.oc.ui.words.res.phraseChipsRowLabel
@@ -1175,11 +1174,12 @@ public fun BasicComposer(
                                     stringResource(Res.string.composerFullSteerHint)
                                 else if (replyHint != null)
                                     replyHint.text
-                                else
-                                    stringResource(
-                                        Res.string.upgradeComposerAsk,
-                                        askAs(state.models.agent, chrome.agentName()),
-                                    ),
+                                else {
+                                    // Open-transitions: no one to ask yet (the agent is not read) is no hint at all,
+                                    // never "Ask OpenCode…" in another agent's box.
+                                    val who = askAs(state.models.agent, chrome.agentName())
+                                    if (who.isEmpty()) "" else stringResource(Res.string.upgradeComposerAsk, who)
+                                },
                             kind = KitFieldKind.Multiline,
                             // B6: one line when empty, so the conversation keeps its room above the
                             // keyboard.
@@ -1204,10 +1204,14 @@ public fun BasicComposer(
                                 else
                                     KitEnabled.Disabled(
                                         // Issue 147: it always ends: the draft, or a plain line that it could not be opened.
-                                        stringResource(
-                                            if (state.draft.failure != null && !state.draft.ready)
-                                                Res.string.chatDraftRestoreFailed
-                                            else Res.string.chatDraftRestoring
+                                        // Open-transitions: while the store is still being read nobody knows whether a
+                                        // draft exists, so the box says nothing (it said "Opening your saved draft…"
+                                        // in every conversation's first frames, with or without a draft). It stays
+                                        // closed to typing for that read, which is real: typed words must not race
+                                        // the restore (B-STATE-100).
+                                        draftWaitWords(
+                                            state.draft,
+                                            stringResource(Res.string.chatDraftRestoreFailed),
                                         )
                                     ),
                             onTextChanged = { accepted ->
@@ -1357,6 +1361,8 @@ private const val COMPOSER_STRIP_GAP = 4
 /** The model's words, as the chip and the "+" sheet's Model row say them ("Server default", "Sonnet 4 · High"). */
 @Composable
 private fun modelWords(state: BasicComposerUi, chrome: ComposerChrome): String {
+    // Open-transitions: a model not read yet is no words at all, never the generic "Model" as if it were a fact.
+    if (modelUnknown(state.models)) return ""
     val named =
         modelLabel(
             state.models.selected?.label
@@ -1372,6 +1378,21 @@ private fun modelWords(state: BasicComposerUi, chrome: ComposerChrome): String {
     // model is marked by the list's own quiet "Free" tag; a suffix here appeared only once the free list had loaded.
     return named
 }
+
+/**
+ * The conversation's model is not known yet: no model is named, the server has not said it uses its default, and the
+ * catalog is still being read (or not read at all). Then the chip has no words: "Model" is only the button's words once
+ * the catalog is in and nothing is chosen (open-transitions: the box said "Model" for a chosen model while loading).
+ */
+internal fun modelUnknown(models: io.github.eslamasabry.oc.feature.chat.world.ComposerModels): Boolean =
+    models.selected == null && !models.usesDefault && (models.loading || models.choices.isEmpty())
+
+/**
+ * The words under a message box that waits for its draft: the could-not-open line once the read failed, and nothing
+ * while it is still read (whether there is a draft at all is not known yet).
+ */
+internal fun draftWaitWords(draft: io.github.eslamasabry.oc.feature.chat.world.DraftFacts, failed: String): String =
+    if (draft.failure != null && !draft.ready) failed else ""
 
 internal fun modelLabel(model: String, level: String, agent: String?): String =
     listOfNotNull(agent?.takeIf { it.isNotEmpty() && !isInternalMode(it) }, model, level.takeIf { it.isNotEmpty() })

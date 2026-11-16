@@ -252,7 +252,10 @@ public class ChatPresenter(
         return combine(inputs, local, hits, world.hasOlder, extra) { i, l, h, _, _ ->
                 present(i, l, h)
             }
-            .stateIn(scope, started, ChatUi.loading(world.ref))
+            // The page's first frame shows what the world already holds (kept rows, a message on its way, the title),
+            // never a loading state it would leave a frame later (open-transitions: the combine's first value arrives
+            // after the first frame is drawn).
+            .stateIn(scope, started, current())
     }
 
     /**
@@ -451,8 +454,11 @@ public class ChatPresenter(
               ),
             phase =
                 when (val load = i.load) {
-                    // Cache-first: known rows draw the real transcript while the live read is on its way.
-                    ChatLoad.Loading -> if (t.rows.isNotEmpty()) ChatPhase.Live else ChatPhase.Loading
+                    // Cache-first: known rows draw the real transcript while the live read is on its way. So do the
+                    // person's own messages on their way (open-transitions: a conversation just started from New
+                    // conversation opened on a skeleton of made-up turns instead of the message just typed): the
+                    // skeleton is only for a conversation of which nothing is known.
+                    ChatLoad.Loading -> if (t.rows.isNotEmpty() || pending.isNotEmpty()) ChatPhase.Live else ChatPhase.Loading
                     ChatLoad.Live -> ChatPhase.Live
                     is ChatLoad.Failed ->
                         if (kept != null) ChatPhase.Live else ChatPhase.Failed(load.failure, loadAgent())
@@ -632,10 +638,14 @@ public class ChatPresenter(
         runtime: String?,
     ) {
         val newest = rows.firstOrNull { it is FooterRow } as FooterRow? ?: return
-        if (!ChatSignInLapse.lapsed(newest)) return
+        // signin-truth: a reply that was the plan's usage limit is said as a limit, never as a sign-in.
+        val limit = ChatSignInLapse.limit(newest)
+        if (!ChatSignInLapse.lapsed(newest) && limit == null) return
         val provider = runtime ?: newest.providerId ?: return
         if (!lapseNoted.add(newest.turnId)) return
-        port.agentSignInLapsed(owner, provider, newest.createdMs ?: return)
+        val at = newest.createdMs ?: return
+        if (limit != null) port.agentLimitReached(owner, provider, at, limit)
+        else port.agentSignInLapsed(owner, provider, at)
     }
 
     /** Set up at first use ([AgentSetUpRules]): a failed send whose agent was never set up says so on its bubble. */

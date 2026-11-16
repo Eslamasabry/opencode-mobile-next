@@ -164,21 +164,35 @@ class FloatingHomeTest {
 
     private class Seen(val bounds: Map<String, DpRect?>, val png: java.awt.image.BufferedImage)
 
-    private fun home(platform: KitPlatform, motion: MotionLevel = MotionLevel.Full, act: ComposeUiTest.() -> Unit = {}): Seen {
+    private fun home(
+        platform: KitPlatform,
+        motion: MotionLevel = MotionLevel.Full,
+        style: Style = Style.Glass,
+        live: Boolean = false,
+        width: Int = W,
+        act: ComposeUiTest.() -> Unit = {},
+    ): Seen {
         lateinit var seen: Seen
-        runDesktopComposeUiTest((W * SCALE).toInt(), (H * SCALE).toInt()) {
+        runDesktopComposeUiTest((width * SCALE).toInt(), (H * SCALE).toInt()) {
             setContent {
                 CompositionLocalProvider(LocalDensity provides Density(SCALE, 1f)) {
                     ChatEnvironment {
                         KitTheme(
-                            appearance = KitAppearance(mode = AppearanceMode.Dark, motion = motion, style = Style.Glass),
+                            appearance =
+                                KitAppearance(
+                                    mode = AppearanceMode.Dark,
+                                    motion = motion,
+                                    style = style,
+                                    liveBackground = live,
+                                    liveStyle = if (live) "auroraImage" else KitAppearance().liveStyle,
+                                ),
                             platform = platform,
                             localeTag = "en",
                             stillFrame = true,
                         ) {
                             CompositionLocalProvider(
                                 LocalKitRedactor provides Redactor(),
-                                LocalKitWindow provides KitWindowInfo(W.toFloat(), H.toFloat()),
+                                LocalKitWindow provides KitWindowInfo(width.toFloat(), H.toFloat()),
                                 LocalKitScreenInsets provides WindowInsets(top = STATUS_DP.dp, bottom = NAV_DP.dp),
                             ) {
                                 Box(Modifier.fillMaxSize().background(LocalKitColors.current.ground)) {
@@ -192,7 +206,7 @@ class FloatingHomeTest {
             waitForIdle()
             act()
             waitForIdle()
-            val tags = listOf("kit-liquid-bar", "kit-floating-below", "kit-status-pill", "kit-page-heading")
+            val tags = listOf("kit-liquid-bar", "kit-floating-chrome", "kit-floating-below", "kit-status-pill", "kit-page-heading")
             val bounds =
                 tags.associateWith { runCatching { onNodeWithTag(it, useUnmergedTree = true).getBoundsInRoot() }.getOrNull() } +
                     ("first" to runCatching { onAllNodesWithText("Explain this project", useUnmergedTree = true).onFirst().getBoundsInRoot() }.getOrNull())
@@ -217,29 +231,30 @@ class FloatingHomeTest {
     }
 
     @Test
-    fun `B-HOME-FLOAT-001 under the lens the title floats as a liquid bar, the chips as pills, and the list rests where it did`() {
+    fun `B-HOME-FLOAT-001 under the lens the title and the chips float with no pane, and the list rests where it did`() {
         val lens = home(LensPlatform())
         val flat = home(DesktopKitPlatform())
-        assertNotNull(lens.bounds["kit-liquid-bar"], "the title row is a liquid capsule")
-        assertNotNull(lens.bounds["kit-floating-below"], "the chips row lies on the same pane")
-        assertNull(flat.bounds["kit-liquid-bar"], "without the lens there is no capsule")
+        // Owner 2026-11-16 ("remove the background below the conversations area"): no pane behind them.
+        assertNull(lens.bounds["kit-liquid-bar"], "the title row paints no pane")
+        assertNotNull(lens.bounds["kit-floating-below"], "the chips row floats in the same block")
+        assertNull(flat.bounds["kit-liquid-bar"], "without the lens there is no pane either")
         assertNull(flat.bounds["kit-floating-below"], "without the lens the chips are the scrolling header's, as before")
-        // One pane under the title and the chips: it reaches from the title row down to the chips row's foot.
-        val capsule = lens.bounds["kit-liquid-bar"]!!
+        // One block holds the title and the chips: it reaches from the title row down to the chips row's foot.
+        val capsule = lens.bounds["kit-floating-chrome"]!!
         val pills = lens.bounds["kit-floating-below"]!!
         val heading = lens.bounds["kit-page-heading"]!!
-        assertTrue(capsule.top.value <= heading.top.value + 4.5f, "the pane $capsule starts at the title row $heading")
-        assertTrue(capsule.bottom.value >= pills.bottom.value - 4.5f, "the pane $capsule reaches the chips row $pills")
+        assertTrue(capsule.top.value <= heading.top.value + .5f, "the block $capsule starts at the title row $heading")
+        assertTrue(capsule.bottom.value >= pills.bottom.value - .5f, "the block $capsule reaches the chips row $pills")
         val a = assertNotNull(lens.bounds["first"], "the first conversation shows under the lens")
         val b = assertNotNull(flat.bounds["first"], "the first conversation shows without the lens")
         // The pane keeps room under its chips row (FloatingPaneRow, the owner's first phone look): the list rests that
         // much lower under the lens.
         val room = io.github.eslamasabry.oc.ui.kit.frame.FloatingPaneRow.ROOM_BELOW_DP
         assertTrue(abs(a.top.value - (b.top.value + room)) <= .5f, "the first conversation rests at ${a.top} under the lens, ${b.top} without, room $room")
-        assertTrue(a.top.value >= capsule.bottom.value, "the first conversation $a rests below the pane $capsule")
+        assertTrue(a.top.value >= capsule.bottom.value, "the first conversation $a rests below the block $capsule")
         // Reduced motion holds the lens: the page is as it was.
         val held = home(LensPlatform(), motion = MotionLevel.Off)
-        assertNull(held.bounds["kit-liquid-bar"], "reduced motion: no floating capsule")
+        assertNull(held.bounds["kit-floating-chrome"], "reduced motion: no floating block")
         assertTrue(abs(assertNotNull(held.bounds["first"], "reduced motion: the first conversation shows").top.value - b.top.value) <= .5f, "reduced motion: the list rests where it did")
     }
 
@@ -258,7 +273,25 @@ class FloatingHomeTest {
         println("step 4 renders$tag: rest first=${rest.bounds["first"]} scrolled first=${scrolled.bounds["first"]} bright first=${bright.bounds["first"]} pane=${rest.bounds["kit-liquid-bar"]}")
     }
 
+    /**
+     * The home's top area at 360 dp over the painted aurora, Solid and Glass dark, at rest and scrolled (off unless
+     * FLOAT_RENDER_DIR names a folder; FLOAT_RENDER_TAG "-before" for a run on the base).
+     */
+    @Test
+    fun `top area pictures at 360 dp in Solid and Glass over a live background`() {
+        val out = System.getenv("FLOAT_RENDER_DIR")?.let(::File) ?: return
+        val tag = System.getenv("FLOAT_RENDER_TAG").orEmpty()
+        out.mkdirs()
+        for ((name, style, platform) in listOf(Triple("solid", Style.Solid, DesktopKitPlatform() as KitPlatform), Triple("glass", Style.Glass, LensPlatform()))) {
+            val rest = home(platform, style = style, live = true, width = NARROW_W)
+            ImageIO.write(rest.png, "png", File(out, "home-top-$name-360-rest$tag.png"))
+            val scrolled = home(platform, style = style, live = true, width = NARROW_W) { drag(-120f) }
+            ImageIO.write(scrolled.png, "png", File(out, "home-top-$name-360-scrolled$tag.png"))
+        }
+    }
+
     private companion object {
+        const val NARROW_W = 360
         const val NOW = 1_800_000_000_000L
         const val SCALE = 2.5f
         const val W = 412

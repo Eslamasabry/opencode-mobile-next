@@ -4,24 +4,28 @@
     native/tool/qa/release_smoke.sh --new-apk <build.apk> [--previous-apk <old.apk>] [--out DIR] [--commit SHA]
 
 The device is chosen by the environment variable OC_SMOKE_SERIAL (an adb serial). It is never written to a file.
-Tools: adb (OC_ADB overrides), python3. Plain adb and uiautomator only; the labels it taps and looks for are read from
+Tools: adb (OC_ADB overrides; else adb on PATH, else $ANDROID_HOME or ~/Android/Sdk platform-tools), python3.
+--commit takes a full or short commit of this repository (default HEAD). Before a run: the device holds an OLDER build
+of the app with at least one conversation (adb install cannot go down), and New conversation's agent and model are the
+cheap ones you want the two prompts to use (the script sends with whatever New conversation shows). Plain adb and uiautomator only; the labels it taps and looks for are read from
 this repository's own words files (ui/words), so a renamed button changes the script's target with the app.
 
 Checks, in order (a later check still runs after an earlier one fails, so one run reports everything):
   a  install: the new APK goes over the installed build (adb install -r, never uninstall) and the app opens with its
      conversations still there. What the person owns is whatever the Conversations screen shows before the install
      that is not one of the app's own words; every such text must still be there after it.
-  b  server: Settings > This phone says the phone's own server is running (it is started with the Start button when off).
-  c  reply: a new conversation, a prompt that asks for one exact word, and that word comes back as a reply.
-  d  permission: a prompt that makes the agent write a file; the permission question appears, "Allow once" answers it,
-     the question goes away and the run goes on.
+  b  server: Settings > Server > This phone says the phone's own server is running (it is started with the Start button when off).
+  c  reply: New conversation, a prompt that asks for one exact word, Start, and that word comes back as a reply.
+  d  permission: a fresh New conversation and a prompt that makes the agent write one file; every permission question
+     that follows is answered with "Allow once" (at most six: an agent may also ask to read or list), the questions
+     go away and the run goes on.
 
 Result file: <out>/smoke-<commit>.json with the commit, the installed version code, the device model, the time, the
 APK's sha256 and each check's pass or fail ("pass": true only when all four passed). scripts/native-release.sh refuses
 to go on without such a file for its HEAD commit.
 Exit: 0 all four passed, 1 a check failed, 2 could not run (no device, no APK, no adb).
 """
-import argparse, datetime, glob, hashlib, json, os, re, secrets, subprocess, sys, time
+import argparse, datetime, glob, hashlib, json, os, re, secrets, shutil, subprocess, sys, time
 import xml.etree.ElementTree as ET
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -29,7 +33,17 @@ NATIVE = os.path.abspath(os.path.join(HERE, '..', '..'))
 REPO = os.path.abspath(os.path.join(NATIVE, '..'))
 WORDS = os.path.join(NATIVE, 'ui', 'words', 'src', 'commonMain', 'composeResources', 'values')
 PKG = 'io.github.eslamasabry.opencode_mobile'
-ADB = os.environ.get('OC_ADB', 'adb')
+def _find_adb():
+    if os.environ.get('OC_ADB', '').strip():
+        return os.environ['OC_ADB'].strip()
+    for c in (shutil.which('adb'), os.path.join(os.environ.get('ANDROID_HOME', '/nonexistent'), 'platform-tools', 'adb'),
+              os.path.expanduser('~/Android/Sdk/platform-tools/adb')):
+        if c and os.path.isfile(c) and os.access(c, os.X_OK):
+            return c
+    return 'adb'
+
+
+ADB = _find_adb()
 SERIAL = os.environ.get('OC_SMOKE_SERIAL', '').strip()
 DUMP = '/sdcard/oc_release_smoke_ui.xml'
 
@@ -52,9 +66,10 @@ def shell(*args, timeout=60):
 
 # ---- the app's own words ------------------------------------------------------------------------------------------------
 _words = {}
-for _f in glob.glob(os.path.join(WORDS, '*.xml')):
+# The shared words, and the Android app's own (notices such as "The app was closed in the background" live there).
+for _f in glob.glob(os.path.join(WORDS, '*.xml')) + glob.glob(os.path.join(NATIVE, 'androidApp', 'src', 'main', 'res', 'values', 'strings*.xml')):
     for _e in ET.parse(_f).getroot().iter('string'):
-        _words[_e.get('name')] = ''.join(_e.itertext()).replace("\\'", "'").replace('\\n', '\n')
+        _words[_e.get('name')] = ''.join(_e.itertext()).replace("\\'", "'").replace('\\u0027', "'").replace('\\n', '\n')
 
 
 def word(key):
@@ -64,6 +79,22 @@ def word(key):
 
 
 CHROME = {v.strip() for v in _words.values() if '%' not in v and '{' not in v}
+# The literal start of every word, up to its first placeholder: a notice or a status line on the Conversations screen
+# ("The app was closed in the background, so ...") is the app's word, often cut short, never the person's own text.
+_STARTS = sorted({re.split(r'%(?:\d+\$)?[sd]|\{', v.strip())[0].strip() for v in _words.values()}, key=len, reverse=True)
+_STARTS = [t for t in _STARTS if len(t) >= 12]
+
+
+# Whole words long enough to be unmistakable inside a longer line (a notice built from two words).
+_LONG = [w for w in CHROME if len(w) >= 20]
+
+
+def apps_words(text):
+    """True when [text] is the app's own words: a word, a filled-in word, or a line that holds a long word."""
+    t = text.strip()
+    if t in CHROME or t.rstrip('…').strip() in CHROME:
+        return True
+    return any(t.startswith(w) for w in _STARTS) or any(w in t for w in _LONG)
 
 
 # ---- uiautomator --------------------------------------------------------------------------------------------------------
@@ -157,7 +188,7 @@ def user_texts(nodes):
     out = set()
     for n in nodes:
         t = n.label().strip()
-        if len(t) >= 3 and t not in CHROME and not re.search(r'\d', t) and not n.cls.endswith('EditText'):
+        if len(t) >= 3 and not apps_words(t) and not re.search(r'\d', t) and not n.cls.endswith('EditText'):
             out.add(t)
     return out
 
@@ -191,7 +222,8 @@ def check_a(new_apk, previous_apk, ctx):
         print(f'  a  installed the previous build ({have}) first; create a conversation in it and run again')
         raise Fail('the previous build was only just installed, so it holds no conversations yet')
     if new_code is not None and have >= new_code:
-        raise Fail(f'the installed build ({have}) is not older than the new one ({new_code}); an update over it is not a test of updating')
+        raise Fail(f'the installed build ({have}) is not older than the new one ({new_code}); an update over it is not a test of '
+                   'updating: install an older build of the same signer first (adb install -r), open a conversation in it, run again')
     launch()
     before = user_texts(conversations_screen())
     if not before:
@@ -217,14 +249,26 @@ def open_this_phone():
     v, nodes = wait_for('Settings', 20, lambda ns: find(ns, word('settingsHubSearch'), exact=False))
     if not v:
         raise Fail('Settings did not open')
+    # Settings lists the "Server" group (its second line names the server, e.g. "This phone · Connected"); the
+    # "This phone" row is inside that group.
+    server_row = word('settingsHubServer')
     for _ in range(8):
-        hit = find(nodes, word('settingsV3ThisPhone'))
+        hit = find(nodes, server_row)
         if hit:
             tap(hit[0])
-            return
+            break
         swipe_up()
         nodes = screen()
-    raise Fail(f'no "{word("settingsV3ThisPhone")}" row in Settings')
+    else:
+        raise Fail(f'no "{server_row}" row in Settings')
+    v, nodes = wait_for('This phone row', 20, lambda ns: find(ns, word('settingsV3ThisPhone')))
+    for _ in range(6):
+        if v:
+            tap(v[0])
+            return
+        swipe_up()
+        v = find(screen(), word('settingsV3ThisPhone'))
+    raise Fail(f'no "{word("settingsV3ThisPhone")}" row under Settings > {server_row}')
 
 
 def check_b(ctx):
@@ -267,7 +311,40 @@ def new_conversation():
         v, nodes = wait_for('composer', 30, composer)
         if not v:
             raise Fail('the conversation did not open with a message box')
+    settle_setup()
     return composer
+
+
+def settle_setup(timeout=90):
+    """Each check starts the app cold, so the phone's own server may still be starting when New conversation reads its
+    projects and models ("This server's projects and models couldn't be read."). The page does not read again by
+    itself; a person taps "Try again". Do the same, every few seconds, until the page has read them."""
+    failed, retry = word('chatsNewSetupFailed'), word('commonRetry')
+    end = time.time() + timeout
+    while time.time() < end:
+        nodes = screen()
+        if not find(nodes, failed):
+            return
+        again = find(nodes, retry)
+        if again:
+            tap(again[0])
+        time.sleep(5)
+    raise Fail(f'New conversation still said "{failed}" after {timeout} s of "{retry}" (the server did not answer)')
+
+
+def clear_field():
+    # Select all and delete: New conversation brings back an earlier draft, which must not join the prompt.
+    shell('input', 'keycombination', 'KEYCODE_CTRL_LEFT', 'KEYCODE_A')
+    shell('input', 'keyevent', 'KEYCODE_DEL')
+
+
+def send_buttons(nodes):
+    """The button that sends: "Send" in a conversation, "Start" (or "Start with <agent>") on New conversation."""
+    hits = find(nodes, word('kitComposerSend')) or find(nodes, word('upgradeNewStart'))
+    if not hits:
+        prefix = word('chatsNewStartWith').split('%')[0].strip()
+        hits = [n for n in nodes if prefix and n.label().strip().startswith(prefix)]
+    return hits
 
 
 def send(composer, text):
@@ -277,13 +354,14 @@ def send(composer, text):
         raise Fail('no message box to type in')
     tap(box[0])
     time.sleep(1)
+    clear_field()
     type_text(text)
     time.sleep(1)
     nodes = screen()
-    send_btn = find(nodes, word('kitComposerSend'))
-    if not send_btn:
-        raise Fail(f'no "{word("kitComposerSend")}" button after typing')
-    tap(send_btn[0])
+    btn = send_buttons(nodes)
+    if not btn:
+        raise Fail(f'no "{word("kitComposerSend")}" or "{word("upgradeNewStart")}" button after typing')
+    tap(btn[0])
 
 
 def check_c(ctx):
@@ -293,27 +371,35 @@ def check_c(ctx):
     send(composer, f'Reply with exactly this word and nothing else: {tok}')
     v, _ = wait_for('reply', 150, lambda ns: [n for n in ns if n.label().strip() == tok])
     if not v:
-        raise Fail(f'no reply that is exactly "{tok}" within 150 s (does the phone\'s server have a working model?)')
+        raise Fail(f'no reply that is exactly "{tok}" within 150 s (was it sent, and does the server have a working model?)')
     return 'the reply came back'
 
 
+MAX_QUESTIONS = 6
+
+
 def check_d(ctx):
-    composer = ctx.get('composer') or new_conversation()
+    composer = new_conversation()  # its own conversation: check c's must not carry this prompt
     name = 'smoke-' + secrets.token_hex(3) + '.txt'
-    send(composer, f'Create a file named {name} in the project with the word hello in it. Do it now.')
+    send(composer, f'Create a file named {name} in the project with the word hello in it, in one write. Do nothing else.')
     allow = word('kitRequestAllowOnce')
     v, nodes = wait_for('permission question', 120, lambda ns: find(ns, allow))
     if not v:
         raise Fail(f'no permission question ("{allow}") within 120 s (is the permission mode "ask" and the model able to write files?)')
-    tap(v[0])
-    gone, nodes = wait_for('question gone', 60, lambda ns: not find(ns, allow))
-    if not gone:
-        raise Fail('the permission question stayed after "Allow once"')
+    answered = 0
+    while v and answered < MAX_QUESTIONS:
+        tap(v[0])
+        answered += 1
+        time.sleep(3)
+        # The agent may ask again (read the file back, list the folder): answer each one, then wait for quiet.
+        v, nodes = wait_for('another question', 20, lambda ns: find(ns, allow))
+    if v:
+        raise Fail(f'a permission question was still there after "{allow}" was pressed {answered} times')
     mentions = lambda ns: [n for n in ns if name in n.label()]
     v, nodes = wait_for('run goes on', 120, lambda ns: len(mentions(ns)) >= 2)
     if not v:
         raise Fail(f'after "Allow once" nothing new about {name} appeared within 120 s (the run did not go on)')
-    return 'the question appeared, Allow once answered it, the run went on'
+    return f'{answered} permission question(s) answered with Allow once, the run went on'
 
 
 def main():
@@ -329,9 +415,10 @@ def main():
         die(f'no APK at {a.new_apk}')
     if a.previous_apk and not os.path.isfile(a.previous_apk):
         die(f'no APK at {a.previous_apk}')
-    commit = a.commit or subprocess.run(['git', '-C', REPO, 'rev-parse', 'HEAD'], capture_output=True, text=True).stdout.strip()
+    commit = subprocess.run(['git', '-C', REPO, 'rev-parse', '--verify', '--quiet', (a.commit or 'HEAD') + '^{commit}'],
+                            capture_output=True, text=True).stdout.strip()
     if not re.fullmatch(r'[0-9a-f]{40}', commit):
-        die('could not read the commit (pass --commit <40 hex>)')
+        die(f'could not read the commit {a.commit or "HEAD"} in this repository (fetch it, or pass --commit <sha>)')
     if adb('get-state').stdout.strip() != 'device':
         die('the device in OC_SMOKE_SERIAL is not online (adb get-state)')
     model = shell('getprop', 'ro.product.model').strip() or 'unknown'

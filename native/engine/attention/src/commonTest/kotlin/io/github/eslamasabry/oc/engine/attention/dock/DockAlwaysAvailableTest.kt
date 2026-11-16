@@ -120,7 +120,7 @@ class DockAlwaysAvailableTest {
         val removed = m.reduce(DockEvent.Remove(b))
         assertEquals(listOf(a, c, d), removed.ids())
         assertEquals(listOf(b), removed.removedRefs)
-        assertTrue(removed.ui.hidden.isEmpty(), "only live removed conversations are listed as hidden")
+        assertEquals(listOf(b), removed.ui.hidden.map { it.ref }, "an idle removed conversation is listed too, so it can be shown again")
         assertEquals(listOf(b), removed.reduce(DockEvent.RequestsRead(p, emptyMap())).removedRefs, "a full read keeps it out")
         // Plain working does not bring it back; it is listed as hidden while live. Restore does.
         val works = removed.reduce(DockEvent.RunStarted(b))

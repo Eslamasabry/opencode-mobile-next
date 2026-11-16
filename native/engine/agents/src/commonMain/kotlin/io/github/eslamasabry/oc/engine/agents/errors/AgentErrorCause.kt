@@ -64,7 +64,9 @@ public object AgentErrorText {
         ci("free (?:tier|model)s? limit") to AgentErrorCause.FreeTierLimit,
         ci(
             "usage limit (?:reached|exceeded)|usagelimiterror|free.?usage.?(?:limit|exceeded|reached)" +
-                "|(?:free|plan|daily|weekly|monthly|\\d+.?hour) limit (?:reached|exceeded)",
+                "|(?:free|plan|daily|weekly|monthly|\\d+.?hour) limit (?:reached|exceeded)" +
+                // signin-truth: Claude Code 2.x, "You've hit your weekly limit · resets Nov 20, 1am (UTC)".
+                "|(?:hit|reached) your (?:[\\w-]+ ){0,2}(?:usage )?limit",
         ) to AgentErrorCause.UsageLimit,
         ci(
             "insufficient.?(quota|credit|funds|balance)|out of credit" +
