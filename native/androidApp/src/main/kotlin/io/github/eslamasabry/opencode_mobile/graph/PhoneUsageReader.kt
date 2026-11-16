@@ -87,7 +87,9 @@ class PhoneUsageReader(
     val agentRows: kotlinx.coroutines.flow.StateFlow<PhoneAgentsState>
         get() = phoneAgents.state
 
-    suspend fun refreshAgents(): Unit = phoneAgents.refresh()
+    suspend fun refreshAgents() {
+        phoneAgents.refresh()
+    }
 
     fun signInOwner(): ProfileId? = if (supported) owner() else null
 
