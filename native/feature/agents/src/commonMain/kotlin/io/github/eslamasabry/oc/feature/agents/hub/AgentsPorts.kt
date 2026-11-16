@@ -181,6 +181,11 @@ public data class PhoneAgentRow(
     val name: String,
     val status: PhoneAgentStatus,
     val removable: Boolean = false,
+    /**
+     * The app no longer offers this agent (Gemini CLI): a copy left on the phone is listed only to be removed. It is
+     * never installed again, checked, signed in or chosen for a conversation.
+     */
+    val retired: Boolean = false,
     val installable: Boolean = false,
     val previousVersionAvailable: Boolean = false,
     /** Current processor's pinned payload, not an estimated complete setup size. */

@@ -1,6 +1,7 @@
 package io.github.eslamasabry.oc.feature.phone.ui
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -19,17 +20,21 @@ import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 
 /**
- * The first-start questions, asked on top of whatever screen is open when the built-in server first
- * starts (Flutter asks right away, wherever the start happened), never at process startup. The app
- * shell hosts this app-wide; the queue saves each answer before any Android settings page opens.
+ * The first-start questions, asked once the built-in server has first started and the moment is [quiet] (the shell
+ * says so: the conversation list is showing, no other sheet or dialog is open, no reply is running). A question that
+ * is waiting never opens over anything else; once it is on screen it stays until it is answered, however the page
+ * under it changes. The queue saves each answer before any Android settings page opens.
  */
 @Composable
-public fun PhoneFirstStartConsentHost(consents: PhoneFirstStartConsents) {
+public fun PhoneFirstStartConsentHost(consents: PhoneFirstStartConsents, quiet: Boolean = true) {
     val consent by consents.pending.collectAsState()
     var saving by remember { mutableStateOf(false) }
     var failed by remember { mutableStateOf(false) }
+    var shown by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
-    PhoneFirstStartConsent(consent, failed) { allow ->
+    val show = consent != null && (shown || quiet)
+    LaunchedEffect(show, consent == null) { shown = show }
+    PhoneFirstStartConsent(if (show) consent else null, failed) { allow ->
         if (!saving) {
             saving = true
             failed = false
