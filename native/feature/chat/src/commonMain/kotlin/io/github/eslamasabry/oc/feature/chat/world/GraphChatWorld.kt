@@ -833,16 +833,13 @@ internal class GraphChatWorld(
                             // and the line says so with its Restart (a sign-in never keeps the helper down).
                             waiting && phone == PhoneServerWait.AgentNeedsSignIn -> ChatServerWait.AgentNeedsSignIn
                             // The real current stage of the start, when the app's signals name one.
-                            down && stage != null -> stageWait(stage)
                             down && phone == PhoneServerWait.Starting -> ChatServerWait.Starting
                             // The server is up and the conversation itself is being read.
-                            waiting && link == ChatLink.Live && appStartsServer -> ChatServerWait.OpeningConversation
                             waiting -> ChatServerWait.Connecting
                             else -> null
                         }
                     }
                     // Each stage holds a moment before the next shows; the page opening ends the line at once.
-                    .holdStages { it.isStage }
                     .collect { mutableServerWait.value = it }
             }
         stopWatching = {

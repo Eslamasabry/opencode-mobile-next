@@ -1592,13 +1592,12 @@ private fun connectionLine(
                 io.github.eslamasabry.oc.feature.chat.world.ChatServerWait.UpdatingAgents -> stringResource(Res.string.connectUpdatingAgents)
                 io.github.eslamasabry.oc.feature.chat.world.ChatServerWait.AgentNeedsSignIn -> stringResource(Res.string.connectAgentNeedsSignIn)
                 io.github.eslamasabry.oc.feature.chat.world.ChatServerWait.Starting -> stringResource(Res.string.connectStartingPhone)
-                io.github.eslamasabry.oc.feature.chat.world.ChatServerWait.StartingLinux -> stringResource(Res.string.stageStartingLinux)
-                io.github.eslamasabry.oc.feature.chat.world.ChatServerWait.StartingOpenCode -> stringResource(Res.string.stageStartingOpenCode)
-                io.github.eslamasabry.oc.feature.chat.world.ChatServerWait.StartingHelper -> stringResource(Res.string.stageStartingHelper)
-                io.github.eslamasabry.oc.feature.chat.world.ChatServerWait.OpeningConversation -> stringResource(Res.string.stageOpeningConversation)
+                io.github.eslamasabry.oc.feature.chat.world.ChatServerWait.StartingLinux -> stringResource(Res.string.launchUiSessionWaiting)
+                io.github.eslamasabry.oc.feature.chat.world.ChatServerWait.StartingOpenCode -> stringResource(Res.string.launchUiSessionWaiting)
+                io.github.eslamasabry.oc.feature.chat.world.ChatServerWait.StartingHelper -> stringResource(Res.string.launchUiSessionWaiting)
+                io.github.eslamasabry.oc.feature.chat.world.ChatServerWait.OpeningConversation -> stringResource(Res.string.launchUiSessionWaiting)
                 io.github.eslamasabry.oc.feature.chat.world.ChatServerWait.StartingAgent ->
-                    if (agentName != null) stringResource(Res.string.stageStartingAgent, agentName)
-                    else stringResource(Res.string.launchUiSessionWaiting)
+                    stringResource(Res.string.launchUiSessionWaiting)
                 io.github.eslamasabry.oc.feature.chat.world.ChatServerWait.Connecting ->
                     if (agentName != null) stringResource(Res.string.chatConnectingToAgent, agentName)
                     else stringResource(Res.string.launchUiSessionWaiting)
