@@ -73,6 +73,37 @@ class PaseoPlanDeclineTest {
         }
     }
 
+    /** A request as Paseo forwards a Codex file patch or any tool the app has no card kind for: a name, no typed detail. */
+    private fun genericPermission(id: String, name: String, detailType: String? = "unknown"): JsonObject =
+        jsonOf(
+            "id" to id, "provider" to "claude", "name" to name, "kind" to "tool",
+            "input" to mapOf("path" to "$DIR/p2.txt", "content" to "hi"),
+            "detail" to (if (detailType == null) emptyMap() else mapOf("type" to detailType, "input" to mapOf("path" to "$DIR/p2.txt"))),
+            "metadata" to mapOf("toolUseId" to "toolu_$id"),
+        )
+
+    @Test
+    fun `B-AGENT-PLAN-014 every change-making kind and any unknown kind is declined in Plan, with no card`() = runTest {
+        val h = known(plan = true)
+        val kinds = listOf("apply_patch", "fileChange", "file_change", "Write", "delete_file", "move_file", "MultiEdit", "NotebookEdit", "mystery_tool")
+        kinds.forEachIndexed { n, name -> h.asks(genericPermission("g$n", name)) }
+        assertTrue(h.cards().isEmpty(), "no card for any of $kinds")
+        assertEquals(kinds.indices.map { "g$it" }, h.daemon.of("agent_permission_response").map { it.str("requestId") })
+    }
+
+    @Test
+    fun `B-AGENT-PLAN-015 known read-only kinds go on in Plan`() = runTest {
+        val h = known(plan = true)
+        listOf(
+            genericPermission("r1", "Glob", "search").let { JsonObject(it + ("detail" to jsonOf("type" to "search", "toolName" to "glob", "query" to "*.kt"))) },
+            genericPermission("r2", "Grep", "search"),
+            genericPermission("r3", "WebFetch", "fetch").let { JsonObject(it + ("detail" to jsonOf("type" to "fetch", "url" to "https://example.com"))) },
+        ).forEach { h.asks(it) }
+        h.asks(readPermission("r4"))
+        assertEquals(4, h.cards().size)
+        assertTrue(h.daemon.of("agent_permission_response").isEmpty())
+    }
+
     @Test
     fun `B-AGENT-PLAN-011 a read asked in Plan goes on as today`() = runTest {
         val h = known(plan = true)
