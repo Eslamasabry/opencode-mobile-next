@@ -70,8 +70,9 @@ class ProductAnalyticsTest {
         val lifecycle = ProductLifecycle(telemetry, StepClock())
         lifecycle.beginColdStart()
         telemetry.track(ProductEvent.ScreenView, mapOf("screen" to ProductScreen.Conversations))
+        telemetry.track(ProductEvent.MemoryPressure, mapOf("level" to "low"))
         lifecycle.coldStart("3.0.1+10081", "3.0.1+10081")
-        assertEquals(listOf("app_open", "screen_view"), sink.events.map { it.first })
+        assertEquals(listOf("app_open", "screen_view", "memory_pressure"), sink.events.map { it.first })
     }
 
     @Test
