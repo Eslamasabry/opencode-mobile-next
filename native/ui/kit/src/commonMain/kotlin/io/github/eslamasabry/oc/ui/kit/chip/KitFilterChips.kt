@@ -153,6 +153,9 @@ private class ChipLine(private val baseGap: Dp, private val minPeek: Dp, private
 
     /** `restWhole`: chips scrolled off before the window's start and chips past its end (the cues' counts). */
     var before by mutableStateOf(0)
+
+    /** `restWhole`: not even the first chip fits beside the cues; the line then scrolls as a plain line (nothing else can hold it). */
+    var noRoom by mutableStateOf(false)
     var after by mutableStateOf(0)
 
     override val spacing: Dp get() = gap
@@ -245,8 +248,9 @@ public fun KitFilterChips(
     val growEnd = if (onPane || endOnGutter) 0.dp else (room - restEnd).coerceAtLeast(0.dp)
     val startPad = restStart + growStart
     val endPad = restEnd + growEnd
-    val whole = restWhole && LocalLayoutDirection.current == LayoutDirection.Ltr
-    val line = remember(whole) { ChipLine(Space.S2.dp, FilterChipsRules.MIN_PEEK_DP.dp, whole) }
+    val wantWhole = restWhole && LocalLayoutDirection.current == LayoutDirection.Ltr
+    val line = remember(wantWhole) { ChipLine(Space.S2.dp, FilterChipsRules.MIN_PEEK_DP.dp, wantWhole) }
+    val whole = wantWhole && !line.noRoom
     if (whole) {
         val density = LocalDensity.current
         LaunchedEffect(scroll, line) {
@@ -305,6 +309,7 @@ public fun KitFilterChips(
                 if (whole && constraints.hasBoundedWidth) {
                     val edge = FilterChipsRules.wholeEnd(line.sizes, line.gapPx, startPad.toPx(), scroll.value.toFloat(), width.toFloat())
                     line.more = edge < width.toFloat() - .5f
+                    if (line.sizes.isNotEmpty() && line.sizes[0] + startPad.toPx() > width + .5f) line.noRoom = true
                     width = edge.roundToInt().coerceIn(0, width)
                     var x = startPad.toPx() - scroll.value
                     var gone = 0
