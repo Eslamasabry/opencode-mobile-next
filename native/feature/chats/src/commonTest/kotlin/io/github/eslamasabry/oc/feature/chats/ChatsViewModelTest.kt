@@ -17,6 +17,11 @@ import io.github.eslamasabry.oc.feature.chats.presentation.ChatsListSourceUi
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsOpeningPhase
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsOpeningUi
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeConnectionState
+import io.github.eslamasabry.oc.feature.chats.presentation.HomeDownloadFact
+import io.github.eslamasabry.oc.feature.chats.presentation.HomeDownloadKind
+import io.github.eslamasabry.oc.feature.chats.presentation.HomeDownloadPhase
+import io.github.eslamasabry.oc.feature.chats.presentation.HomeDownloadRules
+import io.github.eslamasabry.oc.feature.chats.presentation.HomeDownloads
 import io.github.eslamasabry.oc.feature.chats.presentation.PhoneStopWatch
 import io.github.eslamasabry.oc.feature.chats.presentation.HomePermissionReply
 import io.github.eslamasabry.oc.ui.routes.ServersRoute
@@ -1177,5 +1182,89 @@ class ChatsViewModelTest {
         vm.answerQuestion(row, listOf(listOf("pnpm")), "pnpm")
         assertEquals(listOf("pnpm"), vm.state.value.heldQuestions.values.toList())
         assertEquals(emptyMap(), vm.state.value.held, "a question hold is not a permission hold")
+    }
+
+    private class Downloads(initial: List<HomeDownloadFact> = emptyList()) : HomeDownloads {
+        override val facts = MutableStateFlow(initial)
+        val now = mutableListOf<HomeDownloadKind>()
+        var retried = mutableListOf<HomeDownloadKind>()
+        var retryStarts = true
+
+        override fun downloadNow(kind: HomeDownloadKind) {
+            now += kind
+        }
+
+        override fun tryAgain(kind: HomeDownloadKind): Boolean {
+            retried += kind
+            return retryStarts
+        }
+    }
+
+    private fun downloadHome(downloads: Downloads) =
+        ChatsViewModel(
+            Feed(), Briefs(), Door(true), { Instant.fromEpochMilliseconds(0) }, clock, RecordingNavigator(),
+            downloads = downloads,
+        )
+
+    private val waitingOpenCode = HomeDownloadFact(HomeDownloadKind.OpenCode, HomeDownloadPhase.Waiting)
+
+    @Test
+    fun `DOWNLOAD-CONSENT a held download shows on Home with its size, and nothing opens by itself`() = runTest {
+        val vm = downloadHome(Downloads(listOf(waitingOpenCode)))
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
+        assertEquals(waitingOpenCode, vm.state.value.download)
+        assertEquals(130, vm.state.value.download?.megabytes)
+        assertNull(vm.state.value.downloadAsk, "the ask opens only from the line's action")
+    }
+
+    @Test
+    fun `DOWNLOAD-CONSENT the line's action opens the ask, Download now runs that one, Wait keeps the hold`() = runTest {
+        val downloads = Downloads(
+            listOf(waitingOpenCode, HomeDownloadFact(HomeDownloadKind.Helper, HomeDownloadPhase.Waiting)),
+        )
+        val vm = downloadHome(downloads)
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
+        vm.actOnDownload()
+        assertEquals(HomeDownloadKind.OpenCode, vm.state.value.downloadAsk)
+        vm.waitForWifi()
+        assertNull(vm.state.value.downloadAsk)
+        assertTrue(downloads.now.isEmpty(), "Wait for Wi-Fi downloads nothing")
+        vm.actOnDownload()
+        vm.downloadNow()
+        assertEquals(listOf(HomeDownloadKind.OpenCode), downloads.now, "only the one asked about; the other stays held")
+        assertNull(vm.state.value.downloadAsk)
+    }
+
+    @Test
+    fun `DOWNLOAD-CONSENT a download that runs wins the line, then a failure, then a wait`() {
+        val running = HomeDownloadFact(HomeDownloadKind.Helper, HomeDownloadPhase.Running(10))
+        val failed = HomeDownloadFact(HomeDownloadKind.OpenCode, HomeDownloadPhase.Failed)
+        assertEquals(running, HomeDownloadRules.shown(listOf(waitingOpenCode, failed, running)))
+        assertEquals(failed, HomeDownloadRules.shown(listOf(waitingOpenCode, failed)))
+        assertNull(HomeDownloadRules.shown(emptyList()))
+    }
+
+    @Test
+    fun `DOWNLOAD-CONSENT Try again starts a failed download, and asks first when the network is mobile data`() = runTest {
+        val failed = HomeDownloadFact(HomeDownloadKind.OpenCode, HomeDownloadPhase.Failed)
+        val downloads = Downloads(listOf(failed))
+        val vm = downloadHome(downloads)
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
+        vm.actOnDownload()
+        assertEquals(listOf(HomeDownloadKind.OpenCode), downloads.retried)
+        assertNull(vm.state.value.downloadAsk)
+        downloads.retryStarts = false
+        vm.actOnDownload()
+        assertEquals(HomeDownloadKind.OpenCode, vm.state.value.downloadAsk)
+    }
+
+    @Test
+    fun `DOWNLOAD-CONSENT a running download has no action`() = runTest {
+        val downloads = Downloads(listOf(HomeDownloadFact(HomeDownloadKind.OpenCode, HomeDownloadPhase.Running(null))))
+        val vm = downloadHome(downloads)
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
+        vm.actOnDownload()
+        assertNull(vm.state.value.downloadAsk)
+        assertTrue(downloads.retried.isEmpty())
     }
 }

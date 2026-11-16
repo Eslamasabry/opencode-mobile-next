@@ -256,4 +256,64 @@ class OpenCodeUpdateTest {
         assertEquals(0, host.launchCount)
         assertEquals("old", host.binary)
     }
+
+    @Test
+    fun `DOWNLOAD-CONSENT metered and behind: the updater says it waits and downloads nothing`() = runTest {
+        val jobs = Jobs()
+        val updater = OpenCodeAutoUpdater(Host("2.1.1", pinned, metered = true), jobs) { false }
+        assertFalse(updater.waitingForUnmetered.value)
+        updater.changed()
+        assertTrue(updater.waitingForUnmetered.value)
+        assertEquals(emptyList(), jobs.runs)
+    }
+
+    @Test
+    fun `DOWNLOAD-CONSENT Download now runs this one update on the metered network, once`() = runTest {
+        val host = Host("2.1.1", pinned, metered = true)
+        val jobs = Jobs()
+        val updater = OpenCodeAutoUpdater(host, jobs) { false }
+        updater.changed()
+        updater.allowMeteredOnce()
+        updater.changed()
+        assertEquals(listOf("openCode2"), jobs.runs)
+        assertFalse(updater.waitingForUnmetered.value)
+        // A later pin (another update) on the same metered network waits again: the consent was spent.
+        host.version = "2.1.2"
+        val next = Host("2.1.2", "2.3.0", metered = true)
+        val again = OpenCodeAutoUpdater(next, jobs) { false }
+        again.changed()
+        assertEquals(1, jobs.runs.size)
+        assertTrue(again.waitingForUnmetered.value)
+    }
+
+    @Test
+    fun `DOWNLOAD-CONSENT Wait for Wi-Fi holds, and becoming unmetered runs it and clears the wait`() = runTest {
+        val host = Host("2.1.1", pinned, metered = true)
+        val jobs = Jobs()
+        val updater = OpenCodeAutoUpdater(host, jobs) { false }
+        repeat(3) { updater.changed() }
+        assertEquals(emptyList(), jobs.runs)
+        host.metered = false
+        updater.changed()
+        assertEquals(1, jobs.runs.size)
+        assertFalse(updater.waitingForUnmetered.value)
+    }
+
+    @Test
+    fun `DOWNLOAD-CONSENT a consent given while the update is refused is kept until it starts`() = runTest {
+        val host = Host("2.1.1", pinned, metered = true)
+        val jobs = object : OpenCodeUpdateJobs {
+            override val running = false
+            override val failed = false
+            var starts = false
+            var runs = 0
+            override suspend fun updateOpenCode(runtime: String): Boolean { runs++; return starts }
+        }
+        val updater = OpenCodeAutoUpdater(host, jobs) { false }
+        updater.allowMeteredOnce()
+        updater.changed()
+        jobs.starts = true
+        updater.changed()
+        assertEquals(2, jobs.runs)
+    }
 }
