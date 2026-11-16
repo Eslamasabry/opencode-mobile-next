@@ -1797,7 +1797,7 @@ private const val PHONE_STORAGE_FOLDER = "/storage/emulated/0"
 private val NOT_PHONE_SERVER: StateFlow<NewConversationServerState> =
     kotlinx.coroutines.flow.MutableStateFlow(NewConversationServerState.NotPhone)
 
-/** Settled or failing states are said as they are; everything on the way up (checking, restoring, restarting, a stop the person did not make) is "starting". */
+/** Settled or failing states are said as they are; everything on the way up (checking, restoring, restarting) is "starting"; a stop is the person's or the system's. */
 internal fun newConversationServerStateOf(state: PhoneServerState): NewConversationServerState =
     when (state) {
         PhoneServerState.Running -> NewConversationServerState.Up
@@ -1805,6 +1805,7 @@ internal fun newConversationServerStateOf(state: PhoneServerState): NewConversat
         PhoneServerState.InstallFailed,
         is PhoneServerState.GaveUp -> NewConversationServerState.Failed
         is PhoneServerState.Stopped ->
-            if (state.by == StoppedBy.Person) NewConversationServerState.Up else NewConversationServerState.Starting
+            if (state.by == StoppedBy.Person) NewConversationServerState.StoppedByPerson
+            else NewConversationServerState.Stopped
         else -> NewConversationServerState.Starting
     }

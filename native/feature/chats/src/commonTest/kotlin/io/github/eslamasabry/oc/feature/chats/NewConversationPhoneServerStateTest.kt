@@ -29,14 +29,15 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
+import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
-import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
 
 /**
- * first-read-ready: New conversation follows This phone's own server state (starting, up, failed) instead of guessing
- * from a failed read. Cold start: + tapped while the server starts waits, then reads by itself when it is up.
+ * first-read-ready: New conversation follows This phone's own server state (starting, up, failed)
+ * instead of guessing from a failed read. Cold start: + tapped while the server starts waits, then
+ * reads by itself when it is up.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class NewConversationPhoneServerStateTest {
@@ -58,11 +59,24 @@ class NewConversationPhoneServerStateTest {
         override fun back() {}
     }
 
-    /** A server whose first [refusals] reads are refused (still starting); every later read answers. */
-    private inner class Host(private val refusals: Int, val state: MutableStateFlow<NewConversationServerState>) : NewConversationHost {
+    /**
+     * A server whose first [refusals] reads are refused (still starting); every later read answers.
+     */
+    private inner class Host(
+        private val refusals: Int,
+        val state: MutableStateFlow<NewConversationServerState>,
+    ) : NewConversationHost {
         var reads = 0
+        var starts = 0
+
+        override suspend fun startPhoneServer(profile: ProfileId): Outcome<Unit> {
+            starts++
+            state.value = NewConversationServerState.Starting
+            return Outcome.Ok(Unit)
+        }
 
         override fun serverState(profile: ProfileId): StateFlow<NewConversationServerState> = state
+
         override val servers: StateFlow<List<NewConversationServer>> =
             MutableStateFlow(listOf(NewConversationServer(phone, "This phone", connected = true)))
 
@@ -74,19 +88,31 @@ class NewConversationPhoneServerStateTest {
 
         override suspend fun folderExists(profile: ProfileId, directory: String): Boolean? = true
 
-        override suspend fun draft(profile: ProfileId, directory: String?): Outcome<String> = Outcome.Ok("")
+        override suspend fun draft(profile: ProfileId, directory: String?): Outcome<String> =
+            Outcome.Ok("")
 
-        override suspend fun saveDraft(profile: ProfileId, directory: String?, text: String): Outcome<Unit> =
-            Outcome.Ok(Unit)
+        override suspend fun saveDraft(
+            profile: ProfileId,
+            directory: String?,
+            text: String,
+        ): Outcome<Unit> = Outcome.Ok(Unit)
 
-        override suspend fun imports(profile: ProfileId, directory: String): Outcome<ImportableConversations> =
-            Outcome.Failed(Failure.Unavailable(io.github.eslamasabry.oc.core.common.FeatureId("test")))
+        override suspend fun imports(
+            profile: ProfileId,
+            directory: String,
+        ): Outcome<ImportableConversations> =
+            Outcome.Failed(
+                Failure.Unavailable(io.github.eslamasabry.oc.core.common.FeatureId("test"))
+            )
 
         override suspend fun import(
             profile: ProfileId,
             directory: String,
             conversation: ImportableConversation,
-        ): Outcome<ConversationRef> = Outcome.Failed(Failure.Unavailable(io.github.eslamasabry.oc.core.common.FeatureId("test")))
+        ): Outcome<ConversationRef> =
+            Outcome.Failed(
+                Failure.Unavailable(io.github.eslamasabry.oc.core.common.FeatureId("test"))
+            )
 
         override suspend fun start(
             profile: ProfileId,
@@ -104,39 +130,49 @@ class NewConversationPhoneServerStateTest {
 
     @AfterTest fun reset() = Dispatchers.resetMain()
 
-    private fun page(refusals: Int, state: NewConversationServerState): Pair<Host, NewConversationViewModel> {
+    private fun page(
+        refusals: Int,
+        state: NewConversationServerState,
+    ): Pair<Host, NewConversationViewModel> {
         val host = Host(refusals, MutableStateFlow(state))
-        return host to NewConversationViewModel(route, host, Nav(route), Clock.System, ListenedReports())
+        return host to
+            NewConversationViewModel(route, host, Nav(route), Clock.System, ListenedReports())
     }
 
     @Test
-    fun `FRR-1 tapped while the phone server starts waits with no failure words, then reads by itself when it is up`() = runTest {
-        mainOn()
-        val (host, vm) = page(0, NewConversationServerState.Starting)
-        runCurrent()
-        assertEquals(0, host.reads, "nothing is read from a server that is starting")
-        assertNull(vm.state.value.failure)
-        assertEquals(true, vm.state.value.busy)
-        advanceTimeBy(40_000)
-        runCurrent()
-        assertEquals(0, host.reads, "still no guess from a failed read")
-        assertNull(vm.state.value.failure)
-        host.state.value = NewConversationServerState.Up
-        runCurrent()
-        assertEquals(dir, vm.state.value.setup?.directory, "the lists came with no tap and no clock beyond the state change")
-        assertNull(vm.state.value.failure)
-    }
+    fun `FRR-1 tapped while the phone server starts waits with no failure words, then reads by itself when it is up`() =
+        runTest {
+            mainOn()
+            val (host, vm) = page(0, NewConversationServerState.Starting)
+            runCurrent()
+            assertEquals(0, host.reads, "nothing is read from a server that is starting")
+            assertNull(vm.state.value.failure)
+            assertEquals(true, vm.state.value.busy)
+            advanceTimeBy(40_000)
+            runCurrent()
+            assertEquals(0, host.reads, "still no guess from a failed read")
+            assertNull(vm.state.value.failure)
+            host.state.value = NewConversationServerState.Up
+            runCurrent()
+            assertEquals(
+                dir,
+                vm.state.value.setup?.directory,
+                "the lists came with no tap and no clock beyond the state change",
+            )
+            assertNull(vm.state.value.failure)
+        }
 
     @Test
-    fun `FRR-2 a server that stays starting past its start budget says it could not be read`() = runTest {
-        mainOn()
-        val (host, vm) = page(0, NewConversationServerState.Starting)
-        runCurrent()
-        advanceTimeBy(91_000)
-        runCurrent()
-        assertEquals(0, host.reads)
-        assertEquals(Failure.TimedOut(), vm.state.value.failure)
-    }
+    fun `FRR-2 a server that stays starting past its start budget says it could not be read`() =
+        runTest {
+            mainOn()
+            val (host, vm) = page(0, NewConversationServerState.Starting)
+            runCurrent()
+            advanceTimeBy(91_000)
+            runCurrent()
+            assertEquals(0, host.reads)
+            assertEquals(Failure.TimedOut(), vm.state.value.failure)
+        }
 
     @Test
     fun `FRR-3 a phone server that failed to start says so at once`() = runTest {
@@ -150,18 +186,60 @@ class NewConversationPhoneServerStateTest {
     }
 
     @Test
-    fun `FRR-4 a read that fails right after up is read once more shortly, then a real failure says so`() = runTest {
-        mainOn()
-        val (_, vm) = page(1, NewConversationServerState.Up)
-        runCurrent()
-        advanceTimeBy(5_000)
-        runCurrent()
-        assertEquals(dir, vm.state.value.setup?.directory, "one short re-read covers a server still finishing")
-        val (host2, vm2) = page(1000, NewConversationServerState.Up)
-        runCurrent()
-        advanceTimeBy(60_000)
-        runCurrent()
-        assertEquals(2, host2.reads, "one re-read only, no retry loop")
-        assertEquals(Failure.Network(NetworkWhy.Refused), vm2.state.value.failure)
-    }
+    fun `FRR-4 a read that fails right after up is read once more shortly, then a real failure says so`() =
+        runTest {
+            mainOn()
+            val (_, vm) = page(1, NewConversationServerState.Up)
+            runCurrent()
+            advanceTimeBy(5_000)
+            runCurrent()
+            assertEquals(
+                dir,
+                vm.state.value.setup?.directory,
+                "one short re-read covers a server still finishing",
+            )
+            val (host2, vm2) = page(1000, NewConversationServerState.Up)
+            runCurrent()
+            advanceTimeBy(60_000)
+            runCurrent()
+            assertEquals(2, host2.reads, "one re-read only, no retry loop")
+            assertEquals(Failure.Network(NetworkWhy.Refused), vm2.state.value.failure)
+        }
+
+    @Test
+    fun `FRR-5 a server the person stopped shows the stopped page with its Start action, never the failure words`() =
+        runTest {
+            mainOn()
+            val (host, vm) = page(0, NewConversationServerState.StoppedByPerson)
+            runCurrent()
+            advanceTimeBy(5_000)
+            runCurrent()
+            assertEquals(0, host.reads)
+            assertEquals(0, host.starts, "never started behind the person's back")
+            assertNull(vm.state.value.failure)
+            assertEquals(
+                true,
+                vm.state.value.phoneOff,
+                "the page's own stopped state, whose Start action starts it",
+            )
+            assertEquals(false, vm.state.value.busy)
+        }
+
+    @Test
+    fun `FRR-6 a server the system stopped is started once, then followed to up and read with no tap`() =
+        runTest {
+            mainOn()
+            val (host, vm) = page(0, NewConversationServerState.Stopped)
+            runCurrent()
+            assertEquals(1, host.starts, "one start requested")
+            assertEquals(0, host.reads)
+            assertNull(vm.state.value.failure)
+            advanceTimeBy(20_000)
+            runCurrent()
+            assertEquals(1, host.starts, "asked once, not again")
+            host.state.value = NewConversationServerState.Up
+            runCurrent()
+            assertEquals(dir, vm.state.value.setup?.directory)
+            assertNull(vm.state.value.failure)
+        }
 }

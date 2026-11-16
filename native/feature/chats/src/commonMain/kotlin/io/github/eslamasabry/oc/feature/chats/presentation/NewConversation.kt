@@ -68,6 +68,12 @@ public enum class NewConversationServerState {
     /** This phone's server is starting or about to: the page waits, and reads by itself once it is up. */
     Starting,
 
+    /** The person stopped This phone's server: the page says so with its Start action, and reads nothing. */
+    StoppedByPerson,
+
+    /** This phone's server is stopped (not by the person) and nothing is starting it: the page asks for one start. */
+    Stopped,
+
     /** This phone's server answers: a read that fails now is a real failure. */
     Up,
 
@@ -1113,15 +1119,38 @@ public class NewConversationViewModel(
                 }
             } else {
                 var again = 0
+                var startAsked = false
                 while (true) {
+                    if (state.value == NewConversationServerState.StoppedByPerson) {
+                        // The same page the Start action belongs to; nothing is read from a server the person stopped.
+                        if (ticket == generation)
+                            mutable.update {
+                                it.copy(busy = false, failure = null, setup = null, phoneOff = true, preparingSlow = false)
+                            }
+                        return@launch
+                    }
+                    // Stopped by the system with nothing starting it: ask for the one start (the Start action's own).
+                    if (state.value == NewConversationServerState.Stopped && !startAsked) {
+                        startAsked = true
+                        if (host.startPhoneServer(profile) is Outcome.Failed && state.value == NewConversationServerState.Stopped) {
+                            answered = Outcome.Failed(Failure.Network(NetworkWhy.Refused))
+                            break
+                        }
+                    }
                     // Starting: follow the state as it changes; the read happens the moment it is up. Bounded by the
                     // phone server's own start budget (its ready timeout, 90 s): past it the page says so, never waits on.
-                    if (state.value == NewConversationServerState.Starting) {
-                        val settled = withTimeoutOrNull(SETUP_WAIT) { state.first { it != NewConversationServerState.Starting } }
+                    if (state.value == NewConversationServerState.Starting || state.value == NewConversationServerState.Stopped) {
+                        val settled =
+                            withTimeoutOrNull(SETUP_WAIT) {
+                                state.first {
+                                    it != NewConversationServerState.Starting && it != NewConversationServerState.Stopped
+                                }
+                            }
                         if (settled == null) {
                             answered = Outcome.Failed(Failure.TimedOut())
                             break
                         }
+                        if (settled == NewConversationServerState.StoppedByPerson) continue
                     }
                     if (ticket != generation) return@launch
                     if (state.value == NewConversationServerState.Failed && cached == null) {
