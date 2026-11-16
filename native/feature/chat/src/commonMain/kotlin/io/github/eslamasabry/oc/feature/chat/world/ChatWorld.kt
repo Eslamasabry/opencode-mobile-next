@@ -439,7 +439,26 @@ public enum class ChatServerWait {
 
     /** A phone agent needs the person to sign in; the conversation opens after that. */
     AgentNeedsSignIn,
+
+    /** Stage words ([LaunchStage]): the real current stage of getting this conversation ready. */
+    StartingLinux,
+    StartingOpenCode,
+    StartingHelper,
+    StartingAgent,
+    OpeningConversation,
 }
+
+/** True for the stage words, which hold at least [STAGE_HOLD_MS] each before the next one shows. */
+public val ChatServerWait.isStage: Boolean
+    get() =
+        when (this) {
+            ChatServerWait.StartingLinux,
+            ChatServerWait.StartingOpenCode,
+            ChatServerWait.StartingHelper,
+            ChatServerWait.StartingAgent,
+            ChatServerWait.OpeningConversation -> true
+            else -> false
+        }
 
 /** A prompt the person sent that the transcript does not show yet. */
 public data class PendingSend(

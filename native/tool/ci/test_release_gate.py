@@ -45,7 +45,10 @@ class ReleaseGate(unittest.TestCase):
             os.makedirs(os.path.join(t, 'work', os.path.dirname(rel)), exist_ok=True)
             shutil.copy(os.path.join(REPO, rel), os.path.join(t, 'work', rel))
         vc = os.path.join(t, 'work/native/tool/version_code.sh')
-        open(vc, 'w').write('#!/bin/sh\necho 10060\n')
+        # The allocator's answer for a release: the next multiple of ten above the tree's versionCode (a fixed number
+        # goes stale as soon as a build number passes it, as 10061 did).
+        code = int(re.search(r'^versionCode=(\d+)', open(os.path.join(REPO, 'native/version.properties')).read(), re.M).group(1))
+        open(vc, 'w').write(f'#!/bin/sh\necho {(code // 10 + 1) * 10}\n')
         os.chmod(vc, 0o755)
         g = lambda *a, cwd=os.path.join(t, 'work'): subprocess.run(['git', *a], cwd=cwd, check=True, capture_output=True, text=True,
                                                                   env=dict(os.environ, GIT_AUTHOR_NAME='t', GIT_AUTHOR_EMAIL='t@t', GIT_COMMITTER_NAME='t', GIT_COMMITTER_EMAIL='t@t'))
@@ -193,6 +196,16 @@ class SmokeScript(unittest.TestCase):
         import xml.etree.ElementTree as ET
         nodes = [self.mod.Node(e) for e in ET.fromstring(xml).iter('node')]
         self.assertEqual(self.mod.user_texts(nodes), {'Plan the garden shed trip zq'})
+
+    def test_a_row_is_compared_by_its_title_not_its_changing_time(self):
+        import xml.etree.ElementTree as ET
+        def texts(label):
+            xml = f'<hierarchy><node text="{label}" class="x" bounds="[0,0][1,1]"/></hierarchy>'
+            return self.mod.user_texts([self.mod.Node(e) for e in ET.fromstring(xml).iter('node')])
+        before = texts('Seed for the final smoke: reply with the word kiwi, kiwi, Just now')
+        after = texts('Seed for the final smoke: reply with the word kiwi, kiwi, 2 min ago')
+        self.assertEqual(before, {'Seed for the final smoke: reply with the word kiwi'})
+        self.assertEqual(before, after)
 
     def test_a_notice_on_the_conversations_screen_is_not_the_persons_text(self):
         import xml.etree.ElementTree as ET
