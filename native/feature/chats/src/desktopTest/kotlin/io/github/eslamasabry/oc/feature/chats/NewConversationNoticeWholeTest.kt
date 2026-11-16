@@ -79,6 +79,10 @@ class NewConversationNoticeWholeTest {
             mainClock.advanceTimeBy(1_500)
             waitForIdle()
             val main = onNodeWithTag("chats-new-main-action").getBoundsInRoot()
+            val probe = StringBuilder("main=$main field=${onNodeWithTag("chats-new-field").getBoundsInRoot()}")
+            for (text in listOf("started before you chose this folder", "Choose another project"))
+                probe.append(" | $text whole=${onNodeWithText(text, substring = true).getBoundsInRoot()} seen=${onNodeWithText(text, substring = true).fetchSemanticsNode().boundsInRoot}")
+            throw AssertionError("PROBE kb=$keyboardDp $probe")
             for (text in listOf("started before you chose this folder", "Choose another project")) {
                 val node = onNodeWithText(text, substring = true)
                 val whole = node.getBoundsInRoot()
