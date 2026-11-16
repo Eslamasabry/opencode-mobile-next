@@ -30,8 +30,8 @@ import org.jetbrains.compose.resources.stringResource
  *
  * `chats_home_leftover_*`: the "leftover node process" line is the shell's runaway watcher's status (Flutter
  * `leftoverNoticeLine`, chats_host.dart:578-603), which the app hands the home as its status line ([ChatsScreen]'s
- * `appStatus`); the case builds that status as the watcher would. The `chats_new_*` start screen is in
- * NewConversationGateTest.
+ * `appStatus`); the case builds that status as the watcher would. The `chats_new_*` start screen scenes were
+ * retired from the old-app comparison on 2026-11-16 (New conversation was redesigned; see 41.gate.tsv).
  */
 class ChatsGateTest {
     private val actions = RecordingChatsActions()

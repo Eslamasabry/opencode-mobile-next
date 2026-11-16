@@ -33,7 +33,6 @@
     <string name="agentsInstallFailedNotStarted">%1$s a été téléchargé mais n’a pas démarré sur ce téléphone, donc sa version n’a pas pu être vérifiée. Réessayez\u00A0; si cela se reproduit, les détails contiennent ce que le téléphone a signalé.</string>
     <string name="agentsInstallFailedWithdrawn">%1$s n’a pas pu être installé\u00A0: la version %2$s, celle qu’installe cette application, n’est plus proposée au téléchargement. Réessayer n’y changera rien\u00A0; une mise à jour de cette application, si.</string>
     <string name="agentsStateSignInUnchecked">Installé, mais cette app ne peut pas encore vérifier sa connexion</string>
-    <string name="agentsStateSignInCheckFailed">Impossible de vérifier la connexion. Essayez de vous reconnecter.</string>
     <string name="agentsSignInUncheckedBody">Il ne peut pas encore servir aux conversations. Vous pouvez le supprimer.</string>
     <string name="agentsStateSetUpAtFirstUse">Installé. Configurez-le la première fois que vous l’utilisez.</string>
     <string name="agentsChipSetUp">Configurer</string>
@@ -49,4 +48,7 @@
     <string name="agentsUpdateRefused">la mise à jour des agents n’a pas pu démarrer, utilisez Installer sur l’agent</string>
     <string name="agentsUpdateUpdated">%1$s mis à jour</string>
     <string name="agentsUpdateNeedsSignIn">%1$s a besoin que vous vous connectiez</string>
+    <string name="agentsStateSignInNotConfirmed">Connexion non confirmée</string>
+    <string name="agentsSignInNotConfirmedBody">L’app n’a pas pu confirmer si %1$s est connecté. Vérifier à nouveau interroge %1$s maintenant.</string>
+    <string name="agentsCheckSignInAgain">Vérifier %1$s à nouveau</string>
 </resources>

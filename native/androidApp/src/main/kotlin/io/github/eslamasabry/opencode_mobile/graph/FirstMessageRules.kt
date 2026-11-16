@@ -26,16 +26,12 @@ internal object FirstMessageRules {
             io.github.eslamasabry.oc.protocol.paseo.PaseoAgentSignInTag
 
     /**
-     * Issue 147, second report: a refused start that New conversation answers with "needs setting up" or "sign in
-     * again" (the helper refused it for the sign-in, or said the agent is not ready): the agent is then noted as
-     * needing its sign-in everywhere, so no list keeps saying Ready from the kept facts.
+     * Whether a refused start notes the agent's sign-in as lapsed everywhere: only the helper's refusal for the sign-in
+     * itself ([signInLapsed]). signin-truth: a start refused as "not ready", "No model selected" or any other set-up
+     * word is not news about the sign-in (the helper or the agent may still be starting); before, it set the lapse and
+     * the agent read "Sign in needed" everywhere while it was signed in.
      */
-    fun agentNeedsYou(failure: Failure?): Boolean =
-        signInLapsed(failure) ||
-            failure?.let {
-                io.github.eslamasabry.oc.feature.chats.presentation.PhoneStartRules.way(it, null, emptyList()) ==
-                    io.github.eslamasabry.oc.feature.chats.presentation.PhoneStartWay.SetUp
-            } == true
+    fun agentNeedsYou(failure: Failure?): Boolean = signInLapsed(failure)
 
     /**
      * True when the words provably never left the phone, so they go back in the box with "not sent" and Try again.

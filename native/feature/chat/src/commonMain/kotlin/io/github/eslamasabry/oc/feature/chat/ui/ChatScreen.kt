@@ -111,6 +111,7 @@ import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
 import io.github.eslamasabry.oc.ui.kit.modal.LocalKitSheetHost
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
+import io.github.eslamasabry.oc.ui.kit.motion.KitSwap
 import io.github.eslamasabry.oc.ui.kit.status.KitStatus
 import io.github.eslamasabry.oc.ui.kit.status.KitStatusKind
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitReadRequest
@@ -205,6 +206,7 @@ import io.github.eslamasabry.oc.ui.words.res.chatUiDeleteThisMessage
 import io.github.eslamasabry.oc.ui.words.res.chatUiExpandReasoning
 import io.github.eslamasabry.oc.ui.words.res.chatUiFiles
 import io.github.eslamasabry.oc.ui.words.res.chatUiNotConnectedToTheServerRightNow
+import io.github.eslamasabry.oc.ui.words.res.chatConnectingToAgent
 import io.github.eslamasabry.oc.ui.words.res.chatUiOpenCodeIsReconnectingTryAgainShortly
 import io.github.eslamasabry.oc.ui.words.res.chatUiPromptNotAnswered
 import io.github.eslamasabry.oc.ui.words.res.chatUiTheMessageAndAllOfItsParts
@@ -632,7 +634,8 @@ public fun ChatScreen(
                         )
                 },
                 freeModel = { headerState?.state?.freeModel == true },
-                agentName = { headerState?.state?.agentName ?: "OpenCode" },
+                // Open-transitions: an agent not read yet is named by no one, never "OpenCode" for another agent's box.
+                agentName = { headerState?.state?.let { if (it.agentKnown) it.agentName else "" } ?: "OpenCode" },
                 openCommands =
                     if (demoMode) null
                     else {
@@ -776,7 +779,15 @@ public fun ChatScreen(
                                 // An unconfirmed send is said once, on its own bubble with Check again.
                                 state.status
                                     ?.takeUnless { it.kind == ChatStatusKind.SendUnconfirmed }
-                                    ?.let { statusLine(it, actions, header?.state?.serverName, ::openConnectionDetails) },
+                                    ?.let {
+                                        statusLine(
+                                            it,
+                                            actions,
+                                            header?.state?.serverName,
+                                            ::openConnectionDetails,
+                                            agentName = header?.state?.takeIf { h -> h.agentKnown }?.agentName,
+                                        )
+                                    },
                                 appStatus,
                             )
                         )
@@ -1047,13 +1058,20 @@ public fun ChatScreen(
                     },
                     edges = KitScreenEdges.Bleed,
                 ) {
-                    when (val phase = state.phase) {
+                    // Before and after: the placeholder crosses over to the page with the kit's short swap, never a pop; the
+                    // header, the box and the scroll place are outside it and stay put. Motion off: instant.
+                    KitSwap(state.phase, Modifier.fillMaxSize()) { phase ->
+                    when (phase) {
                         // First load: the skeleton under the loading line, never an empty-state
                         // text
                         // (plan 09 §6.5).
                         // A slow load says what it does in words, unless the screen's line already says something.
+                        // Only once the page has arrived: while the page transition runs the body is empty, so no
+                        // skeleton is ever drawn over the page it leaves (device report, build 10054).
                         ChatPhase.Loading ->
-                            ChatLoadingBody(stringResource(Res.string.chatLoadingConversation).takeIf { screenStatus == null })
+                            if (pageSettled()) {
+                                ChatLoadingBody(stringResource(Res.string.chatLoadingConversation).takeIf { screenStatus == null })
+                            }
                         is ChatPhase.Failed ->
                             ChatLoadError(
                                 title = stringResource(Res.string.chatLoadFailedTitle),
@@ -1186,13 +1204,26 @@ public fun ChatScreen(
                                     }
                             }
                     }
+                    }
                     // The edge dock: over the transcript, clear of the header and the composer. Beside the
                     // transcript's recording, not in it: under Glass it bends that recording (never itself).
-                    if (state.phase == ChatPhase.Live)
+                    // Open-transitions (S22 frame item2): the light was mounted while the page still grew out of its
+                    // row and before the page's chrome was measured, so it stood at a place computed from no chrome,
+                    // clipped by the growing page, then jumped to its place. It comes once the page is settled and its
+                    // chrome known, at its own place from its first frame.
+                    val chrome = kitScreenChromePadding()
+                    // (A frame that lays its chrome above the body, Find open, reports no chrome room: nothing to wait for.)
+                    val chromeKnown by remember(chrome) {
+                        androidx.compose.runtime.derivedStateOf {
+                            chrome == androidx.compose.foundation.layout.PaddingValues() ||
+                                (chrome.calculateTopPadding() > 0.dp && chrome.calculateBottomPadding() > 0.dp)
+                        }
+                    }
+                    if (state.phase == ChatPhase.Live && chromeKnown && pageSettled())
                         androidx.compose.runtime.CompositionLocalProvider(
                             io.github.eslamasabry.oc.ui.kit.dock.LocalKitDockGlass provides frost
                         ) {
-                            edgeDock?.Content(kitScreenChromePadding(), onBottomRoom = { dockRoomPx = it })
+                            edgeDock?.Content(chrome, onBottomRoom = { dockRoomPx = it })
                         }
                 }
 
@@ -1502,6 +1533,7 @@ private fun connectionLine(
     actions: ChatActions,
     serverName: String?,
     onDetails: () -> Unit,
+    agentName: String? = null,
 ): KitStatus {
     val offline = line.kind == ChatStatusKind.Offline
     val seconds = line.retryInSeconds
@@ -1546,19 +1578,22 @@ private fun connectionLine(
     // and offers no Try again (Details and Change server stay one tap away).
     val wait = line.serverWait
     if (wait != null) {
+        // A wait that ends by itself looks alive: the kit's working mark, and the agent's name when it is known.
+        val signIn = wait == io.github.eslamasabry.oc.feature.chat.world.ChatServerWait.AgentNeedsSignIn
         return KitStatus(
             KitStatusKind.Connection,
-            stringResource(
-                when (wait) {
-                    io.github.eslamasabry.oc.feature.chat.world.ChatServerWait.Updating -> Res.string.connectUpdatingPhone
-                    io.github.eslamasabry.oc.feature.chat.world.ChatServerWait.UpdatingAgents -> Res.string.connectUpdatingAgents
-                    io.github.eslamasabry.oc.feature.chat.world.ChatServerWait.AgentNeedsSignIn -> Res.string.connectAgentNeedsSignIn
-                    io.github.eslamasabry.oc.feature.chat.world.ChatServerWait.Starting -> Res.string.connectStartingPhone
-                    io.github.eslamasabry.oc.feature.chat.world.ChatServerWait.Connecting -> Res.string.launchUiSessionWaiting
-                }
-            ),
+            when (wait) {
+                io.github.eslamasabry.oc.feature.chat.world.ChatServerWait.Updating -> stringResource(Res.string.connectUpdatingPhone)
+                io.github.eslamasabry.oc.feature.chat.world.ChatServerWait.UpdatingAgents -> stringResource(Res.string.connectUpdatingAgents)
+                io.github.eslamasabry.oc.feature.chat.world.ChatServerWait.AgentNeedsSignIn -> stringResource(Res.string.connectAgentNeedsSignIn)
+                io.github.eslamasabry.oc.feature.chat.world.ChatServerWait.Starting -> stringResource(Res.string.connectStartingPhone)
+                io.github.eslamasabry.oc.feature.chat.world.ChatServerWait.Connecting ->
+                    if (agentName != null) stringResource(Res.string.chatConnectingToAgent, agentName)
+                    else stringResource(Res.string.launchUiSessionWaiting)
+            },
             id = "chat-status-${line.id}",
             more = listOf(details, changeServer),
+            working = !signIn,
         )
     }
     // The phone agents' helper: starting says so; a failed start says why in plain words with the action again.
@@ -1568,6 +1603,7 @@ private fun connectionLine(
             stringResource(Res.string.connectionAgentStarting),
             id = "chat-status-${line.id}",
             more = listOf(details, changeServer),
+            working = true,
         )
     val restartAgent =
         if (line.canRestartAgent)
@@ -1644,10 +1680,11 @@ private fun statusLine(
     actions: ChatActions,
     serverName: String? = null,
     onDetails: () -> Unit = {},
+    agentName: String? = null,
 ): KitStatus =
     when (line.kind) {
         ChatStatusKind.Offline,
-        ChatStatusKind.Connecting -> connectionLine(line, actions, serverName, onDetails)
+        ChatStatusKind.Connecting -> connectionLine(line, actions, serverName, onDetails, agentName)
         ChatStatusKind.SendFailed ->
             KitStatus(
                 KitStatusKind.Info,

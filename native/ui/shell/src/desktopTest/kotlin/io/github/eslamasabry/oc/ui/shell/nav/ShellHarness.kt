@@ -33,6 +33,7 @@ import io.github.eslamasabry.oc.ui.kit.platform.LocalKitPlatform
 import io.github.eslamasabry.oc.ui.routes.ChatRoute
 import io.github.eslamasabry.oc.ui.routes.ChatsRoute
 import io.github.eslamasabry.oc.ui.routes.EntryInstaller
+import io.github.eslamasabry.oc.ui.routes.RouteMotion
 import io.github.eslamasabry.oc.ui.shell.NavShell
 import io.github.eslamasabry.oc.ui.shell.ShellDependencies
 import io.github.eslamasabry.oc.ui.shell.ShellNavigator
@@ -87,6 +88,13 @@ private val testInstaller = EntryInstaller {
             }
         }
     }
+    // A page that slides up over the one it covers (as New conversation does over the home).
+    entry<ChatsRoute.New> {
+        val nav = LocalHarness.navigator
+        KitScreen(title = "Start something", backLabel = "Back", onBack = nav::back) {
+            KitText("new page")
+        }
+    }
     entry<ChatRoute> { route ->
         val nav = LocalHarness.navigator
         KitGrowPage(growKey = route.ref) {
@@ -103,7 +111,15 @@ object LocalHarness {
     lateinit var navigator: ShellNavigator
 }
 
-class Harness(scale: Float = 1f) {
+/**
+ * [grow]: the chat opens by growing out of its row (the grow's own tests). Conversations ship with the ordinary page
+ * transition ([ChatRoute.openMotion]); the grow stays built and tested here until it opens with no blended frame.
+ */
+class Harness(scale: Float = 1f, grow: Boolean = true) {
+    init {
+        ChatRoute.openMotion = if (grow) RouteMotion.GrowFromRow else RouteMotion.SharedAxisX
+    }
+
     val navigator = ShellNavigator().also { LocalHarness.navigator = it }
     val motion = FakeSystemMotion(scale)
     val gate = RowTransformGate()

@@ -172,3 +172,16 @@ internal fun ChatLoadError(
         }
     }
 }
+
+/**
+ * Whether the page has finished arriving: no navigation transition moves it (it grew out of its row, or slid in) any
+ * more. Parts that place themselves from the page's measured chrome (the edge light) wait for it, so they are never
+ * drawn at a place computed mid-flight, cut by the growing page. True where no shell hosts the page (tests, previews).
+ */
+@Composable
+internal fun pageSettled(): Boolean {
+    val host = io.github.eslamasabry.oc.ui.kit.motion.LocalKitGrowHost.current ?: return true
+    val transition = host.animatedVisibilityScope.transition
+    return transition.currentState == androidx.compose.animation.EnterExitState.Visible &&
+        transition.targetState == androidx.compose.animation.EnterExitState.Visible
+}

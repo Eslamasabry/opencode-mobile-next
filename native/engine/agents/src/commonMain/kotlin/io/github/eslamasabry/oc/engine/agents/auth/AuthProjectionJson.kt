@@ -53,6 +53,7 @@ public object AuthProjectionJson {
         "invalidContext" to AuthProbeError.InvalidContext,
         "signInExpired" to AuthProbeError.SignInExpired,
         "signOutFailed" to AuthProbeError.SignOutFailed,
+        "agentBusy" to AuthProbeError.AgentBusy,
     )
 
     private fun JsonElement?.orNull(): JsonElement? = if (this == null || this is JsonNull) null else this

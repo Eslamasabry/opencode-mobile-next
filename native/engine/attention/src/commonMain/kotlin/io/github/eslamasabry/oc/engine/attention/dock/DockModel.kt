@@ -891,9 +891,16 @@ public class DockModel private constructor(private val s: Snapshot) {
                 }
             val hidden =
                 removed.mapNotNull { ref ->
-                    val t = tracked[ref] ?: return@mapNotNull null
+                    val t = tracked[ref]
+                    if (t == null) {
+                        // An idle conversation the person hid is no longer tracked, but it is still theirs to bring back:
+                        // listed while it is still a recent conversation of a server (device 2026-11-16: hidden ones that
+                        // were not running never showed, so nothing could restore them).
+                        if (ref !in recent && ref !in known) return@mapNotNull null
+                        return@mapNotNull DockHidden(ref, known[ref]?.first, names[ref], known[ref]?.second, DockState.Idle, null, marks[ref.profileId])
+                    }
                     val state = if (rootOf(ref) == ref) view(t, includeRemoved = true).state else t.state()
-                    if (state == DockState.Idle) {
+                    if (state == DockState.Idle && rootOf(ref) != ref) {
                         null
                     } else {
                         DockHidden(ref, t.title, names[ref], t.agent, state, rootOf(ref).takeIf { it != ref }, marks[ref.profileId])

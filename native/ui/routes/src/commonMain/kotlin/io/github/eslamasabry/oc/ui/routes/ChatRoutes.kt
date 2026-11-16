@@ -17,7 +17,19 @@ public data class ChatRoute(
     val thenAction: String? = null,
 ) : AppRoute {
     override val motion: RouteMotion
-        get() = RouteMotion.GrowFromRow
+        get() = openMotion
+
+    public companion object {
+        /**
+         * How every way into a conversation (Home, All conversations, Search, a notification, the edge light) opens it,
+         * and Back closes it. The app's ordinary page transition (fade-forwards, as every other full page): the row →
+         * page grow showed two pages blended on the phone (a skeleton over Home, the title drawn twice, Home's words
+         * through the conversation; device report, build 10054). The grow stays built (`KitGrowPage`, the shell's
+         * `GrowFromRow` handling) and its shell tests set `GrowFromRow` here; it comes back when it opens with no blended
+         * frame. Production code never writes this.
+         */
+        public var openMotion: RouteMotion = RouteMotion.SharedAxisX
+    }
 }
 
 /** The parent conversation and the subagents it started, reached from that conversation's menu. */

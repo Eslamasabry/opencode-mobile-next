@@ -19,6 +19,7 @@ import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationServer
 import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationSetup
 import io.github.eslamasabry.oc.feature.chats.presentation.NewConversationViewModel
 import io.github.eslamasabry.oc.feature.chats.presentation.PhoneFolderReach
+import io.github.eslamasabry.oc.feature.chats.presentation.PhoneFolderSide
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.AppRoute
 import io.github.eslamasabry.oc.ui.routes.ChatsRoute
@@ -33,6 +34,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
@@ -80,8 +82,52 @@ class NewConversationPhoneFolderTest {
         override suspend fun phoneFolder(profile: ProfileId, phoneAgent: String?, directory: String): PhoneFolderReach? {
             checks += phoneAgent to directory
             checkGate?.await()
+            stale?.let { return if ((phoneAgent != null) in it) PhoneFolderReach.Restart else PhoneFolderReach.Ready }
             return reach[phoneAgent]
         }
+
+        /**
+         * W3: a model of the phone's two sides when set: the sides (true: the agents' helper, false: the phone's
+         * OpenCode) now running without the folder. One restart restarts both, as `PhoneFolderRestarts` does, unless a
+         * reply runs on OpenCode ([serverReplying]): that side then waits.
+         */
+        var stale: MutableSet<Boolean>? = null
+        var serverReplying = false
+        var waitingSides: Set<PhoneFolderSide> = emptySet()
+
+        /** What Linux answered on 10050 about a folder made a moment ago: not there until a side was restarted. */
+        var linuxSeesFolder: Boolean? = null
+        val fixedFor = mutableListOf<String>()
+        val agents = mutableListOf(NewConversationPhoneAgent("claude", "Claude Code", "claude"))
+
+        override suspend fun folderExists(profile: ProfileId, directory: String): Boolean? = linuxSeesFolder
+
+        override suspend fun fixPhoneFolder(
+            profile: ProfileId,
+            phoneAgent: String?,
+            reach: PhoneFolderReach,
+            directory: String,
+        ): Outcome<Unit> {
+            fixedFor += directory
+            stale?.let { sides ->
+                for (side in sides.toList())
+                    if (!side && serverReplying) waitingSides = waitingSides + PhoneFolderSide.Server
+                    else sides.remove(side)
+                if (reach == PhoneFolderReach.Restart) linuxSeesFolder = true
+            }
+            return fixPhoneFolder(profile, phoneAgent, reach)
+        }
+
+        override suspend fun phoneFolderBothSides(profile: ProfileId, phoneAgent: String?, directory: String): Boolean =
+            stale?.contains(phoneAgent == null) == true
+
+        override suspend fun phoneFolderWaiting(profile: ProfileId): Set<PhoneFolderSide> = waitingSides
+
+        /** I147-WAIT: sides the phone reports waiting while a restart still runs (null: only what [waitingSides] says). */
+        val liveWaiting = MutableStateFlow<Set<PhoneFolderSide>?>(null)
+
+        override fun phoneFolderWaitingUpdates(profile: ProfileId) =
+            liveWaiting.map { it ?: waitingSides }
 
         override suspend fun fixPhoneFolder(
             profile: ProfileId,
@@ -106,7 +152,7 @@ class NewConversationPhoneFolderTest {
                     phone =
                         NewConversationPhone(
                             helper,
-                            listOf(NewConversationPhoneAgent("claude", "Claude Code", "claude")),
+                            agents.toList(),
                             emptyList(),
                         ),
                 )
@@ -268,5 +314,82 @@ class NewConversationPhoneFolderTest {
         gate.complete(Unit)
         assertFalse(vm.state.value.checkingPhoneFolder)
         assertEquals(PhoneFolderReach.Restart, vm.state.value.phoneFolder, "said before the person taps Start")
+    }
+
+    @Test
+    fun `W3-STORAGE the walker's steps - a new folder with Codex, one restart for both sides, no stale "folder gone", no second restart`() {
+        val host = Host()
+        host.agents += NewConversationPhoneAgent("codex", "Codex", "codex")
+        host.agents += NewConversationPhoneAgent("antigravity", "Antigravity", "antigravity")
+        val vm = vm(host)
+        vm.draftChanged("say ok")
+        // New conversation › agent Codex › Project › Phone storage › Documents › New folder w3b (made and chosen). Both
+        // sides of the phone were running before it existed; Linux has not bound it yet (the 10050 answer).
+        vm.choosePhoneAgent("codex")
+        host.stale = mutableSetOf(true, false)
+        host.linuxSeesFolder = false
+        val w3b = "/storage/emulated/0/Documents/w3b"
+        vm.chooseDirectory(w3b)
+        assertEquals(PhoneFolderReach.Restart, vm.state.value.phoneFolder)
+        assertTrue(vm.state.value.phoneFolderBoth, "the notice says the agents and OpenCode both need it")
+        // The agent chip to Antigravity: the same notice names Antigravity.
+        vm.choosePhoneAgent("antigravity")
+        assertEquals(PhoneFolderReach.Restart, vm.state.value.phoneFolder)
+        assertTrue(vm.state.value.phoneFolderBoth)
+        // One tap.
+        vm.fixPhoneFolder()
+        assertEquals(listOf(w3b), host.fixedFor, "one restart, for this folder")
+        assertEquals(PhoneFolderReach.Ready, vm.state.value.phoneFolder)
+        assertEquals(PhoneFolderReach.Restart, vm.state.value.phoneFolderFixed, "the page says it is done")
+        assertFalse(vm.state.value.folderMissing, "no stale \"This project's folder isn't on the server any more\"")
+        // Five minutes later the person chooses OpenCode (or opens w3b again): no second restart is asked for.
+        vm.choosePhoneAgent(null)
+        assertEquals(PhoneFolderReach.Ready, vm.state.value.phoneFolder)
+        vm.chooseDirectory(w3b)
+        assertEquals(PhoneFolderReach.Ready, vm.state.value.phoneFolder)
+        assertEquals(1, host.fixes.size)
+        vm.start()
+        assertEquals(listOf(server to w3b), host.starts)
+    }
+
+    @Test
+    fun `W3-STORAGE a reply running on the phone's OpenCode is not interrupted, the page says it restarts after`() {
+        val host = Host()
+        val vm = vm(host)
+        vm.draftChanged("hello")
+        host.stale = mutableSetOf(false)
+        host.serverReplying = true
+        val folder = "/storage/emulated/0/Documents/w3c"
+        vm.chooseDirectory(folder)
+        assertEquals(PhoneFolderReach.Restart, vm.state.value.phoneFolder)
+        vm.fixPhoneFolder()
+        assertEquals(setOf(PhoneFolderSide.Server), vm.state.value.phoneFolderWaiting)
+        assertTrue(vm.state.value.chosenSideWaits, "the notice says OpenCode restarts when the reply ends")
+        assertEquals(PhoneFolderReach.Restart, vm.state.value.phoneFolder, "it was not restarted mid-reply")
+        vm.fixPhoneFolder()
+        assertEquals(1, host.fixes.size, "nothing to tap while it waits")
+        vm.start()
+        assertTrue(host.starts.isEmpty())
+    }
+
+    @Test
+    fun `I147-WAIT a restart that waits on a running reply says so while it runs, not only after`() {
+        val host = Host()
+        val vm = vm(host)
+        vm.draftChanged("hello")
+        host.stale = mutableSetOf(true, false)
+        val folder = "/storage/emulated/0/Documents/w3f"
+        vm.chooseDirectory(folder)
+        vm.choosePhoneAgent("claude")
+        assertEquals(PhoneFolderReach.Restart, vm.state.value.phoneFolder)
+        host.fixGate = kotlinx.coroutines.CompletableDeferred()
+        vm.fixPhoneFolder()
+        assertTrue(vm.state.value.fixingPhoneFolder)
+        assertFalse(vm.state.value.restartWaitsForReply, "restarting, nothing waits yet")
+        host.liveWaiting.value = setOf(PhoneFolderSide.Server)
+        assertTrue(vm.state.value.restartWaitsForReply, "OpenCode waits for its reply while the agents restart")
+        host.liveWaiting.value = emptySet()
+        assertFalse(vm.state.value.restartWaitsForReply, "the reply ended: back to the restarting words")
+        host.fixGate!!.complete(Unit)
     }
 }

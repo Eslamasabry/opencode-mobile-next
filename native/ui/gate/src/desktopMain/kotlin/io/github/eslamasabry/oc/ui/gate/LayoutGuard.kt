@@ -33,7 +33,8 @@ import java.util.Locale
  *   button within the control width (400 dp).
  * - `ellipsis` / `clipped` / `cut-off` / `scroll-cue` (compact windows: 360 dp at text 1.0 and 1.3, 320 dp at 1.0):
  *   words fit their box, are not cut by a container or the window edge, and a row that scrolls sideways says so
- *   ([KitLayoutMarks.ScrollCue]).
+ *   ([KitLayoutMarks.ScrollCue]). `rest-cut`: a scroller that promises to rest whole ([KitLayoutMarks.RestsWhole], tab strips
+ *   and Home's chips) shows a tab or chip cut at its edge, even under a fade.
  *
  * Exceptions are declared in the kit next to the part ([KitLayoutMarks]); a screen's own leftovers live in the
  * per-module baseline `native/config/layout/baseline/<module>.tsv`, which may only shrink

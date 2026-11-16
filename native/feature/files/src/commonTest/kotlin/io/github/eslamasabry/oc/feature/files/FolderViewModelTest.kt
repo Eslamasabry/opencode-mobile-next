@@ -92,6 +92,29 @@ class FolderViewModelTest {
             emptySet(),
         )
 
+    private val refreshFailed: io.github.eslamasabry.oc.core.common.Outcome<
+        kotlinx.collections.immutable.ImmutableList<io.github.eslamasabry.oc.core.model.VersionControlFile>
+    > =
+        io.github.eslamasabry.oc.core.common.Outcome.Failed(
+            io.github.eslamasabry.oc.core.common.Failure.TimedOut()
+        )
+
+    @Test
+    fun `I147-FILES-NOTGIT a folder that is not a Git repository shows no change-indicator warning`() =
+        runTest {
+            val model =
+                vm(connections = FakeConnections(FakeFileGateway(tree), changesResult = refreshFailed, notGit = true))
+            assertEquals(FolderPhase.Ready, model.state.value.phase)
+            assertNull(model.state.value.changesFailure)
+        }
+
+    @Test
+    fun `I147-FILES-NOTGIT a Git folder whose change read fails still shows the warning`() = runTest {
+        val model =
+            vm(connections = FakeConnections(FakeFileGateway(tree), changesResult = refreshFailed, notGit = false))
+        assertTrue(model.state.value.changesFailure != null)
+    }
+
     @Test
     fun `P-025 the root is titled with the project's folder name`() = runTest {
         assertEquals("app", vm(connections = FakeConnections(FakeFileGateway(tree), dir = "/work/app/")).state.value.projectName)

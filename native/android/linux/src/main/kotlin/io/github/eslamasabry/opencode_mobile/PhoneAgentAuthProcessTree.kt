@@ -13,6 +13,12 @@ internal class PhoneAgentAuthProcessTree(
     private val nano: () -> Long = { System.nanoTime() },
     private val pause: (Long) -> Unit = { Thread.sleep(it) },
     private val outsideOwners: () -> Set<Pair<Int, String>> = { emptySet() },
+    /**
+     * signin-truth: how long the polite stop waits before any force. A CLI ended in the middle of refreshing its sign-in
+     * may lose the new token (if the provider rotates it on use, which is not known), so it first gets SIGTERM and this
+     * long to finish writing; only what is still alive then is frozen and killed. Capped by the stop's own budget.
+     */
+    private val politeNanos: Long = TimeUnit.MILLISECONDS.toNanos(1_500),
 ) {
     private class Entry(val root: Int?, var before: Set<Pair<Int, String>>?) {
         val tokens = mutableMapOf<Int, String>()
@@ -78,6 +84,18 @@ internal class PhoneAgentAuthProcessTree(
         try {
             val deadline = nano() + budgetNanos
             observe(entry, inventory())
+            // Polite first: SIGTERM, children first, and a bounded wait while anything of this tree still runs. Only
+            // this request's own tree is ever signalled (its tokens), never a process the app did not start for it.
+            if (live(entry.tokens, inventory()).isNotEmpty()) {
+                signalOwned(entry.tokens, TERM)
+                val polite = nano() + minOf(politeNanos, budgetNanos * 3 / 4)
+                while (nano() < polite) {
+                    observe(entry, inventory())
+                    if (live(entry.tokens, inventory()).isEmpty()) break
+                    pause(POLL_MILLIS)
+                }
+            }
+            observe(entry, inventory())
             signalOwned(entry.tokens, STOP)
             observe(entry, inventory())
             signalOwned(entry.tokens, KILL)
@@ -120,6 +138,7 @@ internal class PhoneAgentAuthProcessTree(
     private companion object {
         const val STOP = 19
         const val KILL = 9
+        const val TERM = 15
         const val POLL_MILLIS = 20L
     }
 }

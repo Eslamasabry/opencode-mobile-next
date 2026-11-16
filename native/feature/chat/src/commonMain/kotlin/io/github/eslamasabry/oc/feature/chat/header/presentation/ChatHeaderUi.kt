@@ -40,6 +40,17 @@ public data class ChatHeaderUi(
     /** Catalog truth for the model chip; independent of notice dismissal. */
     val freeModel: Boolean = false,
     val agentName: String = "OpenCode",
+    /**
+     * Whether [agentName] is this conversation's real agent. False while the server's capabilities or (for a host
+     * agent) the session's model are not read yet: the message box then names no one rather than "OpenCode" for
+     * another agent's conversation (open-transitions).
+     */
+    val agentKnown: Boolean = true,
+    /**
+     * The title is not known yet (the conversation is still being read and nothing kept names it): the bar shows no
+     * title rather than "Conversation", the words of an untitled one (open-transitions).
+     */
+    val titleUnknown: Boolean = false,
     /** The rename dialog is open with this text. */
     val renaming: String? = null,
     /** S24-CHAT: a new id each time a transcript file was saved ("Transcript saved", said once). */

@@ -194,6 +194,13 @@ class SmokeScript(unittest.TestCase):
         nodes = [self.mod.Node(e) for e in ET.fromstring(xml).iter('node')]
         self.assertEqual(self.mod.user_texts(nodes), {'Plan the garden shed trip zq'})
 
+    def test_a_notice_on_the_conversations_screen_is_not_the_persons_text(self):
+        import xml.etree.ElementTree as ET
+        xml = ('<hierarchy><node text="The app was closed in the background, so OpenCode stopped. I" class="x" bounds="[0,0][1,1]"/>'
+               '<node text="Refactor the parser module zq" class="x" bounds="[0,0][1,1]"/></hierarchy>')
+        nodes = [self.mod.Node(e) for e in ET.fromstring(xml).iter('node')]
+        self.assertEqual(self.mod.user_texts(nodes), {'Refactor the parser module zq'})
+
     def test_the_send_button_is_send_in_a_conversation_and_start_on_new_conversation(self):
         import xml.etree.ElementTree as ET
         def labels(*texts):

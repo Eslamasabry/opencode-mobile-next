@@ -635,11 +635,17 @@ internal fun OpeningStatus(opening: ChatsOpeningUi, actions: ChatsActions, block
  * server has failed, the same words live in the opening card, so there is one card.
  */
 @Composable
-internal fun NewConversationBlocked(opening: ChatsOpeningUi, actions: ChatsActions) {
+internal fun NewConversationBlocked(opening: ChatsOpeningUi, actions: ChatsActions, waiting: Boolean = false) {
+    // Cold start: a + tapped while the server still opens is kept; the line says New conversation is on its way, and
+    // Cancel drops the kept tap. Otherwise (the wait ran out) the server is still opening and nothing was kept.
     KitNotice(
-        message = stringResource(Res.string.homeNewBlockedOpening, opening.serverName),
+        message =
+            if (waiting) stringResource(Res.string.homeNewWaitingOpening, opening.serverName)
+            else stringResource(Res.string.homeNewBlockedOpening, opening.serverName),
         tone = StatusTone.Neutral,
-        dismiss = KitLineAction(stringResource(Res.string.workspaceDismissNotice), actions::dismissNewBlocked),
+        dismiss =
+            if (waiting) KitLineAction(stringResource(Res.string.homeNewWaitingCancel), actions::dismissNewBlocked)
+            else KitLineAction(stringResource(Res.string.workspaceDismissNotice), actions::dismissNewBlocked),
     )
 }
 

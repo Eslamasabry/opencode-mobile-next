@@ -161,13 +161,13 @@ private val WHITESPACE = Regex("\\s+")
 public val PaseoAgentSignInTag: io.github.eslamasabry.oc.core.common.WireTag =
     io.github.eslamasabry.oc.core.common.WireTag("Paseo AgentSignIn")
 
-/** Whether the helper's [reason] is about the agent's sign-in ("Failed to authenticate", "Authentication required"). */
+/**
+ * Whether the helper's [reason] for a refused create is about the agent's sign-in ("Failed to authenticate",
+ * "Authentication required", "Not logged in"). signin-truth: the loose words the provider list reads ("api key", a bare
+ * "log in", "401") do not tag it, and neither does a limit: only a real sign-in failure lapses the agent's sign-in.
+ */
 internal fun paseoAgentSignInText(reason: String?): Boolean =
-    reason != null &&
-        (io.github.eslamasabry.oc.protocol.paseo.mappers.paseoSignInFailure(reason) ||
-            io.github.eslamasabry.oc.protocol.paseo.requests.paseoProviderNeedsSignIn(
-                kotlinx.serialization.json.JsonObject(mapOf("error" to kotlinx.serialization.json.JsonPrimitive(reason)))
-            ))
+    reason != null && io.github.eslamasabry.oc.protocol.paseo.mappers.paseoFailureMeansSignIn(reason)
 
 /** The failure feature a send in Plan to an agent without a plan mode carries (the chat words it). */
 public const val NO_PLAN_MODE_FEATURE: String = "agentPlanMode"

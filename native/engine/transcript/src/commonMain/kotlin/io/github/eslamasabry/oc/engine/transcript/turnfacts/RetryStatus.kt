@@ -28,7 +28,9 @@ private val CAUSE_RULES: List<Pair<Regex, Cause>> =
         ci("free (?:tier|model)s? limit") to Cause.FreeTierLimit,
         ci(
             "usage limit (?:reached|exceeded)|usagelimiterror|free.?usage.?(?:limit|exceeded|reached)" +
-                "|(?:free|plan|daily|weekly|monthly|\\d+.?hour) limit (?:reached|exceeded)",
+                "|(?:free|plan|daily|weekly|monthly|\\d+.?hour) limit (?:reached|exceeded)" +
+                // Claude Code's own wording: "You've hit your weekly limit", "You've reached your usage limit".
+                "|(?:hit|reached) your (?:[\\w-]+ ){0,2}(?:usage )?limit",
         ) to Cause.UsageLimit,
         ci(
             "insufficient.?(quota|credit|funds|balance)|out of credit" +

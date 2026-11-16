@@ -23,18 +23,7 @@ golden	gallery-o41	product	test/goldens/chats_home_sheet_1280x800_dark.png	T5	:f
 golden	gallery-o41	product	test/goldens/chats_home_sheet_1280x800_light.png	T5	:feature:chats
 golden	gallery-o41	product	test/goldens/chats_home_sheet_dark.png	T5	:feature:chats
 golden	gallery-o41	product	test/goldens/chats_home_sheet_light.png	T5	:feature:chats
-golden	gallery-o41	product	test/goldens/chats_new_choose_1280x800_dark.png	T5	:feature:chats
-golden	gallery-o41	product	test/goldens/chats_new_choose_1280x800_light.png	T5	:feature:chats
-golden	gallery-o41	product	test/goldens/chats_new_choose_dark.png	T5	:feature:chats
-golden	gallery-o41	product	test/goldens/chats_new_choose_light.png	T5	:feature:chats
-golden	gallery-o41	product	test/goldens/chats_new_copy_1280x800_dark.png	T5	:feature:chats
-golden	gallery-o41	product	test/goldens/chats_new_copy_1280x800_light.png	T5	:feature:chats
-golden	gallery-o41	product	test/goldens/chats_new_copy_dark.png	T5	:feature:chats
-golden	gallery-o41	product	test/goldens/chats_new_copy_light.png	T5	:feature:chats
-golden	gallery-o41	product	test/goldens/chats_new_project_1280x800_dark.png	T5	:feature:chats
-golden	gallery-o41	product	test/goldens/chats_new_project_1280x800_light.png	T5	:feature:chats
-golden	gallery-o41	product	test/goldens/chats_new_project_dark.png	T5	:feature:chats
-golden	gallery-o41	product	test/goldens/chats_new_project_light.png	T5	:feature:chats
+# retired 2026-11-16: chats_new_{project,choose,copy}[_1280x800] light/dark. New conversation was redesigned (layout B) and the old app is no longer the reference (owner, 2026-11-13); native reference pictures of layout B replace them after the release.
 golden	gallery-o41	product	test/goldens/work_not_answering_dark.png	T5	:feature:chats
 golden	gallery-o41	product	test/goldens/work_not_answering_light.png	T5	:feature:chats
 golden	gallery-o41	product	test/goldens/work_runaway_dark.png	T5	:feature:chats

@@ -773,8 +773,14 @@ public class FolderViewModel(
                     mine == changesReads &&
                         folderGeneration == loads &&
                         changes.failure !is Failure.Unavailable
-                )
-                    local.update { it.copy(changesFailure = changes.failure) }
+                ) {
+                    // A folder that is not a Git repository has no indicators to refresh: say nothing.
+                    val notGit = files.notGitRepository()
+                    if (mine == changesReads && folderGeneration == loads)
+                        local.update {
+                            it.copy(changesFailure = if (notGit) null else changes.failure)
+                        }
+                }
         }
     }
 

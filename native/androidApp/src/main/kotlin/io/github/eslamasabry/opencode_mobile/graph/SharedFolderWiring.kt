@@ -14,7 +14,6 @@ import io.github.eslamasabry.oc.core.common.attempt
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.data.kv.string
-import io.github.eslamasabry.oc.core.data.kv.stringList
 import io.github.eslamasabry.oc.engine.connection.ConnectionGraph
 import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
 import io.github.eslamasabry.oc.engine.profiles.DeletionOptions
@@ -147,13 +146,10 @@ internal class AndroidFilesStorageAccess(
                     }
                 }
             if (safe !is Outcome.Ok || !safe.value) return@withLock FilesStorageResult.Failed
-            val key = "$PREFIX${ref.profileId.raw}"
-            val roots = (stores.prefs.stringList(key).orEmpty() + root).distinct().sorted()
             if (local(ref) !== graph) return@withLock FilesStorageResult.Failed
             if (
-                stores.prefs.commit(stores.lanes.forProfile(ref.profileId)) {
-                    putStringList(key, roots)
-                } is Outcome.Failed
+                SharedProjectList.add(stores.prefs, stores.lanes.forProfile(ref.profileId), ref.profileId, root)
+                    is Outcome.Failed
             )
                 return@withLock FilesStorageResult.Failed
             if (local(ref) !== graph) return@withLock FilesStorageResult.Failed
@@ -179,10 +175,6 @@ internal class AndroidFilesStorageAccess(
      * opened-project union is never overwritten.
      */
     suspend fun syncRoots(): Outcome<Unit> = sharedRoots.syncNow()
-
-    private companion object {
-        const val PREFIX = "oc.sharedProjects."
-    }
 }
 
 @Inject

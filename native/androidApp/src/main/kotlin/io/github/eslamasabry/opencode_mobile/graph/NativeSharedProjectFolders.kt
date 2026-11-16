@@ -84,10 +84,9 @@ class NativeSharedProjectFolders(
         force: Boolean = false,
     ): Outcome<Unit> {
         val owner = stores.prefs.string("oc.builtinServerOwner")?.takeIf { it.isNotEmpty() }
+        val granted = SharedProjectList.all(stores.prefs)
         val addresses =
-            stores.prefs
-                .keys(SHARED_PROJECTS)
-                .map { it.removePrefix(SHARED_PROJECTS) }
+            granted.keys
                 .plus(listOfNotNull(owner))
                 .distinct()
                 .mapNotNull { id -> stores.profiles.profile(ProfileId(id))?.let { id to it.profile.baseUrl } }
@@ -96,9 +95,7 @@ class NativeSharedProjectFolders(
             PhoneSharedRoots.of(
                 owner = owner,
                 addresses = addresses,
-                granted = stores.prefs.keys(SHARED_PROJECTS).associate {
-                    it.removePrefix(SHARED_PROJECTS) to stores.prefs.stringList(it).orEmpty()
-                },
+                granted = granted,
                 opened = owner?.let { stores.prefs.stringList("oc.openedProjects.$it") }.orEmpty(),
                 port = PhoneServerScripts.PORT,
                 excluding = excluding?.raw,
@@ -114,10 +111,6 @@ class NativeSharedProjectFolders(
             }
         if (written is Outcome.Ok) published = roots
         return written
-    }
-
-    private companion object {
-        const val SHARED_PROJECTS = "oc.sharedProjects."
     }
 }
 

@@ -24,6 +24,13 @@ internal val LocalKitAgentGridSpan = staticCompositionLocalOf { false }
 /** One column of full-width cards above 1.3x text (Dart `textScaler.scale(1) > 1.3`). */
 internal fun agentGridOneColumn(textScale: Float): Boolean = textScale > 1.3f // F: lib/ui/kit/kit_agent_grid.dart:29
 
+/** The least a card in two columns gets; a window that leaves less puts the cards in one column so no word is cut. */
+internal const val AGENT_GRID_MIN_COLUMN: Int = 160
+
+/** One column when text is large or two columns would each be narrower than [AGENT_GRID_MIN_COLUMN] dp in [widthDp]. */
+internal fun agentGridOneColumn(textScale: Float, widthDp: Float): Boolean =
+    agentGridOneColumn(textScale) || (widthDp - Space.S3) / 2f < AGENT_GRID_MIN_COLUMN
+
 /**
  * Where each card goes: pairs of indices side by side, and an odd last card alone across the row (Dart `pairs`/`odd`).
  * In one column every card is its own row.
@@ -34,17 +41,19 @@ internal fun agentGridRows(count: Int, oneColumn: Boolean): List<List<Int>> =
 /**
  * Agent cards in two columns of equal width, each pair as tall as its taller card, with the kit's gap between them (a
  * port of Dart `KitAgentGrid`, lib/ui/kit/kit_agent_grid.dart). An odd last card spans both columns and lays out
- * sideways. At large text it is one column of full-width cards, each still mark above words. It scrolls with the page
+ * sideways. At large text, or where two columns would leave each under [AGENT_GRID_MIN_COLUMN] dp (a 360 dp phone), it is one column of full-width cards, each still mark above words. It scrolls with the page
  * and follows the reading direction.
  *
  * States: none — a layout of its children.
  */
 @Composable
 public fun KitAgentGrid(children: List<@Composable () -> Unit>, modifier: Modifier = Modifier) {
-    val oneColumn = agentGridOneColumn(kitTextScale())
+    val scale = kitTextScale()
+    androidx.compose.foundation.layout.BoxWithConstraints(modifier.kitMaxWidth(CapRole.Reading).fillMaxWidth()) {
+    val oneColumn = agentGridOneColumn(scale, maxWidth.value)
     val rows = agentGridRows(children.size, oneColumn)
     Column(
-        modifier.kitMaxWidth(CapRole.Reading).fillMaxWidth().selectableGroup(),
+        Modifier.fillMaxWidth().selectableGroup(),
         verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
     ) {
         for (row in rows) {
@@ -62,6 +71,7 @@ public fun KitAgentGrid(children: List<@Composable () -> Unit>, modifier: Modifi
                 CompositionLocalProvider(LocalKitAgentGridSpan provides !oneColumn) { children[row[0]]() }
             }
         }
+    }
     }
 }
 

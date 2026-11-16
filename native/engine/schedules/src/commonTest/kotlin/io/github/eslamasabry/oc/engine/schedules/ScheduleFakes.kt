@@ -112,6 +112,7 @@ internal class FakeProfiles(var gateway: ScriptedGateway = ScriptedGateway()) : 
     val gateways = mutableMapOf<String, ScriptedGateway>()
     val fingerprints = mutableMapOf(P to "n1:server-a")
     val legacyFingerprints = mutableMapOf(P to "ab".repeat(32))
+    val legacyRows = mutableMapOf<String, Map<String, Any?>>()
     var opens = 0
     var closes = 0
     var openFailure: io.github.eslamasabry.oc.core.common.Failure? = null
@@ -121,6 +122,8 @@ internal class FakeProfiles(var gateway: ScriptedGateway = ScriptedGateway()) : 
     override suspend fun fingerprint(profileId: String): String? = fingerprints[profileId]
 
     override suspend fun legacyFingerprint(profileId: String): String? = legacyFingerprints[profileId]
+
+    override suspend fun legacyRow(profileId: String): Map<String, Any?>? = legacyRows[profileId]
 
     override suspend fun open(profileId: String, projectPath: String, workspace: String?): Outcome<ScheduleConnection> {
         openFailure?.let { return Outcome.Failed(it) }

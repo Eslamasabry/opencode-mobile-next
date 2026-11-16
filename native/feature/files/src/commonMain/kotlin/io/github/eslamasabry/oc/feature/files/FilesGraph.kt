@@ -24,6 +24,7 @@ import io.github.eslamasabry.oc.core.domain.capabilities.ServerCapabilities
 import io.github.eslamasabry.oc.core.model.PromptAttachment
 import io.github.eslamasabry.oc.core.model.ServerLocation
 import io.github.eslamasabry.oc.core.model.VersionControlFile
+import io.github.eslamasabry.oc.core.model.VersionControlSetupState
 import io.github.eslamasabry.oc.core.model.WorkspaceSymbol
 import io.github.eslamasabry.oc.core.domain.platform.SharedStorageAccess
 import io.github.eslamasabry.oc.engine.composer.drafts.ConversationDrafts
@@ -191,6 +192,23 @@ public class GraphFilesConnections(private val registry: ConnectionRegistry) : F
     private fun unavailable(feature: String): Outcome.Failed =
         Outcome.Failed(Failure.Unavailable(FeatureId(feature)))
 
+    override suspend fun notGitRepository(ref: ConversationRef): Boolean {
+        val graph = registry.graphFor(ref) as? FilesGraphAccessors ?: return false
+        val gateway = graph.filesGateway
+        val conversation = (gateway.session(ref.sessionId) as? Outcome.Ok)?.value ?: return false
+        val target =
+            ServerLocation(
+                conversation.directory ?: gateway.location.value.directory,
+                conversation.workspaceId?.raw,
+            )
+        val scoped = gateway as? LocatedVcsGateway
+        val health =
+            if (scoped != null) scoped.versionControlHealthAt(target)
+            else if (gateway.location.value == target) graph.filesOperations.versionControlHealth()
+            else return false
+        return (health as? Outcome.Ok)?.value?.setupState == VersionControlSetupState.Absent
+    }
+
     override fun sourceIdentity(ref: ConversationRef): Any? = registry.graphFor(ref)
 
     override fun canTerminal(ref: ConversationRef): Boolean =
@@ -255,6 +273,16 @@ public class GraphFilesConnections(private val registry: ConnectionRegistry) : F
                         unavailable("workspaceSymbols")
                     else result
                 }
+            },
+            notGitRepository = {
+                val scoped = gateway as? LocatedVcsGateway
+                val health =
+                    if (scoped != null) scoped.versionControlHealthAt(target)
+                    else if (sameFolder(gateway.location.value.directory, directory))
+                        accessors.filesOperations.versionControlHealth()
+                    else null
+                current() &&
+                    (health as? Outcome.Ok)?.value?.setupState == VersionControlSetupState.Absent
             },
             changes = {
                 val scoped = gateway as? LocatedVcsGateway
