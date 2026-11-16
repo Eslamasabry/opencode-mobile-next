@@ -569,13 +569,13 @@ internal fun OpeningStatus(opening: ChatsOpeningUi, actions: ChatsActions, block
             when {
                 opening.phoneOff -> stringResource(Res.string.homePhoneOffTitle)
                 words != null -> words.title
-                else -> stringResource(Res.string.homeOpeningFailed, opening.serverName)
+                else -> stringResource(Res.string.homeOpeningFailed, openingNameShown(opening))
             },
         // After a tap on New conversation the card also says that nothing was started, so there is one card, not two.
         body =
             when {
                 opening.phoneOff -> stringResource(Res.string.thisPhoneAnswerOffLine)
-                blocked -> stringResource(Res.string.homeNewBlockedBody, opening.serverName)
+                blocked -> stringResource(Res.string.homeNewBlockedBody, openingNameShown(opening))
                 words != null -> words.body
                 else -> stringResource(Res.string.homeOpeningFailedBody)
             },
@@ -640,8 +640,8 @@ internal fun NewConversationBlocked(opening: ChatsOpeningUi, actions: ChatsActio
     // Cancel drops the kept tap. Otherwise (the wait ran out) the server is still opening and nothing was kept.
     KitNotice(
         message =
-            if (waiting) stringResource(Res.string.homeNewWaitingOpening, opening.serverName)
-            else stringResource(Res.string.homeNewBlockedOpening, opening.serverName),
+            if (waiting) stringResource(Res.string.homeNewWaitingOpening, openingNameShown(opening))
+            else stringResource(Res.string.homeNewBlockedOpening, openingNameShown(opening)),
         tone = StatusTone.Neutral,
         dismiss =
             if (waiting) KitLineAction(stringResource(Res.string.homeNewWaitingCancel), actions::dismissNewBlocked)

@@ -17,5 +17,13 @@ internal fun serverNameShown(saved: String, phoneWord: String): String = if (sav
 @Composable
 internal fun serverNameShown(saved: String): String = serverNameShown(saved, stringResource(Res.string.settingsV3ThisPhone))
 
+/**
+ * The server home is opening, by the name the pill shows: This phone's own server ([ChatsOpeningUi.onThisPhone]) is
+ * "This phone" in the person's language whatever name it was saved under; any other by [serverNameShown].
+ */
+@Composable
+internal fun openingNameShown(opening: io.github.eslamasabry.oc.feature.chats.presentation.ChatsOpeningUi): String =
+    if (opening.onThisPhone) stringResource(Res.string.settingsV3ThisPhone) else serverNameShown(opening.serverName)
+
 @Composable
 internal fun serverNameShownOrNull(saved: String?): String? = saved?.let { serverNameShown(it) }

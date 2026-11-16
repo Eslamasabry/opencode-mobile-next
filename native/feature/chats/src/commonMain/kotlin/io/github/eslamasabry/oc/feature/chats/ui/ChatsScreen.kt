@@ -299,7 +299,7 @@ public fun ChatsScreen(
                 below = {
                     // Nothing to filter on a list that holds nothing yet, so the chips wait for the first conversation.
                     val showFilters = state.phase == ChatsPhase.List || state.phase == ChatsPhase.NoMatch
-                    val pill: (@Composable () -> Unit)? = if (!shellBar) null else state.connection?.let { connection -> { ConnectionStatusPill(connection, actions) } }
+                    val pill: (@Composable () -> Unit)? = if (!shellBar) null else state.connection?.let { connection -> { ConnectionStatusPill(connection, actions, state.home.opening?.takeIf { it.onThisPhone && it.serverName == connection.server }) } }
                     // Until the saved servers are read the row keeps its room and stays empty, so the pill and the
                     // filters arrive together in their places instead of the pill pushing the filters aside.
                     if (shellBar && !state.home.known) Spacer(Modifier.height(LocalKitTokens.current.minTarget.dp))
@@ -415,7 +415,7 @@ public fun ChatsScreen(
                         KitNotice(
                             message =
                                 if (source.agents) stringResource(Res.string.chatsHomeAgentsUnreachable)
-                                else stringResource(Res.string.chatsHomeUnreachableShort, KitBidi.auto(source.name)),
+                                else stringResource(Res.string.chatsHomeUnreachableShort, KitBidi.auto(serverNameShown(source.name))),
                             actions = listOf(KitLineAction(stringResource(Res.string.kitTryAgain), { actions.retrySource(source.profile) })),
                         )
                     }
@@ -427,7 +427,7 @@ public fun ChatsScreen(
             if (shownNotice == HomeNoticeKind.ListIncomplete) {
                 item(key = "incomplete", contentType = "incomplete") {
                     Box(kitItemMotion().padding(horizontal = LocalKitTokens.current.gutter.dp)) {
-                        val names = KitBidi.auto(partial.joinToString(", "))
+                        val names = KitBidi.auto(partial.map { serverNameShown(it) }.joinToString(", "))
                         KitNotice(
                             stringResource(Res.string.chatsHomeIncompleteNamed, names),
                             actions = listOf(KitLineAction(stringResource(Res.string.kitTryAgain), actions::retryList)),
@@ -685,7 +685,13 @@ private fun HeaderRow(pill: (@Composable () -> Unit)?, showFilters: Boolean, fil
 }
 
 @Composable
-private fun ConnectionStatusPill(connection: HomeConnectionUi, actions: ChatsActions) {
+private fun ConnectionStatusPill(
+    connection: HomeConnectionUi,
+    actions: ChatsActions,
+    /** This phone's own server, still opening: named "This phone" whatever name it was saved under. */
+    ownPhone: io.github.eslamasabry.oc.feature.chats.presentation.ChatsOpeningUi? = null,
+) {
+    val name = ownPhone?.let { openingNameShown(it) } ?: serverNameShown(connection.server)
     val state = connection.state
     val status = stringResource(
         when (state) {
@@ -696,7 +702,7 @@ private fun ConnectionStatusPill(connection: HomeConnectionUi, actions: ChatsAct
     )
     val switchLabel = stringResource(Res.string.serverSwitcherOpen)
     KitStatusPill(
-        label = serverNameShown(connection.server),
+        label = name,
         tone = when (state) {
             HomeConnectionState.Connected -> KitConnectionTone.Ok
             HomeConnectionState.Connecting -> KitConnectionTone.Working
@@ -704,7 +710,7 @@ private fun ConnectionStatusPill(connection: HomeConnectionUi, actions: ChatsAct
         },
         // The dot says connected; a word only when it is not.
         word = status.takeUnless { state == HomeConnectionState.Connected },
-        spoken = "${serverNameShown(connection.server)}, $status, $switchLabel",
+        spoken = "$name, $status, $switchLabel",
         onClickLabel = switchLabel,
         // F: lib/ui/screens/home_screen.dart:434-470: the one-tap switcher, not the Servers page.
         onClick = actions::openServerSwitcher,
