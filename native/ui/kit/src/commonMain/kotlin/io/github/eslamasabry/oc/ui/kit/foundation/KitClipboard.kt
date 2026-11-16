@@ -1,6 +1,7 @@
 package io.github.eslamasabry.oc.ui.kit.foundation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.ClipboardManager
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
@@ -26,4 +27,8 @@ public class KitClipboard internal constructor(
 
 @Composable
 @Suppress("DEPRECATION")
-public fun rememberKitClipboard(): KitClipboard = KitClipboard(LocalClipboardManager.current, LocalKitPlatform.current)
+public fun rememberKitClipboard(): KitClipboard {
+    val clipboard = LocalClipboardManager.current
+    val platform = LocalKitPlatform.current
+    return remember(clipboard, platform) { KitClipboard(clipboard, platform) }
+}

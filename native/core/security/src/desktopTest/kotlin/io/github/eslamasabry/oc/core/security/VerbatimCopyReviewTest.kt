@@ -28,6 +28,8 @@ class VerbatimCopyReviewTest {
                 (1 to "KitClipboardEffect: the chat header masks everything but the person's own prompts first"),
             "androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/SettingsWiring.kt" to
                 (1 to "DiagnosticsExport.copy: the bundled voice licence text (an app asset), never server text"),
+            "ui/kit/src/androidMain/kotlin/io/github/eslamasabry/oc/ui/kit/platform/AndroidKitPlatform.kt" to
+                (1 to "The kit platform dispatches to its sole Android clipboard writer with the caller's explicit mode and unchanged payload"),
             "ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/foundation/KitClipboard.kt" to
                 (1 to "Desktop/test fallback only: payload and explicit mode already chosen by the reviewed caller"),
             "ui/kit/src/androidMain/kotlin/io/github/eslamasabry/oc/ui/kit/foundation/KitClipboard.android.kt" to
