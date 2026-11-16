@@ -1,6 +1,5 @@
 package io.github.eslamasabry.oc.android.terminal
 
-import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.view.MotionEvent
@@ -106,11 +105,10 @@ internal fun showTerminalKeyboard(view: android.view.View) {
  * Dart (`_KitTerminalOscHost`), a write is honoured only while the terminal is on screen: a session
  * running unseen (a background sign-in, a closed screen) cannot change the clipboard.
  */
-internal fun copyTerminalText(session: TerminalSession, text: String, shown: android.view.View?) {
+internal fun copyTerminalText(text: String, shown: android.view.View?, clipboard: TerminalTextClipboard) {
     if (shown == null || !shown.isShown) return
     if (text.isEmpty() || text.toByteArray(Charsets.UTF_8).size > 65_536) return
-    (shown.context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager)
-        ?.setPrimaryClip(ClipData.newPlainText("", text))
+    clipboard.copySensitive(text)
 }
 
 /** What [pasteTerminalText] did. */

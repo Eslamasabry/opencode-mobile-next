@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.kit.content.viewer
 
+import io.github.eslamasabry.oc.ui.kit.foundation.KitClipboardMode
 import io.github.eslamasabry.oc.ui.kit.frame.kitPageScrollState
 import androidx.compose.foundation.layout.wrapContentHeight
 import io.github.eslamasabry.oc.core.common.Redacted
@@ -486,11 +487,11 @@ public fun KitViewer(
         if (findable) add(KitMenuItem(stringResource(Res.string.kitViewerFind), { findOpen = true }, KitIcons.search, KitViewerMenuGroup))
         val copyText = content?.copyText
         if (copyText != null) {
-            val clipboard = androidx.compose.ui.platform.LocalClipboardManager.current
+            val clipboard = io.github.eslamasabry.oc.ui.kit.foundation.rememberKitClipboard()
             add(
                 KitMenuItem(
                     stringResource(Res.string.kitViewerCopyContents),
-                    { clipboard.setText(androidx.compose.ui.text.AnnotatedString(copyText)) }, // SEC-13: verbatim
+                    { clipboard.setText(androidx.compose.ui.text.AnnotatedString(copyText), KitClipboardMode.Sensitive) }, // SEC-13: verbatim
                     KitIcons.copy,
                     KitViewerMenuGroup,
                     enabled = KitEnabled.of(!view.empty, stringResource(Res.string.kitViewerEmpty)),

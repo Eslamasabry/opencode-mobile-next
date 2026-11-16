@@ -10,7 +10,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalClipboardManager
+import io.github.eslamasabry.oc.ui.kit.foundation.rememberKitClipboard
+import io.github.eslamasabry.oc.ui.kit.foundation.KitClipboardMode
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
@@ -217,7 +218,7 @@ private fun Fact(icon: ImageVector, title: String, body: String) {
  */
 @Composable
 internal fun HostGuide(visible: Boolean, onDismiss: () -> Unit, onEnterAddress: (() -> Unit)? = null) {
-    @Suppress("DEPRECATION") val clipboard = LocalClipboardManager.current
+    @Suppress("DEPRECATION") val clipboard = rememberKitClipboard()
     val steps =
         listOf(
             stringResource(Res.string.teamUiHostGuideStep1) to HostScripts.TEAM_CHECK_TOOLS,
@@ -242,7 +243,7 @@ internal fun HostGuide(visible: Boolean, onDismiss: () -> Unit, onEnterAddress: 
                         KitCodeKind.Command,
                         Modifier.testTag("team-host-guide-step-${i + 1}"),
                         copyLabel = if ('\n' in command) stringResource(Res.string.kitCodeCopyCommand) else null,
-                        onCopy = { clipboard.setText(AnnotatedString(it)) },
+                        onCopy = { clipboard.setText(AnnotatedString(it), KitClipboardMode.Sensitive) },
                     )
                 }
             }

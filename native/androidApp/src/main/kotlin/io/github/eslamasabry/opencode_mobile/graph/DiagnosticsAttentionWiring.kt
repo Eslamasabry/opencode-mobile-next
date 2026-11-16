@@ -1,9 +1,9 @@
 package io.github.eslamasabry.opencode_mobile.graph
 
+import io.github.eslamasabry.oc.ui.kit.foundation.KitAndroidClipboard
+import io.github.eslamasabry.oc.ui.kit.foundation.KitClipboardMode
 import android.app.ActivityManager
 import android.app.Application
-import android.content.ClipData
-import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.os.Build
@@ -515,9 +515,7 @@ class GitHubProblemReporter(
             link.clipboardText?.let { text ->
                 val copied =
                     attempt({ Failure.StorageRefused() }) {
-                        application
-                            .getSystemService(ClipboardManager::class.java)
-                            .setPrimaryClip(ClipData.newPlainText("OpenCode Mobile report", text))
+                        KitAndroidClipboard.write(application, text, KitClipboardMode.Sensitive, "OpenCode Mobile report")
                     }
                 if (copied is Outcome.Failed) return@withContext copied
                 val words =

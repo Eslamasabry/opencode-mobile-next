@@ -22,7 +22,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalClipboardManager
+import io.github.eslamasabry.oc.ui.kit.foundation.rememberKitClipboard
+import io.github.eslamasabry.oc.ui.kit.foundation.KitClipboardMode
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.heading
@@ -216,7 +217,7 @@ public fun KitStateView(
     val shownBody = if (slow && since != null) stringResource(Res.string.kitSinceStillWaiting, StateViewRules.slowSeconds()) else body
 
     @Suppress("DEPRECATION") // see KitField: no common plain-text clipboard write without the manager yet
-    val clipboard = LocalClipboardManager.current
+    val clipboard = rememberKitClipboard()
     val copyLabel = stringResource(Res.string.kitCopyDetails)
     val reportLabel = stringResource(Res.string.kitReportProblem)
     val (p, s, t) =
@@ -227,7 +228,7 @@ public fun KitStateView(
                     when (w) {
                         ErrorWay.CopyDetails ->
                             KitAction(copyLabel, onClick = {
-                                details?.let { clipboard.setText(AnnotatedString(it.text)) }
+                                details?.let { clipboard.setText(AnnotatedString(it.text), KitClipboardMode.Sensitive) }
                             }, icon = KitIcons.copy, haptic = KitHaptic.Send)
                         ErrorWay.ReportProblem -> KitAction(reportLabel, onClick = onReport)
                         else -> null

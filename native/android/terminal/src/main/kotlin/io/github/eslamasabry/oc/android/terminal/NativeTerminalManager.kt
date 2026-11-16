@@ -58,6 +58,7 @@ class NativeTerminalManager(
     private val dispatchers: AppDispatchers,
     private val appScope: AppCoroutineScope,
     private val redactor: Redactor,
+    private val clipboard: TerminalTextClipboard,
 ) {
     private val main = Handler(Looper.getMainLooper())
     private val sessions = LinkedHashMap<Int, NativeSession>()
@@ -126,7 +127,7 @@ class NativeTerminalManager(
             object :
                 QuietSessionClient({
                     if (this@NativeSession::view.isInitialized) view else null
-                }) {
+                }, clipboard) {
                 override fun onTextChanged(session: TerminalSession) {
                     // The emulator parses UTF-8 incrementally; whole characters survive split PTY
                     // reads.
@@ -315,7 +316,8 @@ class NativeTerminalManager(
  * Clipboard queries are removed by TerminalSession before VT decoding.
  */
 internal open class QuietSessionClient(
-    private val shownView: () -> android.view.View? = { null }
+    private val shownView: () -> android.view.View?,
+    private val clipboard: TerminalTextClipboard,
 ) : TerminalSessionClient {
     override fun onTextChanged(session: TerminalSession) = Unit
 
@@ -324,7 +326,7 @@ internal open class QuietSessionClient(
     override fun onSessionFinished(session: TerminalSession) = Unit
 
     override fun onCopyTextToClipboard(session: TerminalSession, text: String) {
-        copyTerminalText(session, text, shownView())
+        copyTerminalText(text, shownView(), clipboard)
     }
 
     /** The grid's own Paste (Termux's selection menu): the clipboard into this session, while it is shown. */

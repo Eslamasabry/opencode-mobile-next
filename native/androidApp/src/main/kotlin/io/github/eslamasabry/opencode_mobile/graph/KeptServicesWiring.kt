@@ -1,8 +1,8 @@
 package io.github.eslamasabry.opencode_mobile.graph
 
+import io.github.eslamasabry.oc.ui.kit.foundation.KitAndroidClipboard
+import io.github.eslamasabry.oc.ui.kit.foundation.KitClipboardMode
 import android.app.Application
-import android.content.ClipData
-import android.content.ClipboardManager
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
@@ -350,14 +350,7 @@ class AndroidKeptServices(
             is Outcome.Failed -> read
             is Outcome.Ok ->
                 command {
-                    val clipboard =
-                        requireNotNull(app.getSystemService(ClipboardManager::class.java))
-                    clipboard.setPrimaryClip(
-                        ClipData.newPlainText(
-                            app.applicationInfo.loadLabel(app.packageManager),
-                            read.value,
-                        )
-                    )
+                    KitAndroidClipboard.write(app, read.value, KitClipboardMode.Sensitive, app.applicationInfo.loadLabel(app.packageManager))
                 }
         }
 

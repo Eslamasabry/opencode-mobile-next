@@ -162,6 +162,9 @@ testing {
             }
             targets.all {
                 testTask.configure {
+                    // The security declaration scan parses the same live tree as the full quality gate.
+                    maxHeapSize = "2g"
+                    maxParallelForks = 1
                     inputs.files(fileTree(rootDir) {
                         include("**/src/**/*.kt", "**/src/**/*.xml", "**/build.gradle.kts", "build-logic/**/*.kt", "quality/config/**",
                             "gradle/libs.versions.toml", "version.properties", "androidApp/lint.xml")

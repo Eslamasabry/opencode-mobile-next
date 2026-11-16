@@ -1,7 +1,8 @@
 package io.github.eslamasabry.opencode_mobile.graph
 
+import io.github.eslamasabry.oc.ui.kit.foundation.KitAndroidClipboard
+import io.github.eslamasabry.oc.ui.kit.foundation.KitClipboardMode
 import android.app.Application
-import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import dev.zacsweers.metro.AppScope
@@ -19,7 +20,7 @@ class AndroidTerminalClipboard(private val app: Application) : TerminalClipboard
         get() = app.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
 
     override fun copy(value: String): Boolean {
-        clipboard.setPrimaryClip(ClipData.newPlainText("", value))
+        clipboard.setPrimaryClip(android.content.ClipData.newPlainText("", value))
         return true
     }
 
@@ -91,4 +92,12 @@ class AndroidTerminalPrivacy(private val redactor: Redactor) : TerminalPrivacy {
             redactor.details(redactor.diagnostics(process.pid.toString())),
             redactor.details(redactor.diagnostics(process.exitCode?.toString().orEmpty())),
         )
+}
+
+@Inject
+@ContributesBinding(AppScope::class)
+class KitTerminalTextClipboard(private val app: Application) : io.github.eslamasabry.oc.android.terminal.TerminalTextClipboard {
+    override fun copySensitive(text: String) {
+        app.getSystemService(android.content.ClipboardManager::class.java).setPrimaryClip(android.content.ClipData.newPlainText("", text))
+    }
 }

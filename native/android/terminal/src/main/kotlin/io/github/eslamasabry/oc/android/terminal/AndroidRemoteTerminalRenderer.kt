@@ -19,6 +19,7 @@ class AndroidRemoteTerminalRenderer(
     private val app: Application,
     private val dispatchers: AppDispatchers,
     private val redactor: Redactor,
+    private val clipboard: TerminalTextClipboard,
 ) : RemoteTerminalRenderer {
     override suspend fun open(
         onInput: (String) -> Unit,
@@ -61,7 +62,7 @@ class AndroidRemoteTerminalRenderer(
                     }
                 },
                 2000,
-                object : QuietSessionClient({ grid }) {
+                object : QuietSessionClient({ grid }, clipboard) {
                     override fun onTextChanged(session: TerminalSession) {
                         val raw =
                             redactor.redact(session.emulator?.screen?.transcriptText.orEmpty())

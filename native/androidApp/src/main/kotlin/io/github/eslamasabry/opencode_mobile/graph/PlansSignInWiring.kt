@@ -1,9 +1,8 @@
 package io.github.eslamasabry.opencode_mobile.graph
 
+import io.github.eslamasabry.oc.ui.kit.foundation.KitAndroidClipboard
+import io.github.eslamasabry.oc.ui.kit.foundation.KitClipboardMode
 import android.app.Application
-import android.content.ClipData
-import android.content.ClipboardManager
-import android.os.PersistableBundle
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
@@ -288,11 +287,7 @@ class AndroidPlanSignInPort(
         )
             return stale()
         return try {
-            val clipboard = application.getSystemService(ClipboardManager::class.java)
-            val clip = ClipData.newPlainText(null, code)
-            clip.description.extras =
-                PersistableBundle().apply { putBoolean("android.content.extra.IS_SENSITIVE", true) }
-            clipboard.setPrimaryClip(clip)
+            KitAndroidClipboard.write(application, code, KitClipboardMode.Sensitive, null)
             Unit.ok()
         } catch (_: SecurityException) {
             Failure.Device().failed()

@@ -1,7 +1,7 @@
 package io.github.eslamasabry.opencode_mobile.graph
 
-import android.content.ClipData
-import android.content.ClipboardManager
+import io.github.eslamasabry.oc.ui.kit.foundation.KitAndroidClipboard
+import io.github.eslamasabry.oc.ui.kit.foundation.KitClipboardMode
 import android.content.Context
 import io.github.eslamasabry.oc.android.tiles.SharedStash
 import io.github.eslamasabry.oc.android.tiles.StashLimits
@@ -162,9 +162,7 @@ internal class IncomingShare(
 
     fun copy() {
         val words = text ?: return
-        context
-            .getSystemService(ClipboardManager::class.java)
-            ?.setPrimaryClip(ClipData.newPlainText("", words))
+        KitAndroidClipboard.write(context, words, KitClipboardMode.Sensitive)
     }
 
     fun discard() {

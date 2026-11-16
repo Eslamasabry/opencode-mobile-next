@@ -93,12 +93,43 @@ object SecTextRules {
         return code.substring(open + 1)
     }
 
-    // ---- K-SEC-6: clipboard writes only in the kit's KitCopy / KitPlatform
-    private val clip = Regex("""\bClipData\.newPlainText\b|\bClipEntry\s*\(""")
+    // ---- K-SEC-6: one kit-owned clipboard boundary, explicit mode at every production text copy.
+    private val clipboardBoundaries = setOf(
+        "ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/foundation/KitClipboard.kt",
+        "ui/kit/src/androidMain/kotlin/io/github/eslamasabry/oc/ui/kit/foundation/KitClipboard.android.kt",
+    )
+    private val rawClip = Regex("""\bClipData\s*\.\s*newPlainText\b|\bClipEntry\s*\(|\.\s*(setPrimaryClip|setClipEntry)\s*\(""")
+    private val textWrite = Regex("""\b(\w+)\s*\.\s*setText\s*\(""")
+    private val kitWrite = Regex("""\bKitAndroidClipboard\s*\.\s*write\s*\(""")
 
     fun kSec6(files: List<SecFile>): List<Violation> =
-        everywhere(files).filter { it.isKotlin && !(it.module == "ui/kit" && (it.name.startsWith("KitCopy") || it.name.startsWith("KitPlatform"))) }
-            .flatMap { hits("K-SEC-6", it, clip) }
+        production(files).filter { it.isKotlin && it.rel !in clipboardBoundaries }.flatMap { f ->
+            val code = KotlinText.executable(f.text)
+            val raw = rawClip.findAll(code).map { Violation("K-SEC-6", f.rel, f.lineOf(it.range.first), "raw clipboard write outside KitClipboard") }
+            val typed = Regex("""\b(\w+)\s*:\s*(?:androidx\.compose\.ui\.platform\.)?Clipboard(?:Manager)?\b""")
+                .findAll(code).map { it.groupValues[1] }.toSet()
+            val text = textWrite.findAll(code).mapNotNull { m ->
+                val receiver = m.groupValues[1]
+                val args = KotlinText.balancedArgs(code, m.range.last)
+                val looksLikeClipboard = receiver.startsWith("clipboard", true) || receiver in typed || "AnnotatedString" in args
+                val kitReceiver = Regex("""\bval\s+${Regex.escape(receiver)}\s*=\s*(?:[\w.]+\.)?rememberKitClipboard\s*\(""").containsMatchIn(code)
+                when {
+                    !looksLikeClipboard -> null
+                    !kitReceiver -> Violation("K-SEC-6", f.rel, f.lineOf(m.range.first), "raw text clipboard write outside KitClipboard")
+                    !Regex("""\bKitClipboardMode\.(Sensitive|Public)\b""").containsMatchIn(args) ->
+                        Violation("K-SEC-6", f.rel, f.lineOf(m.range.first), "clipboard write needs an explicit KitClipboardMode")
+                    else -> null
+                }
+            }
+            val modes = kitWrite.findAll(code).mapNotNull { m ->
+                val args = KotlinText.balancedArgs(code, m.range.last)
+                // Only the platform adapter forwards a typed mode; product call sites must choose a concrete mode.
+                val adapter = f.module == "ui/kit" && f.name == "AndroidKitPlatform.kt" && Regex("""\bmode\b""").containsMatchIn(args)
+                if (adapter || Regex("""\bKitClipboardMode\.(Sensitive|Public)\b""").containsMatchIn(args)) null
+                else Violation("K-SEC-6", f.rel, f.lineOf(m.range.first), "clipboard write needs an explicit KitClipboardMode")
+            }
+            (raw + text + modes).toList()
+        }
 
     // ---- K-SEC-7: every PendingIntent is FLAG_IMMUTABLE, except three reviewed files
     private val pendingIntent = Regex("""\bPendingIntent\s*\.\s*(getActivity|getActivities|getBroadcast|getService|getForegroundService)\s*\(""")

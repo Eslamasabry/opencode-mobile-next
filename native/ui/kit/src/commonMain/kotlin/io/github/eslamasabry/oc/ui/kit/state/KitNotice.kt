@@ -16,7 +16,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalClipboardManager
+import io.github.eslamasabry.oc.ui.kit.foundation.rememberKitClipboard
+import io.github.eslamasabry.oc.ui.kit.foundation.KitClipboardMode
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.LiveRegionMode
@@ -413,7 +414,7 @@ public fun KitErrorNotice(
 ) {
     val kind = KitErrorKind.of(failure)
     val actions = listOfNotNull(retry, if (kind == KitErrorKind.Network) switchServer else report)
-    val clipboard = LocalClipboardManager.current
+    val clipboard = rememberKitClipboard()
     val copyWords = copyLabel ?: stringResource(Res.string.kitCopyDetails)
     // With the fold the notice has one copy action, the fold's; without it the notice carries its own button.
     val copy: (@Composable () -> Unit)? =
@@ -422,7 +423,7 @@ public fun KitErrorNotice(
                 KitIconButton(
                     KitIcons.copy,
                     copyWords,
-                    { clipboard.setText(AnnotatedString(d.text)) },
+                    { clipboard.setText(AnnotatedString(d.text), KitClipboardMode.Sensitive) },
                     Modifier.testTag("kit-notice-copy-details"),
                     size = LocalKitTokens.current.smallIcon,
                 )

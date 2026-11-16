@@ -45,6 +45,12 @@ public data class KitSystemSignals(
  */
 @Stable
 public interface KitPlatform {
+    /** Returns true after a platform write; false uses the common desktop/test clipboard. */
+    public fun writeClipboard(text: String, mode: io.github.eslamasabry.oc.ui.kit.foundation.KitClipboardMode): Boolean = false
+
+    @Composable
+    public fun ClipboardBoundary(mode: io.github.eslamasabry.oc.ui.kit.foundation.KitClipboardMode, content: @Composable () -> Unit) { content() }
+
     public val name: String
     public val family: KitPlatformFamily
     public val signals: StateFlow<KitSystemSignals>

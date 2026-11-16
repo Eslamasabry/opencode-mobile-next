@@ -27,7 +27,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalClipboardManager
+import io.github.eslamasabry.oc.ui.kit.foundation.rememberKitClipboard
+import io.github.eslamasabry.oc.ui.kit.foundation.KitClipboardMode
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -80,7 +81,7 @@ public fun KitLogPanel(
         if (!paused && rows.isNotEmpty() && needle.isBlank()) scroll.scrollToItem(rows.lastIndex)
     }
     LaunchedEffect(current) { current?.let { scroll.scrollToItem(it) } }
-    @Suppress("DEPRECATION") val clipboard = LocalClipboardManager.current
+    @Suppress("DEPRECATION") val clipboard = rememberKitClipboard()
     Column(modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
         KitField(query, stringResource(Res.string.p12LogSearch), onTextChanged = { match = 0 })
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
@@ -96,7 +97,7 @@ public fun KitLogPanel(
             )
             KitButton(
                 stringResource(Res.string.p12LogCopy),
-                { clipboard.setText(AnnotatedString(frozen)) },
+                { clipboard.setText(AnnotatedString(frozen), KitClipboardMode.Sensitive) },
                 role = KitButtonRole.Tertiary,
             )
         }

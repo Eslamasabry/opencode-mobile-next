@@ -120,6 +120,48 @@ object KotlinText {
         return out.toString()
     }
 
+    /** Mask literal text, preserving offsets and executable string-template expressions. */
+    fun executable(src: String): String {
+        val code = stripComments(src)
+        val out = code.toCharArray()
+        fun blank(start: Int, end: Int) {
+            for (j in start until end) if (out[j] != '\n') out[j] = ' '
+        }
+        fun scan(start: Int, template: Boolean): Int {
+            var i = start
+            var braces = 0
+            while (i < code.length) {
+                val c = code[i]
+                if (template && c == '}' && braces == 0) return i + 1
+                if (c == '{') braces++
+                if (c == '}') braces--
+                if (c == '\'') {
+                    val end = if (code.getOrNull(i + 1) == '\\') i + 4 else i + 3
+                    blank(i, end.coerceAtMost(code.length)); i = end; continue
+                }
+                if (c != '"') { i++; continue }
+                val raw = code.startsWith("\"\"\"", i)
+                val delimiter = if (raw) 3 else 1
+                blank(i, i + delimiter); i += delimiter
+                while (i < code.length) {
+                    if ((!raw && code[i] == '"') || (raw && code.startsWith("\"\"\"", i))) {
+                        blank(i, i + delimiter); i += delimiter; break
+                    }
+                    if (!raw && code[i] == '\\') {
+                        blank(i, (i + 2).coerceAtMost(code.length)); i += 2; continue
+                    }
+                    if (code[i] == '$' && code.getOrNull(i + 1) == '{') {
+                        blank(i, i + 2); i = scan(i + 2, true); continue
+                    }
+                    blank(i, i + 1); i++
+                }
+            }
+            return i
+        }
+        scan(0, false)
+        return String(out)
+    }
+
     /** The text inside the parentheses that open at [openParen] (balanced; strings skipped). */
     fun balancedArgs(code: String, openParen: Int): String {
         var depth = 0
