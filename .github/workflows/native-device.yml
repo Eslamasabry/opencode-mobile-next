@@ -212,8 +212,10 @@ jobs:
           set_cfg disk.dataPartition.size 8G
           set_cfg hw.keyboard yes
           set_cfg hw.cpu.ncore 4
-          set_cfg hw.gpu.enabled yes
-          set_cfg hw.gpu.mode swiftshader_indirect
+          # Guest rendering, as the PC gate AVDs (hw.gpu.enabled=no): with swiftshader_indirect the emulator process
+          # died in all three cases when the Flutter chat sent its first prompt (run 43777065410).
+          set_cfg hw.gpu.enabled no
+          set_cfg hw.gpu.mode auto
           set_cfg hw.audioInput yes
           echo "$ANDROID_HOME/emulator" >> "$GITHUB_PATH"
           echo "$ANDROID_HOME/platform-tools" >> "$GITHUB_PATH"
@@ -236,6 +238,9 @@ jobs:
           [ -x "$bin" ] || bin="$(find "$RUNNER_TEMP/oc2/node_modules/@opencode" -path '*linux-x64*' -name opencode -type f | head -n 1)"
           "$bin" --version
           echo "FX_OC2_BIN=$bin" >> "$GITHUB_ENV"
+      - name: Host memory watch (background)
+        run: |
+          nohup bash -c 'while true; do { date -u +%T; free -m | sed -n 2p; ps -eo rss,comm --sort=-rss | head -n 6 | tr "\n" " "; echo; } >> "$RUNNER_TEMP/gate-mem.txt"; sleep 30; done' > /dev/null 2>&1 &
       - name: The upgrade gate
         id: gate
         env:
@@ -251,7 +256,9 @@ jobs:
             --adb "$ANDROID_HOME/platform-tools/adb" --maestro "$MAESTRO" --skip-resource-checks \
             2>&1 | tee "$RUNNER_TEMP/gate/gate.log"
           rc=${PIPESTATUS[0]}
+          { echo "--- host after the gate"; free -m; sudo dmesg 2>/dev/null | grep -i -E 'oom|killed process|qemu|segfault' | tail -n 20; } >> "$RUNNER_TEMP/gate/host.txt" 2>&1 || true
           echo "rc=$rc" >> "$GITHUB_OUTPUT"
+          cp "$RUNNER_TEMP/gate-mem.txt" "$RUNNER_TEMP/gate/" || true
           cp "$RUNNER_TEMP/apks/APKS.md" "$RUNNER_TEMP/apks/APP_COMMIT" "$RUNNER_TEMP/gate/" || true
           { echo "### ${{ matrix.case }}: gate exit $rc"; echo '```'; grep -E '^(PASS|FAIL|NOT RUN|VERDICT|REFUSED|via:)' "$RUNNER_TEMP/gate/gate.log"; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
           exit 0
