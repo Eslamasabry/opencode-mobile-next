@@ -3,6 +3,7 @@ package io.github.eslamasabry.oc.feature.chats.rb.o41
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.hasText
@@ -77,16 +78,30 @@ class ChatsHomeHeaderCompactTest {
         val layouts = mutableListOf<TextLayoutResult>()
         label.performSemanticsAction(SemanticsActions.GetTextLayoutResult) { it(layouts) }
         val name = layouts.single()
-        val numbers = "$width/text$scale pill=${(pill.right - pill.left).value} line=${(line.right - line.left).value} cues=${cues.size} name=${name.size.width} ellipsis=${name.isLineEllipsized(0)}"
+        val chipWidths = listOf("All projects", "All connections", "Running").associateWith { text ->
+            var node = onNodeWithText(text, useUnmergedTree = true).fetchSemanticsNode()
+            while (node.config.getOrNull(SemanticsActions.OnClick) == null && node.parent != null) node = node.parent!!
+            node.size.width
+        }
+        val numbers = "$width/text$scale pill=${(pill.right - pill.left).value} line=${(line.right - line.left).value} cues=${cues.size} name=${name.size.width} ellipsis=${name.isLineEllipsized(0)} chips=$chipWidths"
         println("COMPACT-030 $numbers")
         assertTrue(cues.isNotEmpty(), "$numbers: +N must be visible, never the plain-scroll fallback")
+        for (cue in cues) {
+            assertTrue(cue.boundsInRoot.width > .5f && cue.boundsInRoot.left >= 0f && cue.boundsInRoot.right <= width + .5f,
+                "$numbers: +N must be on screen")
+        }
         assertTrue(!name.hasVisualOverflow && !name.isLineEllipsized(0), "$numbers: the pill name stays whole")
         fun checkVisible() {
             val clip = onNodeWithTag("kit-filter-chips").fetchSemanticsNode().boundsInRoot
             for (text in listOf("All projects", "All connections", "Running")) {
                 val nodes = onAllNodes(hasText(text), useUnmergedTree = true).fetchSemanticsNodes()
                 for (node in nodes.filter { it.boundsInRoot.width > .5f }) {
-                    val full = onNodeWithText(text, useUnmergedTree = true).getUnclippedBoundsInRoot()
+                    val chipLabel = onNodeWithText(text, useUnmergedTree = true)
+                    val full = chipLabel.getUnclippedBoundsInRoot()
+                    val textLayouts = mutableListOf<TextLayoutResult>()
+                    chipLabel.performSemanticsAction(SemanticsActions.GetTextLayoutResult) { it(textLayouts) }
+                    assertTrue(textLayouts.single().lineCount == 1 && !textLayouts.single().hasVisualOverflow,
+                        "$numbers: $text stays whole on one line")
                     assertTrue(full.left.value >= clip.left - .5f && full.right.value <= clip.right + .5f,
                         "$numbers: $text whole, bounds=$full clip=$clip")
                     assertTrue(kotlin.math.abs((full.top.value + full.bottom.value - pill.top.value - pill.bottom.value) / 2f) <= 1f,
