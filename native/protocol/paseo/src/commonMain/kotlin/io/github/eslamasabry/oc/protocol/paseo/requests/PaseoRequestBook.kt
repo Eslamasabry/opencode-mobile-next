@@ -261,7 +261,7 @@ public class PaseoRequestBook(
 
     private fun declineForPlan(id: String, pending: Permission): Boolean {
         val appId = pending.permission.sessionId.raw
-        if (pending.host != null || pending.permission.permission !in PLAN_STOPS || !host.inPlan(appId)) return false
+        if (pending.host != null || pending.permission.permission in PLAN_READS || !host.inPlan(appId)) return false
         val scope = tasks ?: return false
         pending.permission.tool?.callId?.let { remember(planStoppedCalls, it) }
         remember(answered, id)
@@ -933,8 +933,12 @@ public class PaseoRequestBook(
         const val PLAN_APPROVE = "Approve"
         const val PLAN_KEEP = "Keep planning"
 
-        /** The requests Plan stops: a file change and a command (anything that is not a plain read). */
-        val PLAN_STOPS = setOf("edit", "bash")
+        /**
+         * The only requests that go on in Plan: known read-only kinds. Everything else is stopped (fail closed): a
+         * command, an edit, a patch, a write, a delete, a move, and any kind this app does not know (Codex's file patch
+         * arrives as a generic tool named by the agent, not as "edit").
+         */
+        val PLAN_READS = setOf("read", "glob", "grep", "websearch", "webfetch", "todoread", "plan", "question", "mode")
 
         fun remember(set: LinkedHashSet<String>, id: String) {
             set += id
