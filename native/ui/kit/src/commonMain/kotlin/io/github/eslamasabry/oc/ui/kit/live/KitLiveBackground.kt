@@ -188,7 +188,7 @@ public fun KitLiveBackground(modifier: Modifier = Modifier, shared: Boolean = fa
         val inkLift = io.github.eslamasabry.oc.ui.design.style.GlassSpec.pageInkLift(roles.dark, paintedClear)
         // Nothing drawn but the flat ground: a page's scroll edges lay that ground over their content instead of clearing
         // it in an offscreen layer (KitScrollEdges.kt), the same pixels at a fraction of the GPU's work.
-        val flatGround = if (render == LiveRender.Flat && ground.alpha >= 1f) ground else androidx.compose.ui.graphics.Color.Unspecified
+        val flatGround = if (ground.alpha >= 1f) ground else androidx.compose.ui.graphics.Color.Unspecified
         CompositionLocalProvider(
             LocalKitGlassBackdrop provides backdrop,
             LocalLiveClock provides clock,
