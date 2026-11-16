@@ -312,7 +312,7 @@ private fun awaitStartup(started: Process) {
 // lock behind, and the first message then fails with "another Claude
 // Code process is refreshing it". No Claude process of this profile
 // runs now (the helper starts them all), so a lock left is stale.
-private fun hostScript(port: Int): String {
+internal fun hostScript(port: Int): String {
     return """
             set -eu
             umask 077
