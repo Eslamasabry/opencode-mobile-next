@@ -46,8 +46,11 @@ import io.github.eslamasabry.oc.core.domain.GatewaySpec
 import io.github.eslamasabry.oc.core.domain.ServerGateway
 import io.github.eslamasabry.oc.core.model.BackendKind
 import io.github.eslamasabry.oc.core.model.ServerLocation
+import io.github.eslamasabry.oc.core.model.ServerProfile
 import io.github.eslamasabry.oc.engine.connection.ConnectionCredentialSource
 import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
+import io.github.eslamasabry.oc.engine.profiles.LoadedProfile
+import io.github.eslamasabry.oc.engine.profiles.ProfileOrigins
 import io.github.eslamasabry.oc.engine.profiles.StoredProfileJson
 import io.github.eslamasabry.oc.engine.schedules.PrefsScheduleBackend
 import io.github.eslamasabry.oc.engine.schedules.ScheduleConnection
@@ -163,8 +166,12 @@ class AppScheduleProfiles(
         // fingerprints saved before the profile store derived it still match.
         val server =
             stores.profiles.profile(ProfileId(profileId))?.toServerProfile(managedOnPhone = false) ?: return null
-        // Everything that names the server and the account, never the display name or a secret.
-        return ScheduleEngine.fingerprint(
+        return identity(server)
+    }
+
+    // Everything that names the server and the account, never the display name or a secret.
+    private fun identity(server: ServerProfile): String =
+        ScheduleEngine.fingerprint(
             listOf(
                 server.backend.name,
                 server.origin.toString(),
@@ -174,6 +181,31 @@ class AppScheduleProfiles(
                 server.trust.cleartextConsentAtMs?.toString(),
             )
         )
+
+    /**
+     * This phone's own server only: the old app ran it at port 4097 and this app at its own port, and the saved
+     * address moves with it. The same server, so its schedules keep their identity across that move.
+     */
+    private fun earlierBaseUrls(loaded: LoadedProfile): List<String> {
+        if (!loaded.managedOnPhone) return emptyList()
+        val current = ProfileOrigins.serverOrigin(loaded.profile.baseUrl) ?: return emptyList()
+        if (current.host != "127.0.0.1") return emptyList()
+        return OLD_APP_PHONE_PORTS.filter { it != current.port }.map { "http://127.0.0.1:$it" }
+    }
+
+    override suspend fun earlierAddresses(profileId: String): List<String> {
+        stores.warm()
+        return stores.profiles.profile(ProfileId(profileId))?.let(::earlierBaseUrls).orEmpty()
+    }
+
+    override suspend fun earlierFingerprints(profileId: String): Set<String> {
+        stores.warm()
+        val loaded = stores.profiles.profile(ProfileId(profileId)) ?: return emptySet()
+        val server = loaded.toServerProfile(managedOnPhone = false) ?: return emptySet()
+        return earlierBaseUrls(loaded)
+            .mapNotNull { ProfileOrigins.serverOrigin(it) }
+            .map { identity(server.copy(origin = it)) }
+            .toSet()
     }
 
     /**
@@ -374,6 +406,8 @@ class AppScheduleProfiles(
     }
 
     private companion object {
+        /** The old app's in-app server port (its BuiltinLinux.serverPort). */
+        val OLD_APP_PHONE_PORTS = listOf(4097)
         const val PHONE_RUN_BUDGET_MS = 420_000L
         const val PHONE_READY_MS = 90_000L
         const val PHONE_POLL_MS = 2_000L
