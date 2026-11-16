@@ -126,4 +126,78 @@ class HelperJoinsTest {
         runCurrent()
         assertEquals(before + 1, tries)
     }
+
+    @Test
+    fun `I147-HA-1 a loop that spent its window in the background starts anew when the app comes to the front`() =
+        runTest {
+            // Owner's phone, build 10057: the update started the app in the background, where no helper start is
+            // admitted. Every try of the first window was refused and the loop went into its long pause.
+            val joins = joins()
+            var front = false
+            var frontTries = 0
+            joins.ensure(helper, HelperStartRules::keepTrying, {}) {
+                if (!front) noAnswer
+                else {
+                    // The first try right at the front is still early (the page is not resumed yet).
+                    frontTries++
+                    if (frontTries == 1) noAnswer else null
+                }
+            }
+            advanceTimeBy(HelperJoins.LIMIT_MS + HelperJoins.QUICK_RETRY_MS + 1)
+            runCurrent()
+            assertEquals(emptySet(), joins.starting.value, "the window is spent")
+            assertTrue(joins.running(helper))
+            front = true
+            joins.wake(helper)
+            runCurrent()
+            assertEquals(1, frontTries, "tried at once")
+            assertEquals(setOf(helper), joins.starting.value, "a new window: reads starting again")
+            advanceTimeBy(HelperJoins.QUICK_RETRY_MS + 1)
+            runCurrent()
+            assertEquals(2, frontTries, "tried again within the quick pace, not after the long pause")
+            assertFalse(joins.running(helper), "started")
+            assertEquals(emptySet(), joins.starting.value)
+        }
+
+    @Test
+    fun `I147-HA-2 a wake that comes while a try runs is kept for the pause after it`() = runTest {
+        val joins = joins()
+        var tries = 0
+        joins.ensure(helper, HelperStartRules::keepTrying, {}) {
+            tries++
+            kotlinx.coroutines.delay(10_000)
+            noAnswer
+        }
+        // Past the window: the loop alternates long pauses and tries of 10 s.
+        advanceTimeBy(HelperJoins.LIMIT_MS + 20_000)
+        runCurrent()
+        // Wait for a try to be running, then wake it (a conversation opened meanwhile).
+        val before = tries
+        while (tries == before) {
+            advanceTimeBy(1_000)
+            runCurrent()
+        }
+        val during = tries
+        joins.wake(helper)
+        advanceTimeBy(10_000 + HelperJoins.QUICK_RETRY_MS + 1)
+        runCurrent()
+        assertTrue(tries > during, "the next try came at the quick pace, not after the long pause")
+        assertTrue(joins.starting.value.contains(helper) || !joins.running(helper))
+    }
+
+    @Test
+    fun `I147-HA-3 a wake with no loop running changes nothing`() = runTest {
+        val joins = joins()
+        joins.wake(helper)
+        var tries = 0
+        joins.ensure(helper, HelperStartRules::keepTrying, {}) {
+            tries++
+            noAnswer
+        }
+        runCurrent()
+        assertEquals(1, tries)
+        advanceTimeBy(HelperJoins.QUICK_RETRY_MS - 1_000)
+        runCurrent()
+        assertEquals(1, tries, "an old wake does not cut the first pause")
+    }
 }

@@ -71,6 +71,8 @@ class PreviewRuntime(
     private val localGates: LocalServerGates,
     // Lazy: the helper's starter connects through this class, so it cannot be built before it.
     private val phoneHelper: Lazy<AppLocalAgentHostStarter>,
+    /** The app coming to the front wakes the helper's start ([wantHelper]): Android admits a start only then. */
+    private val visibility: AppVisibility,
 ) : ServerConnections, ServerDisconnects {
     val profiles: ProfileStore = stores.profiles
     private val lane = dispatchers.serial("preview-runtime")
@@ -488,6 +490,19 @@ class PreviewRuntime(
      */
     private val helperJoins = HelperJoins(scope, now = { clock.now().toEpochMilliseconds() })
 
+    init {
+        // After [helperJoins] exists. Issue 147 (owner's phone, build 10057): a start of the agents' helper is admitted
+        // only while the app is in front; one refused in the background (an update or a boot started the app) is tried
+        // again as soon as the app comes to the front.
+        scope.launch {
+            if (ready.await() is Outcome.Failed) return@launch
+            visibility.state
+                .map { it == io.github.eslamasabry.oc.core.common.pace.Visibility.Foreground }
+                .distinctUntilChanged()
+                .collect { front -> if (front) profiles.profiles.value.forEach { wantHelper(it.id) } }
+        }
+    }
+
     /** The helper sources whose start loop is in its first window (the home reads "Starting" only for these). */
     internal val helperStarting: StateFlow<Set<ProfileId>> get() = helperJoins.starting
 
@@ -540,6 +555,18 @@ class PreviewRuntime(
         if (id in loadedSources.value || helperJoins.running(id)) return
         mutableSourceFailures.value[id]?.let { if (!HelperStartRules.keepTrying(it)) return }
         joinPhoneHelper(id)
+    }
+
+    /**
+     * Issue 147 (owner's phone, build 10057): the helper of [id] is needed now (the app came to the front, or one of its
+     * conversations opened from the home, All conversations, a notification, the edge light or search). Not listed: its
+     * start loop runs, and one that pauses between tries tries again at once with a new 90 s window.
+     */
+    internal fun wantHelper(id: ProfileId) {
+        if (!isPhoneHelper(id) || id in loadedSources.value) return
+        val running = helperJoins.running(id)
+        keepHelperListed(id)
+        if (running) helperJoins.wake(id)
     }
 
     private val joiningServers = mutableSetOf<ProfileId>()
