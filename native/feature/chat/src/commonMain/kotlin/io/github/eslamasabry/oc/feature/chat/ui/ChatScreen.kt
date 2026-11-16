@@ -1122,6 +1122,7 @@ public fun ChatScreen(
                                         ChatTranscriptList(
                                             waitingKey = waitingKey,
                                             waitingJump = waitingJump,
+                                            placeKey = "${state.ref.profileId.raw}/${state.ref.sessionId.raw}",
                                             folds = folds,
                                             rows = state.rows,
                                             live = state.live,
