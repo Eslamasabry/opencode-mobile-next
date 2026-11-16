@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="settings40_style_default">Stile predefinito</string>
+    <string name="settings40_reset_question">Ripristinare l'aspetto?</string>
+    <string name="settings40_reset_body">Ripristina colori, stile, forma, vetro, dimensione del testo, animazioni e bagliore della risposta. Le tue conversazioni, la lingua e le scelte di notifica restano invariate.</string>
+    <string name="settings40_local_work">Lavori non inviati su questo telefono</string>
+    <string name="settings40_queue_title">Prompt in coda</string>
+    <string name="settings40_drafts_title">Bozze di conversazione</string>
+    <plurals name="settings40_storage_size">
+        <item quantity="one">1 elemento · %2$s</item>
+        <item quantity="many">%1$d elementi · %2$s</item>
+        <item quantity="other">%1$d elementi · %2$s</item>
+    </plurals>
+    <string name="settings40_storage_unknown">Impossibile leggere questo spazio di archiviazione. Tutto viene conservato.</string>
+    <string name="settings40_storage_reading">Lettura dello spazio di archiviazione locale…</string>
+    <string name="settings40_discard_queue">Elimina i prompt in coda non inviati</string>
+    <string name="settings40_discard_drafts">Elimina le bozze di conversazione</string>
+    <string name="settings40_queue_keeps">Elimina i prompt mai inviati. I prompt con un contrassegno di invio o una ricevuta di comando restano per la revisione.</string>
+    <string name="settings40_queue_empty">Nessun prompt in coda da eliminare.</string>
+    <string name="settings40_drafts_empty">Nessuna bozza salvata da eliminare.</string>
+    <string name="settings40_discard_working">Eliminazione del contenuto locale…</string>
+    <string name="settings40_queue_question">Eliminare i prompt in coda non inviati?</string>
+    <string name="settings40_drafts_question">Eliminare le bozze di conversazione?</string>
+    <string name="settings40_drafts_body">Elimina i testi salvati e gli allegati delle bozze su questo telefono. Anche le conversazioni aperte vengono aggiornate. Lavori ancora in invio o in verifica impediscono l'eliminazione. Operazione irreversibile.</string>
+    <string name="settings40_discard_failed">Eliminazione non completata. Lavori in invio, lavori incerti, spazio di archiviazione illeggibile o una modifica durante il salvataggio possono impedirla. Controlla i conteggi e riprova.</string>
+    <plurals name="settings40_discard_done">
+        <item quantity="one">1 elemento eliminato.</item>
+        <item quantity="many">%1$d elementi eliminati.</item>
+        <item quantity="other">%1$d elementi eliminati.</item>
+    </plurals>
+    <plurals name="settings40_discard_kept">
+        <item quantity="one">1 elemento eliminato. Prompt conservati per la revisione: %2$d.</item>
+        <item quantity="many">%1$d elementi eliminati. Prompt conservati per la revisione: %2$d.</item>
+        <item quantity="other">%1$d elementi eliminati. Prompt conservati per la revisione: %2$d.</item>
+    </plurals>
+    <plurals name="settings40_discard_cleanup">
+        <item quantity="one">1 bozza eliminata. Alcuni file degli allegati non sono stati rimossi. Riprova a eliminare le bozze per completare.</item>
+        <item quantity="many">%1$d bozze eliminate. Alcuni file degli allegati non sono stati rimossi. Riprova a eliminare le bozze per completare.</item>
+        <item quantity="other">%1$d bozze eliminate. Alcuni file degli allegati non sono stati rimossi. Riprova a eliminare le bozze per completare.</item>
+    </plurals>
+    <string name="settings40_no_answers">Nessuna domanda su questo server richiede ancora una risposta.</string>
+    <string name="settings40_answer_failed">Questo passaggio non è stato completato. La risposta salvata e le impostazioni di Android potrebbero non corrispondere. Controlla Notifiche o Mantieni in esecuzione, poi riprova.</string>
+    <string name="settings40_held_action">Elimina anche questi</string>
+    <string name="settings40_held_question">Eliminare i prompt conservati per la revisione?</string>
+    <string name="settings40_held_body">Potrebbero essere già arrivati sul server. Questa azione li rimuove solo da questo telefono e non invia altro.</string>
+    <plurals name="settings40_queue_held_body">
+        <item quantity="one">1 di questi potrebbe essere già arrivato sul server. L'eliminazione li rimuove solo da questo telefono e non invia altro.</item>
+        <item quantity="many">%1$d di questi potrebbero essere già arrivati sul server. L'eliminazione li rimuove solo da questo telefono e non invia altro.</item>
+        <item quantity="other">%1$d di questi potrebbero essere già arrivati sul server. L'eliminazione li rimuove solo da questo telefono e non invia altro.</item>
+    </plurals>
+</resources>
