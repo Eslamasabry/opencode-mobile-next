@@ -1242,4 +1242,9 @@
     <string name="kitToolPlanStopped">Dihentikan oleh Rencana</string>
     <string name="chatStepPlanStopped">Mode rencana menghentikan sebuah perubahan</string>
     <string name="chatConnectingToAgent">Menghubungkan ke %1$s…</string>
+    <string name="stageStartingLinux">Memulai Linux…</string>
+    <string name="stageStartingOpenCode">Memulai OpenCode…</string>
+    <string name="stageStartingHelper">Memulai pembantu agen…</string>
+    <string name="stageStartingAgent">Memulai %1$s…</string>
+    <string name="stageOpeningConversation">Membuka percakapan…</string>
 </resources>
