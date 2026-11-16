@@ -70,6 +70,7 @@ import kotlinx.coroutines.withContext
 private fun optional(key: String, value: String?): Map<String, Any> = if (value == null) emptyMap() else mapOf(key to value)
 
 private val QUIET_RETRY_EVERY = 3.seconds
+private val QUIET_RETRY_WHEN_FAILED = 15.seconds
 private val STOP_SETTLES = 3.seconds
 
 /**
@@ -174,6 +175,7 @@ class AppChatsHome(
                         shown = runtime.listSourceShown(loaded.id),
                         main = !agents && loaded.id == active,
                         onThisPhone = runtime.sourceOnThisPhone(loaded.profile),
+                        selfRun = selfRun(loaded),
                         // Issue 147: the agents' helper that did not start is named with its Try again (the sheet and
                         // the home's notice), never left reading "Starting"; during an update the update speaks.
                         unreachable =
@@ -224,7 +226,7 @@ class AppChatsHome(
             openingTries = null
         }
         mutable.value = ChatsHomeExtraState(sources, opening, null, monitor.snapshot.value)
-        if (opening?.phase == ChatsOpeningPhase.Starting) keepTryingQuietly()
+        if (opening != null && OpeningRules.worthAskingAgain(opening.phase, phoneWatch?.second)) keepTryingQuietly()
     }
 
     /**
@@ -247,9 +249,22 @@ class AppChatsHome(
                 uptime = facts.status?.serverUptime?.takeIf { alive == true },
                 seenAlive = prior.seenAlive || alive == true || facts.starting,
                 stoppedByPerson = facts.stoppedByPerson,
+                goneSince =
+                    if (alive == false && !facts.starting && prior.seenAlive) prior.goneSince ?: now else null,
             )
         phoneWatch = owner.id to next
         return next
+    }
+
+    /**
+     * A server saved at this phone's own address that is not the app's built-in one and not the agents' helper: the
+     * person starts it themselves (the old app's Termux setup was migrated as such a profile).
+     */
+    private fun selfRun(owner: LoadedProfile): Boolean {
+        if (owner.profile.usesAgentSocket || runtime.isPhoneHelper(owner.id) || builtIn(owner)) return false
+        val address = owner.profile.baseUrl.substringAfter("://").substringBefore('/')
+        val host = address.substringBeforeLast(':').trim('[', ']')
+        return host == "127.0.0.1" || host == "localhost" || host == "::1"
     }
 
     private fun builtIn(owner: LoadedProfile): Boolean =
@@ -270,9 +285,12 @@ class AppChatsHome(
         quietRetry =
             scope.launch {
                 while (true) {
-                    delay(QUIET_RETRY_EVERY)
+                    // A server that reads failed but whose process runs is asked again, less often, so home
+                    // recovers by itself when it answers late.
+                    val failed = mutable.value.opening?.phase == ChatsOpeningPhase.Failed
+                    delay(if (failed) QUIET_RETRY_WHEN_FAILED else QUIET_RETRY_EVERY)
                     val opening = mutable.value.opening ?: break
-                    if (opening.phase != ChatsOpeningPhase.Starting) break
+                    if (!OpeningRules.worthAskingAgain(opening.phase, phoneWatch?.second)) break
                     val profile = opening.profile
                     if (profile != null && !runtime.busy.value) runtime.retryListSource(profile)
                     publish()

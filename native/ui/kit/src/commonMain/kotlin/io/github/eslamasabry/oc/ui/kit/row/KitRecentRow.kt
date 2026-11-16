@@ -19,6 +19,7 @@ import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
+import io.github.eslamasabry.oc.ui.kit.action.KitWorkingMark
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -130,7 +131,8 @@ public object KitRecentRowRules {
  * [state] word under it in plain coloured text (Working green with a small dot, Needs you amber, the rest quiet). No
  * tile, no badge, no pill. [below] holds the row's own acts (a waiting request's Allow / Reject) on the words' edge.
  *
- * States: default, running, needs you, failed, done, pinned, untappable
+ * States: default, running, needs you, failed, done, pinned, untappable, waiting ([KitRowState.waiting]: the working
+ *   mark alone in the time's place)
  * Text: reading (title 1 line, 2 at large text; the second line 1 line)
  * Cap: List
  * Motion: none of its own (the panel eases its height)
@@ -164,7 +166,10 @@ public fun KitRecentRow(
     val line = KitRecentRowRules.line(preview, meta)
     val shownProject = project?.trim()?.takeIf { it.isNotEmpty() }
     val pinnedWord = if (pinned) stringResource(Res.string.kitPinned) else null
-    val words = KitRecentRowRules.spoken(title, pinnedWord, agent.name.takeIf { speakAgent }, state?.word, shownProject, line, time)
+    // A waiting row shows the working mark in the time's place: the time is neither drawn nor said, the word is said.
+    val waiting = state?.waiting == true
+    val shownTime = time.takeUnless { waiting }
+    val words = KitRecentRowRules.spoken(title, pinnedWord, agent.name.takeIf { speakAgent }, state?.word, shownProject, line, shownTime)
     val m =
         Modifier.fillMaxWidth()
             .kitGrowSource(growKey)
@@ -195,7 +200,10 @@ public fun KitRecentRow(
                     }
                     if (line != null || shownProject != null) SecondLine(shownProject, line, previewLines)
                 }
-                if (time != null || state?.word != null) {
+                if (waiting) {
+                    Spacer(Modifier.width(Space.S3.dp))
+                    WaitingEnd()
+                } else if (time != null || state?.word != null) {
                     Spacer(Modifier.width(Space.S3.dp))
                     End(time, state, Modifier.widthIn(max = endMax))
                 }
@@ -316,6 +324,17 @@ private fun End(time: String?, state: KitRowState?, modifier: Modifier = Modifie
         }
     }
 }
+
+/**
+ * The end of a row that waits on something that ends by itself: the kit's working mark alone, in the quiet ink, at the
+ * time's size (a still dot under reduced motion, in tests and on a hidden page, as every kit working mark).
+ */
+@Composable
+private fun WaitingEnd() {
+    KitWorkingMark(LocalKitColors.current.text2, size = WAITING_MARK_DP.dp)
+}
+
+private const val WAITING_MARK_DP = 16
 
 /** Working is green (the theme's success), Needs you amber (attention); every other word stays quiet. */
 private fun stateColor(colors: KitColors, tone: KitRowStateTone): Color =
