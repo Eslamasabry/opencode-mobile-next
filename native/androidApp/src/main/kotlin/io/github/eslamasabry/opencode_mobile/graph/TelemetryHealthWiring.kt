@@ -130,6 +130,7 @@ class AppTelemetryHealth(
                 interaction = chatInteraction::word,
             )
         this.health = health
+        lifecycle.beginColdStart()
         health.start()
         // The install-to-first-reply funnel watches the events below, so it is attached before any of them is sent.
         telemetry.attachJourney(PrefsJourneyMemory(TelemetryAnswers(stores.prefs, stores.lanes.app), scope))

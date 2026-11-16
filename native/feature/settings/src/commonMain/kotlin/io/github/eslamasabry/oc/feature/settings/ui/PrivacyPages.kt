@@ -112,6 +112,7 @@ internal fun ColumnScope.WhatWeCollectBody(privacy: PrivacyUi, actions: Settings
             liveRegion = false,
         )
     }
+    KitGroupNote(stringResource(Res.string.collectRules))
     KitRowGroup(
         label = stringResource(Res.string.collectUsageLabel),
         modifier = Modifier.testTag("collect-usage"),
@@ -144,12 +145,11 @@ internal fun ColumnScope.WhatWeCollectBody(privacy: PrivacyUi, actions: Settings
     KitRowGroup(label = stringResource(Res.string.collectNeverLabel)) {
         KitRow(title = stringResource(Res.string.collectNever), titleMaxLines = 6)
     }
-    KitGroupNote(stringResource(Res.string.collectRules))
 }
 
 @Composable
 private fun CollectRow(item: CollectItem) {
-    KitRow(title = stringResource(collectWords(item)), titleMaxLines = 4)
+    KitRow(title = stringResource(collectWords(item)), titleMaxLines = Int.MAX_VALUE)
 }
 
 internal fun collectWords(item: CollectItem): StringResource =

@@ -65,6 +65,16 @@ class ProductAnalyticsTest {
     }
 
     @Test
+    fun `B-180 app open precedes startup health journey and screen and is not duplicated by the async version read`() {
+        val telemetry = analytics()
+        val lifecycle = ProductLifecycle(telemetry, StepClock())
+        lifecycle.beginColdStart()
+        telemetry.track(ProductEvent.ScreenView, mapOf("screen" to ProductScreen.Conversations))
+        lifecycle.coldStart("3.0.1+10081", "3.0.1+10081")
+        assertEquals(listOf("app_open", "screen_view"), sink.events.map { it.first })
+    }
+
+    @Test
     fun `B-180-001 the event list is Flutter 2_1_5's, name for name`() {
         assertEquals(
             listOf(

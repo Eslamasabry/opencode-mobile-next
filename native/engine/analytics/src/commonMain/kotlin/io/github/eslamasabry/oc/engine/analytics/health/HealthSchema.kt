@@ -295,7 +295,7 @@ public val healthPropertyWords: Map<String, Set<String>> =
     )
 
 public val healthPropertyPatterns: Map<String, Regex> =
-    mapOf("webview_major" to HealthPatterns.number, "oc_server_version" to HealthPatterns.majorMinor)
+    mapOf("webview_major" to HealthPatterns.number, "oc_server_version" to HealthPatterns.majorMinor, "app_build" to Regex("^[0-9]{1,10}$"))
 
 /** The breadcrumb words (section F). A crumb is `area.action`, or `area.action:word` for the four areas that name one. */
 public object BreadcrumbWords {

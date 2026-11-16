@@ -1,6 +1,16 @@
 package io.github.eslamasabry.opencode_mobile.telemetry
 
 import android.content.Context
+import android.os.Build
+import io.github.eslamasabry.opencode_mobile.BuildConfig
+import io.github.eslamasabry.oc.engine.analytics.umami.FileUmamiStore
+import io.github.eslamasabry.oc.engine.analytics.umami.UmamiBuild
+import io.github.eslamasabry.oc.engine.analytics.umami.UmamiDevice
+import io.github.eslamasabry.oc.engine.analytics.umami.UmamiHttp
+import io.github.eslamasabry.oc.engine.analytics.umami.UmamiSender
+import io.github.eslamasabry.oc.engine.analytics.umami.UsageTelemetryVendor
+import java.io.File
+import java.util.Locale
 import io.github.eslamasabry.oc.engine.analytics.health.AppTelemetry
 import io.github.eslamasabry.oc.engine.analytics.health.NoOpTelemetryVendor
 import io.github.eslamasabry.oc.engine.analytics.health.TelemetryConsent
@@ -15,9 +25,9 @@ import kotlinx.coroutines.launch
 
 /**
  * The process-wide [TelemetryService], built first thing in `OcApplication.onCreate` so even the earliest crash of a
- * person who agreed can be reported. The vendor is chosen here and nowhere else: [FirebaseTelemetryVendor] when the
- * build carries the private Firebase config, otherwise nothing (a preview, CI or F-Droid build sends nothing and offers
- * no switches).
+ * person who agreed can be reported. The vendor is chosen here: a Google-configured build uses deferred Firebase,
+ * paired with the plain-HTTP Umami sender when its public build settings are configured. Builds without the private
+ * Google config (including ordinary forks and F-Droid) send nothing and offer no switches.
  *
  * Consent is off until the person turns it on, in every flavour. The answers live under Flutter 2.1.5's keys in the
  * adopted preferences (`HealthConsentStore`, read once the migration gate opens); this file keeps only an early copy
@@ -45,7 +55,31 @@ internal object Telemetry {
         val prefs = app.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
         // Gap 3: the Firebase singletons are built on a background thread on first use, not here on the main thread.
         val vendor: TelemetryVendor? =
-            if (DeferredFirebaseTelemetryVendor.Config.present(app)) DeferredFirebaseTelemetryVendor(app) else null
+            if (DeferredFirebaseTelemetryVendor.Config.present(app)) {
+                val build = UmamiBuild(BuildConfig.VERSION_NAME, BuildConfig.VERSION_CODE.toString())
+                val device = {
+                    val metrics = app.resources.displayMetrics
+                    // Model CLASS only: never Build.MODEL, Build.FINGERPRINT, Android id or an install id.
+                    val tablet = app.resources.configuration.smallestScreenWidthDp >= 600
+                    val modelClass = if (tablet) "Android Tablet" else "Android Phone"
+                    val mobile = if (tablet) "" else " Mobile"
+                    UmamiDevice(
+                        Locale.getDefault().toLanguageTag(),
+                        "${metrics.widthPixels}x${metrics.heightPixels}",
+                        "Mozilla/5.0 (Linux; Android ${Build.VERSION.RELEASE}; $modelClass) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0$mobile Safari/537.36",
+                    )
+                }
+                val configured = UmamiHttp.configured(BuildConfig.UMAMI_URL, BuildConfig.UMAMI_WEBSITE)
+                val sender = UmamiSender(
+                        website = BuildConfig.UMAMI_WEBSITE,
+                        build = build,
+                        device = device,
+                        now = System::currentTimeMillis,
+                        store = FileUmamiStore(File(app.filesDir, "native/usage/outbox.json")),
+                        transport = if (configured) UmamiHttp(BuildConfig.UMAMI_URL) { device().userAgent } else null,
+                    )
+                UsageTelemetryVendor(DeferredFirebaseTelemetryVendor(app), sender, build)
+            } else null
         val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
         val early = TelemetryConsent(prefs.getBoolean(EARLY_USAGE, false), prefs.getBoolean(EARLY_CRASHES, false))
         val service =

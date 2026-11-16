@@ -91,6 +91,14 @@ when {
         )
 }
 
+// Public settings, enabled only alongside an official Google-configured build. Fork/F-Droid defaults stay silent.
+val ownAnalytics = Properties().apply {
+    val source = file("analytics.properties")
+    if (source.isFile) source.inputStream().use(::load)
+}
+fun analyticsSetting(name: String): String =
+    providers.gradleProperty(name).orNull ?: providers.environmentVariable(name).orNull ?: ownAnalytics.getProperty(name, "")
+
 android {
     buildFeatures { buildConfig = true }
     defaultConfig {
@@ -101,6 +109,8 @@ android {
                 else 0L
         buildConfigField("long", "AGENT_INSTALL_MIN_FREE_BYTES", "${agentInstallFloor}L")
         buildConfigField("int", "PHONE_SERVER_PORT", "4098")
+        buildConfigField("String", "UMAMI_URL", "\"${analyticsSetting("OC_UMAMI_URL").replace("\\", "\\\\").replace("\"", "\\\"")}\"")
+        buildConfigField("String", "UMAMI_WEBSITE", "\"${analyticsSetting("OC_UMAMI_WEBSITE").replace("\\", "\\\\").replace("\"", "\\\"")}\"")
     }
     // E01-S01: the release signer. A key file with storeFile, storePassword, keyAlias and keyPassword, found by
     // build-logic's ReleaseKey: OC_KEY_PROPERTIES (environment or Gradle property, so CI can keep it outside the

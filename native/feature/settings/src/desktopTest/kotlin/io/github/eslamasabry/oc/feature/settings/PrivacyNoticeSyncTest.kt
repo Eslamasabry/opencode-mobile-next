@@ -9,7 +9,12 @@ import io.github.eslamasabry.oc.engine.analytics.health.healthPropertyPatterns
 import io.github.eslamasabry.oc.engine.analytics.health.healthPropertyWords
 import io.github.eslamasabry.oc.engine.analytics.product.ProductEvent
 import io.github.eslamasabry.oc.engine.analytics.product.productSchema
+import io.github.eslamasabry.oc.engine.analytics.umami.umamiPages
+import io.github.eslamasabry.oc.engine.analytics.umami.umamiEvent
+import io.github.eslamasabry.oc.engine.analytics.umami.UmamiBuild
+import io.github.eslamasabry.oc.engine.analytics.umami.UmamiDevice
 import io.github.eslamasabry.oc.feature.settings.presentation.HealthContract
+import io.github.eslamasabry.oc.feature.settings.presentation.AppLanguage
 import java.io.File
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -204,6 +209,50 @@ class PrivacyNoticeSyncTest {
             if (token !in known) out += "The in-app policy names `$token`, which the code cannot send"
         }
         return out.distinct()
+    }
+
+    /** Receiver brands are deliberately untranslated in every offered locale. */
+    internal fun recipientViolations(text: String): List<String> =
+        listOf("Google", "Umami", "Railway").filterNot(text::contains)
+
+    @Test
+    fun `B-SEC-207 every offered privacy locale names both senders and self hosting`() {
+        val resources = File(repo, "native/ui/words/src/commonMain/composeResources")
+        val offered = AppLanguage.entries.mapNotNull { it.tag }
+        val code = liveCode()
+        for (tag in offered) {
+            val locale = File(resources, if (tag == "en") "values" else "values-$tag")
+            assertTrue(File(locale, "strings_s28_privacy.xml").isFile, "$tag offers translated disclosure copy")
+            assertTrue(File(locale, "strings_native_privacy.xml").isFile, "$tag offers a translated policy")
+            val detail = File(locale, "strings_s28_privacy.xml").readText()
+            val policy = File(locale, "strings_native_privacy.xml").readText()
+            for (key in listOf("collectRules", "telemetryUsageDetail")) {
+                val text = Regex("""<string name="$key">(.*?)</string>""", RegexOption.DOT_MATCHES_ALL).find(detail)!!.groupValues[1]
+                assertEquals(emptyList(), recipientViolations(text), "${locale.name}: $key names the receivers")
+            }
+            assertEquals(emptyList(), recipientViolations(policy), "${locale.name}: policy receivers")
+            assertTrue("app_build" in policy, "${locale.name}: policy build property")
+            for (name in code.events.keys + code.properties + code.keys + code.failures + code.allFields) {
+                assertTrue(has(policy, name), "${locale.name}: the translated policy must name $name")
+            }
+        }
+        assertEquals(emptyList(), recipientViolations(File(repo, "PRIVACY.md").readText()))
+        assertTrue("Umami" in recipientViolations("Google hosted with Railway"), "omitting the actual sender must fail")
+        assertTrue("Railway" in recipientViolations("Google and Umami"), "omitting the host must fail")
+    }
+
+    @Test
+    fun `B-SEC-207 the new sender adds only documented build metadata to every event`() {
+        for ((name, fields) in productSchema) {
+            val event = umamiEvent(name, fields.mapValues { it.value.first() }, umamiPages.getValue("conversations"),
+                "website", UmamiBuild("3.0.1", "10081"), UmamiDevice("en", "1080x2340", "browser"), 1000)!!
+            assertEquals(setOf("version", "build"), event.payload.data.keys - fields.keys, name)
+        }
+        val wiring = File(repo, "native/androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/telemetry/Telemetry.kt").readText()
+        assertTrue("UsageTelemetryVendor" in wiring && "UmamiSender(" in wiring, "the notice covers the sender that the app actually builds")
+        assertTrue("BuildConfig.VERSION_NAME" in wiring && "BuildConfig.VERSION_CODE" in wiring, "version facts come from this build")
+        val firebase = File(repo, "native/androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/telemetry/FirebaseTelemetryVendor.kt").readText()
+        assertTrue("setUserProperty(\"app_build\", null)" in firebase, "usage off clears the Google build property")
     }
 
     // ---- the tests ----

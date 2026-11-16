@@ -72,7 +72,7 @@ finished reply of the next run. An answer already given in an earlier 2.1.5
 preview carries over: its single "send reports"
 yes turns `usage` on, and turns `crashes` on too unless you had turned the
 "Offer crash reports" switch off. Either way each switch can be changed at any
-time. The two services are run by Google, so Google receives the data under its
+time. The Google services below are run by Google, which receives the data under its
 own terms: **Google Firebase Crashlytics** for crash data and problem reports,
 **Google Analytics for Firebase** for the counts, and **Firebase Performance
 Monitoring** for timings (see "Performance" below). Nothing is collected or
@@ -178,6 +178,25 @@ by itself (only the page kinds above), and no data is exported to any other
 Google product. (When both switches are on, Crashlytics may show the app's own
 usage events beside a crash report; that stays inside the same Firebase
 project.)
+
+Usage reports also go to an analytics server we run ourselves: **Umami, hosted with Railway**.
+Umami stores no IP address and no identifier of the person. It uses the connection address to
+work out a coarse location and an anonymous daily visitor hash. No device or installation ID,
+account, conversation, file name, project name, server address or model key is sent to Umami.
+
+Umami receives the same listed events and permitted properties above. A screen becoming visible
+is a page view with one fixed address per screen category, such as /home or /conversation;
+other actions are named events with that screen address. Each has its own timestamp, the app's
+version name and build number, a fixed app hostname, language and screen resolution. A browser-like
+User-Agent carries the Android version and device class, without a device identifier. The build
+number is also the tag. Google receives the app version automatically and the `app_build` user
+property is the build number, set only with usage on and cleared when it is off.
+
+Unsent Umami events stay in private storage for at most three days, up to 256 events and 256 KiB
+of encoded event data (300 KiB including queue framing). Short request timeouts and increasing
+back-off limit failed requests. Retries happen during normal app use; this queue starts no
+background work and sets no alarms. Turning usage off drops the queue and cancels an in-flight
+request. Crash reports, problem reports and Performance traces still go only to Google.
 
 ### Performance
 

@@ -2,13 +2,13 @@
 <!-- Translated with native/tools/strings/translate; English is the source. -->
 <resources>
     <string name="telemetryUsageTitle">Uso y estado de la app</string>
-    <string name="telemetryUsageDetail">Envía recuentos anónimos a Google Analytics para Firebase: qué tipos de páginas y funciones usas, si funcionan la conexión, el envío, la configuración, los agentes, el servicio en segundo plano y las actualizaciones, qué tan rápido inicia la app y qué tan fluidas son las páginas, avisos de memoria, y rangos de la memoria, el almacenamiento libre, la CPU y la versión de WebView de tu teléfono. También envía tiempos a Firebase Performance Monitoring: cuánto tardan el inicio de la app, la conexión, la primera respuesta, los pasos de configuración y el arranque de un agente. Solo palabras fijas, rangos y números, con un ID de instalación aleatorio, el modelo de tu teléfono y la versión de Android. Sin código, conversaciones, archivos, direcciones, claves ni ID de publicidad.</string>
+    <string name="telemetryUsageDetail">Envía recuentos anónimos a Google Analytics para Firebase: qué tipos de páginas y funciones usas, si funcionan la conexión, el envío, la configuración, los agentes, el servicio en segundo plano y las actualizaciones, qué tan rápido inicia la app y qué tan fluidas son las páginas, avisos de memoria, y rangos de la memoria, el almacenamiento libre, la CPU y la versión de WebView de tu teléfono. También envía tiempos a Firebase Performance Monitoring: cuánto tardan el inicio de la app, la conexión, la primera respuesta, los pasos de configuración y el arranque de un agente. Solo palabras fijas, rangos y números, con un ID de instalación aleatorio, el modelo de tu teléfono y la versión de Android. Sin código, conversaciones, archivos, direcciones, claves ni ID de publicidad. Los informes de uso también se envían a un servidor de analítica que gestionamos nosotros: Umami, alojado en Railway. Umami no almacena la dirección IP ni ningún identificador de la persona. Usa la dirección de conexión para obtener una ubicación aproximada y un hash diario anónimo del visitante. Los informes incluyen la versión y el número de compilación de la app, el idioma, el tamaño de pantalla, la versión de Android y la clase de dispositivo. No se envía a Umami ningún identificador del dispositivo o de la instalación.</string>
     <string name="telemetryCrashesTitle">Informes de fallos</string>
     <string name="telemetryCrashesDetail">Envía informes de fallos a Google Firebase Crashlytics: el tipo de error y en qué parte del código de la app ocurrió, nunca su mensaje, los últimos pasos que diste como palabras cortas, y por qué Android cerró la app la última vez. Sin código, conversaciones, archivos, direcciones, claves ni ID de publicidad.</string>
     <string name="collectTitle">Qué recopilamos</string>
     <string name="collectRowSummary">Uso e Informes de fallos están desactivados hasta que los actives. Mira exactamente qué envía cada uno.</string>
     <string name="collectUsageNotSentYet">Esta versión aún no envía el uso y el estado de la app. Tu respuesta se guarda y se usará cuando lo haga.</string>
-    <string name="collectRules">Solo se envían palabras fijas y rangos de números, nunca texto libre. Al desactivar un interruptor se borra lo que aún no se envió.</string>
+    <string name="collectRules">Al activar los informes de uso, los informes de uso van a Google y a nuestro propio servidor de analítica Umami, alojado en Railway. Umami no guarda la dirección IP ni ningún identificador de la persona. Solo se envían palabras fijas, intervalos y la versión y compilación de la app, nunca texto libre. Desactivar el uso elimina los informes pendientes.</string>
     <string name="collectUsageLabel">Con Uso y estado de la app</string>
     <string name="collectCrashesLabel">Con Informes de fallos</string>
     <string name="collectReportLabel">Solo cuando envías un informe de un problema</string>
@@ -22,13 +22,13 @@
     <string name="collectAgents">Si un agente se inició y el tipo de fallo</string>
     <string name="collectBackground">Por qué se detuvo el servicio en segundo plano</string>
     <string name="collectUpdates">Si una actualización se instaló y el tipo de fallo</string>
-    <string name="collectPages">Qué tipos de páginas y funciones usas, la primera respuesta, cuánto dura una visita y cuántos mensajes enviaste en ella</string>
+    <string name="collectPages">Los tipos de páginas y funciones que usas, la primera respuesta después de aceptar (y si ya habías visto una antes, sin datos sobre ella), cuánto dura una visita y cuántos mensajes enviaste</string>
     <string name="collectJourney">Hasta dónde llegaste en tus primeros pasos (abriste la app, la configuraste, te conectaste, enviaste un mensaje, recibiste una primera respuesta) y aproximadamente cuánto tiempo después de aceptar. Cada paso se cuenta una sola vez</string>
     <string name="collectStarters">Qué tipo de sugerencia tocaste en una conversación nueva, y tu respuesta de una palabra sobre en qué quieres ayuda. Nunca las palabras de una sugerencia ni lo que pide</string>
     <string name="collectStart">Qué tan rápido inicia la app</string>
-    <string name="collectSmooth">Qué tan fluidas son las páginas (la proporción de fotogramas tardíos y lentos, y de fotogramas congelados) y la frecuencia de actualización de la pantalla</string>
+    <string name="collectSmooth">La fluidez de las páginas (proporción de fotogramas tardíos, lentos y congelados), la frecuencia de actualización y qué ocurría en la conversación (llegaba una respuesta, desplazamiento, menú o panel abierto, teclado visible o nada)</string>
     <string name="collectMemory">Avisos de memoria de Android</string>
-    <string name="collectDevice">Rangos de la memoria y el almacenamiento libre de tu teléfono, su tipo de procesador y la versión de WebView, si las notificaciones están permitidas, y el tipo y la versión del servidor que usas</string>
+    <string name="collectDevice">Rangos de la memoria y el almacenamiento libre de tu teléfono, su tipo de procesador y la versión de WebView, si las notificaciones están permitidas, y el tipo y la versión del servidor que usas. También se notifican la versión y compilación de la app, el idioma, el tamaño de pantalla, la versión de Android y la clase de dispositivo.</string>
     <string name="collectCrashKind">El tipo de error y en qué parte del código de la app ocurrió, nunca su mensaje</string>
     <string name="collectExit">Por qué Android cerró la app la última vez (por ejemplo, un fallo, un bloqueo o poca memoria)</string>
     <string name="collectSteps">Tus últimos 30 pasos, como palabras cortas, por ejemplo chat.send</string>
@@ -37,8 +37,8 @@
     <string name="collectReport">Lo que escribes sobre el problema, la última vez que la app se cerró inesperadamente, las versiones de la app y de Android, un rango de memoria y el tipo de servidor, con claves, direcciones y rutas borradas. Sin registros ni conversaciones. Lo ves todo y eliges Enviar o Cancelar.</string>
     <string name="privacyCrashSendTitle">Enviar datos de fallos automáticamente</string>
     <string name="privacyCrashAskTitle">Preguntarme tras un fallo</string>
-    <string name="collectTurns">Cómo terminó cada turno (completado, detenido, error, conexión perdida o sin respuesta a una aprobación), cuánto tardó, cuántas herramientas usó y si se recuperó de una conexión caída</string>
-    <string name="collectApprovals">Qué tipo de solicitud se te hizo (ejecutar, editar, leer, web o una pregunta), tu respuesta y cuánto esperó. Nunca el comando, el archivo ni la pregunta en sí</string>
+    <string name="collectTurns">Cómo terminó cada turno (completado, sin contenido que mostrar, detenido, error, conexión perdida o aprobación sin respuesta), cuánto tardaron la primera respuesta visible y la primera señal de trabajo del agente, la duración total, cuántas herramientas usó y si se recuperó de una desconexión</string>
+    <string name="collectApprovals">El tipo de solicitud (ejecutar, editar, leer, web o una pregunta), tu respuesta o si respondió una elección guardada o se detuvo la ejecución, dónde respondiste (conversación, inicio, notificación o widget) y cuánto esperó. Nunca el comando, archivo o pregunta en sí</string>
     <string name="collectShareIn">Cuántas fotos o archivos compartiste con la app, y si eran imágenes o archivos. Nunca sus nombres ni su contenido</string>
     <string name="collectStarAsk">Si la petición única de dar una estrella al proyecto en GitHub se mostró, se tocó o se descartó</string>
 </resources>

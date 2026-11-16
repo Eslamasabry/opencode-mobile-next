@@ -36,7 +36,7 @@ import io.github.eslamasabry.oc.ui.kitchat.LocalKitRedactor
 
 /** The real kit theme on the desktop platform over the theme's ground, still frame, motion off, at plan 06 §15.3's phone size. */
 @Composable
-fun SettingsThemed(dark: Boolean = false, locale: String = "en", fontScale: Float = 1f, content: @Composable () -> Unit) {
+fun SettingsThemed(dark: Boolean = false, locale: String = "en", fontScale: Float = 1f, width: Float = 412f, content: @Composable () -> Unit) {
     // The person's text size (1.3 = Android's "Large"): the kit reads it from the density's font scale.
     CompositionLocalProvider(LocalDensity provides Density(LocalDensity.current.density, fontScale)) {
     KitTheme(
@@ -47,8 +47,8 @@ fun SettingsThemed(dark: Boolean = false, locale: String = "en", fontScale: Floa
     ) {
         // The app provides its redactor around every screen; the Library's mono parts refuse to draw without it.
         // The window is the phone it draws (Settings now reads the window, not a measured box, to pick one pane or two).
-        CompositionLocalProvider(LocalKitRedactor provides Redactor(), LocalKitWindow provides KitWindowInfo(412f, 915f)) {
-            Box(Modifier.size(412.dp, 915.dp).background(LocalKitColors.current.ground)) { content() }
+        CompositionLocalProvider(LocalKitRedactor provides Redactor(), LocalKitWindow provides KitWindowInfo(width, 915f)) {
+            Box(Modifier.size(width.dp, 915.dp).background(LocalKitColors.current.ground)) { content() }
         }
     }
     }
