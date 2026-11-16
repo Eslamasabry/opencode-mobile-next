@@ -220,7 +220,7 @@ class PhoneAgentStartsInPlaceTest {
             val problem = assertNotNull(shown.phoneStartProblem, "${agent.id}: the failure is shown with the agent")
             assertEquals(agent.name, problem.agentName, "${agent.id}")
             assertEquals(agent.id.raw, problem.agentId, "${agent.id}")
-            assertEquals(PhoneStartWay.SetUp, problem.way, "${agent.id}: not ready means Set up <agent>")
+            assertEquals(PhoneStartWay.CheckAgain, problem.way, "${agent.id}: not ready means Check <agent> again, not set-up")
         }
     }
 

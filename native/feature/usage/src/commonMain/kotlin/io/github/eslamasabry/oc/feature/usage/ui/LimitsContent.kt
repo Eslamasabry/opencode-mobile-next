@@ -69,6 +69,12 @@ import io.github.eslamasabry.oc.ui.words.res.s9LimitsMonth
 import io.github.eslamasabry.oc.ui.words.res.s9LimitsNoLimits
 import io.github.eslamasabry.oc.ui.words.res.s9LimitsNoReset
 import io.github.eslamasabry.oc.ui.words.res.s9LimitsNotSignedIn
+import io.github.eslamasabry.oc.ui.words.res.agentsCheckSignInAgain
+import io.github.eslamasabry.oc.ui.words.res.agentsStateLimit
+import io.github.eslamasabry.oc.ui.words.res.agentsStateLimitReset
+import io.github.eslamasabry.oc.ui.words.res.agentsStateSignInNotConfirmed
+import io.github.eslamasabry.oc.feature.usage.presentation.UsageAgentTruth
+import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.words.res.s9LimitsOfflineAgo
 import io.github.eslamasabry.oc.ui.words.res.s9LimitsOfflineNone
 import io.github.eslamasabry.oc.ui.words.res.s9LimitsOther
@@ -114,7 +120,7 @@ public fun LimitsContent(state: LimitsUi, actions: LimitsActions, modifier: Modi
                         )
                     }
                 LimitsPhase.List -> {
-                    items(state.accounts, key = { "account-${it.key}" }) { account -> Account(account, state.nowMs) }
+                    items(state.accounts, key = { "account-${it.key}" }) { account -> Account(account, state.nowMs, actions) }
                     if (state.keys.isNotEmpty())
                         item(key = "keys") {
                             Spacer(Modifier.height(LocalKitTokens.current.sectionGap.dp))
@@ -145,7 +151,7 @@ public fun LimitsContent(state: LimitsUi, actions: LimitsActions, modifier: Modi
 }
 
 @Composable
-private fun Account(account: LimitAccountUi, nowMs: Long) {
+private fun Account(account: LimitAccountUi, nowMs: Long, actions: LimitsActions) {
     val gutter = LocalKitTokens.current.gutter
     val place =
         account.connection?.let { if (account.connectionIsPhone) stringResource(Res.string.s9LimitsThisPhone) else it }
@@ -160,9 +166,7 @@ private fun Account(account: LimitAccountUi, nowMs: Long) {
             account.plan?.let {
                 KitText(stringResource(Res.string.s9LimitsPlan, it), role = TypeRole.Secondary, tone = TextTone.Secondary)
             }
-            if (account.reportsNothing) {
-                KitText(stateWords(account.state), role = TypeRole.Secondary, tone = TextTone.Secondary)
-            }
+            if (account.reportsNothing) AgentOrStateWords(account, actions)
             for (group in account.groups) {
                 if (group.compact) CompactGroup(group) else Headline(group.windows.first())
             }
@@ -342,6 +346,40 @@ private fun paceWords(window: LimitWindowUi): PaceWords? {
         LimitPace.WithinPace ->
             stringResource(Res.string.s9LimitsWithinPace).let { PaceWords(TextTone.Secondary, it, "$it. $mark") }
         LimitPace.Unknown -> null
+    }
+}
+
+/** What an account without numbers says: the agent's own state when it is known, else the reader's. */
+@Composable
+private fun AgentOrStateWords(account: LimitAccountUi, actions: LimitsActions) {
+    when (val agent = account.agent) {
+        is UsageAgentTruth.Limit ->
+            KitText(
+                agent.resets?.let { stringResource(Res.string.agentsStateLimitReset, it) }
+                    ?: stringResource(Res.string.agentsStateLimit),
+                Modifier.testTag("limit-agent"),
+                role = TypeRole.Secondary,
+                tone = TextTone.Secondary,
+            )
+        is UsageAgentTruth.NotConfirmed ->
+            KitNotice(
+                stringResource(Res.string.agentsStateSignInNotConfirmed),
+                tone = StatusTone.Attention,
+                liveRegion = false,
+                actions =
+                    listOf(
+                        KitLineAction(
+                            stringResource(Res.string.agentsCheckSignInAgain, agent.agentName),
+                            actions::checkAgent,
+                        )
+                    ),
+            )
+        UsageAgentTruth.SignedIn,
+        UsageAgentTruth.SignedOut,
+        null -> {
+            val state = if (account.agent == UsageAgentTruth.SignedIn) SubscriptionState.CantReadYet else account.state
+            KitText(stateWords(state), role = TypeRole.Secondary, tone = TextTone.Secondary)
+        }
     }
 }
 

@@ -88,6 +88,7 @@ internal class LayoutWalk(private val window: Window, roots: List<SemanticsNode>
         for (n in items.filter { it.visible && it.bounds.right > 0f && it.bounds.left < w }) {
             truncation(n)
             if (judgeCut) cutOff(n)
+            restCut(n)
             scrollCue(n)
         }
         return found
@@ -98,6 +99,17 @@ internal class LayoutWalk(private val window: Window, roots: List<SemanticsNode>
         if (!n.text) return
         val lost = n.node.size.width - n.bounds.width
         if (lost > CUT && !n.cued) add(n, "cut-off", "${fmt(lost)} dp of its width is hidden by its container or the window edge")
+    }
+
+    /**
+     * An item of a scroller that promises to rest whole ([KitLayoutMarks.RestsWhole]) that shows cut: a tab or chip a
+     * fade thins out is still a label cut mid-word on the phone. Judged on parts and screens alike.
+     */
+    private fun restCut(n: Item) {
+        if (!(n.text || n.tap)) return
+        if (n.ancestors.none { KitLayoutMarks.RestsWhole in it.config }) return
+        val lost = n.node.size.width - n.bounds.width
+        if (lost > CUT) add(n, "rest-cut", "${fmt(lost)} dp of it is past the scroller's edge at rest")
     }
 
     /** A sideways scroller with more to show than fits must say so (a fade or a partial chip), see [KitLayoutMarks.ScrollCue]. */

@@ -1737,6 +1737,7 @@ chatSteerStopCommand	7bd9b91f80
 chatSteerStopStep	9ea771f9af
 chatStepDeclinedNote	44b5774893
 chatStepMalformedCall	549463ac9e
+chatStepPlanStopped	c8de526518
 chatStopAfterStep	505bfb0c44
 chatStopAfterStepPending	bcc7138ca0
 chatStopAfterStepPrompt	ee845ea221
@@ -6237,6 +6238,7 @@ kitToolFor	1c71062b62
 kitToolNotRun	a993b21ee1
 kitToolOpenConversation	a9f3a39753
 kitToolOpenDetails	3fe329a804
+kitToolPlanStopped	7cad4ef0c3
 kitToolRetry	454b12ef6b
 kitToolRunning	100f4da50a
 kitToolStopped	de2f135c98

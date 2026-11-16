@@ -154,6 +154,11 @@ public data class NewConversationPhoneAgent(
     val signInNeeded: Boolean = false,
     /** Needs its phone check: the Agents page says "Phone check needed", and so does this row. */
     val phoneCheck: Boolean = false,
+    /** Its sign-in check could not run to an answer: the Agents page says "Sign-in not confirmed", and so does this row. */
+    val signInNotConfirmed: Boolean = false,
+    /** Its plan limit is reached: the Agents page says so, and so does this row. [limitResets] is when, when it said. */
+    val limitReached: Boolean = false,
+    val limitResets: String? = null,
 )
 
 /**
@@ -321,6 +326,9 @@ public interface NewConversationHost {
     /** Starts this phone's own OpenCode after the person stopped it. */
     public suspend fun startPhoneServer(profile: ProfileId): Outcome<Unit> =
         Outcome.Failed(Failure.Unavailable(FeatureId("startPhoneServer")))
+
+    /** "Check <agent> again": asks the phone's agents now, and publishes what they answer (signin-followups). */
+    public suspend fun checkPhoneAgents() {}
 
     public suspend fun setup(profile: ProfileId): Outcome<NewConversationSetup>
 
@@ -547,6 +555,12 @@ public enum class PhoneStartWay {
     TryAgain,
 
     /**
+     * signin-followups: the helper said the agent "is not ready": what is wrong is not known to be its set-up, so the way
+     * forward is "Check <agent> again" (asks the agent now), then the start goes again.
+     */
+    CheckAgain,
+
+    /**
      * Issue 147: the agent's own sign-in no longer works (the helper refused the start for it: "Failed to
      * authenticate: OAuth session expired"): "<Agent> needs you to sign in again", with Sign in.
      */
@@ -558,9 +572,12 @@ public data class PhoneStartProblem(val agentId: String, val agentName: String, 
 
 /** Reads a refused phone-agent start into the one way forward (the helper's sentence is matched, never shown). */
 public object PhoneStartRules {
+    /** "<Agent> is not ready": asked again before anyone is sent to set it up (signin-followups). */
+    private val NOT_YET_READY = Regex("is not ready", RegexOption.IGNORE_CASE)
+
     private val NOT_READY =
         Regex(
-            "is not ready|is disabled|not installed|auth(?:entication)?[ _-]?required|authenticate|sign[ -]?in|" +
+            "is disabled|not installed|auth(?:entication)?[ _-]?required|authenticate|sign[ -]?in|" +
                 "log ?in|No model selected|No API key",
             RegexOption.IGNORE_CASE,
         )
@@ -572,6 +589,8 @@ public object PhoneStartRules {
         when {
             failure is Failure.Rejected && failure.tag?.raw == SIGN_IN_TAG -> PhoneStartWay.SignIn
             chosen != null && listed.isNotEmpty() && listed.none { it.model == chosen } -> PhoneStartWay.ChooseModel
+            failure is Failure.ComputerDidNotAnswer && NOT_YET_READY.containsMatchIn(failure.details?.text.orEmpty()) ->
+                PhoneStartWay.CheckAgain
             failure is Failure.ComputerDidNotAnswer && NOT_READY.containsMatchIn(failure.details?.text.orEmpty()) ->
                 PhoneStartWay.SetUp
             else -> PhoneStartWay.TryAgain
@@ -649,6 +668,8 @@ public data class NewConversationUi(
     val phoneModels: List<NewConversationModel> = emptyList(),
     val phoneModel: ModelRef? = null,
     val phoneModelsBusy: Boolean = false,
+    /** The person chose Plan for [phoneAgent]'s conversation (only an agent that can be held to Plan offers it). */
+    val phonePlan: Boolean = false,
     /** Getting the page ready has lasted more than a few seconds: the page names what it is reading. */
     val preparingSlow: Boolean = false,
     /** The thinking effort chosen for the shown model; null is the model's own default. */
@@ -691,6 +712,15 @@ public data class NewConversationUi(
         }
 
     /** The chosen phone agent's row, while it is still offered. */
+    /**
+     * Whether [phoneAgent] can be held to Plan: its own read-only or plan mode exists (the Paseo gateway's plan table), and
+     * the app declines its changes in Plan besides. An agent with neither is never offered Plan.
+     */
+    val phoneCanPlan: Boolean
+        get() =
+            phoneAgent != null &&
+                AgentCatalog.builtIn.agents.firstOrNull { it.id.raw == phoneAgent }?.providerId in PLAN_HOLDING_PROVIDERS
+
     val phoneAgentChoice: NewConversationPhoneAgent?
         get() = setup?.phone?.choices?.firstOrNull { it.id == phoneAgent }
 
@@ -828,6 +858,12 @@ public interface NewConversationActions {
 
     /** Starts this phone's OpenCode when [NewConversationUi.phoneOff]. */
     public fun startPhoneServer() {}
+
+    /**
+     * "Check <agent> again" (a start refused as "not ready", a row whose sign-in check did not answer): asks the phone's
+     * agents now. After a refused start the start then goes again; otherwise the page reads its offer again.
+     */
+    public fun checkPhoneAgents() {}
 
     /** New project in the project sheet: asks for its name. */
     public fun askNewProject() {}
@@ -1313,6 +1349,14 @@ public class NewConversationViewModel(
         mutable.value.profile?.let(::chooseServer)
     }
 
+    override fun checkPhoneAgents() {
+        val refused = mutable.value.phoneStartProblem?.way == PhoneStartWay.CheckAgain
+        viewModelScope.launch {
+            host.checkPhoneAgents()
+            if (refused) start() else retryLoad()
+        }
+    }
+
     override fun draftChanged(text: String) {
         val before = mutable.value
         // Getting the page ready never locks the field (RC1 device pass: 90 s of "Still reading…" then an empty box):
@@ -1450,6 +1494,13 @@ public class NewConversationViewModel(
         }
     }
 
+    override fun chooseMode(mode: String) {
+        val shown = mutable.value
+        if (shown.phoneAgent == null) return super.chooseMode(mode)
+        if (shown.busy || shown.deliveryUnconfirmed || shown.attempted || !shown.phoneCanPlan) return
+        mutable.update { it.copy(phonePlan = mode.equals("plan", ignoreCase = true)) }
+    }
+
     override fun chooseAgent(agent: String?) {
         val setup = mutable.value.setup ?: return
         if (
@@ -1478,6 +1529,7 @@ public class NewConversationViewModel(
                 phoneAgent = agent,
                 // Build/Plan and a separate copy belong to the server's own agent.
                 agent = if (agent != null) null else it.agent,
+                phonePlan = false,
                 separateCopy = if (agent != null) false else it.separateCopy,
                 // The list last read for this agent shows at once; the read below replaces it.
                 phoneFolderFixed = null,
@@ -1962,6 +2014,8 @@ public class NewConversationViewModel(
             val model = if (phone != null) shown.phoneModel else shown.model
             val variant = shown.variant?.takeIf { it in shown.shownVariants }
             val agent = if (phone != null) null else shown.agent
+            // Plan for a phone agent rides the first message only (never saved as the folder's remembered choice).
+            val startMode = if (phone != null && shown.phonePlan && shown.phoneCanPlan) "plan" else agent
             val result = edits.withLock {
                 val saved = host.saveDraft(target, directory, shown.text)
                 val choices = host.saveChoices(target, directory, model, agent)
@@ -1982,7 +2036,7 @@ public class NewConversationViewModel(
                                         shown.text.trim(),
                                         model,
                                         variant,
-                                        agent,
+                                        startMode,
                                         shown.separateCopy,
                                         attempt,
                                         onStarted = { ref ->
@@ -2080,6 +2134,9 @@ public class NewConversationViewModel(
         public fun create(@Assisted route: ChatsRoute.New): NewConversationViewModel
     }
 }
+
+/** The phone agents' runtimes that list a plan or read-only mode (`PaseoPlanModes`); others are not offered Plan. */
+private val PLAN_HOLDING_PROVIDERS = setOf("codex", "claude", "opencode", "copilot")
 
 /** Server modes and background helpers are never peer agents in the chooser. */
 public fun isStartableAgent(name: String): Boolean =

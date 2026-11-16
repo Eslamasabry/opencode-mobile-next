@@ -19,15 +19,16 @@ import io.github.eslamasabry.oc.ui.kit.foundation.KitFrostState
  * bend). Set on [KitScreen] next to its `topBar`. Opt-in: a screen without it lays out exactly as before.
  *
  * Where the lens is drawn (Glass, Android 13+, no battery saver, no reduced motion, no high contrast, a look with a lens,
- * a window that is not short) the bar and its second row ([below]) lie on ONE liquid pane pinned under the status bar,
- * one body of glass with one bottom edge, and the body scrolls on under it: at rest its first part rests right below
- * the pane (a spacer that scrolls away first, as on a page with a header); once it scrolls, its content passes under
- * the pane and the status bar, and nothing of it shows above the pane's bottom edge except through the glass.
+ * a window that is not short) the bar and its second row ([below]) are one block pinned under the status bar, and the
+ * body scrolls on under it: at rest its first part rests right below the block (a spacer that scrolls away first, as on
+ * a page with a header); once it scrolls, nothing of it shows above the block's foot and it dissolves in below it. The
+ * block paints no pane, plate or band of its own in any style (owner 2026-11-16, "remove the background below the
+ * conversations area"): its words and controls lie on the page's own background, a live one included.
  * Everywhere else the page keeps today's layout: the pinned bar, or with [scrollsElsewhere] the bar and [below] as the
  * first parts of the scrolling header.
  *
  * [below] is the one exception to the frame's "no new bar levels" (R9): it belongs to the floating bar and exists only
- * with it. Its controls sit on the pane: they take no frost of their own and ask for no lens.
+ * with it. Its controls keep their own faces.
  */
 @Stable
 public class KitFloatingBar(
@@ -38,13 +39,12 @@ public class KitFloatingBar(
      */
     public val scrollsElsewhere: Boolean = false,
     /**
-     * The feature's own recording of its body (the conversations list under its +): the pane and the status bar's edge
-     * bend and blur it, and the kit records nothing of its own. Null: the kit records the body.
+     * The feature's own recording of its body (the conversations list under its +): the kit records nothing of its own
+     * then. Null: the kit records the body.
      */
     public val source: KitFrostState? = null,
     /**
-     * A second row inside the bar's pane, under the bar (the home's server pill, divider and filters): controls on the
-     * glass, not panes of their own.
+     * A second row in the bar's block, under the bar (the home's server pill, divider and filters).
      */
     public val below: (@Composable () -> Unit)? = null,
     /**
