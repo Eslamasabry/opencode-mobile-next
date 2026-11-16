@@ -180,6 +180,23 @@ class DockRemoveTest {
     }
 
     @Test
+    fun `an idle conversation hidden on an earlier build is listed as hidden and comes back with restore`() {
+        // The saved removed set is read at start; the server's list names the conversations; neither is running.
+        val m =
+            model(
+                DockEvent.RemovedLoaded(p, listOf(a.sessionId)),
+                DockEvent.Recent(p, listOf(DockRecent(a.sessionId, "Create slowdemo", 1_000L), DockRecent(b.sessionId, "Other", 2_000L))),
+            )
+        assertEquals(listOf(a), m.ui.hidden.map { it.ref }, "the stuck one is listed")
+        assertEquals("Create slowdemo", m.ui.hidden.single().name)
+        assertEquals(DockState.Idle, m.ui.hidden.single().state)
+        assertFalse(a in m.ids(), "and still out of the rings")
+        val back = m.reduce(DockEvent.Restore(a))
+        assertTrue(back.ui.hidden.isEmpty())
+        assertTrue(back.removedRefs.isEmpty())
+    }
+
+    @Test
     fun `entries carry what the answer and stop paths need`() {
         val m = model(link(c1), DockEvent.RunStarted(a), DockEvent.RequestOpened(a, "permission:r1"), DockEvent.RequestOpened(a, "question:q1"), DockEvent.RunStarted(c1), DockEvent.RequestOpened(c1, "form:f1"))
         val e = m.ui.entries.single()

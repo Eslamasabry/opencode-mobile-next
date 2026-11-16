@@ -296,9 +296,9 @@ public fun KitLampPanel(
     Column(modifier.kitMaxWidth(KitLampPanelDims.MAX_W.dp).testTag(LAMP_PANEL_TAG)) {
         PanelHeader(model, words, actions)
         PanelList(model, words, actions, Modifier.weight(1f, fill = false))
-        // Hidden conversations stay in reach below the list, where the thumb and the hide bar are: not at the far top
-        // of a long scroll, where a person who hid one could not find the way back (device 2026-11-16).
-        if (model.hidden.isNotEmpty()) {
+        // Hidden conversations are listed in Edit (where they are hidden), under the list by the thumb and the hide bar:
+        // not at the far top of a long scroll, and not as a row of its own while the list is just read.
+        if (model.editing && model.hidden.isNotEmpty()) {
             KitDivider()
             HiddenGroup(model.hidden, words, actions)
         }

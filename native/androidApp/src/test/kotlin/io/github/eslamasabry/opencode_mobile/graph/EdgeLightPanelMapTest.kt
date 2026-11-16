@@ -5,7 +5,14 @@ import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.core.common.text.NumberSymbols
 import io.github.eslamasabry.oc.core.common.text.Numbers
+import io.github.eslamasabry.oc.engine.attention.dock.DockEvent
+import io.github.eslamasabry.oc.engine.attention.dock.DockFacts
+import io.github.eslamasabry.oc.engine.attention.dock.DockList
+import io.github.eslamasabry.oc.engine.attention.dock.DockModel
+import io.github.eslamasabry.oc.engine.attention.dock.DockRecent
 import io.github.eslamasabry.oc.engine.attention.dock.DockRequestKind
+import io.github.eslamasabry.oc.feature.chats.lamp.LampInputs
+import io.github.eslamasabry.oc.feature.chats.lamp.LampListPresenter
 import io.github.eslamasabry.oc.feature.chats.lamp.LampAnswerUi
 import io.github.eslamasabry.oc.feature.chats.lamp.LampChildState
 import io.github.eslamasabry.oc.feature.chats.lamp.LampChildUi
@@ -272,5 +279,19 @@ class EdgeLightPanelMapTest {
         assertEquals("YouAreIn(Mine,%2\$s)", t.fmt(LampWord.YouAreIn, "Mine"))
         val template = LampTexts(mapOf(LampWord.ChildLabel to "%1\$s, sub-agent of %2\$s, %3\$s"))
         assertEquals("a, sub-agent of b, c", template.fmt(LampWord.ChildLabel, "a", "b", "c"))
+    }
+
+    @Test
+    fun `the path the app uses lists an idle conversation hidden on an earlier build, by its title`() {
+        val p = ProfileId("p1")
+        val stuck = SessionId("stuck")
+        val dock =
+            DockModel.empty()
+                .reduce(DockEvent.RemovedLoaded(p, listOf(stuck)))
+                .reduce(DockEvent.Recent(p, listOf(DockRecent(stuck, "Create slowdemo", 1_000L), DockRecent(SessionId("other"), "Other", 2_000L))))
+        val list = DockList.build(dock.ui, DockFacts { 10_000L })
+        val model = LampPanelMap.model(LampListPresenter.present(list, LampInputs(nowMs = 10_000L, editing = true)), t)
+        assertEquals("Create slowdemo", model.hidden.single().title)
+        assertEquals(ConversationRef(p, stuck), model.hidden.single().key)
     }
 }
