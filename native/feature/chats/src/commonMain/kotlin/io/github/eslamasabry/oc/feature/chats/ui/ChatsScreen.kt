@@ -828,6 +828,7 @@ private data class HomeRowWords(
     val interrupted: String,
     /** B-333: a tapped row that waits while its agents are being updated says so. */
     val updating: String,
+    val connecting: String,
     /** B-333: ... or, when it did not connect in time, that it is not answering. */
     val notAnswering: String,
     val archive: String,
@@ -859,6 +860,7 @@ private fun rememberHomeRowWords(): HomeRowWords =
         stopped = stringResource(Res.string.chatsHomeStopped),
         interrupted = stringResource(Res.string.chatsHomeInterrupted),
         updating = stringResource(Res.string.agentsStateUpdatingHelper),
+        connecting = stringResource(Res.string.e7WorkspaceConnecting),
         notAnswering = stringResource(Res.string.phoneServerRowNotAnswering),
         archive = stringResource(Res.string.sessionMenuArchive),
         otherAgent = stringResource(Res.string.agentPersonaOtherName),
@@ -977,8 +979,8 @@ private fun ConversationRow(
         if (flags.held != null || flags.heldQuestion != null || flags.questionSending) null
         // B-333: the tap is kept; the row says it waits for its server instead of looking dead: an agent update says
         // so, anything else getting ready is the working mark alone.
-        else if (flags.waiting && flags.waitingWord == WaitingWord.Updating) words.updating
-        else if (markOnly) words.gettingReady
+        // RED (scratch): af36c31958's behaviour, the plain word.
+        else if (flags.waiting) (if (flags.waitingWord == WaitingWord.Updating) words.updating else words.connecting)
         else if (flags.gaveUp) words.notAnswering
         // Issue 147: an old agent conversation opens and continues like any other, so its row reads like any other.
         else when (row.status) {
@@ -1077,7 +1079,7 @@ private fun ConversationRow(
                 preview = preview,
                 meta = meta,
                 project = project,
-                state = status?.let { KitRowState(it, tone, waiting = markOnly) },
+                state = status?.let { KitRowState(it, tone) },
                 pinned = flags.pinned,
                 growKey = row.ref,
                 onLongClick = if (row.canOpen || canArchive) ({ menuOpen = true }) else null,
