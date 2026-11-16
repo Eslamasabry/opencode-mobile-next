@@ -18,7 +18,7 @@ class SecGatesTest {
         assertClean(Pending.apply(NetworkSecurityConfig.checkTree(root), pending, NetworkSecurityConfig.IDS), "NetworkSecurityConfigTest")
 
     @Test
-    fun `FileProviderPathsTest - exactly the three roots`() =
+    fun `FileProviderPathsTest - exactly the four reviewed app roots`() =
         assertClean(Pending.apply(FileProviderPaths.checkTree(root), pending, FileProviderPaths.IDS), "FileProviderPathsTest")
 
     @Test

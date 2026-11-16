@@ -154,9 +154,10 @@ for key, label, rep in (('RESULT_COMPILE', 'compile', compile_), ('RESULT_APK', 
             integrity.append(f'{label}: Gradle never ran (nothing started, for instance a failed distribution download)')
 
 # Security is required by every normal lane, and by custom full quality/security checkpoints.
-security_required = lane.split(' ')[0] in ('fast', 'full') or any(
-    t in (':quality:test', ':quality:secTest') for shard in shards for t in shard.get('planned', []))
 security_facts = [shard.get('security', {}) for shard in shards]
+selected_quality = any(':quality:test' in shard.get('planned', []) for shard in shards)
+selected_security = any(':quality:secTest' in shard.get('planned', []) for shard in shards)
+security_required = lane.split(' ')[0] in ('fast', 'full') or selected_quality or (selected_security and any(f.get('full') for f in security_facts))
 security_ran = any(f.get('executed') and f.get('full') and f.get('tests', 0) > 0 for f in security_facts)
 security_bad = any(f.get('failed', 0) or f.get('skipped', 0) for f in security_facts)
 if security_required:

@@ -84,7 +84,7 @@ object NetworkSecurityConfig {
 }
 
 // --------------------------------------------------------------------------------------------------------------------
-/** `FileProviderPathsTest` (plan 16 §1.8.3): exactly the three roots, exactly as written. */
+/** `FileProviderPathsTest` (plan 16 §1.8.3): exactly the four reviewed app roots, exactly as written. */
 object FileProviderPaths {
     const val PATH = "androidApp/src/main/res/xml/oc_files_paths.xml"
     val IDS = setOf("FP-ABSENT", "FP-SHAPE")

@@ -33,7 +33,7 @@ class KSecRulesTest {
 
     @Test fun `K-SEC-6 clipboard writes only in the kit KitCopy and KitPlatform`() = assertClean(SecTextRules.kSec6(files), "K-SEC-6")
 
-    @Test fun `K-SEC-7 every PendingIntent is FLAG_IMMUTABLE outside the three reviewed files`() = assertClean(SecTextRules.kSec7(files, config), "K-SEC-7")
+    @Test fun `K-SEC-7 every PendingIntent is immutable except reviewed platform contracts`() = assertClean(SecTextRules.kSec7(files, config), "K-SEC-7")
 
     @Test fun `K-SEC-8 no parseUri, getIntent or relaunched intents from extras`() = assertClean(SecTextRules.kSec8(files), "K-SEC-8")
 
