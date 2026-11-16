@@ -58,6 +58,19 @@ class ReleaseShapeTest {
     }
 
     @Test
+    fun `V301 only a build marked public carries the plain name and the identity check follows the mark`() {
+        val plugin = RepoFiles.text("build-logic/convention/src/main/kotlin/oc/buildlogic/OcAndroidApplicationPlugin.kt")
+        assertTrue(plugin.contains("ReleaseVersionName.forBuild("), "the build names itself through the one rule")
+        assertTrue(plugin.contains("ReleaseVersionName.isPublicBuild("), "the public mark decides")
+        assertTrue(build.contains("publicRelease.set(oc.buildlogic.ReleaseVersionName.isPublicBuild(project))"))
+        assertTrue(build.contains("oc.buildlogic.ReleaseVersionName.problems("), "the identity check uses the same rule")
+        assertTrue(workflow.contains("-Poc.publicRelease=true"), "the public release workflow marks its build public")
+        val script = RepoFiles.rootText("scripts/native-release.sh")
+        assertTrue(script.contains("-Poc.publicRelease=\$public_flag"), "the release script marks its build")
+        assertTrue(script.contains("is already published as"), "the script refuses a reused name")
+    }
+
+    @Test
     fun `E01-S01 release signing reads the lineage key file and keys, and is skipped with a message without it`() {
         // The lookup lives in build-logic (ReleaseKey; its own tests cover the three places with fake files).
         val key = RepoFiles.text("build-logic/convention/src/main/kotlin/oc/buildlogic/ReleaseKey.kt")

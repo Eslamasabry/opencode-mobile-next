@@ -107,6 +107,19 @@ class ReleaseGate(unittest.TestCase):
         self.assertIn('ci verdict  PASS, run 1', out)
         self.assertIn('smoke       PASS (Test Phone', out)
 
+    def test_a_name_that_already_has_a_release_tag_is_refused_and_the_tag_is_named(self):
+        # Every public release needs a version name no earlier release used (tags v<name>+<build>).
+        self.runs([self.green()])
+        self.smoke()
+        name = re.search(r'^versionName=(\S+)', open(os.path.join(REPO, 'native/version.properties')).read(), re.M).group(1)
+        work = os.path.join(self.tmp, 'work')
+        subprocess.run(['git', 'tag', f'v{name}+10005'], cwd=work, check=True)
+        subprocess.run(['git', 'push', '-q', 'origin', f'v{name}+10005'], cwd=work, check=True)
+        subprocess.run(['git', 'tag', '-d', f'v{name}+10005'], cwd=work, check=True, capture_output=True)
+        code, out = self.release()
+        self.assertEqual(code, 1, out)
+        self.assertIn(f'version {name} is already published as v{name}+10005', out)
+
     def test_green_ci_without_a_smoke_is_refused(self):
         self.runs([self.green()])
         code, out = self.release()

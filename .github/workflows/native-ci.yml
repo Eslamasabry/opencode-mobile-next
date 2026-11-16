@@ -127,6 +127,8 @@ jobs:
         run: python3 -I tool/ci/test_gate.py
       - name: Release gate self-test (the release script refuses without a CI verdict and a device smoke)
         run: python3 -I tool/ci/test_release_gate.py
+      - name: Release tools self-test (identity gate, release script, version names; no Gradle)
+        run: bash native/tool/release/test/run_tests.sh
       - name: Pick the lane and the modules
         id: p
         env:

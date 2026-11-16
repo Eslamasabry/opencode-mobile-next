@@ -612,6 +612,8 @@ abstract class VerifyReleaseIdentity : DefaultTask() {
     @get:Input abstract val applicationId: Property<String>
     @get:Input abstract val versionCodes: ListProperty<Int>
     @get:Input abstract val versionNames: ListProperty<String>
+    // -Poc.publicRelease=true: the public release (plain name). Anything else must be <name>-test.<build>.
+    @get:Input abstract val publicRelease: Property<Boolean>
 
     @TaskAction
     fun verify() {
@@ -621,9 +623,7 @@ abstract class VerifyReleaseIdentity : DefaultTask() {
         val codes = versionCodes.get().distinct()
         if (codes.size != 1) problems += "the APKs carry different versionCodes $codes (every split needs the same one)"
         if (codes.any { it < FIRST_RELEASE_CODE }) problems += "versionCode ${codes.min()} is below $FIRST_RELEASE_CODE"
-        val names = versionNames.get().distinct()
-        if (names.size != 1 || !Regex("""[3-9]\.\d+\.\d+|\d{2,}\.\d+\.\d+""").matches(names.single()))
-            problems += "versionName $names is not one plain release version (3.0.0 or later, no suffix)"
+        problems += oc.buildlogic.ReleaseVersionName.problems(versionNames.get(), codes.singleOrNull(), publicRelease.get())
         check(problems.isEmpty()) { "The switch release identity is wrong (E01-S01):\n" + problems.joinToString("\n") }
     }
 
@@ -643,6 +643,7 @@ androidComponents.onVariants(androidComponents.selector().withBuildType("release
             group = "verification"
             description = "Fails when the switch release is not the Flutter package at a release version (E01-S01)."
             applicationId.set(variant.applicationId)
+            publicRelease.set(oc.buildlogic.ReleaseVersionName.isPublicBuild(project))
             for (output in variant.outputs) {
                 versionCodes.add(output.versionCode.map { it ?: -1 })
                 versionNames.add(output.versionName.map { it ?: "" })

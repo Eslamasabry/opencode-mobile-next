@@ -13,7 +13,7 @@ uninstall that deletes the person's projects.
 | Part | Value |
 |---|---|
 | Package | `io.github.eslamasabry.opencode_mobile` (the `switch` flavour; installs over the Flutter app) |
-| Version | `versionName` from `native/version.properties` (`3.0.0`, no suffix) + `versionCode`, at least 10010 |
+| Version | `versionName` from `native/version.properties` (plain `X.Y.Z`, no suffix, a name no earlier release used) + `versionCode`, at least 10010 |
 | Tag | `v<versionName>+<versionCode>`, for example `v3.0.0+10020` (the in-app updater reads the build number from it) |
 | Files | `opencode-mobile-<name>-<code>-arm64-v8a.apk`, `…-x86_64.apk`, `…-universal.apk`, `SHA256SUMS` |
 | Signer | Public CI `842284B2…1D1C` for GitHub releases; Owner local `1DE5BF08…D60C` for the owner's phone |
@@ -22,11 +22,28 @@ uninstall that deletes the person's projects.
 Every APK of one release carries the same versionCode. The build checks it (`verifySwitchReleaseIdentity`), and so does
 the identity gate.
 
+## Version names
+
+Every public release has its own version name, never reused: 3.0.1, then 3.0.2 for a fix or 3.1.0 for a bigger change.
+`native/version.properties` holds the plain name of the next public release and the build number keeps rising as
+before (`native/tool/version_code.sh`); the build number is shown beside the name in About. Only a build marked public
+(`-Poc.publicRelease=true`, which the Native release workflow and `scripts/native-release.sh --lineage public` pass)
+carries the plain name. Every other build (debug and preview builds, the owner lineage, CI test builds) is named
+`<next name>-test.<build>`, for example `3.0.1-test.10081`, so a tester's build is never counted as the public version
+in a report; the dev flavour keeps its own `-dev` ending after that (`3.0.1-test.10081-dev`). The in-app updater
+compares build numbers, not names, so the `-test.N` ending never makes a build look older or newer.
+
+A public release refuses a name that was already published. `scripts/native-release.sh --lineage public` reads the tags
+`v<name>+<build>` (local and on the remote) and stops with the existing tag named, and the Native release workflow
+checks the same before it builds; test builds are never tagged. The owner lineage builds a test build: the dry run
+makes its APKs (`<name>-test.<build>`, checked by `identity_gate.sh --test-build`) and `--go` refuses, because a tag
+would spend the public name. Before a release, set `versionName` to the next name and write its release notes.
+
 ## The gates
 
 | Gate | Where | Refuses when |
 |---|---|---|
-| `verifySwitchReleaseIdentity` | Gradle, before packaging the switch release | package is not the Flutter one, versionCode < 10010 or differs between APKs, versionName is not a plain X.Y.Z |
+| `verifySwitchReleaseIdentity` | Gradle, before packaging the switch release | package is not the Flutter one, versionCode < 10010 or differs between APKs, versionName is not a plain X.Y.Z (public build, `-Poc.publicRelease=true`) or not `X.Y.Z-test.<versionCode>` (any other build) |
 | `verifyProductionLineage` | Gradle, before packaging any release | the signing key is neither Owner local nor Public CI |
 | `verifySwitchReleaseStorageManifest`, `verifySwitchReleaseNativeLibraries` | Gradle, `assembleSwitchRelease` | All-files access would reset; an APK lacks its ABI's Linux or speech libraries |
 | `lintSwitchRelease`, `testSwitchDebugUnitTest` | Gradle | release lint or the app's unit tests (including `ReleaseShapeTest`) fail |
@@ -101,7 +118,7 @@ ledger must keep it) and run the release again, which takes the next number. Nev
 2. Fix on a branch, merge to master as usual.
 3. Write the new notes (`docs/releases/v<name>+<next>.md`) saying what was fixed, then release again from step 2.
    The new version code is higher, so every phone updates over the broken one.
-4. A versionName change is only for a feature release; a fix keeps the name and takes the next code.
+4. A fix takes the next version name too (3.0.2 after 3.0.1) and the next code: a public name is never reused.
 
 ## What this runbook never does
 
