@@ -22,7 +22,15 @@ public data class UmamiPayload(
     val timestamp: Long,
     val data: Map<String, String>,
     val name: String? = null,
+    /**
+     * The period of Umami's anonymous visitor hash. Left out, the server picks its own default; we pin it so the
+     * words "changes every month" are ours. Umami v3.5.0: request-schema.ts `salt`, crypto.ts getSalt (accepts
+     * day/week/month and their -ly forms, any other word is a fixed salt). Never a per-person value.
+     */
+    val salt: String = HASH_PERIOD,
 )
+
+public const val HASH_PERIOD: String = "month"
 
 /** Build-owned metadata; no route, account, installation id or server profile is accepted here. */
 public data class UmamiBuild(val version: String, val build: String, val tag: String = build) {

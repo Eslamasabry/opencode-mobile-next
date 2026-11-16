@@ -2358,7 +2358,7 @@ collectQueue	408cf673e3
 collectReport	283ae08ce9
 collectReportLabel	87b042b051
 collectRowSummary	55533aebc0
-collectRules	a559abad97
+collectRules	fd4128a65b
 collectSend	d1102afc52
 collectShareIn	7a97a956c2
 collectSmooth	ad0735212d
@@ -7769,7 +7769,7 @@ native44Output	a063f4c7f9
 native44Price	5cca42a3ab
 nativeAboutProvenance	e0bd072c84
 nativeAboutProvenanceTitle	f97ce82c6e
-nativeBundledPrivacy	5ae24bfb64
+nativeBundledPrivacy	2e67af5c45
 nativeCapabilitiesDetail	2fd99510fe
 nativeCapabilitiesTitle	3dd91e1995
 nativeCapabilityAddExternalAgentDetail	4c2eba1208
@@ -7921,7 +7921,7 @@ nativeSearchShortcutSend	2343b816ac
 nativeSearchShortcutTabs	91be216915
 nativeSearchShortcutsBody	8b0dad5f24
 nativeTelemetryConsentBody	ef4f42e264
-nativeTelemetryUsageDetail	4c295c4c6b
+nativeTelemetryUsageDetail	5d0cf20ff6
 nativeToolsChooseModel	09388d8f7f
 nativeToolsCoding	b35ab0829c
 nativeToolsNoParameters	a09c14afa3

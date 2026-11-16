@@ -268,7 +268,7 @@ collectQueue	408cf673e3
 collectReport	283ae08ce9
 collectReportLabel	87b042b051
 collectRowSummary	55533aebc0
-collectRules	a559abad97
+collectRules	fd4128a65b
 collectSend	d1102afc52
 collectShareIn	7a97a956c2
 collectSmooth	ad0735212d
@@ -550,9 +550,9 @@ modelSearchHint	ff215890a1
 modelSelectionSaving	747ac43101
 modelServerDefault	ea63d05840
 modelSwitchSession	fc57019b4b
-nativeBundledPrivacy	5ae24bfb64
+nativeBundledPrivacy	2e67af5c45
 nativeTelemetryConsentBody	ef4f42e264
-nativeTelemetryUsageDetail	4c295c4c6b
+nativeTelemetryUsageDetail	5d0cf20ff6
 notifications:notify_alert_checkin_body	5d79aa9796
 notifications:notify_alert_checkin_title	e51cd67b60
 notifications:notify_alert_complete_title	2c965210d4

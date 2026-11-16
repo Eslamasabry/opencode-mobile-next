@@ -180,8 +180,9 @@ usage events beside a crash report; that stays inside the same Firebase
 project.)
 
 Usage reports also go to an analytics server we run ourselves: **Umami, hosted with Railway**.
-Umami stores no IP address and no identifier of the person. It uses the connection address to
-work out a coarse location and an anonymous daily visitor hash. No device or installation ID,
+Umami stores no IP address and no identifier of the person. It uses the connection address once
+to work out a coarse location. It keeps an anonymous visitor hash that changes every month; the
+hash cannot be turned back into your address or your device. No device or installation ID,
 account, conversation, file name, project name, server address or model key is sent to Umami.
 
 Umami receives the same listed events and permitted properties above. A screen becoming visible
