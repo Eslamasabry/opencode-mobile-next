@@ -24,6 +24,7 @@ import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.domain.platform.ForegroundKind
 import io.github.eslamasabry.oc.core.domain.platform.ForegroundTicket
 import io.github.eslamasabry.oc.core.domain.platform.ForegroundWork
+import io.github.eslamasabry.opencode_mobile.graph.BackgroundServiceEnd
 import io.github.eslamasabry.opencode_mobile.graph.attentionRuntime
 import io.github.eslamasabry.opencode_mobile.graph.backgroundHub
 import io.github.eslamasabry.opencode_mobile.graph.platformHub
@@ -140,6 +141,7 @@ class BackgroundConnectionService : Service() {
             expireWidget(startId)
             return
         }
+        BackgroundServiceEnd.app.timedOut(BackgroundServiceEnd.batteryExempt(this)) // B-190 bg_service_end os_limit
         val hub = backgroundHub
         val liveHere = livePromised
         val replyHeld = replyWatch.holds(this)
@@ -177,6 +179,7 @@ class BackgroundConnectionService : Service() {
     }
 
     override fun onDestroy() {
+        BackgroundServiceEnd.app.destroyed(holdsDataSync(), BackgroundServiceEnd.batteryExempt(this))
         widgetJobs.toList().forEach { it.cancel() }
         replyWatch.onServiceDestroy(this)
         if (livePromised) replyWatch.liveOwnerEnded()

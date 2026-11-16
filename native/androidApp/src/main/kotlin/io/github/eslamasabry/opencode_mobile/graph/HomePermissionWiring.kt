@@ -51,16 +51,18 @@ class HomePermissionAnswerWiring(private val registry: ConnectionRegistry) : Hom
                 !(graph.session.server.capabilities.value.persistentPermissionGrants && request.request.canAlwaysAllow)
         )
             return Outcome.Failed(Failure.Unavailable(FeatureId("persistentPermissionGrants")))
-        return engine.answerNow(
-            request.request.id,
-            RequestAnswer.Permission(
-                when (reply) {
-                    HomePermissionReply.Once -> PermissionReply.Once
-                    HomePermissionReply.Always -> PermissionReply.Always
-                    HomePermissionReply.Reject -> PermissionReply.Reject
-                }
-            ),
-        )
+        return withApprovalSurface(request.request.id.raw, "home") {
+            engine.answerNow(
+                request.request.id,
+                RequestAnswer.Permission(
+                    when (reply) {
+                        HomePermissionReply.Once -> PermissionReply.Once
+                        HomePermissionReply.Always -> PermissionReply.Always
+                        HomePermissionReply.Reject -> PermissionReply.Reject
+                    }
+                ),
+            )
+        }
     }
 
     /**
@@ -84,9 +86,11 @@ class HomePermissionAnswerWiring(private val registry: ConnectionRegistry) : Hom
             } ?: return Outcome.Failed(Failure.Refused(RefusalReason.StaleScope))
         if (registry.graphFor(ref) !== graph)
             return Outcome.Failed(Failure.Refused(RefusalReason.StaleScope))
-        return engine.answerNow(
-            request.question.id,
-            RequestAnswer.Question(answers.map { it.toImmutableList() }.toImmutableList()),
-        )
+        return withApprovalSurface(request.question.id.raw, "home") {
+            engine.answerNow(
+                request.question.id,
+                RequestAnswer.Question(answers.map { it.toImmutableList() }.toImmutableList()),
+            )
+        }
     }
 }

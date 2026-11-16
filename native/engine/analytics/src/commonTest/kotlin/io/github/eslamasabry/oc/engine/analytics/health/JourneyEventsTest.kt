@@ -49,6 +49,8 @@ class JourneyEventsTest {
             "attempt", "outcome", "input", "tools_range", "follow_up", "after_range", "turns_range", "frozen_range", "starter",
             // c2-performance 2026-11-15: the jank event's deadline-judged share and the refresh rate its frames were given.
             "late_pct_range", "seen_hz",
+            // 2026-11-16 decisions 20 and 21.
+            "activity_range", "surface", "interaction", "after_consent",
         )
 
     @Test
@@ -72,7 +74,7 @@ class JourneyEventsTest {
         )
         assertEquals(setOf("ok", "fail", "skipped", "cancelled"), HealthWords.setupResults)
         assertEquals(
-            setOf("done", "stopped_by_user", "error", "connection_lost", "approval_timeout"),
+            setOf("done", "stopped_by_user", "error", "connection_lost", "approval_timeout", "no_output"),
             HealthWords.turnOutcomes,
         )
         assertEquals(setOf("1", "2", "3+"), HealthRanges.attempts.toSet())

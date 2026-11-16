@@ -84,7 +84,7 @@ class HealthFlowTest {
         flow.connAttempt("computer", ok = false, elapsedMs = 12_000, failure = Failure.TimedOut())
         flow.connAttempt("computer", ok = true, elapsedMs = 300)
         flow.sendResult("fail", Failure.Rejected(401))
-        flow.sendResult("ok", firstReplyMs = 900)
+        flow.sendResult("ok")
         assertEquals(
             listOf(ReportProblem("timeout", 1), ReportProblem("auth", 1)),
             ProblemTally.count(AppTelemetry.current.ring.lines()),
@@ -97,7 +97,8 @@ class HealthFlowTest {
         val vendor = RecordingVendor()
         val flow = live(vendor)
         flow.connAttempt("computer", ok = false, elapsedMs = 12_000, failure = Failure.Network(NetworkWhy.Dns))
-        flow.sendResult("ok", firstReplyMs = 2_500, serverKind = "phone", traits = SendTraits())
+        flow.sendResult("ok", serverKind = "phone", traits = SendTraits())
+        flow.replyShown("phone", 2_500)
         flow.sendResult("fail", failure = Failure.Rejected(413))
         flow.sendResult("queued")
         flow.linuxSetupStep("node", ok = false, elapsedMs = 70_000, exit = 132, compatMode = "armcap", freeGigabytes = 9.5)
@@ -116,9 +117,9 @@ class HealthFlowTest {
             listOf(
                 "conn_attempt" to
                     mapOf("server_kind" to "computer", "result" to "fail", "fail_kind" to "dns", "ms_range" to ">10000"),
-                "send_result" to mapOf("result" to "ok", "first_reply_range" to "2-10s", "agent" to "other", "input" to "text", "server_kind" to "phone"),
-                "send_result" to mapOf("result" to "fail", "fail_kind" to "too_large", "first_reply_range" to "none"),
-                "send_result" to mapOf("result" to "queued", "first_reply_range" to "none"),
+                "send_result" to mapOf("result" to "ok", "agent" to "other", "input" to "text", "server_kind" to "phone"),
+                "send_result" to mapOf("result" to "fail", "fail_kind" to "too_large"),
+                "send_result" to mapOf("result" to "queued"),
                 "linux_setup_step" to
                     mapOf(
                         "step" to "node",
@@ -180,32 +181,35 @@ class HealthFlowTest {
     }
 
     @Test
-    fun `B-190-027 an accepted send counts its first reply, or none when the turn ends without one`() = runTest {
+    fun `B-190-027 a send is counted once, when the server takes it or refuses it, and the first visible reply is its own number`() = runTest {
         val vendor = RecordingVendor()
         live(vendor)
         var now = 1_000L
         val meter = ChatJourney({ now })
         meter.sent("ses_1", onPhone = true)
         meter.accepted("ses_1", error = false)
-        meter.part("ses_1", "msg_user", "text") // the person's own echo is not a reply
+        meter.settled("ses_1", accepted = true)
+        meter.text("ses_1", "msg_user", streamed = false) // the person's own echo is not a reply
         meter.message("ses_1", "msg_a", assistant = true)
         now += 3_200
-        meter.part("ses_1", "msg_a", "text")
-        meter.delta("ses_1") // only the first one counts
+        meter.text("ses_1", "msg_a", streamed = false)
+        meter.text("ses_1", "msg_a", streamed = true) // only the first one counts
         meter.ended("ses_2") // an unknown session changes nothing
         meter.sent("ses_3", onPhone = false)
+        meter.settled("ses_3", accepted = true)
         meter.ended("ses_3") // a leftover idle before the turn began
         meter.busy("ses_3")
         meter.ended("ses_3")
         meter.sent("ses_4", onPhone = false)
-        meter.accepted("ses_4", error = true) // refused: counted where it was refused
+        meter.accepted("ses_4", error = true)
+        meter.settled("ses_4", accepted = false, failure = Failure.Rejected(500)) // refused: counted where it was refused
         meter.delta("ses_4")
         assertEquals(
             listOf(
+                "send_result" to mapOf("result" to "ok", "agent" to "other", "input" to "text", "server_kind" to "phone"),
+                "send_result" to mapOf("result" to "ok", "agent" to "other", "input" to "text", "server_kind" to "computer"),
                 "send_result" to
-                    mapOf("result" to "ok", "first_reply_range" to "2-10s", "agent" to "other", "input" to "text", "server_kind" to "phone"),
-                "send_result" to
-                    mapOf("result" to "ok", "first_reply_range" to "none", "agent" to "other", "input" to "text", "server_kind" to "computer"),
+                    mapOf("result" to "fail", "fail_kind" to "rejected", "agent" to "other", "input" to "text", "server_kind" to "computer"),
             ),
             vendor.events.filter { it.first == "send_result" },
         )

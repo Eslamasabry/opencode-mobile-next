@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.engine.delivery
 
+import io.github.eslamasabry.oc.engine.analytics.health.AppJourneys
 import io.github.eslamasabry.oc.engine.analytics.health.HealthFlow
 import io.github.eslamasabry.oc.engine.analytics.NoReporting
 import io.github.eslamasabry.oc.engine.analytics.Reporting
@@ -559,11 +560,11 @@ public class PromptDelivery(
         val r =
             link.prompt(ref.sessionId, prompt) { wire(fence() && journal?.isOpen != false) }
         accepted = confirms(r, clientId?.raw)
+        // B-190 stage 1: one send_result per send, decided here by the server's acceptance alone (never by a reply).
+        AppJourneys.sendSettled(ref.sessionId.raw, accepted, (r as? Outcome.Failed)?.failure)
         if (!accepted) {
             failure = (r as? Outcome.Failed)?.failure
             reportNotAccepted(bubble, failure, reachedWire)
-            // B-190: the kind of failure only; an accepted send is counted when its first reply comes.
-            HealthFlow().sendResult("fail", failure)
             if (
                 reachedWire &&
                     bubble.reviewId != null &&
