@@ -94,7 +94,9 @@ public object HomeNotices {
         replyOffer: Boolean,
     ): Set<HomeNoticeKind> = buildSet {
         // The same two cases the screen draws: the failure card, or the "still opening" line after New conversation.
-        state.home.opening?.let { if (it.phase == ChatsOpeningPhase.Failed || state.newBlocked) add(HomeNoticeKind.ServerOpening) }
+        state.home.opening?.let {
+            if (it.phase == ChatsOpeningPhase.Failed || state.newBlocked || state.newWaiting) add(HomeNoticeKind.ServerOpening)
+        }
         if (state.answerFailure != null) add(HomeNoticeKind.AnswerFailure)
         if (state.archiveFailure != null) add(HomeNoticeKind.ArchiveFailure)
         if (state.renameFailure != null) add(HomeNoticeKind.RenameFailure)

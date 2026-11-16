@@ -590,6 +590,80 @@ class ChatsViewModelTest {
     }
 
     @Test
+    fun `COLD-TAP-001 New conversation tapped while the server still opens is kept and opens once when it answers`() = runTest {
+        val nav = RecordingNavigator()
+        nav.top.value = ChatsRoute.Home
+        val home = Home(listOf(source("main", main = true)))
+        val vm = ChatsViewModel(Feed(), Briefs(), Door(false), { Instant.fromEpochMilliseconds(0) }, clock, nav, home = home)
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
+        home.snapshot.value =
+            home.snapshot.value.copy(opening = ChatsOpeningUi(ChatsOpeningPhase.Connecting, "This phone", profile = ProfileId("main")))
+        vm.newConversation()
+        assertEquals(emptyList(), nav.routes, "nothing opens before the server answers")
+        assertTrue(vm.state.value.newWaiting, "the home says New conversation is on its way")
+        assertFalse(vm.state.value.newBlocked)
+        // Tapped again while kept, and the home keeps emitting: still one kept tap.
+        vm.newConversation()
+        home.snapshot.value = home.snapshot.value.copy(opening = home.snapshot.value.opening?.copy(phase = ChatsOpeningPhase.Starting))
+        assertEquals(emptyList(), nav.routes)
+        home.snapshot.value = home.snapshot.value.copy(opening = null)
+        assertEquals(1, nav.routes.size, "the kept tap opens New conversation exactly once: ${nav.routes}")
+        assertEquals(null, (nav.routes.single() as ChatsRoute.New).profile)
+        assertFalse(vm.state.value.newWaiting)
+        home.snapshot.value =
+            home.snapshot.value.copy(opening = ChatsOpeningUi(ChatsOpeningPhase.Connecting, "This phone", profile = ProfileId("main")))
+        home.snapshot.value = home.snapshot.value.copy(opening = null)
+        assertEquals(1, nav.routes.size, "never twice")
+    }
+
+    @Test
+    fun `COLD-TAP-002 a kept New conversation tap is dropped by another page, by Cancel, and refused when opening fails`() = runTest {
+        val nav = RecordingNavigator()
+        nav.top.value = ChatsRoute.Home
+        val home = Home(listOf(source("main", main = true)))
+        val vm = ChatsViewModel(Feed(), Briefs(), Door(false), { Instant.fromEpochMilliseconds(0) }, clock, nav, home = home)
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
+        val connecting = ChatsOpeningUi(ChatsOpeningPhase.Connecting, "This phone", profile = ProfileId("main"))
+        home.snapshot.value = home.snapshot.value.copy(opening = connecting)
+        // Another page on top: dropped, so a page the person left never opens over them.
+        vm.newConversation()
+        nav.top.value = ChatsRoute.All("running")
+        nav.top.value = ChatsRoute.Home
+        home.snapshot.value = home.snapshot.value.copy(opening = null)
+        assertEquals(emptyList(), nav.routes)
+        // Cancel drops it.
+        home.snapshot.value = home.snapshot.value.copy(opening = connecting)
+        vm.newConversation()
+        vm.dismissNewBlocked()
+        assertFalse(vm.state.value.newWaiting)
+        home.snapshot.value = home.snapshot.value.copy(opening = null)
+        assertEquals(emptyList(), nav.routes)
+        // The opening fails while kept: nothing opens, and the home says why.
+        home.snapshot.value = home.snapshot.value.copy(opening = connecting)
+        vm.newConversation()
+        home.snapshot.value = home.snapshot.value.copy(opening = connecting.copy(phase = ChatsOpeningPhase.Failed))
+        assertEquals(emptyList(), nav.routes)
+        assertFalse(vm.state.value.newWaiting)
+        assertTrue(vm.state.value.newBlocked)
+    }
+
+    @Test
+    fun `COLD-TAP-003 a kept New conversation tap ends after the wait's limit and the home says the server still opens`() = runTest {
+        val nav = RecordingNavigator()
+        val home = Home(listOf(source("main", main = true)))
+        val vm = ChatsViewModel(Feed(), Briefs(), Door(false), { Instant.fromEpochMilliseconds(0) }, clock, nav, home = home)
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
+        home.snapshot.value =
+            home.snapshot.value.copy(opening = ChatsOpeningUi(ChatsOpeningPhase.Connecting, "This phone", profile = ProfileId("main")))
+        vm.newConversation()
+        advanceTimeBy(io.github.eslamasabry.oc.feature.chats.presentation.KeptTapRules.LIMIT_MS + 1_000)
+        assertFalse(vm.state.value.newWaiting)
+        assertTrue(vm.state.value.newBlocked)
+        home.snapshot.value = home.snapshot.value.copy(opening = null)
+        assertEquals(emptyList(), nav.routes, "a tap that ran out never opens later")
+    }
+
+    @Test
     fun `NEW-BLOCKED New conversation while the server does not answer says so and opens nothing`() = runTest {
         val nav = RecordingNavigator()
         val home = Home(listOf(source("main", main = true)))
