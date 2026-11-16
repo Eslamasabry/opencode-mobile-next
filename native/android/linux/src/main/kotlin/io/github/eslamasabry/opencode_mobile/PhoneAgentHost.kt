@@ -167,11 +167,11 @@ class PhoneAgentHost(private val linux: BuiltinLinux) {
         launched: Launched,
     ): Map<String, Any?> {
         val profile = request.profile
-        // Probe the installed executable before draining the working daemon.
+        // Read the installed helper version before draining the working daemon.
         // A changed symlink alone says nothing about its loaded version.
         val installedVersion =
             request.helper.expectedVersion?.let { expected ->
-                val output = checks.runVersion(profile, PASEO_PATH)
+                val output = checks.helperVersion(profile, PASEO_PATH)
                 val installed =
                     java.nio.file.Files.exists(
                         java.io.File(linux.rootfs, PASEO_PATH.removePrefix("/")).toPath(),
