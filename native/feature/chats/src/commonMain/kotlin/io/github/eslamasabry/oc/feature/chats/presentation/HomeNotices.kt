@@ -70,9 +70,15 @@ public object HomeNotices {
     public fun shown(active: Set<HomeNoticeKind>): HomeNoticeKind? =
         HomeNoticeKind.entries.firstOrNull { it.actionable && it in active }
 
-    /** The connections the home lists as not answering, except the one still opening (it has its own card). */
+    /**
+     * The connections the home lists as not answering, except the one still opening (it has its own card) and a server
+     * on this phone that the person runs themselves ([ChatsListSourceUi.selfRun]): that one is off, not broken, unless
+     * it is the server new conversations start on.
+     */
     public fun unreachable(state: ChatsUi): List<ChatsListSourceUi> =
-        state.home.sources.filter { it.shown && it.unreachable && it.profile != state.home.opening?.profile }
+        state.home.sources.filter {
+            it.shown && it.unreachable && it.profile != state.home.opening?.profile && !(it.selfRun && !it.main)
+        }
 
     /**
      * The servers whose list is only partly read and that have no line of their own. A source the app itself is
@@ -84,7 +90,7 @@ public object HomeNotices {
         state.incomplete.filterNot { name ->
             unreachable(state).any { it.name == name } ||
                 name == state.home.opening?.serverName ||
-                state.home.sources.any { it.starting != null && it.name == name }
+                state.home.sources.any { (it.starting != null || (it.selfRun && it.unreachable)) && it.name == name }
         }
 
     /** Every kind the home currently has something to say about. */

@@ -88,6 +88,13 @@ public data class ChatsListSourceUi(
     val starting: AppStart? = null,
     /** While [starting] is [AppStart.AgentsUpdating]: the agent being installed, by its name, when known. */
     val updatingAgent: String? = null,
+    /**
+     * A server on this phone that the person runs themselves and the app never starts (a profile the old app made for a
+     * Termux setup, or any server saved at this phone's own address). When it does not answer it is simply off: the
+     * switcher says so, and home does not raise "isn't answering" for it (owner's phone, 2026-11-16: the old
+     * "This device (Termux)" profile nagged on every open after the move from the old app).
+     */
+    val selfRun: Boolean = false,
 )
 
 public data class ChatsHomeExtraState(

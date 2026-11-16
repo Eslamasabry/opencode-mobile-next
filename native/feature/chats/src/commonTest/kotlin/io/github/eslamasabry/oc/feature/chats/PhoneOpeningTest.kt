@@ -34,17 +34,54 @@ class PhoneOpeningTest {
     }
 
     @Test
-    fun `E05-S20 it fails only after the 90 s start window or when the process exits`() {
+    fun `E05-S20 it fails only after the start limit or when the process stays gone`() {
         val booting = PhoneStartWatch(since = opened, startingSince = opened, processAlive = true, seenAlive = true)
-        assertEquals(ChatsOpeningPhase.Starting, phase(booting, after = 89))
-        assertEquals(ChatsOpeningPhase.Failed, phase(booting, after = 90))
+        assertEquals(ChatsOpeningPhase.Starting, phase(booting, after = 179))
+        assertEquals(ChatsOpeningPhase.Failed, phase(booting, after = 180))
         // Issue 147: a server already running from before the app opened gets the start window to answer too.
-        val running = PhoneStartWatch(since = opened, processAlive = true, uptime = 95.seconds, seenAlive = true)
+        val running = PhoneStartWatch(since = opened, processAlive = true, uptime = 200.seconds, seenAlive = true)
         assertEquals(ChatsOpeningPhase.Starting, phase(running, after = 16))
         assertEquals(ChatsOpeningPhase.Failed, phase(running, after = 90))
         assertEquals(ChatsOpeningPhase.Connecting, phase(running, after = 90, busy = true))
         val exited = PhoneStartWatch(since = opened, processAlive = false, seenAlive = true)
         assertEquals(ChatsOpeningPhase.Failed, phase(exited, after = 3))
+    }
+
+    @Test
+    fun `OWNER-1116 a start that takes two minutes on a loaded phone is starting, never isn't answering`() {
+        // Owner's phone, build 10062: several servers saved, about 90 agent conversations, the agents' helper starting
+        // beside the server. The start was still running when the old 90 s window ended.
+        val slow = PhoneStartWatch(since = opened, startingSince = opened + 2.seconds, processAlive = false, seenAlive = true)
+        for (second in 3..150 step 7) assertEquals(ChatsOpeningPhase.Starting, phase(slow, after = second), "at $second s")
+        // The start returned at 120 s; the young process is still booting OpenCode and has not answered.
+        val young = slow.copy(startingSince = null, processAlive = true, uptime = 30.seconds)
+        assertEquals(ChatsOpeningPhase.Starting, phase(young, after = 150))
+        // A process that has run past the limit and still does not answer has failed.
+        assertEquals(ChatsOpeningPhase.Failed, phase(young.copy(uptime = 181.seconds), after = 301))
+    }
+
+    @Test
+    fun `OWNER-1116 a process read as gone for a moment after its start returned is not a failure`() {
+        // The phone's status is read a moment after the start path returns, and the app starts a stopped server again.
+        val gone = PhoneStartWatch(since = opened, processAlive = false, seenAlive = true, goneSince = opened + 20.seconds)
+        assertEquals(ChatsOpeningPhase.Starting, phase(gone, after = 21))
+        assertEquals(ChatsOpeningPhase.Starting, phase(gone, after = 29))
+        // It stayed gone: that is a failure, said after the grace.
+        assertEquals(ChatsOpeningPhase.Failed, phase(gone, after = 30))
+        // The person stopped it: said at once, no grace.
+        assertEquals(ChatsOpeningPhase.Failed, phase(gone.copy(stoppedByPerson = true), after = 21))
+    }
+
+    @Test
+    fun `OWNER-1116 home keeps asking a server that reads failed while its process runs`() {
+        val running = PhoneStartWatch(since = opened, processAlive = true, uptime = 400.seconds, seenAlive = true)
+        assertEquals(true, OpeningRules.worthAskingAgain(ChatsOpeningPhase.Starting, running))
+        assertEquals(true, OpeningRules.worthAskingAgain(ChatsOpeningPhase.Failed, running))
+        // Nothing runs, or the person stopped it: asking again cannot help; Try again is the way.
+        assertEquals(false, OpeningRules.worthAskingAgain(ChatsOpeningPhase.Failed, running.copy(processAlive = false)))
+        assertEquals(false, OpeningRules.worthAskingAgain(ChatsOpeningPhase.Failed, running.copy(stoppedByPerson = true)))
+        assertEquals(false, OpeningRules.worthAskingAgain(ChatsOpeningPhase.Failed, null))
+        assertEquals(false, OpeningRules.worthAskingAgain(ChatsOpeningPhase.Connecting, running))
     }
 
     @Test
