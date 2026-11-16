@@ -25,6 +25,11 @@ internal fun insideTitle(inside: SettingsInside): String =
         SettingsInside.VoiceNotices -> stringResource(Res.string.voiceNoticesTitle)
         SettingsInside.AddServer -> stringResource(Res.string.e7SetupAddServer)
         SettingsInside.Demo -> stringResource(Res.string.settingsTryDemo)
+        SettingsInside.PrivacyWhatWeCollect -> stringResource(Res.string.collectTitle)
+        SettingsInside.PrivacyPolicy -> stringResource(Res.string.privacyPolicyTitle)
+        SettingsInside.PrivacyUsage -> stringResource(Res.string.telemetryUsageTitle)
+        SettingsInside.PrivacyCrashSend -> stringResource(Res.string.privacyCrashSendTitle)
+        SettingsInside.PrivacyCrashAsk -> stringResource(Res.string.privacyCrashAskTitle)
     }
 
 @Composable
@@ -45,6 +50,12 @@ internal fun insideAliases(inside: SettingsInside): String =
         SettingsInside.VoiceNotices -> stringResource(Res.string.settingsHubSearchVoiceAliases)
         SettingsInside.AddServer -> stringResource(Res.string.discoverConnectionHelpAliases)
         SettingsInside.Demo -> stringResource(Res.string.nativeSearchAliasesDemo)
+        // The rows' own supporting lines are their search words (no new copy).
+        SettingsInside.PrivacyWhatWeCollect -> stringResource(Res.string.collectRowSummary)
+        SettingsInside.PrivacyPolicy -> stringResource(Res.string.privacyPagesSummary)
+        SettingsInside.PrivacyUsage -> stringResource(Res.string.telemetryUsageDetail)
+        SettingsInside.PrivacyCrashSend -> stringResource(Res.string.telemetryCrashesDetail)
+        SettingsInside.PrivacyCrashAsk -> stringResource(Res.string.crashOfferSettingDetail)
     }
 
 internal fun insideGlyph(inside: SettingsInside) =
@@ -64,4 +75,9 @@ internal fun insideGlyph(inside: SettingsInside) =
         SettingsInside.VoiceNotices -> KitIcons.mic
         SettingsInside.AddServer -> KitIcons.add
         SettingsInside.Demo -> KitIcons.play
+        SettingsInside.PrivacyWhatWeCollect -> KitIcons.info
+        SettingsInside.PrivacyPolicy -> KitIcons.privacy
+        SettingsInside.PrivacyUsage -> KitIcons.shield
+        SettingsInside.PrivacyCrashSend,
+        SettingsInside.PrivacyCrashAsk -> KitIcons.bug
     }
