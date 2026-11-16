@@ -9,6 +9,7 @@ import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
@@ -200,4 +201,33 @@ class HelperJoinsTest {
         runCurrent()
         assertEquals(1, tries, "an old wake does not cut the first pause")
     }
+
+    @Test
+    fun `I147-HA-4 started in the background by the restore receiver after an update, the helper starts once the app is in front`() =
+        runTest {
+            // The update's restore receiver starts the app in the background: Android's Linux refuses every helper
+            // start there (BuiltinLinux.captureAgentHostStart). Minutes later the person opens the app.
+            val joins = joins()
+            val front = kotlinx.coroutines.flow.MutableStateFlow(false)
+            var started = false
+            val attempt: suspend () -> Failure? = {
+                if (front.value) {
+                    started = true
+                    null
+                } else noAnswer
+            }
+            val want: (ProfileId) -> Unit = { id ->
+                if (joins.running(id)) joins.wake(id) else joins.ensure(id, HelperStartRules::keepTrying, {}, attempt)
+            }
+            backgroundScope.launch { joins.followFront(front, { listOf(helper) }, want) }
+            want(helper) // the home's own start (keepHelperListed) at the background start
+            advanceTimeBy(4 * 60_000L)
+            runCurrent()
+            assertFalse(started, "no start is admitted in the background")
+            assertTrue(joins.running(helper), "the loop pauses between tries")
+            front.value = true
+            runCurrent()
+            assertTrue(started, "the helper started as the app came to the front, no page visit")
+            assertFalse(joins.running(helper))
+        }
 }

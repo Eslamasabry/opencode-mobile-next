@@ -7,9 +7,11 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
@@ -134,6 +136,14 @@ internal class HelperJoins(
     }
 
     private class Answer(val failure: Failure?)
+
+    /**
+     * Each time the app comes to the front ([front] turns true), [want] runs for every source [sources] lists: a start
+     * refused while the app was in the background (an update or a boot started it) is tried again at once.
+     */
+    suspend fun followFront(front: Flow<Boolean>, sources: () -> Collection<ProfileId>, want: (ProfileId) -> Unit) {
+        front.distinctUntilChanged().collect { inFront -> if (inFront) sources().forEach(want) }
+    }
 
     companion object {
         /** The helper's own start waits up to 30 s for its answer; its connection and first list read come on top. */

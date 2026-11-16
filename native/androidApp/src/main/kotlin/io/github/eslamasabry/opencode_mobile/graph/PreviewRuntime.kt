@@ -496,10 +496,11 @@ class PreviewRuntime(
         // again as soon as the app comes to the front.
         scope.launch {
             if (ready.await() is Outcome.Failed) return@launch
-            visibility.state
-                .map { it == io.github.eslamasabry.oc.core.common.pace.Visibility.Foreground }
-                .distinctUntilChanged()
-                .collect { front -> if (front) profiles.profiles.value.forEach { wantHelper(it.id) } }
+            helperJoins.followFront(
+                visibility.state.map { it == io.github.eslamasabry.oc.core.common.pace.Visibility.Foreground },
+                sources = { profiles.profiles.value.map { it.id } },
+                want = ::wantHelper,
+            )
         }
     }
 

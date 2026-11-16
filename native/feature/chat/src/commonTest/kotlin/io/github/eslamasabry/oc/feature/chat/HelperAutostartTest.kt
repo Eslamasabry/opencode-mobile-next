@@ -36,6 +36,8 @@ import io.github.eslamasabry.oc.feature.chat.world.ChatLoad
 import io.github.eslamasabry.oc.feature.chat.world.ChatPhoneServer
 import io.github.eslamasabry.oc.feature.chat.world.ChatServerWait
 import io.github.eslamasabry.oc.feature.chat.world.GraphChatWorld
+import io.github.eslamasabry.oc.feature.chat.world.GraphChatWorlds
+import io.github.eslamasabry.oc.ui.routes.ChatRoute
 import io.github.eslamasabry.oc.feature.chat.world.PhoneServerWait
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -147,7 +149,7 @@ class HelperAutostartTest {
         }
 
     @Test
-    fun `I147-HAS-2 a helper that does not come up ends the wait with its failure, also while an agent needs sign-in`() =
+    fun `I147-HAS-2 an Antigravity conversation is not held by a signed-out Claude Code, and a helper that does not come up ends the wait`() =
         runTest {
             val agents = Agents()
             // Claude Code read "Sign in needed" on the Agents page; the helper itself never answered.
@@ -188,4 +190,49 @@ class HelperAutostartTest {
         assertEquals(emptyList(), other.wanted)
         world.detach()
     }
+
+    @Test
+    fun `I147-HAS-4 every way into the conversation asks for the helper start on a cold open`() = runTest {
+        // Home row, All conversations and Search open ChatRoute(ref); a notification and the edge light carry the
+        // request too (EdgeDockScreens, ShellNavigator). Every one reaches ChatViewModel, which opens its world with
+        // ChatWorlds.open(route.ref).
+        val entries =
+            mapOf(
+                "Home row" to ChatRoute(ref),
+                "All conversations" to ChatRoute(ref, thenAction = null),
+                "Search" to ChatRoute(ref),
+                "notification" to ChatRoute(ref, focusComposer = true, requestId = "perm-1"),
+                "edge light" to ChatRoute(ref, requestId = "perm-1"),
+            )
+        for ((entry, route) in entries) {
+            val agents = Agents()
+            val worlds = GraphChatWorlds(registry(FakeServerGateway(emptyList())), phoneServers = setOf(agents))
+            val world = worlds.open(route.ref)
+            runCurrent()
+            assertEquals(listOf(ref.profileId), agents.wanted, "$entry: the helper start was asked for")
+            worlds.release(world)
+            runCurrent()
+        }
+    }
+
+    @Test
+    fun `I147-HAS-5 with Claude Code signed out a Codex conversation leaves Connecting as soon as the helper is up`() =
+        runTest {
+            val gateway = FakeServerGateway(listOf(Session(ref.sessionId, time = SessionTime(idleMs = 20))))
+            val registry = registry(gateway)
+            val agents = Agents()
+            agents.wait.value = PhoneServerWait.AgentNeedsSignIn
+            val world = GraphChatWorld(ref, registry, phoneServer = agents)
+            world.attach()
+            runCurrent()
+            advanceTimeBy(20_000)
+            gateway.events.connect()
+            registry.open(profile)
+            runCurrent()
+            advanceTimeBy(2_500)
+            runCurrent()
+            assertEquals(ChatLoad.Live, world.load.value)
+            assertNull(world.serverWait.value, "no Connecting, no sign-in wait once it is up")
+            world.detach()
+        }
 }
