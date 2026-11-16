@@ -111,6 +111,7 @@ import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
 import io.github.eslamasabry.oc.ui.kit.modal.LocalKitSheetHost
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
+import io.github.eslamasabry.oc.ui.kit.motion.KitSwap
 import io.github.eslamasabry.oc.ui.kit.status.KitStatus
 import io.github.eslamasabry.oc.ui.kit.status.KitStatusKind
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitReadRequest
@@ -205,6 +206,7 @@ import io.github.eslamasabry.oc.ui.words.res.chatUiDeleteThisMessage
 import io.github.eslamasabry.oc.ui.words.res.chatUiExpandReasoning
 import io.github.eslamasabry.oc.ui.words.res.chatUiFiles
 import io.github.eslamasabry.oc.ui.words.res.chatUiNotConnectedToTheServerRightNow
+import io.github.eslamasabry.oc.ui.words.res.chatConnectingToAgent
 import io.github.eslamasabry.oc.ui.words.res.chatUiOpenCodeIsReconnectingTryAgainShortly
 import io.github.eslamasabry.oc.ui.words.res.chatUiPromptNotAnswered
 import io.github.eslamasabry.oc.ui.words.res.chatUiTheMessageAndAllOfItsParts
@@ -777,7 +779,15 @@ public fun ChatScreen(
                                 // An unconfirmed send is said once, on its own bubble with Check again.
                                 state.status
                                     ?.takeUnless { it.kind == ChatStatusKind.SendUnconfirmed }
-                                    ?.let { statusLine(it, actions, header?.state?.serverName, ::openConnectionDetails) },
+                                    ?.let {
+                                        statusLine(
+                                            it,
+                                            actions,
+                                            header?.state?.serverName,
+                                            ::openConnectionDetails,
+                                            agentName = header?.state?.takeIf { h -> h.agentKnown }?.agentName,
+                                        )
+                                    },
                                 appStatus,
                             )
                         )
@@ -1048,7 +1058,10 @@ public fun ChatScreen(
                     },
                     edges = KitScreenEdges.Bleed,
                 ) {
-                    when (val phase = state.phase) {
+                    // Before and after: the placeholder crosses over to the page with the kit's short swap, never a pop; the
+                    // header, the box and the scroll place are outside it and stay put. Motion off: instant.
+                    KitSwap(state.phase, Modifier.fillMaxSize()) { phase ->
+                    when (phase) {
                         // First load: the skeleton under the loading line, never an empty-state
                         // text
                         // (plan 09 §6.5).
@@ -1190,6 +1203,7 @@ public fun ChatScreen(
                                         )
                                     }
                             }
+                    }
                     }
                     // The edge dock: over the transcript, clear of the header and the composer. Beside the
                     // transcript's recording, not in it: under Glass it bends that recording (never itself).
@@ -1519,6 +1533,7 @@ private fun connectionLine(
     actions: ChatActions,
     serverName: String?,
     onDetails: () -> Unit,
+    agentName: String? = null,
 ): KitStatus {
     val offline = line.kind == ChatStatusKind.Offline
     val seconds = line.retryInSeconds
@@ -1563,19 +1578,22 @@ private fun connectionLine(
     // and offers no Try again (Details and Change server stay one tap away).
     val wait = line.serverWait
     if (wait != null) {
+        // A wait that ends by itself looks alive: the kit's working mark, and the agent's name when it is known.
+        val signIn = wait == io.github.eslamasabry.oc.feature.chat.world.ChatServerWait.AgentNeedsSignIn
         return KitStatus(
             KitStatusKind.Connection,
-            stringResource(
-                when (wait) {
-                    io.github.eslamasabry.oc.feature.chat.world.ChatServerWait.Updating -> Res.string.connectUpdatingPhone
-                    io.github.eslamasabry.oc.feature.chat.world.ChatServerWait.UpdatingAgents -> Res.string.connectUpdatingAgents
-                    io.github.eslamasabry.oc.feature.chat.world.ChatServerWait.AgentNeedsSignIn -> Res.string.connectAgentNeedsSignIn
-                    io.github.eslamasabry.oc.feature.chat.world.ChatServerWait.Starting -> Res.string.connectStartingPhone
-                    io.github.eslamasabry.oc.feature.chat.world.ChatServerWait.Connecting -> Res.string.launchUiSessionWaiting
-                }
-            ),
+            when (wait) {
+                io.github.eslamasabry.oc.feature.chat.world.ChatServerWait.Updating -> stringResource(Res.string.connectUpdatingPhone)
+                io.github.eslamasabry.oc.feature.chat.world.ChatServerWait.UpdatingAgents -> stringResource(Res.string.connectUpdatingAgents)
+                io.github.eslamasabry.oc.feature.chat.world.ChatServerWait.AgentNeedsSignIn -> stringResource(Res.string.connectAgentNeedsSignIn)
+                io.github.eslamasabry.oc.feature.chat.world.ChatServerWait.Starting -> stringResource(Res.string.connectStartingPhone)
+                io.github.eslamasabry.oc.feature.chat.world.ChatServerWait.Connecting ->
+                    if (agentName != null) stringResource(Res.string.chatConnectingToAgent, agentName)
+                    else stringResource(Res.string.launchUiSessionWaiting)
+            },
             id = "chat-status-${line.id}",
             more = listOf(details, changeServer),
+            working = !signIn,
         )
     }
     // The phone agents' helper: starting says so; a failed start says why in plain words with the action again.
@@ -1585,6 +1603,7 @@ private fun connectionLine(
             stringResource(Res.string.connectionAgentStarting),
             id = "chat-status-${line.id}",
             more = listOf(details, changeServer),
+            working = true,
         )
     val restartAgent =
         if (line.canRestartAgent)
@@ -1661,10 +1680,11 @@ private fun statusLine(
     actions: ChatActions,
     serverName: String? = null,
     onDetails: () -> Unit = {},
+    agentName: String? = null,
 ): KitStatus =
     when (line.kind) {
         ChatStatusKind.Offline,
-        ChatStatusKind.Connecting -> connectionLine(line, actions, serverName, onDetails)
+        ChatStatusKind.Connecting -> connectionLine(line, actions, serverName, onDetails, agentName)
         ChatStatusKind.SendFailed ->
             KitStatus(
                 KitStatusKind.Info,

@@ -49,6 +49,7 @@ import io.github.eslamasabry.oc.ui.kit.KitButton
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.action.KitIconButton
+import io.github.eslamasabry.oc.ui.kit.action.KitWorkingMark
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.foundation.KitGlyph
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
@@ -110,6 +111,7 @@ public fun KitStatusLine(status: KitStatus, modifier: Modifier = Modifier) {
         supporting = status.supporting,
         next = status.next,
         riskySwitch = status.kind == KitStatusKind.RiskySwitch,
+        working = status.working,
     )
 }
 
@@ -148,6 +150,7 @@ public fun KitStatusLine(
     countdownLine: ((Duration) -> String)? = null,
     onOpen: (() -> Unit)? = null,
     riskySwitch: Boolean = false,
+    working: Boolean = false,
 ) {
     kitAssert(!riskySwitch || onDismiss == null) { "KitStatusLine: a risky switch is never dismissible (SEC-9)" }
     kitAssert(onSlow.size <= 2) { "KitStatusLine.onSlow offers at most two ways out" } // F: lib/ui/kit/kit_status_line.dart:339
@@ -163,6 +166,7 @@ public fun KitStatusLine(
         moreLabel = stringResource(Res.string.kitMore),
         semanticsLabel = semanticsLabel,
         onOpen = onOpen,
+        working = working,
     )
     if (quiet) {
         KitEntrance(modifier, key = tone to glyph) {
@@ -212,6 +216,7 @@ private class StatusLineParts(
     val moreLabel: String,
     val semanticsLabel: String?,
     val onOpen: (() -> Unit)?,
+    val working: Boolean = false,
 )
 
 /** The quiet line's words: the message, then the countdown when there is one. */
@@ -339,7 +344,9 @@ private fun FullLine(
         Box(
             if (stacked) Modifier.padding(top = Space.S2.dp).height(bodyLine) else Modifier,
             contentAlignment = Alignment.Center,
-        ) { StatusIcon(line.icon, line.tone) }
+        ) {
+            if (line.working) StatusWorking(line.tone) else StatusIcon(line.icon, line.tone)
+        }
         Spacer(Modifier.width(Space.S3.dp))
         Column(Modifier.weight(1f).padding(vertical = Space.S2.dp)) {
             // On one line the glyph centres on the whole block of words (Flutter's centred row), so the block is read
@@ -403,6 +410,13 @@ private fun FullLine(
 @Composable
 private fun StatusIcon(icon: ImageVector, tone: StatusTone) {
     KitIcon(icon, size = KitIconSize.Small, tone = toneFor(tone), growsWithText = true)
+}
+
+/** A wait that ends by itself: the kit's working mark in the glyph's place and tone, still when loops are not allowed. */
+@Composable
+private fun StatusWorking(tone: StatusTone) {
+    val tokens = LocalKitTokens.current
+    KitWorkingMark(glyphColor(tone, LocalKitColors.current), size = tokens.smallIcon.dp, modifier = Modifier.testTag("kit-status-working"))
 }
 
 /** The line's action as a tertiary button (Dart `KitButton.fromAction(action, role: tertiary)`). */
