@@ -77,7 +77,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
+import io.github.eslamasabry.oc.feature.phone.presentation.PhoneServerState
+import io.github.eslamasabry.oc.feature.phone.presentation.StoppedBy
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
@@ -144,6 +147,17 @@ class AndroidNewConversationHost(
 
     override suspend fun startPhoneServer(profile: ProfileId): Outcome<Unit> =
         phoneServer.start(profile)
+
+    // first-read-ready: This phone's own server state, from the facts Home already watches (no poll).
+    override fun serverState(profile: ProfileId): StateFlow<NewConversationServerState> =
+        if (phoneServer.runsHere(profile)) phoneServerState else NOT_PHONE_SERVER
+
+    private val phoneServerState: StateFlow<NewConversationServerState> by lazy {
+        phone.serverFacts
+            .map { newConversationServerStateOf(PhoneServerState.of(it)) }
+            .distinctUntilChanged()
+            .stateIn(appScope, SharingStarted.Eagerly, newConversationServerStateOf(PhoneServerState.of(phone.serverFacts.value)))
+    }
 
     // "Check <agent> again": the Agents page's own read, so both pages show the same answer.
     override suspend fun checkPhoneAgents() {
@@ -1779,3 +1793,19 @@ internal object NewConversationPhoneRules {
 }
 
 private const val PHONE_STORAGE_FOLDER = "/storage/emulated/0"
+
+private val NOT_PHONE_SERVER: StateFlow<NewConversationServerState> =
+    kotlinx.coroutines.flow.MutableStateFlow(NewConversationServerState.NotPhone)
+
+/** Settled or failing states are said as they are; everything on the way up (checking, restoring, restarting) is "starting"; a stop is the person's or the system's. */
+internal fun newConversationServerStateOf(state: PhoneServerState): NewConversationServerState =
+    when (state) {
+        PhoneServerState.Running -> NewConversationServerState.Up
+        PhoneServerState.NotInstalled,
+        PhoneServerState.InstallFailed,
+        is PhoneServerState.GaveUp -> NewConversationServerState.Failed
+        is PhoneServerState.Stopped ->
+            if (state.by == StoppedBy.Person) NewConversationServerState.StoppedByPerson
+            else NewConversationServerState.Stopped
+        else -> NewConversationServerState.Starting
+    }
