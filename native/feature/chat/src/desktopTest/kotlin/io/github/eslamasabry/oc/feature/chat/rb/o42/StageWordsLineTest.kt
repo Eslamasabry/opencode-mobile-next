@@ -51,10 +51,6 @@ class StageWordsLineTest {
         words(ChatServerWait.OpeningConversation, "Antigravity", "Opening the conversation…")
 
     @Test
-    fun `SW-10 guard an agent stage with no known agent name keeps the generic words`() =
-        words(
-            ChatServerWait.StartingAgent,
-            null,
-            "Connecting to the saved server. The conversation opens when it is ready.",
-        )
+    fun `SW-10 guard a wait with no stage keeps the generic words`() =
+        words(ChatServerWait.Connecting, "Antigravity", "Connecting to Antigravity…")
 }
