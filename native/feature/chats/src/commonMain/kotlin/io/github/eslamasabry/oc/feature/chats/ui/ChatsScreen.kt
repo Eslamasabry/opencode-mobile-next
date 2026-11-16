@@ -111,6 +111,10 @@ import io.github.eslamasabry.oc.feature.chats.presentation.HomePreviewRules
 import androidx.compose.runtime.key
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeRightNow
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeRecent
+import io.github.eslamasabry.oc.ui.words.res.stageStartingAgents
+import io.github.eslamasabry.oc.ui.words.res.stageStartingHelper
+import io.github.eslamasabry.oc.ui.words.res.stageStartingLinux
+import io.github.eslamasabry.oc.ui.words.res.stageStartingOpenCode
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeAsksOther
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeAsksToEdit
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeAsksToRead
@@ -528,6 +532,7 @@ public fun ChatsScreen(
                                     label = stringResource(Res.string.chatsHomeRecent),
                                     gapBefore = if (above || rightNow.isNotEmpty()) sectionGap else Space.S4.dp,
                                     prominentDividers = true,
+                                    labelStatus = state.home.stage?.let { stringResource(homeStageWords(it)) },
                                 ) {
                                     recent.forEach { row -> key(row.key) { ConversationRow(row, rowWords, rowFlags(row, state), mask, actions) } }
                                 }
@@ -1276,3 +1281,12 @@ public fun ChatPreviewScreen(state: ChatPreviewUi, actions: ChatPreviewActions) 
         }
     }
 }
+
+/** The words for the stage home names at the end of the "Recent" line. */
+internal fun homeStageWords(stage: io.github.eslamasabry.oc.feature.chats.presentation.HomeStage): org.jetbrains.compose.resources.StringResource =
+    when (stage) {
+        io.github.eslamasabry.oc.feature.chats.presentation.HomeStage.Linux -> Res.string.stageStartingLinux
+        io.github.eslamasabry.oc.feature.chats.presentation.HomeStage.OpenCode -> Res.string.stageStartingOpenCode
+        io.github.eslamasabry.oc.feature.chats.presentation.HomeStage.Helper -> Res.string.stageStartingHelper
+        io.github.eslamasabry.oc.feature.chats.presentation.HomeStage.Agents -> Res.string.stageStartingAgents
+    }

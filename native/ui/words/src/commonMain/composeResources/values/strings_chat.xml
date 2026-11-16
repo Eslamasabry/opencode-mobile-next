@@ -592,6 +592,12 @@
     <string name="chatStartServerFolder">Server folder</string>
     <string name="chatStartTip">Type / for commands · long-press a message for its actions</string>
     <string name="chatConnectingToAgent">Connecting to %1$s…</string>
+    <string name="stageStartingLinux">Starting Linux…</string>
+    <string name="stageStartingOpenCode">Starting OpenCode…</string>
+    <string name="stageStartingHelper">Starting the agents’ helper…</string>
+    <string name="stageStartingAgents">Starting agents…</string>
+    <string name="stageStartingAgent">Starting %1$s…</string>
+    <string name="stageOpeningConversation">Opening the conversation…</string>
     <string name="chatLoadingConversation">Loading the conversation</string>
     <string name="chatLoadFailedBody">Nothing is lost. Try again when OpenCode answers.</string>
     <string name="chatLoadFailedAgentBody">Nothing is lost. Try again when %1$s answers.</string>

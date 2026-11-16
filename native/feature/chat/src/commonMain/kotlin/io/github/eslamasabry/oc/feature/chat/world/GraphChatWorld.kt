@@ -68,6 +68,7 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import io.github.eslamasabry.oc.core.common.holdStages
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -819,9 +820,10 @@ internal class GraphChatWorld(
                 }
             }
         val phoneWaits = phoneServer?.waiting(ref.profileId) ?: MutableStateFlow(PhoneServerWait.None)
+        val stages = phoneServer?.stage(ref.profileId) ?: NoStage
         val waits =
             registry.appScope.launch(registry.mainContext) {
-                combine(phoneWaits, mutableLink, loadWaiting) { phone, link, waiting ->
+                combine(phoneWaits, mutableLink, loadWaiting, stages) { phone, link, waiting, stage ->
                         // The server's own state speaks while the page waits for it, or while its link is down (the
                         // update stops the server under an open conversation too).
                         val down = waiting || link != ChatLink.Live
@@ -831,11 +833,17 @@ internal class GraphChatWorld(
                             // Only while the page waits: once its wait is spent the helper is what did not answer,
                             // and the line says so with its Restart (a sign-in never keeps the helper down).
                             waiting && phone == PhoneServerWait.AgentNeedsSignIn -> ChatServerWait.AgentNeedsSignIn
+                            // The real current stage of the start, when the app's signals name one.
+                            down && stage != null -> stageWait(stage)
                             down && phone == PhoneServerWait.Starting -> ChatServerWait.Starting
+                            // The server is up and the conversation itself is being read.
+                            waiting && link == ChatLink.Live && appStartsServer -> ChatServerWait.OpeningConversation
                             waiting -> ChatServerWait.Connecting
                             else -> null
                         }
                     }
+                    // Each stage holds a moment before the next shows; the page opening ends the line at once.
+                    .holdStages { it.isStage }
                     .collect { mutableServerWait.value = it }
             }
         stopWatching = {
@@ -843,6 +851,15 @@ internal class GraphChatWorld(
             waits.cancel()
         }
     }
+
+    private fun stageWait(stage: LaunchStage): ChatServerWait =
+        when (stage) {
+            LaunchStage.Linux -> ChatServerWait.StartingLinux
+            LaunchStage.OpenCode -> ChatServerWait.StartingOpenCode
+            LaunchStage.Helper -> ChatServerWait.StartingHelper
+            LaunchStage.Agent -> ChatServerWait.StartingAgent
+            LaunchStage.Conversation -> ChatServerWait.OpeningConversation
+        }
 
     /**
      * The app itself starts this conversation's server: This phone's OpenCode or its agents' helper (the Claude Code

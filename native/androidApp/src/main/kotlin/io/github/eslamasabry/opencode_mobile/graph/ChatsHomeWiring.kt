@@ -46,6 +46,8 @@ import io.github.eslamasabry.oc.feature.chats.presentation.ChatsOpeningPhase
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsOpeningUi
 import io.github.eslamasabry.oc.feature.chats.presentation.PhoneStopWatch
 import io.github.eslamasabry.oc.feature.chats.presentation.NoChatsHomeExtras
+import io.github.eslamasabry.oc.feature.chat.world.LaunchStage
+import io.github.eslamasabry.oc.feature.chats.presentation.HomeStage
 import io.github.eslamasabry.oc.feature.chats.presentation.OpeningRules
 import io.github.eslamasabry.oc.feature.chats.presentation.PhoneStartWatch
 import kotlin.time.Clock
@@ -92,6 +94,8 @@ class AppChatsHome(
     /** The automatic agent update: while it installs, the agents' source says "Updating …" (no silent minutes). */
     private val agentUpdate: PhoneAgentUpdateStatus,
     private val sharedStorage: Set<io.github.eslamasabry.oc.core.domain.platform.SharedStorageAccess>,
+    /** The one stage source: what this phone is really starting right now (home names it on the Recent line). */
+    private val stages: LaunchStages,
     appScope: AppCoroutineScope,
     dispatchers: AppDispatchers,
 ) : ChatsHomeExtras, HomeFeedCache {
@@ -126,6 +130,18 @@ class AppChatsHome(
                 .distinctUntilChanged()
                 .drop(1)
                 .collect { updating -> if (!updating) runtime.synchronizeListSources() }
+        }
+        // The stage home names changes with the real signals behind it: This phone's own start, and the start of each
+        // agents' helper that is saved.
+        scope.launch { stages.stageOfPhone().collect { publish() } }
+        scope.launch {
+            runtime.profiles.profiles
+                .map { all -> all.map { it.id }.filter(runtime::isPhoneHelper) }
+                .distinctUntilChanged()
+                .collectLatest { helpers ->
+                    if (helpers.isEmpty()) return@collectLatest
+                    combine(helpers.map(stages::stageOfHelper)) { Unit }.collect { publish() }
+                }
         }
         scope.launch {
             if (stores.warm() is Outcome.Failed) return@launch
@@ -225,9 +241,23 @@ class AppChatsHome(
             phoneWatch = null
             openingTries = null
         }
-        mutable.value = ChatsHomeExtraState(sources, opening, null, monitor.snapshot.value)
+        mutable.value = ChatsHomeExtraState(sources, opening, null, monitor.snapshot.value, stage = homeStage())
         if (opening != null && OpeningRules.worthAskingAgain(opening.phase, phoneWatch?.second)) keepTryingQuietly()
     }
+
+    /**
+     * The stage home names: This phone's own start first (Linux, then OpenCode), else the agents' helper's (helper,
+     * then the agents) when its conversations are shown in the list. Null when no signal names one.
+     */
+    private fun homeStage(): HomeStage? =
+        HomeStageRules.of(
+            phone = stages.stageOfPhone().value,
+            helpers =
+                runtime.profiles.profiles.value
+                    .map { it.id }
+                    .filter { runtime.isPhoneHelper(it) && runtime.listSourceShown(it) }
+                    .map { stages.stageOfHelper(it).value },
+        )
 
     /**
      * E05-S20: the readings of this phone's own server (the built-in Linux server the app launches) while home waits
@@ -592,4 +622,20 @@ internal object HomeAgentNoticeRules {
                     .toImmutableList(),
         )
     }
+}
+
+/** Which stage home names, from the stage source's readings (pure, so it is tested without the app graph). */
+internal object HomeStageRules {
+    fun of(phone: LaunchStage?, helpers: List<LaunchStage?>): HomeStage? =
+        home(phone) ?: helpers.firstNotNullOfOrNull(::home)
+
+    private fun home(stage: LaunchStage?): HomeStage? =
+        when (stage) {
+            LaunchStage.Linux -> HomeStage.Linux
+            LaunchStage.OpenCode -> HomeStage.OpenCode
+            LaunchStage.Helper -> HomeStage.Helper
+            LaunchStage.Agent -> HomeStage.Agents
+            // The conversation's own read is the chat page's stage, not home's.
+            LaunchStage.Conversation, null -> null
+        }
 }

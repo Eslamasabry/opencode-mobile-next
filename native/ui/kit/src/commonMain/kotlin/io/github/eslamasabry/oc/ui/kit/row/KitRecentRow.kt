@@ -1,6 +1,12 @@
 package io.github.eslamasabry.oc.ui.kit.row
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.MutableTransitionState
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.widthIn
@@ -18,6 +24,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import io.github.eslamasabry.oc.ui.kit.action.KitWorkingMark
 import androidx.compose.ui.Alignment
@@ -27,7 +34,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -38,6 +47,7 @@ import io.github.eslamasabry.oc.ui.design.style.SurfaceRole
 import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel
+import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.foundation.KitGlyph
@@ -366,6 +376,12 @@ public fun KitRowPanel(
     gapBefore: Dp? = null,
     /** A line of at least 1 dp between rows (B-173, Flutter #129): the home list on dark screens. */
     prominentDividers: Boolean = false,
+    /**
+     * Quiet words at the end of the label's line that say what is happening for this group right now ("Starting
+     * Linux…"); null when nothing is. They fade in and out; the label and the rows never move. A screen reader hears
+     * them once when they change.
+     */
+    labelStatus: String? = null,
     rows: @Composable () -> Unit,
 ) {
     val tokens = LocalKitTokens.current
@@ -375,7 +391,7 @@ public fun KitRowPanel(
         if (KitMotion.state.reduced) Modifier
         else Modifier.animateContentSize(KitMotion.specs.pace(KitPace.Standard))
     Column(modifier.fillMaxWidth().kitMaxWidth(CapRole.List).testTag("kit-row-panel")) {
-        label?.let { KitSectionLabel(it, gapBefore = gapBefore) }
+        label?.let { KitSectionLabel(it, gapBefore = gapBefore, trailing = kitLabelStatus(labelStatus)) }
         Box(
             Modifier.fillMaxWidth()
                 .padding(horizontal = tokens.gutter.dp)
@@ -390,6 +406,36 @@ public fun KitRowPanel(
                 val endInset = tokens.gutter * LocalKitStyle.current.spec.tokens.dividerEndGutters
                 KitHairlineColumn(inset.dp, endInset.dp, colors.hairline, if (prominentDividers) kitProminentRule() else null, rows)
             }
+        }
+    }
+}
+
+/**
+ * [KitRowPanel]'s status words: null until the first words arrive (a panel that never has any keeps its plain label);
+ * after that the last words stay while they fade out.
+ */
+@Composable
+private fun kitLabelStatus(status: String?): (@Composable () -> Unit)? {
+    val held = remember { mutableStateOf<String?>(null) }
+    if (status != null && held.value != status) held.value = status
+    val words = held.value ?: return null
+    val visible = remember { MutableTransitionState(false) }
+    visible.targetState = status != null
+    val reduced = KitMotion.state.reduced
+    val specs = KitMotion.specs
+    return {
+        AnimatedVisibility(
+            visibleState = visible,
+            enter = if (reduced) EnterTransition.None else fadeIn(specs.enter()),
+            exit = if (reduced) ExitTransition.None else fadeOut(specs.exit()),
+        ) {
+            KitText(
+                words,
+                Modifier.testTag("kit-row-panel-status").semantics { liveRegion = LiveRegionMode.Polite },
+                role = TypeRole.Label,
+                tone = TextTone.Secondary,
+                maxLines = 1,
+            )
         }
     }
 }
