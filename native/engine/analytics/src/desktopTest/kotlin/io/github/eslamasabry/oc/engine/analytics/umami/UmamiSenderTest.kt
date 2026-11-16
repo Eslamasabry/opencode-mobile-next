@@ -13,6 +13,7 @@ import java.util.concurrent.Executor
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -125,9 +126,11 @@ class UmamiSenderTest {
             val wire = UmamiCodec.json.parseToJsonElement(UmamiCodec.batch(listOf(event))).jsonArray.single().jsonObject
             assertEquals(setOf("type", "payload"), wire.keys, name)
             val payload = wire.getValue("payload").jsonObject
-            val expected = setOf("website", "hostname", "language", "screen", "url", "title", "tag", "timestamp", "data") +
+            val expected = setOf("website", "hostname", "language", "screen", "url", "title", "tag", "timestamp", "data", "salt") +
                 if (name == "screen_view") emptySet() else setOf("name")
             assertEquals(expected, payload.keys, name)
+            // Umami rotates the anonymous visitor hash on this word (v3.5.0 request-schema.ts `salt`, crypto.ts getSalt).
+            assertEquals("month", payload.getValue("salt").jsonPrimitive.content, "$name pins the monthly hash period")
             assertEquals(fields.keys + setOf("version", "build"), payload.getValue("data").jsonObject.keys, name)
             assertEquals(name.takeUnless { it == "screen_view" }, event.payload.name, name)
             val page = if (name == "screen_view" || name == "jank") umamiPages.getValue(props.getValue("screen")) else umamiPages.getValue("chat")

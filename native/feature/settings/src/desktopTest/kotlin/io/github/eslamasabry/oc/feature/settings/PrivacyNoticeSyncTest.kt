@@ -254,6 +254,44 @@ class PrivacyNoticeSyncTest {
         assertTrue("Railway" in recipientViolations("Google and Umami"), "omitting the host must fail")
     }
 
+    /** The phrase each offered language uses for "every month", and the words that would say a day instead. */
+    private val monthly = mapOf(
+        "en" to ("every month" to Regex("(?i)daily|every day|each day")),
+        "ar" to ("كل شهر" to Regex("يومي|كل يوم")),
+        "es" to ("cada mes" to Regex("(?i)diari[oa]|cada día")),
+        "fr" to ("chaque mois" to Regex("(?i)quotidien|journalier|chaque jour")),
+        "id" to ("setiap bulan" to Regex("(?i)harian|setiap hari")),
+        "ja" to ("毎月" to Regex("毎日|日ごと")),
+        "pt" to ("cada mês" to Regex("(?i)diári[oa]|cada dia")),
+        "ru" to ("каждый месяц" to Regex("(?i)ежедневн|каждый день|суточн")),
+        "vi" to ("mỗi tháng" to Regex("(?i)hằng ngày|hàng ngày|mỗi ngày")),
+        "zh" to ("每月" to Regex("每日|每天")),
+    )
+
+    @Test
+    fun `B-SEC-210 every offered language says the anonymous visitor hash changes every month and never daily`() {
+        val resources = File(repo, "native/ui/words/src/commonMain/composeResources")
+        val offered = AppLanguage.entries.mapNotNull { it.tag }
+        assertEquals(monthly.keys, offered.toSet(), "every offered language has its month phrase in this guard")
+        for (tag in offered) {
+            val (month, day) = monthly.getValue(tag)
+            val locale = File(resources, if (tag == "en") "values" else "values-$tag")
+            val detail = File(locale, "strings_s28_privacy.xml").readText()
+            val policy = File(locale, "strings_native_privacy.xml").readText()
+            fun text(source: String, key: String) =
+                Regex("""<string name="$key">(.*?)</string>""", RegexOption.DOT_MATCHES_ALL).find(source)!!.groupValues[1]
+            for ((source, key) in listOf(detail to "nativeTelemetryUsageDetail", detail to "collectRules", policy to "nativeBundledPrivacy")) {
+                val words = text(source, key)
+                assertTrue(month in words, "${locale.name}: $key says the visitor hash changes \"$month\"")
+                assertTrue(day.find(words) == null, "${locale.name}: $key must not say the hash changes by the day")
+            }
+            assertTrue(day.find(text(detail, "nativeTelemetryConsentBody")) == null, "${locale.name}: consent sentence")
+        }
+        val md = File(repo, "PRIVACY.md").readText()
+        assertTrue("changes every month" in md, "PRIVACY.md says the hash changes every month")
+        assertTrue(Regex("(?i)daily visitor|daily hash").find(md) == null, "PRIVACY.md must not say daily")
+    }
+
     @Test
     fun `B-SEC-207 the new sender adds only documented build metadata to every event`() {
         for ((name, fields) in productSchema) {
