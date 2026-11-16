@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="agentsTileStepLinux">Preparazione di Linux…</string>
+    <string name="agentsTileStepRuntime">Installazione di Node.js…</string>
+    <string name="agentsTileStepHelper">Installazione dell'helper degli agenti…</string>
+    <string name="agentsTileStillWorking">Ancora al lavoro · %1$s</string>
+    <string name="agentsTileFailedSpace">Non installato: spazio insufficiente</string>
+    <string name="agentsTileFailedDownload">Non installato: download non riuscito</string>
+    <string name="agentsTileFailedStopped">Non installato: configurazione interrotta</string>
+    <string name="agentsTileFailedOther">Non installato: configurazione non riuscita</string>
+    <string name="agentsInstallNeedsSpace">%1$s richiede circa %2$s di spazio libero per l'installazione, e questo telefono ne ha %3$s liberi. Libera spazio, poi installalo.</string>
+    <string name="agentsInstallSpaceFits">Richiede circa %1$s di spazio libero; questo telefono ne ha %2$s liberi.</string>
+</resources>

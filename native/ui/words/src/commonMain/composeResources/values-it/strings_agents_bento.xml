@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="agentsTileInstalling">Installazione…</string>
+    <string name="agentsHelperNotConnected">Gli agenti del telefono non sono connessi.</string>
+    <string name="agentsHelperNotStarted">Gli agenti del telefono non sono connessi: l'helper degli agenti non è stato avviato.</string>
+    <string name="agentsHelperNoAnswer">Gli agenti del telefono non sono connessi: l'helper degli agenti non ha risposto.</string>
+    <string name="agentsHelperKeyRefused">Gli agenti del telefono non sono connessi: l'helper degli agenti non ha accettato la chiave di questa app.</string>
+    <string name="agentsHelperKeyUnreadable">Gli agenti del telefono non sono connessi: questo telefono non è riuscito a leggere la chiave dell'helper degli agenti.</string>
+    <string name="agentsHelperNoLinux">Gli agenti del telefono non sono connessi: il Linux integrato di questo telefono non è configurato.</string>
+    <string name="agentsHelperUpdateRequired">Gli agenti del telefono non sono connessi: l'helper degli agenti manca o è troppo vecchio per funzionare.</string>
+    <string name="agentsHelperUpdateAction">Aggiorna l'helper degli agenti</string>
+    <string name="agentsInstallFailedDownload">Impossibile installare %1$s: il download non è stato completato. Controlla la connessione e riprova.</string>
+    <string name="agentsInstallFailedChecksum">Impossibile installare %1$s: il download non è il file atteso dall'app, quindi è stato scartato. Riprova.</string>
+    <string name="agentsInstallFailedStorage">Impossibile installare %1$s: questo telefono ha poco spazio. Libera spazio, poi riprova.</string>
+    <string name="agentsInstallFailedVersion">Impossibile installare %1$s: la versione arrivata non è quella attesa dall'app. Riprova.</string>
+    <string name="agentsInstallFailedVersionOther">Impossibile installare %1$s: il download indica la versione %2$s, e questa app funziona con %3$s. Riprovare non risolve il problema; un aggiornamento di questa app sì.</string>
+    <string name="agentsInstallFailedWithdrawn">Impossibile installare %1$s: la versione %2$s, quella che installa questa app, non è più disponibile per il download. Riprovare non risolve il problema; un aggiornamento di questa app sì.</string>
+    <string name="agentsInstallFailedNotStarted">%1$s è stato scaricato ma non è partito su questo telefono, quindi la sua versione non è stata verificata. Riprova; se si ripresenta, in Dettagli trovi cosa ha riportato il telefono.</string>
+    <string name="agentsInstallFailedUnknown">Impossibile installare %1$s. Riprova; in Dettagli trovi cosa ha riportato il telefono.</string>
+    <string name="agentsInstallInterruptedNow">L'installazione di %1$s è stata interrotta prima del termine. Riprova per continuare.</string>
+    <string name="agentsTabsLabel">Dove girano gli agenti</string>
+    <string name="agentsTabComputers">Su computer</string>
+    <string name="agentsPhoneReady">Questo telefono è pronto</string>
+    <string name="agentsPhoneReadyDetails">Questo telefono è pronto · %1$s · Android %2$s</string>
+    <string name="agentsCheckAgain">Aggiorna</string>
+    <string name="agentsAddComputerLine">Usa Claude Code o Pi su un computer che esegue Paseo.</string>
+    <string name="agentsComputerLooking">Ricerca agenti su questo computer…</string>
+    <string name="agentsComputerReadFailed">Impossibile leggere gli agenti di questo computer. Trascina verso il basso per riprovare.</string>
+    <string name="agentsNewChat">Nuova conversazione</string>
+    <string name="agentsNewChatWith">Nuova conversazione con %1$s</string>
+    <string name="agentsConversationsStored">Copia una conversazione per un altro agente</string>
+    <string name="agentsConversationsStoredOn">Copia una conversazione da %1$s</string>
+    <string name="agentsHostAccount">Account host: %1$s</string>
+    <string name="agentsStateSignInUnchecked">Installato, ma questa app non può ancora verificarne l'accesso</string>
+    <string name="agentsStateSignInCheckFailed">Impossibile verificare l'accesso. Prova ad accedere di nuovo.</string>
+    <string name="agentsSignInUncheckedBody">Non può ancora essere usato per le conversazioni. Puoi rimuoverlo.</string>
+    <string name="agentsStateSetUpAtFirstUse">Installato. Configuralo al primo utilizzo.</string>
+    <string name="agentsChipSetUp">Configura</string>
+    <string name="agentsSetUpAction">Configura %1$s</string>
+    <string name="agentsSetUpTypeAuth">Digita /auth e segui i passaggi.</string>
+</resources>
