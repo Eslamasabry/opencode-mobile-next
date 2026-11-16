@@ -77,7 +77,13 @@ class LiveConversationServers(
     agentUpdate: PhoneAgentUpdateStatus,
 ) : ConversationServers {
     override fun prefetch(ref: io.github.eslamasabry.oc.core.common.ids.ConversationRef) {
-        registry.graphFor(ref)?.session?.reads?.prefetch(ref.sessionId)
+        val session = registry.graphFor(ref)?.session ?: return
+        // signin-truth-2 (Galaxy, build 10055): a pressed row is about to open, so its history may be read in full
+        // (issue 147, HistoryOpenGateway), as the home's prefetch says. Without it the phone agents' helper read an
+        // idle conversation as "not opened" and answered an empty page, which the opening chat then took as its whole
+        // history: Claude Code's "Hi" and "Reply with OK" opened empty from All conversations and Projects.
+        session.server.facet<io.github.eslamasabry.oc.core.domain.HistoryOpenGateway>()?.historyOpened(ref.sessionId)
+        session.reads.prefetch(ref.sessionId)
     }
 
     override fun forget(ref: io.github.eslamasabry.oc.core.common.ids.ConversationRef) {
