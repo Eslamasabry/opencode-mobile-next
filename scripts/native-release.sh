@@ -85,7 +85,7 @@ CURRENT="$(prop versionCode)"
 [[ "$NAME" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || fail "versionName '$NAME' is not a plain X.Y.Z (a release has no suffix)."
 if [[ "$LINEAGE" == public ]]; then
   published="$({
-    git tag -l "v$NAME+*"
+    git for-each-ref --format='%(refname:short)' "refs/tags/v$NAME+*"
     git ls-remote --tags "$REMOTE" "refs/tags/v$NAME+*" 2>/dev/null | sed -n 's#^.*refs/tags/##p; s#\^{}$##'
   } | { grep -v -e '-test' || true; } | sort -u | head -n 1)"
   [[ -z "$published" ]] ||
