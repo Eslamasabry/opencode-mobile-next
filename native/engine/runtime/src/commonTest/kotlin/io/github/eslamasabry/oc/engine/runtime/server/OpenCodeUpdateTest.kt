@@ -258,7 +258,7 @@ class OpenCodeUpdateTest {
     }
 
     @Test
-    fun `DOWNLOAD-CONSENT metered and behind: the updater says it waits and downloads nothing`() = runTest {
+    fun `DOWNLOAD-CONSENT metered and behind, the updater says it waits and downloads nothing`() = runTest {
         val jobs = Jobs()
         val updater = OpenCodeAutoUpdater(Host("2.1.1", pinned, metered = true), jobs) { false }
         assertFalse(updater.waitingForUnmetered.value)

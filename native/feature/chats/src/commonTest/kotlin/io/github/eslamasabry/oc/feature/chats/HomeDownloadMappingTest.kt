@@ -22,7 +22,7 @@ class HomeDownloadMappingTest {
     ) = HomeDownloadMapping.facts(waiting, running, failed, percent, helper, install, helperPercent)
 
     @Test
-    fun `DOWNLOAD-CONSENT metered and due shows the wait; nothing downloads and nothing is said when not due`() {
+    fun `DOWNLOAD-CONSENT metered and due shows the wait, nothing downloads and nothing is said when not due`() {
         assertEquals(
             listOf(HomeDownloadFact(HomeDownloadKind.OpenCode, HomeDownloadPhase.Waiting)),
             facts(waiting = true),
