@@ -111,6 +111,10 @@ import io.github.eslamasabry.oc.feature.chats.presentation.HomePreviewRules
 import androidx.compose.runtime.key
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeRightNow
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeRecent
+import io.github.eslamasabry.oc.ui.words.res.stageStartingAgents
+import io.github.eslamasabry.oc.ui.words.res.stageStartingHelper
+import io.github.eslamasabry.oc.ui.words.res.stageStartingLinux
+import io.github.eslamasabry.oc.ui.words.res.stageStartingOpenCode
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeAsksOther
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeAsksToEdit
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeAsksToRead
@@ -189,6 +193,7 @@ import io.github.eslamasabry.oc.ui.words.res.chats_back
 import io.github.eslamasabry.oc.ui.words.res.e7WorkspaceConnecting
 import io.github.eslamasabry.oc.ui.words.res.agentsStateUpdatingHelper
 import io.github.eslamasabry.oc.feature.chats.presentation.SourceStartRules
+import io.github.eslamasabry.oc.ui.words.res.chatsNewGettingReady
 import io.github.eslamasabry.oc.feature.chats.presentation.WaitingWord
 import io.github.eslamasabry.oc.ui.words.res.e7WorkspaceDaysAgo
 import io.github.eslamasabry.oc.ui.words.res.e7WorkspaceHoursAgo
@@ -527,6 +532,7 @@ public fun ChatsScreen(
                                     label = stringResource(Res.string.chatsHomeRecent),
                                     gapBefore = if (above || rightNow.isNotEmpty()) sectionGap else Space.S4.dp,
                                     prominentDividers = true,
+                                    labelStatus = state.home.stage?.let { stringResource(homeStageWords(it)) },
                                 ) {
                                     recent.forEach { row -> key(row.key) { ConversationRow(row, rowWords, rowFlags(row, state), mask, actions) } }
                                 }
@@ -825,9 +831,7 @@ private data class HomeRowWords(
     val done: String,
     val stopped: String,
     val interrupted: String,
-    /** B-333: a tapped row that waits for its server to open says so. */
-    val connecting: String,
-    /** B-333: ... or that its agents are being updated. */
+    /** B-333: a tapped row that waits while its agents are being updated says so. */
     val updating: String,
     /** B-333: ... or, when it did not connect in time, that it is not answering. */
     val notAnswering: String,
@@ -845,6 +849,8 @@ private data class HomeRowWords(
     val stop: String,
     /** "Working", or "Working 34m" once the run's start is known (B-161). */
     val runningFor: (Long?) -> String,
+    /** What a screen reader says for a row whose agent is getting ready (the eye sees the working mark alone). */
+    val gettingReady: String,
 )
 
 @Composable
@@ -857,7 +863,6 @@ private fun rememberHomeRowWords(): HomeRowWords =
         done = stringResource(Res.string.chatsHomeDone),
         stopped = stringResource(Res.string.chatsHomeStopped),
         interrupted = stringResource(Res.string.chatsHomeInterrupted),
-        connecting = stringResource(Res.string.e7WorkspaceConnecting),
         updating = stringResource(Res.string.agentsStateUpdatingHelper),
         notAnswering = stringResource(Res.string.phoneServerRowNotAnswering),
         archive = stringResource(Res.string.sessionMenuArchive),
@@ -873,6 +878,7 @@ private fun rememberHomeRowWords(): HomeRowWords =
         delete = stringResource(Res.string.sessionMenuDelete),
         stop = stringResource(Res.string.dockStop),
         runningFor = liveRunWords(),
+        gettingReady = stringResource(Res.string.chatsNewGettingReady),
     )
 
 /** What a row needs to know of the whole screen, and nothing else: equal for a row nothing happened to. */
@@ -902,7 +908,23 @@ private data class HomeRowFlags(
     val gaveUp: Boolean = false,
     /** The row's last run failed and its agent is signed out: the row says Sign in needed. */
     val signedOut: Boolean = false,
+    /**
+     * Its agent is getting ready (the app is starting the phone agents' helper, or its kept tap waits): the working
+     * mark alone in the time's place, no word (home-getting-ready, item 3).
+     */
+    val gettingReady: Boolean = false,
 )
+
+/**
+ * Whether [row]'s agent is getting ready: its source is the phone's agents and the app is starting their helper, or
+ * the row's own kept tap waits for its source. OpenCode rows keep their times while a server opens (the pill says
+ * that), and an agent update keeps its word.
+ */
+private fun rowGettingReady(row: ConversationRowUi, state: ChatsUi): Boolean =
+    SourceStartRules.rowGettingReady(
+        state.home.sources.firstOrNull { it.profile == row.ref.profileId }?.starting,
+        waiting = state.waitingOpen == row.ref,
+    )
 
 private fun rowFlags(row: ConversationRowUi, state: ChatsUi): HomeRowFlags =
     HomeRowFlags(
@@ -926,6 +948,7 @@ private fun rowFlags(row: ConversationRowUi, state: ChatsUi): HomeRowFlags =
         waitingWord =
             SourceStartRules.waitingWord(state.home.sources.firstOrNull { it.profile == row.ref.profileId }?.starting),
         gaveUp = state.keptGaveUp == row.ref,
+        gettingReady = rowGettingReady(row, state),
         signedOut =
             row.status == RowStatus.Failed &&
                 state.agentNotices.lines.any { it.kind == HomeAgentNoticeKind.SignedOut && it.agentName == row.agentName },
@@ -947,12 +970,20 @@ private fun ConversationRow(
 ) {
     val title = rowTitleText(row.title)
     val canArchive = flags.canArchive
+    // The working mark alone in the time's place (its word is for a screen reader only): the row's agent is getting
+    // ready, or its kept tap waits; never over a held answer, an agent update's word, Needs you or Working.
+    val markOnly =
+        flags.held == null && flags.heldQuestion == null && !flags.questionSending &&
+            !(flags.waiting && flags.waitingWord == WaitingWord.Updating) &&
+            (flags.waiting || (flags.gettingReady && row.status != RowStatus.NeedsYou && row.status != RowStatus.Running))
     val status =
         // While the person's answer is held ("Allowed · Undo" under the row) or a chosen answer to a question is held or
         // on its way, the state word must not say "Needs you".
         if (flags.held != null || flags.heldQuestion != null || flags.questionSending) null
-        // B-333: the tap is kept; the row says it waits for its server instead of looking dead.
-        else if (flags.waiting) (if (flags.waitingWord == WaitingWord.Updating) words.updating else words.connecting)
+        // B-333: the tap is kept; the row says it waits for its server instead of looking dead: an agent update says
+        // so, anything else getting ready is the working mark alone.
+        else if (flags.waiting && flags.waitingWord == WaitingWord.Updating) words.updating
+        else if (markOnly) words.gettingReady
         else if (flags.gaveUp) words.notAnswering
         // Issue 147: an old agent conversation opens and continues like any other, so its row reads like any other.
         else when (row.status) {
@@ -1051,7 +1082,7 @@ private fun ConversationRow(
                 preview = preview,
                 meta = meta,
                 project = project,
-                state = status?.let { KitRowState(it, tone) },
+                state = status?.let { KitRowState(it, tone, waiting = markOnly) },
                 pinned = flags.pinned,
                 growKey = row.ref,
                 onLongClick = if (row.canOpen || canArchive) ({ menuOpen = true }) else null,
@@ -1244,3 +1275,12 @@ public fun ChatPreviewScreen(state: ChatPreviewUi, actions: ChatPreviewActions) 
         }
     }
 }
+
+/** The words for the stage home names at the end of the "Recent" line. */
+internal fun homeStageWords(stage: io.github.eslamasabry.oc.feature.chats.presentation.HomeStage): org.jetbrains.compose.resources.StringResource =
+    when (stage) {
+        io.github.eslamasabry.oc.feature.chats.presentation.HomeStage.Linux -> Res.string.stageStartingLinux
+        io.github.eslamasabry.oc.feature.chats.presentation.HomeStage.OpenCode -> Res.string.stageStartingOpenCode
+        io.github.eslamasabry.oc.feature.chats.presentation.HomeStage.Helper -> Res.string.stageStartingHelper
+        io.github.eslamasabry.oc.feature.chats.presentation.HomeStage.Agents -> Res.string.stageStartingAgents
+    }
