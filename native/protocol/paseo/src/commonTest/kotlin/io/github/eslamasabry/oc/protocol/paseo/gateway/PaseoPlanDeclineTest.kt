@@ -76,7 +76,7 @@ class PaseoPlanDeclineTest {
     /** A request as Paseo forwards a Codex file patch or any tool the app has no card kind for: a name, no typed detail. */
     private fun genericPermission(id: String, name: String, detailType: String? = "unknown"): JsonObject =
         jsonOf(
-            "id" to id, "provider" to "codex", "name" to name, "kind" to "tool",
+            "id" to id, "provider" to "claude", "name" to name, "kind" to "tool",
             "input" to mapOf("path" to "$DIR/p2.txt", "content" to "hi"),
             "detail" to (if (detailType == null) emptyMap() else mapOf("type" to detailType, "input" to mapOf("path" to "$DIR/p2.txt"))),
             "metadata" to mapOf("toolUseId" to "toolu_$id"),
