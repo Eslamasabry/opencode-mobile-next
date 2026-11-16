@@ -17,6 +17,7 @@ import io.github.eslamasabry.oc.feature.chat.header.freemodel.FreeNoteStore
 import io.github.eslamasabry.oc.feature.chat.header.world.ChatHeaderPort
 import io.github.eslamasabry.oc.feature.chat.header.world.HeaderFacts
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatLauncher
+import io.github.eslamasabry.oc.feature.chat.world.ChatLoad
 import io.github.eslamasabry.oc.feature.chat.world.ChatWorld
 import io.github.eslamasabry.oc.feature.chat.world.ComposerModel
 import io.github.eslamasabry.oc.feature.chat.world.ComposerModels
@@ -135,7 +136,9 @@ public class ChatHeaderPresenter(
                 m ->
                 ServerSide(t, c, f, tr, m)
             }
-        return combine(serverSide, local, world.readOnly, world.parent, parentTitles) { s, l, _, parent, titles ->
+        // The load decides whether a missing title is unknown (still reading) or untitled.
+        val sides = combine(serverSide, world.load) { s, _ -> s }
+        return combine(sides, local, world.readOnly, world.parent, parentTitles) { s, l, _, parent, titles ->
                 present(s.title, s.caps, s.facts, s.transcript, s.models, l).withParent(parent, titles)
             }
             .stateIn(scope, started, current())
@@ -318,6 +321,10 @@ public class ChatHeaderPresenter(
                 if (caps.hostAgentProviders)
                     models.selected?.providerName?.takeIf(String::isNotBlank) ?: "OpenCode"
                 else "OpenCode",
+            agentKnown =
+                caps != ServerCapabilities.Unknown &&
+                    (!caps.hostAgentProviders || models.selected?.providerName?.isNotBlank() == true),
+            titleUnknown = title == null && world.load.value == ChatLoad.Loading,
             freeModelNote = false,
             freeModel =
                 l.freeFacts?.let { free ->

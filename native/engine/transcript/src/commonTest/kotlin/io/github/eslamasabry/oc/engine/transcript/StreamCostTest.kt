@@ -5,12 +5,20 @@ import io.github.eslamasabry.oc.engine.transcript.internal.StreamingChunk
 import io.github.eslamasabry.oc.engine.transcript.internal.TranscriptModel
 import io.github.eslamasabry.oc.engine.transcript.state.BlockRow
 import io.github.eslamasabry.oc.engine.transcript.state.GatewayEvent
+import io.github.eslamasabry.oc.engine.transcript.state.MessageInfo
+import io.github.eslamasabry.oc.engine.transcript.state.MessageWithParts
+import io.github.eslamasabry.oc.engine.transcript.state.NewestFirst
+import io.github.eslamasabry.oc.engine.transcript.state.Part
+import io.github.eslamasabry.oc.engine.transcript.state.PartType
+import io.github.eslamasabry.oc.engine.transcript.state.Role
 import io.github.eslamasabry.oc.engine.transcript.state.RowKind
 import io.github.eslamasabry.oc.engine.transcript.state.RunOutcome
+import io.github.eslamasabry.oc.engine.transcript.state.ToolStatus
 import io.github.eslamasabry.oc.engine.transcript.state.TranscriptState
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
 import kotlin.test.assertSame
 import kotlin.test.assertTrue
 
@@ -90,6 +98,114 @@ class StreamCostTest {
         }
         assertEquals(26, fence.size, fence.joinToString { "${it.key}:${it.text.lines().size}" })
         assertTrue(fence.all { it.text.lines().size <= StreamingChunk.LINES })
+    }
+
+    /**
+     * Issue 147: [turns] settled turns loaded as history before the reply streams. Each is a prompt and a finished reply
+     * with a thought, one step and its words, so grouping, the turn cache and Find's search text all have work in it.
+     */
+    private fun history(turns: Int): List<MessageWithParts> =
+        (0 until turns).flatMap { i ->
+            val u = "h$i"
+            val a = "h$i-a"
+            listOf(
+                MessageWithParts(
+                    MessageInfo(u, S, Role.User, createdMs = 2L * i),
+                    listOf(Part("$u-t", u, S, PartType.Text, text = "Question $i about the build", ended = true)),
+                ),
+                MessageWithParts(
+                    MessageInfo(a, S, Role.Assistant, createdMs = 2L * i + 1, completedMs = 2L * i + 1),
+                    listOf(
+                        Part("reasoning-0", a, S, PartType.Reasoning, text = "Thinking about step $i.\nThen checking it.", ended = true),
+                        Part(
+                            "tool-0",
+                            a,
+                            S,
+                            PartType.Tool,
+                            toolName = "read",
+                            toolStatus = ToolStatus.Completed,
+                            ended = true,
+                            searchText = "read src/File$i.kt",
+                        ),
+                        Part("text-0", a, S, PartType.Text, text = "Answer $i: the build passes.", ended = true),
+                    ),
+                ),
+            )
+        }
+
+    /** What each publish of the streamed reply cost, after [turns] settled turns were loaded. */
+    private class HistoryCost(
+        val visits: List<Long>,
+        val searchChars: List<Long>,
+        val rowWrites: List<Long>,
+        val states: List<TranscriptState>,
+    )
+
+    private fun streamAfter(turns: Int, keepStates: Boolean = false): HistoryCost {
+        val counters = TranscriptCounters()
+        val model = TranscriptModel(S, counters)
+        var revision = 0L
+        model.loadHistory(history(turns))
+        model.derive(++revision)
+        Reply6000.opening(turn = "live", step = "live-a").forEach { model.apply(it) }
+        model.derive(++revision)
+        val visits = ArrayList<Long>()
+        val chars = ArrayList<Long>()
+        val writes = ArrayList<Long>()
+        val states = ArrayList<TranscriptState>()
+        // The same reply as PB-11, one publish per three deltas (about one per 50 ms).
+        Reply6000.deltas(Reply6000.reply()).chunked(3).forEach { group ->
+            group.forEach { model.apply(Reply6000.delta(it, step = "live-a")) }
+            val v0 = counters.historyVisits
+            val c0 = counters.searchChars
+            val w0 = counters.rowWrites
+            val state = model.derive(++revision)
+            visits += counters.historyVisits - v0
+            chars += counters.searchChars - c0
+            writes += counters.rowWrites - w0
+            if (keepStates) states += state
+        }
+        return HistoryCost(visits, chars, writes, states)
+    }
+
+    @Test
+    fun `B-CHAT-096 PB-19 per-publish engine work does not grow with the settled turns loaded`() {
+        val runs = listOf(20, 200, 1_000).associateWith { streamAfter(it) }
+        val summary =
+            runs.entries.joinToString("; ") { (n, c) ->
+                "$n turns: visits max ${c.visits.max()} mean ${c.visits.sum() / c.visits.size}, " +
+                    "search chars max ${c.searchChars.max()} mean ${c.searchChars.sum() / c.searchChars.size}, " +
+                    "row writes max ${c.rowWrites.max()}"
+            }
+        println("HISTORY_COST $summary")
+        val few = runs.getValue(20)
+        val many = runs.getValue(1_000)
+        // Exact counts, no clock: what a publish walks and copies is the live turn's, whatever lies behind it.
+        assertTrue(many.visits.max() <= few.visits.max(), "visits per publish grow with history: $summary")
+        assertTrue(many.searchChars.max() <= few.searchChars.max(), "search text per publish grows with history: $summary")
+        assertTrue(many.rowWrites.max() <= few.rowWrites.max(), "row writes per publish grow with history: $summary")
+    }
+
+    @Test
+    fun `B-CHAT-096 PB-20 a settled turn is the same object in every publish while a reply streams`() {
+        val states = streamAfter(200, keepStates = true).states
+        val first = states.first()
+        val settled = assertNotNull((first.rows as NewestFirst<*>).settled, "the settled rows are handed over")
+        val thought = first.rows[first.indexOf("thought:h7-a/reasoning-0")]
+        val search = first.searchText.first { it.rowKey == "thought:h7-a/reasoning-0" }
+        for (s in states.drop(1)) {
+            // The same settled list, rows and search text: a reader keeps what it found in them by identity.
+            assertSame(settled, (s.rows as NewestFirst<*>).settled)
+            assertSame(thought, s.rows[s.indexOf("thought:h7-a/reasoning-0")])
+            assertSame(search, s.searchText.first { it.rowKey == "thought:h7-a/reasoning-0" })
+            assertSame(first.searchText[0], s.searchText[0])
+        }
+        // The settled rows are the published list's oldest rows; the rest is the live turn.
+        val last = states.last()
+        val oldestFirst = last.rows.asReversed()
+        assertEquals(settled.toList(), oldestFirst.take(settled.size))
+        assertTrue(oldestFirst.drop(settled.size).all { it.turnId == "live" })
+        assertEquals(200 * 5, settled.size)
     }
 
     @Test

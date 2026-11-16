@@ -46,4 +46,10 @@
     <string name="chatsNewStorageFolderDialogTitle">Folder baru di %1$s</string>
     <string name="chatsNewStorageFolderDialogHelper">Folder kosong di penyimpanan ponsel. Tidak ada hal lain yang ditambahkan ke dalamnya.</string>
     <string name="chatPhoneFolderRestartingAgents">Memulai ulang agen di ponsel agar agen percakapan ini dapat melihat foldernya. Ini memakan waktu sekitar setengah menit.</string>
+    <string name="chatsNewPhoneFolderRestartBoth">Agen di ponsel dan OpenCode-nya dimulai sebelum Anda memilih folder ini, jadi %1$s belum dapat melihatnya. Mulai ulang untuk bekerja di sini.</string>
+    <string name="chatsNewPhoneFolderRestartBothAction">Mulai ulang agen di ponsel dan OpenCode</string>
+    <string name="chatsNewPhoneFolderRestartingBoth">Memulai ulang agen di ponsel dan OpenCode agar setiap agen dapat melihat folder ini. Ini memakan waktu sekitar setengah menit.</string>
+    <string name="chatsNewPhoneFolderRestartedBoth">Agen di ponsel dan OpenCode telah dimulai ulang. Setiap agen sekarang dapat melihat folder ini.</string>
+    <string name="chatsNewPhoneFolderWaitingServer">OpenCode di ponsel ini sedang menulis balasan, jadi akan dimulai ulang sendiri saat balasan selesai. Tidak ada yang terputus.</string>
+    <string name="chatsNewPhoneFolderWaitingAgents">Ada agen di ponsel ini yang sedang bekerja, jadi agen di ponsel akan dimulai ulang sendiri setelah selesai. Tidak ada yang terputus.</string>
 </resources>

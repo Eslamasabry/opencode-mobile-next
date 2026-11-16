@@ -96,15 +96,7 @@ object SecurityFeatureBindings {
                     "last project for new conversation",
                 )
             )
-            register(
-                KeyShape(
-                    "oc.sharedProjects.",
-                    KeyScope.Profile,
-                    PrefType.StrList,
-                    ":engine:runtime",
-                    "selected shared-storage project folders",
-                )
-            )
+            register(SharedProjectList.shape(":engine:runtime", "selected shared-storage project folders"))
             register(
                 KeyShape(
                     "oc.chatListShown.",

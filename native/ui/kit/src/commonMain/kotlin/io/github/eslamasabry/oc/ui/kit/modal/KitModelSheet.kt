@@ -315,6 +315,11 @@ public fun KitModelSheet(
     onToggleFavorite: ((KitModelOption) -> Unit)? = null,
     /** Server default is offered once the caller knows what it means for this server. */
     offersServerDefault: Boolean = true,
+    /**
+     * The model the server resolves "Server default" to, when it says (its [KitModelOption.label] is shown as that row's
+     * second line, on that provider's page only). Null leaves the row's fixed hint.
+     */
+    serverDefault: KitModelOption? = null,
     /** Resets the search and the page when the sheet now serves another conversation. */
     resetKey: Any? = null,
     /** B-169: one suggestion's key, leading every page under [suggestedLabel]. */
@@ -350,7 +355,7 @@ public fun KitModelSheet(
         bodyFills = true,
     ) {
         ModelSheetBody(
-            options, loading, current, { release.run(); onChoose(it) }, favorites, recent, onToggleFavorite, offersServerDefault, resetKey, suggested,
+            options, loading, current, { release.run(); onChoose(it) }, favorites, recent, onToggleFavorite, offersServerDefault, serverDefault, resetKey, suggested,
             suggestedLabel, release, above, below,
         )
     }
@@ -366,6 +371,7 @@ private fun ColumnScope.ModelSheetBody(
     recent: List<KitModelOption>,
     onToggleFavorite: ((KitModelOption) -> Unit)?,
     offersServerDefault: Boolean,
+    serverDefault: KitModelOption?,
     resetKey: Any?,
     suggested: String?,
     suggestedLabel: String,
@@ -473,14 +479,14 @@ private fun ColumnScope.ModelSheetBody(
                     KitTabPages(tabs, Modifier.weight(1f).fillMaxWidth(), pageTitle = { labels.getOrNull(it).orEmpty() }) { i ->
                         val page = pages.getOrNull(i)
                         if (page != null) {
-                            val items = remember(page, offersServerDefault, lead, twins, current) { pageItems(page, offersServerDefault, lead, twins, current) }
+                            val items = remember(page, offersServerDefault, serverDefault, lead, twins, current) { pageItems(page, offersServerDefault, serverDefault, lead, twins, current) }
                             list(items, entrance.takeIf { page.key == entrancePage })
                         }
                     }
                 }
             else -> {
                 val page = pages.first()
-                val items = remember(page, offersServerDefault, lead, twins, current) { pageItems(page, offersServerDefault, lead, twins, current) }
+                val items = remember(page, offersServerDefault, serverDefault, lead, twins, current) { pageItems(page, offersServerDefault, serverDefault, lead, twins, current) }
                 list(items, entrance)
             }
         }
@@ -544,7 +550,7 @@ private sealed interface ModelItem {
     /** A hairline under this row: between two rows, never beside the chosen row's plate, a heading or the list's end. */
     val rule: Boolean
 
-    data class Default(override val rule: Boolean = false) : ModelItem {
+    data class Default(override val rule: Boolean = false, val resolved: String? = null) : ModelItem {
         override val key: String get() = "default"
     }
 
@@ -596,10 +602,10 @@ private fun modelItems(items: List<ModelItem>, current: String?): List<ModelItem
 }
 
 /** A page as lines: Server default, the suggestion, then its sections. The picks' first section needs no heading (its tab says it). */
-private fun pageItems(page: KitModelPage, offersDefault: Boolean, lead: KitModelOption?, twins: Set<String>, current: String?): List<ModelItem> {
+private fun pageItems(page: KitModelPage, offersDefault: Boolean, serverDefault: KitModelOption?, lead: KitModelOption?, twins: Set<String>, current: String?): List<ModelItem> {
     val out = ArrayList<ModelItem>()
     // Server default leads every provider page and the single list; the picks page holds only what was picked.
-    if (offersDefault && page.providerId != null) out += ModelItem.Default()
+    if (offersDefault && page.providerId != null) out += ModelItem.Default(resolved = serverDefault?.label?.takeIf { serverDefault.providerId == page.providerId && it.isNotBlank() })
     if (lead != null) {
         out += ModelItem.Heading(KitModelSectionKind.Suggested)
         out += ModelItem.Model(lead, mixed = true, twin = lead.key in twins, suggested = true)
@@ -671,7 +677,7 @@ private fun ModelList(
                 is ModelItem.Default ->
                     KitChoiceRow(
                         title = stringResource(Res.string.composerPreviewModelDefault),
-                        supporting = stringResource(Res.string.composerPreviewModelDefaultHint),
+                        supporting = item.resolved ?: stringResource(Res.string.composerPreviewModelDefaultHint),
                         selected = current == null,
                         mark = KitChoiceMark.Tick,
                         onClick = { onChoose(null) },

@@ -55,17 +55,18 @@ public object ScheduleWorkPolicy {
      * an accepted prompt. A worker killed mid-run is restarted by WorkManager; the durable claim then records
      * "interrupted" and never sends again.
      */
-    public suspend fun run(engine: ScheduleEngine, data: Data, nowMs: Long): RunReport? {
+    public suspend fun run(engine: ScheduleEngine, data: Data): RunReport? {
         val entry = ScheduleWorkInput.entry(data) ?: return null
-        val deadline = nowMs + RUN_BUDGET_MS
+        // A budget, not a deadline: the engine starts it when the run gets its turn, so waiting never spends it.
+        val budget = RUN_BUDGET_MS
         if (data.getBoolean(ScheduleWorkInput.MANUAL, false)) {
             // The tap's time (fixed in the request) names the run, so a restarted worker never sends it twice.
-            return engine.runManual(entry.profileId, entry.scheduleId, entry.revision, deadline, requestedAtMs = entry.dueAtMs)
+            return engine.runManual(entry.profileId, entry.scheduleId, entry.revision, budget, requestedAtMs = entry.dueAtMs)
         }
         // The run re-arms the schedule when it ends; that must not cancel this very work while it still finishes.
         running.add(entry.workName)
         try {
-            return engine.runOccurrence(entry, deadline)
+            return engine.runOccurrence(entry, budget)
         } finally {
             running.remove(entry.workName)
         }

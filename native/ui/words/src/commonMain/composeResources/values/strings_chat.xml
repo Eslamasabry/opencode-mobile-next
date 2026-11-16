@@ -591,6 +591,7 @@
     <string name="chatStartLooking">Looking at the folder…</string>
     <string name="chatStartServerFolder">Server folder</string>
     <string name="chatStartTip">Type / for commands · long-press a message for its actions</string>
+    <string name="chatConnectingToAgent">Connecting to %1$s…</string>
     <string name="chatLoadingConversation">Loading the conversation</string>
     <string name="chatLoadFailedBody">Nothing is lost. Try again when OpenCode answers.</string>
     <string name="chatLoadFailedAgentBody">Nothing is lost. Try again when %1$s answers.</string>
@@ -766,6 +767,8 @@
     <string name="kitToolDone">Done</string>
     <string name="kitToolFailed">Failed</string>
     <string name="kitToolDeclined">You declined this</string>
+    <string name="kitToolPlanStopped">Stopped by Plan</string>
+    <string name="chatStepPlanStopped">Plan mode stopped a change</string>
     <string name="chatStepDeclinedNote">Your note: “%1$s”</string>
     <string name="chatStepMalformedCall">The agent asked this the wrong way, so nothing ran. Ask it to try again.</string>
     <string name="kitToolStopped">Stopped</string>

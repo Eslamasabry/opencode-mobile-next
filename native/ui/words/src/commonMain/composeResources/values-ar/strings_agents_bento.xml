@@ -33,7 +33,6 @@
     <string name="agentsInstallFailedNotStarted">نُزّل %1$s لكنه لم يبدأ على هذا الهاتف، فتعذّر التحقق من إصداره. حاول مجددًا؛ وإن تكرر ذلك فستجد في التفاصيل ما أبلغ به الهاتف.</string>
     <string name="agentsInstallFailedWithdrawn">تعذّر تثبيت %1$s: الإصدار %2$s، وهو الذي يثبّته هذا التطبيق، لم يعد متاحًا للتنزيل. لن تغيّر إعادة المحاولة ذلك؛ سيغيّره تحديث هذا التطبيق.</string>
     <string name="agentsStateSignInUnchecked">مثبّت، لكن هذا التطبيق لا يستطيع التحقق من تسجيل دخوله بعد</string>
-    <string name="agentsStateSignInCheckFailed">تعذّر التحقق من تسجيل الدخول. حاول تسجيل الدخول مرة أخرى.</string>
     <string name="agentsSignInUncheckedBody">لا يمكن استخدامه في المحادثات بعد. يمكنك إزالته.</string>
     <string name="agentsStateSetUpAtFirstUse">مثبّت. اضبطه في أول مرة تستخدمه فيها.</string>
     <string name="agentsChipSetUp">إعداد</string>
@@ -49,4 +48,7 @@
     <string name="agentsUpdateRefused">تعذّر بدء تحديث الوكلاء، استخدم «تثبيت» على الوكيل</string>
     <string name="agentsUpdateUpdated">تم تحديث %1$s</string>
     <string name="agentsUpdateNeedsSignIn">%1$s يحتاج منك تسجيل الدخول</string>
+    <string name="agentsStateSignInNotConfirmed">لم يُؤكَّد تسجيل الدخول</string>
+    <string name="agentsSignInNotConfirmedBody">تعذّر على التطبيق التأكد مما إذا كان %1$s مسجَّل الدخول. التحقق مجددًا يسأل %1$s الآن.</string>
+    <string name="agentsCheckSignInAgain">تحقق من %1$s مجددًا</string>
 </resources>

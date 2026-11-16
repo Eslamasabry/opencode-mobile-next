@@ -46,6 +46,7 @@ import io.github.eslamasabry.oc.ui.kit.status.KitStatusKind
 import io.github.eslamasabry.oc.ui.routes.ChatRoute
 import io.github.eslamasabry.oc.ui.routes.ChatsRoute
 import io.github.eslamasabry.oc.ui.routes.EntryInstaller
+import io.github.eslamasabry.oc.ui.routes.RouteMotion
 import io.github.eslamasabry.oc.ui.shell.NavShell
 import io.github.eslamasabry.oc.ui.shell.ShellDependencies
 import io.github.eslamasabry.oc.ui.shell.ShellNavigator
@@ -72,6 +73,7 @@ class ShellLookaheadTest {
     @Test
     fun `B-NAV-121 a conversation grown from its row goes from loading to live and back under the lookahead pass`() =
         runDesktopComposeUiTest(W, H) {
+            ChatRoute.openMotion = RouteMotion.GrowFromRow // the grow's own lookahead case (kept built and tested)
             val platform = DesktopKitPlatform()
             val navigator = ShellNavigator()
             val page = ProbedPages(navigator)

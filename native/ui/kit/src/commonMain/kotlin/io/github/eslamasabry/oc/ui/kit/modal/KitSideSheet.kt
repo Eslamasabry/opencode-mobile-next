@@ -120,6 +120,7 @@ public fun KitSideSheet(
         if (!visible) present = false
     }
     if (!present && !visible) return
+    KitReportsModal()
     // Back: the topmost sheet owns it. The preview follows the gesture (not under Off); completion asks to close.
     // At the overlay priority (KitPredictiveBack), so a page's own Back never answers while the sheet is open.
     val back = KitPredictiveBack(enabled = visible) { dismiss() }

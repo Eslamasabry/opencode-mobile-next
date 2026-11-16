@@ -16,6 +16,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.datetime.TimeZone
 import kotlin.concurrent.atomics.AtomicReference
 import kotlin.coroutines.cancellation.CancellationException
@@ -47,8 +50,10 @@ public data class ScheduleDraft(
 
 /**
  * The schedules engine (plan 07 §5 K, Flutter controller + entrypoint + worker policy). One store is the authority
- * across the UI and background runs; every change re-arms the OS scheduler. Runs are serialized (one at a time), are
- * claimed durably before any network mutation and are never retried: an occurrence is sent at most once.
+ * across the UI and background runs; every change re-arms the OS scheduler. Runs of one profile are serialized (they
+ * can share a conversation and the phone's own runtime), runs of different profiles are not; they are claimed durably
+ * before any network mutation and are never retried: an occurrence is sent at most once. A run's time budget starts
+ * when its run starts, never while it waits for its profile's lane.
  */
 public class ScheduleEngine(
     private val backend: ScheduleBackend,
@@ -64,6 +69,8 @@ public class ScheduleEngine(
      * then kept as they are in the shared store (E00-S04).
      */
     private val flutterReadable: suspend () -> Boolean = { false },
+    /** The longest a run waits for its profile's lane before it gives up without sending (WorkManager's window is 10 minutes). */
+    private val laneWaitMs: Long = LANE_WAIT_MS,
 ) {
     public val store: ScheduleStore = ScheduleStore(backend, nowMs, zone)
     public val claims: ScheduleClaims = ScheduleClaims(backend, nowMs)
@@ -71,14 +78,48 @@ public class ScheduleEngine(
     private val receipts = ScheduleReceipts(backend, store, nowMs, zone)
     private val runner =
         ScheduleRunner(profiles, nowMs, pollMs) { schedule ->
-            fingerprints.accepts(schedule.profileId, schedule.profileFingerprint, profiles.fingerprint(schedule.profileId))
+            fingerprints.accepts(schedule.profileId, schedule.profileFingerprint, profiles.fingerprint(schedule.profileId)) ||
+                legacyNamesThisServer(schedule.profileId, schedule.profileFingerprint, remember = true)
         }
-    private val runLane = Mutex()
+    private val unmatched = AtomicReference<PersistentMap<String, Boolean>>(persistentHashMapOf())
+
+    /**
+     * One lane per profile. What really conflicts is what runs of one profile share: a conversation (a schedule that
+     * continues one, or two prompts into the same one: the busy check and the send are not atomic) and the phone's own
+     * runtime (only the profile that owns it uses it). Runs on different servers share nothing, so one server's slow
+     * reply never holds up another server's run.
+     */
+    private val runLanes = AtomicReference<PersistentMap<String, Mutex>>(persistentHashMapOf())
 
     /** B-STATE-089/096: one sync at a time, each reading the store inside the lane, so an older read never wins. */
     private val syncLane = Mutex()
     private val states = AtomicReference<PersistentMap<String, MutableStateFlow<SchedulesState>>>(persistentHashMapOf())
     private val log = AppLog.tagged("Schedules")
+
+    private fun runLane(profileId: String): Mutex {
+        while (true) {
+            val current = runLanes.load()
+            current[profileId]?.let { return it }
+            val created = Mutex()
+            if (runLanes.compareAndSet(current, current.putting(profileId, created))) return created
+        }
+    }
+
+    /** Runs [block] holding [profileId]'s lane; [busy] when the lane stays taken for [laneWaitMs] (nothing was sent). */
+    private suspend fun <T> inRunLane(profileId: String, busy: suspend () -> T, block: suspend () -> T): T {
+        val lane = runLane(profileId)
+        var held = false
+        withTimeoutOrNull(laneWaitMs) {
+            lane.lock()
+            held = true
+        }
+        if (!held) return busy()
+        try {
+            return block()
+        } finally {
+            lane.unlock()
+        }
+    }
 
     public fun state(profileId: String): StateFlow<SchedulesState> = flow(profileId).asStateFlow()
 
@@ -101,12 +142,63 @@ public class ScheduleEngine(
             flow(profileId).update { it.copy(loading = false, platform = platform, error = ScheduleCode.Unsupported) }
             return ScheduleCode.Unsupported.asFailure().failed()
         }
-        return guarded(profileId, platform) {
-            migrate(profileId)
-            // E00-S05: failed runs the Flutter worker could only leave as receipts show in the history.
-            receipts.merge(profileId)
-            sync(profileId)
+        val result =
+            guarded(profileId, platform) {
+                migrate(profileId)
+                // E00-S05: failed runs the Flutter worker could only leave as receipts show in the history.
+                receipts.merge(profileId)
+                sync(profileId)
+            }
+        // The list is already shown; runs whose reply could not be followed are settled from their conversation now.
+        if (result is Outcome.Ok && settleUnconfirmed(profileId) > 0) safely { publish(profileId, platform) }
+        return result
+    }
+
+    /**
+     * Runs the server accepted but whose reply could not be followed ([ScheduleRunner.UNCONFIRMED]) are settled from
+     * the conversation itself once the server answers: replied, failed, or still unknown. Nothing is sent. Returns how
+     * many records changed. Best effort and bounded; a server that is still unreachable leaves them as they are.
+     */
+    public suspend fun settleUnconfirmed(profileId: String): Int {
+        if (!ScheduleIds.valid(profileId)) return 0
+        val pending =
+            safely { store.history(profileId) }
+                ?.filter { it.status == RunStatus.Ran && it.errorCode == ScheduleRunner.UNCONFIRMED && it.sessionId != null }
+                ?.sortedByDescending { it.scheduledAtMs }
+                ?.take(SETTLE_MAX)
+                .orEmpty()
+        if (pending.isEmpty()) return 0
+        val schedules = safely { store.load(profileId) }.orEmpty().associateBy { it.id }
+        var changed = 0
+        val deadline = nowMs() + SETTLE_BUDGET_MS
+        for ((scheduleId, runs) in pending.groupBy { it.scheduleId }) {
+            val schedule = schedules[scheduleId] ?: continue
+            if (profiles.fingerprint(profileId) == null) return changed
+            if (!fingerprints.accepts(profileId, schedule.profileFingerprint, profiles.fingerprint(profileId))) continue
+            if (deadline - nowMs() <= 0) break
+            val opened =
+                withTimeoutOrNull(deadline - nowMs()) { profiles.openUntil(profileId, schedule.projectPath, schedule.workspace, deadline) }
+            if (opened !is Outcome.Ok) continue
+            val connection = opened.value
+            try {
+                // A phone runtime this check would have to start is not worth starting just to look.
+                if (connection.startedPhoneServer) continue
+                for (run in runs) {
+                    val settled =
+                        try {
+                            withTimeoutOrNull(deadline - nowMs()) { runner.settle(connection.gateway, run, nowMs()) }
+                        } catch (e: CancellationException) {
+                            throw e
+                        } catch (e: Exception) {
+                            null
+                        } ?: continue
+                    if (safely { store.recordRun(profileId, settled); true } == true) changed++
+                }
+            } finally {
+                withContext(NonCancellable) { withTimeoutOrNull(CLOSE_WAIT_MS) { connection.close() } }
+            }
         }
+        return changed
     }
 
     /** A new schedule from [draft], or an edit of [editing] (same id, next revision). */
@@ -244,19 +336,47 @@ public class ScheduleEngine(
     private suspend fun migrate(profileId: String) {
         val fingerprint = profiles.fingerprint(profileId) ?: return
         val legacy = profiles.legacyFingerprint(profileId)?.takeIf { ScheduleFingerprints.LEGACY.matches(it) }
+        // Stamps made under the same server's earlier version (the version is part of Flutter's hash and moves when
+        // the phone's own server is refreshed) name this server too.
+        val earlier =
+            store.load(profileId).map { it.profileFingerprint }.filter {
+                ScheduleFingerprints.LEGACY.matches(it) && it != legacy && legacyNamesThisServer(profileId, it, remember = false)
+            }.toSet()
         if (flutterReadable()) {
-            if (legacy != null && store.load(profileId).any { it.profileFingerprint == legacy }) {
-                fingerprints.remember(profileId, fingerprint, legacy)
+            for (stamp in setOfNotNull(legacy.takeIf { l -> store.load(profileId).any { it.profileFingerprint == l } }) + earlier) {
+                fingerprints.remember(profileId, fingerprint, stamp)
             }
             return
         }
         val alias = fingerprints.alias(profileId)
-        val accepted = setOfNotNull(legacy) + alias?.takeIf { it.native == fingerprint }?.legacy.orEmpty()
+        val accepted = setOfNotNull(legacy) + earlier + alias?.takeIf { it.native == fingerprint }?.legacy.orEmpty()
         if (accepted.isNotEmpty()) {
             val changed = store.restamp(profileId, { it in accepted }, fingerprint)
             if (changed > 0) log.i { "migrated $changed scheduled prompts" }
         }
         if (alias != null) fingerprints.forget(profileId)
+    }
+
+    /**
+     * True when the Flutter-era [stamp] is this profile's own row under another server version (and nothing else
+     * changed). A positive is written to the alias when [remember] so later checks need no search; a negative is
+     * remembered in memory until the row changes.
+     */
+    private suspend fun legacyNamesThisServer(profileId: String, stamp: String, remember: Boolean): Boolean {
+        if (!ScheduleFingerprints.LEGACY.matches(stamp)) return false
+        val native = profiles.fingerprint(profileId) ?: return false
+        val row = profiles.legacyRow(profileId) ?: return false
+        val key = "$profileId|$stamp|${LegacyFingerprints.stamp(row)}"
+        if (unmatched.load()[key] == true) return false
+        if (!LegacyFingerprints.matches(row, stamp)) {
+            while (true) {
+                val current = unmatched.load()
+                if (unmatched.compareAndSet(current, current.putting(key, true))) break
+            }
+            return false
+        }
+        if (remember) safely { fingerprints.remember(profileId, native, stamp) }
+        return true
     }
 
     /**
@@ -289,23 +409,33 @@ public class ScheduleEngine(
      * One timed occurrence. Null when nothing ran and nothing should be shown. The occurrence is claimed before any
      * network mutation; a recovered claim (the last attempt died) records "interrupted" and never sends again.
      */
-    public suspend fun runOccurrence(entry: ArmedEntry, deadlineMs: Long): RunReport? =
-        runLane.withLock {
-            if (profiles.fingerprint(entry.profileId) == null) return@withLock null
+    public suspend fun runOccurrence(entry: ArmedEntry, budgetMs: Long): RunReport? =
+        inRunLane(
+            entry.profileId,
+            busy = {
+                // Still queued behind another run of this server: nothing was claimed or sent. Re-arm the occurrence
+                // (it is already due, so the OS runs it again as soon as this worker ends) instead of spending it.
+                safely { sync(entry.profileId) }
+                null
+            },
+        ) {
+            // The budget starts here, when this run starts, not when the OS worker did.
+            val deadlineMs = nowMs() + budgetMs
+            if (profiles.fingerprint(entry.profileId) == null) return@inRunLane null
             if (entry.dueAtMs > nowMs()) {
                 // The clock moved back: keep the occurrence unsent and re-arm it.
                 safely { sync(entry.profileId) }
-                return@withLock null
+                return@inRunLane null
             }
-            val claim = safely { claims.claim(entry) } ?: return@withLock null
+            val claim = safely { claims.claim(entry) } ?: return@inRunLane null
             if (claim == Claim.Duplicate) {
                 // B-STATE-090: the last attempt settled this occurrence but may have died (or failed a write) before
                 // it advanced the schedule or re-armed the next run. Finish that, never run it again.
                 if (!entry.digest) safely { advanceSettled(entry) }
                 safely { sync(entry.profileId) }
-                return@withLock null
+                return@inRunLane null
             }
-            if (claim == Claim.Stale) return@withLock null
+            if (claim == Claim.Stale) return@inRunLane null
             if (claim == Claim.New && !entry.digest) notices.started(entry)
             val report =
                 try {
@@ -363,24 +493,29 @@ public class ScheduleEngine(
         profileId: String,
         scheduleId: String,
         revision: Int,
-        deadlineMs: Long,
+        budgetMs: Long,
         requestedAtMs: Long = nowMs(),
     ): RunReport? =
-        runLane.withLock {
-            if (profiles.fingerprint(profileId) == null) return@withLock null
+        inRunLane(
+            profileId,
+            busy = { notSentBusy(profileId, scheduleId, revision, requestedAtMs) },
+        ) {
+            if (profiles.fingerprint(profileId) == null) return@inRunLane null
             val schedule =
                 safely { store.load(profileId) }?.firstOrNull { it.id == scheduleId }?.takeIf { it.revision == revision }
-                    ?: return@withLock null
+                    ?: return@inRunLane null
             val admittedAt = nowMs()
+            // The budget starts here, when this run starts, not when the OS worker did.
+            val deadlineMs = admittedAt + budgetMs
             val entry = ArmedEntry(profileId, scheduleId, revision, requestedAtMs)
             val runId = ScheduleIds.occurrence(schedule, requestedAtMs)
             val earlier = safely { store.history(profileId) }?.firstOrNull { it.id == runId }
             if (earlier != null) {
-                if (earlier.status != RunStatus.Running) return@withLock null // this request already ended
+                if (earlier.status != RunStatus.Running) return@inRunLane null // this request already ended
                 val interrupted = earlier.copy(finishedAtMs = admittedAt, status = RunStatus.Failed, errorCode = "interrupted")
                 safely { store.recordRun(profileId, interrupted) }
                 publishAfterRun(profileId)
-                return@withLock report(interrupted).also { notices.finished(entry, it) }
+                return@inRunLane report(interrupted).also { notices.finished(entry, it) }
             }
             val running = ScheduledRun(runId, schedule.id, admittedAt, admittedAt, RunStatus.Running)
             val report =
@@ -405,6 +540,23 @@ public class ScheduleEngine(
             publishAfterRun(profileId)
             report.also { if (it.quiet) notices.clear(entry) else notices.finished(entry, it) }
         }
+
+    /**
+     * A "Run now" whose profile lane stayed taken for the whole wait: it was never sent. It is recorded as skipped
+     * ("busy": another run on this server was still using it) so the person sees it and can tap again.
+     */
+    private suspend fun notSentBusy(profileId: String, scheduleId: String, revision: Int, requestedAtMs: Long): RunReport? {
+        val schedule =
+            safely { store.load(profileId) }?.firstOrNull { it.id == scheduleId }?.takeIf { it.revision == revision }
+                ?: return null
+        val runId = ScheduleIds.occurrence(schedule, requestedAtMs)
+        if (safely { store.history(profileId) }?.any { it.id == runId } == true) return null
+        val at = nowMs()
+        val skipped = ScheduledRun(runId, schedule.id, at, at, RunStatus.Skipped, finishedAtMs = at, errorCode = "busy")
+        safely { store.recordRun(profileId, skipped) }
+        publishAfterRun(profileId)
+        return report(skipped).also { notices.finished(ArmedEntry(profileId, scheduleId, revision, requestedAtMs), it) }
+    }
 
     private suspend fun occurrence(entry: ArmedEntry, recoveryOnly: Boolean, deadlineMs: Long): RunReport {
         val profileId = entry.profileId
@@ -540,6 +692,12 @@ public class ScheduleEngine(
         public const val FINGERPRINT_PREFIX: String = "n1:"
         private const val DAY_MS = 86_400_000L
         private const val DRAFT_ATTEMPTS = 5
+        private const val SETTLE_MAX = 10
+        private const val SETTLE_BUDGET_MS = 20_000L
+        private const val CLOSE_WAIT_MS = 3_000L
+
+        /** 2.5 minutes: a 7-minute budget plus this still ends inside WorkManager's 10-minute window. */
+        public const val LANE_WAIT_MS: Long = 150_000L
 
         /** The native profile fingerprint over the server identity fields, without the display name. */
         public fun fingerprint(identity: List<String?>): String = FINGERPRINT_PREFIX + DartJson.sha256Hex(DartJson.encode(identity))

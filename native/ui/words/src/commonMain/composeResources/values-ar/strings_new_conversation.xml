@@ -45,4 +45,10 @@
     <string name="chatsNewStorageFolderDialogTitle">مجلد جديد في %1$s</string>
     <string name="chatsNewStorageFolderDialogHelper">مجلد فارغ في تخزين الهاتف. لا يُضاف إليه أي شيء آخر.</string>
     <string name="chatPhoneFolderRestartingAgents">جارٍ إعادة تشغيل وكلاء الهاتف ليتمكن وكيل هذه المحادثة من رؤية مجلدها. يستغرق ذلك نحو نصف دقيقة.</string>
+    <string name="chatsNewPhoneFolderRestartBoth">بدأ وكلاء الهاتف وOpenCode عليه قبل أن تختار هذا المجلد، لذا لا يراه %1$s بعد. أعد تشغيلهم للعمل هنا.</string>
+    <string name="chatsNewPhoneFolderRestartBothAction">إعادة تشغيل وكلاء الهاتف وOpenCode</string>
+    <string name="chatsNewPhoneFolderRestartingBoth">جارٍ إعادة تشغيل وكلاء الهاتف وOpenCode ليتمكن كل وكيل من رؤية هذا المجلد. يستغرق ذلك نحو نصف دقيقة.</string>
+    <string name="chatsNewPhoneFolderRestartedBoth">أُعيد تشغيل وكلاء الهاتف وOpenCode. يستطيع كل وكيل رؤية هذا المجلد الآن.</string>
+    <string name="chatsNewPhoneFolderWaitingServer">يكتب OpenCode على هذا الهاتف ردًا، لذا سيُعاد تشغيله تلقائيًا عند انتهاء الرد. لن يُقاطَع شيء.</string>
+    <string name="chatsNewPhoneFolderWaitingAgents">أحد الوكلاء على هذا الهاتف يعمل، لذا سيُعاد تشغيل وكلاء الهاتف تلقائيًا عند انتهائه. لن يُقاطَع شيء.</string>
 </resources>

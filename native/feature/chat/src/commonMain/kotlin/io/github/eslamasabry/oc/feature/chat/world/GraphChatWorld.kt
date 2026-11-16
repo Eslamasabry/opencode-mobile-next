@@ -132,6 +132,7 @@ public class GraphChatWorlds(
     private val phoneServers: Set<ChatPhoneServer> = emptySet(),
     private val lastKnown: Set<ChatLastKnown> = emptySet(),
     storages: Set<io.github.eslamasabry.oc.engine.delivery.DeliveryStorage> = emptySet(),
+    private val glances: Set<ChatGlance> = emptySet(),
 ) : ChatWorlds {
     private val withdrawn =
         storages.singleOrNull()?.let {
@@ -151,6 +152,7 @@ public class GraphChatWorlds(
         check(recentBackings.size <= 1) { "multiple recent model stores" }
         check(histories.size <= 1) { "multiple prompt history stores" }
         check(lastKnown.size <= 1) { "multiple last-known transcript stores" }
+        check(glances.size <= 1) { "multiple conversation glances" }
     }
 
     private val open = HashMap<ConversationRef, Pair<GraphChatWorld, Int>>()
@@ -175,6 +177,7 @@ public class GraphChatWorlds(
                     lastKnown.singleOrNull(),
                     withdrawn,
                     shownOutcomes,
+                    glance = glances.singleOrNull(),
                 ) to 0)
         open[ref] = world to holders + 1
         if (holders == 0) world.attach()
@@ -220,6 +223,8 @@ internal class GraphChatWorld(
     private val withdrawnStore: io.github.eslamasabry.oc.engine.connection.adopted.WithdrawnPromptStore? = null,
     private val shownOutcomes: MutableSet<Pair<ConversationRef, io.github.eslamasabry.oc.engine.delivery.SendOutcomeId>> =
         HashSet(),
+    /** What the conversation list shows of this conversation: the page's title from its first frame. */
+    private val glance: ChatGlance? = null,
 ) : ChatWorld, TurnFeedSource, VoiceConversationSession {
     // CHAT-TRANSCRIPT: full messages, run and retry facts for the turn facts (steps, results,
     // context).
@@ -232,7 +237,9 @@ internal class GraphChatWorld(
     private val mutableTranscript = MutableStateFlow(TranscriptState.Empty)
     private val mutableLoad = MutableStateFlow<ChatLoad>(ChatLoad.Loading)
     private val mutableReadOnly = MutableStateFlow<ReadOnlyChat?>(null)
-    private val mutableTitle = MutableStateFlow<String?>(null)
+    // Open-transitions: the title the list showed for the row just tapped, until the server's own is read (never an
+    // empty title for a frame when the list already named it).
+    private val mutableTitle = MutableStateFlow<String?>(glance?.title(ref)?.takeIf { it.isNotBlank() })
 
     /** This server named the conversation by a SessionChanged title: upserts no longer set the header. */
     private var titleChangedSeen = false
@@ -794,6 +801,11 @@ internal class GraphChatWorld(
                 // An explicit conversation route may restore its proven native helper once.
                 // Passive feed observation never starts or retries a helper.
                 if (registry.graphFor(ref) == null) registry.recoverTransient(ref)
+                // Issue 147 (owner's phone, build 10057): a phone agent's conversation opened (from any page: they all
+                // open here) while its helper is not connected asks the app's own start of it to run now. Before, it
+                // only waited, and the helper stayed down until the Agents page started it.
+                val helper = phoneServer?.takeIf { it.isAgentHelper(ref.profileId) }
+                if (helper != null && registry.graphFor(ref) == null) helper.wantAgentHelper(ref.profileId)
                 registry.live.collect {
                     val graph = registry.graphFor(ref)
                     if (
@@ -813,7 +825,9 @@ internal class GraphChatWorld(
                         when {
                             down && phone == PhoneServerWait.Updating -> ChatServerWait.Updating
                             down && phone == PhoneServerWait.UpdatingAgents -> ChatServerWait.UpdatingAgents
-                            down && phone == PhoneServerWait.AgentNeedsSignIn -> ChatServerWait.AgentNeedsSignIn
+                            // Only while the page waits: once its wait is spent the helper is what did not answer,
+                            // and the line says so with its Restart (a sign-in never keeps the helper down).
+                            waiting && phone == PhoneServerWait.AgentNeedsSignIn -> ChatServerWait.AgentNeedsSignIn
                             down && phone == PhoneServerWait.Starting -> ChatServerWait.Starting
                             waiting -> ChatServerWait.Connecting
                             else -> null
@@ -840,9 +854,15 @@ internal class GraphChatWorld(
             it == PhoneServerWait.UpdatingAgents || it == PhoneServerWait.AgentNeedsSignIn
         }
 
-    /** This phone's server is starting or updating: a wait for it does not count toward [NOT_READY_LIMIT_MS]. */
+    /**
+     * This phone's server is starting or updating: a wait for it does not count toward [NOT_READY_LIMIT_MS]. A phone
+     * agent that needs a sign-in does not keep the helper from answering, so it never makes the wait endless (issue
+     * 147, owner's phone, build 10057: "Connecting" for minutes while Claude Code read Sign in needed).
+     */
     private fun phoneBusy(): Boolean =
-        (phoneServer?.waiting(ref.profileId)?.value ?: PhoneServerWait.None) != PhoneServerWait.None
+        (phoneServer?.waiting(ref.profileId)?.value ?: PhoneServerWait.None).let {
+            it != PhoneServerWait.None && it != PhoneServerWait.AgentNeedsSignIn
+        }
 
     /**
      * True when [failure] only says the server is not ready yet: a read refused because the connection it ran on was
@@ -1769,6 +1789,10 @@ internal class GraphChatWorld(
                 agent = if (newer) previous.agent else session?.agent ?: catalogDefaults?.agent,
                 usesDefault =
                     if (newer) previous.usesDefault else session?.model == null && failure == null,
+                serverDefault =
+                    catalogDefaults?.model?.let { ref ->
+                        choices.firstOrNull { it.providerId == ref.providerId && it.modelId == ref.modelId }
+                    },
                 recent = recentOf(choices),
                 favorites = favoritesOf(choices),
                 displayOnly = if (newer) previous.displayOnly else failure != null,

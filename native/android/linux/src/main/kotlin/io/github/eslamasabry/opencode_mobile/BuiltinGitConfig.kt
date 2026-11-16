@@ -41,8 +41,16 @@ object BuiltinGitConfig {
      * Git then refuses the repository as of "dubious ownership". Each folder (and its `/sdcard` spelling) is listed as
      * `safe.directory` in one block the app owns in /etc/gitconfig, rewritten when the folders change and removed when
      * none is left. True when the file was written.
+     *
+     * Git matches `safe.directory` by a repository's own top folder, so a repository one level inside a chosen folder
+     * (a folder of projects chosen as a whole) is listed too, by the names [repositoriesInside] finds (the owner's
+     * decision for W3: one level, nothing deeper). They are found again at each start of the phone's Linux.
      */
-    fun trustSharedFolders(rootfs: File, folders: List<String>): Boolean {
+    fun trustSharedFolders(
+        rootfs: File,
+        folders: List<String>,
+        repositoriesInside: (String) -> List<String> = ::repositoriesOnPhone,
+    ): Boolean {
         val config = target(rootfs) ?: return false
         val existing = if (config.isFile) config.readText() else ""
         val start = existing.indexOf(SHARED_BEGIN)
@@ -51,6 +59,8 @@ object BuiltinGitConfig {
             if (start >= 0 && end > start) existing.removeRange(start, end + SHARED_END.length) else existing
         val spellings =
             folders
+                .mapNotNull { SharedStorageBinds.canonicalRoot(it) }
+                .flatMap { root -> listOf(root) + nested(root, repositoriesInside) }
                 .mapNotNull { SharedStorageBinds.canonicalRoot(it) }
                 .flatMap { root ->
                     listOf(root) +
@@ -70,6 +80,23 @@ object BuiltinGitConfig {
     }
 
     private const val PRIMARY = "/storage/emulated/0"
+
+    /** The repositories one level inside [root] that [find] names, as paths; plain names only. */
+    private fun nested(root: String, find: (String) -> List<String>): List<String> =
+        try {
+            find(root)
+                .filter { name -> name.isNotEmpty() && name != "." && name != ".." && '/' !in name }
+                .map { "$root/$it" }
+        } catch (_: Exception) {
+            emptyList()
+        }
+
+    /** The folders one level inside [root] holding a Git repository (a `.git` folder or file), as the app sees them. */
+    internal fun repositoriesOnPhone(root: String): List<String> =
+        File(root).listFiles { child -> child.isDirectory && File(child, ".git").exists() }
+            ?.map { it.name }
+            ?.sorted()
+            .orEmpty()
 
     /** /etc/gitconfig of [rootfs], or null when it (or /etc) is a link or something odd. */
     private fun target(rootfs: File): File? {

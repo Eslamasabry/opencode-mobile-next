@@ -15,12 +15,14 @@ Always real, never noise:
   * a failing test in a gate module (HARD_MODULES) or a drift / Konsist / detekt / lint class (HARD_CLASS), whatever
     the lists or the base say.
 Noise (does not fail): an individual failing test class that also fails in the base reports, matches
-tool/ci/known_failures.txt (fnmatch on "<module> :: <class>") or is listed in tool/ci/quarantine.txt. Only test-report
+tool/ci/known_failures.txt (one test "<module> :: <class> > <test>", exact; or fnmatch on "<module> :: <class>") or is listed in tool/ci/quarantine.txt. Only test-report
 failures can be absorbed this way.
 
 Reads <reports-dir>/**/report-*.json (test shards), compile.json, apk.json, custom.json and record.json written by the
 jobs, and diffs failing test ids against <base-reports-dir> (the newest run on the base branch that kept reports).
 PLANNED_SHARDS (comma list of shard ids, from the plan job) makes a missing shard report an integrity failure (exit 2).
+In the fast and full lanes a compile or test job that did not run (skipped, for instance after a failed plan job) is an
+integrity failure too: a run with no compile and test rows is not a pass.
 Job results come from the environment: RESULT_COMPILE, RESULT_TEST, RESULT_APK, RESULT_RECORD, RESULT_CUSTOM.
 Tests for this file: tool/ci/test_gate.py.
 """
@@ -75,8 +77,12 @@ def is_known(f):
     mod, rest = f['id'].split(' :: ', 1)
     full = f'{mod} :: {rest}'
     cls = rest.split(' > ')[0]
-    if any(fnmatch.fnmatchcase(full, p) or fnmatch.fnmatchcase(f'{mod} :: {cls}', p) for p in known_pats):
-        return True
+    for p in known_pats:
+        if ' > ' in p:  # one test: "<module> :: <class> > <test name>", compared exactly (test names hold brackets and stars)
+            if full == p:
+                return True
+        elif fnmatch.fnmatchcase(f'{mod} :: {cls}', p):  # a whole class (only the frozen Flutter golden gates remain)
+            return True
     test = rest.split(' > ', 1)[1] if ' > ' in rest else ''
     for q in quar_pats:  # "<FQCN>" or "<FQCN> > <test name prefix>"
         qc, _, qt = q.partition(' > ')
@@ -94,6 +100,7 @@ compile_ = (load('compile.json', reports) or [{}])[0]
 custom = (load('custom.json', reports) or [{}])[0]
 apk = (load('apk.json', reports) or [{}])[0]
 record = (load('record.json', reports) or [{}])[0]
+android = (load('android-unit.json', reports) or [{}])[0]
 
 
 def mark(result):
@@ -116,6 +123,8 @@ if env('RESULT_APK') not in (None, '', 'skipped'):
     rows.append(('apk', mark(env('RESULT_APK')) + (f' - artifact `{apk["artifact"]}`: {apk["file"]} ({apk["mb"]} MB)' if apk.get('file') else '')))
 if env('RESULT_CUSTOM') not in (None, '', 'skipped'):
     rows.append(('custom tasks', mark(env('RESULT_CUSTOM'))))
+if env('RESULT_ANDROID_UNIT') not in (None, '', 'skipped'):
+    rows.append(('android unit tests', mark(env('RESULT_ANDROID_UNIT')) + (f' ({android.get("tests", 0)} run, {len(android.get("failing", []))} failing)' if android else '')))
 
 # Integrity: a run must not look green when Gradle never ran (a failed distribution download, a dead setup step, a missing shard).
 # Exit code 2 = integrity failure; the workflow reds the run on every branch for it, as it does for the ordinary FAIL (1).
@@ -126,12 +135,18 @@ if env('RESULT_TEST') not in (None, '', 'skipped') and planned:
     missing = [x for x in planned if x not in seen]
     if missing:
         integrity.append(f'{len(missing)} of {len(planned)} planned test shard(s) left no report (shard {", ".join(missing)})')
+# A fast or full lane run whose compile or test jobs never ran (the plan job failed, or they were skipped) proved nothing:
+# no compile row and no test row is not a pass (2026-11-16: a failed plan job left a run reading PASS with zero tests).
+if lane.split(' ')[0] in ('fast', 'full'):
+    for key, label in (('RESULT_COMPILE', 'compile'), ('RESULT_TEST', 'desktop tests')):
+        if env(key) in (None, '', 'skipped', 'cancelled'):
+            integrity.append(f'{label}: the job did not run in a {lane.split(" ")[0]} lane run (did the plan job fail?)')
 for s in shards:
     if s.get('job_status') == 'failure' or s.get('pick_outcome') in ('failure', 'skipped', 'cancelled'):
         integrity.append(f'{s["name"]}: the shard job did not get as far as running Gradle (setup {s.get("pick_outcome") or "unknown"}, job {s.get("job_status") or "unknown"})')
     elif s.get('planned') and not s.get('gradle_ran', True):
         integrity.append(f'{s["name"]}: Gradle never ran although {len(s["planned"])} task(s) were planned (no task or BUILD line in the log)')
-for key, label, rep in (('RESULT_COMPILE', 'compile', compile_), ('RESULT_APK', 'apk', apk), ('RESULT_CUSTOM', 'custom tasks', custom)):
+for key, label, rep in (('RESULT_COMPILE', 'compile', compile_), ('RESULT_APK', 'apk', apk), ('RESULT_CUSTOM', 'custom tasks', custom), ('RESULT_ANDROID_UNIT', 'android unit tests', android)):
     if env(key) not in (None, '', 'skipped'):
         if not rep:
             integrity.append(f'{label}: the job left no report (it died before its report step)')
@@ -142,6 +157,9 @@ reasons = []
 for key, label, rep in (('RESULT_COMPILE', 'compile', compile_), ('RESULT_APK', 'apk', apk), ('RESULT_RECORD', 'goldens', record), ('RESULT_CUSTOM', 'custom tasks', custom)):
     if env(key) in ('failure', 'cancelled') or rep.get('failed'):
         reasons.append(f'{label} job failed')
+if env('RESULT_ANDROID_UNIT') in ('failure', 'cancelled') or android.get('failed'):
+    reasons.append('android unit tests failed' + (': ' + ', '.join(f'`{i}`' for i in android['failing'][:5]) if android.get('failing') else '') +
+                   (' (' + '; '.join(android['real'][:3]) + ')' if android.get('real') else ''))
 if env('RESULT_TEST') not in (None, '', 'skipped') and not shards:
     reasons.append('the test shards left no reports at all')
 reasons += [f'real failure, {r}' for r in real]

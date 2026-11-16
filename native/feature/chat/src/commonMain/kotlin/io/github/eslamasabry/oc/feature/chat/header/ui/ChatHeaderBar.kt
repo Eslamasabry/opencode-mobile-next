@@ -330,7 +330,9 @@ public fun ChatHeaderTopBar(
         }
     KitTopBar(
         // F: chat_top_bar.dart:162-166: an untitled conversation's bar reads "Conversation" (commandDestination).
-        title = state.title ?: stringResource(Res.string.commandDestination),
+        // Open-transitions: while the conversation is read and nothing names it yet, no title, never "Conversation"
+        // (the words of an untitled one) in a frame before the real one.
+        title = state.title ?: if (state.titleUnknown) "" else stringResource(Res.string.commandDestination),
         subtitle = subtitle,
         scope = parentLine ?: projectLine,
         exit = if (canGoBack) KitTopBarExit.Back else KitTopBarExit.None,

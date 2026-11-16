@@ -85,6 +85,13 @@ internal class PlaceFiles(val place: FilesPlace, private val connections: FilesC
         return source()?.changes?.invoke() ?: unavailable("connection")
     }
 
+    suspend fun notGitRepository(): Boolean {
+        conversation?.let {
+            return connections.notGitRepository(it)
+        }
+        return source()?.notGitRepository?.invoke() == true
+    }
+
     private fun unavailable(feature: String): Outcome.Failed =
         Outcome.Failed(Failure.Unavailable(FeatureId(feature)))
 }

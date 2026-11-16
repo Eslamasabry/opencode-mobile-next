@@ -83,34 +83,23 @@ class NativeSharedProjectFolders(
         excluding: ProfileId? = null,
         force: Boolean = false,
     ): Outcome<Unit> {
-        val owner = stores.prefs.string("oc.builtinServerOwner")
-        val profile =
-            owner
-                ?.takeIf { it.isNotEmpty() && it != excluding?.raw }
-                ?.let { stores.profiles.profile(ProfileId(it)) }
-        // Folders a Flutter build already granted (`oc.sharedProjects.<profileId>`, migrated as
-        // is) stay bound like Flutter's union, but only for saved phone profiles: a deleted or
-        // remote server's list grants nothing.
-        val migrated =
-            stores.prefs
-                .keys(SHARED_PROJECTS)
-                .filter { key ->
-                    key.removePrefix(SHARED_PROJECTS) != excluding?.raw &&
-                    stores.profiles
-                        .profile(ProfileId(key.removePrefix(SHARED_PROJECTS)))
-                        ?.let { localPhone(it.profile.baseUrl) } == true
-                }
-                .flatMap { stores.prefs.stringList(it).orEmpty() }
-        val opened =
-            if (profile != null && localPhone(profile.profile.baseUrl))
-                stores.prefs.stringList("oc.openedProjects.${profile.id.raw}").orEmpty()
-            else emptyList()
-        val roots =
-            (migrated + opened)
-                .filter(SharedStoragePath::isShared)
-                .mapNotNull(SharedStoragePath::projectRoot)
+        val owner = stores.prefs.string("oc.builtinServerOwner")?.takeIf { it.isNotEmpty() }
+        val granted = SharedProjectList.all(stores.prefs)
+        val addresses =
+            granted.keys
+                .plus(listOfNotNull(owner))
                 .distinct()
-                .sorted()
+                .mapNotNull { id -> stores.profiles.profile(ProfileId(id))?.let { id to it.profile.baseUrl } }
+                .toMap()
+        val roots =
+            PhoneSharedRoots.of(
+                owner = owner,
+                addresses = addresses,
+                granted = granted,
+                opened = owner?.let { stores.prefs.stringList("oc.openedProjects.$it") }.orEmpty(),
+                port = PhoneServerScripts.PORT,
+                excluding = excluding?.raw,
+            )
         if (!force && published == roots) return Outcome.Ok(Unit)
         // The copied runtime writes atomically. A failed replacement leaves the previous
         // file intact; the next acknowledged preference/profile change attempts it again.
@@ -123,18 +112,53 @@ class NativeSharedProjectFolders(
         if (written is Outcome.Ok) published = roots
         return written
     }
+}
 
-    private companion object {
-        const val SHARED_PROJECTS = "oc.sharedProjects."
+/**
+ * The folders of the phone's shared storage its Linux binds, from the saved lists (W3, walker F-043).
+ *
+ * Folders the person chose for this phone's server ([owner], `oc.builtinServerOwner`) are kept as long as that profile
+ * is this phone's own (a loopback address on one of the phone server's ports), whichever of those ports the server runs
+ * on right now. Before, a list counted only while its saved address named the server's current port: when the server
+ * came up on another of its ports, until the saved address followed it (B-239), every rebuild of the list dropped the
+ * person's folders, and whatever started the agents' helper meanwhile (the agent-update look, an own-agent reload, a
+ * connect) bound it without them. The page then said again that the agents must be restarted. Other saved profiles
+ * (folders a Flutter build granted) still count only on the current port; a remote server's list never counts.
+ */
+internal object PhoneSharedRoots {
+    fun of(
+        owner: String?,
+        addresses: Map<String, String>,
+        granted: Map<String, List<String>>,
+        opened: List<String>,
+        port: Int,
+        excluding: String?,
+    ): List<String> {
+        val phone = owner?.takeIf { it != excluding }
+        fun local(id: String): Boolean {
+            if (id == excluding) return false
+            val address = addresses[id] ?: return false
+            return loopbackPort(address)?.let { it == port || (id == phone && PhoneProfileAddress.ownPort(it)) } == true
+        }
+        val fromGrants = granted.filterKeys(::local).values.flatten()
+        val fromOpened = if (phone != null && local(phone)) opened else emptyList()
+        return (fromGrants + fromOpened)
+            .filter(SharedStoragePath::isShared)
+            .mapNotNull(SharedStoragePath::projectRoot)
+            .distinct()
+            .sorted()
     }
 
-    private fun localPhone(raw: String): Boolean =
+    /** The port of an address on this phone itself (`http(s)://127.0.0.1|localhost|[::1]:<port>`), else null. */
+    private fun loopbackPort(raw: String): Int? =
         try {
             val uri = URI(raw)
-            uri.scheme in listOf("http", "https") &&
-                uri.host in listOf("127.0.0.1", "localhost", "[::1]", "::1") &&
-                uri.port == PhoneServerScripts.PORT
+            uri.port.takeIf {
+                uri.scheme in listOf("http", "https") &&
+                    uri.host in listOf("127.0.0.1", "localhost", "[::1]", "::1") &&
+                    it > 0
+            }
         } catch (_: Exception) {
-            false
+            null
         }
 }

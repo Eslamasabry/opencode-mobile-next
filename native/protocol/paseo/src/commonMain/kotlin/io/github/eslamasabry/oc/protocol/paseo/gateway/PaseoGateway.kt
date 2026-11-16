@@ -1493,7 +1493,9 @@ public class PaseoGateway(
         }
         checkLocation(scope, epoch)
         val modes = modesFor(provider)
-        val mode = planned(provider, requestedMode, modes) ?: defaultProviderModes[provider]
+        val wanted = requestedMode ?: if (id in planRequested) PaseoPlanModes.APP_PLAN else null
+        notePlan(id, wanted)
+        val mode = planned(provider, wanted, modes) ?: defaultProviderModes[provider]
         // A runtime with a required mode must list it (0.9.2 may list none on a phone: then it is
         // sent by name).
         if (
@@ -1591,6 +1593,7 @@ public class PaseoGateway(
         var agent = agents[id] ?: return
         val modeIds =
             agent.arr("availableModes").orEmpty().mapNotNull { it.objectOrNull()?.str("id") }
+        notePlan(id, mode)
         val sent = planned(agent.str("provider"), mode, modeIds)
         if (sent != null && sent != agent.str("currentModeId") && sent in modeIds) {
             transport.request(
@@ -1766,6 +1769,22 @@ public class PaseoGateway(
      * an agent that lists modes but none of those refuses Plan (nothing is sent, never run in its normal mode). Any
      * other mode, and Plan to an agent that lists no modes at all, stay as they were.
      */
+    /** Sessions the person put in Plan (before the agent lists its mode): the app declines changes in them. */
+    internal val planRequested: MutableSet<String> = HashSet()
+
+    private fun notePlan(id: String, mode: String?) {
+        if (mode == null) return
+        if (mode == PaseoPlanModes.APP_PLAN) planRequested += id else planRequested -= id
+    }
+
+    /** A new conversation started in Plan: its first turn starts in the agent's read-only mode. */
+    public suspend fun seedDraftPlan(session: SessionId): Outcome<Unit> = call {
+        recall(session.raw)
+        if (session.raw !in drafts) paseoFail(PaseoFailureKind.Unavailable)
+        planRequested += session.raw
+        keepDraft(session.raw)
+    }
+
     private fun planned(provider: String?, mode: String?, listed: List<String>): String? {
         if (mode != PaseoPlanModes.APP_PLAN || listed.isEmpty()) return mode
         return PaseoPlanModes.planMode(provider, listed)
@@ -2019,6 +2038,12 @@ public class PaseoGateway(
                     agents[appId]?.str("provider") ?: draftProviders[appId]
 
                 override fun directoryOf(appId: String): String? = agents[appId]?.str("cwd")
+
+                override fun inPlan(appId: String): Boolean =
+                    appId in planRequested ||
+                        agents[appId]?.let {
+                            PaseoPlanModes.isPlanMode(it.str("provider"), it.str("currentModeId"))
+                        } == true
 
                 override suspend fun request(
                     type: String,

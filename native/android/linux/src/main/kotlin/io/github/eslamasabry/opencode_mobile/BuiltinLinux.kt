@@ -1244,8 +1244,11 @@ class BuiltinLinux(private val context: Context) {
 
     /**
      * Removes Claude's OAuth refresh lock (`<config dir>/.oauth_refresh.lock`, an empty folder) for
-     * [profileId] when none of that profile's agent processes runs: one Android stopped mid-refresh
-     * never releases it.
+     * [profileId]: one Android stopped mid-refresh never releases it. signin-truth: only when the
+     * cold-start process census proves no CLI is alive that could hold it
+     * ([PhoneAgentAuthLock.clearWhenCold]). Before, only the app's own tracked agent processes were
+     * asked, so a Claude Code started in the Terminal or by the in-app server's Claude Agent could
+     * be holding it mid-refresh, and a second refresh could start on the same sign-in.
      */
     @Synchronized
     fun clearStaleAgentLoginLock(profileId: String) {
@@ -1256,15 +1259,30 @@ class BuiltinLinux(private val context: Context) {
             owner == profileId && process.isAlive
         }
         if (busy) return
-        val lock =
-            File(
-                context.filesDir,
-                "linux/ubuntu/home/oc/.oc-profiles/$profileId/claude/.oauth_refresh.lock",
-            )
-        if (lock.isDirectory && lock.canonicalFile.parentFile?.name == "claude") {
-            lock.listFiles()?.forEach { it.delete() }
-            if (lock.delete()) Log.i(TAG, "cleared a stale agent login lock")
-        }
+        if (PhoneAgentAuthLock.clearWhenCold(context.filesDir, profileId, privateAgentAuth::coldQuiescent))
+            Log.i(TAG, "cleared a stale agent login lock")
+    }
+
+    /**
+     * signin-truth: whether a Claude Code CLI runs now in one of [profileId]'s agent trees (a
+     * conversation the helper runs, a sign-in terminal). Read from the tasks' argument lists only.
+     */
+    fun claudeCliRunning(profileId: String): Boolean {
+        val roots =
+            synchronized(this) {
+                agentProcessProfiles.filter { (process, owner) -> owner == profileId && process.isAlive }.keys
+                    .mapNotNull { pidOf(it) }
+            }
+        val tasks = roots.flatMap { listOf(it) + descendants(it) }.distinct()
+        return PhoneAgentCliCensus.claudeAmong(
+            tasks.map { pid ->
+                try {
+                    PhoneAgentCliCensus.argv(File("/proc/$pid/cmdline").readBytes())
+                } catch (_: Exception) {
+                    null
+                }
+            }
+        )
     }
 
     /** [profileId]'s private Paseo home, where the helper keeps its config and supervisor lock. */
@@ -1530,11 +1548,10 @@ class BuiltinLinux(private val context: Context) {
             context,
             { profile, argv -> startAgentProcess(profile, argv, privateOutput = true) },
             { profile, quiet ->
-                synchronized(this) {
-                    if (quiet()) PhoneAgentAuthLock.clear(context.filesDir, profile)
-                }
+                synchronized(this) { PhoneAgentAuthLock.clearWhenCold(context.filesDir, profile, quiet) }
             },
             authOtherOwners::snapshot,
+            ::claudeCliRunning,
         )
     }
 
@@ -1733,11 +1750,31 @@ class BuiltinLinux(private val context: Context) {
                 (!serverStorageBroad &&
                     serverStorageRoots.toSet() != sharedStorageRootsForLaunch().toSet()))
 
-    private fun sharedStorageBinds(): List<String> =
-        SharedStorageBinds.binds(
+    private fun sharedStorageBinds(): List<String> {
+        // A start that records what it binds passes that very view: what it says it saw is what it got (W3).
+        val view = launchStorage.get() ?: return SharedStorageBinds.binds(
             sharedStorageRootsForLaunch(),
             confined = !sharedStorageBroadAccess(),
         )
+        return SharedStorageBinds.binds(view.roots, confined = !view.broad)
+    }
+
+    private val launchStorage = ThreadLocal<SharedStorageView?>()
+
+    /**
+     * Runs [start] so the process it starts on this thread binds exactly [view] of shared storage, the view the caller
+     * records for that process; the check of a chosen folder then compares with the binds the process really has, never
+     * with a second read of the list taken a moment apart.
+     */
+    fun <T> startingWith(view: SharedStorageView, start: () -> T): T {
+        val before = launchStorage.get()
+        launchStorage.set(view)
+        try {
+            return start()
+        } finally {
+            if (before == null) launchStorage.remove() else launchStorage.set(before)
+        }
+    }
 
     /** What a process started now gets of shared storage (the rules of [sharedStorageBinds]). */
     @Synchronized
@@ -5938,12 +5975,13 @@ exec gc supervisor run
         // One log per run; the previous one stays for a look after a crash.
         if (log.isFile) log.renameTo(File(home, "$name.previous.log"))
         if (name == SERVER) serverStartLogOffset = log.length()
-        val storageRoots = if (name == SERVER) sharedStorageRootsForLaunch() else emptyList()
-        val storageBroad = name == SERVER && sharedStorageBroadAccess()
-        val process = launchServiceProcess(name, script, log, launch)
-        if (name == SERVER) {
-            serverStorageRoots = storageRoots
-            serverStorageBroad = storageBroad
+        val storage = if (name == SERVER) sharedStorageViewForLaunch() else null
+        val process =
+            if (storage == null) launchServiceProcess(name, script, log, launch)
+            else startingWith(storage) { launchServiceProcess(name, script, log, launch) }
+        if (storage != null) {
+            serverStorageRoots = storage.roots
+            serverStorageBroad = storage.broad
         }
         process.outputStream.close()
         services[name] = serviceStarted(name, process, port, notice, script)
@@ -6896,9 +6934,12 @@ exec gc supervisor run
             }
             val below = descendants(root)
             val members = below.mapNotNull { NativeProcScan.read(it, AndroidProcess.myUid()) }
+            val politeUntil = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(graceMs)
             for (pid in below) signal(pid, OsConstants.SIGTERM)
             if (process.waitFor(graceMs, TimeUnit.MILLISECONDS)) {
-                // proot left when its command did; a straggler may remain.
+                // proot left when its command did; a straggler may remain. signin-truth: it got SIGTERM too and
+                // may be finishing (a Claude Code CLI writing a refreshed sign-in): the rest of the grace first.
+                PoliteStop.settle({ members.any(NativeProcScan::alive) }, politeUntil)
                 members.forEach { NativeProcScan.signalIfSame(it, OsConstants.SIGKILL) }
                 return
             }

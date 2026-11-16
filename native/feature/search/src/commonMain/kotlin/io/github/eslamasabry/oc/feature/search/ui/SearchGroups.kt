@@ -204,11 +204,11 @@ internal fun LazyListScope.placeGroup(
     }
 }
 
-/** The agent's own mark, bare; the neutral chat glyph when the agent has none bundled. */
+/** The agent's own mark in the kit row's mark tile, as the home and the agent chooser draw it (the bare mark drew an empty box in Search); the neutral chat glyph when the agent has none bundled. */
 @Composable
 internal fun agentLeading(mark: String, name: String?): KitRowLeading =
     if (mark.isBlank()) KitRowLeading.Glyph(KitIcons.chat)
-    else KitRowLeading.Logo(mark, name ?: stringResource(Res.string.agentPersonaOtherName), agent = true, bare = true)
+    else KitRowLeading.Logo(mark, name ?: stringResource(Res.string.agentPersonaOtherName), agent = true)
 
 /** The home's state words: Working in the accent, Needs you in amber, Failed plain; nothing when idle. */
 @Composable

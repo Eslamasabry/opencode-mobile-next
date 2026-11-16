@@ -1426,4 +1426,7 @@
     <string name="chatContinueBriefStopped">На чём остановились:</string>
     <string name="chatUiContinuedAfterCommand">Команда ещё выполнялась, поэтому агента попросили дождаться её и продолжить</string>
     <string name="chatSendNoPlanMode">У этого агента нет режима плана, поэтому ничего не отправлено. Выключите «План», чтобы отправить в собственном режиме агента.</string>
+    <string name="kitToolPlanStopped">Остановлено «Планом»</string>
+    <string name="chatStepPlanStopped">Режим плана остановил изменение</string>
+    <string name="chatConnectingToAgent">Подключение к %1$s…</string>
 </resources>

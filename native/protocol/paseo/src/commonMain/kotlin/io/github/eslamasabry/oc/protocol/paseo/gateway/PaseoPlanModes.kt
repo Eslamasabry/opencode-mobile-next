@@ -27,4 +27,14 @@ internal object PaseoPlanModes {
         if (APP_PLAN in listed) return APP_PLAN
         return (TABLE[provider] ?: GENERIC).firstOrNull { it in listed }
     }
+
+    /**
+     * Whether [modeId] is [provider]'s own plan or read-only mode (what the app's Plan became, or what the person chose in
+     * the agent's own picker). The app's second layer declines changes in such a conversation.
+     */
+    fun isPlanMode(provider: String?, modeId: String?): Boolean =
+        modeId != null && (modeId == APP_PLAN || modeId in (TABLE[provider] ?: GENERIC))
+
+    /** Whether the app can hold [provider]'s agent to Plan at all: its own read-only mode, or requests the app declines. */
+    fun holdsPlan(provider: String?): Boolean = TABLE[provider]?.isNotEmpty() ?: false
 }

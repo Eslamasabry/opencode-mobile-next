@@ -12,6 +12,7 @@ import dev.zacsweers.metro.binding
 import io.github.eslamasabry.oc.core.common.AppDispatchers
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
+import io.github.eslamasabry.oc.core.common.Redacted
 import io.github.eslamasabry.oc.core.common.RuntimeProblem
 import io.github.eslamasabry.oc.core.common.failed
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
@@ -755,12 +756,7 @@ class AppPhoneAgents(
                         val present = PhoneAgentRules.present(payload, version)
                         val signIn =
                             if (present == true)
-                                knownSignIn(
-                                    authOwner,
-                                    agent,
-                                    kept[agent.id.raw],
-                                    lapsed = record[agent.id.raw]?.lapsed == true,
-                                )
+                                knownSignIn(authOwner, agent, kept[agent.id.raw], record[agent.id.raw])
                             else null
                         if (!final && ((needsVersion && version == null) || (present == true && signIn == null)))
                             return@mapNotNull showing[agent.id.raw]
@@ -821,6 +817,17 @@ class AppPhoneAgents(
                                     authOwner != null &&
                                     knownPrevious(authOwner, agent, PhoneAgentRules.foundVersion(version)),
                             installedVersion = PhoneAgentRules.foundVersion(version),
+                            limitResets =
+                                if (status == PhoneAgentStatus.Limit)
+                                    record[agent.id.raw]?.limitResetAt?.let(::shortTime)
+                                else null,
+                            signInEvidence =
+                                if (
+                                    authOwner != null &&
+                                        (status == PhoneAgentStatus.SignInNeeded || status == PhoneAgentStatus.Limit)
+                                )
+                                    evidenceOf(authOwner, agent, record[agent.id.raw])
+                                else null,
                             needsSetUp = setUpFirst && status == PhoneAgentStatus.SetUpAtFirstUse,
                             removable =
                                 removal.removable(agent.id) &&
@@ -857,17 +864,31 @@ class AppPhoneAgents(
     private fun knownVersion(owner: ProfileId, agent: AgentDescriptor): Map<String, Any?>? =
         synchronized(admission) { versions[owner to agent.id]?.second }
 
-    /** The sign-in a tile shows without checking: the agent's last answer, or (shown while checking) the kept one. */
+    /**
+     * The sign-in a tile shows without checking: the agent's last answer, or (shown while checking) the kept one, from
+     * the newest evidence ([PhoneAgentFacts.lapseStands]): a lapse a run reported ([noteSignInLapsed], kept in
+     * [record]) reads Sign in needed only while no sign-in check that answered was asked after it.
+     */
     private fun knownSignIn(
         owner: ProfileId?,
         agent: AgentDescriptor,
         kept: PhoneAgentFacts.Fact?,
-        lapsed: Boolean = false,
+        record: PhoneAgentFacts.Fact? = null,
     ): AgentSignInPhase? {
         if (agent.signInMethod == AgentSignInMethod.None) return AgentSignInPhase.SignedIn
-        // Issue 147: a run said this agent's sign-in no longer works (its check may still read a stored sign-in as
-        // signed in): Sign in needed until a sign-in completes ([noteSignInLapsed], [noteSignedIn]).
-        if (lapsed) return AgentSignInPhase.SignedOut
+        if (PhoneAgentFacts.lapseStands(record, owner?.let { checkedAt(it, agent.id, record) }))
+            return AgentSignInPhase.SignedOut
+        val read = readSignIn(owner, agent, kept)
+        // signin-truth: a reply that was the plan's usage limit is the agent working, signed in: "Plan limit reached"
+        // until the reset it named, unless a sign-in check says it is signed out.
+        return if (
+            read != AgentSignInPhase.SignedOut && PhoneAgentFacts.limitStands(record, System.currentTimeMillis())
+        )
+            AgentSignInPhase.LimitReached
+        else read
+    }
+
+    private fun readSignIn(owner: ProfileId?, agent: AgentDescriptor, kept: PhoneAgentFacts.Fact?): AgentSignInPhase? {
         // No script, or one that refuses this agent before it starts (Gemini CLI, Qwen Code, Goose, omp): the same
         // answer every time, so the row says it at once and never shows "Checking sign-in" first.
         if (
@@ -882,6 +903,91 @@ class AppPhoneAgents(
         }
             ?.let(::phaseOf) ?: PhoneAgentFacts.signIn(kept)?.let(::phaseOf)
     }
+
+    /**
+     * When (wall clock) the newest sign-in check of [agent] that answered was asked: this run's own answer, else the
+     * registry's ([record]). A check that could not answer (timed out, no answer) is no evidence and has no time here.
+     */
+    private fun checkedAt(owner: ProfileId, agent: AgentId, record: PhoneAgentFacts.Fact?): Long? {
+        val key = owner to agent
+        val live =
+            synchronized(admission) {
+                accounts[key]?.takeIf { it.state != AuthState.Error }?.let { askedAt[key] ?: Long.MIN_VALUE }
+            }
+        if (live != null && live != Long.MIN_VALUE) return wallOf(live)
+        return record?.signedInAt?.takeIf { record.signedIn != null }
+    }
+
+    /**
+     * signin-truth: where [agent]'s sign-in state comes from, for its sheet's Details: the sign-in check's answer and
+     * when it was asked, a reported lapse (reply or refused start) and when, a reported plan limit and its reset, a
+     * completed sign-in. Technical words only; never the agent's own text, never an account.
+     */
+    private fun evidenceOf(owner: ProfileId, agent: AgentDescriptor, record: PhoneAgentFacts.Fact?): Redacted {
+        val key = owner to agent.id
+        val (live, asked) = synchronized(admission) { accounts[key] to askedAt[key] }
+        val noAnswer = synchronized(admission) { lastNoAnswer[key] }
+        val lines = buildList {
+            when (noAnswer) {
+                null -> Unit
+                AuthProbeError.AgentBusy -> add("newest check: not run, Claude Code was working in a conversation")
+                else -> add("newest check: no answer (${noAnswer.name})")
+            }
+            when {
+                live != null && asked == null && record?.signedIn != null ->
+                    add(
+                        "sign-in check (kept): ${if (record.signedIn) "signed in" else "signed out"}" +
+                            (record.signedInAt?.let { ", asked ${stamp(it)}" } ?: "")
+                    )
+                live != null ->
+                    add(
+                        "sign-in check: " +
+                            when (live.state) {
+                                AuthState.SignedIn -> "signed in"
+                                AuthState.SignedOut -> "signed out"
+                                AuthState.Error -> "no answer (${live.error?.name ?: "error"})"
+                            } + (asked?.let { ", asked ${stamp(wallOf(it))}" } ?: "")
+                    )
+                record?.signedIn != null ->
+                    add(
+                        "sign-in check (kept): ${if (record.signedIn) "signed in" else "signed out"}" +
+                            (record.signedInAt?.let { ", asked ${stamp(it)}" } ?: "")
+                    )
+                else -> add("sign-in check: no answer yet")
+            }
+            record?.lapsedAt?.let { at ->
+                val from =
+                    when (record.lapseSource) {
+                        PhoneAgentFacts.LapseSource.Reply -> "a reply ended on the sign-in"
+                        PhoneAgentFacts.LapseSource.Start -> "the helper refused a start for the sign-in"
+                        null -> "a run reported the sign-in ended"
+                    }
+                val standing =
+                    if (PhoneAgentFacts.lapseStands(record, checkedAt(owner, agent.id, record))) "newest evidence"
+                    else "older than the check"
+                add("reported: $from, ${stamp(at)} ($standing)")
+            }
+            record?.limitAt?.let { at ->
+                add(
+                    "plan limit: a reply said so, ${stamp(at)}" +
+                        (record.limitResetAt?.let { ", resets ${stamp(it)}" } ?: ", no reset named")
+                )
+            }
+            record?.signInDoneAt?.let { add("sign-in completed in the app: ${stamp(it)}") }
+        }
+        return redactor.details(lines.joinToString("\n"))
+    }
+
+    private fun stamp(wallMs: Long): String =
+        java.text.SimpleDateFormat("yyyy-MM-dd HH:mm zzz", java.util.Locale.ROOT).format(java.util.Date(wallMs))
+
+    /** A reset time as this phone words a short date and time. */
+    private fun shortTime(wallMs: Long): String =
+        java.text.DateFormat.getDateTimeInstance(java.text.DateFormat.MEDIUM, java.text.DateFormat.SHORT)
+            .format(java.util.Date(wallMs))
+
+    /** [elapsed] (`SystemClock.elapsedRealtime`) as wall-clock millis. */
+    private fun wallOf(elapsed: Long): Long = System.currentTimeMillis() - (SystemClock.elapsedRealtime() - elapsed)
 
     /**
      * Whether Claude Code's previous version is kept, for the copy found now. Its check hashes the kept program and
@@ -932,7 +1038,8 @@ class AppPhoneAgents(
                             accounts[key],
                             helperPin,
                             appBuild,
-                            signedInAt = answeredAt[key]?.let { wallNow - (bootNow - it) },
+                            // When the check was asked, not when it answered: a failure reported meanwhile is newer.
+                            signedInAt = askedAt[key]?.let { wallNow - (bootNow - it) },
                         )
                     val row = shown[agent.id.raw]
                     val runs = row?.installedVersion
@@ -1012,21 +1119,34 @@ class AppPhoneAgents(
 
     /**
      * Issue 147: a run of [phone]'s agent behind [provider] reported at [atMs] (wall clock) that its sign-in no longer
-     * works: a create the helper refused for its sign-in, or a turn that ended on it. Kept in the registry
-     * ([PhoneAgentFacts.Fact.lapsedAt]) until a sign-in completes ([noteSignedIn]); every reader of [state] reads the
-     * agent as Sign in needed at once. A report from before the last completed sign-in changes nothing.
+     * works: a create the helper refused for its sign-in, or a turn that ended on it ([source]). Kept in the registry
+     * ([PhoneAgentFacts.Fact.lapsedAt]) while it is the newest evidence: a sign-in check asked after it, or a completed
+     * sign-in ([noteSignedIn]), decides instead. Every reader of [state] reads the agent as Sign in needed at once. A
+     * report older than the last answered check or completed sign-in changes nothing.
      */
     @Suppress("TooGenericExceptionCaught")
-    internal suspend fun noteSignInLapsed(phone: ProfileId, provider: String, atMs: Long) {
+    internal suspend fun noteSignInLapsed(
+        phone: ProfileId,
+        provider: String,
+        atMs: Long,
+        source: PhoneAgentFacts.LapseSource = PhoneAgentFacts.LapseSource.Reply,
+    ) {
         val descriptor =
             catalog.agents.firstOrNull { it.providerId == provider && it.signInMethod != AgentSignInMethod.None }
                 ?: return
         if (needsRestart || ownerId() != phone) return
         val owner = agentOwner(phone) ?: return
         if (synchronized(admission) { owner in denied || phone in denied }) return
+        // A sign-in check this run asked after the reported failure is newer evidence: the report is old news.
+        val asked =
+            synchronized(admission) {
+                val key = owner to descriptor.id
+                accounts[key]?.takeIf { it.state != AuthState.Error }?.let { askedAt[key] }
+            }
+        if (asked != null && wallOf(asked) >= atMs) return
         val now =
             try {
-                keepFacts(owner) { PhoneAgentFacts.lapsed(it, descriptor.id.raw, atMs) }
+                keepFacts(owner) { PhoneAgentFacts.lapsed(it, descriptor.id.raw, atMs, source) }
             } catch (e: CancellationException) {
                 throw e
             } catch (_: Exception) {
@@ -1035,8 +1155,10 @@ class AppPhoneAgents(
         if (now[descriptor.id.raw]?.lapsed != true) return
         synchronized(admission) {
             if (owner in denied) return
-            // The kept "signed in" answer is not the truth any more: the next read keeps the lapse ([knownSignIn]).
+            // The kept "signed in" answer is older than the report: the next read asks the agent again, and only a
+            // check asked after the report ends it ([knownSignIn]).
             accounts.remove(owner to descriptor.id)
+            askedAt.remove(owner to descriptor.id)
             mutable.update { state ->
                 state.copy(
                     agents =
@@ -1052,10 +1174,58 @@ class AppPhoneAgents(
         }
     }
 
+    /**
+     * signin-truth (Galaxy, build 10050): a reply of [phone]'s agent behind [provider] at [atMs] was its plan's usage
+     * limit, resetting at [resetAtMs] when it said so. The agent is signed in: every reader of [state] reads "Plan limit
+     * reached" (never "Sign in needed") until the reset ([PhoneAgentFacts.limitStands]).
+     */
+    @Suppress("TooGenericExceptionCaught")
+    internal suspend fun noteLimitReached(phone: ProfileId, provider: String, atMs: Long, resetAtMs: Long?) {
+        val descriptor =
+            catalog.agents.firstOrNull { it.providerId == provider && it.signInMethod != AgentSignInMethod.None }
+                ?: return
+        if (needsRestart || ownerId() != phone) return
+        val owner = agentOwner(phone) ?: return
+        if (synchronized(admission) { owner in denied || phone in denied }) return
+        val now =
+            try {
+                keepFacts(owner) { PhoneAgentFacts.limited(it, descriptor.id.raw, atMs, resetAtMs) }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Exception) {
+                return
+            }
+        val fact = now[descriptor.id.raw]
+        if (!PhoneAgentFacts.limitStands(fact, System.currentTimeMillis())) return
+        synchronized(admission) {
+            if (owner in denied) return
+            mutable.update { state ->
+                state.copy(
+                    agents =
+                        state.agents
+                            .map {
+                                if (
+                                    it.id == descriptor.id.raw &&
+                                        (it.status == PhoneAgentStatus.Ready ||
+                                            it.status == PhoneAgentStatus.SignInNeeded)
+                                )
+                                    it.copy(
+                                        status = PhoneAgentStatus.Limit,
+                                        signInCheckFailed = false,
+                                        limitResets = fact?.limitResetAt?.let(::shortTime),
+                                    )
+                                else it
+                            }
+                            .toImmutableList()
+                )
+            }
+        }
+    }
+
     /** [noteSignInLapsed] for this phone's own agents (the phone the app runs them for). */
     internal suspend fun noteSignInLapsedHere(provider: String, atMs: Long) {
         val phone = ownerId() ?: return
-        noteSignInLapsed(phone, provider, atMs)
+        noteSignInLapsed(phone, provider, atMs, PhoneAgentFacts.LapseSource.Start)
     }
 
     /** A sign-in of [phone]'s [agent] completed (its sign-in page confirmed it): its lapse, if any, ends. */
@@ -1117,6 +1287,8 @@ class AppPhoneAgents(
             if (signIn) {
                 accounts.remove(key)
                 answeredAt.remove(key)
+                askedAt.remove(key)
+                lastNoAnswer.remove(key)
             }
         }
         keepFacts(owner) { PhoneAgentFacts.forget(it, agent.raw, version, signIn, proof, setUp) }
@@ -1370,6 +1542,8 @@ class AppPhoneAgents(
             denied.addAll(owners)
             accounts.clear()
             answeredAt.clear()
+            askedAt.clear()
+            lastNoAnswer.clear()
         }
         // Sign-ins are being reset: no tile may show a kept "signed in" after the restart.
         owners.forEach { forgetSignIns(it) }
@@ -1452,6 +1626,7 @@ class AppPhoneAgents(
                     return phaseOf(last)
             }
         }
+        val asked = android.os.SystemClock.elapsedRealtime()
         val response =
             linux.agentAuthProbe(
                 mapOf(
@@ -1492,23 +1667,35 @@ class AppPhoneAgents(
                     else -> AuthProjectionJson.failed(AuthProbeError.HostUnavailable)
                 }
             } else probed
+        // signin-truth-2: a check that gave no answer is no evidence: the last answer stands, this run's or else the
+        // registry's (after an app start), with its own time; only with neither is the sign-in "not confirmed".
+        val kept =
+            if (fresh.error in PhoneAgentRules.NO_ANSWER) PhoneAgentFacts.signIn(keptFacts(owner)[agent.id.raw])
+            else null
         val answer =
             synchronized(admission) {
                 // Deletion can revoke while the native reader drains. A late read never repopulates
                 // it.
                 if (owner in denied) return AgentSignInPhase.Failed
                 val previous = accounts[key]
-                if (
-                    fresh.error in setOf(AuthProbeError.HostUnavailable, AuthProbeError.TimedOut) &&
-                        previous != null &&
-                        previous.state != AuthState.Error
-                )
-                    previous
-                else
-                    fresh.also {
-                        accounts[key] = it
-                        answeredAt[key] = android.os.SystemClock.elapsedRealtime()
-                    }
+                lastNoAnswer[key] = fresh.error?.takeIf { it in PhoneAgentRules.NO_ANSWER }
+                val standIn = PhoneAgentRules.standIn(fresh, previous, kept)
+                when {
+                    standIn == null ->
+                        fresh.also {
+                            accounts[key] = it
+                            answeredAt[key] = android.os.SystemClock.elapsedRealtime()
+                            askedAt[key] = asked
+                        }
+                    standIn === previous -> standIn
+                    // The registry's answer: no ask time of this run (its own time is in the registry).
+                    else ->
+                        standIn.also {
+                            accounts[key] = it
+                            answeredAt.remove(key)
+                            askedAt.remove(key)
+                        }
+                }
             }
         return phaseOf(answer)
     }
@@ -1519,6 +1706,12 @@ class AppPhoneAgents(
 
     /** When the agent itself last answered its sign-in check ([accounts]). */
     private val answeredAt = HashMap<Pair<ProfileId, AgentId>, Long>()
+
+    /** When that answered check was asked: the time its evidence is from ([PhoneAgentFacts.lapseStands]). */
+    private val askedAt = HashMap<Pair<ProfileId, AgentId>, Long>()
+
+    /** Why the newest check gave no answer (timed out, no answer, Claude Code busy), for Details; null when it did. */
+    private val lastNoAnswer = HashMap<Pair<ProfileId, AgentId>, AuthProbeError?>()
 
     /** Claude Code's previous version: kept or not, for the version found then ([previousOf]). */
     private val rollbacks = HashMap<Pair<ProfileId, AgentId>, Pair<String?, Boolean>>()

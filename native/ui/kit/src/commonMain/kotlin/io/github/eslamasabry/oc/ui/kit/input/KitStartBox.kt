@@ -1,9 +1,14 @@
 package io.github.eslamasabry.oc.ui.kit.input
 
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
@@ -24,6 +29,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
@@ -85,6 +91,18 @@ public fun KitStartBox(
     autofocus: Boolean = false,
     onTextChanged: ((String) -> Unit)? = null,
     focusKey: Any? = null,
+    /**
+     * A reminder from the page that the box is what is missing (Start tapped on an empty box): a new value above zero
+     * brings the cursor to the box and gives it one short nudge, so the reminder is on the box itself and never a
+     * message dropped over the page's title (issue 147, F-041). Calm and Off motion bring the cursor only.
+     */
+    remind: Int = 0,
+    /**
+     * Layout B (New conversation): the box's own foot, one row under the words inside the same box (the agent and model
+     * chip). With it the box fills the room its parent gives it: it grows with the words up to that room, then the words
+     * scroll inside it with the caret in view, and the foot stays whole at the bottom of the box.
+     */
+    foot: (@Composable () -> Unit)? = null,
 ) {
     val focus = remember { FocusRequester() }
     var focused by remember { mutableStateOf(false) }
@@ -133,12 +151,23 @@ public fun KitStartBox(
         }
     }
     LaunchedEffect(focusKey) { if (focusKey != null) focus.requestFocus() }
+    val nudge = remember { Animatable(0f) }
+    val travels = KitMotion.state.travels
+    // One 48 ms leg of the nudge, timed by the kit (debug time scale, still under reduced motion: MOT-GATE-1).
+    val nudgeLeg = KitMotion.specs.countdown<Float>(NUDGE_LEG_MS)
+    LaunchedEffect(remind) {
+        if (remind <= 0) return@LaunchedEffect
+        focus.requestFocus()
+        if (!travels) return@LaunchedEffect
+        for (target in floatArrayOf(-1f, 1f, -.6f, .6f, 0f)) nudge.animateTo(target, nudgeLeg)
+    }
     // The halo needs room above the box: a page scroller clips at its top, and the box is often the first thing on the
     // page (New conversation in Soft, device pass 2026-11-13: the glow ended in a hard band under the header). The
     // box keeps that room itself, so no screen has to know how far its halo reaches.
     val haloRoom = if (halo === Modifier) 0.dp else START_BOX_HALO_ROOM_DP.dp
     Box(
         modifier
+            .offset { androidx.compose.ui.unit.IntOffset((nudge.value * NUDGE_DP.dp.toPx()).toInt(), 0) }
             .padding(top = haloRoom)
             .kitMaxWidth(CapRole.Conversation)
             .fillMaxWidth()
@@ -148,10 +177,12 @@ public fun KitStartBox(
             .then(edge)
             .padding(horizontal = Space.S5.dp, vertical = Space.S4.dp)
     ) {
+      Column {
         BasicTextField(
             state = state,
             modifier =
                 Modifier.fillMaxWidth()
+                    .then(if (foot != null) Modifier.weight(1f, fill = false) else Modifier)
                     .focusRequester(focus)
                     .onFocusChanged { focused = it.hasFocus }
                     .semantics { contentDescription = question },
@@ -163,14 +194,19 @@ public fun KitStartBox(
                     keyboardType = KeyboardType.Text,
                     imeAction = ImeAction.Default,
                 ),
-            lineLimits = startBoxLines(minLines).let { TextFieldLineLimits.MultiLine(it.first, it.last) },
+            lineLimits =
+                startBoxLines(minLines).let {
+                    TextFieldLineLimits.MultiLine(it.first, if (foot != null) Int.MAX_VALUE else it.last)
+                },
             cursorBrush = SolidColor(accent),
             decorator = { inner ->
                 Box(Modifier.fillMaxWidth()) {
-                    if (state.text.isEmpty()) {
+                    // Blank (a stray space or line break too) shows the question: a box that looks empty must say what
+                    // it is for, in every language, and Start already treats blank words as nothing typed.
+                    if (state.text.isBlank()) {
                         androidx.compose.foundation.text.BasicText(
                             question,
-                            Modifier.clearAndSetSemantics {},
+                            Modifier.clearAndSetSemantics { testTag = START_BOX_HINT_TAG },
                             style = body.copy(color = colors.text2),
                         )
                     }
@@ -178,5 +214,16 @@ public fun KitStartBox(
                 }
             },
         )
+        if (foot != null) {
+            Spacer(Modifier.height(Space.S3.dp))
+            foot()
+        }
+      }
     }
 }
+
+/** The placeholder question's handle for tests; the field itself carries the spoken name. */
+internal const val START_BOX_HINT_TAG = "kit-start-box-hint"
+
+private const val NUDGE_DP = 6
+private const val NUDGE_LEG_MS = 48

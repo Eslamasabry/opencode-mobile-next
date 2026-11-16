@@ -13,6 +13,12 @@ internal class PhoneAgentAuthRuntime(
     launch: (String, List<String>) -> Process,
     clearLock: (String, () -> Boolean) -> Unit,
     otherAgentOwners: () -> Set<Pair<Int, String>> = { emptySet() },
+    /**
+     * signin-truth: whether a Claude Code CLI of this profile's agents runs now (a conversation, a sign-in terminal).
+     * Its own work is the evidence then, and a check beside it could refresh the same sign-in at the same moment: no
+     * check starts, and the app keeps the last answer.
+     */
+    private val claudeBusy: (String) -> Boolean = { false },
 ) {
     private companion object {
         const val POLL_MILLIS = 20L
@@ -50,6 +56,11 @@ internal class PhoneAgentAuthRuntime(
 
     fun run(arguments: Map<*, *>, stop: ProbeStop? = null): Map<String, Any?> {
         val request = PhoneAgentAuthRequest.parse(arguments) ?: return PhoneAgentAuthProjection.error("invalidContext")
+        // signin-truth-2: said as its own answer ("agentBusy"), so the app keeps the last answer and says why; before,
+        // it read as "the phone did not answer" and the agent as "Sign-in not confirmed" for as long as a Claude Code
+        // conversation stayed loaded.
+        if (request.agentId == "claude" && claudeBusy(request.profileId))
+            return PhoneAgentAuthProjection.error("agentBusy")
         deadline.set(PhoneAgentAuthDeadline(request.timeoutSeconds))
         return try { probe.run(arguments, stop) }
         finally { deadline.remove(); before.remove() }
@@ -78,7 +89,14 @@ internal class PhoneAgentAuthRuntime(
 
     private fun inventory(): List<PhoneAgentAuthProcessIdentity> = processInventory.snapshot()
 
-    /** Conservative across app restart: any other same-UID task keeps the lock. */
+    /**
+     * The cold-start process census. Conservative across app restart: any other same-UID task keeps the lock. Also what
+     * a helper start reads before it clears the lock (BuiltinLinux.clearStaleAgentLoginLock).
+     */
+    fun coldQuiescent(): Boolean = coldQuiescent(appContext)
+
+    private val appContext = context
+
     private fun coldQuiescent(context: Context): Boolean {
         val manager = context.getSystemService(ActivityManager::class.java)
         val registered = manager?.runningAppProcesses.orEmpty().filter {

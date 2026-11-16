@@ -49,6 +49,34 @@ class SharedFolderGitTest {
     }
 
     @Test
+    fun `W3-STORAGE each repository one level inside a chosen folder is trusted too, nothing deeper`() {
+        val rootfs = rootfs()
+        val config = File(rootfs, "etc/gitconfig")
+        val found =
+            mapOf("/storage/emulated/0/Code" to listOf("app", "site", "../escape", "a/b", ""))
+        assertTrue(
+            BuiltinGitConfig.trustSharedFolders(rootfs, listOf("/sdcard/Code")) { found[it].orEmpty() }
+        )
+        assertEquals(
+            listOf(
+                "/sdcard/Code",
+                "/sdcard/Code/app",
+                "/sdcard/Code/site",
+                "/storage/emulated/0/Code",
+                "/storage/emulated/0/Code/app",
+                "/storage/emulated/0/Code/site",
+            ),
+            safeDirectories(config),
+        )
+        // Found on the app's side of the storage: a folder holding a `.git`, one level in.
+        val code = temp.newFolder("Code")
+        File(code, "app/.git").mkdirs()
+        File(code, "notes").mkdirs()
+        File(code, "app/inner/.git").mkdirs()
+        assertEquals(listOf("app"), BuiltinGitConfig.repositoriesOnPhone(code.absolutePath))
+    }
+
+    @Test
     fun `I147-STORAGE the block follows the chosen folders and goes when none is left`() {
         val rootfs = rootfs("[core]\n\tcreateObject = rename\n")
         val config = File(rootfs, "etc/gitconfig")

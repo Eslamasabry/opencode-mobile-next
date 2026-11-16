@@ -26,6 +26,7 @@ import io.github.eslamasabry.oc.ui.kit.motion.LocalKitGrowTitle
 @Composable
 public fun KitPageOverlay(visible: Boolean, title: String, onDismissRequest: () -> Unit, content: @Composable () -> Unit) {
     if (!visible) return
+    KitReportsModal()
     Popup(onDismissRequest = onDismissRequest, properties = PopupProperties(focusable = true)) {
         CompositionLocalProvider(LocalKitGrowHost provides null, LocalKitGrowTitle provides null) {
             OverlayPage(title, content)

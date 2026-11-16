@@ -1,11 +1,14 @@
 # Known-noise failures: a failing test matching a line here does not make Native CI red (tool/ci/summary.py gates on
-# anything else). One entry per line: <fnmatch on "<module> :: <fully.qualified.Class>"> | <reason>. A line hides a whole
-# class, so fix the class and delete its line; never add a line for a regression. The tests still run and are listed
-# in the run summary. Newest first: generated from CI runs 42510361705 (fast) and the full lane.
+# anything else). This list can only SHRINK: tool/ci/test_gate.py (KnownFailuresCeiling) fails when a line is added or
+# widened, so fix the test and delete its line, never add a line for a regression. A line is either
+#   <module> :: <fully.qualified.Class> > <test name> | <reason>   one test, compared exactly (the form any new line
+#                                                                  would have to take, and even then it is refused), or
+#   <fnmatch on "<module> :: <fully.qualified.Class>"> | <reason>  a whole class: only what is below, shrink-only.
+# The tests still run and are listed in the run summary. Generated from CI runs 42510361705 (fast) and the full lane.
+# ConversationDraftsTest, E06RequestCardsTest (their 2 + 2 failures were fixed by the draft-opening and file-ask changes:
+# both classes pass on the pinned line) and the two tools/strings lines (a gate module, never absorbed) are gone.
 # Flutter golden gates compare with frozen Flutter pictures that are not re-recordable; the runner differs from the PC.
 * :: *.rb.*GateTest | Flutter golden gate (FlutterGoldenGate): reference is a frozen Flutter picture
-engine/composer :: io.github.eslamasabry.oc.engine.composer.ConversationDraftsTest | known noise before CI goldens (2 failing)
-engine/requests :: io.github.eslamasabry.oc.engine.requests.E06RequestCardsTest | known noise before CI goldens (2 failing)
 engine/runtime :: io.github.eslamasabry.oc.engine.runtime.install.VerbatimScriptsTest | known noise before CI goldens (1 failing)
 feature/background :: io.github.eslamasabry.oc.feature.background.BackgroundScreenUiTest | known noise before CI goldens (2 failing)
 feature/chats :: io.github.eslamasabry.oc.feature.chats.rb.o41.ServerSwitcherSheetTest | known noise before CI goldens (2 failing)
@@ -26,5 +29,3 @@ ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o09.KitConsequencesFoldedTest | kno
 ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o27.KitTaskSheetParityTest | known noise before CI goldens (2 failing)
 ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o27.KitTextHaloParityTest | known noise before CI goldens (2 failing)
 ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.walkfix.KitStatusLineStackTest | known noise before CI goldens (2 failing)
-tools/strings :: io.github.eslamasabry.oc.tools.strings.TranslationQualityTest | i18n pipeline's 100% fr/es/pt/ru/vi/id copy fails its own validators (already red on native/i18n run 42589836957); the i18n owner shrinks it with the baseline
-tools/strings :: io.github.eslamasabry.oc.tools.strings.DriftTest | fr values-fr/strings_chat.xml carries U+00A0 (same i18n run); delete this line when the invisible characters are escaped

@@ -152,8 +152,16 @@ public data class FooterRow(
  * `ReversedImmutableList`). The engine keeps the changing tail at the cheap end of the persistent
  * vector and never copies 5,000 rows per publish.
  */
-public class NewestFirst<T>(private val oldestFirst: PersistentList<T>) :
-    AbstractList<T>(), ImmutableList<T> {
+public class NewestFirst<T>(
+    private val oldestFirst: PersistentList<T>,
+    /**
+     * Issue 147: the oldest rows, those of the settled turns (every turn but the newest), as one list that the engine
+     * hands over again as the same instance while none of those turns changed. The rows of this list are its first
+     * `settled.size` rows (oldest first); the rest are the newest turn's. A reader that walks every row keeps what it
+     * found in [settled] by its identity and walks only the newest turn's rows again. Null: not known.
+     */
+    public val settled: PersistentList<T>? = null,
+) : AbstractList<T>(), ImmutableList<T> {
     override val size: Int
         get() = oldestFirst.size
 

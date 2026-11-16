@@ -11,6 +11,7 @@ import io.github.eslamasabry.oc.engine.settings.teaching.StarPromptRules
 import io.github.eslamasabry.oc.engine.transcript.ledger.factTicks
 import io.github.eslamasabry.oc.engine.transcript.ledger.latest
 import io.github.eslamasabry.oc.engine.transcript.state.FooterRow
+import io.github.eslamasabry.oc.engine.transcript.state.NewestFirst
 import io.github.eslamasabry.oc.engine.transcript.state.PromptRow
 import io.github.eslamasabry.oc.engine.transcript.state.TranscriptRow
 import io.github.eslamasabry.oc.engine.transcript.state.TranscriptState
@@ -194,7 +195,7 @@ public class ChatPresenter(
         val l = local.value
         val hits =
             l.findQuery?.let { TranscriptFind.search(inputs.transcript, it) } ?: persistentListOf()
-        return present(inputs, l, hits)
+        return present(inputs, l, FoundHits(l.findQuery, hits))
     }
 
     /** The production state: [work] is where find searches (never the main thread). */
@@ -209,7 +210,8 @@ public class ChatPresenter(
                 }
                 .conflate()
                 .map { (t, q) ->
-                    if (q == null) persistentListOf() else TranscriptFind.search(t, q)
+                    // Tagged with its query: the query changes at once, its hits arrive later (issue 147).
+                    FoundHits(q, if (q == null) persistentListOf() else TranscriptFind.search(t, q))
                 }
                 .flowOn(work)
         val inputs =
@@ -250,7 +252,10 @@ public class ChatPresenter(
         return combine(inputs, local, hits, world.hasOlder, extra) { i, l, h, _, _ ->
                 present(i, l, h)
             }
-            .stateIn(scope, started, ChatUi.loading(world.ref))
+            // The page's first frame shows what the world already holds (kept rows, a message on its way, the title),
+            // never a loading state it would leave a frame later (open-transitions: the combine's first value arrives
+            // after the first frame is drawn).
+            .stateIn(scope, started, current())
     }
 
     /**
@@ -375,8 +380,8 @@ public class ChatPresenter(
      * composed again (about 170 scopes) for nothing on screen. An equal result keeps the last state, and StateFlow
      * then hands the screen nothing.
      */
-    internal fun present(i: ChatInputs, l: ChatLocal, hits: ImmutableList<FindHit>): ChatUi {
-        val built = build(i, l, hits)
+    internal fun present(i: ChatInputs, l: ChatLocal, found: FoundHits): ChatUi {
+        val built = build(i, l, found)
         val last = lastUi
         if (last != null && last == built.copy(revision = last.revision)) return last
         return built.copy(revision = ++revision).also { lastUi = it }
@@ -384,7 +389,11 @@ public class ChatPresenter(
 
     private var lastUi: ChatUi? = null
 
-    private fun build(i: ChatInputs, l: ChatLocal, hits: ImmutableList<FindHit>): ChatUi {
+    private fun build(i: ChatInputs, l: ChatLocal, found: FoundHits): ChatUi {
+        // Hits made for another query (the previous one, while the new one is searched) count for nothing: no mark, no
+        // jump, no step, no count until the new query's own hits arrive (issue 147).
+        val searching = l.findQuery != null && found.query != l.findQuery
+        val hits = if (found.query == l.findQuery) found.hits else persistentListOf()
         lastHits = hits
         // N-47: when the server goes away after the conversation was read, keep the last transcript and title on
         // screen with one offline line (Try again retries the load) instead of replacing them with an error.
@@ -409,6 +418,7 @@ public class ChatPresenter(
                     olderFailure = l.olderFailure,
                     currentOrdinal = TranscriptFind.ordinalOf(hits, cursor),
                     currentSource = hit?.sourceId,
+                    searching = searching,
                 )
             }
         val arrival =
@@ -444,8 +454,11 @@ public class ChatPresenter(
               ),
             phase =
                 when (val load = i.load) {
-                    // Cache-first: known rows draw the real transcript while the live read is on its way.
-                    ChatLoad.Loading -> if (t.rows.isNotEmpty()) ChatPhase.Live else ChatPhase.Loading
+                    // Cache-first: known rows draw the real transcript while the live read is on its way. So do the
+                    // person's own messages on their way (open-transitions: a conversation just started from New
+                    // conversation opened on a skeleton of made-up turns instead of the message just typed): the
+                    // skeleton is only for a conversation of which nothing is known.
+                    ChatLoad.Loading -> if (t.rows.isNotEmpty() || pending.isNotEmpty()) ChatPhase.Live else ChatPhase.Loading
                     ChatLoad.Live -> ChatPhase.Live
                     is ChatLoad.Failed ->
                         if (kept != null) ChatPhase.Live else ChatPhase.Failed(load.failure, loadAgent())
@@ -561,7 +574,7 @@ public class ChatPresenter(
             replySetUpAtFailure.clear()
             return persistentMapOf<String, AgentSetUpNeed>().also { lastSetUpReplies = it }
         }
-        val failed = rows.filter { it is FooterRow && it.failed && !it.reason.isNullOrBlank() }.map { it as FooterRow }
+        val failed = failedTurns(rows).map { it.footer }.filter { !it.reason.isNullOrBlank() }
         replySetUpAtFailure.keys.retainAll { turn -> failed.any { it.turnId == turn } }
         // Newest first: the oldest footer is the conversation's first answer, unless older history is not loaded.
         val firstTurn = if (world.hasOlder.value) null else rows.lastOrNull { it is FooterRow }?.turnId
@@ -625,10 +638,14 @@ public class ChatPresenter(
         runtime: String?,
     ) {
         val newest = rows.firstOrNull { it is FooterRow } as FooterRow? ?: return
-        if (!ChatSignInLapse.lapsed(newest)) return
+        // signin-truth: a reply that was the plan's usage limit is said as a limit, never as a sign-in.
+        val limit = ChatSignInLapse.limit(newest)
+        if (!ChatSignInLapse.lapsed(newest) && limit == null) return
         val provider = runtime ?: newest.providerId ?: return
         if (!lapseNoted.add(newest.turnId)) return
-        port.agentSignInLapsed(owner, provider, newest.createdMs ?: return)
+        val at = newest.createdMs ?: return
+        if (limit != null) port.agentLimitReached(owner, provider, at, limit)
+        else port.agentSignInLapsed(owner, provider, at)
     }
 
     /** Set up at first use ([AgentSetUpRules]): a failed send whose agent was never set up says so on its bubble. */
@@ -669,6 +686,58 @@ public class ChatPresenter(
         return shown.toPersistentMap().also { lastReceiptChecks = it }
     }
 
+    /** Issue 147 meter: rows the per-state walks over every row look at (tests read it). */
+    internal var rowVisits: Long = 0
+        private set
+
+    /** A failed turn's footer and the prompt it answered (null: the turn has none). */
+    private class FailedTurn(val footer: FooterRow, val prompt: PromptRow?)
+
+    private var failedSource: List<TranscriptRow>? = null
+    private var failedSettled: List<FailedTurn> = emptyList()
+
+    /**
+     * The failed turns, newest first. Issue 147: this runs for every state the chat presents, so on every publish while
+     * a reply streams. What the settled turns hold is kept while the engine hands over the same settled rows
+     * ([NewestFirst.settled]); only the newest turn's rows are walked again. A footer finds its prompt among its own
+     * turn's rows, which sit next to it (it used to walk every row once per failed footer).
+     */
+    private fun failedTurns(rows: ImmutableList<TranscriptRow>): List<FailedTurn> {
+        @Suppress("UNCHECKED_CAST")
+        val settled = (rows as? NewestFirst<*>)?.settled as kotlinx.collections.immutable.PersistentList<TranscriptRow>?
+        val live = failedIn(rows, if (settled == null) rows.size else rows.size - settled.size)
+        if (settled == null) return live
+        if (settled !== failedSource) {
+            failedSettled = failedIn(NewestFirst(settled), settled.size)
+            failedSource = settled
+        }
+        return if (live.isEmpty()) failedSettled else live + failedSettled
+    }
+
+    /** The failed footers among the newest [count] rows of [rows] (newest first), each with its turn's prompt. */
+    private fun failedIn(rows: List<TranscriptRow>, count: Int): List<FailedTurn> {
+        var out: ArrayList<FailedTurn>? = null
+        for (i in 0 until count) {
+            rowVisits++
+            val footer = rows[i] as? FooterRow ?: continue
+            if (!footer.failed) continue
+            var prompt: PromptRow? = null
+            var j = i + 1
+            while (j < rows.size) {
+                rowVisits++
+                val row = rows[j]
+                if (row.turnId != footer.turnId) break
+                if (row is PromptRow) {
+                    prompt = row
+                    break
+                }
+                j++
+            }
+            (out ?: ArrayList<FailedTurn>().also { out = it }) += FailedTurn(footer, prompt)
+        }
+        return out ?: emptyList()
+    }
+
     /** B-169: the limit offer of each failed turn. */
     private fun limitOffers(
         t: TranscriptState,
@@ -678,10 +747,9 @@ public class ChatPresenter(
         if (!caps.promptModelChoice) return persistentMapOf()
         val now = clock?.now()?.toEpochMilliseconds()
         var out = persistentMapOf<String, LimitSwitchUi>()
-        for (row in t.rows) {
-            if (row !is FooterRow || !row.failed) continue
-            val words = t.rows.firstOrNull { it is PromptRow && it.turnId == row.turnId } as? PromptRow
-            val count = words?.let { switches[LimitSwitchRules.promptKey(it.text)] } ?: 0
+        for (failed in failedTurns(t.rows)) {
+            val row = failed.footer
+            val count = failed.prompt?.let { switches[LimitSwitchRules.promptKey(it.text)] } ?: 0
             val offer = LimitSwitchRules.offer(row.reason, now, caps.promptModelChoice, count)
             if (offer != LimitSwitchOffer.None)
                 out = out.put(row.turnId, LimitSwitchUi(offer, stoppedModelName(row.turnId)))

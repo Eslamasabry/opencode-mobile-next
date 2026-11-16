@@ -84,14 +84,27 @@ class PhoneAgentOneStatusTest {
     }
 
     @Test
-    fun `B-AGENT-STATUS-002 a start refused as not ready is noted like a lapsed sign-in, so no list keeps saying Ready`() {
-        // The combination of the report: the kept facts say signed in (Ready in the agent list), the helper refuses the
-        // start with "is not ready" / "authentication required" (New conversation: "needs setting up").
-        val notReady =
-            io.github.eslamasabry.oc.core.common.Failure.ComputerDidNotAnswer(
-                io.github.eslamasabry.oc.core.security.Redactor().details("Provider antigravity is not ready"),
+    fun `B-AGENT-STATUS-002 a start refused as not ready is not news about the sign-in, only the helper's sign-in refusal is`() {
+        // signin-truth: "is not ready" / "No model selected" while the helper or the agent was still starting set the
+        // sticky lapse, and the agent read "Sign in needed" everywhere while it was signed in.
+        val redactor = io.github.eslamasabry.oc.core.security.Redactor()
+        for (words in listOf("Provider antigravity is not ready", "No model selected", "Provider claude is disabled"))
+            assertEquals(
+                false,
+                FirstMessageRules.agentNeedsYou(
+                    io.github.eslamasabry.oc.core.common.Failure.ComputerDidNotAnswer(redactor.details(words))
+                ),
+                words,
             )
-        assertEquals(true, FirstMessageRules.agentNeedsYou(notReady))
+        assertEquals(
+            true,
+            FirstMessageRules.agentNeedsYou(
+                io.github.eslamasabry.oc.core.common.Failure.Rejected(
+                    null,
+                    io.github.eslamasabry.oc.protocol.paseo.PaseoAgentSignInTag,
+                )
+            ),
+        )
         assertEquals(false, FirstMessageRules.agentNeedsYou(io.github.eslamasabry.oc.core.common.Failure.TimedOut()))
         assertEquals(false, FirstMessageRules.agentNeedsYou(null))
     }

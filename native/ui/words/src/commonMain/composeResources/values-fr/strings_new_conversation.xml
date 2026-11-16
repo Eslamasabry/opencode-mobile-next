@@ -46,4 +46,10 @@
     <string name="chatsNewStorageFolderDialogTitle">Nouveau dossier dans %1$s</string>
     <string name="chatsNewStorageFolderDialogHelper">Un dossier vide dans le stockage du téléphone. Rien d’autre n’y est ajouté.</string>
     <string name="chatPhoneFolderRestartingAgents">Redémarrage des agents du téléphone pour que l’agent de cette conversation puisse voir son dossier. Cela prend environ une demi-minute.</string>
+    <string name="chatsNewPhoneFolderRestartBoth">Les agents du téléphone et son OpenCode ont démarré avant que vous choisissiez ce dossier, %1$s ne le voit donc pas encore. Redémarrez-les pour travailler ici.</string>
+    <string name="chatsNewPhoneFolderRestartBothAction">Redémarrer les agents du téléphone et OpenCode</string>
+    <string name="chatsNewPhoneFolderRestartingBoth">Redémarrage des agents du téléphone et d’OpenCode pour que chaque agent puisse voir ce dossier. Cela prend environ une demi-minute.</string>
+    <string name="chatsNewPhoneFolderRestartedBoth">Les agents du téléphone et OpenCode ont redémarré. Chaque agent peut maintenant voir ce dossier.</string>
+    <string name="chatsNewPhoneFolderWaitingServer">L’OpenCode de ce téléphone écrit une réponse, il redémarrera donc de lui-même à la fin de la réponse. Rien n’est interrompu.</string>
+    <string name="chatsNewPhoneFolderWaitingAgents">Un agent de ce téléphone travaille, les agents du téléphone redémarreront donc d’eux-mêmes quand il aura terminé. Rien n’est interrompu.</string>
 </resources>

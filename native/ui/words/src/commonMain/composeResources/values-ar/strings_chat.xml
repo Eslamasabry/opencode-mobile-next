@@ -1550,4 +1550,7 @@
     <string name="chatContinueBriefStopped">أين توقّف العمل:</string>
     <string name="chatUiContinuedAfterCommand">كان أحد الأوامر ما زال يعمل، فطُلب من الوكيل أن ينتظره ثم يتابع</string>
     <string name="chatSendNoPlanMode">لا يوجد وضع للخطة عند هذا الوكيل، لذلك لم يُرسَل شيء. أوقف «الخطة» لإرسالها بوضع الوكيل نفسه.</string>
+    <string name="kitToolPlanStopped">أوقفته «الخطة»</string>
+    <string name="chatStepPlanStopped">أوقف وضع الخطة تغييرًا</string>
+    <string name="chatConnectingToAgent">جارٍ الاتصال بـ %1$s…</string>
 </resources>

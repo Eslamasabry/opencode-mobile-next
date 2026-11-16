@@ -436,7 +436,6 @@
     </plurals>
     <string name="reviewSummary__eq1">1 fichier modifié · +%2$d −%3$d</string>
     <string name="reviewAlreadyApplied">L'agent a déjà effectué ces modifications dans votre projet.</string>
-    <string name="reviewLooksGood">Tout est bon</string>
     <string name="reviewUndoAll">Tout annuler</string>
     <string name="reviewSendBackWithNote">Renvoyer avec une note</string>
     <plurals name="reviewUndoTitle">
@@ -446,4 +445,5 @@
     </plurals>
     <string name="reviewUndoTitle__eq1">Annuler 1 fichier modifié\u00A0?</string>
     <string name="reviewUndoBody">Votre projet revient à son état d'avant le début du travail de l'agent. La conversation est conservée.</string>
+    <string name="reviewDone">Terminé</string>
 </resources>

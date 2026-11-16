@@ -26,6 +26,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.focus.FocusRequester
@@ -86,12 +87,13 @@ import kotlin.math.roundToInt
 import kotlin.math.sign
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 /**
  * Glass in the kit, step 4 (docs/designs/glass-in-the-kit/STEP4-PLAN.md): with [KitFloatingBar] the body of a page runs
- * under a floating liquid bar. At rest nothing moves from where it was; scrolled, the content passes under the pills,
- * the capsule and the status bar; without the lens (every other style, reduced motion, the Frosted look, no lens, a
+ * under a floating bar. At rest nothing moves from where it was; scrolled, the content passes under the bar and the pills
+ * and is gone above their foot; the bar paints no pane in any style (owner 2026-11-16); without the lens (every other style, reduced motion, the Frosted look, no lens, a
  * short window) the page draws exactly as it did without the option.
  */
 class KitFloatingBarTest {
@@ -130,6 +132,10 @@ class KitFloatingBarTest {
         val fourChips: Boolean = false,
         /** False: the rows draw nothing (same layout), to tell what the rows add to a picture. */
         val rowsDraw: Boolean = true,
+        /** True: the bar's and the pills' own parts draw nothing (same layout), to tell what the frame paints behind them. */
+        val chromeHidden: Boolean = false,
+        /** True: the page alone, no bar, no rows: its background as the frame draws it. */
+        val empty: Boolean = false,
     )
 
     /** What the test reads back from a scene. */
@@ -153,12 +159,12 @@ class KitFloatingBarTest {
                 seen.ground = LocalKitColors.current.ground
                 val source = rememberKitFrostState()
                 val bar: @Composable () -> Unit = {
-                    Box(Modifier.fillMaxWidth().heightIn(min = BAR_DP.dp).padding(horizontal = 16.dp).testTag("bar"), contentAlignment = Alignment.CenterStart) {
+                    Box(Modifier.fillMaxWidth().heightIn(min = BAR_DP.dp).padding(horizontal = 16.dp).testTag("bar").alpha(if (extras.chromeHidden) 0f else 1f), contentAlignment = Alignment.CenterStart) {
                         KitText("Conversations", role = TypeRole.LargeTitle, maxLines = 2)
                     }
                 }
                 val pills: @Composable () -> Unit = {
-                    Row(Modifier.fillMaxWidth().padding(start = 16.dp).testTag("pills"), verticalAlignment = Alignment.CenterVertically) {
+                    Row(Modifier.fillMaxWidth().padding(start = 16.dp).testTag("pills").alpha(if (extras.chromeHidden) 0f else 1f), verticalAlignment = Alignment.CenterVertically) {
                         KitStatusPill("This phone", KitConnectionTone.Ok, "This phone, connected", {}, Modifier.testTag("pill-status"))
                         KitChip("All projects", Modifier.testTag("pill-projects"), kind = KitChipKind.Action, opensMenu = true, onClick = {})
                         KitChip("Running", Modifier.testTag("pill-running"), kind = KitChipKind.Action, onClick = {})
@@ -167,7 +173,9 @@ class KitFloatingBarTest {
                 }
                 val home = page == Page.Home
                 val refresh = if (extras.refreshing) KitScreenRefresh(refreshing = true, onRefresh = {}) else null
-                KitScreen(
+                if (extras.empty) {
+                    KitScreen(page = true, edges = KitScreenEdges.Bleed) { Box(Modifier.fillMaxSize()) }
+                } else KitScreen(
                     page = true,
                     topBar = if (home && !floating) null else bar,
                     header = if (home && !floating) ({ bar(); pills() }) else null,
@@ -225,7 +233,7 @@ class KitFloatingBarTest {
 
     private class Shot(val image: PixelMap, val bounds: Map<String, DpRect?>)
 
-    private val tags = listOf("bar", "pills", "pill-status", "pill-projects", "pill-running", "row-0", "kit-liquid-bar", "kit-refresh", "field")
+    private val tags = listOf("bar", "pills", "pill-status", "pill-projects", "pill-running", "row-0", "kit-liquid-bar", FLOATING_CHROME_TAG, "kit-refresh", "field")
 
     private fun shot(
         page: Page,
@@ -313,6 +321,9 @@ class KitFloatingBarTest {
     /** The bottom of the floating chrome: the pills on Home, the bar on Settings. */
     private fun chromeBottom(s: Shot, page: Page) = (if (page == Page.Home) s.bounds["pills"] else s.bounds["bar"])!!.bottom.value
 
+    /** The floating block's foot, its bottom: what scrolls under the block is gone above it (it has no pane since 2026-11-16). */
+    private fun foot(s: Shot): Float = s.bounds[FLOATING_CHROME_TAG]!!.bottom.value
+
     private fun assertSamePixels(a: PixelMap, b: PixelMap, what: String) {
         assertEquals(a.width to a.height, b.width to b.height, "$what: size")
         var diff = 0
@@ -338,12 +349,12 @@ class KitFloatingBarTest {
             assertTrue(row.top.value >= bottom + room - .5f, "$page: the first row $row starts under the chrome ending at $bottom")
             assertTrue(row.top.value <= bottom + room + LOADING_BAR_DP + .5f, "$page: the first row $row rests right below the chrome ending at $bottom")
             assertTrue(abs(row.top.value - (before.bounds["row-0"]!!.top.value + room)) <= .5f, "$page: rests where it did plus the pane's room, ${before.bounds["row-0"]} then, $row now")
-            assertTrue(float.bounds["kit-liquid-bar"] != null, "$page: the bar is a liquid capsule")
-            // One pane holds the bar and (Home) the chips row: from the bar's top to the chrome's foot, 4 dp in.
-            val capsule = float.bounds["kit-liquid-bar"]!!
+            assertNull(float.bounds["kit-liquid-bar"], "$page: the bar paints no pane (owner 2026-11-16)")
+            // One block holds the bar and (Home) the chips row and the room under them.
+            val block = float.bounds[FLOATING_CHROME_TAG]!!
             val bar = float.bounds["bar"]!!
-            assertTrue(abs(capsule.top.value - (bar.top.value + 4f)) <= .5f, "$page: the pane $capsule starts 4 dp into the bar $bar")
-            assertTrue(abs(capsule.bottom.value - (bottom + room - 4f)) <= .5f, "$page: the pane $capsule ends 4 dp above the chrome's foot $bottom and its room $room")
+            assertTrue(abs(block.top.value - bar.top.value) <= .5f, "$page: the block $block starts at the bar $bar")
+            assertTrue(abs(block.bottom.value - (bottom + room)) <= .5f, "$page: the block $block ends at the chrome's foot $bottom and its room $room")
         }
     }
 
@@ -356,13 +367,13 @@ class KitFloatingBarTest {
             val drag: ComposeUiTest.(Seen) -> Unit = { drag(-120f - roomBelow(page)) }
             val s = shot(page, floating = true, act = drag)
             val none = shot(page, floating = true, act = drag, extras = Extras(rowsDraw = false))
-            val capsule = s.bounds["kit-liquid-bar"]!!
+            val foot = foot(s)
             debugPng(s.image, "scrolled-$page")
-            // Under the status bar and across the whole pane, its rim included: the rows add nothing.
-            val (mean, max) = diff(s.image, none.image, 0f, 0f, W.toFloat(), capsule.bottom.value - .5f)
-            assertTrue(mean <= WORDS_MEAN && max <= WORDS_MAX, "$page: the rows show above the pane's bottom edge: mean $mean, max $max\n" + map(s.image, none.image, 0f, 0f, W.toFloat(), capsule.bottom.value + 4f))
-            // Below the pane's bottom edge the rows run on sharp once the dissolve is past: they really pass under it.
-            val (_, belowStep) = column(s.image, 2f, capsule.bottom.value + TOP_DISSOLVE_DP + 1f, capsule.bottom.value + 100f)
+            // Under the status bar and across the whole block, down to its foot: the rows add nothing.
+            val (mean, max) = diff(s.image, none.image, 0f, 0f, W.toFloat(), foot - .5f)
+            assertTrue(mean <= WORDS_MEAN && max <= WORDS_MAX, "$page: the rows show above the block's foot: mean $mean, max $max\n" + map(s.image, none.image, 0f, 0f, W.toFloat(), foot + 4f))
+            // Below the foot the rows run on sharp once the dissolve is past: they really pass under the block.
+            val (_, belowStep) = column(s.image, 2f, foot + TOP_DISSOLVE_DP + 1f, foot + 100f)
             assertTrue(belowStep >= 100f, "$page: the rows run on below the pane, steepest step $belowStep")
         }
     }
@@ -373,16 +384,16 @@ class KitFloatingBarTest {
             val drag: ComposeUiTest.(Seen) -> Unit = { drag(-120f - roomBelow(page)) }
             val bright = shot(page, floating = true, act = drag)
             val none = shot(page, floating = true, act = drag, extras = Extras(rowsDraw = false))
-            val capsule = bright.bounds["kit-liquid-bar"]!!
+            val foot = foot(bright)
             val bar = bright.bounds["bar"]!!
             val lines = listOfNotNull(bar, bright.bounds["pills"])
             for (line in lines) {
-                val (mean, max) = diff(bright.image, none.image, line.left.value + 8f, line.top.value + 10f, line.right.value - 8f, minOf(line.bottom.value - 2f, capsule.bottom.value - 1f))
+                val (mean, max) = diff(bright.image, none.image, line.left.value + 8f, line.top.value + 10f, line.right.value - 8f, minOf(line.bottom.value - 2f, foot - 1f))
                 println("$page words over $line: mean $mean max $max")
-                assertTrue(mean <= WORDS_MEAN && max <= WORDS_MAX, "$page: bright rows show behind the words on the pane at $line: mean $mean, max $max of 255, pane $capsule\n" + map(bright.image, none.image, 0f, 0f, W.toFloat(), capsule.bottom.value + 4f))
+                assertTrue(mean <= WORDS_MEAN && max <= WORDS_MAX, "$page: bright rows show behind the words at $line: mean $mean, max $max of 255, foot $foot\n" + map(bright.image, none.image, 0f, 0f, W.toFloat(), foot + 4f))
             }
-            val (rim, rimMax) = diff(bright.image, none.image, capsule.left.value + 40f, capsule.bottom.value - 8f, capsule.right.value - 40f, capsule.bottom.value - 1f)
-            assertTrue(rim <= WORDS_MEAN && rimMax <= WORDS_MAX, "$page: the pane's rim still bends the rows: mean $rim, max $rimMax")
+            val (rim, rimMax) = diff(bright.image, none.image, 40f, foot - 8f, W - 40f, foot - 1f)
+            assertTrue(rim <= WORDS_MEAN && rimMax <= WORDS_MAX, "$page: the rows show just above the block's foot: mean $rim, max $rimMax")
         }
     }
 
@@ -444,7 +455,7 @@ class KitFloatingBarTest {
     }
 
     @Test
-    fun `B-KIT-FLOAT-005 home's lens budget is the bar's one pane and the +, whatever chips sit on the pane`() {
+    fun `B-KIT-FLOAT-005 home's lens budget is the + alone, whatever chips sit in the bar's block`() {
         shot(
             Page.Home,
             floating = true,
@@ -453,14 +464,14 @@ class KitFloatingBarTest {
                 val budget = seen.budget!!
                 val claims = budget.claims.toList()
                 val granted = budget.granted
-                // Four chips and the status pill sit on the pane as controls: they ask for no lens.
-                assertEquals(listOf(LiquidRole.Action, LiquidRole.Bar), claims.map { it.role }.sortedBy { it.rank }, "claims")
-                assertTrue(claims.all { it.key in granted }, "both granted")
+                // The bar paints no pane (owner 2026-11-16); four chips and the status pill ask for no lens.
+                assertEquals(listOf(LiquidRole.Action), claims.map { it.role }, "claims")
+                assertTrue(claims.all { it.key in granted }, "the + granted")
             },
         )
-        // As LiquidEdge counts it: the list's recording is the feature's (free), so the page spends 2 of its 5.
-        val claims = listOf(LiquidRole.Bar, LiquidRole.Action).mapIndexed { i, role -> LiquidClaim(i, role, source = null, order = i) }
-        assertEquals(setOf(0, 1), LiquidEdge.grant(claims))
+        // As LiquidEdge counts it: the list's recording is the feature's (free), so the page spends 1 of its 5.
+        val claims = listOf(LiquidRole.Action).mapIndexed { i, role -> LiquidClaim(i, role, source = null, order = i) }
+        assertEquals(setOf(0), LiquidEdge.grant(claims))
     }
 
     @Test
@@ -489,14 +500,14 @@ class KitFloatingBarTest {
     }
 
     @Test
-    fun `B-KIT-FLOAT-008 right to left the pills run from the right and the capsule stays centred`() {
+    fun `B-KIT-FLOAT-008 right to left the pills run from the right and the block spans the window`() {
         val ltr = shot(Page.Home, floating = true)
         val rtl = shot(Page.Home, floating = true, locale = "ar")
         val status = rtl.bounds["pill-status"]!!
         val projects = rtl.bounds["pill-projects"]!!
         assertTrue(status.left > projects.left, "RTL: the status pill $status leads from the right, before $projects")
-        val capsule = rtl.bounds["kit-liquid-bar"]!!
-        assertTrue(abs(capsule.left.value - (W - capsule.right.value)) <= .5f, "RTL: the capsule $capsule sits centred")
+        val block = rtl.bounds[FLOATING_CHROME_TAG]!!
+        assertTrue(abs(block.left.value - (W - block.right.value)) <= .5f, "RTL: the block $block sits centred")
         assertTrue(abs(rtl.bounds["row-0"]!!.top.value - ltr.bounds["row-0"]!!.top.value) <= .5f, "RTL: the first row rests where it does LTR")
     }
 
@@ -504,12 +515,12 @@ class KitFloatingBarTest {
     fun `B-KIT-FLOAT-009 at text size 2 the bar and pills grow, stay apart and the first row still rests below them`() {
         for (page in Page.entries) {
             val s = shot(page, floating = true, fontScale = 2f, heightDp = TALL_H)
-            val capsule = s.bounds["kit-liquid-bar"]!!
+            val block = s.bounds[FLOATING_CHROME_TAG]!!
             val bar = s.bounds["bar"]!!
             val bottom = chromeBottom(s, page)
             val row = s.bounds["row-0"]!!
-            assertTrue(capsule.top >= bar.top - .5.dp && capsule.top <= bar.top + 4.5.dp, "$page: the pane $capsule starts at the bar $bar")
-            assertTrue(capsule.bottom.value >= bottom - 4.5f, "$page: the pane $capsule reaches the chrome's foot $bottom")
+            assertTrue(block.top >= bar.top - .5.dp && block.top <= bar.top + .5.dp, "$page: the block $block starts at the bar $bar")
+            assertTrue(block.bottom.value >= bottom - .5f, "$page: the block $block reaches the chrome's foot $bottom")
             val room = roomBelow(page)
             assertTrue(row.top.value >= bottom + room - .5f && row.top.value <= bottom + room + LOADING_BAR_DP + .5f, "$page: the first row $row rests right below $bottom and the pane's room $room")
             // The pinned chrome keeps most of the window for the body.
@@ -551,11 +562,11 @@ class KitFloatingBarTest {
             extras = Extras(clickRows = true),
             act = { seen ->
                 drag(-120f)
-                val capsule = onNodeWithTag("kit-liquid-bar", useUnmergedTree = true).getBoundsInRoot()
+                val bar = onNodeWithTag("bar", useUnmergedTree = true).getBoundsInRoot()
                 val pills = onNodeWithTag("pills", useUnmergedTree = true).getBoundsInRoot()
                 onNodeWithTag("scene").performTouchInput {
-                    // The capsule's middle (the title's empty end) and the gutter beside the pills: rows lie under both.
-                    click(Offset(capsule.right.toPx() - 24.dp.toPx(), ((capsule.top + capsule.bottom) / 2).toPx()))
+                    // The bar's middle (the title's empty end) and the gutter beside the pills: rows lie under both.
+                    click(Offset(bar.right.toPx() - 24.dp.toPx(), ((bar.top + bar.bottom) / 2).toPx()))
                     click(Offset(4.dp.toPx(), ((pills.top + pills.bottom) / 2).toPx()))
                 }
                 waitForIdle()
@@ -575,6 +586,68 @@ class KitFloatingBarTest {
         assertEquals(0f, floatingBringBack(top = 170f, chromePx = 160, offset = -160f))
         assertEquals(0f, floatingBringBack(top = 60f, chromePx = 160, offset = 0f))
         assertEquals(40f, floatingBringBack(top = -10f, chromePx = 160, offset = -40f))
+    }
+
+    /**
+     * Every style in both modes over the painted aurora (a live background on), with the lens where Glass draws it, and
+     * Glass without it.
+     */
+    private fun noPaneCases(): List<Triple<String, KitAppearance, KitPlatform>> =
+        Style.entries.flatMap { style ->
+            listOf(AppearanceMode.Dark, AppearanceMode.Light).flatMap { mode ->
+                val look = KitAppearance(style = style, mode = mode, glassLook = GlassLookId.Glossy, liveBackground = true, liveStyle = "auroraImage")
+                if (style == Style.Glass)
+                    listOf(Triple("Glass $mode, lens", look, LensPlatform()), Triple("Glass $mode, no lens", look, FakeKitPlatform(frost = true)))
+                else listOf(Triple("$style $mode", look, FakeKitPlatform()))
+            }
+        }
+
+    /**
+     * Where [page]'s bar and pills draw their own parts in [s], within the window below the status bar: their bounds,
+     * less a line wholly hidden under the status bar or scrolled out of the window.
+     */
+    private fun wordLines(s: Shot, page: Page): List<DpRect> =
+        listOfNotNull(s.bounds["bar"], if (page == Page.Home) s.bounds["pills"] else null)
+            .filter { it.bottom.value > STATUS_DP && it.top.value < H }
+
+    @Test
+    fun `B-KIT-FLOAT-014 the top area paints no pane, plate, band or shadow of its own in any style`() {
+        // Owner 2026-11-16 ("remove the background below the conversations area which includes search, This phone etc."):
+        // with the bar's and the pills' own parts drawing nothing and no rows, the page is its background alone, from
+        // the top edge down past the block's foot.
+        for ((what, look, platform) in noPaneCases()) for (page in Page.entries) {
+            val chrome = shot(page, floating = true, appearance = look, platform = platform, extras = Extras(rowsDraw = false, chromeHidden = true))
+            val ground = shot(page, floating = true, appearance = look, platform = platform, extras = Extras(empty = true))
+            val bottom = chromeBottom(chrome, page) + roomBelow(page) + TOP_DISSOLVE_DP
+            debugPng(chrome.image, "no-pane-$what-$page")
+            val (mean, max) = diff(chrome.image, ground.image, 0f, 0f, W.toFloat(), bottom)
+            assertTrue(
+                mean <= NO_PANE_MEAN && max <= NO_PANE_MAX,
+                "$what, $page: the top area paints over the page's background: mean $mean, max $max of 255\n" +
+                    map(chrome.image, ground.image, 0f, 0f, W.toFloat(), bottom),
+            )
+        }
+    }
+
+    @Test
+    fun `B-KIT-FLOAT-015 scrolled, nothing of the list and no surface lies behind the title or the chips in any style`() {
+        // The list passes under the top area (Glass with the lens) or the top area scrolls away with it (every other
+        // look): either way, where the title and the chips are, only the page's background shows behind them.
+        for ((what, look, platform) in noPaneCases()) for (page in Page.entries) {
+            val drag: ComposeUiTest.(Seen) -> Unit = { drag(-120f - roomBelow(page)) }
+            val chrome = shot(page, floating = true, appearance = look, platform = platform, act = drag, extras = Extras(chromeHidden = true))
+            val ground = shot(page, floating = true, appearance = look, platform = platform, extras = Extras(empty = true))
+            for (line in wordLines(chrome, page)) {
+                val top = maxOf(line.top.value, STATUS_DP.toFloat())
+                val bottom = minOf(line.bottom.value, H.toFloat())
+                val (mean, max) = diff(chrome.image, ground.image, line.left.value, top, line.right.value, bottom)
+                assertTrue(
+                    mean <= NO_PANE_MEAN && max <= NO_PANE_MAX,
+                    "$what, $page: behind the words at $line the list or a surface shows: mean $mean, max $max of 255\n" +
+                        map(chrome.image, ground.image, 0f, 0f, W.toFloat(), bottom + 8f),
+                )
+            }
+        }
     }
 
     private companion object {
@@ -602,6 +675,10 @@ class KitFloatingBarTest {
         /** Behind the words on a top pane: at most this much brightness of 255 from the rows, on average and at any pixel. */
         const val WORDS_MEAN = 2f
         const val WORDS_MAX = 8f
+
+        /** The top area against the page's own background: the same pixels, but for rounding (of 255). */
+        const val NO_PANE_MEAN = .5f
+        const val NO_PANE_MAX = 3f
 
     }
 }

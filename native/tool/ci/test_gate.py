@@ -7,7 +7,7 @@ Cases: a test-compile failure is FAIL; a strings drift-check failure is FAIL; a 
 a known test-class failure is PASS; a new test-class failure is FAIL; a drift test failure cannot be absorbed by the
 known list; a green run is PASS.
 """
-import json, os, subprocess, sys, tempfile, unittest
+import json, os, re, shutil, subprocess, sys, tempfile, unittest
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 PKG = 'io.github.eslamasabry.oc'
@@ -22,7 +22,7 @@ def junit(root, module, cls, failing=()):
         fh.write(f'<testsuite name="{cls}">{cases}</testsuite>')
 
 
-def run_gate(files_log, tasks, xml=(), results=None, report_env=None, planned='0', jobs=None):
+def run_gate(files_log, tasks, xml=(), results=None, report_env=None, planned='0', jobs=None, known=None):
     """Plants a shard (log + XML), runs test_report.py then summary.py. -> (exit code, markdown)."""
     with tempfile.TemporaryDirectory() as tmp:
         work, reports = os.path.join(tmp, 'native'), os.path.join(tmp, 'reports')
@@ -41,7 +41,14 @@ def run_gate(files_log, tasks, xml=(), results=None, report_env=None, planned='0
             json.dump(body, open(os.path.join(reports, f'{name}.json'), 'w'))
         env = dict(os.environ, RESULT_TEST='success', RESULT_COMPILE='success', RESULT_APK='success', PLANNED_SHARDS=planned)
         env.update(results or {})
-        p = subprocess.run([sys.executable, '-I', os.path.join(HERE, 'summary.py'), reports, os.path.join(tmp, 'nobase'), 'fast'],
+        summary = os.path.join(HERE, 'summary.py')
+        if known is not None:  # a planted known_failures.txt: summary.py reads the list next to itself
+            ci = os.path.join(tmp, 'ci')
+            os.makedirs(ci)
+            shutil.copy(summary, ci)
+            open(os.path.join(ci, 'known_failures.txt'), 'w').write(known)
+            summary = os.path.join(ci, 'summary.py')
+        p = subprocess.run([sys.executable, '-I', summary, reports, os.path.join(tmp, 'nobase'), 'fast'],
                            env=env, capture_output=True, text=True)
         return p.returncode, p.stdout
 
@@ -61,6 +68,13 @@ class Gate(unittest.TestCase):
         code, md = run_gate('> Task :feature:chats:desktopTest\n', ':feature:chats:desktopTest', [('feature/chats', f'{PKG}.feature.chats.XTest', ())])
         self.assertEqual(code, 0, md)
         self.assertIn('## Native CI: PASS', md)
+
+    def test_a_fast_run_whose_compile_and_tests_never_ran_is_integrity_not_pass(self):
+        code, md = run_gate('> Task :feature:chats:desktopTest\n', ':feature:chats:desktopTest', [('feature/chats', f'{PKG}.feature.chats.XTest', ())],
+                            results={'RESULT_COMPILE': 'skipped', 'RESULT_TEST': 'skipped'})
+        self.assertEqual(code, 2, md)
+        self.assertIn('## Native CI: FAIL', md)
+        self.assertIn('compile: the job did not run', md)
 
     def test_test_compile_failure_is_fail(self):
         log = ("> Task :feature:settings:compileTestKotlinDesktop FAILED\n"
@@ -120,6 +134,134 @@ class Gate(unittest.TestCase):
                             results={'RESULT_COMPILE': 'failure'})
         self.assertEqual(code, 1, md)
         self.assertIn('compile job failed', md)
+
+
+class OneTestAtATime(unittest.TestCase):
+    """known_failures.txt can name one test; its other tests in the same class still count."""
+    CLS = f'{PKG}.feature.chats.TwoFailTest'
+    LOG = TEST_FAILED_LOG
+    T = ':feature:chats:desktopTest'
+
+    def gate(self, known):
+        return run_gate(self.LOG, self.T, [('feature/chats', self.CLS, ('first breaks', 'second breaks'))], known=known)
+
+    def test_listing_one_test_leaves_the_other_failing_red(self):
+        code, md = self.gate(f'feature/chats :: {self.CLS} > first breaks | planted\n')
+        self.assertEqual(code, 1, md)
+        self.assertIn('second breaks', md)
+        self.assertNotIn('`feature/chats :: ' + self.CLS + ' > first breaks`', md)
+
+    def test_listing_both_tests_is_noise(self):
+        code, md = self.gate(f'feature/chats :: {self.CLS} > first breaks | planted\nfeature/chats :: {self.CLS} > second breaks | planted\n')
+        self.assertEqual(code, 0, md)
+
+    def test_a_test_line_is_exact_not_a_pattern(self):
+        code, md = self.gate(f'feature/chats :: {self.CLS} > * | planted\n')
+        self.assertEqual(code, 1, md)
+
+    def test_a_class_line_still_hides_the_whole_class(self):
+        code, md = self.gate(f'feature/chats :: {self.CLS} | planted\n')
+        self.assertEqual(code, 0, md)
+
+
+class KnownFailuresCeiling(unittest.TestCase):
+    """known_failures.txt only shrinks: a new or wider line fails here. To delete a line, delete it from the file AND
+    from CEILING (the ceiling then stays lower for good)."""
+    CEILING = {
+        '* :: *.rb.*GateTest',
+        'engine/runtime :: io.github.eslamasabry.oc.engine.runtime.install.VerbatimScriptsTest',
+        'feature/background :: io.github.eslamasabry.oc.feature.background.BackgroundScreenUiTest',
+        'feature/chats :: io.github.eslamasabry.oc.feature.chats.rb.o41.ServerSwitcherSheetTest',
+        'feature/devservices :: io.github.eslamasabry.oc.feature.devservices.DevServicesScreenTest',
+        'feature/devservices :: io.github.eslamasabry.oc.feature.devservices.rb.o47.DevServicesPageTest',
+        'feature/files :: io.github.eslamasabry.oc.feature.files.FolderPolishTest',
+        'feature/phone :: io.github.eslamasabry.oc.feature.phone.PhoneScreensTest',
+        'feature/phonesetup :: io.github.eslamasabry.oc.feature.phonesetup.PhoneSetupScreenTest',
+        'feature/servers :: io.github.eslamasabry.oc.feature.servers.PhoneOwnServerMarkTest',
+        'feature/updates :: io.github.eslamasabry.oc.feature.updates.UpdatesScreenUiTest',
+        'feature/usage :: io.github.eslamasabry.oc.feature.usage.LimitsScreenTest',
+        'feature/usage :: io.github.eslamasabry.oc.feature.usage.UsageScreenTest',
+        'ui/kit :: io.github.eslamasabry.oc.ui.kit.E20S09StateActionsTest',
+        'ui/kit :: io.github.eslamasabry.oc.ui.kit.Kita1FrameInsetsTest',
+        'ui/kit :: io.github.eslamasabry.oc.ui.kit.PartADesktopTest',
+        'ui/kit :: io.github.eslamasabry.oc.ui.kit.S7PolishKitTest',
+        'ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o09.KitConsequencesFoldedTest',
+        'ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o27.KitTaskSheetParityTest',
+        'ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o27.KitTextHaloParityTest',
+        'ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.walkfix.KitStatusLineStackTest',
+    }
+
+    @staticmethod
+    def entries():
+        out = []
+        for line in open(os.path.join(HERE, 'known_failures.txt')):
+            line = line.strip()
+            if line and not line.startswith('#'):
+                head, _, reason = line.partition('|')
+                out.append((head.strip(), reason.strip()))
+        return out
+
+    def test_no_line_was_added_or_widened(self):
+        added = sorted({h for h, _ in self.entries()} - self.CEILING)
+        self.assertEqual(added, [], 'known_failures.txt may only shrink: fix the failing test instead of listing it. New or '
+                                    'changed lines: ' + '; '.join(added))
+
+    def test_the_ceiling_follows_every_deletion(self):
+        gone = sorted(self.CEILING - {h for h, _ in self.entries()})
+        self.assertEqual(gone, [], 'these lines were deleted from known_failures.txt: delete them from CEILING in '
+                                   'test_gate.py too, so the list cannot grow back: ' + '; '.join(gone))
+
+    def test_every_line_has_a_reason_and_none_sits_in_a_gate_module(self):
+        for head, reason in self.entries():
+            self.assertTrue(reason, f'{head}: a line needs a reason after "|"')
+            mod = head.split(' :: ')[0]
+            self.assertNotIn(mod, ('quality', 'tools/strings', 'ui/words', 'core/security', 'ui/gate'),
+                             f'{head}: a gate module is never absorbed, the line does nothing')
+
+    def test_the_two_classes_that_were_fixed_are_no_longer_listed(self):
+        text = ' '.join(h for h, _ in self.entries())
+        self.assertNotIn('ConversationDraftsTest', text)
+        self.assertNotIn('E06RequestCardsTest', text)
+
+
+class AndroidUnit(unittest.TestCase):
+    """The Android library unit tests count in the verdict (the android-unit job's own report)."""
+    T = ':feature:chats:desktopTest'
+
+    def gate(self, android, result='success'):
+        jobs = {'compile': {'failed': False, 'gradle_ran': True}, 'apk': {'failed': False, 'gradle_ran': True}}
+        if android is not None:
+            jobs['android-unit'] = android
+        return run_gate('> Task :feature:chats:desktopTest\n', self.T, [('feature/chats', f'{PKG}.feature.chats.XTest', ())],
+                        jobs=jobs, results={'RESULT_ANDROID_UNIT': result} if result else {})
+
+    def test_green_android_tests_pass(self):
+        code, md = self.gate({'failed': False, 'gradle_ran': True, 'tests': 40, 'failing': [], 'real': []})
+        self.assertEqual(code, 0, md)
+        self.assertIn('android unit tests', md)
+
+    def test_failing_android_test_is_fail(self):
+        code, md = self.gate({'failed': True, 'gradle_ran': True, 'tests': 40, 'failing': ['android/voice :: a.B > breaks'], 'real': []},
+                             result='success')
+        self.assertEqual(code, 1, md)
+        self.assertIn('android unit tests failed', md)
+        self.assertIn('android/voice :: a.B > breaks', md)
+
+    def test_failed_android_job_is_fail_even_without_a_report_flag(self):
+        code, md = self.gate({'failed': False, 'gradle_ran': True}, result='failure')
+        self.assertEqual(code, 1, md)
+
+    def test_android_job_that_never_ran_gradle_is_integrity_fail(self):
+        code, md = self.gate({'failed': True, 'gradle_ran': False})
+        self.assertEqual(code, 2, md)
+
+    def test_android_job_without_report_is_integrity_fail(self):
+        code, md = self.gate(None)
+        self.assertEqual(code, 2, md)
+
+    def test_a_run_without_the_android_job_is_unchanged(self):
+        code, md = self.gate(None, result='skipped')
+        self.assertEqual(code, 0, md)
 
 
 class Integrity(unittest.TestCase):
@@ -207,6 +349,21 @@ class Workflow(unittest.TestCase):
         step = text[text.index('python3 -I native/tool/ci/summary.py'):]
         self.assertIn('exit "$rc"', step)
         self.assertNotIn('WORK_BRANCH', text)
+
+    def test_android_unit_tests_run_by_default_and_count_in_the_verdict(self):
+        text = open(os.path.join(HERE, '..', '..', '..', '.github', 'workflows', 'native-ci.yml')).read()
+        inp = text[text.index('      android_unit:'):]
+        self.assertRegex(inp[:inp.index('runner:')], r'default: true')
+        job = text[text.index('  android-unit:'):text.index('  summary:')]
+        self.assertIn("github.event_name == 'push' || inputs.android_unit == true", job)
+        summary_job = text[text.index('  summary:'):]
+        self.assertRegex(summary_job[:summary_job.index('steps:')], r'needs: \[[^\]]*android-unit')
+        self.assertIn('RESULT_ANDROID_UNIT: ${{ needs.android-unit.result }}', summary_job)
+
+    def test_the_summary_job_uploads_the_verdict_the_release_script_reads(self):
+        text = open(os.path.join(HERE, '..', '..', '..', '.github', 'workflows', 'native-ci.yml')).read()
+        self.assertIn('name: ci-verdict', text)
+        self.assertIn('> verdict.json', text)
 
     def test_fast_lane_quality_shard_does_not_depend_on_the_module_list(self):
         text = open(os.path.join(HERE, '..', '..', '..', '.github', 'workflows', 'native-ci.yml')).read()

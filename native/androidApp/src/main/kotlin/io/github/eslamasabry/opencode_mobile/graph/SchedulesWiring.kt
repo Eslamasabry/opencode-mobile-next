@@ -180,11 +180,13 @@ class AppScheduleProfiles(
      * Flutter `scheduledProfileFingerprint`: SHA-256 of the Dart `toJson()` of the saved profile
      * without `name`.
      */
-    override suspend fun legacyFingerprint(profileId: String): String? {
+    override suspend fun legacyFingerprint(profileId: String): String? =
+        legacyRow(profileId)?.let { DartJson.sha256Hex(DartJson.encode(it)) }
+
+    override suspend fun legacyRow(profileId: String): Map<String, Any?>? {
         stores.warm()
         val stored = stores.profiles.profile(ProfileId(profileId))?.profile ?: return null
-        val row = StoredProfileJson.encode(stored).apply { remove("name") }
-        return DartJson.sha256Hex(DartJson.encode(row))
+        return StoredProfileJson.encode(stored).apply { remove("name") }
     }
 
     /**
@@ -514,11 +516,7 @@ class ScheduledPromptWorker(context: Context, params: WorkerParameters) :
     override suspend fun doWork(): Result {
         val graph = applicationContext.appGraph as SchedulesGraphAccess
         val report =
-            ScheduleWorkPolicy.run(
-                graph.schedules,
-                inputData,
-                graph.schedulesClock.now().toEpochMilliseconds(),
-            )
+            ScheduleWorkPolicy.run(graph.schedules, inputData)
         AppLog.tagged("Schedules").i { "run ended: ${report?.status ?: "nothing to do"}" }
         return Result.success()
     }

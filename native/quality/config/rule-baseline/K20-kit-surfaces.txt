@@ -1,7 +1,8 @@
 # K20-kit-surfaces: hand-painted surface lines per kit file (KitSurfaces.kt; allowlist kit-surfaces-allow.txt).
 # A count may only fall: move a paint behind kitSurfaceLook, then lower its number (or delete the line at 0).
-# Never raise a number or add a file by hand. Total: 70
+# Never raise a number or add a file by hand. Total: 68
 # 2026-11-11, KitScreen.kt 4 to 6: the floating header's pane asks the effects layer for its face on two lines (the bar's glass on the floating path), the same hand-wired lens call the bar already made; counted by the rewrite run, not a new painted surface.
+# 2026-11-16, KitScreen.kt 6 to 4: the floating bar paints no pane (no glass face, no ground plate) behind Home's title and chips.
 # 2026-11-11, added by hand for the dock's glass: DockFace.kt 1, the edge dock's glass body asked of the effects layer (kitLiquidFace, LiquidRole.Dock), as every liquid pane is.
 ui/kit-chat/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kitchat/card/KitAgentCard.kt	2
 ui/kit-chat/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kitchat/card/KitAgentStrip.kt	1
@@ -28,7 +29,7 @@ ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/choice/KitWheel.kt	
 ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/dock/DockFace.kt	1
 ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/foundation/KitPanel.kt	1
 ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/frame/KitJumpPill.kt	3
-ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/frame/KitScreen.kt	6
+ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/frame/KitScreen.kt	4
 ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/frame/KitShellBar.kt	1
 ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/input/KitAskField.kt	1
 ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/input/KitField.kt	3
