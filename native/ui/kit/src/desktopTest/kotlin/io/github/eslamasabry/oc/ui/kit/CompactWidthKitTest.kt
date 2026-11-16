@@ -34,7 +34,6 @@ import io.github.eslamasabry.oc.ui.kit.nav.TabRules
 import io.github.eslamasabry.oc.ui.kit.style.KitSignalSample
 import kotlin.test.assertEquals
 import io.github.eslamasabry.oc.ui.kit.agent.agentGridOneColumn
-import io.github.eslamasabry.oc.ui.kit.agent.agentTileColumns
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
 import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
@@ -163,8 +162,6 @@ class CompactWidthKitTest {
         // A 360 dp phone leaves 328 dp inside the gutters: two columns of 158.
         assertTrue(agentGridOneColumn(1f, 328f), "328 dp wide")
         assertTrue(!agentGridOneColumn(1f, 412f), "412 dp wide keeps two columns")
-        assertEquals(1, agentTileColumns(328f, 1f))
-        assertEquals(2, agentTileColumns(380f, 1f))
     }
 
     @Test

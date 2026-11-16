@@ -83,7 +83,7 @@ internal const val AGENT_TILE_MIN_WIDTH: Int = 200
  * the kit's gap, never fewer than two (a phone) nor more than four (a wide window, still inside the Reading cap).
  */
 internal fun agentTileColumns(widthDp: Float, textScale: Float): Int {
-    if (agentGridOneColumn(textScale, widthDp)) return 1
+    if (agentGridOneColumn(textScale)) return 1
     val gap = Space.S3.toFloat()
     val fit = ((widthDp + gap) / (AGENT_TILE_MIN_WIDTH + gap)).toInt()
     return fit.coerceIn(2, 4)
