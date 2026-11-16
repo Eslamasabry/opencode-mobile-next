@@ -41,10 +41,10 @@ env:
   APP_REF: 544bfc4c390cb04afe32db57c31639a3349aa5e3
   REPO: Eslamasabry/opencode-mobile-next
   # Non-empty: reuse the proof-apks artifact of that earlier run of this workflow (same APP_REF) instead of building.
-  REUSE_RUN: ""
+  REUSE_RUN: "43794206083"
   ANDROID_AVD_HOME: /home/runner/.android/avd
   # Non-empty with REUSE_RUN: only these cases (JSON list).
-  CASES: '["f215","via10020","f214"]'
+  CASES: '["f215@swangle","via10020@swangle","f215@lowmem"]'
   RUNNER_TRACKING_ID: ""
 
 jobs:
@@ -179,7 +179,9 @@ jobs:
         run: |
           set -euo pipefail
           a="$RUNNER_TEMP/apks"
-          case "${{ matrix.case }}" in
+          mc="${{ matrix.case }}"; base="${mc%%@*}"; variant=""; [ "$mc" != "$base" ] && variant="${mc#*@}"
+          echo "variant=$variant" >> "$GITHUB_OUTPUT"
+          case "$base" in
             f215)     fl="$a/resigned-opencode-mobile-2.1.5+63.apk"; via="" ;;
             f214)     fl="$a/resigned-opencode-mobile-2.1.4+62.apk"; via="" ;;
             via10020) fl="$a/resigned-opencode-mobile-2.1.5+63.apk"; via="$a/resigned-opencode-mobile-3.0.0-10020-x86_64.apk" ;;
@@ -208,14 +210,18 @@ jobs:
           ls -la "$ANDROID_AVD_HOME" "$ANDROID_AVD_HOME/OCN_GH.avd"
           cfg="$ANDROID_AVD_HOME/OCN_GH.avd/config.ini"
           set_cfg() { grep -v "^$1=" "$cfg" > "$cfg.new" || true; echo "$1=$2" >> "$cfg.new"; mv "$cfg.new" "$cfg"; }
-          set_cfg hw.ramSize 4096
+          variant="${{ steps.pair.outputs.variant }}"
+          set_cfg hw.ramSize "$([ "$variant" = lowmem ] && echo 3072 || echo 4096)"
           set_cfg disk.dataPartition.size 8G
           set_cfg hw.keyboard yes
-          set_cfg hw.cpu.ncore 4
+          set_cfg hw.cpu.ncore "$([ "$variant" = lowmem ] && echo 2 || echo 4)"
           # Guest rendering, as the PC gate AVDs (hw.gpu.enabled=no): with swiftshader_indirect the emulator process
           # died in all three cases when the Flutter chat sent its first prompt (run 43777065410).
-          set_cfg hw.gpu.enabled no
-          set_cfg hw.gpu.mode auto
+          case "$variant" in
+            swangle) set_cfg hw.gpu.enabled yes; set_cfg hw.gpu.mode swangle_indirect ;;
+            *)       set_cfg hw.gpu.enabled no;  set_cfg hw.gpu.mode auto ;;
+          esac
+          grep -E '^hw.(gpu|ramSize|cpu.ncore)' "$cfg"
           set_cfg hw.audioInput yes
           echo "$ANDROID_HOME/emulator" >> "$GITHUB_PATH"
           echo "$ANDROID_HOME/platform-tools" >> "$GITHUB_PATH"
