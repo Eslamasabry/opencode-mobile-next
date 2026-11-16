@@ -2,6 +2,7 @@
 """Release smoke: four checks on ONE connected Android device or emulator, and a small result file.
 
     native/tool/qa/release_smoke.sh --new-apk <build.apk> [--previous-apk <old.apk>] [--out DIR] [--commit SHA]
+    optional env: OC_SMOKE_SERVER (shown name of a saved connection for checks c and d), OC_SMOKE_PROJECT
 
 The device is chosen by the environment variable OC_SMOKE_SERIAL (an adb serial). It is never written to a file.
 Tools: adb (OC_ADB overrides; else adb on PATH, else $ANDROID_HOME or ~/Android/Sdk platform-tools), python3.
@@ -314,8 +315,36 @@ def new_conversation():
         v, nodes = wait_for('composer', 30, composer)
         if not v:
             raise Fail('the conversation did not open with a message box')
+    choose_server(composer)
     settle_setup()
     return composer
+
+
+def choose_server(composer):
+    """OC_SMOKE_SERVER (optional): the saved connection, by its shown name, that checks c and d run on. New conversation
+    opens on the last-used place after every relaunch, so the script picks it each time: the line under the title
+    ("Where it runs: ...") opens the project sheet, "Runs on" lists the connections, then OC_SMOKE_PROJECT picks the project."""
+    server = os.environ.get('OC_SMOKE_SERVER', '').strip()
+    if not server:
+        return
+    prefix = word('chatsNewWhereSpoken').split('%')[0].strip()
+    v, nodes = wait_for('where line', 30, lambda ns: [n for n in ns if n.label().strip().startswith(prefix)])
+    if not v:
+        raise Fail(f'no "{prefix}" line on New conversation to choose {server}')
+    tap(v[0])
+    v, nodes = wait_for('server row', 20, lambda ns: find(ns, server))
+    if not v:
+        raise Fail(f'the project sheet lists no connection named "{server}" under "{word("chatsNewRunsOn")}"')
+    tap(v[0])
+    project = os.environ.get('OC_SMOKE_PROJECT', '').strip()
+    if project:
+        v, nodes = wait_for('project row', 60, lambda ns: find(ns, project))
+        if not v:
+            raise Fail(f'{server} lists no project "{project}"')
+        tap(v[0])
+    v, nodes = wait_for('composer', 30, composer)
+    if not v:
+        raise Fail(f'New conversation did not come back with a message box after choosing {server}')
 
 
 def settle_setup(timeout=90):
