@@ -1,6 +1,5 @@
 package io.github.eslamasabry.opencode_mobile.graph
 
-import android.app.Application
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.Inject
@@ -34,13 +33,24 @@ import kotlinx.coroutines.launch
 @SingleIn(AppScope::class)
 @Inject
 class PhoneOpenCodeAutoUpdate(
-    private val app: Application,
     private val runtime: BuiltinRuntime,
     private val setup: NativePhoneSetup,
     private val leases: NativeChatLeases,
     private val appScope: AppCoroutineScope,
+    private val downloads: PhoneDownloads,
 ) {
     private var started = false
+    @Volatile private var updaterRef: OpenCodeAutoUpdater? = null
+
+    /**
+     * The person chose Download now on mobile data (Home's ask): the pending refresh runs on this network, once, and
+     * is looked at now rather than at the next 30 s look.
+     */
+    fun allowMeteredOnce() {
+        val updater = updaterRef ?: return
+        updater.allowMeteredOnce()
+        appScope.launch { updater.changed() }
+    }
     private val log = AppLog.tagged("OcAutoUpdate")
 
     fun start() {
@@ -58,8 +68,9 @@ class PhoneOpenCodeAutoUpdate(
                 override val installProblem: Boolean
                     get() = this@PhoneOpenCodeAutoUpdate.runtime.serverFacts.value.status?.phase == RuntimePhase.Failed
 
-                // About 126 MB: never over data that is paid for; unknown counts as paid (as the agents' update).
-                override val metered: Boolean get() = activeNetworkMetered(app)
+                // About 126 MB: never over data that is paid for, unless the person said Download now on Home's ask;
+                // only an unmetered network is free (unknown and offline count as paid, as the voice download).
+                override val metered: Boolean get() = downloads.metered
             }
         val jobs =
             object : OpenCodeUpdateJobs {
@@ -99,6 +110,10 @@ class PhoneOpenCodeAutoUpdate(
                 val busy = settle.busy(reading.idle)
                 busy
             }
+        updaterRef = updater
+        downloads.openCode = this
+        downloads.start()
+        appScope.launch { updater.waitingForUnmetered.collect { downloads.openCodeWaiting.value = it } }
         val reads =
             openCodeAutoUpdateLooks(host, {
                 val now = runtime.readWorkIdle()

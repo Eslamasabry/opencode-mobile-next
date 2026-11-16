@@ -2,6 +2,9 @@ package io.github.eslamasabry.oc.engine.runtime.server
 
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.engine.runtime.host.RuntimeStatus
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.time.Duration.Companion.seconds
@@ -85,6 +88,22 @@ public class OpenCodeAutoUpdater(
 
     private val attempted = mutableSetOf<String>()
     private val checking = Mutex()
+    private var meteredAllowed = false
+    private val waiting = MutableStateFlow(false)
+
+    /**
+     * The server is behind the pin and only the metered (or unknown) network holds the update back: Home says it is
+     * waiting for Wi-Fi and offers the person the choice ([allowMeteredOnce]).
+     */
+    public val waitingForUnmetered: StateFlow<Boolean> = waiting.asStateFlow()
+
+    /**
+     * The person chose "Download now" on mobile data: the next update try runs on this network, once. The flag is
+     * spent when the update job starts; a try refused before it started keeps it.
+     */
+    public fun allowMeteredOnce() {
+        meteredAllowed = true
+    }
 
     public suspend fun changed() {
         if (!checking.tryLock()) return
@@ -94,8 +113,11 @@ public class OpenCodeAutoUpdater(
             withTimeoutOrNull(READ_LIMIT) { host.refresh() }
             if (!decide(key)) return
             // A try refused before the job started is not spent: the next look tries again.
-            if (jobs.updateOpenCode(host.runtime)) attempted += key
-            else note("refused before it started; will try again")
+            if (jobs.updateOpenCode(host.runtime)) {
+                attempted += key
+                meteredAllowed = false
+                waiting.value = false
+            } else note("refused before it started; will try again")
         } finally {
             checking.unlock()
         }
@@ -119,7 +141,10 @@ public class OpenCodeAutoUpdater(
         val switchPending = host.switchPending
         val problem = host.installProblem || jobs.failed
         val tried = key in attempted
-        val metered = host.metered
+        val networkMetered = host.metered
+        val metered = networkMetered && !meteredAllowed
+        val inst = installed?.trim()?.removePrefix("v")
+        waiting.value = !inst.isNullOrEmpty() && inst != host.pinnedVersion && !tried && metered
         val go =
             OpenCodeAutoUpdateRule.shouldUpdate(
                 installedVersion = installed,

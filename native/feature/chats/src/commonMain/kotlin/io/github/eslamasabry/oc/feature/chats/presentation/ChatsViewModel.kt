@@ -65,7 +65,30 @@ public class ChatsViewModel(
     sharedHeld: HeldAnswers? = null,
     /** Stops a running conversation from a row's menu (the chat's own stop path); null: the menu offers no Stop. */
     private val stopper: HomeStop? = null,
+    private val downloads: HomeDownloads = NoHomeDownloads(),
 ) : ViewModel(), ChatsActions {
+    /** The download the mobile-data ask is open for. */
+    private val downloadAskFor = MutableStateFlow<HomeDownloadKind?>(null)
+
+    override fun actOnDownload() {
+        val shown = HomeDownloadRules.shown(downloads.facts.value) ?: return
+        when (shown.phase) {
+            HomeDownloadPhase.Waiting -> downloadAskFor.value = shown.kind
+            HomeDownloadPhase.Failed -> if (!downloads.tryAgain(shown.kind)) downloadAskFor.value = shown.kind
+            is HomeDownloadPhase.Running -> Unit
+        }
+    }
+
+    override fun downloadNow() {
+        val kind = downloadAskFor.value ?: return
+        downloadAskFor.value = null
+        downloads.downloadNow(kind)
+    }
+
+    override fun waitForWifi() {
+        downloadAskFor.value = null
+    }
+
     /** Where the home's list is built: off the main thread in the app; where the caller stands in a test. */
     private val work: kotlin.coroutines.CoroutineContext =
         dispatchers?.default ?: kotlin.coroutines.EmptyCoroutineContext
@@ -265,6 +288,8 @@ public class ChatsViewModel(
                 )
             }
             .combine(agentNoticeFlow) { base, notices -> base.copy(agentNotices = notices) }
+            .combine(downloads.facts) { base, facts -> base.copy(download = HomeDownloadRules.shown(facts)) }
+            .combine(downloadAskFor) { base, ask -> base.copy(downloadAsk = ask) }
             .combine(phoneStorage) { base, access -> base.copy(phoneStorage = access) }
             .combine(newRefused) { base, refused -> base.copy(newBlocked = refused && base.home.opening != null) }
             .combine(newKept) { base, kept -> base.copy(newWaiting = kept && base.home.opening != null) }
@@ -294,7 +319,11 @@ public class ChatsViewModel(
                 viewModelScope,
                 SharingStarted.WhileSubscribed(5_000),
                 build(feed.snapshot.value, briefs.brief.value, filters.value)
-                    .copy(updateReady = updates.ready.value, home = home.snapshot.value),
+                    .copy(
+                        updateReady = updates.ready.value,
+                        home = home.snapshot.value,
+                        download = HomeDownloadRules.shown(downloads.facts.value),
+                    ),
             )
 
     /** N-30: OpenCode conversations on a live connection: they can be renamed and pinned. */
