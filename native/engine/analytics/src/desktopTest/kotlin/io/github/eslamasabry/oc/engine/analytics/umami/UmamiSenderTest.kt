@@ -200,7 +200,7 @@ class UmamiSenderTest {
         assertEquals(1, r.transport.batches.size)
         val restored = Rig(); restored.store.value = r.store.value; restored.transport.fail = true; restored.on()
         assertTrue(restored.transport.batches.isEmpty())
-        r.now += UmamiSender.FIRST_BACKOFF_MS - 1
+        r.now += 29_999L
         r.event("memory_pressure", mapOf("level" to "low")); r.lane.run()
         assertEquals(1, r.transport.batches.size, "no request before the full first backoff")
         r.now += 1
@@ -211,31 +211,31 @@ class UmamiSenderTest {
     @Test
     fun `B-180 repeated failures double the delay to the six hour cap without scheduling retries`() {
         val r = Rig(); r.transport.fail = true; r.on()
-        var wanted = UmamiSender.FIRST_BACKOFF_MS
+        var wanted = 30_000L
         repeat(16) {
             r.event("app_open", mapOf("kind" to "warm")); r.lane.run()
             val saved = UmamiCodec.json.decodeFromString<StoredOutbox>(r.store.value!!)
             assertEquals(wanted, saved.retryAtMs - r.now)
             assertTrue(r.lane.work.isEmpty(), "backoff schedules no wake-up")
             r.now = saved.retryAtMs
-            wanted = (wanted * 2).coerceAtMost(UmamiSender.MAX_BACKOFF_MS)
+            wanted = (wanted * 2).coerceAtMost(21_600_000L)
         }
         assertEquals(16, r.transport.batches.size)
-        assertEquals(UmamiSender.MAX_BACKOFF_MS, wanted)
+        assertEquals(21_600_000L, wanted)
     }
 
     @Test
     fun `B-180 count and byte bounds hold while offline`() {
         val r = Rig(bytes = 1600); r.transport.fail = true; r.on()
         repeat(600) { r.event("app_open", mapOf("kind" to "warm")) }
-        assertTrue(r.sender.queued <= UmamiSender.MAX_EVENTS)
+        assertTrue(r.sender.queued <= 256)
         assertTrue(r.sender.queuedBytes <= 1600)
         assertEquals(1, r.lane.work.size, "producer work is coalesced and bounded too")
         r.lane.run()
         val count = Rig(); count.transport.fail = true; count.on()
         repeat(600) { count.event("memory_pressure", mapOf("level" to "low")) }
-        assertTrue(count.sender.queued <= UmamiSender.MAX_EVENTS)
-        assertTrue(count.sender.queuedBytes <= UmamiSender.MAX_BYTES)
+        assertTrue(count.sender.queued <= 256)
+        assertTrue(count.sender.queuedBytes <= 256 * 1024)
         count.lane.run()
         assertEquals("app_open", count.transport.batches.first().first().payload.name, "overflow cannot orphan an unsent session")
     }
@@ -244,8 +244,9 @@ class UmamiSenderTest {
     fun `B-180 events older than three days expire before a later connection`() {
         val r = Rig(); r.transport.fail = true; r.on()
         r.event("app_open", mapOf("kind" to "cold")); r.lane.run()
-        r.now += UmamiSender.MAX_AGE_MS + 1; r.transport.fail = false
+        r.now += 259_200_001L; r.transport.fail = false
         r.event("app_open", mapOf("kind" to "warm")); r.lane.run()
+        assertEquals(1, r.transport.batches.last().size, "the expired session must be gone before delivery")
         assertEquals("warm", r.transport.batches.last().single().payload.data["kind"])
     }
 
