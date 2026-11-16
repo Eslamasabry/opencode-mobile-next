@@ -7,7 +7,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.drawWithCache
-import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -21,7 +20,6 @@ import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.LayoutDirection
-import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.rememberGraphicsLayer
 import io.github.eslamasabry.oc.ui.kit.platform.LocalKitPlatform
@@ -61,12 +59,9 @@ internal fun LiveShaderLayer(
         modifier
             .then(
                 if (finish != null) {
-                    Modifier.drawWithContent { clipRect { this@drawWithContent.drawContent() } }.graphicsLayer {
+                    Modifier.graphicsLayer {
                         renderEffect = finish
                         compositingStrategy = CompositingStrategy.Offscreen
-                        // The finish writes an opaque pixel wherever it runs, inside the layer or not (black-frame
-                        // 2026-11-16): held to the layer's bounds, a sliding page never paints over the page below.
-                        clip = true
                     }
                 } else {
                     Modifier
@@ -134,13 +129,10 @@ internal fun rememberLiveShaderBackdrop(
                 // The finish: the reduced layer filtered up into a full-size layer, decoded and dithered at full resolution.
                 finished.renderEffect = finish
                 finished.compositingStrategy = androidx.compose.ui.graphics.layer.CompositingStrategy.Offscreen
-                // The finish writes an opaque pixel wherever it runs, inside the layer or not (black-frame 2026-11-16:
-                // a page sliding up painted its background over the whole screen): held to the picture's bounds.
-                finished.clip = true
                 finished.kitRecord(Density(density), LayoutDirection.Ltr, IntSize(max(1, size.width.roundToInt()), max(1, size.height.roundToInt()))) {
                     kitDrawLayer(reduced)
                 }
-                clipRect(0f, 0f, size.width, size.height) { kitDrawLayer(finished) }
+                kitDrawLayer(finished)
             } else {
                 kitDrawLayer(reduced)
             }
