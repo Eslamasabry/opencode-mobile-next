@@ -1242,4 +1242,10 @@
     <string name="kitToolPlanStopped">Đã bị Kế hoạch dừng</string>
     <string name="chatStepPlanStopped">Chế độ kế hoạch đã chặn một thay đổi</string>
     <string name="chatConnectingToAgent">Đang kết nối với %1$s…</string>
+    <string name="stageStartingLinux">Đang khởi động Linux…</string>
+    <string name="stageStartingOpenCode">Đang khởi động OpenCode…</string>
+    <string name="stageStartingHelper">Đang khởi động trình hỗ trợ các tác nhân…</string>
+    <string name="stageStartingAgents">Đang khởi động các tác nhân…</string>
+    <string name="stageStartingAgent">Đang khởi động %1$s…</string>
+    <string name="stageOpeningConversation">Đang mở cuộc trò chuyện…</string>
 </resources>

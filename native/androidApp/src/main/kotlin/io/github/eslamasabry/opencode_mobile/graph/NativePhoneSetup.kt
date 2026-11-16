@@ -654,7 +654,10 @@ class NativePhoneSetup(
             override suspend fun installed(): Boolean? =
                 (native { linux.installed } as? Outcome.Ok)?.value
 
-            override suspend fun erase(): Outcome<Unit> = runtime.eraseRuntime()
+            override suspend fun erase(): Outcome<Unit> =
+                runtime.eraseRuntime().also { result ->
+                    if (result is Outcome.Ok) payloadGuard.sweepAgentHelperLastKnown()
+                }
 
             override suspend fun startSetup(): Outcome<Boolean> =
                 when (val ran = start()) {

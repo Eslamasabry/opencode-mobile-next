@@ -1367,4 +1367,10 @@
     <string name="kitToolPlanStopped">Parado pelo Plano</string>
     <string name="chatStepPlanStopped">O modo de plano impediu uma alteração</string>
     <string name="chatConnectingToAgent">Conectando ao %1$s…</string>
+    <string name="stageStartingLinux">Iniciando o Linux…</string>
+    <string name="stageStartingOpenCode">Iniciando o OpenCode…</string>
+    <string name="stageStartingHelper">Iniciando o auxiliar dos agentes…</string>
+    <string name="stageStartingAgents">Iniciando os agentes…</string>
+    <string name="stageStartingAgent">Iniciando %1$s…</string>
+    <string name="stageOpeningConversation">Abrindo a conversa…</string>
 </resources>

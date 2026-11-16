@@ -62,6 +62,10 @@ class PhoneAgentChecks internal constructor(private val linux: BuiltinLinux) {
         return null
     }
 
+    /** The pinned install already checked its code tree; avoid a Node start just to print its version. */
+    internal fun helperVersion(profile: String, path: String): String? =
+        InstalledHelperVersion.read(linux.rootfs) { runVersion(profile, path) }
+
     /** [stop] ends the running `--version` (a read giving way to a person's step); it then answers null. */
     internal fun runVersion(profile: String, path: String, stop: ProbeStop? = null): String? {
         if (stop?.isStopped == true) return null
