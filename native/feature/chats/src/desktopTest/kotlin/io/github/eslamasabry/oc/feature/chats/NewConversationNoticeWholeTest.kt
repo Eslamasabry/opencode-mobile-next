@@ -79,10 +79,6 @@ class NewConversationNoticeWholeTest {
             mainClock.advanceTimeBy(1_500)
             waitForIdle()
             val main = onNodeWithTag("chats-new-main-action").getBoundsInRoot()
-            val probe = StringBuilder("main=$main field=${onNodeWithTag("chats-new-field").getBoundsInRoot()}")
-            for (text in listOf("started before you chose this folder", "Choose another project"))
-                probe.append(" | $text whole=${onNodeWithText(text, substring = true).getBoundsInRoot()} seen=${onNodeWithText(text, substring = true).fetchSemanticsNode().boundsInRoot}")
-            throw AssertionError("PROBE kb=$keyboardDp $probe")
             for (text in listOf("started before you chose this folder", "Choose another project")) {
                 val node = onNodeWithText(text, substring = true)
                 val whole = node.getBoundsInRoot()
@@ -99,4 +95,12 @@ class NewConversationNoticeWholeTest {
     @Test fun `I147-NOTICE sentence and every action whole at 360 x 780 dp with a 304 dp keyboard`() = scene(304)
 
     @Test fun `I147-NOTICE sentence and every action whole at 360 x 780 dp with a 340 dp keyboard`() = scene(340)
+
+    @Test fun `I147-NOTICE sentence and every action whole at 360 x 780 dp with a 380 dp keyboard`() = scene(380)
+
+    @Test fun `I147-NOTICE sentence and every action whole at 360 x 780 dp with a 420 dp keyboard`() = scene(420)
+
+    @Test fun `I147-NOTICE sentence and every action whole at 360 x 780 dp with a 460 dp keyboard`() = scene(460)
+
+    @Test fun `I147-NOTICE sentence and every action whole at 360 x 780 dp with a 500 dp keyboard`() = scene(500)
 }
