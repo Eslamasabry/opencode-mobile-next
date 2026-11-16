@@ -73,6 +73,8 @@ class PreviewRuntime(
     private val phoneHelper: Lazy<AppLocalAgentHostStarter>,
     /** The app coming to the front wakes the helper's start ([wantHelper]): Android admits a start only then. */
     private val visibility: AppVisibility,
+    /** The one stage source: this class tells it which helper start loops run and which sources connect. */
+    private val stages: LaunchStages,
 ) : ServerConnections, ServerDisconnects {
     val profiles: ProfileStore = stores.profiles
     private val lane = dispatchers.serial("preview-runtime")
@@ -365,7 +367,15 @@ class PreviewRuntime(
         makeActive: Boolean = true,
         local: io.github.eslamasabry.oc.engine.runtime.server.LocalServerWait? = null,
     ): Outcome<Unit> {
-        val result = connectNow(id, recoverDrafts, makeActive, local)
+        // The helper's own source connecting is a stage of the start ([LaunchStages]).
+        val helper = isPhoneHelper(id)
+        if (helper) stages.agentConnecting(id, true)
+        val result =
+            try {
+                connectNow(id, recoverDrafts, makeActive, local)
+            } finally {
+                if (helper) stages.agentConnecting(id, false)
+            }
         when (result) {
             is Outcome.Failed -> mutableSourceFailures.update { it + (id to result.failure) }
             is Outcome.Ok -> mutableSourceFailures.update { it - id }
@@ -494,6 +504,7 @@ class PreviewRuntime(
         // After [helperJoins] exists. Issue 147 (owner's phone, build 10057): a start of the agents' helper is admitted
         // only while the app is in front; one refused in the background (an update or a boot started the app) is tried
         // again as soon as the app comes to the front.
+        scope.launch { helperJoins.starting.collect { stages.helperWanted(it) } }
         scope.launch {
             if (ready.await() is Outcome.Failed) return@launch
             helperJoins.followFront(

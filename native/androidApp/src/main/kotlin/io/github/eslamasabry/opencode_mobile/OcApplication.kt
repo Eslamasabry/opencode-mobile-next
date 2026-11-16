@@ -155,6 +155,11 @@ class OcApplication : Application(), GraphOwner {
                             .firstLaunchHooks
                             .start() // E00-S07: the first app open after the Flutter -> native update (plan 05 §7.9)
                     }
+                    step("homeTranscriptWarmer") {
+                        (appGraph as io.github.eslamasabry.opencode_mobile.graph.HomeTranscriptWarmerAccessors)
+                            .homeTranscriptWarmer
+                            .start()
+                    }
                 },
                 "oc-startup",
             )

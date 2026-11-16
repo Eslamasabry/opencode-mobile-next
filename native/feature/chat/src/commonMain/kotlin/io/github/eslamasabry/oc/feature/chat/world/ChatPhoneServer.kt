@@ -44,6 +44,13 @@ public interface ChatPhoneServer {
     public fun waiting(profile: ProfileId): StateFlow<PhoneServerWait> = NotWaiting
 
     /**
+     * The real current stage of getting [profile]'s server ready (This phone's OpenCode, or the agents' helper and its
+     * agents), from the app's own signals; null while none is current (readers then use their generic words). Each
+     * stage already holds at least [STAGE_HOLD_MS]. Read by the chat page's waiting line and by the home.
+     */
+    public fun stage(profile: ProfileId): StateFlow<LaunchStage?> = NoStage
+
+    /**
      * Issue 147: true when [ref] is a phone agent's conversation the agents helper no longer holds and cannot take up
      * again where it stopped (after a restart, for an agent whose own resume is not proven, or one that already failed
      * to resume): it opens to read what it had, and continuing starts a new conversation. False when it continues in
