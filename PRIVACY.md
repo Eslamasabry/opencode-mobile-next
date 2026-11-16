@@ -192,9 +192,9 @@ User-Agent carries the Android version and device class, without a device identi
 number is also the tag. Google receives the app version automatically and the `app_build` user
 property is the build number, set only with usage on and cleared when it is off.
 
-Unsent Umami events stay in private storage for at most three days, up to 256 events and 256 KiB
-of encoded event data (300 KiB including queue framing). Short request timeouts and increasing
-back-off limit failed requests. Retries happen during normal app use; this queue starts no
+The private queue holds up to 256 events and 256 KiB of encoded event data (300 KiB including
+queue framing). Events older than three days are discarded when the app next uses the queue;
+they are never sent. Short request timeouts and increasing back-off limit failed requests. Retries happen during normal app use; this queue starts no
 background work and sets no alarms. Turning usage off drops the queue and cancels an in-flight
 request. Crash reports, problem reports and Performance traces still go only to Google.
 
