@@ -30,7 +30,10 @@ public enum class ProductEvent(public val wire: String) {
     /** The person came back to an unfinished setup: `step`, `minutes_range` (how long they were away). */
     SetupResumed("setup_resumed"),
 
-    /** The first reply this install ever saw: `server_kind`, `first_reply_range`. */
+    /**
+     * This install's first measured reply: `server_kind`, `first_reply_range`, `after_consent` (yes when a reply was seen
+     * before the person agreed to usage, so this is not the very first; nothing is sent for that earlier reply).
+     */
     FirstReply("first_reply"),
 
     /** The person chose to connect a computer. */
@@ -71,7 +74,8 @@ public enum class ProductEvent(public val wire: String) {
 
     /**
      * A turn ended: `outcome` (`done` only with visible output, `no_output` without), `agent`, `server_kind`,
-     * `first_reply_range` (Send to the first visible text or tool row), `ms_range`, `tools_range`, `fail_kind`,
+     * `first_reply_range` (Send to the first visible text or tool row), `activity_range` (Send to the agent's first sign
+     * of life of any kind, same ranges), `ms_range`, `tools_range`, `fail_kind`,
      * `recovered` (this turn's own connection), `follow_up`.
      */
     ChatTurn("chat_turn"),
@@ -79,6 +83,7 @@ public enum class ProductEvent(public val wire: String) {
     /**
      * An approval or question the person was asked: `kind`, `result` (an answer only once the server confirmed it;
      * `auto` a saved mode's answer, `stopped` its run was stopped, `expired` left unanswered while the run went on),
+     * `surface` (where the person answered: chat, home, notification or widget; only on their own answer),
      * `ms_range` (asked to confirmed).
      */
     Approval("approval"),
@@ -103,7 +108,8 @@ public enum class ProductEvent(public val wire: String) {
 
     /**
      * Slow frames on one kind of page, once per session: `screen`, `janky_pct_range`, `frozen_range`, `refresh_hz`,
-     * `late_pct_range` (frames past their own deadline) and `seen_hz` (the rate most frames were given).
+     * `late_pct_range` (frames past their own deadline) and `seen_hz` (the rate most frames were given). In the chat,
+     * one report per `interaction` (streaming, scrolling, menu, keyboard or idle) instead of one for the whole page.
      */
     Jank("jank"),
 
@@ -417,6 +423,7 @@ public val productSchema: Map<String, Map<String, Set<String>>> =
                 mapOf(
                     "server_kind" to ProductServerKind.entries.map { it.wire }.toSet(),
                     "first_reply_range" to HealthRanges.firstReply.toSet(),
+                    "after_consent" to HealthWords.yesNo,
                 ),
             ProductEvent.ScreenView.wire to mapOf("screen" to ProductScreen.entries.map { it.wire }.toSet()),
             ProductEvent.FeatureUsed.wire to mapOf("feature" to ProductFeature.entries.map { it.wire }.toSet()),
@@ -480,6 +487,7 @@ private fun healthSchema(): Map<String, Map<String, Set<String>>> {
                 "agent" to HealthWords.chatAgents,
                 "server_kind" to HealthWords.serverKinds,
                 "first_reply_range" to HealthRanges.firstReply.toSet(),
+                "activity_range" to HealthRanges.firstReply.toSet(),
                 "ms_range" to HealthRanges.turn.toSet(),
                 "tools_range" to HealthRanges.tools.toSet(),
                 "fail_kind" to HealthWords.turnErrorKinds,
@@ -490,6 +498,7 @@ private fun healthSchema(): Map<String, Map<String, Set<String>>> {
             mapOf(
                 "kind" to HealthWords.approvalKinds,
                 "result" to HealthWords.approvalResults,
+                "surface" to HealthWords.surfaces,
                 "ms_range" to HealthRanges.turn.toSet(),
             ),
         ProductEvent.QueueFlush.wire to
@@ -530,6 +539,7 @@ private fun healthSchema(): Map<String, Map<String, Set<String>>> {
                 "refresh_hz" to HealthRanges.refreshHz.toSet(),
                 "late_pct_range" to HealthRanges.jankPct.toSet(),
                 "seen_hz" to HealthRanges.refreshHz.toSet(),
+                "interaction" to HealthWords.interactions,
             ),
         ProductEvent.MemoryPressure.wire to mapOf("level" to HealthWords.memoryLevels),
     )

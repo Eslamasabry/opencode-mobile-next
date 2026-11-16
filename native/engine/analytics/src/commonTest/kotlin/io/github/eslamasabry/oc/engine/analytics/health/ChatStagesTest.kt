@@ -73,7 +73,7 @@ class ChatStagesTest {
         r.now += 20_000
         r.journey.text("s1", "m1", streamed = true)
         r.journey.ended("s1")
-        assertEquals(listOf(mapOf("server_kind" to "computer", "first_reply_range" to "2-10s")), r.all("first_reply"))
+        assertEquals(listOf(mapOf("server_kind" to "computer", "first_reply_range" to "2-10s", "after_consent" to "no")), r.all("first_reply"))
         assertEquals("done", r.last("chat_turn").getValue("outcome"))
         assertEquals("2-10s", r.last("chat_turn").getValue("first_reply_range"))
         assertEquals(1, r.all("send_result").size)

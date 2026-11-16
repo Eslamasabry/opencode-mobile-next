@@ -264,12 +264,23 @@ public class HealthFlow(private val telemetry: () -> Telemetry = { AppTelemetry.
         )
     }
 
-    /** The first reply this install ever saw. */
-    public fun firstReply(serverKind: String, firstReplyMs: Long) {
-        telemetry().track(
+    /**
+     * This install's first measured reply. [afterConsent] says a reply was seen before the person agreed to usage, so
+     * this is not the very first (`after_consent` yes); the past is never sent. True when it was sent: nothing goes while
+     * usage is off, and the caller keeps the reply for later.
+     */
+    public fun firstReply(serverKind: String, firstReplyMs: Long, afterConsent: Boolean = false): Boolean {
+        val t = telemetry()
+        if (!t.available || !t.usage.value) return false
+        t.track(
             ProductEvent.FirstReply,
-            mapOf("server_kind" to serverKind, "first_reply_range" to HealthRanges.firstReplyOf(firstReplyMs)),
+            mapOf(
+                "server_kind" to serverKind,
+                "first_reply_range" to HealthRanges.firstReplyOf(firstReplyMs),
+                "after_consent" to if (afterConsent) "yes" else "no",
+            ),
         )
+        return true
     }
 
     // ---- chat journey ----
@@ -283,6 +294,7 @@ public class HealthFlow(private val telemetry: () -> Telemetry = { AppTelemetry.
                 put("agent", chatAgentWord(turn.agent))
                 put("server_kind", turn.serverKind)
                 put("first_reply_range", HealthRanges.firstReplyOf(turn.firstReplyMs))
+                put("activity_range", HealthRanges.firstReplyOf(turn.activityMs))
                 put("ms_range", HealthRanges.turnOf(turn.totalMs))
                 put("tools_range", HealthRanges.toolsOf(turn.tools))
                 if (turn.failKind != null) put("fail_kind", turn.failKind)
@@ -296,7 +308,7 @@ public class HealthFlow(private val telemetry: () -> Telemetry = { AppTelemetry.
         telemetry().feature(feature)
     }
 
-    public fun approval(kind: String, result: String, waitedMs: Long) {
+    public fun approval(kind: String, result: String, waitedMs: Long, surface: String? = null) {
         val t = telemetry()
         when (result) {
             "denied", "declined" -> t.breadcrumb("chat.deny")
@@ -305,7 +317,12 @@ public class HealthFlow(private val telemetry: () -> Telemetry = { AppTelemetry.
         }
         t.track(
             ProductEvent.Approval,
-            mapOf("kind" to kind, "result" to result, "ms_range" to HealthRanges.turnOf(waitedMs)),
+            buildMap {
+                put("kind", kind)
+                put("result", result)
+                put("ms_range", HealthRanges.turnOf(waitedMs))
+                if (surface != null) put("surface", surface)
+            },
         )
     }
 
@@ -375,6 +392,8 @@ public data class ChatTurnSummary(
     val agent: String?,
     val serverKind: String,
     val firstReplyMs: Long?,
+    /** Send to the agent's first sign of life of any kind (null: none came). */
+    val activityMs: Long? = null,
     val totalMs: Long,
     val tools: Int,
     val failKind: String?,

@@ -90,10 +90,10 @@ class ChatJourneyTest {
             mapOf("result" to "ok", "agent" to "build", "input" to "text", "server_kind" to "phone"),
             r.vendor.events.first { it.first == "send_result" }.second,
         )
-        assertEquals(mapOf("server_kind" to "phone", "first_reply_range" to "2-10s"), r.last("first_reply"))
+        assertEquals(mapOf("server_kind" to "phone", "first_reply_range" to "2-10s", "after_consent" to "no"), r.last("first_reply"))
         assertEquals(
             mapOf(
-                "outcome" to "done", "agent" to "build", "server_kind" to "phone", "first_reply_range" to "2-10s",
+                "outcome" to "done", "agent" to "build", "server_kind" to "phone", "first_reply_range" to "2-10s", "activity_range" to "2-10s",
                 "ms_range" to "10-30s", "tools_range" to "1-3", "recovered" to "none", "follow_up" to "none",
             ),
             r.last("chat_turn"),
@@ -212,7 +212,7 @@ class ChatJourneyTest {
         r.now += 12_000
         approvals.answered("a1", "allowed")
         approvals.gone("a1")
-        assertEquals(mapOf("kind" to "run", "result" to "allowed", "ms_range" to "10-30s"), r.last("approval"))
+        assertEquals(mapOf("kind" to "run", "result" to "allowed", "ms_range" to "10-30s", "surface" to "chat"), r.last("approval"))
         approvals.asked("a2", "s1", ApprovalMeter.kindOf("edit"))
         r.now += 700_000
         approvals.gone("a2") // left without an answer

@@ -274,4 +274,37 @@ class JourneyWiringTest {
         for (reason in listOf("sk-secret-123 at /home/me/app", "quota exceeded", "model gpt-x not found", null))
             assertTrue(turnErrorWord(null, null, reason) in allowed)
     }
+
+    // ---- decision 20: where an approval was answered ----
+
+    @Test
+    fun `B-JOURNEY-111 an answer sent from home or a notification says so, a failed send takes the word back`() {
+        val telemetry = Recorder()
+        val meter = ApprovalMeter({ 0L }, HealthFlow { telemetry })
+        io.github.eslamasabry.oc.engine.analytics.health.AppJourneys.install(ChatJourney({ 0L }, HealthFlow { telemetry }), meter)
+        try {
+            meter.asked("a1", "s1", "run")
+            kotlinx.coroutines.runBlocking {
+                withApprovalSurface("a1", "notification") { io.github.eslamasabry.oc.core.common.Outcome.Ok(Unit) }
+            }
+            meter.answered("a1", "allowed")
+            assertEquals("notification", telemetry.events.last { it.first == "approval" }.second["surface"])
+            meter.asked("a2", "s1", "edit")
+            kotlinx.coroutines.runBlocking {
+                withApprovalSurface("a2", "home") {
+                    io.github.eslamasabry.oc.core.common.Outcome.Failed(
+                        io.github.eslamasabry.oc.core.common.Failure.Refused(io.github.eslamasabry.oc.core.common.RefusalReason.StaleScope)
+                    )
+                }
+            }
+            meter.answered("a2", "denied")
+            assertEquals("chat", telemetry.events.last { it.first == "approval" }.second["surface"], "the send did not go from home")
+            meter.asked("a3", "s1", "run")
+            noteWidgetAnswer("a3", allowed = false)
+            assertEquals("widget", telemetry.events.last { it.first == "approval" }.second["surface"])
+            assertEquals("denied", telemetry.events.last { it.first == "approval" }.second["result"])
+        } finally {
+            io.github.eslamasabry.oc.engine.analytics.health.AppJourneys.reset()
+        }
+    }
 }

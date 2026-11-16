@@ -121,12 +121,18 @@ public class JankMeter(
     private val report: (screen: ProductScreen, frames: JankReport) -> Unit,
     private val refreshRate: () -> Double = { 60.0 },
     private val minFrames: Int = 30,
+    /** What the person is doing in the chat right now (a word of [HealthWords.interactions]); read per frame batch. */
+    private val interaction: () -> String? = { null },
 ) {
     public var running: Boolean = false
         private set
 
     private var screen = ProductScreen.Other
-    private val counts = HashMap<ProductScreen, Counts>()
+
+    /** One page kind's frames; in the chat also split by what was going on (null elsewhere). */
+    private data class Key(val screen: ProductScreen, val interaction: String?)
+
+    private val counts = HashMap<Key, Counts>()
 
     private class Counts {
         var frames = 0
@@ -158,7 +164,8 @@ public class JankMeter(
      */
     public fun onFrames(total: Int, slow: Int, frozen: Int = 0, judged: Int = total, late: Int = slow, hz: Double = 0.0) {
         if (!running) return
-        val c = counts.getOrPut(screen) { Counts() }
+        val word = if (screen == ProductScreen.Chat) interaction()?.takeIf { it in HealthWords.interactions } else null
+        val c = counts.getOrPut(Key(screen, word)) { Counts() }
         c.frames += total
         c.janky += slow
         c.frozen += frozen
@@ -177,18 +184,19 @@ public class JankMeter(
         counts.clear()
     }
 
-    private fun flush(kind: ProductScreen) {
-        val c = counts[kind] ?: return
+    private fun flush(key: Key) {
+        val c = counts[key] ?: return
         if (c.frames < minFrames) return
         val shown = HealthRanges.refreshHzOf(refreshRate())
         report(
-            kind,
+            key.screen,
             JankReport(
                 pctRange = HealthRanges.jankPctOf(c.janky * 100.0 / c.frames),
                 frozenRange = HealthRanges.frozenOf(c.frozen),
                 hz = shown,
                 latePctRange = HealthRanges.jankPctOf(if (c.judged > 0) c.late * 100.0 / c.judged else 0.0),
                 seenHz = c.hz.maxByOrNull { it.value }?.key ?: shown,
+                interaction = key.interaction,
             ),
         )
     }
@@ -224,16 +232,19 @@ public data class JankReport(
     val hz: String,
     val latePctRange: String,
     val seenHz: String,
+    /** The chat's own split: what was going on (null for any other page). */
+    val interaction: String? = null,
 ) {
     /** The event's parameters besides `screen`. */
     public fun params(): Map<String, String> =
-        mapOf(
-            "janky_pct_range" to pctRange,
-            "frozen_range" to frozenRange,
-            "refresh_hz" to hz,
-            "late_pct_range" to latePctRange,
-            "seen_hz" to seenHz,
-        )
+        buildMap {
+            put("janky_pct_range", pctRange)
+            put("frozen_range", frozenRange)
+            put("refresh_hz", hz)
+            put("late_pct_range", latePctRange)
+            put("seen_hz", seenHz)
+            if (interaction != null) put("interaction", interaction)
+        }
 }
 
 /**
@@ -248,11 +259,13 @@ public class HealthTelemetry(
     private val scope: CoroutineScope,
     private val clock: Clock = Clock.System,
     refreshRate: () -> Double = { 60.0 },
+    interaction: () -> String? = { null },
 ) {
     public val jank: JankMeter =
         JankMeter(
             report = { screen, frames -> telemetry.track(ProductEvent.Jank, mapOf("screen" to screen) + frames.params()) },
             refreshRate = refreshRate,
+            interaction = interaction,
         )
 
     private var context: HealthDeviceContext? = null

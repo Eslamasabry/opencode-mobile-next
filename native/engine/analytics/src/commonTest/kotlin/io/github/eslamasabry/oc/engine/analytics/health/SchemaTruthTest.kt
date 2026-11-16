@@ -46,7 +46,7 @@ class SchemaTruthTest {
             assertTrue(word in productSchema.getValue(event).getValue(key), "$event.$key lists $word")
             assertTrue(productValueIsSafe(word), word)
         }
-        // Every event property is a GA custom dimension; 36 are registered and none may be added here.
+        // Every event property is a GA custom dimension; 36 are registered; the four above are asked of the owner (activity_range, surface, interaction, after_consent).
         val dimensions = productSchema.values.flatMap { it.keys }.toSet()
         assertEquals(
             setOf(
@@ -55,10 +55,12 @@ class SchemaTruthTest {
                 "janky_pct_range", "kind", "late_pct_range", "level", "minutes_range", "ms_range", "outcome", "reason",
                 "recovered", "refresh_hz", "result", "screen", "seen_hz", "sent", "server_kind", "signal", "stage",
                 "starter", "step", "tools_range", "turns_range",
+                // 2026-11-16 decisions: three new fields, and the one that marks a first reply measured after consent.
+                "activity_range", "surface", "interaction", "after_consent",
             ),
             dimensions,
         )
-        assertEquals(36, dimensions.size)
+        assertEquals(40, dimensions.size)
         for (values in productSchema.values.flatMap { it.values }) for (v in values) assertTrue(productValueIsSafe(v), v)
     }
 }

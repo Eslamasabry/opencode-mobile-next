@@ -7,9 +7,19 @@ import kotlinx.coroutines.flow.update
 
 /** Whether this install ever saw a reply (`first_reply` is sent once per install). */
 public interface FirstReplyOnce {
+    /** A reply was seen on this install, whether or not usage was on at the time. */
     public fun seen(): Boolean
 
     public fun mark()
+
+    /**
+     * `first_reply` was actually sent for this install. An install that agreed after its first reply has [seen] but has
+     * not sent: its first reply after agreeing is sent once, marked `after_consent`. Defaults to [seen] for a store that
+     * keeps one flag.
+     */
+    public fun sent(): Boolean = seen()
+
+    public fun markSent(): Unit = Unit
 
     public object Never : FirstReplyOnce {
         override fun seen(): Boolean = true
@@ -48,6 +58,7 @@ public class ChatJourney(
         val tools = HashSet<String>()
         var busy = false
         var firstReplyMs: Long? = null
+        var activityMs: Long? = null
         var lastActivityMs: Long = startMs
         var lastKind: String = ""
         var followUp: String = "none"
@@ -131,6 +142,8 @@ public class ChatJourney(
         val t = turns.value[sessionId] ?: return
         t.lastActivityMs = now()
         t.lastKind = kind
+        // The person's own prompt is a text or file part too: those count only once the message is the assistant's.
+        if ((kind != "text" && kind != "file") || messageId in t.assistant) activity(t)
     }
 
     /** Any streamed piece arrived (text or reasoning): activity only. */
@@ -138,6 +151,7 @@ public class ChatJourney(
         val t = turns.value[sessionId] ?: return
         t.lastActivityMs = now()
         t.lastKind = "text"
+        activity(t)
     }
 
     /**
@@ -148,13 +162,17 @@ public class ChatJourney(
         val t = turns.value[sessionId] ?: return
         t.lastActivityMs = now()
         t.lastKind = "text"
-        if (streamed || messageId in t.assistant) firstReply(t)
+        if (streamed || messageId in t.assistant) {
+            activity(t)
+            firstReply(t)
+        }
     }
 
     /** A tool call of this turn (once per call; later updates of the same call are not counted again). Its row shows. */
     public fun tool(sessionId: String, partId: String) {
         val t = turns.value[sessionId] ?: return
         t.tools.add(partId)
+        activity(t)
         firstReply(t)
     }
 
@@ -164,6 +182,9 @@ public class ChatJourney(
             it.lastActivityMs = now()
         }
     }
+
+    /** Some turn of this app is running right now (the chat's `interaction` reads it; nothing is kept). */
+    public fun anyBusy(): Boolean = turns.value.values.any { it.busy }
 
     /** The person pressed Stop for this turn. */
     public fun stopped(sessionId: String) {
@@ -283,6 +304,7 @@ public class ChatJourney(
                 agent = t.traits.agent,
                 serverKind = serverKind(t),
                 firstReplyMs = t.firstReplyMs,
+                activityMs = t.activityMs,
                 totalMs = (now() - t.startMs).coerceAtLeast(0),
                 tools = t.tools.size,
                 failKind = errorKind,
@@ -292,6 +314,11 @@ public class ChatJourney(
         )
     }
 
+    /** The agent's first sign of life in this turn, of any kind: its own number (`chat_turn.activity_range`), set once. */
+    private fun activity(t: Turn) {
+        if (t.activityMs == null) t.activityMs = (now() - t.startMs).coerceAtLeast(0)
+    }
+
     /** Stage 2: the first output the person can see in this turn. */
     private fun firstReply(t: Turn) {
         if (t.replied) return
@@ -299,10 +326,12 @@ public class ChatJourney(
         val elapsed = (now() - t.startMs).coerceAtLeast(0)
         t.firstReplyMs = elapsed
         flow.replyShown(serverKind(t), elapsed)
-        if (!firstEver.seen()) {
-            firstEver.mark()
-            flow.firstReply(serverKind(t), elapsed)
-        }
+        // `first_reply` is this install's first MEASURED reply. Nothing is sent for a reply seen before the person
+        // agreed; the first one after agreeing is sent, saying it was not the very first (`after_consent`).
+        val alreadySent = firstEver.sent()
+        val seenBefore = firstEver.seen()
+        if (!seenBefore) firstEver.mark()
+        if (!alreadySent && flow.firstReply(serverKind(t), elapsed, afterConsent = seenBefore)) firstEver.markSent()
     }
 
     private fun serverKind(t: Turn): String = if (t.onPhone) "phone" else "computer"
@@ -357,6 +386,21 @@ public class ApprovalMeter(private val now: () -> Long, private val flow: Health
 
     private val open = MutableStateFlow<Map<String, Asked>>(emptyMap())
 
+    /** Where an answer was given when it was not in the chat (`home`, `notification`): by request id, in memory only. */
+    private val surfaces = HashMap<String, String>()
+
+    /**
+     * The answer to [id] is about to be sent from [surface] (one of [HealthWords.surfaces] other than `chat`, which is the
+     * default). Call it before the send; [surfaceUnused] takes it back when the send did not go.
+     */
+    public fun surface(id: String, surface: String) {
+        if (surface in HealthWords.surfaces) surfaces[id] = surface
+    }
+
+    public fun surfaceUnused(id: String) {
+        surfaces.remove(id)
+    }
+
     public fun asked(id: String, sessionId: String, kind: String) {
         if (id in open.value) return
         open.update { it + (id to Asked(sessionId, kind, now())) }
@@ -377,7 +421,24 @@ public class ApprovalMeter(private val now: () -> Long, private val flow: Health
         val a = open.value[id] ?: return
         if (a.reported) return
         a.reported = true
-        flow.approval(a.kind, result, (a.confirmedAtMs ?: now()) - a.atMs)
+        flow.approval(a.kind, result, (a.confirmedAtMs ?: now()) - a.atMs, surfaceFor(id, result))
+    }
+
+    /**
+     * The person's answer was taken by the server through a surface that does not go through the chat's request list (a
+     * widget). Counted at once, as that surface; a later disappearance of the request adds nothing.
+     */
+    public fun answeredOn(id: String, result: String, surface: String) {
+        val a = open.value[id] ?: return
+        if (a.reported) return
+        a.reported = true
+        flow.approval(a.kind, result, now() - a.atMs, surface.takeIf { it in HealthWords.surfaces })
+    }
+
+    /** `surface` is a person's answer's own word: not for a saved rule's `auto`, nor for a request that just left. */
+    private fun surfaceFor(id: String, result: String): String? {
+        val hinted = surfaces.remove(id)
+        return if (result in HealthWords.personAnswers) hinted ?: "chat" else null
     }
 
     /** The run that asked was stopped (Stop here or anywhere, or the server ended it): nothing can answer it now. */
@@ -392,6 +453,7 @@ public class ApprovalMeter(private val now: () -> Long, private val flow: Health
     public fun gone(id: String) {
         val a = open.value[id] ?: return
         open.update { it - id }
+        surfaces.remove(id)
         journey()?.approvalOpen(a.sessionId, -1)
         if (a.reported) return
         a.reported = true

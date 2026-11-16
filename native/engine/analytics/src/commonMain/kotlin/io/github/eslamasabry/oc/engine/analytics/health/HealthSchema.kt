@@ -222,6 +222,15 @@ public object HealthWords {
      */
     public val approvalResults: Set<String> =
         linkedSetOf("allowed", "always", "denied", "answered", "declined", "expired", "auto", "stopped")
+
+    /** `approval.surface`: where the person answered (only for their own answer, never for `auto`, `stopped` or `expired`). */
+    public val surfaces: Set<String> = linkedSetOf("chat", "home", "notification", "widget")
+
+    /** The `approval.result` words that are a person's own answer. */
+    public val personAnswers: Set<String> = linkedSetOf("allowed", "always", "denied", "answered", "declined")
+
+    /** `jank.interaction` (chat only): what was going on while the frames were drawn. */
+    public val interactions: Set<String> = linkedSetOf("streaming", "scrolling", "menu", "keyboard", "idle")
     public val exitKinds: Set<String> = setOf("0", "1", "126", "127", "signal", "other")
     public val signals: Set<String> = setOf("SIGILL", "SIGSEGV", "SIGBUS", "SIGKILL", "other", "none")
     public val compatModes: Set<String> = setOf("none", "armcap", "threads", "both")
