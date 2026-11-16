@@ -31,7 +31,7 @@ public class ConnectionReads(
 ) {
     private val order = Mutex()
     private val sessions = HashMap<SessionId, Deferred<Outcome<Session>>>()
-    private val deletions = HashSet<SessionId>()
+    private val deletions = MutableStateFlow<Set<SessionId>>(emptySet())
 
     private data class TailKey(val session: SessionId, val cursor: String?, val limit: Int)
 
@@ -49,11 +49,9 @@ public class ConnectionReads(
      * A confirmed deletion is permanent for this graph; late reads and startup retries cannot
      * restore it.
      */
-    public suspend fun forget(session: SessionId) {
-        order.withLock {
-            deletions += session
-            mutableMissing.update { it + session }
-        }
+    public fun forget(session: SessionId) {
+        deletions.update { it + session }
+        mutableMissing.update { it + session }
     }
 
     /**
@@ -63,7 +61,10 @@ public class ConnectionReads(
      */
     public suspend fun unforget(session: SessionId) {
         order.withLock {
-            if (session !in deletions) mutableMissing.update { it - session }
+            mutableMissing.update { if (session in deletions.value) it else it - session }
+            // A synchronous deletion may race the update above. Restore its notification too;
+            // refusal checks the permanent set throughout, so no intervening read can revive it.
+            mutableMissing.update { it + deletions.value }
         }
     }
 
@@ -78,7 +79,7 @@ public class ConnectionReads(
     private fun refusal(session: SessionId): Failure? =
         when {
             closed.load() -> Failure.Refused(RefusalReason.StaleScope)
-            session in mutableMissing.value -> Failure.NotFound()
+            session in deletions.value || session in mutableMissing.value -> Failure.NotFound()
             else -> null
         }
 

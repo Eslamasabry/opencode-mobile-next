@@ -26,7 +26,11 @@ class NotFoundTombstoneTest {
         gateway.sessionList = persistentListOf(Session(id))
         assertEquals(
             id,
-            assertIs<Outcome.Ok<ServerPage<Session>>>(gateway.sessionPage()).value.items.single().id,
+            assertIs<Outcome.Ok<ServerPage<Session>>>(gateway.sessionPage())
+                .value
+                .items
+                .single()
+                .id,
         )
         reads.unforget(id)
         assertEquals(id, assertIs<Outcome.Ok<Session>>(reads.session(id)).value.id)
@@ -73,7 +77,9 @@ class NotFoundTombstoneTest {
             val reads =
                 ConnectionReads(gateway, ConnectionCoroutineScope(backgroundScope.coroutineContext))
             assertIs<Outcome.Ok<Session>>(reads.session(id))
-            reads.forget(id)
+            // The list's confirmed-delete hook is a regular callback, not a suspend command.
+            val forget: (SessionId) -> Unit = reads::forget
+            forget(id)
             reads.unforget(id)
             assertIs<Failure.NotFound>(
                 assertIs<Outcome.Failed>(reads.session(id, fresh = true)).failure
