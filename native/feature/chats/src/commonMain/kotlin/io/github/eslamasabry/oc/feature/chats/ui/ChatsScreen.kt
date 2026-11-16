@@ -904,24 +904,22 @@ private data class HomeRowFlags(
     /** The row's last run failed and its agent is signed out: the row says Sign in needed. */
     val signedOut: Boolean = false,
     /**
-     * Its agent or its server is getting ready (the app is starting its source, or its kept tap waits for it): the
-     * working mark alone in the time's place, no word (home-getting-ready, item 3).
+     * Its agent is getting ready (the app is starting the phone agents' helper, or its kept tap waits): the working
+     * mark alone in the time's place, no word (home-getting-ready, item 3).
      */
     val gettingReady: Boolean = false,
 )
 
 /**
- * Whether [row]'s agent or server is getting ready: the app is starting its source (the agents' helper, This phone's
- * own OpenCode, also as the server still opening) or the row's kept tap waits for it. An agent update keeps its word.
+ * Whether [row]'s agent is getting ready: its source is the phone's agents and the app is starting their helper, or
+ * the row's own kept tap waits for its source. OpenCode rows keep their times while a server opens (the pill says
+ * that), and an agent update keeps its word.
  */
-private fun rowGettingReady(row: ConversationRowUi, state: ChatsUi): Boolean {
-    val starting = state.home.sources.firstOrNull { it.profile == row.ref.profileId }?.starting
-    val opening =
-        state.home.opening?.takeIf {
-            it.profile == row.ref.profileId && it.onThisPhone && it.phase != ChatsOpeningPhase.Failed
-        } != null
-    return SourceStartRules.rowGettingReady(starting, waiting = state.waitingOpen == row.ref || opening)
-}
+private fun rowGettingReady(row: ConversationRowUi, state: ChatsUi): Boolean =
+    SourceStartRules.rowGettingReady(
+        state.home.sources.firstOrNull { it.profile == row.ref.profileId }?.starting,
+        waiting = state.waitingOpen == row.ref,
+    )
 
 private fun rowFlags(row: ConversationRowUi, state: ChatsUi): HomeRowFlags =
     HomeRowFlags(
@@ -967,15 +965,20 @@ private fun ConversationRow(
 ) {
     val title = rowTitleText(row.title)
     val canArchive = flags.canArchive
+    // The working mark alone in the time's place (its word is for a screen reader only): the row's agent is getting
+    // ready, or its kept tap waits; never over a held answer, an agent update's word, Needs you or Working.
+    val markOnly =
+        flags.held == null && flags.heldQuestion == null && !flags.questionSending &&
+            !(flags.waiting && flags.waitingWord == WaitingWord.Updating) &&
+            (flags.waiting || (flags.gettingReady && row.status != RowStatus.NeedsYou && row.status != RowStatus.Running))
     val status =
         // While the person's answer is held ("Allowed · Undo" under the row) or a chosen answer to a question is held or
         // on its way, the state word must not say "Needs you".
         if (flags.held != null || flags.heldQuestion != null || flags.questionSending) null
         // B-333: the tap is kept; the row says it waits for its server instead of looking dead: an agent update says
-        // so, anything else getting ready is the working mark alone (its word is for a screen reader only).
+        // so, anything else getting ready is the working mark alone.
         else if (flags.waiting && flags.waitingWord == WaitingWord.Updating) words.updating
-        else if (flags.gettingReady && row.status != RowStatus.NeedsYou && row.status != RowStatus.Running) words.gettingReady
-        else if (flags.waiting) words.gettingReady
+        else if (markOnly) words.gettingReady
         else if (flags.gaveUp) words.notAnswering
         // Issue 147: an old agent conversation opens and continues like any other, so its row reads like any other.
         else when (row.status) {
@@ -1074,7 +1077,7 @@ private fun ConversationRow(
                 preview = preview,
                 meta = meta,
                 project = project,
-                state = status?.let { KitRowState(it, tone, waiting = it == words.gettingReady) },
+                state = status?.let { KitRowState(it, tone, waiting = markOnly) },
                 pinned = flags.pinned,
                 growKey = row.ref,
                 onLongClick = if (row.canOpen || canArchive) ({ menuOpen = true }) else null,

@@ -24,6 +24,8 @@ import io.github.eslamasabry.oc.engine.agents.feed.ReturnBrief
 import io.github.eslamasabry.oc.feature.chats.presentation.AppStart
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsFilters
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsListSourceUi
+import io.github.eslamasabry.oc.feature.chats.presentation.ChatsOpeningPhase
+import io.github.eslamasabry.oc.feature.chats.presentation.ChatsOpeningUi
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsState
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsUi
 import io.github.eslamasabry.oc.feature.chats.ui.ChatsScreen
@@ -169,10 +171,27 @@ class HomeGettingReadyTest {
         }
 
     @Test
-    fun `HOME-READY-002 rows of This phone's own OpenCode while it starts show the mark too`() =
+    fun `HOME-READY-002 guard - This phone's OpenCode opening or starting keeps its rows' times, no mark`() =
         runDesktopComposeUiTest(360, 900) {
-            home(ui(ChatsListSourceUi(office, "Office PC", shown = true, main = true, onThisPhone = false, unreachable = false), phoneSource(starting = AppStart.Phone, main = false)))
-            assertTrue(rowsOf("Explain this project").single().let { "Getting ready…" in it && "min ago" !in it })
+            // This phone is the main server and still opening: the pill carries that wait; its rows keep their times.
+            val opening =
+                starting.let {
+                    it.copy(
+                        waitingOpen = null,
+                        home =
+                            it.home.copy(
+                                sources = persistentListOf(phoneSource(), agentsSource()),
+                                opening = ChatsOpeningUi(ChatsOpeningPhase.Starting, "This phone", profile = phone, onThisPhone = true),
+                            ),
+                    )
+                }
+            val show = home(opening)
+            val oc = rowsOf("Explain this project").single()
+            assertTrue("55 min ago" in oc && "Getting ready" !in oc, "row: $oc")
+            // This phone's OpenCode as a second source that the app is starting: the same.
+            show(ui(ChatsListSourceUi(office, "Office PC", shown = true, main = true, onThisPhone = false, unreachable = false), phoneSource(starting = AppStart.Phone, main = false)))
+            val second = rowsOf("Explain this project").single()
+            assertTrue("55 min ago" in second && "Getting ready" !in second, "row: $second")
         }
 
     @Test
