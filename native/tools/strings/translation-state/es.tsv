@@ -7979,6 +7979,7 @@ nativeSearchShortcutRefresh	70bd063bf7
 nativeSearchShortcutSend	2343b816ac
 nativeSearchShortcutTabs	91be216915
 nativeSearchShortcutsBody	8b0dad5f24
+nativeTelemetryConsentBody	ef4f42e264
 nativeTelemetryUsageDetail	4c295c4c6b
 nativeToolsChooseModel	09388d8f7f
 nativeToolsCoding	b35ab0829c

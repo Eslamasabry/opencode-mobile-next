@@ -39,7 +39,7 @@ import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
 import io.github.eslamasabry.oc.ui.kit.row.KitSwitchRow
 import io.github.eslamasabry.oc.ui.shell.ShellOverlay
 import io.github.eslamasabry.oc.ui.words.res.Res
-import io.github.eslamasabry.oc.ui.words.res.telemetryConsentBody
+import io.github.eslamasabry.oc.ui.words.res.nativeTelemetryConsentBody
 import io.github.eslamasabry.oc.ui.words.res.telemetryConsentChoose
 import io.github.eslamasabry.oc.ui.words.res.telemetryConsentSave
 import io.github.eslamasabry.oc.ui.words.res.telemetryCrashesDetail
@@ -237,7 +237,7 @@ class TelemetryConsentOverlay(private val continuity: AppTelemetryContinuity) : 
                         title = stringResource(Res.string.telemetryConsentTitle),
                         confirmLabel = stringResource(Res.string.telemetryConsentShare),
                         kind = KitConfirmKind.Neutral,
-                        body = stringResource(Res.string.telemetryConsentBody),
+                        body = stringResource(Res.string.nativeTelemetryConsentBody),
                         consequenceItems =
                             listOf(
                                 KitConsequence(stringResource(Res.string.telemetryConsentSends)),
