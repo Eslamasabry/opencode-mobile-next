@@ -79,9 +79,9 @@ class NewConversationNoticeWholeTest {
             }
         }
 
-    @Test
-    fun `I147-NOTICE sentence and every action whole with the keyboard up at 476 dp`() = scene(476)
+    @Test fun `I147-NOTICE sentence and every action whole with the keyboard up at 380 dp`() = scene(380)
 
-    @Test
-    fun `I147-NOTICE sentence and every action whole with the keyboard up at 560 dp`() = scene(560)
+    @Test fun `I147-NOTICE sentence and every action whole with the keyboard up at 420 dp`() = scene(420)
+
+    @Test fun `I147-NOTICE sentence and every action whole with the keyboard up at 476 dp`() = scene(476)
 }
