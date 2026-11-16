@@ -22,6 +22,9 @@ import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.v2.runDesktopComposeUiTest
+import androidx.compose.ui.test.v2.runSkikoComposeUiTest
+import androidx.compose.ui.geometry.Size
+import kotlin.time.Duration.Companion.minutes
 import androidx.compose.ui.unit.Density
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.FeatureId
@@ -200,15 +203,18 @@ class HomeColdStartTapTest {
             n.config.getOrNull(SemanticsProperties.ContentDescription)?.any { it == "New conversation" } == true
         } and hasAnyAncestor(hasTestTag("kit-screen-bottom"))
 
-    private fun ComposeUiTest.startEach(taps: List<Long>, check: (tapMs: Long, start: Start) -> Unit) {
+    /** [check] gets the tap's time, the start, and whether + was there to tap at that frame. */
+    private fun ComposeUiTest.startEach(taps: List<Long>, check: (tapMs: Long, start: Start, plusShown: Boolean) -> Unit) {
         var current by mutableStateOf<Start?>(null)
         setContent {
             CompositionLocalProvider(LocalDensity provides Density(1f)) {
                 ChatEnvironment {
+                    // Motion off: the dropped tap was the view model's, not a moving part, and 188 cold starts must stay quick.
                     KitTheme(
-                        appearance = KitAppearance(mode = AppearanceMode.Light, motion = MotionLevel.Full, style = Style.Solid),
+                        appearance = KitAppearance(mode = AppearanceMode.Light, motion = MotionLevel.Off, style = Style.Solid),
                         platform = DesktopKitPlatform(),
                         localeTag = "en",
+                        stillFrame = true,
                     ) {
                         Box(Modifier.fillMaxSize().background(LocalKitColors.current.ground)) { current?.let { s -> key(s) { Page(s) } } }
                     }
@@ -228,6 +234,7 @@ class HomeColdStartTapTest {
             }
             var at = 0L
             var tapped = false
+            var plusShown = false
             var answered = false
             while (at < END_MS) {
                 if (!answered && at >= READY_MS) {
@@ -235,31 +242,47 @@ class HomeColdStartTapTest {
                     answered = true
                 }
                 if (!tapped && at >= tapMs) {
-                    onNode(plus).performClick()
+                    plusShown = onAllNodes(plus).fetchSemanticsNodes().size == 1
+                    if (plusShown) onNode(plus).performClick()
                     tapped = true
                 }
                 mainClock.advanceTimeByFrame()
                 at += FRAME_MS
             }
-            check(tapMs, start)
+            check(tapMs, start, plusShown)
         }
     }
 
-    @Test
-    fun `COLD-TAP-010 a tap on plus at any frame of the first 3 s opens New conversation exactly once`() =
-        runDesktopComposeUiTest(360, 780) {
+    /** Taps from [fromMs] until [untilMs], one per frame, each in its own cold start. */
+    private fun tapsFrom(fromMs: Long, untilMs: Long) =
+        runSkikoComposeUiTest(Size(360f, 780f), testTimeout = 10.minutes) {
             val missed = mutableListOf<Long>()
             val twice = mutableListOf<Long>()
-            startEach((0L until TAPS_UNTIL_MS step FRAME_MS).toList()) { tapMs, start ->
-                when (start.newOpened) {
-                    1 -> Unit
-                    0 -> missed += tapMs
+            val noPlus = mutableListOf<Long>()
+            startEach((fromMs until untilMs step FRAME_MS).toList()) { tapMs, start, plusShown ->
+                when {
+                    !plusShown -> noPlus += tapMs
+                    start.newOpened == 1 -> Unit
+                    start.newOpened == 0 -> missed += tapMs
                     else -> twice += tapMs
                 }
             }
-            assertEquals(emptyList(), twice, "taps that opened New conversation more than once (ms after the first Home frame)")
-            assertTrue(missed.isEmpty(), "taps on + that opened nothing (${missed.size}), ms after the first Home frame: $missed")
+            assertTrue(
+                missed.isEmpty() && twice.isEmpty() && noPlus.isEmpty(),
+                "ms after the first Home frame - taps on + that opened nothing (${missed.size}): $missed; " +
+                    "opened more than once: $twice; frames with no + to tap: $noPlus",
+            )
         }
+
+    @Test
+    fun `COLD-TAP-010 a tap on plus at any frame of the first second opens New conversation exactly once`() = tapsFrom(0, 1_008)
+
+    @Test
+    fun `COLD-TAP-012 a tap on plus at any frame from 1 s to 2 s opens New conversation exactly once`() = tapsFrom(1_008, 2_000)
+
+    @Test
+    fun `COLD-TAP-013 a tap on plus at any frame from 2 s to 3 s, across the server's answer, opens New conversation exactly once`() =
+        tapsFrom(2_000, TAPS_UNTIL_MS)
 
     @Test
     fun `COLD-TAP-011 a tap kept while the server opens says New conversation is on its way until it opens`() =
