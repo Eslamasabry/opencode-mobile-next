@@ -1366,4 +1366,10 @@
     <string name="kitToolPlanStopped">Arrêté par Plan</string>
     <string name="chatStepPlanStopped">Le mode plan a arrêté une modification</string>
     <string name="chatConnectingToAgent">Connexion à %1$s…</string>
+    <string name="stageStartingLinux">Démarrage de Linux…</string>
+    <string name="stageStartingOpenCode">Démarrage d’OpenCode…</string>
+    <string name="stageStartingHelper">Démarrage de l’assistant des agents…</string>
+    <string name="stageStartingAgents">Démarrage des agents…</string>
+    <string name="stageStartingAgent">Démarrage de %1$s…</string>
+    <string name="stageOpeningConversation">Ouverture de la conversation…</string>
 </resources>

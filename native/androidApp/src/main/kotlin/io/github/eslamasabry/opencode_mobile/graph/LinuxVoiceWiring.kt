@@ -1653,6 +1653,14 @@ internal constructor(
     private val localGate =
         LocalServerGate(
             probe = { id ->
+                // Each poll of the wait also reads whether the server's process runs yet, so the stage words
+                // (Linux starting → OpenCode starting, [LaunchStages]) follow the real thing.
+                val running = runCatchingBlocking { linux.serverRunning } ?: false
+                facts.update { f ->
+                    val status = f.status
+                    if (status == null || status.serverRunning == running) f
+                    else f.copy(status = status.copy(serverRunning = running))
+                }
                 val password = (profiles.secret(id) as? Outcome.Ok)?.value.orEmpty()
                 if (password.isEmpty()) ProbeAnswer.NoAnswer else port.probe(password)
             },

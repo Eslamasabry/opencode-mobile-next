@@ -75,6 +75,7 @@ import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentUpdateNote
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentsState
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneDevice
 import io.github.eslamasabry.oc.feature.agents.hub.phoneInstallStep
+import io.github.eslamasabry.oc.feature.agents.hub.phoneInstalledAgents
 import io.github.eslamasabry.oc.feature.agents.hub.phoneSharedPartsInPlace
 import io.github.eslamasabry.opencode_mobile.BuildConfig
 import io.github.eslamasabry.opencode_mobile.BuiltinLinux
@@ -1429,6 +1430,9 @@ class AppPhoneAgents(
             forgetFacts(it, AgentId(id), version = true, signIn = true, proof = removed, setUp = removed)
         }
         rereadLocked()
+        if (answer is PhoneAgentRemoval.Removed && phoneInstalledAgents(mutable.value).isEmpty()) {
+            payloads.sweepAgentHelperLastKnown(agentOwner(ProfileId(owner)) ?: ProfileId(owner))
+        }
         Outcome.Ok(answer)
     }
 
