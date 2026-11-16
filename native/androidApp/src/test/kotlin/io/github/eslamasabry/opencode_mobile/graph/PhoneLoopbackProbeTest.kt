@@ -3,6 +3,9 @@
 package io.github.eslamasabry.opencode_mobile.graph
 
 import io.github.eslamasabry.oc.core.common.Outcome
+import io.github.eslamasabry.oc.core.testing.TestDispatchers
+import io.github.eslamasabry.oc.engine.integrations.quota.QuotaRequest
+import io.github.eslamasabry.opencode_mobile.DirectLoopbackHttp
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.engine.runtime.host.RuntimeStatus
 import io.github.eslamasabry.oc.engine.runtime.server.LaunchMode
@@ -23,11 +26,16 @@ import java.util.Base64
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.time.Clock
 import kotlin.time.Instant
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.flow.collect
+import kotlinx.collections.immutable.persistentMapOf
+import okhttp3.Request
 
 /** A live owned listener, an unrelated system proxy, and the real phone-start readiness loop. */
 class PhoneLoopbackProbeTest {
@@ -91,6 +99,75 @@ class PhoneLoopbackProbeTest {
         Listener { Reply(401) }.use { origin ->
             assertEquals(ProbeAnswer.NeedsPassword, PhoneLoopbackProbe.probe(origin.port, PASSWORD))
             assertEquals(1, origin.requests.get())
+        }
+    }
+
+    @Test
+    fun `B-LINUX-037 helper routes cannot replace the owned loopback authority`() {
+        for (path in listOf("http://example.test/health", "//example.test/health", "/health\r\nHost: example.test")) {
+            assertFailsWith<IllegalArgumentException> { DirectLoopbackHttp.open(4098, path) }
+        }
+        assertFailsWith<IllegalArgumentException> { DirectLoopbackHttp.open(0, "/health") }
+    }
+
+    @Test
+    fun `B-LINUX-037 phone-engine setup health bypasses a system proxy`() = runTest {
+        Listener { Reply(200) }.use { origin ->
+            Listener { Reply(503) }.use { proxy ->
+                val previous = ProxySelector.getDefault()
+                ProxySelector.setDefault(object : ProxySelector() {
+                    override fun select(uri: URI): List<Proxy> =
+                        listOf(Proxy(Proxy.Type.HTTP, InetSocketAddress("127.0.0.1", proxy.port)))
+                    override fun connectFailed(uri: URI, address: SocketAddress, error: java.io.IOException) {}
+                })
+                try {
+                    val transport = AndroidQuotaTransport(TestDispatchers(StandardTestDispatcher(testScheduler)))
+                    try {
+                        val answer = transport.fetch(QuotaRequest(
+                            "GET", "http://127.0.0.1:${origin.port}/v1/health",
+                            persistentMapOf("Authorization" to AUTH), false, 0, 2_000, 2_000, 2_000,
+                        ))
+                        answer.body.collect { }
+                        assertEquals(200, answer.status, "the phone engine's setup health read is direct")
+                    } finally {
+                        transport.close(true)
+                    }
+                    assertEquals(0, proxy.requests.get(), "no helper credential reaches the system proxy")
+                } finally {
+                    ProxySelector.setDefault(previous)
+                }
+            }
+        }
+    }
+
+    @Test
+    fun `B-LINUX-037 quota-helper bootstrap bypasses a system proxy`() {
+        Listener { Reply(200) }.use { origin ->
+            Listener { Reply(503) }.use { proxy ->
+                val previous = ProxySelector.getDefault()
+                ProxySelector.setDefault(object : ProxySelector() {
+                    override fun select(uri: URI): List<Proxy> =
+                        listOf(Proxy(Proxy.Type.HTTP, InetSocketAddress("127.0.0.1", proxy.port)))
+                    override fun connectFailed(uri: URI, address: SocketAddress, error: java.io.IOException) {}
+                })
+                try {
+                    val client = quotaCollectorReadinessClient()
+                    try {
+                        client.newCall(Request.Builder()
+                            .url("http://127.0.0.1:${origin.port}/provider-quota")
+                            .header("Authorization", AUTH).build()).execute().use {
+                            assertEquals(200, it.code, "the quota helper's bootstrap health read is direct")
+                        }
+                    } finally {
+                        client.dispatcher.cancelAll()
+                        client.connectionPool.evictAll()
+                        client.dispatcher.executorService.shutdown()
+                    }
+                    assertEquals(0, proxy.requests.get(), "no bootstrap credential reaches the system proxy")
+                } finally {
+                    ProxySelector.setDefault(previous)
+                }
+            }
         }
     }
 

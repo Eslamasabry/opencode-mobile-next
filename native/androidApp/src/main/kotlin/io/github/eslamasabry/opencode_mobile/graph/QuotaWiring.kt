@@ -1,6 +1,7 @@
 package io.github.eslamasabry.opencode_mobile.graph
 
 import android.app.Application
+import io.github.eslamasabry.opencode_mobile.DirectLoopbackHttp
 import android.system.Os
 import android.system.OsConstants
 import dev.zacsweers.metro.AppScope
@@ -278,8 +279,7 @@ class AndroidQuotaCollector(
         withContext(dispatchers.io) {
             try {
                 val connection =
-                    URL(IN_APP_QUOTA_ORIGIN + PROVIDER_QUOTA_PATH).openConnection()
-                        as HttpURLConnection
+                    DirectLoopbackHttp.open(InAppQuotaCollector.PORT, PROVIDER_QUOTA_PATH)
                 try {
                     connection.instanceFollowRedirects = false
                     connection.connectTimeout = 3_000

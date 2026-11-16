@@ -26,9 +26,8 @@ import io.github.eslamasabry.oc.engine.runtime.recovery.PreviousExit
 import io.github.eslamasabry.oc.engine.runtime.recovery.PreviousExitKind
 import io.github.eslamasabry.oc.feature.phone.presentation.PhoneStateDetails
 import io.github.eslamasabry.opencode_mobile.BuiltinLinux
-import java.net.HttpURLConnection
 import java.net.URI
-import java.net.URL
+import io.github.eslamasabry.opencode_mobile.DirectLoopbackHttp
 import java.util.Base64
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -227,7 +226,7 @@ class AndroidPhoneStateDetails(
         path: String,
         authorization: String? = null,
     ): Pair<Int, String>? {
-        val connection = URL("http", "127.0.0.1", port, path).openConnection() as HttpURLConnection
+        val connection = DirectLoopbackHttp.open(port, path)
         connection.connectTimeout = 2_000
         connection.readTimeout = 4_000
         connection.instanceFollowRedirects = false

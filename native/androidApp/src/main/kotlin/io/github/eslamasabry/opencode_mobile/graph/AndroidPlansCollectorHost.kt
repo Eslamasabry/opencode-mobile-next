@@ -137,14 +137,7 @@ class AndroidPlansCollectorHost(
 
     private suspend fun probe(token: String): Boolean =
         withContext(dispatchers.io) {
-            val client =
-                OkHttpClient.Builder()
-                    .followRedirects(false)
-                    .followSslRedirects(false)
-                    .retryOnConnectionFailure(false)
-                    .connectTimeout(3, TimeUnit.SECONDS)
-                    .callTimeout(5, TimeUnit.SECONDS)
-                    .build()
+            val client = quotaCollectorReadinessClient()
             try {
                 client
                     .newCall(
@@ -338,3 +331,13 @@ class QuotaCollectorCleaner(private val host: AndroidPlansCollectorHost) : Profi
     override suspend fun clear(profileId: ProfileId, options: DeletionOptions): Outcome<Int> =
         host.clear(profileId)
 }
+
+/** The quota helper's bounded bootstrap probe (closed by its caller). */
+internal fun quotaCollectorReadinessClient(): OkHttpClient =
+    OkHttpClient.Builder()
+        .followRedirects(false)
+        .followSslRedirects(false)
+        .retryOnConnectionFailure(false)
+        .connectTimeout(3, TimeUnit.SECONDS)
+        .callTimeout(5, TimeUnit.SECONDS)
+        .build()
