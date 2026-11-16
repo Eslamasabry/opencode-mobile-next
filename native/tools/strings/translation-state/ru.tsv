@@ -5355,6 +5355,8 @@ homeMonitorPaused	0aefcbe3d0
 homeMonitorUnavailable	63cd4bdb98
 homeMonitorWaiting	bc2c8b169b
 homeMonitorWifi	8f3af55b96
+homeNewWaitingCancel	ca48a4f3e2
+homeNewWaitingOpening	5e3a82a82c
 homeOpeningConnecting	30fe4029fc
 homeOpeningFailed	ee30140f07
 homeOpeningFailedBody	62e614be7e

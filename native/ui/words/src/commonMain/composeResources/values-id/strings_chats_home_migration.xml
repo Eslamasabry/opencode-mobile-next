@@ -20,4 +20,6 @@
     <string name="homeNewBlockedOpening">%1$s masih dibuka. Coba lagi sebentar lagi.</string>
     <string name="homePhoneOffStart">Mulai OpenCode di ponsel ini</string>
     <string name="homePhoneOffTitle">OpenCode di ponsel ini mati</string>
+    <string name="homeNewWaitingOpening">Percakapan baru terbuka begitu %1$s menjawab.</string>
+    <string name="homeNewWaitingCancel">Batalkan Percakapan baru</string>
 </resources>
