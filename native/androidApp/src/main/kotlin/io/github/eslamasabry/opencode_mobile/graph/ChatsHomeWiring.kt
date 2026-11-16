@@ -46,6 +46,8 @@ import io.github.eslamasabry.oc.feature.chats.presentation.ChatsOpeningPhase
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsOpeningUi
 import io.github.eslamasabry.oc.feature.chats.presentation.PhoneStopWatch
 import io.github.eslamasabry.oc.feature.chats.presentation.NoChatsHomeExtras
+import io.github.eslamasabry.oc.feature.chat.world.LaunchStage
+import io.github.eslamasabry.oc.feature.chats.presentation.HomeStage
 import io.github.eslamasabry.oc.feature.chats.presentation.OpeningRules
 import io.github.eslamasabry.oc.feature.chats.presentation.PhoneStartWatch
 import kotlin.time.Clock
@@ -70,6 +72,7 @@ import kotlinx.coroutines.withContext
 private fun optional(key: String, value: String?): Map<String, Any> = if (value == null) emptyMap() else mapOf(key to value)
 
 private val QUIET_RETRY_EVERY = 3.seconds
+private val QUIET_RETRY_WHEN_FAILED = 15.seconds
 private val STOP_SETTLES = 3.seconds
 
 /**
@@ -91,6 +94,8 @@ class AppChatsHome(
     /** The automatic agent update: while it installs, the agents' source says "Updating …" (no silent minutes). */
     private val agentUpdate: PhoneAgentUpdateStatus,
     private val sharedStorage: Set<io.github.eslamasabry.oc.core.domain.platform.SharedStorageAccess>,
+    /** The one stage source: what this phone is really starting right now (home names it on the Recent line). */
+    private val stages: LaunchStages,
     appScope: AppCoroutineScope,
     dispatchers: AppDispatchers,
 ) : ChatsHomeExtras, HomeFeedCache {
@@ -125,6 +130,18 @@ class AppChatsHome(
                 .distinctUntilChanged()
                 .drop(1)
                 .collect { updating -> if (!updating) runtime.synchronizeListSources() }
+        }
+        // The stage home names changes with the real signals behind it: This phone's own start, and the start of each
+        // agents' helper that is saved.
+        scope.launch { stages.stageOfPhone().collect { publish() } }
+        scope.launch {
+            runtime.profiles.profiles
+                .map { all -> all.map { it.id }.filter(runtime::isPhoneHelper) }
+                .distinctUntilChanged()
+                .collectLatest { helpers ->
+                    if (helpers.isEmpty()) return@collectLatest
+                    combine(helpers.map(stages::stageOfHelper)) { Unit }.collect { publish() }
+                }
         }
         scope.launch {
             if (stores.warm() is Outcome.Failed) return@launch
@@ -174,6 +191,7 @@ class AppChatsHome(
                         shown = runtime.listSourceShown(loaded.id),
                         main = !agents && loaded.id == active,
                         onThisPhone = runtime.sourceOnThisPhone(loaded.profile),
+                        selfRun = selfRun(loaded),
                         // Issue 147: the agents' helper that did not start is named with its Try again (the sheet and
                         // the home's notice), never left reading "Starting"; during an update the update speaks.
                         unreachable =
@@ -223,9 +241,23 @@ class AppChatsHome(
             phoneWatch = null
             openingTries = null
         }
-        mutable.value = ChatsHomeExtraState(sources, opening, null, monitor.snapshot.value)
-        if (opening?.phase == ChatsOpeningPhase.Starting) keepTryingQuietly()
+        mutable.value = ChatsHomeExtraState(sources, opening, null, monitor.snapshot.value, stage = homeStage())
+        if (opening != null && OpeningRules.worthAskingAgain(opening.phase, phoneWatch?.second)) keepTryingQuietly()
     }
+
+    /**
+     * The stage home names: This phone's own start first (Linux, then OpenCode), else the agents' helper's (helper,
+     * then the agents) when its conversations are shown in the list. Null when no signal names one.
+     */
+    private fun homeStage(): HomeStage? =
+        HomeStageRules.of(
+            phone = stages.stageOfPhone().value,
+            helpers =
+                runtime.profiles.profiles.value
+                    .map { it.id }
+                    .filter { runtime.isPhoneHelper(it) && runtime.listSourceShown(it) }
+                    .map { stages.stageOfHelper(it).value },
+        )
 
     /**
      * E05-S20: the readings of this phone's own server (the built-in Linux server the app launches) while home waits
@@ -247,9 +279,22 @@ class AppChatsHome(
                 uptime = facts.status?.serverUptime?.takeIf { alive == true },
                 seenAlive = prior.seenAlive || alive == true || facts.starting,
                 stoppedByPerson = facts.stoppedByPerson,
+                goneSince =
+                    if (alive == false && !facts.starting && prior.seenAlive) prior.goneSince ?: now else null,
             )
         phoneWatch = owner.id to next
         return next
+    }
+
+    /**
+     * A server saved at this phone's own address that is not the app's built-in one and not the agents' helper: the
+     * person starts it themselves (the old app's Termux setup was migrated as such a profile).
+     */
+    private fun selfRun(owner: LoadedProfile): Boolean {
+        if (owner.profile.usesAgentSocket || runtime.isPhoneHelper(owner.id) || builtIn(owner)) return false
+        val address = owner.profile.baseUrl.substringAfter("://").substringBefore('/')
+        val host = address.substringBeforeLast(':').trim('[', ']')
+        return host == "127.0.0.1" || host == "localhost" || host == "::1"
     }
 
     private fun builtIn(owner: LoadedProfile): Boolean =
@@ -270,9 +315,12 @@ class AppChatsHome(
         quietRetry =
             scope.launch {
                 while (true) {
-                    delay(QUIET_RETRY_EVERY)
+                    // A server that reads failed but whose process runs is asked again, less often, so home
+                    // recovers by itself when it answers late.
+                    val failed = mutable.value.opening?.phase == ChatsOpeningPhase.Failed
+                    delay(if (failed) QUIET_RETRY_WHEN_FAILED else QUIET_RETRY_EVERY)
                     val opening = mutable.value.opening ?: break
-                    if (opening.phase != ChatsOpeningPhase.Starting) break
+                    if (!OpeningRules.worthAskingAgain(opening.phase, phoneWatch?.second)) break
                     val profile = opening.profile
                     if (profile != null && !runtime.busy.value) runtime.retryListSource(profile)
                     publish()
@@ -574,4 +622,20 @@ internal object HomeAgentNoticeRules {
                     .toImmutableList(),
         )
     }
+}
+
+/** Which stage home names, from the stage source's readings (pure, so it is tested without the app graph). */
+internal object HomeStageRules {
+    fun of(phone: LaunchStage?, helpers: List<LaunchStage?>): HomeStage? =
+        home(phone) ?: helpers.firstNotNullOfOrNull(::home)
+
+    private fun home(stage: LaunchStage?): HomeStage? =
+        when (stage) {
+            LaunchStage.Linux -> HomeStage.Linux
+            LaunchStage.OpenCode -> HomeStage.OpenCode
+            LaunchStage.Helper -> HomeStage.Helper
+            LaunchStage.Agent -> HomeStage.Agents
+            // The conversation's own read is the chat page's stage, not home's.
+            LaunchStage.Conversation, null -> null
+        }
 }

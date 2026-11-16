@@ -29,7 +29,10 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import kotlinx.collections.immutable.persistentListOf
 
-/** B-333: a row whose tap is kept says, to the eye and to a screen reader, that it is connecting; the tap is taken. */
+/**
+ * B-333: a row whose tap is kept shows the working mark alone in the time's place and says to a screen reader that its
+ * agent is getting ready (home-getting-ready: never the plain word "Connecting"); the tap is taken.
+ */
 @OptIn(ExperimentalTestApi::class)
 class HomeKeptTapScreenTest {
     private fun ui(waiting: Boolean): ChatsUi {
@@ -63,14 +66,15 @@ class HomeKeptTapScreenTest {
                 rows.fetchSemanticsNodes().mapNotNull { node ->
                     if (description in node.config) node.config[description].joinToString(" ") else null
                 }
-            if (waiting) assertEquals(1, words.count { "Connecting" in it }, "rows: $words")
+            if (waiting) assertEquals(1, words.count { "Getting ready…" in it }, "rows: $words")
+            assertTrue(words.none { "Connecting" in it }, "rows: $words")
         }
         return words
     }
 
     @Test
-    fun `B-333 a row whose tap is kept says Connecting, and a row with none does not`() {
-        assertTrue(spoken(waiting = true).any { "Connecting" in it })
-        assertTrue(spoken(waiting = false).none { "Connecting" in it })
+    fun `B-333 a row whose tap is kept says its agent is getting ready, and a row with none does not`() {
+        assertTrue(spoken(waiting = true).any { "Getting ready…" in it })
+        assertTrue(spoken(waiting = false).none { "Getting ready" in it })
     }
 }

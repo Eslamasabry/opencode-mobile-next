@@ -2934,6 +2934,8 @@ class BuiltinLinux(private val context: Context) {
     private var activityEpoch = 0L
     @Volatile private var idleServerLive = false
     private var wantedRevision = 0L
+    // What a helper start is admitted under: stops only, never the server's own start (AgentHostRevision).
+    private val hostRevision = AgentHostRevision()
     // Only the person's own Stop is recorded here; nothing saved is not their Stop (PhoneServerStopRecord).
     private var userStopped =
         try {
@@ -3168,6 +3170,7 @@ class BuiltinLinux(private val context: Context) {
                 captureIdleDrain = false
             }
             wantedRevision++
+            hostRevision.stopped()
             supervisionGeneration++
             recoveryScheduleId++
             scheduledRecovery = false
@@ -3373,7 +3376,7 @@ class BuiltinLinux(private val context: Context) {
                     AgentHostTicket(
                         profile,
                         owner,
-                        wantedRevision,
+                        hostRevision.value,
                         activityEpoch,
                         if (idleResume) generation else null,
                     )
@@ -3401,7 +3404,7 @@ class BuiltinLinux(private val context: Context) {
                 idleState.available,
                 activityResumed,
                 activityEpoch,
-                wantedRevision,
+                hostRevision.value,
                 supervisionProfile,
                 restartWanted,
                 userStopped,
@@ -5215,6 +5218,7 @@ class BuiltinLinux(private val context: Context) {
             nativeRecoveryAttempt = null
             manualStartGeneration = null
             val stopRevision = ++wantedRevision
+            hostRevision.stopped()
             onRevoked?.invoke(stopRevision)
             restoreUnavailable(reason)
             // The old identity snapshot and durable revocation share the short admission lock.
@@ -5372,6 +5376,7 @@ class BuiltinLinux(private val context: Context) {
                 serverEventTicket = null
                 serverEventWorkerStarted = false
                 wantedRevision++
+                hostRevision.serverWanted(wanted)
                 recoveryGeneration++
                 recoveryAttempt = null
                 confirmedRecoveryAttempt = null
