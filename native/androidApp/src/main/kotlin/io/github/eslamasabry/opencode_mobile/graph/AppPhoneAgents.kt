@@ -829,6 +829,7 @@ class AppPhoneAgents(
                                     evidenceOf(authOwner, agent, record[agent.id.raw])
                                 else null,
                             needsSetUp = setUpFirst && status == PhoneAgentStatus.SetUpAtFirstUse,
+                            retired = agent.retired,
                             removable =
                                 removal.removable(agent.id) &&
                                     present == true &&
@@ -856,6 +857,7 @@ class AppPhoneAgents(
         PhoneAgentRow(
             id = agent.id.raw,
             name = agent.name,
+            retired = agent.retired,
             status = PhoneAgentStatus.Checking,
             downloadBytes = architecture()?.let(agent::artifactFor)?.downloadBytes,
             supportedInstallation = architecture()?.let(agent::installableOn) == true,

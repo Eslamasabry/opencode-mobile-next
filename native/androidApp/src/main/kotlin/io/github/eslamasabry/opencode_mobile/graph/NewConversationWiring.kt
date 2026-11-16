@@ -1697,6 +1697,8 @@ internal object NewConversationPhoneRules {
             val descriptor =
                 AgentCatalog.builtIn.byId(AgentId(row.id))
                     ?: return@mapNotNull if (OwnAgentRules.isOwn(row.id)) ownFact(row) else null
+            // A retired agent (Gemini CLI) is not a choice for a new conversation; the Agents page only offers Remove.
+            if (row.retired) return@mapNotNull null
             // The one status the Agents page's tile and this list both read (phoneAgentShown).
             val shown = phoneAgentShown(row, state.installation)
             val updating = shown == PhoneAgentShown.Installing

@@ -36,6 +36,7 @@ import io.github.eslamasabry.oc.feature.agents.hub.PhoneDevice
 import io.github.eslamasabry.oc.feature.agents.hub.AgentsUi
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentInstallPhase
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentInstallation
+import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentRemoval
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentRow
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentStatus
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentsState
@@ -207,6 +208,30 @@ class AgentsBentoTest {
             )
         }
         onNode(hasContentDescription("Install Gemini CLI")).assertDoesNotExist()
+        onNodeWithText("Remove Gemini CLI").performClick()
+        assertTrue("remove:gemini" in actions.calls)
+    }
+
+    // Small-faults 301: a retired agent left by an update from 2.1.5 (Gemini CLI, its phone check due) says it is no
+    // longer offered and offers only Remove: never "Phone check needed", never "install it again".
+    @Test
+    fun `B-AGENT-199 a retired agent says it is no longer offered and offers only Remove`() = runComposeUiTest {
+        val actions = Recorder()
+        val retired =
+            PhoneAgentRow("gemini", "Gemini CLI", PhoneAgentStatus.PhoneCheck, removable = true, retired = true)
+        val phone = PhoneAgentsState(available = true, agents = persistentListOf(retired), owner = ProfileId("o"))
+        var sheet by mutableStateOf<String?>(null)
+        setContent { Screen(AgentsUi(phone = phone, sheetAgent = sheet), actions) }
+        // The tile: the retired words, never the phone check, and no install or check act.
+        onNode(hasContentDescription("Gemini CLI. No longer offered on this phone")).assertExists()
+        onNodeWithText("Phone check needed", substring = true).assertDoesNotExist()
+        onNode(hasContentDescription("Check Gemini CLI")).assertDoesNotExist()
+        onNode(hasContentDescription("Install Gemini CLI")).assertDoesNotExist()
+        // The sheet: why, and Remove as its only act; never "install it again".
+        sheet = "gemini"
+        waitForIdle()
+        onNodeWithText("no longer offered on this phone", substring = true).assertExists()
+        onNodeWithText("Install it again", substring = true).assertDoesNotExist()
         onNodeWithText("Remove Gemini CLI").performClick()
         assertTrue("remove:gemini" in actions.calls)
     }
