@@ -2,6 +2,8 @@ package io.github.eslamasabry.oc.feature.chat.ui
 
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -71,23 +73,39 @@ internal class KeptPlace(val place: ScrollPlace, val following: Boolean)
  * to sweep): reopening a conversation from Home, All conversations, Search or the edge light is a new back-stack entry
  * whose own saved state is empty. Bounded: the least recently used conversation is forgotten past [KEPT].
  */
-internal object ScrollPlaceStore {
+public object ScrollPlaceStore {
     private const val KEPT = 24
     private val kept = LinkedHashMap<String, KeptPlace>()
 
-    fun get(conversation: String): KeptPlace? = kept[conversation]
+    internal fun get(conversation: String): KeptPlace? = kept[conversation]
 
-    fun put(conversation: String, place: ScrollPlace, following: Boolean) {
+    internal fun put(conversation: String, place: ScrollPlace, following: Boolean) {
         kept.remove(conversation)
         kept[conversation] = KeptPlace(place, following)
         while (kept.size > KEPT) kept.remove(kept.keys.first())
     }
 
-    fun forget(conversation: String) {
-        kept.remove(conversation)
+    private val readers = mutableMapOf<String, MutableSet<() -> Unit>>()
+
+    /**
+     * A notification opens the newest reply, including when its conversation is already on screen.
+     * Main thread only.
+     */
+    public fun forget(conversation: String) {
+        // Assertion-red proof: keep the callable API, omit notification invalidation.
     }
 
-    fun clear() = kept.clear()
+    internal fun observeForget(conversation: String, reader: () -> Unit): () -> Unit {
+        readers.getOrPut(conversation) { mutableSetOf() }.add(reader)
+        return {
+            readers[conversation]?.let {
+                it.remove(reader)
+                if (it.isEmpty()) readers.remove(conversation)
+            }
+        }
+    }
+
+    internal fun clear() = kept.clear()
 }
 
 internal object ScrollPlaceRules {
@@ -138,12 +156,24 @@ internal fun KeepScrollPlace(list: TranscriptListState, keys: List<String>, conv
                 fresh.fromStore = true
             }
         }
+    var resets by remember(list, conversation) { mutableIntStateOf(0) }
+    DisposableEffect(list, conversation) {
+        val stop = conversation?.let { ScrollPlaceStore.observeForget(it) { resets++ } }
+        onDispose { stop?.invoke() }
+    }
     // Held by identity: a new list of keys is a new value without comparing every key (issue 147: the keys change on
     // every publish while a reply streams, and comparing them walked every row).
     val keysState = remember { mutableStateOf(keys, referentialEqualityPolicy()) }
     keysState.value = keys
     val current by keysState
-    LaunchedEffect(list) {
+    LaunchedEffect(list, resets) {
+        if (resets > 0) {
+            holder.place = null
+            holder.fromStore = false
+            holder.following = true
+            list.following = true
+            list.lazy.scrollToItem(0)
+        }
         val saved = holder.place
         if (saved != null && !(holder.fromStore && holder.following)) {
             // Wait for the rows (a conversation coming back may still be reading them).

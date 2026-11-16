@@ -215,4 +215,103 @@ class ChatBackExactLineTest {
             assertEquals(0, list.lazy.firstVisibleItemIndex)
             assertTrue(list.following)
         }
+    @Test
+    fun `B-407 a reply notification opens a scrolled up conversation on the new reply`() =
+        runComposeUiTest {
+            ScrollPlaceStore.clear()
+            var entry by mutableStateOf("entry-1")
+            var shown by mutableStateOf(true)
+            var rows by mutableStateOf(turns(20))
+            lateinit var list: TranscriptListState
+            setContent {
+                Themed {
+                    val holder = rememberSaveableStateHolder()
+                    if (shown) {
+                        holder.SaveableStateProvider(entry) {
+                            list = rememberTranscriptListState()
+                            Box(Modifier.size(412.dp, 800.dp)) {
+                                ChatTranscript(
+                                    rows,
+                                    Words,
+                                    list,
+                                    rememberRevealRegistry(),
+                                    KitMotionLevel.Off,
+                                    placeKey = "p/notification",
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+            waitForIdle()
+            list.following = false
+            runOnIdle { list.lazy.requestScrollToItem(20, 9) }
+            waitForIdle()
+            assertNotEquals(0, list.lazy.firstVisibleItemIndex)
+            val oldKey = list.firstKey()
+            shown = false
+            waitForIdle()
+            rows = turns(22)
+            // Every notification route forgets the old place before opening its new chat entry.
+            runOnIdle { ScrollPlaceStore.forget("p/notification") }
+            entry = "entry-2"
+            shown = true
+            waitForIdle()
+            assertEquals(
+                0,
+                list.lazy.firstVisibleItemIndex,
+                "the notification opens the newest reply",
+            )
+            assertEquals(0, list.lazy.firstVisibleItemScrollOffset)
+            assertNotEquals(oldKey, list.firstKey())
+            assertTrue(list.following)
+        }
+
+    @Test
+    fun `B-407 a reply notification for the visible conversation jumps to newest every time`() =
+        runComposeUiTest {
+            ScrollPlaceStore.clear()
+            var rows by mutableStateOf(turns(20))
+            lateinit var list: TranscriptListState
+            setContent {
+                Themed {
+                    list = rememberTranscriptListState()
+                    Box(Modifier.size(412.dp, 800.dp)) {
+                        ChatTranscript(
+                            rows,
+                            Words,
+                            list,
+                            rememberRevealRegistry(),
+                            KitMotionLevel.Off,
+                            placeKey = "p/visible",
+                        )
+                    }
+                }
+            }
+            waitForIdle()
+            repeat(2) { reply ->
+                list.following = false
+                runOnIdle { list.lazy.requestScrollToItem(20, 9) }
+                waitForIdle()
+                assertNotEquals(0, list.lazy.firstVisibleItemIndex)
+                rows = turns(21 + reply)
+                waitForIdle()
+                // A different conversation's notification must leave this reader alone.
+                val oldKey = list.firstKey()
+                runOnIdle { ScrollPlaceStore.forget("p/other") }
+                waitForIdle()
+                assertEquals(oldKey, list.firstKey())
+                assertFalse(list.following)
+                // openChat is a no-op when this conversation is already on top.
+                runOnIdle { ScrollPlaceStore.forget("p/visible") }
+                waitForIdle()
+                assertEquals(
+                    0,
+                    list.lazy.firstVisibleItemIndex,
+                    "the visible conversation shows the new reply",
+                )
+                assertEquals(0, list.lazy.firstVisibleItemScrollOffset)
+                assertTrue(list.following)
+            }
+        }
 }
