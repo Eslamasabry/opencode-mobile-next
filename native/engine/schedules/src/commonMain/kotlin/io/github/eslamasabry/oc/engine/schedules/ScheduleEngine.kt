@@ -78,8 +78,10 @@ public class ScheduleEngine(
     private val receipts = ScheduleReceipts(backend, store, nowMs, zone)
     private val runner =
         ScheduleRunner(profiles, nowMs, pollMs) { schedule ->
-            fingerprints.accepts(schedule.profileId, schedule.profileFingerprint, profiles.fingerprint(schedule.profileId))
+            fingerprints.accepts(schedule.profileId, schedule.profileFingerprint, profiles.fingerprint(schedule.profileId)) ||
+                legacyNamesThisServer(schedule.profileId, schedule.profileFingerprint, remember = true)
         }
+    private val unmatched = AtomicReference<PersistentMap<String, Boolean>>(persistentHashMapOf())
 
     /**
      * One lane per profile. What really conflicts is what runs of one profile share: a conversation (a schedule that
@@ -334,19 +336,47 @@ public class ScheduleEngine(
     private suspend fun migrate(profileId: String) {
         val fingerprint = profiles.fingerprint(profileId) ?: return
         val legacy = profiles.legacyFingerprint(profileId)?.takeIf { ScheduleFingerprints.LEGACY.matches(it) }
+        // Stamps made under the same server's earlier version (the version is part of Flutter's hash and moves when
+        // the phone's own server is refreshed) name this server too.
+        val earlier =
+            store.load(profileId).map { it.profileFingerprint }.filter {
+                ScheduleFingerprints.LEGACY.matches(it) && it != legacy && legacyNamesThisServer(profileId, it, remember = false)
+            }.toSet()
         if (flutterReadable()) {
-            if (legacy != null && store.load(profileId).any { it.profileFingerprint == legacy }) {
-                fingerprints.remember(profileId, fingerprint, legacy)
+            for (stamp in setOfNotNull(legacy.takeIf { l -> store.load(profileId).any { it.profileFingerprint == l } }) + earlier) {
+                fingerprints.remember(profileId, fingerprint, stamp)
             }
             return
         }
         val alias = fingerprints.alias(profileId)
-        val accepted = setOfNotNull(legacy) + alias?.takeIf { it.native == fingerprint }?.legacy.orEmpty()
+        val accepted = setOfNotNull(legacy) + earlier + alias?.takeIf { it.native == fingerprint }?.legacy.orEmpty()
         if (accepted.isNotEmpty()) {
             val changed = store.restamp(profileId, { it in accepted }, fingerprint)
             if (changed > 0) log.i { "migrated $changed scheduled prompts" }
         }
         if (alias != null) fingerprints.forget(profileId)
+    }
+
+    /**
+     * True when the Flutter-era [stamp] is this profile's own row under another server version (and nothing else
+     * changed). A positive is written to the alias when [remember] so later checks need no search; a negative is
+     * remembered in memory until the row changes.
+     */
+    private suspend fun legacyNamesThisServer(profileId: String, stamp: String, remember: Boolean): Boolean {
+        if (!ScheduleFingerprints.LEGACY.matches(stamp)) return false
+        val native = profiles.fingerprint(profileId) ?: return false
+        val row = profiles.legacyRow(profileId) ?: return false
+        val key = "$profileId|$stamp|${LegacyFingerprints.stamp(row)}"
+        if (unmatched.load()[key] == true) return false
+        if (!LegacyFingerprints.matches(row, stamp)) {
+            while (true) {
+                val current = unmatched.load()
+                if (unmatched.compareAndSet(current, current.putting(key, true))) break
+            }
+            return false
+        }
+        if (remember) safely { fingerprints.remember(profileId, native, stamp) }
+        return true
     }
 
     /**
