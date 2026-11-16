@@ -9,6 +9,7 @@ import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
@@ -57,16 +58,21 @@ class KitLivePictureRecorderTest {
     /** One recording: the frame it was made in, the picture and the page that made it. */
     private data class Recording(val frame: Int, val picture: KitGlassPicture, val by: KitGlassPictureHolder)
 
-    /** Framed pages of one size on top of each other, as during a push or a pop; [shown] says which are composed. */
+    /**
+     * Framed pages of one size on top of each other, as during a push or a pop; [shown] says which are composed and
+     * [drawn] (read in the draw) which of those are drawn: a page kept composed under another but no longer drawn.
+     */
     @Composable
-    private fun Pages(shown: List<Boolean>, seen: (KitLiveShare?) -> Unit) {
+    private fun Pages(shown: List<Boolean>, drawn: () -> List<Boolean> = { shown }, seen: (KitLiveShare?) -> Unit) {
         Box(Modifier.fillMaxSize()) {
             shown.forEachIndexed { i, on ->
                 if (on) {
                     key(i) {
-                        KitScreen(page = true) {
-                            seen(LocalKitLiveShare.current)
-                            KitText("Page $i")
+                        Box(Modifier.fillMaxSize().drawWithContent { if (drawn()[i]) drawContent() }) {
+                            KitScreen(page = true) {
+                                seen(LocalKitLiveShare.current)
+                                KitText("Page $i")
+                            }
                         }
                     }
                 }
@@ -150,6 +156,62 @@ class KitLivePictureRecorderTest {
                 assertSame(layer, picture.layer, "$style: the same layer, recorded again by the page that stays")
                 frames(20)
                 assertTrue(log.drop(before).all { it.by === picture.recorder }, "$style: then only it records")
+            }
+        }
+    }
+
+    @Test
+    fun `B-KIT-LIVE-056 a recorder no longer drawn hands the recording on and gets it back on the pop`() {
+        for (style in listOf(Style.Solid, Style.Glass)) {
+            runDesktopComposeUiTest(200, 400) {
+                var share: KitLiveShare? = null
+                var frame = 0
+                val log = ArrayList<Recording>()
+                var shown by mutableStateOf(listOf(true, false))
+                var drawn by mutableStateOf(listOf(true, true))
+                mainClock.autoAdvance = false
+                setContent {
+                    KitTheme(appearance(style), platform, "en") {
+                        Pages(shown, { drawn }) { share = it }
+                        SideEffect { share?.pictures?.onRecord = { p, by -> log += Recording(frame, p, by) } }
+                    }
+                }
+                fun frames(n: Int) = repeat(n) {
+                    frame++
+                    mainClock.advanceTimeByFrame()
+                }
+                frames(10)
+                val home = log.last().by
+                val picture = log.last().picture
+                // The push: the page on top arrives, then the covered page stays composed but is no longer drawn.
+                shown = listOf(true, true)
+                frames(20)
+                drawn = listOf(false, true)
+                frames(5)
+                val before = log.size
+                frames(60)
+                val after = log.drop(before)
+                // 60 frames are about a second: the picture keeps stepping (LIVE_LOOK_FPS steps), once a frame.
+                assertTrue(after.size >= LIVE_LOOK_FPS - 3, "$style: the picture stopped stepping (${after.size})")
+                for ((f, inFrame) in after.groupBy { it.frame }) {
+                    assertEquals(1, inFrame.size, "$style: frame $f recorded twice")
+                }
+                // Who records then depends on the platform (Android re-records an invalidated layer its parent does not
+                // draw): either way the picture steps under the page on top, once a frame.
+                val byHome = after.count { it.by === home }
+                println("B-KIT-LIVE-056 $style: not drawn, $byHome of ${after.size} recorded by the covered page")
+                assertEquals(2, picture.users, "$style: both pages still hold the one picture")
+                assertTrue(log.all { it.picture === picture }, "$style: one picture throughout")
+                // The pop: the covered page is drawn again and the page on top leaves.
+                drawn = listOf(true, true)
+                shown = listOf(true, false)
+                frames(2)
+                val popped = log.size
+                frames(60)
+                val back = log.drop(popped)
+                assertTrue(back.size >= LIVE_LOOK_FPS - 3, "$style: after the pop it stopped stepping (${back.size})")
+                assertTrue(back.all { it.by === home }, "$style: after the pop the covered page records again")
+                assertSame(home, picture.recorder, "$style: the covered page is the recorder again")
             }
         }
     }

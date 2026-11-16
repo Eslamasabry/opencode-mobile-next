@@ -146,9 +146,14 @@ private object Unset
  * pages were on screen (a push or a pop) the one layer was recorded twice a frame by two pages, each with its own
  * content (a shader look's own finished layer): what the layer held swapped page by page inside one frame. Now the
  * picture has exactly one [recorder] at a time: the first page that draws it while it has none. Only that page records
- * it; every other page draws the recording as it stands, in its own frame. When the recorder lets go (it leaves, or
- * its size changes), the pages still holding the picture are asked to draw again, and the first of them to draw takes
- * the recording over in that draw. The picture is released only when no page holds it.
+ * it; every other page draws the recording as it stands, in its own frame. The recording passes on:
+ * - when the recorder lets go (it leaves, or its size changes): the pages still holding the picture are asked to draw
+ *   again, and the first of them to draw takes the recording over in that draw;
+ * - when the recorder stops drawing while it still holds the picture (a page kept composed under another, not drawn):
+ *   every holder draws on each step of the picture, and a holder that finds the step not recorded yet takes the
+ *   recording over, so the picture never stops stepping under the page on top;
+ * - when a page's paint changes (a look, a theme, the strength): the first page to draw records the new paint.
+ * The picture is released only when no page holds it.
  */
 internal class KitGlassPicture {
     internal var layer: GraphicsLayer? = null
@@ -168,6 +173,9 @@ internal class KitGlassPicture {
 
     /** Pages holding the picture. */
     internal val users: Int get() = holders.size
+
+    /** The picture's step ([KitGlassBackdrop.stepping]) the last recording was made at. */
+    internal var recordedStep: Any? = null
 
     internal fun release(context: androidx.compose.ui.graphics.GraphicsContext) {
         layer?.let(context::releaseGraphicsLayer)
@@ -220,11 +228,13 @@ internal class KitGlassPictures {
     }
 
     /**
-     * Whether [holder] records [picture] in the draw it is in now: it does when it is the recorder, or when the picture
-     * has none (it then becomes the recorder). Every other holder only draws the recording.
+     * Whether [holder] records [picture] in the draw it is in now, at the picture's [step]: it does when it is the
+     * recorder, when the picture has none, or when the picture moved to a step its recorder has not recorded (the
+     * recorder no longer draws): it then becomes the recorder. Every other holder only draws the recording.
      */
-    internal fun records(picture: KitGlassPicture, holder: KitGlassPictureHolder): Boolean {
-        if (picture.recorder == null) picture.recorder = holder
+    internal fun records(picture: KitGlassPicture, holder: KitGlassPictureHolder, step: Any?): Boolean {
+        val r = picture.recorder
+        if (r == null || (r !== holder && step != null && step != picture.recordedStep)) picture.recorder = holder
         return picture.recorder === holder
     }
 
@@ -615,6 +625,8 @@ private data class BackdropSourceElement(
 
     override fun update(node: BackdropSourceNode) {
         if (node.backdrop !== backdrop || node.shared !== shared) node.letGo()
+        // Another paint: the first page of the shared picture to draw records it (KitGlassPicture, black-frame).
+        node.paintChanged()
         node.shared = shared
         node.backdrop = backdrop
         node.paint = paint
@@ -639,6 +651,11 @@ private class BackdropSourceNode(
     /** The picture's recorder let go: draw again, so a page still showing it can take the recording over. */
     override fun recorderLeft() {
         if (isAttached) invalidateDraw()
+    }
+
+    /** This page's paint changed: the shared picture is recorded again by the first page to draw it. */
+    fun paintChanged() {
+        held?.recorder = null
     }
 
     /** The shared picture this page shows (smoothness round 2), and the page size it was taken for. */
@@ -696,11 +713,16 @@ private class BackdropSourceNode(
         // page showing it draws the recording as it stands, so the layer is recorded once a frame, never by two pages.
         val p = held
         val pictures = shared
-        if (p == null || pictures == null || pictures.records(p, this@BackdropSourceNode)) {
+        // Read by every holder, so each draws on every step of the picture and can see a step left unrecorded.
+        val step = if (p != null) backdrop.stepping() else null
+        if (p == null || pictures == null || pictures.records(p, this@BackdropSourceNode, step)) {
             // Recorded in the layer's own scope, never through this node's: the picture cannot draw into, or ask for
             // its density from, the scope that is drawing it (N-29, a sample's paint reading toPx() recursed for ever).
             recordDetached(layer, paint)
-            if (p != null) pictures?.onRecord?.invoke(p, this@BackdropSourceNode)
+            if (p != null) {
+                p.recordedStep = step
+                pictures?.onRecord?.invoke(p, this@BackdropSourceNode)
+            }
         }
         kitDrawLayer(layer)
         drawContent()
