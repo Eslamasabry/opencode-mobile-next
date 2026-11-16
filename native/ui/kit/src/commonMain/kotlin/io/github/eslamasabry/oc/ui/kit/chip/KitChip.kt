@@ -92,8 +92,6 @@ public fun KitChip(
     expanded: Boolean? = null,
     onLongClick: (() -> Unit)? = null,
     adaptiveModel: Boolean = false,
-    /** The words wrap onto up to three lines instead of ending in an ellipsis (a tile's action in a 158 dp column). */
-    wrapLabel: Boolean = false,
 ) {
     kitAssert(label.isNotBlank()) { "KitChip: a chip always carries a word" }
     kitAssert(kind != KitChipKind.Removable || onRemove != null) { "KitChip: a removable chip needs onRemove" }
@@ -247,9 +245,9 @@ public fun KitChip(
             if (!narrow) BasicText(
                 text, Modifier.weight(1f, fill = false).testTag(if (adaptiveModel) "kit-model-chip-label" else "kit-chip-label"),
                 style = style,
-                maxLines = if (wrapLabel) 3 else if (adaptiveModel && density.fontScale >= 1.3f) 2 else 1, // F: lib/ui/kit/chat/kit_composer_chips.dart:468,523
-                softWrap = adaptiveModel || wrapLabel,
-                overflow = if (wrapLabel) TextOverflow.Clip else TextOverflow.Ellipsis,
+                maxLines = if (adaptiveModel && density.fontScale >= 1.3f) 2 else 1, // F: lib/ui/kit/chat/kit_composer_chips.dart:468,523
+                softWrap = adaptiveModel,
+                overflow = TextOverflow.Ellipsis,
             )
             if (kind == KitChipKind.Removable || (opensMenu && (!narrow || modelPairFits)) || expanded != null) {
                 KitGlyph(if (kind == KitChipKind.Removable) KitIcons.close else KitIcons.chevronDown, if (adaptiveModel || kind == KitChipKind.Removable) c.text2 else c.text1, iconSize,

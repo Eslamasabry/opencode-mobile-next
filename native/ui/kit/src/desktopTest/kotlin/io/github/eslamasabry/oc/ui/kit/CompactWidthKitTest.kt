@@ -29,12 +29,6 @@ import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.kit.chip.FilterChipsRules
 import io.github.eslamasabry.oc.ui.kit.chip.KitFilterChips as KitFilterChipsRest
-import io.github.eslamasabry.oc.ui.kit.agent.KitAgentTile
-import io.github.eslamasabry.oc.ui.kit.agent.KitAgentTileAction
-import io.github.eslamasabry.oc.ui.kit.rb.o23.MARKS
-import io.github.eslamasabry.oc.ui.kit.logo.LocalKitLogoLoader
-import io.github.eslamasabry.oc.ui.kit.agent.KitAgentTiles
-import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.nav.KitTab
 import io.github.eslamasabry.oc.ui.kit.nav.KitTabStrip
 import io.github.eslamasabry.oc.ui.kit.nav.TabRules
@@ -193,23 +187,5 @@ class CompactWidthKitTest {
         // scrolled a little: the nearest chip start (121) wins over where the finger left it
         assertEquals(121, FilterChipsRules.restStart(sizes, 8f, 0f, 90f, 400))
         assertEquals(0, FilterChipsRules.restStart(sizes, 8f, 0f, 30f, 400))
-    }
-
-    @Test
-    fun `COMPACT-028 an agent tile's action wraps its words and never ends in an ellipsis`() {
-        val scene: @Composable () -> Unit = {
-          CompositionLocalProvider(LocalKitLogoLoader provides MARKS) {
-            KitAgentTiles(
-                listOf<@Composable () -> Unit>(
-                    { KitAgentTile("Codex", "Ready", "codex", {}, ready = true, action = KitAgentTileAction("New conversation", "New conversation with Codex", KitIcons.chat) {}) },
-                    { KitAgentTile("Claude Code", "Sign in needed", "claude", {}, action = KitAgentTileAction("Sign in", "Sign in to Claude Code", prominent = true) {}) },
-                    { KitAgentTile("Antigravity", "Ready", "ag", {}, ready = true, action = KitAgentTileAction("New conversation", "New conversation with Antigravity", KitIcons.chat) {}) },
-                    { KitAgentTile("Qwen Code", "Not installed · 44 MB", "qwen", {}, action = KitAgentTileAction("Install", "Install Qwen Code", KitIcons.download) {}) },
-                )
-            )
-          }
-        }
-        val bad = found(scene).filter { it.contains("ellipsis") || it.contains("clipped") }
-        assertTrue(bad.isEmpty(), bad.toString())
     }
 }

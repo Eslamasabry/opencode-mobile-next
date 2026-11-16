@@ -145,7 +145,6 @@ public fun KitAgentTile(
                 icon = action.icon,
                 onClick = action.onClick,
                 spoken = action.spoken,
-                wrapLabel = true,
             )
         }
     }
