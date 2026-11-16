@@ -1316,6 +1316,7 @@ private fun phoneFolderWords(state: NewConversationUi): String? {
             if (state.chosenSideWaits)
                 if (state.phoneAgent != null) stringResource(Res.string.chatsNewPhoneFolderWaitingAgents)
                 else stringResource(Res.string.chatsNewPhoneFolderWaitingServer)
+            else if (state.restartWaitsForReply) stringResource(Res.string.chatsNewPhoneFolderWaitingServer)
             else if (state.fixingPhoneFolder)
                 if (state.phoneFolderBoth) stringResource(Res.string.chatsNewPhoneFolderRestartingBoth)
                 else if (state.phoneAgent != null) stringResource(Res.string.chatsNewPhoneFolderRestartingAgents, agent)
