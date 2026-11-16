@@ -304,8 +304,7 @@ internal class PhoneEngineNative(private val context: Context) {
     private fun awaitHealth(child: Process, port: Int, token: String, profile: String): JSONObject {
         val deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(10)
         while (child.isAlive && System.nanoTime() < deadline) {
-            val connection = URL("http://127.0.0.1:$port/v1/health")
-                .openConnection() as HttpURLConnection
+            val connection = DirectLoopbackHttp.open(port, "/v1/health")
             try {
                 connection.connectTimeout = 300
                 connection.readTimeout = 300

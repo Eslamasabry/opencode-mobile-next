@@ -24,6 +24,7 @@ import io.github.eslamasabry.opencode_mobile.BuiltinLinux
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
+import java.net.Proxy
 import java.security.SecureRandom
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
@@ -137,14 +138,7 @@ class AndroidPlansCollectorHost(
 
     private suspend fun probe(token: String): Boolean =
         withContext(dispatchers.io) {
-            val client =
-                OkHttpClient.Builder()
-                    .followRedirects(false)
-                    .followSslRedirects(false)
-                    .retryOnConnectionFailure(false)
-                    .connectTimeout(3, TimeUnit.SECONDS)
-                    .callTimeout(5, TimeUnit.SECONDS)
-                    .build()
+            val client = quotaCollectorReadinessClient()
             try {
                 client
                     .newCall(
@@ -338,3 +332,14 @@ class QuotaCollectorCleaner(private val host: AndroidPlansCollectorHost) : Profi
     override suspend fun clear(profileId: ProfileId, options: DeletionOptions): Outcome<Int> =
         host.clear(profileId)
 }
+
+/** The quota helper's bounded bootstrap probe (closed by its caller). */
+internal fun quotaCollectorReadinessClient(): OkHttpClient =
+    OkHttpClient.Builder()
+        .proxy(Proxy.NO_PROXY)
+        .followRedirects(false)
+        .followSslRedirects(false)
+        .retryOnConnectionFailure(false)
+        .connectTimeout(3, TimeUnit.SECONDS)
+        .callTimeout(5, TimeUnit.SECONDS)
+        .build()
