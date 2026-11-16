@@ -48,4 +48,7 @@
     <string name="agentsUpdateRefused">la actualización de agentes no pudo empezar, usa Instalar en el agente</string>
     <string name="agentsUpdateUpdated">%1$s actualizado</string>
     <string name="agentsUpdateNeedsSignIn">%1$s necesita que inicies sesión</string>
+    <string name="agentsStateSignInNotConfirmed">Inicio de sesión sin confirmar</string>
+    <string name="agentsSignInNotConfirmedBody">La app no pudo confirmar si %1$s tiene la sesión iniciada. Al comprobar de nuevo se le pregunta a %1$s ahora.</string>
+    <string name="agentsCheckSignInAgain">Comprobar %1$s de nuevo</string>
 </resources>

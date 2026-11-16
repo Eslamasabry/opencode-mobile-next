@@ -48,4 +48,7 @@
     <string name="agentsUpdateRefused">cập nhật tác nhân không bắt đầu được, hãy dùng Cài đặt trên tác nhân</string>
     <string name="agentsUpdateUpdated">đã cập nhật %1$s</string>
     <string name="agentsUpdateNeedsSignIn">%1$s cần bạn đăng nhập</string>
+    <string name="agentsStateSignInNotConfirmed">Chưa xác nhận đăng nhập</string>
+    <string name="agentsSignInNotConfirmedBody">Ứng dụng không thể xác nhận %1$s đã đăng nhập hay chưa. Kiểm tra lại sẽ hỏi %1$s ngay bây giờ.</string>
+    <string name="agentsCheckSignInAgain">Kiểm tra lại %1$s</string>
 </resources>

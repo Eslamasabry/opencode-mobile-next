@@ -48,4 +48,7 @@
     <string name="agentsUpdateRefused">не удалось начать обновление агентов, нажмите «Установить» у агента</string>
     <string name="agentsUpdateUpdated">обновлено: %1$s</string>
     <string name="agentsUpdateNeedsSignIn">%1$s: нужно войти</string>
+    <string name="agentsStateSignInNotConfirmed">Вход не подтверждён</string>
+    <string name="agentsSignInNotConfirmedBody">Приложению не удалось проверить, выполнен ли вход в %1$s. Повторная проверка спросит %1$s сейчас.</string>
+    <string name="agentsCheckSignInAgain">Проверить %1$s ещё раз</string>
 </resources>

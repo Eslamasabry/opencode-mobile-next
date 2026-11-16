@@ -543,6 +543,7 @@ agentsCheckPrevious	1917160d70
 agentsCheckPreviousNote	8b5b86ef4b
 agentsCheckRetry	454b12ef6b
 agentsCheckRunning	d1d6181d12
+agentsCheckSignInAgain	3c12135da4
 agentsCheckTitle	d458d9f32b
 agentsCheckUpdateHelper	c963f334aa
 agentsChecking	948d842958
@@ -741,6 +742,7 @@ agentsSignInHostDown	ff3df594b6
 agentsSignInIntro	8b8cbe8e3c
 agentsSignInIntroOther	8b9112cf95
 agentsSignInLimit	1d3b718c38
+agentsSignInNotConfirmedBody	1e4700556f
 agentsSignInOpenPage	9d3d8e7b8b
 agentsSignInPaste	b239678924
 agentsSignInRejected	cd5add6525
@@ -782,6 +784,7 @@ agentsStateReady	22a88a22d2
 agentsStateSetUpAtFirstUse	b77567ffc2
 agentsStateSignInCheckFailed	00cad5539c
 agentsStateSignInNeeded	b7fb712e5a
+agentsStateSignInNotConfirmed	ec079f842b
 agentsStateSignInUnchecked	f8d969b43a
 agentsStateStopped	7dbdddb6a1
 agentsStateUnavailable	af58c3a2f5

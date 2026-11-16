@@ -48,4 +48,7 @@
     <string name="agentsUpdateRefused">la mise à jour des agents n’a pas pu démarrer, utilisez Installer sur l’agent</string>
     <string name="agentsUpdateUpdated">%1$s mis à jour</string>
     <string name="agentsUpdateNeedsSignIn">%1$s a besoin que vous vous connectiez</string>
+    <string name="agentsStateSignInNotConfirmed">Connexion non confirmée</string>
+    <string name="agentsSignInNotConfirmedBody">L’app n’a pas pu confirmer si %1$s est connecté. Vérifier à nouveau interroge %1$s maintenant.</string>
+    <string name="agentsCheckSignInAgain">Vérifier %1$s à nouveau</string>
 </resources>

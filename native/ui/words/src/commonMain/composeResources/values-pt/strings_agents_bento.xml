@@ -48,4 +48,7 @@
     <string name="agentsUpdateRefused">a atualização de agentes não conseguiu começar, use Instalar no agente</string>
     <string name="agentsUpdateUpdated">%1$s atualizado</string>
     <string name="agentsUpdateNeedsSignIn">%1$s precisa que você entre</string>
+    <string name="agentsStateSignInNotConfirmed">Login não confirmado</string>
+    <string name="agentsSignInNotConfirmedBody">O app não conseguiu confirmar se o %1$s está com login feito. Verificar de novo pergunta ao %1$s agora.</string>
+    <string name="agentsCheckSignInAgain">Verificar %1$s de novo</string>
 </resources>

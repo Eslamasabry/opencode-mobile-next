@@ -48,4 +48,7 @@
     <string name="agentsUpdateRefused">pembaruan agen tidak dapat dimulai, gunakan Pasang pada agen</string>
     <string name="agentsUpdateUpdated">%1$s diperbarui</string>
     <string name="agentsUpdateNeedsSignIn">%1$s perlu Anda masuk</string>
+    <string name="agentsStateSignInNotConfirmed">Status masuk belum dikonfirmasi</string>
+    <string name="agentsSignInNotConfirmedBody">Aplikasi tidak dapat memastikan apakah %1$s sudah masuk. Memeriksa lagi akan menanyakan %1$s sekarang.</string>
+    <string name="agentsCheckSignInAgain">Periksa %1$s lagi</string>
 </resources>
