@@ -1,5 +1,10 @@
 package io.github.eslamasabry.oc.ui.kitchat.card
 
+import io.github.eslamasabry.oc.ui.design.style.SurfaceRole
+import io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel
+import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceInput
+import io.github.eslamasabry.oc.ui.kit.foundation.kitStyledFace
+import io.github.eslamasabry.oc.ui.kit.foundation.kitSurface
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -113,7 +118,10 @@ private fun AgentChip(agent: KitAgent, maxWidth: androidx.compose.ui.unit.Dp) {
             )
         }
     }
-    val pill = Modifier.background(colors.surface3, CircleShape)
+    // glass-truth 2026-11-16: the chip was surface3 in every style. Under Glass it is Glass's chip, a small pane through
+    // the resolver, as KitChip's is; Brutal and Paper dress it; Solid, Soft and Signal keep surface3.
+    val styled = kitStyledFace(KitSurfaceInput(SurfaceRole.Control, KitShapeId.Pill, SurfaceLevel.Surface3, ownFill = colors.surface3))
+    val pill = styled?.let { Modifier.kitSurface(it) } ?: Modifier.background(colors.surface3, CircleShape)
     val onOpen = agent.onOpen
     if (onOpen == null) {
         // The lead: plain, not a button.

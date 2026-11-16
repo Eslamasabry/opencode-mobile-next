@@ -121,9 +121,8 @@ public data class AppearanceUi(
     /** The looks the picker offers (Clear only where it measurably differs from Glossy, glass looks D3). */
     val glassLooks: List<GlassLookId> = GlassLooks.offered,
     /**
-     * What holds the looks: [EdgeHold.Motion] (motion off: every look draws the same held glass, so the row is
-     * disabled and says why) or [EdgeHold.Platform] (no lens below Android 13: the looks still differ in their panes,
-     * the row says the edges do not bend); null when nothing does.
+     * [EdgeHold.Platform] means no lens below Android 13: the looks still differ in their panes, and the row says
+     * the edges do not bend. Motion off keeps the looks; null when nothing holds them. Saver has its own note.
      */
     val glassLookHold: EdgeHold? = null,
     /** The Glass lab row (preview builds): it opens [SettingsPage.GlassLab]. */

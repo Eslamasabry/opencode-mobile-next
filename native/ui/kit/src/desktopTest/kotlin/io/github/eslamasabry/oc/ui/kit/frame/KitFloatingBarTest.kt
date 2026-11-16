@@ -480,7 +480,6 @@ class KitFloatingBarTest {
             Style.entries.filter { it != Style.Glass }.map { "$it" to (dark(it) to (FakeKitPlatform() as KitPlatform)) } +
                 listOf(
                     "Glass, no lens" to (dark(Style.Glass) to FakeKitPlatform(frost = true)),
-                    "Glass, reduced motion" to (dark(Style.Glass, motion = MotionLevel.Off) to LensPlatform()),
                     "Glass, Frosted look" to (dark(Style.Glass, GlassLookId.Frosted) to LensPlatform()),
                 )
         for ((what, look) in cases) for (page in Page.entries) {

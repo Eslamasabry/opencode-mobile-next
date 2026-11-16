@@ -166,11 +166,13 @@ class GlassPanesTest {
         // Glass looks D7: the Frosted look draws its own lighter clear panes, no longer the old thick ones.
         assertTrue(FrostPolicy.clearPanes(ready, b, GlassLookId.Frosted), "the Frosted look: clear panes")
         assertFalse(FrostPolicy.clearPanes(ready, FrostStrength.Off, glossy), "frost Off")
-        for (look in GlassLookId.entries) for (held in listOf(ready.copy(saver = true), ready.copy(reducedMotion = true), ready.copy(highContrast = true), ready.copy(styleAllows = false))) {
+        for (look in GlassLookId.entries) for (held in listOf(ready.copy(saver = true), ready.copy(highContrast = true), ready.copy(styleAllows = false))) {
             assertFalse(FrostPolicy.clearPanes(held, b, look), "$look $held")
             assertNotEquals(null, FrostPolicy.edgesHeldBy(held, b, look))
         }
         assertEquals(EdgeHold.Platform, FrostPolicy.edgesHeldBy(ready.copy(lensSupported = false), b, glossy))
+        // glass-truth 2026-11-16: reduced motion is not a hold; the panes stay clear.
+        for (look in GlassLookId.entries) assertTrue(FrostPolicy.clearPanes(ready.copy(reducedMotion = true), b, look), "$look under reduced motion")
     }
 
     // ---- Glass looks (docs/designs/glass-looks-2026-11-09.md v2)

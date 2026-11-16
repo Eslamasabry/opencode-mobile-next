@@ -80,7 +80,8 @@ import kotlin.math.min
  *
  * Who is joined ([KitLiquidJoin.partnerOf]): a body ([rememberKitLiquidJoinBody]: the bar's capsule, the message box)
  * and the first drop of it ([rememberKitLiquidJoinDrop]: a menu, the jump pill) while both hold a granted liquid face
- * (`kitLiquidFace(join = ...)`): Glass, a look with a lens, Android 13+, motion not reduced, within the window's budget.
+ * (`kitLiquidFace(join = ...)`): Glass, a look with a lens, Android 13+, within the window's budget; the join grows, so
+ * a screen under reduced motion asks for none (KitScreen), while each pane keeps its own liquid face.
  * A pane with no partner is drawn by the vendored library exactly as before.
  */
 

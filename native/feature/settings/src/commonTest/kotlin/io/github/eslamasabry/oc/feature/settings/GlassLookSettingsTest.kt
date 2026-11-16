@@ -93,11 +93,11 @@ class GlassLookSettingsTest {
     }
 
     @Test
-    fun `B-KIT-018 motion off holds the looks, and no lens is said, not held`() = runTest {
+    fun `B-KIT-018 motion off no longer holds the looks, and no lens is said, not held`() = runTest {
         val motionOff = presenter(PersonalPrefs(style = SurfaceStyle.Glass), facts = phoneFacts().copy(systemMotionOff = true, liquidGlass = true))
         runCurrent()
         motionOff.onOpen(SettingsPage.Appearance); runCurrent()
-        assertEquals(EdgeHold.Motion, motionOff.state.value.appearance.glassLookHold)
+        assertNull(motionOff.state.value.appearance.glassLookHold)
         val noLens = presenter(PersonalPrefs(style = SurfaceStyle.Glass), facts = phoneFacts().copy(liquidGlass = false))
         runCurrent()
         noLens.onOpen(SettingsPage.Appearance); runCurrent()

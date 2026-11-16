@@ -1,5 +1,10 @@
 package io.github.eslamasabry.oc.ui.kit.choice
 
+import io.github.eslamasabry.oc.ui.design.style.SurfaceRole
+import io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel
+import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceInput
+import io.github.eslamasabry.oc.ui.kit.foundation.kitStyledFace
+import io.github.eslamasabry.oc.ui.kit.foundation.kitSurface
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -96,6 +101,10 @@ public fun KitAgentChoice(
 ) {
     val colors = LocalKitColors.current
     val shape = KitShapeId.Card.shape()
+    // glass-truth 2026-11-16: the card was surface1 with a hairline in every style. A choice card holds its words, so
+    // under Glass it is a frosted card through the resolver, a chosen one Glass's chosen pane; Brutal and Paper dress
+    // it; Solid, Soft and Signal keep its own face (the check marks the choice there).
+    val styled = kitStyledFace(KitSurfaceInput(SurfaceRole.Content, KitShapeId.Card, SurfaceLevel.Surface1, ownFill = colors.surface1, selected = item.selected))
     KitTappable(
         item.onClick,
         modifier =
@@ -112,8 +121,7 @@ public fun KitAgentChoice(
         Box(
             Modifier.fillMaxWidth()
                 .fillMaxHeight()
-                .background(colors.surface1, shape)
-                .border(1.dp, colors.hairline, shape)
+                .then(styled?.let { Modifier.kitSurface(it) } ?: Modifier.background(colors.surface1, shape).border(1.dp, colors.hairline, shape))
                 .padding(Space.S5.dp)
         ) {
             if (wide) {

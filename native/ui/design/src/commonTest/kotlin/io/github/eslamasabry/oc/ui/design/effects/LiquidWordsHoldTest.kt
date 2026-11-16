@@ -32,7 +32,10 @@ class LiquidWordsHoldTest {
         for (dark in listOf(true, false)) for (role in LiquidRole.entries) {
             val hold = LiquidEdge.recipe(role, dark).hold
             val wants = role == LiquidRole.Menu || role == LiquidRole.Sheet
-            assertEquals(wants, hold.knee, "$role knee dark=$dark")
+            // glass-truth 2026-11-16: the plain bar and message box hold back the light (the knee), not the colour.
+            val words = role == LiquidRole.Bar || role == LiquidRole.Composer
+            assertEquals(wants || words, hold.knee, "$role knee dark=$dark")
+            if (words) assertEquals(LiquidEdge.WORDS_HOLD, hold, "$role hold dark=$dark")
             assertEquals(if (wants) LiquidEdge.HOLD_CHROMA else 0f, hold.chroma, "$role colour hold dark=$dark")
             // Glass liquid (2026-11-14): their fine detail is held round its local mean too; nobody else's.
             assertEquals(wants, hold.local, "$role detail hold dark=$dark")
@@ -55,7 +58,7 @@ class LiquidWordsHoldTest {
     fun `mixing carries the hold of the nearer end`() {
         val bar = LiquidEdge.recipe(LiquidRole.Bar, true)
         val menu = LiquidEdge.recipe(LiquidRole.Menu, true)
-        assertEquals(LiquidHold.Off, LiquidEdge.mix(bar, menu, .4f).hold)
+        assertEquals(bar.hold, LiquidEdge.mix(bar, menu, .4f).hold)
         assertEquals(menu.hold, LiquidEdge.mix(bar, menu, .6f).hold)
     }
 

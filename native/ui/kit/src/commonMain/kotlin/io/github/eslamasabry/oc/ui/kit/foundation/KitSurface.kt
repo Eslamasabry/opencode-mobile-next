@@ -144,7 +144,21 @@ public data class KitSurfaceInput(
      * pane boost). Overrides [shape]'s radius, [radius], [exactRadius] and [corners]; [shape] still names the part's kind.
      */
     val cornerShapes: KitCorners? = null,
+    /**
+     * One cell of a pane drawn in pieces (a lazy list's row group: each row draws its own share of the panel). Glass
+     * draws the cells as one pane: the lit corner, the sheen and the glow only on the [KitPaneCell.First] cell, and no
+     * rim on any (a rim per cell drew a line under every row). Null: a whole pane. Other styles ignore it.
+     */
+    val cell: KitPaneCell? = null,
 )
+
+/** Where a cell lies in a pane drawn in pieces ([KitSurfaceInput.cell]). */
+public enum class KitPaneCell { First, Middle, Last }
+
+/** [this] Glass face as one [cell] of a pane drawn in pieces (see [KitSurfaceInput.cell]). */
+private fun SurfaceDecoration.asCell(cell: KitPaneCell): SurfaceDecoration =
+    if (cell == KitPaneCell.First) copy(edgeWidthDp = 0f, shadows = emptyList())
+    else copy(edgeWidthDp = 0f, shadows = emptyList(), fillStart = fill, sheen = Argb(0), innerGlow = Argb(0), specular = Argb(0))
 
 /**
  * True inside a pane a style dresses with its own outline (the message box, a request card): every surface inside is
@@ -256,7 +270,10 @@ public fun kitSurfaceLook(input: KitSurfaceInput): KitSurfaceLook {
             // A clear content pane (a card, a row group) keeps its first line of words below Glass's pane inset, where its
             // top sheen has mostly faded (GlassFinish.sheenAt); a chip's or a field's words may lie anywhere on it.
             val wordsDp = if (clear && input.role == SurfaceRole.Content) GlassFinish.PANE_WORDS_DP else 0f
-            remember(resolved, spots, solid, roles, clear, request.look, input.role) { glassRims(GlassFinish.thickened(resolved!!, roles, solid, spots, inks = if (clear) GlassFinish.paneInks(roles, solid) else null, wordsDp = wordsDp), roles, clear, request.look, even = input.role == SurfaceRole.Field) }
+            remember(resolved, spots, solid, roles, clear, request.look, input.role, input.cell) {
+                glassRims(GlassFinish.thickened(resolved!!, roles, solid, spots, inks = if (clear) GlassFinish.paneInks(roles, solid) else null, wordsDp = wordsDp), roles, clear, request.look, even = input.role == SurfaceRole.Field)
+                    .let { d -> input.cell?.let { d.asCell(it) } ?: d }
+            }
         }
     // The frost under the face is decided by the decoration the surface settles on, never a fading one, so the tree
     // holds through a fade (kit_surface_look.dart:1257-1266).
@@ -295,6 +312,19 @@ public fun kitSurfaceLook(input: KitSurfaceInput): KitSurfaceLook {
 @Composable
 public fun kitDressedLook(input: KitSurfaceInput): KitSurfaceLook? =
     kitSurfaceLook(input.copy(ownLook = true, ownFill = null)).takeIf { it.dressed }
+
+/**
+ * The outer face of a part that otherwise paints its own (glass-truth 2026-11-16: the voice pill, the side sheet, the
+ * undo bar and their kind kept their own fill in every style, so Glass drew an opaque card among its glass and Brutal a
+ * soft grey one among its ink boxes). Glass: the style's pane for [input] through the resolver (frost; [KitSurfaceInput.ownFill]
+ * is what its words must read as on); Brutal and Paper: their dressing, as [kitDressedLook]; null in Solid, Soft and
+ * Signal, where the part keeps painting its own face exactly as before. A floating part that can bend what lies behind
+ * it asks `kitLiquidFace` first and falls back to this. Not for content inside another pane (a code or output block,
+ * a band inside the message box): those stay quiet insets of the pane they lie in.
+ */
+@Composable
+public fun kitStyledFace(input: KitSurfaceInput): KitSurfaceLook? =
+    if (LocalKitStyle.current.style == Style.Glass) kitSurfaceLook(input).takeIf { it.dressed } else kitDressedLook(input)
 
 /**
  * The style's decoration as data, for a part that draws its own frame by hand (a code block's open-sided chunks, a

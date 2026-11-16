@@ -32,6 +32,12 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.motion.MotionTokens
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
+import io.github.eslamasabry.oc.ui.design.style.SurfaceRole
+import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
+import io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel
+import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceInput
+import io.github.eslamasabry.oc.ui.kit.foundation.kitStyledFace
+import io.github.eslamasabry.oc.ui.kit.foundation.kitSurface
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import kotlinx.coroutines.launch
 import kotlin.math.abs
@@ -127,6 +133,11 @@ public fun KitSideSheet(
             scope.launch { offset.snapTo(SideSheetRules.clampDrag(offset.value + delta, widthPx, rtl)) }
         }
     val scrimTaps = remember { MutableInteractionSource() }
+    // glass-truth 2026-11-16: the sheet was surface1 in every style. Under Glass it is the sheet's frost through the
+    // resolver: it holds reading content, and its square end edge carries no lens (the lens bends rounded rectangles
+    // only) while it slides by a layer translation a lens could not follow. Brutal and Paper dress it; Solid, Soft and
+    // Signal keep surface1.
+    val styled = kitStyledFace(KitSurfaceInput(SurfaceRole.Sheet, KitShapeId.Square, SurfaceLevel.Surface1, ownFill = colors.surface1))
     Box(modifier.fillMaxSize()) {
         Box(
             Modifier.fillMaxSize()
@@ -159,7 +170,7 @@ public fun KitSideSheet(
                         }
                     },
                 )
-                .background(colors.surface1)
+                .then(styled?.let { Modifier.kitSurface(it) } ?: Modifier.background(colors.surface1))
                 .semantics { dismiss { dismiss(); true } },
         ) { content() }
     }

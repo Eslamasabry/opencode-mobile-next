@@ -176,6 +176,13 @@ public object LiquidEdge {
      */
     public val MODAL_HOLD: LiquidHold = LiquidHold(knee = true, chroma = HOLD_CHROMA, localDp = 28f, localFree = .02f, localSlope = .10f, inkKeep = .10f, inkRim = .8f)
 
+    /**
+     * What the plain bar and the plain message box hold back behind their words (glass-truth 2026-11-16): the luminance
+     * knee alone ([LiquidJoin.held]), as their joined body already has. Colour passes ([LiquidHold.chroma] 0) and no
+     * detail hold: the scroll-edge fade clears the content under their words, the knee tames what the rim still shows.
+     */
+    public val WORDS_HOLD: LiquidHold = LiquidHold(knee = true, chroma = 0f)
+
     /** A sheet's hold: a sheet is modal and holds a list, so the page's words between its rows may be held harder. */
     public val SHEET_HOLD: LiquidHold = MODAL_HOLD
 
@@ -292,8 +299,12 @@ public object LiquidEdge {
         return when (role) {
             // Bars and the message box carry words over moving text: their glass frosts it to colour and shape, while
             // the rim still bends it. The dock at rest is a bar (dockRecipe mixes it towards a menu as it grows).
-            LiquidRole.Bar, LiquidRole.Dock -> r(3f, 34f, .14f, .18f, .12f)
-            LiquidRole.Composer -> r(2f, 34f, .16f, .20f, .18f)
+            // glass-truth 2026-11-16: the plain bar and the plain message box hold back bright content behind their
+            // words with the same luminance knee as the joined body, menus and sheets (knee only: no colour limit, no
+            // detail hold; their scroll-edge fade already clears the content under the words).
+            LiquidRole.Bar -> r(3f, 34f, .14f, .18f, .12f, hold = WORDS_HOLD)
+            LiquidRole.Dock -> r(3f, 34f, .14f, .18f, .12f)
+            LiquidRole.Composer -> r(2f, 34f, .16f, .20f, .18f, hold = WORDS_HOLD)
             // Sheets and menus are the bar's material (owner 2026-11-13, "half glass half frosting", "still no liquid it's
             // frosted"): a menu that grows out of a clear bar is no longer a cloudy 12 dp pane but the same clear glass,
             // a little more frost ([MODAL_BLUR_DP]). Their words read by holding back what is behind them, not by frost:
@@ -741,17 +752,27 @@ public object LiquidInkRule {
     /** The ink a theme draws its words in. */
     public fun of(dark: Boolean): LiquidInk = if (dark) LiquidInk.Light else LiquidInk.Dark
 
-    /** Mean luminance and its variance of [argb] pixels (Rec. 709 on sRGB channels, cheap: no linearisation). */
-    public fun measure(argb: IntArray): Pair<Float, Float> {
+    /**
+     * Mean luminance and its variance of [argb] pixels (Rec. 709 on sRGB channels, cheap: no linearisation), each pixel
+     * counted by its [weights] (glass-truth 2026-11-16: the pane weights where its words lie); null, a size that does not
+     * match, or no weight at all counts every pixel alike.
+     */
+    public fun measure(argb: IntArray, weights: FloatArray? = null): Pair<Float, Float> {
         if (argb.isEmpty()) return 0f to 0f
+        val w = weights?.takeIf { it.size == argb.size && it.any { v -> v > 0f } }
         var sum = 0.0
         var sq = 0.0
-        for (p in argb) {
+        var total = 0.0
+        for (i in argb.indices) {
+            val k = w?.get(i)?.toDouble() ?: 1.0
+            if (k <= 0.0) continue
+            val p = argb[i]
             val l = (.2126 * ((p shr 16) and 0xFF) + .7152 * ((p shr 8) and 0xFF) + .0722 * (p and 0xFF)) / 255.0
-            sum += l
-            sq += l * l
+            sum += l * k
+            sq += l * l * k
+            total += k
         }
-        val mean = sum / argb.size
-        return mean.toFloat() to (sq / argb.size - mean * mean).coerceAtLeast(0.0).toFloat()
+        val mean = sum / total
+        return mean.toFloat() to (sq / total - mean * mean).coerceAtLeast(0.0).toFloat()
     }
 }
