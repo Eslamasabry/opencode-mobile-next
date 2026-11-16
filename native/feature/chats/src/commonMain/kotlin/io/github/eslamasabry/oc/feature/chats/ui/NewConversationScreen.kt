@@ -770,11 +770,18 @@ private fun NewConversationAgentStep(state: NewConversationUi, actions: NewConve
                     when {
                         agent.updating -> stringResource(Res.string.agentsUpdatingAgent, agent.name)
                         agent.checking -> stringResource(Res.string.r40PhoneChecking)
+                        agent.signInNotConfirmed -> stringResource(Res.string.agentsStateSignInNotConfirmed)
+                        agent.limitReached ->
+                            agent.limitResets?.let { stringResource(Res.string.agentsStateLimitReset, it) }
+                                ?: stringResource(Res.string.agentsStateLimit)
                         agent.signInNeeded -> stringResource(Res.string.agentsStateSignInNeeded)
                         agent.phoneCheck -> stringResource(Res.string.agentsStatePhoneCheck)
                         else -> stringResource(Res.string.chatsNewSetUp)
                     },
-                onClick = { actions.setUpPhoneAgent(agent.id) },
+                // A check that did not answer is asked again here; every other row opens its set-up.
+                onClick = {
+                    if (agent.signInNotConfirmed) actions.checkPhoneAgents() else actions.setUpPhoneAgent(agent.id)
+                },
                 modifier = Modifier.testTag("chats-new-agent-${agent.id}"),
             )
         }
@@ -1007,6 +1014,7 @@ private fun StartingConversation(state: NewConversationUi, actions: NewConversat
             PhoneStartWay.ChooseModel -> stringResource(Res.string.chatsNewAgentModelMissing, agentName)
             PhoneStartWay.TryAgain -> stringResource(Res.string.chatsNewAgentDidNotStart, agentName)
             PhoneStartWay.SignIn -> stringResource(Res.string.chatSendFailureSignInAgain, agentName)
+            PhoneStartWay.CheckAgain -> stringResource(Res.string.continueWithNotReady, agentName)
             null -> null
         }
     val setUpWords = stringResource(Res.string.agentsSetUpAction, agentName)
@@ -1053,6 +1061,7 @@ private fun StartingConversation(state: NewConversationUi, actions: NewConversat
                 problem?.way == PhoneStartWay.SetUp -> setUpWords
                 problem?.way == PhoneStartWay.ChooseModel -> chooseModelWords
                 problem?.way == PhoneStartWay.SignIn -> stringResource(Res.string.chatSendFailureSignInAction)
+                problem?.way == PhoneStartWay.CheckAgain -> stringResource(Res.string.agentsCheckSignInAgain, agentName)
                 else -> stringResource(Res.string.commonRetry)
             },
         onRetry =
@@ -1064,6 +1073,7 @@ private fun StartingConversation(state: NewConversationUi, actions: NewConversat
                 val forward: () -> Unit = {
                     when (way) {
                         PhoneStartWay.SetUp, PhoneStartWay.SignIn -> actions.setUpPhoneAgent(agentId)
+                        PhoneStartWay.CheckAgain -> actions.checkPhoneAgents()
                         PhoneStartWay.ChooseModel -> {
                             actions.editPrompt()
                             actions.sheet(NewConversationSheet.Models)

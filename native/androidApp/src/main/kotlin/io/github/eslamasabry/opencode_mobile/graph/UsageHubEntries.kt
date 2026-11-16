@@ -37,6 +37,8 @@ import io.github.eslamasabry.oc.ui.routes.*
 import io.github.eslamasabry.oc.ui.words.res.*
 import kotlin.time.Clock
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgents
 import org.jetbrains.compose.resources.stringResource
 
 /**
@@ -53,6 +55,7 @@ class UsageHubEntries(
     private val source: PlansSource,
     private val zone: UsageTimeZone,
     private val clock: Clock,
+    private val phoneAgents: PhoneAgents,
 ) : EntryInstaller {
     override fun EntryProviderScope<NavKey>.install() {
         entry<UsageRoute.Hub> { route ->
@@ -66,6 +69,8 @@ class UsageHubEntries(
             val management by manager.state.collectAsStateWithLifecycle()
             val auth by signIn.state.collectAsStateWithLifecycle()
             val facts by source.snapshot.collectAsStateWithLifecycle()
+            val agentRows by phoneAgents.state.collectAsStateWithLifecycle()
+            val checkScope = rememberCoroutineScope()
             // Cost · Limits · Plans (B-159/B-160); Limits is where the hub opens.
             var tab by rememberSaveable { mutableStateOf(HubTab.Limits) }
             var actionConsumed by rememberSaveable { mutableStateOf(false) }
@@ -121,8 +126,22 @@ class UsageHubEntries(
                     delay(30_000)
                 }
             }
-            val limits = limitsUi(facts, plan.refreshing, nowMs, zone.id())
-            val limitActions = remember(plans) { object : LimitsActions { override fun refresh() = plans.refresh() } }
+            val limits =
+                limitsUi(facts, plan.refreshing, nowMs, zone.id(), UsageAgentTruths.of(agentRows.agents))
+            val limitActions =
+                remember(plans, phoneAgents) {
+                    object : LimitsActions {
+                        override fun refresh() = plans.refresh()
+
+                        // "Check Claude Code again": ask the agents now, then read the limits with their answer.
+                        override fun checkAgent() {
+                            checkScope.launch {
+                                phoneAgents.refresh()
+                                plans.refresh()
+                            }
+                        }
+                    }
+                }
             when {
                 auth.active -> PlanSignInScreen(auth, signIn)
                 management.page != PlanManagePage.None ->
