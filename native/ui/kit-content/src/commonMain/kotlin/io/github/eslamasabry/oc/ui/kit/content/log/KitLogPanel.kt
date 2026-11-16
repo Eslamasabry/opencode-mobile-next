@@ -682,7 +682,7 @@ private fun LogCopyButton(text: () -> String) {
             copied = true
         },
         modifier = Modifier.testTag("kit-log-copy-all"),
-        haptic = KitHaptic.Send,
+        haptic = KitHaptic.Select,
         size = 20, // F: lib/ui/kit/kit_log_panel.dart:1173
     )
 }

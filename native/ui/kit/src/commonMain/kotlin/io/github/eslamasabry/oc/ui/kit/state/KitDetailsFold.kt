@@ -379,7 +379,7 @@ private fun CopyValueButton(text: String, label: String, modifier: Modifier) {
             copied = true
         },
         modifier = modifier,
-        haptic = KitHaptic.Send,
+        haptic = KitHaptic.Select,
         size = LocalKitTokens.current.smallIcon,
     )
 }
