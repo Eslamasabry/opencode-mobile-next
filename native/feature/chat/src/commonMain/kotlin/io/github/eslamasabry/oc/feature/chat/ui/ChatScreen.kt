@@ -223,6 +223,11 @@ import io.github.eslamasabry.oc.ui.words.res.connectAgentNeedsSignIn
 import io.github.eslamasabry.oc.ui.words.res.connectUpdatingAgents
 import io.github.eslamasabry.oc.ui.words.res.connectUpdatingPhone
 import io.github.eslamasabry.oc.ui.words.res.launchUiSessionWaiting
+import io.github.eslamasabry.oc.ui.words.res.stageOpeningConversation
+import io.github.eslamasabry.oc.ui.words.res.stageStartingAgent
+import io.github.eslamasabry.oc.ui.words.res.stageStartingHelper
+import io.github.eslamasabry.oc.ui.words.res.stageStartingLinux
+import io.github.eslamasabry.oc.ui.words.res.stageStartingOpenCode
 import io.github.eslamasabry.oc.ui.words.res.connectionRestartAgent
 import io.github.eslamasabry.oc.ui.words.res.connectionRestartPhoneServer
 import io.github.eslamasabry.oc.ui.words.res.workServerNotAnswering
@@ -1587,6 +1592,13 @@ private fun connectionLine(
                 io.github.eslamasabry.oc.feature.chat.world.ChatServerWait.UpdatingAgents -> stringResource(Res.string.connectUpdatingAgents)
                 io.github.eslamasabry.oc.feature.chat.world.ChatServerWait.AgentNeedsSignIn -> stringResource(Res.string.connectAgentNeedsSignIn)
                 io.github.eslamasabry.oc.feature.chat.world.ChatServerWait.Starting -> stringResource(Res.string.connectStartingPhone)
+                io.github.eslamasabry.oc.feature.chat.world.ChatServerWait.StartingLinux -> stringResource(Res.string.stageStartingLinux)
+                io.github.eslamasabry.oc.feature.chat.world.ChatServerWait.StartingOpenCode -> stringResource(Res.string.stageStartingOpenCode)
+                io.github.eslamasabry.oc.feature.chat.world.ChatServerWait.StartingHelper -> stringResource(Res.string.stageStartingHelper)
+                io.github.eslamasabry.oc.feature.chat.world.ChatServerWait.OpeningConversation -> stringResource(Res.string.stageOpeningConversation)
+                io.github.eslamasabry.oc.feature.chat.world.ChatServerWait.StartingAgent ->
+                    if (agentName != null) stringResource(Res.string.stageStartingAgent, agentName)
+                    else stringResource(Res.string.launchUiSessionWaiting)
                 io.github.eslamasabry.oc.feature.chat.world.ChatServerWait.Connecting ->
                     if (agentName != null) stringResource(Res.string.chatConnectingToAgent, agentName)
                     else stringResource(Res.string.launchUiSessionWaiting)

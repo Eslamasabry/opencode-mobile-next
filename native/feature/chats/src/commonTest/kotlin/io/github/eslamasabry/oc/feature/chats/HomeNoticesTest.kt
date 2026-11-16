@@ -139,6 +139,32 @@ class HomeNoticesTest {
     }
 
     @Test
+    fun `OWNER-1116 a server on this phone that the person runs themselves and that is off raises no notice`() {
+        // Owner's phone, build 10062: the old app's Termux setup was migrated as the profile "This device (Termux)";
+        // the app never starts it, and home said "This device (Termux) isn't answering · Try again" on every open.
+        val termux =
+            io.github.eslamasabry.oc.feature.chats.presentation.ChatsListSourceUi(
+                profile = io.github.eslamasabry.oc.core.common.ids.ProfileId("termux"),
+                name = "This device (Termux)",
+                shown = true,
+                main = false,
+                onThisPhone = true,
+                unreachable = true,
+                selfRun = true,
+            )
+        val base = ui(item("a")).copy(incomplete = persistentListOf("This device (Termux)"))
+        val off = base.copy(home = base.home.copy(sources = persistentListOf(termux)))
+        assertTrue(HomeNotices.unreachable(off).isEmpty())
+        assertNull(HomeNotices.shown(active(off)))
+        // A server elsewhere that does not answer is still said.
+        val laptop = base.copy(home = base.home.copy(sources = persistentListOf(termux.copy(selfRun = false))))
+        assertEquals(HomeNoticeKind.ServerUnreachable, HomeNotices.shown(active(laptop)))
+        // When new conversations start on it, its being off matters and is said.
+        val main = base.copy(home = base.home.copy(sources = persistentListOf(termux.copy(main = true))))
+        assertEquals(HomeNoticeKind.ServerUnreachable, HomeNotices.shown(active(main)))
+    }
+
+    @Test
     fun `a plan limit is said with the agent's page, after a sign-in and a stop`() {
         // New conversation does not say an agent is at its limit: without this line the person learns it from a
         // conversation that fails (Flutter keeps it on its home too, agent_notices.dart:124).
