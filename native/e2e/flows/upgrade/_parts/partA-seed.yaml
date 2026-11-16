@@ -299,7 +299,11 @@ tags: [linux-setup]
           visible: ${output.s.kitVoiceLeave}
           timeout: 300000
           optional: true
-- tapOn: ${output.s.kitVoiceLeave}
+# Upgrade-proof branch: on the GitHub emulator "Leave voice mode" was sometimes gone by the time of the tap (runs 6,
+# 9, 10); the voice files are judged by the gate's voice-files check either way.
+- tapOn:
+    text: ${output.s.kitVoiceLeave}
+    optional: true
 - runFlow: ../../_sub/back-to-conversations.yaml
 
 # Both Quick Settings tiles (the upgrade gate checks they are still placed afterwards).

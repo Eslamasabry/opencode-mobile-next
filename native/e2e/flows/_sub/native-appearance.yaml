@@ -11,20 +11,19 @@ appId: ${APP_ID}
 - runFlow:
     label: "APPEARANCE text size kept"
     commands:
+      # Text size is a slider since 1f5a047bde (its value is not visible text): the screenshot shows its position.
       - tapOn: ${output.s.appearanceGroupComfort}
-      - scrollUntilVisible:
-          element:
-            text: ${output.s.textSizeSmallest + '(\n(?s).*)?'}
-          direction: DOWN
-          timeout: 10000
+      - waitForAnimationToEnd:
+          timeout: 3000
       - takeScreenshot: native-appearance-text
-      - assertVisible:
-          text: ${output.s.textSizeSmallest + '(\n(?s).*)?'}
-          selected: true
+      - assertVisible: ${'(?s).*' + output.s.textSizeSmallest + '.*'}  # literal-ok: built from strings
 - runFlow:
     label: "APPEARANCE style kept"
     commands:
       - tapOn: ${output.s.appearanceGroupStyle}
+      - waitForAnimationToEnd:
+          timeout: 3000
+      - takeScreenshot: native-appearance-style-top
       - scrollUntilVisible:
           element:
             text: ${output.s.appearanceSurfaceSoft + '(\n(?s).*)?'}
