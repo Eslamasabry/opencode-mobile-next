@@ -638,10 +638,14 @@ public class ChatPresenter(
         runtime: String?,
     ) {
         val newest = rows.firstOrNull { it is FooterRow } as FooterRow? ?: return
-        if (!ChatSignInLapse.lapsed(newest)) return
+        // signin-truth: a reply that was the plan's usage limit is said as a limit, never as a sign-in.
+        val limit = ChatSignInLapse.limit(newest)
+        if (!ChatSignInLapse.lapsed(newest) && limit == null) return
         val provider = runtime ?: newest.providerId ?: return
         if (!lapseNoted.add(newest.turnId)) return
-        port.agentSignInLapsed(owner, provider, newest.createdMs ?: return)
+        val at = newest.createdMs ?: return
+        if (limit != null) port.agentLimitReached(owner, provider, at, limit)
+        else port.agentSignInLapsed(owner, provider, at)
     }
 
     /** Set up at first use ([AgentSetUpRules]): a failed send whose agent was never set up says so on its bubble. */
