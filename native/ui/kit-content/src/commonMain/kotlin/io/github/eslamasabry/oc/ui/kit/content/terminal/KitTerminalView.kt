@@ -13,7 +13,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.input.clearText
 import androidx.compose.foundation.text.input.rememberTextFieldState
-import androidx.compose.foundation.text.selection.SelectionContainer
+import io.github.eslamasabry.oc.ui.kit.foundation.KitClipboardSelection
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
@@ -119,7 +119,6 @@ import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel
 import io.github.eslamasabry.oc.ui.kit.KitLtr
-import io.github.eslamasabry.oc.ui.kit.KitSelectable
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEdge
 import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceInput
 import io.github.eslamasabry.oc.ui.kit.foundation.kitEdge
@@ -314,7 +313,7 @@ public fun KitTerminalAccessible(
     val enabled =
         if (inputEnabled) KitEnabled.Enabled else KitEnabled.Disabled(words.inputUnavailable)
     Column(modifier) {
-        SelectionContainer(Modifier.weight(1f).fillMaxWidth()) {
+        KitClipboardSelection(KitClipboardMode.Sensitive, Modifier.weight(1f).fillMaxWidth()) {
             LazyColumn(
                 Modifier.fillMaxSize().testTag(KitTerminalTags.TRANSCRIPT).semantics {
                     contentDescription = words.transcript
@@ -921,7 +920,7 @@ public fun KitTerminalOutput(
                     // One block for a screen reader and for the layout rules: the button above is a 48 dp target
                     // whose label sits in its middle, so the block starts right under its box, as in Flutter.
                     Box(Modifier.fillMaxWidth().heightIn(min = tokens.minTarget.dp).semantics { isTraversalGroup = true }) {
-                        KitSelectable {
+                        KitClipboardSelection(KitClipboardMode.Sensitive) {
                             if (wrap) {
                                 BasicText(text, style = mono)
                             } else {

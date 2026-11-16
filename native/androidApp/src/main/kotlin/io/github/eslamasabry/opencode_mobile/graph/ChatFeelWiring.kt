@@ -61,6 +61,11 @@ import kotlinx.coroutines.withContext
  * launches a URL the policy did not approve. Nothing is logged (prompt and reply text never reach logs).
  */
 
+/** The message/code-block Copy path keeps the ordinary Android preview and paste suggestion. */
+internal fun copyConversationText(context: android.content.Context, text: String) {
+    KitAndroidClipboard.write(context, text, KitClipboardMode.Sensitive, "OpenCode Mobile")
+}
+
 @Inject
 @SingleIn(AppScope::class)
 @ContributesBinding(AppScope::class, replaces = [NoChatOutside::class])
@@ -201,7 +206,7 @@ class AndroidChatOutside(
 
     /** Writes what the presenter hands over: server text already went through [mask] (B-SEC-145). */
     override fun copy(text: String): Boolean = platformCall {
-        KitAndroidClipboard.write(application, text, KitClipboardMode.Sensitive, "OpenCode Mobile")
+        copyConversationText(application, text)
     }
 
     override fun share(text: String): Boolean = platformCall {

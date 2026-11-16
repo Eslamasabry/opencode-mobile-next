@@ -202,7 +202,7 @@ public fun KitTheme(
             typography = remember(typography) { MaterialBridge.typography(typography) },
         ) {
             Box(Modifier.kitThemeCover(fade.cover), propagateMinConstraints = true) {
-                platform.ClipboardBoundary(io.github.eslamasabry.oc.ui.kit.foundation.KitClipboardMode.Sensitive) { content() }
+                platform.ClipboardBoundary(io.github.eslamasabry.oc.ui.kit.foundation.KitClipboardMode.Public) { content() }
             }
         }
     }

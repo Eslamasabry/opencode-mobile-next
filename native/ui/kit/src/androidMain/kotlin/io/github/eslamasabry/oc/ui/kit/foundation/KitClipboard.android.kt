@@ -8,6 +8,7 @@ import android.os.PersistableBundle
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.platform.Clipboard
 import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.LocalClipboard
@@ -25,10 +26,16 @@ public object KitAndroidClipboard {
     internal fun protect(clip: ClipData, mode: KitClipboardMode) {
         // The key is inlined on older Android versions; the extras are harmless there (minSdk 26).
         clip.description.extras = (clip.description.extras ?: PersistableBundle()).apply {
-            putBoolean(ClipDescription.EXTRA_IS_SENSITIVE, mode == KitClipboardMode.Sensitive)
+            putBoolean(ClipDescription.EXTRA_IS_SENSITIVE, true)
         }
     }
 }
+
+// Nested policies always delegate to the original platform clipboard, not a parent's policy wrapper.
+// Otherwise a Public parent would overwrite a secret field's Sensitive metadata (or vice versa).
+@Suppress("DEPRECATION")
+private class KitClipboardSource(val clipboard: Clipboard, val legacy: androidx.compose.ui.platform.ClipboardManager)
+private val LocalKitClipboardSource = staticCompositionLocalOf<KitClipboardSource?> { null }
 
 /** Compose's native selection/cut menus also write the clipboard; protect those implicit text writes. */
 @Composable
@@ -36,20 +43,22 @@ public object KitAndroidClipboard {
 internal fun KitAndroidClipboardBoundary(context: Context, mode: KitClipboardMode, content: @Composable () -> Unit) {
     val current = LocalClipboard.current
     val legacy = LocalClipboardManager.current
-    val clipboard = remember(current, mode) {
-        object : Clipboard by current {
+    val source = LocalKitClipboardSource.current ?: remember(current, legacy) { KitClipboardSource(current, legacy) }
+    val original = source.clipboard
+    val clipboard = remember(original, mode) {
+        object : Clipboard by original {
             override suspend fun setClipEntry(clipEntry: ClipEntry?) {
                 clipEntry?.clipData?.let { KitAndroidClipboard.protect(it, mode) }
-                current.setClipEntry(clipEntry)
+                original.setClipEntry(clipEntry)
             }
         }
     }
-    val manager = remember(legacy, context, mode) {
-        object : androidx.compose.ui.platform.ClipboardManager by legacy {
+    val manager = remember(source, context, mode) {
+        object : androidx.compose.ui.platform.ClipboardManager by source.legacy {
             override fun setText(annotatedString: AnnotatedString) {
                 KitAndroidClipboard.write(context, annotatedString.text, mode)
             }
         }
     }
-    CompositionLocalProvider(LocalClipboard provides clipboard, LocalClipboardManager provides manager, content = content)
+    CompositionLocalProvider(LocalKitClipboardSource provides source, LocalClipboard provides clipboard, LocalClipboardManager provides manager, content = content)
 }

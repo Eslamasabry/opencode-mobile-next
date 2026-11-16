@@ -575,51 +575,53 @@ private fun FieldBox(
         var revealed by rememberSaveable { mutableStateOf(false) }
         // The value is technical: left to right in an Arabic interface too, bidi-isolated by the
         // LTR box.
-        CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-            Row(box.padding(inset).padding(end = 0.dp), verticalAlignment = Alignment.CenterVertically) {
-                BasicSecureTextField(
-                    state = state,
-                    modifier =
-                        Modifier.weight(1f).heightIn(min = tokens.minTarget.dp).testTag("kit-field-secret").semantics {
-                            contentDescription = label
-                            // QA wave 4 N6: the accessibility tree gets dots, never the value (any
-                            // accessibility
-                            // service could read it); the password flag makes TalkBack say
-                            // "password".
-                            password()
-                            val exposed =
-                                if (revealed) AnnotatedString(state.text.toString())
-                                else AnnotatedString(SECRET_DOT.repeat(state.text.length))
-                            editableText = exposed
-                            inputText = exposed
-                        },
-                    enabled = on,
-                    inputTransformation =
-                        (transformation?.then(register) ?: register).let { secured ->
-                            if (report == null) secured else secured.then(report)
-                        },
-                    textStyle = style,
-                    keyboardOptions = keyboard,
-                    onKeyboardAction = submit,
-                    interactionSource = interactions,
-                    cursorBrush = kitCaret(colors.accent),
-                    textObfuscationMode =
-                        if (revealed) TextObfuscationMode.Visible
-                        else TextObfuscationMode.RevealLastTyped,
-                    decorator = { decorator(it) },
-                )
-                // Flutter's trailing pair (kit_field.dart:881-907): Show/Hide, then Paste, both 20 dp glyphs.
-                KitIconButton(
-                    icon = if (revealed) KitPartGlyphs.EyeOff else KitPartGlyphs.Eye,
-                    label =
-                        if (revealed) stringResource(Res.string.kitFieldHideNamed, label)
-                        else stringResource(Res.string.kitFieldShowNamed, label),
-                    onClick = { revealed = !revealed },
-                    enabled = enabled,
-                    selected = revealed,
-                    size = 20, // F: lib/ui/kit/kit_field.dart:885
-                )
-                PasteButton(state, enabled, maxLength, sink)
+        io.github.eslamasabry.oc.ui.kit.foundation.KitClipboardScope(io.github.eslamasabry.oc.ui.kit.foundation.KitClipboardMode.Public) {
+            CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                Row(box.padding(inset).padding(end = 0.dp), verticalAlignment = Alignment.CenterVertically) {
+                    BasicSecureTextField(
+                        state = state,
+                        modifier =
+                            Modifier.weight(1f).heightIn(min = tokens.minTarget.dp).testTag("kit-field-secret").semantics {
+                                contentDescription = label
+                                // QA wave 4 N6: the accessibility tree gets dots, never the value (any
+                                // accessibility
+                                // service could read it); the password flag makes TalkBack say
+                                // "password".
+                                password()
+                                val exposed =
+                                    if (revealed) AnnotatedString(state.text.toString())
+                                    else AnnotatedString(SECRET_DOT.repeat(state.text.length))
+                                editableText = exposed
+                                inputText = exposed
+                            },
+                        enabled = on,
+                        inputTransformation =
+                            (transformation?.then(register) ?: register).let { secured ->
+                                if (report == null) secured else secured.then(report)
+                            },
+                        textStyle = style,
+                        keyboardOptions = keyboard,
+                        onKeyboardAction = submit,
+                        interactionSource = interactions,
+                        cursorBrush = kitCaret(colors.accent),
+                        textObfuscationMode =
+                            if (revealed) TextObfuscationMode.Visible
+                            else TextObfuscationMode.RevealLastTyped,
+                        decorator = { decorator(it) },
+                    )
+                    // Flutter's trailing pair (kit_field.dart:881-907): Show/Hide, then Paste, both 20 dp glyphs.
+                    KitIconButton(
+                        icon = if (revealed) KitPartGlyphs.EyeOff else KitPartGlyphs.Eye,
+                        label =
+                            if (revealed) stringResource(Res.string.kitFieldHideNamed, label)
+                            else stringResource(Res.string.kitFieldShowNamed, label),
+                        onClick = { revealed = !revealed },
+                        enabled = enabled,
+                        selected = revealed,
+                        size = 20, // F: lib/ui/kit/kit_field.dart:885
+                    )
+                    PasteButton(state, enabled, maxLength, sink)
+                }
             }
         }
         return
