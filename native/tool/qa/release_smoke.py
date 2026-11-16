@@ -178,7 +178,10 @@ def launch():
 
 
 def conversations_screen(timeout=90):
-    v, nodes = wait_for('Conversations', timeout, lambda ns: find(ns, word('chatsHomeTitle')))
+    # The title can be drawn before the page's own buttons on a loaded device: wait for the title AND the + button.
+    new = (word('chatsHomeNewChat'), word('chatsHomeNewShort'))
+    v, nodes = wait_for('Conversations', timeout,
+                        lambda ns: find(ns, word('chatsHomeTitle')) and (find(ns, new[0]) or find(ns, new[1])))
     if not v:
         raise Fail(f'the app did not show "{word("chatsHomeTitle")}" within {timeout} s (is the phone unlocked and the app past its setup?)')
     return nodes
@@ -247,7 +250,7 @@ def open_this_phone():
     if not s:
         raise Fail(f'no "{word("librarySettingsTitle")}" entry on the Conversations screen')
     tap(s[0])
-    v, nodes = wait_for('Settings', 20, lambda ns: find(ns, word('settingsHubSearch'), exact=False))
+    v, nodes = wait_for('Settings', 60, lambda ns: find(ns, word('settingsHubSearch'), exact=False))
     if not v:
         raise Fail('Settings did not open')
     # Settings lists the "Server" group (its second line names the server, e.g. "This phone · Connected"); the
