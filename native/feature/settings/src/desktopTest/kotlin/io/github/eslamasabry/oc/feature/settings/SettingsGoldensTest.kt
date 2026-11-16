@@ -31,6 +31,7 @@ import kotlinx.collections.immutable.toImmutableList
 import java.awt.image.BufferedImage
 import java.io.File
 import java.util.Locale
+import java.util.Base64
 import javax.imageio.ImageIO
 import kotlin.math.abs
 import kotlin.test.AfterTest
@@ -77,6 +78,11 @@ class SettingsGoldensTest {
         if (record || !file.isFile) {
             file.parentFile.mkdirs()
             ImageIO.write(image, "png", file)
+            if (record) {
+                // Custom CI tasks upload no image artifact. Export only the selected scenes, for exact runner-byte review.
+                val chunks = Base64.getEncoder().encodeToString(file.readBytes()).chunked(180)
+                chunks.forEachIndexed { index, chunk -> println("ROW_GOLDEN $name $index/${chunks.size} $chunk") }
+            }
             if (!record) fail("$name: no golden yet; recorded ${file.name}. Look at it, then run again.")
             return
         }
