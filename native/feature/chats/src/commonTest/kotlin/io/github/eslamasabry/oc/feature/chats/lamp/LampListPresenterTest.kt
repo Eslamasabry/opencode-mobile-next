@@ -80,6 +80,14 @@ class LampListPresenterTest {
     }
 
     @Test
+    fun `B-LAMP-M1 a conversation last active two hours ago reads 2h and an unknown time reads no age`() {
+        val now = 10_000_000L
+        val ui = present(lmodel(lrow("old", Idle, last = now - 2 * 60 * 60_000L), lrow("unknown", Idle, last = null)), LampInputs(nowMs = now))
+        assertEquals(RelativeAge.Hours(2), ui.row("old").age)
+        assertEquals(null, ui.row("unknown").age)
+    }
+
+    @Test
     fun `B-LAMP-M1 time words, newest line and server come through as the home says them`() {
         val ui = present(lmodel(lrow("a", Idle, last = 1_000_000 - 90_000L, newest = "Ran the tests", server = "Phone")))
         val row = ui.row("a")

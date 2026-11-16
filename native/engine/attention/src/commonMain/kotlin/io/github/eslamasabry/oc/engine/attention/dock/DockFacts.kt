@@ -39,7 +39,9 @@ public class DockFacts(private val now: () -> Long) {
     public fun feed(profile: ProfileId, event: GatewayEvent) {
         fun ref(session: SessionId) = ConversationRef(profile, session)
         when (event) {
-            is GatewayEvent.SessionUpserted -> touch(ref(event.session.id))
+            // A session record arrives for every conversation on each connect and refetch; it is not activity. It counts
+            // only as the time the server wrote on it, never as "now" (device 2026-11-16: every row read "a moment").
+            is GatewayEvent.SessionUpserted -> event.session.time?.updatedMs?.takeIf { it > 0 }?.let { touch(ref(event.session.id), it) }
             is GatewayEvent.RunStarted -> touch(ref(event.sessionId))
             is GatewayEvent.RunRetrying -> touch(ref(event.sessionId))
             is GatewayEvent.RunEnded -> touch(ref(event.sessionId))
@@ -110,10 +112,14 @@ public class DockFacts(private val now: () -> Long) {
         words.keys.removeAll { it.first.profileId == profile }
     }
 
-    private fun touch(ref: ConversationRef) {
-        heard.remove(ref)
-        heard[ref] = now()
-        while (heard.size > MAX_CONVERSATIONS) heard.remove(heard.keys.first())
+    private fun touch(ref: ConversationRef, at: Long = now()) {
+        // Eviction follows the time, never the insertion order: an old record re-seen must not push out a recent one.
+        val kept = heard[ref]
+        heard[ref] = if (kept != null) maxOf(kept, at) else at
+        while (heard.size > MAX_CONVERSATIONS) {
+            val oldest = heard.entries.minByOrNull { it.value }?.key ?: break
+            heard.remove(oldest)
+        }
     }
 
     private fun remember(ref: ConversationRef, entry: DockRequestWords) {
