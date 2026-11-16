@@ -98,11 +98,13 @@ import io.github.eslamasabry.oc.ui.kit.row.KitSwitchRow
 import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.action.KitActionBlock
+import io.github.eslamasabry.oc.ui.kit.action.KitWorkingMark
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.state.KitSkeletonRows
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
 import io.github.eslamasabry.oc.ui.kit.text.kitRelativeAge
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.kitchat.transcript.KitStartingConversation
 import io.github.eslamasabry.oc.ui.kitchat.transcript.KitStartingPhase
@@ -430,7 +432,15 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                     // Start, with the way forward; the message is never sent into another folder.
                     if (phoneFolderWords != null && !state.deliveryUnconfirmed) {
                       KitNoticeInView(phoneFolderWords + state.phoneFolder?.name) { ways ->
-                        KitNotice(phoneFolderWords, inset)
+                        KitNotice(
+                            phoneFolderWords,
+                            inset,
+                            // A restart takes a while: the kit's working mark says it is still going on.
+                            trailing =
+                                if (state.fixingPhoneFolder) {
+                                    { KitWorkingMark(LocalKitColors.current.text2, LocalKitTokens.current.smallIcon.dp) }
+                                } else null,
+                        )
                         // The main action is the bottom block's; here only the other way, when the main one is a fix.
                         if (phoneFixLabel != null && !state.fixingPhoneFolder)
                             KitActionBlock(
