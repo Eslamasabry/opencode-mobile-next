@@ -6,7 +6,7 @@ import dev.zacsweers.metro.SingleIn
 import io.github.eslamasabry.oc.core.common.AppCoroutineScope
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.feature.chat.world.LaunchStage
-import io.github.eslamasabry.oc.feature.chat.world.holdStages
+import io.github.eslamasabry.oc.core.common.holdStages
 import io.github.eslamasabry.oc.feature.phone.presentation.PhoneServerSource
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
