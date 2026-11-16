@@ -219,7 +219,7 @@ class DecisionFieldsTest {
         val byInteraction = sent.filter { it.first == ProductScreen.Chat }.associate { it.second.interaction to it.second.pctRange }
         assertEquals(mapOf<String?, String>("streaming" to ">30", "scrolling" to "<1"), byInteraction)
         assertNull(sent.single { it.first == ProductScreen.Settings }.second.interaction, "only the chat is split")
-        assertEquals("streaming", sent.first { it.first == ProductScreen.Chat }.second.params()["interaction"])
+        assertEquals("streaming", sent.single { it.first == ProductScreen.Chat && it.second.interaction == "streaming" }.second.params()["interaction"])
         assertFalse("interaction" in sent.single { it.first == ProductScreen.Settings }.second.params())
     }
 

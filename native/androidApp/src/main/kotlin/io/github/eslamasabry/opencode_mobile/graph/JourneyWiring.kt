@@ -1,6 +1,5 @@
 package io.github.eslamasabry.opencode_mobile.graph
 
-import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.data.kv.KeyValueStore
 import io.github.eslamasabry.oc.engine.analytics.health.AppJourneys
 import io.github.eslamasabry.oc.engine.analytics.health.ApprovalMeter
@@ -122,18 +121,6 @@ internal class PrefsFirstReply(private val answers: TelemetryAnswers, private va
         sentNow = true
         scope.launch { answers.markFirstReplySent() }
     }
-}
-
-/**
- * Sends the answer to [id] through [send], telling the approval meter first that it comes from [surface] (`home` or
- * `notification`; the chat is the default). The word is taken back when the send does not go.
- */
-internal suspend fun <T> withApprovalSurface(id: String, surface: String, send: suspend () -> Outcome<T>): Outcome<T> {
-    val meter = AppJourneys.approvalsOrNull
-    meter?.surface(id, surface)
-    val result = send()
-    if (result !is Outcome.Ok) meter?.surfaceUnused(id)
-    return result
 }
 
 /** A widget's own answer went to the server (a widget has no request list of its own): counted as the widget's. */
