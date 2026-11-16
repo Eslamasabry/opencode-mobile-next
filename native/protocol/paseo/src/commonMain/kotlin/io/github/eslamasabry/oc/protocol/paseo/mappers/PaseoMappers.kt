@@ -189,6 +189,9 @@ private val DECLINED_REPORT = Regex(
     RegexOption.IGNORE_CASE,
 )
 
+/** The step metadata key that says the app's Plan stopped the call; the chat reads it for its words. */
+public const val PLAN_STOPPED_KEY: String = "oc.planStopped"
+
 /** A failed call the person declined at its permission card (B-AGENT-186). */
 public fun paseoDeclinedToolCall(item: JsonObject): Boolean {
     if (item["status"].stringOrNull() != "failed") return false
@@ -294,10 +297,59 @@ private val SIGN_IN_FAILURE = Regex(
 /** How Paseo's ACP bridge words an agent's RPC failure in the reply text: an error, never prose. */
 private fun systemError(text: String): Boolean = text.trimStart().startsWith("[System Error]")
 
-private val SIGN_IN_ASK = Regex("""\b(sign|log) ?in\b""", RegexOption.IGNORE_CASE)
+/**
+ * signin-truth: an agent asking for its sign-in inside its own error report ("You need to sign in to use this model",
+ * "Authentication required"). Never the bare words "log in" / "sign in", which an error about a log file has too.
+ */
+private val SIGN_IN_ASK = Regex(
+    """\b(?:need|needs|must|please)(?: to)? (?:sign|log) ?in\b|\b(?:sign|log) ?in (?:to use|again|first)\b|""" +
+        """\bnot (?:logged|signed) in\b|\bauth(?:entication)? required\b|\bAuthRequired\b|""" +
+        """\b(?:run|use) `?\S+ login\b""",
+    RegexOption.IGNORE_CASE,
+)
+
+/**
+ * signin-truth: how an agent's own failure line opens when it comes back as the reply text (Claude Code ends a turn
+ * that could not reach Anthropic with exactly such a line; Paseo's ACP bridge reports an RPC failure as
+ * `[System Error] …`). A reply that only quotes these words in prose ("The error `Not logged in` means…") is a
+ * reply, never a failure.
+ */
+private val FAILURE_LINE = Regex(
+    """^\s*(?:API Error\b|Failed to authenticate\b|Invalid API key\b|OAuth (?:session|token)\b|Not logged in\b|""" +
+        """Please run /login\b|\[System Error])""",
+)
+
+/** A failure line stays short; a long reply that happens to open with those words is prose. */
+private const val FAILURE_LINE_MAX = 2_000
+
+/**
+ * A limit, a busy provider or a refused quota: it has its own words (the agent's usage limit, "try again soon") and
+ * is never read as signed out, even when the same report mentions the sign-in.
+ */
+private val NOT_SIGN_IN = Regex(
+    """usage limit|(?:hit|reached) your (?:[\w-]+ ){0,2}limit|rate.?limit|too many requests|\b429\b|credit balance|insufficient.?(?:quota|credit|funds)|""" +
+        """overloaded|\b529\b""",
+    RegexOption.IGNORE_CASE,
+)
+
+/**
+ * signin-truth: whether [text], an error from the agent's own failure channel (an `error` timeline item, a failure line
+ * as the reply, a create the helper refused), says its sign-in no longer works. Prose never reaches here; a limit is
+ * never a sign-in.
+ */
+internal fun paseoFailureMeansSignIn(text: String): Boolean =
+    !NOT_SIGN_IN.containsMatchIn(text) && (SIGN_IN_FAILURE.containsMatchIn(text) || SIGN_IN_ASK.containsMatchIn(text))
+
+/** Whether a reply's whole [text] is the agent's own failure line, not prose ([FAILURE_LINE]). */
+private fun failureLine(text: String): Boolean = text.length <= FAILURE_LINE_MAX && FAILURE_LINE.containsMatchIn(text)
 
 /** Claude Code's own line when a call to Anthropic failed and the turn stopped. */
-private val CLAUDE_TURN_FAILURE = Regex("""^\s*(?:API Error\b|Claude AI usage limit reached\b|Credit balance is too low\b)""")
+private val CLAUDE_TURN_FAILURE = Regex(
+    """^\s*(?:API Error\b|Claude AI usage limit reached\b|Credit balance is too low\b|""" +
+        // signin-truth (Galaxy, build 10050): Claude Code 2.x ends a turn at the plan's limit with exactly this line,
+        // which read as an ordinary reply ("You've hit your weekly limit · resets Nov 20, 1am (UTC)").
+        """You(?:'|\u2019)ve (?:hit|reached) your (?:[\w-]+ ){0,2}(?:usage )?limit\b)""",
+)
 
 /** One timeline item as a message (null for kinds with nothing to show). Error-ish replies become error rows. */
 public fun paseoItemMessage(
@@ -326,7 +378,8 @@ public fun paseoItemMessage(
     if (type == "assistant_message") {
         val text = paseoText(item["text"])
         val system = systemError(text)
-        val signIn = SIGN_IN_FAILURE.containsMatchIn(text) || (system && SIGN_IN_ASK.containsMatchIn(text))
+        // signin-truth: only the agent's own failure line can say the sign-in ended; a reply quoting it is a reply.
+        val signIn = (system || failureLine(text)) && paseoFailureMeansSignIn(text)
         if (signIn || system || CLAUDE_TURN_FAILURE.containsMatchIn(text)) {
             return error(paseoText(item["text"], max = 2000), if (signIn) MessageErrorKind.ProviderAuth else null)
         }
@@ -372,8 +425,13 @@ public fun paseoItemMessage(
             } else {
                 null
             }
-            val metadata =
+            val base =
                 withTurnOutliving(withBackgroundTask(toolMetadata(detail), toolName, status, detail), provider, toolName, status)
+            // The app's Plan stopped this call (not the person): the step says so (PLAN_STOPPED_KEY).
+            val metadata =
+                if (item["stoppedByPlan"].let { it is JsonPrimitive && !it.isString && it.content == "true" })
+                    JsonObject((base ?: JsonObject(emptyMap())) + (PLAN_STOPPED_KEY to JsonPrimitive(true)))
+                else base
             newPart(PartType.Tool, "tool", toolName = toolName, callId = id, tool = toolState(status, input, output, error, metadata))
         }
         "todo" -> {
@@ -435,7 +493,11 @@ public fun paseoItemMessage(
         "error" -> {
             // The agent's own words go to the error row's details; the row says what happened in the app's words.
             val words = paseoText(item["message"], max = 4000)
-            return error(if (words.trim().isEmpty()) "The agent could not finish this reply." else words, null)
+            // The agent's own failure channel: a sign-in that ended is said here as well (signin-truth).
+            return error(
+                if (words.trim().isEmpty()) "The agent could not finish this reply." else words,
+                if (paseoFailureMeansSignIn(words)) MessageErrorKind.ProviderAuth else null,
+            )
         }
         else -> return null
     }

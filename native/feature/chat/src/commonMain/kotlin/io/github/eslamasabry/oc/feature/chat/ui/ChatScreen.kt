@@ -632,7 +632,8 @@ public fun ChatScreen(
                         )
                 },
                 freeModel = { headerState?.state?.freeModel == true },
-                agentName = { headerState?.state?.agentName ?: "OpenCode" },
+                // Open-transitions: an agent not read yet is named by no one, never "OpenCode" for another agent's box.
+                agentName = { headerState?.state?.let { if (it.agentKnown) it.agentName else "" } ?: "OpenCode" },
                 openCommands =
                     if (demoMode) null
                     else {
@@ -1188,11 +1189,23 @@ public fun ChatScreen(
                     }
                     // The edge dock: over the transcript, clear of the header and the composer. Beside the
                     // transcript's recording, not in it: under Glass it bends that recording (never itself).
-                    if (state.phase == ChatPhase.Live)
+                    // Open-transitions (S22 frame item2): the light was mounted while the page still grew out of its
+                    // row and before the page's chrome was measured, so it stood at a place computed from no chrome,
+                    // clipped by the growing page, then jumped to its place. It comes once the page is settled and its
+                    // chrome known, at its own place from its first frame.
+                    val chrome = kitScreenChromePadding()
+                    // (A frame that lays its chrome above the body, Find open, reports no chrome room: nothing to wait for.)
+                    val chromeKnown by remember(chrome) {
+                        androidx.compose.runtime.derivedStateOf {
+                            chrome == androidx.compose.foundation.layout.PaddingValues() ||
+                                (chrome.calculateTopPadding() > 0.dp && chrome.calculateBottomPadding() > 0.dp)
+                        }
+                    }
+                    if (state.phase == ChatPhase.Live && chromeKnown && pageSettled())
                         androidx.compose.runtime.CompositionLocalProvider(
                             io.github.eslamasabry.oc.ui.kit.dock.LocalKitDockGlass provides frost
                         ) {
-                            edgeDock?.Content(kitScreenChromePadding(), onBottomRoom = { dockRoomPx = it })
+                            edgeDock?.Content(chrome, onBottomRoom = { dockRoomPx = it })
                         }
                 }
 

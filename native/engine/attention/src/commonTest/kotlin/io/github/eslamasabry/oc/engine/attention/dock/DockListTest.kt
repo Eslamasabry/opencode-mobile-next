@@ -8,6 +8,8 @@ import io.github.eslamasabry.oc.core.domain.events.GatewayEvent
 import io.github.eslamasabry.oc.core.model.PendingQuestion
 import io.github.eslamasabry.oc.core.model.PermissionRequest
 import io.github.eslamasabry.oc.core.model.QuestionPrompt
+import io.github.eslamasabry.oc.core.model.Session
+import io.github.eslamasabry.oc.core.model.SessionTime
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -164,6 +166,36 @@ class DockListTest {
         assertEquals(9_000L, build(m).rows.single().lastActivityMs)
         facts.forget(a)
         assertNull(facts.lastActivity(a))
+    }
+
+    @Test
+    fun `a session record seen on connect is not activity and a conversation from two hours ago keeps its age`() {
+        val twoHoursAgo = 100_000_000L - 2 * 60 * 60_000L
+        clock = 100_000_000L
+        facts.listed(p, listOf(DockRecent(a.sessionId, "A", twoHoursAgo)))
+        facts.feed(p, GatewayEvent.SessionUpserted(Session(a.sessionId, "A", time = SessionTime(updatedMs = twoHoursAgo))))
+        facts.feed(p, GatewayEvent.SessionUpserted(Session(b.sessionId, "B")))
+        assertEquals(twoHoursAgo, facts.lastActivity(a))
+        assertNull(facts.lastActivity(b))
+    }
+
+    @Test
+    fun `eviction drops the oldest by time, so re-seeing an old record keeps the recently active conversation`() {
+        val max = 256 // the dock's bound (private in DockFacts)
+        // The old one first, then the recent one, then others up to exactly the bound.
+        clock = 1_000L
+        facts.feed(p, GatewayEvent.RunStarted(SessionId("old")))
+        clock = 1_000_000L
+        val recent = SessionId("recent")
+        facts.feed(p, GatewayEvent.RunStarted(recent))
+        for (i in 1 until max - 1) { clock += 10; facts.feed(p, GatewayEvent.RunStarted(SessionId("s$i"))) }
+        // Full now (old + recent + max-2 others). Re-seeing the old record (server time 2_000) must not move it
+        // to the newest place: adding one more conversation then evicts the oldest by time, never the recent one.
+        facts.feed(p, GatewayEvent.SessionUpserted(Session(SessionId("old"), "old", time = SessionTime(updatedMs = 2_000L))))
+        clock += 10
+        facts.feed(p, GatewayEvent.RunStarted(SessionId("extra")))
+        assertEquals(1_000_000L, facts.lastActivity(ConversationRef(p, recent)))
+        assertNull(facts.lastActivity(ConversationRef(p, SessionId("old"))))
     }
 
     @Test

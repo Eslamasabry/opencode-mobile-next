@@ -4,6 +4,7 @@ import android.app.Application
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
+import io.github.eslamasabry.oc.core.common.AppCoroutineScope
 import io.github.eslamasabry.oc.core.common.AppDispatchers
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.FeatureId
@@ -11,12 +12,15 @@ import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.attempt
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.data.kv.PrefValue
-import io.github.eslamasabry.oc.core.data.kv.stringList
 import io.github.eslamasabry.oc.engine.runtime.paths.SharedStoragePath
 import io.github.eslamasabry.oc.feature.chats.presentation.PhoneFolderReach
+import io.github.eslamasabry.oc.feature.chats.presentation.PhoneFolderSide
 import io.github.eslamasabry.oc.feature.phone.presentation.PhoneServerSource
 import io.github.eslamasabry.opencode_mobile.BuiltinLinux
 import io.github.eslamasabry.opencode_mobile.SharedFolderReach
+import kotlin.time.Duration.Companion.seconds
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 
 /**
@@ -39,7 +43,22 @@ class PhoneFolderPreflight(
     private val export: AndroidProjectExport,
     private val server: PhoneServerSource,
     private val helper: AppLocalAgentHostStarter,
+    appScope: AppCoroutineScope,
 ) {
+    /** W3: one restart for a folder restarts every side that runs without it; work running there is never cut. */
+    private val restarts =
+        PhoneFolderRestarts(
+            scope = CoroutineScope(appScope.coroutineContext + dispatchers.io),
+            misses = { side, path -> withContext(dispatchers.io) { runsWithout(side, path) } },
+            serverBusy = {
+                server.refresh()
+                server.facts.value.replyRunning
+            },
+            restartServer = { server.restart() },
+            restartAgents = { helper.restartForFolder() },
+            every = WAIT_EVERY,
+        )
+
     /**
      * What [directory] is to the side that will work in it; null when it is not this phone's storage or unknown. A
      * [thorough] check binds the folder for the next start, lists and writes it from that side, and gives a Git
@@ -87,14 +106,57 @@ class PhoneFolderPreflight(
         return check(phone ?: profile, phoneAgent = phone != null, directory, thorough)
     }
 
+    /**
+     * W3: whether the other side of this phone (its OpenCode for a phone agent, else the agents' helper) also runs
+     * without [directory], so the one restart restarts both.
+     */
+    suspend fun bothSides(owner: ProfileId, phoneAgent: Boolean, directory: String): Boolean {
+        if (!SharedStoragePath.isShared(directory) || !runsHere(owner)) return false
+        val other = if (phoneAgent) PhoneFolderSide.Server else PhoneFolderSide.Agents
+        return withContext(dispatchers.io) {
+            try {
+                runsWithout(other, directory)
+            } catch (_: Exception) {
+                false
+            }
+        }
+    }
+
+    /** W3: the sides of [owner]'s phone whose restart waits for their work to end. */
+    fun waiting(owner: ProfileId): Set<PhoneFolderSide> = if (runsHere(owner)) restarts.waiting.value else emptySet()
+
+    /** [waiting] as it changes. */
+    fun waitingUpdates(owner: ProfileId): kotlinx.coroutines.flow.Flow<Set<PhoneFolderSide>> =
+        restarts.waiting.map { if (runsHere(owner)) it else emptySet() }
+
+    /** Whether [side]'s process now running was started without [path] (false when it does not run). */
+    private fun runsWithout(side: PhoneFolderSide, path: String): Boolean {
+        val linux = BuiltinLinux.get(app)
+        return when (side) {
+            PhoneFolderSide.Server -> !linux.serverCanReadSharedFolder(path)
+            PhoneFolderSide.Agents -> {
+                val owner = (stores.prefs.get("oc.builtinServerOwner") as? PrefValue.Str)?.value ?: return false
+                linux.agentHost.storageView(helperOf(ProfileId(owner)))?.covers(path) == false
+            }
+        }
+    }
+
     /** [fix] for an open conversation of [profile]. */
     suspend fun fixConversation(profile: ProfileId, reach: PhoneFolderReach): Outcome<Unit> {
         val phone = stores.phoneOfHelper(profile)
         return fix(phone ?: profile, phoneAgent = phone != null, reach)
     }
 
-    /** The way forward: Android's All files access page, or a new start of the side started before the choice. */
-    suspend fun fix(owner: ProfileId, phoneAgent: Boolean, reach: PhoneFolderReach): Outcome<Unit> =
+    /**
+     * The way forward: Android's All files access page, or a new start of the side started before the choice; with
+     * [directory] known, the other side restarts too when it also runs without it (W3).
+     */
+    suspend fun fix(
+        owner: ProfileId,
+        phoneAgent: Boolean,
+        reach: PhoneFolderReach,
+        directory: String? = null,
+    ): Outcome<Unit> =
         when (reach) {
             PhoneFolderReach.AppAccess ->
                 when (val asked = export.requestStoragePermission()) {
@@ -106,9 +168,12 @@ class PhoneFolderPreflight(
                 when (val synced = roots.syncNow()) {
                     is Outcome.Failed -> synced
                     is Outcome.Ok ->
-                        if (phoneAgent) helper.restartForFolder()
-                        else if (runsHere(owner)) server.restart()
-                        else Outcome.Failed(Failure.Unavailable(FeatureId("phoneFolder")))
+                        if (!runsHere(owner)) Outcome.Failed(Failure.Unavailable(FeatureId("phoneFolder")))
+                        else
+                            restarts.restart(
+                                if (phoneAgent) PhoneFolderSide.Agents else PhoneFolderSide.Server,
+                                directory?.takeIf(SharedStoragePath::isShared),
+                            )
                 }
             else -> Outcome.Failed(Failure.Unavailable(FeatureId("phoneFolder")))
         }
@@ -116,28 +181,12 @@ class PhoneFolderPreflight(
     private fun runsHere(profile: ProfileId): Boolean =
         (stores.prefs.get("oc.builtinServerOwner") as? PrefValue.Str)?.value == profile.raw
 
-    /** Adds [root] to [owner]'s granted shared folders (`oc.sharedProjects.<owner>`) and rewrites the runtime's list. */
-    private suspend fun remember(owner: ProfileId, root: String): Outcome<Unit> {
-        val key = "$SHARED_PROJECTS${owner.raw}"
-        // Compared and set: another writer of this list (a Files grant, a project opened from storage) adding its
-        // folder at the same moment never drops this one, nor this one theirs.
-        repeat(LIST_TRIES) {
-            val before = stores.prefs.get(key)
-            if (before != null && before !is PrefValue.StrList) return Outcome.Failed(Failure.StorageRefused())
-            val known = (before as? PrefValue.StrList)?.value.orEmpty()
-            if (root in known) return roots.syncNow()
-            when (
-                val saved =
-                    stores.prefs.compareAndCommit(stores.lanes.forProfile(owner), mapOf(key to before)) {
-                        putStringList(key, (known + root).distinct().sorted())
-                    }
-            ) {
-                is Outcome.Failed -> return saved
-                is Outcome.Ok -> if (saved.value) return roots.syncNow()
-            }
+    /** Adds [root] to [owner]'s granted shared folders ([SharedProjectList]) and rewrites the runtime's list. */
+    private suspend fun remember(owner: ProfileId, root: String): Outcome<Unit> =
+        when (val added = SharedProjectList.add(stores.prefs, stores.lanes.forProfile(owner), owner, root)) {
+            is Outcome.Failed -> added
+            is Outcome.Ok -> roots.syncNow()
         }
-        return Outcome.Failed(Failure.Conflict())
-    }
 
     /** The helper's own id in the phone's Linux (the one its agents run under): `<owner>`, as its start names it. */
     private fun helperOf(owner: ProfileId): String =
@@ -146,8 +195,7 @@ class PhoneFolderPreflight(
             ?.takeIf { ID.matches(it) } ?: owner.raw
 
     private companion object {
-        const val SHARED_PROJECTS = "oc.sharedProjects."
-        const val LIST_TRIES = 3
+        val WAIT_EVERY = 5.seconds
         val ID = Regex("[A-Za-z0-9_-]{1,80}")
 
         fun reachOf(code: String): PhoneFolderReach? =

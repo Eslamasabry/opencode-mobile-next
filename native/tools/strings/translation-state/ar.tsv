@@ -543,6 +543,7 @@ agentsCheckPrevious	1917160d70
 agentsCheckPreviousNote	8b5b86ef4b
 agentsCheckRetry	454b12ef6b
 agentsCheckRunning	d1d6181d12
+agentsCheckSignInAgain	3c12135da4
 agentsCheckTitle	d458d9f32b
 agentsCheckUpdateHelper	c963f334aa
 agentsChecking	948d842958
@@ -732,6 +733,7 @@ agentsSignInHostDown	ff3df594b6
 agentsSignInIntro	8b8cbe8e3c
 agentsSignInIntroOther	8b9112cf95
 agentsSignInLimit	1d3b718c38
+agentsSignInNotConfirmedBody	1e4700556f
 agentsSignInOpenPage	9d3d8e7b8b
 agentsSignInPaste	b239678924
 agentsSignInRejected	cd5add6525
@@ -773,6 +775,7 @@ agentsStateReady	22a88a22d2
 agentsStateSetUpAtFirstUse	b77567ffc2
 agentsStateSignInCheckFailed	00cad5539c
 agentsStateSignInNeeded	b7fb712e5a
+agentsStateSignInNotConfirmed	ec079f842b
 agentsStateStopped	7dbdddb6a1
 agentsStateUnavailable	af58c3a2f5
 agentsStateUpdateWaiting	d7ccc5c1fa
@@ -1734,6 +1737,7 @@ chatSteerStopCommand	7bd9b91f80
 chatSteerStopStep	9ea771f9af
 chatStepDeclinedNote	44b5774893
 chatStepMalformedCall	549463ac9e
+chatStepPlanStopped	c8de526518
 chatStopAfterStep	505bfb0c44
 chatStopAfterStepPending	bcc7138ca0
 chatStopAfterStepPrompt	ee845ea221
@@ -2219,13 +2223,19 @@ chatsNewPhoneFolderHelpTitle	21c2db49a7
 chatsNewPhoneFolderMissing	5608242160
 chatsNewPhoneFolderRestartAgents	ed1d30fb04
 chatsNewPhoneFolderRestartAgentsAction	581f621808
+chatsNewPhoneFolderRestartBoth	a22f71c1b7
+chatsNewPhoneFolderRestartBothAction	0a39d421a7
 chatsNewPhoneFolderRestartFailed	8582f46f1f
 chatsNewPhoneFolderRestartServer	cb1a7c84e4
 chatsNewPhoneFolderRestartServerAction	8b587c5ace
 chatsNewPhoneFolderRestartedAgents	4c5e01cc42
+chatsNewPhoneFolderRestartedBoth	25372eb490
 chatsNewPhoneFolderRestartedServer	9747284f1a
 chatsNewPhoneFolderRestartingAgents	b617e98c96
+chatsNewPhoneFolderRestartingBoth	30806ad2fd
 chatsNewPhoneFolderRestartingServer	2d25852a64
+chatsNewPhoneFolderWaitingAgents	85903cfc7c
+chatsNewPhoneFolderWaitingServer	8324ad8bad
 chatsNewPhoneFolderWhere	3fd0b26213
 chatsNewPhoneFolderWhy	aa8c1148ee
 chatsNewPhoneStorage	0596028729
@@ -6228,6 +6238,7 @@ kitToolFor	1c71062b62
 kitToolNotRun	a993b21ee1
 kitToolOpenConversation	a9f3a39753
 kitToolOpenDetails	3fe329a804
+kitToolPlanStopped	7cad4ef0c3
 kitToolRetry	454b12ef6b
 kitToolRunning	100f4da50a
 kitToolStopped	de2f135c98

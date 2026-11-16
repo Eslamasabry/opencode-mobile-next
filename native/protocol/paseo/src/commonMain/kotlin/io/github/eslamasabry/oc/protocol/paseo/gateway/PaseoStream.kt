@@ -157,6 +157,8 @@ internal fun PaseoGateway.onTimelineItem(
         // The person rejected this call's card: its error is their own reason (B-AGENT-186).
         if (item.str("status") == "failed" && requests.wasRejected(messageId))
             item = item.with("declinedByPerson", JsonPrimitive(true))
+        if (item.str("status") == "failed" && requests.wasStoppedByPlan(messageId))
+            item = item.with("declinedByPerson", JsonPrimitive(true)).with("stoppedByPlan", JsonPrimitive(true))
         state.tools[messageId] = item
         while (state.tools.size > 2048) state.tools.remove(state.tools.keys.first())
         state.endsOnDecline = paseoDeclinedToolCall(item)

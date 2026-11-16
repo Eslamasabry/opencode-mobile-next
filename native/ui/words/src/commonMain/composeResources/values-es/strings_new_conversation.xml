@@ -46,4 +46,10 @@
     <string name="chatsNewStorageFolderDialogTitle">Nueva carpeta en %1$s</string>
     <string name="chatsNewStorageFolderDialogHelper">Una carpeta vacía en el almacenamiento del teléfono. No se le añade nada más.</string>
     <string name="chatPhoneFolderRestartingAgents">Reiniciando los agentes del teléfono para que el agente de esta conversación pueda ver su carpeta. Tarda alrededor de medio minuto.</string>
+    <string name="chatsNewPhoneFolderRestartBoth">Los agentes del teléfono y su OpenCode se iniciaron antes de que eligieras esta carpeta, así que %1$s aún no la ve. Reinícialos para trabajar aquí.</string>
+    <string name="chatsNewPhoneFolderRestartBothAction">Reiniciar los agentes del teléfono y OpenCode</string>
+    <string name="chatsNewPhoneFolderRestartingBoth">Reiniciando los agentes del teléfono y OpenCode para que todos los agentes puedan ver esta carpeta. Tarda alrededor de medio minuto.</string>
+    <string name="chatsNewPhoneFolderRestartedBoth">Los agentes del teléfono y OpenCode se reiniciaron. Todos los agentes ya pueden ver esta carpeta.</string>
+    <string name="chatsNewPhoneFolderWaitingServer">El OpenCode de este teléfono está escribiendo una respuesta, así que se reiniciará solo cuando termine. No se interrumpe nada.</string>
+    <string name="chatsNewPhoneFolderWaitingAgents">Un agente de este teléfono está trabajando, así que los agentes del teléfono se reiniciarán solos cuando termine. No se interrumpe nada.</string>
 </resources>

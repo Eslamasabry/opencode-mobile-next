@@ -33,7 +33,6 @@
     <string name="agentsInstallFailedNotStarted">%1$s foi baixado, mas não iniciou neste celular, então não foi possível verificar a versão. Tente novamente; se acontecer de novo, os Detalhes mostram o que o celular informou.</string>
     <string name="agentsInstallFailedWithdrawn">Não foi possível instalar %1$s: a versão %2$s, a que este app instala, não está mais disponível para download. Tentar novamente não muda isso; uma atualização deste app muda.</string>
     <string name="agentsStateSignInUnchecked">Instalado, mas este app ainda não consegue verificar o login dele</string>
-    <string name="agentsStateSignInCheckFailed">Não foi possível verificar o login. Tente fazer login de novo.</string>
     <string name="agentsSignInUncheckedBody">Ainda não dá para usá-lo em conversas. Você pode removê-lo.</string>
     <string name="agentsStateSetUpAtFirstUse">Instalado. Configure na primeira vez que usar.</string>
     <string name="agentsChipSetUp">Configurar</string>
@@ -49,4 +48,7 @@
     <string name="agentsUpdateRefused">a atualização de agentes não conseguiu começar, use Instalar no agente</string>
     <string name="agentsUpdateUpdated">%1$s atualizado</string>
     <string name="agentsUpdateNeedsSignIn">%1$s precisa que você entre</string>
+    <string name="agentsStateSignInNotConfirmed">Login não confirmado</string>
+    <string name="agentsSignInNotConfirmedBody">O app não conseguiu confirmar se o %1$s está com login feito. Verificar de novo pergunta ao %1$s agora.</string>
+    <string name="agentsCheckSignInAgain">Verificar %1$s de novo</string>
 </resources>

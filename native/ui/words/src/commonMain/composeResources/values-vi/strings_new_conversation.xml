@@ -46,4 +46,10 @@
     <string name="chatsNewStorageFolderDialogTitle">Thư mục mới trong %1$s</string>
     <string name="chatsNewStorageFolderDialogHelper">Một thư mục trống trong bộ nhớ điện thoại. Không có gì khác được thêm vào.</string>
     <string name="chatPhoneFolderRestartingAgents">Đang khởi động lại các tác nhân của điện thoại để tác nhân của cuộc trò chuyện này nhìn thấy thư mục của nó. Việc này mất khoảng nửa phút.</string>
+    <string name="chatsNewPhoneFolderRestartBoth">Các tác nhân của điện thoại và OpenCode trên đó đã khởi động trước khi bạn chọn thư mục này, nên %1$s chưa nhìn thấy nó. Hãy khởi động lại chúng để làm việc tại đây.</string>
+    <string name="chatsNewPhoneFolderRestartBothAction">Khởi động lại các tác nhân của điện thoại và OpenCode</string>
+    <string name="chatsNewPhoneFolderRestartingBoth">Đang khởi động lại các tác nhân của điện thoại và OpenCode để mọi tác nhân nhìn thấy thư mục này. Việc này mất khoảng nửa phút.</string>
+    <string name="chatsNewPhoneFolderRestartedBoth">Các tác nhân của điện thoại và OpenCode đã khởi động lại. Giờ mọi tác nhân đã nhìn thấy thư mục này.</string>
+    <string name="chatsNewPhoneFolderWaitingServer">OpenCode trên điện thoại này đang viết câu trả lời, nên sẽ tự khởi động lại khi câu trả lời kết thúc. Không có gì bị gián đoạn.</string>
+    <string name="chatsNewPhoneFolderWaitingAgents">Một tác nhân trên điện thoại này đang làm việc, nên các tác nhân của điện thoại sẽ tự khởi động lại khi nó xong. Không có gì bị gián đoạn.</string>
 </resources>

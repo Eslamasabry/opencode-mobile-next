@@ -35,7 +35,6 @@ import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.design.style.Style
 import io.github.eslamasabry.oc.ui.kit.KitTheme
-import io.github.eslamasabry.oc.ui.kit.effects.LIQUID_BAR_INSET_Y
 import io.github.eslamasabry.oc.ui.kit.frame.LocalKitScreenInsets
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import io.github.eslamasabry.oc.ui.kit.platform.KitPlatform
@@ -119,7 +118,7 @@ class FloatingSettingsTest {
             act()
             waitForIdle()
             bounds =
-                listOf("kit-liquid-bar", "settings-search", "report-description").associateWith {
+                listOf("kit-liquid-bar", "kit-floating-chrome", "settings-search", "report-description").associateWith {
                     runCatching { onNodeWithTag(it, useUnmergedTree = true).getBoundsInRoot() }.getOrNull()
                 }
         }
@@ -142,15 +141,17 @@ class FloatingSettingsTest {
         waitForIdle()
     }
 
-    /** The bottom of the bar the capsule floats in (the capsule sits LIQUID_BAR_INSET_Y inside it). */
-    private fun barBottom(b: Map<String, DpRect?>): Float = b["kit-liquid-bar"]!!.bottom.value + LIQUID_BAR_INSET_Y
+    /** The bottom of the floating bar's block. */
+    private fun barBottom(b: Map<String, DpRect?>): Float = b["kit-floating-chrome"]!!.bottom.value
 
     @Test
-    fun `B-SET-FLOAT-001 the hub floats its bar under the lens and its search rests where it did`() {
+    fun `B-SET-FLOAT-001 the hub floats its bar under the lens with no pane and its search rests where it did`() {
         val lens = page(hub, LensPlatform())
         val flat = page(hub, DesktopKitPlatform())
-        assertNotNull(lens["kit-liquid-bar"], "the hub's bar is a liquid capsule")
-        assertNull(flat["kit-liquid-bar"], "without the lens the bar is pinned as before")
+        // Owner 2026-11-16: a floating bar paints no pane of its own.
+        assertNotNull(lens["kit-floating-chrome"], "the hub's bar floats under the lens")
+        assertNull(lens["kit-liquid-bar"], "the hub's floating bar paints no pane")
+        assertNull(flat["kit-floating-chrome"], "without the lens the bar is pinned as before")
         val a = lens["settings-search"]!!
         val b = flat["settings-search"]!!
         assertTrue(abs(a.top.value - b.top.value) <= .5f, "the search rests at ${a.top} under the lens, ${b.top} without")

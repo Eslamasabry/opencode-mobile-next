@@ -16,8 +16,9 @@ Checks, in order (a later check still runs after an earlier one fails, so one ru
      that is not one of the app's own words; every such text must still be there after it.
   b  server: Settings > Server > This phone says the phone's own server is running (it is started with the Start button when off).
   c  reply: New conversation, a prompt that asks for one exact word, Start, and that word comes back as a reply.
-  d  permission: in that conversation's own message box, a prompt that makes the agent write a file; the permission question appears, "Allow once" answers it,
-     the question goes away and the run goes on.
+  d  permission: a fresh New conversation and a prompt that makes the agent write one file; every permission question
+     that follows is answered with "Allow once" (at most six: an agent may also ask to read or list), the questions
+     go away and the run goes on.
 
 Result file: <out>/smoke-<commit>.json with the commit, the installed version code, the device model, the time, the
 APK's sha256 and each check's pass or fail ("pass": true only when all four passed). scripts/native-release.sh refuses
@@ -65,9 +66,10 @@ def shell(*args, timeout=60):
 
 # ---- the app's own words ------------------------------------------------------------------------------------------------
 _words = {}
-for _f in glob.glob(os.path.join(WORDS, '*.xml')):
+# The shared words, and the Android app's own (notices such as "The app was closed in the background" live there).
+for _f in glob.glob(os.path.join(WORDS, '*.xml')) + glob.glob(os.path.join(NATIVE, 'androidApp', 'src', 'main', 'res', 'values', 'strings*.xml')):
     for _e in ET.parse(_f).getroot().iter('string'):
-        _words[_e.get('name')] = ''.join(_e.itertext()).replace("\\'", "'").replace('\\n', '\n')
+        _words[_e.get('name')] = ''.join(_e.itertext()).replace("\\'", "'").replace('\\u0027', "'").replace('\\n', '\n')
 
 
 def word(key):
@@ -77,6 +79,22 @@ def word(key):
 
 
 CHROME = {v.strip() for v in _words.values() if '%' not in v and '{' not in v}
+# The literal start of every word, up to its first placeholder: a notice or a status line on the Conversations screen
+# ("The app was closed in the background, so ...") is the app's word, often cut short, never the person's own text.
+_STARTS = sorted({re.split(r'%(?:\d+\$)?[sd]|\{', v.strip())[0].strip() for v in _words.values()}, key=len, reverse=True)
+_STARTS = [t for t in _STARTS if len(t) >= 12]
+
+
+# Whole words long enough to be unmistakable inside a longer line (a notice built from two words).
+_LONG = [w for w in CHROME if len(w) >= 20]
+
+
+def apps_words(text):
+    """True when [text] is the app's own words: a word, a filled-in word, or a line that holds a long word."""
+    t = text.strip()
+    if t in CHROME or t.rstrip('…').strip() in CHROME:
+        return True
+    return any(t.startswith(w) for w in _STARTS) or any(w in t for w in _LONG)
 
 
 # ---- uiautomator --------------------------------------------------------------------------------------------------------
@@ -170,7 +188,7 @@ def user_texts(nodes):
     out = set()
     for n in nodes:
         t = n.label().strip()
-        if len(t) >= 3 and t not in CHROME and not re.search(r'\d', t) and not n.cls.endswith('EditText'):
+        if len(t) >= 3 and not apps_words(t) and not re.search(r'\d', t) and not n.cls.endswith('EditText'):
             out.add(t)
     return out
 
@@ -339,23 +357,31 @@ def check_c(ctx):
     return 'the reply came back'
 
 
+MAX_QUESTIONS = 6
+
+
 def check_d(ctx):
-    composer = ctx.get('composer') or new_conversation()
+    composer = new_conversation()  # its own conversation: check c's must not carry this prompt
     name = 'smoke-' + secrets.token_hex(3) + '.txt'
-    send(composer, f'Create a file named {name} in the project with the word hello in it. Do it now.')
+    send(composer, f'Create a file named {name} in the project with the word hello in it, in one write. Do nothing else.')
     allow = word('kitRequestAllowOnce')
     v, nodes = wait_for('permission question', 120, lambda ns: find(ns, allow))
     if not v:
         raise Fail(f'no permission question ("{allow}") within 120 s (is the permission mode "ask" and the model able to write files?)')
-    tap(v[0])
-    gone, nodes = wait_for('question gone', 60, lambda ns: not find(ns, allow))
-    if not gone:
-        raise Fail('the permission question stayed after "Allow once"')
+    answered = 0
+    while v and answered < MAX_QUESTIONS:
+        tap(v[0])
+        answered += 1
+        time.sleep(3)
+        # The agent may ask again (read the file back, list the folder): answer each one, then wait for quiet.
+        v, nodes = wait_for('another question', 20, lambda ns: find(ns, allow))
+    if v:
+        raise Fail(f'a permission question was still there after "{allow}" was pressed {answered} times')
     mentions = lambda ns: [n for n in ns if name in n.label()]
     v, nodes = wait_for('run goes on', 120, lambda ns: len(mentions(ns)) >= 2)
     if not v:
         raise Fail(f'after "Allow once" nothing new about {name} appeared within 120 s (the run did not go on)')
-    return 'the question appeared, Allow once answered it, the run went on'
+    return f'{answered} permission question(s) answered with Allow once, the run went on'
 
 
 def main():
