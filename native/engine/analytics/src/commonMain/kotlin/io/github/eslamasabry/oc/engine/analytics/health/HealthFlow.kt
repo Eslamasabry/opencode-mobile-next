@@ -392,13 +392,13 @@ public data class ChatTurnSummary(
     val agent: String?,
     val serverKind: String,
     val firstReplyMs: Long?,
-    /** Send to the agent's first sign of life of any kind (null: none came). */
-    val activityMs: Long? = null,
     val totalMs: Long,
     val tools: Int,
     val failKind: String?,
     val recovered: String,
     val followUp: String,
+    /** Send to the agent's first sign of life of any kind (null: none came). */
+    val activityMs: Long? = null,
 )
 
 /** The inert default: sends nothing, keeps nothing, has no vendor. */
