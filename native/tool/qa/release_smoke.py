@@ -297,7 +297,9 @@ def new_conversation():
     nc = find(nodes, word('chatsHomeNewChat')) or find(nodes, word('chatsHomeNewShort'))
     if not nc:
         raise Fail(f'no "{word("chatsHomeNewChat")}" button')
-    tap(nc[0])
+    # The edge light's list can also offer "New conversation" (on the right edge, mid screen); the page's own + sits
+    # lowest on the screen, so tap the lowest match.
+    tap(max(nc, key=lambda n: n.box[3]))
 
     def composer(ns):
         return [n for n in ns if n.cls.endswith('EditText') or n.label().strip() in (word('kitComposerField'), word('chatUiAskOpenCode'))]
