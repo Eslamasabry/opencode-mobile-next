@@ -44,6 +44,7 @@ object LocalTerminalWiring {
                         linux.prootIsConfined,
                     )
                 },
+                clipboard = KitTerminalTextClipboard(app),
                 stopTree = { pid, expectedStart ->
                     val process = File("/proc/$pid")
                     if (process.exists()) {

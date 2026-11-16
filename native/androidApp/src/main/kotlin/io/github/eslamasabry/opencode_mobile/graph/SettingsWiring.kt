@@ -1,11 +1,11 @@
 package io.github.eslamasabry.opencode_mobile.graph
 
+import io.github.eslamasabry.oc.ui.kit.foundation.KitAndroidClipboard
+import io.github.eslamasabry.oc.ui.kit.foundation.KitClipboardMode
 import io.github.eslamasabry.opencode_mobile.telemetry.Telemetry
 import android.app.Application
 import android.app.Notification
 import android.app.NotificationManager
-import android.content.ClipData
-import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.content.res.Resources
@@ -660,10 +660,7 @@ class AndroidSettingsHost(
             override suspend fun copy(text: String): Outcome<Unit> =
                 withContext(dispatchers.main) {
                     attempt({ Failure.StorageRefused() }) {
-                        val clipboard = application.getSystemService(ClipboardManager::class.java)
-                        clipboard.setPrimaryClip(
-                            ClipData.newPlainText("OpenCode Mobile report", text)
-                        )
+                        KitAndroidClipboard.write(application, text, KitClipboardMode.Sensitive, "OpenCode Mobile report")
                     }
                 }
         }

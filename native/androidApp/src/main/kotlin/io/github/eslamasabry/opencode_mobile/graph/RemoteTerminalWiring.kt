@@ -30,4 +30,4 @@ public class NativeRemoteTerminalTextPolicy(private val redactor: Redactor) :
 @Inject
 @ContributesIntoSet(AppScope::class, binding = binding<RemoteTerminalRenderer>())
 class AppRemoteTerminalRenderer(app: Application, dispatchers: AppDispatchers, redactor: Redactor) :
-    RemoteTerminalRenderer by AndroidRemoteTerminalRenderer(app, dispatchers, redactor)
+    RemoteTerminalRenderer by AndroidRemoteTerminalRenderer(app, dispatchers, redactor, KitTerminalTextClipboard(app))

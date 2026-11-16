@@ -14,7 +14,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalClipboardManager
+import io.github.eslamasabry.oc.ui.kit.foundation.rememberKitClipboard
+import io.github.eslamasabry.oc.ui.kit.foundation.KitClipboardMode
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.AnnotatedString
@@ -103,7 +104,7 @@ public class KitTerminalLinkFlow {
 @Composable
 public fun KitTerminalLinkSheet(flow: KitTerminalLinkFlow) {
     val host = LocalTerminalLinkHost.current
-    @Suppress("DEPRECATION") val clipboard = LocalClipboardManager.current
+    @Suppress("DEPRECATION") val clipboard = rememberKitClipboard()
     KitSheet(
         visible = flow.sheet != null,
         onDismissRequest = flow::dismiss,
@@ -117,7 +118,7 @@ public fun KitTerminalLinkSheet(flow: KitTerminalLinkFlow) {
         secondary =
             KitAction(
                 stringResource(Res.string.terminalLinkCopy),
-                { flow.copy { clipboard.setText(AnnotatedString(it)) } },
+                { flow.copy { clipboard.setText(AnnotatedString(it), KitClipboardMode.Sensitive) } },
                 icon = KitIcons.copy,
             ),
     ) {

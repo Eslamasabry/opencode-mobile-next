@@ -1,8 +1,8 @@
 package io.github.eslamasabry.opencode_mobile.graph
 
+import io.github.eslamasabry.oc.ui.kit.foundation.KitAndroidClipboard
+import io.github.eslamasabry.oc.ui.kit.foundation.KitClipboardMode
 import android.app.Application
-import android.content.ClipData
-import android.content.ClipboardManager
 import dev.zacsweers.metro.*
 import io.github.eslamasabry.oc.core.common.*
 import io.github.eslamasabry.oc.core.common.dart.DartJson
@@ -178,9 +178,7 @@ class AppHandoffDrafts(
 
     override fun copy(markdown: String): Boolean =
         try {
-            application
-                .getSystemService(ClipboardManager::class.java)
-                .setPrimaryClip(ClipData.newPlainText("Conversation handoff", markdown))
+            KitAndroidClipboard.write(application, markdown, KitClipboardMode.Sensitive, "Conversation handoff")
             true
         } catch (_: RuntimeException) {
             false

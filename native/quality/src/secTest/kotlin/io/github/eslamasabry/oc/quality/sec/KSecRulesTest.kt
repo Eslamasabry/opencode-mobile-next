@@ -29,7 +29,7 @@ class KSecRulesTest {
     @Test fun `K-SEC-5 no Secret in route keys, saved state, work data, intents or bundles`() =
         assertClean(Live.declarations.kSec5Routes() + SecTextRules.kSec5Calls(files), "K-SEC-5")
 
-    @Test fun `K-SEC-6 clipboard writes only in the kit KitCopy and KitPlatform`() = assertClean(SecTextRules.kSec6(files), "K-SEC-6")
+    @Test fun `K-SEC-6 clipboard writes use the kit boundary and explicit preview mode`() = assertClean(SecTextRules.kSec6(files), "K-SEC-6")
 
     @Test fun `K-SEC-7 every PendingIntent is FLAG_IMMUTABLE outside the three reviewed files`() = assertClean(SecTextRules.kSec7(files, config), "K-SEC-7")
 

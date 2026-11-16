@@ -101,12 +101,33 @@ class KSecPlantedTest {
     }
 
     @Test
-    fun `K-SEC-6 planted clipboard write outside the kit fails`() {
+    fun `K-SEC-6 raw sinks and missing modes fail while quoted fixtures do not`() {
         val t = Planted()
-            .file("feature/chat/src/androidMain/kotlin/p/Copy.kt", "fun c() = ClipData.newPlainText(\"x\", \"y\")")
-            .file("ui/shell/$cm/Copy.kt", "suspend fun c(cb: Clipboard) = cb.setClipEntry(ClipEntry(data))")
-            .file("ui/kit/src/androidMain/kotlin/p/KitCopy.android.kt", "fun c() = ClipData.newPlainText(\"x\", \"y\")")
-        assertCaught(SecTextRules.kSec6(t.files()), "K-SEC-6", 2, "feature and shell")
+            .file("feature/chat/$cm/Copy.kt", """
+                val clipboard = rememberKitClipboard()
+                fun c(cb: ClipboardManager) {
+                    cb.setText(AnnotatedString(text))
+                    clipboard.setText(AnnotatedString(text))
+                    clipboard.setText(AnnotatedString(text), KitClipboardMode.Sensitive)
+                    KitAndroidClipboard.write(ctx, text)
+                    KitAndroidClipboard.write(ctx, text, KitClipboardMode.Public)
+                    manager.setPrimaryClip(data)
+                    other.setClipEntry(entry)
+                    ClipData.newPlainText("", text)
+                    val cb2 = LocalClipboardManager.current
+                    cb2.setText(text)
+                    LocalClipboardManager.current.setText(text)
+                    manager.primaryClip = data
+                    toolkit.setContents(data, null)
+                    val quoted = "manager.setPrimaryClip(data)"
+                    val interpolated = "${'$'}{manager.setPrimaryClip(data)}"
+                }
+            """)
+            .file("ui/kit/src/androidMain/kotlin/io/github/eslamasabry/oc/ui/kit/foundation/KitClipboard.android.kt",
+                "fun c() = ClipData.newPlainText(\"x\", \"y\")")
+            .file("ui/kit/$cm/KitCopyPretender.kt", "fun c() = ClipData.newPlainText(\"x\", \"y\")")
+            .file("core/security/src/desktopTest/kotlin/p/Review.kt", "val fixture = \"manager.setPrimaryClip(data)\"")
+        assertCaught(SecTextRules.kSec6(t.files()), "K-SEC-6", 12, "all raw sinks, missing explicit modes, template expression and a misleading kit filename")
     }
 
     @Test

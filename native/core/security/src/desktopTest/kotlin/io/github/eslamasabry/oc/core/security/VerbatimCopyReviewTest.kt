@@ -28,11 +28,12 @@ class VerbatimCopyReviewTest {
                 (1 to "KitClipboardEffect: the chat header masks everything but the person's own prompts first"),
             "androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/SettingsWiring.kt" to
                 (1 to "DiagnosticsExport.copy: the bundled voice licence text (an app asset), never server text"),
-            // Dart twin: lib/ui/kit/kit_terminal_view.dart `_KitTerminalOscHost` (redact: false, reviewed in
-            // test/redaction_test.dart). Masking here would corrupt a copy the person's own program made on purpose.
-            "android/terminal/src/main/kotlin/io/github/eslamasabry/oc/android/terminal/TerminalSurfaceHost.kt" to
-                (1 to "copyTerminalText: a text selection the person copied, or OSC 52 from their own terminal " +
-                    "program (their shell, their content); honoured only while the terminal is on screen, ≤ 64 KiB"),
+            "ui/kit/src/androidMain/kotlin/io/github/eslamasabry/oc/ui/kit/platform/AndroidKitPlatform.kt" to
+                (1 to "The kit platform dispatches to its sole Android clipboard writer with the caller's explicit mode and unchanged payload"),
+            "ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/foundation/KitClipboard.kt" to
+                (1 to "Desktop/test fallback only: payload and explicit mode already chosen by the reviewed caller"),
+            "ui/kit/src/androidMain/kotlin/io/github/eslamasabry/oc/ui/kit/foundation/KitClipboard.android.kt" to
+                (3 to "The sole Android clipboard sink plus native selection forwarding; applies the caller's explicit sensitivity mode without changing text"),
             "androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/AgentAccountWiring.kt" to
                 (1 to "a one-time device code for the person to type (1–64 chars, no controls, current profile), flagged sensitive"),
             "androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/AgentTerminalWiring.kt" to
@@ -59,7 +60,7 @@ class VerbatimCopyReviewTest {
             "androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/ServerIntegrationsWiring.kt" to
                 (1 to "rawCopy holds the app's own install and adb commands (port only) and redacted names; fallback is redacted"),
             "androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/TerminalWiring.kt" to
-                (1 to "the person's own terminal selection or transcript (Dart kit_terminal_view.dart, verbatim there too)"),
+                (2 to "the person's own terminal selection or transcript (Dart kit_terminal_view.dart, verbatim there too)"),
             "feature/agents/src/commonMain/kotlin/io/github/eslamasabry/oc/feature/agents/tools/ui/ToolsScreen.kt" to
                 (1 to "the tool parameter schema after KitRedact.text"),
             "ui/kit-chat/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kitchat/diff/KitDiffView.kt" to
@@ -109,7 +110,7 @@ class VerbatimCopyReviewTest {
             "ui/kit-chat/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kitchat/transcript/KitContextMessagePart.kt" to
                 (listOf("KitRedactedCopyIconButton(") to VERBATIM_PARTS),
             "androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/LibraryWiring.kt" to
-                (listOf("KitCopy.safeText(redactor, text)", "ClipData.newPlainText(\"\", safe)") to
+                (listOf("KitCopy.safeText(redactor, text)", "KitAndroidClipboard.write(application, safe, KitClipboardMode.Sensitive)") to
                     listOf("ClipData.newPlainText(\"\", text)")),
             "ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/action/KitCopyButton.kt" to
                 (listOf("mask.apply(text())", "AnnotatedString(out.text)") to listOf("AnnotatedString(text())")),
@@ -137,7 +138,7 @@ class VerbatimCopyReviewTest {
 
     /** A clipboard write, or text handed to another app through the share sheet. */
     private val copyCall =
-        Regex("""\.(setPrimaryClip|setClipEntry)\(|\bclipboard\w*\.setText\(|\.setText\(\s*AnnotatedString\(|\bputExtra\(\s*Intent\.EXTRA_TEXT\b""")
+        Regex("""\bKitAndroidClipboard\.write\(|\.(setPrimaryClip|setClipEntry)\(|\bclipboard\w*\.setText\(|\.setText\(\s*AnnotatedString\(|\bputExtra\(\s*Intent\.EXTRA_TEXT\b""")
 
     private fun stripComments(source: String): String =
         source.replace(Regex("""/\*[\s\S]*?\*/"""), "").lines().joinToString("\n") { it.substringBefore("//") }

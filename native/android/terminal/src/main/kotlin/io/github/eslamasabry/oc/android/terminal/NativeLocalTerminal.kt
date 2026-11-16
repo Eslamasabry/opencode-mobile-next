@@ -60,6 +60,7 @@ class NativeLocalTerminal(
     private val scope: AppCoroutineScope,
     private val launchShell: () -> TerminalLaunch,
     private val stopTree: (Int, Long) -> Unit,
+    private val clipboard: TerminalTextClipboard,
 ) : LocalTerminalPort, LocalTerminalInputPort {
     private val state = MutableStateFlow<List<LocalShell>>(emptyList())
     override val shells: StateFlow<List<LocalShell>> = state.asStateFlow()
@@ -194,7 +195,7 @@ class NativeLocalTerminal(
                 }
 
                 override fun onCopyTextToClipboard(session: TerminalSession, text: String) {
-                    copyTerminalText(session, text, held.view)
+                    copyTerminalText(text, held.view, clipboard)
                 }
 
                 /** The grid's own Paste (Termux's selection menu), after any queued typing. */

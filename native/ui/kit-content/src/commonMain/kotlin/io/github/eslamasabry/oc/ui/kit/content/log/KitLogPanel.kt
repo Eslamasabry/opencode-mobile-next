@@ -25,7 +25,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalClipboardManager
+import io.github.eslamasabry.oc.ui.kit.foundation.rememberKitClipboard
+import io.github.eslamasabry.oc.ui.kit.foundation.KitClipboardMode
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.AnnotatedString
@@ -172,7 +173,7 @@ public fun KitLogPanel(
     @Suppress(
         "DEPRECATION"
     ) // Kit copy boundary; the clipboard receives only the masked text above.
-    val clipboard = LocalClipboardManager.current
+    val clipboard = rememberKitClipboard()
     LaunchedEffect(query) {
         current = if (matches.isEmpty()) -1 else matches.lastIndex
         if (current >= 0) {
@@ -250,7 +251,7 @@ public fun KitLogPanel(
             )
             KitButton(
                 stringResource(Res.string.kitCopyAll),
-                onClick = { clipboard.setText(AnnotatedString(safe)) },
+                onClick = { clipboard.setText(AnnotatedString(safe), KitClipboardMode.Sensitive) },
                 modifier = Modifier.weight(1f).testTag("kit-log-copy-all"),
                 role = KitButtonRole.Tertiary,
             )
@@ -665,7 +666,7 @@ private fun LogHeader(
 @Composable
 private fun LogCopyButton(text: () -> String) {
     @Suppress("DEPRECATION") // Kit copy boundary; the clipboard receives only the masked lines.
-    val clipboard = LocalClipboardManager.current
+    val clipboard = rememberKitClipboard()
     var copied by remember { mutableStateOf(false) }
     LaunchedEffect(copied) {
         if (copied) {
@@ -677,7 +678,7 @@ private fun LogCopyButton(text: () -> String) {
         if (copied) KitIcons.check else KitIcons.copy,
         stringResource(Res.string.kitCopyAll),
         onClick = {
-            clipboard.setText(AnnotatedString(text()))
+            clipboard.setText(AnnotatedString(text()), KitClipboardMode.Sensitive)
             copied = true
         },
         modifier = Modifier.testTag("kit-log-copy-all"),

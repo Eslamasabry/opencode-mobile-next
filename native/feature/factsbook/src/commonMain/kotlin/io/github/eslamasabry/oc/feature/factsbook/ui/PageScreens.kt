@@ -17,7 +17,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalClipboardManager
+import io.github.eslamasabry.oc.ui.kit.foundation.rememberKitClipboard
+import io.github.eslamasabry.oc.ui.kit.foundation.KitClipboardMode
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.engine.factsbook.CaptureKind
@@ -729,7 +730,7 @@ private fun EntryRow(entry: CouldNotSaveEntry, state: NotSavedUi, actions: NotSa
             "$where · ${stringResource(Res.string.fbNotSavedSince, age)}",
             if (due) stringResource(Res.string.fbNotSavedThirtyDays) else null,
         )
-    @Suppress("DEPRECATION") val clipboard = LocalClipboardManager.current
+    @Suppress("DEPRECATION") val clipboard = rememberKitClipboard()
     val text = entry.text
     KitRow(
         title = text?.let { bidiName(it) } ?: stringResource(Res.string.fbNotSavedNodeItem),
@@ -746,7 +747,7 @@ private fun EntryRow(entry: CouldNotSaveEntry, state: NotSavedUi, actions: NotSa
                     if (text != null) {
                         KitMenuItem(
                             stringResource(if (due) Res.string.fbNotSavedExport else Res.string.fbNotSavedCopy),
-                            { clipboard.setText(AnnotatedString(text)) },
+                            { clipboard.setText(AnnotatedString(text), KitClipboardMode.Sensitive) },
                         )
                     } else null,
                     if (!entry.onPhone && state.canExport) KitMenuItem(stringResource(Res.string.fbNotSavedExport), { actions.export(entry) }) else null,

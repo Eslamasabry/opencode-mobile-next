@@ -15,7 +15,8 @@ import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalClipboardManager
+import io.github.eslamasabry.oc.ui.kit.foundation.rememberKitClipboard
+import io.github.eslamasabry.oc.ui.kit.foundation.KitClipboardMode
 import androidx.compose.ui.semantics.*
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
@@ -101,7 +102,7 @@ public fun KitViewerDocument(
         if (finding && matches.isNotEmpty())
             list.scrollToItem(maxOf(0, matches[active.coerceIn(matches.indices)].first - 3))
     }
-    @Suppress("DEPRECATION") val clipboard = LocalClipboardManager.current
+    @Suppress("DEPRECATION") val clipboard = rememberKitClipboard()
     val colors = LocalKitColors.current
     val style =
         LocalKitTypography.current
@@ -109,7 +110,7 @@ public fun KitViewerDocument(
             .copy(color = colors.text1)
     val rendering = formatted != null && !showSource && !finding
     val chrome = LocalViewerChrome.current
-    val copy = { clipboard.setText(AnnotatedString(source)) }
+    val copy = { clipboard.setText(AnnotatedString(source), KitClipboardMode.Sensitive) }
     val copyLabel = stringResource(Res.string.kitViewerCopyContents)
     val findLabel = stringResource(Res.string.kitViewerFind)
     val sourceLabel =

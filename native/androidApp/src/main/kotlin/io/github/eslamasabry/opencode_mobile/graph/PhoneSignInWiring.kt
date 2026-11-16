@@ -1,10 +1,9 @@
 package io.github.eslamasabry.opencode_mobile.graph
 
+import io.github.eslamasabry.oc.ui.kit.foundation.KitAndroidClipboard
+import io.github.eslamasabry.oc.ui.kit.foundation.KitClipboardMode
 import android.app.Application
-import android.content.ClipData
-import android.content.ClipboardManager
 import android.content.Context
-import android.os.PersistableBundle
 import dev.zacsweers.metro.*
 import io.github.eslamasabry.oc.android.background.ForegroundLease
 import io.github.eslamasabry.oc.android.background.LeaseAdmission
@@ -580,12 +579,7 @@ class NativePhoneSignIn(
                 }
         }
         private val clipboard = SignInClipboard { text ->
-            val clip = ClipData.newPlainText("", text)
-            clip.description.extras =
-                PersistableBundle().apply { putBoolean("android.content.extra.IS_SENSITIVE", true) }
-            (app.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager).setPrimaryClip(
-                clip
-            )
+            KitAndroidClipboard.write(app, text, KitClipboardMode.Sensitive)
         }
         private val presenter =
             SignInTerminalPresenter(

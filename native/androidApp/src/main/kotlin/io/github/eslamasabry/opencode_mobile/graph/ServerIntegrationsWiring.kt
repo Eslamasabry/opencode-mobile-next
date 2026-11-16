@@ -1,8 +1,8 @@
 package io.github.eslamasabry.opencode_mobile.graph
 
+import io.github.eslamasabry.oc.ui.kit.foundation.KitAndroidClipboard
+import io.github.eslamasabry.oc.ui.kit.foundation.KitClipboardMode
 import android.app.Application
-import android.content.ClipData
-import android.content.ClipboardManager
 import android.content.Context
 import dev.zacsweers.metro.*
 import io.github.eslamasabry.oc.core.common.*
@@ -1084,9 +1084,7 @@ class NativeServerIntegrations(
             )
                 return
             val text = rawCopy[item.key] ?: item.details?.text ?: return
-            val clipboard =
-                application.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-            clipboard.setPrimaryClip(ClipData.newPlainText("", text))
+            KitAndroidClipboard.write(application, text, KitClipboardMode.Sensitive)
             mutable.update { it.copy(copied = true) }
         }
 

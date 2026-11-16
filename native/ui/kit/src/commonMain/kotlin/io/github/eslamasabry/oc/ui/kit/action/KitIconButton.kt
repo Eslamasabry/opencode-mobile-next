@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.kit.action
 
+import io.github.eslamasabry.oc.ui.kit.foundation.KitClipboardMode
 import androidx.compose.foundation.border
 import androidx.compose.ui.draw.dropShadow
 import androidx.compose.foundation.layout.Box
@@ -185,7 +186,7 @@ public fun KitIconButtonCopy(
     mask: KitCopyMask = KitCopyVerbatim,
     maskedLabel: String? = null,
 ) {
-    val clipboard = androidx.compose.ui.platform.LocalClipboardManager.current
+    val clipboard = io.github.eslamasabry.oc.ui.kit.foundation.rememberKitClipboard()
     var copied by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
     var masked by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
     androidx.compose.runtime.LaunchedEffect(copied) {
@@ -199,7 +200,7 @@ public fun KitIconButtonCopy(
         if (copied && masked && maskedLabel != null) maskedLabel else label,
         onClick = {
             val out = mask.apply(text())
-            clipboard.setText(androidx.compose.ui.text.AnnotatedString(out.text))
+            clipboard.setText(androidx.compose.ui.text.AnnotatedString(out.text), KitClipboardMode.Sensitive)
             masked = out.masked
             copied = true
         },
