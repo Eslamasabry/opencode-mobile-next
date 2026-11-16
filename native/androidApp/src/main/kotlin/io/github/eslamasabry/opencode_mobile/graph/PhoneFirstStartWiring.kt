@@ -1,6 +1,8 @@
 package io.github.eslamasabry.opencode_mobile.graph
 
 import androidx.compose.runtime.Composable
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.runtime.getValue
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.ContributesIntoSet
@@ -23,6 +25,11 @@ import io.github.eslamasabry.oc.feature.phone.presentation.PhoneConsentUi
 import io.github.eslamasabry.oc.feature.phone.presentation.PhoneFirstStartConsents
 import io.github.eslamasabry.oc.feature.phone.presentation.PhoneMaker
 import io.github.eslamasabry.oc.feature.phone.ui.PhoneFirstStartConsentHost
+import io.github.eslamasabry.oc.ui.kit.frame.kitKeyboardVisible
+import io.github.eslamasabry.oc.ui.kit.modal.KitModalOpen
+import io.github.eslamasabry.oc.ui.routes.AppNavigator
+import io.github.eslamasabry.oc.ui.routes.AppRoute
+import io.github.eslamasabry.oc.ui.routes.ChatsRoute
 import io.github.eslamasabry.oc.ui.shell.ShellOverlay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -137,11 +144,39 @@ class NativePhoneFirstStartConsents(
     }
 }
 
-/** Asks the first-start questions above whatever screen is open (Flutter asks wherever it started). */
+/**
+ * When the first-start questions may open (small-faults 301). They are about the phone server and can wait, so they
+ * never open over another sheet or dialog, over a page other than the conversation lists, during a running reply, or
+ * while the keyboard is up. Once one is open it stays until answered (the host latches it).
+ */
+internal object PhoneConsentMoment {
+    fun quiet(top: AppRoute?, modalOpen: Boolean, replyRunning: Boolean, keyboardUp: Boolean): Boolean =
+        (top == ChatsRoute.Home || top is ChatsRoute.All) && !modalOpen && !replyRunning && !keyboardUp
+}
+
+/** Asks the first-start questions at a quiet moment on the conversation list (see [PhoneConsentMoment]). */
 @Inject
 @ContributesIntoSet(AppScope::class, binding = binding<ShellOverlay>())
-class PhoneConsentOverlay(private val consents: PhoneFirstStartConsents) : ShellOverlay {
-    @Composable override fun Content() = PhoneFirstStartConsentHost(consents)
+class PhoneConsentOverlay(
+    private val consents: PhoneFirstStartConsents,
+    private val navigator: AppNavigator,
+    private val leases: NativeChatLeases,
+) : ShellOverlay {
+    @Composable
+    override fun Content() {
+        val top by navigator.top.collectAsStateWithLifecycle()
+        val busy by leases.busy.collectAsStateWithLifecycle()
+        PhoneFirstStartConsentHost(
+            consents,
+            quiet =
+                PhoneConsentMoment.quiet(
+                    top = top,
+                    modalOpen = KitModalOpen.isOpen,
+                    replyRunning = busy.values.any { it == true },
+                    keyboardUp = kitKeyboardVisible(),
+                ),
+        )
+    }
 }
 
 @Inject

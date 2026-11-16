@@ -28,4 +28,14 @@ class NewConversationPhoneRulesTruthTest {
         val s = state(PhoneAgentRow("claude", "Claude Code", PhoneAgentStatus.Limit, limitResets = "Nov 20, 1:00 AM"))
         assertEquals(mapOf<String, String?>("claude" to "Nov 20, 1:00 AM"), NewConversationPhoneRules.limit(s))
     }
+
+    @Test
+    fun `SMALL-301 a retired agent is not offered for a new conversation`() {
+        val s =
+            state(
+                PhoneAgentRow("gemini", "Gemini CLI", PhoneAgentStatus.PhoneCheck, retired = true, removable = true),
+                PhoneAgentRow("codex", "Codex", PhoneAgentStatus.Ready),
+            )
+        assertEquals(listOf("codex"), NewConversationPhoneRules.facts(s).map { it.id.raw })
+    }
 }

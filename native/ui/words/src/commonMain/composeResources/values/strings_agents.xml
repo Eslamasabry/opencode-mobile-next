@@ -238,6 +238,9 @@
     <string name="agentsStatePhoneCheck">Phone check needed</string>
     <string name="agentsStateStopped">Stopped in the background</string>
     <string name="agentsStateLimit">Plan limit reached</string>
+    <string name="agentsStateRetired">No longer offered on this phone</string>
+    <string name="agentsRetiredBody">%1$s is no longer offered on this phone, so it can't be set up or used again. Remove it to free the space it takes. Your other agents and conversations stay.</string>
+    <string name="agentsRemoveChip">Remove</string>
     <string name="agentsStateUnavailable">Not available on this phone yet</string>
     <string name="agentsSetupTitle">Set up %1$s · %2$s</string>
     <string name="agentsSetupTitleNoSize">Set up %1$s</string>

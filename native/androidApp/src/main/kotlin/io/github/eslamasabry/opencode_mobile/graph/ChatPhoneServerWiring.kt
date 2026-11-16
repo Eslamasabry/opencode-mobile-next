@@ -73,7 +73,7 @@ class AndroidChatPhoneServer(
         else Outcome.Ok(Unit)
 
     override fun wantAgentHelper(profile: ProfileId) {
-        if (isAgentHelper(profile)) runtime.value.wantHelper(profile)
+        if (isAgentHelper(profile)) runtime.value.wantHelper(profile, evenHidden = true)
     }
 
     /**
