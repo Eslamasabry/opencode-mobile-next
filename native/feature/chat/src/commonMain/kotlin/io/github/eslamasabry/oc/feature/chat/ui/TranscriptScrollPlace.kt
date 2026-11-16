@@ -32,27 +32,62 @@ internal class ScrollPlace(val key: String, val offset: Int, val older: List<Str
         val Saver: Saver<ScrollPlaceHolder, Any> =
             Saver(
                 save = { holder ->
-                    holder.place?.let { listOf<Any>(it.key, it.offset) + it.older } ?: emptyList<Any>()
+                    holder.place?.let { listOf<Any>(holder.following, it.key, it.offset) + it.older } ?: emptyList<Any>()
                 },
                 restore = { saved ->
                     val items = saved as List<*>
                     ScrollPlaceHolder().also { holder ->
-                        if (items.size >= 2)
+                        if (items.size >= 3) {
+                            holder.following = items[0] as Boolean
                             holder.place =
                                 ScrollPlace(
-                                    items[0] as String,
-                                    items[1] as Int,
-                                    items.drop(2).map { it as String },
+                                    items[1] as String,
+                                    items[2] as Int,
+                                    items.drop(3).map { it as String },
                                 )
+                        }
                     }
                 },
             )
     }
 }
 
-/** The saved place: one per chat entry; plain fields, written only from the collector below. */
+/**
+ * The saved place: one per chat entry; plain fields, written only from the collector below. [following] is whether
+ * the reader was following the newest row when the place was taken; [fromStore] says the place came from the per-run
+ * [ScrollPlaceStore] (a conversation opened again as a new entry), not from this entry's own saved state.
+ */
 internal class ScrollPlaceHolder {
     var place: ScrollPlace? = null
+    var following: Boolean = false
+    var fromStore: Boolean = false
+}
+
+/** A place kept for a conversation, with whether the reader was following the newest row. */
+internal class KeptPlace(val place: ScrollPlace, val following: Boolean)
+
+/**
+ * Where each conversation was left, for this app run only (memory, nothing persisted, so nothing for profile deletion
+ * to sweep): reopening a conversation from Home, All conversations, Search or the edge light is a new back-stack entry
+ * whose own saved state is empty. Bounded: the least recently used conversation is forgotten past [KEPT].
+ */
+internal object ScrollPlaceStore {
+    private const val KEPT = 24
+    private val kept = LinkedHashMap<String, KeptPlace>()
+
+    fun get(conversation: String): KeptPlace? = kept[conversation]
+
+    fun put(conversation: String, place: ScrollPlace, following: Boolean) {
+        kept.remove(conversation)
+        kept[conversation] = KeptPlace(place, following)
+        while (kept.size > KEPT) kept.remove(kept.keys.first())
+    }
+
+    fun forget(conversation: String) {
+        kept.remove(conversation)
+    }
+
+    fun clear() = kept.clear()
 }
 
 internal object ScrollPlaceRules {
@@ -85,11 +120,24 @@ internal object ScrollPlaceRules {
  * The reader's place survives leaving the chat and coming back (the conversation switcher's Back rule: exactly as
  * they left it). The list state itself saves a position by index, which names another row once rows arrived below, so
  * this restores by key once, when the entry comes back, and then keeps the place current. [keys] are the list's item
- * keys, newest first (index 0 = the first item). A reader who was following the newest row is left following.
+ * keys, newest first (index 0 = the first item).
+ *
+ * Back to the same entry (from a diff, a request's details, Find, any page pushed over the chat) restores the exact row
+ * and offset also for a reader who was following the newest row: if more arrived meanwhile they land where they were
+ * and the list shows the "new below" cue. A conversation opened again as a new entry ([conversation] names it) returns
+ * to where it was left in this run, unless the reader was following the newest row: then it opens on the newest row.
  */
 @Composable
-internal fun KeepScrollPlace(list: TranscriptListState, keys: List<String>) {
-    val holder = rememberSaveable(saver = ScrollPlace.Saver) { ScrollPlaceHolder() }
+internal fun KeepScrollPlace(list: TranscriptListState, keys: List<String>, conversation: String? = null) {
+    val holder =
+        rememberSaveable(saver = ScrollPlace.Saver) {
+            ScrollPlaceHolder().also { fresh ->
+                val kept = conversation?.let(ScrollPlaceStore::get) ?: return@also
+                fresh.place = kept.place
+                fresh.following = kept.following
+                fresh.fromStore = true
+            }
+        }
     // Held by identity: a new list of keys is a new value without comparing every key (issue 147: the keys change on
     // every publish while a reply streams, and comparing them walked every row).
     val keysState = remember { mutableStateOf(keys, referentialEqualityPolicy()) }
@@ -97,17 +145,21 @@ internal fun KeepScrollPlace(list: TranscriptListState, keys: List<String>) {
     val current by keysState
     LaunchedEffect(list) {
         val saved = holder.place
-        if (saved != null && !list.following) {
+        if (saved != null && !(holder.fromStore && holder.following)) {
             // Wait for the rows (a conversation coming back may still be reading them).
             snapshotFlow { current }.first { it.isNotEmpty() }
             ScrollPlaceRules.target(saved, current)?.let { (index, offset) ->
+                // Rows that arrived below put the place away from the newest edge: the reader stays where they were.
+                list.following = holder.following && index == 0
                 list.lazy.scrollToItem(index, offset)
             }
         }
-        snapshotFlow { list.lazy.placeIn(current) }
-            .collect { place ->
-                // A follower keeps no place (they are on the newest message, wherever it has moved to).
-                holder.place = if (list.following) null else place
+        snapshotFlow { list.lazy.placeIn(current) to list.following }
+            .collect { (place, following) ->
+                if (place == null) return@collect
+                holder.place = place
+                holder.following = following
+                if (conversation != null) ScrollPlaceStore.put(conversation, place, following)
             }
     }
 }
