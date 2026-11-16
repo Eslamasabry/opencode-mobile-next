@@ -1267,6 +1267,9 @@ internal class GraphChatWorld(
                         )
                             reconcilePendingReceipts()
                         bridge.event(event)?.let(handle::submit)
+                        if (event is CoreEvent.RunEnded && event.sessionId == sid) {
+                            keepLastKnown(handle)
+                        }
                         if (event is CoreEvent.RevertChanged && event.sessionId == sid) {
                             readHistory(gateway, handle, bridge)
                         }
@@ -1388,13 +1391,13 @@ internal class GraphChatWorld(
         keptHandle = null
     }
 
-    /** Keeps the conversation's newest page as it reads now, once the live history answered. */
+    /** Keeps the conversation's newest page as it reads now (after a live read, or as a turn ends). */
     private fun keepLastKnown(handle: TranscriptHandle) {
         val memory = lastKnown ?: return
-        if (!historyReconciled) return
+        val ledger = feedKeeper.messagesToKeep(historyReconciled)
+        if (ledger.isEmpty()) return
         val title = mutableTitle.value
         // The full messages the turn facts read (taken now: a reload resets the ledger), with the words the rows drew.
-        val ledger = feedKeeper.liveMessages()
         registry.appScope.launch(registry.mainContext) {
             val messages =
                 io.github.eslamasabry.oc.engine.transcript.KeptTranscript.withWords(ledger, handle.keptMessages())
