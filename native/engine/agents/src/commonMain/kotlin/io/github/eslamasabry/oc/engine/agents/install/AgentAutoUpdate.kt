@@ -181,6 +181,17 @@ public class AgentAutoUpdater(
     private val attempted = mutableSetOf<String>()
     private val checking = Mutex()
     private var readTried = false
+    private var meteredAllowed = false
+
+    /**
+     * The person chose "Download now" on mobile data: the next install try runs on this network, once (spent when the
+     * install starts; a try refused before it started keeps it).
+     */
+    public fun allowMeteredOnce() {
+        meteredAllowed = true
+    }
+
+    private fun metered(): Boolean = host.metered && !meteredAllowed
     private val state = MutableStateFlow(AgentUpdateDecision(AgentUpdateStep.NotLooked))
 
     public val decision: StateFlow<AgentUpdateDecision> = state.asStateFlow()
@@ -212,6 +223,7 @@ public class AgentAutoUpdater(
             if (jobs.update(target)) {
                 attempted += "$key/${target.raw}"
                 attempted += "$key/$HELPER"
+                meteredAllowed = false
                 publish(AgentUpdateDecision(AgentUpdateStep.Updating, target))
             } else {
                 note("refused before it started; will try again")
@@ -271,7 +283,7 @@ public class AgentAutoUpdater(
                 setupRunning = running,
                 switchPending = host.switchPending,
                 installProblem = problem,
-                metered = host.metered,
+                metered = metered(),
                 attemptedThisRun = false,
             )
         if (explain) {
@@ -298,7 +310,7 @@ public class AgentAutoUpdater(
                 running -> AgentUpdateStep.WaitingSetup
                 host.switchPending -> AgentUpdateStep.WaitingSwitch
                 problem -> AgentUpdateStep.WaitingSetup
-                host.metered -> AgentUpdateStep.WaitingMetered
+                metered() -> AgentUpdateStep.WaitingMetered
                 busy -> AgentUpdateStep.WaitingAgentsBusy
                 else -> return
             }

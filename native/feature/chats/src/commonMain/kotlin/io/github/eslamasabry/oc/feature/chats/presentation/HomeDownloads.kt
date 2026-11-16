@@ -1,0 +1,136 @@
+package io.github.eslamasabry.oc.feature.chats.presentation
+
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.ContributesBinding
+import dev.zacsweers.metro.Inject
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+
+/** The two big downloads the phone does by itself after an app update. */
+public enum class HomeDownloadKind {
+    /** The phone's OpenCode server binary. */
+    OpenCode,
+
+    /** The agents' helper (Paseo) and what it needs. */
+    Helper,
+}
+
+/** Where one of those downloads is. */
+public sealed interface HomeDownloadPhase {
+    /** Held back because the network is mobile data (or cannot be told); nothing downloads. */
+    public data object Waiting : HomeDownloadPhase
+
+    /** Downloading now, on any network. [percent] is null when the share done is not known. */
+    public data class Running(val percent: Int?) : HomeDownloadPhase
+
+    /** It ended without finishing. The words are plain; technical text stays out of the line. */
+    public data object Failed : HomeDownloadPhase
+}
+
+/** One download's state; [megabytes] is the honest "about" size in [HomeDownloadSizes]. */
+public data class HomeDownloadFact(
+    val kind: HomeDownloadKind,
+    val phase: HomeDownloadPhase,
+    val megabytes: Int = HomeDownloadSizes.of(kind),
+)
+
+/**
+ * The sizes the line and the ask say, in one place. They are measured, not read from a release manifest: on the
+ * 2.1.5 to 3.0.0 upgrade walk (emulator, 2026-11) the phone's OpenCode refresh received about 126 MB and the agents'
+ * helper's first install (`npm ci`) about 333 MB. Said as "about 130 MB" and "about 330 MB".
+ */
+public object HomeDownloadSizes {
+    public const val OPEN_CODE_MB: Int = 130
+    public const val HELPER_MB: Int = 330
+
+    public fun of(kind: HomeDownloadKind): Int =
+        when (kind) {
+            HomeDownloadKind.OpenCode -> OPEN_CODE_MB
+            HomeDownloadKind.Helper -> HELPER_MB
+        }
+}
+
+public object HomeDownloadRules {
+    /**
+     * The one download the Home line talks about: one that downloads now first, then one that failed, then one that
+     * waits for Wi-Fi; OpenCode before the helper. Null when nothing is happening.
+     */
+    public fun shown(facts: List<HomeDownloadFact>): HomeDownloadFact? =
+        facts.sortedWith(compareBy({ rank(it.phase) }, { it.kind.ordinal })).firstOrNull()
+
+    private fun rank(phase: HomeDownloadPhase): Int =
+        when (phase) {
+            is HomeDownloadPhase.Running -> 0
+            HomeDownloadPhase.Failed -> 1
+            HomeDownloadPhase.Waiting -> 2
+        }
+}
+
+/** What the agents' automatic update is doing, as far as Home cares. */
+public enum class HomeHelperStep { None, Waiting, Updating }
+
+/** The agents' install job, as far as Home cares. */
+public enum class HomeInstallPhase { None, Installing, Failed }
+
+/** Turns the two updates' readings into the facts Home shows (pure: the app only supplies the readings). */
+public object HomeDownloadMapping {
+    public fun facts(
+        openCodeWaiting: Boolean,
+        openCodeRunning: Boolean,
+        openCodeFailed: Boolean,
+        openCodePercent: Int?,
+        helper: HomeHelperStep,
+        helperInstall: HomeInstallPhase,
+        helperPercent: Int?,
+    ): List<HomeDownloadFact> = buildList {
+        when {
+            openCodeRunning ->
+                add(HomeDownloadFact(HomeDownloadKind.OpenCode, HomeDownloadPhase.Running(openCodePercent?.coerceIn(0, 100))))
+            openCodeFailed -> add(HomeDownloadFact(HomeDownloadKind.OpenCode, HomeDownloadPhase.Failed))
+            openCodeWaiting -> add(HomeDownloadFact(HomeDownloadKind.OpenCode, HomeDownloadPhase.Waiting))
+        }
+        when (helper) {
+            HomeHelperStep.None -> Unit
+            HomeHelperStep.Waiting -> add(HomeDownloadFact(HomeDownloadKind.Helper, HomeDownloadPhase.Waiting))
+            HomeHelperStep.Updating ->
+                add(
+                    HomeDownloadFact(
+                        HomeDownloadKind.Helper,
+                        when (helperInstall) {
+                            HomeInstallPhase.Failed -> HomeDownloadPhase.Failed
+                            HomeInstallPhase.Installing -> HomeDownloadPhase.Running(helperPercent?.coerceIn(0, 100))
+                            HomeInstallPhase.None -> HomeDownloadPhase.Running(null)
+                        },
+                    )
+                )
+        }
+    }
+}
+
+/**
+ * What Home needs from the phone's automatic updates: what each is doing, "Download now" on the current network once,
+ * and Try again. :androidApp binds it; closed by default.
+ */
+public interface HomeDownloads {
+    public val facts: StateFlow<List<HomeDownloadFact>>
+
+    /** The person chose Download now on mobile data: that one download runs on this network, once. */
+    public fun downloadNow(kind: HomeDownloadKind)
+
+    /**
+     * Starts [kind] again after it failed. False when the network is mobile data (or cannot be told): nothing started
+     * and the person is asked first.
+     */
+    public fun tryAgain(kind: HomeDownloadKind): Boolean
+}
+
+@ContributesBinding(AppScope::class)
+@Inject
+public class NoHomeDownloads : HomeDownloads {
+    override val facts: StateFlow<List<HomeDownloadFact>> = MutableStateFlow(emptyList<HomeDownloadFact>()).asStateFlow()
+
+    override fun downloadNow(kind: HomeDownloadKind): Unit = Unit
+
+    override fun tryAgain(kind: HomeDownloadKind): Boolean = true
+}
