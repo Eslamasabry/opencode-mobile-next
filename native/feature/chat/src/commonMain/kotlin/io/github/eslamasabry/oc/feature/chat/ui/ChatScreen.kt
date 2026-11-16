@@ -1053,8 +1053,12 @@ public fun ChatScreen(
                         // text
                         // (plan 09 §6.5).
                         // A slow load says what it does in words, unless the screen's line already says something.
+                        // Only once the page has arrived: while the page transition runs the body is empty, so no
+                        // skeleton is ever drawn over the page it leaves (device report, build 10054).
                         ChatPhase.Loading ->
-                            ChatLoadingBody(stringResource(Res.string.chatLoadingConversation).takeIf { screenStatus == null })
+                            if (pageSettled()) {
+                                ChatLoadingBody(stringResource(Res.string.chatLoadingConversation).takeIf { screenStatus == null })
+                            }
                         is ChatPhase.Failed ->
                             ChatLoadError(
                                 title = stringResource(Res.string.chatLoadFailedTitle),
