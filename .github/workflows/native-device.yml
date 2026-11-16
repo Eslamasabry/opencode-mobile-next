@@ -38,10 +38,10 @@ concurrency:
 
 env:
   # The app commit under test (the release candidate). Changed by a commit on this branch for each run.
-  APP_REF: 544bfc4c390cb04afe32db57c31639a3349aa5e3
+  APP_REF: 0c523e8c47d5d27829b235b85433bba64be556e4
   REPO: Eslamasabry/opencode-mobile-next
   # Non-empty: reuse the proof-apks artifact of that earlier run of this workflow (same APP_REF) instead of building.
-  REUSE_RUN: "43794206083"
+  REUSE_RUN: ""
   ANDROID_AVD_HOME: /home/runner/.android/avd
   # Non-empty with REUSE_RUN: only these cases (JSON list).
   CASES: '["f215@g1","f215@g2","f215@g3","via10020@g1","via10020@g2"]'
@@ -142,8 +142,7 @@ jobs:
             done
           } | tee -a "$GITHUB_STEP_SUMMARY" > "$out/APKS.md"
           git rev-parse HEAD > "$out/APP_COMMIT"
-          cases='["f215","via10020","f214"]'
-          [ -f "$out/resigned-opencode-mobile-3.0.0-10030-x86_64.apk" ] && cases='["f215","via10020","via10030","f214"]'
+          cases="${CASES:-["f215","via10020","f214"]}"
           echo "cases=$cases" >> "$GITHUB_OUTPUT"
       - name: Delete the throwaway key
         if: always()
