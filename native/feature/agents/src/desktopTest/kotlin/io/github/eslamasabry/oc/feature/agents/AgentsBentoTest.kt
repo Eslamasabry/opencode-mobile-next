@@ -12,6 +12,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toAwtImage
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.hasClickAction
@@ -21,8 +22,10 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.test.v2.runDesktopComposeUiTest
+import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.Failure
@@ -58,6 +61,7 @@ import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentMapOf
@@ -332,6 +336,64 @@ class AgentsBentoTest {
     fun `B-AGENT-181 while connecting or connected there is no line at all`() = runComposeUiTest {
         setContent { Screen(EVERY_STATE.copy(helperConnecting = true, helperConnectFailed = true), Recorder()) }
         onNode(hasContentDescription("Phone agents are not connected", substring = true)).assertDoesNotExist()
+    }
+
+    @Test
+    fun `COMPACT-302 agent tile action wraps whole label without ellipsis at 360 dp`() {
+        val state =
+            EVERY_STATE.copy(
+                phone =
+                    EVERY_STATE.phone.copy(
+                        agents =
+                            persistentListOf(
+                                PhoneAgentRow("claude", "Claude Code", PhoneAgentStatus.Ready, removable = true),
+                                PhoneAgentRow("codex", "Codex", PhoneAgentStatus.Limit, limitResets = "Today, 6:30 PM"),
+                                PhoneAgentRow("agy", "Antigravity", PhoneAgentStatus.SignInNeeded, signInCheckFailed = true, removable = true),
+                                PhoneAgentRow("qwen", "Qwen Code", PhoneAgentStatus.SignInNeeded, signInAvailable = true),
+                            )
+                    )
+            )
+        val cases =
+            listOf(
+                Triple("en", 1f, "Check Antigravity again"),
+                Triple("en", 1.3f, "Check Antigravity again"),
+                Triple("ar", 1f, "تحقق من Antigravity مجددًا"),
+                Triple("ar", 1.3f, "تحقق من Antigravity مجددًا"),
+            )
+        try {
+            for ((locale, scale, expected) in cases) {
+                Locale.setDefault(Locale.forLanguageTag(locale))
+                runDesktopComposeUiTest(360 * 3, 780 * 3) {
+                    setContent {
+                        CompositionLocalProvider(
+                            LocalDensity provides Density(3f, scale),
+                            LocalKitSecretSink provides KitSecretSink {},
+                            LocalKitLogoLoader provides MARKS,
+                        ) {
+                            KitTheme(
+                                platform = DesktopKitPlatform(),
+                                appearance = KitAppearance(mode = AppearanceMode.Dark, motion = MotionLevel.Off),
+                                localeTag = locale,
+                                stillFrame = true,
+                            ) {
+                                Box(Modifier.fillMaxSize().background(LocalKitColors.current.ground)) {
+                                    AgentsScreen(state, Recorder())
+                                }
+                            }
+                        }
+                    }
+                    waitForIdle()
+                    val layouts = mutableListOf<TextLayoutResult>()
+                    onNodeWithText(expected, useUnmergedTree = true)
+                        .performSemanticsAction(SemanticsActions.GetTextLayoutResult) { it(layouts) }
+                    val layout = layouts.single()
+                    assertFalse(layout.hasVisualOverflow, "[$locale/$scale] visual overflow on: $expected")
+                    assertFalse((0 until layout.lineCount).any { layout.isLineEllipsized(it) }, "[$locale/$scale] ellipsized: $expected")
+                }
+            }
+        } finally {
+            Locale.setDefault(Locale.ENGLISH)
+        }
     }
 
     internal companion object {

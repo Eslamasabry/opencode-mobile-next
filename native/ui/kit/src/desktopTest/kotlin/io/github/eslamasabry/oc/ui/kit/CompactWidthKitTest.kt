@@ -10,6 +10,7 @@ import io.github.eslamasabry.oc.ui.gate.FlutterGoldenGate.Frame
 import io.github.eslamasabry.oc.ui.gate.LayoutGuard
 import io.github.eslamasabry.oc.ui.gate.LayoutGuard.Window
 import io.github.eslamasabry.oc.ui.kit.chip.KitChip
+import io.github.eslamasabry.oc.ui.kit.chip.KitChipKind
 import io.github.eslamasabry.oc.ui.kit.chip.KitFilterChips
 import io.github.eslamasabry.oc.ui.kit.nav.KitSessionTab
 import io.github.eslamasabry.oc.ui.kit.nav.KitSessionTabs
@@ -35,6 +36,7 @@ import io.github.eslamasabry.oc.ui.kit.nav.TabRules
 import io.github.eslamasabry.oc.ui.kit.style.KitSignalSample
 import kotlin.test.assertEquals
 import io.github.eslamasabry.oc.ui.kit.agent.agentGridOneColumn
+import io.github.eslamasabry.oc.ui.kit.row.KitOpenSwitchRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
 import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
@@ -187,5 +189,27 @@ class CompactWidthKitTest {
         // scrolled a little: the nearest chip start (121) wins over where the finger left it
         assertEquals(121, FilterChipsRules.restStart(sizes, 8f, 0f, 90f, 400))
         assertEquals(0, FilterChipsRules.restStart(sizes, 8f, 0f, 30f, 400))
+    }
+
+    @Test
+    fun `COMPACT-028 a wrapping action chip and open switch row supporting line wrap without ellipsis at 360 dp`() {
+        val scene: @Composable () -> Unit = {
+            Column(Modifier.padding(16.dp)) {
+                Box(Modifier.width(126.dp)) {
+                    KitChip("Check Antigravity again", kind = KitChipKind.Action, onClick = {}, wraps = true)
+                }
+                KitOpenSwitchRow(
+                    title = "Check for expired coupons",
+                    checked = true,
+                    openLabel = "Edit schedule",
+                    onOpen = {},
+                    onCheckedChange = {},
+                    supporting = "Every 12 hours · Last run Today 08:59: replied",
+                    supportingMaxLines = Int.MAX_VALUE,
+                )
+            }
+        }
+        val bad = found(scene).filter { it.contains("ellipsis") || it.contains("clipped") || it.contains("cut-off") }
+        assertTrue(bad.isEmpty(), bad.toString())
     }
 }

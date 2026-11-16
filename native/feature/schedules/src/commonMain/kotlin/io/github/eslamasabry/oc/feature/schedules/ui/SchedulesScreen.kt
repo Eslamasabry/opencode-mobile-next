@@ -254,6 +254,7 @@ private fun ScheduleRow(
             row.prompt,
             modifier = rowModifier,
             supporting = line,
+            supportingMaxLines = Int.MAX_VALUE,
             selected = state.highlight == row.id,
             enabled = enabled.isEnabled,
             disabledReason = enabled.reason,
@@ -278,6 +279,7 @@ private fun ScheduleRow(
             { actions.setEnabled(row.id, it) },
             rowModifier,
             supporting = line,
+            supportingMaxLines = Int.MAX_VALUE,
             enabled = enabled,
             highlighted = state.highlight == row.id,
             actions = {
