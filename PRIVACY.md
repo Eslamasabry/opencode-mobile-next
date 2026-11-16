@@ -92,10 +92,12 @@ With `crashes` on, the app sends:
 
 - **Fatal and non-fatal errors**: the kind of error (for example "Invalid
   state") and the code locations (library, line and column) it happened in,
-  never its message; for a failure the app handled, one of two fixed names with
+  never its message; for a failure the app handled, one of four fixed names with
   a few short codes: `setup_step_failed` (the setup step, the kind of error
-  and, when the phone closed the app, why) and `process_exit` (the
-  `exit_reason` below). A crash in the app's Android (Java or Kotlin) code
+  and, when the phone closed the app, why), `process_exit` (the `exit_reason`
+  below), `voice_model_download_failed` (the kind of problem and the voice
+  pack name) and `prompt_not_accepted` (whether the server refused the message
+  before or after it was sent, the kind of failure and how long it took). A crash in the app's Android (Java or Kotlin) code
   carries only the exception class names and their code locations.
 - **Why Android ended the app last time**: on the next start, one of crash,
   crash_native, anr, low_memory, excessive_resource, signaled,
@@ -145,7 +147,7 @@ With `usage` on, the app counts exactly these events, and no others. The page "W
 | `share_in` | `count`: 0, 1, 2-5, 6-20 or >20; `kind`: image or file (never a name or address) |
 | `conn_attempt` | `server_kind`: phone or computer; `result`: ok or fail; `fail_kind`: dns, tls, auth, timeout, refused, server_5xx, protocol, offline or other; `ms_range`: <500, 500-2000, 2000-10000 or >10000 milliseconds |
 | `conn_drop` | `server_kind`: phone or computer; `reason`: network_change, server_closed, idle_timeout, background or other; `recovered`: yes or no |
-| `send_result` | `result`: ok, fail or queued; `fail_kind`: as `conn_attempt` plus rejected, too_large, rate_limit, free_limit, sign_in or model_error; `first_reply_range`: <2s, 2-10s, 10-30s, >30s or none; `agent`: build, plan, general or other; `server_kind`: phone or computer; `input`: text, voice, attachment or voice_attachment |
+| `send_result` | `result`: ok, fail or queued; `fail_kind`: dns, tls, auth, timeout, refused, server_5xx, protocol, offline, other, rejected, too_large, rate_limit, free_limit, sign_in or model_error; `first_reply_range`: <2s, 2-10s, 10-30s, >30s or none; `agent`: build, plan, general or other; `server_kind`: phone or computer; `input`: text, voice, attachment or voice_attachment |
 | `turn_stall` | `stage`: waiting_tool, waiting_approval, streaming or other; `minutes_range`: <1, 1-5, 5-15, 15-60 or >60 |
 | `chat_turn` | how a turn ended: `outcome`: done, stopped_by_user, error, connection_lost or approval_timeout; `agent`: build, plan, general or other; `server_kind`: phone or computer; `first_reply_range`: <2s, 2-10s, 10-30s, >30s or none; `ms_range`: <10s, 10-30s, 30-120s, 2-10m or >10m; `tools_range`: 0, 1-3, 4-10, 11-30 or >30; `fail_kind`: provider_auth, rate_limit, free_limit, context_overflow, output_length, content_filter, model_not_found, provider_connection, aborted, server or other; `recovered`: none, yes or no; `follow_up`: none, steer or after_fail |
 | `approval` | `kind`: what was asked, one of run, edit, read, web, question or other; `result`: allowed, always, denied, answered, declined or expired; `ms_range` (asked to answered): <10s, 10-30s, 30-120s, 2-10m or >10m. Never the command, file or question |
