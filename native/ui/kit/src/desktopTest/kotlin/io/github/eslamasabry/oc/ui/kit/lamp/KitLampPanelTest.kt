@@ -8,7 +8,9 @@ import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.ComposeUiTest
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsNotDisplayed
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasText
@@ -285,7 +287,7 @@ class KitLampPanelTest {
     fun `B-LAMP-K2-029 hidden ones fold at the top with Show again, and the rest count toward All conversations`() =
         runDesktopComposeUiTest(412, 1200) {
             val hidden = K2.row("gone", "Old experiment", KitLampRowMark.Quiet)
-            val scene = Scene(K2.model().copy(hidden = listOf(hidden), more = 3))
+            val scene = Scene(K2.model().copy(hidden = listOf(hidden), more = 3, editing = true))
             panel(scene, height = 1200)
             waitForIdle()
             onNodeWithText("3 more in All conversations").performClick()
@@ -320,10 +322,10 @@ class KitLampPanelTest {
     }
 
     @Test
-    fun `B-LAMP-K2-031 a hidden conversation's way back is in view under 25 rows, at 360 dp and text 1_3`() {
+    fun `B-LAMP-K2-031 a hidden conversation's way back is in view in Edit under 25 rows, and not a row of its own outside Edit`() {
         for (fontScale in listOf(1f, 1.3f)) {
             runDesktopComposeUiTest(360, 800) {
-                val scene = Scene(longModel(listOf(K2.row("gone", "Old experiment", KitLampRowMark.Quiet))))
+                val scene = Scene(longModel(listOf(K2.row("gone", "Old experiment", KitLampRowMark.Quiet))).copy(editing = true))
                 panel(scene, width = 360, height = 800, fontScale = fontScale)
                 waitForIdle()
                 onNodeWithText("Hidden · 1").assertIsDisplayed()
@@ -332,6 +334,12 @@ class KitLampPanelTest {
                 onNodeWithText("Show again").assertIsDisplayed()
                 onNodeWithText("Show again").performClick()
                 assertEquals(listOf("show:gone"), scene.events)
+            }
+            runDesktopComposeUiTest(360, 800) {
+                val scene = Scene(longModel(listOf(K2.row("gone", "Old experiment", KitLampRowMark.Quiet))))
+                panel(scene, width = 360, height = 800, fontScale = fontScale)
+                waitForIdle()
+                onAllNodesWithText("Hidden · 1").assertCountEquals(0)
             }
         }
     }
