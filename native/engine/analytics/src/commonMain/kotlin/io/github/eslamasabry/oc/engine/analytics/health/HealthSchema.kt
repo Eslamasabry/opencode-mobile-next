@@ -197,9 +197,9 @@ public object HealthWords {
             "model_not_found", "provider_connection", "aborted", "server", "other",
         )
 
-    /** `chat_turn.outcome`. */
+    /** `chat_turn.outcome`: `done` only when the turn showed output; `no_output` when it ended cleanly with none. */
     public val turnOutcomes: Set<String> =
-        linkedSetOf("done", "stopped_by_user", "error", "connection_lost", "approval_timeout")
+        linkedSetOf("done", "stopped_by_user", "error", "connection_lost", "approval_timeout", "no_output")
 
     /** `send_result.input`: how the prompt was made. */
     public val inputs: Set<String> = linkedSetOf("text", "voice", "attachment", "voice_attachment")
@@ -216,8 +216,21 @@ public object HealthWords {
     /** `approval.kind`: what was asked for. */
     public val approvalKinds: Set<String> = linkedSetOf("run", "edit", "read", "web", "question", "other")
 
-    /** `approval.result`. */
-    public val approvalResults: Set<String> = linkedSetOf("allowed", "always", "denied", "answered", "declined", "expired")
+    /**
+     * `approval.result`: the person's confirmed answer (`allowed` ... `declined`), `auto` a saved Auto or "Approve
+     * everything" answer, `stopped` the run that asked was stopped, `expired` left unanswered while the run went on.
+     */
+    public val approvalResults: Set<String> =
+        linkedSetOf("allowed", "always", "denied", "answered", "declined", "expired", "auto", "stopped")
+
+    /** `approval.surface`: where the person answered (only for their own answer, never for `auto`, `stopped` or `expired`). */
+    public val surfaces: Set<String> = linkedSetOf("chat", "home", "notification", "widget")
+
+    /** The `approval.result` words that are a person's own answer. */
+    public val personAnswers: Set<String> = linkedSetOf("allowed", "always", "denied", "answered", "declined")
+
+    /** `jank.interaction` (chat only): what was going on while the frames were drawn. */
+    public val interactions: Set<String> = linkedSetOf("streaming", "scrolling", "menu", "keyboard", "idle")
     public val exitKinds: Set<String> = setOf("0", "1", "126", "127", "signal", "other")
     public val signals: Set<String> = setOf("SIGILL", "SIGSEGV", "SIGBUS", "SIGKILL", "other", "none")
     public val compatModes: Set<String> = setOf("none", "armcap", "threads", "both")

@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.engine.delivery.queue
 
+import io.github.eslamasabry.oc.engine.analytics.health.HealthFlow
 import io.github.eslamasabry.oc.core.common.AppDispatchers
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
@@ -764,6 +765,8 @@ public class OfflineQueue(
             inFlight = null
             flushing = false
             if (sent > 0) {
+                // B-190 queue_flush: how many went, how many of this server's are still waiting (count ranges only).
+                HealthFlow().queueFlush(sent, failed = queue().count(::eligible))
                 lastFlushed = sent
                 lastSkipped = countForOtherProfiles(profile)
                 flushRevision += 1

@@ -42,9 +42,11 @@ class ChatJourneyTest {
         fun last(name: String) = vendor.events.last { it.first == name }.second
     }
 
+    /** A non-empty reply text the person can see, the way the delivery feed reports it. */
     private fun ChatJourney.reply(session: String, message: String = "m1") {
         message(session, message, assistant = true)
         part(session, message, "text")
+        text(session, message, streamed = false)
     }
 
     @Test
@@ -74,6 +76,7 @@ class ChatJourneyTest {
         val r = Rig(this)
         r.journey.sent("s1", onPhone = true, PromptTraits(agent = "Build"))
         r.journey.accepted("s1", error = false)
+        r.journey.settled("s1", accepted = true)
         r.journey.busy("s1")
         r.now += 3_000
         r.journey.reply("s1")
@@ -84,13 +87,13 @@ class ChatJourneyTest {
         r.journey.ended("s1")
         assertEquals(listOf("send_result", "first_reply", "chat_turn"), r.names().filter { it != "feature_used" })
         assertEquals(
-            mapOf("result" to "ok", "first_reply_range" to "2-10s", "agent" to "build", "input" to "text", "server_kind" to "phone"),
+            mapOf("result" to "ok", "agent" to "build", "input" to "text", "server_kind" to "phone"),
             r.vendor.events.first { it.first == "send_result" }.second,
         )
-        assertEquals(mapOf("server_kind" to "phone", "first_reply_range" to "2-10s"), r.last("first_reply"))
+        assertEquals(mapOf("server_kind" to "phone", "first_reply_range" to "2-10s", "after_consent" to "no"), r.last("first_reply"))
         assertEquals(
             mapOf(
-                "outcome" to "done", "agent" to "build", "server_kind" to "phone", "first_reply_range" to "2-10s",
+                "outcome" to "done", "agent" to "build", "server_kind" to "phone", "first_reply_range" to "2-10s", "activity_range" to "2-10s",
                 "ms_range" to "10-30s", "tools_range" to "1-3", "recovered" to "none", "follow_up" to "none",
             ),
             r.last("chat_turn"),
@@ -115,6 +118,7 @@ class ChatJourneyTest {
         val r = Rig(this)
         r.journey.noteVoice()
         r.journey.sent("s1", false, PromptTraits(hasAttachment = true))
+        r.journey.settled("s1", accepted = true)
         r.journey.busy("s1")
         r.journey.reply("s1")
         assertEquals("voice_attachment", r.last("send_result").getValue("input"))
@@ -208,7 +212,7 @@ class ChatJourneyTest {
         r.now += 12_000
         approvals.answered("a1", "allowed")
         approvals.gone("a1")
-        assertEquals(mapOf("kind" to "run", "result" to "allowed", "ms_range" to "10-30s"), r.last("approval"))
+        assertEquals(mapOf("kind" to "run", "result" to "allowed", "ms_range" to "10-30s", "surface" to "chat"), r.last("approval"))
         approvals.asked("a2", "s1", ApprovalMeter.kindOf("edit"))
         r.now += 700_000
         approvals.gone("a2") // left without an answer
@@ -231,29 +235,21 @@ class ChatJourneyTest {
     }
 
     @Test
-    fun `B-JOURNEY-019 a model refusal with no reply is a failed send with its kind, not an ok one`() = runTest {
+    fun `B-JOURNEY-019 a model refusal is the turn's error with its kind, the send it answered was taken`() = runTest {
         val r = Rig(this)
         for ((n, pair) in listOf("rate" to ("Unknown" to "RateLimitError"), "free" to ("Unknown" to "FreeUsageLimitError"), "auth" to ("ProviderAuth" to null), "other" to ("ContextOverflow" to null)).withIndex()) {
             val (name, kind) = pair
             r.journey.sent("s$n", true)
+            r.journey.settled("s$n", accepted = true)
             r.journey.busy("s$n")
             r.journey.ended("s$n", ChatJourney.errorKindWord(kind.first, kind.second))
-            val send = r.vendor.events.last { it.first == "send_result" }.second
-            assertEquals("fail", send["result"], name)
+            assertEquals("ok", r.vendor.events.last { it.first == "send_result" }.second["result"], name)
         }
-        assertEquals(
-            listOf("rate_limit", "free_limit", "sign_in", "model_error"),
-            r.vendor.events.filter { it.first == "send_result" }.map { it.second.getValue("fail_kind") },
-        )
+        assertEquals(4, r.names().count { it == "send_result" }, "one send_result per send, never a second one for the reply")
         assertEquals(
             listOf("rate_limit", "free_limit", "provider_auth", "context_overflow"),
             r.vendor.events.filter { it.first == "chat_turn" }.map { it.second.getValue("fail_kind") },
         )
-        // Stop is not a failure, and an error after a reply stays an ok send with an error turn.
-        r.journey.sent("s9", true)
-        r.journey.busy("s9")
-        r.journey.reply("s9")
-        r.journey.ended("s9", "server")
-        assertEquals("ok", r.vendor.events.last { it.first == "send_result" }.second["result"])
+        assertEquals(listOf("error"), r.vendor.events.filter { it.first == "chat_turn" }.map { it.second.getValue("outcome") }.distinct())
     }
 }
