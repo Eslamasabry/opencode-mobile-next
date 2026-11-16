@@ -355,6 +355,7 @@ class NativeWidgetTeam(
     ) {
         val client =
             OkHttpClient.Builder()
+                .proxy(java.net.Proxy.NO_PROXY)
                 .followRedirects(false)
                 .followSslRedirects(false)
                 .retryOnConnectionFailure(false)

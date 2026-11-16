@@ -8,15 +8,13 @@ import io.github.eslamasabry.oc.core.common.AppDispatchers
 import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.engine.integrations.host.*
 import io.github.eslamasabry.opencode_mobile.BuiltinLinux
+import io.github.eslamasabry.opencode_mobile.DirectLoopbackHttp
 import java.io.ByteArrayOutputStream
 import java.io.File
-import java.net.HttpURLConnection
 import java.net.InetAddress
 import java.net.InetSocketAddress
-import java.net.Proxy
 import java.net.ServerSocket
 import java.net.Socket
-import java.net.URL
 import kotlinx.coroutines.withContext
 
 /** The Ubuntu shell never forwards stdout, stderr or a command to the app log. */
@@ -180,9 +178,7 @@ internal class AndroidHostHttp(
                     (request.method == "POST" && request.path == "/_oc/revoke")
             )
             redactor.registerSecret(request.authorization)
-            val connection =
-                URL("http://127.0.0.1:${request.port}${request.path}")
-                    .openConnection(Proxy.NO_PROXY) as HttpURLConnection
+            val connection = DirectLoopbackHttp.open(request.port, request.path)
             try {
                 connection.instanceFollowRedirects = false
                 connection.connectTimeout = 5000

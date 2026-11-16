@@ -1,16 +1,19 @@
 package io.github.eslamasabry.opencode_mobile.graph
 
 import io.github.eslamasabry.oc.core.common.AppDispatchers
+import io.github.eslamasabry.oc.core.security.AddressRules
 import io.github.eslamasabry.oc.engine.integrations.quota.QuotaRequest
 import io.github.eslamasabry.oc.engine.integrations.quota.QuotaResponse
 import io.github.eslamasabry.oc.engine.integrations.quota.QuotaTransport
 import java.io.IOException
+import java.net.Proxy
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.suspendCancellableCoroutine
 import okhttp3.Call
 import okhttp3.Callback
+import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
@@ -33,9 +36,11 @@ internal class AndroidQuotaTransport(private val dispatchers: AppDispatchers) : 
     override suspend fun fetch(request: QuotaRequest): QuotaResponse {
         check(!closed)
         require(request.method == "GET" && !request.followRedirects && request.maxRedirects == 0)
+        val endpoint = request.url.toHttpUrl()
         val bounded =
             client
                 .newBuilder()
+                .apply { if (AddressRules.isLoopback(endpoint.host)) proxy(Proxy.NO_PROXY) }
                 .connectTimeout(request.connectTimeoutMs, TimeUnit.MILLISECONDS)
                 .writeTimeout(request.sendTimeoutMs, TimeUnit.MILLISECONDS)
                 .readTimeout(request.receiveTimeoutMs, TimeUnit.MILLISECONDS)
@@ -44,7 +49,7 @@ internal class AndroidQuotaTransport(private val dispatchers: AppDispatchers) : 
         val call =
             bounded.newCall(
                 Request.Builder()
-                    .url(request.url)
+                    .url(endpoint)
                     .apply { request.headers.forEach { (key, value) -> header(key, value) } }
                     .get()
                     .build()

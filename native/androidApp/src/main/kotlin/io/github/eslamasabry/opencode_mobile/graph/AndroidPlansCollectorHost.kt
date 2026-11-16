@@ -24,6 +24,7 @@ import io.github.eslamasabry.opencode_mobile.BuiltinLinux
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
+import java.net.Proxy
 import java.security.SecureRandom
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
@@ -335,6 +336,7 @@ class QuotaCollectorCleaner(private val host: AndroidPlansCollectorHost) : Profi
 /** The quota helper's bounded bootstrap probe (closed by its caller). */
 internal fun quotaCollectorReadinessClient(): OkHttpClient =
     OkHttpClient.Builder()
+        .proxy(Proxy.NO_PROXY)
         .followRedirects(false)
         .followSslRedirects(false)
         .retryOnConnectionFailure(false)
