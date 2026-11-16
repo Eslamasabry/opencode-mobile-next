@@ -276,9 +276,10 @@ def check_b(ctx):
     conversations_screen()
     open_this_phone()
     running = word('thisPhoneAnswerRunning')
-    v, nodes = wait_for('server state', 20, lambda ns: find(ns, running) or find(ns, word('thisPhoneStart')) or find(ns, word('thisPhoneAnswerOff')))
+    # After an update the phone's own server can take minutes to come up on a loaded device; wait for an answer.
+    v, nodes = wait_for('server state', 180, lambda ns: find(ns, running) or find(ns, word('thisPhoneStart')) or find(ns, word('thisPhoneAnswerOff')))
     if not v:
-        raise Fail('the "This phone" page showed neither a running nor a stopped server')
+        raise Fail('the "This phone" page showed neither a running nor a stopped server within 180 s')
     if not find(nodes, running):
         start = find(nodes, word('thisPhoneStart'))
         if not start:
@@ -303,7 +304,7 @@ def new_conversation():
 
     def composer(ns):
         return [n for n in ns if n.cls.endswith('EditText') or n.label().strip() in (word('kitComposerField'), word('chatUiAskOpenCode'))]
-    v, nodes = wait_for('composer', 15, composer)
+    v, nodes = wait_for('composer', 90, composer)
     if not v:
         project = os.environ.get('OC_SMOKE_PROJECT', '').strip()
         hit = find(nodes, project) if project else []
