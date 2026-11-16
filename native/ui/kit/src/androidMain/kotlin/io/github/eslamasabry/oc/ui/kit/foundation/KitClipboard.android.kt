@@ -25,7 +25,7 @@ public object KitAndroidClipboard {
     internal fun protect(clip: ClipData, mode: KitClipboardMode) {
         // The key is inlined on older Android versions; the extras are harmless there (minSdk 26).
         clip.description.extras = (clip.description.extras ?: PersistableBundle()).apply {
-            putBoolean(ClipDescription.EXTRA_IS_SENSITIVE, false)
+            putBoolean(ClipDescription.EXTRA_IS_SENSITIVE, mode == KitClipboardMode.Sensitive)
         }
     }
 }
