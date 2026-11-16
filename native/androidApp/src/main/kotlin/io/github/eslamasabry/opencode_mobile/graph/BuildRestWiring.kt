@@ -60,6 +60,16 @@ class AppPromptTracing(trace: io.github.eslamasabry.oc.engine.diagnostics.perf.P
         )
     }
 
+    override fun sent(sessionId: String, onPhone: Boolean, agent: String?, hasAttachment: Boolean, connection: String) {
+        timeline.sent(sessionId)
+        journey?.sent(
+            sessionId,
+            onPhone,
+            io.github.eslamasabry.oc.engine.analytics.health.PromptTraits(agent, hasAttachment),
+            connection,
+        )
+    }
+
     override fun tool(sessionId: String, partId: String) {
         journey?.tool(sessionId, partId)
     }
@@ -70,6 +80,10 @@ class AppPromptTracing(trace: io.github.eslamasabry.oc.engine.diagnostics.perf.P
 
     override fun stream(onPhone: Boolean, connected: Boolean) {
         journey?.stream(onPhone, connected)
+    }
+
+    override fun stream(connection: String, onPhone: Boolean, connected: Boolean, dropReason: String?) {
+        journey?.stream(connection, onPhone, connected, dropReason)
     }
 
     override fun error(sessionId: String, kind: String?, tag: String?, reason: String?) {
@@ -95,6 +109,10 @@ class AppPromptTracing(trace: io.github.eslamasabry.oc.engine.diagnostics.perf.P
     override fun delta(sessionId: String) {
         timeline.observe(io.github.eslamasabry.oc.engine.diagnostics.perf.PromptSignal.Delta(sessionId))
         journey?.delta(sessionId)
+    }
+
+    override fun text(sessionId: String, messageId: String, streamed: Boolean) {
+        journey?.text(sessionId, messageId, streamed)
     }
 
     override fun busy(sessionId: String) {

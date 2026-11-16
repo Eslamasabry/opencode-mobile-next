@@ -28,6 +28,9 @@ public object TelemetryKeys {
     /** Whether this install ever saw a reply (`first_reply` is sent once). */
     public const val FIRST_REPLY_SEEN: String = "oc.telemetry.firstReplySeen"
 
+    /** `first_reply` was sent (it is not when the first reply came before the person agreed to usage). */
+    public const val FIRST_REPLY_SENT: String = "oc.telemetry.firstReplySent"
+
     /** The setup funnel's memory across restarts: last step, attempts, start time (words and numbers only). */
     public const val SETUP_JOURNEY: String = "oc.telemetry.setupJourney"
 
@@ -57,6 +60,11 @@ public class TelemetryAnswers(private val store: KeyValueStore, private val lane
         store.commit(lane) { putString(TelemetryKeys.LAST_VERSION, version) }
 
     public fun firstReplySeen(): Boolean = store.bool(TelemetryKeys.FIRST_REPLY_SEEN) ?: false
+
+    public fun firstReplySent(): Boolean = store.bool(TelemetryKeys.FIRST_REPLY_SENT) ?: false
+
+    public suspend fun markFirstReplySent(): Outcome<Unit> =
+        store.commit(lane) { putBool(TelemetryKeys.FIRST_REPLY_SENT, true) }
 
     public suspend fun markFirstReplySeen(): Outcome<Unit> =
         store.commit(lane) { putBool(TelemetryKeys.FIRST_REPLY_SEEN, true) }

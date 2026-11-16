@@ -667,6 +667,7 @@ class AgentWidgetWiring(
                         ) is Outcome.Failed
                     )
                         throw Refused("uncertainDelivery")
+                    noteWidgetAnswer(request, allowed = action == "allowOnce")
                 }
                 "stop",
                 "steer" -> {

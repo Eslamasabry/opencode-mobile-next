@@ -49,7 +49,7 @@ The existing events stay: `app_open`, `setup_step_*`, `first_reply`, `screen_vie
 | Event | Parameters |
 |---|---|
 | `app_start` | `kind` (cold, warm), `ms_range` (<500, 500-1000, 1000-2000, 2000-5000, >5000) |
-| `jank` | Sent once per session per page kind: `screen` (the list from `screen_view`), `janky_pct_range` (<1, 1-5, 5-15, >15), `refresh_hz` (60, 90, 120, other), `late_pct_range` (frames past their own deadline, Android 12+; first frames left out; same ranges), `seen_hz` (the rate most frames were given) |
+| `jank` | Sent once per session per page kind: `screen` (the list from `screen_view`), `janky_pct_range` (<1, 1-5, 5-15, >15), `refresh_hz` (60, 90, 120, other), `late_pct_range` (frames past their own deadline, Android 12+; first frames left out; same ranges), `seen_hz` (the rate most frames were given); in the chat one report per `interaction` (streaming, scrolling, menu, keyboard, idle) |
 | `memory_pressure` | `level` (moderate, low, critical) |
 
 ### C2. Firebase Performance Monitoring (`usage` consent)
