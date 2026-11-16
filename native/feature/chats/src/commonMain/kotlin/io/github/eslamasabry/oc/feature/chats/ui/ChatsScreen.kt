@@ -1272,6 +1272,7 @@ public fun ChatPreviewScreen(state: ChatPreviewUi, actions: ChatPreviewActions) 
 @Composable
 private fun homeDownloadStatus(download: HomeDownloadFact?, actions: ChatsActions): KitStatus? {
     download ?: return null
+    if (download.megabytes > 0) return null
     val openCode = download.kind == HomeDownloadKind.OpenCode
     return when (val phase = download.phase) {
         HomeDownloadPhase.Waiting ->

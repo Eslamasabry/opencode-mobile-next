@@ -142,9 +142,9 @@ public class OpenCodeAutoUpdater(
         val problem = host.installProblem || jobs.failed
         val tried = key in attempted
         val networkMetered = host.metered
-        val metered = networkMetered && !meteredAllowed
+        val metered = networkMetered
         val inst = installed?.trim()?.removePrefix("v")
-        waiting.value = !inst.isNullOrEmpty() && inst != host.pinnedVersion && !tried && metered
+        waiting.value = false
         val go =
             OpenCodeAutoUpdateRule.shouldUpdate(
                 installedVersion = installed,

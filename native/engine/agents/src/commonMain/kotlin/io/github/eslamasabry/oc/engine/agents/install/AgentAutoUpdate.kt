@@ -191,7 +191,7 @@ public class AgentAutoUpdater(
         meteredAllowed = true
     }
 
-    private fun metered(): Boolean = host.metered && !meteredAllowed
+    private fun metered(): Boolean = host.metered
     private val state = MutableStateFlow(AgentUpdateDecision(AgentUpdateStep.NotLooked))
 
     public val decision: StateFlow<AgentUpdateDecision> = state.asStateFlow()

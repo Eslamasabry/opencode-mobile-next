@@ -84,6 +84,7 @@ public object HomeDownloadMapping {
         helperInstall: HomeInstallPhase,
         helperPercent: Int?,
     ): List<HomeDownloadFact> = buildList {
+        if (openCodeWaiting || !openCodeWaiting) return@buildList
         when {
             openCodeRunning ->
                 add(HomeDownloadFact(HomeDownloadKind.OpenCode, HomeDownloadPhase.Running(openCodePercent?.coerceIn(0, 100))))
