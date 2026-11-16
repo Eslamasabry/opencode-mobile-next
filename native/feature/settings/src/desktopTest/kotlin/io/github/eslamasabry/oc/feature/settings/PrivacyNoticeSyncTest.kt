@@ -226,6 +226,9 @@ class PrivacyNoticeSyncTest {
             assertTrue("Res.string.nativeTelemetryUsageDetail" in source, "the actual Settings and consent UI use the current notice")
             assertTrue("Res.string.telemetryUsageDetail" !in source, "the frozen Google-only notice is not shown")
         }
+        val consent = File(repo, "native/androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/ContinuityWiring.kt").readText()
+        assertTrue("Res.string.nativeTelemetryConsentBody" in consent, "the first consent question must name the current receivers")
+        assertTrue("Res.string.telemetryConsentBody" !in consent, "the frozen Google-only consent question is not shown")
         val offered = AppLanguage.entries.mapNotNull { it.tag }
         val code = liveCode()
         for (tag in offered) {
@@ -234,8 +237,10 @@ class PrivacyNoticeSyncTest {
             assertTrue(File(locale, "strings_native_privacy.xml").isFile, "$tag offers a translated policy")
             val detail = File(locale, "strings_s28_privacy.xml").readText()
             val policy = File(locale, "strings_native_privacy.xml").readText()
-            for (key in listOf("collectRules", "nativeTelemetryUsageDetail")) {
-                val text = Regex("""<string name="$key">(.*?)</string>""", RegexOption.DOT_MATCHES_ALL).find(detail)!!.groupValues[1]
+            for (key in listOf("collectRules", "nativeTelemetryUsageDetail", "nativeTelemetryConsentBody")) {
+                val match = Regex("""<string name="$key">(.*?)</string>""", RegexOption.DOT_MATCHES_ALL).find(detail)
+                assertTrue(match != null, "${locale.name}: $key is translated")
+                val text = match.groupValues[1]
                 assertEquals(emptyList(), recipientViolations(text), "${locale.name}: $key names the receivers")
             }
             assertEquals(emptyList(), recipientViolations(policy), "${locale.name}: policy receivers")
