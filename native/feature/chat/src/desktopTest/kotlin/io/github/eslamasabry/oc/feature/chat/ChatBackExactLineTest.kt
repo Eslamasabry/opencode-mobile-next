@@ -11,11 +11,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.unit.dp
+import io.github.eslamasabry.oc.core.common.ids.ConversationRef
+import io.github.eslamasabry.oc.core.common.ids.ProfileId
+import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.engine.transcript.state.NoticeKind
 import io.github.eslamasabry.oc.engine.transcript.state.WorkState
 import io.github.eslamasabry.oc.feature.chat.ui.ChatTranscript
 import io.github.eslamasabry.oc.feature.chat.ui.ChatTranscriptWords
 import io.github.eslamasabry.oc.feature.chat.ui.ScrollPlaceStore
+import io.github.eslamasabry.oc.feature.chat.ui.openChatFromNotification
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.kit.KitTheme
@@ -215,6 +219,7 @@ class ChatBackExactLineTest {
             assertEquals(0, list.lazy.firstVisibleItemIndex)
             assertTrue(list.following)
         }
+
     @Test
     fun `B-407 a reply notification opens a scrolled up conversation on the new reply`() =
         runComposeUiTest {
@@ -252,10 +257,15 @@ class ChatBackExactLineTest {
             shown = false
             waitForIdle()
             rows = turns(22)
-            // Every notification route forgets the old place before opening its new chat entry.
-            runOnIdle { ScrollPlaceStore.forget("p/notification") }
-            entry = "entry-2"
-            shown = true
+            val target = ConversationRef(ProfileId("p"), SessionId("notification"))
+            // The same boundary the Android notification routes call; navigation opens a new entry.
+            runOnIdle {
+                openChatFromNotification(target) { ref ->
+                    assertEquals(target, ref)
+                    entry = "entry-2"
+                    shown = true
+                }
+            }
             waitForIdle()
             assertEquals(
                 0,
@@ -289,6 +299,8 @@ class ChatBackExactLineTest {
                 }
             }
             waitForIdle()
+            val target = ConversationRef(ProfileId("p"), SessionId("visible"))
+            var opens = 0
             repeat(2) { reply ->
                 list.following = false
                 runOnIdle { list.lazy.requestScrollToItem(20, 9) }
@@ -303,8 +315,14 @@ class ChatBackExactLineTest {
                 assertEquals(oldKey, list.firstKey())
                 assertFalse(list.following)
                 // openChat is a no-op when this conversation is already on top.
-                runOnIdle { ScrollPlaceStore.forget("p/visible") }
+                runOnIdle {
+                    openChatFromNotification(target) { ref ->
+                        assertEquals(target, ref)
+                        opens++
+                    }
+                }
                 waitForIdle()
+                assertEquals(reply + 1, opens)
                 assertEquals(
                     0,
                     list.lazy.firstVisibleItemIndex,

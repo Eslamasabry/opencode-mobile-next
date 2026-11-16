@@ -10,6 +10,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.referentialEqualityPolicy
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.engine.transcript.state.TranscriptRow
 import io.github.eslamasabry.oc.feature.chat.presentation.FindUi
 import io.github.eslamasabry.oc.feature.chat.presentation.TurnFactsUi
@@ -107,6 +108,12 @@ public object ScrollPlaceStore {
     }
 
     internal fun clear() = kept.clear()
+}
+
+/** The shared notification-open boundary: discard the old reading place before navigation. */
+public fun openChatFromNotification(ref: ConversationRef, openChat: (ConversationRef) -> Unit) {
+    ScrollPlaceStore.forget("${ref.profileId.raw}/${ref.sessionId.raw}")
+    openChat(ref)
 }
 
 internal object ScrollPlaceRules {
