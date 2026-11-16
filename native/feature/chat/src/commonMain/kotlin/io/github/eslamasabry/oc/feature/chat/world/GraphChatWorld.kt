@@ -536,6 +536,9 @@ internal class GraphChatWorld(
     override val serverWait: StateFlow<ChatServerWait?> = mutableServerWait.asStateFlow()
     private var notReadyJob: Job? = null
     private var notReadyWaitedMs = 0L
+
+    /** A failure page held back for [FAILED_SETTLE_MS], so a success right after it never crosses in and out. */
+    private var failedSettleJob: Job? = null
     /**
      * Cache-first: the last rows this conversation showed (kept from a past visit, or live), held while a reload,
      * a reconnect or a missing server has nothing newer to draw, so the chat never blanks or swaps layouts.
@@ -865,22 +868,52 @@ internal class GraphChatWorld(
         }
 
     /**
-     * True when [failure] only says the server is not ready yet: a read refused because the connection it ran on was
-     * replaced or moved, and, for this phone's own server (which the app starts by itself), not answering yet.
+     * The app's own server for this conversation is fully up: neither the phone's OpenCode nor its agents' helper is
+     * starting or updating ([phoneBusy]: the wait state the app keeps for it is None, or only a phone agent's sign-in),
+     * and this connection has answered once since it opened (its event stream connected: `events.connects` > 0). Only
+     * then is an answer from it a real one.
      */
-    private fun notReady(failure: Failure): Boolean =
-        when (failure) {
-            is Failure.Refused ->
-                failure.reason == RefusalReason.StaleScope || failure.reason == RefusalReason.ProfileClosing
+    private fun serverFullyUp(): Boolean =
+        !phoneBusy() && (currentAttached()?.gateway?.events?.connects?.value ?: 0) > 0
+
+    /**
+     * True when [failure] only says the server is not ready yet: a read refused because the connection it ran on was
+     * replaced or moved, and, for a server the app starts by itself (this phone's OpenCode, the agents' helper):
+     * no answer at all (offline, timed out, busy starting, or the helper's socket dropped or refused the read:
+     * [Failure.ComputerDidNotAnswer]), or any other answer while it is not [serverFullyUp] (the agent's session is still
+     * attaching, the conversation is not listed yet). A failure that waiting cannot mend ([hopeless]: a sign-in, a
+     * certificate, an incompatible server, the agent's refusal) is never "not ready": it shows its own state at once.
+     *
+     * Agent-open-flash (owner's phone, build 10059): the helper's dropped socket or its error answer while Antigravity
+     * was starting reached here as ComputerDidNotAnswer, which did not count, so the page showed "Couldn't open this
+     * conversation" until the next read opened it a moment later.
+     */
+    private fun notReady(failure: Failure): Boolean {
+        if (hopeless(failure)) return false
+        val moved =
+            failure is Failure.Refused &&
+                (failure.reason == RefusalReason.StaleScope || failure.reason == RefusalReason.ProfileClosing)
+        if (moved) return true
+        if (!appStartsServer && !agentsUpdating()) return false
+        return when (failure) {
             is Failure.Network,
-            is Failure.TimedOut -> appStartsServer || agentsUpdating()
+            is Failure.TimedOut,
+            is Failure.ComputerDidNotAnswer -> true
             is Failure.Busy ->
-                (appStartsServer &&
-                    (failure.kind == BusyKind.Starting ||
-                        failure.kind == BusyKind.Stopping ||
-                        failure.kind == BusyKind.Overloaded)) || agentsUpdating()
-            else -> false
+                failure.kind == BusyKind.Starting ||
+                    failure.kind == BusyKind.Stopping ||
+                    failure.kind == BusyKind.Overloaded ||
+                    !serverFullyUp()
+            else -> !serverFullyUp()
         }
+    }
+
+    /** A failure no wait mends: shown at once, also while the server starts. */
+    private fun hopeless(failure: Failure): Boolean =
+        failure is Failure.SignIn ||
+            failure is Failure.Certificate ||
+            failure is Failure.Incompatible ||
+            failure is Failure.Rejected
 
     /**
      * The conversation could not load because of [failure]. One that only means "not ready yet" keeps the loading
@@ -888,15 +921,58 @@ internal class GraphChatWorld(
      */
     private fun loadFailed(failure: Failure) {
         if (notReady(failure) && waitForServer()) return
+        // A conversation the server does not list once it is fully up (it was waited for while it started): gone.
+        val gone = currentAttached()?.graph?.session?.reads?.missing?.value?.contains(sid) == true
+        if (failure is Failure.NotFound && gone) {
+            showGone()
+            return
+        }
         notReadyJob?.cancel()
         notReadyJob = null
         loadWaiting.value = false
+        // A server the app starts itself: the page holds its waiting state a moment longer than its swap, so a read
+        // that succeeds right after crosses over from the waiting state, never Loading → Failed → Live.
+        if ((appStartsServer || agentsUpdating()) && !hopeless(failure) && mutableLoad.value is ChatLoad.Loading) {
+            failedSettleJob?.cancel()
+            failedSettleJob =
+                registry.appScope.launch(registry.mainContext) {
+                    delay(FAILED_SETTLE_MS)
+                    failedSettleJob = null
+                    if (mutableLoad.value is ChatLoad.Loading) mutableLoad.value = ChatLoad.Failed(failure)
+                }
+            return
+        }
         mutableLoad.value = ChatLoad.Failed(failure)
+    }
+
+    /** The server said this conversation does not exist (a deletion or a 404): the page says so, nothing kept. */
+    private fun showGone() {
+        cancelFailedSettle()
+        notReadyJob?.cancel()
+        notReadyJob = null
+        loadWaiting.value = false
+        mutableTitle.value = null
+        lastRows = null
+        closeKept()
+        mutableTranscript.value = TranscriptState.Empty
+        publishShown()
+        mutableModels.value = ComposerModels(failure = Failure.NotFound())
+        mutableLoad.value = ChatLoad.Failed(Failure.NotFound())
+        nextCursor = null
+        mutableOlder.value = false
+        feedKeeper.reset(keepShown = false)
+        registry.appScope.launch(registry.mainContext) { recentModels.rememberSession(ref.profileId.raw, sid.raw, null) }
+    }
+
+    private fun cancelFailedSettle() {
+        failedSettleJob?.cancel()
+        failedSettleJob = null
     }
 
     /** Keeps the page loading and schedules the next read; false once the wait's limit is spent. */
     private fun waitForServer(): Boolean {
         if (notReadyWaitedMs >= NOT_READY_LIMIT_MS && !phoneBusy()) return false
+        cancelFailedSettle()
         mutableLoad.value = ChatLoad.Loading
         loadWaiting.value = true
         if (notReadyJob?.isActive == true) return true
@@ -923,6 +999,7 @@ internal class GraphChatWorld(
 
     /** A loaded conversation (or a person's Try again, a new visit) starts any later wait from zero. */
     private fun endWait() {
+        cancelFailedSettle()
         notReadyJob?.cancel()
         notReadyJob = null
         notReadyWaitedMs = 0
@@ -930,6 +1007,7 @@ internal class GraphChatWorld(
     }
 
     private fun bind(graph: ConnectionGraph?) {
+        cancelFailedSettle()
         voiceGeneration++
         voiceLiveUsers.clear()
         unbind()
@@ -1069,17 +1147,11 @@ internal class GraphChatWorld(
                 scope.launch(registry.mainContext) {
                     graph.session.reads.missing.collect { missing ->
                         if (sid in missing && currentAttached()?.graph === graph) {
-                            mutableTitle.value = null
-                            lastRows = null
-                            closeKept()
-                            mutableTranscript.value = TranscriptState.Empty
-                            publishShown()
-                            mutableModels.value = ComposerModels(failure = Failure.NotFound())
-                            mutableLoad.value = ChatLoad.Failed(Failure.NotFound())
-                            nextCursor = null
-                            mutableOlder.value = false
-                            feedKeeper.reset(keepShown = false)
-                            recentModels.rememberSession(ref.profileId.raw, sid.raw, null)
+                            // Agent-open-flash: a conversation the app's own server does not list yet while it starts
+                            // waits (bounded) instead of reading as gone; once it is fully up, a NotFound is real.
+                            if (mutableLoad.value !is ChatLoad.Live && notReady(Failure.NotFound()) && waitForServer())
+                                return@collect
+                            showGone()
                         }
                     }
                 },
@@ -1444,8 +1516,9 @@ internal class GraphChatWorld(
                 if (details.id == sid) adoptUndone(gateway, details)
                 if (details.id != sid) {
                     val failure = Failure.UnreadableReply()
-                    if (mutableLoad.value !is ChatLoad.Live)
-                        mutableLoad.value = ChatLoad.Failed(failure)
+                    if (mutableLoad.value !is ChatLoad.Live) {
+                        if (cursor == null) loadFailed(failure) else mutableLoad.value = ChatLoad.Failed(failure)
+                    }
                     return Outcome.Failed(failure)
                 }
                 details.stagedRevert?.messageId
@@ -3059,6 +3132,9 @@ internal class GraphChatWorld(
          * (the home's start window is 90 s too); then the failure page.
          */
         const val NOT_READY_LIMIT_MS = 90_000L
+
+        /** How long a failure page of a server the app starts waits for a read already on its way: over the swap. */
+        const val FAILED_SETTLE_MS = 300L
     }
 }
 
