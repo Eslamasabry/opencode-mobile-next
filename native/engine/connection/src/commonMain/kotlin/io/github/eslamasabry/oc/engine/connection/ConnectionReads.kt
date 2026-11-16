@@ -31,6 +31,7 @@ public class ConnectionReads(
 ) {
     private val order = Mutex()
     private val sessions = HashMap<SessionId, Deferred<Outcome<Session>>>()
+    private val deletions = MutableStateFlow<Set<SessionId>>(emptySet())
 
     private data class TailKey(val session: SessionId, val cursor: String?, val limit: Int)
 
@@ -45,11 +46,30 @@ public class ConnectionReads(
     private val closed = AtomicReference(false)
 
     /**
-     * A confirmed deletion/404 is a tombstone for this graph; late reads and pages cannot restore
-     * it.
+     * A confirmed deletion is permanent for this graph; late reads and startup retries cannot
+     * restore it.
      */
     public fun forget(session: SessionId) {
+        deletions.update { it + session }
         mutableMissing.update { it + session }
+    }
+
+    /**
+     * Rechecks a read-only NotFound when the chat's bounded startup wait retries. Socket connect
+     * can precede the helper's session listing, so the chat's existing wait decides when to retry.
+     * Explicit deletions stay missing.
+     */
+    public suspend fun unforget(session: SessionId) {
+        order.withLock {
+            mutableMissing.update { if (session in deletions.value) it else it - session }
+            // A synchronous deletion may race the update above. Restore its notification too;
+            // refusal checks the permanent set throughout, so no intervening read can revive it.
+            mutableMissing.update { it + deletions.value }
+        }
+    }
+
+    private suspend fun notFound(session: SessionId) {
+        order.withLock { mutableMissing.update { it + session } }
     }
 
     public fun close() {
@@ -59,7 +79,7 @@ public class ConnectionReads(
     private fun refusal(session: SessionId): Failure? =
         when {
             closed.load() -> Failure.Refused(RefusalReason.StaleScope)
-            session in mutableMissing.value -> Failure.NotFound()
+            session in deletions.value || session in mutableMissing.value -> Failure.NotFound()
             else -> null
         }
 
@@ -73,7 +93,7 @@ public class ConnectionReads(
         }
         return try {
             val result = read.await()
-            if (result is Outcome.Failed && result.failure is Failure.NotFound) forget(id)
+            if (result is Outcome.Failed && result.failure is Failure.NotFound) notFound(id)
             refusal(id)?.failed() ?: result
         } finally {
             order.withLock { if (sessions[id] === read && read.isCompleted) sessions.remove(id) }
@@ -122,7 +142,7 @@ public class ConnectionReads(
         }
         return try {
             val result = entry.read.await()
-            if (result is Outcome.Failed && result.failure is Failure.NotFound) forget(id)
+            if (result is Outcome.Failed && result.failure is Failure.NotFound) notFound(id)
             if (result is Outcome.Failed)
                 order.withLock { if (tails[key] === entry) tails.remove(key) }
             refusal(id)?.failed() ?: result
