@@ -167,11 +167,11 @@ class PhoneAgentHost(private val linux: BuiltinLinux) {
         launched: Launched,
     ): Map<String, Any?> {
         val profile = request.profile
-        // Probe the installed executable before draining the working daemon.
+        // Read the installed helper version before draining the working daemon.
         // A changed symlink alone says nothing about its loaded version.
         val installedVersion =
             request.helper.expectedVersion?.let { expected ->
-                val output = checks.runVersion(profile, PASEO_PATH)
+                val output = checks.helperVersion(profile, PASEO_PATH)
                 val installed =
                     java.nio.file.Files.exists(
                         java.io.File(linux.rootfs, PASEO_PATH.removePrefix("/")).toPath(),
@@ -312,11 +312,18 @@ private fun awaitStartup(started: Process) {
 // lock behind, and the first message then fails with "another Claude
 // Code process is refreshing it". No Claude process of this profile
 // runs now (the helper starts them all), so a lock left is stale.
-private fun hostScript(port: Int): String {
+internal fun hostScript(port: Int): String {
     return """
             set -eu
             umask 077
             [ "${'$'}(id -u)" = 1000 ]
+            # HOME is this profile's Linux home; deleting the phone-agent home removes the cache too.
+            # Cache setup is optional and must never make the helper unavailable.
+            if mkdir -p "${'$'}HOME/.cache/oc-ncc" 2>/dev/null; then
+                export NODE_COMPILE_CACHE="${'$'}HOME/.cache/oc-ncc"
+            else
+                unset NODE_COMPILE_CACHE
+            fi
             IFS= read -r PASEO_PASSWORD
             export PASEO_PASSWORD
             export PASEO_LOG_LEVEL=fatal

@@ -1909,7 +1909,7 @@ public class PaseoGateway(
      * models: wait briefly for a settled snapshot; past the limit answer with what is ready and
      * cache nothing (B-AGENT-162).
      */
-    internal suspend fun providerSnapshot(): List<JsonObject> {
+    internal suspend fun providerSnapshot(waitingFor: String? = null): List<JsonObject> {
         providerEntries?.let {
             return it
         }
@@ -1937,6 +1937,9 @@ public class PaseoGateway(
                 }
                 break
             }
+            // A send needs this conversation's provider only. A partial snapshot is never cached as the catalog.
+            if (waitingFor != null && entries.none { it.str("provider") == waitingFor && it.str("status") == "loading" })
+                break
         }
         return entries
     }
@@ -1957,7 +1960,7 @@ public class PaseoGateway(
     }
 
     private suspend fun providerEntry(id: String): JsonObject {
-        val matches = providerSnapshot().filter { it.str("provider") == id }
+        val matches = providerSnapshot(waitingFor = id).filter { it.str("provider") == id }
         if (matches.size != 1) paseoFail(PaseoFailureKind.Unavailable)
         return matches.single()
     }

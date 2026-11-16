@@ -1194,6 +1194,12 @@ internal class GraphChatWorld(
                     gateway.events.all.collect { envelope ->
                         val event = envelope.event
                         if (event is CoreEvent.SessionUpserted && event.session.id == sid) {
+                            // The helper has listed/attached this conversation. Retry its pending open now, without
+                            // waiting for the fallback tick. Live pages and unrelated conversations never reread here.
+                            if (serverIsAgentHelper && loadWaiting.value && notReadyJob?.isActive == true) {
+                                // Keep the timer running: signals must not reset or extend the bounded wait.
+                                retryNotReady()
+                            }
                             refreshReadOnly(gateway, event.session)
                             adoptUndone(gateway, event.session)
                             // Paseo names a new conversation by an agent update (an upsert, never
