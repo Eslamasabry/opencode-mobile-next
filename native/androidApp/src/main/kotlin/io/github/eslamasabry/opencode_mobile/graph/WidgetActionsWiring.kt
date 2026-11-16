@@ -281,7 +281,10 @@ class NativeWidgetRunner(
                         exact.id,
                         if (action == "allowOnce") PermissionReply.Once else PermissionReply.Reject,
                     )
-                if (reply is Outcome.Ok) accepted() else result("uncertain", "uncertainDelivery")
+                if (reply is Outcome.Ok) {
+                    noteWidgetAnswer(exact.id.raw, allowed = action == "allowOnce")
+                    accepted()
+                } else result("uncertain", "uncertainDelivery")
             }
                 ?: result(
                     if (dispatched) "uncertain" else "rejected",

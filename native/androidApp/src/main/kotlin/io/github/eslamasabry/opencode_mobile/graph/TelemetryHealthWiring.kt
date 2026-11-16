@@ -26,6 +26,7 @@ import io.github.eslamasabry.oc.core.common.AppBuildInfo
 import io.github.eslamasabry.oc.core.common.AppCoroutineScope
 import io.github.eslamasabry.oc.engine.analytics.health.AppJourneys
 import io.github.eslamasabry.oc.engine.analytics.health.ApprovalMeter
+import io.github.eslamasabry.oc.engine.analytics.health.ChatInteraction
 import io.github.eslamasabry.oc.engine.analytics.health.ChatJourney
 import io.github.eslamasabry.oc.engine.analytics.health.SetupJourney
 import io.github.eslamasabry.oc.engine.analytics.health.FrameJudge
@@ -41,9 +42,12 @@ import io.github.eslamasabry.oc.engine.analytics.product.ProductLifecycle
 import io.github.eslamasabry.oc.engine.analytics.product.ProductScreen
 import io.github.eslamasabry.oc.engine.analytics.product.TelemetryAnswers
 import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
+import io.github.eslamasabry.oc.feature.chat.header.approval.AutoApprovalRecords
 import io.github.eslamasabry.oc.feature.chat.world.ChatGraphAccessors
+import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.engine.connection.ServerConnections
 import io.github.eslamasabry.oc.engine.diagnostics.exit.ExitHistory
+import io.github.eslamasabry.oc.engine.updates.AppUpdates
 import io.github.eslamasabry.oc.protocol.paseo.PaseoFailureKind
 import io.github.eslamasabry.oc.protocol.paseo.gateway.PaseoGateway
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
@@ -56,7 +60,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -82,6 +85,7 @@ class AppTelemetryHealth(
     private val connections: Lazy<ServerConnections>,
     private val registry: Lazy<ConnectionRegistry>,
     private val navigator: Lazy<AppNavigator>,
+    private val updates: Lazy<AppUpdates>,
     appScope: AppCoroutineScope,
 ) {
     private val scope = CoroutineScope(appScope.coroutineContext)
@@ -93,6 +97,16 @@ class AppTelemetryHealth(
     @Volatile var onReplyFinished: (() -> Unit)? = null
     private var health: HealthTelemetry? = null
     private val lifecycle by lazy { ProductLifecycle(telemetry, clock) }
+
+    /** What the person is doing in the chat, for the `jank` event's `interaction` (words only, nothing kept). */
+    private val chatInteraction =
+        ChatInteraction(
+            now = { SystemClock.elapsedRealtime() },
+            streaming = { AppJourneys.chatOrNull?.anyBusy() == true },
+            // A menu, sheet or dialog takes the window's focus; the keyboard does not.
+            menuOpen = { resumed.value?.hasWindowFocus() == false },
+            keyboardUp = { imeVisible(resumed.value) },
+        )
 
     /** Device context and process ends, also read by the problem report the person asks for. */
     val platform: HealthPlatform = AndroidHealthPlatform(application, buildInfo, exits) { coldStartMs }
@@ -113,6 +127,7 @@ class AppTelemetryHealth(
                 scope = scope,
                 clock = clock,
                 refreshRate = ::refreshRate,
+                interaction = chatInteraction::word,
             )
         this.health = health
         health.start()
@@ -125,6 +140,7 @@ class AppTelemetryHealth(
             lifecycle.coldStart(version, answers.lastVersion())?.let { answers.setLastVersion(it) }
         }
         startJourneys()
+        followUpdates()
         followScreens(health)
         followConnections(health)
         // agent_start and its trace, from the agent host's create call (the protocol module knows no telemetry).
@@ -171,12 +187,26 @@ class AppTelemetryHealth(
                 for ((id, graph) in live) {
                     if (!watched.add(id.raw)) continue
                     val engine = (graph as? ChatGraphAccessors)?.chatRequests?.engine ?: continue
-                    val feed = ApprovalFeed(approvals.asSink())
-                    scope.launch { engine.pending.collect { feed.update(pendingFacts(it)) } }
+                    // A saved Auto or "Approve everything" answer is recorded per connection (ids in memory only).
+                    val feed =
+                        ApprovalFeed(approvals.asSink()) { fact ->
+                            AutoApprovalRecords.recent(id, SessionId(fact.sessionId)).any { it.requestId.raw == fact.id }
+                        }
+                    scope.launch {
+                        combine(engine.pending, AutoApprovalRecords.revision) { list, _ -> list }
+                            .collect { feed.update(pendingFacts(it)) }
+                    }
                 }
                 watched.retainAll(live.keys.map { it.raw }.toSet())
             }
         }
+    }
+
+    // ---- the app's own update: offered, failed, declined ----
+
+    private fun followUpdates() {
+        val meter = UpdateMeter()
+        scope.launch { updates.value.state.collect { meter.observe(it) } }
     }
 
     // ---- pages ----
@@ -186,8 +216,10 @@ class AppTelemetryHealth(
             navigator.value.top
                 .filterNotNull()
                 .distinctUntilChanged()
-                .map { screenOf(it) }
-                .collect { screen ->
+                .collect { route ->
+                    val screen = screenOf(route)
+                    // The person chose to connect a computer: the new-server form opened (from any of its entries).
+                    if (choseToConnectComputer(route)) HealthFlow().connectComputerChosen()
                     telemetry.breadcrumb("nav.open:${screen.wire}")
                     health.jank.screen(screen)
                     telemetry.track(ProductEvent.ScreenView, mapOf("screen" to screen))
@@ -296,6 +328,10 @@ class AppTelemetryHealth(
         framesOn?.let { (window, listener) -> runCatching { window.removeOnFrameMetricsAvailableListener(listener) } }
         framesOn = null
         val window = activity?.window ?: return
+        // A finger scrolling the page (moved past the touch slop, and a moment after it lifts) is the chat's `scrolling`.
+        if (window.callback !is ScrollWatch) {
+            window.callback = ScrollWatch(window.callback, android.view.ViewConfiguration.get(activity).scaledTouchSlop) { chatInteraction.scrolled() }
+        }
         // c2-performance (2026-11-15): the period is read per frame (a phone moves between 60, 90 and 120 Hz), each frame
         // is also judged against its own deadline on Android 12+ (FrameJudge), and a window's first frame is not judged.
         @Suppress("DEPRECATION")
@@ -316,6 +352,11 @@ class AppTelemetryHealth(
             framesOn = window to listener
         }
     }
+
+    /** Whether the on-screen keyboard is up in [activity] (Android 11 and later; false before). */
+    private fun imeVisible(activity: Activity?): Boolean =
+        Build.VERSION.SDK_INT >= Build.VERSION_CODES.R &&
+            activity?.window?.decorView?.rootWindowInsets?.isVisible(android.view.WindowInsets.Type.ime()) == true
 
     @Suppress("DEPRECATION")
     private fun refreshRate(): Double =
@@ -387,6 +428,39 @@ class AppTelemetryHealth(
                     .getOrNull() ?: return ProductScreen.Other
             return ProductScreen.of(name.split('.').dropWhile { it.firstOrNull()?.isLowerCase() == true }.joinToString("."))
         }
+    }
+}
+
+/**
+ * Tells [onScroll] while a finger drags past the touch slop, and when it lifts off a drag. Only the movement is read:
+ * no position, no target and nothing else about the touch is kept or sent. Every call goes on to the window's own callback.
+ */
+private class ScrollWatch(
+    private val delegate: Window.Callback,
+    private val slop: Int,
+    private val onScroll: () -> Unit,
+) : Window.Callback by delegate {
+    private var downX = 0f
+    private var downY = 0f
+    private var dragging = false
+
+    override fun dispatchTouchEvent(event: android.view.MotionEvent): Boolean {
+        when (event.actionMasked) {
+            android.view.MotionEvent.ACTION_DOWN -> {
+                downX = event.x
+                downY = event.y
+                dragging = false
+            }
+            android.view.MotionEvent.ACTION_MOVE -> {
+                if (!dragging && (kotlin.math.abs(event.x - downX) > slop || kotlin.math.abs(event.y - downY) > slop)) dragging = true
+                if (dragging) onScroll()
+            }
+            android.view.MotionEvent.ACTION_UP, android.view.MotionEvent.ACTION_CANCEL -> {
+                if (dragging) onScroll()
+                dragging = false
+            }
+        }
+        return delegate.dispatchTouchEvent(event)
     }
 }
 
