@@ -57,8 +57,19 @@ class PhoneAgentAutoUpdate(
     private val dispatchers: AppDispatchers,
     private val status: PhoneAgentUpdateStatus,
     private val appScope: AppCoroutineScope,
+    private val downloads: PhoneDownloads,
 ) {
     private var started = false
+
+    /**
+     * The person chose Download now on mobile data (Home's ask): the pending install runs on this network, once, and
+     * is looked at now rather than at the next 30 s look.
+     */
+    fun allowMeteredOnce() {
+        val updater = updaterRef ?: return
+        updater.allowMeteredOnce()
+        appScope.launch(dispatchers.io) { safely { updater.changed() } }
+    }
 
     /**
      * What each agent's install of its pinned version recorded (issue 147), read straight from the phone's Linux tree:
@@ -140,8 +151,9 @@ class PhoneAgentAutoUpdate(
                 // updater's own setup check), and a failed try is retried once per app run.
                 override val installProblem: Boolean get() = false
 
-                // A download of hundreds of megabytes never goes over data that is paid for; unknown counts as paid.
-                override val metered: Boolean get() = activeNetworkMetered(app)
+                // A download of hundreds of megabytes never goes over data that is paid for, unless the person said
+                // Download now on Home's ask; only an unmetered network is free (unknown and offline count as paid).
+                override val metered: Boolean get() = downloads.metered
             }
         val jobs =
             object : AgentUpdateJobs {
@@ -189,6 +201,8 @@ class PhoneAgentAutoUpdate(
                 }
             }
         updaterRef = updater
+        downloads.agents = this
+        downloads.start()
         // Everything runs off the main thread: the decision reads the helper's status in the phone's Linux. Nothing the
         // updater does may end the app: an error in a look is logged by its type only and the next look goes on.
         appScope.launch(dispatchers.io) {
