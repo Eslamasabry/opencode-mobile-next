@@ -51,6 +51,13 @@ public interface ScheduleProfiles {
     public suspend fun legacyFingerprint(profileId: String): String? = null
 
     /**
+     * The saved profile row as Flutter's `toJson()` wrote it, without `name`, in key order (what
+     * [legacyFingerprint] hashes). Lets a Flutter-era stamp made before the server's version moved still be
+     * recognised as this very server. Null (unknown) recognises nothing beyond [legacyFingerprint].
+     */
+    public suspend fun legacyRow(profileId: String): Map<String, Any?>? = null
+
+    /**
      * Opens a gateway for the profile pinned to [projectPath]. Credentials are resolved inside,
      * never stored.
      */
