@@ -649,6 +649,8 @@ public data class NewConversationUi(
     val phoneModels: List<NewConversationModel> = emptyList(),
     val phoneModel: ModelRef? = null,
     val phoneModelsBusy: Boolean = false,
+    /** The person chose Plan for [phoneAgent]'s conversation (only an agent that can be held to Plan offers it). */
+    val phonePlan: Boolean = false,
     /** Getting the page ready has lasted more than a few seconds: the page names what it is reading. */
     val preparingSlow: Boolean = false,
     /** The thinking effort chosen for the shown model; null is the model's own default. */
@@ -691,6 +693,15 @@ public data class NewConversationUi(
         }
 
     /** The chosen phone agent's row, while it is still offered. */
+    /**
+     * Whether [phoneAgent] can be held to Plan: its own read-only or plan mode exists (the Paseo gateway's plan table), and
+     * the app declines its changes in Plan besides. An agent with neither is never offered Plan.
+     */
+    val phoneCanPlan: Boolean
+        get() =
+            phoneAgent != null &&
+                AgentCatalog.builtIn.agents.firstOrNull { it.id.raw == phoneAgent }?.providerId in PLAN_HOLDING_PROVIDERS
+
     val phoneAgentChoice: NewConversationPhoneAgent?
         get() = setup?.phone?.choices?.firstOrNull { it.id == phoneAgent }
 
@@ -1450,6 +1461,13 @@ public class NewConversationViewModel(
         }
     }
 
+    override fun chooseMode(mode: String) {
+        val shown = mutable.value
+        if (shown.phoneAgent == null) return super.chooseMode(mode)
+        if (shown.busy || shown.deliveryUnconfirmed || shown.attempted || !shown.phoneCanPlan) return
+        mutable.update { it.copy(phonePlan = mode.equals("plan", ignoreCase = true)) }
+    }
+
     override fun chooseAgent(agent: String?) {
         val setup = mutable.value.setup ?: return
         if (
@@ -1478,6 +1496,7 @@ public class NewConversationViewModel(
                 phoneAgent = agent,
                 // Build/Plan and a separate copy belong to the server's own agent.
                 agent = if (agent != null) null else it.agent,
+                phonePlan = false,
                 separateCopy = if (agent != null) false else it.separateCopy,
                 // The list last read for this agent shows at once; the read below replaces it.
                 phoneFolderFixed = null,
@@ -1962,6 +1981,8 @@ public class NewConversationViewModel(
             val model = if (phone != null) shown.phoneModel else shown.model
             val variant = shown.variant?.takeIf { it in shown.shownVariants }
             val agent = if (phone != null) null else shown.agent
+            // Plan for a phone agent rides the first message only (never saved as the folder's remembered choice).
+            val startMode = if (phone != null && shown.phonePlan && shown.phoneCanPlan) "plan" else agent
             val result = edits.withLock {
                 val saved = host.saveDraft(target, directory, shown.text)
                 val choices = host.saveChoices(target, directory, model, agent)
@@ -1982,7 +2003,7 @@ public class NewConversationViewModel(
                                         shown.text.trim(),
                                         model,
                                         variant,
-                                        agent,
+                                        startMode,
                                         shown.separateCopy,
                                         attempt,
                                         onStarted = { ref ->
@@ -2080,6 +2101,9 @@ public class NewConversationViewModel(
         public fun create(@Assisted route: ChatsRoute.New): NewConversationViewModel
     }
 }
+
+/** The phone agents' runtimes that list a plan or read-only mode (`PaseoPlanModes`); others are not offered Plan. */
+private val PLAN_HOLDING_PROVIDERS = setOf("codex", "claude", "opencode", "copilot")
 
 /** Server modes and background helpers are never peer agents in the chooser. */
 public fun isStartableAgent(name: String): Boolean =

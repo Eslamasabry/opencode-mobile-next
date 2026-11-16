@@ -189,6 +189,9 @@ private val DECLINED_REPORT = Regex(
     RegexOption.IGNORE_CASE,
 )
 
+/** The step metadata key that says the app's Plan stopped the call; the chat reads it for its words. */
+public const val PLAN_STOPPED_KEY: String = "oc.planStopped"
+
 /** A failed call the person declined at its permission card (B-AGENT-186). */
 public fun paseoDeclinedToolCall(item: JsonObject): Boolean {
     if (item["status"].stringOrNull() != "failed") return false
@@ -372,8 +375,13 @@ public fun paseoItemMessage(
             } else {
                 null
             }
-            val metadata =
+            val base =
                 withTurnOutliving(withBackgroundTask(toolMetadata(detail), toolName, status, detail), provider, toolName, status)
+            // The app's Plan stopped this call (not the person): the step says so (PLAN_STOPPED_KEY).
+            val metadata =
+                if (item["stoppedByPlan"].let { it is JsonPrimitive && !it.isString && it.content == "true" })
+                    JsonObject((base ?: JsonObject(emptyMap())) + (PLAN_STOPPED_KEY to JsonPrimitive(true)))
+                else base
             newPart(PartType.Tool, "tool", toolName = toolName, callId = id, tool = toolState(status, input, output, error, metadata))
         }
         "todo" -> {

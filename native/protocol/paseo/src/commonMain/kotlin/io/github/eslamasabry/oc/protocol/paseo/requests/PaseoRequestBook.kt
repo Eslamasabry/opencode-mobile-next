@@ -97,6 +97,9 @@ public interface PaseoRequestHost {
 
     public fun directoryOf(appId: String): String? = null
 
+    /** Whether the session is in Plan (the app's Plan or the agent's own read-only mode): changes are declined. */
+    public fun inPlan(appId: String): Boolean = false
+
     /** Transport request on [expectedEpoch]; throws [PaseoException]. */
     public suspend fun request(
         type: String,
@@ -239,6 +242,9 @@ public class PaseoRequestBook(
             resolvePermission(permissions.keys.first())
         // A replacement revision never earns a second automatic allow-once (Flutter genUiAttempted).
         if (previous != null) pending.cardAttempted = previous.cardAttempted || previous.cardApproving
+        // Plan holds in the app too, not only in the agent: a change asked in a Plan conversation is declined here,
+        // with no card, whatever the agent or the helper's guard does.
+        if (previous == null && declineForPlan(id, pending)) return
         permissions[id] = pending
         if (tryAllowDisplayCard(pending)) {
             changed()
@@ -246,6 +252,43 @@ public class PaseoRequestBook(
         }
         host.emit(GatewayEvent.PermissionAsked(pending.permission))
         changed()
+    }
+
+    /** Calls Plan stopped (by call id): their step reads "Plan stopped this", not "You declined this". */
+    private val planStoppedCalls = LinkedHashSet<String>()
+
+    public fun wasStoppedByPlan(callId: String): Boolean = callId in planStoppedCalls
+
+    private fun declineForPlan(id: String, pending: Permission): Boolean {
+        val appId = pending.permission.sessionId.raw
+        if (pending.host != null || pending.permission.permission !in PLAN_STOPS || !host.inPlan(appId)) return false
+        val scope = tasks ?: return false
+        pending.permission.tool?.callId?.let { remember(planStoppedCalls, it) }
+        remember(answered, id)
+        val epoch = pending.epoch
+        scope.launch {
+            try {
+                host.send(
+                    "agent_permission_response",
+                    jsonOf(
+                        "agentId" to host.realId(appId),
+                        "requestId" to id,
+                        "response" to
+                            jsonOf(
+                                "behavior" to "deny",
+                                "message" to
+                                    "Plan mode is on, so nothing may be written or run. Describe the change in words instead.",
+                            ),
+                    ),
+                    epoch,
+                )
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Exception) {
+                // The agent asks again or ends the turn; the app never shows the card for it.
+            }
+        }
+        return true
     }
 
     private fun parsePermission(appId: String, id: String, request: JsonObject): Permission {
@@ -889,6 +932,9 @@ public class PaseoRequestBook(
         const val MAX_REMEMBERED = 256
         const val PLAN_APPROVE = "Approve"
         const val PLAN_KEEP = "Keep planning"
+
+        /** The requests Plan stops: a file change and a command (anything that is not a plain read). */
+        val PLAN_STOPS = setOf("edit", "bash")
 
         fun remember(set: LinkedHashSet<String>, id: String) {
             set += id

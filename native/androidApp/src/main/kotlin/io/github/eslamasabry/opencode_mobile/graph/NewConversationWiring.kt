@@ -1229,6 +1229,9 @@ class AndroidNewConversationHost(
                             // again goes to the same agent. Best effort: the first message carries the choice anyway.
                             if (model != null)
                                 (gateway as? PaseoGateway)?.seedDraftProvider(created.value.id, model.providerId)
+                            // Plan reaches the agent as its own read-only mode with the first turn, and the app declines changes.
+                            if (agent.equals("plan", ignoreCase = true))
+                                (gateway as? PaseoGateway)?.seedDraftPlan(created.value.id)
                             val journal =
                                 stores.prefs.commit(stores.lanes.forProfile(profile)) {
                                     putString(

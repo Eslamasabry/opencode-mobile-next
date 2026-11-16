@@ -766,6 +766,8 @@
     <string name="kitToolDone">Done</string>
     <string name="kitToolFailed">Failed</string>
     <string name="kitToolDeclined">You declined this</string>
+    <string name="kitToolPlanStopped">Stopped by Plan</string>
+    <string name="chatStepPlanStopped">Plan mode stopped a change</string>
     <string name="chatStepDeclinedNote">Your note: “%1$s”</string>
     <string name="chatStepMalformedCall">The agent asked this the wrong way, so nothing ran. Ask it to try again.</string>
     <string name="kitToolStopped">Stopped</string>

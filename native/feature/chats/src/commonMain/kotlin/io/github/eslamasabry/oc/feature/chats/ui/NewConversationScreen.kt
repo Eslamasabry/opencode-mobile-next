@@ -790,27 +790,34 @@ private fun NewConversationAgentStep(state: NewConversationUi, actions: NewConve
             )
         }
     }
-    // The server's own Build/Plan: a stepped control inside this sheet, never a chip of its own.
-    if (modes.size in 2..4) {
+    // The server's own Build/Plan: a stepped control inside this sheet, never a chip of its own. A phone agent offers
+    // Plan only when it can be held to it (its own read-only mode; the app also declines its changes); else the sentence
+    // alone says why there is no Build/Plan choice.
+    if (modes.size in 2..4 && (!onPhone || state.phoneCanPlan)) {
         val modeWord = stringResource(Res.string.upgradeMode)
         KitSectionLabel(modeWord)
         KitSegmented(
             segments = modes.map { mode -> KitSegment(mode, modeLabel(mode)) },
             selected =
-                state.agent?.takeIf { it in modes }
-                    ?: modes.firstOrNull { it.lowercase() == "build" }
-                    ?: modes.first(),
+                if (onPhone)
+                    modes.firstOrNull { it.lowercase() == (if (state.phonePlan) "plan" else "build") } ?: modes.first()
+                else
+                    state.agent?.takeIf { it in modes }
+                        ?: modes.firstOrNull { it.lowercase() == "build" }
+                        ?: modes.first(),
             semanticsLabel = modeWord,
             enabled =
-                if (namedAgent)
+                if (namedAgent && !onPhone)
                     KitEnabled.Disabled(
                         stringResource(Res.string.upgNewChatModeOnlyFor, defaultName)
                     )
                 else KitEnabled.Enabled,
             onChange = actions::chooseMode,
         )
-        if (!namedAgent)
+        if (!namedAgent || onPhone)
             KitText(stringResource(Res.string.upgNewChatModeHint), role = TypeRole.Secondary)
+    } else if (modes.size in 2..4) {
+        KitText(stringResource(Res.string.upgNewChatModeOnlyFor, defaultName), role = TypeRole.Secondary)
     }
     KitRowGroup {
         KitRow(
