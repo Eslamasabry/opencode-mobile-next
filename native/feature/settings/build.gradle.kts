@@ -37,6 +37,7 @@ kotlin {
 // Goldens (desktop, Skiko software raster): `-Poc.recordGoldens=true` writes them, otherwise they
 // are compared.
 tasks.withType<Test>().configureEach {
+    testLogging.exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
     systemProperty(
         "oc.goldens.dir",
         layout.projectDirectory.dir("src/desktopTest/goldens").asFile.absolutePath,
