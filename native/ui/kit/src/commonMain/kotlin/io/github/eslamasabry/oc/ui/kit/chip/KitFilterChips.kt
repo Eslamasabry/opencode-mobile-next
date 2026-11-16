@@ -42,6 +42,12 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import kotlin.math.abs
 import kotlin.math.roundToInt
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
+import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.kitChipsFirst
+import io.github.eslamasabry.oc.ui.words.res.kitChipsMore
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -145,6 +151,10 @@ private class ChipLine(private val baseGap: Dp, private val minPeek: Dp, private
     /** `restWhole`: chips lie past the window's end (the visible end was drawn in to the last whole chip). */
     var more by mutableStateOf(false)
 
+    /** `restWhole`: chips scrolled off before the window's start and chips past its end (the cues' counts). */
+    var before by mutableStateOf(0)
+    var after by mutableStateOf(0)
+
     override val spacing: Dp get() = gap
 
     override fun Density.arrange(
@@ -202,7 +212,7 @@ public fun KitFilterChips(
     endOnGutter: Boolean = false,
     /**
      * The line never rests with a chip cut by an edge (the home's chips beside the server pill, at 360 dp): it settles with
-     * its first chip whole at the start, the window ends after the last whole chip, and an end fade says there is more.
+     * its first chip whole at the start, the window ends after the last whole chip, and a "+N" chip says how many lie beyond.
      * Left to right only; a right-to-left line keeps the plain scroll.
      */
     restWhole: Boolean = false,
@@ -247,8 +257,10 @@ public fun KitFilterChips(
             }
         }
     }
+    val scope = rememberCoroutineScope()
+    val lineBox: @Composable (Modifier) -> Unit = { outer ->
     Box(
-        modifier.kitMaxWidth(CapRole.Reading)
+        outer.kitMaxWidth(CapRole.Reading)
             .then(if (onPane) Modifier.padding(start = if (bleed) 0.dp else paneEdge, end = paneEdge) else Modifier)
             .kitShadowRoom(room, start = growStart, end = growEnd)
             .layout { measurable, constraints ->
@@ -260,15 +272,7 @@ public fun KitFilterChips(
             .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
             .drawWithContent {
                 drawContent()
-                if (whole && line.more) {
-                    // More chips lie past the last whole one: its end thins out, the cue that the line goes on.
-                    val fade = minOf(16.dp.toPx(), size.width)
-                    drawRect(
-                        edgeMask(size.width - fade, size.width, fade * FilterChipsRules.CLEAR_PART, clearAtStart = false),
-                        Offset(size.width - fade, 0f), Size(fade, size.height), blendMode = BlendMode.DstIn,
-                    )
-                    return@drawWithContent
-                }
+                if (whole) return@drawWithContent // cues, not fades, say there is more
                 if (scroll.maxValue <= 0 || scroll.maxValue == Int.MAX_VALUE) return@drawWithContent
                 val spans = FilterChipsRules.spans(line.sizes, line.gapPx, startPad.toPx(), scroll.value.toFloat())
                 val fade = FilterChipsRules.CHIP_FADE_DP.dp.toPx()
@@ -302,6 +306,15 @@ public fun KitFilterChips(
                     val edge = FilterChipsRules.wholeEnd(line.sizes, line.gapPx, startPad.toPx(), scroll.value.toFloat(), width.toFloat())
                     line.more = edge < width.toFloat() - .5f
                     width = edge.roundToInt().coerceIn(0, width)
+                    var x = startPad.toPx() - scroll.value
+                    var gone = 0
+                    var past = 0
+                    for (w in line.sizes) {
+                        if (x + w <= startPad.toPx() + .5f) gone++ else if (x + w > width + .5f) past++
+                        x += w + line.gapPx
+                    }
+                    if (gone != line.before) line.before = gone
+                    if (past != line.after) line.after = past
                 }
                 layout(width, placeable.height) { placeable.place(0, 0) }
             }
@@ -314,6 +327,34 @@ public fun KitFilterChips(
             verticalAlignment = Alignment.CenterVertically,
             content = chips,
         )
+    }
+    }
+    if (!whole) {
+        lineBox(modifier)
+    } else {
+        // Chips past either edge are never cut: a chip says how many lie beyond ("+1") and one tap brings them in.
+        Row(modifier, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
+            if (line.before > 0) {
+                KitChip(
+                    "+${line.before}", kind = KitChipKind.Action, spoken = stringResource(Res.string.kitChipsFirst),
+                    onClick = { scope.launch { scroll.animateScrollTo(0) } },
+                )
+            }
+            lineBox(Modifier.weight(1f, fill = false))
+            if (line.after > 0) {
+                KitChip(
+                    "+${line.after}", kind = KitChipKind.Action, spoken = stringResource(Res.string.kitChipsMore),
+                    onClick = {
+                        scope.launch {
+                            val first = line.sizes.size - line.after
+                            var at = 0f
+                            for (i in 0 until first) at += line.sizes[i] + line.gapPx
+                            scroll.animateScrollTo(at.roundToInt().coerceIn(0, scroll.maxValue))
+                        }
+                    },
+                )
+            }
+        }
     }
 }
 

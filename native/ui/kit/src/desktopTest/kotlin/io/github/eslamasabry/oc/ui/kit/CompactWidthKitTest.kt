@@ -22,6 +22,9 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.captureToImage
+import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.onLast
+import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.unit.Density
@@ -187,5 +190,42 @@ class CompactWidthKitTest {
         // scrolled a little: the nearest chip start (121) wins over where the finger left it
         assertEquals(121, FilterChipsRules.restStart(sizes, 8f, 0f, 90f, 400))
         assertEquals(0, FilterChipsRules.restStart(sizes, 8f, 0f, 30f, 400))
+    }
+
+    @Test
+    fun `COMPACT-031 the filter past the edge shows as a plus chip and one tap brings it in whole, at 1_0 and 1_3 text`() {
+        for (scale in listOf(1f, 1.3f)) runComposeUiTest {
+            setContent {
+                CompositionLocalProvider(LocalDensity provides Density(1f, scale)) {
+                    KitTheme(KitAppearance(motion = MotionLevel.Off), FakeKitPlatform(), "en", stillFrame = true) {
+                        InWindow(360, 200) {
+                            Row(Modifier.padding(start = 16.dp), verticalAlignment = Alignment.CenterVertically) {
+                                KitChip("This phone", onClick = {})
+                                Box(Modifier.weight(1f)) {
+                                    KitFilterChipsRest(bleed = true, restWhole = true) {
+                                        for (label in listOf("All projects", "All connections", "Running now")) KitChip(label, onClick = {})
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            waitForIdle()
+            mainClock.advanceTimeBy(1_000)
+            waitForIdle()
+            // The cue is on screen before anything is touched, as a chip with a count.
+            val cues = onAllNodes(hasText("+", substring = true), useUnmergedTree = true).fetchSemanticsNodes()
+            assertTrue(cues.isNotEmpty(), "text $scale: a '+N' chip says there is more")
+            onAllNodes(hasText("+", substring = true), useUnmergedTree = true).onLast().performClick()
+            waitForIdle()
+            mainClock.advanceTimeBy(1_000)
+            waitForIdle()
+            val line = onNodeWithTag("kit-filter-chips").fetchSemanticsNode().boundsInRoot
+            val chip = onAllNodes(hasText("All connections"), useUnmergedTree = true).fetchSemanticsNodes().firstOrNull()
+            assertTrue(chip != null, "text $scale: All connections is reachable in one tap")
+            val b = chip!!.boundsInRoot
+            assertTrue(b.left >= line.left - 0.5f && b.right <= line.right + 0.5f, "text $scale: All connections whole in the line: chip $b line $line")
+        }
     }
 }
