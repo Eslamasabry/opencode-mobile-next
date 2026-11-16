@@ -189,6 +189,7 @@ import io.github.eslamasabry.oc.ui.words.res.chats_back
 import io.github.eslamasabry.oc.ui.words.res.e7WorkspaceConnecting
 import io.github.eslamasabry.oc.ui.words.res.agentsStateUpdatingHelper
 import io.github.eslamasabry.oc.feature.chats.presentation.SourceStartRules
+import io.github.eslamasabry.oc.ui.words.res.chatsNewGettingReady
 import io.github.eslamasabry.oc.feature.chats.presentation.WaitingWord
 import io.github.eslamasabry.oc.ui.words.res.e7WorkspaceDaysAgo
 import io.github.eslamasabry.oc.ui.words.res.e7WorkspaceHoursAgo
@@ -825,9 +826,7 @@ private data class HomeRowWords(
     val done: String,
     val stopped: String,
     val interrupted: String,
-    /** B-333: a tapped row that waits for its server to open says so. */
-    val connecting: String,
-    /** B-333: ... or that its agents are being updated. */
+    /** B-333: a tapped row that waits while its agents are being updated says so. */
     val updating: String,
     /** B-333: ... or, when it did not connect in time, that it is not answering. */
     val notAnswering: String,
@@ -845,6 +844,8 @@ private data class HomeRowWords(
     val stop: String,
     /** "Working", or "Working 34m" once the run's start is known (B-161). */
     val runningFor: (Long?) -> String,
+    /** What a screen reader says for a row whose agent is getting ready (the eye sees the working mark alone). */
+    val gettingReady: String,
 )
 
 @Composable
@@ -857,7 +858,6 @@ private fun rememberHomeRowWords(): HomeRowWords =
         done = stringResource(Res.string.chatsHomeDone),
         stopped = stringResource(Res.string.chatsHomeStopped),
         interrupted = stringResource(Res.string.chatsHomeInterrupted),
-        connecting = stringResource(Res.string.e7WorkspaceConnecting),
         updating = stringResource(Res.string.agentsStateUpdatingHelper),
         notAnswering = stringResource(Res.string.phoneServerRowNotAnswering),
         archive = stringResource(Res.string.sessionMenuArchive),
@@ -873,6 +873,7 @@ private fun rememberHomeRowWords(): HomeRowWords =
         delete = stringResource(Res.string.sessionMenuDelete),
         stop = stringResource(Res.string.dockStop),
         runningFor = liveRunWords(),
+        gettingReady = stringResource(Res.string.chatsNewGettingReady),
     )
 
 /** What a row needs to know of the whole screen, and nothing else: equal for a row nothing happened to. */
@@ -902,7 +903,25 @@ private data class HomeRowFlags(
     val gaveUp: Boolean = false,
     /** The row's last run failed and its agent is signed out: the row says Sign in needed. */
     val signedOut: Boolean = false,
+    /**
+     * Its agent or its server is getting ready (the app is starting its source, or its kept tap waits for it): the
+     * working mark alone in the time's place, no word (home-getting-ready, item 3).
+     */
+    val gettingReady: Boolean = false,
 )
+
+/**
+ * Whether [row]'s agent or server is getting ready: the app is starting its source (the agents' helper, This phone's
+ * own OpenCode, also as the server still opening) or the row's kept tap waits for it. An agent update keeps its word.
+ */
+private fun rowGettingReady(row: ConversationRowUi, state: ChatsUi): Boolean {
+    val starting = state.home.sources.firstOrNull { it.profile == row.ref.profileId }?.starting
+    val opening =
+        state.home.opening?.takeIf {
+            it.profile == row.ref.profileId && it.onThisPhone && it.phase != ChatsOpeningPhase.Failed
+        } != null
+    return SourceStartRules.rowGettingReady(starting, waiting = state.waitingOpen == row.ref || opening)
+}
 
 private fun rowFlags(row: ConversationRowUi, state: ChatsUi): HomeRowFlags =
     HomeRowFlags(
@@ -926,6 +945,7 @@ private fun rowFlags(row: ConversationRowUi, state: ChatsUi): HomeRowFlags =
         waitingWord =
             SourceStartRules.waitingWord(state.home.sources.firstOrNull { it.profile == row.ref.profileId }?.starting),
         gaveUp = state.keptGaveUp == row.ref,
+        gettingReady = rowGettingReady(row, state),
         signedOut =
             row.status == RowStatus.Failed &&
                 state.agentNotices.lines.any { it.kind == HomeAgentNoticeKind.SignedOut && it.agentName == row.agentName },
@@ -951,8 +971,11 @@ private fun ConversationRow(
         // While the person's answer is held ("Allowed · Undo" under the row) or a chosen answer to a question is held or
         // on its way, the state word must not say "Needs you".
         if (flags.held != null || flags.heldQuestion != null || flags.questionSending) null
-        // B-333: the tap is kept; the row says it waits for its server instead of looking dead.
-        else if (flags.waiting) (if (flags.waitingWord == WaitingWord.Updating) words.updating else words.connecting)
+        // B-333: the tap is kept; the row says it waits for its server instead of looking dead: an agent update says
+        // so, anything else getting ready is the working mark alone (its word is for a screen reader only).
+        else if (flags.waiting && flags.waitingWord == WaitingWord.Updating) words.updating
+        else if (flags.gettingReady && row.status != RowStatus.NeedsYou && row.status != RowStatus.Running) words.gettingReady
+        else if (flags.waiting) words.gettingReady
         else if (flags.gaveUp) words.notAnswering
         // Issue 147: an old agent conversation opens and continues like any other, so its row reads like any other.
         else when (row.status) {
@@ -1051,7 +1074,7 @@ private fun ConversationRow(
                 preview = preview,
                 meta = meta,
                 project = project,
-                state = status?.let { KitRowState(it, tone) },
+                state = status?.let { KitRowState(it, tone, waiting = it == words.gettingReady) },
                 pinned = flags.pinned,
                 growKey = row.ref,
                 onLongClick = if (row.canOpen || canArchive) ({ menuOpen = true }) else null,

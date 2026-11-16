@@ -70,6 +70,13 @@ public object SourceStartRules {
     /** A saved row takes a tap (kept until its source connects) only when the app is starting that source. */
     public fun takesTap(appStart: AppStart?): Boolean = savedLine(appStart) != SavedRowLine.MustConnect
 
+    /**
+     * A row whose source the app is starting (or whose kept tap waits for it) shows the working mark alone in the
+     * time's place; an agent update keeps its own word ("Updating…").
+     */
+    public fun rowGettingReady(appStart: AppStart?, waiting: Boolean): Boolean =
+        appStart != AppStart.AgentsUpdating && (waiting || appStart != null)
+
     /** What a row waiting for its source (a kept tap) says: updating while the agents update, else connecting. */
     public fun waitingWord(appStart: AppStart?): WaitingWord =
         if (appStart == AppStart.AgentsUpdating) WaitingWord.Updating else WaitingWord.Connecting
