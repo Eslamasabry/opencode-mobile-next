@@ -10,6 +10,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
@@ -60,15 +61,30 @@ class KitLivePictureRecorderTest {
 
     /**
      * Framed pages of one size on top of each other, as during a push or a pop; [shown] says which are composed and
-     * [drawn] (read in the draw) which of those are drawn: a page kept composed under another but no longer drawn.
+     * [drawn] which of those are drawn: a page kept composed under another but no longer drawn, either skipped by its
+     * parent's draw or, with [unplaced], not placed at all.
      */
     @Composable
-    private fun Pages(shown: List<Boolean>, drawn: () -> List<Boolean> = { shown }, seen: (KitLiveShare?) -> Unit) {
+    private fun Pages(
+        shown: List<Boolean>,
+        drawn: () -> List<Boolean> = { shown },
+        unplaced: Boolean = false,
+        seen: (KitLiveShare?) -> Unit,
+    ) {
         Box(Modifier.fillMaxSize()) {
             shown.forEachIndexed { i, on ->
                 if (on) {
                     key(i) {
-                        Box(Modifier.fillMaxSize().drawWithContent { if (drawn()[i]) drawContent() }) {
+                        val hide =
+                            if (unplaced) {
+                                Modifier.layout { m, c ->
+                                    val placeable = m.measure(c)
+                                    layout(placeable.width, placeable.height) { if (drawn()[i]) placeable.place(0, 0) }
+                                }
+                            } else {
+                                Modifier.drawWithContent { if (drawn()[i]) drawContent() }
+                            }
+                        Box(Modifier.fillMaxSize().then(hide)) {
                             KitScreen(page = true) {
                                 seen(LocalKitLiveShare.current)
                                 KitText("Page $i")
@@ -162,7 +178,7 @@ class KitLivePictureRecorderTest {
 
     @Test
     fun `B-KIT-LIVE-056 a recorder no longer drawn hands the recording on and gets it back on the pop`() {
-        for (style in listOf(Style.Solid, Style.Glass)) {
+        for ((style, unplaced) in listOf(Style.Solid to false, Style.Glass to false, Style.Solid to true)) {
             runDesktopComposeUiTest(200, 400) {
                 var share: KitLiveShare? = null
                 var frame = 0
@@ -172,7 +188,7 @@ class KitLivePictureRecorderTest {
                 mainClock.autoAdvance = false
                 setContent {
                     KitTheme(appearance(style), platform, "en") {
-                        Pages(shown, { drawn }) { share = it }
+                        Pages(shown, { drawn }, unplaced) { share = it }
                         SideEffect { share?.pictures?.onRecord = { p, by -> log += Recording(frame, p, by) } }
                     }
                 }
@@ -199,7 +215,9 @@ class KitLivePictureRecorderTest {
                 // Who records then depends on the platform (Android re-records an invalidated layer its parent does not
                 // draw): either way the picture steps under the page on top, once a frame.
                 val byHome = after.count { it.by === home }
-                println("B-KIT-LIVE-056 $style: not drawn, $byHome of ${after.size} recorded by the covered page")
+                println("B-KIT-LIVE-056 $style unplaced=$unplaced: $byHome of ${after.size} by the covered page")
+                // Not placed, the covered page is not drawn at all: the page on top has taken the recording over.
+                if (unplaced) assertTrue(after.any { it.by !== home }, "$style: the page on top never took it over")
                 assertEquals(2, picture.users, "$style: both pages still hold the one picture")
                 assertTrue(log.all { it.picture === picture }, "$style: one picture throughout")
                 // The pop: the covered page is drawn again and the page on top leaves.
