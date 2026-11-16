@@ -34,6 +34,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
@@ -121,6 +122,12 @@ class NewConversationPhoneFolderTest {
             stale?.contains(phoneAgent == null) == true
 
         override suspend fun phoneFolderWaiting(profile: ProfileId): Set<PhoneFolderSide> = waitingSides
+
+        /** I147-WAIT: sides the phone reports waiting while a restart still runs (null: only what [waitingSides] says). */
+        val liveWaiting = MutableStateFlow<Set<PhoneFolderSide>?>(null)
+
+        override fun phoneFolderWaitingUpdates(profile: ProfileId) =
+            liveWaiting.map { it ?: waitingSides }
 
         override suspend fun fixPhoneFolder(
             profile: ProfileId,
@@ -363,5 +370,26 @@ class NewConversationPhoneFolderTest {
         assertEquals(1, host.fixes.size, "nothing to tap while it waits")
         vm.start()
         assertTrue(host.starts.isEmpty())
+    }
+
+    @Test
+    fun `I147-WAIT a restart that waits on a running reply says so while it runs, not only after`() {
+        val host = Host()
+        val vm = vm(host)
+        vm.draftChanged("hello")
+        host.stale = mutableSetOf(true, false)
+        val folder = "/storage/emulated/0/Documents/w3f"
+        vm.chooseDirectory(folder)
+        vm.choosePhoneAgent("claude")
+        assertEquals(PhoneFolderReach.Restart, vm.state.value.phoneFolder)
+        host.fixGate = kotlinx.coroutines.CompletableDeferred()
+        vm.fixPhoneFolder()
+        assertTrue(vm.state.value.fixingPhoneFolder)
+        assertFalse(vm.state.value.restartWaitsForReply, "restarting, nothing waits yet")
+        host.liveWaiting.value = setOf(PhoneFolderSide.Server)
+        assertTrue(vm.state.value.restartWaitsForReply, "OpenCode waits for its reply while the agents restart")
+        host.liveWaiting.value = emptySet()
+        assertFalse(vm.state.value.restartWaitsForReply, "the reply ended: back to the restarting words")
+        host.fixGate!!.complete(Unit)
     }
 }

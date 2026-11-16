@@ -674,6 +674,10 @@ public data class NewConversationUi(
             phoneFolder == PhoneFolderReach.Restart &&
                 (if (phoneAgent != null) PhoneFolderSide.Agents else PhoneFolderSide.Server) in phoneFolderWaiting
 
+    /** W3: a restart of OpenCode is under way and is waiting for the reply it is writing (nothing is cut). */
+    val restartWaitsForReply: Boolean
+        get() = fixingPhoneFolder && PhoneFolderSide.Server in phoneFolderWaiting
+
     val phoneAgentName: String?
         get() =
             phoneAgent?.let { id ->
