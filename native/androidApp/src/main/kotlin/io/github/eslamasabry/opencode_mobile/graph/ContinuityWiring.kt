@@ -14,7 +14,6 @@ import io.github.eslamasabry.oc.core.common.AppCoroutineScope
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.engine.analytics.health.TelemetryService
 import io.github.eslamasabry.oc.engine.analytics.product.ConsentQuestion
-import io.github.eslamasabry.oc.engine.analytics.product.ProductEvent
 import io.github.eslamasabry.oc.engine.analytics.product.TelemetryAnswers
 import io.github.eslamasabry.oc.engine.diagnostics.crash.CrashOffer
 import io.github.eslamasabry.oc.engine.diagnostics.crash.CrashOfferFacts
@@ -132,8 +131,6 @@ class TelemetryContinuity(
         asking.value = ConsentAsk.Closed
         if (!share) return
         telemetry.setConsent(usage = true, crashes = true)
-        // This start's cold open happened before the answer and was dropped.
-        telemetry.track(ProductEvent.AppOpen, mapOf("kind" to "cold"))
     }
 
     /** "Choose": the two switches, each with what it sends. */
@@ -145,7 +142,6 @@ class TelemetryContinuity(
     suspend fun saveChoice(usage: Boolean, crashes: Boolean) {
         asking.value = ConsentAsk.Closed
         telemetry.setConsent(usage, crashes)
-        if (usage) telemetry.track(ProductEvent.AppOpen, mapOf("kind" to "cold"))
     }
 
     fun dismissChoice() {

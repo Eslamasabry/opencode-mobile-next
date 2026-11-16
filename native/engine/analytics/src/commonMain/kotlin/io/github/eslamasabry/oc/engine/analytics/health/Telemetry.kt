@@ -229,6 +229,8 @@ public class TelemetryService(
     private val keys = LinkedHashMap<String, String>()
     private val turns = AtomicInt(0)
     private val journeyRef = AtomicReference<JourneyMilestones?>(null)
+    // Current UI context only: one schema-listed word, with no off-consent event history or timestamps.
+    private val visibleScreen = AtomicReference<String?>(null)
 
     override val usage: StateFlow<Boolean> = usageFlow.asStateFlow()
     override val crashes: StateFlow<Boolean> = crashesFlow.asStateFlow()
@@ -262,10 +264,12 @@ public class TelemetryService(
     }
 
     private fun apply(usage: Boolean, crashes: Boolean) {
+        val newlyEnabled = usage && !usageFlow.value
         if (available) safely { vendor.setCollection(usage, crashes) }
         // Listeners send what needs collection on already, so the flows change after the vendor switch.
         usageFlow.value = usage
         crashesFlow.value = crashes
+        if (newlyEnabled) track(ProductEvent.AppOpen, mapOf("kind" to "cold"))
     }
 
     @Suppress("TooGenericExceptionCaught")
@@ -329,10 +333,15 @@ public class TelemetryService(
     }
 
     override fun track(event: ProductEvent, props: Map<String, Any?>) {
-        if (!usageLive) return
+        if (!usageLive && event != ProductEvent.ScreenView) return
         val safe = cleanProductProps(event, props) ?: return
+        if (event == ProductEvent.ScreenView) safe["screen"]?.let { visibleScreen.store(it) }
+        if (!usageLive) return
         ring.add("event ${event.wire}" + safe.entries.joinToString("") { " ${it.key}=${it.value}" })
         safely { vendor.event(event.wire, safe) }
+        if (event == ProductEvent.AppOpen) {
+            visibleScreen.load()?.let { track(ProductEvent.ScreenView, mapOf("screen" to it)) }
+        }
         if (event == ProductEvent.SendResult && safe["result"] == "ok") turns.incrementAndFetch()
         safely { journeyRef.load()?.observe(event, safe) }
     }

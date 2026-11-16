@@ -4,6 +4,8 @@ import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.engine.analytics.health.NoOpTelemetryVendor
 import io.github.eslamasabry.oc.engine.analytics.health.TelemetryVendor
+import io.github.eslamasabry.oc.engine.analytics.health.TelemetryService
+import kotlinx.coroutines.test.runTest
 import io.github.eslamasabry.oc.engine.analytics.product.ProductEvent
 import io.github.eslamasabry.oc.engine.analytics.product.ProductScreen
 import io.github.eslamasabry.oc.engine.analytics.product.productSchema
@@ -86,6 +88,29 @@ class UmamiSenderTest {
         r.on(); r.event("screen_view", mapOf("screen" to "settings")); r.lane.run()
         assertEquals(listOf("app_open", null), r.transport.batches.single().map { it.payload.name })
         assertEquals(2, r.transport.batches.single().size)
+    }
+
+    @Test
+    fun `B-180 granting consent in a conversation pairs both receivers with the current page`() = runTest {
+        val r = Rig()
+        val google = mutableListOf<String>()
+        val primary = object : TelemetryVendor by NoOpTelemetryVendor {
+            override fun event(name: String, props: Map<String, String>) { google += name }
+        }
+        val telemetry = TelemetryService(UsageTelemetryVendor(primary, r.sender, UmamiBuild("3.0.1", "10081")),
+            available = true, scope = this)
+        telemetry.track(ProductEvent.ScreenView, mapOf("screen" to ProductScreen.Settings))
+        telemetry.track(ProductEvent.ScreenView, mapOf("screen" to ProductScreen.Chat))
+        r.lane.run()
+        assertEquals(0, r.sender.queued)
+        assertTrue(google.isEmpty() && r.transport.batches.isEmpty())
+        telemetry.setConsent(usage = true, crashes = false)
+        telemetry.track(ProductEvent.MemoryPressure, mapOf("level" to "low"))
+        r.lane.run()
+        assertEquals(listOf("app_open", "screen_view", "memory_pressure"), google)
+        val events = r.transport.batches.single()
+        assertEquals(listOf("app_open", null, "memory_pressure"), events.map { it.payload.name })
+        assertEquals(listOf("/home", "/conversation", "/conversation"), events.map { it.payload.url })
     }
 
     @Test
