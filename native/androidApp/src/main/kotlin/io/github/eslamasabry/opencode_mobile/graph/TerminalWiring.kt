@@ -20,7 +20,7 @@ class AndroidTerminalClipboard(private val app: Application) : TerminalClipboard
         get() = app.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
 
     override fun copy(value: String): Boolean {
-        clipboard.setPrimaryClip(android.content.ClipData.newPlainText("", value))
+        KitAndroidClipboard.write(app, value, KitClipboardMode.Sensitive)
         return true
     }
 
@@ -98,6 +98,6 @@ class AndroidTerminalPrivacy(private val redactor: Redactor) : TerminalPrivacy {
 @ContributesBinding(AppScope::class)
 class KitTerminalTextClipboard(private val app: Application) : io.github.eslamasabry.oc.android.terminal.TerminalTextClipboard {
     override fun copySensitive(text: String) {
-        app.getSystemService(android.content.ClipboardManager::class.java).setPrimaryClip(android.content.ClipData.newPlainText("", text))
+        KitAndroidClipboard.write(app, text, KitClipboardMode.Sensitive)
     }
 }

@@ -243,7 +243,7 @@ internal fun HostGuide(visible: Boolean, onDismiss: () -> Unit, onEnterAddress: 
                         KitCodeKind.Command,
                         Modifier.testTag("team-host-guide-step-${i + 1}"),
                         copyLabel = if ('\n' in command) stringResource(Res.string.kitCodeCopyCommand) else null,
-                        onCopy = { clipboard.setText(AnnotatedString(it), KitClipboardMode.Sensitive) },
+                        onCopy = { clipboard.setText(AnnotatedString(it), KitClipboardMode.Public) },
                     )
                 }
             }

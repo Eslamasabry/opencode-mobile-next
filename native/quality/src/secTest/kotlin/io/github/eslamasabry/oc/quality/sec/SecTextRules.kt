@@ -98,7 +98,7 @@ object SecTextRules {
         "ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/foundation/KitClipboard.kt",
         "ui/kit/src/androidMain/kotlin/io/github/eslamasabry/oc/ui/kit/foundation/KitClipboard.android.kt",
     )
-    private val rawClip = Regex("""\bClipData\s*\.\s*newPlainText\b|\bClipEntry\s*\(|\.\s*(setPrimaryClip|setClipEntry)\s*\(""")
+    private val rawClip = Regex("""\bClipData\s*\.\s*newPlainText\b|\bClipEntry\s*\(|\.\s*(setPrimaryClip|setClipEntry|setContents)\s*\(|\.\s*primaryClip\s*=""")
     private val textWrite = Regex("""\b(\w+)\s*\.\s*setText\s*\(""")
     private val kitWrite = Regex("""\bKitAndroidClipboard\s*\.\s*write\s*\(""")
 
@@ -108,10 +108,12 @@ object SecTextRules {
             val raw = rawClip.findAll(code).map { Violation("K-SEC-6", f.rel, f.lineOf(it.range.first), "raw clipboard write outside KitClipboard") }
             val typed = Regex("""\b(\w+)\s*:\s*(?:androidx\.compose\.ui\.platform\.)?Clipboard(?:Manager)?\b""")
                 .findAll(code).map { it.groupValues[1] }.toSet()
+            val locals = Regex("""\b(?:val|var)\s+(\w+)\s*=\s*(?:[\w.]+\.)?LocalClipboard(?:Manager)?\.current\b""")
+                .findAll(code).map { it.groupValues[1] }.toSet()
             val text = textWrite.findAll(code).mapNotNull { m ->
                 val receiver = m.groupValues[1]
                 val args = KotlinText.balancedArgs(code, m.range.last)
-                val looksLikeClipboard = receiver.startsWith("clipboard", true) || receiver in typed || "AnnotatedString" in args
+                val looksLikeClipboard = receiver.startsWith("clipboard", true) || receiver in typed || receiver in locals || (receiver == "current" && "LocalClipboard" in code) || "AnnotatedString" in args
                 val kitReceiver = Regex("""\bval\s+${Regex.escape(receiver)}\s*=\s*(?:[\w.]+\.)?rememberKitClipboard\s*\(""").containsMatchIn(code)
                 when {
                     !looksLikeClipboard -> null

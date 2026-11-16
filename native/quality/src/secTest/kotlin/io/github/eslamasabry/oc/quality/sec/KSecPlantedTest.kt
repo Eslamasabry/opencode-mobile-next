@@ -114,6 +114,11 @@ class KSecPlantedTest {
                     manager.setPrimaryClip(data)
                     other.setClipEntry(entry)
                     ClipData.newPlainText("", text)
+                    val cb2 = LocalClipboardManager.current
+                    cb2.setText(text)
+                    LocalClipboardManager.current.setText(text)
+                    manager.primaryClip = data
+                    toolkit.setContents(data, null)
                     val quoted = "manager.setPrimaryClip(data)"
                     val interpolated = "${'$'}{manager.setPrimaryClip(data)}"
                 }
@@ -122,7 +127,7 @@ class KSecPlantedTest {
                 "fun c() = ClipData.newPlainText(\"x\", \"y\")")
             .file("ui/kit/$cm/KitCopyPretender.kt", "fun c() = ClipData.newPlainText(\"x\", \"y\")")
             .file("core/security/src/desktopTest/kotlin/p/Review.kt", "val fixture = \"manager.setPrimaryClip(data)\"")
-        assertCaught(SecTextRules.kSec6(t.files()), "K-SEC-6", 8, "all raw sinks, missing explicit modes, template expression and a misleading kit filename")
+        assertCaught(SecTextRules.kSec6(t.files()), "K-SEC-6", 12, "all raw sinks, missing explicit modes, template expression and a misleading kit filename")
     }
 
     @Test
