@@ -57,6 +57,8 @@ import io.github.eslamasabry.oc.ui.kit.chip.KitFilterChips
 import io.github.eslamasabry.oc.ui.kit.effects.KitLiquidBackdrop
 import io.github.eslamasabry.oc.ui.kit.effects.KitLiquidPaneSpec
 import io.github.eslamasabry.oc.ui.kit.effects.LIQUID_BAR_RADIUS
+import io.github.eslamasabry.oc.ui.kit.effects.LIQUID_BAR_INSET_X
+import io.github.eslamasabry.oc.ui.kit.effects.LIQUID_BAR_INSET_Y
 import io.github.eslamasabry.oc.ui.kit.foundation.KitDivider
 import io.github.eslamasabry.oc.ui.kit.foundation.rememberKitFrostState
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
@@ -155,7 +157,7 @@ class KitFloatingBarRowTest {
             waitForIdle()
             if (toEnd) scrollChips()
             waitForIdle()
-            val tags = listOf("kit-liquid-bar", "kit-filter-chips", "row") + CHIPS.indices.map { "chip-$it" }
+            val tags = listOf(FLOATING_CHROME_TAG, "kit-filter-chips", "row") + CHIPS.indices.map { "chip-$it" }
             val bounds = tags.associateWith { onNodeWithTag(it, useUnmergedTree = true).getBoundsInRoot() } +
                 ("search" to onNodeWithContentDescription("Search", useUnmergedTree = true).getBoundsInRoot())
             shot = Shot(onNodeWithTag("scene").captureToImage().toPixelMap(), bounds)
@@ -201,7 +203,11 @@ class KitFloatingBarRowTest {
         val restBare = shot(chipsShown = false, toEnd = false)
         val end = shot(chipsShown = true, toEnd = true)
         val endBare = shot(chipsShown = false, toEnd = true)
-        val pane = rest.bounds["kit-liquid-bar"]!!
+        // Where the pane lay (LIQUID_BAR_INSET_X/Y inside the bar's block): it paints none since 2026-11-16, and the row
+        // keeps the place it had on it.
+        val pane = rest.bounds[FLOATING_CHROME_TAG]!!.let { b ->
+            DpRect(b.left + LIQUID_BAR_INSET_X.dp, b.top + LIQUID_BAR_INSET_Y.dp, b.right - LIQUID_BAR_INSET_X.dp, b.bottom - LIQUID_BAR_INSET_Y.dp)
+        }
         val line = rest.bounds["kit-filter-chips"]!!
         val fade = FloatingPaneRow.FADE_DP.toFloat()
         val inset = FloatingPaneRow.contentInsetDp(16).toFloat()

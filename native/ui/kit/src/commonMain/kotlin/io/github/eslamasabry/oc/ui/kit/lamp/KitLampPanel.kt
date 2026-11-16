@@ -296,6 +296,12 @@ public fun KitLampPanel(
     Column(modifier.kitMaxWidth(KitLampPanelDims.MAX_W.dp).testTag(LAMP_PANEL_TAG)) {
         PanelHeader(model, words, actions)
         PanelList(model, words, actions, Modifier.weight(1f, fill = false))
+        // Hidden conversations are listed in Edit (where they are hidden), under the list by the thumb and the hide bar:
+        // not at the far top of a long scroll, and not as a row of its own while the list is just read.
+        if (model.editing && model.hidden.isNotEmpty()) {
+            KitDivider()
+            HiddenGroup(model.hidden, words, actions)
+        }
         KitReveal(model.editing) { KitLampEditStrip(words, actions.onMove, actions.onTurnOff) }
         KitDivider()
         PanelFooter(model.all, words, actions)
@@ -305,7 +311,7 @@ public fun KitLampPanel(
 @Composable
 private fun PanelHeader(model: KitLampPanelModel, words: KitLampPanelWords, actions: KitLampPanelActions) {
     Row(
-        Modifier.fillMaxWidth().heightIn(min = KitLampPanelDims.HEADER_H.dp).padding(start = Space.S4.dp, end = Space.S2.dp, top = Space.S3.dp),
+        Modifier.fillMaxWidth().heightIn(min = KitLampPanelDims.HEADER_H.dp).padding(start = Space.S4.dp, end = Space.S2.dp, top = Space.S3.dp, bottom = Space.S2.dp),
         verticalAlignment = Alignment.Top,
     ) {
         Column(Modifier.weight(1f).padding(top = Space.S1.dp)) {
@@ -355,7 +361,6 @@ private fun PanelList(model: KitLampPanelModel, words: KitLampPanelWords, action
     ) {
         Column(Modifier.fillMaxWidth().verticalScroll(scroll, reverseScrolling = true)) {
             Column(Modifier.fillMaxWidth().onSizeChanged { heights[0] = it.height }) {
-                if (model.hidden.isNotEmpty()) HiddenGroup(model.hidden, words, actions)
                 if (model.more > 0) {
                     Box(
                         Modifier.fillMaxWidth().heightIn(min = KitLampPanelDims.FOOTER_H.dp).kitTappable(onClick = actions.onAll, role = KitTappableRole.Row).padding(horizontal = Space.S4.dp),
@@ -557,7 +562,7 @@ private fun HiddenGroup(hidden: List<KitLampRow>, words: KitLampPanelWords, acti
         KitText(words.hidden(hidden.size), Modifier.weight(1f), role = TypeRole.Label, kind = KitTextKind.Frame, maxLines = 1)
         KitIcon(if (open) KitIcons.chevronUp else KitIcons.chevronDown, size = KitIconSize.Small, tone = TextTone.Secondary)
     }
-    if (open) {
+    if (open) Column(Modifier.fillMaxWidth().heightIn(max = (KitLampPanelDims.FOOTER_H * 3).dp).verticalScroll(rememberScrollState())) {
         for (row in hidden) {
             Row(Modifier.fillMaxWidth().padding(start = Space.S4.dp, end = Space.S2.dp), verticalAlignment = Alignment.CenterVertically) {
                 KitTaskMark(row.mark.taskState(), size = KitMarkSize.Row, progress = row.progress)

@@ -9,8 +9,10 @@ import kotlin.time.Duration.Companion.seconds
 /**
  * Whether the phone server should be updated to the pinned OpenCode now (port of lib/state/in_app_auto_update.dart
  * `shouldAutoUpdateInApp`; B-LINUX-078). Only when it is behind, and never under running work, over another job, or on
- * a half-finished switch or install. One automatic try per app run and pinned version: a failure is left to the manual
- * "Update OpenCode" row. An unknown version does nothing; a leading `v` is ignored.
+ * a half-finished switch or install, and never on metered data (the download is over a hundred megabytes; an unknown
+ * network counts as metered, as the agents' update rule). One automatic try per app run and pinned version: a failure
+ * is left to the manual "Update OpenCode" row, which runs on any network. An unknown version does nothing; a leading
+ * `v` is ignored.
  */
 public object OpenCodeAutoUpdateRule {
     public fun shouldUpdate(
@@ -21,11 +23,12 @@ public object OpenCodeAutoUpdateRule {
         switchPending: Boolean,
         installProblem: Boolean,
         attemptedThisRun: Boolean,
+        metered: Boolean = false,
     ): Boolean {
         val installed = installedVersion?.trim()?.removePrefix("v")
         if (installed.isNullOrEmpty()) return false
         if (installed == pinnedVersion) return false
-        if (attemptedThisRun || busy || engineRunning) return false
+        if (attemptedThisRun || busy || engineRunning || metered) return false
         if (switchPending || installProblem) return false
         return true
     }
@@ -46,6 +49,12 @@ public interface OpenCodeHostFacts {
     public val runtime: String
     public val switchPending: Boolean
     public val installProblem: Boolean
+
+    /**
+     * The active network charges for data, or cannot be read (then it counts as metered): the automatic update waits
+     * for an unmetered one. Read at every look, so it runs at the first look after the phone is on unmetered data.
+     */
+    public val metered: Boolean get() = false
 }
 
 /** The setup engine's face the auto-updater uses: the same job as the "Update OpenCode" row. */
@@ -110,6 +119,7 @@ public class OpenCodeAutoUpdater(
         val switchPending = host.switchPending
         val problem = host.installProblem || jobs.failed
         val tried = key in attempted
+        val metered = host.metered
         val go =
             OpenCodeAutoUpdateRule.shouldUpdate(
                 installedVersion = installed,
@@ -119,11 +129,12 @@ public class OpenCodeAutoUpdater(
                 switchPending = switchPending,
                 installProblem = problem,
                 attemptedThisRun = tried,
+                metered = metered,
             )
         if (explain) {
             note(
                 "installed=${installed ?: "unknown"} pinned=${host.pinnedVersion} busy=$busy engineRunning=$running " +
-                    "switchPending=$switchPending installProblem=$problem attempted=$tried -> " +
+                    "switchPending=$switchPending installProblem=$problem metered=$metered attempted=$tried -> " +
                     if (go) "update" else "hold",
             )
         }

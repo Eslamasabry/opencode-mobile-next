@@ -19,4 +19,6 @@
     <string name="homeNewBlockedOpening">%1$s ما زال يفتح. أعد المحاولة بعد لحظة.</string>
     <string name="homePhoneOffStart">ابدأ تشغيل OpenCode على هذا الهاتف</string>
     <string name="homePhoneOffTitle">OpenCode على هذا الهاتف متوقف</string>
+    <string name="homeNewWaitingOpening">ستُفتح «محادثة جديدة» فور أن يستجيب %1$s.</string>
+    <string name="homeNewWaitingCancel">إلغاء «محادثة جديدة»</string>
 </resources>

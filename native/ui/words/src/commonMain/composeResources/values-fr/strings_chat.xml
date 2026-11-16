@@ -1363,4 +1363,7 @@
     <string name="chatContinueBriefStopped">Là où ça s’est arrêté\u00A0:</string>
     <string name="chatUiContinuedAfterCommand">Une commande était encore en cours, l’agent a donc été invité à l’attendre puis à continuer</string>
     <string name="chatSendNoPlanMode">Cet agent n’a pas de mode plan, donc rien n’a été envoyé. Désactivez Plan pour l’envoyer dans le mode propre à l’agent.</string>
+    <string name="kitToolPlanStopped">Arrêté par Plan</string>
+    <string name="chatStepPlanStopped">Le mode plan a arrêté une modification</string>
+    <string name="chatConnectingToAgent">Connexion à %1$s…</string>
 </resources>

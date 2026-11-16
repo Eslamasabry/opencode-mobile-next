@@ -65,6 +65,8 @@ import io.github.eslamasabry.oc.ui.words.res.chatUiConnectorSearchNotLoaded
 import io.github.eslamasabry.oc.ui.words.res.chatUiConnectorSearchOff
 import io.github.eslamasabry.oc.ui.words.res.chatUiConnectorSearchUnavailable
 import io.github.eslamasabry.oc.ui.words.res.chatStepDeclinedNote
+import io.github.eslamasabry.oc.ui.words.res.chatStepPlanStopped
+import io.github.eslamasabry.oc.ui.words.res.kitToolPlanStopped
 import io.github.eslamasabry.oc.ui.words.res.approvalDeny
 import io.github.eslamasabry.oc.ui.words.res.chatUiDurationMinutesSeconds
 import io.github.eslamasabry.oc.ui.words.res.chatUiDurationSeconds
@@ -677,7 +679,8 @@ private fun OneStep(
     // "You declined this"; it showed only after a tap that was easy to land on the row above.
     val noteMask = rememberKitMask()
     val declinedWith =
-        declinedStepNote(step.state, out.errorText)?.let { stringResource(Res.string.chatStepDeclinedNote, noteMask(it)) }
+        if (step.state == StepState.Declined && stoppedByPlan(out.metadata)) stringResource(Res.string.chatStepPlanStopped)
+        else declinedStepNote(step.state, out.errorText)?.let { stringResource(Res.string.chatStepDeclinedNote, noteMask(it)) }
     val view =
         KitToolView(
             id = step.partId,
@@ -707,6 +710,7 @@ private fun OneStep(
             removed = f.removed,
             statusLabel =
                 if (waitingForYou) stringResource(Res.string.kitWorkWaitingForYou)
+                else if (step.state == StepState.Declined && stoppedByPlan(out.metadata)) stringResource(Res.string.kitToolPlanStopped)
                 else stepStatus(step.state, f.exitCode),
         )
     // A running command shows what it has put out so far, its last lines, growing in place; a finished one its answer.

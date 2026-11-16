@@ -8,7 +8,9 @@ import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.ComposeUiTest
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsNotDisplayed
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasText
@@ -285,7 +287,7 @@ class KitLampPanelTest {
     fun `B-LAMP-K2-029 hidden ones fold at the top with Show again, and the rest count toward All conversations`() =
         runDesktopComposeUiTest(412, 1200) {
             val hidden = K2.row("gone", "Old experiment", KitLampRowMark.Quiet)
-            val scene = Scene(K2.model().copy(hidden = listOf(hidden), more = 3))
+            val scene = Scene(K2.model().copy(hidden = listOf(hidden), more = 3, editing = true))
             panel(scene, height = 1200)
             waitForIdle()
             onNodeWithText("3 more in All conversations").performClick()
@@ -294,4 +296,51 @@ class KitLampPanelTest {
             onNodeWithText("Show again").performClick()
             assertEquals(listOf("all", "show:gone"), scene.events)
         }
+
+    private fun longModel(hidden: List<KitLampRow> = emptyList()): KitLampPanelModel =
+        K2.model().copy(
+            sections = listOf(KitLampSection(KitLampGroup.Recent, "Recent", (1..25).map { K2.row("r$it", "Conversation number $it", KitLampRowMark.Quiet) })),
+            hidden = hidden,
+            all = 25,
+        )
+
+    @Test
+    fun `B-LAMP-K2-030 the list starts below its header and nothing of the header is overlapped by a row`() {
+        for (width in listOf(360, 412)) for (fontScale in listOf(1f, 1.3f)) {
+            runDesktopComposeUiTest(width, 800) {
+                val scene = Scene(longModel())
+                panel(scene, width = width, height = 800, fontScale = fontScale)
+                waitForIdle()
+                val header = onNodeWithText("You are in", substring = true).getUnclippedBoundsInRoot()
+                val list = onNodeWithTag(LAMP_PANEL_LIST_TAG).getUnclippedBoundsInRoot()
+                assertTrue(list.top.value >= header.bottom.value + 7.5f, "$width dp x$fontScale: list top ${list.top.value} must clear the header text bottom ${header.bottom.value} by a gap")
+                val rows =
+                    onAllNodesWithTag(LAMP_PANEL_HEADING_TAG, useUnmergedTree = true).fetchSemanticsNodes().map { it.boundsInRoot }
+                assertTrue(rows.all { it.height < 0.5f || it.top >= list.top.value - 0.5f }, "nothing drawn above the list's top")
+            }
+        }
+    }
+
+    @Test
+    fun `B-LAMP-K2-031 a hidden conversation's way back is in view in Edit under 25 rows, and not a row of its own outside Edit`() {
+        for (fontScale in listOf(1f, 1.3f)) {
+            runDesktopComposeUiTest(360, 800) {
+                val scene = Scene(longModel(listOf(K2.row("gone", "Old experiment", KitLampRowMark.Quiet))).copy(editing = true))
+                panel(scene, width = 360, height = 800, fontScale = fontScale)
+                waitForIdle()
+                onNodeWithText("Hidden · 1").assertIsDisplayed()
+                onNodeWithText("Hidden · 1").performClick()
+                waitForIdle()
+                onNodeWithText("Show again").assertIsDisplayed()
+                onNodeWithText("Show again").performClick()
+                assertEquals(listOf("show:gone"), scene.events)
+            }
+            runDesktopComposeUiTest(360, 800) {
+                val scene = Scene(longModel(listOf(K2.row("gone", "Old experiment", KitLampRowMark.Quiet))))
+                panel(scene, width = 360, height = 800, fontScale = fontScale)
+                waitForIdle()
+                onAllNodesWithText("Hidden · 1").assertCountEquals(0)
+            }
+        }
+    }
 }

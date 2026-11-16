@@ -1,5 +1,6 @@
 package io.github.eslamasabry.opencode_mobile.graph
 
+import android.app.Application
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.Inject
@@ -26,12 +27,14 @@ import kotlinx.coroutines.launch
 
 /**
  * Keeps the phone server on the OpenCode version this app pins, by itself (Flutter `inAppAutoUpdateProvider`): the
- * same job as This phone's "Update OpenCode" row, once per app run, only when nothing is working. It looks at
- * start and whenever the host, the setup job or the work on the server changes.
+ * same job as This phone's "Update OpenCode" row, once per app run, only when nothing is working and the network is not
+ * metered (the agents' update's own reading; the row itself runs on any network). It looks at start, every 30 s, and
+ * whenever the host, the setup job or the work on the server changes, so it runs at the first look on unmetered data.
  */
 @SingleIn(AppScope::class)
 @Inject
 class PhoneOpenCodeAutoUpdate(
+    private val app: Application,
     private val runtime: BuiltinRuntime,
     private val setup: NativePhoneSetup,
     private val leases: NativeChatLeases,
@@ -54,6 +57,9 @@ class PhoneOpenCodeAutoUpdate(
                 override val switchPending: Boolean get() = this@PhoneOpenCodeAutoUpdate.runtime.switchPending()
                 override val installProblem: Boolean
                     get() = this@PhoneOpenCodeAutoUpdate.runtime.serverFacts.value.status?.phase == RuntimePhase.Failed
+
+                // About 126 MB: never over data that is paid for; unknown counts as paid (as the agents' update).
+                override val metered: Boolean get() = activeNetworkMetered(app)
             }
         val jobs =
             object : OpenCodeUpdateJobs {

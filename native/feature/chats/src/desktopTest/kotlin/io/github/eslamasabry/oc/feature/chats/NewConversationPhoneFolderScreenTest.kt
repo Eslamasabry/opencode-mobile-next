@@ -134,6 +134,27 @@ class NewConversationPhoneFolderScreenTest {
         }
 
     @Test
+    fun `I147-WAIT while OpenCode waits for its reply the notice says it restarts when the reply ends`() =
+        runComposeUiTest {
+            setContent {
+                KitTheme(platform = DesktopKitPlatform(), localeTag = "en", appearance = KitAppearance(motion = MotionLevel.Off)) {
+                    NewConversationScreen(
+                        state(folder, PhoneFolderReach.Restart)
+                            .copy(
+                                phoneAgent = "claude",
+                                fixingPhoneFolder = true,
+                                phoneFolderBoth = true,
+                                phoneFolderWaiting = setOf(io.github.eslamasabry.oc.feature.chats.presentation.PhoneFolderSide.Server),
+                            ),
+                        Actions(),
+                    )
+                }
+            }
+            assertTrue(onAllNodesWithText("restarts by itself when the reply ends", substring = true).fetchSemanticsNodes().isNotEmpty())
+            assertEquals(0, onAllNodesWithText("about half a minute", substring = true).fetchSemanticsNodes().size)
+        }
+
+    @Test
     fun `I147-STORAGE once the restart is done the page says so`() =
         runComposeUiTest {
             setContent {

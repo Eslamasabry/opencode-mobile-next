@@ -31,6 +31,12 @@ public interface ChatPhoneServer {
     public suspend fun startAgentHelper(profile: ProfileId): Outcome<Unit> = Outcome.Ok(Unit)
 
     /**
+     * Issue 147: a conversation of that helper opened while it is not connected. The app's own start of it runs now
+     * (the one the home uses, never a second one), with a new start window; returns at once.
+     */
+    public fun wantAgentHelper(profile: ProfileId) {}
+
+    /**
      * What this phone's own server is doing for [profile] that a conversation should wait for: starting, or stopped
      * for the OpenCode update (the automatic one included). [PhoneServerWait.None] for any other server, and while
      * nothing is in progress.

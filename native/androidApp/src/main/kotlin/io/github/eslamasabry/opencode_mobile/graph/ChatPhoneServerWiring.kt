@@ -47,6 +47,8 @@ class AndroidChatPhoneServer(
     private val appScope: AppCoroutineScope,
     private val registry: Lazy<ConnectionRegistry>,
     private val folders: Lazy<PhoneFolderPreflight>,
+    /** The home's start loop of the agents' helper ([PreviewRuntime.wantHelper]): one start path for every page. */
+    private val runtime: Lazy<PreviewRuntime>,
 ) : ChatPhoneServer {
     override fun runsHere(profile: ProfileId): Boolean =
         (stores.prefs.get("oc.builtinServerOwner") as? PrefValue.Str)?.value == profile.raw
@@ -67,6 +69,10 @@ class AndroidChatPhoneServer(
     override suspend fun startAgentHelper(profile: ProfileId): Outcome<Unit> =
         if (isAgentHelper(profile)) agentHost.value.ensureHelper(profile)
         else Outcome.Ok(Unit)
+
+    override fun wantAgentHelper(profile: ProfileId) {
+        if (isAgentHelper(profile)) runtime.value.wantHelper(profile)
+    }
 
     /**
      * Starting (the one start path, or the crash recovery about to start it) or stopped for the OpenCode update (the

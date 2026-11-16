@@ -126,7 +126,7 @@ class NewConversationWordsKeptTest {
         assertEquals(true, vm.state.value.busy, "the page is getting ready")
         vm.draftChanged("list this folder")
         assertEquals("list this folder", vm.state.value.text, "typing ahead is kept, not dropped")
-        host.reading.complete(Outcome.Failed(Failure.Network(NetworkWhy.Unknown)))
+        host.reading.complete(Outcome.Failed(Failure.Unavailable(io.github.eslamasabry.oc.core.common.FeatureId("test"))))
         assertNotNull(vm.state.value.failure)
         assertEquals("list this folder", vm.state.value.text, "a failed read never empties the field")
     }

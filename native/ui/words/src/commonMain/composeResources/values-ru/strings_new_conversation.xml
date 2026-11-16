@@ -46,4 +46,10 @@
     <string name="chatsNewStorageFolderDialogTitle">Новая папка в %1$s</string>
     <string name="chatsNewStorageFolderDialogHelper">Пустая папка в памяти телефона. Больше в неё ничего не добавляется.</string>
     <string name="chatPhoneFolderRestartingAgents">Перезапускаем агентов телефона, чтобы агент этого разговора увидел его папку. Это займёт около полминуты.</string>
+    <string name="chatsNewPhoneFolderRestartBoth">Агенты телефона и его OpenCode были запущены до того, как вы выбрали эту папку, поэтому %1$s пока её не видит. Перезапустите их, чтобы работать здесь.</string>
+    <string name="chatsNewPhoneFolderRestartBothAction">Перезапустить агентов телефона и OpenCode</string>
+    <string name="chatsNewPhoneFolderRestartingBoth">Перезапускаем агентов телефона и OpenCode, чтобы каждый агент увидел эту папку. Это займёт около полминуты.</string>
+    <string name="chatsNewPhoneFolderRestartedBoth">Агенты телефона и OpenCode перезапущены. Каждый агент теперь видит эту папку.</string>
+    <string name="chatsNewPhoneFolderWaitingServer">OpenCode на этом телефоне пишет ответ, поэтому перезапустится сам, когда ответ закончится. Ничего не прерывается.</string>
+    <string name="chatsNewPhoneFolderWaitingAgents">Агент на этом телефоне работает, поэтому агенты телефона перезапустятся сами, когда он закончит. Ничего не прерывается.</string>
 </resources>

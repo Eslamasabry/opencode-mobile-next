@@ -40,12 +40,17 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.dropWhile
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.takeWhile
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.time.Duration.Companion.seconds
+
+/** A refused first read is read again this often, this many times (about 30 s), before the page says it could not read. */
+internal const val SETUP_RETRY_EVERY_MS: Long = 3_000
+internal const val SETUP_RETRIES: Int = 10
 
 /** How long the page waits for a server's first answer before it says so and offers Try again. */
 internal val SETUP_WAIT = 90.seconds
@@ -114,6 +119,15 @@ public enum class PhoneFolderReach {
     }
 }
 
+/** W3: the two Linux sides of this phone a folder in its storage must be bound into: its OpenCode and its agents. */
+public enum class PhoneFolderSide {
+    /** The phone's own OpenCode server. */
+    Server,
+
+    /** The helper that runs the phone's agents (Claude Code, Codex, Antigravity, Qwen and the rest). */
+    Agents,
+}
+
 public data class NewConversationModel(
     val model: ModelRef,
     val name: String,
@@ -144,6 +158,11 @@ public data class NewConversationPhoneAgent(
     val signInNeeded: Boolean = false,
     /** Needs its phone check: the Agents page says "Phone check needed", and so does this row. */
     val phoneCheck: Boolean = false,
+    /** Its sign-in check could not run to an answer: the Agents page says "Sign-in not confirmed", and so does this row. */
+    val signInNotConfirmed: Boolean = false,
+    /** Its plan limit is reached: the Agents page says so, and so does this row. [limitResets] is when, when it said. */
+    val limitReached: Boolean = false,
+    val limitResets: String? = null,
 )
 
 /**
@@ -256,6 +275,31 @@ public interface NewConversationHost {
         reach: PhoneFolderReach,
     ): Outcome<Unit> = Outcome.Failed(Failure.Unavailable(FeatureId("phoneFolder")))
 
+    /** [fixPhoneFolder] for [directory]: the other side of this phone restarts too when it also lacks it (W3). */
+    public suspend fun fixPhoneFolder(
+        profile: ProfileId,
+        phoneAgent: String?,
+        reach: PhoneFolderReach,
+        directory: String,
+    ): Outcome<Unit> = fixPhoneFolder(profile, phoneAgent, reach)
+
+    /**
+     * W3: whether the other side of this phone (its OpenCode when [phoneAgent] is set, else its agents) also runs
+     * without [directory]. The one restart [fixPhoneFolder] makes then restarts both, so choosing another agent later
+     * never asks again for the same folder.
+     */
+    public suspend fun phoneFolderBothSides(profile: ProfileId, phoneAgent: String?, directory: String): Boolean = false
+
+    /**
+     * W3: the sides whose restart for a chosen folder waits for the work running there to end (a reply on the phone's
+     * OpenCode, an agent's turn); it is never interrupted, and the side restarts by itself once idle.
+     */
+    public suspend fun phoneFolderWaiting(profile: ProfileId): Set<PhoneFolderSide> = emptySet()
+
+    /** [phoneFolderWaiting] as it changes (a waiting side restarts once its work ends). */
+    public fun phoneFolderWaitingUpdates(profile: ProfileId): kotlinx.coroutines.flow.Flow<Set<PhoneFolderSide>> =
+        kotlinx.coroutines.flow.flow { emit(phoneFolderWaiting(profile)) }
+
     /** Whether [profile] can make a new project folder here (the app's own phone server only, as in Projects). */
     public fun canCreateProject(profile: ProfileId): Boolean = false
 
@@ -286,6 +330,9 @@ public interface NewConversationHost {
     /** Starts this phone's own OpenCode after the person stopped it. */
     public suspend fun startPhoneServer(profile: ProfileId): Outcome<Unit> =
         Outcome.Failed(Failure.Unavailable(FeatureId("startPhoneServer")))
+
+    /** "Check <agent> again": asks the phone's agents now, and publishes what they answer (signin-followups). */
+    public suspend fun checkPhoneAgents() {}
 
     public suspend fun setup(profile: ProfileId): Outcome<NewConversationSetup>
 
@@ -512,6 +559,12 @@ public enum class PhoneStartWay {
     TryAgain,
 
     /**
+     * signin-followups: the helper said the agent "is not ready": what is wrong is not known to be its set-up, so the way
+     * forward is "Check <agent> again" (asks the agent now), then the start goes again.
+     */
+    CheckAgain,
+
+    /**
      * Issue 147: the agent's own sign-in no longer works (the helper refused the start for it: "Failed to
      * authenticate: OAuth session expired"): "<Agent> needs you to sign in again", with Sign in.
      */
@@ -523,9 +576,12 @@ public data class PhoneStartProblem(val agentId: String, val agentName: String, 
 
 /** Reads a refused phone-agent start into the one way forward (the helper's sentence is matched, never shown). */
 public object PhoneStartRules {
+    /** "<Agent> is not ready": asked again before anyone is sent to set it up (signin-followups). */
+    private val NOT_YET_READY = Regex("is not ready", RegexOption.IGNORE_CASE)
+
     private val NOT_READY =
         Regex(
-            "is not ready|is disabled|not installed|auth(?:entication)?[ _-]?required|authenticate|sign[ -]?in|" +
+            "is disabled|not installed|auth(?:entication)?[ _-]?required|authenticate|sign[ -]?in|" +
                 "log ?in|No model selected|No API key",
             RegexOption.IGNORE_CASE,
         )
@@ -537,6 +593,8 @@ public object PhoneStartRules {
         when {
             failure is Failure.Rejected && failure.tag?.raw == SIGN_IN_TAG -> PhoneStartWay.SignIn
             chosen != null && listed.isNotEmpty() && listed.none { it.model == chosen } -> PhoneStartWay.ChooseModel
+            failure is Failure.ComputerDidNotAnswer && NOT_YET_READY.containsMatchIn(failure.details?.text.orEmpty()) ->
+                PhoneStartWay.CheckAgain
             failure is Failure.ComputerDidNotAnswer && NOT_READY.containsMatchIn(failure.details?.text.orEmpty()) ->
                 PhoneStartWay.SetUp
             else -> PhoneStartWay.TryAgain
@@ -599,6 +657,10 @@ public data class NewConversationUi(
     val checkingPhoneFolder: Boolean = false,
     /** What the last action fixed (the access, a restart), once the folder reads Ready again; the page says it once. */
     val phoneFolderFixed: PhoneFolderReach? = null,
+    /** W3: the other side of this phone also runs without the folder; one restart restarts both. */
+    val phoneFolderBoth: Boolean = false,
+    /** W3: the sides whose restart waits for their work to end (never interrupted). */
+    val phoneFolderWaiting: Set<PhoneFolderSide> = emptySet(),
     val remakingFolder: Boolean = false,
     val remakeFailure: Failure? = null,
     /** The chosen server is this phone's own OpenCode and the person stopped it: no list can be read until it starts. */
@@ -610,6 +672,8 @@ public data class NewConversationUi(
     val phoneModels: List<NewConversationModel> = emptyList(),
     val phoneModel: ModelRef? = null,
     val phoneModelsBusy: Boolean = false,
+    /** The person chose Plan for [phoneAgent]'s conversation (only an agent that can be held to Plan offers it). */
+    val phonePlan: Boolean = false,
     /** Getting the page ready has lasted more than a few seconds: the page names what it is reading. */
     val preparingSlow: Boolean = false,
     /** The thinking effort chosen for the shown model; null is the model's own default. */
@@ -629,6 +693,16 @@ public data class NewConversationUi(
     val phoneFolderBlocked: Boolean
         get() = phoneFolder != null && phoneFolder != PhoneFolderReach.Ready
 
+    /** W3: the side that will work in the folder restarts once its running work ends (it is never interrupted). */
+    val chosenSideWaits: Boolean
+        get() =
+            phoneFolder == PhoneFolderReach.Restart &&
+                (if (phoneAgent != null) PhoneFolderSide.Agents else PhoneFolderSide.Server) in phoneFolderWaiting
+
+    /** W3: a restart of OpenCode is under way and is waiting for the reply it is writing (nothing is cut). */
+    val restartWaitsForReply: Boolean
+        get() = fixingPhoneFolder && PhoneFolderSide.Server in phoneFolderWaiting
+
     val phoneAgentName: String?
         get() =
             phoneAgent?.let { id ->
@@ -646,6 +720,15 @@ public data class NewConversationUi(
         }
 
     /** The chosen phone agent's row, while it is still offered. */
+    /**
+     * Whether [phoneAgent] can be held to Plan: its own read-only or plan mode exists (the Paseo gateway's plan table), and
+     * the app declines its changes in Plan besides. An agent with neither is never offered Plan.
+     */
+    val phoneCanPlan: Boolean
+        get() =
+            phoneAgent != null &&
+                AgentCatalog.builtIn.agents.firstOrNull { it.id.raw == phoneAgent }?.providerId in PLAN_HOLDING_PROVIDERS
+
     val phoneAgentChoice: NewConversationPhoneAgent?
         get() = setup?.phone?.choices?.firstOrNull { it.id == phoneAgent }
 
@@ -783,6 +866,12 @@ public interface NewConversationActions {
 
     /** Starts this phone's OpenCode when [NewConversationUi.phoneOff]. */
     public fun startPhoneServer() {}
+
+    /**
+     * "Check <agent> again" (a start refused as "not ready", a row whose sign-in check did not answer): asks the phone's
+     * agents now. After a refused start the start then goes again; otherwise the page reads its offer again.
+     */
+    public fun checkPhoneAgents() {}
 
     /** New project in the project sheet: asks for its name. */
     public fun askNewProject() {}
@@ -982,9 +1071,21 @@ public class NewConversationViewModel(
             val cached = host.cachedSetup(profile)
             if (cached != null && ticket == generation) applySetup(profile, ticket, cached)
             // Never wait for ever: a server that does not answer in time is a failure with a Try again.
-            val answered =
+            var answered =
                 withTimeoutOrNull(SETUP_WAIT) { host.setup(profile) }
                     ?: Outcome.Failed(Failure.Network(NetworkWhy.Unknown))
+            // A server that is still starting or reconnecting refuses the read at once: the page keeps waiting (it
+            // stays "getting ready", with Start kept) and reads again by itself, for a bounded time. "Couldn't be
+            // read" with Try again is only for a read that still fails after that (a server that is up and failing).
+            for (again in 1..SETUP_RETRIES) {
+                val refused = answered
+                if (refused !is Outcome.Failed || cached != null || refused.failure !is Failure.Network) break
+                delay(SETUP_RETRY_EVERY_MS)
+                if (ticket != generation) return@launch
+                answered =
+                    withTimeoutOrNull(SETUP_WAIT) { host.setup(profile) }
+                        ?: Outcome.Failed(Failure.Network(NetworkWhy.Unknown))
+            }
             when (val loaded = answered) {
                 is Outcome.Failed ->
                     // A page already showing the remembered setup stays usable when the fresh read fails.
@@ -1268,6 +1369,14 @@ public class NewConversationViewModel(
         mutable.value.profile?.let(::chooseServer)
     }
 
+    override fun checkPhoneAgents() {
+        val refused = mutable.value.phoneStartProblem?.way == PhoneStartWay.CheckAgain
+        viewModelScope.launch {
+            host.checkPhoneAgents()
+            if (refused) start() else retryLoad()
+        }
+    }
+
     override fun draftChanged(text: String) {
         val before = mutable.value
         // Getting the page ready never locks the field (RC1 device pass: 90 s of "Still reading…" then an empty box):
@@ -1405,6 +1514,13 @@ public class NewConversationViewModel(
         }
     }
 
+    override fun chooseMode(mode: String) {
+        val shown = mutable.value
+        if (shown.phoneAgent == null) return super.chooseMode(mode)
+        if (shown.busy || shown.deliveryUnconfirmed || shown.attempted || !shown.phoneCanPlan) return
+        mutable.update { it.copy(phonePlan = mode.equals("plan", ignoreCase = true)) }
+    }
+
     override fun chooseAgent(agent: String?) {
         val setup = mutable.value.setup ?: return
         if (
@@ -1433,6 +1549,7 @@ public class NewConversationViewModel(
                 phoneAgent = agent,
                 // Build/Plan and a separate copy belong to the server's own agent.
                 agent = if (agent != null) null else it.agent,
+                phonePlan = false,
                 separateCopy = if (agent != null) false else it.separateCopy,
                 // The list last read for this agent shows at once; the read below replaces it.
                 phoneFolderFixed = null,
@@ -1658,12 +1775,42 @@ public class NewConversationViewModel(
             mutable.update { if (it.directory == directory) it.copy(checkingPhoneFolder = true) else it }
         viewModelScope.launch {
             val reach = host.phoneFolder(profile, agent, directory)
+            val both = reach == PhoneFolderReach.Restart && host.phoneFolderBothSides(profile, agent, directory)
+            val waiting = if (reach == null) emptySet() else host.phoneFolderWaiting(profile)
             mutable.update {
                 if (read == phoneFolderRead && it.profile == profile && it.directory == directory)
-                    it.copy(phoneFolder = reach, checkingPhoneFolder = false)
+                    it.copy(
+                        phoneFolder = reach,
+                        checkingPhoneFolder = false,
+                        phoneFolderBoth = both,
+                        phoneFolderWaiting = waiting,
+                    )
                 else it
             }
+            watchPhoneFolderWaiting(profile, directory)
         }
+    }
+
+    private var waitingWatch: kotlinx.coroutines.Job? = null
+
+    /**
+     * W3: while a side's restart waits for its work to end, the page follows it; when that side has restarted, the
+     * folder is read again (the notice then goes by itself).
+     */
+    private fun watchPhoneFolderWaiting(profile: ProfileId, directory: String) {
+        if (mutable.value.phoneFolderWaiting.isEmpty() || waitingWatch?.isActive == true) return
+        waitingWatch =
+            viewModelScope.launch {
+                host.phoneFolderWaitingUpdates(profile)
+                    .takeWhile { mutable.value.profile == profile }
+                    .collect { now ->
+                        if (now == mutable.value.phoneFolderWaiting) return@collect
+                        mutable.update { if (it.profile == profile) it.copy(phoneFolderWaiting = now) else it }
+                        val shown = mutable.value
+                        if (shown.profile == profile && shown.directory == directory)
+                            checkPhoneFolder(profile, directory)
+                    }
+            }
     }
 
     override fun fixPhoneFolder() {
@@ -1673,13 +1820,27 @@ public class NewConversationViewModel(
         val reach = shown.phoneFolder ?: return
         if (shown.fixingPhoneFolder || (reach != PhoneFolderReach.AppAccess && reach != PhoneFolderReach.Restart))
             return
+        if (shown.chosenSideWaits) return
         // At once: the notice says what is happening and the action waits (a restart of the agents takes half a
         // minute); it ends with the folder read again, so the page says it is done or why not.
         val read = ++phoneFolderRead
         mutable.update { it.copy(fixingPhoneFolder = true, phoneFolderFailure = null, phoneFolderFixed = null) }
         viewModelScope.launch {
-            val fixed = host.fixPhoneFolder(profile, shown.phoneAgent, reach)
+            // While the restart runs, a side that waits for its work (OpenCode writing a reply) shows at once.
+            val following =
+                launch {
+                    host.phoneFolderWaitingUpdates(profile).collect { now ->
+                        mutable.update {
+                            if (it.profile == profile && it.fixingPhoneFolder) it.copy(phoneFolderWaiting = now) else it
+                        }
+                    }
+                }
+            val fixed = host.fixPhoneFolder(profile, shown.phoneAgent, reach, directory)
+            following.cancel()
             val now = host.phoneFolder(profile, shown.phoneAgent, directory)
+            val waiting = host.phoneFolderWaiting(profile)
+            // W3 (F-042): a folder Linux could not find before it was bound is read again now it is.
+            val there = if (fixed is Outcome.Ok && shown.folderMissing) host.folderExists(profile, directory) else null
             mutable.update {
                 if (read != phoneFolderRead || it.profile != profile || it.directory != directory)
                     it.copy(fixingPhoneFolder = false)
@@ -1690,8 +1851,11 @@ public class NewConversationViewModel(
                         phoneFolder = now,
                         phoneFolderFailure = (fixed as? Outcome.Failed)?.failure,
                         phoneFolderFixed = reach.takeIf { fixed is Outcome.Ok && now == PhoneFolderReach.Ready },
+                        phoneFolderWaiting = waiting,
+                        folderMissing = if (there != null) !there else it.folderMissing,
                     )
             }
+            watchPhoneFolderWaiting(profile, directory)
         }
     }
 
@@ -1880,6 +2044,8 @@ public class NewConversationViewModel(
             val model = if (phone != null) shown.phoneModel else shown.model
             val variant = shown.variant?.takeIf { it in shown.shownVariants }
             val agent = if (phone != null) null else shown.agent
+            // Plan for a phone agent rides the first message only (never saved as the folder's remembered choice).
+            val startMode = if (phone != null && shown.phonePlan && shown.phoneCanPlan) "plan" else agent
             val result = edits.withLock {
                 val saved = host.saveDraft(target, directory, shown.text)
                 val choices = host.saveChoices(target, directory, model, agent)
@@ -1900,7 +2066,7 @@ public class NewConversationViewModel(
                                         shown.text.trim(),
                                         model,
                                         variant,
-                                        agent,
+                                        startMode,
                                         shown.separateCopy,
                                         attempt,
                                         onStarted = { ref ->
@@ -1947,15 +2113,21 @@ public class NewConversationViewModel(
                 }
                 // A screen left lower in the stack starts the next conversation afresh.
                 attempt = null
+                // Open-transitions (S22 recording): a form the opened conversation covers keeps its starting frame. It
+                // went back to its box, which takes focus whenever it comes into the page, while it was still drawn
+                // under the arriving conversation: the keyboard came up over the conversation and dropped again as the
+                // form left. It never becomes usable again (it steps off when the conversation closes), so its box is
+                // never put back.
+                val covered = openedConversation != null
                 mutable.update {
                     it.copy(
                         // Preserve the saved first prompt until its receipt is confirmed. Never
                         // insert it into the chat editor, where Send could duplicate it.
                         text = if (result.dispatched) "" else it.text,
                         textRevision = it.textRevision + 1,
-                        busy = false,
+                        busy = covered,
                         attempted = !result.dispatched,
-                        openingChat = false,
+                        openingChat = covered,
                         deliveryUnconfirmed = result.deliveryUnconfirmed,
                         reviewConversation = result.ref.takeIf { result.deliveryUnconfirmed },
                     )
@@ -1992,6 +2164,9 @@ public class NewConversationViewModel(
         public fun create(@Assisted route: ChatsRoute.New): NewConversationViewModel
     }
 }
+
+/** The phone agents' runtimes that list a plan or read-only mode (`PaseoPlanModes`); others are not offered Plan. */
+private val PLAN_HOLDING_PROVIDERS = setOf("codex", "claude", "opencode", "copilot")
 
 /** Server modes and background helpers are never peer agents in the chooser. */
 public fun isStartableAgent(name: String): Boolean =

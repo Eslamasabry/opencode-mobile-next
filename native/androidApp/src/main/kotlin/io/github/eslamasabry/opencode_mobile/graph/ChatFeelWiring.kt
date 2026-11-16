@@ -106,6 +106,11 @@ class AndroidChatOutside(
         appScope.launch { phones.value.noteSignInLapsed(owner, provider, atMs) }
     }
 
+    override fun agentLimitReached(owner: ProfileId, provider: String, atMs: Long, words: String) {
+        val resetAt = AgentLimitReset.resetAt(words, atMs)
+        appScope.launch { phones.value.noteLimitReached(owner, provider, atMs, resetAt) }
+    }
+
     override fun fileLinkPath(url: String): String? =
         try {
             val uri = URI(url.trim())
