@@ -269,6 +269,31 @@ class KonsistRulesTest {
         kotlin.test.assertEquals(emptyList(), under, "K20: fixed; lower these numbers in ${baseline.name}")
     }
 
+    /**
+     * K20b (glass-truth 2026-11-16, [KitSurfaces.ownFaces]): a kit file that paints a surface by hand also asks the style
+     * for a face Glass answers, or is listed with its reason in `quality/config/kit-own-face-allow.txt`. A new part
+     * cannot keep a Solid face under Glass unnoticed; the list stays short and honest (stale entries fail).
+     */
+    @Test
+    fun `K20b a kit part that paints its own face asks the style, or is listed with a reason`() {
+        val files =
+            KitSurfaces.MODULES.flatMap { m -> File(root, m).walkTopDown().filter { it.isFile }.toList() }
+                .map { it.relativeTo(root).invariantSeparatorsPath to it }
+                .filter { (path, _) -> KitSurfaces.inScope(path) }
+                .associate { (path, file) -> path to file.readText() }
+        val (allow, _) = KitSurfaces.parseAllow(File(root, "quality/config/kit-surfaces-allow.txt").readText())
+        val (own, malformed) = KitSurfaces.parseOwnFaces(File(root, "quality/config/kit-own-face-allow.txt").readText())
+        kotlin.test.assertEquals(emptyList(), malformed, "K20b: malformed own-face lines")
+        val result = KitSurfaces.ownFaces(files, allow, own)
+        kotlin.test.assertEquals(
+            emptyList(),
+            result.unasked,
+            "K20b: these kit files paint their own face and never ask the style, so Glass draws their Solid face: route " +
+                "the outer face through kitStyledFace (or kitSurfaceLook / a liquid face), or list the file with its reason",
+        )
+        kotlin.test.assertEquals(emptyList(), result.stale.map { it.source }, "K20b: these own-face entries are no longer needed; delete them")
+    }
+
     @Test
     fun `K19 a feature never imports another feature`() {
         scope("feature").files.assertFalse { f ->

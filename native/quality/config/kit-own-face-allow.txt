@@ -1,0 +1,21 @@
+# K20b own faces (KitSurfaces.ownFaces, glass-truth 2026-11-16): kit files that paint a surface by hand and do not ask
+# the style for a face Glass answers. One line per file: `path | reason`. A reason is required; an entry whose file no
+# longer needs it fails K20b. A pane (anything that floats, holds reading content or is a card) is never listed here:
+# it asks kitStyledFace, kitSurfaceLook or a liquid face.
+
+# Content inside another pane: a quiet inset of the pane it lies in, never glass of its own
+ui/kit-chat/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kitchat/composer/KitComposerLimitStrip.kt | inside the message box: the box's quiet tint under Glass, dressed in Brutal and Paper
+ui/kit-chat/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kitchat/composer/KitComposerTray.kt | the tray's discs inside the message box: the slab's quiet tint under Glass
+ui/kit-chat/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kitchat/tool/KitCommandBox.kt | command output in the reading flow: a quiet inset like a code block (Brutal and Paper dress it)
+ui/kit-chat/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kitchat/tool/KitToolOutput.kt | tool output in the reading flow: a quiet inset like a code block (Brutal and Paper dress it)
+ui/kit-chat/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kitchat/request/KitRequestTargets.kt | the request's code grounds inside its card (the card's face is KitRequestFrame's)
+ui/kit-chat/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kitchat/request/KitPermissionCard.kt | the subject's code ground inside the card (the card's face is KitRequestFrame's)
+ui/kit-chat/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kitchat/markdown/KitPictureTiles.kt | a file tile inside a reply: content in the reading flow
+ui/kit-chat/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kitchat/markdown/KitMarkdown.kt | a table's cell rules inside a reply (A12)
+
+# State layers and engine primitives
+ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/row/KitOpenSwitchRow.kt | the highlighted row's wash, a state layer on its group's pane
+ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/motion/KitMotionBuilders.kt | KitAnimatedBox, a motion primitive filled with the level its caller names (no kit part wears it as its face)
+
+# Open: same class, a look decision left to the owner (glass-truth report)
+ui/kit-chat/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kitchat/transcript/KitPromptBubble.kt | the person's bubble keeps its own Graphite fill under Glass; whether it becomes a frosted bubble is the owner's call

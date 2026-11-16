@@ -1,5 +1,9 @@
 package io.github.eslamasabry.oc.ui.kitchat.tool
 
+import io.github.eslamasabry.oc.ui.design.style.SurfaceRole
+import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceInput
+import io.github.eslamasabry.oc.ui.kit.foundation.kitDressedLook
+import io.github.eslamasabry.oc.ui.kit.foundation.kitSurface
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -78,6 +82,9 @@ public fun KitCommandBox(
     val colors = LocalKitColors.current
     val shape = KitShapeId.Code.shape()
     val redactor = LocalKitRedactor.current
+    // glass-truth 2026-11-16: output inside the transcript's reading flow is a quiet inset like a code block, never a
+    // pane of glass: Glass keeps this face, as it keeps the code block's. Brutal and Paper dress it as they dress code.
+    val dressed = kitDressedLook(KitSurfaceInput(role = SurfaceRole.Code, shape = KitShapeId.Code, color = colors.surface1))
     // The whole output is masked first (a private key spans lines), then each line again across
     // its ANSI runs; masking twice changes nothing.
     val raw = output?.let(redactor::redact)?.trimEnd().orEmpty()
@@ -91,9 +98,7 @@ public fun KitCommandBox(
     Column(
         modifier
             .fillMaxWidth()
-            .clip(shape)
-            .background(colors.surface1)
-            .border(1.dp, colors.hairline, shape)
+            .then(dressed?.let { Modifier.kitSurface(it) } ?: Modifier.clip(shape).background(colors.surface1).border(1.dp, colors.hairline, shape))
             .padding(horizontal = Space.S3.dp, vertical = Space.S2.dp),
         verticalArrangement = Arrangement.spacedBy(Space.S1.dp),
     ) {

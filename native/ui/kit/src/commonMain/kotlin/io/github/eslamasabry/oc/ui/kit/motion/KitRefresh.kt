@@ -1,5 +1,10 @@
 package io.github.eslamasabry.oc.ui.kit.motion
 
+import io.github.eslamasabry.oc.ui.design.style.SurfaceRole
+import io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel
+import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceInput
+import io.github.eslamasabry.oc.ui.kit.foundation.kitStyledFace
+import io.github.eslamasabry.oc.ui.kit.foundation.kitSurface
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
@@ -139,6 +144,7 @@ private fun BoxScope.RefreshIndicator(state: PullToRefreshState, refreshing: Boo
     val motion = KitMotion.state
     val specs = KitMotion.specs
     val colors = LocalKitColors.current
+    val refreshDisc = kitStyledFace(KitSurfaceInput(SurfaceRole.Control, KitShapeId.Circle, SurfaceLevel.Surface2, ownFill = colors.surface2))
     var phase by remember { mutableStateOf(if (refreshing) RefreshPhase.Refreshing else RefreshPhase.Idle) }
     val leaving = remember { Animatable(1f) }
     LaunchedEffect(state, refreshing) {
@@ -182,7 +188,9 @@ private fun BoxScope.RefreshIndicator(state: PullToRefreshState, refreshing: Boo
                 scaleY = scaleX
             }
             .size(disc)
-            .background(colors.surface2, KitShapeId.Circle.shape())
+            // glass-truth 2026-11-16: the disc floats over the list; under Glass it is Glass's control frost through the
+            // resolver (Brutal and Paper dress it), never an opaque disc among the glass. Solid, Soft and Signal keep surface2.
+            .then(refreshDisc?.let { Modifier.kitSurface(it) } ?: Modifier.background(colors.surface2, KitShapeId.Circle.shape()))
             .drawWithCache {
                 val stroke = 2.dp.toPx()
                 val inset = size.minDimension * 0.28f

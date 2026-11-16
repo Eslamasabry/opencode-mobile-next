@@ -37,12 +37,40 @@ class LiquidEdgeTest {
     }
 
     @Test
-    fun `B-KIT-018 Saver, reduced motion and high contrast hold the edges as they hold frost, in frost's order`() {
+    fun `B-KIT-018 Saver and high contrast hold the edges as they hold frost, in frost's order`() {
         assertEquals(EdgeHold.Saver, FrostPolicy.edgesHeldBy(ready.copy(saver = true, reducedMotion = true), balanced, GlassLookId.Glossy))
-        assertEquals(EdgeHold.Motion, FrostPolicy.edgesHeldBy(ready.copy(reducedMotion = true, highContrast = true), balanced, GlassLookId.Glossy))
+        assertEquals(EdgeHold.Contrast, FrostPolicy.edgesHeldBy(ready.copy(reducedMotion = true, highContrast = true), balanced, GlassLookId.Glossy))
         assertEquals(EdgeHold.Contrast, FrostPolicy.edgesHeldBy(ready.copy(highContrast = true), balanced, GlassLookId.Glossy))
         // A hold of frost's own comes before the platform: Settings names the reason the person can change.
-        assertEquals(EdgeHold.Motion, FrostPolicy.edgesHeldBy(ready.copy(reducedMotion = true, lensSupported = false), balanced, GlassLookId.Glossy))
+        assertEquals(EdgeHold.Saver, FrostPolicy.edgesHeldBy(ready.copy(saver = true, lensSupported = false), balanced, GlassLookId.Glossy))
+    }
+
+    @Test
+    fun `GLASS-TRUTH-3 reduced motion keeps the material as chosen, only Saver and contrast hold it`() {
+        val still = ready.copy(reducedMotion = true)
+        // The lens, the clear panes and the composer's and header's frost all stay: a still pane needs no animation.
+        assertNull(FrostPolicy.heldBy(still))
+        assertNull(FrostPolicy.edgesHeldBy(still, balanced, GlassLookId.Glossy))
+        assertTrue(FrostPolicy.liquidEdges(still, balanced, GlassLookId.Glossy))
+        assertTrue(FrostPolicy.clearPanes(still, balanced, GlassLookId.Glossy))
+        assertTrue(FrostPolicy.clearPanes(still, balanced, GlassLookId.Frosted))
+        assertEquals(EdgeHold.Frosted, FrostPolicy.edgesHeldBy(still, balanced, GlassLookId.Frosted))
+        assertEquals(EdgeHold.Platform, FrostPolicy.edgesHeldBy(still.copy(lensSupported = false), balanced, GlassLookId.Glossy))
+        kotlin.test.assertNotNull(FrostPolicy.spec(io.github.eslamasabry.oc.ui.design.effects.FrostRole.Composer, balanced, dark = true, still))
+        // The other side: battery saver and high contrast hold exactly as before, with or without reduced motion.
+        for (motion in listOf(false, true)) {
+            assertEquals(FrostHold.Saver, FrostPolicy.heldBy(ready.copy(saver = true, reducedMotion = motion)))
+            assertEquals(FrostHold.Contrast, FrostPolicy.heldBy(ready.copy(highContrast = true, reducedMotion = motion)))
+            kotlin.test.assertFalse(FrostPolicy.clearPanes(ready.copy(saver = true, reducedMotion = motion), balanced, GlassLookId.Glossy))
+            assertNull(FrostPolicy.spec(io.github.eslamasabry.oc.ui.design.effects.FrostRole.Composer, balanced, dark = true, ready.copy(saver = true, reducedMotion = motion)))
+        }
+        // Nothing returns the Motion hold any more.
+        val flags = listOf(false, true)
+        for (saver in flags) for (contrast in flags) for (style in flags) for (lens in flags) {
+            val c = FrostConditions(saver, true, contrast, style, lens)
+            kotlin.test.assertNotEquals(FrostHold.Motion, FrostPolicy.heldBy(c))
+            kotlin.test.assertNotEquals(EdgeHold.Motion, FrostPolicy.edgesHeldBy(c, balanced, GlassLookId.Glossy))
+        }
     }
 
     @Test
@@ -253,6 +281,19 @@ class LiquidEdgeTest {
         assertEquals(0f, LiquidInkRule.measure(black).first, 1e-3f)
         assertTrue(LiquidInkRule.measure(white).second < LiquidInkRule.BUSY)
         assertTrue(LiquidInkRule.measure(stripes).second > LiquidInkRule.BUSY, "black-and-white stripes are busy")
+    }
+
+    @Test
+    fun `GLASS-TRUTH-2 the mean is taken where the words are when the pane weights them`() {
+        // A quarter black under the words, three quarters white beside them.
+        val pixels = IntArray(64) { if (it % 8 < 2) 0xFF000000.toInt() else 0xFFFFFFFF.toInt() }
+        val words = FloatArray(64) { if (it % 8 < 2) 1f else 0f }
+        assertEquals(.75f, LiquidInkRule.measure(pixels).first, 1e-3f)
+        assertEquals(0f, LiquidInkRule.measure(pixels, words).first, 1e-3f)
+        assertEquals(LiquidInk.Light, LiquidInkRule.next(LiquidInk.Light, LiquidInkRule.measure(pixels, words).first))
+        // No weight anywhere, or the wrong size: the whole pane, as before.
+        assertEquals(.75f, LiquidInkRule.measure(pixels, FloatArray(64)).first, 1e-3f)
+        assertEquals(.75f, LiquidInkRule.measure(pixels, FloatArray(3) { 1f }).first, 1e-3f)
     }
 
     private fun Argb.solid(): Argb = Argb(v or (0xFF shl 24))

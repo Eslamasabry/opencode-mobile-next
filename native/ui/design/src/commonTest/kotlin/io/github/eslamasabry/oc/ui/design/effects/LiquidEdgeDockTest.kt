@@ -16,7 +16,9 @@ class LiquidEdgeDockTest {
     @Test
     fun `dock glass - at rest the bar's recipe, fully grown the swell's (the menu's old glass), halfway every number halfway`() {
         for (dark in listOf(true, false)) for (look in listOf(GlassLooks.Glossy, GlassLooks.of(io.github.eslamasabry.oc.ui.design.style.GlassLookId.Clear))) {
-            val bar = LiquidEdge.recipe(LiquidRole.Bar, dark, look)
+            // glass-truth 2026-11-16: the bar holds back bright content behind its words (WORDS_HOLD); the dock keeps no
+            // hold (its strip, swell and list never hold anything), and is the bar's glass in every other number.
+            val bar = LiquidEdge.recipe(LiquidRole.Bar, dark, look).copy(hold = io.github.eslamasabry.oc.ui.design.effects.LiquidHold.Off)
             val menu = LiquidEdge.swellRecipe(dark, look)
             assertEquals(bar, LiquidEdge.recipe(LiquidRole.Dock, dark, look), "the dock's own recipe is the bar's (dark=$dark)")
             assertEquals(bar, LiquidEdge.dockRecipe(dark, 0f, look), "at rest (dark=$dark)")

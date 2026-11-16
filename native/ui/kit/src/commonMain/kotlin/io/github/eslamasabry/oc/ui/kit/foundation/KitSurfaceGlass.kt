@@ -52,7 +52,6 @@ import io.github.eslamasabry.oc.ui.design.style.Style
 import io.github.eslamasabry.oc.ui.design.style.SurfaceDecoration
 import io.github.eslamasabry.oc.ui.kit.platform.LocalKitPlatform
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
-import io.github.eslamasabry.oc.ui.kit.theme.LocalKitMotion
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitSignals
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
 
@@ -66,7 +65,7 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
  * 2. [kitSurfaceGlass]: the frost under a pane's face. Once per stack (Dart `_KitSurfaceScope.frosted`): a pane inside
  *    a pane that frosts already sits on that one and draws nothing here. A top pane draws the picture behind it
  *    through the platform blur (Android API 31+, `AndroidFrost`), clipped to its shape; where there is no picture, no
- *    blur (below API 31, desktop), reduced motion, or the pane is in another window (a popup), it draws the page's
+ *    blur (below API 31, desktop), high contrast, or the pane is in another window (a popup), it draws the page's
  *    opaque ground instead. That is the solid fallback: the tint then lies on the plain ground, exactly as the pane
  *    looks over a page with no background, and nothing behind it shows through.
  * 3. [kitGlassFace]: the pane itself (`_KitSurfacePainter.paint`, `kit_surface_paint.dart:14-145`): the long shadow
@@ -309,14 +308,14 @@ internal fun Modifier.kitSurfaceGlass(decoration: SurfaceDecoration?): Modifier 
     if (LocalKitStyle.current.style != Style.Glass) return this
     val platform = LocalKitPlatform.current
     val signals = LocalKitSignals.current
-    val reduced = LocalKitMotion.current.reduced
     val density = LocalDensity.current.density
     val backdrop = LocalKitGlassBackdrop.current
     val ground = LocalKitColors.current.ground
     val light = kitRimLightGround()
     val saturation = io.github.eslamasabry.oc.ui.kit.effects.kitGlassLook().spec.frostSaturation
-    // Reduced motion and high contrast hold the frost solid (Dart `KitFrost.heldBy`; high contrast already draws Solid).
-    val held = reduced || signals.highContrast
+    // High contrast holds the frost solid (Dart `KitFrost.heldBy`; high contrast already draws Solid). Reduced motion does
+    // not (glass-truth 2026-11-16): a still frosted pane needs no animation.
+    val held = signals.highContrast
     val sigma = decoration.frost
     // The shared copy is blurred at FROST_SCALE of the picture's size, so the blur's radius is scaled with it.
     val effect =
@@ -341,14 +340,14 @@ internal fun kitGlassBlurs(backdrop: KitGlassBackdrop?): Boolean {
 }
 
 /**
- * Whether a Glass pane can blur a picture here at all: the platform has the blur (Android 12+) and neither reduced motion
- * nor high contrast holds it. The live background records a shader look for the panes only then.
+ * Whether a Glass pane can blur a picture here at all: the platform has the blur (Android 12+) and high contrast does not
+ * hold it (reduced motion does not: glass-truth 2026-11-16). The live background records a shader look for the panes only then.
  */
 @Composable
 internal fun kitGlassFrostAvailable(): Boolean {
     val platform = LocalKitPlatform.current
     val signals = LocalKitSignals.current
-    if (LocalKitMotion.current.reduced || signals.highContrast) return false
+    if (signals.highContrast) return false
     val density = LocalDensity.current.density
     return remember(platform, density) { platform.frostEffect(FrostSpec(1f, FROST_SATURATION, 0f), density) != null }
 }

@@ -125,10 +125,11 @@ class KitEdgeDockGlassTest {
     }
 
     @Test
-    fun `dock glass - without a recording, under Solid and under reduced motion it keeps today's face`() {
+    fun `dock glass - without a recording and under Solid it keeps today's face, under reduced motion its glass`() {
         assertEquals(false, glassBody(glass, recorded = false), "no recording in scope")
         assertEquals(false, glassBody(glass.copy(style = Style.Solid)), "Solid")
-        assertEquals(false, glassBody(glass.copy(motion = MotionLevel.Off)), "reduced motion")
+        // glass-truth 2026-11-16: reduced motion stills what moves (the swell's growth), never the dock's glass.
+        assertEquals(true, glassBody(glass.copy(motion = MotionLevel.Off)), "reduced motion")
         assertEquals(false, glassBody(glass.copy(glassLook = io.github.eslamasabry.oc.ui.design.style.GlassLookId.Frosted)), "the Frosted look")
     }
 

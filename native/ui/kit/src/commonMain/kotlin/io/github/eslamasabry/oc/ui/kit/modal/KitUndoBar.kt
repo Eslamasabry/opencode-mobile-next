@@ -38,6 +38,11 @@ import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.tokens.KitShapeId
+import io.github.eslamasabry.oc.ui.design.style.SurfaceRole
+import io.github.eslamasabry.oc.ui.design.tokens.SurfaceLevel
+import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceInput
+import io.github.eslamasabry.oc.ui.kit.foundation.kitStyledFace
+import io.github.eslamasabry.oc.ui.kit.foundation.kitSurface
 import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
@@ -174,6 +179,11 @@ public fun KitUndoBar(
     if (!live && !present) return
     val o = shown ?: return
     val shape = KitShapeId.Panel.shape()
+    // glass-truth 2026-11-16: the bar was surface2 with a hairline in every style. Under Glass it is Glass's floating
+    // frost through the resolver: it floats over a list, but the kit holds no recording of what lies under it (it lies in
+    // the page it would bend) and its rise is drawn by a translation a lens could not follow. Brutal and Paper dress it;
+    // Solid, Soft and Signal keep its own face.
+    val styled = kitStyledFace(KitSurfaceInput(SurfaceRole.Floating, KitShapeId.Panel, SurfaceLevel.Surface2, ownFill = colors.surface2))
     Row(
         modifier
             .onSizeChanged { barPx = it.height }
@@ -195,8 +205,7 @@ public fun KitUndoBar(
                 touching = down
                 touches++
             }
-            .background(colors.surface2)
-            .border(1.dp, colors.hairline, shape)
+            .then(styled?.let { Modifier.kitSurface(it) } ?: Modifier.background(colors.surface2).border(1.dp, colors.hairline, shape))
             .heightIn(min = tokens.rowHeightOne.dp)
             // Undo's words keep a 12 dp margin from the bar's end (they sat 4 dp from the edge).
             .padding(start = kitPageGutter(), end = Space.S3.dp)

@@ -354,13 +354,6 @@ private fun ColumnScope.AppearanceControls(
         // Glass only: its look is a choice like Corners and Spacing, in plain sight (no row to a sheet, no second tap
         // on the Glass card).
         if (ui.style == SurfaceStyle.Glass) {
-            val motionHeld = ui.glassLookHold == EdgeHold.Motion
-            val lookHeld =
-                when {
-                    !held.isEnabled -> held
-                    motionHeld -> KitEnabled.Disabled(stringResource(Res.string.appearanceGlassLookHeldMotion))
-                    else -> KitEnabled.Enabled
-                }
             AppearanceKnobLabel(stringResource(Res.string.appearanceGlassLook))
             Box(gutter) {
                 KitSegmented(
@@ -368,12 +361,11 @@ private fun ColumnScope.AppearanceControls(
                     selected = ui.glassLook.takeIf { it in ui.glassLooks } ?: ui.glassLooks.first(),
                     semanticsLabel = stringResource(Res.string.appearanceGlassLook),
                     modifier = Modifier.testTag("appearance-glass-look"),
-                    enabled = lookHeld,
+                    enabled = held,
                     onChange = actions::onGlassLook,
                 )
             }
             when {
-                motionHeld -> KitGroupNote(stringResource(Res.string.appearanceGlassLookHeldMotion))
                 ui.glassLookHold == EdgeHold.Platform -> KitGroupNote(stringResource(Res.string.appearanceGlassLookNeedsAndroid13))
                 ui.glassLook == GlassLookId.Frosted -> KitGroupNote(stringResource(Res.string.appearanceGlassLookFrostedLighter))
                 else -> Unit

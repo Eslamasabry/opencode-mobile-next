@@ -891,7 +891,6 @@
     <string name="appearanceGlassLookSmokedLine">زجاج داكن على الأشرطة والأزرار</string>
     <string name="appearanceGlassLookDisclosure">تستخدم المعاينات ألوانًا ساطعة لتظهر الفروق. الصفحة خلفها تعرض خلفيتك الحقيقية.</string>
     <string name="appearanceGlassLookFrostedLighter">صار المصنفر يستخدم بطاقات أفتح، فيظهر المزيد من خلفيتك.</string>
-    <string name="appearanceGlassLookHeldMotion">تتوقف مظاهر الزجاج ما دامت الحركة متوقفة. شغّل الحركة لتختار واحدًا.</string>
     <string name="appearanceGlassLookNeedsAndroid13">انحناء الحواف يحتاج Android 13. يعرضها هذا الهاتف مموّهة في كل مظهر.</string>
     <string name="appearanceGlassCardHint">اضغط الزجاج مرة أخرى لتختار مظهره.</string>
     <string name="appearanceGlassCardLook">زجاج · %1$s</string>
