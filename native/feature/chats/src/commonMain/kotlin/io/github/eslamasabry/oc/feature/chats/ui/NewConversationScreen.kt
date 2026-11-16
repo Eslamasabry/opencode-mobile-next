@@ -4,6 +4,7 @@ import io.github.eslamasabry.oc.ui.kit.frame.kitPageScrollState
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.Row
@@ -11,6 +12,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.rememberTextFieldState
@@ -332,38 +334,46 @@ public fun NewConversationScreen(state: NewConversationUi, actions: NewConversat
                                 )
                             }
                         }
-                    KitStartBox(
-                        field,
-                        stringResource(Res.string.chatsNewBuildPrompt),
-                        Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp)
-                            .padding(bottom = Space.S1.dp)
-                            .testTag("chats-new-field"),
-                        enabled = enabled,
-                        minLines = 2,
-                        // B-098: not while a sheet is open; coming back from agent setup re-ran this and the keyboard covered the sheet.
-                        autofocus = (!state.busy || preparing) && state.sheet == null,
-                        onTextChanged = {
-                            reported = it
-                            actions.draftChanged(it)
-                        },
-                        focusKey = state.focusRevision.takeIf { it > 0 },
-                        remind = remind,
-                        // Who works on it is in the box's own foot, one chip for the agent and its model.
-                        foot = {
-                            KitAgentModelChip(
-                                agent = agentChipLabel(state),
-                                model = modelLabel(state),
-                                markId = agentMarkId(state),
-                                spoken = stringResource(Res.string.chatsNewAgentChipSpoken, agentChipLabel(state), modelLabel(state)),
-                                onClick = { whereFocus.clearFocus(); actions.sheet(NewConversationSheet.Agents) },
-                                expanded = state.sheet == NewConversationSheet.Agents,
-                            )
-                        },
-                    )
+                    // Issue 147 (build 10053): a blocking notice with the keyboard up had a few lines of room under a
+                    // box that kept all of its own, so its sentence was out of sight and its action cut in half. While a
+                    // notice blocks starting the box joins the one scroller with the notice (its height capped so its
+                    // words still scroll inside it), the page scrolls to the notice whole, and nothing is squeezed.
+                    val startBox: @Composable () -> Unit = {
+                        KitStartBox(
+                            field,
+                            stringResource(Res.string.chatsNewBuildPrompt),
+                            Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp)
+                                .padding(bottom = Space.S1.dp)
+                                .testTag("chats-new-field"),
+                            enabled = enabled,
+                            minLines = 2,
+                            // B-098: not while a sheet is open; coming back from agent setup re-ran this and the keyboard covered the sheet.
+                            autofocus = (!state.busy || preparing) && state.sheet == null,
+                            onTextChanged = {
+                                reported = it
+                                actions.draftChanged(it)
+                            },
+                            focusKey = state.focusRevision.takeIf { it > 0 },
+                            remind = remind,
+                            // Who works on it is in the box's own foot, one chip for the agent and its model.
+                            foot = {
+                                KitAgentModelChip(
+                                    agent = agentChipLabel(state),
+                                    model = modelLabel(state),
+                                    markId = agentMarkId(state),
+                                    spoken = stringResource(Res.string.chatsNewAgentChipSpoken, agentChipLabel(state), modelLabel(state)),
+                                    onClick = { whereFocus.clearFocus(); actions.sheet(NewConversationSheet.Agents) },
+                                    expanded = state.sheet == NewConversationSheet.Agents,
+                                )
+                            },
+                        )
+                    }
+                    if (!phoneBlocks) startBox()
                     Column(
                         Modifier.weight(1f).verticalScroll(kitPageScrollState()),
                         verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
                     ) {
+                    if (phoneBlocks) Box(Modifier.heightIn(max = NOTICE_BOX_MAX_DP.dp)) { startBox() }
                     // Ways to start fill the empty prompt; nothing is sent until Start.
                     KitReveal(
                         visible =
@@ -1354,3 +1364,6 @@ private fun phoneFolderDoneWords(state: NewConversationUi): String? {
         else -> null
     }
 }
+
+/** The start box's tallest height while a blocking notice shares its scroller; longer words scroll inside it. */
+private const val NOTICE_BOX_MAX_DP = 220
