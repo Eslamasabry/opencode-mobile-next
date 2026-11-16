@@ -187,7 +187,22 @@ public data class PlanCardUi(
     val readFrom: PlanConnectionUi? = null,
     val hasAlertOverride: Boolean = false,
     val notifyReset: Boolean = false,
+    val agent: PlanAgentTruth? = null,
 )
+
+/**
+ * What the phone's own agent says about itself when a reader found no numbers on this phone. Mirrors
+ * `UsageAgentTruth` so Usage › Plans agrees with Usage › Limits, the tile and the chooser.
+ */
+public sealed interface PlanAgentTruth {
+    public data object SignedIn : PlanAgentTruth
+
+    public data object SignedOut : PlanAgentTruth
+
+    public data class Limit(val resets: String?) : PlanAgentTruth
+
+    public data class NotConfirmed(val agentName: String) : PlanAgentTruth
+}
 
 public data class PlanKeyUi(
     val name: String,
@@ -273,6 +288,9 @@ public interface PlansActions {
     public fun askCollector(profile: ProfileId)
 
     public fun fix(key: String)
+
+    /** "Check <agent> again": asks the phone's agent whether it is signed in, then reads the plans again. */
+    public fun checkAgent() {}
 }
 
 private fun UsageConnection.ui(): PlanConnectionUi =
@@ -283,7 +301,12 @@ private fun UsageConnection.ui(): PlanConnectionUi =
     )
 
 /** Pure: the engine snapshot as screen state. */
-public fun plansUi(snapshot: UsageSnapshot, refreshing: Boolean, nowMs: Long): PlansUi {
+public fun plansUi(
+    snapshot: UsageSnapshot,
+    refreshing: Boolean,
+    nowMs: Long,
+    agents: Map<String, PlanAgentTruth> = emptyMap(),
+): PlansUi {
     val cards =
         snapshot.subscriptions
             .sortedBy { s ->
@@ -353,8 +376,11 @@ public fun plansUi(snapshot: UsageSnapshot, refreshing: Boolean, nowMs: Long): P
         snapshot.addable.toImmutableList(),
         refreshing,
         nowMs,
-    )
+    ).withAgents(agents)
 }
+
+/** Applies the phone agents' own state to cards whose reader found no numbers on this phone. */
+public fun PlansUi.withAgents(agents: Map<String, PlanAgentTruth>): PlansUi = this
 
 /** Compact cards favour the five-hour and weekly limits, then the first two reported limits. */
 public fun PlanCardUi.cardWindows(): List<PlanWindowUi> {

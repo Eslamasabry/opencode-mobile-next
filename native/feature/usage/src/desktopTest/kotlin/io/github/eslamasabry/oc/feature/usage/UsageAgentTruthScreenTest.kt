@@ -12,6 +12,8 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.security.Redactor
+import io.github.eslamasabry.oc.engine.integrations.usage.SignInState
+import io.github.eslamasabry.oc.engine.integrations.usage.SignedInOn
 import io.github.eslamasabry.oc.engine.integrations.usage.SubscriptionState
 import io.github.eslamasabry.oc.engine.integrations.usage.UsageConnection
 import io.github.eslamasabry.oc.engine.integrations.usage.UsageConnectionKind
@@ -138,6 +140,60 @@ class UsageAgentTruthScreenTest {
         runDesktopComposeUiTest(412, 1000) {
             setContent { Screen(state(UsageAgentTruth.SignedIn), Actions()) }
             onNodeWithText("Signed in, but its numbers can't be read yet.").assertExists()
+            onNodeWithText("Not signed in", substring = true).assertDoesNotExist()
+        }
+
+    @Test
+    fun `SIGNIN-U-7 a collapsed subscription with another connection ahead of phone still uses phone truth`() =
+        runDesktopComposeUiTest(412, 1000) {
+            val actions = Actions()
+            val other = UsageConnection("pc", "Workstation", UsageConnectionKind.PaseoServer)
+            val claude =
+                UsageSubscription(
+                    key = "claude|conn:pc",
+                    providerId = "claude",
+                    displayName = "Claude",
+                    state = SubscriptionState.NotSignedIn,
+                    readFrom = null,
+                    signedInOn = listOf(SignedInOn(other, SignInState.NotSignedIn), SignedInOn(phone, SignInState.NotSignedIn)),
+                )
+            val ui =
+                limitsUi(
+                    UsageSnapshot(subscriptions = listOf(claude), connections = listOf(other, phone), loaded = true),
+                    refreshing = false,
+                    nowMs = now,
+                    timezone = "UTC",
+                    agents = mapOf("claude" to UsageAgentTruth.NotConfirmed("Claude Code")),
+                )
+            setContent { Screen(ui, actions) }
+            onNodeWithText("Sign-in not confirmed").assertExists()
+            onNodeWithText("Not signed in", substring = true).assertDoesNotExist()
+            onNodeWithText("Check Claude Code again").performClick()
+            assertEquals(1, actions.checks)
+        }
+
+    @Test
+    fun `SIGNIN-U-8 a limit stands even when the reader reports no limits`() =
+        runDesktopComposeUiTest(412, 1000) {
+            val claude =
+                UsageSubscription(
+                    key = "claude|conn:phone",
+                    providerId = "claude",
+                    displayName = "Claude",
+                    state = SubscriptionState.NoLimits,
+                    readFrom = null,
+                    signedInOn = listOf(SignedInOn(phone, SignInState.SignedIn)),
+                )
+            val ui =
+                limitsUi(
+                    UsageSnapshot(subscriptions = listOf(claude), connections = listOf(phone), loaded = true),
+                    refreshing = false,
+                    nowMs = now,
+                    timezone = "UTC",
+                    agents = mapOf("claude" to UsageAgentTruth.Limit("Nov 20, 1:00 AM")),
+                )
+            setContent { Screen(ui, Actions()) }
+            onNodeWithText("Plan limit reached · resets Nov 20, 1:00 AM").assertExists()
             onNodeWithText("Not signed in", substring = true).assertDoesNotExist()
         }
 }

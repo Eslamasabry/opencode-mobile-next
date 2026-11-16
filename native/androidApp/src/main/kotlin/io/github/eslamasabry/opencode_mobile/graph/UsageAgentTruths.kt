@@ -2,6 +2,7 @@ package io.github.eslamasabry.opencode_mobile.graph
 
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentRow
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentStatus
+import io.github.eslamasabry.oc.feature.plans.presentation.PlanAgentTruth
 import io.github.eslamasabry.oc.feature.usage.presentation.UsageAgentTruth
 
 /**
@@ -31,4 +32,6 @@ internal object UsageAgentTruths {
                 if (truth != null) put(row.id, truth)
             }
         }
+
+    fun planOf(rows: List<PhoneAgentRow>): Map<String, PlanAgentTruth> = emptyMap()
 }
