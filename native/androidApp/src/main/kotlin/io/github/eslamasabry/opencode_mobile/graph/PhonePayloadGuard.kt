@@ -4,6 +4,7 @@ import android.app.Application
 import dev.zacsweers.metro.*
 import io.github.eslamasabry.oc.core.common.*
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
+import io.github.eslamasabry.oc.core.data.cache.LastKnown
 import io.github.eslamasabry.oc.core.data.kv.PrefValue
 import io.github.eslamasabry.oc.core.domain.GatewaySpec
 import io.github.eslamasabry.oc.engine.connection.TransientOwners
@@ -27,6 +28,7 @@ class PhonePayloadGuard(
     private val dispatchers: AppDispatchers,
     private val transientOwners: TransientOwners,
     private val redactor: io.github.eslamasabry.oc.core.security.Redactor,
+    private val lastKnown: LastKnown,
 ) : ProfileCloser {
     override val owner = ":engine:agents/payloads"
     private val lock = Any()
@@ -232,6 +234,11 @@ class PhonePayloadGuard(
 
     override fun reopen(profile: ProfileId) {
         synchronized(lock) { closed -= profile }
+    }
+
+    /** Sweeps kept pages for the phone agents' helper profile when phone agents are removed. */
+    suspend fun sweepAgentHelperLastKnown(owner: ProfileId? = null) {
+        sweepPhoneAgentLastKnown(lastKnown, stores, owner)
     }
 
     private fun busy(): Outcome<Nothing> = Failure.Busy(BusyKind.Overloaded).failed()
