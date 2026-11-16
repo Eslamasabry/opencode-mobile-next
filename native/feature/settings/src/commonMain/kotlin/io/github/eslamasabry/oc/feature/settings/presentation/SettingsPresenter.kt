@@ -249,7 +249,7 @@ public class SettingsPresenter(
     }
 
     override fun onInside(inside: SettingsInside) {
-        if (inside !in SettingsInside.searchable(currentFacts.value)) return
+        if (inside !in SettingsInside.searchable(currentFacts.value, state.value.privacy)) return
         when (val door = inside.door()) {
             is SettingsDoor.Page -> onOpen(door.page)
             is SettingsDoor.Outside -> onOutside(door.place)
@@ -257,6 +257,22 @@ public class SettingsPresenter(
             is SettingsDoor.Choice -> Unit
         }
     }
+
+    /** The Privacy and data page's facts (null when the build has neither the collect list nor the health contract). */
+    private fun privacyUi(l: Local, e: Engines): PrivacyUi? =
+        (e.collect != null || healthConsent?.available == true)
+            .takeIf { it }
+            ?.let {
+                val health = healthConsent?.takeIf { it.available }?.let { l.health ?: it.read() }
+                PrivacyUi(
+                    e.collect,
+                    l.consentSaving,
+                    l.crashReports ?: reporting?.reportingConsent?.value ?: health?.crashes,
+                    l.offerCrashReports ?: crashOffer?.enabled(),
+                    usage = health?.usage,
+                    vendorSends = healthConsent?.available == true,
+                )
+            }
 
     private fun build(
         l: Local,
@@ -269,7 +285,8 @@ public class SettingsPresenter(
         val results =
             if (l.query.isBlank()) persistentListOf()
             else SettingsSearch.find(l.query, l.entries.filter { it.row in searchable })
-        val insideSearchable = SettingsInside.searchable(f)
+        val privacyUi = privacyUi(l, e)
+        val insideSearchable = SettingsInside.searchable(f, privacyUi)
         val insideResults =
             if (l.query.isBlank()) persistentListOf()
             else SettingsSearch.findInside(l.query, l.insideEntries.filter { it.inside in insideSearchable })
@@ -317,20 +334,7 @@ public class SettingsPresenter(
             about = about,
             memoryPreview = memoryPreview?.let { MemoryPreviewUi(l.memoryPreview ?: it.enabled(), it.phoneNode) },
             whatsNew = whatsNew(l, f),
-            privacy =
-                (e.collect != null || healthConsent?.available == true)
-                    .takeIf { it }
-                    ?.let {
-                        val health = healthConsent?.takeIf { it.available }?.let { l.health ?: it.read() }
-                        PrivacyUi(
-                            e.collect,
-                            l.consentSaving,
-                            l.crashReports ?: reporting?.reportingConsent?.value ?: health?.crashes,
-                            l.offerCrashReports ?: crashOffer?.enabled(),
-                            usage = health?.usage,
-                            vendorSends = healthConsent?.available == true,
-                        )
-                    },
+            privacy = privacyUi,
             localData =
                 localData?.let {
                     LocalDataUi(

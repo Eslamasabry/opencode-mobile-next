@@ -510,7 +510,7 @@ class PreviewRuntime(
             helperJoins.followFront(
                 visibility.state.map { it == io.github.eslamasabry.oc.core.common.pace.Visibility.Foreground },
                 sources = { profiles.profiles.value.map { it.id } },
-                want = ::wantHelper,
+                want = { wantHelper(it) },
             )
         }
     }
@@ -524,15 +524,18 @@ class PreviewRuntime(
             id,
             keepTrying = HelperStartRules::keepTrying,
             onFailed = { failure ->
-                // The source did not answer: named, with Try again; the loop keeps trying after a pause.
-                if (id !in loadedSources.value) mutableSourceFailures.update { it + (id to failure) }
+                // The source did not answer: named, with Try again; the loop keeps trying after a pause. A hidden
+                // source (wanted by an open conversation) has no row to name it on.
+                if (id !in loadedSources.value && listSourceShown(id))
+                    mutableSourceFailures.update { it + (id to failure) }
             },
         ) {
             command {
                 seedWhileStarting(id)
                 Unit.ok()
             }
-            when (val helper = phoneHelper.value.ensureHelper(id)) {
+            val helper = phoneHelper.value.ensureHelper(id)
+            when (helper) {
                 is Outcome.Ok ->
                     command {
                         // Not listed yet, also when an earlier connection left its listing unread: connect it now
@@ -549,37 +552,47 @@ class PreviewRuntime(
                         Unit.ok()
                     }
                 // Recorded for the loop; hidden while the source still reads starting (ChatsHomeWiring).
-                is Outcome.Failed -> mutableSourceFailures.update { it + (id to helper.failure) }
+                is Outcome.Failed -> if (listSourceShown(id)) mutableSourceFailures.update { it + (id to helper.failure) }
             }
-            // Listed, or no longer shown: this loop is done. Otherwise why it is not listed.
-            if (id in loadedSources.value || !listSourceShown(id)) null
-            else mutableSourceFailures.value[id] ?: Failure.Runtime(RuntimeProblem.ServerStartUnavailable)
+            when {
+                // Listed: this loop is done.
+                id in loadedSources.value -> null
+                // Hidden from the list (an open conversation wants the helper): done once the helper is up; until
+                // then the loop tries again like a shown source's.
+                !listSourceShown(id) ->
+                    (helper as? Outcome.Failed)?.failure
+                // Otherwise why it is not listed.
+                else -> mutableSourceFailures.value[id] ?: Failure.Runtime(RuntimeProblem.ServerStartUnavailable)
+            }
         }
     }
+
+    private val helperWanting =
+        HelperWanting(
+            joins = helperJoins,
+            isHelper = ::isPhoneHelper,
+            isActive = { it == profiles.activeId.value },
+            listed = { it in loadedSources.value },
+            shown = ::listSourceShown,
+            failure = { mutableSourceFailures.value[it] },
+            startLoop = ::joinPhoneHelper,
+        )
 
     /**
      * A shown helper source that is not listed and has no start loop (nothing asked for it since the app started, its
      * connection was closed, or a failure was recorded by another path before any start) gets one; a failure waiting
      * cannot change (the phone's Linux or the helper must be installed or updated first) waits for Try again.
      */
-    internal fun keepHelperListed(id: ProfileId) {
-        if (!isPhoneHelper(id) || id == profiles.activeId.value || !listSourceShown(id)) return
-        if (id in loadedSources.value || helperJoins.running(id)) return
-        mutableSourceFailures.value[id]?.let { if (!HelperStartRules.keepTrying(it)) return }
-        joinPhoneHelper(id)
-    }
+    internal fun keepHelperListed(id: ProfileId) = helperWanting.keepListed(id)
 
     /**
      * Issue 147 (owner's phone, build 10057): the helper of [id] is needed now (the app came to the front, or one of its
      * conversations opened from the home, All conversations, a notification, the edge light or search). Not listed: its
-     * start loop runs, and one that pauses between tries tries again at once with a new 90 s window.
+     * start loop runs, and one that pauses between tries tries again at once with a new 90 s window. A source hidden
+     * from the home's list is wanted too when a conversation of it opens ([evenHidden]); the app coming to the front
+     * wants shown sources only.
      */
-    internal fun wantHelper(id: ProfileId) {
-        if (!isPhoneHelper(id) || id in loadedSources.value) return
-        val running = helperJoins.running(id)
-        keepHelperListed(id)
-        if (running) helperJoins.wake(id)
-    }
+    internal fun wantHelper(id: ProfileId, evenHidden: Boolean = false) = helperWanting.want(id, evenHidden)
 
     private val joiningServers = mutableSetOf<ProfileId>()
 

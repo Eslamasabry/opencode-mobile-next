@@ -23,6 +23,12 @@ public enum class SettingsInside(
     AppearanceMode("inside-appearance-mode", SettingsGroupId.ThisApp),
     AppearanceTheme("inside-appearance-theme", SettingsGroupId.ThisApp),
     VoiceNotices("inside-voice-notices", SettingsGroupId.Conversations),
+    // Privacy and data: the rows at the bottom of that page, found from the hub (small-faults 301).
+    PrivacyWhatWeCollect("inside-privacy-collect", SettingsGroupId.ThisApp),
+    PrivacyPolicy("inside-privacy-policy", SettingsGroupId.ThisApp),
+    PrivacyUsage("inside-privacy-usage", SettingsGroupId.ThisApp),
+    PrivacyCrashSend("inside-privacy-crash-send", SettingsGroupId.ThisApp),
+    PrivacyCrashAsk("inside-privacy-crash-ask", SettingsGroupId.ThisApp),
     AddServer("settings-add-server", SettingsGroupId.Server),
     Demo("settings-try-demo", SettingsGroupId.Help);
 
@@ -42,6 +48,11 @@ public enum class SettingsInside(
             AppearanceMode,
             AppearanceTheme -> SettingsDoor.Page(SettingsPage.Appearance)
             VoiceNotices -> SettingsDoor.Outside(SettingsOutside.VoiceNotices)
+            PrivacyWhatWeCollect -> SettingsDoor.Page(SettingsPage.WhatWeCollect)
+            PrivacyPolicy -> SettingsDoor.Outside(SettingsOutside.PrivacyPolicy)
+            PrivacyUsage,
+            PrivacyCrashSend,
+            PrivacyCrashAsk -> SettingsDoor.Page(SettingsPage.Privacy)
             AddServer -> SettingsDoor.Outside(SettingsOutside.AddServer)
             Demo -> SettingsDoor.Outside(SettingsOutside.Demo)
         }
@@ -68,7 +79,23 @@ public enum class SettingsInside(
         return reachable && held
     }
 
+    /**
+     * The Privacy and data rows that exist only when the page has them: What we collect and the two health switches
+     * need the build's health contract ([PrivacyUi] present), the crash question needs the build's crash offer. The
+     * privacy policy is always on the page.
+     */
+    internal fun onPrivacyPage(privacy: PrivacyUi?): Boolean =
+        when (this) {
+            PrivacyWhatWeCollect -> privacy != null
+            PrivacyUsage -> privacy?.usage != null
+            PrivacyCrashSend -> privacy?.crashReports != null
+            PrivacyCrashAsk -> privacy?.offerCrashReports != null
+            else -> true
+        }
+
     public companion object {
-        public fun searchable(f: SettingsFacts): List<SettingsInside> = entries.filter { it.offered(f) }
+        public fun searchable(f: SettingsFacts, privacy: PrivacyUi? = null): List<SettingsInside> =
+            entries.filter { it.offered(f) && it.onPrivacyPage(privacy) }
+
     }
 }

@@ -80,6 +80,9 @@ import io.github.eslamasabry.oc.ui.words.res.agentsStateSetUpAtFirstUse
 import io.github.eslamasabry.oc.ui.words.res.agentsChipSetUp
 import io.github.eslamasabry.oc.ui.words.res.agentsSetUpAction
 import io.github.eslamasabry.oc.ui.words.res.agentsSignInUncheckedBody
+import io.github.eslamasabry.oc.ui.words.res.agentsRemoveChip
+import io.github.eslamasabry.oc.ui.words.res.agentsRetiredBody
+import io.github.eslamasabry.oc.ui.words.res.agentsStateRetired
 import io.github.eslamasabry.oc.ui.words.res.agentsStateUnavailable
 import io.github.eslamasabry.oc.ui.words.res.agentsHelperStartAgain
 import io.github.eslamasabry.oc.ui.words.res.chatsHomeAgentsUnreachable
@@ -200,6 +203,7 @@ private fun AgentTile(tile: AgentTileModel, actions: AgentsActions, chat: Boolea
                 AgentTileState.PhoneCheck,
                 AgentTileState.InstallFailed -> KitAgentTileTone.NeedsYou
                 AgentTileState.CannotRun,
+                AgentTileState.Retired,
                 AgentTileState.Unavailable -> KitAgentTileTone.Dimmed
                 AgentTileState.HelperDown -> KitAgentTileTone.NeedsYou
                 else -> KitAgentTileTone.Calm
@@ -293,6 +297,15 @@ private fun AgentTile(tile: AgentTileModel, actions: AgentsActions, chat: Boolea
                     ) {
                         actions.requestInstall(agent.id)
                     }
+                // A retired agent's only act: remove its files (the sheet confirms before anything is removed).
+                AgentTileAct.Remove ->
+                    KitAgentTileAction(
+                        stringResource(Res.string.agentsRemoveChip),
+                        stringResource(Res.string.linuxAgentPayloadRemove, agent.name),
+                        icon = KitIcons.delete,
+                    ) {
+                        actions.openAgent(agent.id)
+                    }
                 null ->
                     if (cardOffersConversation(tile, chat))
                         KitAgentTileAction(
@@ -337,6 +350,8 @@ internal fun tileWords(tile: AgentTileModel): String {
         // Installed, but the app cannot read its sign-in, so it can never start a conversation: say that, not a bare
         // "not available" (device 2026-11-12, Gemini CLI). Signing in or installing again would not change it.
         AgentTileState.HelperDown -> stringResource(Res.string.chatsHomeAgentsUnreachable)
+        // Never "Phone check needed" or "install it again": the app no longer offers this agent.
+        AgentTileState.Retired -> stringResource(Res.string.agentsStateRetired)
         AgentTileState.Unavailable ->
             if (agent.signInUnchecked) stringResource(Res.string.agentsStateSignInUnchecked)
             else stringResource(Res.string.agentsStateUnavailable)
@@ -511,6 +526,15 @@ internal fun PhoneAgentSheet(
                     )
                 AgentTileAct.StartAgain ->
                     KitAction(stringResource(Res.string.agentsHelperStartAgain), actions::connectPhoneHelper, enabled = can)
+                // A retired agent offers Remove and nothing else.
+                AgentTileAct.Remove ->
+                    KitAction(
+                        stringResource(Res.string.linuxAgentPayloadRemove, tile.agent.name),
+                        { actions.requestRemoval(tile.agent.id) },
+                        enabled = can,
+                        working = state.busy,
+                        destructive = true,
+                    )
                 // The failed install's way forward: the install review again (it reads the space again first).
                 AgentTileAct.Retry ->
                     KitAction(
@@ -536,6 +560,8 @@ internal fun PhoneAgentSheet(
         tertiary =
             buildList {
                 val a = agent ?: return@buildList
+                // A retired agent: Remove is its primary act; nothing else is offered.
+                if (tile?.state == AgentTileState.Retired) return@buildList
                 // signin-truth: "Sign in needed" may rest on an old report; the check asks the agent itself now.
                 if (tile?.act == AgentTileAct.SignIn)
                     add(
@@ -588,6 +614,7 @@ internal fun PhoneAgentSheet(
                 KitProgressView(tileProgress(tile))
                 KitText(stringResource(Res.string.linuxAgentInstallBackground))
             }
+            tile.state == AgentTileState.Retired -> KitText(stringResource(Res.string.agentsRetiredBody, tile.agent.name))
             // Why it did not install, in full, with what the phone reported under Details.
             tile.state == AgentTileState.InstallFailed ->
                 tile.install?.let { install ->

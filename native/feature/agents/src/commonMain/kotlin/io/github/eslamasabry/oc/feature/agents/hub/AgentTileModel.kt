@@ -16,6 +16,8 @@ public enum class AgentTileState {
     Stopped,
     Limit,
     Unavailable,
+    /** The app no longer offers this agent; a copy left on the phone can only be removed. */
+    Retired,
     /**
      * Ready, but the helper every phone agent runs on did not start (the page's start failed and none runs now): the
      * agent itself is fine, the phone's agents are not running. Its act starts the helper again.
@@ -42,6 +44,8 @@ public enum class AgentTileAct {
     Retry,
     /** Start the phone's agent helper again after it did not start ([AgentTileState.HelperDown]). */
     StartAgain,
+    /** Remove a retired agent's files ([AgentTileState.Retired]): its only act. */
+    Remove,
 }
 
 /** One phone agent as the bento grid draws it: its state, the install's measured share, and at most one act. */
@@ -80,6 +84,8 @@ public enum class PhoneAgentShown {
     /** Ready, but the phone's agent helper did not start. */
     HelperDown,
     Unavailable,
+    /** The app no longer offers it: never a choice for a conversation, never fixable; only removable. */
+    Retired,
 }
 
 /** [agent]'s one status ([PhoneAgentShown]) given the running [installation] and whether the helper did not start. */
@@ -90,6 +96,7 @@ public fun phoneAgentShown(
 ): PhoneAgentShown {
     if (installation?.id == agent.id && installation.phase == PhoneAgentInstallPhase.Installing)
         return PhoneAgentShown.Installing
+    if (agent.retired) return PhoneAgentShown.Retired
     return when (agent.status) {
         PhoneAgentStatus.NotInstalled -> PhoneAgentShown.NotInstalled
         PhoneAgentStatus.SetUpAtFirstUse ->
@@ -137,12 +144,15 @@ public fun agentTile(
             quiet = quiet,
         )
     val ended = mine?.phase == PhoneAgentInstallPhase.Failed || mine?.phase == PhoneAgentInstallPhase.Interrupted
-    if (ended && agent.status == PhoneAgentStatus.NotInstalled && agent.supportedInstallation)
+    if (ended && !agent.retired && agent.status == PhoneAgentStatus.NotInstalled && agent.supportedInstallation)
         return AgentTileModel(agent, AgentTileState.InstallFailed, act = AgentTileAct.Retry, install = mine)
     val justInstalled = mine?.phase == PhoneAgentInstallPhase.Done && agent.status != PhoneAgentStatus.Ready
     // The one status every place shows ([phoneAgentShown]); the tile adds its act and its own detail words.
     return when (phoneAgentShown(agent, installation, helperDown)) {
         PhoneAgentShown.Installing -> AgentTileModel(agent, AgentTileState.Installing, install = mine, quiet = quiet)
+        // No longer offered: no install, check or sign-in; Remove frees its files when the app can remove them.
+        PhoneAgentShown.Retired ->
+            AgentTileModel(agent, AgentTileState.Retired, act = if (agent.removable) AgentTileAct.Remove else null)
         PhoneAgentShown.NotInstalled ->
             if (agent.supportedInstallation) AgentTileModel(agent, AgentTileState.NotInstalled, act = AgentTileAct.Install)
             else AgentTileModel(agent, AgentTileState.CannotRun)
