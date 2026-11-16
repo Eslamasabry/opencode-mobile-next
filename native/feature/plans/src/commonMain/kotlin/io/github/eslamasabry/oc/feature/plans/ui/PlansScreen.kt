@@ -152,7 +152,7 @@ public fun PlansContent(
                     KitRowGroup(label = words.needsSetup) {
                         for (card in setup) KitRow(
                             title = words.cardTitle(card.name, card.connection),
-                            supporting = words.state(card.state, card.providerId),
+                            supporting = words.cardState(card),
                             supportingMaxLines = 3,
                             trailing = KitRowTrailing.Chevron,
                             onClick = { opened = card.key },
@@ -365,7 +365,7 @@ private fun PlanDetails(
     Column(verticalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
         KitRowGroup {
             KitRow(
-                title = words.state(card.state, card.providerId),
+                title = words.cardState(card),
                 supporting = card.plan?.let { words.plan(it) },
                 supportingMaxLines = 3,
             )
@@ -376,45 +376,59 @@ private fun PlanDetails(
                 valueSemantics = words.left(w.leftPercent),
                 note = words.resetDetail(w, nowMs),
             )
-            words.fix(card.fix, card.fixConnection)?.let { label ->
+            val agent = card.agent
+            if (agent is PlanAgentTruth.NotConfirmed) {
                 KitRow(
-                    title = label,
-                    onClick =
-                        when (card.fix) {
-                            UsageFix.TryAgain -> actions::refresh
-                            UsageFix.SignIn,
-                            UsageFix.AddKey ->
-                                onAdd?.let { launch ->
-                                    {
-                                        close()
-                                        launch(card.providerId, card.fixConnection?.id)
-                                    }
-                                }
-                            UsageFix.SetUp ->
-                                card.fixConnection?.let { connection ->
-                                    manage?.let { controller ->
-                                        {
-                                            close()
-                                            controller.openReader(connection.id, connection.name)
-                                        }
-                                    }
-                                }
-                            UsageFix.None -> null
-                        },
+                    title = stringResource(Res.string.agentsCheckSignInAgain, agent.agentName),
+                    onClick = actions::checkAgent,
                     supportingMaxLines = 3,
                 )
+            } else if (agent == null || agent == PlanAgentTruth.SignedOut) {
+                words.fix(card.fix, card.fixConnection)?.let { label ->
+                    KitRow(
+                        title = label,
+                        onClick =
+                            when (card.fix) {
+                                UsageFix.TryAgain -> actions::refresh
+                                UsageFix.SignIn,
+                                UsageFix.AddKey ->
+                                    onAdd?.let { launch ->
+                                        {
+                                            close()
+                                            launch(card.providerId, card.fixConnection?.id)
+                                        }
+                                    }
+                                UsageFix.SetUp ->
+                                    card.fixConnection?.let { connection ->
+                                        manage?.let { controller ->
+                                            {
+                                                close()
+                                                controller.openReader(connection.id, connection.name)
+                                            }
+                                        }
+                                    }
+                                UsageFix.None -> null
+                            },
+                        supportingMaxLines = 3,
+                    )
+                }
             }
-            for (on in card.signedInOn) KitRow(
-                title = words.signedIn(on.connection, on.state, on.online, on.readsFromHere),
-                supportingMaxLines = 3,
-                onClick =
-                    if (on.state != SignInState.SignedIn && onAdd != null) {
-                        {
-                            close()
-                            onAdd(card.providerId, on.connection.id)
-                        }
-                    } else null,
-            )
+            for (on in card.signedInOn) {
+                val phoneOverridden =
+                    on.connection.isPhone && agent != null && agent != PlanAgentTruth.SignedOut
+                KitRow(
+                    title =
+                        words.signedIn(on.connection, on.state, on.online, on.readsFromHere, agent),
+                    supportingMaxLines = 3,
+                    onClick =
+                        if (!phoneOverridden && on.state != SignInState.SignedIn && onAdd != null) {
+                            {
+                                close()
+                                onAdd(card.providerId, on.connection.id)
+                            }
+                        } else null,
+                )
+            }
         }
         if (manage != null && management != null && card.windows.isNotEmpty())
             KitRowGroup(label = stringResource(Res.string.m40UsageAlerts)) {

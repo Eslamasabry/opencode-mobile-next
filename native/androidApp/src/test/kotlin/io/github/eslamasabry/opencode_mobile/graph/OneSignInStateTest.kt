@@ -212,12 +212,31 @@ class OneSignInStateTest {
                 connections = listOf(phone),
                 readings =
                     listOf(
-                        UsageReading("claude", "Claude", helperId, UsageReadingStatus.NotSignedIn, Instant.fromEpochMilliseconds(now)),
-                        UsageReading("claude", "Claude", UsageConnection.PHONE_ID, UsageReadingStatus.NotSignedIn, Instant.fromEpochMilliseconds(now)),
+                        UsageReading(
+                            "claude",
+                            "Claude",
+                            helperId,
+                            UsageReadingStatus.NotSignedIn,
+                            Instant.fromEpochMilliseconds(now),
+                        ),
+                        UsageReading(
+                            "claude",
+                            "Claude",
+                            UsageConnection.PHONE_ID,
+                            UsageReadingStatus.NotSignedIn,
+                            Instant.fromEpochMilliseconds(now),
+                        ),
                     ),
             )
         val row = row(AgentSignInPhase.Failed)
-        val ui = limitsUi(merged, refreshing = false, nowMs = now, timezone = "UTC", agents = UsageAgentTruths.of(listOf(row)))
+        val ui =
+            limitsUi(
+                merged,
+                refreshing = false,
+                nowMs = now,
+                timezone = "UTC",
+                agents = UsageAgentTruths.of(listOf(row)),
+            )
         assertEquals(UsageAgentTruth.NotConfirmed("Claude Code"), ui.accounts.single().agent)
     }
 }

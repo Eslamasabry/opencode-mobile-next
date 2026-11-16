@@ -77,7 +77,7 @@ class UsageAgentTruthScreenTest {
     private class Actions : LimitsActions {
         var checks = 0
 
-        override fun refresh() {}
+        override fun refresh(): Unit = Unit
 
         override fun checkAgent() {
             checks++
@@ -155,7 +155,11 @@ class UsageAgentTruthScreenTest {
                     displayName = "Claude",
                     state = SubscriptionState.NotSignedIn,
                     readFrom = null,
-                    signedInOn = listOf(SignedInOn(other, SignInState.NotSignedIn), SignedInOn(phone, SignInState.NotSignedIn)),
+                    signedInOn =
+                        listOf(
+                            SignedInOn(other, SignInState.NotSignedIn),
+                            SignedInOn(phone, SignInState.NotSignedIn),
+                        ),
                 )
             val ui =
                 limitsUi(

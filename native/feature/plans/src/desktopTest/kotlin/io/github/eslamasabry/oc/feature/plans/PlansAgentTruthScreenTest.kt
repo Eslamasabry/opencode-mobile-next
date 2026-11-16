@@ -61,31 +61,31 @@ class PlansAgentTruthScreenTest {
     private class Actions : PlansActions {
         var checks = 0
 
-        override fun back() {}
+        override fun back(): Unit = Unit
 
-        override fun refresh() {}
+        override fun refresh(): Unit = Unit
 
-        override fun setUpCollector() {}
+        override fun setUpCollector(): Unit = Unit
 
-        override fun turnOffCollector() {}
+        override fun turnOffCollector(): Unit = Unit
 
-        override fun editThreshold(key: String?) {}
+        override fun editThreshold(key: String?): Unit = Unit
 
-        override fun thresholdChanged(value: String) {}
+        override fun thresholdChanged(value: String): Unit = Unit
 
-        override fun saveThreshold() {}
+        override fun saveThreshold(): Unit = Unit
 
-        override fun useDefaultThreshold() {}
+        override fun useDefaultThreshold(): Unit = Unit
 
-        override fun toggleResetNotice() {}
+        override fun toggleResetNotice(): Unit = Unit
 
-        override fun dismissEditor() {}
+        override fun dismissEditor(): Unit = Unit
 
-        override fun setAlertsOn(enabled: Boolean) {}
+        override fun setAlertsOn(enabled: Boolean): Unit = Unit
 
-        override fun askCollector(profile: ProfileId) {}
+        override fun askCollector(profile: ProfileId): Unit = Unit
 
-        override fun fix(key: String) {}
+        override fun fix(key: String): Unit = Unit
 
         override fun checkAgent() {
             checks++

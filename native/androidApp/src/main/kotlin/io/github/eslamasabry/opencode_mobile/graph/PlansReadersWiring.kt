@@ -126,6 +126,8 @@ class AndroidPlansReaders(
     fun connections(): List<UsageConnection> = buildList {
         for (profile in stores.profiles.profiles.value) {
             if (profile.id.raw in closed) continue
+            if (profile.profile.backend == BackendKind.Paseo && !stores.isRemotePaseo(profile))
+                continue
             val kind =
                 when (profile.profile.backend) {
                     BackendKind.OpenCode2 ->
@@ -371,6 +373,7 @@ class AndroidPlansReaders(
                     continue
                 }
                 if (p.profile.backend == BackendKind.Paseo) {
+                    if (!stores.isRemotePaseo(p)) continue
                     val answer =
                         withTimeoutOrNull(12_000) {
                             withSavedPair(p) { pair ->

@@ -125,7 +125,7 @@ internal object PhoneAgentRules {
      * which `PhoneUsageReader` (`PHONE_ID`) already represents in Usage.
      */
     fun isRemotePaseoProfile(id: String, backend: BackendKind, savedOwner: String?): Boolean =
-        backend == BackendKind.Paseo
+        backend == BackendKind.Paseo && !isHelperProfile(id, savedOwner)
 
     /**
      * The saved "This phone" server that helper [id] belongs to, or null when [id] is not the helper or no such phone is

@@ -33,5 +33,13 @@ internal object UsageAgentTruths {
             }
         }
 
-    fun planOf(rows: List<PhoneAgentRow>): Map<String, PlanAgentTruth> = emptyMap()
+    fun planOf(rows: List<PhoneAgentRow>): Map<String, PlanAgentTruth> =
+        of(rows).mapValues { (_, truth) ->
+            when (truth) {
+                UsageAgentTruth.SignedIn -> PlanAgentTruth.SignedIn
+                UsageAgentTruth.SignedOut -> PlanAgentTruth.SignedOut
+                is UsageAgentTruth.Limit -> PlanAgentTruth.Limit(truth.resets)
+                is UsageAgentTruth.NotConfirmed -> PlanAgentTruth.NotConfirmed(truth.agentName)
+            }
+        }
 }

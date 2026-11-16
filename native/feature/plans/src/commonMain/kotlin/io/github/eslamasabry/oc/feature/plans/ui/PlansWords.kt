@@ -5,6 +5,7 @@ import io.github.eslamasabry.oc.engine.integrations.usage.SignInState
 import io.github.eslamasabry.oc.engine.integrations.usage.SubscriptionState
 import io.github.eslamasabry.oc.engine.integrations.usage.UsageFix
 import io.github.eslamasabry.oc.engine.integrations.usage.UsageWindowKind
+import io.github.eslamasabry.oc.feature.plans.presentation.PlanAgentTruth
 import io.github.eslamasabry.oc.feature.plans.presentation.PlanCardUi
 import io.github.eslamasabry.oc.feature.plans.presentation.PlanConnectionUi
 import io.github.eslamasabry.oc.feature.plans.presentation.PlanWindowUi
@@ -92,6 +93,19 @@ public class PlansWords internal constructor() {
         )
 
     @Composable
+    fun cardState(card: PlanCardUi): String =
+        when (val agent = card.agent) {
+            is PlanAgentTruth.Limit ->
+                agent.resets?.let { stringResource(Res.string.agentsStateLimitReset, it) }
+                    ?: stringResource(Res.string.agentsStateLimit)
+            is PlanAgentTruth.NotConfirmed ->
+                stringResource(Res.string.agentsStateSignInNotConfirmed)
+            PlanAgentTruth.SignedIn -> stringResource(Res.string.m40PlansCantRead)
+            PlanAgentTruth.SignedOut,
+            null -> state(card.state, card.providerId)
+        }
+
+    @Composable
     fun fix(fix: UsageFix, where: PlanConnectionUi?): String? {
         val place = where?.let { connection(it) }
         return when (fix) {
@@ -159,19 +173,28 @@ public class PlansWords internal constructor() {
         state: SignInState,
         online: Boolean,
         readsHere: Boolean,
+        agent: PlanAgentTruth? = null,
     ): String {
         val place = connection(connection)
         val what =
-            stringResource(
-                when {
-                    !online && connection.isPhone -> Res.string.m40PlansPhoneStopped
-                    !online -> Res.string.m40PlansOfflineShort
-                    state == SignInState.Expired -> Res.string.m40PlansExpiredShort
-                    state == SignInState.NotSignedIn -> Res.string.m40PlansNotSignedInShort
-                    readsHere -> Res.string.m40PlansReadsHere
-                    else -> Res.string.m40PlansSignedIn
-                }
-            )
+            when {
+                connection.isPhone && agent is PlanAgentTruth.NotConfirmed ->
+                    stringResource(Res.string.agentsStateSignInNotConfirmed)
+                connection.isPhone &&
+                    (agent is PlanAgentTruth.SignedIn || agent is PlanAgentTruth.Limit) ->
+                    stringResource(Res.string.m40PlansSignedIn)
+                else ->
+                    stringResource(
+                        when {
+                            !online && connection.isPhone -> Res.string.m40PlansPhoneStopped
+                            !online -> Res.string.m40PlansOfflineShort
+                            state == SignInState.Expired -> Res.string.m40PlansExpiredShort
+                            state == SignInState.NotSignedIn -> Res.string.m40PlansNotSignedInShort
+                            readsHere -> Res.string.m40PlansReadsHere
+                            else -> Res.string.m40PlansSignedIn
+                        }
+                    )
+            }
         return "$place: $what"
     }
 
@@ -263,6 +286,7 @@ public class PlansWords internal constructor() {
      */
     @Composable
     fun blockMessage(card: PlanCardUi, now: Long, several: Boolean): String? {
+        if (card.agent is PlanAgentTruth.Limit) return cardState(card)
         val where = card.fixConnection ?: card.readFrom
         return when (card.state) {
             SubscriptionState.CantReadYet ->
