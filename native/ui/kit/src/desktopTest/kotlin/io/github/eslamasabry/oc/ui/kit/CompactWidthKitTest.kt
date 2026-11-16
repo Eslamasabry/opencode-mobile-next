@@ -57,7 +57,7 @@ class CompactWidthKitTest {
 
     private fun found(content: @Composable () -> Unit): List<String> =
         LayoutGuard.audit(LayoutGuard.Scene(Frame.Part, content = content), compact)
-            .map { "${it.window.name} ${it.rule} ${it.subject}" }
+            .map { "${it.window.name} ${it.rule} ${it.subject} ${it.detail}" }
 
     @Test
     fun `COMPACT-010 a button in a narrow slot wraps its label and never ends it in an ellipsis`() {
