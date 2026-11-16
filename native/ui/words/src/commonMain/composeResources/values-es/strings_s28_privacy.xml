@@ -26,7 +26,7 @@
     <string name="collectJourney">Hasta dónde llegaste en tus primeros pasos (abriste la app, la configuraste, te conectaste, enviaste un mensaje, recibiste una primera respuesta) y aproximadamente cuánto tiempo después de aceptar. Cada paso se cuenta una sola vez</string>
     <string name="collectStarters">Qué tipo de sugerencia tocaste en una conversación nueva, y tu respuesta de una palabra sobre en qué quieres ayuda. Nunca las palabras de una sugerencia ni lo que pide</string>
     <string name="collectStart">Qué tan rápido inicia la app</string>
-    <string name="collectSmooth">Qué tan fluidas son las páginas (la proporción de fotogramas tardíos y lentos, y de fotogramas congelados), la frecuencia de actualización de la pantalla y, en el chat, qué estaba pasando (llegada de una respuesta, desplazamiento, un menú u hoja abierta, el teclado visible o nada)</string>
+    <string name="collectSmooth">Qué tan fluidas son las páginas (la proporción de fotogramas tardíos y lentos, y de fotogramas congelados), la frecuencia de actualización de la pantalla y, en la conversación, qué estaba pasando (llegada de una respuesta, desplazamiento, un menú u hoja abierta, el teclado visible o nada)</string>
     <string name="collectMemory">Avisos de memoria de Android</string>
     <string name="collectDevice">Rangos de la memoria y el almacenamiento libre de tu teléfono, su tipo de procesador y la versión de WebView, si las notificaciones están permitidas, y el tipo y la versión del servidor que usas</string>
     <string name="collectCrashKind">El tipo de error y en qué parte del código de la app ocurrió, nunca su mensaje</string>
@@ -38,7 +38,7 @@
     <string name="privacyCrashSendTitle">Enviar datos de fallos automáticamente</string>
     <string name="privacyCrashAskTitle">Preguntarme tras un fallo</string>
     <string name="collectTurns">Cómo terminó cada turno (completado, terminado sin nada que mostrar, detenido, error, conexión perdida o sin respuesta a una aprobación), cuánto tardó en verse una primera respuesta y hasta que el agente mostró por primera vez alguna señal de trabajo, cuánto tardó, cuántas herramientas usó y si se recuperó de una conexión caída</string>
-    <string name="collectApprovals">Qué tipo de solicitud se te hizo (ejecutar, editar, leer, web o una pregunta), tu respuesta o que la respondió una opción guardada o que se detuvo la ejecución, dónde respondiste (chat, inicio, una notificación o un widget) y cuánto esperó. Nunca el comando, el archivo ni la pregunta en sí</string>
+    <string name="collectApprovals">Qué tipo de solicitud se te hizo (ejecutar, editar, leer, web o una pregunta), tu respuesta o que la respondió una opción guardada o que se detuvo la ejecución, dónde respondiste (conversación, inicio, una notificación o un widget) y cuánto esperó. Nunca el comando, el archivo ni la pregunta en sí</string>
     <string name="collectShareIn">Cuántas fotos o archivos compartiste con la app, y si eran imágenes o archivos. Nunca sus nombres ni su contenido</string>
     <string name="collectStarAsk">Si la petición única de dar una estrella al proyecto en GitHub se mostró, se tocó o se descartó</string>
 </resources>

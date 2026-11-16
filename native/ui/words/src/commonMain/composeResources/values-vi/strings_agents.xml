@@ -578,6 +578,6 @@
     <string name="agentsOwnAgentReadyLater">Sẽ sẵn sàng khi tác vụ đang chạy kết thúc.</string>
     <string name="agentsUpdatingAgent">Đang cập nhật %1$s</string>
     <string name="agentsStateRetired">Không còn được cung cấp trên điện thoại này</string>
-    <string name="agentsRetiredBody">%1$s không còn được cung cấp trên điện thoại này nên không thể thiết lập hay dùng lại. Hãy gỡ để giải phóng dung lượng nó chiếm. Các tác tử và cuộc trò chuyện khác của bạn vẫn còn.</string>
+    <string name="agentsRetiredBody">%1$s không còn được cung cấp trên điện thoại này nên không thể thiết lập hay dùng lại. Hãy gỡ để giải phóng dung lượng nó chiếm. Các tác nhân và cuộc trò chuyện khác của bạn vẫn còn.</string>
     <string name="agentsRemoveChip">Gỡ</string>
 </resources>
