@@ -720,4 +720,6 @@
     <string name="connectUpdatingPhone">Mise à jour d’OpenCode sur ce téléphone…</string>
     <string name="connectUpdatingAgents">Mise à jour de vos agents sur ce téléphone. La conversation s’ouvrira une fois terminée.</string>
     <string name="connectAgentNeedsSignIn">Votre agent a besoin que vous vous connectiez. Ouvrez Agents et touchez Se connecter ; la conversation s’ouvrira ensuite.</string>
+    <string name="kitChipsMore">Afficher plus de filtres</string>
+    <string name="kitChipsFirst">Afficher les premiers filtres</string>
 </resources>

@@ -754,4 +754,6 @@
     <string name="connectUpdatingPhone">جارٍ تحديث OpenCode على هذا الهاتف…</string>
     <string name="connectUpdatingAgents">جارٍ تحديث وكلائك على هذا الهاتف. ستُفتح المحادثة عند الانتهاء.</string>
     <string name="connectAgentNeedsSignIn">وكيلك يحتاج منك تسجيل الدخول. افتح «الوكلاء» واضغط «تسجيل الدخول»، وستُفتح المحادثة بعد ذلك.</string>
+    <string name="kitChipsMore">إظهار المزيد من عوامل التصفية</string>
+    <string name="kitChipsFirst">إظهار عوامل التصفية الأولى</string>
 </resources>

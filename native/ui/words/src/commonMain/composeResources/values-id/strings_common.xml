@@ -698,4 +698,6 @@
     <string name="connectUpdatingPhone">Memperbarui OpenCode di ponsel ini…</string>
     <string name="connectUpdatingAgents">Memperbarui agen Anda di ponsel ini. Percakapan terbuka setelah selesai.</string>
     <string name="connectAgentNeedsSignIn">Agen Anda perlu Anda masuk. Buka Agen lalu ketuk Masuk; percakapan terbuka setelah itu.</string>
+    <string name="kitChipsMore">Tampilkan filter lainnya</string>
+    <string name="kitChipsFirst">Tampilkan filter pertama</string>
 </resources>
