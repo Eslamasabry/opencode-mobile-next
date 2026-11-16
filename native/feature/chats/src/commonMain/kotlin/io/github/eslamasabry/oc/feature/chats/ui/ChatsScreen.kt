@@ -705,7 +705,8 @@ private fun ConnectionStatusPill(connection: HomeConnectionUi, actions: ChatsAct
 
 @Composable
 private fun Filters(state: ChatsUi, actions: ChatsActions, bleed: Boolean = false) {
-    KitFilterChips(bleed = bleed) {
+    // Never rests with a chip cut by the edge ("All connections" at 360 dp): it settles on a whole chip, with an end fade.
+    KitFilterChips(bleed = bleed, restWhole = true) {
         HomeFilterChips(state, actions)
         val runningNow = state.runningShown
         KitChip(

@@ -188,7 +188,7 @@ public fun KitSignalSample(modifier: Modifier = Modifier) {
             if (index < 2) {
                 drawCircle(Color(p.head.v), 7.dp.toPx(), Offset(x(track), at))
                 drawCircle(
-                    Color(if (index == 0) SignalPalette.LampRed.v else SignalPalette.LampGreen.v),
+                    if (index == 0) colors.attention else Color(SignalPalette.LampGreen.v),
                     3.dp.toPx(),
                     Offset(x(track), at),
                 )
