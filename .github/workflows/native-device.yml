@@ -38,10 +38,10 @@ concurrency:
 
 env:
   # The app commit under test (the release candidate). Changed by a commit on this branch for each run.
-  APP_REF: 37ccdd9f32b1ebc08c8f3d35b76208220bb61ddf
+  APP_REF: 91d5b423b8a25425ed672b070eb84435bc07f0ea
   REPO: Eslamasabry/opencode-mobile-next
   # Non-empty: reuse the proof-apks artifact of that earlier run of this workflow (same APP_REF) instead of building.
-  REUSE_RUN: "43774035249"
+  REUSE_RUN: ""
   ANDROID_AVD_HOME: /home/runner/.android/avd
   # Non-empty with REUSE_RUN: only these cases (JSON list).
   CASES: '["f215","via10020","f214"]'
