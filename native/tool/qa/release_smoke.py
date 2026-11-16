@@ -311,7 +311,25 @@ def new_conversation():
         v, nodes = wait_for('composer', 30, composer)
         if not v:
             raise Fail('the conversation did not open with a message box')
+    settle_setup()
     return composer
+
+
+def settle_setup(timeout=90):
+    """Each check starts the app cold, so the phone's own server may still be starting when New conversation reads its
+    projects and models ("This server's projects and models couldn't be read."). The page does not read again by
+    itself; a person taps "Try again". Do the same, every few seconds, until the page has read them."""
+    failed, retry = word('chatsNewSetupFailed'), word('commonRetry')
+    end = time.time() + timeout
+    while time.time() < end:
+        nodes = screen()
+        if not find(nodes, failed):
+            return
+        again = find(nodes, retry)
+        if again:
+            tap(again[0])
+        time.sleep(5)
+    raise Fail(f'New conversation still said "{failed}" after {timeout} s of "{retry}" (the server did not answer)')
 
 
 def clear_field():
@@ -353,7 +371,7 @@ def check_c(ctx):
     send(composer, f'Reply with exactly this word and nothing else: {tok}')
     v, _ = wait_for('reply', 150, lambda ns: [n for n in ns if n.label().strip() == tok])
     if not v:
-        raise Fail(f'no reply that is exactly "{tok}" within 150 s (does the phone\'s server have a working model?)')
+        raise Fail(f'no reply that is exactly "{tok}" within 150 s (was it sent, and does the server have a working model?)')
     return 'the reply came back'
 
 

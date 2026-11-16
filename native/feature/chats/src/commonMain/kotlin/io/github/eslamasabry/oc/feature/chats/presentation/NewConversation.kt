@@ -48,6 +48,10 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.time.Duration.Companion.seconds
 
+/** A refused first read is read again this often, this many times (about 30 s), before the page says it could not read. */
+internal const val SETUP_RETRY_EVERY_MS: Long = 3_000
+internal const val SETUP_RETRIES: Int = 10
+
 /** How long the page waits for a server's first answer before it says so and offers Try again. */
 internal val SETUP_WAIT = 90.seconds
 
@@ -1067,9 +1071,21 @@ public class NewConversationViewModel(
             val cached = host.cachedSetup(profile)
             if (cached != null && ticket == generation) applySetup(profile, ticket, cached)
             // Never wait for ever: a server that does not answer in time is a failure with a Try again.
-            val answered =
+            var answered =
                 withTimeoutOrNull(SETUP_WAIT) { host.setup(profile) }
                     ?: Outcome.Failed(Failure.Network(NetworkWhy.Unknown))
+            // A server that is still starting or reconnecting refuses the read at once: the page keeps waiting (it
+            // stays "getting ready", with Start kept) and reads again by itself, for a bounded time. "Couldn't be
+            // read" with Try again is only for a read that still fails after that (a server that is up and failing).
+            for (again in 1..SETUP_RETRIES) {
+                val refused = answered
+                if (refused !is Outcome.Failed || cached != null || refused.failure !is Failure.Network) break
+                delay(SETUP_RETRY_EVERY_MS)
+                if (ticket != generation) return@launch
+                answered =
+                    withTimeoutOrNull(SETUP_WAIT) { host.setup(profile) }
+                        ?: Outcome.Failed(Failure.Network(NetworkWhy.Unknown))
+            }
             when (val loaded = answered) {
                 is Outcome.Failed ->
                     // A page already showing the remembered setup stays usable when the fresh read fails.

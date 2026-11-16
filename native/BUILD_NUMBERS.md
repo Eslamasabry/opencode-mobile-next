@@ -88,3 +88,4 @@ wiped (see Floor); they never come back and do not raise the floor.
 | 10056 | build | 2026-11-16 | owner's build of a19b8f0c31 (black frame on Home -> +, Plan holds on phone agents, Home top without a pane, sign-in follow-ups, compact width 2; CI 43788143805 passed) |
 | 10057 | build | 2026-11-16 | release candidate for 3.0.0+10060: the owner's build of the commit that records this number (privacy wording made true, plus every release item merged by 06:45) |
 | 10058 | build | 2026-11-16 | release candidate for 3.0.0+10060 (supersedes 10057): the owner's build of the commit that records this number (helper autostart fix on top of 10057, release notes updated) |
+| 10059 | build | 2026-11-16 | final release candidate for 3.0.0+10060 (supersedes 10058): the owner's build of the commit that records this number (10058 + connecting-alive, schedules-migrate, server-refresh-metered, smoke script fix) |
