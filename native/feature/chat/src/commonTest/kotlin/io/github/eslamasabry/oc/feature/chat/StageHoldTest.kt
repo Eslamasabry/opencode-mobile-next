@@ -1,6 +1,6 @@
 package io.github.eslamasabry.oc.feature.chat
 
-import io.github.eslamasabry.oc.feature.chat.world.holdStages
+import io.github.eslamasabry.oc.core.common.holdStages
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlinx.coroutines.ExperimentalCoroutinesApi
