@@ -45,7 +45,10 @@ class ReleaseGate(unittest.TestCase):
             os.makedirs(os.path.join(t, 'work', os.path.dirname(rel)), exist_ok=True)
             shutil.copy(os.path.join(REPO, rel), os.path.join(t, 'work', rel))
         vc = os.path.join(t, 'work/native/tool/version_code.sh')
-        open(vc, 'w').write('#!/bin/sh\necho 10060\n')
+        # The allocator's answer for a release: the next multiple of ten above the tree's versionCode (a fixed number
+        # goes stale as soon as a build number passes it, as 10061 did).
+        code = int(re.search(r'^versionCode=(\d+)', open(os.path.join(REPO, 'native/version.properties')).read(), re.M).group(1))
+        open(vc, 'w').write(f'#!/bin/sh\necho {(code // 10 + 1) * 10}\n')
         os.chmod(vc, 0o755)
         g = lambda *a, cwd=os.path.join(t, 'work'): subprocess.run(['git', *a], cwd=cwd, check=True, capture_output=True, text=True,
                                                                   env=dict(os.environ, GIT_AUTHOR_NAME='t', GIT_AUTHOR_EMAIL='t@t', GIT_COMMITTER_NAME='t', GIT_COMMITTER_EMAIL='t@t'))
