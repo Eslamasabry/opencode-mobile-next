@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <plurals name="notifStatusNeedsYou">
+        <item quantity="other">%1$d件で確認が必要</item>
+    </plurals>
+    <string name="notifStatusReconnectingGeneric">再接続中</string>
+    <string name="andr_thermalPaused">スマートフォンが熱くなっています。冷却のためAI Teamを一時停止しました。温度が下がると自動的に再開します。</string>
+    <string name="andr_thermalStopped">スマートフォンが非常に熱くなっています。保護のためAI Teamを停止しました。作業内容は保持され、スマートフォンが冷えると再び開始します。</string>
+    <string name="andr_thermalResumed">スマートフォンが冷えたため、AI Teamを再開しました。</string>
+</resources>

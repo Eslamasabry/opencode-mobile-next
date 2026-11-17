@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="webSourcesDuplicateNative">このURLはすでに確認リストに含まれています。</string>
+    <string name="webSourcesFullNative">確認できるソースは最大10件までです。新しく追加する前に1件削除してください。</string>
+    <string name="webSourcesChooseNative">確認済みのソースを1件以上選択してください。</string>
+</resources>

@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="glassLabTitle">ガラスラボ</string>
+    <string name="glassLabRowLine">ライブプレビュー上でガラスの各数値を調整します（テストビルド）</string>
+    <string name="glassLabHandle">ガラス設定</string>
+    <string name="glassLabHandleOpen">開く</string>
+    <string name="glassLabHandleClosed">閉じる</string>
+    <string name="glassLabThemeDark">ダークテーマの数値</string>
+    <string name="glassLabThemeLight">ライトテーマの数値</string>
+    <string name="glassLabAllLinked">すべて連動</string>
+    <string name="glassLabStartFrom">基準値</string>
+    <string name="glassLabInApp">アプリ全体で使用</string>
+    <string name="glassLabInAppLine">オフにするまでアプリ内のすべてのガラスパネルにこれらの数値が適用されます</string>
+    <string name="glassLabCopy">値をコピー</string>
+    <string name="glassLabCopied">コピーしました</string>
+    <string name="glassLabCopiedToast">ガラスの数値をコピーしました</string>
+    <string name="glassLabPaste">値を貼り付け</string>
+    <string name="glassLabPasted">ガラスの数値を読み込みました</string>
+    <string name="glassLabPasteRefused">クリップボードにガラスの数値がありません</string>
+    <string name="glassLabResetAll">すべてリセット</string>
+    <string name="glassLabSceneChat">会話</string>
+    <string name="glassLabSceneHome">ホーム一覧</string>
+    <string name="glassLabOpenMenu">バーメニュー</string>
+    <string name="glassLabOpenSheet">シート</string>
+    <string name="glassLabOpenContext">コンテキストメニュー</string>
+    <string name="glassLabOpenDialog">ダイアログ</string>
+    <string name="glassLabSliderReset">初期値に戻す</string>
+    <string name="glassLabTypeTitle">数値を入力</string>
+    <string name="glassLabTypeField">値</string>
+    <string name="glassLabTypeConfirm">設定</string>
+    <string name="glassLabSampleTitle">Ubuntuでパーサーを実行</string>
+    <string name="glassLabSampleSubtitle">新規 · このスマートフォン</string>
+    <string name="glassLabSampleAsk">パーサーがコードブロック内の空行を落としてしまう原因を調べて、数値も見せてくれますか？</string>
+    <string name="glassLabSampleReply">行分割処理が原因でした。コードブロックの境界を確認する前に各行をトリムしているため、ブロック内の空行が段落の終わりとみなされています。同じファイルに対する各バージョンの結果は次のとおりです。\n\n| バージョン | 保持行数 | 時間 |\n|---|---|---|\n| 1.4 | 212 | 38 ms |\n| 1.5 | 196 | 35 ms |\n| fix | 212 | 36 ms |\n\n修正版では境界チェックが終わるまで元の行をそのまま保持します。\n\n```kotlin\nval raw = lines[i]\nif (inFence) block += raw\nelse if (raw.isBlank()) closeParagraph()\n```\n\nUbuntuマシンでテストを実行しましょうか？</string>
+    <string name="glassLabSampleAskTwo">はい、実行して何が失敗するか教えてください。</string>
+    <string name="glassLabSamplePermission">コマンドを実行しますか？</string>
+    <string name="glassLabSampleCommand">./gradlew :core:markdown:test</string>
+    <string name="glassLabSamplePermissionWhy">プロジェクトフォルダ内でmarkdownモジュールのテストを実行します。</string>
+    <string name="glassLabSampleAskBox">OpenCodeに質問…</string>
+    <string name="glassLabSampleModel">Big Pickle</string>
+    <string name="glassLabSampleMode">毎回確認</string>
+    <string name="glassLabSampleDialogTitle">この会話を削除しますか？</string>
+    <string name="glassLabSampleDialogBody">このスマートフォンとサーバーから削除されます。この操作は元に戻せません。</string>
+    <string name="glassLabSampleDelete">削除</string>
+    <string name="glassLabSampleKeep">残す</string>
+    <string name="glassLabSampleHome">会話</string>
+    <string name="glassLabSampleConnected">接続済み</string>
+    <string name="glassLabSampleAll">すべて</string>
+    <string name="glassLabSampleNeedsYou">確認が必要</string>
+    <string name="glassLabSampleRunning">実行中</string>
+    <string name="glassLabSampleNew">新規</string>
+</resources>

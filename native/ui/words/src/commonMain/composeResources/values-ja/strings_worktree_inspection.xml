@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="worktreeInspectionTitle">作業コピーを調べる</string>
+    <string name="worktreeInspectionExactScope">指定されたプロジェクト、フォルダ、ワークスペースに一致する変更と会話を読み込みます。</string>
+    <string name="worktreeInspectionReadFailed">この作業コピーを調べられませんでした。状態は不明です。</string>
+    <string name="worktreeInspectionWorkspace">ワークスペース：%1$s</string>
+    <string name="worktreeInspectionHostScope">このサーバー上</string>
+    <string name="worktreeInspectionConversations">この作業コピー内の会話</string>
+    <string name="worktreeInspectionNoPageMatches">このページには一致する会話がありません。さらに読み込んで検索を続けてください。</string>
+    <string name="worktreeInspectionNoConversations">この作業コピーに一致する会話はありません。</string>
+</resources>

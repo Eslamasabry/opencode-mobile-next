@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="sessionTransferTitle">会話ツール</string>
+    <string name="sessionTransferWait">この操作を完了中…</string>
+    <string name="sessionTransferExport">完全なコピーを保存</string>
+    <string name="sessionTransferRedact">非公開の値を隠す</string>
+    <string name="sessionTransferRedactBody">エクスポートされたコピー内でサーバーが機密の値を置き換えます。</string>
+    <string name="sessionTransferSave">JSONファイルを保存</string>
+    <string name="sessionTransferImport">会話をインポート</string>
+    <string name="sessionTransferChoose">JSONファイルを選択</string>
+    <plurals name="sessionTransferRecords">
+        <item quantity="other">%1$d件のメッセージ記録</item>
+    </plurals>
+    <string name="sessionTransferRedacted">このコピーには隠された値が含まれます。インポート時もそれらのプレースホルダーが維持されます。</string>
+    <string name="sessionTransferDestination">このサーバーフォルダにインポート</string>
+    <string name="sessionTransferDestinationRequired">先に保存先フォルダを選択してください。</string>
+    <string name="sessionTransferImportAction">確認済みの会話をインポート</string>
+    <string name="sessionTransferNote">会話メモ</string>
+    <string name="sessionTransferLoadNote">現在のメモを読み込む</string>
+    <string name="sessionTransferSaveNote">メモを保存</string>
+    <string name="sessionTransferRemoveNote">メモを削除</string>
+    <plurals name="sessionTransferNoteLimit">
+        <item quantity="other">メモはエンコード後%1$dバイト以内にする必要があります。短くしてからもう一度お試しください。</item>
+    </plurals>
+    <string name="sessionTransferSaved">会話を保存しました。</string>
+    <string name="sessionTransferImported">会話をインポートしました。</string>
+    <string name="sessionTransferNoteSaved">メモを保存しました。</string>
+    <string name="sessionTransferNoteRemoved">メモを削除しました。</string>
+    <string name="sessionTransferInvalid">有効なOpenCode JSONエクスポートを選択してください。</string>
+    <string name="sessionTransferLarge">128 MiBより小さいエクスポートを選択してください。</string>
+    <string name="sessionTransferChanged">サーバー接続が変更されました。続ける前にこのツールを開き直してください。</string>
+    <string name="sessionTransferSignIn">サーバーがアクセスを拒否しました。サーバーのサインインを確認してもう一度お試しください。</string>
+    <string name="sessionTransferConflict">このIDの会話がすでに存在します。別の保存先を選ぶかサーバー上で確認してください。</string>
+    <string name="sessionTransferUnsupported">このサーバーは会話の転送に対応していません。</string>
+    <string name="sessionTransferFailed">この操作を完了できませんでした。接続を確認してもう一度お試しください。</string>
+    <string name="sessionTransferReference">サーバーフォルダを参照</string>
+    <string name="sessionTransferReferencePath">このサーバー上のフルフォルダパス</string>
+    <string name="sessionTransferReferenceBody">次のプロンプトにフォルダ参照を追加します。フォルダはサーバー上に残ります。</string>
+    <string name="sessionTransferReferenceAdd">フォルダ参照を追加</string>
+    <string name="sessionTransferReferenceRequired">先にサーバーフォルダのパスを入力してください。</string>
+    <string name="sessionTransferReferenceAdded">下書きにフォルダ参照を追加しました。</string>
+    <string name="sessionTransferReferenceInvalid">サーバー上の絶対フォルダパスを入力してください。</string>
+</resources>

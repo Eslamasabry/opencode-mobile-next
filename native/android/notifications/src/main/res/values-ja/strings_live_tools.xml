@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="notify_tool_command">コマンドを実行中…</string>
+    <string name="notify_tool_edit">ファイルを編集中…</string>
+    <string name="notify_tool_read">ファイルを読み取り中…</string>
+    <string name="notify_tool_search">ファイルを検索中…</string>
+    <string name="notify_tool_web">ウェブを閲覧中…</string>
+    <string name="notify_tool_subagent">サブエージェントを実行中…</string>
+    <string name="notify_tool_plan">計画中…</string>
+    <string name="notify_tool_working">作業中…</string>
+    <string name="notify_tool_card">カードを表示中…</string>
+    <string name="notify_tool_backgroundtask">バックグラウンドタスクを確認中…</string>
+    <string name="notify_tool_other">%1$sを実行中…</string>
+</resources>

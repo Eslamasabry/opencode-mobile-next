@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="secCrashTitle">保存済みのクラッシュ記録</string>
+    <string name="secCrashCapture">このスマートフォンにクラッシュの種類を保存する</string>
+    <string name="secCrashPrivacy">初期設定ではオフです。エラーの種類と時刻のみを保存し、メッセージ、スタックトレース、会話は保存しません。</string>
+    <string name="secCrashClear">保存済みの記録を消去</string>
+    <string name="secCrashPreview">クラッシュレポートをプレビュー</string>
+    <string name="secCrashEmpty">保存されたクラッシュ記録はありません。</string>
+    <string name="secCrashDisabled">今後のエラーの種類を記録するには、クラッシュ記録の保存をオンにしてください。</string>
+    <string name="secCrashStale">記録が更新されました。共有する前にもう一度レポートをプレビューしてください。</string>
+    <string name="secCrashBusy">共有シートをすでに開いています。</string>
+    <string name="secCrashUnavailable">クラッシュ記録を利用できません。もう一度お試しください。</string>
+    <string name="secCrashShareUnavailable">共有を利用できません。もう一度お試しください。</string>
+    <string name="secAppExits">Androidアプリの終了履歴</string>
+    <string name="secHelperExits">エージェントヘルパーの終了履歴</string>
+    <string name="secHistoryRefresh">終了履歴を再読み込み</string>
+    <string name="secHistoryEmpty">最近の終了履歴は記録されていません。</string>
+    <string name="secHistoryUnavailable">終了履歴を利用できません。</string>
+    <string name="secHistoryEntry">%1$s · コード%2$d</string>
+    <string name="secCrashReportHeader">OpenCodeモバイルのクラッシュレポート\n記録されたエラーの種類と時刻のみ。\nメッセージ、スタックトレース、会話は含まれません。\n\n</string>
+</resources>

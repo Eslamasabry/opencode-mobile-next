@@ -3,5 +3,24 @@
      app's notification settings. The row's own lines fall back to English, as the rest of the Japanese copy does. -->
 <resources>
     <string name="notify_dock_channel">進行中の会話</string>
-    <string name="notify_dock_channel_description">何かが動いているときやあなたの返事を待っているときに、進行中の会話を一覧にする静かな通知です。ロック画面では名前は表示されません。</string>
+    <string name="notify_dock_channel_description">何かが動いているときや返事を待っているときに、進行中の会話を一覧にする静かな通知です。ロック画面では名前は表示されません。</string>
+    <string name="notify_dock_untitled">無題の会話</string>
+    <string name="notify_dock_helper_generic">サブエージェント</string>
+    <string name="notify_dock_name_needs_you">%1$sが確認を待っています</string>
+    <string name="notify_dock_waiting_answer">回答をお待ちしています</string>
+    <plurals name="notify_dock_others_working">
+        <item quantity="other">ほか%1$s件が作業中</item>
+    </plurals>
+    <string name="notify_dock_helper_asking">サブエージェント「%1$s」が質問しています</string>
+    <string name="notify_dock_working_on">%1$sを作業中</string>
+    <string name="notify_dock_state_working">作業中</string>
+    <string name="notify_dock_state_thinking">思考中</string>
+    <string name="notify_dock_state_needs_you">要確認</string>
+    <string name="notify_dock_state_done">完了（未開封）</string>
+    <string name="notify_dock_state_failed">完了前に停止しました</string>
+    <plurals name="notify_dock_helpers">
+        <item quantity="other">サブエージェント%1$s件</item>
+    </plurals>
+    <string name="notify_status_action_open_named">%1$sを開く</string>
+    <string name="notify_status_action_stop_named">%1$sを停止</string>
 </resources>

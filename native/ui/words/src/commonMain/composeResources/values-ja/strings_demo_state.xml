@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="stateDemoTryOffline">オフラインで試す</string>
+    <string name="stateDemoTitle">オフラインデモ</string>
+    <string name="stateDemoDisclosure">模擬動作のデモです。サーバー、ファイル、保存済みの設定は変更されません。終了するとこのデモの内容は破棄されます。</string>
+    <string name="stateDemoPrompt">ようこそメッセージをもっと親しみやすくしてください。</string>
+    <string name="stateDemoReply">welcome.txtのあいさつを「%1$s」から「%2$s」に変更します。</string>
+    <string name="stateDemoAllowed">完了しました。welcome.txtの内容が「%1$s」になりました。</string>
+    <string name="stateDemoDenied">了解しました。welcome.txtはそのままにしておきます。</string>
+    <string name="stateDemoBefore">こんにちは</string>
+    <string name="stateDemoAfter">ようこそ</string>
+    <string name="stateDemoMore">デモはここまでです。プロジェクトで作業するにはサーバーに接続してください。</string>
+    <string name="stateDemoModel">サンプルモデル</string>
+    <string name="stateDemoReset">デモをリセット</string>
+    <string name="stateDemoLeave">デモを終了</string>
+</resources>

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="statePromptMigrationPending">古い下書きや添付ファイルの一部をまだ移動できませんでした。保存された内容はそのまま残っています。必要に応じて空き容量を増やしてから、もう一度お試しください。</string>
+    <string name="statePromptFilesUnavailable">次のファイルをここに復元できませんでした：%1$s。保存済みのプロンプトはそのまま残っています。</string>
+</resources>

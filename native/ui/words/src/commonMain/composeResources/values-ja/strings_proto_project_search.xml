@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="protoProjectTools">サーバープロジェクトツール</string>
+    <string name="protoWorking">処理中…</string>
+    <string name="protoGitInitialized">このフォルダはGitリポジトリです。</string>
+    <string name="protoWorktreeCreated">下のフォルダにワークツリーが準備できました。</string>
+    <string name="protoShellSaved">既定のシェルを保存しました。</string>
+    <string name="protoGitInitialize">このフォルダでGitを初期化</string>
+    <string name="protoWorktreeName">新しいワークツリー名</string>
+    <string name="protoWorktreeCreate">ワークツリーを作成</string>
+    <string name="protoShellTitle">既定のターミナルシェル</string>
+    <string name="protoShellDefault">サーバーの既定を使用</string>
+    <string name="protoShellUnavailable">このシェルはこのサーバーでは使用できません。</string>
+    <string name="protoWebSearch">ウェブ を検索</string>
+    <string name="protoWebSearchHelp">このサーバーのプロバイダーで検索します。検索内容は会話履歴に残りません。</string>
+    <string name="protoWebUnavailable">このサーバーでは ウェブ 検索を利用できません。</string>
+    <string name="protoWebFailed">ウェブ 検索を完了できませんでした。プロバイダー一覧を再試行するか、もう一度検索してください。</string>
+    <string name="protoWebQuery">ウェブ 検索クエリ</string>
+    <string name="protoWebProvider">検索プロバイダー</string>
+    <string name="protoWebEmpty">ウェブ 検索結果はありませんでした。</string>
+    <string name="protoWebOpenQuestion">ブラウザで%1$sを開きますか？</string>
+    <string name="protoWebOpenBrowser">ブラウザを開く</string>
+    <string name="protoWebInsecure">このリンクは暗号化されていない接続を使用しています。</string>
+    <string name="protoWebLeaveApp">アプリ外の ウェブ サイトを開きます。</string>
+    <string name="protoGitToolsFailed">処理を実行できませんでした。サーバーを確認してから、もう一度お試しください。</string>
+    <string name="protoPairingCheck">%1$s：%2$s</string>
+</resources>

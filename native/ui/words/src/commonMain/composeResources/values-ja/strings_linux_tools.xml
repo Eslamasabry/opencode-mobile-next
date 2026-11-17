@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxToolsTitle">インストール済みツール</string>
+    <string name="linuxToolsAiTeam">AI Team</string>
+    <string name="linuxToolsPart">端末ツール</string>
+    <string name="linuxToolsFreedBytes">約%1$s解放できます。</string>
+    <string name="linuxToolsWait">実行中の端末操作が終わるまでお待ちください。</string>
+    <string name="linuxToolsInstalled">インストール済み</string>
+    <string name="linuxToolsAbsent">未インストール</string>
+    <string name="linuxToolsUnknown">確認できませんでした。再読み込みしてもう一度お試しください。</string>
+    <string name="linuxToolsRefresh">インストール済みツールを再読み込み</string>
+    <string name="linuxToolsRemovePython">Pythonツールを削除</string>
+    <string name="linuxToolsRemoveQuestion">Pythonツールを削除しますか？</string>
+    <string name="linuxToolsRemoveBody">pipと仮想環境パッケージを削除します。Python本体、プロジェクト、会話は残ります。</string>
+    <string name="linuxToolsRemoved">Pythonツールを削除しました。</string>
+    <string name="linuxToolsDependent">別のインストール済みツールがこのコンポーネントを必要としています。</string>
+    <string name="linuxToolsDependencyUnknown">このコンポーネントを必要とする別のツールを確認できませんでした。再読み込みしてもう一度お試しください。</string>
+    <string name="linuxToolsRequired">このコンポーネントは端末ツールに必要です。</string>
+    <string name="linuxToolsUnsupported">このコンポーネントはここでは削除できません。</string>
+    <string name="linuxToolsInventoryFailed">インストール済みツールを確認できませんでした。再読み込みしてもう一度お試しください。何も削除されていません。</string>
+    <string name="linuxToolsSetupRunning">ツールを削除する前に、セットアップを停止するか完了するまでお待ちください。</string>
+    <string name="linuxToolsRemoveFailed">Pythonツールを完全に削除できませんでした。インストール済みツールを再読み込みしてからもう一度お試しください。</string>
+    <string name="linuxSetupStatusUnreadable">保存済みのセットアップを読み取れませんでした。「セットアップを続行」でもう一度お試しください。</string>
+    <string name="linuxSetupHostMismatch">この保存済みセットアップは別のLinux環境のものです。代わりにこの端末用のセットアップを開始してください。</string>
+    <string name="linuxSetupHostRefused">端末セットアップを安全に開始できませんでした。「セットアップを続行」でもう一度お試しください。</string>
+    <string name="linuxSetupSavedFailed">セットアップを保存できませんでした。空き容量を増やしてからセットアップを続行してください。</string>
+    <string name="linuxSetupBytes">%1$s/%2$s</string>
+    <string name="linuxSetupCheckingPart">インストール済みツールを確認中</string>
+    <string name="linuxSetupPartPending">待機中</string>
+    <string name="linuxSetupPartRunning">インストール中</string>
+    <string name="linuxSetupPartDone">準備完了</string>
+    <string name="linuxSetupPartFailed">完了できませんでした</string>
+</resources>

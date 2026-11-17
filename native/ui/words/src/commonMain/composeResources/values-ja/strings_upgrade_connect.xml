@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="upgradeConnectScanTitle">パソコンのコードを読み取る</string>
+    <string name="upgradeConnectScanBody">パソコン上で下のコマンドを実行してください。コードが表示されるので、読み取ると接続されます。</string>
+    <string name="upgradeConnectPasteBody">パソコン上で下のコマンドを実行し、表示されたコードを貼り付けてください。</string>
+    <string name="upgradeConnectCommandTitle">パソコン上でこれを実行</string>
+    <string name="upgradeConnectOtherWays">その他の接続方法</string>
+    <string name="upgradeConnectTailscaleBody">プライベートネットワークからパソコンに接続します。</string>
+    <string name="upgradeConnectManualBody">アドレスとパスワードを順に入力してください。</string>
+    <string name="upgradeConnectNameLine">「%1$s」として保存されます。下で名前を変更できます。</string>
+    <string name="upgradeConnectNameFallback">自分のパソコン</string>
+    <string name="upgradeReadyTitle">%1$sに接続しました</string>
+    <string name="upgradeReadyVersion">バージョン%1$s</string>
+    <string name="upgradeReadyStart">会話を始める</string>
+</resources>

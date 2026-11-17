@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="keptSvcTitle">サービス</string>
+    <string name="keptSvcFailed">サービスでその操作を完了できませんでした</string>
+    <string name="keptSvcFailedBody">Linuxがセットアップされているか確認してからもう一度お試しください。保存済みのサービス設定は保持されます。</string>
+    <string name="keptSvcAdd">サービスを追加</string>
+    <string name="keptSvcKeepsRunning">起動したサービスは、停止するまでクラッシュ後やアプリを再び開いたあとも実行され続けます。</string>
+    <string name="keptSvcEmpty">サービスはまだありません。常時実行したい独自のコマンドを追加してください。</string>
+    <string name="keptSvcScreenOff">端末を充電中でない限り、画面がオフの間はサービスが一時停止する場合があります。</string>
+    <string name="keptSvcStartNamed">%1$sを起動</string>
+    <string name="keptSvcStopNamed">%1$sを停止</string>
+    <string name="keptSvcRestartNamed">%1$sを再起動</string>
+    <string name="keptSvcOpenNamed">%1$sを開く</string>
+    <string name="keptSvcRemoveNamed">%1$sを削除</string>
+    <string name="keptSvcWorking">サービス操作を完了中…</string>
+    <string name="keptSvcCopyLog">ログをコピー</string>
+    <plurals name="keptSvcRestarts">
+        <item quantity="other">%1$d回の再起動後に復帰</item>
+    </plurals>
+    <string name="keptSvcLogTitle">サービスログ</string>
+    <string name="keptSvcSearchLog">ログ内を検索</string>
+    <string name="keptSvcLogEmpty">出力はまだありません。</string>
+    <string name="keptSvcRemoveQuestion">%1$sを削除しますか？</string>
+    <string name="keptSvcRemoveBody">保存済みの定義とログを削除する前に、サービスを停止します。</string>
+    <string name="keptSvcRemoveGoes">コマンド、オン/オフ設定、ログが削除されます。</string>
+    <string name="keptSvcRemoveStays">インストール済みのツールとプロジェクトファイルは残ります。</string>
+    <string name="keptSvcSaveStart">保存してサービスを起動</string>
+    <string name="keptSvcName">名前</string>
+    <string name="keptSvcNameHint">2〜24文字の英小文字、数字、ハイフン（先頭は英字）。</string>
+    <string name="keptSvcCommand">コマンド</string>
+    <string name="keptSvcDirectory">Linux内のフォルダ</string>
+    <string name="keptSvcPort">ポート（任意）</string>
+    <string name="keptSvcPortHint">1024〜65535の空きポート。ウェブページがない場合は空欄のままにしてください。</string>
+    <string name="keptSvcBadName">上の形式で別の名前を指定してください。アプリのサービス名は予約されています。</string>
+    <string name="keptSvcBadCommand">1行のコマンドを4096文字以内で入力してください。</string>
+    <string name="keptSvcBadDirectory">親フォルダ（..）を含まないLinuxの絶対フォルダパスを指定してください。</string>
+    <string name="keptSvcBadPort">アプリの予約ポート以外の、1024〜65535の未使用ポートを指定してください。</string>
+    <string name="keptSvcRestart">クラッシュ後に再起動</string>
+    <string name="keptSvcRestartBody">失敗後に再試行し、短時間のクラッシュが連続した場合は停止します。</string>
+    <string name="keptSvcLimit">すでに16個のサービスがあります。追加するには1つ削除してください。</string>
+    <string name="keptSvcPaused">端末が過熱しているため一時停止中</string>
+    <string name="keptSvcOff">オフ</string>
+    <string name="keptSvcStarting">起動中…</string>
+    <string name="keptSvcRunning">実行中</string>
+    <string name="keptSvcRunningFor">%1$d分間実行中</string>
+    <string name="keptSvcStopping">停止中…</string>
+    <string name="keptSvcRetrying">クラッシュしました（コード%1$d）。%2$d秒後に再試行します</string>
+    <string name="keptSvcPortBusy">ポート%1$dは使用中です。まもなく再試行します。</string>
+    <plurals name="keptSvcGaveUp">
+        <item quantity="other">繰り返しのクラッシュ後に停止（再起動%1$d回）</item>
+    </plurals>
+    <string name="keptSvcExited">終了しました（コード%1$d）</string>
+    <string name="keptSvcPortNumber">ポート%1$d</string>
+    <string name="keptSvcLogStarted">開始しました</string>
+    <string name="keptSvcLogExit">終了しました（コード%1$d）</string>
+    <string name="keptSvcLogRetry">%1$d秒後に再試行します</string>
+    <string name="keptSvcLogGaveUp">繰り返しのクラッシュ後に停止しました</string>
+</resources>

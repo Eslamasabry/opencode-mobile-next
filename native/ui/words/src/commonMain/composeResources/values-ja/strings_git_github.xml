@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="gitRemotePickGitHub">GitHubから選ぶ</string>
+    <string name="gitRemotePickGitHubTitle">リポジトリを選ぶ</string>
+    <string name="gitRemotePickGitHubNone">このGitHubアカウントにはまだリポジトリがありません。</string>
+    <string name="gitRemoteRepoPrivate">プライベート</string>
+    <string name="gitProblemInvalidGitHubRepositoryName">リポジトリ名には100文字以内の半角英数字、ドット、ハイフン、アンダースコアを使用してください。</string>
+    <string name="gitProblemGitHubRepositoryNameUnavailable">その名前はすでに使われているか、このGitHubアカウントでは利用できません。別の名前をお試しください。</string>
+    <string name="gitActionInitialize">追跡を開始</string>
+    <string name="gitActionPublish">GitHubに作成</string>
+    <string name="gitBusyInitialize">このプロジェクトでGitを開始中…</string>
+    <string name="gitBusyPublish">GitHubにリポジトリを作成中…</string>
+    <string name="gitDoneInitialized">このプロジェクトでGitの準備ができました。</string>
+    <string name="gitDoneGitHubRepositoryCreated">GitHubリポジトリを作成して接続しました。プロジェクトはまだ送信されていません。</string>
+    <string name="gitInitializeProject">このプロジェクトの追跡を開始</string>
+    <string name="gitInitializeProjectHint">これらのファイルをここに残したままGitの使用を開始します。</string>
+    <string name="gitPublishToGitHub">GitHubリポジトリを作成</string>
+    <string name="gitPublishToGitHubHint">名前と公開範囲を選びます。</string>
+    <string name="gitPublishTitle">リポジトリを作成</string>
+    <string name="gitPublishName">リポジトリ名</string>
+    <string name="gitPublishNameHint">半角英数字、ドット、ハイフン、アンダースコアを使用してください。</string>
+    <string name="gitPublishVisibility">公開範囲</string>
+    <string name="gitPublishPrivate">プライベート</string>
+    <string name="gitPublishPublic">パブリック</string>
+    <string name="gitPublishPrivateHint">自分と指定したユーザーだけがこのリポジトリを閲覧できます。</string>
+    <string name="gitPublishPublicHint">誰でもこのリポジトリを閲覧できます。</string>
+    <string name="gitPublishButton">リポジトリを作成</string>
+</resources>

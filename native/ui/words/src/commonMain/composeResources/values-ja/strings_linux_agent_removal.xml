@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxAgentPayloadRefresh">端末内エージェントを再読み込み</string>
+    <string name="linuxAgentPayloadRemove">%1$sを削除</string>
+    <string name="linuxAgentPayloadRemoveTitle">この端末から%1$sを削除しますか？</string>
+    <string name="linuxAgentPayloadRemoveBody">ダウンロード済みのプログラムと未完了のダウンロードを削除します。アカウント、会話、共有ツールはこの端末に残ります。</string>
+    <string name="linuxAgentPayloadRemovedFreed">プログラムを削除しました。%1$sの空き容量が増えました。</string>
+    <string name="linuxAgentPayloadBusy">エージェントまたは別の端末セットアップが実行中です。停止してからもう一度お試しください。</string>
+    <string name="linuxAgentPayloadUnsafe">これらのファイルはアプリが管理するインストールと一致しません。何も削除されませんでした。</string>
+    <string name="linuxAgentPayloadUnconfirmed">削除を確認できませんでした。もう一度お試しになる前に一覧を再読み込みしてください。</string>
+    <string name="linuxAgentPayloadUnavailable">端末内エージェントのファイルを読み取るか削除できませんでした。再読み込みしてもう一度お試しください。</string>
+</resources>
