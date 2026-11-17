@@ -33,4 +33,5 @@
     <string name="approvalAlwaysCoversWords">“始终允许”还会涵盖%1$s。</string>
     <string name="approvalAlwaysPattern">“始终允许”的模式</string>
     <string name="approvalNoteDenyOnly">仅在你选择“拒绝”时发送。</string>
+    <string name="approvalNewFileOf">新文件：%1$s</string>
 </resources>

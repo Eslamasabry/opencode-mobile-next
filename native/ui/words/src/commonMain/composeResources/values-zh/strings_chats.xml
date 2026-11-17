@@ -325,4 +325,22 @@
     <string name="chatsHomeNotReadTitle">并非所有对话都已读取</string>
     <string name="chatsHomeNotReadBody">服务器已响应，但此页面无法读取它的列表，所以不能确定没有对话。请重试以读取。</string>
     <string name="chatsNewSetupFailed">无法读取此服务器的项目和模型。</string>
+    <string name="runningWorkBackgroundUnavailable">这个服务器无法把正在运行的回复的工作移到后台。</string>
+    <string name="runningWorkNotReported">这个服务器不会报告在后台运行的工作。</string>
+    <string name="runningWorkTasksNoStop">这个服务器无法逐个停止这些任务。</string>
+    <string name="runningWorkMenu">正在运行的工作</string>
+    <string name="runningWorkOpen">打开正在运行的工作</string>
+    <string name="chatsNewAgentNoProjects">%1$s 只能在这部手机上的项目中工作，而现在还没有项目。点按这里创建你的第一个项目。</string>
+    <string name="chatsNewPhoneStorage">手机存储</string>
+    <string name="chatsNewPhoneStorageOff">允许这部手机上的智能体读取和修改手机存储中的文件，例如“下载”和“文档”。会打开 Android 的相应页面。</string>
+    <string name="chatsNewPhoneStorageOn">这部手机上的智能体可以读取和修改“下载”“文档”以及手机存储中其余位置的文件。</string>
+    <string name="chatsSourcesUpdating">正在更新 %1$s…</string>
+    <string name="chatsHomeAgentsUnreachable">这部手机上的智能体没有启动</string>
+    <string name="chatsNewStartingAgent">正在启动 %1$s…</string>
+    <string name="chatsNewAgentModelMissing">%1$s 不提供你选择的模型。你写的内容已保留。</string>
+    <string name="chatsNewAgentDidNotStart">%1$s 没有启动。你写的内容已保留。</string>
+    <string name="chatsNewAgentUnconfirmed">%1$s 没有确认这条消息。请刷新以重新检查，或丢弃它重新开始。你写的内容仍保存在这里。</string>
+    <string name="chatsNewRunsOn">运行于</string>
+    <string name="chatsNewWhereSpoken">运行位置：%1$s。会打开项目和连接的选项。</string>
+    <string name="chatsNewAgentChipSpoken">由谁处理：%1$s，%2$s。会打开智能体和模型的选项。</string>
 </resources>

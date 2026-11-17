@@ -873,4 +873,18 @@
     <string name="thermalGuardSaveFailed">无法保存过热保护设置。请重试。</string>
     <string name="thisPhoneRestartBody">正在运行的对话会停止，你的对话都会保留。通常不到一分钟。</string>
     <string name="thisPhoneRestartingRow">正在重新启动。通常不到一分钟…</string>
+    <string name="linuxMgrProblemNotAnswering">Linux 响应了很久。请稍后重试。</string>
+    <string name="phoneDownloadWaitingOpenCode">OpenCode 更新正在等待 Wi-Fi · 约 %1$d MB</string>
+    <string name="phoneDownloadWaitingHelper">智能体辅助程序更新正在等待 Wi-Fi · 约 %1$d MB</string>
+    <string name="phoneDownloadOnMobile">使用移动数据下载</string>
+    <string name="phoneDownloadRunningOpenCode">正在更新 OpenCode</string>
+    <string name="phoneDownloadRunningHelper">正在更新智能体辅助程序</string>
+    <string name="phoneDownloadRunningPercent">%1$s · %2$d%</string>
+    <string name="phoneDownloadFailedOpenCode">OpenCode 更新未完成。</string>
+    <string name="phoneDownloadFailedHelper">智能体辅助程序更新未完成。</string>
+    <string name="phoneDownloadAskTitle">使用移动数据下载约 %1$d MB？</string>
+    <string name="phoneDownloadAskBodyOpenCode">这是这部手机的 OpenCode 更新，会消耗你的流量套餐。等待 Wi-Fi 会把它留到之后。</string>
+    <string name="phoneDownloadAskBodyHelper">这是这部手机上智能体辅助程序的更新，会消耗你的流量套餐。等待 Wi-Fi 会把它留到之后。</string>
+    <string name="phoneDownloadAskNow">立即下载</string>
+    <string name="phoneDownloadAskWait">等待 Wi-Fi</string>
 </resources>

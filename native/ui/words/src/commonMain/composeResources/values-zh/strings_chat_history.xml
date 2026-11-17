@@ -10,4 +10,8 @@
     <string name="chatHistoryEmpty">还没有最近的提示词。</string>
     <string name="chatHistoryLoading">正在加载最近的提示词…</string>
     <string name="chatHistoryLoadFailed">无法加载最近的提示词。你仍可使用此对话中的提示词。</string>
+    <string name="chatReplyFooterTokensK">%1$sk 个令牌</string>
+    <string name="chatReplyFooterTokensM">%1$sM 个令牌</string>
+    <string name="chatReplyFooterCost">$%1$s</string>
+    <string name="chatReplyFooterCostUnderCent">不到 $0.01</string>
 </resources>

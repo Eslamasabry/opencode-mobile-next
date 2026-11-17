@@ -424,4 +424,5 @@
     </plurals>
     <string name="reviewUndoTitle__eq1">撤销 1 个已更改的文件？</string>
     <string name="reviewUndoBody">你的项目会恢复到智能体开始之前的样子。对话会保留。</string>
+    <string name="reviewDone">完成</string>
 </resources>

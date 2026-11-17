@@ -6,4 +6,5 @@
     <string name="chatDraftRepeatTitle">再次发送这段文字？</string>
     <string name="chatDraftRepeatAction">再次发送</string>
     <string name="chatDraftRepeatBody">这段文字已在对话中。只有想要新的回复时才再次发送。</string>
+    <string name="chatDraftRestoreFailed">无法打开你保存的草稿。你可以重试。</string>
 </resources>

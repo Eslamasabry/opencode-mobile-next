@@ -689,7 +689,7 @@
     <string name="composerBusyReason">正在准备你的提示词…</string>
     <string name="composerToolsTextOnly">这台服务器只接受文字</string>
     <string name="composerToolsAgentTextOnly">在这里 %1$s 只接受文字</string>
-    <string name="composerToolsPicturesOnlyUse">%1$s 只接受图片：请使用%2$s或%3$s</string>
+    <string name="composerToolsPicturesOnlyUse">%1$s 只接受图片：请使用 %2$s 或 %3$s</string>
     <string name="composerToolSavedSubtitle">把保存过的提示词放回草稿</string>
     <string name="composerToolSaveForLater">保存提示词以备后用</string>
     <string name="composerToolNothingToSave">请先输入内容或添加附件</string>
@@ -1146,4 +1146,109 @@
     <string name="chatUiShowEarlierMessages">显示更早的消息</string>
     <string name="kitTurnLiveStillThinking">仍在思考</string>
     <string name="chatQuietThinkingHint">有些模型会静默思考几分钟，期间不显示内容。</string>
+    <string name="kitCommandNoOutput">没有输出</string>
+    <string name="kitCommandFailedNoOutput">在输出任何内容之前就失败了</string>
+    <string name="kitCommandStoppedEarly">未完成就停止了</string>
+    <string name="chatUiStopBackgroundTask">停止了一个后台任务</string>
+    <string name="chatUiReadTaskOutput">读取了一个后台任务的输出</string>
+    <string name="chatConnectingToAgent">正在连接 %1$s…</string>
+    <string name="stageStartingLinux">正在启动 Linux…</string>
+    <string name="stageStartingOpenCode">正在启动 OpenCode…</string>
+    <string name="stageStartingHelper">正在启动智能体的辅助程序…</string>
+    <string name="stageStartingAgents">正在启动智能体…</string>
+    <string name="stageStartingAgent">正在启动 %1$s…</string>
+    <string name="stageOpeningConversation">正在打开对话…</string>
+    <string name="chatLoadFailedAgentBody">没有丢失任何内容。%1$s 恢复响应后请重试。</string>
+    <string name="chatLoadFailedAgentsBody">没有丢失任何内容。这部手机上的智能体恢复响应后请重试。</string>
+    <string name="chatLoadMissingAgentBody">%1$s 没有这段对话：它可能在开始前就已停止。请重试，或设置 %1$s 后开始新的对话。</string>
+    <string name="chatLoadMissingAgentsBody">这部手机上的智能体没有这段对话：其智能体可能在开始前就已停止。请重试，或开始新的对话。</string>
+    <string name="kitWorkHideEarlierSteps">隐藏之前的步骤</string>
+    <plurals name="kitWorkFoldDeclined">
+        <item quantity="other">%1$d 项已拒绝</item>
+    </plurals>
+    <plurals name="kitWorkFoldFailed">
+        <item quantity="other">%1$d 项失败</item>
+    </plurals>
+    <plurals name="kitWorkSubAgents">
+        <item quantity="other">%1$d 个子智能体</item>
+    </plurals>
+    <plurals name="kitWorkSubAgentsDone">
+        <item quantity="other">%1$d 个已完成</item>
+    </plurals>
+    <plurals name="kitWorkSubAgentsWorking">
+        <item quantity="other">%1$d 个正在工作</item>
+    </plurals>
+    <plurals name="kitWorkSubAgentsStopped">
+        <item quantity="other">%1$d 个已停止</item>
+    </plurals>
+    <string name="kitWorkSubAgentSpoken">%1$s，子智能体，%2$s</string>
+    <plurals name="stepRunCommands">
+        <item quantity="other">%1$d 条命令</item>
+    </plurals>
+    <plurals name="stepRunFiles">
+        <item quantity="other">%1$d 个文件</item>
+    </plurals>
+    <plurals name="stepRunSearches">
+        <item quantity="other">%1$d 次搜索</item>
+    </plurals>
+    <plurals name="stepRunFolders">
+        <item quantity="other">%1$d 个文件夹</item>
+    </plurals>
+    <string name="stepShellTests">运行了测试</string>
+    <string name="stepShellTestsNow">正在运行测试</string>
+    <string name="stepShellSearch">搜索了文件</string>
+    <string name="stepShellSearchNow">正在搜索文件</string>
+    <string name="stepShellReadOne">读取了 %1$s</string>
+    <string name="stepShellReadMany">读取了文件</string>
+    <string name="stepShellReadManyNow">正在读取文件</string>
+    <string name="stepShellList">列出了文件</string>
+    <string name="stepShellListNow">正在列出文件</string>
+    <string name="stepShellProcesses">检查了正在运行的进程</string>
+    <string name="stepShellProcessesNow">正在检查正在运行的进程</string>
+    <string name="stepShellStop">停止了一个进程</string>
+    <string name="stepShellStopNow">正在停止一个进程</string>
+    <string name="stepShellChanges">检查了更改</string>
+    <string name="stepShellChangesNow">正在检查更改</string>
+    <string name="stepShellAnalyze">检查了代码</string>
+    <string name="stepShellAnalyzeNow">正在检查代码</string>
+    <string name="stepShellBuild">构建了项目</string>
+    <string name="stepShellBuildNow">正在构建项目</string>
+    <string name="stepShellInstall">安装了软件包</string>
+    <string name="stepShellInstallNow">正在安装软件包</string>
+    <string name="stepShellFetch">获取了一个网页</string>
+    <string name="stepShellFetchNow">正在获取一个网页</string>
+    <string name="stepShellDelete">删除了文件</string>
+    <string name="stepShellDeleteNow">正在删除文件</string>
+    <string name="stepShellChangeFiles">修改了文件</string>
+    <string name="stepShellChangeFilesNow">正在修改文件</string>
+    <string name="stepShellWait">等待了</string>
+    <string name="stepShellWaitNow">正在等待</string>
+    <string name="stepShellProgram">运行了 %1$s</string>
+    <string name="stepShellTestsAsk">运行测试</string>
+    <string name="stepShellSearchAsk">搜索文件</string>
+    <string name="stepShellListAsk">列出文件</string>
+    <string name="stepShellProcessesAsk">检查正在运行的进程</string>
+    <string name="stepShellStopAsk">停止一个进程</string>
+    <string name="stepShellChangesAsk">检查更改</string>
+    <string name="stepShellAnalyzeAsk">检查代码</string>
+    <string name="stepShellBuildAsk">构建项目</string>
+    <string name="stepShellInstallAsk">安装软件包</string>
+    <string name="stepShellFetchAsk">获取一个网页</string>
+    <string name="stepShellDeleteAsk">删除文件</string>
+    <string name="stepShellChangeFilesAsk">修改文件</string>
+    <string name="stepShellWaitAsk">等待</string>
+    <string name="stepShellProgramAsk">运行 %1$s</string>
+    <string name="stepShellUnknownAsk">运行一条命令</string>
+    <string name="kitToolPlanStopped">已被规划模式停止</string>
+    <string name="chatStepPlanStopped">规划模式阻止了一次更改</string>
+    <string name="chatOldAgentReadOnly">%1$s 无法再接续这段对话。你可以在这里阅读，或在新的对话中继续。</string>
+    <string name="chatOldAgentReadOnlyUnnamed">这个智能体无法再接续这段对话。你可以在这里阅读，或在新的对话中继续。</string>
+    <string name="chatContinueInNewConversation">在新的对话中继续</string>
+    <string name="chatContinueBriefIntro">让我们继续“%1$s”。你看不到那段对话，所以这里说明当时发生了什么。</string>
+    <string name="chatContinueBriefIntroUntitled">让我们继续之前的一段对话。你看不到它，所以这里说明当时发生了什么。</string>
+    <string name="chatContinueBriefAsked">我的提问：</string>
+    <string name="chatContinueBriefChanged">更改过的文件：</string>
+    <string name="chatContinueBriefStopped">停在了这里：</string>
+    <string name="chatUiContinuedAfterCommand">有一条命令仍在运行，因此已请智能体等待它结束后继续</string>
+    <string name="chatSendNoPlanMode">这个智能体没有规划模式，因此没有发送任何内容。请关闭规划，以智能体自己的模式发送。</string>
 </resources>

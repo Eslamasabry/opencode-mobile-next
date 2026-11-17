@@ -38,4 +38,17 @@
     <string name="agentsChipSetUp">设置</string>
     <string name="agentsSetUpAction">设置 %1$s</string>
     <string name="agentsSetUpTypeAuth">输入 /auth 并按步骤操作。</string>
+    <string name="agentsUpdateReading">正在检查你的智能体是否有更新</string>
+    <string name="agentsUpdateWaitingBusy">智能体更新会等到你的智能体空闲后进行</string>
+    <string name="agentsUpdateWaitingSetup">智能体更新会等到手机设置完成后进行</string>
+    <string name="agentsUpdateWaitingSwitch">智能体更新会等到手机服务器切换完成后进行</string>
+    <string name="agentsUpdateWaitingMetered">智能体更新正在等待 Wi-Fi</string>
+    <string name="agentsUpdateUpdating">正在更新 %1$s</string>
+    <string name="agentsUpdateUpdated">已更新 %1$s</string>
+    <string name="agentsUpdateNeedsSignIn">%1$s 需要你登录</string>
+    <string name="agentsUpdateReadFailed">智能体更新无法检查你的智能体，应用打开时会再次尝试</string>
+    <string name="agentsUpdateRefused">智能体更新无法开始，请使用智能体上的“安装”</string>
+    <string name="agentsStateSignInNotConfirmed">未确认登录状态</string>
+    <string name="agentsSignInNotConfirmedBody">应用无法确认 %1$s 是否已登录。再次检查会立即询问 %1$s。</string>
+    <string name="agentsCheckSignInAgain">再次检查 %1$s</string>
 </resources>

@@ -20,4 +20,6 @@
     <string name="homeNewBlockedOpening">%1$s 仍在打开。请稍后重试。</string>
     <string name="homePhoneOffStart">启动这部手机上的 OpenCode</string>
     <string name="homePhoneOffTitle">这部手机上的 OpenCode 已关闭</string>
+    <string name="homeNewWaitingOpening">%1$s 一响应，新对话就会打开。</string>
+    <string name="homeNewWaitingCancel">取消新对话</string>
 </resources>

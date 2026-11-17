@@ -696,4 +696,9 @@
     <string name="chatRequestAskReadFolder">读取此文件夹？</string>
     <string name="appUpdateUpdatedTo">已更新到版本 %1$s</string>
     <string name="capabilityScreenHeading">此服务器能做什么</string>
+    <string name="connectUpdatingPhone">正在更新这部手机上的 OpenCode…</string>
+    <string name="connectAgentNeedsSignIn">你的智能体需要你登录。请打开“智能体”并点按“登录”；之后对话会自动打开。</string>
+    <string name="connectUpdatingAgents">正在更新这部手机上的智能体。完成后对话会打开。</string>
+    <string name="kitChipsMore">显示更多筛选</string>
+    <string name="kitChipsFirst">显示前面的筛选</string>
 </resources>

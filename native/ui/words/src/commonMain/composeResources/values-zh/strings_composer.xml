@@ -382,4 +382,6 @@
     <string name="claudeAgentCheckAgain">重新检查</string>
     <string name="claudeAgentCheckAgainLabel">重新检查 Claude Agent</string>
     <string name="claudeAgentReady">Claude Agent 已就绪。它的模型标有“试用”。</string>
+    <string name="modelPickerModeDefaultName">默认</string>
+    <string name="modelPickerModeAutoName">自动</string>
 </resources>

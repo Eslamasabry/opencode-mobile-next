@@ -9,4 +9,5 @@
     <string name="linuxAgentPayloadUnsafe">这些文件与应用自己创建的安装不符。没有移除任何内容。</string>
     <string name="linuxAgentPayloadUnconfirmed">无法确认已移除。请先刷新列表再重试。</string>
     <string name="linuxAgentPayloadUnavailable">无法读取或移除手机智能体文件。请刷新后重试。</string>
+    <string name="linuxAgentPayloadRemovedFreed">程序已移除。释放了 %1$s。</string>
 </resources>
