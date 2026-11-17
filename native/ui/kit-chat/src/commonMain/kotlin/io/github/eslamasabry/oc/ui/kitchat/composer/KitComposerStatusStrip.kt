@@ -65,7 +65,7 @@ public fun KitComposerStatusStrip(
             val modelMin = Space.S3.dp * 2 + glyph * 2 + Space.S2.dp + Space.S1.dp + labelWidth + 1.dp // F: lib/ui/kit/chat/kit_composer_status_strip.dart:303-308
             when {
                 !hasChips -> Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
-                    androidx.compose.runtime.CompositionLocalProvider(LocalComposerChipWraps provides true) { model?.invoke() }
+                    ChipsWrap { model?.invoke() }
                 }
                 model == null -> Row(
                     Modifier.fillMaxWidth().testTag("composer-status-scroll").kitShadowRoom(room, start = room, end = room).kitScrollFade(scroll).horizontalScroll(scroll).padding(all = room),
@@ -79,7 +79,7 @@ public fun KitComposerStatusStrip(
                     )
                     Spacer(Modifier.width(Space.S2.dp))
                     Box(Modifier.weight(1f, fill = false)) {
-                        androidx.compose.runtime.CompositionLocalProvider(LocalComposerChipWraps provides true) { model() }
+                        ChipsWrap { model() }
                     }
                 }
             }
@@ -103,3 +103,8 @@ public fun KitComposerStatusStrip(
         }
     }
 }
+
+/** The model chip's words wrap inside [content] instead of ending in an ellipsis. */
+@Composable
+private fun ChipsWrap(content: @Composable () -> Unit) =
+    androidx.compose.runtime.CompositionLocalProvider(LocalComposerChipWraps provides true, content = content)

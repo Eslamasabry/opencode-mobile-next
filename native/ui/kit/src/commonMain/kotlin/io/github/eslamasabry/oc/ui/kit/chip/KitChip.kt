@@ -239,7 +239,8 @@ public fun KitChip(
             }
             if (!narrow) BasicText(
                 text,
-                Modifier.weight(1f, fill = false).testTag(if (adaptiveModel) "kit-model-chip-label" else "kit-chip-label")
+                Modifier.weight(1f, fill = false)
+                    .testTag(if (adaptiveModel) "kit-model-chip-label" else "kit-chip-label")
                     // A model's name beside the chips gives way at its end when the box is narrow (it keeps its first
                     // characters, B-438), and a removable chip is a file or folder name, which may be longer than the
                     // chip's cap: both declare the cut, and the full name is spoken.

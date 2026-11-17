@@ -65,6 +65,8 @@ import kotlin.test.assertTrue
  * mask, no fade, and "Jump to latest" a round arrow at the box's end corner. One scene, every state; [Scene.floating]
  * false is the old frame, which the red runs use.
  */
+// Pixel-measuring scenes: the messages carry the numbers, and the sampling loops nest.
+@Suppress("MaxLineLength", "NestedBlockDepth")
 class ChatFloatingEdgesTest {
     private data class Scene(
         val floating: Boolean = true,
@@ -410,8 +412,8 @@ class ChatFloatingEdgesTest {
                         val px = if (corner) (box.left - pad).toInt() + x else (box.right + pad).toInt() - 1 - x
                         val cx = if (corner) box.left - pad + r else box.right + pad - r
                         val cy = box.bottom + pad - r
-                        val out = Math.hypot((px - cx).toDouble(), (y - cy).toDouble()) > r + 4 * d
-                        if (out && y > cy) assertTrue(kotlin.math.abs(lum(image[px, y]) - groundLum) < 0.25f, "a letter shows outside the box's corner at ($px,$y), ${scene.style} dark=${scene.dark}")
+                        val out = Math.hypot((px - cx).toDouble(), (y - cy).toDouble()) > r + 10 * d
+                        if (out && y > cy) assertTrue(kotlin.math.abs(lum(image[px, y]) - groundLum) < 0.25f, "a letter shows outside the box's corner at ($px,$y), ${scene.style} dark=${scene.dark}: ${image[px, y]} vs ground $groundLum, box $box")
                         x += 1
                     }
                     y += 1

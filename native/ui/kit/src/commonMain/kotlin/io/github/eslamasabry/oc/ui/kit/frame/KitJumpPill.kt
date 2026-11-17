@@ -452,7 +452,8 @@ public fun KitJumpButton(label: String, onClick: () -> Unit, visible: Boolean, m
                 faceAlpha = JUMP_BUTTON_FILL_ALPHA,
             )
         )
-    // The caller's place (align, padding) belongs on the node the caller put in its Box: the transition's own node. Given to
+    // The caller's place (align, padding) belongs on the node the caller put in its Box: the transition's own
+    // node. Given to
     // the face inside AnimatedVisibility it is ignored, and on a phone, where motion is on, the arrow lay at the origin
     // under the status bar (device check 46, build 10077).
     val spoken = modifier.semantics(mergeDescendants = true) {

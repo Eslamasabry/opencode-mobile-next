@@ -68,7 +68,10 @@ public fun KitAskLine(
         }
         Row(
             Modifier.fillMaxWidth().heightIn(min = tokens.statusLineMin.dp)
-                .padding(start = tokens.gutter.dp, end = Space.S2.dp, top = if (stacked) Space.S3.dp else inset, bottom = inset)
+                .padding(
+                    start = tokens.gutter.dp, end = Space.S2.dp,
+                    top = if (stacked) Space.S3.dp else inset, bottom = inset,
+                )
                 .testTag(if (stacked) "kit-ask-line-stacked" else "kit-ask-line-inline"),
             verticalAlignment = if (stacked) Alignment.Top else Alignment.CenterVertically,
         ) {
