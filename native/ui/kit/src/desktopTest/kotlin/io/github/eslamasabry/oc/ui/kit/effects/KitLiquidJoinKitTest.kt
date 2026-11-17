@@ -88,8 +88,11 @@ class KitLiquidJoinKitTest {
      */
     private fun androidx.compose.ui.test.ComposeUiTest.settle(totalMs: Long = 1_500) {
         repeat((totalMs / 250).toInt()) {
+            val t0 = System.nanoTime()
             mainClock.advanceTimeBy(250, ignoreFrameDuration = true)
+            val t1 = System.nanoTime()
             waitForIdle()
+            println("PROBE settle step advance=${(t1 - t0) / 1_000_000}ms idle=${(System.nanoTime() - t1) / 1_000_000}ms")
         }
     }
 
@@ -132,9 +135,13 @@ class KitLiquidJoinKitTest {
     fun `liquid join - nothing joins once the menu has closed`() = runDesktopComposeUiTest(412, 800) {
         mainClock.autoAdvance = false
         var shown by mutableStateOf(false)
+        val p0 = System.nanoTime()
         setContent { KitTheme(appearance = glass, platform = platform(true), localeTag = "en") { Scene(shown) { shown = false } } }
+        println("PROBE setContent ${(System.nanoTime() - p0) / 1_000_000}ms")
         shown = true
+        val p1 = System.nanoTime()
         waitForIdle()
+        println("PROBE open idle ${(System.nanoTime() - p1) / 1_000_000}ms")
         settle()
         onAllNodes(joinedPane, useUnmergedTree = true).assertCountEquals(2)
         shown = false
