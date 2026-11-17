@@ -134,6 +134,11 @@ every fast and full lane run and every push run, and a failure there is FAIL. Un
 without them. Only the complete candidate lane counts for a release; fast/full/custom runs never qualify. Candidate ignores this opt-out and includes Android host tests as well. The summary job also writes `verdict.json` (artifact `ci-verdict`),
 which `scripts/native-release.sh` reads through `release_verdict.py`. The newest candidate decides; missing/unknown/wrong-commit verdict artifacts fail closed rather than rescuing an older pass; missing completeness/security evidence or a red candidate cannot fall back to an older pass. Candidate plan/test artifacts include the SHA, complete task inventory, executed test statuses, whole quality/security and picture counts, and passing self-test counts. `ci-verdict.sh` can validate these reports without relying on job colours.
 
+Layout and ALIGN rules are their own result (B-CI-320): `test_report.py` marks a failure whose message starts with
+`layout guard:` or `align gate:` as kind `rule`. The blanket `*.rb.*GateTest` pattern, the base diff and the quarantine never
+absorb it: it is green, fixed, or listed by its EXACT name in `known_rule_failures.txt` (shrink-only, with its ceiling in
+`test_gate.py`), else it is a new failure. `summary.py` prints "N layout/align rule failures listed by name, M not listed".
+
 Noise (does not FAIL): an individual failing test class from a test report that also fails in the base reports, is listed in
 `known_failures.txt`, or is quarantined. `known_failures.txt` can only shrink (`KnownFailuresCeiling` in `test_gate.py`) and a
 line may name one test (`<module> :: <Class> > <test>`, exact). `tool/ci/test_gate.py` (run by the `plan` job) plants logs for each case.
