@@ -167,53 +167,29 @@ class AndroidComposerFiles(
             activity.registerForActivityResult(ActivityResultContracts.TakePicture()) { saved ->
                 if (!camera.requests.deliver(saved)) camera.orphanResult(saved)
             }
-        val permissionRequests = PickRequests<Boolean>()
-        val permissionRef = AtomicReference<CompletableDeferred<Boolean?>?>()
-        val permissionLauncher =
-            activity.registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-                val request = permissionRef.getAndSet(null) ?: return@registerForActivityResult
-                permissionRequests.resolve(request, granted)
-            }
+        val permission = PermissionSlot(activity)
         // Added after the launchers: their pending results are delivered first on ON_START.
         val started =
             LifecycleEventObserver { _, event -> if (event == Lifecycle.Event.ON_START) camera.hostStarted() }
         activity.lifecycle.addObserver(started)
         val cameraIntake =
-            AttachmentIntake(
-                activity = CameraActivityResults(dispatchers, camera.requests, ::cameraLauncher),
-                permissions =
-                    CameraPermissionGate(activity, dispatchers, permissionLauncher, permissionRequests, permissionRef),
-                reader = ContentReader(activity, dispatchers),
-                codec = AndroidImageCodec(activity.contentResolver, dispatchers),
-                clipboard = AndroidClipboardImages(activity, dispatchers),
-                captures = camera.captures,
-                photos = camera.record,
-                words = ComposerFileWords,
-                dispatchers = dispatchers,
-                clock = clock,
+            cameraIntake(
+                activity,
+                CameraPermissionGate(activity, dispatchers, permission.launcher, permission.requests, permission.ref),
             )
         val intake =
-            AttachmentIntake(
-                activity =
-                    PickerActivityResults(
-                        activity,
-                        dispatchers,
-                        launcher,
-                        requests,
-                        requestRef,
-                        photoLauncher,
-                        photoRequests,
-                        photoRef,
-                    ),
-                permissions = UnavailablePermissions,
-                reader = ContentReader(activity, dispatchers),
-                codec = AndroidImageCodec(activity.contentResolver, dispatchers),
-                clipboard = AndroidClipboardImages(activity, dispatchers),
-                captures = UnavailableCaptures,
-                photos = GalleryPhotos,
-                words = ComposerFileWords,
-                dispatchers = dispatchers,
-                clock = clock,
+            pickerIntake(
+                activity,
+                PickerActivityResults(
+                    activity,
+                    dispatchers,
+                    launcher,
+                    requests,
+                    requestRef,
+                    photoLauncher,
+                    photoRequests,
+                    photoRef,
+                ),
             )
         return Host(
             activity,
@@ -224,12 +200,53 @@ class AndroidComposerFiles(
             photoRequests,
             photoLauncher,
             cameraLauncher,
-            permissionRequests,
-            permissionLauncher,
+            permission.requests,
+            permission.launcher,
             started,
         )
     }
 
+    /** The permission request's launcher with the one request waiting for its answer. */
+    private class PermissionSlot(activity: ComponentActivity) {
+        val requests = PickRequests<Boolean>()
+        val ref = AtomicReference<CompletableDeferred<Boolean?>?>()
+        val launcher: ActivityResultLauncher<String> =
+            activity.registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+                val request = ref.getAndSet(null) ?: return@registerForActivityResult
+                requests.resolve(request, granted)
+            }
+    }
+
+    private fun cameraIntake(activity: ComponentActivity, permissions: CameraPermissionGate) =
+        AttachmentIntake(
+            activity = CameraActivityResults(dispatchers, camera.requests, ::cameraLauncher),
+            permissions = permissions,
+            reader = ContentReader(activity, dispatchers),
+            codec = AndroidImageCodec(activity.contentResolver, dispatchers),
+            clipboard = AndroidClipboardImages(activity, dispatchers),
+            captures = camera.captures,
+            photos = camera.record,
+            words = ComposerFileWords,
+            dispatchers = dispatchers,
+            clock = clock,
+        )
+
+    private fun pickerIntake(activity: ComponentActivity, results: PickerActivityResults) =
+        AttachmentIntake(
+            activity = results,
+            permissions = UnavailablePermissions,
+            reader = ContentReader(activity, dispatchers),
+            codec = AndroidImageCodec(activity.contentResolver, dispatchers),
+            clipboard = AndroidClipboardImages(activity, dispatchers),
+            captures = UnavailableCaptures,
+            photos = GalleryPhotos,
+            words = ComposerFileWords,
+            dispatchers = dispatchers,
+            clock = clock,
+        )
+
+    // The activity-scoped launchers and intakes the composer's file actions use, built once in one place.
+    @Suppress("LongParameterList")
     private class Host(
         val activity: ComponentActivity,
         val intake: AttachmentIntake,

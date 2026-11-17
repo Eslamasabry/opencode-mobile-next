@@ -16,7 +16,10 @@
 #     module's tests fails here, not weeks later in that module);
 #   - strings touched (:ui:words, :tools:strings): the :tools:strings drift check;
 #   - Android lint as CI runs it: `:androidApp:lintSwitchRelease` (strict LintPolicy; always, E02-S03);
-#   - detekt on the touched modules plus the baseline ratchet (tool/qa/detekt.sh, plan 03 check 11; always, E02-S03);
+#   - detekt on the touched modules plus the baseline ratchet (tool/qa/detekt.sh, plan 03 check 11; always, E02-S03).
+#     NOTE: this is a developer-machine check only. Until 3.0.1 no CI lane and no release script ran detekt, and the
+#     baselines were stale. CI gates it as the `detekt` job (tool/ci/detekt_lane.sh: new findings against the base ref,
+#     by signature; the candidate lane calls it with --all);
 #   - the layout guard's baseline ratchet (tool/qa/layout_baseline.sh; always, E02-S13; the guard itself runs in each
 #     touched module's desktopTest);
 #   - the alignment gate's baseline ratchet (layout_baseline.sh --kind align; always; docs/kit/ALIGN-RULES.md);

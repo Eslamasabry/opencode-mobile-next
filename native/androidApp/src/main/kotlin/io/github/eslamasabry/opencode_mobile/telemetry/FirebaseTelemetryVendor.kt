@@ -24,6 +24,8 @@ import kotlinx.coroutines.withContext
  * turns collection on only as the person's answers say. When the build has no Firebase config ([create] answers null)
  * nothing here ever runs.
  */
+// One method per vendor call of the shared TelemetryVendor port; the class implements that port and nothing else.
+@Suppress("TooManyFunctions")
 internal class FirebaseTelemetryVendor
 private constructor(
     private val crashlytics: FirebaseCrashlytics,
@@ -195,6 +197,8 @@ private constructor(
  * background thread, which builds it on first use and then runs every call in the order it was made. A crash report is
  * the one call the caller waits for (bounded), because the process is about to end.
  */
+// Forwards every call of the shared TelemetryVendor port to the real vendor, so it has one method per call.
+@Suppress("TooManyFunctions")
 internal class DeferredFirebaseTelemetryVendor(private val context: Context) : TelemetryVendor {
     private val lane =
         java.util.concurrent.Executors.newSingleThreadExecutor { r ->
