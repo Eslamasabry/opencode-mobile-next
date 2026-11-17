@@ -292,7 +292,7 @@ exit 0
 exit 0
 ''')
         result = self.script("t1.sh", "--base", "base", "--where", "vps")
-        self.assertEqual(result.returncode, 0)
+        self.assertEqual(result.returncode, 0, (result.stdout or "") + (result.stderr or ""))
         self.assertTrue((self.root / "gradle.log").exists())
         self.assertIn("check --repo ..", (self.root / "gradle.log").read_text())
 
