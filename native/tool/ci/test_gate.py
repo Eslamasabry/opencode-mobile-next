@@ -303,7 +303,7 @@ class KnownFailuresCeiling(unittest.TestCase):
     known_failures_ceiling.txt; to delete a line, delete it from the list AND from the ceiling. Every line is ONE test,
     named exactly, with a reason from a fixed set; a class wildcard is refused."""
     REASONS = {'flutter-era-rule', 'unsorted-rule', 'visible-fault-next-update', 'reference-not-in-history',
-               'known-noise-before-ci-goldens'}
+               'known-noise-before-ci-goldens', 'real-time-under-load'}
 
     @staticmethod
     def entries():
@@ -509,7 +509,7 @@ class Workflow(unittest.TestCase):
 class CandidateGate(unittest.TestCase):
     """B-CI-303: one candidate must prove every required check, not just a green aggregate."""
 
-    def gate(self, change=None, base_failures=(), known=None, lane='candidate'):
+    def gate(self, change=None, base_failures=(), known=None, lane='candidate', prior=None):
         desktop = [':feature:chats:desktopTest', ':quality:test', ':quality:secTest']
         android = [':androidApp:testPreviewDebugUnitTest']
         def report(name, tasks):
@@ -538,6 +538,9 @@ class CandidateGate(unittest.TestCase):
             env.pop('RESULT_ANDROID_UNIT', None)
             summary = os.path.join(HERE, 'summary.py')
             with tempfile.TemporaryDirectory() as aux:
+                if prior is not None:  # the failures file of the first attempt (OC_PRIOR_FAILURES)
+                    json.dump(list(prior), open(os.path.join(aux, 'prior.json'), 'w'))
+                    env['OC_PRIOR_FAILURES'] = os.path.join(aux, 'prior.json')
                 base = os.path.join(aux, 'base')
                 os.makedirs(base)
                 if base_failures:  # the newest run on the base branch had these failures
@@ -585,6 +588,39 @@ class CandidateGate(unittest.TestCase):
         code, text = self.gate(self.failing(self.T1, self.T2), known=known)
         self.assertEqual(code, 0, text)
         self.assertIn('known failures by reason: flutter-era-rule 1, unsorted-rule 1', text)
+
+    RT1 = 'feature/chat :: io.github.eslamasabry.oc.feature.chat.ChatEdgesBuildRenders > chat edges build render owner configuration dark[desktop]'
+    RT2 = 'ui/kit :: io.github.eslamasabry.oc.ui.kit.frame.KitFloatingBarTest > words on the pane render[desktop]'
+    RT_KNOWN = f'{RT1} | real-time-under-load: waits\n{RT2} | real-time-under-load: waits\n{T1} | flutter-era-rule: x\n'
+
+    def test_B_CI_335_a_failure_only_on_real_time_tests_reads_re_run_allowed(self):
+        code, text = self.gate(self.failing(self.RT1), known=self.RT_KNOWN)
+        self.assertEqual(code, 1, text)  # never a pass
+        self.assertIn('RE-RUN ALLOWED (once)', text)
+        self.assertIn('real-time-under-load failures (counted separately, never absorbed): 1', text)
+        self.assertNotIn('not known noise', text)
+
+    def test_B_CI_335_a_real_time_failure_with_any_other_failure_fails(self):
+        code, text = self.gate(self.failing(self.RT1, self.T2), known=self.RT_KNOWN)
+        self.assertEqual(code, 1, text)
+        self.assertIn('no re-run allowed', text)
+        self.assertNotIn('RE-RUN ALLOWED', text)
+
+    def test_B_CI_335_the_same_real_time_test_failing_again_after_the_re_run_fails(self):
+        code, text = self.gate(self.failing(self.RT1), known=self.RT_KNOWN, prior=[self.RT1])
+        self.assertEqual(code, 1, text)
+        self.assertIn('failed AGAIN after its one re-run', text)
+        self.assertNotIn('RE-RUN ALLOWED', text)
+
+    def test_B_CI_335_a_different_real_time_failure_in_the_re_run_fails_there_is_no_second_re_run(self):
+        code, text = self.gate(self.failing(self.RT2), known=self.RT_KNOWN, prior=[self.RT1])
+        self.assertEqual(code, 1, text)
+        self.assertIn('no second one', text)
+
+    def test_B_CI_335_a_clean_re_run_passes_and_says_it_was_the_re_run(self):
+        code, text = self.gate(self.failing(self.T1), known=self.RT_KNOWN, prior=[self.RT1])
+        self.assertEqual(code, 0, text)
+        self.assertIn('this re-run is the one allowed', text)
 
     def test_B_CI_333_one_test_off_the_list_fails_the_candidate_and_is_named(self):
         known = f'{self.T1} | flutter-era-rule: start-edge\n'
