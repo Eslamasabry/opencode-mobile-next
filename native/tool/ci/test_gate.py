@@ -116,6 +116,24 @@ class Gate(unittest.TestCase):
         self.assertEqual(code, 2, md)
         self.assertIn('detekt: the lane left no detekt report', md)
 
+    def test_B_CI_309_a_failing_android_variant_test_is_not_a_module_that_never_ran(self):
+        """B-CI-309: `:<module>:test` is a lifecycle task; when the variant unit-test task fails it never prints, and the module
+        must not read "never ran" while its failing test is named."""
+        log = ("> Task :android:linux:testDebugUnitTest FAILED\n\n* What went wrong:\n"
+               "Execution failed for task ':android:linux:testDebugUnitTest'.\n"
+               "> There were failing tests. See the report at: file:///x\n")
+        code, md = run_gate(log, ':android:linux:test',
+                            [('android/linux', f'{PKG}.android.linux.InstallFailureTest', ('install fails',))])
+        self.assertEqual(code, 1, md)
+        self.assertIn('InstallFailureTest', md)
+        self.assertNotIn('never ran', md)
+
+    def test_B_CI_309_an_android_module_whose_variant_never_ran_still_reads_never_ran(self):
+        code, md = run_gate('> Task :feature:chats:desktopTest\n', ':feature:chats:desktopTest :android:linux:test',
+                            [('feature/chats', f'{PKG}.feature.chats.XTest', ())])
+        self.assertEqual(code, 1, md)
+        self.assertIn('android/linux: no test results', md)
+
     def test_green_run_passes(self):
         code, md = run_gate('> Task :feature:chats:desktopTest\n', ':feature:chats:desktopTest', [('feature/chats', f'{PKG}.feature.chats.XTest', ())])
         self.assertEqual(code, 0, md)
