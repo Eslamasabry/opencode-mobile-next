@@ -490,6 +490,7 @@ class CandidateGate(unittest.TestCase):
                  'android-unit.json': {'failed': False, 'gradle_ran': True, 'tests': 3},
                  'report-build-logic.json': report('build-logic', [':convention:test']),
                  'compile.json': {'failed': False, 'gradle_ran': True},
+                 'detekt.json': {'ran': True, 'modules': [':core:net'], 'exit': 0, 'ratchet': 'ok', 'findings': {}},
                  'candidate-plan.json': {'lane': 'candidate', 'sha': 'a' * 40, 'desktop_tasks': desktop.copy(),
                                          'android_tasks': android.copy(),
                                          'self_tests': {n: {'tests': 5, 'passed': True} for n in ('ci', 'release', 'release_tools')}}}
