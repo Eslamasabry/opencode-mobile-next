@@ -1,8 +1,21 @@
-# Glossary for ja (Japanese: polite です/ます in sentences; concise noun or dictionary forms on buttons and labels). kinds (tab separated):
+# Glossary for ja (Japanese).
+# Style rules:
+#  - Polite です/ます register in sentences; leave out あなた (omit the subject).
+#  - Full-width Japanese punctuation (。、「」（）：) in sentences; half-width digits and Latin letters.
+#  - No space between Japanese and Latin letters or digits.
+#  - No exclamation marks (! or ！).
+#  - Buttons and labels: no final period and no trailing する where the noun is enough (保存, 削除, 送信).
+#  - Errors: state what happened in plain です/ます, then the way forward with 〜してください.
+#  - Never translate placeholders, code, file paths, commands, model or agent names.
+#  - House style for long vowels: サーバー, ユーザー, ブラウザ, フォルダ, メモリ, パソコン (never コンピュータ).
+#  - Refresh (button) -> 再読み込み; app/agent Update -> アップデート; Try again (button) -> 再試行 / (in sentence) -> もう一度お試しください.
+#  - Page name Home -> ホーム (key-row Home stays Home); Usage (UI/screen) -> 使用状況.
+#
+# Kinds (tab separated):
 #  keep<TAB>term: the English term stays exactly as written wherever it appears
 #  term<TAB>english regex<TAB>target regex: when the English matches, the translation must match (case-insensitive)
 #  forbid<TAB>target regex<TAB>why: the translation must not match
-#  allow<TAB>word: an English word that may stay in the translation (names, units, standards)
+#  allow<TAB>word: an English word that may stay in the translation (names, units, standards, key names)
 keep	OpenCode
 keep	AI Team
 keep	Gas City
@@ -29,30 +42,57 @@ keep	Claude Code
 keep	Linux
 term	\bThis phone\b	このスマートフォン
 term	\b[Cc]onversations?\b	会話
-term	\bTry again\b	もう一度試す|もう一度お試し
+term	^Try again$	再試行
+term	\bTry again\b	再試行|もう一度お試しください
 term	\bSettings\b	設定
 term	\bServers?\b	サーバー
 term	\bProjects?\b	プロジェクト
 term	\b[Ff]olders?\b	フォルダ
 term	\b[Ss]chedules?\b	スケジュール
 term	\b(?<!Claude )Agents?\b	エージェント
+term	\b[Cc]omputers?\b	パソコン
+term	^Home$	ホーム
 term	^Files$	ファイル
 term	^Cancel$	キャンセル
 term	^Offline$	オフライン
 term	^Disconnect$	切断
 term	^Allow$	許可
+term	\bAllow once\b	今回のみ許可
+term	\bAlways allow\b	常に許可
 term	\b[Aa]pprove\b	承認
 term	\b[Dd]eny\b	拒否
 term	^Delete$	削除
 term	^Search$	検索
-term	^Refresh$	更新
+term	^Refresh$	再読み込み
+term	^Update$	アップデート
+term	^Send$	送信
+term	^Stop$	停止
+term	^Save$	保存
+term	^Copy$	コピー
+term	^Share$	共有
+term	^Back$	戻る
+term	^Done$	完了
+term	^Next$	次へ
+term	^Details$	詳細
+term	\b[Nn]otifications?\b	通知
+term	\b[Pp]asswords?\b	パスワード
+term	\b[Pp]ermissions?\b	権限
+term	^Usage$	使用状況
 term	\b[Mm]odels?\b	モデル
 term	\bSign in\b	サインイン
+term	\bSign in again\b	もう一度サインイン
 term	\bSign out\b	サインアウト
 forbid	セッション(?!時間)	say 会話, not セッション
 forbid	チャット	say 会話, not チャット
 forbid	ログイン	say サインイン, not ログイン
+forbid	コンピュータ	use パソコン, not コンピュータ
 forbid	サーバ(?!ー)	use サーバー, not サーバ
+forbid	ユーザ(?!ー)	use ユーザー, not ユーザ
+forbid	ブラウザー	use ブラウザ, not ブラウザー
+forbid	フォルダー	use フォルダ, not フォルダー
+forbid	メモリー	use メモリ, not メモリー
+forbid	あなた	leave the subject out, do not use あなた
+forbid	[!！]	no exclamation marks
 allow	OK
 allow	Wi-Fi
 allow	Bluetooth
@@ -68,17 +108,10 @@ allow	KiB
 allow	MiB
 allow	GiB
 allow	Markdown
-allow	terminal
-allow	Terminal
-allow	offline
-allow	online
-allow	email
-allow	Email
 allow	Android
 allow	Linux
 allow	Git
 allow	git
-allow	Team
 allow	MCP
 allow	CLI
 allow	SDK
@@ -89,9 +122,15 @@ allow	IPv6
 allow	TLS
 allow	DNS
 allow	OAuth
-allow	Ctrl
-allow	Alt
-allow	Escape
 allow	Home
+allow	End
 allow	Page
 allow	Down
+allow	Up
+allow	Tab
+allow	Esc
+allow	Escape
+allow	Enter
+allow	Shift
+allow	Ctrl
+allow	Alt
