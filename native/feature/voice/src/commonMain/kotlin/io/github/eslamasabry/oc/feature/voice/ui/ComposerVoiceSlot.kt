@@ -202,6 +202,11 @@ private class FieldPort(private val voiceField: KitVoiceField) : VoiceFieldPort 
 
     override fun replace(text: String) = voiceField.replace(text)
 
+    override fun replace(text: String, cursor: Int) {
+        val at = voiceField.replaceAt
+        if (at != null) at(text, cursor) else voiceField.replace(text)
+    }
+
     override fun send() = voiceField.send()
 
     override fun canSend(): Boolean = voiceField.canSend()

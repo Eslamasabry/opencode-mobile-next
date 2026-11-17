@@ -484,4 +484,27 @@ class ComposerVoicePresenterTest {
         runCurrent()
         assertEquals("Whats next hello", rig.field.value)
     }
+
+    @Test
+    fun `B-MEDIA-078 a replacement swaps only the dictated words, typed text and the cursor stay right`() = runTest {
+        val rig = Rig(this)
+        // Typed text on both sides of the cursor: the words go in after "Whats next".
+        rig.field.value = "Whats next? Thanks"
+        rig.field.sel = 10..10
+        runCurrent()
+        rig.presenter.tapMic()
+        runCurrent()
+        rig.listening("hello wrld")
+        runCurrent()
+        assertEquals("Whats next hello wrld ? Thanks", rig.field.value)
+        assertEquals(21, rig.field.cursor, "the cursor sits after the dictated words")
+        // The engine swaps "wrld" for its polished "world" (HeardChange.Replaced): only the dictated words change.
+        rig.listening("hello world", partial = "and")
+        runCurrent()
+        assertEquals("Whats next hello world and ? Thanks", rig.field.value)
+        val kept = rig.field.value.startsWith("Whats next ") && rig.field.value.endsWith(" ? Thanks")
+        assertTrue(kept, "typed text kept")
+        assertEquals(26, rig.field.cursor, "the cursor stays after the dictated words")
+        assertEquals(23..25, rig.presenter.state.value.unconfirmed)
+    }
 }

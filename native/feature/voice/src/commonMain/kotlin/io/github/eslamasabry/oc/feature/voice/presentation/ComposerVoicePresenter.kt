@@ -49,6 +49,11 @@ public interface VoiceFieldPort {
 
     public fun replace(text: String)
 
+    /** Replaces the whole field and puts the cursor at [cursor] (after the dictated words). */
+    public fun replace(text: String, cursor: Int) {
+        replace(text)
+    }
+
     public fun send()
 
     public fun canSend(): Boolean
@@ -1034,14 +1039,14 @@ public class ComposerVoicePresenter(
         val f = field ?: return
         val heard = joinHeard(words, partial)
         val next = if (heard.isBlank()) base.first else DraftMerge.merge(base.first, base.second, base.third, heard)
-        if (next != f.text()) f.replace(next)
+        // Only the dictated range changes (new, confirmed or replaced words); the cursor stays after it.
+        val dictated = DraftMerge.inserted(base.first, base.second, base.third, heard)
+        if (next != f.text()) {
+            if (dictated != null) f.replace(next, dictated.last + 1) else f.replace(next)
+        }
         val forming = partial.trim()
         val unconfirmed =
-            if (forming.isEmpty()) null
-            else
-                DraftMerge.inserted(base.first, base.second, base.third, heard)?.let { r ->
-                    (r.last + 1 - forming.length)..r.last
-                }
+            if (forming.isEmpty() || dictated == null) null else (dictated.last + 1 - forming.length)..dictated.last
         if (mutable.value.unconfirmed != unconfirmed) mutable.update { it.copy(unconfirmed = unconfirmed) }
     }
 

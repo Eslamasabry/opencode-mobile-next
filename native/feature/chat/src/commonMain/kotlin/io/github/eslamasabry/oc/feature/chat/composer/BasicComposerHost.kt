@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.text.TextRange
 import androidx.compose.foundation.layout.RowScope
 import io.github.eslamasabry.oc.ui.kitchat.composer.LocalKitComposerRecorder
 import io.github.eslamasabry.oc.ui.kit.input.LocalKitFieldQuietRange
@@ -480,6 +481,15 @@ public fun BasicComposer(
             send = send,
             canSend = { canSend },
             conversationRef = conversationRef,
+            replaceAt = { words, cursor ->
+                field.edit {
+                    replace(0, length, words)
+                    selection = TextRange(cursor.coerceIn(0, length))
+                }
+                editor.userEditSerial += 1
+                editor.lastReported = words
+                actions.draftChanged(words)
+            },
         )
     // Leaving this conversation (a switch, Files, Back) ends any dictation into its box.
     voice?.StopWhenLeft(voiceField)

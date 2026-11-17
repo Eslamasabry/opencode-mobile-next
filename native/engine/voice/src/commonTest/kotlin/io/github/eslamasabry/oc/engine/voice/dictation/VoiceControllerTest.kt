@@ -367,12 +367,12 @@ class VoiceControllerTest {
             runCurrent()
             capture.speak(5)
             runCurrent()
-            recognizer.partial.value = "hel"
+            recognizer.heard.tryEmit(HeardChange.Partial("hel"))
             runCurrent()
             val forming = assertIs<VoiceState.Listening>(voice.state.value)
             assertEquals("", forming.words)
             assertEquals("hel", forming.partial)
-            recognizer.partial.value = "hello wor"
+            recognizer.heard.tryEmit(HeardChange.Partial("hello wor"))
             runCurrent()
             assertEquals("hello wor", assertIs<VoiceState.Listening>(voice.state.value).partial)
             capture.speak(25) // the 30 s chunk is complete and confirmed
@@ -393,5 +393,27 @@ class VoiceControllerTest {
             assertEquals("", assertIs<VoiceState.Listening>(voice.state.value).partial)
             assertEquals("w1".ok(), voice.finish())
             assertEquals(VoiceState.Done("w1", VoiceEnd.Person), voice.state.value)
+        }
+
+    @Test
+    fun `B-MEDIA-078 the seam confirms words and replaces a dictated range with polished text`() =
+        runTest {
+            val voice = controller()
+            voice.start(tap)
+            runCurrent()
+            capture.speak(5)
+            runCurrent()
+            recognizer.heard.tryEmit(HeardChange.Partial("hello wr"))
+            recognizer.heard.tryEmit(HeardChange.Confirmed("hello wrld"))
+            runCurrent()
+            val confirmed = assertIs<VoiceState.Listening>(voice.state.value)
+            assertEquals("hello wrld", confirmed.words)
+            assertEquals("", confirmed.partial)
+            recognizer.heard.tryEmit(HeardChange.Partial("how"))
+            recognizer.heard.tryEmit(HeardChange.Replaced(6..9, "world"))
+            runCurrent()
+            val replaced = assertIs<VoiceState.Listening>(voice.state.value)
+            assertEquals("hello world", replaced.words, "only the dictated range is swapped")
+            assertEquals("how", replaced.partial, "the forming words stay")
         }
 }

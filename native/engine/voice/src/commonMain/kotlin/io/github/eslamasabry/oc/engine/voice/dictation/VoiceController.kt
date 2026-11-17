@@ -346,8 +346,8 @@ public class VoiceController(
     }
 
     /**
-     * The words being heard now, from an engine that streams them (Whisper streams nothing: this stays quiet). One
-     * watch per open session; it ends with the recording.
+     * What an engine that streams hears (partial, confirmed and replaced words; Whisper streams nothing: this stays
+     * quiet). One watch per open session; it ends with the recording.
      */
     private fun watchPartial(recording: Recording, session: RecognizerSession) {
         if (recording.watched === session) return
@@ -355,14 +355,30 @@ public class VoiceController(
         recording.watched = session
         recording.partialWatch =
             scope.launch {
-                session.partial.collect { heard ->
-                    val next = heard.trim()
-                    if (next != recording.partial) {
-                        recording.partial = next
-                        publishProgress(recording)
-                    }
+                session.heard.collect { change ->
+                    applyHeard(recording, change)
+                    publishProgress(recording)
                 }
             }
+    }
+
+    /** Partial words replace the last ones; confirmed words join the text; a replacement swaps a dictated range. */
+    private fun applyHeard(recording: Recording, change: HeardChange) {
+        when (change) {
+            is HeardChange.Partial -> recording.partial = change.text.trim()
+            is HeardChange.Confirmed -> {
+                recording.words += change.text.trim()
+                recording.partial = ""
+            }
+            is HeardChange.Replaced -> {
+                val text = recording.text
+                val from = change.range.first.coerceIn(0, text.length)
+                val to = (change.range.last + 1).coerceIn(from, text.length)
+                val next = text.replaceRange(from, to, change.text)
+                recording.words.clear()
+                recording.words += next
+            }
+        }
     }
 
     private fun publishProgress(recording: Recording) {
