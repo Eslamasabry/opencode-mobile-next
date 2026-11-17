@@ -252,7 +252,7 @@ public fun KitTranscriptList(
         // not every frame of it.
         val fadeShown by remember { derivedStateOf { fadeState.value > 0f } }
         // A page that records its body ends the list itself above the pill (kitScreenListEdges): no band of ground there.
-        val pageEnds = io.github.eslamasabry.oc.ui.kit.frame.kitScreenBottomGlass() != null
+        val pageEnds = io.github.eslamasabry.oc.ui.kit.frame.kitScreenBottomGlass() != null || io.github.eslamasabry.oc.ui.kit.frame.LocalKitScreenFloating.current
         if (fadeShown && !pageEnds && !io.github.eslamasabry.oc.ui.kit.frame.kitScreenBottomIsSlab())
             Box(
                 Modifier.align(Alignment.BottomCenter)
@@ -271,13 +271,19 @@ public fun KitTranscriptList(
                         )
                     }
             )
+        val floating = io.github.eslamasabry.oc.ui.kit.frame.LocalKitScreenFloating.current
         KitJumpToLatest(
             state,
             jumpLabel,
             motion,
             backdrop,
+            if (floating)
+                // A floating chat (owner 2026-11-17): the pill's place, centred above the message box, as a round arrow only;
+                // its target stands on the block's top.
+                Modifier.align(Alignment.BottomCenter).padding(bottom = chromeBottom)
             // Bottom centre, its face 8 dp above the composer's veil (the 48 dp target's own margin counts toward it).
-            Modifier.align(Alignment.BottomCenter).padding(bottom = chromeBottom + jumpPillLift(LocalKitTokens.current.minTarget).dp),
+            else Modifier.align(Alignment.BottomCenter).padding(bottom = chromeBottom + jumpPillLift(LocalKitTokens.current.minTarget).dp),
+            round = floating,
         )
     }
 }
@@ -348,15 +354,10 @@ private fun KitJumpToLatest(
     motion: KitMotionLevel,
     backdrop: KitFrostState,
     modifier: Modifier,
+    round: Boolean = false,
 ) {
     val scope = rememberCoroutineScope()
-    // The kit's own jump pill (small, chevron and words), shown while away from the newest end.
-    KitJumpPill(
-        label = label,
-        visible = state.awayFromLatest,
-        modifier = modifier.testTag("jump-to-latest"),
-        backdrop = backdrop,
-        onClick = {
+    val jump: () -> Unit = {
                 state.following = true
                 scope.launch {
                     val lazy = state.lazy
@@ -372,6 +373,17 @@ private fun KitJumpToLatest(
                         }
                     }
                 }
-            },
-    )
+            }
+    // The kit's own jump pill (small, chevron and words), or a floating chat's round arrow, shown while away from the
+    // newest end.
+    if (round)
+        io.github.eslamasabry.oc.ui.kit.frame.KitJumpButton(label, jump, state.awayFromLatest, modifier.testTag("jump-to-latest"))
+    else
+        KitJumpPill(
+            label = label,
+            visible = state.awayFromLatest,
+            modifier = modifier.testTag("jump-to-latest"),
+            backdrop = backdrop,
+            onClick = jump,
+        )
 }

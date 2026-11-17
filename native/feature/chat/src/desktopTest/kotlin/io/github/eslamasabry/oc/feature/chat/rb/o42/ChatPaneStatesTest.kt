@@ -110,14 +110,16 @@ class ChatPaneStatesTest {
     }
 
     @Test
-    fun `E5 at the window's root the title starts on the gutter and has no chevron`() =
+    fun `E5 at the window's root the title starts 16 dp inside the header capsule and has no chevron`() =
         runDesktopComposeUiTest(412, 915) {
             val scene = ChatScene()
             setContent { E20Scene { scene.Screen(scene.live()) } }
             waitForIdle()
             onAllNodesWithTag("kit-top-bar-exit", useUnmergedTree = true).assertCountEquals(0)
             val title = boundsOfTag("kit-top-bar-title")
-            assertEquals(16f, title.left, 1f, "the title's words start on the 16 dp gutter")
+            // B-438: the header is one floating capsule; the bar's own 16 dp gutter now lies inside it.
+            val capsule = boundsOfTag("kit-header-capsule")
+            assertEquals(capsule.left + 16f, title.left, 1f, "the title's words start 16 dp inside the header capsule")
             // Flutter's chat title is not a switcher: Rename is in the ⋯ menu.
             onAllNodesWithTag("kit-top-bar-title", useUnmergedTree = true)
                 .assertCountEquals(1)

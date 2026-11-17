@@ -32,6 +32,7 @@ import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -44,6 +45,7 @@ import io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceInput
 import io.github.eslamasabry.oc.ui.kit.foundation.kitDressedLook
 import io.github.eslamasabry.oc.ui.kit.foundation.kitSurface
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
@@ -58,6 +60,7 @@ import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.KitTextKind
 import io.github.eslamasabry.oc.ui.kit.foundation.KitFrostState
 import io.github.eslamasabry.oc.ui.kit.foundation.KitGlyph
+import io.github.eslamasabry.oc.ui.kit.foundation.kitHairlineBorder
 import io.github.eslamasabry.oc.ui.kit.foundation.kitBackdropVeil
 import io.github.eslamasabry.oc.ui.kit.foundation.rememberKitChromeVeil
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
@@ -421,3 +424,71 @@ public fun KitJumpPillLayer(
         Box(Modifier.align(at).then(pad).padding(horizontal = gutter).widthIn(max = Dp.Infinity)) { pill() }
     }
 }
+
+
+/**
+ * The jump control of a floating chat (owner 2026-11-17): a round arrow only, no words, on a slightly see-through fill,
+ * 44 dp inside a 48 dp target, standing centred above the message box where the pill stood (the caller places it). The words
+ * stay as its spoken label ("Jump to latest"). Shown while the body is away from its newest end; scales in and out,
+ * at once under reduced motion.
+ *
+ * Tag `kit-jump-button`. States: hidden, shown, pressed. Cap: none. Motion: scale + fade.
+ */
+@Composable
+public fun KitJumpButton(label: String, onClick: () -> Unit, visible: Boolean, modifier: Modifier = Modifier) {
+    kitAssert(label.isNotBlank()) { "KitJumpButton: a button always carries words for a screen reader" }
+    val colors = LocalKitColors.current
+    val tokens = LocalKitTokens.current
+    // The face is the style's own, a little see-through (the one part of a floating chat that is).
+    val look =
+        io.github.eslamasabry.oc.ui.kit.foundation.kitSurfaceLook(
+            io.github.eslamasabry.oc.ui.kit.foundation.KitSurfaceInput(
+                role = io.github.eslamasabry.oc.ui.design.style.SurfaceRole.Floating,
+                shape = KitShapeId.Circle,
+                level = io.github.eslamasabry.oc.ui.kit.foundation.kitFloatingLevel(colors),
+                ownFill = io.github.eslamasabry.oc.ui.kit.foundation.kitFloatingFill(colors),
+                faceAlpha = JUMP_BUTTON_FILL_ALPHA,
+            )
+        )
+    val face: @Composable () -> Unit = {
+        Box(
+            modifier
+                .testTag("kit-jump-button")
+                .heightIn(min = tokens.minTarget.dp)
+                .widthIn(min = tokens.minTarget.dp)
+                .kitTappable(onClick = onClick, shape = KitShapeId.Pill)
+                .semantics(mergeDescendants = true) {
+                    contentDescription = label
+                    role = androidx.compose.ui.semantics.Role.Button
+                },
+            contentAlignment = Alignment.Center,
+        ) {
+            Box(
+                Modifier.size(JUMP_BUTTON_FACE_DP.dp)
+                    .then(look.modifier)
+                    .kitHairlineBorder(1.dp, colors.hairline, look.shape),
+                contentAlignment = Alignment.Center,
+            ) {
+                KitGlyph(KitIcons.down, colors.text1, 20.dp)
+            }
+        }
+    }
+    if (KitMotion.state.reduced) {
+        if (visible) face()
+        return
+    }
+    AnimatedVisibility(
+        visible,
+        enter = androidx.compose.animation.fadeIn() + androidx.compose.animation.scaleIn(initialScale = 0.8f),
+        exit = androidx.compose.animation.fadeOut() + androidx.compose.animation.scaleOut(targetScale = 0.8f),
+    ) { face() }
+}
+
+/** The round jump button's visible face, dp (its target is the kit's minimum target). */
+internal const val JUMP_BUTTON_FACE_DP: Int = 44
+
+/**
+ * How much of its fill the round jump button keeps (owner 2026-11-17: "I like it was a little bit transparent"). The one
+ * part of a floating chat that is not fully opaque: the header capsule, the message box and what rides in the box are.
+ */
+internal const val JUMP_BUTTON_FILL_ALPHA: Float = 0.88f
