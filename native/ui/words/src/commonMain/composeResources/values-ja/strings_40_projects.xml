@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="r40RelationsTitle">関連する会話</string>
+    <string name="r40RelationsRefresh">関連する会話を再読み込み</string>
+    <string name="r40RelationsStale">この会話の場所が変更されました。戻ってから関連する会話をもう一度開いてください。</string>
+    <string name="r40RelationsFailure">完了できませんでした。もう一度お試しください。または、戻ってから関連する会話をもう一度開いてください。</string>
+    <string name="r40RelationsParent">開始元</string>
+    <string name="r40RelationsEmpty">サブエージェントの会話はまだありません</string>
+    <string name="r40RelationsEmptyBody">委任された作業は元の会話に混ざらず、ここに表示されます。</string>
+    <string name="r40RelationsChildren">サブエージェントの会話 · %1$s</string>
+    <string name="r40RelationsUntitled">無題の会話</string>
+    <string name="r40RelationsNeedsYou">確認が必要 · 開いて回答</string>
+    <string name="r40RelationsWorking">作業中</string>
+    <string name="r40RelationsIdle">待機中</string>
+    <string name="r40RelationsDone">完了</string>
+    <string name="r40RelationsCurrent">この会話</string>
+    <string name="r40RelationsPinned">固定済み</string>
+    <string name="r40RelationsActions">操作</string>
+    <string name="r40RelationsOpening">処理中…</string>
+    <string name="r40RelationsOpen">会話を開く</string>
+    <string name="r40RelationsResume">パソコンで続ける</string>
+    <string name="r40RelationsPin">会話を固定</string>
+    <string name="r40RelationsUnpin">会話の固定を解除</string>
+    <string name="r40RelationsStop">サブエージェントを停止</string>
+    <string name="r40RelationsStopTitle">%1$sを停止しますか？</string>
+    <string name="r40RelationsStopBody">現在進めている作業を停止します。会話と完了した作業は残ります。</string>
+    <string name="r40RelationsKeepRunning">実行を続ける</string>
+    <string name="r40RelationsResumeBody">このサーバーをホストしているパソコンで、同じプロジェクトから次のコマンドを実行してください。コピーしても何も送信されません。</string>
+    <string name="r40RelationsCopy">コマンドをコピー</string>
+    <string name="r40RelationsJustNow">たった今</string>
+    <string name="r40RelationsMinutes">%1$s分前</string>
+    <string name="r40RelationsHours">%1$s時間前</string>
+    <string name="r40RelationsDays">%1$s日前</string>
+</resources>

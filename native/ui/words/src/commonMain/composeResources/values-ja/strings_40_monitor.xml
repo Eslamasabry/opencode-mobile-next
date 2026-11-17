@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="monitorInboxTitle">受信トレイ</string>
+    <string name="monitorInboxEmpty">監視中のサーバーからのリクエストやリマインダーはありません。</string>
+    <string name="monitorInboxFailedRun">確認が必要な実行があります</string>
+    <string name="monitorInboxOpening">リクエストを開いています…</string>
+    <string name="monitorInboxSettings">監視する保存済みサーバーは「通知」で選べます。</string>
+    <string name="monitorInboxSwitchBody">このサーバーでリクエストを開きます。ほかのサーバーで実行中の作業はそのまま続きます。</string>
+</resources>

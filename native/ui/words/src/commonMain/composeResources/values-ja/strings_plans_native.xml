@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="quotaCollectorService">プラン使用状況を読み取り中</string>
+    <string name="plansNativeCollectors">プラン上限を読み取る</string>
+    <string name="plansNativeCollectorOn">読み取りはオンです</string>
+    <string name="plansNativeCollectorOff">読み取りはオフです</string>
+    <string name="plansNativeCollectorSetup">このスマートフォンで読み取りをセットアップ</string>
+    <string name="plansNativeCollectorRemote">このサーバーからの読み取りを許可</string>
+    <string name="plansNativeCollectorWorking">プラン読み取りを更新中</string>
+    <string name="plansNativeCollectorFailed">プラン読み取りを変更できませんでした。サーバーを確認してもう一度お試しください。</string>
+    <string name="plansNativeAlerts">プラン上限の通知</string>
+    <string name="plansNativeAlertsBody">読み取り可能なプランが選択した水準に達したら通知します。リモート読み取りには引き続き許可が必要です。</string>
+    <string name="plansNativeSetupQuestion">%1$sでプラン読み取りをセットアップしますか？</string>
+    <string name="plansNativeRemoteQuestion">%1$sからのプラン読み取りを許可しますか？</string>
+    <string name="plansNativeOffQuestion">%1$sでのプラン読み取りをオフにしますか？</string>
+    <string name="plansNativeSetupBody">アプリ内Ubuntuの内部にプランリーダーをインストールします。プロバイダーの認証情報はスマートフォンに残ります。</string>
+    <string name="plansNativeRemoteBody">このサーバーにすでにインストールされているコレクターからプラン上限を読み取ります。この許可はこのサーバーとそれが報告するプロバイダーアカウントにのみ適用されます。</string>
+    <string name="plansNativeOffBody">このソースからの読み取りを停止し、読み取り許可を削除します。プロバイダーのサインインは保持されます。</string>
+    <string name="plansNativeSetUp">読み取りをセットアップ</string>
+    <string name="plansNativeAllow">読み取りを許可</string>
+    <string name="plansNativeTurnOff">読み取りをオフにする</string>
+    <string name="plansNativeCancel">キャンセル</string>
+</resources>

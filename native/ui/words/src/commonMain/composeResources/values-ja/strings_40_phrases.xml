@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="phraseSuggestionsInsert">挿入：%1$s</string>
+    <string name="phraseSuggestionsOptions">%1$sのオプション</string>
+    <string name="phraseSuggestionsChangeFailed">フレーズを非表示にできませんでした。メニューからもう一度お試しください。</string>
+</resources>

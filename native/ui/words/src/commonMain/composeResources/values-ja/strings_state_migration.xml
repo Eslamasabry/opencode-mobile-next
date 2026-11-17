@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="stateAppearanceOverview">すべての外観設定</string>
+    <string name="stateAppearanceChangedLast">前回の変更：%1$s</string>
+</resources>

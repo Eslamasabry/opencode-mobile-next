@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="stateLifecycleChecking">Androidがアプリを停止しました。実行中のものを再確認しています…</string>
+    <string name="stateLifecycleUnavailable">Androidがアプリを停止しました。復旧状況を確認できませんでした。</string>
+    <string name="stateLifecycleStopped">Androidがアプリを停止しました。OpenCodeは停止しています。</string>
+    <string name="stateLifecycleUnreachable">Androidがアプリを停止しました。OpenCodeはまだ応答していません。</string>
+    <string name="stateLifecyclePartial">OpenCodeは応答していますが、以前実行していた一部のサービスの準備がまだできていません。</string>
+    <string name="stateLifecycleReady">OpenCodeと以前実行していたサービスが再び応答しています。中断されたタスクは確認が必要な場合があります。</string>
+    <string name="stateStorageTitle">アプリのストレージ</string>
+    <string name="stateStorageServer">LinuxとOpenCode</string>
+    <string name="stateStoragePrivate">保存されたサインイン情報、設定、会話</string>
+    <plurals name="stateStorageProject">
+        <item quantity="other">%1$s · %2$d件のファイル · 非公開%3$d件</item>
+    </plurals>
+    <plurals name="stateStorageSavedServers">
+        <item quantity="other">保存済みサーバー%1$d件</item>
+    </plurals>
+    <string name="stateStorageEmpty">このスマートフォンにはLinuxもプロジェクトも保存されていません。</string>
+    <string name="stateStorageFailed">ストレージ容量を計測できませんでした。もう一度お試しください。</string>
+    <string name="stateStorageRefresh">ストレージを再計測</string>
+</resources>

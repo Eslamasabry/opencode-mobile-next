@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="composerLimitApproaching">上限に近づいています</string>
+    <string name="composerLimitReached">上限に達しました</string>
+    <string name="composerLimitResetsInHoursMinutes">あと%1$d時間%2$d分でリセット</string>
+    <string name="composerLimitResetsInHours">あと%1$d時間でリセット</string>
+    <string name="composerLimitResetsInMinutes">あと%1$d分でリセット</string>
+    <string name="composerLimitResetsOnDay">%1$sの%2$sにリセット</string>
+    <string name="composerLimitResetsOnDate">%1$sにリセット</string>
+    <string name="composerLimitViewUsage">使用状況を見る</string>
+    <string name="composerLimitDismiss">閉じる</string>
+    <string name="composerLimitMonday">月曜日</string>
+    <string name="composerLimitTuesday">火曜日</string>
+    <string name="composerLimitWednesday">水曜日</string>
+    <string name="composerLimitThursday">木曜日</string>
+    <string name="composerLimitFriday">金曜日</string>
+    <string name="composerLimitSaturday">土曜日</string>
+    <string name="composerLimitSunday">日曜日</string>
+    <string name="composerLimitClock12">%2$s%1$s</string>
+    <string name="composerLimitAm">午前</string>
+    <string name="composerLimitPm">午後</string>
+</resources>

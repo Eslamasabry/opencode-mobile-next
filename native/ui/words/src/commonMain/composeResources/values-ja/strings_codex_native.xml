@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="codexNativeTitle">Codex接続チェック</string>
+    <string name="codexNativeIntro">パソコンでこの1行コマンドを実行してください。アドレス、フォルダの絶対パス、および機能トークンを入力すると、認証済み接続を確認できます。</string>
+    <string name="codexNativeCopy">起動コマンドをコピー</string>
+    <string name="codexNativeTokenHelp">トークンファイルの絶対パスをご自身のものに合わせて指定してください。トークンは非公開にしてください。暗号化なしのWebSocketはこのデバイス上でのみ許可されており、別のパソコンには安全なWebSocketを使用してください。</string>
+    <string name="codexNativeAddress">WebSocketアドレス</string>
+    <string name="codexNativeDirectory">フォルダの絶対パス</string>
+    <string name="codexNativeToken">機能トークン</string>
+    <string name="codexNativeWorking">接続を確認中…</string>
+    <string name="codexNativeProbe">接続を確認</string>
+    <string name="codexNativeProbed">認証済み接続がフォルダ単位の読み取りに応答しました。結果が空の場合、フォルダの存在は確認されません。</string>
+    <string name="codexNativeFailed">接続チェックに失敗しました。Codexが実行中であることを確認して、もう一度お試しください。</string>
+    <string name="codexNativeAuthFailed">Codexが機能トークンを拒否しました。トークンを確認して、もう一度お試しください。</string>
+    <string name="codexNativeScopeFailed">アドレス、フォルダの絶対パス、許可された接続範囲を確認してください。</string>
+    <string name="codexNativeVersion">この接続ではアカウントの使用状況を取得できません。アカウント情報の読み取りには対応済みのCodex 0.153.4プロトコルが必要です。</string>
+    <string name="codexNativeOpen">アカウント読み取りを開く</string>
+    <string name="codexNativeReaderOpen">アカウント読み取りが開いています。プラン画面を開いてアカウントの上限を更新してください。終わったらここで閉じてください。</string>
+    <string name="codexNativePlans">プランを開く</string>
+    <string name="codexNativeClose">アカウント読み取りを閉じる</string>
+    <string name="codexNativeReadOnly">このページでは接続の確認とアカウントの使用状況の読み取りを行います。会話の開始、サインイン、プロンプトの送信は行いません。</string>
+</resources>

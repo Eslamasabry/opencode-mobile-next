@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="plansWidgetSettings">使用状況ウィジェット</string>
+    <string name="plansWidgetSetupRows">セットアップが必要なプランを表示</string>
+    <string name="plansWidgetBoth">両方の期間を表示</string>
+    <string name="plansWidgetFiveHour">5時間枠を表示</string>
+    <string name="plansWidgetWeekly">週間枠を表示</string>
+    <string name="plansWidgetSelected">選択済み</string>
+    <string name="plansWidgetVisible">このプランをウィジェットに表示</string>
+</resources>

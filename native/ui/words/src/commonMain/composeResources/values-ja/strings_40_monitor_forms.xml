@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="monitor40FormTitle">リクエストに回答</string>
+    <string name="monitor40FormGone">このリクエストは変更されたか、利用できなくなりました。受信トレイからもう一度開いてください。</string>
+    <string name="monitor40FormSent">回答を送信しました。</string>
+    <string name="monitor40FormElsewhere">このリクエストは別の場所で回答されました。</string>
+    <string name="monitor40FormHeld">回答はまもなく送信されます。</string>
+    <string name="monitor40Undo">元に戻す</string>
+    <string name="monitor40FormFailed">回答を送信できませんでした。</string>
+    <string name="monitor40Other">その他</string>
+    <string name="monitor40OpenLink">ページを開く</string>
+    <string name="monitor40Send">回答を送信</string>
+    <string name="monitor40Decline">リクエストを辞退</string>
+    <string name="monitor40FixFields">送信する前に印の付いた回答を確認してください。</string>
+    <string name="monitor40NotConfirmed">未確認</string>
+    <string name="monitor40Sending">回答を送信中…</string>
+    <string name="monitor40DeclineQuestion">このリクエストを辞退しますか？</string>
+    <string name="monitor40DeclineBody">回答せずにこのリクエストを閉じます。</string>
+    <string name="monitor40LinkQuestion">このページを開きますか？</string>
+    <string name="monitor40Required">回答を入力してください。</string>
+    <string name="monitor40Number">数値を入力してください。</string>
+    <string name="monitor40Integer">整数を入力してください。</string>
+    <string name="monitor40NotOffered">提示された回答を選ぶか、フォームで受け付けられる値を入力してください。</string>
+    <plurals name="monitor40MinLength">
+        <item quantity="other">%1$d文字以上で入力してください。</item>
+    </plurals>
+    <plurals name="monitor40MaxLength">
+        <item quantity="other">%1$d文字以内で入力してください。</item>
+    </plurals>
+    <string name="monitor40Range">%1$s〜%2$sの範囲内で値を入力してください。</string>
+    <plurals name="monitor40MinItems">
+        <item quantity="other">回答を%1$d件以上選んでください。</item>
+    </plurals>
+    <plurals name="monitor40MaxItems">
+        <item quantity="other">回答を%1$d件以内で選んでください。</item>
+    </plurals>
+    <string name="monitor40QuestionCount">質問数：%1$d</string>
+    <string name="monitor40Answer">回答</string>
+</resources>

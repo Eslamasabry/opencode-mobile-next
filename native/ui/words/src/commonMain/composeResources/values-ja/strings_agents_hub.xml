@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="agentsHubOnPhone">このスマートフォン</string>
+    <string name="agentsHubOnComputers">パソコン</string>
+    <string name="agentsHubComputersEmpty">パソコンがまだ追加されていません。このスマートフォンからClaude CodeやPiを使うには、Paseoが動作しているパソコンを追加してください。</string>
+    <string name="agentsHubAddComputer">パソコンを追加</string>
+    <string name="agentsHubCheck">接続を確認</string>
+    <string name="agentsHubCheckAgents">エージェントを確認</string>
+    <string name="agentsHubFolderHint">/home/you/project</string>
+    <string name="agentsHubInvalidAddress">このデバイスまたはプライベートネットワーク上のws:// アドレス、あるいはwss:// アドレスを入力してください。</string>
+    <string name="agentsHubInvalidFolder">プロジェクトフォルダは /home/you/projectのようなフルパスで入力してください。</string>
+    <string name="agentsHubInvalidPassword">このパスワードは使用できません。スペースを含まない英字、数字、記号を使用してください。</string>
+    <string name="agentsHubAdded">保存しました。会話は「会話」に表示されます。</string>
+    <string name="agentsHubAddFailed">このパソコンを保存できませんでした。内容を確認して、もう一度お試しください。</string>
+    <string name="agentsHubAgentsFailed">そのパソコン上のエージェントを読み取れませんでした。Paseoが動作しているか確認してください。</string>
+    <string name="agentsHubStartFailed">そのパソコンで会話を開始できませんでした。パソコンの登録は保存されたままです。</string>
+    <string name="agentsHubSignInFailed">そのパソコンでパスワードが受け付けられませんでした。</string>
+    <string name="agentsHubPasswordNeeded">このパソコンにはパスワードが必要です。デーモンのパスワードを入力してから、もう一度確認してください。</string>
+    <string name="agentsHubNotAnswering">そのパソコンから応答がありませんでした。Paseoが動作していて、このスマートフォンから接続できるか確認してください。</string>
+    <string name="agentsHubNotConnected">未接続</string>
+    <string name="agentsHubDefaultName">Paseo</string>
+</resources>

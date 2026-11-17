@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="homeStartOpenProject">プロジェクトを開く</string>
+    <string name="homeStartOpenProjectDetail">新しく作成するか、フォルダを選ぶ</string>
+    <string name="homeStartConnectDetail">パソコンでエージェントを動かす</string>
+    <string name="homeStartDemo">エージェントでできることを見る</string>
+    <string name="homeStartDemoDetail">設定不要で試せる短い例</string>
+    <string name="homeProjectSheetNew">新しいプロジェクト</string>
+    <string name="homeProjectSheetNewDetail">プロジェクト内にGit付きのフォルダを作成します</string>
+    <string name="homeProjectSheetByPath">パスでフォルダを選ぶ</string>
+</resources>

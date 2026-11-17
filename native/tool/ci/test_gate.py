@@ -451,6 +451,10 @@ class Plan(unittest.TestCase):
         r = plan('fast', '')
         self.assertEqual((r['mode'], r['count'], r['total']), ('list', '0', '1'))
 
+    def test_B_CI_303_candidate_lane_has_eight_module_shards_and_a_dedicated_quality_shard(self):
+        r = plan('candidate', 'ALL')
+        self.assertEqual((r['mode'], r['count'], r['total']), ('all', '8', '9'))
+
 
 class Workflow(unittest.TestCase):
     """The summary job's exit code is the run's verdict on every branch."""
@@ -519,6 +523,7 @@ class CandidateGate(unittest.TestCase):
     def test_B_CI_303_complete_candidate_passes(self):
         code, text = self.gate()
         self.assertEqual(code, 0, text)
+        self.assertIn('| android unit tests | ok (3 run, 0 failing) |', text)
 
     def test_B_CI_310_a_candidate_with_a_skipped_guard_is_not_a_pass(self):
         code, text = self.gate()
@@ -536,6 +541,7 @@ class CandidateGate(unittest.TestCase):
             'module': lambda f: f['candidate-plan.json']['desktop_tasks'].append(':feature:missing:desktopTest'),
             'android': lambda f: f.pop('report-android-unit.json'),
             'build-logic': lambda f: f.pop('report-build-logic.json'),
+            'compile-all-tests': lambda f: f['compile.json'].update(compile_all_tests=False),
             'quality': lambda f: f['report-candidate-0.json'].pop('quality'),
             'self-tests': lambda f: f['candidate-plan.json']['self_tests'].pop('release_tools'),
             'self-tests-red': lambda f: f['candidate-plan.json']['self_tests']['release'].update(passed=False),

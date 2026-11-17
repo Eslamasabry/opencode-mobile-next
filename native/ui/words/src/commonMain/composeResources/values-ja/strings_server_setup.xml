@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="secSetupTitle">サーバーセットアップ</string>
+    <string name="secSetupReadOnly">サーバー設定を確認し、ローカルで変更案を作成します。適用と取り消しにはアトミック復元エンドポイントが必要ですが、このサーバーは提供していません。ここではサーバー自体は変更されません。</string>
+    <string name="secSetupFailed">セットアップを読み込めませんでした。このサーバーに再接続してもう一度お試しください。</string>
+    <string name="secSetupRefresh">サーバーセットアップを再読み込み</string>
+    <string name="secSetupConfig">非公開の値を隠した設定</string>
+    <string name="secSetupGuided">この端末でのガイド付きセットアップ</string>
+    <string name="secSetupReview">変更案を確認</string>
+    <string name="secSetupInvalid">認証情報を含めず、指定された項目のみを入力してください。モデル、コマンド、アドレスを確認してもう一度お試しください。</string>
+    <string name="secSetupInputs">認証情報を含めずに必要な値をすべて入力してください。URLにパスワード、クエリ、フラグメントを含めることはできません。変更はまだ提案されていません。</string>
+    <string name="secSetupUnsupported">この手順には個別のサインインまたはサーバー設定ツールが必要です。ガイド付きセットアップでは利用できません。</string>
+    <string name="secSetupProposed">ローカルの変更案が確認できるようになりました。まだ何も適用されていません。コネクタの変更案は無効の状態で開始されます。</string>
+    <string name="secSetupRegistry">公開コネクタレジストリを閲覧</string>
+    <string name="secSetupRegistryConsent">デフォルトではオフです。有効にすると取得せずに選択内容のみが保存されます。再読み込みすると、サーバーの認証情報なしで公開MCPレジストリに問い合わせます。</string>
+    <string name="secSetupSearch">公開一覧を検索</string>
+    <string name="secSetupRegistryRefresh">公開一覧を再読み込み</string>
+    <string name="secSetupRegistryDisabled">公開レジストリへのアクセスはオフです。</string>
+    <string name="secSetupRegistryOffline">オフラインです。保存済みの一覧を表示しています。</string>
+    <string name="secSetupRegistryFailed">公開レジストリを読み込めませんでした。手動でセットアップするか、あとでもう一度お試しください。</string>
+    <string name="secSetupRegistryEmpty">表示できる公開一覧はありません。</string>
+    <string name="secSetupRegistryReady">公開コネクタ一覧</string>
+    <string name="secSetupRegistryRemote">HTTPSエンドポイントが記載されています。サーバーでセットアップする前に詳細を確認してください。</string>
+    <string name="secSetupRegistryDetails">この項目には接続の詳細が必要です。手動でセットアップしてください。</string>
+    <string name="secSetupRegistryCommand">パッケージのインストールにはサーバー上で確認済みのコマンドが必要です。手動でセットアップしてください。</string>
+    <string name="secSetupRegistryNoEndpoint">この項目には対応するHTTPSエンドポイントがありません。手動でセットアップしてください。</string>
+    <string name="secSetupChooseModel">モデルを選択</string>
+    <string name="secSetupDefaultAgent">デフォルトのエージェント</string>
+    <string name="secSetupPermission">権限ルール</string>
+    <string name="secSetupRemoteMcp">リモートコネクタ</string>
+    <string name="secSetupLocalMcp">ローカルコネクタ</string>
+    <string name="secSetupRemoveMcp">コネクタを削除</string>
+    <string name="secSetupProvider">プロバイダーサインイン</string>
+    <string name="secSetupAgent">エージェントを設定</string>
+    <string name="secSetupCommand">コマンドを設定</string>
+    <string name="secSetupModelField">モデル（プロバイダー/モデル）</string>
+    <string name="secSetupAgentField">既存のエージェント名</string>
+    <string name="secSetupToolField">ツール名</string>
+    <string name="secSetupEffectField">権限（ask：確認、allow：許可、deny：拒否）</string>
+    <string name="secSetupUrlField">HTTPSまたはループバックのコネクタアドレス</string>
+    <string name="secSetupCommandField">認証情報を含めないJSON配列形式のコマンド引数</string>
+    <string name="secSetupNameField">コネクタ名</string>
+    <string name="secHostOfficialInstall">公式OpenCode 2パッケージ</string>
+    <string name="secHostPinnedFront">検証済みAI Teamフロントコマンド</string>
+    <string name="secHostPinnedFrontHelp">Gas Cityスーパーバイザーをセットアップしたあと、パソコン上でこのコマンドを実行してください。you@example.comは許可されたTailscale IDに置き換えてください。ダウンロードは特定のコミットに固定されており、命名および実行前に検証されます。</string>
+</resources>

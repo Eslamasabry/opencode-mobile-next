@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="serversInspectSetup">セットアップを確認</string>
+    <string name="serversPairingAnswered">サーバーから応答がありました。接続する前にサインイン状態やステータスを確認してください。</string>
+    <string name="serversRemoteTerminal">ターミナル</string>
+</resources>

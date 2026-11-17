@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="secBuiltinFolders">内蔵Linuxフォルダ</string>
+    <string name="secBuiltinFoldersBody">このスマートフォンのプロジェクトストレージとLinuxフォルダを参照します。</string>
+    <string name="secBuiltinFolderLinked">このフォルダはリンクです。実在するフォルダを選択してください。</string>
+    <string name="secBuiltinFolderNotInstalled">これらのフォルダを参照するには、このスマートフォンにLinuxをインストールしてください。</string>
+</resources>

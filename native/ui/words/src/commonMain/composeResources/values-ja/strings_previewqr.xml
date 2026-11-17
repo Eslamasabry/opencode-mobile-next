@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="previewQrLeaveTitle">ブラウザでこのリンクを開きますか？</string>
+    <string name="previewQrPortLabel">ポート番号</string>
+    <string name="previewQrPortHelp">または実行中アプリのポート番号を入力してください。</string>
+    <string name="previewQrPortInvalid">1から65535のポート番号を入力してください。</string>
+    <string name="previewQrPortOpen">ポートを開く</string>
+    <string name="previewQrPairFilled">ペアリングコードから入力しました。内容を確認してから保存してください。</string>
+    <string name="previewQrLinkFilled">リンクからアドレスを入力しました。パスワードを追加してから保存してください。</string>
+    <string name="previewQrScanRejected">このQRコードはペアリングコードではありません。「opencode2 pair」が表示するコードにカメラを向けてください。</string>
+    <string name="previewQrPairingCodeLabel">ペアリングコード</string>
+</resources>

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="stateFolderNameEmpty">フォルダ名を入力してください。</string>
+    <string name="stateFolderNameSegment">スラッシュを含まない単一のフォルダ名を使用してください。</string>
+    <string name="stateFolderNameCharacters">英数字で始まり、英数字・ドット・ハイフン・アンダースコアのみを使用してください（64文字まで）。</string>
+    <string name="stateFolderCreating">プロジェクトフォルダを作成中…</string>
+</resources>

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="andrStorageInternal">内部ストレージ</string>
+    <string name="andrStorageUp">1つ上のフォルダへ</string>
+    <string name="andrStorageUseFolder">このフォルダを開く</string>
+    <string name="andrStorageFoldersEmpty">ここにフォルダはありません。</string>
+    <string name="andrStorageFolderMissing">このフォルダはもう存在しません。上の階層へ移動して別のフォルダを選んでください。</string>
+    <string name="andrStorageFolderDenied">Androidの設定でフォルダへのアクセスを許可してからもう一度お試しください。</string>
+    <string name="andrStorageFolderFailed">このフォルダを読み取れませんでした。もう一度お試しください。</string>
+    <string name="andrStorageAccess">フォルダへのアクセスを許可</string>
+    <string name="andrStorageWorking">フォルダの読み込みが終わるまでお待ちください。</string>
+    <string name="andrStorageTitle">スマートフォンのストレージ</string>
+    <string name="andrStorageNearlyFull">ストレージがほぼいっぱいです（空き容量%1$s）。ツールをインストールしたり大きな作業を始めたりする前に空き容量を増やしてください。</string>
+    <string name="andrStorageAvailable">このアプリで利用可能な空き容量：%1$s。</string>
+    <string name="andrStorageUnknown">空き容量を読み取れませんでした。もう一度計測してみてください。</string>
+    <string name="andrStorageMeasure">ストレージとLinuxファイルを計測</string>
+    <string name="andrStorageMeasuring">ストレージを計測中…</string>
+    <string name="andrStorageHostSizes">Linuxとツール：%1$s · プロジェクト：%2$s。これらはファイルサイズであり、アプリのストレージ全体ではありません。</string>
+    <string name="andrStorageHostUnknown">Linuxファイルサイズを計測できませんでした。ファイルはそのまま残っています。</string>
+    <string name="andrStorageRootHere">内部ストレージ自体をプロジェクトにすることはできません。中のフォルダを開いてください。</string>
+</resources>
