@@ -6,6 +6,7 @@
 #   fast    default for a manual dispatch. Compile + desktop tests of the modules changed against `base` (and their
 #           direct dependents; everything if too much changed) without picture tests + the APK, all in parallel.
 #   full    every module, picture tests included, compared with the CI-recorded goldens. Push runs use this.
+#   candidate all module tests with pictures, quality/security, Android host/unit and release self-tests; no APK/signing.
 #   goldens re-records the desktop goldens on the runner and uploads them as the `ci-goldens` artifact.
 # `tasks` (custom Gradle tasks) and `apk_only` work as before and ignore the lane.
 name: Native CI
@@ -15,9 +16,9 @@ on:
   workflow_dispatch:
     inputs:
       lane:
-        description: "fast: changed modules, no picture tests (default). full: all modules + goldens. goldens: re-record the goldens"
+        description: "fast: changed modules, no picture tests (default). full: all modules + goldens. candidate: complete release checks. goldens: re-record the goldens"
         type: choice
-        options: [fast, full, goldens]
+        options: [fast, full, candidate, goldens]
         default: fast
       base:
         description: Branch the fast lane diffs against to pick the changed modules
@@ -124,12 +125,18 @@ jobs:
         with:
           fetch-depth: 0
       - name: "Gate self-test (planted logs: a test-compile or drift failure must be FAIL)"
-        run: python3 -I tool/ci/test_gate.py
+        run: |
+          set -o pipefail
+          python3 -I tool/ci/test_gate.py 2>&1 | tee "$RUNNER_TEMP/ci-self.log"
       - name: Release gate self-test (the release script refuses without a CI verdict and a device smoke)
-        run: python3 -I tool/ci/test_release_gate.py
+        run: |
+          set -o pipefail
+          python3 -I tool/ci/test_release_gate.py 2>&1 | tee "$RUNNER_TEMP/release-self.log"
       - name: Release tools self-test (identity gate, release script, version names; no Gradle)
         working-directory: .
-        run: bash native/tool/release/test/run_tests.sh
+        run: |
+          set -o pipefail
+          bash native/tool/release/test/run_tests.sh 2>&1 | tee "$RUNNER_TEMP/release-tools.log"
       - name: Pick the lane and the modules
         id: p
         env:
@@ -163,6 +170,17 @@ jobs:
             echo; echo '```'; cat "$RUNNER_TEMP/why.txt" 2>/dev/null || true; echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
 
+      - name: Candidate plan and self-test evidence
+        if: ${{ always() && inputs.lane == 'candidate' }}
+        run: python3 -I tool/ci/candidate_plan.py candidate reports "$RUNNER_TEMP/ci-self.log" "$RUNNER_TEMP/release-self.log" "$RUNNER_TEMP/release-tools.log"
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: ${{ always() && inputs.lane == 'candidate' }}
+        with:
+          name: report-candidate-plan
+          path: native/reports/candidate-plan.json
+          retention-days: 14
+          if-no-files-found: error
+
   compile:
     name: compile
     needs: [where, plan]
@@ -189,7 +207,7 @@ jobs:
           LANE: ${{ needs.plan.outputs.lane }}
         run: |
           set -o pipefail
-          extra=""; [ "$LANE" = full ] && extra="compileAllTests"
+          extra=""; [[ "$LANE" = full || "$LANE" = candidate ]] && extra="compileAllTests"
           tool/ci/gradle_retry.sh "$RUNNER_TEMP/compile.log" :androidApp:compilePreviewBenchmarkKotlin $extra $GRADLE_FLAGS
       - name: Compile report
         if: always()
@@ -219,7 +237,7 @@ jobs:
     # On work branches this job never fails by itself (every shard still reports); the summary job's verdict reds the run.
     continue-on-error: ${{ github.ref_name != 'native/next' && !startsWith(github.ref_name, 'native/screens-merge') && github.ref_name != 'master' }}
     runs-on: ${{ fromJSON(needs.where.outputs.runs_on) }}
-    timeout-minutes: 45
+    timeout-minutes: ${{ needs.plan.outputs.lane == 'candidate' && 90 || 45 }}
     strategy:
       fail-fast: false
       matrix:
@@ -232,12 +250,12 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          # The full lane extracts Flutter reference goldens from git history; the fast lane has no picture tests.
-          fetch-depth: ${{ needs.plan.outputs.lane != 'full' && '1' || '0' }}
-          clean: ${{ runner.environment != 'self-hosted' }}
+          # Full/candidate extract Flutter reference goldens from git history; the fast lane has no picture tests.
+          fetch-depth: ${{ (needs.plan.outputs.lane == 'full' || needs.plan.outputs.lane == 'candidate') && '0' || '1' }}
+          clean: ${{ needs.plan.outputs.lane == 'candidate' || runner.environment != 'self-hosted' }}
       - uses: ./.github/actions/native-setup
         with:
-          goldens: ${{ needs.plan.outputs.lane == 'full' && 'true' || 'false' }}
+          goldens: ${{ (needs.plan.outputs.lane == 'full' || needs.plan.outputs.lane == 'candidate') && 'true' || 'false' }}
       - name: Stop this workspace's Gradle daemon when the run is cancelled
         if: ${{ cancelled() && runner.environment == 'self-hosted' }}
         working-directory: ${{ github.workspace }}
@@ -249,11 +267,13 @@ jobs:
         id: pick
         run: |
           if [ "$MODE" = list ]; then all="$(printf '%s\n' $LIST)"; else all="$(tool/ci/shard_tasks.sh 0 1)"; fi
-          if [ "$LANE" = fast ] && [ "${{ matrix.shard }}" = "$COUNT" ]; then
+          if [ "$LANE" = candidate ] && [ "${{ matrix.shard }}" = "$COUNT" ]; then
+            tasks=":quality:test :quality:secTest"
+          elif [ "$LANE" = fast ] && [ "${{ matrix.shard }}" = "$COUNT" ]; then
             tasks=":quality:test :quality:secTest"
           else
-            # Security belongs to the same worker as quality. The full lane rotates quality; fast has its own shard.
-            if [ "$LANE" = fast ]; then omit='^:quality:(test|secTest)$'; else omit='^:quality:secTest$'; fi
+            # Security belongs to the same worker as quality. Full rotates quality; fast/candidate have a dedicated shard.
+            if [[ "$LANE" = fast || "$LANE" = candidate ]]; then omit='^:quality:(test|secTest)$'; else omit='^:quality:secTest$'; fi
             tasks="$(printf '%s\n' "$all" | grep -vE "$omit" | awk -v i=${{ matrix.shard }} -v n="$COUNT" 'NF && (c++ % n) == i' | tr '\n' ' ')"
             case " $tasks " in *" :quality:test "*) tasks="$tasks :quality:secTest" ;; esac
           fi
@@ -268,7 +288,22 @@ jobs:
         run: |
           set -o pipefail
           flags=""; [ "$LANE" = fast ] && flags="-PskipGoldens=true"
+          if [ "$LANE" = candidate ]; then
+            flags="-I tool/ci/candidate.init.gradle -PskipGoldens=false -PonlyGoldens=false -Poc.recordGoldens=false -PrunQuarantined=true"
+          fi
+          echo "TEST_FLAGS=$flags" >> "$GITHUB_ENV"
           tool/ci/gradle_retry.sh "$RUNNER_TEMP/gradle.log" ${{ steps.pick.outputs.tasks }} $flags $GRADLE_FLAGS
+      - name: Candidate build-logic tests
+        if: ${{ always() && needs.plan.outputs.lane == 'candidate' && matrix.shard == fromJSON(needs.plan.outputs.count) }}
+        continue-on-error: true
+        run: |
+          rc=0
+          flags="-I $GITHUB_WORKSPACE/native/tool/ci/candidate.init.gradle -PskipGoldens=false -PonlyGoldens=false -Poc.recordGoldens=false -PrunQuarantined=true"
+          tool/ci/gradle_retry.sh "$RUNNER_TEMP/build-logic.log" -p build-logic :convention:test $flags $GRADLE_FLAGS || rc=$?
+          outcome=success; [ "$rc" = 0 ] || outcome=failure
+          (cd build-logic && TEST_FLAGS="$flags" GRADLE_OUTCOME="$outcome" GRADLE_LOG="$RUNNER_TEMP/build-logic.log" TASKS=":convention:test" \
+            python3 -I ../tool/ci/test_report.py build-logic ../reports) >> "$GITHUB_STEP_SUMMARY"
+          exit "$rc"
       - name: Gradle must have run
         # The step above never fails the job (the summary is the gate for test failures), so an infrastructure failure -
         # Gradle never started, e.g. a 504 on the distribution - would look like a pass. Fail here when no task ran.
@@ -366,7 +401,7 @@ jobs:
   apk:
     name: apk
     needs: where
-    if: ${{ inputs.tasks == '' && inputs.lane != 'goldens' }}
+    if: ${{ inputs.tasks == '' && inputs.lane != 'goldens' && (inputs.lane != 'candidate' || inputs.apk_only) }}
     # On work branches this job never fails by itself (every shard still reports); the summary job's verdict reds the run.
     continue-on-error: ${{ github.ref_name != 'native/next' && !startsWith(github.ref_name, 'native/screens-merge') && github.ref_name != 'master' }}
     runs-on: ${{ fromJSON(needs.where.outputs.runs_on) }}
@@ -503,16 +538,18 @@ jobs:
   android-unit:
     name: android unit tests
     needs: where
-    # Part of the fast and full lanes and of every push run (a push has no inputs); counts in the summary verdict like the
-    # desktop shards. Opt out with the android_unit input; a tasks-only, apk-only or goldens run never runs them.
-    if: ${{ inputs.tasks == '' && !inputs.apk_only && inputs.lane != 'goldens' && (github.event_name == 'push' || inputs.android_unit == true) }}
+    env:
+      LANE: ${{ inputs.lane || 'full' }}
+    # Part of fast/full/candidate and every push run (a push has no inputs); counts in the summary verdict like the
+    # desktop shards. Candidate always includes KMP Android host tests too. Other lanes may opt out with android_unit; a tasks-only, apk-only or goldens run never runs them.
+    if: ${{ inputs.tasks == '' && !inputs.apk_only && inputs.lane != 'goldens' && (github.event_name == 'push' || inputs.android_unit == true || inputs.lane == 'candidate') }}
     continue-on-error: ${{ github.ref_name != 'native/next' && !startsWith(github.ref_name, 'native/screens-merge') && github.ref_name != 'master' }}
     runs-on: ${{ fromJSON(needs.where.outputs.runs_on) }}
     timeout-minutes: 90
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          clean: ${{ runner.environment != 'self-hosted' }}
+          clean: ${{ inputs.lane == 'candidate' || runner.environment != 'self-hosted' }}
       - uses: ./.github/actions/native-setup
       - name: Run the Android unit tests
         shell: bash
@@ -521,13 +558,14 @@ jobs:
           # Every android/* library that has unit tests, plus the app module. The list comes from the folders, so a new
           # module is picked up without editing this file. The `test` task runs each module's tested build type
           # (debug for most; :android:migration tests on `qa`, which has no testDebugUnitTest).
-          tasks=""
-          for d in android/*/; do
-            m="$(basename "$d")"
-            if [ -d "$d/src/test" ]; then tasks="$tasks :android:$m:test"; fi
-          done
-          echo "AU_TASKS=$tasks :androidApp:testPreviewDebugUnitTest" >> "$GITHUB_ENV"
-          tool/ci/gradle_retry.sh "$RUNNER_TEMP/android-unit.log" $tasks :androidApp:testPreviewDebugUnitTest $GRADLE_FLAGS
+          tasks="$(bash tool/ci/android_tasks.sh "$LANE" | tr '\n' ' ')"
+          flags=""
+          if [ "$LANE" = candidate ]; then
+            flags="-I tool/ci/candidate.init.gradle -PskipGoldens=false -PonlyGoldens=false -Poc.recordGoldens=false -PrunQuarantined=true"
+          fi
+          echo "AU_TASKS=$tasks" >> "$GITHUB_ENV"
+          echo "TEST_FLAGS=$flags" >> "$GITHUB_ENV"
+          tool/ci/gradle_retry.sh "$RUNNER_TEMP/android-unit.log" $tasks $flags $GRADLE_FLAGS
       - name: Android unit report
         if: always()
         env:
@@ -539,7 +577,8 @@ jobs:
           # The failing tests and tasks, in words, for the summary (test_report.py reads the JUnit XML and the Gradle log).
           mkdir -p "$RUNNER_TEMP/au"
           GRADLE_LOG="$RUNNER_TEMP/android-unit.log" TASKS="$AU_TASKS" JOB_STATUS="$JOB_STATUS" \
-            python3 -I tool/ci/test_report.py android-unit "$RUNNER_TEMP/au" >> "$GITHUB_STEP_SUMMARY" || true
+            python3 -I tool/ci/test_report.py android-unit "$RUNNER_TEMP/au" >> "$GITHUB_STEP_SUMMARY"
+          if [ "$LANE" = candidate ]; then cp "$RUNNER_TEMP/au/report-android-unit.json" reports/; fi
           python3 -I - "$RUNNER_TEMP/au/report-android-unit.json" "$failed" "$ran" > reports/android-unit.json <<'PY'
           import json, sys
           try:
@@ -553,7 +592,20 @@ jobs:
         if: always()
         with:
           name: report-android-unit
-          path: native/reports/android-unit.json
+          path: |
+            native/reports/android-unit.json
+            native/reports/report-android-unit.json
+          retention-days: 7
+          if-no-files-found: ignore
+      - name: Android unit and picture evidence
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: test-reports-android-unit
+          path: |
+            native/**/build/reports/tests/
+            native/**/build/test-results/
+            native/**/build/outputs/roborazzi/
           retention-days: 7
           if-no-files-found: ignore
 
@@ -612,7 +664,8 @@ jobs:
           security = security and not any(s.get('failed', 0) or s.get('skipped', 0) for s in evidence)
           print(json.dumps({'sha': sha, 'lane': lane, 'exit': int(rc), 'android_unit': android not in ('', 'skipped'),
                             'desktop_tests': test not in ('', 'skipped'), 'compile': compile_ not in ('', 'skipped'),
-                            'custom_tasks': custom not in ('', 'skipped'), 'security': security}))
+                            'custom_tasks': custom not in ('', 'skipped'), 'security': security,
+                            'candidate_complete': lane == 'candidate' and int(rc) == 0}))
           PY
           if [ "$rc" = 2 ]; then echo "::error::Native CI integrity failure: Gradle did not run or reports are missing (see the summary)"; exit 1; fi
           # FAIL (1) reds the run on every branch, work branches included, so a run whose own summary says FAIL never

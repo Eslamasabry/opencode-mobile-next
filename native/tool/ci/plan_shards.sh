@@ -15,5 +15,5 @@ if [ "$lane" = fast ] && [ "$(printf '%s' "$sel" | tr -d '[:space:]')" != ALL ];
   n=$(printf '%s\n' $sel | grep -vE '^:quality:(test|secTest)$' | grep -c . || true)
   count=$(( n > 18 ? 8 : (n > 6 ? 4 : 2) )); [ "$count" -le "$n" ] || count=$n
 fi
-total=$count; [ "$lane" = fast ] && total=$(( count + 1 ))
+total=$count; [[ "$lane" = fast || "$lane" = candidate ]] && total=$(( count + 1 ))
 echo "mode=$mode"; echo "count=$count"; echo "total=$total"; echo "tasks=$tasks"

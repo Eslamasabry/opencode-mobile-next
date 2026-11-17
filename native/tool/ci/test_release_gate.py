@@ -32,9 +32,9 @@ else:
 '''
 
 
-def verdict(sha, exit_=0, lane='fast', android=True, custom=False, security=True):
+def verdict(sha, exit_=0, lane='candidate', android=True, custom=False, security=True, complete=True):
     return {'sha': sha, 'lane': lane, 'exit': exit_, 'android_unit': android, 'desktop_tests': True, 'compile': True,
-            'custom_tasks': custom, 'security': security}
+            'custom_tasks': custom, 'security': security, 'candidate_complete': complete}
 
 
 class ReleaseGate(unittest.TestCase):
@@ -107,6 +107,39 @@ class ReleaseGate(unittest.TestCase):
         self.assertIn('ci verdict  PASS, run 1', out)
         self.assertIn('smoke       PASS (Test Phone', out)
 
+    def test_B_CI_301_non_candidate_pass_cannot_qualify_a_release(self):
+        """B-CI-301: daily fast/full PASS does not prove a complete candidate."""
+        for lane in ('fast', 'full'):
+            with self.subTest(lane=lane):
+                self.runs([self.green(lane=lane)])
+                self.smoke()
+                code, out = self.release()
+                self.assertEqual(code, 1, out)
+                self.assertIn('candidate', out)
+
+    def test_B_CI_302_newest_incomplete_candidate_cannot_use_an_older_pass(self):
+        """B-CI-302: missing/false completeness evidence refuses the newest candidate."""
+        for complete in (None, False):
+            with self.subTest(complete=complete):
+                missing = verdict(self.sha, complete=complete)
+                if complete is None:
+                    del missing['candidate_complete']
+                self.runs([self.green(), {'id': 2, 'createdAt': '2026-01-02T10:00:00Z', 'verdict': missing}])
+                self.smoke()
+                code, out = self.release()
+                self.assertEqual(code, 1, out)
+                self.assertIn('candidate', out)
+
+    def test_B_CI_304_newest_missing_or_mismatched_verdict_cannot_use_an_older_candidate(self):
+        """B-CI-304: unknown run coverage cannot silently rescue an older candidate."""
+        for proof in (None, verdict(self.sha, lane=''), verdict('0' * 40)):
+            with self.subTest(proof=proof):
+                self.runs([self.green(), {'id': 2, 'createdAt': '2026-01-02T10:00:00Z', 'verdict': proof}])
+                self.smoke()
+                code, out = self.release()
+                self.assertEqual(code, 1, out)
+                self.assertIn('candidate', out)
+
     def test_a_name_that_already_has_a_release_tag_is_refused_and_the_tag_is_named(self):
         # Every public release needs a version name no earlier release used (tags v<name>+<build>).
         self.runs([self.green()])
@@ -144,7 +177,7 @@ class ReleaseGate(unittest.TestCase):
         self.smoke()
         code, out = self.release()
         self.assertEqual(code, 1, out)
-        self.assertIn('no fast or full lane run with the Android unit tests', out)
+        self.assertIn('incomplete candidate evidence', out)
 
     def test_a_red_security_suite_refuses_release_even_if_the_aggregate_exit_says_green(self):
         self.runs([self.green(security=False)])

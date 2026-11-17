@@ -18,8 +18,8 @@
 #
 # Refuses unless (dry run and --go alike): on master, the tree is clean (untracked files too), master equals
 # <remote>/master, version.properties holds a plain X.Y.Z versionName, AND the commit has both
-#   * a passing Native CI verdict: the newest completed fast or full lane run for HEAD's commit that included the
-#     Android library unit tests, read from the verdict file its summary job writes (native/tool/ci/release_verdict.py,
+#   * a passing Native CI verdict: the newest complete candidate lane run for HEAD's commit, including pictures,
+#     quality/security and Android tests, read from the verdict file its summary job writes (native/tool/ci/release_verdict.py,
 #     `gh` as the person running this), and
 #   * a passing device smoke result for HEAD's commit and the current versionCode (native/tool/qa/release_smoke.sh,
 #     run on one phone or emulator against the APK this script builds; file in native/build/release-smoke/).
@@ -137,7 +137,7 @@ if command -v python3 >/dev/null && command -v "${OC_GH:-gh}" >/dev/null; then
     say "  ci verdict  ${verdict#release verdict: }"
   else
     say "  ci verdict  REFUSED: ${verdict#release verdict: }"
-    say "              run Native CI (fast or full lane, Android unit tests ticked) on ${HEAD_SHA:0:10}, then try again"
+    say "              run Native CI (candidate lane, all required tests included) on ${HEAD_SHA:0:10}, then try again"
     gate_fail=true
   fi
 else

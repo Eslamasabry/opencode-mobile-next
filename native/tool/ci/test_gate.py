@@ -68,6 +68,16 @@ Execution failed for task ':feature:chats:desktopTest'.
 
 
 class Gate(unittest.TestCase):
+    def test_B_CI_305_failed_verification_dependency_is_judged_by_its_assertions(self):
+        """B-CI-305: a failed Robolectric Test blocks its verification lifecycle task."""
+        log = ("> Task :ui:kit:testAndroidHostTest FAILED\n"
+               "Execution failed for task ':ui:kit:testAndroidHostTest'.\n"
+               "> There were failing tests. See the report at: file:///x\n")
+        code, md = run_gate(log, ':ui:kit:verifyRoborazziAndroidHostTest',
+                            [('ui/kit', f'{PKG}.ui.kit.PartADesktopTest', ('known picture difference',))])
+        self.assertEqual(code, 0, md)
+        self.assertIn('known noise', md)
+
     def test_green_run_passes(self):
         code, md = run_gate('> Task :feature:chats:desktopTest\n', ':feature:chats:desktopTest', [('feature/chats', f'{PKG}.feature.chats.XTest', ())])
         self.assertEqual(code, 0, md)
@@ -421,6 +431,66 @@ class Workflow(unittest.TestCase):
     def test_fast_lane_quality_shard_does_not_depend_on_the_module_list(self):
         text = open(os.path.join(HERE, '..', '..', '..', '.github', 'workflows', 'native-ci.yml')).read()
         self.assertIn('[ "$LANE" = fast ] && [ "${{ matrix.shard }}" = "$COUNT" ]; then', text)
+
+
+
+class CandidateGate(unittest.TestCase):
+    """B-CI-303: one candidate must prove every required check, not just a green aggregate."""
+
+    def gate(self, change=None):
+        desktop = [':feature:chats:desktopTest', ':quality:test', ':quality:secTest']
+        android = [':androidApp:testPreviewDebugUnitTest']
+        def report(name, tasks):
+            return {'name': name, 'lane': 'candidate', 'sha': 'a' * 40, 'tests': 3, 'failed': 0, 'failures': [],
+                    'modules': {}, 'planned': tasks, 'gradle_ran': True,
+                    'task_status': {t: 'RAN' for t in tasks},
+                    'candidate': {'fresh': True, 'unfiltered': True, 'pictures': True, 'picture_tests': 1},
+                    'quality': {'executed': True, 'full': True, 'tests': 1, 'failed': 0, 'skipped': 0},
+                    'security': {'executed': True, 'full': True, 'tests': 1, 'failed': 0, 'skipped': 0}}
+        files = {'report-candidate-0.json': report('candidate-0', desktop),
+                 'report-android-unit.json': report('android-unit', android),
+                 'android-unit.json': {'failed': False, 'gradle_ran': True, 'tests': 3},
+                 'report-build-logic.json': report('build-logic', [':convention:test']),
+                 'compile.json': {'failed': False, 'gradle_ran': True},
+                 'candidate-plan.json': {'lane': 'candidate', 'sha': 'a' * 40, 'desktop_tasks': desktop.copy(),
+                                         'android_tasks': android.copy(),
+                                         'self_tests': {n: {'tests': 5, 'passed': True} for n in ('ci', 'release', 'release_tools')}}}
+        if change:
+            change(files)
+        with tempfile.TemporaryDirectory() as tmp:
+            for name, body in files.items():
+                json.dump(body, open(os.path.join(tmp, name), 'w'))
+            # The host ci-verdict wrapper does not pass RESULT_ANDROID_UNIT or RESULT_PLAN.
+            env = dict(os.environ, RESULT_COMPILE='success', RESULT_TEST='success', PLANNED_SHARDS='0')
+            env.pop('RESULT_ANDROID_UNIT', None)
+            p = subprocess.run([sys.executable, '-I', os.path.join(HERE, 'summary.py'), tmp, tmp + '/base', 'candidate'],
+                               env=env, capture_output=True, text=True)
+            return p.returncode, p.stdout
+
+    def test_B_CI_303_complete_candidate_passes(self):
+        code, text = self.gate()
+        self.assertEqual(code, 0, text)
+
+    def test_B_CI_303_missing_or_stale_candidate_evidence_refuses_pass(self):
+        mutations = {
+            'plan': lambda f: f.pop('candidate-plan.json'),
+            'module': lambda f: f['candidate-plan.json']['desktop_tasks'].append(':feature:missing:desktopTest'),
+            'android': lambda f: f.pop('report-android-unit.json'),
+            'build-logic': lambda f: f.pop('report-build-logic.json'),
+            'quality': lambda f: f['report-candidate-0.json'].pop('quality'),
+            'self-tests': lambda f: f['candidate-plan.json']['self_tests'].pop('release_tools'),
+            'self-tests-red': lambda f: f['candidate-plan.json']['self_tests']['release'].update(passed=False),
+            'sha': lambda f: f['report-candidate-0.json'].update(sha='b' * 40),
+            'cached': lambda f: f['report-candidate-0.json']['candidate'].update(fresh=False),
+            'filtered': lambda f: f['report-candidate-0.json']['candidate'].update(unfiltered=False),
+            'pictures-off': lambda f: f['report-candidate-0.json']['candidate'].update(pictures=False),
+            'no-pictures': lambda f: [r['candidate'].update(picture_tests=0) for n, r in f.items() if n.startswith('report-')],
+        }
+        for name, mutation in mutations.items():
+            with self.subTest(missing=name):
+                code, text = self.gate(mutation)
+                self.assertEqual(code, 2, text)
+                self.assertIn('candidate', text)
 
 
 if __name__ == '__main__':
