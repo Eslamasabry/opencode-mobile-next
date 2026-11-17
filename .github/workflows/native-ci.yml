@@ -142,6 +142,11 @@ jobs:
         run: |
           set -o pipefail
           bash native/tool/test/run_tests.sh B-BUILD-024 2>&1 | tee "$RUNNER_TEMP/detekt-ratchet.log"
+      - name: CI egress self-tests (verdict from logs when downloads are refused, a too-old base is refused)
+        working-directory: .
+        run: |
+          set -o pipefail
+          bash native/tool/test/run_tests.sh B-CI-30 2>&1 | tee "$RUNNER_TEMP/ci-egress.log"
       - name: Pick the lane and the modules
         id: p
         env:
