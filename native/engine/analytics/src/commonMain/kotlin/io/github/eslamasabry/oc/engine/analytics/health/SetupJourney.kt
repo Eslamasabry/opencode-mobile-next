@@ -49,6 +49,9 @@ public class SetupJourney(
     private var pendingResume: Pair<String, Long>? = null
     private var doneSent = false
 
+    /** The saved state as [observe] is changing it; written back once at the end. */
+    private var working: SetupJourneySaved? = null
+
     /** The process started: a setup left unfinished when the app was closed counts as abandoned. */
     public fun coldStart() {
         val s = saved ?: return
@@ -86,92 +89,104 @@ public class SetupJourney(
         }
         jobState = state
         val at = now()
-        var current = saved
-        fun update(change: (SetupJourneySaved) -> SetupJourneySaved) {
-            val base = current ?: SetupJourneySaved(at, "", false, at, emptyMap())
-            current = change(base).copy(seenAtMs = at)
-        }
+        working = saved
         for (step in steps) {
             val before = seen[step.id] ?: SetupStepState.Pending
             if (step.state == before) continue
             seen[step.id] = step.state
-            val word = ProductSetupStep.of(step.id).wire
-            val linux = HealthFlow.linuxStepOf(step.id)
             when (step.state) {
-                SetupStepState.Running -> {
-                    started[step.id] = at
-                    var attempt = 1
-                    update { s ->
-                        attempt = (s.attempts[word] ?: 0) + 1
-                        s.copy(
-                            lastStep = word,
-                            finished = false,
-                            startedAtMs = if (s.finished || s.lastStep.isEmpty()) at else s.startedAtMs,
-                            attempts = s.attempts + (word to attempt),
-                        )
-                    }
-                    flow.setupStepReached(word, attempt)
-                    pendingResume?.let { (_, gap) ->
-                        pendingResume = null
-                        if (firstSetup) flow.setupResumed(word, gap)
-                    }
-                }
-                SetupStepState.Done, SetupStepState.Skipped, SetupStepState.Failed -> {
-                    val began = started.remove(step.id)
-                    val attempt = current?.attempts?.get(word) ?: 1
-                    if (linux != null) {
-                        val elapsed = if (began != null) at - began else 0L
-                        when {
-                            step.state == SetupStepState.Failed ->
-                                flow.linuxSetupStep(
-                                    linux, ok = false, elapsedMs = elapsed, attempt = attempt,
-                                    failKind = step.failKind ?: "unknown", freeGigabytes = freeGigabytes(),
-                                )
-                            step.state == SetupStepState.Skipped || began == null ->
-                                flow.linuxSetupStep(linux, ok = false, elapsedMs = 0, attempt = attempt, notRun = "skipped")
-                            else ->
-                                flow.linuxSetupStep(
-                                    linux, ok = true, elapsedMs = elapsed, attempt = attempt, freeGigabytes = freeGigabytes(),
-                                )
-                        }
-                    }
-                    update { it.copy(lastStep = if (step.state == SetupStepState.Failed) word else it.lastStep) }
-                }
+                SetupStepState.Running -> stepStarted(step, at, firstSetup)
+                SetupStepState.Done, SetupStepState.Skipped, SetupStepState.Failed -> stepEnded(step, at)
                 else -> Unit
             }
         }
         // A job that ended while a step was running: cancelled by the person, or taken away by the system.
-        if (state == SetupJobState.Cancelled || state == SetupJobState.Interrupted || state == SetupJobState.Failed) {
-            for ((id, began) in started.toMap()) {
-                val linux = HealthFlow.linuxStepOf(id) ?: continue
-                val word = ProductSetupStep.of(id).wire
-                val attempt = current?.attempts?.get(word) ?: 1
-                started.remove(id)
-                if (state == SetupJobState.Cancelled) {
-                    flow.linuxSetupStep(linux, ok = false, elapsedMs = at - began, attempt = attempt, notRun = "cancelled")
-                } else {
-                    flow.linuxSetupStep(
-                        linux, ok = false, elapsedMs = at - began, attempt = attempt, failKind = "killed_by_system",
-                        freeGigabytes = freeGigabytes(),
-                    )
-                }
-            }
-        }
-        if (state == SetupJobState.Done && !doneSent) {
-            doneSent = true
-            val begun = current?.startedAtMs ?: at
-            val total = (at - begun).coerceAtLeast(0)
-            flow.linuxSetupStep("done", ok = true, elapsedMs = total, freeGigabytes = freeGigabytes())
-            if (firstSetup) flow.setupDone(total, "phone")
-            update { SetupJourneySaved(it.startedAtMs, it.lastStep, true, at, emptyMap()) }
-        }
-        if (current != saved) {
-            saved = current
-            memory.save(current)
+        if (state in ENDED_EARLY) closeRunningSteps(state, at)
+        if (state == SetupJobState.Done && !doneSent) finish(at, firstSetup)
+        if (working != saved) {
+            saved = working
+            memory.save(working)
         }
     }
 
+    private fun update(at: Long, change: (SetupJourneySaved) -> SetupJourneySaved) {
+        val base = working ?: SetupJourneySaved(at, "", false, at, emptyMap())
+        working = change(base).copy(seenAtMs = at)
+    }
+
+    private fun stepStarted(step: SetupStepView, at: Long, firstSetup: Boolean) {
+        val word = ProductSetupStep.of(step.id).wire
+        started[step.id] = at
+        var attempt = 1
+        update(at) { s ->
+            attempt = (s.attempts[word] ?: 0) + 1
+            s.copy(
+                lastStep = word,
+                finished = false,
+                startedAtMs = if (s.finished || s.lastStep.isEmpty()) at else s.startedAtMs,
+                attempts = s.attempts + (word to attempt),
+            )
+        }
+        flow.setupStepReached(word, attempt)
+        pendingResume?.let { (_, gap) ->
+            pendingResume = null
+            if (firstSetup) flow.setupResumed(word, gap)
+        }
+    }
+
+    private fun stepEnded(step: SetupStepView, at: Long) {
+        val word = ProductSetupStep.of(step.id).wire
+        val began = started.remove(step.id)
+        val attempt = working?.attempts?.get(word) ?: 1
+        val linux = HealthFlow.linuxStepOf(step.id)
+        if (linux != null) {
+            val elapsed = if (began != null) at - began else 0L
+            when {
+                step.state == SetupStepState.Failed ->
+                    flow.linuxSetupStep(
+                        linux, ok = false, elapsedMs = elapsed, attempt = attempt,
+                        failKind = step.failKind ?: "unknown", freeGigabytes = freeGigabytes(),
+                    )
+                step.state == SetupStepState.Skipped || began == null ->
+                    flow.linuxSetupStep(linux, ok = false, elapsedMs = 0, attempt = attempt, notRun = "skipped")
+                else ->
+                    flow.linuxSetupStep(
+                        linux, ok = true, elapsedMs = elapsed, attempt = attempt, freeGigabytes = freeGigabytes(),
+                    )
+            }
+        }
+        update(at) { it.copy(lastStep = if (step.state == SetupStepState.Failed) word else it.lastStep) }
+    }
+
+    private fun closeRunningSteps(state: SetupJobState, at: Long) {
+        for ((id, began) in started.toMap()) {
+            val linux = HealthFlow.linuxStepOf(id) ?: continue
+            val word = ProductSetupStep.of(id).wire
+            val attempt = working?.attempts?.get(word) ?: 1
+            started.remove(id)
+            if (state == SetupJobState.Cancelled) {
+                flow.linuxSetupStep(linux, ok = false, elapsedMs = at - began, attempt = attempt, notRun = "cancelled")
+            } else {
+                flow.linuxSetupStep(
+                    linux, ok = false, elapsedMs = at - began, attempt = attempt, failKind = "killed_by_system",
+                    freeGigabytes = freeGigabytes(),
+                )
+            }
+        }
+    }
+
+    private fun finish(at: Long, firstSetup: Boolean) {
+        doneSent = true
+        val begun = working?.startedAtMs ?: at
+        val total = (at - begun).coerceAtLeast(0)
+        flow.linuxSetupStep("done", ok = true, elapsedMs = total, freeGigabytes = freeGigabytes())
+        if (firstSetup) flow.setupDone(total, "phone")
+        update(at) { SetupJourneySaved(it.startedAtMs, it.lastStep, true, at, emptyMap()) }
+    }
+
     public companion object {
+        private val ENDED_EARLY = setOf(SetupJobState.Cancelled, SetupJobState.Interrupted, SetupJobState.Failed)
+
         /** Away from an unfinished setup this long (5 minutes) counts as leaving it. */
         public const val ABANDON_AFTER_MS: Long = 5 * 60_000L
     }

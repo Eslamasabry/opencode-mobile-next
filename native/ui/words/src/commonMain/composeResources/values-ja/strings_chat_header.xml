@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="chatHeaderServer">サーバー</string>
+    <string name="chatHeaderContext">使用済みコンテキスト</string>
+    <string name="chatHeaderNotReported">未報告</string>
+    <string name="chatHeaderTokens">トークン</string>
+    <string name="chatHeaderInUse">使用中</string>
+    <string name="chatHeaderRenameFailed">会話の名前を変更できませんでした。</string>
+    <string name="chatHeaderShareFailed">会話を共有できませんでした。</string>
+    <string name="chatHeaderUnshareFailed">共有を停止できませんでした。</string>
+    <string name="chatHeaderForkFailed">会話を分岐できませんでした。</string>
+    <string name="chatHeaderArchiveFailed">会話をアーカイブできませんでした。</string>
+    <string name="chatHeaderDeleteFailed">会話を削除できませんでした。</string>
+    <string name="chatHeaderFailureDetails">詳細</string>
+    <string name="chatHeaderApprovalSaveFailed">承認設定を保存できませんでした。</string>
+</resources>

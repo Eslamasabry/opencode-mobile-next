@@ -77,6 +77,14 @@ while (($#)); do
 done
 echo "fake detekt $input"
 grep -rqs DETEKT_CONFIG_ERROR "$input" && exit 3
+if grep -rqs DETEKT_FIND "$input"; then  # one finding per "DETEKT_FIND <name>", signed File.kt$Cls$<name>, no baseline read
+  for f in $(grep -rls DETEKT_FIND "$input" | sort); do
+    for n in $(grep -oh 'DETEKT_FIND [A-Za-z]*' "$f" | cut -d' ' -f2); do
+      echo "Fake - [x] at $f:1:1 - Signature=$(basename "$f")\$Cls\$$n" >>"$report"
+    done
+  done
+  exit 2
+fi
 bad="$(grep -rls DETEKT_BAD "$input" | sort)"
 if ((create)); then
   { echo '<SmellBaseline><CurrentIssues>'; for f in $bad; do echo "<ID>Fake:$(basename "$f")</ID>"; done
@@ -467,6 +475,34 @@ expect_out "E02-S03 detekt: --all includes ui/kit" 'detekt :ui:kit: ok'
 expect "E02-S03 detekt: a bad cached jar is refused (2)" 2 env OC_DETEKT_CACHE_DIR="$TMP_ROOT/jarcache" bash -c \
   'mkdir -p "$OC_DETEKT_CACHE_DIR" && echo tampered >"$OC_DETEKT_CACHE_DIR/detekt-cli-1.23.8-all.jar" && native/tool/qa/detekt.sh :core:common --base native/main'
 expect_out "E02-S03 detekt: says checksum" 'checksum mismatch'
+
+# ------------------------------------------------------------------ qa/detekt.sh --new-against: the true ratchet
+R="$(new_repo)"; cd "$R" || exit 1
+mkdir -p native/core/common/pkg
+echo 'val a = 1 // DETEKT_FIND OldMagic' >native/core/common/Old.kt
+echo 'val b = 1 // DETEKT_FIND OldLong' >native/ui/kit/OldKit.kt
+git add -A && git commit -q -m "chore(tool): old findings [skip ci]" -m "Base." && git branch -f native/main HEAD
+na=(env OC_DETEKT_CMD="$FAKE_DETEKT" OC_BUILD_LOCK_FILE="$TMP_ROOT/na.lock")
+expect "B-BUILD-024 detekt ratchet: old findings are not new" 0 "${na[@]}" native/tool/qa/detekt.sh :core:common :ui:kit --new-against native/main
+expect_out "B-BUILD-024 detekt ratchet: prints the total, new and old counts" 'detekt :core:common: ok \(total 1, new 0, old 1'
+echo 'val c = 1 // DETEKT_FIND FreshOne' >native/ui/kit/Fresh.kt
+expect "B-BUILD-024 detekt ratchet: a new finding in another module fails" 1 "${na[@]}" native/tool/qa/detekt.sh :core:common :ui:kit --new-against native/main
+expect_out "B-BUILD-024 detekt ratchet: names the module with its counts" 'detekt :ui:kit: NEW FINDINGS \(new 1, total 2, old 1'
+expect_out "B-BUILD-024 detekt ratchet: the untouched module stays ok" 'detekt :core:common: ok'
+rm native/ui/kit/Fresh.kt
+echo 'val a2 = 2 // DETEKT_FIND OldMagic' >native/core/common/Twin.kt
+expect "B-BUILD-024 detekt ratchet: one more of an old kind of finding is new" 1 "${na[@]}" native/tool/qa/detekt.sh :core:common --new-against native/main
+rm native/core/common/Twin.kt
+git mv native/core/common/Old.kt native/core/common/pkg/Renamed.kt
+expect "B-BUILD-024 detekt ratchet: an old finding in a moved and renamed file is still old" 0 "${na[@]}" native/tool/qa/detekt.sh :core:common --new-against native/main
+expect_out "B-BUILD-024 detekt ratchet: the moved finding counts as old" 'total 1, new 0, old 1'
+expect "B-BUILD-024 detekt ratchet: an unknown ref cannot check (2)" 2 "${na[@]}" native/tool/qa/detekt.sh :core:common --new-against no/such/ref
+expect "B-BUILD-024 detekt ratchet: --all runs every module" 0 "${na[@]}" native/tool/qa/detekt.sh --all --new-against native/main
+expect_out "B-BUILD-024 detekt ratchet: --all counts the kit's old finding" 'detekt :ui:kit: ok \(total 1'
+echo 'val d = 1 // DETEKT_FIND Brand' >native/ui/kit/Brand.kt
+expect "B-BUILD-024 detekt lane script: exits 0 and leaves the report" 0 "${na[@]}" native/tool/ci/detekt_lane.sh native/main --all
+expect "B-BUILD-024 detekt lane script: the report names the new finding per module" 0 \
+  python3 -c "import json,sys; r=json.load(open('native/reports/detekt.json')); sys.exit(0 if r['findings']=={':ui:kit':1} and r['totals'][':core:common']==1 else 1)"
 
 # ------------------------------------------------------------------------------------ qa/layout_baseline.sh (E02-S13)
 R="$(new_repo)"; cd "$R" || exit 1

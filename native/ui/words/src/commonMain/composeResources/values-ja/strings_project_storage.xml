@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="projectStorageMeasureFailed">保存済みファイルの容量を計測できませんでした。もう一度お試しください。</string>
+    <string name="projectStorageDeleteFailed">Androidがアプリのデータを消去できませんでした。もう一度お試しください。</string>
+</resources>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="stateReaderWrap">コードの行を折り返す</string>
+    <string name="stateReaderNoWrap">コードを1行に保つ</string>
+    <string name="stateReaderSaveFailed">表示設定を保存できませんでした。もう一度お試しください。</string>
+    <string name="stateUsageBudgets">個人利用の予算</string>
+    <string name="stateUsageUsd">USD</string>
+</resources>

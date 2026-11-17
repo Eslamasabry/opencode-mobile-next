@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="filesProjectRoot">プロジェクト</string>
+    <string name="filesOpenWith">別のアプリで開く</string>
+    <string name="filesOpenWithNone">このスマートフォンにこのファイルを開けるアプリがありません。</string>
+    <string name="filesOpenWithFailed">このファイルを別のアプリに渡せませんでした。もう一度お試しください。</string>
+    <string name="filesUnavailable">このサーバーではアプリからファイルを参照できません。</string>
+    <string name="filesNotConnected">この会話のサーバーに接続されていません。会話に戻ってもう一度お試しください。</string>
+    <string name="filesHideHidden">隠しファイルを非表示</string>
+    <string name="filesOpenFailed">このファイルを開けませんでした。もう一度お試しください。</string>
+    <string name="filesMentionFailed">このファイルをメッセージに追加できませんでした。もう一度お試しください。</string>
+    <string name="filesFolderLabel">フォルダ%1$s</string>
+    <string name="filesUp">1つ上のフォルダへ</string>
+    <string name="filesShareStarting">共有を開始中…</string>
+    <string name="filesSaveFailed">ファイルを保存できませんでした。もう一度お試しください。</string>
+    <string name="filesReasonTooBig">このファイルは大きすぎてここに表示できません。</string>
+    <string name="filesReasonTooBigBody">上限は2 MBです。保存されているパソコンで開くか、エージェントに一部だけを抜き出すよう依頼してください。</string>
+    <string name="filesReasonTooBigPhoneBody">上限は2 MBです。このスマートフォン上にあるため、他のアプリで開けます。「別のアプリで開く」を選んでください。</string>
+    <string name="filesReasonMissing">そのファイルはもうありません。</string>
+    <string name="filesReasonMissingBody">移動または削除された可能性があります。</string>
+    <string name="filesReasonDenied">このアプリにはそのファイルを読み取る権限がありません。</string>
+    <string name="filesReasonDeniedBody">フォルダの読み取り権限を確認してから、もう一度お試しください。</string>
+    <string name="filesReasonNotShowable">この種類のファイルはここに表示できません。</string>
+    <string name="filesReasonNotShowableBody">テキストまたは画像ではありません。保存されているパソコンで開いてください。</string>
+    <string name="filesReasonNotShowablePhoneBody">テキストまたは画像ではありません。このスマートフォン上にあるため、他のアプリで開けます。「別のアプリで開く」を選んでください。</string>
+    <string name="filesShowingSaved">保存済みの内容を表示しています。現在サーバーに接続できません。</string>
+</resources>

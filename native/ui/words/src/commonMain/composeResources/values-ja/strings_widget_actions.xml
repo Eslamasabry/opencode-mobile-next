@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="widgetActionTitle">この会話にメッセージを送信</string>
+    <string name="widgetActionMessage">メッセージ</string>
+    <string name="widgetActionHint">現在の応答に指示を追加します。このエージェントが作業中の指示に対応していない場合、メッセージは応答の完了後に送信されます。</string>
+    <string name="widgetActionSend">メッセージを送信</string>
+    <string name="widgetActionClose">閉じる</string>
+    <string name="widgetActionOpen">会話を開く</string>
+    <string name="widgetActionAccepted">メッセージを送信しました</string>
+    <string name="widgetActionRejected">この会話はメッセージを受け付けられませんでした</string>
+    <string name="widgetActionUncertain">メッセージの送信を確認できませんでした</string>
+    <string name="widgetActionCheckFirst">もう一度送信する前に会話を確認してください。</string>
+    <string name="widgetActionOpenHint">会話を開いて最新の応答を確認してください。</string>
+    <string name="widgetActionSending">メッセージを送信中…</string>
+    <string name="widgetActionEnterMessage">先にメッセージを入力してください</string>
+    <string name="widgetPanelAllProjects">すべてのプロジェクト</string>
+    <string name="widgetPanelSave">選択を保存</string>
+    <string name="widgetPanelRecord">音声入力</string>
+    <string name="widgetPanelFinishRecording">音声入力を終了</string>
+    <string name="widgetPanelListening">音声を聞き取り中…</string>
+</resources>

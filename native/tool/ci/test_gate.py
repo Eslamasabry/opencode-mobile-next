@@ -22,7 +22,8 @@ def junit(root, module, cls, failing=(), suite="desktopTest", out=""):
         fh.write(f'<testsuite name="{cls}">{cases}<system-out><![CDATA[{out}]]></system-out></testsuite>')
 
 
-def run_gate(files_log, tasks, xml=(), results=None, guard_out='', report_env=None, planned='0', jobs=None, known=None, security=True):
+def run_gate(files_log, tasks, xml=(), results=None, guard_out='', report_env=None, planned='0', jobs=None, known=None, security=True,
+             detekt='clean'):
     """Plants a shard (log + XML), runs test_report.py then summary.py. -> (exit code, markdown)."""
     with tempfile.TemporaryDirectory() as tmp:
         work, reports = os.path.join(tmp, 'native'), os.path.join(tmp, 'reports')
@@ -39,11 +40,15 @@ def run_gate(files_log, tasks, xml=(), results=None, guard_out='', report_env=No
                        check=True, stdout=subprocess.DEVNULL)
         for name, body in (jobs if jobs is not None else {'compile': {'failed': False, 'gradle_ran': True}, 'apk': {'failed': False, 'gradle_ran': True}}).items():
             json.dump(body, open(os.path.join(reports, f'{name}.json'), 'w'))
+        if detekt == 'clean':  # detekt_lane.sh's report for touched modules with nothing to say
+            detekt = {'ran': True, 'modules': [':core:net'], 'exit': 0, 'ratchet': 'ok', 'findings': {}}
+        if detekt is not None:
+            json.dump(detekt, open(os.path.join(reports, 'detekt.json'), 'w'))
         if security is not None:
             fact = {'executed': True, 'full': True, 'tests': 60, 'failed': 0 if security else 1, 'skipped': 0}
             json.dump({'name': 'security-proof', 'tests': 60, 'failed': fact['failed'], 'failures': [], 'modules': {}, 'security': fact},
                       open(os.path.join(reports, 'report-security-proof.json'), 'w'))
-        env = dict(os.environ, RESULT_TEST='success', RESULT_COMPILE='success', RESULT_APK='success', PLANNED_SHARDS=planned)
+        env = dict(os.environ, RESULT_TEST='success', RESULT_COMPILE='success', RESULT_APK='success', RESULT_DETEKT='success', PLANNED_SHARDS=planned)
         env.update(results or {})
         summary = os.path.join(HERE, 'summary.py')
         if known is not None:  # a planted known_failures.txt: summary.py reads the list next to itself
@@ -77,6 +82,39 @@ class Gate(unittest.TestCase):
                             [('ui/kit', f'{PKG}.ui.kit.PartADesktopTest', ('known picture difference',))])
         self.assertEqual(code, 0, md)
         self.assertIn('known noise', md)
+
+    def test_B_CI_306_a_new_detekt_finding_fails_the_lane_and_names_the_module(self):
+        code, md = run_gate('> Task :core:net:desktopTest\n', ':core:net:desktopTest', [('core/net', f'{PKG}.core.net.XTest', ())],
+                            detekt={'ran': True, 'modules': [':core:net', ':engine:analytics'], 'exit': 1, 'ratchet': 'ok',
+                                    'findings': {':core:net': 2}})
+        self.assertEqual(code, 1, md)
+        self.assertIn('## Native CI: FAIL', md)
+        self.assertIn('detekt: 2 new finding(s) on :core:net', md)
+        self.assertIn('| detekt | FAILED on :core:net, :engine:analytics: :core:net: 2 finding(s)', md)
+
+    def test_B_CI_306_a_clean_detekt_run_is_printed_per_module_and_passes(self):
+        code, md = run_gate('> Task :core:net:desktopTest\n', ':core:net:desktopTest', [('core/net', f'{PKG}.core.net.XTest', ())],
+                            detekt={'ran': True, 'modules': [':core:net', ':engine:analytics'], 'exit': 0, 'ratchet': 'ok', 'findings': {}})
+        self.assertEqual(code, 0, md)
+        self.assertIn('| detekt | 0 new findings on :core:net, :engine:analytics (0 old, not counted; ratchet vs base by signature)', md)
+
+    def test_B_CI_306_a_growing_baseline_fails_even_with_no_finding(self):
+        code, md = run_gate('> Task :core:net:desktopTest\n', ':core:net:desktopTest', [('core/net', f'{PKG}.core.net.XTest', ())],
+                            detekt={'ran': True, 'modules': [':core:net'], 'exit': 1, 'ratchet': 'FAIL', 'findings': {}})
+        self.assertEqual(code, 1, md)
+        self.assertIn('a baseline grew', md)
+
+    def test_B_CI_306_detekt_that_could_not_run_is_not_a_pass(self):
+        code, md = run_gate('> Task :core:net:desktopTest\n', ':core:net:desktopTest', [('core/net', f'{PKG}.core.net.XTest', ())],
+                            detekt={'ran': True, 'modules': [':core:net'], 'exit': 2, 'ratchet': 'ok', 'findings': {':core:net': -1}})
+        self.assertEqual(code, 1, md)
+        self.assertIn('detekt: could not run on :core:net', md)
+
+    def test_B_CI_306_a_fast_run_with_no_detekt_report_is_integrity_not_pass(self):
+        code, md = run_gate('> Task :core:net:desktopTest\n', ':core:net:desktopTest', [('core/net', f'{PKG}.core.net.XTest', ())],
+                            detekt=None, results={'RESULT_DETEKT': 'skipped'})
+        self.assertEqual(code, 2, md)
+        self.assertIn('detekt: the lane left no detekt report', md)
 
     def test_green_run_passes(self):
         code, md = run_gate('> Task :feature:chats:desktopTest\n', ':feature:chats:desktopTest', [('feature/chats', f'{PKG}.feature.chats.XTest', ())])
@@ -413,6 +451,10 @@ class Plan(unittest.TestCase):
         r = plan('fast', '')
         self.assertEqual((r['mode'], r['count'], r['total']), ('list', '0', '1'))
 
+    def test_B_CI_303_candidate_lane_has_eight_module_shards_and_a_dedicated_quality_shard(self):
+        r = plan('candidate', 'ALL')
+        self.assertEqual((r['mode'], r['count'], r['total']), ('all', '8', '9'))
+
 
 class Workflow(unittest.TestCase):
     """The summary job's exit code is the run's verdict on every branch."""
@@ -462,6 +504,7 @@ class CandidateGate(unittest.TestCase):
                  'android-unit.json': {'failed': False, 'gradle_ran': True, 'tests': 3},
                  'report-build-logic.json': report('build-logic', [':convention:test']),
                  'compile.json': {'failed': False, 'gradle_ran': True},
+                 'detekt.json': {'ran': True, 'modules': [':core:net'], 'exit': 0, 'ratchet': 'ok', 'findings': {}},
                  'candidate-plan.json': {'lane': 'candidate', 'sha': 'a' * 40, 'desktop_tasks': desktop.copy(),
                                          'android_tasks': android.copy(),
                                          'self_tests': {n: {'tests': 5, 'passed': True} for n in ('ci', 'release', 'release_tools')}}}
@@ -480,6 +523,7 @@ class CandidateGate(unittest.TestCase):
     def test_B_CI_303_complete_candidate_passes(self):
         code, text = self.gate()
         self.assertEqual(code, 0, text)
+        self.assertIn('| android unit tests | ok (3 run, 0 failing) |', text)
 
     def test_B_CI_310_a_candidate_with_a_skipped_guard_is_not_a_pass(self):
         code, text = self.gate()
@@ -497,6 +541,7 @@ class CandidateGate(unittest.TestCase):
             'module': lambda f: f['candidate-plan.json']['desktop_tasks'].append(':feature:missing:desktopTest'),
             'android': lambda f: f.pop('report-android-unit.json'),
             'build-logic': lambda f: f.pop('report-build-logic.json'),
+            'compile-all-tests': lambda f: f['compile.json'].update(compile_all_tests=False),
             'quality': lambda f: f['report-candidate-0.json'].pop('quality'),
             'self-tests': lambda f: f['candidate-plan.json']['self_tests'].pop('release_tools'),
             'self-tests-red': lambda f: f['candidate-plan.json']['self_tests']['release'].update(passed=False),

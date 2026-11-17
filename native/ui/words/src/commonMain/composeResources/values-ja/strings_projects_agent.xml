@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="agentProjectWorkspace">変更とワークツリー</string>
+    <string name="agentProjectReadFailed">このプロジェクト操作を完了できませんでした。もう一度お試しになる前に最新の状態を確認してください。</string>
+    <string name="agentProjectNoGit">このフォルダはGitリポジトリではありません。</string>
+    <string name="agentProjectBranch">現在のブランチ</string>
+    <string name="agentProjectBaseBranch">ベースブランチ</string>
+    <string name="agentProjectDetached">デタッチドチェックアウト</string>
+    <string name="agentProjectWorkingTree">作業ツリー</string>
+    <string name="agentProjectBranchChanges">ベースブランチ以降</string>
+    <string name="agentProjectAllFiles">すべての変更されたファイル</string>
+    <string name="agentProjectNoPatch">このファイルにはテキストパッチがありません。</string>
+    <string name="agentProjectPreviousLines">前の200行</string>
+    <string name="agentProjectNextLines">次の200行</string>
+    <string name="agentProjectChangedFiles">変更されたファイル</string>
+    <string name="agentProjectNoChanges">この比較では変更はありません。</string>
+    <string name="agentProjectLineChanges">追加%1$d · 削除%2$d</string>
+    <string name="agentProjectWorktrees">ワークツリー</string>
+    <string name="agentProjectNoWorktrees">このプロジェクトで報告されたワークツリーはありません。</string>
+    <string name="agentProjectReady">準備完了</string>
+    <string name="agentProjectRemove">ワークツリーを削除</string>
+    <string name="agentProjectWorking">この操作が完了するまでお待ちください。</string>
+    <string name="agentProjectNewWorktree">新しい名前付きワークツリー</string>
+    <string name="agentProjectGenerateWorktree">自動生成された名前で作成</string>
+    <string name="agentProjectRefresh">プロジェクトの状態を再読み込み</string>
+    <string name="agentProjectNameInvalid">1〜128文字の英数字、ドット、アンダースコア、ハイフンを使用してください。先頭は英数字にし、ドットを2つ連続させないでください。</string>
+    <string name="agentProjectWorktreeName">ワークツリー名</string>
+    <string name="agentProjectCreate">ワークツリーを作成</string>
+    <string name="agentProjectRemoveQuestion">「%1$s」を削除しますか？</string>
+    <string name="agentProjectRemoveBody">ワークツリーとその会話をアーカイブし、フォルダを削除します：%1$s</string>
+    <plurals name="agentProjectRemoveChanges">
+        <item quantity="other">このワークツリーには%1$d件の変更されたファイルがあります。フォルダとともに削除されます。</item>
+    </plurals>
+</resources>

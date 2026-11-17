@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="voiceNativeDetect">音声から自動検出</string>
+    <string name="voiceNativeSizeMb">%1$dMB</string>
+    <string name="voiceNativePhoneEngine">音声入力ではスマートフォン標準の音声認識を使うため、音声がこのスマートフォンから外に出ることはありません。音声認識に対応していない端末ではマイクは表示されません。このバージョンでは下の音声モデルはまだ使用しません。</string>
+    <string name="voiceNativeNaturalNeedsEngine">オフライン音声エンジンが必要ですが、このバージョンにはまだ含まれていません。</string>
+    <string name="voiceNativeSettingsAction">音声設定</string>
+    <string name="voiceNativeStoppedAfterPause">間が空いたため停止しました。入力内容は入力欄に入っています。</string>
+    <string name="voiceNativeNoRecognizer">このスマートフォンには音声認識サービスがありません。Androidの設定で有効にしてから、もう一度お試しください。</string>
+    <string name="voiceNativeReadAloud">読み上げる</string>
+    <string name="voiceNativePartial">%2$s中%1$sをダウンロード済み</string>
+    <string name="voiceNativePhoneRecognizer">スマートフォンの音声認識</string>
+</resources>

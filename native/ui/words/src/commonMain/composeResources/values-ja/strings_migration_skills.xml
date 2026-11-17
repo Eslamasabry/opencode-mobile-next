@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="migrationSkillUseNew">新しい会話で使う</string>
+    <string name="migrationSkillReady">新しい会話でスキルの準備ができました。エージェントはまだ実行されていません。</string>
+    <string name="migrationSkillChanged">接続が変更されました。すでに作成された会話は保持されています。</string>
+    <string name="migrationSkillInvalid">このスキルには対応する識別子がありません。スキル一覧を再読み込みしてください。</string>
+    <string name="migrationSkillUncertain">リクエストがサーバーに届いている可能性があります。すでに作成された会話は保持されています。もう一度お試しになる前に確認してください。</string>
+    <string name="migrationSkillOpen">会話を開く</string>
+</resources>

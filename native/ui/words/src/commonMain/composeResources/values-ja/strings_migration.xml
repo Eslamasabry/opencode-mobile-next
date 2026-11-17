@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="migration_opening">開いています…</string>
+    <string name="migration_updating">アプリをアップデート中…</string>
+    <string name="migration_still_updating">アップデート中です。アップデート後の初回起動には少し時間がかかる場合があります。</string>
+    <string name="migration_try_again">データの移行を再試行</string>
+    <string name="migration_reenter_title">いくつかのサインインの再入力が必要です</string>
+    <string name="migration_reenter_body">アップデートでこれらの保存済みサインインを読み取れませんでした。その他のデータはすべて引き継がれています。</string>
+    <string name="migration_reenter_row_password">%1$s · パスワードを入力</string>
+    <string name="migration_reenter_row_token">%1$s · トークンを入力</string>
+    <string name="migration_reenter_row_github">%1$s · GitHubにもう一度サインイン</string>
+    <string name="migration_reenter_row_byo">%1$s · もう一度セットアップ</string>
+    <string name="migration_reenter_unnamed">保存されたサーバー</string>
+    <string name="migration_reenter_later">後でサインインする</string>
+    <string name="migration_reenter_field_password">%1$sのパスワード</string>
+    <string name="migration_reenter_field_token">%1$sのトークン</string>
+    <string name="migration_reenter_save">保存</string>
+    <string name="migration_reenter_save_failed">このスマートフォンに保存できませんでした。もう一度お試しください。</string>
+    <string name="migration_reenter_back">一覧に戻る</string>
+    <string name="migration_reenter_github_where">%1$sのGitHubにもう一度サインインするには、そのサーバーの会話のいずれかを開いて「Git」を開いてください。</string>
+    <string name="migration_reenter_open_chats">会話を開く</string>
+    <string name="migration_reenter_byo_absent">%1$sの再セットアップはこのバージョンにはまだ含まれていません。保存された情報はそのままこのスマートフォンに残っています。</string>
+    <string name="migration_failed_title">アップデートでデータの移行を完了できませんでした</string>
+    <string name="migration_failed_body">何も削除されていません。アップデート前のデータはこのスマートフォンに安全に残っています。</string>
+    <string name="migration_restore_row">アップデート前のデータを復元</string>
+    <string name="migration_restore_confirm">設定とサーバーをアップデート前の状態に戻します。それ以降の変更はコピーとして保持されます。</string>
+    <string name="migration_restore_confirm_title">以前のデータを復元しますか？</string>
+    <string name="migration_restore_confirm_action">アップデート前のデータを復元</string>
+    <string name="migration_start_fresh_row">最初から始める（以前のデータのコピーを保持）</string>
+    <string name="migration_start_fresh_confirm">保存済みサーバーなし、既定の設定で開始します。以前のデータはコピーとしてこのスマートフォンに残ります。</string>
+    <string name="migration_start_fresh_confirm_title">最初から始めますか？</string>
+    <string name="migration_start_fresh_confirm_action">コピーを残して最初から始める</string>
+    <string name="migration_report_row">問題を報告</string>
+    <string name="migration_details">詳細 · %1$s</string>
+    <string name="migration_space_title">スマートフォンの空き容量が残りわずかです</string>
+    <string name="migration_space_body">データの安全コピーを保持するため、アップデートには%1$sの空き容量が必要です。空き容量を増やしてから、もう一度お試しください。</string>
+    <string name="migration_save_failed_title">このスマートフォンに保存できませんでした</string>
+    <string name="migration_open_storage_row">ストレージ設定を開く</string>
+    <string name="migration_close">閉じる</string>
+    <string name="migration_deferred_notice">このバージョンにはまだ含まれていません：%1$s。これらに保存されたデータはそのままこのスマートフォンに残っています。</string>
+    <string name="migration_deferred_ai_team">AI Team</string>
+    <string name="migration_deferred_memory">メモリ</string>
+    <string name="migration_deferred_gemma">端末内AIモデル</string>
+    <string name="migration_deferred_separator">、</string>
+    <string name="migration_deferred_dismiss">このバージョンに含まれない機能についての通知を閉じる</string>
+</resources>

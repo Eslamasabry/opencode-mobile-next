@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="stateShareViewedTitle">閲覧した会話を共有</string>
+    <string name="stateShareViewedDetail">どの完了済み応答を開いたかをこのサーバーに伝えます。オフにすると、この情報は端末内にとどまります。</string>
+    <string name="stateShareViewedSaving">プライバシー設定を保存中…</string>
+</resources>

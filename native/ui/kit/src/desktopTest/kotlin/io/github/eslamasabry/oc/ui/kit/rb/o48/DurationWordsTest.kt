@@ -19,6 +19,7 @@ import io.github.eslamasabry.oc.ui.kit.text.kitTenthsSecondsWords
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.kitLogQuiet
 import io.github.eslamasabry.oc.ui.words.res.linuxSvcRunningFor
+import io.github.eslamasabry.oc.ui.words.res.replySpeedNoWords
 import io.github.eslamasabry.oc.ui.words.res.s9LimitsResetsIn
 import java.util.Locale
 import org.jetbrains.compose.resources.stringResource
@@ -173,7 +174,7 @@ class DurationWordsTest {
             "ru" to listOf("несколько секунд", "Работает уже несколько секунд", "Последняя строка была несколько секунд назад", "сброс через несколько секунд"),
             "vi" to listOf("chưa đến một phút", "Đã chạy chưa đến một phút", "Dòng cuối cách đây chưa đến một phút", "đặt lại sau chưa đến một phút"),
             "zh" to listOf("不到一分钟", "已运行 不到一分钟", "最后一行为不到一分钟前", "不到一分钟 后重置"),
-            "ja" to listOf("数秒"),
+            "ja" to listOf("数秒", "数秒間実行中", "最後の行：数秒前", "あと数秒でリセット", "前回の返信：文字出力がないまま数秒後に終了"),
         )
         for ((loc, expected) in cases) {
             Locale.setDefault(Locale.forLanguageTag(loc))
@@ -183,10 +184,11 @@ class DurationWordsTest {
                         val sub = kitDurationWords(15.seconds)
                         Column {
                             KitText(sub)
-                            if (loc != "ja") {
-                                KitText(stringResource(Res.string.linuxSvcRunningFor, sub))
-                                KitText(stringResource(Res.string.kitLogQuiet, sub))
-                                KitText(stringResource(Res.string.s9LimitsResetsIn, sub))
+                            KitText(stringResource(Res.string.linuxSvcRunningFor, sub))
+                            KitText(stringResource(Res.string.kitLogQuiet, sub))
+                            KitText(stringResource(Res.string.s9LimitsResetsIn, sub))
+                            if (loc == "ja") {
+                                KitText(stringResource(Res.string.replySpeedNoWords, sub))
                             }
                         }
                     }

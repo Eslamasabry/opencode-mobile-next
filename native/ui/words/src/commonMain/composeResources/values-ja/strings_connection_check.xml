@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="connectionCheckAction">接続を確認</string>
+    <string name="connectionCheckTitle">接続の確認</string>
+    <string name="connectionCheckAgain">再読み込み</string>
+    <string name="connectionCheckAddress">アドレス</string>
+    <string name="connectionCheckSignIn">サインイン</string>
+    <string name="connectionCheckVersion">サーバーバージョン</string>
+    <string name="connectionCheckLive">リアルタイム更新</string>
+    <string name="connectionCheckSpeed">応答時間</string>
+    <string name="connectionCheckWaiting">待機中</string>
+    <string name="connectionCheckRunning">確認中…</string>
+    <string name="connectionCheckPassed">合格</string>
+    <string name="connectionCheckVersionValue">バージョン%1$s</string>
+    <string name="connectionCheckMillis">%1$sミリ秒</string>
+    <string name="connectionCheckUnreachable">サーバーに接続できませんでした。アドレスとサーバーが起動しているか確認してください。</string>
+    <string name="connectionCheckNotServer">このアドレスは対応サーバーとして応答しませんでした。アドレスを確認してください。</string>
+    <string name="connectionCheckNeedsPassword">保存済みサーバーのパスワードまたはトークンをもう一度入力してから再試行してください。</string>
+    <string name="connectionCheckPasswordRejected">保存済みのサインインがサーバーに拒否されました。パスワードまたはトークンを更新してください。</string>
+    <string name="connectionCheckUnsupported">このサーバーバージョンには対応していません。サーバーをアップデートしてください。</string>
+    <string name="connectionCheckNotReady">サーバーは応答しましたが、まだ準備ができていません。少し待ってからもう一度確認してください。</string>
+    <string name="connectionCheckStreamUnchecked">リアルタイム更新を確認するにはこのサーバーに接続してください。</string>
+    <string name="connectionCheckStreamConnecting">ライブ接続はまだ再接続中です。少ししてからもう一度確認してください。</string>
+    <string name="connectionCheckStreamDown">既存のライブ接続が切断されています。このサーバーに再接続してください。</string>
+    <string name="connectionCheckSlow">%1$sミリ秒 — サーバーの応答が遅くなっています。ネットワークまたはサーバーの負荷を確認してください。</string>
+    <string name="connectionCheckSkipped">前の手順で確認が必要なためチェックしていません。</string>
+    <string name="connectionCheckTrust">もう一度確認する前にこのサーバーの接続信頼設定を確認してください。</string>
+    <string name="connectionCheckChanged">保存済みサーバーが変更されました。この確認画面を閉じて開き直してください。</string>
+</resources>

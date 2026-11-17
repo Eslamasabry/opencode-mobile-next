@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="p12SearchTitle">会話を検索</string>
+    <string name="p12SearchField">会話を検索</string>
+    <string name="p12SearchServer">サーバー</string>
+    <string name="p12SearchRecent">最近の検索</string>
+    <string name="p12SearchRecentEmpty">このスマートフォンで行った検索がここに表示されます。</string>
+    <string name="p12SearchRecentClear">最近の検索を消去</string>
+    <string name="p12SearchRecentRemove">%1$sを削除</string>
+    <string name="p12SearchRecentFailed">最近の検索を更新できませんでした。検索は引き続き利用できます。</string>
+    <string name="p12SearchInside">最近の会話の本文も検索する</string>
+    <string name="p12SearchInsideHelp">このサーバー上の直近20件の会話から最新のメッセージを読み取ります。</string>
+    <string name="p12SearchTitles">タイトル</string>
+    <string name="p12SearchInsideSection">会話の本文</string>
+    <string name="p12SearchInsideReading">最近の会話を読み込み中…</string>
+    <string name="p12SearchInsideFailed">最近の会話を読み取れませんでした。タイトルの検索結果は引き続き表示されます。</string>
+    <string name="p12SearchFromYou">自分：%1$s</string>
+    <string name="p12SearchFromAgent">返信：%1$s</string>
+    <string name="p12SearchOneProject">このサーバーの現在のプロジェクトのみが検索対象です。</string>
+    <string name="p12SearchSearching">検索中…</string>
+    <string name="p12SearchFailed">会話を検索できませんでした。</string>
+    <string name="p12SearchTryAgain">再試行</string>
+    <string name="p12SearchNoServerTitle">サーバーが接続されていません</string>
+    <string name="p12SearchNoServerBody">会話を検索するにはサーバーを接続してください。</string>
+    <string name="p12SearchOpenServers">「サーバー」を開く</string>
+    <string name="p12SearchConversationsWhat">会話</string>
+    <string name="p12UsageCost">推定コスト</string>
+    <string name="p12UsageRange">期間</string>
+    <string name="p12UsageActivity">日別のアクティビティ</string>
+    <string name="p12UsageDay">%1$s · %2$sステップ</string>
+    <string name="p12UsageProjectsFailed">プロジェクトの一覧を取得できませんでした。「すべてのプロジェクト」は引き続き利用できます。</string>
+    <string name="p12UsageNoServerBody">使用状況とコストを確認するにはサーバーを接続してください。</string>
+    <string name="p12UsageFailed">使用状況を読み込めませんでした。</string>
+    <string name="p12UsageTryAgain">再試行</string>
+    <string name="p12UsageCounts">アクティビティ</string>
+    <string name="p12UsageServer">サーバー</string>
+</resources>

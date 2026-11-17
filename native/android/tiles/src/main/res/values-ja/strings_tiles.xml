@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="shortcut_connect_short">接続</string>
+    <string name="shortcut_connect_long">接続するサーバーを選ぶ</string>
+    <string name="shortcut_new_task_short">新しい会話</string>
+    <string name="shortcut_new_task_long">現在のサーバーで新しい会話を開始</string>
+    <string name="shortcut_session_untitled">無題の会話</string>
+    <string name="shortcut_session_unavailable">この会話は利用できなくなりました</string>
+    <string name="tile_label">OpenCode</string>
+    <string name="tile_label_with_count">OpenCode · %1$s</string>
+    <string name="tile_all_clear">確認が必要なものはありません</string>
+    <plurals name="tile_need_you">
+        <item quantity="other">%1$d件の確認待ち</item>
+    </plurals>
+    <string name="pause_tile_label">バックグラウンドモード</string>
+    <string name="pause_tile_label_with_state">バックグラウンドモード · %1$s</string>
+    <string name="pause_tile_on">オン</string>
+    <string name="pause_tile_paused">一時停止中</string>
+    <string name="pause_tile_off">設定でオフ</string>
+</resources>

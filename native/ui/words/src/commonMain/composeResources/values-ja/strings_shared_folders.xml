@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="sharedFoldersTitle">共有ストレージ</string>
+    <string name="sharedFoldersSelected">以下で変更しない限り、Linuxから参照できるのは開いたプロジェクトフォルダとDownload › OpenCodeのみで、ストレージ全体ではありません。これらのフォルダを開くため、Androidからこのアプリへの「すべてのファイルへのアクセス」（共有ストレージ用の一括権限）の許可が求められます。</string>
+    <string name="sharedFoldersAll">Linuxにすべての共有ストレージを許可</string>
+    <string name="sharedFoldersAllDetail">選択したプロジェクトフォルダではなく、従来のストレージアクセスを使用します。この変更は、スマートフォン内のサーバーが次回起動するときに適用されます。</string>
+    <string name="sharedFoldersAllRisk">Linux内で動作するエージェントが、開いたプロジェクト以外のファイルを読み書きできるようになります。</string>
+    <string name="sharedFoldersProtection">保護を有効にすると、Linuxのアクセスは選択したプロジェクトフォルダに制限されます。</string>
+    <string name="sharedFoldersRestart">フォルダへのアクセス設定を保存しました。作業が落ち着いたら「このスマートフォン」からサーバーを再起動し、「ファイル」を再読み込みしてください。サーバーは停止されていません。</string>
+    <string name="sharedFoldersFailed">フォルダへのアクセス設定を読み書きできませんでした。もう一度お試しください。</string>
+    <string name="sharedFoldersAndroid">Androidファイルアクセス</string>
+    <string name="sharedFoldersAndroidDetail">許可されていません。共有ストレージ内のプロジェクトを開くには「すべてのファイルへのアクセス」を許可してください。</string>
+    <string name="sharedFoldersGranted">許可済み：このアプリには「すべてのファイルへのアクセス」があります。オフにするには「Androidの設定 › すべてのファイルへのアクセス」を開いてください。</string>
+    <string name="sharedFoldersWorking">フォルダへのアクセスを更新中…</string>
+</resources>
