@@ -1042,7 +1042,7 @@ public class ComposerVoicePresenter(
         // Only the dictated range changes (new, confirmed or replaced words); the cursor stays after it.
         val dictated = DraftMerge.inserted(base.first, base.second, base.third, heard)
         if (next != f.text()) {
-            if (dictated != null) f.replace(next, dictated.last + 1) else f.replace(next)
+            f.replace(next) // RED: behaviour held back (no cursor placement).
         }
         val forming = partial.trim()
         val unconfirmed =

@@ -371,6 +371,7 @@ public class VoiceController(
                 recording.partial = ""
             }
             is HeardChange.Replaced -> {
+                if (recording.chunksDone >= 0) return // RED: behaviour held back (a replacement is ignored).
                 val text = recording.text
                 val from = change.range.first.coerceIn(0, text.length)
                 val to = (change.range.last + 1).coerceIn(from, text.length)
