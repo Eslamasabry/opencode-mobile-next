@@ -94,7 +94,7 @@ class ReleaseGate(unittest.TestCase):
     def green(self, **kw):
         return {'id': 1, 'createdAt': '2026-01-01T10:00:00Z', 'verdict': verdict(self.sha, **kw)}
 
-    def test_B_BUILD_030_release_bump_message_keeps_skip_ci_for_the_tag_workflow(self):
+    def test_B_BUILD_030_release_bump_message_omits_the_daily_skip_marker(self):
         """B-BUILD-030: exercise the real commit command in the fixture, never --go or a build."""
         script = open(os.path.join(REPO, 'scripts/native-release.sh')).read().splitlines()
         start = next((i for i, line in enumerate(script) if line.startswith('  git commit --quiet -m ')), None)
@@ -112,7 +112,8 @@ class ReleaseGate(unittest.TestCase):
         p = subprocess.run(['bash', '-euc', '\n'.join(command)], cwd=work, env=env, capture_output=True, text=True)
         self.assertEqual(p.returncode, 0, p.stdout + p.stderr)
         message = self.git('log', '-1', '--format=%B').stdout
-        self.assertEqual(message.splitlines()[0], 'build(release): native 9.9.9+10020 [skip ci]')
+        self.assertEqual(message.splitlines()[0], 'build(release): native 9.9.9+10020')
+        self.assertNotIn('[skip ci]', message)
         self.assertIn('Release-Tag: v9.9.9+10020', message)
         self.assertEqual(self.git('tag').stdout, '')
 
