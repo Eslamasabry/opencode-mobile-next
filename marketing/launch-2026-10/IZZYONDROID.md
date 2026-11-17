@@ -119,7 +119,7 @@ not). Tick "The Fastlane folder is available".
   Ubuntu sandbox inside the app, or connects to agents on a computer.
 - Description:
 
-      OpenCode Mobile is an independent, MIT-licensed Android app for working with coding agents. Guided setup installs an Ubuntu sandbox (proot) inside the app and runs OpenCode and Claude Code there, with no computer and no Termux. It can also connect to OpenCode on a computer by QR code or address. Features: streaming chat with Stop, per-request permission approvals, diffs, Files, Changes and a terminal for Claude Code conversations, home-screen widgets (Allow, Reject, Stop, Steer, voice), a live background, and an AI Team mode. No ads, no analytics, no automatic crash upload; passwords stay in the Android keystore; the user brings their own model provider. Not affiliated with the OpenCode team or Anthropic.
+      OpenCode Mobile is an independent, MIT-licensed Android app for working with coding agents. Guided setup installs an Ubuntu sandbox (proot) inside the app and runs OpenCode and Claude Code there, with no computer and no Termux. It can also connect to OpenCode on a computer by QR code or address. Features: streaming chat with Stop, per-request permission approvals, diffs, Files, Changes and a terminal for Claude Code conversations, home-screen widgets (Allow, Reject, Stop, Steer, voice), a live background, and an AI Team mode. No ads; usage and crash reports are off until you turn them on; passwords stay in the Android keystore; the user brings their own model provider. Not affiliated with the OpenCode team or Anthropic.
 
 - Build instructions (from README and `docs/technical-overview.md`; the owner
   must confirm they work from a clean checkout before sending): Flutter 3.47.1

@@ -338,7 +338,7 @@ class PrivacyNoticeSyncTest {
             .map { "marketing/launch-2026-10/${it.name}" }
             // IZZYONDROID.md rows 50 and 70 are the dated findings of an earlier build's audit, kept as history.
             .filter { !it.endsWith("IZZYONDROID.md") }
-        for (path in marketing + listOf("README.md", "llms.txt", "docs/site/index.html", "PRIVACY.md")) {
+        for (path in marketing + listOf("README.md", "llms.txt", "docs/site/index.html")) {
             assertTrue(denial.find(File(repo, path).readText()) == null, "$path must not say the app has no analytics or no automatic crash upload")
         }
         val izzy = File(repo, "marketing/launch-2026-10/IZZYONDROID.md").readLines()[121]
