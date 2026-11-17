@@ -29,11 +29,13 @@ public object ModelEffort {
     }
 
     /** False when the name already carries an effort word: the choice is made by choosing the model. */
-    public fun offersChoice(name: String): Boolean = true
+    public fun offersChoice(name: String): Boolean = carried(name) == null
 
     /** The name followed by the effort ([shown], its words; [id] its id), the effort left out when the name says it. */
     public fun label(name: String, id: String?, shown: String? = id): String {
         val effort = shown?.trim()?.takeIf { it.isNotEmpty() } ?: id?.trim()?.takeIf { it.isNotEmpty() } ?: return name
+        val carried = carried(name)
+        if (carried != null && (normal(carried) == normal(effort) || normal(carried) == normal(id.orEmpty()))) return name
         return "$name · $effort"
     }
 
