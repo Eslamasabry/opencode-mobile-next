@@ -12,9 +12,6 @@ internal object UsageWidgetText {
     private const val MONTH_MIN_SECONDS = 28L * SECONDS_PER_DAY
     private const val MONTH_MAX_SECONDS = 31L * SECONDS_PER_DAY
     private const val HOURS_LABEL_LIMIT = 48
-    private const val MILLIS_PER_MINUTE = 60_000L
-    private const val MINUTES_PER_HOUR = 60
-    private const val MINUTES_PER_DAY = MINUTES_PER_HOUR * 24
 
     fun detailText(
         context: Context,
@@ -87,23 +84,12 @@ internal object UsageWidgetText {
             seconds in MONTH_MIN_SECONDS..MONTH_MAX_SECONDS ->
                 NativeStrings.get(context, R.string.usage_widget_short_month)
             hours < HOURS_LABEL_LIMIT && hours >= 1 ->
-                NativeStrings.get(context, R.string.usage_widget_short_hours, hours.toInt())
-            else -> NativeStrings.get(
-                context,
-                R.string.usage_widget_short_days,
-                (seconds / SECONDS_PER_DAY).coerceAtLeast(1).toInt()
-            )
+                WidgetDurationWords.shortWindowHours(context, hours.toInt())
+            else ->
+                WidgetDurationWords.shortWindowDays(context, (seconds / SECONDS_PER_DAY).coerceAtLeast(1).toInt())
         }
     }
 
-    private fun duration(context: Context, millis: Long): String {
-        val minutes = (millis / MILLIS_PER_MINUTE).coerceAtLeast(0)
-        return when {
-            minutes < 1 -> NativeStrings.get(context, R.string.native_widget_now)
-            minutes < MINUTES_PER_HOUR -> NativeStrings.get(context, R.string.native_widget_minutes, minutes)
-            minutes < MINUTES_PER_DAY ->
-                NativeStrings.get(context, R.string.native_widget_hours, minutes / MINUTES_PER_HOUR)
-            else -> NativeStrings.get(context, R.string.native_widget_days, minutes / MINUTES_PER_DAY)
-        }
-    }
+    private fun duration(context: Context, millis: Long): String =
+        WidgetDurationWords.compactDuration(context, millis)
 }

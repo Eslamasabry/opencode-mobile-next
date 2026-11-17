@@ -5,15 +5,17 @@ import io.github.eslamasabry.oc.engine.runtime.procs.*
 import io.github.eslamasabry.oc.ui.words.res.*
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
+import io.github.eslamasabry.oc.ui.kit.text.kitDurationParts
+import io.github.eslamasabry.oc.ui.kit.text.kitMinutesUnitWords
+import io.github.eslamasabry.oc.ui.kit.text.kitSecondsUnitWords
 import io.github.eslamasabry.oc.ui.kit.text.kitUnits
 
 @Composable
 internal fun DurationWords.words(): String =
     when (this) {
-        is DurationWords.Seconds -> stringResource(Res.string.termuxProcsDurationSeconds, seconds)
-        is DurationWords.Minutes -> stringResource(Res.string.termuxProcsDurationMinutes, minutes)
-        is DurationWords.Hours ->
-            stringResource(Res.string.termuxProcsDurationHours, hours, minutes)
+        is DurationWords.Seconds -> kitSecondsUnitWords(seconds.toLong())
+        is DurationWords.Minutes -> kitMinutesUnitWords(minutes.toLong())
+        is DurationWords.Hours -> kitDurationParts(hours = hours.toLong(), minutes = minutes.toLong())
     }
 
 @Composable

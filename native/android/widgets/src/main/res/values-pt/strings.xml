@@ -5,9 +5,21 @@
     <string name="widget_description">O que importa agora: o que precisa de você, o que está em andamento ou sua última conversa.</string>
     <string name="native_team_working">Trabalhando</string>
     <string name="native_widget_now">agora</string>
-    <string name="native_widget_minutes">%1$smin</string>
-    <string name="native_widget_hours">%1$sh</string>
-    <string name="native_widget_days">%1$sd</string>
+    <plurals name="native_widget_minutes">
+        <item quantity="one">%1$smin</item>
+        <item quantity="many">%1$smin</item>
+        <item quantity="other">%1$smin</item>
+    </plurals>
+    <plurals name="native_widget_hours">
+        <item quantity="one">%1$sh</item>
+        <item quantity="many">%1$sh</item>
+        <item quantity="other">%1$sh</item>
+    </plurals>
+    <plurals name="native_widget_days">
+        <item quantity="one">%1$sd</item>
+        <item quantity="many">%1$sd</item>
+        <item quantity="other">%1$sd</item>
+    </plurals>
     <string name="usage_widget_title">Uso</string>
     <string name="usage_widget_description">O que resta em cada limite do plano e quando ele é renovado.</string>
     <string name="usage_widget_empty">Ainda sem leituras de limite. Abra Uso para conectar uma fonte.</string>
@@ -26,8 +38,16 @@
     <string name="usage_widget_provider_minimax">MiniMax</string>
     <string name="usage_widget_provider_glm">GLM</string>
     <string name="usage_widget_column">%1$s \u0020%2$s%% restante</string>
-    <string name="usage_widget_short_hours">%1$sh</string>
-    <string name="usage_widget_short_days">%1$sd</string>
+    <plurals name="usage_widget_short_hours">
+        <item quantity="one">%1$sh</item>
+        <item quantity="many">%1$sh</item>
+        <item quantity="other">%1$sh</item>
+    </plurals>
+    <plurals name="usage_widget_short_days">
+        <item quantity="one">%1$sd</item>
+        <item quantity="many">%1$sd</item>
+        <item quantity="other">%1$sd</item>
+    </plurals>
     <string name="usage_widget_short_week">Semana</string>
     <string name="usage_widget_short_month">Mês</string>
     <string name="widget_label_wide">Conversas</string>

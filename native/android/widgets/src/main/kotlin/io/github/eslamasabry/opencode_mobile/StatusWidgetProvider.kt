@@ -153,16 +153,8 @@ internal class StatusWidgetRenderer(
     }
 
     /** "12 min", "3 h", "2 d" since [sinceMs]; null under a minute or unknown. */
-    private fun span(sinceMs: Long): String? {
-        if (sinceMs <= 0) return null
-        val minutes = (now - sinceMs).coerceAtLeast(0) / MINUTE_MS
-        return when {
-            minutes < 1 -> null
-            minutes < MINUTES_PER_HOUR -> s(R.string.widget_v2_span_min, minutes.toInt())
-            minutes < MINUTES_PER_DAY -> s(R.string.widget_v2_span_hour, (minutes / MINUTES_PER_HOUR).toInt())
-            else -> s(R.string.widget_status_span_day, (minutes / MINUTES_PER_DAY).toInt())
-        }
-    }
+    private fun span(sinceMs: Long): String? =
+        WidgetDurationWords.spanSince(context, now, sinceMs)
 
     private fun bindPlan(v: RemoteViews, plan: StatusWidgetModel.Plan?) {
         v.show(R.id.st_plan, plan != null)
@@ -189,7 +181,7 @@ internal class StatusWidgetRenderer(
     private fun window(plan: StatusWidgetModel.Plan): String {
         val hours = plan.seconds / SECONDS_PER_HOUR
         return if (plan.seconds > 0 && plan.seconds % SECONDS_PER_HOUR == 0L && hours in 1 until HOURS_WINDOW_MAX) {
-            s(R.string.widget_v2_span_hour, hours.toInt())
+            WidgetDurationWords.spanHours(context, hours.toInt())
         } else UsageWidgetText.shortWindowName(context, plan.seconds, plan.label)
     }
 

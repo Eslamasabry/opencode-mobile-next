@@ -35,6 +35,9 @@ import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitProgress
 import io.github.eslamasabry.oc.ui.kit.state.KitProgressView
 import io.github.eslamasabry.oc.ui.kit.teaching.KitTip
+import io.github.eslamasabry.oc.ui.kit.text.kitRelativeDaysAgo
+import io.github.eslamasabry.oc.ui.kit.text.kitRelativeHoursAgo
+import io.github.eslamasabry.oc.ui.kit.text.kitRelativeMinutesAgo
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.appTitle
@@ -73,9 +76,6 @@ import io.github.eslamasabry.oc.ui.words.res.appUpdateUpdate
 import io.github.eslamasabry.oc.ui.words.res.appUpdateVerifying
 import io.github.eslamasabry.oc.ui.words.res.appUpdateWhatsNew
 import io.github.eslamasabry.oc.ui.words.res.appUpdatesTitle
-import io.github.eslamasabry.oc.ui.words.res.e7WorkspaceDaysAgo
-import io.github.eslamasabry.oc.ui.words.res.e7WorkspaceHoursAgo
-import io.github.eslamasabry.oc.ui.words.res.e7WorkspaceMinutesAgo
 import io.github.eslamasabry.oc.ui.words.res.kitCopyDetails
 import io.github.eslamasabry.oc.ui.words.res.kitDetails
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarBack
@@ -252,17 +252,17 @@ private fun lineWords(state: UpdatesUi): String {
         UpdatesLine.CheckedMinutesAgo ->
             stringResource(
                 Res.string.appUpdateUpToDate,
-                stringResource(Res.string.e7WorkspaceMinutesAgo, state.agoCount),
+                kitRelativeMinutesAgo(state.agoCount.toLong()),
             )
         UpdatesLine.CheckedHoursAgo ->
             stringResource(
                 Res.string.appUpdateUpToDate,
-                stringResource(Res.string.e7WorkspaceHoursAgo, state.agoCount),
+                kitRelativeHoursAgo(state.agoCount.toLong()),
             )
         UpdatesLine.CheckedDaysAgo ->
             stringResource(
                 Res.string.appUpdateUpToDate,
-                stringResource(Res.string.e7WorkspaceDaysAgo, state.agoCount),
+                kitRelativeDaysAgo(state.agoCount.toLong()),
             )
         UpdatesLine.Available ->
             stringResource(

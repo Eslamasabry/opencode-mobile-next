@@ -5,9 +5,15 @@
     <string name="widget_description">Điều quan trọng nhất lúc này: việc cần bạn, việc đang chạy, hoặc cuộc trò chuyện gần nhất của bạn.</string>
     <string name="native_team_working">Đang làm việc</string>
     <string name="native_widget_now">bây giờ</string>
-    <string name="native_widget_minutes">%1$s phút</string>
-    <string name="native_widget_hours">%1$s giờ</string>
-    <string name="native_widget_days">%1$s ngày</string>
+    <plurals name="native_widget_minutes">
+        <item quantity="other">%1$s phút</item>
+    </plurals>
+    <plurals name="native_widget_hours">
+        <item quantity="other">%1$s giờ</item>
+    </plurals>
+    <plurals name="native_widget_days">
+        <item quantity="other">%1$s ngày</item>
+    </plurals>
     <string name="usage_widget_title">Mức dùng</string>
     <string name="usage_widget_description">Phần còn lại của từng giới hạn gói và thời điểm đặt lại.</string>
     <string name="usage_widget_empty">Chưa có số liệu giới hạn. Hãy mở Mức dùng để kết nối một nguồn.</string>
@@ -26,8 +32,12 @@
     <string name="usage_widget_provider_minimax">MiniMax</string>
     <string name="usage_widget_provider_glm">GLM</string>
     <string name="usage_widget_column">%1$s \u0020còn %2$s%%</string>
-    <string name="usage_widget_short_hours">%1$s giờ</string>
-    <string name="usage_widget_short_days">%1$s ngày</string>
+    <plurals name="usage_widget_short_hours">
+        <item quantity="other">%1$s giờ</item>
+    </plurals>
+    <plurals name="usage_widget_short_days">
+        <item quantity="other">%1$s ngày</item>
+    </plurals>
     <string name="usage_widget_short_week">Tuần</string>
     <string name="usage_widget_short_month">Tháng</string>
     <string name="widget_label_wide">Các cuộc trò chuyện</string>

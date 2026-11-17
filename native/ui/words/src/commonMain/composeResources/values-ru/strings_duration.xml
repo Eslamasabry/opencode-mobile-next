@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="kitDurPair">%1$s %2$s</string>
+    <string name="kitDurTenthsSeconds">%1$s с</string>
+    <plurals name="kitDurSeconds">
+        <item quantity="one">%1$s с</item>
+        <item quantity="few">%1$s с</item>
+        <item quantity="many">%1$s с</item>
+        <item quantity="other">%1$s с</item>
+    </plurals>
+    <plurals name="kitDurMinutes">
+        <item quantity="one">%1$s мин</item>
+        <item quantity="few">%1$s мин</item>
+        <item quantity="many">%1$s мин</item>
+        <item quantity="other">%1$s мин</item>
+    </plurals>
+    <plurals name="kitDurHours">
+        <item quantity="one">%1$s ч</item>
+        <item quantity="few">%1$s ч</item>
+        <item quantity="many">%1$s ч</item>
+        <item quantity="other">%1$s ч</item>
+    </plurals>
+    <plurals name="kitDurDays">
+        <item quantity="one">%1$s д</item>
+        <item quantity="few">%1$s д</item>
+        <item quantity="many">%1$s д</item>
+        <item quantity="other">%1$s д</item>
+    </plurals>
+    <plurals name="kitDurCompactSeconds">
+        <item quantity="one">%1$s с</item>
+        <item quantity="few">%1$s с</item>
+        <item quantity="many">%1$s с</item>
+        <item quantity="other">%1$s с</item>
+    </plurals>
+    <plurals name="kitDurCompactMinutes">
+        <item quantity="one">%1$s мин</item>
+        <item quantity="few">%1$s мин</item>
+        <item quantity="many">%1$s мин</item>
+        <item quantity="other">%1$s мин</item>
+    </plurals>
+    <plurals name="kitDurCompactHours">
+        <item quantity="one">%1$s ч</item>
+        <item quantity="few">%1$s ч</item>
+        <item quantity="many">%1$s ч</item>
+        <item quantity="other">%1$s ч</item>
+    </plurals>
+    <plurals name="kitDurCompactDays">
+        <item quantity="one">%1$s д</item>
+        <item quantity="few">%1$s д</item>
+        <item quantity="many">%1$s д</item>
+        <item quantity="other">%1$s д</item>
+    </plurals>
+    <plurals name="kitRelMinutesAgo">
+        <item quantity="one">%1$s минуту назад</item>
+        <item quantity="few">%1$s минуты назад</item>
+        <item quantity="many">%1$s минут назад</item>
+        <item quantity="other">%1$s минуты назад</item>
+    </plurals>
+    <plurals name="kitRelHoursAgo">
+        <item quantity="one">%1$s час назад</item>
+        <item quantity="few">%1$s часа назад</item>
+        <item quantity="many">%1$s часов назад</item>
+        <item quantity="other">%1$s часа назад</item>
+    </plurals>
+    <plurals name="kitRelDaysAgo">
+        <item quantity="one">%1$s день назад</item>
+        <item quantity="few">%1$s дня назад</item>
+        <item quantity="many">%1$s дней назад</item>
+        <item quantity="other">%1$s дня назад</item>
+    </plurals>
+    <string name="kitResetNow">сбрасывается сейчас</string>
+    <string name="kitResetNowSentence">Сбрасывается сейчас</string>
+    <plurals name="kitResetMinutes">
+        <item quantity="one">Сброс через %1$s минуту</item>
+        <item quantity="few">Сброс через %1$s минуты</item>
+        <item quantity="many">Сброс через %1$s минут</item>
+        <item quantity="other">Сброс через %1$s минуты</item>
+    </plurals>
+    <plurals name="kitResetHours">
+        <item quantity="one">Сброс через %1$s час</item>
+        <item quantity="few">Сброс через %1$s часа</item>
+        <item quantity="many">Сброс через %1$s часов</item>
+        <item quantity="other">Сброс через %1$s часа</item>
+    </plurals>
+    <plurals name="kitResetDays">
+        <item quantity="one">Сброс через %1$s день</item>
+        <item quantity="few">Сброс через %1$s дня</item>
+        <item quantity="many">Сброс через %1$s дней</item>
+        <item quantity="other">Сброс через %1$s дня</item>
+    </plurals>
+    <string name="kitResetCompound">Сброс через %1$s</string>
+    <plurals name="kitResetLowerMinutes">
+        <item quantity="one">сброс через %1$s минуту</item>
+        <item quantity="few">сброс через %1$s минуты</item>
+        <item quantity="many">сброс через %1$s минут</item>
+        <item quantity="other">сброс через %1$s минуты</item>
+    </plurals>
+    <plurals name="kitResetLowerHours">
+        <item quantity="one">сброс через %1$s час</item>
+        <item quantity="few">сброс через %1$s часа</item>
+        <item quantity="many">сброс через %1$s часов</item>
+        <item quantity="other">сброс через %1$s часа</item>
+    </plurals>
+    <plurals name="kitResetLowerDays">
+        <item quantity="one">сброс через %1$s день</item>
+        <item quantity="few">сброс через %1$s дня</item>
+        <item quantity="many">сброс через %1$s дней</item>
+        <item quantity="other">сброс через %1$s дня</item>
+    </plurals>
+    <string name="kitResetLowerCompound">сброс через %1$s</string>
+    <plurals name="kitApproxSeconds">
+        <item quantity="one">около %1$s с</item>
+        <item quantity="few">около %1$s с</item>
+        <item quantity="many">около %1$s с</item>
+        <item quantity="other">около %1$s с</item>
+    </plurals>
+    <plurals name="kitApproxMinutes">
+        <item quantity="one">около %1$s мин</item>
+        <item quantity="few">около %1$s мин</item>
+        <item quantity="many">около %1$s мин</item>
+        <item quantity="other">около %1$s мин</item>
+    </plurals>
+    <string name="kitDurLessThanMinute">меньше минуты</string>
+    <string name="kitRelJustNow">Только что</string>
+    <string name="kitRelYesterday">Вчера</string>
+</resources>

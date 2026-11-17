@@ -182,13 +182,7 @@ internal class WidgetRowText(private val env: WidgetRowEnv) {
     fun liveStatic(m: WidgetRowModel): String {
         if (env.connection != WidgetV2Policy.Connection.CONNECTED)
             return env.copy.offline(env.lastSeen)
-        val since = WidgetElapsedPolicy.sinceUnit(System.currentTimeMillis(), m.startedAt)
-        val span =
-            when {
-                since == null -> ""
-                since.first == "min" -> env.str(R.string.widget_v2_span_min, since.second)
-                else -> env.str(R.string.widget_v2_span_hour, since.second)
-            }
+        val span = WidgetDurationWords.since(env.context, System.currentTimeMillis(), m.startedAt)
         return env.copy.join(liveWords(m), span)
     }
 

@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="kitDurPair">%1$s و%2$s</string>
+    <string name="kitDurTenthsSeconds">%1$s ثانية</string>
+    <plurals name="kitDurSeconds">
+        <item quantity="zero">%1$s ثانية</item>
+        <item quantity="one">ثانية واحدة</item>
+        <item quantity="two">ثانيتان</item>
+        <item quantity="few">%1$s ثوانٍ</item>
+        <item quantity="many">%1$s ثانية</item>
+        <item quantity="other">%1$s ثانية</item>
+    </plurals>
+    <plurals name="kitDurMinutes">
+        <item quantity="zero">%1$s دقيقة</item>
+        <item quantity="one">دقيقة واحدة</item>
+        <item quantity="two">دقيقتان</item>
+        <item quantity="few">%1$s دقائق</item>
+        <item quantity="many">%1$s دقيقة</item>
+        <item quantity="other">%1$s دقيقة</item>
+    </plurals>
+    <plurals name="kitDurHours">
+        <item quantity="zero">%1$s ساعة</item>
+        <item quantity="one">ساعة واحدة</item>
+        <item quantity="two">ساعتان</item>
+        <item quantity="few">%1$s ساعات</item>
+        <item quantity="many">%1$s ساعة</item>
+        <item quantity="other">%1$s ساعة</item>
+    </plurals>
+    <plurals name="kitDurDays">
+        <item quantity="zero">%1$s يوم</item>
+        <item quantity="one">يوم واحد</item>
+        <item quantity="two">يومان</item>
+        <item quantity="few">%1$s أيام</item>
+        <item quantity="many">%1$s يومًا</item>
+        <item quantity="other">%1$s يوم</item>
+    </plurals>
+    <plurals name="kitDurCompactSeconds">
+        <item quantity="zero">%1$s ثانية</item>
+        <item quantity="one">ثانية واحدة</item>
+        <item quantity="two">ثانيتان</item>
+        <item quantity="few">%1$s ثوانٍ</item>
+        <item quantity="many">%1$s ثانية</item>
+        <item quantity="other">%1$s ثانية</item>
+    </plurals>
+    <plurals name="kitDurCompactMinutes">
+        <item quantity="zero">%1$s دقيقة</item>
+        <item quantity="one">دقيقة واحدة</item>
+        <item quantity="two">دقيقتان</item>
+        <item quantity="few">%1$s دقائق</item>
+        <item quantity="many">%1$s دقيقة</item>
+        <item quantity="other">%1$s دقيقة</item>
+    </plurals>
+    <plurals name="kitDurCompactHours">
+        <item quantity="zero">%1$s ساعة</item>
+        <item quantity="one">ساعة واحدة</item>
+        <item quantity="two">ساعتان</item>
+        <item quantity="few">%1$s ساعات</item>
+        <item quantity="many">%1$s ساعة</item>
+        <item quantity="other">%1$s ساعة</item>
+    </plurals>
+    <plurals name="kitDurCompactDays">
+        <item quantity="zero">%1$s يوم</item>
+        <item quantity="one">يوم واحد</item>
+        <item quantity="two">يومان</item>
+        <item quantity="few">%1$s أيام</item>
+        <item quantity="many">%1$s يومًا</item>
+        <item quantity="other">%1$s يوم</item>
+    </plurals>
+    <plurals name="kitRelMinutesAgo">
+        <item quantity="zero">منذ %1$s دقيقة</item>
+        <item quantity="one">منذ دقيقة واحدة</item>
+        <item quantity="two">منذ دقيقتين</item>
+        <item quantity="few">منذ %1$s دقائق</item>
+        <item quantity="many">منذ %1$s دقيقة</item>
+        <item quantity="other">منذ %1$s دقيقة</item>
+    </plurals>
+    <plurals name="kitRelHoursAgo">
+        <item quantity="zero">منذ %1$s ساعة</item>
+        <item quantity="one">منذ ساعة واحدة</item>
+        <item quantity="two">منذ ساعتين</item>
+        <item quantity="few">منذ %1$s ساعات</item>
+        <item quantity="many">منذ %1$s ساعة</item>
+        <item quantity="other">منذ %1$s ساعة</item>
+    </plurals>
+    <plurals name="kitRelDaysAgo">
+        <item quantity="zero">منذ %1$s يوم</item>
+        <item quantity="one">منذ يوم واحد</item>
+        <item quantity="two">منذ يومين</item>
+        <item quantity="few">منذ %1$s أيام</item>
+        <item quantity="many">منذ %1$s يومًا</item>
+        <item quantity="other">منذ %1$s يوم</item>
+    </plurals>
+    <string name="kitResetNow">يُعاد الآن</string>
+    <string name="kitResetNowSentence">يُعاد التعيين الآن</string>
+    <plurals name="kitResetMinutes">
+        <item quantity="zero">يُعاد التعيين بعد %1$s دقيقة</item>
+        <item quantity="one">يُعاد التعيين بعد دقيقة واحدة</item>
+        <item quantity="two">يُعاد التعيين بعد دقيقتين</item>
+        <item quantity="few">يُعاد التعيين بعد %1$s دقائق</item>
+        <item quantity="many">يُعاد التعيين بعد %1$s دقيقة</item>
+        <item quantity="other">يُعاد التعيين بعد %1$s دقيقة</item>
+    </plurals>
+    <plurals name="kitResetHours">
+        <item quantity="zero">يُعاد التعيين بعد %1$s ساعة</item>
+        <item quantity="one">يُعاد التعيين بعد ساعة واحدة</item>
+        <item quantity="two">يُعاد التعيين بعد ساعتين</item>
+        <item quantity="few">يُعاد التعيين بعد %1$s ساعات</item>
+        <item quantity="many">يُعاد التعيين بعد %1$s ساعة</item>
+        <item quantity="other">يُعاد التعيين بعد %1$s ساعة</item>
+    </plurals>
+    <plurals name="kitResetDays">
+        <item quantity="zero">يُعاد التعيين بعد %1$s يوم</item>
+        <item quantity="one">يُعاد التعيين بعد يوم واحد</item>
+        <item quantity="two">يُعاد التعيين بعد يومين</item>
+        <item quantity="few">يُعاد التعيين بعد %1$s أيام</item>
+        <item quantity="many">يُعاد التعيين بعد %1$s يومًا</item>
+        <item quantity="other">يُعاد التعيين بعد %1$s يوم</item>
+    </plurals>
+    <string name="kitResetCompound">يتبقّى %1$s لإعادة التعيين</string>
+    <plurals name="kitResetLowerMinutes">
+        <item quantity="zero">يُعاد التعيين بعد %1$s دقيقة</item>
+        <item quantity="one">يُعاد التعيين بعد دقيقة واحدة</item>
+        <item quantity="two">يُعاد التعيين بعد دقيقتين</item>
+        <item quantity="few">يُعاد التعيين بعد %1$s دقائق</item>
+        <item quantity="many">يُعاد التعيين بعد %1$s دقيقة</item>
+        <item quantity="other">يُعاد التعيين بعد %1$s دقيقة</item>
+    </plurals>
+    <plurals name="kitResetLowerHours">
+        <item quantity="zero">يُعاد التعيين بعد %1$s ساعة</item>
+        <item quantity="one">يُعاد التعيين بعد ساعة واحدة</item>
+        <item quantity="two">يُعاد التعيين بعد ساعتين</item>
+        <item quantity="few">يُعاد التعيين بعد %1$s ساعات</item>
+        <item quantity="many">يُعاد التعيين بعد %1$s ساعة</item>
+        <item quantity="other">يُعاد التعيين بعد %1$s ساعة</item>
+    </plurals>
+    <plurals name="kitResetLowerDays">
+        <item quantity="zero">يُعاد التعيين بعد %1$s يوم</item>
+        <item quantity="one">يُعاد التعيين بعد يوم واحد</item>
+        <item quantity="two">يُعاد التعيين بعد يومين</item>
+        <item quantity="few">يُعاد التعيين بعد %1$s أيام</item>
+        <item quantity="many">يُعاد التعيين بعد %1$s يومًا</item>
+        <item quantity="other">يُعاد التعيين بعد %1$s يوم</item>
+    </plurals>
+    <string name="kitResetLowerCompound">يتبقّى %1$s لإعادة التعيين</string>
+    <plurals name="kitApproxSeconds">
+        <item quantity="zero">نحو %1$s\u00A0ثانية</item>
+        <item quantity="one">نحو ثانية واحدة</item>
+        <item quantity="two">نحو ثانيتين</item>
+        <item quantity="few">نحو %1$s\u00A0ثوانٍ</item>
+        <item quantity="many">نحو %1$s\u00A0ثانية</item>
+        <item quantity="other">نحو %1$s\u00A0ثانية</item>
+    </plurals>
+    <plurals name="kitApproxMinutes">
+        <item quantity="zero">نحو %1$s\u00A0دقيقة</item>
+        <item quantity="one">نحو دقيقة واحدة</item>
+        <item quantity="two">نحو دقيقتين</item>
+        <item quantity="few">نحو %1$s\u00A0دقائق</item>
+        <item quantity="many">نحو %1$s\u00A0دقيقة</item>
+        <item quantity="other">نحو %1$s\u00A0دقيقة</item>
+    </plurals>
+    <string name="kitDurLessThanMinute">أقل من دقيقة</string>
+    <string name="kitRelJustNow">الآن</string>
+    <string name="kitRelYesterday">أمس</string>
+</resources>

@@ -5,9 +5,24 @@
     <string name="widget_description">Самое важное сейчас: что ждёт вас, что в работе или ваш последний чат.</string>
     <string name="native_team_working">В работе</string>
     <string name="native_widget_now">сейчас</string>
-    <string name="native_widget_minutes">%1$s мин</string>
-    <string name="native_widget_hours">%1$s ч</string>
-    <string name="native_widget_days">%1$s д</string>
+    <plurals name="native_widget_minutes">
+        <item quantity="one">%1$s мин</item>
+        <item quantity="few">%1$s мин</item>
+        <item quantity="many">%1$s мин</item>
+        <item quantity="other">%1$s мин</item>
+    </plurals>
+    <plurals name="native_widget_hours">
+        <item quantity="one">%1$s ч</item>
+        <item quantity="few">%1$s ч</item>
+        <item quantity="many">%1$s ч</item>
+        <item quantity="other">%1$s ч</item>
+    </plurals>
+    <plurals name="native_widget_days">
+        <item quantity="one">%1$s д</item>
+        <item quantity="few">%1$s д</item>
+        <item quantity="many">%1$s д</item>
+        <item quantity="other">%1$s д</item>
+    </plurals>
     <string name="usage_widget_title">Расход</string>
     <string name="usage_widget_description">Сколько осталось до лимита каждого тарифа и когда он сбросится.</string>
     <string name="usage_widget_empty">Показаний лимитов пока нет. Откройте «Расход», чтобы подключить источник.</string>
@@ -26,8 +41,18 @@
     <string name="usage_widget_provider_minimax">MiniMax</string>
     <string name="usage_widget_provider_glm">GLM</string>
     <string name="usage_widget_column">%1$s \u0020осталось %2$s%%</string>
-    <string name="usage_widget_short_hours">%1$s ч</string>
-    <string name="usage_widget_short_days">%1$s д</string>
+    <plurals name="usage_widget_short_hours">
+        <item quantity="one">%1$s ч</item>
+        <item quantity="few">%1$s ч</item>
+        <item quantity="many">%1$s ч</item>
+        <item quantity="other">%1$s ч</item>
+    </plurals>
+    <plurals name="usage_widget_short_days">
+        <item quantity="one">%1$s д</item>
+        <item quantity="few">%1$s д</item>
+        <item quantity="many">%1$s д</item>
+        <item quantity="other">%1$s д</item>
+    </plurals>
     <string name="usage_widget_short_week">Неделя</string>
     <string name="usage_widget_short_month">Месяц</string>
     <string name="widget_label_wide">Чаты</string>

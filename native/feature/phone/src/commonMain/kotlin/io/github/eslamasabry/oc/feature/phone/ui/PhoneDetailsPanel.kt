@@ -21,6 +21,7 @@ import io.github.eslamasabry.oc.ui.kit.state.KitDetailsFold
 import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitTechnicalValue
+import io.github.eslamasabry.oc.ui.kit.text.kitDecimalSecondsWords
 import io.github.eslamasabry.oc.ui.words.res.*
 import org.jetbrains.compose.resources.stringResource
 
@@ -220,5 +221,4 @@ internal fun PhoneDetailsPanel(state: ThisPhoneUi, actions: ThisPhoneActions) {
 }
 
 @Composable
-private fun seconds(ms: Long): String =
-    stringResource(Res.string.r40PhoneSeconds, Numbers.decimal(ms / 1000.0, 1))
+private fun seconds(ms: Long): String = kitDecimalSecondsWords(ms / 1000.0)

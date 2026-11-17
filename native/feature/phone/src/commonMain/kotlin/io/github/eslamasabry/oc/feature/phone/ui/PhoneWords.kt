@@ -13,6 +13,8 @@ import io.github.eslamasabry.oc.feature.phone.presentation.PhoneMaker
 import io.github.eslamasabry.oc.feature.phone.presentation.PhoneOp
 import io.github.eslamasabry.oc.feature.phone.presentation.ProcessKind
 import io.github.eslamasabry.oc.ui.design.color.StatusTone
+import io.github.eslamasabry.oc.ui.kit.text.kitApproxMinutesWords
+import io.github.eslamasabry.oc.ui.kit.text.kitApproxSecondsWords
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.consoleOrganizationSwitchConfirm
 import io.github.eslamasabry.oc.ui.words.res.e7SetupOpenAppSettings
@@ -55,8 +57,6 @@ import io.github.eslamasabry.oc.ui.words.res.termuxProcsKindDevService
 import io.github.eslamasabry.oc.ui.words.res.termuxProcsKindHelper
 import io.github.eslamasabry.oc.ui.words.res.termuxProcsKindOpenCode
 import io.github.eslamasabry.oc.ui.words.res.termuxProcsKindTerminal
-import io.github.eslamasabry.oc.ui.words.res.thisPhoneAboutMinutes
-import io.github.eslamasabry.oc.ui.words.res.thisPhoneAboutSeconds
 import io.github.eslamasabry.oc.ui.words.res.thisPhoneAnswerAndroidClosed
 import io.github.eslamasabry.oc.ui.words.res.thisPhoneAnswerChecking
 import io.github.eslamasabry.oc.ui.words.res.thisPhoneAnswerGaveUp
@@ -130,8 +130,8 @@ internal fun AnswerHeadline.words(): String =
 @Composable
 internal fun AboutWait.words(): String =
     when (this) {
-        is AboutWait.Seconds -> stringResource(Res.string.thisPhoneAboutSeconds, value)
-        is AboutWait.Minutes -> stringResource(Res.string.thisPhoneAboutMinutes, value)
+        is AboutWait.Seconds -> kitApproxSecondsWords(value.toLong())
+        is AboutWait.Minutes -> kitApproxMinutesWords(value.toLong())
     }
 
 @Composable

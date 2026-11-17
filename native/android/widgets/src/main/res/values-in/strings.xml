@@ -5,9 +5,15 @@
     <string name="widget_description">Satu hal yang penting sekarang: yang membutuhkan Anda, yang sedang bekerja, atau percakapan terakhir Anda.</string>
     <string name="native_team_working">Bekerja</string>
     <string name="native_widget_now">sekarang</string>
-    <string name="native_widget_minutes">%1$sm</string>
-    <string name="native_widget_hours">%1$sj</string>
-    <string name="native_widget_days">%1$sh</string>
+    <plurals name="native_widget_minutes">
+        <item quantity="other">%1$s mnt</item>
+    </plurals>
+    <plurals name="native_widget_hours">
+        <item quantity="other">%1$s jam</item>
+    </plurals>
+    <plurals name="native_widget_days">
+        <item quantity="other">%1$s hr</item>
+    </plurals>
     <string name="usage_widget_title">Penggunaan</string>
     <string name="usage_widget_description">Sisa pada setiap batas paket, dan kapan direset.</string>
     <string name="usage_widget_empty">Belum ada pembacaan batas. Buka Penggunaan untuk menghubungkan sumber.</string>
@@ -26,8 +32,12 @@
     <string name="usage_widget_provider_minimax">MiniMax</string>
     <string name="usage_widget_provider_glm">GLM</string>
     <string name="usage_widget_column">%1$s \u0020sisa %2$s%%</string>
-    <string name="usage_widget_short_hours">%1$sj</string>
-    <string name="usage_widget_short_days">%1$sh</string>
+    <plurals name="usage_widget_short_hours">
+        <item quantity="other">%1$s jam</item>
+    </plurals>
+    <plurals name="usage_widget_short_days">
+        <item quantity="other">%1$s hr</item>
+    </plurals>
     <string name="usage_widget_short_week">Minggu</string>
     <string name="usage_widget_short_month">Bulan</string>
     <string name="widget_label_wide">Percakapan</string>

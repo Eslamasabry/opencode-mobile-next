@@ -30,7 +30,9 @@ import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
 import io.github.eslamasabry.oc.ui.kit.modal.KitInputOperationDialog
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
+import io.github.eslamasabry.oc.ui.kit.text.kitDurationWords
 import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
+import kotlin.time.Duration.Companion.milliseconds
 import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
@@ -47,8 +49,6 @@ import io.github.eslamasabry.oc.ui.words.res.chatUiRunShellCommand
 import io.github.eslamasabry.oc.ui.words.res.commandRun
 import io.github.eslamasabry.oc.ui.words.res.chatUiShowAllSubagentSessions
 import io.github.eslamasabry.oc.ui.words.res.kitBackgroundWorkGoToStep
-import io.github.eslamasabry.oc.ui.words.res.kitBackgroundWorkHours
-import io.github.eslamasabry.oc.ui.words.res.kitBackgroundWorkMinutes
 import io.github.eslamasabry.oc.ui.words.res.kitConfirmFailed
 import io.github.eslamasabry.oc.ui.words.res.kitSheetDismiss
 import io.github.eslamasabry.oc.ui.words.res.runningWorkBackgroundAction
@@ -325,11 +325,8 @@ private fun WorkListRows(
 
 /** "12 min", "1 h 5 min", "under a minute": how long work started at [sinceMs] has run. */
 @Composable
-private fun elapsedWords(sinceMs: Long, nowMs: Long): String {
-    val minutes = ((nowMs - sinceMs).coerceAtLeast(0) / MINUTE_MS).toInt()
-    return if (minutes < HOUR_MINUTES) pluralStringResource(Res.plurals.kitBackgroundWorkMinutes, minutes, minutes)
-    else stringResource(Res.string.kitBackgroundWorkHours, minutes / HOUR_MINUTES, minutes % HOUR_MINUTES)
-}
+private fun elapsedWords(sinceMs: Long, nowMs: Long): String =
+    kitDurationWords((nowMs - sinceMs).coerceAtLeast(0L).milliseconds)
 
 private const val MINUTE_MS = 60_000L
 private const val HOUR_MINUTES = 60

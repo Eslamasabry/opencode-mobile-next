@@ -678,8 +678,6 @@ internal fun ChatTranscriptList(
                         )
                     )
                 ) {
-                    val minutes = stringResource(Res.string.chatHomeMinutes)
-                    val seconds = stringResource(Res.string.chatHomeSeconds)
                     val step = facts.work.values.lastOrNull { it.now != null }?.now
                     val mask = rememberKitMask()
                     KitRunningFeedLine(
@@ -687,8 +685,6 @@ internal fun ChatTranscriptList(
                         nowMs = facts.nowMs,
                         command = step?.facts?.subject?.let(mask),
                         runningLabel = liveWords,
-                        minutesLabel = { minutes.replace("%1\$s", it) },
-                        secondsLabel = { seconds.replace("%1\$s", it) },
                     )
                 }
               }

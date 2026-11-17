@@ -8,13 +8,13 @@ import io.github.eslamasabry.oc.engine.transcript.turnfacts.ToolKind
 import io.github.eslamasabry.oc.engine.transcript.turnfacts.TurnStallNotice
 import io.github.eslamasabry.oc.feature.chat.presentation.LiveNoticeUi
 import io.github.eslamasabry.oc.feature.chat.presentation.LiveTurnUi
+import io.github.eslamasabry.oc.ui.kit.text.KitDurationStyle
+import io.github.eslamasabry.oc.ui.kit.text.kitElapsedSecondsMinutes
 import io.github.eslamasabry.oc.ui.kitchat.header.rememberKitMask
 import io.github.eslamasabry.oc.ui.kitchat.turn.KitTurnLiveTone
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.kitTurnLiveFor
-import io.github.eslamasabry.oc.ui.words.res.kitTurnLiveMinutes
 import io.github.eslamasabry.oc.ui.words.res.kitTurnLiveNow
-import io.github.eslamasabry.oc.ui.words.res.kitTurnLiveSeconds
 import io.github.eslamasabry.oc.ui.words.res.kitTurnLiveThinking
 import io.github.eslamasabry.oc.ui.words.res.kitTurnLiveStillThinking
 import io.github.eslamasabry.oc.ui.words.res.chatQuietThinkingHint
@@ -90,12 +90,8 @@ internal fun liveLineWords(
     val line =
         if (elapsed == null || elapsed < LIVE_SHOW_ELAPSED_AFTER_MS) stringResource(Res.string.kitTurnLiveNow, words)
         else {
-            val seconds = (elapsed / 1_000).toInt()
-            val time =
-                if (seconds < 60) stringResource(Res.string.kitTurnLiveSeconds, seconds)
-                else stringResource(Res.string.kitTurnLiveMinutes, seconds / 60, seconds % 60)
-            // "12 s" never breaks between the number and its unit (F: kit_turn.dart:913-918).
-            stringResource(Res.string.kitTurnLiveFor, words, time.replace(' ', ' '))
+            val time = kitElapsedSecondsMinutes(elapsed / 1_000L, style = KitDurationStyle.Standard, nonBreaking = true)
+            stringResource(Res.string.kitTurnLiveFor, words, time)
         }
     // F: chat_transcript.dart:310-323 the newest line a running command printed rides in the muted second slot.
     val printed =

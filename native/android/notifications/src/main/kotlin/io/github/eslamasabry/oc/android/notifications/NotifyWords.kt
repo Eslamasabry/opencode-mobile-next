@@ -41,7 +41,7 @@ public class NotifyWords(private val base: Context, private val localeTag: () ->
                 }
             }
 
-        /** The seven app languages (plan 06 §13). */
-        public val SUPPORTED: Set<String> = setOf("en", "ar", "es", "ja", "pt", "ru", "zh")
+        /** All ten app languages supported by the native app. */
+        public val SUPPORTED: Set<String> = setOf("en", "ar", "es", "fr", "id", "in", "ja", "pt", "ru", "vi", "zh")
     }
 }

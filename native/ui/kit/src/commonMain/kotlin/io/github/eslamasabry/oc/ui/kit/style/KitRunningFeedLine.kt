@@ -16,6 +16,8 @@ import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitText
+import io.github.eslamasabry.oc.ui.kit.text.kitMinutesUnitWords
+import io.github.eslamasabry.oc.ui.kit.text.kitSecondsUnitWords
 import kotlin.time.TimeSource
 import io.github.eslamasabry.oc.ui.kit.platform.LocalKitVisibility
 
@@ -26,7 +28,7 @@ public fun KitRunningFeedLine(
     nowMs: Long,
     command: String?,
     runningLabel: String,
-    minutesLabel: (String) -> String,
+    minutesLabel: ((String) -> String)? = null,
     secondsLabel: ((String) -> String)? = null,
 ) {
     val started = remember(sinceMs, nowMs) { TimeSource.Monotonic.markNow() }
@@ -43,17 +45,19 @@ public fun KitRunningFeedLine(
         }
     }
     Row(horizontalArrangement = Arrangement.spacedBy(Space.S1.dp)) {
-        if (sinceMs != null)
+        if (sinceMs != null) {
+            val mins = elapsed / 60_000
+            val secs = (elapsed / 1_000) % 60
+            val elapsedText =
+                if (minutesLabel == null) "${kitMinutesUnitWords(mins)} ${kitSecondsUnitWords(secs)}"
+                else listOfNotNull(minutesLabel(Numbers.format(mins.toInt())), secondsLabel?.invoke(Numbers.format(secs.toInt()))).joinToString(" ")
             KitText(
-                listOfNotNull(
-                        minutesLabel(Numbers.format((elapsed / 60_000).toInt())),
-                        secondsLabel?.invoke(Numbers.format(((elapsed / 1_000) % 60).toInt())),
-                    )
-                    .joinToString(" "),
+                elapsedText,
                 Modifier.testTag("kit-feed-timer"),
                 role = TypeRole.Mono,
                 tone = TextTone.Accent,
             )
+        }
         KitText(
             listOfNotNull(runningLabel, command).joinToString(" · "),
             role = TypeRole.Secondary,

@@ -23,7 +23,9 @@ import io.github.eslamasabry.oc.feature.chats.lamp.LampListController
 import io.github.eslamasabry.oc.feature.chats.lamp.LampNotice
 import io.github.eslamasabry.oc.feature.chats.lamp.LampRequestUi
 import io.github.eslamasabry.oc.feature.chats.lamp.LampStopUi
+import io.github.eslamasabry.oc.feature.chats.lamp.LampStateLine
 import io.github.eslamasabry.oc.feature.chats.lamp.LampUi
+import io.github.eslamasabry.oc.feature.chats.presentation.RelativeAge
 import io.github.eslamasabry.oc.ui.kit.lamp.KitLampPanel
 import io.github.eslamasabry.oc.ui.kit.lamp.KitLampPanelActions
 import io.github.eslamasabry.oc.ui.kit.lamp.KitLampPanelHost
@@ -36,19 +38,32 @@ import io.github.eslamasabry.oc.ui.kit.modal.LocalKitToasts
 import io.github.eslamasabry.oc.ui.kit.request.KitRequestWords
 import io.github.eslamasabry.oc.ui.kit.row.KitReorderWords
 import io.github.eslamasabry.oc.ui.kit.status.KitStepTreeWords
+import io.github.eslamasabry.oc.ui.kit.text.KitDurationStyle
+import io.github.eslamasabry.oc.ui.kit.text.kitDaysUnitWords
+import io.github.eslamasabry.oc.ui.kit.text.kitHoursUnitWords
+import io.github.eslamasabry.oc.ui.kit.text.kitMinutesUnitWords
 import io.github.eslamasabry.oc.ui.words.res.*
 import io.github.eslamasabry.oc.ui.words.res.Res
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 
-/** The words of the list, from the string keys, with "N sub-agents" for each N the list shows. */
+/** The words of the list, from the string keys, with pluralized sub-agent counts and row ages. */
 @Composable
 internal fun rememberLampTexts(ui: LampUi): LampTexts {
     val words = LampWord.entries.associateWith { stringResource(lampWordKey(it)) }
     val counts = ui.groups.flatMap { it.rows }.mapNotNull { it.tree?.count }.distinct()
     val folded = counts.associateWith { pluralStringResource(Res.plurals.edgeLightSubAgentsFolded, it, it) }
-    return remember(words, folded) { LampTexts(words, folded) }
+    val ageKeys = ui.groups.flatMap { it.rows }.mapNotNull { (it.state as? LampStateLine.For)?.age }.distinct()
+    val ages = ageKeys.associateWith { age ->
+        when (age) {
+            RelativeAge.JustNow -> words[LampWord.AgeNow].orEmpty()
+            is RelativeAge.Minutes -> kitMinutesUnitWords(age.count.toLong(), KitDurationStyle.Compact)
+            is RelativeAge.Hours -> kitHoursUnitWords(age.count.toLong(), KitDurationStyle.Compact)
+            is RelativeAge.Days -> kitDaysUnitWords(age.count.toLong(), KitDurationStyle.Compact)
+        }
+    }
+    return remember(words, folded, ages) { LampTexts(words, folded, ages) }
 }
 
 private fun lampWordKey(word: LampWord): StringResource =
@@ -184,7 +199,6 @@ internal fun lampPanelWords(t: LampTexts, ui: LampUi): KitLampPanelWords {
                 failed = t[LampWord.FailedWord],
                 moreInside = { t.fmt(LampWord.MoreInside, t.count(it)) },
                 more = { t.fmt(LampWord.MoreSubAgents, t.count(it)) },
-                duration = { seconds -> if (seconds < 60) "${t.count(seconds.toInt())}s" else "${t.count((seconds / 60).toInt())}:${(seconds % 60).toString().padStart(2, '0')}" },
                 stop = { t.fmt(LampWord.Stop, it) },
                 spoken = { step, said ->
                     val parent = parentOf[step.key] ?: ""
