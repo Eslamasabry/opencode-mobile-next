@@ -287,7 +287,7 @@ class KitFloatingBarTest {
     }
 
     /**
-     * Lets the scene settle on the TEST clock: a few jumps of half a second, one frame each. With the clock on
+     * Lets the scene settle on the TEST clock: one jump of half a second, one frame. With the clock on
      * auto-advance every `waitForIdle` drew a frame per 16 ms of every animation still running (the live glass), which
      * took close to the test's one-minute limit on a busy runner; the jumps draw the same settled picture in a few
      * frames.
@@ -680,8 +680,8 @@ class KitFloatingBarTest {
         const val FIELD_AT = 14
         const val STEPS = 20
 
-        /** Settling on the test clock: [SETTLE_JUMPS] jumps of [SETTLE_JUMP_MS] (1.5 s of animation, 3 frames). */
-        const val SETTLE_JUMPS = 3
+        /** Settling on the test clock: [SETTLE_JUMPS] jump of [SETTLE_JUMP_MS] (half a second of animation, one frame). */
+        const val SETTLE_JUMPS = 1
         const val SETTLE_JUMP_MS = 500L
         const val LENS_BLUR_DP = 6f
 

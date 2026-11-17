@@ -129,10 +129,8 @@ class GlassTruthChatRenders {
             // The clock is ours (auto-advance off): a few half-second jumps, one frame each, instead of a frame
             // per 16 ms of the live background. The still frame is what is drawn either way.
             waitForIdle()
-            repeat(3) {
-                mainClock.advanceTimeBy(500, ignoreFrameDuration = true)
-                waitForIdle()
-            }
+            mainClock.advanceTimeBy(500, ignoreFrameDuration = true)
+            waitForIdle()
             ImageIO.write(onAllNodes(isRoot())[0].captureToImage().toAwtImage(), "png", file)
         }
     }

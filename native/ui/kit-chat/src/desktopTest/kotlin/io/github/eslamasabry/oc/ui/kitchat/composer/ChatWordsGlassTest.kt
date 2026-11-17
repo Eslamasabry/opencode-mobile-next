@@ -284,9 +284,9 @@ class ChatWordsGlassTest {
                     }
                 }
             }
-            settle(1)
+            settle(0)
             onNodeWithTag("transcript-list").performScrollToIndex(scrollTo)
-            settle(1)
+            settle(0)
             // A person reading history drags the list, which stops it following the newest message; a scroll from code
             // keeps following, so the phrase row folding (the block's height changing) would pin it back to the newest.
             // The finger moves 120 dp toward older messages and rests before it lifts, so no fling carries the list on.
@@ -297,12 +297,12 @@ class ChatWordsGlassTest {
                     advanceEventTime(200)
                     up()
                 }
-            settle(1)
+            settle(0)
             // Near the newest message (not away from it): the newest row drawn [nudgeDp] past its resting place, so its
             // lower part lies under the bottom block.
             if (nudgeDp > 0) {
                 runOnIdle { lazy[0]!!.requestScrollToItem(scrollTo, (nudgeDp * D).roundToInt()) }
-                settle(1)
+                settle(0)
             }
             // The phrase row folding, the pill rising out of the box, the page's edges easing to their new place.
             settle()
@@ -342,13 +342,15 @@ class ChatWordsGlassTest {
     }
 
     /**
-     * Lets the scene settle on the TEST clock: a few jumps of half a second, one frame each. With the clock on
-     * auto-advance every `waitForIdle` and every 16 ms of `advanceTimeBy` drew a whole frame of the joined box and pill
-     * (the join shader runs on the CPU, seconds a frame on a loaded runner), which is why this file needed five
-     * minutes.
+     * Lets the scene settle on the TEST clock: jumps of half a second, one frame each; a step between gestures is one
+     * frame. With the clock on auto-advance every `waitForIdle` and every 16 ms of `advanceTimeBy` drew a whole
+     * frame of the joined box and pill (the join shader runs on the CPU, seconds a frame on a loaded runner), which
+     * is why this file needed five minutes.
      */
     private fun androidx.compose.ui.test.ComposeUiTest.settle(jumps: Int = SETTLE_JUMPS) {
         waitForIdle()
+        // No jump (a step between two gestures): one frame, so the layout and the scroll are applied.
+        if (jumps == 0) mainClock.advanceTimeByFrame()
         repeat(jumps) {
             mainClock.advanceTimeBy(SETTLE_JUMP_MS, ignoreFrameDuration = true)
             waitForIdle()
@@ -711,8 +713,8 @@ class ChatWordsGlassTest {
         /** How long one scene may take to draw and settle (see [shot]). */
         val SCENE_TIMEOUT: kotlin.time.Duration = kotlin.time.Duration.parse("5m")
 
-        /** Settling on the test clock: [SETTLE_JUMPS] jumps of [SETTLE_JUMP_MS] (1.5 s of animation, 3 frames). */
-        const val SETTLE_JUMPS = 3
+        /** Settling on the test clock: [SETTLE_JUMPS] jumps of [SETTLE_JUMP_MS] (one second of animation, two frames). */
+        const val SETTLE_JUMPS = 2
         const val SETTLE_JUMP_MS = 500L
 
         const val W = 240
