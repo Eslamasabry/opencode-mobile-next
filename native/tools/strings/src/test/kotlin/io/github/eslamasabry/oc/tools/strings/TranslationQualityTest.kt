@@ -224,7 +224,10 @@ class TranslationQualityTest {
                 val words = latinWord.findAll(strip(t)).map { it.value }.filter { it !in allow }.toList()
                 val runs = if (l == "ja" || l == "zh") cjkWordRuns else latinWordRuns
                 if (l in nonLatin) {
-                    if (words.size >= 3 && words.size * 2 > runs.findAll(strip(t)).count()) return@gate "mostly Latin words: ${words.take(4)}"
+                    val wordRuns = runs.findAll(strip(t)).count()
+                    if (words.size >= 3 && words.size * 2 > wordRuns) {
+                        return@gate "mostly Latin words: ${words.take(4)}"
+                    }
                 } else if (words.map { it.lowercase() }.filter { it in stopwords }.toSet().size >= 2) {
                     return@gate "English words left: ${words.take(5)}"
                 }

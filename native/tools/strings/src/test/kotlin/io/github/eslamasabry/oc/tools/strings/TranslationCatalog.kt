@@ -52,10 +52,13 @@ class TranslationCatalog(private val nativeRoot: File) {
                 for (m in ENTRY.findAll(f.readText())) {
                     val name = NAME.find(m.groupValues[2])?.groupValues?.get(1) ?: continue
                     if (m.groupValues[1] == "string") {
-                        out[name] = Entry(name, mapOf("" to plain(m.groupValues[3])), mapOf("" to m.groupValues[3]), f.name)
+                        val body = m.groupValues[3]
+                        out[name] = Entry(name, mapOf("" to plain(body)), mapOf("" to body), f.name)
                     } else {
                         val items = ITEM.findAll(m.groupValues[3]).toList()
-                        out[name] = Entry(name, items.associate { it.groupValues[1] to plain(it.groupValues[2]) }, items.associate { it.groupValues[1] to it.groupValues[2] }, f.name)
+                        val plains = items.associate { it.groupValues[1] to plain(it.groupValues[2]) }
+                        val raws = items.associate { it.groupValues[1] to it.groupValues[2] }
+                        out[name] = Entry(name, plains, raws, f.name)
                     }
                 }
             }
