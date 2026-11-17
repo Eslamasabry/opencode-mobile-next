@@ -87,7 +87,8 @@ class TransportTrustTest {
         val server = plainServer()
         val outcome = net(spec("http", server.port, cleartext = false)).get(server.url("/api/health"))
         assertEquals(Failure.Refused(RefusalReason.CleartextNotConfirmed), failureOf(outcome))
-        assertEquals(0, server.connectionsSeen.get())
+        server.settle()
+        assertEquals(0, server.clientConnections())
     }
 
     @Test
@@ -113,7 +114,8 @@ class TransportTrustTest {
         val server = plainServer()
         val outcome = net(spec("http", server.port + 1, cleartext = true)).get(server.url("/api/health"))
         assertEquals(Failure.Refused(RefusalReason.OriginChanged), failureOf(outcome))
-        assertEquals(0, server.connectionsSeen.get())
+        server.settle()
+        assertEquals(0, server.clientConnections())
     }
 
     @Test
@@ -121,7 +123,8 @@ class TransportTrustTest {
         val server = plainServer()
         val outcome = net(spec("http", server.port, cleartext = true, pin = ByteArray(32))).get(server.url("/api/health"))
         assertEquals(Failure.Refused(RefusalReason.PinNeedsHttps), failureOf(outcome))
-        assertEquals(0, server.connectionsSeen.get())
+        server.settle()
+        assertEquals(0, server.clientConnections())
     }
 
     @Test
@@ -131,10 +134,17 @@ class TransportTrustTest {
         server.handler = { _, _ -> Reply.Ok("secret data") }
         val client = net(spec("https", server.port, pin = sha256(leaf())))
         assertEquals(Failure.Certificate(CertificateWhy.Changed), failureOf(client.get(server.url("/api/health"))))
+        // Counted only once the server has taken in and finished every connection made so far, so a request still on
+        // its way could not slip past the count.
+        server.settle()
+        val connections = server.clientConnections()
+        // The refusal came from the handshake with this server (the pin was checked), not from a gate before it.
+        assertTrue(connections >= 1, "the client never reached the server")
+        assertEquals(0, server.requests.size)
         // Latched: the next call on this client is refused before any socket.
-        val connections = server.connectionsSeen.get()
         assertEquals(Failure.Certificate(CertificateWhy.Changed), failureOf(client.get(server.url("/api/health"))))
-        assertEquals(connections, server.connectionsSeen.get())
+        server.settle()
+        assertEquals(connections, server.clientConnections())
         assertEquals(0, server.requests.size)
     }
 

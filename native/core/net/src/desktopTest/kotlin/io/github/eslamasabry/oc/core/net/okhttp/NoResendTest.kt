@@ -151,6 +151,16 @@ internal class CountingServer(
     val requests: MutableList<SeenRequest> = Collections.synchronizedList(mutableListOf())
     val connectionsSeen = AtomicInteger()
 
+    /** Connections accepted and not yet finished (their serving thread still runs). */
+    private val serving = AtomicInteger()
+
+    /** Local ports of the probes [settle] opened, so they are not counted as the client's connections. */
+    private val probePorts: MutableSet<Int> = Collections.synchronizedSet(mutableSetOf())
+    private val probesAccepted = AtomicInteger()
+
+    /** Connections the client under test opened that this server accepted ([settle] probes not counted). */
+    fun clientConnections(): Int = connectionsSeen.get() - probesAccepted.get()
+
     @Volatile var handler: (SeenRequest, Int) -> Reply = { _, _ -> Reply.Ok("") }
 
     fun url(path: String) = "$scheme://127.0.0.1:$port$path"
@@ -160,9 +170,43 @@ internal class CountingServer(
     private val acceptor = thread(isDaemon = true, name = "counting-server") {
         while (!socket.isClosed) {
             val client = try { socket.accept() } catch (_: Exception) { break }
+            serving.incrementAndGet()
             val id = connectionsSeen.incrementAndGet()
-            thread(isDaemon = true) { serve(client, id) }
+            if (client.port in probePorts) probesAccepted.incrementAndGet()
+            thread(isDaemon = true) {
+                try {
+                    serve(client, id)
+                } catch (_: java.io.IOException) {
+                    // A refused TLS handshake or a peer that went away: nothing was read, nothing recorded.
+                } finally {
+                    serving.decrementAndGet()
+                }
+            }
         }
+    }
+
+    /**
+     * Waits until everything the client sent so far has been taken in: a probe connection is opened and, once it is
+     * accepted, every connection queued before it was accepted too (the listen queue is first in, first out); then
+     * every accepted connection is read to its end. After this, [requests] and [clientConnections] are final for
+     * what happened before the call, never a snapshot taken while a serving thread could still record.
+     */
+    fun settle(timeoutMs: Long = 5_000) {
+        val deadline = System.nanoTime() + timeoutMs * 1_000_000
+        fun waitFor(what: String, done: () -> Boolean) {
+            while (!done()) {
+                check(System.nanoTime() < deadline) { "the server did not settle: $what" }
+                Thread.sleep(5)
+            }
+        }
+        val accepted = probesAccepted.get()
+        Socket().use { probe ->
+            probe.bind(java.net.InetSocketAddress(InetAddress.getLoopbackAddress(), 0))
+            probePorts += probe.localPort
+            probe.connect(java.net.InetSocketAddress(InetAddress.getLoopbackAddress(), port))
+            waitFor("the probe was not accepted") { probesAccepted.get() > accepted }
+        }
+        waitFor("a connection is still being served") { serving.get() == 0 }
     }
 
     private fun serve(client: Socket, id: Int): Unit = client.use { s ->

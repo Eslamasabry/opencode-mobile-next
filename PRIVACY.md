@@ -92,12 +92,14 @@ With `crashes` on, the app sends:
 
 - **Fatal and non-fatal errors**: the kind of error (for example "Invalid
   state") and the code locations (library, line and column) it happened in,
-  never its message; for a failure the app handled, one of four fixed names with
+  never its message; for a failure the app handled, one of five fixed names with
   a few short codes: `setup_step_failed` (the setup step, the kind of error
   and, when the phone closed the app, why), `process_exit` (the `exit_reason`
   below), `voice_model_download_failed` (the kind of problem and the voice
-  pack name) and `prompt_not_accepted` (whether the server refused the message
-  before or after it was sent, the kind of failure and how long it took). A crash in the app's Android (Java or Kotlin) code
+  pack name), `prompt_not_accepted` (whether the server refused the message
+  before or after it was sent, the kind of failure and how long it took) and
+  `net_client_close_failed` (the kind of error, when closing the connection to a
+  server failed). A crash in the app's Android (Java or Kotlin) code
   carries only the exception class names and their code locations.
 - **Why Android ended the app last time**: on the next start, one of crash,
   crash_native, anr, low_memory, excessive_resource, signaled,
