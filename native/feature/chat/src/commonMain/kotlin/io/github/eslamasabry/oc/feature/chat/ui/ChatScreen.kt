@@ -2171,7 +2171,7 @@ private fun rememberSendFailureWords(onThisPhone: Boolean): (Failure) -> String 
                 io.github.eslamasabry.oc.feature.chat.presentation.SendFailureRules.signInRanOut(failure) ->
                     signInAgainWords.replace("\u0000", agentFallback)
                 // On this phone the thing that did not answer is the phone's agents helper, not a computer.
-                false && failure is Failure.ComputerDidNotAnswer -> phoneHelper
+                onThisPhone && failure is Failure.ComputerDidNotAnswer -> phoneHelper
                 // B-063: the server refused the message because the project's folder is gone.
                 io.github.eslamasabry.oc.feature.chat.presentation.SendFailureRules.folderMissing(failure) -> folderMissing
                 // Issue 147: never sent into a folder in the phone's storage the agent cannot reach now.

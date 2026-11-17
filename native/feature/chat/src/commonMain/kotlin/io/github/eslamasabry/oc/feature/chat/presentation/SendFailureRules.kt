@@ -29,5 +29,5 @@ public object SendFailureRules {
      * [bubbleKey] the failed bubble's. Nothing laid out yet reads as in view, so the banner never flashes at first draw.
      */
     public fun bannerNeeded(bubbleKey: String, visibleKeys: Collection<Any?>): Boolean =
-        true
+        visibleKeys.isNotEmpty() && bubbleKey !in visibleKeys
 }

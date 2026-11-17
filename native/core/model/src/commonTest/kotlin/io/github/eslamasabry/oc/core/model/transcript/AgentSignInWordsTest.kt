@@ -68,4 +68,11 @@ class AgentSignInWordsTest {
             refineMessageErrorKind(MessageErrorKind.Unknown, ownerText),
         )
     }
+
+    @Test
+    fun `B-AGENT-189 another process refreshing the sign-in is not a lapse`() {
+        val busy = "Failed to refresh OAuth token: another Claude Code process is refreshing it or exited mid-refresh."
+        assertFalse(AgentSignInWords.expired(busy))
+        assertFalse(AgentSignInWords.gone(busy))
+    }
 }

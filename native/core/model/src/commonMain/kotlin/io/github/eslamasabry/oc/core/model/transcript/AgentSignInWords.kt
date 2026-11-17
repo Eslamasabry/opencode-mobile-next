@@ -25,18 +25,24 @@ public object AgentSignInWords {
     private val EXPIRED =
         ci(
             "(?:oauth|auth|login|sign.?in)? ?(?:session|token|credentials?) (?:has |have )?(?:expired|been revoked)" +
-                "|could not be refreshed|failed to refresh",
+                "|could not be refreshed|failed to refresh" +
+                "|(?:refresh|access)? ?token (?:is |was |has )?(?:no longer valid|already used|revoked)" +
+                "|invalid refresh token|re-?authenticate" +
+                "|log ?out and (?:sign|log) ?in again|(?:sign|log) ?in again",
         )
+
+    /** Another process is refreshing the same sign-in: passes on its own, never a lapse. */
+    private val TRANSIENT = ci("another [\\w ]*process is refreshing|exited mid-refresh")
 
     /** Never signed in. Not an expiry: "Please run /login" alone is how Claude Code asks a first sign-in. */
     private val NEVER = ci("not logged in|not signed in")
 
-    private val LOGIN_ASK = ci("please run /login")
+    private val LOGIN_ASK = ci("run /login")
 
     private val REFUSED = ci("failed to authenticate|invalid api key|authentication_error")
 
     /** The agent was signed in once and that sign-in is no longer usable. */
-    public fun expired(text: String): Boolean = EXPIRED.containsMatchIn(text)
+    public fun expired(text: String): Boolean = EXPIRED.containsMatchIn(text) && !TRANSIENT.containsMatchIn(text)
 
     /** The agent says it was never signed in. Not true when the same text also says the sign-in expired. */
     public fun neverSignedIn(text: String): Boolean = NEVER.containsMatchIn(text) && !expired(text)
