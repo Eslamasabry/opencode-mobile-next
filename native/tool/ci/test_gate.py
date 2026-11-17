@@ -522,7 +522,7 @@ class CandidateGate(unittest.TestCase):
                  'detekt.json': {'ran': True, 'modules': [':core:net'], 'exit': 0, 'ratchet': 'ok', 'findings': {}},
                  'candidate-plan.json': {'lane': 'candidate', 'sha': 'a' * 40, 'desktop_tasks': desktop.copy(),
                                          'android_tasks': android.copy(),
-                                         'self_tests': {n: {'tests': 5, 'passed': True} for n in ('ci', 'release', 'release_tools')}}}
+                                         'self_tests': {n: {'tests': 5, 'passed': True} for n in ('ci', 'release', 'release_tools', 'tool')}}}
         if change:
             change(files)
         with tempfile.TemporaryDirectory() as tmp:
@@ -612,6 +612,8 @@ class CandidateGate(unittest.TestCase):
             'compile-all-tests': lambda f: f['compile.json'].update(compile_all_tests=False),
             'quality': lambda f: f['report-candidate-0.json'].pop('quality'),
             'self-tests': lambda f: f['candidate-plan.json']['self_tests'].pop('release_tools'),
+            'whole-tool-self-tests': lambda f: f['candidate-plan.json']['self_tests'].pop('tool'),
+            'whole-tool-self-tests-red': lambda f: f['candidate-plan.json']['self_tests']['tool'].update(passed=False),
             'self-tests-red': lambda f: f['candidate-plan.json']['self_tests']['release'].update(passed=False),
             'sha': lambda f: f['report-candidate-0.json'].update(sha='b' * 40),
             'cached': lambda f: f['report-candidate-0.json']['candidate'].update(fresh=False),

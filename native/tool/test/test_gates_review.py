@@ -291,6 +291,8 @@ exit 0
 [[ "$*" != *'check --repo ..'* ]] || exit 1
 exit 0
 ''')
+        # T1 also runs the detekt ratchet since 652c8c372f; this case is about the strings check, so detekt is stubbed
+        self.executable(self.repo / "native/tool/qa/detekt.sh", "exit 0\n")
         result = self.script("t1.sh", "--base", "base", "--where", "vps")
         self.assertEqual(result.returncode, 0, (result.stdout or "") + (result.stderr or ""))
         self.assertTrue((self.root / "gradle.log").exists())

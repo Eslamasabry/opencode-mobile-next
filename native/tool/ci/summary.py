@@ -215,7 +215,7 @@ if lane == 'candidate':
     build_logic = [s for s in shards if s.get('name') == 'build-logic']
     if plan.get('lane') != 'candidate' or not plan.get('sha'):
         integrity.append('candidate: no complete plan/self-test artifact')
-    for name in ('ci', 'release', 'release_tools'):
+    for name in ('ci', 'release', 'release_tools', 'tool'):
         fact = plan.get('self_tests', {}).get(name, {})
         if fact.get('passed') is not True or fact.get('tests', 0) <= 0:
             integrity.append(f'candidate: {name} self-tests not proved passing')
