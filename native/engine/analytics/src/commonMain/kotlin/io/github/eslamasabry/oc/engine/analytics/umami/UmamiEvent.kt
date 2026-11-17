@@ -105,13 +105,12 @@ public fun umamiEvent(
     return UmamiEvent(payload = UmamiPayload(
         website = website,
         language = device.language.takeIf { it.length <= 35 && it.matches(Regex("[A-Za-z]{2,8}(?:-[A-Za-z0-9]{1,8})*")) } ?: "und",
-        screen = "1080x2340",
         url = visible.url,
         title = visible.title,
         tag = build.tag,
         // v3.5.0 unixTimestampParam is an INTEGER, in seconds, not createdAt or milliseconds.
         timestamp = atMs / 1000,
-        data = clean + mapOf("version" to build.version, "build" to build.build),
+        data = clean + mapOf("version" to build.version, "build" to build.build) + deviceData(device),
         name = name.takeUnless { event == ProductEvent.ScreenView },
     ))
 }

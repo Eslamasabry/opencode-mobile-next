@@ -77,7 +77,6 @@ internal object PendingWords {
             NeverCollected.CrashStacks -> "Crash details"
             NeverCollected.Credentials -> "Passwords, keys and tokens"
             NeverCollected.DeviceModel -> "Your phone's model"
-            NeverCollected.ScreenSize -> "Screen size"
             NeverCollected.TimeZone -> "Time zone"
             NeverCollected.Location -> "Location"
             NeverCollected.AdvertisingId -> "Advertising id"

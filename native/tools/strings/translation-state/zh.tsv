@@ -2382,7 +2382,7 @@ collectConnect	46cca38725
 collectCrashKeys	7fd4e40f3b
 collectCrashKind	cffc0cbf8b
 collectCrashesLabel	9ecbc9dad7
-collectDevice	4cc9ad81e8
+collectDevice	a9eaca5d68
 collectDrop	13bd95a3dd
 collectExit	3715cbb996
 collectJourney	fa461aab2a
@@ -7874,7 +7874,7 @@ native44Output	a063f4c7f9
 native44Price	5cca42a3ab
 nativeAboutProvenance	e0bd072c84
 nativeAboutProvenanceTitle	f97ce82c6e
-nativeBundledPrivacy	695cf7044a
+nativeBundledPrivacy	f5affdd0f5
 nativeCapabilitiesDetail	2fd99510fe
 nativeCapabilitiesTitle	3dd91e1995
 nativeCapabilityAddExternalAgentDetail	4c2eba1208
@@ -8031,7 +8031,7 @@ nativeSearchShortcutSend	2343b816ac
 nativeSearchShortcutTabs	91be216915
 nativeSearchShortcutsBody	8b0dad5f24
 nativeTelemetryConsentBody	ef4f42e264
-nativeTelemetryUsageDetail	5d0cf20ff6
+nativeTelemetryUsageDetail	dc77e56bfc
 nativeToolsChooseModel	09388d8f7f
 nativeToolsCoding	b35ab0829c
 nativeToolsNoParameters	a09c14afa3

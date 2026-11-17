@@ -194,9 +194,11 @@ account, conversation, file name, project name, server address or model key is s
 Umami receives the same listed events and permitted properties above. A screen becoming visible
 is a page view with one fixed address per screen category, such as /home or /conversation;
 other actions are named events with that screen address. Each has its own timestamp, the app's
-version name and build number, a fixed app hostname, language and screen resolution. A browser-like
-User-Agent carries the Android version and device class, without a device identifier. The build
-number is also the tag. Google receives the app version automatically and the `app_build` user
+version name and build number, a fixed app hostname and language, and three plain fields about the
+device: the Android main version number (for example 16, sent as `os_major`), the device class
+(phone or tablet, sent as `device_class`) and the build number (sent as `build`). A browser-like User-Agent repeats only the Android main version and the device class.
+Nothing else about the device goes to Umami: no screen size or resolution, model, maker, time zone,
+minor version, or device or installation ID. The build number is also the tag. Google receives the app version automatically and the `app_build` user
 property is the build number, set only with usage on and cleared when it is off.
 
 The private queue holds up to 256 events and 256 KiB of encoded event data (300 KiB including

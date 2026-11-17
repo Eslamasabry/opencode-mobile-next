@@ -395,6 +395,14 @@ class PrivacyNoticeSyncTest {
             assertTrue("not the screen size" in text, "$name says the screen size is not sent to Umami")
         }
         assertTrue("screen size, Android version" !in device && "Google Analytics also receives the screen size" in device, "the page puts the screen size on Google's side only")
+        for (tag in AppLanguage.entries.mapNotNull { it.tag }.filter { it != "en" }) {
+            val dir = File(en.parentFile, "values-$tag")
+            val translated = xmlString(File(dir, "strings_native_privacy.xml"), "nativeBundledPrivacy")
+            val umamiPart = translated.substringAfter("Umami").substringBefore("256")
+            assertTrue("16" in umamiPart, "$tag policy gives the Android main version example for Umami")
+            val line = xmlString(File(dir, "strings_s28_privacy.xml"), "collectDevice")
+            assertTrue("Umami" in line && "Google Analytics" in line, "$tag page puts the screen size on Google's side")
+        }
         assertTrue(NeverCollected.entries.none { it.name == "ScreenSize" }, "the never-list cannot claim a screen size Google receives")
     }
 
