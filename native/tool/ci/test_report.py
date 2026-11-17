@@ -106,6 +106,9 @@ def analyse(lines, mods, expected):
     for t in expected:
         mod = '/'.join(t.strip(':').split(':')[:-1])
         if t not in task_status and t not in failed:
+            dependency = t.replace(':verifyRoborazziAndroidHostTest', ':testAndroidHostTest')
+            if dependency != t and task_status.get(dependency) == 'FAILED' and dependency in covered and mods.get(mod, [0, 0])[1] > 0:
+                continue  # verification's Test ran and failed; classify its assertions, not the blocked lifecycle task
             real.append(f'module {mod}: no test results ({t} never ran)')
     if not failed and any(l.startswith('FAILURE: Build failed') for l in lines):
         real.append('the build failed without naming a task (configuration or script error)')

@@ -188,6 +188,10 @@ if lane == 'candidate':
         for report in selected:
             for task in report.get('planned', []):
                 status = report.get('task_status', {}).get(task)
+                dependency = task.replace(':verifyRoborazziAndroidHostTest', ':testAndroidHostTest')
+                if status is None and dependency != task and report.get('task_status', {}).get(dependency) == 'FAILED' and \
+                        report.get('suites', {}).get(dependency, {}).get('failed', 0) > 0:
+                    status = 'FAILED'  # the failing verification Test is present; its assertions still count below
                 # Android :test and verifyRoborazzi tasks are lifecycle tasks; the actual Test suites below must be fresh.
                 allowed = ('RAN', 'FAILED', 'NO-SOURCE', 'UP-TO-DATE') if label == 'Android' else ('RAN', 'FAILED', 'NO-SOURCE')
                 if status not in allowed:

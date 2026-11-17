@@ -27,7 +27,16 @@ val unitTestCompileTask =
 tasks.register("compileAllTests") {
     group = "verification"
     description = "Compiles every module's unit-test source sets without running them."
-    subprojects.forEach { p -> dependsOn(p.tasks.matching { unitTestCompileTask.matches(it.name) }) }
+    subprojects.forEach { p ->
+        // Query names lazily: matching realizes unrelated AGP Compose Preview tasks, which cannot be created here.
+        dependsOn(
+            p.provider {
+                p.tasks.names
+                    .filter { unitTestCompileTask.matches(it) }
+                    .map { p.tasks.named(it) }
+            },
+        )
+    }
 }
 
 // CI quarantine (tool/ci/QUARANTINE.md): excludes the listed tests on CI only; -PrunQuarantined runs them.
