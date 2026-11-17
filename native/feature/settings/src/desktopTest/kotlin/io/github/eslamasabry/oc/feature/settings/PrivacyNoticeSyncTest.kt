@@ -429,6 +429,9 @@ class PrivacyNoticeSyncTest {
         for (tag in AppLanguage.entries.mapNotNull { it.tag }) {
             val locale = File(resources, if (tag == "en") "values" else "values-$tag")
             val policy = File(locale, "strings_native_privacy.xml").readText()
+            val rows = File(locale, "strings_s28_privacy.xml").readText()
+            for (field in listOf("cause", "app_exit", "exit_reason", "foreground"))
+                assertTrue(has(rows, field), "$tag What we collect must name $field")
             for (word in listOf("cause", "thinking_silent", "tool_running", "retrying", "stream_dead_refetched", "stream_silent", "unknown", "app_exit", "exit_reason", "foreground"))
                 assertTrue(has(policy, word), "$tag policy must name $word")
         }

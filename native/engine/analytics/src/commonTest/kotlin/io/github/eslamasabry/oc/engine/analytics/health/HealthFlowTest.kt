@@ -236,7 +236,7 @@ class HealthFlowTest {
                 "update_result" to mapOf("kind" to "patch", "result" to "failed", "fail_kind" to "checksum"),
                 "bg_service_end" to mapOf("reason" to "os_limit", "battery_exempt" to "yes"),
                 "conn_drop" to mapOf("server_kind" to "phone", "reason" to "background", "recovered" to "yes"),
-                "turn_stall" to mapOf("stage" to "waiting_tool", "minutes_range" to "5-15"),
+                "turn_stall" to mapOf("stage" to "waiting_tool", "minutes_range" to "5-15", "cause" to "unknown"),
                 "queue_flush" to mapOf("sent" to "2-5", "failed" to "0"),
             ),
             vendor.events,

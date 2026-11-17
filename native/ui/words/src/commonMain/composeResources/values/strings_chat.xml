@@ -941,6 +941,8 @@
     <string name="kitTurnLiveWaitingForServer">Waiting for the server</string>
     <string name="kitTurnLiveServerQuiet">The server has not answered yet</string>
     <string name="kitTurnLiveThinking">Thinking</string>
+    <string name="kitTurnLiveStillThinking">Still thinking</string>
+    <string name="chatQuietThinkingHint">Some models think quietly for several minutes.</string>
     <string name="kitTurnLiveFirstWordSlow">Waiting for the model's first word</string>
     <string name="kitTurnLiveFirstWordSlowTeam">AI Team is also working on this phone, so replies may be slower</string>
     <string name="kitTurnLiveWriting">Writing</string>

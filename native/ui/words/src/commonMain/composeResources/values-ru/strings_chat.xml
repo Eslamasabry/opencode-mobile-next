@@ -1435,4 +1435,6 @@
     <string name="stageStartingAgents">Запуск агентов…</string>
     <string name="stageStartingAgent">Запуск %1$s…</string>
     <string name="stageOpeningConversation">Открытие беседы…</string>
+    <string name="kitTurnLiveStillThinking">Всё ещё думает</string>
+    <string name="chatQuietThinkingHint">Некоторые модели думают молча несколько минут.</string>
 </resources>

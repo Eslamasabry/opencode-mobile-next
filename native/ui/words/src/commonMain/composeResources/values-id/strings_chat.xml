@@ -1248,4 +1248,6 @@
     <string name="stageStartingAgents">Memulai agen…</string>
     <string name="stageStartingAgent">Memulai %1$s…</string>
     <string name="stageOpeningConversation">Membuka percakapan…</string>
+    <string name="kitTurnLiveStillThinking">Masih berpikir</string>
+    <string name="chatQuietThinkingHint">Beberapa model berpikir tanpa menampilkan apa pun selama beberapa menit.</string>
 </resources>

@@ -5,6 +5,7 @@ import io.github.eslamasabry.oc.engine.transcript.ledger.StepState
 import io.github.eslamasabry.oc.engine.transcript.ledger.TurnWork
 import io.github.eslamasabry.oc.engine.transcript.ledger.WorkLineState
 import io.github.eslamasabry.oc.engine.transcript.turnfacts.ToolKind
+import io.github.eslamasabry.oc.engine.transcript.turnfacts.TurnStallNotice
 import io.github.eslamasabry.oc.feature.chat.presentation.LiveNoticeUi
 import io.github.eslamasabry.oc.feature.chat.presentation.LiveTurnUi
 import io.github.eslamasabry.oc.ui.kitchat.header.rememberKitMask
@@ -15,6 +16,8 @@ import io.github.eslamasabry.oc.ui.words.res.kitTurnLiveMinutes
 import io.github.eslamasabry.oc.ui.words.res.kitTurnLiveNow
 import io.github.eslamasabry.oc.ui.words.res.kitTurnLiveSeconds
 import io.github.eslamasabry.oc.ui.words.res.kitTurnLiveThinking
+import io.github.eslamasabry.oc.ui.words.res.kitTurnLiveStillThinking
+import io.github.eslamasabry.oc.ui.words.res.chatQuietThinkingHint
 import io.github.eslamasabry.oc.ui.words.res.kitTurnLiveWorking
 import io.github.eslamasabry.oc.ui.words.res.kitTurnLiveWriting
 import org.jetbrains.compose.resources.stringResource
@@ -48,13 +51,14 @@ internal fun liveLineWords(
     elapsedMs: Long?,
 ): LiveLineWords? {
     val mask = rememberKitMask()
+    val quietThinking = notice is LiveNoticeUi.Stall && notice.notice == TurnStallNotice.ModelSlow
     // A stop or a note about the turn replaces what it is doing, without the time (F: kit_turn.dart:920-937).
     val held =
         when {
             live.stopping -> LiveLineWords(listWords.stopping, listWords.stopping, KitTurnLiveTone.Quiet)
             live.stoppingAfterStep ->
                 LiveLineWords(listWords.stoppingAfterStep, listWords.stoppingAfterStep, KitTurnLiveTone.Working)
-            notice != null -> {
+            notice != null && !quietThinking -> {
                 val words = liveNoticeWords(notice)
                 val tone =
                     when (notice) {
@@ -75,6 +79,7 @@ internal fun liveLineWords(
     val now = work?.now
     val words =
         when {
+            quietThinking -> stringResource(Res.string.kitTurnLiveStillThinking)
             // D1 "steps only" (2026-11-14): the step in hand is in view on the turn's step list with its light and its
             // time, so the live line says that the agent works and for how long, never the same step a second time.
             now != null && work != null -> stringResource(Res.string.kitTurnLiveWorking)
@@ -102,5 +107,11 @@ internal fun liveLineWords(
             ?.map { it.trim() }
             ?.lastOrNull { it.isNotEmpty() }
             ?.let(mask)
-    return LiveLineWords(line, words, KitTurnLiveTone.Working, printed)
+    val hint = if (quietThinking && elapsed != null && elapsed >= 300_000) stringResource(Res.string.chatQuietThinkingHint) else null
+    return LiveLineWords(
+        if (hint == null) line else "$line · $hint",
+        if (hint == null) words else "$words. $hint",
+        KitTurnLiveTone.Working,
+        printed,
+    )
 }

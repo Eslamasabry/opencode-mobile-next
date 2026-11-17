@@ -40,7 +40,7 @@ class SchemaTruthTest {
     }
 
     @Test
-    fun `B-JOURNEY-091 the new words are fixed and safe, and no dimension was added`() {
+    fun `B-JOURNEY-091 the new words and the approved dimensions stay closed and safe`() {
         val newWords = listOf(Triple("chat_turn", "outcome", "no_output"), Triple("approval", "result", "auto"), Triple("approval", "result", "stopped"))
         for ((event, key, word) in newWords) {
             assertTrue(word in productSchema.getValue(event).getValue(key), "$event.$key lists $word")
@@ -57,10 +57,12 @@ class SchemaTruthTest {
                 "starter", "step", "tools_range", "turns_range",
                 // 2026-11-16 decisions: three new fields, and the one that marks a first reply measured after consent.
                 "activity_range", "surface", "interaction", "after_consent",
+                // Quiet-reply and previous-exit fields explicitly requested for registration.
+                "cause", "exit_reason", "foreground",
             ),
             dimensions,
         )
-        assertEquals(40, dimensions.size)
+        assertEquals(43, dimensions.size)
         for (values in productSchema.values.flatMap { it.values }) for (v in values) assertTrue(productValueIsSafe(v), v)
     }
 }

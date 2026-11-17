@@ -19,7 +19,7 @@
     <string name="collectSend">Whether sending a message worked or waited in the queue, how you made it (typed, spoken or attached), which agent, and how soon the first reply came</string>
     <string name="collectTurns">How each turn ended (done, finished with nothing to show, stopped, error, connection lost or no answer to an approval), how long until you saw a first reply and until the agent first showed any sign of work, how long it took, how many tools it used and whether it recovered from a dropped connection</string>
     <string name="collectApprovals">What kind of request you were asked (run, edit, read, web or a question), your answer or that a saved choice answered it or the run was stopped, where you answered (conversation, home, a notification or a widget), and how long it waited. Never the command, file or question itself</string>
-    <string name="collectStall">Where a long wait happened (a tool, an approval) and for how long</string>
+    <string name="collectStall">A long wait’s stage, duration and cause: confirmed silent thinking, a running tool, a retry, a missed or broken connection, an unconfirmed quiet connection, or unknown</string>
     <string name="collectQueue">How many queued messages were sent or failed</string>
     <string name="collectPhoneSetup">How far setup on this phone got, how long each step took, the kind of failure, and whether you left it unfinished and came back</string>
     <string name="collectAgents">Whether an agent started, and the kind of failure</string>
@@ -30,12 +30,12 @@
     <string name="collectStarters">Which kind of suggestion you tapped on a new conversation, and your one-word answer to what you want help with. Never a suggestion’s words or what it asks</string>
     <string name="collectShareIn">How many pictures or files you shared into the app, and whether they were images or files. Never their names or contents</string>
     <string name="collectStarAsk">Whether the one-time ask to star the project on GitHub was shown, tapped or dismissed</string>
-    <string name="collectStart">How fast the app starts</string>
+    <string name="collectStart">How fast the app starts. Also the previous process exit (app_exit): its fixed reason (exit_reason) and, when Android knows it, whether the process was in the foreground (foreground, yes/no)</string>
     <string name="collectSmooth">How smooth pages are (the share of late and slow frames, and frozen frames), the screen’s refresh rate, and in the conversation what was going on (a reply arriving, scrolling, a menu or sheet open, the keyboard up or nothing)</string>
     <string name="collectMemory">Memory warnings from Android</string>
     <string name="collectDevice">Ranges for your phone’s memory and free storage, its processor type and WebView version, whether notifications are allowed, and the kind and version of server you use. The app version and build number, language, screen size, Android version and device class are also reported.</string>
     <string name="collectCrashKind">The kind of error and where in the app’s code it happened, never its message</string>
-    <string name="collectExit">Why Android ended the app last time (for example a crash, a freeze or low memory)</string>
+    <string name="collectExit">Unexpected process exits (process_exit). Stops Android calls user_requested are counted only with Usage and app health, never sent as exceptions</string>
     <string name="collectSteps">Your last 30 steps, as short words such as chat.send</string>
     <string name="collectCrashKeys">The app version, how it was installed, the kind of server, whether this phone’s server is running, how many connections are open, the server version, and the kind and code of a report</string>
     <string name="collectReport">What you write about the problem, the last time the app closed unexpectedly, the app and Android versions, a memory range and the kind of server, with keys, addresses and paths blanked. No log and no conversation. You see all of it and choose Send or Cancel.</string>

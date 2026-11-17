@@ -111,6 +111,20 @@ class AppPromptTracing(trace: io.github.eslamasabry.oc.engine.diagnostics.perf.P
         journey?.delta(sessionId)
     }
 
+    override fun delta(sessionId: String, field: io.github.eslamasabry.oc.core.domain.events.DeltaField) {
+        timeline.observe(io.github.eslamasabry.oc.engine.diagnostics.perf.PromptSignal.Delta(sessionId))
+        val kind = when (field) {
+            io.github.eslamasabry.oc.core.domain.events.DeltaField.Text -> "text"
+            io.github.eslamasabry.oc.core.domain.events.DeltaField.Reasoning -> "reasoning"
+            io.github.eslamasabry.oc.core.domain.events.DeltaField.ToolInputRaw -> "tool"
+        }
+        journey?.delta(sessionId, kind)
+    }
+
+    override fun retrying(sessionId: String) { journey?.retrying(sessionId) }
+    override fun runChecked(sessionId: String, busy: Boolean?) { journey?.runChecked(sessionId, busy) }
+    override fun recovered(sessionId: String) { journey?.recovered(sessionId) }
+
     override fun text(sessionId: String, messageId: String, streamed: Boolean) {
         journey?.text(sessionId, messageId, streamed)
     }

@@ -4,6 +4,7 @@ import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.Multibinds
 import io.github.eslamasabry.oc.core.model.StreamStatus
+import io.github.eslamasabry.oc.core.domain.events.DeltaField
 
 /**
  * The prompt timeline's feed (Dart `PromptTrace`, B-BUILD-027): the send path reports sent / accepted, the live stream
@@ -57,6 +58,10 @@ public interface PromptTracing {
     public fun part(sessionId: String, messageId: String, kind: String)
 
     public fun delta(sessionId: String)
+    public fun delta(sessionId: String, field: DeltaField) { delta(sessionId) }
+    public fun retrying(sessionId: String) {}
+    public fun runChecked(sessionId: String, busy: Boolean?) {}
+    public fun recovered(sessionId: String) {}
 
     /**
      * Reply text the person can see arrived: a non-empty streamed text piece ([streamed]), or a non-empty, non-synthetic
@@ -118,6 +123,10 @@ private class ConnectionTracing(private val base: PromptTracing, private val con
     override fun part(sessionId: String, messageId: String, kind: String) = base.part(sessionId, messageId, kind)
 
     override fun delta(sessionId: String) = base.delta(sessionId)
+    override fun delta(sessionId: String, field: DeltaField) = base.delta(sessionId, field)
+    override fun retrying(sessionId: String) = base.retrying(sessionId)
+    override fun runChecked(sessionId: String, busy: Boolean?) = base.runChecked(sessionId, busy)
+    override fun recovered(sessionId: String) = base.recovered(sessionId)
 
     override fun text(sessionId: String, messageId: String, streamed: Boolean) = base.text(sessionId, messageId, streamed)
 

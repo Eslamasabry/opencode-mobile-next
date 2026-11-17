@@ -16,7 +16,7 @@
     <string name="collectConnect">连接服务器是否成功、失败的类型及耗时，以及何时选择连接计算机</string>
     <string name="collectDrop">连接为何中断，以及是否已恢复</string>
     <string name="collectSend">发送消息是成功了还是在队列中等待，采用输入、语音还是附件，使用哪个智能体，以及首个回复的等待时间</string>
-    <string name="collectStall">长时间等待发生在哪里（某个工具、某次授权）以及持续多久</string>
+    <string name="collectStall">长时间等待的阶段、时长和原因（cause）：已确认的静默思考、工具运行、重试、连接中断或结束通知丢失、尚未检查的静默连接，或未知原因</string>
     <string name="collectQueue">排队的消息有多少已发送或失败</string>
     <string name="collectPhoneSetup">这部手机的设置进行到哪一步、每一步的耗时、失败类型，以及是否中途离开后又返回</string>
     <string name="collectAgents">智能体是否已启动，以及失败的类型</string>
@@ -25,12 +25,12 @@
     <string name="collectPages">使用的页面和功能类型，同意后的首个回复（以及同意前是否已看过回复，不发送该回复的任何信息），每次使用的时长和发送的消息数</string>
     <string name="collectJourney">你的最初几步进行到了哪里（打开应用、设置、连接、发送消息、收到首次回复），以及大约在你同意后多久。每一步只计一次</string>
     <string name="collectStarters">在新对话中点击的建议类型，以及对用途问题的一词回答。绝不包含建议的文字或它要求的内容</string>
-    <string name="collectStart">应用启动有多快</string>
+    <string name="collectStart">应用启动速度，以及上次进程退出（app_exit）的固定原因（exit_reason）。如果 Android 有记录，还包括进程当时是否在前台（foreground，yes/no）</string>
     <string name="collectSmooth">页面的流畅度（逾期、缓慢和冻结帧的比例）、屏幕刷新率，以及对话中当时的活动（回复到达、滚动、菜单或面板打开、键盘显示或空闲）</string>
     <string name="collectMemory">来自 Android 的内存警告</string>
     <string name="collectDevice">你手机的内存和可用存储范围、处理器类型和 WebView 版本、是否允许通知，以及你所用服务器的类型和版本。还会报告应用版本和构建编号、语言、屏幕尺寸、Android 版本及设备类别。</string>
     <string name="collectCrashKind">错误的类型及其在应用代码中的位置，绝不包含错误消息</string>
-    <string name="collectExit">上次 Android 结束应用的原因（例如崩溃、卡死或内存不足）</string>
+    <string name="collectExit">意外的进程退出（process_exit）。Android 标记为 user_requested 的停止仅在开启“使用情况和应用健康”时统计，不作为异常发送</string>
     <string name="collectSteps">你最后 30 步操作，以 chat.send 这样的简短词语表示</string>
     <string name="collectCrashKeys">应用版本、安装方式、服务器类型、手机上的服务器是否运行、打开的连接数、服务器版本，以及报告的类型和代码</string>
     <string name="collectNever">你的提示词和回复、文件名或路径、网址、主机名、IP 地址、错误消息文本、密钥或令牌、广告 ID 或 Android ID</string>

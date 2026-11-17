@@ -1559,4 +1559,6 @@
     <string name="stageStartingAgents">جارٍ تشغيل الوكلاء…</string>
     <string name="stageStartingAgent">جارٍ تشغيل %1$s…</string>
     <string name="stageOpeningConversation">جارٍ فتح المحادثة…</string>
+    <string name="kitTurnLiveStillThinking">ما زال يفكر</string>
+    <string name="chatQuietThinkingHint">بعض النماذج تفكر بهدوء لعدة دقائق.</string>
 </resources>

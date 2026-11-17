@@ -139,6 +139,7 @@ import io.github.eslamasabry.oc.ui.kitchat.transcript.KitReplyMeta
 import io.github.eslamasabry.oc.ui.kitchat.transcript.KitTranscriptList
 import io.github.eslamasabry.oc.ui.kitchat.transcript.TranscriptListState
 import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.kitTurnLiveStillThinking
 import io.github.eslamasabry.oc.ui.words.res.chatHomeMinutes
 import io.github.eslamasabry.oc.ui.words.res.chatLiveHideSteps
 import io.github.eslamasabry.oc.ui.words.res.chatLiveShowSteps
@@ -582,6 +583,8 @@ internal fun ChatTranscriptList(
                     when {
                         live.stopping -> listWords.stopping
                         live.stoppingAfterStep -> listWords.stoppingAfterStep
+                        notice is LiveNoticeUi.Stall && notice.notice == io.github.eslamasabry.oc.engine.transcript.turnfacts.TurnStallNotice.ModelSlow ->
+                            stringResource(Res.string.kitTurnLiveStillThinking)
                         notice != null -> liveNoticeWords(notice)
                         else -> listWords.working
                     }

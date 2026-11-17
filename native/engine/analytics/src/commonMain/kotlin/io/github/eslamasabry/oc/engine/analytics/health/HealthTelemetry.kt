@@ -96,7 +96,11 @@ public fun exitReasonWord(reason: Int): String? =
     }
 
 /** Analytics includes normal exits as other; native crashes join crash. */
-public fun appExitReasonWord(reason: Int): String = "other"
+public fun appExitReasonWord(reason: Int): String = when (val word = exitReasonWord(reason)) {
+    "crash_native" -> "crash"
+    null -> "other"
+    else -> word
+}
 
 private const val EXIT_SELF = 1
 private const val PACKAGE_UPDATED = 16
@@ -277,6 +281,9 @@ public class HealthTelemetry(
     private var context: HealthDeviceContext? = null
     private var coldReported = false
     private var exitRead = false
+    private var analyticsExitRead = false
+    private var previousExitRead = false
+    private var previousExit: HealthExit? = null
     private var started = false
     private val memorySent = HashMap<String, Long>()
     private var liveKeys: Map<String, Any?> = emptyMap()
@@ -318,6 +325,7 @@ public class HealthTelemetry(
         if (!telemetry.usage.value) return
         telemetry.setUserProperties((device?.properties ?: emptyMap()) + liveProperties)
         reportColdStart()
+        reportAnalyticsExit()
     }
 
     /** Process start to the first frame, once per process, with its `app_cold_start` trace. */
@@ -351,20 +359,39 @@ public class HealthTelemetry(
         platform.declaredBuildKind?.takeIf { it in HealthWords.buildKinds }
             ?: if (device?.fromStore == true) "store" else "sideload"
 
-    /** Android's note on how the previous process ended, once, as a non-fatal carrying only `exit_reason`. */
-    @Suppress("TooGenericExceptionCaught")
+    private suspend fun readPreviousExit(): HealthExit? {
+        if (previousExitRead) return previousExit
+        previousExitRead = true
+        previousExit = try {
+            platform.exits(limit = 3).maxByOrNull { it.atMs }
+        } catch (cancelled: kotlinx.coroutines.CancellationException) {
+            throw cancelled
+        } catch (_: Throwable) { null }
+        return previousExit
+    }
+
+    /** Once per retained exit, only under usage consent. The timestamp stays on this phone for deduplication. */
+    private suspend fun reportAnalyticsExit() {
+        if (analyticsExitRead) return
+        analyticsExitRead = true
+        val newest = readPreviousExit() ?: return
+        if (!telemetry.usage.value || newest.atMs <= marks.lastAnalyticsExitAtMs()) return
+        if (!marks.setLastAnalyticsExitAtMs(newest.atMs) || !telemetry.usage.value) return
+        telemetry.track(ProductEvent.AppExit, buildMap {
+            put("exit_reason", appExitReasonWord(newest.reason))
+            newest.foreground?.let { put("foreground", if (it) "yes" else "no") }
+        })
+    }
+
+    /** User-requested stops remain useful analytics, but are not app exceptions. Other abnormal exits stay non-fatal. */
     private suspend fun reportLastExit() {
         if (exitRead) return
         exitRead = true
-        try {
-            val newest = platform.exits(limit = 3).maxByOrNull { it.atMs } ?: return
-            if (newest.atMs <= marks.lastExitAtMs()) return
-            marks.setLastExitAtMs(newest.atMs)
-            val word = exitReasonWord(newest.reason) ?: return
-            telemetry.recordFailure("process_exit", mapOf("exit_reason" to word))
-        } catch (_: Throwable) {
-            // Nothing to report.
-        }
+        val newest = readPreviousExit() ?: return
+        if (!telemetry.crashes.value || newest.atMs <= marks.lastExitAtMs()) return
+        marks.setLastExitAtMs(newest.atMs)
+        val word = exitReasonWord(newest.reason) ?: return
+        if (word != "user_requested") telemetry.recordFailure("process_exit", mapOf("exit_reason" to word))
     }
 
     /**

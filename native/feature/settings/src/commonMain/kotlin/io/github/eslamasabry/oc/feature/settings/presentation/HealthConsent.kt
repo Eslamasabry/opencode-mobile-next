@@ -154,7 +154,7 @@ public object HealthContract {
             CollectItem.Starters to listOf("starter_used", "use_for"),
             CollectItem.ShareIn to listOf("share_in"),
             CollectItem.StarAsk to listOf("star_prompt_shown", "star_prompt_tapped", "star_prompt_dismissed"),
-            CollectItem.Start to listOf("app_start"),
+            CollectItem.Start to listOf("app_start", "app_exit"),
             CollectItem.Smooth to listOf("jank"),
             CollectItem.Memory to listOf("memory_pressure"),
             CollectItem.Device to

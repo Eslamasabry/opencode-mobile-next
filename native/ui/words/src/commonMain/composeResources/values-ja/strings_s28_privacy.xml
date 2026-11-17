@@ -19,7 +19,7 @@
     <string name="collectSend">送信が成功したか待ち行列に残ったか、入力・音声・添付の別、エージェントの種類、最初の応答までの時間</string>
     <string name="collectTurns">やり取りの終了状態（完了、表示する内容なし、停止、エラー、切断、承認への未回答）、最初の応答とエージェントの最初の動きまでの時間、全体の所要時間、使ったツールの数、切断から復帰したかどうか</string>
     <string name="collectApprovals">求められた要求の種類（実行、編集、読み取り、ウェブ、質問）、回答または保存済みの選択による回答や実行の停止、回答した場所（会話、ホーム、通知、ウィジェット）、待ち時間。コマンド、ファイル、質問の本文は含みません</string>
-    <string name="collectStall">長い待ち時間が生じた場所（ツール、承認）と待ち時間</string>
+    <string name="collectStall">長い待機の段階、時間、原因（cause）。確認済みの無出力の思考、実行中のツール、再試行、接続や終了通知の喪失、未確認の無応答な接続、または不明な原因</string>
     <string name="collectQueue">送信待ちのメッセージのうち、送信または失敗した件数</string>
     <string name="collectPhoneSetup">端末のセットアップがどこまで進んだか、各手順の時間、失敗の種類、途中で離れて戻ったかどうか</string>
     <string name="collectAgents">エージェントが起動したか、失敗の種類</string>
@@ -30,12 +30,12 @@
     <string name="collectStarters">新しい会話で選んだ提案の種類と、用途への回答を一語にしたもの。提案の文章や依頼内容は含みません</string>
     <string name="collectShareIn">アプリに共有した画像やファイルの件数と、画像・ファイルの別。名前や内容は含みません</string>
     <string name="collectStarAsk">GitHub でプロジェクトにスターを付ける一度限りの依頼を、表示・選択・閉じたかどうか</string>
-    <string name="collectStart">アプリの起動にかかった時間</string>
+    <string name="collectStart">アプリの起動速度と、前回のプロセス終了（app_exit）の固定理由（exit_reason）。Android に記録がある場合は、前面で動作していたか（foreground、yes/no）も含みます</string>
     <string name="collectSmooth">ページの滑らかさ（期限を過ぎたフレーム、遅いフレーム、停止したフレームの割合）、画面の更新頻度、会話での状態（応答の到着、スクロール、メニューやシート、キーボード表示、何もない状態）</string>
     <string name="collectMemory">Android からのメモリ警告</string>
     <string name="collectDevice">端末のメモリと空き容量の範囲、プロセッサーの種類、WebView のバージョン、通知を許可しているか、使うサーバーの種類とバージョン。アプリのバージョンとビルド番号、言語、画面サイズ、Android のバージョン、端末の種類も報告します。</string>
     <string name="collectCrashKind">エラーの種類とコード内の発生位置。エラーメッセージ本文は含みません</string>
-    <string name="collectExit">Android が前回アプリを終了した理由（クラッシュ、応答停止、メモリ不足など）</string>
+    <string name="collectExit">予期しないプロセス終了（process_exit）。Android が user_requested とする停止は「利用状況とアプリの状態」でのみ集計し、例外として送信しません</string>
     <string name="collectSteps">chat.send のような短い語句による直近三十回の操作</string>
     <string name="collectCrashKeys">アプリのバージョン、インストール方法、サーバーの種類、端末内サーバーの動作状態、接続数、サーバーのバージョン、報告の種類とコード</string>
     <string name="collectReport">問題について書いた内容、前回の異常終了、アプリと Android のバージョン、メモリの範囲、サーバーの種類。キー、アドレス、パスは伏せます。ログと会話は含みません。全文を確認して送信またはキャンセルを選べます。</string>

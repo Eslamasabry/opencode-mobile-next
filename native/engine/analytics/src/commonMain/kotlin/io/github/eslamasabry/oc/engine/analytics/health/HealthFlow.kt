@@ -128,7 +128,7 @@ public class HealthFlow(private val telemetry: () -> Telemetry = { AppTelemetry.
     public fun turnStall(stage: String, waitedMs: Long, cause: String = "unknown") {
         val t = telemetry()
         t.breadcrumb("chat.tool_wait")
-        t.track(ProductEvent.TurnStall, mapOf("stage" to stage, "minutes_range" to HealthRanges.stallMinutesOf(waitedMs)))
+        t.track(ProductEvent.TurnStall, mapOf("stage" to stage, "minutes_range" to HealthRanges.stallMinutesOf(waitedMs), "cause" to cause))
     }
 
     public fun queueFlush(sent: Int, failed: Int) {

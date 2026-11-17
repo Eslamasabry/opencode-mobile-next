@@ -252,7 +252,7 @@ public object HealthWords {
     /** Android's ApplicationExitInfo reasons, as the contract names them. */
     public val exitReasons: Set<String> =
         setOf(
-            "crash", "crash_native", "anr", "low_memory", "excessive_resource", "signaled", "user_requested",
+            "crash", "crash_native", "anr", "low_memory", "excessive_resource", "signaled",
             "dependency_died", "other",
         )
     public val buildKinds: Set<String> = setOf("store", "sideload", "ci", "local")

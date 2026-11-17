@@ -194,7 +194,7 @@ class ChatJourneyTest {
         r.now += 61_000
         r.journey.checkStalls()
         r.journey.checkStalls()
-        assertEquals(mapOf("stage" to "waiting_tool", "minutes_range" to "1-5"), r.last("turn_stall"))
+        assertEquals(mapOf("stage" to "waiting_tool", "minutes_range" to "1-5", "cause" to "tool_running"), r.last("turn_stall"))
         r.journey.approvalOpen("s1", +1)
         r.now += 5 * 60_000
         r.journey.checkStalls()

@@ -81,7 +81,13 @@ class HealthConsentStore(private val store: KeyValueStore, private val lane: Wri
         store.commit(lane) { putLong(LAST_EXIT_AT, atMs) }
     }
 
+    override fun lastAnalyticsExitAtMs(): Long = store.long(LAST_ANALYTICS_EXIT_AT) ?: 0L
+
+    override suspend fun setLastAnalyticsExitAtMs(atMs: Long): Boolean =
+        store.commit(lane) { putLong(LAST_ANALYTICS_EXIT_AT, atMs) } is Outcome.Ok
+
     companion object {
+        const val LAST_ANALYTICS_EXIT_AT = "oc.telemetry.lastAnalyticsExitAt"
         const val REPORT_COUNTER = "oc.telemetry.reportCounter"
         const val INSTALL_CODE = "oc.telemetry.installCode"
         const val LAST_EXIT_AT = "oc.telemetry.lastExitAt"

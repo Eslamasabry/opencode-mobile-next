@@ -113,7 +113,8 @@ public class ConnectionDelivery(
     private val reconcileLane = dispatchers.serial("delivery-reconcile")
     private val runRecovery = (gateway as? io.github.eslamasabry.oc.core.domain.RunRecoveryGateway)?.let { recovery ->
         recoveryVisibility.singleOrNull()?.let { visibility ->
-            RunReconciler(recovery, gateway.events, visibility.state(), { clock.now().toEpochMilliseconds() }, scope, reconcileLane)
+            RunReconciler(recovery, gateway.events, visibility.state(), { clock.now().toEpochMilliseconds() }, scope, reconcileLane,
+                checked = { id, busy -> tracing?.runChecked(id.raw, busy) })
         }
     }
     private val running = MutableStateFlow<Set<ConversationRef>>(emptySet())
@@ -202,13 +203,15 @@ public class ConnectionDelivery(
                     trace.text(event.part.sessionId, event.part.messageId, streamed = false)
             }
             is GatewayEvent.PartDelta -> {
-                trace.delta(event.sessionId.raw)
+                trace.delta(event.sessionId.raw, event.field)
                 if (event.field == DeltaField.Text && event.delta.isNotBlank())
                     trace.text(event.sessionId.raw, event.messageId.raw, streamed = true)
             }
             is GatewayEvent.RunStarted -> trace.busy(event.sessionId.raw)
+            is GatewayEvent.RunRetrying -> trace.retrying(event.sessionId.raw)
             is GatewayEvent.RunEnded -> {
                 val history = event.reconciledHistory
+                if (history != null) trace.recovered(event.sessionId.raw)
                 history?.drop(history.indexOfLast { it.info.role == Role.User } + 1)?.forEach { message ->
                     trace.message(message.info.sessionId, message.info.id, message.info.role == Role.Assistant)
                     if (message.info.role == Role.Assistant) message.parts.forEach { part ->
