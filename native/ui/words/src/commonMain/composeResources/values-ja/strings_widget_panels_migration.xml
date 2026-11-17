@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="widgetPanelUpdating">アプリを更新中…</string>
+    <string name="widgetPanelOpenAppForUpdate">アプリを開いて更新を完了してから、このウィジェットをもう一度お試しください。</string>
+    <string name="widgetPanelOpenApp">アプリを開く</string>
+    <string name="widgetPanelOpenFailed">このウィジェットを開けませんでした。閉じてからもう一度お試しください。</string>
+</resources>

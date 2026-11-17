@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="tipMessageDetailsTitle">メッセージの詳細</string>
+    <string name="tipMessageDetails">メッセージを長押しして「詳細」を選ぶか、「その他」ボタンを使うと、モデルやタイミングを確認できます。</string>
+    <string name="tipBackReturnsTo">「戻る」で前回の続きの%1$sに戻ります。</string>
+</resources>

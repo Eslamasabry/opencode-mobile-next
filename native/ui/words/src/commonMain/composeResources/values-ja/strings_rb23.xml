@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="rb23_devPreviewUnsupportedTitle">ここではプレビューを利用できません</string>
+    <string name="rb23_devPreviewUnsupportedBody">この端末ではアプリ内にページを表示できません。代わりにブラウザで開いてください。</string>
+</resources>

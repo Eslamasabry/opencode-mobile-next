@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="upgradeFindTitle">ネットワーク上で検索</string>
+    <string name="upgradeFindBody">このWi-Fi上のパソコンでOpenCodeを探します。</string>
+    <string name="upgradeFindReason">パソコンを見つけるため、同じWi-Fiネットワーク上の端末を確認します。パスワードは送信せず、近くのアドレスにのみ問い合わせます。</string>
+    <string name="upgradeFindScanning">このWi-Fiを検索中…</string>
+    <string name="upgradeFindStop">停止</string>
+    <string name="upgradeFindSearchAgain">再検索</string>
+    <string name="upgradeFindResultsLabel">ネットワーク上で見つかったパソコン</string>
+    <string name="upgradeFindNeedsPassword">パスワードが必要</string>
+    <string name="upgradeFindVersion">バージョン%1$s</string>
+    <string name="upgradeFindPickLabel">%1$sを使う</string>
+    <string name="upgradeFindEmptyTitle">見つかりませんでした</string>
+    <string name="upgradeFindEmptyBody">パソコンでOpenCodeを`opencode serve --mdns`で起動し、両方が同じWi-Fiに接続されていることを確認するか、アドレスを直接入力してください。</string>
+    <string name="upgradeFindEnterAddress">アドレスを入力</string>
+    <string name="upgradeFindDeniedBody">ローカルネットワークへのアクセスがないためパソコンを探せません。アクセスを許可してもう一度お試しになるか、アドレスを直接入力してください。</string>
+    <string name="upgradeFindAllow">許可して検索</string>
+    <string name="upgradeFindBlockedBody">このアプリのローカルネットワークアクセスがオフになっています。アプリ設定でオンにするか、アドレスを直接入力してください。</string>
+    <string name="upgradeFindOpenSettings">アプリ設定を開く</string>
+</resources>

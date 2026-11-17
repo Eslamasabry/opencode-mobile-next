@@ -121,7 +121,7 @@ class UmamiSenderTest {
         for ((name, fields) in productSchema) {
             val props = fields.mapValues { it.value.first() }
             val event = assertNotNull(umamiEvent(name, props + mapOf("prompt" to "private", "id" to "secret", "model_key" to "private"),
-                umamiPages.getValue("chat"), "website", UmamiBuild("3.0.1", "10081"), device, 2000))
+                umamiPages.getValue("chat"), UmamiSource("website", UmamiBuild("3.0.1", "10081"), device), 2000))
             assertEquals("event", event.type, name)
             assertEquals(fields.keys + setOf("version", "build"), event.payload.data.keys, name)
             val wire = UmamiCodec.json.parseToJsonElement(UmamiCodec.batch(listOf(event))).jsonArray.single().jsonObject
@@ -140,21 +140,24 @@ class UmamiSenderTest {
             assertFalse(UmamiCodec.batch(listOf(event)).contains("private"), name)
         }
         assertEquals(ProductEvent.entries.map { it.wire }.toSet(), productSchema.keys)
-        assertNull(umamiEvent("not_listed", emptyMap(), umamiPages.getValue("chat"), "website", UmamiBuild("3.0.1", "10081"), device, 2000))
+        val listed = UmamiSource("website", UmamiBuild("3.0.1", "10081"), device)
+        assertNull(umamiEvent("not_listed", emptyMap(), umamiPages.getValue("chat"), listed, 2000))
     }
 
     @Test
     fun `B-180 forbidden values in listed fields and arbitrary page addresses cannot enter the payload`() {
         val device = UmamiDevice("en-US", "1080x2340", "browser")
         val build = UmamiBuild("3.0.1", "10081")
+        val source = UmamiSource("website", build, device)
         val mapped = umamiEvent("chat_turn", mapOf("agent" to "private/model", "server_kind" to "private.example", "outcome" to "user text"),
-            umamiPages.getValue("chat"), "website", build, device, 1000)!!
+            umamiPages.getValue("chat"), source, 1000)!!
         assertEquals(setOf("version", "build"), mapped.payload.data.keys)
         assertEquals("/conversation", mapped.payload.url)
-        assertNull(umamiEvent("app_open", emptyMap(), UmamiPage("/conversation/private", "Private"), "website", build, device, 1000))
-        assertNull(umamiEvent("screen_view", mapOf("screen" to "private.example"), umamiPages.getValue("chat"), "website", build, device, 1000))
-        assertNull(umamiEvent("app_open", emptyMap(), umamiPages.getValue("chat"), "website", build, device, -1000))
-        assertNull(umamiEvent("app_open", emptyMap(), umamiPages.getValue("chat"), "website", build, device, 2_147_483_648_000))
+        val chat = umamiPages.getValue("chat")
+        assertNull(umamiEvent("app_open", emptyMap(), UmamiPage("/conversation/private", "Private"), source, 1000))
+        assertNull(umamiEvent("screen_view", mapOf("screen" to "private.example"), chat, source, 1000))
+        assertNull(umamiEvent("app_open", emptyMap(), chat, source, -1000))
+        assertNull(umamiEvent("app_open", emptyMap(), chat, source, 2_147_483_648_000))
     }
 
     @Test

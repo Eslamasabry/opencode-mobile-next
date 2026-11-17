@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="andrMonitorExplanation">このアプリを開いている間、またはバックグラウンド接続の実行中に、ほかの保存済みサーバーを確認します。各サーバーごとに許可が必要です。監視によってバックグラウンド接続が勝手に有効になることはありません。</string>
+    <string name="andrMonitorEnabled">このサーバーを確認</string>
+    <string name="andrMonitorOff">オフ（バックグラウンド確認なし）</string>
+    <string name="andrMonitorWaiting">次の確認を待機中です。以前の情報になっている場合があります。</string>
+    <string name="andrMonitorChecking">今確認しています。以前の情報になっている場合があります。</string>
+    <string name="andrMonitorCurrent">最後の確認時点で最新の状態です。</string>
+    <string name="andrMonitorUnavailable">確認できませんでした。最新のアクティビティを見るにはこのサーバーを開いてください。</string>
+    <string name="andrMonitorWifi">Wi-Fiを待機中。</string>
+    <string name="andrMonitorPaused">アプリとバックグラウンド接続が停止しているため一時停止中。</string>
+    <string name="andrMonitorSaveFailed">この選択を保存できませんでした。もう一度お試しください。</string>
+    <string name="andrMonitorCheckIn">長い返信について通知する</string>
+    <string name="andrMonitorCheckInDetail">会話がこの時間作業中と確認されたあとに1回通知します。失敗した確認は作業時間に含まれません。</string>
+    <string name="andrMonitorMinutes">%1$s分</string>
+</resources>

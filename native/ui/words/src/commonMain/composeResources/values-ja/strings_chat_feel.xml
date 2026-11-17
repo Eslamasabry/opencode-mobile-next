@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="chatFeelShare">共有</string>
+    <string name="chatFeelSelectText">テキストを選択</string>
+    <string name="chatFeelEditAndResend">編集して再送信</string>
+    <string name="chatFeelOpenLinkTitle">リンクを開きますか？</string>
+    <string name="chatFeelOpenLinkBody">アプリの外部で%1$sを開きます。</string>
+    <string name="chatFeelOpenLinkAction">開く</string>
+    <string name="chatFeelLinkRefused">ここからはこのリンクを開けません。</string>
+    <string name="chatFeelUndoTitle">ここから元に戻しますか？</string>
+    <string name="chatFeelUndoBody">サーバー上でこのプロンプトとそれ以降がすべて取り消されます。</string>
+    <string name="chatFeelUndoAction">元に戻す</string>
+    <string name="chatFeelPicture">画像</string>
+    <string name="chatFeelPictureOnServer">サーバー上の画像：%1$s</string>
+    <string name="chatFeelPictureOnWeb">%1$sからの画像です。タップするとアプリの外部で開きます。</string>
+    <string name="chatFeelDone">完了</string>
+    <string name="chatFeelPictureLoading">画像を開いています…</string>
+    <string name="chatFeelPictureFailed">ここではこの画像を表示できません。</string>
+</resources>

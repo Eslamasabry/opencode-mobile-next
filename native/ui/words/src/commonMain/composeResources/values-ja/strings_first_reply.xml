@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="setupStepTimedOut">%1$sに通常よりかなり時間がかかっています。代わりにパソコンを使うか、もう一度お試しください。</string>
+    <string name="setupUseComputerInstead">代わりにパソコンを使う</string>
+    <string name="setupActivityDownloading">ファイルをダウンロード中</string>
+    <string name="setupActivityUnpacking">ファイルを展開中</string>
+    <string name="setupActivityConfiguring">設定を適用中</string>
+    <string name="setupActivityChecking">インストール済みの項目を確認中</string>
+    <string name="setupActivityWorking">作業中</string>
+    <string name="setupHeartbeatLine">%1$s · %2$s</string>
+    <string name="setupHeartbeatQuiet">引き続き作業中です。長い手順には数分かかる場合があります。</string>
+    <string name="chatModelFailRateLimit">現在モデルが混み合っています。モデルを切り替えるか、数分後にもう一度お試しください。</string>
+    <string name="chatModelFailDailyLimit">このモデルの1日あたりの無料上限を使い切りました。モデルを切り替えるか、明日もう一度お試しください。</string>
+    <string name="chatModelFailSignIn">このモデルを使うには先にサインインが必要です。サインインするか、モデルを切り替えてください。</string>
+    <string name="chatModelFailQuota">このモデル用のクレジット残高がありません。クレジットを追加するか、モデルを切り替えてください。</string>
+    <string name="chatModelFailGeneric">モデルが応答できませんでした。モデルを切り替えるか、もう一度お試しください。</string>
+    <string name="chatModelFailSwitch">モデルを切り替え</string>
+    <string name="chatModelFailSignInAction">サインイン</string>
+    <string name="chatStalledOnTool">%1$sを待機中です。</string>
+    <string name="chatStalledStop">停止</string>
+</resources>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="runningOrphanParentGone">起動元が停止しました</string>
+    <string name="runningOrphanCpuWithoutOwner">待機中の会話がないままビジー状態です</string>
+    <string name="linuxStorageScanRunning">%1$sを計測中</string>
+    <string name="linuxStorageScanDone">ストレージの計測が完了しました</string>
+    <string name="linuxStorageScanIdle">実行中のスキャンはありません</string>
+    <string name="linuxStorageScanLog">ストレージスキャン</string>
+</resources>

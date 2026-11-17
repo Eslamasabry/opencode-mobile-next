@@ -16,6 +16,13 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class UmamiHttpTest {
+    private val source =
+        UmamiSource(
+            "00000000-0000-4000-8000-000000000001",
+            UmamiBuild("3.0.1", "10081"),
+            UmamiDevice("en", "1080x2340", "browser"),
+        )
+
     @Test
     fun `B-180 a server that accepts but never answers is cut off by the total timeout`() = runTest {
         val release = CountDownLatch(1)
@@ -29,7 +36,7 @@ class UmamiHttpTest {
             }.apply { isDaemon = true; start() }
             try {
                 val event = umamiEvent("app_open", mapOf("kind" to "cold"), umamiPages.getValue("conversations"),
-                    "00000000-0000-4000-8000-000000000001", UmamiBuild("3.0.1", "10081"), UmamiDevice("en", "1080x2340", "browser"), 1000)!!
+                    source, 1000)!!
                 val transport = UmamiHttp("http://localhost:${server.localPort}") { "Mozilla/5.0" }
                 val start = System.nanoTime()
                 val failed = transport.prepare(listOf(event)).execute() is Outcome.Failed
@@ -70,7 +77,7 @@ class UmamiHttpTest {
     }
 
     private fun sample(name: String, props: Map<String, String>, at: Long) = umamiEvent(name, props, umamiPages.getValue("conversations"),
-        "00000000-0000-4000-8000-000000000001", UmamiBuild("3.0.1", "10081"), UmamiDevice("en", "1080x2340", "browser"), at)!!
+        source, at)!!
 
     @Test
     fun `B-180 the single event request on the wire pins the monthly visitor hash period`() = runTest {

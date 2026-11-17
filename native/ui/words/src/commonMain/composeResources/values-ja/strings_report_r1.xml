@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="reportR1Optional">任意</string>
+    <string name="reportR1Included">含まれる内容</string>
+    <string name="reportR1IncludedLine">アプリと端末の詳細情報です。パスワード、キー、サーバーアドレスは除外されます。</string>
+    <string name="reportR1IncludedCrash">アプリと端末の詳細情報と、%1$sのクラッシュ情報です。パスワード、キー、サーバーアドレスは除外されます。</string>
+    <string name="reportR1IncludedFreeze">アプリと端末の詳細情報と、%1$sのフリーズ情報です。パスワード、キー、サーバーアドレスは除外されます。</string>
+    <string name="reportR1IncludedClose">アプリと端末の詳細情報と、%1$sの終了情報です。パスワード、キー、サーバーアドレスは除外されます。</string>
+    <string name="reportR1IncludedOpen">含まれる内容を表示</string>
+    <string name="reportR1Send">レポートを送信</string>
+    <string name="reportR1CopyText">テキストをコピー</string>
+    <string name="reportR1PostGitHub">GitHubに公開投稿</string>
+    <string name="reportR1NoSend">このバージョンではアプリからレポートを送信できません。テキストをコピーしてメッセージで共有するか、GitHubに公開投稿してください。</string>
+    <string name="reportR1SheetSubtitle">送信される内容のすべてです。</string>
+    <string name="reportR1Words">入力した説明</string>
+    <string name="reportR1NoWords">未入力</string>
+    <string name="reportR1LastClose">前回のアプリ終了</string>
+    <string name="reportR1Crashed">予期せず終了 · %1$s</string>
+    <string name="reportR1Froze">応答停止 · %1$s</string>
+    <string name="reportR1ClosedForMemory">メモリ解放のためAndroidが終了 · %1$s</string>
+    <string name="reportR1App">アプリ</string>
+    <string name="reportR1AppValue">OpenCode Mobile %1$s（%2$s）</string>
+    <string name="reportR1Phone">スマートフォン</string>
+    <string name="reportR1Android">Android %1$s</string>
+    <string name="reportR1Memory">メモリ%1$s GB</string>
+    <string name="reportR1Connection">接続</string>
+    <string name="reportR1AddressOut">%1$s · アドレス除外済み</string>
+    <string name="reportR1NotConnected">未接続</string>
+    <string name="reportR1Problems">最近の問題</string>
+    <string name="reportR1NoProblems">なし</string>
+    <string name="reportR1ProblemCount">%1$s（%2$s）</string>
+    <string name="reportR1NeverSent">会話、ファイル、パスワード、キー、サーバーアドレスは送信されません。</string>
+    <string name="reportR1SentBody">ありがとうございます。この問題についてお問い合わせの際は、レポートを特定できるようこのコードをお知らせください。</string>
+    <string name="reportR1PublicTitle">このレポートを公開投稿しますか？</string>
+    <string name="reportR1PublicBody">GitHubのIssueは誰でも閲覧できます。入力した説明とアプリの詳細が入力された状態でフォームが開き、そちらで送信するまで公開されません。</string>
+    <string name="reportR1PublicConfirm">GitHubを開く</string>
+    <string name="reportR1GitHubFailed">GitHubを開けませんでした。もう一度お試しください。</string>
+    <string name="reportR1KindTimeout">タイムアウト</string>
+    <string name="reportR1KindAuth">サインイン拒否</string>
+    <string name="reportR1KindTls">信頼されていない証明書</string>
+    <string name="reportR1KindServer">サーバーエラー</string>
+    <string name="reportR1KindProtocol">予期しないサーバー応答</string>
+    <string name="reportR1KindDns">アドレスが見つかりません</string>
+    <string name="reportR1KindRefused">接続拒否</string>
+    <string name="reportR1KindOffline">ネットワークなし</string>
+    <string name="reportR1KindTooLarge">メッセージが大きすぎます</string>
+    <string name="reportR1KindRejected">メッセージ拒否</string>
+    <string name="reportR1KindOther">その他の問題</string>
+    <string name="reportKeptCopyErrors">エラーログをコピー</string>
+    <string name="reportKeptClearErrors">エラーを消去</string>
+    <string name="reportKeptErrorsNote">アプリが自動で記録したエラーです。このスマートフォン内に保存されており、レポートには追加されません。状況の説明に役立つ場合はコピーして貼り付けてください。</string>
+</resources>

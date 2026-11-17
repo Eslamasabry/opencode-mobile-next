@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="serverSettingsTitle">サーバー設定</string>
+    <string name="serverSettingsShell">デフォルトのシェル</string>
+    <string name="serverSettingsFailed">完了できませんでした。もう一度お試しください。</string>
+    <string name="serverSettingsRemove">サーバーを削除</string>
+    <string name="serverSettingsRemoveBody">このアプリからこの保存済み接続とローカルデータを削除します。サーバーやそのパソコン上のファイルはそのまま残ります。</string>
+    <string name="serverSettingsDisconnected">未接続</string>
+    <string name="serverSettingsConnect">このサーバーに接続</string>
+    <string name="serverSettingsOnServer">ここでの変更は%1$sに保存され、それを使うほかのアプリとも共有されます。</string>
+    <string name="serverSettingsWaiting">待機中</string>
+    <string name="serverSettingsPassed">合格</string>
+    <string name="serverSettingsAttention">要確認</string>
+    <string name="serverSettingsFailedCheck">修正が必要</string>
+    <string name="serverSettingsSkipped">未確認</string>
+    <string name="serverSettingsShellUnavailable">デフォルトのシェルを変更するには、シェル設定を共有するサーバーに接続してください。</string>
+    <string name="serverSettingsSaving">保存中…</string>
+    <string name="serverSettingsTerminal">ターミナル</string>
+    <string name="serverSettingsFiles">ファイルを参照</string>
+    <string name="serverSettingsProjects">プロジェクトを管理</string>
+    <string name="serverSettingsSchedules">予約プロンプト</string>
+    <string name="serverSettingsProviders">モデルプロバイダー</string>
+    <string name="serverSettingsPermissions">権限リクエスト</string>
+    <string name="serverSettingsSteering">実行中の返信を軌道修正</string>
+    <string name="serverSettingsSupported">このサーバーで利用可能</string>
+    <string name="serverSettingsUnsupported">このサーバーでは利用できません</string>
+    <string name="server40DisconnectConfirm">%1$sから切断しますか？</string>
+    <string name="server40Disconnect">切断</string>
+    <string name="server40DisconnectBody">このスマートフォンの接続を閉じます。会話、下書き、待機中のメッセージは保存されたまま残ります。</string>
+    <string name="server40Reconnect">再接続</string>
+    <string name="server40AgentsNone">このパソコンで準備ができているエージェントはありません。</string>
+    <string name="server40Plugins">サーバープラグイン</string>
+    <string name="server40ResetDone">ここで再びデフォルト設定が適用されます。</string>
+    <string name="server40ModelHelp">この選択はこのサーバー上の新しい会話に適用されます。既存の会話ではそれぞれのモデルが維持されます。</string>
+</resources>

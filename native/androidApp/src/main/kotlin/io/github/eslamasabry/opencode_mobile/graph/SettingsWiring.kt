@@ -210,6 +210,8 @@ private fun Context.view(url: String) {
 @SingleIn(AppScope::class)
 @ContributesBinding(AppScope::class, binding = binding<SettingsHost>())
 @Inject
+// The settings page's port to the phone: one injected part per thing it reaches; only the graph builds it.
+@Suppress("LongParameterList")
 class AndroidSettingsHost(
     private val application: Application,
     private val stores: PreviewStores,

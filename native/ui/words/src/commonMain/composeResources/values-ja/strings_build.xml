@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="nativeCapabilitiesDetail">このアプリでできることを確認し、利用可能なセットアップを開きます。</string>
+    <string name="nativeCapabilityOpenFailed">このセットアップを開けませんでした。選択中のサーバーを確認して、もう一度お試しください。</string>
+    <string name="nativeCapabilityAddServerTitle">サーバーに接続</string>
+    <string name="nativeCapabilityAddServerDetail">パソコンで実行しているサーバーのアドレスを保存します。</string>
+    <string name="nativeCapabilityPhoneSetupTitle">このスマートフォンをセットアップ</string>
+    <string name="nativeCapabilityPhoneSetupDetail">このスマートフォンにLinux環境とサーバーをインストールします。</string>
+    <string name="nativeCapabilityServerGenerationTitle">OpenCode 2を使用</string>
+    <string name="nativeCapabilityServerGenerationDetail">使用するサーバー世代をセットアップします。</string>
+    <string name="nativeCapabilityAddServerCodexTitle">Codexに接続</string>
+    <string name="nativeCapabilityAddServerCodexDetail">パソコン上のCodexに接続します。</string>
+    <string name="nativeCapabilityAddServerPaseoTitle">Paseoに接続</string>
+    <string name="nativeCapabilityAddServerPaseoDetail">Paseoが動作するパソコン上のエージェントに接続します。</string>
+    <string name="nativeCapabilityModelSignInTitle">モデルプロバイダーにサインイン</string>
+    <string name="nativeCapabilityModelSignInDetail">選択中のサーバーのプロバイダーアカウントを管理します。</string>
+    <string name="nativeCapabilityTeamTurnOnTitle">AI Teamをセットアップ</string>
+    <string name="nativeCapabilityTeamTurnOnDetail">プロジェクトのチームセットアップを開きます。</string>
+    <string name="nativeCapabilityTeamHostGuideTitle">チームホストに接続</string>
+    <string name="nativeCapabilityTeamHostGuideDetail">チーム用パソコンのセットアップガイドを開きます。</string>
+    <string name="nativeCapabilityVoiceModelSetupTitle">音声入力をセットアップ</string>
+    <string name="nativeCapabilityVoiceModelSetupDetail">デバイス上の音声モデルを選んでダウンロードします。</string>
+    <string name="nativeCapabilityMcpAddTitle">MCPツールを追加</string>
+    <string name="nativeCapabilityMcpAddDetail">選択中のサーバーにツールを接続します。</string>
+    <string name="nativeCapabilityProjectChooseTitle">プロジェクトを開く</string>
+    <string name="nativeCapabilityProjectChooseDetail">作業するフォルダを選択します。</string>
+    <string name="nativeCapabilityProjectGitInitTitle">プロジェクトのGitをセットアップ</string>
+    <string name="nativeCapabilityProjectGitInitDetail">プロジェクトのGitセットアップを開きます。</string>
+    <string name="nativeCapabilityAllowNotificationsTitle">通知を許可</string>
+    <string name="nativeCapabilityAllowNotificationsDetail">アプリを見ていない間に受け取る通知内容を選択します。</string>
+    <string name="nativeCapabilityAllowBackgroundTitle">バックグラウンドで実行を続ける</string>
+    <string name="nativeCapabilityAllowBackgroundDetail">Androidのバックグラウンドとバッテリーの設定を開きます。</string>
+    <string name="nativeCapabilityAllowCameraTitle">カメラを許可</string>
+    <string name="nativeCapabilityAllowCameraDetail">ペアリングや写真撮影のためのカメラアクセスを許可します。</string>
+    <string name="nativeCapabilityAllowMicrophoneTitle">マイクを許可</string>
+    <string name="nativeCapabilityAllowMicrophoneDetail">音声入力のためのマイクアクセスを許可します。</string>
+    <string name="nativeCapabilityTailscaleSetupTitle">Tailscale経由で接続</string>
+    <string name="nativeCapabilityTailscaleSetupDetail">パソコンへのプライベートアクセスを設定します。</string>
+    <string name="nativeCapabilityQuotaCollectorGuideTitle">使用状況の読み取りを設定</string>
+    <string name="nativeCapabilityQuotaCollectorGuideDetail">サブスクリプションの使用状況を読み取るためのセットアップを開きます。</string>
+    <string name="nativeCapabilityAddExternalAgentTitle">外部エージェントを接続</string>
+    <string name="nativeCapabilityAddExternalAgentDetail">公開されているエージェントカードからエージェントを接続します。</string>
+    <string name="nativeCapabilityTeamDeferred">AI Teamはネイティブ版への切り替え後に対応予定です。既存のチームデータはこのスマートフォンに残ります。</string>
+    <string name="nativeCapabilityExternalDropped">他のアプリのエージェントはこのアプリの対象外です。保存済みのデータはそのまま残ります。</string>
+</resources>

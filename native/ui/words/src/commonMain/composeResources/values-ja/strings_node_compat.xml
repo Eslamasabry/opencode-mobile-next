@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="phoneSetupErrorNodeCannotRun">このスマートフォンのシステムでは、内蔵Linux上でNode.jsを実行できません。パソコンに接続すれば、OpenCode Mobileを引き続き利用できます。</string>
+    <string name="phoneSetupNodeConnectComputer">パソコンを接続</string>
+    <string name="phoneSetupNodeReportFailure">この問題を報告</string>
+</resources>

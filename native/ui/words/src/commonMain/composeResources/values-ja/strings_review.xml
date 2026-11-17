@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="reviewTurnTitle">このターンの変更</string>
+    <string name="reviewOneFileUnavailable">1ファイルずつの取り消しにはまだ対応していません。このサーバーではプロンプトからのみ取り消せます。「すべて元に戻す」またはプロンプトの「ここから元に戻す」を使用してください。</string>
+    <string name="reviewNoDiff">このファイルで変更された行がサーバーから返されませんでした。</string>
+    <string name="reviewFileGone">このファイルはこれらの変更にもう含まれていません。</string>
+    <string name="reviewIncomplete">古いメッセージを読み込めなかったため、この一覧に不足しているファイルがある可能性があります。</string>
+    <string name="reviewNoChangesBody">エージェントによるファイル編集は報告されていません。</string>
+    <string name="reviewWaiting">元に戻す操作が確認待ちです。選択するまで、そのプロンプト以降のメッセージは非表示になります。</string>
+    <string name="reviewUndoUnknown">「すべて元に戻す」には変更の開始元のプロンプトが必要ですが、読み込めませんでした。</string>
+    <string name="reviewUndoUnavailable">このサーバーではプロンプトから元に戻せません。</string>
+    <string name="reviewToolEvidence">この会話のエージェントがツールで変更した内容のみを表示しています。コマンドで作成されたファイル、未追跡の新規ファイル、他の会話からの変更は含まれません。「未コミット」には、フォルダ内でGitが認識している変更が表示されます。</string>
+    <string name="reviewSendBackFailed">メモをメッセージに入れられませんでした。もう一度お試しください。</string>
+    <string name="reviewProjectNotGitTitle">Gitプロジェクトではありません</string>
+    <string name="reviewProjectNotGitBody">変更の一覧を表示できるのはGitで管理されているプロジェクトのみです。ここで表示するには、プロジェクトのGitページから追跡を開始してください。</string>
+    <string name="reviewProjectOpenGit">Gitページを開く</string>
+</resources>

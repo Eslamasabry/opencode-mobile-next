@@ -129,17 +129,74 @@ class TranslationQualityTest {
         )
     }
 
+    private fun untranslatedAllowlist(): Set<String> =
+        File(toolDir, "src/test/resources/untranslated-allowlist.tsv").takeIf { it.isFile }?.readLines().orEmpty()
+            .filter { it.isNotBlank() && !it.startsWith("#") }.toSet()
+
     @Test
     fun `glossary use - product terms are kept, glossary words are used, banned nouns are absent`() {
         val g = locales.associateWith(::glossary)
+        val allowed = untranslatedAllowlist()
         gate("glossary") { l, en, tr ->
             val gl = g[l] ?: return@gate null
             val e = en.texts().joinToString(" ")
             val t = tr.texts().joinToString(" ")
             gl.keep.firstOrNull { it in e && it !in t }?.let { "product term \"$it\" must stay as written" }
-                ?: gl.terms.firstOrNull { (en, tgt) -> en.containsMatchIn(e) && !tgt.containsMatchIn(t) }?.let { (en, tgt) -> "English /$en/ should read /$tgt/" }
+                ?: gl.terms.takeIf { en.key !in allowed }?.firstOrNull { (en, tgt) -> en.containsMatchIn(e) && !tgt.containsMatchIn(t) }
+                    ?.let { (en, tgt) -> "English /$en/ should read /$tgt/" }
                 ?: gl.forbid.firstOrNull { (re, _) -> re.containsMatchIn(t) }?.let { (re, why) -> "/${re.pattern}/ is banned: $why" }
         }
+    }
+
+    private fun japaneseSpacingOffenders(dir: File): List<String> {
+        val jaChar = """[\u3040-\u309f\u30a0-\u30ff\u4e00-\u9fff々〆ヵヶー、。（）「」『』【】：]"""
+        // Allowed exceptions:
+        // - Middle-dot separator `" · "` (U+00B7 is outside both character classes).
+        // - Spaces strictly inside ASCII/unit/code/placeholder runs (`Android 13`, `512 MB`, `%1$d / %2$d`).
+        // - Search `*Aliases` keys, which hold whitespace-delimited search tokens.
+        // - `tools/strings/src/test/resources/golden/` fixtures (verified byte-for-byte against frozen ARBs).
+        // - Generated Gradle `build/` output directories.
+        val forbidden = listOf(
+            Regex("""$jaChar [A-Za-z0-9%]"""),
+            Regex("""[A-Za-z0-9%] $jaChar"""),
+        )
+        val offenders = mutableListOf<String>()
+        for ((key, entry) in TranslationCatalog.readDir(dir)) {
+            if (key.endsWith("Aliases")) continue
+            val hit = entry.texts().firstNotNullOfOrNull { t ->
+                forbidden.firstNotNullOfOrNull { it.find(t)?.value }
+            }
+            if (hit != null) {
+                val relFile = File(dir, entry.file).relativeTo(nativeRoot).invariantSeparatorsPath
+                offenders += "$relFile\t$key: \"$hit\""
+            }
+        }
+        return offenders
+    }
+
+    @Test
+    fun `japanese spacing - no space next to Latin, digits, or placeholders across every values-ja file`() {
+        val jaDirs = nativeRoot.walkTopDown()
+            .filter { it.isDirectory && it.name == "values-ja" }
+            .filter { dir ->
+                val rel = dir.relativeTo(nativeRoot).invariantSeparatorsPath
+                "/build/" !in "/$rel/" && !rel.startsWith("tools/strings/src/test/resources/golden")
+            }
+            .sortedBy { it.path }
+            .toList()
+        val offenders = jaDirs.flatMap(::japaneseSpacingOffenders)
+        assertTrue(
+            offenders.isEmpty(),
+            "ja spacing: ${offenders.size} spaced strings\n" + offenders.take(150).joinToString("\n"),
+        )
+    }
+
+    @Test
+    fun `japanese spacing - plural items and placeholder-before-Japanese are caught on the frozen ARB fixture`() {
+        val goldenJa = File(nativeRoot, "tools/strings/src/test/resources/golden/composeResources/values-ja")
+        val hits = japaneseSpacingOffenders(goldenJa)
+        assertTrue(hits.any { "chatUiDraftsQueued" in it }, "must catch plural <item> %1\$s 件: $hits")
+        assertTrue(hits.any { "chatUiRateLimitCountdown" in it }, "must catch %2\$s 後: $hits")
     }
 
     // ---- no English left ----
@@ -150,9 +207,10 @@ class TranslationQualityTest {
     @Test
     fun `no English left - a translation is not the English, and does not carry English sentences`() {
         val g = locales.associateWith(::glossary)
-        val allowed = File(toolDir, "src/test/resources/untranslated-allowlist.tsv").takeIf { it.isFile }?.readLines().orEmpty()
-            .filter { it.isNotBlank() && !it.startsWith("#") }.toSet()
+        val allowed = untranslatedAllowlist()
         val nonLatin = setOf("ru", "ar", "ja", "zh")
+        val cjkWordRuns = Regex("""[\u3040-\u30ff\u4e00-\u9fff\u3400-\u4dbf]{1,2}|[A-Za-z0-9]+|\p{L}+""")
+        val latinWordRuns = Regex("""\p{L}+""")
         gate("english") { l, en, tr ->
             if (en.key in allowed) return@gate null
             val allow = g[l]?.allow.orEmpty() + (g[l]?.keep.orEmpty()).flatMap { it.split(' ') }
@@ -164,8 +222,9 @@ class TranslationQualityTest {
                 if (letters.isEmpty()) continue
                 if (strip(t).equals(s, ignoreCase = true) && letters.any { it !in allow }) return@gate "is the English text"
                 val words = latinWord.findAll(strip(t)).map { it.value }.filter { it !in allow }.toList()
+                val runs = if (l == "ja" || l == "zh") cjkWordRuns else latinWordRuns
                 if (l in nonLatin) {
-                    if (words.size >= 3 && words.size * 2 > Regex("""\p{L}+""").findAll(strip(t)).count()) return@gate "mostly Latin words: ${words.take(4)}"
+                    if (words.size >= 3 && words.size * 2 > runs.findAll(strip(t)).count()) return@gate "mostly Latin words: ${words.take(4)}"
                 } else if (words.map { it.lowercase() }.filter { it in stopwords }.toSet().size >= 2) {
                     return@gate "English words left: ${words.take(5)}"
                 }

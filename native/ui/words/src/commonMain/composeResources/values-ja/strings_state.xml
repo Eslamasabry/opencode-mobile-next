@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="statePin">会話をピン留め</string>
+    <string name="stateUnpin">会話のピン留めを解除</string>
+    <string name="statePinFailed">ピン留めを保存できませんでした。もう一度お試しください。</string>
+    <string name="stateContextUsage">前回のコンテキスト：%1$d%</string>
+    <string name="stateSavedPreview">保存済みの一覧です。この会話を開くには接続してください。</string>
+    <string name="chatsAllSavedGroup">未接続のサーバーの保存済み一覧</string>
+</resources>

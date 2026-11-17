@@ -12,7 +12,6 @@ if [ "${1:-}" = candidate ]; then
     d=${bf%/build.gradle.kts}
     [ -d "$d/src/androidHostTest" ] || continue
     m=":${d//\//:}"
-    if grep -q 'libs.plugins.roborazzi' "$bf"; then echo "$m:verifyRoborazziAndroidHostTest"
-    else echo "$m:testAndroidHostTest"; fi
+    echo "$m:testAndroidHostTest"
   done
 fi

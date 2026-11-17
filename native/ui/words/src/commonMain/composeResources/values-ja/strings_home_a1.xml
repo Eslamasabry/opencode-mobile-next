@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="chatsHomeRightNow">現在</string>
+    <string name="chatsHomeRecent">最近</string>
+    <string name="chatsHomeAsksToRun">実行の許可を求めています：%1$s</string>
+    <string name="chatsHomeAsksToEdit">編集の許可を求めています：%1$s</string>
+    <string name="chatsHomeAsksToRead">読み取りの許可を求めています：%1$s</string>
+    <string name="chatsHomeAsksOther">許可を求めています：%1$s</string>
+</resources>

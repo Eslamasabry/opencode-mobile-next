@@ -42,6 +42,8 @@ public object TelemetryKeys {
 }
 
 /** [TelemetryKeys] over the one [KeyValueStore]; reads in memory, one commit per change on [lane]. */
+// One read and one commit per stored answer, over one store: a flat list of accessors keeps every key in one place.
+@Suppress("TooManyFunctions")
 public class TelemetryAnswers(private val store: KeyValueStore, private val lane: WriterLane) {
     /** The stored consent answer, or null when none was ever stored (Flutter or native). */
     public fun consent(): Boolean? = store.bool(TelemetryKeys.CONSENT)

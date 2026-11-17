@@ -16,6 +16,8 @@ def passed(path):
 os.makedirs(out, exist_ok=True)
 tools = re.search(r'^release tools: (\d+) passed, (\d+) failed$', open(tools_log).read(), re.M)
 json.dump({'lane': lane, 'sha': os.environ['GITHUB_SHA'],
+           'detekt_hook': 'tool/ci/detekt_lane.sh <base-ref> --all',
+           'detekt_entry_present': os.path.isfile('tool/ci/detekt_lane.sh'),
            'desktop_tasks': subprocess.check_output(['bash', 'tool/ci/shard_tasks.sh', '0', '1'], text=True).split(),
            'android_tasks': subprocess.check_output(['bash', 'tool/ci/android_tasks.sh', lane], text=True).split(),
            'self_tests': {'ci': passed(ci_log), 'release': passed(release_log),

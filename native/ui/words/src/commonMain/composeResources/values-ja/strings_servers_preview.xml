@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="serversTitle">サーバー</string>
+    <string name="serversNewTitle">新しい会話</string>
+    <string name="serversSaved">保存済みサーバー</string>
+    <string name="serversEmpty">会話を始めるにはOpenCode 2サーバーを追加してください。</string>
+    <string name="serversAdd">サーバーを追加</string>
+    <string name="serversName">名前</string>
+    <string name="serversAddress">サーバーアドレス</string>
+    <string name="serversUsername">ユーザー名</string>
+    <string name="serversPassword">パスワード</string>
+    <string name="serversCleartext">このアドレスでHTTPを許可</string>
+    <string name="serversCleartextHelp">HTTPではパスワードや会話が暗号化されません。信頼できるネットワーク上でのみ使用してください。</string>
+    <string name="serversCleartextRequired">接続する前にこのアドレスでのHTTP利用を確認してください。</string>
+    <string name="serversConnect">接続</string>
+    <string name="serversConnected">接続済み</string>
+    <string name="serversCreate">会話を始める</string>
+    <string name="serversSave">保存して接続</string>
+    <string name="serversRemove">サーバーを削除</string>
+    <string name="serversCancel">キャンセル</string>
+    <string name="serversRemoveConfirm">このアプリから%1$sと保存済みの接続情報を削除しますか？</string>
+    <string name="serversWorking">現在の操作が終わるまでお待ちください。</string>
+    <string name="serversInvalidAddress">サーバーアドレスを入力してください。</string>
+    <string name="serversSaveFailed">このサーバーを保存できませんでした。アドレスを確認してもう一度お試しください。</string>
+    <string name="serversConnectFailed">接続できませんでした。サーバーアドレスとネットワークを確認してからもう一度お試しください。</string>
+    <string name="serversCreateFailed">会話を始められませんでした。サーバーの設定は引き続き保存されています。</string>
+    <string name="serversRemoveFailed">このサーバーを削除できませんでした。保存済みの詳細は変更されていません。</string>
+    <string name="serversSignInFailed">サーバーがこのサインイン情報を受け入れませんでした。ユーザー名とパスワードを確認してください。</string>
+    <string name="serverHttpsRequired">このアドレスは公開インターネット上にあるためHTTPSが必要です。通常のHTTPではパスワードが暗号化されずに送信されます。アドレスをhttps://で始まる形式に変更するか、Tailscaleまたはネットワークを使ってサーバーに接続してください。</string>
+</resources>

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="oc_schedule_channel">スケジュールされたプロンプト</string>
+    <string name="oc_schedule_title">スケジュールされたプロンプト</string>
+    <string name="oc_schedule_running">スケジュールされたプロンプトを実行中…</string>
+    <string name="oc_schedule_ran">送信しました。返信は会話内にあります。</string>
+    <string name="oc_schedule_finished">完了しました。タップして返信を確認できます。</string>
+    <string name="oc_schedule_skipped">今回はスキップされました。タップして理由を確認できます。</string>
+    <string name="oc_schedule_failed">完了しませんでした。タップして理由を確認できます。</string>
+    <string name="oc_schedule_why_needs_you">回答を待っています。会話を開いて続行してください。</string>
+    <string name="oc_schedule_why_sign_in">サーバーからもう一度サインインするよう求められました。</string>
+    <string name="oc_schedule_why_agent">エージェントがエラーで停止しました。</string>
+    <string name="oc_schedule_why_timeout">時間内に完了しませんでした。再送信は行われませんでした。</string>
+    <string name="oc_schedule_why_unavailable">サーバーに接続できませんでした。</string>
+    <string name="oc_schedule_digest_title">今朝のスケジュールされたプロンプト</string>
+    <string name="oc_schedule_digest_body">%1$d件返信済み、%2$d件未完了、%3$d件スキップ</string>
+    <string name="oc_schedule_open">開く</string>
+</resources>

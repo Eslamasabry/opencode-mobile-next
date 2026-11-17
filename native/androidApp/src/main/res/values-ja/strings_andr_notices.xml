@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="andr_appExitForceStopped">%1$sアプリが閉じられました</string>
+    <string name="andr_appExitStoppedBackground">バックグラウンドでアプリが閉じられました</string>
+    <string name="andr_appExitLowMemory">メモリ解放のため、%1$sAndroidがアプリを終了しました</string>
+    <string name="andr_appExitCrashed">%1$sアプリが予期せず終了しました</string>
+    <string name="andr_appExitKilled">%1$sAndroidがアプリを停止しました</string>
+    <string name="andr_appExitServerStopped">%1$s。OpenCodeは停止しましたが、再起動しています。</string>
+    <string name="andr_appExitServerAndTeamStopped">%1$s。OpenCodeとAI Teamは停止しましたが、再起動しています。</string>
+    <string name="andr_appExitServerStoppedManual">%1$s。OpenCodeは停止しました。「このスマートフォン」からもう一度起動してください。</string>
+    <string name="andr_appExitServerAndTeamStoppedManual">%1$s。OpenCodeとAI Teamは停止しました。「このスマートフォン」からもう一度起動してください。</string>
+    <string name="andr_appExitServerBack">%1$s。OpenCodeは停止しましたが、再び実行されています。</string>
+    <string name="andr_appExitServerBackTeam">%1$s。OpenCodeとAI Teamは停止しましたが、OpenCodeは再び実行されています。</string>
+    <string name="andr_appExitAtTime">%1$sに</string>
+    <string name="andr_appExitOnDay">%1$sの%2$sに</string>
+    <string name="andr_appExitKeepRunning">実行を継続</string>
+    <string name="andr_appExitOpenThisPhone">「このスマートフォン」を開く</string>
+    <string name="andr_backgroundPauseTimeLimit">電池節約のため、%1$sバックグラウンド接続を一時停止しました。</string>
+    <string name="andr_backgroundPauseRestricted">バックグラウンド接続を一時停止しました（電池使用が制限されています）。</string>
+    <string name="andr_backgroundPauseUserStopped">%1$sアプリが閉じられたため、バックグラウンド接続を停止しました。</string>
+    <string name="andr_backgroundPauseAppUpdated">%1$sアプリがアップデートされたため、バックグラウンド接続を停止しました。</string>
+    <string name="andr_backgroundPauseInterrupted">不明な理由によりバックグラウンド接続が停止しました。</string>
+    <string name="andr_backgroundPauseDeviceRestarted">スマートフォンが再起動したため、バックグラウンド接続が停止しました。</string>
+    <string name="andr_backgroundPauseResumeShort">再開</string>
+    <string name="andr_backgroundPauseResuming">バックグラウンド接続を再開中…</string>
+    <string name="andr_backgroundPauseResumeFailed">再開できませんでした。「バックグラウンドで実行を続ける」設定を開いてください。</string>
+    <string name="andr_backgroundPauseOpenKeepRunning">「バックグラウンドで実行を続ける」設定を開く</string>
+    <string name="andr_notifyDismiss">閉じる</string>
+    <string name="andr_firstRunNotifyTitle">エージェントの確認が必要なときに通知しますか？</string>
+    <string name="andr_firstRunNotifyBody">エージェントの作業中はアプリを離れられます。回答が必要なときに通知が届きます。接続を維持している間、Androidの通知欄に小さな常時通知が表示されます。</string>
+    <string name="andr_firstRunNotifyAccept">通知する</string>
+    <string name="andr_firstRunNotifyDecline">今はしない</string>
+    <string name="andr_notifyPermissionRefused">通知がブロックされています。Androidの設定で通知を許可してから、バックグラウンド接続をオンにしてください。</string>
+    <string name="andr_notifyEnableFailed">バックグラウンド接続を開始できませんでした。「バックグラウンド」設定を開いてもう一度お試しください。</string>
+    <string name="andr_pauseBackground">バックグラウンドを一時停止</string>
+    <string name="andr_notifySaveFailed">選択を保存できなかったため、何もオンになりませんでした。もう一度お試しください。</string>
+    <string name="andr_termuxRetiredNotice">Termuxのサポートは終了しました。このスマートフォンに内蔵のLinuxをセットアップするか、パソコンに接続してください。Termux内のプロジェクトはそのまま残っています。移行するにはスマートフォンの共有ストレージにコピーするか、Gitでプッシュしてください。</string>
+    <string name="andr_termuxRetiredSetUpBuiltin">内蔵Linuxをセットアップ</string>
+    <string name="andr_termuxRetiredConnectComputer">パソコンに接続</string>
+    <string name="andr_crashOfferMessage">OpenCode Mobileが前回予期せず終了しました。クラッシュレポートを送信しますか？</string>
+    <string name="andr_crashOfferReview">確認して送信</string>
+    <string name="andr_crashOfferNotNow">今はしない</string>
+</resources>

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="p12LogSearch">ログ内を検索</string>
+    <string name="p12LogFollow">追従</string>
+    <string name="p12LogPause">一時停止</string>
+    <string name="p12LogCopy">すべてコピー</string>
+    <string name="p12LogWrap">行を折り返す</string>
+    <plurals name="p12LogMatches">
+        <item quantity="other">%1$d / %2$d件の一致行</item>
+    </plurals>
+    <string name="p12LogPrevious">前の一致</string>
+    <string name="p12LogNext">次の一致</string>
+</resources>

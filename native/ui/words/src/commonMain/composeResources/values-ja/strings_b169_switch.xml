@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="b169SwitchModel">モデルを切り替え</string>
+    <string name="b169UsedUp">%1$sは現在利用上限に達しています</string>
+    <string name="b169UsedUpNoName">このモデルは現在利用上限に達しています</string>
+    <string name="b169ConnectProvider">プロバイダーを接続…</string>
+    <plurals name="b169AskTitle">
+        <item quantity="other">停止した返信ではすでに%1$dステップ実行されています。%2$sで再送信しますか？</item>
+    </plurals>
+    <string name="b169AskSend">送信</string>
+    <string name="b169AttachAgain">送信するには%1$sをもう一度添付してください</string>
+    <string name="b169Free">無料 · プロンプトが利用される場合があります</string>
+    <string name="b169TooLong">このモデルには長すぎます</string>
+    <string name="b169Suggested">おすすめ</string>
+    <string name="b169Offline">サーバーに再接続すると、モデルの切り替えが再び使えるようになります。</string>
+</resources>
