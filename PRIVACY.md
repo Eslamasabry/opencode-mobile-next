@@ -174,7 +174,7 @@ number), `notif_allowed` (yes or no), `server_kind` (phone, computer or both),
 first use: the same words as `journey_milestone`).
 
 Google Analytics adds on its own a random app-instance identifier, the phone
-model, Android version, app version, language, the time, and a coarse location
+model, Android version, screen size, app version, language, the time, and a coarse location
 (country and region) it works out from the connection without keeping the IP
 address. It also counts a few events of its own, such as the first open and
 the length of a session. The advertising ID and Android ID (SSAID) are never

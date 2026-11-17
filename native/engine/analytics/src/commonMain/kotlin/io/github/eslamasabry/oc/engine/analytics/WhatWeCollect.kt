@@ -12,8 +12,7 @@ import kotlinx.collections.immutable.toImmutableList
 /** Things the app never collects, whatever the tier (plan 16 §5.4). */
 public enum class NeverCollected {
     ChatContent, FileNamesAndPaths, ServerAddresses, ServerNames, ProfileIds, ConversationIds, ModelOrProviderNames,
-    ErrorText, CrashStacks, Credentials, DeviceModel, TimeZone, Location, AdvertisingId, AndroidId,
-    ContactsOrAccounts,
+    ErrorText, CrashStacks, Credentials, AdvertisingId, AndroidId, ContactsOrAccounts,
 }
 
 /** Facts every event carries besides its own properties. */

@@ -3,7 +3,7 @@
 <resources>
     <string name="voiceNativeDetect">音声から自動検出</string>
     <string name="voiceNativeSizeMb">%1$dMB</string>
-    <string name="voiceNativePhoneEngine">音声入力では、このスマートフォンのオンデバイス音声認識（createOnDeviceSpeechRecognizer、Android 12以降）をオフライン認識優先でAndroidに要求します。そのシステムサービス自身のプライバシー規約が適用されます。音声認識に対応していない端末ではマイクは表示されません。このバージョンでは下の音声モデルはまだ使用しません。</string>
+    <string name="voiceNativePhoneEngine">音声入力では、Androidに、スマートフォン自体での音声認識（Android 12以降）をオフライン認識優先で依頼します。そのサービスにはAndroid自身のプライバシー規約が適用されます。音声認識に対応していない端末ではマイクは表示されません。このバージョンでは下の音声モデルはまだ使用しません。</string>
     <string name="voiceNativeNaturalNeedsEngine">オフライン音声エンジンが必要ですが、このバージョンにはまだ含まれていません。</string>
     <string name="voiceNativeSettingsAction">音声設定</string>
     <string name="voiceNativeStoppedAfterPause">間が空いたため停止しました。入力内容は入力欄に入っています。</string>

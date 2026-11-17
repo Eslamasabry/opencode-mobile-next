@@ -3,7 +3,7 @@
 <resources>
     <string name="voiceNativeDetect">根据语音检测</string>
     <string name="voiceNativeSizeMb">%1$d MB</string>
-    <string name="voiceNativePhoneEngine">语音输入会向 Android 请求这部手机的设备端语音识别器（createOnDeviceSpeechRecognizer，Android 12 及更高版本）并优先使用离线识别；适用该系统服务自身的隐私条款。没有该功能的手机不会显示麦克风。此版本尚未使用下面的语音模型。</string>
+    <string name="voiceNativePhoneEngine">语音输入会请 Android 在手机本机上识别语音（Android 12 及更高版本），并优先使用离线识别；适用 Android 对该服务的隐私条款。没有该功能的手机不会显示麦克风。此版本尚未使用下面的语音模型。</string>
     <string name="voiceNativeNaturalNeedsEngine">需要离线语音引擎，而此版本尚未包含它。</string>
     <string name="voiceNativeSettingsAction">语音设置</string>
     <string name="voiceNativeStoppedAfterPause">停顿后已停止。你的话已放进输入框。</string>

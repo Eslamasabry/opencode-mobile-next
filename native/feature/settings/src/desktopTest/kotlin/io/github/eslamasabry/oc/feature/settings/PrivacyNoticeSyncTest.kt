@@ -404,7 +404,7 @@ class PrivacyNoticeSyncTest {
             assertTrue("not the screen size" in text, "$name says the screen size is not sent to Umami")
         }
         val googleOnly = "screen size, Android version" !in device &&
-            "Google Analytics also receives the screen size" in device
+            "Google Analytics also receives the phone model and screen size" in device
         assertTrue(googleOnly, "the page puts the screen size on Google's side only")
         for (tag in AppLanguage.entries.mapNotNull { it.tag }.filter { it != "en" }) {
             val dir = File(en.parentFile, "values-$tag")
@@ -414,8 +414,8 @@ class PrivacyNoticeSyncTest {
             val line = xmlString(File(dir, "strings_s28_privacy.xml"), "collectDevice")
             assertTrue("Umami" in line && "Google Analytics" in line, "$tag page puts the screen size on Google's side")
         }
-        val claimed = NeverCollected.entries.any { it.name == "ScreenSize" }
-        assertTrue(!claimed, "the never-list cannot claim a screen size Google receives")
+        val claimed = NeverCollected.entries.any { it.name in setOf("ScreenSize", "DeviceModel", "TimeZone", "Location") }
+        assertTrue(!claimed, "the never-list cannot claim what Google Analytics receives on its own")
     }
 
     // ---- the tests ----
@@ -517,7 +517,7 @@ class PrivacyNoticeSyncTest {
             .find(file.readText())!!.groupValues[1]
 
     private fun assertBothVoicePaths(where: String, text: String) {
-        val ok = "huggingface.co" in text && "createOnDeviceSpeechRecognizer" in text && "Android 12" in text
+        val ok = "huggingface.co" in text && "Android 12" in text
         assertTrue(ok, "$where must name both voice paths")
     }
 
@@ -545,7 +545,9 @@ class PrivacyNoticeSyncTest {
             val voice = xmlString(File(locale, "strings_voice_native.xml"), "voiceNativePhoneEngine")
             assertBothVoicePaths("${locale.name} policy", policy)
             assertBothVoicePaths("${locale.name} never", never)
-            assertTrue("createOnDeviceSpeechRecognizer" in voice && "Android 12" in voice, "${locale.name}: voice")
+            assertTrue("Android 12" in voice, "${locale.name}: voice")
+            assertTrue("createOnDeviceSpeechRecognizer" !in voice && "createOnDeviceSpeechRecognizer" !in never,
+                "${locale.name}: no code identifier in the words people read")
             for (overclaim in voiceOverclaims) assertTrue(overclaim !in voice, "${locale.name}: $overclaim")
         }
     }
