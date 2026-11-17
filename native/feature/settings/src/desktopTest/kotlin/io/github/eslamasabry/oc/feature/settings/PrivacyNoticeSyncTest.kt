@@ -293,6 +293,24 @@ class PrivacyNoticeSyncTest {
     }
 
     @Test
+    fun `B-SEC-212 the site FAQ and every store description name both receivers and the monthly hash and never deny analytics`() {
+        val site = File(repo, "docs/site/index.html").readText()
+        val stores = File(repo, "fastlane/metadata/android").listFiles { f -> f.isDirectory }!!
+            .associate { it.name to File(it, "full_description.txt").readText() }
+        assertTrue(stores.keys.containsAll(listOf("en-US", "ar")), "the store languages this guard knows: ${stores.keys}")
+        val texts = stores.mapKeys { "store ${it.key}" } + ("site" to site)
+        for ((where, text) in texts) {
+            assertEquals(emptyList(), recipientViolations(text.replace("OpenCode team, Anthropic, OpenAI or Google", "")), "$where names the receivers")
+            assertTrue(Regex("(?i)daily visitor|daily hash").find(text) == null, "$where must not say daily")
+        }
+        assertTrue("changes every month" in site, "site says the hash changes every month")
+        assertTrue("changes every month" in stores.getValue("en-US"), "English store text says the hash changes every month")
+        assertTrue("كل شهر" in stores.getValue("ar"), "Arabic store text says the hash changes every month")
+        assertTrue(Regex("لا تحليلات|no analytics", RegexOption.IGNORE_CASE).find(stores.getValue("ar") + stores.getValue("en-US") + site) == null,
+            "no store or site text may deny the analytics that the app can send")
+    }
+
+    @Test
     fun `B-SEC-207 the new sender adds only documented build metadata to every event`() {
         for ((name, fields) in productSchema) {
             val event = umamiEvent(name, fields.mapValues { it.value.first() }, umamiPages.getValue("conversations"),
