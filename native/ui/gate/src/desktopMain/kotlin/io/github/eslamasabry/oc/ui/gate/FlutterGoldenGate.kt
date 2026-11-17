@@ -172,7 +172,7 @@ object FlutterGoldenGate {
             try {
                 val axes = axesOf(name, mode, ref, textScale, window, density, pixelRatio)
                 val native = render(axes, mode == "dark", motion, style, frame, wrap, content, act = act)
-                if (!goldenFile("${name}_$mode", ref).isFile && ReferenceGuard.outcome() == ReferenceGuard.Outcome.Skip) {
+                if (!goldenFile("${name}_$mode", ref).isFile) {
                     ImageIO.write(native, "png", File(out, "${name}_$mode-native.png")) // the picture is still rendered and kept
                     missingGolden = "picture ${name}_$mode"
                     continue
@@ -189,7 +189,8 @@ object FlutterGoldenGate {
             failures.drop(1).forEach { first.addSuppressed(it) }
             throw first
         }
-        // Outside the lanes that fetch the references a missing golden is a counted skip, never a pass.
+        // A missing golden is a counted skip outside the lanes that fetch the references, and a plain failure in them
+        // (never compare()'s IllegalStateException): ReferenceGuard.missing decides by the lane.
         missingGolden?.let { ReferenceGuard.missing(it) }
         return result
     }
