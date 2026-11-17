@@ -82,6 +82,13 @@ public interface KitComposerVoice {
      */
     @Composable public fun recording(field: KitVoiceField): KitVoiceRecording? = null
 
+    /**
+     * Where in [field]'s text the dictated words still forming sit (UTF-16 indices): the box draws them in the quieter
+     * text colour until they are confirmed. Null when nothing is unconfirmed (always, with an engine that does not
+     * stream).
+     */
+    @Composable public fun unconfirmed(field: KitVoiceField): IntRange? = null
+
     /** The recorder row inside the box while [recording] is not null: ✕, the live waveform and time, ✓. */
     @Composable public fun Recorder(field: KitVoiceField, modifier: Modifier) {}
 

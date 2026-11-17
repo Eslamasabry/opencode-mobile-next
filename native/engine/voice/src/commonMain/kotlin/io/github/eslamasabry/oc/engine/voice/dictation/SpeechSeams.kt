@@ -7,6 +7,9 @@ import io.github.eslamasabry.oc.engine.voice.models.DeviceProbeResult
 import io.github.eslamasabry.oc.engine.voice.models.InstalledPack
 import io.github.eslamasabry.oc.engine.voice.models.ModelPacks
 import io.github.eslamasabry.oc.engine.voice.state.PackId
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 
 /** Plan 10 §4.5. Android: `SherpaSpeechRecognizer` (sherpa-onnx Whisper, one decode at a time app-wide). */
 public interface SpeechRecognizer {
@@ -17,6 +20,15 @@ public interface SpeechRecognizer {
 public interface RecognizerSession {
     /** One ≤ 30 s chunk of 16 kHz float samples. Cancellation stops waiting; a decode inside JNI finishes, discarded. */
     public suspend fun transcribe(samples: FloatArray): Outcome<String>
+
+    /**
+     * Words that may still change for the audio being heard now, beside [transcribe]'s confirmed result (owner
+     * 2026-11-17: the text streams into the message box "like the big guys"). An engine that streams publishes them as
+     * they form and clears them when [transcribe] confirms the chunk. Today's Whisper decodes a whole chunk at once and
+     * streams nothing: this stays "".
+     */
+    public val partial: StateFlow<String>
+        get() = NoPartialWords
 
     public suspend fun close()
 }
@@ -59,3 +71,6 @@ public fun ModelPacks.asSpeechPackSource(): SpeechPackSource =
 
         override val language: VoiceLanguage get() = state.value.language
     }
+
+/** The partial words of an engine that streams nothing (always ""). */
+private val NoPartialWords: StateFlow<String> = MutableStateFlow("").asStateFlow()

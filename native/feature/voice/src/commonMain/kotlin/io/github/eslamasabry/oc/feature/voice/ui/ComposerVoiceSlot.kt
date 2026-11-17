@@ -149,6 +149,13 @@ public class ComposerVoiceSlot : KitComposerVoice {
     }
 
     @Composable
+    override fun unconfirmed(field: KitVoiceField): IntRange? {
+        val presenter = presenterFor(field)
+        val state by presenter.state.collectAsStateWithLifecycle()
+        return state.unconfirmed
+    }
+
+    @Composable
     override fun Recorder(field: KitVoiceField, modifier: Modifier) {
         val presenter = presenterFor(field)
         val state by presenter.state.collectAsStateWithLifecycle()

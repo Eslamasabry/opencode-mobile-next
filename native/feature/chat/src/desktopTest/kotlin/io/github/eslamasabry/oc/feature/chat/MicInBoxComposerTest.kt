@@ -71,8 +71,25 @@ class MicInBoxComposerTest {
     }
 
     /** A voice slot whose dictation the test switches on and off. */
-    private class Voice(val on: MutableState<Boolean>, val note: MutableState<Boolean> = mutableStateOf(false)) : KitComposerVoice {
+    private class Voice(
+        val on: MutableState<Boolean>,
+        val note: MutableState<Boolean> = mutableStateOf(false),
+        val streaming: String? = null,
+    ) : KitComposerVoice {
         var sendNows = 0
+
+        /** The theme's quieter text colour, as the box sees it. */
+        var quiet = androidx.compose.ui.graphics.Color.Unspecified
+
+        @Composable
+        override fun unconfirmed(field: KitVoiceField): IntRange? {
+            quiet = io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors.current.text2
+            val words = streaming ?: return null
+            // A streaming engine's words: the confirmed part, then the forming part (the last word) quieter.
+            androidx.compose.runtime.LaunchedEffect(words) { field.replace(words) }
+            val forming = words.substringAfterLast(' ')
+            return (words.length - forming.length) until words.length
+        }
 
         @Composable
         override fun Mic(field: KitVoiceField, modifier: Modifier) {
@@ -200,4 +217,27 @@ class MicInBoxComposerTest {
             .fetchSemanticsNode().boundsInRoot
         assertTrue(discard.width >= 47.5f, "✕ keeps 48 dp at text 1.3: $discard")
     }
+
+    @Test
+    fun `B-MEDIA-074 words still forming are drawn quieter in the message field, the confirmed ones in the normal colour`() =
+        runComposeUiTest {
+            val on = mutableStateOf(true)
+            val voice = Voice(on, streaming = "Whats next hello wor")
+            setContent { Scene(Actions(), voice) }
+            waitForIdle()
+            val node =
+                onNode(
+                    androidx.compose.ui.test.hasSetTextAction() and
+                        androidx.compose.ui.test.hasAnyAncestor(androidx.compose.ui.test.hasTestTag("chat-composer-field")),
+                    useUnmergedTree = true,
+                ).fetchSemanticsNode()
+            val layout =
+                mutableListOf<androidx.compose.ui.text.TextLayoutResult>()
+                    .also { node.config[SemanticsActions.GetTextLayoutResult].action!!(it) }
+                    .first()
+            val shown = layout.layoutInput.text
+            assertEquals("Whats next hello wor", shown.text)
+            val spans = shown.spanStyles.filter { it.item.color == voice.quiet }
+            assertEquals(listOf(17 to 20), spans.map { it.start to it.end }, "only the forming word is quieter: ${shown.spanStyles}")
+        }
 }

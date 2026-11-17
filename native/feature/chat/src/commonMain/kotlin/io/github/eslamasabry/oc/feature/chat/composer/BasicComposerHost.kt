@@ -1201,6 +1201,8 @@ public fun BasicComposer(
                             },
                             labelShown = false,
                             framed = false,
+                            // Dictation streams into the box (owner 2026-11-17): words still forming are quieter.
+                            quietRange = voice?.unconfirmed(voiceField),
                             focusRequester = focus,
                             enabled =
                                 if (editorReady && state.draft.ready) KitEnabled.Enabled

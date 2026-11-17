@@ -103,6 +103,9 @@ public class VoiceController(
         val silence = SilenceDetector()
         val queue = Channel<FloatArray>(Channel.UNLIMITED)
         val words = mutableListOf<String>()
+
+        /** The words being heard now, not yet confirmed (an engine that streams; "" for Whisper). */
+        var partial = ""
         var chunksDone = 0
         var bytesSeen = 0L
         var listening = false
@@ -314,26 +317,50 @@ public class VoiceController(
     }
 
     private suspend fun transcribeLoop(recording: Recording) {
-        if (openSession(recording) == null) return
+        val first = openSession(recording) ?: return
         recording.listening = true
         publishProgress(recording)
-        for (samples in recording.queue) {
-            val session = openSession(recording) ?: return
-            val result = decodeLock.withLock { session.transcribe(samples) }
-            when (result) {
-                is Outcome.Failed -> {
-                    chunkFailed(recording)
-                    return
+        // The words being heard now, from an engine that streams them (Whisper streams nothing: this stays quiet).
+        var watched: RecognizerSession = first
+        var partials = watchPartial(recording, first)
+        try {
+            for (samples in recording.queue) {
+                val session = openSession(recording) ?: return
+                if (session !== watched) {
+                    partials.cancel()
+                    watched = session
+                    partials = watchPartial(recording, session)
                 }
-                is Outcome.Ok -> {
-                    recording.words += result.value.trim()
-                    recording.chunksDone++
+                val result = decodeLock.withLock { session.transcribe(samples) }
+                when (result) {
+                    is Outcome.Failed -> {
+                        chunkFailed(recording)
+                        return
+                    }
+                    is Outcome.Ok -> {
+                        recording.words += result.value.trim()
+                        recording.partial = "" // confirmed words replace the partial ones
+                        recording.chunksDone++
+                        publishProgress(recording)
+                    }
+                }
+                if (closeBetweenChunks()) closeWarm()
+            }
+        } finally {
+            partials.cancel()
+        }
+    }
+
+    private fun watchPartial(recording: Recording, session: RecognizerSession): Job =
+        scope.launch {
+            session.partial.collect { heard ->
+                val next = heard.trim()
+                if (next != recording.partial) {
+                    recording.partial = next
                     publishProgress(recording)
                 }
             }
-            if (closeBetweenChunks()) closeWarm()
         }
-    }
 
     private fun publishProgress(recording: Recording) {
         if (current !== recording || recording.over) return
@@ -341,7 +368,7 @@ public class VoiceController(
             if (recording.stopping) {
                 VoiceState.Writing(recording.text)
             } else {
-                VoiceState.Listening(recording.since, recording.start.mode, recording.chunksDone, recording.text)
+                VoiceState.Listening(recording.since, recording.start.mode, recording.chunksDone, recording.text, recording.partial)
             }
     }
 

@@ -358,4 +358,40 @@ class VoiceControllerTest {
             assertEquals(1, source.verifies)
             assertEquals(1, audio.endCalls)
         }
+
+    @Test
+    fun `B-MEDIA-072 an engine that streams shows the words still forming, and confirmed words replace them`() =
+        runTest {
+            val voice = controller()
+            voice.start(tap)
+            runCurrent()
+            capture.speak(5)
+            runCurrent()
+            recognizer.partial.value = "hel"
+            runCurrent()
+            val forming = assertIs<VoiceState.Listening>(voice.state.value)
+            assertEquals("", forming.words)
+            assertEquals("hel", forming.partial)
+            recognizer.partial.value = "hello wor"
+            runCurrent()
+            assertEquals("hello wor", assertIs<VoiceState.Listening>(voice.state.value).partial)
+            capture.speak(25) // the 30 s chunk is complete and confirmed
+            runCurrent()
+            val confirmed = assertIs<VoiceState.Listening>(voice.state.value)
+            assertEquals("w1", confirmed.words)
+            assertEquals("", confirmed.partial, "confirmed words replace the forming ones")
+        }
+
+    @Test
+    fun `B-MEDIA-077 an engine that streams nothing, as Whisper, keeps partial words empty and the final text lands as before`() =
+        runTest {
+            val voice = controller()
+            voice.start(tap)
+            runCurrent()
+            capture.speak(5)
+            runCurrent()
+            assertEquals("", assertIs<VoiceState.Listening>(voice.state.value).partial)
+            assertEquals("w1".ok(), voice.finish())
+            assertEquals(VoiceState.Done("w1", VoiceEnd.Person), voice.state.value)
+        }
 }

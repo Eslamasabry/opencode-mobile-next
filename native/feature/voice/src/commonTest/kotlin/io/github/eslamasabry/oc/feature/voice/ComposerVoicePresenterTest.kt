@@ -30,8 +30,8 @@ class ComposerVoicePresenterTest {
             presenter.attach(field)
         }
 
-        fun listening(words: String) {
-            dictation.state.value = VoiceState.Listening(Instant.fromEpochMilliseconds(0), VoiceMode.Tap, 0, words)
+        fun listening(words: String, partial: String = "") {
+            dictation.state.value = VoiceState.Listening(Instant.fromEpochMilliseconds(0), VoiceMode.Tap, 0, words, partial)
         }
     }
 
@@ -404,5 +404,82 @@ class ComposerVoicePresenterTest {
         assertEquals(listOf(false), rig.dictation.cancels)
         assertEquals("Whats next", rig.field.value)
         assertTrue(rig.field.sent.isEmpty(), "nothing is sent on discard")
+    }
+
+    private fun TestScope.streaming(): Rig {
+        val rig = Rig(this)
+        rig.field.value = "Whats next"
+        runCurrent()
+        rig.presenter.tapMic()
+        runCurrent()
+        return rig
+    }
+
+    @Test
+    fun `B-MEDIA-072 words still forming appear in the box while listening, quieter, after the text typed before`() = runTest {
+        val rig = streaming()
+        rig.listening("", partial = "hel")
+        runCurrent()
+        assertEquals("Whats next hel", rig.field.value)
+        assertEquals(11..13, rig.presenter.state.value.unconfirmed, "the forming words are marked for the quieter colour")
+        rig.listening("", partial = "hello wor")
+        runCurrent()
+        assertEquals("Whats next hello wor", rig.field.value)
+        assertEquals(17..19, rig.presenter.state.value.unconfirmed)
+    }
+
+    @Test
+    fun `B-MEDIA-073 confirmed words replace the forming ones in the box`() = runTest {
+        val rig = streaming()
+        rig.listening("", partial = "hello wor")
+        runCurrent()
+        rig.listening("hello world", partial = "")
+        runCurrent()
+        assertEquals("Whats next hello world", rig.field.value)
+        assertNull(rig.presenter.state.value.unconfirmed, "nothing is unconfirmed any more")
+        rig.listening("hello world", partial = "and")
+        runCurrent()
+        assertEquals("Whats next hello world and", rig.field.value)
+        assertEquals(23..25, rig.presenter.state.value.unconfirmed)
+    }
+
+    @Test
+    fun `B-MEDIA-075 discard removes only what this dictation added and keeps the text typed before`() = runTest {
+        val rig = streaming()
+        rig.listening("hello", partial = "wor")
+        runCurrent()
+        assertEquals("Whats next hello wor", rig.field.value)
+        rig.presenter.cancel()
+        runCurrent()
+        assertEquals("Whats next", rig.field.value)
+        assertNull(rig.presenter.state.value.unconfirmed)
+        assertTrue(rig.field.sent.isEmpty())
+    }
+
+    @Test
+    fun `B-MEDIA-076 use the words ends listening and keeps the text already in the box`() = runTest {
+        val rig = streaming()
+        rig.listening("hello", partial = "wor")
+        runCurrent()
+        rig.presenter.done()
+        runCurrent()
+        assertEquals(1, rig.dictation.finishes, "✓ ends listening")
+        rig.dictation.state.value = VoiceState.Done("hello world", VoiceEnd.Person)
+        runCurrent()
+        assertEquals("Whats next hello world", rig.field.value)
+        assertNull(rig.presenter.state.value.unconfirmed)
+        assertTrue(rig.field.sent.isEmpty(), "✓ never sends")
+    }
+
+    @Test
+    fun `B-MEDIA-077 with an engine that streams nothing the final text lands as before`() = runTest {
+        val rig = streaming()
+        rig.listening("")
+        runCurrent()
+        assertEquals("Whats next", rig.field.value)
+        assertNull(rig.presenter.state.value.unconfirmed)
+        rig.dictation.state.value = VoiceState.Done("hello", VoiceEnd.Person)
+        runCurrent()
+        assertEquals("Whats next hello", rig.field.value)
     }
 }

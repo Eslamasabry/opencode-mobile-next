@@ -19,6 +19,8 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.BasicSecureTextField
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.input.OutputTransformation
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.InputTransformation
 import androidx.compose.foundation.text.input.KeyboardActionHandler
@@ -249,6 +251,11 @@ public fun KitField(
     framed: Boolean = true,
     /** Flutter KitField.composer: center text in the control target and omit an empty footer. */
     composer: Boolean = false,
+    /**
+     * Words in the value still forming (UTF-16 indices; dictation streaming into the message box, owner 2026-11-17):
+     * drawn in the quieter text colour until they are confirmed. Paint only: the value and its selection are unchanged.
+     */
+    quietRange: IntRange? = null,
 ) {
     kitAssert(label.isNotBlank()) { "KitField: a field needs its label" }
     kitAssert(
@@ -302,6 +309,7 @@ public fun KitField(
                 // Flutter `InputDecoration.labelText`: a label standing in the empty box keeps the body face, even
                 // over a monospaced value (kit_confirm_sheet.dart:556-560); only a given placeholder follows the kind.
                 placeholderIsLabel = placeholder == null && !labelShown,
+                quietRange = quietRange,
             )
         }
         val disabledNote = error == null && !enabled.isEnabled
@@ -392,6 +400,7 @@ private fun FieldBox(
     framed: Boolean = true,
     composer: Boolean = false,
     placeholderIsLabel: Boolean = false,
+    quietRange: IntRange? = null,
 ) {
     val colors = LocalKitColors.current
     val tokens = LocalKitTokens.current
@@ -639,11 +648,21 @@ private fun FieldBox(
                     multilineLines.last.coerceAtLeast(multilineLines.first.coerceAtLeast(1)),
             )
         else TextFieldLineLimits.SingleLine
+    val quietInk = colors.text2
+    val quiet =
+        quietRange?.let { range ->
+            OutputTransformation {
+                val from = range.first.coerceIn(0, length)
+                val to = (range.last + 1).coerceIn(from, length)
+                if (to > from) addStyle(SpanStyle(color = quietInk), from, to)
+            }
+        }
     BasicTextField(
         state = state,
         modifier = box.semantics { contentDescription = label },
         enabled = on,
         inputTransformation = finalInput,
+        outputTransformation = quiet,
         textStyle = style,
         keyboardOptions = keyboard,
         onKeyboardAction = submit,
