@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="kitDurPair">%1$s %2$s</string>
+    <string name="kitDurTenthsSeconds">%1$s s</string>
+    <plurals name="kitDurSeconds">
+        <item quantity="one">%1$s s</item>
+        <item quantity="many">%1$s s</item>
+        <item quantity="other">%1$s s</item>
+    </plurals>
+    <plurals name="kitDurMinutes">
+        <item quantity="one">%1$s min</item>
+        <item quantity="many">%1$s min</item>
+        <item quantity="other">%1$s min</item>
+    </plurals>
+    <plurals name="kitDurHours">
+        <item quantity="one">%1$s h</item>
+        <item quantity="many">%1$s h</item>
+        <item quantity="other">%1$s h</item>
+    </plurals>
+    <plurals name="kitDurDays">
+        <item quantity="one">%1$s dia</item>
+        <item quantity="many">%1$s dias</item>
+        <item quantity="other">%1$s dias</item>
+    </plurals>
+    <plurals name="kitDurCompactSeconds">
+        <item quantity="one">%1$s s</item>
+        <item quantity="many">%1$s s</item>
+        <item quantity="other">%1$s s</item>
+    </plurals>
+    <plurals name="kitDurCompactMinutes">
+        <item quantity="one">%1$s min</item>
+        <item quantity="many">%1$s min</item>
+        <item quantity="other">%1$s min</item>
+    </plurals>
+    <plurals name="kitDurCompactHours">
+        <item quantity="one">%1$s h</item>
+        <item quantity="many">%1$s h</item>
+        <item quantity="other">%1$s h</item>
+    </plurals>
+    <plurals name="kitDurCompactDays">
+        <item quantity="one">%1$s d</item>
+        <item quantity="many">%1$s d</item>
+        <item quantity="other">%1$s d</item>
+    </plurals>
+    <plurals name="kitRelMinutesAgo">
+        <item quantity="one">há %1$s min</item>
+        <item quantity="many">há %1$s min</item>
+        <item quantity="other">há %1$s min</item>
+    </plurals>
+    <plurals name="kitRelHoursAgo">
+        <item quantity="one">há %1$s h</item>
+        <item quantity="many">há %1$s h</item>
+        <item quantity="other">há %1$s h</item>
+    </plurals>
+    <plurals name="kitRelDaysAgo">
+        <item quantity="one">há %1$s dia</item>
+        <item quantity="many">há %1$s dias</item>
+        <item quantity="other">há %1$s dias</item>
+    </plurals>
+    <string name="kitResetNow">renova agora</string>
+    <string name="kitResetNowSentence">Renova agora</string>
+    <plurals name="kitResetMinutes">
+        <item quantity="one">Renova em %1$s min</item>
+        <item quantity="many">Renova em %1$s min</item>
+        <item quantity="other">Renova em %1$s min</item>
+    </plurals>
+    <plurals name="kitResetHours">
+        <item quantity="one">Renova em %1$s h</item>
+        <item quantity="many">Renova em %1$s h</item>
+        <item quantity="other">Renova em %1$s h</item>
+    </plurals>
+    <plurals name="kitResetDays">
+        <item quantity="one">Renova em %1$s dia</item>
+        <item quantity="many">Renova em %1$s dias</item>
+        <item quantity="other">Renova em %1$s dias</item>
+    </plurals>
+    <string name="kitResetCompound">Renova em %1$s</string>
+    <plurals name="kitResetLowerMinutes">
+        <item quantity="one">renova em %1$s min</item>
+        <item quantity="many">renova em %1$s min</item>
+        <item quantity="other">renova em %1$s min</item>
+    </plurals>
+    <plurals name="kitResetLowerHours">
+        <item quantity="one">renova em %1$s h</item>
+        <item quantity="many">renova em %1$s h</item>
+        <item quantity="other">renova em %1$s h</item>
+    </plurals>
+    <plurals name="kitResetLowerDays">
+        <item quantity="one">renova em %1$s dia</item>
+        <item quantity="many">renova em %1$s dias</item>
+        <item quantity="other">renova em %1$s dias</item>
+    </plurals>
+    <string name="kitResetLowerCompound">renova em %1$s</string>
+    <plurals name="kitApproxSeconds">
+        <item quantity="one">cerca de %1$s s</item>
+        <item quantity="many">cerca de %1$s s</item>
+        <item quantity="other">cerca de %1$s s</item>
+    </plurals>
+    <plurals name="kitApproxMinutes">
+        <item quantity="one">cerca de %1$s min</item>
+        <item quantity="many">cerca de %1$s min</item>
+        <item quantity="other">cerca de %1$s min</item>
+    </plurals>
+    <string name="kitDurLessThanMinute">menos de um minuto</string>
+    <string name="kitRelJustNow">Agora mesmo</string>
+    <string name="kitRelYesterday">Ontem</string>
+</resources>

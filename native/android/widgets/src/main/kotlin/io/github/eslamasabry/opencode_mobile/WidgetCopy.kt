@@ -10,17 +10,7 @@ import io.github.eslamasabry.oc.android.widgets.NativeStrings
 internal class WidgetCopy(private val context: Context, private val now: Long = System.currentTimeMillis()) {
     private fun s(id: Int, vararg args: Any) = NativeStrings.get(context, id, *args)
 
-    fun ago(thenMs: Long): String {
-        if (thenMs <= 0) return ""
-        val e = WidgetElapsedPolicy.elapsed(now, thenMs)
-        return when (e.kind) {
-            WidgetLayoutPolicy.Ago.NOW -> s(R.string.widget_v2_ago_now)
-            WidgetLayoutPolicy.Ago.MINUTES -> s(R.string.widget_v2_ago_min, e.count)
-            WidgetLayoutPolicy.Ago.HOURS -> s(R.string.widget_v2_ago_hour, e.count)
-            WidgetLayoutPolicy.Ago.YESTERDAY -> s(R.string.widget_v2_ago_yesterday)
-            else -> e.label
-        }
-    }
+    fun ago(thenMs: Long): String = WidgetDurationWords.ago(context, now, thenMs)
 
     fun offline(lastSeenMs: Long): String =
         if (lastSeenMs > 0) s(R.string.widget_v2_offline_seen, ago(lastSeenMs)) else s(R.string.widget_v2_offline_plain)

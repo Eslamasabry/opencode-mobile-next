@@ -21,9 +21,11 @@ import io.github.eslamasabry.oc.ui.kit.frame.*
 import io.github.eslamasabry.oc.ui.kit.modal.*
 import io.github.eslamasabry.oc.ui.kit.row.*
 import io.github.eslamasabry.oc.ui.kit.state.*
+import io.github.eslamasabry.oc.ui.kit.text.kitResetInWords
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.*
-import org.jetbrains.compose.resources.pluralStringResource
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.minutes
 import org.jetbrains.compose.resources.stringResource
 
 /**
@@ -381,21 +383,8 @@ private fun reset(state: AgentAccountUi, at: Long?, withDate: Boolean): String {
     if (at == null) return stringResource(Res.string.account40ResetUnknown)
     val left = at - state.nowMs
     val relative =
-        when {
-            left < 0 -> stringResource(Res.string.account40ResetDue)
-            left >= 48 * 3600000L -> {
-                val days = (left / 86400000L).toInt()
-                pluralStringResource(Res.plurals.account40ResetInDays, days, days)
-            }
-            left >= 3600000 -> {
-                val hours = (left / 3600000).toInt()
-                pluralStringResource(Res.plurals.account40ResetInHours, hours, hours)
-            }
-            else -> {
-                val minutes = (left / 60000).coerceAtLeast(1).toInt()
-                pluralStringResource(Res.plurals.account40ResetInMinutes, minutes, minutes)
-            }
-        }
+        if (left < 0L) stringResource(Res.string.account40ResetDue)
+        else kitResetInWords(left.milliseconds.coerceAtLeast(1.minutes), sentenceCase = true)
     return if (withDate && state.resetMoments[at] != null)
         stringResource(Res.string.account40ResetWhen, relative, state.resetMoments[at].orEmpty())
     else relative

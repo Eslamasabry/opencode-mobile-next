@@ -7,8 +7,14 @@
     <string name="notify_status_more">+%1$s more</string>
     <string name="notify_status_waiting_count">%1$s waiting</string>
     <string name="notify_status_tasks_progress">%1$s of %2$s tasks</string>
-    <string name="notify_status_minutes">%1$s min</string>
-    <string name="notify_status_hours">%1$s h</string>
+    <plurals name="notify_status_minutes">
+        <item quantity="one">%1$s min</item>
+        <item quantity="other">%1$s min</item>
+    </plurals>
+    <plurals name="notify_status_hours">
+        <item quantity="one">%1$s h</item>
+        <item quantity="other">%1$s h</item>
+    </plurals>
     <string name="notify_status_waiting_provider">Waiting · %1$s limit</string>
     <string name="notify_status_waiting_generic">Waiting · the provider is busy</string>
     <string name="notify_status_tries_again_at">Tries again at %1$s</string>

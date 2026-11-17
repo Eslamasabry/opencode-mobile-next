@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_label_short">OpenCode</string>
+    <string name="widget_v2_allow">1回のみ許可</string>
+    <string name="widget_v2_allow_short">許可</string>
+    <string name="widget_v2_new_in">%1$sで新しい会話</string>
+    <string name="widget_v2_new">新しい会話</string>
+    <string name="widget_v2_short_write">%1$sを書き込みますか？</string>
+    <string name="widget_v2_short_read">%1$sを読み取りますか？</string>
+    <string name="widget_v2_short_run">%1$sを実行しますか？</string>
+    <string name="widget_v2_ago_now">たった今</string>
+    <plurals name="widget_v2_ago_min">
+        <item quantity="other">%1$s分前</item>
+    </plurals>
+    <plurals name="widget_v2_ago_hour">
+        <item quantity="other">%1$s時間前</item>
+    </plurals>
+    <string name="widget_v2_ago_yesterday">昨日</string>
+    <string name="widget_v2_offline_seen">オフライン · 最終確認 %1$s</string>
+    <string name="widget_v2_offline_plain">オフライン</string>
+    <string name="widget_v2_background_settings">バックグラウンド設定</string>
+    <string name="widget_v2_open">開く</string>
+    <string name="widget_v2_ready">準備完了</string>
+    <string name="widget_v2_failed">操作できません</string>
+    <string name="widget_v2_pending">送信中…</string>
+    <string name="widget_v2_uncertain">会話を確認</string>
+    <string name="widget_v2_needs_you">対応が必要です</string>
+    <string name="widget_v2_working_now">実行中</string>
+    <string name="widget_v2_approve">プランを承認</string>
+    <string name="widget_v2_resume">再開</string>
+    <string name="widget_v2_empty">アプリを開いて接続</string>
+    <string name="widget_v2_voice">音声</string>
+    <plurals name="widget_v2_span_min">
+        <item quantity="other">%1$s分</item>
+    </plurals>
+    <plurals name="widget_v2_span_hour">
+        <item quantity="other">%1$s時間</item>
+    </plurals>
+    <string name="widget_preview_usage_p1">Codex</string>
+    <string name="widget_preview_usage_p2">Claude</string>
+    <string name="widget_preview_usage_5h">5時間  残り62%</string>
+    <string name="widget_preview_usage_wk">週間  残り18%</string>
+    <string name="widget_preview_usage_detail1">3時間後にリセット</string>
+    <string name="widget_preview_usage_detail2">4日後にリセット</string>
+    <string name="widget_preview_usage_wk_short">週  残り18%</string>
+    <string name="widget_preview_usage_5h_p2">5時間  残り34%</string>
+    <string name="widget_preview_usage_wk_p2">週間  残り71%</string>
+    <string name="widget_preview_usage_wk_short_p2">週  残り71%</string>
+    <string name="widget_v2_steer_hint">実行中に指示を追加…</string>
+    <string name="widget_v2_open_chat">会話を開く</string>
+    <string name="widget_conversations_title">会話</string>
+    <string name="widget_reply">返信</string>
+    <string name="widget_conversations_empty">会話はまだありません</string>
+    <string name="widget_conversations_empty_in">%1$sに会話はまだありません</string>
+    <string name="widget_status_title">ステータス</string>
+    <string name="widget_status_server">サーバー</string>
+    <string name="widget_status_online">オンライン</string>
+    <string name="widget_status_offline">オフライン</string>
+    <string name="widget_status_offline_for">オフライン %1$s</string>
+    <string name="widget_status_connecting">接続中</string>
+    <string name="widget_status_linux">Linux</string>
+    <string name="widget_status_running">実行中</string>
+    <string name="widget_status_stopped">停止中</string>
+    <string name="widget_status_tasks">タスク</string>
+    <string name="widget_status_tasks_none">なし</string>
+    <string name="widget_status_tasks_running">%1$s件実行中</string>
+    <plurals name="widget_status_span_day">
+        <item quantity="other">%1$s日</item>
+    </plurals>
+    <string name="widget_status_plan">%1$s · %2$s</string>
+    <string name="widget_status_left">残り %1$s%%</string>
+    <string name="widget_status_replace">このウィジェットを置き換えてください：「会話」または「ステータス」を追加します</string>
+    <string name="widget_allow_for">1回のみ許可: %1$s</string>
+    <string name="widget_reply_for">%1$sに返信</string>
+    <string name="widget_step_for">%1$s: %2$s</string>
+</resources>

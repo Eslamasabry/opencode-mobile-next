@@ -68,8 +68,6 @@ import io.github.eslamasabry.oc.ui.words.res.chatStepDeclinedNote
 import io.github.eslamasabry.oc.ui.words.res.chatStepPlanStopped
 import io.github.eslamasabry.oc.ui.words.res.kitToolPlanStopped
 import io.github.eslamasabry.oc.ui.words.res.approvalDeny
-import io.github.eslamasabry.oc.ui.words.res.chatUiDurationMinutesSeconds
-import io.github.eslamasabry.oc.ui.words.res.chatUiDurationSeconds
 import io.github.eslamasabry.oc.ui.words.res.chatUiGeneratedFile
 import io.github.eslamasabry.oc.ui.words.res.edgeLightActionOn
 import io.github.eslamasabry.oc.ui.words.res.edgeLightAnswer
@@ -408,8 +406,6 @@ internal fun rememberStepTreeWords(): KitStepTreeWords {
     val failed = stringResource(Res.string.kitToolFailed)
     val moreInside = stringResource(Res.string.edgeLightMoreInside)
     val more = stringResource(Res.string.edgeLightMoreSubAgents)
-    val seconds = stringResource(Res.string.chatUiDurationSeconds)
-    val minutes = stringResource(Res.string.chatUiDurationMinutesSeconds)
     val stop = stringResource(Res.string.edgeLightStop)
     val spoken = stringResource(Res.string.kitWorkSubAgentSpoken)
     val unfold = stringResource(Res.string.edgeLightShowSubAgents)
@@ -418,7 +414,7 @@ internal fun rememberStepTreeWords(): KitStepTreeWords {
     val deny = stringResource(Res.string.approvalDeny)
     val answer = stringResource(Res.string.edgeLightAnswer)
     val actionOn = stringResource(Res.string.edgeLightActionOn)
-    return remember(working, notStarted, needsYou, paused, denied, failed, moreInside, more, seconds, minutes, stop, spoken, unfold, fold, allowOnce, deny, answer, actionOn) {
+    return remember(working, notStarted, needsYou, paused, denied, failed, moreInside, more, stop, spoken, unfold, fold, allowOnce, deny, answer, actionOn) {
         fun on(action: String, target: String) = actionOn.replace("%1\$s", action).replace("%2\$s", target)
         KitStepTreeWords(
             working = working,
@@ -429,10 +425,6 @@ internal fun rememberStepTreeWords(): KitStepTreeWords {
             failed = failed,
             moreInside = { moreInside.replace("%1\$s", Numbers.format(it)) },
             more = { more.replace("%1\$s", Numbers.format(it)) },
-            duration = { s ->
-                if (s < 60) seconds.replace("%1\$s", Numbers.format(s))
-                else minutes.replace("%1\$s", Numbers.format(s / 60)).replace("%2\$s", (s % 60).toString().padStart(2, '0'))
-            },
             stop = { stop.replace("%1\$s", it) },
             spoken = { step, said -> spoken.replace("%1\$s", step.name).replace("%2\$s", said) },
             unfold = unfold,

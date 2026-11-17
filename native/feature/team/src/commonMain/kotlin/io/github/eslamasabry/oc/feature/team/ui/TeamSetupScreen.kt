@@ -39,6 +39,8 @@ import io.github.eslamasabry.oc.ui.kit.state.KitStateSize
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
 import io.github.eslamasabry.oc.ui.kit.state.KitStep
 import io.github.eslamasabry.oc.ui.kit.state.KitStepState
+import io.github.eslamasabry.oc.ui.kit.text.KitDurationStyle
+import io.github.eslamasabry.oc.ui.kit.text.kitElapsedSecondsMinutes
 import io.github.eslamasabry.oc.ui.words.res.*
 import org.jetbrains.compose.resources.stringResource
 
@@ -233,11 +235,8 @@ private fun proofLine(proof: SetupProof): String {
 }
 
 @Composable
-private fun elapsed(ms: Long): String {
-    val seconds = (ms / 1_000).coerceAtLeast(0)
-    return if (seconds < 60) stringResource(Res.string.teamProjectElapsedSeconds, seconds.toInt())
-    else stringResource(Res.string.teamProjectElapsedMinutes, (seconds / 60).toInt())
-}
+private fun elapsed(ms: Long): String =
+    kitElapsedSecondsMinutes((ms / 1_000L).coerceAtLeast(0L), style = KitDurationStyle.Standard)
 
 /** One row per step; every mark comes from the engine's own signals. */
 @Composable

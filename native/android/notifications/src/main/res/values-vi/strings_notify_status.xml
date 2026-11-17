@@ -7,8 +7,12 @@
     <string name="notify_status_more">+%1$s nữa</string>
     <string name="notify_status_waiting_count">%1$s đang chờ</string>
     <string name="notify_status_tasks_progress">%1$s/%2$s tác vụ</string>
-    <string name="notify_status_minutes">%1$s phút</string>
-    <string name="notify_status_hours">%1$s giờ</string>
+    <plurals name="notify_status_minutes">
+        <item quantity="other">%1$s phút</item>
+    </plurals>
+    <plurals name="notify_status_hours">
+        <item quantity="other">%1$s giờ</item>
+    </plurals>
     <string name="notify_status_waiting_provider">Đang chờ · giới hạn %1$s</string>
     <string name="notify_status_waiting_generic">Đang chờ · nhà cung cấp đang bận</string>
     <string name="notify_status_tries_again_at">Sẽ thử lại lúc %1$s</string>

@@ -10,8 +10,12 @@
     <string name="widget_v2_short_read">读取 %1$s？</string>
     <string name="widget_v2_short_run">运行 %1$s？</string>
     <string name="widget_v2_ago_now">刚刚</string>
-    <string name="widget_v2_ago_min">%1$s 分钟前</string>
-    <string name="widget_v2_ago_hour">%1$s 小时前</string>
+    <plurals name="widget_v2_ago_min">
+        <item quantity="other">%1$s 分钟前</item>
+    </plurals>
+    <plurals name="widget_v2_ago_hour">
+        <item quantity="other">%1$s 小时前</item>
+    </plurals>
     <string name="widget_v2_ago_yesterday">昨天</string>
     <string name="widget_v2_offline_seen">离线 · 上次在线 %1$s</string>
     <string name="widget_v2_offline_plain">离线</string>
@@ -27,8 +31,12 @@
     <string name="widget_v2_resume">继续</string>
     <string name="widget_v2_empty">打开应用以连接</string>
     <string name="widget_v2_voice">语音</string>
-    <string name="widget_v2_span_min">%1$s 分钟</string>
-    <string name="widget_v2_span_hour">%1$s 小时</string>
+    <plurals name="widget_v2_span_min">
+        <item quantity="other">%1$s 分钟</item>
+    </plurals>
+    <plurals name="widget_v2_span_hour">
+        <item quantity="other">%1$s 小时</item>
+    </plurals>
     <string name="widget_preview_usage_p1">Codex</string>
     <string name="widget_preview_usage_p2">Claude</string>
     <string name="widget_preview_usage_5h">5 小时 \u0020剩余 62%</string>
@@ -57,7 +65,9 @@
     <string name="widget_status_tasks">任务</string>
     <string name="widget_status_tasks_none">无</string>
     <string name="widget_status_tasks_running">%1$s 个运行中</string>
-    <string name="widget_status_span_day">%1$s 天</string>
+    <plurals name="widget_status_span_day">
+        <item quantity="other">%1$s 天</item>
+    </plurals>
     <string name="widget_status_plan">%1$s · %2$s</string>
     <string name="widget_status_left">剩余 %1$s%%</string>
     <string name="widget_status_replace">请替换此小组件：添加“对话”或“状态”</string>

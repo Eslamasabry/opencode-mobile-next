@@ -10,8 +10,18 @@
     <string name="widget_v2_short_read">Прочитать %1$s?</string>
     <string name="widget_v2_short_run">Запустить %1$s?</string>
     <string name="widget_v2_ago_now">только что</string>
-    <string name="widget_v2_ago_min">%1$s мин назад</string>
-    <string name="widget_v2_ago_hour">%1$s ч назад</string>
+    <plurals name="widget_v2_ago_min">
+        <item quantity="one">%1$s минуту назад</item>
+        <item quantity="few">%1$s минуты назад</item>
+        <item quantity="many">%1$s минут назад</item>
+        <item quantity="other">%1$s минуты назад</item>
+    </plurals>
+    <plurals name="widget_v2_ago_hour">
+        <item quantity="one">%1$s час назад</item>
+        <item quantity="few">%1$s часа назад</item>
+        <item quantity="many">%1$s часов назад</item>
+        <item quantity="other">%1$s часа назад</item>
+    </plurals>
     <string name="widget_v2_ago_yesterday">вчера</string>
     <string name="widget_v2_offline_seen">Не в сети · в сети %1$s</string>
     <string name="widget_v2_offline_plain">Не в сети</string>
@@ -27,8 +37,18 @@
     <string name="widget_v2_resume">Продолжить</string>
     <string name="widget_v2_empty">Откройте приложение, чтобы подключиться</string>
     <string name="widget_v2_voice">Голос</string>
-    <string name="widget_v2_span_min">%1$s мин</string>
-    <string name="widget_v2_span_hour">%1$s ч</string>
+    <plurals name="widget_v2_span_min">
+        <item quantity="one">%1$s мин</item>
+        <item quantity="few">%1$s мин</item>
+        <item quantity="many">%1$s мин</item>
+        <item quantity="other">%1$s мин</item>
+    </plurals>
+    <plurals name="widget_v2_span_hour">
+        <item quantity="one">%1$s ч</item>
+        <item quantity="few">%1$s ч</item>
+        <item quantity="many">%1$s ч</item>
+        <item quantity="other">%1$s ч</item>
+    </plurals>
     <string name="widget_preview_usage_p1">Codex</string>
     <string name="widget_preview_usage_p2">Claude</string>
     <string name="widget_preview_usage_5h">5 ч: осталось 62%</string>
@@ -57,7 +77,12 @@
     <string name="widget_status_tasks">Задачи</string>
     <string name="widget_status_tasks_none">нет</string>
     <string name="widget_status_tasks_running">Выполняется: %1$s</string>
-    <string name="widget_status_span_day">%1$s д</string>
+    <plurals name="widget_status_span_day">
+        <item quantity="one">%1$s д</item>
+        <item quantity="few">%1$s д</item>
+        <item quantity="many">%1$s д</item>
+        <item quantity="other">%1$s д</item>
+    </plurals>
     <string name="widget_status_plan">%1$s · %2$s</string>
     <string name="widget_status_left">Осталось %1$s%%</string>
     <string name="widget_status_replace">Замените этот виджет: добавьте «Чаты» или «Состояние»</string>

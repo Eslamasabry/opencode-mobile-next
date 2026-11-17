@@ -10,6 +10,8 @@ import io.github.eslamasabry.oc.feature.team.presentation.TeamMark
 import io.github.eslamasabry.oc.feature.team.presentation.TeamRules
 import io.github.eslamasabry.oc.ui.kit.team.KitTaskState
 import io.github.eslamasabry.oc.ui.kit.team.KitTeamState
+import io.github.eslamasabry.oc.ui.kit.text.KitDurationStyle
+import io.github.eslamasabry.oc.ui.kit.text.kitElapsedSecondsMinutes
 import io.github.eslamasabry.oc.ui.kit.text.kitRelativeAge
 import io.github.eslamasabry.oc.ui.words.res.*
 import org.jetbrains.compose.resources.pluralStringResource
@@ -103,11 +105,7 @@ internal fun columnWord(column: BoardColumn): String =
 internal fun elapsedWords(fromMs: Long?, nowMs: Long): String {
     if (fromMs == null) return ""
     val seconds = ((nowMs - fromMs) / 1000).coerceAtLeast(0)
-    return when {
-        seconds < 60 -> stringResource(Res.string.teamProjectElapsedSeconds, seconds.toInt())
-        seconds < 3600 -> stringResource(Res.string.teamProjectElapsedMinutes, (seconds / 60).toInt())
-        else -> stringResource(Res.string.teamProjectElapsedHours, (seconds / 3600).toInt(), ((seconds / 60) % 60).toInt())
-    }
+    return kitElapsedSecondsMinutes(seconds, style = KitDurationStyle.Standard)
 }
 
 /** Dart `_age`: empty when the engine gave no time. */

@@ -59,6 +59,8 @@ import io.github.eslamasabry.oc.ui.kit.team.KitWorkGraph
 import io.github.eslamasabry.oc.ui.kit.team.KitWorkGraphLayout
 import io.github.eslamasabry.oc.ui.kit.team.KitWorkGraphMark
 import io.github.eslamasabry.oc.ui.kit.team.KitWorkGraphNode
+import io.github.eslamasabry.oc.ui.kit.text.KitDurationStyle
+import io.github.eslamasabry.oc.ui.kit.text.kitMinutesDurationWords
 import io.github.eslamasabry.oc.ui.words.res.*
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
@@ -160,14 +162,8 @@ private fun stageWord(stage: FleetStage): String =
 
 /** Dart `KitSince.durationWords`: minutes, hours and minutes, or days. */
 @Composable
-private fun durationWords(ms: Long): String {
-    val minutes = (ms / 60_000).toInt()
-    return when {
-        minutes < 60 -> stringResource(Res.string.teamUiRunElapsedMinutes, minutes)
-        minutes < 24 * 60 -> stringResource(Res.string.teamUiRunElapsedHours, minutes / 60, minutes % 60)
-        else -> stringResource(Res.string.teamUiRunElapsedDays, minutes / (24 * 60))
-    }
-}
+private fun durationWords(ms: Long): String =
+    kitMinutesDurationWords(ms, KitDurationStyle.Standard)
 
 /** Dart `teamWorkStateWord`. */
 @Composable

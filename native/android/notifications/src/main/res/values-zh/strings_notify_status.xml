@@ -7,8 +7,12 @@
     <string name="notify_status_more">另外 %1$s 个</string>
     <string name="notify_status_waiting_count">%1$s 个在等待</string>
     <string name="notify_status_tasks_progress">%1$s / %2$s 项任务</string>
-    <string name="notify_status_minutes">%1$s 分钟</string>
-    <string name="notify_status_hours">%1$s 小时</string>
+    <plurals name="notify_status_minutes">
+        <item quantity="other">%1$s 分钟</item>
+    </plurals>
+    <plurals name="notify_status_hours">
+        <item quantity="other">%1$s 小时</item>
+    </plurals>
     <string name="notify_status_waiting_provider">等待中 · %1$s 限额</string>
     <string name="notify_status_waiting_generic">等待中 · 服务商繁忙</string>
     <string name="notify_status_tries_again_at">将于 %1$s 重试</string>

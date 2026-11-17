@@ -10,8 +10,12 @@
     <string name="widget_v2_short_read">Đọc %1$s?</string>
     <string name="widget_v2_short_run">Chạy %1$s?</string>
     <string name="widget_v2_ago_now">vừa xong</string>
-    <string name="widget_v2_ago_min">%1$s phút trước</string>
-    <string name="widget_v2_ago_hour">%1$s giờ trước</string>
+    <plurals name="widget_v2_ago_min">
+        <item quantity="other">%1$s phút trước</item>
+    </plurals>
+    <plurals name="widget_v2_ago_hour">
+        <item quantity="other">%1$s giờ trước</item>
+    </plurals>
     <string name="widget_v2_ago_yesterday">hôm qua</string>
     <string name="widget_v2_offline_seen">Ngoại tuyến · lần cuối thấy %1$s</string>
     <string name="widget_v2_offline_plain">Ngoại tuyến</string>
@@ -27,8 +31,12 @@
     <string name="widget_v2_resume">Tiếp tục</string>
     <string name="widget_v2_empty">Mở ứng dụng để kết nối</string>
     <string name="widget_v2_voice">Giọng nói</string>
-    <string name="widget_v2_span_min">%1$s phút</string>
-    <string name="widget_v2_span_hour">%1$s giờ</string>
+    <plurals name="widget_v2_span_min">
+        <item quantity="other">%1$s phút</item>
+    </plurals>
+    <plurals name="widget_v2_span_hour">
+        <item quantity="other">%1$s giờ</item>
+    </plurals>
     <string name="widget_preview_usage_p1">Codex</string>
     <string name="widget_preview_usage_p2">Claude</string>
     <string name="widget_preview_usage_5h">5 giờ \u0020còn 62%</string>
@@ -57,7 +65,9 @@
     <string name="widget_status_tasks">Tác vụ</string>
     <string name="widget_status_tasks_none">không có</string>
     <string name="widget_status_tasks_running">%1$s đang chạy</string>
-    <string name="widget_status_span_day">%1$s ngày</string>
+    <plurals name="widget_status_span_day">
+        <item quantity="other">%1$s ngày</item>
+    </plurals>
     <string name="widget_status_plan">%1$s · %2$s</string>
     <string name="widget_status_left">còn %1$s%%</string>
     <string name="widget_status_replace">Thay tiện ích này: thêm Cuộc trò chuyện hoặc Trạng thái</string>

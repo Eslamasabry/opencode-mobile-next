@@ -2,6 +2,7 @@ package io.github.eslamasabry.oc.feature.usage.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -45,6 +46,9 @@ import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
 import io.github.eslamasabry.oc.ui.kit.state.KitStateView
 import io.github.eslamasabry.oc.ui.kit.state.KitTechnicalValue
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
+import io.github.eslamasabry.oc.ui.kit.text.KitDurationStyle
+import io.github.eslamasabry.oc.ui.kit.text.kitDurationParts
+import io.github.eslamasabry.oc.ui.kit.text.kitDurationWords
 import io.github.eslamasabry.oc.ui.kitchat.LocalKitRedactor
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.s9LimitsAboutPace
@@ -52,19 +56,14 @@ import io.github.eslamasabry.oc.ui.words.res.s9LimitsAhead
 import io.github.eslamasabry.oc.ui.words.res.s9LimitsBroken
 import io.github.eslamasabry.oc.ui.words.res.s9LimitsCantRead
 import io.github.eslamasabry.oc.ui.words.res.s9LimitsCopyDetails
-import io.github.eslamasabry.oc.ui.words.res.s9LimitsDays
-import io.github.eslamasabry.oc.ui.words.res.s9LimitsDaysHours
 import io.github.eslamasabry.oc.ui.words.res.s9LimitsDetails
 import io.github.eslamasabry.oc.ui.words.res.s9LimitsEmptyBody
 import io.github.eslamasabry.oc.ui.words.res.s9LimitsEmptyTitle
 import io.github.eslamasabry.oc.ui.words.res.s9LimitsExpired
 import io.github.eslamasabry.oc.ui.words.res.s9LimitsFiveHours
-import io.github.eslamasabry.oc.ui.words.res.s9LimitsHours
-import io.github.eslamasabry.oc.ui.words.res.s9LimitsHoursMinutes
 import io.github.eslamasabry.oc.ui.words.res.s9LimitsKeyNoLimits
 import io.github.eslamasabry.oc.ui.words.res.s9LimitsKeys
 import io.github.eslamasabry.oc.ui.words.res.s9LimitsLeft
-import io.github.eslamasabry.oc.ui.words.res.s9LimitsMinutes
 import io.github.eslamasabry.oc.ui.words.res.s9LimitsMonth
 import io.github.eslamasabry.oc.ui.words.res.s9LimitsNoLimits
 import io.github.eslamasabry.oc.ui.words.res.s9LimitsNoReset
@@ -92,6 +91,8 @@ import io.github.eslamasabry.oc.ui.words.res.s9LimitsWithinPace
 import io.github.eslamasabry.oc.ui.words.res.usageDetailAccount
 import io.github.eslamasabry.oc.ui.words.res.usageNo
 import io.github.eslamasabry.oc.ui.words.res.usageYes
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.minutes
 import org.jetbrains.compose.resources.stringResource
 
 /**
@@ -185,8 +186,13 @@ private fun Headline(window: LimitWindowUi) {
     val pace = paceWords(window)
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
         KitText(name, role = TypeRole.Label, tone = TextTone.Secondary)
-        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Bottom) {
-            KitText(left, Modifier.weight(1f).testTag("limit-left"), role = TypeRole.Title, tabular = true)
+        FlowRow(
+            Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalArrangement = Arrangement.spacedBy(Space.S1.dp),
+            itemVerticalAlignment = Alignment.Bottom,
+        ) {
+            KitText(left, Modifier.padding(end = Space.S3.dp).testTag("limit-left"), role = TypeRole.Title, tabular = true)
             KitText(reset, role = TypeRole.Secondary, tone = TextTone.Secondary, tabular = true)
         }
         KitLimitBar(
@@ -319,19 +325,11 @@ private fun resetWords(reset: ResetIn?): String =
 /** "1h 38m", "2d 4h", "2h", "3d", "12m": the two largest units, a zero second unit left out. */
 @Composable
 private fun parts(days: Long, hours: Long, minutes: Long): String =
-    when {
-        days > 0 && hours > 0 -> stringResource(Res.string.s9LimitsDaysHours, "$days", "$hours")
-        days > 0 -> stringResource(Res.string.s9LimitsDays, "$days")
-        hours > 0 && minutes > 0 -> stringResource(Res.string.s9LimitsHoursMinutes, "$hours", "$minutes")
-        hours > 0 -> stringResource(Res.string.s9LimitsHours, "$hours")
-        else -> stringResource(Res.string.s9LimitsMinutes, "${minutes.coerceAtLeast(1)}")
-    }
+    kitDurationParts(days = days, hours = hours, minutes = minutes.coerceAtLeast(if (days == 0L && hours == 0L) 1L else 0L), style = KitDurationStyle.Compact)
 
 @Composable
-private fun span(ms: Long): String {
-    val minutes = (ms / 60_000).coerceAtLeast(1)
-    return parts(minutes / 1_440, minutes % 1_440 / 60, minutes % 60)
-}
+private fun span(ms: Long): String =
+    kitDurationWords(ms.milliseconds.coerceAtLeast(1.minutes), style = KitDurationStyle.Compact)
 
 /** The plain pace line: its tone, the words shown, and the words read aloud (which also say where the mark is). */
 private data class PaceWords(val tone: TextTone, val shown: String, val spoken: String)

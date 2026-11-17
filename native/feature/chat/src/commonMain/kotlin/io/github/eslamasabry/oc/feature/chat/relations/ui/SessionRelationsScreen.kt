@@ -44,6 +44,7 @@ import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
 import io.github.eslamasabry.oc.ui.kit.row.KitRowState
 import io.github.eslamasabry.oc.ui.kit.row.KitRowStateTone
 import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
+import io.github.eslamasabry.oc.ui.kit.text.kitRelativeAgeFromMinutes
 import io.github.eslamasabry.oc.ui.kit.state.KitErrorNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitStateKind
@@ -190,15 +191,7 @@ private fun RelationRowView(
 ) {
     var menuOpen by remember(row.id) { mutableStateOf(false) }
     val rowTitle = title(row)
-    val age = row.ageMinutes
-    val ageWords =
-        when {
-            age == null -> null
-            age < 1 -> stringResource(Res.string.r40RelationsJustNow)
-            age < 60 -> stringResource(Res.string.r40RelationsMinutes, Numbers.format(age))
-            age < 1440 -> stringResource(Res.string.r40RelationsHours, Numbers.format(age / 60))
-            else -> stringResource(Res.string.r40RelationsDays, Numbers.format(age / 1440))
-        }
+    val ageWords = row.ageMinutes?.let { kitRelativeAgeFromMinutes(it) }
     val status =
         when (row.status) {
             RelationStatus.NeedsYou -> stringResource(Res.string.kitTaskNeedsYou)

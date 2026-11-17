@@ -79,7 +79,6 @@ english	fr	kitSuggestionsLabel
 english	fr	kitTimeMinute
 english	fr	kitToolTookMinutes
 english	fr	kitToolTookMinutes__eq1
-english	fr	kitTurnLiveMinutes
 english	fr	linuxIdleMinutesValue
 english	fr	linuxMgrKindAgent
 english	fr	linuxMgrPortRow
@@ -96,7 +95,6 @@ english	fr	monitorNativeConversation
 english	fr	monitorSession
 english	fr	nativeSearchPlaceNotifications
 english	fr	nlibConversation
-english	fr	notify_status_minutes
 english	fr	p12LogPause
 english	fr	p12NewAgent
 english	fr	p12SearchConversationsWhat

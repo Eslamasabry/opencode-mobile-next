@@ -351,4 +351,28 @@ class StatusModelParityTest {
         assertNotEquals("Paused · phone is hot", s.title)
         assertTrue("ساخن" in s.title)
     }
+
+    @Test
+    fun `B-ANDR-048 status notification durations use plural forms and localized units in all languages`() {
+        assertEquals("دقيقة واحدة", ar.minutes(1))
+        assertEquals("دقيقتان", ar.minutes(2))
+        assertEquals("5 دقائق", ar.minutes(5))
+        assertEquals("15 دقيقة", ar.minutes(15))
+        assertEquals("ساعة واحدة", ar.hours(1))
+        assertEquals("ساعتان", ar.hours(2))
+
+        val ja = AndroidStatusWords(NotifyWords(app) { "ja" })
+        assertEquals("5分", ja.minutes(5))
+        assertEquals("2時間", ja.hours(2))
+
+        val ru = AndroidStatusWords(NotifyWords(app) { "ru" })
+        assertEquals("5 мин", ru.minutes(5))
+        assertEquals("2 ч", ru.hours(2))
+
+        val fr = AndroidStatusWords(NotifyWords(app) { "fr" })
+        assertEquals("5 min", fr.minutes(5))
+
+        val vi = AndroidStatusWords(NotifyWords(app) { "vi" })
+        assertEquals("5 phút", vi.minutes(5))
+    }
 }
