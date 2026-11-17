@@ -192,7 +192,7 @@ if $GO; then
     fail "the allocator refused $NEXT"
   [[ "$(prop versionCode)" == "$NEXT" ]] || cannot "version.properties does not hold $NEXT after allocation"
   git add native/version.properties native/BUILD_NUMBERS.md
-  git commit --quiet -m "build(release): native $NAME+$NEXT [skip ci]" \
+  git commit --quiet -m "build(release): native $NAME+$NEXT" \
     -m "Takes versionCode $NEXT for the $LINEAGE-lineage fix-forward release (scripts/native-release.sh --go)." \
     -m "Release-Tag: $TAG"
   say "  committed   the version bump ($(git rev-parse --short HEAD)), not pushed"
