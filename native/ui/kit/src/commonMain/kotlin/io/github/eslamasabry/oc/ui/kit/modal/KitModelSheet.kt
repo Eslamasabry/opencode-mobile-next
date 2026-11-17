@@ -336,6 +336,12 @@ public fun KitModelSheet(
     loading: Boolean = false,
     above: @Composable ColumnScope.() -> Unit = {},
     below: @Composable ColumnScope.() -> Unit = {},
+    /**
+     * The caller's choice that frames the whole list (the chat's Thinking levels): drawn right under the title, above the
+     * search field, and it stays put while the list scrolls under it. Empty content takes no room. It is part of the
+     * sheet's head, not a new row level; it shows once the list has models.
+     */
+    header: @Composable ColumnScope.() -> Unit = {},
     morphFrom: Any? = null,
 ) {
     // Closing by any route (a pick, the close button, Back, the scrim) lets the search field go and hides the keyboard
@@ -356,7 +362,7 @@ public fun KitModelSheet(
     ) {
         ModelSheetBody(
             options, loading, current, { release.run(); onChoose(it) }, favorites, recent, onToggleFavorite, offersServerDefault, serverDefault, resetKey, suggested,
-            suggestedLabel, release, above, below,
+            suggestedLabel, release, above, below, header,
         )
     }
 }
@@ -378,6 +384,7 @@ private fun ColumnScope.ModelSheetBody(
     release: SheetRelease,
     above: @Composable ColumnScope.() -> Unit,
     below: @Composable ColumnScope.() -> Unit,
+    header: @Composable ColumnScope.() -> Unit,
 ) {
     val focusManager = LocalFocusManager.current
     val keyboard = LocalSoftwareKeyboardController.current
@@ -409,6 +416,14 @@ private fun ColumnScope.ModelSheetBody(
         return
     }
     if (loading) UpdatingMark(rail)
+    // The caller's framing choice stands first, directly under the title and above the search field; the list scrolls
+    // under it. It takes no room when it has nothing to say (a model without levels).
+    KitStackScope {
+        Column(
+            Modifier.fillMaxWidth().padding(start = rail, end = rail).stepUnder(Space.S2.dp).testTag("chat-model-header"),
+            verticalArrangement = gap,
+        ) { header() }
+    }
     // The search is read from the field itself, in the same frame as the key: a local list needs no wait.
     val search = remember(resetKey) { TextFieldState() }
     val query = search.text.toString()

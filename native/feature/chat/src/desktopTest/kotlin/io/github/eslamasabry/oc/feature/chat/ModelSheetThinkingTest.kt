@@ -10,6 +10,9 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.graphics.toAwtImage
+import androidx.compose.ui.test.captureToImage
+import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performScrollToIndex
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.v2.runDesktopComposeUiTest
@@ -150,4 +153,36 @@ class ModelSheetThinkingTest {
 
     @Test
     fun `B-CHAT-073 no Thinking chip is cut at 360 dp, text 1_3`() = noChipCut(1.3f)
+
+    /** The sheet at 360 dp wide, density 3, dark, text 1.0 and 1.3, written to build/model-sheet-render for review. */
+    @Test
+    fun `B-CHAT-073 render the model sheet at 360 dp, text 1_0 and 1_3`() {
+        for (scale in listOf(1.0f, 1.3f)) {
+            runDesktopComposeUiTest(1080, 2200) {
+                setContent {
+                    CompositionLocalProvider(LocalDensity provides Density(3f, scale)) {
+                        KitTheme(
+                            platform = DesktopKitPlatform(),
+                            appearance =
+                                KitAppearance(
+                                    mode = io.github.eslamasabry.oc.ui.design.effects.AppearanceMode.Dark,
+                                    motion = MotionLevel.Off,
+                                ),
+                            stillFrame = true,
+                            localeTag = "en",
+                        ) {
+                            KitSheetHost { BasicComposer(ui(withThinker()), Actions(), chrome) }
+                        }
+                    }
+                }
+                onNodeWithContentDescription("Model").performClick()
+                waitForIdle()
+                val image = onRoot().captureToImage().toAwtImage()
+                val file = java.io.File("build/model-sheet-render/sheet-dark-360-text-$scale.png")
+                file.parentFile.mkdirs()
+                javax.imageio.ImageIO.write(image, "png", file)
+                assertEquals(1080, image.width)
+            }
+        }
+    }
 }
