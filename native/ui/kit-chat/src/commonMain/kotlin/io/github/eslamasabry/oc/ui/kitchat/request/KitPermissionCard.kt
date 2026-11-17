@@ -489,9 +489,10 @@ private fun AlwaysLink(label: String, onAlways: () -> Unit, enabled: Boolean, re
 
 /**
  * M-005 (Flutter `kit_request_card.dart`): every answer (Allow, Deny, Always, and the deny reply's two answers) plays the
- * light `Send` haptic, the person's words leaving. Opening the reply field is not an answer and stays silent (MOT-11).
+ * consequential `Commit` haptic (approving or denying is felt as stronger than a send). Opening the reply field is
+ * not an answer and stays silent (MOT-11).
  */
-internal val ANSWER_HAPTIC: KitHaptic = KitHaptic.Send
+internal val ANSWER_HAPTIC: KitHaptic = KitHaptic.Commit
 
 /**
  * 45 % of the window's height (60 % at 2× text and above), from the kit's window ([LocalKitWindow], the one window

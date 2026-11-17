@@ -185,6 +185,7 @@ public fun KitIconButtonCopy(
     label: String = "Copy",
     mask: KitCopyMask = KitCopyVerbatim,
     maskedLabel: String? = null,
+    clipboardMode: KitClipboardMode = KitClipboardMode.Sensitive,
 ) {
     val clipboard = io.github.eslamasabry.oc.ui.kit.foundation.rememberKitClipboard()
     var copied by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
@@ -200,11 +201,11 @@ public fun KitIconButtonCopy(
         if (copied && masked && maskedLabel != null) maskedLabel else label,
         onClick = {
             val out = mask.apply(text())
-            clipboard.setText(androidx.compose.ui.text.AnnotatedString(out.text), KitClipboardMode.Sensitive)
+            clipboard.setText(androidx.compose.ui.text.AnnotatedString(out.text), clipboardMode)
             masked = out.masked
             copied = true
         },
-        haptic = KitHaptic.Send,
+        haptic = KitHaptic.Select,
         modifier =
             if (maskedLabel == null) modifier
             else

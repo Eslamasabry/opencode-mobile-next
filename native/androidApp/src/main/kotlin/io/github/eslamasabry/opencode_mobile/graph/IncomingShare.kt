@@ -162,7 +162,7 @@ internal class IncomingShare(
 
     fun copy() {
         val words = text ?: return
-        KitAndroidClipboard.write(context, words, KitClipboardMode.Sensitive)
+        KitAndroidClipboard.write(context, words, KitClipboardMode.Public)
     }
 
     fun discard() {

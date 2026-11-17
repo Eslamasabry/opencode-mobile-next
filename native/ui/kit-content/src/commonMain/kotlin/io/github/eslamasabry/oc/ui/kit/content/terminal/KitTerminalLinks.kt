@@ -6,7 +6,7 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.tokens.Space
-import androidx.compose.foundation.text.selection.SelectionContainer
+import io.github.eslamasabry.oc.ui.kit.foundation.KitClipboardSelection
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
@@ -124,7 +124,7 @@ public fun KitTerminalLinkSheet(flow: KitTerminalLinkFlow) {
     ) {
         // An address reads left to right in every language (Dart: Directionality ltr).
         CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-            SelectionContainer {
+            KitClipboardSelection(KitClipboardMode.Sensitive) {
                 KitText(
                     flow.shown,
                     Modifier.testTag("terminal-link-url"),

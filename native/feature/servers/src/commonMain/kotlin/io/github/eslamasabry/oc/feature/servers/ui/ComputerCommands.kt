@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.servers.ui
 
+import io.github.eslamasabry.oc.ui.kit.foundation.KitClipboardMode
 import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.*
 import io.github.eslamasabry.oc.core.model.BackendKind
@@ -22,7 +23,7 @@ internal fun ComputerCommands() {
     var backend by remember { mutableStateOf(BackendKind.OpenCode2) }
     var clip by remember { mutableStateOf<String?>(null) }
     var clipId by remember { mutableLongStateOf(0L) }
-    KitClipboardEffect(if (clip == null) null else clipId, clip, onDone = { clip = null })
+    KitClipboardEffect(if (clip == null) null else clipId, clip, onDone = { clip = null }, mode = KitClipboardMode.Public)
     KitButton(
         stringResource(Res.string.firstRunShowCommands),
         { expanded = !expanded },

@@ -229,7 +229,7 @@ public fun KitStateView(
                         ErrorWay.CopyDetails ->
                             KitAction(copyLabel, onClick = {
                                 details?.let { clipboard.setText(AnnotatedString(it.text), KitClipboardMode.Sensitive) }
-                            }, icon = KitIcons.copy, haptic = KitHaptic.Send)
+                            }, icon = KitIcons.copy, haptic = KitHaptic.Select)
                         ErrorWay.ReportProblem -> KitAction(reportLabel, onClick = onReport)
                         else -> null
                     }

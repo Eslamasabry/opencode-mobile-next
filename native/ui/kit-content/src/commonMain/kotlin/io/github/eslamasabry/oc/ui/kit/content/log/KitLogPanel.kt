@@ -14,7 +14,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicText
-import androidx.compose.foundation.text.selection.SelectionContainer
+import io.github.eslamasabry.oc.ui.kit.foundation.KitClipboardSelection
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -260,7 +260,7 @@ public fun KitLogPanel(
             KitText(stringResource(Res.string.kitLogEmpty), tone = TextTone.Secondary)
         } else {
             CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-                SelectionContainer {
+                KitClipboardSelection(KitClipboardMode.Sensitive) {
                     LazyColumn(
                         Modifier.fillMaxWidth()
                             .heightIn(min = 120.dp, max = 400.dp)
@@ -333,7 +333,7 @@ public fun KitLogPanel(
     Column(modifier.fillMaxWidth()) {
         KitText(title, role = TypeRole.Headline)
         CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-            SelectionContainer {
+            KitClipboardSelection(KitClipboardMode.Sensitive) {
                 LazyColumn(Modifier.fillMaxWidth().heightIn(max = 280.dp), state = scroll) {
                     itemsIndexed(lines, key = { index, _ -> index }) { _, line ->
                         val label =
@@ -682,7 +682,7 @@ private fun LogCopyButton(text: () -> String) {
             copied = true
         },
         modifier = Modifier.testTag("kit-log-copy-all"),
-        haptic = KitHaptic.Send,
+        haptic = KitHaptic.Select,
         size = 20, // F: lib/ui/kit/kit_log_panel.dart:1173
     )
 }

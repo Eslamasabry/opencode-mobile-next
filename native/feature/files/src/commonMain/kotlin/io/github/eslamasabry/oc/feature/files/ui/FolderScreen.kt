@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.files.ui
 
+import io.github.eslamasabry.oc.ui.kit.foundation.KitClipboardMode
 import io.github.eslamasabry.oc.ui.kit.frame.kitPageListState
 import androidx.compose.runtime.saveable.rememberSaveable
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
@@ -198,7 +199,7 @@ public fun FolderScreen(state: FolderUi, actions: FolderActions) {
                 FileSearchSurface.Symbols -> Res.string.readerUiSearchSymbols
             }
         )
-    KitClipboardEffect(state.clipId, state.clipText, actions::clipDone)
+    KitClipboardEffect(state.clipId, state.clipText, actions::clipDone, mode = KitClipboardMode.Sensitive)
     KitSheetHost(Modifier.fillMaxSize()) {
         KitScreen(
             topBar = {

@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.settings.ui
 
+import io.github.eslamasabry.oc.ui.kit.foundation.KitClipboardMode
 import io.github.eslamasabry.oc.ui.kit.frame.kitPageScrollState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -642,7 +643,7 @@ private fun CopyUpdateCommandsRow(name: String, commands: String) {
     var copied by remember { mutableStateOf<String?>(null) }
     var copyId by remember { mutableLongStateOf(0) }
     var done by remember { mutableStateOf(false) }
-    KitClipboardEffect(if (copied == null) null else copyId, copied, onDone = { copied = null })
+    KitClipboardEffect(if (copied == null) null else copyId, copied, onDone = { copied = null }, mode = KitClipboardMode.Public)
     KitRow(
         title = stringResource(Res.string.serverSettingsCopyUpdateCommands, name),
         supporting =
@@ -663,7 +664,7 @@ private fun CopyUpdateCommandsRow(name: String, commands: String) {
 private fun ReachComputerBody() {
     var copied by remember { mutableStateOf<String?>(null) }
     var copyId by remember { mutableLongStateOf(0) }
-    KitClipboardEffect(if (copied == null) null else copyId, copied, onDone = { copied = null })
+    KitClipboardEffect(if (copied == null) null else copyId, copied, onDone = { copied = null }, mode = KitClipboardMode.Public)
     KitText(stringResource(Res.string.reachIntro))
     KitSectionLabel(stringResource(Res.string.reachTailscaleHeading))
     listOf(

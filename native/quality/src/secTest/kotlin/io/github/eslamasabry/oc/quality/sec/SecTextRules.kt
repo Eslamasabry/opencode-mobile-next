@@ -115,10 +115,18 @@ object SecTextRules {
                 val args = KotlinText.balancedArgs(code, m.range.last)
                 val looksLikeClipboard = receiver.startsWith("clipboard", true) || receiver in typed || receiver in locals || (receiver == "current" && "LocalClipboard" in code) || "AnnotatedString" in args
                 val kitReceiver = Regex("""\bval\s+${Regex.escape(receiver)}\s*=\s*(?:[\w.]+\.)?rememberKitClipboard\s*\(""").containsMatchIn(code)
+                val forwarding = when {
+                    f.rel == "ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/action/KitCopyButton.kt" ||
+                        f.rel == "ui/kit/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kit/action/KitIconButton.kt" ->
+                        "clipboardMode: KitClipboardMode" in code && Regex("""\bclipboardMode\b""").containsMatchIn(args)
+                    f.rel == "ui/kit-chat/src/commonMain/kotlin/io/github/eslamasabry/oc/ui/kitchat/header/KitChatHeaderParts.kt" ->
+                        "mode: KitClipboardMode" in code && Regex("""\bmode\b""").containsMatchIn(args)
+                    else -> false
+                }
                 when {
                     !looksLikeClipboard -> null
                     !kitReceiver -> Violation("K-SEC-6", f.rel, f.lineOf(m.range.first), "raw text clipboard write outside KitClipboard")
-                    !Regex("""\bKitClipboardMode\.(Sensitive|Public)\b""").containsMatchIn(args) ->
+                    !forwarding && !Regex("""\bKitClipboardMode\.(Sensitive|Public)\b""").containsMatchIn(args) ->
                         Violation("K-SEC-6", f.rel, f.lineOf(m.range.first), "clipboard write needs an explicit KitClipboardMode")
                     else -> null
                 }

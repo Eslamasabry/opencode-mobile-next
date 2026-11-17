@@ -164,7 +164,7 @@ class S10MotionTest {
     // ---- M-005: approval card -----------------------------------------------------------------------------------
 
     @Test
-    fun `M-005 Allow, Always and Deny each play the light Send haptic`() = runComposeUiTest {
+    fun `M-005 Allow, Always and Deny each play the consequential Commit haptic`() = runComposeUiTest {
         val platform = RecordingPlatform()
         setContent {
             MotionTheme(level = MotionLevel.Off, platform = platform) {
@@ -178,11 +178,11 @@ class S10MotionTest {
         onNodeWithText("Allow once").performClick()
         onNodeWithText("Always allow").performClick()
         onNodeWithText("Deny").performClick()
-        assertEquals(listOf(KitHaptic.Send, KitHaptic.Send, KitHaptic.Send), platform.haptics)
+        assertEquals(listOf(KitHaptic.Commit, KitHaptic.Commit, KitHaptic.Commit), platform.haptics)
     }
 
     @Test
-    fun `M-005 Deny that opens the reply field is silent, and the reply's answers play Send`() = runComposeUiTest {
+    fun `M-005 Deny that opens the reply field is silent, and the reply's answers play Commit`() = runComposeUiTest {
         val platform = RecordingPlatform()
         setContent {
             MotionTheme(level = MotionLevel.Off, platform = platform) {
@@ -197,7 +197,7 @@ class S10MotionTest {
         onNodeWithText("Deny").performClick()
         assertEquals(emptyList<KitHaptic>(), platform.haptics, "opening the reply is not an answer")
         onNodeWithTag("permission-card-reply-just-deny").performClick()
-        assertEquals(listOf(KitHaptic.Send), platform.haptics)
+        assertEquals(listOf(KitHaptic.Commit), platform.haptics)
     }
 
     @Test

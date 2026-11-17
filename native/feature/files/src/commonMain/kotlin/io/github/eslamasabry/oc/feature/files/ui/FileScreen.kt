@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.files.ui
 
+import io.github.eslamasabry.oc.ui.kit.foundation.KitClipboardMode
 import io.github.eslamasabry.oc.ui.kit.frame.kitPageListState
 import io.github.eslamasabry.oc.ui.kit.frame.kitPageScrollState
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
@@ -142,7 +143,7 @@ import org.jetbrains.compose.resources.stringResource
 @Composable
 public fun FileScreen(state: FileUi, actions: FileActions) {
     var more by rememberSaveable { mutableStateOf(false) }
-    KitClipboardEffect(state.clipId, state.clipText, actions::clipDone)
+    KitClipboardEffect(state.clipId, state.clipText, actions::clipDone, mode = KitClipboardMode.Sensitive)
     LifecycleResumeEffect(actions) {
         actions.onResume()
         onPauseOrDispose {}

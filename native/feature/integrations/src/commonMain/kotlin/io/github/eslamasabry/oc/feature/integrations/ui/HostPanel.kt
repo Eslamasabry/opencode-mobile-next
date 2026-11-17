@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.integrations.ui
 
+import io.github.eslamasabry.oc.ui.kit.foundation.KitClipboardMode
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.text.input.TextFieldState
@@ -40,6 +41,7 @@ internal fun HostPanel(state: HostPanelUi, actions: HostPanelActions) {
         if (clipboard == null) null else clipVersion,
         clipboard,
         onDone = { clipboard = null },
+        mode = KitClipboardMode.Public,
     )
     KitRowGroup {
         KitRow(

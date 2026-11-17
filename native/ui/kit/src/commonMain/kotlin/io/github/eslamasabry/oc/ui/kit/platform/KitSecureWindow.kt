@@ -60,5 +60,5 @@ public fun KitSecureEffect(active: Boolean = true) {
 @Composable
 public fun KitSecureContent(content: @Composable () -> Unit) {
     KitSecureEffect()
-    content()
+    io.github.eslamasabry.oc.ui.kit.foundation.KitClipboardScope(io.github.eslamasabry.oc.ui.kit.foundation.KitClipboardMode.Sensitive, content)
 }

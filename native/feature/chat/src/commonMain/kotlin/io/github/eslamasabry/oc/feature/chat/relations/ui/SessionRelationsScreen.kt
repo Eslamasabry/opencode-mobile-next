@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.chat.relations.ui
 
+import io.github.eslamasabry.oc.ui.kit.foundation.KitClipboardMode
 import io.github.eslamasabry.oc.ui.kit.frame.kitPageListState
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
 import androidx.compose.foundation.layout.PaddingValues
@@ -170,7 +171,7 @@ public fun SessionRelationsScreen(state: SessionRelationsUi, actions: SessionRel
         }
         StopSheet(state, actions)
         ResumeSheet(state, actions)
-        KitClipboardEffect(state.clip?.id, state.clip?.text, actions::clipDone)
+        KitClipboardEffect(state.clip?.id, state.clip?.text, actions::clipDone, mode = KitClipboardMode.Public)
     }
 }
 

@@ -11,7 +11,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.text.selection.SelectionContainer
+import io.github.eslamasabry.oc.ui.kit.foundation.KitClipboardSelection
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
@@ -379,7 +379,7 @@ private fun CopyValueButton(text: String, label: String, modifier: Modifier) {
             copied = true
         },
         modifier = modifier,
-        haptic = KitHaptic.Send,
+        haptic = KitHaptic.Select,
         size = LocalKitTokens.current.smallIcon,
     )
 }
@@ -389,7 +389,7 @@ private fun CopyValueButton(text: String, label: String, modifier: Modifier) {
 private fun LtrValue(text: String, modifier: Modifier = Modifier) {
     Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterStart) {
         CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-            SelectionContainer { KitText(text, modifier, role = TypeRole.Mono) }
+            KitClipboardSelection(KitClipboardMode.Sensitive) { KitText(text, modifier, role = TypeRole.Mono) }
         }
     }
 }
