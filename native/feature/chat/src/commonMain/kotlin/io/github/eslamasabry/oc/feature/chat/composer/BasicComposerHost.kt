@@ -1392,8 +1392,12 @@ internal fun modelUnknown(models: io.github.eslamasabry.oc.feature.chat.world.Co
 internal fun draftWaitWords(draft: io.github.eslamasabry.oc.feature.chat.world.DraftFacts, failed: String): String =
     if (draft.failure != null && !draft.ready) failed else ""
 
-internal fun modelLabel(model: String, level: String, agent: String?): String =
-    listOfNotNull(agent?.takeIf { it.isNotEmpty() && !isInternalMode(it) }, model, level.takeIf { it.isNotEmpty() })
+internal fun modelLabel(model: String, level: String, agent: String?, levelShown: String = level): String =
+    listOfNotNull(
+            agent?.takeIf { it.isNotEmpty() && !isInternalMode(it) },
+            // The model and its effort are said once, by the one formatter (a name that ends "(High)" says it already).
+            io.github.eslamasabry.oc.core.model.ModelEffort.label(model, level.takeIf { it.isNotEmpty() }, levelShown),
+        )
         .joinToString(" · ")
 
 /** Who the box asks ("Ask Claude Code…"): the chosen agent's own name, else [fallback]; never a mode's id. */

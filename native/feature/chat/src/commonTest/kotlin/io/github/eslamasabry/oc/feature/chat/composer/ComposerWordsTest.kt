@@ -22,6 +22,15 @@ class ComposerWordsTest {
     }
 
     @Test
+    fun `B-CHAT-EFFORT-6 the chip says the effort once, as the model's own name does`() {
+        // Owner, build 10073: "Gemini 3.8 Flash (High) · high".
+        assertEquals("Gemini 3.8 Flash (High)", modelLabel("Gemini 3.8 Flash (High)", "high", "default", "High"))
+        assertEquals("Gemini 4 · High", modelLabel("Gemini 4", "high", "default", "High"))
+        assertEquals("Gemini 3.8 Flash (Low) · High", modelLabel("Gemini 3.8 Flash (Low)", "high", "default", "High"))
+        assertEquals("docs · Gemini 3.8 Flash (High)", modelLabel("Gemini 3.8 Flash (High)", "high", "docs", "High"))
+    }
+
+    @Test
     fun `B-CHAT-WALK-008 the picture-only help names the buttons that are on screen`() {
         val tray = pictureWays(listOf(TrayItem.Photos, TrayItem.Camera, TrayItem.File, TrayItem.More))
         assertEquals("composerTrayPhotos" to "composerTrayCamera", tray.first.key to tray.second.key)
