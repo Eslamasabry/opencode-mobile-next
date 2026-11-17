@@ -203,7 +203,7 @@
     </plurals>
     <string name="kitWorkEarlierSteps__eq1">以前の%1$dステップを表示</string>
     <string name="activitySendOffline">回答するにはサーバーに再接続してください。</string>
-    <string name="activityAnswerEveryQuestion">すべての質問に回答してください。</string>
+    <string name="activityAnswerEveryQuestion">先にすべての質問に回答してください。</string>
     <string name="activityQuestionOptional">任意です。空のままでもかまいません。</string>
     <string name="activitySending">送信中…</string>
     <string name="activityQuestionProgress">質問%1$d/%2$d</string>
