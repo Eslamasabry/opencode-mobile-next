@@ -73,4 +73,19 @@ class TranslationCatalog(private val nativeRoot: File) {
     /** Tags of every language folder in any root, without English. */
     fun locales(): List<String> =
         roots.flatMap { r -> r.dir.listFiles().orEmpty().mapNotNull { tagOf(it.name) } }.toSortedSet().toList()
+
+    /** Percentage of English keys present in [rootsToScan] for each locale tag. */
+    fun coverageByLocale(tags: Collection<String>, rootsToScan: List<Root> = roots): Map<String, Double> {
+        var total = 0
+        val hit = tags.associateWith { 0 }.toMutableMap()
+        for (root in rootsToScan) {
+            val en = read(root, "en").keys
+            if (en.isEmpty()) continue
+            total += en.size
+            for (tag in tags) {
+                hit[tag] = hit.getValue(tag) + read(root, tag).keys.intersect(en).size
+            }
+        }
+        return tags.associateWith { tag -> if (total == 0) 0.0 else hit.getValue(tag) * 100.0 / total }
+    }
 }

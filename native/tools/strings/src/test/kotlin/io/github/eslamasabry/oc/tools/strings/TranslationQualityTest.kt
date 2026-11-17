@@ -1,7 +1,9 @@
 package io.github.eslamasabry.oc.tools.strings
 
 import java.io.File
+import java.nio.file.Files
 import kotlin.test.Test
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 /**
@@ -255,17 +257,65 @@ class TranslationQualityTest {
 
     // ---- the language gate ----
 
+    private fun languageCoverage(cat: TranslationCatalog): Map<String, Double> =
+        cat.coverageByLocale(cat.locales(), listOf(cat.roots.first()))
+
     @Test
     fun `language gate - a language is offered only at 95 percent of English, in the picker and in locales_config`() {
-        val words = catalog.roots.first()
-        val en = catalog.read(words, "en").keys
-        val coverage = locales.associateWith { l -> catalog.read(words, l).keys.intersect(en).size * 100.0 / en.size }
+        val coverage = languageCoverage(catalog)
         val offered = coverage.filterValues { it >= 95.0 }.keys
         val gradle = File(nativeRoot, "ui/words/build.gradle.kts").readText()
         val app = File(nativeRoot, "androidApp/build.gradle.kts").readText()
         assertTrue(">= 95 * source.size" in gradle && ">= 95 * source.size" in app, "the 95 % rule is the same in both build files")
         assertTrue(!File(nativeRoot, "androidApp/src/main/res/xml/locales_config.xml").exists(), "locales_config.xml is generated, not hand-kept")
+        assertTrue(offered == locales.toSet(), "every offered language must reach 95 % across all roots: $coverage")
         println("language coverage: " + coverage.entries.joinToString { "${it.key} ${"%.1f".format(it.value)}%" } + "; offered: en $offered")
+    }
+
+    @Test
+    fun `language gate - an incomplete non-words root pulls total coverage below 95 percent`() {
+        val tmp = Files.createTempDirectory("lang-gate").toFile()
+        try {
+            fun writeXml(dir: File, keys: List<String>) {
+                dir.mkdirs()
+                val body = keys.joinToString("\n") { """    <string name="$it">$it</string>""" }
+                File(dir, "strings.xml").writeText("<resources>\n$body\n</resources>\n")
+            }
+            val wordsKeys = (1..100).map { "w_$it" }
+            val widgetKeys = (1..20).map { "wg_$it" }
+            writeXml(File(tmp, "ui/words/src/commonMain/composeResources/values"), wordsKeys)
+            writeXml(File(tmp, "ui/words/src/commonMain/composeResources/values-es"), wordsKeys)
+            writeXml(File(tmp, "android/widgets/src/main/res/values"), widgetKeys)
+            writeXml(File(tmp, "android/widgets/src/main/res/values-es"), emptyList())
+            val cov = languageCoverage(TranslationCatalog(tmp)).getValue("es")
+            assertFalse(cov >= 95.0, "expected < 95% when non-words root is untranslated, got $cov")
+        } finally {
+            tmp.deleteRecursively()
+        }
+    }
+
+    @Test
+    fun `translation state - every shipped key in every language has an English hash recorded`() {
+        val stateDir = File(toolDir, "translation-state")
+        val missing = mutableListOf<String>()
+        for (tag in locales) {
+            val stateFile = File(stateDir, "$tag.tsv")
+            val recorded = if (stateFile.isFile) {
+                stateFile.readLines().filter { '\t' in it }.map { it.substringBefore('\t') }.toSet()
+            } else {
+                emptySet()
+            }
+            for (root in catalog.roots) {
+                if (root.generated) continue
+                val en = catalog.read(root, "en").keys
+                val tr = catalog.read(root, tag).keys
+                for (key in en.intersect(tr)) {
+                    val stateKey = if (root.name == "words") key else "${root.name}:$key"
+                    if (stateKey !in recorded) missing += "$tag\t$stateKey"
+                }
+            }
+        }
+        assertTrue(missing.isEmpty(), "translation-state missing ${missing.size} shipped keys:\n" + missing.take(80).joinToString("\n"))
     }
 
     @Test
