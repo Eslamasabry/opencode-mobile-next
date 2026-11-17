@@ -1,0 +1,142 @@
+# Native owner-key build, compiled on GitHub, UNSIGNED. Dispatch only (never on push, tag or schedule).
+#
+# The owner's test builds are compiled here and signed on the maintainer's own PC afterwards (the build-takeover-gh.sh
+# script there): the signing key never reaches GitHub. This workflow holds NO signing secret and writes NO key file: the
+# release APKs come out unsigned, exactly as the build server's owner-key build leaves them (androidApp/build.gradle.kts
+# leaves the release APK unsigned when no key file is given). The only secret it reads is FIREBASE_GOOGLE_SERVICES_B64
+# (Crashlytics config, not a signing key), installed the way native-release.yml installs it and never printed.
+#
+# Same build as build-takeover-remote.sh: :androidApp:assembleSwitchRelease, no -Poc.publicRelease (so the version name is
+# <name>-test.<code>), the versionCode written into the runner's copy of native/version.properties only (never committed).
+# The ledger (native/BUILD_NUMBERS.md) is the caller's business, not this workflow's.
+
+name: Native owner build (unsigned)
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Commit (full sha) or branch to build"
+        required: true
+        type: string
+      code:
+        description: "versionCode for this build (written into the runner copy only; the caller keeps the ledger)"
+        required: true
+        type: string
+      abis:
+        description: "Which unsigned APKs to upload, comma separated: arm64-v8a (always), x86_64, universal"
+        required: false
+        default: "arm64-v8a"
+        type: string
+      mapping:
+        description: "Also upload the R8 mapping (gzip)"
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: native-owner-build-${{ inputs.code }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: owner build (unsigned) ${{ inputs.code }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.ref }}
+          persist-credentials: false
+      - name: Check the inputs
+        env:
+          CODE: ${{ inputs.code }}
+          ABIS: ${{ inputs.abis }}
+        run: |
+          set -euo pipefail
+          [[ "$CODE" =~ ^[0-9]+$ ]] || { echo "::error::code must be a number"; exit 1; }
+          for a in ${ABIS//,/ }; do
+            case "$a" in arm64-v8a|x86_64|universal) ;; *) echo "::error::unknown abi $a"; exit 1 ;; esac
+          done
+          echo "building $(git rev-parse HEAD)"
+      - uses: ./.github/actions/native-setup
+      - name: Write the build number into this runner's copy
+        env:
+          CODE: ${{ inputs.code }}
+        run: sed -i "s/^versionCode=.*/versionCode=$CODE/" native/version.properties
+      - name: Install the Firebase config (never in git, never printed)
+        env:
+          FIREBASE_B64: ${{ secrets.FIREBASE_GOOGLE_SERVICES_B64 }}
+        run: |
+          set -euo pipefail
+          [ -n "$FIREBASE_B64" ] || { echo "::error::FIREBASE_GOOGLE_SERVICES_B64 is not set"; exit 1; }
+          dir="$RUNNER_TEMP/oc-firebase"
+          mkdir -p "$dir"
+          printf '%s' "$FIREBASE_B64" | base64 -d > "$dir/google-services-io.github.eslamasabry.opencode_mobile.json"
+          echo "OC_GOOGLE_SERVICES_DIR=$dir" >> "$GITHUB_ENV"
+          echo "Firebase config installed"
+      - name: Compile the unsigned switch release
+        id: compile
+        working-directory: native
+        run: |
+          set -euo pipefail
+          export JAVA_HOME="$JAVA_HOME_21_X64"
+          start=$(date +%s)
+          ./gradlew --console=plain "-Dorg.gradle.jvmargs=-Xmx6g -XX:MaxMetaspaceSize=1g -XX:+UseParallelGC -Dfile.encoding=UTF-8" :androidApp:assembleSwitchRelease
+          secs=$(( $(date +%s) - start ))
+          echo "compile_seconds=$secs" >> "$GITHUB_OUTPUT"
+          echo "OWNER-BUILD-COMPILE-SECONDS $secs"
+          echo "### Compile on the runner: ${secs} s" >> "$GITHUB_STEP_SUMMARY"
+      - name: Delete the Firebase config
+        if: always()
+        run: rm -rf "$RUNNER_TEMP/oc-firebase"
+      - name: Collect the unsigned APKs and print their sha256
+        id: collect
+        env:
+          CODE: ${{ inputs.code }}
+          ABIS: ${{ inputs.abis }}
+          MAPPING: ${{ inputs.mapping }}
+        run: |
+          set -euo pipefail
+          src=native/androidApp/build/outputs/apk/switch/release
+          out="$RUNNER_TEMP/owner-out"; mkdir -p "$out"
+          want="arm64-v8a ${ABIS//,/ }"
+          for abi in $(printf '%s\n' $want | sort -u); do
+            f=$(ls -t "$src"/*-"$abi"-release*.apk 2>/dev/null | head -1 || true)
+            [ -n "$f" ] || { echo "::error::no $abi APK in $src"; ls "$src"; exit 1; }
+            cp "$f" "$out/$abi.apk"
+            echo "OWNER-BUILD-SHA256 $abi $(sha256sum "$out/$abi.apk" | cut -d' ' -f1) $(stat -c %s "$out/$abi.apk")"
+          done
+          if [ "$MAPPING" = true ]; then
+            m=native/androidApp/build/outputs/mapping/switchRelease/mapping.txt
+            [ -f "$m" ] && gzip -1 -c "$m" > "$out/mapping.txt.gz" || echo "::warning::no mapping file"
+          fi
+          echo "dir=$out" >> "$GITHUB_OUTPUT"
+      - name: Upload the unsigned arm64 APK
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: owner-unsigned-arm64-${{ inputs.code }}
+          path: ${{ steps.collect.outputs.dir }}/arm64-v8a.apk
+          retention-days: 1
+          if-no-files-found: error
+      - name: Upload the other unsigned APKs (only when asked)
+        if: ${{ contains(inputs.abis, 'x86_64') || contains(inputs.abis, 'universal') }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: owner-unsigned-others-${{ inputs.code }}
+          path: |
+            ${{ steps.collect.outputs.dir }}/x86_64.apk
+            ${{ steps.collect.outputs.dir }}/universal.apk
+          retention-days: 1
+          if-no-files-found: ignore
+      - name: Upload the R8 mapping (only when asked)
+        if: ${{ inputs.mapping }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: owner-mapping-${{ inputs.code }}
+          path: ${{ steps.collect.outputs.dir }}/mapping.txt.gz
+          retention-days: 1
+          if-no-files-found: ignore
