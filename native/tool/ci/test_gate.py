@@ -68,6 +68,16 @@ Execution failed for task ':feature:chats:desktopTest'.
 
 
 class Gate(unittest.TestCase):
+    def test_B_CI_305_failed_verification_dependency_is_judged_by_its_assertions(self):
+        """B-CI-305: a failed Robolectric Test blocks its verification lifecycle task."""
+        log = ("> Task :ui:kit:testAndroidHostTest FAILED\n"
+               "Execution failed for task ':ui:kit:testAndroidHostTest'.\n"
+               "> There were failing tests. See the report at: file:///x\n")
+        code, md = run_gate(log, ':ui:kit:verifyRoborazziAndroidHostTest',
+                            [('ui/kit', f'{PKG}.ui.kit.PartADesktopTest', ('known picture difference',))])
+        self.assertEqual(code, 0, md)
+        self.assertIn('known noise', md)
+
     def test_green_run_passes(self):
         code, md = run_gate('> Task :feature:chats:desktopTest\n', ':feature:chats:desktopTest', [('feature/chats', f'{PKG}.feature.chats.XTest', ())])
         self.assertEqual(code, 0, md)
