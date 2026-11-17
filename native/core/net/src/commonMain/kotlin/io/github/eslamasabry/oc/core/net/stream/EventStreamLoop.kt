@@ -80,6 +80,7 @@ public class EventStreamLoop(
     private val batterySaver: StateFlow<Boolean> = MutableStateFlow(false),
 ) {
     private val retry = Channel<Unit>(Channel.CONFLATED)
+    private val failed = Channel<Unit>(Channel.CONFLATED)
 
     private val mutableLastFailure = MutableStateFlow<Failure?>(null)
 
@@ -90,6 +91,9 @@ public class EventStreamLoop(
     public fun retryNow() {
         retry.trySend(Unit)
     }
+
+    /** A bounded liveness read failed. A live connection closes and uses normal backoff, never manual retry. */
+    public fun connectionFailed() { failed.trySend(Unit) }
 
     /** Cold: collecting runs the loop; cancelling the collector cancels the request and stops it. */
     public fun signals(): Flow<StreamSignal> = channelFlow { run() }.buffer(Channel.RENDEZVOUS)
@@ -241,6 +245,7 @@ public class EventStreamLoop(
         val reader = async { pump(body, generation, onId) }
         val interrupts = buildList {
             add(async { retry.receive(); End.RetryNow })
+            add(async { failed.receive(); End.Failed })
             add(async { visibility.first { it == Visibility.HiddenIdle }; End.Idle }) // PB-53: 0 open streams
             if (gated) add(async { awaitAllowedNetworkChange(networkAtStart); End.NetworkChanged })
         }

@@ -107,9 +107,15 @@ public class ConnectionDelivery(
     tracers: Set<PromptTracing> = emptySet(),
     private val interactiveSendChecks: Set<InteractiveSendCheck> = emptySet(),
     private val reporting: Reporting = NoReporting,
+    recoveryVisibility: Set<RunRecoveryVisibility> = emptySet(),
 ) {
     private val tracing: PromptTracing? = tracers.firstOrNull()?.forConnection(profile.id.raw)
     private val reconcileLane = dispatchers.serial("delivery-reconcile")
+    private val runRecovery = (gateway as? io.github.eslamasabry.oc.core.domain.RunRecoveryGateway)?.let { recovery ->
+        recoveryVisibility.singleOrNull()?.let { visibility ->
+            RunReconciler(recovery, gateway.events, visibility.state(), { clock.now().toEpochMilliseconds() }, scope, reconcileLane)
+        }
+    }
     private val running = MutableStateFlow<Set<ConversationRef>>(emptySet())
     private val stoppedMemory = stores.singleOrNull()?.let { StoppedTurnMemory(it.store, it.lanes.app, profile.id, scope) }
     private val stopped = stoppedMemory?.refs ?: MutableStateFlow<Set<ConversationRef>>(emptySet())
@@ -201,7 +207,14 @@ public class ConnectionDelivery(
                     trace.text(event.sessionId.raw, event.messageId.raw, streamed = true)
             }
             is GatewayEvent.RunStarted -> trace.busy(event.sessionId.raw)
-            is GatewayEvent.RunEnded ->
+            is GatewayEvent.RunEnded -> {
+                val history = event.reconciledHistory
+                history?.drop(history.indexOfLast { it.info.role == Role.User } + 1)?.forEach { message ->
+                    trace.message(message.info.sessionId, message.info.id, message.info.role == Role.Assistant)
+                    if (message.info.role == Role.Assistant) message.parts.forEach { part ->
+                        if (part.type == PartType.Text && part.isRenderable) trace.text(part.sessionId, part.messageId, streamed = false)
+                    }
+                }
                 when (val outcome = event.outcome) {
                     is RunOutcome.Failed -> trace.error(event.sessionId.raw, outcome.kind?.name, outcome.tag?.raw, outcome.details?.text)
                     is RunOutcome.Interrupted ->
@@ -209,6 +222,7 @@ public class ConnectionDelivery(
                         else trace.idle(event.sessionId.raw)
                     else -> trace.idle(event.sessionId.raw)
                 }
+            }
             else -> Unit
         }
     }
@@ -305,6 +319,7 @@ public class ConnectionDelivery(
     }
 
     public fun running(ref: ConversationRef, busy: Boolean) {
+        runRecovery?.running(ref.sessionId, busy)
         running.update { if (busy) it + ref else it - ref }
         if (!busy) engine?.turnEnded(ref)
     }

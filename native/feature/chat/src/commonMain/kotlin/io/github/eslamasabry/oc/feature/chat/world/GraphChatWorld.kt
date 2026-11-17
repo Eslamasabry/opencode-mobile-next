@@ -1278,6 +1278,11 @@ internal class GraphChatWorld(
                         if (event is CoreEvent.RunRetrying && event.sessionId == sid)
                             voiceBusyCount++
                         if (event is CoreEvent.RunEnded && event.sessionId == sid) voiceIdleCount++
+                        if (event is CoreEvent.RunEnded && event.sessionId == sid) event.reconciledHistory?.let { history ->
+                            // Recovery refetched before ending: load that snapshot as history, never token replay.
+                            handle.loadHistory(history.map(bridge::message), handle.historyVersion())
+                            feedKeeper.history(history, feedKeeper.historyVersion(), newest = true)
+                        }
                         feedKeeper.event(event, envelope.receivedAtMs)
                         // Voice watches final identities and lifecycle events; volatile token
                         // deltas need no second snapshot.
@@ -1627,6 +1632,7 @@ internal class GraphChatWorld(
      * state while reading it, and because a run may have started or ended since the opening read.
      */
     private suspend fun confirmIdle(gateway: ServerGateway, handle: TranscriptHandle) {
+        // Busy runs are reconciled by ConnectionDelivery's bounded lane. This read only classifies cut-off history.
         if (feedKeeper.feed.value.busy) return
         val statuses = gateway.sessionStatuses()
         if (currentAttached()?.handle !== handle) return

@@ -73,7 +73,7 @@ public class CodexGatewayFactory(
             ?: return Outcome.Failed(Failure.Refused(RefusalReason.InvalidAddress))
         val secret = spec.credentials.secret?.takeIf(CodexProfileRules::tokenAcceptable)
             ?: return Outcome.Failed(Failure.SignIn(SignInWhy.TokenMissing))
-        val gateway = open(endpoint, secret, spec.location.directory, spec.scope, "codex:${spec.profile.id.raw}")
+        val gateway = open(endpoint, secret, spec.location.directory, spec.scope, "codex:${spec.profile.id.raw}", spec.reconnectAllowed)
         val connected = codexAttempt { gateway.transport.connect() }
         if (connected is Outcome.Failed) {
             gateway.close()
@@ -84,10 +84,10 @@ public class CodexGatewayFactory(
     }
 
     /** One gateway with no I/O until first use. */
-    public fun open(endpoint: CodexEndpoint, secret: String, directory: String?, scope: CoroutineScope, lane: String = "codex"): CodexGateway {
+    public fun open(endpoint: CodexEndpoint, secret: String, directory: String?, scope: CoroutineScope, lane: String = "codex", reconnectAllowed: kotlinx.coroutines.flow.StateFlow<Boolean> = kotlinx.coroutines.flow.MutableStateFlow(true)): CodexGateway {
         val serial = dispatchers.serial(lane)
         val transport = CodexTransport(endpoint, secret, sockets, scope, serial, requestTimeoutMs)
-        return CodexGateway(transport, scope, clock, directory)
+        return CodexGateway(transport, scope, clock, directory, reconnectAllowed)
     }
 
     /** The pairing check (Dart `probeCodexConnection`): nothing is saved; everything opened is closed. */

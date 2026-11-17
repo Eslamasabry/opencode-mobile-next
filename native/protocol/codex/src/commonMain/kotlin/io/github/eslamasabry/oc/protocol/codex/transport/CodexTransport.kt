@@ -291,6 +291,9 @@ public class CodexTransport(
         if (!isClosed) for (listener in listeners.toList()) listener.onDisconnect(disconnectedEpoch)
     }
 
+    /** A liveness read failed: let the gateway's ordinary reconnect policy handle this loss. */
+    public fun connectionFailed() { scope.launch { lost(epoch) } }
+
     /** Idempotent. Fails pending requests, forgets the secret, stops every coroutine this transport started. */
     public suspend fun close() {
         withContext(lane) {

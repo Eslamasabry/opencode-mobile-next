@@ -81,7 +81,8 @@ internal class Oc2Gateway(
     SessionCreationGateway,
     WorktreeInspectionGateway,
     ConfigurationGateway,
-    BoundedHistoryGateway {
+    BoundedHistoryGateway,
+    RunRecoveryGateway {
     // AGENT-2: worktree inspection reads (WorktreeInspectionGateway). Its MCP calls are served once
     // by PROTO's Oc2Library and SEC-2's integrations below.
     private val inspection = Oc2WorktreeInspection(this)
@@ -430,6 +431,21 @@ internal class Oc2Gateway(
             }
         }
 
+    private val runLane = Mutex()
+    private val runRevisions = mutableMapOf<SessionId, Long>()
+    private fun observeRun(event: GatewayEvent) {
+        val id = when (event) {
+            is GatewayEvent.RunStarted -> event.sessionId
+            is GatewayEvent.RunRetrying -> event.sessionId
+            is GatewayEvent.RunEnded -> event.sessionId
+            is GatewayEvent.PartDelta -> event.sessionId
+            is GatewayEvent.PartUpserted -> SessionId(event.part.sessionId)
+            else -> return
+        }
+        runRevisions[id] = (runRevisions[id] ?: 0L) + 1
+        while (runRevisions.size > 512) runRevisions.remove(runRevisions.keys.first())
+    }
+
     private var locationRevision = 0L
     override val scopeRevision: Long
         get() = (locationRevision shl 32) + connects.value
@@ -443,10 +459,11 @@ internal class Oc2Gateway(
         spec: GatewaySpec,
         dispatchers: AppDispatchers,
         network: NetworkStatus = UnknownNetworkStatus,
+        streamConnector: SseConnector? = null,
     ) {
         terminalScope = spec.scope
         terminalDispatchers = dispatchers
-        val connector = KtorSseConnector(net.http) { request("/event", HttpMethod.Get) }
+        val connector = streamConnector ?: KtorSseConnector(net.http) { request("/event", HttpMethod.Get) }
         val live =
             EventStreamLoop(
                 connector,
@@ -484,13 +501,13 @@ internal class Oc2Gateway(
                                 wire.location?.let {
                                     EventLocation(it.directory, it.project?.id, it.workspaceID)
                                 }
-                            for (event in adapter.adapt(wire)) envelopes.emit(
-                                GatewayEnvelope(
-                                    projection.toCore(event),
-                                    place,
-                                    clock.now().toEpochMilliseconds(),
-                                )
-                            )
+                            for (event in adapter.adapt(wire)) {
+                                val core = projection.toCore(event)
+                                runLane.withLock {
+                                    observeRun(core)
+                                    envelopes.emit(GatewayEnvelope(core, place, clock.now().toEpochMilliseconds()))
+                                }
+                            }
                         }
                     }
                 }
@@ -1231,6 +1248,36 @@ internal class Oc2Gateway(
     override suspend fun archiveSession(id: SessionId): Outcome<Unit> =
         if (dialect.value != Oc2Dialect.Stable) unavailable("sessionArchive")
         else unit("/session/${sid(id)}", HttpMethod.Patch, buildJsonObject { put("archived", true) })
+
+    override suspend fun reconcileRuns(sessions: Set<SessionId>): Outcome<ImmutableMap<SessionId, SessionStatus>> {
+        val at = scopeRevision
+        val place = location.value
+        val revisions = runLane.withLock { sessions.associateWith { runRevisions[it] } }
+        val read = sessionStatuses()
+        if (read is Outcome.Failed) return read
+        val statuses = (read as Outcome.Ok).value
+        for (id in sessions) {
+            if (statuses[id] == SessionStatus.Busy || statuses[id] == SessionStatus.Retry) continue
+            val details = session(id)
+            if (details is Outcome.Failed) return details
+            val history = readHistoryAtStagedBoundary(
+                this, id, boundary = (details as Outcome.Ok).value.stagedRevert?.messageId, limit = 100,
+                isCurrent = { at == scopeRevision && !closed },
+            )
+            if (history is Outcome.Failed) return history
+            runLane.withLock {
+                if (at != scopeRevision || revisions[id] != runRevisions[id] || closed)
+                    return Failure.Refused(RefusalReason.StaleScope).failed()
+                envelopes.emit(GatewayEnvelope(
+                    GatewayEvent.RunEnded(id, RunOutcome.Idle, (history as Outcome.Ok).value.items),
+                    EventLocation(place.directory, null, place.workspace), clock.now().toEpochMilliseconds(),
+                ))
+            }
+        }
+        return read
+    }
+
+    override fun reconnectAfterRunCheck() { loop?.connectionFailed() }
 
     override suspend fun sessionStatuses(): Outcome<ImmutableMap<SessionId, SessionStatus>> =
         read("/session/active") { root ->
