@@ -17,6 +17,10 @@ import io.github.eslamasabry.oc.engine.transcript.turnfacts.ShellIntent
 import io.github.eslamasabry.oc.engine.transcript.turnfacts.ShellKind
 import io.github.eslamasabry.oc.feature.chat.presentation.StepFamily
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
+import io.github.eslamasabry.oc.ui.kit.text.KitDurationStyle
+import io.github.eslamasabry.oc.ui.kit.text.kitElapsedSecondsMinutes
+import io.github.eslamasabry.oc.ui.kit.text.kitMinutesDurationWords
+import io.github.eslamasabry.oc.ui.kit.text.kitTenthsSecondsWords
 import io.github.eslamasabry.oc.ui.kitchat.header.rememberKitMask
 import io.github.eslamasabry.oc.engine.transcript.turnfacts.TurnStallNotice
 import io.github.eslamasabry.oc.engine.transcript.turnfacts.formatRetryCountdown
@@ -27,8 +31,6 @@ import io.github.eslamasabry.oc.feature.chat.presentation.WorkLineRules
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.chatStalledOnTool
 import io.github.eslamasabry.oc.ui.words.res.chatStuckCommand
-import io.github.eslamasabry.oc.ui.words.res.chatStuckHours
-import io.github.eslamasabry.oc.ui.words.res.chatStuckMinutes
 import io.github.eslamasabry.oc.ui.words.res.chatStuckUnnamed
 import io.github.eslamasabry.oc.ui.words.res.activeContextShell
 import io.github.eslamasabry.oc.ui.words.res.activeContextSkill
@@ -43,8 +45,6 @@ import io.github.eslamasabry.oc.ui.words.res.chatWorkWaitingRun
 import io.github.eslamasabry.oc.ui.words.res.chatUiAgent
 import io.github.eslamasabry.oc.ui.words.res.chatUiApplyPatch
 import io.github.eslamasabry.oc.ui.words.res.chatUiCompactingConversation
-import io.github.eslamasabry.oc.ui.words.res.chatUiDurationMinutesSeconds
-import io.github.eslamasabry.oc.ui.words.res.chatUiDurationSeconds
 import io.github.eslamasabry.oc.ui.words.res.chatUiEdit
 import io.github.eslamasabry.oc.ui.words.res.chatUiFetchPage
 import io.github.eslamasabry.oc.ui.words.res.chatUiFindFiles
@@ -443,8 +443,13 @@ internal fun stepStatus(state: StepState, exitCode: Int?): String =
 @Composable
 internal fun durationWords(ms: Long): String =
     when (val d = toolDuration(ms)) {
-        is ToolDuration.Seconds -> stringResource(Res.string.chatUiDurationSeconds, d.tenths)
-        is ToolDuration.MinutesSeconds -> stringResource(Res.string.chatUiDurationMinutesSeconds, Numbers.format(d.minutes), d.seconds)
+        is ToolDuration.Seconds -> kitTenthsSecondsWords(d.tenths)
+        is ToolDuration.MinutesSeconds ->
+            kitElapsedSecondsMinutes(
+                totalSeconds = d.minutes * 60L + ((ms / 1_000L) % 60L),
+                style = KitDurationStyle.Compact,
+                padSeconds = true,
+            )
     }
 
 /**
@@ -564,10 +569,7 @@ internal fun liveNoticeWords(n: LiveNoticeUi): String =
         // Phase 0: "Still waiting for read." (the tool as the server names it).
         is LiveNoticeUi.ToolWait -> stringResource(Res.string.chatStalledOnTool, n.toolName)
         is LiveNoticeUi.StuckCommand -> {
-            val minutes = (n.runningMs / 60_000L).toInt()
-            val time =
-                if (minutes < 60) stringResource(Res.string.chatStuckMinutes, minutes)
-                else stringResource(Res.string.chatStuckHours, minutes / 60, minutes % 60)
+            val time = kitMinutesDurationWords(n.runningMs)
             if (n.command == null) stringResource(Res.string.chatStuckUnnamed, time)
             else stringResource(Res.string.chatStuckCommand, time)
         }
@@ -578,11 +580,11 @@ internal fun liveNoticeWords(n: LiveNoticeUi): String =
 internal fun backgroundWords(tasks: List<BackgroundTask>, nowMs: Long): String {
     if (tasks.size == 1) {
         val t = tasks[0]
-        val minutes = ((nowMs - t.sinceMs).coerceAtLeast(0) / 60_000).toInt()
+        val elapsedMs = (nowMs - t.sinceMs).coerceAtLeast(0L)
         return stringResource(
             Res.string.kitBackgroundWorkOne,
             t.name,
-            pluralStringResource(Res.plurals.kitBackgroundWorkMinutes, minutes, minutes),
+            kitMinutesDurationWords(elapsedMs),
         )
     }
     return pluralStringResource(Res.plurals.kitBackgroundWorkMany, tasks.size, tasks.size)

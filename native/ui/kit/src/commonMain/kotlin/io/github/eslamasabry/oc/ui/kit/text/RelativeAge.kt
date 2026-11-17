@@ -3,32 +3,62 @@ package io.github.eslamasabry.oc.ui.kit.text
 import androidx.compose.runtime.Composable
 import io.github.eslamasabry.oc.core.common.text.Numbers
 import io.github.eslamasabry.oc.core.common.text.shortCalendarDate
-import io.github.eslamasabry.oc.ui.words.res.Res
-import io.github.eslamasabry.oc.ui.words.res.e7WorkspaceDaysAgo
-import io.github.eslamasabry.oc.ui.words.res.e7WorkspaceHoursAgo
-import io.github.eslamasabry.oc.ui.words.res.e7WorkspaceJustNow
-import io.github.eslamasabry.oc.ui.words.res.e7WorkspaceMinutesAgo
-import io.github.eslamasabry.oc.ui.words.res.e7WorkspaceYesterday
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitLocaleTag
+import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.kitRelDaysAgo
+import io.github.eslamasabry.oc.ui.words.res.kitRelHoursAgo
+import io.github.eslamasabry.oc.ui.words.res.kitRelJustNow
+import io.github.eslamasabry.oc.ui.words.res.kitRelMinutesAgo
+import io.github.eslamasabry.oc.ui.words.res.kitRelYesterday
+import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 
-/** Flutter relative_age.dart (its e7Workspace* words): future dates clamp to now; a week or more uses a local short date. */
+/** Shared relative-time formatter across the app: future dates clamp to now; a week or more uses a local short date. */
 @Composable
 public fun kitRelativeAge(atMs: Long, nowMs: Long): String {
-    val age = if (atMs >= nowMs) 0L else (nowMs - atMs).takeIf { it >= 0 } ?: Long.MAX_VALUE
-    val minutes = age / 60_000
-    val hours = age / 3_600_000
-    val days = age / 86_400_000
+    val age = if (atMs >= nowMs) 0L else (nowMs - atMs).takeIf { it >= 0L } ?: Long.MAX_VALUE
+    val minutes = age / 60_000L
+    val hours = age / 3_600_000L
+    val days = age / 86_400_000L
     return when {
-        minutes < 1 -> stringResource(Res.string.e7WorkspaceJustNow)
-        hours < 1 -> stringResource(Res.string.e7WorkspaceMinutesAgo, Numbers.format(minutes))
-        days < 1 -> stringResource(Res.string.e7WorkspaceHoursAgo, Numbers.format(hours))
-        days < 2 -> stringResource(Res.string.e7WorkspaceYesterday)
-        days < 7 -> stringResource(Res.string.e7WorkspaceDaysAgo, Numbers.format(days))
-        else -> {
-            shortCalendarDate(atMs, nowMs, LocalKitLocaleTag.current)
-        }
+        minutes < 1L -> stringResource(Res.string.kitRelJustNow)
+        hours < 1L -> kitRelativeMinutesAgo(minutes)
+        days < 1L -> kitRelativeHoursAgo(hours)
+        days < 2L -> stringResource(Res.string.kitRelYesterday)
+        days < 7L -> kitRelativeDaysAgo(days)
+        else -> shortCalendarDate(atMs, nowMs, LocalKitLocaleTag.current)
     }
+}
+
+/** Formats whole [ageMinutes] as just-now / minutes / hours / days ago using the shared plural resources. */
+@Composable
+public fun kitRelativeAgeFromMinutes(ageMinutes: Long): String =
+    when {
+        ageMinutes < 1L -> stringResource(Res.string.kitRelJustNow)
+        ageMinutes < 60L -> kitRelativeMinutesAgo(ageMinutes)
+        ageMinutes < 1440L -> kitRelativeHoursAgo(ageMinutes / 60L)
+        else -> kitRelativeDaysAgo(ageMinutes / 1440L)
+    }
+
+/** Localized `"N min ago"` with CLDR plurals and phone digits. */
+@Composable
+public fun kitRelativeMinutesAgo(minutes: Long): String {
+    val m = minutes.coerceAtLeast(1L)
+    return pluralStringResource(Res.plurals.kitRelMinutesAgo, m.toInt(), Numbers.format(m))
+}
+
+/** Localized `"Nh ago"` with CLDR plurals and phone digits. */
+@Composable
+public fun kitRelativeHoursAgo(hours: Long): String {
+    val h = hours.coerceAtLeast(1L)
+    return pluralStringResource(Res.plurals.kitRelHoursAgo, h.toInt(), Numbers.format(h))
+}
+
+/** Localized `"Nd ago"` with CLDR plurals and phone digits. */
+@Composable
+public fun kitRelativeDaysAgo(days: Long): String {
+    val d = days.coerceAtLeast(1L)
+    return pluralStringResource(Res.plurals.kitRelDaysAgo, d.toInt(), Numbers.format(d))
 }
 
 /** KitTime's locale-neutral selection; the platform supplies local calendar/clock formatting.

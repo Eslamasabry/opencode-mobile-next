@@ -7,8 +7,18 @@
     <string name="notify_status_more">+%1$s ещё</string>
     <string name="notify_status_waiting_count">Ожидают: %1$s</string>
     <string name="notify_status_tasks_progress">%1$s из %2$s задач</string>
-    <string name="notify_status_minutes">%1$s мин</string>
-    <string name="notify_status_hours">%1$s ч</string>
+    <plurals name="notify_status_minutes">
+        <item quantity="one">%1$s мин</item>
+        <item quantity="few">%1$s мин</item>
+        <item quantity="many">%1$s мин</item>
+        <item quantity="other">%1$s мин</item>
+    </plurals>
+    <plurals name="notify_status_hours">
+        <item quantity="one">%1$s ч</item>
+        <item quantity="few">%1$s ч</item>
+        <item quantity="many">%1$s ч</item>
+        <item quantity="other">%1$s ч</item>
+    </plurals>
     <string name="notify_status_waiting_provider">Ожидание · лимит %1$s</string>
     <string name="notify_status_waiting_generic">Ожидание · провайдер занят</string>
     <string name="notify_status_tries_again_at">Повтор в %1$s</string>

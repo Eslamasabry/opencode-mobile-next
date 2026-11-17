@@ -43,6 +43,8 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.role
+import io.github.eslamasabry.oc.ui.kit.text.KitDurationStyle
+import io.github.eslamasabry.oc.ui.kit.text.kitElapsedSecondsMinutes
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
@@ -119,8 +121,8 @@ public class KitStepTreeWords(
     public val moreInside: (Int) -> String,
     /** "+3 more". */
     public val more: (Int) -> String,
-    /** "34s", "1:13", in the phone's digits. */
-    public val duration: (Long) -> String,
+    /** "34s", "1m 13s", localized with the phone's digits; when null, the shared kit duration formatter is used. */
+    public val duration: ((Long) -> String)? = null,
     /** "Stop “‹name›”". */
     public val stop: (String) -> String,
     /** What TalkBack says for a step: "‹child›, sub-agent of ‹parent›, ‹state›, ‹fact›", [said] being its state word. */
@@ -653,7 +655,10 @@ private fun StepLine(
         step.state == KitTreeStepState.NeedsYou -> words.needsYou
         step.state == KitTreeStepState.Failed -> words.failed
         step.state == KitTreeStepState.NotStarted -> words.notStarted
-        else -> step.seconds?.let(words.duration) ?: ""
+        else ->
+            step.seconds?.let { s ->
+                words.duration?.invoke(s) ?: kitElapsedSecondsMinutes(s, style = KitDurationStyle.Compact, padSeconds = true)
+            } ?: ""
     }
     val indent = indentOf(f.depth, first)
     Column(Modifier.fillMaxWidth().testTag(STEP_ROW_TAG)) {
@@ -726,7 +731,11 @@ private fun StepWords(step: KitTreeStep, said: String, counted: Int, words: KitS
         when {
             step.state == KitTreeStepState.Working -> {
                 val t = StepTreeRules.seconds(step, counted)
-                if (t == null) said else "$said ${words.duration(t)}"
+                if (t == null) said
+                else {
+                    val elapsed = words.duration?.invoke(t) ?: kitElapsedSecondsMinutes(t, style = KitDurationStyle.Compact, padSeconds = true)
+                    "$said $elapsed"
+                }
             }
             step.state == KitTreeStepState.NeedsYou && step.request != null -> null // the toggle at the end says it
             else -> said.ifBlank { null }

@@ -10,12 +10,16 @@ import io.github.eslamasabry.oc.feature.plans.presentation.PlanCardUi
 import io.github.eslamasabry.oc.feature.plans.presentation.PlanConnectionUi
 import io.github.eslamasabry.oc.feature.plans.presentation.PlanWindowUi
 import io.github.eslamasabry.oc.feature.plans.presentation.cardWindows
+import io.github.eslamasabry.oc.ui.kit.text.KitDurationStyle
+import io.github.eslamasabry.oc.ui.kit.text.kitMinutesDurationWords
+import io.github.eslamasabry.oc.ui.kit.text.kitResetInWords
 import io.github.eslamasabry.oc.ui.words.res.*
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Instant
 import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
-import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 
 /** Resource-backed plan copy shared by the compact reading and its full details. */
@@ -150,15 +154,10 @@ public class PlansWords internal constructor() {
 
     @Composable
     fun resetsIn(minutes: Long): String =
-        when {
-            minutes <= 0 -> stringResource(Res.string.m40PlansResetNow)
-            minutes < 60 -> stringResource(Res.string.m40PlansResetMinutes, minutes)
-            minutes < 48 * 60 -> stringResource(Res.string.m40PlansResetHours, minutes / 60)
-            else ->
-                (minutes / (24 * 60)).toInt().let { days ->
-                    pluralStringResource(Res.plurals.m40PlansResetDays, days, days)
-                }
-        }
+        kitResetInWords(
+            if (minutes <= 0L) Duration.ZERO else minutes.minutes,
+            sentenceCase = false,
+        )
 
     @Composable
     fun plan(name: String): String =
@@ -208,19 +207,7 @@ public class PlansWords internal constructor() {
         }
 
     @Composable
-    fun duration(ms: Long): String {
-        val minutes = (ms / 60_000).coerceAtLeast(1)
-        val hours = minutes / 60
-        return when {
-            hours == 0L -> stringResource(Res.string.m40PlansDurationMinutes, minutes)
-            hours < 24 && minutes % 60 == 0L ->
-                stringResource(Res.string.m40PlansDurationHours, hours)
-            hours < 24 ->
-                stringResource(Res.string.m40PlansDurationHoursMinutes, hours, minutes % 60)
-            hours % 24 == 0L -> stringResource(Res.string.m40PlansDurationDays, hours / 24)
-            else -> stringResource(Res.string.m40PlansDurationDaysHours, hours / 24, hours % 24)
-        }
-    }
+    fun duration(ms: Long): String = kitMinutesDurationWords(ms, KitDurationStyle.Standard)
 
     /** The device's local clock; a future reset within six days names its weekday. */
     @Composable

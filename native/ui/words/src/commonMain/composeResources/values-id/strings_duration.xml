@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="kitDurPair">%1$s %2$s</string>
+    <string name="kitDurTenthsSeconds">%1$s detik</string>
+    <plurals name="kitDurSeconds">
+        <item quantity="other">%1$s detik</item>
+    </plurals>
+    <plurals name="kitDurMinutes">
+        <item quantity="other">%1$s menit</item>
+    </plurals>
+    <plurals name="kitDurHours">
+        <item quantity="other">%1$s jam</item>
+    </plurals>
+    <plurals name="kitDurDays">
+        <item quantity="other">%1$s hari</item>
+    </plurals>
+    <plurals name="kitDurCompactSeconds">
+        <item quantity="other">%1$s dtk</item>
+    </plurals>
+    <plurals name="kitDurCompactMinutes">
+        <item quantity="other">%1$s mnt</item>
+    </plurals>
+    <plurals name="kitDurCompactHours">
+        <item quantity="other">%1$s jam</item>
+    </plurals>
+    <plurals name="kitDurCompactDays">
+        <item quantity="other">%1$s hari</item>
+    </plurals>
+    <plurals name="kitRelMinutesAgo">
+        <item quantity="other">%1$s menit lalu</item>
+    </plurals>
+    <plurals name="kitRelHoursAgo">
+        <item quantity="other">%1$s jam lalu</item>
+    </plurals>
+    <plurals name="kitRelDaysAgo">
+        <item quantity="other">%1$s hari lalu</item>
+    </plurals>
+    <string name="kitResetNow">direset sekarang</string>
+    <string name="kitResetNowSentence">Direset sekarang</string>
+    <plurals name="kitResetMinutes">
+        <item quantity="other">Reset dalam %1$s menit</item>
+    </plurals>
+    <plurals name="kitResetHours">
+        <item quantity="other">Reset dalam %1$s jam</item>
+    </plurals>
+    <plurals name="kitResetDays">
+        <item quantity="other">Reset dalam %1$s hari</item>
+    </plurals>
+    <string name="kitResetCompound">Reset dalam %1$s</string>
+    <plurals name="kitResetLowerMinutes">
+        <item quantity="other">direset dalam %1$s menit</item>
+    </plurals>
+    <plurals name="kitResetLowerHours">
+        <item quantity="other">direset dalam %1$s jam</item>
+    </plurals>
+    <plurals name="kitResetLowerDays">
+        <item quantity="other">direset dalam %1$s hari</item>
+    </plurals>
+    <string name="kitResetLowerCompound">direset dalam %1$s</string>
+    <plurals name="kitApproxSeconds">
+        <item quantity="other">sekitar %1$s detik</item>
+    </plurals>
+    <plurals name="kitApproxMinutes">
+        <item quantity="other">sekitar %1$s menit</item>
+    </plurals>
+    <string name="kitDurLessThanMinute">kurang dari semenit</string>
+    <string name="kitRelJustNow">Baru saja</string>
+    <string name="kitRelYesterday">Kemarin</string>
+</resources>

@@ -7,8 +7,22 @@
     <string name="notify_status_more">+%1$s أخرى</string>
     <string name="notify_status_waiting_count">%1$s في الانتظار</string>
     <string name="notify_status_tasks_progress">%1$s من %2$s مهام</string>
-    <string name="notify_status_minutes">%1$s د</string>
-    <string name="notify_status_hours">%1$s س</string>
+    <plurals name="notify_status_minutes">
+        <item quantity="zero">%1$s دقيقة</item>
+        <item quantity="one">دقيقة واحدة</item>
+        <item quantity="two">دقيقتان</item>
+        <item quantity="few">%1$s دقائق</item>
+        <item quantity="many">%1$s دقيقة</item>
+        <item quantity="other">%1$s دقيقة</item>
+    </plurals>
+    <plurals name="notify_status_hours">
+        <item quantity="zero">%1$s ساعة</item>
+        <item quantity="one">ساعة واحدة</item>
+        <item quantity="two">ساعتان</item>
+        <item quantity="few">%1$s ساعات</item>
+        <item quantity="many">%1$s ساعة</item>
+        <item quantity="other">%1$s ساعة</item>
+    </plurals>
     <string name="notify_status_waiting_provider">في الانتظار · حدّ %1$s</string>
     <string name="notify_status_waiting_generic">في الانتظار · المزوّد مشغول</string>
     <string name="notify_status_tries_again_at">يعيد المحاولة في %1$s</string>

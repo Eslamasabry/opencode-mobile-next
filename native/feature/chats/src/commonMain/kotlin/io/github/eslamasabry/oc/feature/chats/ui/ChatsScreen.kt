@@ -155,6 +155,7 @@ import io.github.eslamasabry.oc.ui.words.res.phoneDownloadAskBodyHelper
 import io.github.eslamasabry.oc.ui.words.res.phoneDownloadAskNow
 import io.github.eslamasabry.oc.ui.words.res.phoneDownloadAskWait
 import io.github.eslamasabry.oc.ui.kit.text.kitRelativeAge
+import io.github.eslamasabry.oc.ui.kit.text.kitRelativeAgeFromMinutes
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.statePin
@@ -1279,13 +1280,10 @@ private const val QUESTION_ROW_CHOICES: Int = 5
 @Composable
 internal fun agoText(age: RelativeAge): String =
     when (age) {
-        RelativeAge.JustNow -> stringResource(Res.string.e7WorkspaceJustNow)
-        is RelativeAge.Minutes ->
-            stringResource(Res.string.e7WorkspaceMinutesAgo, Numbers.format(age.count))
-        is RelativeAge.Hours ->
-            stringResource(Res.string.e7WorkspaceHoursAgo, Numbers.format(age.count))
-        is RelativeAge.Days ->
-            stringResource(Res.string.e7WorkspaceDaysAgo, Numbers.format(age.count))
+        RelativeAge.JustNow -> kitRelativeAgeFromMinutes(0L)
+        is RelativeAge.Minutes -> kitRelativeAgeFromMinutes(age.count.toLong())
+        is RelativeAge.Hours -> kitRelativeAgeFromMinutes(age.count * 60L)
+        is RelativeAge.Days -> kitRelativeAgeFromMinutes(age.count * 1440L)
     }
 
 /** P2 proof page for ChatRoute: the box a row grows into (plan 08 §5.4). */

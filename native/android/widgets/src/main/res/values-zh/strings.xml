@@ -5,9 +5,15 @@
     <string name="widget_description">此刻最重要的一件事：需要你处理的、正在进行的，或你的上一个对话。</string>
     <string name="native_team_working">工作中</string>
     <string name="native_widget_now">现在</string>
-    <string name="native_widget_minutes">%1$s分</string>
-    <string name="native_widget_hours">%1$s时</string>
-    <string name="native_widget_days">%1$s天</string>
+    <plurals name="native_widget_minutes">
+        <item quantity="other">%1$s分</item>
+    </plurals>
+    <plurals name="native_widget_hours">
+        <item quantity="other">%1$s时</item>
+    </plurals>
+    <plurals name="native_widget_days">
+        <item quantity="other">%1$s天</item>
+    </plurals>
     <string name="usage_widget_title">用量</string>
     <string name="usage_widget_description">每个套餐额度还剩多少，以及何时重置。</string>
     <string name="usage_widget_empty">还没有额度读数。打开用量以连接数据来源。</string>
@@ -26,8 +32,12 @@
     <string name="usage_widget_provider_minimax">MiniMax</string>
     <string name="usage_widget_provider_glm">GLM</string>
     <string name="usage_widget_column">%1$s \u0020剩余 %2$s%%</string>
-    <string name="usage_widget_short_hours">%1$s时</string>
-    <string name="usage_widget_short_days">%1$s天</string>
+    <plurals name="usage_widget_short_hours">
+        <item quantity="other">%1$s时</item>
+    </plurals>
+    <plurals name="usage_widget_short_days">
+        <item quantity="other">%1$s天</item>
+    </plurals>
     <string name="usage_widget_short_week">每周</string>
     <string name="usage_widget_short_month">每月</string>
     <string name="widget_label_wide">对话</string>

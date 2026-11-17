@@ -7,8 +7,12 @@
     <string name="notify_status_more">+%1$s lagi</string>
     <string name="notify_status_waiting_count">%1$s menunggu</string>
     <string name="notify_status_tasks_progress">%1$s dari %2$s tugas</string>
-    <string name="notify_status_minutes">%1$s mnt</string>
-    <string name="notify_status_hours">%1$s j</string>
+    <plurals name="notify_status_minutes">
+        <item quantity="other">%1$s mnt</item>
+    </plurals>
+    <plurals name="notify_status_hours">
+        <item quantity="other">%1$s jam</item>
+    </plurals>
     <string name="notify_status_waiting_provider">Menunggu · batas %1$s</string>
     <string name="notify_status_waiting_generic">Menunggu · penyedia sedang sibuk</string>
     <string name="notify_status_tries_again_at">Mencoba lagi pukul %1$s</string>

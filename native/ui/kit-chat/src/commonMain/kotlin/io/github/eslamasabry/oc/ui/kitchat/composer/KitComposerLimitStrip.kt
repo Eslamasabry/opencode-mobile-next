@@ -51,6 +51,7 @@ import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
 import io.github.eslamasabry.oc.ui.kit.platform.LocalKitPlatform
 import io.github.eslamasabry.oc.ui.kit.text.kitDateTime
+import io.github.eslamasabry.oc.ui.kit.text.kitResetInWords
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.Res
@@ -62,9 +63,6 @@ import io.github.eslamasabry.oc.ui.words.res.composerLimitFriday
 import io.github.eslamasabry.oc.ui.words.res.composerLimitMonday
 import io.github.eslamasabry.oc.ui.words.res.composerLimitPm
 import io.github.eslamasabry.oc.ui.words.res.composerLimitReached
-import io.github.eslamasabry.oc.ui.words.res.composerLimitResetsInHours
-import io.github.eslamasabry.oc.ui.words.res.composerLimitResetsInHoursMinutes
-import io.github.eslamasabry.oc.ui.words.res.composerLimitResetsInMinutes
 import io.github.eslamasabry.oc.ui.words.res.composerLimitResetsOnDate
 import io.github.eslamasabry.oc.ui.words.res.composerLimitResetsOnDay
 import io.github.eslamasabry.oc.ui.words.res.composerLimitSaturday
@@ -73,6 +71,8 @@ import io.github.eslamasabry.oc.ui.words.res.composerLimitThursday
 import io.github.eslamasabry.oc.ui.words.res.composerLimitTuesday
 import io.github.eslamasabry.oc.ui.words.res.composerLimitViewUsage
 import io.github.eslamasabry.oc.ui.words.res.composerLimitWednesday
+import kotlin.time.Duration.Companion.hours
+import kotlin.time.Duration.Companion.minutes
 import org.jetbrains.compose.resources.stringResource
 
 /** What the limit strip says. [reached] switches "Approaching limit" to "Limit reached"; [reset] may be unknown. */
@@ -202,12 +202,10 @@ private fun LimitPill(label: String, onClick: () -> Unit) {
 @Composable
 private fun resetWords(reset: KitLimitReset): String? =
     when (reset) {
-        is KitLimitReset.Within ->
-            when {
-                reset.hours == 0 -> stringResource(Res.string.composerLimitResetsInMinutes, reset.minutes.coerceAtLeast(1))
-                reset.minutes == 0 -> stringResource(Res.string.composerLimitResetsInHours, reset.hours)
-                else -> stringResource(Res.string.composerLimitResetsInHoursMinutes, reset.hours, reset.minutes)
-            }
+        is KitLimitReset.Within -> {
+            val mins = if (reset.hours == 0) reset.minutes.coerceAtLeast(1) else reset.minutes
+            kitResetInWords(reset.hours.hours + mins.minutes, sentenceCase = true)
+        }
         is KitLimitReset.OnDay -> stringResource(Res.string.composerLimitResetsOnDay, weekday(reset.isoWeekday), clock(reset.hour, reset.minute))
         is KitLimitReset.OnDate -> kitDateTime(reset.epochMs)?.let { stringResource(Res.string.composerLimitResetsOnDate, it) }
     }

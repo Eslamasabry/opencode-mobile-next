@@ -49,8 +49,12 @@ internal enum class LampWord {
     Left, Right, High, Middle, Low, OffNotice, RenameFailed, StopFailed, AnswerFailed, HiddenNotice, RenameTitle, Cancel, RenameConfirm,
 }
 
-/** The words by [LampWord]; templates hold `%1$s`, `%2$s`; [folded] is "N sub-agents" for each N the screen shows. */
-internal class LampTexts(private val words: Map<LampWord, String>, val folded: Map<Int, String> = emptyMap()) {
+/** The words by [LampWord]; templates hold `%1$s`, `%2$s`; [folded] and [ages] carry pre-resolved plural phrases. */
+internal class LampTexts(
+    private val words: Map<LampWord, String>,
+    val folded: Map<Int, String> = emptyMap(),
+    val ages: Map<RelativeAge, String> = emptyMap(),
+) {
     operator fun get(word: LampWord): String = words[word] ?: word.name
 
     /** The template of [word] with `%1$s`, `%2$s`... replaced by [args] in order. */
@@ -184,7 +188,7 @@ internal object LampPanelMap {
 
     /** The short age: "a moment", "4m", "2h", "3d". */
     fun age(age: RelativeAge, t: LampTexts): String =
-        when (age) {
+        t.ages[age] ?: when (age) {
             RelativeAge.JustNow -> t[LampWord.AgeNow]
             is RelativeAge.Minutes -> t.fmt(LampWord.AgeMinutes, t.count(age.count))
             is RelativeAge.Hours -> t.fmt(LampWord.AgeHours, t.count(age.count))

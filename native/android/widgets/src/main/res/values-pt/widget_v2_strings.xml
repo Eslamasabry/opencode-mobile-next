@@ -10,8 +10,16 @@
     <string name="widget_v2_short_read">Ler %1$s?</string>
     <string name="widget_v2_short_run">Executar %1$s?</string>
     <string name="widget_v2_ago_now">agora mesmo</string>
-    <string name="widget_v2_ago_min">há %1$s min</string>
-    <string name="widget_v2_ago_hour">há %1$s h</string>
+    <plurals name="widget_v2_ago_min">
+        <item quantity="one">há %1$s min</item>
+        <item quantity="many">há %1$s min</item>
+        <item quantity="other">há %1$s min</item>
+    </plurals>
+    <plurals name="widget_v2_ago_hour">
+        <item quantity="one">há %1$s h</item>
+        <item quantity="many">há %1$s h</item>
+        <item quantity="other">há %1$s h</item>
+    </plurals>
     <string name="widget_v2_ago_yesterday">ontem</string>
     <string name="widget_v2_offline_seen">Offline · visto por último %1$s</string>
     <string name="widget_v2_offline_plain">Offline</string>
@@ -27,8 +35,16 @@
     <string name="widget_v2_resume">Retomar</string>
     <string name="widget_v2_empty">Abra o app para conectar</string>
     <string name="widget_v2_voice">Voz</string>
-    <string name="widget_v2_span_min">%1$s min</string>
-    <string name="widget_v2_span_hour">%1$s h</string>
+    <plurals name="widget_v2_span_min">
+        <item quantity="one">%1$s min</item>
+        <item quantity="many">%1$s min</item>
+        <item quantity="other">%1$s min</item>
+    </plurals>
+    <plurals name="widget_v2_span_hour">
+        <item quantity="one">%1$s h</item>
+        <item quantity="many">%1$s h</item>
+        <item quantity="other">%1$s h</item>
+    </plurals>
     <string name="widget_preview_usage_p1">Codex</string>
     <string name="widget_preview_usage_p2">Claude</string>
     <string name="widget_preview_usage_5h">5h \u002062% restante</string>
@@ -57,7 +73,11 @@
     <string name="widget_status_tasks">Tarefas</string>
     <string name="widget_status_tasks_none">nenhuma</string>
     <string name="widget_status_tasks_running">%1$s em execução</string>
-    <string name="widget_status_span_day">%1$s d</string>
+    <plurals name="widget_status_span_day">
+        <item quantity="one">%1$s d</item>
+        <item quantity="many">%1$s d</item>
+        <item quantity="other">%1$s d</item>
+    </plurals>
     <string name="widget_status_plan">%1$s · %2$s</string>
     <string name="widget_status_left">%1$s%% restante</string>
     <string name="widget_status_replace">Substitua este widget: adicione Conversas ou Status</string>

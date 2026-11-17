@@ -216,13 +216,7 @@ internal class ConversationsWidgetBinder(
         title(v, m.title, 1)
         v.show(R.id.cv_ask, false)
         v.show(R.id.cv_buttons, false)
-        val since = WidgetElapsedPolicy.sinceUnit(System.currentTimeMillis(), m.startedAt)
-        val span =
-            when {
-                since == null -> ""
-                since.first == "min" -> env.str(R.string.widget_v2_span_min, since.second)
-                else -> env.str(R.string.widget_v2_span_hour, since.second)
-            }
+        val span = WidgetDurationWords.since(env.context, System.currentTimeMillis(), m.startedAt)
         val step = m.step.trim().removeSuffix("…").removeSuffix("...").trim()
         val dot = if (m.ticking) g.green else g.idle
         meta(
@@ -433,15 +427,6 @@ internal object ConversationsWidgetPlan {
 
 /** Short ages for a row: "16 min", "1 h", "yesterday", "Mon", "3 Oct". */
 internal object ConversationsWidgetCopy {
-    fun age(env: WidgetRowEnv, thenMs: Long): String {
-        if (thenMs <= 0) return ""
-        val e = WidgetElapsedPolicy.elapsed(System.currentTimeMillis(), thenMs)
-        return when (e.kind) {
-            WidgetLayoutPolicy.Ago.NOW -> env.str(R.string.widget_v2_ago_now)
-            WidgetLayoutPolicy.Ago.MINUTES -> env.str(R.string.widget_v2_span_min, e.count)
-            WidgetLayoutPolicy.Ago.HOURS -> env.str(R.string.widget_v2_span_hour, e.count)
-            WidgetLayoutPolicy.Ago.YESTERDAY -> env.str(R.string.widget_v2_ago_yesterday)
-            else -> e.label
-        }
-    }
+    fun age(env: WidgetRowEnv, thenMs: Long): String =
+        WidgetDurationWords.compactAgo(env.context, System.currentTimeMillis(), thenMs)
 }
