@@ -175,6 +175,14 @@ jobs:
             echo; echo '```'; cat "$RUNNER_TEMP/why.txt" 2>/dev/null || true; echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
 
+      - name: Candidate detekt hook (tool/ci/detekt_lane.sh --all)
+        if: ${{ inputs.lane == 'candidate' }}
+        run: |
+          if [ -f tool/ci/detekt_lane.sh ]; then
+            echo "candidate detekt hook: tool/ci/detekt_lane.sh present (detekt job runs --all)"
+          else
+            echo "candidate detekt hook: waiting for tool/ci/detekt_lane.sh <base-ref> --all from native/detekt-line"
+          fi
       - name: Candidate plan and self-test evidence
         if: ${{ always() && inputs.lane == 'candidate' }}
         run: python3 -I tool/ci/candidate_plan.py candidate reports "$RUNNER_TEMP/ci-self.log" "$RUNNER_TEMP/release-self.log" "$RUNNER_TEMP/release-tools.log"
@@ -220,12 +228,13 @@ jobs:
           JOB_STATUS: ${{ job.status }}
         run: |
           python3 -I - <<'PY'
-          import json, os
+          import json, os, re
           log = open(os.environ['RUNNER_TEMP'] + '/compile.log', errors='replace').read().splitlines() if os.path.exists(os.environ['RUNNER_TEMP'] + '/compile.log') else []
           errs = [l.split('/native/', 1)[-1] for l in log if l.startswith('e: ') or 'FAILURE: Build failed' in l or 'Execution failed for task' in l]
           os.makedirs('reports', exist_ok=True)
           ran = any(l.startswith('> Task :') or l.startswith('BUILD ') for l in log)
-          json.dump({'errors': sum(1 for l in log if l.startswith('e: ')), 'first_errors': errs[:15], 'failed': os.environ.get('JOB_STATUS') == 'failure', 'gradle_ran': ran}, open('reports/compile.json', 'w'))
+          all_tests = any(re.search(r'(^|\s)> Task :compileAllTests(\s|$)', l) for l in log)
+          json.dump({'errors': sum(1 for l in log if l.startswith('e: ')), 'first_errors': errs[:15], 'failed': os.environ.get('JOB_STATUS') == 'failure', 'gradle_ran': ran, 'compile_all_tests': all_tests}, open('reports/compile.json', 'w'))
           PY
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: always()
