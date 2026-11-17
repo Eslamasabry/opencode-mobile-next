@@ -79,12 +79,14 @@ public fun umamiEvent(
     atMs: Long,
 ): UmamiEvent? {
     val (website, build, device) = source
-    if (page !in umamiPages.values || atMs < 0 || atMs / 1000 > 2_147_483_647) return null
+    val inRange = page in umamiPages.values && atMs >= 0 && atMs / 1000 <= 2_147_483_647
     val event = ProductEvent.entries.firstOrNull { it.wire == name }
     val clean = event?.let { cleanProductProps(it, props) }
-    val visible = if (event == ProductEvent.ScreenView || event == ProductEvent.Jank) {
-        clean?.get("screen")?.let { umamiPages[it] }
-    } else page
+    val visible = when {
+        !inRange -> null
+        event == ProductEvent.ScreenView || event == ProductEvent.Jank -> clean?.get("screen")?.let { umamiPages[it] }
+        else -> page
+    }
     if (event == null || clean == null || visible == null) return null
     return UmamiEvent(payload = UmamiPayload(
         website = website,

@@ -153,6 +153,8 @@ fi
 if [[ -n "$new_against" ]]; then
   top="$(oc_repo_root)" || { echo "detekt: could not run (needs git)"; exit 2; }
   git -C "$top" rev-parse --verify -q "$new_against^{commit}" >/dev/null || { echo "detekt: could not run (unknown ref '$new_against')"; exit 2; }
+  # A branch is judged against where it left the ref (the ref itself may have moved on since).
+  new_against="$(git -C "$top" merge-base "$new_against" HEAD 2>/dev/null || echo "$new_against")"
   mkdir -p "$report_dir" || exit 2
   snap="$(mktemp -d "${TMPDIR:-/tmp}/oc-detekt-base.XXXXXX")"; trap 'rm -rf "$snap"' EXIT
   lock="$(oc_build_lock_file)"

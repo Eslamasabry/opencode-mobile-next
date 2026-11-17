@@ -1049,9 +1049,10 @@ class NativeServerIntegrations(
         }
 
         private fun mcpInputAcceptable(name: String, url: String, executable: String, remote: Boolean): Boolean {
-            if (remote == executable.isNotBlank() || name.isBlank() || name.length > 200) return false
-            if (name.any { it.isISOControl() }) return false
-            return !remote || (links.check(url, LinkOrigin.ServerContent) !is LinkDecision.Refuse && safeMcpUrl(url))
+            val named = name.isNotBlank() && name.length <= 200 && name.none { it.isISOControl() }
+            val linkOk =
+                !remote || (links.check(url, LinkOrigin.ServerContent) !is LinkDecision.Refuse && safeMcpUrl(url))
+            return named && remote != executable.isNotBlank() && linkOk
         }
 
         override fun dismiss() {
