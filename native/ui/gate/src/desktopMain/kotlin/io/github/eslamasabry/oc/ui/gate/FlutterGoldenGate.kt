@@ -172,9 +172,15 @@ object FlutterGoldenGate {
             try {
                 val axes = axesOf(name, mode, ref, textScale, window, density, pixelRatio)
                 val native = render(axes, mode == "dark", motion, style, frame, wrap, content, act = act)
-                if (!goldenFile("${name}_$mode", ref).isFile && ReferenceGuard.outcome() == ReferenceGuard.Outcome.Skip) {
+                if (!goldenFile("${name}_$mode", ref).isFile) {
                     ImageIO.write(native, "png", File(out, "${name}_$mode-native.png")) // the picture is still rendered and kept
-                    missingGolden = "picture ${name}_$mode"
+                    if (ReferenceGuard.outcome() == ReferenceGuard.Outcome.Fail) {
+                        // A lane that fetches its pictures: the plain failure, beside any layout finding (never compare()'s
+                        // IllegalStateException).
+                        failures += AssertionError(ReferenceGuard.failureMessage("picture ${name}_$mode"))
+                    } else {
+                        missingGolden = "picture ${name}_$mode"
+                    }
                     continue
                 }
                 result[mode] = compare("${name}_$mode", ref, native)

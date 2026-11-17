@@ -116,6 +116,10 @@ def analyse(lines, mods, expected):
             dependency = t.replace(':verifyRoborazziAndroidHostTest', ':testAndroidHostTest')
             if dependency != t and task_status.get(dependency) == 'FAILED' and dependency in covered and mods.get(mod, [0, 0])[1] > 0:
                 continue  # verification's Test ran and failed; classify its assertions, not the blocked lifecycle task
+            variants = [x for x in task_status
+                        if t.endswith(':test') and x.startswith(t) and x != t and x.endswith(('UnitTest', 'HostTest'))]
+            if any(task_status[x] in ('RAN', 'FAILED', 'UP-TO-DATE') for x in variants):
+                continue  # an Android lifecycle task: its variant unit-test task ran (a failing one stops the lifecycle line)
             real.append(f'module {mod}: no test results ({t} never ran)')
     if not failed and any(l.startswith('FAILURE: Build failed') for l in lines):
         real.append('the build failed without naming a task (configuration or script error)')
