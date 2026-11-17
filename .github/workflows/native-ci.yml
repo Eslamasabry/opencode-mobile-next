@@ -554,7 +554,7 @@ jobs:
   custom:
     name: custom tasks
     needs: where
-    if: ${{ inputs.tasks != '' }}
+    if: ${{ inputs.tasks != '' && !startsWith(inputs.tasks, 'owner_build ') }}
     # On work branches this job never fails by itself (every shard still reports); the summary job's verdict reds the run.
     continue-on-error: ${{ github.ref_name != 'native/next' && !startsWith(github.ref_name, 'native/screens-merge') && github.ref_name != 'master' }}
     runs-on: ${{ fromJSON(needs.where.outputs.runs_on) }}
@@ -765,10 +765,121 @@ jobs:
           retention-days: ${{ (github.ref_name == 'master' || startsWith(github.ref, 'refs/tags/') || inputs.lane == 'candidate') && 7 || 3 }}
           if-no-files-found: ignore
 
+  # `tasks=owner_build <full sha> <versionCode> [abis] [mapping]`: the owner-key build compiled HERE, UNSIGNED, and signed afterwards on the
+  # maintainer's own PC (build-takeover-gh.sh). It holds NO signing secret and writes NO key file: the release APKs come out unsigned,
+  # exactly as the build server's owner build leaves them (androidApp/build.gradle.kts leaves the release APK unsigned when no key
+  # file is given). The only secret read is FIREBASE_GOOGLE_SERVICES_B64 (Crashlytics config, not a signing key), installed the way
+  # native-release.yml installs it and never printed. Same build as build-takeover-remote.sh: :androidApp:assembleSwitchRelease, no
+  # -Poc.publicRelease (version name <name>-test.<code>), the versionCode written into the runner's copy of version.properties only.
+  # (Its own workflow file cannot be dispatched from a branch: only a workflow already on the default branch can.)
+  owner-build:
+    name: owner build (unsigned)
+    if: ${{ startsWith(inputs.tasks, 'owner_build ') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    concurrency:
+      group: native-owner-build-${{ github.run_id }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1
+      - name: Check the request and check out the commit to build
+        id: req
+        env:
+          TASKS: ${{ inputs.tasks }}
+        run: |
+          set -euo pipefail
+          read -r _ sha code abis mapping <<<"$TASKS"
+          abis="${abis:-arm64-v8a}"; mapping="${mapping:-false}"
+          [[ "$sha" =~ ^[0-9a-f]{40}$ ]] || { echo "::error::the commit must be a full 40-character sha"; exit 1; }
+          [[ "$code" =~ ^[0-9]+$ ]] || { echo "::error::the code must be a number"; exit 1; }
+          for a in ${abis//,/ }; do
+            case "$a" in arm64-v8a|x86_64|universal) ;; *) echo "::error::unknown abi $a"; exit 1 ;; esac
+          done
+          git fetch --no-tags --depth=1 origin "$sha"
+          git checkout -q --detach "$sha"
+          echo "building $(git rev-parse HEAD)"
+          { echo "code=$code"; echo "abis=$abis"; echo "mapping=$mapping"; } >> "$GITHUB_OUTPUT"
+      - uses: ./.github/actions/native-setup
+      - name: Write the build number into this runner's copy
+        env:
+          CODE: ${{ steps.req.outputs.code }}
+        run: sed -i "s/^versionCode=.*/versionCode=$CODE/" native/version.properties
+      - name: Install the Firebase config (never in git, never printed)
+        env:
+          FIREBASE_B64: ${{ secrets.FIREBASE_GOOGLE_SERVICES_B64 }}
+        run: |
+          set -euo pipefail
+          [ -n "$FIREBASE_B64" ] || { echo "::error::FIREBASE_GOOGLE_SERVICES_B64 is not set"; exit 1; }
+          dir="$RUNNER_TEMP/oc-firebase"
+          mkdir -p "$dir"
+          printf '%s' "$FIREBASE_B64" | base64 -d > "$dir/google-services-io.github.eslamasabry.opencode_mobile.json"
+          echo "OC_GOOGLE_SERVICES_DIR=$dir" >> "$GITHUB_ENV"
+          echo "Firebase config installed"
+      - name: Compile the unsigned switch release
+        working-directory: native
+        run: |
+          set -euo pipefail
+          export JAVA_HOME="$JAVA_HOME_21_X64"
+          start=$(date +%s)
+          ./gradlew --console=plain "-Dorg.gradle.jvmargs=-Xmx6g -XX:MaxMetaspaceSize=1g -XX:+UseParallelGC -Dfile.encoding=UTF-8" :androidApp:assembleSwitchRelease
+          secs=$(( $(date +%s) - start ))
+          echo "OWNER-BUILD-COMPILE-SECONDS $secs"
+          echo "### Compile on the runner: ${secs} s" >> "$GITHUB_STEP_SUMMARY"
+      - name: Delete the Firebase config
+        if: always()
+        run: rm -rf "$RUNNER_TEMP/oc-firebase"
+      - name: Collect the unsigned APKs and print their sha256
+        id: collect
+        env:
+          ABIS: ${{ steps.req.outputs.abis }}
+          MAPPING: ${{ steps.req.outputs.mapping }}
+        run: |
+          set -euo pipefail
+          src=native/androidApp/build/outputs/apk/switch/release
+          out="$RUNNER_TEMP/owner-out"; mkdir -p "$out"
+          want="arm64-v8a ${ABIS//,/ }"
+          for abi in $(printf '%s\n' $want | sort -u); do
+            f=$(ls -t "$src"/*-"$abi"-release*.apk 2>/dev/null | head -1 || true)
+            [ -n "$f" ] || { echo "::error::no $abi APK in $src"; ls "$src"; exit 1; }
+            cp "$f" "$out/$abi.apk"
+            echo "OWNER-BUILD-SHA256 $abi $(sha256sum "$out/$abi.apk" | cut -d' ' -f1) $(stat -c %s "$out/$abi.apk")"
+          done
+          if [ "$MAPPING" = true ]; then
+            m=native/androidApp/build/outputs/mapping/switchRelease/mapping.txt
+            if [ -f "$m" ]; then gzip -1 -c "$m" > "$out/mapping.txt.gz"; else echo "::warning::no mapping file"; fi
+          fi
+          echo "dir=$out" >> "$GITHUB_OUTPUT"
+      - name: Upload the unsigned arm64 APK
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: owner-unsigned-arm64-${{ steps.req.outputs.code }}
+          path: ${{ steps.collect.outputs.dir }}/arm64-v8a.apk
+          retention-days: 1
+          if-no-files-found: error
+      - name: Upload the other unsigned APKs (only when asked)
+        if: ${{ contains(steps.req.outputs.abis, 'x86_64') || contains(steps.req.outputs.abis, 'universal') }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: owner-unsigned-others-${{ steps.req.outputs.code }}
+          path: |
+            ${{ steps.collect.outputs.dir }}/x86_64.apk
+            ${{ steps.collect.outputs.dir }}/universal.apk
+          retention-days: 1
+          if-no-files-found: ignore
+      - name: Upload the R8 mapping (only when asked)
+        if: ${{ steps.req.outputs.mapping == 'true' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: owner-mapping-${{ steps.req.outputs.code }}
+          path: ${{ steps.collect.outputs.dir }}/mapping.txt.gz
+          retention-days: 1
+          if-no-files-found: ignore
+
   summary:
     name: summary
     needs: [where, plan, compile, test, apk, record, custom, android-unit, detekt]
-    if: ${{ always() }}
+    if: ${{ always() && !startsWith(inputs.tasks, 'owner_build ') }}
     # No job-level continue-on-error: this job's exit code is summary.py's verdict on every branch (1 = FAIL, 2 = integrity:
     # Gradle never ran, a shard left no report), so the run page reads red exactly when the summary says FAIL.
     runs-on: ubuntu-latest
