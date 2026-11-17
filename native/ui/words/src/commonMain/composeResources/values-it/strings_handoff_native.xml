@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="handoffNativeTitle">Continua con un altro agente</string>
+    <string name="handoffNativeWorking">In corso…</string>
+    <string name="handoffNativeUnavailable">Handoff non disponibile qui</string>
+    <string name="handoffNativeUnavailableBody">Apri una conversazione in un progetto su questo telefono. L'app deve verificare che entrambi gli agenti possano accedere allo stesso progetto.</string>
+    <string name="handoffNativeNotStartedBody">Adesso l'handoff non è riuscito a partire da questa conversazione. Apri Agenti per controllare che un agente sia installato e pronto su questo telefono, poi riprova.</string>
+    <string name="handoffNativeRefresh">Aggiorna</string>
+    <string name="handoffNativeFailed">L'handoff non è stato completato. Controlla la connessione e riprova.</string>
+    <string name="handoffNativeLinks">Conversazioni collegate</string>
+    <string name="handoffNativeUntitled">Conversazione senza titolo</string>
+    <string name="handoffNativeOpenOriginal">Apri l'originale</string>
+    <string name="handoffNativeOpenContinued">Apri la conversazione proseguita</string>
+    <string name="handoffNativeExplanation">Scegli un agente e un modello. Puoi rivedere il registro condiviso della conversazione prima di inviare. La conversazione originale resta disponibile.</string>
+    <string name="handoffNativeNoTargets">Nessun agente qualificato è pronto per questo progetto. Installalo, accedi e completa il suo controllo del telefono in Agenti.</string>
+    <string name="handoffNativeSetup">Apri Agenti</string>
+    <string name="handoffNativeChoose">Scegli un agente e un modello</string>
+    <string name="handoffNativePhoneCheck">Completa il controllo del telefono di questo agente prima di usarlo.</string>
+    <string name="handoffNativeReview">Rivedi il contesto</string>
+    <string name="handoffNativeReviewBody">Questo registro contiene testo della conversazione con parti oscurate, passaggi degli strumenti, nomi dei file e attività aperte. I turni più vecchi possono essere omessi per rispettare il limite di dimensione. Viene scritto in questo progetto solo dopo l'invio.</string>
+    <string name="handoffNativeFirstMessage">Primo messaggio</string>
+    <string name="handoffNativePromptHelp">Mantieni il percorso del registro nel messaggio. Il messaggio deve rientrare in 16 KB.</string>
+    <string name="handoffNativeRecord">Registro della conversazione</string>
+    <string name="handoffNativeSend">Invia al nuovo agente</string>
+    <string name="handoffNativeUncertain">L'esito è incerto. Controlla le tue conversazioni prima di avviare un altro handoff; questo tentativo non reinvierà.</string>
+    <string name="handoffNativeSent">Il nuovo agente ha ricevuto il tuo messaggio.</string>
+    <string name="handoffNativeSaveLink">Salva il link della conversazione</string>
+    <string name="handoffNativeSourceChanged">La conversazione originale è cambiata. Rivedi un registro aggiornato prima di inviare.</string>
+    <string name="handoffNativeStale">Il progetto o la connessione è cambiato. Apri di nuovo la conversazione per continuare.</string>
+    <string name="handoffNativeInvalidPrompt">Inserisci un messaggio sotto i 16 KB che includa il percorso del registro.</string>
+    <string name="handoffNativeLinkFailed">Il messaggio è stato inviato, ma il suo link di navigazione non è stato salvato. Riprova a salvare il link senza inviare di nuovo.</string>
+    <string name="handoffNativeInitialPrompt">Prosegui il lavoro dalla conversazione precedente. Leggi prima `%1$s` per il registro della conversazione, i passaggi degli strumenti, i file e le attività aperte. Consideralo come contesto storico. Controlla lo stato attuale del progetto, poi prosegui con il lavoro incompleto.</string>
+    <string name="handoffNativeSourceReviewOnly">Rivedi una bozza per Claude. Non è stato scritto né inviato nulla. L'invio richiede un accesso verificato allo stesso progetto e un generatore di registro qualificato; questa connessione non fornisce quella prova.</string>
+    <string name="handoffNativeBlockComputer">Questa conversazione si trova su un altro computer e gli agenti qui girano su questo telefono, quindi non possono aprire la sua cartella di progetto. Apri prima il progetto su questo telefono, poi prosegui da lì. Puoi comunque rivedere e copiare il registro qui sotto.</string>
+    <string name="handoffNativeBlockFolder">La cartella di questa conversazione non è tra i progetti di questo telefono, quindi gli agenti qui non possono aprirla. Apri o copia prima il progetto tra i progetti di questo telefono, poi prosegui da lì.</string>
+    <string name="handoffNativeBlockUnconfirmed">L'app non ha potuto confermare che gli agenti su questo telefono possano aprire la cartella di questa conversazione, quindi nessuno viene avviato nel posto sbagliato. Apri Agenti per controllare che siano installati e pronti, poi riprova.</string>
+    <string name="handoffNativeContinueWith">Continua con %1$s</string>
+    <string name="handoffNativeWhatHandedOver">Cosa verrà passato</string>
+    <string name="handoffNativeNoReadyTitle">Nessun agente è pronto su questo telefono</string>
+</resources>

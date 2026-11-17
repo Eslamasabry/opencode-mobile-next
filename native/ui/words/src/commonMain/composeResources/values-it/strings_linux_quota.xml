@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxQuotaTitle">Utilizzo del piano su questo telefono</string>
+    <string name="linuxQuotaSetup">Configura utilizzo del piano</string>
+    <string name="linuxQuotaEnabled">Utilizzo del piano configurato</string>
+    <string name="linuxQuotaBody">Legge i limiti di Codex, GLM e MiniMax dagli accessi già presenti su questo telefono. L'helper viene eseguito solo durante la lettura dell'utilizzo.</string>
+    <string name="linuxQuotaTurnOff">Disattiva utilizzo del piano</string>
+    <string name="linuxQuotaLinuxNotReady">Configura prima Linux su questo telefono.</string>
+    <string name="linuxQuotaNoNode">Installa Node dai componenti Linux, poi riprova.</string>
+    <string name="linuxQuotaOldNode">Aggiorna Node alla versione 20 o successiva, poi riprova.</string>
+    <string name="linuxQuotaPrepareFailed">Impossibile preparare i file di utilizzo. Riprova.</string>
+    <string name="linuxQuotaStartFailed">L'helper di utilizzo non ha risposto. Riprova.</string>
+    <string name="linuxQuotaRemoveFailed">Impossibile rimuovere l'helper di utilizzo. Riprova.</string>
+</resources>

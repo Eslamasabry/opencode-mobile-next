@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="hostSecTitle">Una macchina sulla tua rete privata</string>
+    <string name="hostSecIntro">Esamina la sua identità SSH, prepara la chiave pubblica di questo telefono o recupera un host salvato.</string>
+    <string name="hostSecBundleMissing">L'installazione di un nuovo host non è disponibile finché non viene pubblicato un bundle host OpenCode 2 revisionato. Questi comandi di preparazione vengono eseguiti solo se li copi ed esegui sulla tua macchina.</string>
+    <string name="hostSecWorking">In corso…</string>
+    <string name="hostSecRefresh">Aggiorna le macchine salvate</string>
+    <string name="hostSecSaved">Macchine salvate</string>
+    <string name="hostSecAddress">Account SSH e indirizzo tailnet (user@host)</string>
+    <string name="hostSecPort">Porta SSH</string>
+    <string name="hostSecInspect">Esamina l'identità della macchina</string>
+    <string name="hostSecTrustHelp">Confronta questa impronta in una sessione indipendente sulla macchina usando ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub -E sha256. Prosegui solo se corrisponde esattamente.</string>
+    <string name="hostSecTrust">Impronta corrispondente — prepara la chiave pubblica</string>
+    <string name="hostSecPublicHelp">Questa chiave pubblica può essere copiata in sicurezza. La chiave privata resta nell'Android Keystore. L'installazione e la registrazione richiedono comunque il bundle host revisionato.</string>
+    <string name="hostSecCopy">Copia comando</string>
+    <string name="hostSecResume">Verifica la connessione salvata</string>
+    <string name="hostSecVerified">L'identità SSH fissata e l'identità del supervisor salvata sono state verificate sul tunnel privato.</string>
+    <string name="hostSecNotConnected">Nessuna connessione host verificata è aperta.</string>
+    <string name="hostSecRevoke">Revoca questo telefono e rimuovi</string>
+    <string name="hostSecForget">Dimentica i dati host locali</string>
+    <string name="hostSecRemoveConfirm">Rimuovi</string>
+    <string name="hostSecRevokeHelp">L'app deve confermare la revoca con l'host fissato prima di cancellare l'accesso locale. Una revoca fallita conserva i dati salvati per riprovare. Le sessioni sulla macchina continuano a girare.</string>
+    <string name="hostSecForgetHelp">Rimuove il tunnel locale, la chiave e i dati host salvati di questo telefono. Non revoca l'accesso remoto né interrompe le sessioni sulla macchina.</string>
+    <string name="hostSecTargetFailure">Usa un indirizzo di macchina sulla tua rete Tailscale e un account e una porta SSH validi. I percorsi DNS pubblici, locali e misti vengono rifiutati.</string>
+    <string name="hostSecIdentityFailure">L'identità della macchina è cambiata. Nulla è stato adottato. Verifica la macchina in modo indipendente prima di riprovare.</string>
+    <string name="hostSecRevokeFailure">La revoca dell'accesso non è stata confermata. L'accesso salvato è conservato così puoi riprovare.</string>
+    <string name="hostSecStorageFailure">I dati host non sono stati letti o modificati in sicurezza. Mantieni la macchina salvata e riprova.</string>
+    <string name="hostSecFailure">L'operazione host privata non è stata completata. Controlla la configurazione Linux del telefono e la rete privata, poi riprova.</string>
+    <string name="hostSecStepTailnet">Collega entrambi i dispositivi alla tua Tailscale. Questi controlli mostrano stato e indirizzi; non dimostrano l'appartenenza alla VPN. Il DNS viene risolto una volta, ogni risposta deve essere negli intervalli del tailnet e SSH usa l'indirizzo numerico validato con una chiave fissata.</string>
+    <string name="hostSecStepAccount">Usa un account Ubuntu 24.04 separato senza accesso root. Controlla prima questi strumenti. La configurazione verifica il sistema, l'UID non root, l'architettura, Python e il gestore dei servizi utente; non installa pacchetti con sudo.</string>
+    <string name="hostSecStepNetwork">Tieni aperta una sessione di ripristino. Sostituisci MACHINE_TAILSCALE_IP con l'indirizzo numerico reale e rimuovi le voci ListenAddress pubbliche o con caratteri jolly. Questi comandi del proprietario cambiano l'intero daemon SSH. L'installer legge solo i socket in ascolto reali sulla porta SSH selezionata e rifiuta listener pubblici, con caratteri jolly o di LAN ordinaria; non modifica il firewall né i binding SSH. Verifica separatamente ogni altra porta SSH.</string>
+    <string name="hostSecStepLinger">Esegui il primo comando una volta con accesso amministratore. L'installer legge Linger e richiede yes, poi controlla che systemctl --user funzioni. Non attiva mai linger da solo né richiede una password sudo.</string>
+    <string name="hostSecStepPolicy">Tieni aperta una sessione amministratore. Sostituisci PHONE_TAILSCALE_IP e MACHINE_TAILSCALE_IP con gli indirizzi numerici reali. Convalida prima di ricaricare. Direttive SSH precedenti possono prevalere su questo file. L'installer controlla l'inoltro TCP locale, l'inoltro inverso e di socket disattivati, nessun dispositivo tunnel, UseDNS no, DisableForwarding no, l'accesso con chiave pubblica e il percorso standard di authorized_keys. Analizzare le impostazioni non prova che il daemon in esecuzione le abbia caricate; verifica tu stesso il ricaricamento.</string>
+    <string name="hostSecStepIdentity">Confronta questo output con l'app in una sessione indipendente sulla macchina prima di fidarti. L'app calcola l'impronta Ed25519 SHA256 e blocca i cambi di identità successivi.</string>
+    <string name="hostSecRevokeQuestion">Revocare questo telefono e rimuovere l'host?</string>
+    <string name="hostSecForgetQuestion">Dimenticare i dati host locali?</string>
+</resources>

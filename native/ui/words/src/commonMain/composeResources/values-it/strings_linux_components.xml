@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxComponentsTitle">Componenti Linux</string>
+    <string name="linuxComponentsRefresh">Verifica componenti installati</string>
+    <string name="linuxComponentsTeam">AI Team</string>
+    <string name="linuxComponentsUnknown">Componente</string>
+    <string name="linuxComponentsInstalled">Installato</string>
+    <string name="linuxComponentsDependents">Richiesto da %1$s. Rimuovi prima quei componenti.</string>
+    <string name="linuxComponentsDependencyUnknown">Impossibile verificare %1$s. Ricontrolla prima di rimuovere questo componente.</string>
+    <string name="linuxComponentsRequired">Necessario per il server su questo telefono.</string>
+    <string name="linuxComponentsUnsupported">Questo componente non può essere rimosso separatamente.</string>
+    <string name="linuxComponentsAbsent">Non installato</string>
+    <string name="linuxComponentsUnknownPresence">Impossibile verificare i componenti installati. Riprova.</string>
+    <string name="linuxComponentsBusy">Attendi il termine della configurazione o dell'operazione in corso.</string>
+    <string name="linuxComponentsFailed">Impossibile rimuovere il componente. Ricontrolla e riprova.</string>
+    <string name="linuxComponentsRemove">Rimuovi %1$s</string>
+    <string name="linuxComponentsRemoveQuestion">Rimuovere %1$s?</string>
+    <string name="linuxComponentsRemoveBody">Viene rimosso solo questo componente. Progetti e conversazioni restano al loro posto. Le dipendenze verranno verificate di nuovo prima della rimozione.</string>
+    <string name="linuxSetupOpenSettings">Apri Impostazioni app</string>
+    <string name="linuxSetupStepWaiting">In attesa</string>
+    <string name="linuxSetupStepKept">Già installato</string>
+    <string name="linuxSetupSwitchBusy">Termina il lavoro in corso e rispondi alle richieste in sospeso su questo telefono, poi riprova la configurazione.</string>
+    <string name="linuxSetupSwitchFailed">La configurazione non è riuscita a preparare questo telefono in sicurezza. Conversazioni e messaggi salvati restano al loro posto. Controlla la connessione e lo spazio libero, poi riprova.</string>
+</resources>

@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="migration_opening">Apertura…</string>
+    <string name="migration_updating">Aggiornamento dell'app…</string>
+    <string name="migration_still_updating">Aggiornamento in corso. Il primo avvio dopo un aggiornamento può richiedere un po' più di tempo.</string>
+    <string name="migration_try_again">Riprova il trasferimento dei dati</string>
+    <string name="migration_reenter_title">Alcuni accessi vanno rifatti</string>
+    <string name="migration_reenter_body">L'aggiornamento non è riuscito a leggere questi accessi salvati. Tutto il resto è passato.</string>
+    <string name="migration_reenter_row_password">%1$s · Inserisci la password</string>
+    <string name="migration_reenter_row_token">%1$s · Inserisci il token</string>
+    <string name="migration_reenter_row_github">%1$s · Accedi di nuovo a GitHub</string>
+    <string name="migration_reenter_row_byo">%1$s · Riconfigura</string>
+    <string name="migration_reenter_unnamed">Un server salvato</string>
+    <string name="migration_reenter_later">Esegui questi accessi più tardi</string>
+    <string name="migration_reenter_field_password">Password per %1$s</string>
+    <string name="migration_reenter_field_token">Token per %1$s</string>
+    <string name="migration_reenter_save">Salva</string>
+    <string name="migration_reenter_save_failed">Impossibile salvarlo su questo telefono. Riprova.</string>
+    <string name="migration_reenter_back">Torna all'elenco</string>
+    <string name="migration_reenter_github_where">Per accedere di nuovo a GitHub per %1$s, apri una delle sue conversazioni, poi Git.</string>
+    <string name="migration_reenter_open_chats">Apri le conversazioni</string>
+    <string name="migration_reenter_byo_absent">La riconfigurazione di %1$s non è ancora in questa versione. I suoi dettagli salvati restano su questo telefono.</string>
+    <string name="migration_failed_title">L'aggiornamento non ha finito di spostare i dati</string>
+    <string name="migration_failed_body">Nulla è stato eliminato. I dati precedenti all'aggiornamento sono al sicuro su questo telefono.</string>
+    <string name="migration_restore_row">Ripristina i dati precedenti all'aggiornamento</string>
+    <string name="migration_restore_confirm">Rimette Impostazioni e server come erano prima dell'aggiornamento. Le modifiche fatte da allora vengono conservate in una copia.</string>
+    <string name="migration_restore_confirm_title">Ripristinare i dati più vecchi?</string>
+    <string name="migration_restore_confirm_action">Ripristina i dati precedenti all'aggiornamento</string>
+    <string name="migration_start_fresh_row">Ricomincia da zero (conserva una copia dei dati precedenti)</string>
+    <string name="migration_start_fresh_confirm">Ricomincerai senza server salvati e con le Impostazioni predefinite. Una copia dei dati precedenti resta su questo telefono.</string>
+    <string name="migration_start_fresh_confirm_title">Ricominciare da zero?</string>
+    <string name="migration_start_fresh_confirm_action">Ricomincia da zero e conserva una copia</string>
+    <string name="migration_report_row">Segnala un problema</string>
+    <string name="migration_details">Dettagli · %1$s</string>
+    <string name="migration_space_title">Il telefono è quasi pieno</string>
+    <string name="migration_space_body">L'aggiornamento richiede %1$s di spazio libero per conservare una copia di sicurezza dei dati. Libera spazio, poi riprova.</string>
+    <string name="migration_save_failed_title">Impossibile salvare su questo telefono</string>
+    <string name="migration_open_storage_row">Apri le impostazioni di archiviazione</string>
+    <string name="migration_close">Chiudi</string>
+    <string name="migration_deferred_notice">Non ancora in questa versione: %1$s. Quanto hai salvato per loro resta su questo telefono, intatto.</string>
+    <string name="migration_deferred_ai_team">AI Team</string>
+    <string name="migration_deferred_memory">Memoria</string>
+    <string name="migration_deferred_gemma">il modello AI sul telefono</string>
+    <string name="migration_deferred_separator">, </string>
+    <string name="migration_deferred_dismiss">Ignora la nota sulle funzionalità non in questa versione</string>
+</resources>

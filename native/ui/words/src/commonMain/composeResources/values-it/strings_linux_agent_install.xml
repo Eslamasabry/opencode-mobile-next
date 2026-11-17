@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxAgentInstall">Installa o aggiorna %1$s</string>
+    <string name="linuxAgentInstalling">Installazione di %1$s</string>
+    <string name="linuxAgentInstallBackground">L'installazione continua in background. Tocca Aggiorna per vedere l'avanzamento più recente.</string>
+    <string name="linuxAgentInstallCancel">Annulla installazione</string>
+    <string name="linuxAgentInstallBusy">Un'altra configurazione è in corso. Attendi che finisca o annullala prima.</string>
+    <string name="linuxAgentInstallSpace">Spazio libero insufficiente per questo download e per i file installati. Libera spazio e riprova.</string>
+    <string name="linuxAgentInstallUnavailable">Questo agente non può essere installato su questo telefono al momento.</string>
+    <string name="linuxAgentInstallDone">%1$s è installato. Prima dell'uso servono ancora l'accesso e il controllo di compatibilità del telefono.</string>
+    <string name="linuxAgentInstallFailed">Impossibile installare %1$s. Tocca Installa o aggiorna per riprovare.</string>
+    <string name="linuxAgentInstallInterrupted">L'installazione di %1$s è stata interrotta. Tocca Installa o aggiorna per riprovare in sicurezza.</string>
+</resources>

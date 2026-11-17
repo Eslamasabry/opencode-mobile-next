@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="migrationSkillUseNew">Usa in una nuova conversazione</string>
+    <string name="migrationSkillReady">Lo skill è pronto in una nuova conversazione. L'agente non è stato eseguito.</string>
+    <string name="migrationSkillChanged">La connessione è cambiata. Le conversazioni già create sono state conservate.</string>
+    <string name="migrationSkillInvalid">Questo skill non ha un identificatore supportato. Aggiorna l'elenco degli skill.</string>
+    <string name="migrationSkillUncertain">La richiesta potrebbe essere arrivata al server. Le conversazioni già create sono state conservate. Verifica prima di riprovare.</string>
+    <string name="migrationSkillOpen">Apri conversazione</string>
+</resources>

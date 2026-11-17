@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="monitorNativeTitle">Controlla altri server</string>
+    <string name="monitorNativeBack">Indietro</string>
+    <string name="monitorNativeForegroundOnly">Controlla i server salvati finché questa pagina è aperta. Chiudendola le letture si interrompono. Non avvia un server sul telefono né attiva gli avvisi in background.</string>
+    <string name="monitorNativeCheck">Controlla ora</string>
+    <string name="monitorNativeChecking">Verifica in corso…</string>
+    <string name="monitorNativeAllow">Consenti i controlli</string>
+    <string name="monitorNativeConsent">Consenti a questa app di leggere richieste e stato recente delle conversazioni da questo server salvato.</string>
+    <string name="monitorNativeUnsupported">Questo server salvato non può essere controllato qui.</string>
+    <string name="monitorNativeOff">Controlli disattivati</string>
+    <string name="monitorNativeWaiting">Non ancora controllato</string>
+    <string name="monitorNativeCurrent">Controllato</string>
+    <string name="monitorNativePartial">Parzialmente controllato. Controlla di nuovo per leggere altre conversazioni.</string>
+    <string name="monitorNativeUnknown">Impossibile confermare l'ultimo stato. Le osservazioni precedenti potrebbero essere ancora mostrate.</string>
+    <string name="monitorNativePaused">Controlli in pausa</string>
+    <string name="monitorNativePending">In attesa di te: %1$d</string>
+    <string name="monitorNativeRunning">In esecuzione: %1$d</string>
+    <string name="monitorNativeConversation">Conversazione</string>
+    <string name="monitorNativeFailed">L'ultimo turno controllato non è riuscito</string>
+    <string name="monitorNativeEarlierFailure">Errore precedente; l'ultimo stato è sconosciuto</string>
+    <string name="monitorNativeSaveFailed">Impossibile salvare o caricare queste impostazioni. Riprova.</string>
+    <string name="monitorNativeEmpty">Nessun server salvato disponibile per il controllo.</string>
+    <string name="monitorNativeRequest">In attesa di te</string>
+    <string name="monitorNativeEarlierRequest">Richiesta precedente; l'ultimo stato è sconosciuto</string>
+    <string name="monitorNativeReconnect">Connettiti a questo server o aggiorna il suo accesso in Server prima di controllare.</string>
+</resources>

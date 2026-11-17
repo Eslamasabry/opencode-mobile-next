@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxPortActions">Azioni porta</string>
+    <string name="linuxPortCopiedAddress">Copia indirizzo</string>
+    <string name="linuxPortOwnerStop">Ferma %1$s</string>
+    <string name="linuxPortOwnerQuestion">Ferma %1$s?</string>
+    <plurals name="linuxPortOwnerStopBody">
+        <item quantity="one">Ferma il programma selezionato e i suoi helper (1 processo). Ogni processo deve comunque corrispondere all'identità mostrata. Nulla lo riavvia.</item>
+        <item quantity="many">Ferma il programma selezionato e i suoi helper (%1$d processi). Ogni processo deve comunque corrispondere all'identità mostrata. Nulla li riavvia.</item>
+        <item quantity="other">Ferma il programma selezionato e i suoi helper (%1$d processi). Ogni processo deve comunque corrispondere all'identità mostrata. Nulla li riavvia.</item>
+    </plurals>
+    <string name="linuxPortOwnerResult">Terminati: %1$d · forzati: %2$d · ancora in esecuzione: %3$d · identità cambiata e mantenuti: %4$d</string>
+</resources>

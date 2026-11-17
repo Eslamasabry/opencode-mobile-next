@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxBackupPrivacyNative">I file di accesso noti e le impostazioni d'ambiente salvate dei servizi restano su questo telefono. I comandi personalizzati dei servizi sono inclusi; controllali prima di condividere un backup.</string>
+    <string name="linuxBackupServiceAccountsNative">I servizi con impostazioni d'ambiente salvate vengono inclusi nel backup spenti. Dopo il ripristino, configura di nuovo account e ambiente prima di avviarli.</string>
+</resources>

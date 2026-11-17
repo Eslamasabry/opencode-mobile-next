@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="filesViewOptions">Visualizza</string>
+    <string name="filesSearchNames">Nomi dei file</string>
+    <string name="filesRowActions">Azioni</string>
+    <string name="filesChangeDeleted">Eliminato</string>
+    <string name="filesChangeAdded">Aggiunto</string>
+    <string name="filesChangeModified">Modificato</string>
+    <string name="filesWrapCode">Righe a capo</string>
+    <string name="filesUnwrapCode">Scorri le righe in orizzontale</string>
+    <string name="filesShowPreview">Anteprima</string>
+    <string name="filesMoreActions">Altre azioni per i file</string>
+    <string name="filesAttachFailed">Impossibile allegare questo file. Riprova.</string>
+    <string name="filesPreferencesFailed">Impossibile salvare questa preferenza di visualizzazione. Riprova.</string>
+    <string name="filesLinkRefused">Questo link non può essere aperto in sicurezza.</string>
+    <string name="filesOpenLinkQuestion">Aprire %1$s?</string>
+    <string name="filesOpenLinkBody">Questo link si apre fuori dall'app.</string>
+    <string name="filesOpenLink">Apri il link</string>
+    <string name="filesAttachmentReady">File allegato. Torna alla conversazione per aggiungere il tuo commento.</string>
+    <string name="filesScopedEmpty">Questa è la cartella condivisa dal server di questa conversazione. Controlla il suo accesso alle cartelle, poi aggiorna.</string>
+    <string name="filesStorageFailed">L'accesso alle cartelle non è stato modificato. Riprova.</string>
+    <string name="filesStorageRestart">L'accesso alle cartelle è salvato. Riavvia il server di questo telefono, poi aggiorna.</string>
+    <string name="filesOpenPhone">Apri Questo telefono</string>
+    <string name="filesReviewStorage">Rivedi le cartelle condivise</string>
+    <string name="filesSelectedStorageBody">Consenti l'accesso a questa cartella di progetto, oppure rivedi le cartelle condivise. L'accesso a un intero volume di archiviazione resta disattivato se non lo attivi da lì.</string>
+</resources>
