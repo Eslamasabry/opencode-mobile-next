@@ -23,7 +23,9 @@ jobs, and diffs failing test ids against <base-reports-dir> (the newest run on t
 PLANNED_SHARDS (comma list of shard ids, from the plan job) makes a missing shard report an integrity failure (exit 2).
 In the fast and full lanes a compile or test job that did not run (skipped, for instance after a failed plan job) is an
 integrity failure too: a run with no compile and test rows is not a pass.
-Job results come from the environment: RESULT_COMPILE, RESULT_TEST, RESULT_APK, RESULT_RECORD, RESULT_CUSTOM.
+detekt.json (from tool/ci/detekt_lane.sh): any finding, a growing baseline or a run that could not start is FAIL, and
+the fast, full and candidate lanes need the report (integrity failure without it).
+Job results come from the environment: RESULT_COMPILE, RESULT_TEST, RESULT_APK, RESULT_RECORD, RESULT_CUSTOM, RESULT_DETEKT.
 Tests for this file: tool/ci/test_gate.py.
 """
 import fnmatch, glob, json, os, re, sys
@@ -101,6 +103,7 @@ custom = (load('custom.json', reports) or [{}])[0]
 apk = (load('apk.json', reports) or [{}])[0]
 record = (load('record.json', reports) or [{}])[0]
 android = (load('android-unit.json', reports) or [{}])[0]
+detekt = (load('detekt.json', reports) or [{}])[0]
 
 
 def mark(result):
@@ -126,6 +129,18 @@ if env('RESULT_CUSTOM') not in (None, '', 'skipped'):
 if env('RESULT_ANDROID_UNIT') not in (None, '', 'skipped'):
     rows.append(('android unit tests', mark(env('RESULT_ANDROID_UNIT')) + (f' ({android.get("tests", 0)} run, {len(android.get("failing", []))} failing)' if android else '')))
 
+if env('RESULT_DETEKT') not in (None, '', 'skipped') or detekt:
+    bad = {m: n for m, n in detekt.get('findings', {}).items()}
+    where_ = ', '.join(detekt.get('modules', [])) or 'ratchet only'
+    if not detekt:
+        rows.append(('detekt', 'no report'))
+    elif bad or detekt.get('exit') or detekt.get('ratchet') == 'FAIL':
+        per = ', '.join(f'{m}: {"could not run" if n < 0 else str(n) + " finding(s)"}' for m, n in sorted(bad.items()))
+        rows.append(('detekt', f'FAILED on {where_}: {per or "baseline ratchet or run problem"}'))
+    else:
+        old = sum((detekt.get('totals') or {}).values())
+        rows.append(('detekt', f'0 new findings on {where_} ({old} old, not counted; ratchet vs base by signature)'))
+
 # Integrity: a run must not look green when Gradle never ran (a failed distribution download, a dead setup step, a missing shard).
 # Exit code 2 = integrity failure; the workflow reds the run on every branch for it, as it does for the ordinary FAIL (1).
 integrity = []
@@ -141,6 +156,10 @@ if lane.split(' ')[0] in ('fast', 'full', 'candidate'):
     for key, label in (('RESULT_COMPILE', 'compile'), ('RESULT_TEST', 'desktop tests')):
         if env(key) in (None, '', 'skipped', 'cancelled'):
             integrity.append(f'{label}: the job did not run in a {lane.split(" ")[0]} lane run (did the plan job fail?)')
+# detekt runs in every normal lane (a branch cannot read PASS with a new finding it never looked for); a custom-tasks
+# run only reports it when it was asked for.
+if lane.split(' ')[0] in ('fast', 'full', 'candidate') and not detekt:
+    integrity.append('detekt: the lane left no detekt report (did the detekt job run?)')
 for s in shards:
     if (s.get('job_status') == 'failure' and not s.get('gradle_ran')) or s.get('pick_outcome') in ('failure', 'skipped', 'cancelled'):
         integrity.append(f'{s["name"]}: the shard job did not get as far as running Gradle (setup {s.get("pick_outcome") or "unknown"}, job {s.get("job_status") or "unknown"})')
@@ -226,6 +245,13 @@ if security_required and security_bad:
 for key, label, rep in (('RESULT_COMPILE', 'compile', compile_), ('RESULT_APK', 'apk', apk), ('RESULT_RECORD', 'goldens', record), ('RESULT_CUSTOM', 'custom tasks', custom)):
     if env(key) in ('failure', 'cancelled') or rep.get('failed'):
         reasons.append(f'{label} job failed')
+if detekt:
+    for mod, n in sorted(detekt.get('findings', {}).items()):
+        reasons.append(f'detekt: {"could not run on" if n < 0 else str(n) + " new finding(s) on"} {mod}')
+    if detekt.get('ratchet') == 'FAIL':
+        reasons.append('detekt: a baseline grew (baselines only shrink; fix the finding)')  # the old baseline ratchet
+    if detekt.get('exit') and not detekt.get('findings') and detekt.get('ratchet') != 'FAIL':
+        reasons.append(f'detekt: could not run (exit {detekt["exit"]})')
 if lane != 'candidate' and (env('RESULT_ANDROID_UNIT') in ('failure', 'cancelled') or android.get('failed')):
     reasons.append('android unit tests failed' + (': ' + ', '.join(f'`{i}`' for i in android['failing'][:5]) if android.get('failing') else '') +
                    (' (' + '; '.join(android['real'][:3]) + ')' if android.get('real') else ''))

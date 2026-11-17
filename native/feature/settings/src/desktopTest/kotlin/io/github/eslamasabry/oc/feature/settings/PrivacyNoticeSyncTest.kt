@@ -13,6 +13,7 @@ import io.github.eslamasabry.oc.engine.analytics.umami.umamiPages
 import io.github.eslamasabry.oc.engine.analytics.umami.umamiEvent
 import io.github.eslamasabry.oc.engine.analytics.umami.UmamiBuild
 import io.github.eslamasabry.oc.engine.analytics.umami.UmamiDevice
+import io.github.eslamasabry.oc.engine.analytics.umami.UmamiSource
 import io.github.eslamasabry.oc.feature.settings.presentation.HealthContract
 import io.github.eslamasabry.oc.feature.settings.presentation.AppLanguage
 import java.io.File
@@ -348,9 +349,10 @@ class PrivacyNoticeSyncTest {
 
     @Test
     fun `B-SEC-207 the new sender adds only documented build metadata to every event`() {
+        val source = UmamiSource("website", UmamiBuild("3.0.1", "10081"), UmamiDevice("en", "1080x2340", "browser"))
         for ((name, fields) in productSchema) {
             val event = umamiEvent(name, fields.mapValues { it.value.first() }, umamiPages.getValue("conversations"),
-                "website", UmamiBuild("3.0.1", "10081"), UmamiDevice("en", "1080x2340", "browser"), 1000)!!
+                source, 1000)!!
             assertEquals(setOf("version", "build"), event.payload.data.keys - fields.keys, name)
         }
         val wiring = File(repo, "native/androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/telemetry/Telemetry.kt").readText()
