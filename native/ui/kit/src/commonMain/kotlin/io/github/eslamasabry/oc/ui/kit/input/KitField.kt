@@ -460,10 +460,8 @@ private fun FieldBox(
                     KitFieldKind.Secret -> KeyboardType.Password
                     else -> KeyboardType.Text
                 },
-            imeAction =
-                if (kind == KitFieldKind.Multiline && imeAction == ImeAction.Default)
-                    ImeAction.Default
-                else imeAction,
+            // Issue 148: a message box's Enter key is a new line, never a send key.
+            imeAction = if (composer && kind == KitFieldKind.Multiline) ImeAction.Default else imeAction,
         )
     val limit = maxLength?.let { InputTransformation.maxLength(it) }
     val transformation: InputTransformation? =
@@ -482,12 +480,17 @@ private fun FieldBox(
             }
         }
     val finalInput = if (report == null) transformation else transformation?.then(report) ?: report
-    val submit = onSubmit?.let { KeyboardActionHandler { _ -> it() } }
+    // A message box sends from its Send button and a real keyboard's Enter ([kitComposerEnter]), not the IME action.
+    val messageBox = composer && kind == KitFieldKind.Multiline
+    val submit = if (messageBox) null else onSubmit?.let { KeyboardActionHandler { _ -> it() } }
     val box =
         Modifier.semantics {
                 if (!on && !hasError) enabled.reason?.let { stateDescription = it }
             }
             .focusRequester(fieldFocus)
+            .then(
+                if (messageBox && onSubmit != null && on) Modifier.kitComposerEnter(onSubmit) else Modifier
+            )
             .then(
                 if (composer && on)
                     Modifier.pointerInput(fieldFocus, keyboardController) {
