@@ -381,7 +381,7 @@ class PrivacyNoticeSyncTest {
     fun `B-SEC-218 the notices name the three device fields for our server and no screen size for it`() {
         val md = File(repo, "PRIVACY.md").readText()
         val umami = md.substringAfter("Umami receives the same listed events").substringBefore("The private queue")
-        for (fact in listOf("`os_major`", "`device_class`", "`build`", "main version", "phone or tablet")) {
+        for (fact in listOf("Android main version number", "device class (phone or tablet)", "build number", "no screen size or resolution")) {
             assertTrue(fact in umami, "PRIVACY.md Umami part must name $fact")
         }
         assertTrue(Regex("(?i)and\\s+screen\\s+resolution").find(umami) == null, "PRIVACY.md must not say Umami gets the resolution")
