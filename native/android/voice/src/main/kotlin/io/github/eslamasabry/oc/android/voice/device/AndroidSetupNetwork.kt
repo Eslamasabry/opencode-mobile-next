@@ -64,30 +64,44 @@ public object SetupNetworkRules {
      * record carries (a VPN over Wi-Fi carries Wi-Fi, so mobile data that merely stays connected beside it is not
      * read; a VPN pinned to mobile data carries cellular, so the Wi-Fi beside it is not read). Null when none fits.
      */
-    public fun carriersOf(vpnLinks: Set<LinkKind>, connected: List<ConnectedNetworkFacts>): List<UnderlyingNetworkFacts>? =
+    public fun carriersOf(
+        vpnLinks: Set<LinkKind>,
+        connected: List<ConnectedNetworkFacts>,
+    ): List<UnderlyingNetworkFacts>? =
         connected
             .filter { it.links.isNotEmpty() && vpnLinks.containsAll(it.links) }
             .map { UnderlyingNetworkFacts(it.internet, it.validated, LinkKind.Cellular in it.links, it.notMetered) }
             .ifEmpty { null }
 
+    /**
+     * First the VPN's own answer, when it is validated: Android derives its metered-ness from the networks it runs
+     * over (Android 10 and later). Only when that is unvalidated or contradicts itself do the networks it runs over
+     * speak (carriers), each by its own NOT_METERED; none known stays "ask".
+     */
+    private fun classifyVpn(facts: NetworkFacts): SetupNetwork = vpnOwnAnswer(facts) ?: fromCarriers(facts)
+
+    private fun vpnOwnAnswer(facts: NetworkFacts): SetupNetwork? =
+        when {
+            !facts.validated -> null
+            facts.cellular || facts.activeMetered -> SetupNetwork.Metered
+            facts.notMetered -> SetupNetwork.Unmetered
+            else -> null
+        }
+
+    private fun fromCarriers(facts: NetworkFacts): SetupNetwork {
+        val carriers = facts.underlying.orEmpty().filter { it.internet }
+        return when {
+            carriers.isEmpty() -> SetupNetwork.Unknown
+            !facts.validated && carriers.none { it.validated } -> SetupNetwork.Unknown
+            carriers.all { it.notMetered && !it.cellular } -> SetupNetwork.Unmetered
+            else -> SetupNetwork.Metered
+        }
+    }
+
     public fun classify(facts: NetworkFacts?): SetupNetwork {
         if (facts == null || !facts.hasManager) return SetupNetwork.Unknown
         if (!facts.hasActiveNetwork || !facts.internet) return SetupNetwork.Offline
-        if (facts.vpn) {
-            // First the VPN's own answer, when it is validated: Android derives its metered-ness from the networks it
-            // runs over (Android 10 and later). Only when that is unvalidated or contradicts itself do the networks
-            // it runs over speak (carriers), each by its own NOT_METERED; none known stays "ask".
-            if (facts.validated) {
-                when {
-                    facts.cellular || facts.activeMetered -> return SetupNetwork.Metered
-                    facts.notMetered -> return SetupNetwork.Unmetered
-                }
-            }
-            val carriers = facts.underlying.orEmpty().filter { it.internet }
-            if (carriers.isEmpty()) return SetupNetwork.Unknown
-            if (!facts.validated && carriers.none { it.validated }) return SetupNetwork.Unknown
-            return if (carriers.all { it.notMetered && !it.cellular }) SetupNetwork.Unmetered else SetupNetwork.Metered
-        }
+        if (facts.vpn) return classifyVpn(facts)
         if (!facts.validated) return SetupNetwork.Unknown
         if (facts.cellular) return SetupNetwork.Metered
         if (facts.activeMetered) return SetupNetwork.Metered
@@ -137,16 +151,17 @@ public class AndroidSetupNetwork(private val context: Context) : SetupNetworkSou
             val cm = manager ?: return NetworkFacts(false, false, false, false, false, false, true, notMetered = false)
             val network = cm.activeNetwork
             val caps = network?.let { cm.getNetworkCapabilities(it) }
+            val vpn = caps?.hasTransport(NetworkCapabilities.TRANSPORT_VPN) == true
             NetworkFacts(
                 hasManager = true,
                 hasActiveNetwork = network != null && caps != null,
                 internet = caps?.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) == true,
                 validated = caps?.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED) == true,
                 cellular = caps?.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) == true,
-                vpn = caps?.hasTransport(NetworkCapabilities.TRANSPORT_VPN) == true,
+                vpn = vpn,
                 activeMetered = cm.isActiveNetworkMetered,
                 notMetered = caps?.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_METERED) == true,
-                underlying = if (caps?.hasTransport(NetworkCapabilities.TRANSPORT_VPN) == true) underlyingOf(cm, caps) else null,
+                underlying = if (caps != null && vpn) underlyingOf(cm, caps) else null,
             )
         } catch (_: RuntimeException) {
             null

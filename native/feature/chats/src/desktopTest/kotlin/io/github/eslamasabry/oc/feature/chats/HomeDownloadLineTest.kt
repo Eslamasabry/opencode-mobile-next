@@ -123,23 +123,27 @@ class HomeDownloadLineTest {
     }
 
     @Test
-    fun `B-HOME-211 on a list the waiting update sits at the end of the Recent label with its action, in no bar above the title`() = runComposeUiTest {
-        setContent { Home(listed(HomeDownloadFact(HomeDownloadKind.OpenCode, HomeDownloadPhase.Waiting))) }
-        waitForIdle()
-        onNodeWithTag("kit-row-panel-status", useUnmergedTree = true).assertExists()
-        onNodeWithText("OpenCode update waiting for Wi-Fi · about 130 MB").assertExists()
-        // The page's one status line (the bar above the title) is not used for it.
-        assertTrue(onAllNodesWithTag("kit-status-line", useUnmergedTree = true).fetchSemanticsNodes().isEmpty())
-        onNodeWithText("Download on mobile data").performClick()
-        assertEquals(listOf("act"), actions.calls)
-    }
+    fun `B-HOME-211 on a list the waiting update sits in Recent's status place with its action, no bar`() =
+        runComposeUiTest {
+            val waiting = HomeDownloadFact(HomeDownloadKind.OpenCode, HomeDownloadPhase.Waiting)
+            setContent { Home(listed(waiting)) }
+            waitForIdle()
+            onNodeWithTag("kit-row-panel-status", useUnmergedTree = true).assertExists()
+            onNodeWithText("OpenCode update waiting for Wi-Fi · about 130 MB").assertExists()
+            // The page's one status line (the bar above the title) is not used for it.
+            assertTrue(onAllNodesWithTag("kit-status-line", useUnmergedTree = true).fetchSemanticsNodes().isEmpty())
+            onNodeWithText("Download on mobile data").performClick()
+            assertEquals(listOf("act"), actions.calls)
+        }
 
     @Test
-    fun `B-HOME-211 while the helper starts its words win the place and the waiting update does not stack under them`() = runComposeUiTest {
-        setContent { Home(listed(HomeDownloadFact(HomeDownloadKind.OpenCode, HomeDownloadPhase.Waiting), HomeStage.Helper)) }
-        waitForIdle()
-        onNodeWithText("Starting the agents’ helper…").assertExists()
-        assertTrue(onAllNodesWithText("waiting for Wi-Fi", substring = true).fetchSemanticsNodes().isEmpty())
-        assertTrue(onAllNodesWithText("Download on mobile data").fetchSemanticsNodes().isEmpty())
-    }
+    fun `B-HOME-211 while the helper starts its words win the place, the waiting update does not stack`() =
+        runComposeUiTest {
+            val waiting = HomeDownloadFact(HomeDownloadKind.OpenCode, HomeDownloadPhase.Waiting)
+            setContent { Home(listed(waiting, HomeStage.Helper)) }
+            waitForIdle()
+            onNodeWithText("Starting the agents’ helper…").assertExists()
+            assertTrue(onAllNodesWithText("waiting for Wi-Fi", substring = true).fetchSemanticsNodes().isEmpty())
+            assertTrue(onAllNodesWithText("Download on mobile data").fetchSemanticsNodes().isEmpty())
+        }
 }

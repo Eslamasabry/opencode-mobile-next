@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.getValue
@@ -140,6 +141,7 @@ import io.github.eslamasabry.oc.feature.chats.presentation.HomeDownloadKind
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeDownloadPhase
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeDownloadRules
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeLineWinner
+import io.github.eslamasabry.oc.ui.kit.row.LocalKitLabelStatusAction
 import io.github.eslamasabry.oc.feature.chats.presentation.HomeDownloadSizes
 import io.github.eslamasabry.oc.ui.kit.status.KitStatusKind
 import io.github.eslamasabry.oc.ui.words.res.commonRetry
@@ -287,6 +289,7 @@ public fun ChatsScreen(
     val downloadStatus = homeDownloadStatus(state.download, actions)
     val downloadInList = state.phase == ChatsPhase.List && state.recent.any { it.key !in briefKeys }
     val lineWords = HomeDownloadRules.placeWins(state.home.stage, state.download)
+    val statusAction = downloadStatus?.action.takeIf { lineWords == HomeLineWinner.Download }
     // At most one notice at a time, in the notice place; the order is HomeNotices' (a pure, tested rule).
     val shownNotice = HomeNotices.shown(HomeNotices.active(state, appCondition = appStatus != null, replyOffer = replyOffer != null))
     // The words every row shares are read once here, not again by each row; a row's menu words are only used when it opens.
@@ -350,7 +353,10 @@ public fun ChatsScreen(
                     onFab = actions::newConversation,
                 )
             }),
-        status = backExit ?: appStatus.takeIf { shownNotice == HomeNoticeKind.AppCondition } ?: downloadStatus.takeIf { !downloadInList },
+        status =
+            backExit
+                ?: appStatus.takeIf { shownNotice == HomeNoticeKind.AppCondition }
+                ?: downloadStatus.takeIf { !downloadInList },
         // F: lib/ui/screens/chats/chats_home_screen.dart:536: pull the list down to read it again; not while the server
         // is still opening. Refresh wraps the scrolling header too (the title returns before a pull starts). The kit
         // part also answers F5 / Ctrl+R and a TalkBack "Refresh" action.
@@ -555,16 +561,19 @@ public fun ChatsScreen(
                     if (recent.isNotEmpty())
                         item(key = "recent", contentType = "recent") {
                             Box(kitItemMotion()) {
-                                KitRowPanel(
-                                    label = stringResource(Res.string.chatsHomeRecent),
-                                    gapBefore = if (above || rightNow.isNotEmpty()) sectionGap else Space.S4.dp,
-                                    prominentDividers = true,
-                                    labelStatus =
-                                        if (lineWords == HomeLineWinner.Download) downloadStatus?.message
-                                        else state.home.stage?.let { stringResource(homeStageWords(it)) },
-                                    labelAction = if (lineWords == HomeLineWinner.Download) downloadStatus?.action else null,
-                                ) {
-                                    recent.forEach { row -> key(row.key) { ConversationRow(row, rowWords, rowFlags(row, state), mask, actions) } }
+                                CompositionLocalProvider(LocalKitLabelStatusAction provides statusAction) {
+                                    KitRowPanel(
+                                        label = stringResource(Res.string.chatsHomeRecent),
+                                        gapBefore = if (above || rightNow.isNotEmpty()) sectionGap else Space.S4.dp,
+                                        prominentDividers = true,
+                                        labelStatus =
+                                            if (lineWords == HomeLineWinner.Download) downloadStatus?.message
+                                            else state.home.stage?.let { stringResource(homeStageWords(it)) },
+                                    ) {
+                                        recent.forEach { row ->
+                                            key(row.key) { ConversationRow(row, rowWords, rowFlags(row, state), mask, actions) }
+                                        }
+                                    }
                                 }
                             }
                         }

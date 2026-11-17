@@ -383,11 +383,6 @@ public fun KitRowPanel(
      * them once when they change.
      */
     labelStatus: String? = null,
-    /**
-     * The one act that belongs to [labelStatus] ("Download on mobile data"): the section label's own end act, in its
-     * 48 dp target. The status words may then run to two lines at large text instead of being cut.
-     */
-    labelAction: KitLineAction? = null,
     rows: @Composable () -> Unit,
 ) {
     val tokens = LocalKitTokens.current
@@ -397,7 +392,8 @@ public fun KitRowPanel(
         if (KitMotion.state.reduced) Modifier
         else Modifier.animateContentSize(KitMotion.specs.pace(KitPace.Standard))
     Column(modifier.fillMaxWidth().kitMaxWidth(CapRole.List).testTag("kit-row-panel")) {
-        label?.let { KitSectionLabel(it, gapBefore = gapBefore, trailing = kitLabelStatus(labelStatus, labelAction)) }
+        val statusAction = LocalKitLabelStatusAction.current
+        label?.let { KitSectionLabel(it, gapBefore = gapBefore, trailing = kitLabelStatus(labelStatus, statusAction)) }
         Box(
             Modifier.fillMaxWidth()
                 .padding(horizontal = tokens.gutter.dp)
@@ -417,6 +413,14 @@ public fun KitRowPanel(
 }
 
 /**
+ * The one act that belongs to the status words of the [KitRowPanel] below it ("Download on mobile data"): shown under
+ * the words, level with them, in the accent, in a 48 dp target. Null (the default) shows the words alone. Provided
+ * around the panel rather than passed in, so the panel's own parameter list stays as it is.
+ */
+public val LocalKitLabelStatusAction: androidx.compose.runtime.ProvidableCompositionLocal<KitLineAction?> =
+    androidx.compose.runtime.compositionLocalOf { null }
+
+/**
  * [KitRowPanel]'s status words: null until the first words arrive (a panel that never has any keeps its plain label);
  * after that the last words stay while they fade out.
  */
@@ -429,6 +433,7 @@ private fun kitLabelStatus(status: String?, action: KitLineAction? = null): (@Co
     visible.targetState = status != null
     val reduced = KitMotion.state.reduced
     val specs = KitMotion.specs
+    val target = LocalKitTokens.current.minTarget.dp
     return {
         AnimatedVisibility(
             visibleState = visible,
@@ -450,9 +455,9 @@ private fun kitLabelStatus(status: String?, action: KitLineAction? = null): (@Co
                         onClick = action.onClick,
                         enabled = action.enabled,
                         disabledReason = action.disabledReason,
-                        modifier = Modifier.heightIn(min = LocalKitTokens.current.minTarget.dp).testTag("kit-row-panel-status-action"),
+                        modifier = Modifier.heightIn(min = target).testTag("kit-row-panel-status-action"),
                     ) {
-                        Box(Modifier.heightIn(min = LocalKitTokens.current.minTarget.dp), contentAlignment = androidx.compose.ui.Alignment.CenterStart) {
+                        Box(Modifier.heightIn(min = target), contentAlignment = Alignment.CenterStart) {
                             KitText(action.label, role = TypeRole.Label, tone = TextTone.Accent, maxLines = 2)
                         }
                     }

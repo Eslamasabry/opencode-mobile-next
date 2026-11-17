@@ -83,7 +83,8 @@ class PhoneDownloads(
     }
 
     override val facts: StateFlow<List<HomeDownloadFact>> =
-        combine(openCodeWaiting, setup.progress, phones.state, agentStatus.decision, networkRead) { waiting, progress, agentState, decision, read ->
+        combine(openCodeWaiting, setup.progress, phones.state, agentStatus.decision, networkRead) {
+                waiting, progress, agentState, decision, read ->
                 val update = setup.updateJob.owns(progress.jobId)
                 val install = agentState.installation
                 val helper =

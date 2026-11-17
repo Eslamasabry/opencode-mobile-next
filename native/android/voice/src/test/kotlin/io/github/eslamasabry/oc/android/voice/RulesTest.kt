@@ -83,12 +83,18 @@ class RulesTest {
         assertEquals(SetupNetwork.Metered, SetupNetworkRules.classify(facts(cellular = true)))
         assertEquals(SetupNetwork.Unknown, SetupNetworkRules.classify(facts(validated = false)))
         // A VPN over a Wi-Fi nobody validated is not known to be free either.
-        val unchecked = ConnectedNetworkFacts(setOf(LinkKind.Wifi), internet = true, validated = false, notMetered = true)
-        assertEquals(SetupNetwork.Unknown, decide(setOf(LinkKind.Wifi), unchecked, own = facts(vpn = true, validated = false)))
+        val unchecked = net(LinkKind.Wifi, validated = false, notMetered = true)
+        val own = facts(vpn = true, validated = false)
+        assertEquals(SetupNetwork.Unknown, decide(setOf(LinkKind.Wifi), unchecked, own = own))
     }
 
-    private val wifiNet = ConnectedNetworkFacts(setOf(LinkKind.Wifi), internet = true, validated = true, notMetered = true)
-    private val mobileNet = ConnectedNetworkFacts(setOf(LinkKind.Cellular), internet = true, validated = true, notMetered = false)
+    private fun net(link: LinkKind, validated: Boolean, notMetered: Boolean) =
+        ConnectedNetworkFacts(setOf(link), internet = true, validated = validated, notMetered = notMetered)
+
+    private val wifiNet = net(LinkKind.Wifi, validated = true, notMetered = true)
+    private val mobileNet = net(LinkKind.Cellular, validated = true, notMetered = false)
+    private val wifi = setOf(LinkKind.Wifi)
+    private val mobile = setOf(LinkKind.Cellular)
 
     private fun decide(vpnLinks: Set<LinkKind>, vararg connected: ConnectedNetworkFacts, own: NetworkFacts) =
         SetupNetworkRules.classify(own.copy(underlying = SetupNetworkRules.carriersOf(vpnLinks, connected.toList())))
@@ -96,20 +102,22 @@ class RulesTest {
     @Test
     fun `B-ANDR-102 Wi-Fi and mobile data both connected, a VPN over Wi-Fi downloads, read by its own links`() {
         // Its own record is unvalidated, so the carriers speak: mobile data beside it is not read.
+        val badRecord = facts(vpn = true, validated = false, metered = true, notMetered = false)
         assertEquals(
             SetupNetwork.Unmetered,
-            decide(setOf(LinkKind.Wifi), wifiNet, mobileNet, own = facts(vpn = true, validated = false, metered = true, notMetered = false)),
+            decide(wifi, wifiNet, mobileNet, own = badRecord),
         )
         // Its own record is validated and not metered: it is used first.
-        assertEquals(SetupNetwork.Unmetered, decide(setOf(LinkKind.Wifi), wifiNet, mobileNet, own = facts(vpn = true)))
+        assertEquals(SetupNetwork.Unmetered, decide(wifi, wifiNet, mobileNet, own = facts(vpn = true)))
     }
 
     @Test
     fun `B-ANDR-102 Wi-Fi connected but the VPN pinned to mobile data waits`() {
         val unsure = facts(vpn = true, validated = false, metered = true, notMetered = false)
-        assertEquals(SetupNetwork.Metered, decide(setOf(LinkKind.Cellular), wifiNet, mobileNet, own = unsure))
+        assertEquals(SetupNetwork.Metered, decide(mobile, wifiNet, mobileNet, own = unsure))
         // Its own record says so too (validated, cellular link): waits whatever the plan.
-        assertEquals(SetupNetwork.Metered, decide(setOf(LinkKind.Cellular), wifiNet, mobileNet, own = facts(vpn = true, cellular = true)))
+        val validatedCellular = facts(vpn = true, cellular = true)
+        assertEquals(SetupNetwork.Metered, decide(mobile, wifiNet, mobileNet, own = validatedCellular))
     }
 
     @Test
@@ -118,6 +126,7 @@ class RulesTest {
         assertEquals(SetupNetwork.Unmetered, SetupNetworkRules.classify(facts(vpn = true)))
         // Unvalidated and nothing known about what carries it: never free data.
         assertEquals(SetupNetwork.Unknown, SetupNetworkRules.classify(facts(vpn = true, validated = false)))
-        assertEquals(SetupNetwork.Unknown, decide(setOf(LinkKind.Bluetooth), wifiNet, mobileNet, own = facts(vpn = true, validated = false)))
+        val unsure = facts(vpn = true, validated = false)
+        assertEquals(SetupNetwork.Unknown, decide(setOf(LinkKind.Bluetooth), wifiNet, mobileNet, own = unsure))
     }
 }

@@ -40,17 +40,20 @@ class UpdateWaitHomeRendersTest {
 
     private fun shoot(name: String, state: ChatsUi, fontScale: Float, dark: Boolean) {
         Locale.setDefault(Locale.forLanguageTag("en"))
+        val mode = if (dark) AppearanceMode.Dark else AppearanceMode.Light
         runDesktopComposeUiTest(900, 2000) {
             setContent {
                 CompositionLocalProvider(LocalDensity provides Density(2.5f, fontScale)) {
                     ChatEnvironment {
                         KitTheme(
-                            appearance = KitAppearance(mode = if (dark) AppearanceMode.Dark else AppearanceMode.Light, motion = MotionLevel.Off),
+                            appearance = KitAppearance(mode = mode, motion = MotionLevel.Off),
                             platform = DesktopKitPlatform(),
                             localeTag = "en",
                             stillFrame = true,
                         ) {
-                            Box(Modifier.fillMaxSize().background(LocalKitColors.current.ground)) { ChatsScreen(state, RecordingChatsActions()) }
+                            Box(Modifier.fillMaxSize().background(LocalKitColors.current.ground)) {
+                                ChatsScreen(state, RecordingChatsActions())
+                            }
                         }
                     }
                 }
