@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="stateLifecycleChecking">Android ha interrotto l'app. Verifica di ciò che è di nuovo in esecuzione…</string>
+    <string name="stateLifecycleUnavailable">Android ha interrotto l'app. Impossibile verificare il ripristino.</string>
+    <string name="stateLifecycleStopped">Android ha interrotto l'app. OpenCode è fermo.</string>
+    <string name="stateLifecycleUnreachable">Android ha interrotto l'app. OpenCode non risponde ancora.</string>
+    <string name="stateLifecyclePartial">OpenCode risponde. Alcuni servizi in esecuzione in precedenza non sono pronti.</string>
+    <string name="stateLifecycleReady">OpenCode e i servizi in esecuzione in precedenza rispondono di nuovo. Le attività interrotte potrebbero richiedere la tua attenzione.</string>
+    <string name="stateStorageTitle">Archiviazione dell'app</string>
+    <string name="stateStorageServer">Linux e OpenCode</string>
+    <string name="stateStoragePrivate">Accessi salvati, impostazioni e conversazioni</string>
+    <plurals name="stateStorageProject">
+        <item quantity="one">%1$s · 1 file · %3$d privato</item>
+        <item quantity="many">%1$s · %2$d file · %3$d privati</item>
+        <item quantity="other">%1$s · %2$d file · %3$d privati</item>
+    </plurals>
+    <plurals name="stateStorageSavedServers">
+        <item quantity="one">1 server salvato</item>
+        <item quantity="many">%1$d server salvati</item>
+        <item quantity="other">%1$d server salvati</item>
+    </plurals>
+    <string name="stateStorageEmpty">Su questo telefono non sono archiviati Linux o progetti.</string>
+    <string name="stateStorageFailed">Impossibile misurare lo spazio di archiviazione. Riprova.</string>
+    <string name="stateStorageRefresh">Misura di nuovo lo spazio</string>
+</resources>

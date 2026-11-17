@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="serverFailureCertificate">Impossibile verificare il certificato di questo server. Controlla il server, poi riprova.</string>
+    <string name="serverFailureIncompatible">Questo server esegue una versione con cui l'app non può funzionare.</string>
+    <string name="serverFailureNetwork">Impossibile raggiungere questo server. Controlla la rete o l'indirizzo del server, poi riprova.</string>
+    <string name="serverFailureRejected">Il server ha rifiutato questa richiesta. Controlla il server, poi riprova.</string>
+    <string name="serverFailureSecret">L'app non è riuscita a leggere la password salvata. Inserisci di nuovo la password.</string>
+    <string name="serverFailureServer">Il server ha avuto un problema. Riprova più tardi.</string>
+    <string name="serverFailureStorage">L'app non è riuscita a leggere o salvare questa connessione su questo telefono. Riprova.</string>
+    <string name="serverFailureTimeout">Il server non ha risposto in tempo. Riprova.</string>
+    <string name="serverFailureUnreadableReply">Il server ha risposto, ma l'app non è riuscita a leggerne la risposta.</string>
+    <string name="serverFailureOther">L'app non è riuscita a completare questa connessione. Riprova.</string>
+</resources>

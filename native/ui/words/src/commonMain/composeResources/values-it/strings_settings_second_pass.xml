@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="nativeAboutProvenanceTitle">Informazioni su questa build</string>
+    <string name="nativeAboutProvenance">Questa app indipendente è sviluppata in gran parte con l'assistenza dell'IA. Android è la piattaforma supportata principale. Le build per desktop sono sperimentali e non sono state testate su hardware. Segnala ciò che non funziona per contribuire a migliorare l'app.</string>
+    <string name="nativePhraseChipsTitle">Chip di frasi</string>
+    <string name="nativePhraseChipsAliases">chip di frasi frasi rapide suggerimenti compositore</string>
+    <string name="nativePhraseChipsDescription">Suggerisce frasi brevi che usi spesso sopra la casella del messaggio. Le frasi apprese restano su questo dispositivo.</string>
+    <string name="nativeToolsRequired">Obbligatori</string>
+    <string name="nativeToolsOptional">Facoltativi</string>
+    <string name="nativeToolsParameters">Parametri</string>
+    <string name="nativeToolsNoParameters">Questo strumento non dichiara parametri.</string>
+    <string name="nativeToolsCoding">Strumenti per il modello</string>
+    <string name="nativeToolsChooseModel">Scegli un modello per leggerne gli strumenti.</string>
+    <string name="nativeCapabilitiesTitle">Cosa funziona qui</string>
+</resources>

@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="remoteTerminalTitle">Terminale</string>
+    <string name="remoteTerminalWorking">Elaborazione…</string>
+    <string name="remoteTerminalUnavailable">Connettiti a un server che supporta i terminali per usare questa pagina.</string>
+    <string name="remoteTerminalFailed">La richiesta del terminale non è andata a buon fine. Riprova.</string>
+    <string name="remoteTerminalInputUncertain">La connessione si è interrotta durante l'invio dell'input. Controlla il terminale prima di inviarlo di nuovo.</string>
+    <string name="remoteTerminalIntro">I comandi vengono eseguiti su questo server. Uscendo da questa pagina la vista si disconnette; usa Termina terminale per fermare la sua shell.</string>
+    <string name="remoteTerminalCreate">Nuovo terminale</string>
+    <string name="remoteTerminalRefresh">Aggiorna</string>
+    <string name="remoteTerminalEmpty">Ancora nessun terminale.</string>
+    <string name="remoteTerminalRunning">In esecuzione</string>
+    <string name="remoteTerminalEnded">Terminato</string>
+    <string name="remoteTerminalList">Tutti i terminali</string>
+    <string name="remoteTerminalDisconnect">Disconnetti</string>
+    <string name="remoteTerminalReconnect">Riconnetti</string>
+    <string name="remoteTerminalEnd">Termina terminale</string>
+    <string name="remoteTerminalDisconnected">Disconnesso. Riconnettiti per continuare a leggere questo terminale.</string>
+    <string name="remoteTerminalInputOff">Riconnettiti per inviare input al terminale.</string>
+    <string name="remoteTerminalInterrupt">Interrompi (Ctrl-C)</string>
+    <string name="remoteTerminalEndInput">Fine input (Ctrl-D)</string>
+    <string name="remoteTerminalEscape">Escape</string>
+    <string name="remoteTerminalTab">Tab</string>
+    <string name="remoteTerminalReadable">Terminale leggibile</string>
+    <string name="remoteTerminalTranscript">Output del terminale</string>
+    <string name="remoteTerminalNoOutput">Ancora nessun output del terminale.</string>
+    <string name="remoteTerminalInput">Invia al terminale</string>
+    <string name="remoteTerminalSend">Invia</string>
+    <string name="remoteTerminalEndQuestion">Terminare questo terminale?</string>
+    <string name="remoteTerminalEndBody">Questa azione arresta la shell remota e tutto ciò che vi è in esecuzione.</string>
+    <string name="remoteTerminalKeep">Mantieni terminale</string>
+    <string name="remoteTerminalOffline">Il terminale è disconnesso. Aprilo di nuovo per riconnetterti.</string>
+    <string name="remoteTerminalSize">Dimensioni del terminale</string>
+    <string name="remoteTerminalRows">Righe</string>
+    <string name="remoteTerminalColumns">Colonne</string>
+    <string name="remoteTerminalApplySize">Applica dimensioni</string>
+    <string name="remoteTerminalSizeRange">Scegli tra 1 e 1000 righe e colonne.</string>
+    <string name="remoteTerminalServiceUnavailable">Questo server non fornisce un servizio di terminale.</string>
+    <string name="remoteTerminalProjectChanged">Il progetto di questa conversazione è cambiato. Torna indietro e apri di nuovo Terminale.</string>
+    <string name="remoteTerminalSignInRequired">Accedi di nuovo a questo server per usare il suo terminale.</string>
+    <string name="remoteTerminalServiceNoAnswer">Il servizio di terminale non ha risposto. Riprova.</string>
+</resources>

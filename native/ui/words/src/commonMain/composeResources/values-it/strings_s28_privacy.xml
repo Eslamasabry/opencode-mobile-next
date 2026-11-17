@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="telemetryUsageTitle">Utilizzo e salute dell'app</string>
+    <string name="telemetryUsageDetail">Invia conteggi anonimi a Google Analytics for Firebase: quali tipi di pagine e funzioni usi, se connessione, invio, configurazione, agenti, servizio in background e aggiornamenti funzionano, quanto velocemente si avvia l'app e quanto sono fluide le pagine, avvisi di memoria e intervalli per memoria del telefono, spazio libero, CPU e versione di WebView. Invia anche tempistiche a Firebase Performance Monitoring: durata di avvio dell'app, connessione, prima risposta, passaggi di configurazione e avvio di un agente. Solo parole fisse, intervalli e numeri, con un ID di installazione casuale, il modello del telefono e la versione di Android. Nessun codice, conversazione, file, indirizzo, chiave o ID pubblicità.</string>
+    <string name="privacyCrashSendTitle">Invia automaticamente i dati di arresto anomalo</string>
+    <string name="privacyCrashAskTitle">Chiedimi dopo un arresto anomalo</string>
+    <string name="telemetryCrashesTitle">Segnalazioni di arresti anomali</string>
+    <string name="telemetryCrashesDetail">Invia segnalazioni di arresto anomalo a Google Firebase Crashlytics: il tipo di errore e dove nel codice dell'app si è verificato, mai il suo messaggio, gli ultimi passaggi che hai fatto come parole brevi, e perché Android ha terminato l'app l'ultima volta. Nessun codice, conversazione, file, indirizzo, chiave o ID pubblicità.</string>
+    <string name="collectTitle">Cosa raccogliamo</string>
+    <string name="collectRowSummary">Utilizzo e Segnalazioni di arresti anomali restano disattivati se non hai risposto sì quando richiesto. Vedi esattamente cosa invia ciascuno.</string>
+    <string name="collectUsageNotSentYet">Questa versione non invia ancora utilizzo e salute dell'app. La tua risposta viene conservata e usata quando lo farà.</string>
+    <string name="collectRules">Vengono inviate solo parole fisse e intervalli di numeri, mai testo libero. Disattivando un interruttore si elimina ciò che non è stato ancora inviato.</string>
+    <string name="collectUsageLabel">Con Utilizzo e salute dell'app</string>
+    <string name="collectCrashesLabel">Con Segnalazioni di arresti anomali</string>
+    <string name="collectReportLabel">Solo quando invii una segnalazione di problema</string>
+    <string name="collectNeverLabel">Mai inviato</string>
+    <string name="collectConnect">Se la connessione a un server è riuscita, il tipo di errore e quanto tempo ha richiesto</string>
+    <string name="collectDrop">Perché una connessione si è interrotta e se è tornata</string>
+    <string name="collectSend">Se l'invio di un messaggio è riuscito o ha atteso in coda, e quanto tempo prima è arrivata la prima risposta</string>
+    <string name="collectStall">Dove si è verificata una lunga attesa (uno strumento, un'approvazione) e per quanto tempo</string>
+    <string name="collectQueue">Quanti messaggi in coda sono stati inviati o non riusciti</string>
+    <string name="collectPhoneSetup">Quanto è progredita la configurazione su questo telefono, quanto tempo ha richiesto ogni passaggio e il tipo di errore</string>
+    <string name="collectAgents">Se un agente è stato avviato, e il tipo di errore</string>
+    <string name="collectBackground">Perché il servizio in background si è fermato</string>
+    <string name="collectUpdates">Se un aggiornamento è stato installato, e il tipo di errore</string>
+    <string name="collectPages">Quali tipi di pagine e funzioni usi, passaggi di configurazione, la prima risposta, quanto dura una visita e quanti messaggi hai inviato in essa</string>
+    <string name="collectJourney">Quanto sei avanzato nei primi passaggi (app aperta, configurata, connessa, messaggio inviato, prima risposta ricevuta) e più o meno quanto tempo dopo aver accettato. Ogni passaggio è contato una volta</string>
+    <string name="collectStarters">Quale tipo di suggerimento hai toccato in una nuova conversazione, mai le sue parole o cosa chiede</string>
+    <string name="collectStart">Quanto velocemente si avvia l'app</string>
+    <string name="collectSmooth">Quanto sono fluide le pagine (la quota di frame lenti e bloccati) e la frequenza di aggiornamento dello schermo</string>
+    <string name="collectMemory">Avvisi di memoria da Android</string>
+    <string name="collectDevice">Intervalli per la memoria del telefono e lo spazio libero, tipo di processore e versione di WebView, se le notifiche sono consentite, e il tipo e la versione di server che usi</string>
+    <string name="collectCrashKind">Il tipo di errore e dove nel codice dell'app si è verificato, mai il suo messaggio</string>
+    <string name="collectExit">Perché Android ha terminato l'app l'ultima volta (ad esempio un arresto anomalo, un blocco o poca memoria)</string>
+    <string name="collectSteps">I tuoi ultimi 30 passaggi, come parole brevi tipo chat.send</string>
+    <string name="collectCrashKeys">La versione dell'app, come è stata installata, il tipo di server, se il server di questo telefono è in esecuzione, quante connessioni sono aperte e la versione del server</string>
+    <string name="collectReport">Cosa scrivi sul problema, l'ultima volta che l'app si è chiusa inaspettatamente, le versioni dell'app e di Android, un intervallo di memoria e il tipo di server, con chiavi, indirizzi e percorsi oscurati. Nessun log e nessuna conversazione. Vedi tutto e scegli Invia o Annulla.</string>
+    <string name="collectNever">I tuoi prompt e le tue risposte, nomi o percorsi di file, indirizzi web, nomi host, indirizzi IP, testo dei messaggi di errore, chiavi o token, l'ID pubblicità o l'ID Android</string>
+</resources>

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="searchB1Web">Web</string>
+    <string name="searchB1InsideMessages">Nei messaggi</string>
+    <string name="searchB1AboutOptions">Informazioni sulle opzioni di ricerca</string>
+    <string name="searchB1OptionsTitle">Opzioni di ricerca</string>
+    <string name="searchB1ChooseServer">Scegli il server da cercare</string>
+    <string name="searchB1RecentConversations">Conversazioni recenti</string>
+    <string name="searchB1Clear">Cancella</string>
+    <string name="searchB1Conversations">Conversazioni</string>
+    <string name="searchB1Places">Impostazioni e pagine</string>
+    <string name="searchB1SeeAll">Vedi tutti: %1$s</string>
+    <string name="searchB1SeeAllSpoken">Vedi tutte le %1$s conversazioni</string>
+    <plurals name="searchB1ProjectConversations">
+        <item quantity="one">%1$s conversazione</item>
+        <item quantity="many">%1$s di conversazioni</item>
+        <item quantity="other">%1$s conversazioni</item>
+    </plurals>
+</resources>

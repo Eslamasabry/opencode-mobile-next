@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="stateFolderNameEmpty">Inserisci un nome di cartella.</string>
+    <string name="stateFolderNameSegment">Usa un unico nome di cartella senza barre.</string>
+    <string name="stateFolderNameCharacters">Usa lettere, cifre, punti, trattini o trattini bassi, iniziando con una lettera o una cifra (fino a 64 caratteri).</string>
+    <string name="stateFolderCreating">Creazione della cartella del progetto…</string>
+</resources>

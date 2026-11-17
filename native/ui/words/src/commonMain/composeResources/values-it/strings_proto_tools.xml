@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="protoToolsTitle">Strumenti</string>
+    <string name="protoToolsRefresh">Aggiorna</string>
+    <string name="protoToolsPlugins">Plugin</string>
+    <string name="protoToolsSkills">Skill</string>
+    <string name="protoToolsMcp">Server MCP</string>
+    <string name="protoToolsLoadFailed">Impossibile caricare questo elenco. Prova con Aggiorna.</string>
+    <string name="protoToolsUnavailable">Gli strumenti non sono disponibili su questa connessione. Connettiti a un server che li supporta.</string>
+    <string name="protoToolsEmpty">Non c'è ancora niente.</string>
+    <string name="protoToolsUnnamedPlugin">Plugin senza nome</string>
+    <string name="protoToolsSkillNeedsChat">Apri Strumenti da una conversazione per aggiungervi una skill.</string>
+    <string name="protoToolsSkillReview">Aggiungi questa skill alla conversazione corrente. Scegli se l'agente deve continuare subito.</string>
+    <string name="protoToolsResume">Continua subito la conversazione</string>
+    <string name="protoToolsActivate">Aggiungi skill</string>
+    <string name="protoToolsDisconnect">Disconnetti %1$s</string>
+    <string name="protoToolsAddMcp">Aggiungi un server MCP</string>
+    <string name="protoToolsRuntimeScope">Aggiunge il server per il progetto corrente fino al riavvio del server. I nomi esistenti non vengono mai sostituiti.</string>
+    <string name="protoToolsName">Nome del server</string>
+    <string name="protoToolsLocal">Esegui un comando locale</string>
+    <string name="protoToolsCommand">Comando e argomenti, uno per riga</string>
+    <string name="protoToolsUrl">Indirizzo HTTP o HTTPS</string>
+    <string name="protoToolsAdd">Aggiungi server</string>
+    <string name="protoToolsChanged">Connessione o progetto modificati. Aggiorna prima di riprovare.</string>
+    <string name="protoToolsInvalidDraft">Controlla il nome e l'indirizzo o il comando del server, poi riprova.</string>
+    <string name="protoToolsAddFailed">Impossibile aggiungere il server. Aggiorna l'elenco prima di riprovare.</string>
+    <string name="protoToolsDisconnectFailed">Impossibile confermare la connessione. Aggiorna l'elenco prima di riprovare.</string>
+    <string name="protoToolsActivateFailed">Impossibile aggiungere la skill. Verifica che sia ancora disponibile.</string>
+    <string name="protoToolsStaged">Completa o annulla il revert in sospeso prima di aggiungere una skill.</string>
+    <string name="protoToolsUncertain">Il server potrebbe aver ricevuto questa azione. Controlla la conversazione prima di riprovare.</string>
+    <string name="protoToolsDone">Fatto.</string>
+    <string name="protoToolsActive">Attivo</string>
+    <string name="protoToolsFailed">Richiede attenzione</string>
+    <string name="protoToolsUnknown">Stato sconosciuto</string>
+    <string name="protoToolsBuiltin">Integrato</string>
+    <string name="protoToolsPackage">Pacchetto</string>
+    <string name="protoToolsLocalSource">Locale</string>
+    <string name="protoToolsSdk">SDK</string>
+    <string name="protoToolsUnknownSource">Origine sconosciuta</string>
+    <string name="protoToolsConnected">Connesso</string>
+    <string name="protoToolsDisabled">Disattivato</string>
+    <string name="protoToolsSignIn">Accesso richiesto</string>
+    <string name="protoToolsDisconnected">Disconnesso</string>
+    <string name="protoToolsConnecting">Connessione in corso</string>
+    <string name="protoWorktreeInvalid">Inserisci un nome di worktree di 1–120 caratteri, senza caratteri di controllo.</string>
+    <string name="protoWebInvalid">Inserisci una ricerca web di 1–1000 caratteri.</string>
+    <string name="protoToolsProviders">Provider</string>
+    <string name="protoToolsConnect">Connetti %1$s</string>
+</resources>

@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="statePlansCopy0">Piani e limiti</string>
+    <string name="statePlansCopy1">Indietro</string>
+    <string name="statePlansCopy2">Lettura dei tuoi piani</string>
+    <string name="statePlansCopy3">Aggiorna</string>
+    <string name="statePlansCopy4">Aggiornamento</string>
+    <string name="statePlansCopy5">Nessun piano con accesso</string>
+    <string name="statePlansCopy6">Accedi a Codex, Claude, GLM o MiniMax su un server o su questo telefono per vedere cosa resta.</string>
+    <string name="statePlansCopy7">Chiavi API (senza limiti di piano)</string>
+    <string name="statePlansCopy8">Nessun accesso effettuato</string>
+    <string name="statePlansCopy9">Questo telefono</string>
+    <string name="statePlansCopy10">Ancora tanto disponibile</string>
+    <string name="statePlansCopy11">Vicino al limite</string>
+    <string name="statePlansCopy12">Limite raggiunto</string>
+    <string name="statePlansCopy13">Accesso effettuato, ma i dati non sono ancora leggibili</string>
+    <string name="statePlansCopy14">L'accesso è scaduto</string>
+    <string name="statePlansCopy15">Accesso non effettuato</string>
+    <string name="statePlansCopy16">I dati non si sono potuti leggere questa volta</string>
+    <string name="statePlansCopy17">Offline. Questi sono gli ultimi dati.</string>
+    <string name="statePlansCopy18">Nessun limite segnalato</string>
+    <string name="statePlansCopy19">Chiave API, senza limiti di piano</string>
+    <string name="statePlansCopy20">Accedi per vedere i dati</string>
+    <string name="statePlansCopy21">Accedi su %1$s per vedere i dati</string>
+    <string name="statePlansCopy22">Aggiungi la chiave per vedere i dati</string>
+    <string name="statePlansCopy23">Aggiungi la chiave su %1$s per vedere i dati</string>
+    <string name="statePlansCopy24">Configura la lettura per vedere i dati</string>
+    <string name="statePlansCopy25">Configura la lettura su %1$s per vedere i dati</string>
+    <string name="statePlansCopy26">Riprova</string>
+    <string name="statePlansCopy27">5 ore</string>
+    <string name="statePlansCopy28">Questa settimana</string>
+    <string name="statePlansCopy29">Questo mese</string>
+    <string name="statePlansCopy30">Limite</string>
+    <string name="statePlansCopy31">%1$s% residuo</string>
+    <string name="statePlansCopy32">reimpostazione adesso</string>
+    <string name="statePlansCopy33">reimpostazione tra %1$s min</string>
+    <string name="statePlansCopy34">reimpostazione tra %1$s h</string>
+    <string name="statePlansCopy35">reimpostazione tra %1$s giorni</string>
+    <string name="statePlansCopy36">Si è già reimpostato dopo la lettura di questi dati.</string>
+    <string name="statePlansCopy37">Piano: %1$s</string>
+    <string name="statePlansCopy38">Avviso al %1$s% di utilizzo</string>
+    <string name="statePlansCopy39">offline</string>
+    <string name="statePlansCopy40">accesso scaduto</string>
+    <string name="statePlansCopy41">accesso non effettuato</string>
+    <string name="statePlansCopy42">dati letti qui</string>
+    <string name="statePlansCopy43">accesso effettuato</string>
+    <string name="statePlansCopy44">I limiti del piano di Claude non si possono leggere tramite OpenCode</string>
+    <string name="statePlansAlerts">Avvisi di utilizzo</string>
+    <string name="statePlansThreshold">Avviso al %1$d% di utilizzo</string>
+    <string name="statePlansResetOn">Avviso di reimpostazione attivo</string>
+    <string name="statePlansResetOff">Avviso di reimpostazione disattivo</string>
+    <string name="statePlansPercent">Percentuale utilizzata (1–100)</string>
+    <string name="statePlansSaveFailed">Impossibile salvare. Inserisci una percentuale da 1 a 100 e riprova.</string>
+    <string name="statePlansSave">Salva livello di avviso</string>
+    <string name="statePlansUseDefault">Usa il livello di avviso predefinito</string>
+</resources>

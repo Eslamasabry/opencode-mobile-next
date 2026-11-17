@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="nativePendingTitle">In attesa di invio</string>
+    <string name="nativePendingReview">Rivedi</string>
+    <string name="nativePendingFailed">Impossibile aggiornare questo invio. Controlla la connessione e riprova.</string>
+    <string name="nativePendingOffline">Verrà inviato al ritorno online</string>
+    <string name="nativePendingAdmitted">In attesa sul server</string>
+    <string name="nativePendingJoining">Si unisce alla risposta in corso</string>
+    <string name="nativePendingUnconfirmed">Potrebbe essere già stato inviato</string>
+    <string name="nativePendingEdit">Riporta per modificarlo</string>
+    <string name="nativePendingSteer">Unisciti a questa risposta</string>
+    <string name="nativePendingCheck">Aggiorna</string>
+    <string name="nativePendingDiscard">Scarta</string>
+    <string name="nativePendingDiscardTitle">Scartare questo messaggio?</string>
+    <string name="nativePendingEmpty">Nessun invio in attesa.</string>
+    <plurals name="nativePendingCount">
+        <item quantity="one">1 messaggio è in attesa di invio.</item>
+        <item quantity="many">%1$s messaggi sono in attesa di invio.</item>
+        <item quantity="other">%1$s messaggi sono in attesa di invio.</item>
+    </plurals>
+</resources>

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="stateAttentionTitle">Attività</string>
+    <string name="stateAttentionRefresh">Aggiorna</string>
+    <string name="stateAttentionNeedsYou">Richiede la tua attenzione</string>
+    <string name="stateAttentionHistory">Mentre eri via</string>
+    <string name="stateAttentionIncomplete">Alcuni server non sono stati controllati. Le informazioni salvate potrebbero non essere aggiornate.</string>
+    <string name="stateAttentionCorrupt">Alcune attività salvate non si sono potute leggere. Sono state conservate su questo telefono.</string>
+    <string name="stateAttentionSaveFailed">Impossibile salvare questa modifica. Aggiorna e riprova.</string>
+    <string name="stateAttentionNoneKnown">Nessuna richiesta nota dai server che hanno risposto.</string>
+    <string name="stateAttentionNone">Nessuna richiesta in attesa.</string>
+    <string name="stateAttentionNoHistory">Nessuna attività automatica da mostrare.</string>
+    <string name="stateAttentionPermission">Autorizzazione richiesta</string>
+    <string name="stateAttentionQuestion">Domanda in attesa</string>
+    <string name="stateAttentionForm">Modulo in attesa</string>
+    <string name="stateAttentionFailure">Conversazione da controllare</string>
+    <string name="stateAttentionTeam">Il team richiede la tua attenzione</string>
+    <string name="stateAttentionStale">Ultimo dato noto</string>
+    <string name="stateAttentionAcknowledge">Ignora attività mostrata</string>
+    <string name="stateActReconnect">Riconnesso automaticamente</string>
+    <string name="stateActRestart">Riavviato automaticamente</string>
+    <string name="stateActHeatPause">In pausa per surriscaldamento</string>
+    <string name="stateActHeatStop">Interrotto per surriscaldamento</string>
+    <string name="stateActHeatResume">Ripreso dopo il raffreddamento</string>
+    <string name="stateActUpdate">Aggiornato automaticamente</string>
+    <string name="stateActPermission">Autorizzazione concessa automaticamente</string>
+    <string name="stateActQueued">Messaggio salvato inviato</string>
+    <string name="stateActOther">Attività automatica</string>
+    <string name="stateAttentionMonitorTitle">Altri server</string>
+    <string name="stateAttentionMonitorCopy">Scegli quali altri server salvati questo telefono può controllare per trovare richieste in attesa. Non risponde alle richieste e non modifica quei server.</string>
+    <string name="stateAttentionMonitorChoice">Controlla richieste in attesa</string>
+</resources>

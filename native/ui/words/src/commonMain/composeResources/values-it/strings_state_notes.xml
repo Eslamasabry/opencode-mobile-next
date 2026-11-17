@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="stateNoteTitle">Nota della conversazione</string>
+    <string name="stateNoteDescription">Questa nota orienta le risposte in questa conversazione. È salvata su questo server.</string>
+    <string name="stateNoteField">Nota per questa conversazione</string>
+    <string name="stateNoteSave">Salva nota</string>
+    <string name="stateNoteRemove">Rimuovi nota</string>
+    <string name="stateNoteReload">Rileggi la nota salvata</string>
+    <string name="stateNoteWorking">Salvataggio o lettura della nota. Attendi.</string>
+    <string name="stateNoteReloadFirst">Scrivi prima una modifica. La nota deve essere caricata e rientrare in 8192 byte codificati.</string>
+    <string name="stateNoteTooLarge">La nota è troppo lunga. Mantienila entro 8192 byte codificati.</string>
+    <string name="stateNoteChanged">La conversazione o la nota salvata è cambiata. Rileggila prima di salvare.</string>
+    <string name="stateNoteFailed">Impossibile leggere o salvare la nota. Controlla la connessione e riprova.</string>
+    <string name="stateNoteSaved">Nota salvata.</string>
+    <string name="stateNoteRemoved">Nota rimossa.</string>
+    <string name="stateNoteDiscardTitle">Scartare questa modifica alla nota?</string>
+    <string name="stateNoteDiscardBody">La modifica non salvata andrà persa. La nota salvata resta com'è.</string>
+    <string name="stateNoteDiscard">Scarta modifica</string>
+</resources>

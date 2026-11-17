@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="stateFormTitle">Rispondi all'agente</string>
+    <string name="stateFormAnswer">Rispondi</string>
+    <string name="stateFormHeld">La tua risposta sarà inviata a breve.</string>
+    <string name="stateFormUndo">Annulla</string>
+    <string name="stateFormInvalid">Controlla le risposte evidenziate prima di inviare.</string>
+    <string name="stateFormOther">Altro</string>
+    <string name="stateFormOpenLink">Apri link</string>
+    <string name="stateFormRestoring">Ripristino delle risposte salvate…</string>
+    <string name="stateFormSend">Invia risposte</string>
+    <string name="stateFormDecline">Rifiuta questa richiesta</string>
+    <string name="stateFormDeclineTitle">Rifiutare questa richiesta?</string>
+    <string name="stateFormDeclineBody">L'agente continuerà senza le tue risposte. Questa richiesta non si può ripristinare.</string>
+    <string name="stateFormKeepEditing">Continua a modificare</string>
+    <string name="stateFormStorageFailed">Le risposte salvate non si sono potute leggere o salvare. Chiudi e riapri questa richiesta per riprovare.</string>
+    <string name="stateFormUncertain">Consegna non confermata. Controlla la conversazione prima di rispondere di nuovo.</string>
+    <string name="stateFormChanged">Questa richiesta è cambiata. Riapri la richiesta corrente.</string>
+    <string name="stateFormNotAccepted">La risposta non è stata accettata. Rivedi la richiesta prima di riprovare.</string>
+    <string name="stateFormDismiss">Ignora</string>
+</resources>

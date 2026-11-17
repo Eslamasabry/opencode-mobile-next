@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="crashOfferSection">Segnalazioni di arresti anomali</string>
+    <string name="crashOfferSettingTitle">Proponi segnalazioni di arresti anomali</string>
+    <string name="crashOfferSettingDetail">Se l'app si chiude inaspettatamente, propone una segnalazione che puoi prima rivedere. Nulla viene mai inviato da solo.</string>
+    <string name="telemetryConsentTitle">Vuoi contribuire a migliorare OpenCode Mobile?</string>
+    <string name="telemetryConsentBody">Se accetti, l'app invia numeri anonimi su utilizzo e salute dell'app, e segnalazioni di arresto anomalo, tramite Google Firebase. Puoi cambiare ciascuna in Impostazioni › Privacy e dati.</string>
+    <string name="telemetryConsentSends">Viene inviato: pagine e funzioni usate, se connessione, invio e configurazione funzionano, velocità dell'app, intervalli di memoria e archiviazione, segnalazioni di arresto anomalo. Un ID di installazione casuale.</string>
+    <string name="telemetryConsentNever">Non viene mai inviato: il tuo codice, le conversazioni, i file, gli indirizzi dei server o le chiavi. Nessun ID pubblicità.</string>
+    <string name="telemetryConsentShare">Condividi utilizzo e segnalazioni di arresto anomalo</string>
+    <string name="telemetryConsentNotNow">Non ora</string>
+</resources>

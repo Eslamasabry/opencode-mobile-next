@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="serversTitle">Server</string>
+    <string name="serversNewTitle">Nuova conversazione</string>
+    <string name="serversSaved">Server salvati</string>
+    <string name="serversEmpty">Aggiungi un server OpenCode 2 per iniziare una conversazione.</string>
+    <string name="serversAdd">Aggiungi un server</string>
+    <string name="serversName">Nome</string>
+    <string name="serversAddress">Indirizzo del server</string>
+    <string name="serversUsername">Nome utente</string>
+    <string name="serversPassword">Password</string>
+    <string name="serversCleartext">Consenti HTTP per questo indirizzo</string>
+    <string name="serversCleartextHelp">HTTP non cifra la tua password né le conversazioni. Usalo solo su una rete di cui ti fidi.</string>
+    <string name="serversCleartextRequired">Conferma HTTP per questo indirizzo prima di connetterti.</string>
+    <string name="serversConnect">Connetti</string>
+    <string name="serversConnected">Connesso</string>
+    <string name="serversCreate">Inizia conversazione</string>
+    <string name="serversSave">Salva e connetti</string>
+    <string name="serversRemove">Rimuovi server</string>
+    <string name="serversCancel">Annulla</string>
+    <string name="serversRemoveConfirm">Rimuovere %1$s e i suoi dati di connessione salvati da questa app?</string>
+    <string name="serversWorking">Attendi il termine dell'azione in corso.</string>
+    <string name="serversInvalidAddress">Inserisci l'indirizzo di un server.</string>
+    <string name="serversSaveFailed">Impossibile salvare questo server. Controlla l'indirizzo e riprova.</string>
+    <string name="serversConnectFailed">Impossibile connettersi. Controlla l'indirizzo del server e la rete, poi riprova.</string>
+    <string name="serversCreateFailed">Impossibile iniziare una conversazione. Il tuo server resta salvato.</string>
+    <string name="serversRemoveFailed">Impossibile rimuovere questo server. I dati salvati sono invariati.</string>
+    <string name="serversSignInFailed">Il server non ha accettato queste credenziali di accesso. Controlla nome utente e password.</string>
+    <string name="serverHttpsRequired">Questo indirizzo è su internet pubblica, quindi richiede HTTPS. HTTP invierebbe la tua password senza cifratura. Modifica l'indirizzo in modo che inizi con https://, oppure raggiungi il server tramite Tailscale o la tua rete.</string>
+</resources>

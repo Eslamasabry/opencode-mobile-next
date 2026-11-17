@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="openProjectWhereTitle">Dov'è il progetto?</string>
+    <string name="openProjectWhereBody">Scegli il telefono o il computer dove si trova.</string>
+    <string name="openProjectStatusConnected">Connesso</string>
+    <string name="openProjectStatusConnecting">Connessione in corso</string>
+    <string name="openProjectStatusNotConnected">Non connesso</string>
+    <string name="openProjectTypePath">Digita un percorso</string>
+    <string name="openProjectTypePathBody">Apri una cartella tramite il percorso completo</string>
+    <string name="openProjectNewFolder">Nuova cartella</string>
+    <string name="openProjectNewFolderBody">Crea una cartella in %1$s e aprila</string>
+    <string name="openProjectCloneBody">Clona un repository in %1$s e aprilo</string>
+    <string name="openProjectCloneFailed">Impossibile clonare il repository. Controlla l'indirizzo e che il server riesca a raggiungerlo.</string>
+    <string name="openProjectSlowBody">Il server impiega più tempo del solito a rispondere.</string>
+    <string name="openProjectProjectsEmptyBody">Clona un repository o crea una nuova cartella per iniziare.</string>
+    <string name="openProjectServerNotConnected">Questo server non è connesso in questo momento. Riprova quando lo sarà.</string>
+</resources>
