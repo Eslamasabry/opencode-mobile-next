@@ -575,6 +575,10 @@ jobs:
         run: |
           set -o pipefail
           case "$CUSTOM_TASKS" in
+            run_tests)
+              # `tasks=run_tests`: the WHOLE native/tool/test/run_tests.sh on a runner, no Gradle; its per-case lines are the log
+              bash tool/test/run_tests.sh 2>&1 | tee "$RUNNER_TEMP/custom.log"
+              exit 0 ;;
             detekt|"detekt "*)
               # `tasks=detekt :core:net :androidApp` (or `detekt --all`): the detekt lane script on exactly those modules, no Gradle.
               # deep enough for the merge-base of the branch and the ref (the ratchet judges a branch from its fork)
@@ -608,6 +612,7 @@ jobs:
           echo "{\"failed\":$failed,\"gradle_ran\":$ran}" > reports/custom.json
           case "${{ inputs.tasks }}" in
             # no Gradle: "ran" is whether the lane script left its report, which summary.py reads
+            run_tests) echo '{"failed":false,"gradle_ran":true}' > reports/custom.json ;;
             detekt|"detekt "*) ran=false; [ -s reports/detekt.json ] && ran=true; failed=false; [ "$ran" = false ] && failed=true
               echo "{\"failed\":$failed,\"gradle_ran\":$ran}" > reports/custom.json ;;
             *) TASKS="${{ inputs.tasks }}" GRADLE_LOG="$RUNNER_TEMP/custom.log" GRADLE_OUTCOME="$JOB_STATUS" \
