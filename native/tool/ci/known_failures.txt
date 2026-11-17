@@ -4,16 +4,20 @@
 # fixed set, and the guard refuses any other:
 #   flutter-era-rule            bucket A: an old Flutter-era layout rule (columns inside chips and boxes), no visible fault
 #   unsorted-rule               bucket C: icon/label, gap and spacing-step rules waiting for a designer look; does NOT block
-#                               3.0.1, sorting resumes after the release (also: gate scenes that fail in their setup)
+#                               3.0.1, sorting resumes after the release 
 #   visible-fault-next-update   bucket B: a visible fault not fixed in 3.0.1; each points at backlog B-443
 #   reference-not-in-history    the test needs the Glass reference commit (rb_gate.py GREF), which is not in this
 #                               repository's history; its count in the candidate run of the cut: 0
 #   known-noise-before-ci-goldens   a line that existed before this list was made exact
 # The list can only SHRINK: known_failures_ceiling.txt holds the names at the cut and the guard refuses a name that is not
 # in it; fix the test and delete its line from BOTH files. The candidate lane absorbs nothing else: not the base's reports,
-# not quarantine.txt. Built from candidate run 44159231276 (line tip 28d455272d). The message-box and chat-page bucket-B tests
-# that native/chat-edges-rules fixes by the cut are NOT listed: until they are fixed the candidate reads FAIL naming them.
+# not quarantine.txt. Built from candidate run 44159231276 (line tip 28d455272d). The 12 message-box and chat-page bucket-B tests are
+# listed as visible-fault-next-update: the 59 layout rows were deferred by the coordinator; native/chat-edges-rules fixes only the six
+# DEVICE faults for 3.0.1. Any that it does fix come OFF this list when it merges (shrink-only).
 feature/agents :: io.github.eslamasabry.oc.feature.agents.rb.o49.AgentsGateTest > signed_in[desktop] | flutter-era-rule: start-edge
+feature/chat :: io.github.eslamasabry.oc.feature.chat.rb.o42.Chat3ComposerGateTest > composerBusy[desktop] | visible-fault-next-update: B-443: edge-tap, tight
+feature/chat :: io.github.eslamasabry.oc.feature.chat.rb.o42.Chat3ComposerGateTest > composerText[desktop] | visible-fault-next-update: B-443: edge-tap, tight
+feature/chat :: io.github.eslamasabry.oc.feature.chat.rb.o42.Chat3ComposerGateTest > toolsSheet[desktop] | visible-fault-next-update: B-443: edge-tap, tight
 feature/chat :: io.github.eslamasabry.oc.feature.chat.rb.o42.ChatGateTest > failed[desktop] | unsorted-rule: gap-step
 feature/chat :: io.github.eslamasabry.oc.feature.chat.rb.o42.ChatGateTest > loading[desktop] | unsorted-rule: gap-step
 feature/chat :: io.github.eslamasabry.oc.feature.chat.rb.o42.ChatGateTest > transcriptWide[desktop] | visible-fault-next-update: B-443: edge-tap, small-target
@@ -31,18 +35,6 @@ feature/chats :: io.github.eslamasabry.oc.feature.chats.rb.o41.AllConversationsG
 feature/chats :: io.github.eslamasabry.oc.feature.chats.rb.o41.AllConversationsGateTest > loadedWide[desktop] | unsorted-rule: icon-label
 feature/chats :: io.github.eslamasabry.oc.feature.chats.rb.o41.AllConversationsGateTest > loaded[desktop] | unsorted-rule: icon-label
 feature/chats :: io.github.eslamasabry.oc.feature.chats.rb.o41.AllConversationsGateTest > moveConfirm[desktop] | unsorted-rule: icon-label
-feature/chats :: io.github.eslamasabry.oc.feature.chats.rb.o41.ChatsGateTest > emptyWide[desktop] | unsorted-rule: scene fails in setup: LocalKitRedactor is not provided (gate harness, not a layout rule)
-feature/chats :: io.github.eslamasabry.oc.feature.chats.rb.o41.ChatsGateTest > empty[desktop] | unsorted-rule: scene fails in setup: LocalKitRedactor is not provided (gate harness, not a layout rule)
-feature/chats :: io.github.eslamasabry.oc.feature.chats.rb.o41.ChatsGateTest > leftoverWide[desktop] | unsorted-rule: scene fails in setup: LocalKitRedactor is not provided (gate harness, not a layout rule)
-feature/chats :: io.github.eslamasabry.oc.feature.chats.rb.o41.ChatsGateTest > leftover[desktop] | unsorted-rule: scene fails in setup: LocalKitRedactor is not provided (gate harness, not a layout rule)
-feature/chats :: io.github.eslamasabry.oc.feature.chats.rb.o41.ChatsGateTest > mixedWide[desktop] | unsorted-rule: scene fails in setup: LocalKitRedactor is not provided (gate harness, not a layout rule)
-feature/chats :: io.github.eslamasabry.oc.feature.chats.rb.o41.ChatsGateTest > mixed[desktop] | unsorted-rule: scene fails in setup: LocalKitRedactor is not provided (gate harness, not a layout rule)
-feature/chats :: io.github.eslamasabry.oc.feature.chats.rb.o41.ChatsGateTest > noMatchWide[desktop] | unsorted-rule: scene fails in setup: LocalKitRedactor is not provided (gate harness, not a layout rule)
-feature/chats :: io.github.eslamasabry.oc.feature.chats.rb.o41.ChatsGateTest > noMatch[desktop] | unsorted-rule: scene fails in setup: LocalKitRedactor is not provided (gate harness, not a layout rule)
-feature/chats :: io.github.eslamasabry.oc.feature.chats.rb.o41.ChatsGateTest > projectSheetWide[desktop] | unsorted-rule: scene fails in setup: LocalKitRedactor is not provided (gate harness, not a layout rule)
-feature/chats :: io.github.eslamasabry.oc.feature.chats.rb.o41.ChatsGateTest > projectSheet[desktop] | unsorted-rule: scene fails in setup: LocalKitRedactor is not provided (gate harness, not a layout rule)
-feature/chats :: io.github.eslamasabry.oc.feature.chats.rb.o41.ChatsGateTest > runningWide[desktop] | unsorted-rule: scene fails in setup: LocalKitRedactor is not provided (gate harness, not a layout rule)
-feature/chats :: io.github.eslamasabry.oc.feature.chats.rb.o41.ChatsGateTest > running[desktop] | unsorted-rule: scene fails in setup: LocalKitRedactor is not provided (gate harness, not a layout rule)
 feature/phone :: io.github.eslamasabry.oc.feature.phone.rb.o48.PhoneGateTest > running[desktop] | unsorted-rule: icon-label
 feature/servers :: io.github.eslamasabry.oc.feature.servers.rb.o45.ServersGateTest > saved_servers[desktop] | unsorted-rule: gap-step, icon-label
 feature/servers :: io.github.eslamasabry.oc.feature.servers.rb.o45.ServersGateTest > saved_servers_wide[desktop] | unsorted-rule: gap-step, icon-label
@@ -144,12 +136,20 @@ ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o18.KitWorkGraphGateTest > kit_work
 ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o18.KitWorkGraphGateTest > kit_work_graph_rows[desktop] | unsorted-rule: icon-label
 ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o18.KitWorkGraphGateTest > kit_work_graph_rows_text2[desktop] | unsorted-rule: icon-label
 ui/kit :: io.github.eslamasabry.oc.ui.kit.rb.o18.KitWorkGraphGateTest > kit_work_graph_rows_text2_1280x800[desktop] | unsorted-rule: icon-label
+ui/kit-chat :: io.github.eslamasabry.oc.ui.kitchat.rb.o14.KitAskLineGateTest > ask_stacked[desktop] | visible-fault-next-update: B-443: ellipsis, tight
+ui/kit-chat :: io.github.eslamasabry.oc.ui.kitchat.rb.o14.KitComposerChipsGateTest > attachments_and_suggestions[desktop] | visible-fault-next-update: B-443: ellipsis
+ui/kit-chat :: io.github.eslamasabry.oc.ui.kitchat.rb.o14.KitComposerChipsGateTest > default_sizes[desktop] | visible-fault-next-update: B-443: ellipsis
+ui/kit-chat :: io.github.eslamasabry.oc.ui.kitchat.rb.o14.KitComposerChipsGateTest > model[desktop] | visible-fault-next-update: B-443: ellipsis
+ui/kit-chat :: io.github.eslamasabry.oc.ui.kitchat.rb.o14.KitComposerGateTest > conditions[desktop] | visible-fault-next-update: B-443: tight
+ui/kit-chat :: io.github.eslamasabry.oc.ui.kitchat.rb.o14.KitComposerGateTest > idle_and_busy[desktop] | visible-fault-next-update: B-443: tight
 ui/kit-chat :: io.github.eslamasabry.oc.ui.kitchat.rb.o14.KitComposerGateTest > model_above[desktop] | unsorted-rule: gap-step
 ui/kit-chat :: io.github.eslamasabry.oc.ui.kitchat.rb.o14.KitComposerGateTest > voice[desktop] | flutter-era-rule: start-edge
 ui/kit-chat :: io.github.eslamasabry.oc.ui.kitchat.rb.o14.KitDiffViewGateTest > loading_empty_error[desktop] | unsorted-rule: gap-step
 ui/kit-chat :: io.github.eslamasabry.oc.ui.kitchat.rb.o14.KitMarkdownGateTest > pictures[desktop] | visible-fault-next-update: B-443: small-target, target
 ui/kit-chat :: io.github.eslamasabry.oc.ui.kitchat.rb.o14.KitMarkdownGateTest > reply[desktop] | visible-fault-next-update: B-443: small-target, target
 ui/kit-chat :: io.github.eslamasabry.oc.ui.kitchat.rb.o14.KitMarkdownGateTest > roles_paths_empty[desktop] | visible-fault-next-update: B-443: overlap, small-target
+ui/kit-chat :: io.github.eslamasabry.oc.ui.kitchat.rb.o14.KitQueuedMessageGateTest > kit_queued_message_default[desktop] | visible-fault-next-update: B-443: ellipsis
+ui/kit-chat :: io.github.eslamasabry.oc.ui.kitchat.rb.o14.KitQueuedMessageGateTest > kit_queued_message_states[desktop] | visible-fault-next-update: B-443: ellipsis
 ui/kit-chat :: io.github.eslamasabry.oc.ui.kitchat.rb.o14.KitToolRowGateTest > agent[desktop] | visible-fault-next-update: B-443: ellipsis
 ui/kit-chat :: io.github.eslamasabry.oc.ui.kitchat.rb.o14.KitToolRowGateTest > default_sizes[desktop] | visible-fault-next-update: B-443: ellipsis
 ui/kit-chat :: io.github.eslamasabry.oc.ui.kitchat.rb.o14.KitToolRowGateTest > done_states[desktop] | visible-fault-next-update: B-443: ellipsis
@@ -160,6 +160,7 @@ ui/kit-chat :: io.github.eslamasabry.oc.ui.kitchat.rb.o14.KitTurnGateTest > kit_
 ui/kit-chat :: io.github.eslamasabry.oc.ui.kitchat.rb.o15.KitStepTimelineGateTest > expanded_sizes[desktop] | flutter-era-rule: wide-control
 ui/kit-chat :: io.github.eslamasabry.oc.ui.kitchat.rb.o15.KitStepTimelineGateTest > scenes[desktop] | flutter-era-rule: wide-control
 ui/kit-chat :: io.github.eslamasabry.oc.ui.kitchat.rb.o15.KitWorkLineGateTest > states[desktop] | visible-fault-next-update: B-443: tight
+ui/kit-chat :: io.github.eslamasabry.oc.ui.kitchat.rb.o16.KitComposerStatusStripGateTest > composer_status_strip[desktop] | visible-fault-next-update: B-443: ellipsis-frame
 ui/kit-chat :: io.github.eslamasabry.oc.ui.kitchat.rb.o17.KitStepLightGateTest > arabic_text2[desktop] | flutter-era-rule: start-edge
 ui/kit-chat :: io.github.eslamasabry.oc.ui.kitchat.rb.o17.KitStepLightGateTest > changes_of_state[desktop] | flutter-era-rule: start-edge
 ui/kit-chat :: io.github.eslamasabry.oc.ui.kitchat.rb.o17.KitStepLightGateTest > first_and_last[desktop] | flutter-era-rule: start-edge

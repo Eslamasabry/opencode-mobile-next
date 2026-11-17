@@ -11,6 +11,9 @@ import kotlinx.collections.immutable.persistentMapOf
 import kotlinx.collections.immutable.persistentSetOf
 import kotlin.test.Test
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import io.github.eslamasabry.oc.core.security.Redactor
+import io.github.eslamasabry.oc.ui.kitchat.LocalKitRedactor
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.status.KitStatus
@@ -80,7 +83,12 @@ class ChatsGateTest {
         )
 
     private fun shot(name: String, state: ChatsUi, status: (@Composable () -> KitStatus)? = null) =
-        FlutterGoldenGate.check(name, frame = FlutterGoldenGate.Frame.Screen) {
+        FlutterGoldenGate.check(
+            name,
+            frame = FlutterGoldenGate.Frame.Screen,
+            // The app provides the redactor above every screen; the mono chat parts refuse to draw without it.
+            wrap = { content -> CompositionLocalProvider(LocalKitRedactor provides Redactor()) { content() } },
+        ) {
             ChatsScreen(state, actions, appStatus = status?.invoke(), shellBar = false)
         }
 
