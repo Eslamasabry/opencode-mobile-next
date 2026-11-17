@@ -302,6 +302,7 @@ public object KitModelPages {
  * empty), [below] the caller's further choices (thinking, agent) after each list. [morphFrom] is the key of the control the sheet grows out of
  * (`kitMorphSource`), if any.
  */
+@Suppress("LongParameterList") // the sheet's one door: every caller's choices and notices arrive as named parameters
 @Composable
 public fun KitModelSheet(
     visible: Boolean,
@@ -367,6 +368,7 @@ public fun KitModelSheet(
     }
 }
 
+@Suppress("LongParameterList", "LongMethod") // the body of the one sheet; its parts are tested through the sheet
 @Composable
 private fun ColumnScope.ModelSheetBody(
     options: List<KitModelOption>,
@@ -420,7 +422,11 @@ private fun ColumnScope.ModelSheetBody(
     // under it. It takes no room when it has nothing to say (a model without levels).
     KitStackScope {
         Column(
-            Modifier.fillMaxWidth().padding(start = rail, end = rail).stepUnder(Space.S2.dp).testTag("chat-model-header"),
+            Modifier
+                .fillMaxWidth()
+                .padding(start = rail, end = rail)
+                .stepUnder(Space.S2.dp)
+                .testTag("chat-model-header"),
             verticalArrangement = gap,
         ) { header() }
     }

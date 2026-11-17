@@ -48,27 +48,45 @@ class ModelSheetThinkingTest {
     private val fillers = (1..9).map { ComposerModel("prov", "m$it", "Model $it", supportsAttachments = true) }
 
     private class Actions : BasicComposerActions {
-        override fun draftChanged(text: String) {}
+        val calls = mutableListOf<String>()
+
+        override fun draftChanged(text: String) {
+            calls += "draftChanged"
+        }
 
         override suspend fun send(text: String): Boolean = true
 
-        override fun loadModels() {}
+        override fun loadModels() {
+            calls += "loadModels"
+        }
 
         override suspend fun selectModel(choice: ComposerModel?, variant: String): Boolean = true
 
-        override fun attachFile() {}
+        override fun attachFile() {
+            calls += "attachFile"
+        }
 
-        override fun removeAttachment(index: Int) {}
+        override fun removeAttachment(index: Int) {
+            calls += "removeAttachment"
+        }
 
-        override fun dismissAttachmentFailure() {}
+        override fun dismissAttachmentFailure() {
+            calls += "dismissAttachmentFailure"
+        }
 
         override suspend fun selectAgent(agent: String): Boolean = true
 
-        override fun mentionFile(path: String) {}
+        override fun mentionFile(path: String) {
+            calls += "mentionFile"
+        }
 
-        override fun attach(kind: io.github.eslamasabry.oc.feature.chat.composer.presentation.AttachKind) {}
+        override fun attach(kind: io.github.eslamasabry.oc.feature.chat.composer.presentation.AttachKind) {
+            calls += "attach"
+        }
 
-        override fun retrySave() {}
+        override fun retrySave() {
+            calls += "retrySave"
+        }
     }
 
     private fun ui(models: ComposerModels) =
@@ -144,7 +162,10 @@ class ModelSheetThinkingTest {
             waitForIdle()
             for (word in listOf("Default", "Low", "Medium", "High", "Extra high", "Max")) {
                 val b = onNodeWithContentDescription(word).fetchSemanticsNode().boundsInRoot
-                assertTrue(b.left >= 0f && b.right <= 360f, "the $word chip is whole inside 360 dp at text $fontScale: $b")
+                assertTrue(
+                    b.left >= 0f && b.right <= 360f,
+                    "the $word chip is whole inside 360 dp at text $fontScale: $b",
+                )
             }
         }
 
