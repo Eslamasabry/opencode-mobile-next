@@ -49,7 +49,9 @@ import kotlin.test.assertEquals
  */
 @OptIn(ExperimentalTestApi::class, RedactorApi::class)
 class TurnFailSignInTest {
-    private val ownerText = "Unable to validate model: OAuth refresh token is no longer valid; run /login to re-authenticate"
+    private val ownerText =
+        "Unable to validate model: OAuth refresh token is no longer valid; " +
+            "run /login to re-authenticate"
     private val owner = ProfileId("phone")
     private val ref = ConversationRef(ProfileId("phone-agents"), SessionId("draft-1"))
 

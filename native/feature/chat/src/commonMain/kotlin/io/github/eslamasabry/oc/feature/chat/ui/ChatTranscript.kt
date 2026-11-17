@@ -1409,6 +1409,8 @@ private fun ChatRow(
                             ?.takeIf { it.turnId == row.turnId }
                             ?.let { KitQuietLine(limits.words.attachAgain(it.file)) }
                         KitTranscriptActions {
+                            // A set-up need or a lapsed sign-in has its one way on; the other fixes stand down.
+                            val otherWays = setUp == null && signInAgain == null
                             if (setUp != null && setUpReply != null)
                                 KitButton(
                                     listWords.setUpAction(setUp.name),
@@ -1428,8 +1430,7 @@ private fun ChatRow(
                                 )
                             }
                             if (
-                                setUp == null &&
-                                    signInAgain == null &&
+                                otherWays &&
                                     AgentErrorText.classify(reason)?.offersSignIn == true &&
                                     reply?.signInSettingsLabel != null
                             ) {
@@ -1441,7 +1442,7 @@ private fun ChatRow(
                             }
                             // Flutter error card: a sign-in, no-credit, wrong-model or full-context
                             // failure always offers the way on (never a dead end).
-                            if (reply != null && setUp == null && signInAgain == null) {
+                            if (reply != null && otherWays) {
                                 val suggestion =
                                     if (
                                         row.errorKind == MessageErrorKind.ModelNotFound ||
@@ -1550,8 +1551,7 @@ private fun ChatRow(
                             // turn picks up there).
                             val continueLabel = reply?.continueLabel
                             if (
-                                setUp == null &&
-                                    signInAgain == null &&
+                                otherWays &&
                                     kind == ReplyFailureKind.ConnectionLost &&
                                     !continueLabel.isNullOrBlank()
                             )
