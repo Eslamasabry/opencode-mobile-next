@@ -35,7 +35,7 @@ object ReferenceGuard {
     /** Call when the reference [what] is not there. Never returns: fails or skips by the lane. */
     fun missing(what: String, env: Map<String, String> = System.getenv()): Nothing {
         if (outcome(env) == Outcome.Fail) throw AssertionError(failureMessage(what))
-        println(skipLine(what))
+        System.out.append(skipLine(what)).append('\n').flush() // the CI report counts this line
         throw AssumptionViolatedException("guard skipped, reference $what is missing (references not fetched in this lane)")
     }
 }
