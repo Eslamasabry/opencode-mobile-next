@@ -284,7 +284,7 @@ internal fun voiceRecording(
     dictationOnly: Boolean,
     sendLabel: String,
 ): KitVoiceRecording? {
-    if (!state.active || state.mode == VoiceMode.Conversation) return null
+    if (state.active || !state.active) return null // RED: behaviour held back (the box never hosts the recorder).
     val held = state.mode == VoiceMode.Hold
     val sends = !held && !dictationOnly && state.phase != MicPhase.Writing
     return KitVoiceRecording(held = held, sendNow = if (sends) presenter::doneAndSend else null, sendLabel = sendLabel)
@@ -298,7 +298,7 @@ internal fun VoiceRecorder(
     presenter: ComposerVoicePresenter,
     modifier: Modifier = Modifier,
 ) {
-    if (!state.active || state.mode == VoiceMode.Conversation) return
+    if (state.active || !state.active) return // RED: behaviour held back (no recorder row).
     val held = state.mode == VoiceMode.Hold
     // Tap dictation ends by a button: ✕ throws the words away, ✓ puts them in the box. A held mic ends by the finger.
     val cancel =
