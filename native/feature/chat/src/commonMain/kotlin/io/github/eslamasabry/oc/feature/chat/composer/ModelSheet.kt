@@ -194,7 +194,7 @@ private fun kitOption(model: ComposerModel): KitModelOption =
 
 /** A thinking level as people read it (Flutter `presentedEffort`): "Extra high" for `xhigh`; unknown ids as they are. */
 @Composable
-private fun effortWords(id: String): String =
+internal fun effortWords(id: String): String =
     when (id.trim().lowercase()) {
         "none" -> stringResource(Res.string.modelEffortNone)
         "minimal" -> stringResource(Res.string.modelEffortMinimal)

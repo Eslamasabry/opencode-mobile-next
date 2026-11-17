@@ -17,7 +17,7 @@ public fun serverModelLabel(
         choice?.provider?.trim()?.takeIf { it.isNotEmpty() }
             ?: KNOWN_PROVIDERS[model.providerId.lowercase()]
             ?: model.providerId.replaceFirstChar { it.uppercaseChar() }
-    val named = if (variant.isBlank()) name else "$name · $variant"
+    val named = io.github.eslamasabry.oc.core.model.ModelEffort.label(name, variant.takeIf { it.isNotBlank() })
     return if (provider.isBlank()) named else "$named · $provider"
 }
 
