@@ -565,7 +565,7 @@ jobs:
     if: ${{ inputs.tasks == '' && !inputs.apk_only && inputs.lane != 'goldens' }}
     continue-on-error: ${{ github.ref_name != 'native/next' && !startsWith(github.ref_name, 'native/screens-merge') && github.ref_name != 'master' }}
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: ${{ inputs.lane == 'candidate' && 45 || 15 }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
