@@ -311,7 +311,6 @@ public class TelemetryService(
     }
 
     override fun recordFailure(name: String, keys: Map<String, Any?>) {
-        if (!crashLive) return
         val clean = cleanName(name) ?: return
         val safe = cleanKeys(keys)
         ring.add("failure $clean")
