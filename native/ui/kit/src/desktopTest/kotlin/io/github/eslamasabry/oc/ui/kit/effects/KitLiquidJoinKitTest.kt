@@ -85,9 +85,9 @@ class KitLiquidJoinKitTest {
         onAllNodes(joinedPane, useUnmergedTree = true).fetchSemanticsNodes().size
 
     /**
-     * Steps the TEST clock in jumps of [STEP_MS], at most [BUDGET_MS] of simulated time in all, until [expected] panes are
-     * joined, and returns the count it ended on (the caller asserts it, so a join that never comes or never goes still
-     * fails, as an assertion and not as a timeout).
+     * Steps the TEST clock in jumps of [STEP_MS], at most [BUDGET_MS] of simulated time in all, until [expected]
+     * panes are joined, and returns the count it ended on (the caller asserts it, so a join that never comes or never
+     * goes still fails, as an assertion and not as a timeout).
      *
      * Why the budget: what costs time is the animation the clock plays, not the number of calls. Measured on CI, an
      * animating frame of joined glass costs about 0.4 s in software, which is 15 to 25 s of wall time per simulated
