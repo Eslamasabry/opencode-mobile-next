@@ -1,6 +1,7 @@
 package io.github.eslamasabry.oc.feature.chatcomposer.ui
 
 import androidx.compose.runtime.Composable
+import io.github.eslamasabry.oc.core.model.ModelEffort
 import io.github.eslamasabry.oc.feature.chatcomposer.presentation.ComposerChip
 import io.github.eslamasabry.oc.feature.chatcomposer.presentation.EffortWord
 import io.github.eslamasabry.oc.feature.chatcomposer.presentation.ModelLabel
@@ -20,8 +21,11 @@ import org.jetbrains.compose.resources.stringResource
 /** The model chip's text: name, then effort as a word, then the "New" mark, joined with " · " (plan 09 §10.3). */
 @Composable
 internal fun modelChipWords(chip: ComposerChip.Model): String {
-    val parts = mutableListOf(modelLabelWords(chip.label))
-    chip.effort?.let { parts += effortWords(it) }
+    val label = modelLabelWords(chip.label)
+    // The model and its effort are said once, by the one formatter (a name that ends "(High)" says it already).
+    val named =
+        chip.effort?.let { ModelEffort.label(label, effortId(it), effortWords(it)) } ?: label
+    val parts = mutableListOf(named)
     if (chip.isNew) parts += stringResource(Res.string.modelNewBadge)
     return parts.joinToString(" · ")
 }
@@ -45,5 +49,17 @@ private fun effortWords(effort: EffortWord): String =
         EffortWord.Known.High -> stringResource(Res.string.modelEffortHigh)
         EffortWord.Known.ExtraHigh -> stringResource(Res.string.modelEffortExtraHigh)
         EffortWord.Known.Max -> stringResource(Res.string.modelEffortMax)
+        is EffortWord.Other -> effort.raw
+    }
+
+private fun effortId(effort: EffortWord): String =
+    when (effort) {
+        EffortWord.Known.None -> "none"
+        EffortWord.Known.Minimal -> "minimal"
+        EffortWord.Known.Low -> "low"
+        EffortWord.Known.Medium -> "medium"
+        EffortWord.Known.High -> "high"
+        EffortWord.Known.ExtraHigh -> "xhigh"
+        EffortWord.Known.Max -> "max"
         is EffortWord.Other -> effort.raw
     }
