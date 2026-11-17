@@ -285,13 +285,7 @@ private fun account(
             .sortedBy { kindOrder.indexOf(it.key.first) }
             .map { (key, members) -> LimitGroupUi(key.first, key.second, members.map { it.first }.toImmutableList()) }
     val fetched = s.fetchedAt?.toEpochMilliseconds()
-    // "Not signed in" only when the agent itself is signed out: a limit, an unconfirmed check or a signed-in agent
-    // whose numbers cannot be read says that instead. Only this phone's agents speak for this phone's account.
-    val reader = s.readFrom ?: s.signedInOn.firstOrNull()?.connection
-    val agent =
-        if (s.state == SubscriptionState.NotSignedIn && (reader == null || reader.isPhone()))
-            agents[s.providerId]?.takeIf { it != UsageAgentTruth.SignedOut }
-        else null
+    val agent = phoneAgentTruth(s, agents)
     val stale =
         s.state == SubscriptionState.OfflineStale ||
             s.resetSinceLastReading ||
@@ -312,6 +306,21 @@ private fun account(
         account = limitAccountRef(s.accountRef, read = fetched != null),
         agent = agent,
     )
+}
+
+// "Not signed in" only when the agent itself is signed out: a limit, an unconfirmed check or a signed-in agent
+// whose numbers cannot be read says that instead. Any phone connection in a collapsed subscription lets this
+// phone's agent speak for this phone's account, and a known limit outranks a reader that reported no limits.
+private fun phoneAgentTruth(s: UsageSubscription, agents: Map<String, UsageAgentTruth>): UsageAgentTruth? {
+    val speaksForPhone =
+        s.readFrom?.isPhone() ?: (s.signedInOn.isEmpty() || s.signedInOn.any { it.connection.isPhone() })
+    if (!speaksForPhone) return null
+    val truth = agents[s.providerId]
+    return when (s.state) {
+        SubscriptionState.NotSignedIn -> truth?.takeIf { it != UsageAgentTruth.SignedOut }
+        SubscriptionState.NoLimits -> truth as? UsageAgentTruth.Limit
+        else -> null
+    }
 }
 
 private fun window(w: UsageWindow, nowMs: Long, zone: String?): LimitWindowUi {

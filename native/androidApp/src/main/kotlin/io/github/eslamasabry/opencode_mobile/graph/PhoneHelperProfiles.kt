@@ -21,6 +21,14 @@ internal fun PreviewStores.isPhoneHelper(loaded: LoadedProfile): Boolean =
 internal fun PreviewStores.isPhoneHelper(id: ProfileId): Boolean =
     profiles.profile(id)?.let { isPhoneHelper(it) } == true
 
+/** Whether [loaded] is a remote Paseo server rather than this phone's own helper profile. */
+internal fun PreviewStores.isRemotePaseo(loaded: LoadedProfile): Boolean =
+    isRemotePaseo(loaded.id, loaded.profile.backend)
+
+/** Whether saved server [id] is a remote Paseo server rather than this phone's own helper profile. */
+internal fun PreviewStores.isRemotePaseo(id: ProfileId, backend: BackendKind): Boolean =
+    PhoneAgentRules.isRemotePaseoProfile(id.raw, backend, helperOwner(id))
+
 /** The saved "This phone" server helper [id] belongs to; null when [id] is not the helper or no phone is saved. */
 internal fun PreviewStores.phoneOfHelper(id: ProfileId): ProfileId? {
     if (!isPhoneHelper(id)) return null

@@ -11,6 +11,7 @@ import io.github.eslamasabry.oc.engine.integrations.usage.UsageConnection
 import io.github.eslamasabry.oc.engine.integrations.usage.UsageConnectionKind
 import io.github.eslamasabry.oc.engine.integrations.usage.UsageFix
 import io.github.eslamasabry.oc.engine.integrations.usage.UsageSnapshot
+import io.github.eslamasabry.oc.engine.integrations.usage.UsageSubscription
 import io.github.eslamasabry.oc.engine.integrations.usage.UsageWindowKind
 import kotlin.math.roundToInt
 import kotlinx.collections.immutable.ImmutableList
@@ -83,6 +84,13 @@ public interface PlansSource {
 
     public suspend fun turnOffCollector(profile: ProfileId): Outcome<Unit> =
         Outcome.Failed(Failure.Unavailable(FeatureId("usageCollector")))
+
+    /** The phone agents' own sign-in truth, keyed by provider id, for cards without numbers. */
+    public val agentTruths: StateFlow<Map<String, PlanAgentTruth>>
+        get() = noAgentTruths
+
+    /** "Check <agent> again": asks the phone's agents whether they are signed in. */
+    public suspend fun checkPhoneAgents(): Unit = Unit
 }
 
 /** The binding is an opaque digest, so stale confirmations cannot authorize changed credentials. */
@@ -113,6 +121,7 @@ public data class CollectorUi(
 )
 
 private val noComputerReaders: StateFlow<List<ComputerReaderUi>> = MutableStateFlow(emptyList())
+private val noAgentTruths: StateFlow<Map<String, PlanAgentTruth>> = MutableStateFlow(emptyMap())
 
 public data class ComputerReaderUi(
     val id: String,
@@ -187,7 +196,22 @@ public data class PlanCardUi(
     val readFrom: PlanConnectionUi? = null,
     val hasAlertOverride: Boolean = false,
     val notifyReset: Boolean = false,
+    val agent: PlanAgentTruth? = null,
 )
+
+/**
+ * What the phone's own agent says about itself when a reader found no numbers on this phone. Mirrors
+ * `UsageAgentTruth` so Usage › Plans agrees with Usage › Limits, the tile and the chooser.
+ */
+public sealed interface PlanAgentTruth {
+    public data object SignedIn : PlanAgentTruth
+
+    public data object SignedOut : PlanAgentTruth
+
+    public data class Limit(val resets: String?) : PlanAgentTruth
+
+    public data class NotConfirmed(val agentName: String) : PlanAgentTruth
+}
 
 public data class PlanKeyUi(
     val name: String,
@@ -273,6 +297,9 @@ public interface PlansActions {
     public fun askCollector(profile: ProfileId)
 
     public fun fix(key: String)
+
+    /** "Check <agent> again": asks the phone's agent whether it is signed in, then reads the plans again. */
+    public fun checkAgent(): Unit = Unit
 }
 
 private fun UsageConnection.ui(): PlanConnectionUi =
@@ -282,8 +309,50 @@ private fun UsageConnection.ui(): PlanConnectionUi =
         id = id,
     )
 
+private fun UsageSubscription.planCard(): PlanCardUi =
+    PlanCardUi(
+        key = key,
+        providerId = providerId,
+        name = displayName,
+        connection =
+            if (showConnectionName) (readFrom ?: signedInOn.firstOrNull()?.connection)?.ui()
+            else null,
+        state = state,
+        plan = planLabel,
+        windows =
+            windows
+                .map { w ->
+                    PlanWindowUi(
+                        w.kind,
+                        w.label,
+                        w.leftPercent.roundToInt().coerceIn(0, 100),
+                        w.resetsAt?.toEpochMilliseconds(),
+                        w.id,
+                    )
+                }
+                .toImmutableList(),
+        fix = fix,
+        fixConnection = fixConnection?.ui(),
+        signedInOn =
+            signedInOn
+                .map { PlanSignInUi(it.connection.ui(), it.state, it.online, it.readsFromHere) }
+                .toImmutableList(),
+        resetSince = resetSinceLastReading,
+        fetchedAtMs = fetchedAt?.toEpochMilliseconds(),
+        alertThreshold = alertThreshold.roundToInt(),
+        checkedAtMs = checkedAt?.toEpochMilliseconds(),
+        readFrom = readFrom?.ui(),
+        hasAlertOverride = hasAlertOverride,
+        notifyReset = notifyOnReset,
+    )
+
 /** Pure: the engine snapshot as screen state. */
-public fun plansUi(snapshot: UsageSnapshot, refreshing: Boolean, nowMs: Long): PlansUi {
+public fun plansUi(
+    snapshot: UsageSnapshot,
+    refreshing: Boolean,
+    nowMs: Long,
+    agents: Map<String, PlanAgentTruth> = emptyMap(),
+): PlansUi {
     val cards =
         snapshot.subscriptions
             .sortedBy { s ->
@@ -291,51 +360,7 @@ public fun plansUi(snapshot: UsageSnapshot, refreshing: Boolean, nowMs: Long): P
                 if (windows.isEmpty()) 101.0
                 else windows.filter { it.leftPercent > 0 }.minOfOrNull { it.leftPercent } ?: 0.0
             }
-            .map { s ->
-                PlanCardUi(
-                    key = s.key,
-                    providerId = s.providerId,
-                    name = s.displayName,
-                    connection =
-                        if (s.showConnectionName)
-                            (s.readFrom ?: s.signedInOn.firstOrNull()?.connection)?.ui()
-                        else null,
-                    state = s.state,
-                    plan = s.planLabel,
-                    windows =
-                        s.windows
-                            .map { w ->
-                                PlanWindowUi(
-                                    w.kind,
-                                    w.label,
-                                    w.leftPercent.roundToInt().coerceIn(0, 100),
-                                    w.resetsAt?.toEpochMilliseconds(),
-                                    w.id,
-                                )
-                            }
-                            .toImmutableList(),
-                    fix = s.fix,
-                    fixConnection = s.fixConnection?.ui(),
-                    signedInOn =
-                        s.signedInOn
-                            .map {
-                                PlanSignInUi(
-                                    it.connection.ui(),
-                                    it.state,
-                                    it.online,
-                                    it.readsFromHere,
-                                )
-                            }
-                            .toImmutableList(),
-                    resetSince = s.resetSinceLastReading,
-                    fetchedAtMs = s.fetchedAt?.toEpochMilliseconds(),
-                    alertThreshold = s.alertThreshold.roundToInt(),
-                    checkedAtMs = s.checkedAt?.toEpochMilliseconds(),
-                    readFrom = s.readFrom?.ui(),
-                    hasAlertOverride = s.hasAlertOverride,
-                    notifyReset = s.notifyOnReset,
-                )
-            }
+            .map { it.planCard() }
     val keys =
         snapshot.apiKeyAccounts.map {
             PlanKeyUi(it.displayName, it.connection.ui(), it.viaOpenCode)
@@ -353,6 +378,33 @@ public fun plansUi(snapshot: UsageSnapshot, refreshing: Boolean, nowMs: Long): P
         snapshot.addable.toImmutableList(),
         refreshing,
         nowMs,
+    ).withAgents(agents)
+}
+
+/** Applies the phone agents' own state to cards whose reader found no numbers on this phone. */
+public fun PlansUi.withAgents(agents: Map<String, PlanAgentTruth>): PlansUi {
+    if (agents.isEmpty() && cards.none { it.agent != null }) return this
+    return copy(
+        cards =
+            cards
+                .map { card ->
+                    val speaksForPhone =
+                        card.readFrom?.isPhone
+                            ?: (card.signedInOn.isEmpty() ||
+                                card.signedInOn.any { it.connection.isPhone })
+                    val truth = agents[card.providerId]
+                    val agent =
+                        when {
+                            !speaksForPhone || card.windows.isNotEmpty() -> null
+                            card.state == SubscriptionState.NotSignedIn ->
+                                truth?.takeIf { it != PlanAgentTruth.SignedOut }
+                            card.state == SubscriptionState.NoLimits ->
+                                truth as? PlanAgentTruth.Limit
+                            else -> null
+                        }
+                    if (card.agent == agent) card else card.copy(agent = agent)
+                }
+                .toImmutableList()
     )
 }
 

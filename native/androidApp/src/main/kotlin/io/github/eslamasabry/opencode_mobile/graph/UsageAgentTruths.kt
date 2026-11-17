@@ -2,6 +2,7 @@ package io.github.eslamasabry.opencode_mobile.graph
 
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentRow
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentStatus
+import io.github.eslamasabry.oc.feature.plans.presentation.PlanAgentTruth
 import io.github.eslamasabry.oc.feature.usage.presentation.UsageAgentTruth
 
 /**
@@ -29,6 +30,16 @@ internal object UsageAgentTruths {
                         PhoneAgentStatus.Unavailable -> UsageAgentTruth.NotConfirmed(row.name)
                     }
                 if (truth != null) put(row.id, truth)
+            }
+        }
+
+    fun planOf(rows: List<PhoneAgentRow>): Map<String, PlanAgentTruth> =
+        of(rows).mapValues { (_, truth) ->
+            when (truth) {
+                UsageAgentTruth.SignedIn -> PlanAgentTruth.SignedIn
+                UsageAgentTruth.SignedOut -> PlanAgentTruth.SignedOut
+                is UsageAgentTruth.Limit -> PlanAgentTruth.Limit(truth.resets)
+                is UsageAgentTruth.NotConfirmed -> PlanAgentTruth.NotConfirmed(truth.agentName)
             }
         }
 }

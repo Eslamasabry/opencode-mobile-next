@@ -57,6 +57,7 @@ import io.github.eslamasabry.oc.engine.profiles.DeletionStep
 import io.github.eslamasabry.oc.engine.profiles.ProfileResourceCleaner
 import io.github.eslamasabry.oc.feature.plans.presentation.CollectorTarget
 import io.github.eslamasabry.oc.feature.plans.presentation.ComputerReaderUi
+import io.github.eslamasabry.oc.feature.plans.presentation.PlanAgentTruth
 import io.github.eslamasabry.oc.feature.plans.presentation.PlanCollectorUi
 import io.github.eslamasabry.oc.feature.plans.presentation.PlansSource
 import io.github.eslamasabry.opencode_mobile.UsageWidgetProvider
@@ -68,8 +69,11 @@ import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
@@ -120,6 +124,14 @@ class AndroidPlansSource(
     private val scope = CoroutineScope(appScope.coroutineContext)
     private val state = MutableStateFlow(UsageSnapshot())
     override val snapshot: StateFlow<UsageSnapshot> = state.asStateFlow()
+    override val agentTruths: StateFlow<Map<String, PlanAgentTruth>> =
+        phoneUsage.agentRows
+            .map { UsageAgentTruths.planOf(it.agents) }
+            .stateIn(
+                scope,
+                SharingStarted.Eagerly,
+                UsageAgentTruths.planOf(phoneUsage.agentRows.value.agents),
+            )
     private val creating = Mutex()
     private var engine: UsageSubscriptionsEngine? = null
     private var quota: PlansQuotaSource? = null
@@ -361,12 +373,18 @@ class AndroidPlansSource(
 
                 override fun paseoProfiles(): List<PaseoUsageProfile> =
                     registry.live.value
-                        .filterValues { it.session.server is ProviderUsageGateway }
+                        .filter { (id, graph) ->
+                            stores.isRemotePaseo(id, graph.profile.backend) &&
+                                graph.session.server is ProviderUsageGateway
+                        }
                         .map { (id, graph) -> PaseoUsageProfile(id.raw, graph.profile.name) }
 
-                override fun isReadable(profileId: String): Boolean =
-                    registry.live.value[ProfileId(profileId)]?.session?.server is
-                        ProviderUsageGateway
+                override fun isReadable(profileId: String): Boolean {
+                    val id = ProfileId(profileId)
+                    val graph = registry.live.value[id] ?: return false
+                    return stores.isRemotePaseo(id, graph.profile.backend) &&
+                        graph.session.server is ProviderUsageGateway
+                }
 
                 override suspend fun readServer(
                     profileId: String
@@ -413,12 +431,13 @@ class AndroidPlansSource(
             object : PaseoUsagePorts {
                 override fun paseoProfiles(): List<PaseoUsageProfile> =
                     stores.profiles.profiles.value
-                        .filter { it.profile.backend == BackendKind.Paseo }
+                        .filter { stores.isRemotePaseo(it) }
                         .map { PaseoUsageProfile(it.id.raw, it.profile.name) }
 
                 override fun isReadable(profileId: String): Boolean =
-                    stores.profiles.profile(ProfileId(profileId))?.profile?.backend ==
-                        BackendKind.Paseo
+                    stores.profiles.profile(ProfileId(profileId))?.let {
+                        stores.isRemotePaseo(it)
+                    } == true
 
                 override suspend fun readServer(
                     profileId: String
@@ -468,7 +487,10 @@ class AndroidPlansSource(
                             // AGENT-2: live daemons with a provider-usage call, the phone's own
                             // agents, the usage collectors and Codex reads.
                             registry.live.value
-                                .filterValues { it.session.server is ProviderUsageGateway }
+                                .filter { (id, graph) ->
+                                    stores.isRemotePaseo(id, graph.profile.backend) &&
+                                        graph.session.server is ProviderUsageGateway
+                                }
                                 .map { (id, graph) ->
                                     UsageConnection(
                                         id.raw,
@@ -596,7 +618,8 @@ class AndroidPlansSource(
 
     override fun supported(profile: ProfileId): Boolean {
         val graph = registry.savedGraph(stores, profile) ?: return false
-        return graph.session.server is ProviderUsageGateway
+        return stores.isRemotePaseo(profile, graph.profile.backend) &&
+            graph.session.server is ProviderUsageGateway
     }
 
     override fun state(profile: ProfileId): ProviderUsageMonitorState {
@@ -626,7 +649,7 @@ class AndroidPlansSource(
         val monitor = explicitMonitor ?: return
         monitorStates.value =
             stores.profiles.profiles.value
-                .filter { it.profile.backend == BackendKind.Paseo }
+                .filter { stores.isRemotePaseo(it) }
                 .associate { it.id to monitorState(it.id, monitor) }
     }
 
@@ -668,6 +691,8 @@ class AndroidPlansSource(
     override fun canAlert(): Boolean = true
 
     override fun phoneSignInOwner(): ProfileId? = phoneUsage.signInOwner()
+
+    override suspend fun checkPhoneAgents(): Unit = phoneUsage.refreshAgents()
 
     override suspend fun setAlertsOn(enabled: Boolean): Outcome<Unit> {
         val result = collectorUsage.setAlertsOn(enabled)

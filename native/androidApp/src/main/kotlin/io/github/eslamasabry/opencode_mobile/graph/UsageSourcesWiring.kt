@@ -163,7 +163,7 @@ class AndroidAdditionalUsageSources(
 
     fun connections(): List<UsageConnection> =
         stores.profiles.profiles.value
-            .filter { it.profile.backend == BackendKind.Paseo }
+            .filter { stores.isRemotePaseo(it) }
             .map { UsageConnection(it.id.raw, it.profile.name, UsageConnectionKind.PaseoServer) }
 
     override suspend fun read(context: UsageReadContext): Outcome<UsageSourceResult> {
@@ -176,6 +176,7 @@ class AndroidAdditionalUsageSources(
         for (saved in stores.profiles.profiles.value) {
             val id = saved.id
             if (saved.profile.backend == BackendKind.Paseo) {
+                if (!stores.isRemotePaseo(saved)) continue
                 val graph = registry.live.value[id]
                 val gateway = graph?.session?.server as? PaseoGateway
                 if (gateway == null || !gateway.transport.connected) {

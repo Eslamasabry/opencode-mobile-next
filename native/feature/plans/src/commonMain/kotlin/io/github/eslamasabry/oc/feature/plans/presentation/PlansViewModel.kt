@@ -50,8 +50,12 @@ public class PlansViewModel(
     private val keptPlans = MutableStateFlow(shelf?.peek())
 
     /** Nothing live yet (the first read is on its way): the last-seen cards, else the engine's own first state. */
-    private fun first(snapshot: io.github.eslamasabry.oc.engine.integrations.usage.UsageSnapshot, busy: Boolean, nowMs: Long): PlansUi {
-        val live = plansUi(snapshot, busy, nowMs)
+    private fun first(
+        snapshot: io.github.eslamasabry.oc.engine.integrations.usage.UsageSnapshot,
+        busy: Boolean,
+        nowMs: Long,
+    ): PlansUi {
+        val live = plansUi(snapshot, busy, nowMs, source.agentTruths.value)
         val was = keptPlans.value
         return if (live.phase == PlansPhase.Loading && was != null) was.frame(nowMs).copy(refreshing = busy) else live
     }
@@ -156,6 +160,7 @@ public class PlansViewModel(
                     readerFailed = failed,
                 )
             }
+            .combine(source.agentTruths) { ui, truths -> ui.withAgents(truths) }
             .stateIn(
                 viewModelScope,
                 SharingStarted.WhileSubscribed(5_000),
@@ -338,6 +343,15 @@ public class PlansViewModel(
 
     /** The visible Refresh bypasses reader cadence (AGENT-1); opening the page does not. */
     override fun refresh(): Unit = load(force = true)
+
+    override fun checkAgent() {
+        viewModelScope.launch {
+            source.checkPhoneAgents()
+            source.refresh(force = true)
+            collectors.value = source.collectors()
+            syncControls()
+        }
+    }
 
     private fun load(force: Boolean) {
         if (refreshing.value || controls.value.busy) return

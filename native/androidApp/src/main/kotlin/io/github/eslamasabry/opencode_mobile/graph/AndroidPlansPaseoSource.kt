@@ -86,7 +86,8 @@ internal class AndroidPlansPaseoSource(
     private fun <T> stale(): Outcome<T> = Failure.Refused(RefusalReason.StaleScope).failed()
 
     private fun currentGateway(id: ProfileId): PaseoGateway? {
-        if (id in blocked || stores.profiles.profile(id) == null) return null
+        val saved = stores.profiles.profile(id) ?: return null
+        if (id in blocked || !stores.isRemotePaseo(saved)) return null
         val graph = registry.live.value[id] ?: return null
         if (!graph.session.capabilities.value.hostAgentProviders) return null
         return graph.session.server as? PaseoGateway

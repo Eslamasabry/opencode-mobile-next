@@ -25,8 +25,9 @@ import io.github.eslamasabry.oc.engine.integrations.usage.ProviderUsageReading
 import io.github.eslamasabry.oc.engine.integrations.usage.parseProviderUsageList
 import io.github.eslamasabry.oc.engine.integrations.usage.withAntigravityUsage
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentStatus
-import io.github.eslamasabry.oc.feature.agents.hub.phoneAgentSignedOut
 import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgents
+import io.github.eslamasabry.oc.feature.agents.hub.PhoneAgentsState
+import io.github.eslamasabry.oc.feature.agents.hub.phoneAgentSignedOut
 import io.github.eslamasabry.oc.protocol.paseo.jsonOf
 import io.github.eslamasabry.oc.protocol.paseo.transport.PaseoTransport
 import io.github.eslamasabry.opencode_mobile.BuiltinLinux
@@ -82,6 +83,13 @@ class PhoneUsageReader(
 
     val supported: Boolean
         get() = Build.SUPPORTED_ABIS.any { it == "arm64-v8a" || it == "x86_64" }
+
+    val agentRows: kotlinx.coroutines.flow.StateFlow<PhoneAgentsState>
+        get() = phoneAgents.state
+
+    suspend fun refreshAgents() {
+        phoneAgents.refresh()
+    }
 
     fun signInOwner(): ProfileId? = if (supported) owner() else null
 

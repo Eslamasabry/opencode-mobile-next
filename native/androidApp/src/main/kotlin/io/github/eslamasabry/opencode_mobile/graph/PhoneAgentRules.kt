@@ -1,6 +1,7 @@
 package io.github.eslamasabry.opencode_mobile.graph
 
 import io.github.eslamasabry.oc.core.domain.capabilities.ServerCapabilities
+import io.github.eslamasabry.oc.core.model.BackendKind
 import io.github.eslamasabry.oc.engine.agents.AgentId
 import io.github.eslamasabry.oc.engine.agents.catalog.AgentArchitecture
 import io.github.eslamasabry.oc.engine.agents.catalog.AgentDescriptor
@@ -118,6 +119,13 @@ internal object PhoneAgentRules {
      */
     fun isHelperProfile(id: String, savedOwner: String?): Boolean =
         savedOwner != null && Regex("[A-Za-z0-9_-]{1,80}").matches(savedOwner) && id == "$savedOwner-agents"
+
+    /**
+     * Whether saved server [id] is a remote Paseo server rather than this phone's own helper profile (`<owner>-agents`),
+     * which `PhoneUsageReader` (`PHONE_ID`) already represents in Usage.
+     */
+    fun isRemotePaseoProfile(id: String, backend: BackendKind, savedOwner: String?): Boolean =
+        backend == BackendKind.Paseo && !isHelperProfile(id, savedOwner)
 
     /**
      * The saved "This phone" server that helper [id] belongs to, or null when [id] is not the helper or no such phone is
