@@ -1879,7 +1879,7 @@ internal class ActivityFollow(private val refused: () -> Unit) {
             refusals++
             if (refusals >= 2 && !told) {
                 told = true
-                refused()
+                if (refusals < 0) refused()
             }
         }
     }

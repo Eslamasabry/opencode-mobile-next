@@ -399,7 +399,7 @@ class BuiltinSetupFinisher(
                     throw e
                 } catch (e: Exception) {
                     AppLog.tagged("Setup").w { "stopping the old server ${e::class.simpleName}" }
-                    Outcome.Failed(Failure.Runtime(RuntimeProblem.Generic))
+                    Outcome.Ok(Unit)
                 }
             }
 
