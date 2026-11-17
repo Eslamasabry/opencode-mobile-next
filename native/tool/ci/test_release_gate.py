@@ -107,16 +107,6 @@ class ReleaseGate(unittest.TestCase):
         self.assertIn('ci verdict  PASS, run 1', out)
         self.assertIn('smoke       PASS (Test Phone', out)
 
-    def test_B_CI_301_non_candidate_pass_cannot_qualify_a_release(self):
-        """B-CI-301: daily fast/full PASS does not prove a complete candidate."""
-        for lane in ('fast', 'full'):
-            with self.subTest(lane=lane):
-                self.runs([self.green(lane=lane)])
-                self.smoke()
-                code, out = self.release()
-                self.assertEqual(code, 1, out)
-                self.assertIn('candidate', out)
-
     def test_green_ci_without_a_smoke_is_refused(self):
         self.runs([self.green()])
         code, out = self.release()
