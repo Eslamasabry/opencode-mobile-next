@@ -440,4 +440,57 @@ class PrivacyNoticeSyncTest {
         assertTrue(HealthContract.contractEvents.values.flatten().contains("app_exit"), "What we collect names the event")
     }
 
+    private val voiceOverclaims = listOf(
+        "so the audio stays on this phone",
+        "so recorded audio stays on the phone",
+        "فيبقى الصوت على هذا الهاتف",
+        "el audio se queda en este teléfono",
+        "l'audio reste sur ce téléphone",
+        "audio tetap di ponsel ini",
+        "外に出ることはありません",
+        "o áudio fica neste celular",
+        "аудио остаётся на этом телефоне",
+        "âm thanh vẫn ở trên điện thoại này",
+        "音频保留在这部手机上",
+    )
+
+    @Test
+    fun `B-SEC-213 privacy policy, What we collect and voice settings name both voice paths truthfully in every offered language`() {
+        val md = section(File(repo, "PRIVACY.md").readText(), "Microphone and local voice input")
+        val mdFacts = listOf(
+            "huggingface.co",
+            "never leaves the phone",
+            "createOnDeviceSpeechRecognizer",
+            "Android 12",
+            "EXTRA_PREFER_OFFLINE",
+            "privacy terms apply",
+        )
+        for (fact in mdFacts) {
+            assertTrue(fact in md, "PRIVACY.md voice section must name '$fact'")
+        }
+        val wiring = File(repo, "native/androidApp/src/main/kotlin/io/github/eslamasabry/opencode_mobile/graph/VoiceWiring.kt").readText()
+        assertTrue("SpeechRecognizer.createOnDeviceSpeechRecognizer(" in wiring, "fallback voice uses createOnDeviceSpeechRecognizer")
+        assertTrue("RecognizerIntent.EXTRA_PREFER_OFFLINE" in wiring, "fallback voice sets EXTRA_PREFER_OFFLINE")
+        assertTrue("SpeechRecognizer.createSpeechRecognizer(" !in wiring, "fallback voice never uses the default speech recognizer")
+        val kdocPath = "native/engine/voice/src/commonMain/kotlin/io/github/eslamasabry/oc/engine/voice/dictation/OnDeviceSpeech.kt"
+        val kdoc = File(repo, kdocPath).readText()
+        assertTrue("so recorded audio stays on the phone" !in kdoc, "OnDeviceSpeech KDoc must not overclaim for the system fallback")
+        val resources = File(repo, "native/ui/words/src/commonMain/composeResources")
+        for (tag in AppLanguage.entries.mapNotNull { it.tag }) {
+            val locale = File(resources, if (tag == "en") "values" else "values-$tag")
+            val policy = xmlStrings(File(locale, "strings_native_privacy.xml")).getValue("nativeBundledPrivacy")
+            val never = xmlStrings(File(locale, "strings_s28_privacy.xml")).getValue("collectNever")
+            val voice = xmlStrings(File(locale, "strings_voice_native.xml")).getValue("voiceNativePhoneEngine")
+            assertTrue("huggingface.co" in policy && "createOnDeviceSpeechRecognizer" in policy && "Android 12" in policy,
+                "${locale.name}: nativeBundledPrivacy must name both voice paths")
+            assertTrue("huggingface.co" in never && "createOnDeviceSpeechRecognizer" in never && "Android 12" in never,
+                "${locale.name}: collectNever on What we collect must name both voice paths")
+            assertTrue("createOnDeviceSpeechRecognizer" in voice && "Android 12" in voice,
+                "${locale.name}: voiceNativePhoneEngine must name Android's on-device recognizer")
+            for (overclaim in voiceOverclaims) {
+                assertTrue(overclaim !in voice, "${locale.name}: voiceNativePhoneEngine must not overclaim '$overclaim'")
+            }
+        }
+    }
+
 }
