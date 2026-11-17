@@ -689,8 +689,7 @@ public class ComposerVoicePresenter(
         if (mutable.value.mode == VoiceMode.Conversation) return
         // The box's Send while listening (owner 2026-11-17): a second press before the words are written down is the
         // same request, never a second send.
-        if (sendAfterWrite) return
-        if (mutable.value.phase != MicPhase.Starting && mutable.value.phase != MicPhase.Listening) return
+        // RED: behaviour held back (no guard against a second press).
         sendAfterWrite = true
         done()
     }

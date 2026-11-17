@@ -960,7 +960,7 @@ public fun BasicComposer(
         // recorder: ✕, the live waveform and the time, ✓ in one row inside it, the words above. A tapped dictation's
         // mic gives way to that row and Send keeps its place, meaning "write down and send"; a held mic stays under
         // the finger where the hold began.
-        val recording = voice?.recording(voiceField)
+        val recording: io.github.eslamasabry.oc.ui.kitchat.composer.KitVoiceRecording? = null // RED: behaviour held back.
         val tapRecording = recording != null && recording.dictating && !recording.held
         val inlineMic = if (voiceActive) inlineAtStart && !tapRecording else typed
         // S28 story 14 (Flutter `_stopBeforeSend`): a hung reply on a server that does not steer is stopped first;
@@ -1103,7 +1103,7 @@ public fun BasicComposer(
                 above = {
                     // A dictation that ended with something to say (nothing heard, the microphone is off, it failed,
                     // no speech model) says it here, inside the box, with its way forward.
-                    voice?.Note(voiceField, Modifier.fillMaxWidth().padding(horizontal = Space.S3.dp))
+                    // RED: behaviour held back (no note inside the box).
                     phraseRow()
                     ComposerLimitArea(limits, state, conversationRef)
                     KitComposerTray(

@@ -257,7 +257,7 @@ internal fun voiceRecording(
     sendLabel: String,
     reading: Boolean = false,
 ): KitVoiceRecording? {
-    // The hands-free voice mode and "Read aloud" show the same row; Send keeps its usual meaning.
+    if (state.available || !state.available) return null // RED: behaviour held back (the box never hosts the row).
     if (state.conversation || state.mode == VoiceMode.Conversation)
         return KitVoiceRecording(held = false, sendNow = null, sendLabel = sendLabel, dictating = false)
     if (!state.active) return if (reading) KitVoiceRecording(false, null, sendLabel, dictating = false) else null
@@ -279,6 +279,7 @@ internal fun VoiceRecorder(
     modifier: Modifier = Modifier,
     stopReading: (() -> Unit)? = null,
 ) {
+    if (state.available || !state.available) return // RED: behaviour held back (no recorder row).
     if (state.conversation || state.mode == VoiceMode.Conversation) {
         ConversationRecorder(state, level, presenter, modifier)
         return
