@@ -330,6 +330,20 @@ class PrivacyNoticeSyncTest {
         }
         assertTrue(sentence in File(repo, "README.md").readText() && sentence in stores.getValue("en-US") && sentence in site, "the true sentence is used in README, the English store text and the site")
         assertTrue(arabic in stores.getValue("ar"), "the Arabic store text uses the true sentence")
+        // Public launch drafts and docs must not deny analytics either (the app can send usage and crash reports once switched on).
+        val denial = Regex(
+            "(?i)\\bno\\s+(ads,?\\s+|ads\\s+or\\s+)?(analytics|tracking|telemetry)|analytics\\s+or\\s+accounts|ads,\\s+analytics|automatic\\s+crash\\s+upload",
+        )
+        val marketing = File(repo, "marketing/launch-2026-10").listFiles { f -> f.name.endsWith(".md") }!!
+            .map { "marketing/launch-2026-10/${it.name}" }
+            // IZZYONDROID.md rows 50 and 70 are the dated findings of an earlier build's audit, kept as history.
+            .filter { !it.endsWith("IZZYONDROID.md") }
+        for (path in marketing + listOf("README.md", "llms.txt", "docs/site/index.html", "PRIVACY.md")) {
+            assertTrue(denial.find(File(repo, path).readText()) == null, "$path must not say the app has no analytics or no automatic crash upload")
+        }
+        val izzy = File(repo, "marketing/launch-2026-10/IZZYONDROID.md").readLines()[121]
+        assertTrue(denial.find(izzy) == null, "the IZZYONDROID.md submission blurb must not deny analytics")
+        assertTrue("Umami" in File(repo, "README.md").readText(), "README names the Umami receiver beside Google")
     }
 
     @Test
