@@ -49,14 +49,15 @@ class SecGatesPlantedTest {
     // ---- FileProviderPathsTest
     private val pathsPlan = """
         <paths>
-            <external-path name="shared_storage" path="." />
+            <external-path name="phone-shared" path="." />
+            <external-path name="phone-shared-storage" path="." />
             <files-path name="camera" path="camera-capture-v1/" />
-            <cache-path name="share" path="share/" />
+            <cache-path name="open-with" path="open-with/" />
         </paths>
     """.trimIndent()
 
     @Test
-    fun `FileProviderPathsTest passes the plan's three roots`() = assertClean(FileProviderPaths.check(pathsPlan), "plan 16 §1.8.3 file")
+    fun `FileProviderPathsTest passes the four reviewed app roots`() = assertClean(FileProviderPaths.check(pathsPlan), "plan 16 §1.8.3 file")
 
     @Test
     fun `FileProviderPathsTest fails on planted root-path, whole filesDir, a missing root and a duplicate`() {
@@ -64,10 +65,10 @@ class SecGatesPlantedTest {
             listOf(
                 pathsPlan.replace("</paths>", "<root-path name=\"all\" path=\"\" /></paths>"),
                 pathsPlan.replace("path=\"camera-capture-v1/\"", "path=\".\""),
-                pathsPlan.replace("<cache-path name=\"share\" path=\"share/\" />", "<cache-path name=\"share\" path=\"/\" />"),
-                pathsPlan.replace("<cache-path name=\"share\" path=\"share/\" />", ""),
+                pathsPlan.replace("<cache-path name=\"open-with\" path=\"open-with/\" />", "<cache-path name=\"share\" path=\"/\" />"),
+                pathsPlan.replace("<cache-path name=\"open-with\" path=\"open-with/\" />", ""),
                 pathsPlan.replace("</paths>", "<external-files-path name=\"x\" path=\".\" /></paths>"),
-                pathsPlan.replace("</paths>", "<cache-path name=\"share\" path=\"share/\" /></paths>"),
+                pathsPlan.replace("</paths>", "<cache-path name=\"open-with\" path=\"open-with/\" /></paths>"),
             )
         planted.forEachIndexed { i, xml -> assertTrue(ids(FileProviderPaths.check(xml)).contains("FP-SHAPE"), "planted paths #$i passed") }
     }
@@ -90,8 +91,8 @@ class SecGatesPlantedTest {
             <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
         </receiver>
         <receiver android:name=".ScheduledPromptReceiver" android:exported="false" />
-        <provider android:name="androidx.core.content.FileProvider" android:authorities="${'$'}{applicationId}.localfiles" android:exported="false" android:grantUriPermissions="true">
-            <meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/local_file_paths" />
+        <provider android:name="androidx.core.content.FileProvider" android:authorities="${'$'}{applicationId}.files" android:exported="false" android:grantUriPermissions="true">
+            <meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/oc_files_paths" />
         </provider>
     """
 
@@ -103,7 +104,7 @@ class SecGatesPlantedTest {
         val cases =
             mapOf(
                 "SURFACE-EXPORTED" to manifest(mainOk.replace(".ScheduledPromptReceiver\" android:exported=\"false\"", ".ScheduledPromptReceiver\" android:exported=\"true\"")),
-                "SURFACE-PROVIDER" to manifest(mainOk.replace("android:authorities=\"\${applicationId}.localfiles\" android:exported=\"false\"", "android:authorities=\"\${applicationId}.localfiles\" android:exported=\"true\"")),
+                "SURFACE-PROVIDER" to manifest(mainOk.replace("android:authorities=\"\${applicationId}.files\" android:exported=\"false\"", "android:authorities=\"\${applicationId}.files\" android:exported=\"true\"")),
                 "SURFACE-MAIN-TASKAFFINITY" to manifest(mainOk.replace(" android:taskAffinity=\"\"", "")),
                 "SURFACE-MAIN-LAUNCHMODE" to manifest(mainOk.replace("singleTop", "standard")),
                 "SURFACE-EXPLICIT" to manifest(mainOk.replace("<receiver android:name=\".AttentionWidget\" android:exported=\"true\">", "<receiver android:name=\".AttentionWidget\">")),
@@ -132,6 +133,17 @@ class SecGatesPlantedTest {
         assertClean(Pending.apply(f, setOf("SURFACE-MAIN-TASKAFFINITY"), ExportedSurface.IDS), "listed finding")
         assertEquals(1, Pending.apply(emptyList(), setOf("SURFACE-MAIN-TASKAFFINITY"), ExportedSurface.IDS).size)
         assertEquals(1, Pending.apply(f, emptySet(), ExportedSurface.IDS).size)
+    }
+
+    @Test
+    fun `QaHooksAbsentTest release artifact must contain a callable no-op and no real qa kill or delay code`() {
+        val path = "io/github/eslamasabry/oc/android/migration/StepInterrupters.class"
+        val stub = "forBuild getNone StepInterrupter".toByteArray()
+        assertClean(QaHooks.checkReleaseClasses(mapOf(path to stub)), "release no-op")
+        assertTrue(QaHooks.checkReleaseClasses(emptyMap()).isNotEmpty(), "a missing artifact cannot pass")
+        assertTrue(QaHooks.checkReleaseClasses(mapOf(path to ("forBuild getNone StepInterrupter killProcess".toByteArray()))).isNotEmpty())
+        assertTrue(QaHooks.checkReleaseClasses(mapOf(path to stub, "p/QaStepInterrupter.class" to byteArrayOf())).isNotEmpty())
+        assertTrue(QaHooks.checkReleaseClasses(mapOf(path to "forBuild QaStepInterrupter".toByteArray())).isNotEmpty())
     }
 
     // ---- TlsFloorTest

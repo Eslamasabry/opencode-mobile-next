@@ -217,9 +217,9 @@ if $BUILD; then
   (cd "$NATIVE" && ./gradlew --console=plain "-Poc.publicRelease=$public_flag" :androidApp:assembleSwitchRelease :androidApp:lintSwitchRelease \
     :androidApp:testSwitchDebugUnitTest "${android_tests[@]}") >"$OUT/gradle.log" 2>&1 ||
     fail "the build or a gate failed; see $OUT/gradle.log$($GO && echo " (the bump commit is local: push it to keep the number spent, never reuse it)")"
-  say "  gate        :quality:test with the merged switch-release manifest (component freeze)"
-  (cd "$NATIVE" && ./gradlew --console=plain "-Poc.publicRelease=$public_flag" :quality:test -Poc.mergedManifest=required) >>"$OUT/gradle.log" 2>&1 ||
-    fail ":quality:test failed; see $OUT/gradle.log"
+  say "  gate        :quality:test and :quality:secTest with the merged switch-release manifest (component freeze)"
+  (cd "$NATIVE" && ./gradlew --console=plain "-Poc.publicRelease=$public_flag" :quality:test :quality:secTest -Poc.mergedManifest=required) >>"$OUT/gradle.log" 2>&1 ||
+    fail "quality/security gates failed; see $OUT/gradle.log"
   apk_dir="$NATIVE/androidApp/build/outputs/apk/switch/release"
   for abi in arm64-v8a x86_64 universal; do
     src="$(find "$apk_dir" -maxdepth 1 -name "*-$abi-release.apk" | head -n 1)"

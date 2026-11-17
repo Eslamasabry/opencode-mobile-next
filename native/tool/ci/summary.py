@@ -142,7 +142,7 @@ if lane.split(' ')[0] in ('fast', 'full'):
         if env(key) in (None, '', 'skipped', 'cancelled'):
             integrity.append(f'{label}: the job did not run in a {lane.split(" ")[0]} lane run (did the plan job fail?)')
 for s in shards:
-    if s.get('job_status') == 'failure' or s.get('pick_outcome') in ('failure', 'skipped', 'cancelled'):
+    if (s.get('job_status') == 'failure' and not s.get('gradle_ran')) or s.get('pick_outcome') in ('failure', 'skipped', 'cancelled'):
         integrity.append(f'{s["name"]}: the shard job did not get as far as running Gradle (setup {s.get("pick_outcome") or "unknown"}, job {s.get("job_status") or "unknown"})')
     elif s.get('planned') and not s.get('gradle_ran', True):
         integrity.append(f'{s["name"]}: Gradle never ran although {len(s["planned"])} task(s) were planned (no task or BUILD line in the log)')
@@ -153,7 +153,21 @@ for key, label, rep in (('RESULT_COMPILE', 'compile', compile_), ('RESULT_APK', 
         elif rep.get('failed') and rep.get('gradle_ran') is False:
             integrity.append(f'{label}: Gradle never ran (nothing started, for instance a failed distribution download)')
 
+# Security is required by every normal lane, and by custom full quality/security checkpoints.
+security_facts = [shard.get('security', {}) for shard in shards]
+selected_quality = any(':quality:test' in shard.get('planned', []) for shard in shards)
+selected_security = any(':quality:secTest' in shard.get('planned', []) for shard in shards)
+security_required = lane.split(' ')[0] in ('fast', 'full') or selected_quality or (selected_security and any(f.get('full') for f in security_facts))
+security_ran = any(f.get('executed') and f.get('full') and f.get('tests', 0) > 0 for f in security_facts)
+security_bad = any(f.get('failed', 0) or f.get('skipped', 0) for f in security_facts)
+if security_required:
+    rows.append(('security suite', 'executed' if security_ran else 'NOT PROVED'))
+    if not security_ran:
+        integrity.append('security suite: no executed full :quality:secTest report for this run')
+
 reasons = []
+if security_required and security_bad:
+    reasons.append("security suite has failing or skipped assertions")
 for key, label, rep in (('RESULT_COMPILE', 'compile', compile_), ('RESULT_APK', 'apk', apk), ('RESULT_RECORD', 'goldens', record), ('RESULT_CUSTOM', 'custom tasks', custom)):
     if env(key) in ('failure', 'cancelled') or rep.get('failed'):
         reasons.append(f'{label} job failed')

@@ -50,8 +50,8 @@ for bf in */*/build.gradle.kts androidApp/build.gradle.kts desktopApp/build.grad
 done
 [ "${#sel[@]}" -le "$max" ] || all "${#sel[@]} modules selected (limit $max)"
 
-# Keep only modules that have a desktop-test task (same discovery as shard_tasks.sh). :quality (Konsist, ~9 minutes)
-# runs only when it changed or depends on a changed module; otherwise it belongs to the full lane.
+# Keep only modules with a discovered test task. Quality/security always run in the dedicated fast-lane shard;
+# when quality is selected here, retain both tasks so every consumer sees their paired contract.
 mapfile -t known < <(tool/ci/shard_tasks.sh 0 1)
 out=()
 for t in "${known[@]}"; do

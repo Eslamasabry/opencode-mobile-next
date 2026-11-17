@@ -18,7 +18,7 @@ class SecGatesTest {
         assertClean(Pending.apply(NetworkSecurityConfig.checkTree(root), pending, NetworkSecurityConfig.IDS), "NetworkSecurityConfigTest")
 
     @Test
-    fun `FileProviderPathsTest - exactly the three roots`() =
+    fun `FileProviderPathsTest - exactly the four reviewed app roots`() =
         assertClean(Pending.apply(FileProviderPaths.checkTree(root), pending, FileProviderPaths.IDS), "FileProviderPathsTest")
 
     @Test
@@ -40,7 +40,7 @@ class SecGatesTest {
     fun `QaHooksAbsentTest - no qa source wired into release, no qa class or marker in production`() {
         val findings = QaHooks.checkBuildScripts(SecTree.buildScripts(root)) +
             QaHooks.checkSources(Live.files, File(root, "version.properties").readText())
-        assertClean(findings, "QaHooksAbsentTest")
+        assertClean(findings + QaHooks.checkReleaseAar(File(root, "android/migration/build/outputs/aar/migration-release.aar")), "QaHooksAbsentTest")
     }
 
     @Test

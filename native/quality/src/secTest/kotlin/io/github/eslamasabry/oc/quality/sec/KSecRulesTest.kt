@@ -12,14 +12,16 @@ class KSecRulesTest {
 
     /** Live hits minus the reported ones in `ksec-pending.txt`; a pending key of this rule that no longer fires fails. */
     private fun assertClean(violations: List<Violation>, rule: String) {
-        val open = violations.filterNot { it.key in config.ksecPending }
+        val unowned = violations.filterNot { it.key in config.ksecPending }
+        val tracked = TrackedSecurityFailures.read(java.io.File(Live.root, "quality/config/sec/tracked-security.txt"))
+        val open = TrackedSecurityFailures.remaining(unowned, rule, tracked)
         val stale = config.ksecPending.filter { it.startsWith("$rule ") && violations.none { v -> v.key == it } }.map { "$it: fixed, remove it from ksec-pending.txt" }
         io.github.eslamasabry.oc.quality.sec.assertClean(open + stale, rule)
     }
 
     @Test fun `K-SEC-1 no autoLink or Linkify, LocalUriHandler provided only at the shell root`() = assertClean(SecTextRules.kSec1(files), "K-SEC-1")
 
-    @Test fun `K-SEC-2 custom TLS trust only in core net-okhttp`() = assertClean(SecTextRules.kSec2(files), "K-SEC-2")
+    @Test fun `K-SEC-2 custom TLS trust only in the reviewed core net TrustGate`() = assertClean(SecTextRules.kSec2(files), "K-SEC-2")
 
     @Test fun `K-SEC-3 no certificate pinner, logging interceptor, Ktor Logging, retry or redirect`() = assertClean(SecTextRules.kSec3(files), "K-SEC-3")
 
@@ -31,7 +33,7 @@ class KSecRulesTest {
 
     @Test fun `K-SEC-6 clipboard writes use the kit boundary and explicit preview mode`() = assertClean(SecTextRules.kSec6(files), "K-SEC-6")
 
-    @Test fun `K-SEC-7 every PendingIntent is FLAG_IMMUTABLE outside the three reviewed files`() = assertClean(SecTextRules.kSec7(files, config), "K-SEC-7")
+    @Test fun `K-SEC-7 every PendingIntent is immutable except reviewed platform contracts`() = assertClean(SecTextRules.kSec7(files, config), "K-SEC-7")
 
     @Test fun `K-SEC-8 no parseUri, getIntent or relaunched intents from extras`() = assertClean(SecTextRules.kSec8(files), "K-SEC-8")
 

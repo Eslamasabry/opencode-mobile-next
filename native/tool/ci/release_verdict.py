@@ -6,7 +6,7 @@
 Looks at the completed Native CI runs for exactly that commit, newest first, and reads each run's `ci-verdict` artifact:
 the small verdict.json the summary job writes next to the run summary (summary.py's exit code, never a job colour).
 The newest run that counts decides. A run counts only when it was a fast or full lane run (push runs are full) that
-compiled, ran the desktop tests AND the Android library unit tests; a tasks-only, apk-only, goldens or no-Android-tests
+compiled, ran the desktop tests AND the Android library unit tests, with an executed passing full security suite; a tasks-only, apk-only, goldens or no-Android-tests
 run says nothing about a release and is skipped, so is a run from before the artifact existed. Older green runs never
 rescue a newer red one. Uses `gh` as the person running it (OC_GH overrides the binary); no token is read or printed.
 Prints one line naming the run it used.
@@ -49,6 +49,10 @@ for r in runs:
         skipped.append(f'{rid}: {lane} run')
     elif not (v.get('compile') and v.get('desktop_tests') and v.get('android_unit')):
         skipped.append(f'{rid}: {lane} run without the compile, desktop or Android unit tests')
+    elif v.get('security') is not True:
+        print(f'release verdict: FAIL, the newest counting run {rid} ({lane} lane) has no executed passing full security suite '
+              '(older green runs do not count)')
+        sys.exit(1)
     elif v.get('exit') == 0:
         print(f'release verdict: PASS, run {rid} ({lane} lane, with the Android unit tests)')
         sys.exit(0)

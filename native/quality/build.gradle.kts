@@ -165,6 +165,10 @@ testing {
                     // The security declaration scan parses the same live tree as the full quality gate.
                     maxHeapSize = "2g"
                     maxParallelForks = 1
+                    dependsOn(":android:migration:bundleReleaseAar")
+                    // Security evidence must be executed for this checkout, never recovered from a worker cache.
+                    outputs.upToDateWhen { false }
+                    outputs.cacheIf { false }
                     inputs.files(fileTree(rootDir) {
                         include("**/src/**/*.kt", "**/src/**/*.xml", "**/build.gradle.kts", "build-logic/**/*.kt", "quality/config/**",
                             "gradle/libs.versions.toml", "version.properties", "androidApp/lint.xml")
@@ -181,3 +185,23 @@ testing {
     }
 }
 tasks.named("check") { dependsOn("secTest") }
+
+// Every full architecture checkpoint includes the independently reported security suite.
+tasks.test { dependsOn("secTest") }
+
+// The CI planner runs these too; expose the same self-tests to the remote custom-task wrapper.
+tasks.register<Exec>("ciGateSelfTest") {
+    group = "verification"
+    workingDir(rootDir)
+    commandLine("python3", "-I", "tool/ci/test_gate.py")
+}
+tasks.register<Exec>("releaseGateSelfTest") {
+    group = "verification"
+    workingDir(rootDir)
+    commandLine("python3", "-I", "tool/ci/test_release_gate.py")
+}
+tasks.register<Exec>("releaseToolsSelfTest") {
+    group = "verification"
+    workingDir(rootDir)
+    commandLine("bash", "tool/release/test/run_tests.sh")
+}

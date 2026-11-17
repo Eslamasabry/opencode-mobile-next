@@ -32,9 +32,9 @@ else:
 '''
 
 
-def verdict(sha, exit_=0, lane='fast', android=True, custom=False):
+def verdict(sha, exit_=0, lane='fast', android=True, custom=False, security=True):
     return {'sha': sha, 'lane': lane, 'exit': exit_, 'android_unit': android, 'desktop_tests': True, 'compile': True,
-            'custom_tasks': custom}
+            'custom_tasks': custom, 'security': security}
 
 
 class ReleaseGate(unittest.TestCase):
@@ -145,6 +145,22 @@ class ReleaseGate(unittest.TestCase):
         code, out = self.release()
         self.assertEqual(code, 1, out)
         self.assertIn('no fast or full lane run with the Android unit tests', out)
+
+    def test_a_red_security_suite_refuses_release_even_if_the_aggregate_exit_says_green(self):
+        self.runs([self.green(security=False)])
+        self.smoke()
+        code, out = self.release()
+        self.assertEqual(code, 1, out)
+        self.assertIn('security', out)
+
+    def test_a_newer_missing_security_fact_cannot_fall_back_to_an_older_green_run(self):
+        missing = verdict(self.sha)
+        del missing['security']
+        self.runs([self.green(), {'id': 2, 'createdAt': '2026-01-02T10:00:00Z', 'verdict': missing}])
+        self.smoke()
+        code, out = self.release()
+        self.assertEqual(code, 1, out)
+        self.assertIn('security', out)
 
     def test_a_tasks_only_run_is_skipped_but_an_older_full_run_still_counts(self):
         self.runs([self.green(), {'id': 2, 'createdAt': '2026-01-02T10:00:00Z', 'verdict': verdict(self.sha, exit_=1, lane='custom tasks', custom=True)}])
