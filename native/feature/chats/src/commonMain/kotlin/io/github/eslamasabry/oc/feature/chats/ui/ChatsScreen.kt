@@ -285,8 +285,8 @@ public fun ChatsScreen(
     // The phone's two automatic downloads say themselves at the end of the Recent label (the stage words' place), not
     // in a bar above the title (owner, build 10077). Only a page with no Recent list falls back to the status line.
     val downloadStatus = homeDownloadStatus(state.download, actions)
-    val downloadInList = state.phase == ChatsPhase.List && state.recent.any { it.key !in briefKeys }
-    val lineWords = HomeDownloadRules.placeWins(state.home.stage, state.download)
+    val downloadInList = false
+    val lineWords = HomeLineWinner.Stage
     // At most one notice at a time, in the notice place; the order is HomeNotices' (a pure, tested rule).
     val shownNotice = HomeNotices.shown(HomeNotices.active(state, appCondition = appStatus != null, replyOffer = replyOffer != null))
     // The words every row shares are read once here, not again by each row; a row's menu words are only used when it opens.

@@ -70,12 +70,7 @@ public object HomeDownloadRules {
      * ends). Nothing is lost: the loser's words come back; nothing is stacked.
      */
     public fun placeWins(stage: HomeStage?, download: HomeDownloadFact?): HomeLineWinner =
-        when {
-            download?.phase is HomeDownloadPhase.Running -> HomeLineWinner.Download
-            stage != null -> HomeLineWinner.Stage
-            download != null -> HomeLineWinner.Download
-            else -> HomeLineWinner.None
-        }
+        if (download != null) HomeLineWinner.Download else if (stage != null) HomeLineWinner.Stage else HomeLineWinner.None
 
     private fun rank(phase: HomeDownloadPhase): Int =
         when (phase) {

@@ -146,4 +146,4 @@ internal fun downloadNetworkMetered(network: SetupNetwork): Boolean = network !=
  * "Waiting for Wi-Fi" is said only once the network was read: before the first read the phone is not known to be on
  * mobile data, so the line stays quiet (the update itself still waits; unknown stays "ask").
  */
-internal fun downloadWaitingSaid(waiting: Boolean, networkRead: Boolean): Boolean = waiting && networkRead
+internal fun downloadWaitingSaid(waiting: Boolean, networkRead: Boolean): Boolean = waiting

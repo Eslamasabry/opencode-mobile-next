@@ -52,14 +52,6 @@ public object SetupNetworkRules {
     public fun classify(facts: NetworkFacts?): SetupNetwork {
         if (facts == null || !facts.hasManager) return SetupNetwork.Unknown
         if (!facts.hasActiveNetwork || !facts.internet) return SetupNetwork.Offline
-        if (facts.vpn) {
-            // Decide by the network that really carries the traffic. Several: all of them must be free.
-            val carriers = facts.underlying.orEmpty().filter { it.internet }
-            if (carriers.isNotEmpty()) {
-                if (!facts.validated && carriers.none { it.validated }) return SetupNetwork.Unknown
-                return if (carriers.all { it.notMetered && !it.cellular }) SetupNetwork.Unmetered else SetupNetwork.Metered
-            }
-        }
         if (!facts.validated) return SetupNetwork.Unknown
         if (facts.cellular) return SetupNetwork.Metered
         if (facts.vpn) {
