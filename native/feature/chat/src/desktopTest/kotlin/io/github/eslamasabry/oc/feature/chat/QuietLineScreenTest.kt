@@ -31,6 +31,7 @@ import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kitchat.LocalKitRedactor
 import io.github.eslamasabry.oc.ui.kitchat.turn.SWEEP_TAG
 import java.io.File
+import java.util.Locale
 import javax.imageio.ImageIO
 import kotlinx.collections.immutable.persistentListOf
 import kotlin.test.Test
@@ -50,7 +51,14 @@ class QuietLineScreenTest {
             }
         }
     }
-    private fun check(locale: String, scale: Float, motion: MotionLevel): Unit = runDesktopComposeUiTest(360, 800) {
+    private fun check(locale: String, scale: Float, motion: MotionLevel) {
+        val beforeLocale = Locale.getDefault()
+        try {
+            Locale.setDefault(Locale.forLanguageTag(locale))
+            render(locale, scale, motion)
+        } finally { Locale.setDefault(beforeLocale) }
+    }
+    private fun render(locale: String, scale: Float, motion: MotionLevel): Unit = runDesktopComposeUiTest(360, 800) {
         val scene = ChatScene()
         val state = scene.live().copy(status = null, rows = persistentListOf(prompt("t", "Explain this carefully")), live = LiveTurnUi(false))
         var facts by mutableStateOf(TurnFactsUi(nowMs = 72_000, runStartedAtMs = 0, live = LiveNoticeUi.Stall(TurnStallNotice.ModelSlow)))
