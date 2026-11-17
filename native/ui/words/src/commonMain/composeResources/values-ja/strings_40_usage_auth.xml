@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="m40AuthTitle">%1$sにサインイン</string>
+    <string name="m40AuthBack">戻る</string>
+    <string name="m40AuthWorking">処理中…</string>
+    <string name="m40AuthPlaces">どこでサインインしますか？</string>
+    <string name="m40AuthBest">ここでは使用状況を読み取る準備ができています。</string>
+    <string name="m40AuthServer">サインインはこのサーバーに保存されます。</string>
+    <string name="m40AuthPhone">このスマートフォン</string>
+    <string name="m40AuthMethods">サインイン方法を選択</string>
+    <string name="m40AuthNoPlace">サインインできる場所がありません</string>
+    <string name="m40AuthNoPlaceBody">OpenCodeサーバーを追加するか、このスマートフォンにこのプロバイダーのエージェントをインストールしてください。</string>
+    <string name="m40AuthUnavailable">ここではサインインを利用できません</string>
+    <string name="m40AuthUnavailableBody">この接続は、このプロバイダーに対応するサインイン方法を提供していません。</string>
+    <string name="m40AuthKey">APIキー</string>
+    <string name="m40AuthKeyHelp">キーはこの接続へ送信され、そこに保存されます。</string>
+    <string name="m40AuthSaveKey">キーを保存</string>
+    <string name="m40AuthContinue">続行</string>
+    <string name="m40AuthEnterValue">値を入力してください。</string>
+    <string name="m40AuthSelectValue">選択肢を選んでください。</string>
+    <string name="m40AuthOpenPage">サインインページを開く</string>
+    <string name="m40AuthAskPage">ブラウザで%1$sを開きますか？</string>
+    <string name="m40AuthOpenBrowser">ブラウザで開く</string>
+    <string name="m40AuthCheck">サインインを確認</string>
+    <string name="m40AuthWaiting">サインインを完了してからここで確認してください。</string>
+    <string name="m40AuthCommandWaiting">接続先でサインインを実行中です。完了したらここで確認してください。</string>
+    <string name="m40AuthCode">サインインコードまたはコールバックURL</string>
+    <string name="m40AuthFinish">サインインを完了</string>
+    <string name="m40AuthDone">完了</string>
+    <string name="m40AuthComplete">サインインしました</string>
+    <string name="m40AuthCompleteBody">プラン一覧を更新しました。</string>
+    <string name="m40AuthFailed">この手順を完了できませんでした。もう一度お試しください。</string>
+    <string name="m40AuthReenter">「サーバー」でこのサーバーのパスワードをもう一度入力してから、ここに戻ってください。</string>
+    <string name="m40AuthDetails">詳細</string>
+    <string name="m40AuthCopyDetails">詳細をコピー</string>
+    <string name="m40AuthDeviceCode">サインインページでコード「%1$s」を使用してください。</string>
+    <string name="m40AuthCopyCode">コードをコピー</string>
+    <string name="m40AuthCopied">コードをコピーしました</string>
+    <string name="m40AuthBrowserHint">この方法は、このサーバーを実行しているマシンのブラウザで完了する必要があります。</string>
+    <string name="m40AuthDeviceHint">デバイスコードを使ってサインインします。</string>
+    <string name="m40AuthAccountHint">プロバイダーアカウントでサインインします。</string>
+    <string name="m40AuthCommandHint">接続先がこのサインインを実行します。スマートフォン側ではコマンドを実行しません。</string>
+    <string name="m40AuthPhoneHint">このスマートフォンにインストールされたこのプロバイダーのエージェントを使用します。</string>
+</resources>

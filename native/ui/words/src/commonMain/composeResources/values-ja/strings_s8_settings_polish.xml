@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="vpttAutoSendDetailShort">短い間をおくと送信されます（3秒以内ならキャンセル可能）。マイクボタンの長押しでは送信されません。</string>
+    <string name="readAloudVoiceNaturalDetailShort">より自然でオフラインでも動作します。英語のみで、ほかの言語はスマートフォンの音声を使います。</string>
+</resources>

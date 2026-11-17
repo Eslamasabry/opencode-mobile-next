@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="editor40Edit">サーバーを編集</string>
+    <string name="editor40Loading">保存済みサーバーを読み込み中…</string>
+    <string name="editor40Kind">パソコンで何を実行していますか？</string>
+    <string name="editor40Folder">プロジェクトフォルダ</string>
+    <string name="editor40Token">トークンまたはパスワード</string>
+    <string name="editor40More">その他のオプション</string>
+    <string name="editor40OtherCommands">その他のコマンドを表示</string>
+    <string name="editor40Check">接続を確認</string>
+    <string name="editor40CancelCheck">確認をキャンセル</string>
+    <string name="editor40Slow">サーバーの応答に時間がかかっています。この確認をキャンセルして編集を続けることができます。</string>
+    <string name="editor40SaveConnect">保存して接続</string>
+    <string name="editor40SaveAnyway">このまま保存</string>
+    <string name="editor40SavedFailed">サーバーは保存されましたが、接続できませんでした。アドレスとサインインを確認してからもう一度お試しください。</string>
+    <string name="editor40Checked">接続を確認しました · %1$s</string>
+    <string name="editor40Ready">サーバーに接続されました。会話はサーバーに保存されます。</string>
+    <string name="editor40Open">会話を開く</string>
+    <string name="editor40DiscardTitle">これらの変更を破棄しますか？</string>
+    <string name="editor40Discard">変更を破棄</string>
+    <string name="editor40DiscardBody">入力した変更はまだ保存されていません。</string>
+    <string name="editor40HttpTitle">暗号化されていない接続を使用しますか？</string>
+    <string name="editor40UseAddress">このアドレスを使用</string>
+    <string name="editor40HttpBody">同じネットワーク上の他者にパスワードや会話が読み取られる可能性があります。HTTPSまたはプライベートなTailscaleネットワークの使用をおすすめします。この選択はこのアドレスにのみ適用されます。</string>
+    <string name="editor40Inspect">証明書を確認</string>
+    <string name="editor40Pinned">このアドレスには証明書が保存されています。証明書が変更された場合、接続は停止します。</string>
+    <string name="editor40CertificateTitle">この証明書を信頼しますか？</string>
+    <string name="editor40TrustCertificate">この証明書を信頼</string>
+    <string name="editor40CertificateBody">信頼できる別の経路を使って、このSHA-256フィンガープリントをサーバー所有者と照合してください。異なる証明書の場合は接続が停止します。</string>
+    <string name="editor40CertificateDates">有効期間：%1$s〜%2$s（UTC）</string>
+    <string name="editor40TailscaleBody">両方の端末を同じTailscaleネットワークに接続してください。パソコンの100.xアドレスまたは.ts.net名を使用します。サーバー自身のパスワードも引き続き使用されます（Tailscaleで置き換わるわけではありません）。</string>
+    <string name="editor40EnterAddress">パソコンのアドレスを入力</string>
+    <string name="permissions40Title">常に許可する操作</string>
+    <string name="permissions40Intro">このプロジェクトで確認なしにエージェントが実行できる操作です。次回から確認するには操作の許可を取り消してください。</string>
+    <string name="permissions40RevokeTitle">この常に許可された操作を取り消しますか？</string>
+    <string name="permissions40Revoke">アクセス権を取り消す</string>
+    <string name="permissions40RevokeBody">次回この操作を実行する前にエージェントが確認するようになります。実行中の操作は停止しません。</string>
+    <string name="permissions40AllResources">一致するすべてのリソース</string>
+    <string name="permissions40Loading">許可された操作を読み込み中…</string>
+    <string name="permissions40Failed">許可された操作を読み取るか変更できませんでした。接続を確認してもう一度お試しください。</string>
+    <string name="permissions40Empty">このプロジェクトに常に許可された操作はありません。エージェントは権限が必要なときに確認します。</string>
+    <string name="permissions40Revoked">取り消しました：%1$s。次回からエージェントが確認します。</string>
+    <string name="permissions40Dismiss">閉じる</string>
+    <string name="permissions40Refresh">許可された操作を再読み込み</string>
+    <string name="editor40TailscaleInstalled">Tailscaleがインストールされています。開いてサインインし、VPNをオンにしてください。このアプリからVPNのサインイン状態は確認できません。</string>
+    <string name="editor40TailscaleMissing">先にこのスマートフォンに公式Tailscaleアプリをインストールしてください。</string>
+    <string name="editor40TailscaleUnknown">Tailscaleアプリを確認できませんでした。利用可能になったらもう一度確認してください。</string>
+    <string name="editor40TailscaleOpen">Tailscaleを開く</string>
+    <string name="editor40TailscaleInstall">Tailscaleを入手</string>
+    <string name="editor40TailscaleRefresh">Tailscaleをもう一度確認</string>
+    <plurals name="rows40Waiting">
+        <item quantity="other">%1$d件が対応待ち</item>
+    </plurals>
+    <string name="rows40Working">%1$d件が作業中</string>
+    <string name="rows40Secret">保存済みのサインインを再入力</string>
+    <plurals name="rows40Queued">
+        <item quantity="other">%1$d件のプロンプトが待機中</item>
+    </plurals>
+    <plurals name="rows40Move">
+        <item quantity="other">待機中のプロンプト%1$d件を%2$sへ移動</item>
+    </plurals>
+    <string name="rows40Schedules">予約プロンプト</string>
+    <string name="queue40Title">待機中のプロンプトを移動</string>
+    <string name="queue40Loading">待機中のプロンプトと移動先の会話を読み込み中…</string>
+    <string name="queue40Failed">何も移動されませんでした。接続や待機中のプロンプトが変更されたか、ストレージが変更を拒否しました。再読み込みして選択内容をもう一度確認してください。</string>
+    <string name="queue40Intro">待機中のプロンプトを%1$sから%2$sへ移動します。ここでは送信されません。本文内のパスワードとキーは移動前に隠されます。</string>
+    <string name="queue40Empty">このサーバーに待機中のプロンプトはありません。</string>
+    <string name="queue40Attachment">添付ファイル付きのプロンプト</string>
+    <string name="queue40Uncertain">すでに送信済みの可能性があります。元のサーバーで確認してください。</string>
+    <string name="queue40ServerFile">この添付ファイルは元のサーバー上でのみ開けます。</string>
+    <string name="queue40Mentions">シークレットを隠すとこのプロンプトのエージェントメンションが変わってしまいます。先に元のサーバーで編集してください。</string>
+    <string name="queue40Sending">このプロンプトは送信中です。結果が出るまでお待ちください。</string>
+    <string name="queue40CannotMove">このプロンプトは元のサーバーに残す必要があります。</string>
+    <string name="queue40Destination">移動先の会話</string>
+    <string name="queue40NewConversation">新しい会話を始める</string>
+    <string name="queue40Untitled">無題の会話</string>
+    <plurals name="queue40Move">
+        <item quantity="other">%1$d件のプロンプトを%2$sへ移動</item>
+    </plurals>
+    <string name="queue40Select">移動可能なプロンプトを1件以上選択してください。</string>
+    <plurals name="queue40Moved">
+        <item quantity="other">%1$d件のプロンプトを移動しました。元のサーバーに残った件数：%2$d。移動先のモデルまたはエージェント選択を使用する件数：%3$d。何も送信されていません。</item>
+    </plurals>
+    <string name="queue40Undo">移動を元に戻す</string>
+    <string name="queue40Open">移動先の会話を開く</string>
+    <plurals name="queue40Undone">
+        <item quantity="other">まだ待機中だった%1$d件のプロンプトを戻しました。すでに送信を開始していたプロンプトはそのまま残りました。</item>
+    </plurals>
+    <string name="queue40Refresh">待機中のプロンプトを再読み込み</string>
+    <string name="remove40Title">このサーバーを削除</string>
+    <string name="remove40ConfirmTitle">%1$sを削除しますか？</string>
+    <string name="remove40Body">このアプリの保存済み接続とローカルデータを削除します。サーバーから会話が削除されることはありません。</string>
+    <plurals name="remove40QueueLost">
+        <item quantity="other">待機中のプロンプト%1$d件がこのスマートフォンから削除されます。</item>
+    </plurals>
+    <plurals name="remove40QueueKept">
+        <item quantity="other">待機中のプロンプト%1$d件は保存済みプロンプトに残ります。</item>
+    </plurals>
+    <plurals name="remove40Uncertain">
+        <item quantity="other">そのうち%1$d件はすでに送信済みの可能性があり、これらもこのスマートフォンから削除されます。</item>
+    </plurals>
+    <plurals name="remove40DraftsLost">
+        <item quantity="other">保存済みの会話下書き%1$d件が削除されます。</item>
+    </plurals>
+    <string name="remove40Active">現在の接続は閉じられ、保存済みサーバー一覧に戻ります。</string>
+    <string name="remove40ServerKeeps">サーバー側の会話とファイルはそのまま残ります。</string>
+    <string name="remove40Loading">このスマートフォンがこのサーバー用に保持しているデータを確認中…</string>
+    <string name="remove40Failed">このサーバーの削除を完了できませんでした。切断状態になっていたり、一部のローカル整理が完了している場合があります。必要な整理や配信確認が終わっていない間、保存済みサーバーは残ります。</string>
+    <string name="remove40DeleteQueue">待機中のプロンプトも削除する</string>
+    <string name="remove40DeleteQueueHelp">文章や添付ファイルを保存済みプロンプトに残すにはオフのままにしてください。</string>
+    <string name="remove40Refresh">保存済みデータをもう一度確認</string>
+    <string name="queue40UndoFailed">移動を元に戻せませんでした。やり直す前に移動先の会話を確認してください。すでに送信を開始したプロンプトはそのまま残ります。</string>
+    <string name="editor40SaveChanges">変更を保存</string>
+    <string name="editor40Stale">この保存済みサーバーまたはそのサインインが変更されました。やり直す前にこの画面を閉じてサーバーを開き直してください。</string>
+    <string name="editor40Deleted">このサーバーは削除されました。この画面を閉じて保存済みサーバー一覧に戻ってください。</string>
+</resources>

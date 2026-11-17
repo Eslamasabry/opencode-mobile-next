@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="terminalLinkReviewBody">ブラウザでこのリンクを開きますか？ %1$s</string>
+    <string name="terminalLinkReviewInsecure">このリンクは暗号化されていない接続を使用します。ブラウザで%1$sを開きますか？</string>
+    <string name="terminalLinkReviewTitle">このリンクを開きますか？</string>
+    <string name="terminalParityInterrupt">Ctrl-C</string>
+    <string name="terminalParityEndInput">Ctrl-D</string>
+    <string name="terminalParityEscape">Esc</string>
+    <string name="terminalParityTab">Tab</string>
+    <string name="terminalParityOpenAddress">リンクを開く · %1$s</string>
+</resources>

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="terminalNavDevServer">開発サーバー実行中</string>
+    <string name="terminalNavOpenPreview">プレビューを開く</string>
+</resources>

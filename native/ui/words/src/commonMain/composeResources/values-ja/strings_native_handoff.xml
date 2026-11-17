@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="nativeHandoffTitle">新しいエージェントで続行</string>
+    <string name="nativeHandoffIntro">このサーバー上のエージェントを選択してください。開始する前に、マスク済みの会話記録と最初のプロンプトを確認してください。元の会話はそのまま残ります。</string>
+    <string name="nativeHandoffPreparing">会話記録を準備中…</string>
+    <string name="nativeHandoffReview">この記録は同じプロジェクト内の新しい無視対象フォルダに保存されます。認証情報はマスクされ、思考内容と添付ファイルの内容は除外されます。</string>
+    <string name="nativeHandoffPrompt">新しいエージェントへの最初のメッセージ</string>
+    <string name="nativeHandoffSend">新しいエージェントを起動</string>
+    <string name="nativeHandoffSending">記録を保存して新しい会話を開始中…</string>
+    <string name="nativeHandoffSucceeded">新しいエージェントが会話記録を受信しました。</string>
+    <string name="nativeHandoffFailed">転送を完了できませんでした。元の会話は変更されていません。接続とプロジェクトを確認してから、このシートを開き直してください。</string>
+    <string name="nativeHandoffUnconfirmed">新しい会話を確認できませんでした。別の引き継ぎを開始する前に「すべての会話」を確認してください。エージェントはすでに受信している可能性があります。</string>
+    <string name="nativeHandoffLinkFailed">新しいエージェントは記録を受信しましたが、会話リンクを保存できませんでした。リンクの保存だけをやり直してください（メッセージは再送信されません）。</string>
+    <string name="nativeHandoffSaveLink">会話リンクを保存</string>
+</resources>

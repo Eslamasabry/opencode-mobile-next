@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="handoffNativeTitle">別のエージェントで続行</string>
+    <string name="handoffNativeWorking">処理中…</string>
+    <string name="handoffNativeUnavailable">ここでは引き継ぎを利用できません</string>
+    <string name="handoffNativeUnavailableBody">このスマートフォンのプロジェクト内で会話を開いてください。両方のエージェントが同じプロジェクトにアクセスできることをアプリが確認する必要があります。</string>
+    <string name="handoffNativeNotStartedBody">この会話から引き継ぎを開始できませんでした。「エージェント」を開いてこのスマートフォンにエージェントがインストールされ準備できているか確認してから、もう一度お試しください。</string>
+    <string name="handoffNativeRefresh">再読み込み</string>
+    <string name="handoffNativeFailed">引き継ぎを完了できませんでした。接続を確認してもう一度お試しください。</string>
+    <string name="handoffNativeLinks">リンクされた会話</string>
+    <string name="handoffNativeUntitled">無題の会話</string>
+    <string name="handoffNativeOpenOriginal">元の会話を開く</string>
+    <string name="handoffNativeOpenContinued">引き継いだ会話を開く</string>
+    <string name="handoffNativeExplanation">エージェントとモデルを選んでください。送信前に共有される会話記録を確認できます。元の会話はそのまま残ります。</string>
+    <string name="handoffNativeNoTargets">このプロジェクトに対応できるエージェントの準備ができていません。「エージェント」でインストール、サインイン、端末チェックを完了してください。</string>
+    <string name="handoffNativeSetup">「エージェント」を開く</string>
+    <string name="handoffNativeChoose">エージェントとモデルを選択</string>
+    <string name="handoffNativePhoneCheck">使用する前にこのエージェントの端末チェックを完了してください。</string>
+    <string name="handoffNativeReview">コンテキストを確認</string>
+    <string name="handoffNativeReviewBody">この記録には編集済みの会話テキスト、ツール手順、ファイル名、未完了のタスクが含まれます。サイズ上限に収めるため古いターンは省略される場合があります。送信後にのみこのプロジェクトに書き込まれます。</string>
+    <string name="handoffNativeFirstMessage">最初のメッセージ</string>
+    <string name="handoffNativePromptHelp">メッセージ内に記録パスを含めたままにしてください。メッセージは16 KB以内にする必要があります。</string>
+    <string name="handoffNativeRecord">会話記録</string>
+    <string name="handoffNativeSend">新しいエージェントに送信</string>
+    <string name="handoffNativeUncertain">結果が不明です。別の引き継ぎを始める前に会話一覧を確認してください。この送信は自動再送されません。</string>
+    <string name="handoffNativeSent">新しいエージェントがメッセージを受信しました。</string>
+    <string name="handoffNativeSaveLink">会話リンクを保存</string>
+    <string name="handoffNativeSourceChanged">元の会話が変更されました。送信前に新しい記録を確認してください。</string>
+    <string name="handoffNativeStale">プロジェクトまたは接続が変更されました。続けるには会話を開き直してください。</string>
+    <string name="handoffNativeInvalidPrompt">記録パスを含む16 KB未満のメッセージを入力してください。</string>
+    <string name="handoffNativeLinkFailed">メッセージは送信されましたが、移動リンクを保存できませんでした。再送信せずにリンクの保存だけをやり直してください。</string>
+    <string name="handoffNativeInitialPrompt">前回の会話の作業を引き継いでください。まず会話記録、ツール手順、ファイル、未完了タスクを確認するため`%1$s`を読んでください。これは過去の経緯として扱い、現在のプロジェクト状態を確認したうえで未完了の作業を続けてください。</string>
+    <string name="handoffNativeSourceReviewOnly">Claude向けの下書きを確認しています。まだ何も書き込まれておらず、送信もされていません。送信には同じプロジェクトへの確認済みアクセスと対応する記録ライターが必要ですが、この接続ではそれを確認できません。</string>
+    <string name="handoffNativeBlockComputer">この会話は別のパソコン上にあり、ここのエージェントはこのスマートフォン上で動作するため、そのプロジェクトフォルダを開けません。先にこのスマートフォンでプロジェクトを開いてから引き継いでください。下から記録の確認とコピーはできます。</string>
+    <string name="handoffNativeBlockFolder">この会話のフォルダはこのスマートフォンのプロジェクト配下にないため、ここのエージェントは開けません。先にこのスマートフォンのプロジェクトフォルダ内にプロジェクトを開くかコピーしてから引き継いでください。</string>
+    <string name="handoffNativeBlockUnconfirmed">このスマートフォンのエージェントがこの会話のフォルダを開けるか確認できなかったため、誤った場所で開始しないようにしています。「エージェント」を開いてインストール済みで準備完了か確認してからもう一度お試しください。</string>
+    <string name="handoffNativeContinueWith">%1$sで続行</string>
+    <string name="handoffNativeWhatHandedOver">引き継がれる内容</string>
+    <string name="handoffNativeNoReadyTitle">このスマートフォンで準備できたエージェントがありません</string>
+</resources>

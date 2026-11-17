@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="secAutomationTitle">自動実行される処理</string>
+    <string name="secAutomationDetail">このサーバーが自動で行ってよい操作を選びます。ここでの選択は既存の作業を許可するだけで、新しい作業を開始するわけではありません。</string>
+    <string name="secAutomationReconnect">再接続</string>
+    <string name="secAutomationRetryIntake">受信した作業を再試行</string>
+    <string name="secAutomationReconcileQueuedSends">待機中送信を照合</string>
+    <string name="secAutomationRetryProviderErrors">プロバイダーエラーを再試行</string>
+    <string name="secAutomationRestartPhoneServer">端末内サーバーを再起動</string>
+    <string name="secAutomationResumeSetup">セットアップを再開</string>
+    <string name="secAutomationRecheckEnvironment">環境を再確認</string>
+    <string name="secAutomationPollRestartHealth">再起動後の正常性を確認</string>
+    <string name="secAutomationThermalRecovery">発熱後に復旧</string>
+    <string name="secAutomationReduceEffects">視覚効果を軽減</string>
+    <string name="secAutomationChooseDefaults">デフォルトを選択</string>
+    <string name="secAutomationDetectInstallations">インストールを検出</string>
+    <string name="secAutomationPreserveDrafts">下書きを保持</string>
+    <string name="secAutomationFollowOutput">出力を追従</string>
+    <string name="secAutomationPollOpenPages">開いている画面を再読み込み</string>
+    <string name="secAutomationBoundedPaging">追加の結果を読み込む</string>
+    <string name="secAutomationRouteReadyWork">準備完了の作業を振り分け</string>
+    <string name="secAutomationWakeStalledPool">停滞中のワーカーを再開</string>
+    <string name="secAutomationRestartWorkers">ワーカーを再起動</string>
+    <string name="secAutomationRecycleWorkers">ワーカーを入れ替え</string>
+    <string name="secAutomationHoldAtProviderLimit">プロバイダー上限に達したとき待機</string>
+    <string name="secAutomationRetryUnconfirmedAnswer">未確認の回答を再試行</string>
+    <string name="secAutomationRetryTransientTask">一時的な失敗を再試行</string>
+    <string name="secAutomationFallBackToDirectTask">直接タスクのフォールバックを使用</string>
+    <string name="secAutomationApplyCodePush">コードアップデートを適用</string>
+    <string name="secAutomationRestartDevServices">開発サービスを再起動</string>
+    <string name="secAutomationStopIdleHelpers">待機中のヘルパーを停止</string>
+    <string name="secAutomationCleanCaches">キャッシュを整理</string>
+    <string name="secAutomationUpdateWhenIdle">待機中にアップデート</string>
+    <string name="secAutomationMonitorOtherServers">ほかのサーバーを監視</string>
+    <string name="secAutomationMonitorQuota">利用枠を監視</string>
+</resources>

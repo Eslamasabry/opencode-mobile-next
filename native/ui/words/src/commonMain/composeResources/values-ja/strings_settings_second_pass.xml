@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="nativeAboutProvenanceTitle">このビルドについて</string>
+    <string name="nativeAboutProvenance">この独立開発アプリはAIの支援を大きく受けて構築されています。主要な対応プラットフォームはAndroidです。デスクトップビルドは実験的であり、実機テストは行われていません。アプリ改善のため、不具合があればぜひご報告ください。</string>
+    <string name="nativePhraseChipsTitle">フレーズ候補</string>
+    <string name="nativePhraseChipsAliases">フレーズ候補 クイックフレーズ 定型文 提案 コンポーザー</string>
+    <string name="nativePhraseChipsDescription">メッセージ欄の上によく使う短いフレーズを提案します。学習したフレーズはこの端末に残ります。</string>
+    <string name="nativeToolsRequired">必須</string>
+    <string name="nativeToolsOptional">任意</string>
+    <string name="nativeToolsParameters">パラメーター</string>
+    <string name="nativeToolsNoParameters">このツールにはパラメーターが定義されていません。</string>
+    <string name="nativeToolsCoding">モデル用のツール</string>
+    <string name="nativeToolsChooseModel">ツールを読み取るモデルを選択してください。</string>
+    <string name="nativeCapabilitiesTitle">ここで使える機能</string>
+</resources>

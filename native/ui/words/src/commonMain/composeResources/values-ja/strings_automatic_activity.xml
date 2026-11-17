@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="activityUndoRestart">再起動したサーバーを停止</string>
+    <string name="activityUndoing">再起動したサーバーを停止中…</string>
+    <string name="activityUndone">再起動を取り消しました。</string>
+    <string name="activityUndoFailed">取り消しに失敗しました。</string>
+    <string name="activityUndoUnconfirmed">取り消しの結果を確認できません。再試行しません。</string>
+    <string name="activityUndoUnavailable">取り消しは利用できません。</string>
+</resources>

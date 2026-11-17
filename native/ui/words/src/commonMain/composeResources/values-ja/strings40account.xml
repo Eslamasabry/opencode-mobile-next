@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="account40Title">Codexアカウント</string>
+    <string name="account40ScopeLost">このサーバーは変更されました。サーバー一覧に戻り、接続中のサーバーのアカウントを開いてください。</string>
+    <string name="account40Refresh">アカウントを再読み込み</string>
+    <string name="account40Loading">ホストアカウントを確認中</string>
+    <string name="account40Unavailable">アカウントパネルを利用できません</string>
+    <string name="account40ReadFailed">アカウントを読み取れませんでした</string>
+    <string name="account40Disconnected">接続が中断されました</string>
+    <string name="account40Connected">ホストにサインイン済み</string>
+    <string name="account40SignedOut">サインインの準備ができました</string>
+    <string name="account40InProgress">サインイン処理中</string>
+    <string name="account40NeedsAttention">サインインの確認が必要です</string>
+    <string name="account40NoAuth">ホストはサインインを必要としません</string>
+    <string name="account40ApiKey">APIキー</string>
+    <string name="account40HostAuth">ホスト認証</string>
+    <string name="account40HostNote">サインインは公式ランタイムが保持します。アカウントの変更は、このホストに接続されている保存済みのすべてのサーバーに影響します。</string>
+    <string name="account40UnsupportedDetail">このパネルはCodex 0.153.4で確認済みです。接続中のランタイムがこれらのアカウント機能に対応していない可能性があります。</string>
+    <string name="account40ReconnectDetail">アカウントデータとサインインコードを消去しました。更新するには再接続してください。サインインは自動的には再開されません。</string>
+    <string name="account40SignIn">ChatGPTでサインイン</string>
+    <string name="account40SignInNote">ChatGPTアカウントでサインインします。ブラウザで完了してください。このアプリがパスワードを読み取ることはありません。</string>
+    <string name="account40Limits">レート制限</string>
+    <string name="account40LimitsUnavailable">このアカウントまたはホストのレート制限は利用できません。</string>
+    <string name="account40Usage">トークン使用量</string>
+    <string name="account40UsageUnavailable">このアカウントまたはホストのトークン使用量は利用できません。</string>
+    <string name="account40LifetimeTokens">累計トークン数</string>
+    <string name="account40PeakTokens">1日の最大トークン数</string>
+    <string name="account40UsageNote">値はホストから報告されたものです。未取得の値は0ではなく不明です。トークン数は請求額や残りのメッセージ利用枠ではありません。</string>
+    <string name="account40Updated">最終確認：%1$s</string>
+    <string name="account40Starting">サインインコードをリクエスト中</string>
+    <string name="account40Waiting">ブラウザでサインインを完了してください</string>
+    <string name="account40Cancelling">サインインをキャンセル中</string>
+    <string name="account40Cancelled">サインインをキャンセルしました</string>
+    <string name="account40LoginFailed">サインインが完了しませんでした。ホストを確認してもう一度お試しください。</string>
+    <string name="account40LoginUncertain">ホスト側でサインインまたはキャンセルを確認できませんでした。まだ待機中の可能性があります。やり直す前に公式ホストランタイムを確認してください。</string>
+    <string name="account40LoginCompleted">サインインが完了しました。アカウントを確認しています。</string>
+    <string name="account40CodeHint">公式サインインページでこのワンタイムコードを入力してください。他の人には共有しないでください。</string>
+    <string name="account40OpenSignIn">公式サインインを開く</string>
+    <string name="account40Cancel">サインインをキャンセル</string>
+    <string name="account40Allowance">報告された利用枠</string>
+    <string name="account40PercentUsed">%1$d%使用済み</string>
+    <string name="account40WindowUnknown">期間の情報を取得できません</string>
+    <string name="account40WindowMinutes">%1$d分間の枠</string>
+    <string name="account40WindowHours">%1$d時間の枠</string>
+    <string name="account40WindowDays">%1$d日間の枠</string>
+    <string name="account40ResetUnknown">リセット時刻不明</string>
+    <string name="account40ScopeLostTitle">このサーバーは変更されました</string>
+    <string name="account40BackToServers">サーバー一覧に戻る</string>
+    <string name="account40NotConnected">Codexアカウントを確認するにはこのサーバーに接続してください。</string>
+    <string name="account40SignInMethod">サインイン方法</string>
+    <string name="account40PlanTitle">プラン</string>
+    <string name="account40CopyCode">サインインコードをコピー</string>
+    <string name="account40LimitReached">Codexの上限に達しました。%1$s</string>
+    <string name="account40ResetDue">まもなくリセット</string>
+    <string name="account40ResetWhen">%1$s（%2$s）</string>
+    <plurals name="account40ResetInDays">
+        <item quantity="other">あと%1$d日でリセット</item>
+    </plurals>
+    <plurals name="account40ResetInHours">
+        <item quantity="other">あと%1$d時間でリセット</item>
+    </plurals>
+    <plurals name="account40ResetInMinutes">
+        <item quantity="other">あと%1$d分でリセット</item>
+    </plurals>
+    <string name="account40Back">戻る</string>
+    <string name="account40Details">詳細</string>
+    <string name="account40CopyDetails">詳細をコピー</string>
+    <string name="account40Copied">コードをコピーしました</string>
+    <string name="account40OpenQuestion">%1$sの公式サインインページを開きますか？</string>
+    <string name="account40OpenPage">サインインページを開く</string>
+    <string name="account40OpenFailed">サインインページまたはクリップボードを開けませんでした。</string>
+    <string name="account40ChatGpt">ChatGPT</string>
+    <string name="account40Bedrock">Amazon Bedrock</string>
+</resources>

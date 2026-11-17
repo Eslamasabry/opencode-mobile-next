@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="monitorServerUnavailable">このサーバーを確認できませんでした。リクエストを確認するには会話を開いてください。</string>
+    <string name="monitorServerWaiting">次の確認を待機中です。</string>
+    <string name="monitorServerCurrent">リクエストを確認しました。</string>
+    <string name="monitorServerPaused">確認を一時停止しています。アプリを開くかバックグラウンド接続を再開してください。</string>
+    <string name="monitorServerWifiRequired">Wi-Fiを待機中です。</string>
+</resources>

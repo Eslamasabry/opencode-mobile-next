@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="plansCollectors">プラン上限を読み取る</string>
+    <string name="plansCollectorTarget">%1$s · %2$s</string>
+    <string name="plansCollectorEnabled">読み取りが有効です。タップするとオフにしてこれらの数値を消去します。</string>
+    <string name="plansCollectorDisabled">このサーバーにインストールされたコレクターから読み取る</string>
+    <string name="plansCollectorQuestion">このサーバーから%1$sの上限を読み取りますか？</string>
+    <string name="plansCollectorAllow">コレクターを信頼して読み取る</string>
+    <string name="plansCollectorTrust">%1$sにインストールされた使用量コレクターを信頼できる場合にのみ続行してください。コレクターは固定の使用量アドレスでこのサーバーの保存済みサインイン認証情報を受け取ります。リクエストはリダイレクトをたどりません。ここで読み取りをオフにできます。アドレスやサインインを変更すると、もう一度許可が必要になります。</string>
+    <string name="plansCollectorFailed">この選択を保存できませんでした。サーバーに再接続してもう一度お試しください。</string>
+    <string name="plansPaseoDisabled">このPaseoサーバーから使用状況を読み取る</string>
+    <string name="plansPaseoQuestion">Paseoからプラン使用状況を読み取りますか？</string>
+    <string name="plansPaseoTrust">このアプリが表示されている間、%1$sが報告するプラン上限を読み取ります。オフにすると保存済みのウィジェット数値が消去されます。バックグラウンドリーダーは起動しません。</string>
+    <string name="plansBuiltinReader">端末内の使用状況リーダー</string>
+    <string name="plansBuiltinDisabled">このスマートフォンのUbuntu内に使用状況リーダーをセットアップ</string>
+    <string name="plansBuiltinQuestion">このスマートフォンでプラン上限を読み取りますか？</string>
+    <string name="plansBuiltinTrust">%1$sに同梱の使用状況リーダーをインストールし、そこに保存されているプロバイダーサインインを読み取ります。読み取りトークンは安全なストレージと非公開ファイルに保持されます。Claudeの取得は引き続き利用できません。オフにするとサービスが停止し、ウィジェット数値が消去されます。</string>
+</resources>
