@@ -9,7 +9,7 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.click
 import androidx.compose.ui.test.hasSetTextAction
-import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.performKeyInput
@@ -82,7 +82,7 @@ class KitComposerFieldInputTest {
                 assertTrue(shows > beforeRetap, "Retapping a focused composer reopens the keyboard")
             }
             // Issue 148: the on-screen keyboard's action key is a new line, never a send.
-            field.assert(SemanticsMatcher.keyNotDefined(SemanticsActions.OnImeAction))
+            field.assert(SemanticsMatcher.expectValue(SemanticsProperties.ImeAction, ImeAction.Default))
             runOnIdle { assertEquals(emptyList(), submitted) }
         }
 
@@ -118,7 +118,7 @@ class KitComposerFieldInputTest {
         val field = onNode(hasSetTextAction())
         field.performTouchInput { click() }
         field.performTextInput("one")
-        field.assert(SemanticsMatcher.keyNotDefined(SemanticsActions.OnImeAction))
+        field.assert(SemanticsMatcher.expectValue(SemanticsProperties.ImeAction, ImeAction.Default))
         runOnIdle { assertEquals(emptyList(), submitted) }
     }
 
