@@ -29,9 +29,9 @@
     <string name="kitNeedsYouReasonBlocked">停止中: 対応が必要</string>
     <string name="kitNeedsYouReasonConsent">確認が必要です</string>
     <plurals name="kitNeedsYouBadgeSuffix">
-        <item quantity="other">、%1$s件があなたの対応待ち</item>
+        <item quantity="other">、%1$s件が対応待ち</item>
     </plurals>
-    <string name="kitNeedsYouBadgeSuffix__eq1">、%1$s件があなたの対応待ち</string>
+    <string name="kitNeedsYouBadgeSuffix__eq1">、1件が対応待ち</string>
     <string name="kitNeedsYouWaiting">%1$s待ち</string>
     <plurals name="kitNeedsYouWaitingSpoken">
         <item quantity="other">%1$s分待機中</item>

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="chatHistoryReadFailed">以前のメッセージを読み込めませんでした。読み込み済みのメッセージは残っています。もう一度お試しください。</string>
+    <string name="chatTranscriptTokens">%1$sトークン</string>
+    <string name="chatReplyFooterTokensK">%1$skトークン</string>
+    <string name="chatReplyFooterTokensM">%1$sMトークン</string>
+    <string name="chatReplyFooterCost">$%1$s</string>
+    <string name="chatReplyFooterCostUnderCent">$0.01未満</string>
+    <string name="chatTranscriptCost">推定コスト：$%1$s</string>
+    <string name="chatHistoryTitle">プロンプトを再利用</string>
+    <string name="chatHistorySubtitle">この会話または最近の送信から文面を選べます。下書きに追加され、すぐには送信されません。</string>
+    <string name="chatHistorySearch">最近のプロンプトを検索</string>
+    <string name="chatHistoryEmpty">最近のプロンプトはまだありません。</string>
+    <string name="chatHistoryLoading">最近のプロンプトを読み込み中…</string>
+    <string name="chatHistoryLoadFailed">最近のプロンプトを読み込めませんでした。この会話内のプロンプトは引き続き利用できます。</string>
+</resources>

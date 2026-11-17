@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxSetupStart">LinuxとOpenCodeをセットアップ</string>
+    <string name="linuxSetupAddPython">Pythonツールを追加</string>
+    <string name="linuxSetupContinue">セットアップを続行</string>
+    <string name="linuxSetupStop">セットアップを停止</string>
+    <string name="linuxSetupStopQuestion">セットアップを停止しますか？</string>
+    <string name="linuxSetupStopBody">インストール済みのツールは端末に残ります。あとからセットアップを続行できます。</string>
+    <string name="linuxSetupWorking">端末ツールをセットアップ中…</string>
+    <string name="linuxSetupAddingPython">Pythonツールを追加中</string>
+    <string name="linuxSetupDone">端末ツールの準備ができました。</string>
+    <string name="linuxSetupFailed">完了前にセットアップが停止しました。「セットアップを続行」でインストール済みツールを確認し、もう一度お試しください。</string>
+</resources>

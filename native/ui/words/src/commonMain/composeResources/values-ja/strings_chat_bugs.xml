@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="chatReplyFailedSignIn">モデルのプロバイダーがサインインを受け付けませんでした。そのプロバイダーにもう一度サインインするか、別のモデルを選んでください。</string>
+    <string name="chatReplyFailedModel">このモデルは利用できません。別のモデルを選んで送信し直してください。</string>
+    <string name="chatReplyFailedBusy">モデルのプロバイダーが現在混み合っています。しばらく待つか、別のモデルを選んでください。</string>
+    <string name="chatReplyFailedOther">エラーにより返信が停止しました。送信し直すか、別のモデルを選んでください。</string>
+    <string name="chatReplyFailedDetails">詳細</string>
+    <string name="chatReplyFailedCopy">詳細をコピー</string>
+    <string name="chatSendFailedOffline">現在サーバーに接続できません。</string>
+    <string name="chatSendFailedChanged">送信中に接続が変更されました。何も送信されていません。</string>
+    <string name="chatSendFailedRefused">サーバーがメッセージを受け付けませんでした。何も送信されていません。</string>
+    <string name="chatModelsSearch">モデルを検索</string>
+    <string name="chatModelsRecent">最近</string>
+    <string name="chatModelsCurrent">現在</string>
+    <string name="chatModelsNoMatch">一致するモデルがありません</string>
+    <string name="chatsHomeNewShort">新しい会話</string>
+</resources>

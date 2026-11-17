@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="setupKilled">セットアップ中に端末によってOpenCodeが終了されました。完了した手順は残っています。「続行」で中断した箇所から再開できます。</string>
+    <string name="setupKilledMemory">メモリ不足のためセットアップ中に端末によってOpenCodeが終了されました。完了した手順は残っています。「続行」で中断した箇所から再開できます。</string>
+    <string name="setupBatteryTitle">OpenCodeの実行を継続する</string>
+    <string name="setupBatteryBody">一部の端末では電池節約のためアプリが終了されます。セットアップが中断されないよう以下の設定を変更してください。</string>
+    <string name="setupBatteryStepUnrestricted">アプリの「電池」設定を開き、「制限なし」を選択します（端末によっては「制限なし」以外の名称の場合もあります）。</string>
+    <string name="setupBatteryStepAutostart">OpenCodeの自動起動をオンにします。</string>
+    <string name="setupBatteryStepNeverSleeping">OpenCodeをスリープしないアプリに追加します。</string>
+    <string name="setupBatteryOpenApp">アプリ設定を開く</string>
+    <string name="setupBatteryOpenAutostart">自動起動を開く</string>
+    <string name="setupBatteryOpenSamsung">電池設定を開く</string>
+    <string name="setupBatteryOpenFailed">このスマートフォンではその画面を開けませんでした。設定アプリから手動で手順を進めてください。</string>
+</resources>

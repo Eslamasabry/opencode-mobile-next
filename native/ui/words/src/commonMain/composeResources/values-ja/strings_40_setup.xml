@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="r40SetupVoiceDownloading">音声入力をダウンロード中</string>
+    <string name="r40SetupVoiceVerifying">音声入力ファイルを確認中</string>
+    <string name="r40SetupRequired">必須</string>
+    <string name="r40SetupWorking">現在の操作が完了するまでお待ちください。</string>
+    <string name="r40SetupTotals">%1$s · 約%2$s分</string>
+    <string name="r40SetupCouldNotCheck">インストール済みツールまたはセットアップを確認できませんでした。もう一度お試しください。</string>
+    <string name="r40SetupRetry">再試行</string>
+    <string name="r40SetupActionFailed">完了しませんでした。もう一度お試しください。</string>
+    <string name="r40SetupCheckDevice">開始する前に、上のスマートフォン要件を解決してください。</string>
+    <string name="r40SetupStorageUnopened">ストレージ設定を開けませんでした。スマートフォンの設定で空き容量を増やしてから、もう一度お試しください。</string>
+    <string name="r40SetupRemoveVoiceTitle">音声入力を削除しますか？</string>
+    <string name="r40SetupRemoveVoiceBody">このアプリからダウンロード済みの音声モデルを削除します。会話は残ります。音声入力は後で再ダウンロードできます。</string>
+    <string name="r40SetupRemoveVoice">音声入力を削除</string>
+    <string name="r40SetupKeepVoice">音声入力を残す</string>
+    <string name="r40SetupRemoveVoiceFailed">音声入力を削除できませんでした。実行中の録音やダウンロードが完了してから、もう一度お試しください。</string>
+    <string name="r40SetupPercent">%1$s%</string>
+    <string name="r40SetupComponentDone">完了</string>
+    <string name="r40SetupComponentInstalled">インストール済み</string>
+    <string name="r40SetupComponentChecking">確認中…</string>
+    <string name="r40SetupComponentRunning">インストール中…</string>
+    <string name="r40SetupComponentFailed">完了しませんでした</string>
+    <string name="r40SetupComponentPending">待機中</string>
+    <string name="r40WelcomePhone">このスマートフォンで</string>
+    <string name="r40WelcomePhoneBody">ここでOpenCodeを動かします。パソコンは不要です。</string>
+    <string name="r40WelcomeComputer">自分のパソコンで</string>
+    <string name="r40WelcomeComputerBody">OpenCodeが動いているパソコンに接続します。</string>
+    <string name="r40WelcomeRunning">セットアップ%1$s%完了</string>
+    <string name="r40WelcomeStopped">セットアップが%1$s%で停止しました</string>
+    <string name="r40WelcomeSetupBody">専用のLinuxワークスペースとOpenCodeに必要なツールをダウンロードします。開始前にインストールする項目を選んでください。</string>
+    <string name="r40WelcomeViewProgress">セットアップの進捗を見る</string>
+</resources>

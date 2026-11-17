@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxIdleTitle">待機時にサーバーを停止</string>
+    <string name="linuxIdleDetail">作業完了後に端末のリソースを節約します。必要なときに同じサーバーを再開できます。</string>
+    <string name="linuxIdleMinutes">待機時間（分）</string>
+    <plurals name="linuxIdleMinutesValue">
+        <item quantity="other">%1$d分</item>
+    </plurals>
+    <string name="linuxIdleInvalid">1から60の整数を入力してください。</string>
+    <string name="linuxIdleFailed">端末の待機状態を読み取るか変更できませんでした。この画面を開き直してもう一度お試しください。</string>
+    <string name="linuxIdleResume">待機中の端末サーバーを再開</string>
+    <string name="linuxIdleSave">待機時間を保存</string>
+    <string name="linuxIdleWorking">待機状態を更新中…</string>
+</resources>

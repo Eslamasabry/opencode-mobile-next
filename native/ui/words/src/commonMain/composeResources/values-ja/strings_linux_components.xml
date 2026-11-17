@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxComponentsTitle">Linuxコンポーネント</string>
+    <string name="linuxComponentsRefresh">インストール済みコンポーネントを確認</string>
+    <string name="linuxComponentsTeam">AI Team</string>
+    <string name="linuxComponentsUnknown">コンポーネント</string>
+    <string name="linuxComponentsInstalled">インストール済み</string>
+    <string name="linuxComponentsDependents">%1$sで必要です。先にそれらのコンポーネントを削除してください。</string>
+    <string name="linuxComponentsDependencyUnknown">%1$sを確認できませんでした。このコンポーネントを削除する前にもう一度確認してください。</string>
+    <string name="linuxComponentsRequired">この端末上のサーバーに必要です。</string>
+    <string name="linuxComponentsUnsupported">このコンポーネントは個別に削除できません。</string>
+    <string name="linuxComponentsAbsent">未インストール</string>
+    <string name="linuxComponentsUnknownPresence">インストール済みコンポーネントを確認できませんでした。もう一度お試しください。</string>
+    <string name="linuxComponentsBusy">セットアップまたは現在の操作が完了するまでお待ちください。</string>
+    <string name="linuxComponentsFailed">コンポーネントを削除できませんでした。もう一度確認してから再試行してください。</string>
+    <string name="linuxComponentsRemove">%1$sを削除</string>
+    <string name="linuxComponentsRemoveQuestion">%1$sを削除しますか？</string>
+    <string name="linuxComponentsRemoveBody">このコンポーネントのみが削除されます。プロジェクトや会話は残ります。削除前に依存関係がもう一度確認されます。</string>
+    <string name="linuxSetupOpenSettings">アプリ設定を開く</string>
+    <string name="linuxSetupStepWaiting">待機中</string>
+    <string name="linuxSetupStepKept">インストール済み</string>
+    <string name="linuxSetupSwitchBusy">実行中の作業を完了し、この端末で保留中のリクエストに回答してから、もう一度セットアップをお試しください。</string>
+    <string name="linuxSetupSwitchFailed">セットアップでこの端末を安全に準備できませんでした。保存済みの会話とメッセージは保持されています。接続と空き容量を確認してもう一度お試しください。</string>
+</resources>

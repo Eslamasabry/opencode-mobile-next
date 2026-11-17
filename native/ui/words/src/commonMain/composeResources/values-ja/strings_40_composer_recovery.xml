@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="composerKeptRestoreTitle">保持されたプロンプト</string>
+    <string name="composerKeptRestoreRefused">このプロンプトを復元できませんでした。引き続き「保持されたプロンプト」にあります。復元するにはもう一度開いてください。</string>
+    <string name="composerKeptMissingFiles">次のファイルを復元できませんでした：%1$s。保持されたプロンプトはそのまま残っています。</string>
+</resources>

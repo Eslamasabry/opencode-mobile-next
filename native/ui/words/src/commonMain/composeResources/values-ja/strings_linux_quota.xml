@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="linuxQuotaTitle">この端末のプラン使用状況</string>
+    <string name="linuxQuotaSetup">プラン使用状況をセットアップ</string>
+    <string name="linuxQuotaEnabled">プラン使用状況はセットアップ済みです</string>
+    <string name="linuxQuotaBody">この端末に保存済みのサインインからCodex、GLM、MiniMaxの上限を読み取ります。ヘルパーは使用状況を読み取っている間だけ動作します。</string>
+    <string name="linuxQuotaTurnOff">プラン使用状況をオフにする</string>
+    <string name="linuxQuotaLinuxNotReady">先に「このスマートフォン」でLinuxをセットアップしてください。</string>
+    <string name="linuxQuotaNoNode">LinuxコンポーネントからNodeをインストールしてからもう一度お試しください。</string>
+    <string name="linuxQuotaOldNode">Nodeをバージョン20以上にアップデートしてからもう一度お試しください。</string>
+    <string name="linuxQuotaPrepareFailed">使用状況ファイルを準備できませんでした。もう一度お試しください。</string>
+    <string name="linuxQuotaStartFailed">使用状況ヘルパーから応答がありませんでした。もう一度お試しください。</string>
+    <string name="linuxQuotaRemoveFailed">使用状況ヘルパーを削除できませんでした。もう一度お試しください。</string>
+</resources>

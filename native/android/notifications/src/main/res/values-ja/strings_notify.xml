@@ -3,15 +3,15 @@
      strings in this language. To be absorbed by :ui:words strings_os (see docs/native/units/NOTIFY.md). -->
 <resources>
     <string name="notify_live_channel">ライブ接続</string>
-    <string name="notify_live_description">OpenCode がバックグラウンドでサーバーのセッションを維持している間に表示されます</string>
+    <string name="notify_live_description">OpenCodeがバックグラウンドでサーバーの会話を維持している間に表示されます</string>
     <string name="notify_coding_requests_channel">コーディングのリクエスト</string>
     <string name="notify_coding_requests_description">OpenCode が許可や入力を必要とするときに通知します</string>
     <string name="notify_coding_requests_quiet_channel">コーディングのリクエスト(おやすみ時間)</string>
     <string name="notify_coding_requests_quiet_description">おやすみ時間に届くリクエスト(音なし)</string>
-    <string name="notify_coding_status_channel">セッションの更新</string>
-    <string name="notify_coding_status_description">バックグラウンドの OpenCode セッションが終わったときに通知します</string>
-    <string name="notify_team_progress_channel">AI チームの進捗</string>
-    <string name="notify_team_progress_description">AI チームの作業中に表示される控えめな行</string>
+    <string name="notify_coding_status_channel">会話の更新</string>
+    <string name="notify_coding_status_description">バックグラウンドのOpenCodeの会話が終わったときに通知します</string>
+    <string name="notify_team_progress_channel">AI Teamの進捗</string>
+    <string name="notify_team_progress_description">AI Teamの作業中に表示される控えめな行</string>
     <string name="notify_setup_channel">セットアップ</string>
     <string name="notify_phone_server_channel">このスマートフォンの OpenCode</string>
     <string name="notify_phone_server_description">スマートフォンのサーバーまたはプロジェクトエンジンの実行中に表示されます</string>
@@ -28,7 +28,7 @@
     <string name="notify_ask_folder">%1$s で作業しますか?</string>
     <string name="notify_public_needs_you">対応が必要なリクエストがあります</string>
     <string name="notify_public_finished">会話が完了しました</string>
-    <string name="notify_status_public_stopped">OpenCode · チャットが停止しました</string>
+    <string name="notify_status_public_stopped">OpenCode · 会話が停止しました</string>
     <string name="notify_test_title">通知はオンです</string>
     <string name="notify_test_body">質問や完了した作業はこのように届きます。</string>
     <string name="notify_alert_quota_title">プロバイダの使用量がしきい値に達しました</string>
@@ -50,7 +50,7 @@
     <string name="notify_status_action_open">開く</string>
     <string name="notify_status_action_stop_reply">返信を停止</string>
     <string name="notify_status_action_start">開始</string>
-    <string name="notify_status_action_new_chat">新しいチャット</string>
+    <string name="notify_status_action_new_chat">新しい会話</string>
     <string name="notify_status_action_stop_opencode">OpenCode を停止</string>
     <string name="notify_status_public_ready">OpenCode · 準備完了</string>
     <string name="notify_status_public_paused">OpenCode · 一時停止中</string>

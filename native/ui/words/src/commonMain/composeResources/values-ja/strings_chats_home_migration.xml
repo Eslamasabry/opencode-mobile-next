@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="homeOpeningFailed">%1$sが応答していません</string>
+    <string name="homeOpeningFailedBody">サーバーが起動していて、このスマートフォンから接続できることを確認してから、もう一度お試しください。</string>
+    <string name="homeWatchedServers">監視中のサーバー</string>
+    <string name="homeInboxCount">受信トレイ · %1$s</string>
+    <string name="homeSourcesFailed">この一覧の接続を変更できませんでした。もう一度お試しください。</string>
+    <string name="homeWatchedOpenBody">会話を開く前に、このリクエストがまだこのサーバーで待機しているか確認します。</string>
+    <string name="homeWatchedOpenFailed">このリクエストを開けませんでした。監視中のサーバーを再読み込みしてからもう一度お試しください。</string>
+    <string name="homeRefreshWatched">監視中のサーバーを再読み込み</string>
+    <string name="homeMonitorOff">オフです。このサーバーの待機中リクエストを確認するにはオンにしてください。</string>
+    <string name="homeMonitorWaiting">次の確認を待っています</string>
+    <string name="homeMonitorChecking">待機中のリクエストを確認中</string>
+    <string name="homeMonitorCurrent">待機中のリクエストは最新です</string>
+    <string name="homeMonitorUnavailable">応答していません。リクエストは表示されません。</string>
+    <string name="homeMonitorWifi">Wi-Fiを待っています</string>
+    <string name="homeMonitorPaused">アプリとバックグラウンドサービスが停止しているため、確認は一時停止中です。</string>
+    <string name="homeNewBlockedBody">新しい会話は%1$sで開始します。まだ応答していないため、何も開始されていません。</string>
+    <string name="homeNewBlockedOpening">%1$sはまだ起動中です。しばらくしてからもう一度お試しください。</string>
+    <string name="homeNewWaitingOpening">%1$sが応答するとすぐに新しい会話が開きます。</string>
+    <string name="homeNewWaitingCancel">新しい会話をキャンセル</string>
+    <string name="homePhoneOffStart">このスマートフォンでOpenCodeを起動</string>
+    <string name="homePhoneOffTitle">このスマートフォンのOpenCodeがオフです</string>
+</resources>

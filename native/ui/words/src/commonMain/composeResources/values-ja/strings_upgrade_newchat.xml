@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="upgNewChatKept">入力内容と選択は保持されています。先に編集するか、もう一度お試しください。</string>
+    <string name="upgNewChatEdit">編集</string>
+    <string name="upgNewChatAgentMode">%1$s · %2$s</string>
+    <string name="upgNewChatChoicesTitle">エージェントとモデル</string>
+    <string name="upgNewChatAgents">担当</string>
+    <string name="upgNewChatModeHint">プランではまず方針を相談し、ビルドでは変更を行います。</string>
+    <string name="upgNewChatModeOnlyFor">ビルドとプランは%1$s向けです。</string>
+    <string name="upgNewChatModel">モデル</string>
+    <string name="upgNewChatModelsSearch">モデルを検索</string>
+    <string name="upgNewChatBackToAgents">エージェントに戻る</string>
+    <string name="upgNewChatDone">完了</string>
+    <string name="upgNewChatModelsNone">このサーバーに他のモデルはありません。</string>
+</resources>

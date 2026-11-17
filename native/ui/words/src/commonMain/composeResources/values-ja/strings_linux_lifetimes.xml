@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxLifetimeTitle">サービスの稼働時間</string>
+    <string name="linuxLifetimeRefresh">サービスの稼働時間を確認</string>
+    <string name="linuxLifetimeReading">サービスの稼働時間を読み込み中…</string>
+    <string name="linuxLifetimeRunning">実行中</string>
+    <string name="linuxLifetimeStopped">停止中</string>
+    <string name="linuxLifetimeUptime">今回の実行：%1$dミリ秒</string>
+    <string name="linuxLifetimeLastUptime">前回の実行：%1$dミリ秒</string>
+    <string name="linuxLifetimeExit">前回の終了コード：%1$d</string>
+    <string name="linuxLifetimeRestarts">再起動回数：%1$d</string>
+    <string name="linuxLifetimeUnknown">終了原因不明</string>
+    <string name="linuxLifetimeExited">プログラム終了</string>
+    <string name="linuxLifetimeKilled">メモリ不足またはAndroidのプロセス制限</string>
+    <string name="linuxLifetimeFailed">サービスの稼働時間を読み取れませんでした。</string>
+    <string name="linuxLifetimeEmpty">表示できるサービスの稼働記録はありません。</string>
+</resources>

@@ -6,7 +6,13 @@ import io.github.eslamasabry.oc.ui.words.res.account40ResetInHours
 import io.github.eslamasabry.oc.ui.words.res.account40ResetInMinutes
 import io.github.eslamasabry.oc.ui.words.res.chatUiReferenceAlreadyAdded
 import io.github.eslamasabry.oc.ui.words.res.e7SettingsStorageSummary__queued
+import io.github.eslamasabry.oc.ui.words.res.s10HomeRowHoursMinutes
+import io.github.eslamasabry.oc.ui.words.res.s10HomeRowMinutes
+import io.github.eslamasabry.oc.ui.words.res.s10HomeRowWorkingFor
 import io.github.eslamasabry.oc.ui.words.res.teamProjectGoalStatus__milestones
+import io.github.eslamasabry.oc.ui.words.res.termuxProcsDurationHours
+import io.github.eslamasabry.oc.ui.words.res.termuxProcsDurationMinutes
+import io.github.eslamasabry.oc.ui.words.res.workRunaway
 import kotlinx.coroutines.test.runTest
 import org.jetbrains.compose.resources.getPluralString
 import org.jetbrains.compose.resources.getString
@@ -66,6 +72,8 @@ class WordsTest {
         lang("ar")
         assertEquals("‎@x موجود بالفعل في الطلب", getString(Res.string.chatUiReferenceAlreadyAdded, "x"))
         lang("ja")
+        assertEquals("@xはすでにプロンプトに追加されています", getString(Res.string.chatUiReferenceAlreadyAdded, "x"))
+        lang("de")
         assertEquals("@x is already in the prompt", getString(Res.string.chatUiReferenceAlreadyAdded, "x"))
     }
 
@@ -93,5 +101,17 @@ class WordsTest {
         )
         lang("zh")
         assertEquals("2 个里程碑中共 5 个任务", HandWords.teamProjectBoardSummary(5, 2))
+    }
+
+    @Test
+    fun `B-L10N-010 ja composed duration messages read entirely in Japanese`() = runTest {
+        lang("ja")
+        val minDuration = getString(Res.string.termuxProcsDurationMinutes, 12)
+        val hourDuration = getString(Res.string.termuxProcsDurationHours, 1, 12)
+        assertEquals("OpenCodeは何もしていないまま12分間ビジー状態です", getString(Res.string.workRunaway, minDuration))
+        assertEquals("OpenCodeは何もしていないまま1時間12分間ビジー状態です", getString(Res.string.workRunaway, hourDuration))
+        val homeDuration = getString(Res.string.s10HomeRowHoursMinutes, "1", "12")
+        assertEquals("作業中・1時間12分", getString(Res.string.s10HomeRowWorkingFor, homeDuration))
+        assertEquals("5分", getString(Res.string.s10HomeRowMinutes, "5"))
     }
 }

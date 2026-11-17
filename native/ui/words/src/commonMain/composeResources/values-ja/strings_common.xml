@@ -6,8 +6,8 @@
     <string name="librarySettingsTitle">設定</string>
     <string name="modelChooseTitle">モデルを選ぶ</string>
     <string name="modelServerDefault">サーバーの既定</string>
-    <string name="refreshRetry">もう一度試す</string>
-    <string name="commonRetry">もう一度試す</string>
+    <string name="refreshRetry">再試行</string>
+    <string name="commonRetry">再試行</string>
     <string name="workspaceDismissNotice">閉じる</string>
     <string name="onboardingSetupGuide">セットアップガイド</string>
     <string name="onboardingTermuxSetup">このスマートフォン上で</string>
@@ -37,7 +37,7 @@
     <string name="connectStartingPhone">このスマートフォンで OpenCode を起動しています…</string>
     <string name="serverRowConnected">接続済み</string>
     <string name="kitConfirmCancel">キャンセル</string>
-    <string name="kitTryAgain">もう一度試す</string>
+    <string name="kitTryAgain">再試行</string>
     <string name="kitDetails">詳細</string>
     <string name="kitChipRemove">%1$s を削除</string>
     <string name="kitWorking">処理中</string>
@@ -60,7 +60,7 @@
     <string name="kitRequestAllowOnce">今回のみ許可</string>
     <string name="kitRequestReject">拒否</string>
     <string name="composerToolCommandsTitle">コマンドとエージェント</string>
-    <string name="chatRequestIfIgnored">エージェントは、あなたが回答するまで待ちます。失われるものはありません。</string>
+    <string name="chatRequestIfIgnored">エージェントは回答を待ちます。失われるものはありません。</string>
     <plurals name="chatRequestMoreWaiting">
         <item quantity="other">ほかに %1$d 件のリクエストが待っています。</item>
     </plurals>
@@ -73,7 +73,7 @@
     <string name="termuxInAppInstead">アプリ内サーバーを代わりにセットアップ</string>
     <string name="freeModelSignIn">API キーを追加</string>
     <string name="kitTurnLiveSeconds">%1$d秒</string>
-    <string name="kitComposerRailRetry">もう一度試す</string>
+    <string name="kitComposerRailRetry">再試行</string>
     <string name="chatsHomeAllProjects">すべてのプロジェクト</string>
     <string name="chatsHomeNeedsYou">対応が必要</string>
     <string name="shellTabChats">会話</string>

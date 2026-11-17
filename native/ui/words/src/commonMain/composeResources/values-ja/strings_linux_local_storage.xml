@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxLocalProjects">端末プロジェクトを参照</string>
+    <string name="linuxLocalProjectsDetail">Linux削除後に保持されたプロジェクトも含め、サーバー停止中にフォルダを参照できます。</string>
+    <string name="linuxLocalParent">1つ上のフォルダへ</string>
+    <string name="linuxLocalClose">フォルダを閉じる</string>
+    <string name="linuxLocalGit">Gitプロジェクト</string>
+    <string name="linuxLocalFolder">フォルダ</string>
+    <string name="linuxLocalReading">フォルダを読み込み中…</string>
+    <string name="linuxLocalFolderFailed">このフォルダを読み込めません。移動または削除されたか、リンクである可能性があります。</string>
+    <string name="linuxLocalEmpty">ここにフォルダはありません。</string>
+    <string name="linuxLocalMeasure">Linux削除時の空き容量を確認</string>
+    <string name="linuxLocalRemoveKeep">Linuxを削除（プロジェクトは保持）</string>
+    <string name="linuxLocalRemoveAll">Linuxとプロジェクトを削除</string>
+    <string name="linuxLocalFreed">%1$s解放</string>
+    <string name="linuxLocalRemoveKeepQuestion">プロジェクトを残してLinuxを削除しますか？</string>
+    <string name="linuxLocalRemoveAllQuestion">Linuxとすべての端末プロジェクトを削除しますか？</string>
+    <string name="linuxLocalRemoveKeepBody">端末内のプログラムを停止し、Linux、インストール済みツール、サインイン、ローカルサーバー履歴を削除します。プロジェクトファイルは引き続き参照できます。%1$s解放されます。</string>
+    <string name="linuxLocalRemoveAllBody">端末内のプログラムを停止し、Linux、インストール済みツール、サインイン、ローカルサーバー履歴、および保持されているすべての端末プロジェクトファイルを削除します。この操作は元に戻せません。%1$s解放されます。</string>
+    <string name="linuxLocalStorageFailed">Linuxストレージの読み取りまたは削除を完了できませんでした。端末内のタスクを閉じてからもう一度お試しください。</string>
+    <string name="linuxLocalRemoved">Linuxストレージを削除しました。</string>
+    <string name="linuxLocalCreate">端末プロジェクトを作成</string>
+    <string name="linuxLocalCreatePath">プロジェクトフォルダの絶対パス</string>
+    <string name="linuxLocalInvalidPath">親ディレクトリ参照（..）や改行を含まない絶対フォルダパスを入力してください。</string>
+</resources>

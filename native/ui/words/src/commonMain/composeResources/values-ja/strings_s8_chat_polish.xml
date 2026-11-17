@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <plurals name="chatWorkWaitingEdit">
+        <item quantity="other">%1$d件のファイルの編集待ち</item>
+    </plurals>
+    <plurals name="chatWorkWaitingRun">
+        <item quantity="other">%1$d件のコマンドの実行待ち</item>
+    </plurals>
+    <plurals name="chatWorkWaitingOther">
+        <item quantity="other">%1$d件のステップが待機中</item>
+    </plurals>
+    <string name="chatMenuContinueElsewhere">別の場所で続ける</string>
+</resources>

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxFindProjects">この端末上のプロジェクトを検索</string>
+    <string name="linuxFindProjectsBody">プロジェクト領域と端末の共有ストレージ内を検索します。フォルダは元の場所から移動しません。</string>
+    <string name="linuxStopFinding">検索を停止</string>
+    <string name="linuxFindProjectsDone">検索が完了しました</string>
+    <string name="linuxFindProjectsLimited">スキャン上限に達したため停止しました。以下は先頭の結果です。</string>
+    <string name="linuxProjectDart">Dart / Flutter</string>
+    <string name="linuxProjectNode">Node</string>
+    <string name="linuxProjectPython">Python</string>
+    <string name="linuxProjectRust">Rust</string>
+    <string name="linuxProjectGo">Go</string>
+    <string name="linuxProjectJava">Java / Gradle</string>
+    <string name="linuxProjectRuby">Ruby</string>
+    <string name="linuxProjectPhp">PHP</string>
+    <string name="linuxProjectDotnet">.NET</string>
+    <string name="linuxProjectCpp">C / C++</string>
+    <string name="linuxProjectFolder">プロジェクトフォルダ</string>
+</resources>

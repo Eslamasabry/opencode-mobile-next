@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxGitRepairAction">破損したプロジェクト履歴を修復</string>
+    <string name="linuxGitRepairWorking">プロジェクト履歴を修復中…</string>
+    <string name="linuxGitRepairHealthy">このプロジェクトの履歴は正常に読み込めます。修復は不要でした。</string>
+    <plurals name="linuxGitRepairRestored">
+        <item quantity="other">%1$d件の履歴ファイルを復元しました。プロジェクトを再び読み込めます。</item>
+    </plurals>
+    <string name="linuxGitRepairMissing">一部の履歴を復元できませんでした。プロジェクトをもう一度コピーするか、バックアップを復元してください。</string>
+    <string name="linuxGitRepairNotProject">この端末のprojectsフォルダ内にあるプロジェクトのみここで修復できます。</string>
+    <string name="linuxGitRepairFailed">履歴の修復を完了できませんでした。もう一度お試しください。</string>
+    <string name="linuxGitRepairDetailLocal">このプロジェクト内のコピーから履歴ファイルを復元します。プロジェクトファイルはそのまま残ります。</string>
+</resources>

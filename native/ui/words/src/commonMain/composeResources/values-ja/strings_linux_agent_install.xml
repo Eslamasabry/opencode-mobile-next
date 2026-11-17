@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxAgentInstall">%1$sをインストールまたはアップデート</string>
+    <string name="linuxAgentInstalling">%1$sをインストール中</string>
+    <string name="linuxAgentInstallBackground">インストールはバックグラウンドで続行されます。「再読み込み」をタップすると最新の進行状況を確認できます。</string>
+    <string name="linuxAgentInstallCancel">インストールをキャンセル</string>
+    <string name="linuxAgentInstallBusy">別のセットアップが実行中です。完了するまで待つか、先にキャンセルしてください。</string>
+    <string name="linuxAgentInstallSpace">このダウンロードとインストール済みファイルに必要な空き容量がありません。ストレージの空き容量を増やしてからもう一度お試しください。</string>
+    <string name="linuxAgentInstallUnavailable">このエージェントは現在この端末にインストールできません。</string>
+    <string name="linuxAgentInstallDone">%1$sがインストールされました。使用するにはサインインと端末の互換性チェックが必要です。</string>
+    <string name="linuxAgentInstallFailed">%1$sをインストールできませんでした。「インストールまたはアップデート」をタップしてもう一度お試しください。</string>
+    <string name="linuxAgentInstallInterrupted">%1$sのインストールが中断されました。「インストールまたはアップデート」をタップして安全にやり直してください。</string>
+</resources>

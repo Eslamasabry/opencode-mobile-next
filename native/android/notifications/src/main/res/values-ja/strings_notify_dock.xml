@@ -3,5 +3,5 @@
      app's notification settings. The row's own lines fall back to English, as the rest of the Japanese copy does. -->
 <resources>
     <string name="notify_dock_channel">進行中の会話</string>
-    <string name="notify_dock_channel_description">何かが動いているときやあなたの返事を待っているときに、進行中の会話を一覧にする静かな通知です。ロック画面では名前は表示されません。</string>
+    <string name="notify_dock_channel_description">何かが動いているときや返事を待っているときに、進行中の会話を一覧にする静かな通知です。ロック画面では名前は表示されません。</string>
 </resources>

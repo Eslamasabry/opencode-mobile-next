@@ -9,12 +9,12 @@
     <string name="collectTitle">収集する情報</string>
     <string name="collectRowSummary">利用状況とクラッシュ報告は、有効にするまで送信しません。それぞれが送る内容を確認できます。</string>
     <string name="collectUsageNotSentYet">このバージョンは利用状況とアプリの状態をまだ送信しません。選択は保存され、送信に対応した後で使われます。</string>
-    <string name="collectRules">利用状況を有効にすると、利用状況の報告は Google と、私たちが運営し Railway でホストする Umami 分析サーバーに送られます。Umami は IP アドレスや個人を識別する ID を保存しません。匿名の訪問者ハッシュは毎月変わり、あなたのアドレスや端末には戻せません。送るのは固定語、範囲、アプリのバージョンとビルド情報だけで、自由入力の文章は送りません。利用状況を無効にすると未送信の報告を削除します。</string>
+    <string name="collectRules">利用状況を有効にすると、利用状況の報告は Google と、私たちが運営し Railway でホストする Umami 分析サーバーに送られます。Umami は IP アドレスや個人を識別する ID を保存しません。匿名の訪問者ハッシュは毎月変わり、お使いのアドレスや端末には戻せません。送るのは固定語、範囲、アプリのバージョンとビルド情報だけで、自由入力の文章は送りません。利用状況を無効にすると未送信の報告を削除します。</string>
     <string name="collectUsageLabel">利用状況とアプリの状態を有効にした場合</string>
     <string name="collectCrashesLabel">クラッシュ報告を有効にした場合</string>
     <string name="collectReportLabel">問題の報告を送るときだけ</string>
     <string name="collectNeverLabel">送信しない情報</string>
-    <string name="collectConnect">サーバーへの接続が成功したか、失敗の種類と所要時間、コンピューターへの接続を選んだこと</string>
+    <string name="collectConnect">サーバーへの接続が成功したか、失敗の種類と所要時間、パソコンへの接続を選んだこと</string>
     <string name="collectDrop">接続が切れた理由と、再接続できたかどうか</string>
     <string name="collectSend">送信が成功したか待ち行列に残ったか、入力・音声・添付の別、エージェントの種類、最初の応答までの時間</string>
     <string name="collectTurns">やり取りの終了状態（完了、表示する内容なし、停止、エラー、切断、承認への未回答）、最初の応答とエージェントの最初の動きまでの時間、全体の所要時間、使ったツールの数、切断から復帰したかどうか</string>
@@ -40,6 +40,6 @@
     <string name="collectCrashKeys">アプリのバージョン、インストール方法、サーバーの種類、端末内サーバーの動作状態、接続数、サーバーのバージョン、報告の種類とコード</string>
     <string name="collectReport">問題について書いた内容、前回の異常終了、アプリと Android のバージョン、メモリの範囲、サーバーの種類。キー、アドレス、パスは伏せます。ログと会話は含みません。全文を確認して送信またはキャンセルを選べます。</string>
     <string name="collectNever">プロンプトと応答、ファイル名とパス、ウェブアドレス、ホスト名、IP アドレス、エラーメッセージ本文、キーとトークン、広告 ID、Android ID</string>
-    <string name="nativeTelemetryUsageDetail">Google Analytics for Firebase に匿名の集計を送ります。使うページや機能の種類、接続・送信・セットアップ・エージェント・バックグラウンドサービス・更新の成否、起動の速さ、ページの滑らかさ、メモリ警告、メモリ・空き容量・CPU・WebView バージョンの範囲です。Firebase Performance Monitoring には、起動、接続、最初の応答、セットアップの各手順、エージェント起動の所要時間も送ります。固定語、範囲、数値と、ランダムなインストール ID、端末モデル、Android のバージョンを扱い、コード、会話、ファイル、アドレス、キー、広告 ID は送りません。同じ利用状況の報告は、私たちが運営し、Railway でホストする Umami 分析サーバーにも送られます。Umami は IP アドレスや個人を識別する ID を保存せず、接続元のアドレスを一度だけ使っておおよその地域を割り出し、毎月変わる匿名の訪問者ハッシュを保持します。このハッシュから、あなたのアドレスや端末に戻すことはできません。報告にはアプリのバージョンとビルド番号、言語、画面サイズ、Android のバージョン、端末の種類が含まれます。Umami に端末 ID やインストール ID は送りません。</string>
+    <string name="nativeTelemetryUsageDetail">Google Analytics for Firebase に匿名の集計を送ります。使うページや機能の種類、接続・送信・セットアップ・エージェント・バックグラウンドサービス・更新の成否、起動の速さ、ページの滑らかさ、メモリ警告、メモリ・空き容量・CPU・WebView バージョンの範囲です。Firebase Performance Monitoring には、起動、接続、最初の応答、セットアップの各手順、エージェント起動の所要時間も送ります。固定語、範囲、数値と、ランダムなインストール ID、端末モデル、Android のバージョンを扱い、コード、会話、ファイル、アドレス、キー、広告 ID は送りません。同じ利用状況の報告は、私たちが運営し、Railway でホストする Umami 分析サーバーにも送られます。Umami は IP アドレスや個人を識別する ID を保存せず、接続元のアドレスを一度だけ使っておおよその地域を割り出し、毎月変わる匿名の訪問者ハッシュを保持します。このハッシュから、お使いのアドレスや端末に戻すことはできません。報告にはアプリのバージョンとビルド番号、言語、画面サイズ、Android のバージョン、端末の種類が含まれます。Umami に端末 ID やインストール ID は送りません。</string>
     <string name="nativeTelemetryConsentBody">同意すると、利用状況とアプリの状態の報告は Google Firebase と、私たちが運営し Railway でホストする Umami サーバーに送られます。クラッシュ報告は Google Firebase に送られます。Umami は IP アドレスや個人の識別子を保存しません。各選択は「設定 › プライバシーとデータ」で変更できます。</string>
 </resources>

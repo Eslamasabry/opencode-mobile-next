@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="voiceConversationNativeSends">録音が終わると、話した内容がこの会話に送信されます。次の発話を始めるには「聴く」をタップしてください。設定を有効にした場合のみ返信が読み上げられます。</string>
+    <string name="voiceConversationNativeTourSpeak">話してから「送信」をタップすると送信されます。「聴く」で次の発話を始めます。</string>
+    <string name="voiceConversationNativeTourReplies">「返信を読み上げる」を使うには同意と端末の音声が必要です。読み上げはいつでも停止できます。</string>
+    <string name="voiceConversationNativeTourLeave">「音声モードを終了」を押すと聞き取りと自動読み上げが止まります。送信未確認のメッセージが自動で再送信されることはありません。</string>
+    <string name="voiceConversationNativeTourDone">了解</string>
+    <string name="voiceConversationNativeTourNext">次へ</string>
+    <string name="voiceConversationNativeTourReset">ヒントをもう一度表示</string>
+    <string name="voiceConversationNativeTourResetFailed">ヒントをリセットできませんでした。もう一度お試しください。</string>
+    <string name="voiceConversationNativeTourReplay">デモを見る</string>
+    <string name="voiceConversationNativeTourLoadFailed">ヒントを開けませんでした。もう一度お試しください。</string>
+</resources>

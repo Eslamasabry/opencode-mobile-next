@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="linuxHostSetupTitle">Linuxパソコンをセットアップ</string>
+    <string name="linuxHostSetupIntro">コマンドをコピーし、UbuntuまたはLinuxパソコンのターミナルに貼り付けて実行してください。アプリが代わりに実行することはありません。</string>
+    <string name="linuxHostSetupSafety">インストーラーはインストール前に固定バージョンのダウンロードを検証します。OpenCodeはこのパソコン上でのみ待機します。端末を接続するにはUSBまたは認証済みトンネルを使用してください。</string>
+    <string name="linuxHostSetupInstall">OpenCodeとそのサービスをインストール</string>
+    <string name="linuxHostSetupUpdate">OpenCodeをアップデート</string>
+    <string name="linuxHostSetupStart">サービスを起動</string>
+    <string name="linuxHostSetupStop">サービスを停止</string>
+    <string name="linuxHostSetupRestart">サービスを再起動</string>
+    <string name="linuxHostSetupStatus">サービスを確認</string>
+    <string name="linuxHostSetupCopy">インストーラーとコマンドをコピー</string>
+    <string name="linuxHostSetupCopyDetail">コピー内容にはアプリに同梱された完全なインストーラーと選択したコマンドが含まれ、現在のフォルダに「ubuntu-opencode.sh」を書き出します。「インストール」は既存のOpenCode 2を保持し、「アップデート」はOpenCode 1を移行したり新しいバージョンをダウングレードしたりしません。</string>
+    <string name="linuxHostSetupUsb">端末をUSBで接続した状態で、パソコン上でこのコマンドを実行してサーバーポートを転送してください。</string>
+    <string name="linuxHostSetupCopyUsb">USBコマンドをコピー</string>
+</resources>

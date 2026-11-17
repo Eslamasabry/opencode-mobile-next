@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="chatReceiptCheckAgain">再読み込み</string>
+    <string name="chatReceiptChecking">メッセージが届いたか確認中…</string>
+    <string name="chatReceiptLastChecked">最終確認：%1$s。</string>
+</resources>

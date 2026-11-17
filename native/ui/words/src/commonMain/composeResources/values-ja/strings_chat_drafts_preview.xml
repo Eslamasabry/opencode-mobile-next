@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="chatDraftRestoring">保存済みの下書きを開いています…</string>
+    <string name="chatDraftRestoreFailed">保存済みの下書きを開けませんでした。もう一度お試しください。</string>
+    <string name="chatDraftAlreadySent">この内容はすでに送信されている可能性があります。再送信する前に会話を確認してください。</string>
+    <string name="chatDraftRepeatTitle">この内容を再送信しますか？</string>
+    <string name="chatDraftRepeatAction">再送信</string>
+    <string name="chatDraftRepeatBody">この内容はすでに会話に含まれています。新しい返信が必要な場合のみ再送信してください。</string>
+</resources>

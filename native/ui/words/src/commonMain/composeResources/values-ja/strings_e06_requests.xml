@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="chatRequestNoLongerNeeded">対応不要になりました</string>
+    <string name="chatRequestNoLongerNeededEnding">実行が終了しつつあるため、何も送信されませんでした。</string>
+    <string name="chatRequestCardLabel">リクエスト（%1$s/%2$s）：%3$s</string>
+</resources>

@@ -50,7 +50,7 @@ term	\bProjects?\b	プロジェクト
 term	\b[Ff]olders?\b	フォルダ
 term	\b[Ss]chedules?\b	スケジュール
 term	\b(?<!Claude )Agents?\b	エージェント
-term	\b[Cc]omputers?\b	パソコン
+term	\b[Cc]omputers?\b(?! or none)	パソコン
 term	^Home$	ホーム
 term	^Files$	ファイル
 term	^Cancel$	キャンセル
@@ -81,7 +81,7 @@ term	^Next$	次へ
 term	^Details$	詳細
 term	\b[Nn]otifications?\b	通知
 term	\b[Pp]asswords?\b	パスワード
-term	\b[Pp]ermissions?\b	権限
+term	\b[Pp]ermissions?\b	権限|許可
 term	^Usage$	使用状況
 term	\b[Mm]odels?\b	モデル
 term	\bSign in\b	サインイン
@@ -98,7 +98,7 @@ forbid	フォルダー	use フォルダ, not フォルダー
 forbid	メモリー	use メモリ, not メモリー
 forbid	到達	use 接続できません / 届きません, not 到達
 forbid	あなた	leave the subject out, do not use あなた
-forbid	[!！]	no exclamation marks
+forbid	(?<!「)[!！](?!」)	no exclamation marks
 allow	OK
 allow	Wi-Fi
 allow	Bluetooth

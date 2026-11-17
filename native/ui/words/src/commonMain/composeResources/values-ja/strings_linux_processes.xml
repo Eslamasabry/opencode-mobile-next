@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <plurals name="linuxProcessMembers">
+        <item quantity="other">%1$d件のプロセス</item>
+    </plurals>
+    <string name="linuxProcessHeavy">高負荷</string>
+</resources>

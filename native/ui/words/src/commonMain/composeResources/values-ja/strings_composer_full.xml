@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="composerFullThinking">思考</string>
+    <string name="composerFullThinkingDefault">既定</string>
+    <string name="composerFullAgent">エージェント</string>
+    <string name="composerFullModels">モデル</string>
+    <string name="composerFullModelChangeFailed">モデルの選択を確認できませんでした。選択内容を確認してからもう一度お試しください。</string>
+    <string name="composerFullAttach">添付</string>
+    <string name="composerFullAddTitle">プロンプトに追加</string>
+    <string name="composerFullPhotoLibrary">写真ライブラリ</string>
+    <string name="composerFullTakePhoto">写真を撮る</string>
+    <string name="composerFullPasteImage">クリップボードから画像を貼り付け</string>
+    <string name="composerFullPasteEmpty">クリップボードに画像がありません。</string>
+    <string name="composerFullDraftFull">先に添付ファイルを1つ削除してください。下書きには合計5ファイル・20MBまで添付できます。</string>
+    <string name="composerFullPhotoDenied">写真へのアクセスが拒否されました。Androidのアプリ設定でカメラまたは写真へのアクセスを許可してから、もう一度お試しください。</string>
+    <string name="composerFullStale">選択中に会話が変更されました。もう一度お試しください。</string>
+    <string name="composerFullCommands">コマンド</string>
+    <string name="composerFullFiles">プロジェクト内のファイル</string>
+    <string name="composerFullAttachmentsLocal">添付ファイルはこの下書きとともにこの端末に保存されます。</string>
+    <string name="composerFullSteerHint">作業中に指示を追加…</string>
+    <string name="composerFullWaitingHint">上の決定をお待ちください…</string>
+</resources>

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="composerPreviewModelButton">モデル</string>
+    <string name="composerPreviewModelDefault">サーバーの既定</string>
+    <string name="composerPreviewModelDefaultHint">サーバー独自の既定モデル</string>
+    <string name="composerPreviewModelsTitle">モデルを選ぶ</string>
+    <string name="composerPreviewModelsLoading">モデルを読み込み中…</string>
+    <string name="composerPreviewModelsEmpty">現在利用できるモデルはありません。</string>
+    <string name="composerPreviewModelsFailed">モデル一覧を読み込めませんでした。</string>
+    <string name="composerPreviewModelsRetry">再試行</string>
+    <string name="composerPreviewModelsClose">閉じる</string>
+    <string name="composerPreviewAttachFile">ファイルを添付</string>
+    <string name="composerPreviewAttachNoPicker">この端末ではここからファイルを添付できません。</string>
+    <string name="composerPreviewAttachModelWithoutFiles">このモデルはファイルに対応していません。対応しているモデルを選んでください。</string>
+    <string name="composerPreviewAttachmentRemove">削除</string>
+    <string name="composerPreviewAttachmentFailed">ファイルを添付できませんでした。</string>
+    <string name="composerPreviewAttachmentTooLarge">このファイルは大きすぎて添付できません。</string>
+    <string name="composerPreviewAttachmentUnsupported">この種類のファイルは添付できません。</string>
+    <string name="composerPreviewAttachmentStorage">この端末にファイルを保存できませんでした。</string>
+    <string name="composerPreviewAttachmentDismiss">閉じる</string>
+    <string name="composerPreviewAttachmentRetry">再試行</string>
+</resources>

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <plurals name="native_chip_pending">
+        <item quantity="other">%1$d件が対応待ち</item>
+    </plurals>
+    <plurals name="native_chip_running">
+        <item quantity="other">%1$d件が実行中</item>
+    </plurals>
+    <string name="native_live_channel">ライブコーディング接続</string>
+    <string name="native_live_description">OpenCodeがサーバー接続をバックグラウンドで維持している間に表示されます</string>
+    <string name="native_phone_server_body">ほかのアプリを使っている間も、エージェントは作業を続けます。</string>
+    <string name="native_phone_server_channel">この端末上のOpenCode</string>
+    <string name="native_phone_server_description">端末内サーバーまたはプロジェクトエンジンが実行中のときに表示されます</string>
+    <string name="native_setup_channel">セットアップ</string>
+    <string name="native_status_action_new_chat">新しい会話</string>
+    <string name="native_status_action_open">開く</string>
+    <string name="native_status_action_start">起動</string>
+    <string name="native_status_action_stop_opencode">OpenCodeを停止</string>
+    <string name="native_status_action_stop_reply">返信を停止</string>
+    <string name="native_status_on_this_phone">この端末上</string>
+    <string name="native_status_paused_android_body">Androidではバックグラウンド動作が1日6時間で停止されます。続けるにはOpenCodeを開いてください。</string>
+    <string name="native_status_paused_android_title">一時停止中 · Androidのバックグラウンド制限</string>
+    <string name="native_status_paused_idle_body">タップしてOpenCodeを再起動</string>
+    <string name="native_status_paused_idle_title">一時停止中 · 実行中の処理なし</string>
+    <string name="native_status_public_paused">OpenCode · 一時停止中</string>
+    <string name="native_status_public_ready">OpenCode · 待機中</string>
+    <string name="native_status_ready_body">いつでも開始できます</string>
+    <string name="native_status_ready_title">待機中 · 実行中の処理なし</string>
+</resources>

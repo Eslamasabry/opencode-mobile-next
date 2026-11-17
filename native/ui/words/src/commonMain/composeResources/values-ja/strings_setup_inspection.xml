@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="setupInspectTitle">セットアップを確認</string>
+    <string name="setupInspectReadOnly">この画面では設定とツールの状態を読み取ります。このサーバーではセットアップ変更を安全に復元できないため、「適用」と「元に戻す」は利用できません。</string>
+    <string name="setupInspectFailed">セットアップ情報を読み込めませんでした。サーバーに再接続してもう一度お試しください。</string>
+    <string name="setupInspectRefresh">セットアップを再読み込み</string>
+    <string name="setupInspectLoading">セットアップを読み込み中…</string>
+    <string name="setupInspectConfig">設定ソース</string>
+    <string name="setupInspectNoSources">設定ソースは報告されませんでした。</string>
+    <string name="setupInspectMcp">ツール接続</string>
+    <string name="setupInspectNoMcp">ツール接続は報告されませんでした。</string>
+    <string name="setupMcpConnected">接続済み</string>
+    <string name="setupMcpPending">接続中</string>
+    <string name="setupMcpDisabled">無効</string>
+    <string name="setupMcpFailed">接続失敗</string>
+    <string name="setupMcpSignIn">サインインが必要</string>
+    <string name="setupMcpUnknown">状態不明</string>
+    <string name="setupRegistryTitle">公開ツールレジストリ</string>
+    <string name="setupRegistryConsent">公開レジストリを閲覧</string>
+    <string name="setupRegistryPrivacy">再読み込みすると、サーバーの認証情報なしで公開MCPレジストリに問い合わせます。検索語句はレジストリへ送信されますが、決して保存されません。</string>
+    <string name="setupRegistryDisabled">閲覧はオフです。「再読み込み」を選択したときに一覧を読み込むにはオンにしてください。</string>
+    <string name="setupRegistryLoading">公開一覧を読み込み中…</string>
+    <string name="setupRegistryOffline">オフラインです。保存済みの一覧を表示しています。</string>
+    <string name="setupRegistryError">公開レジストリを読み込めませんでした。保存済みの一覧を表示しています。</string>
+    <string name="setupRegistryEmpty">一覧が読み込まれていません。レジストリを再読み込みするか検索してください。</string>
+    <string name="setupRegistryReadOnly">一覧は参考情報のみです。ツールはサーバー上で手動セットアップしてください。この画面でレジストリのコマンドを実行したり一覧のリンクを開いたりすることはありません。</string>
+    <string name="setupRegistrySearch">一覧を検索</string>
+    <string name="setupRegistryRefresh">一覧を再読み込み</string>
+    <string name="setupRegistrySaved">保存済みの一覧を表示</string>
+    <string name="setupInspectUnsupported">このサーバーではセットアップ確認は利用できません。</string>
+    <string name="setupMigrationRequired">以前の会話を移行中…</string>
+    <string name="setupMigrationProgress">以前の会話を移行中（%1$d/%2$d）…</string>
+    <string name="setupMigrationError">以前の会話の移行を完了できませんでした。元のデータはこの端末にそのまま残っています。</string>
+    <string name="setupMigrationUnavailable">以前の会話の状態を取得できませんでした。再読み込みしてもう一度お試しください。</string>
+</resources>

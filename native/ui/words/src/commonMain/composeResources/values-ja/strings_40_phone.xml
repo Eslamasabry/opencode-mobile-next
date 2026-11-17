@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="r40PhoneConnect">このスマートフォンのサーバーを使う</string>
+    <string name="r40PhoneConnectFailed">このスマートフォンのサーバーに接続できませんでした。もう一度お試しください。</string>
+    <string name="r40PhoneMemory">%1$sのメモリを使用中</string>
+    <string name="r40PhoneHistoryMoving">以前の会話を移行中…</string>
+    <string name="r40PhoneHistoryCount">以前の会話を移行中（%1$s/%2$s）…</string>
+    <string name="r40PhoneHistoryFailed">以前の会話を移行できませんでした。元のデータはこのスマートフォンにそのまま残っています。</string>
+    <string name="r40PhoneReplySpeed">前回の返信速度</string>
+    <string name="r40PhoneReplyNoWords">%1$sで完了（文字出力なし）</string>
+    <string name="r40PhoneReplyLast">最初の出力まで%1$s · 完了まで%2$s</string>
+    <string name="r40PhoneInstalled">このスマートフォンにインストール済み</string>
+    <string name="r40PhoneChecking">確認中…</string>
+    <string name="r40PhoneInstalledMark">インストール済み</string>
+    <string name="r40PhoneInventoryFailed">インストール済みの項目を確認できませんでした。前回の一覧を保持しています。もう一度お試しください。</string>
+    <string name="r40PhoneLinuxMode">Linuxモード</string>
+    <string name="r40PhoneLinuxFast">高速（seccomp）</string>
+    <string name="r40PhoneLinuxSlow">低速（ptrace）</string>
+    <string name="r40PhoneUnknown">未報告</string>
+    <string name="r40PhoneAwake">スマートフォンのスリープ防止</string>
+    <string name="r40PhoneAwakeNow">現在作業中のためスリープ防止中</string>
+    <string name="r40PhoneAwakeWhenWorking">作業が必要な間のみ</string>
+    <string name="r40PhoneFirstWords">最初の出力を待つ</string>
+    <string name="r40PhoneFirstSplit">アプリ側%1$s · サーバー側%2$s</string>
+    <string name="r40PhoneRefresh">スマートフォンの詳細を再読み込み</string>
+    <string name="r40PhoneModel">前回の返信のモデル</string>
+    <string name="r40PhoneRuntimeDetails">ランタイムの詳細</string>
+    <string name="r40PhoneHistoryDetails">会話インポートの詳細</string>
+    <string name="r40PhoneLogFailed">サーバーログを読み取れませんでした。もう一度お試しください。</string>
+    <string name="r40PhoneLogEmpty">サーバーはまだログを書き込んでいません。</string>
+    <string name="r40PhoneLog">OpenCodeサーバーログ</string>
+    <string name="r40PhoneSeconds">%1$s秒</string>
+</resources>
