@@ -80,17 +80,24 @@ class KitLiquidJoinKitTest {
         }
     }
 
+    private fun androidx.compose.ui.test.ComposeUiTest.joined(): Int =
+        onAllNodes(joinedPane, useUnmergedTree = true).fetchSemanticsNodes().size
+
     /**
-     * Lets the joined glass settle on the TEST clock in a few large jumps. With the clock on auto-advance every
-     * `waitForIdle` and every 16 ms step of `advanceTimeBy` draws a whole frame, and a frame of joined glass (the
-     * lens pass, in software on a runner) costs far more than the animation needs: about a hundred and fifty frames
-     * took close to the test's one-minute limit when the machine was busy. A jump of [ignoreFrameDuration] draws one.
+     * Steps the TEST clock, in jumps of half a second, until [expected] panes are joined (at most [maxSteps] jumps), and
+     * returns the count it ended on. A frame of joined glass costs seconds in software on a runner while it animates,
+     * and a frame is drawn for every `waitForIdle` and every 16 ms of an auto-advancing clock: about a hundred and
+     * fifty of them took close to the test's one-minute limit when the machine was busy. A jump draws one frame, and
+     * stopping as soon as the join (or its end) is seen draws no more than the join needs. The count is still read
+     * and asserted by the caller, so a join that never comes (or never goes) still fails.
      */
-    private fun androidx.compose.ui.test.ComposeUiTest.settle(totalMs: Long = 1_500) {
-        repeat((totalMs / 250).toInt()) {
-            mainClock.advanceTimeBy(250, ignoreFrameDuration = true)
+    private fun androidx.compose.ui.test.ComposeUiTest.settleTo(expected: Int, maxSteps: Int = 12): Int {
+        repeat(maxSteps) {
+            if (joined() == expected) return expected
+            mainClock.advanceTimeBy(500, ignoreFrameDuration = true)
             waitForIdle()
         }
+        return joined()
     }
 
     private fun joinedPanes(appearance: KitAppearance, joins: Boolean, open: Boolean): Int {
@@ -102,8 +109,8 @@ class KitLiquidJoinKitTest {
             waitForIdle()
             shown = open
             waitForIdle()
-            settle()
-            count = onAllNodes(joinedPane, useUnmergedTree = true).fetchSemanticsNodes().size
+            // Where nothing is to join, wait the same time so a late join would show; where it joins, stop when it has.
+            count = settleTo(if (open && joins && appearance.glassLook != GlassLookId.Frosted) 2 else -1, maxSteps = if (open && joins && appearance.glassLook != GlassLookId.Frosted) 12 else 4)
         }
         return count
     }
@@ -135,11 +142,10 @@ class KitLiquidJoinKitTest {
         setContent { KitTheme(appearance = glass, platform = platform(true), localeTag = "en") { Scene(shown) { shown = false } } }
         shown = true
         waitForIdle()
-        settle()
-        onAllNodes(joinedPane, useUnmergedTree = true).assertCountEquals(2)
+        kotlin.test.assertEquals(2, settleTo(2), "open: the bar's side and the menu's side")
         shown = false
         waitForIdle()
-        settle()
+        kotlin.test.assertEquals(0, settleTo(0), "closed: nothing joins")
         onAllNodes(joinedPane, useUnmergedTree = true).assertCountEquals(0)
     }
 
