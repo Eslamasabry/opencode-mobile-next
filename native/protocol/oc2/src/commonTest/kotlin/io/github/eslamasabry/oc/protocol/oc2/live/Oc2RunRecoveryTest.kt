@@ -25,7 +25,7 @@ class Oc2RunRecoveryTest {
             respond(when {
                 path.endsWith("/active") -> "{}"
                 path.endsWith("/message") -> "[]"
-                else -> error("unexpected read")
+                else -> """{"data":{"id":"session"}}"""
             }, HttpStatusCode.OK, headersOf(HttpHeaders.ContentType, "application/json"))
         }
         val g = Oc2Gateway(NetClient(HttpClient(engine), { TransportError.Other }), ServerOrigin("https", "example.test", 443),
@@ -33,7 +33,7 @@ class Oc2RunRecoveryTest {
         val events = mutableListOf<GatewayEvent>()
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { g.events.all.collect { events += it.event } }
         assertIs<Outcome.Ok<*>>(g.reconcileRuns(setOf(sid)))
-        assertEquals(listOf("/api/session/active", "/api/session/session/message"), requests)
+        assertEquals(listOf("/api/session/active", "/api/session/session", "/api/session/session/message"), requests)
         val ended = assertIs<GatewayEvent.RunEnded>(events.single())
         assertEquals(sid, ended.sessionId)
         assertEquals(io.github.eslamasabry.oc.core.domain.events.RunOutcome.Idle, ended.outcome)

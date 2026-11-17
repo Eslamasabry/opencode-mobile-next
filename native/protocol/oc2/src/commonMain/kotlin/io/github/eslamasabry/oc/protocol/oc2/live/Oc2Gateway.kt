@@ -1258,7 +1258,12 @@ internal class Oc2Gateway(
         val statuses = (read as Outcome.Ok).value
         for (id in sessions) {
             if (statuses[id] == SessionStatus.Busy || statuses[id] == SessionStatus.Retry) continue
-            val history = messagePage(id, limit = 100)
+            val details = session(id)
+            if (details is Outcome.Failed) return details
+            val history = readHistoryAtStagedBoundary(
+                this, id, boundary = (details as Outcome.Ok).value.stagedRevert?.messageId, limit = 100,
+                isCurrent = { at == scopeRevision && !closed },
+            )
             if (history is Outcome.Failed) return history
             runLane.withLock {
                 if (at != scopeRevision || revisions[id] != runRevisions[id] || closed)
