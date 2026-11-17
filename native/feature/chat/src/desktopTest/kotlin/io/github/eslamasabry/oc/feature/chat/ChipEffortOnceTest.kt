@@ -136,10 +136,10 @@ class ChipEffortOnceTest {
             }
             // At text 1.3 the kit's chip ellipsizes a name this long beside the plus and the mic (its design, measured:
             // run 44029281726); the words it carries are whole either way, and 1.0 shows the whole name.
-            if (scale == 1f)
-                scene(locale, scale, null, chrome = bare) {
-                    assertFalse(isCut("Gemini 3.8 Flash (High)"), "$where: the model's name is whole")
-                }
+            // The picture of the chip with the box's room to itself (no approval chip beside it).
+            scene(locale, scale, "bare-$locale-$scale", chrome = bare) {
+                if (scale == 1f) assertFalse(isCut("Gemini 3.8 Flash (High)"), "$where: the model's name is whole")
+            }
         }
     }
 
