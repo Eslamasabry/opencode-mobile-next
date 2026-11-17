@@ -505,4 +505,5 @@
     <string name="agentPhoneCheck">检查手机智能体</string>
     <string name="agentsCatalogNeedsPhoneSetup">请先设置这部手机上的内置服务器，然后回到这里安装此智能体。</string>
     <string name="agentDraftAsCopied">将被复制的完整记录</string>
+    <string name="chatUiRunOnThisPhone">在这部手机上运行</string>
 </resources>

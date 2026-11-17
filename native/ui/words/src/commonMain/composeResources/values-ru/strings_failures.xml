@@ -97,4 +97,8 @@
     <string name="agentErrorFreeTier">Бесплатные модели OpenCode остановили этот ответ.</string>
     <string name="agentErrorFreeTierHint">Длинные чаты часто отклоняются на бесплатном тарифе, даже если сегодня вы почти не пользовались. Обычно помогает сократить этот чат или начать новый.</string>
     <string name="chatSendFailureNeedsSetUp">%1$s нужно настроить, чтобы получить ответ</string>
+    <string name="agentErrorProviderUnreachableHintPhone">Проверьте подключение к интернету на этом телефоне и повторите попытку.</string>
+    <string name="agentErrorServerDiskFullPhone">На этом телефоне закончилась память.</string>
+    <string name="agentErrorServerDiskFullHintPhone">Освободите место на этом телефоне и повторите попытку.</string>
+    <string name="chatSendPhoneHelperNoAnswer">Агенты на этом телефоне не ответили. Возможно, они ещё запускаются: подождите немного и повторите попытку.</string>
 </resources>

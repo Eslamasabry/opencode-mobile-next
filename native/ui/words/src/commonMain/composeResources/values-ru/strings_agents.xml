@@ -605,4 +605,5 @@
     <string name="agentsStateRetired">Больше не предлагается на этом телефоне</string>
     <string name="agentsRetiredBody">%1$s больше не предлагается на этом телефоне, поэтому его нельзя настроить или использовать снова. Удалите его, чтобы освободить занятое место. Остальные агенты и беседы остаются.</string>
     <string name="agentsRemoveChip">Удалить</string>
+    <string name="chatUiRunOnThisPhone">Выполните на этом телефоне</string>
 </resources>

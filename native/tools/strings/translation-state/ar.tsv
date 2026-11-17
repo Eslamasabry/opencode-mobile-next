@@ -353,6 +353,7 @@ agentErrorProviderBusy	ffc8030c50
 agentErrorProviderBusyHint	ce92757734
 agentErrorProviderUnreachable	5f720ca9ec
 agentErrorProviderUnreachableHint	34e8414cf6
+agentErrorProviderUnreachableHintPhone	9d9f71b8a4
 agentErrorRateLimited	90b82da2a1
 agentErrorRateLimitedHint	0fe1863bba
 agentErrorRecovered	616a8bed5b
@@ -360,6 +361,8 @@ agentErrorRequestTooLarge	04e4b30484
 agentErrorRequestTooLargeHint	e882b43630
 agentErrorServerDiskFull	c2d9ff56e9
 agentErrorServerDiskFullHint	f4c0cbb8ff
+agentErrorServerDiskFullHintPhone	c6c117430a
+agentErrorServerDiskFullPhone	9e346024ba
 agentErrorTimedOut	2f2ad541ee
 agentErrorTimedOutHint	2cced3e23b
 agentErrorUnknown	b8c544dcf5
@@ -1706,6 +1709,7 @@ chatSendLaterOrRepeat	bdaec976a4
 chatSendLaterSaved	56d0206556
 chatSendNoPlanMode	a8af9bc385
 chatSendPhoneFolder	9eaaf05e2a
+chatSendPhoneHelperNoAnswer	414ea254dc
 chatStallConnectionLost	d37452bf0b
 chatStallConnectionUnchecked	ff23570360
 chatStallHelperDown	727fdd5c1f
@@ -2027,6 +2031,7 @@ chatUiRevertLastPrompt	763d0231f7
 chatUiReviewCommentAddedToThePrompt	1b808d5281
 chatUiReviewHandledAppErrorsAndSendA	194e18da14
 chatUiReviewTheActualDiffForThisSession	9f345f3ec0
+chatUiRunOnThisPhone	bdd1e0ab88
 chatUiRunOnYourComputer	93b6400bdb
 chatUiRunShellCommand	c198f4aa7e
 chatUiSaveFile	1ab0ee93be

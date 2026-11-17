@@ -72,7 +72,7 @@ class AgentNoticesTest {
     @Test
     fun `B-CHAT-069 a busy refresh elsewhere is not a sign-in failure`() {
         val busy = "Failed to refresh OAuth token: another Claude Code process is refreshing it or exited mid-refresh."
-        assertFalse(AgentSignInFailure.containsMatchIn(busy))
+        assertFalse(agentSignInFailure(busy))
         assertEquals(AgentErrorClass.Other, classifyAgentError(busy))
     }
 }

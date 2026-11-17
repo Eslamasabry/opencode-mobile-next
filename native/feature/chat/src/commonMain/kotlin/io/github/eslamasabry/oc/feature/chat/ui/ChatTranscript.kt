@@ -217,6 +217,9 @@ internal class ChatListWords(
     /** Set up at first use: "{agent} needs setting up before it can answer" and "Set up {agent}", by agent name. */
     val setUpNeeded: (String) -> String = { "" },
     val setUpAction: (String) -> String = { "" },
+    /** An agent whose own sign-in ran out: "{agent} needs you to sign in again" and its action, "Sign in again". */
+    val signInAgain: (String) -> String = { "" },
+    val signInAgainAction: String = "",
 )
 
 /**
@@ -247,6 +250,8 @@ internal class ReplyActions(
     val signInAgainWords: ((String) -> String?)? = null,
     val signInAgainLabel: String? = null,
     val onAgentSignIn: (String) -> Unit = {},
+    /** This conversation runs on this phone: failure words name this phone, never a computer. */
+    val onThisPhone: Boolean = false,
     /** Error-card recovery (Flutter `assistant_error_row.dart`); a null label hides that fix. */
     val models: List<io.github.eslamasabry.oc.feature.chat.world.ComposerModel> = emptyList(),
     val canCompact: Boolean = false,
@@ -426,6 +431,8 @@ internal fun ChatTranscriptList(
     onCheckReceipt: ((Long) -> Unit)? = null,
     /** Set up at first use: opens the set-up of the agent (by id) a failed send needs; null hides it. */
     onSetUpAgent: ((String) -> Unit)? = null,
+    /** Opens an agent's sign-in (by provider id); null where the app has no sign-in for this conversation's agent. */
+    onSignInAgent: ((String) -> Unit)? = null,
     onReviewPending: (() -> Unit)? = null,
     display: TranscriptDisplayChoices = TranscriptDisplayChoices(),
     onCopyReply: ((FooterRow) -> Unit)? = null,
@@ -728,6 +735,7 @@ internal fun ChatTranscriptList(
                         else null,
                     onReview = onReviewPending,
                     onSetUp = onSetUpAgent,
+                    onSignIn = onSignInAgent,
                 )
               }
             }
@@ -1008,6 +1016,7 @@ private fun PendingBubble(
     onCheck: (() -> Unit)? = null,
     onReview: (() -> Unit)? = null,
     onSetUp: ((String) -> Unit)? = null,
+    onSignIn: ((String) -> Unit)? = null,
 ) {
     Column {
         // The same thumbnails the echoed message will show (cached by address), so the swap does not flicker.
@@ -1022,6 +1031,7 @@ private fun PendingBubble(
             attachments = sent.attachments,
         )
         val setUp = p.setUp?.takeIf { onSetUp != null && p.state != PendingState.Sending }
+        val signInNeed = p.signIn?.takeIf { p.state != PendingState.Sending && words.signInAgainAction.isNotEmpty() }
         // Set up at first use: the agent was never set up, so the one way on is its set-up (the words stay above).
         if (setUp != null) {
             KitSendFailed(
@@ -1029,6 +1039,22 @@ private fun PendingBubble(
                 actionLabel = words.setUpAction(setUp.name),
                 onAction = { onSetUp?.invoke(setUp.agentId) },
                 actionTag = "chat-send-set-up",
+            )
+        } else if (signInNeed != null) {
+            // The agent's own sign-in ran out: said with its name, and the one way on is its sign-in. Try again could
+            // never work here; the typed words stay in the bubble and the box, and the raw text stays under Details.
+            val agent = signInNeed
+            val failure = p.failure
+            KitSendFailed(
+                lines = listOf(words.notSent, words.signInAgain(agent.name)),
+                actionLabel = if (onSignIn != null) words.signInAgainAction else words.tryAgain,
+                onAction = { if (onSignIn != null) onSignIn(agent.providerId) else onRetry() },
+                details =
+                    failure
+                        ?.takeIf { words.details.isNotEmpty() }
+                        ?.let { KitSendFailedDetails(words.details, words.copyDetails, failureCode(it), it.details) },
+                detailsTag = "chat-send-failure-details",
+                actionTag = if (onSignIn != null) "chat-send-sign-in-again" else "chat-send-error-try-again",
             )
         } else when (p.state) {
             PendingState.Sending -> KitQuietLine(words.sending)
@@ -1371,7 +1397,7 @@ private fun ChatRow(
                             KitQuietLine(signInAgain, modifier = Modifier.testTag("chat-sign-in-again"))
                         else if (typed != null) KitQuietLine(typed)
                         else {
-                            val (headline, hint) = agentFailureWords(reason, row.createdMs)
+                            val (headline, hint) = agentFailureWords(reason, row.createdMs, reply?.onThisPhone == true)
                             KitQuietLine(headline)
                             KitQuietLine(hint)
                         }
@@ -1766,7 +1792,6 @@ internal fun pathsOf(blocks: List<KitMdBlock>): List<String> {
     blocks.forEach(::walk)
     return out.toList()
 }
-
 
 /** The person's prompt with what it carried: pictures as thumbnails under the words, other files as chips. */
 @Composable

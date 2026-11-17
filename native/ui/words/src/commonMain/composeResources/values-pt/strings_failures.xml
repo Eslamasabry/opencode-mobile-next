@@ -97,4 +97,8 @@
     <string name="agentErrorFreeTier">Os modelos gratuitos do OpenCode interromperam esta resposta.</string>
     <string name="agentErrorFreeTierHint">Conversas longas costumam ser recusadas no plano gratuito, mesmo que você tenha usado pouco hoje. Encurtar esta conversa ou iniciar uma nova geralmente ajuda.</string>
     <string name="chatSendFailureNeedsSetUp">%1$s precisa ser configurado antes de poder responder</string>
+    <string name="agentErrorProviderUnreachableHintPhone">Verifique a conexão com a internet deste celular e tente de novo.</string>
+    <string name="agentErrorServerDiskFullPhone">Este celular ficou sem espaço de armazenamento.</string>
+    <string name="agentErrorServerDiskFullHintPhone">Libere um pouco de espaço neste celular e tente de novo.</string>
+    <string name="chatSendPhoneHelperNoAnswer">Os agentes deste celular não responderam. Talvez ainda estejam iniciando; dê um momento a eles e tente de novo.</string>
 </resources>

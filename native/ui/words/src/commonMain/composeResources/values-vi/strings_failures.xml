@@ -97,4 +97,8 @@
     <string name="agentErrorFreeTier">Các mô hình miễn phí của OpenCode đã dừng câu trả lời này.</string>
     <string name="agentErrorFreeTierHint">Các cuộc trò chuyện dài thường bị từ chối ở gói miễn phí, dù hôm nay bạn dùng ít. Rút ngắn cuộc trò chuyện này hoặc bắt đầu cuộc mới thường sẽ giúp ích.</string>
     <string name="chatSendFailureNeedsSetUp">%1$s cần được thiết lập trước khi có thể trả lời</string>
+    <string name="agentErrorProviderUnreachableHintPhone">Hãy kiểm tra kết nối internet trên điện thoại này rồi thử lại.</string>
+    <string name="agentErrorServerDiskFullPhone">Điện thoại này đã hết dung lượng lưu trữ.</string>
+    <string name="agentErrorServerDiskFullHintPhone">Hãy giải phóng một ít dung lượng trên điện thoại này rồi thử lại.</string>
+    <string name="chatSendPhoneHelperNoAnswer">Các tác nhân trên điện thoại này không phản hồi. Có thể chúng vẫn đang khởi động; hãy chờ một lát rồi thử lại.</string>
 </resources>

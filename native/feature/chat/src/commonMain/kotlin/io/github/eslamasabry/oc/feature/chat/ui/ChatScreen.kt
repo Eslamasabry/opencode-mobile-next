@@ -135,6 +135,7 @@ import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.backgroundWorkShortcut
 import io.github.eslamasabry.oc.ui.words.res.chatSendFailureSignInAction
 import io.github.eslamasabry.oc.ui.words.res.chatSendFailureSignInAgain
+import io.github.eslamasabry.oc.ui.words.res.agentsSignInAgain
 import io.github.eslamasabry.oc.ui.words.res.chatSendFailureNeedsSetUp
 import io.github.eslamasabry.oc.ui.words.res.agentsSetUpAction
 import io.github.eslamasabry.oc.ui.words.res.chatStripBackground
@@ -184,6 +185,7 @@ import io.github.eslamasabry.oc.ui.words.res.chatSendFailureAccountAction
 import io.github.eslamasabry.oc.ui.words.res.chatUiChooseAnotherModel
 import io.github.eslamasabry.oc.ui.words.res.chatUiChooseOption
 import io.github.eslamasabry.oc.ui.words.res.chatUiRunOnYourComputer
+import io.github.eslamasabry.oc.ui.words.res.chatUiRunOnThisPhone
 import io.github.eslamasabry.oc.ui.words.res.chatUiTodo
 import io.github.eslamasabry.oc.ui.words.res.modelChoiceDone
 import io.github.eslamasabry.oc.ui.words.res.chatUiOpenProviders
@@ -272,6 +274,8 @@ import io.github.eslamasabry.oc.ui.words.res.kitTopBarSearch
 import io.github.eslamasabry.oc.ui.words.res.kitTurnLiveSending
 import io.github.eslamasabry.oc.ui.words.res.chatSendFolderMissing
 import io.github.eslamasabry.oc.ui.words.res.chatSendPhoneFolder
+import io.github.eslamasabry.oc.ui.words.res.chatSendPhoneHelperNoAnswer
+import io.github.eslamasabry.oc.ui.words.res.chatSendFailureAgentFallback
 import io.github.eslamasabry.oc.ui.words.res.chatSendNoPlanMode
 import io.github.eslamasabry.oc.ui.words.res.kitTurnLiveWorking
 import io.github.eslamasabry.oc.ui.words.res.kitTurnMore
@@ -435,9 +439,14 @@ public fun ChatScreen(
     val messageError = rememberMessageErrorWords()
     val details = stringResource(Res.string.chatReplyFailedDetails)
     val copyDetails = stringResource(Res.string.chatReplyFailedCopy)
-    val sendFailure = rememberSendFailureWords()
+    // Where this conversation runs decides what a failed reach is called: on this phone it is the phone's agents
+    // helper, never "your computer".
+    val onThisPhone = remember(actions) { actions.phoneAgentSignIn() }
+    val sendFailure = rememberSendFailureWords(onThisPhone)
     val setUpNeeded = stringResource(Res.string.chatSendFailureNeedsSetUp, "\u0000")
     val setUpAction = stringResource(Res.string.agentsSetUpAction, "\u0000")
+    val signInAgainLine = stringResource(Res.string.chatSendFailureSignInAgain, "\u0000")
+    val signInAgainAction = stringResource(Res.string.agentsSignInAgain)
     val listWords =
         remember(
             messageActions,
@@ -455,6 +464,8 @@ public fun ChatScreen(
             sendFailure,
             setUpNeeded,
             setUpAction,
+            signInAgainLine,
+            signInAgainAction,
         ) {
             ChatListWords(
                 messageActions = messageActions,
@@ -472,9 +483,22 @@ public fun ChatScreen(
                 sendFailure = sendFailure,
                 setUpNeeded = { name -> setUpNeeded.replace("\u0000", name) },
                 setUpAction = { name -> setUpAction.replace("\u0000", name) },
+                signInAgain = { name -> signInAgainLine.replace("\u0000", name) },
+                signInAgainAction = signInAgainAction,
             )
         }
     val list = rememberTranscriptListState()
+    val failedSendId = state.status?.takeIf { it.kind == ChatStatusKind.SendFailed }?.localId
+    val failedBubbleInView by
+        remember(list, failedSendId) {
+            derivedStateOf {
+                failedSendId != null &&
+                    !io.github.eslamasabry.oc.feature.chat.presentation.SendFailureRules.bannerNeeded(
+                        ListKeys.pending(failedSendId),
+                        list.lazy.layoutInfo.visibleItemsInfo.map { it.key },
+                    )
+            }
+        }
     var dockRoomPx by remember { mutableIntStateOf(0) }
     val reveal = rememberRevealRegistry()
     val motion = kitChatMotion()
@@ -784,6 +808,9 @@ public fun ChatScreen(
                                 // An unconfirmed send is said once, on its own bubble with Check again.
                                 state.status
                                     ?.takeUnless { it.kind == ChatStatusKind.SendUnconfirmed }
+                                    // The failed bubble under the message says it with its own action: this line is
+                                    // only for a failed message that has scrolled out of sight.
+                                    ?.takeUnless { it.kind == ChatStatusKind.SendFailed && failedBubbleInView }
                                     ?.let {
                                         statusLine(
                                             it,
@@ -1152,6 +1179,7 @@ public fun ChatScreen(
                                             receiptChecks = state.receiptChecks,
                                             onCheckReceipt = actions::checkReceipt,
                                             onSetUpAgent = actions::setUpAgent,
+                                            onSignInAgent = if (onThisPhone) actions::openAgentSignIn else null,
                                             onReviewPending = onReviewPending,
                                             modifier = Modifier.fillMaxSize().chatPane(),
                                             extraBottomPx = dockRoomPx,
@@ -1839,7 +1867,9 @@ internal fun rememberReplyActions(
     val chooseTemplate = stringResource(Res.string.chatUiChooseOption, "\u0000")
     val doneWord = stringResource(Res.string.modelChoiceDone)
     val todoWord = stringResource(Res.string.chatUiTodo)
-    val runOnComputer = stringResource(Res.string.chatUiRunOnYourComputer)
+    val phoneAgentWords = remember(actions) { actions.phoneAgentSignIn() }
+    val runOnComputer =
+        stringResource(if (phoneAgentWords) Res.string.chatUiRunOnThisPhone else Res.string.chatUiRunOnYourComputer)
     val openFullCode = stringResource(Res.string.terminalOpenFull, "\u0000")
     val chooseModel = stringResource(Res.string.chatUiChooseAnotherModel)
     val useModelTemplate = stringResource(Res.string.chatUiUseModelAndResend, "\u0000")
@@ -1944,6 +1974,7 @@ internal fun rememberReplyActions(
             signInAgainWords = if (phoneAgentSignIn) signInAgainWords else null,
             signInAgainLabel = signInAgainLabel,
             onAgentSignIn = actions::openAgentSignIn,
+            onThisPhone = phoneAgentSignIn,
             models = models,
             canCompact = canCompact,
             onCompact = actions::compactAgain,
@@ -2126,7 +2157,7 @@ private fun rememberReplyFailedWords(): (ReplyFailureKind) -> String {
 
 /** B2: why a send did not leave, in plain words (the code goes under Details). */
 @Composable
-private fun rememberSendFailureWords(): (Failure) -> String {
+private fun rememberSendFailureWords(onThisPhone: Boolean): (Failure) -> String {
     val authored = rememberProductFailureWords()
     val changed = stringResource(Res.string.chatSendFailedChanged)
     val phoneBusy = stringResource(Res.string.schedulePhoneBusy)
@@ -2134,9 +2165,17 @@ private fun rememberSendFailureWords(): (Failure) -> String {
     val folderMissing = stringResource(Res.string.chatSendFolderMissing)
     val phoneFolder = stringResource(Res.string.chatSendPhoneFolder)
     val noPlanMode = stringResource(Res.string.chatSendNoPlanMode)
-    return remember(authored, changed, phoneBusy, phoneCheckFailed, folderMissing, phoneFolder, noPlanMode) {
+    val phoneHelper = stringResource(Res.string.chatSendPhoneHelperNoAnswer)
+    val signInAgainWords = stringResource(Res.string.chatSendFailureSignInAgain, "\u0000")
+    val agentFallback = stringResource(Res.string.chatSendFailureAgentFallback)
+    return remember(authored, changed, phoneBusy, phoneCheckFailed, folderMissing, phoneFolder, noPlanMode, phoneHelper, signInAgainWords, agentFallback, onThisPhone) {
         { failure ->
             when {
+                // The helper that answered with the agent's own words for a sign-in that ran out is not "can't reach".
+                io.github.eslamasabry.oc.feature.chat.presentation.SendFailureRules.signInRanOut(failure) ->
+                    signInAgainWords.replace("\u0000", agentFallback)
+                // On this phone the thing that did not answer is the phone's agents helper, not a computer.
+                onThisPhone && failure is Failure.ComputerDidNotAnswer -> phoneHelper
                 // B-063: the server refused the message because the project's folder is gone.
                 io.github.eslamasabry.oc.feature.chat.presentation.SendFailureRules.folderMissing(failure) -> folderMissing
                 // Issue 147: never sent into a folder in the phone's storage the agent cannot reach now.

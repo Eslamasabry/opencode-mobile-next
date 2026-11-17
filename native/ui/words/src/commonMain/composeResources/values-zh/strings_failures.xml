@@ -98,4 +98,8 @@
     <string name="agentErrorFreeTier">OpenCode 的免费模型中止了这条回复。</string>
     <string name="agentErrorFreeTierHint">免费版经常拒绝较长的对话，即使你今天用得很少。缩短这个对话或开始新对话通常有帮助。</string>
     <string name="chatSendFailureNeedsSetUp">%1$s 需要先设置才能回答</string>
+    <string name="agentErrorProviderUnreachableHintPhone">请检查这部手机的网络连接，然后重试。</string>
+    <string name="agentErrorServerDiskFullPhone">这部手机的存储空间已满。</string>
+    <string name="agentErrorServerDiskFullHintPhone">请在这部手机上释放一些空间，然后重试。</string>
+    <string name="chatSendPhoneHelperNoAnswer">这部手机上的代理没有响应。它们可能仍在启动，请稍等片刻后重试。</string>
 </resources>

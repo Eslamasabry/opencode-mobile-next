@@ -431,7 +431,7 @@ public class ChatPresenter(
                             ?.takeIf { it >= 0 }
                     ChatArrivalUi(a.id, a.focusComposer, land)
                 }
-        val pending = withSetUp(i.pending, firstMessage = t.rows.isEmpty())
+        val pending = withSignIn(withSetUp(i.pending, firstMessage = t.rows.isEmpty()))
         return ChatUi(
             revision = revision,
             ref = world.ref,
@@ -646,6 +646,22 @@ public class ChatPresenter(
         val at = newest.createdMs ?: return
         if (limit != null) port.agentLimitReached(owner, provider, at, limit)
         else port.agentSignInLapsed(owner, provider, at)
+    }
+
+    /**
+     * A failed send whose agent's sign-in ran out says so on its bubble ([AgentSetUpRules.signInNeed]), whichever kind of
+     * conversation it is in: the reason is the agent's, not the connection's. Set up at first use wins when it applies.
+     */
+    private fun withSignIn(pending: ImmutableList<PendingSend>): ImmutableList<PendingSend> {
+        if (pending.none(AgentSetUpRules::counts)) return pending
+        val runtime = world.runtimeId() ?: return pending
+        return pending
+            .map { p ->
+                if (p.setUp != null) return@map p
+                val need = AgentSetUpRules.signInNeed(p, runtime)
+                if (need == p.signIn) p else p.copy(signIn = need)
+            }
+            .toImmutableList()
     }
 
     /** Set up at first use ([AgentSetUpRules]): a failed send whose agent was never set up says so on its bubble. */

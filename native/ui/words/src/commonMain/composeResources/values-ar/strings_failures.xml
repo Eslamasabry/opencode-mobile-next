@@ -98,4 +98,8 @@
     <string name="agentErrorFreeTier">أوقفت نماذج OpenCode المجانية هذا الرد.</string>
     <string name="agentErrorFreeTierHint">كثيرًا ما تُرفض المحادثات الطويلة في الخطة المجانية حتى لو استخدمتَ القليل اليوم. غالبًا ما يفيد تقصير هذه المحادثة أو بدء محادثة جديدة.</string>
     <string name="chatSendFailureNeedsSetUp">يحتاج %1$s إلى الإعداد قبل أن يتمكن من الرد</string>
+    <string name="agentErrorProviderUnreachableHintPhone">تحقّق من اتصال الإنترنت على هذا الهاتف ثم حاول مرة أخرى.</string>
+    <string name="agentErrorServerDiskFullPhone">مساحة التخزين على هذا الهاتف ممتلئة.</string>
+    <string name="agentErrorServerDiskFullHintPhone">أخلِ بعض المساحة على هذا الهاتف ثم حاول مرة أخرى.</string>
+    <string name="chatSendPhoneHelperNoAnswer">لم يردّ الوكلاء على هذا الهاتف. قد يكونون ما زالوا يبدؤون؛ امنحهم لحظة ثم حاول مرة أخرى.</string>
 </resources>

@@ -97,4 +97,8 @@
     <string name="agentErrorFreeTier">Model gratis OpenCode menghentikan balasan ini.</string>
     <string name="agentErrorFreeTierHint">Percakapan panjang sering ditolak di paket gratis, meskipun Anda belum banyak memakainya hari ini. Mempersingkat percakapan ini atau memulai yang baru biasanya membantu.</string>
     <string name="chatSendFailureNeedsSetUp">%1$s perlu disiapkan sebelum bisa menjawab</string>
+    <string name="agentErrorProviderUnreachableHintPhone">Periksa koneksi internet di ponsel ini, lalu coba lagi.</string>
+    <string name="agentErrorServerDiskFullPhone">Penyimpanan ponsel ini penuh.</string>
+    <string name="agentErrorServerDiskFullHintPhone">Kosongkan sebagian ruang di ponsel ini, lalu coba lagi.</string>
+    <string name="chatSendPhoneHelperNoAnswer">Agen di ponsel ini tidak menjawab. Mungkin masih memulai; beri mereka waktu sebentar, lalu coba lagi.</string>
 </resources>

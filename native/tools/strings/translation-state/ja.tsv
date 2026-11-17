@@ -7,6 +7,9 @@ activitySendOffline	665ca3538d
 activitySending	5280ca6377
 addServerTypePaseo	9bd15a5fa3
 agentCardComposerHint	76e6ded473
+agentErrorProviderUnreachableHintPhone	9d9f71b8a4
+agentErrorServerDiskFullHintPhone	c6c117430a
+agentErrorServerDiskFullPhone	9e346024ba
 agentsCancel	ef133eb749
 agentsCancelSetup	168fd064cd
 agentsChecking	948d842958
@@ -113,6 +116,7 @@ chatRequestOtherField	d964165af4
 chatRequestWho	55b61beab9
 chatSendFailed	fc77bf38bf
 chatSendFailedKept	ac32656806
+chatSendPhoneHelperNoAnswer	414ea254dc
 chatStartAddTests	ff6354d48d
 chatStartBuildWebPage	c7647e3519
 chatStartChangeCount	409f377073
@@ -196,6 +200,7 @@ chatUiReferencesAttachedNotice	098b692d58
 chatUiResultOpenChild	64f39d3009
 chatUiRetryingCountdown	632927ca2f
 chatUiRetryingSoon	2d35960cf6
+chatUiRunOnThisPhone	bdd1e0ab88
 chatUiSendPromptAgain	d6934b29b5
 chatUiSessionMenu	222b949c65
 chatUiSlashCommandsAndAgents	3d1b6e1f2c

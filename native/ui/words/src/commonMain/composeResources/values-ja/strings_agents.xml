@@ -41,4 +41,5 @@
     <string name="agentsChipSignIn">サインイン</string>
     <string name="agentsChipResume">再開</string>
     <string name="agentsChipCheck">確認</string>
+    <string name="chatUiRunOnThisPhone">このスマートフォンで実行</string>
 </resources>

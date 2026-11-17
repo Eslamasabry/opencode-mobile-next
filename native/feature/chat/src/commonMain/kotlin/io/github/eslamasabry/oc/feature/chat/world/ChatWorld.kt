@@ -480,7 +480,16 @@ public data class PendingSend(
      * agent's set-up instead of Try again. Filled by the presenter, never by the world.
      */
     val setUp: AgentSetUpNeed? = null,
+    /**
+     * This send failed because the agent's own sign-in ran out ([io.github.eslamasabry.oc.core.model.transcript.AgentSignInWords]):
+     * the bubble names the agent, says "sign in again" and offers that agent's sign-in instead of Try again, which
+     * could never work. The typed words stay in the bubble and the box. Filled by the presenter, never by the world.
+     */
+    val signIn: AgentSignInNeed? = null,
 )
+
+/** The agent whose sign-in ran out: its provider id (the sign-in terminal's) and display name. */
+public data class AgentSignInNeed(val providerId: String, val name: String)
 
 /** The agent a failed send needs set up: its catalog id (the set-up terminal's) and display name. */
 public data class AgentSetUpNeed(val agentId: String, val name: String)

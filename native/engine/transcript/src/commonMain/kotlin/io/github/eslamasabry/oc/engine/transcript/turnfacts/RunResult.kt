@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.engine.transcript.turnfacts
 
+import io.github.eslamasabry.oc.core.model.transcript.AgentSignInWords
 import io.github.eslamasabry.oc.core.model.transcript.MessageErrorKind
 import io.github.eslamasabry.oc.core.model.transcript.MessageInfo
 import io.github.eslamasabry.oc.core.model.transcript.MessageWithParts
@@ -411,17 +412,10 @@ private fun runErrorHeadline(text: String): String {
 
 private val RUN_ERROR_CLASS = Regex("^[A-Za-z]+Error$")
 
-private val RUN_SIGN_IN_GONE =
-    Regex(
-        "not logged in|please run /login|failed to authenticate|oauth (session|token) (has )?expired|" +
-            "could not be refreshed|invalid api key|authentication_error",
-        RegexOption.IGNORE_CASE,
-    )
-
 /** Dart `MessageErrorKind.refineFromText`. */
 private fun runRefineErrorKind(kind: MessageErrorKind, text: String): MessageErrorKind {
     if (kind != MessageErrorKind.Unknown) return kind
-    if (RUN_SIGN_IN_GONE.containsMatchIn(text)) return MessageErrorKind.ProviderAuth
+    if (AgentSignInWords.gone(text)) return MessageErrorKind.ProviderAuth
     val head = text.trimStart().split(Regex("[:\\s]")).first()
     return runErrorKindFromName(head) ?: MessageErrorKind.Unknown
 }

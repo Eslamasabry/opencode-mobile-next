@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.engine.transcript.turnfacts
 
+import io.github.eslamasabry.oc.core.model.transcript.AgentSignInWords
 import io.github.eslamasabry.oc.core.model.transcript.MessageErrorKind
 import io.github.eslamasabry.oc.core.model.transcript.MessageWithParts
 import io.github.eslamasabry.oc.core.model.transcript.PartType
@@ -122,13 +123,6 @@ public fun formatRetryCountdown(seconds: Int): String {
 
 // ---- Assistant error card ----
 
-private val SIGN_IN_GONE =
-    Regex(
-        "not logged in|please run /login|failed to authenticate|oauth (session|token) (has )?expired|" +
-            "could not be refreshed|invalid api key|authentication_error",
-        RegexOption.IGNORE_CASE,
-    )
-
 private fun errorKindFromName(name: String?): MessageErrorKind? {
     val trimmed = name?.trim()
     if (trimmed.isNullOrEmpty()) return null
@@ -148,7 +142,7 @@ private fun errorKindFromName(name: String?): MessageErrorKind? {
 /** Dart MessageErrorKind.refineFromText: the error class may sit in the message text rather than the name. */
 private fun refineErrorKind(kind: MessageErrorKind, text: String?): MessageErrorKind {
     if (kind != MessageErrorKind.Unknown || text == null) return kind
-    if (SIGN_IN_GONE.containsMatchIn(text)) return MessageErrorKind.ProviderAuth
+    if (AgentSignInWords.gone(text)) return MessageErrorKind.ProviderAuth
     val head = text.trimStart().split(Regex("[:\\s]")).first()
     return errorKindFromName(head) ?: MessageErrorKind.Unknown
 }

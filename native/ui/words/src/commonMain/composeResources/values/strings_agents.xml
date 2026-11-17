@@ -84,6 +84,7 @@
     <string name="modelChoiceDone">Done</string>
     <string name="chatUiCopiedPasteItIntoTheComposer">Copied. Paste it into the composer</string>
     <string name="chatUiRunOnYourComputer">Run on your computer</string>
+    <string name="chatUiRunOnThisPhone">Run on this phone</string>
     <string name="chatUiChooseOption">Choose: %1$s</string>
     <string name="chatUiTodo">To do</string>
     <string name="phoneServerConnect">Connect</string>

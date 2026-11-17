@@ -66,7 +66,7 @@ public object StatusPick {
         // The newest bubble speaks for the sends; an older failure stays on its own bubble. One whose agent needs
         // setting up says so on its bubble only: Try again here would only fail again.
         pending
-            .lastOrNull { it.state == PendingState.Failed && it.setUp == null }
+            .lastOrNull { it.state == PendingState.Failed && it.setUp == null && it.signIn == null }
             ?.let {
                 return ChatStatusUi(
                     "send-${it.localId}",

@@ -597,4 +597,5 @@
     <string name="agentsStateRetired">Não é mais oferecido neste telefone</string>
     <string name="agentsRetiredBody">%1$s não é mais oferecido neste telefone, então não pode ser configurado nem usado de novo. Remova-o para liberar o espaço que ocupa. Seus outros agentes e conversas ficam.</string>
     <string name="agentsRemoveChip">Remover</string>
+    <string name="chatUiRunOnThisPhone">Executar neste celular</string>
 </resources>
