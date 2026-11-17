@@ -1,0 +1,5 @@
+• The app could close by itself when you disconnected from, switched, saved, removed or tested a server. Fixed.
+• A new chat page: a floating header and message box. Enter now makes a new line.
+• Replies no longer stay "running", and the "Still thinking" line keeps moving.
+• An expired sign-in says so plainly, with one way to sign in again.
+• Big downloads wait for Wi-Fi and say so. Time words in every language. Japanese complete.
