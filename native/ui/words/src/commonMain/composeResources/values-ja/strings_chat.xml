@@ -280,4 +280,6 @@
     <string name="chatProjectMenuLabel">プロジェクトツール</string>
     <string name="chatRequestAnswerRejected">拒否しました</string>
     <string name="agentCardComposerHint">または回答を入力</string>
+    <string name="kitTurnLiveStillThinking">引き続き考えています</string>
+    <string name="chatQuietThinkingHint">モデルによっては、何も表示せずに数分間考えることがあります。</string>
 </resources>

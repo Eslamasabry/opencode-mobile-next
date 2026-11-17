@@ -31,7 +31,7 @@ class JourneyEventsTest {
         listOf(
             ProductEvent.SetupStepReached, ProductEvent.LinuxSetupStep, ProductEvent.SetupDone,
             ProductEvent.SetupAbandoned, ProductEvent.SetupResumed, ProductEvent.FirstReply, ProductEvent.SendResult,
-            ProductEvent.ChatTurn, ProductEvent.TurnStall, ProductEvent.Approval, ProductEvent.SessionLength,
+            ProductEvent.ChatTurn, ProductEvent.TurnStall, ProductEvent.AppExit, ProductEvent.Approval, ProductEvent.SessionLength,
             ProductEvent.JourneyMilestone, ProductEvent.UseFor, ProductEvent.Jank, ProductEvent.StarterUsed,
         )
 
@@ -51,6 +51,7 @@ class JourneyEventsTest {
             "late_pct_range", "seen_hz",
             // 2026-11-16 decisions 20 and 21.
             "activity_range", "surface", "interaction", "after_consent",
+            "cause", "exit_reason", "foreground",
         )
 
     @Test

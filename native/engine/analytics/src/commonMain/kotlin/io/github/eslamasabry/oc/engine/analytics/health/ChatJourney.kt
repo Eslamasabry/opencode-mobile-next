@@ -69,6 +69,8 @@ public class ChatJourney(
         var recovered = false
         var stallBucket = -1
         var replied = false
+        var liveness: Boolean? = null
+        var deadStream = false
     }
 
     /** What the last send of a session carried, until the server's answer to it is known ([settled]). */
@@ -108,6 +110,8 @@ public class ChatJourney(
         if (current != null && steer) {
             current.followUp = "steer"
             current.lastActivityMs = now()
+            current.liveness = null
+            current.deadStream = false
             return
         }
         val turn = Turn(now(), onPhone, traits, connection)
@@ -142,16 +146,47 @@ public class ChatJourney(
         val t = turns.value[sessionId] ?: return
         t.lastActivityMs = now()
         t.lastKind = kind
+        t.liveness = null
+        t.deadStream = false
         // The person's own prompt is a text or file part too: those count only once the message is the assistant's.
         if ((kind != "text" && kind != "file") || messageId in t.assistant) activity(t)
     }
 
-    /** Any streamed piece arrived (text or reasoning): activity only. */
-    public fun delta(sessionId: String) {
+    /** The field's closed kind, supplied by delivery (text, reasoning or tool). */
+    public fun delta(sessionId: String, kind: String) {
         val t = turns.value[sessionId] ?: return
         t.lastActivityMs = now()
-        t.lastKind = "text"
+        t.lastKind = when (kind) { "reasoning" -> "reasoning"; "tool" -> "tool"; else -> "text" }
+        t.liveness = null
+        t.deadStream = false
         activity(t)
+    }
+
+    /** A provider retry is progress, not a minute of silent text streaming. */
+    public fun retrying(sessionId: String) {
+        turns.value[sessionId]?.let { t ->
+            t.busy = true
+            t.lastActivityMs = now()
+            t.lastKind = "retry"
+            t.liveness = null
+            t.deadStream = false
+        }
+    }
+
+    /** Evidence from the bounded recovery lane; it never resets the quiet clock. */
+    public fun runChecked(sessionId: String, busy: Boolean?) {
+        turns.value[sessionId]?.let { t -> t.liveness = busy; t.deadStream = busy != true }
+    }
+
+    /** Record a qualifying dead-stream stall before recovered history resets activity and the turn ends. */
+    public fun recovered(sessionId: String) {
+        turns.value[sessionId]?.let { t -> t.deadStream = true; t.liveness = false }
+        checkStalls()
+    }
+
+    /** Any streamed piece arrived (text or reasoning): activity only. */
+    public fun delta(sessionId: String) {
+        delta(sessionId, "text")
     }
 
     /**
@@ -162,6 +197,8 @@ public class ChatJourney(
         val t = turns.value[sessionId] ?: return
         t.lastActivityMs = now()
         t.lastKind = "text"
+        t.liveness = null
+        t.deadStream = false
         if (streamed || messageId in t.assistant) {
             activity(t)
             firstReply(t)
@@ -180,6 +217,8 @@ public class ChatJourney(
         turns.value[sessionId]?.let {
             it.busy = true
             it.lastActivityMs = now()
+            it.liveness = null
+            it.deadStream = false
         }
     }
 
@@ -234,6 +273,8 @@ public class ChatJourney(
             if (!mine) continue
             if (!connected && t.droppedAtMs == null) t.droppedAtMs = at
             if (connected && t.droppedAtMs != null) {
+                t.liveness = null
+                t.deadStream = false
                 t.droppedAtMs = null
                 t.recovered = true
             }
@@ -291,7 +332,16 @@ public class ChatJourney(
                         t.lastKind.isEmpty() || t.lastKind == "text" || t.lastKind == "reasoning" -> "streaming"
                         else -> "other"
                     }
-                flow.turnStall(stage, quiet)
+                val cause = when {
+                    t.droppedAtMs != null || t.deadStream -> "stream_dead_refetched"
+                    t.openApprovals > 0 -> "unknown"
+                    t.lastKind == "retry" -> "retrying"
+                    t.lastKind == "tool" -> "tool_running"
+                    t.lastKind.isEmpty() || t.lastKind == "text" || t.lastKind == "reasoning" ->
+                        if (t.liveness == true) "thinking_silent" else "stream_silent"
+                    else -> "unknown"
+                }
+                flow.turnStall(stage, quiet, cause)
             }
         }
     }

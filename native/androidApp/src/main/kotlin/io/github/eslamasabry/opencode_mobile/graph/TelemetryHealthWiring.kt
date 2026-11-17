@@ -544,7 +544,12 @@ internal class AndroidHealthPlatform(
     override suspend fun exits(limit: Int): List<HealthExit> {
         val history = exitHistory.history(limit)
         if (!history.supported) return emptyList()
-        return history.entries.map { HealthExit(it.reason, it.at.toEpochMilliseconds()) }.sortedByDescending { it.atMs }
+        return history.entries.map {
+            HealthExit(it.reason, it.at.toEpochMilliseconds(),
+                foreground = it.importance.takeIf { importance -> importance > 0 }?.let { importance ->
+                    importance <= io.github.eslamasabry.oc.engine.diagnostics.exit.ExitReason.IMPORTANCE_FOREGROUND
+                })
+        }.sortedByDescending { it.atMs }
     }
 
     companion object {

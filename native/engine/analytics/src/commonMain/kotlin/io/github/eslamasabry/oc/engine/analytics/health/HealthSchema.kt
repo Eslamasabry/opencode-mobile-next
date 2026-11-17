@@ -163,6 +163,10 @@ public object HealthRanges {
 
 /** The words several events share. */
 public object HealthWords {
+    /** Closed classifications of a quiet turn; unknown transport evidence never says thinking. */
+    public val stallCauses: Set<String> = setOf("thinking_silent", "tool_running", "retrying", "stream_dead_refetched", "stream_silent", "unknown")
+    public val appExitReasons: Set<String> = setOf("crash", "anr", "low_memory", "excessive_resource", "signaled", "user_requested", "dependency_died", "other")
+
     /** `conn_attempt.fail_kind`; `send_result` adds [sendOnlyFailKinds]. */
     public val failKinds: Set<String> =
         setOf("dns", "tls", "auth", "timeout", "refused", "server_5xx", "protocol", "offline", "other")
@@ -248,7 +252,7 @@ public object HealthWords {
     /** Android's ApplicationExitInfo reasons, as the contract names them. */
     public val exitReasons: Set<String> =
         setOf(
-            "crash", "crash_native", "anr", "low_memory", "excessive_resource", "signaled", "user_requested",
+            "crash", "crash_native", "anr", "low_memory", "excessive_resource", "signaled",
             "dependency_died", "other",
         )
     public val buildKinds: Set<String> = setOf("store", "sideload", "ci", "local")

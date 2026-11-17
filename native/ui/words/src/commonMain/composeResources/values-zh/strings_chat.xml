@@ -1144,4 +1144,6 @@
     <string name="chatUiRetryWhyBusy">模型的提供方暂时没有响应。</string>
     <string name="transcriptFindPosition">%1$s / %2$s</string>
     <string name="chatUiShowEarlierMessages">显示更早的消息</string>
+    <string name="kitTurnLiveStillThinking">仍在思考</string>
+    <string name="chatQuietThinkingHint">有些模型会静默思考几分钟，期间不显示内容。</string>
 </resources>

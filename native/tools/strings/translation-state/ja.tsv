@@ -96,6 +96,7 @@ chatErrorUnknown	79c8523231
 chatLoadFailedBody	dd9d15a7d8
 chatLoadFailedTitle	9bdf89d41d
 chatProjectMenuLabel	4ff9bb11e4
+chatQuietThinkingHint	2f09139089
 chatRequestAlwaysInProject	aa0e9af463
 chatRequestAlwaysOn	eaacb28ac2
 chatRequestAlwaysScope	afe6f44fd0
@@ -257,7 +258,7 @@ collectCrashKind	cffc0cbf8b
 collectCrashesLabel	9ecbc9dad7
 collectDevice	4cc9ad81e8
 collectDrop	13bd95a3dd
-collectExit	34e19a2690
+collectExit	3715cbb996
 collectJourney	fa461aab2a
 collectMemory	39a3b87916
 collectNever	1843642ee2
@@ -272,9 +273,9 @@ collectRules	fd4128a65b
 collectSend	d1102afc52
 collectShareIn	7a97a956c2
 collectSmooth	ad0735212d
-collectStall	acce6fdb1a
+collectStall	bc4d4ce188
 collectStarAsk	b3b26f0ab5
-collectStart	6f2a8cf39d
+collectStart	28fd9aabdc
 collectStarters	c875091d70
 collectSteps	7a98bbbf7c
 collectTitle	af3e7783d2
@@ -468,6 +469,7 @@ kitTurnLiveNow	a728ffd64d
 kitTurnLiveSeconds	730fc6bb65
 kitTurnLiveSending	29167c1ded
 kitTurnLiveServerQuiet	5dbe7b7943
+kitTurnLiveStillThinking	044e831593
 kitTurnLiveThinking	adc54cc9be
 kitTurnLiveWaitingForServer	0866978bdb
 kitTurnLiveWaitingForYou	d3e4595269
@@ -550,7 +552,7 @@ modelSearchHint	ff215890a1
 modelSelectionSaving	747ac43101
 modelServerDefault	ea63d05840
 modelSwitchSession	fc57019b4b
-nativeBundledPrivacy	2e67af5c45
+nativeBundledPrivacy	6bb4b9ddcb
 nativeTelemetryConsentBody	ef4f42e264
 nativeTelemetryUsageDetail	5d0cf20ff6
 notifications:notify_alert_checkin_body	5d79aa9796

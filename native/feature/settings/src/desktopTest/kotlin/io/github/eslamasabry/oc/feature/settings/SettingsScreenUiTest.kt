@@ -185,7 +185,7 @@ class SettingsScreenUiTest {
             tap("What we collect")
             onNodeWithText(NOT_SENT_YET).assertDoesNotExist()
             onNodeWithText("With Usage and app health").assertExists()
-            onNodeWithText("How fast the app starts").performScrollTo().assertExists()
+            onNodeWithText("How fast the app starts", substring = true).performScrollTo().assertExists()
             onNodeWithText("With Crash reports").performScrollTo().assertExists()
             onNodeWithText("Never sent").performScrollTo().assertExists()
         }

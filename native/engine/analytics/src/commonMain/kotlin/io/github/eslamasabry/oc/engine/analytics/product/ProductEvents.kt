@@ -71,6 +71,7 @@ public enum class ProductEvent(public val wire: String) {
 
     /** A turn stopped moving: `stage`, `minutes_range`. */
     TurnStall("turn_stall"),
+    AppExit("app_exit"),
 
     /**
      * A turn ended: `outcome` (`done` only with visible output, `no_output` without), `agent`, `server_kind`,
@@ -480,7 +481,8 @@ private fun healthSchema(): Map<String, Map<String, Set<String>>> {
                 "input" to HealthWords.inputs,
             ),
         ProductEvent.TurnStall.wire to
-            mapOf("stage" to HealthWords.stallStages, "minutes_range" to HealthRanges.stallMinutes.toSet()),
+            mapOf("stage" to HealthWords.stallStages, "minutes_range" to HealthRanges.stallMinutes.toSet(), "cause" to HealthWords.stallCauses),
+        ProductEvent.AppExit.wire to mapOf("exit_reason" to HealthWords.appExitReasons, "foreground" to setOf("yes", "no")),
         ProductEvent.ChatTurn.wire to
             mapOf(
                 "outcome" to HealthWords.turnOutcomes,

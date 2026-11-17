@@ -6,6 +6,7 @@ import io.github.eslamasabry.oc.engine.analytics.health.NoOpTelemetryVendor
 import io.github.eslamasabry.oc.engine.analytics.health.TelemetryVendor
 import io.github.eslamasabry.oc.engine.analytics.health.TelemetryService
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.runCurrent
 import io.github.eslamasabry.oc.engine.analytics.product.ProductEvent
 import io.github.eslamasabry.oc.engine.analytics.product.ProductScreen
 import io.github.eslamasabry.oc.engine.analytics.product.productSchema
@@ -338,4 +339,39 @@ class UmamiSenderTest {
         vendor.setCollection(false, false); vendor.setCollection(true, false)
         assertEquals(2, properties.size)
     }
+    @Test
+    fun `B-435 previous exit reaches Google and Umami from one consented product call`() = runTest {
+        val r = Rig()
+        val google = mutableListOf<Pair<String, Map<String, String>>>()
+        val primary = object : TelemetryVendor by NoOpTelemetryVendor {
+            override fun event(name: String, props: Map<String, String>) { google += name to props }
+        }
+        val service = TelemetryService(UsageTelemetryVendor(primary, r.sender, UmamiBuild("3.0.1", "10081")), true, scope = this)
+        service.start(io.github.eslamasabry.oc.engine.analytics.health.TelemetryConsent(true, false),
+            object : io.github.eslamasabry.oc.engine.analytics.health.TelemetryConsentStore {
+                override suspend fun write(consent: io.github.eslamasabry.oc.engine.analytics.health.TelemetryConsent) = true
+            }, io.github.eslamasabry.oc.engine.analytics.health.MemoryTelemetryReportStore())
+        val platform = object : io.github.eslamasabry.oc.engine.analytics.health.HealthPlatform {
+            override suspend fun deviceContext(): io.github.eslamasabry.oc.engine.analytics.health.HealthDeviceContext? = null
+            override suspend fun exits(limit: Int) = listOf(io.github.eslamasabry.oc.engine.analytics.health.HealthExit(4, 5000, true))
+            override fun coldStartMs(): Long? = null
+            override val appVersion = "3.0.1"
+            override val declaredBuildKind: String? = null
+        }
+        val marks = object : io.github.eslamasabry.oc.engine.analytics.health.HealthExitMarks {
+            var at = 0L
+            override fun lastExitAtMs() = 0L
+            override suspend fun setLastExitAtMs(atMs: Long) = Unit
+            override fun lastAnalyticsExitAtMs() = at
+            override suspend fun setLastAnalyticsExitAtMs(atMs: Long): Boolean { at = atMs; return true }
+        }
+        io.github.eslamasabry.oc.engine.analytics.health.HealthTelemetry(service, platform, marks, backgroundScope).start()
+        runCurrent()
+        r.lane.run()
+        assertEquals(listOf("app_exit" to mapOf("exit_reason" to "crash", "foreground" to "yes")), google.filter { it.first == "app_exit" })
+        val own = r.transport.batches.flatten().filter { it.payload.name == "app_exit" }
+        assertEquals(1, own.size)
+        assertEquals(mapOf("exit_reason" to "crash", "foreground" to "yes", "version" to "3.0.1-test.10081", "build" to "10081"), own.single().payload.data)
+    }
+
 }

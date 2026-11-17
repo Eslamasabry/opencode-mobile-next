@@ -36,7 +36,7 @@ import io.github.eslamasabry.oc.ui.words.res.aiteamComponentStageTook
 import io.github.eslamasabry.oc.ui.words.res.chatStallConnectionLost
 import io.github.eslamasabry.oc.ui.words.res.chatStallConnectionUnchecked
 import io.github.eslamasabry.oc.ui.words.res.chatStallHelperDown
-import io.github.eslamasabry.oc.ui.words.res.chatStallModelSlow
+import io.github.eslamasabry.oc.ui.words.res.chatQuietThinkingHint
 import io.github.eslamasabry.oc.ui.words.res.chatWorkWaitingEdit
 import io.github.eslamasabry.oc.ui.words.res.chatWorkWaitingOther
 import io.github.eslamasabry.oc.ui.words.res.chatWorkWaitingRun
@@ -552,7 +552,7 @@ internal fun liveNoticeWords(n: LiveNoticeUi): String =
         }
         is LiveNoticeUi.Stall ->
             when (n.notice) {
-                TurnStallNotice.ModelSlow -> stringResource(Res.string.chatStallModelSlow)
+                TurnStallNotice.ModelSlow -> stringResource(Res.string.chatQuietThinkingHint)
                 TurnStallNotice.HelperStopped,
                 TurnStallNotice.HelperStoppedUnexpectedly,
                 TurnStallNotice.HelperStoppedResourceKill -> stringResource(Res.string.chatStallHelperDown)

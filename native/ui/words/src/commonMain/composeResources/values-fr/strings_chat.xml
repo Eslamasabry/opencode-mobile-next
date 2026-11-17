@@ -1372,4 +1372,6 @@
     <string name="stageStartingAgents">Démarrage des agents…</string>
     <string name="stageStartingAgent">Démarrage de %1$s…</string>
     <string name="stageOpeningConversation">Ouverture de la conversation…</string>
+    <string name="kitTurnLiveStillThinking">Réfléchit encore</string>
+    <string name="chatQuietThinkingHint">Certains modèles réfléchissent en silence pendant plusieurs minutes.</string>
 </resources>
