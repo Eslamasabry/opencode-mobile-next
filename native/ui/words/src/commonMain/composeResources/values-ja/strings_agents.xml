@@ -193,14 +193,14 @@
     </plurals>
     <string name="agentAccountResetWhen">%1$s（%2$s）</string>
     <string name="externalAgentsEmptyTitle">外部エージェントはまだありません</string>
-    <string name="externalAgentsEmptyBody">ウェブ アドレスで追加できます。保存する前にエージェントの自己説明を確認できます。</string>
+    <string name="externalAgentsEmptyBody">ウェブアドレスで追加できます。保存する前にエージェントの自己説明を確認できます。</string>
     <string name="externalAgentsBoundary">外部エージェントに送信されるのは入力したテキストのみです。プロジェクト、ファイル、ほかの会話はこのスマートフォンに留まります。</string>
     <string name="externalAgentsRemovalIncomplete">削除が完了しませんでした · タップして再試行</string>
     <string name="externalAgentsRemoveNamed">%1$sをこのスマートフォンから削除</string>
     <string name="externalAgentsRemoveTitle">%1$sを削除しますか？</string>
     <string name="externalAgentsRemoveBody">保存されたタスクとキーはこのスマートフォンから削除されます。すでに開始された作業はそのまま継続し、エージェント側が保持しているデータもそのまま残ります。</string>
     <string name="externalAgentsBusy">現在の処理が終わるまでお待ちください</string>
-    <string name="externalAgentsAddressHelper">ウェブ アドレス、またはエージェントカードのアドレスです。</string>
+    <string name="externalAgentsAddressHelper">ウェブアドレス、またはエージェントカードのアドレスです。</string>
     <string name="externalAgentsCheck">エージェントを確認</string>
     <string name="externalAgentsCheckNeedsAddress">先にエージェントのアドレスを入力してください</string>
     <string name="externalAgentsStopChecking">確認を停止</string>

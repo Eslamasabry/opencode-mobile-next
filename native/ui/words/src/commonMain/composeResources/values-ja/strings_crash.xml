@@ -18,5 +18,5 @@
     <string name="secHistoryEmpty">最近の終了履歴は記録されていません。</string>
     <string name="secHistoryUnavailable">終了履歴を利用できません。</string>
     <string name="secHistoryEntry">%1$s · コード%2$d</string>
-    <string name="secCrashReportHeader">OpenCodeモバイル クラッシュレポート\n記録されたエラーの種類と時刻のみ。\nメッセージ、スタックトレース、会話は含まれません。\n\n</string>
+    <string name="secCrashReportHeader">OpenCodeモバイルのクラッシュレポート\n記録されたエラーの種類と時刻のみ。\nメッセージ、スタックトレース、会話は含まれません。\n\n</string>
 </resources>
