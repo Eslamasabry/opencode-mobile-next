@@ -43,12 +43,13 @@ public class KitVoiceField(
     public val conversationRef: ConversationRef? = null,
     /** A draft-only surface (for example Ask for change) never auto-sends recorded words. */
     public val dictationOnly: Boolean = false,
+) {
     /**
      * Replaces the whole field and puts the cursor at the given offset (after the dictated words, so text typed after
-     * the insertion point keeps its place). Null: [replace], the field's own cursor rule.
+     * the insertion point keeps its place). Null: [replace], the field's own cursor rule. Set by the host once.
      */
-    public val replaceAt: ((String, Int) -> Unit)? = null,
-)
+    public var replaceAt: ((String, Int) -> Unit)? = null
+}
 
 /** Contributed by `:feature:voice` (empty set = no mic, never a dead one). */
 public interface KitComposerVoice {

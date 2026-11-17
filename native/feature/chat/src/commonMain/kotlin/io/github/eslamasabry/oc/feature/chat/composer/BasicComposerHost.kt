@@ -481,7 +481,8 @@ public fun BasicComposer(
             send = send,
             canSend = { canSend },
             conversationRef = conversationRef,
-            replaceAt = { words, cursor ->
+        ).also {
+            it.replaceAt = { words, cursor ->
                 field.edit {
                     replace(0, length, words)
                     selection = TextRange(cursor.coerceIn(0, length))
@@ -489,8 +490,8 @@ public fun BasicComposer(
                 editor.userEditSerial += 1
                 editor.lastReported = words
                 actions.draftChanged(words)
-            },
-        )
+            }
+        }
     // Leaving this conversation (a switch, Files, Back) ends any dictation into its box.
     voice?.StopWhenLeft(voiceField)
     var modelsOpen by remember(state.targetKey) { mutableStateOf(false) }
