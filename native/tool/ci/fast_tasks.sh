@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Prints the desktop-test Gradle tasks for the modules a change touches, plus their direct dependents, one per
+# Prints the desktop-test Gradle tasks for the modules a change touches, plus all their dependents (transitive), one per
 # line, or the single word ALL when the whole suite should run. The fast lane (tool/ci/LANES.md) feeds this to its
 # shards. Details go to stderr.
 #
@@ -7,7 +7,7 @@
 #
 # The change is `git diff --name-only <base>...HEAD` (merge-base diff, committed changes only, like the PR view).
 # Path -> module: native/<layer>/<name>/... is :<layer>:<name>; native/{androidApp,desktopApp,quality}/... likewise.
-# Direct dependents: every module whose build.gradle.kts names project(":<changed>"). ALL when the base cannot be
+# Dependents: every module that needs a changed module, transitively (see below). ALL when the base cannot be
 # resolved, when build logic, the version catalog, the root build or settings changed, when a changed path under
 # native/ belongs to no module, or when more than [max-modules] (default 30) modules end up selected.
 # Only paths under native/ count; the rest of the repo (Flutter app, docs) cannot affect these tests.
@@ -38,14 +38,31 @@ while IFS= read -r p; do
   esac
 done <<<"$changed"
 
-# Direct dependents from the dependency declarations (project(":a:b") in a module's build file).
-declare -A sel=()
-for m in "${!hit[@]}"; do sel[$m]=1; done
+# Dependents, transitively: every module that needs a changed module, directly or through another module.
+# Edges come from two places: project(":a:b") in a module's build file (a call may be split over lines), and the
+# dependencies the convention plugins add without any build file naming them (build-logic OcKmpFeaturePlugin: every
+# oc.kmp.feature module gets :ui:kit :ui:design :ui:words :ui:routes :core:domain :core:model :core:common; OcKmpLibraryPlugin:
+# every oc.kmp.library module except :core:testing gets :core:testing). Before, only the first, one hop, was read, so a
+# :ui:words change never selected the features (run 44148014813 tested 4 modules). Keep the two lists in step with the plugins.
+declare -A needs=()   # module -> space separated modules it needs
 for bf in */*/build.gradle.kts androidApp/build.gradle.kts desktopApp/build.gradle.kts quality/build.gradle.kts; do
   [ -f "$bf" ] || continue
   dir=${bf%/build.gradle.kts}; me=":${dir//\//:}"
-  for dep in $(grep -oE 'project\(":[a-zA-Z0-9:_-]+"\)' "$bf" | sed -E 's/project\("(.*)"\)/\1/'); do
-    [ -n "${hit[$dep]:-}" ] && sel[$me]=1
+  deps=$(tr '\n' ' ' <"$bf" | grep -oE 'project\( *"[a-zA-Z0-9:_-]+" *\)' | sed -E 's/project\( *"(.*)" *\)/\1/' || true)
+  grep -q 'id("oc\.kmp\.feature")' "$bf" && deps+=" :ui:kit :ui:design :ui:words :ui:routes :core:domain :core:model :core:common"
+  if grep -q 'id("oc\.kmp\.library")' "$bf" && [ "$me" != ":core:testing" ]; then deps+=" :core:testing"; fi
+  needs[$me]=$deps
+done
+declare -A sel=()
+for m in "${!hit[@]}"; do sel[$m]=1; done
+changed_any=1
+while [ "$changed_any" = 1 ]; do
+  changed_any=0
+  for me in "${!needs[@]}"; do
+    [ -n "${sel[$me]:-}" ] && continue
+    for dep in ${needs[$me]}; do
+      if [ -n "${sel[$dep]:-}" ]; then sel[$me]=1; changed_any=1; break; fi
+    done
   done
 done
 [ "${#sel[@]}" -le "$max" ] || all "${#sel[@]} modules selected (limit $max)"

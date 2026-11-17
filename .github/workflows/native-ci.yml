@@ -4,7 +4,7 @@
 #
 # Lanes (native/tool/ci/LANES.md):
 #   fast    default for a manual dispatch. Compile + desktop tests of the modules changed against `base` (and their
-#           direct dependents; everything if too much changed) without picture tests + the APK, all in parallel.
+#           all dependents, transitively; everything if too much changed) without picture tests + the APK, all in parallel.
 #   full    every module, picture tests included, compared with the CI-recorded goldens. Push runs use this.
 #   candidate all module tests with pictures, quality/security, Android host/unit and release self-tests; no APK/signing.
 #   goldens re-records the desktop goldens on the runner and uploads them as the `ci-goldens` artifact.
@@ -176,6 +176,11 @@ jobs:
           else
             echo "whole tool self-tests: not run (no native/tool change against the base, and not a candidate lane)"
           fi
+      - name: Fast-lane module selection self-tests (a changed module reaches every dependent, transitively)
+        working-directory: .
+        run: |
+          set -o pipefail
+          bash native/tool/test/run_tests.sh B-CI-313 2>&1 | tee "$RUNNER_TEMP/fast-selection.log"
       - name: Refuse a quick-lane base that is far older than where this branch left the line
         if: ${{ inputs.lane == 'fast' }}
         working-directory: .

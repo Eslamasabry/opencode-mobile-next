@@ -173,14 +173,7 @@ object FlutterGoldenGate {
                 val axes = axesOf(name, mode, ref, textScale, window, density, pixelRatio)
                 val native = render(axes, mode == "dark", motion, style, frame, wrap, content, act = act)
                 if (!goldenFile("${name}_$mode", ref).isFile) {
-                    ImageIO.write(native, "png", File(out, "${name}_$mode-native.png")) // the picture is still rendered and kept
-                    if (ReferenceGuard.outcome() == ReferenceGuard.Outcome.Fail) {
-                        // A lane that fetches its pictures: the plain failure, beside any layout finding (never compare()'s
-                        // IllegalStateException).
-                        failures += AssertionError(ReferenceGuard.failureMessage("picture ${name}_$mode"))
-                    } else {
-                        missingGolden = "picture ${name}_$mode"
-                    }
+                    missingGolden = noteMissingGolden(name, mode, native, failures) ?: missingGolden
                     continue
                 }
                 result[mode] = compare("${name}_$mode", ref, native)
@@ -198,6 +191,25 @@ object FlutterGoldenGate {
         // Outside the lanes that fetch the references a missing golden is a counted skip, never a pass.
         missingGolden?.let { ReferenceGuard.missing(it) }
         return result
+    }
+
+    /**
+     * The golden `<name>_<mode>` is not on disk: the native picture is still rendered and kept. A lane that fetches its
+     * pictures gets the plain failure beside any layout finding (never compare()'s IllegalStateException); elsewhere
+     * the result is the name the caller turns into a counted skip (null when the failure was recorded instead).
+     */
+    private fun noteMissingGolden(
+        name: String,
+        mode: String,
+        native: BufferedImage,
+        failures: MutableList<Throwable>,
+    ): String? {
+        ImageIO.write(native, "png", File(out, "${name}_$mode-native.png"))
+        if (ReferenceGuard.outcome() == ReferenceGuard.Outcome.Fail) {
+            failures += AssertionError(ReferenceGuard.failureMessage("picture ${name}_$mode"))
+            return null
+        }
+        return "picture ${name}_$mode"
     }
 
     /**

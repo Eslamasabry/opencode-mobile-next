@@ -571,6 +571,31 @@ expect "B-CI-334 base check: a night copy at the tip with a base from an old how
 expect "B-CI-334 base check: any other ref at the line's tip is refused" 1 native/tool/ci/base_check.sh old line native/my-tip-copy
 expect_out "B-CI-334 base check: and told plainly to dispatch on the line ref" "this ref is the line's tip: dispatch on the line ref"
 expect_no_out "B-CI-334 base check: and never offered a base equal to its own tip" "-f base=$(git rev-parse --short=12 HEAD)"
+# ------------------------------------------------------------------ fast_tasks.sh (B-CI-313): a change selects every dependent, transitively
+# Plugins add dependencies that no module's build file names (oc.kmp.feature adds :ui:words, :ui:kit, ...; oc.kmp.library adds
+# :core:testing), and a dependent of a dependent is a dependent: a words change must reach every feature and the app.
+R="$(new_repo)"; cd "$R" || exit 1
+mkdir -p native/ui/words native/ui/shell native/feature/alpha native/feature/beta native/engine/solo native/androidApp native/android/notify/src/test
+printf 'plugins { id("oc.kmp.library") }\n' >native/ui/words/build.gradle.kts
+printf 'plugins { id("oc.kmp.compose") }\nkotlin { sourceSets.commonMain.dependencies { implementation(\n    project(":ui:words")\n) } }\n' >native/ui/kit/build.gradle.kts
+printf 'plugins { id("oc.kmp.compose") }\nkotlin { sourceSets.commonMain.dependencies { implementation(project(":ui:kit")) } }\n' >native/ui/shell/build.gradle.kts
+printf 'plugins { id("oc.kmp.feature") }\n' >native/feature/alpha/build.gradle.kts
+printf 'plugins { id("oc.kmp.feature") }\n' >native/feature/beta/build.gradle.kts
+printf 'plugins { id("oc.kmp.library") }\n' >native/engine/solo/build.gradle.kts
+printf 'plugins { id("oc.android.library") }\n' >native/android/notify/build.gradle.kts
+printf 'plugins { id("oc.android.application") }\ndependencies { implementation(project(":ui:shell"))\n implementation(\n  project(":feature:alpha")) }\n' >native/androidApp/build.gradle.kts
+git add -A && git commit -q -m "chore(tool): a small module graph [skip ci]" -m "Base." && git branch -f line HEAD
+echo 'x' >native/ui/words/Words.kt; git add -A && git commit -q -m "chore(tool): a words change [skip ci]" -m "Base."
+expect "B-CI-313 fast selection: a words change picks the module itself" 0 native/tool/ci/fast_tasks.sh line
+expect_out "B-CI-313 fast selection: :ui:words" '^:ui:words:desktopTest$'
+expect_out "B-CI-313 fast selection: its direct dependent :ui:kit" '^:ui:kit:desktopTest$'
+expect_out "B-CI-313 fast selection: the dependent of a dependent, :ui:shell" '^:ui:shell:desktopTest$'
+expect_out "B-CI-313 fast selection: every feature, though no feature build file names :ui:words (alpha)" '^:feature:alpha:desktopTest$'
+expect_out "B-CI-313 fast selection: every feature (beta)" '^:feature:beta:desktopTest$'
+expect_no_out "B-CI-313 fast selection: a module that does not depend on words is left out" ':engine:solo:desktopTest'
+git checkout -q line; git checkout -q -b leaf; echo 'x' >native/core/common/Leaf.kt; git add -A && git commit -q -m "chore(tool): a core change [skip ci]" -m "Base."
+expect "B-CI-313 fast selection: a change in :core:common reaches a module that only gets it from its plugin" 0 native/tool/ci/fast_tasks.sh line
+expect_out "B-CI-313 fast selection: (a feature)" '^:feature:alpha:desktopTest$'
 
 # ------------------------------------------------------------------------------------ qa/layout_baseline.sh (E02-S13)
 R="$(new_repo)"; cd "$R" || exit 1
