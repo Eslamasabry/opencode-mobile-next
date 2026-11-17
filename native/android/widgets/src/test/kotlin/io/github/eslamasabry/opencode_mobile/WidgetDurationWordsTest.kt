@@ -3,9 +3,9 @@ package io.github.eslamasabry.opencode_mobile
 import android.app.Application
 import io.github.eslamasabry.oc.core.common.text.NumberSymbols
 import io.github.eslamasabry.oc.core.common.text.Numbers
-import kotlin.test.AfterTest
-import kotlin.test.Test
-import kotlin.test.assertEquals
+import org.junit.After
+import org.junit.Assert.assertEquals
+import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
@@ -16,7 +16,7 @@ import org.robolectric.annotation.Config
 class WidgetDurationWordsTest {
     private val app: Application = RuntimeEnvironment.getApplication()
 
-    @AfterTest
+    @After
     fun cleanUp() {
         Numbers.pinned = null
         RuntimeEnvironment.setQualifiers("+en")

@@ -16,6 +16,7 @@ import io.github.eslamasabry.oc.ui.kit.text.kitElapsedSecondsMinutes
 import io.github.eslamasabry.oc.ui.kit.text.kitRelativeAge
 import io.github.eslamasabry.oc.ui.kit.text.kitResetInWords
 import io.github.eslamasabry.oc.ui.kit.text.kitTenthsSecondsWords
+import java.util.Locale
 import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.time.Duration.Companion.days
@@ -24,13 +25,17 @@ import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
 class DurationWordsTest {
+    private val savedLocale: Locale = Locale.getDefault()
+
     @AfterTest
     fun resetNumbers() {
         Numbers.pinned = null
+        Locale.setDefault(savedLocale)
     }
 
     @Test
-    fun `durations follow Flutter largest units and clamp negative elapsed time`() =
+    fun `durations follow Flutter largest units and clamp negative elapsed time`() {
+        Locale.setDefault(Locale.ENGLISH)
         runComposeUiTest {
             setContent {
                 KitTheme(platform = DesktopKitPlatform(), localeTag = "en", stillFrame = true) {
@@ -49,11 +54,13 @@ class DurationWordsTest {
             onNodeWithText("1 d 21 h").assertExists()
             onNodeWithText("2 d").assertExists()
         }
+    }
 
     @Test
-    fun `B-L10N-020 Arabic uses all six plural forms, localized units and system digits`() =
+    fun `B-L10N-020 Arabic uses all six plural forms, localized units and system digits`() {
+        Locale.setDefault(Locale.forLanguageTag("ar"))
+        Numbers.pinned = NumberSymbols(zeroDigit = '٠', grouping = '٬', decimal = '٫', minus = '-')
         runComposeUiTest {
-            Numbers.pinned = NumberSymbols(zeroDigit = '٠', grouping = '٬', decimal = '٫', minus = '-')
             setContent {
                 KitTheme(platform = DesktopKitPlatform(), localeTag = "ar", stillFrame = true) {
                     val nowMs = 1_000_000_000L
@@ -82,11 +89,13 @@ class DurationWordsTest {
             onNodeWithText("منذ ساعتين").assertExists()
             onNodeWithText("يتبقّى ساعتان و١٠ دقائق لإعادة التعيين").assertExists()
         }
+    }
 
     @Test
-    fun `B-L10N-021 Russian uses one-few-many declensions and localized units`() =
+    fun `B-L10N-021 Russian uses one-few-many declensions and localized units`() {
+        Locale.setDefault(Locale.forLanguageTag("ru"))
+        Numbers.pinned = NumberSymbols.Latin
         runComposeUiTest {
-            Numbers.pinned = NumberSymbols.Latin
             setContent {
                 KitTheme(platform = DesktopKitPlatform(), localeTag = "ru", stillFrame = true) {
                     val nowMs = 1_000_000_000L
@@ -109,22 +118,24 @@ class DurationWordsTest {
             onNodeWithText("Сброс через 5 дней").assertExists()
             onNodeWithText("12.4 с").assertExists()
         }
+    }
 
     @Test
-    fun `B-L10N-022 Japanese and all remaining languages localize every duration and age shape`() =
-        runComposeUiTest {
-            Numbers.pinned = NumberSymbols.Latin
-            val cases = listOf(
-                "ja" to listOf("1分12秒", "12.4秒", "13分36秒", "5分前", "2時間前", "2日前", "あと2時間10分でリセット"),
-                "es" to listOf("1 min 12 s", "12.4 s", "13 min 36 s", "hace 5 min", "hace 2 h", "hace 2 días", "Se restablece en 2 h 10 min"),
-                "fr" to listOf("1 min 12 s", "12.4 s", "13 min 36 s", "il y a 5 min", "il y a 2 h", "il y a 2 jours", "Réinitialisation dans 2 h 10 min"),
-                "id" to listOf("1 menit 12 detik", "12.4 detik", "13 mnt 36 dtk", "5 menit lalu", "2 jam lalu", "2 hari lalu", "Reset dalam 2 jam 10 menit"),
-                "pt" to listOf("1 min 12 s", "12.4 s", "13 min 36 s", "há 5 min", "há 2 h", "há 2 dias", "Renova em 2 h 10 min"),
-                "vi" to listOf("1 phút 12 giây", "12.4 giây", "13 phút 36 giây", "5 phút trước", "2 giờ trước", "2 ngày trước", "Đặt lại sau 2 giờ 10 phút"),
-                "zh" to listOf("1 分钟 12 秒", "12.4 秒", "13分 36秒", "5 分钟前", "2 小时前", "2 天前", "2 小时 10 分钟 后重置"),
-            )
-            val nowMs = 1_000_000_000L
-            for ((loc, expected) in cases) {
+    fun `B-L10N-022 Japanese and all remaining languages localize every duration and age shape`() {
+        Numbers.pinned = NumberSymbols.Latin
+        val cases = listOf(
+            "ja" to listOf("1分12秒", "12.4秒", "13分36秒", "5分前", "2時間前", "2日前", "あと2時間10分でリセット"),
+            "es" to listOf("1 min 12 s", "12.4 s", "13 min 36 s", "hace 5 min", "hace 2 h", "hace 2 días", "Se restablece en 2 h 10 min"),
+            "fr" to listOf("1 min 12 s", "12.4 s", "13 min 36 s", "il y a 5 min", "il y a 2 h", "il y a 2 jours", "Réinitialisation dans 2 h 10 min"),
+            "id" to listOf("1 menit 12 detik", "12.4 detik", "13 mnt 36 dtk", "5 menit lalu", "2 jam lalu", "2 hari lalu", "Reset dalam 2 jam 10 menit"),
+            "pt" to listOf("1 min 12 s", "12.4 s", "13 min 36 s", "há 5 min", "há 2 h", "há 2 dias", "Renova em 2 h 10 min"),
+            "vi" to listOf("1 phút 12 giây", "12.4 giây", "13 phút 36 giây", "5 phút trước", "2 giờ trước", "2 ngày trước", "Đặt lại sau 2 giờ 10 phút"),
+            "zh" to listOf("1 分钟 12 秒", "12.4 秒", "13分 36秒", "5 分钟前", "2 小时前", "2 天前", "2 小时 10 分钟 后重置"),
+        )
+        val nowMs = 1_000_000_000L
+        for ((loc, expected) in cases) {
+            Locale.setDefault(Locale.forLanguageTag(loc))
+            runComposeUiTest {
                 setContent {
                     KitTheme(platform = DesktopKitPlatform(), localeTag = loc, stillFrame = true) {
                         Column {
@@ -143,4 +154,5 @@ class DurationWordsTest {
                 }
             }
         }
+    }
 }

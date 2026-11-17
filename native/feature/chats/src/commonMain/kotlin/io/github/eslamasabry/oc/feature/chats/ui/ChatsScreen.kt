@@ -875,7 +875,7 @@ private data class HomeRowWords(
     val delete: String,
     val stop: String,
     /** "Working", or "Working 34m" once the run's start is known (B-161). */
-    val runningFor: (Long?) -> String,
+    val runningFor: @Composable (Long?) -> String,
     /** What a screen reader says for a row whose agent is getting ready (the eye sees the working mark alone). */
     val gettingReady: String,
 )

@@ -196,9 +196,15 @@ usageModelTokens
 usagePillOffline
 usageTokens
 usageTotalTokens
+usage_widget_provider_claude
+usage_widget_provider_codex
 usage_widget_provider_glm
 usage_widget_provider_minimax
+widget_label_short
 widget_label_status
+widget_preview_usage_p1
+widget_preview_usage_p2
+widget_status_linux
 widget_status_title
 widget_v2_offline_plain
 widget_v2_span_min

@@ -13,7 +13,7 @@ import org.jetbrains.compose.resources.stringResource
 
 /** "Working 34m" / "Working 1h 5m" for a live run's length; plain "Working" under a minute or with no start. */
 @Composable
-internal fun liveRunWords(): (Long?) -> String {
+internal fun liveRunWords(): @Composable (Long?) -> String {
     val working = stringResource(Res.string.chatsHomeRowWorking)
     val workingFor = stringResource(Res.string.s10HomeRowWorkingFor)
     return { elapsedMs ->
