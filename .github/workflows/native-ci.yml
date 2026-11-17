@@ -518,7 +518,7 @@ jobs:
           case "$CUSTOM_TASKS" in
             detekt*)
               git -C .. fetch --no-tags --deepen=60 origin "$GITHUB_REF" && git -C .. fetch --no-tags --depth=60 origin native/glass-next:refs/remotes/origin/native/glass-next
-              bash tool/qa/detekt.sh ${CUSTOM_TASKS#detekt} --base origin/native/glass-next 2>&1 | tee "$RUNNER_TEMP/custom.log"
+              bash tool/ci/detekt_compare.sh ${CUSTOM_TASKS#detekt} 2>&1 | tee "$RUNNER_TEMP/custom.log"
               rc=${PIPESTATUS[0]}; echo "DETEKT EXIT $rc"; mkdir -p reports/measure; cp -r build/reports/detekt reports/measure/ 2>/dev/null; exit 0 ;;
           esac
           tool/ci/gradle_retry.sh "$RUNNER_TEMP/custom.log" ${{ inputs.tasks }} $GRADLE_FLAGS
