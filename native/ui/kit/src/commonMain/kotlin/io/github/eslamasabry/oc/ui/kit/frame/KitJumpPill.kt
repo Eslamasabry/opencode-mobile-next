@@ -450,9 +450,12 @@ public fun KitJumpButton(label: String, onClick: () -> Unit, visible: Boolean, m
                 faceAlpha = JUMP_BUTTON_FILL_ALPHA,
             )
         )
+    // The caller's place (align, padding) belongs on the node the caller put in its Box: the transition's own node. Given to
+    // the face inside AnimatedVisibility it is ignored, and on a phone, where motion is on, the arrow lay at the origin
+    // under the status bar (device check 46, build 10077).
     val face: @Composable () -> Unit = {
         Box(
-            modifier
+            Modifier
                 .testTag("kit-jump-button")
                 .heightIn(min = tokens.minTarget.dp)
                 .widthIn(min = tokens.minTarget.dp)
@@ -474,11 +477,12 @@ public fun KitJumpButton(label: String, onClick: () -> Unit, visible: Boolean, m
         }
     }
     if (KitMotion.state.reduced) {
-        if (visible) face()
+        if (visible) Box(modifier) { face() }
         return
     }
     AnimatedVisibility(
         visible,
+        modifier,
         enter = androidx.compose.animation.fadeIn() + androidx.compose.animation.scaleIn(initialScale = 0.8f),
         exit = androidx.compose.animation.fadeOut() + androidx.compose.animation.scaleOut(targetScale = 0.8f),
     ) { face() }

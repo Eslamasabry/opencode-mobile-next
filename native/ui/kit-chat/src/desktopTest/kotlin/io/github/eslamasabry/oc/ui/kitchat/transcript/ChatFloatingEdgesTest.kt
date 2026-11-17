@@ -77,6 +77,8 @@ class ChatFloatingEdgesTest {
         val white: Boolean = false,
         val dark: Boolean = true,
         val picture: Color = Color.White,
+        val motion: MotionLevel = MotionLevel.Off,
+        val style: Style = Style.Solid,
     )
 
     private val rows = (0 until 40).map { i -> if (i == 0) "Row zero the newest line of the conversation" else "Row $i: the build finished and every check passed, then the notes were written." }
@@ -88,7 +90,7 @@ class ChatFloatingEdgesTest {
                 LocalLayoutDirection provides if (scene.rtl) LayoutDirection.Rtl else LayoutDirection.Ltr,
             ) {
                 KitTheme(
-                    KitAppearance(mode = if (scene.dark) AppearanceMode.Dark else AppearanceMode.Light, style = Style.Solid, motion = MotionLevel.Off),
+                    KitAppearance(mode = if (scene.dark) AppearanceMode.Dark else AppearanceMode.Light, style = scene.style, motion = scene.motion),
                     DesktopKitPlatform(),
                     if (scene.rtl) "ar" else "en",
                     stillFrame = true,
@@ -245,6 +247,25 @@ class ChatFloatingEdgesTest {
             // No words on it: its label is spoken, never drawn.
             assertTrue(onAllNodesWithText("Jump to latest", useUnmergedTree = true).fetchSemanticsNodes().isEmpty(), "words are drawn on the button")
         }
+
+    @Test
+    fun `B-CHAT-EDGE-023 with motion on, the jump arrow stands centred just above the box and inside the screen`() {
+        // Device check 46 (build 10077): with motion on, the arrow sat at [0,0][126,126] under the status bar, because
+        // its place (align + padding) was given to the face inside the enter/exit transition, which ignores it. The
+        // earlier tests ran with motion off, where it is placed right, and only asked that the arrow exist.
+        for (style in listOf(Style.Solid, Style.Glass, Style.Soft)) for (keyboard in listOf(false, true)) for (rtl in listOf(false, true))
+        run(Scene(motion = MotionLevel.Full, rtl = rtl, keyboard = keyboard, style = style)) {
+            scrollAway()
+            mainClock.advanceTimeBy(800)
+            waitForIdle()
+            val button = bounds("jump-to-latest")
+            val box = bounds("kit-composer-box")
+            assertEquals(W / 2f, button.center.x, 1f, "the arrow is centred ($style, keyboard $keyboard, rtl $rtl): $button")
+            assertTrue(button.bottom <= box.top + 1f && button.bottom >= box.top - 24f, "the arrow stands just above the box: $button, box $box")
+            assertTrue(button.top >= STATUS_DP + 48f, "the arrow is clear of the status area and the header: $button")
+            assertTrue(button.right <= W && button.left >= 0f && button.bottom <= H, "the arrow is inside the screen: $button")
+        }
+    }
 
     @Test
     fun `B-CHAT-EDGE-009 the jump control stays centred in a right-to-left reading and leaves at the end`() =
