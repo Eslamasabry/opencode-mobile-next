@@ -185,6 +185,7 @@ import io.github.eslamasabry.oc.ui.words.res.chatSendFailureAccountAction
 import io.github.eslamasabry.oc.ui.words.res.chatUiChooseAnotherModel
 import io.github.eslamasabry.oc.ui.words.res.chatUiChooseOption
 import io.github.eslamasabry.oc.ui.words.res.chatUiRunOnYourComputer
+import io.github.eslamasabry.oc.ui.words.res.chatUiRunOnThisPhone
 import io.github.eslamasabry.oc.ui.words.res.chatUiTodo
 import io.github.eslamasabry.oc.ui.words.res.modelChoiceDone
 import io.github.eslamasabry.oc.ui.words.res.chatUiOpenProviders
@@ -1866,7 +1867,9 @@ internal fun rememberReplyActions(
     val chooseTemplate = stringResource(Res.string.chatUiChooseOption, "\u0000")
     val doneWord = stringResource(Res.string.modelChoiceDone)
     val todoWord = stringResource(Res.string.chatUiTodo)
-    val runOnComputer = stringResource(Res.string.chatUiRunOnYourComputer)
+    val phoneAgentWords = remember(actions) { actions.phoneAgentSignIn() }
+    val runOnComputer =
+        stringResource(if (phoneAgentWords) Res.string.chatUiRunOnThisPhone else Res.string.chatUiRunOnYourComputer)
     val openFullCode = stringResource(Res.string.terminalOpenFull, "\u0000")
     val chooseModel = stringResource(Res.string.chatUiChooseAnotherModel)
     val useModelTemplate = stringResource(Res.string.chatUiUseModelAndResend, "\u0000")
@@ -1971,6 +1974,7 @@ internal fun rememberReplyActions(
             signInAgainWords = if (phoneAgentSignIn) signInAgainWords else null,
             signInAgainLabel = signInAgainLabel,
             onAgentSignIn = actions::openAgentSignIn,
+            onThisPhone = phoneAgentSignIn,
             models = models,
             canCompact = canCompact,
             onCompact = actions::compactAgain,

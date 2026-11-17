@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Translated with native/tools/strings/translate; English is the source. -->
+<resources>
+    <string name="agentErrorProviderUnreachableHintPhone">このスマートフォンのインターネット接続を確認して、もう一度お試しください。</string>
+    <string name="agentErrorServerDiskFullPhone">このスマートフォンのストレージの空き容量がありません。</string>
+    <string name="agentErrorServerDiskFullHintPhone">このスマートフォンの空き容量を増やして、もう一度お試しください。</string>
+    <string name="chatSendPhoneHelperNoAnswer">このスマートフォンのエージェントが応答しませんでした。まだ起動中かもしれません。少し待ってから、もう一度お試しください。</string>
+</resources>

@@ -249,6 +249,8 @@ internal class ReplyActions(
     val signInAgainWords: ((String) -> String?)? = null,
     val signInAgainLabel: String? = null,
     val onAgentSignIn: (String) -> Unit = {},
+    /** This conversation runs on this phone: failure words name this phone, never a computer. */
+    val onThisPhone: Boolean = false,
     /** Error-card recovery (Flutter `assistant_error_row.dart`); a null label hides that fix. */
     val models: List<io.github.eslamasabry.oc.feature.chat.world.ComposerModel> = emptyList(),
     val canCompact: Boolean = false,
@@ -1392,7 +1394,7 @@ private fun ChatRow(
                             KitQuietLine(signInAgain, modifier = Modifier.testTag("chat-sign-in-again"))
                         else if (typed != null) KitQuietLine(typed)
                         else {
-                            val (headline, hint) = agentFailureWords(reason, row.createdMs)
+                            val (headline, hint) = agentFailureWords(reason, row.createdMs, reply?.onThisPhone == true)
                             KitQuietLine(headline)
                             KitQuietLine(hint)
                         }

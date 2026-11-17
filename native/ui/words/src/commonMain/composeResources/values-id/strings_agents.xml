@@ -580,4 +580,5 @@
     <string name="agentsStateRetired">Tidak lagi ditawarkan di ponsel ini</string>
     <string name="agentsRetiredBody">%1$s tidak lagi ditawarkan di ponsel ini, jadi tidak bisa disiapkan atau dipakai lagi. Hapus untuk membebaskan ruang yang dipakainya. Agen dan percakapan Anda yang lain tetap ada.</string>
     <string name="agentsRemoveChip">Hapus</string>
+    <string name="chatUiRunOnThisPhone">Jalankan di ponsel ini</string>
 </resources>

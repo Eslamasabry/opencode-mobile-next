@@ -13,7 +13,7 @@ import org.jetbrains.compose.resources.stringResource
  * credential-masked.
  */
 @Composable
-internal fun agentFailureWords(reason: String, saidAtMs: Long? = null): Pair<String, String> {
+internal fun agentFailureWords(reason: String, saidAtMs: Long? = null, onThisPhone: Boolean = false): Pair<String, String> {
     val cause = AgentErrorText.classify(reason)
     // A limit that names its reset says it in the headline, in the person's time zone and clock format.
     val resets =
@@ -28,7 +28,9 @@ internal fun agentFailureWords(reason: String, saidAtMs: Long? = null): Pair<Str
                 Res.string.agentErrorTimedOut to Res.string.agentErrorTimedOutHint
             AgentErrorCause.ProviderUnreachable ->
                 Res.string.agentErrorProviderUnreachable to
-                    Res.string.agentErrorProviderUnreachableHint
+                    // On this phone the connection to check is this phone's, never "the computer running OpenCode".
+                    (if (onThisPhone) Res.string.agentErrorProviderUnreachableHintPhone
+                    else Res.string.agentErrorProviderUnreachableHint)
             AgentErrorCause.RequestTooLarge ->
                 Res.string.agentErrorRequestTooLarge to Res.string.agentErrorRequestTooLargeHint
             AgentErrorCause.RateLimited ->
@@ -44,7 +46,8 @@ internal fun agentFailureWords(reason: String, saidAtMs: Long? = null): Pair<Str
             AgentErrorCause.ProviderAuth ->
                 Res.string.agentErrorProviderAuth to Res.string.agentErrorProviderAuthHint
             AgentErrorCause.ServerDiskFull ->
-                Res.string.agentErrorServerDiskFull to Res.string.agentErrorServerDiskFullHint
+                if (onThisPhone) Res.string.agentErrorServerDiskFullPhone to Res.string.agentErrorServerDiskFullHintPhone
+                else Res.string.agentErrorServerDiskFull to Res.string.agentErrorServerDiskFullHint
             null -> Res.string.agentErrorUnknown to Res.string.agentErrorUnknownHint
         }
     val headline =

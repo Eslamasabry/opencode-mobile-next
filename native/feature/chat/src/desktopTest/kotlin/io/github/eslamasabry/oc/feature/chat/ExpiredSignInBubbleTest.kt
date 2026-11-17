@@ -11,7 +11,12 @@ import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.graphics.toAwtImage
+import androidx.compose.ui.test.captureToImage
+import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.v2.runComposeUiTest
+import androidx.compose.ui.test.v2.runDesktopComposeUiTest
+import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Redacted
 import io.github.eslamasabry.oc.core.common.RedactorApi
@@ -177,4 +182,77 @@ class ExpiredSignInBubbleTest {
             }
             onNodeWithText("Couldn't reach your computer", substring = true).assertExists()
         }
+
+    @Test
+    fun `B-AGENT-189 a failed reply on this phone never says the computer running OpenCode`() {
+        for ((reason, expected) in
+            listOf(
+                "getaddrinfo ENOTFOUND api.anthropic.com" to "Check the internet connection on this phone",
+                "ENOSPC: no space left on device" to "This phone is out of storage space.",
+            )) {
+            runComposeUiTest {
+                val world = AgentWorld(ref)
+                world.transcript.value =
+                    stateOf(
+                        prompt("u1", "go"),
+                        io.github.eslamasabry.oc.engine.transcript.state.FooterRow(
+                            "footer:u1", "u1", failed = true, reason = reason, providerId = "claude",
+                        ),
+                    )
+                val p = ChatPresenter(world, RecordingNavigator(), Immediate, outside = Outside(owner))
+                val scope = CoroutineScope(SupervisorJob() + Dispatchers.Unconfined)
+                val states = p.states(scope, Dispatchers.Unconfined, SharingStarted.Eagerly)
+                setContent {
+                    val state by states.collectAsState()
+                    Root { ChatScreen(state, p, composer) }
+                }
+                onNodeWithText(expected, substring = true).assertExists()
+                onAllNodesWithText("computer", substring = true, ignoreCase = true).assertCountEquals(0)
+            }
+        }
+    }
+
+    /**
+     * The picture of the failed send for the owner's case, 360 dp, density 3, dark: "today" is the same failure
+     * not recognised (the agent unknown), "new" is the expired sign-in read. Written to build/signin-expired-render
+     * (the test's working folder) for review; asserts only that both were drawn.
+     */
+    @Test
+    fun `B-AGENT-189 render the expired sign-in send failure at 360 dp, today and new`() {
+        for ((name, runtime) in listOf("today" to null, "new" to "claude")) {
+            runDesktopComposeUiTest(1080, 1500) {
+                val world = if (runtime == null) FakeChatWorld(ref) else AgentWorld(ref)
+                world.pending.value =
+                    persistentListOf(
+                        PendingSend(4, "Whats next", PendingState.Failed, Failure.ComputerDidNotAnswer(Redacted(ownerText)))
+                    )
+                val p = ChatPresenter(world, RecordingNavigator(), Immediate, outside = if (runtime == null) Outside(null) else Outside(owner))
+                val scope = CoroutineScope(SupervisorJob() + Dispatchers.Unconfined)
+                val states = p.states(scope, Dispatchers.Unconfined, SharingStarted.Eagerly)
+                setContent {
+                    androidx.compose.runtime.CompositionLocalProvider(
+                        androidx.compose.ui.platform.LocalDensity provides androidx.compose.ui.unit.Density(3f)
+                    ) {
+                        KitTheme(
+                            platform = platform,
+                            appearance = KitAppearance(mode = AppearanceMode.Dark, motion = MotionLevel.Off),
+                            localeTag = "en",
+                            stillFrame = true,
+                        ) {
+                            KitStandaloneRedaction {
+                                val state by states.collectAsState()
+                                ChatScreen(state, p, composer)
+                            }
+                        }
+                    }
+                }
+                waitForIdle()
+                val image = onRoot().captureToImage().toAwtImage()
+                val file = java.io.File("build/signin-expired-render/$name-dark-360.png")
+                file.parentFile.mkdirs()
+                javax.imageio.ImageIO.write(image, "png", file)
+                assertEquals(1080, image.width)
+            }
+        }
+    }
 }
