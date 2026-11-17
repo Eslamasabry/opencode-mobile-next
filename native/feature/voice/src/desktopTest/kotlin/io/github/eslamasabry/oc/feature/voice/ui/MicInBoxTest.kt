@@ -20,7 +20,6 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.hasContentDescription
-import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
@@ -284,8 +283,8 @@ class MicInBoxTest {
         runComposeUiTest {
             setContent { Scene(rig) }
             settle(ts)
-            onNode(hasTestTag("send") and SemanticsMatcher.keyIsDefined(SemanticsActions.OnClick), useUnmergedTree = true)
-                .assertExists()
+            // The box's own Send, in its place, now named for what it does.
+            onNodeWithTag("send", useUnmergedTree = true).assertExists()
             val send = onNode(hasContentDescription("Send what you said") and SemanticsMatcher.keyIsDefined(SemanticsActions.OnClick), useUnmergedTree = true)
             send.performClick()
             send.performClick()
