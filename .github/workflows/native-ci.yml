@@ -155,6 +155,11 @@ jobs:
         run: |
           set -o pipefail
           bash native/tool/test/run_tests.sh B-CI-30 2>&1 | tee "$RUNNER_TEMP/ci-egress.log"
+      - name: Fast-lane module selection self-tests (a changed module reaches every dependent, transitively)
+        working-directory: .
+        run: |
+          set -o pipefail
+          bash native/tool/test/run_tests.sh B-CI-313 2>&1 | tee "$RUNNER_TEMP/fast-selection.log"
       - name: Refuse a quick-lane base that is far older than where this branch left the line
         if: ${{ inputs.lane == 'fast' }}
         working-directory: .
