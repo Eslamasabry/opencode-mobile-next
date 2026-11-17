@@ -200,3 +200,8 @@ tasks.register<Exec>("releaseGateSelfTest") {
     workingDir(rootDir)
     commandLine("python3", "-I", "tool/ci/test_release_gate.py")
 }
+tasks.register<Exec>("releaseToolsSelfTest") {
+    group = "verification"
+    workingDir(rootDir)
+    commandLine("bash", "tool/release/test/run_tests.sh")
+}
