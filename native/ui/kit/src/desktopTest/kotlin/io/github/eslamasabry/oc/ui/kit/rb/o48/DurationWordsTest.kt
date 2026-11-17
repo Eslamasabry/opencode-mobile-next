@@ -16,7 +16,12 @@ import io.github.eslamasabry.oc.ui.kit.text.kitElapsedSecondsMinutes
 import io.github.eslamasabry.oc.ui.kit.text.kitRelativeAge
 import io.github.eslamasabry.oc.ui.kit.text.kitResetInWords
 import io.github.eslamasabry.oc.ui.kit.text.kitTenthsSecondsWords
+import io.github.eslamasabry.oc.ui.words.res.Res
+import io.github.eslamasabry.oc.ui.words.res.kitLogQuiet
+import io.github.eslamasabry.oc.ui.words.res.linuxSvcRunningFor
+import io.github.eslamasabry.oc.ui.words.res.s9LimitsResetsIn
 import java.util.Locale
+import org.jetbrains.compose.resources.stringResource
 import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.time.Duration.Companion.days
@@ -146,6 +151,43 @@ class DurationWordsTest {
                             KitText(kitRelativeAge(nowMs - 2 * 3_600_000L, nowMs))
                             KitText(kitRelativeAge(nowMs - 2 * 86_400_000L, nowMs))
                             KitText(kitResetInWords(2.hours + 10.minutes))
+                        }
+                    }
+                }
+                for (text in expected) {
+                    onNodeWithText(text).assertExists()
+                }
+            }
+        }
+    }
+
+    @Test
+    fun `B-L10N-024 sub-minute duration fits standalone, for, ago, and reset-in shapes in every language`() {
+        val cases = listOf(
+            "en" to listOf("less than a minute", "Running for less than a minute", "Last line less than a minute ago", "resets in less than a minute"),
+            "ar" to listOf("أقل من دقيقة", "تعمل منذ أقل من دقيقة", "آخر سطر منذ أقل من دقيقة", "يُعاد التعيين بعد أقل من دقيقة"),
+            "es" to listOf("menos de un minuto", "En ejecución desde hace menos de un minuto", "Última línea hace menos de un minuto", "se reinicia en menos de un minuto"),
+            "fr" to listOf("moins d’une minute", "En marche depuis moins d’une minute", "Dernière ligne il y a moins d’une minute", "réinitialisation dans moins d’une minute"),
+            "id" to listOf("kurang dari semenit", "Berjalan selama kurang dari semenit", "Baris terakhir kurang dari semenit lalu", "diatur ulang dalam kurang dari semenit"),
+            "pt" to listOf("menos de um minuto", "Em execução há menos de um minuto", "Última linha há menos de um minuto", "renova em menos de um minuto"),
+            "ru" to listOf("несколько секунд", "Работает уже несколько секунд", "Последняя строка была несколько секунд назад", "сброс через несколько секунд"),
+            "vi" to listOf("chưa đến một phút", "Đã chạy chưa đến một phút", "Dòng cuối cách đây chưa đến một phút", "đặt lại sau chưa đến một phút"),
+            "zh" to listOf("不到一分钟", "已运行 不到一分钟", "最后一行为不到一分钟前", "不到一分钟 后重置"),
+            "ja" to listOf("数秒"),
+        )
+        for ((loc, expected) in cases) {
+            Locale.setDefault(Locale.forLanguageTag(loc))
+            runComposeUiTest {
+                setContent {
+                    KitTheme(platform = DesktopKitPlatform(), localeTag = loc, stillFrame = true) {
+                        val sub = kitDurationWords(15.seconds)
+                        Column {
+                            KitText(sub)
+                            if (loc != "ja") {
+                                KitText(stringResource(Res.string.linuxSvcRunningFor, sub))
+                                KitText(stringResource(Res.string.kitLogQuiet, sub))
+                                KitText(stringResource(Res.string.s9LimitsResetsIn, sub))
+                            }
                         }
                     }
                 }

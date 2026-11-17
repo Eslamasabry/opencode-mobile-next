@@ -64,7 +64,7 @@
     <plurals name="kitApproxMinutes">
         <item quantity="other">約%1$s分</item>
     </plurals>
-    <string name="kitDurLessThanMinute">1分未満</string>
+    <string name="kitDurLessThanMinute">数秒</string>
     <string name="kitRelJustNow">たった今</string>
     <string name="kitRelYesterday">昨日</string>
 </resources>

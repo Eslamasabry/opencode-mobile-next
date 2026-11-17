@@ -67,9 +67,8 @@ internal object WidgetDurationWords {
         NativeStrings.quantity(context, R.plurals.widget_v2_span_hour, hours, hours)
 
     fun compactDuration(context: Context, millis: Long): String {
-        val minutes = (millis / MILLIS_PER_MINUTE).coerceAtLeast(0L)
+        val minutes = (millis / MILLIS_PER_MINUTE).coerceAtLeast(1L)
         return when {
-            minutes < 1L -> NativeStrings.get(context, R.string.native_widget_now)
             minutes < MINUTES_PER_HOUR ->
                 NativeStrings.quantity(context, R.plurals.native_widget_minutes, minutes.toInt(), minutes)
             minutes < MINUTES_PER_DAY -> {
