@@ -266,28 +266,31 @@ class ChatEdgesBuildRenders {
         }
     }
 
-    @Test
-    fun `chat edges build renders`() {
+    private fun shoot(owner: Boolean, dark: Boolean) {
         Locale.setDefault(Locale.forLanguageTag("en"))
-        for ((owner, dark) in listOf(false to true, false to false, true to true)) {
-            runDesktopComposeUiTest(360 * 3, 780 * 3) {
-                setContent {
-                    CompositionLocalProvider(
-                        LocalDensity provides Density(3f),
-                        io.github.eslamasabry.oc.ui.kit.frame.LocalKitScreenInsets provides androidx.compose.foundation.layout.WindowInsets(top = 28.dp, bottom = 20.dp),
-                    ) {
-                        Screen(Scene.Commands, Style.Solid, facts(Scene.Commands, NOW), still = true, dark = dark, owner = owner)
-                    }
+        runDesktopComposeUiTest(360 * 3, 780 * 3) {
+            setContent {
+                CompositionLocalProvider(
+                    LocalDensity provides Density(3f),
+                    io.github.eslamasabry.oc.ui.kit.frame.LocalKitScreenInsets provides androidx.compose.foundation.layout.WindowInsets(top = 28.dp, bottom = 20.dp),
+                ) {
+                    Screen(Scene.Commands, Style.Solid, facts(Scene.Commands, NOW), still = true, dark = dark, owner = owner)
                 }
-                waitForIdle()
-                onNodeWithTag("transcript-list").performScrollToIndex(5)
-                waitForIdle()
-                mainClock.advanceTimeBy(1_000)
-                waitForIdle()
-                ImageIO.write(onRoot().captureToImage().toAwtImage(), "png", File(out, "build-${if (owner) "owner" else "default"}-${if (dark) "dark" else "light"}-3.png"))
             }
+            waitForIdle()
+            onNodeWithTag("transcript-list").performScrollToIndex(5)
+            waitForIdle()
+            mainClock.advanceTimeBy(1_000)
+            waitForIdle()
+            ImageIO.write(onRoot().captureToImage().toAwtImage(), "png", File(out, "build-${if (owner) "owner" else "default"}-${if (dark) "dark" else "light"}-3.png"))
         }
     }
+
+    @Test fun `chat edges build render default dark`() = shoot(owner = false, dark = true)
+
+    @Test fun `chat edges build render default light`() = shoot(owner = false, dark = false)
+
+    @Test fun `chat edges build render owner configuration dark`() = shoot(owner = true, dark = true)
 
     private object FixedClock : Clock {
         override fun now(): Instant = Instant.fromEpochMilliseconds(NOW)
