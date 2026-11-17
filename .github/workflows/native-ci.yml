@@ -552,6 +552,7 @@ jobs:
             native/reports/custom.json
             native/reports/report-custom.json
             native/reports/detekt.json
+            native/build/reports/detekt/
           retention-days: 7
           if-no-files-found: ignore
 
@@ -577,13 +578,16 @@ jobs:
         working-directory: native
         env:
           BASE: ${{ inputs.base || 'native/screens-merge41' }}
+          LANE: ${{ inputs.lane || 'full' }}
         run: |
           if printf '%s' "$BASE" | grep -Eq '^[0-9a-f]{7,40}$'; then ref="$BASE"; else ref="origin/$BASE"; fi
-          bash tool/ci/detekt_lane.sh "$ref" | tee "$RUNNER_TEMP/detekt.log"
+          # The candidate lane checks every module; the fast and full lanes the modules this change touches.
+          all=(); [ "$LANE" = candidate ] && all=(--all)
+          bash tool/ci/detekt_lane.sh "$ref" "${all[@]}" | tee "$RUNNER_TEMP/detekt.log"
           python3 -I - <<'PY' >> "$GITHUB_STEP_SUMMARY"
           import json
           r = json.load(open('reports/detekt.json'))
-          print('### detekt: ' + (', '.join(f'{m}: {n}' for m, n in sorted(r['findings'].items())) or '0 new findings')
+          print('### detekt: ' + (', '.join(f'{m}: {n} new' for m, n in sorted(r['findings'].items())) or '0 new findings')
                 + f' on {", ".join(r["modules"]) or "ratchet only"} (ratchet {r["ratchet"]}, scope {r["scope"]})')
           PY
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1

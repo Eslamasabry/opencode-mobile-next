@@ -39,14 +39,19 @@ Rules for the native (Kotlin Multiplatform) rewrite. Binding sources: `docs/desi
 | App APK (preview id `io.github.eslamasabry.opencode_mobile.native`) | `./gradlew :androidApp:assembleDebug` |
 | Desktop compile | `./gradlew :desktopApp:compileKotlin` |
 | iOS klibs (VPS nightly only) | `tool/qa/ios-klib-nightly.sh` |
-| detekt (pinned 1.23.8, as the Flutter Kotlin check; T1 runs it on touched modules) | `tool/qa/detekt.sh <module>...` or `--all` |
+| detekt (pinned 1.23.8; the CI `detekt` job runs it on changed modules, the candidate lane on all, T1 only on a developer machine) | `tool/qa/detekt.sh <module>... --new-against <ref>` (CI: `tool/ci/detekt_lane.sh <ref> [--all]`) |
 | Release lint as CI runs it (strict LintPolicy; T1 runs it) | `./gradlew :androidApp:lintSwitchRelease` |
 | Next versionCode / take one (ledger `BUILD_NUMBERS.md`) | `tool/version_code.sh next` / `allocate --kind build\|release --for "<what>"` |
 
-detekt: config `config/detekt/detekt.yml`, one baseline per module in `config/detekt/baseline/<module>.xml`. A baseline
-may only shrink: `tool/qa/detekt.sh` compares each with the merge-base and fails on a new entry or a new baseline file
-(T1 runs that check every time). Fix a new finding; never re-baseline it. After fixing old ones, shrink the module's
-baseline with `tool/qa/detekt.sh <module> --create-baseline` and commit it.
+detekt: config `config/detekt/detekt.yml`. Where it runs, plainly: the Native CI `detekt` job (fast lane: the changed
+modules; candidate lane: all, `tool/ci/detekt_lane.sh <base> --all`) and T1 on a developer machine. Before 3.0.1 it gated
+nothing: no CI lane and no release script ran it, and the baselines (`config/detekt/baseline/<module>.xml`) had gone stale,
+so about 1300 old findings read as new on the five modules first checked. The gate is now a true ratchet: `--new-against
+<ref>` runs detekt without a baseline here and at the base ref and fails only on findings that are new, compared by
+signature (rule + declaration, file name and line left out, so a moved or renamed file keeps its old findings old). Fix
+a new finding; never re-baseline it and never add an `@Suppress` without a reason a reviewer accepts. Old findings are
+cleaned module by module (androidApp and engine:analytics first); the old per-module baselines are still read by plain
+`tool/qa/detekt.sh <module>` (T1) and only shrink.
 
 versionCode: every APK number comes from `tool/version_code.sh` (never a hand edit of `version.properties`); it is
 above every number in the ledger, including builds seen on the owner's phone and emulators, and is never reused.

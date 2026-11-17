@@ -96,7 +96,7 @@ class Gate(unittest.TestCase):
         code, md = run_gate('> Task :core:net:desktopTest\n', ':core:net:desktopTest', [('core/net', f'{PKG}.core.net.XTest', ())],
                             detekt={'ran': True, 'modules': [':core:net', ':engine:analytics'], 'exit': 0, 'ratchet': 'ok', 'findings': {}})
         self.assertEqual(code, 0, md)
-        self.assertIn('| detekt | 0 new findings on :core:net, :engine:analytics (baseline ratchet ok)', md)
+        self.assertIn('| detekt | 0 new findings on :core:net, :engine:analytics (0 old, not counted; ratchet vs base by signature)', md)
 
     def test_B_CI_306_a_growing_baseline_fails_even_with_no_finding(self):
         code, md = run_gate('> Task :core:net:desktopTest\n', ':core:net:desktopTest', [('core/net', f'{PKG}.core.net.XTest', ())],

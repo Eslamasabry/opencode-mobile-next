@@ -25,12 +25,14 @@ import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.random.Random
 import kotlin.time.Clock
 
+private const val DEFAULT_READ_BUFFER_BYTES = 16 * 1024
+
 /** How a stream dials: the pace, the kind of host, whether it resumes, and the size of one read. */
 public class StreamPlan(
     public val policy: BackoffPolicy,
     public val hostClass: HostClass,
     public val resume: ResumeMode = ResumeMode.None,
-    public val readBufferBytes: Int = 16 * 1024,
+    public val readBufferBytes: Int = DEFAULT_READ_BUFFER_BYTES,
 )
 
 /** What the loop watches while it runs; each is bound at graph level and defaults to "nothing special". */

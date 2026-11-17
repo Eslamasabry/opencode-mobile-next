@@ -101,9 +101,7 @@ public class SetupJourney(
             }
         }
         // A job that ended while a step was running: cancelled by the person, or taken away by the system.
-        if (state == SetupJobState.Cancelled || state == SetupJobState.Interrupted || state == SetupJobState.Failed) {
-            closeRunningSteps(state, at)
-        }
+        if (state in ENDED_EARLY) closeRunningSteps(state, at)
         if (state == SetupJobState.Done && !doneSent) finish(at, firstSetup)
         if (working != saved) {
             saved = working
@@ -187,6 +185,8 @@ public class SetupJourney(
     }
 
     public companion object {
+        private val ENDED_EARLY = setOf(SetupJobState.Cancelled, SetupJobState.Interrupted, SetupJobState.Failed)
+
         /** Away from an unfinished setup this long (5 minutes) counts as leaving it. */
         public const val ABANDON_AFTER_MS: Long = 5 * 60_000L
     }

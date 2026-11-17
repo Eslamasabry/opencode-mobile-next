@@ -80,11 +80,12 @@ public fun umamiEvent(
 ): UmamiEvent? {
     val (website, build, device) = source
     if (page !in umamiPages.values || atMs < 0 || atMs / 1000 > 2_147_483_647) return null
-    val event = ProductEvent.entries.firstOrNull { it.wire == name } ?: return null
-    val clean = cleanProductProps(event, props) ?: return null
+    val event = ProductEvent.entries.firstOrNull { it.wire == name }
+    val clean = event?.let { cleanProductProps(it, props) }
     val visible = if (event == ProductEvent.ScreenView || event == ProductEvent.Jank) {
-        umamiPages[clean["screen"]] ?: return null
+        clean?.get("screen")?.let { umamiPages[it] }
     } else page
+    if (event == null || clean == null || visible == null) return null
     return UmamiEvent(payload = UmamiPayload(
         website = website,
         language = device.language.takeIf { it.length <= 35 && it.matches(Regex("[A-Za-z]{2,8}(?:-[A-Za-z0-9]{1,8})*")) } ?: "und",

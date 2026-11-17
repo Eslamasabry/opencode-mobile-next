@@ -138,7 +138,8 @@ if env('RESULT_DETEKT') not in (None, '', 'skipped') or detekt:
         per = ', '.join(f'{m}: {"could not run" if n < 0 else str(n) + " finding(s)"}' for m, n in sorted(bad.items()))
         rows.append(('detekt', f'FAILED on {where_}: {per or "baseline ratchet or run problem"}'))
     else:
-        rows.append(('detekt', f'0 new findings on {where_} (baseline ratchet {detekt.get("ratchet", "unknown")})'))
+        old = sum((detekt.get('totals') or {}).values())
+        rows.append(('detekt', f'0 new findings on {where_} ({old} old, not counted; ratchet vs base by signature)'))
 
 # Integrity: a run must not look green when Gradle never ran (a failed distribution download, a dead setup step, a missing shard).
 # Exit code 2 = integrity failure; the workflow reds the run on every branch for it, as it does for the ordinary FAIL (1).
@@ -242,7 +243,7 @@ if detekt:
     for mod, n in sorted(detekt.get('findings', {}).items()):
         reasons.append(f'detekt: {"could not run on" if n < 0 else str(n) + " new finding(s) on"} {mod}')
     if detekt.get('ratchet') == 'FAIL':
-        reasons.append('detekt: a baseline grew (baselines only shrink; fix the finding)')
+        reasons.append('detekt: a baseline grew (baselines only shrink; fix the finding)')  # the old baseline ratchet
     if detekt.get('exit') and not detekt.get('findings') and detekt.get('ratchet') != 'FAIL':
         reasons.append(f'detekt: could not run (exit {detekt["exit"]})')
 if lane != 'candidate' and (env('RESULT_ANDROID_UNIT') in ('failure', 'cancelled') or android.get('failed')):
