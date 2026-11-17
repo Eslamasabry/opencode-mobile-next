@@ -116,7 +116,8 @@ class ReleaseScriptContractTest {
         assertTrue(script.contains("--go) GO=true; shift ;;"), "only the exact --go flag arms a release")
         val gates = listOf(
             ":androidApp:assembleSwitchRelease", ":androidApp:lintSwitchRelease", ":androidApp:testSwitchDebugUnitTest",
-            ":quality:test -Poc.mergedManifest=required", "kept_classes_check.sh", "identity_gate.sh",
+            "\"-Poc.publicRelease=\$public_flag\" :quality:test :quality:secTest -Poc.mergedManifest=required",
+            "kept_classes_check.sh", "identity_gate.sh",
         )
         gates.forEach { assertTrue(script.contains(it), "the script must run $it") }
         val tag = script.indexOf("git tag -a")
