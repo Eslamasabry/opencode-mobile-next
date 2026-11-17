@@ -28,4 +28,20 @@ class ChatFloatingScreenTest {
             val line = onNodeWithText("IPTV_King", substring = true, useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
             assertTrue(line.top >= capsule.top && line.bottom <= capsule.bottom, "the project line lies inside the capsule: $line in $capsule")
         }
+
+    @Test
+    fun `B-CHAT-EDGE-021 the capsule's second line carries the project and the place, as the live header builds it`() {
+        for (place in listOf("This phone", "Home server")) {
+            runDesktopComposeUiTest(412, 915) {
+                val scene = ChatScene()
+                setContent { E20Scene { scene.Screen(scene.live(), canGoBack = true, projectName = "IPTV_King", serverName = place) } }
+                waitForIdle()
+                val capsule = onNodeWithTag("kit-header-capsule", useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
+                val project = onNodeWithText("IPTV_King", substring = true, useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
+                val where = onNodeWithText(place, substring = true, useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
+                assertTrue(project.left >= capsule.left && where.right <= capsule.right && where.bottom <= capsule.bottom, "the project and the place ($place) lie inside the capsule")
+                assertTrue(project.right <= where.left + 1f, "the project comes before the place ($place)")
+            }
+        }
+    }
 }

@@ -259,7 +259,7 @@ class ChatEdgesBuildRenders {
                                 reasoningExpanded = scene == Scene.Failed,
                             )
                         // The live header (title, the project and the place as its second line, only the overflow), as a phone-agent chat has it.
-                        io.github.eslamasabry.oc.feature.chat.rb.o42.ChatScene().Screen(state, canGoBack = true, projectName = "IPTV_King")
+                        io.github.eslamasabry.oc.feature.chat.rb.o42.ChatScene().Screen(state, canGoBack = true, projectName = "IPTV_King", serverName = "This phone")
                     }
                 }
             }
