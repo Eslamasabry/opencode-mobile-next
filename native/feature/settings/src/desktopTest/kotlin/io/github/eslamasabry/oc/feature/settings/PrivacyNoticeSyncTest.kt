@@ -423,4 +423,16 @@ class PrivacyNoticeSyncTest {
         val found = violations(widened, liveNotices())
         assertTrue(found.any { "99-100" in it }, found.toString())
     }
+    @Test
+    fun `B-435 every offered policy names stall cause and previous exit event fields`() {
+        val resources = File(repo, "native/ui/words/src/commonMain/composeResources")
+        for (tag in AppLanguage.entries.mapNotNull { it.tag }) {
+            val locale = File(resources, if (tag == "en") "values" else "values-$tag")
+            val policy = File(locale, "strings_native_privacy.xml").readText()
+            for (word in listOf("cause", "thinking_silent", "tool_running", "retrying", "stream_dead_refetched", "stream_silent", "unknown", "app_exit", "exit_reason", "foreground"))
+                assertTrue(has(policy, word), "$tag policy must name $word")
+        }
+        assertTrue(HealthContract.contractEvents.values.flatten().contains("app_exit"), "What we collect names the event")
+    }
+
 }

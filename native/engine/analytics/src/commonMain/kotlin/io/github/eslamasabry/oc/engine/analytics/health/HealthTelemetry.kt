@@ -43,7 +43,7 @@ public data class HealthDeviceContext(
 }
 
 /** One process end Android remembers (ApplicationExitInfo): its `REASON_*` number and time. */
-public data class HealthExit(val reason: Int, val atMs: Long)
+public data class HealthExit(val reason: Int, val atMs: Long, val foreground: Boolean? = null)
 
 /** The platform half: everything is read on demand and answers something safe where it cannot. */
 public interface HealthPlatform {
@@ -75,6 +75,9 @@ public interface HealthExitMarks {
     public fun lastExitAtMs(): Long
 
     public suspend fun setLastExitAtMs(atMs: Long)
+
+    public fun lastAnalyticsExitAtMs(): Long = 0L
+    public suspend fun setLastAnalyticsExitAtMs(atMs: Long): Boolean = false
 }
 
 /** The contract word for an Android exit reason, or null for a normal end (the app quit itself, or was updated). */
@@ -91,6 +94,9 @@ public fun exitReasonWord(reason: Int): String? =
         12 -> "dependency_died"
         else -> "other"
     }
+
+/** Analytics includes normal exits as other; native crashes join crash. */
+public fun appExitReasonWord(reason: Int): String = "other"
 
 private const val EXIT_SELF = 1
 private const val PACKAGE_UPDATED = 16

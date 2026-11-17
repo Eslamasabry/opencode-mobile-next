@@ -163,6 +163,10 @@ public object HealthRanges {
 
 /** The words several events share. */
 public object HealthWords {
+    /** Closed classifications of a quiet turn; unknown transport evidence never says thinking. */
+    public val stallCauses: Set<String> = setOf("thinking_silent", "tool_running", "retrying", "stream_dead_refetched", "stream_silent", "unknown")
+    public val appExitReasons: Set<String> = setOf("crash", "anr", "low_memory", "excessive_resource", "signaled", "user_requested", "dependency_died", "other")
+
     /** `conn_attempt.fail_kind`; `send_result` adds [sendOnlyFailKinds]. */
     public val failKinds: Set<String> =
         setOf("dns", "tls", "auth", "timeout", "refused", "server_5xx", "protocol", "offline", "other")

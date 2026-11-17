@@ -146,6 +146,15 @@ public class ChatJourney(
         if ((kind != "text" && kind != "file") || messageId in t.assistant) activity(t)
     }
 
+    /** The field's closed kind, supplied by delivery (text, reasoning or tool). */
+    public fun delta(sessionId: String, kind: String) { delta(sessionId) }
+
+    public fun retrying(sessionId: String): Unit = Unit
+
+    public fun runChecked(sessionId: String, busy: Boolean?): Unit = Unit
+
+    public fun recovered(sessionId: String): Unit = Unit
+
     /** Any streamed piece arrived (text or reasoning): activity only. */
     public fun delta(sessionId: String) {
         val t = turns.value[sessionId] ?: return
