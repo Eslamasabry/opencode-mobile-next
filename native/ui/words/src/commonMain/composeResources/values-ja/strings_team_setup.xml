@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Translated with native/tools/strings/translate; English is the source. -->
 <resources>
-    <string name="phoneTeamProofSignal">安全性テストが完了する前にAndroidによって終了されました（シグナル %1$d）。</string>
-    <string name="phoneTeamProofCheckSignal">安全性確認「%1$s」がAndroidによって終了されました（シグナル %2$d）。</string>
+    <string name="phoneTeamProofSignal">安全性テストが完了する前にAndroidによって終了されました（シグナル%1$d）。</string>
+    <string name="phoneTeamProofCheckSignal">安全性確認「%1$s」がAndroidによって終了されました（シグナル%2$d）。</string>
     <string name="phoneTeamProofNotBlocked">安全性確認「%1$s」に失敗しました。チームのサンドボックスに必要な方式でこのスマートフォンがブロックできませんでした。</string>
     <string name="phoneTeamProofSandbox">このスマートフォンでチームのサンドボックスを起動できませんでした。</string>
     <string name="phoneTeamProofUbuntu">チームのサンドボックス内でUbuntuステップ「%1$s」が失敗しました。</string>

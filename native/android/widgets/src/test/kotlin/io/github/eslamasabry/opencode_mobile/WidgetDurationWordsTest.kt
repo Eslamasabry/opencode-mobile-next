@@ -70,4 +70,38 @@ class WidgetDurationWordsTest {
             assertEquals("2 jam", WidgetDurationWords.compactDuration(app, 2 * 3_600_000L))
         }
     }
+
+    @Test
+    fun `B-L10N-024 usage widget sub-minute countdowns use 1-minute floor instead of now in all 10 languages`() {
+        Numbers.pinned = NumberSymbols.Latin
+        val now = 1_700_000_000_000L
+        val expectedResets = mapOf(
+            "en" to "Resets in 1m",
+            "ar" to "يتجدّد خلال دقيقة واحدة",
+            "es" to "Se restablece en 1 min",
+            "fr" to "Réinitialisation dans 1 min",
+            "id" to "Direset dalam 1 mnt",
+            "pt" to "Renova em 1min",
+            "ru" to "Сброс через 1 мин",
+            "vi" to "Đặt lại sau 1 phút",
+            "zh" to "1分后重置",
+            "ja" to "1分後にリセット",
+        )
+        for ((loc, wantReset) in expectedResets) {
+            withLocale(loc) {
+                val active = UsageWidgetRow(
+                    provider = "codex",
+                    displayName = "Codex",
+                    profileName = "",
+                    seconds = 18_000L,
+                    label = "",
+                    left = 80,
+                    resetsAt = now + 30_000L,
+                    fetchedAt = now - 10_000L,
+                    authNeeded = false,
+                )
+                assertEquals(wantReset, UsageWidgetText.detailText(app, listOf(active), now, false))
+            }
+        }
+    }
 }

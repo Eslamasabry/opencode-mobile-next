@@ -9,6 +9,6 @@
     <string name="agentsTileFailedDownload">未インストール：ダウンロードに失敗しました</string>
     <string name="agentsTileFailedStopped">未インストール：セットアップが停止しました</string>
     <string name="agentsTileFailedOther">未インストール：セットアップに失敗しました</string>
-    <string name="agentsInstallNeedsSpace">%1$sのインストールには約%2$sの空き容量が必要ですが、このスマートフォンの空き容量は %3$sです。容量を空けてからインストールしてください。</string>
+    <string name="agentsInstallNeedsSpace">%1$sのインストールには約%2$sの空き容量が必要ですが、このスマートフォンの空き容量は%3$sです。容量を空けてからインストールしてください。</string>
     <string name="agentsInstallSpaceFits">約%1$sの空き容量が必要です（現在の空き容量：%2$s）。</string>
 </resources>

@@ -9,7 +9,7 @@
     <string name="agentsHelperMayHaveStopped">エージェントヘルパーが停止しました。メモリを解放するため、またはバックグラウンド処理を制限するためにAndroidが停止した可能性があります。</string>
     <string name="agentsHelperStartAgain">エージェントヘルパーを起動</string>
     <string name="agentsPhoneHelperProfile">スマートフォンのエージェント</string>
-    <string name="agentsPreviousVersion">以前の %1$sバージョンを使用</string>
+    <string name="agentsPreviousVersion">以前の%1$sバージョンを使用</string>
     <string name="agentsPreviousVersionBody">このスマートフォンに保存されている検証済みの以前のバージョンに切り替えますか？最初にヘルパーが停止し、そのあとスマートフォンのエージェントが再接続されます。サインインと会話はそのまま残ります。</string>
     <string name="agentsPreviousVersionFailed">以前のバージョンを復元できませんでした。実行中の作業を終了してから、もう一度お試しください。</string>
     <string name="agentsPreviousVersionRestored">以前のバージョンを復元しました。</string>

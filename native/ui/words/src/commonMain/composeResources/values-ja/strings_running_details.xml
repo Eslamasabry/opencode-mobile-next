@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Translated with native/tools/strings/translate; English is the source. -->
 <resources>
-    <string name="runningDetailMemory">メモリ %1$d MB</string>
-    <string name="runningDetailElapsed">実行時間 %1$d分</string>
-    <string name="runningDetailPid">プロセス %1$d</string>
+    <string name="runningDetailMemory">メモリ%1$d MB</string>
+    <string name="runningDetailElapsed">実行時間%1$d分</string>
+    <string name="runningDetailPid">プロセス%1$d</string>
     <plurals name="runningDetailHelpers">
         <item quantity="other">%1$d個のヘルパープロセスも停止します。それぞれのプロセスを照合して再確認します。</item>
     </plurals>

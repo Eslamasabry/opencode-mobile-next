@@ -856,7 +856,10 @@ private fun LazyListScope.breakdowns(
             }
             for (m in models) {
                 val name =
-                    if (m.variant.isNullOrBlank()) m.modelId else "${m.modelId} · ${m.variant}"
+                    io.github.eslamasabry.oc.core.model.ModelEffort.label(
+                        m.modelId,
+                        m.variant?.takeIf { it.isNotBlank() },
+                    )
                 KitRow(
                     title = name,
                     supporting =

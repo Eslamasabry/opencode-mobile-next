@@ -175,8 +175,8 @@
     <string name="readerUiWorkingScopeHint">変更者に関わらず、まだコミットされていないすべての変更です。</string>
     <string name="readerUiBranchScopeHint">メインブランチと比較した、このブランチ上のすべての変更です。</string>
     <string name="readerUiOnPrompt">プロンプトに%1$d件</string>
-    <string name="readerUiNewLines">新 %1$s</string>
-    <string name="readerUiOldLines">旧 %1$s</string>
+    <string name="readerUiNewLines">新%1$s</string>
+    <string name="readerUiOldLines">旧%1$s</string>
     <string name="readerUiLineRange">%1$d〜%2$d行目</string>
     <string name="readerUiReviewPrompt">`%1$s`をレビュー</string>
     <string name="readerUiSession">この会話</string>

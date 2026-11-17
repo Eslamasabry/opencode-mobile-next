@@ -289,7 +289,10 @@ internal class LiveCalls private constructor() : Interceptor {
     }
 
     fun cancelAll() {
-        val live = synchronized(calls) { calls.toList() }
+        // Copied by walking the set, never by its size: the GC may clear a key at any moment, and the
+        // weak map still counts an entry it has cleared but not yet dropped while its iterator skips
+        // it, so a size-based copy (`toList()` of one entry) threw NoSuchElementException on close.
+        val live = synchronized(calls) { buildList { for (call in calls) add(call) } }
         live.forEach { it.cancel() }
     }
 

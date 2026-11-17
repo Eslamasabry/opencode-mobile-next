@@ -115,7 +115,7 @@
     <string name="agentAccountOpenSignIn">公式サインインを開く</string>
     <string name="agentAccountCancel">サインインをキャンセル</string>
     <string name="agentAccountAllowance">報告された利用枠</string>
-    <string name="agentAccountPercentUsed">%1$d% 使用済み</string>
+    <string name="agentAccountPercentUsed">%1$d%使用済み</string>
     <string name="agentAccountWindowUnknown">期間が不明です</string>
     <string name="agentAccountWindowMinutes">%1$d分枠</string>
     <string name="agentAccountWindowHours">%1$d時間枠</string>
@@ -357,8 +357,8 @@
     <string name="agentCardDangerBody">回答はメッセージとしてエージェントに送られます。どう処理するかはエージェント側が決めます。</string>
     <string name="agentCardPhotoTake">写真を撮る</string>
     <string name="agentCardPhotoChoose">写真を選ぶ</string>
-    <string name="agentCardPhotoRemove">写真 %1$dを削除</string>
-    <string name="agentCardPhotoName">写真 %1$d</string>
+    <string name="agentCardPhotoRemove">写真%1$dを削除</string>
+    <string name="agentCardPhotoName">写真%1$d</string>
     <string name="agentCardPhotoCount">%1$d / %2$d</string>
     <string name="agentCardPhotoMax">このカードに添付できる写真はここまでです。</string>
     <string name="agentCardPhotoNone">送信する写真を追加してください。</string>
@@ -410,7 +410,7 @@
     <string name="agentCardYourAnswer">回答</string>
     <string name="agentCardDangerConfirm">回答を送信</string>
     <string name="agentsSignInOpenPage">サインインページを開く</string>
-    <string name="agentsSignInCopyCode">コード %1$sをコピー</string>
+    <string name="agentsSignInCopyCode">コード%1$sをコピー</string>
     <plurals name="cardsProblemNotQualifiedFor">
         <item quantity="other">%2$sはまだカードとの動作が確認されていません。</item>
     </plurals>
@@ -439,7 +439,7 @@
     <string name="agentsCheckRetry">再試行</string>
     <string name="agentsCheckUpdateHelper">Paseoをアップデートして再試行</string>
     <string name="agentsCheckPrevious">以前のバージョンを使う</string>
-    <string name="agentsCheckPreviousNote">バージョン %1$sはこのスマートフォンに残っています。使用前に確認が行われます。サインイン状態や会話はそのまま残ります。</string>
+    <string name="agentsCheckPreviousNote">バージョン%1$sはこのスマートフォンに残っています。使用前に確認が行われます。サインイン状態や会話はそのまま残ります。</string>
     <string name="agentsCheckAgentChanged">必要なエージェントのバージョンが変更されました。このスマートフォンをもう一度確認してください。</string>
     <string name="agentsCheckHelperChanged">必要なPaseoのバージョンが変更されました。接続をもう一度確認してください。</string>
     <string name="agentsCheckInstallChanged">スマートフォンのセットアップが変更されました。もう一度確認してください。</string>
@@ -485,7 +485,7 @@
     <string name="localAssistantDone">完了</string>
     <string name="localAssistantStopped">停止しました。ここまでに作成された内容です。</string>
     <string name="localAssistantRunFailed">要約を完了できませんでした。もう一度お試しください。</string>
-    <string name="localAssistantStats">最初の出力まで %1$s秒 · %2$s語/秒</string>
+    <string name="localAssistantStats">最初の出力まで%1$s秒 · %2$s語/秒</string>
     <string name="agentAccountsTitle">ホストアカウント</string>
     <string name="agentAccountLoginCancelled">サインインをキャンセルしました。</string>
     <string name="agentComputerPaseo">Paseo</string>

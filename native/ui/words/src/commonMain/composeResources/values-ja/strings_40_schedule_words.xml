@@ -13,8 +13,8 @@
     <string name="schedule40UnavailableStorage">このスマートフォンに保存されたスケジュールを読み取れませんでした。</string>
     <string name="schedule40TryAgain">再試行</string>
     <string name="schedule40Once">1回のみ、%1$s</string>
-    <string name="schedule40Daily">毎日 %1$s</string>
-    <string name="schedule40Weekdays">平日 %1$s</string>
+    <string name="schedule40Daily">毎日%1$s</string>
+    <string name="schedule40Weekdays">平日%1$s</string>
     <string name="schedule40EveryHour">1時間ごと</string>
     <string name="schedule40EveryHours">%1$s時間ごと</string>
     <string name="schedule40Next">次回：%1$s</string>
@@ -34,10 +34,10 @@
     <string name="schedule40OpenConversation">会話を開く</string>
     <string name="schedule40Today">今日</string>
     <string name="schedule40Tomorrow">明日</string>
-    <string name="schedule40LastRan">前回 %1$s：返信済み</string>
-    <string name="schedule40LastStarted">前回 %1$s：開始済み</string>
-    <string name="schedule40LastSkipped">前回 %1$s：スキップ</string>
-    <string name="schedule40LastFailed">前回 %1$s：未完了</string>
+    <string name="schedule40LastRan">前回%1$s：返信済み</string>
+    <string name="schedule40LastStarted">前回%1$s：開始済み</string>
+    <string name="schedule40LastSkipped">前回%1$s：スキップ</string>
+    <string name="schedule40LastFailed">前回%1$s：未完了</string>
     <string name="schedule40LastRunning">%1$sから実行中</string>
     <string name="schedule40Late">遅延実行</string>
     <string name="schedule40WhyNeedsYou">回答を待っています。続けるには会話を開いてください。</string>

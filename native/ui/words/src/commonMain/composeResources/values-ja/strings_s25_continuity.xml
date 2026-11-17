@@ -4,7 +4,7 @@
     <string name="crashOfferSection">クラッシュ報告</string>
     <string name="crashOfferSettingTitle">クラッシュ報告を提案</string>
     <string name="crashOfferSettingDetail">アプリが予期せず終了した後、送信前に確認できるレポートの作成を提案します。自動で送信されることはありません。</string>
-    <string name="telemetryConsentTitle">OpenCode Mobileの改善にご協力いただけますか？</string>
+    <string name="telemetryConsentTitle">OpenCode Mobileの改善に協力しますか？</string>
     <string name="telemetryConsentBody">同意すると、匿名の利用状況・アプリの動作状態データとクラッシュ報告がGoogle Firebase経由で送信されます。各項目は「設定 › プライバシーとデータ」からいつでも変更できます。</string>
     <string name="telemetryConsentSends">送信される内容：使用したページや機能、接続・送信・セットアップの成否、アプリ速度、メモリとストレージの範囲、クラッシュ報告、ランダムなインストールID。</string>
     <string name="telemetryConsentNever">送信されない内容：コード、会話、ファイル、サーバーアドレス、キー。広告IDも含まれません。</string>

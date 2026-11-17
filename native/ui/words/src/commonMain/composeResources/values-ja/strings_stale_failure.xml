@@ -2,7 +2,7 @@
 <!-- Translated with native/tools/strings/translate; English is the source. -->
 <resources>
     <string name="staleFailureTitle">この問題を報告しますか？</string>
-    <string name="staleFailureBody">これは %1$sで発生しました。バージョン %2$sではすでに修正されている可能性があります。</string>
+    <string name="staleFailureBody">これは%1$sで発生しました。バージョン%2$sではすでに修正されている可能性があります。</string>
     <string name="staleFailureUpdateFirst">先にアップデート</string>
     <string name="staleFailureReportAnyway">このまま報告</string>
 </resources>

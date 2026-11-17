@@ -19,7 +19,7 @@
     <string name="notify_dock_state_done">完了（未開封）</string>
     <string name="notify_dock_state_failed">完了前に停止しました</string>
     <plurals name="notify_dock_helpers">
-        <item quantity="other">サブエージェント %1$s件</item>
+        <item quantity="other">サブエージェント%1$s件</item>
     </plurals>
     <string name="notify_status_action_open_named">%1$sを開く</string>
     <string name="notify_status_action_stop_named">%1$sを停止</string>

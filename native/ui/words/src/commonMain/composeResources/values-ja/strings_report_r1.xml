@@ -23,7 +23,7 @@
     <string name="reportR1AppValue">OpenCode Mobile %1$s（%2$s）</string>
     <string name="reportR1Phone">スマートフォン</string>
     <string name="reportR1Android">Android %1$s</string>
-    <string name="reportR1Memory">メモリ %1$s GB</string>
+    <string name="reportR1Memory">メモリ%1$s GB</string>
     <string name="reportR1Connection">接続</string>
     <string name="reportR1AddressOut">%1$s · アドレス除外済み</string>
     <string name="reportR1NotConnected">未接続</string>

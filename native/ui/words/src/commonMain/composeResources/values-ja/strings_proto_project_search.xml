@@ -19,7 +19,7 @@
     <string name="protoWebQuery">ウェブ 検索クエリ</string>
     <string name="protoWebProvider">検索プロバイダー</string>
     <string name="protoWebEmpty">ウェブ 検索結果はありませんでした。</string>
-    <string name="protoWebOpenQuestion">ブラウザで %1$sを開きますか？</string>
+    <string name="protoWebOpenQuestion">ブラウザで%1$sを開きますか？</string>
     <string name="protoWebOpenBrowser">ブラウザを開く</string>
     <string name="protoWebInsecure">このリンクは暗号化されていない接続を使用しています。</string>
     <string name="protoWebLeaveApp">アプリ外の ウェブ サイトを開きます。</string>

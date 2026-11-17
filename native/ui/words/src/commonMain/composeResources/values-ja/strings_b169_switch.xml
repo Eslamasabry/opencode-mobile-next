@@ -6,7 +6,7 @@
     <string name="b169UsedUpNoName">このモデルは現在利用上限に達しています</string>
     <string name="b169ConnectProvider">プロバイダーを接続…</string>
     <plurals name="b169AskTitle">
-        <item quantity="other">停止した返信ではすでに %1$dステップ実行されています。%2$sで再送信しますか？</item>
+        <item quantity="other">停止した返信ではすでに%1$dステップ実行されています。%2$sで再送信しますか？</item>
     </plurals>
     <string name="b169AskSend">送信</string>
     <string name="b169AttachAgain">送信するには%1$sをもう一度添付してください</string>

@@ -66,7 +66,7 @@
     <string name="teamUiVerdictNotGasCity">このサーバーではまだAIチームが動いていません。パソコンでセットアップしてください（数分で完了します）。</string>
     <string name="teamUiVerdictUnreachable">このアドレスから応答がありません。アドレスが正しいか、パソコンがスリープしておらずTailscaleネットワークに接続されているか確認してください。</string>
     <string name="teamUiVersionUnknown">不明</string>
-    <string name="teamUiCardAgentsSummary">エージェント %1$d個：作業中 %2$d、待機中 %3$d、アイドル %4$d、停止 %5$d</string>
+    <string name="teamUiCardAgentsSummary">エージェント%1$d個：作業中%2$d、待機中%3$d、アイドル%4$d、停止%5$d</string>
     <string name="teamUiCardEmptyHint">当面はパソコンからタスクを開始してください。</string>
     <string name="teamUiCardEmptyTitle">最近のタスクはありません</string>
     <string name="teamUiCardErrorCityNotRunning">チームホストを起動中です。しばらくしてからもう一度お試しください。</string>
@@ -113,9 +113,9 @@
     <string name="teamUiHomeGateKindReviewReady">レビュー準備完了</string>
     <string name="teamUiHomeGateKindRunFailed">実行失敗</string>
     <string name="teamUiHomeGateKindUnknown">確認が必要</string>
-    <string name="teamUiHomeGateLinkAgent">エージェント %1$s</string>
-    <string name="teamUiHomeGateLinkRun">タスク %1$s</string>
-    <string name="teamUiHomeGateLinkWork">作業 %1$s</string>
+    <string name="teamUiHomeGateLinkAgent">エージェント%1$s</string>
+    <string name="teamUiHomeGateLinkRun">タスク%1$s</string>
+    <string name="teamUiHomeGateLinkWork">作業%1$s</string>
     <string name="teamUiHomeGateOptions">選択肢</string>
     <string name="teamUiHomeHostRawHeading">生の値</string>
     <string name="teamUiHomeRunNeedsYou">確認が必要</string>
@@ -178,8 +178,8 @@
     <string name="teamUiAgentOutputTitle">ライブ出力</string>
     <string name="teamUiAgentOutputUnavailable">このエージェントではライブ出力を利用できません</string>
     <string name="teamUiAgentRecyclingSoon">まもなくリサイクル · コンテキストがほぼ上限です</string>
-    <string name="teamUiAgentSessionAge">継続時間 %1$s</string>
-    <string name="teamUiAgentTermSession">エージェント · 会話 %1$s</string>
+    <string name="teamUiAgentSessionAge">継続時間%1$s</string>
+    <string name="teamUiAgentTermSession">エージェント · 会話%1$s</string>
     <string name="teamUiAgentValueUnknown">報告なし</string>
     <string name="teamUiWorkLabelAssignee">担当者</string>
     <string name="teamUiWorkLabelClosedReason">完了理由</string>
@@ -224,7 +224,7 @@
     <string name="teamUiWorkStateUnknown">不明</string>
     <string name="teamUiWorkStateWaiting">待機中</string>
     <string name="teamUiWorkStateWorking">作業中</string>
-    <string name="teamUiUsageCostEstimated">推定 %1$s</string>
+    <string name="teamUiUsageCostEstimated">推定%1$s</string>
     <string name="teamUiUsageTokens">%1$sトークン</string>
     <string name="teamUiGateAnswerOnHost">ホスト側で回答してください。スマートフォンからは現在閲覧のみ可能です。</string>
     <string name="teamUiGateAnswerOnHostPhone">このスマートフォン上のホストで回答してください。アプリからは現在閲覧のみ可能です。</string>
@@ -334,7 +334,7 @@
     <string name="teamUiStartRunDirectSend">エージェントに送信</string>
     <string name="teamUiStartRunRefused">ホストはこのタスクを受け付けませんでした。</string>
     <string name="teamUiMergeTitleNotReady">マージの準備ができていません</string>
-    <string name="teamUiMergeRequest">マージリクエスト %1$s</string>
+    <string name="teamUiMergeRequest">マージリクエスト%1$s</string>
     <string name="teamUiMergeLineWork">作業項目</string>
     <string name="teamUiMergeLineTests">テスト</string>
     <string name="teamUiMergeLineBuild">ビルド</string>
@@ -371,7 +371,7 @@
     <string name="teamUiPolicyBoundariesNone">ホストに境界は設定されていません</string>
     <string name="teamUiPolicyFromHost">ホスト側で設定 · ここでは読み取り専用</string>
     <string name="teamUiPolicyRig">%1$s用</string>
-    <string name="teamUiPolicySemantics">監督レベル %1$s。境界：%2$s</string>
+    <string name="teamUiPolicySemantics">監督レベル%1$s。境界：%2$s</string>
     <string name="teamUiRunLabelRawTitle">プロバイダー上のタイトル</string>
     <string name="teamUiPhoneOptionalTag">任意 · 試験的機能</string>
     <string name="teamUiPhoneChooseProjectTitle">プロジェクトを選ぶ</string>
@@ -388,7 +388,7 @@
     <string name="teamUiPhoneFailedDownloadHttp">ダウンロードサーバー%1$sによってファイルが拒否されました（HTTP %2$s）。後でもう一度お試しください。解決しない場合、このアプリバージョンのAI Teamダウンロードは利用できません。</string>
     <string name="teamUiPhoneFailedDownloadInterrupted">ダウンロード中に%1$sへの接続が切断されました。もう一度お試しください。ダウンロードは中断した箇所から再開されます。</string>
     <string name="teamUiPhoneFailedDownloadWrite">ダウンロードしたファイルをこのスマートフォンに保存できませんでした。空き容量を増やしてからもう一度お試しください。</string>
-    <string name="teamUiPhoneFailedDownloadOther">%1$sからのダウンロードに失敗しました（エラー %2$s）。接続を確認してもう一度お試しください。</string>
+    <string name="teamUiPhoneFailedDownloadOther">%1$sからのダウンロードに失敗しました（エラー%2$s）。接続を確認してもう一度お試しください。</string>
     <string name="teamUiPhoneFailedPackages">Ubuntuで、必要なパッケージ（tmux、jq、lsof、procps）をインストールできませんでした。失敗した項目は、下の出力（ログ）で確認できます。</string>
     <string name="teamUiPhoneFailedProject">プロジェクトフォルダが存在しないか、gitリポジトリではありません。</string>
     <string name="teamUiPhoneFailedCity">Gas Cityでシティを作成できませんでした。理由は下の出力に表示されます。</string>
@@ -437,8 +437,8 @@
     <string name="aiteamComponentStageWaiting">AI Teamの応答を待機中</string>
     <string name="aiteamComponentTurnOnExpectation">初回は5〜10分ほどかかります。この画面を離れても処理は続行されます。</string>
     <string name="aiteamComponentStartExpectation">数分かかります。この画面を離れても処理は続行されます。</string>
-    <string name="aiteamComponentStageSoFar">経過 %1$s</string>
-    <string name="aiteamComponentStageTook">所要時間 %1$s</string>
+    <string name="aiteamComponentStageSoFar">経過%1$s</string>
+    <string name="aiteamComponentStageTook">所要時間%1$s</string>
     <string name="aiteamComponentRunning">AI Team · 実行中</string>
     <string name="aiteamComponentStopped">AI Team · 停止</string>
     <string name="aiteamComponentProjects">%1$sで作業中</string>
@@ -482,7 +482,7 @@
     <string name="teamUiRunStageWorking">作業中</string>
     <string name="teamUiRunStageReviewing">レビュー中</string>
     <string name="teamUiRunStageDone">マージ済み</string>
-    <string name="teamUiRunStageSemantics">ステージ %1$d/4：%2$s</string>
+    <string name="teamUiRunStageSemantics">ステージ%1$d/4：%2$s</string>
     <string name="teamUiRunStepsHeading">ステップ</string>
     <string name="teamUiRunDetailsUsage">使用状況</string>
     <string name="teamDiscoverEntryTitle">大きな作業をチームに任せる</string>
@@ -876,7 +876,7 @@
     <string name="teamHomeLastKnownAgents">%1$s時点のエージェント</string>
     <string name="teamHomeStoppedStartFirst">タスクを依頼したり開いたりするには、チームをもう一度起動してください。</string>
     <string name="teamProgressOne">AI Team：%1$s</string>
-    <string name="teamProgressStep">AI Team：%1$s · ステップ %2$d/%3$d</string>
+    <string name="teamProgressStep">AI Team：%1$s · ステップ%2$d/%3$d</string>
     <string name="teamProgressMany">AI Team：%1$d件のタスクを実行中</string>
     <string name="teamSettingsTitle">チーム設定</string>
     <string name="teamSettingsOpenTooltip">チーム設定</string>
@@ -899,12 +899,12 @@
     <string name="teamRoleUsesTeamModel">チームのモデルを使用</string>
     <string name="teamRoleUsesComputerModel">パソコンのモデルを使用</string>
     <plurals name="teamRoleTaskCount">
-        <item quantity="other">タスク %1$d件</item>
+        <item quantity="other">タスク%1$d件</item>
     </plurals>
     <string name="teamRoleTaskCount__eq0">まだタスクはありません</string>
     <string name="teamRoleTaskCount__eq1">タスク1件</string>
     <plurals name="teamSettingsAgentsRow">
-        <item quantity="other">エージェント · ロール %1$d件</item>
+        <item quantity="other">エージェント · ロール%1$d件</item>
     </plurals>
     <string name="teamSettingsAgentsRow__eq1">エージェント · ロール1件</string>
     <string name="teamSettingsAgentsHint">作業の担当者と、それぞれの進め方</string>
@@ -1212,33 +1212,33 @@
     <string name="teamProjectEditorAskAgain">もう一度依頼</string>
     <string name="teamProjectDemoChip">デモ</string>
     <plurals name="teamProjectHeadlineMilestone">
-        <item quantity="other">マイルストーン %1$d/%2$d · %3$d件作業中</item>
+        <item quantity="other">マイルストーン%1$d/%2$d · %3$d件作業中</item>
     </plurals>
-    <string name="teamProjectHeadlineMilestone__eq0">マイルストーン %1$d/%2$d</string>
+    <string name="teamProjectHeadlineMilestone__eq0">マイルストーン%1$d/%2$d</string>
     <string name="teamProjectHeadlineDone">全%1$d件のマイルストーンが完了</string>
-    <string name="teamProjectGoalStatus">仕様承認済み %1$s · %2$s · %3$s</string>
+    <string name="teamProjectGoalStatus">仕様承認済み%1$s · %2$s · %3$s</string>
     <plurals name="teamProjectGoalStatus__milestones">
-        <item quantity="other">マイルストーン %1$d件</item>
+        <item quantity="other">マイルストーン%1$d件</item>
     </plurals>
     <plurals name="teamProjectGoalStatus__repos">
-        <item quantity="other">リポジトリ %1$d件</item>
+        <item quantity="other">リポジトリ%1$d件</item>
     </plurals>
     <string name="teamProjectGoalStatusDraft">仕様の下書き · %1$s · %2$s</string>
     <plurals name="teamProjectGoalStatusDraft__milestones">
-        <item quantity="other">マイルストーン %1$d件</item>
+        <item quantity="other">マイルストーン%1$d件</item>
     </plurals>
     <plurals name="teamProjectGoalStatusDraft__repos">
-        <item quantity="other">リポジトリ %1$d件</item>
+        <item quantity="other">リポジトリ%1$d件</item>
     </plurals>
     <string name="teamProjectOpenSpec">仕様を開く</string>
     <string name="teamProjectRequestWhere">%2$sの%1$s</string>
     <plurals name="teamProjectRequestBlocks">
         <item quantity="other">%1$sは待機中で、後続のタスク%2$d件も待機しています</item>
     </plurals>
-    <string name="teamProjectMilestoneTasks">タスク %1$d/%2$d件</string>
+    <string name="teamProjectMilestoneTasks">タスク%1$d/%2$d件</string>
     <string name="teamProjectMilestoneWaits">%1$d件の完了待ち</string>
     <string name="teamProjectMilestoneNoTasks">まだタスクはありません</string>
-    <string name="teamProjectLanesTitle">レーン %1$d/%2$d稼働中</string>
+    <string name="teamProjectLanesTitle">レーン%1$d/%2$d稼働中</string>
     <string name="teamProjectLanesChange">変更</string>
     <string name="teamProjectLaneRunning">%1$s · %2$s</string>
     <string name="teamProjectLaneWaiting">%1$s · 空きレーンを待機中</string>
@@ -1251,25 +1251,25 @@
     <string name="teamProjectElapsedSeconds">%1$d秒</string>
     <string name="teamProjectElapsedMinutes">%1$d分</string>
     <string name="teamProjectElapsedHours">%1$d時間%2$d分</string>
-    <string name="teamProjectCostToday">今日 %1$s</string>
-    <string name="teamProjectCostTodayOf">今日 %1$s / %2$s</string>
-    <string name="teamProjectCostTotal">合計 %1$s</string>
-    <string name="teamProjectCostTotalOf">合計 %1$s / %2$s</string>
+    <string name="teamProjectCostToday">今日%1$s</string>
+    <string name="teamProjectCostTodayOf">今日%1$s / %2$s</string>
+    <string name="teamProjectCostTotal">合計%1$s</string>
+    <string name="teamProjectCostTotalOf">合計%1$s / %2$s</string>
     <string name="teamProjectCostNotReported">まだ報告されていません</string>
     <string name="teamProjectBoardSummary">%2$s全体で%1$s</string>
     <plurals name="teamProjectBoardSummary__tasks">
-        <item quantity="other">タスク %1$d件</item>
+        <item quantity="other">タスク%1$d件</item>
     </plurals>
     <plurals name="teamProjectBoardSummary__milestones">
-        <item quantity="other">マイルストーン %1$d件</item>
+        <item quantity="other">マイルストーン%1$d件</item>
     </plurals>
     <string name="teamProjectBoardEmpty">まだタスクはありません</string>
     <plurals name="teamProjectTimelineSummary">
-        <item quantity="other">イベント %1$d件 · 最新 %2$s</item>
+        <item quantity="other">イベント%1$d件 · 最新%2$s</item>
     </plurals>
     <string name="teamProjectTimelineEmpty">まだ履歴はありません</string>
     <plurals name="teamProjectServersSummary">
-        <item quantity="other">サーバー %1$d台</item>
+        <item quantity="other">サーバー%1$d台</item>
     </plurals>
     <string name="teamProjectSettingsSummaryParallel">並列 · 最大%1$dレーン</string>
     <string name="teamProjectSettingsSummarySingle">単一レーン</string>
@@ -1281,23 +1281,23 @@
     <string name="teamProjectPlanForProject">計画 · 確認待ち</string>
     <string name="teamProjectPlanSummary">%1$s · %2$s · %3$s</string>
     <plurals name="teamProjectPlanSummary__phases">
-        <item quantity="other">フェーズ %1$d件</item>
+        <item quantity="other">フェーズ%1$d件</item>
     </plurals>
     <plurals name="teamProjectPlanSummary__tasks">
-        <item quantity="other">タスク %1$d件</item>
+        <item quantity="other">タスク%1$d件</item>
     </plurals>
     <plurals name="teamProjectPlanSummary__repos">
-        <item quantity="other">リポジトリ %1$d件</item>
+        <item quantity="other">リポジトリ%1$d件</item>
     </plurals>
-    <string name="teamProjectPlanPhase">フェーズ %1$d · %2$s</string>
+    <string name="teamProjectPlanPhase">フェーズ%1$d · %2$s</string>
     <string name="teamProjectPlanReviewPoint">確認ゲート · 高リスク</string>
     <string name="teamProjectPlanRepo">%1$sリポジトリ</string>
     <string name="teamProjectPlanAfter">%1$dの後</string>
     <plurals name="teamProjectPlanCriteria">
-        <item quantity="other">基準 %1$d件</item>
+        <item quantity="other">基準%1$d件</item>
     </plurals>
     <plurals name="teamProjectPlanMore">
-        <item quantity="other">…ほかタスク %1$d件</item>
+        <item quantity="other">…ほかタスク%1$d件</item>
     </plurals>
     <string name="teamProjectPlanEdit">計画を編集</string>
     <string name="teamProjectPlanAsk">変更を依頼</string>
@@ -1313,7 +1313,7 @@
     <string name="teamProjectTimelineRepeated">%1$s · %2$d回</string>
     <string name="teamProjectPromoteTitle">dev → mainに昇格</string>
     <string name="teamProjectPromoteStatus">%1$sリポジトリ · mainは保護されており、昇格は手動でのみ行えます。</string>
-    <string name="teamProjectPromoteMilestone">マイルストーン %1$d · %2$s</string>
+    <string name="teamProjectPromoteMilestone">マイルストーン%1$d · %2$s</string>
     <string name="teamProjectPromoteMerged">%2$d件中%1$d件のタスクをマージ済み</string>
     <plurals name="teamProjectPromoteDays">
         <item quantity="other">%1$d日</item>
@@ -1324,10 +1324,10 @@
     <string name="teamProjectPromoteAccepted">マイルストーン%1$dを承認しました</string>
     <string name="teamProjectPromoteNoReview">この作業には確認が不要でした</string>
     <plurals name="teamProjectPromoteChanges">
-        <item quantity="other">コミット %1$d件</item>
+        <item quantity="other">コミット%1$d件</item>
     </plurals>
     <plurals name="teamProjectPromoteFiles">
-        <item quantity="other">ファイル %1$d件</item>
+        <item quantity="other">ファイル%1$d件</item>
     </plurals>
     <string name="teamProjectPromoteSeeChanges">変更を表示</string>
     <string name="teamProjectPromoteNotYet">まだ</string>
@@ -1337,9 +1337,9 @@
     <string name="teamProjectEditorMoreOptions">詳細オプション</string>
     <string name="teamProjectEditorNameHelp">任意です。空のままにすると目標の冒頭が使用されます。</string>
     <string name="teamProjectEditorBudgetHelp">1日あたりまたはプロジェクト全体の上限に達すると、チームは一時停止します。</string>
-    <string name="teamProjectFindingsCritical">重大 %1$d件</string>
-    <string name="teamProjectFindingsMajor">高 %1$d件</string>
-    <string name="teamProjectFindingsMinor">低 %1$d件</string>
+    <string name="teamProjectFindingsCritical">重大%1$d件</string>
+    <string name="teamProjectFindingsMajor">高%1$d件</string>
+    <string name="teamProjectFindingsMinor">低%1$d件</string>
     <string name="phoneTeamSetupTitle">AI Teamをオンにする</string>
     <string name="phoneTeamStepReply">現在の応答の完了を待つ</string>
     <string name="phoneTeamReplyWaiting">現在の応答を完了中…</string>
@@ -1384,7 +1384,7 @@
     <string name="phoneTeamStripChecking">このスマートフォンでAI Teamを確認中</string>
     <string name="phoneTeamStripWaiting">AI TeamのためOpenCodeの再起動が必要です</string>
     <string name="phoneTeamStripReview">確認画面を開いてタイミングを選択</string>
-    <string name="phoneTeamStripStep">ステップ %1$d/%2$d</string>
+    <string name="phoneTeamStripStep">ステップ%1$d/%2$d</string>
     <string name="phoneTeamBlockedTitle">先にこのスマートフォンを確認しますか？</string>
     <string name="teamMigrationTitle">AI Teamが新しくなりました</string>
     <string name="teamMigrationBody">新しいAI Teamではプロジェクト全体を計画し、このスマートフォン上で実行できます。これまでのチームもクイックタスクは引き続き受け付けますが、プロジェクトの計画は立てられません。切り替える際は、実行中のものを停止する前に確認が表示されます。</string>
@@ -1538,8 +1538,8 @@
     <string name="teamJobsFailedTitle">スケジュール済みジョブを読み取れませんでした</string>
     <string name="teamJobsFailedBody">パソコンへの接続を確認してから、もう一度お試しください。</string>
     <string name="teamJobsLoading">スケジュール済みジョブを読み取り中</string>
-    <string name="teamJobEveryDayAt">毎日 %1$s</string>
-    <string name="teamJobEveryWeekdayAt">平日 %1$s</string>
+    <string name="teamJobEveryDayAt">毎日%1$s</string>
+    <string name="teamJobEveryWeekdayAt">平日%1$s</string>
     <string name="teamJobEveryDowAt">毎週%1$s %2$s</string>
     <string name="teamJobEveryHour">毎時</string>
     <plurals name="teamJobEveryMinutes">

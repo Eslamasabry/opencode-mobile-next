@@ -16,7 +16,7 @@
         <item quantity="other">%1$s時間前</item>
     </plurals>
     <string name="widget_v2_ago_yesterday">昨日</string>
-    <string name="widget_v2_offline_seen">オフライン · 最終確認 %1$s</string>
+    <string name="widget_v2_offline_seen">オフライン · 最終確認：%1$s</string>
     <string name="widget_v2_offline_plain">オフライン</string>
     <string name="widget_v2_background_settings">バックグラウンド設定</string>
     <string name="widget_v2_open">開く</string>
@@ -56,7 +56,7 @@
     <string name="widget_status_server">サーバー</string>
     <string name="widget_status_online">オンライン</string>
     <string name="widget_status_offline">オフライン</string>
-    <string name="widget_status_offline_for">オフライン %1$s</string>
+    <string name="widget_status_offline_for">オフライン%1$s</string>
     <string name="widget_status_connecting">接続中</string>
     <string name="widget_status_linux">Linux</string>
     <string name="widget_status_running">実行中</string>

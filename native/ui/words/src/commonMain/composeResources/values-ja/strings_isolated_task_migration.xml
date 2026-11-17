@@ -3,7 +3,7 @@
 <resources>
     <string name="isolatedTaskCreateUnknown">コピーが作成されたかサーバーが確認できませんでした。別の作業を始める前にプロジェクトを確認してください。</string>
     <string name="isolatedTaskOpenUnknown">サーバーが会話を確認できませんでした。別の会話を始める前に「会話」を確認してください。タスクはここに保存されたままです。</string>
-    <string name="isolatedTaskProgress">ステップ %1$d / 3</string>
+    <string name="isolatedTaskProgress">ステップ%1$d / 3</string>
     <string name="isolatedTaskOperationFailed">そのステップを完了できませんでした。タスクはここに保存されたままです。</string>
     <string name="isolatedTaskCopies">別個のコピー</string>
     <string name="isolatedTaskRefreshCopies">コピーを再読み込み</string>

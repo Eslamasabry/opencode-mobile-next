@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.feature.chat.composer.presentation
 
+import io.github.eslamasabry.oc.core.model.ModelEffort
 import io.github.eslamasabry.oc.feature.chat.world.ComposerModels
 
 /**
@@ -13,5 +14,11 @@ public object ModelPicker {
 
     /** The thinking levels on the chosen model's one line: "" (the model's default) first, then its own levels. */
     public fun thinkingLevels(models: ComposerModels): List<String> =
-        models.selected?.variants?.takeIf { it.isNotEmpty() }?.let { listOf("") + it } ?: emptyList()
+        models.selected
+            // A model whose name already says its effort ("Gemini 3.8 Flash (High)") is that effort's own choice: a
+            // second control would offer a setting that disagrees with the name.
+            ?.takeIf { ModelEffort.offersChoice(it.label) }
+            ?.variants
+            ?.takeIf { it.isNotEmpty() }
+            ?.let { listOf("") + it } ?: emptyList()
 }

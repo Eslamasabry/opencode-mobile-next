@@ -38,12 +38,12 @@
     </plurals>
     <string name="kitNeedsYouWaitingSpoken__eq0">待機時間は1分未満</string>
     <string name="kitNeedsYouWaitingSpoken__eq1">1分待機中</string>
-    <string name="kitNeedsYouWhoOnServer">%2$sの %1$s</string>
+    <string name="kitNeedsYouWhoOnServer">%2$sの%1$s</string>
     <string name="kitJumpLatest">最新へ移動</string>
     <plurals name="kitJumpNewLatest">
-        <item quantity="other">新着 %1$d件 · 最新へ移動</item>
+        <item quantity="other">新着%1$d件 · 最新へ移動</item>
     </plurals>
-    <string name="kitJumpNewLatest__eq1">新着 %1$d件 · 最新へ移動</string>
+    <string name="kitJumpNewLatest__eq1">新着%1$d件 · 最新へ移動</string>
     <string name="kitChoiceCurrent">現在の設定</string>
     <string name="kitChoiceRecommended">おすすめ</string>
     <string name="kitChoiceOtherSend">回答を送信</string>
@@ -63,7 +63,7 @@
     <string name="kitRequestSend">送信</string>
     <string name="kitRequestReplyEmptyReason">先に返信を入力してください。</string>
     <plurals name="kitRequestMoreAnswers">
-        <item quantity="other">ほかに回答 %1$s件</item>
+        <item quantity="other">ほかに回答%1$s件</item>
     </plurals>
     <string name="kitRequestExpired">期限切れ · エージェントは待機をやめました</string>
     <string name="kitRequestAge">%1$s待ち</string>
@@ -207,12 +207,12 @@
     <string name="kitLogQuiet">最後の行：%1$s前</string>
     <string name="kitLogQuietSeconds">最後の行：%1$d秒前</string>
     <string name="kitLogEnded">終了</string>
-    <string name="kitLogEndedExit">終了 · 終了コード %1$s</string>
+    <string name="kitLogEndedExit">終了 · 終了コード%1$s</string>
     <string name="kitLogFailed">失敗</string>
-    <string name="kitLogFailedExit">失敗 · 終了コード %1$s</string>
+    <string name="kitLogFailedExit">失敗 · 終了コード%1$s</string>
     <string name="kitLogEmpty">出力はまだありません</string>
     <plurals name="kitLogNewLines">
-        <item quantity="other">新しい行 %1$d行</item>
+        <item quantity="other">新しい行%1$d行</item>
     </plurals>
     <string name="kitLogNewLines__eq1">新しい行1行</string>
     <plurals name="kitLogDropped">
@@ -230,7 +230,7 @@
         <item quantity="other">%1$d件のファイル</item>
     </plurals>
     <string name="kitDiffFiles__eq1">1件のファイル</string>
-    <string name="kitDiffChangeOf">変更 %1$s / %2$s</string>
+    <string name="kitDiffChangeOf">変更%1$s / %2$s</string>
     <string name="kitDiffPreviousChange">前の変更</string>
     <string name="kitDiffNextChange">次の変更</string>
     <string name="kitDiffLines">%1$s〜%2$s行目</string>
@@ -454,7 +454,7 @@
     <string name="kitMarkupCropArea">切り抜き範囲です。ドラッグして移動します。</string>
     <string name="kitMarkupFailed">編集後の画像を作成できませんでした</string>
     <string name="kitMarkupFailedBody">再試行するか、戻って元の画像を送信してください。</string>
-    <string name="kitContextRingSemantics">コンテキスト使用率 %1$s%</string>
+    <string name="kitContextRingSemantics">コンテキスト使用率%1$s%</string>
     <string name="kitContextRingTapHint">コンテキストの詳細を表示</string>
     <string name="kitContextRingCompacting">圧縮中</string>
     <string name="kitContextRingCompactingSemantics">コンテキストを圧縮中</string>

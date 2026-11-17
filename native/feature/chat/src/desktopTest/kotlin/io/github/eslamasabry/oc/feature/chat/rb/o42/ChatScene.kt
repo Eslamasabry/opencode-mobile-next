@@ -168,11 +168,12 @@ internal class ChatScene(
         facts: TurnFactsUi = facts(),
         projectName: String? = "shopfront",
         agentName: String? = null,
+        serverName: String? = null,
     ) {
         ChatScreen(
             state, actions, host,
             header = ChatHeaderSlot(
-                ChatHeaderUi(title = state.title, projectName = projectName, branch = branch).let { h -> if (agentName == null) h else h.copy(agentName = agentName) },
+                ChatHeaderUi(title = state.title, projectName = projectName, serverName = serverName, branch = branch).let { h -> if (agentName == null) h else h.copy(agentName = agentName) },
                 headerActions,
                 approval = approval?.let { ApprovalChipSlot(it, approvalActions) },
             ),

@@ -163,26 +163,40 @@ class DurationWordsTest {
     }
 
     @Test
-    fun `B-L10N-023 Japanese sub-minute duration fits standalone, ago, running-for, and reset-in shapes`() {
-        Locale.setDefault(Locale.forLanguageTag("ja"))
-        runComposeUiTest {
-            setContent {
-                KitTheme(platform = DesktopKitPlatform(), localeTag = "ja", stillFrame = true) {
-                    val subMinute = kitDurationWords(15.seconds)
-                    Column {
-                        KitText(subMinute)
-                        KitText(stringResource(Res.string.linuxSvcRunningFor, subMinute))
-                        KitText(stringResource(Res.string.kitLogQuiet, subMinute))
-                        KitText(stringResource(Res.string.s9LimitsResetsIn, subMinute))
-                        KitText(stringResource(Res.string.replySpeedNoWords, subMinute))
+    fun `B-L10N-024 sub-minute duration fits standalone, for, ago, and reset-in shapes in every language`() {
+        val cases = listOf(
+            "en" to listOf("less than a minute", "Running for less than a minute", "Last line less than a minute ago", "resets in less than a minute"),
+            "ar" to listOf("أقل من دقيقة", "تعمل منذ أقل من دقيقة", "آخر سطر منذ أقل من دقيقة", "يُعاد التعيين بعد أقل من دقيقة"),
+            "es" to listOf("menos de un minuto", "En ejecución desde hace menos de un minuto", "Última línea hace menos de un minuto", "se reinicia en menos de un minuto"),
+            "fr" to listOf("moins d’une minute", "En marche depuis moins d’une minute", "Dernière ligne il y a moins d’une minute", "réinitialisation dans moins d’une minute"),
+            "id" to listOf("kurang dari semenit", "Berjalan selama kurang dari semenit", "Baris terakhir kurang dari semenit lalu", "diatur ulang dalam kurang dari semenit"),
+            "pt" to listOf("menos de um minuto", "Em execução há menos de um minuto", "Última linha há menos de um minuto", "renova em menos de um minuto"),
+            "ru" to listOf("несколько секунд", "Работает уже несколько секунд", "Последняя строка была несколько секунд назад", "сброс через несколько секунд"),
+            "vi" to listOf("chưa đến một phút", "Đã chạy chưa đến một phút", "Dòng cuối cách đây chưa đến một phút", "đặt lại sau chưa đến một phút"),
+            "zh" to listOf("不到一分钟", "已运行 不到一分钟", "最后一行为不到一分钟前", "不到一分钟 后重置"),
+            "ja" to listOf("数秒", "数秒間実行中", "最後の行：数秒前", "あと数秒でリセット", "前回の返信：文字出力がないまま数秒後に終了"),
+        )
+        for ((loc, expected) in cases) {
+            Locale.setDefault(Locale.forLanguageTag(loc))
+            runComposeUiTest {
+                setContent {
+                    KitTheme(platform = DesktopKitPlatform(), localeTag = loc, stillFrame = true) {
+                        val sub = kitDurationWords(15.seconds)
+                        Column {
+                            KitText(sub)
+                            KitText(stringResource(Res.string.linuxSvcRunningFor, sub))
+                            KitText(stringResource(Res.string.kitLogQuiet, sub))
+                            KitText(stringResource(Res.string.s9LimitsResetsIn, sub))
+                            if (loc == "ja") {
+                                KitText(stringResource(Res.string.replySpeedNoWords, sub))
+                            }
+                        }
                     }
                 }
+                for (text in expected) {
+                    onNodeWithText(text).assertExists()
+                }
             }
-            onNodeWithText("数秒").assertExists()
-            onNodeWithText("数秒間実行中").assertExists()
-            onNodeWithText("最後の行：数秒前").assertExists()
-            onNodeWithText("あと数秒でリセット").assertExists()
-            onNodeWithText("前回の返信：文字出力がないまま数秒後に終了").assertExists()
         }
     }
 }

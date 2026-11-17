@@ -10,7 +10,7 @@
     <string name="filesHideHidden">隠しファイルを非表示</string>
     <string name="filesOpenFailed">このファイルを開けませんでした。もう一度お試しください。</string>
     <string name="filesMentionFailed">このファイルをメッセージに追加できませんでした。もう一度お試しください。</string>
-    <string name="filesFolderLabel">フォルダ %1$s</string>
+    <string name="filesFolderLabel">フォルダ%1$s</string>
     <string name="filesUp">1つ上のフォルダへ</string>
     <string name="filesShareStarting">共有を開始中…</string>
     <string name="filesSaveFailed">ファイルを保存できませんでした。もう一度お試しください。</string>

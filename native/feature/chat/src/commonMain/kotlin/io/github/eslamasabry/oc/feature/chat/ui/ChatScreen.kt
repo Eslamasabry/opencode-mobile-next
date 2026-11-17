@@ -828,6 +828,9 @@ public fun ChatScreen(
                     page = true,
                     overlayChrome = true,
                     hideStatusWhenTyping = true,
+                    // B-438: the header is one floating capsule, the message box floats at the bottom, the transcript runs
+                    // behind both with no band, mask or fade, and the jump control is a round arrow at the box's corner.
+                    floating = true,
                     // N-52/N-57: the header and the composer lie on the page's ground (frosted under Glass), so the
                     // transcript never draws through them.
                     frost = frost,

@@ -14,8 +14,8 @@
     <string name="agentsInstallFailedChecksum">%1$sをインストールできませんでした：ダウンロードしたファイルが期待されたものと一致しないため破棄しました。もう一度お試しください。</string>
     <string name="agentsInstallFailedStorage">%1$sをインストールできませんでした：このスマートフォンの空き容量が不足しています。容量を空けてから、もう一度お試しください。</string>
     <string name="agentsInstallFailedVersion">%1$sをインストールできませんでした：取得したバージョンがアプリが期待するものと異なります。もう一度お試しください。</string>
-    <string name="agentsInstallFailedVersionOther">%1$sをインストールできませんでした：ダウンロードされたバージョンは %2$sですが、このアプリは %3$sに対応しています。再試行しても解決しないため、アプリをアップデートしてください。</string>
-    <string name="agentsInstallFailedWithdrawn">%1$sをインストールできませんでした：このアプリがインストールするバージョン %2$sは現在配信されていません。再試行しても解決しないため、アプリをアップデートしてください。</string>
+    <string name="agentsInstallFailedVersionOther">%1$sをインストールできませんでした：ダウンロードされたバージョンは%2$sですが、このアプリは%3$sに対応しています。再試行しても解決しないため、アプリをアップデートしてください。</string>
+    <string name="agentsInstallFailedWithdrawn">%1$sをインストールできませんでした：このアプリがインストールするバージョン%2$sは現在配信されていません。再試行しても解決しないため、アプリをアップデートしてください。</string>
     <string name="agentsInstallFailedNotStarted">%1$sをダウンロードしましたが、このスマートフォンで起動しなかったためバージョンを確認できませんでした。もう一度お試しください。改善しない場合は、詳細でスマートフォンからの報告を確認できます。</string>
     <string name="agentsInstallFailedUnknown">%1$sをインストールできませんでした。もう一度お試しください。詳細でスマートフォンからの報告を確認できます。</string>
     <string name="agentsInstallInterruptedNow">%1$sのインストールが完了前に中断されました。再開するにはもう一度お試しください。</string>

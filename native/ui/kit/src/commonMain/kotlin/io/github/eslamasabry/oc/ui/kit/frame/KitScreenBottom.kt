@@ -251,6 +251,8 @@ internal val LocalKitScreenZones = staticCompositionLocalOf<KitScreenZones?> { n
 @Composable
 public fun Modifier.kitScreenListEdges(): Modifier {
     val zones = LocalKitScreenZones.current ?: return this
+    // A floating chat runs its transcript behind the message box: the list ends nowhere (no band, no mask).
+    if (LocalKitScreenFloating.current) return this
     DisposableEffect(zones) {
         zones.claims++
         onDispose { zones.claims-- }

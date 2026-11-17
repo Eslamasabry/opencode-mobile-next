@@ -28,7 +28,7 @@
     <string name="notify_status_reconnecting_body">接続を待っています</string>
     <string name="notify_status_ready_title">準備完了 · 実行中のものはありません</string>
     <string name="notify_status_ready_body">いつでもどうぞ</string>
-    <string name="notify_status_last_reply">最後の返信 %1$s前</string>
+    <string name="notify_status_last_reply">最後の返信：%1$s前</string>
     <string name="notify_status_last_reply_now">最後の返信 たった今</string>
     <string name="notify_status_setup_title">セットアップ · %1$s / %2$s</string>
     <string name="notify_status_on_server">%1$s上</string>

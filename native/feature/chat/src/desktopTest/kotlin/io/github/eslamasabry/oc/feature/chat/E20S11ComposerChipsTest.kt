@@ -73,13 +73,17 @@ class E20S11ComposerChipsTest {
 
     private val chrome =
         ComposerChrome({ false }, { false }, {}, { null }, {}, { null }, {}, {}, { false }, rowChips = {
-            // The real approval chip's part (header/ui/ApprovalChip.kt, Flutter `_AutoApprovalIndicator`).
-            io.github.eslamasabry.oc.ui.kit.chip.KitChip(
-                approve,
-                kind = io.github.eslamasabry.oc.ui.kit.chip.KitChipKind.Action,
-                selected = true,
+            // The real approval chip's part (header/ui/ApprovalChip.kt): the shield alone whenever the row cannot hold both
+            // chips whole (B-438), its words kept as the spoken label.
+            io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerChip(
+                label = approve,
                 onClick = {},
                 modifier = Modifier.testTag("approval-chip"),
+                icon = io.github.eslamasabry.oc.ui.kit.icon.KitIcons.shieldFilled,
+                opensPicker = false,
+                semanticsLabel = approve,
+                active = true,
+                collapsible = true,
             )
         })
 

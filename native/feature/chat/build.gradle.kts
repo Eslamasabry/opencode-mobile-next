@@ -50,4 +50,8 @@ tasks.withType<Test>().configureEach {
         "oc.goldens.record",
         providers.gradleProperty("oc.recordGoldens").orElse("false").get(),
     )
+    // The GitHub runner uploads no pictures: a recording run prints the chosen scenes' PNG bytes in its log.
+    if (providers.gradleProperty("oc.recordGoldens").orElse("false").get() == "true") {
+        testLogging.showStandardStreams = true
+    }
 }

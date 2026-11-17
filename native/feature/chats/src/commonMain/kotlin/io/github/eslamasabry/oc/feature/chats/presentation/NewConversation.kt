@@ -774,7 +774,13 @@ public data class NewConversationUi(
 
     /** The efforts the shown model offers (none when it offers none, or no model is named). */
     val shownVariants: List<String>
-        get() = shownModel?.let { ref -> shownModels.firstOrNull { it.model == ref }?.variants }.orEmpty()
+        get() =
+            shownModel
+                ?.let { ref -> shownModels.firstOrNull { it.model == ref } }
+                // A name that says its effort ("Gemini 3.8 Flash (High)") leaves no second effort to choose.
+                ?.takeIf { io.github.eslamasabry.oc.core.model.ModelEffort.offersChoice(it.name) }
+                ?.variants
+                .orEmpty()
 
     /**
      * The phone agent's model list is being read now (the list shown meanwhile is the last known one, or none). This is

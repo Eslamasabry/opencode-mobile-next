@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="workCount">タスク · %1$d件実行中</string>
-    <string name="workExitCode">終了コード %1$d</string>
+    <string name="workExitCode">終了コード%1$d</string>
     <string name="composerClearTextTitle">下書きのテキストを消去</string>
     <string name="composerClearTextSubtitle">添付は残ります · 元に戻せます</string>
     <string name="composerReuseTitle">プロンプトを再利用</string>
@@ -78,7 +78,7 @@
     <string name="chatUiQueuedWithEviction">待機中 — 再接続すると送信されます。%1$s</string>
     <string name="chatUiCommandUnavailable">/%1$sは今は使えません。</string>
     <plurals name="chatUiDraftsQueued">
-        <item quantity="other">再接続時に送信される下書きが %1$s件、待機中です。</item>
+        <item quantity="other">再接続時に送信される下書きが%1$s件、待機中です。</item>
     </plurals>
     <string name="chatUiPermissionNeeded">許可が必要です: %1$s</string>
     <string name="chatUiQuestionLabel">質問: %1$s</string>
@@ -88,9 +88,9 @@
     <string name="chatUiRateLimitRetry">レート制限中です。再試行%1$s…</string>
     <string name="chatUiRateLimitCountdown">レート制限中です。%2$s後に再試行%1$s</string>
     <plurals name="chatUiReferencesAttachedNotice">
-        <item quantity="other">参照 %1$s件は送信時にテキストとして追加されます。下書きには保存されません。</item>
+        <item quantity="other">参照%1$s件は送信時にテキストとして追加されます。下書きには保存されません。</item>
     </plurals>
-    <string name="chatUiAttachedCount">添付 %1$s件</string>
+    <string name="chatUiAttachedCount">添付%1$s件</string>
     <string name="chatUiSubagentCount">委任された会話 · %1$s</string>
     <string name="chatUiBackgroundResult">バックグラウンドの結果</string>
     <string name="chatUiBackgroundComplete">完了</string>
@@ -117,7 +117,7 @@
     <string name="approvalModeAutoDetail">届いた順に、1回ずつ許可されます。</string>
     <string name="approvalModeEverythingTitle">すべて承認</string>
     <string name="approvalModeEverythingDetail">このサーバー上のすべての会話。</string>
-    <string name="approvalModeEverythingAgentDetail">このスマートフォン上の %1$sのすべての会話。</string>
+    <string name="approvalModeEverythingAgentDetail">このスマートフォン上の%1$sのすべての会話。</string>
     <string name="approvalModeSettings">承認の設定…</string>
     <string name="approvalModeConfirmEverythingTitle">すべて承認しますか？</string>
     <string name="approvalModeConfirmEverythingAction">すべて承認</string>
@@ -183,9 +183,9 @@
     </plurals>
     <string name="kitWorkDelegated__eq1">タスク%1$d件を委任</string>
     <plurals name="kitWorkOther">
-        <item quantity="other">その他のステップ %1$d件</item>
+        <item quantity="other">その他のステップ%1$d件</item>
     </plurals>
-    <string name="kitWorkOther__eq1">その他のステップ %1$d件</string>
+    <string name="kitWorkOther__eq1">その他のステップ%1$d件</string>
     <plurals name="kitWorkNotRun">
         <item quantity="other">%1$d件は未実行</item>
     </plurals>
@@ -206,7 +206,7 @@
     <string name="activityAnswerEveryQuestion">すべての質問に回答してください。</string>
     <string name="activityQuestionOptional">任意です。空のままでもかまいません。</string>
     <string name="activitySending">送信中…</string>
-    <string name="activityQuestionProgress">質問 %1$d/%2$d</string>
+    <string name="activityQuestionProgress">質問%1$d/%2$d</string>
     <string name="activityOwnAnswer">または自分で回答を書く</string>
     <string name="kitTurnStarting">モデルを起動しています…</string>
     <string name="kitTurnStillStarting">モデルをまだ待っています · %1$d秒</string>
@@ -218,7 +218,7 @@
     <string name="messageViewSendAgain">このメッセージを再送</string>
     <string name="composerBusyReason">プロンプトを準備しています…</string>
     <string name="composerToolsTextOnly">このサーバーはテキストのみ対応です</string>
-    <string name="composerToolsAgentTextOnly">ここでは %1$sはテキストのみ対応です</string>
+    <string name="composerToolsAgentTextOnly">ここでは%1$sはテキストのみ対応です</string>
     <string name="composerToolsPicturesOnlyUse">%1$sは画像のみ対応しています。%2$sまたは%3$sを使用してください。</string>
     <string name="composerToolSavedSubtitle">保存したプロンプトを下書きに戻す</string>
     <string name="composerToolSaveForLater">プロンプトを後のために保存</string>

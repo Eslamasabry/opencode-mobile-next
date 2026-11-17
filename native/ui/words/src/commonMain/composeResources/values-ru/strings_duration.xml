@@ -121,7 +121,7 @@
         <item quantity="many">около %1$s мин</item>
         <item quantity="other">около %1$s мин</item>
     </plurals>
-    <string name="kitDurLessThanMinute">меньше минуты</string>
+    <string name="kitDurLessThanMinute">несколько секунд</string>
     <string name="kitRelJustNow">Только что</string>
     <string name="kitRelYesterday">Вчера</string>
 </resources>

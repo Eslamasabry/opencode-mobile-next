@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Translated with native/tools/strings/translate; English is the source. -->
 <resources>
-    <string name="chatStarAskTitle">OpenCode Mobileを気に入っていただけましたか？</string>
+    <string name="chatStarAskTitle">OpenCode Mobileを気に入っていますか？</string>
     <string name="chatStarAskBody">GitHubでスターを付けると、他の人も見つけやすくなります。</string>
     <string name="chatStarAskAction">GitHubでスターを付ける</string>
     <string name="chatStarAskDismiss">今はしない</string>

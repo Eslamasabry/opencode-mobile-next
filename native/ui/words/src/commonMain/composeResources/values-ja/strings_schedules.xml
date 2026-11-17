@@ -40,8 +40,8 @@
     <string name="scheduleEveryDay">毎日</string>
     <string name="scheduleWeekdaysShort">平日</string>
     <string name="scheduleCustom">カスタム</string>
-    <string name="scheduleRuleDaily">毎日 %1$s</string>
-    <string name="scheduleRuleWeekdays">毎週平日 %1$s</string>
+    <string name="scheduleRuleDaily">毎日%1$s</string>
+    <string name="scheduleRuleWeekdays">毎週平日%1$s</string>
     <plurals name="scheduleRuleHours">
         <item quantity="other">%1$s時間ごと</item>
     </plurals>
@@ -54,8 +54,8 @@
     </plurals>
     <string name="scheduleForHours__eq1">1時間ごとにスケジュール</string>
     <string name="scheduleForHours__eq2">%1$s時間ごとにスケジュール</string>
-    <string name="scheduleForToday">今日 %1$sにスケジュール</string>
-    <string name="scheduleForTomorrow">明日 %1$sにスケジュール</string>
+    <string name="scheduleForToday">今日%1$sにスケジュール</string>
+    <string name="scheduleForTomorrow">明日%1$sにスケジュール</string>
     <string name="scheduleDayAt">%1$s %2$s</string>
     <string name="scheduleSent">%1$sに送信済み</string>
     <string name="scheduleNotSent">%1$sに送信されませんでした</string>

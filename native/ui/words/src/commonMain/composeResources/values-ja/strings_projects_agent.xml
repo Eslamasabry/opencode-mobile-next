@@ -15,7 +15,7 @@
     <string name="agentProjectNextLines">次の200行</string>
     <string name="agentProjectChangedFiles">変更されたファイル</string>
     <string name="agentProjectNoChanges">この比較では変更はありません。</string>
-    <string name="agentProjectLineChanges">追加 %1$d · 削除 %2$d</string>
+    <string name="agentProjectLineChanges">追加%1$d · 削除%2$d</string>
     <string name="agentProjectWorktrees">ワークツリー</string>
     <string name="agentProjectNoWorktrees">このプロジェクトで報告されたワークツリーはありません。</string>
     <string name="agentProjectReady">準備完了</string>
@@ -30,6 +30,6 @@
     <string name="agentProjectRemoveQuestion">「%1$s」を削除しますか？</string>
     <string name="agentProjectRemoveBody">ワークツリーとその会話をアーカイブし、フォルダを削除します：%1$s</string>
     <plurals name="agentProjectRemoveChanges">
-        <item quantity="other">このワークツリーには %1$d件の変更されたファイルがあります。フォルダとともに削除されます。</item>
+        <item quantity="other">このワークツリーには%1$d件の変更されたファイルがあります。フォルダとともに削除されます。</item>
     </plurals>
 </resources>

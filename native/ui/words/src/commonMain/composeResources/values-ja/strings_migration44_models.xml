@@ -3,10 +3,10 @@
 <resources>
     <string name="native44AllModels">すべてのモデル（%1$s）</string>
     <plurals name="native44MoreModels">
-        <item quantity="other">さらに %1$s件のモデルを表示</item>
+        <item quantity="other">さらに%1$s件のモデルを表示</item>
     </plurals>
-    <string name="native44Context">コンテキスト %1$s</string>
-    <string name="native44Output">出力上限 %1$s</string>
+    <string name="native44Context">コンテキスト%1$s</string>
+    <string name="native44Output">出力上限%1$s</string>
     <string name="native44Price">100万トークンあたり 入力 $%1$s · 出力 $%2$s</string>
     <string name="native44ModelShortcuts">モデルを切り替え</string>
     <string name="native44CopyFailed">モデルIDをコピーできませんでした。もう一度お試しください。</string>

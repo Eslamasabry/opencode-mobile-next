@@ -74,7 +74,7 @@
     <string name="credentialRefresh">アカウントを再読み込み</string>
     <string name="credentialEmpty">このプロバイダーには保存済みアカウントがありません。</string>
     <string name="credentialEnvironment">サーバー環境によって管理されています。ここからは削除できません。</string>
-    <string name="credentialUnnamed">保存済みアカウント %1$d</string>
+    <string name="credentialUnnamed">保存済みアカウント%1$d</string>
     <string name="mcpLoadFailed">MCPデータを再読み込みできませんでした。もう一度お試しください。</string>
     <string name="mcpScopeChanged">サーバーまたはプロジェクトが変更されました。変更を加える前に、再読み込みしてMCPサーバーを読み込んでください。</string>
     <string name="skillUse">会話に追加</string>
@@ -116,7 +116,7 @@
     <string name="projectFolderPathLabel">フォルダパス</string>
     <string name="projectFolderPathHint">%1$s/my-app</string>
     <string name="projectFolderOpenAction">開く</string>
-    <string name="projectFolderCreateSubtitle">この端末の %1$s内</string>
+    <string name="projectFolderCreateSubtitle">この端末の%1$s内</string>
     <string name="projectFolderOpenSubtitle">サーバー上のフォルダのフルパスを入力</string>
     <string name="e7ProjectProjectsReconnect">OpenCodeが再接続中です。しばらくしてからもう一度お試しください。</string>
     <string name="e7ProjectProjectRenameFailed">プロジェクト名を変更できませんでした：%1$s</string>
@@ -233,7 +233,7 @@
     <string name="e7LibraryWasCreatedItsSetupStatusIsNot">%1$sを作成しました。セットアップ状態はまだ確認されていません。</string>
     <string name="e7LibraryWaitForOpenCodeToFinishPreparingThis">このワークツリーの準備が完了するまでお待ちください。</string>
     <string name="e7LibraryOpenCodeDidNotSwitchLocations">サーバーがプロジェクトを切り替えませんでした。</string>
-    <string name="e7LibraryCouldNotVerifyBeforeThisDestructiveAction">この破壊的な操作の前に %1$sを確認できませんでした：%2$s</string>
+    <string name="e7LibraryCouldNotVerifyBeforeThisDestructiveAction">この破壊的な操作の前に%1$sを確認できませんでした：%2$s</string>
     <string name="e7LibraryResetToTheDefaultBranch">%1$sを既定のブランチにリセットしました</string>
     <string name="e7LibraryAndItsBranchWereRemoved">%1$sとそのブランチを削除しました</string>
     <string name="e7LibraryReset">%1$sをリセットしますか？</string>
@@ -368,7 +368,7 @@
     <string name="managedWorkspacesCreateFailed">環境を作成できませんでした</string>
     <string name="managedWorkspacesOpenFailed">%1$sを開けませんでした</string>
     <string name="managedWorkspacesRemoveTitle">%1$sを削除しますか？</string>
-    <string name="managedWorkspacesRemoveBody">サーバーは %1$sにこの環境とその中身を削除するよう要求します。</string>
+    <string name="managedWorkspacesRemoveBody">サーバーは%1$sにこの環境とその中身を削除するよう要求します。</string>
     <string name="managedWorkspacesRemoveLeavesFirst">現在開いているため、先にプロジェクトフォルダへ戻ります。</string>
     <string name="managedWorkspacesRemoveHistoryStays">会話は履歴に残りますが、この環境を開くことはできなくなります。</string>
     <string name="managedWorkspacesRemoveAction">削除</string>
@@ -390,7 +390,7 @@
     <string name="projectHealthRunning">実行中</string>
     <string name="projectHealthNotRunning">停止中</string>
     <string name="projectHealthLineCounts">%1$d行追加、%2$d行削除</string>
-    <string name="projectFolderCreateHelper">このスマートフォンの %1$sに作成し、プロジェクトとして開きます。</string>
+    <string name="projectFolderCreateHelper">このスマートフォンの%1$sに作成し、プロジェクトとして開きます。</string>
     <string name="projectFolderMissingTitle">このフォルダを作成しますか？</string>
     <string name="projectFolderCreateFailedTitle">フォルダを作成できませんでした</string>
     <string name="projectFolderOpenFailedTitle">フォルダを開けませんでした</string>
@@ -435,10 +435,10 @@
     </plurals>
     <string name="integrationsProviderActions">%1$sの操作</string>
     <string name="integrationsManageAccounts">%1$sアカウントを管理</string>
-    <string name="integrationsServerSignIn">サーバー上で %1$sにサインイン</string>
+    <string name="integrationsServerSignIn">サーバー上で%1$sにサインイン</string>
     <string name="integrationsServerSignInUnavailable">このサーバーでは、アプリからサインインコマンドを実行できません。</string>
     <string name="integrationsDisconnectNamed">%1$sを切断</string>
-    <string name="integrationsDisconnectBody">このサーバーから %1$sのキーを削除します。実行中の返信は先に完了します。</string>
+    <string name="integrationsDisconnectBody">このサーバーから%1$sのキーを削除します。実行中の返信は先に完了します。</string>
     <string name="integrationsConnectMethodSubtitle">接続方法を選択</string>
     <string name="integrationsKeyHelper">キーはこのサーバーに保存されます。アプリに再び表示されることはありません。</string>
     <string name="integrationsKeyEmpty">先にキーを貼り付けてください。</string>
@@ -459,17 +459,17 @@
     <string name="integrationsMcpReconnect">%1$sに再接続</string>
     <string name="integrationsMcpSigningIn">%1$sにサインイン中</string>
     <string name="integrationsMcpSignInOnServer">サーバー側のパソコンでサインインしてください。このサーバーではアプリから実行できません。</string>
-    <string name="integrationsMcpRemoveUntilRestart">再起動まで %1$sを削除</string>
+    <string name="integrationsMcpRemoveUntilRestart">再起動まで%1$sを削除</string>
     <string name="integrationsCopyResourceAddress">アドレスをコピー</string>
     <string name="commandAuthSheetWorking">サーバーに確認中…</string>
     <string name="credentialSheetLoading">保存済みアカウントを読み込み中…</string>
-    <string name="credentialSheetEmptyBody">アカウントを追加するには、プロバイダーからもう一度 %1$sにサインインしてください。</string>
+    <string name="credentialSheetEmptyBody">アカウントを追加するには、プロバイダーからもう一度%1$sにサインインしてください。</string>
     <string name="credentialSheetActions">%1$sの操作</string>
     <string name="credentialSheetUseNamed">%1$sを使用</string>
     <string name="credentialSheetInUse">すでに使用中</string>
     <string name="credentialSheetRenameNamed">%1$sの名前を変更…</string>
     <string name="credentialSheetRemoveNamed">%1$sを削除</string>
-    <string name="credentialSheetRemoveBody">このサーバーから %1$sを削除します。これを使用しているプロジェクトでは別の %2$sアカウントが必要になります。</string>
+    <string name="credentialSheetRemoveBody">このサーバーから%1$sを削除します。これを使用しているプロジェクトでは別の%2$sアカウントが必要になります。</string>
     <string name="credentialSheetRenamed">%1$sに名前を変更しました。</string>
     <string name="credentialSheetLabelEmpty">アカウントに名前を付けてください。</string>
     <string name="credentialSheetLabelInvalid">改行や制御文字を含めず、128文字以内で入力してください。</string>
@@ -497,7 +497,7 @@
     <string name="referencesScreenShowDetails">%1$sの詳細を表示</string>
     <string name="referencesScreenCopyMention">%1$sをコピー</string>
     <string name="referencesScreenCopyPath">パスをコピー</string>
-    <string name="referencesScreenSheetBody">プロンプトに %1$sと入力すると、その返信でエージェントがこのフォルダを読み取ります。</string>
+    <string name="referencesScreenSheetBody">プロンプトに%1$sと入力すると、その返信でエージェントがこのフォルダを読み取ります。</string>
     <string name="referencesScreenPathLabel">パス</string>
     <string name="skillsScreenLoading">スキルを読み込み中</string>
     <string name="skillsScreenLoadFailed">スキルを読み込めませんでした</string>
@@ -534,7 +534,7 @@
     </plurals>
     <string name="integrationsAccountCount__eq1">1件のアカウント</string>
     <string name="toolsScreenNoBackgroundSubagents">バックグラウンドサブエージェントなし</string>
-    <string name="commandAuthSheetIntro">このスマートフォン上ではなく、サーバー上でサインインを実行します。サーバーと %1$sを信頼している場合のみ開始してください。サーバー側での手順完了が必要になる場合があります。</string>
+    <string name="commandAuthSheetIntro">このスマートフォン上ではなく、サーバー上でサインインを実行します。サーバーと%1$sを信頼している場合のみ開始してください。サーバー側での手順完了が必要になる場合があります。</string>
     <string name="commandAuthCheckNamed">%1$sのサインインを今すぐ確認</string>
     <string name="credentialRemoveAccountTitle">%1$sアカウント「%2$s」を削除しますか？</string>
     <string name="credentialRemoveConfirmNamed">「%1$s」を削除</string>
@@ -555,7 +555,7 @@
     <string name="integrationsConnectOnServer">サーバー上でセットアップ</string>
     <string name="integrationsProviderDetails">%1$sの詳細</string>
     <string name="integrationsEnvironmentVariable">サーバー環境変数</string>
-    <string name="integrationsEnvironmentNote">アプリを使わずに %1$sを接続するには、サーバーの実行環境でこれを設定してからサーバーを再起動してください。</string>
+    <string name="integrationsEnvironmentNote">アプリを使わずに%1$sを接続するには、サーバーの実行環境でこれを設定してからサーバーを再起動してください。</string>
     <string name="integrationsKeyOnlyHelper">%1$sでは他アプリからのブラウザサインインが許可されていないため、APIキーを使用してください。料金はサブスクリプションとは別に請求されます。キーはこのサーバーに保存され、再表示されません。</string>
     <string name="integrationsGetKey">%1$sからキーを取得</string>
     <string name="integrationsKeySavedReady">%1$sのキーを保存しました。モデル選択画面でモデルを選択してください。</string>
@@ -580,7 +580,7 @@
     <string name="folderBrowserPhoneRefused">スマートフォンストレージへのアクセスが無効です。ここを参照するにはアクセスを許可してください。</string>
     <string name="phoneScanTitle">このスマートフォン上のプロジェクト</string>
     <string name="phoneScanStopped">%1$d秒後に停止 · %2$d件見つかりました</string>
-    <string name="phoneScanFirstShown">最初の %1$d件を表示</string>
+    <string name="phoneScanFirstShown">最初の%1$d件を表示</string>
     <string name="phoneScanLookDeeper">さらに深く検索</string>
     <string name="phoneScanEmptyTitle">プロジェクトが見つかりません</string>
     <string name="phoneScanEmptyBody">フォルダを参照するか、新しいプロジェクトを開始してください。</string>
@@ -594,7 +594,7 @@
         <item quantity="other">%1$d件のフォルダを確認 · %2$d件見つかりました</item>
     </plurals>
     <string name="phoneScanChecked__eq1">1件のフォルダを確認 · %2$d件見つかりました</string>
-    <string name="phoneScanDoneIn">%2$sで %1$d件見つかりました</string>
+    <string name="phoneScanDoneIn">%2$sで%1$d件見つかりました</string>
     <string name="phoneScanStop">停止</string>
     <string name="openProjectChange">変更</string>
     <string name="openProjectIn">%1$s内</string>
@@ -607,7 +607,7 @@
     <string name="filesNoTextTitle">一致する項目がありません</string>
     <string name="filesNoTextBody">そのテキストを含むファイルはありません。つづりを確認するか、単語数を減らしてお試しください。</string>
     <string name="filesTextFailedTitle">ファイルを検索できませんでした</string>
-    <string name="filesTextLimited">最初の %1$d件の一致を表示しています。絞り込むにはさらに入力してください。</string>
+    <string name="filesTextLimited">最初の%1$d件の一致を表示しています。絞り込むにはさらに入力してください。</string>
     <string name="filesTextMatchLine">%1$d行目</string>
     <string name="projectToolsNeedGitCommit">ワークツリーとクラウド環境には、Gitで追跡され、少なくとも1つのコミットがあるプロジェクトが必要です。エージェントにGitの設定と初回コミットを依頼してください。</string>
     <string name="integrationsSignInCodeLabel">コード</string>
@@ -625,7 +625,7 @@
     <string name="devPreviewOpenInBrowser">ブラウザで開く</string>
     <string name="devPreviewCopyAddress">アドレスをコピー</string>
     <string name="devPreviewLoading">プレビューを読み込み中</string>
-    <string name="devPreviewRemoteNote">%2$sのポート %1$sを表示しています。このスマートフォンから接続するには、開発サーバーが0.0.0.0（すべてのアドレス）で待機している必要があります。</string>
+    <string name="devPreviewRemoteNote">%2$sのポート%1$sを表示しています。このスマートフォンから接続するには、開発サーバーが0.0.0.0（すべてのアドレス）で待機している必要があります。</string>
     <string name="devPreviewNoServerTitle">先にサーバーを接続してください</string>
     <string name="devPreviewNoServerBody">この端末へのリンクは、アプリを実行している端末上でのみ意味を持ちます。サーバーを接続するか、ブラウザでリンクを開いてください。</string>
     <string name="devPreviewNoHostTitle">そのサーバーが見つかりません</string>
@@ -641,13 +641,13 @@
     <string name="servicesAlsoPhoneHint">開始方法にかかわらず、待機中のポートから検出されました。</string>
     <string name="servicesAlsoServerHint">このサーバーで実行中のコマンドを一覧表示します。サーバー上のターミナルで開始されたものはここには表示されません。</string>
     <plurals name="servicesPorts">
-        <item quantity="other">ポート %2$s</item>
+        <item quantity="other">ポート%2$s</item>
     </plurals>
-    <string name="servicesPorts__eq1">ポート %2$s</string>
+    <string name="servicesPorts__eq1">ポート%2$s</string>
     <string name="servicesNoPortYet">ポートはまだ見つかりません</string>
     <string name="servicesOpenPreview">プレビューを開く</string>
     <string name="servicesOpenPreviewNamed">%1$sをプレビュー</string>
-    <string name="servicesPreviewPort">ポート %1$sをプレビュー</string>
+    <string name="servicesPreviewPort">ポート%1$sをプレビュー</string>
     <string name="servicesSaveCommand">コマンドとして保存</string>
     <string name="servicesStopFoundTitle">%1$sを停止しますか？</string>
     <string name="servicesStopFoundHint">実行中のマシン上でプログラムを終了します。保存されていない内容は失われます。</string>
@@ -697,9 +697,9 @@
     <string name="gitDetachedHead">ブランチ外</string>
     <string name="gitNoCommitsYet">コミットはまだありません</string>
     <plurals name="gitAhead">
-        <item quantity="other">未プッシュのコミット %1$d件</item>
+        <item quantity="other">未プッシュのコミット%1$d件</item>
     </plurals>
-    <string name="gitAhead__eq0">未プッシュのコミット %1$d件</string>
+    <string name="gitAhead__eq0">未プッシュのコミット%1$d件</string>
     <string name="gitAhead__eq1">未プッシュのコミット1件</string>
     <string name="gitOperationMerge">マージ未完了</string>
     <string name="gitOperationRebase">リベース未完了</string>
@@ -828,7 +828,7 @@
     <string name="gitDoneSavedPlain">保存しました。</string>
     <string name="gitChecking">確認中…</string>
     <string name="gitCheckFailed">確認できませんでした。タップして再試行</string>
-    <string name="gitNewCount">新規 %1$d件</string>
+    <string name="gitNewCount">新規%1$d件</string>
     <string name="gitIdentityWhy">このプロジェクトの保存にはこの名前とメールアドレスが使われるため、送信時に自分の作業として記録されます。</string>
     <string name="gitPullNotOnRemote">まだリモートにありません。先に送信してください。</string>
     <string name="gitPullNoRemote">タップして先にリモートを追加してください。</string>
@@ -847,28 +847,28 @@
     </plurals>
     <string name="gitDoneGotN__eq1">1件の新しい変更を取得しました。</string>
     <plurals name="gitSaveAndSendTo">
-        <item quantity="other">%1$d件のファイルを保存して %2$s · %3$sに送信</item>
+        <item quantity="other">%1$d件のファイルを保存して%2$s · %3$sに送信</item>
     </plurals>
-    <string name="gitSaveAndSendTo__eq1">1件のファイルを保存して %2$s · %3$sに送信</string>
+    <string name="gitSaveAndSendTo__eq1">1件のファイルを保存して%2$s · %3$sに送信</string>
     <plurals name="gitSendSavesTo">
-        <item quantity="other">%1$d件の保存を %2$s · %3$sに送信</item>
+        <item quantity="other">%1$d件の保存を%2$s · %3$sに送信</item>
     </plurals>
-    <string name="gitSendSavesTo__eq1">1件の保存を %2$s · %3$sに送信</string>
+    <string name="gitSendSavesTo__eq1">1件の保存を%2$s · %3$sに送信</string>
     <string name="gitSaveAndSendTitle">保存して送信</string>
     <string name="gitSaveOnly">送信せずに保存</string>
     <string name="gitMessageAddOne">%1$sを追加</string>
     <string name="gitMessageUpdateOne">%1$sを更新</string>
-    <string name="gitMessageUpdateTwo">%1$sと %2$sを更新</string>
+    <string name="gitMessageUpdateTwo">%1$sと%2$sを更新</string>
     <plurals name="gitMessageUpdateMany">
         <item quantity="other">%2$sとほか%1$d件のファイルを更新</item>
     </plurals>
     <string name="gitMessageUpdateMany__eq1">%2$sとほか1件のファイルを更新</string>
-    <string name="gitDoneSavedAndSent">保存して %1$s · %2$sに送信しました。</string>
+    <string name="gitDoneSavedAndSent">保存して%1$s · %2$sに送信しました。</string>
     <string name="gitSavedNotSent">ここには保存しましたが、まだ送信されていません。%1$s</string>
     <string name="gitMoreLabel">リモート、クローン、詳細</string>
     <string name="gitBusySendingTo">%1$s · %2$sに送信中…</string>
     <plurals name="gitGetNewFrom">
-        <item quantity="other">%2$s · %3$sから %1$d件の新しい変更を取得</item>
+        <item quantity="other">%2$s · %3$sから%1$d件の新しい変更を取得</item>
     </plurals>
     <string name="gitGetNewFrom__eq1">%2$s · %3$sから1件の新しい変更を取得</string>
     <string name="gitSavedSignInFirst">ここには保存しましたが、まだ送信されていません。先に%1$sへのサインインが必要です。</string>
@@ -880,7 +880,7 @@
     <string name="filesMenuChanges__eq0">変更</string>
     <string name="filesMenuChanges__eq1">変更 · 1件のファイル</string>
     <string name="filesMenuChanges__eq2">変更 · %1$d件のファイル</string>
-    <string name="filesProjectSwitchLabel">プロジェクト %1$s。プロジェクトを切り替え</string>
+    <string name="filesProjectSwitchLabel">プロジェクト%1$s。プロジェクトを切り替え</string>
     <string name="devPreviewDetails">プレビューの詳細</string>
     <string name="devPreviewShowDetails">詳細を表示</string>
     <string name="devPreviewAddress">アドレス</string>
@@ -931,6 +931,6 @@
     <string name="agentIsolatedOpenAnyway">このまま開く</string>
     <string name="agentIsolatedStartAnyway">このまま開始</string>
     <string name="agentIsolatedCancel">待機を停止</string>
-    <string name="agentElsewhereCounts">待機中 %1$d · 実行中 %2$d · 失敗 %3$d</string>
+    <string name="agentElsewhereCounts">待機中%1$d · 実行中%2$d · 失敗%3$d</string>
     <string name="agentElsewhereStale">更新を待機中</string>
 </resources>

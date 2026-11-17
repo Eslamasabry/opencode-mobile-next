@@ -41,7 +41,7 @@
     <string name="phoneSetupStartCustomize">インストールするものを選ぶ</string>
     <string name="phoneSetupStartByAddress">アドレスを指定してパソコンに接続</string>
     <string name="phoneSetupStartSetUpHere">代わりにこのアプリ内でセットアップ</string>
-    <string name="phoneSetupStartProgressHeadline">セットアップは %1$d% 完了</string>
+    <string name="phoneSetupStartProgressHeadline">セットアップは%1$d%完了</string>
     <string name="phoneSetupStartRunningBody">他のアプリを使っている間も続行されます。</string>
     <string name="phoneSetupStartStoppedBody">完了する前に停止しました。続けると、中断したところから再開します。</string>
     <string name="phoneSetupStartContinue">セットアップを続ける</string>
@@ -57,10 +57,10 @@
     <string name="phoneSetupStartDone">完了</string>
     <string name="phoneSetupStartAdd">追加</string>
     <string name="phoneSetupPreflightUnsupportedHeadline">このスマートフォンでは実行できません</string>
-    <string name="phoneSetupPreflightUnsupportedBody">このアプリのUbuntuは64ビットのArmまたはIntelのスマートフォンでのみ動作します。この端末は %1$sと報告しています。</string>
+    <string name="phoneSetupPreflightUnsupportedBody">このアプリのUbuntuは64ビットのArmまたはIntelのスマートフォンでのみ動作します。この端末は%1$sと報告しています。</string>
     <string name="phoneSetupPreflightLowMemoryHeadline">このスマートフォンはメモリが足りません</string>
-    <string name="phoneSetupPreflightLowMemoryBody">OpenCodeには %1$s MB以上のメモリを搭載したスマートフォンが必要です。この端末は %2$s MBです。代わりにパソコンで実行し、このスマートフォンから接続してください。</string>
-    <string name="phoneSetupPreflightMayBeSlow">メモリが %1$s MBのこのスマートフォンでは、動作が遅くなる場合があります。</string>
+    <string name="phoneSetupPreflightLowMemoryBody">OpenCodeには%1$s MB以上のメモリを搭載したスマートフォンが必要です。この端末は%2$s MBです。代わりにパソコンで実行し、このスマートフォンから接続してください。</string>
+    <string name="phoneSetupPreflightMayBeSlow">メモリが%1$s MBのこのスマートフォンでは、動作が遅くなる場合があります。</string>
     <string name="phoneSetupPreflightLowSpaceHeadline">空き容量が足りません</string>
     <string name="phoneSetupPreflightLowSpaceBody">このスマートフォンの空き容量を約%1$s確保してから、もう一度セットアップしてください。</string>
     <string name="phoneSetupPreflightOpenStorage">ストレージ設定を開く</string>
@@ -74,7 +74,7 @@
     <string name="phoneSetupTermuxConnecting">接続中</string>
     <string name="voiceComponentRemove">音声入力を削除</string>
     <string name="voiceComponentRemoveTitle">音声入力を削除しますか？</string>
-    <string name="voiceComponentRemoveBody">音声認識モデルを削除して %1$sを空けます。ここで再び追加するまで、音声入力は使えません。</string>
+    <string name="voiceComponentRemoveBody">音声認識モデルを削除して%1$sを空けます。ここで再び追加するまで、音声入力は使えません。</string>
     <string name="welcomePhoneCost">%1$s · %2$sのダウンロード</string>
     <string name="welcomePhoneSetUp">このスマートフォンで設定</string>
     <string name="welcomePhoneSettingUp">設定中 · %1$d%</string>

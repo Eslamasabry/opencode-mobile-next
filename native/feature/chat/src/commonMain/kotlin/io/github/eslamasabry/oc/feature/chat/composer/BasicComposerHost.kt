@@ -85,7 +85,6 @@ import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerAdd
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerFieldRow
-import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerStatusStrip
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerLimitStrip
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerBox
 import io.github.eslamasabry.oc.ui.kitchat.composer.kitReportMessageBlock
@@ -93,7 +92,6 @@ import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerChip
 import io.github.eslamasabry.oc.ui.kitchat.composer.kitComposerSlab
 import io.github.eslamasabry.oc.ui.kit.frame.KitReportBottomSlab
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerRowFit
-import io.github.eslamasabry.oc.ui.kit.chip.KitComposerModelChip
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerPrimaryAction
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerSend
 import io.github.eslamasabry.oc.ui.kitchat.composer.KitComposerStop
@@ -706,26 +704,30 @@ public fun BasicComposer(
         // E20-S08: the phrases only, on one line that scrolls (the kit's phrase row); hiding one is its
         // long-press menu, and Settings › Phrase suggestions is the visible way back. A "Hide <phrase>" chip
         // beside every phrase doubled the row and wrapped it to two lines.
-        if (state.phrases.isNotEmpty() && !chrome.requestWaiting()) {
-            val inserts = state.phrases.associateWith { stringResource(Res.string.phraseSuggestionsInsert, it) }
-            val menus = state.phrases.associateWith { stringResource(Res.string.phraseSuggestionsOptions, it) }
-            KitPhraseChips(
-                phrases = state.phrases,
-                label = stringResource(Res.string.phraseChipsRowLabel),
-                insertLabel = { inserts[it] ?: it },
-                menuLabel = { menus[it] ?: it },
-                hideLabel = stringResource(Res.string.phraseChipsHide),
-                onChoose = { phrase ->
-                    if (field.text.isEmpty() && state.draft.attachments.isEmpty()) {
-                        field.edit { replace(0, length, phrase) }
-                        actions.draftChanged(phrase)
-                    }
-                },
-                onHide = actions::hidePhrase,
-                modifier = Modifier.testTag("chat-phrase-chips"),
-                // Audit 2026-11-14 (finding 21): away while a message is being sent or a reply runs.
-                away = busy || state.sending,
-            )
+        // B-438: the phrases ride inside the message box (its `above` slot), on the box's own fill, never floating
+        // over the transcript on their own.
+        val phraseRow: @Composable () -> Unit = {
+            if (state.phrases.isNotEmpty() && !chrome.requestWaiting()) {
+                val inserts = state.phrases.associateWith { stringResource(Res.string.phraseSuggestionsInsert, it) }
+                val menus = state.phrases.associateWith { stringResource(Res.string.phraseSuggestionsOptions, it) }
+                KitPhraseChips(
+                    phrases = state.phrases,
+                    label = stringResource(Res.string.phraseChipsRowLabel),
+                    insertLabel = { inserts[it] ?: it },
+                    menuLabel = { menus[it] ?: it },
+                    hideLabel = stringResource(Res.string.phraseChipsHide),
+                    onChoose = { phrase ->
+                        if (field.text.isEmpty() && state.draft.attachments.isEmpty()) {
+                            field.edit { replace(0, length, phrase) }
+                            actions.draftChanged(phrase)
+                        }
+                    },
+                    onHide = actions::hidePhrase,
+                    modifier = Modifier.testTag("chat-phrase-chips"),
+                    // Audit 2026-11-14 (finding 21): away while a message is being sent or a reply runs.
+                    away = busy || state.sending,
+                )
+            }
         }
         // E20-S20: the tray lives inside the message box (KitComposerBox `above`, Flutter concept C); its More, and
         // "+" on a server that takes no files, open the tools list (Flutter `_openTools`).
@@ -1039,8 +1041,7 @@ public fun BasicComposer(
         // above the box, under the jump pill and the phrase chips): in every style the box holds its own controls, as
         // the Glass slab does: the words on top, one row under them with the plus, the approval mode, the model and
         // the mic or Send, and Stop at the end of the words' row while a reply runs. Nothing rides above the box.
-        val inBox = true
-        val modelPart: @Composable (inBox: Boolean) -> Unit = { inBox ->
+        val modelPart: @Composable () -> Unit = {
             val chipWords = modelWords(state, chrome)
             val modelName = stringResource(Res.string.composerPreviewModelButton)
             val openModels = {
@@ -1058,19 +1059,9 @@ public fun BasicComposer(
                     onClick { openModels(); true }
                 }
             ) {
-                if (inBox) KitComposerChip(label = chipWords, onClick = openModels, icon = KitIcons.model, shrinks = true)
-                else KitComposerModelChip(label = chipWords, onClick = openModels)
+                KitComposerChip(label = chipWords, onClick = openModels, icon = KitIcons.model, shrinks = true)
             }
         }
-        if (!inBox)
-            KitComposerStatusStrip(
-                hasChips = true,
-                modifier = Modifier.padding(bottom = COMPOSER_STRIP_GAP.dp).testTag("composer-status-strip"),
-                stop = if (stopShown) stopPart else null,
-                model = { modelPart(false) },
-            ) {
-                chrome.rowChips()
-            }
         // S24-CHAT story 5: a picture the keyboard inserts (a GIF, a sticker, the clipboard chip) joins
         // the draft like a picked photo; only where this agent takes pictures.
         val takePicture: ((KitInsertedPicture) -> Unit)? =
@@ -1087,19 +1078,18 @@ public fun BasicComposer(
                     }
                 }
         KitPictureReceiver(takePicture, Modifier.fillMaxWidth()) {
-        KitComposerRowFit({ field.text.toString() }, leadingTargets = 1, stack = inBox) { stacked ->
+        KitComposerRowFit({ field.text.toString() }, leadingTargets = 1, stack = true) { stacked ->
             KitComposerBox(
                 running = RunTailRules.boxRunning(RunTailRules.tail(busy, chrome.stopping(), waitingRequest)),
                 stacked = stacked,
                 hasLeading = true,
                 chips = {
-                    if (inBox) {
-                        chrome.rowChips()
-                        modelPart(true)
-                    }
+                    chrome.rowChips()
+                    modelPart()
                 },
-                fieldEnd = { if (inBox && stopShown) stopPart() },
+                fieldEnd = { if (stopShown) stopPart() },
                 above = {
+                    phraseRow()
                     ComposerLimitArea(limits, state, conversationRef)
                     KitComposerTray(
                         open = addOpen,
@@ -1353,7 +1343,6 @@ public fun BasicComposer(
  * The room between the chips strip and the message box (F: the strip's 48 dp line centres its 32 dp chips; Flutter's
  * golden `chat_approval_ask` has the chips' bottom 12 px above the box, 8 of them inside the line).
  */
-private const val COMPOSER_STRIP_GAP = 4
 
 /** "Model · level · agent": the level and agent only when chosen (Flutter composer.dart:795). */
 /** The model's words, as the chip and the "+" sheet's Model row say them ("Server default", "Sonnet 4 · High"). */
@@ -1392,8 +1381,12 @@ internal fun modelUnknown(models: io.github.eslamasabry.oc.feature.chat.world.Co
 internal fun draftWaitWords(draft: io.github.eslamasabry.oc.feature.chat.world.DraftFacts, failed: String): String =
     if (draft.failure != null && !draft.ready) failed else ""
 
-internal fun modelLabel(model: String, level: String, agent: String?): String =
-    listOfNotNull(agent?.takeIf { it.isNotEmpty() && !isInternalMode(it) }, model, level.takeIf { it.isNotEmpty() })
+internal fun modelLabel(model: String, level: String, agent: String?, levelShown: String = level): String =
+    listOfNotNull(
+            agent?.takeIf { it.isNotEmpty() && !isInternalMode(it) },
+            // The model and its effort are said once, by the one formatter (a name that ends "(High)" says it already).
+            io.github.eslamasabry.oc.core.model.ModelEffort.label(model, level.takeIf { it.isNotEmpty() }, levelShown),
+        )
         .joinToString(" · ")
 
 /** Who the box asks ("Ask Claude Code…"): the chosen agent's own name, else [fallback]; never a mode's id. */

@@ -38,7 +38,7 @@
     <string name="notifStatusChatsWorking">%1$d件の会話が作業中</string>
     <string name="notifStatusMore">他 +%1$d件</string>
     <string name="notifStatusWaitingCount">%1$d件が待機中</string>
-    <string name="notifStatusTasksProgress">タスク %1$d / %2$d</string>
+    <string name="notifStatusTasksProgress">タスク%1$d / %2$d</string>
     <string name="notifStatusMinutes">%1$d分</string>
     <string name="notifStatusHours">%1$d時間</string>
     <string name="notifStatusWaitingProvider">待機中 · %1$sの上限</string>
@@ -74,7 +74,7 @@
     <string name="native_schedule_failed">スケジュールされたプロンプトに確認が必要です。タップして履歴を確認してください。</string>
     <string name="native_schedule_skipped">スケジュールされたプロンプトがスキップされました。タップして履歴を確認してください。</string>
     <string name="native_schedule_digest_title">朝のダイジェスト</string>
-    <string name="native_schedule_digest_body">開始 %1$d件 · 失敗 %2$d件 · スキップ %3$d件</string>
+    <string name="native_schedule_digest_body">開始%1$d件 · 失敗%2$d件 · スキップ%3$d件</string>
     <string name="native_schedule_finished">完了しました。タップして会話を開きます。</string>
     <string name="native_schedule_open">開く</string>
     <string name="native_schedule_why_needs_you">停止：回答が必要です。</string>
@@ -253,7 +253,7 @@
     <string name="widget_v2_ago_min">%1$d分前</string>
     <string name="widget_v2_ago_hour">%1$d時間前</string>
     <string name="widget_v2_ago_yesterday">昨日</string>
-    <string name="widget_v2_offline_seen">オフライン · 最終確認 %1$s</string>
+    <string name="widget_v2_offline_seen">オフライン · 最終確認：%1$s</string>
     <string name="widget_v2_offline_plain">オフライン</string>
     <string name="widget_v2_background_settings">バックグラウンド設定</string>
     <string name="widget_v2_open">開く</string>
@@ -289,7 +289,7 @@
     <string name="widget_status_server">サーバー</string>
     <string name="widget_status_online">オンライン</string>
     <string name="widget_status_offline">オフライン</string>
-    <string name="widget_status_offline_for">オフライン %1$s</string>
+    <string name="widget_status_offline_for">オフライン%1$s</string>
     <string name="widget_status_connecting">接続中</string>
     <string name="widget_status_linux">Linux</string>
     <string name="widget_status_running">実行中</string>

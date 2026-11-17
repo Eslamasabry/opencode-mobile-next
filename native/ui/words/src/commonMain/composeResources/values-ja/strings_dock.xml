@@ -63,7 +63,7 @@
     <string name="edgeLightGroupRecent">最近</string>
     <string name="edgeLightHiddenShowAgain">非表示 · %1$s · 再表示</string>
     <string name="edgeLightShowAgain">再表示</string>
-    <string name="edgeLightTasksDone">%2$s件中 %1$s件完了</string>
+    <string name="edgeLightTasksDone">%2$s件中%1$s件完了</string>
     <string name="edgeLightFor">%1$s向け</string>
     <string name="edgeLightThinking">思考中</string>
     <string name="edgeLightWorking">作業中</string>
@@ -72,10 +72,10 @@
     <string name="edgeLightFailedWord">失敗</string>
     <string name="edgeLightWaitingMixed">%1$s件が対応待ち · %2$s件が作業中</string>
     <string name="edgeLightWaitingToFinish">完了するには回答が必要です</string>
-    <string name="edgeLightPausedAtStep">ステップ %1$s / %2$sで一時停止中（回答待ち）</string>
+    <string name="edgeLightPausedAtStep">ステップ%1$s / %2$sで一時停止中（回答待ち）</string>
     <string name="edgeLightPausedUntilAnswer">回答があるまで一時停止中</string>
     <string name="edgeLightSubAgentOf">%1$sのサブエージェント</string>
-    <string name="edgeLightMoreInAll">「すべての会話」にあと %1$s件あります</string>
+    <string name="edgeLightMoreInAll">「すべての会話」にあと%1$s件あります</string>
     <string name="edgeLightMoreSubAgents">ほか%1$s件</string>
     <string name="edgeLightMoreInside">中にほか%1$s件</string>
     <string name="edgeLightAsksRun">実行の許可を求めています：%1$s</string>
@@ -132,7 +132,7 @@
     </plurals>
     <string name="edgeLightChildLabel">%1$s、%2$sのサブエージェント、%3$s</string>
     <string name="edgeLightChildLabelFact">%1$s、%2$sのサブエージェント、%3$s、%4$s</string>
-    <string name="edgeLightFactOf">%2$s件中 %1$s件</string>
+    <string name="edgeLightFactOf">%2$s件中%1$s件</string>
     <string name="edgeLightActionOn">%1$s：%2$s</string>
     <string name="edgeLightNotStarted">未開始</string>
     <string name="edgeLightShowSubAgents">サブエージェントを表示</string>
