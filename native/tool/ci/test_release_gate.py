@@ -50,8 +50,10 @@ class ReleaseGate(unittest.TestCase):
         code = int(re.search(r'^versionCode=(\d+)', open(os.path.join(REPO, 'native/version.properties')).read(), re.M).group(1))
         open(vc, 'w').write(f'#!/bin/sh\necho {(code // 10 + 1) * 10}\n')
         os.chmod(vc, 0o755)
+        self.git_env = dict(os.environ, GIT_AUTHOR_NAME='t', GIT_AUTHOR_EMAIL='t@t', GIT_COMMITTER_NAME='t', GIT_COMMITTER_EMAIL='t@t')
         g = lambda *a, cwd=os.path.join(t, 'work'): subprocess.run(['git', *a], cwd=cwd, check=True, capture_output=True, text=True,
-                                                                  env=dict(os.environ, GIT_AUTHOR_NAME='t', GIT_AUTHOR_EMAIL='t@t', GIT_COMMITTER_NAME='t', GIT_COMMITTER_EMAIL='t@t'))
+                                                                  env=self.git_env)
+        self.git = g
         g('init', '-q', '-b', 'master')
         open(os.path.join(t, 'work/.gitignore'), 'w').write('native/build/\n')
         g('add', '-A')
@@ -91,6 +93,29 @@ class ReleaseGate(unittest.TestCase):
 
     def green(self, **kw):
         return {'id': 1, 'createdAt': '2026-01-01T10:00:00Z', 'verdict': verdict(self.sha, **kw)}
+
+    def test_B_BUILD_030_release_bump_message_omits_the_daily_skip_marker(self):
+        """B-BUILD-030: exercise the real commit command in the fixture, never --go or a build."""
+        script = open(os.path.join(REPO, 'scripts/native-release.sh')).read().splitlines()
+        start = next((i for i, line in enumerate(script) if line.startswith('  git commit --quiet -m ')), None)
+        self.assertIsNotNone(start, 'the release script must create its bump commit')
+        command = []
+        for line in script[start:]:
+            command.append(line)
+            if not line.rstrip().endswith('\\'):
+                break
+        work = os.path.join(self.tmp, 'work')
+        with open(os.path.join(work, 'native/version.properties'), 'a') as fh:
+            fh.write('# commit-message fixture\n')
+        self.git('add', 'native/version.properties')
+        env = dict(self.git_env, NAME='9.9.9', NEXT='10020', LINEAGE='public', TAG='v9.9.9+10020')
+        p = subprocess.run(['bash', '-euc', '\n'.join(command)], cwd=work, env=env, capture_output=True, text=True)
+        self.assertEqual(p.returncode, 0, p.stdout + p.stderr)
+        message = self.git('log', '-1', '--format=%B').stdout
+        self.assertEqual(message.splitlines()[0], 'build(release): native 9.9.9+10020')
+        self.assertNotIn('[skip ci]', message)
+        self.assertIn('Release-Tag: v9.9.9+10020', message)
+        self.assertEqual(self.git('tag').stdout, '')
 
     def test_nothing_proved_is_refused_and_both_gates_say_so(self):
         code, out = self.release()

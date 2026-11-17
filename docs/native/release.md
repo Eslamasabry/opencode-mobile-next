@@ -101,6 +101,9 @@ they can never be delivered.
    10 above every known number: +10 from the last release when no larger build exists), commits the bump, builds,
    runs every gate, writes `native/build/native-release/<tag>/` with the APKs and `SHA256SUMS`, and only when all of
    that passed tags `v<name>+<code>` and pushes master and the tag. Nothing is published.
+
+   The release bump commit omits `[skip ci]` because pushing its version files to `master` matches no automatic workflow; ordinary commits keep the marker.
+   Native release remains manual, while the separate `v*` tag push can start the BYO host bundle workflow.
 5. Run the **Native release** workflow by hand (Actions › Native release › Run workflow, input: the tag). It builds
    the same three APKs with the Public CI key, runs the kept-classes and identity gates, and attaches the files to a
    **draft** release with `make_latest=false`. It never runs on push and never publishes.
